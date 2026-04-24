@@ -27,7 +27,8 @@ export default async function Home() {
       <p className="text-gray-500 mb-8">Недвижимость на Бали — {listings?.length ?? 0} объектов</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {listings?.map((l) => (
-          <div key={l.airtable_id} className="border rounded-xl overflow-hidden hover:shadow-md transition-shadow bg-white">
+          <a key={l.airtable_id} href={`/ru/nedvizhimost/${l.slug}`}
+            className="border rounded-xl overflow-hidden hover:shadow-md transition-shadow bg-white block">
             <div className="w-full h-48 bg-gray-100 flex items-center justify-center overflow-hidden">
               {l.main_image_url
                 ? <img src={l.main_image_url} alt={l.name_ru} className="w-full h-full object-cover" />
@@ -51,7 +52,7 @@ export default async function Home() {
                 </div>
               )}
             </div>
-          </div>
+          </a>
         ))}
       </div>
     </main>
