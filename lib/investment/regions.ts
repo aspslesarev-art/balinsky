@@ -12,9 +12,8 @@ export type RegionDefaults = {
 export const BALI_DEFAULTS: RegionDefaults = {
   region: 'Bali',
   currency: 'USD',
-  // Bands per editorial spec: low <55%, medium 55-70%, high 70-85%.
-  // bad/median use band midpoints; good is pinned to 80% per editorial.
-  occupancyByScenario: { bad: 0.50, median: 0.625, good: 0.80 },
+  // Per editorial: bad <55% → 50%, median 55-70% → 65%, good 70-85% → 85%.
+  occupancyByScenario: { bad: 0.50, median: 0.65, good: 0.85 },
   platformFeePct: 0.15,
   mgmtFeePct: 0.22,
   opexPerSqmMonth: 4,

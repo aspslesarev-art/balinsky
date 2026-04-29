@@ -43,7 +43,7 @@ function computeEconomics({ adr, occupancy, area, askingPrice, leaseholdYearsLef
 }
 
 const BALI = {
-  occupancyByScenario: { bad: 0.50, median: 0.625, good: 0.80 },
+  occupancyByScenario: { bad: 0.50, median: 0.65, good: 0.85 },
   platformFeePct: 0.15, mgmtFeePct: 0.22, opexPerSqmMonth: 4, taxRate: 0.10, capRateThresholdWeak: 0.06,
 }
 
