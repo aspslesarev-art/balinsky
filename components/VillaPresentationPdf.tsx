@@ -40,27 +40,26 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     backgroundColor: COLORS.white,
   },
-  pageDark: {
-    fontFamily: 'Inter',
-    backgroundColor: '#000000',
-    color: COLORS.white,
-  },
   pagePadded: {
     padding: '32 36',
   },
   // Cover
-  coverImage: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%', objectFit: 'cover' },
-  coverOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.45)' },
-  coverContent: { position: 'absolute', left: 36, right: 36, bottom: 40, color: COLORS.white },
-  coverDistrict: { fontSize: 11, color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 },
-  coverTitle: { fontSize: 36, fontWeight: 'bold', lineHeight: 1.1, color: COLORS.white, marginBottom: 14 },
-  coverChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, marginBottom: 18 },
-  coverChip: { fontSize: 12, color: 'rgba(255,255,255,0.9)' },
-  coverPrice: { fontSize: 28, fontWeight: 'bold', color: COLORS.white },
-  coverPriceM2: { fontSize: 12, color: 'rgba(255,255,255,0.75)', marginTop: 4 },
-  // Photo page
-  photoImage: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%', objectFit: 'contain' },
-  photoCaption: { position: 'absolute', bottom: 16, left: 0, right: 0, textAlign: 'center', fontSize: 9, color: 'rgba(255,255,255,0.7)' },
+  coverRoot: { flexDirection: 'row', height: '100%', gap: 24, alignItems: 'center' },
+  coverTextCol: { width: '38%', flexDirection: 'column' },
+  coverPhotoCol: { flex: 1, height: '100%', borderRadius: 14, overflow: 'hidden', backgroundColor: COLORS.bgSoft },
+  coverPhotoImg: { width: '100%', height: '100%', objectFit: 'cover' },
+  coverDistrict: { fontSize: 10, color: COLORS.primary, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, fontWeight: 'bold' },
+  coverTitle: { fontSize: 30, fontWeight: 'bold', lineHeight: 1.1, color: COLORS.text, marginBottom: 14 },
+  coverChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, marginBottom: 16 },
+  coverChip: { fontSize: 11, color: COLORS.muted },
+  coverPrice: { fontSize: 26, fontWeight: 'bold', color: COLORS.text },
+  coverPriceM2: { fontSize: 11, color: COLORS.muted, marginTop: 4 },
+  // Photoset page (mosaic 1+4 or 2x2 grid)
+  photosetRoot: { flexDirection: 'row', height: '100%', gap: 8 },
+  photosetTile: { borderRadius: 12, overflow: 'hidden', backgroundColor: COLORS.bgSoft },
+  photosetTileImg: { width: '100%', height: '100%', objectFit: 'cover' },
+  photosetCol: { flex: 1, flexDirection: 'column', gap: 8, height: '100%' },
+  photosetRow: { flex: 1, flexDirection: 'row', gap: 8, width: '100%' },
   // Generic
   h2: { fontSize: 24, fontWeight: 'bold', marginBottom: 6, color: COLORS.text },
   subtitle: { fontSize: 11, color: COLORS.muted, marginBottom: 18 },
@@ -172,34 +171,140 @@ const NEARBY_ORDER = [
   'supermarket', 'pharmacy', 'hospital', 'attraction',
 ]
 
-function PageFooter({ title, pageNum, total }: { title: string; pageNum: number; total: number }) {
+function PageFooter({ title }: { title: string }) {
   return (
     <View style={styles.footer} fixed>
       <Text style={styles.footerText}>{title}</Text>
-      <Text style={styles.footerText}>{pageNum} / {total}</Text>
+      <Text style={styles.footerText} render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} />
+    </View>
+  )
+}
+
+function PhotoSetPdf({ photos, layout }: { photos: string[]; layout: 'mosaic5' | 'grid4' | 'small' }) {
+  if (layout === 'mosaic5') {
+    return (
+      <View style={styles.photosetRoot}>
+        {photos[0] && (
+          <View style={[styles.photosetTile, { flex: 1.4 }]}>
+            <Image src={photos[0]} style={styles.photosetTileImg} />
+          </View>
+        )}
+        <View style={styles.photosetCol}>
+          <View style={styles.photosetRow}>
+            {photos[1] && (
+              <View style={[styles.photosetTile, { flex: 1 }]}>
+                <Image src={photos[1]} style={styles.photosetTileImg} />
+              </View>
+            )}
+            {photos[2] && (
+              <View style={[styles.photosetTile, { flex: 1 }]}>
+                <Image src={photos[2]} style={styles.photosetTileImg} />
+              </View>
+            )}
+          </View>
+          <View style={styles.photosetRow}>
+            {photos[3] && (
+              <View style={[styles.photosetTile, { flex: 1 }]}>
+                <Image src={photos[3]} style={styles.photosetTileImg} />
+              </View>
+            )}
+            {photos[4] && (
+              <View style={[styles.photosetTile, { flex: 1 }]}>
+                <Image src={photos[4]} style={styles.photosetTileImg} />
+              </View>
+            )}
+          </View>
+        </View>
+      </View>
+    )
+  }
+  if (layout === 'grid4') {
+    return (
+      <View style={[styles.photosetRoot, { flexDirection: 'column' }]}>
+        <View style={styles.photosetRow}>
+          {photos[0] && (
+            <View style={[styles.photosetTile, { flex: 1 }]}>
+              <Image src={photos[0]} style={styles.photosetTileImg} />
+            </View>
+          )}
+          {photos[1] && (
+            <View style={[styles.photosetTile, { flex: 1 }]}>
+              <Image src={photos[1]} style={styles.photosetTileImg} />
+            </View>
+          )}
+        </View>
+        <View style={styles.photosetRow}>
+          {photos[2] && (
+            <View style={[styles.photosetTile, { flex: 1 }]}>
+              <Image src={photos[2]} style={styles.photosetTileImg} />
+            </View>
+          )}
+          {photos[3] && (
+            <View style={[styles.photosetTile, { flex: 1 }]}>
+              <Image src={photos[3]} style={styles.photosetTileImg} />
+            </View>
+          )}
+        </View>
+      </View>
+    )
+  }
+  // 'small' — 1-4 photos, simple row/grid
+  if (photos.length === 1) {
+    return (
+      <View style={[styles.photosetTile, { flex: 1 }]}>
+        <Image src={photos[0]} style={styles.photosetTileImg} />
+      </View>
+    )
+  }
+  if (photos.length === 2) {
+    return (
+      <View style={styles.photosetRow}>
+        {photos.map((src, idx) => (
+          <View key={idx} style={[styles.photosetTile, { flex: 1 }]}>
+            <Image src={src} style={styles.photosetTileImg} />
+          </View>
+        ))}
+      </View>
+    )
+  }
+  return (
+    <View style={[styles.photosetRoot, { flexDirection: 'column' }]}>
+      <View style={styles.photosetRow}>
+        {photos.slice(0, 2).map((src, idx) => (
+          <View key={idx} style={[styles.photosetTile, { flex: 1 }]}>
+            <Image src={src} style={styles.photosetTileImg} />
+          </View>
+        ))}
+      </View>
+      {photos.length > 2 && (
+        <View style={styles.photosetRow}>
+          {photos.slice(2, 4).map((src, idx) => (
+            <View key={idx} style={[styles.photosetTile, { flex: 1 }]}>
+              <Image src={src} style={styles.photosetTileImg} />
+            </View>
+          ))}
+        </View>
+      )}
     </View>
   )
 }
 
 export function VillaPdfDocument({ data, snap, agent }: { data: VillaPresentationData; snap: Snapshot | null; agent: AgentContact }) {
-  const photos = data.photos.slice(0, 8)
+  const allPhotos = data.photos.slice(0, 12)
+  const photosetPool = allPhotos.slice(1)
+  const photosetGroups: { layout: 'mosaic5' | 'grid4' | 'small'; photos: string[] }[] = []
+  if (photosetPool.length >= 5) {
+    photosetGroups.push({ layout: 'mosaic5', photos: photosetPool.slice(0, 5) })
+    if (photosetPool.length >= 6) {
+      photosetGroups.push({ layout: 'grid4', photos: photosetPool.slice(5, 9) })
+    }
+  } else if (photosetPool.length > 0) {
+    photosetGroups.push({ layout: 'small', photos: photosetPool })
+  }
   const hasMap = data.lat != null && data.lng != null
   const hasNearby = !!snap && Object.values(snap.nearbyByCategory ?? {}).some(arr => arr.length > 0)
   const hasScenarios = !!snap?.scenarios
 
-  const slides: ('cover' | 'photo' | 'facts' | 'description' | 'location' | 'nearby' | 'invest' | 'agent')[] = [
-    'cover',
-    ...photos.map(() => 'photo' as const),
-    'facts',
-    ...(data.seoText ? ['description' as const] : []),
-    ...(hasMap ? ['location' as const] : []),
-    ...(hasNearby ? ['nearby' as const] : []),
-    ...(hasScenarios ? ['invest' as const] : []),
-    'agent',
-  ]
-  const total = slides.length
-
-  let pageNum = 0
   const factsItems = [
     data.bedrooms != null && { label: 'Спальни', value: `${data.bedrooms} BR` },
     data.area != null && { label: 'Дом', value: `${data.area} м²` },
@@ -213,38 +318,37 @@ export function VillaPdfDocument({ data, snap, agent }: { data: VillaPresentatio
 
   return (
     <Document title={data.title} author={agent.name} producer="balinsky.info">
-      {/* Cover */}
-      <Page size="A4" orientation="landscape" style={styles.pageDark}>
-        {photos[0] && <Image src={photos[0]} style={styles.coverImage} />}
-        <View style={styles.coverOverlay} />
-        <View style={styles.coverContent}>
-          {data.district && <Text style={styles.coverDistrict}>{data.district}, Бали</Text>}
-          <Text style={styles.coverTitle}>{data.title}</Text>
-          <View style={styles.coverChips}>
-            {data.bedrooms != null && <Text style={styles.coverChip}>{data.bedrooms} BR</Text>}
-            {data.area != null && <Text style={styles.coverChip}>{data.area} м² дом</Text>}
-            {data.land != null && <Text style={styles.coverChip}>{data.land} м² земля</Text>}
-            {data.lease && <Text style={styles.coverChip}>Лизхолд {data.lease} лет</Text>}
-          </View>
-          {data.priceUsd != null && (
-            <View>
-              <Text style={styles.coverPrice}>{fmtUsd(data.priceUsd)}</Text>
-              {data.pricePerM2 != null && <Text style={styles.coverPriceM2}>{fmtUsd(data.pricePerM2)} / м²</Text>}
+      {/* Cover — white bg, split layout */}
+      <Page size="A4" orientation="landscape" style={[styles.page, styles.pagePadded]}>
+        <View style={styles.coverRoot}>
+          <View style={styles.coverTextCol}>
+            {data.district && <Text style={styles.coverDistrict}>{data.district}, Бали</Text>}
+            <Text style={styles.coverTitle}>{data.title}</Text>
+            <View style={styles.coverChips}>
+              {data.bedrooms != null && <Text style={styles.coverChip}>{data.bedrooms} BR</Text>}
+              {data.area != null && <Text style={styles.coverChip}>{data.area} м² дом</Text>}
+              {data.land != null && <Text style={styles.coverChip}>{data.land} м² земля</Text>}
+              {data.lease && <Text style={styles.coverChip}>Лизхолд {data.lease} лет</Text>}
             </View>
-          )}
+            {data.priceUsd != null && (
+              <View>
+                <Text style={styles.coverPrice}>{fmtUsd(data.priceUsd)}</Text>
+                {data.pricePerM2 != null && <Text style={styles.coverPriceM2}>{fmtUsd(data.pricePerM2)} / м²</Text>}
+              </View>
+            )}
+          </View>
+          <View style={styles.coverPhotoCol}>
+            {allPhotos[0] && <Image src={allPhotos[0]} style={styles.coverPhotoImg} />}
+          </View>
         </View>
       </Page>
 
-      {/* Photos */}
-      {photos.map((src, idx) => {
-        pageNum = idx + 2
-        return (
-          <Page key={src} size="A4" orientation="landscape" style={styles.pageDark}>
-            <Image src={src} style={styles.photoImage} />
-            <Text style={styles.photoCaption}>Фото {idx + 1} из {photos.length}</Text>
-          </Page>
-        )
-      })}
+      {/* Photo compositions */}
+      {photosetGroups.map((group, gIdx) => (
+        <Page key={`photoset-${gIdx}`} size="A4" orientation="landscape" style={[styles.page, styles.pagePadded]}>
+          <PhotoSetPdf photos={group.photos} layout={group.layout} />
+        </Page>
+      ))}
 
       {/* Facts */}
       <Page size="A4" orientation="landscape" style={[styles.page, styles.pagePadded]}>
@@ -258,7 +362,7 @@ export function VillaPdfDocument({ data, snap, agent }: { data: VillaPresentatio
             </View>
           ))}
         </View>
-        <PageFooter title={data.title} pageNum={photos.length + 2} total={total} />
+        <PageFooter title={data.title} />
       </Page>
 
       {/* Description */}
@@ -266,7 +370,7 @@ export function VillaPdfDocument({ data, snap, agent }: { data: VillaPresentatio
         <Page size="A4" orientation="landscape" style={[styles.page, styles.pagePadded]}>
           <Text style={styles.h2}>О вилле</Text>
           <Text style={styles.descBody}>{data.seoText}</Text>
-          <PageFooter title={data.title} pageNum={photos.length + 3} total={total} />
+          <PageFooter title={data.title} />
         </Page>
       )}
 
@@ -278,7 +382,7 @@ export function VillaPdfDocument({ data, snap, agent }: { data: VillaPresentatio
           {data.district && <Text style={styles.locText}>Район: {data.district}, Бали</Text>}
           <Text style={styles.locText}>Координаты: {data.lat!.toFixed(5)}, {data.lng!.toFixed(5)}</Text>
           <Text style={styles.locMuted}>https://www.google.com/maps/search/?api=1&query={data.lat},{data.lng}</Text>
-          <PageFooter title={data.title} pageNum={photos.length + (data.seoText ? 4 : 3)} total={total} />
+          <PageFooter title={data.title} />
         </Page>
       )}
 

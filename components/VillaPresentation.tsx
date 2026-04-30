@@ -47,7 +47,7 @@ const NEARBY_ORDER = [
 
 type Slide =
   | { kind: 'cover' }
-  | { kind: 'photo'; src: string; index: number; total: number }
+  | { kind: 'photoset'; photos: string[]; layout: 'mosaic5' | 'grid4' | 'small' }
   | { kind: 'facts' }
   | { kind: 'description'; text: string }
   | { kind: 'map' }
@@ -89,13 +89,22 @@ function VillaPresentation({ data, onClose }: { data: VillaPresentationData; onC
     return () => { cancelled = true }
   }, [data.villaId])
 
-  // Build slide list — recompute when snapshot arrives
-  const photoSlides: Slide[] = data.photos.slice(0, 8).map((src, idx, arr) => ({
-    kind: 'photo' as const, src, index: idx + 1, total: arr.length,
-  }))
+  // Build photoset slides: cover already shows photos[0], so distribute photos[1..] into compositions
+  const allPhotos = data.photos.slice(0, 12)
+  const photosetPool = allPhotos.slice(1)
+  const photosetSlides: Slide[] = []
+  if (photosetPool.length >= 5) {
+    photosetSlides.push({ kind: 'photoset', photos: photosetPool.slice(0, 5), layout: 'mosaic5' })
+    if (photosetPool.length >= 6) {
+      photosetSlides.push({ kind: 'photoset', photos: photosetPool.slice(5, 9), layout: 'grid4' })
+    }
+  } else if (photosetPool.length > 0) {
+    photosetSlides.push({ kind: 'photoset', photos: photosetPool, layout: 'small' })
+  }
+
   const slides: Slide[] = [
     { kind: 'cover' },
-    ...photoSlides,
+    ...photosetSlides,
     { kind: 'facts' },
     ...(data.seoText ? [{ kind: 'description' as const, text: data.seoText }] : []),
     ...(data.lat != null && data.lng != null ? [{ kind: 'map' as const }] : []),
@@ -138,11 +147,9 @@ function VillaPresentation({ data, onClose }: { data: VillaPresentationData; onC
     touchX.current = null
   }
 
-  const isDark = slide.kind === 'cover' || slide.kind === 'photo'
-
   return (
     <div
-      className={`fixed inset-0 z-[100] flex flex-col ${isDark ? 'bg-black' : 'bg-white'}`}
+      className="fixed inset-0 z-[100] flex flex-col bg-white"
       role="dialog"
       aria-modal="true"
       aria-label="Презентация виллы"
@@ -150,9 +157,9 @@ function VillaPresentation({ data, onClose }: { data: VillaPresentationData; onC
       onTouchEnd={onTouchEnd}
     >
       {/* Top bar */}
-      <div className={`relative z-20 flex items-center justify-between gap-4 px-4 md:px-8 py-3 ${isDark ? 'text-white' : 'text-[#111827]'}`}>
+      <div className="relative z-20 flex items-center justify-between gap-4 px-4 md:px-8 py-3 text-[#111827]">
         <div className="min-w-0 flex items-center gap-3">
-          <div className={`text-[12px] uppercase tracking-wider ${isDark ? 'text-white/60' : 'text-[var(--color-text-muted)]'}`}>
+          <div className="text-[12px] uppercase tracking-wider text-[var(--color-text-muted)]">
             {safeI + 1} / {total}
           </div>
           <div className="min-w-0 truncate text-[14px] font-medium">
@@ -163,7 +170,7 @@ function VillaPresentation({ data, onClose }: { data: VillaPresentationData; onC
           <button
             type="button"
             onClick={() => setDownloadOpen(true)}
-            className={`inline-flex items-center gap-1.5 px-3 h-9 rounded-full text-[13px] font-medium ${isDark ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white'} transition-colors`}
+            className="inline-flex items-center gap-1.5 px-3 h-9 rounded-full text-[13px] font-medium bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white transition-colors"
             aria-label="Скачать презентацию в PDF"
           >
             <Download size={15} />
@@ -172,7 +179,7 @@ function VillaPresentation({ data, onClose }: { data: VillaPresentationData; onC
           <button
             type="button"
             onClick={onClose}
-            className={`inline-flex items-center justify-center w-9 h-9 rounded-full ${isDark ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-black/5 hover:bg-black/10 text-[#111827]'} transition-colors`}
+            className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-black/5 hover:bg-black/10 text-[#111827] transition-colors"
             aria-label="Закрыть презентацию"
           >
             <X size={18} />
@@ -198,9 +205,7 @@ function VillaPresentation({ data, onClose }: { data: VillaPresentationData; onC
               onClick={() => setI(idx)}
               aria-label={`Слайд ${idx + 1}`}
               className={`h-1 flex-1 rounded-full transition-colors ${
-                idx < safeI ? (isDark ? 'bg-white/80' : 'bg-[var(--color-primary)]') :
-                idx === safeI ? (isDark ? 'bg-white' : 'bg-[var(--color-primary)]') :
-                (isDark ? 'bg-white/20' : 'bg-black/10')
+                idx <= safeI ? 'bg-[var(--color-primary)]' : 'bg-black/10'
               }`}
             />
           ))}
@@ -219,7 +224,7 @@ function VillaPresentation({ data, onClose }: { data: VillaPresentationData; onC
           disabled={safeI === 0}
           className="hidden md:flex absolute left-0 top-0 bottom-0 w-[12%] items-center justify-start pl-3 group focus:outline-none disabled:cursor-default"
         >
-          <span className={`opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center justify-center w-10 h-10 rounded-full ${isDark ? 'bg-white/10 text-white' : 'bg-black/5 text-[#111827]'} ${safeI === 0 ? 'invisible' : ''}`}>
+          <span className={`opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center justify-center w-10 h-10 rounded-full bg-black/5 text-[#111827] ${safeI === 0 ? 'invisible' : ''}`}>
             <ChevronLeft size={22} />
           </span>
         </button>
@@ -230,19 +235,19 @@ function VillaPresentation({ data, onClose }: { data: VillaPresentationData; onC
           disabled={safeI === total - 1}
           className="hidden md:flex absolute right-0 top-0 bottom-0 w-[12%] items-center justify-end pr-3 group focus:outline-none disabled:cursor-default"
         >
-          <span className={`opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center justify-center w-10 h-10 rounded-full ${isDark ? 'bg-white/10 text-white' : 'bg-black/5 text-[#111827]'} ${safeI === total - 1 ? 'invisible' : ''}`}>
+          <span className={`opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center justify-center w-10 h-10 rounded-full bg-black/5 text-[#111827] ${safeI === total - 1 ? 'invisible' : ''}`}>
             <ChevronRight size={22} />
           </span>
         </button>
       </div>
 
       {/* Mobile bottom controls */}
-      <div className={`md:hidden flex items-center justify-between gap-3 px-4 py-3 border-t ${isDark ? 'border-white/10' : 'border-black/5'}`}>
+      <div className="md:hidden flex items-center justify-between gap-3 px-4 py-3 border-t border-black/5">
         <button
           type="button"
           onClick={prev}
           disabled={safeI === 0}
-          className={`inline-flex items-center justify-center w-10 h-10 rounded-full ${isDark ? 'bg-white/10 text-white' : 'bg-black/5 text-[#111827]'} disabled:opacity-30`}
+          className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-black/5 text-[#111827] disabled:opacity-30"
           aria-label="Назад"
         >
           <ChevronLeft size={20} />
@@ -251,7 +256,7 @@ function VillaPresentation({ data, onClose }: { data: VillaPresentationData; onC
           type="button"
           onClick={next}
           disabled={safeI === total - 1}
-          className={`inline-flex items-center justify-center w-10 h-10 rounded-full ${isDark ? 'bg-white text-black' : 'bg-[var(--color-primary)] text-white'} disabled:opacity-30`}
+          className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[var(--color-primary)] text-white disabled:opacity-30"
           aria-label="Дальше"
         >
           <ChevronRight size={20} />
@@ -264,7 +269,7 @@ function VillaPresentation({ data, onClose }: { data: VillaPresentationData; onC
 function SlideBody({ slide, data, snap, snapTried }: { slide: Slide; data: VillaPresentationData; snap: Snapshot | null; snapTried: boolean }) {
   switch (slide.kind) {
     case 'cover':       return <CoverSlide data={data} />
-    case 'photo':       return <PhotoSlide src={slide.src} index={slide.index} total={slide.total} alt={data.title} />
+    case 'photoset':    return <PhotoSetSlide photos={slide.photos} layout={slide.layout} alt={data.title} />
     case 'facts':       return <FactsSlide data={data} />
     case 'description': return <DescriptionSlide text={slide.text} title={data.title} />
     case 'map':         return <MapSlide data={data} />
@@ -276,49 +281,91 @@ function SlideBody({ slide, data, snap, snapTried }: { slide: Slide; data: Villa
 function CoverSlide({ data }: { data: VillaPresentationData }) {
   const cover = data.photos[0]
   return (
-    <div className="absolute inset-0">
-      {cover && (
-        <img
-          src={cover}
-          alt={data.title}
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-      )}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/40" />
-      <div className="relative z-10 h-full flex flex-col justify-end px-6 md:px-16 pb-16 md:pb-20 text-white">
-        {data.district && (
-          <div className="inline-flex items-center gap-1.5 text-[13px] md:text-[14px] uppercase tracking-wider text-white/80 mb-3">
-            <MapPin size={14} /> {data.district}, Бали
+    <div className="absolute inset-0 px-6 md:px-12 lg:px-16 py-8 md:py-12">
+      <div className="h-full grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] gap-6 md:gap-10 items-center">
+        {/* Text */}
+        <div className="order-2 md:order-1 flex flex-col">
+          {data.district && (
+            <div className="inline-flex items-center gap-1.5 text-[12px] md:text-[13px] uppercase tracking-wider text-[var(--color-primary)] mb-3 font-medium">
+              <MapPin size={13} /> {data.district}, Бали
+            </div>
+          )}
+          <h1 className="text-[26px] md:text-[44px] lg:text-[56px] font-semibold tracking-tight leading-[1.05] text-[#111827]">
+            {data.title}
+          </h1>
+          <div className="mt-5 md:mt-6 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[14px] md:text-[16px] text-[var(--color-text-muted)]">
+            {data.bedrooms != null && <span>{data.bedrooms} BR</span>}
+            {data.area != null && <span>{data.area} м² дом</span>}
+            {data.land != null && <span>{data.land} м² земля</span>}
+            {data.lease && <span>Лизхолд {data.lease} лет</span>}
           </div>
-        )}
-        <h1 className="text-[32px] md:text-[56px] lg:text-[72px] font-semibold tracking-tight leading-[1.05] max-w-4xl">
-          {data.title}
-        </h1>
-        <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-[15px] md:text-[18px]">
-          {data.bedrooms != null && <span>{data.bedrooms} BR</span>}
-          {data.area != null && <span>{data.area} м² дом</span>}
-          {data.land != null && <span>{data.land} м² земля</span>}
-          {data.lease && <span>Лизхолд {data.lease} лет</span>}
+          {data.priceUsd != null && (
+            <div className="mt-6 md:mt-8 flex items-baseline gap-4 flex-wrap">
+              <div className="text-[26px] md:text-[40px] font-semibold text-[#111827]">{fmtUsd(data.priceUsd)}</div>
+              {data.pricePerM2 != null && (
+                <div className="text-[13px] md:text-[15px] text-[var(--color-text-muted)]">{fmtUsd(data.pricePerM2)} / м²</div>
+              )}
+            </div>
+          )}
         </div>
-        {data.priceUsd != null && (
-          <div className="mt-6 flex items-baseline gap-4 flex-wrap">
-            <div className="text-[28px] md:text-[44px] font-semibold">{fmtUsd(data.priceUsd)}</div>
-            {data.pricePerM2 != null && (
-              <div className="text-[14px] md:text-[16px] text-white/70">{fmtUsd(data.pricePerM2)} / м²</div>
-            )}
-          </div>
-        )}
+        {/* Photo */}
+        <div className="order-1 md:order-2 relative w-full h-[40vh] md:h-full overflow-hidden rounded-2xl md:rounded-3xl bg-[var(--color-search-bg)]">
+          {cover ? (
+            <img src={cover} alt={data.title} className="absolute inset-0 w-full h-full object-cover" />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center text-[var(--color-text-muted)] text-[14px]">
+              Нет фото
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
 }
 
-function PhotoSlide({ src, index, total, alt }: { src: string; index: number; total: number; alt: string }) {
+function PhotoSetSlide({ photos, layout, alt }: { photos: string[]; layout: 'mosaic5' | 'grid4' | 'small'; alt: string }) {
+  const tile = "rounded-2xl md:rounded-3xl overflow-hidden bg-[var(--color-search-bg)]"
+  if (layout === 'mosaic5') {
+    return (
+      <div className="absolute inset-0 px-4 md:px-12 lg:px-16 py-6 md:py-10">
+        <div className="h-full grid gap-2 md:gap-3 grid-cols-2 grid-rows-3 md:grid-cols-3 md:grid-rows-2">
+          <div className={`${tile} col-span-2 row-span-1 md:col-span-1 md:row-span-2`}>
+            {photos[0] && <img src={photos[0]} alt={alt} className="w-full h-full object-cover" />}
+          </div>
+          {[1, 2, 3, 4].map(idx => photos[idx] && (
+            <div key={idx} className={tile}>
+              <img src={photos[idx]} alt={alt} className="w-full h-full object-cover" />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+  if (layout === 'grid4') {
+    return (
+      <div className="absolute inset-0 px-4 md:px-12 lg:px-16 py-6 md:py-10">
+        <div className="h-full grid grid-cols-2 grid-rows-2 gap-2 md:gap-3">
+          {photos.slice(0, 4).map((src, idx) => (
+            <div key={idx} className={tile}>
+              <img src={src} alt={alt} className="w-full h-full object-cover" />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+  // 'small' — 1-4 photos, gracefully laid out
+  const count = photos.length
+  const cols = count === 1 ? 'grid-cols-1' : 'grid-cols-2'
+  const rows = count <= 2 ? 'grid-rows-1' : 'grid-rows-2'
   return (
-    <div className="absolute inset-0 flex items-center justify-center bg-black">
-      <img src={src} alt={alt} className="max-w-full max-h-full object-contain" />
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/50 text-white text-[12px]">
-        Фото {index} из {total}
+    <div className="absolute inset-0 px-4 md:px-12 lg:px-16 py-6 md:py-10">
+      <div className={`h-full grid gap-2 md:gap-3 ${cols} ${rows}`}>
+        {photos.map((src, idx) => (
+          <div key={idx} className={tile}>
+            <img src={src} alt={alt} className="w-full h-full object-cover" />
+          </div>
+        ))}
       </div>
     </div>
   )
