@@ -23,6 +23,7 @@ import { InvestmentWidget } from '@/components/InvestmentWidget'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { loadAllVideos } from '@/lib/videos'
 import { VideoGrid } from '@/components/VideoGrid'
+import { VillaPresentationButton } from '@/components/VillaPresentation'
 
 export const revalidate = 3600
 export function generateStaticParams() { return [] }
@@ -442,23 +443,45 @@ export default async function Page({ params }: { params: Params }) {
             {land != null && <span>{land} м² земля</span>}
             {district && <span>{district}, Бали</span>}
           </div>
-          {priceNum != null && (
-            <div>
-              <div className="text-[28px] font-semibold text-[#111827]">
-                {fmtUsd(priceNum)}
-                {priceM2 != null && (
-                  <span className="ml-3 text-[14px] font-normal text-[var(--color-text-muted)]">
-                    {fmtUsd(priceM2)} / м²
-                  </span>
+          <div className="flex items-end justify-between gap-4 flex-wrap">
+            {priceNum != null && (
+              <div>
+                <div className="text-[28px] font-semibold text-[#111827]">
+                  {fmtUsd(priceNum)}
+                  {priceM2 != null && (
+                    <span className="ml-3 text-[14px] font-normal text-[var(--color-text-muted)]">
+                      {fmtUsd(priceM2)} / м²
+                    </span>
+                  )}
+                </div>
+                {priceUpdatedAt && (
+                  <div className="mt-1.5 text-[12px] text-[var(--color-text-muted)]">
+                    Цена обновлена {new Date(priceUpdatedAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  </div>
                 )}
               </div>
-              {priceUpdatedAt && (
-                <div className="mt-1.5 text-[12px] text-[var(--color-text-muted)]">
-                  Цена обновлена {new Date(priceUpdatedAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
-                </div>
-              )}
-            </div>
-          )}
+            )}
+            <VillaPresentationButton
+              villaId={v.airtable_id}
+              slug={slug}
+              title={title}
+              district={district}
+              photos={photos}
+              priceUsd={priceNum}
+              pricePerM2={priceM2}
+              bedrooms={bedrooms}
+              area={area}
+              land={land}
+              yearLabel={yearRaw && status?.toLowerCase().includes('построен') ? 'Сдан' : (yearRaw ?? null)}
+              lease={lease}
+              permit={permit}
+              lat={lat}
+              lng={lng}
+              seoText={seoText}
+              developerName={developerName}
+              complexName={parentComplex?.name ?? null}
+            />
+          </div>
         </section>
 
         {facts.length > 0 && (
