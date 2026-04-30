@@ -455,49 +455,49 @@ function NearbySlide({ snap, snapTried }: { snap: Snapshot | null; snapTried: bo
       </div>
     )
   }
-  const cats = NEARBY_ORDER.filter(k => (snap.nearbyByCategory[k] ?? []).length > 0)
+  const cats = NEARBY_ORDER.filter(k => (snap.nearbyByCategory[k] ?? []).length > 0).slice(0, 8)
   return (
-    <div className="absolute inset-0 overflow-auto px-6 md:px-16 py-10 md:py-14">
-      <div className="max-w-6xl mx-auto">
-        <h2 className="text-[28px] md:text-[40px] font-semibold tracking-tight text-[#111827] mb-2">Что вокруг виллы</h2>
-        <p className="text-[15px] text-[var(--color-text-muted)] mb-8">
+    <div className="absolute inset-0 flex flex-col px-6 md:px-12 lg:px-16 py-6 md:py-10">
+      <div className="shrink-0 mb-4">
+        <h2 className="text-[24px] md:text-[34px] font-semibold tracking-tight text-[#111827] mb-1">Что вокруг виллы</h2>
+        <p className="text-[13px] text-[var(--color-text-muted)]">
           Топ-места поблизости по рейтингу и расстоянию
         </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {cats.map(cat => {
-            const meta = NEARBY_META[cat] ?? { icon: '📌', title: cat }
-            const items = [...(snap.nearbyByCategory[cat] ?? [])]
-              .sort((a, b) => a.distanceKm - b.distanceKm)
-              .slice(0, 4)
-            return (
-              <div key={cat} className="rounded-2xl border border-[var(--color-border)] bg-white p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-[18px]">{meta.icon}</span>
-                  <span className="text-[14px] font-semibold text-[#111827]">{meta.title}</span>
-                  <span className="text-[12px] text-[var(--color-text-muted)] ml-auto">
-                    {(snap.nearbyByCategory[cat] ?? []).length}
-                  </span>
-                </div>
-                <ul className="space-y-2">
-                  {items.map(p => (
-                    <li key={p.id} className="flex items-baseline justify-between gap-3 text-[13px]">
-                      <span className="min-w-0 truncate text-[#111827]" title={p.name ?? ''}>{p.name}</span>
-                      <span className="shrink-0 inline-flex items-center gap-2 text-[12px] text-[var(--color-text-muted)]">
-                        {p.rating != null && (
-                          <span className="inline-flex items-center gap-0.5">
-                            <Star size={11} className="text-[#F59E0B] fill-[#F59E0B]" />
-                            <span className="font-medium text-[#111827]">{p.rating.toFixed(1)}</span>
-                          </span>
-                        )}
-                        <span>{fmtDistance(p.distanceKm)}</span>
-                      </span>
-                    </li>
-                  ))}
-                </ul>
+      </div>
+      <div className="flex-1 min-h-0 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 md:gap-3 auto-rows-fr">
+        {cats.map(cat => {
+          const meta = NEARBY_META[cat] ?? { icon: '📌', title: cat }
+          const items = [...(snap.nearbyByCategory[cat] ?? [])]
+            .sort((a, b) => a.distanceKm - b.distanceKm)
+            .slice(0, 3)
+          return (
+            <div key={cat} className="rounded-xl border border-[var(--color-border)] bg-white p-3 min-h-0 flex flex-col">
+              <div className="flex items-center gap-1.5 mb-2">
+                <span className="text-[14px]">{meta.icon}</span>
+                <span className="text-[12px] font-semibold text-[#111827] truncate">{meta.title}</span>
+                <span className="text-[10px] text-[var(--color-text-muted)] ml-auto">
+                  {(snap.nearbyByCategory[cat] ?? []).length}
+                </span>
               </div>
-            )
-          })}
-        </div>
+              <ul className="space-y-1.5 min-h-0">
+                {items.map(p => (
+                  <li key={p.id} className="flex items-baseline justify-between gap-2 text-[11px]">
+                    <span className="min-w-0 truncate text-[#111827]" title={p.name ?? ''}>{p.name}</span>
+                    <span className="shrink-0 inline-flex items-center gap-1 text-[10px] text-[var(--color-text-muted)]">
+                      {p.rating != null && (
+                        <span className="inline-flex items-center gap-0.5">
+                          <Star size={9} className="text-[#F59E0B] fill-[#F59E0B]" />
+                          <span className="font-medium text-[#111827]">{p.rating.toFixed(1)}</span>
+                        </span>
+                      )}
+                      <span>{fmtDistance(p.distanceKm)}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )
+        })}
       </div>
     </div>
   )

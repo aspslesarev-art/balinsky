@@ -81,14 +81,14 @@ const styles = StyleSheet.create({
   locText: { fontSize: 13, color: COLORS.text, marginBottom: 6 },
   locMuted: { fontSize: 10, color: COLORS.muted },
   // Nearby
-  nearbyGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  nearbyGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   nearbyCard: {
-    width: '31%',
+    width: '23.5%',
     border: `1 solid ${COLORS.border}`,
-    borderRadius: 10,
-    padding: 10,
+    borderRadius: 8,
+    padding: 8,
     backgroundColor: COLORS.white,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   nearbyTitleRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
   nearbyTitle: { fontSize: 11, fontWeight: 'bold', color: COLORS.text, flex: 1 },
@@ -386,14 +386,14 @@ export function VillaPdfDocument({ data, snap, agent }: { data: VillaPresentatio
         </Page>
       )}
 
-      {/* Nearby */}
+      {/* Nearby — limited to 8 categories × 3 items so it fits on one A4 landscape page */}
       {hasNearby && snap && (
-        <Page size="A4" orientation="landscape" style={[styles.page, styles.pagePadded]} wrap>
+        <Page size="A4" orientation="landscape" style={[styles.page, styles.pagePadded]}>
           <Text style={styles.h2}>Что вокруг виллы</Text>
           <Text style={styles.subtitle}>Топ-места поблизости по рейтингу и расстоянию</Text>
           <View style={styles.nearbyGrid}>
-            {NEARBY_ORDER.filter(c => (snap.nearbyByCategory[c] ?? []).length > 0).map(cat => {
-              const items = [...(snap.nearbyByCategory[cat] ?? [])].sort((a, b) => a.distanceKm - b.distanceKm).slice(0, 4)
+            {NEARBY_ORDER.filter(c => (snap.nearbyByCategory[c] ?? []).length > 0).slice(0, 8).map(cat => {
+              const items = [...(snap.nearbyByCategory[cat] ?? [])].sort((a, b) => a.distanceKm - b.distanceKm).slice(0, 3)
               const totalCount = (snap.nearbyByCategory[cat] ?? []).length
               return (
                 <View key={cat} style={styles.nearbyCard} wrap={false}>
