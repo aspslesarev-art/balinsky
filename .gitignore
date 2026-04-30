@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local script caches & outputs (regeneratable, too big for git)
+/scripts/_*.json
+/scripts/out/
+
+# ad-hoc debug snippets at repo root
+/check*.mjs
+/checklogo.mjs

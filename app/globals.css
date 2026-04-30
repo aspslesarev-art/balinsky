@@ -1,26 +1,72 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* === Balinsky design system === */
+
+  /* Brand greens */
+  --color-primary: #33A474;
+  --color-primary-hover: #2C8E65;
+  --color-primary-pressed: #257754;
+  --color-primary-soft: #E5F2EC;
+
+  /* Surfaces */
+  --color-bg: #F8FAF8;
+  --color-header-bg: #EEF5F1;
+  --color-card-bg: #FFFFFF;
+  --color-search-bg: #F1F5F1;
+
+  /* Text */
+  --color-text: #111827;
+  --color-text-muted: #6B7280;
+
+  /* Lines */
+  --color-border: #E5E7EB;
+
+  /* Functional */
+  --color-progress-low: #EF4444;
+  --color-progress-mid: #FACC15;
+  --color-progress-hi: #33A474;
+  --color-logo-bg: #ED7A3C;
+  --color-brand: #E78C3D;
+
+  /* Shadows */
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-popover: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  /* Reserve space for the vertical scrollbar even when the page is short,
+     so container widths stay consistent across pages with/without scroll. */
+  scrollbar-gutter: stable;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+/* Round Google Maps default UI controls (zoom, map/satellite, fullscreen,
+   street view pegman) so they match the rest of the rounded design.
+   Google sets inline styles on these — !important is required. */
+.gm-style .gm-bundled-control,
+.gm-style .gm-bundled-control-on-bottom,
+.gm-style .gm-style-mtc,
+.gm-style .gm-style-mtc-bbw,
+.gm-style .gm-style-mtc > button,
+.gm-style .gm-fullscreen-control,
+.gm-style .gm-svpc {
+  border-radius: 12px !important;
+  overflow: hidden !important;
+}
+
+/* The zoom in/out buttons sit inside .gm-bundled-control as a vertical pair.
+   The container handles the rounded corners via overflow:hidden above. */
+.gm-style .gm-bundled-control button {
+  border-radius: 0 !important;
 }

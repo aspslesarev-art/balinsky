@@ -1,0 +1,7 @@
+scripts/
+check.mjs
+check2.mjs
+check3.mjs
+checklogo.mjs
+.next/
+.env.local
