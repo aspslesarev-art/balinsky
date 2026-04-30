@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { X, ChevronLeft, ChevronRight, Play, Star, MapPin, BedDouble, Square, Trees, Calendar, FileCheck2, Lock, ArrowUpRight } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, Play, Star, MapPin, BedDouble, Square, Trees, Calendar, FileCheck2, Lock, ArrowUpRight, Download, Loader2 } from 'lucide-react'
 import type { Snapshot } from '@/components/InvestmentWidget/types'
 import { fmtUsd, fmtUsdShort, fmtPct, fmtYears, fmtDistance, pluralRu } from '@/components/InvestmentWidget/utils'
 
@@ -76,6 +76,7 @@ function VillaPresentation({ data, onClose }: { data: VillaPresentationData; onC
   const [snap, setSnap] = useState<Snapshot | null>(null)
   const [snapTried, setSnapTried] = useState(false)
   const [i, setI] = useState(0)
+  const [downloadOpen, setDownloadOpen] = useState(false)
   const touchX = useRef<number | null>(null)
 
   // Fetch investment snapshot once
@@ -158,15 +159,34 @@ function VillaPresentation({ data, onClose }: { data: VillaPresentationData; onC
             {data.title}
           </div>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className={`shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-full ${isDark ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-black/5 hover:bg-black/10 text-[#111827]'} transition-colors`}
-          aria-label="Закрыть презентацию"
-        >
-          <X size={18} />
-        </button>
+        <div className="shrink-0 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setDownloadOpen(true)}
+            className={`inline-flex items-center gap-1.5 px-3 h-9 rounded-full text-[13px] font-medium ${isDark ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white'} transition-colors`}
+            aria-label="Скачать презентацию в PDF"
+          >
+            <Download size={15} />
+            <span className="hidden sm:inline">Скачать</span>
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className={`inline-flex items-center justify-center w-9 h-9 rounded-full ${isDark ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-black/5 hover:bg-black/10 text-[#111827]'} transition-colors`}
+            aria-label="Закрыть презентацию"
+          >
+            <X size={18} />
+          </button>
+        </div>
       </div>
+
+      {downloadOpen && (
+        <DownloadModal
+          data={data}
+          snap={snap}
+          onClose={() => setDownloadOpen(false)}
+        />
+      )}
 
       {/* Progress dots */}
       <div className="px-4 md:px-8 pb-2">
@@ -481,3 +501,154 @@ function InvestSlide({ snap, priceUsd }: { snap: Snapshot | null; priceUsd: numb
   )
 }
 
+function DownloadModal({ data, snap, onClose }: { data: VillaPresentationData; snap: Snapshot | null; onClose: () => void }) {
+  const [name, setName] = useState('')
+  const [telegram, setTelegram] = useState('')
+  const [whatsapp, setWhatsapp] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const trimmedName = name.trim()
+  const trimmedTg = telegram.trim()
+  const trimmedWa = whatsapp.trim()
+  const canSubmit = trimmedName.length > 0 && (trimmedTg.length > 0 || trimmedWa.length > 0) && !busy
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && !busy) onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose, busy])
+
+  const submit = async () => {
+    if (!canSubmit) return
+    setBusy(true)
+    setError(null)
+    try {
+      const { downloadVillaPdf } = await import('./VillaPresentationPdf')
+      await downloadVillaPdf(data, snap, { name: trimmedName, telegram: trimmedTg, whatsapp: trimmedWa })
+      onClose()
+    } catch (e) {
+      console.error(e)
+      setError('Не получилось собрать PDF. Попробуйте ещё раз.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 px-4"
+      onClick={() => { if (!busy) onClose() }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="download-modal-title"
+    >
+      <div
+        className="w-full max-w-md rounded-3xl bg-white p-6 md:p-8 shadow-xl"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-3 mb-1">
+          <h3 id="download-modal-title" className="text-[20px] md:text-[22px] font-semibold tracking-tight text-[#111827]">
+            Скачать презентацию
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={busy}
+            className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-full bg-black/5 hover:bg-black/10 text-[#111827] disabled:opacity-50"
+            aria-label="Закрыть"
+          >
+            <X size={16} />
+          </button>
+        </div>
+        <p className="text-[13px] text-[var(--color-text-muted)] mb-5">
+          Ваши контакты будут добавлены на последнюю страницу PDF — клиент сможет связаться с вами напрямую.
+        </p>
+
+        <form
+          onSubmit={e => { e.preventDefault(); submit() }}
+          className="space-y-3"
+        >
+          <Field
+            id="dl-name"
+            label="Имя"
+            value={name}
+            onChange={setName}
+            placeholder="Андрей"
+            autoFocus
+            required
+          />
+          <Field
+            id="dl-telegram"
+            label="Telegram"
+            value={telegram}
+            onChange={setTelegram}
+            placeholder="@username"
+          />
+          <Field
+            id="dl-whatsapp"
+            label="WhatsApp"
+            value={whatsapp}
+            onChange={setWhatsapp}
+            placeholder="+62 812 345 67 89"
+            inputMode="tel"
+          />
+          {!canSubmit && trimmedName.length > 0 && trimmedTg.length === 0 && trimmedWa.length === 0 && !busy && (
+            <p className="text-[12px] text-[var(--color-text-muted)]">
+              Укажите Telegram или WhatsApp — хотя бы один контакт.
+            </p>
+          )}
+          {error && <p className="text-[13px] text-[#B91C1C]">{error}</p>}
+          <button
+            type="submit"
+            disabled={!canSubmit}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[15px] font-medium px-5 py-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {busy ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                Собираем PDF…
+              </>
+            ) : (
+              <>
+                <Download size={16} />
+                Скачать PDF
+              </>
+            )}
+          </button>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+function Field({
+  id, label, value, onChange, placeholder, autoFocus, required, inputMode,
+}: {
+  id: string
+  label: string
+  value: string
+  onChange: (v: string) => void
+  placeholder?: string
+  autoFocus?: boolean
+  required?: boolean
+  inputMode?: 'text' | 'tel' | 'email' | 'url'
+}) {
+  return (
+    <label htmlFor={id} className="block">
+      <span className="block text-[12px] font-medium text-[var(--color-text-muted)] mb-1.5">
+        {label} {required && <span className="text-[#B91C1C]">*</span>}
+      </span>
+      <input
+        id={id}
+        type="text"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder={placeholder}
+        autoFocus={autoFocus}
+        autoComplete="off"
+        inputMode={inputMode}
+        className="w-full rounded-xl border border-[var(--color-border)] bg-white px-4 py-3 text-[15px] text-[#111827] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/30 focus:border-[var(--color-primary)]"
+      />
+    </label>
+  )
+}
