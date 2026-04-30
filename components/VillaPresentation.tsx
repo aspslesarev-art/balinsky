@@ -1,12 +1,13 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { X, ChevronLeft, ChevronRight, Play, Star, MapPin, BedDouble, Square, Trees, Calendar, FileCheck2, Lock, ArrowUpRight, Download, Loader2 } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, Play, Star, MapPin, BedDouble, Square, Trees, Calendar, FileCheck2, Lock, ArrowUpRight, Download, Loader2, UserRound } from 'lucide-react'
 import type { Snapshot } from '@/components/InvestmentWidget/types'
 import { fmtUsd, fmtUsdShort, fmtPct, fmtYears, fmtDistance, pluralRu } from '@/components/InvestmentWidget/utils'
 
 export type VillaPresentationData = {
   villaId: string
+  slug: string
   title: string
   district: string | null
   photos: string[]
@@ -549,6 +550,7 @@ function InvestSlide({ snap, priceUsd }: { snap: Snapshot | null; priceUsd: numb
 }
 
 function DownloadModal({ data, snap, onClose }: { data: VillaPresentationData; snap: Snapshot | null; onClose: () => void }) {
+  const [mode, setMode] = useState<'choose' | 'agent'>('choose')
   const [name, setName] = useState('')
   const [telegram, setTelegram] = useState('')
   const [whatsapp, setWhatsapp] = useState('')
@@ -557,7 +559,7 @@ function DownloadModal({ data, snap, onClose }: { data: VillaPresentationData; s
   const trimmedName = name.trim()
   const trimmedTg = telegram.trim()
   const trimmedWa = whatsapp.trim()
-  const canSubmit = trimmedName.length > 0 && (trimmedTg.length > 0 || trimmedWa.length > 0) && !busy
+  const canSubmitAgent = trimmedName.length > 0 && (trimmedTg.length > 0 || trimmedWa.length > 0) && !busy
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && !busy) onClose() }
@@ -565,8 +567,23 @@ function DownloadModal({ data, snap, onClose }: { data: VillaPresentationData; s
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose, busy])
 
-  const submit = async () => {
-    if (!canSubmit) return
+  const downloadSimple = async () => {
+    setBusy(true)
+    setError(null)
+    try {
+      const { downloadVillaPdf } = await import('./VillaPresentationPdf')
+      await downloadVillaPdf(data, snap, null)
+      onClose()
+    } catch (e) {
+      console.error(e)
+      setError('Не получилось собрать PDF. Попробуйте ещё раз.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const submitAgent = async () => {
+    if (!canSubmitAgent) return
     setBusy(true)
     setError(null)
     try {
@@ -607,62 +624,98 @@ function DownloadModal({ data, snap, onClose }: { data: VillaPresentationData; s
             <X size={16} />
           </button>
         </div>
-        <p className="text-[13px] text-[var(--color-text-muted)] mb-5">
-          Ваши контакты будут добавлены на последнюю страницу PDF — клиент сможет связаться с вами напрямую.
-        </p>
 
-        <form
-          onSubmit={e => { e.preventDefault(); submit() }}
-          className="space-y-3"
-        >
-          <Field
-            id="dl-name"
-            label="Имя"
-            value={name}
-            onChange={setName}
-            placeholder="Андрей"
-            autoFocus
-            required
-          />
-          <Field
-            id="dl-telegram"
-            label="Telegram"
-            value={telegram}
-            onChange={setTelegram}
-            placeholder="@username"
-          />
-          <Field
-            id="dl-whatsapp"
-            label="WhatsApp"
-            value={whatsapp}
-            onChange={setWhatsapp}
-            placeholder="+62 812 345 67 89"
-            inputMode="tel"
-          />
-          {!canSubmit && trimmedName.length > 0 && trimmedTg.length === 0 && trimmedWa.length === 0 && !busy && (
-            <p className="text-[12px] text-[var(--color-text-muted)]">
-              Укажите Telegram или WhatsApp — хотя бы один контакт.
+        {mode === 'choose' ? (
+          <>
+            <p className="text-[13px] text-[var(--color-text-muted)] mb-5">
+              Выберите вариант — без контактов или со своими как агента.
             </p>
-          )}
-          {error && <p className="text-[13px] text-[#B91C1C]">{error}</p>}
-          <button
-            type="submit"
-            disabled={!canSubmit}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[15px] font-medium px-5 py-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {busy ? (
-              <>
-                <Loader2 size={16} className="animate-spin" />
-                Собираем PDF…
-              </>
-            ) : (
-              <>
-                <Download size={16} />
-                Скачать PDF
-              </>
-            )}
-          </button>
-        </form>
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={downloadSimple}
+                disabled={busy}
+                className="w-full text-left rounded-2xl border border-[var(--color-border)] hover:border-[var(--color-primary)] bg-white px-4 py-4 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="shrink-0 w-10 h-10 rounded-xl bg-[var(--color-search-bg)] flex items-center justify-center">
+                    {busy ? <Loader2 size={18} className="animate-spin text-[var(--color-text-muted)]" /> : <Download size={18} className="text-[#111827]" />}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[15px] font-semibold text-[#111827]">Скачать</div>
+                    <div className="text-[12px] text-[var(--color-text-muted)] mt-0.5">
+                      На последней странице — ссылка на страницу виллы
+                    </div>
+                  </div>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode('agent')}
+                disabled={busy}
+                className="w-full text-left rounded-2xl border border-[var(--color-border)] hover:border-[var(--color-primary)] bg-white px-4 py-4 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="shrink-0 w-10 h-10 rounded-xl bg-[var(--color-primary-soft)] flex items-center justify-center">
+                    <UserRound size={18} className="text-[var(--color-primary-pressed)]" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[15px] font-semibold text-[#111827]">Скачать для агента</div>
+                    <div className="text-[12px] text-[var(--color-text-muted)] mt-0.5">
+                      На последней странице — ваши имя, Telegram и WhatsApp
+                    </div>
+                  </div>
+                </div>
+              </button>
+            </div>
+            {error && <p className="mt-3 text-[13px] text-[#B91C1C]">{error}</p>}
+          </>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={() => setMode('choose')}
+              disabled={busy}
+              className="text-[12px] text-[var(--color-text-muted)] hover:text-[#111827] inline-flex items-center gap-1 mb-3 disabled:opacity-50"
+            >
+              <ChevronLeft size={13} /> К выбору варианта
+            </button>
+            <p className="text-[13px] text-[var(--color-text-muted)] mb-5">
+              Ваши контакты попадут на последнюю страницу PDF — клиент сможет связаться напрямую.
+            </p>
+            <form
+              onSubmit={e => { e.preventDefault(); submitAgent() }}
+              className="space-y-3"
+            >
+              <Field id="dl-name" label="Имя" value={name} onChange={setName} placeholder="Андрей" autoFocus required />
+              <Field id="dl-telegram" label="Telegram" value={telegram} onChange={setTelegram} placeholder="@username" />
+              <Field id="dl-whatsapp" label="WhatsApp" value={whatsapp} onChange={setWhatsapp} placeholder="+62 812 345 67 89" inputMode="tel" />
+              {!canSubmitAgent && trimmedName.length > 0 && trimmedTg.length === 0 && trimmedWa.length === 0 && !busy && (
+                <p className="text-[12px] text-[var(--color-text-muted)]">
+                  Укажите Telegram или WhatsApp — хотя бы один контакт.
+                </p>
+              )}
+              {error && <p className="text-[13px] text-[#B91C1C]">{error}</p>}
+              <button
+                type="submit"
+                disabled={!canSubmitAgent}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[15px] font-medium px-5 py-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {busy ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    Собираем PDF…
+                  </>
+                ) : (
+                  <>
+                    <Download size={16} />
+                    Скачать PDF
+                  </>
+                )}
+              </button>
+            </form>
+          </>
+        )}
       </div>
     </div>
   )

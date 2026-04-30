@@ -1,4 +1,4 @@
-import { Document, Page, Text, View, Image, StyleSheet, Font, pdf } from '@react-pdf/renderer'
+import { Document, Page, Text, View, Image, Link, StyleSheet, Font, pdf } from '@react-pdf/renderer'
 import type { Snapshot } from '@/components/InvestmentWidget/types'
 import type { VillaPresentationData } from '@/components/VillaPresentation'
 
@@ -121,6 +121,7 @@ const styles = StyleSheet.create({
   agentName: { fontSize: 32, fontWeight: 'bold', color: COLORS.text, marginBottom: 18, textAlign: 'center' },
   agentSubtitle: { fontSize: 11, color: COLORS.muted, marginBottom: 24, textAlign: 'center' },
   contactRow: { flexDirection: 'row', alignItems: 'center', borderRadius: 10, border: `1 solid ${COLORS.border}`, paddingVertical: 12, paddingHorizontal: 16, marginBottom: 10, width: '100%', justifyContent: 'space-between' },
+  linkBox: { fontSize: 13, color: COLORS.primary, borderRadius: 10, border: `1 solid ${COLORS.border}`, paddingVertical: 12, paddingHorizontal: 16, textDecoration: 'none', textAlign: 'center', width: '100%' },
   contactLabel: { fontSize: 10, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: 0.5 },
   contactValue: { fontSize: 13, fontWeight: 'bold', color: COLORS.text },
   // Footer (page numbers)
@@ -289,7 +290,10 @@ function PhotoSetPdf({ photos, layout }: { photos: string[]; layout: 'mosaic5' |
   )
 }
 
-export function VillaPdfDocument({ data, snap, agent }: { data: VillaPresentationData; snap: Snapshot | null; agent: AgentContact }) {
+const SITE_URL = 'https://balinsky.info'
+
+export function VillaPdfDocument({ data, snap, agent }: { data: VillaPresentationData; snap: Snapshot | null; agent: AgentContact | null }) {
+  const villaUrl = `${SITE_URL}/ru/villy/o/${data.slug}`
   const allPhotos = data.photos.slice(0, 12)
   const photosetPool = allPhotos.slice(1)
   const photosetGroups: { layout: 'mosaic5' | 'grid4' | 'small'; photos: string[] }[] = []
@@ -317,7 +321,7 @@ export function VillaPdfDocument({ data, snap, agent }: { data: VillaPresentatio
   ].filter(Boolean) as { label: string; value: string }[]
 
   return (
-    <Document title={data.title} author={agent.name} producer="balinsky.info">
+    <Document title={data.title} author={agent?.name ?? 'balinsky.info'} producer="balinsky.info">
       {/* Cover — white bg, split layout */}
       <Page size="A4" orientation="landscape" style={[styles.page, styles.pagePadded]}>
         <View style={styles.coverRoot}>
@@ -449,24 +453,35 @@ export function VillaPdfDocument({ data, snap, agent }: { data: VillaPresentatio
         </Page>
       )}
 
-      {/* Agent contact (last) */}
+      {/* Last page — either agent contact or villa link */}
       <Page size="A4" orientation="landscape" style={[styles.page, styles.pagePadded]}>
         <View style={styles.agentWrap}>
           <View style={styles.agentInner}>
-            <Text style={styles.agentEyebrow}>Ваш агент</Text>
-            <Text style={styles.agentName}>{agent.name}</Text>
-            <Text style={styles.agentSubtitle}>Свяжитесь напрямую — быстро отвечу и помогу с просмотром</Text>
-            {agent.telegram && (
-              <View style={styles.contactRow}>
-                <Text style={styles.contactLabel}>Telegram</Text>
-                <Text style={styles.contactValue}>{agent.telegram}</Text>
-              </View>
-            )}
-            {agent.whatsapp && (
-              <View style={styles.contactRow}>
-                <Text style={styles.contactLabel}>WhatsApp</Text>
-                <Text style={styles.contactValue}>{agent.whatsapp}</Text>
-              </View>
+            {agent ? (
+              <>
+                <Text style={styles.agentEyebrow}>Ваш агент</Text>
+                <Text style={styles.agentName}>{agent.name}</Text>
+                <Text style={styles.agentSubtitle}>Свяжитесь напрямую — быстро отвечу и помогу с просмотром</Text>
+                {agent.telegram && (
+                  <View style={styles.contactRow}>
+                    <Text style={styles.contactLabel}>Telegram</Text>
+                    <Text style={styles.contactValue}>{agent.telegram}</Text>
+                  </View>
+                )}
+                {agent.whatsapp && (
+                  <View style={styles.contactRow}>
+                    <Text style={styles.contactLabel}>WhatsApp</Text>
+                    <Text style={styles.contactValue}>{agent.whatsapp}</Text>
+                  </View>
+                )}
+              </>
+            ) : (
+              <>
+                <Text style={styles.agentEyebrow}>Подробнее на сайте</Text>
+                <Text style={styles.agentName}>{data.title}</Text>
+                <Text style={styles.agentSubtitle}>Полная карточка, актуальная цена и форма связи — на странице виллы</Text>
+                <Link src={villaUrl} style={styles.linkBox}>{villaUrl}</Link>
+              </>
             )}
           </View>
         </View>
@@ -475,7 +490,7 @@ export function VillaPdfDocument({ data, snap, agent }: { data: VillaPresentatio
   )
 }
 
-export async function downloadVillaPdf(data: VillaPresentationData, snap: Snapshot | null, agent: AgentContact): Promise<void> {
+export async function downloadVillaPdf(data: VillaPresentationData, snap: Snapshot | null, agent: AgentContact | null): Promise<void> {
   const blob = await pdf(<VillaPdfDocument data={data} snap={snap} agent={agent} />).toBlob()
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')

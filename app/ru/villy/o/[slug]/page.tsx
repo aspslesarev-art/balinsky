@@ -463,6 +463,7 @@ export default async function Page({ params }: { params: Params }) {
             )}
             <VillaPresentationButton
               villaId={v.airtable_id}
+              slug={slug}
               title={title}
               district={district}
               photos={photos}
