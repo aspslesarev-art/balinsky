@@ -7,7 +7,6 @@ import { fmtUsd, fmtUsdShort, fmtPct, fmtYears, fmtDistance, pluralRu } from '@/
 
 export type VillaPresentationData = {
   villaId: string
-  slug: string
   title: string
   district: string | null
   photos: string[]
@@ -22,8 +21,6 @@ export type VillaPresentationData = {
   lat: number | null
   lng: number | null
   seoText: string | null
-  developerName: string | null
-  complexName: string | null
 }
 
 const NEARBY_META: Record<string, { icon: string; title: string }> = {
@@ -56,7 +53,6 @@ type Slide =
   | { kind: 'map' }
   | { kind: 'nearby' }
   | { kind: 'invest' }
-  | { kind: 'cta' }
 
 export function VillaPresentationButton(props: VillaPresentationData) {
   const [open, setOpen] = useState(false)
@@ -104,7 +100,6 @@ function VillaPresentation({ data, onClose }: { data: VillaPresentationData; onC
     ...(data.lat != null && data.lng != null ? [{ kind: 'map' as const }] : []),
     ...(snap && Object.keys(snap.nearbyByCategory ?? {}).length > 0 ? [{ kind: 'nearby' as const }] : []),
     ...(snap?.scenarios ? [{ kind: 'invest' as const }] : []),
-    { kind: 'cta' },
   ]
   const total = slides.length
   const safeI = Math.min(i, total - 1)
@@ -255,7 +250,6 @@ function SlideBody({ slide, data, snap, snapTried }: { slide: Slide; data: Villa
     case 'map':         return <MapSlide data={data} />
     case 'nearby':      return <NearbySlide snap={snap} snapTried={snapTried} />
     case 'invest':      return <InvestSlide snap={snap} priceUsd={data.priceUsd} />
-    case 'cta':         return <CtaSlide data={data} />
   }
 }
 
@@ -487,32 +481,3 @@ function InvestSlide({ snap, priceUsd }: { snap: Snapshot | null; priceUsd: numb
   )
 }
 
-function CtaSlide({ data }: { data: VillaPresentationData }) {
-  const url = typeof window !== 'undefined' ? `${window.location.origin}/ru/villy/o/${data.slug}` : `https://balinsky.info/ru/villy/o/${data.slug}`
-  return (
-    <div className="absolute inset-0 flex items-center justify-center px-6 md:px-16">
-      <div className="max-w-2xl w-full text-center">
-        <h2 className="text-[32px] md:text-[48px] font-semibold tracking-tight text-[#111827] mb-3">Готовы посмотреть?</h2>
-        <p className="text-[16px] md:text-[18px] text-[var(--color-text-muted)] mb-8 leading-relaxed">
-          {data.title}{data.district ? ` · ${data.district}` : ''}{data.priceUsd != null ? ` · ${fmtUsd(data.priceUsd)}` : ''}
-        </p>
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <a
-            href={`https://wa.me/?text=${encodeURIComponent(`${data.title} — ${url}`)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[15px] font-medium px-6 py-3 transition-colors"
-          >
-            Связаться по WhatsApp
-          </a>
-          <a
-            href={url}
-            className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--color-border)] bg-white hover:bg-[var(--color-search-bg)] text-[#111827] text-[15px] font-medium px-6 py-3 transition-colors"
-          >
-            Открыть страницу <ArrowUpRight size={15} />
-          </a>
-        </div>
-      </div>
-    </div>
-  )
-}

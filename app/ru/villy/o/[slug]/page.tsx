@@ -463,7 +463,6 @@ export default async function Page({ params }: { params: Params }) {
             )}
             <VillaPresentationButton
               villaId={v.airtable_id}
-              slug={slug}
               title={title}
               district={district}
               photos={photos}
@@ -478,8 +477,6 @@ export default async function Page({ params }: { params: Params }) {
               lat={lat}
               lng={lng}
               seoText={seoText}
-              developerName={developerName}
-              complexName={parentComplex?.name ?? null}
             />
           </div>
         </section>
