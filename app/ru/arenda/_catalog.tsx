@@ -1,10 +1,12 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { BedDouble, MapPin, X } from 'lucide-react'
 import { FilterDropdown } from '@/components/FilterDropdown'
 import type { RentalItem } from '@/lib/rental'
+
+const PAGE_SIZE = 24
 
 function fmtUsd(n: number): string { return '$' + Math.round(n).toLocaleString('en-US') }
 function pluralRu(n: number, forms: [string, string, string]): string {
@@ -103,6 +105,28 @@ export function RentalCatalog({ items, initial }: { items: RentalItem[]; initial
     : 'Цена'
   const activeCount = districts.length + bedrooms.length + (priceActive ? 1 : 0)
 
+  // Lazy mount: render PAGE_SIZE items, expose more on scroll near bottom.
+  // Reset on any filter change so the user always starts from the top of
+  // the new result set.
+  const [visible, setVisible] = useState(PAGE_SIZE)
+  useEffect(() => { setVisible(PAGE_SIZE) }, [districts, bedrooms, priceMin, priceMax])
+
+  const sentinelRef = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    const el = sentinelRef.current
+    if (!el) return
+    const obs = new IntersectionObserver(entries => {
+      if (entries.some(e => e.isIntersecting)) {
+        setVisible(v => Math.min(v + PAGE_SIZE, filtered.length))
+      }
+    }, { rootMargin: '600px 0px' })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [filtered.length])
+
+  const visibleItems = filtered.slice(0, visible)
+  const hasMore = visible < filtered.length
+
   return (
     <>
       <div className="mb-6 flex flex-wrap items-center gap-2">
@@ -167,13 +191,26 @@ export function RentalCatalog({ items, initial }: { items: RentalItem[]; initial
       </div>
 
       {filtered.length > 0 ? (
-        <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map(r => (
-            <li key={r.id}>
-              <RentalCard r={r} />
-            </li>
-          ))}
-        </ul>
+        <>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {visibleItems.map(r => (
+              <li key={r.id}>
+                <RentalCard r={r} />
+              </li>
+            ))}
+          </ul>
+          {hasMore && (
+            <div ref={sentinelRef} className="mt-8 flex justify-center">
+              <button
+                type="button"
+                onClick={() => setVisible(v => Math.min(v + PAGE_SIZE, filtered.length))}
+                className="text-[13px] text-[var(--color-text-muted)] hover:text-[#111827] px-4 py-2"
+              >
+                Показано {visibleItems.length} из {filtered.length} — загрузить ещё
+              </button>
+            </div>
+          )}
+        </>
       ) : (
         <div className="rounded-2xl border border-dashed border-[var(--color-border)] bg-white p-8 text-center text-[var(--color-text-muted)]">
           По выбранным фильтрам ничего не нашлось. Сбросьте фильтры или попробуйте другие.
