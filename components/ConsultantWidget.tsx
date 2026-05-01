@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { MessageCircle, X, Send, Loader2, Bot, AlertTriangle } from 'lucide-react'
+import { MessageCircle, X, Send, Loader2, AlertTriangle } from 'lucide-react'
 
 type Message = { role: 'user' | 'assistant'; content: string }
 
@@ -81,10 +81,15 @@ export function ConsultantWidget() {
           type="button"
           onClick={() => setOpen(true)}
           aria-label="Открыть AI-консультант"
-          className="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 px-4 py-3 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white shadow-lg transition-colors"
+          className="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 pl-1.5 pr-4 py-1.5 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white shadow-lg transition-colors"
         >
-          <MessageCircle size={20} />
-          <span className="hidden sm:inline text-[14px] font-medium">Бали Гид</span>
+          <img
+            src="/consultant-avatar.jpg"
+            alt=""
+            className="w-9 h-9 rounded-full object-cover ring-2 ring-white/40"
+          />
+          <span className="text-[14px] font-medium hidden sm:inline">Бали Гид</span>
+          <MessageCircle size={16} className="sm:hidden" />
         </button>
       )}
 
@@ -99,9 +104,11 @@ export function ConsultantWidget() {
             {/* Header */}
             <div className="shrink-0 flex items-center justify-between gap-3 px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-primary-soft)]">
               <div className="flex items-center gap-2.5">
-                <div className="shrink-0 w-9 h-9 rounded-full bg-[var(--color-primary)] text-white inline-flex items-center justify-center">
-                  <Bot size={18} />
-                </div>
+                <img
+                  src="/consultant-avatar.jpg"
+                  alt=""
+                  className="shrink-0 w-9 h-9 rounded-full object-cover"
+                />
                 <div>
                   <div className="text-[14px] font-semibold text-[#111827] leading-tight">Бали Гид</div>
                   <div className="text-[11px] text-[var(--color-text-muted)] leading-tight">AI-консультант · может ошибаться</div>
