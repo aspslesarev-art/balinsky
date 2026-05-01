@@ -1,6 +1,14 @@
 // Sync monthly rentals (Помесячная аренда) from Airtable → Supabase Storage manifest.
+//
+// Photos are downloaded into Supabase Storage on first sync and the resulting
+// public URLs are reused on subsequent runs via a local attachmentId → url
+// cache. Airtable attachment URLs are ephemeral (~hours), so the manifest must
+// not contain them directly — that broke /ru/arenda when the GitHub Actions
+// cron skipped a few runs.
 import { createClient } from '@supabase/supabase-js'
+import crypto from 'node:crypto'
 import fs from 'node:fs'
+import path from 'node:path'
 
 const env = fs.readFileSync('.env.local', 'utf8')
 for (const l of env.split('\n')) { const m = l.match(/^([A-Z_]+)=(.*)$/); if (m) process.env[m[1]] = m[2].replace(/^['"]|['"]$/g, '') }
@@ -10,14 +18,14 @@ const TABLE = 'tblv9FD65h8SQi8M0'
 
 const TOKEN = process.env.AIRTABLE_TOKEN
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
+const SUPABASE_BASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 
 const BUCKET = 'rental'
 const KEY = '_rental.json'
-// Airtable attachment URLs are ephemeral (~hours). The 10-min cron regenerates
-// them on every run, so we ship them directly in the manifest — no per-photo
-// upload to Storage. Trades off "photos break if cron is down for hours" for
-// instant first sync.
+const PHOTO_BUCKET = 'rental-photos'
+const PHOTO_CACHE_PATH = path.resolve('scripts/_rental-photos-cache.json')
 const MAX_PHOTOS_PER_LISTING = 8
+const PHOTO_CONCURRENCY = 8
 
 const TRANSLIT = {
   а:'a',б:'b',в:'v',г:'g',д:'d',е:'e',ё:'e',ж:'zh',з:'z',и:'i',й:'y',
@@ -36,13 +44,62 @@ function slugify(s) {
     .slice(0, 80) || 'arenda'
 }
 
-async function ensureBucket() {
+async function ensureBucket(name) {
   const { data: list } = await sb.storage.listBuckets()
-  if (!list?.some(b => b.name === BUCKET)) {
-    const { error } = await sb.storage.createBucket(BUCKET, { public: true })
+  if (!list?.some(b => b.name === name)) {
+    const { error } = await sb.storage.createBucket(name, { public: true })
     if (error) throw error
-    console.log('created bucket', BUCKET)
+    console.log('created bucket', name)
   }
+}
+
+function loadPhotoCache() {
+  try { return JSON.parse(fs.readFileSync(PHOTO_CACHE_PATH, 'utf8')) } catch { return {} }
+}
+function savePhotoCache(cache) { fs.writeFileSync(PHOTO_CACHE_PATH, JSON.stringify(cache, null, 0)) }
+
+const photoCache = loadPhotoCache()
+let photoCacheDirty = false
+
+async function uploadPhoto(recordId, attachment) {
+  if (!attachment?.id || !attachment?.url) return null
+  // Cached: same attachmentId already in Storage. Skip download entirely.
+  if (photoCache[attachment.id]) return photoCache[attachment.id]
+  try {
+    const r = await fetch(attachment.url)
+    if (!r.ok) return null
+    const buf = Buffer.from(await r.arrayBuffer())
+    const ct = r.headers.get('content-type') || 'image/jpeg'
+    const ext = ct.includes('png') ? 'png' : ct.includes('webp') ? 'webp' : 'jpg'
+    // Hash-based key keeps things idempotent across runs even if cache is wiped.
+    const hash = crypto.createHash('sha1').update(buf).digest('hex').slice(0, 10)
+    const key = `${recordId}/${hash}.${ext}`
+    const { error } = await sb.storage.from(PHOTO_BUCKET).upload(key, buf, {
+      contentType: ct, upsert: true,
+    })
+    if (error) return null
+    const url = `${SUPABASE_BASE_URL}/storage/v1/object/public/${PHOTO_BUCKET}/${key}`
+    photoCache[attachment.id] = url
+    photoCacheDirty = true
+    return url
+  } catch {
+    return null
+  }
+}
+
+// Run uploads in bounded concurrency to keep both Airtable and Supabase happy.
+async function uploadPhotosBounded(recordId, attachments) {
+  const results = new Array(attachments.length)
+  let cursor = 0
+  async function worker() {
+    while (true) {
+      const i = cursor++
+      if (i >= attachments.length) return
+      results[i] = await uploadPhoto(recordId, attachments[i])
+    }
+  }
+  await Promise.all(Array.from({ length: PHOTO_CONCURRENCY }, worker))
+  return results.filter(Boolean)
 }
 
 async function fetchAll(baseId, tableId) {
@@ -74,18 +131,23 @@ function num(v) {
   if (typeof v === 'string') { const n = Number(v.replace(/[^\d.\-]/g, '')); return Number.isFinite(n) ? n : null }
   return null
 }
-function bestAttachmentUrl(a) {
-  return a?.thumbnails?.large?.url ?? a?.url ?? null
+function attachmentForUpload(a) {
+  // Use the medium thumbnail when available — keeps Storage size sane while
+  // still giving 640px-ish wide images (good enough for catalog cards).
+  const url = a?.thumbnails?.large?.url ?? a?.url
+  return url ? { id: a.id, url } : null
 }
 
-await ensureBucket()
+await ensureBucket(BUCKET)
+await ensureBucket(PHOTO_BUCKET)
 console.log('▶ fetching rentals…')
 const recs = await fetchAll(BASE, TABLE)
-console.log('  records:', recs.length)
+console.log('  records:', recs.length, '| photo cache hits start:', Object.keys(photoCache).length)
 
 const items = []
 const seenSlugs = new Map()
 let dropped = 0
+let processed = 0
 
 for (const r of recs) {
   const f = r.fields || {}
@@ -99,11 +161,18 @@ for (const r of recs) {
   seenSlugs.set(slug, n)
   if (n > 1) slug = `${slug}-${n}`
 
-  const photos = photoAtts
+  const candidateAtts = photoAtts
     .slice(0, MAX_PHOTOS_PER_LISTING)
-    .map(bestAttachmentUrl)
+    .map(attachmentForUpload)
     .filter(Boolean)
+  const photos = await uploadPhotosBounded(r.id, candidateAtts)
   if (photos.length === 0) { dropped++; continue }
+
+  processed++
+  if (processed % 50 === 0) {
+    if (photoCacheDirty) { savePhotoCache(photoCache); photoCacheDirty = false }
+    console.log(`  … ${processed} listings, ${Object.keys(photoCache).length} photos cached`)
+  }
 
   items.push({
     id: r.id,
@@ -138,3 +207,6 @@ const { error } = await sb.storage.from(BUCKET).upload(KEY, body, {
 })
 if (error) throw error
 console.log(`✓ uploaded ${BUCKET}/${KEY}`)
+
+if (photoCacheDirty) savePhotoCache(photoCache)
+console.log(`  photo cache size: ${Object.keys(photoCache).length}`)

@@ -2,8 +2,9 @@ name: Sync content from Airtable
 
 on:
   schedule:
-    # Every 10 minutes
-    - cron: '*/10 * * * *'
+    # Every 15 minutes — GitHub Actions skips */10 schedules under load.
+    # Also avoid hh:00 / hh:30 boundaries, which are the most-skipped slots.
+    - cron: '7,22,37,52 * * * *'
   workflow_dispatch:
 
 concurrency:
