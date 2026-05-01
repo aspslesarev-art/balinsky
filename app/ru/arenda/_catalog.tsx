@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { BedDouble, MapPin, X } from 'lucide-react'
 import { FilterDropdown } from '@/components/FilterDropdown'
 import { CurrencyToggle, useCurrency } from '@/components/CurrencyContext'
-import { CURRENCY_RATES, formatPrice, type Currency } from '@/lib/currency'
+import { formatPrice, type Currency } from '@/lib/currency'
 import type { RentalItem } from '@/lib/rental'
 
 const PAGE_SIZE = 24
@@ -20,17 +20,6 @@ const SORT_LABELS: Record<SortKey, string> = {
   'br-desc': 'Спален ↓',
 }
 
-// For the rental card we render BOTH the chosen currency (main) and a USD
-// secondary line — keeps a familiar reference point when the visitor has
-// switched to RUB, IDR, etc.
-function fmtRentalPrice(usd: number, currency: Currency): { main: string; sub: string | null } {
-  const main = formatPrice(usd, currency)
-  if (currency === 'USD') {
-    const idr = Math.round(usd * CURRENCY_RATES.IDR)
-    return { main, sub: 'Rp ' + idr.toLocaleString('ru-RU').replace(/,/g, ' ') }
-  }
-  return { main, sub: '~$' + Math.round(usd).toLocaleString('en-US') }
-}
 function pluralRu(n: number, forms: [string, string, string]): string {
   const m10 = n % 10, m100 = n % 100
   if (m10 === 1 && m100 !== 11) return forms[0]
@@ -508,7 +497,7 @@ function CheckboxList({
 
 function RentalCard({ r, currency }: { r: RentalItem; currency: Currency }) {
   const cover = r.photos[0]
-  const price = fmtRentalPrice(r.priceMonthUsd, currency)
+  const price = formatPrice(r.priceMonthUsd, currency)
   return (
     <Link
       href={`/ru/arenda/o/${r.slug}`}
@@ -524,8 +513,7 @@ function RentalCard({ r, currency }: { r: RentalItem; currency: Currency }) {
       <div className="p-4">
         <div className="flex items-baseline justify-between gap-3 mb-1">
           <div>
-            <div className="text-[18px] font-semibold text-[#111827] leading-tight">{price.main}<span className="text-[12px] font-normal text-[var(--color-text-muted)]"> / мес</span></div>
-            {price.sub && <div className="text-[11px] text-[var(--color-text-muted)] mt-0.5">{price.sub}</div>}
+            <div className="text-[18px] font-semibold text-[#111827] leading-tight">{price}<span className="text-[12px] font-normal text-[var(--color-text-muted)]"> / мес</span></div>
           </div>
           {r.bedrooms != null && (
             <div className="inline-flex items-center gap-1 text-[12px] text-[var(--color-text-muted)] shrink-0">
