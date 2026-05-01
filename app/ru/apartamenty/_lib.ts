@@ -117,6 +117,15 @@ export type EnrichedRow = {
   lng: number | null
 }
 
+function priceUpdatedMs(d: Record<string, unknown>): number {
+  const raw = firstString(d['Обновление цены'])
+    ?? firstString(d['Последнее обновление'])
+    ?? firstString(d['Обновлено'])
+  if (!raw) return 0
+  const t = new Date(raw).getTime()
+  return Number.isFinite(t) ? t : 0
+}
+
 function parseGeo(v: unknown): number | null {
   if (typeof v === 'number') return Number.isFinite(v) ? v : null
   if (typeof v === 'string') {
@@ -346,13 +355,21 @@ export function buildAllCards(
   const isSearch = filters.q.trim().length > 0
   if (isSearch) filtered = applySearch(filtered, filters.q)
 
-  const mapped = filtered
+  if (!isSearch) {
+    // Sort by price-update recency (newest first); fall back to price desc
+    // when neither row has a parseable date so behaviour stays sensible
+    // for legacy rows.
+    filtered = [...filtered].sort((a, b) => {
+      const ta = priceUpdatedMs(a.data)
+      const tb = priceUpdatedMs(b.data)
+      if (ta !== tb) return tb - ta
+      return (b.priceUsd ?? 0) - (a.priceUsd ?? 0)
+    })
+  }
+
+  const sorted = filtered
     .map(e => toCard(e, manifest))
     .filter((c): c is Card => c !== null)
-
-  const sorted = isSearch
-    ? mapped // keep search relevance order
-    : [...mapped].sort((a, b) => (b.priceUsd ?? 0) - (a.priceUsd ?? 0))
 
   const seen = new Set<string>()
   const out: Card[] = []
