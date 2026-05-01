@@ -1,5 +1,9 @@
+'use client'
+
 import Link from 'next/link'
 import { PhotoSlider } from './PhotoSlider'
+import { useCurrency } from './CurrencyContext'
+import { formatPrice } from '@/lib/currency'
 
 export type ApartmentCardData = {
   slug: string
@@ -11,13 +15,11 @@ export type ApartmentCardData = {
   photos: string[]
 }
 
-function formatPrice(v: number | null): string | null {
-  if (v == null || !Number.isFinite(v)) return null
-  return `${Math.round(v).toLocaleString('ru-RU').replace(/,/g, ' ')} $`
-}
-
 export function ApartmentCard({ a }: { a: ApartmentCardData }) {
-  const price = formatPrice(a.priceUsd)
+  const { currency } = useCurrency()
+  const price = a.priceUsd != null && Number.isFinite(a.priceUsd)
+    ? formatPrice(a.priceUsd, currency)
+    : null
 
   return (
     <Link

@@ -5,13 +5,11 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { BedDouble, MapPin, X } from 'lucide-react'
 import { FilterDropdown } from '@/components/FilterDropdown'
+import { CurrencyToggle, useCurrency } from '@/components/CurrencyContext'
+import { CURRENCY_RATES, formatPrice, type Currency } from '@/lib/currency'
 import type { RentalItem } from '@/lib/rental'
 
 const PAGE_SIZE = 24
-// Approximate IDR per 1 USD; override via Airtable later if we want a live
-// rate. The point is to give a feel for the IDR price, exact paise don't
-// matter for a 12-month rental.
-const IDR_PER_USD = 16400
 
 type SortKey = 'newest' | 'price-asc' | 'price-desc' | 'br-asc' | 'br-desc'
 const SORT_LABELS: Record<SortKey, string> = {
@@ -22,21 +20,16 @@ const SORT_LABELS: Record<SortKey, string> = {
   'br-desc': 'Спален ↓',
 }
 
-type Currency = 'USD' | 'IDR'
-const CURRENCY_LS_KEY = 'rental.currency'
-
-function fmtPrice(usd: number, currency: Currency): { main: string; sub: string } {
-  if (currency === 'IDR') {
-    const idr = Math.round(usd * IDR_PER_USD)
-    return {
-      main: 'Rp ' + idr.toLocaleString('ru-RU').replace(/,/g, ' '),
-      sub: '~$' + Math.round(usd).toLocaleString('en-US'),
-    }
+// For the rental card we render BOTH the chosen currency (main) and a USD
+// secondary line — keeps a familiar reference point when the visitor has
+// switched to RUB, IDR, etc.
+function fmtRentalPrice(usd: number, currency: Currency): { main: string; sub: string | null } {
+  const main = formatPrice(usd, currency)
+  if (currency === 'USD') {
+    const idr = Math.round(usd * CURRENCY_RATES.IDR)
+    return { main, sub: 'Rp ' + idr.toLocaleString('ru-RU').replace(/,/g, ' ') }
   }
-  return {
-    main: '$' + Math.round(usd).toLocaleString('en-US'),
-    sub: 'Rp ' + Math.round(usd * IDR_PER_USD).toLocaleString('ru-RU').replace(/,/g, ' '),
-  }
+  return { main, sub: '~$' + Math.round(usd).toLocaleString('en-US') }
 }
 function pluralRu(n: number, forms: [string, string, string]): string {
   const m10 = n % 10, m100 = n % 100
@@ -115,21 +108,10 @@ export function RentalCatalog({ items, initial }: { items: RentalItem[]; initial
   const setPriceMax = (v: number | null) => updateUrl({ priceMax: v })
   const setSort = (v: SortKey) => updateUrl({ sort: v })
 
-  // Currency lives in localStorage — out of URL by design (don't want noise).
-  // Default to IDR — long-term rentals are quoted in rupiah locally, USD is
-  // the secondary line for visiting clients.
-  const [currency, setCurrency] = useState<Currency>('IDR')
-  useEffect(() => {
-    try {
-      const v = localStorage.getItem(CURRENCY_LS_KEY)
-      if (v === 'IDR' || v === 'USD') setCurrency(v)
-    } catch {}
-  }, [])
-  const toggleCurrency = () => {
-    const next: Currency = currency === 'USD' ? 'IDR' : 'USD'
-    setCurrency(next)
-    try { localStorage.setItem(CURRENCY_LS_KEY, next) } catch {}
-  }
+  // Shared global currency context. Default-on-rental is IDR (set inside the
+  // provider via the pathname check), but the user's pick — whichever currency
+  // out of USD/EUR/RUB/UAH/IDR they chose anywhere on the site — wins.
+  const { currency } = useCurrency()
 
   // Cross-filter aware counts: each filter's options are counted against
   // items that pass ALL OTHER active filters, so the numbers reflect what
@@ -303,15 +285,7 @@ export function RentalCatalog({ items, initial }: { items: RentalItem[]; initial
             fight the filter buttons for horizontal space; on sm+ ml-auto keeps
             it pinned to the right of the filter row. */}
         <div className="basis-full sm:basis-auto sm:ml-auto flex items-center justify-between sm:justify-end gap-3 mt-1 sm:mt-0">
-          <button
-            type="button"
-            onClick={toggleCurrency}
-            aria-label={`Валюта: ${currency}. Переключить.`}
-            className="inline-flex items-center rounded-full border border-[var(--color-border)] bg-white text-[12px] font-medium overflow-hidden"
-          >
-            <span className={`px-2.5 py-1.5 ${currency === 'USD' ? 'bg-[var(--color-primary)] text-white' : 'text-[var(--color-text-muted)]'}`}>USD</span>
-            <span className={`px-2.5 py-1.5 ${currency === 'IDR' ? 'bg-[var(--color-primary)] text-white' : 'text-[var(--color-text-muted)]'}`}>IDR</span>
-          </button>
+          <CurrencyToggle />
           <div className="text-[13px] text-[var(--color-text-muted)]">
             {filtered.length} {pluralRu(filtered.length, ['объект', 'объекта', 'объектов'])}
           </div>
@@ -534,7 +508,7 @@ function CheckboxList({
 
 function RentalCard({ r, currency }: { r: RentalItem; currency: Currency }) {
   const cover = r.photos[0]
-  const price = fmtPrice(r.priceMonthUsd, currency)
+  const price = fmtRentalPrice(r.priceMonthUsd, currency)
   return (
     <Link
       href={`/ru/arenda/o/${r.slug}`}
@@ -551,7 +525,7 @@ function RentalCard({ r, currency }: { r: RentalItem; currency: Currency }) {
         <div className="flex items-baseline justify-between gap-3 mb-1">
           <div>
             <div className="text-[18px] font-semibold text-[#111827] leading-tight">{price.main}<span className="text-[12px] font-normal text-[var(--color-text-muted)]"> / мес</span></div>
-            <div className="text-[11px] text-[var(--color-text-muted)] mt-0.5">{price.sub}</div>
+            {price.sub && <div className="text-[11px] text-[var(--color-text-muted)] mt-0.5">{price.sub}</div>}
           </div>
           {r.bedrooms != null && (
             <div className="inline-flex items-center gap-1 text-[12px] text-[var(--color-text-muted)] shrink-0">
