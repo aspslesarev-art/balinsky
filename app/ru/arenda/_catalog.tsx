@@ -27,27 +27,57 @@ export function RentalCatalog({ items }: { items: RentalItem[] }) {
   const [priceMin, setPriceMin] = useState<number | null>(null)
   const [priceMax, setPriceMax] = useState<number | null>(null)
 
+  // Cross-filter aware counts: each filter's options are counted against
+  // items that pass ALL OTHER active filters, so the numbers reflect what
+  // the user would actually see if they picked that value next.
+  const passesDistrict = (r: RentalItem) =>
+    districts.length === 0 || (r.location != null && districts.includes(r.location))
+  const passesBedrooms = (r: RentalItem) =>
+    bedrooms.length === 0 || (r.bedrooms != null && bedrooms.includes(String(r.bedrooms)))
+  const passesPrice = (r: RentalItem) =>
+    (priceMin == null || r.priceMonthUsd >= priceMin) &&
+    (priceMax == null || r.priceMonthUsd <= priceMax)
+
   const districtOptions = useMemo(() => {
     const counts = new Map<string, number>()
     for (const r of items) {
       if (!r.location) continue
+      if (!passesBedrooms(r) || !passesPrice(r)) continue
       counts.set(r.location, (counts.get(r.location) ?? 0) + 1)
     }
+    // Show currently-selected districts even when count would be 0 under other filters
+    for (const v of districts) if (!counts.has(v)) counts.set(v, 0)
     return [...counts.entries()]
       .sort((a, b) => b[1] - a[1])
       .map(([value, count]) => ({ value, count }))
-  }, [items])
+  }, [items, bedrooms, priceMin, priceMax, districts])
 
   const bedroomOptions = useMemo(() => {
     const counts = new Map<number, number>()
     for (const r of items) {
       if (r.bedrooms == null) continue
+      if (!passesDistrict(r) || !passesPrice(r)) continue
       counts.set(r.bedrooms, (counts.get(r.bedrooms) ?? 0) + 1)
+    }
+    for (const v of bedrooms) {
+      const n = Number(v)
+      if (Number.isFinite(n) && !counts.has(n)) counts.set(n, 0)
     }
     return [...counts.entries()]
       .sort((a, b) => a[0] - b[0])
       .map(([value, count]) => ({ value: String(value), count }))
-  }, [items])
+  }, [items, districts, priceMin, priceMax, bedrooms])
+
+  const presetCount = (min: number | null, max: number | null) => {
+    let n = 0
+    for (const r of items) {
+      if (!passesDistrict(r) || !passesBedrooms(r)) continue
+      if (min != null && r.priceMonthUsd < min) continue
+      if (max != null && r.priceMonthUsd > max) continue
+      n++
+    }
+    return n
+  }
 
   const filtered = useMemo(() => {
     if (districts.length === 0 && bedrooms.length === 0 && priceMin == null && priceMax == null) return items
@@ -109,6 +139,7 @@ export function RentalCatalog({ items }: { items: RentalItem[] }) {
               priceMax={priceMax}
               setPriceMin={setPriceMin}
               setPriceMax={setPriceMax}
+              countFor={presetCount}
             />
           )}
         </FilterDropdown>
@@ -146,12 +177,13 @@ export function RentalCatalog({ items }: { items: RentalItem[] }) {
 }
 
 function PriceRangePopover({
-  priceMin, priceMax, setPriceMin, setPriceMax,
+  priceMin, priceMax, setPriceMin, setPriceMax, countFor,
 }: {
   priceMin: number | null
   priceMax: number | null
   setPriceMin: (n: number | null) => void
   setPriceMax: (n: number | null) => void
+  countFor: (min: number | null, max: number | null) => number
 }) {
   const [minDraft, setMinDraft] = useState(priceMin == null ? '' : String(priceMin))
   const [maxDraft, setMaxDraft] = useState(priceMax == null ? '' : String(priceMax))
@@ -205,18 +237,20 @@ function PriceRangePopover({
       <div className="flex flex-wrap gap-1.5">
         {PRICE_PRESETS.map(p => {
           const active = priceMin === p.min && priceMax === p.max
+          const count = countFor(p.min, p.max)
           return (
             <button
               key={p.label}
               type="button"
               onClick={() => applyPreset(p.min, p.max)}
+              disabled={count === 0 && !active}
               className={`text-[12px] px-2.5 py-1 rounded-full border transition-colors ${
                 active
                   ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white'
-                  : 'bg-white border-[var(--color-border)] text-[#111827] hover:border-[var(--color-primary)]'
+                  : 'bg-white border-[var(--color-border)] text-[#111827] hover:border-[var(--color-primary)] disabled:opacity-40 disabled:hover:border-[var(--color-border)] disabled:cursor-not-allowed'
               }`}
             >
-              {p.label}
+              {p.label}{!active && <span className="ml-1 opacity-60">{count}</span>}
             </button>
           )
         })}
