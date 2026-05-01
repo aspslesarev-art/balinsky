@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { loadAllRental } from '@/lib/rental'
@@ -45,7 +46,9 @@ export default async function RentalListPage({ searchParams }: { searchParams: S
           Виллы и апартаменты в долгосрочную аренду — обновляется автоматически
         </div>
 
-        <RentalCatalog items={items} initial={initial} />
+        <Suspense fallback={<div className="text-[14px] text-[var(--color-text-muted)]">Загрузка…</div>}>
+          <RentalCatalog items={items} initial={initial} />
+        </Suspense>
 
         <div className="h-16" />
       </PageContainer>

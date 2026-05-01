@@ -1,14 +1,43 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { BedDouble, MapPin, X } from 'lucide-react'
 import { FilterDropdown } from '@/components/FilterDropdown'
 import type { RentalItem } from '@/lib/rental'
 
 const PAGE_SIZE = 24
+// Approximate IDR per 1 USD; override via Airtable later if we want a live
+// rate. The point is to give a feel for the IDR price, exact paise don't
+// matter for a 12-month rental.
+const IDR_PER_USD = 16400
 
-function fmtUsd(n: number): string { return '$' + Math.round(n).toLocaleString('en-US') }
+type SortKey = 'newest' | 'price-asc' | 'price-desc' | 'br-asc' | 'br-desc'
+const SORT_LABELS: Record<SortKey, string> = {
+  'newest': 'Сначала новые',
+  'price-asc': 'Цена ↑',
+  'price-desc': 'Цена ↓',
+  'br-asc': 'Спален ↑',
+  'br-desc': 'Спален ↓',
+}
+
+type Currency = 'USD' | 'IDR'
+const CURRENCY_LS_KEY = 'rental.currency'
+
+function fmtPrice(usd: number, currency: Currency): { main: string; sub: string } {
+  if (currency === 'IDR') {
+    const idr = Math.round(usd * IDR_PER_USD)
+    return {
+      main: 'Rp ' + idr.toLocaleString('ru-RU').replace(/,/g, ' '),
+      sub: '~$' + Math.round(usd).toLocaleString('en-US'),
+    }
+  }
+  return {
+    main: '$' + Math.round(usd).toLocaleString('en-US'),
+    sub: 'Rp ' + Math.round(usd * IDR_PER_USD).toLocaleString('ru-RU').replace(/,/g, ' '),
+  }
+}
 function pluralRu(n: number, forms: [string, string, string]): string {
   const m10 = n % 10, m100 = n % 100
   if (m10 === 1 && m100 !== 11) return forms[0]
@@ -30,11 +59,75 @@ type Initial = {
   priceMax: number | null
 }
 
+function parseList(v: string | null): string[] {
+  if (!v) return []
+  return v.split(',').map(s => s.trim()).filter(Boolean)
+}
+function parseNum(v: string | null): number | null {
+  if (!v) return null
+  const n = Number(v.replace(/[^\d]/g, ''))
+  return Number.isFinite(n) ? n : null
+}
+function isSortKey(v: string | null): v is SortKey {
+  return v != null && (v in SORT_LABELS)
+}
+
 export function RentalCatalog({ items, initial }: { items: RentalItem[]; initial?: Initial }) {
-  const [districts, setDistricts] = useState<string[]>(initial?.districts ?? [])
-  const [bedrooms, setBedrooms] = useState<string[]>(initial?.bedrooms ?? [])
-  const [priceMin, setPriceMin] = useState<number | null>(initial?.priceMin ?? null)
-  const [priceMax, setPriceMax] = useState<number | null>(initial?.priceMax ?? null)
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Single source of truth = URL. State is derived from searchParams so the
+  // browser back/forward buttons restore filters automatically.
+  const districts = parseList(searchParams.get('location')).length > 0
+    ? parseList(searchParams.get('location'))
+    : (initial?.districts ?? [])
+  const bedrooms = parseList(searchParams.get('bedrooms')).length > 0
+    ? parseList(searchParams.get('bedrooms'))
+    : (initial?.bedrooms ?? [])
+  const priceMin = parseNum(searchParams.get('priceMin')) ?? initial?.priceMin ?? null
+  const priceMax = parseNum(searchParams.get('priceMax')) ?? initial?.priceMax ?? null
+  const sort: SortKey = isSortKey(searchParams.get('sort')) ? (searchParams.get('sort') as SortKey) : 'newest'
+
+  const updateUrl = useCallback((patch: {
+    districts?: string[]
+    bedrooms?: string[]
+    priceMin?: number | null
+    priceMax?: number | null
+    sort?: SortKey
+  }) => {
+    const next = new URLSearchParams(searchParams.toString())
+    const setOrDel = (key: string, value: string) => {
+      if (value) next.set(key, value)
+      else next.delete(key)
+    }
+    if ('districts' in patch) setOrDel('location', (patch.districts ?? []).join(','))
+    if ('bedrooms' in patch) setOrDel('bedrooms', (patch.bedrooms ?? []).join(','))
+    if ('priceMin' in patch) setOrDel('priceMin', patch.priceMin == null ? '' : String(patch.priceMin))
+    if ('priceMax' in patch) setOrDel('priceMax', patch.priceMax == null ? '' : String(patch.priceMax))
+    if ('sort' in patch) setOrDel('sort', patch.sort && patch.sort !== 'newest' ? patch.sort : '')
+    const qs = next.toString()
+    router.replace(qs ? `?${qs}` : '?', { scroll: false })
+  }, [router, searchParams])
+
+  const setDistricts = (v: string[]) => updateUrl({ districts: v })
+  const setBedrooms = (v: string[]) => updateUrl({ bedrooms: v })
+  const setPriceMin = (v: number | null) => updateUrl({ priceMin: v })
+  const setPriceMax = (v: number | null) => updateUrl({ priceMax: v })
+  const setSort = (v: SortKey) => updateUrl({ sort: v })
+
+  // Currency lives in localStorage — out of URL by design (don't want noise).
+  const [currency, setCurrency] = useState<Currency>('USD')
+  useEffect(() => {
+    try {
+      const v = localStorage.getItem(CURRENCY_LS_KEY)
+      if (v === 'IDR' || v === 'USD') setCurrency(v)
+    } catch {}
+  }, [])
+  const toggleCurrency = () => {
+    const next: Currency = currency === 'USD' ? 'IDR' : 'USD'
+    setCurrency(next)
+    try { localStorage.setItem(CURRENCY_LS_KEY, next) } catch {}
+  }
 
   // Cross-filter aware counts: each filter's options are counted against
   // items that pass ALL OTHER active filters, so the numbers reflect what
@@ -54,11 +147,11 @@ export function RentalCatalog({ items, initial }: { items: RentalItem[]; initial
       if (!passesBedrooms(r) || !passesPrice(r)) continue
       counts.set(r.location, (counts.get(r.location) ?? 0) + 1)
     }
-    // Show currently-selected districts even when count would be 0 under other filters
     for (const v of districts) if (!counts.has(v)) counts.set(v, 0)
     return [...counts.entries()]
       .sort((a, b) => b[1] - a[1])
       .map(([value, count]) => ({ value, count }))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, bedrooms, priceMin, priceMax, districts])
 
   const bedroomOptions = useMemo(() => {
@@ -75,6 +168,7 @@ export function RentalCatalog({ items, initial }: { items: RentalItem[]; initial
     return [...counts.entries()]
       .sort((a, b) => a[0] - b[0])
       .map(([value, count]) => ({ value: String(value), count }))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, districts, priceMin, priceMax, bedrooms])
 
   const presetCount = (min: number | null, max: number | null) => {
@@ -89,15 +183,25 @@ export function RentalCatalog({ items, initial }: { items: RentalItem[]; initial
   }
 
   const filtered = useMemo(() => {
-    if (districts.length === 0 && bedrooms.length === 0 && priceMin == null && priceMax == null) return items
-    return items.filter(r => {
-      if (districts.length > 0 && (!r.location || !districts.includes(r.location))) return false
-      if (bedrooms.length > 0 && (r.bedrooms == null || !bedrooms.includes(String(r.bedrooms)))) return false
-      if (priceMin != null && r.priceMonthUsd < priceMin) return false
-      if (priceMax != null && r.priceMonthUsd > priceMax) return false
-      return true
-    })
-  }, [items, districts, bedrooms, priceMin, priceMax])
+    const base = (districts.length === 0 && bedrooms.length === 0 && priceMin == null && priceMax == null)
+      ? items
+      : items.filter(r => {
+          if (districts.length > 0 && (!r.location || !districts.includes(r.location))) return false
+          if (bedrooms.length > 0 && (r.bedrooms == null || !bedrooms.includes(String(r.bedrooms)))) return false
+          if (priceMin != null && r.priceMonthUsd < priceMin) return false
+          if (priceMax != null && r.priceMonthUsd > priceMax) return false
+          return true
+        })
+    if (sort === 'newest') return base // manifest is already newest-first
+    const arr = [...base]
+    switch (sort) {
+      case 'price-asc':  arr.sort((a, b) => a.priceMonthUsd - b.priceMonthUsd); break
+      case 'price-desc': arr.sort((a, b) => b.priceMonthUsd - a.priceMonthUsd); break
+      case 'br-asc':     arr.sort((a, b) => (a.bedrooms ?? 99) - (b.bedrooms ?? 99)); break
+      case 'br-desc':    arr.sort((a, b) => (b.bedrooms ?? 0) - (a.bedrooms ?? 0)); break
+    }
+    return arr
+  }, [items, districts, bedrooms, priceMin, priceMax, sort])
 
   const priceActive = priceMin != null || priceMax != null
   const priceSummary = priceActive
@@ -106,10 +210,8 @@ export function RentalCatalog({ items, initial }: { items: RentalItem[]; initial
   const activeCount = districts.length + bedrooms.length + (priceActive ? 1 : 0)
 
   // Lazy mount: render PAGE_SIZE items, expose more on scroll near bottom.
-  // Reset on any filter change so the user always starts from the top of
-  // the new result set.
   const [visible, setVisible] = useState(PAGE_SIZE)
-  useEffect(() => { setVisible(PAGE_SIZE) }, [districts, bedrooms, priceMin, priceMax])
+  useEffect(() => { setVisible(PAGE_SIZE) }, [districts.join(','), bedrooms.join(','), priceMin, priceMax, sort])
 
   const sentinelRef = useRef<HTMLDivElement | null>(null)
   useEffect(() => {
@@ -175,18 +277,39 @@ export function RentalCatalog({ items, initial }: { items: RentalItem[]; initial
           )}
         </FilterDropdown>
 
+        <FilterDropdown
+          label="Сортировка"
+          summary={SORT_LABELS[sort]}
+          active={sort !== 'newest'}
+        >
+          {(close) => (
+            <SortMenu current={sort} onChange={(v) => { setSort(v); close() }} />
+          )}
+        </FilterDropdown>
+
         {activeCount > 0 && (
           <button
             type="button"
-            onClick={() => { setDistricts([]); setBedrooms([]); setPriceMin(null); setPriceMax(null) }}
+            onClick={() => updateUrl({ districts: [], bedrooms: [], priceMin: null, priceMax: null })}
             className="inline-flex items-center gap-1 text-[13px] text-[var(--color-text-muted)] hover:text-[#111827] px-3 py-2"
           >
             <X size={14} /> Сбросить
           </button>
         )}
 
-        <div className="ml-auto text-[13px] text-[var(--color-text-muted)]">
-          {filtered.length} {pluralRu(filtered.length, ['объект', 'объекта', 'объектов'])}
+        <div className="ml-auto flex items-center gap-3">
+          <button
+            type="button"
+            onClick={toggleCurrency}
+            aria-label={`Валюта: ${currency}. Переключить.`}
+            className="inline-flex items-center rounded-full border border-[var(--color-border)] bg-white text-[12px] font-medium overflow-hidden"
+          >
+            <span className={`px-2.5 py-1.5 ${currency === 'USD' ? 'bg-[var(--color-primary)] text-white' : 'text-[var(--color-text-muted)]'}`}>USD</span>
+            <span className={`px-2.5 py-1.5 ${currency === 'IDR' ? 'bg-[var(--color-primary)] text-white' : 'text-[var(--color-text-muted)]'}`}>IDR</span>
+          </button>
+          <div className="text-[13px] text-[var(--color-text-muted)]">
+            {filtered.length} {pluralRu(filtered.length, ['объект', 'объекта', 'объектов'])}
+          </div>
         </div>
       </div>
 
@@ -195,7 +318,7 @@ export function RentalCatalog({ items, initial }: { items: RentalItem[]; initial
           <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {visibleItems.map(r => (
               <li key={r.id}>
-                <RentalCard r={r} />
+                <RentalCard r={r} currency={currency} />
               </li>
             ))}
           </ul>
@@ -220,6 +343,28 @@ export function RentalCatalog({ items, initial }: { items: RentalItem[]; initial
   )
 }
 
+function SortMenu({ current, onChange }: { current: SortKey; onChange: (v: SortKey) => void }) {
+  return (
+    <div className="absolute z-30 right-0 sm:left-0 sm:right-auto top-full mt-2 w-[220px] max-w-[calc(100vw-32px)] rounded-2xl border border-[var(--color-border)] bg-white shadow-[0_8px_24px_rgba(0,0,0,0.08)] p-2">
+      <ul>
+        {(Object.keys(SORT_LABELS) as SortKey[]).map(key => (
+          <li key={key}>
+            <button
+              type="button"
+              onClick={() => onChange(key)}
+              className={`w-full text-left px-3 py-2 rounded-lg text-[13px] hover:bg-[var(--color-search-bg)] ${
+                key === current ? 'text-[var(--color-primary-pressed)] font-medium bg-[var(--color-primary-soft)]' : 'text-[#111827]'
+              }`}
+            >
+              {SORT_LABELS[key]}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 function PriceRangePopover({
   priceMin, priceMax, setPriceMin, setPriceMax, countFor,
 }: {
@@ -231,6 +376,9 @@ function PriceRangePopover({
 }) {
   const [minDraft, setMinDraft] = useState(priceMin == null ? '' : String(priceMin))
   const [maxDraft, setMaxDraft] = useState(priceMax == null ? '' : String(priceMax))
+
+  useEffect(() => { setMinDraft(priceMin == null ? '' : String(priceMin)) }, [priceMin])
+  useEffect(() => { setMaxDraft(priceMax == null ? '' : String(priceMax)) }, [priceMax])
 
   const commit = () => {
     const min = minDraft.trim() === '' ? null : Number(minDraft.replace(/[^\d]/g, ''))
@@ -379,8 +527,9 @@ function CheckboxList({
   )
 }
 
-function RentalCard({ r }: { r: RentalItem }) {
+function RentalCard({ r, currency }: { r: RentalItem; currency: Currency }) {
   const cover = r.photos[0]
+  const price = fmtPrice(r.priceMonthUsd, currency)
   return (
     <Link
       href={`/ru/arenda/o/${r.slug}`}
@@ -395,14 +544,17 @@ function RentalCard({ r }: { r: RentalItem }) {
       </div>
       <div className="p-4">
         <div className="flex items-baseline justify-between gap-3 mb-1">
-          <div className="text-[18px] font-semibold text-[#111827]">{fmtUsd(r.priceMonthUsd)}<span className="text-[12px] font-normal text-[var(--color-text-muted)]"> / мес</span></div>
+          <div>
+            <div className="text-[18px] font-semibold text-[#111827] leading-tight">{price.main}<span className="text-[12px] font-normal text-[var(--color-text-muted)]"> / мес</span></div>
+            <div className="text-[11px] text-[var(--color-text-muted)] mt-0.5">{price.sub}</div>
+          </div>
           {r.bedrooms != null && (
-            <div className="inline-flex items-center gap-1 text-[12px] text-[var(--color-text-muted)]">
+            <div className="inline-flex items-center gap-1 text-[12px] text-[var(--color-text-muted)] shrink-0">
               <BedDouble size={13} /> {r.bedrooms} BR
             </div>
           )}
         </div>
-        <div className="text-[14px] font-medium leading-snug line-clamp-2 mb-2">{r.title}</div>
+        <div className="text-[14px] font-medium leading-snug line-clamp-2 mt-2 mb-2">{r.title}</div>
         {r.location && (
           <div className="inline-flex items-center gap-1 text-[12px] text-[var(--color-text-muted)]">
             <MapPin size={12} /> {r.location}

@@ -25,7 +25,7 @@ const KEY = '_rental.json'
 const PHOTO_BUCKET = 'rental-photos'
 const PHOTO_CACHE_PATH = path.resolve('scripts/_rental-photos-cache.json')
 const MAX_PHOTOS_PER_LISTING = 8
-const PHOTO_CONCURRENCY = 8
+const PHOTO_CONCURRENCY = 4
 
 const TRANSLIT = {
   а:'a',б:'b',в:'v',г:'g',д:'d',е:'e',ё:'e',ж:'zh',з:'z',и:'i',й:'y',
@@ -88,6 +88,8 @@ async function uploadPhoto(recordId, attachment) {
 }
 
 // Run uploads in bounded concurrency to keep both Airtable and Supabase happy.
+// Falls back to the original Airtable URL when Storage upload fails so the
+// listing still shows a photo (the next cron run will retry the upload).
 async function uploadPhotosBounded(recordId, attachments) {
   const results = new Array(attachments.length)
   let cursor = 0
@@ -95,7 +97,9 @@ async function uploadPhotosBounded(recordId, attachments) {
     while (true) {
       const i = cursor++
       if (i >= attachments.length) return
-      results[i] = await uploadPhoto(recordId, attachments[i])
+      const att = attachments[i]
+      const stored = await uploadPhoto(recordId, att)
+      results[i] = stored ?? att.url ?? null
     }
   }
   await Promise.all(Array.from({ length: PHOTO_CONCURRENCY }, worker))
