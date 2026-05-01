@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import ReactMarkdown from 'react-markdown'
 import { MessageCircle, X, Send, Loader2, AlertTriangle, BedDouble, MapPin, ExternalLink, Mic, MicOff } from 'lucide-react'
 
 // Minimal Web Speech API typing — TS stdlib doesn't ship it, and we only use
@@ -197,7 +198,7 @@ export function ConsultantWidget() {
             onClick={() => setOpen(false)}
             aria-hidden="true"
           />
-          <div className="fixed inset-0 sm:inset-auto sm:bottom-5 sm:right-5 sm:w-[400px] sm:h-[640px] sm:max-h-[calc(100vh-40px)] z-50 flex flex-col bg-white sm:rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.25)] sm:border sm:border-[var(--color-border)] overflow-hidden">
+          <div className="fixed inset-0 sm:inset-auto sm:bottom-5 sm:right-5 sm:w-[440px] sm:h-[680px] sm:max-h-[calc(100vh-40px)] z-50 flex flex-col bg-white sm:rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.25)] sm:border sm:border-[var(--color-border)] overflow-hidden">
             {/* Header */}
             <div className="shrink-0 flex items-center justify-between gap-3 px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-primary-soft)]">
               <div className="flex items-center gap-2.5">
@@ -261,10 +262,10 @@ export function ConsultantWidget() {
                     send()
                   }
                 }}
-                placeholder={listening ? 'Слушаю…' : 'Например: ищу виллу в Чангу до $400k, 3 спальни'}
-                rows={1}
+                placeholder={listening ? 'Слушаю…' : 'Что ищешь? Например, виллу в Чангу с 3 спальнями'}
+                rows={2}
                 disabled={loading}
-                className="flex-1 resize-none max-h-32 rounded-2xl border border-[var(--color-border)] bg-white px-4 py-2.5 text-[14px] focus:outline-none focus:border-[var(--color-primary)] disabled:opacity-50"
+                className="flex-1 resize-none min-h-[48px] max-h-32 rounded-2xl border border-[var(--color-border)] bg-white px-4 py-2.5 text-[14px] focus:outline-none focus:border-[var(--color-primary)] disabled:opacity-50"
               />
               {voiceSupported && (
                 <button
@@ -349,14 +350,39 @@ function ListingChatCard({ card }: { card: ListingCard }) {
 
 function Bubble({ role, children }: { role: 'user' | 'assistant'; children: React.ReactNode }) {
   const isUser = role === 'user'
+  const isString = typeof children === 'string'
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
-      <div className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[14px] leading-relaxed whitespace-pre-wrap ${
+      <div className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[14px] leading-relaxed ${
         isUser
-          ? 'bg-[var(--color-primary)] text-white rounded-br-md'
+          ? 'bg-[var(--color-primary)] text-white rounded-br-md whitespace-pre-wrap'
           : 'bg-white border border-[var(--color-border)] text-[#111827] rounded-bl-md'
       }`}>
-        {children}
+        {!isUser && isString ? (
+          <div className="prose-chat">
+            <ReactMarkdown
+              components={{
+                // Render only inline-style elements; lists become tight, paragraphs lose default margins.
+                p:  ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                ul: ({ children }) => <ul className="list-disc pl-5 mb-2 last:mb-0 space-y-0.5">{children}</ul>,
+                ol: ({ children }) => <ol className="list-decimal pl-5 mb-2 last:mb-0 space-y-0.5">{children}</ol>,
+                li: ({ children }) => <li>{children}</li>,
+                strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                em: ({ children }) => <em className="italic">{children}</em>,
+                a: ({ href, children }) => (
+                  <a href={href} target="_blank" rel="noopener noreferrer" className="text-[var(--color-primary-pressed)] underline">
+                    {children}
+                  </a>
+                ),
+                code: ({ children }) => <code className="px-1 py-0.5 rounded bg-black/5 text-[12px]">{children}</code>,
+              }}
+            >
+              {children as string}
+            </ReactMarkdown>
+          </div>
+        ) : (
+          <div className="whitespace-pre-wrap">{children}</div>
+        )}
       </div>
     </div>
   )
