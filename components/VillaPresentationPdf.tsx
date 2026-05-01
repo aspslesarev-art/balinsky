@@ -293,7 +293,8 @@ function PhotoSetPdf({ photos, layout }: { photos: string[]; layout: 'mosaic5' |
 const SITE_URL = 'https://balinsky.info'
 
 export function VillaPdfDocument({ data, snap, agent }: { data: VillaPresentationData; snap: Snapshot | null; agent: AgentContact | null }) {
-  const villaUrl = `${SITE_URL}/ru/villy/o/${data.slug}`
+  const sectionPath = data.kind === 'apartment' ? '/ru/apartamenty/o/' : '/ru/villy/o/'
+  const villaUrl = `${SITE_URL}${sectionPath}${data.slug}`
   const allPhotos = data.photos.slice(0, 12)
   const photosetPool = allPhotos.slice(1)
   const photosetGroups: { layout: 'mosaic5' | 'grid4' | 'small'; photos: string[] }[] = []
@@ -495,7 +496,7 @@ export async function downloadVillaPdf(data: VillaPresentationData, snap: Snapsh
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `villa-${slugify(data.title)}.pdf`
+  a.download = `${data.kind === 'apartment' ? 'apartament' : 'villa'}-${slugify(data.title)}.pdf`
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)

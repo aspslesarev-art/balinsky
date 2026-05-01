@@ -8,6 +8,7 @@ import { fmtUsd, fmtUsdShort, fmtPct, fmtYears, fmtDistance, pluralRu } from '@/
 export type VillaPresentationData = {
   villaId: string
   slug: string
+  kind?: 'villa' | 'apartment'
   title: string
   district: string | null
   photos: string[]
@@ -83,12 +84,13 @@ function VillaPresentation({ data, onClose }: { data: VillaPresentationData; onC
   // Fetch investment snapshot once
   useEffect(() => {
     let cancelled = false
-    fetch(`/api/villa/${data.villaId}/investment-snapshot`)
+    const apiBase = data.kind === 'apartment' ? '/api/apartament' : '/api/villa'
+    fetch(`${apiBase}/${data.villaId}/investment-snapshot`)
       .then(r => (r.ok ? r.json() : null))
       .then(s => { if (!cancelled) { setSnap(s); setSnapTried(true) } })
       .catch(() => { if (!cancelled) setSnapTried(true) })
     return () => { cancelled = true }
-  }, [data.villaId])
+  }, [data.villaId, data.kind])
 
   // Build photoset slides: cover already shows photos[0], so distribute photos[1..] into compositions
   const allPhotos = data.photos.slice(0, 12)

@@ -93,8 +93,11 @@ function detectPool(d: Record<string, unknown>): boolean | null {
   return null
 }
 
-export async function buildSnapshot(villaId: string): Promise<InvestmentSnapshot | null> {
-  const { data: rows, error } = await sb.from('raw_villas').select('airtable_id, data').eq('airtable_id', villaId).limit(1)
+export type ListingKind = 'villa' | 'apartment'
+
+export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'): Promise<InvestmentSnapshot | null> {
+  const table = kind === 'apartment' ? 'raw_apartments' : 'raw_villas'
+  const { data: rows, error } = await sb.from(table).select('airtable_id, data').eq('airtable_id', villaId).limit(1)
   if (error) { console.error('[investment] db error:', error.message); return null }
   const row = (rows?.[0] as Row | undefined)
   if (!row) return null
@@ -168,8 +171,8 @@ export async function buildSnapshot(villaId: string): Promise<InvestmentSnapshot
   })).slice(0, 250)
   const infra = places ? scoreInfra(places.byCategory) : { metrics: { premiumRestaurants: 0, beachClubs: 0, topCafes: 0, fitness: 0, nightclubs: 0, avgRating: null, reviewDensity: 0, totalAnchors: 0 }, composite: 0, anchors: [] }
 
-  // Photo from villa-photos manifest (best-effort)
-  const photo = await firstPhoto(villaId)
+  // Photo from corresponding photos manifest (best-effort)
+  const photo = await firstPhoto(villaId, kind)
 
   return {
     villaId,
@@ -224,14 +227,18 @@ function toCard(m: import('../competitor-utils').CompetitorWithDistance): Nearby
 }
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/villa-photos/_manifest.json`
-let _photoCache: { ts: number; data: Record<string, string[]> } | null = null
-async function firstPhoto(villaId: string): Promise<string | null> {
-  if (!_photoCache || Date.now() - _photoCache.ts > 60 * 60 * 1000) {
+const PHOTO_MANIFEST_URLS: Record<ListingKind, string> = {
+  villa: `${SUPABASE_URL}/storage/v1/object/public/villa-photos/_manifest.json`,
+  apartment: `${SUPABASE_URL}/storage/v1/object/public/apartment-photos/_manifest.json`,
+}
+const _photoCache: Partial<Record<ListingKind, { ts: number; data: Record<string, string[]> }>> = {}
+async function firstPhoto(villaId: string, kind: ListingKind): Promise<string | null> {
+  const cached = _photoCache[kind]
+  if (!cached || Date.now() - cached.ts > 60 * 60 * 1000) {
     try {
-      const r = await fetch(PHOTO_MANIFEST_URL, { next: { revalidate: 1800 } })
-      if (r.ok) _photoCache = { ts: Date.now(), data: await r.json() }
+      const r = await fetch(PHOTO_MANIFEST_URLS[kind], { next: { revalidate: 1800 } })
+      if (r.ok) _photoCache[kind] = { ts: Date.now(), data: await r.json() }
     } catch { /* ignore */ }
   }
-  return _photoCache?.data[villaId]?.[0] ?? null
+  return _photoCache[kind]?.data[villaId]?.[0] ?? null
 }

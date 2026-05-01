@@ -11,7 +11,8 @@ import type { Snapshot } from './types'
 export function InvestmentWidget({
   villaId,
   apiKey,
-}: { villaId: string; apiKey: string }) {
+  kind = 'villa',
+}: { villaId: string; apiKey: string; kind?: 'villa' | 'apartment' }) {
   const [snap, setSnap] = useState<Snapshot | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -19,7 +20,8 @@ export function InvestmentWidget({
   useEffect(() => {
     let cancelled = false
     setLoading(true)
-    fetch(`/api/villa/${villaId}/investment-snapshot`)
+    const apiBase = kind === 'apartment' ? '/api/apartament' : '/api/villa'
+    fetch(`${apiBase}/${villaId}/investment-snapshot`)
       .then(async r => {
         if (!r.ok) throw new Error(`http_${r.status}`)
         return r.json() as Promise<Snapshot>
@@ -28,7 +30,7 @@ export function InvestmentWidget({
       .catch(e => { if (!cancelled) setError(String(e)) })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
-  }, [villaId])
+  }, [villaId, kind])
 
   if (loading) return <SectionShell><Skeleton /></SectionShell>
   if (error || !snap) return null
