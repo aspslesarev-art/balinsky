@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
+import { LocalDateTime } from '@/components/LocalDateTime'
 import { loadAllEvents } from '@/lib/events'
 
 export const revalidate = 600
@@ -12,21 +13,25 @@ export const metadata: Metadata = {
   alternates: { canonical: '/ru/meropriyatiya' },
 }
 
-function fmtDateTime(iso: string | null): string | null {
-  if (!iso) return null
-  try {
-    return new Date(iso).toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
-  } catch { return iso }
+function startTimeMs(iso: string | null): number {
+  if (!iso) return Number.POSITIVE_INFINITY
+  const t = new Date(iso).getTime()
+  return Number.isFinite(t) ? t : Number.POSITIVE_INFINITY
 }
 function isPast(iso: string | null): boolean {
   if (!iso) return false
-  try { return new Date(iso).getTime() < Date.now() } catch { return false }
+  const t = new Date(iso).getTime()
+  return Number.isFinite(t) && t < Date.now()
 }
 
 export default async function EventsListPage() {
   const items = await loadAllEvents()
-  const upcoming = items.filter(e => !isPast(e.startsAt))
-  const past = items.filter(e => isPast(e.startsAt))
+  const upcoming = items
+    .filter(e => !isPast(e.startsAt))
+    .sort((a, b) => startTimeMs(a.startsAt) - startTimeMs(b.startsAt))
+  const past = items
+    .filter(e => isPast(e.startsAt))
+    .sort((a, b) => startTimeMs(b.startsAt) - startTimeMs(a.startsAt))
   return (
     <>
       <Header />
@@ -94,7 +99,11 @@ function EventCard({ e }: { e: import('@/lib/events').EventItem }) {
         </div>
         <div className="text-[16px] font-semibold leading-snug mb-2 line-clamp-3">{e.title}</div>
         {e.startsAt && (
-          <div className="text-[12px] text-[var(--color-text-muted)]">{fmtDateTime(e.startsAt)}</div>
+          <LocalDateTime
+            iso={e.startsAt}
+            withTime
+            className="text-[12px] text-[var(--color-text-muted)]"
+          />
         )}
       </div>
     </Link>

@@ -5,6 +5,7 @@ import { ChevronLeft, Calendar, ExternalLink, MapPin, HardHat, Video } from 'luc
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { LocalDateTime } from '@/components/LocalDateTime'
 import { loadAllEvents, loadEventBySlug } from '@/lib/events'
 
 export const revalidate = 600
@@ -13,15 +14,10 @@ export function generateStaticParams() { return [] }
 type Params = Promise<{ slug: string }>
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
-function fmtDateTime(iso: string | null): string | null {
-  if (!iso) return null
-  try {
-    return new Date(iso).toLocaleString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-  } catch { return iso }
-}
 function isPast(iso: string | null): boolean {
   if (!iso) return false
-  try { return new Date(iso).getTime() < Date.now() } catch { return false }
+  const t = new Date(iso).getTime()
+  return Number.isFinite(t) && t < Date.now()
 }
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
@@ -81,7 +77,11 @@ export default async function EventDetailPage({ params }: { params: Params }) {
 
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px] text-[var(--color-text-muted)] mb-6">
             {e.startsAt && (
-              <span className="inline-flex items-center gap-1.5"><Calendar size={14} /> {fmtDateTime(e.startsAt)}{e.endsAt ? ` – ${fmtDateTime(e.endsAt)?.split(', ').pop()}` : ''}</span>
+              <span className="inline-flex items-center gap-1.5">
+                <Calendar size={14} />
+                <LocalDateTime iso={e.startsAt} withYear withTime />
+                {e.endsAt && (<><span> – </span><LocalDateTime iso={e.endsAt} withTime /></>)}
+              </span>
             )}
             {e.developers[0] && (
               e.developers[0].slug ? (
