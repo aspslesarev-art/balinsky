@@ -1,6 +1,6 @@
 import OpenAI from 'openai'
 import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions'
-import { SYSTEM_PROMPT, TOOLS, executeToolCall, ensureFeedbackBucket } from '@/lib/consultant'
+import { SYSTEM_PROMPT, TOOLS, executeToolCall, ensureFeedbackBucket, type ListingCard } from '@/lib/consultant'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -35,6 +35,12 @@ export async function POST(req: Request) {
     ...trimmed,
   ]
 
+  // Accumulate listing cards from all search_listings tool calls in this turn.
+  // De-duped by URL because the model occasionally calls the tool twice with
+  // overlapping filters.
+  const allListings: ListingCard[] = []
+  const seenUrls = new Set<string>()
+
   for (let hop = 0; hop < MAX_TOOL_HOPS; hop++) {
     const completion = await client.chat.completions.create({
       model: 'gpt-4o-mini',
@@ -50,6 +56,7 @@ export async function POST(req: Request) {
     if (!msg.tool_calls || msg.tool_calls.length === 0) {
       return Response.json({
         message: { role: 'assistant', content: msg.content ?? '' },
+        listings: allListings,
         usage: completion.usage,
       })
     }
@@ -62,6 +69,17 @@ export async function POST(req: Request) {
         tool_call_id: tc.id,
         content: result,
       })
+      if (tc.function.name === 'search_listings') {
+        try {
+          const parsed = JSON.parse(result) as { results?: ListingCard[] }
+          for (const card of parsed.results ?? []) {
+            if (card?.url && !seenUrls.has(card.url)) {
+              seenUrls.add(card.url)
+              allListings.push(card)
+            }
+          }
+        } catch { /* ignore */ }
+      }
     }
   }
 
@@ -70,5 +88,6 @@ export async function POST(req: Request) {
       role: 'assistant',
       content: 'Извините, не получилось довести запрос до конца. Попробуйте переформулировать.',
     },
+    listings: allListings,
   })
 }

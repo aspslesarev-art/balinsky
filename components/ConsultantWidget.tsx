@@ -1,9 +1,22 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { MessageCircle, X, Send, Loader2, AlertTriangle } from 'lucide-react'
+import { MessageCircle, X, Send, Loader2, AlertTriangle, BedDouble, MapPin, ExternalLink } from 'lucide-react'
 
-type Message = { role: 'user' | 'assistant'; content: string }
+type ListingCard = {
+  kind: 'villa' | 'apartment' | 'complex' | 'developer' | 'rental'
+  title: string
+  url: string
+  photo: string | null
+  district: string | null
+  bedrooms: number | null
+  area_sqm: number | null
+  price_usd: number | null
+  price_per_sqm_usd: number | null
+  rent_per_month_usd: number | null
+}
+
+type Message = { role: 'user' | 'assistant'; content: string; listings?: ListingCard[] }
 
 const GREETING: Message = {
   role: 'assistant',
@@ -64,8 +77,8 @@ export function ConsultantWidget() {
         const j = await res.json().catch(() => ({}))
         throw new Error(j.error ?? `http_${res.status}`)
       }
-      const j = await res.json() as { message: Message }
-      setMessages([...next, j.message])
+      const j = await res.json() as { message: Message; listings?: ListingCard[] }
+      setMessages([...next, { ...j.message, listings: j.listings }])
     } catch (e) {
       console.error('[consultant] error:', e)
       setError('Не получилось отправить сообщение. Попробуйте ещё раз.')
@@ -127,7 +140,14 @@ export function ConsultantWidget() {
             {/* Messages */}
             <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto px-4 py-4 bg-[var(--color-search-bg)] flex flex-col gap-3">
               {messages.map((m, i) => (
-                <Bubble key={i} role={m.role}>{m.content}</Bubble>
+                <div key={i} className="flex flex-col gap-2">
+                  {m.content && <Bubble role={m.role}>{m.content}</Bubble>}
+                  {m.listings && m.listings.length > 0 && (
+                    <div className="self-start max-w-[95%] flex flex-col gap-2">
+                      {m.listings.map(card => <ListingChatCard key={card.url} card={card} />)}
+                    </div>
+                  )}
+                </div>
               ))}
               {loading && (
                 <Bubble role="assistant">
@@ -175,6 +195,55 @@ export function ConsultantWidget() {
         </>
       )}
     </>
+  )
+}
+
+function fmtUsd(n: number | null): string | null {
+  if (n == null || !Number.isFinite(n)) return null
+  return '$' + Math.round(n).toLocaleString('en-US')
+}
+
+function ListingChatCard({ card }: { card: ListingCard }) {
+  const isRental = card.kind === 'rental'
+  const mainPrice = isRental ? fmtUsd(card.rent_per_month_usd) : fmtUsd(card.price_usd)
+  const priceSuffix = isRental ? ' / мес' : ''
+  return (
+    <a
+      href={card.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-stretch gap-3 rounded-2xl border border-[var(--color-border)] bg-white hover:border-[var(--color-primary)] transition-colors no-underline overflow-hidden group"
+    >
+      <div className="shrink-0 w-[88px] h-[88px] bg-[var(--color-search-bg)]">
+        {card.photo ? (
+          <img src={card.photo} alt="" className="w-full h-full object-cover" loading="lazy" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-2xl">🏡</div>
+        )}
+      </div>
+      <div className="flex-1 min-w-0 py-2 pr-3 flex flex-col justify-center">
+        <div className="text-[13px] font-semibold text-[#111827] leading-tight line-clamp-2">{card.title}</div>
+        <div className="mt-1 flex items-center flex-wrap gap-x-2 gap-y-0.5 text-[11px] text-[var(--color-text-muted)]">
+          {mainPrice && (
+            <span className="font-semibold text-[#111827] text-[12px]">
+              {mainPrice}{priceSuffix}
+            </span>
+          )}
+          {card.price_per_sqm_usd != null && card.price_per_sqm_usd > 0 && (
+            <span>{fmtUsd(card.price_per_sqm_usd)} / м²</span>
+          )}
+          {card.bedrooms != null && (
+            <span className="inline-flex items-center gap-0.5"><BedDouble size={11} /> {card.bedrooms} BR</span>
+          )}
+          {card.district && (
+            <span className="inline-flex items-center gap-0.5"><MapPin size={11} /> {card.district}</span>
+          )}
+        </div>
+      </div>
+      <div className="shrink-0 self-start mt-2 mr-2 text-[var(--color-text-muted)] group-hover:text-[var(--color-primary)]">
+        <ExternalLink size={14} />
+      </div>
+    </a>
   )
 }
 
