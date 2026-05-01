@@ -116,7 +116,9 @@ export function RentalCatalog({ items, initial }: { items: RentalItem[]; initial
   const setSort = (v: SortKey) => updateUrl({ sort: v })
 
   // Currency lives in localStorage — out of URL by design (don't want noise).
-  const [currency, setCurrency] = useState<Currency>('USD')
+  // Default to IDR — long-term rentals are quoted in rupiah locally, USD is
+  // the secondary line for visiting clients.
+  const [currency, setCurrency] = useState<Currency>('IDR')
   useEffect(() => {
     try {
       const v = localStorage.getItem(CURRENCY_LS_KEY)

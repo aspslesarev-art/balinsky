@@ -13,7 +13,9 @@ export function generateStaticParams() { return [] }
 type Params = Promise<{ slug: string }>
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
+const IDR_PER_USD = 16400
 function fmtUsd(n: number): string { return '$' + Math.round(n).toLocaleString('en-US') }
+function fmtIdr(usd: number): string { return 'Rp ' + Math.round(usd * IDR_PER_USD).toLocaleString('ru-RU').replace(/,/g, ' ') }
 
 // The Airtable "Контакт Телеграм" field is used loosely: most rows are full
 // https://t.me/... URLs, some are WhatsApp wa.me URLs, and some may be a bare
@@ -109,8 +111,11 @@ export default async function RentalDetailPage({ params }: { params: Params }) {
             {r.location && <span className="inline-flex items-center gap-1.5"><MapPin size={14} /> {r.location}, Бали</span>}
             {r.priceSegment && <span className="inline-flex items-center gap-1.5"><Tag size={14} /> {r.priceSegment}</span>}
           </div>
-          <div className="text-[28px] font-semibold text-[#111827]">
-            {fmtUsd(r.priceMonthUsd)} <span className="text-[14px] font-normal text-[var(--color-text-muted)]">/ мес</span>
+          <div>
+            <div className="text-[28px] font-semibold text-[#111827]">
+              {fmtIdr(r.priceMonthUsd)} <span className="text-[14px] font-normal text-[var(--color-text-muted)]">/ мес</span>
+            </div>
+            <div className="text-[14px] text-[var(--color-text-muted)] mt-1">~{fmtUsd(r.priceMonthUsd)} / мес</div>
           </div>
         </section>
 
