@@ -16,6 +16,8 @@ import { loadAllVideos } from '@/lib/videos'
 import { VideoGrid } from '@/components/VideoGrid'
 import { InvestmentWidget } from '@/components/InvestmentWidget'
 import { RentalCompareSection } from '@/components/RentalCompareSection'
+import { ManagerCard } from '@/components/ManagerCard'
+import { loadManagerByDeveloperName } from '@/lib/managers'
 import { VillaPresentationButton } from '@/components/VillaPresentation'
 
 const AIRPORT_LAT = -8.7467
@@ -284,7 +286,10 @@ export default async function Page({ params }: { params: Params }) {
   const parentComplex = findParentComplex(title, complexes)
   const parentComplexName = parentComplex ? firstString(parentComplex.data['Project']) : null
 
-  const otherApts = await loadOtherApartmentsInDistrict(district, a.airtable_id)
+  const [otherApts, manager] = await Promise.all([
+    loadOtherApartmentsInDistrict(district, a.airtable_id),
+    loadManagerByDeveloperName(devName),
+  ])
   const GMAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? ''
 
   // Videos for parent complex (or empty)
@@ -505,6 +510,8 @@ export default async function Page({ params }: { params: Params }) {
             </div>
           </section>
         )}
+
+        {manager && <ManagerCard manager={manager} developerName={devName} />}
 
         {lat != null && lng != null && (
           <InvestmentWidget villaId={a.airtable_id} apiKey={GMAPS_KEY} kind="apartment" />

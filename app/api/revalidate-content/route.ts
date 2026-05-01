@@ -9,6 +9,7 @@ const KIND_TO_TAGS: Record<string, string> = {
   promo: 'content:promo',
   knowledge: 'content:knowledge',
   rental: 'content:rental',
+  managers: 'content:managers',
 }
 const KIND_TO_PATHS: Record<string, { path: string; type?: 'page' | 'layout' }[]> = {
   events: [
@@ -31,6 +32,12 @@ const KIND_TO_PATHS: Record<string, { path: string; type?: 'page' | 'layout' }[]
     { path: '/ru/arenda' },
     { path: '/ru/arenda/o/[slug]', type: 'page' },
   ],
+  managers: [
+    { path: '/ru/zastrojshhiki/[slug]', type: 'page' },
+    { path: '/ru/zhilye-kompleksy/o/[slug]', type: 'page' },
+    { path: '/ru/villy/o/[slug]', type: 'page' },
+    { path: '/ru/apartamenty/o/[slug]', type: 'page' },
+  ],
 }
 
 export async function POST(request: Request) {
@@ -45,7 +52,7 @@ export async function POST(request: Request) {
   }
 
   const url = new URL(request.url)
-  const kindsParam = url.searchParams.get('kinds') ?? 'events,news,promo,knowledge,rental'
+  const kindsParam = url.searchParams.get('kinds') ?? 'events,news,promo,knowledge,rental,managers'
   const kinds = kindsParam.split(',').map(s => s.trim()).filter(Boolean)
   const unknown = kinds.filter(k => !KIND_TO_TAGS[k])
   if (unknown.length > 0) {

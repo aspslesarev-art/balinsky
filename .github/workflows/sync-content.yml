@@ -47,6 +47,9 @@ jobs:
       - name: Sync rental
         run: node scripts/sync-rental.mjs
 
+      - name: Sync managers
+        run: node scripts/sync-managers.mjs
+
       - name: Revalidate site caches
         env:
           SITE_URL: ${{ secrets.SITE_URL }}

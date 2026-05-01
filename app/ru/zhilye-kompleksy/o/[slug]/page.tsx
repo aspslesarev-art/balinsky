@@ -11,6 +11,8 @@ import { PageContainer } from '@/components/PageContainer'
 import { PhotoGalleryHero } from '@/components/PhotoGalleryHero'
 import { ProgressBar } from '@/components/ProgressBar'
 import { ApartmentCard, type ApartmentCardData } from '@/components/ApartmentCard'
+import { ManagerCard } from '@/components/ManagerCard'
+import { loadManagerByDeveloperName } from '@/lib/managers'
 import { VillaCard, type VillaCardData } from '@/components/VillaCard'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { distanceKm as haversineKm } from '@/lib/competitor-utils'
@@ -359,6 +361,7 @@ export default async function Page({ params }: { params: Params }) {
   const totalUnits = numberOrNull(d['Total quantity of units'])
   const lease = firstString(d['Leasehold']) ?? firstString(d['Leashold'])
   const developerName = firstString(d['Developer1']) ?? firstString(d['Варианты поиска застройщика'])
+  const manager = await loadManagerByDeveloperName(developerName)
   const lat = parseGeo(d['Geo'])
   const lng = parseGeo(d['Geo 2'])
   const seoText = firstString(d['SEO Text']) ?? firstString(d['Описание']) ?? firstString(d['ИИ Описание 2']) ?? firstString(d['ИИ Описание'])
@@ -551,6 +554,8 @@ export default async function Page({ params }: { params: Params }) {
             </div>
           </section>
         )}
+
+        {manager && <ManagerCard manager={manager} developerName={developerName} />}
 
         {/* RESOURCES */}
         {resources.length > 0 && (

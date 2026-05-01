@@ -21,6 +21,8 @@ import { PhotoGalleryHero } from '@/components/PhotoGalleryHero'
 import { VillaCard, type VillaCardData } from '@/components/VillaCard'
 import { InvestmentWidget } from '@/components/InvestmentWidget'
 import { RentalCompareSection } from '@/components/RentalCompareSection'
+import { ManagerCard } from '@/components/ManagerCard'
+import { loadManagerByDeveloperName, loadManagerByDeveloperSlug } from '@/lib/managers'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { loadAllVideos } from '@/lib/videos'
 import { VideoGrid } from '@/components/VideoGrid'
@@ -339,6 +341,9 @@ export default async function Page({ params }: { params: Params }) {
 
   const parentComplex = findParentComplex(title, complexes)
   const developer = findDeveloperByName(developerName, developers)
+  const manager = developer?.slug
+    ? await loadManagerByDeveloperSlug(developer.slug)
+    : await loadManagerByDeveloperName(developerName)
 
   // Videos: prefer videos for parent complex, else for developer
   const allVideos = await loadAllVideos().catch(() => [])
@@ -600,6 +605,8 @@ export default async function Page({ params }: { params: Params }) {
             ) : null}
           </section>
         )}
+
+        {manager && <ManagerCard manager={manager} developerName={developer?.name ?? developerName} />}
 
         {lat != null && lng != null && (
           <InvestmentWidget villaId={v.airtable_id} apiKey={GMAPS_KEY} />
