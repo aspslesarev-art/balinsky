@@ -1,0 +1,222 @@
+'use client'
+
+import { useMemo, useState } from 'react'
+import Link from 'next/link'
+import { BedDouble, MapPin, X } from 'lucide-react'
+import { FilterDropdown } from '@/components/FilterDropdown'
+import type { RentalItem } from '@/lib/rental'
+
+function fmtUsd(n: number): string { return '$' + Math.round(n).toLocaleString('en-US') }
+function pluralRu(n: number, forms: [string, string, string]): string {
+  const m10 = n % 10, m100 = n % 100
+  if (m10 === 1 && m100 !== 11) return forms[0]
+  if (m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20)) return forms[1]
+  return forms[2]
+}
+
+export function RentalCatalog({ items }: { items: RentalItem[] }) {
+  const [districts, setDistricts] = useState<string[]>([])
+  const [bedrooms, setBedrooms] = useState<string[]>([])
+
+  const districtOptions = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const r of items) {
+      if (!r.location) continue
+      counts.set(r.location, (counts.get(r.location) ?? 0) + 1)
+    }
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([value, count]) => ({ value, count }))
+  }, [items])
+
+  const bedroomOptions = useMemo(() => {
+    const counts = new Map<number, number>()
+    for (const r of items) {
+      if (r.bedrooms == null) continue
+      counts.set(r.bedrooms, (counts.get(r.bedrooms) ?? 0) + 1)
+    }
+    return [...counts.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .map(([value, count]) => ({ value: String(value), count }))
+  }, [items])
+
+  const filtered = useMemo(() => {
+    if (districts.length === 0 && bedrooms.length === 0) return items
+    return items.filter(r => {
+      if (districts.length > 0 && (!r.location || !districts.includes(r.location))) return false
+      if (bedrooms.length > 0 && (r.bedrooms == null || !bedrooms.includes(String(r.bedrooms)))) return false
+      return true
+    })
+  }, [items, districts, bedrooms])
+
+  const activeCount = districts.length + bedrooms.length
+
+  return (
+    <>
+      <div className="mb-6 flex flex-wrap items-center gap-2">
+        <FilterDropdown
+          label="Район"
+          summary={districts.length === 0 ? 'Район' : `Район · ${districts.length}`}
+          active={districts.length > 0}
+        >
+          {() => (
+            <CheckboxList
+              options={districtOptions}
+              selected={districts}
+              onChange={setDistricts}
+              searchable
+            />
+          )}
+        </FilterDropdown>
+
+        <FilterDropdown
+          label="Спальни"
+          summary={bedrooms.length === 0 ? 'Спальни' : bedrooms.map(b => `${b} BR`).join(', ')}
+          active={bedrooms.length > 0}
+        >
+          {() => (
+            <CheckboxList
+              options={bedroomOptions.map(o => ({ ...o, label: `${o.value} BR` }))}
+              selected={bedrooms}
+              onChange={setBedrooms}
+            />
+          )}
+        </FilterDropdown>
+
+        {activeCount > 0 && (
+          <button
+            type="button"
+            onClick={() => { setDistricts([]); setBedrooms([]) }}
+            className="inline-flex items-center gap-1 text-[13px] text-[var(--color-text-muted)] hover:text-[#111827] px-3 py-2"
+          >
+            <X size={14} /> Сбросить
+          </button>
+        )}
+
+        <div className="ml-auto text-[13px] text-[var(--color-text-muted)]">
+          {filtered.length} {pluralRu(filtered.length, ['объект', 'объекта', 'объектов'])}
+        </div>
+      </div>
+
+      {filtered.length > 0 ? (
+        <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filtered.map(r => (
+            <li key={r.id}>
+              <RentalCard r={r} />
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div className="rounded-2xl border border-dashed border-[var(--color-border)] bg-white p-8 text-center text-[var(--color-text-muted)]">
+          По выбранным фильтрам ничего не нашлось. Сбросьте фильтры или попробуйте другие.
+        </div>
+      )}
+    </>
+  )
+}
+
+function CheckboxList({
+  options,
+  selected,
+  onChange,
+  searchable,
+}: {
+  options: { value: string; label?: string; count?: number }[]
+  selected: string[]
+  onChange: (next: string[]) => void
+  searchable?: boolean
+}) {
+  const [query, setQuery] = useState('')
+  const filteredOptions = !searchable || query.trim() === ''
+    ? options
+    : options.filter(o => (o.label ?? o.value).toLowerCase().includes(query.toLowerCase()))
+
+  const toggle = (value: string) => {
+    onChange(selected.includes(value) ? selected.filter(v => v !== value) : [...selected, value])
+  }
+
+  return (
+    <div className="absolute left-0 top-full mt-2 z-30 w-[280px] rounded-2xl border border-[var(--color-border)] bg-white shadow-[0_8px_24px_rgba(0,0,0,0.08)] p-3">
+      {searchable && (
+        <input
+          autoFocus
+          type="text"
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          placeholder="Поиск…"
+          className="w-full mb-2 rounded-lg border border-[var(--color-border)] px-3 py-2 text-[13px] focus:outline-none focus:border-[var(--color-primary)]"
+        />
+      )}
+      <ul className="max-h-[280px] overflow-y-auto">
+        {filteredOptions.map(o => {
+          const checked = selected.includes(o.value)
+          return (
+            <li key={o.value}>
+              <label className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-[var(--color-search-bg)] cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => toggle(o.value)}
+                  className="h-4 w-4 accent-[var(--color-primary)]"
+                />
+                <span className="text-[13px] text-[#111827] flex-1 truncate">{o.label ?? o.value}</span>
+                {o.count != null && <span className="text-[11px] text-[var(--color-text-muted)]">{o.count}</span>}
+              </label>
+            </li>
+          )
+        })}
+        {filteredOptions.length === 0 && (
+          <li className="px-2 py-2 text-[12px] text-[var(--color-text-muted)]">Ничего не нашлось</li>
+        )}
+      </ul>
+      {selected.length > 0 && (
+        <button
+          type="button"
+          onClick={() => onChange([])}
+          className="mt-2 w-full text-[12px] text-[var(--color-text-muted)] hover:text-[#111827] py-1.5"
+        >
+          Очистить
+        </button>
+      )}
+    </div>
+  )
+}
+
+function RentalCard({ r }: { r: RentalItem }) {
+  const cover = r.photos[0]
+  return (
+    <Link
+      href={`/ru/arenda/o/${r.slug}`}
+      className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)] transition-colors"
+    >
+      <div className="relative aspect-[4/3] bg-[var(--color-search-bg)]">
+        {cover ? (
+          <img src={cover} alt={r.title} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center text-3xl">🏡</div>
+        )}
+        {r.type && (
+          <span className="absolute left-3 top-3 text-[11px] uppercase tracking-wide bg-white/95 backdrop-blur px-2 py-1 rounded-full font-medium">
+            {r.type}
+          </span>
+        )}
+      </div>
+      <div className="p-4">
+        <div className="flex items-baseline justify-between gap-3 mb-1">
+          <div className="text-[18px] font-semibold text-[#111827]">{fmtUsd(r.priceMonthUsd)}<span className="text-[12px] font-normal text-[var(--color-text-muted)]"> / мес</span></div>
+          {r.bedrooms != null && (
+            <div className="inline-flex items-center gap-1 text-[12px] text-[var(--color-text-muted)]">
+              <BedDouble size={13} /> {r.bedrooms} BR
+            </div>
+          )}
+        </div>
+        <div className="text-[14px] font-medium leading-snug line-clamp-2 mb-2">{r.title}</div>
+        {r.location && (
+          <div className="inline-flex items-center gap-1 text-[12px] text-[var(--color-text-muted)]">
+            <MapPin size={12} /> {r.location}
+          </div>
+        )}
+      </div>
+    </Link>
+  )
+}
