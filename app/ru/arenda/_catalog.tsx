@@ -14,9 +14,18 @@ function pluralRu(n: number, forms: [string, string, string]): string {
   return forms[2]
 }
 
+const PRICE_PRESETS: { label: string; min: number | null; max: number | null }[] = [
+  { label: 'До $1000', min: null, max: 1000 },
+  { label: '$1000–2000', min: 1000, max: 2000 },
+  { label: '$2000–3000', min: 2000, max: 3000 },
+  { label: '$3000+', min: 3000, max: null },
+]
+
 export function RentalCatalog({ items }: { items: RentalItem[] }) {
   const [districts, setDistricts] = useState<string[]>([])
   const [bedrooms, setBedrooms] = useState<string[]>([])
+  const [priceMin, setPriceMin] = useState<number | null>(null)
+  const [priceMax, setPriceMax] = useState<number | null>(null)
 
   const districtOptions = useMemo(() => {
     const counts = new Map<string, number>()
@@ -41,15 +50,21 @@ export function RentalCatalog({ items }: { items: RentalItem[] }) {
   }, [items])
 
   const filtered = useMemo(() => {
-    if (districts.length === 0 && bedrooms.length === 0) return items
+    if (districts.length === 0 && bedrooms.length === 0 && priceMin == null && priceMax == null) return items
     return items.filter(r => {
       if (districts.length > 0 && (!r.location || !districts.includes(r.location))) return false
       if (bedrooms.length > 0 && (r.bedrooms == null || !bedrooms.includes(String(r.bedrooms)))) return false
+      if (priceMin != null && r.priceMonthUsd < priceMin) return false
+      if (priceMax != null && r.priceMonthUsd > priceMax) return false
       return true
     })
-  }, [items, districts, bedrooms])
+  }, [items, districts, bedrooms, priceMin, priceMax])
 
-  const activeCount = districts.length + bedrooms.length
+  const priceActive = priceMin != null || priceMax != null
+  const priceSummary = priceActive
+    ? `${priceMin != null ? '$' + priceMin : ''}${priceMin != null && priceMax != null ? '–' : ''}${priceMax != null ? '$' + priceMax : (priceMin != null ? '+' : '')}`
+    : 'Цена'
+  const activeCount = districts.length + bedrooms.length + (priceActive ? 1 : 0)
 
   return (
     <>
@@ -83,10 +98,25 @@ export function RentalCatalog({ items }: { items: RentalItem[] }) {
           )}
         </FilterDropdown>
 
+        <FilterDropdown
+          label="Цена"
+          summary={priceSummary}
+          active={priceActive}
+        >
+          {() => (
+            <PriceRangePopover
+              priceMin={priceMin}
+              priceMax={priceMax}
+              setPriceMin={setPriceMin}
+              setPriceMax={setPriceMax}
+            />
+          )}
+        </FilterDropdown>
+
         {activeCount > 0 && (
           <button
             type="button"
-            onClick={() => { setDistricts([]); setBedrooms([]) }}
+            onClick={() => { setDistricts([]); setBedrooms([]); setPriceMin(null); setPriceMax(null) }}
             className="inline-flex items-center gap-1 text-[13px] text-[var(--color-text-muted)] hover:text-[#111827] px-3 py-2"
           >
             <X size={14} /> Сбросить
@@ -112,6 +142,95 @@ export function RentalCatalog({ items }: { items: RentalItem[] }) {
         </div>
       )}
     </>
+  )
+}
+
+function PriceRangePopover({
+  priceMin, priceMax, setPriceMin, setPriceMax,
+}: {
+  priceMin: number | null
+  priceMax: number | null
+  setPriceMin: (n: number | null) => void
+  setPriceMax: (n: number | null) => void
+}) {
+  const [minDraft, setMinDraft] = useState(priceMin == null ? '' : String(priceMin))
+  const [maxDraft, setMaxDraft] = useState(priceMax == null ? '' : String(priceMax))
+
+  const commit = () => {
+    const min = minDraft.trim() === '' ? null : Number(minDraft.replace(/[^\d]/g, ''))
+    const max = maxDraft.trim() === '' ? null : Number(maxDraft.replace(/[^\d]/g, ''))
+    setPriceMin(Number.isFinite(min as number) ? (min as number) : null)
+    setPriceMax(Number.isFinite(max as number) ? (max as number) : null)
+  }
+
+  const applyPreset = (min: number | null, max: number | null) => {
+    setMinDraft(min == null ? '' : String(min))
+    setMaxDraft(max == null ? '' : String(max))
+    setPriceMin(min)
+    setPriceMax(max)
+  }
+
+  return (
+    <div className="absolute left-0 top-full mt-2 z-30 w-[300px] rounded-2xl border border-[var(--color-border)] bg-white shadow-[0_8px_24px_rgba(0,0,0,0.08)] p-4">
+      <div className="text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] mb-2">Цена в месяц, USD</div>
+      <div className="flex items-center gap-2 mb-3">
+        <label className="flex-1">
+          <span className="block text-[11px] text-[var(--color-text-muted)] mb-1">От</span>
+          <input
+            type="text"
+            inputMode="numeric"
+            value={minDraft}
+            onChange={e => setMinDraft(e.target.value)}
+            onBlur={commit}
+            onKeyDown={e => { if (e.key === 'Enter') commit() }}
+            placeholder="0"
+            className="w-full rounded-lg border border-[var(--color-border)] px-3 py-2 text-[14px] focus:outline-none focus:border-[var(--color-primary)]"
+          />
+        </label>
+        <span className="text-[var(--color-text-muted)] mt-4">—</span>
+        <label className="flex-1">
+          <span className="block text-[11px] text-[var(--color-text-muted)] mb-1">До</span>
+          <input
+            type="text"
+            inputMode="numeric"
+            value={maxDraft}
+            onChange={e => setMaxDraft(e.target.value)}
+            onBlur={commit}
+            onKeyDown={e => { if (e.key === 'Enter') commit() }}
+            placeholder="∞"
+            className="w-full rounded-lg border border-[var(--color-border)] px-3 py-2 text-[14px] focus:outline-none focus:border-[var(--color-primary)]"
+          />
+        </label>
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {PRICE_PRESETS.map(p => {
+          const active = priceMin === p.min && priceMax === p.max
+          return (
+            <button
+              key={p.label}
+              type="button"
+              onClick={() => applyPreset(p.min, p.max)}
+              className={`text-[12px] px-2.5 py-1 rounded-full border transition-colors ${
+                active
+                  ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white'
+                  : 'bg-white border-[var(--color-border)] text-[#111827] hover:border-[var(--color-primary)]'
+              }`}
+            >
+              {p.label}
+            </button>
+          )
+        })}
+      </div>
+      {(priceMin != null || priceMax != null) && (
+        <button
+          type="button"
+          onClick={() => applyPreset(null, null)}
+          className="mt-3 w-full text-[12px] text-[var(--color-text-muted)] hover:text-[#111827] py-1.5"
+        >
+          Очистить
+        </button>
+      )}
+    </div>
   )
 }
 
