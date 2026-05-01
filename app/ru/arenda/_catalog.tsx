@@ -239,11 +239,12 @@ export function RentalCatalog({ items, initial }: { items: RentalItem[]; initial
           summary={districts.length === 0 ? 'Район' : `Район · ${districts.length}`}
           active={districts.length > 0}
         >
-          {() => (
+          {(close) => (
             <CheckboxList
               options={districtOptions}
               selected={districts}
               onChange={setDistricts}
+              onClose={close}
               searchable
             />
           )}
@@ -254,11 +255,12 @@ export function RentalCatalog({ items, initial }: { items: RentalItem[]; initial
           summary={bedrooms.length === 0 ? 'Спальни' : bedrooms.map(b => `${b} BR`).join(', ')}
           active={bedrooms.length > 0}
         >
-          {() => (
+          {(close) => (
             <CheckboxList
               options={bedroomOptions.map(o => ({ ...o, label: `${o.value} BR` }))}
               selected={bedrooms}
               onChange={setBedrooms}
+              onClose={close}
             />
           )}
         </FilterDropdown>
@@ -268,13 +270,14 @@ export function RentalCatalog({ items, initial }: { items: RentalItem[]; initial
           summary={priceSummary}
           active={priceActive}
         >
-          {() => (
+          {(close) => (
             <PriceRangePopover
               priceMin={priceMin}
               priceMax={priceMax}
               setPriceMin={setPriceMin}
               setPriceMax={setPriceMax}
               countFor={presetCount}
+              onClose={close}
             />
           )}
         </FilterDropdown>
@@ -285,7 +288,7 @@ export function RentalCatalog({ items, initial }: { items: RentalItem[]; initial
           active={sort !== 'newest'}
         >
           {(close) => (
-            <SortMenu current={sort} onChange={(v) => { setSort(v); close() }} />
+            <SortMenu current={sort} onChange={(v) => { setSort(v); close() }} onClose={close} />
           )}
         </FilterDropdown>
 
@@ -348,9 +351,23 @@ export function RentalCatalog({ items, initial }: { items: RentalItem[]; initial
   )
 }
 
-function SortMenu({ current, onChange }: { current: SortKey; onChange: (v: SortKey) => void }) {
+function MobileCloseBtn({ onClose }: { onClose: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClose}
+      aria-label="Закрыть"
+      className="sm:hidden absolute top-2 right-2 inline-flex items-center justify-center w-9 h-9 rounded-full bg-black/5 hover:bg-black/10 text-[#111827] z-10"
+    >
+      <X size={18} />
+    </button>
+  )
+}
+
+function SortMenu({ current, onChange, onClose }: { current: SortKey; onChange: (v: SortKey) => void; onClose: () => void }) {
   return (
     <div className="fixed left-3 top-24 w-[calc(100vw-24px)] max-h-[70vh] overflow-y-auto sm:absolute sm:left-0 sm:top-full sm:w-[220px] sm:max-h-none mt-0 sm:mt-2 z-30 rounded-2xl border border-[var(--color-border)] bg-white shadow-[0_12px_32px_rgba(0,0,0,0.16)] sm:shadow-[0_8px_24px_rgba(0,0,0,0.08)] p-2">
+      <MobileCloseBtn onClose={onClose} />
       <ul>
         {(Object.keys(SORT_LABELS) as SortKey[]).map(key => (
           <li key={key}>
@@ -371,13 +388,14 @@ function SortMenu({ current, onChange }: { current: SortKey; onChange: (v: SortK
 }
 
 function PriceRangePopover({
-  priceMin, priceMax, setPriceMin, setPriceMax, countFor,
+  priceMin, priceMax, setPriceMin, setPriceMax, countFor, onClose,
 }: {
   priceMin: number | null
   priceMax: number | null
   setPriceMin: (n: number | null) => void
   setPriceMax: (n: number | null) => void
   countFor: (min: number | null, max: number | null) => number
+  onClose: () => void
 }) {
   const [minDraft, setMinDraft] = useState(priceMin == null ? '' : String(priceMin))
   const [maxDraft, setMaxDraft] = useState(priceMax == null ? '' : String(priceMax))
@@ -401,6 +419,7 @@ function PriceRangePopover({
 
   return (
     <div className="fixed left-3 top-24 w-[calc(100vw-24px)] max-h-[70vh] overflow-y-auto sm:absolute sm:left-0 sm:top-full sm:w-[300px] sm:max-h-none mt-0 sm:mt-2 z-30 rounded-2xl border border-[var(--color-border)] bg-white shadow-[0_12px_32px_rgba(0,0,0,0.16)] sm:shadow-[0_8px_24px_rgba(0,0,0,0.08)] p-4">
+      <MobileCloseBtn onClose={onClose} />
       <div className="text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] mb-2">Цена в месяц, USD</div>
       <div className="flex items-center gap-2 mb-3">
         <label className="flex-1">
@@ -469,11 +488,13 @@ function CheckboxList({
   options,
   selected,
   onChange,
+  onClose,
   searchable,
 }: {
   options: { value: string; label?: string; count?: number }[]
   selected: string[]
   onChange: (next: string[]) => void
+  onClose: () => void
   searchable?: boolean
 }) {
   const [query, setQuery] = useState('')
@@ -487,6 +508,7 @@ function CheckboxList({
 
   return (
     <div className="fixed left-3 top-24 w-[calc(100vw-24px)] max-h-[70vh] overflow-y-auto sm:absolute sm:left-0 sm:top-full sm:w-[280px] sm:max-h-none mt-0 sm:mt-2 z-30 rounded-2xl border border-[var(--color-border)] bg-white shadow-[0_12px_32px_rgba(0,0,0,0.16)] sm:shadow-[0_8px_24px_rgba(0,0,0,0.08)] p-3">
+      <MobileCloseBtn onClose={onClose} />
       {searchable && (
         <input
           autoFocus
