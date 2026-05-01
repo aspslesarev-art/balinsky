@@ -48,8 +48,8 @@ export function DeveloperRow({ d }: { d: DeveloperRowData }) {
 
   return (
     <div className="w-full bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-2xl hover:shadow-sm transition-shadow">
-      <div className="h-24 px-6 py-4 flex items-center gap-5">
-        <div className="shrink-0 w-[80px] h-[48px] md:w-[140px] md:h-[56px] flex items-center justify-center p-1">
+      <div className="px-3 sm:px-6 py-3 sm:py-4 flex items-center gap-3 sm:gap-5">
+        <div className="shrink-0 w-[60px] h-[40px] sm:w-[100px] sm:h-[48px] md:w-[140px] md:h-[56px] flex items-center justify-center p-1">
           {d.logoUrl ? (
             <img
               src={d.logoUrl}
@@ -59,7 +59,7 @@ export function DeveloperRow({ d }: { d: DeveloperRowData }) {
             />
           ) : (
             <span
-              className="text-[16px] font-medium text-[var(--color-text)] truncate"
+              className="text-[13px] sm:text-[16px] font-medium text-[var(--color-text)] truncate"
               style={{ fontFamily: 'serif' }}
             >
               {d.name}
@@ -67,14 +67,14 @@ export function DeveloperRow({ d }: { d: DeveloperRowData }) {
           )}
         </div>
 
-        <div className="flex-1 min-w-0 text-[20px] font-medium text-[var(--color-text)] truncate">
+        <div className="flex-1 min-w-0 text-[15px] sm:text-[18px] md:text-[20px] font-medium text-[var(--color-text)] truncate">
           {d.name}
         </div>
 
         {d.slug && (
           <Link
             href={`/ru/zastrojshhiki/${d.slug}`}
-            className="shrink-0 h-11 px-5 md:px-8 rounded-[10px] bg-[var(--color-primary)] text-white text-[15px] font-medium inline-flex items-center hover:bg-[var(--color-primary-hover)] transition-colors"
+            className="shrink-0 h-9 sm:h-11 px-3 sm:px-5 md:px-8 rounded-[10px] bg-[var(--color-primary)] text-white text-[13px] sm:text-[15px] font-medium inline-flex items-center hover:bg-[var(--color-primary-hover)] transition-colors"
           >
             Открыть
           </Link>
@@ -85,19 +85,19 @@ export function DeveloperRow({ d }: { d: DeveloperRowData }) {
           aria-label={open ? 'Свернуть' : 'Развернуть'}
           aria-expanded={open}
           onClick={() => setOpen(v => !v)}
-          className="hidden md:inline-flex shrink-0 w-10 h-10 items-center justify-center text-[#9CA3AF] hover:text-[var(--color-text)]"
+          className="inline-flex shrink-0 w-9 h-9 sm:w-10 sm:h-10 items-center justify-center text-[#9CA3AF] hover:text-[var(--color-text)]"
         >
           <ChevronDown
-            size={24}
+            size={22}
             className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
           />
         </button>
       </div>
 
       {open && (
-        <div className="hidden md:block px-6 pb-5">
+        <div className="px-4 sm:px-6 pb-5">
           <div className="pt-5 border-t border-[var(--color-border)]">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
               <BulletMetric title="Строительство и недвижимость" value={d.construction} />
               <BulletMetric title="Репутация и опыт" value={d.reputation} />
               <BulletMetric title="Техника и производство" value={d.equipment} />
