@@ -247,7 +247,7 @@ function PriceRangePopover({
   }
 
   return (
-    <div className="absolute left-0 top-full mt-2 z-30 w-[300px] rounded-2xl border border-[var(--color-border)] bg-white shadow-[0_8px_24px_rgba(0,0,0,0.08)] p-4">
+    <div className="absolute z-30 left-0 top-full mt-2 w-[300px] max-w-[calc(100vw-32px)] rounded-2xl border border-[var(--color-border)] bg-white shadow-[0_8px_24px_rgba(0,0,0,0.08)] p-4">
       <div className="text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] mb-2">Цена в месяц, USD</div>
       <div className="flex items-center gap-2 mb-3">
         <label className="flex-1">
@@ -333,7 +333,7 @@ function CheckboxList({
   }
 
   return (
-    <div className="absolute left-0 top-full mt-2 z-30 w-[280px] rounded-2xl border border-[var(--color-border)] bg-white shadow-[0_8px_24px_rgba(0,0,0,0.08)] p-3">
+    <div className="absolute z-30 left-0 top-full mt-2 w-[280px] max-w-[calc(100vw-32px)] rounded-2xl border border-[var(--color-border)] bg-white shadow-[0_8px_24px_rgba(0,0,0,0.08)] p-3">
       {searchable && (
         <input
           autoFocus
