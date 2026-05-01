@@ -2,15 +2,16 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Home, Building, Building2, HardHat, Menu, X } from 'lucide-react'
+import { Home, Building, Building2, HardHat, KeyRound, Menu, X } from 'lucide-react'
 
-type NavKey = 'villy' | 'apartamenty' | 'zhilye-kompleksy' | 'zastrojshhiki'
+type NavKey = 'villy' | 'apartamenty' | 'zhilye-kompleksy' | 'zastrojshhiki' | 'arenda'
 
 const NAV = [
   { key: 'villy' as const, href: '/ru/villy', label: 'Виллы и дома', Icon: Home },
   { key: 'apartamenty' as const, href: '/ru/apartamenty', label: 'Апартаменты', Icon: Building },
   { key: 'zhilye-kompleksy' as const, href: '/ru/zhilye-kompleksy', label: 'Жилые комплексы', Icon: Building2 },
   { key: 'zastrojshhiki' as const, href: '/ru/zastrojshhiki', label: 'Застройщики', Icon: HardHat },
+  { key: 'arenda' as const, href: '/ru/arenda', label: 'Аренда', Icon: KeyRound },
 ]
 
 export function Header({ active }: { active?: NavKey }) {
