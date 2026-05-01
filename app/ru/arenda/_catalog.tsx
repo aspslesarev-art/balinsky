@@ -353,14 +353,16 @@ export function RentalCatalog({ items, initial }: { items: RentalItem[]; initial
 
 function MobileCloseBtn({ onClose }: { onClose: () => void }) {
   return (
-    <button
-      type="button"
-      onClick={onClose}
-      aria-label="Закрыть"
-      className="sm:hidden absolute top-2 right-2 inline-flex items-center justify-center w-9 h-9 rounded-full bg-black/5 hover:bg-black/10 text-[#111827] z-10"
-    >
-      <X size={18} />
-    </button>
+    <div className="sm:hidden flex justify-end mb-2 -mt-1 -mr-1">
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label="Закрыть"
+        className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-black/5 hover:bg-black/10 text-[#111827]"
+      >
+        <X size={18} />
+      </button>
+    </div>
   )
 }
 
