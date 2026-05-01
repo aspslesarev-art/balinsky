@@ -211,7 +211,10 @@ async function searchSupabaseTable(
     const d = r.data
     const slug = fs1(d['SEO:Slug'])!
     const title = fs1(d['SEO:Title']) ?? fs1(d['ИИ Имя']) ?? fs1(d['Name']) ?? fs1(d['Project']) ?? fs1(d['Developer']) ?? ''
-    const district = fs1(d['Location filter']) ?? fs1(d['Location 2']) ?? fs1(d['Location']) ?? null
+    const districtRaw = fs1(d['Location filter']) ?? fs1(d['Location 2']) ?? fs1(d['Location'])
+    // Some villa rows have airtable record IDs in 'Location' (linked record).
+    // Drop them so the chat card shows nothing instead of "recXXX".
+    const district = districtRaw && /^rec[A-Za-z0-9]{14,}$/.test(districtRaw) ? null : districtRaw
     const bedrooms = num(d['Комнаты']) ?? num(d['Спальни']) ?? null
     const area = num(d['Площадь']) ?? null
     const priceUsd = num(d['price_usd']) ?? num(d['price']) ?? num(d['Цена']) ?? null

@@ -8,6 +8,23 @@ export const dynamic = 'force-dynamic'
 const MAX_TOOL_HOPS = 4
 const MAX_INPUT_MESSAGES = 30
 
+// The model insists on inlining URLs / markdown links / image embeds in its
+// reply even when the system prompt says cards render below. Strip them so
+// the chat doesn't show duplicate noisy URLs alongside the structured cards.
+function stripRedundantLinks(text: string): string {
+  return text
+    // markdown image: ![alt](url) — drop entirely
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, '')
+    // markdown link: [text](url) → keep just text
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    // bare https:// urls
+    .replace(/https?:\/\/\S+/g, '')
+    // collapse extra whitespace from removals
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
 type IncomingMessage = { role: 'user' | 'assistant'; content: string }
 
 export async function POST(req: Request) {
@@ -55,7 +72,7 @@ export async function POST(req: Request) {
 
     if (!msg.tool_calls || msg.tool_calls.length === 0) {
       return Response.json({
-        message: { role: 'assistant', content: msg.content ?? '' },
+        message: { role: 'assistant', content: stripRedundantLinks(msg.content ?? '') },
         listings: allListings,
         usage: completion.usage,
       })
