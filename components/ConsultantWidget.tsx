@@ -1,7 +1,28 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { MessageCircle, X, Send, Loader2, AlertTriangle, BedDouble, MapPin, ExternalLink } from 'lucide-react'
+import { MessageCircle, X, Send, Loader2, AlertTriangle, BedDouble, MapPin, ExternalLink, Mic, MicOff } from 'lucide-react'
+
+// Minimal Web Speech API typing — TS stdlib doesn't ship it, and we only use
+// the few fields we touch.
+type SpeechRecognitionLike = {
+  lang: string
+  continuous: boolean
+  interimResults: boolean
+  onresult: ((e: { resultIndex: number; results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null
+  onend: (() => void) | null
+  onerror: ((e: { error?: string }) => void) | null
+  start: () => void
+  stop: () => void
+  abort: () => void
+}
+type SpeechRecognitionCtor = new () => SpeechRecognitionLike
+declare global {
+  interface Window {
+    SpeechRecognition?: SpeechRecognitionCtor
+    webkitSpeechRecognition?: SpeechRecognitionCtor
+  }
+}
 
 type ListingCard = {
   kind: 'villa' | 'apartment' | 'complex' | 'developer' | 'rental'
@@ -30,7 +51,70 @@ export function ConsultantWidget() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [listening, setListening] = useState(false)
+  const [voiceSupported, setVoiceSupported] = useState(false)
   const scrollRef = useRef<HTMLDivElement | null>(null)
+  const recRef = useRef<SpeechRecognitionLike | null>(null)
+  // Snapshot of input text at the moment listening started — speech results
+  // append to this so existing typing isn't blown away.
+  const baseInputRef = useRef('')
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    setVoiceSupported(!!(window.SpeechRecognition || window.webkitSpeechRecognition))
+  }, [])
+
+  const toggleVoice = () => {
+    if (typeof window === 'undefined') return
+    if (listening) {
+      recRef.current?.stop()
+      return
+    }
+    const Ctor = window.SpeechRecognition ?? window.webkitSpeechRecognition
+    if (!Ctor) return
+    const rec = new Ctor()
+    rec.lang = 'ru-RU'
+    rec.continuous = false
+    rec.interimResults = true
+    baseInputRef.current = input.trim()
+    rec.onresult = (e) => {
+      let transcript = ''
+      for (let i = 0; i < e.results.length; i++) {
+        transcript += e.results[i][0].transcript
+      }
+      const sep = baseInputRef.current && transcript ? ' ' : ''
+      setInput(baseInputRef.current + sep + transcript)
+    }
+    rec.onend = () => {
+      setListening(false)
+      recRef.current = null
+    }
+    rec.onerror = (e) => {
+      setListening(false)
+      recRef.current = null
+      if (e?.error && e.error !== 'no-speech' && e.error !== 'aborted') {
+        setError(e.error === 'not-allowed' ? 'Доступ к микрофону запрещён.' : 'Ошибка распознавания: ' + e.error)
+      }
+    }
+    try {
+      rec.start()
+      recRef.current = rec
+      setListening(true)
+      setError(null)
+    } catch {
+      // Some browsers throw if start() is called too quickly in succession.
+      setListening(false)
+    }
+  }
+
+  // Stop recognition when widget closes.
+  useEffect(() => {
+    if (!open && recRef.current) {
+      recRef.current.abort()
+      recRef.current = null
+      setListening(false)
+    }
+  }, [open])
 
   // Body scroll lock on mobile when open (simple — only when sheet covers screen).
   useEffect(() => {
@@ -177,11 +261,27 @@ export function ConsultantWidget() {
                     send()
                   }
                 }}
-                placeholder="Например: ищу виллу в Чангу до $400k, 3 спальни"
+                placeholder={listening ? 'Слушаю…' : 'Например: ищу виллу в Чангу до $400k, 3 спальни'}
                 rows={1}
                 disabled={loading}
                 className="flex-1 resize-none max-h-32 rounded-2xl border border-[var(--color-border)] bg-white px-4 py-2.5 text-[14px] focus:outline-none focus:border-[var(--color-primary)] disabled:opacity-50"
               />
+              {voiceSupported && (
+                <button
+                  type="button"
+                  onClick={toggleVoice}
+                  disabled={loading}
+                  aria-label={listening ? 'Остановить запись' : 'Записать голосом'}
+                  title={listening ? 'Остановить' : 'Записать голосом'}
+                  className={`shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-full transition-colors disabled:opacity-50 ${
+                    listening
+                      ? 'bg-[#DC2626] hover:bg-[#B91C1C] text-white animate-pulse'
+                      : 'bg-black/5 hover:bg-black/10 text-[#111827]'
+                  }`}
+                >
+                  {listening ? <MicOff size={18} /> : <Mic size={18} />}
+                </button>
+              )}
               <button
                 type="submit"
                 disabled={!input.trim() || loading}
