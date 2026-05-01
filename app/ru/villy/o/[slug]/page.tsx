@@ -20,6 +20,7 @@ import { PageContainer } from '@/components/PageContainer'
 import { PhotoGalleryHero } from '@/components/PhotoGalleryHero'
 import { VillaCard, type VillaCardData } from '@/components/VillaCard'
 import { InvestmentWidget } from '@/components/InvestmentWidget'
+import { RentalCompareSection } from '@/components/RentalCompareSection'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { loadAllVideos } from '@/lib/videos'
 import { VideoGrid } from '@/components/VideoGrid'
@@ -603,6 +604,12 @@ export default async function Page({ params }: { params: Params }) {
         {lat != null && lng != null && (
           <InvestmentWidget villaId={v.airtable_id} apiKey={GMAPS_KEY} />
         )}
+
+        <RentalCompareSection
+          district={district}
+          bedrooms={bedrooms}
+          villaPriceUsd={priceNum}
+        />
 
         {videos.length > 0 && (
           <VideoGrid videos={videos} title={parentComplex ? `Видео: ${parentComplex.name}` : developer ? `Видео: ${developer.name}` : 'Видео'} />

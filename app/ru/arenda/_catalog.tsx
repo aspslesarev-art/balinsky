@@ -21,11 +21,18 @@ const PRICE_PRESETS: { label: string; min: number | null; max: number | null }[]
   { label: '$3000+', min: 3000, max: null },
 ]
 
-export function RentalCatalog({ items }: { items: RentalItem[] }) {
-  const [districts, setDistricts] = useState<string[]>([])
-  const [bedrooms, setBedrooms] = useState<string[]>([])
-  const [priceMin, setPriceMin] = useState<number | null>(null)
-  const [priceMax, setPriceMax] = useState<number | null>(null)
+type Initial = {
+  districts: string[]
+  bedrooms: string[]
+  priceMin: number | null
+  priceMax: number | null
+}
+
+export function RentalCatalog({ items, initial }: { items: RentalItem[]; initial?: Initial }) {
+  const [districts, setDistricts] = useState<string[]>(initial?.districts ?? [])
+  const [bedrooms, setBedrooms] = useState<string[]>(initial?.bedrooms ?? [])
+  const [priceMin, setPriceMin] = useState<number | null>(initial?.priceMin ?? null)
+  const [priceMax, setPriceMax] = useState<number | null>(initial?.priceMax ?? null)
 
   // Cross-filter aware counts: each filter's options are counted against
   // items that pass ALL OTHER active filters, so the numbers reflect what

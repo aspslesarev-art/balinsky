@@ -12,8 +12,28 @@ export const metadata: Metadata = {
   alternates: { canonical: '/ru/arenda' },
 }
 
-export default async function RentalListPage() {
+type SP = Promise<Record<string, string | string[] | undefined>>
+
+function parseList(v: string | string[] | undefined): string[] {
+  if (v == null) return []
+  return (Array.isArray(v) ? v : [v]).flatMap(s => s.split(',')).map(s => s.trim()).filter(Boolean)
+}
+function parseNum(v: string | string[] | undefined): number | null {
+  const s = Array.isArray(v) ? v[0] : v
+  if (!s) return null
+  const n = Number(s.replace(/[^\d]/g, ''))
+  return Number.isFinite(n) ? n : null
+}
+
+export default async function RentalListPage({ searchParams }: { searchParams: SP }) {
+  const sp = await searchParams
   const items = await loadAllRental()
+  const initial = {
+    districts: parseList(sp.location),
+    bedrooms: parseList(sp.bedrooms),
+    priceMin: parseNum(sp.priceMin),
+    priceMax: parseNum(sp.priceMax),
+  }
   return (
     <>
       <Header active="arenda" />
@@ -25,7 +45,7 @@ export default async function RentalListPage() {
           Виллы и апартаменты в долгосрочную аренду — обновляется автоматически
         </div>
 
-        <RentalCatalog items={items} />
+        <RentalCatalog items={items} initial={initial} />
 
         <div className="h-16" />
       </PageContainer>
