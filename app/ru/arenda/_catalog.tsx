@@ -348,11 +348,6 @@ function RentalCard({ r }: { r: RentalItem }) {
         ) : (
           <div className="absolute inset-0 flex items-center justify-center text-3xl">🏡</div>
         )}
-        {r.type && (
-          <span className="absolute left-3 top-3 text-[11px] uppercase tracking-wide bg-white/95 backdrop-blur px-2 py-1 rounded-full font-medium">
-            {r.type}
-          </span>
-        )}
       </div>
       <div className="p-4">
         <div className="flex items-baseline justify-between gap-3 mb-1">
