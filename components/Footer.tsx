@@ -18,7 +18,7 @@ const COLS: Col[] = [
       { label: 'Жилые комплексы', href: '/ru/zhilye-kompleksy' },
       { label: 'Виллы', href: '/ru/villy' },
       { label: 'Апартаменты', href: '/ru/apartamenty' },
-      { label: 'Аренда', href: '#' },
+      { label: 'Аренда', href: '/ru/arenda' },
     ],
   },
   {
