@@ -297,7 +297,10 @@ export function RentalCatalog({ items, initial }: { items: RentalItem[]; initial
           </button>
         )}
 
-        <div className="ml-auto flex items-center gap-3">
+        {/* basis-full bumps this group onto its own row on mobile so it doesn't
+            fight the filter buttons for horizontal space; on sm+ ml-auto keeps
+            it pinned to the right of the filter row. */}
+        <div className="basis-full sm:basis-auto sm:ml-auto flex items-center justify-between sm:justify-end gap-3 mt-1 sm:mt-0">
           <button
             type="button"
             onClick={toggleCurrency}
