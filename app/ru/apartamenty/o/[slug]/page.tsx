@@ -480,21 +480,29 @@ export default async function Page({ params }: { params: Params }) {
 
         {lat != null && lng != null && (
           <section className="mb-10">
-            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
+            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-2">
               Расположение
             </h2>
-            <div className="text-[14px] text-[var(--color-text)] mb-3">
-              {district ? `${district}, ` : ''}Бали, Индонезия
+            <div className="text-[14px] text-[var(--color-text-muted)] mb-4 flex items-center flex-wrap gap-x-4 gap-y-1">
+              <span>{district ? `${district}, ` : ''}Бали, Индонезия</span>
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-[var(--color-primary)] hover:text-[var(--color-primary-pressed)]"
+              >
+                <MapIcon size={14} /> Открыть на Google Maps
+              </a>
             </div>
-            <a
-              href={`https://www.google.com/maps?q=${lat},${lng}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border border-[var(--color-border)] text-[14px] font-medium text-[var(--color-text)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)]"
-            >
-              <MapIcon size={16} className="text-[var(--color-primary)]" />
-              Открыть на Google Maps
-            </a>
+            <div className="w-full aspect-[16/9] md:aspect-[21/9] overflow-hidden rounded-3xl border border-[var(--color-border)]">
+              <iframe
+                src={`https://www.google.com/maps?q=${lat},${lng}&hl=ru&z=15&output=embed`}
+                title={`Карта: ${title}`}
+                className="w-full h-full"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            </div>
           </section>
         )}
 
