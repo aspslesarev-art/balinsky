@@ -4,6 +4,7 @@ import Script from "next/script";
 import "./globals.css";
 import { Footer } from "@/components/Footer";
 import { CurrencyProvider } from "@/components/CurrencyContext";
+import { ConsultantWidget } from "@/components/ConsultantWidget";
 
 const GTM_ID = "GTM-TM6D54Z3";
 
@@ -53,6 +54,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <CurrencyProvider>
           {children}
           <Footer />
+          <ConsultantWidget />
         </CurrencyProvider>
       </body>
     </html>
