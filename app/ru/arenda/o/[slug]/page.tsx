@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { BedDouble, MapPin, Send, Tag } from 'lucide-react'
+import { BedDouble, MapPin, MessageCircle, Send, Tag } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
@@ -15,10 +15,27 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
 function fmtUsd(n: number): string { return '$' + Math.round(n).toLocaleString('en-US') }
 
-function tgHref(handle: string): string | null {
-  const v = handle.trim().replace(/^@/, '')
+// The Airtable "Контакт Телеграм" field is used loosely: most rows are full
+// https://t.me/... URLs, some are WhatsApp wa.me URLs, and some may be a bare
+// @username. Normalise into a clickable link + label.
+function parseContact(raw: string): { href: string; kind: 'telegram' | 'whatsapp' | 'other' } | null {
+  const v = raw.trim()
   if (!v) return null
-  return `https://t.me/${encodeURIComponent(v)}`
+  if (/^https?:\/\//i.test(v)) {
+    try {
+      const u = new URL(v)
+      const host = u.hostname.replace(/^www\./, '').toLowerCase()
+      if (host === 't.me' || host.endsWith('.t.me') || host === 'telegram.me') return { href: v, kind: 'telegram' }
+      if (host === 'wa.me' || host === 'api.whatsapp.com' || host === 'whatsapp.com') return { href: v, kind: 'whatsapp' }
+      return { href: v, kind: 'other' }
+    } catch {
+      return null
+    }
+  }
+  // Bare @handle or handle — assume Telegram
+  const handle = v.replace(/^@/, '').replace(/[^A-Za-z0-9_]/g, '')
+  if (!handle) return null
+  return { href: `https://t.me/${handle}`, kind: 'telegram' }
 }
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
@@ -45,7 +62,11 @@ export default async function RentalDetailPage({ params }: { params: Params }) {
   const r = await loadRentalBySlug(slug)
   if (!r) notFound()
 
-  const tg = r.telegram ? tgHref(r.telegram) : null
+  const contact = r.telegram ? parseContact(r.telegram) : null
+  const contactLabel = contact?.kind === 'whatsapp' ? 'Написать в WhatsApp'
+    : contact?.kind === 'telegram' ? 'Написать в Telegram'
+    : 'Связаться'
+  const ContactIcon = contact?.kind === 'whatsapp' ? MessageCircle : Send
 
   const productJsonLd: Record<string, unknown> = {
     '@context': 'https://schema.org',
@@ -104,15 +125,15 @@ export default async function RentalDetailPage({ params }: { params: Params }) {
           </section>
         )}
 
-        {tg && (
+        {contact && (
           <section className="mb-10">
             <a
-              href={tg}
+              href={contact.href}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[15px] font-medium no-underline transition-colors"
             >
-              <Send size={16} /> Написать в Telegram
+              <ContactIcon size={16} /> {contactLabel}
             </a>
           </section>
         )}
