@@ -1,7 +1,6 @@
 // Sync monthly rentals (Помесячная аренда) from Airtable → Supabase Storage manifest.
 import { createClient } from '@supabase/supabase-js'
 import fs from 'node:fs'
-import { downloadAndUpload, ensureBucket as ensureBucketHelper } from './lib-photo-sync.mjs'
 
 const env = fs.readFileSync('.env.local', 'utf8')
 for (const l of env.split('\n')) { const m = l.match(/^([A-Z_]+)=(.*)$/); if (m) process.env[m[1]] = m[2].replace(/^['"]|['"]$/g, '') }
@@ -14,8 +13,11 @@ const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABA
 
 const BUCKET = 'rental'
 const KEY = '_rental.json'
-const PHOTO_BUCKET = 'rental-photos'
-const MAX_PHOTOS_PER_LISTING = 12
+// Airtable attachment URLs are ephemeral (~hours). The 10-min cron regenerates
+// them on every run, so we ship them directly in the manifest — no per-photo
+// upload to Storage. Trades off "photos break if cron is down for hours" for
+// instant first sync.
+const MAX_PHOTOS_PER_LISTING = 8
 
 const TRANSLIT = {
   а:'a',б:'b',в:'v',г:'g',д:'d',е:'e',ё:'e',ж:'zh',з:'z',и:'i',й:'y',
@@ -77,7 +79,6 @@ function bestAttachmentUrl(a) {
 }
 
 await ensureBucket()
-await ensureBucketHelper(sb, PHOTO_BUCKET)
 console.log('▶ fetching rentals…')
 const recs = await fetchAll(BASE, TABLE)
 console.log('  records:', recs.length)
@@ -85,7 +86,6 @@ console.log('  records:', recs.length)
 const items = []
 const seenSlugs = new Map()
 let dropped = 0
-let totalPhotosUploaded = 0
 
 for (const r of recs) {
   const f = r.fields || {}
@@ -99,12 +99,10 @@ for (const r of recs) {
   seenSlugs.set(slug, n)
   if (n > 1) slug = `${slug}-${n}`
 
-  // Upload photos to Storage; Airtable URLs are ephemeral.
-  const photos = []
-  for (const a of photoAtts.slice(0, MAX_PHOTOS_PER_LISTING)) {
-    const url = await downloadAndUpload(sb, PHOTO_BUCKET, r.id, bestAttachmentUrl(a))
-    if (url) { photos.push(url); totalPhotosUploaded++ }
-  }
+  const photos = photoAtts
+    .slice(0, MAX_PHOTOS_PER_LISTING)
+    .map(bestAttachmentUrl)
+    .filter(Boolean)
   if (photos.length === 0) { dropped++; continue }
 
   items.push({
@@ -131,7 +129,7 @@ items.sort((a, b) => {
   return tb - ta
 })
 
-console.log('▶ kept:', items.length, 'dropped:', dropped, 'photos:', totalPhotosUploaded)
+console.log('▶ kept:', items.length, 'dropped:', dropped)
 const body = JSON.stringify({ generatedAt: new Date().toISOString(), count: items.length, items })
 console.log('  payload size:', (body.length / 1024).toFixed(1), 'KB')
 
