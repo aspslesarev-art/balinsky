@@ -348,7 +348,7 @@ export function RentalCatalog({ items, initial }: { items: RentalItem[]; initial
 
 function SortMenu({ current, onChange }: { current: SortKey; onChange: (v: SortKey) => void }) {
   return (
-    <div className="fixed left-3 right-3 top-24 max-h-[70vh] overflow-y-auto sm:absolute sm:inset-x-auto sm:left-0 sm:top-full sm:max-h-none mt-0 sm:mt-2 z-30 w-auto sm:w-[220px] rounded-2xl border border-[var(--color-border)] bg-white shadow-[0_12px_32px_rgba(0,0,0,0.16)] sm:shadow-[0_8px_24px_rgba(0,0,0,0.08)] p-2">
+    <div className="fixed left-3 top-24 w-[calc(100vw-24px)] max-h-[70vh] overflow-y-auto sm:absolute sm:left-0 sm:top-full sm:w-[220px] sm:max-h-none mt-0 sm:mt-2 z-30 rounded-2xl border border-[var(--color-border)] bg-white shadow-[0_12px_32px_rgba(0,0,0,0.16)] sm:shadow-[0_8px_24px_rgba(0,0,0,0.08)] p-2">
       <ul>
         {(Object.keys(SORT_LABELS) as SortKey[]).map(key => (
           <li key={key}>
@@ -398,7 +398,7 @@ function PriceRangePopover({
   }
 
   return (
-    <div className="fixed left-3 right-3 top-24 max-h-[70vh] overflow-y-auto sm:absolute sm:inset-x-auto sm:left-0 sm:top-full sm:max-h-none mt-0 sm:mt-2 z-30 w-auto sm:w-[300px] rounded-2xl border border-[var(--color-border)] bg-white shadow-[0_12px_32px_rgba(0,0,0,0.16)] sm:shadow-[0_8px_24px_rgba(0,0,0,0.08)] p-4">
+    <div className="fixed left-3 top-24 w-[calc(100vw-24px)] max-h-[70vh] overflow-y-auto sm:absolute sm:left-0 sm:top-full sm:w-[300px] sm:max-h-none mt-0 sm:mt-2 z-30 rounded-2xl border border-[var(--color-border)] bg-white shadow-[0_12px_32px_rgba(0,0,0,0.16)] sm:shadow-[0_8px_24px_rgba(0,0,0,0.08)] p-4">
       <div className="text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] mb-2">Цена в месяц, USD</div>
       <div className="flex items-center gap-2 mb-3">
         <label className="flex-1">
@@ -484,7 +484,7 @@ function CheckboxList({
   }
 
   return (
-    <div className="fixed left-3 right-3 top-24 max-h-[70vh] overflow-y-auto sm:absolute sm:inset-x-auto sm:left-0 sm:top-full sm:max-h-none mt-0 sm:mt-2 z-30 w-auto sm:w-[280px] rounded-2xl border border-[var(--color-border)] bg-white shadow-[0_12px_32px_rgba(0,0,0,0.16)] sm:shadow-[0_8px_24px_rgba(0,0,0,0.08)] p-3">
+    <div className="fixed left-3 top-24 w-[calc(100vw-24px)] max-h-[70vh] overflow-y-auto sm:absolute sm:left-0 sm:top-full sm:w-[280px] sm:max-h-none mt-0 sm:mt-2 z-30 rounded-2xl border border-[var(--color-border)] bg-white shadow-[0_12px_32px_rgba(0,0,0,0.16)] sm:shadow-[0_8px_24px_rgba(0,0,0,0.08)] p-3">
       {searchable && (
         <input
           autoFocus
