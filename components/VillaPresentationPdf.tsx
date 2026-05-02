@@ -16,6 +16,8 @@ export type AgentContact = {
   whatsapp: string
 }
 
+export type PdfOrientation = 'landscape' | 'portrait'
+
 const COLORS = {
   text: '#111827',
   muted: '#6B7280',
@@ -292,7 +294,17 @@ function PhotoSetPdf({ photos, layout }: { photos: string[]; layout: 'mosaic5' |
 
 const SITE_URL = 'https://balinsky.info'
 
-export function VillaPdfDocument({ data, snap, agent }: { data: VillaPresentationData; snap: Snapshot | null; agent: AgentContact | null }) {
+export function VillaPdfDocument({ data, snap, agent, orientation = 'landscape' }: {
+  data: VillaPresentationData;
+  snap: Snapshot | null;
+  agent: AgentContact | null;
+  orientation?: PdfOrientation;
+}) {
+  const isPortrait = orientation === 'portrait'
+  // Each Page picks up the chosen orientation; layouts that depended on the
+  // wide aspect (cover, scenarios row, photoset mosaic) flip to a vertical
+  // arrangement when isPortrait is true.
+  const pageProps = { size: 'A4' as const, orientation }
   const sectionPath = data.kind === 'apartment' ? '/ru/apartamenty/o/' : '/ru/villy/o/'
   const villaUrl = `${SITE_URL}${sectionPath}${data.slug}`
   const allPhotos = data.photos.slice(0, 12)
@@ -323,10 +335,11 @@ export function VillaPdfDocument({ data, snap, agent }: { data: VillaPresentatio
 
   return (
     <Document title={data.title} author={agent?.name ?? 'balinsky.info'} producer="balinsky.info">
-      {/* Cover — white bg, split layout */}
-      <Page size="A4" orientation="landscape" style={[styles.page, styles.pagePadded]}>
-        <View style={styles.coverRoot}>
-          <View style={styles.coverTextCol}>
+      {/* Cover — split layout. In portrait the photo sits on top (filling
+          the wide upper half) and the text drops below it. */}
+      <Page {...pageProps} style={[styles.page, styles.pagePadded]}>
+        <View style={isPortrait ? [styles.coverRoot, { flexDirection: 'column-reverse', gap: 16, alignItems: 'stretch' }] : styles.coverRoot}>
+          <View style={isPortrait ? [styles.coverTextCol, { width: '100%' }] : styles.coverTextCol}>
             {data.district && <Text style={styles.coverDistrict}>{data.district}, Бали</Text>}
             <Text style={styles.coverTitle}>{data.title}</Text>
             <View style={styles.coverChips}>
@@ -342,21 +355,23 @@ export function VillaPdfDocument({ data, snap, agent }: { data: VillaPresentatio
               </View>
             )}
           </View>
-          <View style={styles.coverPhotoCol}>
+          <View style={isPortrait ? [styles.coverPhotoCol, { width: '100%', height: 360, flex: 0 }] : styles.coverPhotoCol}>
             {allPhotos[0] && <Image src={allPhotos[0]} style={styles.coverPhotoImg} />}
           </View>
         </View>
       </Page>
 
-      {/* Photo compositions */}
+      {/* Photo compositions. Mosaic5 / grid4 are designed for landscape;
+          in portrait we degrade to the simple stacked "small" layout so
+          tall pictures get full width instead of being cropped. */}
       {photosetGroups.map((group, gIdx) => (
-        <Page key={`photoset-${gIdx}`} size="A4" orientation="landscape" style={[styles.page, styles.pagePadded]}>
-          <PhotoSetPdf photos={group.photos} layout={group.layout} />
+        <Page key={`photoset-${gIdx}`} {...pageProps} style={[styles.page, styles.pagePadded]}>
+          <PhotoSetPdf photos={group.photos} layout={isPortrait ? 'small' : group.layout} />
         </Page>
       ))}
 
       {/* Facts */}
-      <Page size="A4" orientation="landscape" style={[styles.page, styles.pagePadded]}>
+      <Page {...pageProps} style={[styles.page, styles.pagePadded]}>
         <Text style={styles.h2}>Характеристики</Text>
         <Text style={styles.subtitle}>Ключевые параметры объекта</Text>
         <View style={styles.factsGrid}>
@@ -372,7 +387,7 @@ export function VillaPdfDocument({ data, snap, agent }: { data: VillaPresentatio
 
       {/* Description */}
       {data.seoText && (
-        <Page size="A4" orientation="landscape" style={[styles.page, styles.pagePadded]}>
+        <Page {...pageProps} style={[styles.page, styles.pagePadded]}>
           <Text style={styles.h2}>О вилле</Text>
           <Text style={styles.descBody}>{data.seoText}</Text>
           <PageFooter title={data.title} />
@@ -381,7 +396,7 @@ export function VillaPdfDocument({ data, snap, agent }: { data: VillaPresentatio
 
       {/* Location */}
       {hasMap && (
-        <Page size="A4" orientation="landscape" style={[styles.page, styles.pagePadded]}>
+        <Page {...pageProps} style={[styles.page, styles.pagePadded]}>
           <Text style={styles.h2}>Расположение</Text>
           <Text style={styles.subtitle}>Координаты и район</Text>
           {data.district && <Text style={styles.locText}>Район: {data.district}, Бали</Text>}
@@ -393,7 +408,7 @@ export function VillaPdfDocument({ data, snap, agent }: { data: VillaPresentatio
 
       {/* Nearby — limited to 8 categories × 3 items so it fits on one A4 landscape page */}
       {hasNearby && snap && (
-        <Page size="A4" orientation="landscape" style={[styles.page, styles.pagePadded]}>
+        <Page {...pageProps} style={[styles.page, styles.pagePadded]}>
           <Text style={styles.h2}>Что вокруг виллы</Text>
           <Text style={styles.subtitle}>Топ-места поблизости по рейтингу и расстоянию</Text>
           <View style={styles.nearbyGrid}>
@@ -423,12 +438,12 @@ export function VillaPdfDocument({ data, snap, agent }: { data: VillaPresentatio
 
       {/* Investment scenarios */}
       {hasScenarios && snap?.scenarios && (
-        <Page size="A4" orientation="landscape" style={[styles.page, styles.pagePadded]}>
+        <Page {...pageProps} style={[styles.page, styles.pagePadded]}>
           <Text style={styles.h2}>Инвестиционный потенциал</Text>
           <Text style={styles.subtitle}>
             Три сценария аренды на основе матчинга с конкурентами на Booking ({snap.competitors.length} объектов)
           </Text>
-          <View style={styles.scenariosRow}>
+          <View style={isPortrait ? [styles.scenariosRow, { flexDirection: 'column', gap: 8 }] : styles.scenariosRow}>
             {(['bad', 'median', 'good'] as const).map(key => {
               const e = snap.scenarios![key]
               const cardStyle = key === 'bad' ? styles.scenarioCardBad : key === 'good' ? styles.scenarioCardGood : styles.scenarioCardMedian
@@ -455,7 +470,7 @@ export function VillaPdfDocument({ data, snap, agent }: { data: VillaPresentatio
       )}
 
       {/* Last page — either agent contact or villa link */}
-      <Page size="A4" orientation="landscape" style={[styles.page, styles.pagePadded]}>
+      <Page {...pageProps} style={[styles.page, styles.pagePadded]}>
         <View style={styles.agentWrap}>
           <View style={styles.agentInner}>
             {agent ? (
@@ -491,12 +506,19 @@ export function VillaPdfDocument({ data, snap, agent }: { data: VillaPresentatio
   )
 }
 
-export async function downloadVillaPdf(data: VillaPresentationData, snap: Snapshot | null, agent: AgentContact | null): Promise<void> {
-  const blob = await pdf(<VillaPdfDocument data={data} snap={snap} agent={agent} />).toBlob()
+export async function downloadVillaPdf(
+  data: VillaPresentationData,
+  snap: Snapshot | null,
+  agent: AgentContact | null,
+  orientation: PdfOrientation = 'landscape',
+): Promise<void> {
+  const blob = await pdf(<VillaPdfDocument data={data} snap={snap} agent={agent} orientation={orientation} />).toBlob()
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `${data.kind === 'apartment' ? 'apartament' : 'villa'}-${slugify(data.title)}.pdf`
+  const kindPrefix = data.kind === 'apartment' ? 'apartament' : 'villa'
+  const orientSuffix = orientation === 'portrait' ? '-mobile' : ''
+  a.download = `${kindPrefix}-${slugify(data.title)}${orientSuffix}.pdf`
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)

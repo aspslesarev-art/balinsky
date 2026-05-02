@@ -561,6 +561,7 @@ function InvestSlide({ snap, priceUsd }: { snap: Snapshot | null; priceUsd: numb
 
 function DownloadModal({ data, snap, onClose }: { data: VillaPresentationData; snap: Snapshot | null; onClose: () => void }) {
   const [mode, setMode] = useState<'choose' | 'agent'>('choose')
+  const [orientation, setOrientation] = useState<'landscape' | 'portrait'>('landscape')
   const [name, setName] = useState('')
   const [telegram, setTelegram] = useState('')
   const [whatsapp, setWhatsapp] = useState('')
@@ -582,7 +583,7 @@ function DownloadModal({ data, snap, onClose }: { data: VillaPresentationData; s
     setError(null)
     try {
       const { downloadVillaPdf } = await import('./VillaPresentationPdf')
-      await downloadVillaPdf(data, snap, null)
+      await downloadVillaPdf(data, snap, null, orientation)
       onClose()
     } catch (e) {
       console.error(e)
@@ -598,7 +599,7 @@ function DownloadModal({ data, snap, onClose }: { data: VillaPresentationData; s
     setError(null)
     try {
       const { downloadVillaPdf } = await import('./VillaPresentationPdf')
-      await downloadVillaPdf(data, snap, { name: trimmedName, telegram: trimmedTg, whatsapp: trimmedWa })
+      await downloadVillaPdf(data, snap, { name: trimmedName, telegram: trimmedTg, whatsapp: trimmedWa }, orientation)
       onClose()
     } catch (e) {
       console.error(e)
@@ -637,9 +638,32 @@ function DownloadModal({ data, snap, onClose }: { data: VillaPresentationData; s
 
         {mode === 'choose' ? (
           <>
-            <p className="text-[13px] text-[var(--color-text-muted)] mb-5">
-              Выберите вариант — без контактов или со своими как агента.
+            <p className="text-[13px] text-[var(--color-text-muted)] mb-4">
+              Выберите формат и вариант. Горизонтальный — для экрана, вертикальный — под телефон.
             </p>
+            <div className="mb-4 inline-flex w-full rounded-full border border-[var(--color-border)] p-1 bg-[var(--color-search-bg)]">
+              {([
+                { v: 'landscape', label: 'Горизонтально' },
+                { v: 'portrait',  label: 'Для телефона' },
+              ] as const).map(opt => {
+                const isActive = orientation === opt.v
+                return (
+                  <button
+                    key={opt.v}
+                    type="button"
+                    onClick={() => setOrientation(opt.v)}
+                    disabled={busy}
+                    className={`flex-1 rounded-full px-4 py-2 text-[13px] font-medium transition-colors ${
+                      isActive
+                        ? 'bg-white text-[#111827] shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
+                        : 'text-[var(--color-text-muted)] hover:text-[#111827]'
+                    } disabled:opacity-50`}
+                  >
+                    {opt.label}
+                  </button>
+                )
+              })}
+            </div>
             <div className="space-y-3">
               <button
                 type="button"
