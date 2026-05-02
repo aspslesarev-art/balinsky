@@ -107,6 +107,8 @@ function CompareCard({ r }: { r: RentalItem }) {
   return (
     <Link
       href={`/ru/arenda/o/${r.slug}`}
+      target="_blank"
+      rel="noopener"
       className="block rounded-xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)] transition-colors"
     >
       <div className="relative aspect-[4/3] bg-[var(--color-search-bg)]">
