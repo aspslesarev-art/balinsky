@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { ChevronRight, BedDouble, MapPin } from 'lucide-react'
-import { loadAllRental, type RentalItem } from '@/lib/rental'
+import { loadCompareRental, type RentalItem } from '@/lib/rental'
 import { InlinePrice } from './InlinePrice'
 
 type Props = {
@@ -34,7 +34,7 @@ function pickMatches(items: RentalItem[], district: string, bedrooms: number | n
 
 export async function RentalCompareSection({ district, bedrooms, villaPriceUsd }: Props) {
   if (!district) return null
-  const all = await loadAllRental()
+  const all = await loadCompareRental()
   const { matches, level } = pickMatches(all, district, bedrooms)
   if (matches.length === 0) return null
 

@@ -6,6 +6,7 @@ import { loadAllNews } from '@/lib/news'
 import { loadAllPromo } from '@/lib/promo'
 import { loadAllEvents } from '@/lib/events'
 import { loadAllKnowledge } from '@/lib/knowledge'
+import { loadAllRental } from '@/lib/rental'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
@@ -18,6 +19,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/ru/apartamenty`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
     { url: `${SITE_URL}/ru/zhilye-kompleksy`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
     { url: `${SITE_URL}/ru/villy`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
+    { url: `${SITE_URL}/ru/arenda`, lastModified: now, changeFrequency: 'daily', priority: 0.8 },
     { url: `${SITE_URL}/ru/zastrojshhiki`, lastModified: now, changeFrequency: 'daily', priority: 0.8 },
     { url: `${SITE_URL}/ru/novosti`, lastModified: now, changeFrequency: 'daily', priority: 0.7 },
     { url: `${SITE_URL}/ru/akcii`, lastModified: now, changeFrequency: 'daily', priority: 0.7 },
@@ -36,13 +38,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     url: `${SITE_URL}${path}`, lastModified: now, changeFrequency: 'weekly' as const, priority: 0.7,
   }))
 
-  // Detail pages: news / promo / events / knowledge
+  // Detail pages: news / promo / events / knowledge / rental
   let news: MetadataRoute.Sitemap = []
   let promo: MetadataRoute.Sitemap = []
   let events: MetadataRoute.Sitemap = []
   let knowledge: MetadataRoute.Sitemap = []
+  let rental: MetadataRoute.Sitemap = []
   try {
-    const [n, p, e, k] = await Promise.all([loadAllNews(), loadAllPromo(), loadAllEvents(), loadAllKnowledge()])
+    const [n, p, e, k, r] = await Promise.all([loadAllNews(), loadAllPromo(), loadAllEvents(), loadAllKnowledge(), loadAllRental()])
     news = n.map(x => ({
       url: `${SITE_URL}/ru/novosti/${x.slug}`,
       lastModified: x.date ? new Date(x.date) : now,
@@ -67,13 +70,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly' as const,
       priority: 0.5,
     }))
+    // Every rental we ever published — even old listings keep their detail
+    // page alive (loadRentalBySlug is no longer fresh-only) so the URLs
+    // stay indexable and inbound links from the comparison block still work.
+    rental = r.map(x => ({
+      url: `${SITE_URL}/ru/arenda/o/${x.slug}`,
+      lastModified: x.updatedAt ? new Date(x.updatedAt) : (x.createdTime ? new Date(x.createdTime) : now),
+      changeFrequency: 'monthly' as const,
+      priority: 0.5,
+    }))
   } catch {
     // If manifests are unavailable at build time, ship sitemap without those.
   }
 
   // Dedupe by URL (top-level pages may also be in section listings)
   const seen = new Set<string>()
-  const all = [...top, ...apartments, ...complexes, ...villas, ...news, ...promo, ...events, ...knowledge]
+  const all = [...top, ...apartments, ...complexes, ...villas, ...news, ...promo, ...events, ...knowledge, ...rental]
   return all.filter(entry => {
     if (seen.has(entry.url)) return false
     seen.add(entry.url)
