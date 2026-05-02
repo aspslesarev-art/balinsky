@@ -54,6 +54,19 @@ function initials(name: string): string {
   if (parts.length === 0) return '?'
   return (parts[0][0] + (parts[1]?.[0] ?? '')).toUpperCase()
 }
+// Bot replies are stored as HTML; strip tags for the chat-list preview.
+function stripHtml(s: string | null | undefined): string {
+  if (!s) return ''
+  return s
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 function relTime(iso: string): string {
   const d = new Date(iso)
   const now = Date.now()
@@ -195,7 +208,7 @@ export function Inbox() {
                     <div className="text-[11px] text-white/40 shrink-0">{relTime(c.last_message_at)}</div>
                   </div>
                   <div className="flex items-center justify-between gap-2 mt-0.5">
-                    <div className="text-[12px] text-white/50 truncate">{c.last_message_text ?? '—'}</div>
+                    <div className="text-[12px] text-white/50 truncate">{stripHtml(c.last_message_text) || '—'}</div>
                     {c.unread_count > 0 && (
                       <span className="shrink-0 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full bg-[var(--color-primary)] text-white text-[10px] font-semibold">{c.unread_count}</span>
                     )}
