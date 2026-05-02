@@ -101,12 +101,14 @@ body {
   to   { transform: scale(1.00) translate3d(0,  0,  0); }
 }
 
-.photo-kenburns-square-in  { animation: photo-kenburns-square-in  6s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate; }
-.photo-kenburns-square-out { animation: photo-kenburns-square-out 6s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate; }
-.photo-kenburns-wide-in    { animation: photo-kenburns-wide-in    6s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate; }
-.photo-kenburns-wide-out   { animation: photo-kenburns-wide-out   6s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate; }
-.photo-kenburns-tall-in    { animation: photo-kenburns-tall-in    6s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate; }
-.photo-kenburns-tall-out   { animation: photo-kenburns-tall-out   6s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate; }
+/* Class only sets the animation name — duration / fill / iteration are
+   set inline so PhotoSlider can tune them per cycle. */
+.photo-kenburns-square-in  { animation-name: photo-kenburns-square-in; }
+.photo-kenburns-square-out { animation-name: photo-kenburns-square-out; }
+.photo-kenburns-wide-in    { animation-name: photo-kenburns-wide-in; }
+.photo-kenburns-wide-out   { animation-name: photo-kenburns-wide-out; }
+.photo-kenburns-tall-in    { animation-name: photo-kenburns-tall-in; }
+.photo-kenburns-tall-out   { animation-name: photo-kenburns-tall-out; }
 
 @media (prefers-reduced-motion: reduce) {
   [class*="photo-kenburns-"] { animation: none; }

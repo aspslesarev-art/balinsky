@@ -4,12 +4,19 @@ import { useEffect, useRef, useState } from 'react'
 
 // Lazy slideshow inside a card. The first photo is a regular <img loading=
 // "lazy"> for SEO + LCP; everything else is mounted only after the user
-// hovers/focuses (desktop) or taps (mobile). Two layers ping-pong with
-// orientation-aware Ken Burns and a crossfade timed to land mid-motion.
+// hovers/focuses (desktop) or the card dominates the viewport (mobile).
 //
-// Stops + resets to the first photo on mouse leave / blur / scroll-off.
+// Stack model — only the top photo fades, the next is already at 100 %
+// opacity behind it, so transitions never show a half-blended pair.
+//
+// Two physical layers (A, B) swap roles each step:
+//   - top layer (visible / fading): runs kenburns-in, scale 1.0 → 1.10
+//   - bottom layer (steady, opacity 1): runs kenburns-out, scale 1.10 → 1.0
+// At step boundary the layer that was top ends at scale 1.10, then becomes
+// bottom and starts kenburns-out from 1.10 — continuous. Symmetric for B.
 const AUTO_PHOTOS = 5
 const ADVANCE_MS = 3000
+const FADE_MS = 700
 
 type Orient = 'square' | 'wide' | 'tall'
 function detectOrientation(img: HTMLImageElement): Orient {
@@ -43,25 +50,19 @@ export function PhotoSlider({
     setHoverDevice(window.matchMedia('(hover: hover)').matches)
   }, [])
 
-  // Ping-pong state — only meaningful while active.
-  const [layerAIdx, setLayerAIdx] = useState(0)
-  const [layerBIdx, setLayerBIdx] = useState(autoCount > 1 ? 1 : 0)
-  const [front, setFront] = useState<'a' | 'b'>('a')
-  const [tick, setTick] = useState(0)
+  // Step counter — increments on each tick. Photo on top is photos[step%n],
+  // photo behind it (steady, ready to take over) is photos[(step+1)%n].
+  const [step, setStep] = useState(0)
+  // True during the FADE_MS window where the top is fading out and the
+  // step++ swap is about to happen.
+  const [fading, setFading] = useState(false)
 
   const [orientA, setOrientA] = useState<Orient>('square')
   const [orientB, setOrientB] = useState<Orient>('square')
   const [baseOrient, setBaseOrient] = useState<Orient>('square')
 
-  const visibleIdx = front === 'a' ? layerAIdx : layerBIdx
-
-  // Viewport observer:
-  // - all devices: stop when the card scrolls off
-  // - touch devices (no real hover): also auto-start when the card is
-  //   the dominantly-visible thing on screen — TikTok/Reels style. We
-  //   activate at 85% visible and only release below 40%, so a quick
-  //   pause on a card kicks the slideshow off without it flickering on
-  //   and off as the user drags through.
+  // Viewport observer: stop on scroll-off; on touch devices also auto-start
+  // when the card dominates the viewport (TikTok / Reels feel).
   useEffect(() => {
     if (!ref.current) return
     const obs = new IntersectionObserver(
@@ -78,38 +79,41 @@ export function PhotoSlider({
     return () => obs.disconnect()
   }, [hoverDevice])
 
-  // Reset to first photo whenever active toggles off.
+  // Reset when slideshow stops.
   useEffect(() => {
     if (active) return
-    setFront('a')
-    setLayerAIdx(0)
-    setLayerBIdx(autoCount > 1 ? 1 : 0)
-    setTick(0)
-  }, [active, autoCount])
+    setStep(0)
+    setFading(false)
+  }, [active])
 
-  // Tick advance only while active. Respect prefers-reduced-motion.
+  // Preload all photos in the auto window so swaps never flash.
+  useEffect(() => {
+    if (!active) return
+    photos.slice(0, autoCount).forEach(src => {
+      const img = new Image()
+      img.src = src
+    })
+  }, [active, autoCount, photos])
+
+  // Tick driver: every ADVANCE_MS we start the fade, then FADE_MS later
+  // commit the step (which swaps physical roles and loads the next photo
+  // into what becomes the new bottom).
   useEffect(() => {
     if (!active || autoCount <= 1) return
     if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    const id = setInterval(() => setTick(t => t + 1), ADVANCE_MS)
-    return () => clearInterval(id)
+    const fadeTimers: ReturnType<typeof setTimeout>[] = []
+    const interval = setInterval(() => {
+      setFading(true)
+      fadeTimers.push(setTimeout(() => {
+        setStep(s => s + 1)
+        setFading(false)
+      }, FADE_MS))
+    }, ADVANCE_MS)
+    return () => {
+      clearInterval(interval)
+      fadeTimers.forEach(clearTimeout)
+    }
   }, [active, autoCount])
-
-  // Each tick flips which layer is on top.
-  useEffect(() => {
-    if (tick === 0) return
-    setFront(prev => (prev === 'a' ? 'b' : 'a'))
-  }, [tick])
-
-  // After front swaps, queue the next photo into the now-hidden layer.
-  useEffect(() => {
-    if (!active || autoCount <= 1) return
-    const visIdx = front === 'a' ? layerAIdx : layerBIdx
-    const upcoming = (visIdx + 1) % autoCount
-    if (front === 'a') setLayerBIdx(upcoming)
-    else setLayerAIdx(upcoming)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [front, active, autoCount])
 
   if (count === 0) {
     return (
@@ -121,17 +125,26 @@ export function PhotoSlider({
     )
   }
 
-  // Pointer handlers — only on devices with a real hover (desktop with
-  // mouse / trackpad). Touch devices get auto-activation from the
-  // viewport observer above, so attaching mouse handlers there would
-  // double-fire on tap. Focus is always wired for keyboard nav.
+  // Pointer handlers — desktop only. Touch path goes through observer.
   const pointerHandlers = hoverDevice === true ? {
     onMouseEnter: () => setActive(true),
     onMouseLeave: () => setActive(false),
   } : {}
 
-  // The base image: always rendered, normal img tag, lazy. SEO + LCP
-  // unaffected because no JS or extra requests gate this.
+  // Even step: A is top, B is bottom. Odd step: roles swap.
+  // Each layer's photo only changes when it's the bottom layer — so the
+  // visible top never has its src updated mid-frame.
+  const aIsTop = step % 2 === 0
+  const topPhotoIdx    = step % autoCount
+  const bottomPhotoIdx = (step + 1) % autoCount
+  const aPhotoIdx = aIsTop ? topPhotoIdx : bottomPhotoIdx
+  const bPhotoIdx = aIsTop ? bottomPhotoIdx : topPhotoIdx
+
+  // The top layer fades when `fading` is true; the bottom layer is always
+  // fully opaque so the next photo is already 100% visible underneath.
+  const topOpacityClass = fading ? 'opacity-0' : 'opacity-100'
+  const fadeTransition  = `transition-opacity duration-[${FADE_MS}ms] ease-in-out`
+
   return (
     <div
       ref={ref}
@@ -153,57 +166,69 @@ export function PhotoSlider({
 
       {active && autoCount > 1 && (
         <>
+          {/* Layer A — z-index 2 when top, 1 when bottom */}
           <img
-            src={photos[layerAIdx]}
+            key={`a-${aPhotoIdx}`}
+            src={photos[aPhotoIdx]}
             alt=""
             aria-hidden="true"
             loading="lazy"
             onLoad={e => setOrientA(detectOrientation(e.currentTarget))}
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1200ms] ease-in-out ${
-              front === 'a' ? 'opacity-100' : 'opacity-0'
-            } photo-kenburns-${orientA}-in`}
+            className={`absolute inset-0 w-full h-full object-cover ${
+              aIsTop
+                ? `${fadeTransition} ${topOpacityClass} z-[2] photo-kenburns-${orientA}-in`
+                : `opacity-100 z-[1] photo-kenburns-${orientA}-out`
+            }`}
+            style={{
+              animationDuration: `${ADVANCE_MS + FADE_MS}ms`,
+              animationTimingFunction: 'linear',
+              animationFillMode: 'forwards',
+            }}
           />
+          {/* Layer B */}
           <img
-            src={photos[layerBIdx]}
+            key={`b-${bPhotoIdx}`}
+            src={photos[bPhotoIdx]}
             alt=""
             aria-hidden="true"
             loading="lazy"
             onLoad={e => setOrientB(detectOrientation(e.currentTarget))}
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1200ms] ease-in-out ${
-              front === 'b' ? 'opacity-100' : 'opacity-0'
-            } photo-kenburns-${orientB}-out`}
+            className={`absolute inset-0 w-full h-full object-cover ${
+              !aIsTop
+                ? `${fadeTransition} ${topOpacityClass} z-[2] photo-kenburns-${orientB}-in`
+                : `opacity-100 z-[1] photo-kenburns-${orientB}-out`
+            }`}
+            style={{
+              animationDuration: `${ADVANCE_MS + FADE_MS}ms`,
+              animationTimingFunction: 'linear',
+              animationFillMode: 'forwards',
+            }}
           />
         </>
       )}
 
-      {/* Subtle overlay for "premium" depth — only on hover so static cards stay flat. */}
+      {/* Subtle dark overlay only while playing — adds a touch of depth. */}
       {active && (
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-transparent z-[1]" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-transparent z-[3]" />
       )}
 
-      {/* Reels-style progress bar — one segment per photo in the auto
-          window. Past segments are filled, current animates 0 → 100 %
-          in sync with ADVANCE_MS, future segments empty. Only visible
-          while the slideshow is actually playing. */}
+      {/* Continuous progress bar at the very bottom. Translucent track,
+          a single white sweep that fills 0 → 100 % over each photo cycle
+          and restarts on the swap. Only visible while playing. */}
       {active && autoCount > 1 && (
-        <div className="pointer-events-none absolute left-3 right-3 bottom-3 flex items-center gap-1 z-[2]">
-          {Array.from({ length: autoCount }).map((_, idx) => (
-            <div key={idx} className="flex-1 h-[2.5px] bg-white/35 rounded-full overflow-hidden">
-              <div
-                key={`${idx}-${tick}`}
-                className="h-full bg-white rounded-full"
-                style={{
-                  width: idx < visibleIdx ? '100%' : idx === visibleIdx ? '100%' : '0%',
-                  animation: idx === visibleIdx ? `photo-progress ${ADVANCE_MS}ms linear forwards` : undefined,
-                }}
-              />
-            </div>
-          ))}
+        <div className="pointer-events-none absolute left-0 right-0 bottom-0 h-[3px] bg-white/30 z-[4]">
+          <div
+            key={step}
+            className="h-full bg-white"
+            style={{
+              animation: `photo-progress ${ADVANCE_MS}ms linear forwards`,
+            }}
+          />
         </div>
       )}
 
-      {/* Suppress unused-warnings: baseOrient kept in case we want a Ken Burns
-          on the static base image too (currently it stays put). */}
+      {/* Suppress unused-warnings: baseOrient kept in case we want a Ken
+          Burns on the static base image too (currently it stays put). */}
       <span hidden>{baseOrient}</span>
     </div>
   )
