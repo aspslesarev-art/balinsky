@@ -92,12 +92,12 @@ export function PhotoSlider({
     return () => obs.disconnect()
   }, [hoverDevice])
 
-  // Reset when slideshow stops.
-  useEffect(() => {
-    if (active) return
-    setStep(0)
-    setFading(false)
-  }, [active])
+  // Once the visitor has activated the slideshow, the layers stay
+  // mounted (and animations stay where they were) even when activity
+  // pauses — so a re-engage picks up exactly where it left off rather
+  // than snapping back to photos[0].
+  const [everActivated, setEverActivated] = useState(false)
+  useEffect(() => { if (active) setEverActivated(true) }, [active])
 
   // Preload all photos in the auto window so swaps never flash.
   useEffect(() => {
@@ -177,10 +177,15 @@ export function PhotoSlider({
 
   const topOpacityClass = fading ? 'opacity-0' : 'opacity-100'
   const fadeTransition  = `transition-opacity duration-[${FADE_MS}ms] ease-in-out`
+  // animation-play-state freezes the Ken Burns + progress sweep mid-flight
+  // when the visitor leaves; resuming flips it back to running and the
+  // browser carries on from the same transform / width.
+  const playState = active ? 'running' : 'paused'
   const animStyle = {
     animationDuration: `${ANIM_DURATION}ms`,
     animationTimingFunction: 'linear',
     animationFillMode: 'forwards',
+    animationPlayState: playState,
   } as const
 
   return (
@@ -198,11 +203,11 @@ export function PhotoSlider({
         alt={alt}
         loading="lazy"
         className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[600ms] ${
-          active && autoCount > 1 ? 'opacity-0' : 'opacity-100'
+          everActivated && autoCount > 1 ? 'opacity-0' : 'opacity-100'
         }`}
       />
 
-      {active && autoCount > 1 && (
+      {everActivated && autoCount > 1 && (
         <>
           {/* Layer A — z-index 2 when top, 1 when bottom */}
           <img
@@ -235,20 +240,24 @@ export function PhotoSlider({
         </>
       )}
 
-      {/* Subtle dark overlay only while playing — adds a touch of depth. */}
+      {/* Subtle dark overlay while engaged — adds a touch of depth. */}
       {active && (
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-transparent z-[3]" />
       )}
 
       {/* One continuous progress bar at the very bottom. Translucent
           track + a single white sweep that fills 0 → 100 % across the
-          full slideshow cycle (autoCount × ADVANCE_MS). */}
-      {active && autoCount > 1 && (
+          full slideshow cycle (autoCount × ADVANCE_MS). Pause freezes
+          the sweep at its current width via animation-play-state. */}
+      {everActivated && autoCount > 1 && (
         <div className="pointer-events-none absolute left-0 right-0 bottom-0 h-[3px] bg-white/30 z-[4]">
           <div
             key={Math.floor(step / autoCount)}
             className="h-full bg-white"
-            style={{ animation: `photo-progress ${autoCount * ADVANCE_MS}ms linear forwards` }}
+            style={{
+              animation: `photo-progress ${autoCount * ADVANCE_MS}ms linear forwards`,
+              animationPlayState: playState,
+            }}
           />
         </div>
       )}
