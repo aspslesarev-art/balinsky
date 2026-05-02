@@ -88,6 +88,14 @@ function InvestmentWidgetView({ snap, apiKey }: { snap: Snapshot; apiKey: string
   return (
     <SectionShell>
       <Verdict snap={snap} />
+
+      {/* Context first: explain what the three scenarios mean and which
+          villas/zone the numbers came from, BEFORE the map and the cards.
+          Reading order: NOI summary → what is this → which zone → map →
+          three scenarios → list of comparable Booking villas. */}
+      {snap.scenarios && <ScenariosIntro snap={snap} />}
+      <Explanation snap={snap} />
+
       <div className="mt-4">
         <InvestmentMap apiKey={apiKey} snap={snap} allPois={allPois} />
       </div>
@@ -104,15 +112,11 @@ function InvestmentWidgetView({ snap, apiKey }: { snap: Snapshot; apiKey: string
         </Banner>
       )}
 
-      {snap.scenarios && <ScenariosIntro snap={snap} />}
-
       {snap.scenarios ? (
         <Scenarios snap={snap} />
       ) : snap.references ? (
         <References snap={snap} />
       ) : null}
-
-      <Explanation snap={snap} />
 
       {snap.competitors.length > 0 && <CompetitorsGrid snap={snap} />}
 
