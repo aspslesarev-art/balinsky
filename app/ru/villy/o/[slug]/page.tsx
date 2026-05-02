@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js'
 import { unstable_cache } from 'next/cache'
 import {
   BedDouble, Square, Trees, Calendar, FileCheck2, Lock, MapPin, Plane,
-  ChevronRight, Building2, HardHat, Star,
+  ChevronRight, Building2, HardHat, Star, Palette,
 } from 'lucide-react'
 import { distanceKm as haversineKm } from '@/lib/competitor-utils'
 
@@ -28,6 +28,7 @@ import { DetailPriceBlock } from '@/components/DetailPriceBlock'
 import { InlinePrice } from '@/components/InlinePrice'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { loadAllVideos } from '@/lib/videos'
+import { loadVillaStyles } from '@/lib/villa-styles'
 import { VideoGrid } from '@/components/VideoGrid'
 import { VillaPresentationButton } from '@/components/VillaPresentation'
 
@@ -335,11 +336,13 @@ export default async function Page({ params }: { params: Params }) {
   const seoText = firstString(d['SEO Text']) ?? firstString(d['Notes'])
   const developerName = firstString(d['Developer1']) ?? firstString(d['Developer'])
 
-  const [otherVillas, complexes, developers] = await Promise.all([
+  const [otherVillas, complexes, developers, stylesMap] = await Promise.all([
     loadOtherVillasInDistrict(district, v.airtable_id),
     _loadComplexesIndex(),
     _loadDevelopersIndex(),
+    loadVillaStyles(),
   ])
+  const interiorStyle = stylesMap[v.airtable_id]?.style ?? null
   const GMAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? ''
 
   const parentComplex = findParentComplex(title, complexes)
@@ -370,6 +373,7 @@ export default async function Page({ params }: { params: Params }) {
     lease && { Icon: Lock, label: 'Лизхолд', value: `${lease} лет` },
     district && { Icon: MapPin, label: 'Район', value: district },
     fmtAirportDistance(lat, lng) && { Icon: Plane, label: 'До аэропорта', value: fmtAirportDistance(lat, lng)! },
+    interiorStyle && { Icon: Palette, label: 'Стиль интерьера', value: interiorStyle },
     priceM2 != null && { Icon: Square, label: 'Цена за м²', value: <InlinePrice usd={priceM2} /> },
   ].filter(Boolean) as { Icon: typeof BedDouble; label: string; value: ReactNode }[]
 

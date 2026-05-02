@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 import Fuse from 'fuse.js'
 import type { Option } from '@/components/filters/MultiSelectFilter'
 import { translit, hasCyrillic } from '@/lib/translit'
+import { loadVillaStyles } from '@/lib/villa-styles'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/villa-photos/_manifest.json`
@@ -30,6 +31,7 @@ export type VillaFilterState = {
   permit: string[]
   year: string[]
   developer: string[]
+  style: string[]
 }
 
 export type VillaFilterOptions = {
@@ -39,6 +41,7 @@ export type VillaFilterOptions = {
   permit: Option[]
   year: Option[]
   developer: Option[]
+  style: Option[]
 }
 
 export type Row = { airtable_id: string; data: Record<string, unknown> }
@@ -82,6 +85,7 @@ export const EMPTY_FILTERS: VillaFilterState = {
   permit: [],
   year: [],
   developer: [],
+  style: [],
 }
 
 // === helpers ===
@@ -139,6 +143,7 @@ export function parseQueryFilters(sp: Record<string, string | undefined>): Villa
     permit: asArray(sp.permit),
     year: asArray(sp.year),
     developer: asArray(sp.developer),
+    style: asArray(sp.style),
   }
 }
 
@@ -152,7 +157,8 @@ export function hasAnyFilter(f: VillaFilterState): boolean {
     f.status.length > 0 ||
     f.permit.length > 0 ||
     f.year.length > 0 ||
-    f.developer.length > 0
+    f.developer.length > 0 ||
+    f.style.length > 0
   )
 }
 
@@ -172,9 +178,12 @@ export type EnrichedRow = {
   land: number | null
   lat: number | null
   lng: number | null
+  style: string | null
 }
 
-function enrich(r: Row): EnrichedRow {
+export type StylesMap = Record<string, { style: string | null }>
+
+export function enrich(r: Row, styles: StylesMap = {}): EnrichedRow {
   const d = r.data
   const yearRaw = firstString(d['Year of completion'])
   const year = yearRaw && /^\d{4}$/.test(yearRaw) ? yearRaw : null
@@ -192,6 +201,7 @@ function enrich(r: Row): EnrichedRow {
     land: numberOrNull(d['Земля']),
     lat: parseGeo(d['Geo']),
     lng: parseGeo(d['Geo 2']),
+    style: styles[r.airtable_id]?.style ?? null,
   }
 }
 
@@ -207,6 +217,7 @@ export function passes(e: EnrichedRow, f: VillaFilterState): boolean {
   if (f.permit.length > 0 && (!e.permit || !f.permit.includes(e.permit))) return false
   if (f.year.length > 0 && (!e.year || !f.year.includes(e.year))) return false
   if (f.developer.length > 0 && (!e.developerName || !f.developer.includes(e.developerName))) return false
+  if (f.style.length > 0 && (!e.style || !f.style.includes(e.style))) return false
   return true
 }
 
@@ -302,6 +313,7 @@ export function buildOptions(allRows: EnrichedRow[], current: VillaFilterState):
   const year = build('year', e => e.year, 'value')
   const permit = build('permit', e => e.permit)
   const developer = build('developer', e => e.developerName)
+  const style = build('style', e => e.style)
   const statusCounts = countsExcludingDim('status', e => e.status)
   const status: Option[] = []
   for (const [name, key] of Object.entries(STATUS_TO_URL)) {
@@ -309,7 +321,7 @@ export function buildOptions(allRows: EnrichedRow[], current: VillaFilterState):
     if (c > 0) status.push({ value: key, label: name, count: c })
   }
 
-  return { district, bedrooms, status, permit, year, developer }
+  return { district, bedrooms, status, permit, year, developer, style }
 }
 
 // === card mapping ===
@@ -351,14 +363,15 @@ let _cache: { ts: number; data: CachedAll } | null = null
 let _inflight: Promise<CachedAll> | null = null
 
 async function _loadAllInternal(): Promise<CachedAll> {
-  const [rowsRes, manifest] = await Promise.all([
+  const [rowsRes, manifest, styles] = await Promise.all([
     sb.from('raw_villas').select('airtable_id, data').limit(1000),
     loadJson<Record<string, string[]>>(PHOTO_MANIFEST_URL, {}),
+    loadVillaStyles(),
   ])
   const rows = (rowsRes.data ?? []) as Row[]
   const enriched = rows
     .filter(r => r.data?.['Опубликовать'] === true)
-    .map(enrich)
+    .map(r => enrich(r, styles))
   return { enriched, manifest }
 }
 

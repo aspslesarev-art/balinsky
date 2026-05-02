@@ -32,6 +32,7 @@ export function parseCleanPath(segments: string[]): VillaFilterState | null {
     permit: [],
     year: [],
     developer: [],
+    style: [],
   }
   const seen = new Set<string>()
   for (const raw of segments) {

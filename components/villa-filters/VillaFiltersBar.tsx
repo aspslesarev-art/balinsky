@@ -37,7 +37,8 @@ export function VillaFiltersBar({
     (state.status.length > 0 ? 1 : 0) +
     (state.permit.length > 0 ? 1 : 0) +
     (state.year.length > 0 ? 1 : 0) +
-    (state.developer.length > 0 ? 1 : 0)
+    (state.developer.length > 0 ? 1 : 0) +
+    (state.style.length > 0 ? 1 : 0)
 
   return (
     <Suspense fallback={null}>
@@ -46,6 +47,7 @@ export function VillaFiltersBar({
         <VillaMultiSelect stateKey="district" label="Район" options={options.district} selected={state.district} current={state} view={view} searchable />
         <VillaMultiSelect stateKey="bedrooms" label="Кол-во спален" options={options.bedrooms} selected={state.bedrooms} current={state} view={view} />
         <VillaMultiSelect stateKey="status" label="Этап стройки" options={options.status} selected={state.status} current={state} view={view} />
+        <VillaMultiSelect stateKey="style" label="Стиль" options={options.style} selected={state.style} current={state} view={view} />
         <VillaMultiSelect stateKey="year" label="Год сдачи" options={options.year} selected={state.year} current={state} view={view} />
         <VillaMultiSelect stateKey="developer" label="Застройщик" options={options.developer} selected={state.developer} current={state} view={view} searchable />
         <VillaMultiSelect stateKey="permit" label="Разрешение" options={options.permit} selected={state.permit} current={state} view={view} />
