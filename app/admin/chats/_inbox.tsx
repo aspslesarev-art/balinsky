@@ -176,9 +176,11 @@ export function Inbox() {
     setChats(prev => prev.map(c => c.chat_id === activeChat.chat_id ? { ...c, bot_disabled: next } : c))
   }
 
-  if (!themeReady) return null
+  // Render eagerly; theme defaults to dark and switches once localStorage
+  // is read. A brief flash is fine; an empty page on a stale render is not.
   return (
     <div className={`h-screen flex bg-[var(--ax-bg)] text-[var(--ax-fg)] ${themeClass(theme)}`}>
+      {!themeReady && null}
       {/* Left: chat list */}
       <aside className={`flex flex-col w-full sm:w-[340px] border-r border-[var(--ax-border)] ${activeId != null ? 'hidden sm:flex' : 'flex'}`}>
         <div className="shrink-0 px-4 py-3 border-b border-[var(--ax-border)] flex items-center justify-between">

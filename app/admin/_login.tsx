@@ -28,10 +28,9 @@ export function LoginForm() {
     }
   }
 
-  if (!ready) return null
-
   return (
     <div className={`min-h-screen flex items-center justify-center px-4 bg-[var(--ax-bg)] text-[var(--ax-fg)] ${themeClass(theme)}`}>
+      {!ready && null}
       <form onSubmit={submit} className="w-full max-w-sm rounded-2xl bg-[var(--ax-panel)] border border-[var(--ax-border)] p-8 shadow-xl relative">
         <div className="absolute top-3 right-3">
           <ThemeToggle theme={theme} toggle={toggle} />
