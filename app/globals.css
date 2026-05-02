@@ -85,20 +85,20 @@ body {
   to   { transform: scale(1.00); }
 }
 @keyframes photo-kenburns-wide-in {
-  from { transform: scale(1.00) translate3d( 2%, 0, 0); }
-  to   { transform: scale(1.10) translate3d(-2%, 0, 0); }
+  from { transform: scale(1.00) translate3d(0,    0, 0); }
+  to   { transform: scale(1.10) translate3d(-4%,  0, 0); }
 }
 @keyframes photo-kenburns-wide-out {
-  from { transform: scale(1.10) translate3d(-2%, 0, 0); }
-  to   { transform: scale(1.00) translate3d( 2%, 0, 0); }
+  from { transform: scale(1.10) translate3d(-4%,  0, 0); }
+  to   { transform: scale(1.00) translate3d(0,    0, 0); }
 }
 @keyframes photo-kenburns-tall-in {
-  from { transform: scale(1.00) translate3d(0,  2%, 0); }
-  to   { transform: scale(1.10) translate3d(0, -2%, 0); }
+  from { transform: scale(1.00) translate3d(0,  0,  0); }
+  to   { transform: scale(1.10) translate3d(0, -4%, 0); }
 }
 @keyframes photo-kenburns-tall-out {
-  from { transform: scale(1.10) translate3d(0, -2%, 0); }
-  to   { transform: scale(1.00) translate3d(0,  2%, 0); }
+  from { transform: scale(1.10) translate3d(0, -4%, 0); }
+  to   { transform: scale(1.00) translate3d(0,  0,  0); }
 }
 
 .photo-kenburns-square-in  { animation: photo-kenburns-square-in  6s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate; }
