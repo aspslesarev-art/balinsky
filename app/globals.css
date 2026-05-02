@@ -71,47 +71,46 @@ body {
   border-radius: 0 !important;
 }
 
-/* === Card photo Ken Burns ===
-   Two layers ping-pong: front zooms in (1.0 → 1.10), back zooms
-   out (1.10 → 1.0), both 6 s infinite alternate. Direction of pan
-   depends on aspect ratio — square photos stay centered (just zoom),
-   wide photos pan left/right, tall photos pan up/down. */
-@keyframes photo-kenburns-square-in {
-  from { transform: scale(1.00); }
-  to   { transform: scale(1.10); }
+/* === Card photo motion ===
+   Six presets cycled by photo index so adjacent slides move along
+   different axes in different directions — feels like an edited
+   cut, not a strobe. Each photo runs ONE continuous motion for its
+   entire on-screen lifetime; no zoom-in immediately followed by
+   zoom-out, no pulsation. Duration / fill set inline per cycle. */
+@keyframes photo-motion-0 { /* zoom in, pan left */
+  from { transform: scale(1.00) translate3d(0,    0,   0); }
+  to   { transform: scale(1.10) translate3d(-4%,  0,   0); }
 }
-@keyframes photo-kenburns-square-out {
-  from { transform: scale(1.10); }
-  to   { transform: scale(1.00); }
+@keyframes photo-motion-1 { /* zoom in, pan up */
+  from { transform: scale(1.00) translate3d(0,    0,   0); }
+  to   { transform: scale(1.10) translate3d(0,   -4%,  0); }
 }
-@keyframes photo-kenburns-wide-in {
-  from { transform: scale(1.00) translate3d(0,    0, 0); }
-  to   { transform: scale(1.10) translate3d(-4%,  0, 0); }
+@keyframes photo-motion-2 { /* zoom out, pan right */
+  from { transform: scale(1.10) translate3d(-4%,  0,   0); }
+  to   { transform: scale(1.00) translate3d(0,    0,   0); }
 }
-@keyframes photo-kenburns-wide-out {
-  from { transform: scale(1.10) translate3d(-4%,  0, 0); }
-  to   { transform: scale(1.00) translate3d(0,    0, 0); }
+@keyframes photo-motion-3 { /* zoom out, pan down */
+  from { transform: scale(1.10) translate3d(0,   -4%,  0); }
+  to   { transform: scale(1.00) translate3d(0,    0,   0); }
 }
-@keyframes photo-kenburns-tall-in {
-  from { transform: scale(1.00) translate3d(0,  0,  0); }
-  to   { transform: scale(1.10) translate3d(0, -4%, 0); }
+@keyframes photo-motion-4 { /* zoom in, pan right */
+  from { transform: scale(1.00) translate3d(0,    0,   0); }
+  to   { transform: scale(1.10) translate3d(4%,   0,   0); }
 }
-@keyframes photo-kenburns-tall-out {
-  from { transform: scale(1.10) translate3d(0, -4%, 0); }
-  to   { transform: scale(1.00) translate3d(0,  0,  0); }
+@keyframes photo-motion-5 { /* zoom in, pan down */
+  from { transform: scale(1.00) translate3d(0,    0,   0); }
+  to   { transform: scale(1.10) translate3d(0,    4%,  0); }
 }
 
-/* Class only sets the animation name — duration / fill / iteration are
-   set inline so PhotoSlider can tune them per cycle. */
-.photo-kenburns-square-in  { animation-name: photo-kenburns-square-in; }
-.photo-kenburns-square-out { animation-name: photo-kenburns-square-out; }
-.photo-kenburns-wide-in    { animation-name: photo-kenburns-wide-in; }
-.photo-kenburns-wide-out   { animation-name: photo-kenburns-wide-out; }
-.photo-kenburns-tall-in    { animation-name: photo-kenburns-tall-in; }
-.photo-kenburns-tall-out   { animation-name: photo-kenburns-tall-out; }
+.photo-motion-0 { animation-name: photo-motion-0; }
+.photo-motion-1 { animation-name: photo-motion-1; }
+.photo-motion-2 { animation-name: photo-motion-2; }
+.photo-motion-3 { animation-name: photo-motion-3; }
+.photo-motion-4 { animation-name: photo-motion-4; }
+.photo-motion-5 { animation-name: photo-motion-5; }
 
 @media (prefers-reduced-motion: reduce) {
-  [class*="photo-kenburns-"] { animation: none; }
+  [class*="photo-motion-"] { animation: none; }
 }
 
 /* Reels-style segmented progress bar at the bottom of a card. */
