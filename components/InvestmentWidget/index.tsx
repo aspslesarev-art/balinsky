@@ -104,6 +104,8 @@ function InvestmentWidgetView({ snap, apiKey }: { snap: Snapshot; apiKey: string
         </Banner>
       )}
 
+      {snap.scenarios && <ScenariosIntro snap={snap} />}
+
       {snap.scenarios ? (
         <Scenarios snap={snap} />
       ) : snap.references ? (
@@ -165,6 +167,24 @@ function Banner({ tone, icon, children, className }: { tone: 'info' | 'danger' |
     <div className={`rounded-2xl border ${map[tone]} px-4 py-3 text-[13px] flex items-start gap-2 ${className ?? ''}`}>
       <span className="shrink-0 mt-0.5">{icon}</span>
       <span>{children}</span>
+    </div>
+  )
+}
+
+function ScenariosIntro({ snap }: { snap: Snapshot }) {
+  const competitorCount = snap.competitors.length
+  return (
+    <div className="mt-5 rounded-2xl border border-[var(--color-border)] bg-[var(--color-search-bg)] px-4 py-3.5 text-[13px] leading-[1.55] text-[var(--color-text)]">
+      <div className="font-semibold text-[var(--color-text)] mb-1">Что значат эти три цифры</div>
+      <div className="text-[var(--color-text-muted)]">
+        Считаем, сколько эта вилла может зарабатывать на посуточной аренде. За основу — {competitorCount > 0 ? <><span className="font-medium text-[var(--color-text)]">{competitorCount}</span> {pluralRu(competitorCount, ['похожая вилла', 'похожие виллы', 'похожих вилл'])}</> : 'похожие виллы'} в той же зоне ({snap.zone.title.toLowerCase()}; на карте сверху — синие точки внутри красного круга).
+        {' '}
+        <strong className="text-[#B91C1C]">Плохой</strong> — пессимистичный прогноз, вилла стоит полупустой.{' '}
+        <strong className="text-[var(--color-primary-pressed)]">Нормальный</strong> — то, что бывает чаще всего.{' '}
+        <strong className="text-[#15803D]">Хороший</strong> — потолок, если работать с управляющей компанией и держать высокий рейтинг.
+        {' '}
+        Под сценариями есть карточки тех самых конкурентов — можно открыть и сравнить площадь / рейтинг / цену с этой виллой.
+      </div>
     </div>
   )
 }
