@@ -1,12 +1,12 @@
-export function fmtUsd(n: number | null | undefined): string {
+import { formatPrice, formatPriceExact, type Currency } from '@/lib/currency'
+
+export function fmtMoney(n: number | null | undefined, currency: Currency): string {
   if (n == null || !Number.isFinite(n)) return '—'
-  if (Math.abs(n) >= 1000) return Math.round(n).toLocaleString('ru-RU').replace(/,/g, ' ') + ' $'
-  return Math.round(n) + ' $'
+  return formatPriceExact(n, currency)
 }
-export function fmtUsdShort(n: number): string {
-  if (Math.abs(n) >= 1_000_000) return (n / 1_000_000).toFixed(1).replace('.0', '') + 'M $'
-  if (Math.abs(n) >= 1_000) return (n / 1_000).toFixed(0) + 'k $'
-  return Math.round(n) + ' $'
+export function fmtMoneyShort(n: number | null | undefined, currency: Currency): string {
+  if (n == null || !Number.isFinite(n)) return '—'
+  return formatPrice(n, currency)
 }
 export function fmtPct(n: number | null | undefined, digits = 1): string {
   if (n == null || !Number.isFinite(n)) return '—'

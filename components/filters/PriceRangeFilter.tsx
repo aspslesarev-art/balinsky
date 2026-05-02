@@ -4,13 +4,16 @@ import { useEffect, useState } from 'react'
 import { FilterDropdown } from '../FilterDropdown'
 import { useFilterUrl, type FilterView } from './useFilterUrl'
 import type { FilterState } from './FiltersBar'
+import { useCurrency } from '../CurrencyContext'
+import { CURRENCY_RATES, formatPrice } from '@/lib/currency'
 
-function fmt(v: number | null): string {
-  if (v == null) return ''
-  return v.toLocaleString('ru-RU').replace(/,/g, ' ')
+const SYMBOLS: Record<string, string> = { USD: '$', EUR: '€', RUB: '₽', UAH: '₴', IDR: 'Rp' }
+
+function fmtRu(v: number): string {
+  return Math.round(v).toLocaleString('ru-RU').replace(/,/g, ' ')
 }
-function parse(v: string): number | null {
-  const n = Number(v.replace(/\s/g, ''))
+function parseNum(v: string): number | null {
+  const n = Number(v.replace(/\s/g, '').replace(',', '.'))
   return Number.isFinite(n) && n > 0 ? n : null
 }
 
@@ -28,15 +31,29 @@ export function PriceRangeFilter({
   view?: FilterView
 }) {
   const { apply } = useFilterUrl(current, view)
-  const [draftMin, setDraftMin] = useState(fmt(min))
-  const [draftMax, setDraftMax] = useState(fmt(max))
+  const { currency } = useCurrency()
+  const rate = CURRENCY_RATES[currency]
+  const sym = SYMBOLS[currency] ?? '$'
 
-  useEffect(() => { setDraftMin(fmt(min)) }, [min])
-  useEffect(() => { setDraftMax(fmt(max)) }, [max])
+  // URL stores USD; the input shows the currently-selected currency.
+  const usdToInput = (usd: number | null): string => usd == null ? '' : fmtRu(usd * rate)
+  const inputToUsd = (s: string): number | null => {
+    const n = parseNum(s)
+    return n == null ? null : Math.round(n / rate)
+  }
+
+  const [draftMin, setDraftMin] = useState(usdToInput(min))
+  const [draftMax, setDraftMax] = useState(usdToInput(max))
+
+  useEffect(() => { setDraftMin(usdToInput(min)) }, [min, rate]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { setDraftMax(usdToInput(max)) }, [max, rate]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const active = min != null || max != null
   const summary = active
-    ? `${min != null ? `от ${fmt(min)}` : ''}${min != null && max != null ? ' ' : ''}${max != null ? `до ${fmt(max)}` : ''} $`
+    ? [
+        min != null ? `от ${formatPrice(min, currency)}` : '',
+        max != null ? `до ${formatPrice(max, currency)}` : '',
+      ].filter(Boolean).join(' ')
     : ''
 
   return (
@@ -45,7 +62,7 @@ export function PriceRangeFilter({
         <div className="flex flex-col gap-3 min-w-[260px]">
           <div className="flex items-center gap-2">
             <div className="flex-1">
-              <div className="text-[12px] text-[var(--color-text-muted)] mb-1">от, $</div>
+              <div className="text-[12px] text-[var(--color-text-muted)] mb-1">от, {sym}</div>
               <input
                 type="text"
                 inputMode="numeric"
@@ -56,7 +73,7 @@ export function PriceRangeFilter({
               />
             </div>
             <div className="flex-1">
-              <div className="text-[12px] text-[var(--color-text-muted)] mb-1">до, $</div>
+              <div className="text-[12px] text-[var(--color-text-muted)] mb-1">до, {sym}</div>
               <input
                 type="text"
                 inputMode="numeric"
@@ -83,7 +100,7 @@ export function PriceRangeFilter({
             <button
               type="button"
               onClick={() => {
-                apply({ priceMin: parse(draftMin), priceMax: parse(draftMax) })
+                apply({ priceMin: inputToUsd(draftMin), priceMax: inputToUsd(draftMax) })
                 close()
               }}
               className="text-[13px] font-medium text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] rounded-lg px-4 py-2 transition-colors"

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@supabase/supabase-js'
@@ -19,6 +20,7 @@ import { RentalCompareSection } from '@/components/RentalCompareSection'
 import { ManagerCard } from '@/components/ManagerCard'
 import { loadManagerByDeveloperName } from '@/lib/managers'
 import { DetailPriceBlock } from '@/components/DetailPriceBlock'
+import { InlinePrice } from '@/components/InlinePrice'
 import { VillaPresentationButton } from '@/components/VillaPresentation'
 
 const AIRPORT_LAT = -8.7467
@@ -299,7 +301,7 @@ export default async function Page({ params }: { params: Params }) {
     ? allVideos.filter(v => v.complexes.some(c => c.slug === parentComplex.slug)).slice(0, 6)
     : []
 
-  const facts: { Icon: typeof BedDouble; label: string; value: string }[] = [
+  const facts: { Icon: typeof BedDouble; label: string; value: ReactNode }[] = [
     bedrooms != null && { Icon: BedDouble, label: 'Спальни', value: `${bedrooms} BR` },
     area != null && { Icon: Square, label: 'Площадь', value: `${area} м²` },
     floor && { Icon: Layers, label: 'Этаж', value: floor === 'GROUND FLOOR' ? 'Цокольный' : floor },
@@ -308,8 +310,8 @@ export default async function Page({ params }: { params: Params }) {
     lease && { Icon: Lock, label: 'Лизхолд', value: `${lease} лет` },
     district && { Icon: MapPin, label: 'Район', value: district },
     fmtAirportDistance(lat, lng) && { Icon: Plane, label: 'До аэропорта', value: fmtAirportDistance(lat, lng)! },
-    priceM2 != null && { Icon: Square, label: 'Цена за м²', value: fmtUsd(priceM2) ?? '—' },
-  ].filter(Boolean) as { Icon: typeof BedDouble; label: string; value: string }[]
+    priceM2 != null && { Icon: Square, label: 'Цена за м²', value: <InlinePrice usd={priceM2} /> },
+  ].filter(Boolean) as { Icon: typeof BedDouble; label: string; value: ReactNode }[]
 
   const faqItems = FAQ(title, district, fmtUsd(priceNum), lease)
   const faqJsonLd = {

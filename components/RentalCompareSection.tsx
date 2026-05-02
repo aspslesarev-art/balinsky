@@ -1,17 +1,12 @@
 import Link from 'next/link'
 import { ChevronRight, BedDouble, MapPin } from 'lucide-react'
 import { loadAllRental, type RentalItem } from '@/lib/rental'
+import { InlinePrice } from './InlinePrice'
 
 type Props = {
   district: string | null
   bedrooms: number | null
   villaPriceUsd: number | null
-}
-
-function fmtUsd(n: number): string { return '$' + Math.round(n).toLocaleString('en-US') }
-function fmtUsdShort(n: number): string {
-  if (n >= 1000) return '$' + (Math.round(n / 100) / 10).toFixed(1).replace(/\.0$/, '') + 'k'
-  return fmtUsd(n)
 }
 function pluralRu(n: number, forms: [string, string, string]): string {
   const m10 = n % 10, m100 = n % 100
@@ -81,12 +76,12 @@ export async function RentalCompareSection({ district, bedrooms, villaPriceUsd }
       <div className="text-[14px] text-[var(--color-text-muted)] mb-5">{subtitle}</div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
-        <Stat label="Медианная аренда" value={fmtUsd(med) + ' / мес'} />
-        <Stat label="Диапазон" value={`${fmtUsdShort(min)} – ${fmtUsdShort(max)}`} />
+        <Stat label="Медианная аренда" value={<><InlinePrice usd={med} /> / мес</>} />
+        <Stat label="Диапазон" value={<><InlinePrice usd={min} /> – <InlinePrice usd={max} /></>} />
         <Stat
           label={annualYieldPct != null ? 'Брутто-доходность' : 'За год'}
-          value={annualYieldPct != null ? `~${annualYieldPct.toFixed(1)}%` : `${fmtUsd(med * 12)} / год`}
-          hint={annualYieldPct != null ? `${fmtUsd(med * 12)} в год от цены виллы ${fmtUsd(villaPriceUsd ?? 0)}` : undefined}
+          value={annualYieldPct != null ? `~${annualYieldPct.toFixed(1)}%` : <><InlinePrice usd={med * 12} /> / год</>}
+          hint={annualYieldPct != null ? <><InlinePrice usd={med * 12} /> в год от цены виллы <InlinePrice usd={villaPriceUsd ?? 0} /></> : undefined}
         />
       </div>
 
@@ -97,7 +92,7 @@ export async function RentalCompareSection({ district, bedrooms, villaPriceUsd }
   )
 }
 
-function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
+function Stat({ label, value, hint }: { label: string; value: React.ReactNode; hint?: React.ReactNode }) {
   return (
     <div className="rounded-2xl border border-[var(--color-border)] bg-white p-4">
       <div className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)] mb-1.5">{label}</div>
@@ -123,7 +118,7 @@ function CompareCard({ r }: { r: RentalItem }) {
       </div>
       <div className="p-2.5">
         <div className="text-[14px] font-semibold text-[#111827] leading-tight">
-          {fmtUsd(r.priceMonthUsd)}<span className="text-[10px] font-normal text-[var(--color-text-muted)]"> / мес</span>
+          <InlinePrice usd={r.priceMonthUsd} /><span className="text-[10px] font-normal text-[var(--color-text-muted)]"> / мес</span>
         </div>
         <div className="mt-0.5 flex items-center gap-2 text-[11px] text-[var(--color-text-muted)]">
           {r.bedrooms != null && <span className="inline-flex items-center gap-0.5"><BedDouble size={10} /> {r.bedrooms} BR</span>}

@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { X, ChevronLeft, ChevronRight, Play, Star, MapPin, BedDouble, Square, Trees, Calendar, FileCheck2, Lock, ArrowUpRight, Download, Loader2, UserRound } from 'lucide-react'
 import type { Snapshot } from '@/components/InvestmentWidget/types'
-import { fmtUsd, fmtUsdShort, fmtPct, fmtYears, fmtDistance, pluralRu } from '@/components/InvestmentWidget/utils'
+import { fmtMoney, fmtMoneyShort, fmtPct, fmtYears, fmtDistance, pluralRu } from '@/components/InvestmentWidget/utils'
+import { useCurrency } from '@/components/CurrencyContext'
 
 export type VillaPresentationData = {
   villaId: string
@@ -282,6 +283,8 @@ function SlideBody({ slide, data, snap, snapTried }: { slide: Slide; data: Villa
 }
 
 function CoverSlide({ data }: { data: VillaPresentationData }) {
+  const { currency } = useCurrency()
+  const fmtUsd = (n: number | null | undefined) => fmtMoney(n, currency)
   const cover = data.photos[0]
   return (
     <div className="absolute inset-0 px-6 md:px-12 lg:px-16 py-8 md:py-12">
@@ -375,6 +378,8 @@ function PhotoSetSlide({ photos, layout, alt }: { photos: string[]; layout: 'mos
 }
 
 function FactsSlide({ data }: { data: VillaPresentationData }) {
+  const { currency } = useCurrency()
+  const fmtUsd = (n: number | null | undefined) => fmtMoney(n, currency)
   const items = [
     data.bedrooms != null && { Icon: BedDouble, label: 'Спальни', value: `${data.bedrooms} BR` },
     data.area != null && { Icon: Square, label: 'Дом', value: `${data.area} м²` },
@@ -507,6 +512,9 @@ function NearbySlide({ snap, snapTried }: { snap: Snapshot | null; snapTried: bo
 }
 
 function InvestSlide({ snap, priceUsd }: { snap: Snapshot | null; priceUsd: number | null }) {
+  const { currency } = useCurrency()
+  const fmtUsd = (n: number | null | undefined) => fmtMoney(n, currency)
+  const fmtUsdShort = (n: number | null | undefined) => fmtMoneyShort(n, currency)
   if (!snap?.scenarios) return null
   const sc = snap.scenarios
   const cards: { key: 'bad' | 'median' | 'good'; title: string; tone: string; tint: string }[] = [

@@ -10,6 +10,8 @@ import {
 import { MarkerClusterer, type Renderer } from '@googlemaps/markerclusterer'
 import { X } from 'lucide-react'
 import { BALINSKY_MAP_STYLE } from '@/lib/google-map-style'
+import { useCurrency } from './CurrencyContext'
+import { formatPrice } from '@/lib/currency'
 
 export type MapPoint = {
   id: string
@@ -41,9 +43,9 @@ const COLORS = {
   white: '#FFFFFF',
 }
 
-function fmtPrice(v: number | null): string | null {
-  if (v == null || !Number.isFinite(v)) return null
-  return `${Math.round(v).toLocaleString('ru-RU').replace(/,/g, ' ')} $`
+function useFmtPrice(): (v: number | null) => string | null {
+  const { currency } = useCurrency()
+  return (v) => (v == null || !Number.isFinite(v)) ? null : formatPrice(v, currency)
 }
 
 // SVG pin: a filled circle with an inner white dot, OR a count number when
@@ -239,6 +241,8 @@ function CloseButton({ onClose }: { onClose: () => void }) {
 }
 
 function SinglePopup({ p, onClose }: { p: MapPoint; onClose: () => void }) {
+  const fmtPrice = useFmtPrice()
+  const price = fmtPrice(p.priceUsd)
   return (
     <div className="relative w-[260px] p-1">
       <CloseButton onClose={onClose} />
@@ -252,9 +256,9 @@ function SinglePopup({ p, onClose }: { p: MapPoint; onClose: () => void }) {
       <div className="text-[14px] font-semibold leading-snug mb-1.5 line-clamp-2 text-[#111827] pr-6">
         {p.title}
       </div>
-      {fmtPrice(p.priceUsd) && (
+      {price && (
         <div className="text-[15px] font-semibold text-[#2C8E65] mb-3">
-          {fmtPrice(p.priceUsd)}
+          {price}
         </div>
       )}
       <a
@@ -268,6 +272,7 @@ function SinglePopup({ p, onClose }: { p: MapPoint; onClose: () => void }) {
 }
 
 function MultiPopup({ items, onClose }: { items: MapPoint[]; onClose: () => void }) {
+  const fmtPrice = useFmtPrice()
   return (
     <div className="relative w-[300px] p-1">
       <CloseButton onClose={onClose} />

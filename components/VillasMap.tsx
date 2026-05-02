@@ -5,6 +5,8 @@ import { APIProvider, Map, InfoWindow, useMap } from '@vis.gl/react-google-maps'
 import { MarkerClusterer, type Renderer } from '@googlemaps/markerclusterer'
 import { X } from 'lucide-react'
 import { BALINSKY_MAP_STYLE } from '@/lib/google-map-style'
+import { useCurrency } from './CurrencyContext'
+import { formatPrice } from '@/lib/currency'
 
 export type VillaPoint = {
   id: string
@@ -27,10 +29,6 @@ const COLORS = {
   white: '#FFFFFF',
 }
 
-function fmtPrice(v: number | null): string | null {
-  if (v == null || !Number.isFinite(v)) return null
-  return `${Math.round(v).toLocaleString('ru-RU').replace(/,/g, ' ')} $`
-}
 
 function pinSvg({ bg, size = 32, ring }: { bg: string; size?: number; ring?: string }): string {
   const half = size / 2
@@ -137,6 +135,8 @@ function MapMarkers({ points, selectedId, onSelect }: { points: VillaPoint[]; se
 }
 
 function PopupCard({ p, onClose }: { p: VillaPoint; onClose: () => void }) {
+  const { currency } = useCurrency()
+  const price = p.priceUsd != null && Number.isFinite(p.priceUsd) ? formatPrice(p.priceUsd, currency) : null
   return (
     <div className="relative w-[260px] p-1">
       <button
@@ -153,8 +153,8 @@ function PopupCard({ p, onClose }: { p: VillaPoint; onClose: () => void }) {
         <div className="w-full h-[140px] rounded-xl mb-3 bg-[#F1F5F1] flex items-center justify-center text-3xl">🏝️</div>
       )}
       <div className="text-[14px] font-semibold leading-snug mb-1.5 line-clamp-2 text-[#111827] pr-6">{p.title}</div>
-      {fmtPrice(p.priceUsd) && (
-        <div className="text-[15px] font-semibold text-[#2C8E65] mb-3">{fmtPrice(p.priceUsd)}</div>
+      {price && (
+        <div className="text-[15px] font-semibold text-[#2C8E65] mb-3">{price}</div>
       )}
       <a
         href={`/ru/villy/o/${p.slug}`}

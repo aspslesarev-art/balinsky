@@ -5,14 +5,18 @@ import {
   Star, Info, AlertTriangle, Sparkles, ChevronDown, ChevronUp, TrendingUp,
 } from 'lucide-react'
 import { InvestmentMap } from './InvestmentMap'
-import { fmtUsd, fmtUsdShort, fmtPct, fmtYears, fmtDistance, fmtMeters, pluralRu } from './utils'
+import { fmtMoney, fmtMoneyShort, fmtPct, fmtYears, fmtDistance, fmtMeters, pluralRu } from './utils'
 import type { Snapshot } from './types'
+import { useCurrency } from '../CurrencyContext'
 
 export function InvestmentWidget({
   villaId,
   apiKey,
   kind = 'villa',
 }: { villaId: string; apiKey: string; kind?: 'villa' | 'apartment' }) {
+  const { currency } = useCurrency()
+  const fmtUsd = (n: number | null | undefined) => fmtMoney(n, currency)
+  const fmtUsdShort = (n: number | null | undefined) => fmtMoneyShort(n, currency)
   const [snap, setSnap] = useState<Snapshot | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -118,6 +122,8 @@ function InvestmentWidgetView({ snap, apiKey }: { snap: Snapshot; apiKey: string
 }
 
 function Verdict({ snap }: { snap: Snapshot }) {
+  const { currency } = useCurrency()
+  const fmtUsdShort = (n: number | null | undefined) => fmtMoneyShort(n, currency)
   const sc = snap.scenarios
   const noiRange = sc ? `${fmtUsdShort(sc.bad.noi)}–${fmtUsdShort(sc.good.noi)}/год` : null
   const paybackRange =
@@ -164,6 +170,8 @@ function Banner({ tone, icon, children, className }: { tone: 'info' | 'danger' |
 }
 
 function Scenarios({ snap }: { snap: Snapshot }) {
+  const { currency } = useCurrency()
+  const fmtUsd = (n: number | null | undefined) => fmtMoney(n, currency)
   const sc = snap.scenarios!
   const cards: { key: 'bad' | 'median' | 'good'; title: string; tone: string }[] = [
     { key: 'bad', title: 'Плохой', tone: 'border-[#FECACA] bg-[#FEF2F2]' },
@@ -212,6 +220,8 @@ function Scenarios({ snap }: { snap: Snapshot }) {
 }
 
 function References({ snap }: { snap: Snapshot }) {
+  const { currency } = useCurrency()
+  const fmtUsd = (n: number | null | undefined) => fmtMoney(n, currency)
   return (
     <div className="mt-5 rounded-2xl border border-dashed border-[var(--color-border)] bg-white p-5">
       <div className="flex items-center gap-2 text-[12px] uppercase tracking-wide font-semibold text-[#111827] mb-2">
@@ -251,6 +261,8 @@ function Explanation({ snap }: { snap: Snapshot }) {
 }
 
 function CompetitorsGrid({ snap }: { snap: Snapshot }) {
+  const { currency } = useCurrency()
+  const fmtUsd = (n: number | null | undefined) => fmtMoney(n, currency)
   const [showAll, setShowAll] = useState(false)
   const list = showAll ? snap.competitors : snap.competitors.slice(0, 9)
   return (

@@ -8,10 +8,8 @@ import {
   summarize,
   summarizeSimilar,
 } from '@/lib/competitor-utils'
-
-function fmtUsd(n: number): string {
-  return Math.round(n).toLocaleString('ru-RU').replace(/,/g, ' ') + ' $'
-}
+import { useCurrency } from './CurrencyContext'
+import { formatPrice } from '@/lib/currency'
 function pluralRu(n: number, [one, few, many]: [string, string, string]): string {
   const mod10 = n % 10
   const mod100 = n % 100
@@ -38,6 +36,8 @@ export function CompetitorsSection({
   maxRadiusKm?: number
   district: string | null
 }) {
+  const { currency } = useCurrency()
+  const fmtUsd = (n: number) => formatPrice(n, currency)
   const [radiusKm, setRadiusKm] = useState(initialRadiusKm)
 
   const filtered = useMemo(

@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { APIProvider, Map, InfoWindow, useMap } from '@vis.gl/react-google-maps'
 import { X, Star } from 'lucide-react'
 import { BALINSKY_MAP_STYLE } from '@/lib/google-map-style'
+import { useCurrency } from './CurrencyContext'
+import { formatPrice } from '@/lib/currency'
 
 export type CompetitorUnit = {
   id: string
@@ -41,9 +43,6 @@ const COLORS = {
   white: '#FFFFFF',
 }
 
-function fmtUsd(n: number): string {
-  return Math.round(n).toLocaleString('ru-RU').replace(/,/g, ' ') + ' $'
-}
 
 function pinSvg({ bg, size = 28, ring }: { bg: string; size?: number; ring?: string }): string {
   const half = size / 2
@@ -189,10 +188,12 @@ function MapLayer({
 }
 
 function PopupCard({ p, onClose }: { p: CompetitorPoint; onClose: () => void }) {
+  const { currency } = useCurrency()
+  const fmt = (n: number) => formatPrice(n, currency)
   const titleText = p.complex || (p.units[0]?.name ?? 'Объект на Booking')
   const priceLabel = p.priceMin === p.priceMax
-    ? `${fmtUsd(p.priceMin)}`
-    : `${fmtUsd(p.priceMin)} – ${fmtUsd(p.priceMax)}`
+    ? fmt(p.priceMin)
+    : `${fmt(p.priceMin)} – ${fmt(p.priceMax)}`
   return (
     <div className="relative w-[280px] p-1">
       <button
@@ -242,7 +243,7 @@ function PopupCard({ p, onClose }: { p: CompetitorPoint; onClose: () => void }) 
                   {u.area != null ? `${u.area} м²` : ''}
                 </div>
               </div>
-              <div className="text-[13px] font-semibold text-[#1D4ED8] shrink-0">{fmtUsd(u.price)}</div>
+              <div className="text-[13px] font-semibold text-[#1D4ED8] shrink-0">{fmt(u.price)}</div>
             </a>
           ))}
         </div>
