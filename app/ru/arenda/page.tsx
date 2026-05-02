@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
-import { loadAllRental } from '@/lib/rental'
+import { loadFreshRental } from '@/lib/rental'
 import { RentalCatalog } from './_catalog'
 
 export const revalidate = 600
@@ -28,7 +28,7 @@ function parseNum(v: string | string[] | undefined): number | null {
 
 export default async function RentalListPage({ searchParams }: { searchParams: SP }) {
   const sp = await searchParams
-  const items = await loadAllRental()
+  const items = await loadFreshRental()
   const initial = {
     districts: parseList(sp.location),
     bedrooms: parseList(sp.bedrooms),
