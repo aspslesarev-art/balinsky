@@ -47,9 +47,11 @@ export function scoreDeveloper(stats: ComplexStats, info: DevScoreInput): number
   const total = stats.total ?? 0
   const inProgress = Math.max(0, total - ready)
 
-  // Completed projects: strongest signal (100 each).
-  // In-progress projects: half weight (50 each) — they're activity, not proof yet.
-  // Infos: each filled dimension adds up to ~20 by length-richness.
+  // Completed projects: strongest signal (150 each).
+  // In-progress projects: capped at `ready + 2`. Building 1 thing while you've
+  // sold 1 = healthy activity. Building 20 things while you've sold 1 = over-
+  // commitment risk and shouldn't drag the score above a developer with 5 sold.
+  const inProgressCounted = Math.min(inProgress, ready + 2)
   const editorialScore =
     richness(info.construction) +
     richness(info.reputation) +
@@ -57,7 +59,7 @@ export function scoreDeveloper(stats: ComplexStats, info: DevScoreInput): number
     richness(info.management) +
     Math.min(15, richness(info.team) + richness(info.business) + richness(info.yieldText))
 
-  return ready * 100 + inProgress * 50 + editorialScore
+  return ready * 150 + inProgressCounted * 30 + editorialScore
 }
 
 export function buildDeveloperStats(complexRows: { data: Record<string, unknown> }[]): Map<string, ComplexStats> {
