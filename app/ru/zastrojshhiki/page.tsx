@@ -58,23 +58,29 @@ export default async function Page() {
 
   const rows = (devData ?? []) as Row[]
   // Build a Developer-name → { total, ready } map and use it both for the
-  // score and for the chips on each card.
+  // score and for the chips on each card. Some catalog rows use the short
+  // brand name ("LB Group") while the developer record carries it with a
+  // parens suffix ("LB Group (LOYO&BONDAR)"); canonicalize by stripping any
+  // trailing "(...)" so they collapse to the same key.
+  const canonicalize = (s: string) =>
+    s.replace(/\s*\([^)]*\)\s*$/, '').trim().toLowerCase()
   const statsByDev = new Map<string, ComplexStats>()
   for (const cr of (complexData ?? []) as { data: Record<string, unknown> }[]) {
     const dev = (cr.data['Developer1'] ?? '').toString().trim()
     if (!dev) continue
     const status = (cr.data['Статус'] ?? cr.data['Готовность'] ?? '').toString()
-    const cur = statsByDev.get(dev.toLowerCase()) ?? { total: 0, ready: 0 }
+    const key = canonicalize(dev)
+    const cur = statsByDev.get(key) ?? { total: 0, ready: 0 }
     cur.total += 1
     if (/(построен|сдан|готов|complet)/i.test(status)) cur.ready += 1
-    statsByDev.set(dev.toLowerCase(), cur)
+    statsByDev.set(key, cur)
   }
 
   const enriched = rows
     .filter(r => r.data['Публикация'] === true && r.data['SEO:Slug'] && r.data['Developer'])
     .map(r => {
       const name = String(r.data['Developer'])
-      const stats = statsByDev.get(name.toLowerCase()) ?? { total: 0, ready: 0 }
+      const stats = statsByDev.get(canonicalize(name)) ?? { total: 0, ready: 0 }
       const construction = asText(r.data['Строительство и недвижимость'])
       const reputation = asText(r.data['Репутация и опыт'])
       const equipment = asText(r.data['Техника и производство'])

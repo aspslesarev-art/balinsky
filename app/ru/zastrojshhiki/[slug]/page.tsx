@@ -110,10 +110,18 @@ async function loadProjectsByDeveloper(devName: string): Promise<{
     _loadAllComplexes(),
     _loadComplexManifest(),
   ])
-  const lower = devName.toLowerCase()
+  // Strip trailing "(...)" suffix so devs like "LB Group (LOYO&BONDAR)" match
+  // catalog rows tagged just "LB Group". Lookup is symmetric: canonical form
+  // of either side wins.
+  const canonical = (s: string) => s.replace(/\s*\([^)]*\)\s*$/, '').trim().toLowerCase()
+  const queryLower = devName.toLowerCase()
+  const queryCanonical = canonical(devName)
   const matched = all.filter(r => {
     const dev = firstString(r.data['Developer1']) ?? firstString(r.data['Варианты поиска застройщика'])
-    return dev?.toLowerCase().includes(lower)
+    if (!dev) return false
+    const devLower = dev.toLowerCase()
+    if (devLower.includes(queryLower) || queryLower.includes(devLower)) return true
+    return canonical(dev) === queryCanonical
   })
 
   const CURRENT_YEAR = 2026
