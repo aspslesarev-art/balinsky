@@ -56,7 +56,7 @@ type SP = Promise<Record<string, string | string[] | undefined>>
 
 function parseSort(v: string | string[] | undefined): DevelopersSortKey {
   const s = Array.isArray(v) ? v[0] : v
-  if (s === 'ready' || s === 'inprogress' || s === 'experience') return s
+  if (s === 'ready' || s === 'inprogress' || s === 'experience' || s === 'international') return s
   return 'balanced'
 }
 
@@ -119,7 +119,11 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
         richnessLen(r.data['Строительство и недвижимость']) +
         richnessLen(r.data['Техника и производство']) +
         richnessLen(r.data['Команда'])
-      return { r, name, stats, score, expScore, construction, reputation, equipment, management }
+      // Editorial international rank from Airtable «Опыт вне бали №» (1 = top).
+      // 0 / missing means «no international experience recorded».
+      const intlRankRaw = Number(r.data['Опыт вне бали №'] ?? 0)
+      const intlRank = Number.isFinite(intlRankRaw) && intlRankRaw > 0 ? intlRankRaw : null
+      return { r, name, stats, score, expScore, intlRank, construction, reputation, equipment, management }
     })
 
   const sortKey = sort
@@ -131,6 +135,14 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
       return bIp - aIp || b.score - a.score
     }
     if (sortKey === 'experience') return b.expScore - a.expScore || b.score - a.score
+    if (sortKey === 'international') {
+      // Lower rank = higher placement; nulls go to the bottom but still
+      // sorted by balanced score so the list isn't suddenly random.
+      if (a.intlRank == null && b.intlRank == null) return b.score - a.score
+      if (a.intlRank == null) return 1
+      if (b.intlRank == null) return -1
+      return a.intlRank - b.intlRank
+    }
     return b.score - a.score // balanced (default)
   })
 

@@ -2,13 +2,14 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 
-export type DevelopersSortKey = 'balanced' | 'ready' | 'inprogress' | 'experience'
+export type DevelopersSortKey = 'balanced' | 'ready' | 'inprogress' | 'experience' | 'international'
 
 const OPTIONS: { key: DevelopersSortKey; label: string; hint: string }[] = [
-  { key: 'balanced',   label: 'Сбалансированный', hint: 'Сданные + в работе + редакторская оценка' },
-  { key: 'ready',      label: 'Сданные ЖК',       hint: 'Кто реально построил больше всего' },
-  { key: 'inprogress', label: 'Активные стройки', hint: 'У кого больше проектов сейчас в работе' },
-  { key: 'experience', label: 'Опыт и репутация', hint: 'По данным о репутации, технике, опыте строительства' },
+  { key: 'balanced',      label: 'Сбалансированный',   hint: 'Сданные + в работе + редакторская оценка' },
+  { key: 'ready',         label: 'Сданные ЖК',         hint: 'Кто реально построил больше всего' },
+  { key: 'inprogress',    label: 'Активные стройки',   hint: 'У кого больше проектов сейчас в работе' },
+  { key: 'experience',    label: 'Опыт и репутация',   hint: 'По данным о репутации, технике, опыте строительства' },
+  { key: 'international', label: '🌍 Международный опыт', hint: 'Девелоперы с историей и проектами за пределами Бали' },
 ]
 
 export function DevelopersSortToggle({ current }: { current: DevelopersSortKey }) {
