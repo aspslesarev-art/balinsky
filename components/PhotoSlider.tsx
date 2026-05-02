@@ -72,7 +72,9 @@ export function PhotoSlider({
   return (
     <div ref={ref} className={`group/slider relative w-full ${heightClass} bg-[var(--color-border)] overflow-hidden`}>
       {Array.from({ length: autoCount }).map((_, idx) => {
-        const motion = `photo-kenburns-${(idx % 4) + 1}`
+        // Even slots zoom in (small → big), odd slots zoom out
+        // (big → small) — together it reads as one breathing motion.
+        const motion = idx % 2 === 0 ? 'photo-kenburns-in' : 'photo-kenburns-out'
         const isActive = inAutoWindow && idx === i
         return (
           <img
