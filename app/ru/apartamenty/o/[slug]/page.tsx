@@ -18,6 +18,7 @@ import { InvestmentWidget } from '@/components/InvestmentWidget'
 import { RentalCompareSection } from '@/components/RentalCompareSection'
 import { ManagerCard } from '@/components/ManagerCard'
 import { loadManagerByDeveloperName } from '@/lib/managers'
+import { DetailPriceBlock } from '@/components/DetailPriceBlock'
 import { VillaPresentationButton } from '@/components/VillaPresentation'
 
 const AIRPORT_LAT = -8.7467
@@ -390,21 +391,7 @@ export default async function Page({ params }: { params: Params }) {
           </div>
           <div className="flex items-end justify-between gap-4 flex-wrap">
             {priceNum != null && (
-              <div>
-                <div className="text-[28px] font-semibold text-[#111827]">
-                  {fmtUsd(priceNum)}
-                  {priceM2 != null && (
-                    <span className="ml-3 text-[14px] font-normal text-[var(--color-text-muted)]">
-                      {fmtUsd(priceM2)} / м²
-                    </span>
-                  )}
-                </div>
-                {priceUpdatedAt && (
-                  <div className="mt-1.5 text-[12px] text-[var(--color-text-muted)]">
-                    Цена обновлена {new Date(priceUpdatedAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
-                  </div>
-                )}
-              </div>
+              <DetailPriceBlock priceUsd={priceNum} pricePerSqmUsd={priceM2} updatedAt={priceUpdatedAt} />
             )}
             <VillaPresentationButton
               villaId={a.airtable_id}

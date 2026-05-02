@@ -16,6 +16,23 @@ export function isCurrency(v: unknown): v is Currency {
   return typeof v === 'string' && v in CURRENCY_RATES
 }
 
+// IDR numbers naturally hit billions even for entry-level properties
+// (Rp 6,500,000,000 = ~$400k). Compact form keeps cards readable.
+function formatIdrCompact(value: number): string {
+  if (value >= 1_000_000_000) {
+    const v = value / 1_000_000_000
+    return 'Rp ' + (Math.round(v * 10) / 10).toString().replace('.', ',') + ' MLRD'
+  }
+  if (value >= 1_000_000) {
+    const v = value / 1_000_000
+    return 'Rp ' + (Math.round(v * 10) / 10).toString().replace('.', ',') + ' MLN'
+  }
+  if (value >= 1_000) {
+    return 'Rp ' + Math.round(value / 1_000) + ' K'
+  }
+  return 'Rp ' + Math.round(value).toString()
+}
+
 export function formatPrice(usd: number, currency: Currency): string {
   if (!Number.isFinite(usd)) return '—'
   const value = usd * CURRENCY_RATES[currency]
@@ -24,6 +41,6 @@ export function formatPrice(usd: number, currency: Currency): string {
     case 'EUR': return '€' + Math.round(value).toLocaleString('de-DE')
     case 'RUB': return Math.round(value).toLocaleString('ru-RU') + ' ₽'
     case 'UAH': return Math.round(value).toLocaleString('uk-UA') + ' ₴'
-    case 'IDR': return 'Rp ' + Math.round(value).toLocaleString('ru-RU').replace(/,/g, ' ')
+    case 'IDR': return formatIdrCompact(value)
   }
 }

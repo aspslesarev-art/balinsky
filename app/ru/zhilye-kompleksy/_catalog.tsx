@@ -6,6 +6,7 @@ import { ComplexesSeoContent } from '@/components/ComplexesSeoContent'
 import { ComplexCatalogSearchBar } from '@/components/ComplexCatalogSearchBar'
 import { ComplexInfiniteScrollClient } from '@/components/ComplexInfiniteScrollClient'
 import { ComplexFiltersBar } from '@/components/complex-filters/ComplexFiltersBar'
+import { CurrencyToggle } from '@/components/CurrencyContext'
 import { buildListHref, buildMapHref } from '@/lib/complex-filter-href'
 import { loadCatalogPage, buildHeading, type ComplexFilterState } from './_lib'
 
@@ -52,9 +53,12 @@ export async function ComplexesCatalog({
             </span>
           )}
         </h1>
-        <div className="text-[14px] text-[var(--color-text-muted)] mb-6">
-          {totalCount} комплексов
-          {totalPages > 1 && ` · страница ${actualPage} из ${totalPages}`}
+        <div className="text-[14px] text-[var(--color-text-muted)] mb-6 flex items-center justify-between gap-3 flex-wrap">
+          <span>
+            {totalCount} комплексов
+            {totalPages > 1 && ` · страница ${actualPage} из ${totalPages}`}
+          </span>
+          <CurrencyToggle />
         </div>
 
         <CatalogTabs active="list" listHref={listTabHref} mapHref={mapTabHref} />
