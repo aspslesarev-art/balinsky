@@ -87,14 +87,15 @@ function InvestmentWidgetView({ snap, apiKey }: { snap: Snapshot; apiKey: string
   const allPois = useMemo(() => [...snap.anchors.map(a => ({ lat: a.lat, lng: a.lng, name: a.name, category: a.primaryType ?? '' }))], [snap])
   return (
     <SectionShell>
-      <Verdict snap={snap} />
-
-      {/* Context first: explain what the three scenarios mean and which
-          villas/zone the numbers came from, BEFORE the map and the cards.
-          Reading order: NOI summary → what is this → which zone → map →
-          three scenarios → list of comparable Booking villas. */}
+      {/* Reading order: plain-language intro → three scenarios →
+          map (with the matched competitors visualised) → comparables. */}
       {snap.scenarios && <ScenariosIntro snap={snap} />}
-      <Explanation snap={snap} />
+
+      {snap.scenarios ? (
+        <Scenarios snap={snap} />
+      ) : snap.references ? (
+        <References snap={snap} />
+      ) : null}
 
       <div className="mt-4">
         <InvestmentMap apiKey={apiKey} snap={snap} allPois={allPois} />
@@ -105,18 +106,6 @@ function InvestmentWidgetView({ snap, apiKey }: { snap: Snapshot; apiKey: string
           Расширенная выборка: в исходной зоне ({snap.zone.raw}) не нашлось матчей, перешли на {snap.zone.applied}.
         </Banner>
       )}
-      {snap.flags.leaseholdRisk && (
-        <Banner tone="danger" icon={<AlertTriangle size={16} />} className="mt-4">
-          <strong>Leasehold-риск:</strong> окупаемость в плохом сценарии превышает остаток лет аренды
-          {snap.villa.leaseholdYearsLeft != null ? ` (осталось ${snap.villa.leaseholdYearsLeft} лет)` : ''}.
-        </Banner>
-      )}
-
-      {snap.scenarios ? (
-        <Scenarios snap={snap} />
-      ) : snap.references ? (
-        <References snap={snap} />
-      ) : null}
 
       {snap.competitors.length > 0 && <CompetitorsGrid snap={snap} />}
 
