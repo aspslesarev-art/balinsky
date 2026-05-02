@@ -71,6 +71,17 @@ body {
   border-radius: 0 !important;
 }
 
+/* === Telegram mini-app mode ===
+   Activated by the .tma-mode class on <html> when the user came in via
+   /telegram. Shifts the sticky header down so Telegram's own top bar
+   (close + expand + title) doesn't sit on top of our menu. */
+.tma-mode body {
+  padding-top: 56px;
+}
+.tma-mode header.sticky {
+  top: 56px !important;
+}
+
 /* === Admin inbox theme tokens ===
    Defaults are dark; .theme-light on the same wrapper flips them. */
 .theme-admin {
