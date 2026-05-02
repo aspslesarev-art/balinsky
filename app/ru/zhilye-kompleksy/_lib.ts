@@ -329,9 +329,11 @@ function readinessOf(e: EnrichedRow): number {
 export function toCard(
   e: EnrichedRow,
   manifest: Record<string, string[]>,
+  prices?: Map<string, ComplexPrices>,
 ): ComplexCard | null {
   if (!e.slug || !e.name) return null
   const photos = manifest[e.id] ?? []
+  const p = prices?.get(e.id)
   return {
     id: e.id,
     slug: e.slug,
@@ -345,24 +347,104 @@ export function toCard(
     photoCount: photos.length || e.photoCount,
     lat: e.lat,
     lng: e.lng,
+    villaPriceFrom: p?.villas?.from ?? null,
+    villaPriceTo: p?.villas?.to ?? null,
+    aptPriceFrom: p?.apartments?.from ?? null,
+    aptPriceTo: p?.apartments?.to ?? null,
   }
 }
 
 // === data load ===
 
 // Module-level cache — same reason as villas/apartments _lib.ts.
-type CachedAll = { enriched: EnrichedRow[]; manifest: Record<string, string[]> }
+type PriceRange = { from: number; to: number; count: number }
+type ComplexPrices = { villas?: PriceRange; apartments?: PriceRange }
+type CachedAll = {
+  enriched: EnrichedRow[]
+  manifest: Record<string, string[]>
+  prices: Map<string, ComplexPrices>
+}
 const TTL_MS = 60_000
 let _cache: { ts: number; data: CachedAll } | null = null
 let _inflight: Promise<CachedAll> | null = null
 
+function priceOf(d: Record<string, unknown>): number | null {
+  const candidates = [d['price_usd'], d['price'], d['Цена']]
+  for (const v of candidates) {
+    if (typeof v === 'number' && Number.isFinite(v) && v > 0) return v
+    if (typeof v === 'string') {
+      const n = Number(v.replace(/\s/g, ''))
+      if (Number.isFinite(n) && n > 0) return n
+    }
+  }
+  return null
+}
+
+// Match villa/apartment titles to complexes by longest-substring match on
+// the complex's Project name. Same heuristic the detail pages use.
+function buildPriceIndex(complexes: EnrichedRow[], villas: { data: Record<string, unknown> }[], apts: { data: Record<string, unknown> }[]): Map<string, ComplexPrices> {
+  const projects: { id: string; lower: string; len: number }[] = []
+  for (const c of complexes) {
+    const name = c.name?.toLowerCase()
+    if (!name || name.length < 4) continue
+    projects.push({ id: c.id, lower: name, len: name.length })
+  }
+  // Longest project name first so a villa whose title matches both
+  // "Karma" and "Karma Royal Sanur" picks the longer one.
+  projects.sort((a, b) => b.len - a.len)
+
+  const byComplex = new Map<string, { villas: number[]; apartments: number[] }>()
+  const tally = (id: string, kind: 'villas' | 'apartments', price: number) => {
+    let entry = byComplex.get(id)
+    if (!entry) { entry = { villas: [], apartments: [] }; byComplex.set(id, entry) }
+    entry[kind].push(price)
+  }
+
+  for (const v of villas) {
+    const price = priceOf(v.data)
+    if (price == null) continue
+    const title = (firstString(v.data['SEO:Title']) ?? firstString(v.data['ИИ Имя']) ?? firstString(v.data['Name']) ?? '').toLowerCase()
+    if (!title) continue
+    const match = projects.find(p => title.includes(p.lower))
+    if (match) tally(match.id, 'villas', price)
+  }
+  for (const a of apts) {
+    const price = priceOf(a.data)
+    if (price == null) continue
+    const title = (firstString(a.data['SEO:Title']) ?? firstString(a.data['ИИ Имя']) ?? firstString(a.data['Name']) ?? '').toLowerCase()
+    if (!title) continue
+    const match = projects.find(p => title.includes(p.lower))
+    if (match) tally(match.id, 'apartments', price)
+  }
+
+  const out = new Map<string, ComplexPrices>()
+  for (const [id, lists] of byComplex.entries()) {
+    const item: ComplexPrices = {}
+    if (lists.villas.length > 0) {
+      item.villas = { from: Math.min(...lists.villas), to: Math.max(...lists.villas), count: lists.villas.length }
+    }
+    if (lists.apartments.length > 0) {
+      item.apartments = { from: Math.min(...lists.apartments), to: Math.max(...lists.apartments), count: lists.apartments.length }
+    }
+    out.set(id, item)
+  }
+  return out
+}
+
 async function _loadAllInternal(): Promise<CachedAll> {
-  const [rowsRes, manifest] = await Promise.all([
+  const [rowsRes, manifest, villasRes, aptsRes] = await Promise.all([
     sb.from('raw_complexes').select('airtable_id, data, slug, cover_url').limit(500),
     loadJson<Record<string, string[]>>(PHOTO_MANIFEST_URL, {}),
+    sb.from('raw_villas').select('data').limit(3000),
+    sb.from('raw_apartments').select('data').limit(3000),
   ])
   const enriched = ((rowsRes.data ?? []) as Row[]).map(enrich)
-  return { enriched, manifest }
+  const prices = buildPriceIndex(
+    enriched,
+    (villasRes.data ?? []) as { data: Record<string, unknown> }[],
+    (aptsRes.data ?? []) as { data: Record<string, unknown> }[],
+  )
+  return { enriched, manifest, prices }
 }
 
 export async function loadAll(): Promise<CachedAll> {
@@ -378,12 +460,13 @@ export function buildAllCards(
   enriched: EnrichedRow[],
   manifest: Record<string, string[]>,
   filters: ComplexFilterState,
+  prices?: Map<string, ComplexPrices>,
 ): ComplexCard[] {
   let filtered = enriched.filter(e => passes(e, filters))
   const isSearch = filters.q.trim().length > 0
   if (isSearch) filtered = applySearch(filtered, filters.q)
   const mapped = filtered
-    .map(e => toCard(e, manifest))
+    .map(e => toCard(e, manifest, prices))
     .filter((c): c is ComplexCard => c !== null)
   return isSearch
     ? mapped
@@ -395,9 +478,9 @@ export async function loadCatalogPage(
   page: number,
 ): Promise<CatalogPage> {
   const safePage = Math.max(1, Math.floor(page))
-  const { enriched, manifest } = await loadAll()
+  const { enriched, manifest, prices } = await loadAll()
   const options = buildOptions(enriched, filters)
-  const all = buildAllCards(enriched, manifest, filters)
+  const all = buildAllCards(enriched, manifest, filters, prices)
   const totalCount = all.length
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
   const start = (safePage - 1) * PAGE_SIZE

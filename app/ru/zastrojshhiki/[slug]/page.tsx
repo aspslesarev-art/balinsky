@@ -165,6 +165,10 @@ async function loadProjectsByDeveloper(devName: string): Promise<{
         coverUrl: r.cover_url,
         photos,
         photoCount: photos.length || 1,
+        villaPriceFrom: null,
+        villaPriceTo: null,
+        aptPriceFrom: null,
+        aptPriceTo: null,
       }
     })
 
