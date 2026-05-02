@@ -38,27 +38,11 @@ export function PhotoSlider({
   const count = photos.length
   const autoCount = Math.min(count, AUTO_PHOTOS)
 
-  // Random start photo for the slideshow only — base <img> below is
-  // always photos[0] so SSR output, LCP and og:image stay stable.
-  // Picks one of the first AUTO_PHOTOS as the "first impression"; the
-  // rest of the slideshow rotates around that pick.
-  const [startOffset, setStartOffset] = useState(0)
-  useEffect(() => {
-    if (autoCount <= 1) return
-    const offset = Math.floor(Math.random() * autoCount)
-    setStartOffset(offset)
-    // Track the chosen first impression so we can later see which
-    // starting photo correlates with longer card engagement / leads.
-    type Ymetrika = (id: number, action: string, goal: string, params?: Record<string, unknown>) => void
-    const ym = (typeof window !== 'undefined') ? (window as unknown as { ym?: Ymetrika }).ym : undefined
-    if (ym && trackingId) {
-      ym(104881153, 'reachGoal', 'photo_first_impression', {
-        listing: trackingId,
-        photo_idx: offset,
-      })
-    }
-  }, [autoCount, trackingId])
-
+  // Slideshow always starts from photos[0] — the first photo is the
+  // hero everyone sees in the SSR output, in og:image previews, and in
+  // search results, so we keep that order stable. Below we only TRACK
+  // which photo was on screen at engagement / click moments — the
+  // ordering itself stays in Airtable.
   const ref = useRef<HTMLDivElement>(null)
   const [active, setActive] = useState(false)
   // null until first client effect resolves — avoids attaching the wrong
@@ -75,9 +59,9 @@ export function PhotoSlider({
   // True during the FADE_MS window where the top is fading out and the
   // step++ swap is about to happen.
   const [fading, setFading] = useState(false)
-  // We only want one engagement event per (mount, startOffset) — the
-  // visitor stopping their scroll on the card or hovering over it. Resets
-  // when activity stops so a re-engage on the same card still counts.
+  // Engagement event fires once per "session" — the visitor either
+  // hovered (desktop) or stopped scrolling on the card (mobile). Reset
+  // happens when activity stops so re-engagement counts again.
   const engagedRef = useRef(false)
   useEffect(() => {
     if (!active) { engagedRef.current = false; return }
@@ -86,12 +70,9 @@ export function PhotoSlider({
     type Ymetrika = (id: number, action: string, goal: string, params?: Record<string, unknown>) => void
     const ym = (typeof window !== 'undefined') ? (window as unknown as { ym?: Ymetrika }).ym : undefined
     if (ym && trackingId) {
-      ym(104881153, 'reachGoal', 'photo_engagement', {
-        listing: trackingId,
-        photo_idx: startOffset,
-      })
+      ym(104881153, 'reachGoal', 'photo_engagement', { listing: trackingId })
     }
-  }, [active, trackingId, startOffset])
+  }, [active, trackingId])
 
   // Viewport observer: stop on scroll-off; on touch devices also auto-start
   // when the card dominates the viewport (TikTok / Reels feel).
@@ -165,13 +146,28 @@ export function PhotoSlider({
 
   // Even step: A is top, B is bottom. Odd step: roles swap. Each layer's
   // photo only changes when it's the bottom — never on the visible top.
-  // Indexing rotates around startOffset so the slideshow opens with the
-  // randomly chosen first-impression photo.
   const aIsTop = step % 2 === 0
-  const topPhotoIdx    = (startOffset + step)     % autoCount
-  const bottomPhotoIdx = (startOffset + step + 1) % autoCount
+  const topPhotoIdx    = step % autoCount
+  const bottomPhotoIdx = (step + 1) % autoCount
   const aPhotoIdx = aIsTop ? topPhotoIdx : bottomPhotoIdx
   const bPhotoIdx = aIsTop ? bottomPhotoIdx : topPhotoIdx
+
+  // Click capture — fires before the parent <Link> navigates away. Tells
+  // us which photo was on screen at the moment the visitor decided to
+  // open the listing. Per-photo CTR (this goal / photo_engagement) is the
+  // signal for whether a particular photo is the one that "sells" the card.
+  const handleClickCapture = () => {
+    type Ymetrika = (id: number, action: string, goal: string, params?: Record<string, unknown>) => void
+    const ym = (typeof window !== 'undefined') ? (window as unknown as { ym?: Ymetrika }).ym : undefined
+    if (!ym || !trackingId) return
+    // When inactive (no slideshow ever started) the visible photo is the base — index 0.
+    const visibleAtClick = active ? topPhotoIdx : 0
+    ym(104881153, 'reachGoal', 'photo_click_through', {
+      listing: trackingId,
+      photo_idx: visibleAtClick,
+      steps_seen: step,
+    })
+  }
 
   // Motion preset is a function of photo index — adjacent photos always
   // get different presets so the eye reads each cut as a real transition,
@@ -193,6 +189,7 @@ export function PhotoSlider({
       {...pointerHandlers}
       onFocus={() => setActive(true)}
       onBlur={() => setActive(false)}
+      onClickCapture={handleClickCapture}
       tabIndex={-1}
       className={`group/slider relative w-full ${heightClass} bg-[var(--color-border)] overflow-hidden`}
     >
