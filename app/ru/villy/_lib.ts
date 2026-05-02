@@ -472,6 +472,8 @@ export function buildHeading(f: VillaFilterState): string {
   else s += ' на Бали'
 
   if (f.developer.length === 1) s += ` от застройщика ${f.developer[0]}`
+  if (f.style.length === 1) s += ` в стиле ${f.style[0]}`
+  else if (f.style.length > 1) s += ` в стилях ${f.style.join(', ')}`
   if (f.priceMin != null && f.priceMax != null) s += ` за ${fmtUsd(f.priceMin)} – ${fmtUsd(f.priceMax)}`
   else if (f.priceMax != null) s += ` до ${fmtUsd(f.priceMax)}`
   else if (f.priceMin != null) s += ` от ${fmtUsd(f.priceMin)}`

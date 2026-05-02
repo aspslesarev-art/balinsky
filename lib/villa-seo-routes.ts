@@ -10,6 +10,25 @@ export const SLUG_TO_STATUS: Record<string, string> = Object.fromEntries(
   Object.entries(STATUS_TO_SLUG).map(([k, v]) => [v, k]),
 )
 
+// Interior style slugs — taken from the closed list classified by
+// scripts/classify-villa-style.mjs. Slugs are stable (transliterated /
+// short ASCII) so URLs survive renames in the human-facing label.
+export const STYLE_TO_SLUG: Record<string, string> = {
+  'Балийский тропический': 'stil-bali-tropic',
+  'Современный минимализм': 'stil-minimalism',
+  'Тропический модерн':     'stil-tropic-modern',
+  'Средиземноморский':      'stil-mediterranean',
+  'Скандинавский':          'stil-scandi',
+  'Японский / wabi-sabi':   'stil-wabi-sabi',
+  'Лофт / индустриальный':  'stil-loft',
+  'Бохо / эклектика':       'stil-boho',
+  'Классический':           'stil-classic',
+  'Колониальный':           'stil-colonial',
+}
+export const SLUG_TO_STYLE: Record<string, string> = Object.fromEntries(
+  Object.entries(STYLE_TO_SLUG).map(([k, v]) => [v, k]),
+)
+
 const BASE = '/ru/villy'
 
 export function stripPagination(segments: string[]): { segments: string[]; page: number } | null {
@@ -49,6 +68,10 @@ export function parseCleanPath(segments: string[]): VillaFilterState | null {
       if (seen.has('status')) return null
       seen.add('status')
       f.status = [SLUG_TO_STATUS[seg]]
+    } else if (SLUG_TO_STYLE[seg]) {
+      if (seen.has('style')) return null
+      seen.add('style')
+      f.style = [SLUG_TO_STYLE[seg]]
     } else {
       return null
     }
@@ -61,11 +84,11 @@ export function buildCanonicalPath(f: VillaFilterState): string | null {
   if (f.permit.length > 0) return null
   if (f.year.length > 0) return null
   if (f.developer.length > 0) return null
-  if (f.style.length > 0) return null
   if (f.priceMin != null || f.priceMax != null) return null
   if (f.district.length > 1) return null
   if (f.bedrooms.length > 1) return null
   if (f.status.length > 1) return null
+  if (f.style.length > 1) return null
 
   const dims: string[] = []
   if (f.district.length === 1) {
@@ -83,8 +106,13 @@ export function buildCanonicalPath(f: VillaFilterState): string | null {
     if (!slug) return null
     dims.push(slug)
   }
+  if (f.style.length === 1) {
+    const slug = STYLE_TO_SLUG[f.style[0]]
+    if (!slug) return null
+    dims.push(slug)
+  }
   if (dims.length === 0) return BASE
-  if (dims.length > 3) return null
+  if (dims.length > 4) return null
   return BASE + '/' + dims.join('/')
 }
 
@@ -93,13 +121,17 @@ export function listAllCanonicalPaths(): string[] {
   const districtSlugs = Object.values(DISTRICT_TO_SLUG)
   const bedroomSlugs = Object.values(BEDROOM_TO_SLUG)
   const statusSlugs = Object.values(STATUS_TO_SLUG)
+  const styleSlugs = Object.values(STYLE_TO_SLUG)
   for (const d of districtSlugs) out.add(`${BASE}/${d}`)
   for (const b of bedroomSlugs) out.add(`${BASE}/${b}`)
   for (const s of statusSlugs) out.add(`${BASE}/${s}`)
+  for (const st of styleSlugs) out.add(`${BASE}/${st}`)
   for (const d of districtSlugs) {
     for (const b of bedroomSlugs) out.add(`${BASE}/${d}/${b}`)
     for (const s of statusSlugs) out.add(`${BASE}/${d}/${s}`)
+    for (const st of styleSlugs) out.add(`${BASE}/${d}/${st}`)
   }
   for (const b of bedroomSlugs) for (const s of statusSlugs) out.add(`${BASE}/${b}/${s}`)
+  for (const st of styleSlugs) for (const d of districtSlugs) out.add(`${BASE}/${d}/${st}`)
   return [...out]
 }

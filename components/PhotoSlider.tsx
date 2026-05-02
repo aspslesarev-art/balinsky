@@ -75,6 +75,23 @@ export function PhotoSlider({
   // True during the FADE_MS window where the top is fading out and the
   // step++ swap is about to happen.
   const [fading, setFading] = useState(false)
+  // We only want one engagement event per (mount, startOffset) — the
+  // visitor stopping their scroll on the card or hovering over it. Resets
+  // when activity stops so a re-engage on the same card still counts.
+  const engagedRef = useRef(false)
+  useEffect(() => {
+    if (!active) { engagedRef.current = false; return }
+    if (engagedRef.current) return
+    engagedRef.current = true
+    type Ymetrika = (id: number, action: string, goal: string, params?: Record<string, unknown>) => void
+    const ym = (typeof window !== 'undefined') ? (window as unknown as { ym?: Ymetrika }).ym : undefined
+    if (ym && trackingId) {
+      ym(104881153, 'reachGoal', 'photo_engagement', {
+        listing: trackingId,
+        photo_idx: startOffset,
+      })
+    }
+  }, [active, trackingId, startOffset])
 
   // Viewport observer: stop on scroll-off; on touch devices also auto-start
   // when the card dominates the viewport (TikTok / Reels feel).
