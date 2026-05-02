@@ -12,6 +12,9 @@ export type DeveloperRowData = {
   reputation: string | null
   equipment: string | null
   management: string | null
+  // Catalog stats — show on the card and drive the sort order.
+  complexesReady?: number
+  complexesTotal?: number
 }
 
 function parseBullets(s: string | null): string[] | null {
@@ -69,8 +72,23 @@ export function DeveloperRow({ d }: { d: DeveloperRowData }) {
             )}
           </div>
 
-          <div className="flex-1 min-w-0 text-[15px] sm:text-[18px] md:text-[20px] font-medium text-[var(--color-text)] leading-tight line-clamp-2 sm:line-clamp-1">
-            {d.name}
+          <div className="flex-1 min-w-0">
+            <div className="text-[15px] sm:text-[18px] md:text-[20px] font-medium text-[var(--color-text)] leading-tight line-clamp-2 sm:line-clamp-1">
+              {d.name}
+            </div>
+            {(d.complexesReady != null || d.complexesTotal != null) && (d.complexesTotal ?? 0) > 0 && (
+              <div className="mt-1 text-[11px] sm:text-[12px] text-[var(--color-text-muted)]">
+                {d.complexesReady != null && d.complexesReady > 0 && (
+                  <span className="text-[var(--color-primary-pressed)] font-medium">{d.complexesReady} сдано</span>
+                )}
+                {d.complexesReady != null && d.complexesReady > 0 && (d.complexesTotal ?? 0) - (d.complexesReady ?? 0) > 0 && (
+                  <span className="mx-1.5">·</span>
+                )}
+                {(d.complexesTotal ?? 0) - (d.complexesReady ?? 0) > 0 && (
+                  <span>{(d.complexesTotal ?? 0) - (d.complexesReady ?? 0)} в работе</span>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

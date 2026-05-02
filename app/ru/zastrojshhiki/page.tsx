@@ -4,6 +4,7 @@ import { PageContainer } from '@/components/PageContainer'
 import { DevelopersList } from '@/components/DevelopersList'
 import { DevelopersSeoContent } from '@/components/DevelopersSeoContent'
 import type { DeveloperRowData } from '@/components/DeveloperRow'
+import { scoreDeveloper, type ComplexStats } from '@/lib/developer-score'
 
 export const revalidate = 3600
 
@@ -37,29 +38,66 @@ function logoFromJson(data: Record<string, unknown>): string | null {
   return null
 }
 
+// Some Airtable AI fields come back as { state, value } instead of plain
+// strings; normalize so DeveloperRow's parseBullets() (which calls .trim)
+// never blows up.
+function asText(v: unknown): string | null {
+  if (v == null) return null
+  if (typeof v === 'string') return v.trim() || null
+  if (typeof v === 'number') return String(v)
+  if (Array.isArray(v) && v.length) return asText(v[0])
+  if (typeof v === 'object' && 'value' in (v as Record<string, unknown>)) return asText((v as Record<string, unknown>).value)
+  return null
+}
+
 export default async function Page() {
-  const { data } = await sb
-    .from('raw_developers')
-    .select('data, logo_url')
-    .limit(200)
+  const [{ data: devData }, { data: complexData }] = await Promise.all([
+    sb.from('raw_developers').select('data, logo_url').limit(200),
+    sb.from('raw_complexes').select('data').limit(2000),
+  ])
 
-  const rows = (data ?? []) as Row[]
+  const rows = (devData ?? []) as Row[]
+  // Build a Developer-name → { total, ready } map and use it both for the
+  // score and for the chips on each card.
+  const statsByDev = new Map<string, ComplexStats>()
+  for (const cr of (complexData ?? []) as { data: Record<string, unknown> }[]) {
+    const dev = (cr.data['Developer1'] ?? '').toString().trim()
+    if (!dev) continue
+    const status = (cr.data['Статус'] ?? cr.data['Готовность'] ?? '').toString()
+    const cur = statsByDev.get(dev.toLowerCase()) ?? { total: 0, ready: 0 }
+    cur.total += 1
+    if (/(построен|сдан|готов|complet)/i.test(status)) cur.ready += 1
+    statsByDev.set(dev.toLowerCase(), cur)
+  }
 
-  const items: DeveloperRowData[] = rows
+  const enriched = rows
     .filter(r => r.data['Публикация'] === true && r.data['SEO:Slug'] && r.data['Developer'])
-    .sort(
-      (a, b) =>
-        Number(b.data['Общий рейтинг'] ?? 0) - Number(a.data['Общий рейтинг'] ?? 0)
-    )
-    .map(r => ({
-      slug: String(r.data['SEO:Slug'] ?? '') || null,
-      name: String(r.data['Developer']),
-      logoUrl: r.logo_url ?? logoFromJson(r.data),
-      construction: (r.data['Строительство и недвижимость'] as string | null) ?? null,
-      reputation: (r.data['Репутация и опыт'] as string | null) ?? null,
-      equipment: (r.data['Техника и производство'] as string | null) ?? null,
-      management: (r.data['Управляющая компания'] as string | null) ?? null,
-    }))
+    .map(r => {
+      const name = String(r.data['Developer'])
+      const stats = statsByDev.get(name.toLowerCase()) ?? { total: 0, ready: 0 }
+      const construction = asText(r.data['Строительство и недвижимость'])
+      const reputation = asText(r.data['Репутация и опыт'])
+      const equipment = asText(r.data['Техника и производство'])
+      const management = asText(r.data['Управляющая компания'])
+      const team = asText(r.data['Команда'])
+      const business = asText(r.data['Бизнес и сервисы'])
+      const yieldText = asText(r.data['Доходность'])
+      const score = scoreDeveloper(stats, { construction, reputation, equipment, management, team, business, yieldText })
+      return { r, name, stats, score, construction, reputation, equipment, management }
+    })
+    .sort((a, b) => b.score - a.score)
+
+  const items: DeveloperRowData[] = enriched.map(({ r, name, stats, construction, reputation, equipment, management }) => ({
+    slug: String(r.data['SEO:Slug'] ?? '') || null,
+    name,
+    logoUrl: r.logo_url ?? logoFromJson(r.data),
+    construction,
+    reputation,
+    equipment,
+    management,
+    complexesReady: stats.ready,
+    complexesTotal: stats.total,
+  }))
 
   return (
     <>
@@ -79,9 +117,10 @@ export default async function Page() {
           производство, управляющая компания после ввода.
         </p>
         <p className="max-w-3xl text-[15px] leading-relaxed text-[var(--color-text-muted)] mb-8">
-          Сортировка по общему рейтингу — наверху самые сильные. Это помогает быстро отсеять
-          случайных игроков и сфокусироваться на тех, у кого есть сданные проекты, прозрачная
-          юридическая схема и работающая управляющая компания.
+          Сортировка — объективная: на первом месте те, у кого больше сданных жилых комплексов,
+          далее идут активные с проектами в стройке, и насыщенность данных по 4 направлениям
+          добавляет небольшой вес. Это помогает отсеять случайных игроков и сфокусироваться на
+          девелоперах с реальным портфолио.
         </p>
 
         <DevelopersList items={items} />
