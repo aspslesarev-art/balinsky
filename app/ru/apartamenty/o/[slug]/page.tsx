@@ -8,7 +8,7 @@ import {
 } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
-import { PhotoSlider } from '@/components/PhotoSlider'
+import { PhotoGalleryHero } from '@/components/PhotoGalleryHero'
 import { ApartmentCard, type ApartmentCardData } from '@/components/ApartmentCard'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { distanceKm as haversineKm } from '@/lib/competitor-utils'
@@ -370,8 +370,8 @@ export default async function Page({ params }: { params: Params }) {
           { label: title },
         ]} />
 
-        <section className="mb-6 mt-2 rounded-3xl overflow-hidden border border-[var(--color-border)]">
-          <PhotoSlider photos={photos} alt={title} heightClass="h-[340px] md:h-[480px]" />
+        <section className="mb-6 mt-2">
+          <PhotoGalleryHero photos={photos} alt={title} />
         </section>
 
         <section className="mb-10">
