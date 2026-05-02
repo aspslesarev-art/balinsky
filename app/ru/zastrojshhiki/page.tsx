@@ -1,8 +1,10 @@
+import { Suspense } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { DevelopersList } from '@/components/DevelopersList'
 import { DevelopersSeoContent } from '@/components/DevelopersSeoContent'
+import { DevelopersSortToggle, type DevelopersSortKey } from '@/components/DevelopersSortToggle'
 import type { DeveloperRowData } from '@/components/DeveloperRow'
 import { scoreDeveloper, type ComplexStats } from '@/lib/developer-score'
 
@@ -50,7 +52,26 @@ function asText(v: unknown): string | null {
   return null
 }
 
-export default async function Page() {
+type SP = Promise<Record<string, string | string[] | undefined>>
+
+function parseSort(v: string | string[] | undefined): DevelopersSortKey {
+  const s = Array.isArray(v) ? v[0] : v
+  if (s === 'ready' || s === 'inprogress' || s === 'experience') return s
+  return 'balanced'
+}
+
+function richnessLen(v: unknown): number {
+  if (!v) return 0
+  if (typeof v === 'string') return v.trim().length
+  if (typeof v === 'number') return String(v).length
+  if (Array.isArray(v) && v.length) return richnessLen(v[0])
+  if (typeof v === 'object' && 'value' in (v as Record<string, unknown>)) return richnessLen((v as Record<string, unknown>).value)
+  return 0
+}
+
+export default async function Page({ searchParams }: { searchParams: SP }) {
+  const sp = await searchParams
+  const sort = parseSort(sp.sort)
   const [{ data: devData }, { data: complexData }] = await Promise.all([
     sb.from('raw_developers').select('data, logo_url').limit(200),
     sb.from('raw_complexes').select('data').limit(2000),
@@ -89,9 +110,29 @@ export default async function Page() {
       const business = asText(r.data['Бизнес и сервисы'])
       const yieldText = asText(r.data['Доходность'])
       const score = scoreDeveloper(stats, { construction, reputation, equipment, management, team, business, yieldText })
-      return { r, name, stats, score, construction, reputation, equipment, management }
+      // Experience score = how rich the editorial copy is on the dimensions
+      // that describe construction know-how + reputation + team. Length is a
+      // crude proxy but it's the best signal we have without a manual
+      // "years on the market" field.
+      const expScore =
+        richnessLen(r.data['Репутация и опыт']) +
+        richnessLen(r.data['Строительство и недвижимость']) +
+        richnessLen(r.data['Техника и производство']) +
+        richnessLen(r.data['Команда'])
+      return { r, name, stats, score, expScore, construction, reputation, equipment, management }
     })
-    .sort((a, b) => b.score - a.score)
+
+  const sortKey = sort
+  enriched.sort((a, b) => {
+    if (sortKey === 'ready')      return b.stats.ready - a.stats.ready || b.score - a.score
+    if (sortKey === 'inprogress') {
+      const aIp = a.stats.total - a.stats.ready
+      const bIp = b.stats.total - b.stats.ready
+      return bIp - aIp || b.score - a.score
+    }
+    if (sortKey === 'experience') return b.expScore - a.expScore || b.score - a.score
+    return b.score - a.score // balanced (default)
+  })
 
   const items: DeveloperRowData[] = enriched.map(({ r, name, stats, construction, reputation, equipment, management }) => ({
     slug: String(r.data['SEO:Slug'] ?? '') || null,
@@ -122,12 +163,15 @@ export default async function Page() {
           направлениям: качество строительства и недвижимости, репутация и опыт, техника и
           производство, управляющая компания после ввода.
         </p>
-        <p className="max-w-3xl text-[15px] leading-relaxed text-[var(--color-text-muted)] mb-8">
-          Сортировка — объективная: на первом месте те, у кого больше сданных жилых комплексов,
-          далее идут активные с проектами в стройке, и насыщенность данных по 4 направлениям
-          добавляет небольшой вес. Это помогает отсеять случайных игроков и сфокусироваться на
-          девелоперах с реальным портфолио.
+        <p className="max-w-3xl text-[15px] leading-relaxed text-[var(--color-text-muted)] mb-6">
+          Переключайте сортировку под свой критерий: сбалансированный рейтинг учитывает всё разом,
+          «Сданные ЖК» показывают тех, кто реально достроил, «Активные стройки» — кто
+          сейчас работает, «Опыт и репутация» — насыщенность данных о компании.
         </p>
+
+        <Suspense fallback={null}>
+          <DevelopersSortToggle current={sort} />
+        </Suspense>
 
         <DevelopersList items={items} />
 
