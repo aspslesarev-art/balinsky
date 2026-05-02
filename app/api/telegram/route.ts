@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { handleStart, fallbackReply } from '@/lib/telegram-handlers'
-import { logMessage, upsertChat } from '@/lib/bot-storage'
+import { logMessage, upsertChat, getChat, shouldBotAutoReply } from '@/lib/bot-storage'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -58,6 +58,14 @@ export async function POST(req: Request) {
     })
   } catch (err) {
     console.error('[telegram] log inbound failed:', err)
+  }
+
+  // Handover: if the manager is actively in this chat (replied within the
+  // last 10 min) or has hard-paused the bot, skip the auto-reply entirely.
+  // Inbound message is still logged above so the manager sees it.
+  const chatRow = await getChat(msg.chat.id)
+  if (!shouldBotAutoReply(chatRow)) {
+    return NextResponse.json({ ok: true, handover: true })
   }
 
   const reply = startMatch ? await handleStart(startPayload) : fallbackReply()

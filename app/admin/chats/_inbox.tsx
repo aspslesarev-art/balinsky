@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Send, LogOut, RefreshCcw, MessageCircle } from 'lucide-react'
+import { Send, LogOut, RefreshCcw, MessageCircle, Bot, BotOff } from 'lucide-react'
 
 type ChatRow = {
   chat_id: number
@@ -12,6 +12,23 @@ type ChatRow = {
   last_message_text: string | null
   last_inbound_at: string | null
   unread_count: number
+  last_manager_at: string | null
+  bot_disabled: boolean
+}
+
+const HANDOVER_MS = 10 * 60 * 1000
+
+function botStatus(c: ChatRow | null): { label: string; soft: boolean; off: boolean } {
+  if (!c) return { label: 'Бот: ON', soft: false, off: false }
+  if (c.bot_disabled) return { label: 'Бот: на паузе', soft: false, off: true }
+  if (c.last_manager_at) {
+    const elapsed = Date.now() - new Date(c.last_manager_at).getTime()
+    if (elapsed < HANDOVER_MS) {
+      const left = Math.ceil((HANDOVER_MS - elapsed) / 60000)
+      return { label: `Менеджер ведёт диалог · ${left} мин до возврата бота`, soft: true, off: false }
+    }
+  }
+  return { label: 'Бот: ON', soft: false, off: false }
 }
 type MessageRow = {
   id: number
@@ -132,6 +149,18 @@ export function Inbox() {
 
   const activeChat = chats.find(c => c.chat_id === activeId) ?? null
 
+  const toggleBot = async () => {
+    if (!activeChat) return
+    const next = !activeChat.bot_disabled
+    await fetch(`/api/admin/chats/${activeChat.chat_id}/toggle-bot`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ disabled: next }),
+    })
+    // Optimistic local update; chats poll catches up.
+    setChats(prev => prev.map(c => c.chat_id === activeChat.chat_id ? { ...c, bot_disabled: next } : c))
+  }
+
   return (
     <div className="h-screen flex bg-[#0F1419] text-white">
       {/* Left: chat list */}
@@ -194,8 +223,19 @@ export function Inbox() {
                 </div>
               </div>
               <button
+                onClick={toggleBot}
+                title={activeChat.bot_disabled ? 'Включить автоответ бота' : 'Поставить бота на паузу'}
+                className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-medium ${
+                  activeChat.bot_disabled
+                    ? 'bg-[#7F1D1D]/30 text-[#FCA5A5] hover:bg-[#7F1D1D]/50'
+                    : 'bg-white/10 text-white/70 hover:bg-white/20'
+                }`}
+              >
+                {activeChat.bot_disabled ? <BotOff size={13} /> : <Bot size={13} />}
+                {activeChat.bot_disabled ? 'Бот на паузе' : 'Поставить на паузу'}
+              </button>
+              <button
                 onClick={() => {
-                  // Re-poll on demand.
                   if (activeId != null) {
                     fetch(`/api/admin/chats/${activeId}/messages`, { cache: 'no-store' })
                       .then(r => r.json())
@@ -208,6 +248,15 @@ export function Inbox() {
                 <RefreshCcw size={16} />
               </button>
             </div>
+            {(() => {
+              const s = botStatus(activeChat)
+              if (!s.soft && !s.off) return null
+              return (
+                <div className={`px-4 py-2 text-[12px] border-b border-white/10 ${s.off ? 'bg-[#7F1D1D]/30 text-[#FCA5A5]' : 'bg-[#1F2937] text-white/70'}`}>
+                  {s.label}
+                </div>
+              )
+            })()}
 
             <div ref={messagesScrollRef} className="flex-1 overflow-y-auto bg-[#1A1F2A] px-4 py-4 space-y-2">
               {messages.length === 0 ? (

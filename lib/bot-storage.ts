@@ -52,12 +52,16 @@ export async function logMessage(m: LogMessageInput): Promise<void> {
     tg_message_id: m.tg_message_id ?? null,
   })
   if (m.direction === 'out') {
-    // Outbound update lifts last_message and resets unread (manager has acked).
-    await sb.from('bot_chats').update({
-      last_message_at: new Date().toISOString(),
+    const now = new Date().toISOString()
+    const patch: Record<string, unknown> = {
+      last_message_at: now,
       last_message_text: m.text?.slice(0, 200) ?? null,
       unread_count: 0,
-    }).eq('chat_id', m.chat_id)
+    }
+    // Manager-typed message resets the handover clock so the bot stays
+    // silent for the next 10 minutes.
+    if (m.source === 'manager') patch.last_manager_at = now
+    await sb.from('bot_chats').update(patch).eq('chat_id', m.chat_id)
   }
 }
 
@@ -70,6 +74,25 @@ export type ChatRow = {
   last_message_text: string | null
   last_inbound_at: string | null
   unread_count: number
+  last_manager_at: string | null
+  bot_disabled: boolean
+}
+
+// Soft-handover window: while the manager has replied within the last
+// HANDOVER_MS, the bot's auto-reply stays silent so two voices don't talk
+// over each other in the same chat.
+export const HANDOVER_MS = 10 * 60 * 1000
+
+export function shouldBotAutoReply(chat: ChatRow | null): boolean {
+  if (!chat) return true
+  if (chat.bot_disabled) return false
+  if (!chat.last_manager_at) return true
+  const elapsed = Date.now() - new Date(chat.last_manager_at).getTime()
+  return elapsed >= HANDOVER_MS
+}
+
+export async function setBotDisabled(chatId: number, disabled: boolean): Promise<void> {
+  await sb.from('bot_chats').update({ bot_disabled: disabled }).eq('chat_id', chatId)
 }
 
 export async function listChats(limit = 200): Promise<ChatRow[]> {
