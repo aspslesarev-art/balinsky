@@ -8,9 +8,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 // останавливается, когда карточка уходит с экрана. Ручные стрелки
 // продолжают работать как раньше.
 const AUTO_PHOTOS = 4
-// Long enough that the Ken Burns motion gets to develop, short enough
-// that you'd actually see all 4 photos before scrolling past.
-const ADVANCE_MS = 5200
+const ADVANCE_MS = 3000
 
 export function PhotoSlider({
   photos,
