@@ -1,18 +1,19 @@
-// Maps the deep-link `/start <param>` payload to a reply.
-// Params follow the contract documented in lib/bot-link.ts:
-//   manager_<recordId>  — connect to a developer's manager
-//   rental_<recordId>   — connect to a monthly-rental owner
-//   review_<DevName>    — leave a review (legacy, hand-curated text)
-//   error_<DevName>     — report a bug (legacy, hand-curated text)
+// Maps the deep-link `/start <param>` payload to a reply + chat tags.
+// Tags get persisted on bot_chats.tags so that /admin/broadcast can later
+// message everyone who, e.g., asked about a specific event.
+//
+// Params follow the contract documented in lib/bot-link.ts.
 
 import type { ManagerItem } from '@/lib/managers'
 import type { RentalItem } from '@/lib/rental'
+import { loadAllEvents, type EventItem } from '@/lib/events'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const MANAGERS_URL = `${SUPABASE_URL}/storage/v1/object/public/managers/_managers.json`
 const RENTAL_URL   = `${SUPABASE_URL}/storage/v1/object/public/rental/_rental.json`
 
 type Reply = { text: string; parseMode?: 'HTML' | 'MarkdownV2' }
+type StartResult = { reply: Reply; tags?: string[] }
 
 // Tiny in-memory caches, fine on per-instance Vercel functions.
 let _managersCache: { ts: number; items: ManagerItem[] } | null = null
@@ -54,14 +55,23 @@ function defaultGreeting(): Reply {
   }
 }
 
-async function handleManager(id: string): Promise<Reply> {
+// Slugify a free-form name for use as a tag, so "LB Group (LOYO&BONDAR)"
+// and "lb-group" hash to the same bucket.
+function tagSlug(s: string): string {
+  return s.toLowerCase()
+    .replace(/[^a-z0-9а-яё]+/gi, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60)
+}
+
+async function handleManager(id: string): Promise<StartResult> {
   const all = await loadManagers()
   const m = all.find(x => x.id === id)
   if (!m) {
-    return {
+    return { reply: {
       text: 'Не получилось найти менеджера 🤷‍♂️ Возможно, карточка обновилась. Откройте <a href="https://balinsky.info">сайт</a> ещё раз и нажмите кнопку контакта.',
       parseMode: 'HTML',
-    }
+    } }
   }
   const dev = m.developerNames?.[0] ?? 'застройщика'
   const lines: string[] = [
@@ -72,17 +82,19 @@ async function handleManager(id: string): Promise<Reply> {
   if (m.telegram) lines.push(`✈️ <a href="${m.telegram}">Telegram</a>`)
   if (m.whatsapp) lines.push(`💬 <a href="${m.whatsapp}">WhatsApp</a>`)
   lines.push('', 'Если будут вопросы по сделке или нужна вторая пара глаз — пишите мне сюда, помогу.')
-  return { text: lines.join('\n'), parseMode: 'HTML' }
+  const devSlug = m.developerSlugs?.[0] ?? tagSlug(dev)
+  const tags = ['developer:' + devSlug]
+  return { reply: { text: lines.join('\n'), parseMode: 'HTML' }, tags }
 }
 
-async function handleRental(id: string): Promise<Reply> {
+async function handleRental(id: string): Promise<StartResult> {
   const all = await loadRentals()
   const r = all.find(x => x.id === id)
   if (!r) {
-    return {
+    return { reply: {
       text: 'Этот объект помесячной аренды уже не активен. Свежая подборка — на <a href="https://balinsky.info/ru/arenda">balinsky.info/ru/arenda</a>.',
       parseMode: 'HTML',
-    }
+    } }
   }
   const lines: string[] = [
     `<b>${escape(r.title)}</b>`,
@@ -91,46 +103,82 @@ async function handleRental(id: string): Promise<Reply> {
     '',
   ]
   if (r.telegram) {
-    // Bare handle / URL — just pass it through. The site already has a
-    // parser, but the bot just shows whatever's there.
     lines.push(`Контакт хозяина: ${escape(r.telegram)}`)
   } else {
     lines.push('Контакт хозяина не указан в карточке. Напишите сюда — попробую найти его.')
   }
   lines.push('', `Карточка на сайте: https://balinsky.info/ru/arenda/o/${r.slug}`)
-  return { text: lines.join('\n'), parseMode: 'HTML' }
+  return { reply: { text: lines.join('\n'), parseMode: 'HTML' }, tags: ['rental:' + r.slug] }
 }
 
-function handleReview(devName: string): Reply {
+async function handleEvent(slug: string): Promise<StartResult> {
+  let ev: EventItem | undefined
+  try {
+    const all = await loadAllEvents()
+    ev = all.find(x => x.slug === slug)
+  } catch { /* fall through */ }
+  if (!ev) {
+    return { reply: {
+      text: 'Не нашёл это мероприятие — возможно, ссылка устарела. Актуальная афиша: <a href="https://balinsky.info/ru/meropriyatiya">balinsky.info/ru/meropriyatiya</a>.',
+      parseMode: 'HTML',
+    }, tags: ['event:' + slug] }
+  }
+  const when = ev.startsAt ? new Date(ev.startsAt).toLocaleString('ru-RU', {
+    day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Makassar',
+  }) : null
+  const lines: string[] = [
+    `<b>${escape(ev.title)}</b>`,
+  ]
+  if (when) lines.push(`📅 ${escape(when)} (Бали)`)
+  if (ev.format) lines.push(`📍 ${escape(ev.format)}`)
+  lines.push('')
+  if (ev.registerUrl) {
+    lines.push(`Регистрация: <a href="${ev.registerUrl}">${ev.registerUrl}</a>`)
+    lines.push('')
+    lines.push('Откройте ссылку и заполните форму. Если что-то не работает — напишите сюда, помогу с регистрацией вручную.')
+  } else {
+    lines.push('Чтобы записаться — оставьте ваше имя и телефон/Telegram прямо в этом чате, передам организаторам.')
+  }
+  lines.push('', `Подробности: https://balinsky.info/ru/meropriyatiya/${ev.slug}`)
+  return { reply: { text: lines.join('\n'), parseMode: 'HTML' }, tags: ['event:' + ev.slug] }
+}
+
+function handleReview(devName: string): StartResult {
   return {
-    text:
-      `Спасибо, что хотите оставить отзыв о застройщике <b>${escape(devName)}</b>. ` +
-      'Опишите свой опыт прямо в этом чате — мы сохраним и опубликуем после модерации.',
-    parseMode: 'HTML',
+    reply: {
+      text:
+        `Спасибо, что хотите оставить отзыв о застройщике <b>${escape(devName)}</b>. ` +
+        'Опишите свой опыт прямо в этом чате — мы сохраним и опубликуем после модерации.',
+      parseMode: 'HTML',
+    },
+    tags: ['developer:' + tagSlug(devName)],
   }
 }
-function handleError(devName: string): Reply {
+function handleError(devName: string): StartResult {
   return {
-    text:
-      `Нашли неточность на странице <b>${escape(devName)}</b>? Опишите тут что не так — поправим. ` +
-      'Скриншот можно прикрепить, чтобы было понятнее.',
-    parseMode: 'HTML',
+    reply: {
+      text:
+        `Нашли неточность на странице <b>${escape(devName)}</b>? Опишите тут что не так — поправим. ` +
+        'Скриншот можно прикрепить, чтобы было понятнее.',
+      parseMode: 'HTML',
+    },
+    tags: ['developer:' + tagSlug(devName)],
   }
 }
 
-export async function handleStart(payload: string | null): Promise<Reply> {
-  if (!payload) return defaultGreeting()
-  const m = payload.match(/^(manager|rental|review|error)_(.+)$/)
-  if (!m) return defaultGreeting()
+export async function handleStart(payload: string | null): Promise<StartResult> {
+  if (!payload) return { reply: defaultGreeting() }
+  const m = payload.match(/^(manager|rental|event|review|error)_(.+)$/)
+  if (!m) return { reply: defaultGreeting() }
   const [, kind, raw] = m
-  // Restore underscores in dev names for review/error (we sanitised them with _).
   const decoded = raw
   switch (kind) {
     case 'manager': return await handleManager(decoded)
     case 'rental':  return await handleRental(decoded)
+    case 'event':   return await handleEvent(decoded)
     case 'review':  return handleReview(decoded.replace(/_/g, ' '))
     case 'error':   return handleError(decoded.replace(/_/g, ' '))
-    default:        return defaultGreeting()
+    default:        return { reply: defaultGreeting() }
   }
 }
 

@@ -76,6 +76,41 @@ export type ChatRow = {
   unread_count: number
   last_manager_at: string | null
   bot_disabled: boolean
+  tags: string[]
+}
+
+// Merge new tags into the chat's tag set (no-op if all already present).
+// Read-modify-write is fine here — bot updates for one chat are serialised
+// behind Telegram's per-chat update ordering, no concurrent writers.
+export async function addChatTags(chatId: number, tags: string[]): Promise<void> {
+  if (!tags.length) return
+  const { data } = await sb.from('bot_chats').select('tags').eq('chat_id', chatId).maybeSingle()
+  const existing = (data?.tags as string[] | null) ?? []
+  const merged = Array.from(new Set([...existing, ...tags]))
+  if (merged.length === existing.length) return
+  await sb.from('bot_chats').update({ tags: merged }).eq('chat_id', chatId)
+}
+
+export async function listChatsByTag(tag: string): Promise<ChatRow[]> {
+  const { data, error } = await sb
+    .from('bot_chats')
+    .select('*')
+    .contains('tags', [tag])
+    .order('last_message_at', { ascending: false })
+  if (error) { console.error('[bot-storage] listChatsByTag:', error.message); return [] }
+  return (data ?? []) as ChatRow[]
+}
+
+export async function listAllTags(): Promise<{ tag: string; count: number }[]> {
+  const { data, error } = await sb.from('bot_chats').select('tags')
+  if (error) { console.error('[bot-storage] listAllTags:', error.message); return [] }
+  const counts = new Map<string, number>()
+  for (const row of (data ?? []) as { tags: string[] | null }[]) {
+    for (const t of row.tags ?? []) counts.set(t, (counts.get(t) ?? 0) + 1)
+  }
+  return Array.from(counts.entries())
+    .map(([tag, count]) => ({ tag, count }))
+    .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag))
 }
 
 // Soft-handover window: while the manager has replied within the last

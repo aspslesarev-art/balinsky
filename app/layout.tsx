@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
-import { Footer } from "@/components/Footer";
 import { CurrencyProvider } from "@/components/CurrencyContext";
-import { ConsultantWidget } from "@/components/ConsultantWidget";
+import { SiteChrome } from "@/components/SiteChrome";
 
 const GTM_ID = "GTM-TM6D54Z3";
 const YM_ID = 104881153;
@@ -69,8 +68,7 @@ ym(${YM_ID}, 'init', {ssr:true, webvisor:true, trackHash:true, clickmap:true, ec
         </noscript>
         <CurrencyProvider>
           {children}
-          <Footer />
-          <ConsultantWidget />
+          <SiteChrome />
         </CurrencyProvider>
       </body>
     </html>

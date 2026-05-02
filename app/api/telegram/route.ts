@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { handleStart, fallbackReply } from '@/lib/telegram-handlers'
-import { logMessage, upsertChat, getChat, shouldBotAutoReply } from '@/lib/bot-storage'
+import { logMessage, upsertChat, getChat, shouldBotAutoReply, addChatTags } from '@/lib/bot-storage'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -68,7 +68,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, handover: true })
   }
 
-  const reply = startMatch ? await handleStart(startPayload) : fallbackReply()
+  const startResult = startMatch ? await handleStart(startPayload) : null
+  const reply = startResult?.reply ?? fallbackReply()
+  if (startResult?.tags?.length) {
+    try { await addChatTags(msg.chat.id, startResult.tags) }
+    catch (err) { console.error('[telegram] addChatTags failed:', err) }
+  }
 
   try {
     const r = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {

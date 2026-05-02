@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronLeft, Calendar, ExternalLink, MapPin, HardHat, Video } from 'lucide-react'
+import { ChevronLeft, Calendar, MapPin, HardHat, Video, Send } from 'lucide-react'
+import { botLink } from '@/lib/bot-link'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
@@ -106,9 +107,9 @@ export default async function EventDetailPage({ params }: { params: Params }) {
           )}
 
           <div className="mt-6 flex flex-wrap gap-3">
-            {!past && e.registerUrl && (
-              <a href={e.registerUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[var(--color-primary)] text-white text-[14px] font-medium no-underline hover:bg-[var(--color-primary-hover)]">
-                <ExternalLink size={14} /> Зарегистрироваться
+            {!past && (
+              <a href={botLink('event', e.slug)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[var(--color-primary)] text-white text-[14px] font-medium no-underline hover:bg-[var(--color-primary-hover)]">
+                <Send size={14} /> Записаться через Telegram
               </a>
             )}
             {e.locationUrl && (

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Send, LogOut, RefreshCcw, MessageCircle, Bot, BotOff } from 'lucide-react'
+import { Send, LogOut, RefreshCcw, MessageCircle, Bot, BotOff, Megaphone, Tag } from 'lucide-react'
 import { useAdminTheme, themeClass, ThemeToggle } from '../_theme'
 
 type ChatRow = {
@@ -15,6 +15,7 @@ type ChatRow = {
   unread_count: number
   last_manager_at: string | null
   bot_disabled: boolean
+  tags: string[] | null
 }
 
 const HANDOVER_MS = 10 * 60 * 1000
@@ -189,6 +190,9 @@ export function Inbox() {
             <div className="text-[11px] text-[var(--ax-fg-muted)]">{chats.length} {chats.length === 1 ? 'чат' : 'чатов'}</div>
           </div>
           <div className="flex items-center gap-1">
+            <a href="/admin/broadcast" className="inline-flex items-center gap-1 text-[12px] text-[var(--ax-fg-soft)] hover:text-[var(--ax-fg)] px-2 py-1 rounded no-underline" title="Рассылка по меткам">
+              <Megaphone size={13} /> Рассылка
+            </a>
             <ThemeToggle theme={theme} toggle={toggleTheme} />
             <button onClick={logout} className="inline-flex items-center gap-1 text-[12px] text-[var(--ax-fg-soft)] hover:text-[var(--ax-fg)] px-2 py-1 rounded">
               <LogOut size={13} /> Выйти
@@ -221,6 +225,18 @@ export function Inbox() {
                       <span className="shrink-0 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full bg-[var(--color-primary)] text-white text-[10px] font-semibold">{c.unread_count}</span>
                     )}
                   </div>
+                  {c.tags && c.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {c.tags.slice(0, 3).map(t => (
+                        <span key={t} className="inline-flex items-center gap-0.5 text-[10px] text-[var(--ax-fg-soft)] bg-[var(--ax-hover)] rounded px-1.5 py-0.5">
+                          <Tag size={9} /> {t}
+                        </span>
+                      ))}
+                      {c.tags.length > 3 && (
+                        <span className="text-[10px] text-[var(--ax-fg-faint)]">+{c.tags.length - 3}</span>
+                      )}
+                    </div>
+                  )}
                 </div>
               </button>
             )
