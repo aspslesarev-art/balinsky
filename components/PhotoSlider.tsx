@@ -37,6 +37,13 @@ export function PhotoSlider({
 
   const ref = useRef<HTMLDivElement>(null)
   const [active, setActive] = useState(false)
+  // null until first client effect resolves — avoids attaching the wrong
+  // set of handlers in the SSR/hydration window.
+  const [hoverDevice, setHoverDevice] = useState<boolean | null>(null)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    setHoverDevice(window.matchMedia('(hover: hover)').matches)
+  }, [])
 
   // Ping-pong state — only meaningful while active.
   const [layerAIdx, setLayerAIdx] = useState(0)
@@ -50,16 +57,28 @@ export function PhotoSlider({
 
   const visibleIdx = front === 'a' ? layerAIdx : layerBIdx
 
-  // Stop + reset when the card scrolls off screen.
+  // Viewport observer:
+  // - all devices: stop when the card scrolls off
+  // - touch devices (no real hover): also auto-start when the card is
+  //   the dominantly-visible thing on screen — TikTok/Reels style. We
+  //   activate at 85% visible and only release below 40%, so a quick
+  //   pause on a card kicks the slideshow off without it flickering on
+  //   and off as the user drags through.
   useEffect(() => {
     if (!ref.current) return
     const obs = new IntersectionObserver(
-      ([entry]) => { if (!entry.isIntersecting) setActive(false) },
-      { threshold: 0 },
+      ([entry]) => {
+        if (!entry.isIntersecting) { setActive(false); return }
+        if (hoverDevice === false) {
+          if (entry.intersectionRatio >= 0.85) setActive(true)
+          else if (entry.intersectionRatio < 0.4) setActive(false)
+        }
+      },
+      { threshold: [0, 0.4, 0.85, 1] },
     )
     obs.observe(ref.current)
     return () => obs.disconnect()
-  }, [])
+  }, [hoverDevice])
 
   // Reset to first photo whenever active toggles off.
   useEffect(() => {
@@ -121,16 +140,23 @@ export function PhotoSlider({
     }
   }
 
+  // Pointer handlers — only on devices with a real hover (desktop with
+  // mouse / trackpad). Touch devices get auto-activation from the
+  // viewport observer above, so attaching mouse handlers there would
+  // double-fire on tap. Focus is always wired for keyboard nav.
+  const pointerHandlers = hoverDevice === true ? {
+    onMouseEnter: () => setActive(true),
+    onMouseLeave: () => setActive(false),
+  } : {}
+
   // The base image: always rendered, normal img tag, lazy. SEO + LCP
   // unaffected because no JS or extra requests gate this.
   return (
     <div
       ref={ref}
-      onMouseEnter={() => setActive(true)}
-      onMouseLeave={() => setActive(false)}
+      {...pointerHandlers}
       onFocus={() => setActive(true)}
       onBlur={() => setActive(false)}
-      onTouchStart={() => setActive(true)}
       tabIndex={-1}
       className={`group/slider relative w-full ${heightClass} bg-[var(--color-border)] overflow-hidden`}
     >
