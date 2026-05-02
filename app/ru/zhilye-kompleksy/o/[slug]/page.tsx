@@ -79,6 +79,13 @@ function parseGeo(v: unknown): number | null {
   return null
 }
 function readiness(d: Record<string, unknown>): number {
+  // Editorial source-of-truth: «Готовность» в Airtable, число 0..1.
+  const raw = d['Готовность']
+  if (typeof raw === 'number' && Number.isFinite(raw)) {
+    const pct = raw <= 1 ? raw * 100 : raw
+    return Math.max(0, Math.min(100, Math.round(pct)))
+  }
+  // Fallback when the editor hasn't filled the field yet.
   const status = (firstString(d['Статус']) ?? '').toLowerCase()
   if (status.includes('построен')) return 100
   if (status.includes('заказ')) return 10

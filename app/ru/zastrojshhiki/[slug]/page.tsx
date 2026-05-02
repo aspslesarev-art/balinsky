@@ -126,6 +126,11 @@ async function loadProjectsByDeveloper(devName: string): Promise<{
 
   const CURRENT_YEAR = 2026
   function readiness(d: Record<string, unknown>): number {
+    const raw = d['Готовность']
+    if (typeof raw === 'number' && Number.isFinite(raw)) {
+      const pct = raw <= 1 ? raw * 100 : raw
+      return Math.max(0, Math.min(100, Math.round(pct)))
+    }
     const status = (firstString(d['Статус']) ?? '').toLowerCase()
     if (status.includes('построен')) return 100
     if (status.includes('заказ')) return 10

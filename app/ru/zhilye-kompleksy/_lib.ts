@@ -305,6 +305,12 @@ export function buildOptions(
 // === card mapping ===
 
 function readinessOf(e: EnrichedRow): number {
+  // Editorial source-of-truth: «Готовность» в Airtable, число 0..1.
+  const raw = e.data['Готовность']
+  if (typeof raw === 'number' && Number.isFinite(raw)) {
+    const pct = raw <= 1 ? raw * 100 : raw
+    return Math.max(0, Math.min(100, Math.round(pct)))
+  }
   const status = (e.status ?? '').toLowerCase()
   if (status.includes('построен')) return 100
   if (status.includes('заказ')) return 10
