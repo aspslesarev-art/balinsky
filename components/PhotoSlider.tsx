@@ -8,7 +8,9 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 // останавливается, когда карточка уходит с экрана. Ручные стрелки
 // продолжают работать как раньше.
 const AUTO_PHOTOS = 4
-const ADVANCE_MS = 3500
+// Long enough that the Ken Burns motion gets to develop, short enough
+// that you'd actually see all 4 photos before scrolling past.
+const ADVANCE_MS = 5200
 
 export function PhotoSlider({
   photos,
@@ -69,18 +71,22 @@ export function PhotoSlider({
 
   return (
     <div ref={ref} className={`group/slider relative w-full ${heightClass} bg-[var(--color-border)] overflow-hidden`}>
-      {Array.from({ length: autoCount }).map((_, idx) => (
-        <img
-          key={idx}
-          src={photos[idx]}
-          alt={count > 1 ? `${alt} — фото ${idx + 1} из ${count}` : alt}
-          loading={idx === 0 ? 'eager' : 'lazy'}
-          fetchPriority={idx === 0 ? 'high' : 'auto'}
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-out ${
-            inAutoWindow && idx === i ? 'opacity-100 photo-kenburns' : 'opacity-0'
-          }`}
-        />
-      ))}
+      {Array.from({ length: autoCount }).map((_, idx) => {
+        const motion = `photo-kenburns-${(idx % 4) + 1}`
+        const isActive = inAutoWindow && idx === i
+        return (
+          <img
+            key={idx}
+            src={photos[idx]}
+            alt={count > 1 ? `${alt} — фото ${idx + 1} из ${count}` : alt}
+            loading={idx === 0 ? 'eager' : 'lazy'}
+            fetchPriority={idx === 0 ? 'high' : 'auto'}
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1200ms] ease-in-out ${
+              isActive ? `opacity-100 ${motion}` : 'opacity-0'
+            }`}
+          />
+        )
+      })}
       {!inAutoWindow && (
         <img
           src={photos[i]}

@@ -72,18 +72,34 @@ body {
 }
 
 /* === Card photo Ken Burns ===
-   Each freshly-active photo runs a slow zoom while it's the visible
-   layer in PhotoSlider; pairs with the 700 ms opacity crossfade so
-   the card feels alive without paying for actual video. */
-@keyframes photo-kenburns {
-  from { transform: scale(1.0); }
-  to   { transform: scale(1.08); }
+   Four motion variants alternate across slots so neighbouring
+   photos breathe in different directions — one zooms in toward
+   the top-left while the next zooms out toward the bottom-right,
+   etc. Combined with a long crossfade (1.2 s) it reads as a
+   slow cinematic montage rather than a slideshow. */
+@keyframes photo-kenburns-1 {
+  from { transform: scale(1.0)  translate3d(0,    0,    0); }
+  to   { transform: scale(1.10) translate3d(-2%,  -1.5%, 0); }
 }
-.photo-kenburns {
-  animation: photo-kenburns 5s ease-out both;
+@keyframes photo-kenburns-2 {
+  from { transform: scale(1.10) translate3d(2%,   1.5%,  0); }
+  to   { transform: scale(1.0)  translate3d(0,    0,    0); }
 }
+@keyframes photo-kenburns-3 {
+  from { transform: scale(1.0)  translate3d(2%,   -1%,  0); }
+  to   { transform: scale(1.10) translate3d(-1%,  2%,   0); }
+}
+@keyframes photo-kenburns-4 {
+  from { transform: scale(1.10) translate3d(-2%,  1%,   0); }
+  to   { transform: scale(1.0)  translate3d(1%,   -1.5%, 0); }
+}
+.photo-kenburns-1 { animation: photo-kenburns-1 8s cubic-bezier(0.33, 0, 0.67, 1) both; }
+.photo-kenburns-2 { animation: photo-kenburns-2 8s cubic-bezier(0.33, 0, 0.67, 1) both; }
+.photo-kenburns-3 { animation: photo-kenburns-3 8s cubic-bezier(0.33, 0, 0.67, 1) both; }
+.photo-kenburns-4 { animation: photo-kenburns-4 8s cubic-bezier(0.33, 0, 0.67, 1) both; }
+
 @media (prefers-reduced-motion: reduce) {
-  .photo-kenburns { animation: none; }
+  .photo-kenburns-1, .photo-kenburns-2, .photo-kenburns-3, .photo-kenburns-4 { animation: none; }
 }
 
 /* === Telegram mini-app mode ===
