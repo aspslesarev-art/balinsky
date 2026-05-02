@@ -28,7 +28,7 @@ export function VillaCard({ a }: { a: VillaCardData }) {
       href={`/ru/villy/o/${a.slug}`}
       className="group block bg-[var(--color-card-bg)] rounded-2xl border border-[var(--color-border)] overflow-hidden"
     >
-      <PhotoSlider photos={a.photos} alt={a.title} />
+      <PhotoSlider photos={a.photos} alt={a.title} trackingId={`villa:${a.slug}`} />
 
       <div className="p-6">
         <h3

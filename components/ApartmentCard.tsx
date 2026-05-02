@@ -26,7 +26,7 @@ export function ApartmentCard({ a }: { a: ApartmentCardData }) {
       href={`/ru/apartamenty/o/${a.slug}`}
       className="group block bg-[var(--color-card-bg)] rounded-2xl border border-[var(--color-border)] overflow-hidden"
     >
-      <PhotoSlider photos={a.photos} alt={a.title} />
+      <PhotoSlider photos={a.photos} alt={a.title} trackingId={`apt:${a.slug}`} />
 
       <div className="p-6">
         <h3

@@ -46,7 +46,7 @@ export function ComplexCard({ c }: { c: ComplexCardData }) {
       href={`/ru/zhilye-kompleksy/o/${c.slug}`}
       className="group flex h-full flex-col bg-[var(--color-card-bg)] rounded-2xl border border-[var(--color-border)] overflow-hidden hover:shadow-sm transition-shadow"
     >
-      <PhotoSlider photos={slides} alt={c.name} heightClass="h-[240px] md:h-[360px]" />
+      <PhotoSlider photos={slides} alt={c.name} heightClass="h-[240px] md:h-[360px]" trackingId={`complex:${c.slug}`} />
 
       <div className="flex flex-1 flex-col p-6">
         <h3 className="text-[24px] font-semibold text-[var(--color-text)] mb-3 truncate">{c.name}</h3>

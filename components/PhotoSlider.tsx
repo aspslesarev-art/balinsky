@@ -25,13 +25,39 @@ export function PhotoSlider({
   photos,
   alt,
   heightClass = 'h-[360px]',
+  trackingId,
 }: {
   photos: string[]
   alt: string
   heightClass?: string
+  // Slug or id used to attribute the random first-impression to a
+  // specific listing in Yandex Metrika. Optional — without it the
+  // randomisation still works, just no analytics tag.
+  trackingId?: string
 }) {
   const count = photos.length
   const autoCount = Math.min(count, AUTO_PHOTOS)
+
+  // Random start photo for the slideshow only — base <img> below is
+  // always photos[0] so SSR output, LCP and og:image stay stable.
+  // Picks one of the first AUTO_PHOTOS as the "first impression"; the
+  // rest of the slideshow rotates around that pick.
+  const [startOffset, setStartOffset] = useState(0)
+  useEffect(() => {
+    if (autoCount <= 1) return
+    const offset = Math.floor(Math.random() * autoCount)
+    setStartOffset(offset)
+    // Track the chosen first impression so we can later see which
+    // starting photo correlates with longer card engagement / leads.
+    type Ymetrika = (id: number, action: string, goal: string, params?: Record<string, unknown>) => void
+    const ym = (typeof window !== 'undefined') ? (window as unknown as { ym?: Ymetrika }).ym : undefined
+    if (ym && trackingId) {
+      ym(104881153, 'reachGoal', 'photo_first_impression', {
+        listing: trackingId,
+        photo_idx: offset,
+      })
+    }
+  }, [autoCount, trackingId])
 
   const ref = useRef<HTMLDivElement>(null)
   const [active, setActive] = useState(false)
@@ -122,9 +148,11 @@ export function PhotoSlider({
 
   // Even step: A is top, B is bottom. Odd step: roles swap. Each layer's
   // photo only changes when it's the bottom — never on the visible top.
+  // Indexing rotates around startOffset so the slideshow opens with the
+  // randomly chosen first-impression photo.
   const aIsTop = step % 2 === 0
-  const topPhotoIdx    = step % autoCount
-  const bottomPhotoIdx = (step + 1) % autoCount
+  const topPhotoIdx    = (startOffset + step)     % autoCount
+  const bottomPhotoIdx = (startOffset + step + 1) % autoCount
   const aPhotoIdx = aIsTop ? topPhotoIdx : bottomPhotoIdx
   const bPhotoIdx = aIsTop ? bottomPhotoIdx : topPhotoIdx
 
