@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 // Lazy slideshow inside a card. The first photo is a regular <img loading=
 // "lazy"> for SEO + LCP; everything else is mounted only after the user
@@ -33,7 +32,6 @@ export function PhotoSlider({
 }) {
   const count = photos.length
   const autoCount = Math.min(count, AUTO_PHOTOS)
-  const dots = Math.min(10, count)
 
   const ref = useRef<HTMLDivElement>(null)
   const [active, setActive] = useState(false)
@@ -123,23 +121,6 @@ export function PhotoSlider({
     )
   }
 
-  // Manual nav — flips through the auto window via the same crossfade path.
-  const go = (delta: number) => (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault()
-    e.stopPropagation()
-    e.currentTarget.blur()
-    if (autoCount <= 1) return
-    setActive(true)
-    const next = (visibleIdx + delta + autoCount) % autoCount
-    if (front === 'a') {
-      setLayerBIdx(next)
-      setFront('b')
-    } else {
-      setLayerAIdx(next)
-      setFront('a')
-    }
-  }
-
   // Pointer handlers — only on devices with a real hover (desktop with
   // mouse / trackpad). Touch devices get auto-activation from the
   // viewport observer above, so attaching mouse handlers there would
@@ -200,40 +181,25 @@ export function PhotoSlider({
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-transparent z-[1]" />
       )}
 
-      {count > 1 && (
-        <>
-          <button
-            type="button"
-            aria-label="Предыдущее фото"
-            onClick={go(-1)}
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] inline-flex items-center justify-center text-[var(--color-text)] opacity-0 group-hover/slider:opacity-100 focus-visible:opacity-100 transition-opacity z-10"
-          >
-            <ChevronLeft size={20} strokeWidth={2.5} />
-          </button>
-          <button
-            type="button"
-            aria-label="Следующее фото"
-            onClick={go(1)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] inline-flex items-center justify-center text-[var(--color-text)] opacity-0 group-hover/slider:opacity-100 focus-visible:opacity-100 transition-opacity z-10"
-          >
-            <ChevronRight size={20} strokeWidth={2.5} />
-          </button>
-
-          <div className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10">
-            {Array.from({ length: dots }).map((_, idx) => {
-              const dotIdx = active ? Math.min(visibleIdx, dots - 1) : 0
-              const isActive = idx === dotIdx
-              return (
-                <span
-                  key={idx}
-                  className={`w-1.5 h-1.5 rounded-full ${
-                    isActive ? 'bg-white ring-1 ring-white/80' : 'bg-white/50'
-                  }`}
-                />
-              )
-            })}
-          </div>
-        </>
+      {/* Reels-style progress bar — one segment per photo in the auto
+          window. Past segments are filled, current animates 0 → 100 %
+          in sync with ADVANCE_MS, future segments empty. Only visible
+          while the slideshow is actually playing. */}
+      {active && autoCount > 1 && (
+        <div className="pointer-events-none absolute left-3 right-3 bottom-3 flex items-center gap-1 z-[2]">
+          {Array.from({ length: autoCount }).map((_, idx) => (
+            <div key={idx} className="flex-1 h-[2.5px] bg-white/35 rounded-full overflow-hidden">
+              <div
+                key={`${idx}-${tick}`}
+                className="h-full bg-white rounded-full"
+                style={{
+                  width: idx < visibleIdx ? '100%' : idx === visibleIdx ? '100%' : '0%',
+                  animation: idx === visibleIdx ? `photo-progress ${ADVANCE_MS}ms linear forwards` : undefined,
+                }}
+              />
+            </div>
+          ))}
+        </div>
       )}
 
       {/* Suppress unused-warnings: baseOrient kept in case we want a Ken Burns

@@ -112,6 +112,12 @@ body {
   [class*="photo-kenburns-"] { animation: none; }
 }
 
+/* Reels-style segmented progress bar at the bottom of a card. */
+@keyframes photo-progress {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+
 /* === Telegram mini-app mode ===
    Activated by the .tma-mode class on <html> when the user came in via
    /telegram. Shifts the sticky header down so Telegram's own top bar
