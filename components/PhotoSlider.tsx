@@ -212,16 +212,17 @@ export function PhotoSlider({
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-transparent z-[3]" />
       )}
 
-      {/* Continuous progress bar at the very bottom. Translucent track,
-          a single white sweep that fills 0 → 100 % over each photo cycle
-          and restarts on the swap. Only visible while playing. */}
+      {/* Continuous progress bar at the very bottom. One translucent track,
+          one white sweep that fills 0 → 100 % across the FULL slideshow
+          cycle (autoCount × ADVANCE_MS), so for 5 photos × 3 s the bar
+          reaches a fifth at every swap and only restarts after the loop. */}
       {active && autoCount > 1 && (
         <div className="pointer-events-none absolute left-0 right-0 bottom-0 h-[3px] bg-white/30 z-[4]">
           <div
-            key={step}
+            key={Math.floor(step / autoCount)}
             className="h-full bg-white"
             style={{
-              animation: `photo-progress ${ADVANCE_MS}ms linear forwards`,
+              animation: `photo-progress ${autoCount * ADVANCE_MS}ms linear forwards`,
             }}
           />
         </div>
