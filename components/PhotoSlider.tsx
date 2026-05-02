@@ -36,6 +36,20 @@ export function PhotoSlider({
   const [front, setFront] = useState<'a' | 'b'>('a')
   const [tick, setTick] = useState(0)
 
+  // Aspect ratio of each layer's current photo — picks the pan direction.
+  // Detected on load: wide → pan X, tall → pan Y, otherwise pure zoom.
+  type Orient = 'square' | 'wide' | 'tall'
+  const [orientA, setOrientA] = useState<Orient>('square')
+  const [orientB, setOrientB] = useState<Orient>('square')
+  const detect = (img: HTMLImageElement): Orient => {
+    const w = img.naturalWidth, h = img.naturalHeight
+    if (!w || !h) return 'square'
+    const r = w / h
+    if (r > 1.2)  return 'wide'
+    if (r < 0.85) return 'tall'
+    return 'square'
+  }
+
   const visibleIdx = front === 'a' ? layerAIdx : layerBIdx
 
   useEffect(() => {
@@ -106,18 +120,20 @@ export function PhotoSlider({
         alt={count > 1 ? `${alt} — фото ${layerAIdx + 1} из ${count}` : alt}
         loading="eager"
         fetchPriority="high"
+        onLoad={e => setOrientA(detect(e.currentTarget))}
         className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1200ms] ease-in-out ${
           front === 'a' ? 'opacity-100' : 'opacity-0'
-        } ${autoCount > 1 && inView ? 'photo-kenburns-in' : ''}`}
+        } ${autoCount > 1 && inView ? `photo-kenburns-${orientA}-in` : ''}`}
       />
       {autoCount > 1 && (
         <img
           src={photos[layerBIdx]}
           alt={`${alt} — фото ${layerBIdx + 1} из ${count}`}
           loading="lazy"
+          onLoad={e => setOrientB(detect(e.currentTarget))}
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1200ms] ease-in-out ${
             front === 'b' ? 'opacity-100' : 'opacity-0'
-          } ${inView ? 'photo-kenburns-out' : ''}`}
+          } ${inView ? `photo-kenburns-${orientB}-out` : ''}`}
         />
       )}
 

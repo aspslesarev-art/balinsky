@@ -72,23 +72,44 @@ body {
 }
 
 /* === Card photo Ken Burns ===
-   Two variants alternate: one frame zooms in (1.0 → 1.10), the
-   next zooms out (1.10 → 1.0), repeat. Pure scale, no pan, linear
-   easing — gives "breathing in / breathing out" rhythm, paired
-   with a 1.2 s crossfade between layers. */
-@keyframes photo-kenburns-in {
-  from { transform: scale(1.0); }
+   Two layers ping-pong: front zooms in (1.0 → 1.10), back zooms
+   out (1.10 → 1.0), both 6 s infinite alternate. Direction of pan
+   depends on aspect ratio — square photos stay centered (just zoom),
+   wide photos pan left/right, tall photos pan up/down. */
+@keyframes photo-kenburns-square-in {
+  from { transform: scale(1.00); }
   to   { transform: scale(1.10); }
 }
-@keyframes photo-kenburns-out {
+@keyframes photo-kenburns-square-out {
   from { transform: scale(1.10); }
-  to   { transform: scale(1.0); }
+  to   { transform: scale(1.00); }
 }
-.photo-kenburns-in  { animation: photo-kenburns-in  6s linear infinite alternate; }
-.photo-kenburns-out { animation: photo-kenburns-out 6s linear infinite alternate; }
+@keyframes photo-kenburns-wide-in {
+  from { transform: scale(1.00) translate3d( 2%, 0, 0); }
+  to   { transform: scale(1.10) translate3d(-2%, 0, 0); }
+}
+@keyframes photo-kenburns-wide-out {
+  from { transform: scale(1.10) translate3d(-2%, 0, 0); }
+  to   { transform: scale(1.00) translate3d( 2%, 0, 0); }
+}
+@keyframes photo-kenburns-tall-in {
+  from { transform: scale(1.00) translate3d(0,  2%, 0); }
+  to   { transform: scale(1.10) translate3d(0, -2%, 0); }
+}
+@keyframes photo-kenburns-tall-out {
+  from { transform: scale(1.10) translate3d(0, -2%, 0); }
+  to   { transform: scale(1.00) translate3d(0,  2%, 0); }
+}
+
+.photo-kenburns-square-in  { animation: photo-kenburns-square-in  6s linear infinite alternate; }
+.photo-kenburns-square-out { animation: photo-kenburns-square-out 6s linear infinite alternate; }
+.photo-kenburns-wide-in    { animation: photo-kenburns-wide-in    6s linear infinite alternate; }
+.photo-kenburns-wide-out   { animation: photo-kenburns-wide-out   6s linear infinite alternate; }
+.photo-kenburns-tall-in    { animation: photo-kenburns-tall-in    6s linear infinite alternate; }
+.photo-kenburns-tall-out   { animation: photo-kenburns-tall-out   6s linear infinite alternate; }
 
 @media (prefers-reduced-motion: reduce) {
-  .photo-kenburns-in, .photo-kenburns-out { animation: none; }
+  [class*="photo-kenburns-"] { animation: none; }
 }
 
 /* === Telegram mini-app mode ===
