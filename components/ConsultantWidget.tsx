@@ -46,6 +46,14 @@ const GREETING: Message = {
     'Привет! Я Бали Гид — AI, помогаю с недвижкой на Бали.\n\nМогу подобрать виллу, апарты или ЖК, рассказать про районы и юридику, или подключить менеджера/агента — созвонимся в Zoom и предметно поговорим.\n\nЯ модель GPT, могу ошибаться. Что ищешь?',
 }
 
+const QUICK_ACTIONS: { label: string; prompt: string }[] = [
+  { label: '🏡 Подобрать виллу', prompt: 'Помоги подобрать виллу на Бали. Расскажи какие районы сейчас интересные и какой бюджет нужен.' },
+  { label: '🏢 Апартаменты', prompt: 'Хочу апартаменты на Бали для жизни и сдачи в аренду. С чего начать?' },
+  { label: '⚖️ Юридика покупки', prompt: 'Объясни как иностранцу купить недвижимость на Бали — leasehold, PT PMA, что выбрать.' },
+  { label: '🔑 Аренда на месяц', prompt: 'Подбери варианты помесячной аренды виллы на Бали в районе Чангу или Берава.' },
+  { label: '📞 Связаться с менеджером', prompt: 'Хочу пообщаться с живым менеджером застройщика. Как это устроено?' },
+]
+
 export function ConsultantWidget() {
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([GREETING])
@@ -141,10 +149,10 @@ export function ConsultantWidget() {
     scrollRef.current.scrollTop = scrollRef.current.scrollHeight
   }, [messages, loading])
 
-  const send = async () => {
-    const text = input.trim()
-    if (!text || loading) return
-    const next: Message[] = [...messages, { role: 'user', content: text }]
+  const sendText = async (text: string) => {
+    const trimmed = text.trim()
+    if (!trimmed || loading) return
+    const next: Message[] = [...messages, { role: 'user', content: trimmed }]
     setMessages(next)
     setInput('')
     setLoading(true)
@@ -154,7 +162,6 @@ export function ConsultantWidget() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          // Don't ship the canned greeting back to the model — it's UI-only.
           messages: next.filter((m, i) => !(i === 0 && m === GREETING)),
         }),
       })
@@ -171,6 +178,7 @@ export function ConsultantWidget() {
       setLoading(false)
     }
   }
+  const send = () => sendText(input)
 
   return (
     <>
@@ -234,6 +242,20 @@ export function ConsultantWidget() {
                   )}
                 </div>
               ))}
+              {messages.length === 1 && !loading && (
+                <div className="flex flex-wrap gap-1.5 mt-1">
+                  {QUICK_ACTIONS.map(a => (
+                    <button
+                      key={a.label}
+                      type="button"
+                      onClick={() => sendText(a.prompt)}
+                      className="text-[12px] px-3 py-1.5 rounded-full bg-white border border-[var(--color-border)] text-[#111827] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] transition-colors"
+                    >
+                      {a.label}
+                    </button>
+                  ))}
+                </div>
+              )}
               {loading && (
                 <Bubble role="assistant">
                   <span className="inline-flex items-center gap-2 text-[var(--color-text-muted)]">
