@@ -1,8 +1,11 @@
 import { Send, MessageCircle, Star, Languages } from 'lucide-react'
 import type { ManagerItem } from '@/lib/managers'
+import { botLink } from '@/lib/bot-link'
 
 export function ManagerCard({ manager, developerName }: { manager: ManagerItem; developerName?: string | null }) {
-  const tg = manager.telegram
+  // TG goes through @BalinskyBot so the lead lands in the brand chat first;
+  // the bot then forwards the user to the actual manager handle.
+  const tg = manager.telegram ? botLink('manager', manager.id) : null
   const wa = manager.whatsapp
   if (!tg && !wa) return null
 

@@ -7,6 +7,7 @@ import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { PhotoGalleryHero } from '@/components/PhotoGalleryHero'
 import { PriceDisplay } from '@/components/PriceDisplay'
 import { loadRentalBySlug } from '@/lib/rental'
+import { botLink } from '@/lib/bot-link'
 
 export const revalidate = 600
 export function generateStaticParams() { return [] }
@@ -63,7 +64,12 @@ export default async function RentalDetailPage({ params }: { params: Params }) {
   const r = await loadRentalBySlug(slug)
   if (!r) notFound()
 
-  const contact = r.telegram ? parseContact(r.telegram) : null
+  const rawContact = r.telegram ? parseContact(r.telegram) : null
+  // TG-flavoured contacts route through @BalinskyBot first; the bot then
+  // forwards the user to the actual handle stored on the listing.
+  const contact = rawContact?.kind === 'telegram'
+    ? { href: botLink('rental', r.id), kind: 'telegram' as const }
+    : rawContact
   const contactLabel = contact?.kind === 'whatsapp' ? 'Написать в WhatsApp'
     : contact?.kind === 'telegram' ? 'Написать в Telegram'
     : 'Связаться'
