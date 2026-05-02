@@ -3,10 +3,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
-// "Ожившая карточка" — когда карточка попадает в viewport, фотографии
-// плавно сменяют друг друга с лёгким Ken Burns-зумом. Автозамена
-// останавливается, когда карточка уходит с экрана. Ручные стрелки
-// продолжают работать как раньше.
+// "Live" card — two image layers continuously ping-pong: layer A
+// zooms 1.0 → 1.10, layer B zooms 1.10 → 1.0, both 6 s, infinite
+// alternate. Every 3 s we swap which layer is on top, which is also
+// the moment both are at scale 1.05 — the crossfade happens while
+// both layers are mid-motion, so nothing ever sits still.
+//
+// Hidden layer's photo is swapped to the next one *before* it fades
+// in, so by the time it's visible the right image is already there.
 const AUTO_PHOTOS = 4
 const ADVANCE_MS = 3000
 
@@ -19,15 +23,21 @@ export function PhotoSlider({
   alt: string
   heightClass?: string
 }) {
-  const [i, setI] = useState(0)
-  const [inView, setInView] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
   const count = photos.length
   const autoCount = Math.min(count, AUTO_PHOTOS)
   const dots = Math.min(10, count)
 
-  // Watch the card; auto-advance only while it's actually on screen.
-  // Skip entirely when the user has prefers-reduced-motion set.
+  const ref = useRef<HTMLDivElement>(null)
+  const [inView, setInView] = useState(false)
+
+  // Two-layer ping-pong state.
+  const [layerAIdx, setLayerAIdx] = useState(0)
+  const [layerBIdx, setLayerBIdx] = useState(autoCount > 1 ? 1 : 0)
+  const [front, setFront] = useState<'a' | 'b'>('a')
+  const [tick, setTick] = useState(0)
+
+  const visibleIdx = front === 'a' ? layerAIdx : layerBIdx
+
   useEffect(() => {
     if (!ref.current || autoCount <= 1) return
     if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
@@ -41,9 +51,26 @@ export function PhotoSlider({
 
   useEffect(() => {
     if (!inView || autoCount <= 1) return
-    const id = setInterval(() => setI(prev => (prev + 1) % autoCount), ADVANCE_MS)
+    const id = setInterval(() => setTick(t => t + 1), ADVANCE_MS)
     return () => clearInterval(id)
   }, [inView, autoCount])
+
+  // Each tick flips which layer is on top.
+  useEffect(() => {
+    if (tick === 0) return
+    setFront(prev => (prev === 'a' ? 'b' : 'a'))
+  }, [tick])
+
+  // After front swaps, queue the next photo into the now-hidden layer
+  // so it's ready before the next crossfade.
+  useEffect(() => {
+    if (autoCount <= 1) return
+    const visIdx = front === 'a' ? layerAIdx : layerBIdx
+    const upcoming = (visIdx + 1) % autoCount
+    if (front === 'a') setLayerBIdx(upcoming)
+    else setLayerAIdx(upcoming)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [front, autoCount])
 
   if (count === 0) {
     return (
@@ -55,44 +82,42 @@ export function PhotoSlider({
     )
   }
 
+  // Manual nav within the auto window — sets next photo into the hidden
+  // layer then flips front, so the change still flows through a crossfade.
   const go = (delta: number) => (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
     e.stopPropagation()
     e.currentTarget.blur()
-    setI((i + delta + count) % count)
+    if (autoCount <= 1) return
+    const next = (visibleIdx + delta + autoCount) % autoCount
+    if (front === 'a') {
+      setLayerBIdx(next)
+      setFront('b')
+    } else {
+      setLayerAIdx(next)
+      setFront('a')
+    }
   }
-
-  // For slots inside the auto-rotating window we render every layer so the
-  // crossfade can paint without re-fetching. Manual stepping past the
-  // window falls back to swapping the single image source.
-  const inAutoWindow = i < autoCount
 
   return (
     <div ref={ref} className={`group/slider relative w-full ${heightClass} bg-[var(--color-border)] overflow-hidden`}>
-      {Array.from({ length: autoCount }).map((_, idx) => {
-        // Even slots zoom in (small → big), odd slots zoom out
-        // (big → small) — together it reads as one breathing motion.
-        const motion = idx % 2 === 0 ? 'photo-kenburns-in' : 'photo-kenburns-out'
-        const isActive = inAutoWindow && idx === i
-        return (
-          <img
-            key={idx}
-            src={photos[idx]}
-            alt={count > 1 ? `${alt} — фото ${idx + 1} из ${count}` : alt}
-            loading={idx === 0 ? 'eager' : 'lazy'}
-            fetchPriority={idx === 0 ? 'high' : 'auto'}
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1200ms] ease-in-out ${
-              isActive ? `opacity-100 ${motion}` : 'opacity-0'
-            }`}
-          />
-        )
-      })}
-      {!inAutoWindow && (
+      <img
+        src={photos[layerAIdx]}
+        alt={count > 1 ? `${alt} — фото ${layerAIdx + 1} из ${count}` : alt}
+        loading="eager"
+        fetchPriority="high"
+        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1200ms] ease-in-out ${
+          front === 'a' ? 'opacity-100' : 'opacity-0'
+        } ${autoCount > 1 && inView ? 'photo-kenburns-in' : ''}`}
+      />
+      {autoCount > 1 && (
         <img
-          src={photos[i]}
-          alt={`${alt} — фото ${i + 1} из ${count}`}
+          src={photos[layerBIdx]}
+          alt={`${alt} — фото ${layerBIdx + 1} из ${count}`}
           loading="lazy"
-          className="absolute inset-0 w-full h-full object-cover opacity-100"
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1200ms] ease-in-out ${
+            front === 'b' ? 'opacity-100' : 'opacity-0'
+          } ${inView ? 'photo-kenburns-out' : ''}`}
         />
       )}
 
@@ -117,7 +142,7 @@ export function PhotoSlider({
 
           <div className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10">
             {Array.from({ length: dots }).map((_, idx) => {
-              const isActive = idx === Math.min(i, dots - 1)
+              const isActive = idx === Math.min(visibleIdx, dots - 1)
               return (
                 <span
                   key={idx}

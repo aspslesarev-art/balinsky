@@ -84,8 +84,8 @@ body {
   from { transform: scale(1.10); }
   to   { transform: scale(1.0); }
 }
-.photo-kenburns-in  { animation: photo-kenburns-in  6s linear both; }
-.photo-kenburns-out { animation: photo-kenburns-out 6s linear both; }
+.photo-kenburns-in  { animation: photo-kenburns-in  6s linear infinite alternate; }
+.photo-kenburns-out { animation: photo-kenburns-out 6s linear infinite alternate; }
 
 @media (prefers-reduced-motion: reduce) {
   .photo-kenburns-in, .photo-kenburns-out { animation: none; }
