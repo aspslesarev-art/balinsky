@@ -3,16 +3,24 @@
 import { useEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
-// "Live" card — two image layers continuously ping-pong: layer A
-// zooms 1.0 → 1.10, layer B zooms 1.10 → 1.0, both 6 s, infinite
-// alternate. Every 3 s we swap which layer is on top, which is also
-// the moment both are at scale 1.05 — the crossfade happens while
-// both layers are mid-motion, so nothing ever sits still.
+// Lazy slideshow inside a card. The first photo is a regular <img loading=
+// "lazy"> for SEO + LCP; everything else is mounted only after the user
+// hovers/focuses (desktop) or taps (mobile). Two layers ping-pong with
+// orientation-aware Ken Burns and a crossfade timed to land mid-motion.
 //
-// Hidden layer's photo is swapped to the next one *before* it fades
-// in, so by the time it's visible the right image is already there.
-const AUTO_PHOTOS = 4
+// Stops + resets to the first photo on mouse leave / blur / scroll-off.
+const AUTO_PHOTOS = 5
 const ADVANCE_MS = 3000
+
+type Orient = 'square' | 'wide' | 'tall'
+function detectOrientation(img: HTMLImageElement): Orient {
+  const w = img.naturalWidth, h = img.naturalHeight
+  if (!w || !h) return 'square'
+  const r = w / h
+  if (r > 1.2)  return 'wide'
+  if (r < 0.85) return 'tall'
+  return 'square'
+}
 
 export function PhotoSlider({
   photos,
@@ -28,46 +36,47 @@ export function PhotoSlider({
   const dots = Math.min(10, count)
 
   const ref = useRef<HTMLDivElement>(null)
-  const [inView, setInView] = useState(false)
+  const [active, setActive] = useState(false)
 
-  // Two-layer ping-pong state.
+  // Ping-pong state — only meaningful while active.
   const [layerAIdx, setLayerAIdx] = useState(0)
   const [layerBIdx, setLayerBIdx] = useState(autoCount > 1 ? 1 : 0)
   const [front, setFront] = useState<'a' | 'b'>('a')
   const [tick, setTick] = useState(0)
 
-  // Aspect ratio of each layer's current photo — picks the pan direction.
-  // Detected on load: wide → pan X, tall → pan Y, otherwise pure zoom.
-  type Orient = 'square' | 'wide' | 'tall'
   const [orientA, setOrientA] = useState<Orient>('square')
   const [orientB, setOrientB] = useState<Orient>('square')
-  const detect = (img: HTMLImageElement): Orient => {
-    const w = img.naturalWidth, h = img.naturalHeight
-    if (!w || !h) return 'square'
-    const r = w / h
-    if (r > 1.2)  return 'wide'
-    if (r < 0.85) return 'tall'
-    return 'square'
-  }
+  const [baseOrient, setBaseOrient] = useState<Orient>('square')
 
   const visibleIdx = front === 'a' ? layerAIdx : layerBIdx
 
+  // Stop + reset when the card scrolls off screen.
   useEffect(() => {
-    if (!ref.current || autoCount <= 1) return
-    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    if (!ref.current) return
     const obs = new IntersectionObserver(
-      ([entry]) => setInView(entry.isIntersecting && entry.intersectionRatio >= 0.5),
-      { threshold: [0, 0.5, 1] },
+      ([entry]) => { if (!entry.isIntersecting) setActive(false) },
+      { threshold: 0 },
     )
     obs.observe(ref.current)
     return () => obs.disconnect()
-  }, [autoCount])
+  }, [])
 
+  // Reset to first photo whenever active toggles off.
   useEffect(() => {
-    if (!inView || autoCount <= 1) return
+    if (active) return
+    setFront('a')
+    setLayerAIdx(0)
+    setLayerBIdx(autoCount > 1 ? 1 : 0)
+    setTick(0)
+  }, [active, autoCount])
+
+  // Tick advance only while active. Respect prefers-reduced-motion.
+  useEffect(() => {
+    if (!active || autoCount <= 1) return
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const id = setInterval(() => setTick(t => t + 1), ADVANCE_MS)
     return () => clearInterval(id)
-  }, [inView, autoCount])
+  }, [active, autoCount])
 
   // Each tick flips which layer is on top.
   useEffect(() => {
@@ -75,16 +84,15 @@ export function PhotoSlider({
     setFront(prev => (prev === 'a' ? 'b' : 'a'))
   }, [tick])
 
-  // After front swaps, queue the next photo into the now-hidden layer
-  // so it's ready before the next crossfade.
+  // After front swaps, queue the next photo into the now-hidden layer.
   useEffect(() => {
-    if (autoCount <= 1) return
+    if (!active || autoCount <= 1) return
     const visIdx = front === 'a' ? layerAIdx : layerBIdx
     const upcoming = (visIdx + 1) % autoCount
     if (front === 'a') setLayerBIdx(upcoming)
     else setLayerAIdx(upcoming)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [front, autoCount])
+  }, [front, active, autoCount])
 
   if (count === 0) {
     return (
@@ -96,13 +104,13 @@ export function PhotoSlider({
     )
   }
 
-  // Manual nav within the auto window — sets next photo into the hidden
-  // layer then flips front, so the change still flows through a crossfade.
+  // Manual nav — flips through the auto window via the same crossfade path.
   const go = (delta: number) => (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
     e.stopPropagation()
     e.currentTarget.blur()
     if (autoCount <= 1) return
+    setActive(true)
     const next = (visibleIdx + delta + autoCount) % autoCount
     if (front === 'a') {
       setLayerBIdx(next)
@@ -113,28 +121,57 @@ export function PhotoSlider({
     }
   }
 
+  // The base image: always rendered, normal img tag, lazy. SEO + LCP
+  // unaffected because no JS or extra requests gate this.
   return (
-    <div ref={ref} className={`group/slider relative w-full ${heightClass} bg-[var(--color-border)] overflow-hidden`}>
+    <div
+      ref={ref}
+      onMouseEnter={() => setActive(true)}
+      onMouseLeave={() => setActive(false)}
+      onFocus={() => setActive(true)}
+      onBlur={() => setActive(false)}
+      onTouchStart={() => setActive(true)}
+      tabIndex={-1}
+      className={`group/slider relative w-full ${heightClass} bg-[var(--color-border)] overflow-hidden`}
+    >
       <img
-        src={photos[layerAIdx]}
-        alt={count > 1 ? `${alt} — фото ${layerAIdx + 1} из ${count}` : alt}
-        loading="eager"
-        fetchPriority="high"
-        onLoad={e => setOrientA(detect(e.currentTarget))}
-        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1200ms] ease-in-out ${
-          front === 'a' ? 'opacity-100' : 'opacity-0'
-        } ${autoCount > 1 && inView ? `photo-kenburns-${orientA}-in` : ''}`}
+        src={photos[0]}
+        alt={alt}
+        loading="lazy"
+        onLoad={e => setBaseOrient(detectOrientation(e.currentTarget))}
+        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[600ms] ${
+          active && autoCount > 1 ? 'opacity-0' : 'opacity-100'
+        }`}
       />
-      {autoCount > 1 && (
-        <img
-          src={photos[layerBIdx]}
-          alt={`${alt} — фото ${layerBIdx + 1} из ${count}`}
-          loading="lazy"
-          onLoad={e => setOrientB(detect(e.currentTarget))}
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1200ms] ease-in-out ${
-            front === 'b' ? 'opacity-100' : 'opacity-0'
-          } ${inView ? `photo-kenburns-${orientB}-out` : ''}`}
-        />
+
+      {active && autoCount > 1 && (
+        <>
+          <img
+            src={photos[layerAIdx]}
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            onLoad={e => setOrientA(detectOrientation(e.currentTarget))}
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1200ms] ease-in-out ${
+              front === 'a' ? 'opacity-100' : 'opacity-0'
+            } photo-kenburns-${orientA}-in`}
+          />
+          <img
+            src={photos[layerBIdx]}
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            onLoad={e => setOrientB(detectOrientation(e.currentTarget))}
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1200ms] ease-in-out ${
+              front === 'b' ? 'opacity-100' : 'opacity-0'
+            } photo-kenburns-${orientB}-out`}
+          />
+        </>
+      )}
+
+      {/* Subtle overlay for "premium" depth — only on hover so static cards stay flat. */}
+      {active && (
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-transparent z-[1]" />
       )}
 
       {count > 1 && (
@@ -158,7 +195,8 @@ export function PhotoSlider({
 
           <div className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10">
             {Array.from({ length: dots }).map((_, idx) => {
-              const isActive = idx === Math.min(visibleIdx, dots - 1)
+              const dotIdx = active ? Math.min(visibleIdx, dots - 1) : 0
+              const isActive = idx === dotIdx
               return (
                 <span
                   key={idx}
@@ -171,6 +209,10 @@ export function PhotoSlider({
           </div>
         </>
       )}
+
+      {/* Suppress unused-warnings: baseOrient kept in case we want a Ken Burns
+          on the static base image too (currently it stays put). */}
+      <span hidden>{baseOrient}</span>
     </div>
   )
 }

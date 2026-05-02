@@ -101,12 +101,12 @@ body {
   to   { transform: scale(1.00) translate3d(0,  2%, 0); }
 }
 
-.photo-kenburns-square-in  { animation: photo-kenburns-square-in  6s linear infinite alternate; }
-.photo-kenburns-square-out { animation: photo-kenburns-square-out 6s linear infinite alternate; }
-.photo-kenburns-wide-in    { animation: photo-kenburns-wide-in    6s linear infinite alternate; }
-.photo-kenburns-wide-out   { animation: photo-kenburns-wide-out   6s linear infinite alternate; }
-.photo-kenburns-tall-in    { animation: photo-kenburns-tall-in    6s linear infinite alternate; }
-.photo-kenburns-tall-out   { animation: photo-kenburns-tall-out   6s linear infinite alternate; }
+.photo-kenburns-square-in  { animation: photo-kenburns-square-in  6s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate; }
+.photo-kenburns-square-out { animation: photo-kenburns-square-out 6s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate; }
+.photo-kenburns-wide-in    { animation: photo-kenburns-wide-in    6s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate; }
+.photo-kenburns-wide-out   { animation: photo-kenburns-wide-out   6s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate; }
+.photo-kenburns-tall-in    { animation: photo-kenburns-tall-in    6s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate; }
+.photo-kenburns-tall-out   { animation: photo-kenburns-tall-out   6s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate; }
 
 @media (prefers-reduced-motion: reduce) {
   [class*="photo-kenburns-"] { animation: none; }
