@@ -1,16 +1,15 @@
 import { NextResponse } from 'next/server'
 import { handleStart, fallbackReply } from '@/lib/telegram-handlers'
+import { logMessage, upsertChat } from '@/lib/bot-storage'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-// Telegram Bot API webhook handler. Configured via setWebhook with a secret
-// token; we verify it on each call so random POSTs can't trigger replies.
-
+type TgUser = { id: number; username?: string; first_name?: string; last_name?: string; language_code?: string }
 type TgMessage = {
   message_id: number
   chat: { id: number; type?: string }
-  from?: { id: number; username?: string; first_name?: string }
+  from?: TgUser
   text?: string
   date?: number
 }
@@ -38,30 +37,57 @@ export async function POST(req: Request) {
 
   const text = (msg.text ?? '').trim()
   const startMatch = text.match(/^\/start(?:@\w+)?(?:\s+(.+))?$/)
+  const startPayload = startMatch ? (startMatch[1] ?? '').trim() || null : null
 
-  let reply
-  if (startMatch) {
-    const payload = (startMatch[1] ?? '').trim() || null
-    reply = await handleStart(payload)
-  } else {
-    reply = fallbackReply()
+  // Log inbound + bump chat metadata.
+  try {
+    await upsertChat({
+      chat_id: msg.chat.id,
+      username: msg.from?.username ?? null,
+      first_name: msg.from?.first_name ?? null,
+      last_name: msg.from?.last_name ?? null,
+      language_code: msg.from?.language_code ?? null,
+    }, text)
+    await logMessage({
+      chat_id: msg.chat.id,
+      direction: 'in',
+      source: 'user',
+      text,
+      start_payload: startPayload,
+      tg_message_id: msg.message_id,
+    })
+  } catch (err) {
+    console.error('[telegram] log inbound failed:', err)
   }
 
-  await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
+  const reply = startMatch ? await handleStart(startPayload) : fallbackReply()
+
+  try {
+    const r = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: msg.chat.id,
+        text: reply.text,
+        parse_mode: reply.parseMode ?? 'HTML',
+        disable_web_page_preview: true,
+      }),
+    })
+    const j = await r.json().catch(() => null) as { result?: { message_id?: number } } | null
+    await logMessage({
       chat_id: msg.chat.id,
+      direction: 'out',
+      source: 'bot',
       text: reply.text,
-      parse_mode: reply.parseMode ?? 'HTML',
-      disable_web_page_preview: true,
-    }),
-  }).catch(err => console.error('[telegram] sendMessage failed:', err))
+      tg_message_id: j?.result?.message_id ?? null,
+    })
+  } catch (err) {
+    console.error('[telegram] sendMessage failed:', err)
+  }
 
   return NextResponse.json({ ok: true })
 }
 
-// Helpful for sanity-checking from a browser.
 export async function GET() {
   const ok = !!process.env.TELEGRAM_BOT_TOKEN
   return NextResponse.json({ ok, hint: ok ? 'webhook handler ready' : 'set TELEGRAM_BOT_TOKEN' })
