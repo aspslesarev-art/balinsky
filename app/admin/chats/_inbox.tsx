@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Send, LogOut, RefreshCcw, MessageCircle, Bot, BotOff } from 'lucide-react'
+import { useAdminTheme, themeClass, ThemeToggle } from '../_theme'
 
 type ChatRow = {
   chat_id: number
@@ -78,6 +79,7 @@ function relTime(iso: string): string {
 }
 
 export function Inbox() {
+  const { theme, toggle: toggleTheme, ready: themeReady } = useAdminTheme()
   const [chats, setChats] = useState<ChatRow[]>([])
   const [activeId, setActiveId] = useState<number | null>(null)
   const [messages, setMessages] = useState<MessageRow[]>([])
@@ -174,22 +176,26 @@ export function Inbox() {
     setChats(prev => prev.map(c => c.chat_id === activeChat.chat_id ? { ...c, bot_disabled: next } : c))
   }
 
+  if (!themeReady) return null
   return (
-    <div className="h-screen flex bg-[#0F1419] text-white">
+    <div className={`h-screen flex bg-[var(--ax-bg)] text-[var(--ax-fg)] ${themeClass(theme)}`}>
       {/* Left: chat list */}
-      <aside className={`flex flex-col w-full sm:w-[340px] border-r border-white/10 ${activeId != null ? 'hidden sm:flex' : 'flex'}`}>
-        <div className="shrink-0 px-4 py-3 border-b border-white/10 flex items-center justify-between">
+      <aside className={`flex flex-col w-full sm:w-[340px] border-r border-[var(--ax-border)] ${activeId != null ? 'hidden sm:flex' : 'flex'}`}>
+        <div className="shrink-0 px-4 py-3 border-b border-[var(--ax-border)] flex items-center justify-between">
           <div>
             <div className="text-[14px] font-semibold">Inbox</div>
-            <div className="text-[11px] text-white/50">{chats.length} {chats.length === 1 ? 'чат' : 'чатов'}</div>
+            <div className="text-[11px] text-[var(--ax-fg-muted)]">{chats.length} {chats.length === 1 ? 'чат' : 'чатов'}</div>
           </div>
-          <button onClick={logout} className="inline-flex items-center gap-1 text-[12px] text-white/60 hover:text-white px-2 py-1 rounded">
-            <LogOut size={13} /> Выйти
-          </button>
+          <div className="flex items-center gap-1">
+            <ThemeToggle theme={theme} toggle={toggleTheme} />
+            <button onClick={logout} className="inline-flex items-center gap-1 text-[12px] text-[var(--ax-fg-soft)] hover:text-[var(--ax-fg)] px-2 py-1 rounded">
+              <LogOut size={13} /> Выйти
+            </button>
+          </div>
         </div>
         <div className="flex-1 overflow-y-auto">
           {chats.length === 0 ? (
-            <div className="p-6 text-[13px] text-white/40 text-center">Чатов пока нет — никто не писал боту.</div>
+            <div className="p-6 text-[13px] text-[var(--ax-fg-faint)] text-center">Чатов пока нет — никто не писал боту.</div>
           ) : chats.map(c => {
             const name = displayName(c)
             const isActive = c.chat_id === activeId
@@ -197,7 +203,7 @@ export function Inbox() {
               <button
                 key={c.chat_id}
                 onClick={() => setActiveId(c.chat_id)}
-                className={`w-full text-left px-3 py-3 flex items-center gap-3 border-b border-white/5 ${isActive ? 'bg-[#1F2937]' : 'hover:bg-white/5'}`}
+                className={`w-full text-left px-3 py-3 flex items-center gap-3 border-b border-[var(--ax-border-soft)] ${isActive ? 'bg-[var(--ax-panel)]' : 'hover:bg-[var(--ax-hover)]'}`}
               >
                 <div className={`shrink-0 w-10 h-10 rounded-full bg-[var(--color-primary)] flex items-center justify-center text-white font-semibold text-[13px]`}>
                   {initials(name)}
@@ -205,10 +211,10 @@ export function Inbox() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
                     <div className="text-[14px] font-medium truncate">{name}</div>
-                    <div className="text-[11px] text-white/40 shrink-0">{relTime(c.last_message_at)}</div>
+                    <div className="text-[11px] text-[var(--ax-fg-faint)] shrink-0">{relTime(c.last_message_at)}</div>
                   </div>
                   <div className="flex items-center justify-between gap-2 mt-0.5">
-                    <div className="text-[12px] text-white/50 truncate">{stripHtml(c.last_message_text) || '—'}</div>
+                    <div className="text-[12px] text-[var(--ax-fg-muted)] truncate">{stripHtml(c.last_message_text) || '—'}</div>
                     {c.unread_count > 0 && (
                       <span className="shrink-0 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full bg-[var(--color-primary)] text-white text-[10px] font-semibold">{c.unread_count}</span>
                     )}
@@ -224,14 +230,14 @@ export function Inbox() {
       <main className={`flex-1 flex flex-col min-w-0 ${activeId == null ? 'hidden sm:flex' : 'flex'}`}>
         {activeChat ? (
           <>
-            <div className="shrink-0 px-4 py-3 border-b border-white/10 flex items-center gap-3">
-              <button onClick={() => setActiveId(null)} className="sm:hidden text-white/60 hover:text-white">←</button>
+            <div className="shrink-0 px-4 py-3 border-b border-[var(--ax-border)] flex items-center gap-3">
+              <button onClick={() => setActiveId(null)} className="sm:hidden text-[var(--ax-fg-soft)] hover:text-[var(--ax-fg)]">←</button>
               <div className="shrink-0 w-9 h-9 rounded-full bg-[var(--color-primary)] flex items-center justify-center text-white font-semibold text-[13px]">
                 {initials(displayName(activeChat))}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-[14px] font-medium truncate">{displayName(activeChat)}</div>
-                <div className="text-[11px] text-white/50 truncate">
+                <div className="text-[11px] text-[var(--ax-fg-muted)] truncate">
                   chat_id {activeChat.chat_id}{activeChat.username ? ` · @${activeChat.username}` : ''}
                 </div>
               </div>
@@ -240,8 +246,8 @@ export function Inbox() {
                 title={activeChat.bot_disabled ? 'Включить автоответ бота' : 'Поставить бота на паузу'}
                 className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-medium ${
                   activeChat.bot_disabled
-                    ? 'bg-[#7F1D1D]/30 text-[#FCA5A5] hover:bg-[#7F1D1D]/50'
-                    : 'bg-white/10 text-white/70 hover:bg-white/20'
+                    ? 'bg-[var(--ax-paused-bg)] text-[var(--ax-paused-fg)] hover:opacity-90'
+                    : 'bg-[var(--ax-hover)] text-[var(--ax-fg-soft)] hover:bg-[var(--ax-hover)]'
                 }`}
               >
                 {activeChat.bot_disabled ? <BotOff size={13} /> : <Bot size={13} />}
@@ -255,7 +261,7 @@ export function Inbox() {
                       .then(j => setMessages(j.messages ?? []))
                   }
                 }}
-                className="text-white/50 hover:text-white p-1"
+                className="text-[var(--ax-fg-muted)] hover:text-[var(--ax-fg)] p-1"
                 title="Обновить"
               >
                 <RefreshCcw size={16} />
@@ -265,20 +271,20 @@ export function Inbox() {
               const s = botStatus(activeChat)
               if (!s.soft && !s.off) return null
               return (
-                <div className={`px-4 py-2 text-[12px] border-b border-white/10 ${s.off ? 'bg-[#7F1D1D]/30 text-[#FCA5A5]' : 'bg-[#1F2937] text-white/70'}`}>
+                <div className={`px-4 py-2 text-[12px] border-b border-[var(--ax-border)] ${s.off ? 'bg-[var(--ax-paused-bg)] text-[var(--ax-paused-fg)]' : 'bg-[var(--ax-panel)] text-[var(--ax-fg-soft)]'}`}>
                   {s.label}
                 </div>
               )
             })()}
 
-            <div ref={messagesScrollRef} className="flex-1 overflow-y-auto bg-[#1A1F2A] px-4 py-4 space-y-2">
+            <div ref={messagesScrollRef} className="flex-1 overflow-y-auto bg-[var(--ax-chat-bg)] px-4 py-4 space-y-2">
               {messages.length === 0 ? (
-                <div className="text-center text-white/40 text-[13px] py-12">Нет сообщений</div>
+                <div className="text-center text-[var(--ax-fg-faint)] text-[13px] py-12">Нет сообщений</div>
               ) : messages.map(m => {
                 const isOutbound = m.direction === 'out'
                 const bg = isOutbound
-                  ? (m.source === 'manager' ? 'bg-[var(--color-primary)]' : 'bg-[#374151]')
-                  : 'bg-white text-[#111827]'
+                  ? (m.source === 'manager' ? 'bg-[var(--color-primary)]' : 'bg-[var(--ax-bubble-bot-bg)]')
+                  : 'bg-[var(--ax-bubble-user-bg)] text-[var(--ax-bubble-user-fg)]'
                 return (
                   <div key={m.id} className={`flex ${isOutbound ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-[14px] leading-relaxed whitespace-pre-wrap ${bg}`}>
@@ -297,7 +303,7 @@ export function Inbox() {
 
             <form
               onSubmit={e => { e.preventDefault(); send() }}
-              className="shrink-0 border-t border-white/10 p-3 flex items-end gap-2 bg-[#0F1419]"
+              className="shrink-0 border-t border-[var(--ax-border)] p-3 flex items-end gap-2 bg-[var(--ax-bg)]"
             >
               <textarea
                 value={draft}
@@ -306,7 +312,7 @@ export function Inbox() {
                 placeholder="Ответить пользователю…"
                 rows={2}
                 disabled={sending}
-                className="flex-1 resize-none bg-[#1F2937] border border-white/10 rounded-xl px-3 py-2 text-[14px] text-white placeholder:text-white/40 focus:outline-none focus:border-[var(--color-primary)]"
+                className="flex-1 resize-none bg-[var(--ax-input-bg)] border border-[var(--ax-input-border)] rounded-xl px-3 py-2 text-[14px] text-[var(--ax-fg)] placeholder:text-[var(--ax-fg-faint)] focus:outline-none focus:border-[var(--color-primary)]"
               />
               <button
                 type="submit"
@@ -316,10 +322,10 @@ export function Inbox() {
                 <Send size={18} />
               </button>
             </form>
-            {error && <div className="px-4 py-2 text-[12px] text-[#F87171] bg-[#7F1D1D]/30 border-t border-[#F87171]/20">{error}</div>}
+            {error && <div className="px-4 py-2 text-[12px] text-[var(--ax-error-fg)] bg-[var(--ax-error-bg)] border-t border-[var(--ax-error-border)]">{error}</div>}
           </>
         ) : (
-          <div className="hidden sm:flex flex-1 items-center justify-center text-white/40">
+          <div className="hidden sm:flex flex-1 items-center justify-center text-[var(--ax-fg-faint)]">
             <div className="text-center">
               <MessageCircle size={42} className="mx-auto mb-3 opacity-50" />
               <div className="text-[14px]">Выберите чат слева</div>

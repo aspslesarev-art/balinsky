@@ -7,9 +7,5 @@ export const metadata = { robots: { index: false, follow: false }, title: 'Balin
 
 export default async function AdminRoot() {
   if (await requireAdmin()) redirect('/admin/chats')
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0F1419] text-white px-4">
-      <LoginForm />
-    </div>
-  )
+  return <LoginForm />
 }

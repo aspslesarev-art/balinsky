@@ -70,3 +70,52 @@ body {
 .gm-style .gm-bundled-control button {
   border-radius: 0 !important;
 }
+
+/* === Admin inbox theme tokens ===
+   Defaults are dark; .theme-light on the same wrapper flips them. */
+.theme-admin {
+  --ax-bg:              #0F1419;
+  --ax-fg:              #FFFFFF;
+  --ax-fg-soft:         rgba(255,255,255,0.7);
+  --ax-fg-muted:        rgba(255,255,255,0.5);
+  --ax-fg-faint:        rgba(255,255,255,0.4);
+  --ax-panel:           #1F2937;
+  --ax-chat-bg:         #1A1F2A;
+  --ax-input-bg:        #111827;
+  --ax-input-border:    rgba(255,255,255,0.1);
+  --ax-border:          rgba(255,255,255,0.1);
+  --ax-border-soft:     rgba(255,255,255,0.05);
+  --ax-hover:           rgba(255,255,255,0.05);
+  --ax-bubble-bot-bg:   #374151;
+  --ax-bubble-bot-fg:   #FFFFFF;
+  --ax-bubble-user-bg:  #FFFFFF;
+  --ax-bubble-user-fg:  #111827;
+  --ax-paused-bg:       rgba(127,29,29,0.30);
+  --ax-paused-fg:       #FCA5A5;
+  --ax-error-fg:        #F87171;
+  --ax-error-bg:        rgba(127,29,29,0.30);
+  --ax-error-border:    rgba(248,113,113,0.20);
+}
+.theme-admin.theme-light {
+  --ax-bg:              #F9FAFB;
+  --ax-fg:              #111827;
+  --ax-fg-soft:         #4B5563;
+  --ax-fg-muted:        #6B7280;
+  --ax-fg-faint:        #9CA3AF;
+  --ax-panel:           #FFFFFF;
+  --ax-chat-bg:         #F3F4F6;
+  --ax-input-bg:        #FFFFFF;
+  --ax-input-border:    #E5E7EB;
+  --ax-border:          #E5E7EB;
+  --ax-border-soft:     #F3F4F6;
+  --ax-hover:           #F3F4F6;
+  --ax-bubble-bot-bg:   #FFFFFF;
+  --ax-bubble-bot-fg:   #111827;
+  --ax-bubble-user-bg:  #DBEAFE;
+  --ax-bubble-user-fg:  #111827;
+  --ax-paused-bg:       #FEE2E2;
+  --ax-paused-fg:       #B91C1C;
+  --ax-error-fg:        #B91C1C;
+  --ax-error-bg:        #FEF2F2;
+  --ax-error-border:    #FECACA;
+}
