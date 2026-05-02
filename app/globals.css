@@ -71,6 +71,21 @@ body {
   border-radius: 0 !important;
 }
 
+/* === Card photo Ken Burns ===
+   Each freshly-active photo runs a slow zoom while it's the visible
+   layer in PhotoSlider; pairs with the 700 ms opacity crossfade so
+   the card feels alive without paying for actual video. */
+@keyframes photo-kenburns {
+  from { transform: scale(1.0); }
+  to   { transform: scale(1.08); }
+}
+.photo-kenburns {
+  animation: photo-kenburns 5s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .photo-kenburns { animation: none; }
+}
+
 /* === Telegram mini-app mode ===
    Activated by the .tma-mode class on <html> when the user came in via
    /telegram. Shifts the sticky header down so Telegram's own top bar
