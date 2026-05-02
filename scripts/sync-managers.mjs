@@ -1,8 +1,12 @@
 // Sync managers (Менеджеры застройщиков) from Airtable → Supabase Storage manifest.
-// Each manager is keyed by the slug of its main-base developer so any page that
-// knows the developer slug can fetch its manager card directly.
+// Photos are downloaded into Storage on first run and reused via a local
+// attachmentId → url cache, same pattern as sync-rental.mjs. Airtable
+// attachment URLs are ephemeral (~hours), so we can't ship them in the
+// manifest directly.
 import { createClient } from '@supabase/supabase-js'
+import crypto from 'node:crypto'
 import fs from 'node:fs'
+import path from 'node:path'
 
 const env = fs.readFileSync('.env.local', 'utf8')
 for (const l of env.split('\n')) { const m = l.match(/^([A-Z_]+)=(.*)$/); if (m) process.env[m[1]] = m[2].replace(/^['"]|['"]$/g, '') }
@@ -13,16 +17,48 @@ const DEV_TABLE = 'tblpKy7gSF4Rpc7Cb' // local Developer table in managers base
 
 const TOKEN = process.env.AIRTABLE_TOKEN
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
+const SUPABASE_BASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 
 const BUCKET = 'managers'
 const KEY = '_managers.json'
+const PHOTO_BUCKET = 'manager-photos'
+const PHOTO_CACHE_PATH = path.resolve('scripts/_manager-photos-cache.json')
 
-async function ensureBucket() {
+async function ensureBucket(name, { public: pub = true } = {}) {
   const { data: list } = await sb.storage.listBuckets()
-  if (!list?.some(b => b.name === BUCKET)) {
-    const { error } = await sb.storage.createBucket(BUCKET, { public: true })
+  if (!list?.some(b => b.name === name)) {
+    const { error } = await sb.storage.createBucket(name, { public: pub })
     if (error) throw error
-    console.log('created bucket', BUCKET)
+    console.log('created bucket', name)
+  }
+}
+
+function loadPhotoCache() {
+  try { return JSON.parse(fs.readFileSync(PHOTO_CACHE_PATH, 'utf8')) } catch { return {} }
+}
+function savePhotoCache(cache) { fs.writeFileSync(PHOTO_CACHE_PATH, JSON.stringify(cache, null, 0)) }
+const photoCache = loadPhotoCache()
+
+async function uploadPhoto(recordId, attachment) {
+  if (!attachment?.id || !attachment?.url) return null
+  if (photoCache[attachment.id]) return photoCache[attachment.id]
+  try {
+    const r = await fetch(attachment.url)
+    if (!r.ok) return null
+    const buf = Buffer.from(await r.arrayBuffer())
+    const ct = r.headers.get('content-type') || 'image/jpeg'
+    const ext = ct.includes('png') ? 'png' : ct.includes('webp') ? 'webp' : 'jpg'
+    const hash = crypto.createHash('sha1').update(buf).digest('hex').slice(0, 10)
+    const key = `${recordId}/${hash}.${ext}`
+    const { error } = await sb.storage.from(PHOTO_BUCKET).upload(key, buf, {
+      contentType: ct, upsert: true,
+    })
+    if (error) return null
+    const url = `${SUPABASE_BASE_URL}/storage/v1/object/public/${PHOTO_BUCKET}/${key}`
+    photoCache[attachment.id] = url
+    return url
+  } catch {
+    return null
   }
 }
 async function fetchAll(baseId, tableId) {
@@ -49,13 +85,15 @@ function fs1(v) {
   if (typeof v === 'object' && 'value' in v) return fs1(v.value)
   return null
 }
-function bestAttachmentUrl(att) {
+function attachmentForUpload(att) {
   if (!Array.isArray(att) || att.length === 0) return null
   const a = att[0]
-  return a?.thumbnails?.large?.url ?? a?.url ?? null
+  const url = a?.thumbnails?.large?.url ?? a?.url
+  return url ? { id: a.id, url } : null
 }
 
-await ensureBucket()
+await ensureBucket(BUCKET, { public: true })
+await ensureBucket(PHOTO_BUCKET, { public: true })
 console.log('▶ fetching managers + local dev table…')
 const [managers, localDevs] = await Promise.all([
   fetchAll(BASE, MANAGERS_TABLE),
@@ -82,6 +120,7 @@ console.log('  prod developers:', slugByName.size)
 
 const items = []
 let dropped = 0
+let uploadedPhotos = 0
 for (const r of managers) {
   const f = r.fields || {}
   const name = fs1(f['Name'])
@@ -103,10 +142,19 @@ for (const r of managers) {
   const languages = Array.isArray(f['Языки']) ? f['Языки'] : []
   const rating = typeof f['Рейтинг'] === 'number' ? f['Рейтинг'] : null
 
+  // Photo → Supabase Storage with cache fallback to Airtable URL on upload error.
+  const photoAtt = attachmentForUpload(f['Фото'])
+  let photoUrl = null
+  if (photoAtt) {
+    const stored = await uploadPhoto(r.id, photoAtt)
+    if (stored) { photoUrl = stored; uploadedPhotos++ }
+    else photoUrl = photoAtt.url
+  }
+
   items.push({
     id: r.id,
     name,
-    photo: bestAttachmentUrl(f['Фото']),
+    photo: photoUrl,
     telegram: fs1(f['Telegram']),
     telegramHandle: fs1(f['TG Name']),
     whatsapp: fs1(f['WhatsApp']),
@@ -118,7 +166,8 @@ for (const r of managers) {
   })
 }
 
-console.log('▶ kept:', items.length, 'dropped:', dropped)
+savePhotoCache(photoCache)
+console.log('▶ kept:', items.length, 'dropped:', dropped, '| photos in storage:', uploadedPhotos, '| cache size:', Object.keys(photoCache).length)
 const body = JSON.stringify({ generatedAt: new Date().toISOString(), count: items.length, items })
 console.log('  payload size:', (body.length / 1024).toFixed(1), 'KB')
 
