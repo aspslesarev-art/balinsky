@@ -501,26 +501,30 @@ function RentalCard({ r, currency }: { r: RentalItem; currency: Currency }) {
   return (
     <Link
       href={`/ru/arenda/o/${r.slug}`}
-      className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)] transition-colors"
+      className="group block bg-[var(--color-card-bg)] rounded-2xl border border-[var(--color-border)] overflow-hidden no-underline text-[#111827]"
     >
-      <PhotoSlider photos={r.photos} alt={r.title} heightClass="aspect-[4/3]" trackingId={`rental:${r.slug}`} />
-      <div className="p-4">
-        <div className="flex items-baseline justify-between gap-3 mb-1">
-          <div>
-            <div className="text-[18px] font-semibold text-[#111827] leading-tight">{price}<span className="text-[12px] font-normal text-[var(--color-text-muted)]"> / мес</span></div>
-          </div>
+      <PhotoSlider photos={r.photos} alt={r.title} trackingId={`rental:${r.slug}`} />
+
+      <div className="p-6">
+        <h3
+          className="text-[20px] font-semibold text-[var(--color-text)] leading-[1.3] mb-4 overflow-hidden"
+          style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}
+        >
+          {r.title}
+        </h3>
+
+        <div className="text-[18px] font-semibold text-[var(--color-text)] mb-3">
+          {price}<span className="text-[14px] font-normal text-[var(--color-text-muted)]"> / мес</span>
+        </div>
+
+        <div className="flex items-center flex-wrap gap-x-5 gap-y-1 text-[14px] text-[var(--color-text-muted)]">
           {r.bedrooms != null && (
-            <div className="inline-flex items-center gap-1 text-[12px] text-[var(--color-text-muted)] shrink-0">
-              <BedDouble size={13} /> {r.bedrooms} BR
-            </div>
+            <span className="inline-flex items-center gap-1"><BedDouble size={14} /> {r.bedrooms} BR</span>
+          )}
+          {r.location && (
+            <span className="inline-flex items-center gap-1"><MapPin size={14} /> {r.location}</span>
           )}
         </div>
-        <div className="text-[14px] font-medium leading-snug line-clamp-2 mt-2 mb-2">{r.title}</div>
-        {r.location && (
-          <div className="inline-flex items-center gap-1 text-[12px] text-[var(--color-text-muted)]">
-            <MapPin size={12} /> {r.location}
-          </div>
-        )}
       </div>
     </Link>
   )
