@@ -94,7 +94,7 @@ function EventCard({ e }: { e: import('@/lib/events').EventItem }) {
             <span className="text-[11px] uppercase tracking-wide text-[var(--color-primary-pressed)] font-medium">{e.developers[0].name}</span>
           )}
           {e.format && (
-            <span className="text-[10px] uppercase tracking-wide bg-[#F1F5F9] text-[#6B7280] px-1.5 py-0.5 rounded">{e.format}</span>
+            <span className="text-[10px] uppercase tracking-wide bg-[#E5E7EB] text-[#374151] px-1.5 py-0.5 rounded">{e.format}</span>
           )}
         </div>
         <div className="text-[16px] font-semibold leading-snug mb-2 line-clamp-3">{e.title}</div>

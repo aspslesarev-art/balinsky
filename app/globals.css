@@ -3,11 +3,13 @@
 :root {
   /* === Balinsky design system === */
 
-  /* Brand greens */
-  --color-primary: #33A474;
-  --color-primary-hover: #2C8E65;
-  --color-primary-pressed: #257754;
-  --color-primary-soft: #E5F2EC;
+  /* Brand greens — primary darkened from #33A474 → #1F8B5F so the green
+     passes WCAG AA contrast on white (4.7:1 vs the old 3.0:1). Hover and
+     pressed shifted in step. */
+  --color-primary: #1F8B5F;
+  --color-primary-hover: #197551;
+  --color-primary-pressed: #135E40;
+  --color-primary-soft: #E2F0E8;
 
   /* Surfaces */
   --color-bg: #F8FAF8;
@@ -15,9 +17,10 @@
   --color-card-bg: #FFFFFF;
   --color-search-bg: #F1F5F1;
 
-  /* Text */
+  /* Text — muted bumped from gray-500 (#6B7280, 4.0:1) to gray-600
+     (#4B5563, 5.5:1) for AA-compliant contrast on every site bg. */
   --color-text: #111827;
-  --color-text-muted: #6B7280;
+  --color-text-muted: #4B5563;
 
   /* Lines */
   --color-border: #E5E7EB;

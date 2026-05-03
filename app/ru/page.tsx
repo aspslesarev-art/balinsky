@@ -306,7 +306,7 @@ export default async function RuHome() {
                           <span className="text-[11px] uppercase tracking-wide text-[var(--color-primary-pressed)] font-medium">{e.developers[0].name}</span>
                         )}
                         {e.format && (
-                          <span className="text-[10px] uppercase tracking-wide bg-[#F1F5F9] text-[#6B7280] px-1.5 py-0.5 rounded">{e.format}</span>
+                          <span className="text-[10px] uppercase tracking-wide bg-[#E5E7EB] text-[#374151] px-1.5 py-0.5 rounded">{e.format}</span>
                         )}
                       </div>
                       <div className="text-[15px] font-semibold leading-snug line-clamp-2 mb-1.5">{e.title}</div>

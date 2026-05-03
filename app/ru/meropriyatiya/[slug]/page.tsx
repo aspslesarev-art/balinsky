@@ -94,7 +94,7 @@ export default async function EventDetailPage({ params }: { params: Params }) {
               )
             )}
             {e.format && <span className="inline-flex items-center gap-1.5">📍 {e.format}</span>}
-            {past && <span className="text-[10px] uppercase tracking-wide bg-[#F1F5F9] text-[#6B7280] px-1.5 py-0.5 rounded">прошло</span>}
+            {past && <span className="text-[10px] uppercase tracking-wide bg-[#E5E7EB] text-[#374151] px-1.5 py-0.5 rounded">прошло</span>}
           </div>
 
           {e.photo && (

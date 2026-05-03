@@ -53,7 +53,7 @@ export default async function PromoListPage() {
                         </span>
                       )}
                       {expired && (
-                        <span className="text-[10px] uppercase tracking-wide bg-[#F1F5F9] text-[#6B7280] px-1.5 py-0.5 rounded">завершена</span>
+                        <span className="text-[10px] uppercase tracking-wide bg-[#E5E7EB] text-[#374151] px-1.5 py-0.5 rounded">завершена</span>
                       )}
                       {!expired && p.pinned && (
                         <span className="text-[10px] uppercase tracking-wide bg-[var(--color-primary-soft)] text-[var(--color-primary-pressed)] px-1.5 py-0.5 rounded">топ</span>
