@@ -2,10 +2,19 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
+    // Vercel image optimization runs through these hosts: AVIF / WebP
+    // conversion, on-the-fly resize, srcset, year-long edge cache.
+    // Supabase Storage host is the main one — every villa / apartment /
+    // complex / rental photo is served from it.
     remotePatterns: [
+      { protocol: 'https', hostname: 'ifdgiwxothmcalibmydv.supabase.co' },
       { protocol: 'https', hostname: 'v5.airtableusercontent.com' },
       { protocol: 'https', hostname: 'dl.airtable.com' },
+      { protocol: 'https', hostname: 'i.ytimg.com' },
+      { protocol: 'https', hostname: 'i4.ytimg.com' },
     ],
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 31536000,
   },
   // Long browser-cache for sitemap / robots / static assets that rarely
   // change. Crawlers respect Cache-Control too; cuts repeated full

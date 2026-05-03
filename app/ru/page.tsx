@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { createClient } from '@supabase/supabase-js'
 import { Home as HomeIcon, Building, Building2, HardHat, ArrowRight, Calendar, Sparkles, Newspaper, BookOpen } from 'lucide-react'
 import { Header } from '@/components/Header'
@@ -203,14 +204,20 @@ export default async function RuHome() {
             <Link key={key} href={href} className="group block bg-white rounded-3xl border border-[var(--color-border)] overflow-hidden hover:border-[var(--color-primary)] transition-colors">
               <div className="relative h-[220px] md:h-[260px] bg-[var(--color-search-bg)] overflow-hidden">
                 {cover ? (
-                  // First two cover images are above the fold on most viewports
-                  // and are the LCP candidate — eager load + high fetchpriority.
-                  <img
+                  // next/image runs every photo through Vercel image
+                  // optimization: AVIF / WebP + on-the-fly resize +
+                  // year-long edge cache. fill makes it stretch the
+                  // 220-260px parent; sizes hints the right srcset
+                  // (50vw at md+, full width on mobile). priority on
+                  // the first two — they're the LCP element above
+                  // the fold.
+                  <Image
                     src={cover}
                     alt={title}
-                    loading={idx < 2 ? 'eager' : 'lazy'}
-                    fetchPriority={idx < 2 ? 'high' : 'auto'}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    fill
+                    sizes="(min-width: 768px) 50vw, 100vw"
+                    priority={idx < 2}
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-[var(--color-primary-soft)]">

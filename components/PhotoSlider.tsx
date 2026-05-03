@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import NextImage from 'next/image'
 
 // Lazy slideshow inside a card. The first photo is a regular <img loading=
 // "lazy"> for SEO + LCP; everything else is mounted only after the user
@@ -198,11 +199,18 @@ export function PhotoSlider({
       tabIndex={-1}
       className={`group/slider relative w-full ${heightClass} bg-[var(--color-border)] overflow-hidden`}
     >
-      <img
+      {/* Base image — the thing crawlers and first paint see. Goes
+          through Vercel image optimization (AVIF / WebP, srcset,
+          year-long edge cache). The animated layers below stay on
+          plain <img> so the JS-driven preload + Ken Burns transitions
+          keep working unchanged. */}
+      <NextImage
         src={photos[0]}
         alt={alt}
+        fill
+        sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
         loading="lazy"
-        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[600ms] ${
+        className={`object-cover transition-opacity duration-[600ms] ${
           everActivated && autoCount > 1 ? 'opacity-0' : 'opacity-100'
         }`}
       />

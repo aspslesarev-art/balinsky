@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { Play, ChevronRight } from 'lucide-react'
 import type { YouTubeVideo } from '@/lib/youtube'
 
@@ -32,11 +33,13 @@ export function YouTubeBlock({ videos }: { videos: YouTubeVideo[] }) {
               className="group block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)] transition-colors"
             >
               <div className="relative aspect-video bg-[var(--color-search-bg)]">
-                <img
+                <Image
                   src={v.thumbnail}
                   alt={v.title}
+                  fill
+                  sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 50vw"
                   loading="lazy"
-                  className="absolute inset-0 w-full h-full object-cover"
+                  className="object-cover"
                 />
                 <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/15 transition-colors">
                   <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white/95 shadow-[0_2px_8px_rgba(0,0,0,0.18)] text-[#111827]">
