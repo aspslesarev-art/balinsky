@@ -88,33 +88,39 @@ function ConfidenceBadge({ confidence, size }: { confidence: 'high' | 'medium' |
 function InvestmentWidgetView({ snap, apiKey }: { snap: Snapshot; apiKey: string }) {
   const allPois = useMemo(() => [...snap.anchors.map(a => ({ lat: a.lat, lng: a.lng, name: a.name, category: a.primaryType ?? '' }))], [snap])
   return (
-    <SectionShell>
-      {/* Reading order: plain-language intro → three scenarios →
-          map (with the matched competitors visualised) → comparables. */}
-      {snap.scenarios && <ScenariosIntro snap={snap} />}
+    <>
+      {/* Investment-only block: scenarios + map + comparables. SectionShell
+          carries data-investment-block so the intent toggle hides the whole
+          wrapper in "Для жизни" mode. */}
+      <SectionShell>
+        {snap.scenarios && <ScenariosIntro snap={snap} />}
 
-      {snap.scenarios ? (
-        <Scenarios snap={snap} />
-      ) : snap.references ? (
-        <References snap={snap} />
-      ) : null}
+        {snap.scenarios ? (
+          <Scenarios snap={snap} />
+        ) : snap.references ? (
+          <References snap={snap} />
+        ) : null}
 
-      <div className="mt-4">
-        <InvestmentMap apiKey={apiKey} snap={snap} allPois={allPois} />
-      </div>
+        <div className="mt-4">
+          <InvestmentMap apiKey={apiKey} snap={snap} allPois={allPois} />
+        </div>
 
-      {snap.flags.expandedZone && (
-        <Banner tone="info" icon={<Info size={16} />} className="mt-4">
-          Расширенная выборка: в исходной зоне ({snap.zone.raw}) не нашлось матчей, перешли на {snap.zone.applied}.
-        </Banner>
-      )}
+        {snap.flags.expandedZone && (
+          <Banner tone="info" icon={<Info size={16} />} className="mt-4">
+            Расширенная выборка: в исходной зоне ({snap.zone.raw}) не нашлось матчей, перешли на {snap.zone.applied}.
+          </Banner>
+        )}
 
-      {snap.competitors.length > 0 && <CompetitorsGrid snap={snap} />}
+        {snap.competitors.length > 0 && <CompetitorsGrid snap={snap} />}
 
-      {snap.flags.emergingMarket && <EmergingBlock snap={snap} />}
+        {snap.flags.emergingMarket && <EmergingBlock snap={snap} />}
+      </SectionShell>
 
+      {/* "Что вокруг" lives outside the investment wrapper so it stays
+          visible in "Для жизни" mode — it's useful for living-buyers
+          (схools, рестораны, пляжи), not just investors. */}
       <NearbyPlacesBlock snap={snap} />
-    </SectionShell>
+    </>
   )
 }
 
