@@ -6,6 +6,8 @@ import { PageContainer } from '@/components/PageContainer'
 import { VillaCard, type VillaCardData } from '@/components/VillaCard'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { loadAll as loadAllVillas, buildAllCards as buildAllVillaCards, type VillaFilterState } from './villy/_lib'
+import { loadLatestYouTubeVideos } from '@/lib/youtube'
+import { YouTubeBlock } from '@/components/YouTubeBlock'
 import { loadAllVillaScores } from '@/lib/investment/batch-scores'
 import { loadAllNews } from '@/lib/news'
 import { loadAllPromo } from '@/lib/promo'
@@ -134,7 +136,7 @@ function isPast(iso: string | null): boolean {
 }
 
 export default async function RuHome() {
-  const [counts, villaThumb, apartmentThumb, complexThumb, topVillas, topComplexes, allNews, allPromo, allEvents] = await Promise.all([
+  const [counts, villaThumb, apartmentThumb, complexThumb, topVillas, topComplexes, allNews, allPromo, allEvents, ytVideos] = await Promise.all([
     loadCounts(),
     loadFirstThumb(`${SUPABASE_URL}/storage/v1/object/public/villa-photos/_manifest.json`),
     loadFirstThumb(`${SUPABASE_URL}/storage/v1/object/public/apartment-photos/_manifest.json`),
@@ -144,6 +146,7 @@ export default async function RuHome() {
     loadAllNews().catch(() => []),
     loadAllPromo().catch(() => []),
     loadAllEvents().catch(() => []),
+    loadLatestYouTubeVideos(6).catch(() => []),
   ])
 
   const latestNews = allNews.slice(0, 3)
@@ -214,6 +217,9 @@ export default async function RuHome() {
             </div>
           </section>
         )}
+
+        {/* Latest YouTube videos — pulled from the channel RSS feed every 30 min */}
+        <YouTubeBlock videos={ytVideos} />
 
         {/* Active promotions */}
         {activePromo.length > 0 && (
