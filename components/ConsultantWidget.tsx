@@ -51,21 +51,15 @@ function extractChips(content: string): { text: string; chips: string[] } {
   return { text: content.slice(0, m.index).trimEnd(), chips }
 }
 
+// First message in every conversation. Includes its own [CHIPS] block,
+// so the entry-point picks render through the same chip pipeline as
+// every later step — chips lead to chips end-to-end.
 const GREETING: Message = {
   role: 'assistant',
   content:
-    'Здравствуйте! Я Бали Гид — AI, помогаю с недвижимостью на Бали.\n\nМогу подобрать виллу, апартаменты или ЖК, рассказать про районы и юридику, подключить менеджера или агента для созвона в Zoom.\n\nЯ модель GPT, могу ошибаться. Что вас интересует?',
+    'Я Бали Гид — AI-помощник по недвижимости на Бали. Могу ошибаться. Что нужно?\n\n' +
+    '[CHIPS] Подобрать виллу | Подобрать апартаменты | Помесячная аренда | Юридика покупки | Связаться с менеджером',
 }
-
-// Quick-action prompts use "вы". The model auto-switches to "ты" if the
-// user later writes informally.
-const QUICK_ACTIONS: { label: string; prompt: string }[] = [
-  { label: '🏡 Подобрать виллу', prompt: 'Помогите подобрать виллу на Бали. Какие районы сейчас интересные и какой бюджет нужен?' },
-  { label: '🏢 Апартаменты', prompt: 'Хочу апартаменты на Бали для жизни и сдачи в аренду. С чего начать?' },
-  { label: '⚖️ Юридика покупки', prompt: 'Объясните как иностранцу купить недвижимость на Бали — leasehold, PT PMA, что выбрать.' },
-  { label: '🔑 Аренда на месяц', prompt: 'Подберите варианты помесячной аренды виллы на Бали в районе Чангу или Берава.' },
-  { label: '📞 Связаться с менеджером', prompt: 'Хочу пообщаться с живым менеджером застройщика. Как это устроено?' },
-]
 
 export function ConsultantWidget() {
   const [open, setOpen] = useState(false)
@@ -273,20 +267,8 @@ export function ConsultantWidget() {
                   </div>
                 )
               })}
-              {messages.length === 1 && !loading && (
-                <div className="flex flex-wrap gap-1.5 mt-1">
-                  {QUICK_ACTIONS.map(a => (
-                    <button
-                      key={a.label}
-                      type="button"
-                      onClick={() => sendText(a.prompt)}
-                      className="text-[12px] px-3 py-1.5 rounded-full bg-white border border-[var(--color-border)] text-[#111827] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] transition-colors"
-                    >
-                      {a.label}
-                    </button>
-                  ))}
-                </div>
-              )}
+              {/* Greeting chips render via the same extractChips path as
+                  later replies — see the [CHIPS] block in GREETING. */}
               {loading && (
                 <Bubble role="assistant">
                   <span className="inline-flex items-center gap-2 text-[var(--color-text-muted)]">
