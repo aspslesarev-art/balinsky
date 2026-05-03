@@ -284,7 +284,7 @@ export function RentalCatalog({ items, initial }: { items: RentalItem[]; initial
 
       {filtered.length > 0 ? (
         <>
-          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <ul className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {visibleItems.map(r => (
               <li key={r.id}>
                 <RentalCard r={r} currency={currency} />
