@@ -199,11 +199,19 @@ export default async function RuHome() {
 
         {/* 4 categories */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
-          {sections.map(({ key, href, title, tagline, count, countLabel, cover, Icon }) => (
+          {sections.map(({ key, href, title, tagline, count, countLabel, cover, Icon }, idx) => (
             <Link key={key} href={href} className="group block bg-white rounded-3xl border border-[var(--color-border)] overflow-hidden hover:border-[var(--color-primary)] transition-colors">
               <div className="relative h-[220px] md:h-[260px] bg-[var(--color-search-bg)] overflow-hidden">
                 {cover ? (
-                  <img src={cover} alt={title} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                  // First two cover images are above the fold on most viewports
+                  // and are the LCP candidate — eager load + high fetchpriority.
+                  <img
+                    src={cover}
+                    alt={title}
+                    loading={idx < 2 ? 'eager' : 'lazy'}
+                    fetchPriority={idx < 2 ? 'high' : 'auto'}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-[var(--color-primary-soft)]">
                     <Icon size={56} strokeWidth={1.5} className="text-[var(--color-primary-pressed)]" />

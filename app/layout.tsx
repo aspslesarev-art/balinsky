@@ -38,20 +38,38 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
-        <Script id="gtm-loader" strategy="afterInteractive">
+        {/* Preconnect to the photo bucket — every card's first image fetch
+            saves ~150-300 ms on the LCP element. dns-prefetch is a fallback
+            for older browsers that ignore preconnect. */}
+        <link rel="preconnect" href="https://ifdgiwxothmcalibmydv.supabase.co" crossOrigin="" />
+        <link rel="dns-prefetch" href="https://ifdgiwxothmcalibmydv.supabase.co" />
+        {/* Analytics origins — preconnect so the deferred script isn't
+            paying for handshake when it eventually fires. */}
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        <link rel="dns-prefetch" href="https://mc.yandex.ru" />
+
+        {/* Both analytics tags pushed to lazyOnload — they don't need to
+            run before the page is interactive. Cuts main-thread JS work
+            during FCP / LCP, which is what mobile PSI scores hate most. */}
+        <Script id="gtm-loader" strategy="lazyOnload">
           {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','${GTM_ID}');`}
         </Script>
-        <Script id="yandex-metrika" strategy="afterInteractive">
+        {/* Yandex Metrika without webvisor / accurateTrackBounce —
+            those alone add ~200 KB of script + per-event recording.
+            Kept clickmap + trackLinks (cheap, useful for behaviour
+            reports). Re-enable webvisor manually in YM dashboard
+            if you need session replay. */}
+        <Script id="yandex-metrika" strategy="lazyOnload">
           {`(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
 m[i].l=1*new Date();
 for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
 k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
 (window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=${YM_ID}', 'ym');
-ym(${YM_ID}, 'init', {ssr:true, webvisor:true, trackHash:true, clickmap:true, ecommerce:"dataLayer", accurateTrackBounce:true, trackLinks:true});`}
+ym(${YM_ID}, 'init', {ssr:true, clickmap:true, trackLinks:true, ecommerce:"dataLayer"});`}
         </Script>
       </head>
       <body className="min-h-full flex flex-col">

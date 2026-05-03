@@ -7,6 +7,26 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'dl.airtable.com' },
     ],
   },
+  // Long browser-cache for sitemap / robots / static assets that rarely
+  // change. Crawlers respect Cache-Control too; cuts repeated full
+  // refetches and saves crawl budget on hot URLs.
+  async headers() {
+    return [
+      {
+        source: '/sitemap.xml',
+        headers: [{ key: 'cache-control', value: 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400' }],
+      },
+      {
+        source: '/robots.txt',
+        headers: [{ key: 'cache-control', value: 'public, max-age=86400, s-maxage=86400, stale-while-revalidate=86400' }],
+      },
+      {
+        // Bucket-static images, fonts, manifests
+        source: '/(.*)\\.(jpg|jpeg|png|webp|avif|svg|ico|woff|woff2|otf|ttf)',
+        headers: [{ key: 'cache-control', value: 'public, max-age=31536000, immutable' }],
+      },
+    ]
+  },
   async redirects() {
     // 301 redirects from old Wix site (balinsky.info) → new Next routes.
     return [
