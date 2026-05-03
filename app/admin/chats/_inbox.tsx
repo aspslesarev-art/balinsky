@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Send, LogOut, RefreshCcw, MessageCircle, Bot, BotOff, Megaphone, Tag } from 'lucide-react'
+import { Send, LogOut, RefreshCcw, MessageCircle, Bot, BotOff, Megaphone, Tag, Image as ImageIcon } from 'lucide-react'
 import { useAdminTheme, themeClass, ThemeToggle } from '../_theme'
 
 type ChatRow = {
@@ -192,6 +192,9 @@ export function Inbox() {
           <div className="flex items-center gap-1">
             <a href="/admin/broadcast" className="inline-flex items-center gap-1 text-[12px] text-[var(--ax-fg-soft)] hover:text-[var(--ax-fg)] px-2 py-1 rounded no-underline" title="Рассылка по меткам">
               <Megaphone size={13} /> Рассылка
+            </a>
+            <a href="/admin/ads" className="inline-flex items-center gap-1 text-[12px] text-[var(--ax-fg-soft)] hover:text-[var(--ax-fg)] px-2 py-1 rounded no-underline" title="Реклама">
+              <ImageIcon size={13} /> Реклама
             </a>
             <ThemeToggle theme={theme} toggle={toggleTheme} />
             <button onClick={logout} className="inline-flex items-center gap-1 text-[12px] text-[var(--ax-fg-soft)] hover:text-[var(--ax-fg)] px-2 py-1 rounded">
