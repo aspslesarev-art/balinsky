@@ -264,7 +264,7 @@ export default async function RuHome() {
                   <Link href={`/ru/akcii/${p.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)] transition-colors">
                     <div className="w-full aspect-[16/9] bg-[var(--color-search-bg)]">
                       {p.photo ? (
-                        <img src={p.photo} alt={p.title} className="w-full h-full object-cover" />
+                        <Image src={p.photo} alt={p.title} fill sizes="(min-width: 768px) 33vw, 100vw" loading="lazy" className="object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-3xl">🎁</div>
                       )}
@@ -295,7 +295,7 @@ export default async function RuHome() {
                   <Link href={`/ru/meropriyatiya/${e.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)] transition-colors">
                     <div className="w-full aspect-[16/9] bg-[var(--color-search-bg)]">
                       {e.photo ? (
-                        <img src={e.photo} alt={e.title} className="w-full h-full object-cover" />
+                        <Image src={e.photo} alt={e.title} fill sizes="(min-width: 768px) 33vw, 100vw" loading="lazy" className="object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-3xl">🎟️</div>
                       )}
@@ -331,7 +331,7 @@ export default async function RuHome() {
                   <Link href={`/ru/zhilye-kompleksy/o/${c.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)] transition-colors">
                     <div className="w-full aspect-[4/3] bg-[var(--color-search-bg)]">
                       {c.cover ? (
-                        <img src={c.cover} alt={c.title} className="w-full h-full object-cover" />
+                        <Image src={c.cover} alt={c.title} fill sizes="(min-width: 768px) 33vw, 100vw" loading="lazy" className="object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-3xl">🏗️</div>
                       )}
@@ -360,7 +360,7 @@ export default async function RuHome() {
                   <Link href={`/ru/novosti/${n.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)] transition-colors">
                     <div className="w-full aspect-[16/9] bg-[var(--color-search-bg)]">
                       {n.photo ? (
-                        <img src={n.photo} alt={n.title} className="w-full h-full object-cover" />
+                        <Image src={n.photo} alt={n.title} fill sizes="(min-width: 768px) 33vw, 100vw" loading="lazy" className="object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-3xl">📰</div>
                       )}
