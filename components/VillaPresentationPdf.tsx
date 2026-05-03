@@ -335,30 +335,55 @@ export function VillaPdfDocument({ data, snap, agent, orientation = 'landscape' 
 
   return (
     <Document title={data.title} author={agent?.name ?? 'balinsky.info'} producer="balinsky.info">
-      {/* Cover — split layout. In portrait the photo sits on top (filling
-          the wide upper half) and the text drops below it. */}
+      {/* Cover — landscape uses a side-by-side split, portrait stacks the
+          photo (top) and the text (bottom) explicitly so flex order /
+          column-reverse quirks in @react-pdf can't trip the layout. */}
       <Page {...pageProps} style={[styles.page, styles.pagePadded]}>
-        <View style={isPortrait ? [styles.coverRoot, { flexDirection: 'column-reverse', gap: 16, alignItems: 'stretch' }] : styles.coverRoot}>
-          <View style={isPortrait ? [styles.coverTextCol, { width: '100%' }] : styles.coverTextCol}>
-            {data.district && <Text style={styles.coverDistrict}>{data.district}, Бали</Text>}
-            <Text style={styles.coverTitle}>{data.title}</Text>
-            <View style={styles.coverChips}>
-              {data.bedrooms != null && <Text style={styles.coverChip}>{data.bedrooms} BR</Text>}
-              {data.area != null && <Text style={styles.coverChip}>{data.area} м² дом</Text>}
-              {data.land != null && <Text style={styles.coverChip}>{data.land} м² земля</Text>}
-              {data.lease && <Text style={styles.coverChip}>Лизхолд {data.lease} лет</Text>}
+        {isPortrait ? (
+          <View style={{ flexDirection: 'column', height: '100%', gap: 18 }}>
+            <View style={{ width: '100%', height: 360, borderRadius: 14, overflow: 'hidden', backgroundColor: COLORS.bgSoft }}>
+              {allPhotos[0] && <Image src={allPhotos[0]} style={styles.coverPhotoImg} />}
             </View>
-            {data.priceUsd != null && (
-              <View>
-                <Text style={styles.coverPrice}>{fmtUsd(data.priceUsd)}</Text>
-                {data.pricePerM2 != null && <Text style={styles.coverPriceM2}>{fmtUsd(data.pricePerM2)} / м²</Text>}
+            <View style={{ flexDirection: 'column' }}>
+              {data.district && <Text style={styles.coverDistrict}>{data.district}, Бали</Text>}
+              <Text style={styles.coverTitle}>{data.title}</Text>
+              <View style={styles.coverChips}>
+                {data.bedrooms != null && <Text style={styles.coverChip}>{data.bedrooms} BR</Text>}
+                {data.area != null && <Text style={styles.coverChip}>{data.area} м² дом</Text>}
+                {data.land != null && <Text style={styles.coverChip}>{data.land} м² земля</Text>}
+                {data.lease && <Text style={styles.coverChip}>Лизхолд {data.lease} лет</Text>}
               </View>
-            )}
+              {data.priceUsd != null && (
+                <View>
+                  <Text style={styles.coverPrice}>{fmtUsd(data.priceUsd)}</Text>
+                  {data.pricePerM2 != null && <Text style={styles.coverPriceM2}>{fmtUsd(data.pricePerM2)} / м²</Text>}
+                </View>
+              )}
+            </View>
           </View>
-          <View style={isPortrait ? [styles.coverPhotoCol, { width: '100%', height: 360, flex: 0 }] : styles.coverPhotoCol}>
-            {allPhotos[0] && <Image src={allPhotos[0]} style={styles.coverPhotoImg} />}
+        ) : (
+          <View style={styles.coverRoot}>
+            <View style={styles.coverTextCol}>
+              {data.district && <Text style={styles.coverDistrict}>{data.district}, Бали</Text>}
+              <Text style={styles.coverTitle}>{data.title}</Text>
+              <View style={styles.coverChips}>
+                {data.bedrooms != null && <Text style={styles.coverChip}>{data.bedrooms} BR</Text>}
+                {data.area != null && <Text style={styles.coverChip}>{data.area} м² дом</Text>}
+                {data.land != null && <Text style={styles.coverChip}>{data.land} м² земля</Text>}
+                {data.lease && <Text style={styles.coverChip}>Лизхолд {data.lease} лет</Text>}
+              </View>
+              {data.priceUsd != null && (
+                <View>
+                  <Text style={styles.coverPrice}>{fmtUsd(data.priceUsd)}</Text>
+                  {data.pricePerM2 != null && <Text style={styles.coverPriceM2}>{fmtUsd(data.pricePerM2)} / м²</Text>}
+                </View>
+              )}
+            </View>
+            <View style={styles.coverPhotoCol}>
+              {allPhotos[0] && <Image src={allPhotos[0]} style={styles.coverPhotoImg} />}
+            </View>
           </View>
-        </View>
+        )}
       </Page>
 
       {/* Photo compositions. Mosaic5 / grid4 are designed for landscape;
@@ -376,9 +401,14 @@ export function VillaPdfDocument({ data, snap, agent, orientation = 'landscape' 
         <Text style={styles.subtitle}>Ключевые параметры объекта</Text>
         <View style={styles.factsGrid}>
           {factsItems.map(it => (
-            <View key={it.label} style={styles.factCard}>
-              <Text style={styles.factLabel}>{it.label}</Text>
-              <Text style={styles.factValue}>{it.value}</Text>
+            <View
+              key={it.label}
+              style={isPortrait
+                ? [styles.factCard, { width: '48%', minHeight: 84, padding: 16 }]
+                : styles.factCard}
+            >
+              <Text style={isPortrait ? [styles.factLabel, { fontSize: 9 }] : styles.factLabel}>{it.label}</Text>
+              <Text style={isPortrait ? [styles.factValue, { fontSize: 15 }] : styles.factValue}>{it.value}</Text>
             </View>
           ))}
         </View>
@@ -443,20 +473,36 @@ export function VillaPdfDocument({ data, snap, agent, orientation = 'landscape' 
           <Text style={styles.subtitle}>
             Три сценария аренды на основе матчинга с конкурентами на Booking ({snap.competitors.length} объектов)
           </Text>
-          <View style={isPortrait ? [styles.scenariosRow, { flexDirection: 'column', gap: 8 }] : styles.scenariosRow}>
+          <View style={isPortrait ? [styles.scenariosRow, { flexDirection: 'column', gap: 12 }] : styles.scenariosRow}>
             {(['bad', 'median', 'good'] as const).map(key => {
               const e = snap.scenarios![key]
               const cardStyle = key === 'bad' ? styles.scenarioCardBad : key === 'good' ? styles.scenarioCardGood : styles.scenarioCardMedian
               const titleColor = key === 'bad' ? COLORS.scenarioBadText : key === 'good' ? COLORS.scenarioGoodText : COLORS.primaryDark
               const title = key === 'bad' ? 'Плохой' : key === 'good' ? 'Хороший' : 'Нормальный'
               return (
-                <View key={key} style={[styles.scenarioCard, cardStyle]}>
-                  <Text style={[styles.scenarioLabel, { color: titleColor }]}>{title}</Text>
-                  <Text style={styles.scenarioMeta}>ADR {fmtUsd(e.adr)} · {Math.round(e.occupancy * 100)}%</Text>
-                  <Text style={styles.scenarioNoi}>{fmtUsdShort(e.noi)}</Text>
-                  <Text style={styles.scenarioNoiSuffix}>/ год NOI</Text>
-                  <View style={styles.scenarioRow}><Text style={styles.scenarioRowKey}>Окупаемость</Text><Text style={styles.scenarioRowVal}>{fmtYears(e.payback)}</Text></View>
-                  <View style={styles.scenarioRow}><Text style={styles.scenarioRowKey}>Cap rate</Text><Text style={styles.scenarioRowVal}>{fmtPct(e.capRate)}</Text></View>
+                <View
+                  key={key}
+                  style={isPortrait
+                    ? [styles.scenarioCard, cardStyle, { padding: 18, flex: undefined }]
+                    : [styles.scenarioCard, cardStyle]}
+                >
+                  <View style={isPortrait ? { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 } : {}}>
+                    <Text style={isPortrait
+                      ? [styles.scenarioLabel, { fontSize: 11, color: titleColor }]
+                      : [styles.scenarioLabel, { color: titleColor }]}>{title}</Text>
+                    {isPortrait && <Text style={[styles.scenarioMeta, { marginBottom: 0 }]}>ADR {fmtUsd(e.adr)} · {Math.round(e.occupancy * 100)}%</Text>}
+                  </View>
+                  {!isPortrait && <Text style={styles.scenarioMeta}>ADR {fmtUsd(e.adr)} · {Math.round(e.occupancy * 100)}%</Text>}
+                  <Text style={isPortrait ? [styles.scenarioNoi, { fontSize: 26 }] : styles.scenarioNoi}>{fmtUsdShort(e.noi)}</Text>
+                  <Text style={isPortrait ? [styles.scenarioNoiSuffix, { fontSize: 11, marginBottom: 12 }] : styles.scenarioNoiSuffix}>/ год NOI</Text>
+                  <View style={styles.scenarioRow}>
+                    <Text style={isPortrait ? [styles.scenarioRowKey, { fontSize: 11 }] : styles.scenarioRowKey}>Окупаемость</Text>
+                    <Text style={isPortrait ? [styles.scenarioRowVal, { fontSize: 11 }] : styles.scenarioRowVal}>{fmtYears(e.payback)}</Text>
+                  </View>
+                  <View style={styles.scenarioRow}>
+                    <Text style={isPortrait ? [styles.scenarioRowKey, { fontSize: 11 }] : styles.scenarioRowKey}>Cap rate</Text>
+                    <Text style={isPortrait ? [styles.scenarioRowVal, { fontSize: 11 }] : styles.scenarioRowVal}>{fmtPct(e.capRate)}</Text>
+                  </View>
                 </View>
               )
             })}
