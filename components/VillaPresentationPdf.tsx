@@ -446,15 +446,19 @@ export function VillaPdfDocument({ data, snap, agent, orientation = 'landscape' 
               const items = [...(snap.nearbyByCategory[cat] ?? [])].sort((a, b) => a.distanceKm - b.distanceKm).slice(0, 3)
               const totalCount = (snap.nearbyByCategory[cat] ?? []).length
               return (
-                <View key={cat} style={styles.nearbyCard} wrap={false}>
+                <View
+                  key={cat}
+                  wrap={false}
+                  style={isPortrait ? [styles.nearbyCard, { width: '48.5%', padding: 12 }] : styles.nearbyCard}
+                >
                   <View style={styles.nearbyTitleRow}>
-                    <Text style={styles.nearbyTitle}>{NEARBY_META[cat] ?? cat}</Text>
+                    <Text style={isPortrait ? [styles.nearbyTitle, { fontSize: 12 }] : styles.nearbyTitle}>{NEARBY_META[cat] ?? cat}</Text>
                     <Text style={styles.nearbyCount}>{totalCount}</Text>
                   </View>
                   {items.map(p => (
                     <View key={p.id} style={styles.nearbyItem}>
-                      <Text style={styles.nearbyName}>{p.name}</Text>
-                      <Text style={styles.nearbyMeta}>
+                      <Text style={isPortrait ? [styles.nearbyName, { fontSize: 10 }] : styles.nearbyName}>{p.name}</Text>
+                      <Text style={isPortrait ? [styles.nearbyMeta, { fontSize: 9 }] : styles.nearbyMeta}>
                         {p.rating != null ? `★${p.rating.toFixed(1)} · ` : ''}{fmtDistance(p.distanceKm)}
                       </Text>
                     </View>
@@ -473,33 +477,26 @@ export function VillaPdfDocument({ data, snap, agent, orientation = 'landscape' 
           <Text style={styles.subtitle}>
             Три сценария аренды на основе матчинга с конкурентами на Booking ({snap.competitors.length} объектов)
           </Text>
-          <View style={isPortrait ? [styles.scenariosRow, { flexDirection: 'column', gap: 12 }] : styles.scenariosRow}>
+          <View style={isPortrait ? { flexDirection: 'column', gap: 12 } : styles.scenariosRow}>
             {(['bad', 'median', 'good'] as const).map(key => {
               const e = snap.scenarios![key]
               const cardStyle = key === 'bad' ? styles.scenarioCardBad : key === 'good' ? styles.scenarioCardGood : styles.scenarioCardMedian
               const titleColor = key === 'bad' ? COLORS.scenarioBadText : key === 'good' ? COLORS.scenarioGoodText : COLORS.primaryDark
               const title = key === 'bad' ? 'Плохой' : key === 'good' ? 'Хороший' : 'Нормальный'
+              const baseCard = isPortrait
+                ? { borderWidth: 1, borderRadius: 12, padding: 18, width: '100%' as const }
+                : styles.scenarioCard
               return (
-                <View
-                  key={key}
-                  style={isPortrait
-                    ? [styles.scenarioCard, cardStyle, { padding: 18, flex: undefined }]
-                    : [styles.scenarioCard, cardStyle]}
-                >
-                  <View style={isPortrait ? { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 } : {}}>
-                    <Text style={isPortrait
-                      ? [styles.scenarioLabel, { fontSize: 11, color: titleColor }]
-                      : [styles.scenarioLabel, { color: titleColor }]}>{title}</Text>
-                    {isPortrait && <Text style={[styles.scenarioMeta, { marginBottom: 0 }]}>ADR {fmtUsd(e.adr)} · {Math.round(e.occupancy * 100)}%</Text>}
-                  </View>
-                  {!isPortrait && <Text style={styles.scenarioMeta}>ADR {fmtUsd(e.adr)} · {Math.round(e.occupancy * 100)}%</Text>}
+                <View key={key} style={[baseCard, cardStyle]}>
+                  <Text style={[styles.scenarioLabel, isPortrait ? { fontSize: 11, color: titleColor } : { color: titleColor }]}>{title}</Text>
+                  <Text style={isPortrait ? [styles.scenarioMeta, { fontSize: 10 }] : styles.scenarioMeta}>ADR {fmtUsd(e.adr)} · {Math.round(e.occupancy * 100)}%</Text>
                   <Text style={isPortrait ? [styles.scenarioNoi, { fontSize: 26 }] : styles.scenarioNoi}>{fmtUsdShort(e.noi)}</Text>
                   <Text style={isPortrait ? [styles.scenarioNoiSuffix, { fontSize: 11, marginBottom: 12 }] : styles.scenarioNoiSuffix}>/ год NOI</Text>
-                  <View style={styles.scenarioRow}>
+                  <View style={isPortrait ? [styles.scenarioRow, { marginBottom: 4 }] : styles.scenarioRow}>
                     <Text style={isPortrait ? [styles.scenarioRowKey, { fontSize: 11 }] : styles.scenarioRowKey}>Окупаемость</Text>
                     <Text style={isPortrait ? [styles.scenarioRowVal, { fontSize: 11 }] : styles.scenarioRowVal}>{fmtYears(e.payback)}</Text>
                   </View>
-                  <View style={styles.scenarioRow}>
+                  <View style={isPortrait ? [styles.scenarioRow, { marginBottom: 0 }] : styles.scenarioRow}>
                     <Text style={isPortrait ? [styles.scenarioRowKey, { fontSize: 11 }] : styles.scenarioRowKey}>Cap rate</Text>
                     <Text style={isPortrait ? [styles.scenarioRowVal, { fontSize: 11 }] : styles.scenarioRowVal}>{fmtPct(e.capRate)}</Text>
                   </View>
