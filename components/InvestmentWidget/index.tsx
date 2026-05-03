@@ -420,7 +420,10 @@ function NearbyPlacesBlock({ snap }: { snap: Snapshot }) {
   const cats = ORDER.filter(k => (filtered[k] ?? []).length > 0)
   if (cats.length === 0) return null
   return (
-    <section className="mt-8">
+    // mb-10 matches the rest of the detail-page sections so the rhythm
+    // stays even no matter whether the investment block above it is
+    // visible (Все / Инвестиции) or hidden (Для жизни).
+    <section className="mb-10">
       <div className="flex items-baseline gap-3 mb-3">
         <h3 className="text-[18px] md:text-[20px] font-semibold text-[#111827]">Что вокруг виллы</h3>
       </div>
