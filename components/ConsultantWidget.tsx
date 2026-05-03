@@ -40,6 +40,17 @@ type ListingCard = {
 
 type Message = { role: 'user' | 'assistant'; content: string; listings?: ListingCard[] }
 
+// Strips a trailing `[CHIPS] a | b | c` block off an assistant message and
+// returns it as a list of suggestion strings. Chips show only for the LAST
+// assistant message — old chips would offer answers that no longer make
+// sense for the current state of the conversation.
+function extractChips(content: string): { text: string; chips: string[] } {
+  const m = content.match(/\n*\[CHIPS\]\s*(.+?)\s*$/)
+  if (!m) return { text: content, chips: [] }
+  const chips = m[1].split('|').map(s => s.trim()).filter(Boolean).slice(0, 6)
+  return { text: content.slice(0, m.index).trimEnd(), chips }
+}
+
 const GREETING: Message = {
   role: 'assistant',
   content:
@@ -234,16 +245,34 @@ export function ConsultantWidget() {
 
             {/* Messages */}
             <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto px-4 py-4 bg-[var(--color-search-bg)] flex flex-col gap-3">
-              {messages.map((m, i) => (
-                <div key={i} className="flex flex-col gap-2">
-                  {m.content && <Bubble role={m.role}>{m.content}</Bubble>}
-                  {m.listings && m.listings.length > 0 && (
-                    <div className="self-start max-w-[95%] flex flex-col gap-2">
-                      {m.listings.map(card => <ListingChatCard key={card.url} card={card} />)}
-                    </div>
-                  )}
-                </div>
-              ))}
+              {messages.map((m, i) => {
+                const isLastAssistant = m.role === 'assistant' && i === messages.length - 1
+                const { text, chips } = m.role === 'assistant' ? extractChips(m.content) : { text: m.content, chips: [] }
+                return (
+                  <div key={i} className="flex flex-col gap-2">
+                    {text && <Bubble role={m.role}>{text}</Bubble>}
+                    {m.listings && m.listings.length > 0 && (
+                      <div className="self-start max-w-[95%] flex flex-col gap-2">
+                        {m.listings.map(card => <ListingChatCard key={card.url} card={card} />)}
+                      </div>
+                    )}
+                    {isLastAssistant && chips.length > 0 && !loading && (
+                      <div className="self-start flex flex-wrap gap-1.5 mt-0.5 max-w-[95%]">
+                        {chips.map(c => (
+                          <button
+                            key={c}
+                            type="button"
+                            onClick={() => sendText(c)}
+                            className="text-[12px] px-3 py-1.5 rounded-full bg-white border border-[var(--color-border)] text-[#111827] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] transition-colors"
+                          >
+                            {c}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
               {messages.length === 1 && !loading && (
                 <div className="flex flex-wrap gap-1.5 mt-1">
                   {QUICK_ACTIONS.map(a => (
