@@ -75,7 +75,12 @@ export async function RentalCompareSection({ district, bedrooms, villaPriceUsd }
       </div>
       <div className="text-[14px] text-[var(--color-text-muted)] mb-5">{subtitle}</div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+      {/* Yield / median / range — pure investment metrics. Hidden in
+          "Для жизни" via the global data-investment-block CSS rule;
+          rental cards below stay visible because they're useful in
+          both intents (a living-buyer also wants to see what's around
+          the villa). */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5" data-investment-block>
         <Stat label="Медианная аренда" value={<><InlinePrice usd={med} /> / мес</>} />
         <Stat label="Диапазон" value={<><InlinePrice usd={min} /> – <InlinePrice usd={max} /></>} />
         <Stat
