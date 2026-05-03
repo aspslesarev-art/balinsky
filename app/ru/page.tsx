@@ -262,7 +262,7 @@ export default async function RuHome() {
               {activePromo.map(p => (
                 <li key={p.id}>
                   <Link href={`/ru/akcii/${p.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)] transition-colors">
-                    <div className="w-full aspect-[16/9] bg-[var(--color-search-bg)]">
+                    <div className="relative w-full aspect-[16/9] bg-[var(--color-search-bg)] overflow-hidden">
                       {p.photo ? (
                         <Image src={p.photo} alt={p.title} fill sizes="(min-width: 768px) 33vw, 100vw" loading="lazy" className="object-cover" />
                       ) : (
@@ -293,7 +293,7 @@ export default async function RuHome() {
               {upcomingEvents.map(e => (
                 <li key={e.id}>
                   <Link href={`/ru/meropriyatiya/${e.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)] transition-colors">
-                    <div className="w-full aspect-[16/9] bg-[var(--color-search-bg)]">
+                    <div className="relative w-full aspect-[16/9] bg-[var(--color-search-bg)] overflow-hidden">
                       {e.photo ? (
                         <Image src={e.photo} alt={e.title} fill sizes="(min-width: 768px) 33vw, 100vw" loading="lazy" className="object-cover" />
                       ) : (
@@ -329,7 +329,7 @@ export default async function RuHome() {
               {topComplexes.map(c => (
                 <li key={c.slug}>
                   <Link href={`/ru/zhilye-kompleksy/o/${c.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)] transition-colors">
-                    <div className="w-full aspect-[4/3] bg-[var(--color-search-bg)]">
+                    <div className="relative w-full aspect-[4/3] bg-[var(--color-search-bg)] overflow-hidden">
                       {c.cover ? (
                         <Image src={c.cover} alt={c.title} fill sizes="(min-width: 768px) 33vw, 100vw" loading="lazy" className="object-cover" />
                       ) : (
@@ -358,7 +358,7 @@ export default async function RuHome() {
               {latestNews.map(n => (
                 <li key={n.id}>
                   <Link href={`/ru/novosti/${n.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)] transition-colors">
-                    <div className="w-full aspect-[16/9] bg-[var(--color-search-bg)]">
+                    <div className="relative w-full aspect-[16/9] bg-[var(--color-search-bg)] overflow-hidden">
                       {n.photo ? (
                         <Image src={n.photo} alt={n.title} fill sizes="(min-width: 768px) 33vw, 100vw" loading="lazy" className="object-cover" />
                       ) : (
