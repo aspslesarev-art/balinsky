@@ -10,8 +10,9 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'ifdgiwxothmcalibmydv.supabase.co' },
       { protocol: 'https', hostname: 'v5.airtableusercontent.com' },
       { protocol: 'https', hostname: 'dl.airtable.com' },
-      { protocol: 'https', hostname: 'i.ytimg.com' },
-      { protocol: 'https', hostname: 'i4.ytimg.com' },
+      // YouTube serves thumbnails from i1.ytimg.com, i2.ytimg.com, etc.,
+      // depending on which CDN edge the video lives on.
+      { protocol: 'https', hostname: '**.ytimg.com' },
     ],
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 31536000,
