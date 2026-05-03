@@ -44,7 +44,9 @@ export function InvestmentWidget({
 
 function SectionShell({ children }: { children: React.ReactNode }) {
   return (
-    <section className="mb-10">
+    // data-investment-block lets the intent toggle hide this whole
+    // section in "Для жизни" mode without removing it from SSR HTML.
+    <section className="mb-10" data-investment-block>
       <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-2">
         Инвестиционный потенциал
       </h2>

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { PhotoSlider } from './PhotoSlider'
 import { useCurrency } from './CurrencyContext'
 import { formatPrice } from '@/lib/currency'
+import { classifyApartment } from './IntentContext'
 
 export type ApartmentCardData = {
   slug: string
@@ -21,9 +22,11 @@ export function ApartmentCard({ a }: { a: ApartmentCardData }) {
     ? formatPrice(a.priceUsd, currency)
     : null
 
+  const intentTag = classifyApartment({ bedrooms: a.bedrooms, district: null })
   return (
     <Link
       href={`/ru/apartamenty/o/${a.slug}`}
+      data-intent={intentTag}
       className="group block bg-[var(--color-card-bg)] rounded-2xl border border-[var(--color-border)] overflow-hidden"
     >
       <PhotoSlider photos={a.photos} alt={a.title} trackingId={`apt:${a.slug}`} />

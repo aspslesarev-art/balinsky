@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { Home, Building, Building2, HardHat, KeyRound, Menu, X } from 'lucide-react'
+import { IntentToggle } from './IntentToggle'
 
 type NavKey = 'villy' | 'apartamenty' | 'zhilye-kompleksy' | 'zastrojshhiki' | 'arenda'
 
@@ -46,6 +47,10 @@ export function Header({ active }: { active?: NavKey }) {
           })}
         </nav>
 
+        {/* Intent toggle: All / Investment / For living. Desktop only —
+            on mobile it sits inside the burger menu (below). */}
+        <IntentToggle className="hidden lg:inline-flex shrink-0" />
+
         <button
           type="button"
           className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg text-[var(--color-text)]"
@@ -76,6 +81,9 @@ export function Header({ active }: { active?: NavKey }) {
                 </Link>
               )
             })}
+            <div className="mt-2 pt-3 border-t border-[var(--color-border)]">
+              <IntentToggle className="w-full justify-center" />
+            </div>
           </div>
         </div>
       )}

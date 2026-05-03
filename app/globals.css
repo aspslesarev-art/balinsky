@@ -122,6 +122,22 @@ body {
   to   { width: 100%; }
 }
 
+/* === Intent toggle ===
+   "Для инвестиций" hides anything tagged data-intent="live-only";
+   "Для жизни" hides anything tagged data-intent="invest-only" PLUS the
+   investment analytics widget on detail pages. The default mode keeps
+   everything visible — that's also what crawlers see in the SSR HTML. */
+html.intent-invest [data-intent="live-only"],
+html.intent-live   [data-intent="invest-only"] {
+  display: none !important;
+}
+/* Investment analytics widget — hidden in "Для жизни". The server
+   component itself stays in the HTML so Google still sees the schema +
+   text content of the page. */
+html.intent-live [data-investment-block] {
+  display: none !important;
+}
+
 /* === Telegram mini-app mode ===
    Activated by the .tma-mode class on <html> when the user came in via
    /telegram. Shifts the sticky header down so Telegram's own top bar
