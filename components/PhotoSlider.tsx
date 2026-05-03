@@ -16,8 +16,8 @@ import { useEffect, useRef, useState } from 'react'
 // bottom, 1 step as top), we set animation duration to 2 × ADVANCE_MS
 // and let it run continuously — the swap happens mid-motion.
 const AUTO_PHOTOS = 5
-const ADVANCE_MS = 3000
-const FADE_MS = 700
+const ADVANCE_MS = 2000
+const FADE_MS = 600
 const PRESET_COUNT = 6
 const ANIM_DURATION = 2 * ADVANCE_MS // photo's on-screen lifetime
 

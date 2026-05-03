@@ -8,6 +8,7 @@ import { FilterDropdown } from '@/components/FilterDropdown'
 import { CurrencyToggle, useCurrency } from '@/components/CurrencyContext'
 import { formatPrice, type Currency } from '@/lib/currency'
 import type { RentalItem } from '@/lib/rental'
+import { PhotoSlider } from '@/components/PhotoSlider'
 
 const PAGE_SIZE = 24
 
@@ -496,20 +497,13 @@ function CheckboxList({
 }
 
 function RentalCard({ r, currency }: { r: RentalItem; currency: Currency }) {
-  const cover = r.photos[0]
   const price = formatPrice(r.priceMonthUsd, currency)
   return (
     <Link
       href={`/ru/arenda/o/${r.slug}`}
       className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)] transition-colors"
     >
-      <div className="relative aspect-[4/3] bg-[var(--color-search-bg)]">
-        {cover ? (
-          <img src={cover} alt={r.title} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-3xl">🏡</div>
-        )}
-      </div>
+      <PhotoSlider photos={r.photos} alt={r.title} heightClass="aspect-[4/3]" trackingId={`rental:${r.slug}`} />
       <div className="p-4">
         <div className="flex items-baseline justify-between gap-3 mb-1">
           <div>
