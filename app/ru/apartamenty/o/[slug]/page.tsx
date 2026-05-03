@@ -20,6 +20,7 @@ import { RentalCompareSection } from '@/components/RentalCompareSection'
 import { ManagerCard } from '@/components/ManagerCard'
 import { loadManagerByDeveloperName } from '@/lib/managers'
 import { DetailPriceBlock } from '@/components/DetailPriceBlock'
+import { BuyButton } from '@/components/BuyButton'
 import { InlinePrice } from '@/components/InlinePrice'
 import { VillaPresentationButton } from '@/components/VillaPresentation'
 
@@ -395,25 +396,28 @@ export default async function Page({ params }: { params: Params }) {
             {priceNum != null && (
               <DetailPriceBlock priceUsd={priceNum} pricePerSqmUsd={priceM2} updatedAt={priceUpdatedAt} />
             )}
-            <VillaPresentationButton
-              villaId={a.airtable_id}
-              slug={slug}
-              kind="apartment"
-              title={title}
-              district={district}
-              photos={photos}
-              priceUsd={priceNum}
-              pricePerM2={priceM2}
-              bedrooms={bedrooms}
-              area={area}
-              land={null}
-              yearLabel={yearRaw && status?.toLowerCase().includes('построен') ? 'Сдан' : (yearRaw ?? null)}
-              lease={lease}
-              permit={permit}
-              lat={lat}
-              lng={lng}
-              seoText={seoText}
-            />
+            <div className="flex items-center gap-3 flex-wrap">
+              <BuyButton managerId={manager?.id ?? null} />
+              <VillaPresentationButton
+                villaId={a.airtable_id}
+                slug={slug}
+                kind="apartment"
+                title={title}
+                district={district}
+                photos={photos}
+                priceUsd={priceNum}
+                pricePerM2={priceM2}
+                bedrooms={bedrooms}
+                area={area}
+                land={null}
+                yearLabel={yearRaw && status?.toLowerCase().includes('построен') ? 'Сдан' : (yearRaw ?? null)}
+                lease={lease}
+                permit={permit}
+                lat={lat}
+                lng={lng}
+                seoText={seoText}
+              />
+            </div>
           </div>
         </section>
 

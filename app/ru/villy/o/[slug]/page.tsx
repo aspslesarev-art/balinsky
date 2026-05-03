@@ -25,6 +25,7 @@ import { RentalCompareSection } from '@/components/RentalCompareSection'
 import { ManagerCard } from '@/components/ManagerCard'
 import { loadManagerByDeveloperName, loadManagerByDeveloperSlug } from '@/lib/managers'
 import { DetailPriceBlock } from '@/components/DetailPriceBlock'
+import { BuyButton } from '@/components/BuyButton'
 import { InlinePrice } from '@/components/InlinePrice'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { loadAllVideos } from '@/lib/videos'
@@ -460,7 +461,9 @@ export default async function Page({ params }: { params: Params }) {
             {priceNum != null && (
               <DetailPriceBlock priceUsd={priceNum} pricePerSqmUsd={priceM2} updatedAt={priceUpdatedAt} />
             )}
-            <VillaPresentationButton
+            <div className="flex items-center gap-3 flex-wrap">
+              <BuyButton managerId={manager?.id ?? null} />
+              <VillaPresentationButton
               villaId={v.airtable_id}
               slug={slug}
               title={title}
@@ -477,7 +480,8 @@ export default async function Page({ params }: { params: Params }) {
               lat={lat}
               lng={lng}
               seoText={seoText}
-            />
+              />
+            </div>
           </div>
         </section>
 
