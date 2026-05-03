@@ -47,9 +47,9 @@ export function Header({ active }: { active?: NavKey }) {
           })}
         </nav>
 
-        {/* Intent toggle: All / Investment / For living. Desktop only —
-            on mobile it sits inside the burger menu (below). */}
-        <IntentToggle className="hidden lg:inline-flex shrink-0" />
+        {/* Intent toggle pinned in the header on every viewport — never
+            buried inside the burger menu. */}
+        <IntentToggle className="ml-auto shrink-0" />
 
         <button
           type="button"
@@ -81,9 +81,6 @@ export function Header({ active }: { active?: NavKey }) {
                 </Link>
               )
             })}
-            <div className="mt-2 pt-3 border-t border-[var(--color-border)]">
-              <IntentToggle className="w-full justify-center" />
-            </div>
           </div>
         </div>
       )}

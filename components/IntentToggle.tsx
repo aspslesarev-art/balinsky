@@ -2,10 +2,10 @@
 
 import { useIntent, type Intent } from './IntentContext'
 
-const OPTIONS: { v: Intent; label: string }[] = [
-  { v: 'all',    label: 'Все' },
-  { v: 'invest', label: 'Инвестиции' },
-  { v: 'live',   label: 'Для жизни' },
+const OPTIONS: { v: Intent; label: string; short: string }[] = [
+  { v: 'all',    label: 'Все',         short: 'Все' },
+  { v: 'invest', label: 'Инвестиции',  short: 'Инвест' },
+  { v: 'live',   label: 'Для жизни',   short: 'Жизнь' },
 ]
 
 export function IntentToggle({ className = '' }: { className?: string }) {
@@ -25,13 +25,14 @@ export function IntentToggle({ className = '' }: { className?: string }) {
             role="tab"
             aria-selected={isActive}
             onClick={() => setIntent(opt.v)}
-            className={`text-[12px] font-medium px-3 py-1.5 rounded-full transition-colors ${
+            className={`text-[11px] sm:text-[12px] font-medium px-2.5 sm:px-3 py-1.5 rounded-full transition-colors whitespace-nowrap ${
               isActive
                 ? 'bg-[var(--color-primary)] text-white'
                 : 'text-[var(--color-text-muted)] hover:text-[#111827]'
             }`}
           >
-            {opt.label}
+            <span className="hidden sm:inline">{opt.label}</span>
+            <span className="sm:hidden">{opt.short}</span>
           </button>
         )
       })}

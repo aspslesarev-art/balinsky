@@ -72,19 +72,27 @@ const LIVE_FRIENDLY_DISTRICTS = new Set([
   'Ubud', 'Sanur', 'Cemagi', 'Tabanan', 'Sidemen',
 ])
 
+// Conservative classifier: most listings stay un-tagged (visible in every
+// mode) — only the unambiguous extremes get a tag, so the catalog never
+// goes empty in either intent. Empty filter results are a worse UX than
+// showing a neutral mix.
 export function classifyVilla(opts: { bedrooms: number | null; district: string | null }): IntentTag {
   const bd = opts.bedrooms ?? 0
   const d = opts.district ?? ''
-  if (bd >= 3 && (LIVE_FRIENDLY_DISTRICTS.has(d) || !INVEST_FRIENDLY_DISTRICTS.has(d))) return 'live-only'
-  if (bd > 0 && bd <= 2 && INVEST_FRIENDLY_DISTRICTS.has(d)) return 'invest-only'
-  if (bd >= 4) return 'live-only'
+  // Big family villa anywhere → living-only.
+  if (bd >= 5) return 'live-only'
+  // 3-4 BR villa in an explicitly quiet district → living-only.
+  if (bd >= 3 && LIVE_FRIENDLY_DISTRICTS.has(d)) return 'live-only'
+  // Studio / 1 BR in a tourist hotspot → investment-only.
+  if (bd === 1 && INVEST_FRIENDLY_DISTRICTS.has(d)) return 'invest-only'
   return undefined
 }
 
 export function classifyApartment(opts: { bedrooms: number | null; district: string | null }): IntentTag {
-  // Apartments lean investment by default; large units in quiet districts
-  // can swing to "live".
+  // Apartments stay un-tagged by default — they fit both intents. Mark
+  // only when bedroom count clearly skews one way.
   const bd = opts.bedrooms ?? 0
   if (bd >= 3 && LIVE_FRIENDLY_DISTRICTS.has(opts.district ?? '')) return 'live-only'
-  return 'invest-only'
+  if (bd === 0 || bd === 1) return undefined // studios / 1BR are popular for both
+  return undefined
 }
