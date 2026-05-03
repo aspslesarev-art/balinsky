@@ -523,20 +523,27 @@ export function buildTitle(f: ComplexFilterState): string {
   return buildHeading(f) + ' | Balinsky'
 }
 
-export function buildDescription(f: ComplexFilterState): string {
-  const bits: string[] = [buildHeading(f)]
-  bits.push('Каталог с фото, ценами, застройщиками, сроками сдачи и разрешениями')
-  if (f.types.length > 1) bits.push(`типы: ${f.types.join(', ')}`)
-  if (f.year.length > 1) bits.push(`сдача: ${f.year.join(', ')}`)
-  return bits.join('. ') + '.'
+// Per-filter unique meta-description so combinatorial pages don't share
+// one generic line (Google folds duplicate-meta pages).
+export function buildDescription(f: ComplexFilterState, totalCount?: number): string {
+  const where =
+    f.district.length === 1 ? `в районе ${f.district[0]}`
+    : f.district.length > 1 ? `в районах ${f.district.join(', ')}`
+    : 'на Бали'
+  const countPart = typeof totalCount === 'number' && totalCount > 0
+    ? `${totalCount} жилых комплексов` : 'Жилые комплексы'
+  let s = `${countPart} ${where}`
+  if (f.types.length === 1) s += `, тип: ${f.types[0]}`
+  if (f.year.length === 1) s += `, сдача в ${f.year[0]}`
+  return `${s}. Фото, цены от застройщика, сроки сдачи, разрешения и контакты.`
 }
 
 export function buildMetadata(
   f: ComplexFilterState,
-  opts: { canonicalPath: string; noIndex: boolean },
+  opts: { canonicalPath: string; noIndex: boolean; totalCount?: number },
 ) {
   const title = buildTitle(f)
-  const description = buildDescription(f)
+  const description = buildDescription(f, opts.totalCount)
   return {
     title,
     description,

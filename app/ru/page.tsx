@@ -113,6 +113,24 @@ const FAQ_ITEMS: { q: string; a: string }[] = [
   { q: 'Что такое PBG и SLF?', a: 'PBG — разрешение на строительство (без него стройка нелегальна). SLF — сертификат пригодности к эксплуатации (без него юнит не может официально сдаваться в аренду).' },
 ]
 
+const SITE_BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
+
+// Organization schema — gives Google a stable identity to attach the
+// Knowledge Panel + sitelinks; sameAs ties the site to its YouTube
+// channel and Telegram bot, two real off-site signals we already control.
+const organizationJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'Balinsky',
+  url: `${SITE_BASE}/ru`,
+  logo: `${SITE_BASE}/logo.svg`,
+  description: 'Каталог недвижимости на Бали: виллы, апартаменты, жилые комплексы и проверенные застройщики.',
+  sameAs: [
+    'https://www.youtube.com/@balinsky_info',
+    'https://t.me/BalinskyBot',
+  ],
+}
+
 const faqJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'FAQPage',
@@ -417,6 +435,8 @@ export default async function RuHome() {
 
           <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
         </section>
+
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
 
         <div className="h-16" />
       </PageContainer>

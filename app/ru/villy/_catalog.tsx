@@ -3,6 +3,7 @@ import { PageContainer } from '@/components/PageContainer'
 import { CatalogTabs } from '@/components/CatalogTabs'
 import { VillaCard } from '@/components/VillaCard'
 import { VillasSeoContent } from '@/components/VillasSeoContent'
+import { RelatedVillaFilters } from '@/components/RelatedVillaFilters'
 import { VillaCatalogSearchBar } from '@/components/VillaCatalogSearchBar'
 import { VillaInfiniteScrollClient } from '@/components/VillaInfiniteScrollClient'
 import { VillaFiltersBar } from '@/components/villa-filters/VillaFiltersBar'
@@ -84,6 +85,8 @@ export async function VillasCatalog({
             />
           </>
         )}
+
+        <RelatedVillaFilters filters={filters} options={options} />
 
         <VillasSeoContent filters={filters} variant="list" />
 

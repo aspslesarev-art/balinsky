@@ -10,6 +10,9 @@ const nextConfig: NextConfig = {
   async redirects() {
     // 301 redirects from old Wix site (balinsky.info) → new Next routes.
     return [
+      // Root → /ru as a permanent (301) redirect. Next's automatic root
+      // routing returns 307, which doesn't pass full link equity.
+      { source: '/',                   destination: '/ru',                  permanent: true },
       { source: '/villas',             destination: '/ru/villy',            permanent: true },
       { source: '/villas-ready',       destination: '/ru/villy',            permanent: true },
       { source: '/villas-mounth-rent', destination: '/ru/villy',            permanent: true },

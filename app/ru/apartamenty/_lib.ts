@@ -461,20 +461,31 @@ export function buildTitle(f: FilterState): string {
   return buildHeading(f) + ' | Balinsky'
 }
 
-export function buildDescription(f: FilterState): string {
-  const bits: string[] = []
-  bits.push(buildHeading(f))
-  bits.push('Каталог с фото, ценами, застройщиками и характеристиками')
-  if (f.bedrooms.length > 1) bits.push(`спальни: ${f.bedrooms.join(', ')}`)
-  if (f.floor.length > 1) bits.push(`этажи: ${f.floor.map(x => x === '0' ? 'цоколь' : x).join(', ')}`)
-  if (f.developer.length > 1) bits.push(`застройщики: ${f.developer.slice(0, 5).join(', ')}${f.developer.length > 5 ? '…' : ''}`)
-  if (f.permit.length > 1) bits.push(`разрешения: ${f.permit.join(', ')}`)
-  return bits.join('. ') + '.'
+// Per-filter unique meta-description so 5–15K combo pages don't share one
+// generic line (Google folds duplicate-meta pages from indexing).
+export function buildDescription(f: FilterState, totalCount?: number): string {
+  const noun = f.bedrooms.length === 1 ? `${f.bedrooms[0]}-комнатных апартаментов` : 'апартаментов'
+  const where =
+    f.district.length === 1 ? `в районе ${f.district[0]}`
+    : f.district.length > 1 ? `в районах ${f.district.join(', ')}`
+    : 'на Бали'
+  const countPart = typeof totalCount === 'number' && totalCount > 0
+    ? `${totalCount} ${noun}` : noun.charAt(0).toUpperCase() + noun.slice(1)
+  let s = `${countPart} ${where}`
+  if (f.status.length === 1) {
+    const lbl = f.status[0] === 'building' ? 'строящихся'
+      : f.status[0] === 'built' ? 'готовых' : 'на стадии планирования'
+    s += `, ${lbl}`
+  }
+  if (f.priceMin != null && f.priceMax != null) s += `, цены ${fmtUsd(f.priceMin)}–${fmtUsd(f.priceMax)}`
+  else if (f.priceMax != null) s += `, до ${fmtUsd(f.priceMax)}`
+  else if (f.priceMin != null) s += `, от ${fmtUsd(f.priceMin)}`
+  return `${s}. Фото, актуальные цены, разрешения, контакты застройщиков.`
 }
 
-export function buildMetadata(f: FilterState, opts: { canonicalPath: string; noIndex: boolean }) {
+export function buildMetadata(f: FilterState, opts: { canonicalPath: string; noIndex: boolean; totalCount?: number }) {
   const title = buildTitle(f)
-  const description = buildDescription(f)
+  const description = buildDescription(f, opts.totalCount)
   return {
     title,
     description,
