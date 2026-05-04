@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { Home, Building, Building2, HardHat, KeyRound, Menu, X } from 'lucide-react'
 import { ProModeToggle } from './ProModeToggle'
+import { LangSwitch } from './LangSwitch'
 
 type NavKey = 'villy' | 'apartamenty' | 'zhilye-kompleksy' | 'zastrojshhiki' | 'arenda'
 
@@ -49,7 +50,10 @@ export function Header({ active }: { active?: NavKey }) {
 
         {/* Pro mode switch — default ON. Hides analytics on detail pages
             when the visitor flips it off. Catalogs are unaffected. */}
-        <ProModeToggle className="ml-auto shrink-0" />
+        <div className="ml-auto flex items-center gap-2 shrink-0">
+          <LangSwitch />
+          <ProModeToggle />
+        </div>
 
         <button
           type="button"
