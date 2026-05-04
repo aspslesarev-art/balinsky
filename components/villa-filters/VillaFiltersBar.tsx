@@ -3,6 +3,7 @@
 import { Suspense } from 'react'
 import { VillaMultiSelect } from './VillaMultiSelect'
 import { VillaPriceRange } from './VillaPriceRange'
+import { VillaGoalFilter } from './VillaGoalFilter'
 import { useVillaFilterUrl, type FilterView } from './useVillaFilterUrl'
 import type { VillaFilterState, VillaFilterOptions } from '@/app/ru/villy/_lib'
 
@@ -38,11 +39,13 @@ export function VillaFiltersBar({
     (state.permit.length > 0 ? 1 : 0) +
     (state.year.length > 0 ? 1 : 0) +
     (state.developer.length > 0 ? 1 : 0) +
-    (state.style.length > 0 ? 1 : 0)
+    (state.style.length > 0 ? 1 : 0) +
+    (state.goal != null ? 1 : 0)
 
   return (
     <Suspense fallback={null}>
       <div className="flex items-center gap-3 flex-wrap">
+        <VillaGoalFilter current={state} view={view} />
         <VillaPriceRange label="Цена" min={state.priceMin} max={state.priceMax} current={state} view={view} />
         <VillaMultiSelect stateKey="district" label="Район" options={options.district} selected={state.district} current={state} view={view} searchable />
         <VillaMultiSelect stateKey="bedrooms" label="Кол-во спален" options={options.bedrooms} selected={state.bedrooms} current={state} view={view} />

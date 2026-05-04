@@ -32,6 +32,10 @@ export type VillaFilterState = {
   year: string[]
   developer: string[]
   style: string[]
+  // 'invest' = land color is anything but Yellow (Pink/Tourism/C1/Orange/etc.) —
+  // only zones where short-term tourist rental is legal.
+  // 'live'   = land color is Yellow (residential) plus a minimum livable area.
+  goal: 'invest' | 'live' | null
 }
 
 export type VillaFilterOptions = {
@@ -86,6 +90,7 @@ export const EMPTY_FILTERS: VillaFilterState = {
   year: [],
   developer: [],
   style: [],
+  goal: null,
 }
 
 // === helpers ===
@@ -144,6 +149,7 @@ export function parseQueryFilters(sp: Record<string, string | undefined>): Villa
     year: asArray(sp.year),
     developer: asArray(sp.developer),
     style: asArray(sp.style),
+    goal: sp.goal === 'invest' || sp.goal === 'live' ? sp.goal : null,
   }
 }
 
@@ -158,9 +164,27 @@ export function hasAnyFilter(f: VillaFilterState): boolean {
     f.permit.length > 0 ||
     f.year.length > 0 ||
     f.developer.length > 0 ||
-    f.style.length > 0
+    f.style.length > 0 ||
+    f.goal != null
   )
 }
+
+// Parse "Land color" string into a normalised bucket. Yellow zones are
+// residential (legal to live in, not legal for short-term rental). Pink /
+// Tourism / C1 / C2 / Orange are commercial / tourism — short-term rental
+// is allowed there. Empty / unknown stays neutral so a missing field
+// doesn't accidentally exclude a listing from either bucket.
+type LandBucket = 'residential' | 'tourism' | 'unknown'
+function landBucket(s: string | null): LandBucket {
+  if (!s) return 'unknown'
+  const lower = s.toLowerCase()
+  if (lower.includes('yellow')) return 'residential'
+  if (lower.includes('pink') || lower.includes('tourism') || lower.includes('orange')
+   || /\bc-?\d\b/.test(lower) || lower.includes('commercial')) return 'tourism'
+  return 'unknown'
+}
+
+const LIVE_MIN_AREA_SQM = 60
 
 // === enrichment & filter ===
 
@@ -179,6 +203,7 @@ export type EnrichedRow = {
   lat: number | null
   lng: number | null
   style: string | null
+  landBucket: LandBucket
 }
 
 export type StylesMap = Record<string, { style: string | null }>
@@ -202,6 +227,7 @@ export function enrich(r: Row, styles: StylesMap = {}): EnrichedRow {
     lat: parseGeo(d['Geo']),
     lng: parseGeo(d['Geo 2']),
     style: styles[r.airtable_id]?.style ?? null,
+    landBucket: landBucket(firstString(d['Land color'])),
   }
 }
 
@@ -218,6 +244,17 @@ export function passes(e: EnrichedRow, f: VillaFilterState): boolean {
   if (f.year.length > 0 && (!e.year || !f.year.includes(e.year))) return false
   if (f.developer.length > 0 && (!e.developerName || !f.developer.includes(e.developerName))) return false
   if (f.style.length > 0 && (!e.style || !f.style.includes(e.style))) return false
+  if (f.goal === 'invest') {
+    // Tourism / commercial zoning only — Yellow is illegal for short-term
+    // rental in Bali, so it's the wrong land for an investment buyer.
+    if (e.landBucket === 'residential') return false
+  }
+  if (f.goal === 'live') {
+    // Yellow zoning + at least a livable area. A 20 m² studio isn't a
+    // home; nobody serious about moving in wants that.
+    if (e.landBucket === 'tourism') return false
+    if (e.area != null && e.area < LIVE_MIN_AREA_SQM) return false
+  }
   return true
 }
 

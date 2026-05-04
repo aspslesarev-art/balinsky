@@ -3,6 +3,7 @@
 import { Suspense } from 'react'
 import { MultiSelectFilter, type Option } from './MultiSelectFilter'
 import { PriceRangeFilter } from './PriceRangeFilter'
+import { GoalFilter } from './GoalFilter'
 import { useFilterUrl, type FilterView } from './useFilterUrl'
 
 export type FilterState = {
@@ -15,6 +16,9 @@ export type FilterState = {
   developer: string[]
   status: string[]
   permit: string[]
+  // 'invest' = tourism / commercial land, short-term rental allowed.
+  // 'live'   = residential (yellow) zone + livable area.
+  goal: 'invest' | 'live' | null
 }
 
 export type FilterOptions = {
@@ -65,11 +69,13 @@ export function FiltersBar({
     (state.floor.length > 0 ? 1 : 0) +
     (state.developer.length > 0 ? 1 : 0) +
     (state.status.length > 0 ? 1 : 0) +
-    (state.permit.length > 0 ? 1 : 0)
+    (state.permit.length > 0 ? 1 : 0) +
+    (state.goal != null ? 1 : 0)
 
   return (
     <Suspense fallback={null}>
       <div className="flex items-center gap-3 flex-wrap">
+        <GoalFilter current={state} view={view} />
         <PriceRangeFilter label="Цена" min={state.priceMin} max={state.priceMax} current={state} view={view} />
         <MultiSelectFilter
           stateKey="district"

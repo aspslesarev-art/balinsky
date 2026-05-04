@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { Home, Building, Building2, HardHat, KeyRound, Menu, X } from 'lucide-react'
-import { IntentToggle } from './IntentToggle'
+import { ProModeToggle } from './ProModeToggle'
 
 type NavKey = 'villy' | 'apartamenty' | 'zhilye-kompleksy' | 'zastrojshhiki' | 'arenda'
 
@@ -47,9 +47,9 @@ export function Header({ active }: { active?: NavKey }) {
           })}
         </nav>
 
-        {/* Intent toggle pinned in the header on every viewport — never
-            buried inside the burger menu. */}
-        <IntentToggle className="ml-auto shrink-0" />
+        {/* Pro mode switch — default ON. Hides analytics on detail pages
+            when the visitor flips it off. Catalogs are unaffected. */}
+        <ProModeToggle className="ml-auto shrink-0" />
 
         <button
           type="button"

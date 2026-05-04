@@ -38,6 +38,7 @@ export const EMPTY_FILTERS: FilterState = {
   developer: [],
   status: [],
   permit: [],
+  goal: null,
 }
 
 export async function loadJson<T>(url: string, fallback: T): Promise<T> {
@@ -100,8 +101,20 @@ export function parseQueryFilters(sp: Record<string, string | undefined>): Filte
     developer: asArray(sp.developer),
     status: asArray(sp.status),
     permit: asArray(sp.permit),
+    goal: sp.goal === 'invest' || sp.goal === 'live' ? sp.goal : null,
   }
 }
+
+type LandBucket = 'residential' | 'tourism' | 'unknown'
+function landBucket(s: string | null): LandBucket {
+  if (!s) return 'unknown'
+  const lower = s.toLowerCase()
+  if (lower.includes('yellow')) return 'residential'
+  if (lower.includes('pink') || lower.includes('tourism') || lower.includes('orange')
+   || /\bc-?\d\b/.test(lower) || lower.includes('commercial')) return 'tourism'
+  return 'unknown'
+}
+const LIVE_MIN_AREA_SQM = 50
 
 export type EnrichedRow = {
   id: string
@@ -113,8 +126,10 @@ export type EnrichedRow = {
   status: string | null
   permit: string | null
   priceUsd: number | null
+  area: number | null
   lat: number | null
   lng: number | null
+  landBucket: LandBucket
 }
 
 function priceUpdatedMs(d: Record<string, unknown>): number {
@@ -153,8 +168,10 @@ function enrich(r: Row, devMap: Record<string, string>): EnrichedRow {
     status: firstString(d['Статус']),
     permit: firstString(d['Разрешение']),
     priceUsd: numberOrNull(d['price_usd'] ?? d['Цена']),
+    area: numberOrNull(d['Площадь']),
     lat: parseGeo(d['Geo']),
     lng: parseGeo(d['Geo 2']),
+    landBucket: landBucket(firstString(d['Land color'])),
   }
 }
 
@@ -223,6 +240,11 @@ export function passes(e: EnrichedRow, f: FilterState): boolean {
     if (!e.status || !wanted.includes(e.status)) return false
   }
   if (f.permit.length > 0 && (!e.permit || !f.permit.includes(e.permit))) return false
+  if (f.goal === 'invest' && e.landBucket === 'residential') return false
+  if (f.goal === 'live') {
+    if (e.landBucket === 'tourism') return false
+    if (e.area != null && e.area < LIVE_MIN_AREA_SQM) return false
+  }
   return true
 }
 
