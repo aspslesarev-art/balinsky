@@ -29,13 +29,17 @@ function isEmail(s: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)
 }
 
-// Best-effort Telegram notification to the operator. Skips silently if
-// the chat ID isn't configured — the reservation row is the source of
-// truth, not the message.
-async function notifyAdmin(text: string) {
-  if (!TG_TOKEN || !TG_ADMIN_CHAT) return
+// Sends operator the new-reservation card with ✅/❌ inline buttons.
+// callback_data carries the reservation id so the webhook can flip
+// status without any other lookup. Awaited so the serverless lambda
+// doesn't freeze before the request hits Telegram.
+async function notifyAdmin(text: string, reservationId: string): Promise<void> {
+  if (!TG_TOKEN || !TG_ADMIN_CHAT) {
+    console.warn('[reservation] tg env missing — token?', !!TG_TOKEN, 'chat?', !!TG_ADMIN_CHAT)
+    return
+  }
   try {
-    await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+    const r = await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -43,8 +47,18 @@ async function notifyAdmin(text: string) {
         text,
         parse_mode: 'HTML',
         disable_web_page_preview: true,
+        reply_markup: {
+          inline_keyboard: [[
+            { text: '✅ Подтвердить', callback_data: `rsv:confirm:${reservationId}` },
+            { text: '❌ Отменить',    callback_data: `rsv:cancel:${reservationId}` },
+          ]],
+        },
       }),
     })
+    if (!r.ok) {
+      const body = await r.text().catch(() => '')
+      console.error('[reservation] tg send failed:', r.status, body.slice(0, 300))
+    }
   } catch (e) {
     console.error('[reservation] tg notify failed:', e)
   }
@@ -89,13 +103,17 @@ export async function POST(req: Request) {
 
   const sectionPath = kind === 'apartment' ? '/ru/apartamenty/o/' : '/ru/villy/o/'
   const url = `https://balinsky.info${sectionPath}${listingSlug}`
-  notifyAdmin(
+  const priceLine = typeof body.listing_price_usd === 'number'
+    ? `\n💵 $${Math.round(body.listing_price_usd).toLocaleString('en-US')}` : ''
+  await notifyAdmin(
     `<b>📌 Новая бронь</b>\n\n` +
-    `<b>${escapeHtml(body.listing_title ?? listingSlug)}</b>\n` +
+    `<b>${escapeHtml(body.listing_title ?? listingSlug)}</b>${priceLine}\n` +
     `${url}\n\n` +
-    `${escapeHtml(name)}\n` +
-    `${escapeHtml(email)} · ${escapeHtml(phone)}\n\n` +
-    `Открыть в админке: https://balinsky.info/admin/reservations`,
+    `👤 ${escapeHtml(name)}\n` +
+    `✉️ ${escapeHtml(email)}\n` +
+    `📞 ${escapeHtml(phone)}\n\n` +
+    `Подтверди бронь — объект встанет на hold на 14 дней.`,
+    data!.id,
   )
 
   return NextResponse.json({ ok: true, id: data?.id, expires_at: data?.expires_at })

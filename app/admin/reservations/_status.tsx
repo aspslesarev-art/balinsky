@@ -28,6 +28,9 @@ export function ReservationStatusButtons({
   // Hide buttons that don't apply to the current state to keep the UI honest.
   const next: { v: ReservationStatus; label: string; tone: string }[] = []
   if (current === 'pending') {
+    next.push({ v: 'confirmed',    label: 'Подтвердить',    tone: 'bg-[#065F46] text-white hover:bg-[#054C3A]' })
+    next.push({ v: 'cancelled',    label: 'Отменить',       tone: 'bg-white text-[#991B1B] border border-[#FEE2E2] hover:border-[#B91C1C]' })
+  } else if (current === 'confirmed') {
     next.push({ v: 'invoice_sent', label: 'Счёт отправлен', tone: 'bg-[#1E40AF] text-white hover:bg-[#1B388F]' })
     next.push({ v: 'cancelled',    label: 'Отменить',       tone: 'bg-white text-[#991B1B] border border-[#FEE2E2] hover:border-[#B91C1C]' })
   } else if (current === 'invoice_sent') {

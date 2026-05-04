@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
 
-const ALLOWED = new Set(['pending', 'invoice_sent', 'paid', 'cancelled', 'expired'])
+const ALLOWED = new Set(['pending', 'confirmed', 'invoice_sent', 'paid', 'cancelled', 'expired'])
 
 export async function POST(req: Request) {
   if (!(await requireAdmin())) return NextResponse.json({ ok: false }, { status: 401 })

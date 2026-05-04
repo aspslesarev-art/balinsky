@@ -9,7 +9,8 @@ export const dynamic = 'force-dynamic'
 export const metadata = { robots: { index: false, follow: false }, title: 'Брони · Balinsky Admin' }
 
 const STATUS_LABEL: Record<ReservationStatus, string> = {
-  pending: 'Устная бронь',
+  pending: 'Ждёт подтверждения',
+  confirmed: 'Подтверждено',
   invoice_sent: 'Счёт отправлен',
   paid: 'Оплачено',
   cancelled: 'Отменено',
@@ -17,6 +18,7 @@ const STATUS_LABEL: Record<ReservationStatus, string> = {
 }
 const STATUS_TONE: Record<ReservationStatus, string> = {
   pending: 'bg-[#FEF3C7] text-[#92400E]',
+  confirmed: 'bg-[#D1FAE5] text-[#065F46]',
   invoice_sent: 'bg-[#DBEAFE] text-[#1E40AF]',
   paid: 'bg-[#D1FAE5] text-[#065F46]',
   cancelled: 'bg-[#E5E7EB] text-[#374151]',

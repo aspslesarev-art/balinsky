@@ -2,7 +2,13 @@ import { createClient } from '@supabase/supabase-js'
 
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
 
-export type ReservationStatus = 'pending' | 'invoice_sent' | 'paid' | 'cancelled' | 'expired'
+export type ReservationStatus =
+  | 'pending'        // visitor submitted; waiting for operator to confirm in Telegram
+  | 'confirmed'      // operator tapped ✅ — listing now shows "Reserved" banner
+  | 'invoice_sent'   // operator emailed the invoice
+  | 'paid'           // deposit received
+  | 'cancelled'
+  | 'expired'
 export type ListingKind = 'villa' | 'apartment'
 
 export type Reservation = {
@@ -22,10 +28,13 @@ export type Reservation = {
   internal_notes: string | null
 }
 
-// "Reserved" badge / detail-page banner shows when there's any non-final
-// reservation that hasn't expired. Cancelled / expired don't count.
+// "Reserved" badge / detail-page banner only shows AFTER the operator has
+// tapped ✅ in Telegram — pending reservations are invisible to the public
+// so two visitors can keep submitting until one gets confirmed.
+const ACTIVE_STATUSES: ReadonlySet<ReservationStatus> = new Set(['confirmed', 'invoice_sent', 'paid'])
+
 export function isActive(r: Pick<Reservation, 'status' | 'expires_at'>): boolean {
-  if (r.status === 'cancelled' || r.status === 'expired') return false
+  if (!ACTIVE_STATUSES.has(r.status)) return false
   return new Date(r.expires_at).getTime() > Date.now()
 }
 
@@ -39,7 +48,7 @@ export async function findActiveReservation(
     .select('*')
     .eq('listing_kind', kind)
     .eq('listing_id', listingId)
-    .in('status', ['pending', 'invoice_sent', 'paid'])
+    .in('status', ['confirmed', 'invoice_sent', 'paid'])
     .gt('expires_at', new Date().toISOString())
     .order('created_at', { ascending: false })
     .limit(1)
@@ -59,7 +68,7 @@ export async function findActiveReservationsByIds(
     .select('*')
     .eq('listing_kind', kind)
     .in('listing_id', ids)
-    .in('status', ['pending', 'invoice_sent', 'paid'])
+    .in('status', ['confirmed', 'invoice_sent', 'paid'])
     .gt('expires_at', new Date().toISOString())
     .order('created_at', { ascending: false })
   for (const r of (data ?? []) as Reservation[]) {

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { handleStart, fallbackReply } from '@/lib/telegram-handlers'
 import { logMessage, upsertChat, getChat, shouldBotAutoReply, addChatTags } from '@/lib/bot-storage'
+import { handleReservationCallback } from '@/lib/telegram-reservation'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -13,10 +14,17 @@ type TgMessage = {
   text?: string
   date?: number
 }
+type TgCallbackQuery = {
+  id: string
+  from?: TgUser
+  message?: { message_id: number; chat: { id: number }; text?: string }
+  data?: string
+}
 type TgUpdate = {
   update_id: number
   message?: TgMessage
   edited_message?: TgMessage
+  callback_query?: TgCallbackQuery
 }
 
 export async function POST(req: Request) {
@@ -31,6 +39,13 @@ export async function POST(req: Request) {
 
   let update: TgUpdate
   try { update = await req.json() } catch { return NextResponse.json({ ok: false }, { status: 400 }) }
+
+  // Reservation confirm/cancel taps come in as callback_query — they share
+  // the bot but bypass the chat handover/auto-reply pipeline below.
+  if (update.callback_query?.data?.startsWith('rsv:')) {
+    await handleReservationCallback(token, update.callback_query)
+    return NextResponse.json({ ok: true, callback: true })
+  }
 
   const msg = update.message ?? update.edited_message
   if (!msg?.chat?.id) return NextResponse.json({ ok: true })
