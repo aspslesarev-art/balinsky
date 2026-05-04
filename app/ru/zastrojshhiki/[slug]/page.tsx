@@ -280,6 +280,23 @@ export default async function Page({ params }: { params: Params }) {
   if (logoUrl) orgJsonLd.logo = logoUrl
   if (aiText) orgJsonLd.description = aiText.slice(0, 500)
 
+  // Editorial review schema — the "Общий рейтинг" field is our own
+  // editorial scoring (4 dimensions averaged into 0-100). Output as a
+  // single Review with Balinsky as the author so Google understands
+  // it's editorial / first-party, not a fake user aggregate.
+  const totalScore = typeof dev.data['Общий рейтинг'] === 'number'
+    ? dev.data['Общий рейтинг'] as number
+    : null
+  if (totalScore != null && totalScore > 0) {
+    const ratingValue = Math.round((totalScore / 20) * 10) / 10 // 0-100 → 0-5, one decimal
+    orgJsonLd.review = {
+      '@type': 'Review',
+      reviewRating: { '@type': 'Rating', ratingValue, bestRating: 5, worstRating: 1 },
+      author: { '@type': 'Organization', name: 'Balinsky', url: `${SITE_URL}/ru` },
+      itemReviewed: { '@type': 'RealEstateAgent', name },
+    }
+  }
+
   return (
     <>
       <Header active="zastrojshhiki" />
