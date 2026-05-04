@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { handleStart, fallbackReply } from '@/lib/telegram-handlers'
 import { logMessage, upsertChat, getChat, shouldBotAutoReply, addChatTags } from '@/lib/bot-storage'
 import { handleReservationCallback } from '@/lib/telegram-reservation'
+import { refreshChatAvatar } from '@/lib/chat-avatars'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -71,6 +72,9 @@ export async function POST(req: Request) {
       start_payload: startPayload,
       tg_message_id: msg.message_id,
     })
+    // Refresh the cached profile photo (throttled to 24h inside the
+    // helper). Awaited so it actually fires on serverless.
+    await refreshChatAvatar(token, msg.chat.id)
   } catch (err) {
     console.error('[telegram] log inbound failed:', err)
   }

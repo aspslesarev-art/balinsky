@@ -17,6 +17,7 @@ type ChatRow = {
   last_manager_at: string | null
   bot_disabled: boolean
   tags: string[] | null
+  avatar_url: string | null
 }
 
 const HANDOVER_MS = 10 * 60 * 1000
@@ -56,6 +57,24 @@ function initials(name: string): string {
   const parts = name.replace(/^@/, '').split(/\s+/).filter(Boolean)
   if (parts.length === 0) return '?'
   return (parts[0][0] + (parts[1]?.[0] ?? '')).toUpperCase()
+}
+
+// Telegram avatar with initials fallback. We don't render <img> at all
+// when avatar_url is missing — keeps the DOM small for the 90% of chats
+// that haven't synced an avatar yet.
+function Avatar({ chat, size }: { chat: ChatRow; size: number }) {
+  const name = displayName(chat)
+  const cls = `shrink-0 rounded-full bg-[var(--color-primary)] flex items-center justify-center text-white font-semibold overflow-hidden`
+  const px = { width: size, height: size, fontSize: size <= 36 ? 13 : 14 }
+  if (chat.avatar_url) {
+    return (
+      <div className={cls} style={px}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={chat.avatar_url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+      </div>
+    )
+  }
+  return <div className={cls} style={px}>{initials(name)}</div>
 }
 // Bot replies are stored as HTML; strip tags for the chat-list preview.
 function stripHtml(s: string | null | undefined): string {
@@ -196,9 +215,7 @@ export function Inbox() {
                 onClick={() => setActiveId(c.chat_id)}
                 className={`w-full text-left px-3 py-3 flex items-center gap-3 border-b border-[var(--ax-border-soft)] ${isActive ? 'bg-[var(--ax-panel)]' : 'hover:bg-[var(--ax-hover)]'}`}
               >
-                <div className={`shrink-0 w-10 h-10 rounded-full bg-[var(--color-primary)] flex items-center justify-center text-white font-semibold text-[13px]`}>
-                  {initials(name)}
-                </div>
+                <Avatar chat={c} size={40} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
                     <div className="text-[14px] font-medium truncate">{name}</div>
@@ -236,9 +253,7 @@ export function Inbox() {
           <>
             <div className="shrink-0 px-4 py-3 border-b border-[var(--ax-border)] flex items-center gap-3">
               <button onClick={() => setActiveId(null)} className="sm:hidden text-[var(--ax-fg-soft)] hover:text-[var(--ax-fg)]">←</button>
-              <div className="shrink-0 w-9 h-9 rounded-full bg-[var(--color-primary)] flex items-center justify-center text-white font-semibold text-[13px]">
-                {initials(displayName(activeChat))}
-              </div>
+              <Avatar chat={activeChat} size={36} />
               <div className="flex-1 min-w-0">
                 <div className="text-[14px] font-medium truncate">{displayName(activeChat)}</div>
                 <div className="text-[11px] text-[var(--ax-fg-muted)] truncate">

@@ -77,6 +77,7 @@ export type ChatRow = {
   last_manager_at: string | null
   bot_disabled: boolean
   tags: string[]
+  avatar_url: string | null
 }
 
 // Merge new tags into the chat's tag set (no-op if all already present).
