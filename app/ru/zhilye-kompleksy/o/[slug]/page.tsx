@@ -117,7 +117,7 @@ async function _loadComplexIndex(): Promise<ComplexIndexEntry[]> {
   if (_complexIndexInflight) return _complexIndexInflight
   _complexIndexInflight = (async () => {
     try {
-      const r = await fetch(COMPLEX_INDEX_URL, { next: { revalidate: 1800 } })
+      const r = await fetch(COMPLEX_INDEX_URL, { cache: 'no-store' })
       if (!r.ok) return _complexIndexCache?.data ?? []
       const j = await r.json() as { items: ComplexIndexEntry[] }
       const items = j.items ?? []

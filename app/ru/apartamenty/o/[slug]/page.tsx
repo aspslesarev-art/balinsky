@@ -86,7 +86,7 @@ async function _loadApartmentIndex(): Promise<AptIndexEntry[]> {
   if (_aptIndexInflight) return _aptIndexInflight
   _aptIndexInflight = (async () => {
     try {
-      const r = await fetch(APT_INDEX_URL, { next: { revalidate: 1800 } })
+      const r = await fetch(APT_INDEX_URL, { cache: 'no-store' })
       if (!r.ok) return _aptIndexCache?.data ?? []
       const j = await r.json() as { items: AptIndexEntry[] }
       const items = j.items ?? []
