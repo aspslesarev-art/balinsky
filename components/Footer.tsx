@@ -125,6 +125,16 @@ export function Footer() {
           <div className="mt-5 text-center text-[13px] text-[var(--color-text-muted)]">
             Copyright © {new Date().getFullYear()} Balinsky.info. All rights reserved.
           </div>
+          <div className="mt-3 text-center text-[12px] leading-[1.7] text-[var(--color-text-muted)]">
+            <div>Individual Entrepreneur Andrei Slesarau (Georgia)</div>
+            <div>Reg. No. 316362404 · Registered 06 Jan 2022</div>
+            <div>19 Shartava St., Rustavi, Georgia</div>
+            <div>
+              Site: <a href="https://balinsky.info" className="hover:text-[var(--color-primary-pressed)] no-underline">balinsky.info</a>
+              {' · '}Email: <a href="mailto:i@balinsky.info" className="hover:text-[var(--color-primary-pressed)] no-underline">i@balinsky.info</a>
+              {' · '}WhatsApp: <a href="https://wa.me/628873173613" className="hover:text-[var(--color-primary-pressed)] no-underline">+62 887 3173 613</a>
+            </div>
+          </div>
         </div>
       </div>
     </footer>
