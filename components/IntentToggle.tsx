@@ -3,9 +3,8 @@
 import { useIntent, type Intent } from './IntentContext'
 
 const OPTIONS: { v: Intent; label: string; short: string }[] = [
-  { v: 'all',    label: 'Все',         short: 'Все' },
-  { v: 'invest', label: 'Инвестиции',  short: 'Инвест' },
-  { v: 'live',   label: 'Для жизни',   short: 'Жизнь' },
+  { v: 'pro',     label: 'Pro',      short: 'Pro' },
+  { v: 'regular', label: 'Обычный',  short: 'Обыч.' },
 ]
 
 export function IntentToggle({ className = '' }: { className?: string }) {
@@ -14,7 +13,7 @@ export function IntentToggle({ className = '' }: { className?: string }) {
     <div
       className={`inline-flex rounded-full border border-[var(--color-border)] p-0.5 bg-white ${className}`}
       role="tablist"
-      aria-label="Цель подбора"
+      aria-label="Режим отображения"
     >
       {OPTIONS.map(opt => {
         const isActive = ready && intent === opt.v

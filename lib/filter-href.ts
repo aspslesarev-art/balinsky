@@ -15,6 +15,7 @@ function toQueryString(f: FilterState): string {
   if (f.developer.length) sp.set('developer', f.developer.join(','))
   if (f.status.length) sp.set('status', f.status.join(','))
   if (f.permit.length) sp.set('permit', f.permit.join(','))
+  if (f.purpose.length) sp.set('purpose', f.purpose.join(','))
   return sp.toString()
 }
 

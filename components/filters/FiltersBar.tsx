@@ -15,6 +15,7 @@ export type FilterState = {
   developer: string[]
   status: string[]
   permit: string[]
+  purpose: string[]
 }
 
 export type FilterOptions = {
@@ -24,6 +25,7 @@ export type FilterOptions = {
   developer: Option[]
   status: Option[]
   permit: Option[]
+  purpose: Option[]
 }
 
 function ResetAll({
@@ -65,12 +67,21 @@ export function FiltersBar({
     (state.floor.length > 0 ? 1 : 0) +
     (state.developer.length > 0 ? 1 : 0) +
     (state.status.length > 0 ? 1 : 0) +
-    (state.permit.length > 0 ? 1 : 0)
+    (state.permit.length > 0 ? 1 : 0) +
+    (state.purpose.length > 0 ? 1 : 0)
 
   return (
     <Suspense fallback={null}>
       <div className="flex items-center gap-3 flex-wrap">
         <PriceRangeFilter label="Цена" min={state.priceMin} max={state.priceMax} current={state} view={view} />
+        <MultiSelectFilter
+          stateKey="purpose"
+          label="Цель"
+          options={options.purpose}
+          selected={state.purpose}
+          current={state}
+          view={view}
+        />
         <MultiSelectFilter
           stateKey="district"
           label="Район"

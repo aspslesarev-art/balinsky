@@ -46,11 +46,20 @@ export function ComplexFiltersBar({
     (state.status.length > 0 ? 1 : 0) +
     (state.permit.length > 0 ? 1 : 0) +
     (state.year.length > 0 ? 1 : 0) +
-    (state.developer.length > 0 ? 1 : 0)
+    (state.developer.length > 0 ? 1 : 0) +
+    (state.purpose.length > 0 ? 1 : 0)
 
   return (
     <Suspense fallback={null}>
       <div className="flex items-center gap-3 flex-wrap">
+        <ComplexMultiSelect
+          stateKey="purpose"
+          label="Цель"
+          options={options.purpose}
+          selected={state.purpose}
+          current={state}
+          view={view}
+        />
         <ComplexMultiSelect
           stateKey="district"
           label="Район"

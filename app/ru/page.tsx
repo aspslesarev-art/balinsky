@@ -62,7 +62,7 @@ async function loadTopVillas(): Promise<VillaCardData[]> {
     ])
     const emptyFilters: VillaFilterState = {
       q: '', priceMin: null, priceMax: null,
-      district: [], bedrooms: [], status: [], permit: [], year: [], developer: [], style: [],
+      district: [], bedrooms: [], status: [], permit: [], year: [], developer: [], style: [], purpose: [],
     }
     const cards = buildAllVillaCards(enriched, manifest, emptyFilters, scores, 'investment-desc')
     return cards.slice(0, 6)

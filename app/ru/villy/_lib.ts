@@ -32,6 +32,7 @@ export type VillaFilterState = {
   year: string[]
   developer: string[]
   style: string[]
+  purpose: string[]
 }
 
 export type VillaFilterOptions = {
@@ -42,6 +43,15 @@ export type VillaFilterOptions = {
   year: Option[]
   developer: Option[]
   style: Option[]
+  purpose: Option[]
+}
+
+// Bali zoning colors that allow short-term-rental / commercial use.
+// Anything else (yellow, green, etc.) is residential — i.e. "для жизни".
+const INVEST_LAND = new Set(['pink', 'red'])
+export function purposeOf(landDesignation: string | null): 'invest' | 'live' | null {
+  if (!landDesignation) return null
+  return INVEST_LAND.has(landDesignation.trim().toLowerCase()) ? 'invest' : 'live'
 }
 
 export type Row = { airtable_id: string; data: Record<string, unknown> }
@@ -87,6 +97,7 @@ export const EMPTY_FILTERS: VillaFilterState = {
   year: [],
   developer: [],
   style: [],
+  purpose: [],
 }
 
 // === helpers ===
@@ -145,6 +156,7 @@ export function parseQueryFilters(sp: Record<string, string | undefined>): Villa
     year: asArray(sp.year),
     developer: asArray(sp.developer),
     style: asArray(sp.style),
+    purpose: asArray(sp.purpose).filter(v => v === 'invest' || v === 'live'),
   }
 }
 
@@ -159,7 +171,8 @@ export function hasAnyFilter(f: VillaFilterState): boolean {
     f.permit.length > 0 ||
     f.year.length > 0 ||
     f.developer.length > 0 ||
-    f.style.length > 0
+    f.style.length > 0 ||
+    f.purpose.length > 0
   )
 }
 
@@ -221,6 +234,12 @@ export function passes(e: EnrichedRow, f: VillaFilterState): boolean {
   if (f.year.length > 0 && (!e.year || !f.year.includes(e.year))) return false
   if (f.developer.length > 0 && (!e.developerName || !f.developer.includes(e.developerName))) return false
   if (f.style.length > 0 && (!e.style || !f.style.includes(e.style))) return false
+  if (f.purpose.length > 0) {
+    const p = purposeOf(e.landDesignation)
+    // Selecting both "invest" + "live" includes any villa whose land
+    // designation is known; rows without a designation stay hidden.
+    if (!p || !f.purpose.includes(p)) return false
+  }
   return true
 }
 
@@ -324,7 +343,15 @@ export function buildOptions(allRows: EnrichedRow[], current: VillaFilterState):
     if (c > 0) status.push({ value: key, label: name, count: c })
   }
 
-  return { district, bedrooms, status, permit, year, developer, style }
+  // Fixed two-option facet — counts reflect everything else the user has
+  // already chosen so the labels show realistic totals.
+  const purposeCounts = countsExcludingDim('purpose', e => purposeOf(e.landDesignation))
+  const purpose: Option[] = [
+    { value: 'invest', label: 'Для инвестиций', count: purposeCounts.get('invest') ?? 0 },
+    { value: 'live',   label: 'Для жизни',      count: purposeCounts.get('live')   ?? 0 },
+  ]
+
+  return { district, bedrooms, status, permit, year, developer, style, purpose }
 }
 
 // === card mapping ===
@@ -458,6 +485,13 @@ function fmtUsd(n: number): string {
   return n.toLocaleString('ru-RU').replace(/,/g, ' ') + ' $'
 }
 
+function purposeSuffix(purpose: string[]): string {
+  if (purpose.length !== 1) return ''
+  return purpose[0] === 'invest' ? ' для инвестиций'
+    : purpose[0] === 'live'   ? ' для жизни'
+    : ''
+}
+
 export function buildHeading(f: VillaFilterState): string {
   const adj: string[] = []
   if (f.status.length === 1) {
@@ -470,6 +504,8 @@ export function buildHeading(f: VillaFilterState): string {
   }
   const noun = adj.length || hasAnyFilter(f) ? 'виллы и дома' : 'Виллы и дома'
   let s = adj.length ? adj.join(' ') + ' ' + noun : noun
+
+  s += purposeSuffix(f.purpose)
 
   if (f.district.length === 1) s += ` в районе ${f.district[0]}`
   else if (f.district.length > 1) s += ` в районах ${f.district.join(', ')}`
@@ -505,7 +541,7 @@ export function buildDescription(f: VillaFilterState, totalCount?: number): stri
     : 'на Бали'
   const countPart = typeof totalCount === 'number' && totalCount > 0
     ? `${totalCount} ${noun}` : noun.charAt(0).toUpperCase() + noun.slice(1)
-  let s = `${countPart} ${where}`
+  let s = `${countPart}${purposeSuffix(f.purpose)} ${where}`
   if (f.style.length === 1) s += ` в стиле ${f.style[0]}`
   if (f.status.length === 1) {
     const lbl = f.status[0] === 'building' ? 'строящихся'

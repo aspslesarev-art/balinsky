@@ -38,6 +38,13 @@ export const EMPTY_FILTERS: FilterState = {
   developer: [],
   status: [],
   permit: [],
+  purpose: [],
+}
+
+const INVEST_LAND = new Set(['pink', 'red'])
+export function purposeOf(landDesignation: string | null): 'invest' | 'live' | null {
+  if (!landDesignation) return null
+  return INVEST_LAND.has(landDesignation.trim().toLowerCase()) ? 'invest' : 'live'
 }
 
 export async function loadJson<T>(url: string, fallback: T): Promise<T> {
@@ -100,6 +107,7 @@ export function parseQueryFilters(sp: Record<string, string | undefined>): Filte
     developer: asArray(sp.developer),
     status: asArray(sp.status),
     permit: asArray(sp.permit),
+    purpose: asArray(sp.purpose).filter(v => v === 'invest' || v === 'live'),
   }
 }
 
@@ -115,6 +123,7 @@ export type EnrichedRow = {
   priceUsd: number | null
   lat: number | null
   lng: number | null
+  landDesignation: string | null
 }
 
 function priceUpdatedMs(d: Record<string, unknown>): number {
@@ -136,12 +145,18 @@ function parseGeo(v: unknown): number | null {
   return null
 }
 
-function enrich(r: Row, devMap: Record<string, string>): EnrichedRow {
+function enrich(r: Row, devMap: Record<string, string>, complexLand: Map<string, string>): EnrichedRow {
   const d = r.data
   const devRefs = Array.isArray(d['Developer']) ? (d['Developer'] as unknown[]) : []
   const developerNames = devRefs
     .map(id => (typeof id === 'string' ? devMap[id] : null))
     .filter((n): n is string => !!n)
+
+  // First-class field on the apartment row wins; otherwise inherit from the
+  // matched parent complex (resolved by longest-substring title match in
+  // _loadAllInternal — same heuristic complexes use to attach prices).
+  const own = firstString(d['Назначение земли'])
+  const matchedKey = matchComplexKey(d, complexLand)
 
   return {
     id: r.airtable_id,
@@ -155,7 +170,20 @@ function enrich(r: Row, devMap: Record<string, string>): EnrichedRow {
     priceUsd: numberOrNull(d['price_usd'] ?? d['Цена']),
     lat: parseGeo(d['Geo']),
     lng: parseGeo(d['Geo 2']),
+    landDesignation: own ?? (matchedKey ? complexLand.get(matchedKey) ?? null : null),
   }
+}
+
+function matchComplexKey(d: Record<string, unknown>, complexLand: Map<string, string>): string | null {
+  const title = (firstString(d['SEO:Title']) ?? firstString(d['ИИ Имя']) ?? firstString(d['Name']) ?? '').toLowerCase()
+  if (!title) return null
+  // Longest project name wins so "Karma Royal Sanur" beats "Karma".
+  let best: string | null = null
+  for (const key of complexLand.keys()) {
+    if (!title.includes(key)) continue
+    if (!best || key.length > best.length) best = key
+  }
+  return best
 }
 
 // Fuzzy search by SEO title, district, developer names. Tolerates typos and
@@ -223,6 +251,10 @@ export function passes(e: EnrichedRow, f: FilterState): boolean {
     if (!e.status || !wanted.includes(e.status)) return false
   }
   if (f.permit.length > 0 && (!e.permit || !f.permit.includes(e.permit))) return false
+  if (f.purpose.length > 0) {
+    const p = purposeOf(e.landDesignation)
+    if (!p || !f.purpose.includes(p)) return false
+  }
   return true
 }
 
@@ -291,7 +323,13 @@ export function buildOptions(allRows: EnrichedRow[], current: FilterState): Filt
 
   const permit = build('permit', e => e.permit)
 
-  return { district: districts, bedrooms, floor, developer, status, permit }
+  const purposeCounts = countsExcludingDim('purpose', e => purposeOf(e.landDesignation))
+  const purpose: Option[] = [
+    { value: 'invest', label: 'Для инвестиций', count: purposeCounts.get('invest') ?? 0 },
+    { value: 'live',   label: 'Для жизни',      count: purposeCounts.get('live')   ?? 0 },
+  ]
+
+  return { district: districts, bedrooms, floor, developer, status, permit, purpose }
 }
 
 export function toCard(e: EnrichedRow, manifest: Record<string, string[]>): Card | null {
@@ -323,15 +361,26 @@ let _cache: { ts: number; data: CachedAll } | null = null
 let _inflight: Promise<CachedAll> | null = null
 
 async function _loadAllInternal(): Promise<CachedAll> {
-  const [rowsRes, manifest, devMap] = await Promise.all([
+  const [rowsRes, manifest, devMap, complexRes] = await Promise.all([
     sb.from('raw_apartments').select('airtable_id, data').limit(1000),
     loadJson<Record<string, string[]>>(PHOTO_MANIFEST_URL, {}),
     loadJson<Record<string, string>>(DEV_LOOKUP_URL, {}),
+    sb.from('raw_complexes').select('data').limit(500),
   ])
+  // Lower-cased Project name → land designation. Apartments inherit zoning
+  // from their parent complex via title-substring match (same heuristic the
+  // complex catalog uses for prices). Names < 4 chars are too noisy to match.
+  const complexLand = new Map<string, string>()
+  for (const c of (complexRes.data ?? []) as { data: Record<string, unknown> }[]) {
+    const name = firstString(c.data['Project'])?.toLowerCase()
+    const land = firstString(c.data['Назначение земли'])
+    if (!name || name.length < 4 || !land) continue
+    complexLand.set(name, land)
+  }
   const rows = (rowsRes.data ?? []) as Row[]
   const enriched = rows
     .filter(r => r.data?.['Опубликовать'] === true)
-    .map(r => enrich(r, devMap))
+    .map(r => enrich(r, devMap, complexLand))
   return { enriched, manifest }
 }
 
@@ -420,8 +469,16 @@ export function hasAnyFilter(f: FilterState): boolean {
     f.floor.length > 0 ||
     f.developer.length > 0 ||
     f.status.length > 0 ||
-    f.permit.length > 0
+    f.permit.length > 0 ||
+    f.purpose.length > 0
   )
+}
+
+function purposeSuffix(purpose: string[]): string {
+  if (purpose.length !== 1) return ''
+  return purpose[0] === 'invest' ? ' для инвестиций'
+    : purpose[0] === 'live'   ? ' для жизни'
+    : ''
 }
 
 export function buildHeading(f: FilterState): string {
@@ -436,6 +493,8 @@ export function buildHeading(f: FilterState): string {
 
   const base = hasAnyFilter(f) ? 'апартаменты' : 'Апартаменты и квартиры'
   let s = adj.length ? adj.join(' ') + ' ' + base : base
+
+  s += purposeSuffix(f.purpose)
 
   if (f.district.length === 1) s += ` в районе ${f.district[0]}`
   else if (f.district.length > 1) s += ` в районах ${f.district.join(', ')}`
@@ -471,7 +530,7 @@ export function buildDescription(f: FilterState, totalCount?: number): string {
     : 'на Бали'
   const countPart = typeof totalCount === 'number' && totalCount > 0
     ? `${totalCount} ${noun}` : noun.charAt(0).toUpperCase() + noun.slice(1)
-  let s = `${countPart} ${where}`
+  let s = `${countPart}${purposeSuffix(f.purpose)} ${where}`
   if (f.status.length === 1) {
     const lbl = f.status[0] === 'building' ? 'строящихся'
       : f.status[0] === 'built' ? 'готовых' : 'на стадии планирования'

@@ -10,6 +10,14 @@ export const SLUG_TO_STATUS: Record<string, string> = Object.fromEntries(
   Object.entries(STATUS_TO_SLUG).map(([k, v]) => [v, k]),
 )
 
+export const PURPOSE_TO_SLUG: Record<string, string> = {
+  invest: 'dlya-investicij',
+  live:   'dlya-zhizni',
+}
+export const SLUG_TO_PURPOSE: Record<string, string> = Object.fromEntries(
+  Object.entries(PURPOSE_TO_SLUG).map(([k, v]) => [v, k]),
+)
+
 // Interior style slugs — taken from the closed list classified by
 // scripts/classify-villa-style.mjs. Slugs are stable (transliterated /
 // short ASCII) so URLs survive renames in the human-facing label.
@@ -52,6 +60,7 @@ export function parseCleanPath(segments: string[]): VillaFilterState | null {
     year: [],
     developer: [],
     style: [],
+    purpose: [],
   }
   const seen = new Set<string>()
   for (const raw of segments) {
@@ -72,6 +81,10 @@ export function parseCleanPath(segments: string[]): VillaFilterState | null {
       if (seen.has('style')) return null
       seen.add('style')
       f.style = [SLUG_TO_STYLE[seg]]
+    } else if (SLUG_TO_PURPOSE[seg]) {
+      if (seen.has('purpose')) return null
+      seen.add('purpose')
+      f.purpose = [SLUG_TO_PURPOSE[seg]]
     } else {
       return null
     }
@@ -89,6 +102,7 @@ export function buildCanonicalPath(f: VillaFilterState): string | null {
   if (f.bedrooms.length > 1) return null
   if (f.status.length > 1) return null
   if (f.style.length > 1) return null
+  if (f.purpose.length > 1) return null
 
   const dims: string[] = []
   if (f.district.length === 1) {
@@ -111,8 +125,13 @@ export function buildCanonicalPath(f: VillaFilterState): string | null {
     if (!slug) return null
     dims.push(slug)
   }
+  if (f.purpose.length === 1) {
+    const slug = PURPOSE_TO_SLUG[f.purpose[0]]
+    if (!slug) return null
+    dims.push(slug)
+  }
   if (dims.length === 0) return BASE
-  if (dims.length > 4) return null
+  if (dims.length > 5) return null
   return BASE + '/' + dims.join('/')
 }
 
@@ -122,16 +141,20 @@ export function listAllCanonicalPaths(): string[] {
   const bedroomSlugs = Object.values(BEDROOM_TO_SLUG)
   const statusSlugs = Object.values(STATUS_TO_SLUG)
   const styleSlugs = Object.values(STYLE_TO_SLUG)
+  const purposeSlugs = Object.values(PURPOSE_TO_SLUG)
   for (const d of districtSlugs) out.add(`${BASE}/${d}`)
   for (const b of bedroomSlugs) out.add(`${BASE}/${b}`)
   for (const s of statusSlugs) out.add(`${BASE}/${s}`)
   for (const st of styleSlugs) out.add(`${BASE}/${st}`)
+  for (const p of purposeSlugs) out.add(`${BASE}/${p}`)
   for (const d of districtSlugs) {
     for (const b of bedroomSlugs) out.add(`${BASE}/${d}/${b}`)
     for (const s of statusSlugs) out.add(`${BASE}/${d}/${s}`)
     for (const st of styleSlugs) out.add(`${BASE}/${d}/${st}`)
+    for (const p of purposeSlugs) out.add(`${BASE}/${d}/${p}`)
   }
   for (const b of bedroomSlugs) for (const s of statusSlugs) out.add(`${BASE}/${b}/${s}`)
   for (const st of styleSlugs) for (const d of districtSlugs) out.add(`${BASE}/${d}/${st}`)
+  for (const p of purposeSlugs) for (const b of bedroomSlugs) out.add(`${BASE}/${p}/${b}`)
   return [...out]
 }

@@ -5,7 +5,6 @@ import { ProgressBar } from './ProgressBar'
 import { PhotoSlider } from './PhotoSlider'
 import { useCurrency } from './CurrencyContext'
 import { formatPrice } from '@/lib/currency'
-import { classifyComplex } from './IntentContext'
 
 export type ComplexCardData = {
   slug: string
@@ -42,12 +41,10 @@ export function ComplexCard({ c }: { c: ComplexCardData }) {
   const slides = c.photos.length > 0 ? c.photos : c.coverUrl ? [c.coverUrl] : []
   const villaRange = fmtRange(c.villaPriceFrom, c.villaPriceTo, currency)
   const aptRange = fmtRange(c.aptPriceFrom, c.aptPriceTo, currency)
-  const intentTag = classifyComplex({ landDesignation: c.landDesignation })
 
   return (
     <Link
       href={`/ru/zhilye-kompleksy/o/${c.slug}`}
-      data-intent={intentTag}
       className="group flex h-full flex-col bg-[var(--color-card-bg)] rounded-2xl border border-[var(--color-border)] overflow-hidden hover:shadow-sm transition-shadow"
     >
       <PhotoSlider photos={slides} alt={c.name} heightClass="h-[240px] md:h-[360px]" trackingId={`complex:${c.slug}`} />

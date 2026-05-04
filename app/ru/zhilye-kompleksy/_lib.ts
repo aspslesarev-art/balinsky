@@ -30,6 +30,7 @@ export type ComplexFilterState = {
   permit: string[]
   year: string[]
   developer: string[]
+  purpose: string[]
 }
 
 export type ComplexFilterOptions = {
@@ -39,6 +40,13 @@ export type ComplexFilterOptions = {
   permit: Option[]
   year: Option[]
   developer: Option[]
+  purpose: Option[]
+}
+
+const INVEST_LAND = new Set(['pink', 'red'])
+export function purposeOf(landDesignation: string | null): 'invest' | 'live' | null {
+  if (!landDesignation) return null
+  return INVEST_LAND.has(landDesignation.trim().toLowerCase()) ? 'invest' : 'live'
 }
 
 export type Row = {
@@ -78,6 +86,7 @@ export const EMPTY_FILTERS: ComplexFilterState = {
   permit: [],
   year: [],
   developer: [],
+  purpose: [],
 }
 
 // === helpers ===
@@ -121,6 +130,7 @@ export function parseQueryFilters(sp: Record<string, string | undefined>): Compl
     permit: asArray(sp.permit),
     year: asArray(sp.year),
     developer: asArray(sp.developer),
+    purpose: asArray(sp.purpose).filter(v => v === 'invest' || v === 'live'),
   }
 }
 
@@ -132,7 +142,8 @@ export function hasAnyFilter(f: ComplexFilterState): boolean {
     f.status.length > 0 ||
     f.permit.length > 0 ||
     f.year.length > 0 ||
-    f.developer.length > 0
+    f.developer.length > 0 ||
+    f.purpose.length > 0
   )
 }
 
@@ -191,6 +202,10 @@ export function passes(e: EnrichedRow, f: ComplexFilterState): boolean {
   if (f.permit.length > 0 && (!e.permit || !f.permit.includes(e.permit))) return false
   if (f.year.length > 0 && (!e.year || !f.year.includes(e.year))) return false
   if (f.developer.length > 0 && (!e.developerName || !f.developer.includes(e.developerName))) return false
+  if (f.purpose.length > 0) {
+    const p = purposeOf(e.landDesignation)
+    if (!p || !f.purpose.includes(p)) return false
+  }
   return true
 }
 
@@ -301,7 +316,13 @@ export function buildOptions(
     if (c > 0) status.push({ value: key, label: name, count: c })
   }
 
-  return { district, types, status, permit, year, developer }
+  const purposeCounts = countsExcludingDim('purpose', e => purposeOf(e.landDesignation))
+  const purpose: Option[] = [
+    { value: 'invest', label: 'Для инвестиций', count: purposeCounts.get('invest') ?? 0 },
+    { value: 'live',   label: 'Для жизни',      count: purposeCounts.get('live')   ?? 0 },
+  ]
+
+  return { district, types, status, permit, year, developer, purpose }
 }
 
 // === card mapping ===
@@ -500,6 +521,13 @@ export async function loadCatalogPage(
 
 // === heading & metadata ===
 
+function purposeSuffix(purpose: string[]): string {
+  if (purpose.length !== 1) return ''
+  return purpose[0] === 'invest' ? ' для инвестиций'
+    : purpose[0] === 'live'   ? ' для жизни'
+    : ''
+}
+
 export function buildHeading(f: ComplexFilterState): string {
   const adj: string[] = []
   if (f.status.length === 1) {
@@ -510,6 +538,7 @@ export function buildHeading(f: ComplexFilterState): string {
   let s = adj.length ? adj.join(' ') + ' ' + noun : noun
 
   if (f.types.length === 1) s += ` (${f.types[0].toLowerCase()})`
+  s += purposeSuffix(f.purpose)
 
   if (f.district.length === 1) s += ` в районе ${f.district[0]}`
   else if (f.district.length > 1) s += ` в районах ${f.district.join(', ')}`
@@ -535,7 +564,7 @@ export function buildDescription(f: ComplexFilterState, totalCount?: number): st
     : 'на Бали'
   const countPart = typeof totalCount === 'number' && totalCount > 0
     ? `${totalCount} жилых комплексов` : 'Жилые комплексы'
-  let s = `${countPart} ${where}`
+  let s = `${countPart}${purposeSuffix(f.purpose)} ${where}`
   if (f.types.length === 1) s += `, тип: ${f.types[0]}`
   if (f.year.length === 1) s += `, сдача в ${f.year[0]}`
   return `${s}. Фото, цены от застройщика, сроки сдачи, разрешения и контакты.`

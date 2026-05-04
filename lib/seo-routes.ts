@@ -47,6 +47,14 @@ export const SLUG_TO_STATUS: Record<string, string> = Object.fromEntries(
   Object.entries(STATUS_TO_SLUG).map(([k, v]) => [v, k])
 )
 
+export const PURPOSE_TO_SLUG: Record<string, string> = {
+  invest: 'dlya-investicij',
+  live:   'dlya-zhizni',
+}
+export const SLUG_TO_PURPOSE: Record<string, string> = Object.fromEntries(
+  Object.entries(PURPOSE_TO_SLUG).map(([k, v]) => [v, k])
+)
+
 // Predefined price segments (USD). Match order matters: pick first that fits.
 export type PriceSegment = {
   slug: string
@@ -90,6 +98,7 @@ export function parseCleanPath(segments: string[]): FilterState | null {
     developer: [],
     status: [],
     permit: [],
+    purpose: [],
   }
   const seen = new Set<string>()
   for (const raw of segments) {
@@ -106,6 +115,10 @@ export function parseCleanPath(segments: string[]): FilterState | null {
       if (seen.has('status')) return null
       seen.add('status')
       filters.status = [SLUG_TO_STATUS[seg]]
+    } else if (SLUG_TO_PURPOSE[seg]) {
+      if (seen.has('purpose')) return null
+      seen.add('purpose')
+      filters.purpose = [SLUG_TO_PURPOSE[seg]]
     } else if (PRICE_BY_SLUG[seg]) {
       if (seen.has('price')) return null
       seen.add('price')
@@ -136,6 +149,7 @@ export function buildCanonicalPath(f: FilterState): string | null {
   if (f.district.length > 1) return null
   if (f.bedrooms.length > 1) return null
   if (f.status.length > 1) return null
+  if (f.purpose.length > 1) return null
   // count used dimensions
   const dims: string[] = []
   if (f.district.length === 1) {
@@ -153,13 +167,18 @@ export function buildCanonicalPath(f: FilterState): string | null {
     if (!slug) return null
     dims.push(slug)
   }
+  if (f.purpose.length === 1) {
+    const slug = PURPOSE_TO_SLUG[f.purpose[0]]
+    if (!slug) return null
+    dims.push(slug)
+  }
   if (f.priceMin != null || f.priceMax != null) {
     const seg = matchPriceSegment(f.priceMin, f.priceMax)
     if (!seg) return null
     dims.push(seg.slug)
   }
   if (dims.length === 0) return '/ru/apartamenty'
-  if (dims.length > 3) return null
+  if (dims.length > 4) return null
   return '/ru/apartamenty/' + dims.join('/')
 }
 
@@ -174,15 +193,18 @@ export function listAllCanonicalPaths(): string[] {
   const bedroomSlugs = Object.values(BEDROOM_TO_SLUG)
   const statusSlugs = Object.values(STATUS_TO_SLUG)
   const priceSlugs = PRICE_SEGMENTS.map(s => s.slug)
+  const purposeSlugs = Object.values(PURPOSE_TO_SLUG)
 
   for (const d of districtSlugs) out.add(`/ru/apartamenty/${d}`)
   for (const b of bedroomSlugs) out.add(`/ru/apartamenty/${b}`)
   for (const s of statusSlugs) out.add(`/ru/apartamenty/${s}`)
   for (const p of priceSlugs) out.add(`/ru/apartamenty/${p}`)
+  for (const p of purposeSlugs) out.add(`/ru/apartamenty/${p}`)
   for (const d of districtSlugs) {
     for (const b of bedroomSlugs) out.add(`/ru/apartamenty/${d}/${b}`)
     for (const s of statusSlugs) out.add(`/ru/apartamenty/${d}/${s}`)
     for (const p of priceSlugs) out.add(`/ru/apartamenty/${d}/${p}`)
+    for (const p of purposeSlugs) out.add(`/ru/apartamenty/${d}/${p}`)
   }
   for (const b of bedroomSlugs) {
     for (const s of statusSlugs) out.add(`/ru/apartamenty/${b}/${s}`)
