@@ -20,7 +20,7 @@ import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { PhotoGalleryHero } from '@/components/PhotoGalleryHero'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
-import { tField, tFieldOrRu } from '@/lib/i18n'
+import { tField, t } from '@/lib/i18n'
 
 export const revalidate = 3600
 export function generateStaticParams() { return [] }
@@ -92,10 +92,10 @@ export async function generateMetadata({ params }: { params: Params }) {
     title,
     description,
     alternates: {
-      canonical: `${SITE_URL}/en/villy/o/${slug}`,
+      canonical: `${SITE_URL}/en/villas/o/${slug}`,
       languages: {
         ru: `${SITE_URL}/ru/villy/o/${slug}`,
-        en: `${SITE_URL}/en/villy/o/${slug}`,
+        en: `${SITE_URL}/en/villas/o/${slug}`,
       },
     },
   }
@@ -124,11 +124,11 @@ export default async function Page({ params }: { params: Params }) {
   const priceUsd = numberOrNull(d['price'] ?? d['Цена'])
 
   const facts = [
-    bedrooms != null && { Icon: BedDouble, label: 'Bedrooms',  value: String(bedrooms) },
-    area     != null && { Icon: Square,    label: 'Area',      value: `${area} m²` },
-    land     != null && { Icon: Trees,     label: 'Land plot', value: `${land} m²` },
-    year             && { Icon: Calendar,  label: 'Completion', value: year },
-    district         && { Icon: MapPin,    label: 'District',   value: district },
+    bedrooms != null && { Icon: BedDouble, label: t('facts.bedrooms', 'en'), value: String(bedrooms) },
+    area     != null && { Icon: Square,    label: t('facts.area',     'en'), value: `${area} m²` },
+    land     != null && { Icon: Trees,     label: t('facts.land',     'en'), value: `${land} m²` },
+    year             && { Icon: Calendar,  label: t('facts.year',     'en'), value: year },
+    district         && { Icon: MapPin,    label: t('facts.district', 'en'), value: district },
   ].filter(Boolean) as { Icon: typeof BedDouble; label: string; value: string }[]
 
   // Hreflang JSON-LD partner — keeps Google's bilingual indexing happy
@@ -137,7 +137,7 @@ export default async function Page({ params }: { params: Params }) {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: title,
-    url: `${SITE_URL}/en/villy/o/${slug}`,
+    url: `${SITE_URL}/en/villas/o/${slug}`,
     category: 'Villa',
     description: description ?? title,
     image: photos.slice(0, 5),
@@ -148,7 +148,7 @@ export default async function Page({ params }: { params: Params }) {
       price: Math.round(priceUsd),
       priceCurrency: 'USD',
       availability: 'https://schema.org/InStock',
-      url: `${SITE_URL}/en/villy/o/${slug}`,
+      url: `${SITE_URL}/en/villas/o/${slug}`,
     }
   }
 
@@ -157,8 +157,8 @@ export default async function Page({ params }: { params: Params }) {
       <Header active="villy" />
       <PageContainer>
         <Breadcrumbs items={[
-          { label: 'Home', href: '/en' },
-          { label: 'Villas', href: '/en/villy' },
+          { label: t('breadcrumbs.home',   'en'), href: '/en' },
+          { label: t('breadcrumbs.villas', 'en'), href: '/en/villas' },
           { label: title },
         ]} />
 
@@ -168,7 +168,7 @@ export default async function Page({ params }: { params: Params }) {
 
         <section className="mb-10">
           <div className="text-[13px] text-[var(--color-text-muted)] mb-2">
-            <Link href="/en/villy" className="hover:text-[var(--color-text)]">Villas</Link>
+            <Link href="/en/villas" className="hover:text-[var(--color-text)]">{t('breadcrumbs.villas', 'en')}</Link>
             {district && <> · {district}</>}
           </div>
           <h1 className="text-[26px] md:text-[40px] font-semibold tracking-tight text-[#111827] leading-[1.1] mb-3">
@@ -207,7 +207,7 @@ export default async function Page({ params }: { params: Params }) {
           {priceBreakdown && (
             <div className="rounded-xl border border-[var(--color-border)] p-4 bg-[var(--color-search-bg)] mb-5">
               <div className="text-[13px] text-[var(--color-text-muted)] mb-1.5 uppercase tracking-wide">
-                Price breakdown
+                {t('sections.priceBreakdown', 'en')}
               </div>
               <div className="text-[14px] whitespace-pre-line text-[#1A1F1C]">{priceBreakdown}</div>
             </div>
@@ -228,7 +228,3 @@ export default async function Page({ params }: { params: Params }) {
     </>
   )
 }
-
-// Suppress lint for an unused helper that lives here for future EN
-// fields where we want the silent fallback rather than the placeholder.
-void tFieldOrRu

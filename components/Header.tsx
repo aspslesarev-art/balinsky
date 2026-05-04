@@ -51,8 +51,8 @@ export function Header({ active }: { active?: NavKey }) {
         {/* Pro mode switch — default ON. Hides analytics on detail pages
             when the visitor flips it off. Catalogs are unaffected. */}
         <div className="ml-auto flex items-center gap-2 shrink-0">
-          <LangSwitch />
           <ProModeToggle />
+          <LangSwitch />
         </div>
 
         <button

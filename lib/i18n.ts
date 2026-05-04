@@ -1,28 +1,24 @@
-// Airtable-data internationalization.
+// Site-wide internationalization.
 //
-// Convention: every translatable Airtable column has a sibling whose
-// name is the original key plus " EN" — so "Описание ИИ" → "Описание ИИ EN".
-// On English pages we look up the EN sibling first; if it's empty we
-// **render the literal column name** ("Описание ИИ EN") so it's
-// immediately visible to the editor which Airtable column they need to
-// create or fill in. No styling, no badge — just the raw key, exactly
-// like the user requested.
-//
-// Russian pages bypass this helper entirely.
+// 1) Airtable field translation (tField). For lang='en' we look up
+//    `<field> EN` first; if empty, render the literal column name as a
+//    placeholder so editors immediately see what to fill in.
+// 2) URL segment mapping. Russian and English versions of the site
+//    live under different path roots — `villy` ↔ `villas`, etc.
+// 3) UI dictionary. Hardcoded labels (breadcrumbs, sections, buttons)
+//    by language.
 
 export type Lang = 'ru' | 'en'
 
-// Some Airtable string fields wrap their value in a generated/staged
-// object: { state: 'generated', value: 'Vila Anya', isStale: false }.
-// Unwrap to the actual string.
+// ---- Airtable field unwrap + translate -----------------------------------
+
 function unwrap(v: unknown): string | null {
   if (v == null) return null
   if (typeof v === 'string') return v.trim() || null
   if (typeof v === 'number') return String(v)
   if (Array.isArray(v)) {
     for (const x of v) {
-      const u = unwrap(x)
-      if (u) return u
+      const u = unwrap(x); if (u) return u
     }
     return null
   }
@@ -33,13 +29,12 @@ function unwrap(v: unknown): string | null {
 }
 
 /**
- * Look up `field` from a raw_villas/raw_apartments/etc data blob,
- * applying the English-fallback convention.
+ * Resolve `field` from a raw_* data blob with English-fallback rules.
  *
- * - lang='ru' → return data[field], unwrapped to a string
- * - lang='en' → return data[`${field} EN`] if present and non-empty;
- *   otherwise return the literal placeholder `${field} EN` so the
- *   editor can spot the missing translation.
+ * - lang='ru'    → return data[field], unwrapped to a string
+ * - lang='en'    → return data[`${field} EN`] if present and non-empty;
+ *   otherwise return the literal placeholder `${field} EN` so editors
+ *   see what to create. If the RU side is also empty, returns null.
  */
 export function tField(
   data: Record<string, unknown> | null | undefined,
@@ -50,15 +45,11 @@ export function tField(
   if (lang === 'ru') return unwrap(d[field])
   const en = unwrap(d[`${field} EN`])
   if (en) return en
-  // Placeholder form: literal column name. Use only when there's a
-  // Russian value to translate — if the RU side is also empty, return
-  // null so callers can hide the field entirely.
   const ru = unwrap(d[field])
   return ru ? `${field} EN` : null
 }
 
-// Sometimes a page wants the actual EN value when present, otherwise
-// the RU value (graceful fallback for rendering, not for editor TODOs).
+/** Same as tField but never shows the placeholder — falls back to RU. */
 export function tFieldOrRu(
   data: Record<string, unknown> | null | undefined,
   field: string,
@@ -71,37 +62,138 @@ export function tFieldOrRu(
   return unwrap(d[field])
 }
 
-// Pure UI strings live in this small dictionary. Keep flat so you can
-// see at a glance which keys exist; nesting tends to drift.
+// ---- Path-segment mapping ------------------------------------------------
+
+// Top-level section segments. The detail-page slugs that follow them
+// stay identical in both languages — listings carry one Airtable
+// SEO:Slug, and we don't translate it.
+const SEGMENTS: Record<string, string> = {
+  villy: 'villas',
+  apartamenty: 'apartments',
+  'zhilye-kompleksy': 'complexes',
+  zastrojshhiki: 'developers',
+  arenda: 'rental',
+  meropriyatiya: 'events',
+  novosti: 'news',
+  znaniya: 'knowledge',
+  akcii: 'promo',
+  karta: 'map',
+}
+const SEGMENTS_REV: Record<string, string> = Object.fromEntries(
+  Object.entries(SEGMENTS).map(([ru, en]) => [en, ru]),
+)
+
+/** Convert a path segment in either direction. Pass-through for unknowns. */
+export function localizeSegment(seg: string, target: Lang): string {
+  if (target === 'en') return SEGMENTS[seg] ?? seg
+  return SEGMENTS_REV[seg] ?? seg
+}
+
+/** Map `/ru/villy/o/X` ↔ `/en/villas/o/X`. */
+export function switchLangPath(pathname: string, target: Lang): string {
+  if (!pathname.startsWith('/')) pathname = '/' + pathname
+  const parts = pathname.split('/').filter(Boolean)
+  if (parts.length === 0) return `/${target}`
+  const [head, ...rest] = parts
+  if (head !== 'ru' && head !== 'en') return `/${target}`
+  if (head === target) return pathname
+  // Translate every section-name segment along the way; opaque tail
+  // segments (slugs, IDs) pass through unchanged.
+  const translated = rest.map(p => localizeSegment(p, target))
+  return '/' + [target, ...translated].join('/')
+}
+
+// ---- UI dictionary -------------------------------------------------------
+
+// Keep additions flat / typed at the leaves so consumers can autocomplete.
+// The structure mirrors how it's used: `t('nav.villas', 'en')`.
 export const UI = {
   ru: {
-    siteName: 'Balinsky',
-    nav: {
-      villy: 'Виллы и дома',
-      apartamenty: 'Апартаменты',
-      zhilye: 'Жилые комплексы',
-      zastrojshhiki: 'Застройщики',
-      arenda: 'Аренда',
-    },
+    'nav.villas': 'Виллы и дома',
+    'nav.apartments': 'Апартаменты',
+    'nav.complexes': 'Жилые комплексы',
+    'nav.developers': 'Застройщики',
+    'nav.rental': 'Аренда',
+    'breadcrumbs.home': 'Главная',
+    'breadcrumbs.villas': 'Виллы и дома',
+    'breadcrumbs.apartments': 'Апартаменты',
+    'breadcrumbs.complexes': 'Жилые комплексы',
+    'breadcrumbs.developers': 'Застройщики',
+    'price.label': 'Цена',
+    'price.priceUpdated': 'Цена обновлена',
+    'price.perSqm': 'за м²',
+    'cta.buy': 'Купить',
+    'cta.buyChat': 'Купить — чат в Telegram',
+    'cta.buySeller': 'Купить — связаться с продавцом',
+    'cta.reserve': 'Зарезервировать',
+    'facts.bedrooms': 'Спальни',
+    'facts.area': 'Площадь',
+    'facts.land': 'Участок',
+    'facts.year': 'Сдача',
+    'facts.district': 'Район',
+    'facts.airport': 'До аэропорта',
+    'facts.priceM2': 'Цена за м²',
+    'sections.faq': 'Часто задаваемые вопросы',
+    'sections.location': 'Расположение',
+    'sections.about': 'Об объекте',
+    'sections.description': 'Описание',
+    'sections.priceBreakdown': 'Разбивка по цене',
+    'sections.investment': 'Инвестиционный потенциал',
+    'sections.developer': 'Застройщик',
+    'sections.complex': 'Жилой комплекс',
+    'sections.related': 'Похожие объекты',
+    'reserved.banner.title': 'Объект сейчас забронирован',
+    'reserved.banner.until': 'Hold действует до',
+    'misc.viewAll': 'Все →',
+    'misc.loading': 'Загрузка…',
+    'misc.empty': 'Пусто',
+    'misc.notFound': 'Не найдено',
   },
   en: {
-    siteName: 'Balinsky',
-    nav: {
-      villy: 'Villas',
-      apartamenty: 'Apartments',
-      zhilye: 'Residential complexes',
-      zastrojshhiki: 'Developers',
-      arenda: 'Long-term rental',
-    },
+    'nav.villas': 'Villas',
+    'nav.apartments': 'Apartments',
+    'nav.complexes': 'Residential complexes',
+    'nav.developers': 'Developers',
+    'nav.rental': 'Long-term rental',
+    'breadcrumbs.home': 'Home',
+    'breadcrumbs.villas': 'Villas',
+    'breadcrumbs.apartments': 'Apartments',
+    'breadcrumbs.complexes': 'Residential complexes',
+    'breadcrumbs.developers': 'Developers',
+    'price.label': 'Price',
+    'price.priceUpdated': 'Price updated',
+    'price.perSqm': 'per m²',
+    'cta.buy': 'Buy',
+    'cta.buyChat': 'Buy — chat on Telegram',
+    'cta.buySeller': 'Buy — contact seller',
+    'cta.reserve': 'Reserve',
+    'facts.bedrooms': 'Bedrooms',
+    'facts.area': 'Area',
+    'facts.land': 'Land plot',
+    'facts.year': 'Completion',
+    'facts.district': 'District',
+    'facts.airport': 'To airport',
+    'facts.priceM2': 'Price per m²',
+    'sections.faq': 'Frequently asked questions',
+    'sections.location': 'Location',
+    'sections.about': 'About the property',
+    'sections.description': 'Description',
+    'sections.priceBreakdown': 'Price breakdown',
+    'sections.investment': 'Investment potential',
+    'sections.developer': 'Developer',
+    'sections.complex': 'Residential complex',
+    'sections.related': 'Similar properties',
+    'reserved.banner.title': 'Currently reserved',
+    'reserved.banner.until': 'Hold expires on',
+    'misc.viewAll': 'View all →',
+    'misc.loading': 'Loading…',
+    'misc.empty': 'Empty',
+    'misc.notFound': 'Not found',
   },
 } as const
 
-// Toggle the locale segment in a path: /ru/villy/o/x ↔ /en/villy/o/x.
-// Used by the Header switcher.
-export function switchLangPath(pathname: string, target: Lang): string {
-  if (pathname.startsWith(`/${target}/`) || pathname === `/${target}`) return pathname
-  if (pathname.startsWith('/ru')) return target === 'ru' ? pathname : '/en' + pathname.slice(3)
-  if (pathname.startsWith('/en')) return target === 'en' ? pathname : '/ru' + pathname.slice(3)
-  // Outside known locale roots — point to the catalog as a sensible fallback.
-  return `/${target}`
+export type UIKey = keyof (typeof UI)['ru']
+
+export function t(key: UIKey, lang: Lang): string {
+  return UI[lang][key] ?? UI.ru[key] ?? key
 }
