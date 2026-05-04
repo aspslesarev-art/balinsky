@@ -1,20 +1,25 @@
-name: Sync content from Airtable
+name: Sync heavy content (rental + photos)
+
+# Rental sync caches every photo from Airtable into Storage — that's
+# 3000+ HTTP downloads on a full run, takes 20-40 min. Lives on its
+# own schedule so it can't push the fast events/news pipeline over
+# the timeout. Runs hourly; rentals don't change minute-to-minute.
 
 on:
   schedule:
-    # Every 15 minutes — GitHub Actions skips */10 schedules under load.
-    # Also avoid hh:00 / hh:30 boundaries, which are the most-skipped slots.
-    - cron: '7,22,37,52 * * * *'
+    # Once per hour at :15, after the fast workflow's :07 slot has
+    # already cleared.
+    - cron: '15 * * * *'
   workflow_dispatch:
 
 concurrency:
-  group: sync-content
+  group: sync-heavy
   cancel-in-progress: false
 
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 
@@ -33,31 +38,16 @@ jobs:
           SUPABASE_SERVICE_KEY=${{ secrets.SUPABASE_SERVICE_KEY }}
           EOF
 
-      - name: Sync events
-        run: node scripts/sync-events.mjs
-
-      - name: Sync news
-        run: node scripts/sync-news.mjs
-
-      - name: Sync promo
-        run: node scripts/sync-promo.mjs
-
-      - name: Sync knowledge
-        run: node scripts/sync-knowledge.mjs
-
       - name: Sync rental
         run: node scripts/sync-rental.mjs
 
-      - name: Sync managers
-        run: node scripts/sync-managers.mjs
-
-      - name: Revalidate site caches
+      - name: Revalidate rental cache
         env:
           SITE_URL: ${{ secrets.SITE_URL }}
           REVALIDATE_TOKEN: ${{ secrets.REVALIDATE_TOKEN }}
         run: |
           curl --fail --silent --show-error \
-            -X POST "${SITE_URL}/api/revalidate-content" \
+            -X POST "${SITE_URL}/api/revalidate-content?kinds=rental" \
             -H "Authorization: Bearer ${REVALIDATE_TOKEN}" \
             -H "Content-Type: application/json" \
             -d '{}' \
