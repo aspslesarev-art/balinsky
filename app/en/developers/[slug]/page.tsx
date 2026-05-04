@@ -1,3 +1,9 @@
+// MIRROR of /ru/zastrojshhiki/[slug]/page.tsx — when you edit the
+// layout / data fetching / sections of either file, mirror the change
+// in the other. Visible strings here are translated to English; the
+// data and component imports come straight from the RU page so cards
+// and helpers behave identically.
+
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@supabase/supabase-js'
@@ -14,6 +20,7 @@ import { loadAllPromo } from '@/lib/promo'
 import { loadAllEvents } from '@/lib/events'
 import { loadVideosByDeveloperWithComplexes } from '@/lib/videos'
 import { VideoGrid } from '@/components/VideoGrid'
+import { tFieldOrRu } from '@/lib/i18n'
 
 export const revalidate = 3600
 // Empty list → all slugs are generated on-demand and cached as ISR.
@@ -52,7 +59,7 @@ function logoFromJson(data: Record<string, unknown>): string | null {
 function parseBullets(s: string | null): string[] {
   if (!s) return []
   const trimmed = s.trim()
-  if (!trimmed || trimmed.toLowerCase() === 'не известно') return []
+  if (!trimmed || /^(не известно|no data)$/i.test(trimmed)) return []
   return trimmed
     .split('\n')
     .map(line => line.replace(/^[\s•\-–—·]+/, '').trim())
@@ -180,25 +187,27 @@ export async function generateMetadata({ params }: { params: Params }) {
   const dev = await loadDeveloper(slug)
   if (!dev) return { robots: { index: false } }
   const name = firstString(dev.data['Developer']) ?? slug
-  const aiDesc = firstString(dev.data['SEO Text']) ?? firstString(dev.data['Описание ИИ']) ?? firstString(dev.data['AI Описание'])
+  const aiDesc = tFieldOrRu(dev.data, 'SEO Text', 'en')
+    ?? tFieldOrRu(dev.data, 'Описание ИИ', 'en')
+    ?? firstString(dev.data['AI Описание'])
   const description = aiDesc
     ? aiDesc.slice(0, 160).trim() + (aiDesc.length > 160 ? '…' : '')
-    : `Застройщик ${name} на Бали — рейтинг по 4 направлениям, проекты, комиссия, надёжность.`
+    : `${name} — Bali property developer. Score across four dimensions, projects, commission, reliability.`
   return {
-    title: `Застройщик ${name} на Бали — проекты, рейтинг, отзывы | Balinsky`,
+    title: `${name} — Bali property developer | projects, score, reviews | Balinsky`,
     description,
     alternates: {
-      canonical: `/ru/zastrojshhiki/${slug}`,
+      canonical: `/en/developers/${slug}`,
       languages: {
         ru: `${SITE_URL}/ru/zastrojshhiki/${slug}`,
         en: `${SITE_URL}/en/developers/${slug}`,
       },
     },
     openGraph: {
-      title: `${name} — застройщик на Бали`,
+      title: `${name} — Bali property developer`,
       description,
       type: 'website' as const,
-      url: `${SITE_URL}/ru/zastrojshhiki/${slug}`,
+      url: `${SITE_URL}/en/developers/${slug}`,
       images: dev.logo_url ? [{ url: dev.logo_url }] : [],
     },
   }
@@ -206,20 +215,20 @@ export async function generateMetadata({ params }: { params: Params }) {
 
 const FAQ_FOR_DEVELOPER = (name: string) => ([
   {
-    q: `Сколько проектов у застройщика ${name} на Бали?`,
-    a: `Список действующих проектов компании ${name} приведён выше на этой странице. Каждый проект — отдельная карточка с фото, районом и сроками сдачи.`,
+    q: `How many projects does ${name} have in Bali?`,
+    a: `${name}'s active projects are listed above on this page. Each project is a separate card with photos, district and completion date.`,
   },
   {
-    q: `Как проверить надёжность ${name}?`,
-    a: 'Смотрим четыре сигнала: количество сданных проектов, действующее разрешение PBG/SLF на текущей стройке, формат собственности (лизхолд / freehold), наличие и опыт управляющей компании.',
+    q: `How do I verify ${name} is reliable?`,
+    a: 'Check four signals: number of completed projects, an active PBG/SLF permit on the current build, ownership format (leasehold / freehold), and whether a real management company is in place.',
   },
   {
-    q: `Можно ли купить юнит у ${name} напрямую?`,
-    a: 'Да, большинство застройщиков на Бали продают юниты напрямую без посредников. Сделка оформляется у нотариуса PPAT, оплата идёт по графику, привязанному к этапам строительства.',
+    q: `Can I buy a unit from ${name} directly?`,
+    a: 'Yes — most Bali developers sell directly without intermediaries. The deal is closed at a PPAT notary, payment runs on a schedule tied to construction milestones.',
   },
   {
-    q: 'Что важно проверить перед покупкой?',
-    a: 'Срок лизхолда и условия продления, разрешения PBG и SLF, назначение земли, подключение к коммуникациям, наличие управляющей компании. Это даёт уверенность в юридической чистоте и в том, что объект сможет легально сдаваться в аренду.',
+    q: 'What should I verify before buying?',
+    a: 'Leasehold term and extension conditions, PBG and SLF permits, land designation, utilities connection and management company presence. This gives you confidence in the legal cleanliness of the deal and the ability to legally rent the property out.',
   },
 ])
 
@@ -231,19 +240,21 @@ export default async function Page({ params }: { params: Params }) {
 
   const name = firstString(dev.data['Developer']) ?? slug
   const logoUrl = dev.logo_url ?? logoFromJson(dev.data)
-  const aiText = firstString(dev.data['SEO Text']) ?? firstString(dev.data['Описание ИИ']) ?? firstString(dev.data['AI Описание'])
+  const aiText = tFieldOrRu(dev.data, 'SEO Text', 'en')
+    ?? tFieldOrRu(dev.data, 'Описание ИИ', 'en')
+    ?? firstString(dev.data['AI Описание'])
 
   const dimensions: { title: string; bullets: string[]; Icon: typeof Building2 }[] = [
-    { title: 'Строительство и недвижимость', bullets: parseBullets(firstString(dev.data['Строительство и недвижимость'])), Icon: Building2 },
-    { title: 'Репутация и опыт', bullets: parseBullets(firstString(dev.data['Репутация и опыт'])), Icon: Award },
-    { title: 'Техника и производство', bullets: parseBullets(firstString(dev.data['Техника и производство'])), Icon: Wrench },
-    { title: 'Управляющая компания', bullets: parseBullets(firstString(dev.data['Управляющая компания'])), Icon: Users },
+    { title: 'Construction & real estate',  bullets: parseBullets(tFieldOrRu(dev.data, 'Строительство и недвижимость', 'en')), Icon: Building2 },
+    { title: 'Reputation & experience',     bullets: parseBullets(tFieldOrRu(dev.data, 'Репутация и опыт',             'en')), Icon: Award },
+    { title: 'Equipment & production',      bullets: parseBullets(tFieldOrRu(dev.data, 'Техника и производство',       'en')), Icon: Wrench },
+    { title: 'Management company',          bullets: parseBullets(tFieldOrRu(dev.data, 'Управляющая компания',         'en')), Icon: Users },
   ].filter(d => d.bullets.length > 0)
 
   const extras: { title: string; bullets: string[]; Icon: typeof Briefcase }[] = [
-    { title: 'Команда', bullets: parseBullets(firstString(dev.data['Команда'])), Icon: Users },
-    { title: 'Бизнес и сервисы', bullets: parseBullets(firstString(dev.data['Бизнес и сервисы'])), Icon: Briefcase },
-    { title: 'Доходность для инвестора', bullets: parseBullets(firstString(dev.data['Доходность'])), Icon: TrendingUp },
+    { title: 'Team',                bullets: parseBullets(tFieldOrRu(dev.data, 'Команда',           'en')), Icon: Users },
+    { title: 'Business & services', bullets: parseBullets(tFieldOrRu(dev.data, 'Бизнес и сервисы',  'en')), Icon: Briefcase },
+    { title: 'Investor yield',      bullets: parseBullets(tFieldOrRu(dev.data, 'Доходность',        'en')), Icon: TrendingUp },
   ].filter(d => d.bullets.length > 0)
 
   const [{ complexes, apartmentCount }, manager] = await Promise.all([
@@ -280,7 +291,7 @@ export default async function Page({ params }: { params: Params }) {
     '@context': 'https://schema.org',
     '@type': 'RealEstateAgent',
     name,
-    url: `${SITE_URL}/ru/zastrojshhiki/${slug}`,
+    url: `${SITE_URL}/en/developers/${slug}`,
     areaServed: { '@type': 'Place', name: 'Bali, Indonesia' },
   }
   if (logoUrl) orgJsonLd.logo = logoUrl
@@ -308,8 +319,8 @@ export default async function Page({ params }: { params: Params }) {
       <Header active="zastrojshhiki" />
       <PageContainer>
         <Breadcrumbs items={[
-          { label: 'Главная', href: '/ru' },
-          { label: 'Застройщики', href: '/ru/zastrojshhiki' },
+          { label: 'Home', href: '/en' },
+          { label: 'Developers', href: '/en/developers' },
           { label: name },
         ]} />
 
@@ -324,7 +335,7 @@ export default async function Page({ params }: { params: Params }) {
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-[13px] text-[var(--color-text-muted)] mb-2">Застройщик на Бали</div>
+              <div className="text-[13px] text-[var(--color-text-muted)] mb-2">Bali property developer</div>
               <h1 className="text-[28px] md:text-[40px] font-semibold tracking-tight text-[#111827] leading-[1.1] mb-4">
                 {name}
               </h1>
@@ -333,12 +344,12 @@ export default async function Page({ params }: { params: Params }) {
                   <div className="flex items-center gap-2">
                     <Building2 size={18} className="text-[var(--color-primary)]" />
                     <span className="text-[15px] font-medium text-[#111827]">{complexes.length}</span>
-                    <span className="text-[13px] text-[var(--color-text-muted)]">проектов</span>
+                    <span className="text-[13px] text-[var(--color-text-muted)]">projects</span>
                   </div>
                 )}
                 {districts.length > 0 && (
                   <div className="text-[14px] text-[var(--color-text-muted)]">
-                    Районы: <span className="text-[var(--color-text)]">{districts.slice(0, 4).join(', ')}{districts.length > 4 ? ` +${districts.length - 4}` : ''}</span>
+                    Districts: <span className="text-[var(--color-text)]">{districts.slice(0, 4).join(', ')}{districts.length > 4 ? ` +${districts.length - 4}` : ''}</span>
                   </div>
                 )}
               </div>
@@ -352,7 +363,7 @@ export default async function Page({ params }: { params: Params }) {
         {dimensions.length > 0 && (
           <section className="mb-10">
             <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-5">
-              Рейтинг по направлениям
+              Score by dimension
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {dimensions.map(({ title, bullets, Icon }) => (
@@ -374,7 +385,7 @@ export default async function Page({ params }: { params: Params }) {
         {aiText && (
           <section className="mb-10">
             <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
-              О застройщике
+              About the developer
             </h2>
             <div className="prose-balinsky max-w-3xl text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
               {aiText}
@@ -386,13 +397,13 @@ export default async function Page({ params }: { params: Params }) {
         {complexes.length > 0 && (
           <section className="mb-10">
             <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-2">
-              Проекты застройщика
+              Projects by this developer
             </h2>
             <div className="text-[14px] text-[var(--color-text-muted)] mb-5">
-              {complexes.length} жилых комплексов{apartmentCount > 0 ? ` · ${apartmentCount} апартаментов в продаже` : ''}
+              {complexes.length} residential complexes{apartmentCount > 0 ? ` · ${apartmentCount} apartments on sale` : ''}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {complexes.map(c => <ComplexCard key={c.id} c={c} />)}
+              {complexes.map(c => <ComplexCard key={c.id} c={c} lang="en" />)}
             </div>
           </section>
         )}
@@ -401,7 +412,7 @@ export default async function Page({ params }: { params: Params }) {
         {extras.length > 0 && (
           <section className="mb-10">
             <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-5">
-              Дополнительно
+              Extras
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {extras.map(({ title, bullets, Icon }) => (
@@ -422,15 +433,15 @@ export default async function Page({ params }: { params: Params }) {
         {/* Internal links */}
         <section className="mb-10">
           <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[#111827] mb-4">
-            По теме
+            Related
           </h2>
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2 max-w-3xl">
             {[
-              { href: '/ru/zastrojshhiki', label: 'Все застройщики Бали' },
-              { href: '/ru/zhilye-kompleksy', label: 'Жилые комплексы Бали' },
-              { href: '/ru/apartamenty', label: 'Апартаменты на Бали' },
-              { href: '/ru/villy', label: 'Виллы и дома' },
-              ...districts.slice(0, 4).map(d => ({ href: '/ru/apartamenty', label: `Апартаменты в ${d}` })),
+              { href: '/en/developers', label: 'All Bali developers' },
+              { href: '/en/complexes', label: 'Residential complexes in Bali' },
+              { href: '/en/apartments', label: 'Apartments in Bali' },
+              { href: '/en/villas', label: 'Villas and houses in Bali' },
+              ...districts.slice(0, 4).map(d => ({ href: '/en/apartments', label: `Apartments in ${d}` })),
             ].map(l => (
               <li key={l.href + l.label}>
                 <Link
@@ -446,17 +457,17 @@ export default async function Page({ params }: { params: Params }) {
 
         {/* Videos */}
         {devVideos.length > 0 && (
-          <VideoGrid videos={devVideos} title={`Видео о ${name}`} />
+          <VideoGrid videos={devVideos} title={`Videos about ${name}`} />
         )}
 
         {/* News from this developer */}
         {devNews.length > 0 && (
           <section className="mb-10">
-            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">Новости {name}</h2>
+            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">News from {name}</h2>
             <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {devNews.map(n => (
                 <li key={n.id}>
-                  <Link href={`/ru/novosti/${n.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)]">
+                  <Link href={`/en/news/${n.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)]">
                     <div className="w-full aspect-[16/9] bg-[var(--color-search-bg)]">
                       {n.photo ? (
                         <img src={n.photo} alt={n.title} className="w-full h-full object-cover" />
@@ -475,11 +486,11 @@ export default async function Page({ params }: { params: Params }) {
         {/* Promotions from this developer */}
         {devPromo.length > 0 && (
           <section className="mb-10">
-            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">Акции {name}</h2>
+            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">Promotions from {name}</h2>
             <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {devPromo.map(p => (
                 <li key={p.id}>
-                  <Link href={`/ru/akcii/${p.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)]">
+                  <Link href={`/en/promo/${p.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)]">
                     <div className="w-full aspect-[16/9] bg-[var(--color-search-bg)]">
                       {p.photo ? (
                         <img src={p.photo} alt={p.title} className="w-full h-full object-cover" />
@@ -498,11 +509,11 @@ export default async function Page({ params }: { params: Params }) {
         {/* Events from this developer */}
         {devEvents.length > 0 && (
           <section className="mb-10">
-            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">Мероприятия {name}</h2>
+            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">Events with {name}</h2>
             <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {devEvents.map(e => (
                 <li key={e.id}>
-                  <Link href={`/ru/meropriyatiya/${e.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)]">
+                  <Link href={`/en/events/${e.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)]">
                     <div className="w-full aspect-[16/9] bg-[var(--color-search-bg)]">
                       {e.photo ? (
                         <img src={e.photo} alt={e.title} className="w-full h-full object-cover" />
@@ -521,7 +532,7 @@ export default async function Page({ params }: { params: Params }) {
         {/* FAQ */}
         <section className="mb-10">
           <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
-            Часто задаваемые вопросы
+            Frequently asked questions
           </h2>
           <div className="max-w-3xl divide-y divide-[var(--color-border)] border-t border-b border-[var(--color-border)]">
             {faqItems.map((item, i) => (
