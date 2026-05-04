@@ -2,22 +2,26 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { Home, Building, Building2, HardHat, KeyRound, Menu, X } from 'lucide-react'
 import { ProModeToggle } from './ProModeToggle'
 import { LangSwitch } from './LangSwitch'
+import { t, type Lang } from '@/lib/i18n'
 
 type NavKey = 'villy' | 'apartamenty' | 'zhilye-kompleksy' | 'zastrojshhiki' | 'arenda'
 
-const NAV = [
-  { key: 'villy' as const, href: '/ru/villy', label: 'Виллы и дома', Icon: Home },
-  { key: 'apartamenty' as const, href: '/ru/apartamenty', label: 'Апартаменты', Icon: Building },
-  { key: 'zhilye-kompleksy' as const, href: '/ru/zhilye-kompleksy', label: 'Жилые комплексы', Icon: Building2 },
-  { key: 'zastrojshhiki' as const, href: '/ru/zastrojshhiki', label: 'Застройщики', Icon: HardHat },
-  { key: 'arenda' as const, href: '/ru/arenda', label: 'Аренда', Icon: KeyRound },
+const NAV: { key: NavKey; ru: { href: string }; en: { href: string }; labelKey: 'nav.villas' | 'nav.apartments' | 'nav.complexes' | 'nav.developers' | 'nav.rental'; Icon: typeof Home }[] = [
+  { key: 'villy',            ru: { href: '/ru/villy' },             en: { href: '/en/villas' },     labelKey: 'nav.villas',     Icon: Home },
+  { key: 'apartamenty',      ru: { href: '/ru/apartamenty' },       en: { href: '/en/apartments' }, labelKey: 'nav.apartments', Icon: Building },
+  { key: 'zhilye-kompleksy', ru: { href: '/ru/zhilye-kompleksy' },  en: { href: '/en/complexes' },  labelKey: 'nav.complexes',  Icon: Building2 },
+  { key: 'zastrojshhiki',    ru: { href: '/ru/zastrojshhiki' },     en: { href: '/en/developers' }, labelKey: 'nav.developers', Icon: HardHat },
+  { key: 'arenda',           ru: { href: '/ru/arenda' },            en: { href: '/en/rental' },     labelKey: 'nav.rental',     Icon: KeyRound },
 ]
 
 export function Header({ active }: { active?: NavKey }) {
   const [open, setOpen] = useState(false)
+  const pathname = usePathname() ?? ''
+  const lang: Lang = pathname.startsWith('/en') ? 'en' : 'ru'
 
   return (
     <header className="sticky top-0 z-20 w-full bg-[var(--color-header-bg)] border-b border-[var(--color-border)]">
@@ -27,8 +31,10 @@ export function Header({ active }: { active?: NavKey }) {
         </Link>
 
         <nav className="hidden md:flex items-center gap-8 h-full">
-          {NAV.map(({ key, href, label, Icon }) => {
+          {NAV.map(({ key, ru, en, labelKey, Icon }) => {
             const isActive = key === active
+            const href = lang === 'en' ? en.href : ru.href
+            const label = t(labelKey, lang)
             return (
               <Link
                 key={key}
@@ -69,8 +75,10 @@ export function Header({ active }: { active?: NavKey }) {
       {open && (
         <div className="md:hidden border-t border-[var(--color-border)] bg-[var(--color-header-bg)]">
           <div className="max-w-[1280px] mx-auto px-6 py-4 flex flex-col gap-1">
-            {NAV.map(({ key, href, label, Icon }) => {
+            {NAV.map(({ key, ru, en, labelKey, Icon }) => {
               const isActive = key === active
+              const href = lang === 'en' ? en.href : ru.href
+              const label = t(labelKey, lang)
               return (
                 <Link
                   key={key}
