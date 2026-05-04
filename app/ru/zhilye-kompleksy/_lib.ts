@@ -523,6 +523,65 @@ export function buildTitle(f: ComplexFilterState): string {
   return buildHeading(f) + ' | Balinsky'
 }
 
+// English-language counterpart of buildHeading. Mirrors the same shape:
+// status adjective + noun + (type) + district + developer + year +
+// permit. Kept as a parallel function rather than parameterising
+// buildHeading so RU pages stay 100% byte-identical to before.
+export function buildHeadingEn(f: ComplexFilterState): string {
+  const adj: string[] = []
+  if (f.status.length === 1) {
+    const s = f.status[0]
+    adj.push(s === 'building' ? 'Under construction' : s === 'built' ? 'Completed' : 'Planned')
+  }
+  const noun = adj.length || hasAnyFilter(f) ? 'residential complexes' : 'Residential complexes'
+  let s = adj.length ? adj.join(' ') + ' ' + noun : noun
+
+  if (f.types.length === 1) s += ` (${f.types[0].toLowerCase()})`
+
+  if (f.district.length === 1) s += ` in ${f.district[0]}`
+  else if (f.district.length > 1) s += ` in ${f.district.join(', ')}`
+  else s += ' in Bali'
+
+  if (f.developer.length === 1) s += ` by ${f.developer[0]}`
+  if (f.year.length === 1) s += `, completion ${f.year[0]}`
+  if (f.permit.length === 1) s += `, permit ${f.permit[0]}`
+
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}
+
+export function buildTitleEn(f: ComplexFilterState): string {
+  return buildHeadingEn(f) + ' | Balinsky'
+}
+
+export function buildDescriptionEn(f: ComplexFilterState, totalCount?: number): string {
+  const where =
+    f.district.length === 1 ? `in ${f.district[0]}`
+    : f.district.length > 1 ? `in ${f.district.join(', ')}`
+    : 'in Bali'
+  const countPart = typeof totalCount === 'number' && totalCount > 0
+    ? `${totalCount} residential complexes` : 'Residential complexes'
+  let s = `${countPart} ${where}`
+  if (f.types.length === 1) s += `, type: ${f.types[0]}`
+  if (f.year.length === 1) s += `, completion ${f.year[0]}`
+  return `${s}. Photos, developer pricing, completion dates, permits and contacts.`
+}
+
+export function buildMetadataEn(
+  f: ComplexFilterState,
+  opts: { canonicalPath: string; noIndex: boolean; totalCount?: number },
+) {
+  const title = buildTitleEn(f)
+  const description = buildDescriptionEn(f, opts.totalCount)
+  return {
+    title,
+    description,
+    alternates: { canonical: opts.canonicalPath },
+    robots: opts.noIndex ? { index: false, follow: true } : { index: true, follow: true },
+    openGraph: { title, description, type: 'website' as const, url: opts.canonicalPath },
+    twitter: { card: 'summary_large_image' as const, title, description },
+  }
+}
+
 // Per-filter unique meta-description so combinatorial pages don't share
 // one generic line (Google folds duplicate-meta pages).
 export function buildDescription(f: ComplexFilterState, totalCount?: number): string {

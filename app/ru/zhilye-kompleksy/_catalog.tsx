@@ -8,7 +8,13 @@ import { ComplexInfiniteScrollClient } from '@/components/ComplexInfiniteScrollC
 import { ComplexFiltersBar } from '@/components/complex-filters/ComplexFiltersBar'
 import { CurrencyToggle } from '@/components/CurrencyContext'
 import { buildListHref, buildMapHref } from '@/lib/complex-filter-href'
-import { loadCatalogPage, buildHeading, type ComplexFilterState } from './_lib'
+import { loadCatalogPage, buildHeading, buildHeadingEn, type ComplexFilterState } from './_lib'
+import type { Lang } from '@/lib/i18n'
+
+const COPY = {
+  ru: { page: 'страница', of: 'из', complexes: (n: number) => `${n} комплексов`, emptySearch: (q: string) => `По запросу «${q}» ничего не найдено`, emptyFilters: 'Ничего не найдено по выбранным фильтрам' },
+  en: { page: 'page',     of: 'of', complexes: (n: number) => `${n} residential complexes`, emptySearch: (q: string) => `Nothing found for "${q}"`, emptyFilters: 'Nothing matches the selected filters' },
+} as const
 
 function toQueryString(f: ComplexFilterState): string {
   const sp = new URLSearchParams()
@@ -26,15 +32,18 @@ export async function ComplexesCatalog({
   filters,
   page = 1,
   basePath,
+  lang = 'ru',
 }: {
   filters: ComplexFilterState
   page?: number
   basePath: string
+  lang?: Lang
 }) {
   const { cards, totalCount, totalPages, hasMore, options, page: actualPage } =
     await loadCatalogPage(filters, page)
   const isSearch = filters.q.trim().length > 0
-  const heading = buildHeading(filters)
+  const heading = lang === 'en' ? buildHeadingEn(filters) : buildHeading(filters)
+  const copy = COPY[lang]
 
   // Use complex tab hrefs (not the apartments ones from CatalogTabs defaults).
   const listTabHref = buildListHref(filters)
@@ -49,14 +58,14 @@ export async function ComplexesCatalog({
           {heading}
           {actualPage > 1 && (
             <span className="text-[var(--color-text-muted)] font-normal text-[20px] md:text-[24px]">
-              {' '}— страница {actualPage}
+              {' '}— {copy.page} {actualPage}
             </span>
           )}
         </h1>
         <div className="text-[14px] text-[var(--color-text-muted)] mb-6 flex items-center justify-between gap-3 flex-wrap">
           <span>
-            {totalCount} комплексов
-            {totalPages > 1 && ` · страница ${actualPage} из ${totalPages}`}
+            {copy.complexes(totalCount)}
+            {totalPages > 1 && ` · ${copy.page} ${actualPage} ${copy.of} ${totalPages}`}
           </span>
           <CurrencyToggle />
         </div>
@@ -73,14 +82,12 @@ export async function ComplexesCatalog({
 
         {cards.length === 0 ? (
           <div className="py-16 text-center text-[var(--color-text-muted)]">
-            {isSearch
-              ? `По запросу «${filters.q}» ничего не найдено`
-              : 'Ничего не найдено по выбранным фильтрам'}
+            {isSearch ? copy.emptySearch(filters.q) : copy.emptyFilters}
           </div>
         ) : (
           <>
             <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-              {cards.map(c => <ComplexCard key={c.id} c={c} />)}
+              {cards.map(c => <ComplexCard key={c.id} c={c} lang={lang} />)}
             </div>
 
             <ComplexInfiniteScrollClient
