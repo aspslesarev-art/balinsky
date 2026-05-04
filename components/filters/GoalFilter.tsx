@@ -1,40 +1,57 @@
 'use client'
 
+import { FilterDropdown } from '../FilterDropdown'
 import { useFilterUrl, type FilterView } from './useFilterUrl'
 import type { FilterState } from './FiltersBar'
 
-// Goal filter — three exclusive chips: Все / Инвестиции / Для жизни.
-// Filtering rules live in the corresponding _lib.ts (passes()), this is
-// just the UI + URL sync.
+const OPTS: { v: 'invest' | 'live'; label: string }[] = [
+  { v: 'invest', label: 'Под инвестиции' },
+  { v: 'live',   label: 'Для жизни' },
+]
+
+// Single-select dropdown for purpose-of-purchase, sitting in the same
+// FilterDropdown shell as the other catalog filters. `null` means
+// "no preference" — chosen by clicking the active row a second time
+// or via the "Сбросить" link.
 export function GoalFilter({ current, view = 'list' }: {
   current: FilterState
   view?: FilterView
 }) {
   const { apply } = useFilterUrl(current, view)
-  const opts: { v: 'invest' | 'live' | null; label: string }[] = [
-    { v: null, label: 'Все' },
-    { v: 'invest', label: 'Инвестиции' },
-    { v: 'live', label: 'Для жизни' },
-  ]
+  const active = OPTS.find(o => o.v === current.goal) ?? null
+  const summary = active?.label ?? ''
+
   return (
-    <div className="inline-flex rounded-full border border-[var(--color-border)] p-0.5 bg-white">
-      {opts.map(o => {
-        const isActive = current.goal === o.v
-        return (
+    <FilterDropdown label="Цель покупки" summary={summary} active={active != null}>
+      {(close) => (
+        <div className="flex flex-col gap-1 min-w-[220px]">
+          {OPTS.map(o => {
+            const selected = current.goal === o.v
+            return (
+              <label
+                key={o.v}
+                className="flex items-center gap-2.5 py-2 px-2 rounded-md cursor-pointer hover:bg-[var(--color-bg)]"
+              >
+                <input
+                  type="radio"
+                  name="goal"
+                  checked={selected}
+                  onChange={() => { apply({ goal: o.v }); close() }}
+                  className="w-4 h-4 accent-[var(--color-primary)]"
+                />
+                <span className="text-[14px] text-[var(--color-text)]">{o.label}</span>
+              </label>
+            )
+          })}
           <button
-            key={String(o.v)}
             type="button"
-            onClick={() => apply({ goal: o.v })}
-            className={`text-[12px] font-medium px-3 py-1.5 rounded-full transition-colors whitespace-nowrap ${
-              isActive
-                ? 'bg-[var(--color-primary)] text-white'
-                : 'text-[var(--color-text-muted)] hover:text-[#111827]'
-            }`}
+            onClick={() => { apply({ goal: null }); close() }}
+            className="mt-2 self-start text-[13px] text-[var(--color-text-muted)] hover:text-[var(--color-text)] px-2 py-1"
           >
-            {o.label}
+            Сбросить
           </button>
-        )
-      })}
-    </div>
+        </div>
+      )}
+    </FilterDropdown>
   )
 }
