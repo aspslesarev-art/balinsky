@@ -132,7 +132,6 @@ export function Footer() {
             <div>
               Site: <a href="https://balinsky.info" className="hover:text-[var(--color-primary-pressed)] no-underline">balinsky.info</a>
               {' · '}Email: <a href="mailto:i@balinsky.info" className="hover:text-[var(--color-primary-pressed)] no-underline">i@balinsky.info</a>
-              {' · '}WhatsApp: <a href="https://wa.me/628873173613" className="hover:text-[var(--color-primary-pressed)] no-underline">+62 887 3173 613</a>
             </div>
           </div>
         </div>
