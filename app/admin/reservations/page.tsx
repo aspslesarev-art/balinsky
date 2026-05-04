@@ -1,9 +1,10 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Mail, Phone } from 'lucide-react'
+import { Mail, Phone } from 'lucide-react'
 import { requireAdmin } from '@/lib/admin-auth'
 import { listAllReservations, type Reservation, type ReservationStatus } from '@/lib/reservations'
 import { ReservationStatusButtons } from './_status'
+import { AdminAccountMenu } from '../_account-menu'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { robots: { index: false, follow: false }, title: 'Брони · Balinsky Admin' }
@@ -38,9 +39,6 @@ export default async function ReservationsAdmin() {
     <div className="min-h-screen bg-[#F9FAFB] text-[#111827]">
       <div className="max-w-5xl mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-6">
-          <Link href="/admin/chats" className="inline-flex items-center gap-1.5 text-[13px] text-[#4B5563] hover:text-[#111827] no-underline">
-            <ArrowLeft size={14} /> К чатам
-          </Link>
           <h1 className="text-[20px] font-semibold">Брони</h1>
           <span className="text-[12px] text-[#6B7280]">{items.length} {items.length === 1 ? 'заявка' : 'заявок'}</span>
         </div>
@@ -56,6 +54,7 @@ export default async function ReservationsAdmin() {
           </ul>
         )}
       </div>
+      <AdminAccountMenu variant="floating" />
     </div>
   )
 }

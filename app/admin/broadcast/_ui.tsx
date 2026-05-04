@@ -1,15 +1,15 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import { ArrowLeft, Send, Tag, AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react'
-import { useAdminTheme, themeClass, ThemeToggle } from '../_theme'
+import { Send, Tag, AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react'
+import { useAdminTheme, themeClass } from '../_theme'
+import { AdminAccountMenu } from '../_account-menu'
 
 type TagRow = { tag: string; count: number }
 type SendResult = { ok: boolean; sent?: number; failed?: number; total?: number; error?: string }
 
 export function BroadcastUI() {
-  const { theme, toggle: toggleTheme } = useAdminTheme()
+  const { theme } = useAdminTheme()
   const [tags, setTags] = useState<TagRow[]>([])
   const [loadingTags, setLoadingTags] = useState(true)
   const [selectedTag, setSelectedTag] = useState<string>('')
@@ -53,14 +53,7 @@ export function BroadcastUI() {
   return (
     <div className={`min-h-screen bg-[var(--ax-bg)] text-[var(--ax-fg)] ${themeClass(theme)}`}>
       <div className="max-w-2xl mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-6">
-          <Link href="/admin/chats" className="inline-flex items-center gap-1.5 text-[13px] text-[var(--ax-fg-soft)] hover:text-[var(--ax-fg)] no-underline">
-            <ArrowLeft size={14} /> К чатам
-          </Link>
-          <ThemeToggle theme={theme} toggle={toggleTheme} />
-        </div>
-
-        <h1 className="text-[22px] font-semibold mb-1">Рассылка по метке</h1>
+        <h1 className="text-[22px] font-semibold mt-2 mb-1">Рассылка по метке</h1>
         <p className="text-[13px] text-[var(--ax-fg-muted)] mb-6">
           Сообщение придёт всем, кто хотя бы раз нажал кнопку с этой меткой
           (например, регистрировался на мероприятие или открывал контакт застройщика).
@@ -137,6 +130,7 @@ export function BroadcastUI() {
           </div>
         )}
       </div>
+      <AdminAccountMenu variant="floating" />
     </div>
   )
 }

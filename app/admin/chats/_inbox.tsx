@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Send, LogOut, RefreshCcw, MessageCircle, Bot, BotOff, Megaphone, Tag, Image as ImageIcon, Lock } from 'lucide-react'
-import { useAdminTheme, themeClass, ThemeToggle } from '../_theme'
+import { Send, RefreshCcw, MessageCircle, Bot, BotOff, Tag } from 'lucide-react'
+import { useAdminTheme, themeClass } from '../_theme'
+import { AdminAccountMenu } from '../_account-menu'
 
 type ChatRow = {
   chat_id: number
@@ -80,7 +81,7 @@ function relTime(iso: string): string {
 }
 
 export function Inbox() {
-  const { theme, toggle: toggleTheme, ready: themeReady } = useAdminTheme()
+  const { theme, ready: themeReady } = useAdminTheme()
   const [chats, setChats] = useState<ChatRow[]>([])
   const [activeId, setActiveId] = useState<number | null>(null)
   const [messages, setMessages] = useState<MessageRow[]>([])
@@ -158,11 +159,6 @@ export function Inbox() {
     }
   }
 
-  const logout = async () => {
-    await fetch('/api/admin/logout', { method: 'POST' })
-    window.location.href = '/admin'
-  }
-
   const activeChat = chats.find(c => c.chat_id === activeId) ?? null
 
   const toggleBot = async () => {
@@ -184,28 +180,11 @@ export function Inbox() {
       {!themeReady && null}
       {/* Left: chat list */}
       <aside className={`flex flex-col w-full sm:w-[340px] border-r border-[var(--ax-border)] ${activeId != null ? 'hidden sm:flex' : 'flex'}`}>
-        <div className="shrink-0 px-4 py-3 border-b border-[var(--ax-border)] flex items-center justify-between">
-          <div>
-            <div className="text-[14px] font-semibold">Inbox</div>
-            <div className="text-[11px] text-[var(--ax-fg-muted)]">{chats.length} {chats.length === 1 ? 'чат' : 'чатов'}</div>
-          </div>
-          <div className="flex items-center gap-1">
-            <a href="/admin/reservations" className="inline-flex items-center gap-1 text-[12px] text-[var(--ax-fg-soft)] hover:text-[var(--ax-fg)] px-2 py-1 rounded no-underline" title="Брони">
-              <Lock size={13} /> Брони
-            </a>
-            <a href="/admin/broadcast" className="inline-flex items-center gap-1 text-[12px] text-[var(--ax-fg-soft)] hover:text-[var(--ax-fg)] px-2 py-1 rounded no-underline" title="Рассылка по меткам">
-              <Megaphone size={13} /> Рассылка
-            </a>
-            <a href="/admin/ads" className="inline-flex items-center gap-1 text-[12px] text-[var(--ax-fg-soft)] hover:text-[var(--ax-fg)] px-2 py-1 rounded no-underline" title="Реклама">
-              <ImageIcon size={13} /> Реклама
-            </a>
-            <ThemeToggle theme={theme} toggle={toggleTheme} />
-            <button onClick={logout} className="inline-flex items-center gap-1 text-[12px] text-[var(--ax-fg-soft)] hover:text-[var(--ax-fg)] px-2 py-1 rounded">
-              <LogOut size={13} /> Выйти
-            </button>
-          </div>
+        <div className="shrink-0 px-4 py-3 border-b border-[var(--ax-border)]">
+          <div className="text-[14px] font-semibold">Inbox</div>
+          <div className="text-[11px] text-[var(--ax-fg-muted)]">{chats.length} {chats.length === 1 ? 'чат' : 'чатов'}</div>
         </div>
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto min-h-0">
           {chats.length === 0 ? (
             <div className="p-6 text-[13px] text-[var(--ax-fg-faint)] text-center">Чатов пока нет — никто не писал боту.</div>
           ) : chats.map(c => {
@@ -248,6 +227,7 @@ export function Inbox() {
             )
           })}
         </div>
+        <AdminAccountMenu />
       </aside>
 
       {/* Right: conversation */}

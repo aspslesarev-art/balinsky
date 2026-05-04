@@ -1,10 +1,9 @@
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@supabase/supabase-js'
-import { ArrowLeft } from 'lucide-react'
 import { requireAdmin } from '@/lib/admin-auth'
 import { loadAllBanners, type Banner } from '@/lib/banners'
+import { AdminAccountMenu } from '../_account-menu'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { robots: { index: false, follow: false }, title: 'Реклама · Balinsky Admin' }
@@ -51,9 +50,6 @@ export default async function AdsAdmin() {
     <div className="min-h-screen bg-[#F9FAFB] text-[#111827]">
       <div className="max-w-5xl mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-6">
-          <Link href="/admin/chats" className="inline-flex items-center gap-1.5 text-[13px] text-[#4B5563] hover:text-[#111827] no-underline">
-            <ArrowLeft size={14} /> К чатам
-          </Link>
           <h1 className="text-[20px] font-semibold">Рекламные баннеры</h1>
           <span className="text-[12px] text-[#6B7280]">{banners.length} {banners.length === 1 ? 'баннер' : 'баннеров'}</span>
         </div>
@@ -130,6 +126,7 @@ export default async function AdsAdmin() {
           </ul>
         )}
       </div>
+      <AdminAccountMenu variant="floating" />
     </div>
   )
 }
