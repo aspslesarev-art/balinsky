@@ -189,13 +189,6 @@ export function ReserveButton({
             </div>
           </div>
 
-          {/* Slide-in keyframes scoped to this component — no global CSS edit. */}
-          <style jsx>{`
-            @keyframes reserveSlide {
-              from { transform: translateY(40px); opacity: 0; }
-              to   { transform: translateY(0);    opacity: 1; }
-            }
-          `}</style>
         </div>
       )}
     </>

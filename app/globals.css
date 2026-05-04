@@ -190,3 +190,11 @@ html.no-pro [data-investment-block] {
   --ax-error-bg:        #FEF2F2;
   --ax-error-border:    #FECACA;
 }
+
+/* Bottom-sheet entry for the Reserve modal — used by ReserveButton.tsx
+   on every viewport size. Inline <style jsx> doesn't survive Turbopack
+   in this project, so the keyframe lives here. */
+@keyframes reserveSlide {
+  from { transform: translateY(40px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
