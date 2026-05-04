@@ -2,10 +2,11 @@
 
 import Link from 'next/link'
 import type { ReactNode } from 'react'
-import { Send, ArrowRight, FileText, MapPinned, UserRound } from 'lucide-react'
+import { Send, ArrowRight, FileText, MapPinned, UserRound, Lock } from 'lucide-react'
 import { useCurrency } from './CurrencyContext'
 import { formatPrice, type Currency } from '@/lib/currency'
 import { botLink } from '@/lib/bot-link'
+import { ReserveButton } from './ReserveButton'
 
 // Single bordered container that joins the price + the two CTAs +
 // trust-chips on the villa / apartment detail page. Replaces the
@@ -21,17 +22,26 @@ export function PriceCtaCard({
   managerId = null,
   sellerUrl = null,
   presentationButton,
+  // Reservation context — when these are set, render the "Зарезервировать"
+  // button. When `reservedUntil` is set, swap CTAs for an "уже забронирован"
+  // banner so two visitors don't both think they're holding the unit.
+  listingKind = null,
+  listingId = null,
+  listingSlug = null,
+  listingTitle = null,
+  reservedUntil = null,
 }: {
   priceUsd: number
   pricePerSqmUsd?: number | null
   updatedAt?: string | null
   managerId?: string | null
-  // For resale listings — direct seller contact URL. When set the
-  // primary button bypasses @BalinskyBot and opens this URL.
   sellerUrl?: string | null
-  // The "Презентация PDF" trigger; passed in so this component stays
-  // server-friendly and the modal logic lives in VillaPresentationButton.
   presentationButton: ReactNode
+  listingKind?: 'villa' | 'apartment' | null
+  listingId?: string | null
+  listingSlug?: string | null
+  listingTitle?: string | null
+  reservedUntil?: string | null
 }) {
   const { currency, setCurrency } = useCurrency()
   const main = formatPrice(priceUsd, currency)
@@ -90,22 +100,45 @@ export function PriceCtaCard({
       {/* RIGHT — CTAs + trust chips. Order on mobile uses CSS so the
           primary button stays at the top per spec. */}
       <div className="flex flex-col gap-3 md:items-end">
-        <div className="flex flex-col-reverse md:flex-row gap-2 w-full md:w-auto">
-          {/* Secondary — PDF presentation. Passed in by the page so the
-              modal-trigger lifecycle stays in its own component. */}
-          {presentationButton}
-          {/* Primary — buy / contact */}
-          <Link
-            href={buyHref}
-            target="_blank"
-            rel={isResale ? 'noopener noreferrer' : 'noopener'}
-            className="inline-flex items-center justify-center gap-2 h-[54px] px-6 rounded-[10px] bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[15px] md:text-[16px] font-semibold whitespace-nowrap transition-colors no-underline shadow-[0_1px_0_rgba(255,255,255,0.15)_inset,0_6px_16px_-8px_rgba(31,90,52,0.6)]"
-          >
-            <Send size={18} strokeWidth={1.6} />
-            {buyLabel}
-            <ArrowRight size={16} strokeWidth={1.6} className="-mr-0.5" />
-          </Link>
-        </div>
+        {reservedUntil ? (
+          // The unit is already on a 14-day hold. Hide the buy / reserve
+          // CTAs so two visitors don't think they both have it. They can
+          // still reach the operator via the bot if they want to be
+          // notified when the hold lifts.
+          <div className="w-full md:w-auto md:max-w-[420px] rounded-[10px] border border-[#E5E7EB] bg-[#FEF3C7] text-[#92400E] px-4 py-3 flex items-start gap-2">
+            <Lock size={16} strokeWidth={1.6} className="shrink-0 mt-0.5" />
+            <div className="text-[13px] leading-snug">
+              <div className="font-semibold mb-0.5">Объект сейчас забронирован</div>
+              <div>Hold действует до {formatUpdated(reservedUntil)}. Если бронь снимется — напишем менеджеру.</div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col-reverse md:flex-row gap-2 w-full md:w-auto">
+            {/* Reserve flow — only shown when the listing context is
+                provided. Outside the resale path (resale already routes
+                to the seller, doesn't need a hold from us). */}
+            {!isResale && listingKind && listingId && listingSlug && (
+              <ReserveButton
+                listingKind={listingKind}
+                listingId={listingId}
+                listingSlug={listingSlug}
+                listingTitle={listingTitle}
+                listingPriceUsd={priceUsd}
+              />
+            )}
+            {presentationButton}
+            <Link
+              href={buyHref}
+              target="_blank"
+              rel={isResale ? 'noopener noreferrer' : 'noopener'}
+              className="inline-flex items-center justify-center gap-2 h-[54px] px-6 rounded-[10px] bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[15px] md:text-[16px] font-semibold whitespace-nowrap transition-colors no-underline shadow-[0_1px_0_rgba(255,255,255,0.15)_inset,0_6px_16px_-8px_rgba(31,90,52,0.6)]"
+            >
+              <Send size={18} strokeWidth={1.6} />
+              {buyLabel}
+              <ArrowRight size={16} strokeWidth={1.6} className="-mr-0.5" />
+            </Link>
+          </div>
+        )}
 
         {/* Trust chips. Three short labels under the buttons that
             tell the visitor what they actually get on the other side

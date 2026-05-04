@@ -31,6 +31,7 @@ import { InlinePrice } from '@/components/InlinePrice'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { loadAllVideos } from '@/lib/videos'
 import { loadVillaStyles } from '@/lib/villa-styles'
+import { findActiveReservation } from '@/lib/reservations'
 import { VideoGrid } from '@/components/VideoGrid'
 import { VillaPresentationButton } from '@/components/VillaPresentation'
 
@@ -346,11 +347,12 @@ export default async function Page({ params }: { params: Params }) {
   const isResale = /перепрод|resale|вторич|secondary/.test(dealTypeRaw)
   const sellerUrl = isResale ? firstString(d['Контакт продавца']) : null
 
-  const [otherVillas, complexes, developers, stylesMap] = await Promise.all([
+  const [otherVillas, complexes, developers, stylesMap, activeReservation] = await Promise.all([
     loadOtherVillasInDistrict(district, v.airtable_id),
     _loadComplexesIndex(),
     _loadDevelopersIndex(),
     loadVillaStyles(),
+    findActiveReservation('villa', v.airtable_id),
   ])
   const interiorStyle = stylesMap[v.airtable_id]?.style ?? null
   const GMAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? ''
@@ -473,6 +475,11 @@ export default async function Page({ params }: { params: Params }) {
               updatedAt={priceUpdatedAt}
               managerId={manager?.id ?? null}
               sellerUrl={sellerUrl}
+              listingKind="villa"
+              listingId={v.airtable_id}
+              listingSlug={slug}
+              listingTitle={title}
+              reservedUntil={activeReservation?.expires_at ?? null}
               presentationButton={
                 <VillaPresentationButton
                   variant="outline"

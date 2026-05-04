@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Send, LogOut, RefreshCcw, MessageCircle, Bot, BotOff, Megaphone, Tag, Image as ImageIcon } from 'lucide-react'
+import { Send, LogOut, RefreshCcw, MessageCircle, Bot, BotOff, Megaphone, Tag, Image as ImageIcon, Lock } from 'lucide-react'
 import { useAdminTheme, themeClass, ThemeToggle } from '../_theme'
 
 type ChatRow = {
@@ -190,6 +190,9 @@ export function Inbox() {
             <div className="text-[11px] text-[var(--ax-fg-muted)]">{chats.length} {chats.length === 1 ? 'чат' : 'чатов'}</div>
           </div>
           <div className="flex items-center gap-1">
+            <a href="/admin/reservations" className="inline-flex items-center gap-1 text-[12px] text-[var(--ax-fg-soft)] hover:text-[var(--ax-fg)] px-2 py-1 rounded no-underline" title="Брони">
+              <Lock size={13} /> Брони
+            </a>
             <a href="/admin/broadcast" className="inline-flex items-center gap-1 text-[12px] text-[var(--ax-fg-soft)] hover:text-[var(--ax-fg)] px-2 py-1 rounded no-underline" title="Рассылка по меткам">
               <Megaphone size={13} /> Рассылка
             </a>

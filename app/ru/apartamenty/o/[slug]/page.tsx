@@ -22,6 +22,7 @@ import { loadManagerByDeveloperName } from '@/lib/managers'
 import { DetailPriceBlock } from '@/components/DetailPriceBlock'
 import { BuyButton } from '@/components/BuyButton'
 import { PriceCtaCard } from '@/components/PriceCtaCard'
+import { findActiveReservation } from '@/lib/reservations'
 import { InlinePrice } from '@/components/InlinePrice'
 import { VillaPresentationButton } from '@/components/VillaPresentation'
 
@@ -291,9 +292,10 @@ export default async function Page({ params }: { params: Params }) {
   const parentComplex = findParentComplex(title, complexes)
   const parentComplexName = parentComplex ? firstString(parentComplex.data['Project']) : null
 
-  const [otherApts, manager] = await Promise.all([
+  const [otherApts, manager, activeReservation] = await Promise.all([
     loadOtherApartmentsInDistrict(district, a.airtable_id),
     loadManagerByDeveloperName(devName),
+    findActiveReservation('apartment', a.airtable_id),
   ])
   const GMAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? ''
 
@@ -399,6 +401,11 @@ export default async function Page({ params }: { params: Params }) {
               pricePerSqmUsd={priceM2}
               updatedAt={priceUpdatedAt}
               managerId={manager?.id ?? null}
+              listingKind="apartment"
+              listingId={a.airtable_id}
+              listingSlug={slug}
+              listingTitle={title}
+              reservedUntil={activeReservation?.expires_at ?? null}
               presentationButton={
                 <VillaPresentationButton
                   variant="outline"
