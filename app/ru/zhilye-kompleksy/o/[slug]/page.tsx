@@ -329,7 +329,7 @@ export async function generateMetadata({ params }: { params: Params }) {
 const FAQ_FOR_COMPLEX = (name: string, district: string | null, lease: string | null) => [
   {
     q: `Где находится ${name}?`,
-    a: district ? `Жилой комплекс ${name} расположен в районе ${district} на Бали, Индонезия.` : `Жилой комплекс ${name} находится на Бали, Индонезия. Точные координаты — на карте ниже.`,
+    a: district ? `Жилой комплекс ${name} расположен в районе ${district} на Бали, Индонезия.` : `Жилой комплекс ${name} находится на Бали, Индонезия. Точные координаты — на карте выше.`,
   },
   {
     q: `Какой срок лизхолда у ${name}?`,
