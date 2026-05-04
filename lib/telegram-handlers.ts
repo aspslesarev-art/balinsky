@@ -4,6 +4,7 @@
 //
 // Params follow the contract documented in lib/bot-link.ts.
 
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import type { ManagerItem } from '@/lib/managers'
 import type { RentalItem } from '@/lib/rental'
 import { loadAllEvents, type EventItem } from '@/lib/events'
@@ -143,6 +144,52 @@ async function handleEvent(slug: string): Promise<StartResult> {
   return { reply: { text: lines.join('\n'), parseMode: 'HTML' }, tags: ['event:' + ev.slug] }
 }
 
+// Resale-villa seller contact. Listing carries the seller's Telegram URL
+// in raw_villas.data['Контакт продавца изначальный']; the public-facing
+// "buy" button links here to the bot, so we see the lead before the user
+// gets the seller's chat. Tagged with seller:<id> for follow-up broadcasts.
+async function handleSeller(airtableId: string): Promise<StartResult> {
+  const sb = sellerSb()
+  const { data } = await sb
+    .from('raw_villas')
+    .select('data')
+    .eq('airtable_id', airtableId)
+    .maybeSingle()
+  const d = (data?.data ?? {}) as Record<string, unknown>
+  const sellerRaw =
+    (typeof d['Контакт продавца изначальный'] === 'string' && d['Контакт продавца изначальный']) ||
+    (typeof d['Контакт продавца оригинал'] === 'string' && d['Контакт продавца оригинал']) ||
+    null
+  const seller = typeof sellerRaw === 'string' && /^https?:\/\/(t\.me|wa\.me)\//.test(sellerRaw)
+    ? sellerRaw : null
+  const titleRaw =
+    (typeof d['ИИ Имя'] === 'object' && d['ИИ Имя'] !== null && 'value' in (d['ИИ Имя'] as object)
+      ? (d['ИИ Имя'] as { value?: string }).value : null) ||
+    (typeof d['Имя ENG'] === 'object' && d['Имя ENG'] !== null && 'value' in (d['Имя ENG'] as object)
+      ? (d['Имя ENG'] as { value?: string }).value : null) ||
+    (typeof d['Name'] === 'string' ? d['Name'] : null) || 'эта вилла'
+  const lines: string[] = [
+    `<b>${escape(titleRaw)}</b>`,
+    '',
+  ]
+  if (seller) {
+    lines.push('Контакт продавца:')
+    lines.push(`✈️ <a href="${seller}">${escape(seller)}</a>`)
+    lines.push('')
+    lines.push('Если что-то непонятно по объекту — спрашивайте здесь, помогу разобраться.')
+  } else {
+    lines.push('Это вторичка — продавцом занимается отдельный агент.')
+    lines.push('Напишите сюда коротко: какой бюджет и сроки — я свяжу с продавцом и помогу с проверкой документов.')
+  }
+  return { reply: { text: lines.join('\n'), parseMode: 'HTML' }, tags: ['seller:' + tagSlug(airtableId)] }
+}
+
+let _sellerSb: SupabaseClient | null = null
+function sellerSb(): SupabaseClient {
+  if (!_sellerSb) _sellerSb = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY!)
+  return _sellerSb
+}
+
 function handleReview(devName: string): StartResult {
   return {
     reply: {
@@ -168,7 +215,7 @@ function handleError(devName: string): StartResult {
 
 export async function handleStart(payload: string | null): Promise<StartResult> {
   if (!payload) return { reply: defaultGreeting() }
-  const m = payload.match(/^(manager|rental|event|review|error)_(.+)$/)
+  const m = payload.match(/^(manager|rental|event|review|error|seller)_(.+)$/)
   if (!m) return { reply: defaultGreeting() }
   const [, kind, raw] = m
   const decoded = raw
@@ -176,6 +223,7 @@ export async function handleStart(payload: string | null): Promise<StartResult> 
     case 'manager': return await handleManager(decoded)
     case 'rental':  return await handleRental(decoded)
     case 'event':   return await handleEvent(decoded)
+    case 'seller':  return await handleSeller(decoded)
     case 'review':  return handleReview(decoded.replace(/_/g, ' '))
     case 'error':   return handleError(decoded.replace(/_/g, ' '))
     default:        return { reply: defaultGreeting() }

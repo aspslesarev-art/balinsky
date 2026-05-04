@@ -8,6 +8,7 @@
 //   event_<eventSlug>           → register for an event (slug, not recId)
 //   review_<DeveloperName>      → leave a review
 //   error_<DeveloperName>       → report a bug
+//   seller_<airtableId>         → resale: get seller contact via the bot
 //
 // Each /start also tags the chat (event:<slug>, developer:<slug>, etc.) so
 // /admin/broadcast can later message everyone who showed interest in a topic.
@@ -19,6 +20,6 @@ function sanitize(s: string): string {
   return s.replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 60)
 }
 
-export function botLink(kind: 'manager' | 'rental' | 'event', id: string): string {
+export function botLink(kind: 'manager' | 'rental' | 'event' | 'seller', id: string): string {
   return `https://t.me/${BOT_USERNAME}?start=${kind}_${sanitize(id)}`
 }
