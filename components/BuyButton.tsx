@@ -23,7 +23,7 @@ export function BuyButton({
     <Link
       href={href}
       target="_blank"
-      rel="noopener"
+      rel="noopener noreferrer"
       className={`inline-flex items-center gap-2 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[15px] font-semibold px-6 py-3 transition-colors no-underline ${className}`}
     >
       <Send size={16} /> {label}

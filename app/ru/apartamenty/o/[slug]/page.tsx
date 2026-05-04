@@ -21,6 +21,7 @@ import { ManagerCard } from '@/components/ManagerCard'
 import { loadManagerByDeveloperName } from '@/lib/managers'
 import { DetailPriceBlock } from '@/components/DetailPriceBlock'
 import { BuyButton } from '@/components/BuyButton'
+import { TrustStrip } from '@/components/TrustStrip'
 import { InlinePrice } from '@/components/InlinePrice'
 import { VillaPresentationButton } from '@/components/VillaPresentation'
 
@@ -392,12 +393,19 @@ export default async function Page({ params }: { params: Params }) {
             {floor && <span>Этаж: {floor}</span>}
             {district && <span>{district}, Бали</span>}
           </div>
+          <TrustStrip
+            permit={permit}
+            lease={lease}
+            yearLabel={yearRaw && status?.toLowerCase().includes('построен') ? 'Сдан' : (yearRaw ?? null)}
+            hasManager={!!manager}
+            className="mb-4"
+          />
           <div className="flex items-end justify-between gap-4 flex-wrap">
             {priceNum != null && (
               <DetailPriceBlock priceUsd={priceNum} pricePerSqmUsd={priceM2} updatedAt={priceUpdatedAt} />
             )}
             <div className="flex items-center gap-3 flex-wrap">
-              <BuyButton managerId={manager?.id ?? null} />
+              <BuyButton managerId={manager?.id ?? null} label="Получить контакт в Telegram" />
               <VillaPresentationButton
                 villaId={a.airtable_id}
                 slug={slug}

@@ -12,6 +12,7 @@ import { PhotoGalleryHero } from '@/components/PhotoGalleryHero'
 import { ProgressBar } from '@/components/ProgressBar'
 import { ApartmentCard, type ApartmentCardData } from '@/components/ApartmentCard'
 import { ManagerCard } from '@/components/ManagerCard'
+import { TrustStrip } from '@/components/TrustStrip'
 import { InlinePrice } from '@/components/InlinePrice'
 import { loadManagerByDeveloperName } from '@/lib/managers'
 import { VillaCard, type VillaCardData } from '@/components/VillaCard'
@@ -472,6 +473,13 @@ export default async function Page({ params }: { params: Params }) {
             {yearRaw && <> · {status?.toLowerCase().includes('построен') ? 'сдан' : `сдача ${yearRaw}`}</>}
             {totalUnits != null && <> · {totalUnits} юнитов</>}
           </div>
+          <TrustStrip
+            permit={permit}
+            lease={lease}
+            yearLabel={yearRaw && status?.toLowerCase().includes('построен') ? 'Сдан' : (yearRaw ?? null)}
+            hasManager={!!manager}
+            className="mb-4"
+          />
           {minPrice != null && (
             <div className="text-[20px] font-semibold text-[#16A34A]">
               Юниты от <InlinePrice usd={minPrice} />
