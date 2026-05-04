@@ -4,7 +4,7 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { Send, ArrowRight, FileText, MapPinned, UserRound } from 'lucide-react'
 import { useCurrency } from './CurrencyContext'
-import { formatPrice } from '@/lib/currency'
+import { formatPrice, type Currency } from '@/lib/currency'
 import { botLink } from '@/lib/bot-link'
 
 // Single bordered container that joins the price + the two CTAs +
@@ -33,7 +33,7 @@ export function PriceCtaCard({
   // server-friendly and the modal logic lives in VillaPresentationButton.
   presentationButton: ReactNode
 }) {
-  const { currency } = useCurrency()
+  const { currency, setCurrency } = useCurrency()
   const main = formatPrice(priceUsd, currency)
   const perSqm = pricePerSqmUsd != null && Number.isFinite(pricePerSqmUsd) && pricePerSqmUsd > 0
     ? formatPrice(pricePerSqmUsd, currency)
@@ -48,6 +48,30 @@ export function PriceCtaCard({
     <div className="rounded-2xl bg-white border border-[var(--color-border)] px-5 py-5 md:px-6 md:py-[22px] grid grid-cols-1 md:grid-cols-[1fr_auto] gap-5 md:gap-6 md:items-center">
       {/* LEFT — price */}
       <div className="min-w-0">
+        {/* Local IDR/USD/EUR pill — drives the global useCurrency state,
+            so the catalog's currency stays in sync with whatever the
+            visitor picks here. RUB / UAH still reachable via the header
+            toggle; this pill stays compact with the three "Bali money"
+            options that cover 95% of buyers. */}
+        <div className="inline-flex items-center gap-0.5 mb-3 rounded-full bg-[var(--color-search-bg)] p-[3px]">
+          {(['IDR', 'USD', 'EUR'] as Currency[]).map(c => {
+            const active = currency === c
+            return (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setCurrency(c)}
+                className={`rounded-full px-2.5 py-1 text-[12px] font-semibold transition-colors ${
+                  active
+                    ? 'bg-white text-[#1A1F1C] shadow-[0_1px_2px_rgba(20,25,22,0.05)]'
+                    : 'text-[var(--color-text-muted)] hover:text-[#1A1F1C]'
+                }`}
+              >
+                {c}
+              </button>
+            )
+          })}
+        </div>
         <div className="text-[30px] md:text-[32px] font-semibold tracking-[-0.02em] leading-none text-[#1A1F1C] tabular-nums">
           {main}
         </div>
