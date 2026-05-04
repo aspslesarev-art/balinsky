@@ -90,7 +90,7 @@ async function _loadVillaIndex(): Promise<IndexEntry[]> {
       // no-store + 30-min in-memory cache: bypass Next data cache so a
       // freshly-uploaded _villas-index.json is picked up on the next
       // Lambda cold start instead of waiting for the ISR window to expire.
-      const r = await fetch(INDEX_URL, { cache: 'no-store' })
+      const r = await fetch(INDEX_URL, { next: { revalidate: 10 } })
       if (!r.ok) return _indexCache?.data ?? []
       const j = await r.json() as { items: IndexEntry[] }
       const items = j.items ?? []
