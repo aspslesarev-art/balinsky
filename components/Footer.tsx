@@ -126,7 +126,7 @@ export function Footer() {
             Copyright © {new Date().getFullYear()} Balinsky.info. All rights reserved.
           </div>
           <div className="mt-3 text-center text-[12px] leading-[1.7] text-[var(--color-text-muted)]">
-            <div>Individual Entrepreneur Andrei Slesarau (Georgia)</div>
+            <div>Individual Entrepreneur Andrei Slesarau</div>
             <div>Reg. No. 316362404 · Registered 06 Jan 2022</div>
             <div>19 Shartava St., Rustavi, Georgia</div>
             <div>
