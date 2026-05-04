@@ -72,11 +72,27 @@ const LIVE_FRIENDLY_DISTRICTS = new Set([
   'Ubud', 'Sanur', 'Cemagi', 'Tabanan', 'Sidemen',
 ])
 
+// Bali zoning colors that allow short-term-rental / commercial use. Anything
+// else (yellow, green, etc.) is residential-only, so the property can't be
+// run as an investment rental — mark as live-only.
+const INVEST_FRIENDLY_LAND = new Set(['pink', 'red'])
+
+function isLiveOnlyByLand(landDesignation: string | null | undefined): boolean {
+  if (!landDesignation) return false
+  return !INVEST_FRIENDLY_LAND.has(landDesignation.trim().toLowerCase())
+}
+
 // Conservative classifier: most listings stay un-tagged (visible in every
 // mode) — only the unambiguous extremes get a tag, so the catalog never
 // goes empty in either intent. Empty filter results are a worse UX than
 // showing a neutral mix.
-export function classifyVilla(opts: { bedrooms: number | null; district: string | null }): IntentTag {
+export function classifyVilla(opts: {
+  bedrooms: number | null
+  district: string | null
+  landDesignation?: string | null
+}): IntentTag {
+  // Land designation is the strongest signal — overrides any heuristic.
+  if (isLiveOnlyByLand(opts.landDesignation)) return 'live-only'
   const bd = opts.bedrooms ?? 0
   const d = opts.district ?? ''
   // Big family villa anywhere → living-only.
@@ -94,5 +110,10 @@ export function classifyApartment(opts: { bedrooms: number | null; district: str
   const bd = opts.bedrooms ?? 0
   if (bd >= 3 && LIVE_FRIENDLY_DISTRICTS.has(opts.district ?? '')) return 'live-only'
   if (bd === 0 || bd === 1) return undefined // studios / 1BR are popular for both
+  return undefined
+}
+
+export function classifyComplex(opts: { landDesignation?: string | null }): IntentTag {
+  if (isLiveOnlyByLand(opts.landDesignation)) return 'live-only'
   return undefined
 }

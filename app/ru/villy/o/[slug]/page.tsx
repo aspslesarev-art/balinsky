@@ -244,6 +244,7 @@ async function loadOtherVillasInDistrict(district: string | null, exceptId: stri
       bedrooms: numberOrNull(r.data['Комнаты']),
       area: numberOrNull(r.data['Площадь']),
       land: numberOrNull(r.data['Земля']),
+      landDesignation: firstString(r.data['Назначение земли']),
       district: firstString(r.data['Location 2']) ?? firstString(r.data['Location']),
       status: firstString(r.data['Статус']),
       photos: manifest[r.airtable_id] ?? [],

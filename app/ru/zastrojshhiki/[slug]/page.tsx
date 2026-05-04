@@ -169,6 +169,7 @@ async function loadProjectsByDeveloper(devName: string): Promise<{
         villaPriceTo: null,
         aptPriceFrom: null,
         aptPriceTo: null,
+        landDesignation: firstString(r.data['Назначение земли']),
       }
     })
 

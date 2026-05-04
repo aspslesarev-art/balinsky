@@ -13,6 +13,7 @@ export type VillaCardData = {
   bedrooms: number | null
   area: number | null
   land: number | null
+  landDesignation: string | null
   district: string | null
   status: string | null
   photos: string[]
@@ -24,7 +25,11 @@ export function VillaCard({ a }: { a: VillaCardData }) {
   const price = a.priceUsd != null && Number.isFinite(a.priceUsd)
     ? formatPrice(a.priceUsd, currency)
     : null
-  const intentTag = classifyVilla({ bedrooms: a.bedrooms, district: a.district })
+  const intentTag = classifyVilla({
+    bedrooms: a.bedrooms,
+    district: a.district,
+    landDesignation: a.landDesignation,
+  })
   return (
     <Link
       href={`/ru/villy/o/${a.slug}`}

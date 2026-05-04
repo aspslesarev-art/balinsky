@@ -54,6 +54,7 @@ export type VillaCard = {
   bedrooms: number | null
   area: number | null
   land: number | null
+  landDesignation: string | null
   district: string | null
   status: string | null
   photos: string[]
@@ -176,6 +177,7 @@ export type EnrichedRow = {
   priceUsd: number | null
   area: number | null
   land: number | null
+  landDesignation: string | null
   lat: number | null
   lng: number | null
   style: string | null
@@ -199,6 +201,7 @@ export function enrich(r: Row, styles: StylesMap = {}): EnrichedRow {
     priceUsd: numberOrNull(d['price']) ?? numberOrNull(d['Цена']),
     area: numberOrNull(d['Площадь']),
     land: numberOrNull(d['Земля']),
+    landDesignation: firstString(d['Назначение земли']),
     lat: parseGeo(d['Geo']),
     lng: parseGeo(d['Geo 2']),
     style: styles[r.airtable_id]?.style ?? null,
@@ -344,6 +347,7 @@ export function toCard(e: EnrichedRow, manifest: Record<string, string[]>): Vill
     bedrooms: e.bedrooms ? Number(e.bedrooms) : null,
     area: e.area,
     land: e.land,
+    landDesignation: e.landDesignation,
     district: e.district,
     status: e.status,
     photos: manifest[e.id] ?? [],

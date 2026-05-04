@@ -153,6 +153,7 @@ export type EnrichedRow = {
   lat: number | null
   lng: number | null
   photoCount: number
+  landDesignation: string | null
 }
 
 function enrich(r: Row): EnrichedRow {
@@ -176,6 +177,7 @@ function enrich(r: Row): EnrichedRow {
     lat: parseGeo(d['Geo']),
     lng: parseGeo(d['Geo 2']),
     photoCount,
+    landDesignation: firstString(d['Назначение земли']),
   }
 }
 
@@ -351,6 +353,7 @@ export function toCard(
     villaPriceTo: p?.villas?.to ?? null,
     aptPriceFrom: p?.apartments?.from ?? null,
     aptPriceTo: p?.apartments?.to ?? null,
+    landDesignation: e.landDesignation,
   }
 }
 
