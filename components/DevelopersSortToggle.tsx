@@ -1,18 +1,29 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
+import type { Lang } from '@/lib/i18n'
 
 export type DevelopersSortKey = 'balanced' | 'ready' | 'inprogress' | 'experience' | 'international'
 
-const OPTIONS: { key: DevelopersSortKey; label: string; hint: string }[] = [
-  { key: 'balanced',      label: 'Сбалансированный',   hint: 'Сданные + в работе + редакторская оценка' },
-  { key: 'ready',         label: 'Сданные ЖК',         hint: 'Кто реально построил больше всего' },
-  { key: 'inprogress',    label: 'Активные стройки',   hint: 'У кого больше проектов сейчас в работе' },
-  { key: 'experience',    label: 'Опыт и репутация',   hint: 'По данным о репутации, технике, опыте строительства' },
-  { key: 'international', label: '🌍 Международный опыт', hint: 'Девелоперы с историей и проектами за пределами Бали' },
-]
+type Option = { key: DevelopersSortKey; label: string; hint: string }
+const OPTIONS_BY_LANG: Record<Lang, Option[]> = {
+  ru: [
+    { key: 'balanced',      label: 'Сбалансированный',     hint: 'Сданные + в работе + редакторская оценка' },
+    { key: 'ready',         label: 'Сданные ЖК',           hint: 'Кто реально построил больше всего' },
+    { key: 'inprogress',    label: 'Активные стройки',     hint: 'У кого больше проектов сейчас в работе' },
+    { key: 'experience',    label: 'Опыт и репутация',     hint: 'По данным о репутации, технике, опыте строительства' },
+    { key: 'international', label: '🌍 Международный опыт', hint: 'Девелоперы с историей и проектами за пределами Бали' },
+  ],
+  en: [
+    { key: 'balanced',      label: 'Balanced',          hint: 'Completed + active + editorial score' },
+    { key: 'ready',         label: 'Completed projects', hint: 'Who has actually built the most' },
+    { key: 'inprogress',    label: 'Active projects',   hint: 'Who has the most ongoing builds' },
+    { key: 'experience',    label: 'Experience',         hint: 'By depth of editorial data on reputation and team' },
+    { key: 'international', label: '🌍 International',  hint: 'Developers with projects outside Bali' },
+  ],
+}
 
-export function DevelopersSortToggle({ current }: { current: DevelopersSortKey }) {
+export function DevelopersSortToggle({ current, lang = 'ru' }: { current: DevelopersSortKey; lang?: Lang }) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -24,9 +35,10 @@ export function DevelopersSortToggle({ current }: { current: DevelopersSortKey }
     router.replace(qs ? `?${qs}` : '?', { scroll: false })
   }
 
+  const options = OPTIONS_BY_LANG[lang]
   return (
     <div className="mb-5 flex flex-wrap gap-1.5">
-      {OPTIONS.map(o => (
+      {options.map(o => (
         <button
           key={o.key}
           type="button"

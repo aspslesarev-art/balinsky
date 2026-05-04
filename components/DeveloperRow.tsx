@@ -3,6 +3,34 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { ChevronDown } from 'lucide-react'
+import type { Lang } from '@/lib/i18n'
+
+const COPY = {
+  ru: {
+    ready: 'сдано',
+    inprogress: 'в работе',
+    open: 'Открыть',
+    expand: 'Развернуть',
+    collapse: 'Свернуть',
+    unknown: 'не известно',
+    construction: 'Строительство и недвижимость',
+    reputation: 'Репутация и опыт',
+    equipment: 'Техника и производство',
+    management: 'Управляющая компания',
+  },
+  en: {
+    ready: 'completed',
+    inprogress: 'in progress',
+    open: 'Open',
+    expand: 'Expand',
+    collapse: 'Collapse',
+    unknown: 'no data',
+    construction: 'Construction & real estate',
+    reputation: 'Reputation & experience',
+    equipment: 'Equipment & production',
+    management: 'Management company',
+  },
+} as const
 
 export type DeveloperRowData = {
   slug: string | null
@@ -21,14 +49,14 @@ function parseBullets(s: string | null): string[] | null {
   if (!s) return null
   const trimmed = s.trim()
   if (!trimmed) return null
-  if (trimmed.toLowerCase() === 'не известно') return null
+  if (/^(не известно|no data)$/i.test(trimmed)) return null
   return trimmed
     .split('\n')
     .map(line => line.replace(/^[\s•\-–—·]+/, '').trim())
     .filter(Boolean)
 }
 
-function BulletMetric({ title, value }: { title: string; value: string | null }) {
+function BulletMetric({ title, value, unknown }: { title: string; value: string | null; unknown: string }) {
   const bullets = parseBullets(value)
   return (
     <div>
@@ -40,14 +68,16 @@ function BulletMetric({ title, value }: { title: string; value: string | null })
           ))}
         </ul>
       ) : (
-        <div className="text-[14px] italic text-[#9CA3AF]">не известно</div>
+        <div className="text-[14px] italic text-[#9CA3AF]">{unknown}</div>
       )}
     </div>
   )
 }
 
-export function DeveloperRow({ d }: { d: DeveloperRowData }) {
+export function DeveloperRow({ d, lang = 'ru' }: { d: DeveloperRowData; lang?: Lang }) {
   const [open, setOpen] = useState(false)
+  const copy = COPY[lang]
+  const detailHref = lang === 'en' ? `/en/developers/${d.slug}` : `/ru/zastrojshhiki/${d.slug}`
 
   return (
     <div className="w-full bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-2xl hover:shadow-sm transition-shadow">
@@ -79,13 +109,13 @@ export function DeveloperRow({ d }: { d: DeveloperRowData }) {
             {(d.complexesReady != null || d.complexesTotal != null) && (d.complexesTotal ?? 0) > 0 && (
               <div className="mt-1 text-[11px] sm:text-[12px] text-[var(--color-text-muted)]">
                 {d.complexesReady != null && d.complexesReady > 0 && (
-                  <span className="text-[var(--color-primary-pressed)] font-medium">{d.complexesReady} сдано</span>
+                  <span className="text-[var(--color-primary-pressed)] font-medium">{d.complexesReady} {copy.ready}</span>
                 )}
                 {d.complexesReady != null && d.complexesReady > 0 && (d.complexesTotal ?? 0) - (d.complexesReady ?? 0) > 0 && (
                   <span className="mx-1.5">·</span>
                 )}
                 {(d.complexesTotal ?? 0) - (d.complexesReady ?? 0) > 0 && (
-                  <span>{(d.complexesTotal ?? 0) - (d.complexesReady ?? 0)} в работе</span>
+                  <span>{(d.complexesTotal ?? 0) - (d.complexesReady ?? 0)} {copy.inprogress}</span>
                 )}
               </div>
             )}
@@ -96,16 +126,16 @@ export function DeveloperRow({ d }: { d: DeveloperRowData }) {
         <div className="flex items-center gap-2 sm:gap-3 sm:shrink-0">
           {d.slug && (
             <Link
-              href={`/ru/zastrojshhiki/${d.slug}`}
+              href={detailHref}
               className="flex-1 sm:flex-initial h-10 sm:h-11 px-4 sm:px-6 md:px-8 rounded-[10px] bg-[var(--color-primary)] text-white text-[14px] sm:text-[15px] font-medium inline-flex items-center justify-center hover:bg-[var(--color-primary-hover)] transition-colors"
             >
-              Открыть
+              {copy.open}
             </Link>
           )}
 
           <button
             type="button"
-            aria-label={open ? 'Свернуть' : 'Развернуть'}
+            aria-label={open ? copy.collapse : copy.expand}
             aria-expanded={open}
             onClick={() => setOpen(v => !v)}
             className="inline-flex shrink-0 w-10 h-10 items-center justify-center text-[#9CA3AF] hover:text-[var(--color-text)]"
@@ -122,10 +152,10 @@ export function DeveloperRow({ d }: { d: DeveloperRowData }) {
         <div className="px-4 sm:px-6 pb-5">
           <div className="pt-5 border-t border-[var(--color-border)]">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
-              <BulletMetric title="Строительство и недвижимость" value={d.construction} />
-              <BulletMetric title="Репутация и опыт" value={d.reputation} />
-              <BulletMetric title="Техника и производство" value={d.equipment} />
-              <BulletMetric title="Управляющая компания" value={d.management} />
+              <BulletMetric title={copy.construction} value={d.construction} unknown={copy.unknown} />
+              <BulletMetric title={copy.reputation}   value={d.reputation}   unknown={copy.unknown} />
+              <BulletMetric title={copy.equipment}    value={d.equipment}    unknown={copy.unknown} />
+              <BulletMetric title={copy.management}   value={d.management}   unknown={copy.unknown} />
             </div>
           </div>
         </div>
