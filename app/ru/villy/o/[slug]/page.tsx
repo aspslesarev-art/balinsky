@@ -26,6 +26,7 @@ import { ManagerCard } from '@/components/ManagerCard'
 import { loadManagerByDeveloperName, loadManagerByDeveloperSlug } from '@/lib/managers'
 import { DetailPriceBlock } from '@/components/DetailPriceBlock'
 import { BuyButton } from '@/components/BuyButton'
+import { PriceCtaCard } from '@/components/PriceCtaCard'
 import { InlinePrice } from '@/components/InlinePrice'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { loadAllVideos } from '@/lib/videos'
@@ -465,32 +466,36 @@ export default async function Page({ params }: { params: Params }) {
             {land != null && <span>{land} м² земля</span>}
             {district && <span>{district}, Бали</span>}
           </div>
-          <div className="flex items-end justify-between gap-4 flex-wrap">
-            {priceNum != null && (
-              <DetailPriceBlock priceUsd={priceNum} pricePerSqmUsd={priceM2} updatedAt={priceUpdatedAt} />
-            )}
-            <div className="flex items-center gap-3 flex-wrap">
-              <BuyButton managerId={manager?.id ?? null} sellerUrl={sellerUrl} />
-              <VillaPresentationButton
-              villaId={v.airtable_id}
-              slug={slug}
-              title={title}
-              district={district}
-              photos={photos}
+          {priceNum != null && (
+            <PriceCtaCard
               priceUsd={priceNum}
-              pricePerM2={priceM2}
-              bedrooms={bedrooms}
-              area={area}
-              land={land}
-              yearLabel={yearRaw && status?.toLowerCase().includes('построен') ? 'Сдан' : (yearRaw ?? null)}
-              lease={lease}
-              permit={permit}
-              lat={lat}
-              lng={lng}
-              seoText={seoText}
-              />
-            </div>
-          </div>
+              pricePerSqmUsd={priceM2}
+              updatedAt={priceUpdatedAt}
+              managerId={manager?.id ?? null}
+              sellerUrl={sellerUrl}
+              presentationButton={
+                <VillaPresentationButton
+                  variant="outline"
+                  villaId={v.airtable_id}
+                  slug={slug}
+                  title={title}
+                  district={district}
+                  photos={photos}
+                  priceUsd={priceNum}
+                  pricePerM2={priceM2}
+                  bedrooms={bedrooms}
+                  area={area}
+                  land={land}
+                  yearLabel={yearRaw && status?.toLowerCase().includes('построен') ? 'Сдан' : (yearRaw ?? null)}
+                  lease={lease}
+                  permit={permit}
+                  lat={lat}
+                  lng={lng}
+                  seoText={seoText}
+                />
+              }
+            />
+          )}
         </section>
 
         {facts.length > 0 && (

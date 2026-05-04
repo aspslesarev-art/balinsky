@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { X, ChevronLeft, ChevronRight, Play, Star, MapPin, BedDouble, Square, Trees, Calendar, FileCheck2, Lock, ArrowUpRight, Download, Loader2, UserRound } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, Play, Star, MapPin, BedDouble, Square, Trees, Calendar, FileCheck2, Lock, ArrowUpRight, Download, Loader2, UserRound, FileText } from 'lucide-react'
 import type { Snapshot } from '@/components/InvestmentWidget/types'
 import { fmtMoney, fmtMoneyShort, fmtPct, fmtYears, fmtDistance, pluralRu } from '@/components/InvestmentWidget/utils'
 import { useCurrency } from '@/components/CurrencyContext'
@@ -57,18 +57,29 @@ type Slide =
   | { kind: 'nearby' }
   | { kind: 'invest' }
 
-export function VillaPresentationButton(props: VillaPresentationData) {
+export function VillaPresentationButton({
+  variant = 'primary',
+  ...props
+}: VillaPresentationData & { variant?: 'primary' | 'outline' }) {
   const [open, setOpen] = useState(false)
+  // 'outline' matches the new PriceCtaCard CTA row — same 54px height
+  // as the green Buy button, white background with a hairline border so
+  // the two CTAs read as siblings rather than mismatched controls.
+  const styles = variant === 'outline'
+    ? 'h-[54px] px-6 rounded-[10px] bg-white border border-[var(--color-border)] hover:border-[var(--color-text-muted)] text-[#1A1F1C] text-[15px] md:text-[16px] font-semibold transition-colors'
+    : 'rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[14px] font-medium px-4 py-2.5 shadow-sm transition-colors'
   return (
     <>
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-2 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[14px] font-medium px-4 py-2.5 shadow-sm transition-colors"
+        className={`inline-flex items-center justify-center gap-2 whitespace-nowrap ${styles}`}
         aria-label="Открыть презентацию виллы"
       >
-        <Play size={15} fill="currentColor" />
-        Презентация
+        {variant === 'outline'
+          ? <FileText size={18} strokeWidth={1.6} />
+          : <Play size={15} fill="currentColor" />}
+        {variant === 'outline' ? 'Презентация PDF' : 'Презентация'}
       </button>
       {open && <VillaPresentation data={props} onClose={() => setOpen(false)} />}
     </>
