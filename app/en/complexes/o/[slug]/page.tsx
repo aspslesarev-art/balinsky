@@ -1,3 +1,9 @@
+// MIRROR of /ru/zhilye-kompleksy/o/[slug]/page.tsx — keep the layout,
+// data fetching and section order in sync between the two files.
+// Visible labels and meta tags are translated to English; long-form
+// editorial copy comes from Airtable EN columns via tFieldOrRu and
+// silently falls back to RU when an EN value isn't filled in yet.
+
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@supabase/supabase-js'
@@ -7,6 +13,7 @@ import {
   ChevronRight, ExternalLink, Box, Map as MapIcon, Film, FileText, BedDouble,
 } from 'lucide-react'
 import { Header } from '@/components/Header'
+import { tFieldOrRu } from '@/lib/i18n'
 import { PageContainer } from '@/components/PageContainer'
 import { PhotoGalleryHero } from '@/components/PhotoGalleryHero'
 import { ProgressBar } from '@/components/ProgressBar'
@@ -308,25 +315,27 @@ export async function generateMetadata({ params }: { params: Params }) {
   const district = firstString(c.data['Location 2']) ?? firstString(c.data['Location'])
   const types = strList(c.data['Типы юнитов']).join(', ')
   const yearRaw = firstString(c.data['Year of completion ']) ?? firstString(c.data['Year of completion'])
-  const seoText = firstString(c.data['SEO Text']) ?? firstString(c.data['Описание']) ?? firstString(c.data['ИИ Описание 2'])
+  const seoText = tFieldOrRu(c.data, 'SEO Text', 'en')
+    ?? tFieldOrRu(c.data, 'Описание', 'en')
+    ?? firstString(c.data['ИИ Описание 2'])
   const description = seoText
     ? seoText.slice(0, 160).trim() + (seoText.length > 160 ? '…' : '')
-    : `Жилой комплекс ${name}${district ? ` в районе ${district}` : ''} на Бали. ${types ? `Форматы: ${types.toLowerCase()}.` : ''}${yearRaw ? ` Сдача: ${yearRaw}.` : ''} Фото, цены, разрешения.`
+    : `${name} residential complex${district ? ` in ${district}` : ''} in Bali.${types ? ` Unit types: ${types.toLowerCase()}.` : ''}${yearRaw ? ` Completion: ${yearRaw}.` : ''} Photos, prices, permits.`
   return {
-    title: `${name} — жилой комплекс${district ? ` в ${district}` : ''} на Бали | Balinsky`,
+    title: `${name} — residential complex${district ? ` in ${district}` : ''} in Bali | Balinsky`,
     description,
     alternates: {
-      canonical: `/ru/zhilye-kompleksy/o/${slug}`,
+      canonical: `/en/complexes/o/${slug}`,
       languages: {
         ru: `${SITE_URL}/ru/zhilye-kompleksy/o/${slug}`,
         en: `${SITE_URL}/en/complexes/o/${slug}`,
       },
     },
     openGraph: {
-      title: `${name} на Бали`,
+      title: `${name} in Bali`,
       description,
       type: 'website' as const,
-      url: `${SITE_URL}/ru/zhilye-kompleksy/o/${slug}`,
+      url: `${SITE_URL}/en/complexes/o/${slug}`,
       images: c.cover_url ? [{ url: c.cover_url }] : [],
     },
   }
@@ -334,20 +343,20 @@ export async function generateMetadata({ params }: { params: Params }) {
 
 const FAQ_FOR_COMPLEX = (name: string, district: string | null, lease: string | null) => [
   {
-    q: `Где находится ${name}?`,
-    a: district ? `Жилой комплекс ${name} расположен в районе ${district} на Бали, Индонезия.` : `Жилой комплекс ${name} находится на Бали, Индонезия. Точные координаты — на карте выше.`,
+    q: `Where is ${name} located?`,
+    a: district ? `${name} residential complex is in ${district}, Bali, Indonesia.` : `${name} is in Bali, Indonesia. The exact coordinates are on the map above.`,
   },
   {
-    q: `Какой срок лизхолда у ${name}?`,
-    a: lease ? `Базовый срок лизхолда — ${lease} лет. Уточняйте у застройщика возможность продления.` : 'Срок лизхолда уточняйте у застройщика. Для большинства проектов на Бали — 25–80 лет с возможностью продления.',
+    q: `What is the leasehold term at ${name}?`,
+    a: lease ? `The base leasehold is ${lease} years. Check with the developer about extension terms.` : 'Check the leasehold term with the developer. Typical Bali projects run 25–80 years with extension options.',
   },
   {
-    q: `Можно ли купить юнит в ${name} иностранцу?`,
-    a: 'Да. Сделка оформляется по схеме лизхолда (долгосрочной аренды земли) у нотариуса PPAT. Иностранцы покупают так же, как и местные.',
+    q: `Can a foreigner buy a unit at ${name}?`,
+    a: 'Yes. The deal is closed via the leasehold scheme (long-term land lease) at a PPAT notary. Foreigners buy on the same terms as locals.',
   },
   {
-    q: 'Какие документы должны быть у комплекса?',
-    a: 'Главные — PBG (разрешение на строительство) и SLF (сертификат пригодности). Без SLF юнит нельзя легально сдавать в аренду. Документы видны выше в блоке «Ключевые факты».',
+    q: 'What documents should the complex have?',
+    a: 'The main ones are PBG (construction permit) and SLF (suitability certificate). Without SLF a unit cannot be legally rented out. Permits are listed above in the “Key facts” block.',
   },
 ]
 
@@ -378,7 +387,10 @@ export default async function Page({ params }: { params: Params }) {
   const manager = await loadManagerByDeveloperName(developerName)
   const lat = parseGeo(d['Geo'])
   const lng = parseGeo(d['Geo 2'])
-  const seoText = firstString(d['SEO Text']) ?? firstString(d['Описание']) ?? firstString(d['ИИ Описание 2']) ?? firstString(d['ИИ Описание'])
+  const seoText = tFieldOrRu(d, 'SEO Text', 'en')
+    ?? tFieldOrRu(d, 'Описание', 'en')
+    ?? firstString(d['ИИ Описание 2'])
+    ?? firstString(d['ИИ Описание'])
 
   // External resources
   const resources: { label: string; url: string; Icon: typeof Box }[] = []
@@ -390,23 +402,23 @@ export default async function Page({ params }: { params: Params }) {
   const booking = firstString(d['Booking'])
   const airbnb = firstString(d['AirBNB'])
   const gmap = firstString(d['Link from Google maps on location'] ?? d['Google maps'] ?? d['Google map'])
-  if (presentations) resources.push({ label: 'Презентация проекта', url: presentations, Icon: FileText })
-  if (renders) resources.push({ label: 'Рендеры', url: renders, Icon: Box })
-  if (masterplan) resources.push({ label: 'Мастер-план', url: masterplan, Icon: MapIcon })
-  if (tour3d) resources.push({ label: '3D-тур', url: tour3d, Icon: Box })
-  if (video) resources.push({ label: 'Видео обзор', url: video, Icon: Film })
+  if (presentations) resources.push({ label: 'Project presentation', url: presentations, Icon: FileText })
+  if (renders) resources.push({ label: 'Renders', url: renders, Icon: Box })
+  if (masterplan) resources.push({ label: 'Master plan', url: masterplan, Icon: MapIcon })
+  if (tour3d) resources.push({ label: '3D tour', url: tour3d, Icon: Box })
+  if (video) resources.push({ label: 'Video tour', url: video, Icon: Film })
   if (booking) resources.push({ label: 'Booking.com', url: booking, Icon: ExternalLink })
   if (airbnb) resources.push({ label: 'AirBnB', url: airbnb, Icon: ExternalLink })
 
   // Key facts
   const facts: { Icon: typeof Building2; label: string; value: string }[] = [
-    types.length > 0 && { Icon: Home, label: 'Тип юнитов', value: types.join(', ') },
-    yearRaw && { Icon: Calendar, label: 'Срок сдачи', value: status?.toLowerCase().includes('построен') ? 'Сдан' : yearRaw },
-    permit && permit.toLowerCase() !== 'нет' && { Icon: FileCheck2, label: 'Разрешения', value: permit },
-    lease && { Icon: Lock, label: 'Лизхолд', value: `${lease} лет` },
-    totalUnits != null && { Icon: BedDouble, label: 'Юнитов', value: String(totalUnits) },
-    district && { Icon: MapPin, label: 'Район', value: district },
-    fmtAirportDistance(lat, lng) && { Icon: Plane, label: 'До аэропорта', value: fmtAirportDistance(lat, lng)! },
+    types.length > 0 && { Icon: Home, label: 'Unit type', value: types.join(', ') },
+    yearRaw && { Icon: Calendar, label: 'Completion', value: status?.toLowerCase().includes('построен') ? 'Completed' : yearRaw },
+    permit && permit.toLowerCase() !== 'нет' && { Icon: FileCheck2, label: 'Permits', value: permit },
+    lease && { Icon: Lock, label: 'Leasehold', value: `${lease} years` },
+    totalUnits != null && { Icon: BedDouble, label: 'Units', value: String(totalUnits) },
+    district && { Icon: MapPin, label: 'District', value: district },
+    fmtAirportDistance(lat, lng) && { Icon: Plane, label: 'To airport', value: fmtAirportDistance(lat, lng)! },
   ].filter(Boolean) as { Icon: typeof Building2; label: string; value: string }[]
 
   const ready = readiness(d)
@@ -429,7 +441,7 @@ export default async function Page({ params }: { params: Params }) {
     '@context': 'https://schema.org',
     '@type': 'ApartmentComplex',
     name,
-    url: `${SITE_URL}/ru/zhilye-kompleksy/o/${slug}`,
+    url: `${SITE_URL}/en/complexes/o/${slug}`,
     address: {
       '@type': 'PostalAddress',
       addressCountry: 'ID',
@@ -451,9 +463,9 @@ export default async function Page({ params }: { params: Params }) {
       <Header active="zhilye-kompleksy" />
       <PageContainer>
         <Breadcrumbs items={[
-          { label: 'Главная', href: '/ru' },
-          { label: 'Жилые комплексы', href: '/ru/zhilye-kompleksy' },
-          ...(district ? [{ label: district, href: `/ru/zhilye-kompleksy/${district.toLowerCase().replace(/\s+/g, '-')}` }] : []),
+          { label: 'Home', href: '/en' },
+          { label: 'Residential complexes', href: '/en/complexes' },
+          ...(district ? [{ label: district, href: `/en/complexes/${district.toLowerCase().replace(/\s+/g, '-')}` }] : []),
           { label: name },
         ]} />
 
@@ -465,7 +477,7 @@ export default async function Page({ params }: { params: Params }) {
         {/* HERO */}
         <section className="mb-10">
           <div className="text-[13px] text-[var(--color-text-muted)] mb-2">
-            <Link href="/ru/zhilye-kompleksy" className="hover:text-[var(--color-text)]">Жилые комплексы</Link>
+            <Link href="/en/complexes" className="hover:text-[var(--color-text)]">Residential complexes</Link>
             {district && <> · <span>{district}</span></>}
           </div>
           <h1 className="text-[28px] md:text-[44px] font-semibold tracking-tight text-[#111827] leading-[1.05] mb-3">
@@ -473,13 +485,13 @@ export default async function Page({ params }: { params: Params }) {
           </h1>
           <div className="text-[16px] text-[var(--color-text-muted)] leading-relaxed max-w-3xl mb-4">
             {types.length > 0 && <>{types.join(', ')}</>}
-            {district && <> · {district}, Бали</>}
-            {yearRaw && <> · {status?.toLowerCase().includes('построен') ? 'сдан' : `сдача ${yearRaw}`}</>}
-            {totalUnits != null && <> · {totalUnits} юнитов</>}
+            {district && <> · {district}, Bali</>}
+            {yearRaw && <> · {status?.toLowerCase().includes('построен') ? 'completed' : `completion ${yearRaw}`}</>}
+            {totalUnits != null && <> · {totalUnits} units</>}
           </div>
           {minPrice != null && (
             <div className="text-[20px] font-semibold text-[#16A34A]">
-              Юниты от <InlinePrice usd={minPrice} />
+              Units from <InlinePrice usd={minPrice} />
             </div>
           )}
         </section>
@@ -488,7 +500,7 @@ export default async function Page({ params }: { params: Params }) {
         {facts.length > 0 && (
           <section className="mb-10">
             <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
-              Ключевые факты
+              Key facts
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {facts.map(({ Icon, label, value }) => (
@@ -506,10 +518,10 @@ export default async function Page({ params }: { params: Params }) {
 
         {/* READINESS */}
         <section className="mb-10 max-w-3xl">
-          <h2 className="text-[18px] font-semibold text-[#111827] mb-3">Готовность строительства</h2>
+          <h2 className="text-[18px] font-semibold text-[#111827] mb-3">Construction progress</h2>
           <ProgressBar value={ready} />
           <div className="mt-2 text-[13px] text-[var(--color-text-muted)]">
-            {status ?? 'статус неизвестен'} · оценка ~{ready}%
+            {status ?? 'status unknown'} · estimated ~{ready}%
           </div>
         </section>
 
@@ -517,7 +529,7 @@ export default async function Page({ params }: { params: Params }) {
         {seoText && (
           <section className="mb-10">
             <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
-              О комплексе {name}
+              About {name}
             </h2>
             <div className="prose-balinsky max-w-3xl text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
               {seoText}
@@ -529,16 +541,16 @@ export default async function Page({ params }: { params: Params }) {
         {units.length > 0 && (
           <section className="mb-10">
             <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-2">
-              Доступные юниты
+              Available units
             </h2>
             <div className="text-[14px] text-[var(--color-text-muted)] mb-5">
-              {units.length} опубликованных {(() => {
+              {units.length} published {(() => {
                 const hasA = units.some(u => u.kind === 'apartment')
                 const hasV = units.some(u => u.kind === 'villa')
-                if (hasA && hasV) return 'юнитов'
-                if (hasV) return 'вилл'
-                return 'апартаментов'
-              })()} в {name}
+                if (hasA && hasV) return 'units'
+                if (hasV) return 'villas'
+                return 'apartments'
+              })()} in {name}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {units.slice(0, 12).map(u =>
@@ -554,16 +566,16 @@ export default async function Page({ params }: { params: Params }) {
         {developerName && (
           <section className="mb-10">
             <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
-              Застройщик
+              Developer
             </h2>
             <div className="bg-white rounded-2xl border border-[var(--color-border)] p-6 max-w-3xl">
-              <div className="text-[13px] text-[var(--color-text-muted)] mb-1">Проект реализует</div>
+              <div className="text-[13px] text-[var(--color-text-muted)] mb-1">Built by</div>
               <div className="text-[20px] font-semibold text-[#111827] mb-3">{developerName}</div>
               <Link
-                href="/ru/zastrojshhiki"
+                href="/en/developers"
                 className="inline-flex items-center gap-1 text-[14px] text-[var(--color-primary-pressed)] hover:text-[var(--color-primary)]"
               >
-                Все застройщики Бали <ChevronRight size={14} />
+                All Bali developers <ChevronRight size={14} />
               </Link>
             </div>
           </section>
@@ -575,7 +587,7 @@ export default async function Page({ params }: { params: Params }) {
         {resources.length > 0 && (
           <section className="mb-10">
             <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
-              Документы и материалы
+              Documents and materials
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-3xl">
               {resources.map(r => (
@@ -601,10 +613,10 @@ export default async function Page({ params }: { params: Params }) {
         {lat != null && lng != null && (
           <section className="mb-10">
             <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
-              Расположение
+              Location
             </h2>
             <div className="text-[14px] text-[var(--color-text)] mb-3">
-              {district ? `${district}, ` : ''}Бали, Индонезия
+              {district ? `${district}, ` : ''}Bali, Indonesia
             </div>
             <a
               href={gmap ?? `https://www.google.com/maps?q=${lat},${lng}`}
@@ -613,27 +625,27 @@ export default async function Page({ params }: { params: Params }) {
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border border-[var(--color-border)] text-[14px] font-medium text-[var(--color-text)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)]"
             >
               <MapIcon size={16} className="text-[var(--color-primary)]" />
-              Открыть на Google Maps
+              Open in Google Maps
             </a>
           </section>
         )}
 
         {/* VIDEOS */}
         {complexVideos.length > 0 && (
-          <VideoGrid videos={complexVideos} title={`Видео о ${name}`} />
+          <VideoGrid videos={complexVideos} title={`Videos about ${name}`} />
         )}
 
         {/* OTHER COMPLEXES */}
         {otherComplexes.length > 0 && (
           <section className="mb-10">
             <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
-              Другие проекты в районе {district}
+              Other projects in {district}
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {otherComplexes.map(o => (
                 <Link
                   key={o.slug}
-                  href={`/ru/zhilye-kompleksy/o/${o.slug}`}
+                  href={`/en/complexes/o/${o.slug}`}
                   className="group block bg-white rounded-2xl border border-[var(--color-border)] overflow-hidden hover:border-[var(--color-primary)] transition-colors"
                 >
                   <div className="relative h-[160px] bg-[var(--color-search-bg)]">
@@ -658,17 +670,17 @@ export default async function Page({ params }: { params: Params }) {
         {/* INTERNAL LINKS */}
         <section className="mb-10">
           <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[#111827] mb-4">
-            По теме
+            Related
           </h2>
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2 max-w-3xl">
             {[
-              { href: '/ru/zhilye-kompleksy', label: 'Все жилые комплексы Бали' },
-              { href: '/ru/apartamenty', label: 'Апартаменты на Бали' },
-              { href: '/ru/villy', label: 'Виллы и дома' },
-              { href: '/ru/zastrojshhiki', label: 'Застройщики Бали' },
+              { href: '/en/complexes', label: 'All Bali residential complexes' },
+              { href: '/en/apartments', label: 'Apartments in Bali' },
+              { href: '/en/villas', label: 'Villas and houses in Bali' },
+              { href: '/en/developers', label: 'Bali developers' },
               ...(district ? [
-                { href: `/ru/zhilye-kompleksy/${district.toLowerCase().replace(/\s+/g, '-')}`, label: `Жилые комплексы в ${district}` },
-                { href: `/ru/apartamenty/${district.toLowerCase().replace(/\s+/g, '-')}`, label: `Апартаменты в ${district}` },
+                { href: `/en/complexes/${district.toLowerCase().replace(/\s+/g, '-')}`, label: `Residential complexes in ${district}` },
+                { href: `/en/apartments/${district.toLowerCase().replace(/\s+/g, '-')}`, label: `Apartments in ${district}` },
               ] : []),
             ].map(l => (
               <li key={l.href + l.label}>
@@ -686,7 +698,7 @@ export default async function Page({ params }: { params: Params }) {
         {/* FAQ */}
         <section className="mb-10">
           <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
-            Часто задаваемые вопросы
+            Frequently asked questions
           </h2>
           <div className="max-w-3xl divide-y divide-[var(--color-border)] border-t border-b border-[var(--color-border)]">
             {faqItems.map((it, i) => (
