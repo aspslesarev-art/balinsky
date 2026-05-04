@@ -36,6 +36,11 @@ export type VillaFilterState = {
   // only zones where short-term tourist rental is legal.
   // 'live'   = land color is Yellow (residential) plus a minimum livable area.
   goal: 'invest' | 'live' | null
+  // 'primary' = sold by the developer (default).
+  // 'resale' / 'secondary' = sold by an owner / agent.
+  // Stored as string[] so VillaMultiSelect's StringArrayKey constraint
+  // accepts it; values are validated in passes().
+  dealType: string[]
 }
 
 export type VillaFilterOptions = {
@@ -46,6 +51,7 @@ export type VillaFilterOptions = {
   year: Option[]
   developer: Option[]
   style: Option[]
+  dealType: Option[]
 }
 
 export type Row = { airtable_id: string; data: Record<string, unknown> }
@@ -64,6 +70,7 @@ export type VillaCard = {
   lat: number | null
   lng: number | null
   investmentScore: number | null
+  dealType: 'resale' | 'secondary' | null
 }
 
 export type SortOrder = 'price-desc' | 'investment-desc'
@@ -91,6 +98,7 @@ export const EMPTY_FILTERS: VillaFilterState = {
   developer: [],
   style: [],
   goal: null,
+  dealType: [],
 }
 
 // === helpers ===
@@ -150,6 +158,7 @@ export function parseQueryFilters(sp: Record<string, string | undefined>): Villa
     developer: asArray(sp.developer),
     style: asArray(sp.style),
     goal: sp.goal === 'invest' || sp.goal === 'live' ? sp.goal : null,
+    dealType: asArray(sp.deal).filter(v => v === 'primary' || v === 'resale' || v === 'secondary'),
   }
 }
 
@@ -165,8 +174,21 @@ export function hasAnyFilter(f: VillaFilterState): boolean {
     f.year.length > 0 ||
     f.developer.length > 0 ||
     f.style.length > 0 ||
-    f.goal != null
+    f.goal != null ||
+    f.dealType.length > 0
   )
+}
+
+// Maps the free-form "Тип сделки" Airtable string to our normalised
+// enum. "Перепродажа" / "Resale" / "Перепродать" → resale.
+// "Вторичка" / "Secondary" → secondary. Anything else (or empty) → primary.
+type DealType = 'primary' | 'resale' | 'secondary'
+function dealFromString(s: string | null): DealType {
+  if (!s) return 'primary'
+  const lower = s.toLowerCase()
+  if (/перепрод|resale/.test(lower)) return 'resale'
+  if (/вторич|secondary/.test(lower)) return 'secondary'
+  return 'primary'
 }
 
 // Parse "Land color" string into a normalised bucket. Yellow zones are
@@ -204,6 +226,7 @@ export type EnrichedRow = {
   lng: number | null
   style: string | null
   landBucket: LandBucket
+  dealType: DealType
 }
 
 export type StylesMap = Record<string, { style: string | null }>
@@ -228,6 +251,7 @@ export function enrich(r: Row, styles: StylesMap = {}): EnrichedRow {
     lng: parseGeo(d['Geo 2']),
     style: styles[r.airtable_id]?.style ?? null,
     landBucket: landBucket(firstString(d['Land color'])),
+    dealType: dealFromString(firstString(d['Тип сделки'])),
   }
 }
 
@@ -255,6 +279,7 @@ export function passes(e: EnrichedRow, f: VillaFilterState): boolean {
     if (e.landBucket === 'tourism') return false
     if (e.area != null && e.area < LIVE_MIN_AREA_SQM) return false
   }
+  if (f.dealType.length > 0 && !f.dealType.includes(e.dealType)) return false
   return true
 }
 
@@ -358,7 +383,15 @@ export function buildOptions(allRows: EnrichedRow[], current: VillaFilterState):
     if (c > 0) status.push({ value: key, label: name, count: c })
   }
 
-  return { district, bedrooms, status, permit, year, developer, style }
+  // Deal type — counts derived directly so the chip shows
+  // "Перепродажа · 12" etc.
+  const dealCounts = countsExcludingDim('dealType', e => e.dealType)
+  const DEAL_LABELS: Record<string, string> = { primary: 'От застройщика', resale: 'Перепродажа', secondary: 'Вторичка' }
+  const dealType: Option[] = (['primary', 'resale', 'secondary'] as const)
+    .map(v => ({ value: v, label: DEAL_LABELS[v], count: dealCounts.get(v) ?? 0 }))
+    .filter(o => o.count > 0)
+
+  return { district, bedrooms, status, permit, year, developer, style, dealType }
 }
 
 // === card mapping ===
@@ -387,6 +420,7 @@ export function toCard(e: EnrichedRow, manifest: Record<string, string[]>): Vill
     lat: e.lat,
     lng: e.lng,
     investmentScore: null,
+    dealType: e.dealType === 'primary' ? null : e.dealType,
   }
 }
 

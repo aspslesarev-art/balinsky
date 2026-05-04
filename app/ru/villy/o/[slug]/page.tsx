@@ -336,6 +336,11 @@ export default async function Page({ params }: { params: Params }) {
   const lng = parseGeo(d['Geo 2'])
   const seoText = firstString(d['SEO Text']) ?? firstString(d['Notes'])
   const developerName = firstString(d['Developer1']) ?? firstString(d['Developer'])
+  // Resale / secondary listings carry a direct seller URL — bypass the
+  // developer's manager for those.
+  const dealTypeRaw = (firstString(d['Тип сделки']) ?? '').toLowerCase()
+  const isResale = /перепрод|resale|вторич|secondary/.test(dealTypeRaw)
+  const sellerUrl = isResale ? firstString(d['Контакт продавца']) : null
 
   const [otherVillas, complexes, developers, stylesMap] = await Promise.all([
     loadOtherVillasInDistrict(district, v.airtable_id),
@@ -462,7 +467,7 @@ export default async function Page({ params }: { params: Params }) {
               <DetailPriceBlock priceUsd={priceNum} pricePerSqmUsd={priceM2} updatedAt={priceUpdatedAt} />
             )}
             <div className="flex items-center gap-3 flex-wrap">
-              <BuyButton managerId={manager?.id ?? null} />
+              <BuyButton managerId={manager?.id ?? null} sellerUrl={sellerUrl} />
               <VillaPresentationButton
               villaId={v.airtable_id}
               slug={slug}

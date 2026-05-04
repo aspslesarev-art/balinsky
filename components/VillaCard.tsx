@@ -16,6 +16,10 @@ export type VillaCardData = {
   status: string | null
   photos: string[]
   investmentScore?: number | null
+  // 'resale' / 'secondary' = sold by an owner / agent rather than the
+  // developer. Drives the "Перепродажа" badge and the contact routing
+  // on the detail page (direct seller contact instead of dev manager).
+  dealType?: 'resale' | 'secondary' | null
 }
 
 export function VillaCard({ a }: { a: VillaCardData }) {
@@ -23,12 +27,22 @@ export function VillaCard({ a }: { a: VillaCardData }) {
   const price = a.priceUsd != null && Number.isFinite(a.priceUsd)
     ? formatPrice(a.priceUsd, currency)
     : null
+  const dealLabel = a.dealType === 'resale' ? 'Перепродажа'
+    : a.dealType === 'secondary' ? 'Вторичка'
+    : null
   return (
     <Link
       href={`/ru/villy/o/${a.slug}`}
       className="group block bg-[var(--color-card-bg)] rounded-2xl border border-[var(--color-border)] overflow-hidden"
     >
-      <PhotoSlider photos={a.photos} alt={a.title} trackingId={`villa:${a.slug}`} />
+      <div className="relative">
+        <PhotoSlider photos={a.photos} alt={a.title} trackingId={`villa:${a.slug}`} />
+        {dealLabel && (
+          <span className="absolute top-3 left-3 z-10 inline-flex items-center text-[11px] font-semibold uppercase tracking-wide bg-white text-[#111827] rounded-full px-2.5 py-1 shadow-[0_1px_3px_rgba(0,0,0,0.12)]">
+            {dealLabel}
+          </span>
+        )}
+      </div>
 
       <div className="p-6">
         <h3

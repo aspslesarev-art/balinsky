@@ -53,6 +53,7 @@ export function parseCleanPath(segments: string[]): VillaFilterState | null {
     developer: [],
     style: [],
     goal: null,
+    dealType: [],
   }
   const seen = new Set<string>()
   for (const raw of segments) {
@@ -86,6 +87,7 @@ export function buildCanonicalPath(f: VillaFilterState): string | null {
   if (f.year.length > 0) return null
   if (f.developer.length > 0) return null
   if (f.goal) return null
+  if (f.dealType.length > 0) return null
   if (f.priceMin != null || f.priceMax != null) return null
   if (f.district.length > 1) return null
   if (f.bedrooms.length > 1) return null
