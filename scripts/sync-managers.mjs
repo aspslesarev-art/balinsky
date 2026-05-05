@@ -173,6 +173,7 @@ for (const r of managers) {
     languagesEn,
     developerSlugs: slugs,
     developerNames,
+    regalia: fs1(f['Регалии']),
   })
 }
 
