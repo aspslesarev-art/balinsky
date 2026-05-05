@@ -5,6 +5,7 @@ import { Heart, X, Trash2, Send } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { ShortlistSeoContent } from './ShortlistSeoContent'
 import { useWishlist } from './WishlistContext'
 import { useCurrency } from './CurrencyContext'
 import { formatPrice } from '@/lib/currency'
@@ -304,6 +305,9 @@ export function ShortlistView({ lang }: { lang: Lang }) {
             )}
           </>
         )}
+
+        <ShortlistSeoContent lang={lang} />
+
         <div className="h-16" />
       </PageContainer>
     </>
