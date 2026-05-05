@@ -547,6 +547,15 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
               area: area ?? null,
               land: land ?? null,
               dealType: isResale ? 'resale' : 'primary',
+              pricePerSqmUsd: priceM2 ?? null,
+              leaseYears: lease ? Number(lease) || null : null,
+              permit: permit && permit.toLowerCase() !== 'нет' ? permit : null,
+              status: status ?? null,
+              claimedYieldPct: (() => {
+                const y = numberOrNull(d['Заявленная доходность'])
+                return y != null ? Math.round(y * 1000) / 10 : null
+              })(),
+              landUse: firstString(d['Назначение земли']) ?? null,
             }}
           />
         </section>

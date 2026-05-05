@@ -449,6 +449,15 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
               bedrooms: bedrooms ?? null,
               area: area ?? null,
               floor: floor ?? null,
+              pricePerSqmUsd: priceM2 ?? null,
+              leaseYears: lease ? Number(lease) || null : null,
+              permit: permit && permit.toLowerCase() !== 'нет' ? permit : null,
+              status: status ?? null,
+              claimedYieldPct: (() => {
+                const y = numberOrNull(d['Заявленная доходность'])
+                return y != null ? Math.round(y * 1000) / 10 : null
+              })(),
+              landUse: firstString(d['Назначение земли']) ?? null,
             }}
           />
         </section>

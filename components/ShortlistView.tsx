@@ -28,10 +28,13 @@ const COPY = {
     villasLink: 'К виллам',
     apartmentsLink: 'К апартаментам',
     complexesLink: 'К жилым комплексам',
-    rowKind: 'Тип', rowPrice: 'Цена', rowBedrooms: 'Спальни', rowArea: 'Площадь',
+    rowKind: 'Тип', rowPrice: 'Цена', rowPriceM2: 'Цена за м²',
+    rowBedrooms: 'Спальни', rowArea: 'Площадь',
     rowLand: 'Земля', rowDistrict: 'Район', rowFloor: 'Этаж',
-    rowCompletion: 'Сдача', rowDealType: 'Тип сделки',
-    sqm: 'м²',
+    rowCompletion: 'Сдача', rowStatus: 'Статус стройки',
+    rowDealType: 'Тип сделки', rowLease: 'Лизхолд', rowPermit: 'Разрешение',
+    rowYield: 'Заявленная доходность', rowLandUse: 'Назначение земли',
+    sqm: 'м²', years: 'лет',
     dealResale: 'Перепродажа', dealSecondary: 'Вторичка', dealPrimary: 'От застройщика',
   },
   en: {
@@ -50,10 +53,13 @@ const COPY = {
     villasLink: 'Browse villas',
     apartmentsLink: 'Browse apartments',
     complexesLink: 'Browse complexes',
-    rowKind: 'Type', rowPrice: 'Price', rowBedrooms: 'Bedrooms', rowArea: 'Area',
+    rowKind: 'Type', rowPrice: 'Price', rowPriceM2: 'Price / m²',
+    rowBedrooms: 'Bedrooms', rowArea: 'Area',
     rowLand: 'Land', rowDistrict: 'District', rowFloor: 'Floor',
-    rowCompletion: 'Completion', rowDealType: 'Deal',
-    sqm: 'm²',
+    rowCompletion: 'Completion', rowStatus: 'Build status',
+    rowDealType: 'Deal', rowLease: 'Leasehold', rowPermit: 'Permit',
+    rowYield: 'Claimed yield', rowLandUse: 'Land use',
+    sqm: 'm²', years: 'yrs',
     dealResale: 'Resale', dealSecondary: 'Secondary', dealPrimary: 'Developer',
   },
 } as const
@@ -91,19 +97,26 @@ export function ShortlistView({ lang }: { lang: Lang }) {
     return c.dealPrimary
   }
 
-  // Comparison rows. Each row reads one field across every saved item
-  // in a section. Rows whose cells are empty for everyone in that
-  // section get hidden — apartments-only group never shows "Land", a
-  // complexes-only group never shows "Bedrooms".
+  // Comparison rows ordered roughly by what an investor weighs first —
+  // price + price/m², then space, then legal (lease, permit, deal type
+  // + claimed yield), then location and physical specs. Empty rows
+  // collapse so the table never shows "Land · — · —" for an
+  // apartments-only group.
   const rows: { key: string; label: string; cell: (it: WishlistItem) => string | null }[] = [
     { key: 'price',      label: c.rowPrice,      cell: it => fmt(it.priceUsd) },
+    { key: 'priceM2',    label: c.rowPriceM2,    cell: it => fmt(it.pricePerSqmUsd) },
+    { key: 'yield',      label: c.rowYield,      cell: it => it.claimedYieldPct != null ? `${it.claimedYieldPct}%` : null },
+    { key: 'lease',      label: c.rowLease,      cell: it => it.leaseYears != null ? `${it.leaseYears} ${c.years}` : null },
+    { key: 'permit',     label: c.rowPermit,     cell: it => it.permit ?? null },
+    { key: 'dealType',   label: c.rowDealType,   cell: it => dealTypeLabel(it.dealType) },
+    { key: 'status',     label: c.rowStatus,     cell: it => it.status ?? null },
+    { key: 'completion', label: c.rowCompletion, cell: it => it.completionYear ?? null },
     { key: 'bedrooms',   label: c.rowBedrooms,   cell: it => it.bedrooms != null ? String(it.bedrooms) : null },
     { key: 'area',       label: c.rowArea,       cell: it => it.area != null ? `${it.area} ${c.sqm}` : null },
     { key: 'land',       label: c.rowLand,       cell: it => it.land != null ? `${it.land} ${c.sqm}` : null },
     { key: 'floor',      label: c.rowFloor,      cell: it => it.floor ?? null },
     { key: 'district',   label: c.rowDistrict,   cell: it => it.district ?? null },
-    { key: 'completion', label: c.rowCompletion, cell: it => it.completionYear ?? null },
-    { key: 'dealType',   label: c.rowDealType,   cell: it => dealTypeLabel(it.dealType) },
+    { key: 'landUse',    label: c.rowLandUse,    cell: it => it.landUse ?? null },
   ]
 
   // Two sections with different render shapes. Villas / apartments

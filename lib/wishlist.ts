@@ -25,6 +25,15 @@ export type WishlistItem = {
   floor?: string | null
   completionYear?: string | null
   dealType?: 'resale' | 'secondary' | 'primary' | null
+  // Investor-focused snapshot fields. Each comes from a single
+  // Airtable column on the detail-page side; rendered as their own row
+  // in the compare table.
+  pricePerSqmUsd?: number | null
+  leaseYears?: number | null
+  permit?: string | null
+  status?: string | null
+  claimedYieldPct?: number | null
+  landUse?: string | null
   savedAt: string
 }
 
