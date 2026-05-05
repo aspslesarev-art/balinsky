@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Heart, X, Trash2, Send } from 'lucide-react'
+import { Heart, X, Trash2, Send, Sparkle } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
@@ -17,7 +17,8 @@ const COPY = {
     home: 'Главная',
     crumb: 'Избранное',
     h1: 'Избранное',
-    intro: 'Виллы и апартаменты сравниваются в одной таблице. Жилые комплексы — отдельным списком карточек.',
+    intro: 'Виллы и апартаменты сравниваются в одной таблице. Жилые комплексы — отдельным списком. ✦ — лучший показатель в строке (минимальная цена, длиннее лизхолд, выше доходность и так далее).',
+    bestLabel: 'Лучший показатель в строке',
     sectionRealEstate: 'Виллы и апартаменты',
     sectionComplexes: 'Жилые комплексы',
     bedrooms: 'BR',
@@ -42,7 +43,8 @@ const COPY = {
     home: 'Home',
     crumb: 'Shortlist',
     h1: 'Shortlist',
-    intro: 'Villas and apartments compare side-by-side in one table. Complexes show as a card list.',
+    intro: 'Villas and apartments compare side-by-side in one table. Complexes show as a card list. ✦ marks the best value in each row (lowest price, longest lease, highest yield and so on).',
+    bestLabel: 'Best in row',
     sectionRealEstate: 'Villas & apartments',
     sectionComplexes: 'Residential complexes',
     bedrooms: 'BR',
@@ -103,22 +105,47 @@ export function ShortlistView({ lang }: { lang: Lang }) {
   // + claimed yield), then location and physical specs. Empty rows
   // collapse so the table never shows "Land · — · —" for an
   // apartments-only group.
-  const rows: { key: string; label: string; cell: (it: WishlistItem) => string | null }[] = [
-    { key: 'price',      label: c.rowPrice,      cell: it => fmt(it.priceUsd) },
-    { key: 'priceM2',    label: c.rowPriceM2,    cell: it => fmt(it.pricePerSqmUsd) },
-    { key: 'yield',      label: c.rowYield,      cell: it => it.claimedYieldPct != null ? `${it.claimedYieldPct}%` : null },
-    { key: 'lease',      label: c.rowLease,      cell: it => it.leaseYears != null ? `${it.leaseYears} ${c.years}` : null },
+  //
+  // `best` rows have an objective winner direction: 'min' for price-ish
+  // (cheapest wins) and 'max' for yield / lease / area. Bedrooms,
+  // completion, district, status, permit and deal type are subjective
+  // or categorical, so we leave them un-highlighted.
+  type Row = {
+    key: string; label: string;
+    cell: (it: WishlistItem) => string | null;
+    best?: 'min' | 'max';
+    num?: (it: WishlistItem) => number | null;
+  }
+  const rows: Row[] = [
+    { key: 'price',      label: c.rowPrice,      cell: it => fmt(it.priceUsd),
+      best: 'min', num: it => it.priceUsd ?? null },
+    { key: 'priceM2',    label: c.rowPriceM2,    cell: it => fmt(it.pricePerSqmUsd),
+      best: 'min', num: it => it.pricePerSqmUsd ?? null },
+    { key: 'yield',      label: c.rowYield,      cell: it => it.claimedYieldPct != null ? `${it.claimedYieldPct}%` : null,
+      best: 'max', num: it => it.claimedYieldPct ?? null },
+    { key: 'lease',      label: c.rowLease,      cell: it => it.leaseYears != null ? `${it.leaseYears} ${c.years}` : null,
+      best: 'max', num: it => it.leaseYears ?? null },
     { key: 'permit',     label: c.rowPermit,     cell: it => it.permit ?? null },
     { key: 'dealType',   label: c.rowDealType,   cell: it => dealTypeLabel(it.dealType) },
     { key: 'status',     label: c.rowStatus,     cell: it => it.status ?? null },
     { key: 'completion', label: c.rowCompletion, cell: it => it.completionYear ?? null },
     { key: 'bedrooms',   label: c.rowBedrooms,   cell: it => it.bedrooms != null ? String(it.bedrooms) : null },
-    { key: 'area',       label: c.rowArea,       cell: it => it.area != null ? `${it.area} ${c.sqm}` : null },
-    { key: 'land',       label: c.rowLand,       cell: it => it.land != null ? `${it.land} ${c.sqm}` : null },
+    { key: 'area',       label: c.rowArea,       cell: it => it.area != null ? `${it.area} ${c.sqm}` : null,
+      best: 'max', num: it => it.area ?? null },
+    { key: 'land',       label: c.rowLand,       cell: it => it.land != null ? `${it.land} ${c.sqm}` : null,
+      best: 'max', num: it => it.land ?? null },
     { key: 'floor',      label: c.rowFloor,      cell: it => it.floor ?? null },
     { key: 'district',   label: c.rowDistrict,   cell: it => it.district ?? null },
     { key: 'landUse',    label: c.rowLandUse,    cell: it => it.landUse ?? null },
   ]
+  // Compute the winning value for a directional row across a section.
+  // null when fewer than 2 items have a value (no contest = no badge).
+  const bestValueFor = (r: Row, section: WishlistItem[]): number | null => {
+    if (!r.best || !r.num) return null
+    const nums = section.map(r.num).filter((v): v is number => v != null && Number.isFinite(v))
+    if (nums.length < 2) return null
+    return r.best === 'min' ? Math.min(...nums) : Math.max(...nums)
+  }
 
   // Two sections with different render shapes. Villas / apartments
   // share enough fields to compare side-by-side; complexes sell phases
@@ -237,21 +264,35 @@ export function ShortlistView({ lang }: { lang: Lang }) {
                       </tr>
                     </thead>
                     <tbody>
-                      {rows.filter(r => realEstate.some(it => r.cell(it))).map(r => (
-                        <tr key={r.key}>
-                          <td className="sticky left-0 bg-[var(--color-bg)] z-10 text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] py-3 align-top">
-                            {r.label}
-                          </td>
-                          {realEstate.map(it => {
-                            const v = r.cell(it)
-                            return (
-                              <td key={`${r.key}-${it.kind}:${it.slug}`} className="text-[14px] text-[var(--color-text)] py-3 align-top">
-                                {v ?? <span className="text-[var(--color-text-muted)]">—</span>}
-                              </td>
-                            )
-                          })}
-                        </tr>
-                      ))}
+                      {rows.filter(r => realEstate.some(it => r.cell(it))).map(r => {
+                        const winning = bestValueFor(r, realEstate)
+                        return (
+                          <tr key={r.key}>
+                            <td className="sticky left-0 bg-[var(--color-bg)] z-10 text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] py-3 align-top">
+                              {r.label}
+                            </td>
+                            {realEstate.map(it => {
+                              const v = r.cell(it)
+                              const num = r.num?.(it)
+                              const isBest = winning != null && num != null && num === winning
+                              return (
+                                <td key={`${r.key}-${it.kind}:${it.slug}`} className="text-[14px] py-3 align-top">
+                                  {v != null ? (
+                                    <span className={`inline-flex items-center gap-1.5 ${isBest ? 'font-semibold text-[var(--color-primary)]' : 'text-[var(--color-text)]'}`}>
+                                      {v}
+                                      {isBest && (
+                                        <Sparkle size={13} fill="currentColor" strokeWidth={0} aria-label={c.bestLabel} />
+                                      )}
+                                    </span>
+                                  ) : (
+                                    <span className="text-[var(--color-text-muted)]">—</span>
+                                  )}
+                                </td>
+                              )
+                            })}
+                          </tr>
+                        )
+                      })}
                     </tbody>
                   </table>
                 </div>
