@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Send, RefreshCcw, MessageCircle, Bot, BotOff, Tag } from 'lucide-react'
+import { Send, RefreshCcw, MessageCircle, Bot, BotOff, Tag, Mic, Square, Paperclip, X } from 'lucide-react'
 import { useAdminTheme, themeClass } from '../_theme'
 import { AdminAccountMenu } from '../_account-menu'
 
@@ -18,7 +18,11 @@ type ChatRow = {
   bot_disabled: boolean
   tags: string[] | null
   avatar_url: string | null
+  chat_type: 'private' | 'group' | 'supergroup' | 'channel'
+  title: string | null
 }
+
+type Tab = 'private' | 'groups'
 
 const HANDOVER_MS = 10 * 60 * 1000
 
@@ -42,12 +46,21 @@ type MessageRow = {
   text: string | null
   start_payload: string | null
   created_at: string
+  media_type: string | null
+  media_url: string | null
+  media_filename: string | null
+  media_mime: string | null
+  media_duration: number | null
+  media_size: number | null
+  sender_id: number | null
+  sender_name: string | null
 }
 
 const CHATS_POLL_MS = 8000
 const MESSAGES_POLL_MS = 4000
 
 function displayName(c: ChatRow): string {
+  if (c.chat_type !== 'private' && c.title) return c.title
   const n = [c.first_name, c.last_name].filter(Boolean).join(' ').trim()
   if (n) return n
   if (c.username) return '@' + c.username
@@ -102,6 +115,7 @@ function relTime(iso: string): string {
 export function Inbox() {
   const { theme, ready: themeReady } = useAdminTheme()
   const [chats, setChats] = useState<ChatRow[]>([])
+  const [tab, setTab] = useState<Tab>('private')
   const [activeId, setActiveId] = useState<number | null>(null)
   const [messages, setMessages] = useState<MessageRow[]>([])
   const [draft, setDraft] = useState('')
@@ -178,6 +192,97 @@ export function Inbox() {
     }
   }
 
+  // Multipart upload for voice + arbitrary attachments. Shares the error
+  // / sending plumbing with text send so the row above doesn't have to
+  // know which kind we're sending.
+  const sendMultipart = async (form: FormData) => {
+    if (activeId == null) return
+    setSending(true); setError(null)
+    try {
+      const r = await fetch(`/api/admin/chats/${activeId}/send`, { method: 'POST', body: form })
+      const j = await r.json().catch(() => null) as { ok?: boolean; detail?: string } | null
+      if (!j?.ok) {
+        setError(j?.detail ? `Не доставлено: ${j.detail}` : 'Telegram не принял сообщение')
+      }
+    } catch {
+      setError('Сеть недоступна')
+    } finally {
+      setSending(false)
+    }
+  }
+
+  // --- Attachment picker ---------------------------------------------------
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const onFilePicked = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0]
+    e.target.value = '' // allow re-picking the same file later
+    if (!f) return
+    const form = new FormData()
+    form.set('kind', 'document')
+    form.set('file', f, f.name)
+    if (draft.trim()) form.set('text', draft.trim())
+    setDraft('')
+    await sendMultipart(form)
+  }
+
+  // --- Voice recorder ------------------------------------------------------
+  const recRef = useRef<MediaRecorder | null>(null)
+  const recChunks = useRef<Blob[]>([])
+  const recStartedAt = useRef<number>(0)
+  const [recording, setRecording] = useState(false)
+  const [recElapsed, setRecElapsed] = useState(0)
+  useEffect(() => {
+    if (!recording) return
+    const t = setInterval(() => setRecElapsed(Math.floor((Date.now() - recStartedAt.current) / 1000)), 250)
+    return () => clearInterval(t)
+  }, [recording])
+
+  const startRecording = async () => {
+    if (recording || activeId == null) return
+    setError(null)
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')
+          ? 'audio/ogg;codecs=opus'
+          : ''
+      const rec = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream)
+      recChunks.current = []
+      rec.ondataavailable = ev => { if (ev.data.size) recChunks.current.push(ev.data) }
+      rec.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop())
+        const blob = new Blob(recChunks.current, { type: rec.mimeType || 'audio/webm' })
+        const seconds = Math.max(1, Math.round((Date.now() - recStartedAt.current) / 1000))
+        const ext = (rec.mimeType || '').includes('ogg') ? 'ogg' : 'webm'
+        const form = new FormData()
+        form.set('kind', 'voice')
+        form.set('duration', String(seconds))
+        form.set('file', blob, `voice.${ext}`)
+        await sendMultipart(form)
+      }
+      rec.start()
+      recRef.current = rec
+      recStartedAt.current = Date.now()
+      setRecElapsed(0)
+      setRecording(true)
+    } catch (err) {
+      setError('Нет доступа к микрофону')
+      console.error(err)
+    }
+  }
+  const stopRecording = (sendIt: boolean) => {
+    const rec = recRef.current
+    setRecording(false)
+    if (!rec) return
+    if (!sendIt) {
+      // Drop the chunks before stopping so onstop doesn't upload them.
+      recChunks.current = []
+    }
+    if (rec.state !== 'inactive') rec.stop()
+    recRef.current = null
+  }
+
   const activeChat = chats.find(c => c.chat_id === activeId) ?? null
 
   const toggleBot = async () => {
@@ -197,16 +302,47 @@ export function Inbox() {
   return (
     <div className={`h-screen flex bg-[var(--ax-bg)] text-[var(--ax-fg)] ${themeClass(theme)}`}>
       {!themeReady && null}
-      {/* Left: chat list */}
+      {/* Left: chat list. Two tabs at the top split DMs from groups —
+          the bot only auto-replies in DMs; groups are read-only logs
+          where the manager can still send messages by typing. */}
       <aside className={`flex flex-col w-full sm:w-[340px] border-r border-[var(--ax-border)] ${activeId != null ? 'hidden sm:flex' : 'flex'}`}>
-        <div className="shrink-0 px-4 py-3 border-b border-[var(--ax-border)]">
-          <div className="text-[14px] font-semibold">Inbox</div>
-          <div className="text-[11px] text-[var(--ax-fg-muted)]">{chats.length} {chats.length === 1 ? 'чат' : 'чатов'}</div>
+        <div className="shrink-0 px-2 pt-2 border-b border-[var(--ax-border)]">
+          <div className="px-2 pt-1 pb-2 flex items-center gap-1">
+            {(() => {
+              const counts = chats.reduce<{ private: number; groups: number }>((acc, c) => {
+                if (c.chat_type === 'private') acc.private++; else acc.groups++
+                return acc
+              }, { private: 0, groups: 0 })
+              const TabBtn = ({ value, label, n }: { value: Tab; label: string; n: number }) => (
+                <button
+                  type="button"
+                  onClick={() => { setTab(value); setActiveId(null) }}
+                  className={`px-3 py-1.5 rounded-full text-[12px] font-medium ${
+                    tab === value
+                      ? 'bg-[var(--ax-panel)] text-[var(--ax-fg)]'
+                      : 'text-[var(--ax-fg-muted)] hover:text-[var(--ax-fg)] hover:bg-[var(--ax-hover)]'
+                  }`}
+                >
+                  {label} <span className="opacity-60">· {n}</span>
+                </button>
+              )
+              return <>
+                <TabBtn value="private" label="Личные" n={counts.private} />
+                <TabBtn value="groups"  label="Группы" n={counts.groups}  />
+              </>
+            })()}
+          </div>
         </div>
         <div className="flex-1 overflow-y-auto min-h-0">
-          {chats.length === 0 ? (
-            <div className="p-6 text-[13px] text-[var(--ax-fg-faint)] text-center">Чатов пока нет — никто не писал боту.</div>
-          ) : chats.map(c => {
+          {(() => {
+            const filtered = chats.filter(c => tab === 'groups' ? c.chat_type !== 'private' : c.chat_type === 'private')
+            if (filtered.length === 0) {
+              const msg = tab === 'groups'
+                ? 'Бот ещё не добавлен в группы. Добавь его в чат, и здесь появятся сообщения.'
+                : 'Чатов пока нет — никто не писал боту.'
+              return <div className="p-6 text-[13px] text-[var(--ax-fg-faint)] text-center">{msg}</div>
+            }
+            return filtered.map(c => {
             const name = displayName(c)
             const isActive = c.chat_id === activeId
             return (
@@ -242,7 +378,8 @@ export function Inbox() {
                 </div>
               </button>
             )
-          })}
+          })
+          })()}
         </div>
         <AdminAccountMenu />
       </aside>
@@ -257,21 +394,26 @@ export function Inbox() {
               <div className="flex-1 min-w-0">
                 <div className="text-[14px] font-medium truncate">{displayName(activeChat)}</div>
                 <div className="text-[11px] text-[var(--ax-fg-muted)] truncate">
+                  {activeChat.chat_type !== 'private' ? `${activeChat.chat_type} · ` : ''}
                   chat_id {activeChat.chat_id}{activeChat.username ? ` · @${activeChat.username}` : ''}
                 </div>
               </div>
-              <button
-                onClick={toggleBot}
-                title={activeChat.bot_disabled ? 'Включить автоответ бота' : 'Поставить бота на паузу'}
-                className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-medium ${
-                  activeChat.bot_disabled
-                    ? 'bg-[var(--ax-paused-bg)] text-[var(--ax-paused-fg)] hover:opacity-90'
-                    : 'bg-[var(--ax-hover)] text-[var(--ax-fg-soft)] hover:bg-[var(--ax-hover)]'
-                }`}
-              >
-                {activeChat.bot_disabled ? <BotOff size={13} /> : <Bot size={13} />}
-                {activeChat.bot_disabled ? 'Бот на паузе' : 'Поставить на паузу'}
-              </button>
+              {/* Bot pause toggle is meaningless in groups (the bot never
+                  auto-replies there), so we hide it for non-private chats. */}
+              {activeChat.chat_type === 'private' && (
+                <button
+                  onClick={toggleBot}
+                  title={activeChat.bot_disabled ? 'Включить автоответ бота' : 'Поставить бота на паузу'}
+                  className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-medium ${
+                    activeChat.bot_disabled
+                      ? 'bg-[var(--ax-paused-bg)] text-[var(--ax-paused-fg)] hover:opacity-90'
+                      : 'bg-[var(--ax-hover)] text-[var(--ax-fg-soft)] hover:bg-[var(--ax-hover)]'
+                  }`}
+                >
+                  {activeChat.bot_disabled ? <BotOff size={13} /> : <Bot size={13} />}
+                  {activeChat.bot_disabled ? 'Бот на паузе' : 'Поставить на паузу'}
+                </button>
+              )}
               <button
                 onClick={() => {
                   if (activeId != null) {
@@ -286,7 +428,7 @@ export function Inbox() {
                 <RefreshCcw size={16} />
               </button>
             </div>
-            {(() => {
+            {activeChat.chat_type === 'private' && (() => {
               const s = botStatus(activeChat)
               if (!s.soft && !s.off) return null
               return (
@@ -295,6 +437,11 @@ export function Inbox() {
                 </div>
               )
             })()}
+            {activeChat.chat_type !== 'private' && (
+              <div className="px-4 py-2 text-[12px] border-b border-[var(--ax-border)] bg-[var(--ax-panel)] text-[var(--ax-fg-soft)]">
+                Бот в группе только пишет лог, ничего не отвечает автоматически. Сообщения отсюда уходят в чат от имени бота.
+              </div>
+            )}
 
             <div ref={messagesScrollRef} className="flex-1 overflow-y-auto bg-[var(--ax-chat-bg)] px-4 py-4 space-y-2">
               {messages.length === 0 ? (
@@ -308,11 +455,14 @@ export function Inbox() {
                   <div key={m.id} className={`flex ${isOutbound ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-[14px] leading-relaxed whitespace-pre-wrap ${bg}`}>
                       <div className="text-[10px] uppercase tracking-wide opacity-60 mb-1">
-                        {m.source === 'user' ? 'Пользователь' : m.source === 'bot' ? 'Бот' : 'Менеджер'}
+                        {/* In groups inbound messages have a real speaker
+                            name; in DMs we just label the role. */}
+                        {m.sender_name
+                          ? m.sender_name
+                          : m.source === 'user' ? 'Пользователь' : m.source === 'bot' ? 'Бот' : 'Менеджер'}
                         {m.start_payload && ` · /start ${m.start_payload}`}
                       </div>
-                      {/* Render plain text — bot replies use <a> tags but we strip-render here for safety. */}
-                      <div dangerouslySetInnerHTML={{ __html: linkify(m.text ?? '') }} />
+                      <MessageBody m={m} />
                       <div className="text-[10px] opacity-50 mt-1 text-right">{new Date(m.created_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</div>
                     </div>
                   </div>
@@ -324,22 +474,79 @@ export function Inbox() {
               onSubmit={e => { e.preventDefault(); send() }}
               className="shrink-0 border-t border-[var(--ax-border)] p-3 flex items-end gap-2 bg-[var(--ax-bg)]"
             >
-              <textarea
-                value={draft}
-                onChange={e => setDraft(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
-                placeholder="Ответить пользователю…"
-                rows={2}
-                disabled={sending}
-                className="flex-1 resize-none bg-[var(--ax-input-bg)] border border-[var(--ax-input-border)] rounded-xl px-3 py-2 text-[14px] text-[var(--ax-fg)] placeholder:text-[var(--ax-fg-faint)] focus:outline-none focus:border-[var(--color-primary)]"
+              <input
+                ref={fileInputRef}
+                type="file"
+                onChange={onFilePicked}
+                className="hidden"
+                disabled={sending || recording}
               />
               <button
-                type="submit"
-                disabled={sending || !draft.trim()}
-                className="shrink-0 inline-flex items-center justify-center w-11 h-11 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white disabled:opacity-50"
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={sending || recording}
+                title="Прикрепить файл"
+                className="shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-full text-[var(--ax-fg-soft)] hover:bg-[var(--ax-hover)] hover:text-[var(--ax-fg)] disabled:opacity-40"
               >
-                <Send size={18} />
+                <Paperclip size={18} />
               </button>
+
+              {recording ? (
+                <div className="flex-1 flex items-center gap-3 px-3 py-2 rounded-xl bg-[var(--ax-input-bg)] border border-[var(--color-primary)]">
+                  <span className="inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                  <span className="text-[13px] tabular-nums text-[var(--ax-fg)]">
+                    {Math.floor(recElapsed / 60)}:{String(recElapsed % 60).padStart(2, '0')}
+                  </span>
+                  <span className="flex-1 text-[12px] text-[var(--ax-fg-muted)]">Запись… нажмите ⏹ чтобы отправить</span>
+                  <button
+                    type="button"
+                    onClick={() => stopRecording(false)}
+                    title="Отменить"
+                    className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-full text-[var(--ax-fg-soft)] hover:bg-[var(--ax-hover)] hover:text-[var(--ax-fg)]"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              ) : (
+                <textarea
+                  value={draft}
+                  onChange={e => setDraft(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
+                  placeholder={activeChat.chat_type === 'private' ? 'Ответить пользователю…' : 'Сообщение в группу…'}
+                  rows={2}
+                  disabled={sending}
+                  className="flex-1 resize-none bg-[var(--ax-input-bg)] border border-[var(--ax-input-border)] rounded-xl px-3 py-2 text-[14px] text-[var(--ax-fg)] placeholder:text-[var(--ax-fg-faint)] focus:outline-none focus:border-[var(--color-primary)]"
+                />
+              )}
+
+              {recording ? (
+                <button
+                  type="button"
+                  onClick={() => stopRecording(true)}
+                  title="Остановить и отправить"
+                  className="shrink-0 inline-flex items-center justify-center w-11 h-11 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white"
+                >
+                  <Square size={18} fill="currentColor" />
+                </button>
+              ) : draft.trim() ? (
+                <button
+                  type="submit"
+                  disabled={sending}
+                  className="shrink-0 inline-flex items-center justify-center w-11 h-11 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white disabled:opacity-50"
+                >
+                  <Send size={18} />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={startRecording}
+                  disabled={sending}
+                  title="Записать голосовое"
+                  className="shrink-0 inline-flex items-center justify-center w-11 h-11 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white disabled:opacity-50"
+                >
+                  <Mic size={18} />
+                </button>
+              )}
             </form>
             {error && <div className="px-4 py-2 text-[12px] text-[var(--ax-error-fg)] bg-[var(--ax-error-bg)] border-t border-[var(--ax-error-border)]">{error}</div>}
           </>
@@ -354,6 +561,81 @@ export function Inbox() {
       </main>
     </div>
   )
+}
+
+// Renders the body of a chat message: media (voice / photo / file)
+// stacked above any caption text. Photos render inline; voice shows a
+// native <audio> player; documents become a clickable filename row.
+function MessageBody({ m }: { m: MessageRow }) {
+  const hasText = !!(m.text && m.text.trim())
+  return (
+    <div className="space-y-1.5">
+      {m.media_type && m.media_url && (
+        <MediaBlock m={m} />
+      )}
+      {hasText && (
+        <div dangerouslySetInnerHTML={{ __html: linkify(m.text ?? '') }} />
+      )}
+      {!m.media_type && !hasText && (
+        <span className="opacity-60 italic text-[13px]">[пусто]</span>
+      )}
+    </div>
+  )
+}
+
+function MediaBlock({ m }: { m: MessageRow }) {
+  const url = m.media_url!
+  switch (m.media_type) {
+    case 'voice':
+    case 'audio':
+      return (
+        <audio
+          controls
+          src={url}
+          preload="metadata"
+          className="w-full max-w-[280px] [color-scheme:auto]"
+        />
+      )
+    case 'photo':
+      return (
+        // eslint-disable-next-line @next/next/no-img-element
+        <a href={url} target="_blank" rel="noopener noreferrer">
+          <img src={url} alt={m.media_filename ?? 'photo'} className="rounded-lg max-h-[260px] w-auto" />
+        </a>
+      )
+    case 'video':
+    case 'video_note':
+      return (
+        <video controls src={url} className="rounded-lg max-h-[260px] w-auto max-w-full" />
+      )
+    case 'sticker':
+      return (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={url} alt="sticker" className="max-h-[140px] w-auto" />
+      )
+    case 'document':
+    default:
+      return (
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-black/10 hover:bg-black/15 text-[13px] no-underline"
+        >
+          <Paperclip size={14} className="opacity-70" />
+          <span className="truncate max-w-[220px]">{m.media_filename ?? 'файл'}</span>
+          {m.media_size != null && (
+            <span className="opacity-60 text-[11px]">{formatBytes(m.media_size)}</span>
+          )}
+        </a>
+      )
+  }
+}
+
+function formatBytes(n: number): string {
+  if (n < 1024) return `${n} B`
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`
+  return `${(n / 1024 / 1024).toFixed(1)} MB`
 }
 
 // Conservative linkify: only HTML-escape + auto-link bare URLs. Bot replies

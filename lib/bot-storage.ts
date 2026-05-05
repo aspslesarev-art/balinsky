@@ -5,12 +5,17 @@ const sb = createClient(
   process.env.SUPABASE_SERVICE_KEY!,
 )
 
+export type ChatType = 'private' | 'group' | 'supergroup' | 'channel'
+
 export type ChatMeta = {
   chat_id: number
   username: string | null
   first_name: string | null
   last_name: string | null
   language_code: string | null
+  // Group/supergroup/channel only — private chats stay null.
+  chat_type?: ChatType
+  title?: string | null
 }
 
 export async function upsertChat(meta: ChatMeta, lastMessageText: string | null): Promise<void> {
@@ -21,6 +26,8 @@ export async function upsertChat(meta: ChatMeta, lastMessageText: string | null)
     first_name: meta.first_name,
     last_name: meta.last_name,
     language_code: meta.language_code,
+    chat_type: meta.chat_type ?? 'private',
+    title: meta.title ?? null,
     last_message_at: now,
     last_message_text: lastMessageText?.slice(0, 200) ?? null,
     last_inbound_at: now,
@@ -40,6 +47,34 @@ export type LogMessageInput = {
   text: string | null
   start_payload?: string | null
   tg_message_id?: number | null
+  media_type?: string | null
+  media_url?: string | null
+  media_filename?: string | null
+  media_mime?: string | null
+  media_duration?: number | null
+  media_size?: number | null
+  // Group chats: who actually said it. Null for private DMs and for
+  // outbound bot/manager messages.
+  sender_id?: number | null
+  sender_name?: string | null
+}
+
+// Plain-text preview used in the chat list for messages whose body is
+// just a media attachment ("🎙️ Голосовое 0:12", "📎 contract.pdf").
+function previewFor(m: LogMessageInput): string | null {
+  if (m.text && m.text.trim()) return m.text
+  switch (m.media_type) {
+    case 'voice': return m.media_duration != null
+      ? `🎙️ Голосовое ${Math.floor(m.media_duration / 60)}:${String(m.media_duration % 60).padStart(2, '0')}`
+      : '🎙️ Голосовое сообщение'
+    case 'audio':       return '🎵 Аудио'
+    case 'photo':       return '🖼️ Фото'
+    case 'video':       return '🎬 Видео'
+    case 'video_note':  return '🎬 Кружок'
+    case 'sticker':     return '🤩 Стикер'
+    case 'document':    return `📎 ${m.media_filename ?? 'файл'}`
+    default:            return null
+  }
 }
 
 export async function logMessage(m: LogMessageInput): Promise<void> {
@@ -50,12 +85,20 @@ export async function logMessage(m: LogMessageInput): Promise<void> {
     text: m.text,
     start_payload: m.start_payload ?? null,
     tg_message_id: m.tg_message_id ?? null,
+    media_type: m.media_type ?? null,
+    media_url: m.media_url ?? null,
+    media_filename: m.media_filename ?? null,
+    media_mime: m.media_mime ?? null,
+    media_duration: m.media_duration ?? null,
+    media_size: m.media_size ?? null,
+    sender_id: m.sender_id ?? null,
+    sender_name: m.sender_name ?? null,
   })
   if (m.direction === 'out') {
     const now = new Date().toISOString()
     const patch: Record<string, unknown> = {
       last_message_at: now,
-      last_message_text: m.text?.slice(0, 200) ?? null,
+      last_message_text: previewFor(m)?.slice(0, 200) ?? null,
       unread_count: 0,
     }
     // Manager-typed message resets the handover clock so the bot stays
@@ -78,6 +121,8 @@ export type ChatRow = {
   bot_disabled: boolean
   tags: string[]
   avatar_url: string | null
+  chat_type: ChatType
+  title: string | null
 }
 
 // Merge new tags into the chat's tag set (no-op if all already present).
@@ -149,6 +194,14 @@ export type MessageRow = {
   text: string | null
   start_payload: string | null
   created_at: string
+  media_type: string | null
+  media_url: string | null
+  media_filename: string | null
+  media_mime: string | null
+  media_duration: number | null
+  media_size: number | null
+  sender_id: number | null
+  sender_name: string | null
 }
 
 export async function listMessages(chatId: number, limit = 500): Promise<MessageRow[]> {
