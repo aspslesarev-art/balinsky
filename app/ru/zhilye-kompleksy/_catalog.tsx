@@ -12,8 +12,20 @@ import { loadCatalogPage, buildHeading, buildHeadingEn, type ComplexFilterState 
 import type { Lang } from '@/lib/i18n'
 
 const COPY = {
-  ru: { page: 'страница', of: 'из', complexes: (n: number) => `${n} комплексов`, emptySearch: (q: string) => `По запросу «${q}» ничего не найдено`, emptyFilters: 'Ничего не найдено по выбранным фильтрам' },
-  en: { page: 'page',     of: 'of', complexes: (n: number) => `${n} residential complexes`, emptySearch: (q: string) => `Nothing found for "${q}"`, emptyFilters: 'Nothing matches the selected filters' },
+  ru: {
+    page: 'страница', of: 'из',
+    complexes: (n: number) => `${n} комплексов`,
+    emptySearch: (q: string) => `По запросу «${q}» ничего не найдено`,
+    emptyFilters: 'Ничего не найдено по выбранным фильтрам',
+    searchPlaceholder: 'Поиск по комплексам, районам, застройщикам…',
+  },
+  en: {
+    page: 'page', of: 'of',
+    complexes: (n: number) => `${n} residential complexes`,
+    emptySearch: (q: string) => `Nothing found for "${q}"`,
+    emptyFilters: 'Nothing matches the selected filters',
+    searchPlaceholder: 'Search complexes, districts, developers…',
+  },
 } as const
 
 function toQueryString(f: ComplexFilterState): string {
@@ -73,11 +85,11 @@ export async function ComplexesCatalog({
         <CatalogTabs active="list" listHref={listTabHref} mapHref={mapTabHref} />
 
         <div className="mt-6">
-          <ComplexCatalogSearchBar initial={filters.q} current={filters} view="list" />
+          <ComplexCatalogSearchBar initial={filters.q} current={filters} view="list" placeholder={copy.searchPlaceholder} />
         </div>
 
         <div className="mt-4">
-          <ComplexFiltersBar state={filters} options={options} view="list" />
+          <ComplexFiltersBar state={filters} options={options} view="list" lang={lang} />
         </div>
 
         {cards.length === 0 ? (
