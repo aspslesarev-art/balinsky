@@ -52,7 +52,7 @@ export async function ComplexesCatalog({
   lang?: Lang
 }) {
   const { cards, totalCount, totalPages, hasMore, options, page: actualPage } =
-    await loadCatalogPage(filters, page)
+    await loadCatalogPage(filters, page, lang)
   const isSearch = filters.q.trim().length > 0
   const heading = lang === 'en' ? buildHeadingEn(filters) : buildHeading(filters)
   const copy = COPY[lang]

@@ -19,7 +19,7 @@ import { loadAllPromo } from '@/lib/promo'
 import { loadAllEvents } from '@/lib/events'
 import { loadVideosByDeveloperWithComplexes } from '@/lib/videos'
 import { VideoGrid } from '@/components/VideoGrid'
-import { tFieldOrRu, type Lang } from '@/lib/i18n'
+import { tField, type Lang } from '@/lib/i18n'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
@@ -221,8 +221,8 @@ export async function generateDeveloperMetadata(slug: string, lang: Lang) {
   const dev = await loadDeveloper(slug)
   if (!dev) return { robots: { index: false } }
   const name = firstString(dev.data['Developer']) ?? slug
-  const aiDesc = tFieldOrRu(dev.data, 'SEO Text', lang)
-    ?? tFieldOrRu(dev.data, 'Описание ИИ', lang)
+  const aiDesc = tField(dev.data, 'SEO Text', lang)
+    ?? tField(dev.data, 'Описание ИИ', lang)
     ?? firstString(dev.data['AI Описание'])
   const description = aiDesc
     ? aiDesc.slice(0, 160).trim() + (aiDesc.length > 160 ? '…' : '')
@@ -258,21 +258,21 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
   const c = COPY[lang]
   const name = firstString(dev.data['Developer']) ?? slug
   const logoUrl = dev.logo_url ?? logoFromJson(dev.data)
-  const aiText = tFieldOrRu(dev.data, 'SEO Text', lang)
-    ?? tFieldOrRu(dev.data, 'Описание ИИ', lang)
+  const aiText = tField(dev.data, 'SEO Text', lang)
+    ?? tField(dev.data, 'Описание ИИ', lang)
     ?? firstString(dev.data['AI Описание'])
 
   const dimensions = [
-    { title: c.dim.construction, bullets: parseBullets(tFieldOrRu(dev.data, 'Строительство и недвижимость', lang)), Icon: Building2 },
-    { title: c.dim.reputation,   bullets: parseBullets(tFieldOrRu(dev.data, 'Репутация и опыт',             lang)), Icon: Award },
-    { title: c.dim.equipment,    bullets: parseBullets(tFieldOrRu(dev.data, 'Техника и производство',       lang)), Icon: Wrench },
-    { title: c.dim.management,   bullets: parseBullets(tFieldOrRu(dev.data, 'Управляющая компания',         lang)), Icon: Users },
+    { title: c.dim.construction, bullets: parseBullets(tField(dev.data, 'Строительство и недвижимость', lang)), Icon: Building2 },
+    { title: c.dim.reputation,   bullets: parseBullets(tField(dev.data, 'Репутация и опыт',             lang)), Icon: Award },
+    { title: c.dim.equipment,    bullets: parseBullets(tField(dev.data, 'Техника и производство',       lang)), Icon: Wrench },
+    { title: c.dim.management,   bullets: parseBullets(tField(dev.data, 'Управляющая компания',         lang)), Icon: Users },
   ].filter(d => d.bullets.length > 0)
 
   const extras = [
-    { title: c.extras.team,     bullets: parseBullets(tFieldOrRu(dev.data, 'Команда',           lang)), Icon: Users },
-    { title: c.extras.business, bullets: parseBullets(tFieldOrRu(dev.data, 'Бизнес и сервисы',  lang)), Icon: Briefcase },
-    { title: c.extras.yield,    bullets: parseBullets(tFieldOrRu(dev.data, 'Доходность',        lang)), Icon: TrendingUp },
+    { title: c.extras.team,     bullets: parseBullets(tField(dev.data, 'Команда',           lang)), Icon: Users },
+    { title: c.extras.business, bullets: parseBullets(tField(dev.data, 'Бизнес и сервисы',  lang)), Icon: Briefcase },
+    { title: c.extras.yield,    bullets: parseBullets(tField(dev.data, 'Доходность',        lang)), Icon: TrendingUp },
   ].filter(d => d.bullets.length > 0)
 
   const [{ complexes, apartmentCount }, manager] = await Promise.all([

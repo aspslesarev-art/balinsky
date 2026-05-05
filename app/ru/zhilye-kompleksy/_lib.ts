@@ -240,10 +240,54 @@ export function applySearch(rows: EnrichedRow[], rawQuery: string): EnrichedRow[
 
 // === filter options (facet counts excluding self-dim) ===
 
+// Build a value→EN-translation map by walking rows. For each unique RU
+// value of `colRu`, the first row that also has a non-empty `colEn` wins.
+// When the column-pair isn't filled in Airtable, the map stays empty
+// and consumers fall back to the literal "<colRu> EN" placeholder.
+function buildLabelMap(rows: EnrichedRow[], colRu: string, colEn: string): Map<string, string> {
+  const out = new Map<string, string>()
+  for (const r of rows) {
+    const ruRaw = r.data[colRu]
+    const enRaw = r.data[colEn]
+    const ru = Array.isArray(ruRaw) ? ruRaw.map(String) : [firstString(ruRaw) ?? '']
+    const en = Array.isArray(enRaw) ? enRaw.map(String) : [firstString(enRaw) ?? '']
+    if (ru.length === en.length) {
+      for (let i = 0; i < ru.length; i++) {
+        const k = ru[i]?.trim(); const v = en[i]?.trim()
+        if (k && v && !out.has(k)) out.set(k, v)
+      }
+    } else if (ru.length === 1 && en[0]?.trim()) {
+      const k = ru[0]?.trim(); const v = en[0]?.trim()
+      if (k && v && !out.has(k)) out.set(k, v)
+    }
+  }
+  return out
+}
+
 export function buildOptions(
   allRows: EnrichedRow[],
   current: ComplexFilterState,
+  lang: 'ru' | 'en' = 'ru',
 ): ComplexFilterOptions {
+  // Per-filter EN translation maps. Add a `<RU column> EN` column in
+  // Airtable to translate filter labels — until then EN catalogues
+  // render the literal column name as a placeholder so editors can
+  // see what to create.
+  const enMap = lang === 'en' ? {
+    district:  buildLabelMap(allRows, 'Location 2', 'Location 2 EN'),
+    types:     buildLabelMap(allRows, 'Типы юнитов', 'Типы юнитов EN'),
+    status:    buildLabelMap(allRows, 'Статус', 'Статус EN'),
+    permit:    buildLabelMap(allRows, 'Разрешительные документы', 'Разрешительные документы EN'),
+    developer: new Map<string, string>(), // brand names — keep as-is
+  } : null
+
+  function tr(dim: 'district' | 'types' | 'status' | 'permit' | 'developer', value: string, ruCol: string): string {
+    if (!enMap) return value
+    if (dim === 'developer') return value
+    const en = enMap[dim].get(value)
+    return en ?? `${ruCol} EN`
+  }
+
   function countsExcludingDim(
     dim: keyof ComplexFilterState,
     picker: (e: EnrichedRow) => string | string[] | null,
@@ -285,19 +329,28 @@ export function buildOptions(
     return arr
   }
 
-  const district = build('district', e => e.district)
-  const types = build('types', e => e.types)
-  const year = build('year', e => e.year, 'value')
-  const permit = build('permit', e => e.permit)
-  const developer = build('developer', e => e.developerName)
+  const districtRaw  = build('district', e => e.district)
+  const typesRaw     = build('types', e => e.types)
+  const year         = build('year', e => e.year, 'value')
+  const permitRaw    = build('permit', e => e.permit)
+  const developerRaw = build('developer', e => e.developerName)
 
-  // status: counts keyed by Russian name, options keyed by URL slug
+  // status: counts keyed by Russian name, options keyed by URL slug.
   const statusCounts = countsExcludingDim('status', e => e.status)
-  const status: Option[] = []
+  const statusRaw: Option[] = []
   for (const [name, key] of Object.entries(STATUS_TO_URL)) {
     const c = statusCounts.get(name) ?? 0
-    if (c > 0) status.push({ value: key, label: name, count: c })
+    if (c > 0) statusRaw.push({ value: key, label: name, count: c })
   }
+
+  // Apply EN translation pass — keep `value` (URL slug / RU value) so
+  // existing URLs and filter matching keep working; only the `label`
+  // changes for display.
+  const district  = districtRaw.map(o  => ({ ...o, label: tr('district',  o.label, 'Location 2') }))
+  const types     = typesRaw.map(o     => ({ ...o, label: tr('types',     o.label, 'Типы юнитов') }))
+  const permit    = permitRaw.map(o    => ({ ...o, label: tr('permit',    o.label, 'Разрешительные документы') }))
+  const developer = developerRaw // brand names — no translation
+  const status    = statusRaw.map(o    => ({ ...o, label: tr('status',    o.label, 'Статус') }))
 
   return { district, types, status, permit, year, developer }
 }
@@ -476,10 +529,11 @@ export function buildAllCards(
 export async function loadCatalogPage(
   filters: ComplexFilterState,
   page: number,
+  lang: 'ru' | 'en' = 'ru',
 ): Promise<CatalogPage> {
   const safePage = Math.max(1, Math.floor(page))
   const { enriched, manifest, prices } = await loadAll()
-  const options = buildOptions(enriched, filters)
+  const options = buildOptions(enriched, filters, lang)
   const all = buildAllCards(enriched, manifest, filters, prices)
   const totalCount = all.length
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))

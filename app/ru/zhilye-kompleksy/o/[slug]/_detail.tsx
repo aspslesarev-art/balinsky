@@ -24,7 +24,7 @@ import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { distanceKm as haversineKm } from '@/lib/competitor-utils'
 import { loadVideosByComplexSlug } from '@/lib/videos'
 import { VideoGrid } from '@/components/VideoGrid'
-import { tFieldOrRu, type Lang } from '@/lib/i18n'
+import { tField, type Lang } from '@/lib/i18n'
 
 const AIRPORT_LAT = -8.7467
 const AIRPORT_LNG = 115.1667
@@ -441,8 +441,8 @@ export async function generateComplexMetadata(slug: string, lang: Lang) {
   const district = firstString(c.data['Location 2']) ?? firstString(c.data['Location'])
   const types = strList(c.data['Типы юнитов']).join(', ')
   const yearRaw = firstString(c.data['Year of completion ']) ?? firstString(c.data['Year of completion'])
-  const seoText = tFieldOrRu(c.data, 'SEO Text', lang)
-    ?? tFieldOrRu(c.data, 'Описание', lang)
+  const seoText = tField(c.data, 'SEO Text', lang)
+    ?? tField(c.data, 'Описание', lang)
     ?? firstString(c.data['ИИ Описание 2'])
   const description = seoText
     ? seoText.slice(0, 160).trim() + (seoText.length > 160 ? '…' : '')
@@ -494,8 +494,8 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   const manager = await loadManagerByDeveloperName(developerName)
   const lat = parseGeo(d['Geo'])
   const lng = parseGeo(d['Geo 2'])
-  const seoText = tFieldOrRu(d, 'SEO Text', lang)
-    ?? tFieldOrRu(d, 'Описание', lang)
+  const seoText = tField(d, 'SEO Text', lang)
+    ?? tField(d, 'Описание', lang)
     ?? firstString(d['ИИ Описание 2'])
     ?? firstString(d['ИИ Описание'])
 
