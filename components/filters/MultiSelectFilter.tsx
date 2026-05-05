@@ -4,6 +4,12 @@ import { useEffect, useState } from 'react'
 import { FilterDropdown } from '../FilterDropdown'
 import { useFilterUrl, type FilterView } from './useFilterUrl'
 import type { FilterState } from './FiltersBar'
+import type { Lang } from '@/lib/i18n'
+
+const COPY = {
+  ru: { search: 'Поиск…', noOptions: 'Нет вариантов', clear: 'Сбросить', apply: 'Применить' },
+  en: { search: 'Search…', noOptions: 'No options', clear: 'Clear', apply: 'Apply' },
+} as const
 
 export type Option = { value: string; label: string; count?: number }
 
@@ -20,6 +26,7 @@ export function MultiSelectFilter({
   view = 'list',
   searchable = false,
   summaryFormatter,
+  lang = 'ru',
 }: {
   stateKey: StringArrayKey
   label: string
@@ -29,10 +36,12 @@ export function MultiSelectFilter({
   view?: FilterView
   searchable?: boolean
   summaryFormatter?: (selected: string[], options: Option[]) => string
+  lang?: Lang
 }) {
   const { apply } = useFilterUrl(current, view)
   const [query, setQuery] = useState('')
   const [draft, setDraft] = useState<string[]>(selected)
+  const copy = COPY[lang]
 
   useEffect(() => { setDraft(selected) }, [selected.join(',')])
 
@@ -61,13 +70,13 @@ export function MultiSelectFilter({
               type="text"
               value={query}
               onChange={e => setQuery(e.target.value)}
-              placeholder="Поиск…"
+              placeholder={copy.search}
               className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] text-[14px] focus:outline-none focus:border-[var(--color-primary)]"
             />
           )}
           <div className="max-h-[300px] overflow-y-auto flex flex-col gap-1 pr-1">
             {filtered.length === 0 ? (
-              <div className="text-[13px] text-[var(--color-text-muted)] py-2">Нет вариантов</div>
+              <div className="text-[13px] text-[var(--color-text-muted)] py-2">{copy.noOptions}</div>
             ) : (
               filtered.map(o => {
                 const checked = draft.includes(o.value)
@@ -104,7 +113,7 @@ export function MultiSelectFilter({
               }}
               className="text-[13px] text-[var(--color-text-muted)] hover:text-[var(--color-text)] px-2 py-1"
             >
-              Сбросить
+              {copy.clear}
             </button>
             <button
               type="button"
@@ -114,7 +123,7 @@ export function MultiSelectFilter({
               }}
               className="text-[13px] font-medium text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] rounded-lg px-4 py-2 transition-colors"
             >
-              Применить
+              {copy.apply}
             </button>
           </div>
         </div>

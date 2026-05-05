@@ -9,7 +9,25 @@ import { FiltersBar } from '@/components/filters/FiltersBar'
 import type { FilterState } from '@/components/filters/FiltersBar'
 import { CurrencyToggle } from '@/components/CurrencyContext'
 import { buildListHref, buildMapHref } from '@/lib/filter-href'
-import { loadCatalogPage, buildHeading } from './_lib'
+import { loadCatalogPage, buildHeading, buildHeadingEn } from './_lib'
+import type { Lang } from '@/lib/i18n'
+
+const COPY = {
+  ru: {
+    page: 'страница', of: 'из',
+    objects: (n: number) => `${n} объектов`,
+    emptySearch: (q: string) => `По запросу «${q}» ничего не найдено`,
+    emptyFilters: 'Ничего не найдено по выбранным фильтрам',
+    searchPlaceholder: 'Поиск по апартаментам, районам, застройщикам…',
+  },
+  en: {
+    page: 'page', of: 'of',
+    objects: (n: number) => `${n} listings`,
+    emptySearch: (q: string) => `Nothing found for "${q}"`,
+    emptyFilters: 'Nothing matches the selected filters',
+    searchPlaceholder: 'Search apartments, districts, developers…',
+  },
+} as const
 
 function toQueryString(f: FilterState): string {
   const sp = new URLSearchParams()
@@ -29,16 +47,18 @@ export async function ApartamentyCatalog({
   filters,
   page = 1,
   basePath,
+  lang = 'ru',
 }: {
   filters: FilterState
   page?: number
-  /** URL of the current view sans /page/N suffix, e.g. `/ru/apartamenty/pandawa`. */
   basePath: string
+  lang?: Lang
 }) {
   const { cards, totalCount, totalPages, hasMore, options, page: actualPage } =
-    await loadCatalogPage(filters, page)
+    await loadCatalogPage(filters, page, lang)
   const isSearch = filters.q.trim().length > 0
-  const heading = buildHeading(filters)
+  const heading = lang === 'en' ? buildHeadingEn(filters) : buildHeading(filters)
+  const copy = COPY[lang]
 
   return (
     <>
@@ -49,14 +69,14 @@ export async function ApartamentyCatalog({
           {heading}
           {actualPage > 1 && (
             <span className="text-[var(--color-text-muted)] font-normal text-[20px] md:text-[24px]">
-              {' '}— страница {actualPage}
+              {' '}— {copy.page} {actualPage}
             </span>
           )}
         </h1>
         <div className="text-[14px] text-[var(--color-text-muted)] mb-6 flex items-center justify-between gap-3 flex-wrap">
           <span>
-            {totalCount} объектов
-            {totalPages > 1 && ` · страница ${actualPage} из ${totalPages}`}
+            {copy.objects(totalCount)}
+            {totalPages > 1 && ` · ${copy.page} ${actualPage} ${copy.of} ${totalPages}`}
           </span>
           <CurrencyToggle />
         </div>
@@ -68,23 +88,21 @@ export async function ApartamentyCatalog({
         />
 
         <div className="mt-6">
-          <CatalogSearchBar initial={filters.q} current={filters} view="list" />
+          <CatalogSearchBar initial={filters.q} current={filters} view="list" placeholder={copy.searchPlaceholder} />
         </div>
 
         <div className="mt-4">
-          <FiltersBar state={filters} options={options} />
+          <FiltersBar state={filters} options={options} lang={lang} />
         </div>
 
         {cards.length === 0 ? (
           <div className="py-16 text-center text-[var(--color-text-muted)]">
-            {isSearch
-              ? `По запросу «${filters.q}» ничего не найдено`
-              : 'Ничего не найдено по выбранным фильтрам'}
+            {isSearch ? copy.emptySearch(filters.q) : copy.emptyFilters}
           </div>
         ) : (
           <>
             <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-              {cards.map(c => <ApartmentCard key={c.id} a={c} />)}
+              {cards.map(c => <ApartmentCard key={c.id} a={c} lang={lang} />)}
             </div>
 
             <InfiniteScrollClient
@@ -95,7 +113,7 @@ export async function ApartamentyCatalog({
           </>
         )}
 
-        <SeoContent filters={filters} variant="list" />
+        <SeoContent filters={filters} variant="list" lang={lang} />
 
         <div className="h-16" />
       </PageContainer>

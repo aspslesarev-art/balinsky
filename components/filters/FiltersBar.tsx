@@ -5,6 +5,18 @@ import { MultiSelectFilter, type Option } from './MultiSelectFilter'
 import { PriceRangeFilter } from './PriceRangeFilter'
 import { GoalFilter } from './GoalFilter'
 import { useFilterUrl, type FilterView } from './useFilterUrl'
+import type { Lang } from '@/lib/i18n'
+
+const COPY = {
+  ru: {
+    price: 'Цена', district: 'Район', bedrooms: 'Кол-во спален', floor: 'Этаж',
+    developer: 'Застройщик', status: 'Этап стройки', permit: 'Разрешение', resetAll: 'Сбросить все',
+  },
+  en: {
+    price: 'Price', district: 'District', bedrooms: 'Bedrooms', floor: 'Floor',
+    developer: 'Developer', status: 'Construction stage', permit: 'Permit', resetAll: 'Clear all',
+  },
+} as const
 
 export type FilterState = {
   q: string
@@ -30,14 +42,11 @@ export type FilterOptions = {
   permit: Option[]
 }
 
-function ResetAll({
-  activeCount,
-  current,
-  view,
-}: {
+function ResetAll({ activeCount, current, view, lang }: {
   activeCount: number
   current: FilterState
   view: FilterView
+  lang: Lang
 }) {
   const { clearAll } = useFilterUrl(current, view)
   if (activeCount === 0) return null
@@ -47,7 +56,7 @@ function ResetAll({
       onClick={clearAll}
       className="text-[13px] text-[var(--color-text-muted)] underline-offset-2 hover:underline ml-2"
     >
-      Сбросить все
+      {COPY[lang].resetAll}
     </button>
   )
 }
@@ -56,11 +65,14 @@ export function FiltersBar({
   state,
   options,
   view = 'list',
+  lang = 'ru',
 }: {
   state: FilterState
   options: FilterOptions
   view?: FilterView
+  lang?: Lang
 }) {
+  const c = COPY[lang]
   const activeCount =
     (state.q.trim() ? 1 : 0) +
     (state.priceMin != null || state.priceMax != null ? 1 : 0) +
@@ -75,59 +87,15 @@ export function FiltersBar({
   return (
     <Suspense fallback={null}>
       <div className="flex items-center gap-3 flex-wrap">
-        <GoalFilter current={state} view={view} />
-        <PriceRangeFilter label="Цена" min={state.priceMin} max={state.priceMax} current={state} view={view} />
-        <MultiSelectFilter
-          stateKey="district"
-          label="Район"
-          options={options.district}
-          selected={state.district}
-          current={state}
-          view={view}
-          searchable
-        />
-        <MultiSelectFilter
-          stateKey="bedrooms"
-          label="Кол-во спален"
-          options={options.bedrooms}
-          selected={state.bedrooms}
-          current={state}
-          view={view}
-        />
-        <MultiSelectFilter
-          stateKey="floor"
-          label="Этаж"
-          options={options.floor}
-          selected={state.floor}
-          current={state}
-          view={view}
-        />
-        <MultiSelectFilter
-          stateKey="developer"
-          label="Застройщик"
-          options={options.developer}
-          selected={state.developer}
-          current={state}
-          view={view}
-          searchable
-        />
-        <MultiSelectFilter
-          stateKey="status"
-          label="Этап стройки"
-          options={options.status}
-          selected={state.status}
-          current={state}
-          view={view}
-        />
-        <MultiSelectFilter
-          stateKey="permit"
-          label="Разрешение"
-          options={options.permit}
-          selected={state.permit}
-          current={state}
-          view={view}
-        />
-        <ResetAll activeCount={activeCount} current={state} view={view} />
+        <GoalFilter current={state} view={view} lang={lang} />
+        <PriceRangeFilter label={c.price} min={state.priceMin} max={state.priceMax} current={state} view={view} lang={lang} />
+        <MultiSelectFilter stateKey="district"  label={c.district}  options={options.district}  selected={state.district}  current={state} view={view} lang={lang} searchable />
+        <MultiSelectFilter stateKey="bedrooms"  label={c.bedrooms}  options={options.bedrooms}  selected={state.bedrooms}  current={state} view={view} lang={lang} />
+        <MultiSelectFilter stateKey="floor"     label={c.floor}     options={options.floor}     selected={state.floor}     current={state} view={view} lang={lang} />
+        <MultiSelectFilter stateKey="developer" label={c.developer} options={options.developer} selected={state.developer} current={state} view={view} lang={lang} searchable />
+        <MultiSelectFilter stateKey="status"    label={c.status}    options={options.status}    selected={state.status}    current={state} view={view} lang={lang} />
+        <MultiSelectFilter stateKey="permit"    label={c.permit}    options={options.permit}    selected={state.permit}    current={state} view={view} lang={lang} />
+        <ResetAll activeCount={activeCount} current={state} view={view} lang={lang} />
       </div>
     </Suspense>
   )

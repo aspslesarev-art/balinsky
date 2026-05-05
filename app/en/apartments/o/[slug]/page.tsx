@@ -1,4 +1,4 @@
-import { ApartmentDetail, generateApartmentMetadata } from './_detail'
+import { ApartmentDetail, generateApartmentMetadata } from '../../../../ru/apartamenty/o/[slug]/_detail'
 
 export const revalidate = 3600
 export function generateStaticParams() { return [] }
@@ -7,10 +7,10 @@ type Params = Promise<{ slug: string }>
 
 export async function generateMetadata({ params }: { params: Params }) {
   const { slug } = await params
-  return generateApartmentMetadata(slug, 'ru')
+  return generateApartmentMetadata(slug, 'en')
 }
 
 export default async function Page({ params }: { params: Params }) {
   const { slug } = await params
-  return <ApartmentDetail slug={slug} lang="ru" />
+  return <ApartmentDetail slug={slug} lang="en" />
 }

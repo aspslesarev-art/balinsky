@@ -6,6 +6,12 @@ import { useFilterUrl, type FilterView } from './useFilterUrl'
 import type { FilterState } from './FiltersBar'
 import { useCurrency } from '../CurrencyContext'
 import { CURRENCY_RATES, formatPrice } from '@/lib/currency'
+import type { Lang } from '@/lib/i18n'
+
+const COPY = {
+  ru: { from: 'от', to: 'до', clear: 'Сбросить', apply: 'Применить' },
+  en: { from: 'from', to: 'to', clear: 'Clear', apply: 'Apply' },
+} as const
 
 const SYMBOLS: Record<string, string> = { USD: '$', EUR: '€', RUB: '₽', UAH: '₴', IDR: 'Rp' }
 
@@ -23,17 +29,20 @@ export function PriceRangeFilter({
   max,
   current,
   view = 'list',
+  lang = 'ru',
 }: {
   label: string
   min: number | null
   max: number | null
   current: FilterState
   view?: FilterView
+  lang?: Lang
 }) {
   const { apply } = useFilterUrl(current, view)
   const { currency } = useCurrency()
   const rate = CURRENCY_RATES[currency]
   const sym = SYMBOLS[currency] ?? '$'
+  const c = COPY[lang]
 
   // URL stores USD; the input shows the currently-selected currency.
   const usdToInput = (usd: number | null): string => usd == null ? '' : fmtRu(usd * rate)
@@ -51,8 +60,8 @@ export function PriceRangeFilter({
   const active = min != null || max != null
   const summary = active
     ? [
-        min != null ? `от ${formatPrice(min, currency)}` : '',
-        max != null ? `до ${formatPrice(max, currency)}` : '',
+        min != null ? `${c.from} ${formatPrice(min, currency)}` : '',
+        max != null ? `${c.to} ${formatPrice(max, currency)}` : '',
       ].filter(Boolean).join(' ')
     : ''
 
@@ -62,7 +71,7 @@ export function PriceRangeFilter({
         <div className="flex flex-col gap-3 min-w-[260px]">
           <div className="flex items-center gap-2">
             <div className="flex-1">
-              <div className="text-[12px] text-[var(--color-text-muted)] mb-1">от, {sym}</div>
+              <div className="text-[12px] text-[var(--color-text-muted)] mb-1">{c.from}, {sym}</div>
               <input
                 type="text"
                 inputMode="numeric"
@@ -73,7 +82,7 @@ export function PriceRangeFilter({
               />
             </div>
             <div className="flex-1">
-              <div className="text-[12px] text-[var(--color-text-muted)] mb-1">до, {sym}</div>
+              <div className="text-[12px] text-[var(--color-text-muted)] mb-1">{c.to}, {sym}</div>
               <input
                 type="text"
                 inputMode="numeric"
@@ -95,7 +104,7 @@ export function PriceRangeFilter({
               }}
               className="text-[13px] text-[var(--color-text-muted)] hover:text-[var(--color-text)] px-2 py-1"
             >
-              Сбросить
+              {c.clear}
             </button>
             <button
               type="button"
@@ -105,7 +114,7 @@ export function PriceRangeFilter({
               }}
               className="text-[13px] font-medium text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] rounded-lg px-4 py-2 transition-colors"
             >
-              Применить
+              {c.apply}
             </button>
           </div>
         </div>
