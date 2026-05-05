@@ -1,15 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useMemo } from 'react'
-import { Heart, X, Trash2, Send, Columns3, Check } from 'lucide-react'
+import { Heart, X, Trash2, Send } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { useWishlist } from './WishlistContext'
 import { useCurrency } from './CurrencyContext'
 import { formatPrice } from '@/lib/currency'
-import { botLink } from '@/lib/bot-link'
 import type { Lang } from '@/lib/i18n'
 import type { WishlistItem, WishlistKind } from '@/lib/wishlist'
 
@@ -18,37 +16,39 @@ const COPY = {
     home: 'Главная',
     crumb: 'Избранное',
     h1: 'Избранное',
+    intro: 'Все объекты из шортлиста сравниваются здесь рядом — листайте таблицу вправо, чтобы увидеть остальные.',
     empty: 'Пока ничего не добавлено. Откройте каталог и нажмите на сердце у любого объекта.',
     countOne: 'объект', countFew: 'объекта', countMany: 'объектов',
     clear: 'Очистить всё',
-    sendToBot: 'Отправить шортлист в Telegram',
+    sendToBot: 'Отправить в Telegram',
     remove: 'Убрать',
-    selectForCompare: 'Выбрать для сравнения',
-    compareSelected: (n: number) => `Сравнить выбранные · ${n}`,
-    compareHint: 'Выбрано для сравнения. Можно сравнить до 4 объектов.',
-    cancelSelection: 'Отмена',
     villasLink: 'К виллам',
     apartmentsLink: 'К апартаментам',
     complexesLink: 'К жилым комплексам',
-    bedrooms: 'BR',
+    rowKind: 'Тип', rowPrice: 'Цена', rowBedrooms: 'Спальни', rowArea: 'Площадь',
+    rowLand: 'Земля', rowDistrict: 'Район', rowFloor: 'Этаж',
+    rowCompletion: 'Сдача', rowDealType: 'Тип сделки',
+    sqm: 'м²',
+    dealResale: 'Перепродажа', dealSecondary: 'Вторичка', dealPrimary: 'От застройщика',
   },
   en: {
     home: 'Home',
     crumb: 'Shortlist',
     h1: 'Shortlist',
+    intro: 'Saved listings line up side-by-side — scroll the table horizontally to see the rest.',
     empty: 'Nothing saved yet. Open a catalogue and tap the heart on any listing.',
     countOne: 'item', countFew: 'items', countMany: 'items',
     clear: 'Clear all',
-    sendToBot: 'Send shortlist to Telegram',
+    sendToBot: 'Send to Telegram',
     remove: 'Remove',
-    selectForCompare: 'Select for comparison',
-    compareSelected: (n: number) => `Compare selected · ${n}`,
-    compareHint: 'Selected for comparison. Up to 4 listings.',
-    cancelSelection: 'Cancel',
     villasLink: 'Browse villas',
     apartmentsLink: 'Browse apartments',
     complexesLink: 'Browse complexes',
-    bedrooms: 'BR',
+    rowKind: 'Type', rowPrice: 'Price', rowBedrooms: 'Bedrooms', rowArea: 'Area',
+    rowLand: 'Land', rowDistrict: 'District', rowFloor: 'Floor',
+    rowCompletion: 'Completion', rowDealType: 'Deal',
+    sqm: 'm²',
+    dealResale: 'Resale', dealSecondary: 'Secondary', dealPrimary: 'Developer',
   },
 } as const
 
@@ -71,58 +71,46 @@ function detailHref(item: WishlistItem, lang: Lang): string {
 }
 
 function kindLabel(kind: WishlistKind, lang: Lang): string {
-  if (lang === 'en') {
-    return ({ villa: 'Villa', apartment: 'Apartment', complex: 'Complex', rental: 'Rental' } as const)[kind]
-  }
+  if (lang === 'en') return ({ villa: 'Villa', apartment: 'Apartment', complex: 'Complex', rental: 'Rental' } as const)[kind]
   return ({ villa: 'Вилла', apartment: 'Апартаменты', complex: 'Комплекс', rental: 'Аренда' } as const)[kind]
 }
-
-const MAX_COMPARE = 4
 
 export function ShortlistView({ lang }: { lang: Lang }) {
   const { items, ready, remove, clear } = useWishlist()
   const { currency } = useCurrency()
   const c = COPY[lang]
   const home = lang === 'en' ? '/en' : '/ru'
-  const compareHref = lang === 'en' ? '/en/compare' : '/ru/sravnenie'
 
-  // Multi-select for comparison. Stored as `${kind}:${slug}` strings so
-  // toggling is O(1) and ids are stable across renders. We also drop
-  // ids that no longer exist in the wishlist (e.g. the user removed a
-  // saved object while it was selected).
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
-  const validSelected = useMemo(() => {
-    const valid = new Set<string>()
-    for (const it of items) {
-      const id = `${it.kind}:${it.slug}`
-      if (selectedIds.has(id)) valid.add(id)
-    }
-    return valid
-  }, [items, selectedIds])
-  const toggleSelect = (kind: WishlistKind, slug: string) => {
-    const id = `${kind}:${slug}`
-    setSelectedIds(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else if (next.size < MAX_COMPARE) next.add(id)
-      return next
-    })
+  const fmt = (v: number | null | undefined) =>
+    v != null && Number.isFinite(v) ? formatPrice(v, currency) : null
+  const dealTypeLabel = (t: WishlistItem['dealType']): string | null => {
+    if (!t) return null
+    if (t === 'resale')    return c.dealResale
+    if (t === 'secondary') return c.dealSecondary
+    return c.dealPrimary
   }
-  // Build the ?items= query for the compare page from the current
-  // selection, preserving the order users picked them in.
-  const compareQuery = useMemo(() => {
-    const orderedItems = items.filter(it => validSelected.has(`${it.kind}:${it.slug}`))
-    return orderedItems.map(it => `${it.kind[0]}.${it.slug}`).join(',')
-  }, [items, validSelected])
 
-  // Build a single payload that the visitor sends via the bot. Each item
-  // becomes a deep-linkable URL in the message — the bot's /start payload
-  // is too short for a multi-item list, so we use Telegram's message-share
-  // intent (t.me/share/url) to seed the manager's chat with the list.
-  const sharePayload = items.map(i => `https://balinsky.info${detailHref(i, lang)}`).join('\n')
-  const shareHref = items.length > 0
-    ? `https://t.me/share/url?url=${encodeURIComponent(sharePayload)}&text=${encodeURIComponent(c.sendToBot)}`
-    : botLink('manager', '')
+  // Side-by-side comparison rows. Each row reads one field across every
+  // saved item. Rows whose cells are empty for everyone get hidden so a
+  // shortlist of three apartments doesn't show empty "Land" / "Plot"
+  // lines.
+  const rows: { key: string; label: string; cell: (it: WishlistItem) => string | null }[] = [
+    { key: 'kind',       label: c.rowKind,       cell: it => kindLabel(it.kind, lang) },
+    { key: 'price',      label: c.rowPrice,      cell: it => fmt(it.priceUsd) },
+    { key: 'bedrooms',   label: c.rowBedrooms,   cell: it => it.bedrooms != null ? String(it.bedrooms) : null },
+    { key: 'area',       label: c.rowArea,       cell: it => it.area != null ? `${it.area} ${c.sqm}` : null },
+    { key: 'land',       label: c.rowLand,       cell: it => it.land != null ? `${it.land} ${c.sqm}` : null },
+    { key: 'floor',      label: c.rowFloor,      cell: it => it.floor ?? null },
+    { key: 'district',   label: c.rowDistrict,   cell: it => it.district ?? null },
+    { key: 'completion', label: c.rowCompletion, cell: it => it.completionYear ?? null },
+    { key: 'dealType',   label: c.rowDealType,   cell: it => dealTypeLabel(it.dealType) },
+  ]
+  const filledRows = rows.filter(r => items.some(it => r.cell(it)))
+
+  // Build the shareable Telegram message — one URL per saved item so the
+  // recipient can tap straight into each detail page.
+  const shareText = items.map(it => `https://balinsky.info${detailHref(it, lang)}`).join('\n')
+  const shareHref = `https://t.me/share/url?url=${encodeURIComponent(shareText)}&text=${encodeURIComponent(c.sendToBot)}`
 
   return (
     <>
@@ -170,106 +158,70 @@ export function ShortlistView({ lang }: { lang: Lang }) {
             <Heart size={36} className="mx-auto mb-3 text-[var(--color-text-muted)]" />
             <div className="text-[15px] text-[var(--color-text)] max-w-md mx-auto mb-6">{c.empty}</div>
             <div className="flex items-center justify-center gap-2 flex-wrap">
-              <Link href={lang === 'en' ? '/en/villas' : '/ru/villy'}      className="px-4 py-2 rounded-full bg-[var(--color-primary)] text-white text-[13px] font-medium no-underline">{c.villasLink}</Link>
-              <Link href={lang === 'en' ? '/en/apartments' : '/ru/apartamenty'} className="px-4 py-2 rounded-full border border-[var(--color-border)] text-[13px] no-underline">{c.apartmentsLink}</Link>
-              <Link href={lang === 'en' ? '/en/complexes' : '/ru/zhilye-kompleksy'} className="px-4 py-2 rounded-full border border-[var(--color-border)] text-[13px] no-underline">{c.complexesLink}</Link>
+              <Link href={lang === 'en' ? '/en/villas' : '/ru/villy'}                  className="px-4 py-2 rounded-full bg-[var(--color-primary)] text-white text-[13px] font-medium no-underline">{c.villasLink}</Link>
+              <Link href={lang === 'en' ? '/en/apartments' : '/ru/apartamenty'}        className="px-4 py-2 rounded-full border border-[var(--color-border)] text-[13px] no-underline">{c.apartmentsLink}</Link>
+              <Link href={lang === 'en' ? '/en/complexes' : '/ru/zhilye-kompleksy'}    className="px-4 py-2 rounded-full border border-[var(--color-border)] text-[13px] no-underline">{c.complexesLink}</Link>
             </div>
           </div>
         ) : (
-          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {items.map(item => {
-              const price = item.priceUsd != null && Number.isFinite(item.priceUsd)
-                ? formatPrice(item.priceUsd, currency)
-                : null
-              const id = `${item.kind}:${item.slug}`
-              const isSelected = validSelected.has(id)
-              const canSelectMore = validSelected.size < MAX_COMPARE
-              return (
-                <li key={id} className="relative">
-                  <Link
-                    href={detailHref(item, lang)}
-                    className={`block bg-white rounded-2xl border overflow-hidden no-underline text-[var(--color-text)] transition-colors ${
-                      isSelected
-                        ? 'border-[var(--color-primary)] shadow-[0_0_0_2px_var(--color-primary)_inset]'
-                        : 'border-[var(--color-border)] hover:border-[var(--color-primary)]'
-                    }`}
-                  >
-                    <div className="relative aspect-[4/3] bg-[var(--color-search-bg)]">
-                      {item.photo ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={item.photo} alt={item.title} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-3xl">🏝️</div>
-                      )}
-                      <span className="absolute top-3 left-3 text-[11px] uppercase tracking-wide bg-white/90 backdrop-blur-sm rounded-full px-2.5 py-1 font-semibold">
-                        {kindLabel(item.kind, lang)}
-                      </span>
-                    </div>
-                    <div className="p-4">
-                      <h3 className="text-[16px] font-semibold leading-snug mb-2 line-clamp-2">{item.title}</h3>
-                      {price && <div className="text-[15px] font-semibold mb-1">{price}</div>}
-                      <div className="text-[13px] text-[var(--color-text-muted)] flex items-center gap-3 flex-wrap">
-                        {item.bedrooms != null && <span>{item.bedrooms} {c.bedrooms}</span>}
-                        {item.district && <span>{item.district}</span>}
-                      </div>
-                    </div>
-                  </Link>
-                  {/* Compare-checkbox in the bottom-left corner of the
-                      photo. Click stops propagation so the wrapping
-                      <Link> doesn't navigate. Disabled for the 5th item
-                      onwards once the cap is reached. */}
-                  <button
-                    type="button"
-                    aria-label={c.selectForCompare}
-                    aria-pressed={isSelected}
-                    disabled={!isSelected && !canSelectMore}
-                    onClick={e => { e.preventDefault(); e.stopPropagation(); toggleSelect(item.kind, item.slug) }}
-                    className={`absolute bottom-[26%] left-3 z-10 inline-flex items-center justify-center w-7 h-7 rounded-md border-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
-                      isSelected
-                        ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white'
-                        : 'bg-white/90 border-[#d1d5db] hover:border-[var(--color-primary)]'
-                    }`}
-                  >
-                    {isSelected && <Check size={14} strokeWidth={3} />}
-                  </button>
-                  <button
-                    type="button"
-                    aria-label={c.remove}
-                    onClick={() => remove(item.kind, item.slug)}
-                    className="absolute top-3 right-3 z-10 inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/85 backdrop-blur-sm hover:bg-white text-[#1A1F1C] shadow-[0_1px_3px_rgba(0,0,0,0.12)]"
-                  >
-                    <X size={16} />
-                  </button>
-                </li>
-              )
-            })}
-          </ul>
-        )}
-        {/* Floating bottom bar appears only when ≥2 items are ticked.
-            Sticks to the bottom of the viewport, doesn't overlap mobile
-            footer because the wishlist page sits above it. */}
-        {ready && validSelected.size >= 2 && (
-          <div className="fixed left-1/2 -translate-x-1/2 bottom-4 z-40 max-w-[680px] w-[calc(100%-32px)]">
-            <div className="rounded-full bg-[#1A1F1C] text-white shadow-[0_10px_32px_-8px_rgba(0,0,0,0.35)] flex items-center justify-between gap-3 pl-5 pr-2 py-2">
-              <span className="text-[13px] hidden sm:inline opacity-80">{c.compareHint}</span>
-              <span className="text-[13px] sm:hidden opacity-80">{validSelected.size}/{MAX_COMPARE}</span>
-              <div className="flex items-center gap-1 ml-auto">
-                <button
-                  type="button"
-                  onClick={() => setSelectedIds(new Set())}
-                  className="px-3 py-1.5 text-[12px] text-white/70 hover:text-white"
-                >
-                  {c.cancelSelection}
-                </button>
-                <Link
-                  href={`${compareHref}?items=${encodeURIComponent(compareQuery)}`}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[13px] font-medium no-underline"
-                >
-                  <Columns3 size={14} /> {c.compareSelected(validSelected.size)}
-                </Link>
-              </div>
+          <>
+            <p className="text-[14px] text-[var(--color-text-muted)] mb-4 max-w-2xl">{c.intro}</p>
+            <div className="overflow-x-auto -mx-4 px-4 pb-4">
+              <table className="border-separate border-spacing-x-3 min-w-full">
+                <thead>
+                  <tr>
+                    {/* Sticky label column */}
+                    <th className="sticky left-0 bg-[var(--color-bg)] z-10 align-bottom min-w-[120px] w-[120px]"></th>
+                    {items.map(it => (
+                      <th key={`${it.kind}:${it.slug}`} className="text-left align-bottom min-w-[220px] w-[260px]">
+                        <div className="relative">
+                          <Link
+                            href={detailHref(it, lang)}
+                            className="block group no-underline text-[var(--color-text)]"
+                          >
+                            <div className="aspect-[4/3] rounded-xl overflow-hidden bg-[var(--color-search-bg)] mb-2">
+                              {it.photo ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={it.photo} alt={it.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-3xl">🏝️</div>
+                              )}
+                            </div>
+                            <div className="text-[15px] font-semibold leading-snug line-clamp-2 mb-3">{it.title}</div>
+                          </Link>
+                          <button
+                            type="button"
+                            aria-label={c.remove}
+                            onClick={() => remove(it.kind, it.slug)}
+                            className="absolute top-2 right-2 inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/85 backdrop-blur-sm hover:bg-white text-[#1A1F1C] shadow-[0_1px_3px_rgba(0,0,0,0.12)]"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filledRows.map(r => (
+                    <tr key={r.key}>
+                      <td className="sticky left-0 bg-[var(--color-bg)] z-10 text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] py-3 align-top w-[120px]">
+                        {r.label}
+                      </td>
+                      {items.map(it => {
+                        const v = r.cell(it)
+                        return (
+                          <td key={`${r.key}-${it.kind}:${it.slug}`} className="text-[14px] text-[var(--color-text)] py-3 align-top">
+                            {v ?? <span className="text-[var(--color-text-muted)]">—</span>}
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          </div>
+          </>
         )}
         <div className="h-16" />
       </PageContainer>
