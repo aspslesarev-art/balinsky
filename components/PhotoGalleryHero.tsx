@@ -1,7 +1,13 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { usePathname } from 'next/navigation'
 import { ChevronLeft, ChevronRight, X, ImageIcon } from 'lucide-react'
+
+const COPY = {
+  ru: { open: 'Открыть галерею', photoN: (n: number) => `Фото ${n}`, more: (n: number) => `+${n} фото`, count: (n: number) => `${n} фото`, close: 'Закрыть', prev: 'Предыдущее', next: 'Следующее', mainPhoto: 'главное фото', photoLabel: 'фото', thumb: 'миниатюра' },
+  en: { open: 'Open gallery',    photoN: (n: number) => `Photo ${n}`, more: (n: number) => `+${n} photos`, count: (n: number) => `${n} photos`, close: 'Close', prev: 'Previous', next: 'Next', mainPhoto: 'main photo', photoLabel: 'photo', thumb: 'thumb' },
+} as const
 
 export function PhotoGalleryHero({
   photos,
@@ -11,6 +17,9 @@ export function PhotoGalleryHero({
   alt: string
 }) {
   const [openAt, setOpenAt] = useState<number | null>(null)
+  const pathname = usePathname() ?? ''
+  const lang = pathname.startsWith('/en') ? 'en' : 'ru'
+  const c = COPY[lang]
 
   if (photos.length === 0) {
     return (
@@ -21,56 +30,88 @@ export function PhotoGalleryHero({
   }
 
   const hero = photos[0]
-  const thumbs = photos.slice(1, 5)
+  // How many photos render in the right column on desktop. Caps at 4
+  // because that's all the 2x2 grid can show — anything beyond rolls
+  // into the "+N more" overlay on the last thumb.
+  const rightCount = Math.min(photos.length - 1, 4)
+  const thumbs = photos.slice(1, 1 + rightCount)
   const remaining = Math.max(0, photos.length - 5)
 
+  // Pick a layout shape that fills the right column nicely no matter
+  // how many photos we have. The grid below keeps the same outer
+  // height (480px) and just changes the internal track layout so two
+  // photos render as a clean 50/50 split, three as 1+2-stacked,
+  // four+ as the original 2x2 grid.
+  let rightGridClass = ''
+  if (rightCount === 1) {
+    // Single full-height tile on the right — splits the hero 50/50.
+    rightGridClass = 'grid grid-cols-1 grid-rows-1'
+  } else if (rightCount === 2) {
+    // Two photos stacked vertically on the right — each 50% height.
+    rightGridClass = 'grid grid-cols-1 grid-rows-2'
+  } else if (rightCount === 3) {
+    // Three photos: top row spans full width, bottom row splits in two.
+    rightGridClass = 'grid grid-cols-2 grid-rows-2 [&>:first-child]:col-span-2'
+  } else {
+    // Four photos: standard 2x2 grid.
+    rightGridClass = 'grid grid-cols-2 grid-rows-2'
+  }
+
+  // Mobile: with 2+ photos render a 2-up split (hero on top, second
+  // photo below) rather than just the hero — gives the second photo
+  // some visibility on phones too.
   return (
     <>
-      {/* Desktop: hero + 2x2 thumbs */}
+      {/* Desktop: hero + adaptive right column */}
       <div className="hidden md:flex gap-2 rounded-3xl overflow-hidden border border-[var(--color-border)] h-[480px]">
         <button
           type="button"
           onClick={() => setOpenAt(0)}
-          className="flex-1 relative bg-[var(--color-search-bg)] cursor-pointer overflow-hidden group"
-          aria-label="Открыть галерею"
+          className={`relative bg-[var(--color-search-bg)] cursor-pointer overflow-hidden group ${rightCount === 0 ? 'flex-1' : 'flex-1'}`}
+          aria-label={c.open}
         >
-          <img src={hero} alt={`${alt} — главное фото`} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" />
+          <img src={hero} alt={`${alt} — ${c.mainPhoto}`} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" />
         </button>
-        <div className="flex-1 grid grid-cols-2 grid-rows-2 gap-2">
-          {thumbs.map((src, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => setOpenAt(i + 1)}
-              className="relative bg-[var(--color-search-bg)] cursor-pointer overflow-hidden group"
-              aria-label={`Фото ${i + 2}`}
-            >
-              <img src={src} alt={`${alt} — фото ${i + 2}`} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.04]" />
-              {i === 3 && remaining > 0 && (
-                <div className="absolute inset-0 bg-black/55 flex items-center justify-center text-white">
-                  <div className="flex items-center gap-2 text-[15px] font-medium">
-                    <ImageIcon size={18} />
-                    +{remaining} фото
-                  </div>
-                </div>
-              )}
-            </button>
-          ))}
-        </div>
+        {rightCount > 0 && (
+          <div className={`flex-1 ${rightGridClass} gap-2`}>
+            {thumbs.map((src, i) => {
+              const isLastThumb = i === thumbs.length - 1
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setOpenAt(i + 1)}
+                  className="relative bg-[var(--color-search-bg)] cursor-pointer overflow-hidden group"
+                  aria-label={c.photoN(i + 2)}
+                >
+                  <img src={src} alt={`${alt} — ${c.photoLabel} ${i + 2}`} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.04]" />
+                  {isLastThumb && remaining > 0 && (
+                    <div className="absolute inset-0 bg-black/55 flex items-center justify-center text-white">
+                      <div className="flex items-center gap-2 text-[15px] font-medium">
+                        <ImageIcon size={18} />
+                        {c.more(remaining)}
+                      </div>
+                    </div>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        )}
       </div>
 
-      {/* Mobile: hero only with "all photos" button */}
+      {/* Mobile: hero + count badge */}
       <div className="md:hidden rounded-2xl overflow-hidden border border-[var(--color-border)] relative">
         <button
           type="button"
           onClick={() => setOpenAt(0)}
           className="block w-full h-[280px] bg-[var(--color-search-bg)]"
         >
-          <img src={hero} alt={`${alt} — главное фото`} className="w-full h-full object-cover" />
+          <img src={hero} alt={`${alt} — ${c.mainPhoto}`} className="w-full h-full object-cover" />
           {photos.length > 1 && (
             <div className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/65 text-white text-[13px] font-medium">
               <ImageIcon size={14} />
-              {photos.length} фото
+              {c.count(photos.length)}
             </div>
           )}
         </button>
@@ -82,6 +123,7 @@ export function PhotoGalleryHero({
           startIndex={openAt}
           alt={alt}
           onClose={() => setOpenAt(null)}
+          copy={c}
         />
       )}
     </>
@@ -93,11 +135,13 @@ function Lightbox({
   startIndex,
   alt,
   onClose,
+  copy,
 }: {
   photos: string[]
   startIndex: number
   alt: string
   onClose: () => void
+  copy: { close: string; prev: string; next: string; thumb: string }
 }) {
   const [i, setI] = useState(startIndex)
   const count = photos.length
@@ -130,7 +174,7 @@ function Lightbox({
       <button
         type="button"
         onClick={onClose}
-        aria-label="Закрыть"
+        aria-label={copy.close}
         className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 text-white inline-flex items-center justify-center backdrop-blur-sm"
       >
         <X size={20} />
@@ -145,7 +189,7 @@ function Lightbox({
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); prev() }}
-            aria-label="Предыдущее"
+            aria-label={copy.prev}
             className="absolute left-4 md:left-8 w-12 h-12 rounded-full bg-white/15 hover:bg-white/25 text-white inline-flex items-center justify-center backdrop-blur-sm"
           >
             <ChevronLeft size={26} strokeWidth={2.5} />
@@ -153,7 +197,7 @@ function Lightbox({
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); next() }}
-            aria-label="Следующее"
+            aria-label={copy.next}
             className="absolute right-4 md:right-8 w-12 h-12 rounded-full bg-white/15 hover:bg-white/25 text-white inline-flex items-center justify-center backdrop-blur-sm"
           >
             <ChevronRight size={26} strokeWidth={2.5} />
@@ -183,7 +227,7 @@ function Lightbox({
                 idx === i ? 'border-white' : 'border-transparent opacity-70 hover:opacity-100'
               }`}
             >
-              <img src={src} alt={`${alt} — миниатюра ${idx + 1}`} className="w-full h-full object-cover" />
+              <img src={src} alt={`${alt} — ${copy.thumb} ${idx + 1}`} className="w-full h-full object-cover" />
             </button>
           ))}
         </div>
