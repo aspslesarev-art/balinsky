@@ -4,6 +4,11 @@ import { Heart } from 'lucide-react'
 import { useWishlist } from './WishlistContext'
 import type { WishlistItem } from '@/lib/wishlist'
 
+// Plain-object input — no thunk. RSC serialisation refuses functions, so
+// detail pages (server components) can't pass a constructor. We instead
+// take the snapshot fields and stamp savedAt inside toggle().
+export type WishlistInput = Omit<WishlistItem, 'savedAt'>
+
 // Heart toggle that lives over the photo slider on each card. Clicking
 // stops propagation + prevents default so the card's wrapping <Link>
 // doesn't navigate while the user just wanted to save it.
@@ -12,16 +17,12 @@ export function WishlistButton({
   className = '',
   size = 'md',
 }: {
-  // We want the snapshot to be cheap to build at the call site, so the
-  // button accepts a constructor-thunk OR a ready-made item. Most cards
-  // already have all the fields handy and pass an object directly.
-  item: WishlistItem | (() => WishlistItem)
+  item: WishlistInput
   className?: string
   size?: 'sm' | 'md'
 }) {
   const { has, toggle, ready } = useWishlist()
-  const probe = typeof item === 'function' ? null : item
-  const saved = ready && probe ? has(probe.kind, probe.slug) : false
+  const saved = ready ? has(item.kind, item.slug) : false
   const dim = size === 'sm' ? 32 : 38
   const icon = size === 'sm' ? 16 : 18
   return (
@@ -32,8 +33,7 @@ export function WishlistButton({
       onClick={e => {
         e.preventDefault()
         e.stopPropagation()
-        const it = typeof item === 'function' ? item() : item
-        toggle(it)
+        toggle({ ...item, savedAt: new Date().toISOString() })
       }}
       className={`inline-flex items-center justify-center rounded-full transition-colors backdrop-blur-sm ${
         saved

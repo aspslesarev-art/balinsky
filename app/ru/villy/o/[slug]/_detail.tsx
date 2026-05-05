@@ -538,14 +538,13 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
           <PhotoGalleryHero
             photos={photos}
             alt={title}
-            wishlistItem={() => ({
+            wishlistItem={{
               kind: 'villa', slug, title,
               photo: photos[0] ?? null,
               priceUsd: priceNum ?? null,
               district: district ?? null,
               bedrooms: bedrooms ?? null,
-              savedAt: new Date().toISOString(),
-            })}
+            }}
           />
         </section>
 

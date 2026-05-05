@@ -591,14 +591,13 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
           <PhotoGalleryHero
             photos={slidesPhotos}
             alt={name}
-            wishlistItem={() => ({
+            wishlistItem={{
               kind: 'complex', slug, title: name,
               photo: slidesPhotos[0] ?? null,
               priceUsd: null,
               district: district ?? null,
               bedrooms: null,
-              savedAt: new Date().toISOString(),
-            })}
+            }}
           />
         </section>
 

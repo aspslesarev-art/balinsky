@@ -3,8 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
 import { ChevronLeft, ChevronRight, X, ImageIcon } from 'lucide-react'
-import { WishlistButton } from './WishlistButton'
-import type { WishlistItem } from '@/lib/wishlist'
+import { WishlistButton, type WishlistInput } from './WishlistButton'
 
 const COPY = {
   ru: { open: 'Открыть галерею', photoN: (n: number) => `Фото ${n}`, more: (n: number) => `+${n} фото`, count: (n: number) => `${n} фото`, close: 'Закрыть', prev: 'Предыдущее', next: 'Следующее', mainPhoto: 'главное фото', photoLabel: 'фото', thumb: 'миниатюра' },
@@ -19,9 +18,9 @@ export function PhotoGalleryHero({
   photos: string[]
   alt: string
   // When provided, a heart toggle is overlaid on the gallery's
-  // top-right corner. Detail pages pass a thunk so we don't pay the
-  // Date.now() cost until the user actually taps save.
-  wishlistItem?: WishlistItem | (() => WishlistItem)
+  // top-right corner. Plain object only — no thunks (would break RSC
+  // serialisation when called from a server-rendered detail page).
+  wishlistItem?: WishlistInput
 }) {
   const [openAt, setOpenAt] = useState<number | null>(null)
   const pathname = usePathname() ?? ''
