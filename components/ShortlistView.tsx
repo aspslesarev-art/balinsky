@@ -16,9 +16,10 @@ const COPY = {
     home: 'Главная',
     crumb: 'Избранное',
     h1: 'Избранное',
-    intro: 'Объекты сравниваются группами — виллы и апартаменты вместе, жилые комплексы отдельно.',
+    intro: 'Виллы и апартаменты сравниваются в одной таблице. Жилые комплексы — отдельным списком карточек.',
     sectionRealEstate: 'Виллы и апартаменты',
     sectionComplexes: 'Жилые комплексы',
+    bedrooms: 'BR',
     empty: 'Пока ничего не добавлено. Откройте каталог и нажмите на сердце у любого объекта.',
     countOne: 'объект', countFew: 'объекта', countMany: 'объектов',
     clear: 'Очистить всё',
@@ -37,9 +38,10 @@ const COPY = {
     home: 'Home',
     crumb: 'Shortlist',
     h1: 'Shortlist',
-    intro: 'Saved listings line up in groups — villas and apartments together, residential complexes separately.',
+    intro: 'Villas and apartments compare side-by-side in one table. Complexes show as a card list.',
     sectionRealEstate: 'Villas & apartments',
     sectionComplexes: 'Residential complexes',
+    bedrooms: 'BR',
     empty: 'Nothing saved yet. Open a catalogue and tap the heart on any listing.',
     countOne: 'item', countFew: 'items', countMany: 'items',
     clear: 'Clear all',
@@ -104,16 +106,11 @@ export function ShortlistView({ lang }: { lang: Lang }) {
     { key: 'dealType',   label: c.rowDealType,   cell: it => dealTypeLabel(it.dealType) },
   ]
 
-  // Two comparison groups. Villas and apartments share enough shape
-  // (price, bedrooms, area, district) to live in one table; complexes
-  // sell phases / unit ranges instead and don't compare cleanly with
-  // single-unit listings, so they stay in their own section.
-  const groups: { id: string; title: string; items: WishlistItem[] }[] = [
-    { id: 'realestate', title: c.sectionRealEstate,
-      items: items.filter(i => i.kind === 'villa' || i.kind === 'apartment' || i.kind === 'rental') },
-    { id: 'complexes',  title: c.sectionComplexes,
-      items: items.filter(i => i.kind === 'complex') },
-  ].filter(g => g.items.length > 0)
+  // Two sections with different render shapes. Villas / apartments
+  // share enough fields to compare side-by-side; complexes sell phases
+  // and unit ranges so they render as plain cards instead.
+  const realEstate = items.filter(i => i.kind === 'villa' || i.kind === 'apartment' || i.kind === 'rental')
+  const complexes  = items.filter(i => i.kind === 'complex')
 
   // Build the shareable Telegram message — one URL per saved item so the
   // recipient can tap straight into each detail page.
@@ -174,71 +171,112 @@ export function ShortlistView({ lang }: { lang: Lang }) {
         ) : (
           <>
             <p className="text-[14px] text-[var(--color-text-muted)] mb-6 max-w-2xl">{c.intro}</p>
-            {groups.map(group => {
-              const groupRows = rows.filter(r => group.items.some(it => r.cell(it)))
-              return (
-                <section key={group.id} className="mb-10">
-                  <h2 className="text-[18px] md:text-[20px] font-semibold text-[var(--color-text)] mb-4">
-                    {group.title}
-                    <span className="text-[var(--color-text-muted)] font-normal ml-2">· {group.items.length}</span>
-                  </h2>
-                  {/* Scroll the table inside the standard PageContainer
-                      width — same horizontal frame as every other page
-                      on the site. */}
-                  <div className="overflow-x-auto pb-4">
-                    <table className="border-separate border-spacing-x-3 min-w-full">
-                      <thead>
-                        <tr>
-                          <th className="sticky left-0 bg-[var(--color-bg)] z-10 align-bottom min-w-[120px] w-[120px]"></th>
-                          {group.items.map(it => (
-                            <th key={`${it.kind}:${it.slug}`} className="text-left align-bottom min-w-[220px] w-[260px]">
-                              <div className="relative">
-                                <Link href={detailHref(it, lang)} className="block group no-underline text-[var(--color-text)]">
-                                  <div className="aspect-[4/3] rounded-xl overflow-hidden bg-[var(--color-search-bg)] mb-2">
-                                    {it.photo ? (
-                                      // eslint-disable-next-line @next/next/no-img-element
-                                      <img src={it.photo} alt={it.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" />
-                                    ) : (
-                                      <div className="w-full h-full flex items-center justify-center text-3xl">🏝️</div>
-                                    )}
-                                  </div>
-                                  <div className="text-[15px] font-semibold leading-snug line-clamp-2 mb-3">{it.title}</div>
-                                </Link>
-                                <button
-                                  type="button"
-                                  aria-label={c.remove}
-                                  onClick={() => remove(it.kind, it.slug)}
-                                  className="absolute top-2 right-2 inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/85 backdrop-blur-sm hover:bg-white text-[#1A1F1C] shadow-[0_1px_3px_rgba(0,0,0,0.12)]"
-                                >
-                                  <X size={14} />
-                                </button>
-                              </div>
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {groupRows.map(r => (
-                          <tr key={r.key}>
-                            <td className="sticky left-0 bg-[var(--color-bg)] z-10 text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] py-3 align-top w-[120px]">
-                              {r.label}
-                            </td>
-                            {group.items.map(it => {
-                              const v = r.cell(it)
-                              return (
-                                <td key={`${r.key}-${it.kind}:${it.slug}`} className="text-[14px] text-[var(--color-text)] py-3 align-top">
-                                  {v ?? <span className="text-[var(--color-text-muted)]">—</span>}
-                                </td>
-                              )
-                            })}
-                          </tr>
+
+            {realEstate.length > 0 && (
+              <section className="mb-10">
+                <h2 className="text-[18px] md:text-[20px] font-semibold text-[var(--color-text)] mb-4">
+                  {c.sectionRealEstate}
+                  <span className="text-[var(--color-text-muted)] font-normal ml-2">· {realEstate.length}</span>
+                </h2>
+                <div className="overflow-x-auto pb-4">
+                  <table className="border-separate border-spacing-x-3 min-w-full">
+                    <thead>
+                      <tr>
+                        <th className="sticky left-0 bg-[var(--color-bg)] z-10 align-bottom min-w-[120px] w-[120px]"></th>
+                        {realEstate.map(it => (
+                          <th key={`${it.kind}:${it.slug}`} className="text-left align-bottom min-w-[220px] w-[260px]">
+                            <div className="relative">
+                              <Link href={detailHref(it, lang)} className="block group no-underline text-[var(--color-text)]">
+                                <div className="aspect-[4/3] rounded-xl overflow-hidden bg-[var(--color-search-bg)] mb-2">
+                                  {it.photo ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img src={it.photo} alt={it.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-3xl">🏝️</div>
+                                  )}
+                                </div>
+                                <div className="text-[15px] font-semibold leading-snug line-clamp-2 mb-3">{it.title}</div>
+                              </Link>
+                              <button
+                                type="button"
+                                aria-label={c.remove}
+                                onClick={() => remove(it.kind, it.slug)}
+                                className="absolute top-2 right-2 inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/85 backdrop-blur-sm hover:bg-white text-[#1A1F1C] shadow-[0_1px_3px_rgba(0,0,0,0.12)]"
+                              >
+                                <X size={14} />
+                              </button>
+                            </div>
+                          </th>
                         ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </section>
-              )
-            })}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rows.filter(r => realEstate.some(it => r.cell(it))).map(r => (
+                        <tr key={r.key}>
+                          <td className="sticky left-0 bg-[var(--color-bg)] z-10 text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] py-3 align-top w-[120px]">
+                            {r.label}
+                          </td>
+                          {realEstate.map(it => {
+                            const v = r.cell(it)
+                            return (
+                              <td key={`${r.key}-${it.kind}:${it.slug}`} className="text-[14px] text-[var(--color-text)] py-3 align-top">
+                                {v ?? <span className="text-[var(--color-text-muted)]">—</span>}
+                              </td>
+                            )
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            )}
+
+            {complexes.length > 0 && (
+              <section className="mb-10">
+                <h2 className="text-[18px] md:text-[20px] font-semibold text-[var(--color-text)] mb-4">
+                  {c.sectionComplexes}
+                  <span className="text-[var(--color-text-muted)] font-normal ml-2">· {complexes.length}</span>
+                </h2>
+                <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {complexes.map(item => {
+                    const completion = item.completionYear
+                    return (
+                      <li key={`${item.kind}:${item.slug}`} className="relative">
+                        <Link
+                          href={detailHref(item, lang)}
+                          className="block bg-white rounded-2xl border border-[var(--color-border)] overflow-hidden no-underline text-[var(--color-text)] hover:border-[var(--color-primary)] transition-colors"
+                        >
+                          <div className="aspect-[4/3] bg-[var(--color-search-bg)]">
+                            {item.photo ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={item.photo} alt={item.title} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-3xl">🏝️</div>
+                            )}
+                          </div>
+                          <div className="p-4">
+                            <h3 className="text-[16px] font-semibold leading-snug mb-2 line-clamp-2">{item.title}</h3>
+                            <div className="text-[13px] text-[var(--color-text-muted)] flex items-center gap-3 flex-wrap">
+                              {item.district && <span>{item.district}</span>}
+                              {completion && <span>{c.rowCompletion}: {completion}</span>}
+                            </div>
+                          </div>
+                        </Link>
+                        <button
+                          type="button"
+                          aria-label={c.remove}
+                          onClick={() => remove(item.kind, item.slug)}
+                          className="absolute top-3 right-3 z-10 inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/85 backdrop-blur-sm hover:bg-white text-[#1A1F1C] shadow-[0_1px_3px_rgba(0,0,0,0.12)]"
+                        >
+                          <X size={16} />
+                        </button>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </section>
+            )}
           </>
         )}
         <div className="h-16" />
