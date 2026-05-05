@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { Home, Building, Building2, HardHat, KeyRound, Menu, X } from 'lucide-react'
 import { LangSwitch } from './LangSwitch'
 import { CurrencyToggle } from './CurrencyContext'
+import { WishlistHeaderLink } from './WishlistHeaderLink'
 import { t, type Lang } from '@/lib/i18n'
 
 type NavKey = 'villy' | 'apartamenty' | 'zhilye-kompleksy' | 'zastrojshhiki' | 'arenda'
@@ -55,6 +56,7 @@ export function Header({ active }: { active?: NavKey }) {
         </nav>
 
         <div className="ml-auto flex items-center gap-2 shrink-0">
+          <WishlistHeaderLink />
           <CurrencyToggle />
           <LangSwitch />
         </div>

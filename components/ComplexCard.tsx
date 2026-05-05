@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ProgressBar } from './ProgressBar'
 import { PhotoSlider } from './PhotoSlider'
 import { useCurrency } from './CurrencyContext'
+import { WishlistButton } from './WishlistButton'
 import { formatPrice } from '@/lib/currency'
 import type { Lang } from '@/lib/i18n'
 
@@ -61,7 +62,20 @@ export function ComplexCard({ c, lang = 'ru' }: { c: ComplexCardData; lang?: Lan
       href={detailHref}
       className="group flex h-full flex-col bg-[var(--color-card-bg)] rounded-2xl border border-[var(--color-border)] overflow-hidden hover:shadow-sm transition-shadow"
     >
-      <PhotoSlider photos={slides} alt={c.name} heightClass="h-[240px] md:h-[360px]" trackingId={`complex:${c.slug}`} />
+      <div className="relative">
+        <PhotoSlider photos={slides} alt={c.name} heightClass="h-[240px] md:h-[360px]" trackingId={`complex:${c.slug}`} />
+        <WishlistButton
+          className="absolute top-3 right-3 z-10"
+          item={() => ({
+            kind: 'complex', slug: c.slug, title: c.name,
+            photo: c.photos?.[0] ?? c.coverUrl ?? null,
+            priceUsd: c.villaPriceFrom ?? c.aptPriceFrom ?? null,
+            district: c.location ?? null,
+            bedrooms: null,
+            savedAt: new Date().toISOString(),
+          })}
+        />
+      </div>
 
       <div className="flex flex-1 flex-col p-6">
         <h3 className="text-[24px] font-semibold text-[var(--color-text)] mb-3 truncate">{c.name}</h3>

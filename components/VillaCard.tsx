@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { PhotoSlider } from './PhotoSlider'
 import { useCurrency } from './CurrencyContext'
+import { WishlistButton } from './WishlistButton'
 import { formatPrice } from '@/lib/currency'
 import type { Lang } from '@/lib/i18n'
 
@@ -50,6 +51,17 @@ export function VillaCard({ a, lang = 'ru' }: { a: VillaCardData; lang?: Lang })
             {dealLabel}
           </span>
         )}
+        <WishlistButton
+          className="absolute top-3 right-3 z-10"
+          item={() => ({
+            kind: 'villa', slug: a.slug, title: a.title,
+            photo: a.photos?.[0] ?? null,
+            priceUsd: a.priceUsd ?? null,
+            district: a.district ?? null,
+            bedrooms: a.bedrooms ?? null,
+            savedAt: new Date().toISOString(),
+          })}
+        />
       </div>
 
       <div className="p-6">
