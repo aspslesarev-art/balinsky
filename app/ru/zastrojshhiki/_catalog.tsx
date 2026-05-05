@@ -62,17 +62,16 @@ function richnessLen(v: unknown): number {
   return 0
 }
 
-// Pull the EN translation if the lang is 'en' and the column is filled.
-// Otherwise fall back to the RU value silently — bullets coming from
-// translatable Airtable fields shouldn't render as the placeholder
-// because the row already shows a "no data" italic line for empty
-// values, and a giant column-name string would be far worse.
+// Pull the EN translation if filled; otherwise return the literal
+// "<key> EN" placeholder so editors immediately see which Airtable
+// columns to create. Matches tField() from lib/i18n.ts but kept local
+// because the catalogue uses raw `asText` for unwrapping below.
 function txt(data: Record<string, unknown>, key: string, lang: Lang): string | null {
-  if (lang === 'en') {
-    const en = asText(data[`${key} EN`])
-    if (en) return en
-  }
-  return asText(data[key])
+  if (lang === 'ru') return asText(data[key])
+  const en = asText(data[`${key} EN`])
+  if (en) return en
+  const ru = asText(data[key])
+  return ru ? `${key} EN` : null
 }
 
 export async function DevelopersCatalog({
@@ -178,7 +177,7 @@ export async function DevelopersCatalog({
 
         <DevelopersList items={items} lang={lang} />
 
-        <DevelopersSeoContent />
+        <DevelopersSeoContent lang={lang} />
 
         <div className="h-16" />
       </PageContainer>
