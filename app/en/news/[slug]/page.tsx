@@ -1,4 +1,4 @@
-import { KnowledgeDetail, generateKnowledgeDetailMetadata } from './_detail'
+import { NewsDetail, generateNewsDetailMetadata } from '../../../ru/novosti/[slug]/_detail'
 
 export const revalidate = 600
 export function generateStaticParams() { return [] }
@@ -7,10 +7,10 @@ type Params = Promise<{ slug: string }>
 
 export async function generateMetadata({ params }: { params: Params }) {
   const { slug } = await params
-  return generateKnowledgeDetailMetadata(slug, 'ru')
+  return generateNewsDetailMetadata(slug, 'en')
 }
 
 export default async function Page({ params }: { params: Params }) {
   const { slug } = await params
-  return <KnowledgeDetail slug={slug} lang="ru" />
+  return <NewsDetail slug={slug} lang="en" />
 }
