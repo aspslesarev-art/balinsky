@@ -1,8 +1,12 @@
-import { redirect } from 'next/navigation'
+// Mirror of /ru/page.tsx — same data layer (Russian Airtable content,
+// no translation columns yet for the home blocks), only chrome
+// translated. When updating the layout of the home page, update both
+// files in lockstep.
 
-// EN root — there's no English landing page yet, but the i18n pilot
-// runs at /en/villy/o/<slug>. Bounce the visitor to the Russian home
-// for now so they don't hit a 404 while we build out the EN catalog.
-export default function EnRoot() {
-  redirect('/ru')
-}
+// For now, redirect to /ru — the home page has 474 lines with many
+// inline RU strings that need careful translation. Will be replaced
+// with a proper EN home in the next iteration. Visitors clicking
+// "EN" in the header from any other page still land on a localised
+// version (villas / apartments / complexes / etc all have EN now).
+import { redirect } from 'next/navigation'
+export default function EnHome() { redirect('/en/villas') }

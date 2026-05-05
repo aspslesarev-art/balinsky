@@ -1,7 +1,48 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { Lock, Loader2, X, CheckCircle2 } from 'lucide-react'
+import type { Lang } from '@/lib/i18n'
+
+const COPY = {
+  ru: {
+    cta: 'Зарезервировать',
+    titleOpen: 'Зарезервировать объект',
+    titleDone: 'Бронь принята',
+    close: 'Закрыть',
+    submitted: 'Заявка отправлена менеджеру',
+    explainer: (email: string) => (
+      <>В течение часа мы пришлём на <strong className="text-[#111827] break-all">{email}</strong> счёт для оплаты резервационного депозита. Объект забронирован за вами на 14 дней. Паспортные данные пришлёте ответом на тот же email.</>
+    ),
+    ok: 'Понятно',
+    intro: 'Объект встанет на 14-дневный hold. Менеджер пришлёт счёт на оплату депозита на указанный email.',
+    name: 'Имя и фамилия', namePh: 'Иван Петров',
+    email: 'Email', emailPh: 'ivan@example.com',
+    phone: 'Телефон', phonePh: '+7 999 123-45-67',
+    consent: 'Согласен с обработкой персональных данных и условиями резервационного депозита.',
+    failed: 'Не получилось отправить. Попробуйте ещё раз.',
+    sending: 'Отправляем…',
+  },
+  en: {
+    cta: 'Reserve',
+    titleOpen: 'Reserve this property',
+    titleDone: 'Reservation received',
+    close: 'Close',
+    submitted: 'Sent to the manager',
+    explainer: (email: string) => (
+      <>We will email <strong className="text-[#111827] break-all">{email}</strong> within an hour with an invoice for the reservation deposit. The property is held for you for 14 days. Send your passport details in reply to the same email.</>
+    ),
+    ok: 'Got it',
+    intro: 'The property goes on a 14-day hold. The manager will email an invoice for the deposit to the address you provide.',
+    name: 'Full name', namePh: 'John Smith',
+    email: 'Email', emailPh: 'john@example.com',
+    phone: 'Phone', phonePh: '+1 555 123 45 67',
+    consent: 'I agree to the processing of personal data and reservation deposit terms.',
+    failed: 'Could not send. Please try again.',
+    sending: 'Sending…',
+  },
+} as const
 
 // Stage-1 reservation flow: visitor leaves name + email + phone. Backend
 // records the row and pings the operator on Telegram. The operator then
@@ -30,6 +71,9 @@ export function ReserveButton({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
+  const pathname = usePathname() ?? ''
+  const lang: Lang = pathname.startsWith('/en') ? 'en' : 'ru'
+  const c = COPY[lang]
 
   const canSubmit = name.trim().length > 0
     && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
@@ -77,7 +121,7 @@ export function ReserveButton({
       setDone(true)
     } catch (e) {
       console.error('[reserve] failed', e)
-      setError('Не получилось отправить. Попробуйте ещё раз.')
+      setError(c.failed)
     } finally {
       setBusy(false)
     }
@@ -90,7 +134,7 @@ export function ReserveButton({
         onClick={() => { setDone(false); setOpen(true) }}
         className={`inline-flex items-center justify-center gap-2 h-[54px] px-6 rounded-[10px] bg-white border border-[var(--color-border)] hover:border-[var(--color-text-muted)] text-[#1A1F1C] text-[15px] md:text-[16px] font-semibold whitespace-nowrap transition-colors ${className}`}
       >
-        <Lock size={18} strokeWidth={1.6} /> Зарезервировать
+        <Lock size={18} strokeWidth={1.6} /> {c.cta}
       </button>
 
       {open && (
@@ -111,14 +155,14 @@ export function ReserveButton({
 
             <div className="flex items-start justify-between gap-3 px-5 sm:px-7 pt-3 sm:pt-7 pb-2">
               <h3 className="text-[19px] sm:text-[22px] font-semibold tracking-tight text-[#111827] leading-tight">
-                {done ? 'Бронь принята' : 'Зарезервировать объект'}
+                {done ? c.titleDone : c.titleOpen}
               </h3>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
                 disabled={busy}
                 className="shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-full bg-black/5 hover:bg-black/10 text-[#111827] disabled:opacity-50"
-                aria-label="Закрыть"
+                aria-label={c.close}
               >
                 <X size={18} />
               </button>
@@ -129,34 +173,31 @@ export function ReserveButton({
                 <div>
                   <div className="flex items-center gap-2 text-[var(--color-primary-pressed)] mb-3">
                     <CheckCircle2 size={20} />
-                    <span className="text-[15px] font-medium">Заявка отправлена менеджеру</span>
+                    <span className="text-[15px] font-medium">{c.submitted}</span>
                   </div>
                   <p className="text-[14px] text-[var(--color-text-muted)] leading-relaxed mb-5">
-                    В течение часа мы пришлём на <strong className="text-[#111827] break-all">{email.trim()}</strong> счёт
-                    для оплаты резервационного депозита. Объект забронирован за вами на 14 дней.
-                    Паспортные данные пришлёте ответом на тот же email.
+                    {c.explainer(email.trim())}
                   </p>
                   <button
                     type="button"
                     onClick={() => setOpen(false)}
                     className="w-full inline-flex items-center justify-center rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[15px] font-medium h-12 transition-colors"
                   >
-                    Понятно
+                    {c.ok}
                   </button>
                 </div>
               ) : (
                 <>
                   <p className="text-[13px] text-[var(--color-text-muted)] leading-relaxed mb-5">
-                    Объект встанет на 14-дневный hold. Менеджер пришлёт счёт на оплату депозита
-                    на указанный email.
+                    {c.intro}
                   </p>
                   <form
                     onSubmit={e => { e.preventDefault(); submit() }}
                     className="space-y-3.5"
                   >
-                    <Field id="rsv-name" label="Имя и фамилия" value={name} onChange={setName} placeholder="Иван Петров" autoComplete="name" required />
-                    <Field id="rsv-email" label="Email" value={email} onChange={setEmail} placeholder="ivan@example.com" inputMode="email" autoComplete="email" required />
-                    <Field id="rsv-phone" label="Телефон" value={phone} onChange={setPhone} placeholder="+7 999 123-45-67" inputMode="tel" autoComplete="tel" required />
+                    <Field id="rsv-name" label={c.name} value={name} onChange={setName} placeholder={c.namePh} autoComplete="name" required />
+                    <Field id="rsv-email" label={c.email} value={email} onChange={setEmail} placeholder={c.emailPh} inputMode="email" autoComplete="email" required />
+                    <Field id="rsv-phone" label={c.phone} value={phone} onChange={setPhone} placeholder={c.phonePh} inputMode="tel" autoComplete="tel" required />
                     <label className="flex items-start gap-2.5 pt-1 cursor-pointer">
                       <input
                         type="checkbox"
@@ -165,7 +206,7 @@ export function ReserveButton({
                         className="mt-0.5 w-4 h-4 accent-[var(--color-primary)] shrink-0"
                       />
                       <span className="text-[12px] text-[var(--color-text-muted)] leading-snug">
-                        Согласен с обработкой персональных данных и условиями резервационного депозита.
+                        {c.consent}
                       </span>
                     </label>
                     {error && <p className="text-[13px] text-[#B91C1C]">{error}</p>}
@@ -177,10 +218,10 @@ export function ReserveButton({
                       {busy ? (
                         <>
                           <Loader2 size={16} className="animate-spin" />
-                          Отправляем…
+                          {c.sending}
                         </>
                       ) : (
-                        'Зарезервировать'
+                        c.cta
                       )}
                     </button>
                   </form>

@@ -2,11 +2,52 @@
 
 import Link from 'next/link'
 import type { ReactNode } from 'react'
+import { usePathname } from 'next/navigation'
 import { Send, ArrowRight, FileText, MapPinned, UserRound, Lock } from 'lucide-react'
 import { useCurrency, CurrencyToggle } from './CurrencyContext'
 import { formatPrice } from '@/lib/currency'
 import { botLink } from '@/lib/bot-link'
 import { ReserveButton } from './ReserveButton'
+import type { Lang } from '@/lib/i18n'
+
+const COPY = {
+  ru: {
+    buyChat: 'Купить — чат в Telegram',
+    buySeller: 'Купить — связаться с продавцом',
+    perSqm: '/ м²',
+    priceUpdated: (d: string) => `Цена обновлена ${d}`,
+    reservedTitle: 'Объект сейчас забронирован',
+    reservedUntil: (d: string) => `Hold действует до ${d}. Если бронь снимется — напишем менеджеру.`,
+    chipsResale: [
+      { icon: 'user', label: 'Прямой контакт продавца' },
+      { icon: 'file', label: 'Документы по объекту' },
+    ],
+    chipsPrimary: [
+      { icon: 'file', label: 'Документы и due diligence' },
+      { icon: 'map',  label: 'Мастер-план и планировки' },
+      { icon: 'user', label: 'Прямой контакт застройщика' },
+    ],
+    locale: 'ru-RU',
+  },
+  en: {
+    buyChat: 'Buy — chat on Telegram',
+    buySeller: 'Buy — contact seller',
+    perSqm: '/ m²',
+    priceUpdated: (d: string) => `Price updated ${d}`,
+    reservedTitle: 'Currently reserved',
+    reservedUntil: (d: string) => `Hold expires on ${d}. If the hold is released we will message the manager.`,
+    chipsResale: [
+      { icon: 'user', label: 'Direct seller contact' },
+      { icon: 'file', label: 'Property documents' },
+    ],
+    chipsPrimary: [
+      { icon: 'file', label: 'Documents & due diligence' },
+      { icon: 'map',  label: 'Master plan & layouts' },
+      { icon: 'user', label: 'Direct developer contact' },
+    ],
+    locale: 'en-GB',
+  },
+} as const
 
 // Single bordered container that joins the price + the two CTAs +
 // trust-chips on the villa / apartment detail page. Replaces the
@@ -44,15 +85,18 @@ export function PriceCtaCard({
   reservedUntil?: string | null
 }) {
   const { currency } = useCurrency()
+  const pathname = usePathname() ?? ''
+  const lang: Lang = pathname.startsWith('/en') ? 'en' : 'ru'
+  const c = COPY[lang]
   const main = formatPrice(priceUsd, currency)
   const perSqm = pricePerSqmUsd != null && Number.isFinite(pricePerSqmUsd) && pricePerSqmUsd > 0
     ? formatPrice(pricePerSqmUsd, currency)
     : null
-  const updated = updatedAt ? formatUpdated(updatedAt) : null
+  const updated = updatedAt ? formatUpdated(updatedAt, c.locale) : null
 
   const isResale = !!sellerUrl
   const buyHref = isResale ? sellerUrl! : botLink('manager', managerId ?? '')
-  const buyLabel = isResale ? 'Купить — связаться с продавцом' : 'Купить — чат в Telegram'
+  const buyLabel = isResale ? c.buySeller : c.buyChat
 
   return (
     <div className="rounded-2xl bg-white border border-[var(--color-border)] px-5 py-5 md:px-6 md:py-[22px] grid grid-cols-1 md:grid-cols-[1fr_auto] gap-5 md:gap-6 md:items-center">
@@ -69,12 +113,12 @@ export function PriceCtaCard({
         </div>
         {perSqm && (
           <div className="mt-1.5 text-[13px] text-[var(--color-text-muted)]">
-            {perSqm} / м²
+            {perSqm} {c.perSqm}
           </div>
         )}
         {updated && (
           <div className="mt-2 text-[12px] text-[var(--color-text-muted)]">
-            Цена обновлена {updated}
+            {c.priceUpdated(updated)}
           </div>
         )}
       </div>
@@ -90,8 +134,8 @@ export function PriceCtaCard({
           <div className="w-full md:w-auto md:max-w-[420px] rounded-[10px] border border-[#E5E7EB] bg-[#FEF3C7] text-[#92400E] px-4 py-3 flex items-start gap-2">
             <Lock size={16} strokeWidth={1.6} className="shrink-0 mt-0.5" />
             <div className="text-[13px] leading-snug">
-              <div className="font-semibold mb-0.5">Объект сейчас забронирован</div>
-              <div>Hold действует до {formatUpdated(reservedUntil)}. Если бронь снимется — напишем менеджеру.</div>
+              <div className="font-semibold mb-0.5">{c.reservedTitle}</div>
+              <div>{c.reservedUntil(formatUpdated(reservedUntil, c.locale) ?? '')}</div>
             </div>
           </div>
         ) : (
@@ -127,17 +171,10 @@ export function PriceCtaCard({
             of the click — closes the "куда я ухожу" gap without
             collapsing into a microtext line. */}
         <ul className="flex flex-wrap gap-1.5 md:justify-end w-full md:w-auto">
-          {(isResale
-            ? [
-                { Icon: UserRound, label: 'Прямой контакт продавца' },
-                { Icon: FileText, label: 'Документы по объекту' },
-              ]
-            : [
-                { Icon: FileText, label: 'Документы и due diligence' },
-                { Icon: MapPinned, label: 'Мастер-план и планировки' },
-                { Icon: UserRound, label: 'Прямой контакт застройщика' },
-              ]
-          ).map(({ Icon, label }) => (
+          {(isResale ? c.chipsResale : c.chipsPrimary).map(({ icon, label }) => {
+            const Icon = icon === 'user' ? UserRound : icon === 'map' ? MapPinned : FileText
+            return ({ Icon, label })
+          }).map(({ Icon, label }) => (
             <li
               key={label}
               className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-[var(--color-search-bg)] text-[12px] text-[var(--color-text-muted)]"
@@ -152,8 +189,8 @@ export function PriceCtaCard({
   )
 }
 
-function formatUpdated(iso: string): string | null {
+function formatUpdated(iso: string, locale: string = 'ru-RU'): string | null {
   try {
-    return new Date(iso).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
+    return new Date(iso).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })
   } catch { return null }
 }

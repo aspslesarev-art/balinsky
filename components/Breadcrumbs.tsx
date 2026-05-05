@@ -21,7 +21,7 @@ export function Breadcrumbs({ items }: { items: Crumb[] }) {
 
   return (
     <>
-      <nav aria-label="Хлебные крошки" className="mt-4 mb-2">
+      <nav aria-label="Breadcrumbs" className="mt-4 mb-2">
         <ol className="flex items-center flex-wrap gap-x-1.5 gap-y-1 text-[13px] text-[var(--color-text-muted)]">
           {items.map((c, i) => {
             const last = i === items.length - 1
