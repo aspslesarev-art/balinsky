@@ -191,13 +191,25 @@ export function ShortlistView({ lang }: { lang: Lang }) {
                   {c.sectionRealEstate}
                   <span className="text-[var(--color-text-muted)] font-normal ml-2">· {realEstate.length}</span>
                 </h2>
+                {/* table-fixed + w-full distributes remaining width
+                    evenly across the item columns, so 2 items stretch to
+                    ~556px each instead of leaving a 590px empty strip.
+                    The minWidth keeps cells legible when many items are
+                    saved — overflows the container, scrolls horizontally. */}
                 <div className="overflow-x-auto pb-4">
-                  <table className="border-separate border-spacing-x-3 min-w-full">
+                  <table
+                    className="table-fixed border-separate border-spacing-x-3 w-full"
+                    style={{ minWidth: `${120 + realEstate.length * 220}px` }}
+                  >
+                    <colgroup>
+                      <col style={{ width: '120px' }} />
+                      {realEstate.map(it => <col key={`${it.kind}:${it.slug}`} />)}
+                    </colgroup>
                     <thead>
                       <tr>
-                        <th className="sticky left-0 bg-[var(--color-bg)] z-10 align-bottom min-w-[120px] w-[120px]"></th>
+                        <th className="sticky left-0 bg-[var(--color-bg)] z-10 align-bottom"></th>
                         {realEstate.map(it => (
-                          <th key={`${it.kind}:${it.slug}`} className="text-left align-bottom min-w-[220px] w-[260px]">
+                          <th key={`${it.kind}:${it.slug}`} className="text-left align-bottom">
                             <div className="relative">
                               <Link href={detailHref(it, lang)} className="block group no-underline text-[var(--color-text)]">
                                 <div className="aspect-[4/3] rounded-xl overflow-hidden bg-[var(--color-search-bg)] mb-2">
@@ -226,7 +238,7 @@ export function ShortlistView({ lang }: { lang: Lang }) {
                     <tbody>
                       {rows.filter(r => realEstate.some(it => r.cell(it))).map(r => (
                         <tr key={r.key}>
-                          <td className="sticky left-0 bg-[var(--color-bg)] z-10 text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] py-3 align-top w-[120px]">
+                          <td className="sticky left-0 bg-[var(--color-bg)] z-10 text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] py-3 align-top">
                             {r.label}
                           </td>
                           {realEstate.map(it => {
