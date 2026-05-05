@@ -9,17 +9,38 @@ import { CurrencyToggle, useCurrency } from '@/components/CurrencyContext'
 import { formatPrice, type Currency } from '@/lib/currency'
 import type { RentalItem } from '@/lib/rental'
 import { PhotoSlider } from '@/components/PhotoSlider'
+import type { Lang } from '@/lib/i18n'
 
 const PAGE_SIZE = 24
 
 type SortKey = 'newest' | 'price-asc' | 'price-desc' | 'br-asc' | 'br-desc'
-const SORT_LABELS: Record<SortKey, string> = {
-  'newest': 'Сначала новые',
-  'price-asc': 'Цена ↑',
-  'price-desc': 'Цена ↓',
-  'br-asc': 'Спален ↑',
-  'br-desc': 'Спален ↓',
-}
+
+const COPY = {
+  ru: {
+    sort: { newest: 'Сначала новые', 'price-asc': 'Цена ↑', 'price-desc': 'Цена ↓', 'br-asc': 'Спален ↑', 'br-desc': 'Спален ↓' } as Record<SortKey, string>,
+    presets: ['До $1000', '$1000–2000', '$2000–3000', '$3000+'] as const,
+    district: 'Район', bedrooms: 'Спальни', price: 'Цена', sortLabel: 'Сортировка',
+    reset: 'Сбросить', clear: 'Очистить', search: 'Поиск…', noResults: 'Ничего не нашлось',
+    priceMonthHeader: 'Цена в месяц, USD', priceFrom: 'От', priceTo: 'До',
+    objects: (n: number) => `${n} ${pluralRu(n, ['объект', 'объекта', 'объектов'])}`,
+    showingOfTotal: (shown: number, total: number) => `Показано ${shown} из ${total} — загрузить ещё`,
+    emptyByFilters: 'По выбранным фильтрам ничего не нашлось. Сбросьте фильтры или попробуйте другие.',
+    perMonth: '/ мес',
+    bali: 'Бали',
+  },
+  en: {
+    sort: { newest: 'Newest first', 'price-asc': 'Price ↑', 'price-desc': 'Price ↓', 'br-asc': 'Bedrooms ↑', 'br-desc': 'Bedrooms ↓' } as Record<SortKey, string>,
+    presets: ['Up to $1000', '$1000–2000', '$2000–3000', '$3000+'] as const,
+    district: 'District', bedrooms: 'Bedrooms', price: 'Price', sortLabel: 'Sort',
+    reset: 'Clear', clear: 'Clear', search: 'Search…', noResults: 'Nothing found',
+    priceMonthHeader: 'Monthly price, USD', priceFrom: 'From', priceTo: 'To',
+    objects: (n: number) => `${n} ${n === 1 ? 'listing' : 'listings'}`,
+    showingOfTotal: (shown: number, total: number) => `Showing ${shown} of ${total} — load more`,
+    emptyByFilters: 'No listings match the selected filters. Clear filters or try different ones.',
+    perMonth: '/ mo',
+    bali: 'Bali',
+  },
+} as const
 
 function pluralRu(n: number, forms: [string, string, string]): string {
   const m10 = n % 10, m100 = n % 100
@@ -27,13 +48,6 @@ function pluralRu(n: number, forms: [string, string, string]): string {
   if (m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20)) return forms[1]
   return forms[2]
 }
-
-const PRICE_PRESETS: { label: string; min: number | null; max: number | null }[] = [
-  { label: 'До $1000', min: null, max: 1000 },
-  { label: '$1000–2000', min: 1000, max: 2000 },
-  { label: '$2000–3000', min: 2000, max: 3000 },
-  { label: '$3000+', min: 3000, max: null },
-]
 
 type Initial = {
   districts: string[]
@@ -52,12 +66,20 @@ function parseNum(v: string | null): number | null {
   return Number.isFinite(n) ? n : null
 }
 function isSortKey(v: string | null): v is SortKey {
-  return v != null && (v in SORT_LABELS)
+  return v != null && (v === 'newest' || v === 'price-asc' || v === 'price-desc' || v === 'br-asc' || v === 'br-desc')
 }
 
-export function RentalCatalog({ items, initial }: { items: RentalItem[]; initial?: Initial }) {
+export function RentalCatalog({ items, initial, lang = 'ru' }: { items: RentalItem[]; initial?: Initial; lang?: Lang }) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const COPY_L = COPY[lang]
+  const SORT_LABELS = COPY_L.sort
+  const PRICE_PRESETS: { label: string; min: number | null; max: number | null }[] = [
+    { label: COPY_L.presets[0], min: null, max: 1000 },
+    { label: COPY_L.presets[1], min: 1000, max: 2000 },
+    { label: COPY_L.presets[2], min: 2000, max: 3000 },
+    { label: COPY_L.presets[3], min: 3000, max: null },
+  ]
 
   // Single source of truth = URL. State is derived from searchParams so the
   // browser back/forward buttons restore filters automatically.
@@ -180,7 +202,7 @@ export function RentalCatalog({ items, initial }: { items: RentalItem[]; initial
   const priceActive = priceMin != null || priceMax != null
   const priceSummary = priceActive
     ? `${priceMin != null ? '$' + priceMin : ''}${priceMin != null && priceMax != null ? '–' : ''}${priceMax != null ? '$' + priceMax : (priceMin != null ? '+' : '')}`
-    : 'Цена'
+    : COPY_L.price
   const activeCount = districts.length + bedrooms.length + (priceActive ? 1 : 0)
 
   // Lazy mount: render PAGE_SIZE items, expose more on scroll near bottom.
@@ -207,8 +229,8 @@ export function RentalCatalog({ items, initial }: { items: RentalItem[]; initial
     <>
       <div className="mb-6 flex flex-wrap items-center gap-2">
         <FilterDropdown
-          label="Район"
-          summary={districts.length === 0 ? 'Район' : `Район · ${districts.length}`}
+          label={COPY_L.district}
+          summary={districts.length === 0 ? COPY_L.district : `${COPY_L.district} · ${districts.length}`}
           active={districts.length > 0}
         >
           {() => (
@@ -217,13 +239,14 @@ export function RentalCatalog({ items, initial }: { items: RentalItem[]; initial
               selected={districts}
               onChange={setDistricts}
               searchable
+              lang={lang}
             />
           )}
         </FilterDropdown>
 
         <FilterDropdown
-          label="Спальни"
-          summary={bedrooms.length === 0 ? 'Спальни' : bedrooms.map(b => `${b} BR`).join(', ')}
+          label={COPY_L.bedrooms}
+          summary={bedrooms.length === 0 ? COPY_L.bedrooms : bedrooms.map(b => `${b} BR`).join(', ')}
           active={bedrooms.length > 0}
         >
           {() => (
@@ -231,12 +254,13 @@ export function RentalCatalog({ items, initial }: { items: RentalItem[]; initial
               options={bedroomOptions.map(o => ({ ...o, label: `${o.value} BR` }))}
               selected={bedrooms}
               onChange={setBedrooms}
+              lang={lang}
             />
           )}
         </FilterDropdown>
 
         <FilterDropdown
-          label="Цена"
+          label={COPY_L.price}
           summary={priceSummary}
           active={priceActive}
         >
@@ -247,17 +271,19 @@ export function RentalCatalog({ items, initial }: { items: RentalItem[]; initial
               setPriceMin={setPriceMin}
               setPriceMax={setPriceMax}
               countFor={presetCount}
+              presets={PRICE_PRESETS}
+              lang={lang}
             />
           )}
         </FilterDropdown>
 
         <FilterDropdown
-          label="Сортировка"
+          label={COPY_L.sortLabel}
           summary={SORT_LABELS[sort]}
           active={sort !== 'newest'}
         >
           {(close) => (
-            <SortMenu current={sort} onChange={(v) => { setSort(v); close() }} />
+            <SortMenu current={sort} onChange={(v) => { setSort(v); close() }} labels={SORT_LABELS} />
           )}
         </FilterDropdown>
 
@@ -267,17 +293,14 @@ export function RentalCatalog({ items, initial }: { items: RentalItem[]; initial
             onClick={() => updateUrl({ districts: [], bedrooms: [], priceMin: null, priceMax: null })}
             className="inline-flex items-center gap-1 text-[13px] text-[var(--color-text-muted)] hover:text-[#111827] px-3 py-2"
           >
-            <X size={14} /> Сбросить
+            <X size={14} /> {COPY_L.reset}
           </button>
         )}
 
-        {/* basis-full bumps this group onto its own row on mobile so it doesn't
-            fight the filter buttons for horizontal space; on sm+ ml-auto keeps
-            it pinned to the right of the filter row. */}
         <div className="basis-full sm:basis-auto sm:ml-auto flex items-center justify-between sm:justify-end gap-3 mt-1 sm:mt-0">
           <CurrencyToggle />
           <div className="text-[13px] text-[var(--color-text-muted)]">
-            {filtered.length} {pluralRu(filtered.length, ['объект', 'объекта', 'объектов'])}
+            {COPY_L.objects(filtered.length)}
           </div>
         </div>
       </div>
@@ -287,7 +310,7 @@ export function RentalCatalog({ items, initial }: { items: RentalItem[]; initial
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {visibleItems.map(r => (
               <li key={r.id}>
-                <RentalCard r={r} currency={currency} />
+                <RentalCard r={r} currency={currency} lang={lang} perMonth={COPY_L.perMonth} bali={COPY_L.bali} />
               </li>
             ))}
           </ul>
@@ -298,25 +321,25 @@ export function RentalCatalog({ items, initial }: { items: RentalItem[]; initial
                 onClick={() => setVisible(v => Math.min(v + PAGE_SIZE, filtered.length))}
                 className="text-[13px] text-[var(--color-text-muted)] hover:text-[#111827] px-4 py-2"
               >
-                Показано {visibleItems.length} из {filtered.length} — загрузить ещё
+                {COPY_L.showingOfTotal(visibleItems.length, filtered.length)}
               </button>
             </div>
           )}
         </>
       ) : (
         <div className="rounded-2xl border border-dashed border-[var(--color-border)] bg-white p-8 text-center text-[var(--color-text-muted)]">
-          По выбранным фильтрам ничего не нашлось. Сбросьте фильтры или попробуйте другие.
+          {COPY_L.emptyByFilters}
         </div>
       )}
     </>
   )
 }
 
-function SortMenu({ current, onChange }: { current: SortKey; onChange: (v: SortKey) => void }) {
+function SortMenu({ current, onChange, labels }: { current: SortKey; onChange: (v: SortKey) => void; labels: Record<SortKey, string> }) {
   return (
     <div className="sm:w-[220px]">
       <ul>
-        {(Object.keys(SORT_LABELS) as SortKey[]).map(key => (
+        {(Object.keys(labels) as SortKey[]).map(key => (
           <li key={key}>
             <button
               type="button"
@@ -325,7 +348,7 @@ function SortMenu({ current, onChange }: { current: SortKey; onChange: (v: SortK
                 key === current ? 'text-[var(--color-primary-pressed)] font-medium bg-[var(--color-primary-soft)]' : 'text-[#111827]'
               }`}
             >
-              {SORT_LABELS[key]}
+              {labels[key]}
             </button>
           </li>
         ))}
@@ -335,14 +358,17 @@ function SortMenu({ current, onChange }: { current: SortKey; onChange: (v: SortK
 }
 
 function PriceRangePopover({
-  priceMin, priceMax, setPriceMin, setPriceMax, countFor,
+  priceMin, priceMax, setPriceMin, setPriceMax, countFor, presets, lang,
 }: {
   priceMin: number | null
   priceMax: number | null
   setPriceMin: (n: number | null) => void
   setPriceMax: (n: number | null) => void
   countFor: (min: number | null, max: number | null) => number
+  presets: { label: string; min: number | null; max: number | null }[]
+  lang: Lang
 }) {
+  const C = COPY[lang]
   const [minDraft, setMinDraft] = useState(priceMin == null ? '' : String(priceMin))
   const [maxDraft, setMaxDraft] = useState(priceMax == null ? '' : String(priceMax))
 
@@ -365,10 +391,10 @@ function PriceRangePopover({
 
   return (
     <div className="sm:w-[300px]">
-      <div className="text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] mb-2">Цена в месяц, USD</div>
+      <div className="text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] mb-2">{C.priceMonthHeader}</div>
       <div className="flex items-center gap-2 mb-3">
         <label className="flex-1">
-          <span className="block text-[11px] text-[var(--color-text-muted)] mb-1">От</span>
+          <span className="block text-[11px] text-[var(--color-text-muted)] mb-1">{C.priceFrom}</span>
           <input
             type="text"
             inputMode="numeric"
@@ -382,7 +408,7 @@ function PriceRangePopover({
         </label>
         <span className="text-[var(--color-text-muted)] mt-4">—</span>
         <label className="flex-1">
-          <span className="block text-[11px] text-[var(--color-text-muted)] mb-1">До</span>
+          <span className="block text-[11px] text-[var(--color-text-muted)] mb-1">{C.priceTo}</span>
           <input
             type="text"
             inputMode="numeric"
@@ -396,7 +422,7 @@ function PriceRangePopover({
         </label>
       </div>
       <div className="flex flex-wrap gap-1.5">
-        {PRICE_PRESETS.map(p => {
+        {presets.map(p => {
           const active = priceMin === p.min && priceMax === p.max
           const count = countFor(p.min, p.max)
           return (
@@ -422,7 +448,7 @@ function PriceRangePopover({
           onClick={() => applyPreset(null, null)}
           className="mt-3 w-full text-[12px] text-[var(--color-text-muted)] hover:text-[#111827] py-1.5"
         >
-          Очистить
+          {C.clear}
         </button>
       )}
     </div>
@@ -434,16 +460,19 @@ function CheckboxList({
   selected,
   onChange,
   searchable,
+  lang,
 }: {
   options: { value: string; label?: string; count?: number }[]
   selected: string[]
   onChange: (next: string[]) => void
   searchable?: boolean
+  lang: Lang
 }) {
   const [query, setQuery] = useState('')
   const filteredOptions = !searchable || query.trim() === ''
     ? options
     : options.filter(o => (o.label ?? o.value).toLowerCase().includes(query.toLowerCase()))
+  const C = COPY[lang]
 
   const toggle = (value: string) => {
     onChange(selected.includes(value) ? selected.filter(v => v !== value) : [...selected, value])
@@ -457,7 +486,7 @@ function CheckboxList({
           type="text"
           value={query}
           onChange={e => setQuery(e.target.value)}
-          placeholder="Поиск…"
+          placeholder={C.search}
           className="w-full mb-2 rounded-lg border border-[var(--color-border)] px-3 py-2 text-[13px] focus:outline-none focus:border-[var(--color-primary)]"
         />
       )}
@@ -480,7 +509,7 @@ function CheckboxList({
           )
         })}
         {filteredOptions.length === 0 && (
-          <li className="px-2 py-2 text-[12px] text-[var(--color-text-muted)]">Ничего не нашлось</li>
+          <li className="px-2 py-2 text-[12px] text-[var(--color-text-muted)]">{C.noResults}</li>
         )}
       </ul>
       {selected.length > 0 && (
@@ -489,18 +518,21 @@ function CheckboxList({
           onClick={() => onChange([])}
           className="mt-2 w-full text-[12px] text-[var(--color-text-muted)] hover:text-[#111827] py-1.5"
         >
-          Очистить
+          {C.clear}
         </button>
       )}
     </div>
   )
 }
 
-function RentalCard({ r, currency }: { r: RentalItem; currency: Currency }) {
+function RentalCard({ r, currency, lang, perMonth, bali }: {
+  r: RentalItem; currency: Currency; lang: Lang; perMonth: string; bali: string
+}) {
   const price = formatPrice(r.priceMonthUsd, currency)
+  const detailHref = lang === 'en' ? `/en/rental/o/${r.slug}` : `/ru/arenda/o/${r.slug}`
   return (
     <Link
-      href={`/ru/arenda/o/${r.slug}`}
+      href={detailHref}
       className="group block bg-[var(--color-card-bg)] rounded-2xl border border-[var(--color-border)] overflow-hidden no-underline text-[#111827]"
     >
       <PhotoSlider photos={r.photos} alt={r.title} trackingId={`rental:${r.slug}`} />
@@ -514,7 +546,7 @@ function RentalCard({ r, currency }: { r: RentalItem; currency: Currency }) {
         </h3>
 
         <div className="text-[18px] font-semibold text-[var(--color-text)] mb-3">
-          {price}<span className="text-[14px] font-normal text-[var(--color-text-muted)]"> / мес</span>
+          {price}<span className="text-[14px] font-normal text-[var(--color-text-muted)]"> {perMonth}</span>
         </div>
 
         <div className="flex items-center flex-wrap gap-x-5 gap-y-1 text-[14px] text-[var(--color-text-muted)]">
