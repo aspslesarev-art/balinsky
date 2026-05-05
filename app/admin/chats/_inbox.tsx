@@ -24,6 +24,32 @@ type ChatRow = {
 
 type Tab = 'private' | 'groups'
 
+function TabButton({
+  active,
+  label,
+  count,
+  onClick,
+}: {
+  active: boolean
+  label: string
+  count: number
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`px-3 py-1.5 rounded-full text-[12px] font-medium ${
+        active
+          ? 'bg-[var(--ax-panel)] text-[var(--ax-fg)]'
+          : 'text-[var(--ax-fg-muted)] hover:text-[var(--ax-fg)] hover:bg-[var(--ax-hover)]'
+      }`}
+    >
+      {label} <span className="opacity-60">· {count}</span>
+    </button>
+  )
+}
+
 const HANDOVER_MS = 10 * 60 * 1000
 
 function botStatus(c: ChatRow | null): { label: string; soft: boolean; off: boolean } {
@@ -313,22 +339,11 @@ export function Inbox() {
                 if (c.chat_type === 'private') acc.private++; else acc.groups++
                 return acc
               }, { private: 0, groups: 0 })
-              const TabBtn = ({ value, label, n }: { value: Tab; label: string; n: number }) => (
-                <button
-                  type="button"
-                  onClick={() => { setTab(value); setActiveId(null) }}
-                  className={`px-3 py-1.5 rounded-full text-[12px] font-medium ${
-                    tab === value
-                      ? 'bg-[var(--ax-panel)] text-[var(--ax-fg)]'
-                      : 'text-[var(--ax-fg-muted)] hover:text-[var(--ax-fg)] hover:bg-[var(--ax-hover)]'
-                  }`}
-                >
-                  {label} <span className="opacity-60">· {n}</span>
-                </button>
-              )
               return <>
-                <TabBtn value="private" label="Личные" n={counts.private} />
-                <TabBtn value="groups"  label="Группы" n={counts.groups}  />
+                <TabButton active={tab === 'private'} label="Личные" count={counts.private}
+                  onClick={() => { setTab('private'); setActiveId(null) }} />
+                <TabButton active={tab === 'groups'}  label="Группы" count={counts.groups}
+                  onClick={() => { setTab('groups');  setActiveId(null) }} />
               </>
             })()}
           </div>
