@@ -16,7 +16,11 @@ const COPY = {
     home: 'Главная',
     crumb: 'Избранное',
     h1: 'Избранное',
-    intro: 'Все объекты из шортлиста сравниваются здесь рядом — листайте таблицу вправо, чтобы увидеть остальные.',
+    intro: 'Объекты сравниваются внутри своего типа — виллы с виллами, апартаменты с апартаментами, комплексы с комплексами.',
+    sectionVillas: 'Виллы',
+    sectionApartments: 'Апартаменты',
+    sectionComplexes: 'Жилые комплексы',
+    sectionRental: 'Аренда',
     empty: 'Пока ничего не добавлено. Откройте каталог и нажмите на сердце у любого объекта.',
     countOne: 'объект', countFew: 'объекта', countMany: 'объектов',
     clear: 'Очистить всё',
@@ -35,7 +39,11 @@ const COPY = {
     home: 'Home',
     crumb: 'Shortlist',
     h1: 'Shortlist',
-    intro: 'Saved listings line up side-by-side — scroll the table horizontally to see the rest.',
+    intro: 'Listings line up by kind — villas next to villas, apartments next to apartments, complexes next to complexes.',
+    sectionVillas: 'Villas',
+    sectionApartments: 'Apartments',
+    sectionComplexes: 'Residential complexes',
+    sectionRental: 'Rental',
     empty: 'Nothing saved yet. Open a catalogue and tap the heart on any listing.',
     countOne: 'item', countFew: 'items', countMany: 'items',
     clear: 'Clear all',
@@ -70,11 +78,6 @@ function detailHref(item: WishlistItem, lang: Lang): string {
   }
 }
 
-function kindLabel(kind: WishlistKind, lang: Lang): string {
-  if (lang === 'en') return ({ villa: 'Villa', apartment: 'Apartment', complex: 'Complex', rental: 'Rental' } as const)[kind]
-  return ({ villa: 'Вилла', apartment: 'Апартаменты', complex: 'Комплекс', rental: 'Аренда' } as const)[kind]
-}
-
 export function ShortlistView({ lang }: { lang: Lang }) {
   const { items, ready, remove, clear } = useWishlist()
   const { currency } = useCurrency()
@@ -90,12 +93,11 @@ export function ShortlistView({ lang }: { lang: Lang }) {
     return c.dealPrimary
   }
 
-  // Side-by-side comparison rows. Each row reads one field across every
-  // saved item. Rows whose cells are empty for everyone get hidden so a
-  // shortlist of three apartments doesn't show empty "Land" / "Plot"
-  // lines.
+  // Comparison rows. Each row reads one field across every saved item
+  // in a section. Rows whose cells are empty for everyone in that
+  // section get hidden — apartments-only group never shows "Land", a
+  // complexes-only group never shows "Bedrooms".
   const rows: { key: string; label: string; cell: (it: WishlistItem) => string | null }[] = [
-    { key: 'kind',       label: c.rowKind,       cell: it => kindLabel(it.kind, lang) },
     { key: 'price',      label: c.rowPrice,      cell: it => fmt(it.priceUsd) },
     { key: 'bedrooms',   label: c.rowBedrooms,   cell: it => it.bedrooms != null ? String(it.bedrooms) : null },
     { key: 'area',       label: c.rowArea,       cell: it => it.area != null ? `${it.area} ${c.sqm}` : null },
@@ -105,7 +107,17 @@ export function ShortlistView({ lang }: { lang: Lang }) {
     { key: 'completion', label: c.rowCompletion, cell: it => it.completionYear ?? null },
     { key: 'dealType',   label: c.rowDealType,   cell: it => dealTypeLabel(it.dealType) },
   ]
-  const filledRows = rows.filter(r => items.some(it => r.cell(it)))
+
+  // Group by kind in a stable order so saving a villa after several
+  // apartments doesn't shuffle the section order on the page.
+  const SECTION_ORDER: WishlistKind[] = ['villa', 'apartment', 'complex', 'rental']
+  const sectionTitle: Record<WishlistKind, string> = {
+    villa: c.sectionVillas, apartment: c.sectionApartments,
+    complex: c.sectionComplexes, rental: c.sectionRental,
+  }
+  const sections = SECTION_ORDER
+    .map(kind => ({ kind, items: items.filter(i => i.kind === kind) }))
+    .filter(s => s.items.length > 0)
 
   // Build the shareable Telegram message — one URL per saved item so the
   // recipient can tap straight into each detail page.
@@ -165,62 +177,69 @@ export function ShortlistView({ lang }: { lang: Lang }) {
           </div>
         ) : (
           <>
-            <p className="text-[14px] text-[var(--color-text-muted)] mb-4 max-w-2xl">{c.intro}</p>
-            <div className="overflow-x-auto -mx-4 px-4 pb-4">
-              <table className="border-separate border-spacing-x-3 min-w-full">
-                <thead>
-                  <tr>
-                    {/* Sticky label column */}
-                    <th className="sticky left-0 bg-[var(--color-bg)] z-10 align-bottom min-w-[120px] w-[120px]"></th>
-                    {items.map(it => (
-                      <th key={`${it.kind}:${it.slug}`} className="text-left align-bottom min-w-[220px] w-[260px]">
-                        <div className="relative">
-                          <Link
-                            href={detailHref(it, lang)}
-                            className="block group no-underline text-[var(--color-text)]"
-                          >
-                            <div className="aspect-[4/3] rounded-xl overflow-hidden bg-[var(--color-search-bg)] mb-2">
-                              {it.photo ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img src={it.photo} alt={it.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-3xl">🏝️</div>
-                              )}
-                            </div>
-                            <div className="text-[15px] font-semibold leading-snug line-clamp-2 mb-3">{it.title}</div>
-                          </Link>
-                          <button
-                            type="button"
-                            aria-label={c.remove}
-                            onClick={() => remove(it.kind, it.slug)}
-                            className="absolute top-2 right-2 inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/85 backdrop-blur-sm hover:bg-white text-[#1A1F1C] shadow-[0_1px_3px_rgba(0,0,0,0.12)]"
-                          >
-                            <X size={14} />
-                          </button>
-                        </div>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filledRows.map(r => (
-                    <tr key={r.key}>
-                      <td className="sticky left-0 bg-[var(--color-bg)] z-10 text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] py-3 align-top w-[120px]">
-                        {r.label}
-                      </td>
-                      {items.map(it => {
-                        const v = r.cell(it)
-                        return (
-                          <td key={`${r.key}-${it.kind}:${it.slug}`} className="text-[14px] text-[var(--color-text)] py-3 align-top">
-                            {v ?? <span className="text-[var(--color-text-muted)]">—</span>}
-                          </td>
-                        )
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <p className="text-[14px] text-[var(--color-text-muted)] mb-6 max-w-2xl">{c.intro}</p>
+            {sections.map(section => {
+              const sectionRows = rows.filter(r => section.items.some(it => r.cell(it)))
+              return (
+                <section key={section.kind} className="mb-10">
+                  <h2 className="text-[18px] md:text-[20px] font-semibold text-[var(--color-text)] mb-4">
+                    {sectionTitle[section.kind]}
+                    <span className="text-[var(--color-text-muted)] font-normal ml-2">· {section.items.length}</span>
+                  </h2>
+                  <div className="overflow-x-auto -mx-4 px-4 pb-4">
+                    <table className="border-separate border-spacing-x-3 min-w-full">
+                      <thead>
+                        <tr>
+                          <th className="sticky left-0 bg-[var(--color-bg)] z-10 align-bottom min-w-[120px] w-[120px]"></th>
+                          {section.items.map(it => (
+                            <th key={`${it.kind}:${it.slug}`} className="text-left align-bottom min-w-[220px] w-[260px]">
+                              <div className="relative">
+                                <Link href={detailHref(it, lang)} className="block group no-underline text-[var(--color-text)]">
+                                  <div className="aspect-[4/3] rounded-xl overflow-hidden bg-[var(--color-search-bg)] mb-2">
+                                    {it.photo ? (
+                                      // eslint-disable-next-line @next/next/no-img-element
+                                      <img src={it.photo} alt={it.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center text-3xl">🏝️</div>
+                                    )}
+                                  </div>
+                                  <div className="text-[15px] font-semibold leading-snug line-clamp-2 mb-3">{it.title}</div>
+                                </Link>
+                                <button
+                                  type="button"
+                                  aria-label={c.remove}
+                                  onClick={() => remove(it.kind, it.slug)}
+                                  className="absolute top-2 right-2 inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/85 backdrop-blur-sm hover:bg-white text-[#1A1F1C] shadow-[0_1px_3px_rgba(0,0,0,0.12)]"
+                                >
+                                  <X size={14} />
+                                </button>
+                              </div>
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sectionRows.map(r => (
+                          <tr key={r.key}>
+                            <td className="sticky left-0 bg-[var(--color-bg)] z-10 text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] py-3 align-top w-[120px]">
+                              {r.label}
+                            </td>
+                            {section.items.map(it => {
+                              const v = r.cell(it)
+                              return (
+                                <td key={`${r.key}-${it.kind}:${it.slug}`} className="text-[14px] text-[var(--color-text)] py-3 align-top">
+                                  {v ?? <span className="text-[var(--color-text-muted)]">—</span>}
+                                </td>
+                              )
+                            })}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              )
+            })}
           </>
         )}
         <div className="h-16" />
