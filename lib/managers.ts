@@ -1,6 +1,10 @@
 export type ManagerItem = {
   id: string
   name: string
+  // EN counterparts populated from `Name En` / `Языки En` in Airtable.
+  // Null / empty array when the editor hasn't filled them in yet — the
+  // UI falls back to the RU values.
+  nameEn?: string | null
   photo: string | null
   telegram: string | null
   telegramHandle: string | null
@@ -8,6 +12,7 @@ export type ManagerItem = {
   botRequest: string | null
   rating: number | null
   languages: string[]
+  languagesEn?: string[]
   developerSlugs: string[]
   developerNames: string[]
 }

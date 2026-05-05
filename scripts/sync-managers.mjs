@@ -140,6 +140,14 @@ for (const r of managers) {
   if (slugs.length === 0) { dropped++; continue } // manager not linked to any published developer
 
   const languages = Array.isArray(f['Языки']) ? f['Языки'] : []
+  // EN fields land in Airtable as `{ state, value, isStale }` AI-generated
+  // wrappers; fs1 unwraps them. Languages EN comes back as a comma- or
+  // slash-separated string ("Russian, English") — split into a clean array.
+  const nameEn = fs1(f['Name En'])
+  const languagesEnRaw = fs1(f['Языки En'])
+  const languagesEn = languagesEnRaw
+    ? languagesEnRaw.split(/[,;/]+/).map(s => s.trim()).filter(Boolean)
+    : []
   const rating = typeof f['Рейтинг'] === 'number' ? f['Рейтинг'] : null
 
   // Photo → Supabase Storage with cache fallback to Airtable URL on upload error.
@@ -154,6 +162,7 @@ for (const r of managers) {
   items.push({
     id: r.id,
     name,
+    nameEn,
     photo: photoUrl,
     telegram: fs1(f['Telegram']),
     telegramHandle: fs1(f['TG Name']),
@@ -161,6 +170,7 @@ for (const r of managers) {
     botRequest: fs1(f['Заявка в бота']),
     rating,
     languages,
+    languagesEn,
     developerSlugs: slugs,
     developerNames,
   })
