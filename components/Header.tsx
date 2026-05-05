@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { Home, Building, Building2, HardHat, KeyRound, Menu, X } from 'lucide-react'
 import { ProModeToggle } from './ProModeToggle'
 import { LangSwitch } from './LangSwitch'
+import { CurrencyToggle } from './CurrencyContext'
 import { t, type Lang } from '@/lib/i18n'
 
 type NavKey = 'villy' | 'apartamenty' | 'zhilye-kompleksy' | 'zastrojshhiki' | 'arenda'
@@ -55,9 +56,11 @@ export function Header({ active }: { active?: NavKey }) {
         </nav>
 
         {/* Pro mode switch — default ON. Hides analytics on detail pages
-            when the visitor flips it off. Catalogs are unaffected. */}
+            when the visitor flips it off. Catalogs are unaffected.
+            Currency selector lives here too so it works on every page. */}
         <div className="ml-auto flex items-center gap-2 shrink-0">
           <ProModeToggle />
+          <CurrencyToggle />
           <LangSwitch />
         </div>
 

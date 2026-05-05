@@ -32,9 +32,10 @@ function unwrap(v: unknown): string | null {
  * Resolve `field` from a raw_* data blob with English-fallback rules.
  *
  * - lang='ru'    → return data[field], unwrapped to a string
- * - lang='en'    → return data[`${field} EN`] if present and non-empty;
- *   otherwise return the literal placeholder `${field} EN` so editors
- *   see what to create. If the RU side is also empty, returns null.
+ * - lang='en'    → try data[`${field} EN`] then data[`${field} En`]; the
+ *   first non-empty value wins. Falls back to the literal placeholder
+ *   `${field} EN` so editors see which Airtable column to create. If the
+ *   RU side is also empty, returns null.
  */
 export function tField(
   data: Record<string, unknown> | null | undefined,
@@ -43,7 +44,7 @@ export function tField(
 ): string | null {
   const d = data ?? {}
   if (lang === 'ru') return unwrap(d[field])
-  const en = unwrap(d[`${field} EN`])
+  const en = unwrap(d[`${field} EN`]) ?? unwrap(d[`${field} En`])
   if (en) return en
   const ru = unwrap(d[field])
   return ru ? `${field} EN` : null
@@ -57,7 +58,7 @@ export function tFieldOrRu(
 ): string | null {
   const d = data ?? {}
   if (lang === 'ru') return unwrap(d[field])
-  const en = unwrap(d[`${field} EN`])
+  const en = unwrap(d[`${field} EN`]) ?? unwrap(d[`${field} En`])
   if (en) return en
   return unwrap(d[field])
 }

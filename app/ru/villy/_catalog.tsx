@@ -7,7 +7,6 @@ import { RelatedVillaFilters } from '@/components/RelatedVillaFilters'
 import { VillaCatalogSearchBar } from '@/components/VillaCatalogSearchBar'
 import { VillaInfiniteScrollClient } from '@/components/VillaInfiniteScrollClient'
 import { VillaFiltersBar } from '@/components/villa-filters/VillaFiltersBar'
-import { CurrencyToggle } from '@/components/CurrencyContext'
 import { buildListHref, buildMapHref } from '@/lib/villa-filter-href'
 import { loadCatalogPage, buildHeading, buildHeadingEn, type VillaFilterState } from './_lib'
 import type { Lang } from '@/lib/i18n'
@@ -71,12 +70,9 @@ export async function VillasCatalog({
             <span className="text-[var(--color-text-muted)] font-normal text-[20px] md:text-[24px]"> — {copy.page} {actualPage}</span>
           )}
         </h1>
-        <div className="text-[14px] text-[var(--color-text-muted)] mb-6 flex items-center justify-between gap-3 flex-wrap">
-          <span>
-            {copy.objects(totalCount)}
-            {totalPages > 1 && ` · ${copy.page} ${actualPage} ${copy.of} ${totalPages}`}
-          </span>
-          <CurrencyToggle />
+        <div className="text-[14px] text-[var(--color-text-muted)] mb-6">
+          {copy.objects(totalCount)}
+          {totalPages > 1 && ` · ${copy.page} ${actualPage} ${copy.of} ${totalPages}`}
         </div>
 
         <CatalogTabs active="list" listHref={buildListHref(filters)} mapHref={buildMapHref(filters)} />

@@ -4,7 +4,7 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { usePathname } from 'next/navigation'
 import { Send, ArrowRight, FileText, MapPinned, UserRound, Lock } from 'lucide-react'
-import { useCurrency, CurrencyToggle } from './CurrencyContext'
+import { useCurrency } from './CurrencyContext'
 import { formatPrice } from '@/lib/currency'
 import { botLink } from '@/lib/bot-link'
 import { ReserveButton } from './ReserveButton'
@@ -102,12 +102,6 @@ export function PriceCtaCard({
     <div className="rounded-2xl bg-white border border-[var(--color-border)] px-5 py-5 md:px-6 md:py-[22px] grid grid-cols-1 md:grid-cols-[1fr_auto] gap-5 md:gap-6 md:items-center">
       {/* LEFT — price */}
       <div className="min-w-0">
-        {/* Same dropdown the catalog uses (USD/EUR/RUB/UAH/IDR) — kept on
-            the global useCurrency state so a switch here also updates
-            other prices on the page and the catalog. */}
-        <div className="mb-3">
-          <CurrencyToggle />
-        </div>
         <div className="text-[30px] md:text-[32px] font-semibold tracking-[-0.02em] leading-none text-[#1A1F1C] tabular-nums">
           {main}
         </div>

@@ -10,6 +10,10 @@ const KIND_TO_TAGS: Record<string, string> = {
   knowledge: 'content:knowledge',
   rental: 'content:rental',
   managers: 'content:managers',
+  developers: 'content:developers',
+  villas: 'content:villas',
+  apartments: 'content:apartments',
+  complexes: 'content:complexes',
 }
 const KIND_TO_PATHS: Record<string, { path: string; type?: 'page' | 'layout' }[]> = {
   events: [
@@ -37,6 +41,30 @@ const KIND_TO_PATHS: Record<string, { path: string; type?: 'page' | 'layout' }[]
     { path: '/ru/zhilye-kompleksy/o/[slug]', type: 'page' },
     { path: '/ru/villy/o/[slug]', type: 'page' },
     { path: '/ru/apartamenty/o/[slug]', type: 'page' },
+  ],
+  developers: [
+    { path: '/ru/zastrojshhiki' },
+    { path: '/en/developers' },
+    { path: '/ru/zastrojshhiki/[slug]', type: 'page' },
+    { path: '/en/developers/[slug]', type: 'page' },
+  ],
+  villas: [
+    { path: '/ru/villy' },
+    { path: '/en/villas' },
+    { path: '/ru/villy/o/[slug]', type: 'page' },
+    { path: '/en/villas/o/[slug]', type: 'page' },
+  ],
+  apartments: [
+    { path: '/ru/apartamenty' },
+    { path: '/en/apartments' },
+    { path: '/ru/apartamenty/o/[slug]', type: 'page' },
+    { path: '/en/apartments/o/[slug]', type: 'page' },
+  ],
+  complexes: [
+    { path: '/ru/zhilye-kompleksy' },
+    { path: '/en/complexes' },
+    { path: '/ru/zhilye-kompleksy/o/[slug]', type: 'page' },
+    { path: '/en/complexes/o/[slug]', type: 'page' },
   ],
 }
 

@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { BedDouble, MapPin, X } from 'lucide-react'
 import { FilterDropdown } from '@/components/FilterDropdown'
-import { CurrencyToggle, useCurrency } from '@/components/CurrencyContext'
+import { useCurrency } from '@/components/CurrencyContext'
 import { formatPrice, type Currency } from '@/lib/currency'
 import type { RentalItem } from '@/lib/rental'
 import { PhotoSlider } from '@/components/PhotoSlider'
@@ -298,7 +298,6 @@ export function RentalCatalog({ items, initial, lang = 'ru' }: { items: RentalIt
         )}
 
         <div className="basis-full sm:basis-auto sm:ml-auto flex items-center justify-between sm:justify-end gap-3 mt-1 sm:mt-0">
-          <CurrencyToggle />
           <div className="text-[13px] text-[var(--color-text-muted)]">
             {COPY_L.objects(filtered.length)}
           </div>

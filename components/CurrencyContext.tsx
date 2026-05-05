@@ -64,13 +64,15 @@ export function useCurrency(): Ctx {
 
 export function CurrencyToggle({ className = '' }: { className?: string }) {
   const { currency, setCurrency } = useCurrency()
+  const pathname = usePathname() ?? ''
+  const label = pathname.startsWith('/en') ? 'Currency' : 'Валюта'
   return (
     <label className={`relative inline-flex items-center ${className}`}>
-      <span className="sr-only">Валюта</span>
+      <span className="sr-only">{label}</span>
       <select
         value={currency}
         onChange={e => setCurrency(e.target.value as Currency)}
-        aria-label="Валюта"
+        aria-label={label}
         className="appearance-none rounded-full border border-[var(--color-border)] bg-white pl-3 pr-7 py-1.5 text-[12px] font-medium text-[#111827] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] cursor-pointer"
       >
         {ALL_CURRENCIES.map(c => (

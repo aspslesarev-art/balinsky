@@ -7,7 +7,6 @@ import { CatalogSearchBar } from '@/components/CatalogSearchBar'
 import { InfiniteScrollClient } from '@/components/InfiniteScrollClient'
 import { FiltersBar } from '@/components/filters/FiltersBar'
 import type { FilterState } from '@/components/filters/FiltersBar'
-import { CurrencyToggle } from '@/components/CurrencyContext'
 import { buildListHref, buildMapHref } from '@/lib/filter-href'
 import { loadCatalogPage, buildHeading, buildHeadingEn } from './_lib'
 import type { Lang } from '@/lib/i18n'
@@ -73,12 +72,9 @@ export async function ApartamentyCatalog({
             </span>
           )}
         </h1>
-        <div className="text-[14px] text-[var(--color-text-muted)] mb-6 flex items-center justify-between gap-3 flex-wrap">
-          <span>
-            {copy.objects(totalCount)}
-            {totalPages > 1 && ` · ${copy.page} ${actualPage} ${copy.of} ${totalPages}`}
-          </span>
-          <CurrencyToggle />
+        <div className="text-[14px] text-[var(--color-text-muted)] mb-6">
+          {copy.objects(totalCount)}
+          {totalPages > 1 && ` · ${copy.page} ${actualPage} ${copy.of} ${totalPages}`}
         </div>
 
         <CatalogTabs
