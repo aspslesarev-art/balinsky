@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { CurrencyProvider } from "@/components/CurrencyContext";
-import { ProModeProvider } from "@/components/ProModeContext";
 import { SiteChrome } from "@/components/SiteChrome";
 import { TmaModeMarker } from "@/components/TmaModeMarker";
 
@@ -90,12 +89,10 @@ ym(${YM_ID}, 'init', {ssr:true, clickmap:true, trackLinks:true, ecommerce:"dataL
           </div>
         </noscript>
         <TmaModeMarker />
-        <ProModeProvider>
-          <CurrencyProvider>
-            {children}
-            <SiteChrome />
-          </CurrencyProvider>
-        </ProModeProvider>
+        <CurrencyProvider>
+          {children}
+          <SiteChrome />
+        </CurrencyProvider>
       </body>
     </html>
   );
