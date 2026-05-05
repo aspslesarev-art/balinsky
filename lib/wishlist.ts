@@ -16,6 +16,15 @@ export type WishlistItem = {
   priceUsd: number | null
   district: string | null
   bedrooms: number | null
+  // Comparison-table fields. Optional because not every kind has every
+  // value — apartments have no land area, complexes are rarely a single
+  // bedroom count, etc. We fill what we have at save time and the
+  // compare view leaves the cell empty otherwise.
+  area?: number | null
+  land?: number | null
+  floor?: string | null
+  completionYear?: string | null
+  dealType?: 'resale' | 'secondary' | 'primary' | null
   savedAt: string
 }
 

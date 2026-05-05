@@ -597,6 +597,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
               priceUsd: null,
               district: district ?? null,
               bedrooms: null,
+              completionYear: yearRaw ?? null,
             }}
           />
         </section>

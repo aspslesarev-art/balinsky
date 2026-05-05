@@ -544,6 +544,9 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
               priceUsd: priceNum ?? null,
               district: district ?? null,
               bedrooms: bedrooms ?? null,
+              area: area ?? null,
+              land: land ?? null,
+              dealType: isResale ? 'resale' : 'primary',
             }}
           />
         </section>

@@ -447,6 +447,8 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
               priceUsd: priceNum ?? null,
               district: district ?? null,
               bedrooms: bedrooms ?? null,
+              area: area ?? null,
+              floor: floor ?? null,
             }}
           />
         </section>

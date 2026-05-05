@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { Heart, X, Trash2, Send } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { Heart, X, Trash2, Send, Columns3, Check } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
@@ -22,6 +23,10 @@ const COPY = {
     clear: 'Очистить всё',
     sendToBot: 'Отправить шортлист в Telegram',
     remove: 'Убрать',
+    selectForCompare: 'Выбрать для сравнения',
+    compareSelected: (n: number) => `Сравнить выбранные · ${n}`,
+    compareHint: 'Выбрано для сравнения. Можно сравнить до 4 объектов.',
+    cancelSelection: 'Отмена',
     villasLink: 'К виллам',
     apartmentsLink: 'К апартаментам',
     complexesLink: 'К жилым комплексам',
@@ -36,6 +41,10 @@ const COPY = {
     clear: 'Clear all',
     sendToBot: 'Send shortlist to Telegram',
     remove: 'Remove',
+    selectForCompare: 'Select for comparison',
+    compareSelected: (n: number) => `Compare selected · ${n}`,
+    compareHint: 'Selected for comparison. Up to 4 listings.',
+    cancelSelection: 'Cancel',
     villasLink: 'Browse villas',
     apartmentsLink: 'Browse apartments',
     complexesLink: 'Browse complexes',
@@ -68,11 +77,43 @@ function kindLabel(kind: WishlistKind, lang: Lang): string {
   return ({ villa: 'Вилла', apartment: 'Апартаменты', complex: 'Комплекс', rental: 'Аренда' } as const)[kind]
 }
 
+const MAX_COMPARE = 4
+
 export function ShortlistView({ lang }: { lang: Lang }) {
   const { items, ready, remove, clear } = useWishlist()
   const { currency } = useCurrency()
   const c = COPY[lang]
   const home = lang === 'en' ? '/en' : '/ru'
+  const compareHref = lang === 'en' ? '/en/compare' : '/ru/sravnenie'
+
+  // Multi-select for comparison. Stored as `${kind}:${slug}` strings so
+  // toggling is O(1) and ids are stable across renders. We also drop
+  // ids that no longer exist in the wishlist (e.g. the user removed a
+  // saved object while it was selected).
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const validSelected = useMemo(() => {
+    const valid = new Set<string>()
+    for (const it of items) {
+      const id = `${it.kind}:${it.slug}`
+      if (selectedIds.has(id)) valid.add(id)
+    }
+    return valid
+  }, [items, selectedIds])
+  const toggleSelect = (kind: WishlistKind, slug: string) => {
+    const id = `${kind}:${slug}`
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else if (next.size < MAX_COMPARE) next.add(id)
+      return next
+    })
+  }
+  // Build the ?items= query for the compare page from the current
+  // selection, preserving the order users picked them in.
+  const compareQuery = useMemo(() => {
+    const orderedItems = items.filter(it => validSelected.has(`${it.kind}:${it.slug}`))
+    return orderedItems.map(it => `${it.kind[0]}.${it.slug}`).join(',')
+  }, [items, validSelected])
 
   // Build a single payload that the visitor sends via the bot. Each item
   // becomes a deep-linkable URL in the message — the bot's /start payload
@@ -140,11 +181,18 @@ export function ShortlistView({ lang }: { lang: Lang }) {
               const price = item.priceUsd != null && Number.isFinite(item.priceUsd)
                 ? formatPrice(item.priceUsd, currency)
                 : null
+              const id = `${item.kind}:${item.slug}`
+              const isSelected = validSelected.has(id)
+              const canSelectMore = validSelected.size < MAX_COMPARE
               return (
-                <li key={`${item.kind}:${item.slug}`} className="relative">
+                <li key={id} className="relative">
                   <Link
                     href={detailHref(item, lang)}
-                    className="block bg-white rounded-2xl border border-[var(--color-border)] overflow-hidden no-underline text-[var(--color-text)] hover:border-[var(--color-primary)] transition-colors"
+                    className={`block bg-white rounded-2xl border overflow-hidden no-underline text-[var(--color-text)] transition-colors ${
+                      isSelected
+                        ? 'border-[var(--color-primary)] shadow-[0_0_0_2px_var(--color-primary)_inset]'
+                        : 'border-[var(--color-border)] hover:border-[var(--color-primary)]'
+                    }`}
                   >
                     <div className="relative aspect-[4/3] bg-[var(--color-search-bg)]">
                       {item.photo ? (
@@ -166,6 +214,24 @@ export function ShortlistView({ lang }: { lang: Lang }) {
                       </div>
                     </div>
                   </Link>
+                  {/* Compare-checkbox in the bottom-left corner of the
+                      photo. Click stops propagation so the wrapping
+                      <Link> doesn't navigate. Disabled for the 5th item
+                      onwards once the cap is reached. */}
+                  <button
+                    type="button"
+                    aria-label={c.selectForCompare}
+                    aria-pressed={isSelected}
+                    disabled={!isSelected && !canSelectMore}
+                    onClick={e => { e.preventDefault(); e.stopPropagation(); toggleSelect(item.kind, item.slug) }}
+                    className={`absolute bottom-[26%] left-3 z-10 inline-flex items-center justify-center w-7 h-7 rounded-md border-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                      isSelected
+                        ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white'
+                        : 'bg-white/90 border-[#d1d5db] hover:border-[var(--color-primary)]'
+                    }`}
+                  >
+                    {isSelected && <Check size={14} strokeWidth={3} />}
+                  </button>
                   <button
                     type="button"
                     aria-label={c.remove}
@@ -178,6 +244,32 @@ export function ShortlistView({ lang }: { lang: Lang }) {
               )
             })}
           </ul>
+        )}
+        {/* Floating bottom bar appears only when ≥2 items are ticked.
+            Sticks to the bottom of the viewport, doesn't overlap mobile
+            footer because the wishlist page sits above it. */}
+        {ready && validSelected.size >= 2 && (
+          <div className="fixed left-1/2 -translate-x-1/2 bottom-4 z-40 max-w-[680px] w-[calc(100%-32px)]">
+            <div className="rounded-full bg-[#1A1F1C] text-white shadow-[0_10px_32px_-8px_rgba(0,0,0,0.35)] flex items-center justify-between gap-3 pl-5 pr-2 py-2">
+              <span className="text-[13px] hidden sm:inline opacity-80">{c.compareHint}</span>
+              <span className="text-[13px] sm:hidden opacity-80">{validSelected.size}/{MAX_COMPARE}</span>
+              <div className="flex items-center gap-1 ml-auto">
+                <button
+                  type="button"
+                  onClick={() => setSelectedIds(new Set())}
+                  className="px-3 py-1.5 text-[12px] text-white/70 hover:text-white"
+                >
+                  {c.cancelSelection}
+                </button>
+                <Link
+                  href={`${compareHref}?items=${encodeURIComponent(compareQuery)}`}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[13px] font-medium no-underline"
+                >
+                  <Columns3 size={14} /> {c.compareSelected(validSelected.size)}
+                </Link>
+              </div>
+            </div>
+          </div>
         )}
         <div className="h-16" />
       </PageContainer>
