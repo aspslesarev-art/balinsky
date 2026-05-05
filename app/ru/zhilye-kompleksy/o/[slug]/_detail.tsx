@@ -588,7 +588,18 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
 
         {/* PHOTO GALLERY */}
         <section className="mb-6 mt-2 rounded-3xl overflow-hidden border border-[var(--color-border)]">
-          <PhotoGalleryHero photos={slidesPhotos} alt={name} />
+          <PhotoGalleryHero
+            photos={slidesPhotos}
+            alt={name}
+            wishlistItem={() => ({
+              kind: 'complex', slug, title: name,
+              photo: slidesPhotos[0] ?? null,
+              priceUsd: null,
+              district: district ?? null,
+              bedrooms: null,
+              savedAt: new Date().toISOString(),
+            })}
+          />
         </section>
 
         {/* HERO */}

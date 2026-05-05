@@ -3,6 +3,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
 import { ChevronLeft, ChevronRight, X, ImageIcon } from 'lucide-react'
+import { WishlistButton } from './WishlistButton'
+import type { WishlistItem } from '@/lib/wishlist'
 
 const COPY = {
   ru: { open: 'Открыть галерею', photoN: (n: number) => `Фото ${n}`, more: (n: number) => `+${n} фото`, count: (n: number) => `${n} фото`, close: 'Закрыть', prev: 'Предыдущее', next: 'Следующее', mainPhoto: 'главное фото', photoLabel: 'фото', thumb: 'миниатюра' },
@@ -12,9 +14,14 @@ const COPY = {
 export function PhotoGalleryHero({
   photos,
   alt,
+  wishlistItem,
 }: {
   photos: string[]
   alt: string
+  // When provided, a heart toggle is overlaid on the gallery's
+  // top-right corner. Detail pages pass a thunk so we don't pay the
+  // Date.now() cost until the user actually taps save.
+  wishlistItem?: WishlistItem | (() => WishlistItem)
 }) {
   const [openAt, setOpenAt] = useState<number | null>(null)
   const pathname = usePathname() ?? ''
@@ -23,8 +30,11 @@ export function PhotoGalleryHero({
 
   if (photos.length === 0) {
     return (
-      <div className="rounded-3xl overflow-hidden border border-[var(--color-border)] bg-[var(--color-search-bg)] h-[340px] md:h-[480px] flex items-center justify-center text-5xl text-[#B8C3BC]">
+      <div className="rounded-3xl overflow-hidden border border-[var(--color-border)] bg-[var(--color-search-bg)] h-[340px] md:h-[480px] flex items-center justify-center text-5xl text-[#B8C3BC] relative">
         🏝️
+        {wishlistItem && (
+          <WishlistButton item={wishlistItem} className="absolute top-4 right-4 z-10" />
+        )}
       </div>
     )
   }
@@ -63,7 +73,10 @@ export function PhotoGalleryHero({
   return (
     <>
       {/* Desktop: hero + adaptive right column */}
-      <div className="hidden md:flex gap-2 rounded-3xl overflow-hidden border border-[var(--color-border)] h-[480px]">
+      <div className="hidden md:flex gap-2 rounded-3xl overflow-hidden border border-[var(--color-border)] h-[480px] relative">
+        {wishlistItem && (
+          <WishlistButton item={wishlistItem} className="absolute top-4 right-4 z-10" />
+        )}
         <button
           type="button"
           onClick={() => setOpenAt(0)}
@@ -115,6 +128,9 @@ export function PhotoGalleryHero({
             </div>
           )}
         </button>
+        {wishlistItem && (
+          <WishlistButton item={wishlistItem} className="absolute top-3 right-3 z-10" />
+        )}
       </div>
 
       {openAt != null && (

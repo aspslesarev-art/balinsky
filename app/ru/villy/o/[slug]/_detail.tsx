@@ -535,7 +535,18 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
         ]} />
 
         <section className="mb-6 mt-2">
-          <PhotoGalleryHero photos={photos} alt={title} />
+          <PhotoGalleryHero
+            photos={photos}
+            alt={title}
+            wishlistItem={() => ({
+              kind: 'villa', slug, title,
+              photo: photos[0] ?? null,
+              priceUsd: priceNum ?? null,
+              district: district ?? null,
+              bedrooms: bedrooms ?? null,
+              savedAt: new Date().toISOString(),
+            })}
+          />
         </section>
 
         <section className="mb-10">

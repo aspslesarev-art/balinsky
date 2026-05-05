@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { PhotoSlider } from './PhotoSlider'
 import { useCurrency } from './CurrencyContext'
-import { WishlistButton } from './WishlistButton'
 import { formatPrice } from '@/lib/currency'
 import type { Lang } from '@/lib/i18n'
 
@@ -15,7 +14,6 @@ export type ApartmentCardData = {
   area: number | null
   floor: string | null
   photos: string[]
-  district?: string | null
 }
 
 const COPY = {
@@ -36,20 +34,7 @@ export function ApartmentCard({ a, lang = 'ru' }: { a: ApartmentCardData; lang?:
       href={detailHref}
       className="group block bg-[var(--color-card-bg)] rounded-2xl border border-[var(--color-border)] overflow-hidden"
     >
-      <div className="relative">
-        <PhotoSlider photos={a.photos} alt={a.title} trackingId={`apt:${a.slug}`} />
-        <WishlistButton
-          className="absolute top-3 right-3 z-10"
-          item={() => ({
-            kind: 'apartment', slug: a.slug, title: a.title,
-            photo: a.photos?.[0] ?? null,
-            priceUsd: a.priceUsd ?? null,
-            district: a.district ?? null,
-            bedrooms: a.bedrooms ?? null,
-            savedAt: new Date().toISOString(),
-          })}
-        />
-      </div>
+      <PhotoSlider photos={a.photos} alt={a.title} trackingId={`apt:${a.slug}`} />
 
       <div className="p-6">
         <h3
