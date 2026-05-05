@@ -9,18 +9,16 @@ import { useWishlist } from './WishlistContext'
 import { useCurrency } from './CurrencyContext'
 import { formatPrice } from '@/lib/currency'
 import type { Lang } from '@/lib/i18n'
-import type { WishlistItem, WishlistKind } from '@/lib/wishlist'
+import type { WishlistItem } from '@/lib/wishlist'
 
 const COPY = {
   ru: {
     home: 'Главная',
     crumb: 'Избранное',
     h1: 'Избранное',
-    intro: 'Объекты сравниваются внутри своего типа — виллы с виллами, апартаменты с апартаментами, комплексы с комплексами.',
-    sectionVillas: 'Виллы',
-    sectionApartments: 'Апартаменты',
+    intro: 'Объекты сравниваются группами — виллы и апартаменты вместе, жилые комплексы отдельно.',
+    sectionRealEstate: 'Виллы и апартаменты',
     sectionComplexes: 'Жилые комплексы',
-    sectionRental: 'Аренда',
     empty: 'Пока ничего не добавлено. Откройте каталог и нажмите на сердце у любого объекта.',
     countOne: 'объект', countFew: 'объекта', countMany: 'объектов',
     clear: 'Очистить всё',
@@ -39,11 +37,9 @@ const COPY = {
     home: 'Home',
     crumb: 'Shortlist',
     h1: 'Shortlist',
-    intro: 'Listings line up by kind — villas next to villas, apartments next to apartments, complexes next to complexes.',
-    sectionVillas: 'Villas',
-    sectionApartments: 'Apartments',
+    intro: 'Saved listings line up in groups — villas and apartments together, residential complexes separately.',
+    sectionRealEstate: 'Villas & apartments',
     sectionComplexes: 'Residential complexes',
-    sectionRental: 'Rental',
     empty: 'Nothing saved yet. Open a catalogue and tap the heart on any listing.',
     countOne: 'item', countFew: 'items', countMany: 'items',
     clear: 'Clear all',
@@ -108,16 +104,16 @@ export function ShortlistView({ lang }: { lang: Lang }) {
     { key: 'dealType',   label: c.rowDealType,   cell: it => dealTypeLabel(it.dealType) },
   ]
 
-  // Group by kind in a stable order so saving a villa after several
-  // apartments doesn't shuffle the section order on the page.
-  const SECTION_ORDER: WishlistKind[] = ['villa', 'apartment', 'complex', 'rental']
-  const sectionTitle: Record<WishlistKind, string> = {
-    villa: c.sectionVillas, apartment: c.sectionApartments,
-    complex: c.sectionComplexes, rental: c.sectionRental,
-  }
-  const sections = SECTION_ORDER
-    .map(kind => ({ kind, items: items.filter(i => i.kind === kind) }))
-    .filter(s => s.items.length > 0)
+  // Two comparison groups. Villas and apartments share enough shape
+  // (price, bedrooms, area, district) to live in one table; complexes
+  // sell phases / unit ranges instead and don't compare cleanly with
+  // single-unit listings, so they stay in their own section.
+  const groups: { id: string; title: string; items: WishlistItem[] }[] = [
+    { id: 'realestate', title: c.sectionRealEstate,
+      items: items.filter(i => i.kind === 'villa' || i.kind === 'apartment' || i.kind === 'rental') },
+    { id: 'complexes',  title: c.sectionComplexes,
+      items: items.filter(i => i.kind === 'complex') },
+  ].filter(g => g.items.length > 0)
 
   // Build the shareable Telegram message — one URL per saved item so the
   // recipient can tap straight into each detail page.
@@ -178,20 +174,23 @@ export function ShortlistView({ lang }: { lang: Lang }) {
         ) : (
           <>
             <p className="text-[14px] text-[var(--color-text-muted)] mb-6 max-w-2xl">{c.intro}</p>
-            {sections.map(section => {
-              const sectionRows = rows.filter(r => section.items.some(it => r.cell(it)))
+            {groups.map(group => {
+              const groupRows = rows.filter(r => group.items.some(it => r.cell(it)))
               return (
-                <section key={section.kind} className="mb-10">
+                <section key={group.id} className="mb-10">
                   <h2 className="text-[18px] md:text-[20px] font-semibold text-[var(--color-text)] mb-4">
-                    {sectionTitle[section.kind]}
-                    <span className="text-[var(--color-text-muted)] font-normal ml-2">· {section.items.length}</span>
+                    {group.title}
+                    <span className="text-[var(--color-text-muted)] font-normal ml-2">· {group.items.length}</span>
                   </h2>
-                  <div className="overflow-x-auto -mx-4 px-4 pb-4">
+                  {/* Scroll the table inside the standard PageContainer
+                      width — same horizontal frame as every other page
+                      on the site. */}
+                  <div className="overflow-x-auto pb-4">
                     <table className="border-separate border-spacing-x-3 min-w-full">
                       <thead>
                         <tr>
                           <th className="sticky left-0 bg-[var(--color-bg)] z-10 align-bottom min-w-[120px] w-[120px]"></th>
-                          {section.items.map(it => (
+                          {group.items.map(it => (
                             <th key={`${it.kind}:${it.slug}`} className="text-left align-bottom min-w-[220px] w-[260px]">
                               <div className="relative">
                                 <Link href={detailHref(it, lang)} className="block group no-underline text-[var(--color-text)]">
@@ -219,12 +218,12 @@ export function ShortlistView({ lang }: { lang: Lang }) {
                         </tr>
                       </thead>
                       <tbody>
-                        {sectionRows.map(r => (
+                        {groupRows.map(r => (
                           <tr key={r.key}>
                             <td className="sticky left-0 bg-[var(--color-bg)] z-10 text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] py-3 align-top w-[120px]">
                               {r.label}
                             </td>
-                            {section.items.map(it => {
+                            {group.items.map(it => {
                               const v = r.cell(it)
                               return (
                                 <td key={`${r.key}-${it.kind}:${it.slug}`} className="text-[14px] text-[var(--color-text)] py-3 align-top">
