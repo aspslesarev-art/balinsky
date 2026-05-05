@@ -6,6 +6,12 @@ import { useVillaFilterUrl, type FilterView } from './useVillaFilterUrl'
 import type { VillaFilterState } from '@/app/ru/villy/_lib'
 import { useCurrency } from '../CurrencyContext'
 import { CURRENCY_RATES, formatPrice } from '@/lib/currency'
+import type { Lang } from '@/lib/i18n'
+
+const COPY = {
+  ru: { from: 'от', to: 'до', clear: 'Сбросить', apply: 'Применить' },
+  en: { from: 'from', to: 'to', clear: 'Clear', apply: 'Apply' },
+} as const
 
 const SYMBOLS: Record<string, string> = { USD: '$', EUR: '€', RUB: '₽', UAH: '₴', IDR: 'Rp' }
 
@@ -23,17 +29,20 @@ export function VillaPriceRange({
   max,
   current,
   view = 'list',
+  lang = 'ru',
 }: {
   label: string
   min: number | null
   max: number | null
   current: VillaFilterState
   view?: FilterView
+  lang?: Lang
 }) {
   const { apply } = useVillaFilterUrl(current, view)
   const { currency } = useCurrency()
   const rate = CURRENCY_RATES[currency]
   const sym = SYMBOLS[currency] ?? '$'
+  const c = COPY[lang]
 
   const usdToInput = (usd: number | null): string => usd == null ? '' : fmtRu(usd * rate)
   const inputToUsd = (s: string): number | null => {
@@ -50,8 +59,8 @@ export function VillaPriceRange({
   const active = min != null || max != null
   const summary = active
     ? [
-        min != null ? `от ${formatPrice(min, currency)}` : '',
-        max != null ? `до ${formatPrice(max, currency)}` : '',
+        min != null ? `${c.from} ${formatPrice(min, currency)}` : '',
+        max != null ? `${c.to} ${formatPrice(max, currency)}` : '',
       ].filter(Boolean).join(' ')
     : ''
 
@@ -61,7 +70,7 @@ export function VillaPriceRange({
         <div className="flex flex-col gap-3 min-w-[260px]">
           <div className="flex items-center gap-2">
             <div className="flex-1">
-              <div className="text-[12px] text-[var(--color-text-muted)] mb-1">от, {sym}</div>
+              <div className="text-[12px] text-[var(--color-text-muted)] mb-1">{c.from}, {sym}</div>
               <input
                 type="text"
                 inputMode="numeric"
@@ -72,7 +81,7 @@ export function VillaPriceRange({
               />
             </div>
             <div className="flex-1">
-              <div className="text-[12px] text-[var(--color-text-muted)] mb-1">до, {sym}</div>
+              <div className="text-[12px] text-[var(--color-text-muted)] mb-1">{c.to}, {sym}</div>
               <input
                 type="text"
                 inputMode="numeric"
@@ -89,14 +98,14 @@ export function VillaPriceRange({
               onClick={() => { setDraftMin(''); setDraftMax(''); apply({ priceMin: null, priceMax: null }); close() }}
               className="text-[13px] text-[var(--color-text-muted)] hover:text-[var(--color-text)] px-2 py-1"
             >
-              Сбросить
+              {c.clear}
             </button>
             <button
               type="button"
               onClick={() => { apply({ priceMin: inputToUsd(draftMin), priceMax: inputToUsd(draftMax) }); close() }}
               className="text-[13px] font-medium text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] rounded-lg px-4 py-2 transition-colors"
             >
-              Применить
+              {c.apply}
             </button>
           </div>
         </div>

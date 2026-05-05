@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { PhotoSlider } from './PhotoSlider'
 import { useCurrency } from './CurrencyContext'
 import { formatPrice } from '@/lib/currency'
+import type { Lang } from '@/lib/i18n'
 
 export type VillaCardData = {
   slug: string
@@ -22,17 +23,24 @@ export type VillaCardData = {
   dealType?: 'resale' | 'secondary' | null
 }
 
-export function VillaCard({ a }: { a: VillaCardData }) {
+const COPY = {
+  ru: { resale: 'Перепродажа', secondary: 'Вторичка', house: 'Дом', land: 'Земля', sqm: 'м²' },
+  en: { resale: 'Resale',      secondary: 'Secondary', house: 'House', land: 'Land', sqm: 'm²' },
+} as const
+
+export function VillaCard({ a, lang = 'ru' }: { a: VillaCardData; lang?: Lang }) {
   const { currency } = useCurrency()
+  const copy = COPY[lang]
   const price = a.priceUsd != null && Number.isFinite(a.priceUsd)
     ? formatPrice(a.priceUsd, currency)
     : null
-  const dealLabel = a.dealType === 'resale' ? 'Перепродажа'
-    : a.dealType === 'secondary' ? 'Вторичка'
+  const dealLabel = a.dealType === 'resale' ? copy.resale
+    : a.dealType === 'secondary' ? copy.secondary
     : null
+  const detailHref = lang === 'en' ? `/en/villas/o/${a.slug}` : `/ru/villy/o/${a.slug}`
   return (
     <Link
-      href={`/ru/villy/o/${a.slug}`}
+      href={detailHref}
       className="group block bg-[var(--color-card-bg)] rounded-2xl border border-[var(--color-border)] overflow-hidden"
     >
       <div className="relative">
@@ -58,8 +66,8 @@ export function VillaCard({ a }: { a: VillaCardData }) {
 
         <div className="flex items-center flex-wrap gap-x-5 gap-y-1 text-[14px] text-[var(--color-text-muted)]">
           {a.bedrooms != null && <span>{a.bedrooms} BR</span>}
-          {a.area != null && <span>Дом: {a.area} м²</span>}
-          {a.land != null && <span>Земля: {a.land} м²</span>}
+          {a.area != null && <span>{copy.house}: {a.area} {copy.sqm}</span>}
+          {a.land != null && <span>{copy.land}: {a.land} {copy.sqm}</span>}
           {a.district && <span>{a.district}</span>}
         </div>
       </div>

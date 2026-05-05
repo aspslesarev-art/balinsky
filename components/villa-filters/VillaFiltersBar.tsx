@@ -6,8 +6,27 @@ import { VillaPriceRange } from './VillaPriceRange'
 import { VillaGoalFilter } from './VillaGoalFilter'
 import { useVillaFilterUrl, type FilterView } from './useVillaFilterUrl'
 import type { VillaFilterState, VillaFilterOptions } from '@/app/ru/villy/_lib'
+import type { Lang } from '@/lib/i18n'
 
-function ResetAll({ activeCount, current, view }: { activeCount: number; current: VillaFilterState; view: FilterView }) {
+const COPY = {
+  ru: {
+    price: 'Цена', district: 'Район', bedrooms: 'Кол-во спален', status: 'Этап стройки',
+    dealType: 'Тип сделки', style: 'Стиль', year: 'Год сдачи', developer: 'Застройщик',
+    permit: 'Разрешение', resetAll: 'Сбросить все',
+  },
+  en: {
+    price: 'Price', district: 'District', bedrooms: 'Bedrooms', status: 'Construction stage',
+    dealType: 'Deal type', style: 'Style', year: 'Completion year', developer: 'Developer',
+    permit: 'Permit', resetAll: 'Clear all',
+  },
+} as const
+
+function ResetAll({ activeCount, current, view, lang }: {
+  activeCount: number
+  current: VillaFilterState
+  view: FilterView
+  lang: Lang
+}) {
   const { clearAll } = useVillaFilterUrl(current, view)
   if (activeCount === 0) return null
   return (
@@ -16,7 +35,7 @@ function ResetAll({ activeCount, current, view }: { activeCount: number; current
       onClick={clearAll}
       className="text-[13px] text-[var(--color-text-muted)] underline-offset-2 hover:underline ml-2"
     >
-      Сбросить все
+      {COPY[lang].resetAll}
     </button>
   )
 }
@@ -25,11 +44,14 @@ export function VillaFiltersBar({
   state,
   options,
   view = 'list',
+  lang = 'ru',
 }: {
   state: VillaFilterState
   options: VillaFilterOptions
   view?: FilterView
+  lang?: Lang
 }) {
+  const c = COPY[lang]
   const activeCount =
     (state.q.trim() ? 1 : 0) +
     (state.priceMin != null || state.priceMax != null ? 1 : 0) +
@@ -46,17 +68,17 @@ export function VillaFiltersBar({
   return (
     <Suspense fallback={null}>
       <div className="flex items-center gap-3 flex-wrap">
-        <VillaGoalFilter current={state} view={view} />
-        <VillaPriceRange label="Цена" min={state.priceMin} max={state.priceMax} current={state} view={view} />
-        <VillaMultiSelect stateKey="district" label="Район" options={options.district} selected={state.district} current={state} view={view} searchable />
-        <VillaMultiSelect stateKey="bedrooms" label="Кол-во спален" options={options.bedrooms} selected={state.bedrooms} current={state} view={view} />
-        <VillaMultiSelect stateKey="status" label="Этап стройки" options={options.status} selected={state.status} current={state} view={view} />
-        <VillaMultiSelect stateKey="dealType" label="Тип сделки" options={options.dealType} selected={state.dealType} current={state} view={view} />
-        <VillaMultiSelect stateKey="style" label="Стиль" options={options.style} selected={state.style} current={state} view={view} />
-        <VillaMultiSelect stateKey="year" label="Год сдачи" options={options.year} selected={state.year} current={state} view={view} />
-        <VillaMultiSelect stateKey="developer" label="Застройщик" options={options.developer} selected={state.developer} current={state} view={view} searchable />
-        <VillaMultiSelect stateKey="permit" label="Разрешение" options={options.permit} selected={state.permit} current={state} view={view} />
-        <ResetAll activeCount={activeCount} current={state} view={view} />
+        <VillaGoalFilter current={state} view={view} lang={lang} />
+        <VillaPriceRange label={c.price} min={state.priceMin} max={state.priceMax} current={state} view={view} lang={lang} />
+        <VillaMultiSelect stateKey="district"  label={c.district}  options={options.district}  selected={state.district}  current={state} view={view} lang={lang} searchable />
+        <VillaMultiSelect stateKey="bedrooms"  label={c.bedrooms}  options={options.bedrooms}  selected={state.bedrooms}  current={state} view={view} lang={lang} />
+        <VillaMultiSelect stateKey="status"    label={c.status}    options={options.status}    selected={state.status}    current={state} view={view} lang={lang} />
+        <VillaMultiSelect stateKey="dealType"  label={c.dealType}  options={options.dealType}  selected={state.dealType}  current={state} view={view} lang={lang} />
+        <VillaMultiSelect stateKey="style"     label={c.style}     options={options.style}     selected={state.style}     current={state} view={view} lang={lang} />
+        <VillaMultiSelect stateKey="year"      label={c.year}      options={options.year}      selected={state.year}      current={state} view={view} lang={lang} />
+        <VillaMultiSelect stateKey="developer" label={c.developer} options={options.developer} selected={state.developer} current={state} view={view} lang={lang} searchable />
+        <VillaMultiSelect stateKey="permit"    label={c.permit}    options={options.permit}    selected={state.permit}    current={state} view={view} lang={lang} />
+        <ResetAll activeCount={activeCount} current={state} view={view} lang={lang} />
       </div>
     </Suspense>
   )

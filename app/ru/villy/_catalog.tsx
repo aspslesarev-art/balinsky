@@ -9,7 +9,25 @@ import { VillaInfiniteScrollClient } from '@/components/VillaInfiniteScrollClien
 import { VillaFiltersBar } from '@/components/villa-filters/VillaFiltersBar'
 import { CurrencyToggle } from '@/components/CurrencyContext'
 import { buildListHref, buildMapHref } from '@/lib/villa-filter-href'
-import { loadCatalogPage, buildHeading, type VillaFilterState } from './_lib'
+import { loadCatalogPage, buildHeading, buildHeadingEn, type VillaFilterState } from './_lib'
+import type { Lang } from '@/lib/i18n'
+
+const COPY = {
+  ru: {
+    page: 'страница', of: 'из',
+    objects: (n: number) => `${n} объектов`,
+    emptySearch: (q: string) => `По запросу «${q}» ничего не найдено`,
+    emptyFilters: 'Ничего не найдено по выбранным фильтрам',
+    searchPlaceholder: 'Поиск по виллам, районам, застройщикам…',
+  },
+  en: {
+    page: 'page', of: 'of',
+    objects: (n: number) => `${n} listings`,
+    emptySearch: (q: string) => `Nothing found for "${q}"`,
+    emptyFilters: 'Nothing matches the selected filters',
+    searchPlaceholder: 'Search villas, districts, developers…',
+  },
+} as const
 
 function toQueryString(f: VillaFilterState): string {
   const sp = new URLSearchParams()
@@ -29,15 +47,18 @@ export async function VillasCatalog({
   filters,
   page = 1,
   basePath,
+  lang = 'ru',
 }: {
   filters: VillaFilterState
   page?: number
   basePath: string
+  lang?: Lang
 }) {
   const { cards, totalCount, totalPages, hasMore, options, page: actualPage } =
-    await loadCatalogPage(filters, page)
+    await loadCatalogPage(filters, page, lang)
   const isSearch = filters.q.trim().length > 0
-  const heading = buildHeading(filters)
+  const heading = lang === 'en' ? buildHeadingEn(filters) : buildHeading(filters)
+  const copy = COPY[lang]
 
   return (
     <>
@@ -47,13 +68,13 @@ export async function VillasCatalog({
         <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[#111827]">
           {heading}
           {actualPage > 1 && (
-            <span className="text-[var(--color-text-muted)] font-normal text-[20px] md:text-[24px]"> — страница {actualPage}</span>
+            <span className="text-[var(--color-text-muted)] font-normal text-[20px] md:text-[24px]"> — {copy.page} {actualPage}</span>
           )}
         </h1>
         <div className="text-[14px] text-[var(--color-text-muted)] mb-6 flex items-center justify-between gap-3 flex-wrap">
           <span>
-            {totalCount} объектов
-            {totalPages > 1 && ` · страница ${actualPage} из ${totalPages}`}
+            {copy.objects(totalCount)}
+            {totalPages > 1 && ` · ${copy.page} ${actualPage} ${copy.of} ${totalPages}`}
           </span>
           <CurrencyToggle />
         </div>
@@ -61,22 +82,22 @@ export async function VillasCatalog({
         <CatalogTabs active="list" listHref={buildListHref(filters)} mapHref={buildMapHref(filters)} />
 
         <div className="mt-6">
-          <VillaCatalogSearchBar initial={filters.q} current={filters} view="list" />
+          <VillaCatalogSearchBar initial={filters.q} current={filters} view="list" placeholder={copy.searchPlaceholder} />
         </div>
 
         <div className="mt-4">
-          <VillaFiltersBar state={filters} options={options} view="list" />
+          <VillaFiltersBar state={filters} options={options} view="list" lang={lang} />
         </div>
 
 
         {cards.length === 0 ? (
           <div className="py-16 text-center text-[var(--color-text-muted)]">
-            {isSearch ? `По запросу «${filters.q}» ничего не найдено` : 'Ничего не найдено по выбранным фильтрам'}
+            {isSearch ? copy.emptySearch(filters.q) : copy.emptyFilters}
           </div>
         ) : (
           <>
             <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-              {cards.map(c => <VillaCard key={c.id} a={c} />)}
+              {cards.map(c => <VillaCard key={c.id} a={c} lang={lang} />)}
             </div>
             <VillaInfiniteScrollClient
               initialOffset={cards.length}
@@ -86,9 +107,9 @@ export async function VillasCatalog({
           </>
         )}
 
-        <RelatedVillaFilters filters={filters} options={options} />
+        <RelatedVillaFilters filters={filters} options={options} lang={lang} />
 
-        <VillasSeoContent filters={filters} variant="list" />
+        <VillasSeoContent filters={filters} variant="list" lang={lang} />
 
         <div className="h-16" />
       </PageContainer>

@@ -3,25 +3,34 @@
 import { FilterDropdown } from '../FilterDropdown'
 import { useVillaFilterUrl, type FilterView } from './useVillaFilterUrl'
 import type { VillaFilterState } from '@/app/ru/villy/_lib'
+import type { Lang } from '@/lib/i18n'
 
-const OPTS: { v: 'invest' | 'live'; label: string }[] = [
-  { v: 'invest', label: 'Под инвестиции' },
-  { v: 'live',   label: 'Для жизни' },
-]
+const OPTS_BY_LANG: Record<Lang, { v: 'invest' | 'live'; label: string }[]> = {
+  ru: [{ v: 'invest', label: 'Под инвестиции' }, { v: 'live', label: 'Для жизни' }],
+  en: [{ v: 'invest', label: 'For investment' }, { v: 'live', label: 'To live in' }],
+}
 
-export function VillaGoalFilter({ current, view = 'list' }: {
+const COPY = {
+  ru: { dropdown: 'Цель покупки', clear: 'Сбросить' },
+  en: { dropdown: 'Buying goal',  clear: 'Clear' },
+} as const
+
+export function VillaGoalFilter({ current, view = 'list', lang = 'ru' }: {
   current: VillaFilterState
   view?: FilterView
+  lang?: Lang
 }) {
   const { apply } = useVillaFilterUrl(current, view)
-  const active = OPTS.find(o => o.v === current.goal) ?? null
+  const opts = OPTS_BY_LANG[lang]
+  const c = COPY[lang]
+  const active = opts.find(o => o.v === current.goal) ?? null
   const summary = active?.label ?? ''
 
   return (
-    <FilterDropdown label="Цель покупки" summary={summary} active={active != null}>
+    <FilterDropdown label={c.dropdown} summary={summary} active={active != null}>
       {(close) => (
         <div className="flex flex-col gap-1 min-w-[220px]">
-          {OPTS.map(o => {
+          {opts.map(o => {
             const selected = current.goal === o.v
             return (
               <label
@@ -44,7 +53,7 @@ export function VillaGoalFilter({ current, view = 'list' }: {
             onClick={() => { apply({ goal: null }); close() }}
             className="mt-2 self-start text-[13px] text-[var(--color-text-muted)] hover:text-[var(--color-text)] px-2 py-1"
           >
-            Сбросить
+            {c.clear}
           </button>
         </div>
       )}

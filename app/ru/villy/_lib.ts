@@ -331,7 +331,50 @@ export function applySearch(rows: EnrichedRow[], rawQuery: string): EnrichedRow[
 
 // === options (facet counts) ===
 
-export function buildOptions(allRows: EnrichedRow[], current: VillaFilterState): VillaFilterOptions {
+// Translation map RU value → EN value sourced from `<col> EN` columns.
+function buildLabelMap(rows: EnrichedRow[], colRu: string, colEn: string): Map<string, string> {
+  const out = new Map<string, string>()
+  for (const r of rows) {
+    const ruRaw = r.data[colRu]
+    const enRaw = r.data[colEn]
+    const ru = Array.isArray(ruRaw) ? ruRaw.map(String) : [firstString(ruRaw) ?? '']
+    const en = Array.isArray(enRaw) ? enRaw.map(String) : [firstString(enRaw) ?? '']
+    if (ru.length === en.length) {
+      for (let i = 0; i < ru.length; i++) {
+        const k = ru[i]?.trim(); const v = en[i]?.trim()
+        if (k && v && !out.has(k)) out.set(k, v)
+      }
+    } else if (ru.length === 1 && en[0]?.trim()) {
+      const k = ru[0]?.trim(); const v = en[0]?.trim()
+      if (k && v && !out.has(k)) out.set(k, v)
+    }
+  }
+  return out
+}
+
+export function buildOptions(
+  allRows: EnrichedRow[],
+  current: VillaFilterState,
+  lang: 'ru' | 'en' = 'ru',
+): VillaFilterOptions {
+  // Per-filter EN translation maps. Add `<RU column> EN` columns in
+  // Airtable to translate filter labels — until then EN catalogues
+  // render the literal column name as a placeholder.
+  const enMap = lang === 'en' ? {
+    district:  buildLabelMap(allRows, 'Location 2', 'Location 2 EN'),
+    bedrooms:  new Map<string, string>(), // numbers, no translation
+    status:    buildLabelMap(allRows, 'Статус', 'Статус EN'),
+    permit:    buildLabelMap(allRows, 'Разрешение', 'Разрешение EN'),
+    developer: new Map<string, string>(), // brand names — keep as-is
+    style:     buildLabelMap(allRows, 'Стиль интерьера', 'Стиль интерьера EN'),
+  } : null
+  function tr(dim: 'district' | 'status' | 'permit' | 'developer' | 'style' | 'bedrooms', value: string, ruCol: string): string {
+    if (!enMap) return value
+    if (dim === 'developer' || dim === 'bedrooms') return value
+    const en = enMap[dim].get(value)
+    return en ?? `${ruCol} EN`
+  }
+
   function countsExcludingDim(
     dim: keyof VillaFilterState,
     picker: (e: EnrichedRow) => string | string[] | null,
@@ -370,26 +413,37 @@ export function buildOptions(allRows: EnrichedRow[], current: VillaFilterState):
     return arr
   }
 
-  const district = build('district', e => e.district)
-  const bedrooms = build('bedrooms', e => e.bedrooms, 'value')
-  const year = build('year', e => e.year, 'value')
-  const permit = build('permit', e => e.permit)
-  const developer = build('developer', e => e.developerName)
-  const style = build('style', e => e.style)
+  const districtRaw  = build('district', e => e.district)
+  const bedrooms     = build('bedrooms', e => e.bedrooms, 'value')
+  const year         = build('year', e => e.year, 'value')
+  const permitRaw    = build('permit', e => e.permit)
+  const developer    = build('developer', e => e.developerName) // brand names
+  const styleRaw     = build('style', e => e.style)
   const statusCounts = countsExcludingDim('status', e => e.status)
-  const status: Option[] = []
+  const statusRaw: Option[] = []
   for (const [name, key] of Object.entries(STATUS_TO_URL)) {
     const c = statusCounts.get(name) ?? 0
-    if (c > 0) status.push({ value: key, label: name, count: c })
+    if (c > 0) statusRaw.push({ value: key, label: name, count: c })
   }
 
   // Deal type — counts derived directly so the chip shows
   // "Перепродажа · 12" etc.
   const dealCounts = countsExcludingDim('dealType', e => e.dealType)
-  const DEAL_LABELS: Record<string, string> = { primary: 'От застройщика', resale: 'Перепродажа', secondary: 'Вторичка' }
+  const DEAL_LABELS: Record<'ru' | 'en', Record<string, string>> = {
+    ru: { primary: 'От застройщика', resale: 'Перепродажа', secondary: 'Вторичка' },
+    en: { primary: 'From developer', resale: 'Resale',      secondary: 'Secondary' },
+  }
   const dealType: Option[] = (['primary', 'resale', 'secondary'] as const)
-    .map(v => ({ value: v, label: DEAL_LABELS[v], count: dealCounts.get(v) ?? 0 }))
+    .map(v => ({ value: v, label: DEAL_LABELS[lang][v], count: dealCounts.get(v) ?? 0 }))
     .filter(o => o.count > 0)
+
+  // Apply EN-translation pass — `value` keeps its original (URL slug or
+  // RU value) so existing URLs and filter matching keep working; only
+  // visible labels change for EN catalogues.
+  const district = districtRaw.map(o => ({ ...o, label: tr('district', o.label, 'Location 2') }))
+  const permit   = permitRaw  .map(o => ({ ...o, label: tr('permit',   o.label, 'Разрешение') }))
+  const style    = styleRaw   .map(o => ({ ...o, label: tr('style',    o.label, 'Стиль интерьера') }))
+  const status   = statusRaw  .map(o => ({ ...o, label: tr('status',   o.label, 'Статус') }))
 
   return { district, bedrooms, status, permit, year, developer, style, dealType }
 }
@@ -496,11 +550,12 @@ export type CatalogPage = {
 export async function loadCatalogPage(
   filters: VillaFilterState,
   page: number,
+  lang: 'ru' | 'en' = 'ru',
   sort: SortOrder = 'investment-desc',
 ): Promise<CatalogPage> {
   const safePage = Math.max(1, Math.floor(page))
   const { enriched, manifest } = await loadAll()
-  const options = buildOptions(enriched, filters)
+  const options = buildOptions(enriched, filters, lang)
   const scores = sort === 'investment-desc'
     ? await (await import('@/lib/investment/batch-scores')).loadAllVillaScores().catch(() => undefined)
     : undefined
@@ -556,6 +611,73 @@ export function buildHeading(f: VillaFilterState): string {
 
 export function buildTitle(f: VillaFilterState): string {
   return buildHeading(f) + ' | Balinsky'
+}
+
+// English mirrors of the heading / title / description / metadata
+// builders above. Kept as parallel functions rather than parameterising
+// the RU ones so the RU pages stay byte-identical.
+export function buildHeadingEn(f: VillaFilterState): string {
+  const adj: string[] = []
+  if (f.status.length === 1) {
+    const s = f.status[0]
+    adj.push(s === 'building' ? 'Under construction' : s === 'built' ? 'Completed' : 'Planned')
+  }
+  if (f.bedrooms.length > 0) {
+    const sorted = [...f.bedrooms].sort()
+    adj.push(`${sorted.join('-, ')}-bedroom`)
+  }
+  const noun = adj.length || hasAnyFilter(f) ? 'villas and houses' : 'Villas and houses'
+  let s = adj.length ? adj.join(' ') + ' ' + noun : noun
+
+  if (f.district.length === 1) s += ` in ${f.district[0]}`
+  else if (f.district.length > 1) s += ` in ${f.district.join(', ')}`
+  else s += ' in Bali'
+
+  if (f.developer.length === 1) s += ` by ${f.developer[0]}`
+  if (f.style.length === 1) s += ` in ${f.style[0]} style`
+  else if (f.style.length > 1) s += ` in ${f.style.join(', ')} style`
+  if (f.priceMin != null && f.priceMax != null) s += `, $${Math.round(f.priceMin).toLocaleString('en-US')} – $${Math.round(f.priceMax).toLocaleString('en-US')}`
+  else if (f.priceMax != null) s += `, up to $${Math.round(f.priceMax).toLocaleString('en-US')}`
+  else if (f.priceMin != null) s += `, from $${Math.round(f.priceMin).toLocaleString('en-US')}`
+  if (f.permit.length === 1) s += `, permit ${f.permit[0]}`
+  if (f.year.length === 1) s += `, completion ${f.year[0]}`
+
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}
+export function buildTitleEn(f: VillaFilterState): string { return buildHeadingEn(f) + ' | Balinsky' }
+export function buildDescriptionEn(f: VillaFilterState, totalCount?: number): string {
+  const noun = f.bedrooms.length === 1 ? `${f.bedrooms[0]}-bedroom villas and houses` : 'villas and houses'
+  const where =
+    f.district.length === 1 ? `in ${f.district[0]}`
+    : f.district.length > 1 ? `in ${f.district.join(', ')}`
+    : 'in Bali'
+  const countPart = typeof totalCount === 'number' && totalCount > 0
+    ? `${totalCount} ${noun}` : noun.charAt(0).toUpperCase() + noun.slice(1)
+  let s = `${countPart} ${where}`
+  if (f.style.length === 1) s += `, ${f.style[0]} style`
+  if (f.status.length === 1) {
+    const lbl = f.status[0] === 'building' ? 'under construction'
+      : f.status[0] === 'built' ? 'completed' : 'planned'
+    s += `, ${lbl}`
+  }
+  if (f.priceMin != null && f.priceMax != null) s += `, prices $${Math.round(f.priceMin).toLocaleString('en-US')}–$${Math.round(f.priceMax).toLocaleString('en-US')}`
+  else if (f.priceMax != null) s += `, up to $${Math.round(f.priceMax).toLocaleString('en-US')}`
+  else if (f.priceMin != null) s += `, from $${Math.round(f.priceMin).toLocaleString('en-US')}`
+  return `${s}. Photos, current prices, permits, developer contacts.`
+}
+export function buildMetadataEn(
+  f: VillaFilterState,
+  opts: { canonicalPath: string; noIndex: boolean; totalCount?: number },
+) {
+  const title = buildTitleEn(f)
+  const description = buildDescriptionEn(f, opts.totalCount)
+  return {
+    title, description,
+    alternates: { canonical: opts.canonicalPath },
+    robots: opts.noIndex ? { index: false, follow: true } : { index: true, follow: true },
+    openGraph: { title, description, type: 'website' as const, url: opts.canonicalPath },
+    twitter: { card: 'summary_large_image' as const, title, description },
+  }
 }
 
 // Build a unique meta-description per filter combination so 5–15K filter

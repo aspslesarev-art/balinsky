@@ -5,6 +5,12 @@ import { FilterDropdown } from '../FilterDropdown'
 import { useVillaFilterUrl, type FilterView } from './useVillaFilterUrl'
 import type { Option } from '../filters/MultiSelectFilter'
 import type { VillaFilterState } from '@/app/ru/villy/_lib'
+import type { Lang } from '@/lib/i18n'
+
+const COPY = {
+  ru: { search: 'Поиск…', noOptions: 'Нет вариантов', clear: 'Сбросить', apply: 'Применить' },
+  en: { search: 'Search…', noOptions: 'No options', clear: 'Clear',     apply: 'Apply' },
+} as const
 
 type StringArrayKey = {
   [K in keyof VillaFilterState]: VillaFilterState[K] extends string[] ? K : never
@@ -18,6 +24,7 @@ export function VillaMultiSelect({
   current,
   view = 'list',
   searchable = false,
+  lang = 'ru',
 }: {
   stateKey: StringArrayKey
   label: string
@@ -26,10 +33,12 @@ export function VillaMultiSelect({
   current: VillaFilterState
   view?: FilterView
   searchable?: boolean
+  lang?: Lang
 }) {
   const { apply } = useVillaFilterUrl(current, view)
   const [query, setQuery] = useState('')
   const [draft, setDraft] = useState<string[]>(selected)
+  const copy = COPY[lang]
 
   useEffect(() => { setDraft(selected) }, [selected.join(',')])
 
@@ -53,13 +62,13 @@ export function VillaMultiSelect({
               type="text"
               value={query}
               onChange={e => setQuery(e.target.value)}
-              placeholder="Поиск…"
+              placeholder={copy.search}
               className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] text-[14px] focus:outline-none focus:border-[var(--color-primary)]"
             />
           )}
           <div className="max-h-[300px] overflow-y-auto flex flex-col gap-1 pr-1">
             {filtered.length === 0 ? (
-              <div className="text-[13px] text-[var(--color-text-muted)] py-2">Нет вариантов</div>
+              <div className="text-[13px] text-[var(--color-text-muted)] py-2">{copy.noOptions}</div>
             ) : filtered.map(o => {
               const checked = draft.includes(o.value)
               const empty = o.count === 0 && !checked
@@ -86,14 +95,14 @@ export function VillaMultiSelect({
               onClick={() => { setDraft([]); apply({ [stateKey]: [] } as Partial<VillaFilterState>); close() }}
               className="text-[13px] text-[var(--color-text-muted)] hover:text-[var(--color-text)] px-2 py-1"
             >
-              Сбросить
+              {copy.clear}
             </button>
             <button
               type="button"
               onClick={() => { apply({ [stateKey]: draft } as Partial<VillaFilterState>); close() }}
               className="text-[13px] font-medium text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] rounded-lg px-4 py-2 transition-colors"
             >
-              Применить
+              {copy.apply}
             </button>
           </div>
         </div>
