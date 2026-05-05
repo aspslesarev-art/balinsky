@@ -1,38 +1,38 @@
 'use client'
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { switchLangPath, type Lang } from '@/lib/i18n'
 
-// Two pill buttons RU / EN. Clicking switches the locale segment of the
-// current URL. Same convention as the Pro mode toggle next to it: a
-// rounded-full container with the active option white-on-bg.
+// Same visual treatment as CurrencyToggle — appearance-none <select> with a
+// chevron overlay. Keeps the header's right-side controls consistent.
 export function LangSwitch({ className = '' }: { className?: string }) {
   const pathname = usePathname() ?? '/'
+  const router = useRouter()
   const current: Lang = pathname.startsWith('/en') ? 'en' : 'ru'
+  const label = current === 'en' ? 'Language' : 'Язык'
 
   return (
-    <div className={`inline-flex items-center gap-0.5 rounded-full bg-[var(--color-search-bg)] p-[3px] ${className}`}>
-      {(['RU', 'EN'] as const).map(l => {
-        const lang = l.toLowerCase() as Lang
-        const active = current === lang
-        const href = switchLangPath(pathname, lang)
-        return (
-          <Link
-            key={l}
-            href={href}
-            className={`px-2.5 py-1 rounded-full text-[12px] font-semibold transition-colors no-underline ${
-              active
-                ? 'bg-white text-[#1A1F1C] shadow-[0_1px_2px_rgba(20,25,22,0.05)]'
-                : 'text-[var(--color-text-muted)] hover:text-[#1A1F1C]'
-            }`}
-            aria-current={active ? 'true' : undefined}
-            prefetch={false}
-          >
-            {l}
-          </Link>
-        )
-      })}
-    </div>
+    <label className={`relative inline-flex items-center ${className}`}>
+      <span className="sr-only">{label}</span>
+      <select
+        value={current}
+        onChange={e => {
+          const next = e.target.value as Lang
+          router.push(switchLangPath(pathname, next))
+        }}
+        aria-label={label}
+        className="appearance-none rounded-full border border-[var(--color-border)] bg-white pl-3 pr-7 py-1.5 text-[12px] font-medium text-[#111827] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] cursor-pointer"
+      >
+        <option value="ru">RU</option>
+        <option value="en">EN</option>
+      </select>
+      <svg
+        aria-hidden="true"
+        className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]"
+        width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+      >
+        <polyline points="6 9 12 15 18 9" />
+      </svg>
+    </label>
   )
 }
