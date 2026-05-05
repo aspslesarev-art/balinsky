@@ -1,8 +1,9 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { Lock, Loader2, X, CheckCircle2 } from 'lucide-react'
+import { Lock, Loader2, X, CheckCircle2, Calendar, FileText, Wallet, Undo2, ChevronRight } from 'lucide-react'
 import type { Lang } from '@/lib/i18n'
 
 const COPY = {
@@ -23,6 +24,11 @@ const COPY = {
     consent: 'Согласен с обработкой персональных данных и условиями резервационного депозита.',
     failed: 'Не получилось отправить. Попробуйте ещё раз.',
     sending: 'Отправляем…',
+    trustHold: '14-дневный эксклюзивный hold — никто другой не сможет купить в это окно.',
+    trustForm: 'Reservation form — короткая бумага, не SPA. Сделку у нотариуса PPAT подписываем позже, после due diligence.',
+    trustDeposit: 'Депозит ($2–10k) идёт на счёт нотариуса или эскроу — не на личный счёт менеджера.',
+    trustRefund: 'Если в 14 дней вы откажетесь по результатам DD — депозит возвращается полностью.',
+    trustMore: 'Подробнее о бронировании',
   },
   en: {
     cta: 'Reserve',
@@ -41,6 +47,11 @@ const COPY = {
     consent: 'I agree to the processing of personal data and reservation deposit terms.',
     failed: 'Could not send. Please try again.',
     sending: 'Sending…',
+    trustHold: '14-day exclusive hold — no one else can complete a purchase in that window.',
+    trustForm: 'Reservation form is a short document, not the SPA. The SPA is signed later before a PPAT notary, after due diligence.',
+    trustDeposit: 'Deposit ($2–10k) sits with the notary escrow — never on a personal account.',
+    trustRefund: 'If you walk inside 14 days based on DD findings — full refund.',
+    trustMore: 'Read the full reservation policy',
   },
 } as const
 
@@ -188,9 +199,34 @@ export function ReserveButton({
                 </div>
               ) : (
                 <>
-                  <p className="text-[13px] text-[var(--color-text-muted)] leading-relaxed mb-5">
+                  <p className="text-[13px] text-[var(--color-text-muted)] leading-relaxed mb-4">
                     {c.intro}
                   </p>
+
+                  {/* Trust strip — four bullets that close the gap a foreign
+                      investor opens up between "I tap reserve" and "I send
+                      money". Compact icons + one short line each. */}
+                  <ul className="rounded-xl bg-[var(--color-search-bg)] p-3 space-y-2 mb-4">
+                    {[
+                      { Icon: Calendar, t: c.trustHold },
+                      { Icon: FileText, t: c.trustForm },
+                      { Icon: Wallet,   t: c.trustDeposit },
+                      { Icon: Undo2,    t: c.trustRefund },
+                    ].map(({ Icon, t }, i) => (
+                      <li key={i} className="flex gap-2 items-start text-[12px] leading-snug text-[var(--color-text)]">
+                        <Icon size={13} strokeWidth={1.8} className="text-[var(--color-primary)] shrink-0 mt-[2px]" />
+                        <span>{t}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    href={lang === 'en' ? '/en/reservation' : '/ru/rezervirovanie'}
+                    target="_blank"
+                    className="inline-flex items-center gap-1 text-[12px] text-[var(--color-primary)] hover:text-[var(--color-primary-pressed)] mb-5 no-underline"
+                  >
+                    {c.trustMore} <ChevronRight size={12} />
+                  </Link>
+
                   <form
                     onSubmit={e => { e.preventDefault(); submit() }}
                     className="space-y-3.5"
