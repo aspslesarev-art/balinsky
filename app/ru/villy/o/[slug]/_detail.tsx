@@ -35,6 +35,7 @@ import { InlinePrice } from '@/components/InlinePrice'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { loadAllVideos, matchesLang as videoMatchesLang } from '@/lib/videos'
 import { loadVillaStyles } from '@/lib/villa-styles'
+import { loadAllVillaScores } from '@/lib/investment/batch-scores'
 import { findActiveReservation } from '@/lib/reservations'
 import { VideoGrid } from '@/components/VideoGrid'
 import { VillaPresentationButton } from '@/components/VillaPresentation'
@@ -427,14 +428,17 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   const isResale = /перепрод|resale|вторич|secondary/.test(dealTypeRaw)
   const sellerUrl = isResale ? firstString(d['Контакт продавца']) : null
 
-  const [otherVillas, complexes, developers, stylesMap, activeReservation] = await Promise.all([
+  const [otherVillas, complexes, developers, stylesMap, scoresMap, activeReservation] = await Promise.all([
     loadOtherVillasInDistrict(district, v.airtable_id),
     _loadComplexesIndex(),
     _loadDevelopersIndex(),
     loadVillaStyles(),
+    loadAllVillaScores(),
     findActiveReservation('villa', v.airtable_id),
   ])
   const interiorStyle = stylesMap[v.airtable_id]?.style ?? null
+  const villaScore = scoresMap.get(v.airtable_id) ?? null
+  const bestCapRate = villaScore?.goodCapRate ?? null
   const GMAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? ''
 
   const parentComplex = findParentComplex(title, complexes)
@@ -594,6 +598,8 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
               developerName: developerName ?? null,
               developerCompletedCount: devStats?.ready ?? null,
               developerInProgressCount: devStats?.inProgress ?? null,
+              bestCapRate,
+              interiorStyle,
             }}
           />
         </section>

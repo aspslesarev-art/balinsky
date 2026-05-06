@@ -34,6 +34,8 @@ export type VillaCardData = {
   permit?: string | null
   completionYear?: string | null
   claimedYieldPct?: number | null
+  bestCapRate?: number | null
+  interiorStyle?: string | null
 }
 
 const COPY = {
@@ -84,6 +86,8 @@ export function VillaCard({ a, lang = 'ru' }: { a: VillaCardData; lang?: Lang })
             completionYear: a.completionYear ?? null,
             claimedYieldPct: a.claimedYieldPct ?? null,
             status: a.status ?? null,
+            bestCapRate: a.bestCapRate ?? null,
+            interiorStyle: a.interiorStyle ?? null,
           }}
         />
       </div>

@@ -37,7 +37,8 @@ function detectPool(d: Record<string, unknown>): boolean | null {
 export type VillaScore = {
   villaId: string
   composite: number   // 0..100
-  capRate: number | null
+  capRate: number | null      // median scenario (p50 ADR × 65% occupancy)
+  goodCapRate: number | null  // optimistic scenario (p75 ADR × 85% occupancy)
   infra: number       // 0..100
   confidence: 'high' | 'medium' | 'low'
   noi: number | null
@@ -72,6 +73,7 @@ function buildOneScore(
   const matchResult: MatchResult = matchCompetitors(inRadius, { lat, lng, bedrooms, area, hasPool }, beaches)
 
   let capRate: number | null = null
+  let goodCapRate: number | null = null
   let noi: number | null = null
   let leaseholdRisk = false
   let hasScenarios = false
@@ -85,7 +87,12 @@ function buildOneScore(
       adr: pcts.p25, occupancy: region.occupancyByScenario.bad,
       area, askingPrice, leaseholdYearsLeft, region,
     })
+    const good = computeEconomics({
+      adr: pcts.p75, occupancy: region.occupancyByScenario.good,
+      area, askingPrice, leaseholdYearsLeft, region,
+    })
     capRate = median.capRate
+    goodCapRate = good.capRate
     noi = median.noi
     leaseholdRisk = bad.leaseholdRisk || median.leaseholdRisk
     hasScenarios = true
@@ -108,6 +115,7 @@ function buildOneScore(
     villaId: row.airtable_id,
     composite: Math.max(0, Math.min(100, composite)),
     capRate,
+    goodCapRate,
     infra,
     confidence,
     noi,

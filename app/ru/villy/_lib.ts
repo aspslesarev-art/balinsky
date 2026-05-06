@@ -80,6 +80,8 @@ export type VillaCard = {
   permit: string | null
   completionYear: string | null
   claimedYieldPct: number | null
+  bestCapRate: number | null
+  interiorStyle: string | null
 }
 
 export type SortOrder = 'price-desc' | 'investment-desc'
@@ -517,6 +519,8 @@ export function toCard(
     permit,
     completionYear: e.year,
     claimedYieldPct,
+    bestCapRate: null,
+    interiorStyle: e.style,
   }
 }
 
@@ -555,7 +559,7 @@ export function buildAllCards(
   enriched: EnrichedRow[],
   manifest: Record<string, string[]>,
   filters: VillaFilterState,
-  scores?: Map<string, { composite: number }>,
+  scores?: Map<string, { composite: number; goodCapRate: number | null }>,
   sort: SortOrder = 'investment-desc',
   devStats?: Map<string, { ready: number; total: number }>,
 ): VillaCard[] {
@@ -563,7 +567,11 @@ export function buildAllCards(
   const isSearch = filters.q.trim().length > 0
   if (isSearch) filtered = applySearch(filtered, filters.q)
   const mapped = filtered.map(e => toCard(e, manifest, devStats)).filter((c): c is VillaCard => c !== null)
-  if (scores) for (const c of mapped) c.investmentScore = scores.get(c.id)?.composite ?? null
+  if (scores) for (const c of mapped) {
+    const s = scores.get(c.id)
+    c.investmentScore = s?.composite ?? null
+    c.bestCapRate = s?.goodCapRate ?? null
+  }
   let sorted: VillaCard[]
   if (isSearch) sorted = mapped
   else if (sort === 'investment-desc') sorted = [...mapped].sort((a, b) => (b.investmentScore ?? -1) - (a.investmentScore ?? -1))
@@ -599,10 +607,11 @@ export async function loadCatalogPage(
   const safePage = Math.max(1, Math.floor(page))
   const { enriched, manifest } = await loadAll()
   const options = buildOptions(enriched, filters, lang)
+  // Always load scores — even when sorting by price we still want
+  // bestCapRate piped into the wishlist snapshot so a heart-tap from
+  // the catalog carries the projected ROI to the comparison view.
   const [scores, devStats] = await Promise.all([
-    sort === 'investment-desc'
-      ? (await import('@/lib/investment/batch-scores')).loadAllVillaScores().catch(() => undefined)
-      : Promise.resolve(undefined),
+    (await import('@/lib/investment/batch-scores')).loadAllVillaScores().catch(() => undefined),
     (await import('@/lib/developer-stats')).loadAllDeveloperStats().catch(() => undefined),
   ])
   const all = buildAllCards(enriched, manifest, filters, scores, sort, devStats)

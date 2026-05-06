@@ -39,6 +39,8 @@ const COPY = {
     rowDealType: 'Тип сделки', rowLease: 'Лизхолд', rowPermit: 'Разрешение',
     rowYield: 'Заявленная доходность', rowLandUse: 'Назначение земли',
     rowDeveloper: 'Застройщик',
+    rowBestRoi: 'ROI (наш расчёт)',
+    rowStyle: 'Стиль интерьера',
     sqm: 'м²', years: 'лет',
     devReady: (n: number) => `${n} сдано`,
     devInProgress: (n: number) => `${n} строится`,
@@ -71,6 +73,8 @@ const COPY = {
     rowDealType: 'Deal', rowLease: 'Leasehold', rowPermit: 'Permit',
     rowYield: 'Claimed yield', rowLandUse: 'Land use',
     rowDeveloper: 'Developer',
+    rowBestRoi: 'ROI (our estimate)',
+    rowStyle: 'Interior style',
     sqm: 'm²', years: 'yrs',
     devReady: (n: number) => `${n} delivered`,
     devInProgress: (n: number) => `${n} in progress`,
@@ -151,6 +155,13 @@ export function ShortlistView({ lang }: { lang: Lang }) {
       best: 'min', num: it => it.pricePerSqmYearUsd ?? null },
     { key: 'yield',      label: c.rowYield,      cell: it => it.claimedYieldPct != null ? `${it.claimedYieldPct}%` : null,
       best: 'max', num: it => it.claimedYieldPct ?? null },
+    // Best-case ROI from our own calculator (Booking comps + good-
+    // scenario occupancy). The developer's claimed yield is marketing
+    // copy; this column is what the asset would actually return based
+    // on observed market rates. Stored as fraction (0..1), shown as %.
+    { key: 'bestRoi',    label: c.rowBestRoi,
+      cell: it => it.bestCapRate != null ? `${(it.bestCapRate * 100).toFixed(1)}%` : null,
+      best: 'max', num: it => it.bestCapRate ?? null },
     { key: 'lease',      label: c.rowLease,      cell: it => it.leaseYears != null ? `${it.leaseYears} ${c.years}` : null,
       best: 'max', num: it => it.leaseYears ?? null },
     { key: 'permit',     label: c.rowPermit,     cell: it => it.permit ?? null },
@@ -197,6 +208,7 @@ export function ShortlistView({ lang }: { lang: Lang }) {
     { key: 'floor',      label: c.rowFloor,      cell: it => it.floor ?? null },
     { key: 'district',   label: c.rowDistrict,   cell: it => it.district ?? null },
     { key: 'landUse',    label: c.rowLandUse,    cell: it => it.landUse ?? null },
+    { key: 'style',      label: c.rowStyle,      cell: it => it.interiorStyle ?? null },
     // Developer row: name on its own line, then a small "✓ N · ▲ M"
     // badge of completed / in-progress projects underneath. We pack
     // both into the cell text via a separator the renderer recognises

@@ -49,6 +49,13 @@ export type WishlistItem = {
   // Construction readiness for complexes: 0–100 percentage based on
   // build stages. Null for villas / apartments / rentals.
   readinessPct?: number | null
+  // Best-case ROI as cap rate (0..1) under our optimistic scenario —
+  // p75 ADR from booked Booking comps × good occupancy. Captured at
+  // save time so the shortlist doesn't need to re-run the calculator.
+  // Villa-only at the moment (apartments use developer-claimed yield).
+  bestCapRate?: number | null
+  // Interior style label from gpt-4o-mini photo classifier. Villa-only.
+  interiorStyle?: string | null
   savedAt: string
 }
 
