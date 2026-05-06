@@ -1,6 +1,7 @@
 import { Document, Page, Text, View, Image, Link, StyleSheet, Font, pdf } from '@react-pdf/renderer'
 import type { Snapshot } from '@/components/InvestmentWidget/types'
 import type { VillaPresentationData } from '@/components/VillaPresentation'
+import { telegramUrl, whatsappUrl } from '@/lib/agent-links'
 
 Font.register({
   family: 'Inter',
@@ -126,6 +127,9 @@ const styles = StyleSheet.create({
   linkBox: { fontSize: 13, color: COLORS.primary, borderRadius: 10, border: `1 solid ${COLORS.border}`, paddingVertical: 12, paddingHorizontal: 16, textDecoration: 'none', textAlign: 'center', width: '100%' },
   contactLabel: { fontSize: 10, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: 0.5 },
   contactValue: { fontSize: 13, fontWeight: 'bold', color: COLORS.text },
+  // Clickable variant — primary colour, no underline so the value
+  // reads as the agent typed it. Used when wrapped in <Link>.
+  contactValueLink: { fontSize: 13, fontWeight: 'bold', color: COLORS.primary, textDecoration: 'none' },
   // Footer (page numbers)
   footer: { position: 'absolute', bottom: 16, left: 36, right: 36, flexDirection: 'row', justifyContent: 'space-between' },
   footerText: { fontSize: 8, color: COLORS.muted },
@@ -521,18 +525,28 @@ export function VillaPdfDocument({ data, snap, agent, orientation = 'landscape' 
                 <Text style={styles.agentEyebrow}>Ваш агент</Text>
                 <Text style={styles.agentName}>{agent.name}</Text>
                 <Text style={styles.agentSubtitle}>Свяжитесь напрямую — быстро отвечу и помогу с просмотром</Text>
-                {agent.telegram && (
-                  <View style={styles.contactRow}>
-                    <Text style={styles.contactLabel}>Telegram</Text>
-                    <Text style={styles.contactValue}>{agent.telegram}</Text>
-                  </View>
-                )}
-                {agent.whatsapp && (
-                  <View style={styles.contactRow}>
-                    <Text style={styles.contactLabel}>WhatsApp</Text>
-                    <Text style={styles.contactValue}>{agent.whatsapp}</Text>
-                  </View>
-                )}
+                {agent.telegram && (() => {
+                  const tgHref = telegramUrl(agent.telegram)
+                  return (
+                    <View style={styles.contactRow}>
+                      <Text style={styles.contactLabel}>Telegram</Text>
+                      {tgHref
+                        ? <Link src={tgHref} style={styles.contactValueLink}>{agent.telegram}</Link>
+                        : <Text style={styles.contactValue}>{agent.telegram}</Text>}
+                    </View>
+                  )
+                })()}
+                {agent.whatsapp && (() => {
+                  const waHref = whatsappUrl(agent.whatsapp)
+                  return (
+                    <View style={styles.contactRow}>
+                      <Text style={styles.contactLabel}>WhatsApp</Text>
+                      {waHref
+                        ? <Link src={waHref} style={styles.contactValueLink}>{agent.whatsapp}</Link>
+                        : <Text style={styles.contactValue}>{agent.whatsapp}</Text>}
+                    </View>
+                  )
+                })()}
               </>
             ) : (
               <>
