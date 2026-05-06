@@ -27,7 +27,10 @@ export const loadAllDeveloperStats = cache(async (): Promise<Map<string, Complex
 
 const loadAllStats = loadAllDeveloperStats
 
-export type DeveloperStats = ComplexStats & { inProgress: number }
+export type DeveloperStats = ComplexStats & {
+  inProgress: number
+  unitsInProgress: number
+}
 
 export async function getDeveloperStats(
   name: string | null | undefined,
@@ -47,6 +50,9 @@ export async function getDeveloperStats(
   return {
     total: match.total,
     ready: match.ready,
+    unitsTotal: match.unitsTotal,
+    unitsReady: match.unitsReady,
     inProgress: Math.max(0, match.total - match.ready),
+    unitsInProgress: Math.max(0, match.unitsTotal - match.unitsReady),
   }
 }

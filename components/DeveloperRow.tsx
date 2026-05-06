@@ -9,6 +9,8 @@ const COPY = {
   ru: {
     ready: 'сдано',
     inprogress: 'в работе',
+    unitsReady: 'юнитов сдано',
+    unitsInProgress: 'юнитов строится',
     open: 'Открыть',
     expand: 'Развернуть',
     collapse: 'Свернуть',
@@ -21,6 +23,8 @@ const COPY = {
   en: {
     ready: 'completed',
     inprogress: 'in progress',
+    unitsReady: 'units delivered',
+    unitsInProgress: 'units under construction',
     open: 'Open',
     expand: 'Expand',
     collapse: 'Collapse',
@@ -43,6 +47,12 @@ export type DeveloperRowData = {
   // Catalog stats — show on the card and drive the sort order.
   complexesReady?: number
   complexesTotal?: number
+  // Unit-level totals across the developer's complexes. Two builders
+  // with the same number of complexes can carry vastly different
+  // construction obligations (5 villas vs 600-unit tower); these
+  // numbers expose that asymmetry.
+  unitsReady?: number
+  unitsTotal?: number
 }
 
 function parseBullets(s: string | null): string[] | null {
@@ -116,6 +126,24 @@ export function DeveloperRow({ d, lang = 'ru' }: { d: DeveloperRowData; lang?: L
                 )}
                 {(d.complexesTotal ?? 0) - (d.complexesReady ?? 0) > 0 && (
                   <span>{(d.complexesTotal ?? 0) - (d.complexesReady ?? 0)} {copy.inprogress}</span>
+                )}
+              </div>
+            )}
+            {/* Second stats line: actual unit counts. Surfaces the
+                asymmetry between "10 small villa projects" and
+                "2 large complexes" — same complex count, very
+                different construction load. Shown only when at
+                least one of the unit totals is non-zero. */}
+            {((d.unitsReady ?? 0) > 0 || ((d.unitsTotal ?? 0) - (d.unitsReady ?? 0)) > 0) && (
+              <div className="mt-0.5 text-[11px] sm:text-[12px] text-[var(--color-text-muted)]">
+                {(d.unitsReady ?? 0) > 0 && (
+                  <span className="text-[var(--color-primary-pressed)] font-medium">{d.unitsReady} {copy.unitsReady}</span>
+                )}
+                {(d.unitsReady ?? 0) > 0 && ((d.unitsTotal ?? 0) - (d.unitsReady ?? 0)) > 0 && (
+                  <span className="mx-1.5">·</span>
+                )}
+                {((d.unitsTotal ?? 0) - (d.unitsReady ?? 0)) > 0 && (
+                  <span>{(d.unitsTotal ?? 0) - (d.unitsReady ?? 0)} {copy.unitsInProgress}</span>
                 )}
               </div>
             )}
