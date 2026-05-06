@@ -30,6 +30,7 @@ const COPY = {
     clear: 'Очистить всё',
     sendToBot: 'Отправить в Telegram',
     downloadPdf: 'Скачать PDF',
+    pdfLimit: (max: number) => `PDF можно скачать, если в подборке не больше ${max} объектов`,
     pdfTooMany: (max: number) => `PDF доступен для подборок до ${max} объектов — уберите лишнее`,
     remove: 'Убрать',
     pdfModalTitle: 'Скачать подборку',
@@ -83,6 +84,7 @@ const COPY = {
     clear: 'Clear all',
     sendToBot: 'Send to Telegram',
     downloadPdf: 'Download PDF',
+    pdfLimit: (max: number) => `PDF download is available when the shortlist has up to ${max} listings`,
     pdfTooMany: (max: number) => `PDF is available for shortlists up to ${max} listings — remove some first`,
     remove: 'Remove',
     pdfModalTitle: 'Download shortlist',
@@ -413,9 +415,9 @@ export function ShortlistView({ lang }: { lang: Lang }) {
           )}
         </div>
 
-        {ready && pdfDisabled && (
-          <div className="text-[12px] text-[var(--color-text-muted)] mb-4 -mt-3">
-            {c.pdfTooMany(PDF_MAX_ITEMS)}
+        {ready && items.length > 0 && (
+          <div className={`text-[12px] mb-4 -mt-3 ${pdfDisabled ? 'text-[#B91C1C]' : 'text-[var(--color-text-muted)]'}`}>
+            {pdfDisabled ? c.pdfTooMany(PDF_MAX_ITEMS) : c.pdfLimit(PDF_MAX_ITEMS)}
           </div>
         )}
 
