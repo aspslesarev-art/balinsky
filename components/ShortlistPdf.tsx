@@ -2,6 +2,7 @@ import { Document, Page, Text, View, Image, Link, StyleSheet, Font, pdf } from '
 import type { WishlistItem } from '@/lib/wishlist'
 import type { Lang } from '@/lib/i18n'
 import { classifyLandUse } from '@/lib/land-use'
+import { telegramUrl, whatsappUrl } from '@/lib/agent-links'
 import type { AgentContact, PdfOrientation } from './VillaPresentationPdf'
 
 Font.register({
@@ -103,6 +104,10 @@ const styles = StyleSheet.create({
   contactRow: { flexDirection: 'row', alignItems: 'center', borderRadius: 10, border: `1 solid ${COLORS.border}`, paddingVertical: 12, paddingHorizontal: 16, marginBottom: 10, width: '100%', justifyContent: 'space-between' },
   contactLabel: { fontSize: 10, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: 0.5 },
   contactValue: { fontSize: 13, fontWeight: 'bold', color: COLORS.text },
+  // Same look as contactValue but used inside <Link>: primary colour
+  // hints "this is clickable" and we strip the default underline so
+  // the value reads as the agent typed it.
+  contactValueLink: { fontSize: 13, fontWeight: 'bold', color: COLORS.primary, textDecoration: 'none' },
   linkBox: { fontSize: 13, color: COLORS.primary, borderRadius: 10, border: `1 solid ${COLORS.border}`, paddingVertical: 12, paddingHorizontal: 16, textDecoration: 'none', textAlign: 'center', width: '100%' },
   // Footer (page numbers)
   footer: { position: 'absolute', bottom: 16, left: 36, right: 36, flexDirection: 'row', justifyContent: 'space-between' },
@@ -606,18 +611,28 @@ export function ShortlistPdfDocument({ items, agent, orientation = 'landscape', 
                 <Text style={styles.agentEyebrow}>{c.agentEyebrow}</Text>
                 <Text style={styles.agentName}>{agent.name}</Text>
                 <Text style={styles.agentSubtitle}>{c.agentSubtitle}</Text>
-                {agent.telegram && (
-                  <View style={styles.contactRow}>
-                    <Text style={styles.contactLabel}>Telegram</Text>
-                    <Text style={styles.contactValue}>{agent.telegram}</Text>
-                  </View>
-                )}
-                {agent.whatsapp && (
-                  <View style={styles.contactRow}>
-                    <Text style={styles.contactLabel}>WhatsApp</Text>
-                    <Text style={styles.contactValue}>{agent.whatsapp}</Text>
-                  </View>
-                )}
+                {agent.telegram && (() => {
+                  const tgHref = telegramUrl(agent.telegram)
+                  return (
+                    <View style={styles.contactRow}>
+                      <Text style={styles.contactLabel}>Telegram</Text>
+                      {tgHref
+                        ? <Link src={tgHref} style={styles.contactValueLink}>{agent.telegram}</Link>
+                        : <Text style={styles.contactValue}>{agent.telegram}</Text>}
+                    </View>
+                  )
+                })()}
+                {agent.whatsapp && (() => {
+                  const waHref = whatsappUrl(agent.whatsapp)
+                  return (
+                    <View style={styles.contactRow}>
+                      <Text style={styles.contactLabel}>WhatsApp</Text>
+                      {waHref
+                        ? <Link src={waHref} style={styles.contactValueLink}>{agent.whatsapp}</Link>
+                        : <Text style={styles.contactValue}>{agent.whatsapp}</Text>}
+                    </View>
+                  )
+                })()}
               </>
             ) : (
               <>
