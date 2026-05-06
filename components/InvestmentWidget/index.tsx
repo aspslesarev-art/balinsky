@@ -2,12 +2,14 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import {
-  Star, Info, AlertTriangle, Sparkles, ChevronDown, ChevronUp, TrendingUp,
+  Star, Info, AlertTriangle, Sparkles, ChevronDown, ChevronUp, TrendingUp, RotateCcw,
 } from 'lucide-react'
 import { InvestmentMap } from './InvestmentMap'
 import { fmtMoney, fmtMoneyShort, fmtPct, fmtYears, fmtDistance, fmtMeters, pluralRu } from './utils'
 import type { Snapshot } from './types'
 import { useCurrency } from '../CurrencyContext'
+import { computeEconomics, type Economics, type ScenarioKey } from '@/lib/investment/economics'
+import { CURRENCY_RATES } from '@/lib/currency'
 
 export function InvestmentWidget({
   villaId,
@@ -191,51 +193,154 @@ function ScenariosIntro({ snap }: { snap: Snapshot }) {
 }
 
 function Scenarios({ snap }: { snap: Snapshot }) {
-  const { currency } = useCurrency()
-  const fmtUsd = (n: number | null | undefined) => fmtMoney(n, currency)
-  const sc = snap.scenarios!
-  const cards: { key: 'bad' | 'median' | 'good'; title: string; tone: string }[] = [
-    { key: 'bad', title: 'Плохой', tone: 'border-[#FECACA] bg-[#FEF2F2]' },
+  const cards: { key: ScenarioKey; title: string; tone: string }[] = [
+    { key: 'bad',    title: 'Плохой',     tone: 'border-[#FECACA] bg-[#FEF2F2]' },
     { key: 'median', title: 'Нормальный', tone: 'border-[var(--color-primary)] bg-[var(--color-primary-soft)]' },
-    { key: 'good', title: 'Хороший', tone: 'border-[#BBF7D0] bg-[#F0FDF4]' },
+    { key: 'good',   title: 'Хороший',    tone: 'border-[#BBF7D0] bg-[#F0FDF4]' },
   ]
-  const [open, setOpen] = useState<string | null>(null)
   return (
     <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-4">
-      {cards.map(c => {
-        const e = sc[c.key]
-        const isOpen = open === c.key
-        return (
-          <div key={c.key} className={`rounded-2xl border-2 ${c.tone} p-5`}>
-            <div className="flex items-center justify-between mb-1">
-              <div className="text-[12px] uppercase tracking-wide font-semibold text-[#111827]">{c.title}</div>
-              <div className="text-[11px] text-[var(--color-text-muted)]">ADR {fmtUsd(e.adr)} · {Math.round(e.occupancy * 100)}%</div>
-            </div>
-            <div className="text-[24px] font-semibold text-[#111827] leading-tight">{fmtUsd(e.noi)}<span className="text-[13px] font-normal text-[var(--color-text-muted)]"> / год NOI</span></div>
-            <div className="text-[13px] text-[var(--color-text-muted)] mt-2 space-y-0.5">
-              <div>Окупаемость: <span className="text-[#111827] font-medium">{fmtYears(e.payback)}</span></div>
-              <div>Cap rate: <span className="text-[#111827] font-medium">{fmtPct(e.capRate)}</span></div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setOpen(isOpen ? null : c.key)}
-              className="mt-3 inline-flex items-center gap-1 text-[12px] text-[var(--color-primary-pressed)] hover:text-[var(--color-primary)] cursor-pointer"
-            >
-              Как считалось {isOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-            </button>
-            {isOpen && (
-              <ul className="mt-2 text-[12px] text-[var(--color-text)] space-y-0.5 border-t border-[var(--color-border)] pt-2">
-                <li>Revenue: {fmtUsd(e.revenue)}</li>
-                <li>− Platform ({Math.round(snap.region.platformFeePct * 100)}%): {fmtUsd(e.platformFee)}</li>
-                <li>− Mgmt ({Math.round(snap.region.mgmtFeePct * 100)}%): {fmtUsd(e.mgmtFee)}</li>
-                <li>− OPEX ({snap.region.opexPerSqmMonth} $/м²/мес): {fmtUsd(e.opex)}</li>
-                <li>− Tax ({Math.round(snap.region.taxRate * 100)}%): {fmtUsd(e.tax)}</li>
-                <li className="pt-1 border-t border-[var(--color-border)] mt-1 font-medium">= NOI: {fmtUsd(e.noi)}</li>
-              </ul>
-            )}
-          </div>
-        )
-      })}
+      {cards.map(c => (
+        <ScenarioCard key={c.key} sKey={c.key} title={c.title} tone={c.tone} snap={snap} />
+      ))}
+    </div>
+  )
+}
+
+// One scenario card with editable ADR / occupancy / mgmt fee. Defaults
+// come from the data-driven scenario the API computed; user can dial
+// any number, the rest of the model recomputes via computeEconomics.
+function ScenarioCard({
+  sKey, title, tone, snap,
+}: {
+  sKey: ScenarioKey; title: string; tone: string; snap: Snapshot
+}) {
+  const { currency } = useCurrency()
+  const fmtUsd = (n: number | null | undefined) => fmtMoney(n, currency)
+  const fxRate = CURRENCY_RATES[currency]
+  const baseline = snap.scenarios![sKey]
+
+  const [adrUsd, setAdrUsd] = useState<number>(baseline.adr)
+  const [occupancyPct, setOccupancyPct] = useState<number>(Math.round(baseline.occupancy * 100))
+  const [mgmtFeePct, setMgmtFeePct] = useState<number>(Math.round(snap.region.mgmtFeePct * 100))
+  const [open, setOpen] = useState(false)
+
+  // ADR field shows in the visitor's currency to avoid the "$190 in EUR?"
+  // friction. Underlying math stays in USD.
+  const adrInCurrency = Math.round(adrUsd * fxRate)
+  const setAdrInCurrency = (n: number) => setAdrUsd(Math.max(1, Math.round(n / fxRate)))
+
+  const e: Economics = useMemo(() => computeEconomics({
+    adr: adrUsd,
+    occupancy: occupancyPct / 100,
+    area: snap.villa.area,
+    askingPrice: snap.villa.askingPrice,
+    leaseholdYearsLeft: snap.villa.leaseholdYearsLeft,
+    region: { ...snap.region, mgmtFeePct: mgmtFeePct / 100 },
+  }), [adrUsd, occupancyPct, mgmtFeePct, snap])
+
+  const isCustom =
+    adrUsd !== baseline.adr ||
+    occupancyPct !== Math.round(baseline.occupancy * 100) ||
+    mgmtFeePct !== Math.round(snap.region.mgmtFeePct * 100)
+
+  const reset = () => {
+    setAdrUsd(baseline.adr)
+    setOccupancyPct(Math.round(baseline.occupancy * 100))
+    setMgmtFeePct(Math.round(snap.region.mgmtFeePct * 100))
+  }
+
+  return (
+    <div className={`rounded-2xl border-2 ${tone} p-5 space-y-3`}>
+      <div className="flex items-center justify-between">
+        <div className="text-[12px] uppercase tracking-wide font-semibold text-[#111827]">{title}</div>
+        {isCustom && (
+          <button
+            type="button"
+            onClick={reset}
+            title="Сбросить к данным по конкурентам"
+            className="inline-flex items-center gap-1 text-[11px] text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+          >
+            <RotateCcw size={11} /> сбросить
+          </button>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <ScenarioInput
+          label="ADR"
+          value={adrInCurrency}
+          onChange={setAdrInCurrency}
+          suffix={currency}
+          step={Math.max(1, Math.round(5 * fxRate))}
+        />
+        <ScenarioInput
+          label="Загрузка"
+          value={occupancyPct}
+          onChange={n => setOccupancyPct(Math.min(100, Math.max(0, n)))}
+          suffix="%"
+          step={1}
+        />
+        <ScenarioInput
+          label="Mgmt fee"
+          value={mgmtFeePct}
+          onChange={n => setMgmtFeePct(Math.min(50, Math.max(0, n)))}
+          suffix="%"
+          step={1}
+        />
+      </div>
+
+      <div className="pt-2 border-t border-[var(--color-border)]">
+        <div className="text-[24px] font-semibold text-[#111827] leading-tight">
+          {fmtUsd(e.noi)}
+          <span className="text-[13px] font-normal text-[var(--color-text-muted)]"> / год NOI</span>
+        </div>
+        <div className="text-[13px] text-[var(--color-text-muted)] mt-2 space-y-0.5">
+          <div>Окупаемость: <span className="text-[#111827] font-medium">{fmtYears(e.payback)}</span></div>
+          <div>Cap rate: <span className="text-[#111827] font-medium">{fmtPct(e.capRate)}</span></div>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="inline-flex items-center gap-1 text-[12px] text-[var(--color-primary-pressed)] hover:text-[var(--color-primary)] cursor-pointer"
+      >
+        Как считалось {open ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+      </button>
+      {open && (
+        <ul className="text-[12px] text-[var(--color-text)] space-y-0.5 border-t border-[var(--color-border)] pt-2">
+          <li>Revenue: {fmtUsd(e.revenue)}</li>
+          <li>− Platform ({Math.round(snap.region.platformFeePct * 100)}%): {fmtUsd(e.platformFee)}</li>
+          <li>− Mgmt ({mgmtFeePct}%): {fmtUsd(e.mgmtFee)}</li>
+          <li>− OPEX ({snap.region.opexPerSqmMonth} $/м²/мес): {fmtUsd(e.opex)}</li>
+          <li>− Tax ({Math.round(snap.region.taxRate * 100)}%): {fmtUsd(e.tax)}</li>
+          <li className="pt-1 border-t border-[var(--color-border)] mt-1 font-medium">= NOI: {fmtUsd(e.noi)}</li>
+        </ul>
+      )}
+    </div>
+  )
+}
+
+function ScenarioInput({
+  label, value, onChange, suffix, step,
+}: {
+  label: string; value: number; onChange: (v: number) => void; suffix: string; step: number
+}) {
+  return (
+    <div className="flex items-center gap-2 text-[12px]">
+      <span className="text-[var(--color-text-muted)] w-[64px] shrink-0">{label}</span>
+      <input
+        type="number"
+        value={value}
+        onChange={e => {
+          const n = Number(e.target.value)
+          if (Number.isFinite(n)) onChange(n)
+        }}
+        step={step}
+        className="flex-1 min-w-0 rounded-md border border-[var(--color-border)] bg-white px-2 py-1 text-[13px] tabular-nums text-[#111827] focus:outline-none focus:border-[var(--color-primary)]"
+      />
+      <span className="text-[11px] text-[var(--color-text-muted)] shrink-0">{suffix}</span>
     </div>
   )
 }

@@ -26,7 +26,6 @@ import { PageContainer } from '@/components/PageContainer'
 import { PhotoGalleryHero } from '@/components/PhotoGalleryHero'
 import { VillaCard, type VillaCardData } from '@/components/VillaCard'
 import { InvestmentWidget } from '@/components/InvestmentWidget'
-import { RoiCalculator } from '@/components/RoiCalculator'
 import { RentalCompareSection } from '@/components/RentalCompareSection'
 import { ManagerCard } from '@/components/ManagerCard'
 import { loadManagerByDeveloperName, loadManagerByDeveloperSlug } from '@/lib/managers'
@@ -736,18 +735,6 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
         )}
 
         {manager && <ManagerCard manager={manager} developerName={developer?.name ?? developerName} />}
-
-        {priceNum != null && (
-          <RoiCalculator
-            priceUsd={priceNum}
-            district={district}
-            claimedYieldPct={(() => {
-              const y = numberOrNull(d['Заявленная доходность'])
-              return y != null ? Math.round(y * 1000) / 10 : null
-            })()}
-            lang={lang}
-          />
-        )}
 
         {lat != null && lng != null && (
           <InvestmentWidget villaId={v.airtable_id} apiKey={GMAPS_KEY} />
