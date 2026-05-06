@@ -1,9 +1,12 @@
-name: Sync heavy content (rental + photos)
+name: Sync heavy content (rental + villa/apartment photos)
 
-# Rental sync caches every photo from Airtable into Storage — that's
-# 3000+ HTTP downloads on a full run, takes 20-40 min. Lives on its
-# own schedule so it can't push the fast events/news pipeline over
-# the timeout. Runs hourly; rentals don't change minute-to-minute.
+# Photo-heavy syncs that take minutes per run. Rental sync caches
+# every photo from Airtable into Storage (3000+ HTTP downloads on a
+# full run). Villa + apartment photo syncs use att-id change detection
+# in resume mode, so a normal hourly run only re-pulls records whose
+# Airtable photos actually changed — usually zero. The first run after
+# this file lands re-syncs everyone (no att-id manifest yet); after
+# that it's near-zero-cost.
 
 on:
   schedule:
@@ -41,13 +44,19 @@ jobs:
       - name: Sync rental
         run: node scripts/sync-rental.mjs
 
-      - name: Revalidate rental cache
+      - name: Sync villa photos
+        run: node scripts/sync-villa-photos.mjs
+
+      - name: Sync apartment photos
+        run: node scripts/sync-apartments-photos.mjs
+
+      - name: Revalidate rental + villa + apartment caches
         env:
           SITE_URL: ${{ secrets.SITE_URL }}
           REVALIDATE_TOKEN: ${{ secrets.REVALIDATE_TOKEN }}
         run: |
           curl --fail --silent --show-error \
-            -X POST "${SITE_URL}/api/revalidate-content?kinds=rental" \
+            -X POST "${SITE_URL}/api/revalidate-content?kinds=rental,villas,apartments" \
             -H "Authorization: Bearer ${REVALIDATE_TOKEN}" \
             -H "Content-Type: application/json" \
             -d '{}' \

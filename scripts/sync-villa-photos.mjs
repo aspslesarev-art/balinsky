@@ -11,6 +11,12 @@ const AIRTABLE_BASE = 'appAwgCAwOIQs2DJh'
 const AIRTABLE_TABLE = 'tblRD00AhDNrpW3DA'
 const BUCKET = 'villa-photos'
 const MANIFEST_KEY = '_manifest.json'
+// Side file holding the Airtable attachment-ID list per record ("att…"),
+// joined as a comma-separated string. Used as a change-detection key:
+// resume mode skips a record only if the stored key matches the current
+// Airtable atts. So a photo replace, reorder, or count change in
+// Airtable triggers a re-upload on the next run.
+const ATTS_KEY = '_attachments.json'
 const MAX_PHOTOS = 10
 const RETRIES = 4
 const CONCURRENCY = 3
@@ -98,8 +104,8 @@ async function uploadOne(recId, idx, att) {
   return sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl
 }
 
-async function loadExistingManifest() {
-  const { data, error } = await sb.storage.from(BUCKET).download(MANIFEST_KEY)
+async function loadJsonFile(key) {
+  const { data, error } = await sb.storage.from(BUCKET).download(key)
   if (error) return {}
   try {
     const text = await data.text()
@@ -108,12 +114,12 @@ async function loadExistingManifest() {
   } catch { return {} }
 }
 
-async function saveManifest(manifest) {
-  const body = Buffer.from(JSON.stringify(manifest))
+async function saveJsonFile(key, payload) {
+  const body = Buffer.from(JSON.stringify(payload))
   let lastErr
   for (let i = 0; i <= RETRIES; i++) {
     try {
-      const { error } = await sb.storage.from(BUCKET).upload(MANIFEST_KEY, body, {
+      const { error } = await sb.storage.from(BUCKET).upload(key, body, {
         contentType: 'application/json',
         upsert: true,
       })
@@ -125,6 +131,15 @@ async function saveManifest(manifest) {
     }
   }
   throw lastErr
+}
+
+const loadExistingManifest = () => loadJsonFile(MANIFEST_KEY)
+const saveManifest = m => saveJsonFile(MANIFEST_KEY, m)
+const loadExistingAtts = () => loadJsonFile(ATTS_KEY)
+const saveAtts = a => saveJsonFile(ATTS_KEY, a)
+
+function attsKeyOf(photos) {
+  return (Array.isArray(photos) ? photos : []).map(p => p?.id).filter(Boolean).join(',')
 }
 
 await ensureBucket()
@@ -139,10 +154,24 @@ const candidates = records.filter(rec => {
 console.log(`with Opt photos${PUBLISHED_ONLY ? ' (published)' : ''}: ${candidates.length}`)
 
 const manifest = await loadExistingManifest()
+const atts = await loadExistingAtts()
 console.log(`existing manifest entries: ${Object.keys(manifest).length}`)
+console.log(`existing atts entries: ${Object.keys(atts).length}`)
 
+// Resume mode skips a record only when (a) we already have photos for
+// it AND (b) the Airtable attachment list hasn't changed since last
+// sync. A photo swap in Airtable changes the att-id list → record gets
+// re-pulled. Records with no atts entry yet (legacy data) get re-pulled
+// too, so the first run of this version refreshes everyone — that's a
+// one-time cost.
 const afterResume = RESUME
-  ? candidates.filter(rec => !manifest[rec.id] || manifest[rec.id].length === 0)
+  ? candidates.filter(rec => {
+      const haveUrls = manifest[rec.id] && manifest[rec.id].length > 0
+      if (!haveUrls) return true
+      const stored = atts[rec.id]
+      const current = attsKeyOf(rec.fields['Opt photos'])
+      return stored !== current
+    })
   : candidates
 const slice = Number.isFinite(LIMIT) ? afterResume.slice(0, LIMIT) : afterResume
 console.log(`processing: ${slice.length} (resume=${RESUME})`)
@@ -171,6 +200,7 @@ async function worker(queue) {
     try {
       const urls = await processOne(rec)
       manifest[rec.id] = urls
+      atts[rec.id] = attsKeyOf(rec.fields['Opt photos'])
       total_photos += urls.length
       done++
     } catch (e) {
@@ -181,7 +211,10 @@ async function worker(queue) {
     process.stdout.write(`\r${done + failed}/${slice.length}  done=${done} fail=${failed} photos=${total_photos}`)
     if (sinceSave >= SAVE_EVERY) {
       sinceSave = 0
-      try { await saveManifest(manifest) } catch (e) { console.error('\nmanifest save:', e.message) }
+      try {
+        await saveManifest(manifest)
+        await saveAtts(atts)
+      } catch (e) { console.error('\nmanifest save:', e.message) }
     }
   }
 }
@@ -190,5 +223,6 @@ const queue = [...slice]
 await Promise.all(Array.from({ length: CONCURRENCY }, () => worker(queue)))
 
 await saveManifest(manifest)
+await saveAtts(atts)
 console.log(`\nfinished: done=${done} failed=${failed} total_photos=${total_photos}`)
 console.log(`manifest at: ${sb.storage.from(BUCKET).getPublicUrl(MANIFEST_KEY).data.publicUrl}`)
