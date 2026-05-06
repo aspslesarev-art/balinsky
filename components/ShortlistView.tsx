@@ -773,7 +773,12 @@ export function ShortlistView({ lang }: { lang: Lang }) {
 
       {downloadOpen && (
         <DownloadShortlistModal
-          items={items}
+          // Preserve the on-screen ordering: villa+apartment columns
+          // are already sorted by overall verdict score (best first),
+          // complexes and rentals follow in their saved order. The PDF
+          // walks this list as-is, so what the visitor sees in the
+          // table is what they get on the cover-to-back of the file.
+          items={[...realEstate, ...complexes, ...rentals]}
           lang={lang}
           c={c}
           onClose={() => setDownloadOpen(false)}
