@@ -112,8 +112,12 @@ export function PhotoGalleryHero({
         )}
       </div>
 
-      {/* Mobile: hero + count badge */}
-      <div className="md:hidden rounded-2xl overflow-hidden border border-[var(--color-border)] relative">
+      {/* Mobile: hero + count badge. mx-3 pushes the card off the
+          page padding (px-6 on PageContainer) so the gallery reads
+          as an inset element with breathing room on the sides,
+          matching how cards on the catalog feel framed instead of
+          flush with the screen edge. */}
+      <div className="md:hidden mx-3 rounded-2xl overflow-hidden border border-[var(--color-border)] relative">
         <button
           type="button"
           onClick={() => setOpenAt(0)}
