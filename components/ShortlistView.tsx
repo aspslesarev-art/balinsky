@@ -250,16 +250,76 @@ export function ShortlistView({ lang }: { lang: Lang }) {
                   {c.sectionRealEstate}
                   <span className="text-[var(--color-text-muted)] font-normal ml-2">· {realEstate.length}</span>
                 </h2>
-                {/* table-fixed + w-full distributes remaining width
-                    evenly across the item columns, so 2 items stretch to
-                    ~556px each instead of leaving a 590px empty strip.
-                    On phones we tighten label col + item min-width and
-                    enable scroll-snap so each card lands on screen
-                    cleanly when the user swipes between saved items. */}
-                <div className="-mx-6 px-6 overflow-x-auto pb-4 snap-x snap-mandatory md:snap-none scroll-pl-6">
+
+                {/* Mobile layout: vertical stack of per-item cards with
+                    inline label / value rows. Side-by-side comparison
+                    on a 400px viewport just doesn't fit, so we drop it
+                    on small screens — the visitor scans items one by
+                    one. Each card has the same comparison rows as the
+                    desktop table, just rotated 90 degrees. */}
+                <ul className="md:hidden space-y-4 mb-2">
+                  {realEstate.map(it => {
+                    const filledRows = rows.filter(r => r.cell(it) != null)
+                    return (
+                      <li key={`m-${it.kind}:${it.slug}`} className="rounded-2xl border border-[var(--color-border)] bg-white overflow-hidden relative">
+                        <Link href={detailHref(it, lang)} className="block no-underline text-[var(--color-text)]">
+                          <div className="aspect-[16/9] bg-[var(--color-search-bg)]">
+                            {it.photo ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={it.photo} alt={it.title} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-3xl">🏝️</div>
+                            )}
+                          </div>
+                          <div className="px-4 pt-4">
+                            <h3 className="text-[15px] font-semibold leading-snug line-clamp-2 mb-3">{it.title}</h3>
+                          </div>
+                        </Link>
+                        <button
+                          type="button"
+                          aria-label={c.remove}
+                          onClick={() => remove(it.kind, it.slug)}
+                          className="absolute top-2 right-2 inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/85 backdrop-blur-sm hover:bg-white text-[#1A1F1C] shadow-[0_1px_3px_rgba(0,0,0,0.12)]"
+                        >
+                          <X size={14} />
+                        </button>
+                        <dl className="px-4 pb-4 divide-y divide-[var(--color-border-soft)]">
+                          {filledRows.map(r => {
+                            const v = r.cell(it)
+                            const lines = v != null ? v.split('\n') : []
+                            const winning = bestValueFor(r, realEstate)
+                            const num = r.num?.(it)
+                            const isBest = winning != null && num != null && num === winning
+                            return (
+                              <div key={r.key} className="flex items-start justify-between gap-3 py-2">
+                                <dt className="text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] shrink-0 pt-0.5">
+                                  {r.label}
+                                </dt>
+                                <dd className={`text-[13px] text-right ${isBest ? 'font-semibold text-[var(--color-primary)]' : 'text-[var(--color-text)]'}`}>
+                                  <span className="inline-flex items-center gap-1.5 justify-end">
+                                    {lines[0]}
+                                    {isBest && (
+                                      <Sparkle size={12} fill="currentColor" strokeWidth={0} aria-label={c.bestLabel} />
+                                    )}
+                                  </span>
+                                  {lines[1] && (
+                                    <span className="block text-[11px] font-normal text-[var(--color-text-muted)] mt-0.5">{lines[1]}</span>
+                                  )}
+                                </dd>
+                              </div>
+                            )
+                          })}
+                        </dl>
+                      </li>
+                    )
+                  })}
+                </ul>
+
+                {/* Desktop layout: horizontal comparison table. */}
+                <div className="hidden md:block overflow-x-auto pb-4">
                   <table
                     className="table-fixed border-separate border-spacing-x-2 md:border-spacing-x-3 w-full"
-                    style={{ minWidth: `${realEstate.length === 1 ? 320 : 90 + realEstate.length * 180}px` }}
+                    style={{ minWidth: `${realEstate.length === 1 ? 280 : 80 + realEstate.length * 160}px` }}
                   >
                     <colgroup>
                       <col className="w-[88px] md:w-[120px]" />
