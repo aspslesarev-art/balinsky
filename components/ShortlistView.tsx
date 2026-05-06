@@ -245,9 +245,28 @@ export function ShortlistView({ lang }: { lang: Lang }) {
   // they render as plain cards. Rentals have a different price unit
   // (per month) and shorter spec set, so they render as their own
   // card list too.
-  const realEstate = items.filter(i => i.kind === 'villa' || i.kind === 'apartment')
+  const realEstateUnsorted = items.filter(i => i.kind === 'villa' || i.kind === 'apartment')
   const complexes  = items.filter(i => i.kind === 'complex')
   const rentals    = items.filter(i => i.kind === 'rental')
+
+  // Order the comparison columns by overall quality: each `best`
+  // verdict counts +1, each `worst` counts −1, neutral / middle
+  // contribute 0. Ties keep insertion order (Array.sort is stable).
+  // This way the leftmost column is the strongest pick across the
+  // measured rows, the rightmost is the weakest.
+  const realEstate = [...realEstateUnsorted]
+    .map(it => {
+      let score = 0
+      for (const r of rows) {
+        if (!r.best) continue
+        const v = verdictFor(r, it, realEstateUnsorted)
+        if (v === 'best')  score += 1
+        else if (v === 'worst') score -= 1
+      }
+      return { it, score }
+    })
+    .sort((a, b) => b.score - a.score)
+    .map(x => x.it)
 
   // Build the shareable Telegram message — one URL per saved item so the
   // recipient can tap straight into each detail page.
