@@ -170,7 +170,8 @@ export function ShortlistView({ lang }: { lang: Lang }) {
         return Math.max(y, now)
       },
       worstMinRelDev: 0 },
-    { key: 'bedrooms',   label: c.rowBedrooms,   cell: it => it.bedrooms != null ? String(it.bedrooms) : null },
+    { key: 'bedrooms',   label: c.rowBedrooms,   cell: it => it.bedrooms != null ? String(it.bedrooms) : null,
+      best: 'max', num: it => it.bedrooms ?? null },
     { key: 'area',       label: c.rowArea,       cell: it => it.area != null ? `${it.area} ${c.sqm}` : null,
       best: 'max', num: it => it.area ?? null },
     { key: 'land',       label: c.rowLand,       cell: it => it.land != null ? `${it.land} ${c.sqm}` : null,
