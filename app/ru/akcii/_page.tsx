@@ -13,6 +13,8 @@ const COPY = {
     description: 'Скидки, рассрочки и спецпредложения от застройщиков на виллы и апартаменты Бали.',
     h1: 'Акции',
     sub: 'Скидки, рассрочки и спецпредложения от застройщиков Бали',
+    active: 'Действующие',
+    expiredHeading: 'Завершённые',
     expired: 'завершена',
     top: 'топ',
     until: (d: string) => `До ${d}`,
@@ -24,6 +26,8 @@ const COPY = {
     description: 'Discounts, instalments and special offers from developers on Bali villas and apartments.',
     h1: 'Promotions',
     sub: 'Discounts, instalments and special offers from Bali developers',
+    active: 'Active',
+    expiredHeading: 'Expired',
     expired: 'expired',
     top: 'top',
     until: (d: string) => `Until ${d}`,
@@ -57,51 +61,110 @@ export function generatePromoListMetadata(lang: Lang): Metadata {
   }
 }
 
+// Sort active promos: pinned first, then those with the latest expiry
+// (still-fresh ones before about-to-end), null-expiry treated as
+// far-future. Expired list goes most-recently-expired first.
+function expiryMs(iso: string | null): number {
+  if (!iso) return Number.POSITIVE_INFINITY
+  const t = new Date(iso).getTime()
+  return Number.isFinite(t) ? t : Number.POSITIVE_INFINITY
+}
+
+type PromoItem = Awaited<ReturnType<typeof loadAllPromo>>[number]
+type PromoCopy = {
+  expired: string
+  top: string
+  until: (d: string) => string
+  locale: string
+}
+
+function PromoCard({
+  p, expired, c, detailRoot,
+}: {
+  p: PromoItem; expired: boolean;
+  c: PromoCopy; detailRoot: string
+}) {
+  return (
+    <Link href={`${detailRoot}/${p.slug}`} className={`block rounded-2xl overflow-hidden border bg-white no-underline text-[#111827] transition-colors ${expired ? 'border-[var(--color-border)]' : 'border-[var(--color-border)] hover:border-[var(--color-primary)]'}`}>
+      {p.photo ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={p.photo} alt={p.title} className={`w-full h-[180px] object-cover ${expired ? 'grayscale' : ''}`} />
+      ) : (
+        <div className="w-full h-[180px] bg-[var(--color-search-bg)] flex items-center justify-center text-3xl">🎁</div>
+      )}
+      <div className="p-4">
+        <div className="flex items-center gap-2 mb-1.5">
+          {p.developers[0]?.name && (
+            <span className="text-[11px] uppercase tracking-wide text-[var(--color-primary-pressed)] font-medium">
+              {p.developers[0].name}
+            </span>
+          )}
+          {expired && (
+            <span className="text-[10px] uppercase tracking-wide bg-[#E5E7EB] text-[#374151] px-1.5 py-0.5 rounded">{c.expired}</span>
+          )}
+          {!expired && p.pinned && (
+            <span className="text-[10px] uppercase tracking-wide bg-[var(--color-primary-soft)] text-[var(--color-primary-pressed)] px-1.5 py-0.5 rounded">{c.top}</span>
+          )}
+        </div>
+        <div className="text-[16px] font-semibold leading-snug mb-2 line-clamp-3">{p.title}</div>
+        {fmtDate(p.expiresAt, c.locale) && (
+          <div className="text-[12px] text-[var(--color-text-muted)]">{c.until(fmtDate(p.expiresAt, c.locale)!)}</div>
+        )}
+      </div>
+    </Link>
+  )
+}
+
 export async function PromoList({ lang }: { lang: Lang }) {
   const c = COPY[lang]
   const items = await loadAllPromo()
   const detailRoot = lang === 'en' ? '/en/promo' : '/ru/akcii'
+
+  const active = items
+    .filter(p => !isExpired(p.expiresAt))
+    .sort((a, b) => {
+      // Pinned first, then soonest deadline (closest expiry first
+      // gives urgency; null expiry sorts to the end).
+      if (a.pinned !== b.pinned) return a.pinned ? -1 : 1
+      return expiryMs(a.expiresAt) - expiryMs(b.expiresAt)
+    })
+  const expired = items
+    .filter(p => isExpired(p.expiresAt))
+    .sort((a, b) => expiryMs(b.expiresAt) - expiryMs(a.expiresAt))
+
   return (
     <>
       <Header />
       <PageContainer>
         <h1 className="pt-8 mb-4 text-[28px] md:text-[36px] font-semibold tracking-tight text-[#111827]">{c.h1}</h1>
         <div className="text-[14px] text-[var(--color-text-muted)] mb-8">{c.sub}</div>
-        <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {items.map(p => {
-            const expired = isExpired(p.expiresAt)
-            return (
-              <li key={p.id}>
-                <Link href={`${detailRoot}/${p.slug}`} className={`block rounded-2xl overflow-hidden border bg-white no-underline text-[#111827] transition-colors ${expired ? 'border-[var(--color-border)] opacity-70' : 'border-[var(--color-border)] hover:border-[var(--color-primary)]'}`}>
-                  {p.photo ? (
-                    <img src={p.photo} alt={p.title} className="w-full h-[180px] object-cover" />
-                  ) : (
-                    <div className="w-full h-[180px] bg-[var(--color-search-bg)] flex items-center justify-center text-3xl">🎁</div>
-                  )}
-                  <div className="p-4">
-                    <div className="flex items-center gap-2 mb-1.5">
-                      {p.developers[0]?.name && (
-                        <span className="text-[11px] uppercase tracking-wide text-[var(--color-primary-pressed)] font-medium">
-                          {p.developers[0].name}
-                        </span>
-                      )}
-                      {expired && (
-                        <span className="text-[10px] uppercase tracking-wide bg-[#E5E7EB] text-[#374151] px-1.5 py-0.5 rounded">{c.expired}</span>
-                      )}
-                      {!expired && p.pinned && (
-                        <span className="text-[10px] uppercase tracking-wide bg-[var(--color-primary-soft)] text-[var(--color-primary-pressed)] px-1.5 py-0.5 rounded">{c.top}</span>
-                      )}
-                    </div>
-                    <div className="text-[16px] font-semibold leading-snug mb-2 line-clamp-3">{p.title}</div>
-                    {fmtDate(p.expiresAt, c.locale) && (
-                      <div className="text-[12px] text-[var(--color-text-muted)]">{c.until(fmtDate(p.expiresAt, c.locale)!)}</div>
-                    )}
-                  </div>
-                </Link>
-              </li>
-            )
-          })}
-        </ul>
+
+        {active.length > 0 && (
+          <>
+            <h2 className="text-[18px] md:text-[20px] font-semibold text-[#111827] mb-4">{c.active}</h2>
+            <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+              {active.map(p => (
+                <li key={p.id}>
+                  <PromoCard p={p} expired={false} c={c} detailRoot={detailRoot} />
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+
+        {expired.length > 0 && (
+          <>
+            <h2 className="text-[18px] md:text-[20px] font-semibold text-[#111827] mb-4">{c.expiredHeading}</h2>
+            <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {expired.slice(0, 24).map(p => (
+                <li key={p.id} className="opacity-60">
+                  <PromoCard p={p} expired={true} c={c} detailRoot={detailRoot} />
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+
         {items.length === 0 && (
           <div className="rounded-2xl border border-dashed border-[var(--color-border)] bg-white p-8 text-center text-[var(--color-text-muted)]">
             {c.empty}
