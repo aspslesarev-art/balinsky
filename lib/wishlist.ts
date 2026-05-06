@@ -29,6 +29,10 @@ export type WishlistItem = {
   // Airtable column on the detail-page side; rendered as their own row
   // in the compare table.
   pricePerSqmUsd?: number | null
+  // Annual revenue per square metre as filled in Airtable
+  // (Цена м² в год). Lets the comparison surface "earnings per sqm
+  // per year" alongside the asking price per sqm.
+  pricePerSqmYearUsd?: number | null
   leaseYears?: number | null
   permit?: string | null
   status?: string | null

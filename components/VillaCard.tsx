@@ -22,6 +22,16 @@ export type VillaCardData = {
   // developer. Drives the "Перепродажа" badge and the contact routing
   // on the detail page (direct seller contact instead of dev manager).
   dealType?: 'resale' | 'secondary' | null
+  // Optional fields piped into the wishlist snapshot at heart-tap so
+  // saved listings carry investor-relevant context out of the catalog
+  // without needing to open the detail page first.
+  developerName?: string | null
+  pricePerSqmUsd?: number | null
+  pricePerSqmYearUsd?: number | null
+  leaseYears?: number | null
+  permit?: string | null
+  completionYear?: string | null
+  claimedYieldPct?: number | null
 }
 
 const COPY = {
@@ -62,6 +72,14 @@ export function VillaCard({ a, lang = 'ru' }: { a: VillaCardData; lang?: Lang })
             area: a.area ?? null,
             land: a.land ?? null,
             dealType: a.dealType === 'resale' ? 'resale' : a.dealType === 'secondary' ? 'secondary' : 'primary',
+            developerName: a.developerName ?? null,
+            pricePerSqmUsd: a.pricePerSqmUsd ?? null,
+            pricePerSqmYearUsd: a.pricePerSqmYearUsd ?? null,
+            leaseYears: a.leaseYears ?? null,
+            permit: a.permit ?? null,
+            completionYear: a.completionYear ?? null,
+            claimedYieldPct: a.claimedYieldPct ?? null,
+            status: a.status ?? null,
           }}
         />
       </div>

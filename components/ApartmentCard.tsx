@@ -16,6 +16,16 @@ export type ApartmentCardData = {
   floor: string | null
   photos: string[]
   district?: string | null
+  // Optional fields piped into the wishlist snapshot at heart-tap so
+  // saved apartments carry investor-relevant context.
+  developerName?: string | null
+  pricePerSqmUsd?: number | null
+  pricePerSqmYearUsd?: number | null
+  leaseYears?: number | null
+  permit?: string | null
+  completionYear?: string | null
+  claimedYieldPct?: number | null
+  status?: string | null
 }
 
 const COPY = {
@@ -48,6 +58,14 @@ export function ApartmentCard({ a, lang = 'ru' }: { a: ApartmentCardData; lang?:
             bedrooms: a.bedrooms ?? null,
             area: a.area ?? null,
             floor: a.floor ?? null,
+            developerName: a.developerName ?? null,
+            pricePerSqmUsd: a.pricePerSqmUsd ?? null,
+            pricePerSqmYearUsd: a.pricePerSqmYearUsd ?? null,
+            leaseYears: a.leaseYears ?? null,
+            permit: a.permit ?? null,
+            completionYear: a.completionYear ?? null,
+            claimedYieldPct: a.claimedYieldPct ?? null,
+            status: a.status ?? null,
           }}
         />
       </div>

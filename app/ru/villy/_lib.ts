@@ -71,6 +71,13 @@ export type VillaCard = {
   lng: number | null
   investmentScore: number | null
   dealType: 'resale' | 'secondary' | null
+  developerName: string | null
+  pricePerSqmUsd: number | null
+  pricePerSqmYearUsd: number | null
+  leaseYears: number | null
+  permit: string | null
+  completionYear: string | null
+  claimedYieldPct: number | null
 }
 
 export type SortOrder = 'price-desc' | 'investment-desc'
@@ -460,6 +467,18 @@ export function toCard(e: EnrichedRow, manifest: Record<string, string[]>): Vill
     firstString(d['Имя ENG']) ??
     firstString(d['Name'])
   if (!titleRaw) return null
+  // Optional investor-relevant fields piped into the wishlist snapshot
+  // at heart-tap. Read directly off the raw row — the catalog already
+  // has them in scope, no extra fetch.
+  const priceM2     = numberOrNull(d['Цена м²'])
+  const priceM2Year = numberOrNull(d['Цена м² в год'])
+  const leaseRaw    = firstString(d['Leasehold']) ?? firstString(d['Leashold'])
+  const leaseYears  = leaseRaw ? Number(leaseRaw) || null : null
+  const permitRaw   = firstString(d['Разрешение'])
+  const permit      = permitRaw && permitRaw.toLowerCase() !== 'нет' ? permitRaw : null
+  const yieldRaw    = numberOrNull(d['Заявленная доходность'])
+  const claimedYieldPct = yieldRaw != null ? Math.round(yieldRaw * 1000) / 10 : null
+
   return {
     id: e.id,
     slug,
@@ -475,6 +494,13 @@ export function toCard(e: EnrichedRow, manifest: Record<string, string[]>): Vill
     lng: e.lng,
     investmentScore: null,
     dealType: e.dealType === 'primary' ? null : e.dealType,
+    developerName: e.developerName,
+    pricePerSqmUsd: priceM2,
+    pricePerSqmYearUsd: priceM2Year,
+    leaseYears,
+    permit,
+    completionYear: e.year,
+    claimedYieldPct,
   }
 }
 

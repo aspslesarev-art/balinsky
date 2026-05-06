@@ -368,6 +368,19 @@ export function toCard(e: EnrichedRow, manifest: Record<string, string[]>): Card
     firstString(d['ИИ Имя']) ??
     firstString(d['Name'])
   if (!title) return null
+  // Investor-relevant snapshot fields (same as villas — read straight
+  // off the row so heart-tap from the catalog carries them into the
+  // wishlist without extra fetches).
+  const priceM2     = numberOrNull(d['Цена м²'])
+  const priceM2Year = numberOrNull(d['Цена м² в год'])
+  const leaseRaw    = firstString(d['Leasehold']) ?? firstString(d['Leashold'])
+  const leaseYears  = leaseRaw ? Number(leaseRaw) || null : null
+  const permitRaw   = firstString(d['Разрешение'])
+  const permit      = permitRaw && permitRaw.toLowerCase() !== 'нет' ? permitRaw : null
+  const yieldRaw    = numberOrNull(d['Заявленная доходность'])
+  const claimedYieldPct = yieldRaw != null ? Math.round(yieldRaw * 1000) / 10 : null
+  const yearRaw     = firstString(d['Year of completion ']) ?? firstString(d['Year of completion'])
+  const completionYear = yearRaw && /^\d{4}$/.test(yearRaw) ? yearRaw : null
   return {
     id: e.id,
     slug,
@@ -377,6 +390,15 @@ export function toCard(e: EnrichedRow, manifest: Record<string, string[]>): Card
     area: numberOrNull(d['Площадь']),
     floor: e.floor,
     photos: manifest[e.id] ?? [],
+    district: e.district,
+    developerName: e.developerNames[0] ?? null,
+    pricePerSqmUsd: priceM2,
+    pricePerSqmYearUsd: priceM2Year,
+    leaseYears,
+    permit,
+    completionYear,
+    claimedYieldPct,
+    status: firstString(d['Статус']) ?? null,
   }
 }
 

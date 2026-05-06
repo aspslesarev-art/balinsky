@@ -550,6 +550,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
               land: land ?? null,
               dealType: isResale ? 'resale' : 'primary',
               pricePerSqmUsd: priceM2 ?? null,
+              pricePerSqmYearUsd: numberOrNull(d['Цена м² в год']),
               leaseYears: lease ? Number(lease) || null : null,
               permit: permit && permit.toLowerCase() !== 'нет' ? permit : null,
               status: status ?? null,

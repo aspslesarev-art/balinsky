@@ -452,6 +452,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
               area: area ?? null,
               floor: floor ?? null,
               pricePerSqmUsd: priceM2 ?? null,
+              pricePerSqmYearUsd: numberOrNull(d['Цена м² в год']),
               leaseYears: lease ? Number(lease) || null : null,
               permit: permit && permit.toLowerCase() !== 'нет' ? permit : null,
               status: status ?? null,
