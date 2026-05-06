@@ -332,13 +332,15 @@ function ScenarioInput({
       <span className="text-[var(--color-text-muted)] w-[64px] shrink-0">{label}</span>
       <input
         type="number"
+        inputMode="numeric"
         value={value}
         onChange={e => {
           const n = Number(e.target.value)
           if (Number.isFinite(n)) onChange(n)
         }}
         step={step}
-        className="flex-1 min-w-0 rounded-md border border-black/10 bg-transparent px-2 py-1 text-[13px] tabular-nums text-[#111827] focus:outline-none focus:border-[var(--color-primary)] focus:bg-white/40"
+        // 16px on mobile suppresses iOS Safari's auto-zoom on focus.
+        className="flex-1 min-w-0 rounded-md border border-black/10 bg-transparent px-2 py-1 text-[16px] md:text-[13px] tabular-nums text-[#111827] focus:outline-none focus:border-[var(--color-primary)] focus:bg-white/40"
       />
       <span className="text-[11px] text-[var(--color-text-muted)] shrink-0">{suffix}</span>
     </div>
