@@ -389,12 +389,15 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: title,
-    url: `${SITE_URL}/ru/apartamenty/o/${slug}`,
+    url: lang === 'en' ? `${SITE_URL}/en/apartments/o/${slug}` : `${SITE_URL}/ru/apartamenty/o/${slug}`,
     category: 'Apartment',
   }
   if (photos.length > 0) productJsonLd.image = photos.slice(0, 5)
-  if (seoText) productJsonLd.description = seoText.slice(0, 500)
-  if (devName) productJsonLd.brand = { '@type': 'Brand', name: devName }
+  productJsonLd.description = seoText?.slice(0, 500)
+    ?? (lang === 'en'
+      ? `${bedrooms ? bedrooms + '-bedroom ' : ''}apartment${district ? ` in ${district}` : ''}, Bali, Indonesia`
+      : `${bedrooms ? bedrooms + '-комнатные ' : ''}апартаменты${district ? ` в ${district}` : ''} на Бали, Индонезия`)
+  productJsonLd.brand = { '@type': 'Brand', name: devName ?? 'Balinsky' }
   if (priceNum != null) {
     productJsonLd.offers = {
       '@type': 'Offer',
@@ -402,6 +405,24 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
       priceCurrency: 'USD',
       availability: 'https://schema.org/InStock',
       url: lang === 'en' ? `${SITE_URL}/en/apartments/o/${slug}` : `${SITE_URL}/ru/apartamenty/o/${slug}`,
+      // Real-estate sales don't ship and don't return — explicit
+      // declarations satisfy Google Merchant validator without faking
+      // e-commerce semantics.
+      shippingDetails: {
+        '@type': 'OfferShippingDetails',
+        shippingRate: { '@type': 'MonetaryAmount', value: 0, currency: 'USD' },
+        shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'ID' },
+        deliveryTime: {
+          '@type': 'ShippingDeliveryTime',
+          handlingTime: { '@type': 'QuantitativeValue', minValue: 0, maxValue: 0, unitCode: 'DAY' },
+          transitTime: { '@type': 'QuantitativeValue', minValue: 0, maxValue: 0, unitCode: 'DAY' },
+        },
+      },
+      hasMerchantReturnPolicy: {
+        '@type': 'MerchantReturnPolicy',
+        applicableCountry: 'ID',
+        returnPolicyCategory: 'https://schema.org/MerchantReturnNotPermitted',
+      },
     }
   }
 

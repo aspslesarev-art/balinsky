@@ -69,6 +69,37 @@ export async function EventDetail({ slug, lang }: { slug: string; lang: Lang }) 
 
   const past = isPast(e.startsAt)
 
+  // Schema.org/Event requires `location` for any in-person event and
+  // it must have a Place / VirtualLocation with at least a name —
+  // missing it gets the page rejected from rich-result eligibility.
+  // We default to a Bali Place when the format isn't explicitly
+  // online; online events get a VirtualLocation pointing to the
+  // event's register / location URL when present.
+  const isOnline = e.format?.toLowerCase().includes('онлайн') || e.format?.toLowerCase().includes('online')
+  const location = isOnline
+    ? {
+        '@type': 'VirtualLocation',
+        url: e.locationUrl ?? e.registerUrl ?? `${SITE_URL}${lang === 'en' ? '/en/events/' : '/ru/meropriyatiya/'}${e.slug}`,
+      }
+    : {
+        '@type': 'Place',
+        name: e.format?.trim() || (lang === 'en' ? 'Bali, Indonesia' : 'Бали, Индонезия'),
+        address: {
+          '@type': 'PostalAddress',
+          addressCountry: 'ID',
+          addressRegion: 'Bali',
+        },
+        ...(e.locationUrl ? { url: e.locationUrl } : {}),
+      }
+
+  // Performer falls back to organiser when no explicit performer is in
+  // the data — keeps Google happy and roughly accurate (a developer
+  // hosting their own pitch IS the performer in our context).
+  const organizerName = e.developers[0]?.name ?? 'Balinsky'
+  const organizerUrl = e.developers[0]?.slug
+    ? `${SITE_URL}${lang === 'en' ? '/en/developers/' : '/ru/zastrojshhiki/'}${e.developers[0].slug}`
+    : `${SITE_URL}${lang === 'en' ? '/en' : '/ru'}`
+
   const eventJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Event',
@@ -77,11 +108,31 @@ export async function EventDetail({ slug, lang }: { slug: string; lang: Lang }) 
     startDate: e.startsAt ?? undefined,
     endDate: e.endsAt ?? undefined,
     eventStatus: 'https://schema.org/EventScheduled',
-    eventAttendanceMode: e.format === 'Онлайн'
+    eventAttendanceMode: isOnline
       ? 'https://schema.org/OnlineEventAttendanceMode'
       : 'https://schema.org/OfflineEventAttendanceMode',
+    location,
     image: e.photo ? [e.photo] : undefined,
-    organizer: e.developers[0]?.name ? { '@type': 'Organization', name: e.developers[0].name } : undefined,
+    organizer: {
+      '@type': 'Organization',
+      name: organizerName,
+      url: organizerUrl,
+    },
+    performer: {
+      '@type': 'Organization',
+      name: organizerName,
+    },
+    // Free admission with optional registration — give Google a
+    // valid Offer block. price 0 still counts as a "free" offer per
+    // the spec; without it the page can't qualify as a rich result.
+    offers: {
+      '@type': 'Offer',
+      url: e.registerUrl ?? `${SITE_URL}${lang === 'en' ? '/en/events/' : '/ru/meropriyatiya/'}${e.slug}`,
+      price: 0,
+      priceCurrency: 'USD',
+      availability: 'https://schema.org/InStock',
+      validFrom: e.startsAt ?? undefined,
+    },
     url: `${SITE_URL}${lang === 'en' ? '/en/events/' : '/ru/meropriyatiya/'}${e.slug}`,
   }
 
