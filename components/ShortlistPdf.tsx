@@ -65,33 +65,35 @@ const styles = StyleSheet.create({
   },
   itemFactLabel: { fontSize: 8, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 },
   itemFactValue: { fontSize: 11, fontWeight: 'bold', color: COLORS.text },
-  // Comparison table
-  cmpTitle: { fontSize: 22, fontWeight: 'bold', marginBottom: 4, color: COLORS.text },
-  cmpSubtitle: { fontSize: 10, color: COLORS.muted, marginBottom: 14 },
-  cmpHead: { flexDirection: 'row', alignItems: 'flex-end', borderBottomWidth: 1, borderBottomColor: COLORS.border, paddingBottom: 8, marginBottom: 6 },
-  cmpHeadLabel: { fontSize: 9, color: COLORS.muted, textTransform: 'uppercase' },
-  cmpHeadCol: { flex: 1, paddingHorizontal: 4 },
-  cmpHeadPhoto: { width: '100%', height: 70, borderRadius: 6, backgroundColor: COLORS.bgSoft, marginBottom: 4, overflow: 'hidden' },
+  // Comparison table — densely packed so the full row set + 5 columns
+  // fits on a single landscape A4 even with the land-use warning
+  // panel above. Don't loosen these without re-counting rows.
+  cmpTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 2, color: COLORS.text },
+  cmpSubtitle: { fontSize: 9, color: COLORS.muted, marginBottom: 8 },
+  cmpHead: { flexDirection: 'row', alignItems: 'flex-end', borderBottomWidth: 1, borderBottomColor: COLORS.border, paddingBottom: 4, marginBottom: 2 },
+  cmpHeadLabel: { fontSize: 8, color: COLORS.muted, textTransform: 'uppercase' },
+  cmpHeadCol: { flex: 1, paddingHorizontal: 3 },
+  cmpHeadPhoto: { width: '100%', height: 46, borderRadius: 4, backgroundColor: COLORS.bgSoft, marginBottom: 3, overflow: 'hidden' },
   cmpHeadPhotoImg: { width: '100%', height: '100%', objectFit: 'cover' },
-  cmpHeadTitle: { fontSize: 9, fontWeight: 'bold', color: COLORS.text, lineHeight: 1.2 },
-  cmpRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: COLORS.borderSoft, paddingVertical: 5, alignItems: 'flex-start' },
-  cmpRowLabel: { fontSize: 8, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: 0.4 },
-  cmpRowVal: { fontSize: 9.5, color: COLORS.text },
-  cmpRowValBest: { fontSize: 9.5, color: COLORS.bestText, fontWeight: 'bold' },
-  cmpRowValWorst: { fontSize: 9.5, color: COLORS.warnText, fontWeight: 'bold' },
-  cmpRowDash: { fontSize: 9.5, color: COLORS.muted },
+  cmpHeadTitle: { fontSize: 8, fontWeight: 'bold', color: COLORS.text, lineHeight: 1.15 },
+  cmpRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: COLORS.borderSoft, paddingVertical: 3, alignItems: 'flex-start' },
+  cmpRowLabel: { fontSize: 7.5, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: 0.3 },
+  cmpRowVal: { fontSize: 8.5, color: COLORS.text },
+  cmpRowValBest: { fontSize: 8.5, color: COLORS.bestText, fontWeight: 'bold' },
+  cmpRowValWorst: { fontSize: 8.5, color: COLORS.warnText, fontWeight: 'bold' },
+  cmpRowDash: { fontSize: 8.5, color: COLORS.muted },
   // Land-use warning panel — same pattern (red border + soft red bg)
   // we use on the on-screen shortlist so the document feels familiar.
   warnPanel: {
     borderWidth: 1,
     borderColor: COLORS.warnBorder,
     backgroundColor: COLORS.warnBg,
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 14,
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 8,
   },
-  warnTitle: { fontSize: 11, fontWeight: 'bold', color: COLORS.warnText, marginBottom: 4 },
-  warnBody: { fontSize: 10, color: COLORS.warnTextSoft, lineHeight: 1.4 },
+  warnTitle: { fontSize: 10, fontWeight: 'bold', color: COLORS.warnText, marginBottom: 2 },
+  warnBody: { fontSize: 9, color: COLORS.warnTextSoft, lineHeight: 1.35 },
   // Agent page
   agentWrap: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   agentInner: { width: '70%', maxWidth: 480, alignItems: 'center' },
@@ -262,9 +264,14 @@ function PageFooter({ name }: { name: string }) {
 // WishlistItem, so it's just a snapshot of what the visitor saw when
 // they hearted the listing.
 function ItemPage({
-  it, idx, total, c, lang, isPortrait,
+  it, idx, total, c, lang, isPortrait, hideDeveloperName,
 }: {
   it: WishlistItem; idx: number; total: number; c: Copy; lang: Lang; isPortrait: boolean
+  // Agent-variant PDFs strip the developer's company name so the
+  // recipient comes back to the agent rather than searching the
+  // builder. The track-record counts ("3 сдано · 2 строится") stay —
+  // they're the buyer-relevant signal anyway.
+  hideDeveloperName: boolean
 }) {
   const dealLabel = it.dealType === 'resale' ? c.dealResale
     : it.dealType === 'secondary' ? c.dealSecondary
@@ -275,16 +282,19 @@ function ItemPage({
     : it.kind === 'rental'  ? c.rental
     : c.villa
 
-  // Developer cell: name + "✓ N · ▲ M" tail when we have counts.
+  // Developer cell: name + "N сдано · M строится" tail. Agent variant
+  // hides the name but keeps the counts.
   const ready = it.developerCompletedCount ?? null
   const inProg = it.developerInProgressCount ?? null
   const devTail = [
     ready  != null && ready  > 0 ? c.devReady(ready)     : null,
     inProg != null && inProg > 0 ? c.devInProgress(inProg) : null,
   ].filter(Boolean).join(' · ')
-  const devValue = it.developerName
-    ? (devTail ? `${it.developerName} (${devTail})` : it.developerName)
-    : null
+  const devValue = hideDeveloperName
+    ? (devTail || null)
+    : it.developerName
+      ? (devTail ? `${it.developerName} (${devTail})` : it.developerName)
+      : null
 
   const facts: { label: string; value: string }[] = [
     it.priceUsd != null && { label: c.factPrice,    value: fmtUsd(it.priceUsd) },
@@ -365,7 +375,7 @@ type CmpRow = {
   verdict?: (it: WishlistItem) => 'best' | 'worst' | null
 }
 
-function buildCmpRows(c: Copy): CmpRow[] {
+function buildCmpRows(c: Copy, hideDeveloperName: boolean): CmpRow[] {
   const dealLabel = (t: WishlistItem['dealType']): string | null => {
     if (!t) return null
     if (t === 'resale')    return c.dealResale
@@ -408,13 +418,14 @@ function buildCmpRows(c: Copy): CmpRow[] {
     { key: 'style',       label: c.rowStyle,       cell: it => it.interiorStyle ?? null },
     { key: 'developer',   label: c.rowDeveloper,
       cell: (it, cc) => {
-        if (!it.developerName) return null
         const r  = it.developerCompletedCount  ?? null
         const ip = it.developerInProgressCount ?? null
         const tail = [
           r  != null && r  > 0 ? cc.devReady(r)     : null,
           ip != null && ip > 0 ? cc.devInProgress(ip) : null,
         ].filter(Boolean).join(' · ')
+        if (hideDeveloperName) return tail || null
+        if (!it.developerName) return null
         return tail ? `${it.developerName} (${tail})` : it.developerName
       },
       best: 'max',
@@ -531,6 +542,7 @@ export function ShortlistPdfDocument({ items, agent, orientation = 'landscape', 
   const isPortrait = orientation === 'portrait'
   const pageProps = { size: 'A4' as const, orientation }
   const c = COPY[lang]
+  const hideDeveloperName = !!agent
 
   // Per-item pages: villas + apartments + complexes + rentals all get
   // one. Complexes / rentals look thinner because we save fewer fields,
@@ -541,7 +553,7 @@ export function ShortlistPdfDocument({ items, agent, orientation = 'landscape', 
   // price units (per month) and column sets.
   const cmpItems = items.filter(i => i.kind === 'villa' || i.kind === 'apartment')
 
-  const cmpRows = buildCmpRows(c)
+  const cmpRows = buildCmpRows(c, hideDeveloperName)
   const chunkSize = isPortrait ? 3 : 5
   const cmpChunks: WishlistItem[][] = []
   for (let i = 0; i < cmpItems.length; i += chunkSize) {
@@ -564,7 +576,7 @@ export function ShortlistPdfDocument({ items, agent, orientation = 'landscape', 
       {/* Per-item pages */}
       {itemPages.map((it, idx) => (
         <Page key={`item-${it.kind}:${it.slug}`} {...pageProps} style={[styles.page, styles.pagePadded]}>
-          <ItemPage it={it} idx={idx} total={itemPages.length} c={c} lang={lang} isPortrait={isPortrait} />
+          <ItemPage it={it} idx={idx} total={itemPages.length} c={c} lang={lang} isPortrait={isPortrait} hideDeveloperName={hideDeveloperName} />
           <PageFooter name={c.footerName} />
         </Page>
       ))}
