@@ -26,7 +26,30 @@ export function Header({ active }: { active?: NavKey }) {
 
   return (
     <header className="sticky top-0 z-20 w-full bg-[var(--color-header-bg)] border-b border-[var(--color-border)]">
-      <div className="max-w-[1280px] mx-auto px-6 h-[72px] flex items-center justify-between gap-6">
+      {/* Mobile: 3-col grid (burger | logo | right cluster) so the
+          logo sits exactly in the centre regardless of how wide the
+          right side gets. The 1fr_auto_1fr track keeps the side
+          columns symmetrical, which keeps the centre lined up.
+          Desktop: switches to flex with the original layout — logo
+          left, nav, invest pill, right cluster. */}
+      <div className="max-w-[1280px] mx-auto px-6 h-[72px]
+        grid grid-cols-[1fr_auto_1fr] items-center gap-2
+        md:flex md:items-center md:justify-between md:gap-6">
+
+        {/* Burger — mobile only, sits at the start of the left column. */}
+        <button
+          type="button"
+          className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg text-[var(--color-text)] justify-self-start"
+          aria-label={open ? 'Закрыть меню' : 'Открыть меню'}
+          aria-expanded={open}
+          onClick={() => setOpen(v => !v)}
+        >
+          {open ? <X size={22} /> : <Menu size={22} />}
+        </button>
+
+        {/* Logo — auto-width centre column on mobile, first item on
+            desktop. shrink-0 keeps it from collapsing when the right
+            side gets crowded on tablet widths. */}
         <Link href="/" className="flex items-center shrink-0" aria-label="Balinsky">
           <img src="/logo.svg" alt="Balinsky" className="h-10 w-10" />
         </Link>
@@ -67,21 +90,13 @@ export function Header({ active }: { active?: NavKey }) {
           {lang === 'en' ? 'Invest tour' : 'Инвест-тур'}
         </Link>
 
-        <div className="ml-auto lg:ml-2 flex items-center gap-2 shrink-0">
+        {/* Right cluster — pinned to end of the right grid column on
+            mobile, ml-auto on desktop pushes it to the right edge. */}
+        <div className="flex items-center gap-2 shrink-0 justify-self-end md:ml-auto lg:ml-2">
           <WishlistHeaderLink />
           <CurrencyToggle />
           <LangSwitch />
         </div>
-
-        <button
-          type="button"
-          className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg text-[var(--color-text)]"
-          aria-label={open ? 'Закрыть меню' : 'Открыть меню'}
-          aria-expanded={open}
-          onClick={() => setOpen(v => !v)}
-        >
-          {open ? <X size={22} /> : <Menu size={22} />}
-        </button>
       </div>
 
       {open && (
