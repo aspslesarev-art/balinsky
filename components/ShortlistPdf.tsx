@@ -168,6 +168,7 @@ const COPY = {
     siteTitle: 'Полная подборка',
     siteSubtitle: 'Каждая карточка ведёт на страницу объекта с актуальной ценой и формой связи',
     footerName: 'balinsky.info — подборка',
+    footerNameAgent: 'Подборка',
     landWarnTitle: 'Земля не для посуточной аренды',
     landWarnBody: (titles: string) => `В подборке есть объект на земле, официально не предназначенной для посуточной аренды: ${titles}. Уточните легальный статус сдачи у застройщика — это влияет на доходность от Booking/Airbnb.`,
   },
@@ -222,6 +223,7 @@ const COPY = {
     siteTitle: 'Full shortlist',
     siteSubtitle: 'Each card links to the listing page with up-to-date price and a contact form',
     footerName: 'balinsky.info — shortlist',
+    footerNameAgent: 'Shortlist',
     landWarnTitle: 'Land not zoned for daily rental',
     landWarnBody: (titles: string) => `Your shortlist contains a listing on land not officially zoned for daily rental: ${titles}. Verify the legal rental status with the developer — it affects revenue from Booking/Airbnb.`,
   },
@@ -255,6 +257,24 @@ function detailUrl(it: WishlistItem, lang: Lang): string {
   }
 }
 
+// Agent variant strips brand/complex names ("Vilas Komville",
+// "MasonBagam") so the client sticks with the agent instead of
+// looking up the project independently. We synthesize a generic
+// description from structured fields (kind + bedrooms + area +
+// district). Saved title is used as-is when not in agent mode.
+function displayTitle(it: WishlistItem, c: Copy, agentMode: boolean): string {
+  if (!agentMode) return it.title
+  const kindWord = it.kind === 'apartment' ? c.apartment
+    : it.kind === 'complex' ? c.complex
+    : it.kind === 'rental'  ? c.rental
+    : c.villa
+  const parts: string[] = [kindWord]
+  if (it.bedrooms != null) parts.push(`${it.bedrooms} BR`)
+  if (it.area != null)     parts.push(`${it.area} ${c.sqm}`)
+  if (it.district)         parts.push(it.district)
+  return parts.join(', ')
+}
+
 function PageFooter({ name }: { name: string }) {
   return (
     <View style={styles.footer} fixed>
@@ -269,14 +289,14 @@ function PageFooter({ name }: { name: string }) {
 // WishlistItem, so it's just a snapshot of what the visitor saw when
 // they hearted the listing.
 function ItemPage({
-  it, idx, total, c, lang, isPortrait, hideDeveloperName,
+  it, idx, total, c, lang, isPortrait, agentMode,
 }: {
   it: WishlistItem; idx: number; total: number; c: Copy; lang: Lang; isPortrait: boolean
   // Agent-variant PDFs strip the developer's company name so the
   // recipient comes back to the agent rather than searching the
   // builder. The track-record counts ("3 сдано · 2 строится") stay —
   // they're the buyer-relevant signal anyway.
-  hideDeveloperName: boolean
+  agentMode: boolean
 }) {
   const dealLabel = it.dealType === 'resale' ? c.dealResale
     : it.dealType === 'secondary' ? c.dealSecondary
@@ -295,7 +315,7 @@ function ItemPage({
     ready  != null && ready  > 0 ? c.devReady(ready)     : null,
     inProg != null && inProg > 0 ? c.devInProgress(inProg) : null,
   ].filter(Boolean).join(' · ')
-  const devValue = hideDeveloperName
+  const devValue = agentMode
     ? (devTail || null)
     : it.developerName
       ? (devTail ? `${it.developerName} (${devTail})` : it.developerName)
@@ -318,6 +338,7 @@ function ItemPage({
   ].filter(Boolean) as { label: string; value: string }[]
 
   const url = detailUrl(it, lang)
+  const title = displayTitle(it, c, agentMode)
 
   const PhotoBlock = (
     <View style={[styles.itemPhotoBox, isPortrait ? { width: '100%', height: 280 } : { flex: 1, height: '100%' }]}>
@@ -331,8 +352,8 @@ function ItemPage({
         <Text style={styles.itemNumber}>{c.objectN(idx + 1, total)}</Text>
         <Text style={styles.itemKindBadge}>{kindLabel}</Text>
       </View>
-      <Text style={styles.itemTitle}>{it.title}</Text>
-      {it.district && <Text style={styles.itemDistrict}>{it.district}</Text>}
+      <Text style={styles.itemTitle}>{title}</Text>
+      {!agentMode && it.district && <Text style={styles.itemDistrict}>{it.district}</Text>}
       {it.priceUsd != null && (
         <View style={styles.itemPriceRow}>
           <Text style={styles.itemPrice}>{fmtUsd(it.priceUsd)}</Text>
@@ -347,7 +368,9 @@ function ItemPage({
           </View>
         ))}
       </View>
-      <Link src={url} style={{ fontSize: 9, color: COLORS.primary, marginTop: 12, textDecoration: 'none' }}>{url}</Link>
+      {!agentMode && (
+        <Link src={url} style={{ fontSize: 9, color: COLORS.primary, marginTop: 12, textDecoration: 'none' }}>{url}</Link>
+      )}
     </View>
   )
 
@@ -380,7 +403,7 @@ type CmpRow = {
   verdict?: (it: WishlistItem) => 'best' | 'worst' | null
 }
 
-function buildCmpRows(c: Copy, hideDeveloperName: boolean): CmpRow[] {
+function buildCmpRows(c: Copy, agentMode: boolean): CmpRow[] {
   const dealLabel = (t: WishlistItem['dealType']): string | null => {
     if (!t) return null
     if (t === 'resale')    return c.dealResale
@@ -429,7 +452,7 @@ function buildCmpRows(c: Copy, hideDeveloperName: boolean): CmpRow[] {
           r  != null && r  > 0 ? cc.devReady(r)     : null,
           ip != null && ip > 0 ? cc.devInProgress(ip) : null,
         ].filter(Boolean).join(' · ')
-        if (hideDeveloperName) return tail || null
+        if (agentMode) return tail || null
         if (!it.developerName) return null
         return tail ? `${it.developerName} (${tail})` : it.developerName
       },
@@ -448,7 +471,7 @@ function buildCmpRows(c: Copy, hideDeveloperName: boolean): CmpRow[] {
 // columns don't get squashed when the shortlist is long. Each page
 // repeats the row labels so it's readable on its own.
 function ComparisonPage({
-  chunk, allItems, rows, c, isPortrait, chunkIdx, totalChunks,
+  chunk, allItems, rows, c, isPortrait, chunkIdx, totalChunks, agentMode,
 }: {
   chunk: WishlistItem[]
   allItems: WishlistItem[]
@@ -457,6 +480,7 @@ function ComparisonPage({
   isPortrait: boolean
   chunkIdx: number
   totalChunks: number
+  agentMode: boolean
 }) {
   const labelColWidth = isPortrait ? '24%' : '18%'
   // Hide rows where every item in *this* chunk is empty, so a chunk
@@ -480,7 +504,7 @@ function ComparisonPage({
   // Land-zoning warning, repeated on every comparison-page chunk so
   // it travels with the table even if the table paginates.
   const restricted = allItems.filter(it => classifyLandUse(it.landUse) === 'restricted')
-  const restrictedNames = restricted.map(it => it.title).join(', ')
+  const restrictedNames = restricted.map(it => displayTitle(it, c, agentMode)).join(', ')
 
   return (
     <>
@@ -499,7 +523,7 @@ function ComparisonPage({
             <View style={styles.cmpHeadPhoto}>
               {it.photo ? <Image src={it.photo} style={styles.cmpHeadPhotoImg} /> : null}
             </View>
-            <Text style={styles.cmpHeadTitle}>{it.title}</Text>
+            <Text style={styles.cmpHeadTitle}>{displayTitle(it, c, agentMode)}</Text>
           </View>
         ))}
       </View>
@@ -547,7 +571,7 @@ export function ShortlistPdfDocument({ items, agent, orientation = 'landscape', 
   const isPortrait = orientation === 'portrait'
   const pageProps = { size: 'A4' as const, orientation }
   const c = COPY[lang]
-  const hideDeveloperName = !!agent
+  const agentMode = !!agent
 
   // Per-item pages: villas + apartments + complexes + rentals all get
   // one. Complexes / rentals look thinner because we save fewer fields,
@@ -558,7 +582,7 @@ export function ShortlistPdfDocument({ items, agent, orientation = 'landscape', 
   // price units (per month) and column sets.
   const cmpItems = items.filter(i => i.kind === 'villa' || i.kind === 'apartment')
 
-  const cmpRows = buildCmpRows(c, hideDeveloperName)
+  const cmpRows = buildCmpRows(c, agentMode)
   const chunkSize = isPortrait ? 3 : 5
   const cmpChunks: WishlistItem[][] = []
   for (let i = 0; i < cmpItems.length; i += chunkSize) {
@@ -575,14 +599,14 @@ export function ShortlistPdfDocument({ items, agent, orientation = 'landscape', 
           <Text style={styles.coverMeta}>{c.coverCount(items.length)}</Text>
           <Text style={styles.coverMeta}>{c.selectedAt}: {fmtDate(lang)}</Text>
         </View>
-        <PageFooter name={c.footerName} />
+        <PageFooter name={agentMode ? c.footerNameAgent : c.footerName} />
       </Page>
 
       {/* Per-item pages */}
       {itemPages.map((it, idx) => (
         <Page key={`item-${it.kind}:${it.slug}`} {...pageProps} style={[styles.page, styles.pagePadded]}>
-          <ItemPage it={it} idx={idx} total={itemPages.length} c={c} lang={lang} isPortrait={isPortrait} hideDeveloperName={hideDeveloperName} />
-          <PageFooter name={c.footerName} />
+          <ItemPage it={it} idx={idx} total={itemPages.length} c={c} lang={lang} isPortrait={isPortrait} agentMode={agentMode} />
+          <PageFooter name={agentMode ? c.footerNameAgent : c.footerName} />
         </Page>
       ))}
 
@@ -597,8 +621,9 @@ export function ShortlistPdfDocument({ items, agent, orientation = 'landscape', 
             isPortrait={isPortrait}
             chunkIdx={ci}
             totalChunks={cmpChunks.length}
+            agentMode={agentMode}
           />
-          <PageFooter name={c.footerName} />
+          <PageFooter name={agentMode ? c.footerNameAgent : c.footerName} />
         </Page>
       ))}
 
