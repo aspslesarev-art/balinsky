@@ -386,9 +386,9 @@ export function ShortlistView({ lang }: { lang: Lang }) {
                     </colgroup>
                     <thead>
                       <tr>
-                        <th className="sticky left-0 bg-[var(--color-bg)] z-10 align-bottom"></th>
+                        <th className="sticky left-0 bg-[var(--color-bg)] z-10 align-top"></th>
                         {realEstate.map(it => (
-                          <th key={`${it.kind}:${it.slug}`} className="text-left align-bottom snap-start">
+                          <th key={`${it.kind}:${it.slug}`} className="text-left align-top snap-start">
                             <div className="relative">
                               <Link href={detailHref(it, lang)} className="block group no-underline text-[var(--color-text)]">
                                 <div className="aspect-[4/3] rounded-xl overflow-hidden bg-[var(--color-search-bg)] mb-2">
@@ -399,7 +399,13 @@ export function ShortlistView({ lang }: { lang: Lang }) {
                                     <div className="w-full h-full flex items-center justify-center text-2xl md:text-3xl">🏝️</div>
                                   )}
                                 </div>
-                                <div className="text-[13px] md:text-[15px] font-semibold leading-snug line-clamp-2 mb-2 md:mb-3">{it.title}</div>
+                                {/* min-h reserves the height of two
+                                    title lines so single-line titles
+                                    leave the same gap before the data
+                                    rows as multi-line ones — keeps
+                                    the comparison rows visually
+                                    aligned across columns. */}
+                                <div className="text-[13px] md:text-[15px] font-semibold leading-snug line-clamp-2 mb-2 md:mb-3 min-h-[2.6em] md:min-h-[2.6em]">{it.title}</div>
                               </Link>
                               <button
                                 type="button"
