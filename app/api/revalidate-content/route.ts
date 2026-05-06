@@ -14,6 +14,7 @@ const KIND_TO_TAGS: Record<string, string> = {
   villas: 'content:villas',
   apartments: 'content:apartments',
   complexes: 'content:complexes',
+  videos: 'content:videos',
 }
 const KIND_TO_PATHS: Record<string, { path: string; type?: 'page' | 'layout' }[]> = {
   events: [
@@ -65,6 +66,16 @@ const KIND_TO_PATHS: Record<string, { path: string; type?: 'page' | 'layout' }[]
     { path: '/en/complexes' },
     { path: '/ru/zhilye-kompleksy/o/[slug]', type: 'page' },
     { path: '/en/complexes/o/[slug]', type: 'page' },
+  ],
+  videos: [
+    { path: '/ru/zastrojshhiki/[slug]', type: 'page' },
+    { path: '/en/developers/[slug]', type: 'page' },
+    { path: '/ru/zhilye-kompleksy/o/[slug]', type: 'page' },
+    { path: '/en/complexes/o/[slug]', type: 'page' },
+    { path: '/ru/villy/o/[slug]', type: 'page' },
+    { path: '/en/villas/o/[slug]', type: 'page' },
+    { path: '/ru/apartamenty/o/[slug]', type: 'page' },
+    { path: '/en/apartments/o/[slug]', type: 'page' },
   ],
 }
 

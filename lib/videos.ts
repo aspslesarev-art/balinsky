@@ -28,13 +28,14 @@ export async function loadAllVideos(): Promise<VideoItem[]> {
   if (_inflight) return _inflight
   _inflight = (async () => {
     try {
-      // no-store on the network fetch — the module-level _cache below
-      // still memoises for 30 min per Vercel instance, so we only hit
-      // Supabase once per warm worker. Avoids the Next.js data cache
-      // serving a stale manifest after a sync (the previous
-      // revalidate: 1800 setting kept old payloads alive for half an
-      // hour even after the underlying Storage object had updated).
-      const r = await fetch(MANIFEST_URL, { cache: 'no-store' })
+      // Tagged cache so SSG pages (developer, complex, villa, apt
+      // detail) stay statically generated. We invalidate the tag on
+      // demand via /api/revalidate-content?kinds=videos after a sync
+      // run, so a fresh manifest is served without breaking SSG.
+      // (Plain cache: 'no-store' marks the fetch as revalidate: 0,
+      // which forces the whole page dynamic at runtime and crashes
+      // pages that have generateStaticParams.)
+      const r = await fetch(MANIFEST_URL, { next: { revalidate: 1800, tags: ['content:videos'] } })
       if (!r.ok) return []
       const j = (await r.json()) as Manifest
       const items = Array.isArray(j.items) ? j.items : []
