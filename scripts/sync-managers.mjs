@@ -41,11 +41,17 @@ const photoCache = loadPhotoCache()
 
 async function uploadPhoto(recordId, attachment) {
   if (!attachment?.id || !attachment?.url) return null
-  if (photoCache[attachment.id]) return photoCache[attachment.id]
+  // Cache key is `<attachmentId>:<size>` — Airtable can replace the
+  // file behind the same attachment.id when an editor uploads a new
+  // one, but the file size changes, which we can read off the
+  // download response. Pure attachment.id caching used to serve the
+  // first uploaded URL forever.
   try {
     const r = await fetch(attachment.url)
     if (!r.ok) return null
     const buf = Buffer.from(await r.arrayBuffer())
+    const cacheKey = `${attachment.id}:${buf.length}`
+    if (photoCache[cacheKey]) return photoCache[cacheKey]
     const ct = r.headers.get('content-type') || 'image/jpeg'
     const ext = ct.includes('png') ? 'png' : ct.includes('webp') ? 'webp' : 'jpg'
     const hash = crypto.createHash('sha1').update(buf).digest('hex').slice(0, 10)
@@ -55,7 +61,10 @@ async function uploadPhoto(recordId, attachment) {
     })
     if (error) return null
     const url = `${SUPABASE_BASE_URL}/storage/v1/object/public/${PHOTO_BUCKET}/${key}`
-    photoCache[attachment.id] = url
+    photoCache[cacheKey] = url
+    // Drop the old plain-id key for this attachment so the cache
+    // doesn't keep both indefinitely.
+    delete photoCache[attachment.id]
     return url
   } catch {
     return null

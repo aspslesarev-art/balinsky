@@ -135,8 +135,12 @@ export function ShortlistView({ lang }: { lang: Lang }) {
     worstMinRelDev?: number
   }
   const rows: Row[] = [
-    { key: 'price',      label: c.rowPrice,      cell: it => fmt(it.priceUsd),
-      best: 'min', num: it => it.priceUsd ?? null },
+    // Total price isn't a fair "best/worst" metric — a $360k villa
+    // and a $120k apartment are different products, not better/worse
+    // versions of the same thing. Leave the row neutral; price-per-m²
+    // and price-per-m²-per-year below normalise by size and are
+    // genuinely comparable, so they keep the highlight.
+    { key: 'price',      label: c.rowPrice,      cell: it => fmt(it.priceUsd) },
     { key: 'priceM2',    label: c.rowPriceM2,    cell: it => fmt(it.pricePerSqmUsd),
       best: 'min', num: it => it.pricePerSqmUsd ?? null },
     // "Цена м² в год" = price per m² divided by remaining leasehold
