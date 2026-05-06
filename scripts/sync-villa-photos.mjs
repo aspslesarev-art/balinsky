@@ -177,9 +177,16 @@ console.log(`existing atts entries: ${Object.keys(atts).length}`)
 // new manifest — only Airtable changes since now will trigger work.
 function matchesForceSlugs(rec) {
   if (FORCE_SLUGS.length === 0) return false
+  // Match against both SEO:Slug (per-villa identifier like "v00589")
+  // AND SEO:Title (which usually contains the complex name like
+  // "Maison Boheme"). One token, broader coverage — passing
+  // --force-slugs=maison-boheme catches every villa in that complex
+  // even though their per-villa slugs don't carry the complex name.
   const slug = String(rec.fields?.['SEO:Slug'] ?? '').toLowerCase()
-  if (!slug) return false
-  return FORCE_SLUGS.some(s => slug.includes(s))
+  const title = String(rec.fields?.['SEO:Title'] ?? '').toLowerCase()
+  const haystack = `${slug} ${title}`
+  if (!haystack.trim()) return false
+  return FORCE_SLUGS.some(s => haystack.includes(s))
 }
 
 const afterResume = []
