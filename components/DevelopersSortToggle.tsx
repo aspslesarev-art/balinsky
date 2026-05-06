@@ -3,23 +3,34 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import type { Lang } from '@/lib/i18n'
 
-export type DevelopersSortKey = 'balanced' | 'ready' | 'inprogress' | 'experience' | 'international'
+export type DevelopersSortKey =
+  | 'balanced'
+  | 'ready'
+  | 'inprogress'
+  | 'units-ready'
+  | 'units-inprogress'
+  | 'experience'
+  | 'international'
 
 type Option = { key: DevelopersSortKey; label: string; hint: string }
 const OPTIONS_BY_LANG: Record<Lang, Option[]> = {
   ru: [
-    { key: 'balanced',      label: 'Сбалансированный',     hint: 'Сданные + в работе + редакторская оценка' },
-    { key: 'ready',         label: 'Сданные ЖК',           hint: 'Кто реально построил больше всего' },
-    { key: 'inprogress',    label: 'Активные стройки',     hint: 'У кого больше проектов сейчас в работе' },
-    { key: 'experience',    label: 'Опыт и репутация',     hint: 'По данным о репутации, технике, опыте строительства' },
-    { key: 'international', label: '🌍 Международный опыт', hint: 'Девелоперы с историей и проектами за пределами Бали' },
+    { key: 'balanced',         label: 'Сбалансированный',     hint: 'Сданные + в работе + редакторская оценка' },
+    { key: 'ready',            label: 'Сданные ЖК',           hint: 'Кто реально построил больше всего' },
+    { key: 'inprogress',       label: 'Активные стройки',     hint: 'У кого больше проектов сейчас в работе' },
+    { key: 'units-ready',      label: 'Сданные юниты',        hint: 'По общему количеству сданных юнитов' },
+    { key: 'units-inprogress', label: 'Юниты в стройке',      hint: 'По общему количеству юнитов в работе' },
+    { key: 'experience',       label: 'Опыт и репутация',     hint: 'По данным о репутации, технике, опыте строительства' },
+    { key: 'international',    label: '🌍 Международный опыт', hint: 'Девелоперы с историей и проектами за пределами Бали' },
   ],
   en: [
-    { key: 'balanced',      label: 'Balanced',          hint: 'Completed + active + editorial score' },
-    { key: 'ready',         label: 'Completed projects', hint: 'Who has actually built the most' },
-    { key: 'inprogress',    label: 'Active projects',   hint: 'Who has the most ongoing builds' },
-    { key: 'experience',    label: 'Experience',         hint: 'By depth of editorial data on reputation and team' },
-    { key: 'international', label: '🌍 International',  hint: 'Developers with projects outside Bali' },
+    { key: 'balanced',         label: 'Balanced',           hint: 'Completed + active + editorial score' },
+    { key: 'ready',            label: 'Completed projects', hint: 'Who has actually built the most' },
+    { key: 'inprogress',       label: 'Active projects',    hint: 'Who has the most ongoing builds' },
+    { key: 'units-ready',      label: 'Delivered units',    hint: 'By total number of delivered units' },
+    { key: 'units-inprogress', label: 'Units under build',  hint: 'By total number of units currently under construction' },
+    { key: 'experience',       label: 'Experience',         hint: 'By depth of editorial data on reputation and team' },
+    { key: 'international',    label: '🌍 International',   hint: 'Developers with projects outside Bali' },
   ],
 }
 

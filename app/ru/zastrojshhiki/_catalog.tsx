@@ -149,6 +149,21 @@ export async function DevelopersCatalog({
       const bIp = b.stats.total - b.stats.ready
       return bIp - aIp || b.score - a.score
     }
+    if (sort === 'units-ready') {
+      // Tiebreak by complex count (more delivered ≠ less risk),
+      // then editorial score so empty cards don't sort above
+      // editorialised ones with the same unit number.
+      return b.stats.unitsReady - a.stats.unitsReady
+        || b.stats.ready - a.stats.ready
+        || b.score - a.score
+    }
+    if (sort === 'units-inprogress') {
+      const aUip = a.stats.unitsTotal - a.stats.unitsReady
+      const bUip = b.stats.unitsTotal - b.stats.unitsReady
+      return bUip - aUip
+        || (b.stats.total - b.stats.ready) - (a.stats.total - a.stats.ready)
+        || b.score - a.score
+    }
     if (sort === 'experience') return b.expScore - a.expScore || b.score - a.score
     if (sort === 'international') {
       if (a.intlRank == null && b.intlRank == null) return b.score - a.score
@@ -207,6 +222,13 @@ export async function DevelopersCatalog({
 
 export function parseSort(v: string | string[] | undefined): DevelopersSortKey {
   const s = Array.isArray(v) ? v[0] : v
-  if (s === 'ready' || s === 'inprogress' || s === 'experience' || s === 'international') return s
+  if (
+    s === 'ready' ||
+    s === 'inprogress' ||
+    s === 'units-ready' ||
+    s === 'units-inprogress' ||
+    s === 'experience' ||
+    s === 'international'
+  ) return s
   return 'balanced'
 }
