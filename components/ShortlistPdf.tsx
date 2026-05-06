@@ -169,6 +169,8 @@ const COPY = {
     siteSubtitle: 'Каждая карточка ведёт на страницу объекта с актуальной ценой и формой связи',
     footerName: 'balinsky.info — подборка',
     footerNameAgent: 'Подборка',
+    factListingId: 'ID для поиска',
+    rowListingId: 'ID',
     landWarnTitle: 'Земля не для посуточной аренды',
     landWarnBody: (titles: string) => `В подборке есть объект на земле, официально не предназначенной для посуточной аренды: ${titles}. Уточните легальный статус сдачи у застройщика — это влияет на доходность от Booking/Airbnb.`,
   },
@@ -224,6 +226,8 @@ const COPY = {
     siteSubtitle: 'Each card links to the listing page with up-to-date price and a contact form',
     footerName: 'balinsky.info — shortlist',
     footerNameAgent: 'Shortlist',
+    factListingId: 'Lookup ID',
+    rowListingId: 'ID',
     landWarnTitle: 'Land not zoned for daily rental',
     landWarnBody: (titles: string) => `Your shortlist contains a listing on land not officially zoned for daily rental: ${titles}. Verify the legal rental status with the developer — it affects revenue from Booking/Airbnb.`,
   },
@@ -370,6 +374,14 @@ function ItemPage({
       </View>
       {!agentMode && (
         <Link src={url} style={{ fontSize: 9, color: COLORS.primary, marginTop: 12, textDecoration: 'none' }}>{url}</Link>
+      )}
+      {agentMode && it.airtableId && (
+        // Lookup code — paste into the catalog search box on the
+        // site to land on this listing. Older saves predate this
+        // field, in which case nothing prints.
+        <Text style={{ fontSize: 9, color: COLORS.muted, marginTop: 12 }}>
+          {c.factListingId}: <Text style={{ color: COLORS.text, fontWeight: 'bold' }}>{it.airtableId}</Text>
+        </Text>
       )}
     </View>
   )

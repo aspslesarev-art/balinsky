@@ -82,6 +82,7 @@ export type VillaCard = {
   claimedYieldPct: number | null
   bestCapRate: number | null
   interiorStyle: string | null
+  airtableId: string | null
 }
 
 export type SortOrder = 'price-desc' | 'investment-desc'
@@ -311,6 +312,9 @@ export function applySearch(rows: EnrichedRow[], rawQuery: string): EnrichedRow[
       r.district ?? '',
       r.developerName ?? '',
       firstString(r.data['Notes']) ?? '',
+      // Airtable ID — lets agents paste a code from a saved PDF
+      // ("rec…") into the catalog search and land on the listing.
+      r.id,
     ].filter(Boolean).join(' ')
     const haystack = (parts + ' ' + translit(parts)).toLowerCase()
     return { id: r.id, row: r, haystack }
@@ -521,6 +525,7 @@ export function toCard(
     claimedYieldPct,
     bestCapRate: null,
     interiorStyle: e.style,
+    airtableId: e.id,
   }
 }
 
