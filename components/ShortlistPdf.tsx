@@ -1,6 +1,7 @@
 import { Document, Page, Text, View, Image, Link, StyleSheet, Font, pdf } from '@react-pdf/renderer'
 import type { WishlistItem } from '@/lib/wishlist'
 import type { Lang } from '@/lib/i18n'
+import { classifyLandUse } from '@/lib/land-use'
 import type { AgentContact, PdfOrientation } from './VillaPresentationPdf'
 
 Font.register({
@@ -23,6 +24,10 @@ const COLORS = {
   white: '#FFFFFF',
   bestText: '#15803D',
   bestBg: '#F0FDF4',
+  warnText: '#B91C1C',
+  warnTextSoft: '#7F1D1D',
+  warnBg: '#FEF2F2',
+  warnBorder: '#FECACA',
 }
 
 const styles = StyleSheet.create({
@@ -73,7 +78,20 @@ const styles = StyleSheet.create({
   cmpRowLabel: { fontSize: 8, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: 0.4 },
   cmpRowVal: { fontSize: 9.5, color: COLORS.text },
   cmpRowValBest: { fontSize: 9.5, color: COLORS.bestText, fontWeight: 'bold' },
+  cmpRowValWorst: { fontSize: 9.5, color: COLORS.warnText, fontWeight: 'bold' },
   cmpRowDash: { fontSize: 9.5, color: COLORS.muted },
+  // Land-use warning panel — same pattern (red border + soft red bg)
+  // we use on the on-screen shortlist so the document feels familiar.
+  warnPanel: {
+    borderWidth: 1,
+    borderColor: COLORS.warnBorder,
+    backgroundColor: COLORS.warnBg,
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 14,
+  },
+  warnTitle: { fontSize: 11, fontWeight: 'bold', color: COLORS.warnText, marginBottom: 4 },
+  warnBody: { fontSize: 10, color: COLORS.warnTextSoft, lineHeight: 1.4 },
   // Agent page
   agentWrap: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   agentInner: { width: '70%', maxWidth: 480, alignItems: 'center' },
@@ -143,6 +161,8 @@ const COPY = {
     siteTitle: 'Полная подборка',
     siteSubtitle: 'Каждая карточка ведёт на страницу объекта с актуальной ценой и формой связи',
     footerName: 'balinsky.info — подборка',
+    landWarnTitle: 'Земля не для посуточной аренды',
+    landWarnBody: (titles: string) => `В подборке есть объект на земле, официально не предназначенной для посуточной аренды: ${titles}. Уточните легальный статус сдачи у застройщика — это влияет на доходность от Booking/Airbnb.`,
   },
   en: {
     coverEyebrow: 'Comparison shortlist',
@@ -195,6 +215,8 @@ const COPY = {
     siteTitle: 'Full shortlist',
     siteSubtitle: 'Each card links to the listing page with up-to-date price and a contact form',
     footerName: 'balinsky.info — shortlist',
+    landWarnTitle: 'Land not zoned for daily rental',
+    landWarnBody: (titles: string) => `Your shortlist contains a listing on land not officially zoned for daily rental: ${titles}. Verify the legal rental status with the developer — it affects revenue from Booking/Airbnb.`,
   },
 } as const
 
@@ -337,6 +359,10 @@ type CmpRow = {
   cell: (it: WishlistItem, c: Copy) => string | null
   best?: 'min' | 'max'
   num?: (it: WishlistItem) => number | null
+  // Categorical override for rows where good vs. bad is a label match
+  // rather than a numeric ranking (land-use zoning is the canonical
+  // case). Returning null leaves the cell at neutral colouring.
+  verdict?: (it: WishlistItem) => 'best' | 'worst' | null
 }
 
 function buildCmpRows(c: Copy): CmpRow[] {
@@ -372,7 +398,13 @@ function buildCmpRows(c: Copy): CmpRow[] {
       best: 'max', num: it => it.land ?? null },
     { key: 'floor',       label: c.rowFloor,       cell: it => it.floor ?? null },
     { key: 'district',    label: c.rowDistrict,    cell: it => it.district ?? null },
-    { key: 'landUse',     label: c.rowLandUse,     cell: it => it.landUse ?? null },
+    { key: 'landUse',     label: c.rowLandUse,     cell: it => it.landUse ?? null,
+      verdict: it => {
+        const status = classifyLandUse(it.landUse)
+        if (status === 'allowed')    return 'best'
+        if (status === 'restricted') return 'worst'
+        return null
+      } },
     { key: 'style',       label: c.rowStyle,       cell: it => it.interiorStyle ?? null },
     { key: 'developer',   label: c.rowDeveloper,
       cell: (it, cc) => {
@@ -429,10 +461,21 @@ function ComparisonPage({
     bestByRow.set(r.key, r.best === 'min' ? min : max)
   }
 
+  // Land-zoning warning, repeated on every comparison-page chunk so
+  // it travels with the table even if the table paginates.
+  const restricted = allItems.filter(it => classifyLandUse(it.landUse) === 'restricted')
+  const restrictedNames = restricted.map(it => it.title).join(', ')
+
   return (
     <>
       <Text style={styles.cmpTitle}>{c.comparisonTitle}{totalChunks > 1 ? ` (${chunkIdx + 1}/${totalChunks})` : ''}</Text>
       <Text style={styles.cmpSubtitle}>{c.comparisonSubtitle}</Text>
+      {restricted.length > 0 && (
+        <View style={styles.warnPanel} wrap={false}>
+          <Text style={styles.warnTitle}>{c.landWarnTitle}</Text>
+          <Text style={styles.warnBody}>{c.landWarnBody(restrictedNames)}</Text>
+        </View>
+      )}
       <View style={styles.cmpHead}>
         <View style={{ width: labelColWidth }}><Text style={styles.cmpHeadLabel}> </Text></View>
         {chunk.map(it => (
@@ -458,12 +501,18 @@ function ComparisonPage({
                 </View>
               )
             }
-            const num = r.num ? r.num(it) : null
-            const best = bestByRow.get(r.key)
-            const isBest = num != null && best != null && num === best
+            const override = r.verdict ? r.verdict(it) : null
+            let cellStyle = styles.cmpRowVal
+            if (override === 'best') cellStyle = styles.cmpRowValBest
+            else if (override === 'worst') cellStyle = styles.cmpRowValWorst
+            else {
+              const num = r.num ? r.num(it) : null
+              const best = bestByRow.get(r.key)
+              if (num != null && best != null && num === best) cellStyle = styles.cmpRowValBest
+            }
             return (
               <View key={`${r.key}-${it.kind}:${it.slug}`} style={styles.cmpHeadCol}>
-                <Text style={isBest ? styles.cmpRowValBest : styles.cmpRowVal}>{val}</Text>
+                <Text style={cellStyle}>{val}</Text>
               </View>
             )
           })}

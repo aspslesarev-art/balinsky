@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Heart, X, Trash2, Send, Sparkle, Download, Loader2, UserRound, ChevronLeft } from 'lucide-react'
+import { Heart, X, Trash2, Send, Sparkle, Download, Loader2, UserRound, ChevronLeft, AlertTriangle } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
@@ -10,6 +10,7 @@ import { ShortlistSeoContent } from './ShortlistSeoContent'
 import { useWishlist } from './WishlistContext'
 import { useCurrency } from './CurrencyContext'
 import { formatPrice } from '@/lib/currency'
+import { classifyLandUse } from '@/lib/land-use'
 import type { Lang } from '@/lib/i18n'
 import type { WishlistItem } from '@/lib/wishlist'
 
@@ -50,6 +51,8 @@ const COPY = {
     pdfNeedContact: 'Укажите Telegram или WhatsApp — хотя бы один контакт.',
     pdfError: 'Не получилось собрать PDF. Попробуйте ещё раз.',
     pdfClose: 'Закрыть',
+    landWarnTitle: 'Земля не для посуточной аренды',
+    landWarnBody: (titles: string) => `В подборке есть объект на земле, официально не предназначенной для посуточной аренды: ${titles}. Уточните легальный статус сдачи у застройщика — это влияет на доходность от Booking/Airbnb.`,
     villasLink: 'К виллам',
     apartmentsLink: 'К апартаментам',
     complexesLink: 'К жилым комплексам',
@@ -104,6 +107,8 @@ const COPY = {
     pdfNeedContact: 'Add Telegram or WhatsApp — at least one contact.',
     pdfError: 'Could not build the PDF. Please try again.',
     pdfClose: 'Close',
+    landWarnTitle: 'Land not zoned for daily rental',
+    landWarnBody: (titles: string) => `Your shortlist contains a listing on land not officially zoned for daily rental: ${titles}. Verify the legal rental status with the developer — it affects revenue from Booking/Airbnb.`,
     villasLink: 'Browse villas',
     apartmentsLink: 'Browse apartments',
     complexesLink: 'Browse complexes',
@@ -173,9 +178,15 @@ export function ShortlistView({ lang }: { lang: Lang }) {
   // (cheapest wins) and 'max' for yield / lease / area. Bedrooms,
   // completion, district, status, permit and deal type are subjective
   // or categorical, so we leave them un-highlighted.
+  type Verdict = 'best' | 'middle' | 'worst' | 'neutral'
   type Row = {
     key: string; label: string;
     cell: (it: WishlistItem) => string | null;
+    // Categorical override — bypasses the numeric `best/num` machinery
+    // for rows where "good vs bad" is a label match (e.g. land use:
+    // tourism zone = best, residential = worst). Returning null falls
+    // through to the numeric path.
+    verdict?: (it: WishlistItem) => Verdict | null;
     best?: 'min' | 'max';
     num?: (it: WishlistItem) => number | null;
     // Minimum relative deviation from the "best" value before a cell
@@ -254,7 +265,16 @@ export function ShortlistView({ lang }: { lang: Lang }) {
       best: 'max', num: it => it.land ?? null },
     { key: 'floor',      label: c.rowFloor,      cell: it => it.floor ?? null },
     { key: 'district',   label: c.rowDistrict,   cell: it => it.district ?? null },
-    { key: 'landUse',    label: c.rowLandUse,    cell: it => it.landUse ?? null },
+    // Land use: tourism / Pariwisata / "красная" zoning is rentable
+    // ("best"); residential / yellow / pink is not ("worst"). Anything
+    // we can't classify falls through to neutral.
+    { key: 'landUse',    label: c.rowLandUse,    cell: it => it.landUse ?? null,
+      verdict: it => {
+        const status = classifyLandUse(it.landUse)
+        if (status === 'allowed')    return 'best'
+        if (status === 'restricted') return 'worst'
+        return 'neutral'
+      } },
     { key: 'style',      label: c.rowStyle,      cell: it => it.interiorStyle ?? null },
     // Developer row: name on its own line, then a small "✓ N · ▲ M"
     // badge of completed / in-progress projects underneath. We pack
@@ -296,8 +316,11 @@ export function ShortlistView({ lang }: { lang: Lang }) {
   // 1900 vs 2000 — 5% apart) shouldn't paint the higher one red just
   // because it ranks last; a meaningful relative gap from the best
   // value is required (default 10%, overridable per row).
-  type Verdict = 'best' | 'middle' | 'worst' | 'neutral'
   const verdictFor = (r: Row, item: WishlistItem, section: WishlistItem[]): Verdict => {
+    if (r.verdict) {
+      const override = r.verdict(item)
+      if (override) return override
+    }
     if (!r.best || !r.num) return 'neutral'
     const num = r.num(item)
     if (num == null || !Number.isFinite(num)) return 'neutral'
@@ -435,12 +458,28 @@ export function ShortlistView({ lang }: { lang: Lang }) {
           <>
             <p className="text-[14px] text-[var(--color-text-muted)] mb-6 max-w-2xl">{c.intro}</p>
 
-            {realEstate.length > 0 && (
+            {realEstate.length > 0 && (() => {
+              // Surface the rental-zoning risk before the comparison so
+              // the visitor reads "this villa is on residential land"
+              // up front, not only by spotting a red cell halfway down.
+              const restricted = realEstate.filter(it => classifyLandUse(it.landUse) === 'restricted')
+              const restrictedNames = restricted.map(it => it.title).join(', ')
+              return (
               <section className="mb-10">
                 <h2 className="text-[18px] md:text-[20px] font-semibold text-[var(--color-text)] mb-4">
                   {c.sectionRealEstate}
                   <span className="text-[var(--color-text-muted)] font-normal ml-2">· {realEstate.length}</span>
                 </h2>
+
+                {restricted.length > 0 && (
+                  <div className="mb-4 rounded-2xl border border-[#FECACA] bg-[#FEF2F2] p-4 flex gap-3">
+                    <AlertTriangle size={18} className="shrink-0 text-[#B91C1C] mt-0.5" />
+                    <div className="text-[13px] text-[#7F1D1D] leading-relaxed">
+                      <div className="font-semibold text-[#B91C1C] mb-1">{c.landWarnTitle}</div>
+                      {c.landWarnBody(restrictedNames)}
+                    </div>
+                  </div>
+                )}
 
                 {/* Mobile layout: vertical stack of per-item cards with
                     inline label / value rows. Side-by-side comparison
@@ -592,7 +631,8 @@ export function ShortlistView({ lang }: { lang: Lang }) {
                   </table>
                 </div>
               </section>
-            )}
+              )
+            })()}
 
             {complexes.length > 0 && (
               <section className="mb-10">
