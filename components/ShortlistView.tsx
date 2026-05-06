@@ -146,7 +146,21 @@ export function ShortlistView({ lang }: { lang: Lang }) {
     { key: 'permit',     label: c.rowPermit,     cell: it => it.permit ?? null },
     { key: 'dealType',   label: c.rowDealType,   cell: it => dealTypeLabel(it.dealType) },
     { key: 'status',     label: c.rowStatus,     cell: it => it.status ?? null },
-    { key: 'completion', label: c.rowCompletion, cell: it => it.completionYear ?? null },
+    // Completion year — earlier = better, but past years are
+    // equivalent (anything already delivered is just "delivered").
+    // Clamp past values to current year so 2024 and 2025 read the
+    // same as 2026 and don't accidentally rank against each other;
+    // future years rank later = worse.
+    { key: 'completion', label: c.rowCompletion,
+      cell: it => it.completionYear ?? null,
+      best: 'min',
+      num: it => {
+        if (!it.completionYear) return null
+        const y = Number(it.completionYear)
+        if (!Number.isFinite(y)) return null
+        const now = new Date().getFullYear()
+        return Math.max(y, now)
+      } },
     { key: 'bedrooms',   label: c.rowBedrooms,   cell: it => it.bedrooms != null ? String(it.bedrooms) : null },
     { key: 'area',       label: c.rowArea,       cell: it => it.area != null ? `${it.area} ${c.sqm}` : null,
       best: 'max', num: it => it.area ?? null },
