@@ -155,19 +155,19 @@ export function ShortlistView({ lang }: { lang: Lang }) {
       best: 'max', num: it => it.leaseYears ?? null },
     { key: 'permit',     label: c.rowPermit,     cell: it => it.permit ?? null },
     { key: 'dealType',   label: c.rowDealType,   cell: it => dealTypeLabel(it.dealType) },
-    // Build status — for an investor "под строительством" wins
-    // (lower entry price + capital appreciation as it completes);
-    // "построен" loses (you pay full delivered-asset price).
-    // Mapping: Строится → 2 best, Под заказ / planned → 1 middle,
-    // Построен / built / completed → 0 worst.
+    // Build status — completed beats under-construction. A delivered
+    // asset is real and tour-able; a project still on site carries
+    // construction risk (delays, quality, developer solvency).
+    // Mapping: Построен → 2 best (green), Под заказ / planned → 1
+    // middle, Строится → 0 worst (red).
     { key: 'status',     label: c.rowStatus,     cell: it => it.status ?? null,
       best: 'max',
       num: it => {
         if (!it.status) return null
         const s = it.status.toLowerCase()
-        if (/строит|construc/.test(s)) return 2
+        if (/постр|сдан|готов|built|complet|delivered/.test(s)) return 2
         if (/заказ|план|plan|under/.test(s)) return 1
-        if (/постр|сдан|готов|built|complet|delivered/.test(s)) return 0
+        if (/строит|construc/.test(s)) return 0
         return null
       } },
     // Completion year — earlier = better, but past years are
@@ -201,6 +201,13 @@ export function ShortlistView({ lang }: { lang: Lang }) {
     // badge of completed / in-progress projects underneath. We pack
     // both into the cell text via a separator the renderer recognises
     // and formats with two lines.
+    //
+    // Verdict score = built − in-progress. The investor's risk read:
+    // delivered projects are evidence the developer can finish; an
+    // inflated in-progress pipeline (especially if this listing is
+    // itself one of them) raises completion risk. So 2 built / 0
+    // in-progress > 2 built / 2 in-progress > 0 built / Y in-progress,
+    // and the more in-progress, the lower the rank.
     { key: 'developer',  label: c.rowDeveloper,
       cell: it => {
         if (!it.developerName) return null
@@ -212,6 +219,17 @@ export function ShortlistView({ lang }: { lang: Lang }) {
         ].filter(Boolean).join(' · ')
         return tail ? `${it.developerName}\n${tail}` : it.developerName
       },
+      best: 'max',
+      num: it => {
+        const ready  = it.developerCompletedCount  ?? null
+        const inProg = it.developerInProgressCount ?? null
+        if (ready == null && inProg == null) return null
+        return (ready ?? 0) - (inProg ?? 0)
+      },
+      // Counts are small integers (typically -3..+5). The default 10%
+      // relative-deviation gate would suppress meaningful 1-unit gaps
+      // (one delivered project is signal). Drop the gate.
+      worstMinRelDev: 0,
     },
   ]
   // Classify each cell on a 3-step traffic-light scale based on its
