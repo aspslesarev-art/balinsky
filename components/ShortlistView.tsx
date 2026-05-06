@@ -210,19 +210,19 @@ export function ShortlistView({ lang }: { lang: Lang }) {
             )}
           </div>
           {ready && items.length > 0 && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
               <a
                 href={shareHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[13px] font-medium no-underline"
+                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[12px] sm:text-[13px] font-medium no-underline"
               >
                 <Send size={14} /> {c.sendToBot}
               </a>
               <button
                 type="button"
                 onClick={() => { if (confirm(lang === 'en' ? 'Clear the whole shortlist?' : 'Очистить весь шортлист?')) clear() }}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-full text-[13px] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-search-bg)]"
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-full text-[12px] sm:text-[13px] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-search-bg)]"
               >
                 <Trash2 size={14} /> {c.clear}
               </button>
@@ -253,22 +253,23 @@ export function ShortlistView({ lang }: { lang: Lang }) {
                 {/* table-fixed + w-full distributes remaining width
                     evenly across the item columns, so 2 items stretch to
                     ~556px each instead of leaving a 590px empty strip.
-                    The minWidth keeps cells legible when many items are
-                    saved — overflows the container, scrolls horizontally. */}
-                <div className="overflow-x-auto pb-4">
+                    On phones we tighten label col + item min-width and
+                    enable scroll-snap so each card lands on screen
+                    cleanly when the user swipes between saved items. */}
+                <div className="-mx-6 px-6 overflow-x-auto pb-4 snap-x snap-mandatory md:snap-none scroll-pl-6">
                   <table
-                    className="table-fixed border-separate border-spacing-x-3 w-full"
-                    style={{ minWidth: `${120 + realEstate.length * 220}px` }}
+                    className="table-fixed border-separate border-spacing-x-2 md:border-spacing-x-3 w-full"
+                    style={{ minWidth: `${realEstate.length === 1 ? 320 : 90 + realEstate.length * 180}px` }}
                   >
                     <colgroup>
-                      <col style={{ width: '120px' }} />
+                      <col className="w-[88px] md:w-[120px]" />
                       {realEstate.map(it => <col key={`${it.kind}:${it.slug}`} />)}
                     </colgroup>
                     <thead>
                       <tr>
                         <th className="sticky left-0 bg-[var(--color-bg)] z-10 align-bottom"></th>
                         {realEstate.map(it => (
-                          <th key={`${it.kind}:${it.slug}`} className="text-left align-bottom">
+                          <th key={`${it.kind}:${it.slug}`} className="text-left align-bottom snap-start">
                             <div className="relative">
                               <Link href={detailHref(it, lang)} className="block group no-underline text-[var(--color-text)]">
                                 <div className="aspect-[4/3] rounded-xl overflow-hidden bg-[var(--color-search-bg)] mb-2">
@@ -276,16 +277,16 @@ export function ShortlistView({ lang }: { lang: Lang }) {
                                     // eslint-disable-next-line @next/next/no-img-element
                                     <img src={it.photo} alt={it.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" />
                                   ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-3xl">🏝️</div>
+                                    <div className="w-full h-full flex items-center justify-center text-2xl md:text-3xl">🏝️</div>
                                   )}
                                 </div>
-                                <div className="text-[15px] font-semibold leading-snug line-clamp-2 mb-3">{it.title}</div>
+                                <div className="text-[13px] md:text-[15px] font-semibold leading-snug line-clamp-2 mb-2 md:mb-3">{it.title}</div>
                               </Link>
                               <button
                                 type="button"
                                 aria-label={c.remove}
                                 onClick={() => remove(it.kind, it.slug)}
-                                className="absolute top-2 right-2 inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/85 backdrop-blur-sm hover:bg-white text-[#1A1F1C] shadow-[0_1px_3px_rgba(0,0,0,0.12)]"
+                                className="absolute top-2 right-2 inline-flex items-center justify-center w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/85 backdrop-blur-sm hover:bg-white text-[#1A1F1C] shadow-[0_1px_3px_rgba(0,0,0,0.12)]"
                               >
                                 <X size={14} />
                               </button>
@@ -299,7 +300,7 @@ export function ShortlistView({ lang }: { lang: Lang }) {
                         const winning = bestValueFor(r, realEstate)
                         return (
                           <tr key={r.key}>
-                            <td className="sticky left-0 bg-[var(--color-bg)] z-10 text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] py-3 align-top">
+                            <td className="sticky left-0 bg-[var(--color-bg)] z-10 text-[10px] md:text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] py-2 md:py-3 align-top pr-2">
                               {r.label}
                             </td>
                             {realEstate.map(it => {
@@ -312,17 +313,17 @@ export function ShortlistView({ lang }: { lang: Lang }) {
                               // "Builder name" above "✓ N · ▲ M".
                               const lines = v != null ? v.split('\n') : []
                               return (
-                                <td key={`${r.key}-${it.kind}:${it.slug}`} className="text-[14px] py-3 align-top">
+                                <td key={`${r.key}-${it.kind}:${it.slug}`} className="text-[13px] md:text-[14px] py-2 md:py-3 align-top">
                                   {v != null ? (
                                     <span className={`inline-flex flex-col items-start gap-0.5 ${isBest ? 'font-semibold text-[var(--color-primary)]' : 'text-[var(--color-text)]'}`}>
                                       <span className="inline-flex items-center gap-1.5">
                                         {lines[0]}
                                         {isBest && (
-                                          <Sparkle size={13} fill="currentColor" strokeWidth={0} aria-label={c.bestLabel} />
+                                          <Sparkle size={12} fill="currentColor" strokeWidth={0} aria-label={c.bestLabel} />
                                         )}
                                       </span>
                                       {lines[1] && (
-                                        <span className="text-[12px] font-normal text-[var(--color-text-muted)]">{lines[1]}</span>
+                                        <span className="text-[11px] md:text-[12px] font-normal text-[var(--color-text-muted)]">{lines[1]}</span>
                                       )}
                                     </span>
                                   ) : (
