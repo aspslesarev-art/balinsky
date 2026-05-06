@@ -3,6 +3,7 @@ import type { WishlistItem } from '@/lib/wishlist'
 import type { Lang } from '@/lib/i18n'
 import { classifyLandUse } from '@/lib/land-use'
 import { telegramUrl, whatsappUrl } from '@/lib/agent-links'
+import { formatPriceExact, type Currency } from '@/lib/currency'
 import type { AgentContact, PdfOrientation } from './VillaPresentationPdf'
 
 Font.register({
@@ -242,9 +243,12 @@ function pluralRu(n: number, forms: [string, string, string]): string {
   return forms[2]
 }
 
-function fmtUsd(n: number | null | undefined): string {
+// Money formatter — converts the saved USD value into whichever
+// currency the visitor had picked on the site at download time.
+// Function name kept as fmtUsd for minimal diff at the call sites.
+function fmtMoney(n: number | null | undefined, currency: Currency): string {
   if (n == null || !Number.isFinite(n)) return '—'
-  return '$' + Math.round(n).toLocaleString('en-US')
+  return formatPriceExact(n, currency)
 }
 
 function fmtDate(lang: Lang): string {
@@ -293,7 +297,7 @@ function PageFooter({ name }: { name: string }) {
 // WishlistItem, so it's just a snapshot of what the visitor saw when
 // they hearted the listing.
 function ItemPage({
-  it, idx, total, c, lang, isPortrait, agentMode,
+  it, idx, total, c, lang, isPortrait, agentMode, currency,
 }: {
   it: WishlistItem; idx: number; total: number; c: Copy; lang: Lang; isPortrait: boolean
   // Agent-variant PDFs strip the developer's company name so the
@@ -301,7 +305,9 @@ function ItemPage({
   // builder. The track-record counts ("3 сдано · 2 строится") stay —
   // they're the buyer-relevant signal anyway.
   agentMode: boolean
+  currency: Currency
 }) {
+  const fmtUsd = (n: number | null | undefined) => fmtMoney(n, currency)
   const dealLabel = it.dealType === 'resale' ? c.dealResale
     : it.dealType === 'secondary' ? c.dealSecondary
     : it.dealType === 'primary' ? c.dealPrimary
@@ -415,7 +421,8 @@ type CmpRow = {
   verdict?: (it: WishlistItem) => 'best' | 'worst' | null
 }
 
-function buildCmpRows(c: Copy, agentMode: boolean): CmpRow[] {
+function buildCmpRows(c: Copy, agentMode: boolean, currency: Currency): CmpRow[] {
+  const fmtUsd = (n: number | null | undefined) => fmtMoney(n, currency)
   const dealLabel = (t: WishlistItem['dealType']): string | null => {
     if (!t) return null
     if (t === 'resale')    return c.dealResale
@@ -574,11 +581,15 @@ function ComparisonPage({
   )
 }
 
-export function ShortlistPdfDocument({ items, agent, orientation = 'landscape', lang }: {
+export function ShortlistPdfDocument({ items, agent, orientation = 'landscape', lang, currency = 'USD' }: {
   items: WishlistItem[]
   agent: AgentContact | null
   orientation?: PdfOrientation
   lang: Lang
+  // Currency picked on the site at download time; threaded through
+  // to every price-bearing renderer so the document matches what
+  // the visitor was reading.
+  currency?: Currency
 }) {
   const isPortrait = orientation === 'portrait'
   const pageProps = { size: 'A4' as const, orientation }
@@ -594,7 +605,7 @@ export function ShortlistPdfDocument({ items, agent, orientation = 'landscape', 
   // price units (per month) and column sets.
   const cmpItems = items.filter(i => i.kind === 'villa' || i.kind === 'apartment')
 
-  const cmpRows = buildCmpRows(c, agentMode)
+  const cmpRows = buildCmpRows(c, agentMode, currency)
   const chunkSize = isPortrait ? 3 : 5
   const cmpChunks: WishlistItem[][] = []
   for (let i = 0; i < cmpItems.length; i += chunkSize) {
@@ -617,7 +628,7 @@ export function ShortlistPdfDocument({ items, agent, orientation = 'landscape', 
       {/* Per-item pages */}
       {itemPages.map((it, idx) => (
         <Page key={`item-${it.kind}:${it.slug}`} {...pageProps} style={[styles.page, styles.pagePadded]}>
-          <ItemPage it={it} idx={idx} total={itemPages.length} c={c} lang={lang} isPortrait={isPortrait} agentMode={agentMode} />
+          <ItemPage it={it} idx={idx} total={itemPages.length} c={c} lang={lang} isPortrait={isPortrait} agentMode={agentMode} currency={currency} />
           <PageFooter name={agentMode ? c.footerNameAgent : c.footerName} />
         </Page>
       ))}
@@ -691,9 +702,10 @@ export async function downloadShortlistPdf(
   agent: AgentContact | null,
   orientation: PdfOrientation = 'landscape',
   lang: Lang = 'ru',
+  currency: Currency = 'USD',
 ): Promise<void> {
   const blob = await pdf(
-    <ShortlistPdfDocument items={items} agent={agent} orientation={orientation} lang={lang} />
+    <ShortlistPdfDocument items={items} agent={agent} orientation={orientation} lang={lang} currency={currency} />
   ).toBlob()
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')

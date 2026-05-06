@@ -571,6 +571,10 @@ function InvestSlide({ snap, priceUsd }: { snap: Snapshot | null; priceUsd: numb
 }
 
 function DownloadModal({ data, snap, onClose }: { data: VillaPresentationData; snap: Snapshot | null; onClose: () => void }) {
+  // Currency at download time. Threaded through to the PDF builder
+  // so price/scenarios print in whichever currency the visitor was
+  // browsing in (USD/EUR/RUB/UAH/IDR via lib/currency).
+  const { currency } = useCurrency()
   const [mode, setMode] = useState<'choose' | 'agent'>('choose')
   const [orientation, setOrientation] = useState<'landscape' | 'portrait'>('landscape')
   const [name, setName] = useState('')
@@ -594,7 +598,7 @@ function DownloadModal({ data, snap, onClose }: { data: VillaPresentationData; s
     setError(null)
     try {
       const { downloadVillaPdf } = await import('./VillaPresentationPdf')
-      await downloadVillaPdf(data, snap, null, orientation)
+      await downloadVillaPdf(data, snap, null, orientation, currency)
       onClose()
     } catch (e) {
       console.error(e)
@@ -610,7 +614,7 @@ function DownloadModal({ data, snap, onClose }: { data: VillaPresentationData; s
     setError(null)
     try {
       const { downloadVillaPdf } = await import('./VillaPresentationPdf')
-      await downloadVillaPdf(data, snap, { name: trimmedName, telegram: trimmedTg, whatsapp: trimmedWa }, orientation)
+      await downloadVillaPdf(data, snap, { name: trimmedName, telegram: trimmedTg, whatsapp: trimmedWa }, orientation, currency)
       onClose()
     } catch (e) {
       console.error(e)

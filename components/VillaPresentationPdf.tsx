@@ -2,6 +2,7 @@ import { Document, Page, Text, View, Image, Link, StyleSheet, Font, pdf } from '
 import type { Snapshot } from '@/components/InvestmentWidget/types'
 import type { VillaPresentationData } from '@/components/VillaPresentation'
 import { telegramUrl, whatsappUrl } from '@/lib/agent-links'
+import { formatPrice, formatPriceExact, type Currency } from '@/lib/currency'
 
 Font.register({
   family: 'Inter',
@@ -135,13 +136,16 @@ const styles = StyleSheet.create({
   footerText: { fontSize: 8, color: COLORS.muted },
 })
 
-function fmtUsd(n: number | null | undefined): string {
+// Currency formatters honour whichever currency the visitor picked
+// on the site. Stored amounts are in USD; both helpers convert via
+// the shared rate table from lib/currency. fmtMoney = exact ("$220,000"),
+// fmtMoneyShort = compact ("$35K") used for the cramped scenario tiles.
+function fmtMoney(n: number | null | undefined, currency: Currency): string {
   if (n == null || !Number.isFinite(n)) return '—'
-  return '$' + Math.round(n).toLocaleString('en-US')
+  return formatPriceExact(n, currency)
 }
-function fmtUsdShort(n: number): string {
-  if (n >= 1000) return '$' + (Math.round(n / 100) / 10).toFixed(1).replace(/\.0$/, '') + 'k'
-  return '$' + Math.round(n).toLocaleString('en-US')
+function fmtMoneyShort(n: number, currency: Currency): string {
+  return formatPrice(n, currency)
 }
 function fmtPct(n: number | null | undefined, digits = 1): string {
   if (n == null || !Number.isFinite(n)) return '—'
@@ -298,13 +302,21 @@ function PhotoSetPdf({ photos, layout }: { photos: string[]; layout: 'mosaic5' |
 
 const SITE_URL = 'https://balinsky.info'
 
-export function VillaPdfDocument({ data, snap, agent, orientation = 'landscape' }: {
+export function VillaPdfDocument({ data, snap, agent, orientation = 'landscape', currency = 'USD' }: {
   data: VillaPresentationData;
   snap: Snapshot | null;
   agent: AgentContact | null;
   orientation?: PdfOrientation;
+  // Whatever currency the visitor had selected on the site at
+  // download time. All money values get rendered through the shared
+  // formatPrice helpers — so a Russian visitor downloads "₽", an
+  // Indonesian gets "Rp", and the saved-USD source numbers are
+  // converted via lib/currency rates.
+  currency?: Currency;
 }) {
   const isPortrait = orientation === 'portrait'
+  const fmtUsd = (n: number | null | undefined) => fmtMoney(n, currency)
+  const fmtUsdShort = (n: number) => fmtMoneyShort(n, currency)
   // Each Page picks up the chosen orientation; layouts that depended on the
   // wide aspect (cover, scenarios row, photoset mosaic) flip to a vertical
   // arrangement when isPortrait is true.
@@ -568,8 +580,9 @@ export async function downloadVillaPdf(
   snap: Snapshot | null,
   agent: AgentContact | null,
   orientation: PdfOrientation = 'landscape',
+  currency: Currency = 'USD',
 ): Promise<void> {
-  const blob = await pdf(<VillaPdfDocument data={data} snap={snap} agent={agent} orientation={orientation} />).toBlob()
+  const blob = await pdf(<VillaPdfDocument data={data} snap={snap} agent={agent} orientation={orientation} currency={currency} />).toBlob()
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
