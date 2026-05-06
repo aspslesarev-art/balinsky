@@ -195,6 +195,8 @@ export function applySearch(rows: EnrichedRow[], rawQuery: string): EnrichedRow[
       r.district ?? '',
       r.developerNames.join(' '),
       firstString(r.data['Notes']) ?? '',
+      // Airtable ID — paste-from-PDF lookup for agent shortlists.
+      r.id,
     ]
       .filter(Boolean)
       .join(' ')
@@ -417,6 +419,7 @@ export function toCard(
     completionYear,
     claimedYieldPct,
     status: firstString(d['Статус']) ?? null,
+    airtableId: e.id,
   }
 }
 

@@ -36,6 +36,10 @@ export type VillaCardData = {
   claimedYieldPct?: number | null
   bestCapRate?: number | null
   interiorStyle?: string | null
+  // Airtable record ID, piped into the wishlist snapshot so the
+  // agent PDF can print a lookup code and the catalog search can
+  // resolve a paste-back. Optional for safety against legacy callers.
+  airtableId?: string | null
 }
 
 const COPY = {
@@ -88,6 +92,7 @@ export function VillaCard({ a, lang = 'ru' }: { a: VillaCardData; lang?: Lang })
             status: a.status ?? null,
             bestCapRate: a.bestCapRate ?? null,
             interiorStyle: a.interiorStyle ?? null,
+            airtableId: a.airtableId ?? null,
           }}
         />
       </div>

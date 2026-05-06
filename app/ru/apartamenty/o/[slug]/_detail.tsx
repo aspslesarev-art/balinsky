@@ -486,6 +486,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
               developerName: devName,
               developerCompletedCount: devStats?.ready ?? null,
               developerInProgressCount: devStats?.inProgress ?? null,
+              airtableId: a.airtable_id,
             }}
           />
         </section>

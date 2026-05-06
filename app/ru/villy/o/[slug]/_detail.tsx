@@ -600,6 +600,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
               developerInProgressCount: devStats?.inProgress ?? null,
               bestCapRate,
               interiorStyle,
+              airtableId: v.airtable_id,
             }}
           />
         </section>

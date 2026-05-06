@@ -56,6 +56,11 @@ export type WishlistItem = {
   bestCapRate?: number | null
   // Interior style label from gpt-4o-mini photo classifier. Villa-only.
   interiorStyle?: string | null
+  // Canonical Airtable record ID ("rec…"). Saved so the agent PDF can
+  // print a lookup code and the catalog search can find the listing
+  // by ID. Optional — older saves predate the field and degrade
+  // gracefully (no ID printed, no search hit by ID).
+  airtableId?: string | null
   savedAt: string
 }
 

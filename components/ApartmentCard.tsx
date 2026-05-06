@@ -28,6 +28,9 @@ export type ApartmentCardData = {
   completionYear?: string | null
   claimedYieldPct?: number | null
   status?: string | null
+  // Airtable record ID — saved into the wishlist so the agent PDF
+  // can print a lookup code searchable on the catalog.
+  airtableId?: string | null
 }
 
 const COPY = {
@@ -70,6 +73,7 @@ export function ApartmentCard({ a, lang = 'ru' }: { a: ApartmentCardData; lang?:
             completionYear: a.completionYear ?? null,
             claimedYieldPct: a.claimedYieldPct ?? null,
             status: a.status ?? null,
+            airtableId: a.airtableId ?? null,
           }}
         />
       </div>
