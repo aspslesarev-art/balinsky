@@ -173,9 +173,14 @@ console.log(`existing atts entries: ${Object.keys(atts).length}`)
 // one-time cost.
 function matchesForceSlugs(rec) {
   if (FORCE_SLUGS.length === 0) return false
+  // Match against both SEO:Slug (per-apartment identifier) AND
+  // SEO:Title (which usually carries the complex name). One token,
+  // broader coverage — see sync-villa-photos.mjs for the rationale.
   const slug = String(rec.fields?.['SEO:Slug'] ?? '').toLowerCase()
-  if (!slug) return false
-  return FORCE_SLUGS.some(s => slug.includes(s))
+  const title = String(rec.fields?.['SEO:Title'] ?? '').toLowerCase()
+  const haystack = `${slug} ${title}`
+  if (!haystack.trim()) return false
+  return FORCE_SLUGS.some(s => haystack.includes(s))
 }
 
 const afterResume = []

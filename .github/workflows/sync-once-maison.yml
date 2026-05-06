@@ -2,8 +2,10 @@ name: One-shot — force-resync Maison Boheme photos
 
 # Throwaway workflow. Triggers when this file itself lands on main
 # (paths filter), forces a photo re-pull for everything matching
-# slug "maison-boheme", revalidates the listings, and exits. Delete
-# this file after the run shows up green in the Actions tab.
+# slug or SEO:Title containing "maison-boheme" (per-villa SEO:Slug
+# only carries an internal id like "v00589"; the complex name lives
+# in the title), revalidates the listings, and exits. Delete this
+# file after the run shows up green in the Actions tab.
 #
 # Why a separate workflow: the regular sync-heavy.yml only triggers
 # via cron or workflow_dispatch — neither of which we can fire from
