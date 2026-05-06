@@ -155,7 +155,21 @@ export function ShortlistView({ lang }: { lang: Lang }) {
       best: 'max', num: it => it.leaseYears ?? null },
     { key: 'permit',     label: c.rowPermit,     cell: it => it.permit ?? null },
     { key: 'dealType',   label: c.rowDealType,   cell: it => dealTypeLabel(it.dealType) },
-    { key: 'status',     label: c.rowStatus,     cell: it => it.status ?? null },
+    // Build status — for an investor "под строительством" wins
+    // (lower entry price + capital appreciation as it completes);
+    // "построен" loses (you pay full delivered-asset price).
+    // Mapping: Строится → 2 best, Под заказ / planned → 1 middle,
+    // Построен / built / completed → 0 worst.
+    { key: 'status',     label: c.rowStatus,     cell: it => it.status ?? null,
+      best: 'max',
+      num: it => {
+        if (!it.status) return null
+        const s = it.status.toLowerCase()
+        if (/строит|construc/.test(s)) return 2
+        if (/заказ|план|plan|under/.test(s)) return 1
+        if (/постр|сдан|готов|built|complet|delivered/.test(s)) return 0
+        return null
+      } },
     // Completion year — earlier = better, but past years are
     // equivalent (anything already delivered is just "delivered").
     // Clamp past values to current year so 2024 and 2025 read the
