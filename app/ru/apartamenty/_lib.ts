@@ -359,7 +359,11 @@ export function buildOptions(
   return { district: districts, bedrooms, floor, developer, status, permit }
 }
 
-export function toCard(e: EnrichedRow, manifest: Record<string, string[]>): Card | null {
+export function toCard(
+  e: EnrichedRow,
+  manifest: Record<string, string[]>,
+  devStats?: Map<string, { ready: number; total: number }>,
+): Card | null {
   const d = e.data
   const slug = firstString(d['SEO:Slug'])
   if (!slug || slug.startsWith('-')) return null
@@ -392,6 +396,20 @@ export function toCard(e: EnrichedRow, manifest: Record<string, string[]>): Card
     photos: manifest[e.id] ?? [],
     district: e.district,
     developerName: e.developerNames[0] ?? null,
+    developerCompletedCount: (() => {
+      if (!devStats) return null
+      const name = e.developerNames[0]
+      if (!name) return null
+      const s = devStats.get(name.trim())
+      return s ? s.ready : null
+    })(),
+    developerInProgressCount: (() => {
+      if (!devStats) return null
+      const name = e.developerNames[0]
+      if (!name) return null
+      const s = devStats.get(name.trim())
+      return s ? Math.max(0, s.total - s.ready) : null
+    })(),
     pricePerSqmUsd: priceM2,
     pricePerSqmYearUsd: priceM2Year,
     leaseYears,
@@ -437,6 +455,7 @@ export function buildAllCards(
   enriched: EnrichedRow[],
   manifest: Record<string, string[]>,
   filters: FilterState,
+  devStats?: Map<string, { ready: number; total: number }>,
 ): Card[] {
   let filtered = enriched.filter(e => passes(e, filters))
   const isSearch = filters.q.trim().length > 0
@@ -455,7 +474,7 @@ export function buildAllCards(
   }
 
   const sorted = filtered
-    .map(e => toCard(e, manifest))
+    .map(e => toCard(e, manifest, devStats))
     .filter((c): c is Card => c !== null)
 
   const seen = new Set<string>()
@@ -477,7 +496,8 @@ export async function loadCatalogPage(
   const safePage = Math.max(1, Math.floor(page))
   const { enriched, manifest } = await loadAll()
   const options = buildOptions(enriched, filters, lang)
-  const all = buildAllCards(enriched, manifest, filters)
+  const devStats = await (await import('@/lib/developer-stats')).loadAllDeveloperStats().catch(() => undefined)
+  const all = buildAllCards(enriched, manifest, filters, devStats)
   const totalCount = all.length
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
   const start = (safePage - 1) * PAGE_SIZE

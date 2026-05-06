@@ -19,6 +19,8 @@ export type ApartmentCardData = {
   // Optional fields piped into the wishlist snapshot at heart-tap so
   // saved apartments carry investor-relevant context.
   developerName?: string | null
+  developerCompletedCount?: number | null
+  developerInProgressCount?: number | null
   pricePerSqmUsd?: number | null
   pricePerSqmYearUsd?: number | null
   leaseYears?: number | null
@@ -59,6 +61,8 @@ export function ApartmentCard({ a, lang = 'ru' }: { a: ApartmentCardData; lang?:
             area: a.area ?? null,
             floor: a.floor ?? null,
             developerName: a.developerName ?? null,
+            developerCompletedCount: a.developerCompletedCount ?? null,
+            developerInProgressCount: a.developerInProgressCount ?? null,
             pricePerSqmUsd: a.pricePerSqmUsd ?? null,
             pricePerSqmYearUsd: a.pricePerSqmYearUsd ?? null,
             leaseYears: a.leaseYears ?? null,

@@ -26,6 +26,8 @@ export type VillaCardData = {
   // saved listings carry investor-relevant context out of the catalog
   // without needing to open the detail page first.
   developerName?: string | null
+  developerCompletedCount?: number | null
+  developerInProgressCount?: number | null
   pricePerSqmUsd?: number | null
   pricePerSqmYearUsd?: number | null
   leaseYears?: number | null
@@ -73,6 +75,8 @@ export function VillaCard({ a, lang = 'ru' }: { a: VillaCardData; lang?: Lang })
             land: a.land ?? null,
             dealType: a.dealType === 'resale' ? 'resale' : a.dealType === 'secondary' ? 'secondary' : 'primary',
             developerName: a.developerName ?? null,
+            developerCompletedCount: a.developerCompletedCount ?? null,
+            developerInProgressCount: a.developerInProgressCount ?? null,
             pricePerSqmUsd: a.pricePerSqmUsd ?? null,
             pricePerSqmYearUsd: a.pricePerSqmYearUsd ?? null,
             leaseYears: a.leaseYears ?? null,

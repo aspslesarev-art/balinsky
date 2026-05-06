@@ -72,6 +72,8 @@ export type VillaCard = {
   investmentScore: number | null
   dealType: 'resale' | 'secondary' | null
   developerName: string | null
+  developerCompletedCount: number | null
+  developerInProgressCount: number | null
   pricePerSqmUsd: number | null
   pricePerSqmYearUsd: number | null
   leaseYears: number | null
@@ -457,7 +459,11 @@ export function buildOptions(
 
 // === card mapping ===
 
-export function toCard(e: EnrichedRow, manifest: Record<string, string[]>): VillaCard | null {
+export function toCard(
+  e: EnrichedRow,
+  manifest: Record<string, string[]>,
+  devStats?: Map<string, { ready: number; total: number }>,
+): VillaCard | null {
   const d = e.data
   const slug = firstString(d['SEO:Slug'])
   if (!slug || slug.startsWith('-')) return null
@@ -495,6 +501,16 @@ export function toCard(e: EnrichedRow, manifest: Record<string, string[]>): Vill
     investmentScore: null,
     dealType: e.dealType === 'primary' ? null : e.dealType,
     developerName: e.developerName,
+    developerCompletedCount: (() => {
+      if (!devStats || !e.developerName) return null
+      const s = devStats.get(e.developerName.trim())
+      return s ? s.ready : null
+    })(),
+    developerInProgressCount: (() => {
+      if (!devStats || !e.developerName) return null
+      const s = devStats.get(e.developerName.trim())
+      return s ? Math.max(0, s.total - s.ready) : null
+    })(),
     pricePerSqmUsd: priceM2,
     pricePerSqmYearUsd: priceM2Year,
     leaseYears,
@@ -541,11 +557,12 @@ export function buildAllCards(
   filters: VillaFilterState,
   scores?: Map<string, { composite: number }>,
   sort: SortOrder = 'investment-desc',
+  devStats?: Map<string, { ready: number; total: number }>,
 ): VillaCard[] {
   let filtered = enriched.filter(e => passes(e, filters))
   const isSearch = filters.q.trim().length > 0
   if (isSearch) filtered = applySearch(filtered, filters.q)
-  const mapped = filtered.map(e => toCard(e, manifest)).filter((c): c is VillaCard => c !== null)
+  const mapped = filtered.map(e => toCard(e, manifest, devStats)).filter((c): c is VillaCard => c !== null)
   if (scores) for (const c of mapped) c.investmentScore = scores.get(c.id)?.composite ?? null
   let sorted: VillaCard[]
   if (isSearch) sorted = mapped
@@ -582,10 +599,13 @@ export async function loadCatalogPage(
   const safePage = Math.max(1, Math.floor(page))
   const { enriched, manifest } = await loadAll()
   const options = buildOptions(enriched, filters, lang)
-  const scores = sort === 'investment-desc'
-    ? await (await import('@/lib/investment/batch-scores')).loadAllVillaScores().catch(() => undefined)
-    : undefined
-  const all = buildAllCards(enriched, manifest, filters, scores, sort)
+  const [scores, devStats] = await Promise.all([
+    sort === 'investment-desc'
+      ? (await import('@/lib/investment/batch-scores')).loadAllVillaScores().catch(() => undefined)
+      : Promise.resolve(undefined),
+    (await import('@/lib/developer-stats')).loadAllDeveloperStats().catch(() => undefined),
+  ])
+  const all = buildAllCards(enriched, manifest, filters, scores, sort, devStats)
   const totalCount = all.length
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
   const start = (safePage - 1) * PAGE_SIZE

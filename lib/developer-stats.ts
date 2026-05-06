@@ -16,10 +16,16 @@ const sb = createClient(
   process.env.SUPABASE_SERVICE_KEY!,
 )
 
-const loadAllStats = cache(async (): Promise<Map<string, ComplexStats>> => {
+// Per-request cached map of developer name → { ready, total }. Internal
+// to per-name lookups below, also exported so catalog builders can read
+// the full map once and look up dozens of cards without each trying to
+// hit Supabase. React's cache() makes both call paths share the fetch.
+export const loadAllDeveloperStats = cache(async (): Promise<Map<string, ComplexStats>> => {
   const { data } = await sb.from('raw_complexes').select('data').limit(2000)
   return buildDeveloperStats((data ?? []) as { data: Record<string, unknown> }[])
 })
+
+const loadAllStats = loadAllDeveloperStats
 
 export type DeveloperStats = ComplexStats & { inProgress: number }
 
