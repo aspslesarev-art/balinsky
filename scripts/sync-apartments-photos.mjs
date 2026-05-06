@@ -25,6 +25,12 @@ const limitArg = process.argv.find(a => a.startsWith('--limit='))
 const LIMIT = limitArg ? Number(limitArg.split('=')[1]) : Infinity
 const PUBLISHED_ONLY = !process.argv.includes('--all')
 const RESUME = !process.argv.includes('--force')
+// One-off targeted re-pull. Pass --force-slugs=foo,bar (comma-separated)
+// to force-resync just records whose SEO:Slug *contains* any of the
+// substrings. Used to recover from Airtable edits made before the
+// att-id baseline existed (e.g. updating an entire complex's photos).
+const forceSlugsArg = process.argv.find(a => a.startsWith('--force-slugs='))?.split('=')[1]
+const FORCE_SLUGS = (forceSlugsArg ?? '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
 
 const sb = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -165,15 +171,29 @@ console.log(`existing atts entries: ${Object.keys(atts).length}`)
 // re-pulled. Records with no atts entry yet (legacy data) get re-pulled
 // too, so the first run of this version refreshes everyone — that's a
 // one-time cost.
-const afterResume = RESUME
-  ? candidates.filter(rec => {
-      const haveUrls = manifest[rec.id] && manifest[rec.id].length > 0
-      if (!haveUrls) return true
-      const stored = atts[rec.id]
-      const current = attsKeyOf(rec.fields['Opt photos'])
-      return stored !== current
-    })
-  : candidates
+function matchesForceSlugs(rec) {
+  if (FORCE_SLUGS.length === 0) return false
+  const slug = String(rec.fields?.['SEO:Slug'] ?? '').toLowerCase()
+  if (!slug) return false
+  return FORCE_SLUGS.some(s => slug.includes(s))
+}
+
+const afterResume = []
+for (const rec of candidates) {
+  if (matchesForceSlugs(rec)) { afterResume.push(rec); continue }
+  if (!RESUME) { afterResume.push(rec); continue }
+  const haveUrls = manifest[rec.id] && manifest[rec.id].length > 0
+  if (!haveUrls) { afterResume.push(rec); continue }
+  const current = attsKeyOf(rec.fields['Opt photos'])
+  const stored = atts[rec.id]
+  if (stored === undefined) {
+    // Bootstrap: adopt the current att list as the baseline. We trust
+    // the existing manifest until proven otherwise — no re-download.
+    atts[rec.id] = current
+    continue
+  }
+  if (stored !== current) afterResume.push(rec)
+}
 const slice = Number.isFinite(LIMIT) ? afterResume.slice(0, LIMIT) : afterResume
 console.log(`processing: ${slice.length} (resume=${RESUME})`)
 

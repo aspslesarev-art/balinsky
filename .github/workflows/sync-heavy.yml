@@ -14,6 +14,11 @@ on:
     # already cleared.
     - cron: '15 * * * *'
   workflow_dispatch:
+    inputs:
+      force_slugs:
+        description: 'Comma-separated SEO:Slug substrings to force-resync (e.g. "maison-boheme"). Leave empty for normal cron behavior.'
+        required: false
+        default: ''
 
 concurrency:
   group: sync-heavy
@@ -45,10 +50,20 @@ jobs:
         run: node scripts/sync-rental.mjs
 
       - name: Sync villa photos
-        run: node scripts/sync-villa-photos.mjs
+        env:
+          FORCE_SLUGS: ${{ github.event.inputs.force_slugs }}
+        run: |
+          ARGS=""
+          if [ -n "${FORCE_SLUGS}" ]; then ARGS="--force-slugs=${FORCE_SLUGS}"; fi
+          node scripts/sync-villa-photos.mjs $ARGS
 
       - name: Sync apartment photos
-        run: node scripts/sync-apartments-photos.mjs
+        env:
+          FORCE_SLUGS: ${{ github.event.inputs.force_slugs }}
+        run: |
+          ARGS=""
+          if [ -n "${FORCE_SLUGS}" ]; then ARGS="--force-slugs=${FORCE_SLUGS}"; fi
+          node scripts/sync-apartments-photos.mjs $ARGS
 
       - name: Revalidate rental + villa + apartment caches
         env:
