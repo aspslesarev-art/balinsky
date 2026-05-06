@@ -338,7 +338,7 @@ function ScenarioInput({
           if (Number.isFinite(n)) onChange(n)
         }}
         step={step}
-        className="flex-1 min-w-0 rounded-md border border-[var(--color-border)] bg-white px-2 py-1 text-[13px] tabular-nums text-[#111827] focus:outline-none focus:border-[var(--color-primary)]"
+        className="flex-1 min-w-0 rounded-md border border-black/10 bg-transparent px-2 py-1 text-[13px] tabular-nums text-[#111827] focus:outline-none focus:border-[var(--color-primary)] focus:bg-white/40"
       />
       <span className="text-[11px] text-[var(--color-text-muted)] shrink-0">{suffix}</span>
     </div>
