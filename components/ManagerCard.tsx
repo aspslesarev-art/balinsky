@@ -69,6 +69,11 @@ export function ManagerCard({
   )
 }
 
+type ManagerCopy = {
+  role: (dev?: string | null) => string
+  sla: string
+  videoCall: string
+}
 function ManagerRow({
   m,
   lang,
@@ -78,7 +83,7 @@ function ManagerRow({
 }: {
   m: ManagerItem
   lang: Lang
-  c: typeof COPY['ru']
+  c: ManagerCopy
   developerName: string | null
   videoUrl: string | null
 }) {

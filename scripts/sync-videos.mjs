@@ -101,12 +101,25 @@ for (const v of videos) {
     complexes.push({ name: nm, slug: main?.slug ?? null })
   }
 
+  // Map Airtable Язык multiselect ("Русский", "English") to short
+  // codes ("ru", "en") so the UI can filter by site locale. Empty
+  // array means the video applies to both languages (same fallback
+  // behaviour as before, safe for untagged legacy rows).
+  const langArr = Array.isArray(f['Язык']) ? f['Язык'] : []
+  const languages = []
+  for (const l of langArr) {
+    const s = String(l).toLowerCase()
+    if (s.includes('рус')) languages.push('ru')
+    else if (s.includes('eng') || s.includes('англ')) languages.push('en')
+  }
+
   items.push({
     id: v.id,
     name: fs1(f['Name']),
     url,
     embedUrl: ytEmbed(url),
     addedAt: fs1(f['Дата добавления']),
+    languages,
     developers: devs,
     complexes,
   })

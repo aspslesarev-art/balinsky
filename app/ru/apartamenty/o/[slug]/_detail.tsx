@@ -17,7 +17,7 @@ import { ApartmentCard, type ApartmentCardData } from '@/components/ApartmentCar
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { distanceKm as haversineKm } from '@/lib/competitor-utils'
 import { getDeveloperStats } from '@/lib/developer-stats'
-import { loadAllVideos } from '@/lib/videos'
+import { loadAllVideos, matchesLang as videoMatchesLang } from '@/lib/videos'
 import { VideoGrid } from '@/components/VideoGrid'
 import { InvestmentWidget } from '@/components/InvestmentWidget'
 import { RentalCompareSection } from '@/components/RentalCompareSection'
@@ -355,8 +355,9 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
   ])
   const GMAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? ''
 
-  // Videos for parent complex (or empty)
-  const allVideos = await loadAllVideos().catch(() => [])
+  // Videos for parent complex (or empty), filtered by site language.
+  const allVideos = (await loadAllVideos().catch(() => []))
+    .filter(v => videoMatchesLang(v, lang))
   const aptVideos = parentComplex?.slug
     ? allVideos.filter(v => v.complexes.some(c => c.slug === parentComplex.slug)).slice(0, 6)
     : []

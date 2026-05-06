@@ -532,7 +532,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
 
   const ready = readiness(d)
   const otherComplexes = await loadOtherComplexesInDistrict(district, c.airtable_id)
-  const complexVideos = await loadVideosByComplexSlug(slug, 6).catch(() => [])
+  const complexVideos = await loadVideosByComplexSlug(slug, 6, lang).catch(() => [])
 
   const faqItems = copy.faq(name, district, lease)
   const faqJsonLd = {

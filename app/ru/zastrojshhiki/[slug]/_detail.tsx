@@ -286,7 +286,7 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
     loadAllNews().catch(() => []),
     loadAllPromo().catch(() => []),
     loadAllEvents().catch(() => []),
-    loadVideosByDeveloperWithComplexes(slug, complexSlugs, 12).catch(() => []),
+    loadVideosByDeveloperWithComplexes(slug, complexSlugs, 12, lang).catch(() => []),
   ])
   const devNews = allNews.filter(n => n.developers.some(d => d.slug === slug)).slice(0, 4)
   const devPromo = allPromo.filter(p => p.developers.some(d => d.slug === slug)).slice(0, 4)

@@ -33,7 +33,7 @@ import { getDeveloperStats } from '@/lib/developer-stats'
 import { PriceCtaCard } from '@/components/PriceCtaCard'
 import { InlinePrice } from '@/components/InlinePrice'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
-import { loadAllVideos } from '@/lib/videos'
+import { loadAllVideos, matchesLang as videoMatchesLang } from '@/lib/videos'
 import { loadVillaStyles } from '@/lib/villa-styles'
 import { findActiveReservation } from '@/lib/reservations'
 import { VideoGrid } from '@/components/VideoGrid'
@@ -443,8 +443,11 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
     ? await loadManagersByDeveloperSlug(developer.slug)
     : await loadManagersByDeveloperName(developerName)
 
-  // Videos: prefer videos for parent complex, else for developer
-  const allVideos = await loadAllVideos().catch(() => [])
+  // Videos: prefer videos for parent complex, else for developer.
+  // Filter by site language so an EN visitor doesn't see RU-only
+  // videos (and vice versa); un-tagged videos pass through.
+  const allVideos = (await loadAllVideos().catch(() => []))
+    .filter(v => videoMatchesLang(v, lang))
   const videos = (() => {
     if (parentComplex?.slug) {
       const byComplex = allVideos.filter(v => v.complexes.some(c => c.slug === parentComplex.slug)).slice(0, 6)

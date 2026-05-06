@@ -1,3 +1,5 @@
+import type { Lang } from './i18n'
+
 export type VideoLink = { name: string; slug: string | null }
 export type VideoItem = {
   id: string
@@ -5,6 +7,10 @@ export type VideoItem = {
   url: string
   embedUrl: string | null
   addedAt: string | null
+  // Languages this video is for: 'ru', 'en'. Empty array = applies to
+  // both (default for un-tagged legacy rows so they stay visible while
+  // editors backfill).
+  languages: string[]
   developers: VideoLink[]
   complexes: VideoLink[]
 }
@@ -37,25 +43,36 @@ export async function loadAllVideos(): Promise<VideoItem[]> {
   return _inflight
 }
 
-export async function loadVideosByDeveloperSlug(slug: string, limit = 12): Promise<VideoItem[]> {
-  const all = await loadAllVideos()
-  return all.filter(v => v.developers.some(d => d.slug === slug)).slice(0, limit)
+// A video is shown on a given site language if it's tagged for that
+// language, or if it has no language tag at all (treated as universal
+// — keeps un-tagged legacy rows visible).
+export function matchesLang(v: VideoItem, lang: Lang | undefined): boolean {
+  if (!lang) return true
+  if (!Array.isArray(v.languages) || v.languages.length === 0) return true
+  return v.languages.includes(lang)
 }
-export async function loadVideosByComplexSlug(slug: string, limit = 6): Promise<VideoItem[]> {
+
+export async function loadVideosByDeveloperSlug(slug: string, limit = 12, lang?: Lang): Promise<VideoItem[]> {
   const all = await loadAllVideos()
-  return all.filter(v => v.complexes.some(c => c.slug === slug)).slice(0, limit)
+  return all.filter(v => v.developers.some(d => d.slug === slug) && matchesLang(v, lang)).slice(0, limit)
+}
+export async function loadVideosByComplexSlug(slug: string, limit = 6, lang?: Lang): Promise<VideoItem[]> {
+  const all = await loadAllVideos()
+  return all.filter(v => v.complexes.some(c => c.slug === slug) && matchesLang(v, lang)).slice(0, limit)
 }
 // Inheritance: developer page also shows videos of all this developer's complexes.
 export async function loadVideosByDeveloperWithComplexes(
   developerSlug: string,
   complexSlugsOfDeveloper: string[],
   limit = 12,
+  lang?: Lang,
 ): Promise<VideoItem[]> {
   const all = await loadAllVideos()
   const complexSet = new Set(complexSlugsOfDeveloper)
   const seen = new Set<string>()
   const out: VideoItem[] = []
   for (const v of all) {
+    if (!matchesLang(v, lang)) continue
     const matchDev = v.developers.some(d => d.slug === developerSlug)
     const matchComplex = v.complexes.some(c => c.slug && complexSet.has(c.slug))
     if (!matchDev && !matchComplex) continue
