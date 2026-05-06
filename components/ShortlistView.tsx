@@ -168,13 +168,32 @@ export function ShortlistView({ lang }: { lang: Lang }) {
       },
     },
   ]
-  // Compute the winning value for a directional row across a section.
-  // null when fewer than 2 items have a value (no contest = no badge).
-  const bestValueFor = (r: Row, section: WishlistItem[]): number | null => {
-    if (!r.best || !r.num) return null
+  // Classify each cell on a 3-step traffic-light scale: best (cheapest
+  // price, longest lease, biggest area, etc.), worst (the opposite),
+  // middle (everything in between). Returns 'neutral' for non-
+  // directional rows or when fewer than 2 items carry a value or all
+  // values tie.
+  type Verdict = 'best' | 'middle' | 'worst' | 'neutral'
+  const verdictFor = (r: Row, item: WishlistItem, section: WishlistItem[]): Verdict => {
+    if (!r.best || !r.num) return 'neutral'
+    const num = r.num(item)
+    if (num == null || !Number.isFinite(num)) return 'neutral'
     const nums = section.map(r.num).filter((v): v is number => v != null && Number.isFinite(v))
-    if (nums.length < 2) return null
-    return r.best === 'min' ? Math.min(...nums) : Math.max(...nums)
+    if (nums.length < 2) return 'neutral'
+    const winning = r.best === 'min' ? Math.min(...nums) : Math.max(...nums)
+    const losing  = r.best === 'min' ? Math.max(...nums) : Math.min(...nums)
+    if (winning === losing) return 'neutral'
+    if (num === winning) return 'best'
+    if (num === losing)  return 'worst'
+    return 'middle'
+  }
+  const verdictTextClass = (v: Verdict): string => {
+    switch (v) {
+      case 'best':   return 'font-semibold text-[var(--color-primary)]'
+      case 'middle': return 'font-medium text-[#92400E]'
+      case 'worst':  return 'font-medium text-[#B91C1C]'
+      case 'neutral': return 'text-[var(--color-text)]'
+    }
   }
 
   // Three render shapes. Villas / apartments share enough fields to
@@ -289,18 +308,16 @@ export function ShortlistView({ lang }: { lang: Lang }) {
                           {filledRows.map(r => {
                             const v = r.cell(it)
                             const lines = v != null ? v.split('\n') : []
-                            const winning = bestValueFor(r, realEstate)
-                            const num = r.num?.(it)
-                            const isBest = winning != null && num != null && num === winning
+                            const verdict = verdictFor(r, it, realEstate)
                             return (
                               <div key={r.key} className="flex items-start justify-between gap-3 py-2">
                                 <dt className="text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] shrink-0 pt-0.5">
                                   {r.label}
                                 </dt>
-                                <dd className={`text-[13px] text-right ${isBest ? 'font-semibold text-[var(--color-primary)]' : 'text-[var(--color-text)]'}`}>
+                                <dd className={`text-[13px] text-right ${verdictTextClass(verdict)}`}>
                                   <span className="inline-flex items-center gap-1.5 justify-end">
                                     {lines[0]}
-                                    {isBest && (
+                                    {verdict === 'best' && (
                                       <Sparkle size={12} fill="currentColor" strokeWidth={0} aria-label={c.bestLabel} />
                                     )}
                                   </span>
@@ -359,7 +376,6 @@ export function ShortlistView({ lang }: { lang: Lang }) {
                     </thead>
                     <tbody>
                       {rows.filter(r => realEstate.some(it => r.cell(it))).map(r => {
-                        const winning = bestValueFor(r, realEstate)
                         return (
                           <tr key={r.key}>
                             <td className="sticky left-0 bg-[var(--color-bg)] z-10 text-[10px] md:text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] py-2 md:py-3 align-top pr-2">
@@ -367,8 +383,7 @@ export function ShortlistView({ lang }: { lang: Lang }) {
                             </td>
                             {realEstate.map(it => {
                               const v = r.cell(it)
-                              const num = r.num?.(it)
-                              const isBest = winning != null && num != null && num === winning
+                              const verdict = verdictFor(r, it, realEstate)
                               // Cells with a "\n" want a stacked
                               // primary line + muted secondary line —
                               // the developer row uses this to put
@@ -377,10 +392,10 @@ export function ShortlistView({ lang }: { lang: Lang }) {
                               return (
                                 <td key={`${r.key}-${it.kind}:${it.slug}`} className="text-[13px] md:text-[14px] py-2 md:py-3 align-top">
                                   {v != null ? (
-                                    <span className={`inline-flex flex-col items-start gap-0.5 ${isBest ? 'font-semibold text-[var(--color-primary)]' : 'text-[var(--color-text)]'}`}>
+                                    <span className={`inline-flex flex-col items-start gap-0.5 ${verdictTextClass(verdict)}`}>
                                       <span className="inline-flex items-center gap-1.5">
                                         {lines[0]}
-                                        {isBest && (
+                                        {verdict === 'best' && (
                                           <Sparkle size={12} fill="currentColor" strokeWidth={0} aria-label={c.bestLabel} />
                                         )}
                                       </span>
