@@ -17,7 +17,9 @@ const COPY = {
     home: 'Главная',
     crumb: 'Избранное',
     h1: 'Избранное',
-    intro: 'Виллы и апартаменты сравниваются в одной таблице. Жилые комплексы — отдельным списком. ✦ — лучший показатель в строке (минимальная цена, длиннее лизхолд, выше доходность и так далее).',
+    intro: 'Виллы и апартаменты в продаже сравниваются в таблице. Жилые комплексы и долгосрочная аренда — отдельными блоками карточек. ✦ — лучший показатель в строке (минимальная цена, длиннее лизхолд, выше доходность и так далее).',
+    sectionRental: 'Долгосрочная аренда',
+    perMonth: '/ мес',
     bestLabel: 'Лучший показатель в строке',
     sectionRealEstate: 'Виллы и апартаменты',
     sectionComplexes: 'Жилые комплексы',
@@ -47,7 +49,9 @@ const COPY = {
     home: 'Home',
     crumb: 'Shortlist',
     h1: 'Shortlist',
-    intro: 'Villas and apartments compare side-by-side in one table. Complexes show as a card list. ✦ marks the best value in each row (lowest price, longest lease, highest yield and so on).',
+    intro: 'Villas and apartments for sale compare in one table. Residential complexes and long-term rentals get their own card blocks. ✦ marks the best value in each row (lowest price, longest lease, highest yield and so on).',
+    sectionRental: 'Long-term rental',
+    perMonth: '/ mo',
     bestLabel: 'Best in row',
     sectionRealEstate: 'Villas & apartments',
     sectionComplexes: 'Residential complexes',
@@ -171,11 +175,14 @@ export function ShortlistView({ lang }: { lang: Lang }) {
     return r.best === 'min' ? Math.min(...nums) : Math.max(...nums)
   }
 
-  // Two sections with different render shapes. Villas / apartments
-  // share enough fields to compare side-by-side; complexes sell phases
-  // and unit ranges so they render as plain cards instead.
-  const realEstate = items.filter(i => i.kind === 'villa' || i.kind === 'apartment' || i.kind === 'rental')
+  // Three render shapes. Villas / apartments share enough fields to
+  // compare side-by-side. Complexes sell phases and unit ranges, so
+  // they render as plain cards. Rentals have a different price unit
+  // (per month) and shorter spec set, so they render as their own
+  // card list too.
+  const realEstate = items.filter(i => i.kind === 'villa' || i.kind === 'apartment')
   const complexes  = items.filter(i => i.kind === 'complex')
+  const rentals    = items.filter(i => i.kind === 'rental')
 
   // Build the shareable Telegram message — one URL per saved item so the
   // recipient can tap straight into each detail page.
@@ -391,6 +398,60 @@ export function ShortlistView({ lang }: { lang: Lang }) {
                             <div className="text-[13px] text-[var(--color-text-muted)] flex items-center gap-3 flex-wrap">
                               {item.district && <span>{item.district}</span>}
                               {completion && <span>{c.rowCompletion}: {completion}</span>}
+                            </div>
+                          </div>
+                        </Link>
+                        <button
+                          type="button"
+                          aria-label={c.remove}
+                          onClick={() => remove(item.kind, item.slug)}
+                          className="absolute top-3 right-3 z-10 inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/85 backdrop-blur-sm hover:bg-white text-[#1A1F1C] shadow-[0_1px_3px_rgba(0,0,0,0.12)]"
+                        >
+                          <X size={16} />
+                        </button>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </section>
+            )}
+
+            {rentals.length > 0 && (
+              <section className="mb-10">
+                <h2 className="text-[18px] md:text-[20px] font-semibold text-[var(--color-text)] mb-4">
+                  {c.sectionRental}
+                  <span className="text-[var(--color-text-muted)] font-normal ml-2">· {rentals.length}</span>
+                </h2>
+                <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {rentals.map(item => {
+                    const price = item.priceUsd != null && Number.isFinite(item.priceUsd)
+                      ? formatPrice(item.priceUsd, currency)
+                      : null
+                    return (
+                      <li key={`${item.kind}:${item.slug}`} className="relative">
+                        <Link
+                          href={detailHref(item, lang)}
+                          className="block bg-white rounded-2xl border border-[var(--color-border)] overflow-hidden no-underline text-[var(--color-text)] hover:border-[var(--color-primary)] transition-colors"
+                        >
+                          <div className="aspect-[4/3] bg-[var(--color-search-bg)]">
+                            {item.photo ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={item.photo} alt={item.title} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-3xl">🏝️</div>
+                            )}
+                          </div>
+                          <div className="p-4">
+                            <h3 className="text-[16px] font-semibold leading-snug mb-2 line-clamp-2">{item.title}</h3>
+                            {price && (
+                              <div className="text-[15px] font-semibold mb-1">
+                                {price}
+                                <span className="text-[12px] font-normal text-[var(--color-text-muted)]"> {c.perMonth}</span>
+                              </div>
+                            )}
+                            <div className="text-[13px] text-[var(--color-text-muted)] flex items-center gap-3 flex-wrap">
+                              {item.bedrooms != null && <span>{item.bedrooms} {c.bedrooms}</span>}
+                              {item.district && <span>{item.district}</span>}
                             </div>
                           </div>
                         </Link>

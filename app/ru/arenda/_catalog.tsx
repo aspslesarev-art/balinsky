@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { BedDouble, MapPin, X } from 'lucide-react'
 import { FilterDropdown } from '@/components/FilterDropdown'
 import { useCurrency } from '@/components/CurrencyContext'
+import { WishlistButton } from '@/components/WishlistButton'
 import { formatPrice, type Currency } from '@/lib/currency'
 import type { RentalItem } from '@/lib/rental'
 import { PhotoSlider } from '@/components/PhotoSlider'
@@ -534,7 +535,19 @@ function RentalCard({ r, currency, lang, perMonth, bali }: {
       href={detailHref}
       className="group block bg-[var(--color-card-bg)] rounded-2xl border border-[var(--color-border)] overflow-hidden no-underline text-[#111827]"
     >
-      <PhotoSlider photos={r.photos} alt={r.title} trackingId={`rental:${r.slug}`} />
+      <div className="relative">
+        <PhotoSlider photos={r.photos} alt={r.title} trackingId={`rental:${r.slug}`} />
+        <WishlistButton
+          className="absolute top-3 right-3 z-10"
+          item={{
+            kind: 'rental', slug: r.slug, title: r.title,
+            photo: r.photos?.[0] ?? null,
+            priceUsd: r.priceMonthUsd,
+            district: r.location ?? null,
+            bedrooms: r.bedrooms ?? null,
+          }}
+        />
+      </div>
 
       <div className="p-6">
         <h3

@@ -126,7 +126,17 @@ export async function RentalDetail({ slug, lang }: { slug: string; lang: Lang })
 
         {r.photos.length > 0 && (
           <section className="mb-6 mt-2">
-            <PhotoGalleryHero photos={r.photos} alt={r.title} />
+            <PhotoGalleryHero
+              photos={r.photos}
+              alt={r.title}
+              wishlistItem={{
+                kind: 'rental', slug: r.slug, title: r.title,
+                photo: r.photos[0] ?? null,
+                priceUsd: r.priceMonthUsd,
+                district: r.location ?? null,
+                bedrooms: r.bedrooms ?? null,
+              }}
+            />
           </section>
         )}
 
