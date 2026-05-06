@@ -20,6 +20,7 @@ import { getDeveloperStats } from '@/lib/developer-stats'
 import { loadAllVideos } from '@/lib/videos'
 import { VideoGrid } from '@/components/VideoGrid'
 import { InvestmentWidget } from '@/components/InvestmentWidget'
+import { RoiCalculator } from '@/components/RoiCalculator'
 import { RentalCompareSection } from '@/components/RentalCompareSection'
 import { ManagerCard } from '@/components/ManagerCard'
 import { loadManagerByDeveloperName } from '@/lib/managers'
@@ -602,6 +603,18 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
         )}
 
         {manager && <ManagerCard manager={manager} developerName={devName} />}
+
+        {priceNum != null && (
+          <RoiCalculator
+            priceUsd={priceNum}
+            district={district}
+            claimedYieldPct={(() => {
+              const y = numberOrNull(d['Заявленная доходность'])
+              return y != null ? Math.round(y * 1000) / 10 : null
+            })()}
+            lang={lang}
+          />
+        )}
 
         {lat != null && lng != null && (
           <InvestmentWidget villaId={a.airtable_id} apiKey={GMAPS_KEY} kind="apartment" />
