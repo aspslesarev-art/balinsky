@@ -26,6 +26,7 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
     {
       title: 'Информация',
       links: [
+        { label: 'Инвест-тур', href: '/ru/invest-tour' },
         { label: 'Как купить на Бали', href: '/ru/kak-kupit' },
         { label: 'Бронирование', href: '/ru/rezervirovanie' },
         { label: 'Новости', href: '/ru/novosti' },
@@ -67,6 +68,7 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
     {
       title: 'Information',
       links: [
+        { label: 'Invest tour', href: '/en/invest-tour' },
         { label: 'How to buy in Bali', href: '/en/how-to-buy' },
         { label: 'Reservation', href: '/en/reservation' },
         { label: 'News', href: '/en/news' },
