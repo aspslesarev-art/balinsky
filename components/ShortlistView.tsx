@@ -30,6 +30,7 @@ const COPY = {
     clear: 'Очистить всё',
     sendToBot: 'Отправить в Telegram',
     downloadPdf: 'Скачать PDF',
+    pdfTooMany: (max: number) => `PDF доступен для подборок до ${max} объектов — уберите лишнее`,
     remove: 'Убрать',
     pdfModalTitle: 'Скачать подборку',
     pdfModalIntro: 'Выберите формат и вариант. Горизонтальный — для экрана, вертикальный — под телефон.',
@@ -82,6 +83,7 @@ const COPY = {
     clear: 'Clear all',
     sendToBot: 'Send to Telegram',
     downloadPdf: 'Download PDF',
+    pdfTooMany: (max: number) => `PDF is available for shortlists up to ${max} listings — remove some first`,
     remove: 'Remove',
     pdfModalTitle: 'Download shortlist',
     pdfModalIntro: 'Pick a format. Landscape suits screens, portrait suits phones.',
@@ -144,6 +146,11 @@ export function ShortlistView({ lang }: { lang: Lang }) {
   const c = COPY[lang]
   const home = lang === 'en' ? '/en' : '/ru'
   const [downloadOpen, setDownloadOpen] = useState(false)
+  // Cap PDF generation at a length where the comparison table still
+  // fits one landscape page (5 columns) — beyond that we'd be paginating
+  // the comparison and the per-listing pages bloat the file too.
+  const PDF_MAX_ITEMS = 5
+  const pdfDisabled = items.length > PDF_MAX_ITEMS
 
   const fmt = (v: number | null | undefined) =>
     v != null && Number.isFinite(v) ? formatPrice(v, currency) : null
@@ -380,7 +387,9 @@ export function ShortlistView({ lang }: { lang: Lang }) {
               <button
                 type="button"
                 onClick={() => setDownloadOpen(true)}
-                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[12px] sm:text-[13px] font-medium"
+                disabled={pdfDisabled}
+                title={pdfDisabled ? c.pdfTooMany(PDF_MAX_ITEMS) : undefined}
+                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[12px] sm:text-[13px] font-medium disabled:bg-[var(--color-border)] disabled:hover:bg-[var(--color-border)] disabled:text-[var(--color-text-muted)] disabled:cursor-not-allowed"
                 aria-label={c.downloadPdf}
               >
                 <Download size={14} /> {c.downloadPdf}
@@ -403,6 +412,12 @@ export function ShortlistView({ lang }: { lang: Lang }) {
             </div>
           )}
         </div>
+
+        {ready && pdfDisabled && (
+          <div className="text-[12px] text-[var(--color-text-muted)] mb-4 -mt-3">
+            {c.pdfTooMany(PDF_MAX_ITEMS)}
+          </div>
+        )}
 
         {!ready ? null : items.length === 0 ? (
           <div className="rounded-2xl border border-[var(--color-border)] bg-white px-6 py-12 text-center">
