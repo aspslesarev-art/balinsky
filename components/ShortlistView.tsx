@@ -133,8 +133,12 @@ export function ShortlistView({ lang }: { lang: Lang }) {
       best: 'min', num: it => it.priceUsd ?? null },
     { key: 'priceM2',    label: c.rowPriceM2,    cell: it => fmt(it.pricePerSqmUsd),
       best: 'min', num: it => it.pricePerSqmUsd ?? null },
+    // "Цена м² в год" = price per m² divided by remaining leasehold
+    // years — your effective annual cost per square metre of holding
+    // the lease. Min wins: you pay less per m² per year. (Not rental
+    // revenue — that one would be max-better.)
     { key: 'priceM2Year', label: c.rowPriceM2Year, cell: it => fmt(it.pricePerSqmYearUsd),
-      best: 'max', num: it => it.pricePerSqmYearUsd ?? null },
+      best: 'min', num: it => it.pricePerSqmYearUsd ?? null },
     { key: 'yield',      label: c.rowYield,      cell: it => it.claimedYieldPct != null ? `${it.claimedYieldPct}%` : null,
       best: 'max', num: it => it.claimedYieldPct ?? null },
     { key: 'lease',      label: c.rowLease,      cell: it => it.leaseYears != null ? `${it.leaseYears} ${c.years}` : null,
