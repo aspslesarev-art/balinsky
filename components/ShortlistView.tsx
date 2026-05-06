@@ -127,6 +127,12 @@ export function ShortlistView({ lang }: { lang: Lang }) {
     cell: (it: WishlistItem) => string | null;
     best?: 'min' | 'max';
     num?: (it: WishlistItem) => number | null;
+    // Minimum relative deviation from the "best" value before a cell
+    // can be classified as "worst". Default 0.10 (=10%) so a 1900 vs
+    // 2000 m² price spread doesn't get the more expensive one painted
+    // red just for being 5% above. Year-like metrics override to 0
+    // because absolute years matter more than relative %.
+    worstMinRelDev?: number
   }
   const rows: Row[] = [
     { key: 'price',      label: c.rowPrice,      cell: it => fmt(it.priceUsd),
@@ -150,7 +156,9 @@ export function ShortlistView({ lang }: { lang: Lang }) {
     // equivalent (anything already delivered is just "delivered").
     // Clamp past values to current year so 2024 and 2025 read the
     // same as 2026 and don't accidentally rank against each other;
-    // future years rank later = worse.
+    // future years rank later = worse. worstMinRelDev: 0 because a
+    // 1-year delta is meaningful but is only 0.05% relative to year
+    // numbers — the percentage gate would always fail.
     { key: 'completion', label: c.rowCompletion,
       cell: it => it.completionYear ?? null,
       best: 'min',
@@ -160,7 +168,8 @@ export function ShortlistView({ lang }: { lang: Lang }) {
         if (!Number.isFinite(y)) return null
         const now = new Date().getFullYear()
         return Math.max(y, now)
-      } },
+      },
+      worstMinRelDev: 0 },
     { key: 'bedrooms',   label: c.rowBedrooms,   cell: it => it.bedrooms != null ? String(it.bedrooms) : null },
     { key: 'area',       label: c.rowArea,       cell: it => it.area != null ? `${it.area} ${c.sqm}` : null,
       best: 'max', num: it => it.area ?? null },
@@ -186,11 +195,11 @@ export function ShortlistView({ lang }: { lang: Lang }) {
       },
     },
   ]
-  // Classify each cell on a 3-step traffic-light scale: best (cheapest
-  // price, longest lease, biggest area, etc.), worst (the opposite),
-  // middle (everything in between). Returns 'neutral' for non-
-  // directional rows or when fewer than 2 items carry a value or all
-  // values tie.
+  // Classify each cell on a 3-step traffic-light scale based on its
+  // position within the row's spread. Tightly-grouped values (e.g.
+  // 1900 vs 2000 — 5% apart) shouldn't paint the higher one red just
+  // because it ranks last; a meaningful relative gap from the best
+  // value is required (default 10%, overridable per row).
   type Verdict = 'best' | 'middle' | 'worst' | 'neutral'
   const verdictFor = (r: Row, item: WishlistItem, section: WishlistItem[]): Verdict => {
     if (!r.best || !r.num) return 'neutral'
@@ -198,11 +207,23 @@ export function ShortlistView({ lang }: { lang: Lang }) {
     if (num == null || !Number.isFinite(num)) return 'neutral'
     const nums = section.map(r.num).filter((v): v is number => v != null && Number.isFinite(v))
     if (nums.length < 2) return 'neutral'
-    const winning = r.best === 'min' ? Math.min(...nums) : Math.max(...nums)
-    const losing  = r.best === 'min' ? Math.max(...nums) : Math.min(...nums)
-    if (winning === losing) return 'neutral'
-    if (num === winning) return 'best'
-    if (num === losing)  return 'worst'
+    const min = Math.min(...nums)
+    const max = Math.max(...nums)
+    if (min === max) return 'neutral'
+    const bestVal  = r.best === 'min' ? min : max
+    const gap = max - min
+    // Position 0 = at best; 1 = at worst.
+    const pos = Math.abs(num - bestVal) / gap
+    // "Best" — at the best value, or close to it (within 20% of the
+    // spread). This covers cases like 1900/1950 where both are
+    // effectively cheapest.
+    if (pos <= 0.20) return 'best'
+    // "Worst" — high in the spread AND meaningfully far from best.
+    // The relative gate stops a 5% spread from painting anything red;
+    // override `worstMinRelDev` per row when % isn't the right unit.
+    const minRel = r.worstMinRelDev ?? 0.10
+    const relDev = bestVal !== 0 ? Math.abs(num - bestVal) / Math.abs(bestVal) : Infinity
+    if (pos >= 0.80 && relDev >= minRel) return 'worst'
     return 'middle'
   }
   const verdictTextClass = (v: Verdict): string => {
