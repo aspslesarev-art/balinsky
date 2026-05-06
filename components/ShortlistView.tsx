@@ -1,7 +1,8 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Heart, X, Trash2, Send, Sparkle } from 'lucide-react'
+import { Heart, X, Trash2, Send, Sparkle, Download, Loader2, UserRound, ChevronLeft } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
@@ -28,7 +29,25 @@ const COPY = {
     countOne: 'объект', countFew: 'объекта', countMany: 'объектов',
     clear: 'Очистить всё',
     sendToBot: 'Отправить в Telegram',
+    downloadPdf: 'Скачать PDF',
     remove: 'Убрать',
+    pdfModalTitle: 'Скачать подборку',
+    pdfModalIntro: 'Выберите формат и вариант. Горизонтальный — для экрана, вертикальный — под телефон.',
+    pdfOrientLandscape: 'Горизонтально',
+    pdfOrientPortrait: 'Для телефона',
+    pdfSimple: 'Скачать',
+    pdfSimpleNote: 'PDF с карточками объектов и таблицей сравнения',
+    pdfAgent: 'Скачать для агента',
+    pdfAgentNote: 'На последней странице — ваши имя, Telegram и WhatsApp',
+    pdfBack: 'К выбору варианта',
+    pdfAgentIntro: 'Ваши контакты попадут на последнюю страницу PDF — клиент сможет связаться напрямую.',
+    pdfFieldName: 'Имя',
+    pdfFieldTg: 'Telegram',
+    pdfFieldWa: 'WhatsApp',
+    pdfBuilding: 'Собираем PDF…',
+    pdfNeedContact: 'Укажите Telegram или WhatsApp — хотя бы один контакт.',
+    pdfError: 'Не получилось собрать PDF. Попробуйте ещё раз.',
+    pdfClose: 'Закрыть',
     villasLink: 'К виллам',
     apartmentsLink: 'К апартаментам',
     complexesLink: 'К жилым комплексам',
@@ -62,7 +81,25 @@ const COPY = {
     countOne: 'item', countFew: 'items', countMany: 'items',
     clear: 'Clear all',
     sendToBot: 'Send to Telegram',
+    downloadPdf: 'Download PDF',
     remove: 'Remove',
+    pdfModalTitle: 'Download shortlist',
+    pdfModalIntro: 'Pick a format. Landscape suits screens, portrait suits phones.',
+    pdfOrientLandscape: 'Landscape',
+    pdfOrientPortrait: 'Portrait',
+    pdfSimple: 'Download',
+    pdfSimpleNote: 'PDF with listing cards and a comparison table',
+    pdfAgent: 'Download for agent',
+    pdfAgentNote: 'Last page carries your name, Telegram and WhatsApp',
+    pdfBack: 'Back to options',
+    pdfAgentIntro: 'Your contacts go onto the last page of the PDF — the client can reach you directly.',
+    pdfFieldName: 'Name',
+    pdfFieldTg: 'Telegram',
+    pdfFieldWa: 'WhatsApp',
+    pdfBuilding: 'Building PDF…',
+    pdfNeedContact: 'Add Telegram or WhatsApp — at least one contact.',
+    pdfError: 'Could not build the PDF. Please try again.',
+    pdfClose: 'Close',
     villasLink: 'Browse villas',
     apartmentsLink: 'Browse apartments',
     complexesLink: 'Browse complexes',
@@ -106,6 +143,7 @@ export function ShortlistView({ lang }: { lang: Lang }) {
   const { currency } = useCurrency()
   const c = COPY[lang]
   const home = lang === 'en' ? '/en' : '/ru'
+  const [downloadOpen, setDownloadOpen] = useState(false)
 
   const fmt = (v: number | null | undefined) =>
     v != null && Number.isFinite(v) ? formatPrice(v, currency) : null
@@ -339,11 +377,19 @@ export function ShortlistView({ lang }: { lang: Lang }) {
           </div>
           {ready && items.length > 0 && (
             <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={() => setDownloadOpen(true)}
+                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[12px] sm:text-[13px] font-medium"
+                aria-label={c.downloadPdf}
+              >
+                <Download size={14} /> {c.downloadPdf}
+              </button>
               <a
                 href={shareHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[12px] sm:text-[13px] font-medium no-underline"
+                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full border border-[var(--color-border)] hover:border-[var(--color-text-muted)] text-[var(--color-text)] text-[12px] sm:text-[13px] font-medium no-underline"
               >
                 <Send size={14} /> {c.sendToBot}
               </a>
@@ -667,6 +713,250 @@ export function ShortlistView({ lang }: { lang: Lang }) {
 
         <div className="h-16" />
       </PageContainer>
+
+      {downloadOpen && (
+        <DownloadShortlistModal
+          items={items}
+          lang={lang}
+          c={c}
+          onClose={() => setDownloadOpen(false)}
+        />
+      )}
     </>
+  )
+}
+
+// Modal mirrors the villa presentation download flow: pick orientation,
+// pick "simple" vs "agent" variant, and trigger the lazy PDF build. We
+// duplicate it here (rather than re-using VillaPresentation's modal)
+// because the data shape and PDF builder are different.
+function DownloadShortlistModal({
+  items, lang, c, onClose,
+}: {
+  items: WishlistItem[]
+  lang: Lang
+  c: typeof COPY[Lang]
+  onClose: () => void
+}) {
+  const [mode, setMode] = useState<'choose' | 'agent'>('choose')
+  const [orientation, setOrientation] = useState<'landscape' | 'portrait'>('landscape')
+  const [name, setName] = useState('')
+  const [telegram, setTelegram] = useState('')
+  const [whatsapp, setWhatsapp] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const trimmedName = name.trim()
+  const trimmedTg = telegram.trim()
+  const trimmedWa = whatsapp.trim()
+  const canSubmitAgent = trimmedName.length > 0 && (trimmedTg.length > 0 || trimmedWa.length > 0) && !busy
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && !busy) onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose, busy])
+
+  const downloadSimple = async () => {
+    setBusy(true)
+    setError(null)
+    try {
+      const { downloadShortlistPdf } = await import('./ShortlistPdf')
+      await downloadShortlistPdf(items, null, orientation, lang)
+      onClose()
+    } catch (e) {
+      console.error(e)
+      setError(c.pdfError)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const submitAgent = async () => {
+    if (!canSubmitAgent) return
+    setBusy(true)
+    setError(null)
+    try {
+      const { downloadShortlistPdf } = await import('./ShortlistPdf')
+      await downloadShortlistPdf(
+        items,
+        { name: trimmedName, telegram: trimmedTg, whatsapp: trimmedWa },
+        orientation,
+        lang,
+      )
+      onClose()
+    } catch (e) {
+      console.error(e)
+      setError(c.pdfError)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 px-4"
+      onClick={() => { if (!busy) onClose() }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="shortlist-download-title"
+    >
+      <div
+        className="w-full max-w-md rounded-3xl bg-white p-6 md:p-8 shadow-xl"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-3 mb-1">
+          <h3 id="shortlist-download-title" className="text-[20px] md:text-[22px] font-semibold tracking-tight text-[#111827]">
+            {c.pdfModalTitle}
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={busy}
+            aria-label={c.pdfClose}
+            className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-full bg-black/5 hover:bg-black/10 text-[#111827] disabled:opacity-50"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        {mode === 'choose' ? (
+          <>
+            <p className="text-[13px] text-[var(--color-text-muted)] mb-4">{c.pdfModalIntro}</p>
+            <div className="mb-4 inline-flex w-full rounded-full border border-[var(--color-border)] p-1 bg-[var(--color-search-bg)]">
+              {([
+                { v: 'landscape', label: c.pdfOrientLandscape },
+                { v: 'portrait',  label: c.pdfOrientPortrait },
+              ] as const).map(opt => {
+                const isActive = orientation === opt.v
+                return (
+                  <button
+                    key={opt.v}
+                    type="button"
+                    onClick={() => setOrientation(opt.v)}
+                    disabled={busy}
+                    className={`flex-1 rounded-full px-4 py-2 text-[13px] font-medium transition-colors ${
+                      isActive
+                        ? 'bg-white text-[#111827] shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
+                        : 'text-[var(--color-text-muted)] hover:text-[#111827]'
+                    } disabled:opacity-50`}
+                  >
+                    {opt.label}
+                  </button>
+                )
+              })}
+            </div>
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={downloadSimple}
+                disabled={busy}
+                className="w-full text-left rounded-2xl border border-[var(--color-border)] hover:border-[var(--color-primary)] bg-white px-4 py-4 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="shrink-0 w-10 h-10 rounded-xl bg-[var(--color-search-bg)] flex items-center justify-center">
+                    {busy ? <Loader2 size={18} className="animate-spin text-[var(--color-text-muted)]" /> : <Download size={18} className="text-[#111827]" />}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[15px] font-semibold text-[#111827]">{c.pdfSimple}</div>
+                    <div className="text-[12px] text-[var(--color-text-muted)] mt-0.5">{c.pdfSimpleNote}</div>
+                  </div>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode('agent')}
+                disabled={busy}
+                className="w-full text-left rounded-2xl border border-[var(--color-border)] hover:border-[var(--color-primary)] bg-white px-4 py-4 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="shrink-0 w-10 h-10 rounded-xl bg-[var(--color-primary-soft)] flex items-center justify-center">
+                    <UserRound size={18} className="text-[var(--color-primary-pressed)]" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[15px] font-semibold text-[#111827]">{c.pdfAgent}</div>
+                    <div className="text-[12px] text-[var(--color-text-muted)] mt-0.5">{c.pdfAgentNote}</div>
+                  </div>
+                </div>
+              </button>
+            </div>
+            {error && <p className="mt-3 text-[13px] text-[#B91C1C]">{error}</p>}
+          </>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={() => setMode('choose')}
+              disabled={busy}
+              className="text-[12px] text-[var(--color-text-muted)] hover:text-[#111827] inline-flex items-center gap-1 mb-3 disabled:opacity-50"
+            >
+              <ChevronLeft size={13} /> {c.pdfBack}
+            </button>
+            <p className="text-[13px] text-[var(--color-text-muted)] mb-5">{c.pdfAgentIntro}</p>
+            <form
+              onSubmit={e => { e.preventDefault(); submitAgent() }}
+              className="space-y-3"
+            >
+              <PdfField id="sl-name" label={c.pdfFieldName} value={name} onChange={setName} placeholder={lang === 'en' ? 'Andrey' : 'Андрей'} autoFocus required />
+              <PdfField id="sl-telegram" label={c.pdfFieldTg} value={telegram} onChange={setTelegram} placeholder="@username" />
+              <PdfField id="sl-whatsapp" label={c.pdfFieldWa} value={whatsapp} onChange={setWhatsapp} placeholder="+62 812 345 67 89" inputMode="tel" />
+              {!canSubmitAgent && trimmedName.length > 0 && trimmedTg.length === 0 && trimmedWa.length === 0 && !busy && (
+                <p className="text-[12px] text-[var(--color-text-muted)]">{c.pdfNeedContact}</p>
+              )}
+              {error && <p className="text-[13px] text-[#B91C1C]">{error}</p>}
+              <button
+                type="submit"
+                disabled={!canSubmitAgent}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[15px] font-medium px-5 py-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {busy ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    {c.pdfBuilding}
+                  </>
+                ) : (
+                  <>
+                    <Download size={16} />
+                    {c.downloadPdf}
+                  </>
+                )}
+              </button>
+            </form>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function PdfField({
+  id, label, value, onChange, placeholder, autoFocus, required, inputMode,
+}: {
+  id: string
+  label: string
+  value: string
+  onChange: (v: string) => void
+  placeholder?: string
+  autoFocus?: boolean
+  required?: boolean
+  inputMode?: 'text' | 'tel' | 'email' | 'url'
+}) {
+  return (
+    <label htmlFor={id} className="block">
+      <span className="block text-[12px] font-medium text-[var(--color-text-muted)] mb-1.5">
+        {label} {required && <span className="text-[#B91C1C]">*</span>}
+      </span>
+      <input
+        id={id}
+        type="text"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder={placeholder}
+        autoFocus={autoFocus}
+        autoComplete="off"
+        inputMode={inputMode}
+        // 16px font-size suppresses iOS Safari's auto-zoom on focus.
+        className="w-full rounded-xl border border-[var(--color-border)] bg-white px-4 py-3 text-[16px] text-[#111827] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/30 focus:border-[var(--color-primary)]"
+      />
+    </label>
   )
 }
