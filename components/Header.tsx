@@ -26,20 +26,16 @@ export function Header({ active }: { active?: NavKey }) {
 
   return (
     <header className="sticky top-0 z-20 w-full bg-[var(--color-header-bg)] border-b border-[var(--color-border)]">
-      {/* Mobile: 3-col grid (burger | logo | right cluster) so the
-          logo sits exactly in the centre regardless of how wide the
-          right side gets. The 1fr_auto_1fr track keeps the side
-          columns symmetrical, which keeps the centre lined up.
-          Desktop: switches to flex with the original layout — logo
-          left, nav, invest pill, right cluster. */}
+      {/* Mobile shows only burger + right cluster (logo lives inside
+          the dropdown). Desktop is the original flex layout — logo
+          first, nav, invest-pill, right cluster at the end. */}
       <div className="max-w-[1280px] mx-auto px-6 h-[72px]
-        grid grid-cols-[1fr_auto_1fr] items-center gap-2
-        md:flex md:items-center md:justify-between md:gap-6">
+        flex items-center justify-between gap-2 md:gap-6">
 
-        {/* Burger — mobile only, sits at the start of the left column. */}
+        {/* Burger — mobile only, sits at the leading edge of the bar. */}
         <button
           type="button"
-          className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg text-[var(--color-text)] justify-self-start"
+          className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg text-[var(--color-text)]"
           aria-label={open ? 'Закрыть меню' : 'Открыть меню'}
           aria-expanded={open}
           onClick={() => setOpen(v => !v)}
@@ -47,10 +43,10 @@ export function Header({ active }: { active?: NavKey }) {
           {open ? <X size={22} /> : <Menu size={22} />}
         </button>
 
-        {/* Logo — auto-width centre column on mobile, first item on
-            desktop. shrink-0 keeps it from collapsing when the right
-            side gets crowded on tablet widths. */}
-        <Link href="/" className="flex items-center shrink-0" aria-label="Balinsky">
+        {/* Logo — desktop only on the top bar. On mobile it lives at
+            the top of the dropdown menu instead, so the bar reads as
+            burger | controls without a competing brand mark. */}
+        <Link href="/" className="hidden md:flex items-center shrink-0" aria-label="Balinsky">
           <img src="/logo.svg" alt="Balinsky" className="h-10 w-10" />
         </Link>
 
@@ -90,9 +86,9 @@ export function Header({ active }: { active?: NavKey }) {
           {lang === 'en' ? 'Invest tour' : 'Инвест-тур'}
         </Link>
 
-        {/* Right cluster — pinned to end of the right grid column on
-            mobile, ml-auto on desktop pushes it to the right edge. */}
-        <div className="flex items-center gap-2 shrink-0 justify-self-end md:ml-auto lg:ml-2">
+        {/* Right cluster — sits at the trailing edge of the bar via
+            justify-between on mobile, ml-auto on desktop. */}
+        <div className="flex items-center gap-2 shrink-0 md:ml-auto lg:ml-2">
           <WishlistHeaderLink />
           <CurrencyToggle />
           <LangSwitch />
@@ -102,6 +98,18 @@ export function Header({ active }: { active?: NavKey }) {
       {open && (
         <div className="md:hidden border-t border-[var(--color-border)] bg-[var(--color-header-bg)]">
           <div className="max-w-[1280px] mx-auto px-6 py-4 flex flex-col gap-1">
+            {/* Logo at the top of the dropdown — fills the role the
+                top bar's centred logo used to play, keeps the brand
+                visible once the menu is open. */}
+            <Link
+              href="/"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-3 py-3 mb-2 no-underline"
+              aria-label="Balinsky"
+            >
+              <img src="/logo.svg" alt="Balinsky" className="h-10 w-10" />
+              <span className="text-[18px] font-semibold tracking-tight text-[#1A1A1A]">Balinsky</span>
+            </Link>
             {/* Invest-tour leads the mobile menu — premium CTA, full
                 primary color so it reads as the headline action. */}
             <Link
