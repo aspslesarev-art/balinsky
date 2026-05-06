@@ -89,15 +89,33 @@ export async function DevelopersCatalog({
 
   const rows = (devData ?? []) as Row[]
   const canonicalize = (s: string) => s.replace(/\s*\([^)]*\)\s*$/, '').trim().toLowerCase()
+  // Aggregate complex *and* unit counts per developer. Units come
+  // from the complex's "Total quantity of units" field — same lookup
+  // the public detail page uses. Empty/non-numeric values count as 0
+  // so editors with sparse data don't deflate the totals weirdly.
+  const readNumUnits = (v: unknown): number => {
+    if (typeof v === 'number' && Number.isFinite(v) && v > 0) return Math.floor(v)
+    if (typeof v === 'string') {
+      const n = parseInt(v.replace(/[^\d]/g, ''), 10)
+      return Number.isFinite(n) && n > 0 ? n : 0
+    }
+    if (Array.isArray(v) && v.length) return readNumUnits(v[0])
+    return 0
+  }
   const statsByDev = new Map<string, ComplexStats>()
   for (const cr of (complexData ?? []) as { data: Record<string, unknown> }[]) {
     const dev = (cr.data['Developer1'] ?? '').toString().trim()
     if (!dev) continue
     const status = (cr.data['Статус'] ?? cr.data['Готовность'] ?? '').toString()
+    const units = readNumUnits(cr.data['Total quantity of units'])
     const key = canonicalize(dev)
-    const cur = statsByDev.get(key) ?? { total: 0, ready: 0 }
+    const cur = statsByDev.get(key) ?? { total: 0, ready: 0, unitsTotal: 0, unitsReady: 0 }
     cur.total += 1
-    if (/(построен|сдан|готов|complet)/i.test(status)) cur.ready += 1
+    cur.unitsTotal += units
+    if (/(построен|сдан|готов|complet)/i.test(status)) {
+      cur.ready += 1
+      cur.unitsReady += units
+    }
     statsByDev.set(key, cur)
   }
 
@@ -105,7 +123,7 @@ export async function DevelopersCatalog({
     .filter(r => r.data['Публикация'] === true && r.data['SEO:Slug'] && r.data['Developer'])
     .map(r => {
       const name = String(r.data['Developer'])
-      const stats = statsByDev.get(canonicalize(name)) ?? { total: 0, ready: 0 }
+      const stats = statsByDev.get(canonicalize(name)) ?? { total: 0, ready: 0, unitsTotal: 0, unitsReady: 0 }
       const construction = txt(r.data, 'Строительство и недвижимость', lang)
       const reputation = txt(r.data, 'Репутация и опыт', lang)
       const equipment = txt(r.data, 'Техника и производство', lang)
@@ -151,6 +169,8 @@ export async function DevelopersCatalog({
     management,
     complexesReady: stats.ready,
     complexesTotal: stats.total,
+    unitsReady: stats.unitsReady,
+    unitsTotal: stats.unitsTotal,
   }))
 
   return (

@@ -800,6 +800,10 @@ function DownloadShortlistModal({
   c: typeof COPY[Lang]
   onClose: () => void
 }) {
+  // Currency at download time. Threaded into the PDF builder so the
+  // document prints prices in whichever currency the visitor was
+  // browsing in.
+  const { currency } = useCurrency()
   const [mode, setMode] = useState<'choose' | 'agent'>('choose')
   const [orientation, setOrientation] = useState<'landscape' | 'portrait'>('landscape')
   const [name, setName] = useState('')
@@ -823,7 +827,7 @@ function DownloadShortlistModal({
     setError(null)
     try {
       const { downloadShortlistPdf } = await import('./ShortlistPdf')
-      await downloadShortlistPdf(items, null, orientation, lang)
+      await downloadShortlistPdf(items, null, orientation, lang, currency)
       onClose()
     } catch (e) {
       console.error(e)
@@ -844,6 +848,7 @@ function DownloadShortlistModal({
         { name: trimmedName, telegram: trimmedTg, whatsapp: trimmedWa },
         orientation,
         lang,
+        currency,
       )
       onClose()
     } catch (e) {
