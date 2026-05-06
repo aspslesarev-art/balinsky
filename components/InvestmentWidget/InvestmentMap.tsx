@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { APIProvider, Map, useMap } from '@vis.gl/react-google-maps'
+import { APIProvider, Map as GMap, useMap } from '@vis.gl/react-google-maps'
 import { BALINSKY_MAP_STYLE } from '@/lib/google-map-style'
 import type { Snapshot } from './types'
 
@@ -30,16 +30,88 @@ function priceLabel(adr: number): string {
   return String(Math.round(adr))
 }
 
+// Crude HTML escape — we render our own InfoWindow body via setContent,
+// and it goes straight into innerHTML inside Google's iframe-less popup.
+function esc(s: string | null | undefined): string {
+  if (s == null) return ''
+  return String(s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+}
+
+function fmtAdr(n: number): string {
+  return '$' + Math.round(n).toLocaleString('en-US')
+}
+
+function competitorPopupHtml(c: {
+  name?: string | null; complex?: string | null; photo?: string | null;
+  rating?: number | null; reviews?: number | null; bedrooms?: number | null;
+  area?: number | null; adr: number; url?: string | null
+}): string {
+  const title = c.complex || c.name || 'Booking listing'
+  const stars = c.rating != null ? `★ ${c.rating.toFixed(1)}` : ''
+  const reviews = c.reviews != null ? ` · ${c.reviews} отзывов` : ''
+  const beds = c.bedrooms != null ? `${c.bedrooms} BR` : ''
+  const area = c.area != null ? `${c.area} м²` : ''
+  const specs = [beds, area].filter(Boolean).join(' · ')
+  const photo = c.photo
+    ? `<div style="width:100%;height:120px;border-radius:10px;overflow:hidden;margin-bottom:8px;background:#F2EAD8"><img src="${esc(c.photo)}" alt="" style="width:100%;height:100%;object-fit:cover"></div>`
+    : ''
+  const link = c.url
+    ? `<a href="${esc(c.url)}" target="_blank" rel="noopener noreferrer nofollow" style="color:#1D4ED8;text-decoration:none;font-size:12px">Открыть на Booking →</a>`
+    : ''
+  return `
+    <div style="font-family:-apple-system,system-ui,sans-serif;max-width:240px;color:#111827">
+      ${photo}
+      <div style="font-weight:600;font-size:14px;line-height:1.3;margin-bottom:4px">${esc(title)}</div>
+      <div style="font-size:12px;color:#6B7280;margin-bottom:6px">${esc([specs, [stars, reviews].join('').trim()].filter(Boolean).join(' · '))}</div>
+      <div style="font-weight:600;color:#1D4ED8;font-size:15px;margin-bottom:6px">${fmtAdr(c.adr)}<span style="color:#6B7280;font-weight:400;font-size:11px"> / ночь</span></div>
+      ${link}
+    </div>
+  `.trim()
+}
+
+function anchorPopupHtml(a: {
+  name?: string | null; primaryType?: string | null;
+  rating?: number | null; reviews?: number | null;
+  address?: string | null; mapsUrl?: string | null
+}): string {
+  const title = a.name || 'POI'
+  const stars = a.rating != null ? `★ ${a.rating.toFixed(1)}` : ''
+  const reviews = a.reviews != null ? ` · ${a.reviews} отзывов` : ''
+  const cat = a.primaryType ? a.primaryType.replace(/_/g, ' ') : ''
+  const link = a.mapsUrl
+    ? `<a href="${esc(a.mapsUrl)}" target="_blank" rel="noopener noreferrer" style="color:#16A34A;text-decoration:none;font-size:12px">Открыть на Google Maps →</a>`
+    : ''
+  return `
+    <div style="font-family:-apple-system,system-ui,sans-serif;max-width:240px;color:#111827">
+      <div style="font-weight:600;font-size:14px;line-height:1.3;margin-bottom:2px">${esc(title)}</div>
+      ${cat ? `<div style="font-size:11px;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px">${esc(cat)}</div>` : ''}
+      ${stars ? `<div style="font-size:13px;color:#111827;margin-bottom:4px"><span style="color:#F59E0B">${esc(stars)}</span><span style="color:#6B7280">${esc(reviews)}</span></div>` : ''}
+      ${a.address ? `<div style="font-size:12px;color:#6B7280;margin-bottom:6px;line-height:1.4">${esc(a.address)}</div>` : ''}
+      ${link}
+    </div>
+  `.trim()
+}
+
 function MapLayer({ snap, showAllPois, allPois }: { snap: Snapshot; showAllPois: boolean; allPois: { lat: number; lng: number; name: string | null; category: string }[] }) {
   const map = useMap()
   const ref = useRef<{ markers: google.maps.Marker[]; circles: google.maps.Circle[] }>({ markers: [], circles: [] })
+  const infoWindowRef = useRef<google.maps.InfoWindow | null>(null)
   const fitOnceRef = useRef(false)
 
   useEffect(() => {
     if (!map) return
+    if (!infoWindowRef.current) infoWindowRef.current = new google.maps.InfoWindow()
+    const iw = infoWindowRef.current
     for (const m of ref.current.markers) m.setMap(null)
     for (const c of ref.current.circles) c.setMap(null)
     ref.current = { markers: [], circles: [] }
+
+    // Map competitors by id so we can pull rich data (photo / rating /
+    // reviews / url) for the popup. mapCompetitors is grouped by lat/lng
+    // and only carries the lean fields we need to draw the marker.
+    const compsById = new Map(snap.competitors.map(c => [c.id, c]))
 
     // Villa pin (red, large)
     const villaSize = 44
@@ -96,6 +168,11 @@ function MapLayer({ snap, showAllPois, allPois }: { snap: Snapshot; showAllPois:
         zIndex: c.isMatch ? 100 : 10,
         title: `Booking: ${c.adr} $/ночь${c.bedrooms != null ? ` · ${c.bedrooms} BR` : ''}`,
       })
+      m.addListener('click', () => {
+        const card = compsById.get(c.id)
+        iw.setContent(competitorPopupHtml(card ?? { adr: c.adr, bedrooms: c.bedrooms }))
+        iw.open(map, m)
+      })
       ref.current.markers.push(m)
     }
 
@@ -112,6 +189,10 @@ function MapLayer({ snap, showAllPois, allPois }: { snap: Snapshot; showAllPois:
           scaledSize: new google.maps.Size(size, size),
         },
         title: a.name ?? 'POI',
+      })
+      m.addListener('click', () => {
+        iw.setContent(anchorPopupHtml(a))
+        iw.open(map, m)
       })
       ref.current.markers.push(m)
     }
@@ -134,6 +215,12 @@ function MapLayer({ snap, showAllPois, allPois }: { snap: Snapshot; showAllPois:
           },
           opacity: 0.7,
           title: p.name ?? 'POI',
+        })
+        m.addListener('click', () => {
+          // showAllPois passes a slimmer record (no rating / address) —
+          // the anchor popup gracefully degrades to just name + category.
+          iw.setContent(anchorPopupHtml({ name: p.name, primaryType: p.category }))
+          iw.open(map, m)
         })
         ref.current.markers.push(m)
       }
@@ -179,7 +266,7 @@ export function InvestmentMap({
   return (
     <div className={`relative ${heightClass} bg-white rounded-3xl overflow-hidden border border-[var(--color-border)]`}>
       <APIProvider apiKey={apiKey}>
-        <Map
+        <GMap
           defaultCenter={{ lat: snap.villa.lat, lng: snap.villa.lng }}
           defaultZoom={14}
           gestureHandling="greedy"
@@ -198,7 +285,7 @@ export function InvestmentMap({
           backgroundColor="#F2EAD8"
         >
           <MapLayer snap={snap} showAllPois={showAllPois} allPois={allPois} />
-        </Map>
+        </GMap>
       </APIProvider>
 
       <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-sm rounded-2xl border border-[var(--color-border)] px-3 py-2 text-[12px] flex items-center gap-3 shadow-sm">
