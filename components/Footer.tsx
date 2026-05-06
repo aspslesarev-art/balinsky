@@ -91,7 +91,7 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
 
 const BOTTOM_BY_LANG: Record<Lang, { label: string; href: string }[]> = {
   ru: [
-    { label: 'О нас', href: '#' },
+    { label: 'О нас', href: '/ru/o-balinsky' },
     { label: 'Реклама', href: '#' },
     { label: 'Сотрудничество с застройщиками', href: '#' },
     { label: 'Сотрудничество с агентствами', href: '#' },
@@ -99,7 +99,7 @@ const BOTTOM_BY_LANG: Record<Lang, { label: string; href: string }[]> = {
     { label: 'Связаться', href: '#' },
   ],
   en: [
-    { label: 'About', href: '#' },
+    { label: 'About', href: '/en/about' },
     { label: 'Advertising', href: '#' },
     { label: 'Developer partnerships', href: '#' },
     { label: 'Agency partnerships', href: '#' },

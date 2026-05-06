@@ -81,6 +81,7 @@ const SEGMENTS: Record<string, string> = {
   izbrannoe: 'favourites',
   'kak-kupit': 'how-to-buy',
   rezervirovanie: 'reservation',
+  'o-balinsky': 'about',
   karta: 'map',
 }
 const SEGMENTS_REV: Record<string, string> = Object.fromEntries(
