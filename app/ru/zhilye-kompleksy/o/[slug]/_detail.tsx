@@ -19,6 +19,7 @@ import { ApartmentCard, type ApartmentCardData } from '@/components/ApartmentCar
 import { ManagerCard } from '@/components/ManagerCard'
 import { InlinePrice } from '@/components/InlinePrice'
 import { loadManagerByDeveloperName } from '@/lib/managers'
+import { getDeveloperStats } from '@/lib/developer-stats'
 import { VillaCard, type VillaCardData } from '@/components/VillaCard'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { distanceKm as haversineKm } from '@/lib/competitor-utils'
@@ -492,6 +493,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   const lease = firstString(d['Leasehold']) ?? firstString(d['Leashold'])
   const developerName = firstString(d['Developer1']) ?? firstString(d['Варианты поиска застройщика'])
   const manager = await loadManagerByDeveloperName(developerName)
+  const devStats = await getDeveloperStats(developerName)
   const lat = parseGeo(d['Geo'])
   const lng = parseGeo(d['Geo 2'])
   const seoText = tField(d, 'SEO Text', lang)
@@ -598,6 +600,11 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
               district: district ?? null,
               bedrooms: null,
               completionYear: yearRaw ?? null,
+              status: status ?? null,
+              readinessPct: ready,
+              developerName: developerName ?? null,
+              developerCompletedCount: devStats?.ready ?? null,
+              developerInProgressCount: devStats?.inProgress ?? null,
             }}
           />
         </section>

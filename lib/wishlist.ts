@@ -34,6 +34,17 @@ export type WishlistItem = {
   status?: string | null
   claimedYieldPct?: number | null
   landUse?: string | null
+  // Developer track record at save time. `developerName` shows on the
+  // comparison row; `developerCompletedCount` / `developerInProgressCount`
+  // render as a "✓ N · ▲ M" badge — quickly tells the foreign buyer
+  // whether they're saving a project from a builder with a delivery
+  // history or a one-off.
+  developerName?: string | null
+  developerCompletedCount?: number | null
+  developerInProgressCount?: number | null
+  // Construction readiness for complexes: 0–100 percentage based on
+  // build stages. Null for villas / apartments / rentals.
+  readinessPct?: number | null
   savedAt: string
 }
 

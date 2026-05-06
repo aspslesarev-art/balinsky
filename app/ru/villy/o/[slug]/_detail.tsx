@@ -29,6 +29,7 @@ import { InvestmentWidget } from '@/components/InvestmentWidget'
 import { RentalCompareSection } from '@/components/RentalCompareSection'
 import { ManagerCard } from '@/components/ManagerCard'
 import { loadManagerByDeveloperName, loadManagerByDeveloperSlug } from '@/lib/managers'
+import { getDeveloperStats } from '@/lib/developer-stats'
 import { PriceCtaCard } from '@/components/PriceCtaCard'
 import { InlinePrice } from '@/components/InlinePrice'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
@@ -419,6 +420,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   const lng = parseGeo(d['Geo 2'])
   const seoText = tField(d, 'SEO Text', lang) ?? tField(d, 'Notes', lang)
   const developerName = firstString(d['Developer1']) ?? firstString(d['Developer'])
+  const devStats = await getDeveloperStats(developerName)
   // Resale / secondary listings carry a direct seller URL — bypass the
   // developer's manager for those.
   const dealTypeRaw = (firstString(d['Тип сделки']) ?? '').toLowerCase()
@@ -556,6 +558,9 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
                 return y != null ? Math.round(y * 1000) / 10 : null
               })(),
               landUse: firstString(d['Назначение земли']) ?? null,
+              developerName: developerName ?? null,
+              developerCompletedCount: devStats?.ready ?? null,
+              developerInProgressCount: devStats?.inProgress ?? null,
             }}
           />
         </section>

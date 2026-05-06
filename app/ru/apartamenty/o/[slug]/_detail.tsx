@@ -16,6 +16,7 @@ import { PhotoGalleryHero } from '@/components/PhotoGalleryHero'
 import { ApartmentCard, type ApartmentCardData } from '@/components/ApartmentCard'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { distanceKm as haversineKm } from '@/lib/competitor-utils'
+import { getDeveloperStats } from '@/lib/developer-stats'
 import { loadAllVideos } from '@/lib/videos'
 import { VideoGrid } from '@/components/VideoGrid'
 import { InvestmentWidget } from '@/components/InvestmentWidget'
@@ -341,6 +342,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
   const devName = devRefs
     .map(id => (typeof id === 'string' ? devMap[id] : null))
     .find(n => !!n) ?? null
+  const devStats = await getDeveloperStats(devName)
 
   // Parent complex (best-effort by name match in title)
   const parentComplex = findParentComplex(title, complexes)
@@ -458,6 +460,9 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
                 return y != null ? Math.round(y * 1000) / 10 : null
               })(),
               landUse: firstString(d['Назначение земли']) ?? null,
+              developerName: devName,
+              developerCompletedCount: devStats?.ready ?? null,
+              developerInProgressCount: devStats?.inProgress ?? null,
             }}
           />
         </section>

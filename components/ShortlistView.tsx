@@ -36,7 +36,11 @@ const COPY = {
     rowCompletion: 'Сдача', rowStatus: 'Статус стройки',
     rowDealType: 'Тип сделки', rowLease: 'Лизхолд', rowPermit: 'Разрешение',
     rowYield: 'Заявленная доходность', rowLandUse: 'Назначение земли',
+    rowDeveloper: 'Застройщик',
     sqm: 'м²', years: 'лет',
+    devReady: (n: number) => `${n} сдано`,
+    devInProgress: (n: number) => `${n} строится`,
+    readinessLabel: 'Готовность',
     dealResale: 'Перепродажа', dealSecondary: 'Вторичка', dealPrimary: 'От застройщика',
   },
   en: {
@@ -62,7 +66,11 @@ const COPY = {
     rowCompletion: 'Completion', rowStatus: 'Build status',
     rowDealType: 'Deal', rowLease: 'Leasehold', rowPermit: 'Permit',
     rowYield: 'Claimed yield', rowLandUse: 'Land use',
+    rowDeveloper: 'Developer',
     sqm: 'm²', years: 'yrs',
+    devReady: (n: number) => `${n} delivered`,
+    devInProgress: (n: number) => `${n} in progress`,
+    readinessLabel: 'Readiness',
     dealResale: 'Resale', dealSecondary: 'Secondary', dealPrimary: 'Developer',
   },
 } as const
@@ -137,6 +145,22 @@ export function ShortlistView({ lang }: { lang: Lang }) {
     { key: 'floor',      label: c.rowFloor,      cell: it => it.floor ?? null },
     { key: 'district',   label: c.rowDistrict,   cell: it => it.district ?? null },
     { key: 'landUse',    label: c.rowLandUse,    cell: it => it.landUse ?? null },
+    // Developer row: name on its own line, then a small "✓ N · ▲ M"
+    // badge of completed / in-progress projects underneath. We pack
+    // both into the cell text via a separator the renderer recognises
+    // and formats with two lines.
+    { key: 'developer',  label: c.rowDeveloper,
+      cell: it => {
+        if (!it.developerName) return null
+        const ready    = it.developerCompletedCount ?? null
+        const inProg   = it.developerInProgressCount ?? null
+        const tail = [
+          ready    != null && ready    > 0 ? c.devReady(ready)    : null,
+          inProg   != null && inProg   > 0 ? c.devInProgress(inProg) : null,
+        ].filter(Boolean).join(' · ')
+        return tail ? `${it.developerName}\n${tail}` : it.developerName
+      },
+    },
   ]
   // Compute the winning value for a directional row across a section.
   // null when fewer than 2 items have a value (no contest = no badge).
@@ -275,13 +299,23 @@ export function ShortlistView({ lang }: { lang: Lang }) {
                               const v = r.cell(it)
                               const num = r.num?.(it)
                               const isBest = winning != null && num != null && num === winning
+                              // Cells with a "\n" want a stacked
+                              // primary line + muted secondary line —
+                              // the developer row uses this to put
+                              // "Builder name" above "✓ N · ▲ M".
+                              const lines = v != null ? v.split('\n') : []
                               return (
                                 <td key={`${r.key}-${it.kind}:${it.slug}`} className="text-[14px] py-3 align-top">
                                   {v != null ? (
-                                    <span className={`inline-flex items-center gap-1.5 ${isBest ? 'font-semibold text-[var(--color-primary)]' : 'text-[var(--color-text)]'}`}>
-                                      {v}
-                                      {isBest && (
-                                        <Sparkle size={13} fill="currentColor" strokeWidth={0} aria-label={c.bestLabel} />
+                                    <span className={`inline-flex flex-col items-start gap-0.5 ${isBest ? 'font-semibold text-[var(--color-primary)]' : 'text-[var(--color-text)]'}`}>
+                                      <span className="inline-flex items-center gap-1.5">
+                                        {lines[0]}
+                                        {isBest && (
+                                          <Sparkle size={13} fill="currentColor" strokeWidth={0} aria-label={c.bestLabel} />
+                                        )}
+                                      </span>
+                                      {lines[1] && (
+                                        <span className="text-[12px] font-normal text-[var(--color-text-muted)]">{lines[1]}</span>
                                       )}
                                     </span>
                                   ) : (
@@ -308,6 +342,9 @@ export function ShortlistView({ lang }: { lang: Lang }) {
                 <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {complexes.map(item => {
                     const completion = item.completionYear
+                    const readiness = item.readinessPct ?? null
+                    const devReady    = item.developerCompletedCount  ?? null
+                    const devInProg   = item.developerInProgressCount ?? null
                     return (
                       <li key={`${item.kind}:${item.slug}`} className="relative">
                         <Link
@@ -324,6 +361,33 @@ export function ShortlistView({ lang }: { lang: Lang }) {
                           </div>
                           <div className="p-4">
                             <h3 className="text-[16px] font-semibold leading-snug mb-2 line-clamp-2">{item.title}</h3>
+                            {readiness != null && (
+                              <div className="mb-3">
+                                <div className="flex items-center justify-between text-[12px] mb-1">
+                                  <span className="text-[var(--color-text-muted)]">{c.readinessLabel}</span>
+                                  <span className="font-medium text-[var(--color-text)] tabular-nums">{readiness}%</span>
+                                </div>
+                                <div className="h-1.5 rounded-full bg-[var(--color-search-bg)] overflow-hidden">
+                                  <div
+                                    className="h-full bg-[var(--color-primary)]"
+                                    style={{ width: `${Math.min(100, Math.max(0, readiness))}%` }}
+                                  />
+                                </div>
+                              </div>
+                            )}
+                            {item.developerName && (
+                              <div className="mb-2 text-[12px]">
+                                <div className="text-[var(--color-text)] truncate">{item.developerName}</div>
+                                {(devReady != null && devReady > 0) || (devInProg != null && devInProg > 0) ? (
+                                  <div className="text-[var(--color-text-muted)] mt-0.5">
+                                    {[
+                                      devReady   != null && devReady   > 0 ? c.devReady(devReady)     : null,
+                                      devInProg  != null && devInProg  > 0 ? c.devInProgress(devInProg) : null,
+                                    ].filter(Boolean).join(' · ')}
+                                  </div>
+                                ) : null}
+                              </div>
+                            )}
                             <div className="text-[13px] text-[var(--color-text-muted)] flex items-center gap-3 flex-wrap">
                               {item.district && <span>{item.district}</span>}
                               {completion && <span>{c.rowCompletion}: {completion}</span>}
