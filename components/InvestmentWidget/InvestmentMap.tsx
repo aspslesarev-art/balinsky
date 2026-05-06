@@ -183,7 +183,16 @@ export function InvestmentMap({
           defaultCenter={{ lat: snap.villa.lat, lng: snap.villa.lng }}
           defaultZoom={14}
           gestureHandling="greedy"
-          disableDefaultUI={false}
+          // We want the Pegman + zoom (bottom-right) and fullscreen
+          // (top-right) — explicitly enable instead of disableDefaultUI,
+          // so our POI toggle below doesn't have to fight for the same
+          // anchor. mapTypeControl off — we don't need Satellite here.
+          streetViewControl={true}
+          zoomControl={true}
+          fullscreenControl={true}
+          mapTypeControl={false}
+          rotateControl={false}
+          scaleControl={false}
           clickableIcons={false}
           styles={BALINSKY_MAP_STYLE}
           backgroundColor="#F2EAD8"
@@ -197,10 +206,13 @@ export function InvestmentMap({
         <span className="inline-flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#3B82F6]" /> Конкуренты</span>
         <span className="inline-flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#16A34A]" /> Якоря</span>
       </div>
+      {/* POI toggle — top-left so it doesn't collide with Google's
+          fullscreen control (top-right) or Pegman + zoom buttons
+          (bottom-right). */}
       <button
         type="button"
         onClick={() => setShowAllPois(v => !v)}
-        className="absolute bottom-3 right-3 bg-white/95 backdrop-blur-sm rounded-full border border-[var(--color-border)] px-3 py-1.5 text-[12px] font-medium hover:border-[var(--color-primary)] cursor-pointer shadow-sm"
+        className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm rounded-full border border-[var(--color-border)] px-3 py-1.5 text-[12px] font-medium hover:border-[var(--color-primary)] cursor-pointer shadow-sm"
       >
         {showAllPois ? 'Только якоря' : 'Все POI'}
       </button>
