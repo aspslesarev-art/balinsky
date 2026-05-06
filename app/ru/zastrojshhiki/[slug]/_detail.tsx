@@ -13,7 +13,7 @@ import { PageContainer } from '@/components/PageContainer'
 import { ComplexCard, type ComplexCardData } from '@/components/ComplexCard'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { ManagerCard } from '@/components/ManagerCard'
-import { loadManagerByDeveloperSlug } from '@/lib/managers'
+import { loadManagersByDeveloperSlug } from '@/lib/managers'
 import { loadAllNews } from '@/lib/news'
 import { loadAllPromo } from '@/lib/promo'
 import { loadAllEvents } from '@/lib/events'
@@ -275,9 +275,9 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
     { title: c.extras.yield,    bullets: parseBullets(tField(dev.data, 'Доходность',        lang)), Icon: TrendingUp },
   ].filter(d => d.bullets.length > 0)
 
-  const [{ complexes, apartmentCount }, manager] = await Promise.all([
+  const [{ complexes, apartmentCount }, managers] = await Promise.all([
     loadProjectsByDeveloper(name),
-    loadManagerByDeveloperSlug(slug),
+    loadManagersByDeveloperSlug(slug),
   ])
   const districts = [...new Set(complexes.map(c => c.location).filter(Boolean) as string[])]
   const complexSlugs = complexes.map(c => c.slug).filter((s): s is string => !!s)
@@ -372,7 +372,7 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
           </div>
         </section>
 
-        {manager && <ManagerCard manager={manager} developerName={name} />}
+        {managers.length > 0 && <ManagerCard managers={managers} developerName={name} />}
 
         {dimensions.length > 0 && (
           <section className="mb-10">

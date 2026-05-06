@@ -18,7 +18,7 @@ import { ProgressBar } from '@/components/ProgressBar'
 import { ApartmentCard, type ApartmentCardData } from '@/components/ApartmentCard'
 import { ManagerCard } from '@/components/ManagerCard'
 import { InlinePrice } from '@/components/InlinePrice'
-import { loadManagerByDeveloperName } from '@/lib/managers'
+import { loadManagersByDeveloperName } from '@/lib/managers'
 import { getDeveloperStats } from '@/lib/developer-stats'
 import { VillaCard, type VillaCardData } from '@/components/VillaCard'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
@@ -492,7 +492,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   const totalUnits = numberOrNull(d['Total quantity of units'])
   const lease = firstString(d['Leasehold']) ?? firstString(d['Leashold'])
   const developerName = firstString(d['Developer1']) ?? firstString(d['Варианты поиска застройщика'])
-  const manager = await loadManagerByDeveloperName(developerName)
+  const managers = await loadManagersByDeveloperName(developerName)
   const devStats = await getDeveloperStats(developerName)
   const lat = parseGeo(d['Geo'])
   const lng = parseGeo(d['Geo 2'])
@@ -715,7 +715,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
           </section>
         )}
 
-        {manager && <ManagerCard manager={manager} developerName={developerName} />}
+        {managers.length > 0 && <ManagerCard managers={managers} developerName={developerName} />}
 
         {/* RESOURCES */}
         {resources.length > 0 && (

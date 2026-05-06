@@ -28,7 +28,7 @@ import { VillaCard, type VillaCardData } from '@/components/VillaCard'
 import { InvestmentWidget } from '@/components/InvestmentWidget'
 import { RentalCompareSection } from '@/components/RentalCompareSection'
 import { ManagerCard } from '@/components/ManagerCard'
-import { loadManagerByDeveloperName, loadManagerByDeveloperSlug } from '@/lib/managers'
+import { loadManagersByDeveloperName, loadManagersByDeveloperSlug } from '@/lib/managers'
 import { getDeveloperStats } from '@/lib/developer-stats'
 import { PriceCtaCard } from '@/components/PriceCtaCard'
 import { InlinePrice } from '@/components/InlinePrice'
@@ -439,9 +439,9 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
 
   const parentComplex = findParentComplex(title, complexes)
   const developer = findDeveloperByName(developerName, developers)
-  const manager = developer?.slug
-    ? await loadManagerByDeveloperSlug(developer.slug)
-    : await loadManagerByDeveloperName(developerName)
+  const managers = developer?.slug
+    ? await loadManagersByDeveloperSlug(developer.slug)
+    : await loadManagersByDeveloperName(developerName)
 
   // Videos: prefer videos for parent complex, else for developer
   const allVideos = await loadAllVideos().catch(() => [])
@@ -585,7 +585,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
               priceUsd={priceNum}
               pricePerSqmUsd={priceM2}
               updatedAt={priceUpdatedAt}
-              managerId={manager?.id ?? null}
+              managerId={managers[0]?.id ?? null}
               sellerUrl={sellerUrl}
               listingKind="villa"
               listingId={v.airtable_id}
@@ -735,7 +735,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
           </section>
         )}
 
-        {manager && <ManagerCard manager={manager} developerName={developer?.name ?? developerName} />}
+        {managers.length > 0 && <ManagerCard managers={managers} developerName={developer?.name ?? developerName} />}
 
         {lat != null && lng != null && (
           <InvestmentWidget villaId={v.airtable_id} apiKey={GMAPS_KEY} />

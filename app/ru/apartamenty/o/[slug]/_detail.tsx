@@ -22,7 +22,7 @@ import { VideoGrid } from '@/components/VideoGrid'
 import { InvestmentWidget } from '@/components/InvestmentWidget'
 import { RentalCompareSection } from '@/components/RentalCompareSection'
 import { ManagerCard } from '@/components/ManagerCard'
-import { loadManagerByDeveloperName } from '@/lib/managers'
+import { loadManagersByDeveloperName } from '@/lib/managers'
 import { PriceCtaCard } from '@/components/PriceCtaCard'
 import { findActiveReservation } from '@/lib/reservations'
 import { InlinePrice } from '@/components/InlinePrice'
@@ -348,9 +348,9 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
   const parentComplex = findParentComplex(title, complexes)
   const parentComplexName = parentComplex ? firstString(parentComplex.data['Project']) : null
 
-  const [otherApts, manager, activeReservation] = await Promise.all([
+  const [otherApts, managers, activeReservation] = await Promise.all([
     loadOtherApartmentsInDistrict(district, a.airtable_id),
-    loadManagerByDeveloperName(devName),
+    loadManagersByDeveloperName(devName),
     findActiveReservation('apartment', a.airtable_id),
   ])
   const GMAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? ''
@@ -487,7 +487,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
               priceUsd={priceNum}
               pricePerSqmUsd={priceM2}
               updatedAt={priceUpdatedAt}
-              managerId={manager?.id ?? null}
+              managerId={managers[0]?.id ?? null}
               listingKind="apartment"
               listingId={a.airtable_id}
               listingSlug={slug}
@@ -602,7 +602,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
           </section>
         )}
 
-        {manager && <ManagerCard manager={manager} developerName={devName} />}
+        {managers.length > 0 && <ManagerCard managers={managers} developerName={devName} />}
 
         {lat != null && lng != null && (
           <InvestmentWidget villaId={a.airtable_id} apiKey={GMAPS_KEY} kind="apartment" />

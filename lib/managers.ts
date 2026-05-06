@@ -35,23 +35,24 @@ export async function loadAllManagers(): Promise<ManagerItem[]> {
   }
 }
 
-// Returns the highest-rated manager for the given developer slug, or any one
-// if ratings are missing. Null when no manager is linked to that developer.
-export async function loadManagerByDeveloperSlug(devSlug: string | null | undefined): Promise<ManagerItem | null> {
-  if (!devSlug) return null
+// Returns every manager linked to the given developer slug, sorted by
+// rating descending (ties: leave Airtable order). Empty array when
+// none. Detail pages render a card per manager — many developers have
+// 2–3 people on rotation and the visitor should see all of them.
+export async function loadManagersByDeveloperSlug(devSlug: string | null | undefined): Promise<ManagerItem[]> {
+  if (!devSlug) return []
   const all = await loadAllManagers()
-  return pickBest(all.filter(m => m.developerSlugs.includes(devSlug)))
+  return sortByRating(all.filter(m => m.developerSlugs.includes(devSlug)))
 }
 
-export async function loadManagerByDeveloperName(devName: string | null | undefined): Promise<ManagerItem | null> {
-  if (!devName) return null
+export async function loadManagersByDeveloperName(devName: string | null | undefined): Promise<ManagerItem[]> {
+  if (!devName) return []
   const lc = devName.trim().toLowerCase()
-  if (!lc) return null
+  if (!lc) return []
   const all = await loadAllManagers()
-  return pickBest(all.filter(m => m.developerNames.some(n => n.toLowerCase() === lc)))
+  return sortByRating(all.filter(m => m.developerNames.some(n => n.toLowerCase() === lc)))
 }
 
-function pickBest(matches: ManagerItem[]): ManagerItem | null {
-  if (matches.length === 0) return null
-  return [...matches].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))[0]
+function sortByRating(matches: ManagerItem[]): ManagerItem[] {
+  return [...matches].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
 }
