@@ -1,12 +1,12 @@
-name: Sync heavy content (rental + villa/apartment photos)
+name: Sync heavy content (rental + villa/apartment/complex photos)
 
 # Photo-heavy syncs that take minutes per run. Rental sync caches
 # every photo from Airtable into Storage (3000+ HTTP downloads on a
-# full run). Villa + apartment photo syncs use att-id change detection
-# in resume mode, so a normal hourly run only re-pulls records whose
-# Airtable photos actually changed — usually zero. The first run after
-# this file lands re-syncs everyone (no att-id manifest yet); after
-# that it's near-zero-cost.
+# full run). Villa / apartment / complex photo syncs use att-id change
+# detection in resume mode, so a normal hourly run only re-pulls
+# records whose Airtable photos actually changed — usually zero. The
+# first run after this file lands re-syncs everyone (no att-id
+# manifest yet); after that it's near-zero-cost.
 
 on:
   schedule:
@@ -65,13 +65,21 @@ jobs:
           if [ -n "${FORCE_SLUGS}" ]; then ARGS="--force-slugs=${FORCE_SLUGS}"; fi
           node scripts/sync-apartments-photos.mjs $ARGS
 
-      - name: Revalidate rental + villa + apartment caches
+      - name: Sync complex photos
+        env:
+          FORCE_SLUGS: ${{ github.event.inputs.force_slugs }}
+        run: |
+          ARGS=""
+          if [ -n "${FORCE_SLUGS}" ]; then ARGS="--force-slugs=${FORCE_SLUGS}"; fi
+          node scripts/sync-complex-photos.mjs $ARGS
+
+      - name: Revalidate rental + villa + apartment + complex caches
         env:
           SITE_URL: ${{ secrets.SITE_URL }}
           REVALIDATE_TOKEN: ${{ secrets.REVALIDATE_TOKEN }}
         run: |
           curl --fail --silent --show-error \
-            -X POST "${SITE_URL}/api/revalidate-content?kinds=rental,villas,apartments" \
+            -X POST "${SITE_URL}/api/revalidate-content?kinds=rental,villas,apartments,complexes" \
             -H "Authorization: Bearer ${REVALIDATE_TOKEN}" \
             -H "Content-Type: application/json" \
             -d '{}' \
