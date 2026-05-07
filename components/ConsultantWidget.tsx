@@ -1,8 +1,10 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import { MessageCircle, X, Send, Loader2, AlertTriangle, BedDouble, MapPin, ExternalLink, Mic, MicOff } from 'lucide-react'
+import type { Lang } from '@/lib/i18n'
 
 // Minimal Web Speech API typing — TS stdlib doesn't ship it, and we only use
 // the few fields we touch.
@@ -54,16 +56,80 @@ function extractChips(content: string): { text: string; chips: string[] } {
 // First message in every conversation. Includes its own [CHIPS] block,
 // so the entry-point picks render through the same chip pipeline as
 // every later step — chips lead to chips end-to-end.
-const GREETING: Message = {
-  role: 'assistant',
-  content:
-    'Я Бали Гид — AI-помощник по недвижимости на Бали. Могу ошибаться. Что нужно?\n\n' +
-    '[CHIPS] Подобрать виллу | Подобрать апартаменты | Помесячная аренда | Юридика покупки | Связаться с менеджером',
+const GREETING_BY_LANG: Record<Lang, Message> = {
+  ru: {
+    role: 'assistant',
+    content:
+      'Я Бали Гид — AI-помощник по недвижимости на Бали. Могу ошибаться. Что нужно?\n\n' +
+      '[CHIPS] Подобрать виллу | Подобрать апартаменты | Помесячная аренда | Юридика покупки | Связаться с менеджером',
+  },
+  en: {
+    role: 'assistant',
+    content:
+      "I'm the Bali Guide — AI helper for Bali real estate. I might be wrong. What do you need?\n\n" +
+      '[CHIPS] Pick a villa | Pick an apartment | Monthly rental | Legal side of buying | Contact a manager',
+  },
 }
 
+// All UI copy in one place. The chat replies themselves come from the
+// model and pick up language from the conversation context (the API
+// also injects an explicit lang directive when lang === 'en').
+const COPY = {
+  ru: {
+    triggerAria: 'Открыть AI-консультант',
+    triggerName: 'Бали Гид',
+    title: 'Бали Гид',
+    subtitle: 'AI-консультант · может ошибаться',
+    closeAria: 'Закрыть',
+    typing: 'печатает…',
+    placeholder: 'Что ищешь? Например, виллу в Чангу с 3 спальнями',
+    listening: 'Слушаю…',
+    sendError: 'Не получилось отправить сообщение. Попробуйте ещё раз.',
+    micDenied: 'Доступ к микрофону запрещён.',
+    micError: (e: string) => `Ошибка распознавания: ${e}`,
+    voiceStartAria: 'Записать голосом',
+    voiceStopAria: 'Остановить запись',
+    voiceStartTitle: 'Записать голосом',
+    voiceStopTitle: 'Остановить',
+    sendAria: 'Отправить',
+    perMonth: ' / мес',
+    perSqm: '/ м²',
+    voiceLang: 'ru-RU',
+  },
+  en: {
+    triggerAria: 'Open AI consultant',
+    triggerName: 'Bali Guide',
+    title: 'Bali Guide',
+    subtitle: 'AI consultant · may be wrong',
+    closeAria: 'Close',
+    typing: 'typing…',
+    placeholder: 'What are you looking for? e.g. a villa in Canggu with 3 bedrooms',
+    listening: 'Listening…',
+    sendError: 'Could not send the message. Please try again.',
+    micDenied: 'Microphone access denied.',
+    micError: (e: string) => `Recognition error: ${e}`,
+    voiceStartAria: 'Record by voice',
+    voiceStopAria: 'Stop recording',
+    voiceStartTitle: 'Record by voice',
+    voiceStopTitle: 'Stop',
+    sendAria: 'Send',
+    perMonth: ' / mo',
+    perSqm: '/ m²',
+    voiceLang: 'en-US',
+  },
+} as const
+
 export function ConsultantWidget() {
+  // Lang follows the URL: /en/* → English, anything else → Russian.
+  // Greeting + UI copy + voice recognition locale + the lang directive
+  // we send to the chat API all key off this.
+  const pathname = usePathname() ?? ''
+  const lang: Lang = pathname.startsWith('/en') ? 'en' : 'ru'
+  const c = COPY[lang]
+  const greeting = GREETING_BY_LANG[lang]
+
   const [open, setOpen] = useState(false)
-  const [messages, setMessages] = useState<Message[]>([GREETING])
+  const [messages, setMessages] = useState<Message[]>([greeting])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -80,6 +146,17 @@ export function ConsultantWidget() {
     setVoiceSupported(!!(window.SpeechRecognition || window.webkitSpeechRecognition))
   }, [])
 
+  // Swap the greeting if the visitor navigated between /ru and /en
+  // before saying anything — keeps the entry chips in the same
+  // language as the rest of the page. Don't touch in-progress chats.
+  useEffect(() => {
+    setMessages(prev => {
+      if (prev.length !== 1) return prev
+      const wasGreeting = prev[0] === GREETING_BY_LANG.ru || prev[0] === GREETING_BY_LANG.en
+      return wasGreeting ? [greeting] : prev
+    })
+  }, [greeting])
+
   const toggleVoice = () => {
     if (typeof window === 'undefined') return
     if (listening) {
@@ -89,7 +166,7 @@ export function ConsultantWidget() {
     const Ctor = window.SpeechRecognition ?? window.webkitSpeechRecognition
     if (!Ctor) return
     const rec = new Ctor()
-    rec.lang = 'ru-RU'
+    rec.lang = c.voiceLang
     rec.continuous = false
     rec.interimResults = true
     baseInputRef.current = input.trim()
@@ -109,7 +186,7 @@ export function ConsultantWidget() {
       setListening(false)
       recRef.current = null
       if (e?.error && e.error !== 'no-speech' && e.error !== 'aborted') {
-        setError(e.error === 'not-allowed' ? 'Доступ к микрофону запрещён.' : 'Ошибка распознавания: ' + e.error)
+        setError(e.error === 'not-allowed' ? c.micDenied : c.micError(e.error))
       }
     }
     try {
@@ -169,7 +246,11 @@ export function ConsultantWidget() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: next.filter((m, i) => !(i === 0 && m === GREETING)),
+          // Drop the greeting before sending — model never needs to
+          // see it. Pass current site language so the API can append
+          // a "respond in English" directive when the visitor's on /en.
+          messages: next.filter((m, i) => !(i === 0 && (m === GREETING_BY_LANG.ru || m === GREETING_BY_LANG.en))),
+          lang,
         }),
       })
       if (!res.ok) {
@@ -180,7 +261,7 @@ export function ConsultantWidget() {
       setMessages([...next, { ...j.message, listings: j.listings }])
     } catch (e) {
       console.error('[consultant] error:', e)
-      setError('Не получилось отправить сообщение. Попробуйте ещё раз.')
+      setError(c.sendError)
     } finally {
       setLoading(false)
     }
@@ -193,7 +274,7 @@ export function ConsultantWidget() {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          aria-label="Открыть AI-консультант"
+          aria-label={c.triggerAria}
           className="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 pl-1.5 pr-4 py-1.5 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white shadow-lg transition-colors"
         >
           <img
@@ -201,7 +282,7 @@ export function ConsultantWidget() {
             alt=""
             className="w-9 h-9 rounded-full object-cover ring-2 ring-white/40"
           />
-          <span className="text-[14px] font-medium hidden sm:inline">Бали Гид</span>
+          <span className="text-[14px] font-medium hidden sm:inline">{c.triggerName}</span>
           <MessageCircle size={16} className="sm:hidden" />
         </button>
       )}
@@ -223,14 +304,14 @@ export function ConsultantWidget() {
                   className="shrink-0 w-9 h-9 rounded-full object-cover"
                 />
                 <div>
-                  <div className="text-[14px] font-semibold text-[#111827] leading-tight">Бали Гид</div>
-                  <div className="text-[11px] text-[var(--color-text-muted)] leading-tight">AI-консультант · может ошибаться</div>
+                  <div className="text-[14px] font-semibold text-[#111827] leading-tight">{c.title}</div>
+                  <div className="text-[11px] text-[var(--color-text-muted)] leading-tight">{c.subtitle}</div>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                aria-label="Закрыть"
+                aria-label={c.closeAria}
                 className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/60 hover:bg-white text-[#111827]"
               >
                 <X size={18} />
@@ -247,7 +328,7 @@ export function ConsultantWidget() {
                     {text && <Bubble role={m.role}>{text}</Bubble>}
                     {m.listings && m.listings.length > 0 && (
                       <div className="self-start max-w-[95%] flex flex-col gap-2">
-                        {m.listings.map(card => <ListingChatCard key={card.url} card={card} />)}
+                        {m.listings.map(card => <ListingChatCard key={card.url} card={card} lang={lang} />)}
                       </div>
                     )}
                     {isLastAssistant && chips.length > 0 && !loading && (
@@ -272,7 +353,7 @@ export function ConsultantWidget() {
               {loading && (
                 <Bubble role="assistant">
                   <span className="inline-flex items-center gap-2 text-[var(--color-text-muted)]">
-                    <Loader2 size={14} className="animate-spin" /> печатает…
+                    <Loader2 size={14} className="animate-spin" /> {c.typing}
                   </span>
                 </Bubble>
               )}
@@ -297,7 +378,7 @@ export function ConsultantWidget() {
                     send()
                   }
                 }}
-                placeholder={listening ? 'Слушаю…' : 'Что ищешь? Например, виллу в Чангу с 3 спальнями'}
+                placeholder={listening ? c.listening : c.placeholder}
                 rows={2}
                 disabled={loading}
                 className="flex-1 resize-none min-h-[48px] max-h-32 rounded-2xl border border-[var(--color-border)] bg-white px-4 py-2.5 text-[14px] focus:outline-none focus:border-[var(--color-primary)] disabled:opacity-50"
@@ -307,8 +388,8 @@ export function ConsultantWidget() {
                   type="button"
                   onClick={toggleVoice}
                   disabled={loading}
-                  aria-label={listening ? 'Остановить запись' : 'Записать голосом'}
-                  title={listening ? 'Остановить' : 'Записать голосом'}
+                  aria-label={listening ? c.voiceStopAria : c.voiceStartAria}
+                  title={listening ? c.voiceStopTitle : c.voiceStartTitle}
                   className={`shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-full transition-colors disabled:opacity-50 ${
                     listening
                       ? 'bg-[#DC2626] hover:bg-[#B91C1C] text-white animate-pulse'
@@ -321,7 +402,7 @@ export function ConsultantWidget() {
               <button
                 type="submit"
                 disabled={!input.trim() || loading}
-                aria-label="Отправить"
+                aria-label={c.sendAria}
                 className="shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
@@ -339,10 +420,10 @@ function fmtUsd(n: number | null): string | null {
   return '$' + Math.round(n).toLocaleString('en-US')
 }
 
-function ListingChatCard({ card }: { card: ListingCard }) {
+function ListingChatCard({ card, lang }: { card: ListingCard; lang: Lang }) {
   const isRental = card.kind === 'rental'
   const mainPrice = isRental ? fmtUsd(card.rent_per_month_usd) : fmtUsd(card.price_usd)
-  const priceSuffix = isRental ? ' / мес' : ''
+  const priceSuffix = isRental ? COPY[lang].perMonth : ''
   return (
     <a
       href={card.url}
@@ -366,7 +447,7 @@ function ListingChatCard({ card }: { card: ListingCard }) {
             </span>
           )}
           {card.price_per_sqm_usd != null && card.price_per_sqm_usd > 0 && (
-            <span>{fmtUsd(card.price_per_sqm_usd)} / м²</span>
+            <span>{fmtUsd(card.price_per_sqm_usd)} {COPY[lang].perSqm}</span>
           )}
           {card.bedrooms != null && (
             <span className="inline-flex items-center gap-0.5"><BedDouble size={11} /> {card.bedrooms} BR</span>
