@@ -69,3 +69,24 @@ for (let i = 0; i < rows.length; i += 100) {
   process.stdout.write(`\r  ${done}/${rows.length}`)
 }
 console.log()
+
+// Drop rows that are no longer in Airtable so deletes propagate.
+// Sanity guard against an Airtable blip wiping the table.
+if (rows.length === 0) {
+  console.error('  ✖ Airtable returned 0 rows — refusing to prune Supabase')
+  process.exit(1)
+}
+console.log('▶ pruning rows missing from Airtable…')
+const liveIds = new Set(rows.map(r => r.airtable_id))
+const { data: existing, error: listErr } = await sb.from('raw_complexes').select('airtable_id')
+if (listErr) { console.error('  ✖ list:', listErr.message); process.exit(1) }
+const stale = (existing ?? []).map(r => r.airtable_id).filter(id => !liveIds.has(id))
+console.log(`  stale rows: ${stale.length}`)
+if (stale.length > 0) {
+  for (let i = 0; i < stale.length; i += 500) {
+    const slice = stale.slice(i, i + 500)
+    const { error: delErr } = await sb.from('raw_complexes').delete().in('airtable_id', slice)
+    if (delErr) { console.error('  ✖ delete:', delErr.message); process.exit(1) }
+  }
+  console.log(`  ✓ deleted ${stale.length} stale rows`)
+}
