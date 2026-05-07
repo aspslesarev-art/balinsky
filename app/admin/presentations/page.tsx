@@ -15,7 +15,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 import { requireAdmin } from '@/lib/admin-auth'
-import { AdminAccountMenu } from '../_account-menu'
+import { AdminThemeShell } from '@/components/admin/AdminThemeShell'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { robots: { index: false, follow: false }, title: 'Презентации · Balinsky Admin' }
@@ -207,30 +207,28 @@ export default async function PresentationsAdmin({
     .slice(0, 50)
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] text-[#111827] pb-20">
-      <header className="px-6 pt-6 pb-4 border-b border-[#E5E7EB] bg-white">
-        <h1 className="text-[22px] font-semibold tracking-tight">Презентации</h1>
-        <div className="mt-2 text-[13px] text-[#6B7280]">
-          PDF, скачанные с сайта. Считаем оба формата — по одному объекту и по подборке.
-        </div>
-        <div className="mt-4 flex flex-wrap gap-2">
+    <AdminThemeShell
+      title="Презентации"
+      description="PDF, скачанные с сайта. Считаем оба формата — по одному объекту и по подборке."
+      filters={
+        <div className="flex flex-wrap gap-2">
           {(['24h', '7d', '30d', 'all'] as Range[]).map(r => (
             <Link
               key={r}
               href={`/admin/presentations?range=${r}`}
               className={`px-3 py-1.5 rounded-full text-[13px] no-underline transition-colors ${
                 r === range
-                  ? 'bg-[#111827] text-white'
-                  : 'bg-white border border-[#E5E7EB] text-[#374151] hover:border-[#9CA3AF]'
+                  ? 'bg-[var(--ax-fg)] text-[var(--ax-bg)]'
+                  : 'bg-[var(--ax-panel)] border border-[var(--ax-border)] text-[var(--ax-fg-soft)] hover:text-[var(--ax-fg)]'
               }`}
             >
               {RANGE_LABELS[r]}
             </Link>
           ))}
         </div>
-      </header>
-
-      <main className="px-6 py-6 max-w-[1200px] mx-auto space-y-10">
+      }
+    >
+      <div className="space-y-8 md:space-y-10">
         {/* Top KPIs */}
         <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <KpiCard label="Всего скачиваний" value={String(events.length)} />
@@ -249,7 +247,7 @@ export default async function PresentationsAdmin({
         <section>
           <h2 className="text-[16px] font-semibold mb-3">Лиды с контактом агента</h2>
           {agentLeads.length === 0 ? (
-            <div className="rounded-2xl bg-white border border-[#E5E7EB] p-6 text-[13px] text-[#6B7280]">
+            <div className="rounded-2xl bg-[var(--ax-panel)] border border-[var(--ax-border)] p-6 text-[13px] text-[var(--ax-fg-muted)]">
               За выбранный период PDF с контактом агента не скачивались.
             </div>
           ) : (
@@ -257,35 +255,35 @@ export default async function PresentationsAdmin({
               {agentLeads.map(e => {
                 const objHref = e.kind === 'object' ? detailHref({ slug: e.slug, objectKind: e.object_kind }) : null
                 return (
-                  <li key={e.id} className="rounded-2xl bg-white border border-[#E5E7EB] px-4 py-3">
+                  <li key={e.id} className="rounded-2xl bg-[var(--ax-panel)] border border-[var(--ax-border)] px-4 py-3">
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px]">
-                      <span className="text-[#374151] font-medium tabular-nums">{fmtDateTime(e.created_at)}</span>
-                      <span className="text-[#6B7280]">·</span>
+                      <span className="text-[var(--ax-fg-soft)] font-medium tabular-nums">{fmtDateTime(e.created_at)}</span>
+                      <span className="text-[var(--ax-fg-muted)]">·</span>
                       {e.kind === 'object' ? (
                         <>
-                          <span className="text-[#9CA3AF] text-[11px] uppercase tracking-wide">{kindLabel(e.object_kind)}</span>
+                          <span className="text-[var(--ax-fg-faint)] text-[11px] uppercase tracking-wide">{kindLabel(e.object_kind)}</span>
                           {objHref ? (
-                            <a href={objHref} target="_blank" rel="noopener noreferrer" className="text-[#111827] hover:text-[var(--color-primary-pressed)] no-underline font-medium">{e.title ?? e.slug ?? e.object_id}</a>
+                            <a href={objHref} target="_blank" rel="noopener noreferrer" className="text-[var(--ax-fg)] hover:text-[var(--color-primary-pressed)] no-underline font-medium">{e.title ?? e.slug ?? e.object_id}</a>
                           ) : (
-                            <span className="text-[#111827] font-medium">{e.title ?? e.slug ?? e.object_id}</span>
+                            <span className="text-[var(--ax-fg)] font-medium">{e.title ?? e.slug ?? e.object_id}</span>
                           )}
                         </>
                       ) : (
-                        <span className="text-[#111827] font-medium">Подборка из {e.item_count ?? 0} объектов</span>
+                        <span className="text-[var(--ax-fg)] font-medium">Подборка из {e.item_count ?? 0} объектов</span>
                       )}
-                      <span className="text-[#9CA3AF] text-[11px] ml-auto">{(e.lang ?? '').toUpperCase()} · {e.orientation ?? ''}</span>
+                      <span className="text-[var(--ax-fg-faint)] text-[11px] ml-auto">{(e.lang ?? '').toUpperCase()} · {e.orientation ?? ''}</span>
                     </div>
-                    <div className="mt-1.5 text-[12px] flex flex-wrap items-center gap-x-4 gap-y-1 text-[#374151]">
-                      {e.agent_name     && <span><span className="text-[#9CA3AF]">Агент:</span> <span className="font-medium">{e.agent_name}</span></span>}
-                      {e.agent_telegram && <span><span className="text-[#9CA3AF]">Telegram:</span> <a className="text-[var(--color-primary-pressed)] no-underline" href={tgHref(e.agent_telegram)} target="_blank" rel="noopener noreferrer">{e.agent_telegram}</a></span>}
-                      {e.agent_whatsapp && <span><span className="text-[#9CA3AF]">WhatsApp:</span> <a className="text-[var(--color-primary-pressed)] no-underline" href={waHref(e.agent_whatsapp)} target="_blank" rel="noopener noreferrer">{e.agent_whatsapp}</a></span>}
+                    <div className="mt-1.5 text-[12px] flex flex-wrap items-center gap-x-4 gap-y-1 text-[var(--ax-fg-soft)]">
+                      {e.agent_name     && <span><span className="text-[var(--ax-fg-faint)]">Агент:</span> <span className="font-medium">{e.agent_name}</span></span>}
+                      {e.agent_telegram && <span><span className="text-[var(--ax-fg-faint)]">Telegram:</span> <a className="text-[var(--color-primary-pressed)] no-underline" href={tgHref(e.agent_telegram)} target="_blank" rel="noopener noreferrer">{e.agent_telegram}</a></span>}
+                      {e.agent_whatsapp && <span><span className="text-[var(--ax-fg-faint)]">WhatsApp:</span> <a className="text-[var(--color-primary-pressed)] no-underline" href={waHref(e.agent_whatsapp)} target="_blank" rel="noopener noreferrer">{e.agent_whatsapp}</a></span>}
                     </div>
                     {e.kind === 'shortlist' && e.items_detail && e.items_detail.length > 0 && (
-                      <div className="mt-2 text-[11.5px] text-[#6B7280] flex flex-wrap gap-x-2 gap-y-0.5">
+                      <div className="mt-2 text-[11.5px] text-[var(--ax-fg-muted)] flex flex-wrap gap-x-2 gap-y-0.5">
                         {e.items_detail.slice(0, 8).map((it, i) => (
                           <span key={i}>· {it.title ?? it.id}</span>
                         ))}
-                        {e.items_detail.length > 8 && <span className="text-[#9CA3AF]">+{e.items_detail.length - 8} ещё</span>}
+                        {e.items_detail.length > 8 && <span className="text-[var(--ax-fg-faint)]">+{e.items_detail.length - 8} ещё</span>}
                       </div>
                     )}
                   </li>
@@ -299,13 +297,13 @@ export default async function PresentationsAdmin({
         <section>
           <h2 className="text-[16px] font-semibold mb-3">По объектам</h2>
           {objects.length === 0 ? (
-            <div className="rounded-2xl bg-white border border-[#E5E7EB] p-6 text-[13px] text-[#6B7280]">
+            <div className="rounded-2xl bg-[var(--ax-panel)] border border-[var(--ax-border)] p-6 text-[13px] text-[var(--ax-fg-muted)]">
               За выбранный период нет скачиваний по отдельным объектам.
             </div>
           ) : (
-            <div className="rounded-2xl bg-white border border-[#E5E7EB] overflow-hidden">
+            <div className="rounded-2xl bg-[var(--ax-panel)] border border-[var(--ax-border)] overflow-hidden">
               <table className="w-full text-[13px]">
-                <thead className="bg-[#F9FAFB] text-[#6B7280] text-[11px] uppercase tracking-wide">
+                <thead className="bg-[var(--ax-bg)] text-[var(--ax-fg-muted)] text-[11px] uppercase tracking-wide">
                   <tr>
                     <th className="text-left px-4 py-2 font-medium">Объект</th>
                     <th className="text-left px-4 py-2 font-medium">Тип</th>
@@ -318,21 +316,21 @@ export default async function PresentationsAdmin({
                   {objects.map((s, i) => {
                     const href = detailHref(s)
                     return (
-                      <tr key={s.objectId} className={i % 2 ? 'bg-[#FAFAFA]' : ''}>
+                      <tr key={s.objectId} className={i % 2 ? 'bg-[var(--ax-hover)]' : ''}>
                         <td className="px-4 py-2.5">
                           {href ? (
-                            <a href={href} target="_blank" rel="noopener noreferrer" className="text-[#111827] hover:text-[var(--color-primary-pressed)] no-underline">
+                            <a href={href} target="_blank" rel="noopener noreferrer" className="text-[var(--ax-fg)] hover:text-[var(--color-primary-pressed)] no-underline">
                               {s.title ?? s.slug ?? s.objectId}
                             </a>
                           ) : (
                             <span>{s.title ?? s.slug ?? s.objectId}</span>
                           )}
-                          <div className="text-[11px] text-[#9CA3AF]">{s.objectId}</div>
+                          <div className="text-[11px] text-[var(--ax-fg-faint)]">{s.objectId}</div>
                         </td>
-                        <td className="px-4 py-2.5 text-[#6B7280]">{kindLabel(s.objectKind)}</td>
+                        <td className="px-4 py-2.5 text-[var(--ax-fg-muted)]">{kindLabel(s.objectKind)}</td>
                         <td className="px-4 py-2.5 text-right tabular-nums font-medium">{s.total}</td>
-                        <td className="px-4 py-2.5 text-right tabular-nums text-[#6B7280]">{s.withAgent}</td>
-                        <td className="px-4 py-2.5 text-[#6B7280]">{fmtDateTime(s.lastAt)}</td>
+                        <td className="px-4 py-2.5 text-right tabular-nums text-[var(--ax-fg-muted)]">{s.withAgent}</td>
+                        <td className="px-4 py-2.5 text-[var(--ax-fg-muted)]">{fmtDateTime(s.lastAt)}</td>
                       </tr>
                     )
                   })}
@@ -353,13 +351,13 @@ export default async function PresentationsAdmin({
 
           <h3 className="text-[14px] font-semibold mb-2 mt-6">Чаще всего попадают в подборки</h3>
           {shortlist.topItems.length === 0 ? (
-            <div className="rounded-2xl bg-white border border-[#E5E7EB] p-6 text-[13px] text-[#6B7280]">
+            <div className="rounded-2xl bg-[var(--ax-panel)] border border-[var(--ax-border)] p-6 text-[13px] text-[var(--ax-fg-muted)]">
               Пока нет данных.
             </div>
           ) : (
-            <div className="rounded-2xl bg-white border border-[#E5E7EB] overflow-hidden">
+            <div className="rounded-2xl bg-[var(--ax-panel)] border border-[var(--ax-border)] overflow-hidden">
               <table className="w-full text-[13px]">
-                <thead className="bg-[#F9FAFB] text-[#6B7280] text-[11px] uppercase tracking-wide">
+                <thead className="bg-[var(--ax-bg)] text-[var(--ax-fg-muted)] text-[11px] uppercase tracking-wide">
                   <tr>
                     <th className="text-left px-4 py-2 font-medium">Объект</th>
                     <th className="text-left px-4 py-2 font-medium">Тип</th>
@@ -371,17 +369,17 @@ export default async function PresentationsAdmin({
                   {shortlist.topItems.map((m, i) => {
                     const href = detailHref({ slug: m.slug, objectKind: m.kind })
                     return (
-                      <tr key={m.airtableId} className={i % 2 ? 'bg-[#FAFAFA]' : ''}>
+                      <tr key={m.airtableId} className={i % 2 ? 'bg-[var(--ax-hover)]' : ''}>
                         <td className="px-4 py-2.5">
                           {href && m.title ? (
-                            <a href={href} target="_blank" rel="noopener noreferrer" className="text-[#111827] hover:text-[var(--color-primary-pressed)] no-underline">{m.title}</a>
+                            <a href={href} target="_blank" rel="noopener noreferrer" className="text-[var(--ax-fg)] hover:text-[var(--color-primary-pressed)] no-underline">{m.title}</a>
                           ) : (
                             <span className="font-mono text-[12px]">{m.title ?? m.airtableId}</span>
                           )}
-                          <div className="text-[11px] text-[#9CA3AF] font-mono">{m.airtableId}</div>
+                          <div className="text-[11px] text-[var(--ax-fg-faint)] font-mono">{m.airtableId}</div>
                         </td>
-                        <td className="px-4 py-2.5 text-[#6B7280]">{kindLabel(m.kind)}</td>
-                        <td className="px-4 py-2.5 text-[#6B7280]">{m.district ?? '—'}</td>
+                        <td className="px-4 py-2.5 text-[var(--ax-fg-muted)]">{kindLabel(m.kind)}</td>
+                        <td className="px-4 py-2.5 text-[var(--ax-fg-muted)]">{m.district ?? '—'}</td>
                         <td className="px-4 py-2.5 text-right tabular-nums font-medium">{m.appearances}</td>
                       </tr>
                     )
@@ -393,53 +391,53 @@ export default async function PresentationsAdmin({
 
           <h3 className="text-[14px] font-semibold mb-2 mt-6">Последние скачивания подборок</h3>
           {shortlist.recent.length === 0 ? (
-            <div className="rounded-2xl bg-white border border-[#E5E7EB] p-6 text-[13px] text-[#6B7280]">
+            <div className="rounded-2xl bg-[var(--ax-panel)] border border-[var(--ax-border)] p-6 text-[13px] text-[var(--ax-fg-muted)]">
               За выбранный период подборки не скачивались.
             </div>
           ) : (
             <ul className="space-y-3">
               {shortlist.recent.map(e => (
-                <li key={e.id} className="rounded-2xl bg-white border border-[#E5E7EB] overflow-hidden">
-                  <div className="px-4 py-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] border-b border-[#E5E7EB] bg-[#F9FAFB]">
-                    <span className="text-[#374151] font-medium tabular-nums">{fmtDateTime(e.created_at)}</span>
-                    <span className="text-[#6B7280]">·</span>
+                <li key={e.id} className="rounded-2xl bg-[var(--ax-panel)] border border-[var(--ax-border)] overflow-hidden">
+                  <div className="px-4 py-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] border-b border-[var(--ax-border)] bg-[var(--ax-bg)]">
+                    <span className="text-[var(--ax-fg-soft)] font-medium tabular-nums">{fmtDateTime(e.created_at)}</span>
+                    <span className="text-[var(--ax-fg-muted)]">·</span>
                     <span className="font-medium tabular-nums">{e.item_count ?? 0} объектов</span>
                     {e.has_agent && (
                       <span className="text-[11px] uppercase tracking-wide bg-[var(--color-primary-soft)] text-[var(--color-primary-pressed)] px-1.5 py-0.5 rounded">Агент</span>
                     )}
-                    <span className="text-[#9CA3AF] text-[11px] ml-auto">{(e.lang ?? '').toUpperCase()} · {e.orientation ?? ''}</span>
+                    <span className="text-[var(--ax-fg-faint)] text-[11px] ml-auto">{(e.lang ?? '').toUpperCase()} · {e.orientation ?? ''}</span>
                   </div>
                   {/* Agent contacts (only on for-agent PDFs) */}
                   {(e.agent_name || e.agent_telegram || e.agent_whatsapp) && (
-                    <div className="px-4 py-2.5 border-b border-[#E5E7EB] text-[12px] flex flex-wrap items-center gap-x-4 gap-y-1 text-[#374151]">
-                      {e.agent_name     && <span><span className="text-[#9CA3AF]">Агент:</span> <span className="font-medium">{e.agent_name}</span></span>}
-                      {e.agent_telegram && <span><span className="text-[#9CA3AF]">Telegram:</span> <a className="text-[var(--color-primary-pressed)] no-underline" href={tgHref(e.agent_telegram)} target="_blank" rel="noopener noreferrer">{e.agent_telegram}</a></span>}
-                      {e.agent_whatsapp && <span><span className="text-[#9CA3AF]">WhatsApp:</span> <a className="text-[var(--color-primary-pressed)] no-underline" href={waHref(e.agent_whatsapp)} target="_blank" rel="noopener noreferrer">{e.agent_whatsapp}</a></span>}
+                    <div className="px-4 py-2.5 border-b border-[var(--ax-border)] text-[12px] flex flex-wrap items-center gap-x-4 gap-y-1 text-[var(--ax-fg-soft)]">
+                      {e.agent_name     && <span><span className="text-[var(--ax-fg-faint)]">Агент:</span> <span className="font-medium">{e.agent_name}</span></span>}
+                      {e.agent_telegram && <span><span className="text-[var(--ax-fg-faint)]">Telegram:</span> <a className="text-[var(--color-primary-pressed)] no-underline" href={tgHref(e.agent_telegram)} target="_blank" rel="noopener noreferrer">{e.agent_telegram}</a></span>}
+                      {e.agent_whatsapp && <span><span className="text-[var(--ax-fg-faint)]">WhatsApp:</span> <a className="text-[var(--color-primary-pressed)] no-underline" href={waHref(e.agent_whatsapp)} target="_blank" rel="noopener noreferrer">{e.agent_whatsapp}</a></span>}
                     </div>
                   )}
                   {/* Per-item list */}
                   {e.items_detail && e.items_detail.length > 0 ? (
-                    <ol className="divide-y divide-[#E5E7EB]">
+                    <ol className="divide-y divide-[var(--ax-border-soft)]">
                       {e.items_detail.map((it, idx) => {
                         const href = detailHref({ slug: it.slug, objectKind: it.kind })
                         return (
                           <li key={idx} className="px-4 py-2.5 text-[12.5px] flex items-center gap-3">
-                            <span className="text-[#9CA3AF] tabular-nums w-[20px] shrink-0">{idx + 1}</span>
+                            <span className="text-[var(--ax-fg-faint)] tabular-nums w-[20px] shrink-0">{idx + 1}</span>
                             <span className="flex-1 min-w-0">
                               {href && it.title ? (
-                                <a href={href} target="_blank" rel="noopener noreferrer" className="text-[#111827] hover:text-[var(--color-primary-pressed)] no-underline">{it.title}</a>
+                                <a href={href} target="_blank" rel="noopener noreferrer" className="text-[var(--ax-fg)] hover:text-[var(--color-primary-pressed)] no-underline">{it.title}</a>
                               ) : (
-                                <span className="text-[#111827]">{it.title ?? it.id ?? '—'}</span>
+                                <span className="text-[var(--ax-fg)]">{it.title ?? it.id ?? '—'}</span>
                               )}
-                              <span className="text-[#9CA3AF] ml-2 text-[11px]">{kindLabel(it.kind)}{it.district ? ` · ${it.district}` : ''}{it.bedrooms != null ? ` · ${it.bedrooms} BR` : ''}{it.area != null ? ` · ${it.area} м²` : ''}</span>
+                              <span className="text-[var(--ax-fg-faint)] ml-2 text-[11px]">{kindLabel(it.kind)}{it.district ? ` · ${it.district}` : ''}{it.bedrooms != null ? ` · ${it.bedrooms} BR` : ''}{it.area != null ? ` · ${it.area} м²` : ''}</span>
                             </span>
-                            <span className="text-[#374151] tabular-nums shrink-0">{fmtUsd(it.priceUsd)}</span>
+                            <span className="text-[var(--ax-fg-soft)] tabular-nums shrink-0">{fmtUsd(it.priceUsd)}</span>
                           </li>
                         )
                       })}
                     </ol>
                   ) : (e.items && e.items.length > 0) ? (
-                    <div className="px-4 py-2.5 text-[12px] text-[#9CA3AF]">
+                    <div className="px-4 py-2.5 text-[12px] text-[var(--ax-fg-faint)]">
                       Только airtable id (старая запись): {e.items.join(', ')}
                     </div>
                   ) : null}
@@ -448,17 +446,15 @@ export default async function PresentationsAdmin({
             </ul>
           )}
         </section>
-      </main>
-
-      <AdminAccountMenu variant="floating" />
-    </div>
+      </div>
+    </AdminThemeShell>
   )
 }
 
 function KpiCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl bg-white border border-[#E5E7EB] p-4">
-      <div className="text-[11px] uppercase tracking-wide text-[#6B7280] font-medium">{label}</div>
+    <div className="rounded-2xl bg-[var(--ax-panel)] border border-[var(--ax-border)] p-4">
+      <div className="text-[11px] uppercase tracking-wide text-[var(--ax-fg-muted)] font-medium">{label}</div>
       <div className="mt-1 text-[24px] font-semibold tabular-nums">{value}</div>
     </div>
   )

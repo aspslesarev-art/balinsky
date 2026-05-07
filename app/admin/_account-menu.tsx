@@ -62,19 +62,22 @@ export function AdminAccountMenu({ variant = 'sidebar' }: { variant?: Variant })
     window.location.href = '/admin'
   }
 
-  // Two distinct skin maps so the floating variant doesn't depend on the
-  // theme-admin CSS vars (which aren't set on light admin pages).
+  // Two skins: floating now lives inside the AdminThemeShell wrapper
+  // and resolves through the same CSS vars as the chats sidebar — so
+  // the menu follows whatever theme the user picked. On mobile the
+  // bubble shrinks and hugs the bottom edge full-width with safe-
+  // area padding so it never overlaps the device home indicator.
   const skin = variant === 'floating'
     ? {
-        wrap: 'fixed bottom-4 left-4 z-40 w-[240px] rounded-2xl border border-[#E5E7EB] bg-white shadow-[0_12px_32px_rgba(0,0,0,0.16)]',
-        button: 'w-full flex items-center gap-2.5 px-3 py-2.5 rounded-2xl hover:bg-[#F9FAFB] text-left',
-        nameFg: 'text-[#111827]',
-        subFg: 'text-[#9CA3AF]',
-        chev: 'text-[#9CA3AF]',
-        popup: 'absolute bottom-full left-0 right-0 mb-1.5 z-50 bg-white border border-[#E5E7EB] rounded-2xl shadow-[0_12px_32px_rgba(0,0,0,0.16)] p-1.5',
-        item: 'text-[#4B5563] hover:bg-[#F3F4F6] hover:text-[#111827]',
-        itemActive: 'bg-[#F3F4F6] text-[#111827] font-medium',
-        sep: 'border-t border-[#E5E7EB]',
+        wrap: 'fixed bottom-4 left-4 right-4 sm:right-auto z-40 sm:w-[240px] rounded-2xl border border-[var(--ax-border)] bg-[var(--ax-panel)] shadow-[0_12px_32px_rgba(0,0,0,0.16)]',
+        button: 'w-full flex items-center gap-2.5 px-3 py-2.5 rounded-2xl hover:bg-[var(--ax-hover)] text-left',
+        nameFg: 'text-[var(--ax-fg)]',
+        subFg: 'text-[var(--ax-fg-faint)]',
+        chev: 'text-[var(--ax-fg-faint)]',
+        popup: 'absolute bottom-full left-0 right-0 mb-1.5 z-50 bg-[var(--ax-panel)] border border-[var(--ax-border)] rounded-2xl shadow-[0_12px_32px_rgba(0,0,0,0.16)] p-1.5',
+        item: 'text-[var(--ax-fg-soft)] hover:bg-[var(--ax-hover)] hover:text-[var(--ax-fg)]',
+        itemActive: 'bg-[var(--ax-hover)] text-[var(--ax-fg)] font-medium',
+        sep: 'border-t border-[var(--ax-border-soft)]',
       }
     : {
         wrap: 'relative shrink-0 border-t border-[var(--ax-border)]',

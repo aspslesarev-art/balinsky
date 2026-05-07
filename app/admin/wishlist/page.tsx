@@ -12,7 +12,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@supabase/supabase-js'
 import { requireAdmin } from '@/lib/admin-auth'
-import { AdminAccountMenu } from '../_account-menu'
+import { AdminThemeShell } from '@/components/admin/AdminThemeShell'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { robots: { index: false, follow: false }, title: 'Лайки · Balinsky Admin' }
@@ -158,31 +158,28 @@ export default async function WishlistAdmin({
   }
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] text-[#111827] pb-20">
-      <header className="px-6 pt-6 pb-4 border-b border-[#E5E7EB] bg-white">
-        <h1 className="text-[22px] font-semibold tracking-tight">Лайки</h1>
-        <div className="mt-2 text-[13px] text-[#6B7280]">
-          Что посетители сохраняют в избранное. Считаем добавления (heart-tap), не считаем удаления.
-        </div>
-        <div className="mt-4 flex flex-wrap gap-2">
+    <AdminThemeShell
+      title="Лайки"
+      description="Что посетители сохраняют в избранное. Считаем добавления (heart-tap), не считаем удаления."
+      filters={
+        <div className="flex flex-wrap gap-2">
           {(['24h', '7d', '30d', 'all'] as Range[]).map(r => (
             <Link
               key={r}
               href={`/admin/wishlist?range=${r}`}
               className={`px-3 py-1.5 rounded-full text-[13px] no-underline transition-colors ${
                 r === range
-                  ? 'bg-[#111827] text-white'
-                  : 'bg-white border border-[#E5E7EB] text-[#374151] hover:border-[#9CA3AF]'
+                  ? 'bg-[var(--ax-fg)] text-[var(--ax-bg)]'
+                  : 'bg-[var(--ax-panel)] border border-[var(--ax-border)] text-[var(--ax-fg-soft)] hover:text-[var(--ax-fg)]'
               }`}
             >
               {RANGE_LABELS[r]}
             </Link>
           ))}
         </div>
-      </header>
-
-      <main className="px-6 py-6 max-w-[1200px] mx-auto space-y-10">
-        {/* Top KPIs */}
+      }
+    >
+      <div className="space-y-8 md:space-y-10">
         <section className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <KpiCard label="Всего лайков" value={String(totalLikes)} />
           <KpiCard label="Виллы"        value={String(totalsByKind.villa)} />
@@ -191,43 +188,46 @@ export default async function WishlistAdmin({
           <KpiCard label="Аренда"       value={String(totalsByKind.rental)} />
         </section>
 
-        <div className="text-[12px] text-[#9CA3AF]">
+        <div className="text-[12px] text-[var(--ax-fg-faint)]">
           Уникальных объектов с лайками: {uniqueListings}
         </div>
 
-        {/* One section per kind */}
         {(['villa', 'apartment', 'complex', 'rental'] as Kind[]).map(kind => (
           <section key={kind}>
-            <h2 className="text-[16px] font-semibold mb-3">{kindLabel(kind)}</h2>
+            <h2 className="text-[15px] md:text-[16px] font-semibold mb-3 text-[var(--ax-fg)]">{kindLabel(kind)}</h2>
             {byKind[kind].length === 0 ? (
-              <div className="rounded-2xl bg-white border border-[#E5E7EB] p-6 text-[13px] text-[#6B7280]">
+              <div className="rounded-2xl bg-[var(--ax-panel)] border border-[var(--ax-border)] p-6 text-[13px] text-[var(--ax-fg-muted)]">
                 За выбранный период нет лайков.
               </div>
             ) : (
-              <div className="rounded-2xl bg-white border border-[#E5E7EB] overflow-hidden">
-                <table className="w-full text-[13px]">
-                  <thead className="bg-[#F9FAFB] text-[#6B7280] text-[11px] uppercase tracking-wide">
-                    <tr>
+              <div className="rounded-2xl bg-[var(--ax-panel)] border border-[var(--ax-border)] overflow-x-auto">
+                <table className="w-full text-[13px] min-w-[600px]">
+                  <thead className="text-[var(--ax-fg-muted)] text-[11px] uppercase tracking-wide">
+                    <tr className="border-b border-[var(--ax-border-soft)]">
                       <th className="text-left  px-4 py-2 font-medium">Объект</th>
-                      <th className="text-left  px-4 py-2 font-medium">Район</th>
-                      <th className="text-right px-4 py-2 font-medium">Цена</th>
+                      <th className="text-left  px-4 py-2 font-medium hidden md:table-cell">Район</th>
+                      <th className="text-right px-4 py-2 font-medium hidden md:table-cell">Цена</th>
                       <th className="text-right px-4 py-2 font-medium">Лайков</th>
-                      <th className="text-left  px-4 py-2 font-medium">Последний</th>
+                      <th className="text-left  px-4 py-2 font-medium hidden lg:table-cell">Последний</th>
                     </tr>
                   </thead>
                   <tbody>
                     {byKind[kind].map((a, i) => (
-                      <tr key={`${a.kind}:${a.slug}`} className={i % 2 ? 'bg-[#FAFAFA]' : ''}>
+                      <tr key={`${a.kind}:${a.slug}`} className={i % 2 ? 'bg-[var(--ax-hover)]' : ''}>
                         <td className="px-4 py-2.5">
-                          <a href={detailHref(a)} target="_blank" rel="noopener noreferrer" className="text-[#111827] hover:text-[var(--color-primary-pressed)] no-underline">
+                          <a href={detailHref(a)} target="_blank" rel="noopener noreferrer" className="text-[var(--ax-fg)] hover:text-[var(--color-primary)] no-underline">
                             {a.title ?? a.slug}
                           </a>
-                          {a.airtableId && <div className="text-[11px] text-[#9CA3AF] font-mono">{a.airtableId}</div>}
+                          {a.airtableId && <div className="text-[11px] text-[var(--ax-fg-faint)] font-mono">{a.airtableId}</div>}
+                          {/* Mobile-only inline meta — district / price collapse on small screens */}
+                          <div className="text-[11px] text-[var(--ax-fg-muted)] mt-0.5 md:hidden">
+                            {a.district ?? '—'}{a.priceUsd != null && ` · ${fmtUsd(a.priceUsd)}`}
+                          </div>
                         </td>
-                        <td className="px-4 py-2.5 text-[#6B7280]">{a.district ?? '—'}</td>
-                        <td className="px-4 py-2.5 text-right tabular-nums text-[#374151]">{fmtUsd(a.priceUsd)}</td>
-                        <td className="px-4 py-2.5 text-right tabular-nums font-semibold">{a.likes}</td>
-                        <td className="px-4 py-2.5 text-[#6B7280]">{fmtDateTime(a.lastAt)}</td>
+                        <td className="px-4 py-2.5 text-[var(--ax-fg-muted)] hidden md:table-cell">{a.district ?? '—'}</td>
+                        <td className="px-4 py-2.5 text-right tabular-nums text-[var(--ax-fg-soft)] hidden md:table-cell">{fmtUsd(a.priceUsd)}</td>
+                        <td className="px-4 py-2.5 text-right tabular-nums font-semibold text-[var(--ax-fg)]">{a.likes}</td>
+                        <td className="px-4 py-2.5 text-[var(--ax-fg-muted)] hidden lg:table-cell">{fmtDateTime(a.lastAt)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -236,18 +236,16 @@ export default async function WishlistAdmin({
             )}
           </section>
         ))}
-      </main>
-
-      <AdminAccountMenu variant="floating" />
-    </div>
+      </div>
+    </AdminThemeShell>
   )
 }
 
 function KpiCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl bg-white border border-[#E5E7EB] p-4">
-      <div className="text-[11px] uppercase tracking-wide text-[#6B7280] font-medium">{label}</div>
-      <div className="mt-1 text-[24px] font-semibold tabular-nums">{value}</div>
+    <div className="rounded-2xl bg-[var(--ax-panel)] border border-[var(--ax-border)] p-4">
+      <div className="text-[11px] uppercase tracking-wide text-[var(--ax-fg-muted)] font-medium">{label}</div>
+      <div className="mt-1 text-[22px] md:text-[24px] font-semibold tabular-nums text-[var(--ax-fg)]">{value}</div>
     </div>
   )
 }

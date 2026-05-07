@@ -4,7 +4,7 @@ import { Mail, Phone } from 'lucide-react'
 import { requireAdmin } from '@/lib/admin-auth'
 import { listAllReservations, type Reservation, type ReservationStatus } from '@/lib/reservations'
 import { ReservationStatusButtons } from './_status'
-import { AdminAccountMenu } from '../_account-menu'
+import { AdminThemeShell } from '@/components/admin/AdminThemeShell'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { robots: { index: false, follow: false }, title: 'Брони · Balinsky Admin' }
@@ -22,7 +22,7 @@ const STATUS_TONE: Record<ReservationStatus, string> = {
   confirmed: 'bg-[#D1FAE5] text-[#065F46]',
   invoice_sent: 'bg-[#DBEAFE] text-[#1E40AF]',
   paid: 'bg-[#D1FAE5] text-[#065F46]',
-  cancelled: 'bg-[#E5E7EB] text-[#374151]',
+  cancelled: 'bg-[var(--ax-hover)] text-[var(--ax-fg-soft)]',
   expired: 'bg-[#FEE2E2] text-[#991B1B]',
 }
 
@@ -36,26 +36,21 @@ export default async function ReservationsAdmin() {
   const items = await listAllReservations()
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] text-[#111827]">
-      <div className="max-w-5xl mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-[20px] font-semibold">Брони</h1>
-          <span className="text-[12px] text-[#6B7280]">{items.length} {items.length === 1 ? 'заявка' : 'заявок'}</span>
+    <AdminThemeShell
+      title="Брони"
+      description={`${items.length} ${items.length === 1 ? 'заявка' : 'заявок'} · резервации с детальных страниц.`}
+    >
+      {items.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-[var(--ax-border)] bg-[var(--ax-panel)] p-10 text-center text-[13px] text-[var(--ax-fg-muted)]">
+          Заявок пока нет. Когда кто-то нажмёт «Зарезервировать» на странице объекта,
+          запись появится здесь.
         </div>
-
-        {items.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-[#E5E7EB] bg-white p-10 text-center text-[13px] text-[#6B7280]">
-            Заявок пока нет. Когда кто-то нажмёт «Зарезервировать» на странице объекта,
-            запись появится здесь.
-          </div>
-        ) : (
-          <ul className="space-y-3">
-            {items.map(r => <Row key={r.id} r={r} />)}
-          </ul>
-        )}
-      </div>
-      <AdminAccountMenu variant="floating" />
-    </div>
+      ) : (
+        <ul className="space-y-3">
+          {items.map(r => <Row key={r.id} r={r} />)}
+        </ul>
+      )}
+    </AdminThemeShell>
   )
 }
 
@@ -64,28 +59,28 @@ function Row({ r }: { r: Reservation }) {
   const expired = new Date(r.expires_at).getTime() < Date.now() && r.status !== 'paid' && r.status !== 'cancelled'
   const visibleStatus: ReservationStatus = expired && r.status !== 'expired' ? 'expired' : r.status
   return (
-    <li className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
+    <li className="rounded-2xl border border-[var(--ax-border)] bg-[var(--ax-panel)] p-4">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap mb-1">
             <span className={`text-[10px] uppercase tracking-wide font-medium px-2 py-0.5 rounded ${STATUS_TONE[visibleStatus]}`}>
               {STATUS_LABEL[visibleStatus]}
             </span>
-            <span className="text-[11px] text-[#6B7280]">
+            <span className="text-[11px] text-[var(--ax-fg-muted)]">
               {fmtDateTime(r.created_at)} · до {fmtDateTime(r.expires_at)}
             </span>
           </div>
           <div className="text-[14px] font-medium leading-snug mb-2">
-            <Link href={`${sectionPath}${r.listing_slug}`} target="_blank" className="text-[#111827] hover:text-[#1F8B5F]">
+            <Link href={`${sectionPath}${r.listing_slug}`} target="_blank" className="text-[var(--ax-fg)] hover:text-[#1F8B5F]">
               {r.listing_title ?? r.listing_slug}
             </Link>
             {r.listing_price_usd != null && (
-              <span className="ml-2 text-[12px] text-[#6B7280] font-normal">
+              <span className="ml-2 text-[12px] text-[var(--ax-fg-muted)] font-normal">
                 ${Math.round(r.listing_price_usd).toLocaleString('en-US')}
               </span>
             )}
           </div>
-          <div className="text-[14px] text-[#111827] mb-1">{r.contact_name}</div>
+          <div className="text-[14px] text-[var(--ax-fg)] mb-1">{r.contact_name}</div>
           <div className="flex items-center gap-3 flex-wrap text-[12px] text-[#4B5563]">
             <a href={`mailto:${r.contact_email}`} className="inline-flex items-center gap-1 hover:text-[#1F8B5F]">
               <Mail size={12} /> {r.contact_email}

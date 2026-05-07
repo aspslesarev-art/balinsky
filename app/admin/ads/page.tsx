@@ -3,7 +3,7 @@ import Image from 'next/image'
 import { createClient } from '@supabase/supabase-js'
 import { requireAdmin } from '@/lib/admin-auth'
 import { loadAllBanners, type Banner } from '@/lib/banners'
-import { AdminAccountMenu } from '../_account-menu'
+import { AdminThemeShell } from '@/components/admin/AdminThemeShell'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { robots: { index: false, follow: false }, title: 'Реклама · Balinsky Admin' }
@@ -47,15 +47,12 @@ export default async function AdsAdmin() {
   const [banners, stats] = await Promise.all([loadAllBanners(), loadStats()])
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] text-[#111827]">
-      <div className="max-w-5xl mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-[20px] font-semibold">Рекламные баннеры</h1>
-          <span className="text-[12px] text-[#6B7280]">{banners.length} {banners.length === 1 ? 'баннер' : 'баннеров'}</span>
-        </div>
-
+    <AdminThemeShell
+      title="Рекламные баннеры"
+      description={`${banners.length} ${banners.length === 1 ? 'баннер' : 'баннеров'} · карточки берутся из Airtable.`}
+    >
         {banners.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-[#E5E7EB] bg-white p-10 text-center text-[13px] text-[#6B7280]">
+          <div className="rounded-2xl border border-dashed border-[var(--ax-border)] bg-[var(--ax-panel)] p-10 text-center text-[13px] text-[var(--ax-fg-muted)]">
             Баннеров пока нет. Заведите запись в Airtable (таблица «Ad Banners»),
             затем запустите <code className="bg-[#F3F4F6] px-1.5 py-0.5 rounded">node scripts/sync-banners.mjs</code>.
           </div>
@@ -71,7 +68,7 @@ export default async function AdsAdmin() {
                 ? Math.min(100, Math.round(((s?.impressions_count ?? 0) / b.impressionLimit) * 100))
                 : null
               return (
-                <li key={b.id} className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
+                <li key={b.id} className="rounded-2xl border border-[var(--ax-border)] bg-[var(--ax-panel)] p-4">
                   <div className="flex items-start gap-4">
                     <div className="relative shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-[#F3F4F6]">
                       {b.imageUrl && <Image src={b.imageUrl} alt={b.alt} fill sizes="80px" className="object-cover" />}
@@ -81,13 +78,13 @@ export default async function AdsAdmin() {
                         <span className={`text-[10px] uppercase tracking-wide font-medium px-2 py-0.5 rounded ${
                           status.tone === 'live'      ? 'bg-[#D1FAE5] text-[#065F46]'
                           : status.tone === 'capped'  ? 'bg-[#FEE2E2] text-[#991B1B]'
-                          : status.tone === 'paused'  ? 'bg-[#E5E7EB] text-[#374151]'
+                          : status.tone === 'paused'  ? 'bg-[var(--ax-hover)] text-[var(--ax-fg-soft)]'
                           : status.tone === 'expired' ? 'bg-[#FEF3C7] text-[#92400E]'
                           : 'bg-[#DBEAFE] text-[#1E40AF]'
                         }`}>
                           {status.label}
                         </span>
-                        {b.sponsor && <span className="text-[12px] text-[#6B7280]">{b.sponsor}</span>}
+                        {b.sponsor && <span className="text-[12px] text-[var(--ax-fg-muted)]">{b.sponsor}</span>}
                       </div>
                       <div className="text-[14px] font-medium leading-snug mb-1.5">{b.headline}</div>
                       <a href={b.linkUrl} target="_blank" rel="noopener" className="text-[12px] text-[#1F8B5F] hover:underline break-all">{b.linkUrl}</a>
@@ -101,7 +98,7 @@ export default async function AdsAdmin() {
 
                       {limitProgress != null && (
                         <div className="mt-3">
-                          <div className="flex items-center justify-between text-[11px] text-[#6B7280] mb-1">
+                          <div className="flex items-center justify-between text-[11px] text-[var(--ax-fg-muted)] mb-1">
                             <span>Лимит показов</span>
                             <span>{(s?.impressions_count ?? 0).toLocaleString('ru-RU')} / {b.impressionLimit!.toLocaleString('ru-RU')}</span>
                           </div>
@@ -114,7 +111,7 @@ export default async function AdsAdmin() {
                         </div>
                       )}
 
-                      <div className="mt-3 text-[11px] text-[#6B7280]">
+                      <div className="mt-3 text-[11px] text-[var(--ax-fg-muted)]">
                         Управление статусом / лимитом — в Airtable, таблица «Ad Banners».
                         После правок запустите <code>node scripts/sync-banners.mjs</code> или дождитесь следующей синхронизации.
                       </div>
@@ -125,17 +122,15 @@ export default async function AdsAdmin() {
             })}
           </ul>
         )}
-      </div>
-      <AdminAccountMenu variant="floating" />
-    </div>
+    </AdminThemeShell>
   )
 }
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] p-2">
-      <div className="text-[10px] uppercase tracking-wide text-[#6B7280]">{label}</div>
-      <div className="text-[14px] font-semibold text-[#111827]">{value}</div>
+    <div className="rounded-lg border border-[var(--ax-border)] bg-[var(--ax-bg)] p-2">
+      <div className="text-[10px] uppercase tracking-wide text-[var(--ax-fg-muted)]">{label}</div>
+      <div className="text-[14px] font-semibold text-[var(--ax-fg)]">{value}</div>
     </div>
   )
 }
