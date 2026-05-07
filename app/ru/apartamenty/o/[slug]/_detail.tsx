@@ -2,7 +2,7 @@
 // and /en/apartments/o/[slug]. Layout / data fetching live here only.
 
 import type { ReactNode } from 'react'
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@supabase/supabase-js'
 import { unstable_cache } from 'next/cache'
@@ -29,6 +29,7 @@ import { findActiveReservation } from '@/lib/reservations'
 import { InlinePrice } from '@/components/InlinePrice'
 import { VillaPresentationButton } from '@/components/VillaPresentation'
 import { tField, type Lang } from '@/lib/i18n'
+import { normalizeSlug } from '@/lib/slug-normalize'
 
 const AIRPORT_LAT = -8.7467
 const AIRPORT_LNG = 115.1667
@@ -152,7 +153,10 @@ function cleanTitle(s: string | null): string | null {
 }
 
 // Slug → id index. Loaded from Storage manifest (avoids 14MB raw_apartments query).
-type AptIndexEntry = { id: string; slug: string; district: string | null }
+// `aliases` carries the legacy "dirty" Airtable slug (cyrillic look-
+// alikes, parens, etc.) so old GSC-cached URLs can resolve to the
+// same id and 301 to the canonical clean slug.
+type AptIndexEntry = { id: string; slug: string; district: string | null; aliases?: string[] }
 const APT_INDEX_URL = `${SUPABASE_URL}/storage/v1/object/public/feeds/_apartments-index.json`
 let _aptIndexCache: { ts: number; data: AptIndexEntry[] } | null = null
 let _aptIndexInflight: Promise<AptIndexEntry[]> | null = null
@@ -230,11 +234,28 @@ async function _loadAllComplexes(): Promise<ComplexRow[]> {
 }
 
 
-async function loadApartmentBySlug(slug: string): Promise<Row | null> {
+// Resolve a URL slug (possibly the dirty alias from a legacy GSC link)
+// to { row, canonicalSlug }. Detail page redirects 301 when the URL
+// slug isn't already canonical.
+async function resolveApartment(urlSlug: string): Promise<{ row: Row; canonicalSlug: string } | null> {
   const idx = await _loadApartmentIndex()
-  const entry = idx.find(e => e.slug === slug)
+  // Direct match on the canonical slug (the common case).
+  let entry = idx.find(e => e.slug === urlSlug)
+  if (!entry) {
+    // Alias lookup: normalised version of the URL slug, then any
+    // explicit alias the index carries.
+    const normalised = normalizeSlug(urlSlug)
+    entry = idx.find(e => e.slug === normalised) || idx.find(e => e.aliases?.includes(urlSlug))
+  }
   if (!entry) return null
-  return _loadApartmentById(entry.id)
+  const row = await _loadApartmentById(entry.id)
+  if (!row) return null
+  return { row, canonicalSlug: entry.slug }
+}
+
+async function loadApartmentBySlug(slug: string): Promise<Row | null> {
+  const r = await resolveApartment(slug)
+  return r?.row ?? null
 }
 
 // Best-effort match of apartment to its parent complex by extracting the
@@ -310,8 +331,18 @@ export async function generateApartmentMetadata(slug: string, lang: Lang) {
 
 export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang }) {
   const c = COPY[lang]
-  const a = await loadApartmentBySlug(slug)
-  if (!a) notFound()
+  // Canonical-slug redirect: legacy GSC links carry dirty slugs
+  // (cyrillic look-alikes, parens). Resolve resolves either form and
+  // tells us the canonical; redirect 301 if the URL doesn't match.
+  const resolved = await resolveApartment(slug)
+  if (!resolved) notFound()
+  if (resolved.canonicalSlug !== slug) {
+    const path = lang === 'en'
+      ? `/en/apartments/o/${resolved.canonicalSlug}`
+      : `/ru/apartamenty/o/${resolved.canonicalSlug}`
+    permanentRedirect(path)
+  }
+  const a = resolved.row
 
   const d = a.data
   const [manifest, devMap, complexes] = await Promise.all([

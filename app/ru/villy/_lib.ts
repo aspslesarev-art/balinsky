@@ -3,6 +3,7 @@ import Fuse from 'fuse.js'
 import type { Option } from '@/components/filters/MultiSelectFilter'
 import { translit, hasCyrillic } from '@/lib/translit'
 import { loadVillaStyles } from '@/lib/villa-styles'
+import { normalizeSlug } from '@/lib/slug-normalize'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/villa-photos/_manifest.json`
@@ -479,7 +480,9 @@ export function toCard(
   devStats?: Map<string, { ready: number; total: number }>,
 ): VillaCard | null {
   const d = e.data
-  const slug = firstString(d['SEO:Slug'])
+  // Canonicalise the Airtable slug at the catalog level so internal
+  // links emit the clean URL (no GSC churn from dirty slugs).
+  const slug = normalizeSlug(firstString(d['SEO:Slug']))
   if (!slug || slug.startsWith('-')) return null
   const titleRaw =
     cleanTitle(firstString(d['SEO:Title'])) ??

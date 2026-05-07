@@ -4,6 +4,7 @@ import type { ApartmentCardData } from '@/components/ApartmentCard'
 import type { FilterOptions, FilterState } from '@/components/filters/FiltersBar'
 import type { Option } from '@/components/filters/MultiSelectFilter'
 import { translit, hasCyrillic } from '@/lib/translit'
+import { normalizeSlug } from '@/lib/slug-normalize'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/apartment-photos/_manifest.json`
@@ -371,7 +372,10 @@ export function toCard(
   devStats?: Map<string, { ready: number; total: number }>,
 ): Card | null {
   const d = e.data
-  const slug = firstString(d['SEO:Slug'])
+  // Canonicalise the Airtable slug at the catalog level so every
+  // link the site emits points at the clean URL — no GSC churn from
+  // dirty cyrillic / paren slugs surfacing from internal navigation.
+  const slug = normalizeSlug(firstString(d['SEO:Slug']))
   if (!slug || slug.startsWith('-')) return null
   const title =
     cleanTitle(firstString(d['SEO:Title'])) ??

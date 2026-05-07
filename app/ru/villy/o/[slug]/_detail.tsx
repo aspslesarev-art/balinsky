@@ -3,7 +3,7 @@
 // here; locale-specific copy is in the COPY table below.
 
 import type { ReactNode } from 'react'
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@supabase/supabase-js'
 import { unstable_cache } from 'next/cache'
@@ -41,6 +41,7 @@ import { VideoGrid } from '@/components/VideoGrid'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { VillaPresentationButton } from '@/components/VillaPresentation'
 import { tField, type Lang } from '@/lib/i18n'
+import { normalizeSlug } from '@/lib/slug-normalize'
 
 const COPY = {
   ru: {
@@ -180,7 +181,7 @@ function cleanTitle(s: string | null): string | null {
 
 // Slug index loaded from Storage manifest (built by scripts/sync-detail-indexes.mjs).
 // Avoids the 21MB raw_villas query that hits Postgres statement timeout.
-type IndexEntry = { id: string; slug: string; district: string | null }
+type IndexEntry = { id: string; slug: string; district: string | null; aliases?: string[] }
 const INDEX_URL = `${SUPABASE_URL}/storage/v1/object/public/feeds/_villas-index.json`
 const INDEX_TTL_MS = 30 * 60 * 1000
 let _indexCache: { ts: number; data: IndexEntry[] } | null = null
@@ -229,11 +230,22 @@ async function _loadManifest(): Promise<Record<string, string[]>> {
   } catch { return _manifestCache?.data ?? {} }
 }
 
-async function loadVillaBySlug(slug: string): Promise<Row | null> {
+async function resolveVilla(urlSlug: string): Promise<{ row: Row; canonicalSlug: string } | null> {
   const idx = await _loadVillaIndex()
-  const entry = idx.find(e => e.slug === slug)
+  let entry = idx.find(e => e.slug === urlSlug)
+  if (!entry) {
+    const normalised = normalizeSlug(urlSlug)
+    entry = idx.find(e => e.slug === normalised) || idx.find(e => e.aliases?.includes(urlSlug))
+  }
   if (!entry) return null
-  return _loadVillaById(entry.id)
+  const row = await _loadVillaById(entry.id)
+  if (!row) return null
+  return { row, canonicalSlug: entry.slug }
+}
+
+async function loadVillaBySlug(slug: string): Promise<Row | null> {
+  const r = await resolveVilla(slug)
+  return r?.row ?? null
 }
 
 // === Parent complex + developer lookups ===
@@ -398,8 +410,18 @@ export async function generateVillaMetadata(slug: string, lang: Lang) {
 
 export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) {
   const c = COPY[lang]
-  const v = await loadVillaBySlug(slug)
-  if (!v) notFound()
+  // Canonical-slug redirect: legacy GSC links carry dirty slugs
+  // (cyrillic look-alikes, parens). resolveVilla finds either form
+  // and tells us the canonical; we 301 if URL doesn't match.
+  const resolved = await resolveVilla(slug)
+  if (!resolved) notFound()
+  if (resolved.canonicalSlug !== slug) {
+    const path = lang === 'en'
+      ? `/en/villas/o/${resolved.canonicalSlug}`
+      : `/ru/villy/o/${resolved.canonicalSlug}`
+    permanentRedirect(path)
+  }
+  const v = resolved.row
 
   const d = v.data
   const manifest = await _loadManifest()
