@@ -132,6 +132,11 @@ let dropped = 0
 let uploadedPhotos = 0
 for (const r of managers) {
   const f = r.fields || {}
+  // Hidden by editor — they don't ship to the manifest at all, so
+  // /ru/zastrojshhiki, villa / complex / apartment detail pages and the
+  // generic ManagerCard never see them. Re-enabling is a one-click in
+  // Airtable + next sync run.
+  if (f['Скрыть'] === true) { dropped++; continue }
   const name = fs1(f['Name'])
   if (!name) { dropped++; continue }
 
