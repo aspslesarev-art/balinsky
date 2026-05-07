@@ -112,17 +112,24 @@ async function handleRental(id: string): Promise<StartResult> {
   return { reply: { text: lines.join('\n'), parseMode: 'HTML' }, tags: ['rental:' + r.slug] }
 }
 
-async function handleEvent(slug: string): Promise<StartResult> {
+async function handleEvent(key: string): Promise<StartResult> {
+  // `key` is the Airtable record id ("rec…") for new links; old links
+  // shipped slugs, so we fall back to slug lookup. Some legacy slugs
+  // also exceeded Telegram's 64-char `start` limit and arrived
+  // truncated — match by prefix as a last resort so a partial slug
+  // still finds its event.
   let ev: EventItem | undefined
   try {
     const all = await loadAllEvents()
-    ev = all.find(x => x.slug === slug)
+    ev = all.find(x => x.id === key)
+        ?? all.find(x => x.slug === key)
+        ?? (key.length >= 20 ? all.find(x => x.slug.startsWith(key)) : undefined)
   } catch { /* fall through */ }
   if (!ev) {
     return { reply: {
       text: 'Не нашёл это мероприятие — возможно, ссылка устарела. Актуальная афиша: <a href="https://balinsky.info/ru/meropriyatiya">balinsky.info/ru/meropriyatiya</a>.',
       parseMode: 'HTML',
-    }, tags: ['event:' + slug] }
+    }, tags: ['event:' + key] }
   }
   const when = ev.startsAt ? new Date(ev.startsAt).toLocaleString('ru-RU', {
     day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Makassar',

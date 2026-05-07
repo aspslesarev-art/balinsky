@@ -183,7 +183,7 @@ export async function EventDetail({ slug, lang }: { slug: string; lang: Lang }) 
 
           <div className="mt-6 flex flex-wrap gap-3">
             {!past && (
-              <a href={botLink('event', e.slug)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[var(--color-primary)] text-white text-[14px] font-medium no-underline hover:bg-[var(--color-primary-hover)]">
+              <a href={botLink('event', e.id)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[var(--color-primary)] text-white text-[14px] font-medium no-underline hover:bg-[var(--color-primary-hover)]">
                 <Send size={14} /> {c.register}
               </a>
             )}

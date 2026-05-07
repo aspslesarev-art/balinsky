@@ -5,21 +5,31 @@
 // Bot handles these `start=` params (see lib/telegram-handlers.ts):
 //   manager_<airtableRecordId>  → connect to a developer's manager
 //   rental_<airtableRecordId>   → connect to a monthly-rental owner
-//   event_<eventSlug>           → register for an event (slug, not recId)
+//   event_<airtableRecordId>    → register for an event
 //   review_<DeveloperName>      → leave a review
 //   error_<DeveloperName>       → report a bug
 //   seller_<airtableId>         → resale: get seller contact via the bot
 //
 // Each /start also tags the chat (event:<slug>, developer:<slug>, etc.) so
 // /admin/broadcast can later message everyone who showed interest in a topic.
+//
+// Telegram caps the `start` parameter at 64 chars and only allows
+// [A-Za-z0-9_-]. We always use Airtable record IDs ("rec…") for the
+// event/manager/rental/seller lookup keys — they're 17 chars, well
+// under the limit. Event slugs used to be passed here directly but
+// they routinely run past 60 chars (region + project + date), so a
+// silent truncation broke the bot lookup.
 
 const BOT_USERNAME = 'BalinskyBot'
 
-// Telegram allows [a-zA-Z0-9_-] in the start parameter, max 64 chars.
-function sanitize(s: string): string {
-  return s.replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 60)
+const MAX_START_LEN = 64
+
+function sanitize(s: string, maxLen: number): string {
+  return s.replace(/[^A-Za-z0-9_-]/g, '_').slice(0, maxLen)
 }
 
 export function botLink(kind: 'manager' | 'rental' | 'event' | 'seller', id: string): string {
-  return `https://t.me/${BOT_USERNAME}?start=${kind}_${sanitize(id)}`
+  // Account for prefix `<kind>_` so the final payload always fits.
+  const budget = MAX_START_LEN - kind.length - 1
+  return `https://t.me/${BOT_USERNAME}?start=${kind}_${sanitize(id, budget)}`
 }
