@@ -51,6 +51,33 @@ for (let i = 0; i < rows.length; i += 100) {
   console.log(`  ${done}/${rows.length}`)
 }
 
+// Prune rows that exist in Supabase but no longer in Airtable. Without
+// this an editor's "delete from Airtable" never propagates — the row
+// stays in raw_apartments forever and the listing keeps showing on the
+// site. Sanity guard: refuse to prune if Airtable returned zero records
+// (almost certainly an upstream blip rather than a bulk delete) so we
+// can never accidentally nuke the table.
+if (rows.length === 0) {
+  console.error('  ✖ Airtable returned 0 rows — refusing to prune Supabase')
+  process.exit(1)
+}
+console.log('▶ pruning rows missing from Airtable…')
+const liveIds = new Set(rows.map(r => r.airtable_id))
+const { data: existing, error: listErr } = await sb.from('raw_apartments').select('airtable_id')
+if (listErr) { console.error('  ✖ list:', listErr.message); process.exit(1) }
+const stale = (existing ?? []).map(r => r.airtable_id).filter(id => !liveIds.has(id))
+console.log(`  stale rows: ${stale.length}`)
+if (stale.length > 0) {
+  // chunk the in() because Postgres has a parameter limit and very
+  // large lists can hit URL length caps on the PostgREST side.
+  for (let i = 0; i < stale.length; i += 500) {
+    const slice = stale.slice(i, i + 500)
+    const { error: delErr } = await sb.from('raw_apartments').delete().in('airtable_id', slice)
+    if (delErr) { console.error('  ✖ delete:', delErr.message); process.exit(1) }
+  }
+  console.log(`  ✓ deleted ${stale.length} stale rows`)
+}
+
 const enFilled = rows.filter(r => {
   const v = r.data['SEO:Title EN']
   const s = typeof v === 'object' && v?.value !== undefined ? v.value : v
