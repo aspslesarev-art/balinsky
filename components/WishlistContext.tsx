@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useCallback, useContext, useMemo, useSyncExternalStore, type ReactNode } from 'react'
-import { WISHLIST_LS_KEY, WISHLIST_MAX, type WishlistItem, type WishlistKind } from '@/lib/wishlist'
+import { WISHLIST_LS_KEY, WISHLIST_MAX, CAPPED_KINDS, type WishlistItem, type WishlistKind } from '@/lib/wishlist'
 
 type Ctx = {
   items: WishlistItem[]
@@ -15,6 +15,26 @@ type Ctx = {
 
 const WishlistContext = createContext<Ctx | null>(null)
 const EMPTY: WishlistItem[] = []
+
+// Cap eviction. The cap of `WISHLIST_MAX` applies *only* to capped
+// kinds (villas + apartments). Complexes and rentals are kept as-is
+// regardless of count. When a capped item is added that pushes the
+// capped subset past the limit, evict the oldest capped item by
+// `savedAt` so the new add survives. `incomingKind` short-circuits
+// the work when an uncapped item was added.
+function applyCap(list: WishlistItem[], incomingKind: WishlistKind): WishlistItem[] {
+  if (!CAPPED_KINDS.has(incomingKind)) return list
+  const capped = list.filter(i => CAPPED_KINDS.has(i.kind))
+  if (capped.length <= WISHLIST_MAX) return list
+  const keep = new Set(
+    capped
+      .slice()
+      .sort((a, b) => (a.savedAt < b.savedAt ? 1 : -1))
+      .slice(0, WISHLIST_MAX)
+      .map(i => `${i.kind}:${i.slug}`),
+  )
+  return list.filter(i => !CAPPED_KINDS.has(i.kind) || keep.has(`${i.kind}:${i.slug}`))
+}
 
 function readSnapshot(): WishlistItem[] {
   if (typeof window === 'undefined') return EMPTY
@@ -86,12 +106,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   const add = useCallback((item: WishlistItem) => {
     const prev = readSnapshot()
     if (prev.some(i => i.kind === item.kind && i.slug === item.slug)) return
-    const next = [item, ...prev]
-    if (next.length > WISHLIST_MAX) {
-      next.sort((a, b) => (a.savedAt < b.savedAt ? 1 : -1))
-      next.length = WISHLIST_MAX
-    }
-    write(next)
+    write(applyCap([item, ...prev], item.kind))
   }, [])
 
   const remove = useCallback((kind: WishlistKind, slug: string) => {
@@ -106,11 +121,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     const exists = prev.some(i => i.kind === item.kind && i.slug === item.slug)
     const next = exists
       ? prev.filter(i => !(i.kind === item.kind && i.slug === item.slug))
-      : [item, ...prev]
-    if (!exists && next.length > WISHLIST_MAX) {
-      next.sort((a, b) => (a.savedAt < b.savedAt ? 1 : -1))
-      next.length = WISHLIST_MAX
-    }
+      : applyCap([item, ...prev], item.kind)
     write(next)
   }, [])
 

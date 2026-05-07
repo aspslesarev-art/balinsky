@@ -65,4 +65,11 @@ export type WishlistItem = {
 }
 
 export const WISHLIST_LS_KEY = 'balinsky.shortlist'
+// Cap applies only to *sale listings* — villas and apartments. Their
+// shortlist is the comparison-table workhorse, and the comparison row
+// math gets unwieldy past ~80 items. Residential complexes and
+// long-term rentals are stored separately on the page (their own card
+// blocks, not the table) and there's no analytical cost to keeping
+// dozens — so they don't count toward the cap.
 export const WISHLIST_MAX = 80
+export const CAPPED_KINDS: ReadonlySet<WishlistKind> = new Set(['villa', 'apartment'])
