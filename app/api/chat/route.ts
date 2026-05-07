@@ -27,6 +27,12 @@ function stripRedundantLinks(text: string): string {
 
 type IncomingMessage = { role: 'user' | 'assistant'; content: string }
 
+// SYSTEM_PROMPT is in Russian. When the visitor is on the English
+// site we tack on a short directive so the model replies in English.
+// Cheaper than maintaining a parallel translated prompt.
+const EN_LANG_DIRECTIVE =
+  '\n\nIMPORTANT: The user is on the English version of the site. Always respond in English, including any [CHIPS] suggestions. Translate any examples (city names like "Чангу" → "Canggu", "Убуд" → "Ubud") naturally.'
+
 export async function POST(req: Request) {
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) {
@@ -41,14 +47,17 @@ export async function POST(req: Request) {
   if (incoming.length === 0) {
     return Response.json({ error: 'no_messages' }, { status: 400 })
   }
+  const langRaw = (body as { lang?: unknown }).lang
+  const lang: 'ru' | 'en' = langRaw === 'en' ? 'en' : 'ru'
   const trimmed = incoming.slice(-MAX_INPUT_MESSAGES)
 
   // Lazy-create the feedback bucket on first chat (cheap idempotent call).
   await ensureFeedbackBucket().catch(() => null)
 
   const client = new OpenAI({ apiKey })
+  const systemPrompt = lang === 'en' ? SYSTEM_PROMPT + EN_LANG_DIRECTIVE : SYSTEM_PROMPT
   const messages: ChatCompletionMessageParam[] = [
-    { role: 'system', content: SYSTEM_PROMPT },
+    { role: 'system', content: systemPrompt },
     ...trimmed,
   ]
 
