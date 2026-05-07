@@ -206,9 +206,16 @@ const afterResume = []
 for (const rec of candidates) {
   if (matchesForceSlugs(rec)) { afterResume.push(rec); continue }
   if (!RESUME) { afterResume.push(rec); continue }
+  const photos = rec.fields['Opt photos']
   const haveUrls = manifest[rec.id] && manifest[rec.id].length > 0
   if (!haveUrls) { afterResume.push(rec); continue }
-  const current = attsKeyOf(rec.fields['Opt photos'])
+  // Catch-up: if the manifest has fewer photos than the current
+  // att-list expects (capped at MAX_PHOTOS), force a re-pull. The
+  // att-id baseline alone misses cases where bootstrap adopted the
+  // current atts before the manifest was complete.
+  const expected = Math.min(MAX_PHOTOS, photos.length)
+  if (manifest[rec.id].length < expected) { afterResume.push(rec); continue }
+  const current = attsKeyOf(photos)
   const stored = atts[rec.id]
   if (stored === undefined) {
     // Bootstrap: adopt the current att list as the baseline. We trust

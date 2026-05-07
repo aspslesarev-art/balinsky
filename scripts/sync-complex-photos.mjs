@@ -24,6 +24,13 @@ const CONCURRENCY = 3
 const RESUME = !process.argv.includes('--force')
 const limitArg = process.argv.find(a => a.startsWith('--limit='))
 const LIMIT = limitArg ? Number(limitArg.split('=')[1]) : Infinity
+// Targeted re-pull, mirrors the villa/apartment scripts. Pass
+// --force-slugs=foo,bar to force-resync any complex whose Project /
+// SEO:Title / SEO:Slug contains any of the substrings (case-
+// insensitive). Useful after editorial photo updates that the att-id
+// baseline missed (see the bootstrap caveat below).
+const forceSlugsArg = process.argv.find(a => a.startsWith('--force-slugs='))?.split('=')[1]
+const FORCE_SLUGS = (forceSlugsArg ?? '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
 
 const sb = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -167,17 +174,40 @@ const atts = await loadExistingAtts()
 console.log(`existing manifest entries: ${Object.keys(manifest).length}`)
 console.log(`existing atts entries: ${Object.keys(atts).length}`)
 
-// Resume mode skips a record only when (a) it already has photos in
-// Supabase AND (b) the Airtable att-list hasn't changed since last
-// sync. First run after this version landed: _attachments.json is
-// empty, so we adopt the current att-list as baseline for any record
-// that already has photos — no full re-sync just to bootstrap.
+// Resume comparison.
+//
+// Skip a record only when (a) it already has photos in Supabase AND
+// (b) the manifest has as many photos as we'd upload for the current
+// att-list AND (c) the att-list hasn't changed since last sync.
+//
+// The length check (b) catches a class of stale manifests the att-id
+// baseline alone misses: bootstrap of `_attachments.json` happily
+// adopts the current Airtable atts even when the manifest only has
+// half the photos — so when an editor adds photos before bootstrap
+// runs, the manifest stays half-empty forever. With (b), the resume
+// skip refuses until the manifest catches up.
+function matchesForceSlugs(rec) {
+  if (FORCE_SLUGS.length === 0) return false
+  const project = String(rec.fields?.['Project']    ?? '').toLowerCase()
+  const slug    = String(rec.fields?.['SEO:Slug']   ?? '').toLowerCase()
+  const title   = String(rec.fields?.['SEO:Title']  ?? '').toLowerCase()
+  const haystack = `${project} ${slug} ${title}`
+  if (!haystack.trim()) return false
+  return FORCE_SLUGS.some(s => haystack.includes(s))
+}
+
 const afterResume = []
 for (const rec of candidates) {
+  if (matchesForceSlugs(rec)) { afterResume.push(rec); continue }
   if (!RESUME) { afterResume.push(rec); continue }
+  const photos = rec.fields['Opt photos']
   const haveUrls = manifest[rec.id] && manifest[rec.id].length > 0
   if (!haveUrls) { afterResume.push(rec); continue }
-  const current = attsKeyOf(rec.fields['Opt photos'])
+  // Manifest length should match min(MAX_PHOTOS, current att count).
+  // If manifest is shorter — we missed photos at some point, catch up.
+  const expected = Math.min(MAX_PHOTOS, photos.length)
+  if (manifest[rec.id].length < expected) { afterResume.push(rec); continue }
+  const current = attsKeyOf(photos)
   const stored = atts[rec.id]
   if (stored === undefined) { atts[rec.id] = current; continue }
   if (stored !== current) afterResume.push(rec)
