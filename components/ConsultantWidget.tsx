@@ -60,13 +60,13 @@ const GREETING_BY_LANG: Record<Lang, Message> = {
   ru: {
     role: 'assistant',
     content:
-      'Я Бали Гид — AI-помощник по недвижимости на Бали. Могу ошибаться. Что нужно?\n\n' +
+      'Я Балина — AI-брокер по недвижимости на Бали. Помогу подобрать объект под ваш бюджет и цели. Что вы ищете?\n\n' +
       '[CHIPS] Подобрать виллу | Подобрать апартаменты | Помесячная аренда | Юридика покупки | Связаться с менеджером',
   },
   en: {
     role: 'assistant',
     content:
-      "I'm the Bali Guide — AI helper for Bali real estate. I might be wrong. What do you need?\n\n" +
+      "I'm Balina — AI broker for Bali real estate. I'll help match a property to your budget and goals. What are you looking for?\n\n" +
       '[CHIPS] Pick a villa | Pick an apartment | Monthly rental | Legal side of buying | Contact a manager',
   },
 }
@@ -76,10 +76,10 @@ const GREETING_BY_LANG: Record<Lang, Message> = {
 // also injects an explicit lang directive when lang === 'en').
 const COPY = {
   ru: {
-    triggerAria: 'Открыть AI-консультант',
-    triggerName: 'Бали Гид',
-    title: 'Бали Гид',
-    subtitle: 'AI-консультант · может ошибаться',
+    triggerAria: 'Открыть AI-брокера Балину',
+    triggerName: 'Балина',
+    title: 'Балина',
+    subtitle: 'AI-брокер · может ошибаться',
     closeAria: 'Закрыть',
     typing: 'печатает…',
     placeholder: 'Что ищешь? Например, виллу в Чангу с 3 спальнями',
@@ -97,10 +97,10 @@ const COPY = {
     voiceLang: 'ru-RU',
   },
   en: {
-    triggerAria: 'Open AI consultant',
-    triggerName: 'Bali Guide',
-    title: 'Bali Guide',
-    subtitle: 'AI consultant · may be wrong',
+    triggerAria: 'Open AI broker Balina',
+    triggerName: 'Balina',
+    title: 'Balina',
+    subtitle: 'AI broker · may be wrong',
     closeAria: 'Close',
     typing: 'typing…',
     placeholder: 'What are you looking for? e.g. a villa in Canggu with 3 bedrooms',
@@ -144,6 +144,43 @@ export function ConsultantWidget() {
   useEffect(() => {
     if (typeof window === 'undefined') return
     setVoiceSupported(!!(window.SpeechRecognition || window.webkitSpeechRecognition))
+  }, [])
+
+  // Bridge from BalinaHero on the home page. The hero dispatches a
+  // `balina:open` CustomEvent with one of two payloads:
+  //   { text: string, autoSend?: boolean } — prefill the input, optionally
+  //                                          send it straight away
+  //   { listen: true }                     — open + start voice recognition
+  // Either way, the widget opens.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const onOpen = (ev: Event) => {
+      const detail = (ev as CustomEvent<{ text?: string; autoSend?: boolean; listen?: boolean }>).detail ?? {}
+      setOpen(true)
+      setError(null)
+      if (typeof detail.text === 'string' && detail.text.trim()) {
+        const text = detail.text.trim()
+        if (detail.autoSend) {
+          // Defer to next tick so the panel paints before we kick off the
+          // network round-trip — feels much smoother than insta-loading.
+          setTimeout(() => sendText(text), 50)
+        } else {
+          setInput(text)
+        }
+      }
+      if (detail.listen) {
+        // Same deferral — the recogniser sometimes throws if start() runs
+        // before the panel has finished its open animation.
+        setTimeout(() => {
+          if (!listening) toggleVoice()
+        }, 80)
+      }
+    }
+    window.addEventListener('balina:open', onOpen)
+    return () => window.removeEventListener('balina:open', onOpen)
+    // sendText / toggleVoice are stable closures over local state we want
+    // to capture lazily — eslint-disable for the dep array is fine here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Swap the greeting if the visitor navigated between /ru and /en
@@ -278,7 +315,7 @@ export function ConsultantWidget() {
           className="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 pl-1.5 pr-4 py-1.5 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white shadow-lg transition-colors"
         >
           <img
-            src="/consultant-avatar.jpg"
+            src="/balina.jpg"
             alt=""
             className="w-9 h-9 rounded-full object-cover ring-2 ring-white/40"
           />
@@ -299,7 +336,7 @@ export function ConsultantWidget() {
             <div className="shrink-0 flex items-center justify-between gap-3 px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-primary-soft)]">
               <div className="flex items-center gap-2.5">
                 <img
-                  src="/consultant-avatar.jpg"
+                  src="/balina.jpg"
                   alt=""
                   className="shrink-0 w-9 h-9 rounded-full object-cover"
                 />

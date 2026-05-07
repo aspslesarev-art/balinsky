@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { createClient } from '@supabase/supabase-js'
 import { Home as HomeIcon, Building, Building2, HardHat, ArrowRight, Calendar, Sparkles, Newspaper, BookOpen } from 'lucide-react'
 import { Header } from '@/components/Header'
+import { BalinaHero } from '@/components/BalinaHero'
 import { PageContainer } from '@/components/PageContainer'
 import { VillaCard, type VillaCardData } from '@/components/VillaCard'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
@@ -186,12 +187,16 @@ export default async function RuHome() {
       <Header />
 
       <PageContainer>
-        {/* Hero */}
-        <section className="pt-12 md:pt-16 pb-8">
-          <h1 className="text-[36px] md:text-[52px] font-semibold tracking-tight text-[#111827] leading-[1.05] max-w-3xl">
+        {/* Balina hero — AI-broker entry point */}
+        <BalinaHero />
+
+        {/* Sub-intro: catalog facts under the hero so the H2 below
+            still carries SEO weight without a competing huge H1. */}
+        <section className="pb-6">
+          <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[#111827] leading-snug max-w-3xl">
             Недвижимость на Бали — без посредников и красивых обещаний
-          </h1>
-          <p className="mt-5 text-[17px] md:text-[18px] text-[var(--color-text-muted)] leading-relaxed max-w-2xl">
+          </h2>
+          <p className="mt-3 text-[15px] md:text-[16px] text-[var(--color-text-muted)] leading-relaxed max-w-2xl">
             Каталог из {counts.villas + counts.apartments} объектов и {counts.complexes} жилых комплексов
             от {counts.developers} застройщиков. Прозрачные данные о разрешениях и управляющих компаниях,
             свежие акции, новости и мероприятия.
