@@ -543,11 +543,16 @@ export function ShortlistView({ lang }: { lang: Lang }) {
                   })}
                 </ul>
 
-                {/* Desktop layout: horizontal comparison table. */}
+                {/* Desktop layout: horizontal comparison table. Columns
+                    have a 220px minimum each so the table only scrolls
+                    horizontally past 5–6 items on a 1280px laptop —
+                    below that it fits cleanly, above that the user
+                    can swipe through all 10 columns without anything
+                    being squished. */}
                 <div className="hidden md:block overflow-x-auto pb-4">
                   <table
                     className="table-fixed border-separate border-spacing-x-2 md:border-spacing-x-3 w-full"
-                    style={{ minWidth: `${realEstate.length === 1 ? 280 : 80 + realEstate.length * 160}px` }}
+                    style={{ minWidth: `${realEstate.length === 1 ? 280 : 88 + realEstate.length * 220}px` }}
                   >
                     <colgroup>
                       <col className="w-[88px] md:w-[120px]" />

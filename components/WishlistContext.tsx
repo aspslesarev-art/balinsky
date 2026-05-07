@@ -103,10 +103,34 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     [items],
   )
 
+  // Fire-and-forget tracking ping on every add. We track adds only —
+  // removes are signal-poor for "what do users like". Failures are
+  // swallowed; analytics never blocks the heart-tap.
+  const trackAdd = (item: WishlistItem) => {
+    const lang: 'ru' | 'en' = typeof window !== 'undefined' && /^\/en(\/|$)/.test(window.location.pathname) ? 'en' : 'ru'
+    fetch('/api/track/wishlist', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        kind: item.kind,
+        airtableId: item.airtableId ?? null,
+        slug: item.slug,
+        title: item.title,
+        district: item.district,
+        bedrooms: item.bedrooms,
+        area: item.area ?? null,
+        priceUsd: item.priceUsd,
+        lang,
+      }),
+      keepalive: true,
+    }).catch(() => {})
+  }
+
   const add = useCallback((item: WishlistItem) => {
     const prev = readSnapshot()
     if (prev.some(i => i.kind === item.kind && i.slug === item.slug)) return
     write(applyCap([item, ...prev], item.kind))
+    trackAdd(item)
   }, [])
 
   const remove = useCallback((kind: WishlistKind, slug: string) => {
@@ -123,6 +147,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
       ? prev.filter(i => !(i.kind === item.kind && i.slug === item.slug))
       : applyCap([item, ...prev], item.kind)
     write(next)
+    if (!exists) trackAdd(item)
   }, [])
 
   const clear = useCallback(() => { write([]) }, [])
