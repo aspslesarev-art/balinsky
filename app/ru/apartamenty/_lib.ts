@@ -130,6 +130,9 @@ export type EnrichedRow = {
   lat: number | null
   lng: number | null
   landBucket: LandBucket
+  // Editorial "TOP" checkbox in Airtable — pinned items bubble
+  // to the top of the catalog regardless of the active sort.
+  isTop: boolean
 }
 
 function priceUpdatedMs(d: Record<string, unknown>): number {
@@ -172,6 +175,7 @@ function enrich(r: Row, devMap: Record<string, string>): EnrichedRow {
     lat: parseGeo(d['Geo']),
     lng: parseGeo(d['Geo 2']),
     landBucket: landBucket(firstString(d['Land color'])),
+    isTop: d['TOP'] === true,
   }
 }
 
@@ -467,13 +471,16 @@ export function buildAllCards(
   if (!isSearch) {
     // Sort by price-update recency (newest first); fall back to price desc
     // when neither row has a parseable date so behaviour stays sensible
-    // for legacy rows.
+    // for legacy rows. Then editorial-pin pass: TOP-flagged listings
+    // float to the top regardless of the recency sort. Stable secondary
+    // ordering preserves the recency tie-breaker within both groups.
     filtered = [...filtered].sort((a, b) => {
       const ta = priceUpdatedMs(a.data)
       const tb = priceUpdatedMs(b.data)
       if (ta !== tb) return tb - ta
       return (b.priceUsd ?? 0) - (a.priceUsd ?? 0)
     })
+    filtered = [...filtered].sort((a, b) => (b.isTop ? 1 : 0) - (a.isTop ? 1 : 0))
   }
 
   const sorted = filtered

@@ -83,6 +83,9 @@ export type VillaCard = {
   bestCapRate: number | null
   interiorStyle: string | null
   airtableId: string | null
+  // Editorial pin — surfaced at the top of the catalog regardless of
+  // sort. Sourced from the Airtable "TOP" checkbox in raw_villas.
+  isTop: boolean
 }
 
 export type SortOrder = 'price-desc' | 'investment-desc'
@@ -239,6 +242,10 @@ export type EnrichedRow = {
   style: string | null
   landBucket: LandBucket
   dealType: DealType
+  // Editorial pin — the "TOP" checkbox in Airtable. Pinned listings
+  // bubble to the top of the catalog regardless of the active sort,
+  // so promoted developers / hand-picked listings appear first.
+  isTop: boolean
 }
 
 export type StylesMap = Record<string, { style: string | null }>
@@ -264,6 +271,7 @@ export function enrich(r: Row, styles: StylesMap = {}): EnrichedRow {
     style: styles[r.airtable_id]?.style ?? null,
     landBucket: landBucket(firstString(d['Land color'])),
     dealType: dealFromString(firstString(d['Тип сделки'])),
+    isTop: d['TOP'] === true,
   }
 }
 
@@ -526,6 +534,7 @@ export function toCard(
     bestCapRate: null,
     interiorStyle: e.style,
     airtableId: e.id,
+    isTop: e.isTop,
   }
 }
 
@@ -581,6 +590,14 @@ export function buildAllCards(
   if (isSearch) sorted = mapped
   else if (sort === 'investment-desc') sorted = [...mapped].sort((a, b) => (b.investmentScore ?? -1) - (a.investmentScore ?? -1))
   else sorted = [...mapped].sort((a, b) => (b.priceUsd ?? 0) - (a.priceUsd ?? 0))
+  // Editorial pin pass: TOP-flagged listings bubble to the top of
+  // the catalog regardless of the active sort. Stable within both
+  // groups (pinned/unpinned), so the existing sort order is
+  // preserved as the secondary key. Skipped during search — a
+  // search hit shouldn't be pushed past unrelated pinned listings.
+  if (!isSearch) {
+    sorted = [...sorted].sort((a, b) => (b.isTop ? 1 : 0) - (a.isTop ? 1 : 0))
+  }
   // Dedupe by airtable id only. Same slug across rows is a real case
   // (multiple physical units of one project type with different prices/land
   // sizes) — they should each show as a card.

@@ -48,7 +48,14 @@ export type Row = {
   cover_url: string | null
 }
 
-export type ComplexCard = ComplexCardData & { id: string; lat: number | null; lng: number | null }
+export type ComplexCard = ComplexCardData & {
+  id: string; lat: number | null; lng: number | null
+  // Editorial pin — TOP-flagged complexes float to the top of the
+  // catalog. `topRank` (when present) orders within the pinned
+  // group; lower number wins.
+  isTop: boolean
+  topRank: number | null
+}
 
 export type CatalogPage = {
   cards: ComplexCard[]
@@ -153,6 +160,15 @@ export type EnrichedRow = {
   lat: number | null
   lng: number | null
   photoCount: number
+  // Editorial pin — true when Airtable's `ТОП` checkbox or `TOP`
+  // numeric is set. Pinned complexes float to the top of the
+  // catalog regardless of the active sort.
+  isTop: boolean
+  // Optional manual rank (1, 2, 3…) within the pinned group.
+  // Lower number wins — Airtable's `TOP` field carries this when
+  // it's a number; checkbox-only pins arrive as null and tie-break
+  // by name afterwards.
+  topRank: number | null
 }
 
 function enrich(r: Row): EnrichedRow {
@@ -176,6 +192,13 @@ function enrich(r: Row): EnrichedRow {
     lat: parseGeo(d['Geo']),
     lng: parseGeo(d['Geo 2']),
     photoCount,
+    // Two parallel fields exist in Airtable: `ТОП` (cyrillic
+    // checkbox) for the pin flag, and `TOP` (latin) which is
+    // either a number-rank or sometimes a checkbox boolean. We
+    // honour any truthy value as a pin; numeric values double as
+    // the rank within the pinned group.
+    isTop: d['ТОП'] === true || d['TOP'] === true || typeof d['TOP'] === 'number',
+    topRank: typeof d['TOP'] === 'number' ? d['TOP'] : null,
   }
 }
 
@@ -404,6 +427,8 @@ export function toCard(
     villaPriceTo: p?.villas?.to ?? null,
     aptPriceFrom: p?.apartments?.from ?? null,
     aptPriceTo: p?.apartments?.to ?? null,
+    isTop: e.isTop,
+    topRank: e.topRank,
   }
 }
 
@@ -521,9 +546,20 @@ export function buildAllCards(
   const mapped = filtered
     .map(e => toCard(e, manifest, prices))
     .filter((c): c is ComplexCard => c !== null)
-  return isSearch
-    ? mapped
-    : [...mapped].sort((a, b) => a.name.localeCompare(b.name, 'ru'))
+  if (isSearch) return mapped
+  // Default ordering: TOP-pinned first (Airtable `ТОП` checkbox or
+  // `TOP` numeric rank), then alphabetical by name. Within the
+  // pinned group, lower `topRank` wins; null ranks tie-break by
+  // name, so a checkbox-only pin still sorts deterministically.
+  return [...mapped].sort((a, b) => {
+    if (a.isTop !== b.isTop) return a.isTop ? -1 : 1
+    if (a.isTop && b.isTop) {
+      const ra = a.topRank ?? Number.POSITIVE_INFINITY
+      const rb = b.topRank ?? Number.POSITIVE_INFINITY
+      if (ra !== rb) return ra - rb
+    }
+    return a.name.localeCompare(b.name, 'ru')
+  })
 }
 
 export async function loadCatalogPage(
