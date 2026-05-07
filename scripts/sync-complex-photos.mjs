@@ -11,6 +11,12 @@ const AIRTABLE_BASE = 'applhWe0pCVRue9QC'
 const AIRTABLE_TABLE = 'Комплексы'
 const BUCKET = 'complex-photos'
 const MANIFEST_KEY = '_manifest.json'
+// Sidecar tracking the Airtable attachment-id list per record, joined
+// with commas. Same change-detection contract as villas / apartments:
+// resume mode skips a record only when its stored att-list still
+// matches Airtable, so a photo replace, reorder, or count change
+// triggers a re-upload on the next run.
+const ATTS_KEY = '_attachments.json'
 const MAX_PHOTOS = 10
 const RETRIES = 4
 const CONCURRENCY = 3
@@ -88,17 +94,28 @@ async function uploadWithRetry(path, buf) {
   throw lastErr
 }
 
+// Cache-bust by tagging the Airtable attachment id as `?v=`. Storage
+// upserts to a fixed path; without versioning, browsers serve a stale
+// copy after an editor swaps a photo. ?v= flips the URL exactly when
+// invalidation is needed.
+function attVersion(att) {
+  const id = att?.id ?? ''
+  return id.startsWith('att') ? id.slice(3) : id
+}
+
 async function uploadOne(recId, idx, att) {
   const src = photoUrl(att)
   if (!src) return null
   const buf = await downloadWithRetry(src)
   const path = `${recId}/${idx}.jpg`
   await uploadWithRetry(path, buf)
-  return sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl
+  const baseUrl = sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl
+  const v = attVersion(att)
+  return v ? `${baseUrl}?v=${v}` : baseUrl
 }
 
-async function loadExistingManifest() {
-  const { data, error } = await sb.storage.from(BUCKET).download(MANIFEST_KEY)
+async function loadJsonFile(key) {
+  const { data, error } = await sb.storage.from(BUCKET).download(key)
   if (error) return {}
   try {
     const text = await data.text()
@@ -107,12 +124,12 @@ async function loadExistingManifest() {
   } catch { return {} }
 }
 
-async function saveManifest(manifest) {
-  const body = Buffer.from(JSON.stringify(manifest))
+async function saveJsonFile(key, payload) {
+  const body = Buffer.from(JSON.stringify(payload))
   let lastErr
   for (let i = 0; i <= RETRIES; i++) {
     try {
-      const { error } = await sb.storage.from(BUCKET).upload(MANIFEST_KEY, body, {
+      const { error } = await sb.storage.from(BUCKET).upload(key, body, {
         contentType: 'application/json',
         upsert: true,
       })
@@ -126,6 +143,15 @@ async function saveManifest(manifest) {
   throw lastErr
 }
 
+const loadExistingManifest = () => loadJsonFile(MANIFEST_KEY)
+const saveManifest = m => saveJsonFile(MANIFEST_KEY, m)
+const loadExistingAtts = () => loadJsonFile(ATTS_KEY)
+const saveAtts = a => saveJsonFile(ATTS_KEY, a)
+
+function attsKeyOf(photos) {
+  return (Array.isArray(photos) ? photos : []).map(p => p?.id).filter(Boolean).join(',')
+}
+
 await ensureBucket()
 const records = await fetchAirtableAll()
 console.log(`Airtable records: ${records.length}`)
@@ -137,11 +163,25 @@ const candidates = records.filter(rec => {
 console.log(`with Opt photos: ${candidates.length}`)
 
 const manifest = await loadExistingManifest()
+const atts = await loadExistingAtts()
 console.log(`existing manifest entries: ${Object.keys(manifest).length}`)
+console.log(`existing atts entries: ${Object.keys(atts).length}`)
 
-const afterResume = RESUME
-  ? candidates.filter(rec => !manifest[rec.id] || manifest[rec.id].length === 0)
-  : candidates
+// Resume mode skips a record only when (a) it already has photos in
+// Supabase AND (b) the Airtable att-list hasn't changed since last
+// sync. First run after this version landed: _attachments.json is
+// empty, so we adopt the current att-list as baseline for any record
+// that already has photos — no full re-sync just to bootstrap.
+const afterResume = []
+for (const rec of candidates) {
+  if (!RESUME) { afterResume.push(rec); continue }
+  const haveUrls = manifest[rec.id] && manifest[rec.id].length > 0
+  if (!haveUrls) { afterResume.push(rec); continue }
+  const current = attsKeyOf(rec.fields['Opt photos'])
+  const stored = atts[rec.id]
+  if (stored === undefined) { atts[rec.id] = current; continue }
+  if (stored !== current) afterResume.push(rec)
+}
 const slice = Number.isFinite(LIMIT) ? afterResume.slice(0, LIMIT) : afterResume
 console.log(`processing: ${slice.length} (resume=${RESUME})`)
 
@@ -169,6 +209,7 @@ async function worker(queue) {
     try {
       const urls = await processOne(rec)
       manifest[rec.id] = urls
+      atts[rec.id] = attsKeyOf(rec.fields['Opt photos'])
       total_photos += urls.length
       done++
     } catch (e) {
@@ -179,7 +220,10 @@ async function worker(queue) {
     process.stdout.write(`\r${done + failed}/${slice.length}  done=${done} fail=${failed} photos=${total_photos}`)
     if (sinceSave >= SAVE_EVERY) {
       sinceSave = 0
-      try { await saveManifest(manifest) } catch (e) { console.error('\nmanifest save:', e.message) }
+      try {
+        await saveManifest(manifest)
+        await saveAtts(atts)
+      } catch (e) { console.error('\nmanifest save:', e.message) }
     }
   }
 }
@@ -187,6 +231,28 @@ async function worker(queue) {
 const queue = [...slice]
 await Promise.all(Array.from({ length: CONCURRENCY }, () => worker(queue)))
 
+// One-time normalisation: stamp ?v= onto legacy unversioned URLs
+// using the att-lists we already fetched above. Idempotent.
+const attsByRec = new Map()
+for (const rec of candidates) attsByRec.set(rec.id, rec.fields['Opt photos'])
+let normalised = 0
+for (const [recId, urls] of Object.entries(manifest)) {
+  if (!Array.isArray(urls)) continue
+  const photos = attsByRec.get(recId)
+  if (!Array.isArray(photos) || photos.length === 0) continue
+  let changed = false
+  const next = urls.map((u, i) => {
+    if (typeof u !== 'string' || u.includes('?v=')) return u
+    const v = attVersion(photos[i])
+    if (!v) return u
+    changed = true
+    return `${u}?v=${v}`
+  })
+  if (changed) { manifest[recId] = next; normalised++ }
+}
+if (normalised) console.log(`\nnormalised ${normalised} manifest entries to ?v=…`)
+
 await saveManifest(manifest)
+await saveAtts(atts)
 console.log(`\nfinished: done=${done} failed=${failed} total_photos=${total_photos}`)
 console.log(`manifest at: ${sb.storage.from(BUCKET).getPublicUrl(MANIFEST_KEY).data.publicUrl}`)

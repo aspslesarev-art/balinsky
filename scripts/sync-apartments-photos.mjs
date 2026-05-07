@@ -101,13 +101,24 @@ async function uploadWithRetry(path, buf) {
   throw lastErr
 }
 
+// Cache-bust URLs by tagging the Airtable attachment id as `?v=`.
+// Storage upserts to a fixed path; without a versioned URL, browsers
+// keep showing the stale copy after an editor replaces or reorders a
+// photo. ?v= flips the URL exactly when invalidation is needed.
+function attVersion(att) {
+  const id = att?.id ?? ''
+  return id.startsWith('att') ? id.slice(3) : id
+}
+
 async function uploadOne(recId, idx, att) {
   const src = photoUrl(att)
   if (!src) return null
   const buf = await downloadWithRetry(src)
   const path = `${recId}/${idx}.jpg`
   await uploadWithRetry(path, buf)
-  return sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl
+  const baseUrl = sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl
+  const v = attVersion(att)
+  return v ? `${baseUrl}?v=${v}` : baseUrl
 }
 
 async function loadJsonFile(key) {
@@ -247,6 +258,28 @@ async function worker(queue) {
 
 const queue = [...slice]
 await Promise.all(Array.from({ length: CONCURRENCY }, () => worker(queue)))
+
+// Idempotent normalisation: stamp ?v= onto legacy unversioned URLs
+// from previous sync runs. Uses Airtable atts already in scope, no
+// extra downloads.
+const attsByRec = new Map()
+for (const rec of candidates) attsByRec.set(rec.id, rec.fields['Opt photos'])
+let normalised = 0
+for (const [recId, urls] of Object.entries(manifest)) {
+  if (!Array.isArray(urls)) continue
+  const photos = attsByRec.get(recId)
+  if (!Array.isArray(photos) || photos.length === 0) continue
+  let changed = false
+  const next = urls.map((u, i) => {
+    if (typeof u !== 'string' || u.includes('?v=')) return u
+    const v = attVersion(photos[i])
+    if (!v) return u
+    changed = true
+    return `${u}?v=${v}`
+  })
+  if (changed) { manifest[recId] = next; normalised++ }
+}
+if (normalised) console.log(`\nnormalised ${normalised} manifest entries to ?v=…`)
 
 await saveManifest(manifest)
 await saveAtts(atts)

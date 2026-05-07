@@ -101,13 +101,26 @@ async function uploadWithRetry(path, buf) {
   throw lastErr
 }
 
+// Cache-busting query string. Storage upserts the same path
+// (`<recId>/<idx>.jpg`) on every re-pull, so without a versioned URL
+// browsers happily serve stale copies even after the binary on
+// Storage changes. Embedding the Airtable attachment id as `?v=` flips
+// the URL whenever the editor replaces or reorders a photo, which is
+// exactly when we need cache invalidation.
+function attVersion(att) {
+  const id = att?.id ?? ''
+  return id.startsWith('att') ? id.slice(3) : id
+}
+
 async function uploadOne(recId, idx, att) {
   const src = photoUrl(att)
   if (!src) return null
   const buf = await downloadWithRetry(src)
   const path = `${recId}/${idx}.jpg`
   await uploadWithRetry(path, buf)
-  return sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl
+  const baseUrl = sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl
+  const v = attVersion(att)
+  return v ? `${baseUrl}?v=${v}` : baseUrl
 }
 
 async function loadJsonFile(key) {
@@ -253,6 +266,30 @@ async function worker(queue) {
 
 const queue = [...slice]
 await Promise.all(Array.from({ length: CONCURRENCY }, () => worker(queue)))
+
+// One-time normalisation: stamp `?v=<att-id>` onto any manifest URL
+// that's still on the legacy unversioned format. Idempotent — URLs
+// already carrying ?v= are left alone. Uses the att list we have in
+// scope from this run (Airtable was already fetched above), so no
+// extra download / API roundtrip.
+const attsByRec = new Map()
+for (const rec of candidates) attsByRec.set(rec.id, rec.fields['Opt photos'])
+let normalised = 0
+for (const [recId, urls] of Object.entries(manifest)) {
+  if (!Array.isArray(urls)) continue
+  const photos = attsByRec.get(recId)
+  if (!Array.isArray(photos) || photos.length === 0) continue
+  let changed = false
+  const next = urls.map((u, i) => {
+    if (typeof u !== 'string' || u.includes('?v=')) return u
+    const v = attVersion(photos[i])
+    if (!v) return u
+    changed = true
+    return `${u}?v=${v}`
+  })
+  if (changed) { manifest[recId] = next; normalised++ }
+}
+if (normalised) console.log(`\nnormalised ${normalised} manifest entries to ?v=…`)
 
 await saveManifest(manifest)
 await saveAtts(atts)
