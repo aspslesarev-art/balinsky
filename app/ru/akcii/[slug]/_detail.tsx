@@ -7,6 +7,7 @@ import { Calendar, ExternalLink, Building2, HardHat } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { PageViewTracker } from '@/components/PageViewTracker'
 import { loadAllPromo, loadPromoBySlug } from '@/lib/promo'
 import type { Lang } from '@/lib/i18n'
 
@@ -68,6 +69,7 @@ export async function PromoDetail({ slug, lang }: { slug: string; lang: Lang }) 
   return (
     <>
       <Header />
+      <PageViewTracker kind="promo" slug={slug} title={p.title} airtableId={p.id} lang={lang} />
       <PageContainer>
         <Breadcrumbs items={[
           { label: c.home, href: home },

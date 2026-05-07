@@ -10,6 +10,7 @@ import { PhotoGalleryHero } from '@/components/PhotoGalleryHero'
 import { PriceDisplay } from '@/components/PriceDisplay'
 import { loadRentalBySlug } from '@/lib/rental'
 import { botLink } from '@/lib/bot-link'
+import { PageViewTracker } from '@/components/PageViewTracker'
 import type { Lang } from '@/lib/i18n'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
@@ -117,6 +118,7 @@ export async function RentalDetail({ slug, lang }: { slug: string; lang: Lang })
   return (
     <>
       <Header active="arenda" />
+      <PageViewTracker kind="rental" slug={r.slug} title={r.title} airtableId={r.id} lang={lang} />
       <PageContainer>
         <Breadcrumbs items={[
           { label: c.home, href: lang === 'en' ? '/en' : '/ru' },

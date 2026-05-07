@@ -7,6 +7,7 @@ import { ExternalLink } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { PageViewTracker } from '@/components/PageViewTracker'
 import { loadAllKnowledge, loadKnowledgeBySlug } from '@/lib/knowledge'
 import type { Lang } from '@/lib/i18n'
 
@@ -61,6 +62,7 @@ export async function KnowledgeDetail({ slug, lang }: { slug: string; lang: Lang
   return (
     <>
       <Header />
+      <PageViewTracker kind="knowledge" slug={slug} title={k.title} airtableId={k.id} lang={lang} />
       <PageContainer>
         <Breadcrumbs items={[
           { label: c.home, href: home },

@@ -19,6 +19,7 @@ import { loadAllPromo } from '@/lib/promo'
 import { loadAllEvents } from '@/lib/events'
 import { loadVideosByDeveloperWithComplexes } from '@/lib/videos'
 import { VideoGrid } from '@/components/VideoGrid'
+import { PageViewTracker } from '@/components/PageViewTracker'
 import { tField, type Lang } from '@/lib/i18n'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -332,6 +333,7 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
   return (
     <>
       <Header active="zastrojshhiki" />
+      <PageViewTracker kind="developer" slug={slug} title={name} airtableId={dev.airtable_id} lang={lang} />
       <PageContainer>
         <Breadcrumbs items={[
           { label: c.home, href: home },

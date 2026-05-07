@@ -38,6 +38,7 @@ import { loadVillaStyles } from '@/lib/villa-styles'
 import { loadAllVillaScores } from '@/lib/investment/batch-scores'
 import { findActiveReservation } from '@/lib/reservations'
 import { VideoGrid } from '@/components/VideoGrid'
+import { PageViewTracker } from '@/components/PageViewTracker'
 import { VillaPresentationButton } from '@/components/VillaPresentation'
 import { tField, type Lang } from '@/lib/i18n'
 
@@ -564,6 +565,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   return (
     <>
       <Header active="villy" />
+      <PageViewTracker kind="villa" slug={slug} title={title} airtableId={v.airtable_id} lang={lang} />
       <PageContainer>
         <Breadcrumbs items={[
           { label: c.home, href: home },

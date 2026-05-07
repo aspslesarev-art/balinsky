@@ -7,6 +7,7 @@ import { Calendar, ExternalLink, Building2, HardHat } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { PageViewTracker } from '@/components/PageViewTracker'
 import { loadAllNews, loadNewsBySlug } from '@/lib/news'
 import type { Lang } from '@/lib/i18n'
 
@@ -85,6 +86,7 @@ export async function NewsDetail({ slug, lang }: { slug: string; lang: Lang }) {
   return (
     <>
       <Header />
+      <PageViewTracker kind="news" slug={slug} title={n.title} airtableId={n.id} lang={lang} />
       <PageContainer>
         <Breadcrumbs items={[
           { label: c.home, href: home },

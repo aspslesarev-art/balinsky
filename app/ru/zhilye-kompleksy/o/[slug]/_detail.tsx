@@ -25,6 +25,7 @@ import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { distanceKm as haversineKm } from '@/lib/competitor-utils'
 import { loadVideosByComplexSlug } from '@/lib/videos'
 import { VideoGrid } from '@/components/VideoGrid'
+import { PageViewTracker } from '@/components/PageViewTracker'
 import { tField, type Lang } from '@/lib/i18n'
 
 const AIRPORT_LAT = -8.7467
@@ -580,6 +581,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   return (
     <>
       <Header active="zhilye-kompleksy" />
+      <PageViewTracker kind="complex" slug={slug} title={name} airtableId={c.airtable_id} lang={lang} />
       <PageContainer>
         <Breadcrumbs items={[
           { label: copy.home, href: home },

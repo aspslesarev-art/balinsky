@@ -9,6 +9,7 @@ import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { LocalDateTime } from '@/components/LocalDateTime'
+import { PageViewTracker } from '@/components/PageViewTracker'
 import { loadEventBySlug } from '@/lib/events'
 import type { Lang } from '@/lib/i18n'
 
@@ -139,6 +140,7 @@ export async function EventDetail({ slug, lang }: { slug: string; lang: Lang }) 
   return (
     <>
       <Header />
+      <PageViewTracker kind="event" slug={slug} title={e.title} airtableId={e.id} lang={lang} />
       <PageContainer>
         <Breadcrumbs items={[
           { label: c.home, href: home },

@@ -19,6 +19,7 @@ import { distanceKm as haversineKm } from '@/lib/competitor-utils'
 import { getDeveloperStats } from '@/lib/developer-stats'
 import { loadAllVideos, matchesLang as videoMatchesLang } from '@/lib/videos'
 import { VideoGrid } from '@/components/VideoGrid'
+import { PageViewTracker } from '@/components/PageViewTracker'
 import { InvestmentWidget } from '@/components/InvestmentWidget'
 import { RentalCompareSection } from '@/components/RentalCompareSection'
 import { ManagerCard } from '@/components/ManagerCard'
@@ -453,6 +454,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
   return (
     <>
       <Header active="apartamenty" />
+      <PageViewTracker kind="apartment" slug={slug} title={title} airtableId={a.airtable_id} lang={lang} />
       <PageContainer>
         <Breadcrumbs items={[
           { label: c.home, href: home },
