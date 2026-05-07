@@ -5,16 +5,30 @@ import { createClient } from '@supabase/supabase-js'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-// Per-record live sync from Airtable. The hourly GitHub Actions
-// pipeline still runs as a fallback, but this endpoint lets an
-// Airtable Automation push a change ("a manager edited a permit
-// field") into Supabase + revalidate the corresponding page in
-// seconds, instead of waiting 15 min for the cron.
+// Per-record live sync from Airtable. The cron pipelines stay as a
+// fallback, but this endpoint lets an Airtable Automation push a
+// change into Supabase + revalidate the corresponding page in
+// seconds.
+//
+// Two flavours of content:
+//
+//   SQL-backed (villas / apartments / complexes / rentals /
+//   developers): we re-fetch the single record from Airtable and
+//   upsert into raw_<table>. Real per-record latency, ~1–3 s.
+//
+//   Manifest-backed (events / news / promo / knowledge / managers):
+//   data lives as a JSON manifest in Supabase Storage, built by
+//   sync-<type>.mjs. Patching one row inside the manifest would
+//   duplicate the build logic for each type, so we instead dispatch
+//   the existing GitHub Actions sync-fast.yml workflow. End-to-end
+//   latency ~30–60 s once GH queues + runs the action.
 //
 // Request:
 //   POST /api/webhook/airtable
 //   Headers: x-webhook-token: <AIRTABLE_WEBHOOK_TOKEN>
-//   Body:    { "table": "villas|apartments|complexes|rentals",
+//   Body:    { "table": "villas|apartments|complexes|rentals|
+//                        developers|events|news|promo|knowledge|
+//                        managers",
 //              "recordId": "recXXXXXXXXXXXXXX",
 //              "deleted": false }
 //
@@ -76,6 +90,54 @@ const TABLES: Record<string, TableConfig> = {
       { path: '/ru/arenda/o/[slug]', type: 'page' },
     ],
   },
+  // Developer base mirrors the Airtable structure used by the
+  // catalog cards' "Developer" link target. raw_developers is
+  // queried directly by /admin/* and homepage developer counts.
+  developers: {
+    airtableBase: 'applhWe0pCVRue9QC',
+    airtableTable: 'Imported table',
+    supabaseTable: 'raw_developers',
+    revalidateTag: 'content:developers',
+    revalidatePaths: [
+      { path: '/ru/zastrojshhiki' },
+      { path: '/en/developers' },
+      { path: '/ru/zastrojshhiki/[slug]', type: 'page' },
+      { path: '/en/developers/[slug]', type: 'page' },
+    ],
+  },
+}
+
+// Manifest-backed content types: data lives as a JSON file in
+// Supabase Storage, built by their respective sync-<type>.mjs
+// script. We can't patch one record inline without copying the
+// full build logic, so we delegate to the GitHub Actions
+// sync-fast.yml workflow. The webhook returns immediately; the
+// workflow rebuilds + revalidates within ~30–60 s.
+const MANIFEST_TABLES = new Set(['events', 'news', 'promo', 'knowledge', 'managers'])
+const MANIFEST_REVALIDATE_TAGS: Record<string, string> = {
+  events:    'content:events',
+  news:      'content:news',
+  promo:     'content:promo',
+  knowledge: 'content:knowledge',
+  managers:  'content:managers',
+}
+
+async function dispatchSyncFastWorkflow(): Promise<{ ok: boolean; status: number; error?: string }> {
+  const token = process.env.GH_DISPATCH_TOKEN
+  const repo = process.env.GH_DISPATCH_REPO ?? 'aspslesarev-art/balinsky'
+  if (!token) return { ok: false, status: 500, error: 'GH_DISPATCH_TOKEN not configured' }
+  const r = await fetch(`https://api.github.com/repos/${repo}/actions/workflows/sync-fast.yml/dispatches`, {
+    method: 'POST',
+    headers: {
+      'authorization': `Bearer ${token}`,
+      'accept': 'application/vnd.github+json',
+      'x-github-api-version': '2022-11-28',
+    },
+    body: JSON.stringify({ ref: 'main' }),
+  })
+  if (r.status === 204) return { ok: true, status: 204 }
+  const text = await r.text().catch(() => '')
+  return { ok: false, status: r.status, error: text.slice(0, 300) }
 }
 
 async function fetchAirtableRecord(cfg: TableConfig, recordId: string, token: string) {
@@ -112,12 +174,32 @@ export async function POST(request: Request) {
 
   const tableKey = body.table?.trim().toLowerCase()
   const recordId = body.recordId?.trim()
-  if (!tableKey || !recordId) {
-    return NextResponse.json({ error: 'missing_fields', need: ['table', 'recordId'] }, { status: 400 })
+  if (!tableKey) {
+    return NextResponse.json({ error: 'missing_fields', need: ['table'] }, { status: 400 })
+  }
+
+  // Manifest-backed types short-circuit through the GH Actions
+  // dispatch — we don't need a recordId to rebuild the full feed.
+  if (MANIFEST_TABLES.has(tableKey)) {
+    const dispatch = await dispatchSyncFastWorkflow()
+    if (!dispatch.ok) {
+      return NextResponse.json({ error: 'gh_dispatch_failed', status: dispatch.status, message: dispatch.error }, { status: 502 })
+    }
+    // Best-effort revalidate of the cache tag immediately — the
+    // workflow will revalidate again when it finishes, but this
+    // shaves the first cycle off the visitor-facing latency once
+    // the manifest lands.
+    const tag = MANIFEST_REVALIDATE_TAGS[tableKey]
+    if (tag) revalidateTag(tag, 'max')
+    return NextResponse.json({ ok: true, action: 'workflow_dispatched', table: tableKey, recordId: recordId ?? null })
+  }
+
+  if (!recordId) {
+    return NextResponse.json({ error: 'missing_fields', need: ['recordId'] }, { status: 400 })
   }
   const cfg = TABLES[tableKey]
   if (!cfg) {
-    return NextResponse.json({ error: 'unknown_table', got: tableKey, expected: Object.keys(TABLES) }, { status: 400 })
+    return NextResponse.json({ error: 'unknown_table', got: tableKey, expected: [...Object.keys(TABLES), ...MANIFEST_TABLES] }, { status: 400 })
   }
   if (!/^rec[a-zA-Z0-9]{14,}$/.test(recordId)) {
     return NextResponse.json({ error: 'invalid_record_id' }, { status: 400 })
