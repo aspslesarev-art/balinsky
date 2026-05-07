@@ -100,12 +100,21 @@ export async function POST(req: Request) {
     }
   }
 
-  const { error } = await sb.from('presentation_events').insert(row)
-  if (error) {
-    // Don't surface error details to clients; this is fire-and-forget
-    // and we don't want the visitor to see anything when ingest fails.
-    console.error('[track-presentation]', error.message)
-    return NextResponse.json({ ok: false }, { status: 500 })
+  // Self-healing insert. If the schema is missing one of the optional
+  // columns added in later migrations (agent_*, items_detail), the
+  // insert returns "column ... does not exist" — drop those keys and
+  // retry, so the core event still lands. Prevents losing analytics
+  // events while a migration deploy is in flight.
+  const optionalCols = ['agent_name', 'agent_telegram', 'agent_whatsapp', 'items_detail']
+  let lastErr: string | null = null
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const { error } = await sb.from('presentation_events').insert(row)
+    if (!error) return NextResponse.json({ ok: true })
+    lastErr = error.message
+    const missingCol = optionalCols.find(c => error.message.includes(c) && /column/i.test(error.message))
+    if (!missingCol) break
+    delete row[missingCol]
   }
-  return NextResponse.json({ ok: true })
+  console.error('[track-presentation]', lastErr)
+  return NextResponse.json({ ok: false }, { status: 500 })
 }
