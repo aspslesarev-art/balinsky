@@ -18,11 +18,11 @@ type ChatRow = {
   bot_disabled: boolean
   tags: string[] | null
   avatar_url: string | null
-  chat_type: 'private' | 'group' | 'supergroup' | 'channel'
+  chat_type: 'private' | 'group' | 'supergroup' | 'channel' | 'assistant'
   title: string | null
 }
 
-type Tab = 'private' | 'groups'
+type Tab = 'private' | 'groups' | 'assistant'
 
 function TabButton({
   active,
@@ -328,33 +328,43 @@ export function Inbox() {
   return (
     <div className={`h-screen flex bg-[var(--ax-bg)] text-[var(--ax-fg)] ${themeClass(theme)}`}>
       {!themeReady && null}
-      {/* Left: chat list. Two tabs at the top split DMs from groups —
-          the bot only auto-replies in DMs; groups are read-only logs
-          where the manager can still send messages by typing. */}
+      {/* Left: chat list. Three tabs split DMs / groups / on-site
+          AI-assistant chats. Telegram bot auto-replies live in DMs;
+          groups are read-only logs; assistant tab shows visitor
+          conversations with Балина from balinsky.info itself. */}
       <aside className={`flex flex-col w-full sm:w-[340px] border-r border-[var(--ax-border)] ${activeId != null ? 'hidden sm:flex' : 'flex'}`}>
         <div className="shrink-0 px-2 pt-2 border-b border-[var(--ax-border)]">
-          <div className="px-2 pt-1 pb-2 flex items-center gap-1">
+          <div className="px-2 pt-1 pb-2 flex items-center gap-1 overflow-x-auto">
             {(() => {
-              const counts = chats.reduce<{ private: number; groups: number }>((acc, c) => {
-                if (c.chat_type === 'private') acc.private++; else acc.groups++
+              const counts = chats.reduce<{ private: number; groups: number; assistant: number }>((acc, c) => {
+                if (c.chat_type === 'assistant') acc.assistant++
+                else if (c.chat_type === 'private') acc.private++
+                else acc.groups++
                 return acc
-              }, { private: 0, groups: 0 })
+              }, { private: 0, groups: 0, assistant: 0 })
               return <>
-                <TabButton active={tab === 'private'} label="Личные" count={counts.private}
-                  onClick={() => { setTab('private'); setActiveId(null) }} />
-                <TabButton active={tab === 'groups'}  label="Группы" count={counts.groups}
-                  onClick={() => { setTab('groups');  setActiveId(null) }} />
+                <TabButton active={tab === 'private'}   label="Личные"    count={counts.private}
+                  onClick={() => { setTab('private');   setActiveId(null) }} />
+                <TabButton active={tab === 'groups'}    label="Группы"    count={counts.groups}
+                  onClick={() => { setTab('groups');    setActiveId(null) }} />
+                <TabButton active={tab === 'assistant'} label="Ассистент" count={counts.assistant}
+                  onClick={() => { setTab('assistant'); setActiveId(null) }} />
               </>
             })()}
           </div>
         </div>
         <div className="flex-1 overflow-y-auto min-h-0">
           {(() => {
-            const filtered = chats.filter(c => tab === 'groups' ? c.chat_type !== 'private' : c.chat_type === 'private')
+            const filtered = chats.filter(c => {
+              if (tab === 'assistant') return c.chat_type === 'assistant'
+              if (tab === 'groups')    return c.chat_type !== 'private' && c.chat_type !== 'assistant'
+              return c.chat_type === 'private'
+            })
             if (filtered.length === 0) {
-              const msg = tab === 'groups'
-                ? 'Бот ещё не добавлен в группы. Добавь его в чат, и здесь появятся сообщения.'
-                : 'Чатов пока нет — никто не писал боту.'
+              const msg =
+                tab === 'assistant' ? 'Пока никто не писал AI-брокеру с сайта.'
+              : tab === 'groups'    ? 'Бот ещё не добавлен в группы. Добавь его в чат, и здесь появятся сообщения.'
+              :                       'Чатов пока нет — никто не писал боту.'
               return <div className="p-6 text-[13px] text-[var(--ax-fg-faint)] text-center">{msg}</div>
             }
             return filtered.map(c => {
@@ -485,6 +495,17 @@ export function Inbox() {
               })}
             </div>
 
+            {/* Assistant chats are visitor ↔ Балина via /api/chat —
+                there is no return channel: the visitor's browser tab
+                is the only client, and once it's gone we can't push
+                a message back. Show a read-only notice instead of a
+                send composer so the admin doesn't accidentally
+                enqueue a Telegram send to a fake chat_id. */}
+            {activeChat.chat_type === 'assistant' ? (
+              <div className="shrink-0 border-t border-[var(--ax-border)] px-4 py-3 text-[12px] text-[var(--ax-fg-muted)] bg-[var(--ax-bg)]">
+                Это переписка посетителя с AI-брокером Балиной на сайте — только просмотр.
+              </div>
+            ) : (
             <form
               onSubmit={e => { e.preventDefault(); send() }}
               className="shrink-0 border-t border-[var(--ax-border)] p-3 flex items-end gap-2 bg-[var(--ax-bg)]"
@@ -563,6 +584,7 @@ export function Inbox() {
                 </button>
               )}
             </form>
+            )}
             {error && <div className="px-4 py-2 text-[12px] text-[var(--ax-error-fg)] bg-[var(--ax-error-bg)] border-t border-[var(--ax-error-border)]">{error}</div>}
           </>
         ) : (

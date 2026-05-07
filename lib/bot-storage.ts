@@ -5,7 +5,7 @@ const sb = createClient(
   process.env.SUPABASE_SERVICE_KEY!,
 )
 
-export type ChatType = 'private' | 'group' | 'supergroup' | 'channel'
+export type ChatType = 'private' | 'group' | 'supergroup' | 'channel' | 'assistant'
 
 export type ChatMeta = {
   chat_id: number

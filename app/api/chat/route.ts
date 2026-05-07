@@ -1,6 +1,7 @@
 import OpenAI from 'openai'
 import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions'
 import { SYSTEM_PROMPT, TOOLS, executeToolCall, ensureFeedbackBucket, type ListingCard } from '@/lib/consultant'
+import { ensureAssistantSession, logAssistantTurn } from '@/lib/assistant-session'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -54,6 +55,13 @@ export async function POST(req: Request) {
   // Lazy-create the feedback bucket on first chat (cheap idempotent call).
   await ensureFeedbackBucket().catch(() => null)
 
+  // Resolve / create the visitor's assistant session BEFORE the
+  // model call so we have a chat_id to log against. The user's
+  // last message in `incoming` is what we'll persist as the inbound
+  // turn — earlier history is already in the DB from prior calls.
+  const session = await ensureAssistantSession().catch(() => null)
+  const lastUserMessage = [...trimmed].reverse().find(m => m.role === 'user')?.content ?? ''
+
   const client = new OpenAI({ apiKey })
   const systemPrompt = lang === 'en' ? SYSTEM_PROMPT + EN_LANG_DIRECTIVE : SYSTEM_PROMPT
   const messages: ChatCompletionMessageParam[] = [
@@ -80,11 +88,25 @@ export async function POST(req: Request) {
     messages.push(msg)
 
     if (!msg.tool_calls || msg.tool_calls.length === 0) {
+      const assistantText = stripRedundantLinks(msg.content ?? '')
+      // Persist turn in bot_chats / bot_messages so the admin inbox
+      // sees the conversation. Failures here never block the user.
+      if (session && lastUserMessage) {
+        logAssistantTurn({
+          chatId: session.chatId,
+          isNew: session.isNew,
+          userText: lastUserMessage,
+          assistantText,
+          lang,
+        }).catch(err => console.error('[chat] log turn:', err))
+      }
+      const headers: Record<string, string> = {}
+      if (session?.setCookieHeader) headers['set-cookie'] = session.setCookieHeader
       return Response.json({
-        message: { role: 'assistant', content: stripRedundantLinks(msg.content ?? '') },
+        message: { role: 'assistant', content: assistantText },
         listings: allListings,
         usage: completion.usage,
-      })
+      }, { headers })
     }
 
     for (const tc of msg.tool_calls) {
@@ -109,11 +131,20 @@ export async function POST(req: Request) {
     }
   }
 
+  const fallbackText = 'Извините, не получилось довести запрос до конца. Попробуйте переформулировать.'
+  if (session && lastUserMessage) {
+    logAssistantTurn({
+      chatId: session.chatId,
+      isNew: session.isNew,
+      userText: lastUserMessage,
+      assistantText: fallbackText,
+      lang,
+    }).catch(err => console.error('[chat] log turn (fallback):', err))
+  }
+  const headers: Record<string, string> = {}
+  if (session?.setCookieHeader) headers['set-cookie'] = session.setCookieHeader
   return Response.json({
-    message: {
-      role: 'assistant',
-      content: 'Извините, не получилось довести запрос до конца. Попробуйте переформулировать.',
-    },
+    message: { role: 'assistant', content: fallbackText },
     listings: allListings,
-  })
+  }, { headers })
 }
