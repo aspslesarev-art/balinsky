@@ -143,7 +143,7 @@ export function ReserveButton({
       <button
         type="button"
         onClick={() => { setDone(false); setOpen(true) }}
-        className={`inline-flex items-center justify-center gap-2 h-[54px] px-6 rounded-[10px] bg-white border border-[var(--color-border)] hover:border-[var(--color-text-muted)] text-[#1A1F1C] text-[15px] md:text-[16px] font-semibold whitespace-nowrap transition-colors ${className}`}
+        className={`inline-flex w-full md:w-auto items-center justify-center gap-2 min-h-[54px] py-2 px-6 rounded-[10px] bg-white border border-[var(--color-border)] hover:border-[var(--color-text-muted)] text-[#1A1F1C] text-[15px] md:text-[16px] font-semibold text-center leading-tight transition-colors ${className}`}
       >
         <Lock size={18} strokeWidth={1.6} /> {c.cta}
       </button>

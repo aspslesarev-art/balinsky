@@ -66,14 +66,14 @@ export function VillaPresentationButton({
   // as the green Buy button, white background with a hairline border so
   // the two CTAs read as siblings rather than mismatched controls.
   const styles = variant === 'outline'
-    ? 'h-[54px] px-6 rounded-[10px] bg-white border border-[var(--color-border)] hover:border-[var(--color-text-muted)] text-[#1A1F1C] text-[15px] md:text-[16px] font-semibold transition-colors'
+    ? 'w-full md:w-auto min-h-[54px] py-2 px-6 rounded-[10px] bg-white border border-[var(--color-border)] hover:border-[var(--color-text-muted)] text-[#1A1F1C] text-[15px] md:text-[16px] font-semibold text-center leading-tight transition-colors'
     : 'rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[14px] font-medium px-4 py-2.5 shadow-sm transition-colors'
   return (
     <>
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`inline-flex items-center justify-center gap-2 whitespace-nowrap ${styles}`}
+        className={`inline-flex items-center justify-center gap-2 ${styles}`}
         aria-label="Открыть презентацию виллы"
       >
         {variant === 'outline'

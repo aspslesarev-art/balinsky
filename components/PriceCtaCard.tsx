@@ -151,7 +151,7 @@ export function PriceCtaCard({
               href={buyHref}
               target="_blank"
               rel={isResale ? 'noopener noreferrer' : 'noopener'}
-              className="inline-flex items-center justify-center gap-2 h-[54px] px-6 rounded-[10px] bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[15px] md:text-[16px] font-semibold whitespace-nowrap transition-colors no-underline shadow-[0_1px_0_rgba(255,255,255,0.15)_inset,0_6px_16px_-8px_rgba(31,90,52,0.6)]"
+              className="inline-flex w-full md:w-auto items-center justify-center gap-2 min-h-[54px] py-2 px-6 rounded-[10px] bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[15px] md:text-[16px] font-semibold text-center leading-tight transition-colors no-underline shadow-[0_1px_0_rgba(255,255,255,0.15)_inset,0_6px_16px_-8px_rgba(31,90,52,0.6)]"
             >
               <Send size={18} strokeWidth={1.6} />
               {buyLabel}

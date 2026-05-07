@@ -52,6 +52,16 @@ body {
   font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
   background: var(--color-bg);
   color: var(--color-text);
+  /* Mobile safety net: if any inner element overflows the viewport
+     width (long unbreakable label, oversize map widget, embed iframe,
+     etc.) the page itself can never be horizontally scrolled. `clip`
+     is preferred over `hidden` because it doesn't establish a new
+     scroll container, so position: sticky / fixed continue to work
+     against the viewport. */
+  overflow-x: clip;
+  /* Russian + Latin URLs and long tokens in copy break naturally
+     instead of pushing the layout. */
+  overflow-wrap: break-word;
 }
 
 /* Round Google Maps default UI controls (zoom, map/satellite, fullscreen,
