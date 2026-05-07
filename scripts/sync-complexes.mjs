@@ -1,4 +1,12 @@
 import { createClient } from '@supabase/supabase-js'
+import fs from 'node:fs'
+
+// Load .env.local for local runs. In CI env vars come from secrets and
+// .env.local doesn't exist — try/catch keeps the script working in both.
+try {
+  const env = fs.readFileSync('.env.local', 'utf8')
+  for (const l of env.split('\n')) { const m = l.match(/^([A-Z_]+)=(.*)$/); if (m) process.env[m[1]] = m[2].replace(/^['"]|['"]$/g, '') }
+} catch { /* CI: vars already in env */ }
 
 const AIRTABLE_BASE = 'applhWe0pCVRue9QC'
 const AIRTABLE_TABLE = 'Комплексы'
@@ -56,6 +64,16 @@ function extFromFilename(name) {
   return ext && /^[a-z0-9]{2,5}$/.test(ext) ? ext : 'bin'
 }
 
+// Cache-bust the public URL with the Airtable attachment id. Storage
+// upserts to a fixed path (`<recId>.<ext>`), so without versioning
+// browsers serve a stale copy after an editor swaps the cover. The
+// att-id is stable across editor sessions but flips when the
+// attachment is replaced — exactly the right invalidation key.
+function attVersion(att) {
+  const id = att?.id ?? ''
+  return id.startsWith('att') ? id.slice(3) : id
+}
+
 async function uploadAttachment(bucket, recId, attachment) {
   if (!attachment?.url) return null
   const r = await fetch(attachment.url)
@@ -67,7 +85,9 @@ async function uploadAttachment(bucket, recId, attachment) {
     upsert: true,
   })
   if (error) throw error
-  return sb.storage.from(bucket).getPublicUrl(path).data.publicUrl
+  const baseUrl = sb.storage.from(bucket).getPublicUrl(path).data.publicUrl
+  const v = attVersion(attachment)
+  return v ? `${baseUrl}?v=${v}` : baseUrl
 }
 
 await ensureBucket(LOGOS)

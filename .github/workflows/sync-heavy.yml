@@ -49,6 +49,9 @@ jobs:
       - name: Sync rental
         run: node scripts/sync-rental.mjs
 
+      - name: Sync complex logos + covers
+        run: node scripts/sync-complexes.mjs
+
       - name: Sync villa photos
         env:
           FORCE_SLUGS: ${{ github.event.inputs.force_slugs }}
