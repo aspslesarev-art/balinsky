@@ -35,6 +35,17 @@ function rangeStartIso(range: Range): string | null {
   return new Date(Date.now() - ms).toISOString()
 }
 
+type ItemDetail = {
+  id: string | null
+  kind: 'villa' | 'apartment' | 'complex' | 'rental' | null
+  slug: string | null
+  title: string | null
+  district: string | null
+  bedrooms: number | null
+  area: number | null
+  priceUsd: number | null
+}
+
 type EventRow = {
   id: number
   created_at: string
@@ -45,9 +56,13 @@ type EventRow = {
   title: string | null
   item_count: number | null
   items: string[] | null
+  items_detail: ItemDetail[] | null
   orientation: 'portrait' | 'landscape' | null
   has_agent: boolean
   lang: 'ru' | 'en' | null
+  agent_name: string | null
+  agent_telegram: string | null
+  agent_whatsapp: string | null
 }
 
 async function loadEvents(range: Range): Promise<EventRow[]> {
@@ -93,7 +108,14 @@ function aggregateObjects(events: EventRow[]): ObjectStat[] {
   return [...m.values()].sort((a, b) => b.total - a.total || b.lastAt.localeCompare(a.lastAt))
 }
 
-type ShortlistMember = { airtableId: string; appearances: number }
+type ShortlistMember = {
+  airtableId: string
+  appearances: number
+  title: string | null
+  kind: ItemDetail['kind']
+  slug: string | null
+  district: string | null
+}
 
 function aggregateShortlists(events: EventRow[]): {
   total: number
@@ -106,22 +128,38 @@ function aggregateShortlists(events: EventRow[]): {
   const withAgent = list.filter(e => e.has_agent).length
   const itemSum = list.reduce((acc, e) => acc + (e.item_count ?? 0), 0)
   const avg = list.length > 0 ? itemSum / list.length : 0
-  const memberCounts = new Map<string, number>()
+  // Build the count map from items[] (always present) and enrich
+  // with the freshest items_detail entry we've seen for that id.
+  const counts = new Map<string, number>()
+  const meta   = new Map<string, ItemDetail>()
   for (const e of list) {
-    for (const id of (e.items ?? [])) {
-      memberCounts.set(id, (memberCounts.get(id) ?? 0) + 1)
+    for (const id of (e.items ?? [])) counts.set(id, (counts.get(id) ?? 0) + 1)
+    for (const d of (e.items_detail ?? [])) {
+      if (d?.id && (!meta.has(d.id) || (d.title && !meta.get(d.id)!.title))) {
+        meta.set(d.id, d)
+      }
     }
   }
-  const topItems = [...memberCounts.entries()]
+  const topItems: ShortlistMember[] = [...counts.entries()]
     .sort((a, b) => b[1] - a[1])
     .slice(0, 25)
-    .map(([airtableId, appearances]) => ({ airtableId, appearances }))
+    .map(([airtableId, appearances]) => {
+      const m = meta.get(airtableId)
+      return {
+        airtableId,
+        appearances,
+        title:    m?.title    ?? null,
+        kind:     m?.kind     ?? null,
+        slug:     m?.slug     ?? null,
+        district: m?.district ?? null,
+      }
+    })
   return {
     total: list.length,
     withAgent,
     avgItems: avg,
     topItems,
-    recent: list.slice(0, 25),
+    recent: list.slice(0, 50),
   }
 }
 
@@ -133,11 +171,17 @@ function fmtDateTime(iso: string): string {
   } catch { return iso }
 }
 
-function detailHref(s: ObjectStat): string | null {
+function detailHref(s: { slug: string | null; objectKind: ItemDetail['kind'] | 'villa' | 'apartment' | 'complex' | null }): string | null {
   if (!s.slug) return null
   if (s.objectKind === 'apartment') return `/ru/apartamenty/o/${s.slug}`
   if (s.objectKind === 'complex')   return `/ru/zhilye-kompleksy/o/${s.slug}`
+  if (s.objectKind === 'rental')    return `/ru/arenda/o/${s.slug}`
   return `/ru/villy/o/${s.slug}`
+}
+
+function fmtUsd(v: number | null | undefined): string {
+  if (typeof v !== 'number' || !Number.isFinite(v)) return '—'
+  return `$${Math.round(v).toLocaleString('en-US')}`
 }
 
 export default async function PresentationsAdmin({
@@ -156,6 +200,11 @@ export default async function PresentationsAdmin({
   const objects   = aggregateObjects(events)
   const shortlist = aggregateShortlists(events)
   const totalObjectEvents = events.filter(e => e.kind === 'object').length
+  // Cross-kind feed of agent leads (events that explicitly carried
+  // agent contact). Newest first, capped at 50.
+  const agentLeads = events
+    .filter(e => e.has_agent && (e.agent_name || e.agent_telegram || e.agent_whatsapp))
+    .slice(0, 50)
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] text-[#111827] pb-20">
@@ -191,6 +240,59 @@ export default async function PresentationsAdmin({
             label="Средний размер подборки"
             value={shortlist.total > 0 ? shortlist.avgItems.toFixed(1) : '—'}
           />
+        </section>
+
+        {/* Agent leads — both 'object' and 'shortlist' events that
+            carried an agent contact, in one feed. Most actionable
+            section for the user, so it sits above the per-object /
+            per-shortlist breakdowns. */}
+        <section>
+          <h2 className="text-[16px] font-semibold mb-3">Лиды с контактом агента</h2>
+          {agentLeads.length === 0 ? (
+            <div className="rounded-2xl bg-white border border-[#E5E7EB] p-6 text-[13px] text-[#6B7280]">
+              За выбранный период PDF с контактом агента не скачивались.
+            </div>
+          ) : (
+            <ul className="space-y-2">
+              {agentLeads.map(e => {
+                const objHref = e.kind === 'object' ? detailHref({ slug: e.slug, objectKind: e.object_kind }) : null
+                return (
+                  <li key={e.id} className="rounded-2xl bg-white border border-[#E5E7EB] px-4 py-3">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px]">
+                      <span className="text-[#374151] font-medium tabular-nums">{fmtDateTime(e.created_at)}</span>
+                      <span className="text-[#6B7280]">·</span>
+                      {e.kind === 'object' ? (
+                        <>
+                          <span className="text-[#9CA3AF] text-[11px] uppercase tracking-wide">{kindLabel(e.object_kind)}</span>
+                          {objHref ? (
+                            <a href={objHref} target="_blank" rel="noopener noreferrer" className="text-[#111827] hover:text-[var(--color-primary-pressed)] no-underline font-medium">{e.title ?? e.slug ?? e.object_id}</a>
+                          ) : (
+                            <span className="text-[#111827] font-medium">{e.title ?? e.slug ?? e.object_id}</span>
+                          )}
+                        </>
+                      ) : (
+                        <span className="text-[#111827] font-medium">Подборка из {e.item_count ?? 0} объектов</span>
+                      )}
+                      <span className="text-[#9CA3AF] text-[11px] ml-auto">{(e.lang ?? '').toUpperCase()} · {e.orientation ?? ''}</span>
+                    </div>
+                    <div className="mt-1.5 text-[12px] flex flex-wrap items-center gap-x-4 gap-y-1 text-[#374151]">
+                      {e.agent_name     && <span><span className="text-[#9CA3AF]">Агент:</span> <span className="font-medium">{e.agent_name}</span></span>}
+                      {e.agent_telegram && <span><span className="text-[#9CA3AF]">Telegram:</span> <a className="text-[var(--color-primary-pressed)] no-underline" href={tgHref(e.agent_telegram)} target="_blank" rel="noopener noreferrer">{e.agent_telegram}</a></span>}
+                      {e.agent_whatsapp && <span><span className="text-[#9CA3AF]">WhatsApp:</span> <a className="text-[var(--color-primary-pressed)] no-underline" href={waHref(e.agent_whatsapp)} target="_blank" rel="noopener noreferrer">{e.agent_whatsapp}</a></span>}
+                    </div>
+                    {e.kind === 'shortlist' && e.items_detail && e.items_detail.length > 0 && (
+                      <div className="mt-2 text-[11.5px] text-[#6B7280] flex flex-wrap gap-x-2 gap-y-0.5">
+                        {e.items_detail.slice(0, 8).map((it, i) => (
+                          <span key={i}>· {it.title ?? it.id}</span>
+                        ))}
+                        {e.items_detail.length > 8 && <span className="text-[#9CA3AF]">+{e.items_detail.length - 8} ещё</span>}
+                      </div>
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
+          )}
         </section>
 
         {/* Per object */}
@@ -259,17 +361,31 @@ export default async function PresentationsAdmin({
               <table className="w-full text-[13px]">
                 <thead className="bg-[#F9FAFB] text-[#6B7280] text-[11px] uppercase tracking-wide">
                   <tr>
-                    <th className="text-left px-4 py-2 font-medium">Airtable ID</th>
-                    <th className="text-right px-4 py-2 font-medium">Появлений в подборках</th>
+                    <th className="text-left px-4 py-2 font-medium">Объект</th>
+                    <th className="text-left px-4 py-2 font-medium">Тип</th>
+                    <th className="text-left px-4 py-2 font-medium">Район</th>
+                    <th className="text-right px-4 py-2 font-medium">Появлений</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {shortlist.topItems.map((m, i) => (
-                    <tr key={m.airtableId} className={i % 2 ? 'bg-[#FAFAFA]' : ''}>
-                      <td className="px-4 py-2.5 font-mono text-[12px]">{m.airtableId}</td>
-                      <td className="px-4 py-2.5 text-right tabular-nums font-medium">{m.appearances}</td>
-                    </tr>
-                  ))}
+                  {shortlist.topItems.map((m, i) => {
+                    const href = detailHref({ slug: m.slug, objectKind: m.kind })
+                    return (
+                      <tr key={m.airtableId} className={i % 2 ? 'bg-[#FAFAFA]' : ''}>
+                        <td className="px-4 py-2.5">
+                          {href && m.title ? (
+                            <a href={href} target="_blank" rel="noopener noreferrer" className="text-[#111827] hover:text-[var(--color-primary-pressed)] no-underline">{m.title}</a>
+                          ) : (
+                            <span className="font-mono text-[12px]">{m.title ?? m.airtableId}</span>
+                          )}
+                          <div className="text-[11px] text-[#9CA3AF] font-mono">{m.airtableId}</div>
+                        </td>
+                        <td className="px-4 py-2.5 text-[#6B7280]">{kindLabel(m.kind)}</td>
+                        <td className="px-4 py-2.5 text-[#6B7280]">{m.district ?? '—'}</td>
+                        <td className="px-4 py-2.5 text-right tabular-nums font-medium">{m.appearances}</td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
@@ -281,13 +397,52 @@ export default async function PresentationsAdmin({
               За выбранный период подборки не скачивались.
             </div>
           ) : (
-            <ul className="rounded-2xl bg-white border border-[#E5E7EB] divide-y divide-[#E5E7EB]">
+            <ul className="space-y-3">
               {shortlist.recent.map(e => (
-                <li key={e.id} className="px-4 py-3 text-[13px] flex items-center gap-3">
-                  <span className="text-[#9CA3AF] tabular-nums w-[120px] shrink-0">{fmtDateTime(e.created_at)}</span>
-                  <span className="font-medium tabular-nums">{e.item_count ?? 0} объектов</span>
-                  {e.has_agent && <span className="text-[11px] uppercase tracking-wide bg-[var(--color-primary-soft)] text-[var(--color-primary-pressed)] px-1.5 py-0.5 rounded">Агент</span>}
-                  <span className="text-[#9CA3AF] text-[11px]">{e.lang ?? ''} · {e.orientation ?? ''}</span>
+                <li key={e.id} className="rounded-2xl bg-white border border-[#E5E7EB] overflow-hidden">
+                  <div className="px-4 py-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] border-b border-[#E5E7EB] bg-[#F9FAFB]">
+                    <span className="text-[#374151] font-medium tabular-nums">{fmtDateTime(e.created_at)}</span>
+                    <span className="text-[#6B7280]">·</span>
+                    <span className="font-medium tabular-nums">{e.item_count ?? 0} объектов</span>
+                    {e.has_agent && (
+                      <span className="text-[11px] uppercase tracking-wide bg-[var(--color-primary-soft)] text-[var(--color-primary-pressed)] px-1.5 py-0.5 rounded">Агент</span>
+                    )}
+                    <span className="text-[#9CA3AF] text-[11px] ml-auto">{(e.lang ?? '').toUpperCase()} · {e.orientation ?? ''}</span>
+                  </div>
+                  {/* Agent contacts (only on for-agent PDFs) */}
+                  {(e.agent_name || e.agent_telegram || e.agent_whatsapp) && (
+                    <div className="px-4 py-2.5 border-b border-[#E5E7EB] text-[12px] flex flex-wrap items-center gap-x-4 gap-y-1 text-[#374151]">
+                      {e.agent_name     && <span><span className="text-[#9CA3AF]">Агент:</span> <span className="font-medium">{e.agent_name}</span></span>}
+                      {e.agent_telegram && <span><span className="text-[#9CA3AF]">Telegram:</span> <a className="text-[var(--color-primary-pressed)] no-underline" href={tgHref(e.agent_telegram)} target="_blank" rel="noopener noreferrer">{e.agent_telegram}</a></span>}
+                      {e.agent_whatsapp && <span><span className="text-[#9CA3AF]">WhatsApp:</span> <a className="text-[var(--color-primary-pressed)] no-underline" href={waHref(e.agent_whatsapp)} target="_blank" rel="noopener noreferrer">{e.agent_whatsapp}</a></span>}
+                    </div>
+                  )}
+                  {/* Per-item list */}
+                  {e.items_detail && e.items_detail.length > 0 ? (
+                    <ol className="divide-y divide-[#E5E7EB]">
+                      {e.items_detail.map((it, idx) => {
+                        const href = detailHref({ slug: it.slug, objectKind: it.kind })
+                        return (
+                          <li key={idx} className="px-4 py-2.5 text-[12.5px] flex items-center gap-3">
+                            <span className="text-[#9CA3AF] tabular-nums w-[20px] shrink-0">{idx + 1}</span>
+                            <span className="flex-1 min-w-0">
+                              {href && it.title ? (
+                                <a href={href} target="_blank" rel="noopener noreferrer" className="text-[#111827] hover:text-[var(--color-primary-pressed)] no-underline">{it.title}</a>
+                              ) : (
+                                <span className="text-[#111827]">{it.title ?? it.id ?? '—'}</span>
+                              )}
+                              <span className="text-[#9CA3AF] ml-2 text-[11px]">{kindLabel(it.kind)}{it.district ? ` · ${it.district}` : ''}{it.bedrooms != null ? ` · ${it.bedrooms} BR` : ''}{it.area != null ? ` · ${it.area} м²` : ''}</span>
+                            </span>
+                            <span className="text-[#374151] tabular-nums shrink-0">{fmtUsd(it.priceUsd)}</span>
+                          </li>
+                        )
+                      })}
+                    </ol>
+                  ) : (e.items && e.items.length > 0) ? (
+                    <div className="px-4 py-2.5 text-[12px] text-[#9CA3AF]">
+                      Только airtable id (старая запись): {e.items.join(', ')}
+                    </div>
+                  ) : null}
                 </li>
               ))}
             </ul>
@@ -313,5 +468,19 @@ function kindLabel(k: string | null): string {
   if (k === 'apartment') return 'Апартаменты'
   if (k === 'complex')   return 'Комплекс'
   if (k === 'villa')     return 'Вилла'
+  if (k === 'rental')    return 'Аренда'
   return '—'
+}
+
+function tgHref(raw: string): string {
+  const s = raw.trim().replace(/^@+/, '')
+  if (/^https?:\/\//.test(s)) return s
+  return `https://t.me/${s}`
+}
+function waHref(raw: string): string {
+  const s = raw.trim()
+  if (/^https?:\/\//.test(s)) return s
+  // Strip non-digits for the wa.me link.
+  const digits = s.replace(/\D/g, '')
+  return digits ? `https://wa.me/${digits}` : s
 }

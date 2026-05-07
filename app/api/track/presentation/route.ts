@@ -14,6 +14,17 @@ const sb = createClient(
   process.env.SUPABASE_SERVICE_KEY!,
 )
 
+type ShortlistItemDetail = {
+  id?: string | null
+  kind?: 'villa' | 'apartment' | 'complex' | 'rental' | null
+  slug?: string | null
+  title?: string | null
+  district?: string | null
+  bedrooms?: number | null
+  area?: number | null
+  priceUsd?: number | null
+}
+
 type Body = {
   kind?: 'object' | 'shortlist'
   // For 'object'
@@ -24,6 +35,9 @@ type Body = {
   // For 'shortlist'
   itemCount?: number
   items?: string[]
+  itemsDetail?: ShortlistItemDetail[]
+  // Agent contact when the visitor downloaded the "for-agent" PDF.
+  agent?: { name?: string; telegram?: string; whatsapp?: string } | null
   // Common context
   orientation?: 'portrait' | 'landscape'
   hasAgent?: boolean
@@ -46,6 +60,16 @@ export async function POST(req: Request) {
     lang: body.lang === 'en' ? 'en' : 'ru',
   }
 
+  // Agent contact stored only when the visitor explicitly generated
+  // the "for-agent" PDF. A regular shortlist download has agent: null
+  // and these stay null. Stripped to non-empty strings.
+  if (body.agent && typeof body.agent === 'object') {
+    const a = body.agent
+    if (typeof a.name === 'string'     && a.name.trim())     row.agent_name     = a.name.trim().slice(0, 200)
+    if (typeof a.telegram === 'string' && a.telegram.trim()) row.agent_telegram = a.telegram.trim().slice(0, 200)
+    if (typeof a.whatsapp === 'string' && a.whatsapp.trim()) row.agent_whatsapp = a.whatsapp.trim().slice(0, 200)
+  }
+
   if (body.kind === 'object') {
     if (!body.objectId) {
       return NextResponse.json({ ok: false, error: 'missing objectId' }, { status: 400 })
@@ -60,6 +84,20 @@ export async function POST(req: Request) {
     const items = Array.isArray(body.items) ? body.items.slice(0, 30) : []
     row.item_count = typeof body.itemCount === 'number' ? body.itemCount : items.length
     row.items      = items
+    // Per-item snapshot (title, kind, slug, district, price). Capped
+    // at 30 items, sanitised to known keys.
+    if (Array.isArray(body.itemsDetail)) {
+      row.items_detail = body.itemsDetail.slice(0, 30).map(d => ({
+        id:        typeof d.id === 'string' ? d.id : null,
+        kind:      typeof d.kind === 'string' ? d.kind : null,
+        slug:      typeof d.slug === 'string' ? d.slug : null,
+        title:     typeof d.title === 'string' ? d.title.slice(0, 300) : null,
+        district:  typeof d.district === 'string' ? d.district.slice(0, 200) : null,
+        bedrooms:  typeof d.bedrooms === 'number' ? d.bedrooms : null,
+        area:      typeof d.area === 'number' ? d.area : null,
+        priceUsd:  typeof d.priceUsd === 'number' ? d.priceUsd : null,
+      }))
+    }
   }
 
   const { error } = await sb.from('presentation_events').insert(row)

@@ -594,7 +594,8 @@ export async function downloadVillaPdf(
   document.body.removeChild(a)
   setTimeout(() => URL.revokeObjectURL(url), 1000)
   // Fire-and-forget analytics ping. Body is JSON; failure logs but
-  // never blocks the user's download.
+  // never blocks the user's download. Agent contact is sent verbatim
+  // when the visitor explicitly generated the "for-agent" PDF.
   fetch('/api/track/presentation', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -604,6 +605,7 @@ export async function downloadVillaPdf(
       objectId: data.villaId,
       slug: data.slug,
       title: data.title,
+      agent: agent ? { name: agent.name, telegram: agent.telegram, whatsapp: agent.whatsapp } : null,
       orientation,
       hasAgent: !!agent,
       lang: 'ru',

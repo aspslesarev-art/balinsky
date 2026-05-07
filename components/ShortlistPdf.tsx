@@ -716,8 +716,12 @@ export async function downloadShortlistPdf(
   a.click()
   document.body.removeChild(a)
   setTimeout(() => URL.revokeObjectURL(url), 1000)
-  // Fire-and-forget analytics. Item ids capped server-side at 30 to
-  // keep rows compact; full count goes in itemCount regardless.
+  // Fire-and-forget analytics. Item ids capped server-side at 30
+  // to keep rows compact; full count goes in itemCount regardless.
+  // Per-item details (title, district, price) so the admin sees
+  // the actual content of each shortlist, not just record IDs.
+  // Agent contact is sent verbatim only when the user explicitly
+  // generated the "for-agent" PDF.
   fetch('/api/track/presentation', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -725,6 +729,17 @@ export async function downloadShortlistPdf(
       kind: 'shortlist',
       itemCount: items.length,
       items: items.map(it => it.airtableId).filter((x): x is string => !!x).slice(0, 30),
+      itemsDetail: items.slice(0, 30).map(it => ({
+        id: it.airtableId ?? null,
+        kind: it.kind,
+        slug: it.slug,
+        title: it.title,
+        district: it.district,
+        bedrooms: it.bedrooms,
+        area: it.area ?? null,
+        priceUsd: it.priceUsd,
+      })),
+      agent: agent ? { name: agent.name, telegram: agent.telegram, whatsapp: agent.whatsapp } : null,
       orientation,
       hasAgent: !!agent,
       lang,
