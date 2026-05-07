@@ -101,13 +101,20 @@ export async function EventDetail({ slug, lang }: { slug: string; lang: Lang }) 
     ? `${SITE_URL}${lang === 'en' ? '/en/developers/' : '/ru/zastrojshhiki/'}${e.developers[0].slug}`
     : `${SITE_URL}${lang === 'en' ? '/en' : '/ru'}`
 
-  const eventJsonLd = {
+  // Event JSON-LD only when we have the required fields. `startDate`
+  // is mandatory per schema.org/Event — without it Google rejects
+  // the whole block. Same for a non-empty `description`. If either
+  // is missing we skip the script tag instead of emitting an
+  // invalid Event (which is exactly what triggered the GSC errors).
+  const description = e.seoDescription?.trim()
+    || (e.body ? e.body.trim().slice(0, 250) : null)
+  const eventJsonLd = (e.startsAt && description) ? {
     '@context': 'https://schema.org',
     '@type': 'Event',
     name: e.title,
-    description: e.seoDescription ?? undefined,
-    startDate: e.startsAt ?? undefined,
-    endDate: e.endsAt ?? undefined,
+    description,
+    startDate: e.startsAt,
+    endDate: e.endsAt ?? e.startsAt,
     eventStatus: 'https://schema.org/EventScheduled',
     eventAttendanceMode: isOnline
       ? 'https://schema.org/OnlineEventAttendanceMode'
@@ -132,10 +139,10 @@ export async function EventDetail({ slug, lang }: { slug: string; lang: Lang }) 
       price: 0,
       priceCurrency: 'USD',
       availability: 'https://schema.org/InStock',
-      validFrom: e.startsAt ?? undefined,
+      validFrom: e.startsAt,
     },
     url: `${SITE_URL}${lang === 'en' ? '/en/events/' : '/ru/meropriyatiya/'}${e.slug}`,
-  }
+  } : null
 
   return (
     <>
@@ -202,7 +209,9 @@ export async function EventDetail({ slug, lang }: { slug: string; lang: Lang }) 
           </div>
         </article>
 
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(eventJsonLd) }} />
+        {eventJsonLd && (
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(eventJsonLd) }} />
+        )}
         <div className="h-16" />
       </PageContainer>
     </>
