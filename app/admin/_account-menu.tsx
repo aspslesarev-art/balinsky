@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import {
-  MessageCircle, Lock, Megaphone, Image as ImageIcon,
+  MessageCircle, Lock, Megaphone, Image as ImageIcon, FileText,
   Sun, Moon, LogOut, ChevronUp, UserRound,
 } from 'lucide-react'
 import { useAdminTheme } from './_theme'
@@ -26,10 +26,11 @@ type Variant = 'sidebar' | 'floating'
 type Item = { href: string; label: string; Icon: typeof MessageCircle }
 
 const ITEMS: Item[] = [
-  { href: '/admin/chats',        label: 'Чаты',     Icon: MessageCircle },
-  { href: '/admin/reservations', label: 'Брони',    Icon: Lock },
-  { href: '/admin/broadcast',    label: 'Рассылка', Icon: Megaphone },
-  { href: '/admin/ads',          label: 'Реклама',  Icon: ImageIcon },
+  { href: '/admin/chats',         label: 'Чаты',         Icon: MessageCircle },
+  { href: '/admin/reservations',  label: 'Брони',        Icon: Lock },
+  { href: '/admin/broadcast',     label: 'Рассылка',     Icon: Megaphone },
+  { href: '/admin/ads',           label: 'Реклама',      Icon: ImageIcon },
+  { href: '/admin/presentations', label: 'Презентации',  Icon: FileText },
 ]
 
 export function AdminAccountMenu({ variant = 'sidebar' }: { variant?: Variant }) {

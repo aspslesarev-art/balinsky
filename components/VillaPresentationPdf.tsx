@@ -593,6 +593,23 @@ export async function downloadVillaPdf(
   a.click()
   document.body.removeChild(a)
   setTimeout(() => URL.revokeObjectURL(url), 1000)
+  // Fire-and-forget analytics ping. Body is JSON; failure logs but
+  // never blocks the user's download.
+  fetch('/api/track/presentation', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      kind: 'object',
+      objectKind: data.kind ?? 'villa',
+      objectId: data.villaId,
+      slug: data.slug,
+      title: data.title,
+      orientation,
+      hasAgent: !!agent,
+      lang: 'ru',
+    }),
+    keepalive: true,
+  }).catch(() => {})
 }
 
 function slugify(s: string): string {

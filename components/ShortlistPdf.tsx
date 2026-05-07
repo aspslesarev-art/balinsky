@@ -716,4 +716,19 @@ export async function downloadShortlistPdf(
   a.click()
   document.body.removeChild(a)
   setTimeout(() => URL.revokeObjectURL(url), 1000)
+  // Fire-and-forget analytics. Item ids capped server-side at 30 to
+  // keep rows compact; full count goes in itemCount regardless.
+  fetch('/api/track/presentation', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      kind: 'shortlist',
+      itemCount: items.length,
+      items: items.map(it => it.airtableId).filter((x): x is string => !!x).slice(0, 30),
+      orientation,
+      hasAgent: !!agent,
+      lang,
+    }),
+    keepalive: true,
+  }).catch(() => {})
 }
