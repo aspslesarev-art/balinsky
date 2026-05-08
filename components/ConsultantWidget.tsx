@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
-import { MessageCircle, X, Send, Loader2, AlertTriangle, BedDouble, MapPin, ExternalLink, Mic, MicOff } from 'lucide-react'
+import { MessageCircle, X, Send, Loader2, AlertTriangle, BedDouble, MapPin, ExternalLink, Mic, MicOff, UserRound } from 'lucide-react'
 import type { Lang } from '@/lib/i18n'
 
 // Minimal Web Speech API typing — TS stdlib doesn't ship it, and we only use
@@ -40,7 +40,15 @@ type ListingCard = {
   rent_per_month_usd: number | null
 }
 
-type Message = { role: 'user' | 'assistant'; content: string; listings?: ListingCard[] }
+type Message = {
+  role: 'user' | 'assistant';
+  content: string;
+  listings?: ListingCard[];
+  // 'manager' marks a reply pushed in by an admin from /admin/chats
+  // (polled via /api/chat/inbound). Rendered with a small badge so the
+  // visitor can tell a human jumped in.
+  source?: 'bot' | 'manager';
+}
 
 // Strips a trailing `[CHIPS] a | b | c` block off an assistant message and
 // returns it as a list of suggestion strings. Chips show only for the LAST
@@ -182,6 +190,50 @@ export function ConsultantWidget() {
     // to capture lazily — eslint-disable for the dep array is fine here.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Poll /api/chat/inbound while the widget is open so manager replies
+  // typed into /admin/chats land in this conversation in (near) real
+  // time. We hold a `since` cursor — server returns only messages with
+  // created_at > since. On open: cursor = now, so old logged messages
+  // don't get re-played.
+  const inboundCursor = useRef<string | null>(null)
+  useEffect(() => {
+    if (!open) return
+    if (typeof window === 'undefined') return
+    let cancelled = false
+    const tick = async () => {
+      try {
+        const since = inboundCursor.current
+        const url = since ? `/api/chat/inbound?since=${encodeURIComponent(since)}` : '/api/chat/inbound'
+        const r = await fetch(url, { cache: 'no-store' })
+        if (!r.ok) return
+        const j = await r.json() as {
+          serverNow?: string
+          messages?: { role: 'assistant'; content: string; source: 'manager'; createdAt: string }[]
+        }
+        if (cancelled) return
+        // Initialise cursor on the first poll so we don't replay history.
+        if (!inboundCursor.current && j.serverNow) inboundCursor.current = j.serverNow
+        const incoming = (j.messages ?? []).filter(m => m.content.trim())
+        if (incoming.length > 0) {
+          setMessages(prev => [...prev, ...incoming.map(m => ({
+            role: 'assistant' as const,
+            content: m.content,
+            source: 'manager' as const,
+          }))])
+          // Bump cursor to the newest manager message we received.
+          const latest = incoming[incoming.length - 1].createdAt
+          if (latest > (inboundCursor.current ?? '')) inboundCursor.current = latest
+        }
+      } catch {
+        // Network blips are fine — we'll catch up on the next tick.
+      }
+    }
+    // First tick on open establishes the cursor; then 5-sec interval.
+    void tick()
+    const id = setInterval(tick, 5000)
+    return () => { cancelled = true; clearInterval(id) }
+  }, [open])
 
   // Swap the greeting if the visitor navigated between /ru and /en
   // before saying anything — keeps the entry chips in the same
@@ -362,6 +414,16 @@ export function ConsultantWidget() {
                 const { text, chips } = m.role === 'assistant' ? extractChips(m.content) : { text: m.content, chips: [] }
                 return (
                   <div key={i} className="flex flex-col gap-2">
+                    {/* Manager badge: assistant message but the source
+                        is a human admin who jumped into the chat from
+                        /admin/chats. Sits above the bubble so the
+                        visitor reads "Менеджер" before the body. */}
+                    {m.source === 'manager' && (
+                      <span className="self-start inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary-pressed)] text-[10px] font-medium uppercase tracking-wide">
+                        <UserRound size={10} strokeWidth={2.4} />
+                        {lang === 'en' ? 'Manager' : 'Менеджер'}
+                      </span>
+                    )}
                     {text && <Bubble role={m.role}>{text}</Bubble>}
                     {m.listings && m.listings.length > 0 && (
                       <div className="self-start max-w-[95%] flex flex-col gap-2">

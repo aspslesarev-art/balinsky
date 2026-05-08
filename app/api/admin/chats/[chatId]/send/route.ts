@@ -1,10 +1,21 @@
 import { NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 import { requireAdmin } from '@/lib/admin-auth'
 import { logMessage } from '@/lib/bot-storage'
 import { uploadChatMedia, type ChatMediaKind } from '@/lib/chat-media'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+
+const sb = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_KEY!,
+)
+
+async function getChatType(chatId: number): Promise<string | null> {
+  const { data } = await sb.from('bot_chats').select('chat_type').eq('chat_id', chatId).maybeSingle()
+  return data?.chat_type ?? null
+}
 
 // Manager-side send: text-only goes through sendMessage; voice notes go
 // through sendVoice; everything else through sendDocument (lets the user
@@ -24,6 +35,16 @@ export async function POST(req: Request, { params }: { params: Promise<{ chatId:
   const { chatId } = await params
   const id = Number(chatId)
   if (!Number.isFinite(id)) return NextResponse.json({ ok: false, error: 'invalid_chat_id' }, { status: 400 })
+
+  // Assistant chats route inside the website only — there's no Telegram
+  // chat_id behind them. Skip the Telegram call entirely and log the
+  // message; the visitor's ConsultantWidget polls /api/chat/inbound to
+  // pull manager replies in real time.
+  const chatType = await getChatType(id)
+  const isAssistant = chatType === 'assistant'
+  if (isAssistant) {
+    return await sendAssistantText(req, id)
+  }
 
   const ct = req.headers.get('content-type') ?? ''
   if (ct.startsWith('application/json')) {
@@ -110,6 +131,31 @@ export async function POST(req: Request, { params }: { params: Promise<{ chatId:
     media_size: file.size,
   })
 
+  return NextResponse.json({ ok: true })
+}
+
+// Manager → visitor on a website assistant chat. We accept JSON or
+// multipart text body; voice / files aren't supported yet for
+// assistant chats since the widget UI doesn't render them.
+async function sendAssistantText(req: Request, id: number) {
+  let text = ''
+  const ct = req.headers.get('content-type') ?? ''
+  if (ct.startsWith('application/json')) {
+    try { const body = await req.json() as { text?: string }; text = (body.text ?? '').trim() }
+    catch { return NextResponse.json({ ok: false, error: 'bad_json' }, { status: 400 }) }
+  } else if (ct.startsWith('multipart/')) {
+    try { const form = await req.formData(); text = ((form.get('text') as string | null) ?? '').trim() }
+    catch { return NextResponse.json({ ok: false, error: 'bad_form' }, { status: 400 }) }
+  } else {
+    return NextResponse.json({ ok: false, error: 'unsupported_content_type' }, { status: 415 })
+  }
+  if (!text) return NextResponse.json({ ok: false, error: 'empty_text' }, { status: 400 })
+  await logMessage({
+    chat_id: id,
+    direction: 'out',
+    source: 'manager',
+    text,
+  })
   return NextResponse.json({ ok: true })
 }
 

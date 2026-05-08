@@ -495,17 +495,13 @@ export function Inbox() {
               })}
             </div>
 
-            {/* Assistant chats are visitor ↔ Балина via /api/chat —
-                there is no return channel: the visitor's browser tab
-                is the only client, and once it's gone we can't push
-                a message back. Show a read-only notice instead of a
-                send composer so the admin doesn't accidentally
-                enqueue a Telegram send to a fake chat_id. */}
-            {activeChat.chat_type === 'assistant' ? (
-              <div className="shrink-0 border-t border-[var(--ax-border)] px-4 py-3 text-[12px] text-[var(--ax-fg-muted)] bg-[var(--ax-bg)]">
-                Это переписка посетителя с AI-брокером Балиной на сайте — только просмотр.
-              </div>
-            ) : (
+            {/* Assistant chats: manager can join the conversation.
+                When sent, /api/admin/chats/[chatId]/send detects
+                chat_type=assistant and just logs to bot_messages
+                (skipping Telegram). The visitor's ConsultantWidget
+                polls /api/chat/inbound every 5s and surfaces the
+                manager reply inline as if from the assistant, with
+                a small "Менеджер" badge so it's clear it's a human. */}
             <form
               onSubmit={e => { e.preventDefault(); send() }}
               className="shrink-0 border-t border-[var(--ax-border)] p-3 flex items-end gap-2 bg-[var(--ax-bg)]"
@@ -584,7 +580,6 @@ export function Inbox() {
                 </button>
               )}
             </form>
-            )}
             {error && <div className="px-4 py-2 text-[12px] text-[var(--ax-error-fg)] bg-[var(--ax-error-bg)] border-t border-[var(--ax-error-border)]">{error}</div>}
           </>
         ) : (
