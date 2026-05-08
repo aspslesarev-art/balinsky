@@ -3,6 +3,8 @@
 
 import { createClient } from '@supabase/supabase-js'
 import type { ChatCompletionTool } from 'openai/resources/chat/completions'
+import { loadAllVillaScores } from './investment/batch-scores'
+import { loadAllRental } from './rental'
 
 const sb = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -43,6 +45,20 @@ export type ListingCard = {
   completion_year: string | null
   status: string | null
   claimed_yield_pct: number | null
+  // Two-scenario rental economics. For villas we have a real Booking-
+  // based capRate model (lib/investment/batch-scores.ts) — both the
+  // median and the optimistic ("good") scenario. For both villas and
+  // apartments we attach a same-district monthly-rental comparison
+  // pulled from the rental catalog so Балина can frame "if Booking
+  // doesn't work, fall back to monthly".
+  //   cap_rate_median — fraction (0..1), e.g. 0.09 = 9%/year
+  //   cap_rate_good — optimistic scenario, fraction
+  //   monthly_rent_comp_usd — average $/mo of comparable rentals nearby
+  //   monthly_rent_comp_count — how many rentals were averaged
+  cap_rate_median: number | null
+  cap_rate_good: number | null
+  monthly_rent_comp_usd: number | null
+  monthly_rent_comp_count: number | null
 }
 
 export const SYSTEM_PROMPT = `Ты — Балина, AI-брокер сайта Balinsky (balinsky.info) по недвижимости на Бали.
@@ -195,6 +211,48 @@ export const SYSTEM_PROMPT = `Ты — Балина, AI-брокер сайта 
 4. **Чего избегать** — если в выдаче что-то совсем мимо (yellow для инвестиций, лизхолд <20 лет, нет PBG, цена x2 рынка) — открыто скажи "вот этот **не бери**, потому что Y".
 
 Тон — как друг-брокер, не как маркетолог. "Слушай, вот эти два — реально топ под твою задачу. А вот третий смотри сам, тут yellow, для инвестиций не пойдёт". Без воды и без "уважаемый клиент, прошу обратить внимание".
+
+ДВА СЦЕНАРИЯ ДОХОДА — РАЗБИРАЙ КАЖДЫЙ ОБЪЕКТ:
+
+Когда клиент спрашивает про инвестиционную привлекательность, **всегда** разворачивай две модели аренды:
+
+**1. Посуточная аренда (Booking / Airbnb).**
+В каждой карточке от tool приходят два числа:
+- \`cap_rate_median\` — медианный сценарий: реалистичная цена/ночь × 65% загрузка − комиссии (15% Booking + 22% управляющая) − opex.
+- \`cap_rate_good\` — хороший сценарий: премиальный ADR (p75) × 85% загрузка − те же комиссии.
+Это **не** заявленная застройщиком доходность — это наш расчёт по похожим объектам в радиусе 2 км из Booking.
+
+Формулируй так:
+"Посуточно: при медианном сценарии ~X%/год чистыми, при хорошем (p75 ADR + 85% загрузка) ~Y%. Если нашёл хорошего управляющего — вторая цифра реалистична."
+
+Сравнивай числа с порогами:
+- >9% чистыми (good) — крепкая инвестиция.
+- 6–9% — нормально, но без подушки.
+- <6% — для инвестиций мимо, окупаемость 16+ лет.
+- null или confidence=low — мало сравнимых, считать на воду; предлагай помесячно как базу.
+
+**2. Помесячная аренда — fallback.**
+В карточке поле \`monthly_rent_comp_usd\` — средняя цена помесячной аренды у соседних объектов в этом же районе с тем же числом спален (±1). \`monthly_rent_comp_count\` — сколько объектов попало в выборку.
+
+Если посуточная схема не работает (yellow земля / низкий cap rate / клиент сам не хочет туристов) — посчитай помесячную доходность вслух:
+- Годовой доход ≈ \`monthly_rent_comp_usd\` × 11 (один месяц = простой / резервный фонд).
+- Cap rate помесячно = годовой доход / цена × 100%.
+- Сравни с посуточным; обычно помесячно даёт 4–7%, что хуже чем хороший Booking-сценарий, но без юридических рисков и без операционной возни.
+
+Формулировка:
+"Если посуточно не пойдёт — помесячно тут сдают за ~$X/мес (видел Y соседних по похожим параметрам). Это $X×11 = $Z/год чистого, ROI ≈ Q% на этот ценник. Хуже чем Booking, но стабильнее и легально на любой земле."
+
+**ПРИМЕР ПОЛНОГО РАЗБОРА:**
+
+"Вилла Dune ($185k):
+- Посуточно — медиана 7.5%/год, хороший сценарий 11%. Confidence высокая, в радиусе 2 км 14 сравнимых на Booking.
+- Помесячно — соседи сдают ~$1500/мес (5 объектов рядом). Это ≈$16.5k/год = 8.9% к цене покупки.
+- Земля pink, лизхолд 30 лет — ок под Booking. Брал бы под инвестицию."
+
+"Вилла Ubud Dream ($200k):
+- Земля **yellow** — посуточно нелегально, Booking исключён. Если сдавать — только помесячно.
+- Соседи помесячно: ~$1300/мес (3 объекта). Годовой $14.3k = 7.1% к цене. Чисто, но без upside от высокого сезона.
+- Под "купил-сдал-уехал" — слабо. Под жизнь самому или долгосрочную сдачу — норм."
 
 ВАЖНО: каждый красный флаг — конкретно. Не "есть некоторые риски", а "лизхолд 25 лет, оставшаяся доходность ужмётся к 2050" или "yellow зона, посуточно нелегально".
 
@@ -381,7 +439,8 @@ async function searchSupabaseTable(
 
   const photoManifest = photoBucket ? await loadPhotoManifest(photoBucket) : {}
 
-  return filtered.slice(0, limit).map(r => {
+  const sliced = filtered.slice(0, limit)
+  const cards = sliced.map(r => {
     const d = r.data
     const slug = fs1(d['SEO:Slug'])!
     const title = fs1(d['SEO:Title']) ?? fs1(d['ИИ Имя']) ?? fs1(d['Name']) ?? fs1(d['Project']) ?? fs1(d['Developer']) ?? ''
@@ -420,8 +479,64 @@ async function searchSupabaseTable(
       completion_year: fs1(d['Year of completion']) ?? fs1(d['Year of completion ']) ?? null,
       status: fs1(d['Статус']),
       claimed_yield_pct: yieldRaw,
+      // These four are populated post-hoc in attachInvestmentMetrics —
+      // we need cards built first so we have district/bedrooms to
+      // run the rental comp against.
+      cap_rate_median: null,
+      cap_rate_good: null,
+      monthly_rent_comp_usd: null,
+      monthly_rent_comp_count: null,
     }
   })
+  await attachInvestmentMetrics(cards, kind, sliced.map(r => r.airtable_id))
+  return cards
+}
+
+// Layer two of the search pipeline. Once the basic cards are built
+// we attach rental economics so Балина can talk about both scenarios:
+//   - per-day (Booking comps via batch-scores) — applies to villas
+//     where the data pipeline produces a capRate.
+//   - per-month (in-district rental comparison) — applies to villas
+//     and apartments by averaging rentals with similar bedroom count
+//     in the same district.
+async function attachInvestmentMetrics(
+  cards: ListingCard[],
+  kind: ListingCard['kind'],
+  airtableIds: string[],
+): Promise<void> {
+  // 1. Per-day cap rate (villa-only — apartments don't have a
+  //    batch-score pipeline yet).
+  if (kind === 'villa') {
+    const scores = await loadAllVillaScores().catch(() => null)
+    if (scores) {
+      for (let i = 0; i < cards.length; i++) {
+        const s = scores.get(airtableIds[i])
+        if (s) {
+          cards[i].cap_rate_median = s.capRate ?? null
+          cards[i].cap_rate_good = s.goodCapRate ?? null
+        }
+      }
+    }
+  }
+
+  // 2. Per-month rental comparables — same district + bedrooms ±1.
+  if (kind === 'villa' || kind === 'apartment') {
+    const rentals = await loadAllRental().catch(() => [])
+    if (rentals.length === 0) return
+    for (const card of cards) {
+      if (!card.district || card.bedrooms == null) continue
+      const dLower = card.district.toLowerCase()
+      const matches = rentals.filter(r => {
+        if (!r.location || !r.location.toLowerCase().includes(dLower)) return false
+        if (r.bedrooms == null) return false
+        return Math.abs(r.bedrooms - (card.bedrooms ?? 0)) <= 1
+      })
+      if (matches.length === 0) continue
+      const avg = matches.reduce((s, r) => s + r.priceMonthUsd, 0) / matches.length
+      card.monthly_rent_comp_usd = Math.round(avg)
+      card.monthly_rent_comp_count = matches.length
+    }
+  }
 }
 
 // Maps Airtable's free-form land-color string to a small enum so the
@@ -474,6 +589,10 @@ async function searchRental(args: SearchArgs): Promise<ListingCard[]> {
     completion_year: null,
     status: null,
     claimed_yield_pct: null,
+    cap_rate_median: null,
+    cap_rate_good: null,
+    monthly_rent_comp_usd: null,
+    monthly_rent_comp_count: null,
   }))
 }
 
