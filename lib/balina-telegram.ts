@@ -46,6 +46,26 @@ export async function replyAsBalina({
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) return { handled: false, reason: 'no_openai_key' }
 
+  // Show "печатает…" in Telegram for the entire turn so the visitor
+  // sees the bot is alive while we transcribe / call OpenAI / send
+  // photo cards. Telegram's chat-action expires after ~5 s, so we
+  // re-ping every 4 s. A single stopper at the end clears the
+  // interval no matter which exit path we take.
+  const stopTyping = startTypingPing(token, chatId)
+  try {
+    return await runTurn(apiKey, { chatId, token, lang, userText, voiceFileId })
+  } finally {
+    stopTyping()
+  }
+}
+
+async function runTurn(
+  apiKey: string,
+  { chatId, token, lang, userText, voiceFileId }: {
+    chatId: number; token: string; lang: 'ru' | 'en'; userText?: string; voiceFileId?: string | null
+  },
+): Promise<{ handled: boolean; reason?: string }> {
+
   // Soft rate limit — count assistant outbound in the last 24h. We
   // do this BEFORE Whisper so a bored visitor can't burn quota on
   // transcriptions either.
@@ -178,6 +198,30 @@ async function transcribeVoice(client: OpenAI, token: string, fileId: string): P
   return (r.text ?? '').trim() || null
 }
 
+// === Telegram chat-action (the "печатает…" indicator) ====================
+
+// Telegram drops the indicator after ~5 seconds, so we re-ping
+// every 4 s while the turn is processing. Returns a stopper that
+// clears the interval; call it in a finally block so the typing
+// indicator never gets stuck even on errors.
+function startTypingPing(token: string, chatId: number, action: ChatAction = 'typing'): () => void {
+  void sendChatAction(token, chatId, action)
+  const id = setInterval(() => { void sendChatAction(token, chatId, action) }, 4000)
+  return () => clearInterval(id)
+}
+
+type ChatAction = 'typing' | 'upload_photo' | 'record_voice' | 'upload_voice'
+
+async function sendChatAction(token: string, chatId: number, action: ChatAction): Promise<void> {
+  try {
+    await fetch(`https://api.telegram.org/bot${token}/sendChatAction`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, action }),
+    })
+  } catch { /* indicator failures are not worth surfacing */ }
+}
+
 // === Telegram sender helpers =============================================
 
 async function sendText(token: string, chatId: number, text: string): Promise<boolean> {
@@ -204,6 +248,10 @@ async function sendListingCard(token: string, chatId: number, card: ListingCard,
       { text: `🔗 ${openLabel}`, url: card.url },
     ]],
   }
+  // Brief "uploading photo…" hint before the actual sendPhoto so
+  // the visitor sees a per-card progress beat instead of a wall of
+  // silence between the prose and the cards.
+  if (card.photo) void sendChatAction(token, chatId, 'upload_photo')
   try {
     if (card.photo) {
       const r = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
