@@ -135,6 +135,9 @@ async function runTurn(
             '     Строки 3–5: перечисли 2–4 КОНКРЕТНЫХ недостающих параметра которые помогут попасть в 100 %, выбирая из того что реально ещё не известно. Каждый — отдельным буллитом с примером. НЕ обобщённое «район / бюджет / спальни», а конкретно, по делу.',
             '   Потом карточки. Больше ничего.',
             '5. Если посетитель называет КОНКРЕТНЫЙ объект по имени («почему не показал X», «что про Y», «а Maison Boheme?») — вызови search_listings с query="<имя>" и попробуй kind=villa, если 0 — попробуй kind=apartment, потом kind=complex. Не гадай — либо найди и расскажи, либо честно скажи «под этим именем не нашёл, проверь написание».',
+            '5b. Когда запрос широкий (тип объекта — «вилла», «апарты», «жильё», «недвижка» — без явного отсева комплексов) — ВСЕГДА делай ДВА параллельных вызова search_listings: kind=villa И kind=complex с теми же фильтрами. Многие желанные объекты (Maison Boheme и аналоги) проходят как complex, а не villa, и теряются если искать только в одном bucket. Объедини результаты, отсортируй по релевантности и отдай топ-5.',
+            '5c. Когда посетитель упомянул "белый песок / white sand" — это ЖЁСТКОЕ требование. Подходят ТОЛЬКО: Букит (Uluwatu, Bingin, Padang Padang, Balangan, Dreamland, Pecatu, Ungasan, Nusa Dua, Jimbaran, Pandawa, Melasti, Green Bowl), Сануре, Танджунг-Беноа, Амед, Туламбен. Чёрный песок — Чангу, Берава, Перененан, Семиньяк, Кута, Легиан, Сесех, Танах-Лот, Ньяньи, Кедунгу, Балиан, Медеви, Ловина — ИХ ИСКЛЮЧИ. Если в выборке вышли чёрно-песочные — переспроси search с query, ограниченным белыми районами.',
+            '5d. Когда посетитель сказал "пешком до пляжа / в пешей доступности / walking distance" — даже Umalas, Kerobokan, Tibubeneng, Dalung, Padonan не подходят (они 1-2 км от воды). Только Berawa, Batu Bolong, Pererenan beachfront, Echo Beach, Seminyak beachfront, Jimbaran bay, Sanur beachfront, Bukit cliffside проектов с явным «beachfront / 1 минута / на пляже».',
             '6. ⚠️ КРИТИЧНО: Никогда НЕ выдумывай конкретные виллы, проекты, районы как «варианты». Если в этом ходу ты НЕ вызвала search_listings — НЕЛЬЗЯ упоминать «Вилла в Нуса-Дуа», «Вилла в Чангу» и т.п. в виде списка вариантов. Если посетитель ждёт варианты, а ты не вызвала search_listings — это твоя ошибка, исправь: вызови tool ПЕРЕД ответом. Никаких списков из головы, только из tool результата.',
             '7. ⚠️ ЖЁСТКО: после буллитов с недостающими параметрами — СТОП. НЕ пиши «Вот виллы которые подходят:», НЕ пиши «1. Вилла X», НЕ пиши «Ссылка на виллу». Карточки с фото и кнопками отрисуются автоматически отдельными сообщениями. Любое перечисление вилл в тексте — БАГ.',
             '',
@@ -278,20 +281,75 @@ const INLAND_TOKENS = [
   'tampaksiring', 'тампаксиринг',
 ]
 
+// Districts that are technically Bali-coast-adjacent but actually
+// 1–3 km inland from the actual beach (Mengwi/Canggu hinterlands).
+// Block these when the visitor asked for WALKING distance to the
+// ocean (which means <500m). Kept separate from INLAND_TOKENS
+// because Mengwi-as-a-regency includes Canggu beachfront — only
+// the named inland villages get blocked.
+const NON_WALKING_TOKENS = [
+  'umalas', 'умалас',
+  'kerobokan', 'керобокан',
+  'tibubeneng', 'тибубенен',
+  'dalung', 'далунг',
+  'padonan', 'падонан',
+]
+
+// Districts where the beach is primarily WHITE coral sand. Used
+// when the visitor asked for "белый песок / white sand". Anything
+// outside this set gets dropped — Чангу/Берава/Перененан/Семиньяк
+// /Кута/Легиан are all volcanic black-sand and don't qualify.
+const WHITE_SAND_TOKENS = [
+  // Bukit peninsula
+  'букит', 'bukit', 'улуват', 'uluwatu', 'бинг', 'bingin',
+  'паданг', 'padang', 'балинг', 'balang', 'дримленд', 'dreamland',
+  'нуса-дуа', 'nusa dua', 'nusa-dua', 'nusadua',
+  'джимбар', 'jimbaran',
+  'pecatu', 'пекату', 'ungasan', 'унгасан', 'kutuh', 'кутух',
+  'melasti', 'меласти', 'green bowl', 'грин боул',
+  'pandawa', 'пандава',
+  // East / north-east white-sand zones
+  'sanur', 'сануре', 'санур',
+  'tanjung benoa', 'танджунг беноа', 'танджунг-беноа',
+  'amed', 'амед', 'tulamben', 'туламбен',
+]
+
 // Detect ocean intent across the immediate user message + recent
 // history. Conservative — once the visitor said "у океана" we
 // keep enforcing the coastal filter for the rest of the chat unless
 // they explicitly say "не важно где" / "и горы тоже".
 function userWantsOcean(userText: string, history: ChatCompletionMessageParam[]): boolean {
-  const OCEAN_RE = /океан|у мор[яею]\b|прибрежн|пляж|у воды|на пляж|beachfront|beach\b|ocean|seaside|sea\b|surf|waves/i
-  if (OCEAN_RE.test(userText)) return true
-  // Skim last 10 user turns from history.
+  return matchesAcrossHistory(userText, history, /океан|у мор[яею]\b|прибрежн|пляж|у воды|на пляж|beachfront|beach\b|ocean|seaside|sea\b|surf|waves/i)
+}
+
+// Stronger ocean ask — visitor explicitly wants WALKING distance
+// (≤500m). Triggers the NON_WALKING_TOKENS filter on top of the
+// ocean filter.
+function userWantsWalkingToBeach(userText: string, history: ChatCompletionMessageParam[]): boolean {
+  return matchesAcrossHistory(
+    userText, history,
+    /пешк|пешей|walking|walkable|до пляж[ауе]|ден[оье] с пляж|у самого моря|первой линии|beachfront|first line/i,
+  )
+}
+
+// White-sand-only ask. Drops black-sand districts (Чангу / Берава /
+// Перененан / Семиньяк / Кута / Легиан / Сесех / Танах-Лот /
+// Кедунгу / Балиан / Медеви / Ньяньи / Ловина).
+function userWantsWhiteSand(userText: string, history: ChatCompletionMessageParam[]): boolean {
+  return matchesAcrossHistory(
+    userText, history,
+    /белый песок|белого песк|white sand|белый пляж|белого пляж|coral sand|кораллов/i,
+  )
+}
+
+function matchesAcrossHistory(userText: string, history: ChatCompletionMessageParam[], re: RegExp): boolean {
+  if (re.test(userText)) return true
   const recentUserText = history
     .filter(m => m.role === 'user' && typeof m.content === 'string')
     .slice(-10)
     .map(m => String(m.content))
     .join(' ')
-  return OCEAN_RE.test(recentUserText)
+  return re.test(recentUserText)
 }
 
 // If the model called search_listings without max_distance_to_beach
@@ -314,22 +372,45 @@ function enforceConstraintsFromHistory(
   return JSON.stringify(args)
 }
 
-// Last line of defence: drop any returned card whose district,
-// title, or URL contains an inland token when the visitor asked
-// for the ocean. Triple-source check because Airtable sometimes
-// stores the village name in title ("Вилла Moonrock в Ubud")
-// while leaving district blank or set to a sub-village we don't
-// recognise. URL slug catches the rest (`/ru/villy/o/villa-x-in-
-// ubud-...`).
+// Last line of defence: drop returned cards that don't match the
+// visitor's stated geographic constraints. Triple-source check
+// (district + title + url) because Airtable sometimes stores the
+// village in title and leaves district blank / set to a sub-name
+// we don't recognise.
+//
+// Layers (each AND-ed with the prior):
+//   1. Inland → drop if visitor asked for the ocean.
+//   2. Non-walking → drop Mengwi-hinterland villages (Umalas etc.)
+//      if visitor explicitly asked for walking distance.
+//   3. White-sand → drop everything outside WHITE_SAND_TOKENS if
+//      visitor asked for white sand. This is a HARD whitelist
+//      because anything that isn't on the whitelist is, by Bali
+//      geography, almost certainly black-sand.
 function postFilterCards(
   cards: ListingCard[],
   userText: string,
   history: ChatCompletionMessageParam[],
 ): ListingCard[] {
-  if (!userWantsOcean(userText, history)) return cards
+  const wantOcean = userWantsOcean(userText, history)
+  const wantWalk = userWantsWalkingToBeach(userText, history)
+  const wantWhite = userWantsWhiteSand(userText, history)
+  if (!wantOcean && !wantWalk && !wantWhite) return cards
+
   return cards.filter(c => {
     const haystack = [c.district, c.title, c.url].filter(Boolean).join(' ').toLowerCase()
-    return !INLAND_TOKENS.some(t => haystack.includes(t))
+
+    // Layer 1: kill all inland.
+    if (wantOcean && INLAND_TOKENS.some(t => haystack.includes(t))) return false
+
+    // Layer 2: kill Mengwi-hinterland (Umalas / Kerobokan etc.) if
+    // walking distance was asked.
+    if (wantWalk && NON_WALKING_TOKENS.some(t => haystack.includes(t))) return false
+
+    // Layer 3: positive whitelist for white sand. If the haystack
+    // doesn't mention any known white-sand district, drop.
+    if (wantWhite && !WHITE_SAND_TOKENS.some(t => haystack.includes(t))) return false
+
+    return true
   })
 }
 
