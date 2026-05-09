@@ -634,7 +634,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
             <Link href={villasRoot} className="hover:text-[var(--color-text)]">{c.villasCrumb}</Link>
             {district && <> · {district}</>}
           </div>
-          <h1 className="text-[20px] sm:text-[26px] md:text-[40px] font-semibold tracking-tight text-[#111827] leading-[1.2] md:leading-[1.1] mb-3 [overflow-wrap:anywhere] hyphens-auto">
+          <h1 className="text-[18px] sm:text-[24px] md:text-[40px] font-semibold tracking-tight text-[#111827] leading-[1.25] md:leading-[1.1] mb-3 [word-break:break-word] [overflow-wrap:anywhere]">
             {title}
           </h1>
           <div className="text-[15px] text-[var(--color-text-muted)] leading-relaxed mb-4 flex items-center flex-wrap gap-x-5 gap-y-1">
