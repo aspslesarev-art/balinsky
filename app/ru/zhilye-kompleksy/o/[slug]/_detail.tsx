@@ -617,7 +617,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             <Link href={complexesRoot} className="hover:text-[var(--color-text)]">{copy.backToComplexes}</Link>
             {district && <> · <span>{district}</span></>}
           </div>
-          <h1 className="text-[24px] sm:text-[28px] md:text-[44px] font-semibold tracking-tight text-[#111827] leading-[1.15] md:leading-[1.05] mb-3 break-words hyphens-auto">
+          <h1 className="text-[22px] sm:text-[28px] md:text-[44px] font-semibold tracking-tight text-[#111827] leading-[1.2] md:leading-[1.05] mb-3 [overflow-wrap:anywhere] hyphens-auto">
             {name}
           </h1>
           <div className="text-[16px] text-[var(--color-text-muted)] leading-relaxed max-w-3xl mb-4">
