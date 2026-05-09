@@ -70,6 +70,22 @@ export type ListingCard = {
   // the sample is small.
   district_median_price_per_sqm_usd: number | null
   district_listings_count: number | null
+  // Free-form copy from Airtable's "SEO Text" / "Notes" field —
+  // capped to keep the search-results payload bounded. Model uses
+  // this to comment on what's actually in the unit (interior, view,
+  // pool, distance to specific landmarks) without having to call
+  // get_listing_full first.
+  description_preview: string | null
+  // Geographic anchors. lat/lng come from Airtable's Geo / Geo 2
+  // columns. distance_to_beach_km is computed via haversine to the
+  // nearest beach in BEACH_REFS (canonical Bali surf + family
+  // beach coordinates). These let Балина answer "сколько минут до
+  // моря" honestly with a number instead of guessing from the
+  // district name.
+  lat: number | null
+  lng: number | null
+  distance_to_beach_km: number | null
+  nearest_beach: string | null
 }
 
 // Editable knowledge base lives in DB + lib/assistant-knowledge.ts.
@@ -168,6 +184,68 @@ function fs1(v: unknown): string | null {
   if (typeof v === 'object' && 'value' in (v as Record<string, unknown>)) return fs1((v as Record<string, unknown>).value)
   return null
 }
+// Airtable's "Geo" / "Geo 2" columns hold one number each as text
+// ("-8.681307" / "115.260389"). Sometimes editors paste both
+// coordinates into one cell — pull the first parseable float so
+// we get something usable either way.
+function parseGeoStr(v: unknown): number | null {
+  const s = fs1(v)
+  if (!s) return null
+  const m = s.match(/-?\d+(?:\.\d+)?/)
+  if (!m) return null
+  const n = Number(m[0])
+  return Number.isFinite(n) ? n : null
+}
+
+// Canonical Bali beach coordinates — surf + family-friendly mix.
+// Used to compute "nearest beach" + km distance per card so the
+// model can answer "сколько до моря" with a real number.
+const BEACH_REFS: { name: string; lat: number; lng: number }[] = [
+  { name: 'Echo Beach (Canggu)',          lat: -8.6515, lng: 115.1305 },
+  { name: 'Berawa Beach',                 lat: -8.6593, lng: 115.1378 },
+  { name: 'Pererenan Beach',              lat: -8.6394, lng: 115.1233 },
+  { name: 'Batu Bolong Beach (Canggu)',   lat: -8.6582, lng: 115.1300 },
+  { name: 'Nyanyi Beach',                 lat: -8.6253, lng: 115.1041 },
+  { name: 'Seseh Beach',                  lat: -8.6133, lng: 115.0960 },
+  { name: 'Tanah Lot',                    lat: -8.6212, lng: 115.0867 },
+  { name: 'Seminyak Beach',               lat: -8.6911, lng: 115.1672 },
+  { name: 'Kuta Beach',                   lat: -8.7180, lng: 115.1690 },
+  { name: 'Sanur Beach',                  lat: -8.6878, lng: 115.2630 },
+  { name: 'Tanjung Benoa',                lat: -8.7635, lng: 115.2266 },
+  { name: 'Nusa Dua Beach',               lat: -8.8003, lng: 115.2294 },
+  { name: 'Jimbaran Bay',                 lat: -8.7896, lng: 115.1640 },
+  { name: 'Balangan Beach (Bukit)',       lat: -8.7910, lng: 115.1297 },
+  { name: 'Dreamland Beach (Bukit)',      lat: -8.7970, lng: 115.1110 },
+  { name: 'Bingin Beach (Bukit)',         lat: -8.8118, lng: 115.1133 },
+  { name: 'Padang Padang (Bukit)',        lat: -8.8121, lng: 115.1066 },
+  { name: 'Uluwatu Beach',                lat: -8.8290, lng: 115.0853 },
+  { name: 'Pandawa Beach',                lat: -8.8467, lng: 115.1900 },
+  { name: 'Melasti Beach',                lat: -8.8456, lng: 115.1670 },
+  { name: 'Green Bowl Beach',             lat: -8.8559, lng: 115.1814 },
+  { name: 'Amed Beach',                   lat: -8.3387, lng: 115.6655 },
+  { name: 'Lovina Beach',                 lat: -8.1576, lng: 115.0264 },
+]
+
+function nearestBeach(lat: number, lng: number): { name: string; km: number } | null {
+  let best: { name: string; km: number } | null = null
+  for (const b of BEACH_REFS) {
+    const km = haversineKm(lat, lng, b.lat, b.lng)
+    if (!best || km < best.km) best = { name: b.name, km: Math.round(km * 100) / 100 }
+  }
+  return best
+}
+
+// Inline haversine — same formula as lib/competitor-utils.ts but
+// kept local so consultant.ts doesn't pick up a peer-module dep.
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371
+  const toRad = (d: number) => d * Math.PI / 180
+  const dLat = toRad(lat2 - lat1)
+  const dLng = toRad(lng2 - lng1)
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2
+  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
 function num(v: unknown): number | null {
   if (typeof v === 'number' && Number.isFinite(v)) return v
   if (typeof v === 'string') { const n = Number(v.replace(/\s/g, '')); return Number.isFinite(n) ? n : null }
@@ -321,6 +399,23 @@ async function searchSupabaseTable(
     const permitRaw = fs1(d['Разрешение']) ?? fs1(d['PBG'])
     const leaseRaw = fs1(d['Leasehold']) ?? fs1(d['Leashold'])
     const yieldRaw = num(d['Заявленная доходность'])
+    // Compact preview of the editor-written description so the model
+    // can comment on amenities / interior / proximity to landmarks
+    // without a follow-up tool call. ~400 chars keeps the per-card
+    // token cost under control while giving 2-3 sentences of useful
+    // context. Full text is reachable via get_listing_full(slug).
+    const seoText = fs1(d['SEO Text']) ?? fs1(d['Notes']) ?? fs1(d['Описание'])
+    const descriptionPreview = seoText
+      ? (seoText.length > 400 ? seoText.slice(0, 400).trim() + '…' : seoText.trim())
+      : null
+    // Geo: Airtable stores lat in 'Geo' and lng in 'Geo 2' as
+    // free-text "decimal[, ...]" — parseGeoStr extracts the first
+    // float. Distance to beach is the closest of BEACH_REFS via
+    // haversine, plus the name of which one matched so the model
+    // can say "5 минут до Echo Beach".
+    const lat = parseGeoStr(d['Geo'])
+    const lng = parseGeoStr(d['Geo 2'])
+    const beach = lat != null && lng != null ? nearestBeach(lat, lng) : null
     return {
       kind,
       title: title.replace(/\s*\|\s*Balinsky\s*$/, '').trim(),
@@ -348,6 +443,11 @@ async function searchSupabaseTable(
       monthly_rent_comp_count: null,
       district_median_price_per_sqm_usd: null,
       district_listings_count: null,
+      description_preview: descriptionPreview,
+      lat,
+      lng,
+      distance_to_beach_km: beach?.km ?? null,
+      nearest_beach: beach?.name ?? null,
     }
   })
   await attachInvestmentMetrics(cards, kind, sliced.map(r => r.airtable_id))
@@ -530,6 +630,11 @@ async function searchRental(args: SearchArgs): Promise<ListingCard[]> {
     monthly_rent_comp_count: null,
     district_median_price_per_sqm_usd: null,
     district_listings_count: null,
+    description_preview: null,
+    lat: null,
+    lng: null,
+    distance_to_beach_km: null,
+    nearest_beach: null,
   }))
 }
 
