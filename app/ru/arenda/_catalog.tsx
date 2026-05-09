@@ -7,6 +7,7 @@ import { BedDouble, MapPin, X } from 'lucide-react'
 import { FilterDropdown } from '@/components/FilterDropdown'
 import { useCurrency } from '@/components/CurrencyContext'
 import { WishlistButton } from '@/components/WishlistButton'
+import { SubscribeCTA } from '@/components/SubscribeCTA'
 import { formatPrice, type Currency } from '@/lib/currency'
 import type { RentalItem } from '@/lib/rental'
 import { PhotoSlider } from '@/components/PhotoSlider'
@@ -331,6 +332,24 @@ export function RentalCatalog({ items, initial, lang = 'ru' }: { items: RentalIt
           {COPY_L.emptyByFilters}
         </div>
       )}
+
+      {/* Telegram alerts CTA — for monthly rental this is the most
+          impactful surface: villas come and go fast and tenants
+          actively wait for new options. Filter shape mirrors what's
+          on screen — first district + bedroom range + price/month. */}
+      <div className="mt-10">
+        <SubscribeCTA
+          lang={lang}
+          filter={{
+            kind: 'rental',
+            district: districts[0],
+            bedrooms_min: bedrooms.length > 0 ? Math.min(...bedrooms.map(Number).filter(Number.isFinite)) : undefined,
+            bedrooms_max: bedrooms.length > 0 ? Math.max(...bedrooms.map(Number).filter(Number.isFinite)) : undefined,
+            price_min_usd: priceMin ?? undefined,
+            price_max_usd: priceMax ?? undefined,
+          }}
+        />
+      </div>
     </>
   )
 }
