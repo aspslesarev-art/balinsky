@@ -192,6 +192,38 @@ function firstString(v: unknown): string | null {
   }
   return null
 }
+// Build a lookup of developers (name → {slug, logo}) so we can
+// link a complex's developer directly to /ru/zastrojshhiki/<slug>.
+// Mirrors the villa detail page; cached for an hour because the
+// developer list churns slowly.
+type DeveloperLink = { name: string; slug: string; logoUrl: string | null }
+
+const _loadDevelopersIndex = unstable_cache(
+  async (): Promise<DeveloperLink[]> => {
+    const { data } = await sb.from('raw_developers').select('airtable_id, data, logo_url').limit(200)
+    const out: DeveloperLink[] = []
+    for (const r of (data ?? []) as { airtable_id: string; data: Record<string, unknown>; logo_url: string | null }[]) {
+      if (r.data['Публикация'] !== true) continue
+      const name = firstString(r.data['Developer'])
+      const slug = firstString(r.data['SEO:Slug'])
+      if (!name || !slug) continue
+      out.push({ name, slug, logoUrl: r.logo_url })
+    }
+    return out
+  },
+  ['complex-developers-index'],
+  { revalidate: 3600 },
+)
+
+async function findDeveloperLink(name: string | null): Promise<DeveloperLink | null> {
+  if (!name) return null
+  const list = await _loadDevelopersIndex()
+  const t = name.toLowerCase().trim()
+  return list.find(d => d.name.toLowerCase() === t)
+    ?? list.find(d => d.name.toLowerCase().includes(t) || t.includes(d.name.toLowerCase()))
+    ?? null
+}
+
 function numberOrNull(v: unknown): number | null {
   if (typeof v === 'number' && Number.isFinite(v)) return v
   if (typeof v === 'string') {
@@ -495,6 +527,12 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   const developerName = firstString(d['Developer1']) ?? firstString(d['Варианты поиска застройщика'])
   const managers = await loadManagersByDeveloperName(developerName)
   const devStats = await getDeveloperStats(developerName)
+  // Resolve the developer by name → slug + logo so we can link to
+  // /ru/zastrojshhiki/<slug> directly instead of just to the
+  // developers index. Mirrors the lookup the villa detail page
+  // uses; cached for an hour to avoid hammering raw_developers
+  // on every complex render.
+  const developerLink = await findDeveloperLink(developerName)
   const lat = parseGeo(d['Geo'])
   const lng = parseGeo(d['Geo 2'])
   const seoText = tField(d, 'SEO Text', lang)
@@ -698,22 +736,48 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
           </section>
         )}
 
-        {/* DEVELOPER */}
+        {/* DEVELOPER — links straight to /ru/zastrojshhiki/<slug>
+            when we resolved one by name; falls back to the index
+            otherwise. Logo + name is clickable, mirrors the villa
+            detail page so visitors get the same affordance. */}
         {developerName && (
           <section className="mb-10">
             <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
               {copy.developer}
             </h2>
-            <div className="bg-white rounded-2xl border border-[var(--color-border)] p-6 max-w-3xl">
-              <div className="text-[13px] text-[var(--color-text-muted)] mb-1">{copy.builtBy}</div>
-              <div className="text-[20px] font-semibold text-[#111827] mb-3">{developerName}</div>
+            {developerLink ? (
               <Link
-                href={developersRoot}
-                className="inline-flex items-center gap-1 text-[14px] text-[var(--color-primary-pressed)] hover:text-[var(--color-primary)]"
+                href={`${developersRoot}/${developerLink.slug}`}
+                className="group flex items-center gap-4 bg-white rounded-2xl border border-[var(--color-border)] p-5 max-w-3xl hover:border-[var(--color-primary)] transition-colors"
               >
-                {copy.allDevelopers} <ChevronRight size={14} />
+                <div className="shrink-0 w-[72px] h-[72px] rounded-xl bg-[var(--color-bg)] border border-[var(--color-border)] flex items-center justify-center p-2">
+                  {developerLink.logoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={developerLink.logoUrl} alt={developerLink.name} className="max-w-full max-h-full object-contain" />
+                  ) : (
+                    <Building2 size={28} className="text-[var(--color-text-muted)]" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] mb-1">{copy.builtBy}</div>
+                  <div className="text-[19px] font-semibold text-[#111827] truncate">{developerLink.name}</div>
+                  <div className="mt-1 text-[13px] text-[var(--color-primary-pressed)] font-medium inline-flex items-center gap-1 group-hover:gap-2 transition-all">
+                    {copy.developer} <ChevronRight size={14} />
+                  </div>
+                </div>
               </Link>
-            </div>
+            ) : (
+              <div className="bg-white rounded-2xl border border-[var(--color-border)] p-6 max-w-3xl">
+                <div className="text-[13px] text-[var(--color-text-muted)] mb-1">{copy.builtBy}</div>
+                <div className="text-[20px] font-semibold text-[#111827] mb-3">{developerName}</div>
+                <Link
+                  href={developersRoot}
+                  className="inline-flex items-center gap-1 text-[14px] text-[var(--color-primary-pressed)] hover:text-[var(--color-primary)]"
+                >
+                  {copy.allDevelopers} <ChevronRight size={14} />
+                </Link>
+              </div>
+            )}
           </section>
         )}
 

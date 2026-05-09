@@ -262,11 +262,15 @@ export async function POST(req: Request) {
 
   for (let hop = 0; hop < MAX_TOOL_HOPS; hop++) {
     const completion = await client.chat.completions.create({
-      model: 'gpt-4o-mini',
+      // Upgraded from gpt-4o-mini → gpt-4o so the web chat matches
+      // Telegram in compliance + tool-call discipline. Web volumes
+      // are higher than Telegram so we keep temperature lower (0.5)
+      // and rely on the system prompt for variety.
+      model: 'gpt-4o',
       messages,
       tools: TOOLS,
       tool_choice: 'auto',
-      temperature: 0.7,
+      temperature: 0.5,
     })
     const choice = completion.choices[0]
     const msg = choice.message
