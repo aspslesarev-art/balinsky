@@ -9,11 +9,20 @@ import { CURRENCY_RATES, formatPrice } from '@/lib/currency'
 import type { Lang } from '@/lib/i18n'
 
 const COPY = {
-  ru: { from: 'от', to: 'до', clear: 'Сбросить', apply: 'Применить' },
-  en: { from: 'from', to: 'to', clear: 'Clear', apply: 'Apply' },
+  ru: { from: 'от', to: 'до', clear: 'Сбросить', apply: 'Применить', quick: 'Быстрый выбор' },
+  en: { from: 'from', to: 'to', clear: 'Clear', apply: 'Apply', quick: 'Quick presets' },
 } as const
 
 const SYMBOLS: Record<string, string> = { USD: '$', EUR: '€', RUB: '₽', UAH: '₴', IDR: 'Rp' }
+
+// Common Bali villa price brackets in USD; rendered in active currency.
+const PRESETS_USD: { min: number | null; max: number | null }[] = [
+  { min: null, max: 200_000 },
+  { min: 200_000, max: 400_000 },
+  { min: 400_000, max: 700_000 },
+  { min: 700_000, max: 1_200_000 },
+  { min: 1_200_000, max: null },
+]
 
 function fmtRu(v: number): string {
   return Math.round(v).toLocaleString('ru-RU').replace(/,/g, ' ')
@@ -64,10 +73,25 @@ export function VillaPriceRange({
       ].filter(Boolean).join(' ')
     : ''
 
+  // Render a preset bracket label in the active currency.
+  function presetLabel(p: { min: number | null; max: number | null }): string {
+    const fmt = (usd: number) => {
+      const v = usd * rate
+      if (v >= 1_000_000) return `${sym}${(v / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`
+      if (v >= 1_000) return `${sym}${Math.round(v / 1000)}k`
+      return `${sym}${Math.round(v)}`
+    }
+    if (p.min == null && p.max != null) return `${c.to} ${fmt(p.max)}`
+    if (p.min != null && p.max == null) return `${fmt(p.min)}+`
+    if (p.min != null && p.max != null) return `${fmt(p.min)} – ${fmt(p.max)}`
+    return ''
+  }
+  const isPresetActive = (p: { min: number | null; max: number | null }) => p.min === min && p.max === max
+
   return (
     <FilterDropdown label={label} summary={summary} active={active}>
       {(close) => (
-        <div className="flex flex-col gap-3 min-w-[260px]">
+        <div className="flex flex-col gap-3 min-w-[280px]">
           <div className="flex items-center gap-2">
             <div className="flex-1">
               <div className="text-[12px] text-[var(--color-text-muted)] mb-1">{c.from}, {sym}</div>
@@ -92,6 +116,38 @@ export function VillaPriceRange({
               />
             </div>
           </div>
+
+          {/* Preset chips — typical Bali ladder. One tap → applies +
+              closes; replaces typing for the 90 % of visitors who
+              just want a ballpark. */}
+          <div>
+            <div className="text-[11.5px] uppercase tracking-wide text-[var(--color-text-muted)] mb-1.5">{c.quick}</div>
+            <div className="flex flex-wrap gap-1.5">
+              {PRESETS_USD.map((p, i) => {
+                const a = isPresetActive(p)
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => {
+                      setDraftMin(usdToInput(p.min))
+                      setDraftMax(usdToInput(p.max))
+                      apply({ priceMin: p.min, priceMax: p.max })
+                      close()
+                    }}
+                    className={`px-3 py-1.5 rounded-full text-[12.5px] border transition-colors ${
+                      a
+                        ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white'
+                        : 'bg-white border-[var(--color-border)] text-[var(--color-text)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)]'
+                    }`}
+                  >
+                    {presetLabel(p)}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
           <div className="flex items-center justify-between gap-2 pt-2 border-t border-[var(--color-border)]">
             <button
               type="button"
