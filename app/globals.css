@@ -69,26 +69,29 @@ body {
   overflow-wrap: break-word;
 }
 
-/* Mobile-overflow defence-in-depth, scoped to <main>. Without
-   this an inline-flex chip / grid cell / wide text block can take
-   an intrinsic min-content width past the viewport, pushing the
-   page sideways even with body's overflow-x: clip. The companion
-   `min-width: 0` lets flex/grid items shrink below their content's
-   intrinsic minimum so wrap rules (overflow-wrap, break-word) can
-   actually engage.
-
-   Scoped to <main> so utility surfaces (sticky header, floating
-   chat widget, lightbox portals) keep their explicit width intent.
-
-   Critically does NOT touch height — many images deliberately
-   use h-full / h-[Npx] with object-cover to fill a hero/gallery
-   slot. Forcing height:auto on those collapses the crop and
-   breaks the layout (verified visually). Width-only is enough. */
-main, main * {
-  max-width: 100%;
-}
-main *:not(img):not(video):not(iframe):not(canvas):not(svg) {
-  min-width: 0;
+/* Mobile-overflow defence-in-depth, scoped to descendants of
+   <main>. Wrapped in @layer base so Tailwind's @layer utilities
+   (e.g. `max-w-3xl`, `max-w-[1280px]`) WIN — base < utilities in
+   cascade priority. Without the layer, my non-layered rule would
+   override every Tailwind max-w utility and stretch the whole
+   page to viewport width.
+   Effect: any element under <main> with no explicit max-width
+   gets capped at its parent (the safety net). Anything with a
+   Tailwind max-w-* utility keeps its intentional width. The
+   companion `min-width: 0` lets flex/grid items shrink below
+   intrinsic min-content so overflow-wrap / break-word actually
+   engage.
+   Scope is <main> only so headers / footers / floating chat /
+   lightbox portals keep their explicit width intent. Width-only —
+   heights stay explicit so object-cover hero photos don't collapse
+   to intrinsic aspect. */
+@layer base {
+  main * {
+    max-width: 100%;
+  }
+  main *:not(img):not(video):not(iframe):not(canvas):not(svg) {
+    min-width: 0;
+  }
 }
 
 /* Round Google Maps default UI controls (zoom, map/satellite, fullscreen,
