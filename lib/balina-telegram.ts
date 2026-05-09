@@ -161,6 +161,7 @@ async function runTurn(
             '5d. Когда посетитель сказал "пешком до пляжа / в пешей доступности / walking distance" — даже Umalas, Kerobokan, Tibubeneng, Dalung, Padonan не подходят (они 1-2 км от воды). Только Berawa, Batu Bolong, Pererenan beachfront, Echo Beach, Seminyak beachfront, Jimbaran bay, Sanur beachfront, Bukit cliffside проектов с явным «beachfront / 1 минута / на пляже».',
             '6. ⚠️ КРИТИЧНО: Никогда НЕ выдумывай конкретные виллы, проекты, районы как «варианты». Если в этом ходу ты НЕ вызвала search_listings — НЕЛЬЗЯ упоминать «Вилла в Нуса-Дуа», «Вилла в Чангу» и т.п. в виде списка вариантов. Если посетитель ждёт варианты, а ты не вызвала search_listings — это твоя ошибка, исправь: вызови tool ПЕРЕД ответом. Никаких списков из головы, только из tool результата.',
             '7. ⚠️ ЖЁСТКО: после буллитов с недостающими параметрами — СТОП. НЕ пиши «Вот виллы которые подходят:», НЕ пиши «1. Вилла X», НЕ пиши «Ссылка на виллу». Карточки с фото и кнопками отрисуются автоматически отдельными сообщениями. Любое перечисление вилл в тексте — БАГ.',
+            '8. ⚠️ ЧИСЛО ВАРИАНТОВ: когда говоришь «ниже N вариантов», бери N ИСКЛЮЧИТЕЛЬНО из длины массива results в последнем результате search_listings (после серверной фильтрации). Если в результате 1 объект — пиши «ниже 1 вариант». Если 0 — НЕ обещай карточек, скажи честно «под жёсткие фильтры (например, белый песок + пешком + 2BR) ничего не нашлось, могу расширить — что готов смягчить?»',
             '',
             'ПРИМЕР ИДЕАЛЬНОГО ОТВЕТА с поиском:',
             '«Окей, ниже 5 вариантов под твой запрос.',
@@ -243,20 +244,41 @@ async function runTurn(
       // dropped even if Airtable's district field was unusual.
       const enforcedArgs = enforceConstraintsFromHistory(tc.function.name, tc.function.arguments, textIn, history)
       const result = await executeToolCall(tc.function.name, enforcedArgs)
-      messages.push({
-        role: 'tool',
-        tool_call_id: tc.id,
-        content: result,
-      })
+
+      // Pass the FILTERED list to the model — not the raw tool result
+      // — so the model's narration ("ниже 5 вариантов") matches
+      // exactly what the visitor will actually receive. Without this
+      // the model claimed N from the raw count and we sent K<N
+      // actual cards, leaving the visitor with "Окей, ниже 6
+      // вариантов" + 1 photo and asking "где они?".
       let parsed: unknown = null
       try { parsed = JSON.parse(result) } catch { /* tool returned non-json — ignore */ }
-      const r = parsed as { results?: ListingCard[] } | null
+      const r = parsed as { results?: ListingCard[]; [k: string]: unknown } | null
+      let toolContent = result
       if (r && Array.isArray(r.results)) {
         const filtered = postFilterCards(r.results, textIn, history)
         for (const c of filtered) {
           if (!seenUrls.has(c.url)) { seenUrls.add(c.url); allListings.push(c) }
         }
+        const dropped = r.results.length - filtered.length
+        const filteredPayload = {
+          ...r,
+          results: filtered,
+          // Be explicit so the model knows what happened and can
+          // honestly say "вышло мало" instead of pretending more
+          // exist. Visible only in the model's tool-message context.
+          _filtered_out: dropped > 0
+            ? `${dropped} object(s) dropped by server-side white-sand / walking / inland filter`
+            : undefined,
+        }
+        toolContent = JSON.stringify(filteredPayload)
       }
+
+      messages.push({
+        role: 'tool',
+        tool_call_id: tc.id,
+        content: toolContent,
+      })
     }
   }
 
