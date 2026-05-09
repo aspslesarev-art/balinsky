@@ -89,17 +89,6 @@ export async function ComplexesCatalog({
           <ComplexFiltersBar state={filters} options={options} view="list" lang={lang} />
         </div>
 
-        <div className="mt-4">
-          <SubscribeCTA
-            lang={lang}
-            filter={{
-              kind: 'complex',
-              district: filters.district[0],
-              query: filters.q.trim() || undefined,
-            }}
-          />
-        </div>
-
         {cards.length === 0 ? (
           <div className="py-16 text-center text-[var(--color-text-muted)]">
             {isSearch ? copy.emptySearch(filters.q) : copy.emptyFilters}
@@ -116,6 +105,19 @@ export async function ComplexesCatalog({
               searchString={toQueryString(filters)}
             />
           </>
+        )}
+
+        {cards.length > 0 && (
+          <div className="mt-10">
+            <SubscribeCTA
+              lang={lang}
+              filter={{
+                kind: 'complex',
+                district: filters.district[0],
+                query: filters.q.trim() || undefined,
+              }}
+            />
+          </div>
         )}
 
         <ComplexesSeoContent filters={filters} variant="list" />

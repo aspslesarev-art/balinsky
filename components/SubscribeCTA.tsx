@@ -55,7 +55,12 @@ export function SubscribeCTA({
         body: JSON.stringify({ filter }),
       })
       if (!r.ok) {
-        const j = await r.json().catch(() => ({}))
+        const j = await r.json().catch(() => ({})) as { error?: string; detail?: string }
+        // Friendly wording for the most common pre-launch case where
+        // the admin hasn't applied migration 018 yet.
+        if (j.error === 'subscriptions_not_set_up') {
+          throw new Error(copy.errorNotSetUp)
+        }
         throw new Error(j.error ?? `http_${r.status}`)
       }
       const j = await r.json() as { deepLink: string }
@@ -123,6 +128,7 @@ const COPY = {
     openedSubtitle: 'Подписка активируется сразу как откроете чат с ботом и нажмёте Start.',
     openAgain: 'Открыть Telegram ещё раз',
     errorPrefix: 'Не получилось',
+    errorNotSetUp: 'Подписки временно недоступны',
   },
   en: {
     idleTitle: 'Get Telegram alerts for new listings under this filter',
@@ -132,5 +138,6 @@ const COPY = {
     openedSubtitle: 'The subscription activates as soon as you open the bot chat and tap Start.',
     openAgain: 'Open Telegram again',
     errorPrefix: 'Failed',
+    errorNotSetUp: 'Alerts are temporarily unavailable',
   },
 } as const

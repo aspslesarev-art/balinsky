@@ -56,6 +56,15 @@ export async function POST(req: Request) {
     })
   } catch (e) {
     console.error('[subscriptions] createDraft failed:', e)
-    return NextResponse.json({ error: 'create_failed' }, { status: 500 })
+    // Most common cause in early days: migration 018 not applied yet.
+    // Surface the raw PostgREST hint so the admin can immediately see
+    // what's wrong in DevTools, while the UI translates it for users.
+    const msg = e instanceof Error ? e.message : 'unknown'
+    const code = (e as { code?: string })?.code ?? null
+    const isTableMissing = code === '42P01' || /relation .* does not exist/i.test(msg) || /not.*exist/i.test(msg)
+    return NextResponse.json({
+      error: isTableMissing ? 'subscriptions_not_set_up' : 'create_failed',
+      detail: msg,
+    }, { status: 500 })
   }
 }

@@ -86,27 +86,6 @@ export async function VillasCatalog({
           <VillaFiltersBar state={filters} options={options} view="list" lang={lang} />
         </div>
 
-        {/* Telegram alerts CTA — derives a SubscriptionFilter from the
-            current URL filters so the bot watches exactly what the
-            visitor is browsing. Multi-value district / bedrooms get
-            collapsed to first / range respectively, since the
-            subscription filter is single-district + min/max bedrooms. */}
-        <div className="mt-4">
-          <SubscribeCTA
-            lang={lang}
-            filter={{
-              kind: 'villa',
-              district: filters.district[0],
-              bedrooms_min: filters.bedrooms.length > 0 ? Math.min(...filters.bedrooms.map(Number).filter(Number.isFinite)) : undefined,
-              bedrooms_max: filters.bedrooms.length > 0 ? Math.max(...filters.bedrooms.map(Number).filter(Number.isFinite)) : undefined,
-              price_min_usd: filters.priceMin ?? undefined,
-              price_max_usd: filters.priceMax ?? undefined,
-              str_only: filters.goal === 'invest' || undefined,
-              query: filters.q.trim() || undefined,
-            }}
-          />
-        </div>
-
         {cards.length === 0 ? (
           <div className="py-16 text-center text-[var(--color-text-muted)]">
             {isSearch ? copy.emptySearch(filters.q) : copy.emptyFilters}
@@ -122,6 +101,27 @@ export async function VillasCatalog({
               searchString={toQueryString(filters)}
             />
           </>
+        )}
+
+        {/* Telegram alerts CTA — under the catalog so the visitor sees
+            it after browsing some results. Filters get collapsed:
+            multi-district → first, multi-bedrooms → min/max range. */}
+        {cards.length > 0 && (
+          <div className="mt-10">
+            <SubscribeCTA
+              lang={lang}
+              filter={{
+                kind: 'villa',
+                district: filters.district[0],
+                bedrooms_min: filters.bedrooms.length > 0 ? Math.min(...filters.bedrooms.map(Number).filter(Number.isFinite)) : undefined,
+                bedrooms_max: filters.bedrooms.length > 0 ? Math.max(...filters.bedrooms.map(Number).filter(Number.isFinite)) : undefined,
+                price_min_usd: filters.priceMin ?? undefined,
+                price_max_usd: filters.priceMax ?? undefined,
+                str_only: filters.goal === 'invest' || undefined,
+                query: filters.q.trim() || undefined,
+              }}
+            />
+          </div>
         )}
 
         <RelatedVillaFilters filters={filters} options={options} lang={lang} />
