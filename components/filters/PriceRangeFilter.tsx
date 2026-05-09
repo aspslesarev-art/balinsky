@@ -100,7 +100,7 @@ export function PriceRangeFilter({
   return (
     <FilterDropdown label={label} summary={summary} active={active}>
       {(close) => (
-        <div className="flex flex-col gap-3 min-w-[280px]">
+        <div className="flex flex-col gap-3 min-w-[340px] sm:min-w-[380px]">
           <div className="flex items-center gap-2">
             <div className="flex-1">
               <div className="text-[12px] text-[var(--color-text-muted)] mb-1">{c.from}, {sym}</div>
