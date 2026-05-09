@@ -456,49 +456,69 @@ function defaultSectionsAsLoaded(): KnowledgeSection[] {
 // in-code defaults so the app keeps working — the admin page shows
 // a "migration not applied" banner.
 async function loadAndSeed(): Promise<KnowledgeSection[]> {
-  const { data, error } = await sb
+  const first = await sb
     .from('assistant_knowledge')
     .select('key, title, body, sort_order, is_default, updated_at')
     .order('sort_order', { ascending: true })
 
-  if (error) {
-    // Postgres "relation does not exist" — surfaces as code 42P01
-    // through PostgREST as either status 404 or a "PGRST205" / similar
-    // error code. We accept any error here and fall back gracefully
-    // rather than crashing the chat or the admin page.
+  if (first.error) {
+    // Most common: relation does not exist (migration not applied).
+    // Treat any error here as "table missing" so the admin UI shows
+    // the migration banner instead of a blank page.
+    console.error('[balina] select failed, falling back to defaults:', first.error)
     tableMissing = true
     return defaultSectionsAsLoaded()
   }
   tableMissing = false
 
-  const existingKeys = new Set((data ?? []).map(r => r.key))
+  const rows = first.data ?? []
+  const existingKeys = new Set(rows.map(r => r.key))
   const missing = DEFAULT_SECTIONS.filter(s => !existingKeys.has(s.key))
-  if (missing.length > 0) {
-    const insertRows = missing.map(s => ({
-      key: s.key,
-      title: s.title,
-      body: s.body,
-      sort_order: s.sortOrder,
-      is_default: true,
-    }))
-    await sb.from('assistant_knowledge').insert(insertRows)
+
+  if (missing.length === 0) {
+    return rows.map(toSection)
   }
 
-  const all = missing.length > 0
-    ? (await sb
-        .from('assistant_knowledge')
-        .select('key, title, body, sort_order, is_default, updated_at')
-        .order('sort_order', { ascending: true })).data ?? []
-    : (data ?? [])
-
-  return all.map(r => ({
-    key: r.key,
-    title: r.title,
-    body: r.body,
-    sortOrder: r.sort_order,
-    isDefault: !!r.is_default,
-    updatedAt: r.updated_at ?? null,
+  // Seed missing sections. Important: surface the insert error so we
+  // don't silently fall through to an empty re-fetch and render zero
+  // sections (the bug you hit when the table existed but seeding got
+  // blocked).
+  const insertRows = missing.map(s => ({
+    key: s.key,
+    title: s.title,
+    body: s.body,
+    sort_order: s.sortOrder,
+    is_default: true,
   }))
+  const ins = await sb.from('assistant_knowledge').insert(insertRows)
+  if (ins.error) {
+    console.error('[balina] seed insert failed, falling back to defaults:', ins.error)
+    tableMissing = true
+    return defaultSectionsAsLoaded()
+  }
+
+  const refetch = await sb
+    .from('assistant_knowledge')
+    .select('key, title, body, sort_order, is_default, updated_at')
+    .order('sort_order', { ascending: true })
+
+  if (refetch.error || !refetch.data || refetch.data.length === 0) {
+    console.error('[balina] re-fetch after seed returned nothing:', refetch.error)
+    tableMissing = true
+    return defaultSectionsAsLoaded()
+  }
+  return refetch.data.map(toSection)
+}
+
+function toSection(r: {
+  key: string; title: string; body: string;
+  sort_order: number; is_default: boolean | null; updated_at: string | null;
+}): KnowledgeSection {
+  return {
+    key: r.key, title: r.title, body: r.body,
+    sortOrder: r.sort_order, isDefault: !!r.is_default,
+    updatedAt: r.updated_at ?? null,
+  }
 }
 
 export async function loadKnowledgeSections(): Promise<KnowledgeSection[]> {
