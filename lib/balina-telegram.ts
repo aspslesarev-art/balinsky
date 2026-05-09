@@ -208,7 +208,16 @@ async function runTurn(
     // Process tool calls; collect ListingCards from search_listings.
     for (const tc of msg.tool_calls) {
       if (tc.type !== 'function') continue
-      const result = await executeToolCall(tc.function.name, tc.function.arguments)
+
+      // Server-side safety net for the most common model failure
+      // mode: visitor said "у океана / в пешей доступности к морю"
+      // and the model called search_listings WITHOUT
+      // max_distance_to_beach. We mutate the args here so the tool
+      // applies the coastal whitelist + post-filter the result so
+      // any inland match (Убуд / Табанан / Бедугул etc) gets
+      // dropped even if Airtable's district field was unusual.
+      const enforcedArgs = enforceConstraintsFromHistory(tc.function.name, tc.function.arguments, textIn, history)
+      const result = await executeToolCall(tc.function.name, enforcedArgs)
       messages.push({
         role: 'tool',
         tool_call_id: tc.id,
@@ -218,7 +227,8 @@ async function runTurn(
       try { parsed = JSON.parse(result) } catch { /* tool returned non-json — ignore */ }
       const r = parsed as { results?: ListingCard[] } | null
       if (r && Array.isArray(r.results)) {
-        for (const c of r.results) {
+        const filtered = postFilterCards(r.results, textIn, history)
+        for (const c of filtered) {
           if (!seenUrls.has(c.url)) { seenUrls.add(c.url); allListings.push(c) }
         }
       }
@@ -242,6 +252,71 @@ async function transcribeVoice(client: OpenAI, token: string, fileId: string): P
     model: 'whisper-1',
   })
   return (r.text ?? '').trim() || null
+}
+
+// Inland districts that should NEVER appear when the visitor asked
+// for ocean / beach proximity. Mirrors the list in lib/consultant.ts
+// + lib/subscriptions.ts. Kept in sync by hand because importing
+// would create a circular module graph; the set is short and
+// stable enough that drift is acceptable.
+const INLAND_TOKENS = [
+  'убуд', 'ubud', 'табан', 'tabanan', 'бедугул', 'bedugul',
+  'мундук', 'munduk', 'кинтамани', 'kintamani', 'сидеман',
+  'sideman', 'sidemen', 'паянган', 'payangan',
+  'тегаллаланг', 'tegallalang', 'tegalalang',
+]
+
+// Detect ocean intent across the immediate user message + recent
+// history. Conservative — once the visitor said "у океана" we
+// keep enforcing the coastal filter for the rest of the chat unless
+// they explicitly say "не важно где" / "и горы тоже".
+function userWantsOcean(userText: string, history: ChatCompletionMessageParam[]): boolean {
+  const OCEAN_RE = /океан|у мор[яею]\b|прибрежн|пляж|у воды|на пляж|beachfront|beach\b|ocean|seaside|sea\b|surf|waves/i
+  if (OCEAN_RE.test(userText)) return true
+  // Skim last 10 user turns from history.
+  const recentUserText = history
+    .filter(m => m.role === 'user' && typeof m.content === 'string')
+    .slice(-10)
+    .map(m => String(m.content))
+    .join(' ')
+  return OCEAN_RE.test(recentUserText)
+}
+
+// If the model called search_listings without max_distance_to_beach
+// despite the visitor asking for the ocean, splice it in. JSON-parse
+// the model's args, mutate, JSON-stringify back. Safe because
+// executeToolCall expects a string and parses with try/catch.
+function enforceConstraintsFromHistory(
+  toolName: string,
+  rawArgs: string,
+  userText: string,
+  history: ChatCompletionMessageParam[],
+): string {
+  if (toolName !== 'search_listings') return rawArgs
+  if (!userWantsOcean(userText, history)) return rawArgs
+  let args: Record<string, unknown>
+  try { args = JSON.parse(rawArgs) ?? {} } catch { return rawArgs }
+  if (typeof args.max_distance_to_beach !== 'string' || args.max_distance_to_beach === 'any') {
+    args.max_distance_to_beach = 'walking'
+  }
+  return JSON.stringify(args)
+}
+
+// Last line of defence: drop any returned card whose district
+// matches the inland blocklist when the visitor asked for the
+// ocean. Catches cases where Airtable's "Location filter" doesn't
+// align with our coastal whitelist heuristic in lib/consultant.ts.
+function postFilterCards(
+  cards: ListingCard[],
+  userText: string,
+  history: ChatCompletionMessageParam[],
+): ListingCard[] {
+  if (!userWantsOcean(userText, history)) return cards
+  return cards.filter(c => {
+    if (!c.district) return true
+    const lower = c.district.toLowerCase()
+    return !INLAND_TOKENS.some(t => lower.includes(t))
+  })
 }
 
 // Heuristic: does the visitor's message look like a property-search
