@@ -220,9 +220,9 @@ function handleError(devName: string): StartResult {
   }
 }
 
-export async function handleStart(payload: string | null): Promise<StartResult> {
+export async function handleStart(payload: string | null, chatId?: number): Promise<StartResult> {
   if (!payload) return { reply: defaultGreeting() }
-  const m = payload.match(/^(manager|rental|event|review|error|seller)_(.+)$/)
+  const m = payload.match(/^(manager|rental|event|review|error|seller|sub)_(.+)$/)
   if (!m) return { reply: defaultGreeting() }
   const [, kind, raw] = m
   const decoded = raw
@@ -233,8 +233,115 @@ export async function handleStart(payload: string | null): Promise<StartResult> 
     case 'seller':  return await handleSeller(decoded)
     case 'review':  return handleReview(decoded.replace(/_/g, ' '))
     case 'error':   return handleError(decoded.replace(/_/g, ' '))
+    case 'sub':     return await handleSubscribe(decoded, chatId)
     default:        return { reply: defaultGreeting() }
   }
+}
+
+// Saved-search alert claim. The visitor created a draft on the site
+// (POST /api/subscriptions/draft) and was sent here via deep-link.
+// Look up the token, attach this chat_id, mark active, send back a
+// confirmation with the first 3 currently-matching listings.
+async function handleSubscribe(token: string, chatId: number | undefined): Promise<StartResult> {
+  if (!chatId) return { reply: defaultGreeting() }
+  const { claimDraft, describeFilter } = await import('@/lib/subscriptions')
+  const result = await claimDraft(token, chatId).catch(err => {
+    console.error('[telegram] claimDraft failed:', err)
+    return null
+  })
+  if (!result) {
+    return {
+      reply: {
+        text: '<b>Ссылка недействительна или уже использована.</b>\n\nВернитесь на сайт <a href="https://balinsky.info">balinsky.info</a>, задайте фильтры и нажмите «🔔 Уведомлять в Telegram» ещё раз.',
+        parseMode: 'HTML',
+      },
+    }
+  }
+  const { subscription, matches } = result
+  const top3 = matches.slice(0, 3)
+  const listLines = top3.map(m => formatMatchLine(m)).join('\n\n')
+  const tail = matches.length > 3
+    ? `\n\nЕщё ${matches.length - 3} объектов в этом фильтре — посмотреть на сайте.`
+    : ''
+  const summary = describeFilter(subscription.filter)
+  return {
+    reply: {
+      text:
+        `<b>✅ Подписка оформлена</b>\n\n` +
+        `Буду присылать новые объекты раз в день в 10:00 (Бали) под фильтр:\n` +
+        `<b>${escape(summary)}</b>\n\n` +
+        (matches.length > 0
+          ? `Вот что подходит прямо сейчас (топ-3):\n\n${listLines}${tail}`
+          : 'Сейчас под этот фильтр пусто, но как только появится — пришлю.') +
+        `\n\nКоманды: /мои — список подписок · /стоп — отключить все`,
+      parseMode: 'HTML',
+    },
+    tags: ['subscription'],
+  }
+}
+
+// Compact one-listing block for digests + claim confirmation. HTML
+// because the bot already uses HTML parse_mode everywhere.
+function formatMatchLine(m: { title: string; district: string | null; bedrooms: number | null; priceUsd: number | null; pricePerSqm: number | null; url: string }): string {
+  const bits: string[] = []
+  if (m.district) bits.push(escape(m.district))
+  if (m.bedrooms != null) bits.push(`${m.bedrooms} BR`)
+  if (m.priceUsd != null) bits.push(`$${m.priceUsd.toLocaleString('en-US')}`)
+  if (m.pricePerSqm != null) bits.push(`$${m.pricePerSqm.toLocaleString('en-US')}/м²`)
+  return `🏡 <b><a href="${escape(m.url)}">${escape(m.title)}</a></b>\n   ${bits.join(' · ')}`
+}
+
+// Bot text-command handlers — invoked by app/api/telegram/route.ts
+// when the inbound message starts with /мои or /стоп etc.
+export async function handleSubscriptionCommand(text: string, chatId: number): Promise<Reply | null> {
+  const cmd = text.trim().toLowerCase().split(/\s+/)[0]
+  if (cmd !== '/мои' && cmd !== '/my' && cmd !== '/subs' && cmd !== '/стоп' && cmd !== '/stop') return null
+
+  const { listForChat, deleteSubscription, describeFilter } = await import('@/lib/subscriptions')
+
+  if (cmd === '/стоп' || cmd === '/stop') {
+    const subs = await listForChat(chatId)
+    for (const s of subs) await deleteSubscription(s.id, chatId)
+    return {
+      text: subs.length > 0
+        ? `Отключил ${subs.length} ${pluralize(subs.length, 'подписку', 'подписки', 'подписок')}. Можно подписаться заново через сайт.`
+        : 'У вас не было активных подписок.',
+      parseMode: 'HTML',
+    }
+  }
+
+  // /мои — list active subscriptions.
+  const subs = await listForChat(chatId)
+  if (subs.length === 0) {
+    return {
+      text: 'У вас нет активных подписок.\n\nЗайдите на <a href="https://balinsky.info">balinsky.info</a>, задайте фильтры в каталоге и нажмите «🔔 Уведомлять в Telegram».',
+      parseMode: 'HTML',
+    }
+  }
+  const lines = subs.map((s, i) =>
+    `${i + 1}. <b>${escape(describeFilter(s.filter))}</b>\n   /удалить_${s.id}`
+  ).join('\n\n')
+  return {
+    text: `<b>Ваши подписки:</b>\n\n${lines}\n\nЧтобы отключить все: /стоп`,
+    parseMode: 'HTML',
+  }
+}
+
+// Handle /удалить_<id> command emitted from the /мои listing.
+export async function handleDeleteCommand(text: string, chatId: number): Promise<Reply | null> {
+  const m = text.trim().match(/^\/(удалить|delete)_(\d+)/i)
+  if (!m) return null
+  const { deleteSubscription } = await import('@/lib/subscriptions')
+  await deleteSubscription(Number(m[2]), chatId)
+  return { text: 'Подписка удалена. /мои — посмотреть что осталось.', parseMode: 'HTML' }
+}
+
+function pluralize(n: number, one: string, few: string, many: string): string {
+  const mod10 = n % 10
+  const mod100 = n % 100
+  if (mod10 === 1 && mod100 !== 11) return one
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few
+  return many
 }
 
 export function fallbackReply(): Reply {

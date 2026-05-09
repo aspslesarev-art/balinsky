@@ -7,6 +7,7 @@ import { CatalogSearchBar } from '@/components/CatalogSearchBar'
 import { InfiniteScrollClient } from '@/components/InfiniteScrollClient'
 import { FiltersBar } from '@/components/filters/FiltersBar'
 import type { FilterState } from '@/components/filters/FiltersBar'
+import { SubscribeCTA } from '@/components/SubscribeCTA'
 import { buildListHref, buildMapHref } from '@/lib/filter-href'
 import { loadCatalogPage, buildHeading, buildHeadingEn } from './_lib'
 import type { Lang } from '@/lib/i18n'
@@ -89,6 +90,22 @@ export async function ApartamentyCatalog({
 
         <div className="mt-4">
           <FiltersBar state={filters} options={options} lang={lang} />
+        </div>
+
+        <div className="mt-4">
+          <SubscribeCTA
+            lang={lang}
+            filter={{
+              kind: 'apartment',
+              district: filters.district[0],
+              bedrooms_min: filters.bedrooms.length > 0 ? Math.min(...filters.bedrooms.map(Number).filter(Number.isFinite)) : undefined,
+              bedrooms_max: filters.bedrooms.length > 0 ? Math.max(...filters.bedrooms.map(Number).filter(Number.isFinite)) : undefined,
+              price_min_usd: filters.priceMin ?? undefined,
+              price_max_usd: filters.priceMax ?? undefined,
+              str_only: filters.goal === 'invest' || undefined,
+              query: filters.q.trim() || undefined,
+            }}
+          />
         </div>
 
         {cards.length === 0 ? (

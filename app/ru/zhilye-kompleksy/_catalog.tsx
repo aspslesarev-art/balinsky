@@ -6,6 +6,7 @@ import { ComplexesSeoContent } from '@/components/ComplexesSeoContent'
 import { ComplexCatalogSearchBar } from '@/components/ComplexCatalogSearchBar'
 import { ComplexInfiniteScrollClient } from '@/components/ComplexInfiniteScrollClient'
 import { ComplexFiltersBar } from '@/components/complex-filters/ComplexFiltersBar'
+import { SubscribeCTA } from '@/components/SubscribeCTA'
 import { buildListHref, buildMapHref } from '@/lib/complex-filter-href'
 import { loadCatalogPage, buildHeading, buildHeadingEn, type ComplexFilterState } from './_lib'
 import type { Lang } from '@/lib/i18n'
@@ -86,6 +87,17 @@ export async function ComplexesCatalog({
 
         <div className="mt-4">
           <ComplexFiltersBar state={filters} options={options} view="list" lang={lang} />
+        </div>
+
+        <div className="mt-4">
+          <SubscribeCTA
+            lang={lang}
+            filter={{
+              kind: 'complex',
+              district: filters.district[0],
+              query: filters.q.trim() || undefined,
+            }}
+          />
         </div>
 
         {cards.length === 0 ? (

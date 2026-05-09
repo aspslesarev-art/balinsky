@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { handleStart, fallbackReply } from '@/lib/telegram-handlers'
+import { handleStart, fallbackReply, handleSubscriptionCommand, handleDeleteCommand } from '@/lib/telegram-handlers'
 import { logMessage, upsertChat, getChat, shouldBotAutoReply, addChatTags } from '@/lib/bot-storage'
 import { handleReservationCallback } from '@/lib/telegram-reservation'
 import { refreshChatAvatar } from '@/lib/chat-avatars'
@@ -152,8 +152,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, handover: true })
   }
 
-  const startResult = startMatch ? await handleStart(startPayload) : null
-  const reply = startResult?.reply ?? fallbackReply()
+  // Three handler tiers in priority order:
+  //   1. /start <payload> — deep-link from the site (manager / rental
+  //      / event / saved-search subscribe).
+  //   2. /мои /стоп /subs /stop — saved-search management commands.
+  //   3. /удалить_<id> — emitted by /мои listing inline-style.
+  // Only when none of those match do we fall back to the boilerplate
+  // reply telling the visitor what the bot does.
+  const startResult = startMatch ? await handleStart(startPayload, msg.chat.id) : null
+  let commandReply = null
+  if (!startResult && text) {
+    commandReply = (await handleSubscriptionCommand(text, msg.chat.id))
+                ?? (await handleDeleteCommand(text, msg.chat.id))
+  }
+  const reply = startResult?.reply ?? commandReply ?? fallbackReply()
   if (startResult?.tags?.length) {
     try { await addChatTags(msg.chat.id, startResult.tags) }
     catch (err) { console.error('[telegram] addChatTags failed:', err) }
