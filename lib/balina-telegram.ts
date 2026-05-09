@@ -255,16 +255,27 @@ async function transcribeVoice(client: OpenAI, token: string, fileId: string): P
   return (r.text ?? '').trim() || null
 }
 
-// Inland districts that should NEVER appear when the visitor asked
-// for ocean / beach proximity. Mirrors the list in lib/consultant.ts
-// + lib/subscriptions.ts. Kept in sync by hand because importing
-// would create a circular module graph; the set is short and
-// stable enough that drift is acceptable.
+// Inland districts + their sub-villages that should NEVER appear
+// when the visitor asked for ocean / beach proximity. Includes
+// known Ubud-area villages (Kedewatan, Singakerta, Penestanan,
+// Sayan, Peliatan, Mas, Lod Tunduh) since Airtable often files
+// villas under the village name, not "Ubud".
 const INLAND_TOKENS = [
-  'убуд', 'ubud', 'табан', 'tabanan', 'бедугул', 'bedugul',
-  'мундук', 'munduk', 'кинтамани', 'kintamani', 'сидеман',
-  'sideman', 'sidemen', 'паянган', 'payangan',
+  'убуд', 'ubud',
+  'табан', 'tabanan',
+  'бедугул', 'bedugul',
+  'мундук', 'munduk',
+  'кинтамани', 'kintamani',
+  'сидеман', 'sideman', 'sidemen',
+  'паянган', 'payangan',
   'тегаллаланг', 'tegallalang', 'tegalalang',
+  'кедеват', 'kedewat',
+  'сингакерт', 'singakerta',
+  'пенестан', 'penestanan',
+  'саян', 'sayan',
+  'пелиатан', 'peliatan',
+  'lod tunduh', 'лод тундух',
+  'tampaksiring', 'тампаксиринг',
 ]
 
 // Detect ocean intent across the immediate user message + recent
@@ -303,10 +314,13 @@ function enforceConstraintsFromHistory(
   return JSON.stringify(args)
 }
 
-// Last line of defence: drop any returned card whose district
-// matches the inland blocklist when the visitor asked for the
-// ocean. Catches cases where Airtable's "Location filter" doesn't
-// align with our coastal whitelist heuristic in lib/consultant.ts.
+// Last line of defence: drop any returned card whose district,
+// title, or URL contains an inland token when the visitor asked
+// for the ocean. Triple-source check because Airtable sometimes
+// stores the village name in title ("Вилла Moonrock в Ubud")
+// while leaving district blank or set to a sub-village we don't
+// recognise. URL slug catches the rest (`/ru/villy/o/villa-x-in-
+// ubud-...`).
 function postFilterCards(
   cards: ListingCard[],
   userText: string,
@@ -314,9 +328,8 @@ function postFilterCards(
 ): ListingCard[] {
   if (!userWantsOcean(userText, history)) return cards
   return cards.filter(c => {
-    if (!c.district) return true
-    const lower = c.district.toLowerCase()
-    return !INLAND_TOKENS.some(t => lower.includes(t))
+    const haystack = [c.district, c.title, c.url].filter(Boolean).join(' ').toLowerCase()
+    return !INLAND_TOKENS.some(t => haystack.includes(t))
   })
 }
 
