@@ -97,7 +97,19 @@ export async function createDraft(
     })
     .select('id')
     .single()
-  if (error || !data) throw error ?? new Error('draft_insert_failed')
+  if (error) {
+    // Wrap the PostgrestError as a real Error so the caller's catch
+    // can read .message + .code without instanceof tricks. Preserve
+    // the original code on the wrapped object so the route can
+    // distinguish "table missing" (42P01 / PGRST205) from real
+    // failures.
+    const wrapped = new Error(error.message || 'draft_insert_failed') as Error & { code?: string; details?: string; hint?: string }
+    wrapped.code = error.code
+    wrapped.details = error.details
+    wrapped.hint = error.hint
+    throw wrapped
+  }
+  if (!data) throw new Error('draft_insert_returned_no_row')
   const botUsername = process.env.TELEGRAM_BOT_USERNAME ?? 'BalinskyBot'
   return {
     id: data.id,

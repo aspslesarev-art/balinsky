@@ -56,15 +56,28 @@ export async function POST(req: Request) {
     })
   } catch (e) {
     console.error('[subscriptions] createDraft failed:', e)
-    // Most common cause in early days: migration 018 not applied yet.
-    // Surface the raw PostgREST hint so the admin can immediately see
-    // what's wrong in DevTools, while the UI translates it for users.
-    const msg = e instanceof Error ? e.message : 'unknown'
-    const code = (e as { code?: string })?.code ?? null
-    const isTableMissing = code === '42P01' || /relation .* does not exist/i.test(msg) || /not.*exist/i.test(msg)
+    // Supabase throws PostgrestError-like objects, NOT Error
+    // instances — `instanceof Error` was returning false and the
+    // detail came back "unknown". Read fields off the bag directly.
+    const bag = (e ?? {}) as Record<string, unknown>
+    const msg = String(bag.message ?? bag.error ?? (e instanceof Error ? e.message : '') ?? 'unknown')
+    const code = String(bag.code ?? '')
+    // Migration-not-applied surfaces in two ways depending on which
+    // Supabase library version: Postgres "relation does not exist"
+    // (42P01) when raw, or PostgREST schema-cache miss (PGRST204 /
+    // PGRST205) when proxied. Catch both plus the schema-cache
+    // wording PostgREST inserts in the message.
+    const isTableMissing =
+      code === '42P01' ||
+      code === 'PGRST205' ||
+      code === 'PGRST204' ||
+      /relation .* does not exist/i.test(msg) ||
+      /could not find the table/i.test(msg) ||
+      /schema cache/i.test(msg)
     return NextResponse.json({
       error: isTableMissing ? 'subscriptions_not_set_up' : 'create_failed',
       detail: msg,
+      code,
     }, { status: 500 })
   }
 }
