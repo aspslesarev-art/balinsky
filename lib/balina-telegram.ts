@@ -136,6 +136,7 @@ async function runTurn(
             '   Потом карточки. Больше ничего.',
             '5. Если посетитель называет КОНКРЕТНЫЙ объект по имени («почему не показал X», «что про Y», «а Maison Boheme?») — вызови search_listings с query="<имя>" и попробуй kind=villa, если 0 — попробуй kind=apartment, потом kind=complex. Не гадай — либо найди и расскажи, либо честно скажи «под этим именем не нашёл, проверь написание».',
             '6. ⚠️ КРИТИЧНО: Никогда НЕ выдумывай конкретные виллы, проекты, районы как «варианты». Если в этом ходу ты НЕ вызвала search_listings — НЕЛЬЗЯ упоминать «Вилла в Нуса-Дуа», «Вилла в Чангу» и т.п. в виде списка вариантов. Если посетитель ждёт варианты, а ты не вызвала search_listings — это твоя ошибка, исправь: вызови tool ПЕРЕД ответом. Никаких списков из головы, только из tool результата.',
+            '7. ⚠️ ЖЁСТКО: после буллитов с недостающими параметрами — СТОП. НЕ пиши «Вот виллы которые подходят:», НЕ пиши «1. Вилла X», НЕ пиши «Ссылка на виллу». Карточки с фото и кнопками отрисуются автоматически отдельными сообщениями. Любое перечисление вилл в тексте — БАГ.',
             '',
             'ПРИМЕР ИДЕАЛЬНОГО ОТВЕТА с поиском:',
             '«Окей, ниже 5 вариантов под твой запрос.',
@@ -463,12 +464,39 @@ function formatCaption(card: ListingCard, lang: 'ru' | 'en'): string {
 
 // Strip the model's [CHIPS] block + bare URLs (Telegram will render
 // listing cards separately, prose shouldn't compete with them).
+// Also truncate aggressively at the first sign that the model
+// started enumerating property names — the cards already do that.
 function stripChipsAndUrls(text: string): string {
-  return text
+  let out = text
     .replace(/\[CHIPS\][^\n]*/g, '')
     .replace(/!\[[^\]]*\]\([^)]+\)/g, '')
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
     .replace(/https?:\/\/\S+/g, '')
+
+  // Hard cut: if the model started listing villas in prose ("1.
+  // Вилла X" / "Вот виллы:" / "Ссылка на виллу") despite the
+  // directive, truncate at the first such marker. This is the
+  // "do what I say not what I want" safety net for when gpt-4o
+  // still ignores the no-list rule.
+  const cutPatterns = [
+    /\n\s*\d+\.\s+\*?\*?(вилл|апартамент|комплекс)/i,
+    /\n\s*[-•]\s*ссылк[аи] на (вилл|объект|апартамент)/i,
+    /\n\s*вот (виллы|варианты|объекты|подбор|карточки)/i,
+    /\n\s*ниже (виллы|варианты|объекты|карточки)/i,
+    /\n\s*here (are|'s) (villas|options|listings|cards)/i,
+  ]
+  for (const p of cutPatterns) {
+    const m = out.match(p)
+    if (m && m.index != null) {
+      out = out.slice(0, m.index)
+      break
+    }
+  }
+
+  // Drop any leftover "Ссылка на виллу" / "Link to villa" stub line.
+  out = out.replace(/^\s*ссылк[аи] на .+$/gim, '').replace(/^\s*link to .+$/gim, '')
+
+  return out
     .replace(/[ \t]+\n/g, '\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim()
