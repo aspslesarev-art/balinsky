@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
-import { MessageCircle, X, Send, Loader2, AlertTriangle, BedDouble, MapPin, ExternalLink, Mic, MicOff, UserRound } from 'lucide-react'
+import { MessageCircle, X, Send, Loader2, AlertTriangle, BedDouble, MapPin, ExternalLink, Mic, MicOff, UserRound, Trash2 } from 'lucide-react'
 import type { Lang } from '@/lib/i18n'
 
 // Minimal Web Speech API typing — TS stdlib doesn't ship it, and we only use
@@ -148,11 +148,55 @@ export function ConsultantWidget() {
   // Snapshot of input text at the moment listening started — speech results
   // append to this so existing typing isn't blown away.
   const baseInputRef = useRef('')
+  // Tracks whether the localStorage hydrate ran so the persistence
+  // useEffect below doesn't immediately overwrite stored history with
+  // the default greeting on the very first render.
+  const hydratedRef = useRef(false)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
     setVoiceSupported(!!(window.SpeechRecognition || window.webkitSpeechRecognition))
   }, [])
+
+  // Hydrate conversation history from localStorage on first mount.
+  // Without this every page navigation / refresh wipes the chat back
+  // to the bare greeting — frustrating after the visitor has already
+  // gone several turns deep with Балина. The key is per-language so
+  // an /en visitor doesn't see RU history bleed in (or vice versa).
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const raw = localStorage.getItem(`balina.history.${lang}`)
+      if (raw) {
+        const parsed = JSON.parse(raw) as Message[]
+        if (Array.isArray(parsed) && parsed.length > 0) setMessages(parsed)
+      }
+    } catch { /* malformed JSON or storage disabled — fall through to greeting */ }
+    hydratedRef.current = true
+    // We hydrate exactly once on mount; lang changes are handled by
+    // the swap-greeting effect below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Persist messages on every change. Capped at 80 entries so the
+  // store doesn't grow unbounded after long sessions; the cap drops
+  // the oldest, keeping the most recent context which matters more
+  // for the model on next /api/chat call anyway.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!hydratedRef.current) return
+    try {
+      const trimmed = messages.length > 80 ? messages.slice(-80) : messages
+      localStorage.setItem(`balina.history.${lang}`, JSON.stringify(trimmed))
+    } catch { /* quota / private mode — silently skip */ }
+  }, [messages, lang])
+
+  const clearHistory = () => {
+    setMessages([greeting])
+    if (typeof window !== 'undefined') {
+      try { localStorage.removeItem(`balina.history.${lang}`) } catch {}
+    }
+  }
 
   // Bridge from BalinaHero on the home page. The hero dispatches a
   // `balina:open` CustomEvent with one of two payloads:
@@ -397,14 +441,32 @@ export function ConsultantWidget() {
                   <div className="text-[11px] text-[var(--color-text-muted)] leading-tight">{c.subtitle}</div>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                aria-label={c.closeAria}
-                className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/60 hover:bg-white text-[#111827]"
-              >
-                <X size={18} />
-              </button>
+              <div className="flex items-center gap-1.5">
+                {/* Clear-history is a manual escape hatch when the
+                    visitor wants to start over. Hidden when the chat
+                    is just the greeting (nothing to clear yet). */}
+                {messages.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm(lang === 'en' ? 'Clear the chat history?' : 'Очистить переписку?')) clearHistory()
+                    }}
+                    aria-label={lang === 'en' ? 'Clear chat' : 'Очистить чат'}
+                    title={lang === 'en' ? 'Clear chat' : 'Очистить чат'}
+                    className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/60 hover:bg-white text-[#111827]"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  aria-label={c.closeAria}
+                  className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/60 hover:bg-white text-[#111827]"
+                >
+                  <X size={18} />
+                </button>
+              </div>
             </div>
 
             {/* Messages */}
