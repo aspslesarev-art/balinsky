@@ -57,9 +57,17 @@ export function FilterDropdown({
 
       {open && (
         <div
+          // !max-w-[480px] is required because globals.css applies
+          // `main * { max-width: 100% }` as a mobile-overflow safety
+          // net. The popover's positioned-relative parent is the
+          // tiny pill button (~85 px wide); without an explicit
+          // override every popover collapses to that button's width
+          // regardless of inner min-w utilities. The same override
+          // also exists on inner content for nested elements.
+          style={{ maxWidth: 'min(480px, calc(100vw - 24px))' }}
           className={
             'fixed left-3 top-24 w-[calc(100vw-24px)] max-h-[70vh] overflow-y-auto ' +
-            'sm:absolute sm:left-0 sm:top-full sm:w-auto sm:min-w-[260px] sm:max-h-none ' +
+            'sm:absolute sm:left-0 sm:top-full sm:w-auto sm:min-w-[380px] sm:max-h-none ' +
             'mt-0 sm:mt-2 z-30 bg-white rounded-2xl border border-[var(--color-border)] ' +
             'shadow-[0_12px_32px_rgba(0,0,0,0.16)] sm:shadow-[var(--shadow-popover)] ' +
             'p-4'
