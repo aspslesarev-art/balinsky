@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
@@ -26,6 +26,19 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'),
   title: 'Balinsky — недвижимость на Бали',
   description: 'Каталог вилл, апартаментов и жилых комплексов на Бали с фото, ценами и проверенными застройщиками.',
+};
+
+// Without this, iOS WebView (Telegram in-app browser, Twitter, etc.)
+// falls back to the default 980 px viewport and scales the page
+// down — every "контент шире экрана" mobile bug we saw was rooted
+// here. width=device-width pegs the layout viewport to the actual
+// device width so the existing max-w / px rules actually clamp.
+// `viewportFit: 'cover'` lets the safe-area inset paddings (notch /
+// home-indicator) work cleanly on notched devices.
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({
