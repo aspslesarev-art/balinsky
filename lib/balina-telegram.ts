@@ -352,10 +352,15 @@ function matchesAcrossHistory(userText: string, history: ChatCompletionMessagePa
   return re.test(recentUserText)
 }
 
-// If the model called search_listings without max_distance_to_beach
-// despite the visitor asking for the ocean, splice it in. JSON-parse
-// the model's args, mutate, JSON-stringify back. Safe because
-// executeToolCall expects a string and parses with try/catch.
+// Server-side reinforcement of geographic constraints. The model
+// keeps shipping district=Чангу even when the visitor explicitly
+// wants white sand (which would mean Сануре / Букит). We:
+//   - splice in max_distance_to_beach='walking' for ocean asks
+//   - DROP the district filter when the visitor asked for white
+//     sand AND the model's chosen district isn't on the white-sand
+//     list. Without this the search never even reaches Sanur or
+//     Bukit because Airtable has no overlap between Чангу and
+//     Сануре, and postFilter drops everything → empty result.
 function enforceConstraintsFromHistory(
   toolName: string,
   rawArgs: string,
@@ -363,12 +368,27 @@ function enforceConstraintsFromHistory(
   history: ChatCompletionMessageParam[],
 ): string {
   if (toolName !== 'search_listings') return rawArgs
-  if (!userWantsOcean(userText, history)) return rawArgs
+  const wantOcean = userWantsOcean(userText, history)
+  const wantWhite = userWantsWhiteSand(userText, history)
+  if (!wantOcean && !wantWhite) return rawArgs
+
   let args: Record<string, unknown>
   try { args = JSON.parse(rawArgs) ?? {} } catch { return rawArgs }
-  if (typeof args.max_distance_to_beach !== 'string' || args.max_distance_to_beach === 'any') {
+
+  if (wantOcean && (typeof args.max_distance_to_beach !== 'string' || args.max_distance_to_beach === 'any')) {
     args.max_distance_to_beach = 'walking'
   }
+
+  if (wantWhite && typeof args.district === 'string' && args.district.length > 0) {
+    const districtLower = args.district.toLowerCase()
+    const isWhite = WHITE_SAND_TOKENS.some(t => districtLower.includes(t))
+    if (!isWhite) {
+      // Throw the district away so the search returns candidates from
+      // every region; postFilterCards then keeps only white-sand ones.
+      delete args.district
+    }
+  }
+
   return JSON.stringify(args)
 }
 
