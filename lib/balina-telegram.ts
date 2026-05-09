@@ -27,7 +27,7 @@ import { downloadTelegramFile } from '@/lib/chat-media'
 
 const MAX_HISTORY = 24                  // rows pulled from bot_messages → assistant context
 const MAX_TOOL_HOPS = 4
-const MAX_LISTING_CARDS = 4             // top-N to actually send as photos
+const MAX_LISTING_CARDS = 5             // top-N to actually send as photos
 const DAILY_LIMIT_PER_CHAT = 30         // outbound assistant messages per 24 h
 
 const escape = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -112,8 +112,22 @@ async function runTurn(
     {
       role: 'system',
       content: lang === 'en'
-        ? 'CHANNEL: Telegram. The user is on Telegram, NOT the website. Don\'t emit [CHIPS] blocks (Telegram won\'t render them). Don\'t paste raw URLs in your prose — listing cards are sent as separate photo messages with their own links.'
-        : 'КАНАЛ: Telegram. Посетитель пишет из Telegram, не с сайта. НЕ выводи блоки [CHIPS] — Telegram их не рендерит. НЕ вставляй URL-ы в текст ответа — карточки объектов уйдут отдельными сообщениями с фото и кнопками.',
+        ? [
+            'CHANNEL: Telegram, NOT the website. Hard rules:',
+            '1. Be SHORT. Max 2–3 lines of prose total in any reply. NO long expert breakdowns per object — the cards already show district / BR / price / cap rate / land / lease.',
+            '2. NO [CHIPS] blocks (Telegram won\'t render them).',
+            '3. NO raw URLs in prose — listing cards are separate photo messages with tap-through buttons.',
+            '4. When you return search results, say something like: "Вот 5 под твой запрос. Если не то — уточни район / бюджет / спален, подберу лучше." Then the cards. Nothing more.',
+            '5. If the user names a SPECIFIC property ("почему не показал X", "что про Y"), call search_listings with query="<name>" and try kind=villa first; if 0 results, try kind=apartment, then kind=complex. Don\'t guess — find or say "под этим именем не нашёл, проверь написание".',
+          ].join(' ')
+        : [
+            'КАНАЛ: Telegram, не сайт. Жёсткие правила:',
+            '1. КРАТКО. Максимум 2–3 строки текста на весь ответ. НИКАКИХ длинных разборов по каждому объекту — на карточках уже видно район / BR / цена / cap rate / земля / лизхолд.',
+            '2. НЕ выводи блоки [CHIPS] — Telegram их не рендерит.',
+            '3. НЕ вставляй URL-ы в текст — карточки приходят отдельными сообщениями с фото и кнопкой.',
+            '4. Когда отдаёшь результаты поиска, формулируй так: «Вот 5 под твой запрос. Если не то — уточни район / бюджет / спальни, подберу лучше». И всё. Никаких комментариев по каждой вилле в тексте.',
+            '5. Если посетитель называет КОНКРЕТНЫЙ объект по имени («почему не показал X», «что про Y», «а Maison Boheme?») — вызови search_listings с query="<имя>" и попробуй kind=villa, если 0 — попробуй kind=apartment, потом kind=complex. Не гадай — либо найди и расскажи, либо честно скажи «под этим именем не нашёл, проверь написание».',
+          ].join(' '),
     },
     ...history,
     { role: 'user', content: textIn },
