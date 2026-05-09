@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { handleStart, fallbackReply, handleSubscriptionCommand, handleDeleteCommand } from '@/lib/telegram-handlers'
+import { replyAsBalina } from '@/lib/balina-telegram'
 import { logMessage, upsertChat, getChat, shouldBotAutoReply, addChatTags } from '@/lib/bot-storage'
 import { handleReservationCallback } from '@/lib/telegram-reservation'
 import { refreshChatAvatar } from '@/lib/chat-avatars'
@@ -152,19 +153,40 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, handover: true })
   }
 
-  // Three handler tiers in priority order:
+  // Four handler tiers in priority order:
   //   1. /start <payload> — deep-link from the site (manager / rental
   //      / event / saved-search subscribe).
   //   2. /мои /стоп /subs /stop — saved-search management commands.
   //   3. /удалить_<id> — emitted by /мои listing inline-style.
-  // Only when none of those match do we fall back to the boilerplate
-  // reply telling the visitor what the bot does.
+  //   4. Free-form text or voice → Balina (the AI consultant). She
+  //      sends her own reply messages (text + photo cards) and we
+  //      short-circuit out of the boilerplate path below.
   const startResult = startMatch ? await handleStart(startPayload, msg.chat.id) : null
   let commandReply = null
   if (!startResult && text) {
     commandReply = (await handleSubscriptionCommand(text, msg.chat.id))
                 ?? (await handleDeleteCommand(text, msg.chat.id))
   }
+
+  if (!startResult && !commandReply) {
+    // Voice messages come as `msg.voice` (file_id + duration); we
+    // download + Whisper-transcribe inside replyAsBalina. Plain
+    // text uses `text` directly. Anything else (sticker, document
+    // without caption, etc.) falls through to the boilerplate.
+    const voiceFileId = msg.voice?.file_id ?? null
+    if (text || voiceFileId) {
+      const lang: 'ru' | 'en' = (msg.from?.language_code ?? '').startsWith('en') ? 'en' : 'ru'
+      const balina = await replyAsBalina({
+        chatId: msg.chat.id, token, lang,
+        userText: text || undefined,
+        voiceFileId,
+      }).catch(err => { console.error('[telegram] balina failed:', err); return { handled: false } })
+      if (balina.handled) {
+        return NextResponse.json({ ok: true, balina: true })
+      }
+    }
+  }
+
   const reply = startResult?.reply ?? commandReply ?? fallbackReply()
   if (startResult?.tags?.length) {
     try { await addChatTags(msg.chat.id, startResult.tags) }
