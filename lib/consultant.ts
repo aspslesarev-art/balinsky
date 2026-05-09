@@ -100,6 +100,7 @@ export const TOOLS: ChatCompletionTool[] = [
           price_min_usd: { type: 'number', description: 'Минимальная цена в USD (для покупки) или USD/мес (для аренды)' },
           price_max_usd: { type: 'number', description: 'Максимальная цена в USD' },
           query: { type: 'string', description: 'Свободный поисковый запрос — ищет по заголовку' },
+          slug: { type: 'string', description: 'Точный slug объекта — используй когда нужно достать ОДИН конкретный объект (например, в системе указана текущая страница и посетитель спрашивает «про эту виллу»). Возвращает максимум 1 результат, остальные фильтры игнорируются.' },
           limit: { type: 'number', description: 'Сколько результатов вернуть (по умолчанию 6, максимум 12)' },
           exclude_urls: {
             type: 'array',
@@ -152,6 +153,7 @@ type SearchArgs = {
   price_min_usd?: number
   price_max_usd?: number
   query?: string
+  slug?: string
   limit?: number
   exclude_urls?: string[]
   str_only?: boolean
@@ -233,6 +235,13 @@ async function searchSupabaseTable(
     if (d['Опубликовать'] !== true && d['Публикация'] !== true) return false
     const slug = fs1(d['SEO:Slug'])
     if (!slug || slug.startsWith('-')) return false
+
+    // Exact-slug short-circuit: when the model passes `slug` it wants
+    // ONE listing (the one the visitor is currently viewing). Skip
+    // every other filter — a slug match is the strongest signal we
+    // have and re-filtering by district / bedrooms could exclude a
+    // legitimate hit if Airtable's metadata disagrees with the URL.
+    if (args.slug) return slug === args.slug
 
     if (args.district && !matchDistrict(d, args.district)) return false
 
@@ -486,6 +495,7 @@ async function searchRental(args: SearchArgs): Promise<ListingCard[]> {
   const limit = Math.min(args.limit ?? 6, 12)
 
   const filtered = items.filter(it => {
+    if (args.slug) return it.slug === args.slug
     if (args.district && (!it.location || !it.location.toLowerCase().includes(args.district.toLowerCase()))) return false
     if (args.bedrooms_min != null && (it.bedrooms == null || it.bedrooms < args.bedrooms_min)) return false
     if (args.bedrooms_max != null && (it.bedrooms == null || it.bedrooms > args.bedrooms_max)) return false

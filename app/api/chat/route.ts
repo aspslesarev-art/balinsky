@@ -38,7 +38,18 @@ type WishlistEntry = {
   area?: number | null
 }
 type RecentEntry = { kind: string; slug: string; title?: string | null; at?: string }
-type UserContext = { wishlist?: WishlistEntry[]; recentlyViewed?: RecentEntry[] }
+type CurrentPage = {
+  kind: string
+  slug: string
+  url: string
+  title?: string | null
+  airtableId?: string | null
+}
+type UserContext = {
+  wishlist?: WishlistEntry[]
+  recentlyViewed?: RecentEntry[]
+  currentPage?: CurrentPage | null
+}
 
 const KIND_LABEL_RU: Record<string, string> = {
   villa: 'вилла', apartment: 'апартаменты', complex: 'ЖК', developer: 'застройщик',
@@ -53,6 +64,48 @@ const KIND_LABEL_EN: Record<string, string> = {
 // footprint so Балина can refer to wishlist + recently-viewed
 // listings without re-asking. Skipped entirely when both lists
 // are empty so we don't burn tokens on a useless preamble.
+// Strong, separate system message for the page the visitor is staring
+// at right now. Kept apart from the wishlist/recently-viewed block
+// because it's a completely different signal: "current focus" >
+// "history". The model needs to treat any "эту виллу / этот объект /
+// здесь / тут" as referring to THIS slug, not ask "о какой вилле речь".
+function buildCurrentPageSystemMessage(cp: CurrentPage | null | undefined, lang: 'ru' | 'en'): string | null {
+  if (!cp) return null
+  const labelsRu: Record<string, string> = {
+    villa: 'виллы', apartment: 'апартаментов', complex: 'жилого комплекса',
+    developer: 'застройщика', rental: 'арендной виллы', event: 'события',
+    promo: 'акции', news: 'новости', knowledge: 'статьи',
+  }
+  const labelsEn: Record<string, string> = {
+    villa: 'villa', apartment: 'apartment', complex: 'complex',
+    developer: 'developer', rental: 'rental', event: 'event',
+    promo: 'promo', news: 'news', knowledge: 'guide',
+  }
+  if (lang === 'ru') {
+    const what = labelsRu[cp.kind] ?? cp.kind
+    return [
+      'ТЕКУЩАЯ СТРАНИЦА — посетитель прямо сейчас СМОТРИТ на эту страницу:',
+      `- Тип: ${what}`,
+      `- Название: ${cp.title ?? '(пока не получено, используй slug)'}`,
+      `- Slug: ${cp.slug}`,
+      `- URL: ${cp.url}`,
+      '',
+      'ОБЯЗАТЕЛЬНО: на любой вопрос вида «что скажешь про эту виллу / этот объект / тут / здесь / эти апартаменты» — это ИМЕННО этот объект, не переспрашивай «о какой вилле речь».',
+      `Подними свежие данные через search_listings({ kind: '${cp.kind}', slug: '${cp.slug}' }) и сразу разверни экспертный комментарий по нашему шаблону (топ-выбор / риски / что брать / что не брать) применительно к этому объекту. Карточку UI отрисует сам.`,
+    ].join('\n')
+  }
+  const what = labelsEn[cp.kind] ?? cp.kind
+  return [
+    `CURRENT PAGE — the visitor is RIGHT NOW looking at this ${what} page:`,
+    `- Title: ${cp.title ?? '(not captured yet, use the slug)'}`,
+    `- Slug: ${cp.slug}`,
+    `- URL: ${cp.url}`,
+    '',
+    'IMPORTANT: any question like "what about this villa / this listing / what do you think of it / how is the yield here" — refers to THIS listing. Do not ask "which villa do you mean".',
+    `Fetch fresh data via search_listings({ kind: '${cp.kind}', slug: '${cp.slug}' }) and run the expert-commentary template (top pick / risks / what to take / what to skip) on this exact listing. The UI renders the card itself.`,
+  ].join('\n')
+}
+
 function buildUserContextSystemMessage(ctx: UserContext, lang: 'ru' | 'en'): string | null {
   const wl = (ctx.wishlist ?? []).slice(0, 10)
   const rv = (ctx.recentlyViewed ?? []).slice(0, 6)
@@ -185,12 +238,17 @@ export async function POST(req: Request) {
   // pages + funnel stage. Both go in as separate system messages
   // so the static prompt stays cacheable while these turn-specific
   // bits ride along fresh each call.
+  const currentPageMsg = buildCurrentPageSystemMessage(userContext.currentPage ?? null, lang)
   const userContextMsg = buildUserContextSystemMessage(userContext, lang)
   const stage = detectFunnelStage(trimmed, userContext, lastUserMessage)
   const stageDirective = funnelStageDirective(stage, lang)
 
   const messages: ChatCompletionMessageParam[] = [
     { role: 'system', content: systemPrompt },
+    // currentPage goes FIRST among the dynamic blocks because it's
+    // the strongest signal — what the visitor is actively looking at
+    // beats their wishlist, recent history, and stage classification.
+    ...(currentPageMsg ? [{ role: 'system' as const, content: currentPageMsg }] : []),
     ...(userContextMsg ? [{ role: 'system' as const, content: userContextMsg }] : []),
     { role: 'system', content: stageDirective },
     ...trimmed,

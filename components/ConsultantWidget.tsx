@@ -389,6 +389,40 @@ export function ConsultantWidget() {
         if (raw) recentlyViewed = (JSON.parse(raw) as RecentlyViewedEntry[]).slice(0, 10)
       } catch { /* ignore */ }
 
+      // Current page detection — parse pathname into a kind+slug pair
+      // so the model knows EXACTLY which listing the visitor is staring
+      // at when they say "что про эту виллу" / "какая доходность тут"
+      // / "сколько лизхолд". Title comes from recentlyViewed (the
+      // PageViewTracker writes it on mount); falls back to the slug
+      // when not yet captured. URL routes are the canonical source —
+      // we don't trust localStorage to contain the *current* page if
+      // the user navigated and the widget already loaded.
+      const currentPage = (() => {
+        const PATTERNS: { re: RegExp; kind: RecentlyViewedEntry['kind'] }[] = [
+          { re: /^\/(?:ru\/villy|en\/villas)\/o\/([^/?#]+)/,             kind: 'villa' },
+          { re: /^\/(?:ru\/apartamenty|en\/apartments)\/o\/([^/?#]+)/,   kind: 'apartment' },
+          { re: /^\/(?:ru\/zhilye-kompleksy|en\/complexes)\/o\/([^/?#]+)/, kind: 'complex' },
+          { re: /^\/(?:ru\/zastrojshhiki|en\/developers)\/([^/?#]+)/,    kind: 'developer' },
+          { re: /^\/(?:ru\/arenda|en\/rental)\/o\/([^/?#]+)/,            kind: 'rental' },
+          { re: /^\/ru\/(?:meropriyatiya|novosti|akcii|znaniya)\/([^/?#]+)/, kind: 'event' },
+        ]
+        for (const p of PATTERNS) {
+          const m = pathname.match(p.re)
+          if (m) {
+            const slug = m[1]
+            const matched = recentlyViewed.find(r => r.kind === p.kind && r.slug === slug)
+            return {
+              kind: p.kind,
+              slug,
+              url: pathname,
+              title: matched?.title ?? null,
+              airtableId: matched?.airtableId ?? null,
+            }
+          }
+        }
+        return null
+      })()
+
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -416,6 +450,7 @@ export function ConsultantWidget() {
             recentlyViewed: recentlyViewed.map(e => ({
               kind: e.kind, slug: e.slug, title: e.title, at: e.at,
             })),
+            currentPage,
           },
         }),
       })
