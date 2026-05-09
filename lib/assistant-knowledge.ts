@@ -438,6 +438,14 @@ const DEFAULT_SECTIONS: SeedSection[] = [
 Не показывай этот контактный блок на стадии browsing — там нужны фильтры (район/бюджет/спальни). На стадии comparing допускается, если клиент уже ткнул пальцем в конкретный объект.`,
   },
   {
+    key: 'learned_rules',
+    title: 'ПРАВКИ ОТ ВЛАДЕЛЬЦА — учитывай в первую очередь',
+    sortOrder: 175,
+    body: `Здесь живут поправки, которые владелец бота надиктовал тебе через триггер «слушай и запоминай» в Telegram. Это самый высокий приоритет — если они противоречат другим частям промпта, побеждают эти правки.
+
+(Пока пусто — заполняется автоматически когда владелец говорит «слушай и запоминай: …» в боте.)`,
+  },
+  {
     key: 'site_interface',
     title: 'ИНТЕРФЕЙС САЙТА (не пиши URL\'ы — это для контекста)',
     sortOrder: 180,
@@ -588,6 +596,51 @@ export async function updateSection(key: string, body: string): Promise<void> {
     .from('assistant_knowledge')
     .update({ body, is_default: isDefault, updated_at: new Date().toISOString() })
     .eq('key', key)
+  if (error) throw error
+  invalidateCache()
+}
+
+// Append a learned-rule line to the `learned_rules` section.
+// Triggered from Telegram when the owner says "слушай и запоминай: …".
+// Stored as a dated bullet so the owner can audit + delete rules
+// from /admin/balina later. Caps at LEARNED_RULES_CAP total bullets
+// (oldest dropped) so the section can't grow unbounded.
+const LEARNED_RULES_CAP = 50
+
+export async function appendLearnedRule(rule: string): Promise<void> {
+  if (tableMissing) throw new Error('migration_not_applied')
+  const trimmed = rule.trim()
+  if (!trimmed) return
+
+  const sections = await loadKnowledgeSections()
+  const current = sections.find(s => s.key === 'learned_rules')
+  const seed = DEFAULT_SECTIONS.find(s => s.key === 'learned_rules')
+
+  // Strip the placeholder "(Пока пусто …)" line on first append.
+  const baseBody = current
+    ? current.body.replace(/\n*\(Пока пусто[^)]*\)\s*$/i, '').trim()
+    : (seed?.body ?? '').replace(/\n*\(Пока пусто[^)]*\)\s*$/i, '').trim()
+
+  const today = new Date().toISOString().slice(0, 10)
+  const newLine = `- [${today}] ${trimmed}`
+
+  // Keep the heading sentence + the most recent LEARNED_RULES_CAP
+  // bullets. Heading is the first paragraph (everything before the
+  // first bullet line), bullets are lines starting with "- ".
+  const headingMatch = baseBody.match(/^([\s\S]*?)(?=\n- |\Z)/)
+  const heading = headingMatch ? headingMatch[1].trim() : ''
+  const bulletLines = baseBody
+    .split('\n')
+    .filter(l => l.startsWith('- '))
+  bulletLines.push(newLine)
+  const trimmedBullets = bulletLines.slice(-LEARNED_RULES_CAP)
+
+  const newBody = [heading, '', ...trimmedBullets].filter(Boolean).join('\n')
+
+  const { error } = await sb
+    .from('assistant_knowledge')
+    .update({ body: newBody, is_default: false, updated_at: new Date().toISOString() })
+    .eq('key', 'learned_rules')
   if (error) throw error
   invalidateCache()
 }

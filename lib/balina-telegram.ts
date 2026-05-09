@@ -22,6 +22,7 @@
 import OpenAI from 'openai'
 import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions'
 import { getSystemPrompt, TOOLS, executeToolCall, type ListingCard } from '@/lib/consultant'
+import { appendLearnedRule } from '@/lib/assistant-knowledge'
 import { listMessages, logMessage } from '@/lib/bot-storage'
 import { downloadTelegramFile } from '@/lib/chat-media'
 
@@ -101,6 +102,26 @@ async function runTurn(
     }).catch(() => {})
   }
   if (!textIn) return { handled: false, reason: 'no_text' }
+
+  // Trainer mode: "слушай и запоминай: <правило>" appends a line
+  // to the learned_rules section in assistant_knowledge so future
+  // turns honour the correction. We respond synchronously (no
+  // OpenAI call needed) and short-circuit out of the chat loop.
+  const correction = extractCorrection(textIn)
+  if (correction) {
+    try {
+      await appendLearnedRule(correction)
+      await sendText(token, chatId, `✅ Запомнила: «${escape(correction)}»\n\n<i>В следующих ответах буду этого придерживаться. Все правки видно в /admin/balina.</i>`)
+      await logMessage({
+        chat_id: chatId, direction: 'out', source: 'bot',
+        text: `Запомнила правку: ${correction}`, media_type: null,
+      }).catch(() => {})
+    } catch (err) {
+      console.error('[balina-tg] appendLearnedRule failed:', err)
+      await sendText(token, chatId, '❌ Не получилось сохранить правку. Попробуй ещё раз через минуту.')
+    }
+    return { handled: true, reason: 'correction_saved' }
+  }
 
   // Build history from bot_messages — last MAX_HISTORY rows. We
   // skip rows whose text starts with `/` (commands) and rows from
@@ -432,6 +453,38 @@ function postFilterCards(
 
     return true
   })
+}
+
+// Trainer trigger detection. Matches a wide range of Russian +
+// English phrasings the owner might say to teach Балина a new
+// rule:
+//   «слушай и запоминай: …»
+//   «запомни: …»
+//   «учти на будущее: …»
+//   «remember: …»
+//   «note this: …»
+// Whisper sometimes drops the colon, so we also accept «слушай и
+// запоминай …» with just whitespace. Returns the instruction
+// (whatever follows the trigger) trimmed and de-quoted, or null
+// if no trigger was found / the instruction body was empty.
+function extractCorrection(text: string): string | null {
+  const TRIGGERS = [
+    /^\s*(?:слушай и|а теперь слушай и|теперь)?\s*запоминай\s*[:,.\-—–]?\s*/i,
+    /^\s*запомни\s*[:,.\-—–]?\s*/i,
+    /^\s*учти(?: на будущее)?\s*[:,.\-—–]?\s*/i,
+    /^\s*remember(?: this)?\s*[:,.\-—–]?\s*/i,
+    /^\s*note(?: this)?\s*[:,.\-—–]?\s*/i,
+    /^\s*new rule\s*[:,.\-—–]?\s*/i,
+  ]
+  for (const re of TRIGGERS) {
+    const m = text.match(re)
+    if (!m) continue
+    const rest = text.slice(m[0].length).trim()
+    if (!rest) return null  // trigger phrase alone — wait for next message instead
+    // Strip surrounding "«»" / "''" / '""' that voice-to-text often adds.
+    return rest.replace(/^[«"'"]+|[»"'"]+$/g, '').trim() || null
+  }
+  return null
 }
 
 // Heuristic: does the visitor's message look like a property-search
