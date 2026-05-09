@@ -69,28 +69,26 @@ body {
   overflow-wrap: break-word;
 }
 
-/* Nuclear fix for catalog detail pages: nothing inside <main> can be
-   wider than its parent. Without this, an inline-flex chip / grid
-   item / image / table can take an intrinsic min-content width
-   wider than 360 px, push siblings sideways, and even though body's
-   overflow-x: clip hides the scroll, content visibly clips at the
-   viewport edge. The `min-width: 0` companion lets flex/grid items
-   shrink below their content's intrinsic minimum so wrap rules
-   (overflow-wrap, hyphens) can do their job. Combined: every text
-   block wraps, every image scales down, every flex/grid cell
-   collapses to its container — no horizontal overflow possible.
+/* Mobile-overflow defence-in-depth, scoped to <main>. Without
+   this an inline-flex chip / grid cell / wide text block can take
+   an intrinsic min-content width past the viewport, pushing the
+   page sideways even with body's overflow-x: clip. The companion
+   `min-width: 0` lets flex/grid items shrink below their content's
+   intrinsic minimum so wrap rules (overflow-wrap, break-word) can
+   actually engage.
 
-   Scoped to <main> only so utility surfaces (sticky header bar,
-   floating chat widget, lightbox) keep their explicit width
-   intent. */
+   Scoped to <main> so utility surfaces (sticky header, floating
+   chat widget, lightbox portals) keep their explicit width intent.
+
+   Critically does NOT touch height — many images deliberately
+   use h-full / h-[Npx] with object-cover to fill a hero/gallery
+   slot. Forcing height:auto on those collapses the crop and
+   breaks the layout (verified visually). Width-only is enough. */
 main, main * {
   max-width: 100%;
 }
-main * {
+main *:not(img):not(video):not(iframe):not(canvas):not(svg) {
   min-width: 0;
-}
-main img, main video, main iframe {
-  height: auto;
 }
 
 /* Round Google Maps default UI controls (zoom, map/satellite, fullscreen,
