@@ -238,3 +238,14 @@ html.no-pro [data-investment-block] {
   from { transform: translateY(40px); opacity: 0; }
   to   { transform: translateY(0);    opacity: 1; }
 }
+
+/* Telegram-style typing indicator — three dots that scale + fade in
+   sequence. ConsultantWidget's <TypingDots> applies this with
+   staggered animation-delay (-320ms / -160ms / 0) so the wave reads
+   left-to-right. The 1.2s duration matches Telegram's own cadence
+   closely enough that returning users won't notice a different
+   rhythm. */
+@keyframes balina-typing {
+  0%, 60%, 100% { transform: scale(0.6); opacity: 0.4; }
+  30%           { transform: scale(1);   opacity: 1; }
+}

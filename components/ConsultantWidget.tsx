@@ -451,9 +451,7 @@ export function ConsultantWidget() {
                   later replies — see the [CHIPS] block in GREETING. */}
               {loading && (
                 <Bubble role="assistant">
-                  <span className="inline-flex items-center gap-2 text-[var(--color-text-muted)]">
-                    <Loader2 size={14} className="animate-spin" /> {c.typing}
-                  </span>
+                  <TypingDots />
                 </Bubble>
               )}
               {error && (
@@ -560,6 +558,21 @@ function ListingChatCard({ card, lang }: { card: ListingCard; lang: Lang }) {
         <ExternalLink size={14} />
       </div>
     </a>
+  )
+}
+
+// Telegram-style "печатает…" — three dots that blink in sequence.
+// Keyframes live in app/globals.css (`balina-typing`); each dot
+// gets a -160ms / -80ms / 0ms delay so the wave reads left-to-right
+// like the chat indicator the user is used to.
+function TypingDots() {
+  const dot = 'w-[6px] h-[6px] rounded-full bg-[var(--color-text-muted)] [animation:balina-typing_1.2s_ease-in-out_infinite]'
+  return (
+    <span className="inline-flex items-center gap-1 py-1.5" aria-label="печатает">
+      <span className={dot} style={{ animationDelay: '-0.32s' }} />
+      <span className={dot} style={{ animationDelay: '-0.16s' }} />
+      <span className={dot} />
+    </span>
   )
 }
 
