@@ -135,6 +135,7 @@ async function runTurn(
             '     Строки 3–5: перечисли 2–4 КОНКРЕТНЫХ недостающих параметра которые помогут попасть в 100 %, выбирая из того что реально ещё не известно. Каждый — отдельным буллитом с примером. НЕ обобщённое «район / бюджет / спальни», а конкретно, по делу.',
             '   Потом карточки. Больше ничего.',
             '5. Если посетитель называет КОНКРЕТНЫЙ объект по имени («почему не показал X», «что про Y», «а Maison Boheme?») — вызови search_listings с query="<имя>" и попробуй kind=villa, если 0 — попробуй kind=apartment, потом kind=complex. Не гадай — либо найди и расскажи, либо честно скажи «под этим именем не нашёл, проверь написание».',
+            '6. ⚠️ КРИТИЧНО: Никогда НЕ выдумывай конкретные виллы, проекты, районы как «варианты». Если в этом ходу ты НЕ вызвала search_listings — НЕЛЬЗЯ упоминать «Вилла в Нуса-Дуа», «Вилла в Чангу» и т.п. в виде списка вариантов. Если посетитель ждёт варианты, а ты не вызвала search_listings — это твоя ошибка, исправь: вызови tool ПЕРЕД ответом. Никаких списков из головы, только из tool результата.',
             '',
             'ПРИМЕР ИДЕАЛЬНОГО ОТВЕТА с поиском:',
             '«Окей, ниже 5 вариантов под твой запрос.',
@@ -154,13 +155,27 @@ async function runTurn(
   const allListings: ListingCard[] = []
   const seenUrls = new Set<string>()
 
+  // Force a tool call on the first hop when the visitor's message
+  // clearly requests listings — gpt-4o-mini was hallucinating
+  // villa names from training data instead of going to the catalog.
+  // Once a tool result is in the conversation we drop back to
+  // 'auto' so follow-up turns can answer general questions without
+  // a forced search.
+  const wantsListings = looksLikeListingRequest(textIn)
+
   for (let hop = 0; hop < MAX_TOOL_HOPS; hop++) {
+    const toolChoice: 'required' | 'auto' = (hop === 0 && wantsListings) ? 'required' : 'auto'
     const completion = await client.chat.completions.create({
-      model: 'gpt-4o-mini',
+      // gpt-4o (not -mini) for Telegram: better instruction-following,
+      // 8× pricing but daily cap + low Telegram volume keep cost
+      // bounded. Saw -mini hallucinate villas + ignore the no-prose-
+      // facts directive, so the upgrade pays for itself in fewer
+      // bad responses.
+      model: 'gpt-4o',
       messages,
       tools: TOOLS,
-      tool_choice: 'auto',
-      temperature: 0.7,
+      tool_choice: toolChoice,
+      temperature: 0.5,
     })
     const choice = completion.choices[0]
     const msg = choice.message
@@ -227,6 +242,31 @@ async function transcribeVoice(client: OpenAI, token: string, fileId: string): P
     model: 'whisper-1',
   })
   return (r.text ?? '').trim() || null
+}
+
+// Heuristic: does the visitor's message look like a property-search
+// request? If yes, force the first OpenAI hop to call a tool —
+// otherwise gpt-4o(-mini) sometimes hallucinates "вилла в Чангу"
+// from training data instead of querying the live catalog.
+//
+// We only check the immediate user message (not history) because
+// follow-up clarifications ("Чангу" / "до $300k") should also
+// trigger a fresh search, and they will because the keywords match.
+function looksLikeListingRequest(text: string): boolean {
+  const t = text.toLowerCase()
+  // Property-type words OR explicit ask verbs OR price/bedroom hints.
+  const PATTERNS = [
+    /вилл/i, /villa/i,
+    /апартамент/i, /apartment/i,
+    /жк\b/i, /комплекс/i, /complex/i,
+    /аренд/i, /rental/i, /сдат/i, /сним/i,
+    /\bbr\b/i, /спален/i, /спальн/i, /bedroom/i,
+    /до \$?\d/i, /\$\d+\s*k/i, /\$\d+\s*m/i, /бюджет/i, /budget/i,
+    /найди/i, /покажи/i, /подбер/i, /варианты/i, /искать/i, /find/i, /show/i, /search/i,
+    /у океана/i, /у моря/i, /near beach/i, /рядом с пляж/i,
+    /чангу/i, /canggu/i, /берав/i, /berawa/i, /перенен/i, /pererenan/i, /букит/i, /bukit/i, /улуват/i, /uluwatu/i, /сануре/i, /sanur/i, /убуд/i, /ubud/i, /семинья/i, /seminyak/i, /джимбар/i, /jimbaran/i, /нуса.дуа/i, /nusa.dua/i,
+  ]
+  return PATTERNS.some(p => p.test(t))
 }
 
 // === Telegram chat-action (the "печатает…" indicator) ====================
