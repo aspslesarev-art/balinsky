@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { Home, Building, Building2, HardHat, KeyRound, Menu, X, Plane } from 'lucide-react'
+import { Home, Building, Building2, HardHat, KeyRound, Menu, X } from 'lucide-react'
 import { LangSwitch } from './LangSwitch'
 import { CurrencyToggle } from './CurrencyContext'
 import { WishlistHeaderLink } from './WishlistHeaderLink'
@@ -74,18 +74,6 @@ export function Header({ active }: { active?: NavKey }) {
           })}
         </nav>
 
-        {/* Invest-tour CTA pill — premium service offering, deliberately
-            distinct from the catalog nav so it reads as a paid concierge
-            instead of yet another listing tab. Hidden on mobile because
-            the burger menu surfaces it at the top instead. */}
-        <Link
-          href={lang === 'en' ? '/en/invest-tour' : '/ru/invest-tour'}
-          className="hidden lg:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[13px] font-medium no-underline shrink-0 transition-colors"
-        >
-          <Plane size={14} />
-          {lang === 'en' ? 'Invest tour' : 'Инвест-тур'}
-        </Link>
-
         {/* Right cluster — sits at the trailing edge of the bar via
             justify-between on mobile, ml-auto on desktop. */}
         <div className="flex items-center gap-2 shrink-0 md:ml-auto lg:ml-2">
@@ -109,16 +97,6 @@ export function Header({ active }: { active?: NavKey }) {
             >
               <img src="/logo.svg" alt="Balinsky" className="h-10 w-10" />
               <span className="text-[18px] font-semibold tracking-tight text-[#1A1A1A]">Balinsky</span>
-            </Link>
-            {/* Invest-tour leads the mobile menu — premium CTA, full
-                primary color so it reads as the headline action. */}
-            <Link
-              href={lang === 'en' ? '/en/invest-tour' : '/ru/invest-tour'}
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-3 py-3 mb-2 rounded-lg bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[15px] font-medium no-underline"
-            >
-              <Plane size={18} />
-              {lang === 'en' ? 'Invest tour' : 'Инвест-тур'}
             </Link>
             {NAV.map(({ key, ru, en, labelKey, Icon }) => {
               const isActive = key === active
