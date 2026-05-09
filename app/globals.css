@@ -47,8 +47,7 @@ html {
      so container widths stay consistent across pages with/without scroll. */
   scrollbar-gutter: stable;
   /* Hard cap at the visual viewport so the entire document tree can't
-     accidentally exceed the device width on iOS. Defence-in-depth on
-     top of body's overflow-x. */
+     accidentally exceed the device width on iOS. */
   max-width: 100vw;
   overflow-x: hidden;
 }
@@ -57,19 +56,41 @@ body {
   font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
   background: var(--color-bg);
   color: var(--color-text);
-  /* Mobile safety net: if any inner element overflows the viewport
-     width (long unbreakable label, oversize map widget, embed iframe,
-     etc.) the page itself can never be horizontally scrolled. `clip`
-     is preferred over `hidden` because it doesn't establish a new
-     scroll container, so position: sticky / fixed continue to work
-     against the viewport. We declare both — older Safari (<16) ignores
-     `clip` and falls back to `hidden`; newer ones honour `clip`. */
+  /* Mobile safety net — see html rules above. Declare both overflow
+     values: older Safari (<16) ignores `clip` and falls back to
+     `hidden`; newer ones honour `clip` (which doesn't create a new
+     scroll context, so position: sticky / fixed continue to work
+     against the viewport). */
   overflow-x: hidden;
   overflow-x: clip;
   max-width: 100vw;
   /* Russian + Latin URLs and long tokens in copy break naturally
      instead of pushing the layout. */
   overflow-wrap: break-word;
+}
+
+/* Nuclear fix for catalog detail pages: nothing inside <main> can be
+   wider than its parent. Without this, an inline-flex chip / grid
+   item / image / table can take an intrinsic min-content width
+   wider than 360 px, push siblings sideways, and even though body's
+   overflow-x: clip hides the scroll, content visibly clips at the
+   viewport edge. The `min-width: 0` companion lets flex/grid items
+   shrink below their content's intrinsic minimum so wrap rules
+   (overflow-wrap, hyphens) can do their job. Combined: every text
+   block wraps, every image scales down, every flex/grid cell
+   collapses to its container — no horizontal overflow possible.
+
+   Scoped to <main> only so utility surfaces (sticky header bar,
+   floating chat widget, lightbox) keep their explicit width
+   intent. */
+main, main * {
+  max-width: 100%;
+}
+main * {
+  min-width: 0;
+}
+main img, main video, main iframe {
+  height: auto;
 }
 
 /* Round Google Maps default UI controls (zoom, map/satellite, fullscreen,
