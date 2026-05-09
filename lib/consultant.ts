@@ -114,11 +114,19 @@ export const SYSTEM_PROMPT = `Ты — Балина, AI-брокер сайта 
 - Налоги: 5% покупатель (BPHTB), 10% продавец (PHTB). NJOP — налоговая база, обычно ниже рыночной.
 - Разрешения на стройку: было IMB, теперь PBG (с 2021). Без PBG — риск сноса. SLF — сертификат пригодности к эксплуатации, без него юнит не может легально сдаваться в аренду.
 
-🟦 ЦВЕТ ЗЕМЛИ — критически важно для инвестиций:
-- **Pink / Tourism / C1 / C2** — туристическое назначение. Тут законно сдавать посуточно (Booking/Airbnb). Только эти зоны подходят под чистую инвест-стратегию аренды.
-- **Yellow** — жилое назначение. Посуточно сдавать **технически нелегально**, штрафы и риск принудительного закрытия. Подходит ТОЛЬКО для жизни или долгосрочной аренды (помесячно). Если в выдаче окажется "yellow" объект под инвестиции — обязательно предупреди.
-- **Green / Agricultural** — сельхозземля. Иностранцу обычно недоступна, ставить на ней капитал = риск споров о праве. Если попалось — флагай отдельно.
-- Если land_zone = 'unknown' — проси клиента уточнить через менеджера, не делай вид что знаешь.
+🟦 ЦВЕТ ЗЕМЛИ — критически важно для инвестиций. Tool возвращает поле `land_zone` со значениями: pink / tourism / commercial / yellow / green / unknown.
+
+ПОДХОДЯТ под посуточную аренду (Booking/Airbnb легально):
+- **pink** / **tourism** — туристическая зона, классика для STR. Идеально под чистую инвест-стратегию.
+- **commercial** — это включает Red, Orange, C1/C2/К2, Pondok Wisata. Юридически STR разрешён через коммерческое разрешение / pondok wisata. На практике «красная земля» (Red) считается **одним из лучших вариантов** для краткосрочной аренды — не ставь на ней «нельзя сдавать» НИКОГДА. Для клиента это полноценный инвест-вариант.
+
+НЕ подходят под посуточную:
+- **yellow** — жилое назначение. Посуточно сдавать технически нелегально, штрафы и риск принудительного закрытия. ТОЛЬКО для жизни или долгосрочной аренды (помесячно). Обязательно флагай предупреждение когда клиент явно ищет инвестиционный объект.
+
+Не подходят вообще:
+- **green** / agricultural — иностранцу недоступна, ставить на ней капитал = риск споров о праве. Если попалось — флагай отдельно.
+
+**unknown** — данных нет или классификатор не распознал. Не делай вид что знаешь — просто скажи «по этому объекту зона не указана, лучше уточнить у менеджера». Не помечай это как риск без оснований.
 
 🟦 РАЙОНЫ:
 - Чангу / Берава / Перененан — серфинг + посуточная аренда, доходность 9–13%, плотный трафик в high season.
@@ -458,7 +466,15 @@ async function searchSupabaseTable(
     // Risk-relevant signals — Балина uses these in the assistant
     // commentary block to flag yellow-zone properties, near-expiry
     // leaseholds, missing PBG, etc.
-    const landRaw = fs1(d['Land color']) ?? fs1(d['Цвет земли'])
+    // Three columns can carry zoning info — prefer the colour code,
+    // fall back to the Russian purpose text editor often fills
+    // instead. Concatenated so the classifier sees both signals.
+    const landRaw = [
+      fs1(d['Land color']),
+      fs1(d['Цвет земли']),
+      fs1(d['Цвет земли вторичка']),
+      fs1(d['Назначение земли']),
+    ].filter(Boolean).join(' ; ')
     const permitRaw = fs1(d['Разрешение']) ?? fs1(d['PBG'])
     const leaseRaw = fs1(d['Leasehold']) ?? fs1(d['Leashold'])
     const yieldRaw = num(d['Заявленная доходность'])
@@ -539,17 +555,39 @@ async function attachInvestmentMetrics(
   }
 }
 
-// Maps Airtable's free-form land-color string to a small enum so the
-// model can reason about it. Keep buckets aligned with how the
-// catalog filter classifies zones.
+// Maps Airtable's free-form land-color / land-purpose string to a
+// small enum the model can reason about.
+//
+// In Bali zoning practice the rental-legality bands collapse to:
+//   - SHORT-TERM RENTAL OK:  Pink / Tourism / Red / Orange / Commercial / "С"-zones / pondok wisata
+//   - RESIDENTIAL ONLY:      Yellow / Residence / R-zones (no Booking/Airbnb)
+//   - NO FOREIGN OWNERSHIP:  Green / Agricultural
+//
+// Order of checks matters — we test the most specific colour
+// keywords first (yellow + pondok wisata can read both ways but is
+// classified yellow by the editor). Anything we can't map gives
+// 'unknown' so the model knows to ask, not invent.
 function classifyLandZone(raw: string | null): ListingCard['land_zone'] {
   if (!raw) return null
   const s = raw.toLowerCase()
-  if (s.includes('yellow') || s.includes('жёлт') || s.includes('желт')) return 'yellow'
-  if (s.includes('pink') || s.includes('розов')) return 'pink'
+  // Yellow / residential — strict: rental-illegal
+  if (s.includes('yellow') || s.includes('жёлт') || s.includes('желт')
+      || /\br-?\d/.test(s) || s.includes('residence') || s.includes('residential')
+      || s.includes('жил')) return 'yellow'
+  // Green / agricultural
   if (s.includes('green') || s.includes('зелён') || s.includes('зелен') || s.includes('agricult')) return 'green'
-  if (/\bc-?\d/.test(s) || s.includes('commercial') || s.includes('коммерч')) return 'commercial'
+  // Pink — the canonical Bali "Tourism" colour shorthand
+  if (s.includes('pink') || s.includes('розов')) return 'pink'
+  // Tourism zone — explicit
   if (s.includes('tourism') || s.includes('туризм')) return 'tourism'
+  // Commercial: "Red"-zone (Bali zoning red = commercial / mixed,
+  // STR-friendly), "Orange", explicit "commercial", C-codes
+  // (C1/C-2/К2), and Russian wording ("коммерч").
+  if (s.includes('red') || s.includes('красн')
+      || s.includes('orange') || s.includes('оранж')
+      || /\bc-?\d/.test(s) || /\bк-?\d/.test(s)
+      || s.includes('commercial') || s.includes('коммерч')
+      || s.includes('pondok wisata')) return 'commercial'
   return 'unknown'
 }
 
