@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import { MessageCircle, X, Send, Loader2, AlertTriangle, BedDouble, MapPin, ExternalLink, Mic, MicOff, UserRound, Trash2 } from 'lucide-react'
+import { useWishlist } from './WishlistContext'
+import { RECENT_KEY, type RecentlyViewedEntry } from './PageViewTracker'
 import type { Lang } from '@/lib/i18n'
 
 // Minimal Web Speech API typing — TS stdlib doesn't ship it, and we only use
@@ -135,6 +137,7 @@ export function ConsultantWidget() {
   const lang: Lang = pathname.startsWith('/en') ? 'en' : 'ru'
   const c = COPY[lang]
   const greeting = GREETING_BY_LANG[lang]
+  const { items: wishlistItems } = useWishlist()
 
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([greeting])
@@ -375,6 +378,17 @@ export function ConsultantWidget() {
     setLoading(true)
     setError(null)
     try {
+      // Pull the visitor's catalog footprint — what they've hearted
+      // and recently opened — so the model can reason about it as
+      // existing context instead of asking from scratch every time.
+      // Both come from localStorage; if quota / private mode they
+      // simply degrade to empty.
+      let recentlyViewed: RecentlyViewedEntry[] = []
+      try {
+        const raw = typeof window !== 'undefined' ? localStorage.getItem(RECENT_KEY) : null
+        if (raw) recentlyViewed = (JSON.parse(raw) as RecentlyViewedEntry[]).slice(0, 10)
+      } catch { /* ignore */ }
+
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -384,6 +398,25 @@ export function ConsultantWidget() {
           // a "respond in English" directive when the visitor's on /en.
           messages: next.filter((m, i) => !(i === 0 && (m === GREETING_BY_LANG.ru || m === GREETING_BY_LANG.en))),
           lang,
+          // Visitor's catalog footprint — wishlist + recently opened
+          // detail pages. The model uses this to skip "what are you
+          // looking for?" when it's already implied, and to comment
+          // on the comparison ("из тех, что ты лайкнул, Origins
+          // дороже Allex на 40% — рассказать почему?").
+          userContext: {
+            wishlist: wishlistItems.map(it => ({
+              kind: it.kind,
+              slug: it.slug,
+              title: it.title,
+              district: it.district,
+              priceUsd: it.priceUsd,
+              bedrooms: it.bedrooms,
+              area: it.area ?? null,
+            })),
+            recentlyViewed: recentlyViewed.map(e => ({
+              kind: e.kind, slug: e.slug, title: e.title, at: e.at,
+            })),
+          },
         }),
       })
       if (!res.ok) {
