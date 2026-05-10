@@ -59,6 +59,22 @@ export type UnitOption = {
   photoUrl: string | null
 }
 
+// === migration-status ====================================================
+// True when the latest call to listLayers / listHotspots / etc. found
+// the visualisation tables missing (Postgres 42P01 / PostgREST PGRST205).
+// The admin page reads it and renders a "apply migration 019" banner
+// so the empty editor isn't a mystery.
+let _tablesMissing = false
+export function isVizTablesMissing(): boolean { return _tablesMissing }
+
+function isMissingTableError(e: { code?: string; message?: string } | null | undefined): boolean {
+  if (!e) return false
+  return e.code === '42P01' || e.code === 'PGRST205' || e.code === 'PGRST204'
+    || /could not find the table/i.test(e.message ?? '')
+    || /relation .* does not exist/i.test(e.message ?? '')
+    || /schema cache/i.test(e.message ?? '')
+}
+
 // === layers CRUD =========================================================
 
 export async function listLayers(complexAirtableId: string): Promise<Layer[]> {
@@ -68,7 +84,11 @@ export async function listLayers(complexAirtableId: string): Promise<Layer[]> {
     .eq('complex_airtable_id', complexAirtableId)
     .order('sort_order', { ascending: true })
     .order('id', { ascending: true })
-  if (error) throw error
+  if (error) {
+    if (isMissingTableError(error)) { _tablesMissing = true; return [] }
+    throw error
+  }
+  _tablesMissing = false
   return (data ?? []).map(rowToLayer)
 }
 
@@ -117,7 +137,10 @@ export async function listHotspots(layerIds: number[]): Promise<Hotspot[]> {
     .in('layer_id', layerIds)
     .order('sort_order', { ascending: true })
     .order('id', { ascending: true })
-  if (error) throw error
+  if (error) {
+    if (isMissingTableError(error)) { _tablesMissing = true; return [] }
+    throw error
+  }
   return (data ?? []).map(rowToHotspot)
 }
 
@@ -204,8 +227,19 @@ export async function listComplexesWithStatus(): Promise<ComplexSummary[]> {
     sb.from('complex_visualization_layers').select('id, complex_airtable_id'),
     sb.from('complex_visualization_hotspots').select('id, layer_id'),
   ])
-  if (layersRes.error) console.error('[viz] layers load failed:', layersRes.error.message)
-  if (hotspotsRes.error) console.error('[viz] hotspots load failed:', hotspotsRes.error.message)
+  // Tolerate the migration-not-applied case so the index page still
+  // renders the complete complex list (just with all rows in the
+  // "no visualisation" bucket). The page reads isVizTablesMissing()
+  // to render an explanatory banner.
+  if (layersRes.error) {
+    if (isMissingTableError(layersRes.error)) _tablesMissing = true
+    else console.error('[viz] layers load failed:', layersRes.error.message)
+  } else {
+    _tablesMissing = false
+  }
+  if (hotspotsRes.error && !isMissingTableError(hotspotsRes.error)) {
+    console.error('[viz] hotspots load failed:', hotspotsRes.error.message)
+  }
   const layerRows = (layersRes.data ?? []) as { id: number; complex_airtable_id: string }[]
   const hotspotRows = (hotspotsRes.data ?? []) as { layer_id: number }[]
 

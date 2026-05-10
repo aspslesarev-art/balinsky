@@ -594,8 +594,14 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   // hotspots can point at. unitInfoBySlug is built from the
   // already-loaded units array so the viewer can render rich popups
   // without an extra round-trip.
-  const vizLayers = await listLayers(c.airtable_id).catch(() => [])
-  const vizHotspots = vizLayers.length > 0 ? await listHotspots(vizLayers.map(l => l.id)).catch(() => []) : []
+  // listLayers / listHotspots already swallow the migration-missing
+  // case server-side (lib/complex-visualizations) — extra .catch
+  // here as belt-and-suspenders so a transient PG error never takes
+  // out the public detail page.
+  const vizLayers = await listLayers(c.airtable_id).catch(() => [] as Awaited<ReturnType<typeof listLayers>>)
+  const vizHotspots = vizLayers.length > 0
+    ? await listHotspots(vizLayers.map(l => l.id)).catch(() => [] as Awaited<ReturnType<typeof listHotspots>>)
+    : []
   const unitsRoot = lang === 'en' ? '/en' : '/ru'
   const unitInfoBySlug: Record<string, {
     kind: 'villa' | 'apartment'; slug: string; title: string;
