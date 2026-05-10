@@ -51,13 +51,20 @@ function parseBullets(s: string | null): string[] {
   return trimmed.split('\n').map(line => line.replace(/^[\s•\-–—·]+/, '').trim()).filter(Boolean)
 }
 
+// Note: don't cache empty results — if Supabase momentarily flaked
+// during the last regeneration, the cache would poison and every
+// dev detail page returns 404 for the next hour. Throwing forces
+// Next to drop the cache slot and retry on the next request.
 export const _loadAllDevelopers = unstable_cache(
   async (): Promise<DeveloperRow[]> => {
-    const { data } = await sb.from('raw_developers').select('airtable_id, data, logo_url').limit(200)
-    return (data as DeveloperRow[] | null) ?? []
+    const { data, error } = await sb.from('raw_developers').select('airtable_id, data, logo_url').limit(200)
+    if (error) throw new Error(`raw_developers: ${error.message}`)
+    const rows = (data as DeveloperRow[] | null) ?? []
+    if (rows.length === 0) throw new Error('raw_developers returned 0 rows — refusing to cache empty')
+    return rows
   },
-  ['developers-all'],
-  { revalidate: 3600 },
+  ['developers-all-v2'],
+  { revalidate: 600 },
 )
 
 export async function loadDeveloper(slug: string): Promise<DeveloperRow | null> {
