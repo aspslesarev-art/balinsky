@@ -380,8 +380,8 @@ function fuzzyQueryMatch(query: string, haystack: string): boolean {
 type Landmark = { name: string; aliases: string[]; lat: number; lng: number; district: string }
 const LANDMARKS: Landmark[] = [
   // Beach clubs
-  { name: 'Atlas Beach Club',     aliases: ['atlas', 'атлас'],                                 lat: -8.6531, lng: 115.1320, district: 'Berawa' },
-  { name: 'FINNS Beach Club',     aliases: ['finns', 'finn\'s', 'финнс', 'финс'],              lat: -8.6500, lng: 115.1325, district: 'Berawa' },
+  { name: 'Atlas Beach Club',     aliases: ['atlas', 'атлас'],                                 lat: -8.6608, lng: 115.1378, district: 'Berawa' },
+  { name: 'FINNS Beach Club',     aliases: ['finns', 'finn\'s', 'финнс', 'финс'],              lat: -8.6627, lng: 115.1390, district: 'Berawa' },
   { name: 'La Brisa',             aliases: ['la brisa', 'лабриса', 'ла бриса'],                lat: -8.6485, lng: 115.1245, district: 'Echo Beach (Canggu)' },
   { name: 'Potato Head Beach Club', aliases: ['potato head', 'потейто', 'патейто'],            lat: -8.6826, lng: 115.1591, district: 'Seminyak' },
   { name: 'Karma Beach Club',     aliases: ['karma', 'карма'],                                 lat: -8.8120, lng: 115.0865, district: 'Uluwatu' },
@@ -585,13 +585,24 @@ async function searchSupabaseTable(
     // Atlas Beach Club", find_landmark returns its lat/lng and the
     // model passes it here as near_lat/near_lng + max_distance_km.
     // Default radius is 1.5 km — comfortable scooter / 15-min walk.
+    //
+    // Lenient mode: if a row has no Geo coords AND the model also
+    // passed args.district (which find_landmark returns), accept
+    // it on district match — Airtable geo coverage is patchy and
+    // strict reject would zero the result for popular venues.
     if (args.near_lat != null && args.near_lng != null) {
       const lat = parseGeoStr(d['Geo'])
       const lng = parseGeoStr(d['Geo 2'])
-      if (lat == null || lng == null) return false
       const maxKm = typeof args.max_distance_km === 'number' && args.max_distance_km > 0 ? args.max_distance_km : 1.5
-      const km = haversineKm(lat, lng, args.near_lat, args.near_lng)
-      if (km > maxKm) return false
+      if (lat == null || lng == null) {
+        // Fallback to district hint if available; otherwise drop.
+        if (!args.district) return false
+        // matchDistrict already ran above when args.district was set
+        // — we wouldn't be here if it didn't pass.
+      } else {
+        const km = haversineKm(lat, lng, args.near_lat, args.near_lng)
+        if (km > maxKm) return false
+      }
     }
 
     return true
@@ -611,7 +622,8 @@ async function searchSupabaseTable(
     const bedrooms = num(d['Комнаты']) ?? num(d['Спальни']) ?? null
     const area = num(d['Площадь']) ?? null
     const priceUsd = num(d['price_usd']) ?? num(d['price']) ?? num(d['Цена']) ?? null
-    const pricePerSqm = num(d['Цена м²']) ?? (priceUsd != null && area && area > 0 ? Math.round(priceUsd / area) : null)
+    const pricePerSqmRaw = num(d['Цена м²']) ?? (priceUsd != null && area && area > 0 ? priceUsd / area : null)
+    const pricePerSqm = pricePerSqmRaw != null ? Math.round(pricePerSqmRaw) : null
     const photo = kind === 'developer'
       ? (r.logo_url ?? null)
       : (photoManifest[r.airtable_id]?.[0] ?? null)
