@@ -1,53 +1,99 @@
 // Public ad banner pipeline.
 //
-// Banners are authored in Airtable; scripts/sync-banners.mjs copies them
-// into Supabase Storage as `assets/_banners.json`. The site reads that
-// manifest, picks one banner to render, and the impression endpoint
-// updates per-banner counters in ad_banner_stats / ad_banner_daily.
+// Banners are now authored DIRECTLY in /admin/ads (Postgres table
+// public.ad_banners — migration 020). The site reads the table,
+// filters by active flag + date window, cross-checks the auto-disabled
+// flag from ad_banner_stats, picks one to render via round-robin
+// rotation, and the impression endpoint updates per-banner counters.
 //
-// Airtable owns: image, link, alt, headline, sponsor, dates,
-// impression_limit, active toggle.
+// Owner authors: image, link, alt, headline, sponsor, dates,
+// impression_limit, active toggle, sort_order.
 // We own: live impression / click counts and the auto_disabled flag we
 // flip when impressions_count >= impression_limit.
 
 import { createClient } from '@supabase/supabase-js'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/assets/_banners.json`
+
+const sb = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY!)
 
 export type Banner = {
   id: string
   imageUrl: string
   linkUrl: string
   alt: string
-  headline: string         // short selling line, ~6-10 words
-  sponsor?: string | null  // small grey "от <Sponsor>"
+  headline: string
+  sponsor?: string | null
   startsAt?: string | null
   endsAt?: string | null
-  active: boolean          // Airtable manual toggle
+  active: boolean
   impressionLimit?: number | null
+  sortOrder?: number
 }
 
-type Manifest = { generatedAt: string; banners: Banner[] }
+// True when the latest call to listBanners() found the table missing
+// (Postgres 42P01 / PostgREST PGRST205). Admin UI banner reads it to
+// show an "apply migration 020" hint.
+let _bannersTableMissing = false
+export function isBannersTableMissing(): boolean { return _bannersTableMissing }
+
+function isMissingTableError(e: { code?: string; message?: string } | null | undefined): boolean {
+  if (!e) return false
+  return e.code === '42P01' || e.code === 'PGRST205' || e.code === 'PGRST204'
+    || /could not find the table/i.test(e.message ?? '')
+    || /relation .* does not exist/i.test(e.message ?? '')
+    || /schema cache/i.test(e.message ?? '')
+}
+
+type BannerRow = {
+  id: string
+  image_url: string
+  link_url: string
+  alt: string | null
+  headline: string
+  sponsor: string | null
+  starts_at: string | null
+  ends_at: string | null
+  active: boolean
+  impression_limit: number | null
+  sort_order: number
+}
+
+function rowToBanner(r: BannerRow): Banner {
+  return {
+    id: r.id,
+    imageUrl: r.image_url,
+    linkUrl: r.link_url,
+    alt: r.alt ?? '',
+    headline: r.headline,
+    sponsor: r.sponsor,
+    startsAt: r.starts_at,
+    endsAt: r.ends_at,
+    active: r.active,
+    impressionLimit: r.impression_limit,
+    sortOrder: r.sort_order,
+  }
+}
 
 export async function loadAllBanners(): Promise<Banner[]> {
-  try {
-    const r = await fetch(MANIFEST_URL, { next: { revalidate: 300, tags: ['ads'] } })
-    if (!r.ok) return []
-    const j = await r.json() as Manifest
-    return Array.isArray(j.banners) ? j.banners : []
-  } catch {
+  const { data, error } = await sb
+    .from('ad_banners')
+    .select('*')
+    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: false })
+  if (error) {
+    if (isMissingTableError(error)) { _bannersTableMissing = true; return [] }
+    console.error('[banners] load failed:', error.message)
     return []
   }
+  _bannersTableMissing = false
+  return ((data ?? []) as BannerRow[]).map(rowToBanner)
 }
 
 export async function loadEligibleBanners(): Promise<Banner[]> {
   const all = await loadAllBanners()
   if (all.length === 0) return []
   const now = Date.now()
-  // Filter by Airtable active flag + date window. The auto_disabled flag
-  // is checked separately against ad_banner_stats so the manifest can
-  // stay 100% Airtable-controlled.
   const active = all.filter(b => {
     if (!b.active) return false
     if (b.startsAt && Date.parse(b.startsAt) > now) return false
@@ -55,9 +101,8 @@ export async function loadEligibleBanners(): Promise<Banner[]> {
     return true
   })
   if (active.length === 0) return []
-  // Cross-check the live disabled flags from Postgres in one query.
+  // Cross-check the live disabled flags from ad_banner_stats.
   try {
-    const sb = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY!)
     const { data } = await sb
       .from('ad_banner_stats')
       .select('banner_id, auto_disabled')
@@ -80,4 +125,97 @@ export function pickBanner(banners: Banner[]): Banner | null {
   if (banners.length === 0) return null
   const idx = Math.floor(Date.now() / 60000) % banners.length
   return banners[idx]
+}
+
+// === admin CRUD ==========================================================
+
+export type BannerInput = {
+  id?: string                  // optional on create — we'll auto-generate
+  imageUrl: string
+  linkUrl: string
+  alt?: string
+  headline: string
+  sponsor?: string | null
+  startsAt?: string | null
+  endsAt?: string | null
+  active?: boolean
+  impressionLimit?: number | null
+  sortOrder?: number
+}
+
+function genId(): string {
+  // Short readable id: bn_<8 lowercase hex chars>. Stable across retries
+  // because it's random not time-based, so concurrent inserts are safe.
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
+  let id = 'bn_'
+  for (let i = 0; i < 8; i++) id += chars[Math.floor(Math.random() * chars.length)]
+  return id
+}
+
+export async function createBanner(input: BannerInput): Promise<Banner> {
+  if (_bannersTableMissing) throw new Error('migration_not_applied')
+  const id = input.id?.trim() || genId()
+  const row = {
+    id,
+    image_url: input.imageUrl,
+    link_url: input.linkUrl,
+    alt: input.alt ?? '',
+    headline: input.headline,
+    sponsor: input.sponsor ?? null,
+    starts_at: input.startsAt ?? null,
+    ends_at: input.endsAt ?? null,
+    active: input.active ?? true,
+    impression_limit: input.impressionLimit ?? null,
+    sort_order: input.sortOrder ?? 0,
+  }
+  const { data, error } = await sb.from('ad_banners').insert(row).select('*').single()
+  if (error || !data) throw error ?? new Error('insert_failed')
+  return rowToBanner(data as BannerRow)
+}
+
+export async function updateBanner(id: string, patch: Partial<BannerInput>): Promise<void> {
+  const update: Record<string, unknown> = { updated_at: new Date().toISOString() }
+  if (patch.imageUrl !== undefined) update.image_url = patch.imageUrl
+  if (patch.linkUrl !== undefined) update.link_url = patch.linkUrl
+  if (patch.alt !== undefined) update.alt = patch.alt
+  if (patch.headline !== undefined) update.headline = patch.headline
+  if (patch.sponsor !== undefined) update.sponsor = patch.sponsor
+  if (patch.startsAt !== undefined) update.starts_at = patch.startsAt
+  if (patch.endsAt !== undefined) update.ends_at = patch.endsAt
+  if (patch.active !== undefined) update.active = patch.active
+  if (patch.impressionLimit !== undefined) update.impression_limit = patch.impressionLimit
+  if (patch.sortOrder !== undefined) update.sort_order = patch.sortOrder
+  const { error } = await sb.from('ad_banners').update(update).eq('id', id)
+  if (error) throw error
+}
+
+export async function deleteBanner(id: string): Promise<void> {
+  const { error } = await sb.from('ad_banners').delete().eq('id', id)
+  if (error) throw error
+}
+
+// Photo upload to the existing `assets` Supabase Storage bucket
+// (same place the legacy Airtable manifest lived). One file per
+// banner is the typical case; we namespace by banner-id-or-fresh
+// to keep deletes / re-uploads tidy.
+const ASSETS_BUCKET = 'assets'
+const ASSETS_PUBLIC = `${SUPABASE_URL}/storage/v1/object/public/${ASSETS_BUCKET}`
+
+export async function uploadBannerPhoto(opts: {
+  filename: string
+  buf: Buffer
+  contentType: string
+}): Promise<string | null> {
+  const safeName = opts.filename.replace(/[^A-Za-z0-9._-]+/g, '_').slice(0, 80) || 'banner'
+  const key = `banners/${Date.now()}-${safeName}`
+  const { error } = await sb.storage.from(ASSETS_BUCKET).upload(key, opts.buf, {
+    contentType: opts.contentType,
+    upsert: false,
+    cacheControl: '604800',
+  })
+  if (error) {
+    console.error('[banners] upload', key, error.message)
+    return null
+  }
+  return `${ASSETS_PUBLIC}/${key}`
 }
