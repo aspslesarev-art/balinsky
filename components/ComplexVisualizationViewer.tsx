@@ -71,7 +71,9 @@ export function ComplexVisualizationViewer({
   const [popup, setPopup] = useState<{ clientX: number; clientY: number; unit: UnitInfo } | null>(null)
   const [zoom, setZoom] = useState(1)
   const [mounted, setMounted] = useState(false)
+  const [dragging, setDragging] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const dragStateRef = useRef<{ pageX: number; pageY: number; scrollLeft: number; scrollTop: number; moved: boolean } | null>(null)
 
   useEffect(() => { setMounted(true) }, [])
   // Reset zoom when layer swaps so the visitor isn't stuck zoomed in.
@@ -96,6 +98,10 @@ export function ComplexVisualizationViewer({
   const currentHotspots = hotspots.filter(h => h.layerId === currentLayer.id)
 
   function onPolygonClick(h: Hotspot, ev: React.MouseEvent<SVGPolygonElement>) {
+    // If the user dragged the canvas (pan), the synthetic click that
+    // fires on mouseup is just the end of the drag — don't treat
+    // it as a hotspot tap.
+    if (dragStateRef.current?.moved) return
     ev.stopPropagation()
     if (h.targetType === 'layer' && h.targetLayerId != null) {
       const next = layers.find(l => l.id === h.targetLayerId)
@@ -111,6 +117,53 @@ export function ComplexVisualizationViewer({
       setPopup({ clientX: ev.clientX, clientY: ev.clientY, unit })
     }
   }
+
+  // Drag-to-pan when zoomed > 100 %. mousedown captures starting
+  // scrollLeft/Top + pointer position; mousemove (on document, so
+  // the drag survives leaving the canvas) updates scroll offsets;
+  // mouseup releases. `moved` flag lets onPolygonClick distinguish
+  // a real tap from the click that fires at the end of a drag.
+  function onCanvasMouseDown(e: React.MouseEvent<HTMLDivElement>) {
+    if (zoom <= 1) return
+    if (e.button !== 0) return
+    const el = scrollRef.current
+    if (!el) return
+    dragStateRef.current = {
+      pageX: e.pageX, pageY: e.pageY,
+      scrollLeft: el.scrollLeft, scrollTop: el.scrollTop,
+      moved: false,
+    }
+    setDragging(true)
+    e.preventDefault()
+  }
+
+  useEffect(() => {
+    if (!dragging) return
+    function onMove(e: MouseEvent) {
+      const s = dragStateRef.current
+      const el = scrollRef.current
+      if (!s || !el) return
+      const dx = e.pageX - s.pageX
+      const dy = e.pageY - s.pageY
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) s.moved = true
+      el.scrollLeft = s.scrollLeft - dx
+      el.scrollTop = s.scrollTop - dy
+    }
+    function onUp() {
+      setDragging(false)
+      // Defer clearing the drag flag so the click that fires
+      // immediately after mouseup still sees `moved=true` and
+      // gets ignored by onPolygonClick.
+      const s = dragStateRef.current
+      setTimeout(() => { if (dragStateRef.current === s) dragStateRef.current = null }, 0)
+    }
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+    return () => {
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+    }
+  }, [dragging])
 
   function back() {
     setStack(prev => prev.length > 1 ? prev.slice(0, -1) : prev)
@@ -155,8 +208,8 @@ export function ComplexVisualizationViewer({
         <div className="absolute top-3 right-3 z-10 inline-flex items-center gap-0.5 rounded-full bg-white/90 backdrop-blur shadow-md p-0.5">
           <button
             type="button"
-            onClick={() => setZoom(z => Math.max(0.75, +(z - 0.25).toFixed(2)))}
-            disabled={zoom <= 0.75}
+            onClick={() => setZoom(z => Math.max(1, +(z - 0.25).toFixed(2)))}
+            disabled={zoom <= 1}
             className="px-2 py-1.5 rounded-full text-[#111827] disabled:opacity-30"
             aria-label="Zoom out"
           >
@@ -185,21 +238,28 @@ export function ComplexVisualizationViewer({
             with native scroll / touch. */}
         <div
           ref={scrollRef}
-          className="relative overflow-auto"
+          className={`relative overflow-auto ${zoom > 1 ? (dragging ? 'cursor-grabbing' : 'cursor-grab') : ''}`}
           onClick={() => setPopup(null)}
+          onMouseDown={onCanvasMouseDown}
         >
           {/* Inner wrapper sized to image; transform-scale keeps SVG
-              overlay aligned regardless of zoom level. */}
+              overlay aligned regardless of zoom level. width:100%
+              keeps the photo within container bounds — no min-width
+              that would push it past the viewport (broke mobile
+              layout in the previous iteration). User reaches finer
+              detail via the +/− zoom buttons + drag-pan. */}
           <div
             className="relative inline-block"
-            style={{ transform: `scale(${zoom})`, transformOrigin: 'top left' }}
+            style={{
+              width: zoom === 1 ? '100%' : `${zoom * 100}%`,
+              transformOrigin: 'top left',
+            }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={currentLayer.photoUrl}
               alt={currentLayer.title ?? ''}
-              className="block w-auto max-w-none select-none"
-              style={{ width: '100%', minWidth: 'min(900px, 200vw)' }}
+              className="block w-full h-auto select-none"
               draggable={false}
             />
             <svg

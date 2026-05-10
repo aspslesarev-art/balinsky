@@ -86,6 +86,10 @@ export function VisualizationEditor({
   // When zoomed, the canvas container scrolls so the admin can pan
   // around. Mouse wheel + ⌘/Ctrl shortcuts also adjust it.
   const [zoom, setZoom] = useState(1)
+  // Drag-to-pan state for zoomed canvas (fullscreen + zoom > 1).
+  const [dragging, setDragging] = useState(false)
+  const dragStateRef = useRef<{ pageX: number; pageY: number; scrollLeft: number; scrollTop: number; moved: boolean } | null>(null)
+  const canvasScrollRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const activeLayer = useMemo(() => layers.find(l => l.id === activeLayerId) ?? null, [layers, activeLayerId])
@@ -252,6 +256,49 @@ export function VisualizationEditor({
   // changes — otherwise an old zoom level lingers and a smaller
   // photo lands at the wrong scale.
   useEffect(() => { setZoom(1) }, [fullscreen, activeLayerId])
+
+  // Drag-to-pan listeners (only active while a drag is in progress).
+  useEffect(() => {
+    if (!dragging) return
+    function onMove(e: MouseEvent) {
+      const s = dragStateRef.current
+      const el = canvasScrollRef.current
+      if (!s || !el) return
+      const dx = e.pageX - s.pageX
+      const dy = e.pageY - s.pageY
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) s.moved = true
+      el.scrollLeft = s.scrollLeft - dx
+      el.scrollTop = s.scrollTop - dy
+    }
+    function onUp() {
+      setDragging(false)
+      const s = dragStateRef.current
+      // Defer clearing so the synthetic click after mouseup still
+      // sees moved=true and doesn't add a polygon point.
+      setTimeout(() => { if (dragStateRef.current === s) dragStateRef.current = null }, 0)
+    }
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+    return () => {
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+    }
+  }, [dragging])
+
+  function onCanvasMouseDown(e: React.MouseEvent<HTMLDivElement>) {
+    // Only enable drag-pan when zoomed AND not actively drawing —
+    // otherwise we'd hijack pen-tool clicks for panning.
+    if (!fullscreen || zoom <= 1 || draft) return
+    if (e.button !== 0) return
+    const el = canvasScrollRef.current
+    if (!el) return
+    dragStateRef.current = {
+      pageX: e.pageX, pageY: e.pageY,
+      scrollLeft: el.scrollLeft, scrollTop: el.scrollTop,
+      moved: false,
+    }
+    setDragging(true)
+  }
 
   // === render =============================================================
 
@@ -421,7 +468,11 @@ export function VisualizationEditor({
               {/* In fullscreen the outer container scrolls when zoom
                   > 1 so the admin can pan around. Pre-fullscreen
                   there's no scroll — photo fits inline. */}
-              <div className={`relative bg-black/20 ${fullscreen ? 'flex-1 min-h-0 overflow-auto p-2' : ''}`}>
+              <div
+                ref={canvasScrollRef}
+                onMouseDown={onCanvasMouseDown}
+                className={`relative bg-black/20 ${fullscreen ? 'flex-1 min-h-0 overflow-auto p-2' : ''} ${fullscreen && zoom > 1 && !draft ? (dragging ? 'cursor-grabbing' : 'cursor-grab') : ''}`}
+              >
                 {/* The flex centring is on a separate inner so the
                     scroll container above still grows to fit the
                     zoomed image. inline-block wrapper sizes to
