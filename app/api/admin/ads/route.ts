@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/admin-auth'
 import { createBanner, type BannerInput } from '@/lib/banners'
 
@@ -16,6 +17,10 @@ export async function POST(req: Request) {
   if (!body.headline || typeof body.headline !== 'string') return NextResponse.json({ error: 'headline_required' }, { status: 400 })
   try {
     const banner = await createBanner(body as BannerInput)
+    // Banners render inside app/ru/layout.tsx via AdBannerSlot, so
+    // a layout-scoped revalidation pushes the new banner into every
+    // page on the next request without waiting for ISR windows.
+    revalidatePath('/', 'layout')
     return NextResponse.json({ banner })
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'create_failed' }, { status: 500 })
