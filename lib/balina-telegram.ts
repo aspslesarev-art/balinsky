@@ -559,6 +559,7 @@ function looksLikeListingRequest(text: string): boolean {
     /\bbr\b/i, /спален/i, /спальн/i, /bedroom/i,
     /до \$?\d/i, /\$\d+\s*k/i, /\$\d+\s*m/i, /бюджет/i, /budget/i,
     /найди/i, /покажи/i, /подбер/i, /варианты/i, /искать/i, /find/i, /show/i, /search/i,
+    /сравн/i, /compare/i, /\bvs\b/i, /что лучше/i, /which is better/i, /разниц/i, /difference/i,
     /у океана/i, /у моря/i, /near beach/i, /рядом с пляж/i,
     /чангу/i, /canggu/i, /берав/i, /berawa/i, /перенен/i, /pererenan/i, /букит/i, /bukit/i, /улуват/i, /uluwatu/i, /сануре/i, /sanur/i, /убуд/i, /ubud/i, /семинья/i, /seminyak/i, /джимбар/i, /jimbaran/i, /нуса.дуа/i, /nusa.dua/i,
   ]

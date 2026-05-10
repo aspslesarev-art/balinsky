@@ -254,6 +254,102 @@ function nearestBeach(lat: number, lng: number): { name: string; km: number } | 
   return best
 }
 
+// Cross-script + Whisper-tolerant query matching for search_listings.
+//
+// Bug case that motivated this: visitor asked "Сравни Maison Boheme и
+// Origins" via voice. Whisper transcribed it as "Mason, Богем и
+// Origins". Plain blob.includes() couldn't match because:
+//   - "mason" is not a substring of "maison" (an "i" got dropped)
+//   - "богем" is Cyrillic, "boheme" is Latin
+// Both situations are common with voice input + foreign brand names.
+//
+// Strategy:
+//   1. Tokenize query + haystack into words ≥3 chars.
+//   2. Generate Cyrillic→Latin transliteration variants of each
+//      Russian token (Russian г can land as g/gh/h, ё as yo/e, etc.)
+//      so "богем" yields "bogem", "boghem", "bohem".
+//   3. For every query token, accept a row if ANY haystack token
+//      is a substring match OR within Levenshtein distance 1 (for
+//      tokens of length ≥4) of a query variant.
+//   4. ALL query tokens must match — semantically equivalent to
+//      the old "must contain phrase" rule, just split per word.
+const TRANSLIT: Record<string, string[]> = {
+  а:['a'], б:['b'], в:['v'], г:['g','gh','h'], д:['d'],
+  е:['e','ye'], ё:['yo','e'], ж:['zh','j'], з:['z'],
+  и:['i'], й:['i','y','j'], к:['k'], л:['l'], м:['m'],
+  н:['n'], о:['o'], п:['p'], р:['r'], с:['s'], т:['t'],
+  у:['u'], ф:['f'], х:['h','kh'], ц:['ts','c'], ч:['ch'],
+  ш:['sh'], щ:['shch','sch'], ъ:[''], ы:['y','i'], ь:[''],
+  э:['e'], ю:['yu','iu','u'], я:['ya','ia','a'],
+}
+
+function transliterateVariants(s: string): string[] {
+  const lower = s.toLowerCase()
+  let variants = ['']
+  for (const c of lower) {
+    const cands = TRANSLIT[c] ?? [c]
+    const next: string[] = []
+    for (const v of variants) {
+      for (const cand of cands) next.push(v + cand)
+    }
+    variants = next
+    // Explosion guard — limit branches per token.
+    if (variants.length > 24) variants = variants.slice(0, 24)
+  }
+  return variants
+}
+
+function tokenize(s: string): string[] {
+  return s.toLowerCase().split(/[^a-zа-яё0-9]+/i).filter(t => t.length >= 3)
+}
+
+function levenshtein(a: string, b: string): number {
+  if (a === b) return 0
+  if (!a.length) return b.length
+  if (!b.length) return a.length
+  let prev = new Array(b.length + 1)
+  let cur = new Array(b.length + 1)
+  for (let j = 0; j <= b.length; j++) prev[j] = j
+  for (let i = 1; i <= a.length; i++) {
+    cur[0] = i
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1
+      cur[j] = Math.min(cur[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost)
+    }
+    [prev, cur] = [cur, prev]
+  }
+  return prev[b.length]
+}
+
+function fuzzyQueryMatch(query: string, haystack: string): boolean {
+  const queryTokens = tokenize(query)
+  if (queryTokens.length === 0) return true
+  // Pre-compute haystack tokens once, including transliteration so
+  // a Latin haystack can match a Cyrillic query and vice versa.
+  const hayBaseTokens = tokenize(haystack)
+  const hayTokens = new Set<string>(hayBaseTokens)
+  for (const t of hayBaseTokens) {
+    for (const v of transliterateVariants(t)) hayTokens.add(v)
+  }
+  for (const qt of queryTokens) {
+    // Generate candidate forms of the query token: original + all
+    // transliterations. For a Cyrillic query word like "богем" this
+    // gives {bogem, boghem, bohem, ...}; for a Latin word, just itself.
+    const qVariants = new Set<string>([qt, ...transliterateVariants(qt)])
+
+    let matched = false
+    outer: for (const qv of qVariants) {
+      for (const ht of hayTokens) {
+        if (ht.includes(qv) || qv.includes(ht)) { matched = true; break outer }
+        if (qv.length >= 4 && ht.length >= 4 && Math.abs(qv.length - ht.length) <= 1
+            && levenshtein(qv, ht) <= 1) { matched = true; break outer }
+      }
+    }
+    if (!matched) return false
+  }
+  return true
+}
+
 // Inline haversine — same formula as lib/competitor-utils.ts but
 // kept local so consultant.ts doesn't pick up a peer-module dep.
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -381,8 +477,8 @@ async function searchSupabaseTable(
         fs1(d['Name']) ?? '',
         fs1(d['Project']) ?? '',
         fs1(d['Developer']) ?? '',
-      ].join(' ').toLowerCase()
-      if (!blob.includes(args.query.toLowerCase())) return false
+      ].join(' ')
+      if (!fuzzyQueryMatch(args.query, blob)) return false
     }
 
     return true
