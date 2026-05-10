@@ -469,6 +469,12 @@ export function VisualizationEditor({
         <aside className="rounded-2xl bg-[var(--ax-panel)] border border-[var(--ax-border)] p-3 space-y-3 self-start">
           {selectedHotspot ? (
             <HotspotInspector
+              // key forces React to unmount + remount when the
+              // selected hotspot changes, so the inspector's
+              // internal useState fields (label / target / etc.)
+              // re-initialise from the new hotspot's props
+              // instead of showing stale data from the previous one.
+              key={selectedHotspot.id}
               hotspot={selectedHotspot}
               layers={layers.filter(l => l.id !== selectedHotspot.layerId)}
               units={units}
