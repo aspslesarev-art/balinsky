@@ -185,13 +185,27 @@ export async function uploadVizPhoto(opts: {
 // Walk raw_complexes once + all layers + all hotspots, return per-complex
 // summary so admin sees "12 visualised, 174 not started" at a glance.
 export async function listComplexesWithStatus(): Promise<ComplexSummary[]> {
-  const [complexesRes, layersRes, hotspotsRes] = await Promise.all([
-    sb.from('raw_complexes').select('airtable_id, data').limit(2000),
+  // Pull raw_complexes in pages because Supabase JS defaults to a
+  // 1000-row cap regardless of the .limit() value when the table
+  // has no service-role override on the request — this matches how
+  // the public catalog page paginates the same table.
+  const complexes: { airtable_id: string; data: Record<string, unknown> }[] = []
+  for (let from = 0; from < 2000; from += 200) {
+    const { data, error } = await sb.from('raw_complexes')
+      .select('airtable_id, data')
+      .range(from, from + 199)
+    if (error) { console.error('[viz] raw_complexes load failed:', error.message); break }
+    if (!data || data.length === 0) break
+    complexes.push(...(data as { airtable_id: string; data: Record<string, unknown> }[]))
+    if (data.length < 200) break
+  }
+
+  const [layersRes, hotspotsRes] = await Promise.all([
     sb.from('complex_visualization_layers').select('id, complex_airtable_id'),
     sb.from('complex_visualization_hotspots').select('id, layer_id'),
   ])
-  type ComplexRow = { airtable_id: string; data: Record<string, unknown> }
-  const complexes = (complexesRes.data ?? []) as ComplexRow[]
+  if (layersRes.error) console.error('[viz] layers load failed:', layersRes.error.message)
+  if (hotspotsRes.error) console.error('[viz] hotspots load failed:', hotspotsRes.error.message)
   const layerRows = (layersRes.data ?? []) as { id: number; complex_airtable_id: string }[]
   const hotspotRows = (hotspotsRes.data ?? []) as { layer_id: number }[]
 
