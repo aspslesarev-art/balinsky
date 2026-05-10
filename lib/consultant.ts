@@ -117,6 +117,9 @@ export const TOOLS: ChatCompletionTool[] = [
           price_max_usd: { type: 'number', description: 'Максимальная цена в USD' },
           query: { type: 'string', description: 'Свободный поисковый запрос — ищет по заголовку' },
           slug: { type: 'string', description: 'Точный slug объекта — используй когда нужно достать ОДИН конкретный объект (например, в системе указана текущая страница и посетитель спрашивает «про эту виллу»). Возвращает максимум 1 результат, остальные фильтры игнорируются.' },
+          near_lat: { type: 'number', description: 'Широта точки-якоря (например, координаты Atlas Beach Club или другого ориентира). Используй вместе с near_lng + max_distance_km, чтобы вернуть только объекты в радиусе от этой точки. Координату возьми через find_landmark.' },
+          near_lng: { type: 'number', description: 'Долгота точки-якоря. См. near_lat.' },
+          max_distance_km: { type: 'number', description: 'Радиус в километрах от near_lat/near_lng. По умолчанию 1.5 (пешком). Используй 0.5 для строго-беговой доступности, 3 — для скутер-доступности.' },
           limit: { type: 'number', description: 'Сколько результатов вернуть (по умолчанию 6, максимум 12)' },
           exclude_urls: {
             type: 'array',
@@ -134,6 +137,20 @@ export const TOOLS: ChatCompletionTool[] = [
           },
         },
         required: ['kind'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'find_landmark',
+      description: 'Найти координаты популярного Бали-ориентира (пляжный клуб, ресторан, школа сёрфинга, торговый центр, аэропорт): Atlas Beach Club, FINNS, La Brisa, Old Man\'s, Pretty Poison, Single Fin, Potato Head, Nasi Crew, Pepito, La Baracca, Sundays Beach Club, Karma Beach, Rock Bar и т.п. Возвращает {lat, lng, district, name}. Используй ВСЕГДА когда посетитель спрашивает про близость к конкретному месту по имени, а потом передай координаты в search_listings({near_lat, near_lng, max_distance_km}). Не выдумывай координаты — если не нашлось, скажи об этом честно.',
+      parameters: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', description: 'Имя ориентира как сказал посетитель (свободный текст, без необходимости точного написания)' },
+        },
+        required: ['name'],
       },
     },
   },
@@ -193,6 +210,9 @@ type SearchArgs = {
   exclude_urls?: string[]
   str_only?: boolean
   max_distance_to_beach?: 'beachfront' | 'walking' | 'scooter' | 'any'
+  near_lat?: number
+  near_lng?: number
+  max_distance_km?: number
 }
 
 function fs1(v: unknown): string | null {
@@ -350,6 +370,86 @@ function fuzzyQueryMatch(query: string, haystack: string): boolean {
   return true
 }
 
+// Curated Bali landmark coordinates — popular beach clubs, surf
+// schools, restaurants, shopping. Used by find_landmark to translate
+// "near Atlas Beach Club" into an actual lat/lng anchor for
+// search_listings near_lat/near_lng. Hand-picked from Google Maps;
+// covers the 80 % of cases the visitor actually asks about. For
+// anything not in the list we fall back to Google Places Text
+// Search if NEXT_PUBLIC_GOOGLE_MAPS_KEY is configured.
+type Landmark = { name: string; aliases: string[]; lat: number; lng: number; district: string }
+const LANDMARKS: Landmark[] = [
+  // Beach clubs
+  { name: 'Atlas Beach Club',     aliases: ['atlas', 'атлас'],                                 lat: -8.6531, lng: 115.1320, district: 'Berawa' },
+  { name: 'FINNS Beach Club',     aliases: ['finns', 'finn\'s', 'финнс', 'финс'],              lat: -8.6500, lng: 115.1325, district: 'Berawa' },
+  { name: 'La Brisa',             aliases: ['la brisa', 'лабриса', 'ла бриса'],                lat: -8.6485, lng: 115.1245, district: 'Echo Beach (Canggu)' },
+  { name: 'Potato Head Beach Club', aliases: ['potato head', 'потейто', 'патейто'],            lat: -8.6826, lng: 115.1591, district: 'Seminyak' },
+  { name: 'Karma Beach Club',     aliases: ['karma', 'карма'],                                 lat: -8.8120, lng: 115.0865, district: 'Uluwatu' },
+  { name: 'Sundays Beach Club',   aliases: ['sundays', 'сандейс', 'сандэйс'],                  lat: -8.8403, lng: 115.0875, district: 'Bukit (Ungasan)' },
+  { name: 'OMNIA Bali',           aliases: ['omnia', 'омния', 'омниа'],                        lat: -8.8417, lng: 115.0850, district: 'Bukit (Uluwatu)' },
+  { name: 'Savaya Bali',          aliases: ['savaya', 'савайя', 'савайа'],                     lat: -8.8487, lng: 115.0850, district: 'Bukit (Uluwatu)' },
+  { name: 'Rock Bar (AYANA)',     aliases: ['rock bar', 'рок бар', 'ayana', 'аяна'],           lat: -8.7855, lng: 115.1413, district: 'Jimbaran' },
+  { name: 'Single Fin Uluwatu',   aliases: ['single fin', 'сингл фин', 'singlefin'],           lat: -8.8127, lng: 115.0902, district: 'Uluwatu' },
+  // Cafes / restaurants
+  { name: 'Old Man\'s Canggu',    aliases: ['old man', 'old mans', 'олд мэн', 'олдмэн'],       lat: -8.6572, lng: 115.1314, district: 'Batu Bolong (Canggu)' },
+  { name: 'Pretty Poison',        aliases: ['pretty poison', 'претти пойзон'],                 lat: -8.6450, lng: 115.1342, district: 'Pererenan' },
+  { name: 'The Lawn Canggu',      aliases: ['the lawn', 'лаун', 'лон'],                        lat: -8.6535, lng: 115.1319, district: 'Berawa' },
+  { name: 'Nasi Crew',            aliases: ['nasi crew', 'наси крю'],                          lat: -8.6505, lng: 115.1369, district: 'Berawa' },
+  { name: 'Pepito',               aliases: ['pepito', 'пепито'],                               lat: -8.6601, lng: 115.1390, district: 'Canggu (Tibubeneng)' },
+  { name: 'Lacalita',             aliases: ['lacalita', 'la calita', 'лакалита'],              lat: -8.6498, lng: 115.1311, district: 'Berawa' },
+  { name: 'La Baracca',           aliases: ['la baracca', 'ла баракка'],                       lat: -8.6577, lng: 115.1289, district: 'Batu Bolong (Canggu)' },
+  { name: 'Crate Cafe',           aliases: ['crate', 'крейт'],                                 lat: -8.6447, lng: 115.1361, district: 'Pererenan' },
+  { name: 'Milk and Madu',        aliases: ['milk and madu', 'milk & madu', 'милк маду'],      lat: -8.6478, lng: 115.1379, district: 'Berawa' },
+  // Surf
+  { name: 'Echo Beach',           aliases: ['echo beach', 'echo', 'эко бич', 'эхо бич'],       lat: -8.6515, lng: 115.1305, district: 'Echo Beach (Canggu)' },
+  { name: 'Berawa Beach',         aliases: ['berawa beach', 'берава бич'],                     lat: -8.6593, lng: 115.1378, district: 'Berawa' },
+  { name: 'Padang Padang Beach',  aliases: ['padang padang', 'паданг паданг'],                 lat: -8.8121, lng: 115.1066, district: 'Bukit (Padang Padang)' },
+  { name: 'Bingin Beach',         aliases: ['bingin', 'бингин'],                               lat: -8.8118, lng: 115.1133, district: 'Bukit (Bingin)' },
+  { name: 'Uluwatu Temple',       aliases: ['uluwatu temple', 'храм улуват', 'pura uluwatu'],  lat: -8.8290, lng: 115.0853, district: 'Uluwatu' },
+  // Shopping / hubs
+  { name: 'Beachwalk Kuta',       aliases: ['beachwalk', 'бичволк'],                           lat: -8.7224, lng: 115.1671, district: 'Kuta' },
+  { name: 'Samasta Lifestyle',    aliases: ['samasta', 'самаста'],                             lat: -8.7813, lng: 115.1597, district: 'Jimbaran' },
+  { name: 'Discovery Mall',       aliases: ['discovery mall', 'дискавери молл'],               lat: -8.7320, lng: 115.1670, district: 'Kuta' },
+  // Schools / hospitals
+  { name: 'Green School',         aliases: ['green school', 'грин скул'],                      lat: -8.5176, lng: 115.2447, district: 'Sibang Kaja' },
+  { name: 'BIS (Bali Island School)', aliases: ['bali island school', 'bis bali'],             lat: -8.6495, lng: 115.2354, district: 'Sanur' },
+  { name: 'Sanglah Hospital',     aliases: ['sanglah', 'санглах'],                             lat: -8.6862, lng: 115.2126, district: 'Denpasar' },
+  { name: 'BIMC Nusa Dua',        aliases: ['bimc nusa dua'],                                  lat: -8.7920, lng: 115.2280, district: 'Nusa Dua' },
+  { name: 'BIMC Kuta',            aliases: ['bimc kuta'],                                      lat: -8.7345, lng: 115.1782, district: 'Kuta' },
+  { name: 'Ngurah Rai Airport',   aliases: ['airport', 'аэропорт', 'denpasar airport', 'нгура рай'], lat: -8.7467, lng: 115.1667, district: 'Tuban' },
+]
+
+async function findLandmark(name: string): Promise<{ lat: number; lng: number; name: string; district: string; source: 'curated' | 'google' } | { error: string }> {
+  const normalized = name.toLowerCase().trim()
+  // 1. Curated exact-or-fuzzy match (uses fuzzyQueryMatch on each alias).
+  for (const l of LANDMARKS) {
+    const haystack = [l.name, ...l.aliases].join(' ')
+    if (fuzzyQueryMatch(normalized, haystack)) {
+      return { lat: l.lat, lng: l.lng, name: l.name, district: l.district, source: 'curated' }
+    }
+  }
+  // 2. Google Places Text Search fallback (only if API key configured).
+  const key = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY
+  if (!key) return { error: 'not_in_curated_list' }
+  try {
+    const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(name + ' Bali')}&key=${key}`
+    const r = await fetch(url, { cache: 'no-store' })
+    if (!r.ok) return { error: `google_places_${r.status}` }
+    const j = await r.json() as { results?: Array<{ name: string; geometry?: { location?: { lat: number; lng: number } }; vicinity?: string; formatted_address?: string }> }
+    const top = j.results?.[0]
+    if (!top?.geometry?.location) return { error: 'not_found_via_google' }
+    return {
+      lat: top.geometry.location.lat,
+      lng: top.geometry.location.lng,
+      name: top.name,
+      district: top.vicinity ?? top.formatted_address ?? '',
+      source: 'google',
+    }
+  } catch {
+    return { error: 'google_lookup_failed' }
+  }
+}
+
 // Inline haversine — same formula as lib/competitor-utils.ts but
 // kept local so consultant.ts doesn't pick up a peer-module dep.
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -479,6 +579,19 @@ async function searchSupabaseTable(
         fs1(d['Developer']) ?? '',
       ].join(' ')
       if (!fuzzyQueryMatch(args.query, blob)) return false
+    }
+
+    // Radius-from-landmark filter. When the visitor asked "near
+    // Atlas Beach Club", find_landmark returns its lat/lng and the
+    // model passes it here as near_lat/near_lng + max_distance_km.
+    // Default radius is 1.5 km — comfortable scooter / 15-min walk.
+    if (args.near_lat != null && args.near_lng != null) {
+      const lat = parseGeoStr(d['Geo'])
+      const lng = parseGeoStr(d['Geo 2'])
+      if (lat == null || lng == null) return false
+      const maxKm = typeof args.max_distance_km === 'number' && args.max_distance_km > 0 ? args.max_distance_km : 1.5
+      const km = haversineKm(lat, lng, args.near_lat, args.near_lng)
+      if (km > maxKm) return false
     }
 
     return true
@@ -819,6 +932,11 @@ export async function executeToolCall(name: string, rawArgs: string): Promise<st
   }
   if (name === 'get_listing_full') {
     const result = await getListingFull(args as { kind?: string; slug?: string })
+    return JSON.stringify(result)
+  }
+  if (name === 'find_landmark') {
+    const lookupName = (args as { name?: string })?.name ?? ''
+    const result = await findLandmark(lookupName)
     return JSON.stringify(result)
   }
   return JSON.stringify({ error: 'unknown_tool' })
