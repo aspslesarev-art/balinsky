@@ -27,6 +27,8 @@ import { loadVideosByComplexSlug } from '@/lib/videos'
 import { VideoGrid } from '@/components/VideoGrid'
 import { loadNearbyPlaces } from '@/lib/nearby-places'
 import { NearbyPlaces } from '@/components/NearbyPlaces'
+import { listLayers, listHotspots } from '@/lib/complex-visualizations'
+import { ComplexVisualizationViewer } from '@/components/ComplexVisualizationViewer'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { tField, type Lang } from '@/lib/i18n'
 
@@ -587,6 +589,35 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
     if (data) { nearby = data; break }
   }
 
+  // Interactive visualisation — if the admin built one for this
+  // complex, load its layer tree + hotspots and the unit info bag
+  // hotspots can point at. unitInfoBySlug is built from the
+  // already-loaded units array so the viewer can render rich popups
+  // without an extra round-trip.
+  const vizLayers = await listLayers(c.airtable_id).catch(() => [])
+  const vizHotspots = vizLayers.length > 0 ? await listHotspots(vizLayers.map(l => l.id)).catch(() => []) : []
+  const unitsRoot = lang === 'en' ? '/en' : '/ru'
+  const unitInfoBySlug: Record<string, {
+    kind: 'villa' | 'apartment'; slug: string; title: string;
+    bedrooms: number | null; area: number | null; priceUsd: number | null;
+    url: string; photoUrl: string | null;
+  }> = {}
+  for (const u of units) {
+    const path = u.kind === 'villa'
+      ? `${unitsRoot === '/en' ? '/en/villas' : '/ru/villy'}/o/${u.slug}`
+      : `${unitsRoot === '/en' ? '/en/apartments' : '/ru/apartamenty'}/o/${u.slug}`
+    unitInfoBySlug[u.slug] = {
+      kind: u.kind,
+      slug: u.slug,
+      title: u.title,
+      bedrooms: u.bedrooms,
+      area: u.area,
+      priceUsd: u.priceUsd,
+      url: path,
+      photoUrl: u.photos?.[0] ?? null,
+    }
+  }
+
   const faqItems = copy.faq(name, district, lease)
   const faqJsonLd = {
     '@context': 'https://schema.org',
@@ -796,6 +827,22 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
         )}
 
         {managers.length > 0 && <ManagerCard managers={managers} developerName={developerName} />}
+
+        {/* Interactive plan — kicks in only when the admin has built
+            at least one layer in /admin/visualizations/<airtable_id>.
+            Visitor sees a panorama with clickable zones, drills down
+            to a specific unit, opens its detail page. */}
+        {vizLayers.length > 0 && (
+          <ComplexVisualizationViewer
+            layers={vizLayers.map(l => ({
+              id: l.id, parentLayerId: l.parentLayerId,
+              title: l.title, photoUrl: l.photoUrl,
+            }))}
+            hotspots={vizHotspots}
+            unitsBySlug={unitInfoBySlug}
+            lang={lang}
+          />
+        )}
 
         {/* Nearby places — beaches / cafes / nightlife / etc. The
             data is keyed by villa airtable_id; we surface it on
