@@ -208,8 +208,10 @@ export async function listComplexesWithStatus(): Promise<ComplexSummary[]> {
     hotspotCount.set(cid, (hotspotCount.get(cid) ?? 0) + 1)
   }
 
+  // Note: raw_complexes has no Публикация checkbox — every row in
+  // the table is considered live (matches what the public catalog
+  // does). We filter only on having a usable slug.
   return complexes
-    .filter(c => c.data['Публикация'] === true)
     .map(c => {
       const slug = pickStr(c.data['SEO:Slug']) ?? ''
       const name = pickStr(c.data['Project']) ?? slug
