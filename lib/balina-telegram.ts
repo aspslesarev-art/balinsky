@@ -29,7 +29,10 @@ import { downloadTelegramFile } from '@/lib/chat-media'
 const MAX_HISTORY = 24                  // rows pulled from bot_messages → assistant context
 const MAX_TOOL_HOPS = 4
 const MAX_LISTING_CARDS = 5             // top-N to actually send as photos
-const DAILY_LIMIT_PER_CHAT = 30         // outbound assistant messages per 24 h
+// Daily cap disabled — owner wants unlimited testing. Re-enable by
+// setting this to a positive number; isOverDailyLimit returns false
+// while it's null/<=0 so the gate becomes a no-op.
+const DAILY_LIMIT_PER_CHAT: number | null = null
 
 const escape = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
@@ -716,6 +719,7 @@ async function loadHistory(chatId: number): Promise<ChatCompletionMessageParam[]
 // === rate limit ==========================================================
 
 async function isOverDailyLimit(chatId: number): Promise<boolean> {
+  if (DAILY_LIMIT_PER_CHAT == null || DAILY_LIMIT_PER_CHAT <= 0) return false
   const since = new Date(Date.now() - 24 * 3600_000).toISOString()
   // Reuse listMessages — bounded to 200 rows which is more than
   // enough for a daily-cap check.
