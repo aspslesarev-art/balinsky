@@ -22,8 +22,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import {
-  Plus, Upload, Trash2, Save, ChevronRight, Image as ImageIcon,
-  Loader2, AlertTriangle, Check, X, Maximize2, Minimize2,
+  Plus, Upload, Trash2, Save, ChevronRight, ChevronLeft, Image as ImageIcon,
+  Loader2, AlertTriangle, Check, X, Maximize2, Minimize2, ZoomIn, ZoomOut, ArrowLeft,
 } from 'lucide-react'
 
 type Layer = {
@@ -82,6 +82,10 @@ export function VisualizationEditor({
   // Fullscreen overlay — covers the whole viewport so the photo
   // gets max real-estate for accurate polygon drawing. Esc exits.
   const [fullscreen, setFullscreen] = useState(false)
+  // Photo zoom — only applied in fullscreen. 1.0 = fit, up to 4×.
+  // When zoomed, the canvas container scrolls so the admin can pan
+  // around. Mouse wheel + ⌘/Ctrl shortcuts also adjust it.
+  const [zoom, setZoom] = useState(1)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const activeLayer = useMemo(() => layers.find(l => l.id === activeLayerId) ?? null, [layers, activeLayerId])
@@ -227,16 +231,27 @@ export function VisualizationEditor({
   }
 
   // Esc → exit fullscreen + cancel in-progress drawing.
+  // ⌘/Ctrl + +/- → zoom in/out. ⌘/Ctrl + 0 → reset to 100 %.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') {
         if (draft) cancelDrawing()
         else if (fullscreen) setFullscreen(false)
       }
+      if (fullscreen && (e.metaKey || e.ctrlKey)) {
+        if (e.key === '=' || e.key === '+') { e.preventDefault(); setZoom(z => Math.min(4, +(z + 0.25).toFixed(2))) }
+        if (e.key === '-')                   { e.preventDefault(); setZoom(z => Math.max(0.5, +(z - 0.25).toFixed(2))) }
+        if (e.key === '0')                   { e.preventDefault(); setZoom(1) }
+      }
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
   }, [draft, fullscreen])
+
+  // Reset zoom whenever fullscreen toggles or the active layer
+  // changes — otherwise an old zoom level lingers and a smaller
+  // photo lands at the wrong scale.
+  useEffect(() => { setZoom(1) }, [fullscreen, activeLayerId])
 
   // === render =============================================================
 
@@ -323,7 +338,20 @@ export function VisualizationEditor({
           {activeLayer ? (
             <>
               <div className="px-4 py-3 border-b border-[var(--ax-border-soft)] flex items-center justify-between gap-3 flex-wrap">
-                <div className="text-[13.5px] font-medium text-[var(--ax-fg)] truncate">{activeLayer.title ?? `Слой #${activeLayer.id}`}</div>
+                <div className="flex items-center gap-2 min-w-0">
+                  {/* Back-to-list button — visible in BOTH normal
+                      and fullscreen modes, since the breadcrumb
+                      bar above the editor is hidden when fullscreen
+                      covers the whole viewport. */}
+                  <Link
+                    href="/admin/visualizations"
+                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[var(--ax-hover)] text-[var(--ax-fg-soft)] hover:text-[var(--ax-fg)] text-[12px]"
+                    title="Назад к списку всех ЖК"
+                  >
+                    <ArrowLeft size={12} /> Все ЖК
+                  </Link>
+                  <div className="text-[13.5px] font-medium text-[var(--ax-fg)] truncate">{activeLayer.title ?? `Слой #${activeLayer.id}`}</div>
+                </div>
                 <div className="flex items-center gap-2">
                   {draft ? (
                     <>
@@ -343,6 +371,38 @@ export function VisualizationEditor({
                   <button onClick={() => removeLayer(activeLayer.id)} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[var(--ax-hover)] text-[var(--ax-error-fg)] text-[12px]">
                     <Trash2 size={12} /> Слой
                   </button>
+
+                  {/* Zoom controls — fullscreen only, where they
+                      actually matter. Pre-fullscreen the photo
+                      already fits the column. */}
+                  {fullscreen && (
+                    <div className="inline-flex items-center gap-0.5 rounded-lg bg-[var(--ax-hover)] p-0.5">
+                      <button
+                        onClick={() => setZoom(z => Math.max(0.5, +(z - 0.25).toFixed(2)))}
+                        disabled={zoom <= 0.5}
+                        title="Уменьшить (⌘−)"
+                        className="px-2 py-1 rounded text-[var(--ax-fg-soft)] hover:text-[var(--ax-fg)] disabled:opacity-40"
+                      >
+                        <ZoomOut size={12} />
+                      </button>
+                      <button
+                        onClick={() => setZoom(1)}
+                        title="100% (⌘0)"
+                        className="px-2 py-1 rounded text-[11px] tabular-nums text-[var(--ax-fg-soft)] hover:text-[var(--ax-fg)] min-w-[44px]"
+                      >
+                        {Math.round(zoom * 100)}%
+                      </button>
+                      <button
+                        onClick={() => setZoom(z => Math.min(4, +(z + 0.25).toFixed(2)))}
+                        disabled={zoom >= 4}
+                        title="Увеличить (⌘+)"
+                        className="px-2 py-1 rounded text-[var(--ax-fg-soft)] hover:text-[var(--ax-fg)] disabled:opacity-40"
+                      >
+                        <ZoomIn size={12} />
+                      </button>
+                    </div>
+                  )}
+
                   <button
                     onClick={() => setFullscreen(v => !v)}
                     className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[var(--ax-hover)] text-[var(--ax-fg-soft)] hover:text-[var(--ax-fg)] text-[12px]"
@@ -358,17 +418,27 @@ export function VisualizationEditor({
                   In fullscreen we let the parent flex-fill the
                   viewport and the photo uses object-contain so the
                   whole image is visible regardless of aspect. */}
-              <div className={`relative bg-black/20 ${fullscreen ? 'flex-1 flex items-center justify-center min-h-0 overflow-hidden p-2' : ''}`}>
-                {/* Wrapper is `inline-block relative` so it sizes
-                    exactly to the image — that way the SVG overlay
-                    using inset-0 always aligns pixel-perfect with
-                    the photo, in both normal + fullscreen modes. */}
-                <div className={fullscreen ? 'relative inline-block max-h-full max-w-full' : 'relative w-full'}>
+              {/* In fullscreen the outer container scrolls when zoom
+                  > 1 so the admin can pan around. Pre-fullscreen
+                  there's no scroll — photo fits inline. */}
+              <div className={`relative bg-black/20 ${fullscreen ? 'flex-1 min-h-0 overflow-auto p-2' : ''}`}>
+                {/* The flex centring is on a separate inner so the
+                    scroll container above still grows to fit the
+                    zoomed image. inline-block wrapper sizes to
+                    image (and scales with it via transform), so the
+                    SVG overlay always aligns pixel-perfect. */}
+                <div className={fullscreen ? 'min-h-full min-w-full flex items-center justify-center' : ''}>
+                  <div
+                    className={fullscreen ? 'relative inline-block' : 'relative w-full'}
+                    style={fullscreen
+                      ? { transform: `scale(${zoom})`, transformOrigin: 'center center', willChange: 'transform' }
+                      : undefined}
+                  >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={activeLayer.photoUrl}
                     alt={activeLayer.title ?? ''}
-                    className={`block select-none ${fullscreen ? 'max-h-[calc(100vh-110px)] max-w-full w-auto h-auto' : 'w-full h-auto'}`}
+                    className={`block select-none ${fullscreen ? 'max-h-[calc(100vh-110px)] max-w-[calc(100vw-560px)] w-auto h-auto' : 'w-full h-auto'}`}
                     draggable={false}
                   />
                   <svg
@@ -455,6 +525,7 @@ export function VisualizationEditor({
                       </>
                     )}
                   </svg>
+                  </div>
                 </div>
               </div>
             </>
