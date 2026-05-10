@@ -140,6 +140,25 @@ export const TOOLS: ChatCompletionTool[] = [
   {
     type: 'function',
     function: {
+      name: 'get_listing_full',
+      description: 'Загрузить ПОЛНЫЕ данные одного конкретного объекта — всё что видно на его странице сайта (готовность строительства, разрешения, плановые сроки сдачи, описание, удобства, презентации, рендеры, расстояния до аэропорта и т.д.). Используй когда посетитель задаёт детальный вопрос про конкретный объект ("процент готовности у X?", "что внутри Y?", "когда сдают Z?", "есть ли бассейн / охрана / парковка?", "что в презентации?"). Тяжелее search_listings, но возвращает на порядок больше деталей. По slug + kind.',
+      parameters: {
+        type: 'object',
+        properties: {
+          kind: {
+            type: 'string',
+            enum: ['villa', 'apartment', 'complex', 'developer', 'rental'],
+            description: 'Тип объекта',
+          },
+          slug: { type: 'string', description: 'Точный SEO-slug объекта (как в URL после /o/)' },
+        },
+        required: ['kind', 'slug'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'submit_feedback',
       description: 'Записать обратную связь от пользователя. Вызывай когда пользователь делится мнением, жалуется на ошибку, предлагает идею — даже без явного запроса от пользователя записать.',
       parameters: {
@@ -702,5 +721,70 @@ export async function executeToolCall(name: string, rawArgs: string): Promise<st
     const result = await submitFeedback(args as FeedbackArgs)
     return JSON.stringify(result)
   }
+  if (name === 'get_listing_full') {
+    const result = await getListingFull(args as { kind?: string; slug?: string })
+    return JSON.stringify(result)
+  }
   return JSON.stringify({ error: 'unknown_tool' })
+}
+
+// Full deep-read of one listing — everything in the Airtable row,
+// minus internal-only / linked-record noise. Treat as Балина
+// "walking the page": the same fields the human visitor would see
+// on /ru/villy/o/<slug> etc. are in here.
+//
+// We strip:
+//   - linked-record id arrays (look like ["recXXXX..."]) — model
+//     can't follow them anyway
+//   - obviously internal columns that start with "_" or contain
+//     "Created"/"Last modified"/"Sync"
+//   - empty / null / empty-array values
+async function getListingFull(args: { kind?: string; slug?: string }): Promise<Record<string, unknown>> {
+  if (!args.slug || typeof args.slug !== 'string') return { error: 'missing_slug' }
+  const tableByKind: Record<string, string> = {
+    villa: 'raw_villas', apartment: 'raw_apartments',
+    complex: 'raw_complexes', developer: 'raw_developers',
+  }
+  const kind = String(args.kind ?? 'villa').toLowerCase()
+  if (kind === 'rental') {
+    // Rental lives in a Storage manifest, not Supabase row — load
+    // and find by slug.
+    const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/rental/_rental.json`
+    const r = await fetch(url, { cache: 'no-store' })
+    if (!r.ok) return { error: 'rental_manifest_failed' }
+    const j = await r.json() as { items?: unknown[] }
+    const items = (j.items ?? []) as Array<{ slug: string }>
+    const item = items.find(it => it.slug === args.slug)
+    return item ?? { error: 'not_found' }
+  }
+  const table = tableByKind[kind]
+  if (!table) return { error: 'unknown_kind' }
+  const { data, error } = await sb.from(table).select('airtable_id, data').limit(2000)
+  if (error) return { error: error.message }
+  const rows = (data ?? []) as { airtable_id: string; data: Record<string, unknown> }[]
+  const row = rows.find(r => fs1(r.data['SEO:Slug']) === args.slug)
+  if (!row) return { error: 'not_found', slug: args.slug }
+  return {
+    airtable_id: row.airtable_id,
+    kind,
+    slug: args.slug,
+    fields: cleanForModel(row.data),
+  }
+}
+
+function cleanForModel(data: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
+  for (const [key, val] of Object.entries(data)) {
+    // Skip internal / metadata.
+    if (key.startsWith('_')) continue
+    if (/^(Created|Last modified|Sync|Auto)\b/i.test(key)) continue
+    // Skip empty.
+    if (val == null) continue
+    if (typeof val === 'string' && val.trim() === '') continue
+    if (Array.isArray(val) && val.length === 0) continue
+    // Skip pure linked-record id arrays — useless to the model.
+    if (Array.isArray(val) && val.every(v => typeof v === 'string' && /^rec[A-Za-z0-9]{14,}$/.test(v))) continue
+    out[key] = val
+  }
+  return out
 }
