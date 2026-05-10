@@ -23,7 +23,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import {
   Plus, Upload, Trash2, Save, ChevronRight, Image as ImageIcon,
-  Loader2, AlertTriangle, Check, X,
+  Loader2, AlertTriangle, Check, X, Maximize2, Minimize2,
 } from 'lucide-react'
 
 type Layer = {
@@ -79,6 +79,9 @@ export function VisualizationEditor({
   // line from the last drawn vertex to where the pen is hovering,
   // Figma-style. null when not drawing or not hovering.
   const [cursor, setCursor] = useState<[number, number] | null>(null)
+  // Fullscreen overlay — covers the whole viewport so the photo
+  // gets max real-estate for accurate polygon drawing. Esc exits.
+  const [fullscreen, setFullscreen] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const activeLayer = useMemo(() => layers.find(l => l.id === activeLayerId) ?? null, [layers, activeLayerId])
@@ -223,6 +226,18 @@ export function VisualizationEditor({
     setCursor(null)
   }
 
+  // Esc → exit fullscreen + cancel in-progress drawing.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        if (draft) cancelDrawing()
+        else if (fullscreen) setFullscreen(false)
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [draft, fullscreen])
+
   // === render =============================================================
 
   return (
@@ -241,7 +256,11 @@ export function VisualizationEditor({
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-[260px_minmax(0,1fr)_280px] gap-4">
+      <div className={
+        fullscreen
+          ? 'fixed inset-0 z-50 bg-[var(--ax-bg)] grid grid-cols-[240px_minmax(0,1fr)_280px] gap-2 p-2'
+          : 'grid grid-cols-1 md:grid-cols-[260px_minmax(0,1fr)_280px] gap-4'
+      }>
         {/* LEFT: layer tree */}
         <aside className="rounded-2xl bg-[var(--ax-panel)] border border-[var(--ax-border)] p-3 space-y-2 self-start">
           <div className="flex items-center justify-between mb-1">
@@ -324,20 +343,32 @@ export function VisualizationEditor({
                   <button onClick={() => removeLayer(activeLayer.id)} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[var(--ax-hover)] text-[var(--ax-error-fg)] text-[12px]">
                     <Trash2 size={12} /> Слой
                   </button>
+                  <button
+                    onClick={() => setFullscreen(v => !v)}
+                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[var(--ax-hover)] text-[var(--ax-fg-soft)] hover:text-[var(--ax-fg)] text-[12px]"
+                    title={fullscreen ? 'Свернуть (Esc)' : 'Полный экран'}
+                  >
+                    {fullscreen ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
+                    {fullscreen ? 'Свернуть' : 'Полный экран'}
+                  </button>
                 </div>
               </div>
-              {/* Canvas: photo grows to fill the available width. The
-                  image's intrinsic aspect ratio defines the section
-                  height — no centring / no min-height so there are
-                  never grey bars above or below. SVG sits on top
-                  with viewBox 0..1 so coordinates stay normalised. */}
-              <div className="relative bg-black/20">
-                <div className="relative w-full">
+              {/* Canvas: in normal mode the photo's intrinsic aspect
+                  drives section height (no centring, no grey bands).
+                  In fullscreen we let the parent flex-fill the
+                  viewport and the photo uses object-contain so the
+                  whole image is visible regardless of aspect. */}
+              <div className={`relative bg-black/20 ${fullscreen ? 'flex-1 flex items-center justify-center min-h-0 overflow-hidden p-2' : ''}`}>
+                {/* Wrapper is `inline-block relative` so it sizes
+                    exactly to the image — that way the SVG overlay
+                    using inset-0 always aligns pixel-perfect with
+                    the photo, in both normal + fullscreen modes. */}
+                <div className={fullscreen ? 'relative inline-block max-h-full max-w-full' : 'relative w-full'}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={activeLayer.photoUrl}
                     alt={activeLayer.title ?? ''}
-                    className="block w-full h-auto select-none"
+                    className={`block select-none ${fullscreen ? 'max-h-[calc(100vh-110px)] max-w-full w-auto h-auto' : 'w-full h-auto'}`}
                     draggable={false}
                   />
                   <svg
