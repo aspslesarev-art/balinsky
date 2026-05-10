@@ -12,6 +12,7 @@
 // flip when impressions_count >= impression_limit.
 
 import { createClient } from '@supabase/supabase-js'
+import { unstable_noStore as noStore } from 'next/cache'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 
@@ -76,6 +77,11 @@ function rowToBanner(r: BannerRow): Banner {
 }
 
 export async function loadAllBanners(): Promise<Banner[]> {
+  // Bail out of static rendering for any route that touches this —
+  // banners need to reflect admin edits immediately, not after the
+  // page's `revalidate` window expires. ISR pages still cache other
+  // sections; only the AdBannerSlot subtree re-renders per request.
+  noStore()
   const { data, error } = await sb
     .from('ad_banners')
     .select('*')
