@@ -45,6 +45,8 @@ export type ComplexSummary = {
   airtableId: string
   slug: string
   name: string
+  developer: string | null
+  district: string | null
   layerCount: number
   hotspotCount: number
 }
@@ -263,10 +265,14 @@ export async function listComplexesWithStatus(): Promise<ComplexSummary[]> {
     .map(c => {
       const slug = pickStr(c.data['SEO:Slug']) ?? ''
       const name = pickStr(c.data['Project']) ?? slug
+      const developer = pickStr(c.data['Developer1']) ?? pickStr(c.data['Варианты поиска застройщика'])
+      const district = pickStr(c.data['Location 2']) ?? pickStr(c.data['Location'])
       return {
         airtableId: c.airtable_id,
         slug,
         name,
+        developer,
+        district,
         layerCount: layerCount.get(c.airtable_id) ?? 0,
         hotspotCount: hotspotCount.get(c.airtable_id) ?? 0,
       }
