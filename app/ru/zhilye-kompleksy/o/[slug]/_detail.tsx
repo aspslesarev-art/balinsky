@@ -763,6 +763,23 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
           </section>
         )}
 
+        {/* Interactive plan — sits ABOVE the units list because the
+            visitor drills from the panorama → highlighted hotspot →
+            specific unit, so the natural reading flow is plan first,
+            full unit grid second. Renders only when the admin has
+            built at least one layer in /admin/visualizations/<id>. */}
+        {vizLayers.length > 0 && (
+          <ComplexVisualizationViewer
+            layers={vizLayers.map(l => ({
+              id: l.id, parentLayerId: l.parentLayerId,
+              title: l.title, photoUrl: l.photoUrl,
+            }))}
+            hotspots={vizHotspots}
+            unitsBySlug={unitInfoBySlug}
+            lang={lang}
+          />
+        )}
+
         {/* UNITS in this complex */}
         {units.length > 0 && (
           <section className="mb-10">
@@ -833,22 +850,6 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
         )}
 
         {managers.length > 0 && <ManagerCard managers={managers} developerName={developerName} />}
-
-        {/* Interactive plan — kicks in only when the admin has built
-            at least one layer in /admin/visualizations/<airtable_id>.
-            Visitor sees a panorama with clickable zones, drills down
-            to a specific unit, opens its detail page. */}
-        {vizLayers.length > 0 && (
-          <ComplexVisualizationViewer
-            layers={vizLayers.map(l => ({
-              id: l.id, parentLayerId: l.parentLayerId,
-              title: l.title, photoUrl: l.photoUrl,
-            }))}
-            hotspots={vizHotspots}
-            unitsBySlug={unitInfoBySlug}
-            lang={lang}
-          />
-        )}
 
         {/* Nearby places — beaches / cafes / nightlife / etc. The
             data is keyed by villa airtable_id; we surface it on
