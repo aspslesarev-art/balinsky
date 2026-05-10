@@ -75,6 +75,10 @@ export function VisualizationEditor({
   const [selectedHotspotId, setSelectedHotspotId] = useState<number | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Cursor position in normalised 0..1 — drives the live-preview
+  // line from the last drawn vertex to where the pen is hovering,
+  // Figma-style. null when not drawing or not hovering.
+  const [cursor, setCursor] = useState<[number, number] | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const activeLayer = useMemo(() => layers.find(l => l.id === activeLayerId) ?? null, [layers, activeLayerId])
@@ -207,6 +211,18 @@ export function VisualizationEditor({
     if (draft) finishDrawing()
   }
 
+  function onCanvasMouseMove(e: React.MouseEvent<SVGSVGElement>) {
+    if (!draft) return
+    const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect()
+    const x = (e.clientX - rect.left) / rect.width
+    const y = (e.clientY - rect.top) / rect.height
+    setCursor([x, y])
+  }
+
+  function onCanvasMouseLeave() {
+    setCursor(null)
+  }
+
   // === render =============================================================
 
   return (
@@ -225,7 +241,7 @@ export function VisualizationEditor({
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-[280px_1fr_300px] gap-4 min-h-[600px]">
+      <div className="grid grid-cols-1 md:grid-cols-[260px_minmax(0,1fr)_280px] gap-4">
         {/* LEFT: layer tree */}
         <aside className="rounded-2xl bg-[var(--ax-panel)] border border-[var(--ax-border)] p-3 space-y-2 self-start">
           <div className="flex items-center justify-between mb-1">
@@ -310,16 +326,28 @@ export function VisualizationEditor({
                   </button>
                 </div>
               </div>
-              <div className="relative bg-black/30 grow flex items-center justify-center">
-                <div className="relative w-full max-w-[1200px]" style={{ aspectRatio: 'auto' }}>
+              {/* Canvas: photo grows to fill the available width. The
+                  image's intrinsic aspect ratio defines the section
+                  height — no centring / no min-height so there are
+                  never grey bars above or below. SVG sits on top
+                  with viewBox 0..1 so coordinates stay normalised. */}
+              <div className="relative bg-black/20">
+                <div className="relative w-full">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={activeLayer.photoUrl} alt={activeLayer.title ?? ''} className="block w-full h-auto select-none" draggable={false} />
+                  <img
+                    src={activeLayer.photoUrl}
+                    alt={activeLayer.title ?? ''}
+                    className="block w-full h-auto select-none"
+                    draggable={false}
+                  />
                   <svg
                     viewBox="0 0 1 1"
                     preserveAspectRatio="none"
                     className={`absolute inset-0 w-full h-full ${draft ? 'cursor-crosshair' : ''}`}
                     onClick={onCanvasClick}
                     onDoubleClick={onCanvasDoubleClick}
+                    onMouseMove={onCanvasMouseMove}
+                    onMouseLeave={onCanvasMouseLeave}
                   >
                     {layerHotspots.map(h => {
                       const isSelected = h.id === selectedHotspotId
@@ -339,16 +367,59 @@ export function VisualizationEditor({
                     })}
                     {draft && draft.polygon.length > 0 && (
                       <>
+                        {/* Solid green line through all confirmed
+                            vertices — Figma-pen feel. */}
                         <polyline
                           points={draft.polygon.map(([x, y]) => `${x},${y}`).join(' ')}
                           fill="none"
-                          stroke="#FACC15"
+                          stroke="#1F8B5F"
                           strokeWidth={0.004}
+                          strokeLinejoin="round"
+                          strokeLinecap="round"
                           vectorEffect="non-scaling-stroke"
-                          strokeDasharray="0.01,0.01"
                         />
+                        {/* Dashed live-preview from the last vertex
+                            to the cursor — and a closing hint back
+                            to the first vertex, so the admin sees
+                            the polygon shape before double-clicking. */}
+                        {cursor && (
+                          <>
+                            <line
+                              x1={draft.polygon[draft.polygon.length - 1][0]}
+                              y1={draft.polygon[draft.polygon.length - 1][1]}
+                              x2={cursor[0]}
+                              y2={cursor[1]}
+                              stroke="#1F8B5F"
+                              strokeWidth={0.003}
+                              strokeDasharray="0.008,0.008"
+                              vectorEffect="non-scaling-stroke"
+                            />
+                            {draft.polygon.length >= 2 && (
+                              <line
+                                x1={cursor[0]}
+                                y1={cursor[1]}
+                                x2={draft.polygon[0][0]}
+                                y2={draft.polygon[0][1]}
+                                stroke="#1F8B5F"
+                                strokeWidth={0.002}
+                                strokeDasharray="0.004,0.012"
+                                strokeOpacity={0.5}
+                                vectorEffect="non-scaling-stroke"
+                              />
+                            )}
+                          </>
+                        )}
                         {draft.polygon.map(([x, y], i) => (
-                          <circle key={i} cx={x} cy={y} r={0.006} fill="#FACC15" />
+                          <circle
+                            key={i}
+                            cx={x}
+                            cy={y}
+                            r={0.007}
+                            fill={i === 0 ? '#FFFFFF' : '#1F8B5F'}
+                            stroke="#1F8B5F"
+                            strokeWidth={0.003}
+                            vectorEffect="non-scaling-stroke"
+                          />
                         ))}
                       </>
                     )}
