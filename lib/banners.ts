@@ -194,28 +194,29 @@ export async function deleteBanner(id: string): Promise<void> {
   if (error) throw error
 }
 
-// Photo upload to the existing `assets` Supabase Storage bucket
-// (same place the legacy Airtable manifest lived). One file per
-// banner is the typical case; we namespace by banner-id-or-fresh
-// to keep deletes / re-uploads tidy.
-const ASSETS_BUCKET = 'assets'
-const ASSETS_PUBLIC = `${SUPABASE_URL}/storage/v1/object/public/${ASSETS_BUCKET}`
+// Photo upload to Supabase Storage. Uses the `viz-photos` bucket
+// (already created public+writable for the visualisations editor)
+// so we don't need a separate banner bucket. Returns either the
+// public URL or an Error with the actual Storage message so the
+// admin sees what's wrong instead of a vague "upload failed".
+const BANNER_BUCKET = process.env.BANNERS_BUCKET ?? 'viz-photos'
+const BANNER_PUBLIC = `${SUPABASE_URL}/storage/v1/object/public/${BANNER_BUCKET}`
 
 export async function uploadBannerPhoto(opts: {
   filename: string
   buf: Buffer
   contentType: string
-}): Promise<string | null> {
+}): Promise<string> {
   const safeName = opts.filename.replace(/[^A-Za-z0-9._-]+/g, '_').slice(0, 80) || 'banner'
   const key = `banners/${Date.now()}-${safeName}`
-  const { error } = await sb.storage.from(ASSETS_BUCKET).upload(key, opts.buf, {
+  const { error } = await sb.storage.from(BANNER_BUCKET).upload(key, opts.buf, {
     contentType: opts.contentType,
     upsert: false,
     cacheControl: '604800',
   })
   if (error) {
-    console.error('[banners] upload', key, error.message)
-    return null
+    console.error('[banners] upload', BANNER_BUCKET, key, error.message)
+    throw new Error(`storage(${BANNER_BUCKET}): ${error.message}`)
   }
-  return `${ASSETS_PUBLIC}/${key}`
+  return `${BANNER_PUBLIC}/${key}`
 }

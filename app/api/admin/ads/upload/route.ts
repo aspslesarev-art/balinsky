@@ -14,11 +14,14 @@ export async function POST(req: Request) {
   const file = form.get('file')
   if (!(file instanceof File)) return NextResponse.json({ error: 'no_file' }, { status: 400 })
   const buf = Buffer.from(await file.arrayBuffer())
-  const url = await uploadBannerPhoto({
-    filename: file.name,
-    buf,
-    contentType: file.type || 'image/jpeg',
-  })
-  if (!url) return NextResponse.json({ error: 'upload_failed' }, { status: 500 })
-  return NextResponse.json({ url })
+  try {
+    const url = await uploadBannerPhoto({
+      filename: file.name,
+      buf,
+      contentType: file.type || 'image/jpeg',
+    })
+    return NextResponse.json({ url })
+  } catch (e) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'upload_failed' }, { status: 500 })
+  }
 }
