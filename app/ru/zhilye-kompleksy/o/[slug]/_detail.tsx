@@ -25,6 +25,8 @@ import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { distanceKm as haversineKm } from '@/lib/competitor-utils'
 import { loadVideosByComplexSlug } from '@/lib/videos'
 import { VideoGrid } from '@/components/VideoGrid'
+import { loadNearbyPlaces } from '@/lib/nearby-places'
+import { NearbyPlaces } from '@/components/NearbyPlaces'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { tField, type Lang } from '@/lib/i18n'
 
@@ -573,6 +575,18 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   const otherComplexes = await loadOtherComplexesInDistrict(district, c.airtable_id)
   const complexVideos = await loadVideosByComplexSlug(slug, 6, lang).catch(() => [])
 
+  // Nearby places — keyed by villa airtable_id in the manifest. The
+  // user pointed out that villas in a complex inherit the complex's
+  // geo, so the first villa unit's nearby data is a faithful proxy
+  // for "what's around this complex". Fall through silently when no
+  // villa unit has nearby data populated yet.
+  let nearby: Awaited<ReturnType<typeof loadNearbyPlaces>> = null
+  for (const u of units) {
+    if (u.kind !== 'villa') continue
+    const data = await loadNearbyPlaces(u.id).catch(() => null)
+    if (data) { nearby = data; break }
+  }
+
   const faqItems = copy.faq(name, district, lease)
   const faqJsonLd = {
     '@context': 'https://schema.org',
@@ -782,6 +796,14 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
         )}
 
         {managers.length > 0 && <ManagerCard managers={managers} developerName={developerName} />}
+
+        {/* Nearby places — beaches / cafes / nightlife / etc. The
+            data is keyed by villa airtable_id; we surface it on
+            the complex page using the first villa unit's nearby
+            data because units in the same complex share geo. */}
+        {nearby && (
+          <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} />
+        )}
 
         {/* RESOURCES */}
         {resources.length > 0 && (
