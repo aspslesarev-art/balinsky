@@ -217,32 +217,37 @@ function UnitPopup({
       ref={ref}
       onClick={e => e.stopPropagation()}
       style={{ position: 'fixed', left: pos.left, top: pos.top, width: POPUP_W, zIndex: 1000 }}
-      className="bg-white rounded-2xl shadow-[0_12px_32px_rgba(0,0,0,0.18)] border border-[var(--color-border)] p-3"
+      // overflow-hidden + rounded-2xl on the outer card → photo
+      // clips to the rounded corners flush with no inner padding,
+      // text body keeps its p-3 breathing room.
+      className="bg-white rounded-2xl shadow-[0_12px_32px_rgba(0,0,0,0.18)] border border-[var(--color-border)] overflow-hidden"
     >
       {popup.unit.photoUrl && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={popup.unit.photoUrl} alt={popup.unit.title} className="w-full h-32 object-cover rounded-xl mb-2" />
+        <img src={popup.unit.photoUrl} alt={popup.unit.title} className="block w-full h-36 object-cover" />
       )}
-      <div className="text-[14px] font-semibold text-[#111827] line-clamp-2 mb-1">{popup.unit.title}</div>
-      <div className="text-[12px] text-[var(--color-text-muted)] flex items-center gap-2 flex-wrap mb-2">
-        {popup.unit.bedrooms != null && (<span className="inline-flex items-center gap-1"><BedDouble size={11} />{popup.unit.bedrooms} {copy.br}</span>)}
-        {popup.unit.area != null && <span>{popup.unit.area} {copy.sqm}</span>}
-        {popup.unit.priceUsd != null && <span>${popup.unit.priceUsd.toLocaleString('en-US')}</span>}
-      </div>
-      <div className="flex items-center justify-between gap-2">
-        <Link
-          href={popup.unit.url}
-          className="inline-flex items-center gap-1 text-[13px] font-medium text-[#1F8B5F] hover:text-[#197551] no-underline"
-        >
-          <ExternalLink size={12} /> {copy.open}
-        </Link>
-        <button
-          type="button"
-          onClick={onDismiss}
-          className="text-[12px] text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
-        >
-          ✕
-        </button>
+      <div className="p-3">
+        <div className="text-[14px] font-semibold text-[#111827] line-clamp-2 mb-1">{popup.unit.title}</div>
+        <div className="text-[12px] text-[var(--color-text-muted)] flex items-center gap-2 flex-wrap mb-2">
+          {popup.unit.bedrooms != null && (<span className="inline-flex items-center gap-1"><BedDouble size={11} />{popup.unit.bedrooms} {copy.br}</span>)}
+          {popup.unit.area != null && <span>{popup.unit.area} {copy.sqm}</span>}
+          {popup.unit.priceUsd != null && <span>${popup.unit.priceUsd.toLocaleString('en-US')}</span>}
+        </div>
+        <div className="flex items-center justify-between gap-2">
+          <Link
+            href={popup.unit.url}
+            className="inline-flex items-center gap-1 text-[13px] font-medium text-[#1F8B5F] hover:text-[#197551] no-underline"
+          >
+            <ExternalLink size={12} /> {copy.open}
+          </Link>
+          <button
+            type="button"
+            onClick={onDismiss}
+            className="text-[12px] text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+          >
+            ✕
+          </button>
+        </div>
       </div>
     </div>
   )
