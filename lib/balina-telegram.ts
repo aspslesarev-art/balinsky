@@ -29,6 +29,23 @@ import { downloadTelegramFile } from '@/lib/chat-media'
 const MAX_HISTORY = 24                  // rows pulled from bot_messages → assistant context
 const MAX_TOOL_HOPS = 4
 const MAX_LISTING_CARDS = 5             // top-N to actually send as photos
+
+// Trainer mode is owner-only — random visitors saying "запомни" must
+// not be able to mutate the system prompt. Hardcoded default keeps
+// it working out of the box; comma-separated env var
+// BALINA_OWNER_CHAT_IDS can extend the set without a code change
+// (still needs a deploy on Vercel, but no edit here).
+const DEFAULT_OWNER_IDS = new Set<number>([555450800])
+const OWNER_CHAT_IDS: Set<number> = (() => {
+  const env = (process.env.BALINA_OWNER_CHAT_IDS ?? '').trim()
+  if (!env) return DEFAULT_OWNER_IDS
+  const set = new Set<number>(DEFAULT_OWNER_IDS)
+  for (const tok of env.split(',')) {
+    const n = Number(tok.trim())
+    if (Number.isFinite(n)) set.add(n)
+  }
+  return set
+})()
 // Daily cap disabled — owner wants unlimited testing. Re-enable by
 // setting this to a positive number; isOverDailyLimit returns false
 // while it's null/<=0 so the gate becomes a no-op.
@@ -108,22 +125,32 @@ async function runTurn(
 
   // Trainer mode: "слушай и запоминай: <правило>" appends a line
   // to the learned_rules section in assistant_knowledge so future
-  // turns honour the correction. We respond synchronously (no
-  // OpenAI call needed) and short-circuit out of the chat loop.
+  // turns honour the correction. Owner-gated — random visitors must
+  // NOT be able to rewrite the system prompt. Non-owners get a
+  // polite decline + their message is forwarded to Балина as a
+  // normal turn (so they don't sit in a dead end).
   const correction = extractCorrection(textIn)
   if (correction) {
-    try {
-      await appendLearnedRule(correction)
-      await sendText(token, chatId, `✅ Запомнила: «${escape(correction)}»\n\n<i>В следующих ответах буду этого придерживаться. Все правки видно в /admin/balina.</i>`)
-      await logMessage({
-        chat_id: chatId, direction: 'out', source: 'bot',
-        text: `Запомнила правку: ${correction}`, media_type: null,
-      }).catch(() => {})
-    } catch (err) {
-      console.error('[balina-tg] appendLearnedRule failed:', err)
-      await sendText(token, chatId, '❌ Не получилось сохранить правку. Попробуй ещё раз через минуту.')
+    if (!OWNER_CHAT_IDS.has(chatId)) {
+      await sendText(token, chatId,
+        '🔒 Обучение Балины доступно только владельцу. Ваше сообщение я обработаю как обычный запрос — пишите, что ищете.')
+      // fall through into the normal chat flow with the original
+      // text (still containing the trigger phrase — model can choose
+      // to reply normally to it).
+    } else {
+      try {
+        await appendLearnedRule(correction)
+        await sendText(token, chatId, `✅ Запомнила: «${escape(correction)}»\n\n<i>В следующих ответах буду этого придерживаться. Все правки видно в /admin/balina.</i>`)
+        await logMessage({
+          chat_id: chatId, direction: 'out', source: 'bot',
+          text: `Запомнила правку: ${correction}`, media_type: null,
+        }).catch(() => {})
+      } catch (err) {
+        console.error('[balina-tg] appendLearnedRule failed:', err)
+        await sendText(token, chatId, '❌ Не получилось сохранить правку. Попробуй ещё раз через минуту.')
+      }
+      return { handled: true, reason: 'correction_saved' }
     }
-    return { handled: true, reason: 'correction_saved' }
   }
 
   // Build history from bot_messages — last MAX_HISTORY rows. We
