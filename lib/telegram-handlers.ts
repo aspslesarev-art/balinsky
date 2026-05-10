@@ -46,12 +46,28 @@ async function loadRentals(): Promise<RentalItem[]> {
 
 const escape = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
+// First-touch greeting — fired when a fresh user hits /start with no
+// deep-link payload. Reads as Балина (the AI broker), not the old
+// "I just connect you to managers" persona. Lists the four ways to
+// drive the bot (text / voice / trainer phrase / commands) and gives
+// three concrete example queries so the visitor doesn't have to
+// invent one.
 function defaultGreeting(): Reply {
   return {
     text:
-      '<b>Привет! Я Balinsky Bot.</b>\n\n' +
-      'Я подключаю с менеджерами застройщиков и владельцами вилл на помесячную аренду.\n\n' +
-      'Откройте сайт <a href="https://balinsky.info">balinsky.info</a>, выберите объект и нажмите кнопку «Написать в Telegram» — я свяжу с нужным человеком.',
+      '<b>Привет! Я Балина — AI-брокер по недвижимости на Бали.</b>\n\n' +
+      'Помогу подобрать виллу, апартаменты, ЖК или помесячную аренду. ' +
+      'Расскажу про лизхолд, цены, доходность и безопасность пляжей — без воды, по делу.\n\n' +
+      '<b>Как общаться:</b>\n' +
+      '• Напишите запрос текстом или голосом\n' +
+      '• «Слушай и запоминай: …» — обучить меня\n' +
+      '• /мои — ваши подписки на новые объекты\n' +
+      '• /стоп — отключить уведомления\n\n' +
+      '<b>Например:</b>\n' +
+      '🏡 Вилла 2 спальни в Сануре, белый песок, до $300k\n' +
+      '🏖 Апартаменты у океана под посуточную аренду\n' +
+      '🤝 Сравни Maison Boheme и Origins\n\n' +
+      'Что ищете?',
     parseMode: 'HTML',
   }
 }
