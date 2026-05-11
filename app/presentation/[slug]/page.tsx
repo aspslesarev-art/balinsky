@@ -76,10 +76,24 @@ function parseBullets(s: string | null): string[] {
 
 type Params = Promise<{ slug: string }>
 
+// Match the URL slug against the developer's SEO:Slug. Supports
+// both the full canonical slug ("lb-group-loyobondar-bali-developer")
+// and any shorter prefix the developer wants to share
+// ("lb-group", "breig"). First exact match wins; otherwise we take
+// the developer whose slug starts with `<slug>-`.
+function findDev(devs: DevRow[], slug: string): DevRow | undefined {
+  const exact = devs.find(d => fs(d.data['SEO:Slug']) === slug)
+  if (exact) return exact
+  return devs.find(d => {
+    const s = fs(d.data['SEO:Slug'])
+    return s != null && s.startsWith(slug + '-')
+  })
+}
+
 export async function generateMetadata({ params }: { params: Params }) {
   const { slug } = await params
   const devs = await _loadDevelopers().catch(() => [])
-  const dev = devs.find(d => fs(d.data['SEO:Slug']) === slug)
+  const dev = findDev(devs, slug)
   if (!dev) return { title: 'Застройщик · presentation.estate' }
   const name = fs(dev.data['Developer']) ?? slug
   const desc = fs(dev.data['SEO Text']) ?? `Жилые комплексы и проекты застройщика ${name} на Бали`
@@ -95,8 +109,9 @@ export default async function PresentationPage({ params }: { params: Params }) {
   const lang: Lang = 'ru' // single-locale for v1; can flip to ?lang= later
 
   const devs = await _loadDevelopers().catch(() => [])
-  const dev = devs.find(d => fs(d.data['SEO:Slug']) === slug)
+  const dev = findDev(devs, slug)
   if (!dev) notFound()
+  const fullSlug = fs(dev.data['SEO:Slug']) ?? slug
 
   const name = fs(dev.data['Developer']) ?? slug
   const logo = dev.logo_url
@@ -241,7 +256,7 @@ export default async function PresentationPage({ params }: { params: Params }) {
             <Link href="https://balinsky.info" className="text-[#1F8B5F] hover:underline" target="_blank">balinsky.info</Link>
             {' · '}<span className="text-[#9CA3AF]">presentation.estate</span>
           </div>
-          <Link href={`https://balinsky.info/ru/zastrojshhiki/${slug}`} target="_blank" className="inline-flex items-center gap-1 text-[#1F8B5F] hover:underline">
+          <Link href={`https://balinsky.info/ru/zastrojshhiki/${fullSlug}`} target="_blank" className="inline-flex items-center gap-1 text-[#1F8B5F] hover:underline">
             <ExternalLink size={11} /> Открыть на balinsky.info
           </Link>
         </footer>
