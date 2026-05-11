@@ -1,13 +1,15 @@
 'use client'
 
-import { useState, useEffect, type ReactNode } from 'react'
+import { useState, useEffect, useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { ExternalLink, Copy, Check } from 'lucide-react'
 
-// Wraps any clickable element with a centered popover offering
-// "Open in new tab" / "Copy link" actions. The popover is rendered
-// via createPortal so it isn't clipped by parent overflow-hidden
-// (e.g. the card photo border-radius wrapper).
+const POPOVER_W = 260
+
+// Wraps any clickable element with a popover anchored to the centre
+// of the trigger card / chip. Rendered via createPortal so it isn't
+// clipped by a parent `overflow-hidden`. Anchored to the trigger
+// rect, then clamped to the viewport so it never bleeds off-edge.
 export function LinkMenu({
   url,
   children,
@@ -18,93 +20,125 @@ export function LinkMenu({
   className?: string
   align?: 'left' | 'right'
 }) {
-  const [open, setOpen] = useState(false)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const popoverRef = useRef<HTMLDivElement>(null)
+  const [anchor, setAnchor] = useState<{ left: number; top: number } | null>(null)
   const [copied, setCopied] = useState(false)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => { setMounted(true) }, [])
 
+  function place() {
+    const t = triggerRef.current
+    if (!t) return
+    const r = t.getBoundingClientRect()
+    const cx = r.left + r.width / 2
+    const cy = r.top + r.height / 2
+    setAnchor({ left: cx, top: cy })
+  }
+
   useEffect(() => {
-    if (!open) return
+    if (anchor == null) return
     function onEsc(e: KeyboardEvent) {
-      if (e.key === 'Escape') setOpen(false)
+      if (e.key === 'Escape') setAnchor(null)
     }
+    function onResize() { setAnchor(null) }
     document.addEventListener('keydown', onEsc)
-    // Lock page scroll while the modal is up so taps behind it
-    // don't accidentally fire on tile underneath.
-    const prevOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    window.addEventListener('resize', onResize)
+    window.addEventListener('scroll', onResize, true)
     return () => {
       document.removeEventListener('keydown', onEsc)
-      document.body.style.overflow = prevOverflow
+      window.removeEventListener('resize', onResize)
+      window.removeEventListener('scroll', onResize, true)
     }
-  }, [open])
+  }, [anchor])
+
+  // After mount, measure popover and clamp position so it never
+  // bleeds off the viewport edge.
+  useEffect(() => {
+    if (anchor == null) return
+    const el = popoverRef.current
+    if (!el) return
+    const w = el.offsetWidth || POPOVER_W
+    const h = el.offsetHeight || 200
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+    const m = 12
+    let left = anchor.left - w / 2
+    let top = anchor.top - h / 2
+    left = Math.max(m, Math.min(vw - w - m, left))
+    top = Math.max(m, Math.min(vh - h - m, top))
+    if (left !== anchor.left - w / 2 || top !== anchor.top - h / 2) {
+      // We mutate via dataset rather than another setState to avoid
+      // a measurement→clamp render loop.
+      el.style.left = `${left}px`
+      el.style.top = `${top}px`
+    }
+  }, [anchor])
 
   function openLink(e: React.MouseEvent) {
     e.stopPropagation()
     window.open(url, '_blank', 'noopener,noreferrer')
-    setOpen(false)
+    setAnchor(null)
   }
   async function copy(e: React.MouseEvent) {
     e.stopPropagation()
     try {
       await navigator.clipboard.writeText(url)
       setCopied(true)
-      setTimeout(() => { setCopied(false); setOpen(false) }, 900)
+      setTimeout(() => { setCopied(false); setAnchor(null) }, 900)
     } catch {
       window.prompt('Скопируйте ссылку:', url)
-      setOpen(false)
+      setAnchor(null)
     }
   }
 
+  const open = anchor != null
   const overlay = open && mounted ? createPortal(
-    <div
-      onClick={() => setOpen(false)}
-      className="fixed inset-0 z-[1000] bg-black/45 backdrop-blur-[1px] flex items-center justify-center p-4"
-    >
+    <>
+      {/* transparent click-outside layer */}
+      <div onClick={() => setAnchor(null)} className="fixed inset-0 z-[999]" />
       <div
+        ref={popoverRef}
         role="menu"
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-[340px] bg-white rounded-2xl shadow-[0_24px_60px_rgba(0,0,0,0.25)] border border-[#E5E7EB] overflow-hidden"
+        style={{
+          position: 'fixed',
+          left: anchor!.left - POPOVER_W / 2,
+          top: anchor!.top - 80,
+          width: POPOVER_W,
+          zIndex: 1000,
+        }}
+        className="bg-white rounded-2xl shadow-[0_18px_48px_rgba(0,0,0,0.22)] border border-[#E5E7EB] overflow-hidden"
       >
-        <div className="px-4 pt-4 pb-2 border-b border-[#F3F4F6]">
-          <div className="text-[11.5px] uppercase tracking-wide text-[#9CA3AF] mb-1">Ссылка</div>
-          <div className="text-[12.5px] text-[#374151] break-all leading-snug">{url}</div>
-        </div>
         <button
           type="button"
           onClick={openLink}
-          className="w-full text-left px-4 py-3.5 hover:bg-[#F3F4F6] text-[14px] flex items-center gap-3 text-[#111827]"
+          className="w-full text-left px-4 py-3 hover:bg-[#F3F4F6] text-[14px] flex items-center gap-3 text-[#111827]"
         >
-          <ExternalLink size={16} className="text-[#1F8B5F] shrink-0" /> Открыть в новой вкладке
+          <ExternalLink size={16} className="text-[#1F8B5F] shrink-0" /> Открыть
         </button>
         <button
           type="button"
           onClick={copy}
-          className="w-full text-left px-4 py-3.5 hover:bg-[#F3F4F6] text-[14px] flex items-center gap-3 text-[#111827] border-t border-[#F3F4F6]"
+          className="w-full text-left px-4 py-3 hover:bg-[#F3F4F6] text-[14px] flex items-center gap-3 text-[#111827] border-t border-[#F3F4F6]"
         >
           {copied
             ? <Check size={16} className="text-[#1F8B5F] shrink-0" />
             : <Copy size={16} className="text-[#6B7280] shrink-0" />}
           {copied ? 'Скопировано' : 'Скопировать ссылку'}
         </button>
-        <button
-          type="button"
-          onClick={() => setOpen(false)}
-          className="w-full text-center px-4 py-3 text-[13px] text-[#6B7280] hover:bg-[#FAFAF8] border-t border-[#F3F4F6]"
-        >
-          Отмена
-        </button>
       </div>
-    </div>,
+    </>,
     document.body,
   ) : null
 
   return (
     <>
       <button
+        ref={triggerRef}
         type="button"
-        onClick={(e) => { e.stopPropagation(); e.preventDefault(); setOpen(v => !v) }}
+        onClick={(e) => { e.stopPropagation(); e.preventDefault(); open ? setAnchor(null) : place() }}
         className={className}
         aria-haspopup="menu"
         aria-expanded={open}
