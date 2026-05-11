@@ -15,7 +15,10 @@ import { ListingReportPDF } from '@/components/ListingReportPDF'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-export const maxDuration = 60
+// 120 s safety: first-time uncached reports do listing fetch +
+// district median + nearby places + OpenAI verdict + PDF render.
+// Subsequent calls hit the verdict cache and finish in ~2-3 s.
+export const maxDuration = 120
 
 export async function GET(req: Request, { params }: { params: Promise<{ kind: string; slug: string }> }) {
   const { kind, slug } = await params

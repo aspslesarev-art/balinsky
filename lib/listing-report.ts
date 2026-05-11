@@ -107,7 +107,11 @@ export async function buildReport(kind: ReportKind, slug: string): Promise<Repor
       })).filter(x => x.places.length > 0)
     : []
 
-  const verdict = await generateBalinaVerdict({
+  // Cached verdict by (kind, slug), TTL 7 days. The OpenAI call is
+  // the only ~$0.01 cost in the pipeline; everything else (data
+  // shaping, PDF render) is essentially free. Repeat downloads
+  // therefore cost nothing.
+  const verdict = await loadOrGenerateVerdict(kind, slug, () => generateBalinaVerdict({
     title: base.title,
     district: base.district,
     bedrooms: base.bedrooms,
@@ -124,7 +128,7 @@ export async function buildReport(kind: ReportKind, slug: string): Promise<Repor
     districtMedianPricePerSqmUsd: districtMedianRow?.median ?? null,
     descriptionPreview: base.description ? base.description.slice(0, 600) : null,
     nearestBeachKm: nearestBeach?.km ?? null,
-  })
+  }))
 
   return {
     kind,
@@ -171,16 +175,17 @@ type Base = {
 
 async function loadListingBase(kind: ReportKind, slug: string): Promise<Base | null> {
   const table = TABLE_BY_KIND[kind]
-  // Pull rows in pages because Supabase JS defaults to a 1000-row cap.
-  const rows: { airtable_id: string; data: Record<string, unknown> }[] = []
-  for (let from = 0; from < 4000; from += 200) {
-    const { data, error } = await sb.from(table).select('airtable_id, data').range(from, from + 199)
-    if (error) throw new Error(`${table}: ${error.message}`)
-    if (!data || data.length === 0) break
-    rows.push(...(data as { airtable_id: string; data: Record<string, unknown> }[]))
-    if (data.length < 200) break
-  }
-  const row = rows.find(r => fs1(r.data['SEO:Slug']) === slug)
+  // Direct JSONB filter on `data->>SEO:Slug` so we hit just the
+  // matching row instead of pulling thousands. Used to paginate
+  // through 4000 rows which blew past the 60s function timeout
+  // for first-time uncached reports.
+  const { data, error } = await sb
+    .from(table)
+    .select('airtable_id, data')
+    .eq('data->>SEO:Slug', slug)
+    .limit(1)
+  if (error) throw new Error(`${table}: ${error.message}`)
+  const row = (data?.[0] ?? null) as { airtable_id: string; data: Record<string, unknown> } | null
   if (!row) return null
   const d = row.data
   const titleRaw = fs1(d['SEO:Title']) ?? fs1(d['ИИ Имя']) ?? fs1(d['Name']) ?? fs1(d['Project']) ?? ''
@@ -237,27 +242,46 @@ function computeMonthlyRentComp(rentals: Awaited<ReturnType<typeof loadAllRental
   return { usd: Math.round(avg), count: matches.length }
 }
 
+// District median lookup is filter-by-substring on a JSONB field —
+// PostgREST can't do "contains" on jsonb cleanly, so we scope by
+// kind + return only the rows whose Location filter starts with the
+// asked district. Cached in-memory across requests within the same
+// serverless instance for cheap reuse.
+const _medianCache = new Map<string, { ts: number; value: { median: number; count: number } | null }>()
+const MEDIAN_TTL_MS = 30 * 60_000
+
 async function loadDistrictMedian(kind: ReportKind, district: string | null): Promise<{ median: number; count: number } | null> {
   if (!district) return null
+  const cacheKey = `${kind}::${district.toLowerCase()}`
+  const cached = _medianCache.get(cacheKey)
+  if (cached && Date.now() - cached.ts < MEDIAN_TTL_MS) return cached.value
+
   const table = TABLE_BY_KIND[kind]
-  const { data } = await sb.from(table).select('data').limit(2000)
+  // ilike pattern uses the ->> JSONB extractor; fast even without an
+  // index because we limit to 500 rows of just `data` jsonb.
+  const { data } = await sb.from(table)
+    .select('data')
+    .ilike('data->>Location filter', `%${district}%`)
+    .limit(500)
   const rows = (data ?? []) as { data: Record<string, unknown> }[]
-  const dLower = district.toLowerCase()
   const ppsm: number[] = []
   for (const r of rows) {
     const d = r.data
-    const dr = fs1(d['Location filter']) ?? fs1(d['Location 2']) ?? fs1(d['Location'])
-    if (!dr || !dr.toLowerCase().includes(dLower)) continue
     const area = num(d['Площадь'])
     const price = num(d['price_usd']) ?? num(d['price']) ?? num(d['Цена'])
     const v = num(d['Цена м²']) ?? (price != null && area && area > 0 ? price / area : null)
     if (v && v > 0) ppsm.push(v)
   }
-  if (ppsm.length < 3) return null
+  if (ppsm.length < 3) {
+    _medianCache.set(cacheKey, { ts: Date.now(), value: null })
+    return null
+  }
   const sorted = ppsm.sort((a, b) => a - b)
   const mid = Math.floor(sorted.length / 2)
   const median = sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid]
-  return { median: Math.round(median), count: sorted.length }
+  const value = { median: Math.round(median), count: sorted.length }
+  _medianCache.set(cacheKey, { ts: Date.now(), value })
+  return value
 }
 
 // Subset of the BEACH_REFS from lib/consultant. Intentionally
@@ -317,6 +341,41 @@ const VERDICT_FALLBACK: BalinaVerdict = {
   },
   finalRating: 'consider',
   confidence: 'low',
+}
+
+// Cache wrapper around generateBalinaVerdict — keyed by (kind, slug),
+// TTL 7 days. Falls through to live generation on cache miss / error;
+// any cache write failure is non-fatal so a Storage hiccup never
+// blocks the user from getting a report.
+const VERDICT_TTL_MS = 7 * 24 * 3600_000
+
+async function loadOrGenerateVerdict(
+  kind: ReportKind, slug: string,
+  generate: () => Promise<BalinaVerdict>,
+): Promise<BalinaVerdict> {
+  try {
+    const { data } = await sb
+      .from('ai_report_verdict_cache')
+      .select('verdict, generated_at')
+      .eq('kind', kind).eq('slug', slug)
+      .maybeSingle()
+    if (data) {
+      const ageMs = Date.now() - new Date(data.generated_at).getTime()
+      if (ageMs < VERDICT_TTL_MS && data.verdict) {
+        return data.verdict as BalinaVerdict
+      }
+    }
+  } catch (e) {
+    console.warn('[report] verdict cache read failed (regenerating):', e)
+  }
+
+  const fresh = await generate()
+  // Don't await — write fires in the background so the request
+  // returns the PDF as fast as possible. Errors logged, not raised.
+  sb.from('ai_report_verdict_cache')
+    .upsert({ kind, slug, verdict: fresh, generated_at: new Date().toISOString() }, { onConflict: 'kind,slug' })
+    .then(({ error }) => { if (error) console.warn('[report] verdict cache write failed:', error.message) })
+  return fresh
 }
 
 async function generateBalinaVerdict(input: VerdictInput): Promise<BalinaVerdict> {
