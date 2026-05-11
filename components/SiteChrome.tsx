@@ -15,8 +15,10 @@ const ConsultantWidget = dynamic(
 
 export function SiteChrome() {
   const pathname = usePathname() ?? ''
-  // Admin is its own self-contained UI: no public footer, no AI consultant.
+  // Admin + the presentation.estate white-label routes are self-
+  // contained UIs: no Balinsky footer, no AI consultant widget.
   if (pathname === '/admin' || pathname.startsWith('/admin/')) return null
+  if (pathname.startsWith('/presentation/') || pathname === '/presentation') return null
   const lang: Lang = pathname.startsWith('/en') ? 'en' : 'ru'
   return (
     <>

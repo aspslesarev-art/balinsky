@@ -37,12 +37,33 @@ const nextConfig: NextConfig = {
       },
     ]
   },
+  // Host-based rewrites for the white-label developer-presentation
+  // domain. presentation.estate/<slug> renders the internal
+  // /presentation/<slug> route, no Balinsky chrome. DNS for
+  // presentation.estate must point at the same Vercel project
+  // (Vercel → Project → Domains → Add).
+  async rewrites() {
+    return [
+      {
+        source: '/:slug',
+        destination: '/presentation/:slug',
+        has: [{ type: 'host', value: 'presentation.estate' }],
+      },
+      {
+        source: '/',
+        destination: '/presentation',
+        has: [{ type: 'host', value: 'presentation.estate' }],
+      },
+    ]
+  },
   async redirects() {
     // 301 redirects from old Wix site (balinsky.info) → new Next routes.
+    // NOTE: redirects fire AFTER rewrites, but the `has: host` filter
+    // limits redirects to balinsky.info — they don't trigger on
+    // presentation.estate.
     return [
-      // Root → /ru as a permanent (301) redirect. Next's automatic root
-      // routing returns 307, which doesn't pass full link equity.
-      { source: '/',                   destination: '/ru',                  permanent: true },
+      // Root → /ru as a permanent (301) redirect — balinsky.info only.
+      { source: '/',                   destination: '/ru',                  permanent: true, has: [{ type: 'host', value: 'balinsky.info' }] },
       { source: '/villas',             destination: '/ru/villy',            permanent: true },
       { source: '/villas-ready',       destination: '/ru/villy',            permanent: true },
       { source: '/villas-mounth-rent', destination: '/ru/villy',            permanent: true },
