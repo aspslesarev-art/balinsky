@@ -23,7 +23,6 @@ import { PageViewTracker } from '@/components/PageViewTracker'
 import { InvestmentWidget } from '@/components/InvestmentWidget'
 import { RentalCompareSection } from '@/components/RentalCompareSection'
 import { ManagerCard } from '@/components/ManagerCard'
-import { DownloadReportButton } from '@/components/DownloadReportButton'
 import { loadManagersByDeveloperName } from '@/lib/managers'
 import { PriceCtaCard } from '@/components/PriceCtaCard'
 import { findActiveReservation } from '@/lib/reservations'
@@ -541,9 +540,6 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
             {area != null && <span>{area} {c.sqm}</span>}
             {floor && <span>{c.floor}: {floor}</span>}
             {district && <span>{district}, {c.bali}</span>}
-          </div>
-          <div className="mb-4">
-            <DownloadReportButton kind="apartment" slug={slug} lang={lang} />
           </div>
           {priceNum != null && (
             <PriceCtaCard
