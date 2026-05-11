@@ -1,6 +1,6 @@
 import { ComplexDetail, generateComplexMetadata } from '../../../../ru/zhilye-kompleksy/o/[slug]/_detail'
 
-export const revalidate = 3600
+export const revalidate = 60
 export function generateStaticParams() { return [] }
 
 type Params = Promise<{ slug: string }>
