@@ -33,7 +33,9 @@ async function loadManifest(): Promise<Manifest | null> {
   if (_inflight) return _inflight
   _inflight = (async () => {
     try {
-      const r = await fetch(MANIFEST_URL, { next: { revalidate: 1800 } })
+      // no-store: manifest is ~54 MB, well above Next.js' 2 MB data
+      // cache cap. The module-level _cache above handles dedup.
+      const r = await fetch(MANIFEST_URL, { cache: 'no-store' })
       if (!r.ok) return null
       const j = (await r.json()) as Manifest
       _cache = { ts: Date.now(), data: j }

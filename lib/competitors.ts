@@ -48,7 +48,11 @@ export async function loadCompetitors(): Promise<Competitor[]> {
   if (_inflight) return _inflight
   _inflight = (async () => {
     try {
-      const r = await fetch(MANIFEST_URL, { next: { revalidate: 600 } })
+      // no-store: this manifest is ~14 MB. Next.js' fetch cache rejects
+      // payloads >2 MB and surfaces the failure as an unhandledRejection
+      // (→ 500 on Vercel). The module-level _cache above handles dedup;
+      // we don't need Next's data cache too.
+      const r = await fetch(MANIFEST_URL, { cache: 'no-store' })
       if (!r.ok) return []
       const j = (await r.json()) as Manifest
       const items = Array.isArray(j.items) ? dedupCompetitors(j.items) : []

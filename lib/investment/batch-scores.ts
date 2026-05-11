@@ -187,7 +187,9 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PLACES_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/competitors/_nearby_places.json`
 async function fetchPlacesManifest(): Promise<{ villas: Record<string, Record<string, NearbyPlace[]>> } | null> {
   try {
-    const r = await fetch(PLACES_MANIFEST_URL, { next: { revalidate: 1800 } })
+    // no-store: same 54 MB manifest as lib/nearby-places — exceeds
+    // Next.js' 2 MB fetch-cache cap, surfaces as 500 in prod.
+    const r = await fetch(PLACES_MANIFEST_URL, { cache: 'no-store' })
     if (!r.ok) return null
     return await r.json()
   } catch { return null }
