@@ -6,7 +6,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@supabase/supabase-js'
-import { unstable_cache } from 'next/cache'
 import { HardHat, Building2, Award, Wrench, Users, Briefcase, TrendingUp, ChevronRight } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
@@ -51,47 +50,70 @@ function parseBullets(s: string | null): string[] {
   return trimmed.split('\n').map(line => line.replace(/^[\s•\-–—·]+/, '').trim()).filter(Boolean)
 }
 
-// Note: don't cache empty results — if Supabase momentarily flaked
-// during the last regeneration, the cache would poison and every
-// dev detail page returns 404 for the next hour. Throwing forces
-// Next to drop the cache slot and retry on the next request.
-export const _loadAllDevelopers = unstable_cache(
-  async (): Promise<DeveloperRow[]> => {
+// In-memory module-level cache. We deliberately do NOT use
+// `unstable_cache` here: that helper persists results to Next.js'
+// data cache, which throws on payloads >2 MB. `raw_developers` is
+// ~2.6 MB and `raw_complexes` is ~6.8 MB → cache-set throws,
+// surfaced as 500 on every dev detail page. The in-memory map lives
+// for the lifetime of the Lambda (effectively a few minutes on
+// Vercel cold starts) and gives us the same dedup behaviour for free.
+const TTL_MS = 10 * 60 * 1000
+type ComplexBundle = { airtable_id: string; data: Record<string, unknown>; slug: string | null; cover_url: string | null }
+type Manifest = Record<string, string[]>
+
+let _devCache: { ts: number; data: DeveloperRow[] } | null = null
+let _devInflight: Promise<DeveloperRow[]> | null = null
+export async function _loadAllDevelopers(): Promise<DeveloperRow[]> {
+  if (_devCache && Date.now() - _devCache.ts < TTL_MS) return _devCache.data
+  if (_devInflight) return _devInflight
+  _devInflight = (async () => {
     const { data, error } = await sb.from('raw_developers').select('airtable_id, data, logo_url').limit(200)
     if (error) throw new Error(`raw_developers: ${error.message}`)
     const rows = (data as DeveloperRow[] | null) ?? []
-    if (rows.length === 0) throw new Error('raw_developers returned 0 rows — refusing to cache empty')
+    if (rows.length === 0) {
+      // Don't poison cache on a transient empty read.
+      throw new Error('raw_developers returned 0 rows')
+    }
+    _devCache = { ts: Date.now(), data: rows }
     return rows
-  },
-  ['developers-all-v2'],
-  { revalidate: 600 },
-)
-
-export async function loadDeveloper(slug: string): Promise<DeveloperRow | null> {
-  const all = await _loadAllDevelopers()
-  return all.find(r => firstString(r.data['SEO:Slug']) === slug) ?? null
+  })().finally(() => { _devInflight = null })
+  return _devInflight
 }
 
-const _loadAllComplexes = unstable_cache(
-  async () => {
-    const { data } = await sb.from('raw_complexes').select('airtable_id, data, slug, cover_url').limit(500)
-    return (data ?? []) as { airtable_id: string; data: Record<string, unknown>; slug: string | null; cover_url: string | null }[]
-  },
-  ['complexes-all-for-dev'],
-  { revalidate: 3600 },
-)
+export async function loadDeveloper(slug: string): Promise<DeveloperRow | null> {
+  try {
+    const all = await _loadAllDevelopers()
+    return all.find(r => firstString(r.data['SEO:Slug']) === slug) ?? null
+  } catch {
+    return null
+  }
+}
 
-const _loadComplexManifest = unstable_cache(
-  async (): Promise<Record<string, string[]>> => {
-    try {
-      const r = await fetch(COMPLEX_PHOTO_MANIFEST_URL)
-      if (!r.ok) return {}
-      return (await r.json()) as Record<string, string[]>
-    } catch { return {} }
-  },
-  ['complex-manifest-for-dev'],
-  { revalidate: 3600 },
-)
+let _complexesCache: { ts: number; data: ComplexBundle[] } | null = null
+let _complexesInflight: Promise<ComplexBundle[]> | null = null
+async function _loadAllComplexes(): Promise<ComplexBundle[]> {
+  if (_complexesCache && Date.now() - _complexesCache.ts < TTL_MS) return _complexesCache.data
+  if (_complexesInflight) return _complexesInflight
+  _complexesInflight = (async () => {
+    const { data } = await sb.from('raw_complexes').select('airtable_id, data, slug, cover_url').limit(500)
+    const rows = (data ?? []) as ComplexBundle[]
+    if (rows.length > 0) _complexesCache = { ts: Date.now(), data: rows }
+    return rows
+  })().finally(() => { _complexesInflight = null })
+  return _complexesInflight
+}
+
+let _manifestCache: { ts: number; data: Manifest } | null = null
+async function _loadComplexManifest(): Promise<Manifest> {
+  if (_manifestCache && Date.now() - _manifestCache.ts < TTL_MS) return _manifestCache.data
+  try {
+    const r = await fetch(COMPLEX_PHOTO_MANIFEST_URL, { next: { revalidate: 3600 } })
+    if (!r.ok) return _manifestCache?.data ?? {}
+    const j = (await r.json()) as Manifest
+    _manifestCache = { ts: Date.now(), data: j }
+    return j
+  } catch { return _manifestCache?.data ?? {} }
+}
 
 async function loadProjectsByDeveloper(devName: string): Promise<{
   complexes: (ComplexCardData & { id: string })[]
