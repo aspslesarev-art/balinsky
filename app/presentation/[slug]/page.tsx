@@ -18,7 +18,7 @@
 // No auth, no chat widget, no Balinsky chrome. We maintain the
 // data; the developer just shares presentation.estate/<short-slug>.
 
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 import { unstable_cache } from 'next/cache'
 import {
@@ -193,6 +193,17 @@ function findDev(devs: DevRow[], slug: string): DevRow | undefined {
   })
 }
 
+// Canonical short slug for an developer URL — drop the redundant
+// "-bali-developer" / "-developer" suffix that originally came from
+// Wix SEO templates. Whatever slug Airtable stores, this is the form
+// agents share and the page redirects long forms onto.
+function canonicalDevSlug(seoSlug: string): string {
+  return seoSlug
+    .replace(/-bali-developer$/i, '')
+    .replace(/-developer$/i, '')
+    .replace(/-+$/, '')
+}
+
 export async function generateMetadata({ params }: { params: Params }) {
   const { slug } = await params
   const devs = await _loadDevelopers().catch(() => [])
@@ -215,7 +226,12 @@ export default async function PresentationPage({ params }: { params: Params }) {
   const devs = await _loadDevelopers().catch(() => [])
   const dev = findDev(devs, slug)
   if (!dev) notFound()
-  const fullSlug = fs(dev.data['SEO:Slug']) ?? slug
+  const seoSlug = fs(dev.data['SEO:Slug']) ?? slug
+  const fullSlug = canonicalDevSlug(seoSlug)
+  // Permanent-redirect every non-canonical hit (the long Wix-era slug
+  // ending in -bali-developer, or any other prefix variant) onto the
+  // canonical short form so shared links stay tidy.
+  if (slug !== fullSlug) permanentRedirect(`/${fullSlug}`)
 
   const name = fs(dev.data['Developer']) ?? slug
   const logo = dev.logo_url
