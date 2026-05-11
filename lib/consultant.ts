@@ -879,23 +879,41 @@ async function searchRental(args: SearchArgs): Promise<ListingCard[]> {
 }
 
 async function searchListings(args: SearchArgs): Promise<ListingCard[]> {
-  let raw: ListingCard[]
-  switch (args.kind) {
-    case 'villa':     raw = await searchSupabaseTable('raw_villas', 'villa', args, '/ru/villy/o/', 'villa-photos'); break
-    case 'apartment': raw = await searchSupabaseTable('raw_apartments', 'apartment', args, '/ru/apartamenty/o/', 'apartment-photos'); break
-    case 'complex':   raw = await searchSupabaseTable('raw_complexes', 'complex', args, '/ru/zhilye-kompleksy/o/', 'complex-photos'); break
-    case 'developer': raw = await searchSupabaseTable('raw_developers', 'developer', args, '/ru/zastrojshhiki/', null); break
-    case 'rental':    raw = await searchRental(args); break
-    default:          return []
+  let raw = await searchOneKind(args)
+
+  // Server-side fan-out for name searches. The model frequently
+  // queries `kind=villa` first and gives up after 0 hits — but the
+  // visitor's "Surfside" might be in raw_complexes, "Maison Boheme"
+  // sits across both. When `query` is set AND we got 0 hits AND the
+  // visitor didn't explicitly pick another bucket via slug, retry
+  // across the other primary kinds (villa → apartment → complex).
+  if (raw.length === 0 && args.query && args.query.trim().length >= 3 && !args.slug) {
+    const tried = new Set([args.kind])
+    const fallbackKinds: SearchArgs['kind'][] = ['villa', 'apartment', 'complex']
+    for (const k of fallbackKinds) {
+      if (tried.has(k)) continue
+      const probe = await searchOneKind({ ...args, kind: k })
+      if (probe.length > 0) { raw = probe; break }
+    }
   }
+
   // Drop already-shown listings when the model passes exclude_urls.
-  // Match URL-only — slug-suffix on /ru/villy/o/foo matches whether
-  // the model passed the bare path or a full https URL.
   if (args.exclude_urls?.length) {
     const stop = new Set(args.exclude_urls.map(u => u.replace(/^https?:\/\/[^/]+/, '')))
     raw = raw.filter(c => !stop.has(c.url.replace(/^https?:\/\/[^/]+/, '')))
   }
   return raw
+}
+
+async function searchOneKind(args: SearchArgs): Promise<ListingCard[]> {
+  switch (args.kind) {
+    case 'villa':     return searchSupabaseTable('raw_villas', 'villa', args, '/ru/villy/o/', 'villa-photos')
+    case 'apartment': return searchSupabaseTable('raw_apartments', 'apartment', args, '/ru/apartamenty/o/', 'apartment-photos')
+    case 'complex':   return searchSupabaseTable('raw_complexes', 'complex', args, '/ru/zhilye-kompleksy/o/', 'complex-photos')
+    case 'developer': return searchSupabaseTable('raw_developers', 'developer', args, '/ru/zastrojshhiki/', null)
+    case 'rental':    return searchRental(args)
+    default:          return []
+  }
 }
 
 type FeedbackArgs = {
