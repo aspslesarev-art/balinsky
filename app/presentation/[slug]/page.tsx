@@ -465,7 +465,7 @@ export default async function PresentationPage({ params }: { params: Params }) {
                         <div className="text-[12px] uppercase tracking-wide text-[#6B7280] mb-2">
                           Юниты ({units.length}{totalProjUnits ? ` из ${totalProjUnits}` : ''})
                         </div>
-                        <ul className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        <ul className="grid grid-cols-2 md:grid-cols-4 gap-3">
                           {units.map(u => (
                             <li key={u.id}>
                               <LinkMenu
@@ -474,25 +474,25 @@ export default async function PresentationPage({ params }: { params: Params }) {
                               >
                                 {u.photo ? (
                                   // eslint-disable-next-line @next/next/no-img-element
-                                  <img src={u.photo} alt={u.title} className="w-full h-20 object-cover" />
+                                  <img src={u.photo} alt={u.title} className="w-full h-40 sm:h-44 object-cover" />
                                 ) : (
-                                  <div className="w-full h-20 bg-[#F3F4F6] flex items-center justify-center text-[#9CA3AF]">
-                                    <BedDouble size={20} />
+                                  <div className="w-full h-40 sm:h-44 bg-[#F3F4F6] flex items-center justify-center text-[#9CA3AF]">
+                                    <BedDouble size={28} />
                                   </div>
                                 )}
-                                <div className="p-2">
-                                  <div className="text-[11.5px] text-[#6B7280] mb-0.5 flex items-center gap-1">
+                                <div className="p-3">
+                                  <div className="text-[12.5px] text-[#6B7280] mb-1 flex items-center gap-1 flex-wrap">
                                     {u.bedrooms != null && <span>{u.bedrooms} BR</span>}
                                     {u.area != null && <span>· {u.area} м²</span>}
                                     {u.floor && <span>· эт. {u.floor}</span>}
                                   </div>
                                   {u.priceUsd != null && (
-                                    <div className="text-[12.5px] font-semibold text-[#16A34A]">
+                                    <div className="text-[15px] font-semibold text-[#16A34A]">
                                       ${u.priceUsd.toLocaleString('en-US')}
                                     </div>
                                   )}
                                   {(u.commissionPct != null || u.commissionUsd != null) && (
-                                    <div className="text-[10.5px] text-[#6B7280] mt-0.5">
+                                    <div className="text-[11.5px] text-[#6B7280] mt-1">
                                       Комиссия{u.commissionPct != null && ` ${u.commissionPct}%`}
                                       {u.commissionUsd != null && <> · <span className="font-semibold text-[#1F8B5F]">${u.commissionUsd.toLocaleString('en-US')}</span></>}
                                     </div>
