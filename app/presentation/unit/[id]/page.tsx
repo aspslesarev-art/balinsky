@@ -6,7 +6,6 @@
 
 import { notFound } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
-import { unstable_cache } from 'next/cache'
 import { MapPin, BedDouble, Maximize2, Building2 } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'

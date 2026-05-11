@@ -20,7 +20,6 @@
 
 import { notFound, permanentRedirect } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
-import { unstable_cache } from 'next/cache'
 import {
   Building2, MapPin, Calendar, Users, ExternalLink, FileText, Image as ImageIcon,
   Map as MapIcon, Film, Box, BedDouble,
@@ -49,20 +48,34 @@ type DevRow = { airtable_id: string; data: Record<string, unknown>; logo_url: st
 type ComplexRow = { airtable_id: string; data: Record<string, unknown>; slug: string | null; cover_url: string | null }
 type UnitRow = { airtable_id: string; data: Record<string, unknown> }
 
-const _loadDevelopers = unstable_cache(
-  async (): Promise<DevRow[]> => {
+// Module-level caches — unstable_cache rejects >2 MB payloads and
+// raw_developers / raw_complexes / raw_villas / raw_apartments all
+// exceed that. The Lambda holds these for TTL_MS; cold starts pay
+// the Supabase fetch once.
+const TTL_MS = 10 * 60 * 1000
+
+let _devCache: { ts: number; data: DevRow[] } | null = null
+let _devInflight: Promise<DevRow[]> | null = null
+async function _loadDevelopers(): Promise<DevRow[]> {
+  if (_devCache && Date.now() - _devCache.ts < TTL_MS) return _devCache.data
+  if (_devInflight) return _devInflight
+  _devInflight = (async () => {
     const { data, error } = await sb.from('raw_developers').select('airtable_id, data, logo_url').limit(200)
     if (error) throw new Error(`raw_developers: ${error.message}`)
     const rows = (data ?? []) as DevRow[]
     if (rows.length === 0) throw new Error('raw_developers empty')
+    _devCache = { ts: Date.now(), data: rows }
     return rows
-  },
-  ['presentation-developers-v2'],
-  { revalidate: 600 },
-)
+  })().finally(() => { _devInflight = null })
+  return _devInflight
+}
 
-const _loadComplexes = unstable_cache(
-  async (): Promise<ComplexRow[]> => {
+let _complexCache: { ts: number; data: ComplexRow[] } | null = null
+let _complexInflight: Promise<ComplexRow[]> | null = null
+async function _loadComplexes(): Promise<ComplexRow[]> {
+  if (_complexCache && Date.now() - _complexCache.ts < TTL_MS) return _complexCache.data
+  if (_complexInflight) return _complexInflight
+  _complexInflight = (async () => {
     const rows: ComplexRow[] = []
     for (let from = 0; from < 1000; from += 200) {
       const { data, error } = await sb.from('raw_complexes').select('airtable_id, data, slug, cover_url').range(from, from + 199)
@@ -72,14 +85,18 @@ const _loadComplexes = unstable_cache(
       if (data.length < 200) break
     }
     if (rows.length === 0) throw new Error('raw_complexes empty')
+    _complexCache = { ts: Date.now(), data: rows }
     return rows
-  },
-  ['presentation-complexes-v2'],
-  { revalidate: 600 },
-)
+  })().finally(() => { _complexInflight = null })
+  return _complexInflight
+}
 
-const _loadApartments = unstable_cache(
-  async (): Promise<UnitRow[]> => {
+let _aptCache: { ts: number; data: UnitRow[] } | null = null
+let _aptInflight: Promise<UnitRow[]> | null = null
+async function _loadApartments(): Promise<UnitRow[]> {
+  if (_aptCache && Date.now() - _aptCache.ts < TTL_MS) return _aptCache.data
+  if (_aptInflight) return _aptInflight
+  _aptInflight = (async () => {
     const rows: UnitRow[] = []
     for (let from = 0; from < 4000; from += 200) {
       const { data, error } = await sb.from('raw_apartments').select('airtable_id, data').range(from, from + 199)
@@ -88,14 +105,18 @@ const _loadApartments = unstable_cache(
       rows.push(...(data as UnitRow[]))
       if (data.length < 200) break
     }
+    if (rows.length > 0) _aptCache = { ts: Date.now(), data: rows }
     return rows
-  },
-  ['presentation-apartments-v2'],
-  { revalidate: 600 },
-)
+  })().finally(() => { _aptInflight = null })
+  return _aptInflight
+}
 
-const _loadVillas = unstable_cache(
-  async (): Promise<UnitRow[]> => {
+let _villaCache: { ts: number; data: UnitRow[] } | null = null
+let _villaInflight: Promise<UnitRow[]> | null = null
+async function _loadVillas(): Promise<UnitRow[]> {
+  if (_villaCache && Date.now() - _villaCache.ts < TTL_MS) return _villaCache.data
+  if (_villaInflight) return _villaInflight
+  _villaInflight = (async () => {
     const rows: UnitRow[] = []
     for (let from = 0; from < 4000; from += 200) {
       const { data, error } = await sb.from('raw_villas').select('airtable_id, data').range(from, from + 199)
@@ -104,11 +125,11 @@ const _loadVillas = unstable_cache(
       rows.push(...(data as UnitRow[]))
       if (data.length < 200) break
     }
+    if (rows.length > 0) _villaCache = { ts: Date.now(), data: rows }
     return rows
-  },
-  ['presentation-villas-v2'],
-  { revalidate: 600 },
-)
+  })().finally(() => { _villaInflight = null })
+  return _villaInflight
+}
 
 const PHOTO_MANIFEST_BASE = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public`
 async function loadPhotoManifest(bucket: string): Promise<Record<string, string[]>> {
