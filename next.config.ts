@@ -64,6 +64,11 @@ const nextConfig: NextConfig = {
           destination: '/presentation/:slug',
           has: [{ type: 'host', value: 'presentation.estate' }],
         },
+        {
+          source: '/:slug/:unitSlug',
+          destination: '/presentation/:slug/:unitSlug',
+          has: [{ type: 'host', value: 'presentation.estate' }],
+        },
       ],
       fallback: [],
     }

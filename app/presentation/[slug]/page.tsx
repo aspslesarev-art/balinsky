@@ -25,9 +25,12 @@ import {
   Building2, MapPin, Calendar, Users, ExternalLink, FileText, Image as ImageIcon,
   Map as MapIcon, Film, Box, BedDouble,
 } from 'lucide-react'
+import Link from 'next/link'
 import { listLayers, listHotspots } from '@/lib/complex-visualizations'
-import { ComplexVisualizationViewer } from '@/components/ComplexVisualizationViewer'
 import { CopyPostButton } from './_copy-button'
+import { CollapsibleViewer } from './_collapsible-viewer'
+import { DevTabs } from './_dev-tabs'
+import { AllUnitsView, type UnitForFilter } from './_all-units'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 300
@@ -264,6 +267,26 @@ export default async function PresentationPage({ params }: { params: Params }) {
   ))
   const totalUnits = Array.from(unitsByProject.values()).reduce((s, arr) => s + arr.length, 0)
 
+  // Build a flat "all units" array for the second tab. Each unit
+  // carries its parent project name and district so the filter view
+  // can show them without re-joining server-side.
+  const projectDistrict = new Map<string, string | null>()
+  for (const c of complexes) {
+    const p = fs(c.data['Project'])
+    if (p) projectDistrict.set(p, fs(c.data['Location 2']) ?? fs(c.data['Location']))
+  }
+  const flatUnits: UnitForFilter[] = []
+  for (const [p, arr] of unitsByProject.entries()) {
+    for (const u of arr) {
+      flatUnits.push({
+        id: u.id, slug: u.slug, kind: u.kind, title: u.title,
+        bedrooms: u.bedrooms, area: u.area, priceUsd: u.priceUsd,
+        floor: u.floor, photo: u.photo,
+        project: p, district: projectDistrict.get(p) ?? null,
+      })
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#FAFAF8] text-[#111827]">
       <main className="max-w-[1180px] mx-auto px-5 sm:px-8 py-8 sm:py-12">
@@ -296,6 +319,10 @@ export default async function PresentationPage({ params }: { params: Params }) {
             У этого застройщика пока нет опубликованных проектов в каталоге.
           </div>
         ) : (
+          <DevTabs
+            unitCount={flatUnits.length}
+            allUnits={<AllUnitsView devSlug={fullSlug} units={flatUnits} />}
+            byProjects={
           <div className="space-y-8">
             {complexesEnriched.map(({ row: c, layers, hotspots }) => {
               const project = fs(c.data['Project']) ?? c.slug ?? ''
@@ -385,16 +412,14 @@ export default async function PresentationPage({ params }: { params: Params }) {
                       </div>
                     )}
 
-                    {/* Interactive plan if drawn */}
+                    {/* Interactive plan if drawn — collapsed by default. */}
                     {layers.length > 0 && (
-                      <div className="mb-4">
-                        <ComplexVisualizationViewer
-                          layers={layers.map(l => ({ id: l.id, parentLayerId: l.parentLayerId, title: l.title, photoUrl: l.photoUrl }))}
-                          hotspots={hotspots}
-                          unitsBySlug={{}}
-                          lang="ru"
-                        />
-                      </div>
+                      <CollapsibleViewer
+                        layers={layers.map(l => ({ id: l.id, parentLayerId: l.parentLayerId, title: l.title, photoUrl: l.photoUrl }))}
+                        hotspots={hotspots}
+                        unitsBySlug={{}}
+                        lang="ru"
+                      />
                     )}
 
                     {/* Шахматка юнитов */}
@@ -405,33 +430,35 @@ export default async function PresentationPage({ params }: { params: Params }) {
                         </div>
                         <ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                           {units.map(u => (
-                            <li
-                              key={u.id}
-                              className="block bg-[#FAFAF8] border border-[#E5E7EB] rounded-xl overflow-hidden text-[#111827]"
-                            >
-                              {u.photo ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img src={u.photo} alt={u.title} className="w-full h-20 object-cover" />
-                              ) : (
-                                <div className="w-full h-20 bg-[#F3F4F6] flex items-center justify-center text-[#9CA3AF]">
-                                  <BedDouble size={20} />
-                                </div>
-                              )}
-                              <div className="p-2">
-                                <div className="text-[11.5px] text-[#6B7280] mb-0.5 flex items-center gap-1">
-                                  {u.bedrooms != null && <span>{u.bedrooms} BR</span>}
-                                  {u.area != null && <span>· {u.area} м²</span>}
-                                  {u.floor && <span>· эт. {u.floor}</span>}
-                                </div>
-                                <div className="text-[11px] text-[#111827] line-clamp-2 mb-1">
-                                  {u.title.replace(project, '').replace(/^[\s\-·,]+/, '')}
-                                </div>
-                                {u.priceUsd != null && (
-                                  <div className="text-[12.5px] font-semibold text-[#16A34A]">
-                                    ${u.priceUsd.toLocaleString('en-US')}
+                            <li key={u.id}>
+                              <Link
+                                href={`/${fullSlug}/${u.slug}`}
+                                className="block bg-[#FAFAF8] hover:bg-white border border-[#E5E7EB] hover:border-[#1F8B5F] rounded-xl overflow-hidden text-[#111827] no-underline"
+                              >
+                                {u.photo ? (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img src={u.photo} alt={u.title} className="w-full h-20 object-cover" />
+                                ) : (
+                                  <div className="w-full h-20 bg-[#F3F4F6] flex items-center justify-center text-[#9CA3AF]">
+                                    <BedDouble size={20} />
                                   </div>
                                 )}
-                              </div>
+                                <div className="p-2">
+                                  <div className="text-[11.5px] text-[#6B7280] mb-0.5 flex items-center gap-1">
+                                    {u.bedrooms != null && <span>{u.bedrooms} BR</span>}
+                                    {u.area != null && <span>· {u.area} м²</span>}
+                                    {u.floor && <span>· эт. {u.floor}</span>}
+                                  </div>
+                                  <div className="text-[11px] text-[#111827] line-clamp-2 mb-1">
+                                    {u.title.replace(project, '').replace(/^[\s\-·,]+/, '')}
+                                  </div>
+                                  {u.priceUsd != null && (
+                                    <div className="text-[12.5px] font-semibold text-[#16A34A]">
+                                      ${u.priceUsd.toLocaleString('en-US')}
+                                    </div>
+                                  )}
+                                </div>
+                              </Link>
                             </li>
                           ))}
                         </ul>
@@ -442,6 +469,8 @@ export default async function PresentationPage({ params }: { params: Params }) {
               )
             })}
           </div>
+            }
+          />
         )}
 
         <footer className="mt-16 pt-6 border-t border-[#E5E7EB] text-[11.5px] text-[#9CA3AF]">

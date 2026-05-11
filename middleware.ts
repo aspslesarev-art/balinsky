@@ -102,14 +102,51 @@ const SECTION_FALLBACK: Record<string, string> = {
 
 export async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname
+  const host = (req.headers.get('host') ?? '').toLowerCase()
+  const isPresentation = host === 'presentation.estate' || host.endsWith('.presentation.estate')
 
-  // presentation.estate — closed agent portal. Set the HTTP-level
-  // X-Robots-Tag noindex on every page so search engines can't
-  // index it even if they followed an internal link past the
-  // meta-robots tag in <head>. The rewrite from next.config.ts
-  // turns presentation.estate/<slug> into /presentation/<slug>
-  // BEFORE this middleware runs, so the path-prefix check below
-  // covers all requests on that domain.
+  // presentation.estate-specific routing — runs before any
+  // balinsky.info Wix-redirect handling so old Wix-style URLs on the
+  // new domain don't get rewritten to balinsky.info paths.
+  if (isPresentation) {
+    // www.presentation.estate → presentation.estate (301), preserve
+    // path + query so deep links keep working.
+    if (host.startsWith('www.')) {
+      const url = req.nextUrl.clone()
+      url.host = 'presentation.estate'
+      return NextResponse.redirect(url, 301)
+    }
+
+    // Old Wix-style developer URLs: /developer/<slug>/r/<airtable_id>
+    // → /<slug>. We don't bother resolving the airtable_id because the
+    // slug is already canonical on the new domain; findDev() does a
+    // prefix match so even truncated slugs resolve correctly.
+    let m = path.match(/^\/developer\/([^/]+)\/r\/[^/]+\/?$/i)
+    if (m) {
+      return NextResponse.redirect(new URL(`/${m[1]}`, req.url), 301)
+    }
+    // /developer/<slug> (no /r/) → /<slug>
+    m = path.match(/^\/developer\/([^/]+)\/?$/i)
+    if (m) {
+      return NextResponse.redirect(new URL(`/${m[1]}`, req.url), 301)
+    }
+
+    // Closed agent portal — noindex everything on the new domain.
+    // The rewrite from next.config.ts turns presentation.estate/<slug>
+    // into /presentation/<slug> BEFORE this middleware runs, so the
+    // path-prefix check covers all rewritten requests.
+    if (path === '/presentation' || path.startsWith('/presentation/')) {
+      const res = NextResponse.next()
+      res.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet')
+      return res
+    }
+    // Anything else on the presentation domain still falls through
+    // to filesystem routes; let it resolve normally.
+    return NextResponse.next()
+  }
+
+  // balinsky.info — keep the original noindex guard for /presentation/*
+  // in case the URL ever leaks through.
   if (path === '/presentation' || path.startsWith('/presentation/')) {
     const res = NextResponse.next()
     res.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet')
