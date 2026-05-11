@@ -26,7 +26,7 @@ import { appendLearnedRule } from '@/lib/assistant-knowledge'
 import { listMessages, logMessage } from '@/lib/bot-storage'
 import { downloadTelegramFile } from '@/lib/chat-media'
 
-const MAX_HISTORY = 24                  // rows pulled from bot_messages → assistant context
+const MAX_HISTORY = 12                  // rows pulled from bot_messages → assistant context (12 ≈ 6 user + 6 assistant)
 const MAX_TOOL_HOPS = 4
 const MAX_LISTING_CARDS = 5             // top-N to actually send as photos
 
@@ -252,12 +252,13 @@ async function runTurn(
   for (let hop = 0; hop < MAX_TOOL_HOPS; hop++) {
     const toolChoice: 'required' | 'auto' = (hop === 0 && wantsListings) ? 'required' : 'auto'
     const completion = await client.chat.completions.create({
-      // gpt-4o (not -mini) for Telegram: better instruction-following,
-      // 8× pricing but daily cap + low Telegram volume keep cost
-      // bounded. Saw -mini hallucinate villas + ignore the no-prose-
-      // facts directive, so the upgrade pays for itself in fewer
-      // bad responses.
-      model: 'gpt-4o',
+      // gpt-4o-mini for routine chat — ~16× cheaper than gpt-4o.
+      // The hallucinations gpt-4o was protecting against are now
+      // caught by server-side guards (forced tool_choice on listing
+      // intent, fan-out across kinds, white-sand / inland post-
+      // filters, model sees only the filtered tool result).
+      // PDF AI-report still uses gpt-4o where quality is critical.
+      model: 'gpt-4o-mini',
       messages,
       tools: TOOLS,
       tool_choice: toolChoice,

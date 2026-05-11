@@ -521,7 +521,7 @@ async function searchSupabaseTable(
   const select = table === 'raw_developers' ? 'airtable_id, data, logo_url' : 'airtable_id, data'
   const { data } = await sb.from(table).select(select).limit(2000)
   const rows = (data ?? []) as unknown as { airtable_id: string; data: Record<string, unknown>; logo_url?: string | null }[]
-  const limit = Math.min(args.limit ?? 6, 12)
+  const limit = Math.min(args.limit ?? 5, 8)
 
   const filtered = rows.filter(r => {
     const d = r.data
@@ -646,7 +646,7 @@ async function searchSupabaseTable(
     // context. Full text is reachable via get_listing_full(slug).
     const seoText = fs1(d['SEO Text']) ?? fs1(d['Notes']) ?? fs1(d['Описание'])
     const descriptionPreview = seoText
-      ? (seoText.length > 400 ? seoText.slice(0, 400).trim() + '…' : seoText.trim())
+      ? (seoText.length > 220 ? seoText.slice(0, 220).trim() + '…' : seoText.trim())
       : null
     // Geo: Airtable stores lat in 'Geo' and lng in 'Geo 2' as
     // free-text "decimal[, ...]" — parseGeoStr extracts the first
@@ -832,7 +832,7 @@ async function searchRental(args: SearchArgs): Promise<ListingCard[]> {
   if (!r.ok) return []
   const j = await r.json() as { items?: { id: string; slug: string; title: string; type: string | null; bedrooms: number | null; location: string | null; priceMonthUsd: number; photos: string[] }[] }
   const items = Array.isArray(j.items) ? j.items : []
-  const limit = Math.min(args.limit ?? 6, 12)
+  const limit = Math.min(args.limit ?? 5, 8)
 
   const filtered = items.filter(it => {
     if (args.slug) return it.slug === args.slug

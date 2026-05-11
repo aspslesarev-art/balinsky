@@ -7,7 +7,7 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 const MAX_TOOL_HOPS = 4
-const MAX_INPUT_MESSAGES = 30
+const MAX_INPUT_MESSAGES = 14
 
 // The model insists on inlining URLs / markdown links / image embeds in its
 // reply even when the system prompt says cards render below. Strip them so
@@ -262,11 +262,12 @@ export async function POST(req: Request) {
 
   for (let hop = 0; hop < MAX_TOOL_HOPS; hop++) {
     const completion = await client.chat.completions.create({
-      // Upgraded from gpt-4o-mini → gpt-4o so the web chat matches
-      // Telegram in compliance + tool-call discipline. Web volumes
-      // are higher than Telegram so we keep temperature lower (0.5)
-      // and rely on the system prompt for variety.
-      model: 'gpt-4o',
+      // gpt-4o-mini for the web chat — ~16× cheaper than gpt-4o.
+      // The hallucination protections that justified gpt-4o now
+      // live server-side (forced tool calls on listing intent,
+      // cross-kind fan-out, server-side post-filters). Mini handles
+      // the constrained shape just fine.
+      model: 'gpt-4o-mini',
       messages,
       tools: TOOLS,
       tool_choice: 'auto',
