@@ -17,6 +17,7 @@ import { PhotoGalleryHero } from '@/components/PhotoGalleryHero'
 import { ProgressBar } from '@/components/ProgressBar'
 import { ApartmentCard, type ApartmentCardData } from '@/components/ApartmentCard'
 import { ManagerCard } from '@/components/ManagerCard'
+import { DownloadReportButton } from '@/components/DownloadReportButton'
 import { InlinePrice } from '@/components/InlinePrice'
 import { loadManagersByDeveloperName } from '@/lib/managers'
 import { getDeveloperStats } from '@/lib/developer-stats'
@@ -719,10 +720,11 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             {totalUnits != null && <> · {copy.units(totalUnits)}</>}
           </div>
           {minPrice != null && (
-            <div className="text-[16px] sm:text-[18px] md:text-[20px] font-semibold text-[#16A34A]">
+            <div className="text-[16px] sm:text-[18px] md:text-[20px] font-semibold text-[#16A34A] mb-3">
               {copy.unitsFrom} <InlinePrice usd={minPrice} />
             </div>
           )}
+          <DownloadReportButton kind="complex" slug={slug} lang={lang} />
         </section>
 
         {/* KEY FACTS */}

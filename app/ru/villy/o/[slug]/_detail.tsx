@@ -28,6 +28,7 @@ import { VillaCard, type VillaCardData } from '@/components/VillaCard'
 import { InvestmentWidget } from '@/components/InvestmentWidget'
 import { RentalCompareSection } from '@/components/RentalCompareSection'
 import { ManagerCard } from '@/components/ManagerCard'
+import { DownloadReportButton } from '@/components/DownloadReportButton'
 import { loadManagersByDeveloperName, loadManagersByDeveloperSlug } from '@/lib/managers'
 import { getDeveloperStats } from '@/lib/developer-stats'
 import { PriceCtaCard } from '@/components/PriceCtaCard'
@@ -651,6 +652,9 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
             {area != null && <span>{area} {c.sqm} {c.house}</span>}
             {land != null && <span>{land} {c.sqm} {c.land}</span>}
             {district && <span>{district}, {c.bali}</span>}
+          </div>
+          <div className="mb-4">
+            <DownloadReportButton kind="villa" slug={slug} lang={lang} />
           </div>
           {priceNum != null && (
             <PriceCtaCard
