@@ -202,13 +202,16 @@ const _loadAptManifest = unstable_cache(
 )
 const _loadDevLookup = unstable_cache(
   async (): Promise<Record<string, string>> => {
-    try {
-      const r = await fetch(DEV_LOOKUP_URL)
-      return r.ok ? r.json() : {}
-    } catch { return {} }
+    // Throw on fetch failure so empty {} doesn't get cached for an
+    // hour and break developer cross-links on every apartment page.
+    const r = await fetch(DEV_LOOKUP_URL)
+    if (!r.ok) throw new Error(`dev-lookup http_${r.status}`)
+    const j = await r.json() as Record<string, string>
+    if (Object.keys(j).length === 0) throw new Error('dev-lookup returned empty — refusing to cache')
+    return j
   },
-  ['dev-lookup-detail'],
-  { revalidate: 3600 },
+  ['dev-lookup-detail-v2'],
+  { revalidate: 600 },
 )
 // Complexes — small set (186 rows), but full data ~9MB. Module cache + paginated fetch.
 let _complexesCache: { ts: number; data: ComplexRow[] } | null = null

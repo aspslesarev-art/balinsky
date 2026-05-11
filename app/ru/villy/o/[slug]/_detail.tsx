@@ -262,11 +262,17 @@ type ComplexLite = {
   coverUrl: string | null
 }
 
+// Defensive: throw on PG error or empty result so the cache slot
+// never gets poisoned with [] for the next hour. Bumped key v2 to
+// drop the existing slot at deploy.
 const _loadComplexesIndex = unstable_cache(
   async (): Promise<ComplexLite[]> => {
-    const { data } = await sb.from('raw_complexes').select('airtable_id, data, slug, cover_url').limit(500)
+    const { data, error } = await sb.from('raw_complexes').select('airtable_id, data, slug, cover_url').limit(500)
+    if (error) throw new Error(`raw_complexes: ${error.message}`)
+    const rows = (data ?? []) as { airtable_id: string; data: Record<string, unknown>; slug: string | null; cover_url: string | null }[]
+    if (rows.length === 0) throw new Error('raw_complexes returned 0 rows — refusing to cache empty')
     const out: ComplexLite[] = []
-    for (const c of (data ?? []) as { airtable_id: string; data: Record<string, unknown>; slug: string | null; cover_url: string | null }[]) {
+    for (const c of rows) {
       const name = firstString(c.data['Project'])
       if (!name || !c.slug) continue
       const types = Array.isArray(c.data['Типы юнитов'])
@@ -286,8 +292,8 @@ const _loadComplexesIndex = unstable_cache(
     }
     return out
   },
-  ['villy-complex-index'],
-  { revalidate: 3600 },
+  ['villy-complex-index-v2'],
+  { revalidate: 600 },
 )
 
 function findParentComplex(villaTitle: string, complexes: ComplexLite[]): ComplexLite | null {
@@ -312,9 +318,12 @@ type DeveloperLite = {
 
 const _loadDevelopersIndex = unstable_cache(
   async (): Promise<DeveloperLite[]> => {
-    const { data } = await sb.from('raw_developers').select('airtable_id, data, logo_url').limit(200)
+    const { data, error } = await sb.from('raw_developers').select('airtable_id, data, logo_url').limit(200)
+    if (error) throw new Error(`raw_developers: ${error.message}`)
+    const rows = (data ?? []) as { airtable_id: string; data: Record<string, unknown>; logo_url: string | null }[]
+    if (rows.length === 0) throw new Error('raw_developers returned 0 rows — refusing to cache empty')
     const out: DeveloperLite[] = []
-    for (const r of (data ?? []) as { airtable_id: string; data: Record<string, unknown>; logo_url: string | null }[]) {
+    for (const r of rows) {
       if (r.data['Публикация'] !== true) continue
       const name = firstString(r.data['Developer'])
       const slug = firstString(r.data['SEO:Slug'])
@@ -330,8 +339,8 @@ const _loadDevelopersIndex = unstable_cache(
     }
     return out
   },
-  ['villy-developers-index'],
-  { revalidate: 3600 },
+  ['villy-developers-index-v2'],
+  { revalidate: 600 },
 )
 
 function findDeveloperByName(targetName: string | null, list: DeveloperLite[]): DeveloperLite | null {

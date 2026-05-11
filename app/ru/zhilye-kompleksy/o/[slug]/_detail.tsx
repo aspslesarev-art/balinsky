@@ -204,9 +204,12 @@ type DeveloperLink = { name: string; slug: string; logoUrl: string | null }
 
 const _loadDevelopersIndex = unstable_cache(
   async (): Promise<DeveloperLink[]> => {
-    const { data } = await sb.from('raw_developers').select('airtable_id, data, logo_url').limit(200)
+    const { data, error } = await sb.from('raw_developers').select('airtable_id, data, logo_url').limit(200)
+    if (error) throw new Error(`raw_developers: ${error.message}`)
+    const rows = (data ?? []) as { airtable_id: string; data: Record<string, unknown>; logo_url: string | null }[]
+    if (rows.length === 0) throw new Error('raw_developers returned 0 rows — refusing to cache empty')
     const out: DeveloperLink[] = []
-    for (const r of (data ?? []) as { airtable_id: string; data: Record<string, unknown>; logo_url: string | null }[]) {
+    for (const r of rows) {
       if (r.data['Публикация'] !== true) continue
       const name = firstString(r.data['Developer'])
       const slug = firstString(r.data['SEO:Slug'])
@@ -215,8 +218,8 @@ const _loadDevelopersIndex = unstable_cache(
     }
     return out
   },
-  ['complex-developers-index'],
-  { revalidate: 3600 },
+  ['complex-developers-index-v2'],
+  { revalidate: 600 },
 )
 
 async function findDeveloperLink(name: string | null): Promise<DeveloperLink | null> {
