@@ -709,17 +709,17 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             <Link href={complexesRoot} className="hover:text-[var(--color-text)]">{copy.backToComplexes}</Link>
             {district && <> · <span>{district}</span></>}
           </div>
-          <h1 className="text-[20px] sm:text-[28px] md:text-[44px] font-semibold tracking-tight text-[#111827] leading-[1.25] md:leading-[1.05] mb-3 [word-break:break-word] [overflow-wrap:anywhere]">
+          <h1 className="text-[20px] sm:text-[28px] md:text-[44px] font-semibold tracking-tight text-[#111827] leading-[1.2] md:leading-[1.05] mb-2 sm:mb-3 [word-break:break-word] [overflow-wrap:anywhere]">
             {name}
           </h1>
-          <div className="text-[16px] text-[var(--color-text-muted)] leading-relaxed max-w-3xl mb-4">
+          <div className="text-[13px] sm:text-[15px] md:text-[16px] text-[var(--color-text-muted)] leading-snug max-w-3xl mb-3 sm:mb-4">
             {types.length > 0 && <>{types.join(', ')}</>}
             {district && <> · {district}, {copy.bali}</>}
             {yearRaw && <> · {status?.toLowerCase().includes('построен') ? copy.completed : copy.completion(yearRaw)}</>}
             {totalUnits != null && <> · {copy.units(totalUnits)}</>}
           </div>
           {minPrice != null && (
-            <div className="text-[20px] font-semibold text-[#16A34A]">
+            <div className="text-[16px] sm:text-[18px] md:text-[20px] font-semibold text-[#16A34A]">
               {copy.unitsFrom} <InlinePrice usd={minPrice} />
             </div>
           )}
@@ -728,7 +728,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
         {/* KEY FACTS */}
         {facts.length > 0 && (
           <section className="mb-10">
-            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
+            <h2 className="text-[18px] sm:text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
               {copy.keyFacts}
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -757,7 +757,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
         {/* ABOUT (long text from SEO Text) */}
         {seoText && (
           <section className="mb-10">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
+            <h2 className="text-[19px] sm:text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
               {copy.aboutPrefix} {name}
             </h2>
             <div className="prose-balinsky max-w-3xl text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
@@ -786,7 +786,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
         {/* UNITS in this complex */}
         {units.length > 0 && (
           <section className="mb-10">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-2">
+            <h2 className="text-[19px] sm:text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-2">
               {copy.availableUnits}
             </h2>
             <div className="text-[14px] text-[var(--color-text-muted)] mb-5">
@@ -813,7 +813,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             detail page so visitors get the same affordance. */}
         {developerName && (
           <section className="mb-10">
-            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
+            <h2 className="text-[18px] sm:text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
               {copy.developer}
             </h2>
             {developerLink ? (
@@ -865,7 +865,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
         {/* RESOURCES */}
         {resources.length > 0 && (
           <section className="mb-10">
-            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
+            <h2 className="text-[18px] sm:text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
               {copy.docsHeading}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-3xl">
@@ -891,7 +891,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
         {/* LOCATION */}
         {lat != null && lng != null && (
           <section className="mb-10">
-            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
+            <h2 className="text-[18px] sm:text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
               {copy.location}
             </h2>
             <div className="text-[14px] text-[var(--color-text)] mb-3">
@@ -917,7 +917,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
         {/* OTHER COMPLEXES */}
         {otherComplexes.length > 0 && district && (
           <section className="mb-10">
-            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
+            <h2 className="text-[18px] sm:text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
               {copy.otherProjectsIn(district)}
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -976,7 +976,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
 
         {/* FAQ */}
         <section className="mb-10">
-          <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
+          <h2 className="text-[19px] sm:text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
             {copy.faqHeading}
           </h2>
           <div className="max-w-3xl divide-y divide-[var(--color-border)] border-t border-b border-[var(--color-border)]">
