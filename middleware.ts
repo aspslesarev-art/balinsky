@@ -102,6 +102,20 @@ const SECTION_FALLBACK: Record<string, string> = {
 
 export async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname
+
+  // presentation.estate — closed agent portal. Set the HTTP-level
+  // X-Robots-Tag noindex on every page so search engines can't
+  // index it even if they followed an internal link past the
+  // meta-robots tag in <head>. The rewrite from next.config.ts
+  // turns presentation.estate/<slug> into /presentation/<slug>
+  // BEFORE this middleware runs, so the path-prefix check below
+  // covers all requests on that domain.
+  if (path === '/presentation' || path.startsWith('/presentation/')) {
+    const res = NextResponse.next()
+    res.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet')
+    return res
+  }
+
   const idx = await loadIndex()
   if (!idx) return NextResponse.next()
 

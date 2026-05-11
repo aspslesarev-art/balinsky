@@ -19,7 +19,6 @@
 // data; the developer just shares presentation.estate/<short-slug>.
 
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
 import { createClient } from '@supabase/supabase-js'
 import { unstable_cache } from 'next/cache'
 import {
@@ -177,7 +176,14 @@ export async function generateMetadata({ params }: { params: Params }) {
   const dev = findDev(devs, slug)
   if (!dev) return { title: 'Застройщик · presentation.estate' }
   const name = fs(dev.data['Developer']) ?? slug
-  return { title: `${name} · presentation.estate`, robots: { index: false } }
+  // Closed agent portal — no indexing, no following, no archive.
+  return {
+    title: `${name} · presentation.estate`,
+    robots: {
+      index: false, follow: false, nocache: true,
+      googleBot: { index: false, follow: false, noimageindex: true },
+    },
+  }
 }
 
 export default async function PresentationPage({ params }: { params: Params }) {
@@ -450,15 +456,8 @@ export default async function PresentationPage({ params }: { params: Params }) {
           </div>
         )}
 
-        <footer className="mt-16 pt-6 border-t border-[#E5E7EB] text-[12px] text-[#6B7280] flex items-center justify-between flex-wrap gap-3">
-          <div>
-            Данные и материалы поддерживаются командой{' '}
-            <Link href="https://balinsky.info" className="text-[#1F8B5F] hover:underline" target="_blank">balinsky.info</Link>
-            {' · '}<span className="text-[#9CA3AF]">presentation.estate</span>
-          </div>
-          <Link href={`https://balinsky.info/ru/zastrojshhiki/${fullSlug}`} target="_blank" className="inline-flex items-center gap-1 text-[#1F8B5F] hover:underline">
-            <ExternalLink size={11} /> Открыть на balinsky.info
-          </Link>
+        <footer className="mt-16 pt-6 border-t border-[#E5E7EB] text-[11.5px] text-[#9CA3AF]">
+          Закрытый портал для агентов · presentation.estate
         </footer>
       </main>
     </div>
