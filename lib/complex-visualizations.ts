@@ -29,6 +29,8 @@ export type Layer = {
   updatedAt: string
 }
 
+export type HotspotAvailability = 'free' | 'reserved' | 'sold' | null
+
 export type Hotspot = {
   id: number
   layerId: number
@@ -38,6 +40,7 @@ export type Hotspot = {
   targetLayerId: number | null
   targetUnitKind: 'villa' | 'apartment' | null
   targetUnitSlug: string | null
+  availability: HotspotAvailability
   sortOrder: number
 }
 
@@ -146,7 +149,7 @@ export async function listHotspots(layerIds: number[]): Promise<Hotspot[]> {
   return (data ?? []).map(rowToHotspot)
 }
 
-export async function createHotspot(input: Omit<Hotspot, 'id' | 'sortOrder'> & { sortOrder?: number }): Promise<Hotspot> {
+export async function createHotspot(input: Omit<Hotspot, 'id' | 'sortOrder' | 'availability'> & { sortOrder?: number; availability?: HotspotAvailability }): Promise<Hotspot> {
   const { data, error } = await sb
     .from('complex_visualization_hotspots')
     .insert({
@@ -157,6 +160,7 @@ export async function createHotspot(input: Omit<Hotspot, 'id' | 'sortOrder'> & {
       target_layer_id: input.targetLayerId,
       target_unit_kind: input.targetUnitKind,
       target_unit_slug: input.targetUnitSlug,
+      availability: input.availability ?? null,
       sort_order: input.sortOrder ?? 0,
     })
     .select('*')
@@ -173,6 +177,7 @@ export async function updateHotspot(id: number, patch: Partial<Omit<Hotspot, 'id
   if (patch.targetLayerId !== undefined) update.target_layer_id = patch.targetLayerId
   if (patch.targetUnitKind !== undefined) update.target_unit_kind = patch.targetUnitKind
   if (patch.targetUnitSlug !== undefined) update.target_unit_slug = patch.targetUnitSlug
+  if (patch.availability !== undefined) update.availability = patch.availability
   if (patch.sortOrder !== undefined) update.sort_order = patch.sortOrder
   const { error } = await sb.from('complex_visualization_hotspots').update(update).eq('id', id)
   if (error) throw error
@@ -390,6 +395,7 @@ type HotspotRow = {
   target_layer_id: number | null
   target_unit_kind: 'villa' | 'apartment' | null
   target_unit_slug: string | null
+  availability: HotspotAvailability | null
   sort_order: number
 }
 function rowToHotspot(r: HotspotRow): Hotspot {
@@ -401,6 +407,7 @@ function rowToHotspot(r: HotspotRow): Hotspot {
     targetLayerId: r.target_layer_id,
     targetUnitKind: r.target_unit_kind,
     targetUnitSlug: r.target_unit_slug,
+    availability: r.availability ?? null,
     sortOrder: r.sort_order,
   }
 }

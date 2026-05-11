@@ -42,6 +42,7 @@ type Hotspot = {
   targetLayerId: number | null
   targetUnitKind: 'villa' | 'apartment' | null
   targetUnitSlug: string | null
+  availability?: 'free' | 'reserved' | 'sold' | null
 }
 type UnitOption = {
   kind: 'villa' | 'apartment'
@@ -650,6 +651,7 @@ function HotspotInspector({
   const [targetType, setTargetType] = useState<'layer' | 'unit'>(hotspot.targetType)
   const [targetLayerId, setTargetLayerId] = useState<number | null>(hotspot.targetLayerId)
   const [targetUnitSlug, setTargetUnitSlug] = useState<string | null>(hotspot.targetUnitSlug)
+  const [availability, setAvailability] = useState<'free' | 'reserved' | 'sold' | null>(hotspot.availability ?? null)
   const [savingNow, setSavingNow] = useState(false)
 
   async function save() {
@@ -661,6 +663,7 @@ function HotspotInspector({
       targetLayerId: targetType === 'layer' ? targetLayerId : null,
       targetUnitSlug: targetType === 'unit' ? targetUnitSlug : null,
       targetUnitKind: targetType === 'unit' ? (unit?.kind ?? null) : null,
+      availability,
     })
     setSavingNow(false)
   }
@@ -729,6 +732,33 @@ function HotspotInspector({
             ))}
           </select>
         )}
+      </div>
+
+      {/* Per-hotspot availability override. Drives the polygon
+          colour on the public viewer + the badge in the popup —
+          green / yellow / red / no-badge. */}
+      <div>
+        <div className="text-[11.5px] text-[var(--ax-fg-muted)] mb-1">Статус продажи</div>
+        <div className="grid grid-cols-4 gap-1">
+          {([
+            { v: null,        label: '—',        cls: 'bg-[var(--ax-hover)] text-[var(--ax-fg-soft)]' },
+            { v: 'free',      label: 'Свободно', cls: 'bg-[#16A34A] text-white' },
+            { v: 'reserved',  label: 'Бронь',    cls: 'bg-[#F59E0B] text-white' },
+            { v: 'sold',      label: 'Продано',  cls: 'bg-[#DC2626] text-white' },
+          ] as const).map(opt => {
+            const active = availability === opt.v
+            return (
+              <button
+                key={String(opt.v)}
+                type="button"
+                onClick={() => setAvailability(opt.v)}
+                className={`px-2 py-1.5 rounded-lg text-[11.5px] font-medium ${active ? opt.cls : 'bg-[var(--ax-input-bg)] border border-[var(--ax-input-border)] text-[var(--ax-fg-soft)] hover:text-[var(--ax-fg)]'}`}
+              >
+                {opt.label}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       <button

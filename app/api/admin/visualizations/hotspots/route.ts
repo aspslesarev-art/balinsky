@@ -18,6 +18,7 @@ export async function POST(req: Request) {
     targetLayerId?: number | null
     targetUnitKind?: 'villa' | 'apartment' | null
     targetUnitSlug?: string | null
+    availability?: 'free' | 'reserved' | 'sold' | null
   }
   try { body = await req.json() } catch { return NextResponse.json({ error: 'invalid_json' }, { status: 400 }) }
   if (typeof body.layerId !== 'number') return NextResponse.json({ error: 'layerId_required' }, { status: 400 })
@@ -35,6 +36,7 @@ export async function POST(req: Request) {
     targetLayerId: body.targetLayerId ?? null,
     targetUnitKind: body.targetUnitKind ?? null,
     targetUnitSlug: body.targetUnitSlug ?? null,
+    availability: body.availability ?? null,
   })
   return NextResponse.json({ hotspot })
 }

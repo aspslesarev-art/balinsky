@@ -34,7 +34,17 @@ type Hotspot = {
   targetLayerId: number | null
   targetUnitKind: 'villa' | 'apartment' | null
   targetUnitSlug: string | null
+  availability?: 'free' | 'reserved' | 'sold' | null
 }
+
+// Polygon palette per status. The "neutral" / null case keeps the
+// original brand-green so existing visualisations look unchanged.
+const STATUS_STYLE = {
+  free:     { fill: 'rgba(22,163,74,0.30)',  stroke: '#16A34A', hover: 'hover:fill-[rgba(22,163,74,0.50)]' },
+  reserved: { fill: 'rgba(245,158,11,0.30)', stroke: '#F59E0B', hover: 'hover:fill-[rgba(245,158,11,0.50)]' },
+  sold:     { fill: 'rgba(220,38,38,0.30)',  stroke: '#DC2626', hover: 'hover:fill-[rgba(220,38,38,0.40)]' },
+  neutral:  { fill: 'rgba(31,139,95,0.30)',  stroke: '#1F8B5F', hover: 'hover:fill-[rgba(31,139,95,0.50)]' },
+} as const
 type UnitInfo = {
   kind: 'villa' | 'apartment'
   slug: string
@@ -59,7 +69,7 @@ export function ComplexVisualizationViewer({
 }) {
   const root = layers.find(l => l.parentLayerId == null) ?? layers[0]
   const [stack, setStack] = useState<Layer[]>(root ? [root] : [])
-  const [popup, setPopup] = useState<{ clientX: number; clientY: number; unit: UnitInfo } | null>(null)
+  const [popup, setPopup] = useState<{ clientX: number; clientY: number; unit: UnitInfo; availability: 'free' | 'reserved' | 'sold' | null } | null>(null)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => { setMounted(true) }, [])
@@ -95,7 +105,7 @@ export function ComplexVisualizationViewer({
     if (h.targetType === 'unit' && h.targetUnitSlug) {
       const unit = unitsBySlug[h.targetUnitSlug]
       if (!unit) return
-      setPopup({ clientX: ev.clientX, clientY: ev.clientY, unit })
+      setPopup({ clientX: ev.clientX, clientY: ev.clientY, unit, availability: h.availability ?? null })
     }
   }
 
@@ -152,18 +162,26 @@ export function ComplexVisualizationViewer({
           >
             {currentHotspots.map(h => {
               const points = h.polygon.map(([x, y]) => `${x},${y}`).join(' ')
+              const palette = STATUS_STYLE[h.availability ?? 'neutral'] ?? STATUS_STYLE.neutral
+              const isSold = h.availability === 'sold'
               return (
                 <polygon
                   key={h.id}
                   points={points}
                   onClick={ev => onPolygonClick(h, ev)}
-                  fill="rgba(31,139,95,0.30)"
-                  stroke="#1F8B5F"
+                  fill={palette.fill}
+                  stroke={palette.stroke}
                   strokeWidth={0.003}
                   vectorEffect="non-scaling-stroke"
-                  className="pointer-events-auto cursor-pointer hover:fill-[rgba(31,139,95,0.50)]"
+                  className={`pointer-events-auto ${isSold ? 'cursor-not-allowed' : 'cursor-pointer'} ${palette.hover}`}
                 >
-                  {h.label && <title>{h.label}</title>}
+                  {(h.label || h.availability) && (
+                    <title>
+                      {h.label ?? ''}
+                      {h.availability && (h.label ? ' · ' : '') +
+                        (h.availability === 'free' ? 'свободно' : h.availability === 'reserved' ? 'забронировано' : 'продано')}
+                    </title>
+                  )}
                 </polygon>
               )
             })}
@@ -182,10 +200,15 @@ export function ComplexVisualizationViewer({
 function UnitPopup({
   popup, copy, onDismiss,
 }: {
-  popup: { clientX: number; clientY: number; unit: UnitInfo }
+  popup: { clientX: number; clientY: number; unit: UnitInfo; availability: 'free' | 'reserved' | 'sold' | null }
   copy: { back: string; open: string; sqm: string; br: string }
   onDismiss: () => void
 }) {
+  const statusBadge = popup.availability ? {
+    free:     { text: 'Свободно',      cls: 'bg-[#16A34A] text-white' },
+    reserved: { text: 'Забронировано', cls: 'bg-[#F59E0B] text-white' },
+    sold:     { text: 'Продано',        cls: 'bg-[#DC2626] text-white' },
+  }[popup.availability] : null
   const ref = useRef<HTMLDivElement>(null)
   const [pos, setPos] = useState<{ left: number; top: number }>({ left: -9999, top: -9999 })
 
@@ -223,10 +246,22 @@ function UnitPopup({
       className="bg-white rounded-2xl shadow-[0_12px_32px_rgba(0,0,0,0.18)] border border-[var(--color-border)] overflow-hidden"
     >
       {popup.unit.photoUrl && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={popup.unit.photoUrl} alt={popup.unit.title} className="block w-full h-36 object-cover" />
+        <div className="relative">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={popup.unit.photoUrl} alt={popup.unit.title} className="block w-full h-36 object-cover" />
+          {statusBadge && (
+            <div className={`absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10.5px] font-semibold uppercase tracking-wide ${statusBadge.cls}`}>
+              {statusBadge.text}
+            </div>
+          )}
+        </div>
       )}
       <div className="p-3">
+        {!popup.unit.photoUrl && statusBadge && (
+          <div className={`inline-block mb-2 px-2 py-0.5 rounded-full text-[10.5px] font-semibold uppercase tracking-wide ${statusBadge.cls}`}>
+            {statusBadge.text}
+          </div>
+        )}
         <div className="text-[14px] font-semibold text-[#111827] line-clamp-2 mb-1">{popup.unit.title}</div>
         <div className="text-[12px] text-[var(--color-text-muted)] flex items-center gap-2 flex-wrap mb-2">
           {popup.unit.bedrooms != null && (<span className="inline-flex items-center gap-1"><BedDouble size={11} />{popup.unit.bedrooms} {copy.br}</span>)}
