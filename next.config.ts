@@ -43,9 +43,13 @@ const nextConfig: NextConfig = {
   // presentation.estate must point at the same Vercel project
   // (Vercel → Project → Domains → Add).
   async rewrites() {
-    // beforeFiles — runs BEFORE filesystem routing. Required here
-    // because `app/page.tsx` exists and would otherwise win the
-    // match for `/`, preventing the rewrite to /presentation.
+    // Split:
+    //  - `/` lives in beforeFiles because app/page.tsx would
+    //    otherwise win the filesystem match and 307→/ru|/en.
+    //  - `/:slug` lives in afterFiles so it ONLY fires when no
+    //    filesystem route matches. Otherwise beforeFiles would
+    //    re-match the just-rewritten `/presentation` against
+    //    `/:slug` and produce `/presentation/presentation` → 404.
     return {
       beforeFiles: [
         {
@@ -53,13 +57,14 @@ const nextConfig: NextConfig = {
           destination: '/presentation',
           has: [{ type: 'host', value: 'presentation.estate' }],
         },
+      ],
+      afterFiles: [
         {
           source: '/:slug',
           destination: '/presentation/:slug',
           has: [{ type: 'host', value: 'presentation.estate' }],
         },
       ],
-      afterFiles: [],
       fallback: [],
     }
   },
