@@ -25,12 +25,17 @@ import {
   Building2, MapPin, Calendar, Users, ExternalLink, FileText, Image as ImageIcon,
   Map as MapIcon, Film, Box, BedDouble,
 } from 'lucide-react'
-import Link from 'next/link'
 import { listLayers, listHotspots } from '@/lib/complex-visualizations'
 import { CopyPostButton } from './_copy-button'
 import { CollapsibleViewer } from './_collapsible-viewer'
 import { DevTabs } from './_dev-tabs'
 import { AllUnitsView, type UnitForFilter } from './_all-units'
+import { LinkMenu } from './_link-menu'
+
+// Public origin used to build shareable unit URLs for the clipboard
+// "copy link" action. The URL must be the public one, not the internal
+// /presentation/ rewrite target.
+const PUBLIC_ORIGIN = 'https://presentation.estate'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 300
@@ -200,6 +205,14 @@ export default async function PresentationPage({ params }: { params: Params }) {
   const name = fs(dev.data['Developer']) ?? slug
   const logo = dev.logo_url
 
+  // Commission shown on every unit tile so the agent sees their
+  // upside without leaving the page. `Комиссия` in raw_developers
+  // is usually a number (e.g. 5) or a string ("5%", "5-7"). We parse
+  // the first number; if absent, commission isn't shown.
+  const commissionRaw = fs(dev.data['Комиссия']) ?? fs(dev.data['Комиссия отображение'])
+  const commissionMatch = commissionRaw?.match(/(\d+(?:[.,]\d+)?)/)
+  const commissionPct: number | null = commissionMatch ? Number(commissionMatch[1].replace(',', '.')) : null
+
   // All complexes by this developer. Match is fuzzy in both
   // directions because raw_developers' Developer field often has a
   // parenthetical brand qualifier ("LB Group (LOYO&BONDAR)") that
@@ -321,7 +334,7 @@ export default async function PresentationPage({ params }: { params: Params }) {
         ) : (
           <DevTabs
             unitCount={flatUnits.length}
-            allUnits={<AllUnitsView devSlug={fullSlug} units={flatUnits} />}
+            allUnits={<AllUnitsView units={flatUnits} commissionPct={commissionPct} />}
             byProjects={
           <div className="space-y-8">
             {complexesEnriched.map(({ row: c, layers, hotspots }) => {
@@ -394,20 +407,19 @@ export default async function PresentationPage({ params }: { params: Params }) {
                       <CopyPostButton text={postText} />
                     </div>
 
-                    {/* Resource toolbar */}
+                    {/* Resource toolbar — each chip opens a context menu
+                        with «Открыть» / «Скопировать ссылку». */}
                     {resources.length > 0 && (
                       <div className="flex flex-wrap gap-2 mb-4">
                         {resources.map(({ label, url, Icon }) => (
-                          <a
+                          <LinkMenu
                             key={label}
-                            href={url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F3F4F6] hover:bg-[#E5E7EB] text-[12.5px] text-[#111827] no-underline border border-transparent hover:border-[#1F8B5F]"
+                            url={url}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F3F4F6] hover:bg-[#E5E7EB] text-[12.5px] text-[#111827] border border-transparent hover:border-[#1F8B5F]"
                           >
                             <Icon size={12} className="text-[#1F8B5F]" />
                             {label}
-                          </a>
+                          </LinkMenu>
                         ))}
                       </div>
                     )}
@@ -429,38 +441,46 @@ export default async function PresentationPage({ params }: { params: Params }) {
                           Юниты ({units.length}{totalProjUnits ? ` из ${totalProjUnits}` : ''})
                         </div>
                         <ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                          {units.map(u => (
-                            <li key={u.id}>
-                              <Link
-                                href={`/${fullSlug}/${u.slug}`}
-                                className="block bg-[#FAFAF8] hover:bg-white border border-[#E5E7EB] hover:border-[#1F8B5F] rounded-xl overflow-hidden text-[#111827] no-underline"
-                              >
-                                {u.photo ? (
-                                  // eslint-disable-next-line @next/next/no-img-element
-                                  <img src={u.photo} alt={u.title} className="w-full h-20 object-cover" />
-                                ) : (
-                                  <div className="w-full h-20 bg-[#F3F4F6] flex items-center justify-center text-[#9CA3AF]">
-                                    <BedDouble size={20} />
-                                  </div>
-                                )}
-                                <div className="p-2">
-                                  <div className="text-[11.5px] text-[#6B7280] mb-0.5 flex items-center gap-1">
-                                    {u.bedrooms != null && <span>{u.bedrooms} BR</span>}
-                                    {u.area != null && <span>· {u.area} м²</span>}
-                                    {u.floor && <span>· эт. {u.floor}</span>}
-                                  </div>
-                                  <div className="text-[11px] text-[#111827] line-clamp-2 mb-1">
-                                    {u.title.replace(project, '').replace(/^[\s\-·,]+/, '')}
-                                  </div>
-                                  {u.priceUsd != null && (
-                                    <div className="text-[12.5px] font-semibold text-[#16A34A]">
-                                      ${u.priceUsd.toLocaleString('en-US')}
+                          {units.map(u => {
+                            const commissionAmount = commissionPct != null && u.priceUsd != null
+                              ? Math.round(u.priceUsd * commissionPct / 100)
+                              : null
+                            return (
+                              <li key={u.id}>
+                                <LinkMenu
+                                  url={`${PUBLIC_ORIGIN}/unit/${u.id}`}
+                                  className="block w-full text-left bg-[#FAFAF8] hover:bg-white border border-[#E5E7EB] hover:border-[#1F8B5F] rounded-xl overflow-hidden text-[#111827]"
+                                >
+                                  {u.photo ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img src={u.photo} alt={u.title} className="w-full h-20 object-cover" />
+                                  ) : (
+                                    <div className="w-full h-20 bg-[#F3F4F6] flex items-center justify-center text-[#9CA3AF]">
+                                      <BedDouble size={20} />
                                     </div>
                                   )}
-                                </div>
-                              </Link>
-                            </li>
-                          ))}
+                                  <div className="p-2">
+                                    <div className="text-[11.5px] text-[#6B7280] mb-0.5 flex items-center gap-1">
+                                      {u.bedrooms != null && <span>{u.bedrooms} BR</span>}
+                                      {u.area != null && <span>· {u.area} м²</span>}
+                                      {u.floor && <span>· эт. {u.floor}</span>}
+                                    </div>
+                                    {u.priceUsd != null && (
+                                      <div className="text-[12.5px] font-semibold text-[#16A34A]">
+                                        ${u.priceUsd.toLocaleString('en-US')}
+                                      </div>
+                                    )}
+                                    {commissionPct != null && (
+                                      <div className="text-[10.5px] text-[#6B7280] mt-0.5">
+                                        Комиссия {commissionPct}%
+                                        {commissionAmount != null && <> · <span className="font-semibold text-[#1F8B5F]">${commissionAmount.toLocaleString('en-US')}</span></>}
+                                      </div>
+                                    )}
+                                  </div>
+                                </LinkMenu>
+                              </li>
+                            )
+                          })}
                         </ul>
                       </div>
                     )}

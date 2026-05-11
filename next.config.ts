@@ -64,9 +64,11 @@ const nextConfig: NextConfig = {
           destination: '/presentation/:slug',
           has: [{ type: 'host', value: 'presentation.estate' }],
         },
+        // Anonymous unit page — shareable URL hides developer / complex
+        // so a client can't reverse-engineer who the agent is working with.
         {
-          source: '/:slug/:unitSlug',
-          destination: '/presentation/:slug/:unitSlug',
+          source: '/unit/:id',
+          destination: '/presentation/unit/:id',
           has: [{ type: 'host', value: 'presentation.estate' }],
         },
       ],
