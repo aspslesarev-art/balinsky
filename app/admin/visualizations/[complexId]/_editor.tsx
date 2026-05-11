@@ -44,6 +44,16 @@ type Hotspot = {
   targetUnitSlug: string | null
   availability?: 'free' | 'reserved' | 'sold' | null
 }
+
+// Per-status polygon palette, mirrors the public viewer.
+// `neutral` covers hotspots where the owner hasn't set a status yet
+// — keeps the canvas readable for plain layer→layer drill-downs.
+const HOTSPOT_PALETTE = {
+  neutral:  { fill: 'rgba(31,139,95,0.25)',  fillSelected: 'rgba(31,139,95,0.45)',  stroke: '#1F8B5F', strokeSelected: '#197551' },
+  free:     { fill: 'rgba(22,163,74,0.30)',  fillSelected: 'rgba(22,163,74,0.50)',  stroke: '#16A34A', strokeSelected: '#0F7A39' },
+  reserved: { fill: 'rgba(245,158,11,0.30)', fillSelected: 'rgba(245,158,11,0.55)', stroke: '#F59E0B', strokeSelected: '#B45309' },
+  sold:     { fill: 'rgba(220,38,38,0.30)',  fillSelected: 'rgba(220,38,38,0.55)',  stroke: '#DC2626', strokeSelected: '#991B1B' },
+} as const
 type UnitOption = {
   kind: 'villa' | 'apartment'
   slug: string
@@ -505,13 +515,20 @@ export function VisualizationEditor({
                     {layerHotspots.map(h => {
                       const isSelected = h.id === selectedHotspotId
                       const points = h.polygon.map(([x, y]) => `${x},${y}`).join(' ')
+                      // Mirror the public viewer's status palette so
+                      // the editor canvas previews exactly what the
+                      // visitor will see (green / yellow / red /
+                      // brand-green default).
+                      const palette = HOTSPOT_PALETTE[h.availability ?? 'neutral'] ?? HOTSPOT_PALETTE.neutral
+                      const fill = isSelected ? palette.fillSelected : palette.fill
+                      const stroke = isSelected ? palette.strokeSelected : palette.stroke
                       return (
                         <polygon
                           key={h.id}
                           points={points}
                           onClick={ev => { ev.stopPropagation(); setSelectedHotspotId(h.id); setDraft(null) }}
-                          fill={isSelected ? 'rgba(31,139,95,0.45)' : 'rgba(31,139,95,0.25)'}
-                          stroke={isSelected ? '#197551' : '#1F8B5F'}
+                          fill={fill}
+                          stroke={stroke}
                           strokeWidth={isSelected ? 0.005 : 0.003}
                           vectorEffect="non-scaling-stroke"
                           className="cursor-pointer"
