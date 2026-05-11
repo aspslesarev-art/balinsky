@@ -111,7 +111,7 @@ export function AllUnitsView({ units }: { units: UnitForFilter[] }) {
           По выбранным фильтрам юнитов нет.
         </div>
       ) : (
-        <ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+        <ul className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {filtered.map(u => (
             <li key={u.id}>
               <LinkMenu

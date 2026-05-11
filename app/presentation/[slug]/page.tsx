@@ -465,7 +465,7 @@ export default async function PresentationPage({ params }: { params: Params }) {
                         <div className="text-[12px] uppercase tracking-wide text-[#6B7280] mb-2">
                           Юниты ({units.length}{totalProjUnits ? ` из ${totalProjUnits}` : ''})
                         </div>
-                        <ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                        <ul className="grid grid-cols-2 md:grid-cols-4 gap-2">
                           {units.map(u => (
                             <li key={u.id}>
                               <LinkMenu
