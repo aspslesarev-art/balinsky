@@ -44,7 +44,11 @@ const styles = StyleSheet.create({
   title: { fontSize: 22, fontWeight: 'bold', marginBottom: 4 },
   subtitle: { fontSize: 11, color: COLORS.muted, marginBottom: 14 },
   cover: { width: '100%', height: 220, objectFit: 'cover', borderRadius: 8, marginBottom: 18 },
-  oneLiner: { fontSize: 12, fontStyle: 'italic', color: COLORS.text, padding: '12 14', backgroundColor: COLORS.primarySoft, borderRadius: 8, marginBottom: 18 },
+  // No italic variant of Inter is bundled, so we use medium-weight
+  // body text instead of fontStyle:'italic' which would fail at
+  // render time. The green pill carries enough visual emphasis on
+  // its own.
+  oneLiner: { fontSize: 12, color: COLORS.text, padding: '12 14', backgroundColor: COLORS.primarySoft, borderRadius: 8, marginBottom: 18 },
 
   sectionTitle: { fontSize: 13, fontWeight: 'bold', marginBottom: 8, color: COLORS.text, borderBottomWidth: 1, borderBottomColor: COLORS.border, paddingBottom: 4 },
 
