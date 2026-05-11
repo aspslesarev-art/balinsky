@@ -1,17 +1,17 @@
 'use client'
 
-import { useState, useRef, useEffect, type ReactNode } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { ExternalLink, Copy, Check } from 'lucide-react'
 
-// Wraps any clickable element with a small floating menu offering
-// "Open in new tab" / "Copy link" actions. Used by:
-//  - resource chips (Презентация / Рендеры / Booking / …)
-//  - unit tiles in chessboard and "Все юниты" filter view
+// Wraps any clickable element with a centered popover offering
+// "Open in new tab" / "Copy link" actions. The popover is rendered
+// via createPortal so it isn't clipped by parent overflow-hidden
+// (e.g. the card photo border-radius wrapper).
 export function LinkMenu({
   url,
   children,
   className = '',
-  align = 'left',
 }: {
   url: string
   children: ReactNode
@@ -20,21 +20,23 @@ export function LinkMenu({
 }) {
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState(false)
-  const rootRef = useRef<HTMLDivElement>(null)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => { setMounted(true) }, [])
 
   useEffect(() => {
     if (!open) return
-    function onDocClick(e: MouseEvent) {
-      if (!rootRef.current?.contains(e.target as Node)) setOpen(false)
-    }
     function onEsc(e: KeyboardEvent) {
       if (e.key === 'Escape') setOpen(false)
     }
-    document.addEventListener('mousedown', onDocClick)
     document.addEventListener('keydown', onEsc)
+    // Lock page scroll while the modal is up so taps behind it
+    // don't accidentally fire on tile underneath.
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
     return () => {
-      document.removeEventListener('mousedown', onDocClick)
       document.removeEventListener('keydown', onEsc)
+      document.body.style.overflow = prevOverflow
     }
   }, [open])
 
@@ -55,41 +57,61 @@ export function LinkMenu({
     }
   }
 
+  const overlay = open && mounted ? createPortal(
+    <div
+      onClick={() => setOpen(false)}
+      className="fixed inset-0 z-[1000] bg-black/45 backdrop-blur-[1px] flex items-center justify-center p-4"
+    >
+      <div
+        role="menu"
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-[340px] bg-white rounded-2xl shadow-[0_24px_60px_rgba(0,0,0,0.25)] border border-[#E5E7EB] overflow-hidden"
+      >
+        <div className="px-4 pt-4 pb-2 border-b border-[#F3F4F6]">
+          <div className="text-[11.5px] uppercase tracking-wide text-[#9CA3AF] mb-1">Ссылка</div>
+          <div className="text-[12.5px] text-[#374151] break-all leading-snug">{url}</div>
+        </div>
+        <button
+          type="button"
+          onClick={openLink}
+          className="w-full text-left px-4 py-3.5 hover:bg-[#F3F4F6] text-[14px] flex items-center gap-3 text-[#111827]"
+        >
+          <ExternalLink size={16} className="text-[#1F8B5F] shrink-0" /> Открыть в новой вкладке
+        </button>
+        <button
+          type="button"
+          onClick={copy}
+          className="w-full text-left px-4 py-3.5 hover:bg-[#F3F4F6] text-[14px] flex items-center gap-3 text-[#111827] border-t border-[#F3F4F6]"
+        >
+          {copied
+            ? <Check size={16} className="text-[#1F8B5F] shrink-0" />
+            : <Copy size={16} className="text-[#6B7280] shrink-0" />}
+          {copied ? 'Скопировано' : 'Скопировать ссылку'}
+        </button>
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          className="w-full text-center px-4 py-3 text-[13px] text-[#6B7280] hover:bg-[#FAFAF8] border-t border-[#F3F4F6]"
+        >
+          Отмена
+        </button>
+      </div>
+    </div>,
+    document.body,
+  ) : null
+
   return (
-    <div ref={rootRef} className="relative inline-block">
+    <>
       <button
         type="button"
-        onClick={(e) => { e.stopPropagation(); setOpen(v => !v) }}
+        onClick={(e) => { e.stopPropagation(); e.preventDefault(); setOpen(v => !v) }}
         className={className}
         aria-haspopup="menu"
         aria-expanded={open}
       >
         {children}
       </button>
-      {open && (
-        <div
-          role="menu"
-          className={`absolute z-50 top-full mt-1 min-w-[180px] bg-white rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.12)] border border-[#E5E7EB] py-1 ${
-            align === 'right' ? 'right-0' : 'left-0'
-          }`}
-        >
-          <button
-            type="button"
-            onClick={openLink}
-            className="w-full text-left px-3 py-2 hover:bg-[#F3F4F6] text-[13px] flex items-center gap-2 text-[#111827]"
-          >
-            <ExternalLink size={13} className="text-[#1F8B5F]" /> Открыть
-          </button>
-          <button
-            type="button"
-            onClick={copy}
-            className="w-full text-left px-3 py-2 hover:bg-[#F3F4F6] text-[13px] flex items-center gap-2 text-[#111827]"
-          >
-            {copied ? <Check size={13} className="text-[#1F8B5F]" /> : <Copy size={13} className="text-[#6B7280]" />}
-            {copied ? 'Скопировано' : 'Скопировать ссылку'}
-          </button>
-        </div>
-      )}
-    </div>
+      {overlay}
+    </>
   )
 }
