@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
@@ -41,11 +42,17 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Server-side host check so the presentation.estate domain never
+  // includes the Balinsky chat widget / footer in the SSR HTML —
+  // no client-flash, no hydration mismatch.
+  const hdrs = await headers()
+  const host = (hdrs.get('host') ?? '').toLowerCase()
+  const isClosedPortal = host === 'presentation.estate' || host.endsWith('.presentation.estate')
   return (
     <html
       lang="en"
@@ -106,7 +113,7 @@ ym(${YM_ID}, 'init', {ssr:true, clickmap:true, trackLinks:true, ecommerce:"dataL
         <CurrencyProvider>
           <WishlistProvider>
             {children}
-            <SiteChrome />
+            <SiteChrome isClosedPortal={isClosedPortal} />
           </WishlistProvider>
         </CurrencyProvider>
       </body>

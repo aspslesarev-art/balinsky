@@ -197,12 +197,19 @@ export default async function PresentationPage({ params }: { params: Params }) {
   const name = fs(dev.data['Developer']) ?? slug
   const logo = dev.logo_url
 
-  // All complexes by this developer.
-  const allComplexes = await _loadComplexes().catch(() => [])
+  // All complexes by this developer. Match is fuzzy in both
+  // directions because raw_developers' Developer field often has a
+  // parenthetical brand qualifier ("LB Group (LOYO&BONDAR)") that
+  // doesn't appear in the complex row's Developer1 ("LB Group").
+  // Strip parentheticals + split to take the longest common phrase.
+  const baseName = name.replace(/\([^)]*\)/g, '').replace(/\s+/g, ' ').trim().toLowerCase()
   const lowerName = name.toLowerCase()
+  const allComplexes = await _loadComplexes().catch(() => [])
   const complexes = allComplexes.filter(c => {
-    const dev1 = fs(c.data['Developer1']) ?? fs(c.data['Варианты поиска застройщика'])
-    return dev1 && dev1.toLowerCase().includes(lowerName)
+    const dev1 = (fs(c.data['Developer1']) ?? fs(c.data['Варианты поиска застройщика']) ?? '').toLowerCase()
+    if (!dev1) return false
+    return dev1.includes(baseName) || dev1.includes(lowerName)
+      || baseName.includes(dev1) || lowerName.includes(dev1)
   })
 
   // All units across this developer's complexes. We match by

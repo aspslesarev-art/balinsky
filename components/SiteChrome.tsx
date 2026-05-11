@@ -13,12 +13,15 @@ const ConsultantWidget = dynamic(
   { ssr: false, loading: () => null },
 )
 
-export function SiteChrome() {
+// Server passes `isClosedPortal=true` for presentation.estate / admin
+// so we render nothing there. Path-check below is a belt-and-
+// suspenders fallback (e.g. someone navigates client-side).
+export function SiteChrome({ isClosedPortal = false }: { isClosedPortal?: boolean }) {
   const pathname = usePathname() ?? ''
-  // Admin + the presentation.estate white-label routes are self-
-  // contained UIs: no Balinsky footer, no AI consultant widget.
+  if (isClosedPortal) return null
   if (pathname === '/admin' || pathname.startsWith('/admin/')) return null
   if (pathname.startsWith('/presentation/') || pathname === '/presentation') return null
+
   const lang: Lang = pathname.startsWith('/en') ? 'en' : 'ru'
   return (
     <>
