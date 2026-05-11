@@ -116,31 +116,31 @@ export function AllUnitsView({ units }: { units: UnitForFilter[] }) {
             <li key={u.id}>
               <LinkMenu
                 url={`${PUBLIC_ORIGIN}/unit/${u.id}`}
-                className="block w-full text-left bg-white border border-[#E5E7EB] hover:border-[#1F8B5F] rounded-xl overflow-hidden text-[#111827]"
+                className="block w-full text-left bg-white border border-[#E5E7EB] hover:border-[#1F8B5F] hover:shadow-md transition-shadow rounded-2xl overflow-hidden text-[#111827]"
               >
                 {u.photo ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={u.photo} alt={u.title} className="w-full h-40 sm:h-44 object-cover" />
+                  <img src={u.photo} alt={u.title} className="w-full aspect-[4/3] object-cover" />
                 ) : (
-                  <div className="w-full h-40 sm:h-44 bg-[#F3F4F6] flex items-center justify-center text-[#9CA3AF]">
-                    <BedDouble size={28} />
+                  <div className="w-full aspect-[4/3] bg-[#F3F4F6] flex items-center justify-center text-[#9CA3AF]">
+                    <BedDouble size={32} />
                   </div>
                 )}
-                <div className="p-3">
-                  <div className="text-[12px] text-[#6B7280] mb-1 truncate">{u.project}</div>
-                  <div className="text-[12.5px] text-[#374151] mb-1 flex items-center gap-1 flex-wrap">
-                    <span>{u.kind === 'villa' ? 'Вилла' : 'Апарт.'}</span>
+                <div className="p-4">
+                  <div className="text-[12px] text-[#9CA3AF] mb-1 truncate">{u.project}</div>
+                  <div className="text-[13px] text-[#374151] mb-1.5 flex items-center gap-1 flex-wrap">
+                    <span className="font-medium text-[#111827]">{u.kind === 'villa' ? 'Вилла' : 'Апарт.'}</span>
                     {u.bedrooms != null && <span>· {u.bedrooms} BR</span>}
                     {u.area != null && <span>· {u.area} м²</span>}
                     {u.floor && <span>· эт. {u.floor}</span>}
                   </div>
                   {u.priceUsd != null && (
-                    <div className="text-[15px] font-semibold text-[#16A34A]">
+                    <div className="text-[18px] font-semibold text-[#16A34A] leading-tight">
                       ${u.priceUsd.toLocaleString('en-US')}
                     </div>
                   )}
                   {(u.commissionPct != null || u.commissionUsd != null) && (
-                    <div className="text-[11.5px] text-[#6B7280] mt-1">
+                    <div className="text-[12px] text-[#6B7280] mt-1.5">
                       Комиссия{u.commissionPct != null && ` ${u.commissionPct}%`}
                       {u.commissionUsd != null && <> · <span className="font-semibold text-[#1F8B5F]">${u.commissionUsd.toLocaleString('en-US')}</span></>}
                     </div>
