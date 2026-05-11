@@ -1,23 +1,34 @@
-// White-label developer page on presentation.estate.
+// White-label developer page on presentation.estate — agent
+// workflow, not SEO. Goal: agent lands here, gets every material
+// they need to push a project to a client in <30 sec.
 //
-// Reuses the same raw_developers + raw_complexes data the main site
-// renders, but in a stripped layout with the presentation.estate
-// brand instead of Balinsky chrome (no main header, no chat widget,
-// no Balinsky footer). The developer just shares
-// `presentation.estate/<slug>` with their leads.
+// What lives on the page (in order):
+//   1. Hero with logo + name + concrete facts (projects built /
+//      in progress / locations / unit count). No marketing prose.
+//   2. Per-complex block:
+//      • cover + name + status + completion year + district
+//      • Resource toolbar: Презентация, Рендеры, Мастер-план,
+//        3D-тур, Видео, Booking, Airbnb, Google Maps
+//      • Шахматка юнитов — flat grid of all published villa /
+//        apartment slugs inside the project with photo / BR /
+//        area / floor / price + link to the unit page
+//      • "Скопировать пост" — clipboard-ready Telegram snippet
+//      • Interactive plan if the admin built one
 //
-// No auth, no editor: we (Balinsky) maintain the database, the
-// developer gets a clean shareable page out of it. Future iteration
-// can add a magic-link editor if they ask for one.
+// No auth, no chat widget, no Balinsky chrome. We maintain the
+// data; the developer just shares presentation.estate/<short-slug>.
 
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@supabase/supabase-js'
 import { unstable_cache } from 'next/cache'
-import { Building2, MapPin, Calendar, Users, ExternalLink } from 'lucide-react'
-import { tField, type Lang } from '@/lib/i18n'
+import {
+  Building2, MapPin, Calendar, Users, ExternalLink, FileText, Image as ImageIcon,
+  Map as MapIcon, Film, Box, BedDouble,
+} from 'lucide-react'
 import { listLayers, listHotspots } from '@/lib/complex-visualizations'
 import { ComplexVisualizationViewer } from '@/components/ComplexVisualizationViewer'
+import { CopyPostButton } from './_copy-button'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 300
@@ -28,20 +39,20 @@ const sb = createClient(
 )
 
 type DevRow = { airtable_id: string; data: Record<string, unknown>; logo_url: string | null }
+type ComplexRow = { airtable_id: string; data: Record<string, unknown>; slug: string | null; cover_url: string | null }
+type UnitRow = { airtable_id: string; data: Record<string, unknown> }
 
 const _loadDevelopers = unstable_cache(
   async (): Promise<DevRow[]> => {
     const { data, error } = await sb.from('raw_developers').select('airtable_id, data, logo_url').limit(200)
     if (error) throw new Error(`raw_developers: ${error.message}`)
     const rows = (data ?? []) as DevRow[]
-    if (rows.length === 0) throw new Error('raw_developers empty — refusing to cache')
+    if (rows.length === 0) throw new Error('raw_developers empty')
     return rows
   },
-  ['presentation-developers-v1'],
+  ['presentation-developers-v2'],
   { revalidate: 600 },
 )
-
-type ComplexRow = { airtable_id: string; data: Record<string, unknown>; slug: string | null; cover_url: string | null }
 
 const _loadComplexes = unstable_cache(
   async (): Promise<ComplexRow[]> => {
@@ -53,12 +64,53 @@ const _loadComplexes = unstable_cache(
       rows.push(...(data as ComplexRow[]))
       if (data.length < 200) break
     }
-    if (rows.length === 0) throw new Error('raw_complexes empty — refusing to cache')
+    if (rows.length === 0) throw new Error('raw_complexes empty')
     return rows
   },
-  ['presentation-complexes-v1'],
+  ['presentation-complexes-v2'],
   { revalidate: 600 },
 )
+
+const _loadApartments = unstable_cache(
+  async (): Promise<UnitRow[]> => {
+    const rows: UnitRow[] = []
+    for (let from = 0; from < 4000; from += 200) {
+      const { data, error } = await sb.from('raw_apartments').select('airtable_id, data').range(from, from + 199)
+      if (error) throw new Error(`raw_apartments: ${error.message}`)
+      if (!data || data.length === 0) break
+      rows.push(...(data as UnitRow[]))
+      if (data.length < 200) break
+    }
+    return rows
+  },
+  ['presentation-apartments-v2'],
+  { revalidate: 600 },
+)
+
+const _loadVillas = unstable_cache(
+  async (): Promise<UnitRow[]> => {
+    const rows: UnitRow[] = []
+    for (let from = 0; from < 4000; from += 200) {
+      const { data, error } = await sb.from('raw_villas').select('airtable_id, data').range(from, from + 199)
+      if (error) throw new Error(`raw_villas: ${error.message}`)
+      if (!data || data.length === 0) break
+      rows.push(...(data as UnitRow[]))
+      if (data.length < 200) break
+    }
+    return rows
+  },
+  ['presentation-villas-v2'],
+  { revalidate: 600 },
+)
+
+const PHOTO_MANIFEST_BASE = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public`
+async function loadPhotoManifest(bucket: string): Promise<Record<string, string[]>> {
+  try {
+    const r = await fetch(`${PHOTO_MANIFEST_BASE}/${bucket}/_manifest.json`, { next: { revalidate: 600 } })
+    if (!r.ok) return {}
+    return await r.json() as Record<string, string[]>
+  } catch { return {} }
+}
 
 function fs(v: unknown): string | null {
   if (v == null) return null
@@ -68,19 +120,48 @@ function fs(v: unknown): string | null {
   if (typeof v === 'object' && 'value' in (v as Record<string, unknown>)) return fs((v as Record<string, unknown>).value)
   return null
 }
+function num(v: unknown): number | null {
+  if (typeof v === 'number') return v
+  if (typeof v === 'string') {
+    const n = Number(v.replace(/[^\d.\-]/g, ''))
+    return Number.isFinite(n) ? n : null
+  }
+  return null
+}
 
-function parseBullets(s: string | null): string[] {
-  if (!s) return []
-  return s.split('\n').map(l => l.replace(/^[\s•\-–—·]+/, '').trim()).filter(Boolean)
+type Unit = {
+  kind: 'villa' | 'apartment'
+  id: string
+  slug: string
+  title: string
+  bedrooms: number | null
+  area: number | null
+  priceUsd: number | null
+  floor: string | null
+  photo: string | null
+  status: string | null
+}
+
+function unitFromRow(r: UnitRow, kind: 'villa' | 'apartment', photos: Record<string, string[]>): Unit | null {
+  if (r.data['Опубликовать'] !== true) return null
+  const slug = fs(r.data['SEO:Slug'])
+  if (!slug || slug.startsWith('-')) return null
+  const title = (fs(r.data['SEO:Title']) ?? fs(r.data['Name']) ?? '').replace(/\s*\|\s*Balinsky\s*$/i, '').trim()
+  return {
+    kind, id: r.airtable_id, slug, title,
+    bedrooms: num(r.data['Комнаты']) ?? num(r.data['Спальни']),
+    area: num(r.data['Площадь']),
+    priceUsd: kind === 'villa'
+      ? (num(r.data['price']) ?? num(r.data['Цена']))
+      : (num(r.data['price_usd']) ?? num(r.data['Цена'])),
+    floor: fs(r.data['Этаж']),
+    photo: photos[r.airtable_id]?.[0] ?? null,
+    status: fs(r.data['Статус']),
+  }
 }
 
 type Params = Promise<{ slug: string }>
 
-// Match the URL slug against the developer's SEO:Slug. Supports
-// both the full canonical slug ("lb-group-loyobondar-bali-developer")
-// and any shorter prefix the developer wants to share
-// ("lb-group", "breig"). First exact match wins; otherwise we take
-// the developer whose slug starts with `<slug>-`.
 function findDev(devs: DevRow[], slug: string): DevRow | undefined {
   const exact = devs.find(d => fs(d.data['SEO:Slug']) === slug)
   if (exact) return exact
@@ -96,17 +177,11 @@ export async function generateMetadata({ params }: { params: Params }) {
   const dev = findDev(devs, slug)
   if (!dev) return { title: 'Застройщик · presentation.estate' }
   const name = fs(dev.data['Developer']) ?? slug
-  const desc = fs(dev.data['SEO Text']) ?? `Жилые комплексы и проекты застройщика ${name} на Бали`
-  return {
-    title: `${name} · presentation.estate`,
-    description: desc.slice(0, 160),
-    robots: { index: true, follow: true },
-  }
+  return { title: `${name} · presentation.estate`, robots: { index: false } }
 }
 
 export default async function PresentationPage({ params }: { params: Params }) {
   const { slug } = await params
-  const lang: Lang = 'ru' // single-locale for v1; can flip to ?lang= later
 
   const devs = await _loadDevelopers().catch(() => [])
   const dev = findDev(devs, slug)
@@ -115,15 +190,8 @@ export default async function PresentationPage({ params }: { params: Params }) {
 
   const name = fs(dev.data['Developer']) ?? slug
   const logo = dev.logo_url
-  const aiDesc = tField(dev.data, 'SEO Text', lang) ?? fs(dev.data['AI Описание'])
 
-  const dimensions = [
-    { title: 'Строительство и недвижимость', bullets: parseBullets(tField(dev.data, 'Строительство и недвижимость', lang)), Icon: Building2 },
-    { title: 'Репутация и опыт',             bullets: parseBullets(tField(dev.data, 'Репутация и опыт',           lang)), Icon: Users },
-    { title: 'Техника и производство',       bullets: parseBullets(tField(dev.data, 'Техника и производство',     lang)), Icon: Calendar },
-  ].filter(d => d.bullets.length > 0)
-
-  // Developer's complexes — match by name appearing in Developer1 / search variants
+  // All complexes by this developer.
   const allComplexes = await _loadComplexes().catch(() => [])
   const lowerName = name.toLowerCase()
   const complexes = allComplexes.filter(c => {
@@ -131,128 +199,260 @@ export default async function PresentationPage({ params }: { params: Params }) {
     return dev1 && dev1.toLowerCase().includes(lowerName)
   })
 
-  // Pre-load interactive plans for each complex (parallel).
-  const complexesWithViz = await Promise.all(complexes.map(async c => {
+  // All units across this developer's complexes. We match by
+  // complex name appearing in the unit's title (same heuristic
+  // the public complex page uses).
+  const [allApts, allVillas, aptPhotos, villaPhotos] = await Promise.all([
+    _loadApartments().catch(() => []),
+    _loadVillas().catch(() => []),
+    loadPhotoManifest('apartment-photos'),
+    loadPhotoManifest('villa-photos'),
+  ])
+
+  // Build a name → projectName lookup so we can attribute each unit
+  // to its parent complex.
+  const projectNames = complexes
+    .map(c => fs(c.data['Project']))
+    .filter((x): x is string => x != null)
+    .map(s => s.trim())
+
+  const unitsByProject = new Map<string, Unit[]>()
+  function tryAttribute(unit: Unit) {
+    const lowerTitle = unit.title.toLowerCase()
+    for (const p of projectNames) {
+      if (lowerTitle.includes(p.toLowerCase())) {
+        const arr = unitsByProject.get(p) ?? []
+        arr.push(unit)
+        unitsByProject.set(p, arr)
+        return
+      }
+    }
+  }
+  for (const r of allApts) {
+    const u = unitFromRow(r, 'apartment', aptPhotos); if (u) tryAttribute(u)
+  }
+  for (const r of allVillas) {
+    const u = unitFromRow(r, 'villa', villaPhotos); if (u) tryAttribute(u)
+  }
+
+  // Pre-load interactive plans for each complex.
+  const complexesEnriched = await Promise.all(complexes.map(async c => {
     const layers = await listLayers(c.airtable_id).catch(() => [])
     const hotspots = layers.length > 0 ? await listHotspots(layers.map(l => l.id)).catch(() => []) : []
-    return { complex: c, layers, hotspots }
+    return { row: c, layers, hotspots }
   }))
 
+  // Aggregate facts for the header strip.
   const totalProjects = complexes.length
+  const built = complexes.filter(c => (fs(c.data['Статус']) ?? '').toLowerCase().includes('постро')).length
+  const building = totalProjects - built
+  const districts = Array.from(new Set(
+    complexes.map(c => fs(c.data['Location 2']) ?? fs(c.data['Location'])).filter((x): x is string => !!x),
+  ))
+  const totalUnits = Array.from(unitsByProject.values()).reduce((s, arr) => s + arr.length, 0)
 
   return (
     <div className="min-h-screen bg-[#FAFAF8] text-[#111827]">
-      {/* Sticky brand bar — presentation.estate, not Balinsky */}
       <header className="sticky top-0 z-20 bg-white/95 backdrop-blur border-b border-[#E5E7EB]">
         <div className="max-w-[1180px] mx-auto px-5 sm:px-8 h-[60px] flex items-center justify-between gap-3">
           <div className="text-[14px] font-semibold tracking-tight">
             <span className="text-[#1F8B5F]">presentation</span>.estate
           </div>
-          <div className="text-[12px] text-[#6B7280] truncate max-w-[60%]">{name}</div>
+          <div className="text-[12px] text-[#6B7280] truncate max-w-[60%]">для агентов · {name}</div>
         </div>
       </header>
 
       <main className="max-w-[1180px] mx-auto px-5 sm:px-8 py-8 sm:py-12">
-        {/* Hero — logo + name + 1-line tagline */}
-        <section className="flex items-start gap-6 mb-10 flex-wrap">
+        {/* HERO — agent-grade summary */}
+        <section className="flex items-start gap-6 mb-8 flex-wrap">
           {logo && (
-            <div className="shrink-0 w-[120px] h-[120px] rounded-2xl bg-white border border-[#E5E7EB] flex items-center justify-center p-4">
+            <div className="shrink-0 w-[100px] h-[100px] rounded-2xl bg-white border border-[#E5E7EB] flex items-center justify-center p-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={logo} alt={name} className="max-w-full max-h-full object-contain" />
             </div>
           )}
           <div className="flex-1 min-w-0">
             <div className="text-[12px] uppercase tracking-wide text-[#6B7280] mb-1">Застройщик на Бали</div>
-            <h1 className="text-[28px] sm:text-[36px] md:text-[44px] font-semibold tracking-tight leading-[1.1] mb-3">{name}</h1>
-            <div className="text-[14px] text-[#4B5563] flex items-center gap-4 flex-wrap">
-              {totalProjects > 0 && (
-                <span className="inline-flex items-center gap-1.5">
-                  <Building2 size={14} /> {totalProjects} {totalProjects === 1 ? 'проект' : totalProjects < 5 ? 'проекта' : 'проектов'}
-                </span>
+            <h1 className="text-[26px] sm:text-[34px] md:text-[40px] font-semibold tracking-tight leading-[1.1] mb-2">{name}</h1>
+            <div className="text-[13px] text-[#4B5563] flex flex-wrap gap-x-5 gap-y-1">
+              {totalProjects > 0 && <span>{totalProjects} {totalProjects === 1 ? 'проект' : totalProjects < 5 ? 'проекта' : 'проектов'}</span>}
+              {built > 0 && <span>· сдано: <b>{built}</b></span>}
+              {building > 0 && <span>· в стройке: <b>{building}</b></span>}
+              {totalUnits > 0 && <span>· юнитов в каталоге: <b>{totalUnits}</b></span>}
+              {districts.length > 0 && (
+                <span>· районы: <b>{districts.slice(0, 5).join(', ')}{districts.length > 5 ? ` +${districts.length - 5}` : ''}</b></span>
               )}
-              <span className="inline-flex items-center gap-1.5">
-                <MapPin size={14} /> Бали, Индонезия
-              </span>
             </div>
           </div>
         </section>
 
-        {/* About */}
-        {aiDesc && (
-          <section className="mb-10">
-            <h2 className="text-[22px] font-semibold tracking-tight mb-3">О компании</h2>
-            <div className="prose max-w-3xl text-[15px] leading-relaxed whitespace-pre-line text-[#1F2937]">{aiDesc}</div>
-          </section>
-        )}
+        {/* Per-complex blocks — the meat of the page */}
+        {complexesEnriched.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-[#E5E7EB] bg-white p-8 text-center text-[14px] text-[#6B7280]">
+            У этого застройщика пока нет опубликованных проектов в каталоге.
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {complexesEnriched.map(({ row: c, layers, hotspots }) => {
+              const project = fs(c.data['Project']) ?? c.slug ?? ''
+              const district = fs(c.data['Location 2']) ?? fs(c.data['Location'])
+              const year = fs(c.data['Year of completion ']) ?? fs(c.data['Year of completion'])
+              const status = fs(c.data['Статус'])
+              const lease = fs(c.data['Leasehold']) ?? fs(c.data['Leashold'])
+              const permit = fs(c.data['Разрешительные документы'])
+              const totalProjUnits = num(c.data['Total quantity of units'])
 
-        {/* Dimensions — opyt / reputation / technika */}
-        {dimensions.length > 0 && (
-          <section className="mb-10 grid grid-cols-1 md:grid-cols-3 gap-4">
-            {dimensions.map(({ title, bullets, Icon }) => (
-              <div key={title} className="bg-white border border-[#E5E7EB] rounded-2xl p-5">
-                <div className="inline-flex items-center gap-2 text-[#1F8B5F] mb-2">
-                  <Icon size={16} />
-                  <span className="text-[13px] font-semibold">{title}</span>
-                </div>
-                <ul className="space-y-1.5 text-[13.5px] text-[#374151]">
-                  {bullets.slice(0, 6).map((b, i) => (
-                    <li key={i} className="flex items-start gap-2">
-                      <span className="text-[#1F8B5F] mt-1">•</span>
-                      <span>{b}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </section>
-        )}
+              const resources: { label: string; url: string; Icon: typeof Box }[] = []
+              const presentations = fs(c.data['Презентации'])
+              const renders = fs(c.data['Renders'])
+              const masterplan = fs(c.data['Мастерплан'])
+              const tour3d = fs(c.data['3D tours'])
+              const video = fs(c.data['Video'])
+              const booking = fs(c.data['Booking'])
+              const airbnb = fs(c.data['AirBNB'])
+              const gmap = fs(c.data['Link from Google maps on location']) ?? fs(c.data['Google maps']) ?? fs(c.data['Google map'])
+              if (presentations) resources.push({ label: 'Презентация', url: presentations, Icon: FileText })
+              if (renders)       resources.push({ label: 'Рендеры',     url: renders,       Icon: ImageIcon })
+              if (masterplan)    resources.push({ label: 'Мастер-план', url: masterplan,    Icon: MapIcon })
+              if (tour3d)        resources.push({ label: '3D-тур',      url: tour3d,        Icon: Box })
+              if (video)         resources.push({ label: 'Видео',       url: video,         Icon: Film })
+              if (gmap)          resources.push({ label: 'Google Maps', url: gmap,          Icon: MapIcon })
+              if (booking)       resources.push({ label: 'Booking',     url: booking,       Icon: ExternalLink })
+              if (airbnb)        resources.push({ label: 'AirBnB',      url: airbnb,        Icon: ExternalLink })
 
-        {/* Projects with interactive plans where present */}
-        {complexesWithViz.length > 0 && (
-          <section className="mb-10">
-            <h2 className="text-[22px] font-semibold tracking-tight mb-4">Проекты</h2>
-            <div className="space-y-8">
-              {complexesWithViz.map(({ complex, layers, hotspots }) => {
-                const projectName = fs(complex.data['Project']) ?? complex.slug ?? ''
-                const district = fs(complex.data['Location 2']) ?? fs(complex.data['Location'])
-                const year = fs(complex.data['Year of completion ']) ?? fs(complex.data['Year of completion'])
-                const status = fs(complex.data['Статус'])
-                return (
-                  <article key={complex.airtable_id} className="bg-white border border-[#E5E7EB] rounded-2xl overflow-hidden">
-                    {complex.cover_url && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={complex.cover_url} alt={projectName} className="w-full h-[200px] sm:h-[260px] object-cover" />
-                    )}
-                    <div className="p-5 sm:p-6">
-                      <div className="flex items-start justify-between gap-4 flex-wrap mb-3">
-                        <h3 className="text-[20px] sm:text-[24px] font-semibold tracking-tight">{projectName}</h3>
-                        <div className="text-[12.5px] text-[#6B7280] flex items-center gap-3 flex-wrap">
+              const units = (unitsByProject.get(project) ?? []).sort((a, b) => {
+                if (a.bedrooms !== b.bedrooms) return (a.bedrooms ?? 99) - (b.bedrooms ?? 99)
+                return (a.priceUsd ?? 0) - (b.priceUsd ?? 0)
+              })
+              const minPrice = units.reduce<number | null>((m, u) => u.priceUsd != null && (m == null || u.priceUsd < m) ? u.priceUsd : m, null)
+
+              const projectUrl = c.slug ? `https://balinsky.info/ru/zhilye-kompleksy/o/${c.slug}` : null
+              const postText = [
+                `🏠 ${project}${district ? ` · ${district}` : ''}`,
+                [
+                  status,
+                  year && !status?.toLowerCase().includes('постро') ? `сдача ${year}` : null,
+                  lease ? `лизхолд ${lease}л` : null,
+                  permit && permit.toLowerCase() !== 'нет' ? permit : null,
+                ].filter(Boolean).join(' · '),
+                totalProjUnits ? `Юнитов в проекте: ${totalProjUnits}` : null,
+                minPrice ? `Цена от $${minPrice.toLocaleString('en-US')}` : null,
+                '',
+                projectUrl ? `Подробнее: ${projectUrl}` : null,
+              ].filter(Boolean).join('\n')
+
+              return (
+                <article key={c.airtable_id} className="bg-white border border-[#E5E7EB] rounded-2xl overflow-hidden">
+                  {c.cover_url && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={c.cover_url} alt={project} className="w-full h-[180px] sm:h-[240px] object-cover" />
+                  )}
+                  <div className="p-5 sm:p-6">
+                    <div className="flex items-start justify-between gap-4 flex-wrap mb-2">
+                      <div className="min-w-0">
+                        <h2 className="text-[20px] sm:text-[24px] font-semibold tracking-tight">{project}</h2>
+                        <div className="text-[12.5px] text-[#6B7280] flex items-center gap-3 flex-wrap mt-1">
                           {district && <span className="inline-flex items-center gap-1"><MapPin size={11} /> {district}</span>}
-                          {year && <span>· сдача {year}</span>}
                           {status && <span>· {status}</span>}
+                          {year && !status?.toLowerCase().includes('постро') && <span>· сдача {year}</span>}
+                          {lease && <span>· лизхолд {lease}л</span>}
+                          {totalProjUnits != null && <span>· {totalProjUnits} юнитов</span>}
+                          {permit && permit.toLowerCase() !== 'нет' && <span>· {permit}</span>}
+                          {minPrice != null && <span className="text-[#16A34A] font-medium">· от ${minPrice.toLocaleString('en-US')}</span>}
                         </div>
                       </div>
-                      {/* Interactive plan if the admin has built one */}
-                      {layers.length > 0 && (
+                      <CopyPostButton text={postText} />
+                    </div>
+
+                    {/* Resource toolbar */}
+                    {resources.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {resources.map(({ label, url, Icon }) => (
+                          <a
+                            key={label}
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F3F4F6] hover:bg-[#E5E7EB] text-[12.5px] text-[#111827] no-underline border border-transparent hover:border-[#1F8B5F]"
+                          >
+                            <Icon size={12} className="text-[#1F8B5F]" />
+                            {label}
+                          </a>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Interactive plan if drawn */}
+                    {layers.length > 0 && (
+                      <div className="mb-4">
                         <ComplexVisualizationViewer
                           layers={layers.map(l => ({ id: l.id, parentLayerId: l.parentLayerId, title: l.title, photoUrl: l.photoUrl }))}
                           hotspots={hotspots}
                           unitsBySlug={{}}
-                          lang={lang}
+                          lang="ru"
                         />
-                      )}
-                    </div>
-                  </article>
-                )
-              })}
-            </div>
-          </section>
+                      </div>
+                    )}
+
+                    {/* Шахматка юнитов */}
+                    {units.length > 0 && (
+                      <div>
+                        <div className="text-[12px] uppercase tracking-wide text-[#6B7280] mb-2">
+                          Юниты ({units.length}{totalProjUnits ? ` из ${totalProjUnits}` : ''})
+                        </div>
+                        <ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                          {units.map(u => {
+                            const href = u.kind === 'villa'
+                              ? `https://balinsky.info/ru/villy/o/${u.slug}`
+                              : `https://balinsky.info/ru/apartamenty/o/${u.slug}`
+                            return (
+                              <li key={u.id}>
+                                <a
+                                  href={href}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="block bg-[#FAFAF8] hover:bg-white border border-[#E5E7EB] hover:border-[#1F8B5F] rounded-xl overflow-hidden no-underline text-[#111827]"
+                                >
+                                  {u.photo ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img src={u.photo} alt={u.title} className="w-full h-20 object-cover" />
+                                  ) : (
+                                    <div className="w-full h-20 bg-[#F3F4F6] flex items-center justify-center text-[#9CA3AF]">
+                                      <BedDouble size={20} />
+                                    </div>
+                                  )}
+                                  <div className="p-2">
+                                    <div className="text-[11.5px] text-[#6B7280] mb-0.5 flex items-center gap-1">
+                                      {u.bedrooms != null && <span>{u.bedrooms} BR</span>}
+                                      {u.area != null && <span>· {u.area} м²</span>}
+                                      {u.floor && <span>· эт. {u.floor}</span>}
+                                    </div>
+                                    <div className="text-[11px] text-[#111827] line-clamp-2 mb-1">
+                                      {u.title.replace(project, '').replace(/^[\s\-·,]+/, '')}
+                                    </div>
+                                    {u.priceUsd != null && (
+                                      <div className="text-[12.5px] font-semibold text-[#16A34A]">
+                                        ${u.priceUsd.toLocaleString('en-US')}
+                                      </div>
+                                    )}
+                                  </div>
+                                </a>
+                              </li>
+                            )
+                          })}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </article>
+              )
+            })}
+          </div>
         )}
 
-        {/* Footer with credit + back to main site */}
         <footer className="mt-16 pt-6 border-t border-[#E5E7EB] text-[12px] text-[#6B7280] flex items-center justify-between flex-wrap gap-3">
           <div>
-            Страница и данные поддерживаются командой{' '}
+            Данные и материалы поддерживаются командой{' '}
             <Link href="https://balinsky.info" className="text-[#1F8B5F] hover:underline" target="_blank">balinsky.info</Link>
             {' · '}<span className="text-[#9CA3AF]">presentation.estate</span>
           </div>
