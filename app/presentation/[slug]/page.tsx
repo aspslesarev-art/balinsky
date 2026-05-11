@@ -147,6 +147,8 @@ type Unit = {
   floor: string | null
   photo: string | null
   status: string | null
+  commissionPct: number | null
+  commissionUsd: number | null
 }
 
 function unitFromRow(r: UnitRow, kind: 'villa' | 'apartment', photos: Record<string, string[]>): Unit | null {
@@ -154,16 +156,29 @@ function unitFromRow(r: UnitRow, kind: 'villa' | 'apartment', photos: Record<str
   const slug = fs(r.data['SEO:Slug'])
   if (!slug || slug.startsWith('-')) return null
   const title = (fs(r.data['SEO:Title']) ?? fs(r.data['Name']) ?? '').replace(/\s*\|\s*Balinsky\s*$/i, '').trim()
+  const priceUsd = kind === 'villa'
+    ? (num(r.data['price']) ?? num(r.data['Цена']))
+    : (num(r.data['price_usd']) ?? num(r.data['Цена']))
+  // `Комиссия` on a unit is a fraction (0.08 = 8%); occasionally stored
+  // as an integer percent (5 = 5%). Treat <1 as fraction, ≥1 as percent.
+  const commissionRaw = num(r.data['Комиссия'])
+  const commissionPct = commissionRaw == null ? null
+    : commissionRaw < 1 ? Math.round(commissionRaw * 1000) / 10
+    : Math.round(commissionRaw * 10) / 10
+  // Prefer the precomputed agent-amount column when present; fall back
+  // to price × pct.
+  const commissionUsd = num(r.data['Комиссия агента $'])
+    ?? (priceUsd != null && commissionPct != null ? Math.round(priceUsd * commissionPct / 100) : null)
   return {
     kind, id: r.airtable_id, slug, title,
     bedrooms: num(r.data['Комнаты']) ?? num(r.data['Спальни']),
     area: num(r.data['Площадь']),
-    priceUsd: kind === 'villa'
-      ? (num(r.data['price']) ?? num(r.data['Цена']))
-      : (num(r.data['price_usd']) ?? num(r.data['Цена'])),
+    priceUsd,
     floor: fs(r.data['Этаж']),
     photo: photos[r.airtable_id]?.[0] ?? null,
     status: fs(r.data['Статус']),
+    commissionPct,
+    commissionUsd,
   }
 }
 
@@ -204,14 +219,6 @@ export default async function PresentationPage({ params }: { params: Params }) {
 
   const name = fs(dev.data['Developer']) ?? slug
   const logo = dev.logo_url
-
-  // Commission shown on every unit tile so the agent sees their
-  // upside without leaving the page. `Комиссия` in raw_developers
-  // is usually a number (e.g. 5) or a string ("5%", "5-7"). We parse
-  // the first number; if absent, commission isn't shown.
-  const commissionRaw = fs(dev.data['Комиссия']) ?? fs(dev.data['Комиссия отображение'])
-  const commissionMatch = commissionRaw?.match(/(\d+(?:[.,]\d+)?)/)
-  const commissionPct: number | null = commissionMatch ? Number(commissionMatch[1].replace(',', '.')) : null
 
   // All complexes by this developer. Match is fuzzy in both
   // directions because raw_developers' Developer field often has a
@@ -296,6 +303,8 @@ export default async function PresentationPage({ params }: { params: Params }) {
         bedrooms: u.bedrooms, area: u.area, priceUsd: u.priceUsd,
         floor: u.floor, photo: u.photo,
         project: p, district: projectDistrict.get(p) ?? null,
+        commissionPct: u.commissionPct,
+        commissionUsd: u.commissionUsd,
       })
     }
   }
@@ -334,7 +343,7 @@ export default async function PresentationPage({ params }: { params: Params }) {
         ) : (
           <DevTabs
             unitCount={flatUnits.length}
-            allUnits={<AllUnitsView units={flatUnits} commissionPct={commissionPct} />}
+            allUnits={<AllUnitsView units={flatUnits} />}
             byProjects={
           <div className="space-y-8">
             {complexesEnriched.map(({ row: c, layers, hotspots }) => {
@@ -441,46 +450,41 @@ export default async function PresentationPage({ params }: { params: Params }) {
                           Юниты ({units.length}{totalProjUnits ? ` из ${totalProjUnits}` : ''})
                         </div>
                         <ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                          {units.map(u => {
-                            const commissionAmount = commissionPct != null && u.priceUsd != null
-                              ? Math.round(u.priceUsd * commissionPct / 100)
-                              : null
-                            return (
-                              <li key={u.id}>
-                                <LinkMenu
-                                  url={`${PUBLIC_ORIGIN}/unit/${u.id}`}
-                                  className="block w-full text-left bg-[#FAFAF8] hover:bg-white border border-[#E5E7EB] hover:border-[#1F8B5F] rounded-xl overflow-hidden text-[#111827]"
-                                >
-                                  {u.photo ? (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img src={u.photo} alt={u.title} className="w-full h-20 object-cover" />
-                                  ) : (
-                                    <div className="w-full h-20 bg-[#F3F4F6] flex items-center justify-center text-[#9CA3AF]">
-                                      <BedDouble size={20} />
+                          {units.map(u => (
+                            <li key={u.id}>
+                              <LinkMenu
+                                url={`${PUBLIC_ORIGIN}/unit/${u.id}`}
+                                className="block w-full text-left bg-[#FAFAF8] hover:bg-white border border-[#E5E7EB] hover:border-[#1F8B5F] rounded-xl overflow-hidden text-[#111827]"
+                              >
+                                {u.photo ? (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img src={u.photo} alt={u.title} className="w-full h-20 object-cover" />
+                                ) : (
+                                  <div className="w-full h-20 bg-[#F3F4F6] flex items-center justify-center text-[#9CA3AF]">
+                                    <BedDouble size={20} />
+                                  </div>
+                                )}
+                                <div className="p-2">
+                                  <div className="text-[11.5px] text-[#6B7280] mb-0.5 flex items-center gap-1">
+                                    {u.bedrooms != null && <span>{u.bedrooms} BR</span>}
+                                    {u.area != null && <span>· {u.area} м²</span>}
+                                    {u.floor && <span>· эт. {u.floor}</span>}
+                                  </div>
+                                  {u.priceUsd != null && (
+                                    <div className="text-[12.5px] font-semibold text-[#16A34A]">
+                                      ${u.priceUsd.toLocaleString('en-US')}
                                     </div>
                                   )}
-                                  <div className="p-2">
-                                    <div className="text-[11.5px] text-[#6B7280] mb-0.5 flex items-center gap-1">
-                                      {u.bedrooms != null && <span>{u.bedrooms} BR</span>}
-                                      {u.area != null && <span>· {u.area} м²</span>}
-                                      {u.floor && <span>· эт. {u.floor}</span>}
+                                  {(u.commissionPct != null || u.commissionUsd != null) && (
+                                    <div className="text-[10.5px] text-[#6B7280] mt-0.5">
+                                      Комиссия{u.commissionPct != null && ` ${u.commissionPct}%`}
+                                      {u.commissionUsd != null && <> · <span className="font-semibold text-[#1F8B5F]">${u.commissionUsd.toLocaleString('en-US')}</span></>}
                                     </div>
-                                    {u.priceUsd != null && (
-                                      <div className="text-[12.5px] font-semibold text-[#16A34A]">
-                                        ${u.priceUsd.toLocaleString('en-US')}
-                                      </div>
-                                    )}
-                                    {commissionPct != null && (
-                                      <div className="text-[10.5px] text-[#6B7280] mt-0.5">
-                                        Комиссия {commissionPct}%
-                                        {commissionAmount != null && <> · <span className="font-semibold text-[#1F8B5F]">${commissionAmount.toLocaleString('en-US')}</span></>}
-                                      </div>
-                                    )}
-                                  </div>
-                                </LinkMenu>
-                              </li>
-                            )
-                          })}
+                                  )}
+                                </div>
+                              </LinkMenu>
+                            </li>
+                          ))}
                         </ul>
                       </div>
                     )}

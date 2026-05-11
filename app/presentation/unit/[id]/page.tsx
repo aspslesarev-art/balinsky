@@ -61,6 +61,40 @@ function num(v: unknown): number | null {
   return null
 }
 
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+// Strip every brand-name leak from free-form text. Airtable already
+// stores comma-separated typo variants of the complex / developer
+// name in two utility fields ("Название комплекса с ошибками",
+// "Название застройщика с ошибками") — we use those plus the
+// canonical names as the scrub list.
+function scrubBrandLeaks(text: string, leaks: Array<string | null>): string {
+  const variants = new Set<string>()
+  for (const raw of leaks) {
+    if (!raw) continue
+    for (const piece of raw.split(/[,\n]/)) {
+      const t = piece.trim()
+      if (t.length >= 3) variants.add(t)
+    }
+  }
+  // Longest-first so "Loyo Villas Ubud" is removed before "Loyo".
+  const sorted = Array.from(variants).sort((a, b) => b.length - a.length)
+  let out = text
+  for (const v of sorted) {
+    out = out.replace(new RegExp(escapeRegex(v), 'gi'), '')
+  }
+  // Tidy: collapse leftover punctuation+whitespace artefacts.
+  return out
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/\s+([.,;:!?])/g, '$1')
+    .replace(/\(\s*\)/g, '')
+    .replace(/[—–-]\s*[—–-]/g, '—')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
 type Params = Promise<{ id: string }>
 
 export async function generateMetadata({ params }: { params: Params }) {
@@ -107,10 +141,31 @@ export default async function UnitAnonPage({ params }: { params: Params }) {
     ? (num(d['price']) ?? num(d['Цена']))
     : (num(d['price_usd']) ?? num(d['Цена']))
   const district = fs(d['Location 2']) ?? fs(d['Location'])
-  // Description: keep only the field, scrub any obvious brand name
-  // leakage caused by SEO text mentioning the project.
-  const rawDescription = fs(d['SEO Text']) ?? fs(d['Notes']) ?? fs(d['ИИ описание'])
   const view = fs(d['Вид']) ?? fs(d['View'])
+
+  // Brand-leak scrub list — explicit names + typo variants Airtable
+  // already keeps. Used to clean description text below; never
+  // rendered as-is, never echoed back to the client.
+  const leakNames: Array<string | null> = [
+    fs(d['Комплекс 1']),
+    fs(d['Developer1']),
+    fs(d['Название комплекса с ошибками']),
+    fs(d['Название застройщика с ошибками']),
+    fs(d['SEO:Title']),
+    fs(d['Name']),
+  ]
+  // Description sources, in priority order. Each is scrubbed before
+  // we pick the first non-empty result.
+  const rawDescCandidates = [
+    fs(d['SEO Text']),
+    fs(d['Notes']),
+    fs(d['ИИ описание']),
+  ].filter((x): x is string => !!x)
+  let description: string | null = null
+  for (const raw of rawDescCandidates) {
+    const cleaned = scrubBrandLeaks(raw, leakNames)
+    if (cleaned.length >= 30) { description = cleaned; break }
+  }
 
   // Anonymised lead-in: type + district only. Never the project name
   // or developer; we explicitly do NOT render `d['Project']` or
@@ -176,11 +231,11 @@ export default async function UnitAnonPage({ params }: { params: Params }) {
               {view && <Fact icon={MapPin} label="Вид" value={view} />}
             </div>
 
-            {rawDescription && (
+            {description && (
               <div className="mb-2">
                 <div className="text-[12px] uppercase tracking-wide text-[#6B7280] mb-2">Описание</div>
                 <div className="text-[14px] leading-[1.7] text-[#374151] whitespace-pre-wrap">
-                  {rawDescription}
+                  {description}
                 </div>
               </div>
             )}

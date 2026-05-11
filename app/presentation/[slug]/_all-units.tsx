@@ -18,6 +18,8 @@ export type UnitForFilter = {
   photo: string | null
   project: string
   district: string | null
+  commissionPct: number | null
+  commissionUsd: number | null
 }
 
 const chip = (active: boolean) =>
@@ -27,12 +29,7 @@ const chip = (active: boolean) =>
       : 'bg-white text-[#374151] border-[#E5E7EB] hover:border-[#1F8B5F]'
   }`
 
-export function AllUnitsView({
-  units, commissionPct,
-}: {
-  units: UnitForFilter[]
-  commissionPct: number | null
-}) {
+export function AllUnitsView({ units }: { units: UnitForFilter[] }) {
   const [kind, setKind] = useState<'all' | 'villa' | 'apartment'>('all')
   const [br, setBr] = useState<number | null>(null)
   const [project, setProject] = useState<string>('all')
@@ -115,48 +112,43 @@ export function AllUnitsView({
         </div>
       ) : (
         <ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-          {filtered.map(u => {
-            const commissionAmount = commissionPct != null && u.priceUsd != null
-              ? Math.round(u.priceUsd * commissionPct / 100)
-              : null
-            return (
-              <li key={u.id}>
-                <LinkMenu
-                  url={`${PUBLIC_ORIGIN}/unit/${u.id}`}
-                  className="block w-full text-left bg-white border border-[#E5E7EB] hover:border-[#1F8B5F] rounded-xl overflow-hidden text-[#111827]"
-                >
-                  {u.photo ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={u.photo} alt={u.title} className="w-full h-28 object-cover" />
-                  ) : (
-                    <div className="w-full h-28 bg-[#F3F4F6] flex items-center justify-center text-[#9CA3AF]">
-                      <BedDouble size={22} />
+          {filtered.map(u => (
+            <li key={u.id}>
+              <LinkMenu
+                url={`${PUBLIC_ORIGIN}/unit/${u.id}`}
+                className="block w-full text-left bg-white border border-[#E5E7EB] hover:border-[#1F8B5F] rounded-xl overflow-hidden text-[#111827]"
+              >
+                {u.photo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={u.photo} alt={u.title} className="w-full h-28 object-cover" />
+                ) : (
+                  <div className="w-full h-28 bg-[#F3F4F6] flex items-center justify-center text-[#9CA3AF]">
+                    <BedDouble size={22} />
+                  </div>
+                )}
+                <div className="p-2.5">
+                  <div className="text-[11px] text-[#6B7280] mb-0.5 truncate">{u.project}</div>
+                  <div className="text-[12px] text-[#374151] mb-1 flex items-center gap-1 flex-wrap">
+                    <span>{u.kind === 'villa' ? 'Вилла' : 'Апарт.'}</span>
+                    {u.bedrooms != null && <span>· {u.bedrooms} BR</span>}
+                    {u.area != null && <span>· {u.area} м²</span>}
+                    {u.floor && <span>· эт. {u.floor}</span>}
+                  </div>
+                  {u.priceUsd != null && (
+                    <div className="text-[13px] font-semibold text-[#16A34A]">
+                      ${u.priceUsd.toLocaleString('en-US')}
                     </div>
                   )}
-                  <div className="p-2.5">
-                    <div className="text-[11px] text-[#6B7280] mb-0.5 truncate">{u.project}</div>
-                    <div className="text-[12px] text-[#374151] mb-1 flex items-center gap-1 flex-wrap">
-                      <span>{u.kind === 'villa' ? 'Вилла' : 'Апарт.'}</span>
-                      {u.bedrooms != null && <span>· {u.bedrooms} BR</span>}
-                      {u.area != null && <span>· {u.area} м²</span>}
-                      {u.floor && <span>· эт. {u.floor}</span>}
+                  {(u.commissionPct != null || u.commissionUsd != null) && (
+                    <div className="text-[11px] text-[#6B7280] mt-0.5">
+                      Комиссия{u.commissionPct != null && ` ${u.commissionPct}%`}
+                      {u.commissionUsd != null && <> · <span className="font-semibold text-[#1F8B5F]">${u.commissionUsd.toLocaleString('en-US')}</span></>}
                     </div>
-                    {u.priceUsd != null && (
-                      <div className="text-[13px] font-semibold text-[#16A34A]">
-                        ${u.priceUsd.toLocaleString('en-US')}
-                      </div>
-                    )}
-                    {commissionPct != null && (
-                      <div className="text-[11px] text-[#6B7280] mt-0.5">
-                        Комиссия {commissionPct}%
-                        {commissionAmount != null && <> · <span className="font-semibold text-[#1F8B5F]">${commissionAmount.toLocaleString('en-US')}</span></>}
-                      </div>
-                    )}
-                  </div>
-                </LinkMenu>
-              </li>
-            )
-          })}
+                  )}
+                </div>
+              </LinkMenu>
+            </li>
+          ))}
         </ul>
       )}
     </div>
