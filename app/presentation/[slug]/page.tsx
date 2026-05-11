@@ -266,15 +266,6 @@ export default async function PresentationPage({ params }: { params: Params }) {
 
   return (
     <div className="min-h-screen bg-[#FAFAF8] text-[#111827]">
-      <header className="sticky top-0 z-20 bg-white/95 backdrop-blur border-b border-[#E5E7EB]">
-        <div className="max-w-[1180px] mx-auto px-5 sm:px-8 h-[60px] flex items-center justify-between gap-3">
-          <div className="text-[14px] font-semibold tracking-tight">
-            <span className="text-[#1F8B5F]">presentation</span>.estate
-          </div>
-          <div className="text-[12px] text-[#6B7280] truncate max-w-[60%]">для агентов · {name}</div>
-        </div>
-      </header>
-
       <main className="max-w-[1180px] mx-auto px-5 sm:px-8 py-8 sm:py-12">
         {/* HERO — agent-grade summary */}
         <section className="flex items-start gap-6 mb-8 flex-wrap">
@@ -339,7 +330,8 @@ export default async function PresentationPage({ params }: { params: Params }) {
               })
               const minPrice = units.reduce<number | null>((m, u) => u.priceUsd != null && (m == null || u.priceUsd < m) ? u.priceUsd : m, null)
 
-              const projectUrl = c.slug ? `https://balinsky.info/ru/zhilye-kompleksy/o/${c.slug}` : null
+              // Telegram-ready snippet for agents. No URL — the
+              // agent attaches their own contact / lead form.
               const postText = [
                 `🏠 ${project}${district ? ` · ${district}` : ''}`,
                 [
@@ -350,8 +342,6 @@ export default async function PresentationPage({ params }: { params: Params }) {
                 ].filter(Boolean).join(' · '),
                 totalProjUnits ? `Юнитов в проекте: ${totalProjUnits}` : null,
                 minPrice ? `Цена от $${minPrice.toLocaleString('en-US')}` : null,
-                '',
-                projectUrl ? `Подробнее: ${projectUrl}` : null,
               ].filter(Boolean).join('\n')
 
               return (
@@ -414,45 +404,36 @@ export default async function PresentationPage({ params }: { params: Params }) {
                           Юниты ({units.length}{totalProjUnits ? ` из ${totalProjUnits}` : ''})
                         </div>
                         <ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                          {units.map(u => {
-                            const href = u.kind === 'villa'
-                              ? `https://balinsky.info/ru/villy/o/${u.slug}`
-                              : `https://balinsky.info/ru/apartamenty/o/${u.slug}`
-                            return (
-                              <li key={u.id}>
-                                <a
-                                  href={href}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="block bg-[#FAFAF8] hover:bg-white border border-[#E5E7EB] hover:border-[#1F8B5F] rounded-xl overflow-hidden no-underline text-[#111827]"
-                                >
-                                  {u.photo ? (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img src={u.photo} alt={u.title} className="w-full h-20 object-cover" />
-                                  ) : (
-                                    <div className="w-full h-20 bg-[#F3F4F6] flex items-center justify-center text-[#9CA3AF]">
-                                      <BedDouble size={20} />
-                                    </div>
-                                  )}
-                                  <div className="p-2">
-                                    <div className="text-[11.5px] text-[#6B7280] mb-0.5 flex items-center gap-1">
-                                      {u.bedrooms != null && <span>{u.bedrooms} BR</span>}
-                                      {u.area != null && <span>· {u.area} м²</span>}
-                                      {u.floor && <span>· эт. {u.floor}</span>}
-                                    </div>
-                                    <div className="text-[11px] text-[#111827] line-clamp-2 mb-1">
-                                      {u.title.replace(project, '').replace(/^[\s\-·,]+/, '')}
-                                    </div>
-                                    {u.priceUsd != null && (
-                                      <div className="text-[12.5px] font-semibold text-[#16A34A]">
-                                        ${u.priceUsd.toLocaleString('en-US')}
-                                      </div>
-                                    )}
+                          {units.map(u => (
+                            <li
+                              key={u.id}
+                              className="block bg-[#FAFAF8] border border-[#E5E7EB] rounded-xl overflow-hidden text-[#111827]"
+                            >
+                              {u.photo ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={u.photo} alt={u.title} className="w-full h-20 object-cover" />
+                              ) : (
+                                <div className="w-full h-20 bg-[#F3F4F6] flex items-center justify-center text-[#9CA3AF]">
+                                  <BedDouble size={20} />
+                                </div>
+                              )}
+                              <div className="p-2">
+                                <div className="text-[11.5px] text-[#6B7280] mb-0.5 flex items-center gap-1">
+                                  {u.bedrooms != null && <span>{u.bedrooms} BR</span>}
+                                  {u.area != null && <span>· {u.area} м²</span>}
+                                  {u.floor && <span>· эт. {u.floor}</span>}
+                                </div>
+                                <div className="text-[11px] text-[#111827] line-clamp-2 mb-1">
+                                  {u.title.replace(project, '').replace(/^[\s\-·,]+/, '')}
+                                </div>
+                                {u.priceUsd != null && (
+                                  <div className="text-[12.5px] font-semibold text-[#16A34A]">
+                                    ${u.priceUsd.toLocaleString('en-US')}
                                   </div>
-                                </a>
-                              </li>
-                            )
-                          })}
+                                )}
+                              </div>
+                            </li>
+                          ))}
                         </ul>
                       </div>
                     )}
