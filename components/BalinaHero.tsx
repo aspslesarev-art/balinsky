@@ -14,14 +14,11 @@ import { usePathname } from 'next/navigation'
 import { Mic, Send, Sparkles } from 'lucide-react'
 import type { Lang } from '@/lib/i18n'
 
-// Cycling typewriter placeholder: types each example char-by-char,
-// holds the full sentence, then INSTANTLY clears it and types the
-// next one from scratch. The previous char-by-char erase animation
-// felt nervous + made the just-typed phrase re-appear inside the
-// fade. Now: type → hold → blank → next.
-//
-// Per-char delay has ±30 % jitter + a punctuation pause so it reads
-// like a human typing rather than a stuttering terminal.
+// Cycling typewriter placeholder. Predictable rhythm — characters
+// at a fixed cadence, just a slightly longer pause after punctuation
+// so the eye can catch up. No random jitter (it read as "stuttering"
+// in practice). Phase machine: type → hold full sentence → blank →
+// short beat → next sentence from scratch.
 function useTypewriter(examples: readonly string[], paused: boolean): string {
   const [text, setText] = useState('')
   useEffect(() => {
@@ -32,15 +29,13 @@ function useTypewriter(examples: readonly string[], paused: boolean): string {
     let phase: 'typing' | 'holding' = 'typing'
     let timer: ReturnType<typeof setTimeout> | null = null
 
-    const baseTypeMs = 55
-    const holdMs = 2400
-    const clearedMs = 500    // beat of empty field before next phrase
+    const typeMs = 60        // fixed cadence, no jitter
+    const punctPauseMs = 220 // extra after . , — – : ;
+    const holdMs = 2400      // full sentence display time
+    const blankMs = 480      // beat with empty field before next phrase
 
-    const charDelay = (ch: string): number => {
-      const extra = /[.,—–:;]/.test(ch) ? 240 : 0
-      const jitter = (Math.random() - 0.5) * 0.6
-      return Math.round(baseTypeMs * (1 + jitter)) + extra
-    }
+    const delayAfter = (ch: string): number =>
+      typeMs + (/[.,—–:;]/.test(ch) ? punctPauseMs : 0)
 
     const tick = () => {
       if (cancelled) return
@@ -52,16 +47,14 @@ function useTypewriter(examples: readonly string[], paused: boolean): string {
           phase = 'holding'
           timer = setTimeout(tick, holdMs)
         } else {
-          timer = setTimeout(tick, charDelay(current[pos - 1] ?? ''))
+          timer = setTimeout(tick, delayAfter(current[pos - 1] ?? ''))
         }
       } else {
-        // Hold elapsed — instantly clear, advance to the next phrase,
-        // give the eye a brief beat, then start typing the new one.
         setText('')
         i = (i + 1) % examples.length
         pos = 0
         phase = 'typing'
-        timer = setTimeout(tick, clearedMs)
+        timer = setTimeout(tick, blankMs)
       }
     }
     tick()
@@ -85,11 +78,11 @@ const COPY = {
     voiceUnsupported: 'Голос не поддерживается этим браузером',
     altPhoto: 'AI-брокер Балина',
     examples: [
-      'Переехать с семьёй — двое детей 14 и 7 лет, важны школы. Бюджет ~$600K, жить полгода, сдавать помесячно.',
+      'Семья с двумя детьми, важны школы — бюджет ~$600K',
       'Вилла 2 спальни, Букит или Санур, до $400K',
-      'Виды на океан или рисовые террасы — обязательно',
-      'Катаюсь на сёрфе, нужен пеший доступ к спотам',
-      'Апартамент под Booking, доходность 10%+',
+      'Хочу виды на океан или рисовые террасы',
+      'Сёрфер: пешком до спота, до $500K',
+      'Под Booking, доходность 10%+, новостройка',
     ],
     examplesMobile: [
       'Вилла 2BR, Букит, до $400K',
@@ -110,11 +103,11 @@ const COPY = {
     voiceUnsupported: 'Voice input is not supported in this browser',
     altPhoto: 'AI broker Balina',
     examples: [
-      'Relocating with family — two kids aged 14 and 7, schools matter. Budget ~$600K, live half the year, rent the rest.',
+      'Family with two kids, schools matter — budget ~$600K',
       'Villa, 2BR, Bukit or Sanur, up to $400K',
-      'Views matter — ocean or rice terraces',
-      'I surf, walking distance to the break is a must',
-      'Apartment for Booking, 10%+ cap rate',
+      'Ocean or rice-terrace views, must-have',
+      'Surfer: walking distance to a break, up to $500K',
+      'For Booking, 10%+ cap rate, new-build',
     ],
     examplesMobile: [
       'Villa 2BR, Bukit, up to $400K',
