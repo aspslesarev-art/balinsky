@@ -176,6 +176,26 @@ export const TOOLS: ChatCompletionTool[] = [
   {
     type: 'function',
     function: {
+      name: 'semantic_search',
+      description: 'Семантический поиск по каталогу — НЕ field-based, а по СМЫСЛУ описания. Используй когда посетитель упоминает мягкие/качественные атрибуты, которые не маппятся на структурные поля Airtable: «инфинити-бассейн», «вид на закат», «среди джунглей», «тропический минимализм», «для digital-nomad пары», «семейная атмосфера», «лофт-формат», «крыша с jacuzzi», «pet-friendly». Эмбеддит запрос через text-embedding-3-large и возвращает топ-N объектов по косинусной близости описаний. Жёсткие фильтры (район, цена, спальни) — это для search_listings. Если запрос смешанный («вилла в Чангу с инфинити-бассейном до 600k») — сначала зови semantic_search со всем текстом запроса, потом мягко фильтруй результаты по цене / району в своём ответе (или вызывай оба tool и мерджи).',
+      parameters: {
+        type: 'object',
+        properties: {
+          query: { type: 'string', description: 'Свободно-текстовый запрос как сказал посетитель — все мягкие признаки, описание стиля, образ жизни и т.д.' },
+          kinds: {
+            type: 'array',
+            items: { type: 'string', enum: ['villa', 'apartment', 'complex'] },
+            description: 'Ограничить выдачу одним или несколькими типами объектов. По умолчанию ищем по всем трём.',
+          },
+          limit: { type: 'number', description: 'Сколько вернуть (по умолчанию 8, максимум 20)' },
+        },
+        required: ['query'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'submit_feedback',
       description: 'Записать обратную связь от пользователя. Вызывай когда пользователь делится мнением, жалуется на ошибку, предлагает идею — даже без явного запроса от пользователя записать.',
       parameters: {
@@ -969,7 +989,129 @@ export async function executeToolCall(name: string, rawArgs: string): Promise<st
     const result = await findLandmark(lookupName)
     return JSON.stringify(result)
   }
+  if (name === 'semantic_search') {
+    const result = await searchSemantic(args as SemanticArgs)
+    return JSON.stringify({ results: result })
+  }
   return JSON.stringify({ error: 'unknown_tool' })
+}
+
+// =========== Semantic search via pgvector ============================
+//
+// Embeds the visitor's free-text query through Azure OpenAI's
+// text-embedding-3-large (1536-dim Matryoshka truncation, matching
+// the column type defined in migration 023), then asks
+// `semantic_search_catalog` RPC for the nearest rows across all three
+// catalogs. The RPC already filters non-published rows server-side.
+
+type SemanticArgs = {
+  query?: string
+  kinds?: Array<'villa' | 'apartment' | 'complex'>
+  limit?: number
+}
+
+async function searchSemantic(args: SemanticArgs): Promise<ListingCard[]> {
+  const q = (args.query ?? '').trim()
+  if (q.length < 3) return []
+  const limit = Math.max(1, Math.min(20, args.limit ?? 8))
+  const kinds: Array<'villa' | 'apartment' | 'complex'> =
+    args.kinds && args.kinds.length ? args.kinds : ['villa', 'apartment', 'complex']
+
+  const { semanticSearch } = await import('@/lib/semantic-search')
+  const hits = await semanticSearch(q, { limit, kinds })
+  if (hits.length === 0) return []
+
+  // Fetch rows in batch from the three tables.
+  const byKind: Record<'villa' | 'apartment' | 'complex', string[]> = { villa: [], apartment: [], complex: [] }
+  for (const h of hits) byKind[h.kind].push(h.airtable_id)
+
+  type AnyRow = { airtable_id: string; data: Record<string, unknown>; logo_url?: string | null }
+  const rowsByKey = new Map<string, AnyRow>()
+  const tasks: Promise<void>[] = []
+  if (byKind.villa.length) {
+    tasks.push((async () => {
+      const r = await sb.from('raw_villas').select('airtable_id, data').in('airtable_id', byKind.villa)
+      for (const row of (r.data ?? []) as AnyRow[]) rowsByKey.set(`villa:${row.airtable_id}`, row)
+    })())
+  }
+  if (byKind.apartment.length) {
+    tasks.push((async () => {
+      const r = await sb.from('raw_apartments').select('airtable_id, data').in('airtable_id', byKind.apartment)
+      for (const row of (r.data ?? []) as AnyRow[]) rowsByKey.set(`apartment:${row.airtable_id}`, row)
+    })())
+  }
+  if (byKind.complex.length) {
+    tasks.push((async () => {
+      const r = await sb.from('raw_complexes').select('airtable_id, data').in('airtable_id', byKind.complex)
+      for (const row of (r.data ?? []) as AnyRow[]) rowsByKey.set(`complex:${row.airtable_id}`, row)
+    })())
+  }
+  await Promise.all(tasks)
+
+  const photoManifests: Record<'villa' | 'apartment' | 'complex', Record<string, string[]>> = {
+    villa: await loadPhotoManifest('villa-photos'),
+    apartment: await loadPhotoManifest('apartment-photos'),
+    complex: await loadPhotoManifest('complex-photos'),
+  }
+  const pathByKind: Record<'villa' | 'apartment' | 'complex', string> = {
+    villa: '/ru/villy/o/', apartment: '/ru/apartamenty/o/', complex: '/ru/zhilye-kompleksy/o/',
+  }
+
+  const cards: ListingCard[] = []
+  for (const h of hits) {
+    const row = rowsByKey.get(`${h.kind}:${h.airtable_id}`)
+    if (!row) continue
+    const d = row.data
+    const slug = fs1(d['SEO:Slug']) ?? null
+    if (!slug || slug.startsWith('-')) continue
+    const title = fs1(d['SEO:Title']) ?? fs1(d['ИИ Имя']) ?? fs1(d['Name']) ?? fs1(d['Project']) ?? ''
+    const districtRaw = fs1(d['Location filter']) ?? fs1(d['Location 2']) ?? fs1(d['Location'])
+    const district = districtRaw && /^rec[A-Za-z0-9]{14,}$/.test(districtRaw) ? null : districtRaw
+    const bedrooms = num(d['Комнаты']) ?? num(d['Спальни']) ?? null
+    const area = num(d['Площадь']) ?? null
+    const priceUsd = num(d['price_usd']) ?? num(d['price']) ?? num(d['Цена']) ?? null
+    const pricePerSqmRaw = num(d['Цена м²']) ?? (priceUsd != null && area && area > 0 ? priceUsd / area : null)
+    const pricePerSqm = pricePerSqmRaw != null ? Math.round(pricePerSqmRaw) : null
+    const photo = photoManifests[h.kind][row.airtable_id]?.[0] ?? null
+    const landPurpose = fs1(d['Назначение земли'])
+    const landColor = fs1(d['Land color']) ?? fs1(d['Цвет земли']) ?? fs1(d['Цвет земли вторичка'])
+    const leaseRaw = fs1(d['Leasehold']) ?? fs1(d['Leashold'])
+    const seoText = fs1(d['SEO Text']) ?? fs1(d['Notes']) ?? fs1(d['Описание'])
+    const lat = parseGeoStr(d['Geo'])
+    const lng = parseGeoStr(d['Geo 2'])
+    const beach = lat != null && lng != null ? nearestBeach(lat, lng) : null
+    cards.push({
+      kind: h.kind,
+      title: title.replace(/\s*\|\s*Balinsky\s*$/, '').trim(),
+      url: `${SITE_URL}${pathByKind[h.kind]}${slug}`,
+      photo,
+      district,
+      bedrooms,
+      area_sqm: area,
+      price_usd: priceUsd,
+      price_per_sqm_usd: pricePerSqm,
+      rent_per_month_usd: null,
+      land_zone: classifyLandZone(landPurpose, landColor),
+      land_purpose: landPurpose,
+      permit: fs1(d['Разрешение']) ?? fs1(d['PBG']),
+      lease_years: leaseRaw ? Number(leaseRaw) || null : null,
+      completion_year: fs1(d['Year of completion']) ?? fs1(d['Year of completion ']) ?? null,
+      status: fs1(d['Статус']),
+      claimed_yield_pct: num(d['Заявленная доходность']),
+      cap_rate_median: null,
+      cap_rate_good: null,
+      monthly_rent_comp_usd: null,
+      monthly_rent_comp_count: null,
+      district_median_price_per_sqm_usd: null,
+      district_listings_count: null,
+      description_preview: seoText ? (seoText.length > 220 ? seoText.slice(0, 220).trim() + '…' : seoText.trim()) : null,
+      lat,
+      lng,
+      distance_to_beach_km: beach?.km ?? null,
+      nearest_beach: beach?.name ?? null,
+    })
+  }
+  return cards
 }
 
 // Full deep-read of one listing — everything in the Airtable row,
