@@ -14,32 +14,92 @@ import { usePathname } from 'next/navigation'
 import { Mic, Send, Sparkles } from 'lucide-react'
 import type { Lang } from '@/lib/i18n'
 
+// Cycling typewriter placeholder: types each example char-by-char,
+// holds the full sentence, deletes it, types the next. Pauses entirely
+// when `paused` is true (visitor started typing or focused the field
+// — keeping the animation running underneath would feel jittery).
+function useTypewriter(examples: readonly string[], paused: boolean): string {
+  const [text, setText] = useState('')
+  useEffect(() => {
+    if (paused || examples.length === 0) return
+    let cancelled = false
+    let i = 0
+    let pos = 0
+    let phase: 'typing' | 'holding' | 'erasing' = 'typing'
+    let timer: ReturnType<typeof setTimeout> | null = null
+
+    const tick = () => {
+      if (cancelled) return
+      const current = examples[i]
+      if (phase === 'typing') {
+        pos++
+        setText(current.slice(0, pos))
+        if (pos >= current.length) {
+          phase = 'holding'
+          timer = setTimeout(tick, 1800)
+        } else {
+          timer = setTimeout(tick, 38)
+        }
+      } else if (phase === 'holding') {
+        phase = 'erasing'
+        timer = setTimeout(tick, 18)
+      } else {
+        pos--
+        setText(current.slice(0, Math.max(0, pos)))
+        if (pos <= 0) {
+          i = (i + 1) % examples.length
+          phase = 'typing'
+          timer = setTimeout(tick, 420)
+        } else {
+          timer = setTimeout(tick, 18)
+        }
+      }
+    }
+    tick()
+    return () => { cancelled = true; if (timer) clearTimeout(timer) }
+  }, [examples, paused])
+  return text
+}
+
 const COPY = {
   ru: {
     eyebrow: 'AI-брокер',
     name: 'Балина',
     title: 'Помогу подобрать недвижимость на Бали',
     subtitle: 'Расскажу что есть в продаже, помогу определиться и свяжу с менеджером застройщика.',
-    // Two placeholders: long one looks great on desktop, short one
-    // fits the narrow mobile input without being cut.
-    placeholder:       'Например: вилла в Чангу, 2 спальни, до $250K, под аренду…',
+    // Static fallback shown on mobile + first render (before animation
+    // hook fires). The desktop placeholder is replaced by a cycling
+    // typewriter of varied EXAMPLES below.
     placeholderMobile: 'Что вы ищете?',
     sendAria: 'Отправить сообщение',
     voiceAria: 'Записать голосом',
     voiceUnsupported: 'Голос не поддерживается этим браузером',
     altPhoto: 'AI-брокер Балина',
+    examples: [
+      'Хотим переехать на Бали с семьёй — жена, двое детей 14 и 7 лет, важны школы. Бюджет ~$600K, жить полгода, полгода сдавать помесячно.',
+      'Вилла 2 спальни, Букит или Санур, до $400K',
+      'Важны виды — океан или рисовые террасы',
+      'Катаюсь на сёрфе, нужен пеший доступ к спотам',
+      'Апартамент под Booking, доходность 10%+',
+    ],
   },
   en: {
     eyebrow: 'AI broker',
     name: 'Balina',
     title: "I'll help you find Bali real estate",
     subtitle: "I'll tell you what's on the market, help you choose, and connect you with a developer manager.",
-    placeholder:       'e.g. villa in Canggu, 2 bedrooms, up to $250K, for rental…',
     placeholderMobile: 'What are you looking for?',
     sendAria: 'Send message',
     voiceAria: 'Record by voice',
     voiceUnsupported: 'Voice input is not supported in this browser',
     altPhoto: 'AI broker Balina',
+    examples: [
+      'Relocating to Bali with my family — wife, two kids aged 14 and 7, schools matter. Budget ~$600K, live half the year, rent it out monthly the other half.',
+      'Villa, 2BR, Bukit or Sanur, up to $400K',
+      'Views matter — ocean or rice terraces',
+      'I surf, walking distance to the break is a must',
+      'Apartment for Booking, 10%+ cap rate',
+    ],
   },
 } as const
 
@@ -50,12 +110,17 @@ export function BalinaHero() {
 
   const [value, setValue] = useState('')
   const [voiceSupported, setVoiceSupported] = useState(false)
-  // Mobile-vs-desktop placeholder swap based on viewport width. Long
-  // example copy gets cut to ~6 visible chars on iPhone SE because of
-  // the two action buttons next to the input — the short version is
-  // legible at any width.
+  // Mobile-vs-desktop placeholder swap. On mobile we drop the
+  // typewriter animation entirely and use a single short string —
+  // long sentences get cut to ~6 visible chars and look broken.
   const [isNarrow, setIsNarrow] = useState(false)
+  const [focused, setFocused] = useState(false)
   const taRef = useRef<HTMLTextAreaElement | null>(null)
+  // Pause animation once the visitor engages — either started typing
+  // or focused the field. Resumes when they clear the input and blur.
+  const animationPaused = isNarrow || focused || value.length > 0
+  const typed = useTypewriter(c.examples, animationPaused)
+  const placeholder = isNarrow ? c.placeholderMobile : (typed || c.examples[0])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -142,7 +207,9 @@ export function BalinaHero() {
                 value={value}
                 onChange={(e) => handleInput(e.target.value)}
                 onKeyDown={onKeyDown}
-                placeholder={isNarrow ? c.placeholderMobile : c.placeholder}
+                onFocus={() => setFocused(true)}
+                onBlur={() => setFocused(false)}
+                placeholder={placeholder}
                 rows={1}
                 className="flex-1 min-w-0 resize-none bg-transparent border-0 outline-none text-[15px] md:text-[16px] leading-[1.45] text-[#111827] placeholder:text-[var(--color-text-muted)] py-2 px-2.5 max-h-[160px]"
               />
