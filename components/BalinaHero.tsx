@@ -129,14 +129,10 @@ export function BalinaHero() {
   const [isNarrow, setIsNarrow] = useState(false)
   const [focused, setFocused] = useState(false)
   const inputRef = useRef<HTMLInputElement | null>(null)
-  // Pause animation once the visitor engages.
-  const animationPaused = focused || value.length > 0
   // Mobile uses shorter example strings — the long desktop sentences
   // get clipped to the first few chars in a narrow input and look
   // broken half-typed.
   const exampleSet = isNarrow ? c.examplesMobile : c.examples
-  const typed = useTypewriter(exampleSet, animationPaused)
-  const placeholder = typed || exampleSet[0] || c.placeholderMobile
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -208,17 +204,25 @@ export function BalinaHero() {
                 textarea owns the visible width with both action
                 buttons still hitting the 44px touch-target floor. */}
             <div className="flex items-end gap-1.5 md:gap-2 bg-white rounded-2xl border border-[var(--color-border)] p-1.5 md:p-2.5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] focus-within:border-[var(--color-primary)] transition-colors">
-              <input
-                ref={inputRef}
-                type="text"
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                onKeyDown={onKeyDown}
-                onFocus={() => setFocused(true)}
-                onBlur={() => setFocused(false)}
-                placeholder={placeholder}
-                className="flex-1 min-w-0 bg-transparent border-0 outline-none text-[15px] md:text-[16px] leading-[1.45] text-[#111827] placeholder:text-[var(--color-text-muted)] py-2.5 px-2.5"
-              />
+              {/* Real input. No placeholder attribute — animation lives in
+                  the TypewriterOverlay below so the browser doesn't have
+                  to re-shape the input on every char. */}
+              <div className="relative flex-1 min-w-0">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={value}
+                  onChange={(e) => setValue(e.target.value)}
+                  onKeyDown={onKeyDown}
+                  onFocus={() => setFocused(true)}
+                  onBlur={() => setFocused(false)}
+                  aria-label={c.placeholderMobile}
+                  className="relative z-10 w-full bg-transparent border-0 outline-none text-[15px] md:text-[16px] leading-[1.45] text-[#111827] py-2.5 px-2.5"
+                />
+                {value.length === 0 && !focused && (
+                  <TypewriterOverlay examples={exampleSet} />
+                )}
+              </div>
               <button
                 type="button"
                 onClick={startVoice}
@@ -243,5 +247,24 @@ export function BalinaHero() {
         </div>
       </div>
     </section>
+  )
+}
+
+// Animated placeholder overlay. Sits absolutely above the input
+// (z-index 0, real input is z-10). Renders a div whose text content
+// changes char-by-char — much cheaper than poking the input's
+// `placeholder` attribute (the browser re-shapes the input on every
+// placeholder change, which is what showed up as "jank"). A blinking
+// caret at the cursor position makes the animation feel intentional.
+function TypewriterOverlay({ examples }: { examples: readonly string[] }) {
+  const text = useTypewriter(examples, false)
+  return (
+    <div
+      aria-hidden="true"
+      className="absolute inset-0 flex items-center px-2.5 pointer-events-none select-none text-[15px] md:text-[16px] leading-[1.45] text-[var(--color-text-muted)] overflow-hidden whitespace-nowrap"
+    >
+      <span>{text}</span>
+      <span className="ml-[1px] inline-block w-[1.5px] h-[1.05em] bg-[var(--color-text-muted)] align-middle balina-caret" />
+    </div>
   )
 }
