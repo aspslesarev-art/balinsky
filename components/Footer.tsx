@@ -203,13 +203,8 @@ export function Footer({ lang = 'ru' }: { lang?: Lang }) {
             )}
           </div>
           <div className="mt-3 text-center text-[12px] leading-[1.7] text-[var(--color-text-muted)]">
-            <div>Balinsky Marketplace</div>
-            <div>Reg. No. 316362404 · Registered 06 Jan 2022</div>
-            <div>19 Shartava St., Rustavi, Georgia</div>
-            <div>
-              Site: <a href="https://balinsky.info" className="hover:text-[var(--color-primary-pressed)] no-underline">balinsky.info</a>
-              {' · '}Email: <a href="mailto:i@balinsky.info" className="hover:text-[var(--color-primary-pressed)] no-underline">i@balinsky.info</a>
-            </div>
+            Site: <a href="https://balinsky.info" className="hover:text-[var(--color-primary-pressed)] no-underline">balinsky.info</a>
+            {' · '}Email: <a href="mailto:i@balinsky.info" className="hover:text-[var(--color-primary-pressed)] no-underline">i@balinsky.info</a>
           </div>
         </div>
       </div>
