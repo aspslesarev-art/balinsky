@@ -185,20 +185,42 @@ export function Footer({ lang = 'ru' }: { lang?: Lang }) {
               </li>
             ))}
           </ul>
-          <div className="mt-5 text-center text-[9.5px] leading-[1.45] text-[#9CA3AF]/55 max-w-[760px] mx-auto">
+          <div className="mt-5 text-center text-[9.5px] leading-[1.55] text-[#9CA3AF]/55 max-w-[820px] mx-auto space-y-2">
             {lang === 'en' ? (
               <>
-                Balinsky.info — authorised marketing resource and lead-generation
-                partner of Loyo &amp; Bondar. The site is operated by the company&apos;s
-                lead expert and serves as a platform for market analysis and direct
-                lead routing to the Loyo &amp; Bondar sales department.
+                <p>
+                  Balinsky.info — a proprietary IT platform and analytics resource.
+                  The project operates as an accredited external lead-generation
+                  department of Loyo &amp; Bondar (PT LOYO DEVELOPMENT BALI).
+                </p>
+                <p>
+                  Exclusive rights to the source code, architecture and database
+                  are private property of the developer and protected under
+                  international law. The platform is operated in the developer&apos;s
+                  interest under the current employment arrangement. Interaction
+                  and data confidentiality are governed by Confidentiality Agreement
+                  No. 1 dated 28.10.2024.
+                </p>
+                <p>Copyright © 2022–2026 Balinsky.info. All rights reserved.</p>
               </>
             ) : (
               <>
-                Balinsky.info — авторизованный маркетинговый ресурс и партнёр по
-                лидогенерации компании Loyo&nbsp;&amp;&nbsp;Bondar. Сайт управляется
-                ведущим экспертом компании и служит платформой для анализа рынка
-                и привлечения прямых запросов в отдел продаж Loyo&nbsp;&amp;&nbsp;Bondar.
+                <p>
+                  Balinsky.info — авторская ИТ-платформа и аналитический ресурс.
+                  Проект функционирует как аккредитованный внешний департамент
+                  лидогенерации компании Loyo&nbsp;&amp;&nbsp;Bondar
+                  (PT LOYO DEVELOPMENT BALI).
+                </p>
+                <p>
+                  Исключительные права на программный код, архитектуру и базу
+                  данных являются частной собственностью разработчика и защищены
+                  международным правом. Эксплуатация платформы осуществляется
+                  в интересах застройщика в рамках текущей трудовой деятельности.
+                  Порядок взаимодействия и конфиденциальность данных регулируются
+                  Соглашением № 1 о неразглашении конфиденциальной информации
+                  от 28.10.2024.
+                </p>
+                <p>Copyright © 2022–2026 Balinsky.info. All rights reserved.</p>
               </>
             )}
           </div>
