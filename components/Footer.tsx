@@ -185,8 +185,21 @@ export function Footer({ lang = 'ru' }: { lang?: Lang }) {
               </li>
             ))}
           </ul>
-          <div className="mt-5 text-center text-[13px] text-[var(--color-text-muted)]">
-            Copyright © {new Date().getFullYear()} Balinsky.info. All rights reserved.
+          <div className="mt-5 text-center text-[13px] text-[var(--color-text-muted)] leading-[1.7] max-w-[820px] mx-auto">
+            {lang === 'en' ? (
+              <>
+                Balinsky.info — official information resource and lead-generation partner
+                of Loyo &amp; Bondar. All content rights belong to the author.
+                Property offers on the site do not constitute a public offer.
+              </>
+            ) : (
+              <>
+                Balinsky.info — официальный информационный ресурс и лид-ген партнёр
+                компании Loyo&nbsp;&amp;&nbsp;Bondar. Все права на контент принадлежат
+                автору. Предложения по недвижимости на сайте не являются публичной
+                офертой.
+              </>
+            )}
           </div>
           <div className="mt-3 text-center text-[12px] leading-[1.7] text-[var(--color-text-muted)]">
             <div>Balinsky Marketplace</div>
