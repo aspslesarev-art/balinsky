@@ -636,11 +636,13 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
       ? `${unitsRoot === '/en' ? '/en/villas' : '/ru/villy'}/o/${u.slug}`
       : `${unitsRoot === '/en' ? '/en/apartments' : '/ru/apartamenty'}/o/${u.slug}`
     const row = (u.kind === 'villa' ? vilRowsById : aptRowsById).get(u.id)
-    // Preference order for the popup hero: `Image Opt` (single
-    // pre-compressed thumbnail) → `Opt photos` (multi-photo gallery,
-    // take first) → manifest first photo (the raw bucket copy).
+    // Preference order for the popup hero: `Opt photos[0]` is the
+    // truly compressed variant (~140 KB, 800 px wide). `Image Opt`
+    // is misleadingly named — for many rows it holds the raw 4-7 MB
+    // master, not a thumbnail. Manifest is the bucket-cached
+    // fallback when neither attachment field is filled.
     const optUrl = row
-      ? (attachmentUrl(row.data['Image Opt']) ?? attachmentUrl(row.data['Opt photos']))
+      ? (attachmentUrl(row.data['Opt photos']) ?? attachmentUrl(row.data['Image Opt']))
       : null
     unitInfoBySlug[u.slug] = {
       kind: u.kind,
