@@ -177,7 +177,11 @@ export function VisualizationEditor({
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          parentLayerId: activeLayerId,
+          // New layers are root-level by default — that's what makes
+          // them appear as switcher tabs on the public viewer. Nesting
+          // happens later via a hotspot's `target_layer_id`, not at
+          // create time.
+          parentLayerId: null,
           title,
           photoUrl,
         }),
