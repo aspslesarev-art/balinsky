@@ -24,6 +24,8 @@ function fmtAirportDistance(lat: number | null, lng: number | null, lang: 'ru' |
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { PhotoGalleryHero } from '@/components/PhotoGalleryHero'
+import { LandProfileBlock } from '@/components/LandProfileBlock'
+import { loadVillaLandProfile } from '@/lib/land-profile'
 import { VillaCard, type VillaCardData } from '@/components/VillaCard'
 import { InvestmentWidget } from '@/components/InvestmentWidget'
 import { RentalCompareSection } from '@/components/RentalCompareSection'
@@ -460,13 +462,14 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   const isResale = /перепрод|resale|вторич|secondary/.test(dealTypeRaw)
   const sellerUrl = isResale ? firstString(d['Контакт продавца']) : null
 
-  const [otherVillas, complexes, developers, stylesMap, scoresMap, activeReservation] = await Promise.all([
+  const [otherVillas, complexes, developers, stylesMap, scoresMap, activeReservation, landProfile] = await Promise.all([
     loadOtherVillasInDistrict(district, v.airtable_id),
     _loadComplexesIndex(),
     _loadDevelopersIndex(),
     loadVillaStyles(),
     loadAllVillaScores(),
     findActiveReservation('villa', v.airtable_id),
+    loadVillaLandProfile(v.airtable_id),
   ])
   const interiorStyle = stylesMap[v.airtable_id]?.style ?? null
   const villaScore = scoresMap.get(v.airtable_id) ?? null
@@ -716,6 +719,12 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
             <div className="prose-balinsky max-w-3xl text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
               {seoText}
             </div>
+          </section>
+        )}
+
+        {landProfile && (landProfile.zona_code || landProfile.subzona_code) && (
+          <section className="mb-10 max-w-3xl">
+            <LandProfileBlock data={landProfile} lang={lang} />
           </section>
         )}
 
