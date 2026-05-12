@@ -103,6 +103,27 @@ export function VisualizationEditor({
   const canvasScrollRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
+  // Pre-uploaded complex photos (already optimised, webp, 2000px wide)
+  // pulled from the complex-photos/_manifest.json. Shown in the
+  // "Добавить слой" modal so the editor can pick one in one click
+  // instead of finding a file on disk and uploading.
+  const [complexPhotos, setComplexPhotos] = useState<string[]>([])
+  const [pickerOpen, setPickerOpen] = useState(false)
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const supabase = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
+        const r = await fetch(`${supabase}/storage/v1/object/public/complex-photos/_manifest.json`, { cache: 'no-store' })
+        if (!r.ok) return
+        const j = await r.json() as Record<string, string[]>
+        if (cancelled) return
+        setComplexPhotos(j[complexId] ?? [])
+      } catch {}
+    })()
+    return () => { cancelled = true }
+  }, [complexId])
+
   const activeLayer = useMemo(() => layers.find(l => l.id === activeLayerId) ?? null, [layers, activeLayerId])
   const layerHotspots = useMemo(
     () => hotspots.filter(h => h.layerId === activeLayerId),
@@ -133,11 +154,23 @@ export function VisualizationEditor({
     try {
       const photoUrl = await uploadPhoto(file)
       if (!photoUrl) throw new Error('upload_failed')
+      await addLayerFromUrl(photoUrl, title)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'unknown')
+    } finally { setSaving(false) }
+  }
+
+  // Create a layer from an existing public URL — used by the
+  // "pick from complex photos" path so we skip the re-upload step
+  // (the photo is already in the complex-photos bucket).
+  async function addLayerFromUrl(photoUrl: string, title: string | null) {
+    setSaving(true); setError(null)
+    try {
       const r = await fetch(`/api/admin/visualizations/${encodeURIComponent(complexId)}/layers`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          parentLayerId: activeLayerId,   // new layers default to children of current view
+          parentLayerId: activeLayerId,
           title,
           photoUrl,
         }),
@@ -340,7 +373,7 @@ export function VisualizationEditor({
             <div className="text-[12px] uppercase tracking-wide text-[var(--ax-fg-muted)] font-medium">Слои ({layers.length})</div>
             <button
               type="button"
-              onClick={() => fileRef.current?.click()}
+              onClick={() => setPickerOpen(true)}
               disabled={saving}
               className="inline-flex items-center gap-1 text-[12px] font-medium text-[#1F8B5F] hover:text-[#197551] disabled:opacity-50"
             >
@@ -358,6 +391,7 @@ export function VisualizationEditor({
                 const title = prompt('Название слоя (например, «Общий план», «Корпус А», «Этаж 3»)?', '')
                 await addLayer(f, title?.trim() || null)
                 e.target.value = ''
+                setPickerOpen(false)
               }}
             />
           </div>
@@ -651,6 +685,20 @@ export function VisualizationEditor({
           )}
         </aside>
       </div>
+
+      {pickerOpen && (
+        <LayerPickerModal
+          photos={complexPhotos}
+          saving={saving}
+          onClose={() => setPickerOpen(false)}
+          onPick={async (url) => {
+            const title = prompt('Название слоя (например, «Общий план», «Корпус А», «Этаж 3»)?', '')
+            await addLayerFromUrl(url, title?.trim() || null)
+            setPickerOpen(false)
+          }}
+          onUpload={() => fileRef.current?.click()}
+        />
+      )}
     </div>
   )
 }
@@ -798,4 +846,87 @@ function formatTarget(h: Hotspot, layers: Layer[], units: UnitOption[]): { summa
   }
   const u = units.find(x => x.slug === h.targetUnitSlug)
   return { summary: u ? `→ ${u.title}` : '→ юнит не выбран' }
+}
+
+// Picker modal — shows the complex's pre-optimised cover photos as
+// clickable thumbnails plus a "upload my own" fallback. Both paths
+// end up creating a new layer with the chosen photoUrl.
+function LayerPickerModal({
+  photos, saving, onClose, onPick, onUpload,
+}: {
+  photos: string[]
+  saving: boolean
+  onClose: () => void
+  onPick: (url: string) => Promise<void>
+  onUpload: () => void
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-[200] bg-black/55 backdrop-blur-sm flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-[920px] max-h-[88vh] bg-[var(--ax-panel)] border border-[var(--ax-border)] rounded-2xl shadow-2xl flex flex-col"
+      >
+        <div className="px-5 py-4 border-b border-[var(--ax-border-soft)] flex items-center justify-between">
+          <div>
+            <div className="text-[14px] font-semibold text-[var(--ax-fg)]">Добавить слой</div>
+            <div className="text-[12px] text-[var(--ax-fg-muted)] mt-0.5">Выбери фото комплекса или загрузи свою картинку</div>
+          </div>
+          <button type="button" onClick={onClose} className="p-1.5 rounded-lg hover:bg-[var(--ax-hover)] text-[var(--ax-fg-muted)]" aria-label="Закрыть">
+            <X size={16} />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-5 py-4">
+          {photos.length === 0 ? (
+            <div className="text-[12.5px] text-[var(--ax-fg-faint)] py-6 text-center">
+              Фото комплекса в complex-photos не нашлось. Используй кнопку «Загрузить файл» внизу.
+            </div>
+          ) : (
+            <>
+              <div className="text-[11px] uppercase tracking-wide text-[var(--ax-fg-muted)] mb-2">
+                Фото этого комплекса ({photos.length}) — оптимизированы, webp, до 2000px
+              </div>
+              <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {photos.map(url => (
+                  <li key={url}>
+                    <button
+                      type="button"
+                      disabled={saving}
+                      onClick={() => onPick(url)}
+                      className="group block w-full rounded-xl overflow-hidden border border-[var(--ax-border)] hover:border-[#1F8B5F] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={url}
+                        alt=""
+                        className="w-full aspect-[4/3] object-cover group-hover:scale-[1.03] transition-transform"
+                        loading="lazy"
+                      />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </div>
+
+        <div className="px-5 py-4 border-t border-[var(--ax-border-soft)] flex items-center justify-between">
+          <div className="text-[11.5px] text-[var(--ax-fg-faint)]">
+            {saving ? 'Сохраняю слой…' : 'Клик по фото — создаёт слой сразу'}
+          </div>
+          <button
+            type="button"
+            disabled={saving}
+            onClick={onUpload}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[var(--ax-hover)] hover:bg-[var(--ax-hover-strong)] text-[13px] text-[var(--ax-fg)] disabled:opacity-50"
+          >
+            <Upload size={13} /> Загрузить файл
+          </button>
+        </div>
+      </div>
+    </div>
+  )
 }
