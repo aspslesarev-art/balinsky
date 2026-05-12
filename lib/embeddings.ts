@@ -1,4 +1,4 @@
-// Azure OpenAI embeddings — `text-embedding-3-large` (3072 dims).
+// Azure OpenAI embeddings — `text-embedding-3-large` (1536 dims).
 // Used by:
 //   - scripts/embed-catalog.mjs to backfill the catalog
 //   - lib/semantic-search.ts for the query-time vector lookup
@@ -15,7 +15,7 @@ const _client = (() => {
 
 const DEPLOYMENT = process.env.AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT ?? 'text-embedding-3-large'
 
-export const EMBEDDING_DIMS = 3072
+export const EMBEDDING_DIMS = 1536
 
 export async function embedText(text: string): Promise<number[] | null> {
   if (!_client) return null
@@ -24,6 +24,7 @@ export async function embedText(text: string): Promise<number[] | null> {
   const r = await _client.embeddings.create({
     model: DEPLOYMENT,
     input: t,
+    dimensions: EMBEDDING_DIMS,
   })
   const vec = r.data[0]?.embedding
   return vec ?? null
@@ -38,7 +39,7 @@ export async function embedBatch(texts: string[]): Promise<Array<number[] | null
   const BATCH = 16
   for (let i = 0; i < texts.length; i += BATCH) {
     const slice = texts.slice(i, i + BATCH).map(t => t.trim().slice(0, 8000) || ' ')
-    const r = await _client.embeddings.create({ model: DEPLOYMENT, input: slice })
+    const r = await _client.embeddings.create({ model: DEPLOYMENT, input: slice, dimensions: EMBEDDING_DIMS })
     for (const e of r.data) out.push(e.embedding ?? null)
   }
   return out

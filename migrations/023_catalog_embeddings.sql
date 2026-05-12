@@ -5,15 +5,15 @@
 
 CREATE EXTENSION IF NOT EXISTS vector;
 
-ALTER TABLE raw_villas      ADD COLUMN IF NOT EXISTS embedding vector(3072);
+ALTER TABLE raw_villas      ADD COLUMN IF NOT EXISTS embedding vector(1536);
 ALTER TABLE raw_villas      ADD COLUMN IF NOT EXISTS embedding_text text;
 ALTER TABLE raw_villas      ADD COLUMN IF NOT EXISTS embedded_at  timestamptz;
 
-ALTER TABLE raw_apartments  ADD COLUMN IF NOT EXISTS embedding vector(3072);
+ALTER TABLE raw_apartments  ADD COLUMN IF NOT EXISTS embedding vector(1536);
 ALTER TABLE raw_apartments  ADD COLUMN IF NOT EXISTS embedding_text text;
 ALTER TABLE raw_apartments  ADD COLUMN IF NOT EXISTS embedded_at  timestamptz;
 
-ALTER TABLE raw_complexes   ADD COLUMN IF NOT EXISTS embedding vector(3072);
+ALTER TABLE raw_complexes   ADD COLUMN IF NOT EXISTS embedding vector(1536);
 ALTER TABLE raw_complexes   ADD COLUMN IF NOT EXISTS embedding_text text;
 ALTER TABLE raw_complexes   ADD COLUMN IF NOT EXISTS embedded_at  timestamptz;
 
@@ -34,7 +34,7 @@ CREATE INDEX IF NOT EXISTS raw_complexes_embedding_hnsw
 -- across all three tables, ordered by cosine distance ascending.
 -- distance is 1 - cosine_similarity (0 = identical, 2 = opposite).
 CREATE OR REPLACE FUNCTION semantic_search_catalog(
-  query_embedding vector(3072),
+  query_embedding vector(1536),
   match_count int DEFAULT 12,
   kinds text[] DEFAULT ARRAY['villa','apartment','complex']
 )

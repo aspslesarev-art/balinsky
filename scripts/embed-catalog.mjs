@@ -82,8 +82,17 @@ function buildComplexText(row) {
   return parts.join(' · ')
 }
 
+// HNSW caps at 2000 dims; text-embedding-3-large natively outputs 3072
+// but is Matryoshka-trained so we can request 1536 with negligible
+// quality loss. Must match vector(1536) in migration 023.
+const EMBEDDING_DIMS = 1536
+
 async function embedBatch(texts) {
-  const r = await ai.embeddings.create({ model: DEPL, input: texts.map(t => t.slice(0, 8000) || ' ') })
+  const r = await ai.embeddings.create({
+    model: DEPL,
+    input: texts.map(t => t.slice(0, 8000) || ' '),
+    dimensions: EMBEDDING_DIMS,
+  })
   return r.data.map(d => d.embedding)
 }
 
