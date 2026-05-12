@@ -202,10 +202,6 @@ export function Footer({ lang = 'ru' }: { lang?: Lang }) {
               </>
             )}
           </div>
-          <div className="mt-3 text-center text-[12px] leading-[1.7] text-[var(--color-text-muted)]">
-            Site: <a href="https://balinsky.info" className="hover:text-[var(--color-primary-pressed)] no-underline">balinsky.info</a>
-            {' · '}Email: <a href="mailto:i@balinsky.info" className="hover:text-[var(--color-primary-pressed)] no-underline">i@balinsky.info</a>
-          </div>
         </div>
       </div>
     </footer>
