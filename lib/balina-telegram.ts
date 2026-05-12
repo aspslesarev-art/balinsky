@@ -19,7 +19,7 @@
 // Operator-handover (`shouldBotAutoReply`) is checked OUTSIDE this
 // module by the route — same pattern the existing fallback uses.
 
-import OpenAI from 'openai'
+import { AzureOpenAI } from 'openai'
 import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions'
 import { getSystemPrompt, TOOLS, executeToolCall, type ListingCard } from '@/lib/consultant'
 import { appendLearnedRule } from '@/lib/assistant-knowledge'
@@ -64,8 +64,14 @@ export async function replyAsBalina({
   userText?: string
   voiceFileId?: string | null
 }): Promise<{ handled: boolean; reason?: string }> {
-  const apiKey = process.env.OPENAI_API_KEY
-  if (!apiKey) return { handled: false, reason: 'no_openai_key' }
+  // Azure OpenAI lives in two separate resources:
+  //   1. Chat / embeddings — balinski-ai-service (eastus)
+  //   2. Speech-to-text    — andre-mp27ytji-eastus2 (eastus2; gpt-4o-transcribe isn't in eastus)
+  // Hence two distinct API keys / endpoints. We still gate on the
+  // chat key here — if that's missing nothing useful can happen.
+  const chatKey = process.env.AZURE_OPENAI_API_KEY
+  const chatEndpoint = process.env.AZURE_OPENAI_ENDPOINT
+  if (!chatKey || !chatEndpoint) return { handled: false, reason: 'no_azure_openai' }
 
   // Show "печатает…" in Telegram for the entire turn so the visitor
   // sees the bot is alive while we transcribe / call OpenAI / send
@@ -74,14 +80,32 @@ export async function replyAsBalina({
   // interval no matter which exit path we take.
   const stopTyping = startTypingPing(token, chatId)
   try {
-    return await runTurn(apiKey, { chatId, token, lang, userText, voiceFileId })
+    return await runTurn({ chatId, token, lang, userText, voiceFileId })
   } finally {
     stopTyping()
   }
 }
 
+function buildChatClient(): AzureOpenAI | null {
+  const apiKey = process.env.AZURE_OPENAI_API_KEY
+  const endpoint = process.env.AZURE_OPENAI_ENDPOINT
+  const apiVersion = process.env.AZURE_OPENAI_API_VERSION ?? '2024-12-01-preview'
+  if (!apiKey || !endpoint) return null
+  return new AzureOpenAI({ apiKey, endpoint, apiVersion })
+}
+
+// Separate client for the transcription resource (gpt-4o-transcribe lives
+// in eastus2, not eastus). Returns null when not configured — voice
+// messages then degrade gracefully to a "send it as text" prompt.
+function buildTranscribeClient(): AzureOpenAI | null {
+  const apiKey = process.env.AZURE_OPENAI_TRANSCRIBE_API_KEY
+  const endpoint = process.env.AZURE_OPENAI_TRANSCRIBE_ENDPOINT
+  const apiVersion = process.env.AZURE_OPENAI_TRANSCRIBE_API_VERSION ?? '2024-12-01-preview'
+  if (!apiKey || !endpoint) return null
+  return new AzureOpenAI({ apiKey, endpoint, apiVersion })
+}
+
 async function runTurn(
-  apiKey: string,
   { chatId, token, lang, userText, voiceFileId }: {
     chatId: number; token: string; lang: 'ru' | 'en'; userText?: string; voiceFileId?: string | null
   },
@@ -101,11 +125,13 @@ async function runTurn(
   // user explicitly rather than silently dropping their message.
   let textIn = userText?.trim() ?? ''
   if (!textIn && voiceFileId) {
-    const client = new OpenAI({ apiKey })
-    const transcript = await transcribeVoice(client, token, voiceFileId).catch(err => {
-      console.error('[balina-tg] transcribe failed:', err)
-      return null
-    })
+    const transcribeClient = buildTranscribeClient()
+    const transcript = transcribeClient
+      ? await transcribeVoice(transcribeClient, token, voiceFileId).catch(err => {
+          console.error('[balina-tg] transcribe failed:', err)
+          return null
+        })
+      : null
     if (!transcript) {
       await sendText(token, chatId, lang === 'en'
         ? 'Sorry, I couldn\'t transcribe that voice message. Try sending it as text?'
@@ -237,7 +263,9 @@ async function runTurn(
     { role: 'user', content: textIn },
   ]
 
-  const client = new OpenAI({ apiKey })
+  const client = buildChatClient()
+  if (!client) return { handled: false, reason: 'no_azure_openai' }
+  const chatDeployment = process.env.AZURE_OPENAI_CHAT_DEPLOYMENT ?? 'gpt-5.4'
   const allListings: ListingCard[] = []
   const seenUrls = new Set<string>()
 
@@ -252,13 +280,13 @@ async function runTurn(
   for (let hop = 0; hop < MAX_TOOL_HOPS; hop++) {
     const toolChoice: 'required' | 'auto' = (hop === 0 && wantsListings) ? 'required' : 'auto'
     const completion = await client.chat.completions.create({
-      // gpt-4o-mini for routine chat — ~16× cheaper than gpt-4o.
-      // The hallucinations gpt-4o was protecting against are now
-      // caught by server-side guards (forced tool_choice on listing
-      // intent, fan-out across kinds, white-sand / inland post-
-      // filters, model sees only the filtered tool result).
-      // PDF AI-report still uses gpt-4o where quality is critical.
-      model: 'gpt-4o-mini',
+      // Azure OpenAI: `model` is the DEPLOYMENT name (configured via
+      // AZURE_OPENAI_CHAT_DEPLOYMENT, default gpt-5.4). Lives in the
+      // balinski-ai-service resource (eastus). Switched off
+      // gpt-4o-mini — gpt-5.4 is meaningfully better at sounding like
+      // a broker rather than a search-result reader, and the $1k
+      // Azure credit gives us years of runway at current volumes.
+      model: chatDeployment,
       messages,
       tools: TOOLS,
       tool_choice: toolChoice,
@@ -348,16 +376,19 @@ async function runTurn(
 
 // === voice → text via OpenAI Whisper =====================================
 
-async function transcribeVoice(client: OpenAI, token: string, fileId: string): Promise<string | null> {
+async function transcribeVoice(client: AzureOpenAI, token: string, fileId: string): Promise<string | null> {
   const file = await downloadTelegramFile(token, fileId)
   if (!file) return null
-  // OpenAI's audio.transcriptions.create wants a File-like input.
-  // The Web `File` constructor exists in Node 20+ and works with
-  // the OpenAI SDK out of the box.
+  // Azure exposes audio.transcriptions.create with the same shape as
+  // the OpenAI SDK; the `model` field here is the DEPLOYMENT name
+  // (default gpt-4o-transcribe — provisioned in the eastus2 resource
+  // because the model isn't available in eastus where Balina's chat
+  // resource lives). The Web `File` constructor (Node 20+) gives us
+  // a File-like input the SDK accepts directly.
   const blob = new File([new Uint8Array(file.buf)], 'voice.ogg', { type: file.mime || 'audio/ogg' })
   const r = await client.audio.transcriptions.create({
     file: blob,
-    model: 'whisper-1',
+    model: process.env.AZURE_OPENAI_TRANSCRIBE_DEPLOYMENT ?? 'gpt-4o-transcribe',
   })
   return (r.text ?? '').trim() || null
 }

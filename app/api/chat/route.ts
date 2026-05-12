@@ -1,4 +1,4 @@
-import OpenAI from 'openai'
+import { AzureOpenAI } from 'openai'
 import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions'
 import { getSystemPrompt, TOOLS, executeToolCall, ensureFeedbackBucket, type ListingCard } from '@/lib/consultant'
 import { ensureAssistantSession, logAssistantTurn } from '@/lib/assistant-session'
@@ -201,9 +201,12 @@ const EN_LANG_DIRECTIVE =
   '\n\nIMPORTANT: The user is on the English version of the site. Always respond in English, including any [CHIPS] suggestions. Translate any examples (city names like "Чангу" → "Canggu", "Убуд" → "Ubud") naturally.'
 
 export async function POST(req: Request) {
-  const apiKey = process.env.OPENAI_API_KEY
-  if (!apiKey) {
-    return Response.json({ error: 'OPENAI_API_KEY is not configured on the server' }, { status: 500 })
+  const apiKey = process.env.AZURE_OPENAI_API_KEY
+  const endpoint = process.env.AZURE_OPENAI_ENDPOINT
+  const apiVersion = process.env.AZURE_OPENAI_API_VERSION ?? '2024-12-01-preview'
+  const chatDeployment = process.env.AZURE_OPENAI_CHAT_DEPLOYMENT ?? 'gpt-5.4'
+  if (!apiKey || !endpoint) {
+    return Response.json({ error: 'Azure OpenAI is not configured on the server' }, { status: 500 })
   }
 
   let body: unknown
@@ -230,7 +233,7 @@ export async function POST(req: Request) {
   const session = await ensureAssistantSession().catch(() => null)
   const lastUserMessage = [...trimmed].reverse().find(m => m.role === 'user')?.content ?? ''
 
-  const client = new OpenAI({ apiKey })
+  const client = new AzureOpenAI({ apiKey, endpoint, apiVersion })
   const basePrompt = await getSystemPrompt()
   const systemPrompt = lang === 'en' ? basePrompt + EN_LANG_DIRECTIVE : basePrompt
 
@@ -262,12 +265,13 @@ export async function POST(req: Request) {
 
   for (let hop = 0; hop < MAX_TOOL_HOPS; hop++) {
     const completion = await client.chat.completions.create({
-      // gpt-4o-mini for the web chat — ~16× cheaper than gpt-4o.
-      // The hallucination protections that justified gpt-4o now
-      // live server-side (forced tool calls on listing intent,
-      // cross-kind fan-out, server-side post-filters). Mini handles
-      // the constrained shape just fine.
-      model: 'gpt-4o-mini',
+      // Azure OpenAI: `model` is the DEPLOYMENT name, configured via
+      // AZURE_OPENAI_CHAT_DEPLOYMENT (default gpt-5.4 — provisioned in
+      // the balinski-ai-service resource, eastus). Switched off
+      // gpt-4o-mini because gpt-5.4 quality difference is meaningful
+      // for the broker tone we want and the $1k Azure credit gives
+      // us years of runway at current chat volumes.
+      model: chatDeployment,
       messages,
       tools: TOOLS,
       tool_choice: 'auto',
