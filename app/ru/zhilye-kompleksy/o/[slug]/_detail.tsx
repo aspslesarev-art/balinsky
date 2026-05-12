@@ -636,7 +636,12 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
       ? `${unitsRoot === '/en' ? '/en/villas' : '/ru/villy'}/o/${u.slug}`
       : `${unitsRoot === '/en' ? '/en/apartments' : '/ru/apartamenty'}/o/${u.slug}`
     const row = (u.kind === 'villa' ? vilRowsById : aptRowsById).get(u.id)
-    const optUrl = row ? attachmentUrl(row.data['Image Opt']) : null
+    // Preference order for the popup hero: `Image Opt` (single
+    // pre-compressed thumbnail) → `Opt photos` (multi-photo gallery,
+    // take first) → manifest first photo (the raw bucket copy).
+    const optUrl = row
+      ? (attachmentUrl(row.data['Image Opt']) ?? attachmentUrl(row.data['Opt photos']))
+      : null
     unitInfoBySlug[u.slug] = {
       kind: u.kind,
       slug: u.slug,
