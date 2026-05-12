@@ -185,19 +185,20 @@ export function Footer({ lang = 'ru' }: { lang?: Lang }) {
               </li>
             ))}
           </ul>
-          <div className="mt-5 text-center text-[13px] text-[var(--color-text-muted)] leading-[1.7] max-w-[820px] mx-auto">
+          <div className="mt-5 text-center text-[10.5px] leading-[1.55] text-[var(--color-text-muted)]/70 max-w-[820px] mx-auto">
             {lang === 'en' ? (
               <>
-                Balinsky.info — official information resource and lead-generation partner
-                of Loyo &amp; Bondar. All content rights belong to the author.
-                Property offers on the site do not constitute a public offer.
+                Balinsky.info — authorised marketing resource and lead-generation
+                partner of Loyo &amp; Bondar. The site is operated by the company&apos;s
+                lead expert and serves as a platform for market analysis and direct
+                lead routing to the Loyo &amp; Bondar sales department.
               </>
             ) : (
               <>
-                Balinsky.info — официальный информационный ресурс и лид-ген партнёр
-                компании Loyo&nbsp;&amp;&nbsp;Bondar. Все права на контент принадлежат
-                автору. Предложения по недвижимости на сайте не являются публичной
-                офертой.
+                Balinsky.info — авторизованный маркетинговый ресурс и партнёр по
+                лидогенерации компании Loyo&nbsp;&amp;&nbsp;Bondar. Сайт управляется
+                ведущим экспертом компании и служит платформой для анализа рынка
+                и привлечения прямых запросов в отдел продаж Loyo&nbsp;&amp;&nbsp;Bondar.
               </>
             )}
           </div>
