@@ -9,7 +9,6 @@
 // Cost ballpark: ~1.5k villas + ~5k apartments + ~200 complexes =
 // ~7k rows × ~2-3k chars each ≈ 15M tokens × $0.13/M = ~$2.
 
-import 'dotenv/config'
 import fs from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
 import { AzureOpenAI } from 'openai'

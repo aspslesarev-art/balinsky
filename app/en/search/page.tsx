@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { SemanticSearchClient } from '../../ru/найти/_client'
+import { SemanticSearchClient } from '../../ru/poisk/_client'
 
 export const metadata: Metadata = {
   title: 'AI property search · Balinsky',
