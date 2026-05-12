@@ -606,6 +606,26 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
     ? await listHotspots(vizLayers.map(l => l.id)).catch(() => [] as Awaited<ReturnType<typeof listHotspots>>)
     : []
   const unitsRoot = lang === 'en' ? '/en' : '/ru'
+  // For the popup we prefer the optimised single-image attachment
+  // (`Image Opt` in Airtable — a pre-compressed thumbnail) over the
+  // full-quality first photo from the manifest. The interactive plan
+  // shows at most one unit popup at a time, so this trims ~80% of the
+  // bytes vs the raw photo and keeps tap-to-open snappy on mobile.
+  function attachmentUrl(v: unknown): string | null {
+    if (!Array.isArray(v) || v.length === 0) return null
+    const first = v[0]
+    if (first && typeof first === 'object' && 'url' in first && typeof (first as { url: unknown }).url === 'string') {
+      return (first as { url: string }).url
+    }
+    return null
+  }
+  // Module-cached loaders return instantly the second time, so this
+  // adds no real cost. We need them to read `Image Opt` which isn't
+  // carried through the units[] array.
+  const [aptForOpt, vilForOpt] = await Promise.all([_loadApartments(), _loadVillas()])
+  const aptRowsById = new Map(aptForOpt.rows.map(r => [r.airtable_id, r]))
+  const vilRowsById = new Map(vilForOpt.rows.map(r => [r.airtable_id, r]))
+
   const unitInfoBySlug: Record<string, {
     kind: 'villa' | 'apartment'; slug: string; title: string;
     bedrooms: number | null; area: number | null; priceUsd: number | null;
@@ -615,6 +635,8 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
     const path = u.kind === 'villa'
       ? `${unitsRoot === '/en' ? '/en/villas' : '/ru/villy'}/o/${u.slug}`
       : `${unitsRoot === '/en' ? '/en/apartments' : '/ru/apartamenty'}/o/${u.slug}`
+    const row = (u.kind === 'villa' ? vilRowsById : aptRowsById).get(u.id)
+    const optUrl = row ? attachmentUrl(row.data['Image Opt']) : null
     unitInfoBySlug[u.slug] = {
       kind: u.kind,
       slug: u.slug,
@@ -623,7 +645,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
       area: u.area,
       priceUsd: u.priceUsd,
       url: path,
-      photoUrl: u.photos?.[0] ?? null,
+      photoUrl: optUrl ?? u.photos?.[0] ?? null,
     }
   }
 
