@@ -36,9 +36,6 @@ const COPY = {
     statDevs: 'застройщиков',
     statMgrs: 'менеджеров на связи',
 
-    h2Who: 'Кто стоит за сайтом',
-    pWho: 'Оператор сайта — ИП Andrei Slesarau (Грузия, Тбилиси). На Бали — собственная съёмочная команда: дрон, ground-shooting, 4K видео объектов. Команда личных переговоров с застройщиками базируется на Бали: ходят по стройкам, обсуждают комиссии, согласовывают условия для клиентов сайта. Я сам родился в Минске, живу между Тбилиси и Бали, занимаюсь бали-недвижимостью с 2022 года.',
-
     h2How: 'Как мы выбираем что публиковать',
     standards: [
       { Icon: FileSearch, title: 'Проверка документов', body: 'У каждого объекта в базе должен быть валидный PBG, понятная структура земли (SHM/HGB/Hak Pakai) и реальный застройщик с PT-регистрацией. Без этого набора объект просто не попадает на сайт.' },
@@ -77,9 +74,6 @@ const COPY = {
     statComplexes: 'residential complexes',
     statDevs: 'developers',
     statMgrs: 'managers on call',
-
-    h2Who: 'Who runs the site',
-    pWho: 'The operator is Andrei Slesarau (sole proprietor, Georgia, Tbilisi). The on-the-ground crew lives on Bali: drone, ground filming, 4K project videos. Our negotiation team walks construction sites, agrees commission structures, and locks terms with developers for site visitors. I was born in Minsk, split my time between Tbilisi and Bali, and have been working with Bali property since 2022.',
 
     h2How: 'How we decide what to publish',
     standards: [
@@ -174,12 +168,6 @@ export async function AboutView({ lang }: { lang: Lang }) {
         </section>
 
         <article className="max-w-[760px]">
-          {/* Who runs the site */}
-          <section className="mb-14">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-3">{c.h2Who}</h2>
-            <p className="text-[15px] leading-[1.7] text-[var(--color-text)]">{c.pWho}</p>
-          </section>
-
           {/* Editorial standards */}
           <section className="mb-14">
             <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-5">{c.h2How}</h2>
