@@ -59,7 +59,8 @@ export function BalinaHero() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    setVoiceSupported(!!(window.SpeechRecognition || window.webkitSpeechRecognition))
+    // Voice input is now driven by MediaRecorder + /api/transcribe.
+    setVoiceSupported(typeof window.MediaRecorder !== 'undefined' && !!navigator.mediaDevices?.getUserMedia)
     const mq = window.matchMedia('(max-width: 640px)')
     const onChange = () => setIsNarrow(mq.matches)
     onChange()

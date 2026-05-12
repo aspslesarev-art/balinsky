@@ -3,31 +3,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
-import { MessageCircle, X, Send, Loader2, AlertTriangle, BedDouble, MapPin, ExternalLink, Mic, MicOff, UserRound, Trash2 } from 'lucide-react'
+import { MessageCircle, X, Send, Loader2, AlertTriangle, BedDouble, MapPin, ExternalLink, Mic, Square, UserRound, Trash2 } from 'lucide-react'
 import { useWishlist } from './WishlistContext'
 import { RECENT_KEY, type RecentlyViewedEntry } from './PageViewTracker'
 import type { Lang } from '@/lib/i18n'
-
-// Minimal Web Speech API typing — TS stdlib doesn't ship it, and we only use
-// the few fields we touch.
-type SpeechRecognitionLike = {
-  lang: string
-  continuous: boolean
-  interimResults: boolean
-  onresult: ((e: { resultIndex: number; results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null
-  onend: (() => void) | null
-  onerror: ((e: { error?: string }) => void) | null
-  start: () => void
-  stop: () => void
-  abort: () => void
-}
-type SpeechRecognitionCtor = new () => SpeechRecognitionLike
-declare global {
-  interface Window {
-    SpeechRecognition?: SpeechRecognitionCtor
-    webkitSpeechRecognition?: SpeechRecognitionCtor
-  }
-}
 
 type ListingCard = {
   kind: 'villa' | 'apartment' | 'complex' | 'developer' | 'rental'
@@ -105,6 +84,21 @@ const COPY = {
     perMonth: ' / мес',
     perSqm: '/ м²',
     voiceLang: 'ru-RU',
+    rec: {
+      recording: 'Запись',
+      transcribing: 'Распознаю…',
+      retrying: 'Сбой сети, пробую ещё раз…',
+      failed: 'Не получилось распознать',
+      silentTitle: 'Вы молчите',
+      silentHint: 'Закончить или продолжить?',
+      finishBtn: 'Готово',
+      continueBtn: 'Продолжить',
+      stopBtn: 'Остановить',
+      cancelBtn: 'Отменить',
+      retryBtn: 'Повторить',
+      micDenied: 'Доступ к микрофону запрещён',
+      micError: 'Не получилось включить микрофон',
+    },
   },
   en: {
     triggerAria: 'Open AI broker Balina',
@@ -126,6 +120,21 @@ const COPY = {
     perMonth: ' / mo',
     perSqm: '/ m²',
     voiceLang: 'en-US',
+    rec: {
+      recording: 'Recording',
+      transcribing: 'Transcribing…',
+      retrying: 'Network hiccup, retrying…',
+      failed: 'Could not transcribe',
+      silentTitle: 'You\'re silent',
+      silentHint: 'Finish or keep recording?',
+      finishBtn: 'Done',
+      continueBtn: 'Keep recording',
+      stopBtn: 'Stop',
+      cancelBtn: 'Cancel',
+      retryBtn: 'Retry',
+      micDenied: 'Microphone access denied',
+      micError: 'Could not start the microphone',
+    },
   },
 } as const
 
@@ -144,13 +153,45 @@ export function ConsultantWidget() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [listening, setListening] = useState(false)
   const [voiceSupported, setVoiceSupported] = useState(false)
   const scrollRef = useRef<HTMLDivElement | null>(null)
-  const recRef = useRef<SpeechRecognitionLike | null>(null)
-  // Snapshot of input text at the moment listening started — speech results
-  // append to this so existing typing isn't blown away.
+
+  // ===== Voice input (dictaphone-style) ================================
+  //
+  // Replaces the old browser SpeechRecognition path with a MediaRecorder
+  // flow: tap mic → record raw audio → tap stop → POST to
+  // /api/transcribe → text appended to input.
+  //
+  // Why not Web Speech API: real-time word-by-word leaks recognition
+  // mistakes into the UI while the visitor is still speaking, doesn't
+  // work in Safari at all, and silently fails on weak networks. Raw
+  // capture + server-side Whisper is more reliable + matches Telegram
+  // behaviour + keeps the audio blob alive so we never throw away
+  // speech the visitor already gave us.
+  type RecState =
+    | { kind: 'idle' }
+    | { kind: 'recording'; silent: boolean }
+    | { kind: 'transcribing'; blob: Blob; attempt: number }
+    | { kind: 'failed'; blob: Blob }
+  const [recState, setRecState] = useState<RecState>({ kind: 'idle' })
+  const [recElapsed, setRecElapsed] = useState(0)   // seconds, ticks while recording
+  const [recLevel, setRecLevel] = useState(0)       // 0..1, drives the level meter
+
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const chunksRef = useRef<Blob[]>([])
+  const audioCtxRef = useRef<AudioContext | null>(null)
+  const analyserRef = useRef<AnalyserNode | null>(null)
+  const rafRef = useRef<number | null>(null)
+  const recStartedAtRef = useRef(0)
+  const lastSoundAtRef = useRef(0)
+  // Input value at the moment recording started. Transcribed text
+  // appends to this instead of overwriting whatever the visitor had
+  // already typed before tapping mic.
   const baseInputRef = useRef('')
+
+  const SILENCE_MS = 3500   // peak below threshold for this long → show finish prompt
+  const SILENCE_LEVEL = 0.04
+  const MAX_RECORDING_MS = 60_000   // hard cap, force-stop at 60s
   // Tracks whether the localStorage hydrate ran so the persistence
   // useEffect below doesn't immediately overwrite stored history with
   // the default greeting on the very first render.
@@ -158,7 +199,10 @@ export function ConsultantWidget() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    setVoiceSupported(!!(window.SpeechRecognition || window.webkitSpeechRecognition))
+    setVoiceSupported(
+      typeof window.MediaRecorder !== 'undefined'
+      && !!navigator.mediaDevices?.getUserMedia,
+    )
   }, [])
 
   // Hydrate conversation history from localStorage on first mount.
@@ -224,17 +268,17 @@ export function ConsultantWidget() {
         }
       }
       if (detail.listen) {
-        // Same deferral — the recogniser sometimes throws if start() runs
+        // Same deferral — getUserMedia sometimes throws if it runs
         // before the panel has finished its open animation.
         setTimeout(() => {
-          if (!listening) toggleVoice()
+          if (recState.kind === 'idle') void startRecording()
         }, 80)
       }
     }
     window.addEventListener('balina:open', onOpen)
     return () => window.removeEventListener('balina:open', onOpen)
-    // sendText / toggleVoice are stable closures over local state we want
-    // to capture lazily — eslint-disable for the dep array is fine here.
+    // sendText / startRecording are stable closures over local state
+    // we want to capture lazily — eslint-disable for the dep array is fine.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -293,56 +337,167 @@ export function ConsultantWidget() {
     })
   }, [greeting])
 
-  const toggleVoice = () => {
+  // Clear all voice resources — stream tracks, audio context, RAF.
+  // Safe to call from anywhere; idempotent.
+  const cleanupRecording = () => {
+    if (rafRef.current != null) { cancelAnimationFrame(rafRef.current); rafRef.current = null }
+    const mr = mediaRecorderRef.current
+    if (mr) {
+      try { mr.stream.getTracks().forEach(t => t.stop()) } catch {}
+      mediaRecorderRef.current = null
+    }
+    if (audioCtxRef.current) {
+      try { audioCtxRef.current.close() } catch {}
+      audioCtxRef.current = null
+    }
+    analyserRef.current = null
+    setRecElapsed(0)
+    setRecLevel(0)
+  }
+
+  // Pick a MIME type the browser supports. We accept any of the
+  // common four — server side passes the blob to Azure transcribe
+  // which is happy with all of them.
+  const pickMime = (): string => {
+    const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg', '']
+    if (typeof MediaRecorder === 'undefined') return ''
+    for (const t of candidates) {
+      if (!t) return ''
+      try { if (MediaRecorder.isTypeSupported(t)) return t } catch {}
+    }
+    return ''
+  }
+
+  const startRecording = async () => {
     if (typeof window === 'undefined') return
-    if (listening) {
-      recRef.current?.stop()
-      return
-    }
-    const Ctor = window.SpeechRecognition ?? window.webkitSpeechRecognition
-    if (!Ctor) return
-    const rec = new Ctor()
-    rec.lang = c.voiceLang
-    rec.continuous = false
-    rec.interimResults = true
-    baseInputRef.current = input.trim()
-    rec.onresult = (e) => {
-      let transcript = ''
-      for (let i = 0; i < e.results.length; i++) {
-        transcript += e.results[i][0].transcript
-      }
-      const sep = baseInputRef.current && transcript ? ' ' : ''
-      setInput(baseInputRef.current + sep + transcript)
-    }
-    rec.onend = () => {
-      setListening(false)
-      recRef.current = null
-    }
-    rec.onerror = (e) => {
-      setListening(false)
-      recRef.current = null
-      if (e?.error && e.error !== 'no-speech' && e.error !== 'aborted') {
-        setError(e.error === 'not-allowed' ? c.micDenied : c.micError(e.error))
-      }
-    }
+    setError(null)
     try {
-      rec.start()
-      recRef.current = rec
-      setListening(true)
-      setError(null)
-    } catch {
-      // Some browsers throw if start() is called too quickly in succession.
-      setListening(false)
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } })
+      const mime = pickMime()
+      const recorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream)
+      mediaRecorderRef.current = recorder
+      chunksRef.current = []
+      baseInputRef.current = input.trim()
+
+      recorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunksRef.current.push(e.data) }
+      recorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: mime || 'audio/webm' })
+        cleanupRecording()
+        if (blob.size < 1024) {
+          // Less than 1 KB — visitor tapped record then immediately
+          // stop with no audible speech. Just return to idle.
+          setRecState({ kind: 'idle' })
+          return
+        }
+        void submitAudio(blob, 0)
+      }
+
+      // Level + silence detection via AnalyserNode.
+      const AudioCtx: typeof AudioContext = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+      const ctx = new AudioCtx()
+      audioCtxRef.current = ctx
+      const src = ctx.createMediaStreamSource(stream)
+      const analyser = ctx.createAnalyser()
+      analyser.fftSize = 512
+      src.connect(analyser)
+      analyserRef.current = analyser
+
+      const data = new Uint8Array(analyser.frequencyBinCount)
+      recStartedAtRef.current = Date.now()
+      lastSoundAtRef.current = Date.now()
+
+      const tick = () => {
+        if (!analyserRef.current) return
+        analyser.getByteTimeDomainData(data)
+        // Peak deviation from silence (128 is mid-point for uint8 PCM).
+        let peak = 0
+        for (let i = 0; i < data.length; i++) {
+          const v = Math.abs(data[i] - 128) / 128
+          if (v > peak) peak = v
+        }
+        setRecLevel(peak)
+        const now = Date.now()
+        if (peak > SILENCE_LEVEL) lastSoundAtRef.current = now
+        setRecElapsed(Math.round((now - recStartedAtRef.current) / 1000))
+
+        const elapsed = now - recStartedAtRef.current
+        const sinceSound = now - lastSoundAtRef.current
+        const silent = sinceSound > SILENCE_MS && elapsed > SILENCE_MS
+        setRecState(prev => (prev.kind === 'recording' && prev.silent !== silent ? { kind: 'recording', silent } : prev))
+
+        // Hard cap — force-stop at MAX_RECORDING_MS.
+        if (elapsed > MAX_RECORDING_MS) { recorder.stop(); return }
+        rafRef.current = requestAnimationFrame(tick)
+      }
+      rafRef.current = requestAnimationFrame(tick)
+
+      recorder.start(250)   // emit chunks every 250 ms — smoother stop
+      setRecState({ kind: 'recording', silent: false })
+    } catch (e) {
+      cleanupRecording()
+      setRecState({ kind: 'idle' })
+      const isDenied = e instanceof Error && /Permission|denied|NotAllowed/i.test(e.message)
+      setError(isDenied ? c.rec.micDenied : c.rec.micError)
     }
   }
 
-  // Stop recognition when widget closes.
-  useEffect(() => {
-    if (!open && recRef.current) {
-      recRef.current.abort()
-      recRef.current = null
-      setListening(false)
+  // Visitor tapped "stop" or "done". MediaRecorder.onstop will fire
+  // and pipe the blob into submitAudio.
+  const stopRecording = () => {
+    const mr = mediaRecorderRef.current
+    if (!mr) return
+    try { if (mr.state !== 'inactive') mr.stop() } catch {}
+  }
+
+  // Visitor tapped "cancel" — drop the audio entirely.
+  const cancelRecording = () => {
+    const mr = mediaRecorderRef.current
+    chunksRef.current = []
+    if (mr) {
+      try { mr.ondataavailable = null } catch {}
+      try { mr.onstop = () => { cleanupRecording(); setRecState({ kind: 'idle' }) } } catch {}
+      try { if (mr.state !== 'inactive') mr.stop() } catch {}
+    } else {
+      cleanupRecording()
+      setRecState({ kind: 'idle' })
     }
+  }
+
+  // POST the blob to /api/transcribe. Auto-retries twice on network
+  // / 5xx errors; if still failing we surface 'failed' state with the
+  // blob preserved so the visitor can tap "повторить" manually — the
+  // audio is NEVER discarded until they decide.
+  const submitAudio = async (blob: Blob, attempt: number) => {
+    setRecState({ kind: 'transcribing', blob, attempt })
+    try {
+      const fd = new FormData()
+      fd.append('audio', blob, 'voice.webm')
+      const r = await fetch('/api/transcribe', { method: 'POST', body: fd })
+      if (!r.ok) throw new Error(`http_${r.status}`)
+      const j = await r.json() as { text?: string; error?: string }
+      const text = (j.text ?? '').trim()
+      if (text) {
+        const sep = baseInputRef.current && text ? ' ' : ''
+        setInput(baseInputRef.current + sep + text)
+      }
+      setRecState({ kind: 'idle' })
+    } catch {
+      if (attempt < 2) {
+        // Auto-retry on transient network failure — visitor never
+        // has to think about it.
+        setTimeout(() => { void submitAudio(blob, attempt + 1) }, 600)
+      } else {
+        setRecState({ kind: 'failed', blob })
+      }
+    }
+  }
+
+  // Stop recording / drop the audio context when the widget closes.
+  useEffect(() => {
+    if (!open) {
+      cancelRecording()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
   // Body scroll lock on mobile when open (simple — only when sheet covers screen).
@@ -591,6 +746,25 @@ export function ConsultantWidget() {
               )}
             </div>
 
+            {/* Voice recording overlay — covers the input area while a
+                recording / transcription is in flight. Visitor can stop,
+                cancel, retry, or confirm finish-on-silence from here. */}
+            {recState.kind !== 'idle' && (
+              <div className="shrink-0 border-t border-[var(--color-border)] bg-white p-3">
+                <VoiceOverlay
+                  state={recState}
+                  elapsed={recElapsed}
+                  level={recLevel}
+                  copy={c.rec}
+                  onStop={stopRecording}
+                  onCancel={cancelRecording}
+                  onRetry={() => {
+                    if (recState.kind === 'failed') void submitAudio(recState.blob, 0)
+                  }}
+                />
+              </div>
+            )}
+
             {/* Input */}
             <form
               onSubmit={e => { e.preventDefault(); send() }}
@@ -605,25 +779,21 @@ export function ConsultantWidget() {
                     send()
                   }
                 }}
-                placeholder={listening ? c.listening : c.placeholder}
+                placeholder={recState.kind === 'transcribing' ? c.rec.transcribing : c.placeholder}
                 rows={2}
-                disabled={loading}
+                disabled={loading || recState.kind !== 'idle'}
                 className="flex-1 resize-none min-h-[48px] max-h-32 rounded-2xl border border-[var(--color-border)] bg-white px-4 py-2.5 text-[14px] focus:outline-none focus:border-[var(--color-primary)] disabled:opacity-50"
               />
-              {voiceSupported && (
+              {voiceSupported && recState.kind === 'idle' && (
                 <button
                   type="button"
-                  onClick={toggleVoice}
+                  onClick={() => { void startRecording() }}
                   disabled={loading}
-                  aria-label={listening ? c.voiceStopAria : c.voiceStartAria}
-                  title={listening ? c.voiceStopTitle : c.voiceStartTitle}
-                  className={`shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-full transition-colors disabled:opacity-50 ${
-                    listening
-                      ? 'bg-[#DC2626] hover:bg-[#B91C1C] text-white animate-pulse'
-                      : 'bg-black/5 hover:bg-black/10 text-[#111827]'
-                  }`}
+                  aria-label={c.voiceStartAria}
+                  title={c.voiceStartTitle}
+                  className="shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-full bg-black/5 hover:bg-black/10 text-[#111827] disabled:opacity-50"
                 >
-                  {listening ? <MicOff size={18} /> : <Mic size={18} />}
+                  <Mic size={18} />
                 </button>
               )}
               <button
@@ -742,6 +912,116 @@ function Bubble({ role, children }: { role: 'user' | 'assistant'; children: Reac
           <div className="whitespace-pre-wrap">{children}</div>
         )}
       </div>
+    </div>
+  )
+}
+
+// Voice-recording overlay shown above the chat input while a recording
+// is captured / transcribed. Pure presentational — all state + actions
+// flow in from the parent.
+type RecOverlayState =
+  | { kind: 'recording'; silent: boolean }
+  | { kind: 'transcribing'; attempt: number }
+  | { kind: 'failed' }
+
+type VoiceCopy = {
+  recording: string
+  transcribing: string
+  retrying: string
+  failed: string
+  silentTitle: string
+  silentHint: string
+  finishBtn: string
+  continueBtn: string
+  stopBtn: string
+  cancelBtn: string
+  retryBtn: string
+}
+
+function VoiceOverlay({
+  state, elapsed, level, copy,
+  onStop, onCancel, onRetry,
+}: {
+  state: RecOverlayState
+  elapsed: number
+  level: number
+  copy: VoiceCopy
+  onStop: () => void
+  onCancel: () => void
+  onRetry: () => void
+}) {
+  const mm = String(Math.floor(elapsed / 60)).padStart(1, '0')
+  const ss = String(elapsed % 60).padStart(2, '0')
+  const time = `${mm}:${ss}`
+
+  // Recording — live level meter + timer + Stop / Cancel.
+  if (state.kind === 'recording' && !state.silent) {
+    return (
+      <div className="flex items-center gap-3">
+        <div className="shrink-0 w-3 h-3 rounded-full bg-[#DC2626] animate-pulse" />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-2">
+            <span className="text-[13px] font-medium text-[#111827]">{copy.recording}</span>
+            <span className="text-[12px] font-mono text-[#6B7280] tabular-nums">{time}</span>
+          </div>
+          <div className="mt-1 h-1.5 bg-black/5 rounded-full overflow-hidden">
+            <div className="h-full bg-[#1F8B5F] transition-[width] duration-75" style={{ width: `${Math.min(100, Math.round(level * 200))}%` }} />
+          </div>
+        </div>
+        <button type="button" onClick={onCancel} className="text-[12px] text-[#6B7280] hover:text-[#111827] px-2 py-1">
+          {copy.cancelBtn}
+        </button>
+        <button type="button" onClick={onStop} className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#1F8B5F] hover:bg-[#197551] text-white">
+          <Square size={14} />
+        </button>
+      </div>
+    )
+  }
+
+  // Silent — pulse-stops, prompt "are you done?" with two big buttons.
+  if (state.kind === 'recording' && state.silent) {
+    return (
+      <div className="flex items-center gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="text-[13px] font-medium text-[#111827]">{copy.silentTitle}</div>
+          <div className="text-[12px] text-[#6B7280] mt-0.5">{copy.silentHint}</div>
+        </div>
+        <button type="button" onClick={onCancel} className="text-[12px] text-[#6B7280] hover:text-[#111827] px-2 py-1">
+          {copy.cancelBtn}
+        </button>
+        <button type="button" onClick={onStop} className="px-4 h-10 rounded-full bg-[#1F8B5F] hover:bg-[#197551] text-white text-[13px] font-medium">
+          {copy.finishBtn}
+        </button>
+      </div>
+    )
+  }
+
+  // Transcribing — spinner + status (notes auto-retry if attempt > 0).
+  if (state.kind === 'transcribing') {
+    return (
+      <div className="flex items-center gap-3">
+        <Loader2 size={16} className="animate-spin text-[#1F8B5F]" />
+        <div className="flex-1 text-[13px] text-[#111827]">
+          {state.attempt > 0 ? copy.retrying : copy.transcribing}
+        </div>
+        <button type="button" onClick={onCancel} className="text-[12px] text-[#6B7280] hover:text-[#111827] px-2 py-1">
+          {copy.cancelBtn}
+        </button>
+      </div>
+    )
+  }
+
+  // Failed — manual retry, audio blob still preserved.
+  return (
+    <div className="flex items-center gap-3">
+      <AlertTriangle size={16} className="text-[#DC2626]" />
+      <div className="flex-1 text-[13px] text-[#111827]">{copy.failed}</div>
+      <button type="button" onClick={onCancel} className="text-[12px] text-[#6B7280] hover:text-[#111827] px-2 py-1">
+        {copy.cancelBtn}
+      </button>
+      <button type="button" onClick={onRetry} className="px-4 h-10 rounded-full bg-[#1F8B5F] hover:bg-[#197551] text-white text-[13px] font-medium">
+        {copy.retryBtn}
+      </button>
     </div>
   )
 }
