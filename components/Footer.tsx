@@ -185,7 +185,7 @@ export function Footer({ lang = 'ru' }: { lang?: Lang }) {
               </li>
             ))}
           </ul>
-          <div className="mt-5 text-center text-[10.5px] leading-[1.55] text-[var(--color-text-muted)]/70 max-w-[820px] mx-auto">
+          <div className="mt-5 text-center text-[9.5px] leading-[1.45] text-[#9CA3AF]/55 max-w-[760px] mx-auto">
             {lang === 'en' ? (
               <>
                 Balinsky.info — authorised marketing resource and lead-generation
