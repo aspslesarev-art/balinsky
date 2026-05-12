@@ -68,13 +68,10 @@ export function ComplexVisualizationViewer({
   lang?: 'ru' | 'en'
 }) {
   // Root-level layers — top-level "views" the visitor can switch
-  // between (Апартаменты / Вилла / Апарты 2 …). Sorted by editor-
-  // controlled sortOrder so drag-and-drop in admin actually reflows
-  // them on the public side.
-  const rootLayers = layers
-    .filter(l => l.parentLayerId == null)
-    .slice()
-    .sort((a, b) => a.sortOrder - b.sortOrder)
+  // between (Апартаменты / Вилла / Апарты 2 …). Trust the order the
+  // server gave us (listLayers already ORDER BY sort_order), so
+  // drag-and-drop in admin flows through to the public side.
+  const rootLayers = layers.filter(l => l.parentLayerId == null)
   const root = rootLayers[0] ?? layers[0]
   const [stack, setStack] = useState<Layer[]>(root ? [root] : [])
 
