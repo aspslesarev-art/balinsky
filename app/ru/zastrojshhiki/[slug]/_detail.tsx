@@ -69,7 +69,13 @@ export const _loadAllDevelopers = unstable_cache(
 
 export async function loadDeveloper(slug: string): Promise<DeveloperRow | null> {
   const all = await _loadAllDevelopers()
-  return all.find(r => firstString(r.data['SEO:Slug']) === slug) ?? null
+  // Slug-collision tolerance: Airtable sometimes keeps a draft row
+  // alongside the live record with the same SEO:Slug. Prefer the
+  // published row so the page doesn't 404 just because an editor
+  // forgot to delete the placeholder.
+  return all.find(r => firstString(r.data['SEO:Slug']) === slug && r.data['Публикация'] === true)
+      ?? all.find(r => firstString(r.data['SEO:Slug']) === slug)
+      ?? null
 }
 
 const _loadAllComplexes = unstable_cache(
