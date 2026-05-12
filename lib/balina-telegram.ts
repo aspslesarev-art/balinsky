@@ -25,6 +25,7 @@ import { getSystemPrompt, TOOLS, executeToolCall, type ListingCard } from '@/lib
 import { appendLearnedRule } from '@/lib/assistant-knowledge'
 import { listMessages, logMessage } from '@/lib/bot-storage'
 import { downloadTelegramFile } from '@/lib/chat-media'
+import { logUsage } from '@/lib/usage-tracker'
 
 const MAX_HISTORY = 12                  // rows pulled from bot_messages → assistant context (12 ≈ 6 user + 6 assistant)
 const MAX_TOOL_HOPS = 4
@@ -292,6 +293,13 @@ async function runTurn(
       tool_choice: toolChoice,
       temperature: 0.5,
     })
+    logUsage({
+      feature: 'chat-tg',
+      deployment: chatDeployment,
+      promptTokens: completion.usage?.prompt_tokens ?? 0,
+      completionTokens: completion.usage?.completion_tokens ?? 0,
+      meta: { hop, chat_id: chatId },
+    })
     const choice = completion.choices[0]
     const msg = choice.message
     messages.push(msg)
@@ -386,10 +394,12 @@ async function transcribeVoice(client: AzureOpenAI, token: string, fileId: strin
   // resource lives). The Web `File` constructor (Node 20+) gives us
   // a File-like input the SDK accepts directly.
   const blob = new File([new Uint8Array(file.buf)], 'voice.ogg', { type: file.mime || 'audio/ogg' })
-  const r = await client.audio.transcriptions.create({
-    file: blob,
-    model: process.env.AZURE_OPENAI_TRANSCRIBE_DEPLOYMENT ?? 'gpt-4o-transcribe',
-  })
+  const deployment = process.env.AZURE_OPENAI_TRANSCRIBE_DEPLOYMENT ?? 'gpt-4o-transcribe'
+  const r = await client.audio.transcriptions.create({ file: blob, model: deployment })
+  // Telegram voice messages are OPUS @ ~32 kbps ≈ 4 KB/s. Byte-length
+  // gives a rough seconds estimate, accurate enough for cost tracking.
+  const approxSeconds = Math.max(1, Math.round(file.buf.length / 4000))
+  logUsage({ feature: 'transcribe', deployment, audioSeconds: approxSeconds })
   return (r.text ?? '').trim() || null
 }
 

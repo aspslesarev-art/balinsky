@@ -2,6 +2,7 @@ import { AzureOpenAI } from 'openai'
 import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions'
 import { getSystemPrompt, TOOLS, executeToolCall, ensureFeedbackBucket, type ListingCard } from '@/lib/consultant'
 import { ensureAssistantSession, logAssistantTurn } from '@/lib/assistant-session'
+import { logUsage } from '@/lib/usage-tracker'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -276,6 +277,14 @@ export async function POST(req: Request) {
       tools: TOOLS,
       tool_choice: 'auto',
       temperature: 0.5,
+    })
+    // Log Azure spend per chat hop — fire-and-forget.
+    logUsage({
+      feature: 'chat-web',
+      deployment: chatDeployment,
+      promptTokens: completion.usage?.prompt_tokens ?? 0,
+      completionTokens: completion.usage?.completion_tokens ?? 0,
+      meta: { hop, chat_id: session?.chatId ?? null },
     })
     const choice = completion.choices[0]
     const msg = choice.message

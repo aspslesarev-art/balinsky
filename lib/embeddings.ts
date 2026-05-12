@@ -26,6 +26,15 @@ export async function embedText(text: string): Promise<number[] | null> {
     input: t,
     dimensions: EMBEDDING_DIMS,
   })
+  // Fire-and-forget usage log (avoids cyclical import via direct call).
+  const usage = r.usage as { prompt_tokens?: number } | undefined
+  if (usage?.prompt_tokens) {
+    import('@/lib/usage-tracker').then(({ logUsage }) => logUsage({
+      feature: 'embed-search',
+      deployment: DEPLOYMENT,
+      promptTokens: usage.prompt_tokens ?? 0,
+    }))
+  }
   const vec = r.data[0]?.embedding
   return vec ?? null
 }
