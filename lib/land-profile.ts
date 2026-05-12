@@ -10,6 +10,17 @@ const sb = createClient(
   process.env.SUPABASE_SERVICE_KEY!,
 )
 
+export type TranslationFields = Partial<{
+  kabupaten: string
+  kecamatan: string
+  desa: string
+  zona_name: string
+  subzona_name: string
+  gsb_setback: string
+  building_height: string
+  regulation: string
+}>
+
 export type LandProfile = {
   airtable_id: string
   lat: number
@@ -31,6 +42,7 @@ export type LandProfile = {
   regulation: string | null
   regulation_pdf: string | null
   str_likely_allowed: string | null
+  translations: { ru?: TranslationFields; en?: TranslationFields } | null
   error: string | null
   synced_at: string
 }

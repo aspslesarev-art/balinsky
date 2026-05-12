@@ -7,6 +7,17 @@
 import { useState } from 'react'
 import { Landmark, ChevronDown, ChevronUp, ExternalLink, CircleCheck, CircleX, CircleAlert } from 'lucide-react'
 
+type Tx = Partial<{
+  kabupaten: string
+  kecamatan: string
+  desa: string
+  zona_name: string
+  subzona_name: string
+  gsb_setback: string
+  building_height: string
+  regulation: string
+}>
+
 export type LandProfileProps = {
   kabupaten: string | null
   kecamatan: string | null
@@ -25,6 +36,7 @@ export type LandProfileProps = {
   regulation: string | null
   regulation_pdf: string | null
   str_likely_allowed: string | null
+  translations?: { ru?: Tx; en?: Tx } | null
 }
 
 const COPY = {
@@ -99,15 +111,26 @@ export function LandProfileBlock({ data, lang = 'ru' }: { data: LandProfileProps
   const [open, setOpen] = useState(false)
   const c = COPY[lang]
 
-  // One-line summary: subzone code + subzone name + STR verdict + KDB/KLB
-  const subZoneShort = [data.subzona_code, data.subzona_name].filter(Boolean).join(' · ')
+  // Use translated text when present; fall back to raw Indonesian.
+  const tx = data.translations?.[lang] ?? {}
+  const t = (key: keyof Tx, raw: string | null): string | null => tx[key] ?? raw
+
+  // One-line summary: subzone code + (translated) subzone name + STR verdict + facts.
+  const subZoneShort = [data.subzona_code, t('subzona_name', data.subzona_name)].filter(Boolean).join(' · ')
   const str = strBadge(data.str_likely_allowed)
 
+  // Short kecamatan name (drop the "Kecamatan" / "Кечаматан" prefix) for the summary chip.
+  const kecShort = (() => {
+    const raw = t('kecamatan', data.kecamatan)
+    if (!raw) return null
+    return raw.replace(/^(Kecamatan|Кечаматан)\s+/i, '')
+  })()
+
   const facts = [
-    data.kecamatan ? data.kecamatan.replace(/^Kecamatan\s+/i, '') : null,
+    kecShort,
     data.kdb_percent != null ? `KDB ${data.kdb_percent}%` : null,
     data.klb_ratio != null ? `KLB ${data.klb_ratio}` : null,
-    data.building_height ? `${data.building_height}` : null,
+    t('building_height', data.building_height),
   ].filter(Boolean)
 
   return (
@@ -158,23 +181,23 @@ export function LandProfileBlock({ data, lang = 'ru' }: { data: LandProfileProps
 
       {open && (
         <div className="border-t border-[var(--color-border)] px-5 py-4 text-[13.5px] grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5">
-          {data.kabupaten && <Row label={c.kabupaten} value={data.kabupaten} />}
-          {data.kecamatan && <Row label={c.kecamatan} value={data.kecamatan} />}
-          {data.desa && <Row label={c.desa} value={data.desa} />}
-          {(data.zona_name || data.zona_code) && (
-            <Row label={c.zone} value={[data.zona_name, data.zona_code ? `(${data.zona_code})` : null].filter(Boolean).join(' ')} />
+          {(tx.kabupaten || data.kabupaten) && <Row label={c.kabupaten} value={t('kabupaten', data.kabupaten)!} />}
+          {(tx.kecamatan || data.kecamatan) && <Row label={c.kecamatan} value={t('kecamatan', data.kecamatan)!} />}
+          {(tx.desa || data.desa) && <Row label={c.desa} value={t('desa', data.desa)!} />}
+          {(tx.zona_name || data.zona_name || data.zona_code) && (
+            <Row label={c.zone} value={[t('zona_name', data.zona_name), data.zona_code ? `(${data.zona_code})` : null].filter(Boolean).join(' ')} />
           )}
-          {(data.subzona_name || data.subzona_code) && (
-            <Row label={c.subzone} value={[data.subzona_name, data.subzona_code ? `(${data.subzona_code})` : null].filter(Boolean).join(' ')} />
+          {(tx.subzona_name || data.subzona_name || data.subzona_code) && (
+            <Row label={c.subzone} value={[t('subzona_name', data.subzona_name), data.subzona_code ? `(${data.subzona_code})` : null].filter(Boolean).join(' ')} />
           )}
           {data.kdb_percent != null && <Row label={c.kdb} value={`${data.kdb_percent}%`} />}
           {data.klb_ratio != null && <Row label={c.klb} value={String(data.klb_ratio)} />}
           {data.kdh_percent != null && <Row label={c.kdh} value={`${data.kdh_percent}%`} />}
           {data.ktb_percent != null && <Row label={c.ktb} value={`${data.ktb_percent}%`} />}
-          {data.building_height && <Row label={c.height} value={data.building_height} />}
-          {data.gsb_setback && <Row label={c.gsb} value={data.gsb_setback} wide />}
+          {(tx.building_height || data.building_height) && <Row label={c.height} value={t('building_height', data.building_height)!} />}
+          {(tx.gsb_setback || data.gsb_setback) && <Row label={c.gsb} value={t('gsb_setback', data.gsb_setback)!} wide />}
           {data.allowed_use_count != null && <Row label={c.uses} value={String(data.allowed_use_count)} />}
-          {data.regulation && <Row label={c.regulation} value={data.regulation} wide />}
+          {(tx.regulation || data.regulation) && <Row label={c.regulation} value={t('regulation', data.regulation)!} wide />}
           {data.regulation_pdf && (
             <div className="sm:col-span-2">
               <a

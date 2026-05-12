@@ -12,6 +12,7 @@ Usage:
 """
 
 import argparse
+import json
 import os
 import re
 import sys
@@ -24,6 +25,72 @@ sys.path.insert(0, str(Path(__file__).parent))
 from land_profile import make_session, profile_one  # noqa: E402
 
 import requests
+
+
+def translate_via_azure(p) -> dict | None:
+    """One call to Azure OpenAI to translate the Indonesian fields to
+    RU + EN. Returns the translations jsonb shape, or None on error
+    (sync continues with raw Indonesian — component falls back)."""
+    api_key = os.environ.get("AZURE_OPENAI_API_KEY")
+    endpoint = os.environ.get("AZURE_OPENAI_ENDPOINT")
+    api_version = os.environ.get("AZURE_OPENAI_API_VERSION", "2024-12-01-preview")
+    deployment = os.environ.get("AZURE_OPENAI_CHAT_DEPLOYMENT", "gpt-5.4")
+    if not api_key or not endpoint:
+        return None
+
+    # Compact source dict — only fields that need translating.
+    src = {
+        "kabupaten": p.Kabupaten,
+        "kecamatan": p.Kecamatan,
+        "desa": p.Desa,
+        "zona_name": p.Zona_Name,
+        "subzona_name": p.Subzona_Name,
+        "gsb_setback": p.GSB_Setback,
+        "building_height": p.Building_Height,
+        "regulation": p.Regulation,
+    }
+    # Strip empties so we don't waste tokens.
+    src = {k: v for k, v in src.items() if v}
+    if not src:
+        return None
+
+    sys_prompt = (
+        "You translate Indonesian (Bahasa) land-zoning text into Russian and English. "
+        "Output a single JSON object with two keys, `ru` and `en`. Each is an object "
+        "with the same keys as the input. Rules:\n"
+        "- Place names (kabupaten / kecamatan / desa): transliterate to natural Russian "
+        "  (e.g. Канггу, Кута Утара, Бадунг) and use the common English/Indonesian form for `en`. "
+        "  Drop the prefix word: 'Kabupaten Badung' → 'Бадунг' / 'Badung'.\n"
+        "- Zone / sub-zone names: short semantic translation, no longer than 3 words.\n"
+        "- GSB setback rule + building-height rule: rewrite as one short, plain sentence per language. "
+        "  Drop Indonesian jargon (Kolektor Primer, Lokal Primer, Lingkungan Primer); use a single number "
+        "  if it's the same across road classes, or '15 м на основных дорогах' if you must mention them. "
+        "  Be terse — investor needs the takeaway, not the regulation text.\n"
+        "- Regulation: keep the doc type + region + year, drop the long official phrasing.\n"
+        "- If a field is null/empty in input, omit it from output.\n"
+        "Return ONLY the JSON, no prose, no markdown fence."
+    )
+    user_msg = "Translate to RU + EN:\n" + json.dumps(src, ensure_ascii=False)
+
+    url = f"{endpoint.rstrip('/')}/openai/deployments/{deployment}/chat/completions?api-version={api_version}"
+    body = {
+        "messages": [
+            {"role": "system", "content": sys_prompt},
+            {"role": "user", "content": user_msg},
+        ],
+        "temperature": 0.2,
+        "response_format": {"type": "json_object"},
+    }
+    try:
+        r = requests.post(url, json=body, headers={"api-key": api_key, "Content-Type": "application/json"}, timeout=30)
+        r.raise_for_status()
+        msg = r.json()["choices"][0]["message"]["content"]
+        parsed = json.loads(msg)
+        if isinstance(parsed, dict) and "ru" in parsed and "en" in parsed:
+            return parsed
+    except Exception as e:
+        print(f"  translate failed: {e}", file=sys.stderr)
+    return None
 
 
 def load_env_local() -> None:
@@ -151,6 +218,10 @@ def main() -> None:
             failed += 1
             continue
 
+        # One Azure call to translate the Indonesian fields to RU + EN.
+        # Cheap (~$0.0001 / villa) and saves us doing it at render-time.
+        translations = translate_via_azure(p) if p.Zona_Name else None
+
         body = {
             "airtable_id": aid,
             "lat": lat, "lon": lon,
@@ -163,11 +234,9 @@ def main() -> None:
             "allowed_use_count": p.Allowed_Use_Count,
             "regulation": p.Regulation, "regulation_pdf": p.Regulation_PDF,
             "str_likely_allowed": p.STR_Likely_Allowed,
+            "translations": translations,
             "error": p.Error,
-            "synced_at": "now()",
         }
-        # Strip the "now()" — let Postgres set it via DEFAULT on upsert.
-        body.pop("synced_at")
 
         r = sb.post(
             f"{SB_URL}/rest/v1/villa_land_profile?on_conflict=airtable_id",
