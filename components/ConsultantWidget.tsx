@@ -476,11 +476,16 @@ export function ConsultantWidget() {
       if (!r.ok) throw new Error(`http_${r.status}`)
       const j = await r.json() as { text?: string; error?: string }
       const text = (j.text ?? '').trim()
-      if (text) {
-        const sep = baseInputRef.current && text ? ' ' : ''
-        setInput(baseInputRef.current + sep + text)
-      }
       setRecState({ kind: 'idle' })
+      if (text) {
+        // Voice input is now auto-send — the visitor talked, we
+        // transcribed, no extra tap on Send required. The pre-record
+        // input value (if any) is concatenated in front so typed +
+        // dictated context goes in the same message.
+        const sep = baseInputRef.current && text ? ' ' : ''
+        const full = baseInputRef.current + sep + text
+        void sendText(full)
+      }
     } catch {
       if (attempt < 2) {
         // Auto-retry on transient network failure — visitor never
