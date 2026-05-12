@@ -24,6 +24,7 @@ import Link from 'next/link'
 import {
   Plus, Upload, Trash2, Save, ChevronRight, ChevronLeft, Image as ImageIcon,
   Loader2, AlertTriangle, Check, X, Maximize2, Minimize2, ZoomIn, ZoomOut, ArrowLeft,
+  GripVertical,
 } from 'lucide-react'
 
 type Layer = {
@@ -109,6 +110,12 @@ export function VisualizationEditor({
   // instead of finding a file on disk and uploading.
   const [complexPhotos, setComplexPhotos] = useState<string[]>([])
   const [pickerOpen, setPickerOpen] = useState(false)
+  // Drag-and-drop reordering of the layer list. dragId tracks which
+  // layer is being dragged; overId is the layer hovered over so we
+  // can paint an insertion line. On drop we reflow sortOrder by
+  // index×10 and PATCH the rows whose order changed.
+  const [dragId, setDragId] = useState<number | null>(null)
+  const [overId, setOverId] = useState<number | null>(null)
   useEffect(() => {
     let cancelled = false
     ;(async () => {
@@ -182,6 +189,32 @@ export function VisualizationEditor({
     } catch (e) {
       setError(e instanceof Error ? e.message : 'unknown')
     } finally { setSaving(false) }
+  }
+
+  // Move layer with `srcId` to be inserted at the position of `dstId`.
+  // Rewrites sortOrder = index × 10 across the affected list and
+  // PATCHes only the rows whose sortOrder actually changed.
+  async function reorderLayers(srcId: number, dstId: number) {
+    if (srcId === dstId) return
+    const ordered = [...layers].sort((a, b) => a.sortOrder - b.sortOrder)
+    const fromIdx = ordered.findIndex(l => l.id === srcId)
+    const toIdx = ordered.findIndex(l => l.id === dstId)
+    if (fromIdx < 0 || toIdx < 0) return
+    const [moved] = ordered.splice(fromIdx, 1)
+    ordered.splice(toIdx, 0, moved)
+    const renumbered = ordered.map((l, i) => ({ ...l, sortOrder: (i + 1) * 10 }))
+    // Optimistic update — surface the new order immediately.
+    setLayers(renumbered)
+    // PATCH every row whose sortOrder changed.
+    const before = new Map(layers.map(l => [l.id, l.sortOrder]))
+    const dirty = renumbered.filter(l => before.get(l.id) !== l.sortOrder)
+    await Promise.all(dirty.map(l =>
+      fetch(`/api/admin/visualizations/layers/${l.id}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ sortOrder: l.sortOrder }),
+      }).catch(() => null),
+    ))
   }
 
   async function removeLayer(id: number) {
@@ -401,19 +434,48 @@ export function VisualizationEditor({
             </div>
           ) : (
             <ul className="space-y-1">
-              {layers.map(l => {
+              {[...layers].sort((a, b) => a.sortOrder - b.sortOrder).map(l => {
                 const isActive = l.id === activeLayerId
                 const childCount = layers.filter(c => c.parentLayerId === l.id).length
                 const hsCount = hotspots.filter(h => h.layerId === l.id).length
+                const isDragging = dragId === l.id
+                const isOver = overId === l.id && dragId != null && dragId !== l.id
                 return (
-                  <li key={l.id}>
+                  <li
+                    key={l.id}
+                    draggable
+                    onDragStart={(e) => {
+                      setDragId(l.id)
+                      e.dataTransfer.effectAllowed = 'move'
+                      // Firefox needs *something* in dataTransfer or
+                      // dragstart fires but no drop ever does.
+                      try { e.dataTransfer.setData('text/plain', String(l.id)) } catch {}
+                    }}
+                    onDragOver={(e) => {
+                      if (dragId != null && dragId !== l.id) {
+                        e.preventDefault()
+                        e.dataTransfer.dropEffect = 'move'
+                        if (overId !== l.id) setOverId(l.id)
+                      }
+                    }}
+                    onDragLeave={() => { if (overId === l.id) setOverId(null) }}
+                    onDrop={async (e) => {
+                      e.preventDefault()
+                      const src = dragId
+                      setDragId(null); setOverId(null)
+                      if (src != null && src !== l.id) await reorderLayers(src, l.id)
+                    }}
+                    onDragEnd={() => { setDragId(null); setOverId(null) }}
+                    className={`relative ${isDragging ? 'opacity-40' : ''} ${isOver ? 'before:absolute before:-top-0.5 before:left-0 before:right-0 before:h-0.5 before:bg-[var(--color-primary)] before:rounded-full' : ''}`}
+                  >
                     <button
                       type="button"
                       onClick={() => { setActiveLayerId(l.id); setSelectedHotspotId(null); setDraft(null) }}
-                      className={`w-full text-left px-2.5 py-2 rounded-lg text-[13px] flex items-center gap-2 ${
+                      className={`w-full text-left px-2 py-2 rounded-lg text-[13px] flex items-center gap-2 ${
                         isActive ? 'bg-[var(--color-primary)] text-white' : 'hover:bg-[var(--ax-hover)] text-[var(--ax-fg)]'
                       }`}
                     >
+                      <GripVertical size={13} className={`shrink-0 cursor-grab ${isActive ? 'opacity-80' : 'opacity-40'}`} />
                       <ImageIcon size={14} className={isActive ? 'opacity-90' : 'opacity-60'} />
                       <span className="flex-1 truncate">{l.title ?? `Слой #${l.id}`}</span>
                       <span className={`text-[10.5px] ${isActive ? 'text-white/80' : 'text-[var(--ax-fg-faint)]'}`}>{hsCount}з{childCount > 0 ? ` ${childCount}↳` : ''}</span>

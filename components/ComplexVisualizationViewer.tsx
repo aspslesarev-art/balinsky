@@ -67,8 +67,21 @@ export function ComplexVisualizationViewer({
   unitsBySlug: Record<string, UnitInfo>
   lang?: 'ru' | 'en'
 }) {
-  const root = layers.find(l => l.parentLayerId == null) ?? layers[0]
+  // Root-level layers — top-level "views" the visitor can switch
+  // between (Апартаменты / Вилла / Апарты 2 …). Sorted by editor-
+  // controlled sortOrder so drag-and-drop in admin actually reflows
+  // them on the public side.
+  const rootLayers = layers
+    .filter(l => l.parentLayerId == null)
+    .slice()
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+  const root = rootLayers[0] ?? layers[0]
   const [stack, setStack] = useState<Layer[]>(root ? [root] : [])
+
+  function switchRoot(layer: Layer) {
+    setStack([layer])
+    setPopup(null)
+  }
   const [popup, setPopup] = useState<{ clientX: number; clientY: number; unit: UnitInfo; availability: 'free' | 'reserved' | 'sold' | null } | null>(null)
   const [mounted, setMounted] = useState(false)
 
@@ -141,11 +154,33 @@ export function ComplexVisualizationViewer({
             </button>
           </div>
         )}
-        {currentLayer.title && (
+        {/* Top-right switcher: pills for each root view when at the
+            root, or just the current layer title chip when drilled in. */}
+        {stack.length === 1 && rootLayers.length > 1 ? (
+          <div className="absolute top-3 right-3 z-10 flex flex-wrap justify-end gap-1.5 max-w-[70vw]">
+            {rootLayers.map(l => {
+              const active = l.id === currentLayer.id
+              return (
+                <button
+                  key={l.id}
+                  type="button"
+                  onClick={() => switchRoot(l)}
+                  className={`px-3 py-1.5 rounded-full text-[12px] backdrop-blur shadow-md transition-colors ${
+                    active
+                      ? 'bg-[#1F8B5F] text-white'
+                      : 'bg-white/90 text-[#111827] hover:bg-white'
+                  }`}
+                >
+                  {l.title ?? `#${l.id}`}
+                </button>
+              )
+            })}
+          </div>
+        ) : currentLayer.title ? (
           <div className="absolute top-3 right-3 z-10 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur text-[12px] text-[#111827] shadow-md max-w-[60vw] truncate">
             {currentLayer.title}
           </div>
-        )}
+        ) : null}
 
         <div className="relative" onClick={() => setPopup(null)}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
