@@ -32,9 +32,9 @@ function useTypewriter(examples: readonly string[], paused: boolean): string {
     let timer: ReturnType<typeof setTimeout> | null = null
 
     const baseTypeMs = 55
-    const baseEraseMs = 28
+    const baseEraseMs = 12   // erase is mechanical, do it briskly
     const holdMs = 2400
-    const betweenMs = 800
+    const betweenMs = 320    // short gap before the next example starts
 
     const charDelay = (ch: string): number => {
       // Slow down a beat on commas / dashes — gives the eye time to
