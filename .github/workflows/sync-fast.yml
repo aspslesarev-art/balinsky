@@ -71,6 +71,13 @@ jobs:
       - name: Merge complex EN translations
         run: node scripts/sync-complexes-en.mjs
 
+      - name: Rebuild villa / apartment / complex slug indexes
+        # The detail-page slug index is used by /ru/zhilye-kompleksy/o/<slug>
+        # to resolve slug → airtable_id (avoiding a 9MB+ full-table read).
+        # Without this step a newly-published complex 404s until the index
+        # is regenerated. Cheap (a few hundred slugs → ~15 KB JSON).
+        run: node scripts/sync-detail-indexes.mjs
+
       - name: Revalidate site caches (fast kinds)
         env:
           SITE_URL: ${{ secrets.SITE_URL }}
