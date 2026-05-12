@@ -15,12 +15,13 @@ import { Mic, Send, Sparkles } from 'lucide-react'
 import type { Lang } from '@/lib/i18n'
 
 // Cycling typewriter placeholder: types each example char-by-char,
-// holds the full sentence, deletes it, types the next. Pauses entirely
-// when `paused` is true.
+// holds the full sentence, then INSTANTLY clears it and types the
+// next one from scratch. The previous char-by-char erase animation
+// felt nervous + made the just-typed phrase re-appear inside the
+// fade. Now: type → hold → blank → next.
 //
-// Timing knobs are tuned for a calm, premium feel — not a jittery
-// terminal. Per-char delay has a small Gaussian-ish jitter so it
-// doesn't feel mechanical; punctuation pauses a beat longer.
+// Per-char delay has ±30 % jitter + a punctuation pause so it reads
+// like a human typing rather than a stuttering terminal.
 function useTypewriter(examples: readonly string[], paused: boolean): string {
   const [text, setText] = useState('')
   useEffect(() => {
@@ -28,19 +29,15 @@ function useTypewriter(examples: readonly string[], paused: boolean): string {
     let cancelled = false
     let i = 0
     let pos = 0
-    let phase: 'typing' | 'holding' | 'erasing' = 'typing'
+    let phase: 'typing' | 'holding' = 'typing'
     let timer: ReturnType<typeof setTimeout> | null = null
 
     const baseTypeMs = 55
-    const baseEraseMs = 12   // erase is mechanical, do it briskly
     const holdMs = 2400
-    const betweenMs = 320    // short gap before the next example starts
+    const clearedMs = 500    // beat of empty field before next phrase
 
     const charDelay = (ch: string): number => {
-      // Slow down a beat on commas / dashes — gives the eye time to
-      // catch up on phrases.
       const extra = /[.,—–:;]/.test(ch) ? 240 : 0
-      // ±30% jitter so it doesn't feel like a stuttering terminal.
       const jitter = (Math.random() - 0.5) * 0.6
       return Math.round(baseTypeMs * (1 + jitter)) + extra
     }
@@ -57,19 +54,14 @@ function useTypewriter(examples: readonly string[], paused: boolean): string {
         } else {
           timer = setTimeout(tick, charDelay(current[pos - 1] ?? ''))
         }
-      } else if (phase === 'holding') {
-        phase = 'erasing'
-        timer = setTimeout(tick, baseEraseMs)
       } else {
-        pos--
-        setText(current.slice(0, Math.max(0, pos)))
-        if (pos <= 0) {
-          i = (i + 1) % examples.length
-          phase = 'typing'
-          timer = setTimeout(tick, betweenMs)
-        } else {
-          timer = setTimeout(tick, baseEraseMs)
-        }
+        // Hold elapsed — instantly clear, advance to the next phrase,
+        // give the eye a brief beat, then start typing the new one.
+        setText('')
+        i = (i + 1) % examples.length
+        pos = 0
+        phase = 'typing'
+        timer = setTimeout(tick, clearedMs)
       }
     }
     tick()
