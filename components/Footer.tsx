@@ -201,7 +201,6 @@ export function Footer({ lang = 'ru' }: { lang?: Lang }) {
                   and data confidentiality are governed by Confidentiality Agreement
                   No. 1 dated 28.10.2024.
                 </p>
-                <p>Copyright © 2022–2026 Balinsky.info. All rights reserved.</p>
               </>
             ) : (
               <>
@@ -220,9 +219,11 @@ export function Footer({ lang = 'ru' }: { lang?: Lang }) {
                   Соглашением № 1 о неразглашении конфиденциальной информации
                   от 28.10.2024.
                 </p>
-                <p>Copyright © 2022–2026 Balinsky.info. All rights reserved.</p>
               </>
             )}
+          </div>
+          <div className="mt-4 text-center text-[12px] text-[var(--color-text-muted)]">
+            Copyright © 2022–2026 Balinsky.info. All rights reserved.
           </div>
         </div>
       </div>

@@ -16,17 +16,34 @@ import type { Lang } from '@/lib/i18n'
 
 // Cycling typewriter placeholder: types each example char-by-char,
 // holds the full sentence, deletes it, types the next. Pauses entirely
-// when `paused` is true (visitor started typing or focused the field
-// — keeping the animation running underneath would feel jittery).
+// when `paused` is true.
+//
+// Timing knobs are tuned for a calm, premium feel — not a jittery
+// terminal. Per-char delay has a small Gaussian-ish jitter so it
+// doesn't feel mechanical; punctuation pauses a beat longer.
 function useTypewriter(examples: readonly string[], paused: boolean): string {
   const [text, setText] = useState('')
   useEffect(() => {
-    if (paused || examples.length === 0) return
+    if (paused || examples.length === 0) { setText(''); return }
     let cancelled = false
     let i = 0
     let pos = 0
     let phase: 'typing' | 'holding' | 'erasing' = 'typing'
     let timer: ReturnType<typeof setTimeout> | null = null
+
+    const baseTypeMs = 55
+    const baseEraseMs = 28
+    const holdMs = 2400
+    const betweenMs = 800
+
+    const charDelay = (ch: string): number => {
+      // Slow down a beat on commas / dashes — gives the eye time to
+      // catch up on phrases.
+      const extra = /[.,—–:;]/.test(ch) ? 240 : 0
+      // ±30% jitter so it doesn't feel like a stuttering terminal.
+      const jitter = (Math.random() - 0.5) * 0.6
+      return Math.round(baseTypeMs * (1 + jitter)) + extra
+    }
 
     const tick = () => {
       if (cancelled) return
@@ -36,22 +53,22 @@ function useTypewriter(examples: readonly string[], paused: boolean): string {
         setText(current.slice(0, pos))
         if (pos >= current.length) {
           phase = 'holding'
-          timer = setTimeout(tick, 1800)
+          timer = setTimeout(tick, holdMs)
         } else {
-          timer = setTimeout(tick, 38)
+          timer = setTimeout(tick, charDelay(current[pos - 1] ?? ''))
         }
       } else if (phase === 'holding') {
         phase = 'erasing'
-        timer = setTimeout(tick, 18)
+        timer = setTimeout(tick, baseEraseMs)
       } else {
         pos--
         setText(current.slice(0, Math.max(0, pos)))
         if (pos <= 0) {
           i = (i + 1) % examples.length
           phase = 'typing'
-          timer = setTimeout(tick, 420)
+          timer = setTimeout(tick, betweenMs)
         } else {
-          timer = setTimeout(tick, 18)
+          timer = setTimeout(tick, baseEraseMs)
         }
       }
     }
@@ -76,11 +93,18 @@ const COPY = {
     voiceUnsupported: 'Голос не поддерживается этим браузером',
     altPhoto: 'AI-брокер Балина',
     examples: [
-      'Хотим переехать на Бали с семьёй — жена, двое детей 14 и 7 лет, важны школы. Бюджет ~$600K, жить полгода, полгода сдавать помесячно.',
+      'Переехать с семьёй — двое детей 14 и 7 лет, важны школы. Бюджет ~$600K, жить полгода, сдавать помесячно.',
       'Вилла 2 спальни, Букит или Санур, до $400K',
-      'Важны виды — океан или рисовые террасы',
+      'Виды на океан или рисовые террасы — обязательно',
       'Катаюсь на сёрфе, нужен пеший доступ к спотам',
       'Апартамент под Booking, доходность 10%+',
+    ],
+    examplesMobile: [
+      'Вилла 2BR, Букит, до $400K',
+      'Виды на океан',
+      'Школы для двоих детей',
+      'Пешком до серф-спотов',
+      'Под Booking, 10%+',
     ],
   },
   en: {
@@ -94,11 +118,18 @@ const COPY = {
     voiceUnsupported: 'Voice input is not supported in this browser',
     altPhoto: 'AI broker Balina',
     examples: [
-      'Relocating to Bali with my family — wife, two kids aged 14 and 7, schools matter. Budget ~$600K, live half the year, rent it out monthly the other half.',
+      'Relocating with family — two kids aged 14 and 7, schools matter. Budget ~$600K, live half the year, rent the rest.',
       'Villa, 2BR, Bukit or Sanur, up to $400K',
       'Views matter — ocean or rice terraces',
       'I surf, walking distance to the break is a must',
       'Apartment for Booking, 10%+ cap rate',
+    ],
+    examplesMobile: [
+      'Villa 2BR, Bukit, up to $400K',
+      'Ocean view',
+      'Schools for two kids',
+      'Walking distance to surf',
+      'For Booking, 10%+',
     ],
   },
 } as const
@@ -110,17 +141,17 @@ export function BalinaHero() {
 
   const [value, setValue] = useState('')
   const [voiceSupported, setVoiceSupported] = useState(false)
-  // Mobile-vs-desktop placeholder swap. On mobile we drop the
-  // typewriter animation entirely and use a single short string —
-  // long sentences get cut to ~6 visible chars and look broken.
   const [isNarrow, setIsNarrow] = useState(false)
   const [focused, setFocused] = useState(false)
-  const taRef = useRef<HTMLTextAreaElement | null>(null)
-  // Pause animation once the visitor engages — either started typing
-  // or focused the field. Resumes when they clear the input and blur.
-  const animationPaused = isNarrow || focused || value.length > 0
-  const typed = useTypewriter(c.examples, animationPaused)
-  const placeholder = isNarrow ? c.placeholderMobile : (typed || c.examples[0])
+  const inputRef = useRef<HTMLInputElement | null>(null)
+  // Pause animation once the visitor engages.
+  const animationPaused = focused || value.length > 0
+  // Mobile uses shorter example strings — the long desktop sentences
+  // get clipped to the first few chars in a narrow input and look
+  // broken half-typed.
+  const exampleSet = isNarrow ? c.examplesMobile : c.examples
+  const typed = useTypewriter(exampleSet, animationPaused)
+  const placeholder = typed || exampleSet[0] || c.placeholderMobile
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -133,28 +164,18 @@ export function BalinaHero() {
     return () => mq.removeEventListener('change', onChange)
   }, [])
 
-  // Auto-grow the textarea up to ~5 lines.
-  const handleInput = (next: string) => {
-    setValue(next)
-    const el = taRef.current
-    if (!el) return
-    el.style.height = 'auto'
-    el.style.height = Math.min(el.scrollHeight, 160) + 'px'
-  }
-
   const send = () => {
     const text = value.trim()
     if (!text) return
     window.dispatchEvent(new CustomEvent('balina:open', { detail: { text, autoSend: true } }))
     setValue('')
-    if (taRef.current) taRef.current.style.height = 'auto'
   }
   const startVoice = () => {
     if (!voiceSupported) return
     window.dispatchEvent(new CustomEvent('balina:open', { detail: { listen: true } }))
   }
-  const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
       e.preventDefault()
       send()
     }
@@ -202,16 +223,16 @@ export function BalinaHero() {
                 textarea owns the visible width with both action
                 buttons still hitting the 44px touch-target floor. */}
             <div className="flex items-end gap-1.5 md:gap-2 bg-white rounded-2xl border border-[var(--color-border)] p-1.5 md:p-2.5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] focus-within:border-[var(--color-primary)] transition-colors">
-              <textarea
-                ref={taRef}
+              <input
+                ref={inputRef}
+                type="text"
                 value={value}
-                onChange={(e) => handleInput(e.target.value)}
+                onChange={(e) => setValue(e.target.value)}
                 onKeyDown={onKeyDown}
                 onFocus={() => setFocused(true)}
                 onBlur={() => setFocused(false)}
                 placeholder={placeholder}
-                rows={1}
-                className="flex-1 min-w-0 resize-none bg-transparent border-0 outline-none text-[15px] md:text-[16px] leading-[1.45] text-[#111827] placeholder:text-[var(--color-text-muted)] py-2 px-2.5 max-h-[160px]"
+                className="flex-1 min-w-0 bg-transparent border-0 outline-none text-[15px] md:text-[16px] leading-[1.45] text-[#111827] placeholder:text-[var(--color-text-muted)] py-2.5 px-2.5"
               />
               <button
                 type="button"
