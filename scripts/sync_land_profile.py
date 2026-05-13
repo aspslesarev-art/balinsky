@@ -257,12 +257,31 @@ def sync_kind(kind: str, args) -> tuple[int, int]:
             "error": p.Error,
         }
 
-        r = sb.post(
-            f"{SB_URL}/rest/v1/{dest_table}?on_conflict=airtable_id",
-            json=body,
-            headers={**headers, "Prefer": "resolution=merge-duplicates,return=minimal"},
-            timeout=30,
-        )
+        # Supabase occasionally drops the connection when several sync
+        # processes hit it concurrently. Retry with exponential back-off
+        # so a single transient error doesn't lose the whole run.
+        r = None
+        last_err: Exception | None = None
+        for attempt in range(4):
+            try:
+                r = sb.post(
+                    f"{SB_URL}/rest/v1/{dest_table}?on_conflict=airtable_id",
+                    json=body,
+                    headers={**headers, "Prefer": "resolution=merge-duplicates,return=minimal"},
+                    timeout=30,
+                )
+                break
+            except requests.exceptions.RequestException as e:
+                last_err = e
+                wait = 2 ** attempt
+                print(f"[{i}/{len(queue)}] {aid} upsert connection error: {e} — retry in {wait}s", file=sys.stderr)
+                time.sleep(wait)
+        if r is None:
+            failed += 1
+            print(f"[{i}/{len(queue)}] {aid} upsert gave up: {last_err}", file=sys.stderr)
+            if i < len(queue):
+                time.sleep(args.delay)
+            continue
         if r.status_code in (200, 201, 204):
             ok += 1
             tag = p.Subzona_Code or p.Zona_Code or "no-data"
