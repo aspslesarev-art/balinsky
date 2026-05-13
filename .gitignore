@@ -47,3 +47,5 @@ next-env.d.ts
 # ad-hoc debug snippets at repo root
 /check*.mjs
 /checklogo.mjs
+scripts/estatemarket_cards.json
+estatemarket_occupancy_report.xlsx
