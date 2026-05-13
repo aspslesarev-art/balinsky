@@ -191,16 +191,23 @@ function Lightbox({
       role="dialog"
       aria-modal="true"
     >
+      {/* Close + nav buttons sit at z-10 so the 90vw × 88vh image
+          wrapper that paints below them (later in the DOM, taller
+          stack-context) can't swallow their clicks — the image
+          wrapper does its own `stopPropagation` to keep clicks on
+          the photo itself from closing the dialog, but that was also
+          eating clicks on the corners where it overlapped the ✕
+          button. */}
       <button
         type="button"
-        onClick={onClose}
+        onClick={(e) => { e.stopPropagation(); onClose() }}
         aria-label={copy.close}
-        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 text-white inline-flex items-center justify-center backdrop-blur-sm"
+        className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 text-white inline-flex items-center justify-center backdrop-blur-sm"
       >
         <X size={20} />
       </button>
 
-      <div className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-white/15 text-white text-[13px] font-medium backdrop-blur-sm">
+      <div className="absolute top-4 left-4 z-10 px-3 py-1.5 rounded-full bg-white/15 text-white text-[13px] font-medium backdrop-blur-sm">
         {i + 1} / {count}
       </div>
 
@@ -210,7 +217,7 @@ function Lightbox({
             type="button"
             onClick={(e) => { e.stopPropagation(); prev() }}
             aria-label={copy.prev}
-            className="absolute left-4 md:left-8 w-12 h-12 rounded-full bg-white/15 hover:bg-white/25 text-white inline-flex items-center justify-center backdrop-blur-sm"
+            className="absolute left-4 md:left-8 z-10 w-12 h-12 rounded-full bg-white/15 hover:bg-white/25 text-white inline-flex items-center justify-center backdrop-blur-sm"
           >
             <ChevronLeft size={26} strokeWidth={2.5} />
           </button>
@@ -218,7 +225,7 @@ function Lightbox({
             type="button"
             onClick={(e) => { e.stopPropagation(); next() }}
             aria-label={copy.next}
-            className="absolute right-4 md:right-8 w-12 h-12 rounded-full bg-white/15 hover:bg-white/25 text-white inline-flex items-center justify-center backdrop-blur-sm"
+            className="absolute right-4 md:right-8 z-10 w-12 h-12 rounded-full bg-white/15 hover:bg-white/25 text-white inline-flex items-center justify-center backdrop-blur-sm"
           >
             <ChevronRight size={26} strokeWidth={2.5} />
           </button>
