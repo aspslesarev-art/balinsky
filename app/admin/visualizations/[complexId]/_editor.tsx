@@ -654,34 +654,11 @@ export function VisualizationEditor({
                     onMouseLeave={onCanvasMouseLeave}
                   >
                     {layerHotspots.map(h => {
+                      if (h.shape === 'marker') return null
                       const isSelected = h.id === selectedHotspotId
                       const palette = HOTSPOT_PALETTE[h.availability ?? 'neutral'] ?? HOTSPOT_PALETTE.neutral
                       const fill = isSelected ? palette.fillSelected : palette.fill
                       const stroke = isSelected ? palette.strokeSelected : palette.stroke
-                      if (h.shape === 'marker') {
-                        const [cx, cy] = h.polygon[0] ?? [0.5, 0.5]
-                        const r = isSelected ? 0.022 : 0.018
-                        return (
-                          <g
-                            key={h.id}
-                            onClick={ev => { ev.stopPropagation(); setSelectedHotspotId(h.id); setDraft(null) }}
-                            className="cursor-pointer"
-                          >
-                            <circle cx={cx} cy={cy} r={r} fill={stroke} stroke="white" strokeWidth={isSelected ? 0.004 : 0.003} vectorEffect="non-scaling-stroke" />
-                            <text
-                              x={cx} y={cy}
-                              fill="white"
-                              fontSize={isSelected ? 0.022 : 0.018}
-                              fontWeight="700"
-                              textAnchor="middle"
-                              dominantBaseline="central"
-                              style={{ userSelect: 'none', pointerEvents: 'none' }}
-                            >
-                              {h.label || '?'}
-                            </text>
-                          </g>
-                        )
-                      }
                       const points = h.polygon.map(([x, y]) => `${x},${y}`).join(' ')
                       return (
                         <polygon
@@ -755,6 +732,39 @@ export function VisualizationEditor({
                       </>
                     )}
                   </svg>
+
+                  {/* Marker overlay — absolutely positioned HTML so
+                      the pins stay perfect circles regardless of the
+                      photo's aspect ratio (an SVG circle inside the
+                      `preserveAspectRatio='none'` overlay above
+                      flattens to an ellipse on widescreen renders). */}
+                  {layerHotspots.map(h => {
+                    if (h.shape !== 'marker') return null
+                    const isSelected = h.id === selectedHotspotId
+                    const palette = HOTSPOT_PALETTE[h.availability ?? 'neutral'] ?? HOTSPOT_PALETTE.neutral
+                    const [cx, cy] = h.polygon[0] ?? [0.5, 0.5]
+                    const size = isSelected ? 28 : 24
+                    return (
+                      <button
+                        key={h.id}
+                        type="button"
+                        onClick={ev => { ev.stopPropagation(); setSelectedHotspotId(h.id); setDraft(null) }}
+                        title={h.label ?? ''}
+                        className={`absolute z-10 inline-flex items-center justify-center rounded-full text-white text-[11px] font-semibold leading-none shadow-md transition-transform ${isSelected ? 'ring-2 ring-white' : 'ring-1 ring-white/70'} hover:scale-110`}
+                        style={{
+                          left: `${cx * 100}%`,
+                          top: `${cy * 100}%`,
+                          transform: 'translate(-50%, -50%)',
+                          width: size,
+                          height: size,
+                          backgroundColor: palette.stroke,
+                          opacity: isSelected ? 1 : 0.85,
+                        }}
+                      >
+                        {h.label || '?'}
+                      </button>
+                    )
+                  })}
                   </div>
                 </div>
               </div>

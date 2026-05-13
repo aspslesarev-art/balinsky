@@ -203,6 +203,7 @@ export function ComplexVisualizationViewer({
             className="absolute inset-0 w-full h-full pointer-events-none"
           >
             {currentHotspots.map(h => {
+              if (h.shape === 'marker') return null
               const palette = STATUS_STYLE[h.availability ?? 'neutral'] ?? STATUS_STYLE.neutral
               const isSold = h.availability === 'sold'
               const titleText = (h.label || h.availability) ? (
@@ -210,34 +211,6 @@ export function ComplexVisualizationViewer({
                 (h.availability ? ((h.label ? ' · ' : '') +
                   (h.availability === 'free' ? 'свободно' : h.availability === 'reserved' ? 'забронировано' : 'продано')) : '')
               ) : null
-              if (h.shape === 'marker') {
-                const [cx, cy] = h.polygon[0] ?? [0.5, 0.5]
-                return (
-                  <g
-                    key={h.id}
-                    onClick={ev => onPolygonClick(h, ev)}
-                    className={`pointer-events-auto ${isSold ? 'cursor-not-allowed' : 'cursor-pointer'}`}
-                  >
-                    {/* Subtle drop shadow under the pin so it reads
-                        against bright photos. Two stacked circles
-                        scaled non-uniformly via stroke. */}
-                    <circle cx={cx} cy={cy} r={0.022} fill="rgba(0,0,0,0.18)" />
-                    <circle cx={cx} cy={cy} r={0.02} fill={palette.stroke} stroke="white" strokeWidth={0.004} vectorEffect="non-scaling-stroke" />
-                    <text
-                      x={cx} y={cy}
-                      fill="white"
-                      fontSize={0.02}
-                      fontWeight={700}
-                      textAnchor="middle"
-                      dominantBaseline="central"
-                      style={{ userSelect: 'none', pointerEvents: 'none' }}
-                    >
-                      {h.label || '?'}
-                    </text>
-                    {titleText && <title>{titleText}</title>}
-                  </g>
-                )
-              }
               const points = h.polygon.map(([x, y]) => `${x},${y}`).join(' ')
               return (
                 <polygon
@@ -255,6 +228,40 @@ export function ComplexVisualizationViewer({
               )
             })}
           </svg>
+
+          {/* Markers render as absolutely-positioned HTML so they
+              stay perfectly round on any image aspect ratio (an SVG
+              circle with `preserveAspectRatio='none'` flattens to an
+              ellipse on widescreen renders). */}
+          {currentHotspots.map(h => {
+            if (h.shape !== 'marker') return null
+            const palette = STATUS_STYLE[h.availability ?? 'neutral'] ?? STATUS_STYLE.neutral
+            const isSold = h.availability === 'sold'
+            const [cx, cy] = h.polygon[0] ?? [0.5, 0.5]
+            const titleText = (h.label || h.availability) ? (
+              (h.label ?? '') +
+              (h.availability ? ((h.label ? ' · ' : '') +
+                (h.availability === 'free' ? 'свободно' : h.availability === 'reserved' ? 'забронировано' : 'продано')) : '')
+            ) : null
+            return (
+              <button
+                key={h.id}
+                type="button"
+                onClick={ev => onPolygonClick(h, ev as unknown as React.MouseEvent<SVGElement>)}
+                title={titleText ?? undefined}
+                className={`absolute z-10 inline-flex items-center justify-center w-6 h-6 rounded-full text-white text-[11px] font-semibold leading-none shadow-md ring-2 ring-white/70 ${isSold ? 'cursor-not-allowed' : 'cursor-pointer hover:scale-110'} transition-transform`}
+                style={{
+                  left: `${cx * 100}%`,
+                  top: `${cy * 100}%`,
+                  transform: 'translate(-50%, -50%)',
+                  backgroundColor: palette.stroke,
+                  opacity: 0.85,
+                }}
+              >
+                {h.label || '?'}
+              </button>
+            )
+          })}
         </div>
       </div>
 
