@@ -34,7 +34,14 @@ export type ListingCard = {
   //     'yellow' — residential ONLY; daily rental technically illegal
   //     'green' / 'agricultural' — generally not for foreigners
   //     null — unknown, must verify
-  //   permit — PBG (build permit) string from Airtable, or 'нет'
+  //   permit            — legacy single string ("PBG", "Заявка PBG",
+  //                       "SLF", "Заявка SLF", "нет"). Kept for
+  //                       backwards-compat — model may read it directly.
+  //   permit_pbg        — 'есть' | 'заявка' | 'нет' | null
+  //   permit_slf        — 'есть' | 'заявка' | 'нет' | null
+  //   permit_pbg_number — actual PBG certificate id when known
+  //   permit_summary    — one phrase Балина can quote verbatim to the
+  //                       visitor, e.g. «PBG есть, SLF — на стадии заявки»
   //   lease_years — leasehold years remaining, e.g. 25, 50, 80
   //   completion_year — string like "2024" / "2026 Q3" / null when not set
   //   status — "Построен" / "Строится" / "Под заказ"
@@ -45,6 +52,10 @@ export type ListingCard = {
   // back to the visitor instead of paraphrasing the enum.
   land_purpose: string | null
   permit: string | null
+  permit_pbg: 'есть' | 'заявка' | 'нет' | null
+  permit_slf: 'есть' | 'заявка' | 'нет' | null
+  permit_pbg_number: string | null
+  permit_summary: string | null
   lease_years: number | null
   completion_year: string | null
   status: string | null
@@ -656,7 +667,16 @@ async function searchSupabaseTable(
     // checks them in that order.
     const landPurpose = fs1(d['Назначение земли'])
     const landColor = fs1(d['Land color']) ?? fs1(d['Цвет земли']) ?? fs1(d['Цвет земли вторичка'])
-    const permitRaw = fs1(d['Разрешение']) ?? fs1(d['PBG'])
+    // Per-listing permits. The editor uses ONE composite string in
+    // `Разрешение` / `Разрешительные документы` ("нет" / "Заявка PBG"
+    // / "PBG" / "Заявка SLF" / "SLF") plus the actual PBG certificate
+    // id in a separate `PBG` column on complexes. parsePermitStatus()
+    // turns that into a structured {pbg, slf, summary, pbgNumber}
+    // tuple so Балина can speak about each line item in plain words
+    // without having to parse the raw value herself.
+    const permitRaw = fs1(d['Разрешение']) ?? fs1(d['Разрешительные документы']) ?? fs1(d['PBG'])
+    const pbgNumber = fs1(d['PBG'])
+    const permitStatus = parsePermitStatus(permitRaw)
     const leaseRaw = fs1(d['Leasehold']) ?? fs1(d['Leashold'])
     const yieldRaw = num(d['Заявленная доходность'])
     // Compact preview of the editor-written description so the model
@@ -690,6 +710,10 @@ async function searchSupabaseTable(
       land_zone: classifyLandZone(landPurpose, landColor),
       land_purpose: landPurpose,
       permit: permitRaw,
+      permit_pbg: permitStatus.pbg,
+      permit_slf: permitStatus.slf,
+      permit_pbg_number: pbgNumber && pbgNumber.toLowerCase() !== 'нет' ? pbgNumber : null,
+      permit_summary: permitStatus.summary,
       lease_years: leaseRaw ? Number(leaseRaw) || null : null,
       completion_year: fs1(d['Year of completion']) ?? fs1(d['Year of completion ']) ?? null,
       status: fs1(d['Статус']),
@@ -814,6 +838,41 @@ async function attachInvestmentMetrics(
 //   yellow → residential only (no Booking, no Airbnb)
 //   green → not for foreigners at all
 //   unknown → ask, don't invent
+// Editors stuff one of five strings into the `Разрешение` /
+// `Разрешительные документы` field: "нет" / "Заявка PBG" / "PBG" /
+// "Заявка SLF" / "SLF". The progression is linear:
+//   нет          → no permits at all (highest risk)
+//   Заявка PBG   → PBG (build permit) applied, not granted yet
+//   PBG          → PBG granted; SLF not started
+//   Заявка SLF   → PBG granted, SLF (occupancy certificate) in progress
+//   SLF          → both granted; legally rentable
+// We split that into per-permit slots so Балина can speak about PBG
+// and SLF independently ("PBG получен, SLF на стадии заявки") instead
+// of paraphrasing one combined string.
+function parsePermitStatus(raw: string | null): {
+  pbg: 'есть' | 'заявка' | 'нет' | null
+  slf: 'есть' | 'заявка' | 'нет' | null
+  summary: string | null
+} {
+  if (!raw) return { pbg: null, slf: null, summary: null }
+  const s = raw.toLowerCase().trim()
+  if (!s || s === '—' || s === '-') return { pbg: null, slf: null, summary: null }
+  if (s === 'нет' || s === 'no' || s === 'none') {
+    return { pbg: 'нет', slf: 'нет', summary: 'Разрешений на стройку нет' }
+  }
+  const hasSlf = s.includes('slf') || s.includes('сертификат пригодн') || s.includes('сертификат соответ')
+  const hasPbg = s.includes('pbg') || s.includes('imb') || s.includes('разрешение на стройку') || s.includes('разрешение на строительство')
+  const isApp = s.includes('заявк') || s.includes('appli') || s.includes('в процесс') || s.includes('оформл')
+  // SLF strictly subsumes PBG — you can't get SLF without PBG.
+  if (hasSlf && !isApp) return { pbg: 'есть', slf: 'есть', summary: 'PBG и SLF получены — объект легален для аренды' }
+  if (hasSlf && isApp)  return { pbg: 'есть', slf: 'заявка', summary: 'PBG есть, SLF на стадии заявки' }
+  if (hasPbg && !isApp) return { pbg: 'есть', slf: 'нет', summary: 'PBG получен; SLF не подавали' }
+  if (hasPbg && isApp)  return { pbg: 'заявка', slf: 'нет', summary: 'PBG — на стадии заявки' }
+  // Looks like a raw PBG certificate number (e.g. SK-PBG-510306-…).
+  if (/^[a-z0-9-]{6,}$/.test(s)) return { pbg: 'есть', slf: 'нет', summary: 'PBG получен (есть номер), SLF не подавали' }
+  return { pbg: null, slf: null, summary: raw }
+}
+
 function classifyLandZone(purpose: string | null, color: string | null): ListingCard['land_zone'] {
   // Step 1: try the Russian purpose text — most authoritative.
   if (purpose) {
@@ -880,6 +939,10 @@ async function searchRental(args: SearchArgs): Promise<ListingCard[]> {
     land_zone: null,
     land_purpose: null,
     permit: null,
+    permit_pbg: null,
+    permit_slf: null,
+    permit_pbg_number: null,
+    permit_summary: null,
     lease_years: null,
     completion_year: null,
     status: null,
@@ -1093,7 +1156,21 @@ async function searchSemantic(args: SemanticArgs): Promise<ListingCard[]> {
       rent_per_month_usd: null,
       land_zone: classifyLandZone(landPurpose, landColor),
       land_purpose: landPurpose,
-      permit: fs1(d['Разрешение']) ?? fs1(d['PBG']),
+      permit: (() => {
+        const raw = fs1(d['Разрешение']) ?? fs1(d['Разрешительные документы']) ?? fs1(d['PBG'])
+        return raw
+      })(),
+      ...(() => {
+        const raw = fs1(d['Разрешение']) ?? fs1(d['Разрешительные документы']) ?? fs1(d['PBG'])
+        const num = fs1(d['PBG'])
+        const ps = parsePermitStatus(raw)
+        return {
+          permit_pbg: ps.pbg,
+          permit_slf: ps.slf,
+          permit_pbg_number: num && num.toLowerCase() !== 'нет' ? num : null,
+          permit_summary: ps.summary,
+        }
+      })(),
       lease_years: leaseRaw ? Number(leaseRaw) || null : null,
       completion_year: fs1(d['Year of completion']) ?? fs1(d['Year of completion ']) ?? null,
       status: fs1(d['Статус']),
