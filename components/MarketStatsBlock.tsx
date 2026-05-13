@@ -8,7 +8,7 @@ import type { ComplexMarketStats } from '@/lib/complex-market-stats'
 const COPY = {
   ru: {
     title: 'Рынок краткосрочной аренды поблизости',
-    subtitle: 'Booking-данные с estatemarket.io в радиусе 500 м',
+    subtitle: 'Booking-данные с estatemarket.io в радиусе 1 км',
     villas: 'Виллы',
     apartments: 'Апартаменты',
     listings: 'листингов',
@@ -20,11 +20,11 @@ const COPY = {
     estateMarket: 'estatemarket.io',
     none: 'нет данных в радиусе',
     fewData: 'мало данных',
-    total: (n: number) => `${n} ${n === 1 ? 'листинг' : n < 5 ? 'листинга' : 'листингов'} в радиусе 500 м`,
+    total: (n: number) => `${n} ${n === 1 ? 'листинг' : n < 5 ? 'листинга' : 'листингов'} в радиусе 1 км`,
   },
   en: {
     title: 'Short-term rental market nearby',
-    subtitle: 'Booking data from estatemarket.io within 500 m',
+    subtitle: 'Booking data from estatemarket.io within 1 km',
     villas: 'Villas',
     apartments: 'Apartments',
     listings: 'listings',
@@ -36,7 +36,7 @@ const COPY = {
     estateMarket: 'estatemarket.io',
     none: 'no listings in radius',
     fewData: 'too few',
-    total: (n: number) => `${n} listing${n === 1 ? '' : 's'} within 500 m`,
+    total: (n: number) => `${n} listing${n === 1 ? '' : 's'} within 1 km`,
   },
 } as const
 

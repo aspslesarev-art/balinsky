@@ -37,7 +37,7 @@ CARD_URL  = "https://estatemarket.io/api/booking_data_map_card/{id}"
 # in the file if format changes.
 CACHE_PATH = Path(__file__).parent / "estatemarket_cards.json"
 
-RADIUS_M = 500
+RADIUS_M = 1000
 EARTH_R  = 6_371_000
 
 # Types worth counting. estatemarket sometimes uses "Villa" (singular)
@@ -460,8 +460,8 @@ def main() -> None:
     for cx in complexes:
         clat, clng = cx["lat"], cx["lng"]
         # Cheap pre-filter: bounding-box first, haversine only on survivors.
-        # 0.005° ≈ 555 m at the equator — easily covers 500m.
-        BOX = 0.0055
+        # 0.011° ≈ 1.2 km at the equator — easily covers 1000m.
+        BOX = 0.011
         candidates = [
             ls for ls in index
             if abs(ls["lat"] - clat) < BOX and abs(ls["lng"] - clng) < BOX

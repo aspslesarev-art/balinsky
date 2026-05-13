@@ -781,6 +781,25 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
           </section>
         )}
 
+        {/* LAND + MARKET — two-column due-diligence row. Renders both
+            when available; collapses to one column when only one block
+            has data. Sits high on the page so the zoning verdict +
+            nearby occupancy are visible before the visitor scrolls past
+            the photo galleries. */}
+        {(
+          (landProfile && (landProfile.zona_code || landProfile.subzona_code))
+          || (marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0))
+        ) && (
+          <section className="mb-10 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+            {landProfile && (landProfile.zona_code || landProfile.subzona_code) && (
+              <LandProfileBlock data={landProfile} lang={lang} />
+            )}
+            {marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0) && (
+              <MarketStatsBlock data={marketStats} lang={lang} />
+            )}
+          </section>
+        )}
+
         {/* READINESS */}
         <section className="mb-10 max-w-3xl">
           <h2 className="text-[18px] font-semibold text-[#111827] mb-3">{copy.progress}</h2>
@@ -888,18 +907,6 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
         )}
 
         {managers.length > 0 && <ManagerCard managers={managers} developerName={developerName} />}
-
-        {landProfile && (landProfile.zona_code || landProfile.subzona_code) && (
-          <section className="mb-10 max-w-3xl">
-            <LandProfileBlock data={landProfile} lang={lang} />
-          </section>
-        )}
-
-        {marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0) && (
-          <section className="mb-10 max-w-3xl">
-            <MarketStatsBlock data={marketStats} lang={lang} />
-          </section>
-        )}
 
         {/* Nearby places — beaches / cafes / nightlife / etc. The
             data is keyed by villa airtable_id; we surface it on
