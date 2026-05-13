@@ -94,6 +94,73 @@ def make_session() -> requests.Session:
     return s
 
 
+_HEIGHT_NUM_RE = re.compile(r"(\d+(?:[.,]\d+)?)\s*(meter|metre|metres|m\b|метров|м\b)?", re.IGNORECASE)
+
+def simplify_building_height(v: Any) -> Optional[str]:
+    """Reduce the raw `ktgbgn` value to a single "N m" height. The
+    raw shape varies across kabupatens: sometimes a bare string
+    ("15 meter"), sometimes a list with one comma-joined string of
+    per-road-class values ("Kolektor Primer: 15 m, Lokal Primer: 15 m
+    …"), sometimes a per-road-class dict whose values carry the
+    Bhisama / Khayangan religious clause.
+
+    The religious clause is surfaced separately via extract_religious(),
+    so it never needs to ride inside Building_Height. We collect every
+    numeric height across road classes, dedup; if all classes agree on
+    one value we just return "15 m", otherwise "12 m / 15 m".
+    """
+    if v is None:
+        return None
+    # Gather candidate strings from whichever shape Airtable gave us.
+    strings: list[str] = []
+    if isinstance(v, dict):
+        strings.extend(str(val) for val in v.values() if val)
+    elif isinstance(v, list):
+        for item in v:
+            if isinstance(item, dict):
+                strings.extend(str(val) for val in item.values() if val)
+            elif item:
+                strings.append(str(item))
+    elif v:
+        strings.append(str(v))
+    if not strings:
+        return None
+    # Each string can be a comma-joined "road class: height" list.
+    # Accept a segment only when it looks like "label: number" or a
+    # bare numeric height — never as a free-text segment with numbers,
+    # because those almost always belong to the Bhisama buffer clause
+    # (e.g. "Khusus Bangunan ... 25 meter ..." is the temple distance,
+    # not the building height).
+    heights: list[str] = []
+    for s in strings:
+        for seg in s.split(","):
+            seg = seg.strip()
+            if not seg:
+                continue
+            if ":" in seg:
+                # Road-class prefix: take the part after the colon.
+                tail = seg.split(":", 1)[-1].strip()
+            elif re.fullmatch(r"\d+(?:[.,]\d+)?\s*(meter|metre|metres|m|метров|м)?", seg, re.IGNORECASE):
+                tail = seg
+            else:
+                continue
+            m = _HEIGHT_NUM_RE.search(tail)
+            if not m:
+                continue
+            n = m.group(1).replace(",", ".")
+            if "." in n and n.split(".")[1].rstrip("0") == "":
+                n = n.split(".")[0]
+            h = f"{n} m"
+            if h not in heights:
+                heights.append(h)
+    if not heights:
+        # Fall back to the original raw if no number was found.
+        return strings[0][:120]
+    if len(heights) == 1:
+        return heights[0]
+    return " / ".join(heights)
+
+
 def first_str(v: Any) -> Optional[str]:
     """Flatten {value: x} / [x] / 'x' to a clean string."""
     if v is None:
@@ -386,7 +453,7 @@ def parse_central(data: dict) -> LandProfile:
     out.KDH_Percent = parse_percent(first_str(data.get("kdh")))
     out.KTB_Percent = parse_percent(first_str(data.get("ktb")))
     out.GSB_Setback = first_str(data.get("gsb"))
-    out.Building_Height = first_str(data.get("ktgbgn"))
+    out.Building_Height = simplify_building_height(data.get("ktgbgn"))
 
     uses = data.get("bgnizn")
     bgntbt = data.get("bgntbt") or []

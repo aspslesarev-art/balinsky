@@ -270,7 +270,10 @@ export function LandProfileBlock({ data, lang = 'ru' }: { data: LandProfileProps
   // Friendly summary chips — drop technical abbreviations from the
   // collapsed view; full Indonesian indicator names are still in the
   // expanded panel with explanatory tooltips.
-  const buildHeight = t('building_height', data.building_height)
+  const buildHeightRaw = t('building_height', data.building_height)
+  const buildHeight = buildHeightRaw && lang === 'ru'
+    ? buildHeightRaw.replace(/\bm\b/g, 'м')
+    : buildHeightRaw
   const facts = [
     kecShort,
     data.kdb_percent != null ? (lang === 'ru' ? `застройка до ${data.kdb_percent}%` : `up to ${data.kdb_percent}% built`) : null,
@@ -407,7 +410,7 @@ export function LandProfileBlock({ data, lang = 'ru' }: { data: LandProfileProps
             {data.klb_ratio != null && <Row label={c.klb} value={`${data.klb_ratio}×`} hint={c.klbHint} />}
             {data.kdh_percent != null && <Row label={c.kdh} value={`${data.kdh_percent}%`} hint={c.kdhHint} />}
             {data.ktb_percent != null && <Row label={c.ktb} value={`${data.ktb_percent}%`} hint={c.ktbHint} />}
-            {(tx.building_height || data.building_height) && <Row label={c.height} value={t('building_height', data.building_height)!} wide />}
+            {(tx.building_height || data.building_height) && <Row label={c.height} value={buildHeight!} wide />}
             {(tx.gsb_setback || data.gsb_setback) && <Row label={c.gsb} value={t('gsb_setback', data.gsb_setback)!} wide hint={c.gsbHint} />}
             {data.allowed_use_count != null && <Row label={c.uses} value={String(data.allowed_use_count)} />}
             {(tx.regulation || data.regulation) && <Row label={c.regulation} value={t('regulation', data.regulation)!} wide />}
