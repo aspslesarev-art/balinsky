@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
       // YouTube serves thumbnails from i1.ytimg.com, i2.ytimg.com, etc.,
       // depending on which CDN edge the video lives on.
       { protocol: 'https', hostname: '**.ytimg.com' },
+      // Booking.com hotel photos used by the "competitors" / "nearby
+      // rentals" sections. Without this whitelist next/image refuses
+      // to optimise the URL and renders a blank box.
+      { protocol: 'https', hostname: 'cf.bstatic.com' },
+      { protocol: 'https', hostname: '**.bstatic.com' },
     ],
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 31536000,
