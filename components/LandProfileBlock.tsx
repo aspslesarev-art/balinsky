@@ -241,6 +241,32 @@ function UseCaseRow({ icon: Icon, label, status, c }: {
   )
 }
 
+// Compact inline pill for the collapsed-block summary row. Same tone
+// vocabulary as UseCaseRow but rendered as a single chip with icon +
+// label + status dot so 4 of them fit on one line next to the
+// existing facts.
+function UseChipMini({ icon: Icon, label, status, c }: {
+  icon: typeof Hotel
+  label: string
+  status: UseCaseStatus
+  c: CopyShape
+}) {
+  if (!status || status === 'unknown') return null
+  const chip = useCaseChip(c, status)
+  return (
+    <span
+      title={`${label}: ${chip.label}`}
+      className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium ${toneClasses(chip.tone)}`}
+    >
+      <Icon size={11} />
+      {label}
+      {chip.tone === 'green' && <CircleCheck size={10} />}
+      {chip.tone === 'red'   && <CircleX size={10} />}
+      {(chip.tone === 'amber' || chip.tone === 'orange') && <CircleAlert size={10} />}
+    </span>
+  )
+}
+
 export function LandProfileBlock({ data, lang = 'ru' }: { data: LandProfileProps; lang?: Lang }) {
   const [open, setOpen] = useState(false)
   const c = COPY[lang]
@@ -344,6 +370,14 @@ export function LandProfileBlock({ data, lang = 'ru' }: { data: LandProfileProps
                 </span>
               )}
               {facts.map(f => <span key={f}>{f}</span>)}
+            </div>
+          )}
+          {hasUseCases && (
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              <UseChipMini icon={Hotel}     label={c.hotel}      status={data.uses_hotel}      c={c} />
+              <UseChipMini icon={HomeIcon}  label={c.villa}      status={data.uses_villa}      c={c} />
+              <UseChipMini icon={Bed}       label={c.kos}        status={data.uses_kos}        c={c} />
+              <UseChipMini icon={Utensils}  label={c.restaurant} status={data.uses_restaurant} c={c} />
             </div>
           )}
         </div>
