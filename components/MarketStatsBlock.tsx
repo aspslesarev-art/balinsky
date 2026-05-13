@@ -4,7 +4,7 @@
 // showing in the first place. Renders nothing when both villa_count
 // and apartment_count are 0.
 
-import { TrendingUp, Hotel, Home as HomeIcon, ExternalLink, Info } from 'lucide-react'
+import { TrendingUp, Hotel, Home as HomeIcon, ExternalLink } from 'lucide-react'
 import type { ComplexMarketStats } from '@/lib/complex-market-stats'
 
 const COPY = {
@@ -17,6 +17,10 @@ const COPY = {
     occupancy: 'Загрузка',
     adr: 'ADR (ср. ночь)',
     revpar: 'RevPAR',
+    annual: 'Доход за год',
+    annualHint: 'RevPAR × 365. Ожидаемая годовая выручка с номера при текущей загрузке и ADR.',
+    daysBooked: 'Дней забронировано',
+    daysBookedHint: 'Сколько ночей в году объект сдан в среднем по сегменту.',
     revparHint: 'RevPAR = Загрузка × ADR. Метрика дохода с номера за ночь.',
     sourceTitle: 'Источник',
     estateMarket: 'estatemarket.io',
@@ -33,6 +37,10 @@ const COPY = {
     occupancy: 'Occupancy',
     adr: 'ADR (avg/night)',
     revpar: 'RevPAR',
+    annual: 'Annual revenue',
+    annualHint: 'RevPAR × 365. Expected per-room annual gross at the current occupancy and ADR.',
+    daysBooked: 'Nights booked',
+    daysBookedHint: 'Average nights per year the segment is rented out.',
     revparHint: 'RevPAR = Occupancy × ADR. Per-room revenue per night.',
     sourceTitle: 'Source',
     estateMarket: 'estatemarket.io',
@@ -98,11 +106,7 @@ export function MarketStatsBlock({ data, lang = 'ru' }: { data: ComplexMarketSta
           )}
         </div>
 
-        <div className="mt-4 pt-3 border-t border-[var(--color-border)] flex items-center justify-between gap-2 text-[11.5px] text-[var(--color-text-muted)]">
-          <span className="inline-flex items-center gap-1.5">
-            <Info size={11} />
-            {c.revparHint}
-          </span>
+        <div className="mt-4 pt-3 border-t border-[var(--color-border)] flex items-center justify-end gap-2 text-[11.5px] text-[var(--color-text-muted)]">
           <a
             href="https://estatemarket.io/booking_data-map"
             target="_blank"
@@ -129,28 +133,38 @@ function SegmentCard({
   revpar: number | null
   c: Copy
 }) {
+  // Derived: annual gross revenue per unit at current occupancy + ADR.
+  // The single most actionable number for an investor evaluating a buy
+  // (alongside the unit price they'll see elsewhere on the page).
+  const annual = revpar != null ? revpar * 365 : null
+  const daysBooked = occ != null ? Math.round((occ / 100) * 365) : null
   return (
-    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-search-bg)] p-3.5">
-      <div className="flex items-center gap-2 text-[13px] font-semibold text-[#111827] mb-2.5">
-        <Icon size={14} className="text-[var(--color-primary)]" />
+    <div className="py-1">
+      <div className="flex items-center gap-2 text-[14px] font-semibold text-[#111827] mb-3 pb-2 border-b border-[var(--color-border)]">
+        <Icon size={15} className="text-[var(--color-primary)]" />
         {label}
         <span className="ml-auto text-[12px] font-normal text-[var(--color-text-muted)]">
           {count} {c.listings}
         </span>
       </div>
-      <div className="grid grid-cols-3 gap-2 text-center">
-        <div>
-          <div className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">{c.occupancy}</div>
-          <div className="text-[15px] font-semibold text-[#111827] mt-0.5">{fmtPct(occ)}</div>
-        </div>
-        <div>
-          <div className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">{c.adr}</div>
-          <div className="text-[15px] font-semibold text-[#111827] mt-0.5">{adr != null ? fmtUsd(adr) : c.fewData}</div>
-        </div>
-        <div>
-          <div className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">{c.revpar}</div>
-          <div className="text-[15px] font-semibold text-[var(--color-primary)] mt-0.5">{revpar != null ? fmtUsd(revpar) : '—'}</div>
-        </div>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+        <Metric label={c.occupancy} value={fmtPct(occ)} hint={daysBooked != null ? `~${daysBooked} ${c.daysBooked.toLowerCase()}` : null} />
+        <Metric label={c.adr}       value={adr != null ? fmtUsd(adr) : c.fewData} />
+        <Metric label={c.revpar}    value={revpar != null ? fmtUsd(revpar) : '—'} tone="primary" hint={c.revparHint} />
+        <Metric label={c.annual}    value={annual != null ? fmtUsd(annual) : '—'} tone="primary" hint={c.annualHint} />
+      </div>
+    </div>
+  )
+}
+
+function Metric({ label, value, tone = 'default', hint }: {
+  label: string; value: string; tone?: 'default' | 'primary'; hint?: string | null
+}) {
+  return (
+    <div title={hint ?? undefined}>
+      <div className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)] leading-tight">{label}</div>
+      <div className={`text-[17px] font-semibold mt-0.5 leading-none ${tone === 'primary' ? 'text-[var(--color-primary)]' : 'text-[#111827]'}`}>
+        {value}
       </div>
     </div>
   )
