@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import { normalizeSlug } from '@/lib/slug-normalize'
 
 export const config = {
   matcher: [
@@ -23,6 +24,18 @@ export const config = {
     '/unit/:path*',
     '/devcontact',
     '/agency',
+    // Dirty-slug pre-canonicaliser: catches /ru/<section>/o/<slug-with-parens-or-cyrillic>
+    // before the page handler runs. The page-level permanentRedirect()
+    // mishandles those characters under Next 16 and 500s instead of
+    // 308'ing, so we 301 to the clean form here.
+    '/ru/villy/o/:slug',
+    '/ru/apartamenty/o/:slug',
+    '/ru/arenda/o/:slug',
+    '/ru/zhilye-kompleksy/o/:slug',
+    '/en/villas/o/:slug',
+    '/en/apartments/o/:slug',
+    '/en/rental/o/:slug',
+    '/en/complexes/o/:slug',
   ],
 }
 
@@ -100,7 +113,32 @@ const SECTION_FALLBACK: Record<string, string> = {
   devcontact: '/ru/zastrojshhiki',
 }
 
+// Detail-page slug pre-canonicaliser. The page handler does the same
+// thing via permanentRedirect(), but Next 16 throws an unhelpful 500
+// when permanentRedirect() runs against a source URL with parens or
+// non-Latin characters — catch those here and emit a clean 301 before
+// the page is invoked.
+const DETAIL_PATH_RE = /^\/(ru|en)\/(villy|apartamenty|arenda|zhilye-kompleksy|villas|apartments|rental|complexes)\/o\/(.+?)\/?$/
+
+function handleDirtyDetailSlug(req: NextRequest): NextResponse | null {
+  const path = req.nextUrl.pathname
+  const m = path.match(DETAIL_PATH_RE)
+  if (!m) return null
+  const [, , section, rawSlug] = m
+  // Slug is already URL-decoded by Next.js. Normalise and compare —
+  // we only redirect when the canonical form actually differs, so this
+  // is a no-op for clean URLs (everyone else falls through).
+  const canonical = normalizeSlug(rawSlug)
+  if (!canonical || canonical === rawSlug) return null
+  const target = path.replace(rawSlug, canonical)
+  return NextResponse.redirect(new URL(target, req.url), 301)
+}
+
 export async function middleware(req: NextRequest) {
+  // Fast path — runs on every matched URL, no I/O.
+  const dirty = handleDirtyDetailSlug(req)
+  if (dirty) return dirty
+
   const path = req.nextUrl.pathname
   const idx = await loadIndex()
   if (!idx) return NextResponse.next()
