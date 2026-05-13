@@ -13,6 +13,7 @@ export async function POST(req: Request) {
   let body: {
     layerId?: number
     label?: string | null
+    shape?: 'polygon' | 'marker'
     polygon?: [number, number][]
     targetType?: 'layer' | 'unit'
     targetLayerId?: number | null
@@ -22,8 +23,13 @@ export async function POST(req: Request) {
   }
   try { body = await req.json() } catch { return NextResponse.json({ error: 'invalid_json' }, { status: 400 }) }
   if (typeof body.layerId !== 'number') return NextResponse.json({ error: 'layerId_required' }, { status: 400 })
-  if (!Array.isArray(body.polygon) || body.polygon.length < 3) {
-    return NextResponse.json({ error: 'polygon_required' }, { status: 400 })
+  const shape = body.shape ?? 'polygon'
+  // Polygon needs ≥ 3 vertices to enclose an area; markers store one
+  // point. Both share the same column so the runtime check is shape-
+  // aware.
+  const minPts = shape === 'marker' ? 1 : 3
+  if (!Array.isArray(body.polygon) || body.polygon.length < minPts) {
+    return NextResponse.json({ error: shape === 'marker' ? 'marker_point_required' : 'polygon_required' }, { status: 400 })
   }
   if (body.targetType !== 'layer' && body.targetType !== 'unit') {
     return NextResponse.json({ error: 'bad_targetType' }, { status: 400 })
@@ -31,6 +37,7 @@ export async function POST(req: Request) {
   const hotspot = await createHotspot({
     layerId: body.layerId,
     label: body.label ?? null,
+    shape,
     polygon: body.polygon,
     targetType: body.targetType,
     targetLayerId: body.targetLayerId ?? null,

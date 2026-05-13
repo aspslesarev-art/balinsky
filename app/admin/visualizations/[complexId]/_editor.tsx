@@ -34,10 +34,12 @@ type Layer = {
   photoUrl: string
   sortOrder: number
 }
+type HotspotShape = 'polygon' | 'marker'
 type Hotspot = {
   id: number
   layerId: number
   label: string | null
+  shape: HotspotShape
   polygon: [number, number][]
   targetType: 'layer' | 'unit'
   targetLayerId: number | null
@@ -66,6 +68,7 @@ type UnitOption = {
 
 type DraftHotspot = {
   layerId: number
+  shape: HotspotShape
   polygon: [number, number][]   // in-progress vertices, normalised
 }
 
@@ -234,7 +237,13 @@ export function VisualizationEditor({
 
   function startDrawing() {
     if (activeLayerId == null) return
-    setDraft({ layerId: activeLayerId, polygon: [] })
+    setDraft({ layerId: activeLayerId, shape: 'polygon', polygon: [] })
+    setSelectedHotspotId(null)
+  }
+
+  function startMarker() {
+    if (activeLayerId == null) return
+    setDraft({ layerId: activeLayerId, shape: 'marker', polygon: [] })
     setSelectedHotspotId(null)
   }
 
@@ -242,20 +251,34 @@ export function VisualizationEditor({
     setDraft(null)
   }
 
-  async function finishDrawing() {
-    if (!draft || draft.polygon.length < 3) {
+  async function finishDrawing(override?: { shape: HotspotShape; layerId: number; polygon: [number, number][] }) {
+    const d = override ?? draft
+    if (!d) return
+    if (d.shape === 'polygon' && d.polygon.length < 3) {
+      setDraft(null)
+      return
+    }
+    if (d.shape === 'marker' && d.polygon.length < 1) {
       setDraft(null)
       return
     }
     setSaving(true); setError(null)
     try {
+      // Marker labels auto-number within the layer so the admin sees
+      // the next chip prefilled — they can still rewrite it later in
+      // the inspector.
+      const nextNum = d.shape === 'marker'
+        ? String(layerHotspots.filter(h => h.shape === 'marker').length + 1)
+        : null
       const r = await fetch('/api/admin/visualizations/hotspots', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          layerId: draft.layerId,
-          polygon: draft.polygon,
-          targetType: 'unit',          // sensible default; admin sets it next
+          layerId: d.layerId,
+          shape: d.shape,
+          label: nextNum,
+          polygon: d.polygon,
+          targetType: 'unit',
           targetLayerId: null,
           targetUnitKind: null,
           targetUnitSlug: null,
@@ -296,11 +319,17 @@ export function VisualizationEditor({
     const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect()
     const x = (e.clientX - rect.left) / rect.width
     const y = (e.clientY - rect.top) / rect.height
-    setDraft({ ...draft, polygon: [...draft.polygon, [Math.round(x * 1000) / 1000, Math.round(y * 1000) / 1000]] })
+    const pt: [number, number] = [Math.round(x * 1000) / 1000, Math.round(y * 1000) / 1000]
+    if (draft.shape === 'marker') {
+      // Single click places the marker and persists immediately.
+      finishDrawing({ layerId: draft.layerId, shape: 'marker', polygon: [pt] })
+      return
+    }
+    setDraft({ ...draft, polygon: [...draft.polygon, pt] })
   }
 
   function onCanvasDoubleClick() {
-    if (draft) finishDrawing()
+    if (draft && draft.shape === 'polygon') finishDrawing()
   }
 
   function onCanvasMouseMove(e: React.MouseEvent<SVGSVGElement>) {
@@ -513,18 +542,30 @@ export function VisualizationEditor({
                 <div className="flex items-center gap-2">
                   {draft ? (
                     <>
-                      <span className="text-[11.5px] text-[var(--ax-fg-muted)]">{draft.polygon.length} точек · двойной клик чтобы закрыть</span>
-                      <button onClick={finishDrawing} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#1F8B5F] text-white text-[12px]">
-                        <Check size={12} /> Готово
-                      </button>
+                      <span className="text-[11.5px] text-[var(--ax-fg-muted)]">
+                        {draft.shape === 'marker'
+                          ? 'кликни в точку, чтобы поставить маркер'
+                          : `${draft.polygon.length} точек · двойной клик чтобы закрыть`}
+                      </span>
+                      {draft.shape === 'polygon' && (
+                        <button onClick={() => finishDrawing()} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#1F8B5F] text-white text-[12px]">
+                          <Check size={12} /> Готово
+                        </button>
+                      )}
                       <button onClick={cancelDrawing} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[var(--ax-hover)] text-[var(--ax-fg-soft)] text-[12px]">
                         <X size={12} /> Отмена
                       </button>
                     </>
                   ) : (
-                    <button onClick={startDrawing} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#1F8B5F] text-white text-[12px] font-medium">
-                      <Plus size={12} /> Нарисовать зону
-                    </button>
+                    <>
+                      <button onClick={startDrawing} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#1F8B5F] text-white text-[12px] font-medium">
+                        <Plus size={12} /> Нарисовать зону
+                      </button>
+                      <button onClick={startMarker} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[var(--ax-hover)] text-[var(--ax-fg)] text-[12px] font-medium border border-[var(--ax-border)] hover:border-[#1F8B5F]" title="Поставить кружок-маркер с номером">
+                        <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#1F8B5F] text-white text-[10px] font-bold">1</span>
+                        Маркер
+                      </button>
+                    </>
                   )}
                   <button onClick={() => removeLayer(activeLayer.id)} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[var(--ax-hover)] text-[var(--ax-error-fg)] text-[12px]">
                     <Trash2 size={12} /> Слой
@@ -614,14 +655,34 @@ export function VisualizationEditor({
                   >
                     {layerHotspots.map(h => {
                       const isSelected = h.id === selectedHotspotId
-                      const points = h.polygon.map(([x, y]) => `${x},${y}`).join(' ')
-                      // Mirror the public viewer's status palette so
-                      // the editor canvas previews exactly what the
-                      // visitor will see (green / yellow / red /
-                      // brand-green default).
                       const palette = HOTSPOT_PALETTE[h.availability ?? 'neutral'] ?? HOTSPOT_PALETTE.neutral
                       const fill = isSelected ? palette.fillSelected : palette.fill
                       const stroke = isSelected ? palette.strokeSelected : palette.stroke
+                      if (h.shape === 'marker') {
+                        const [cx, cy] = h.polygon[0] ?? [0.5, 0.5]
+                        const r = isSelected ? 0.022 : 0.018
+                        return (
+                          <g
+                            key={h.id}
+                            onClick={ev => { ev.stopPropagation(); setSelectedHotspotId(h.id); setDraft(null) }}
+                            className="cursor-pointer"
+                          >
+                            <circle cx={cx} cy={cy} r={r} fill={stroke} stroke="white" strokeWidth={isSelected ? 0.004 : 0.003} vectorEffect="non-scaling-stroke" />
+                            <text
+                              x={cx} y={cy}
+                              fill="white"
+                              fontSize={isSelected ? 0.022 : 0.018}
+                              fontWeight="700"
+                              textAnchor="middle"
+                              dominantBaseline="central"
+                              style={{ userSelect: 'none', pointerEvents: 'none' }}
+                            >
+                              {h.label || '?'}
+                            </text>
+                          </g>
+                        )
+                      }
+                      const points = h.polygon.map(([x, y]) => `${x},${y}`).join(' ')
                       return (
                         <polygon
                           key={h.id}

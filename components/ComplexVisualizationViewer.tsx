@@ -30,6 +30,8 @@ type Hotspot = {
   id: number
   layerId: number
   label: string | null
+  // 'polygon' — painted highlight; 'marker' — small numbered circle.
+  shape?: 'polygon' | 'marker'
   polygon: [number, number][]
   targetType: 'layer' | 'unit'
   targetLayerId: number | null
@@ -103,7 +105,7 @@ export function ComplexVisualizationViewer({
   const currentLayer = stack[stack.length - 1]
   const currentHotspots = hotspots.filter(h => h.layerId === currentLayer.id)
 
-  function onPolygonClick(h: Hotspot, ev: React.MouseEvent<SVGPolygonElement>) {
+  function onPolygonClick(h: Hotspot, ev: React.MouseEvent<SVGElement>) {
     ev.stopPropagation()
     if (h.targetType === 'layer' && h.targetLayerId != null) {
       const next = layers.find(l => l.id === h.targetLayerId)
@@ -201,9 +203,42 @@ export function ComplexVisualizationViewer({
             className="absolute inset-0 w-full h-full pointer-events-none"
           >
             {currentHotspots.map(h => {
-              const points = h.polygon.map(([x, y]) => `${x},${y}`).join(' ')
               const palette = STATUS_STYLE[h.availability ?? 'neutral'] ?? STATUS_STYLE.neutral
               const isSold = h.availability === 'sold'
+              const titleText = (h.label || h.availability) ? (
+                (h.label ?? '') +
+                (h.availability ? ((h.label ? ' · ' : '') +
+                  (h.availability === 'free' ? 'свободно' : h.availability === 'reserved' ? 'забронировано' : 'продано')) : '')
+              ) : null
+              if (h.shape === 'marker') {
+                const [cx, cy] = h.polygon[0] ?? [0.5, 0.5]
+                return (
+                  <g
+                    key={h.id}
+                    onClick={ev => onPolygonClick(h, ev)}
+                    className={`pointer-events-auto ${isSold ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                  >
+                    {/* Subtle drop shadow under the pin so it reads
+                        against bright photos. Two stacked circles
+                        scaled non-uniformly via stroke. */}
+                    <circle cx={cx} cy={cy} r={0.022} fill="rgba(0,0,0,0.18)" />
+                    <circle cx={cx} cy={cy} r={0.02} fill={palette.stroke} stroke="white" strokeWidth={0.004} vectorEffect="non-scaling-stroke" />
+                    <text
+                      x={cx} y={cy}
+                      fill="white"
+                      fontSize={0.02}
+                      fontWeight={700}
+                      textAnchor="middle"
+                      dominantBaseline="central"
+                      style={{ userSelect: 'none', pointerEvents: 'none' }}
+                    >
+                      {h.label || '?'}
+                    </text>
+                    {titleText && <title>{titleText}</title>}
+                  </g>
+                )
+              }
+              const points = h.polygon.map(([x, y]) => `${x},${y}`).join(' ')
               return (
                 <polygon
                   key={h.id}
@@ -215,13 +250,7 @@ export function ComplexVisualizationViewer({
                   vectorEffect="non-scaling-stroke"
                   className={`pointer-events-auto ${isSold ? 'cursor-not-allowed' : 'cursor-pointer'} ${palette.hover}`}
                 >
-                  {(h.label || h.availability) && (
-                    <title>
-                      {h.label ?? ''}
-                      {h.availability && (h.label ? ' · ' : '') +
-                        (h.availability === 'free' ? 'свободно' : h.availability === 'reserved' ? 'забронировано' : 'продано')}
-                    </title>
-                  )}
+                  {titleText && <title>{titleText}</title>}
                 </polygon>
               )
             })}

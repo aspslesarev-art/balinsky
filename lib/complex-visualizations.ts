@@ -30,11 +30,16 @@ export type Layer = {
 }
 
 export type HotspotAvailability = 'free' | 'reserved' | 'sold' | null
+export type HotspotShape = 'polygon' | 'marker'
 
 export type Hotspot = {
   id: number
   layerId: number
   label: string | null
+  // 'polygon' — multi-vertex highlight; 'marker' — single-point pin
+  // (the polygon array stores one [[x, y]] pair). Both shapes share
+  // every other field so existing callers keep working.
+  shape: HotspotShape
   polygon: [number, number][]   // normalized 0..1
   targetType: 'layer' | 'unit'
   targetLayerId: number | null
@@ -149,12 +154,13 @@ export async function listHotspots(layerIds: number[]): Promise<Hotspot[]> {
   return (data ?? []).map(rowToHotspot)
 }
 
-export async function createHotspot(input: Omit<Hotspot, 'id' | 'sortOrder' | 'availability'> & { sortOrder?: number; availability?: HotspotAvailability }): Promise<Hotspot> {
+export async function createHotspot(input: Omit<Hotspot, 'id' | 'sortOrder' | 'availability' | 'shape'> & { shape?: HotspotShape; sortOrder?: number; availability?: HotspotAvailability }): Promise<Hotspot> {
   const { data, error } = await sb
     .from('complex_visualization_hotspots')
     .insert({
       layer_id: input.layerId,
       label: input.label,
+      shape: input.shape ?? 'polygon',
       polygon: input.polygon,
       target_type: input.targetType,
       target_layer_id: input.targetLayerId,
@@ -172,6 +178,7 @@ export async function createHotspot(input: Omit<Hotspot, 'id' | 'sortOrder' | 'a
 export async function updateHotspot(id: number, patch: Partial<Omit<Hotspot, 'id' | 'layerId'>>): Promise<void> {
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() }
   if (patch.label !== undefined) update.label = patch.label
+  if (patch.shape !== undefined) update.shape = patch.shape
   if (patch.polygon !== undefined) update.polygon = patch.polygon
   if (patch.targetType !== undefined) update.target_type = patch.targetType
   if (patch.targetLayerId !== undefined) update.target_layer_id = patch.targetLayerId
@@ -390,6 +397,7 @@ type HotspotRow = {
   id: number
   layer_id: number
   label: string | null
+  shape?: HotspotShape | null
   polygon: unknown
   target_type: 'layer' | 'unit'
   target_layer_id: number | null
@@ -402,6 +410,7 @@ function rowToHotspot(r: HotspotRow): Hotspot {
   return {
     id: r.id, layerId: r.layer_id,
     label: r.label,
+    shape: r.shape ?? 'polygon',
     polygon: Array.isArray(r.polygon) ? r.polygon as [number, number][] : [],
     targetType: r.target_type,
     targetLayerId: r.target_layer_id,
