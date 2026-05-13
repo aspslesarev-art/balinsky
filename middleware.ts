@@ -124,13 +124,19 @@ function handleDirtyDetailSlug(req: NextRequest): NextResponse | null {
   const path = req.nextUrl.pathname
   const m = path.match(DETAIL_PATH_RE)
   if (!m) return null
-  const [, , section, rawSlug] = m
-  // Slug is already URL-decoded by Next.js. Normalise and compare —
-  // we only redirect when the canonical form actually differs, so this
-  // is a no-op for clean URLs (everyone else falls through).
-  const canonical = normalizeSlug(rawSlug)
-  if (!canonical || canonical === rawSlug) return null
-  const target = path.replace(rawSlug, canonical)
+  const [, lang, section, rawSlug] = m
+  // Pathname in the edge runtime arrives percent-encoded for non-ASCII
+  // bytes — decode before normalising or normalizeSlug will treat the
+  // `%D0%BA` bytes as garbage and emit `d0-ba` in the output.
+  let decoded: string
+  try {
+    decoded = decodeURIComponent(rawSlug)
+  } catch {
+    decoded = rawSlug
+  }
+  const canonical = normalizeSlug(decoded)
+  if (!canonical || canonical === decoded) return null
+  const target = `/${lang}/${section}/o/${canonical}`
   return NextResponse.redirect(new URL(target, req.url), 301)
 }
 
