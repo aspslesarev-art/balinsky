@@ -754,6 +754,12 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             {yearRaw && <> · {status?.toLowerCase().includes('построен') ? copy.completed : copy.completion(yearRaw)}</>}
             {totalUnits != null && <> · {copy.units(totalUnits)}</>}
           </div>
+          <div className="max-w-3xl mb-3 sm:mb-4">
+            <ProgressBar value={ready} />
+            <div className="mt-1.5 text-[12px] sm:text-[13px] text-[var(--color-text-muted)]">
+              {status ?? copy.statusUnknown} · {copy.estimate} ~{ready}%
+            </div>
+          </div>
           {minPrice != null && (
             <div className="text-[16px] sm:text-[18px] md:text-[20px] font-semibold text-[#16A34A]">
               {copy.unitsFrom} <InlinePrice usd={minPrice} />
@@ -799,15 +805,6 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             )}
           </section>
         )}
-
-        {/* READINESS */}
-        <section className="mb-10 max-w-3xl">
-          <h2 className="text-[18px] font-semibold text-[#111827] mb-3">{copy.progress}</h2>
-          <ProgressBar value={ready} />
-          <div className="mt-2 text-[13px] text-[var(--color-text-muted)]">
-            {status ?? copy.statusUnknown} · {copy.estimate} ~{ready}%
-          </div>
-        </section>
 
         {/* ABOUT (long text from SEO Text) */}
         {seoText && (
