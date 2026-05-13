@@ -87,15 +87,31 @@ def parse_geo(v: Any) -> float | None:
         return None
 
 
-def load_complexes_from_supabase() -> list[dict]:
+KIND_TO_RAW = {
+    "complex":   "raw_complexes",
+    "villa":     "raw_villas",
+    "apartment": "raw_apartments",
+}
+KIND_TO_DEST = {
+    "complex":   "complex_market_stats",
+    "villa":     "villa_market_stats",
+    "apartment": "apartment_market_stats",
+}
+
+
+def load_listings_from_supabase(kind: str) -> list[dict]:
+    """Pull every published row of the given kind from Supabase and
+    return the minimal shape estatemarket_occupancy needs.
+    Complexes are gated by Статус, villas/apartments by `Опубликовать`."""
     SB_URL = os.environ["NEXT_PUBLIC_SUPABASE_URL"]
     SB_KEY = os.environ["SUPABASE_SERVICE_KEY"]
     h = {"apikey": SB_KEY, "Authorization": f"Bearer {SB_KEY}"}
+    raw_table = KIND_TO_RAW[kind]
     out: list[dict] = []
     PAGE = 200
     for offset in range(0, 8000, PAGE):
         r = requests.get(
-            f"{SB_URL}/rest/v1/raw_complexes?select=airtable_id,data&limit={PAGE}&offset={offset}",
+            f"{SB_URL}/rest/v1/{raw_table}?select=airtable_id,data&limit={PAGE}&offset={offset}",
             headers=h, timeout=30,
         )
         r.raise_for_status()
@@ -104,29 +120,35 @@ def load_complexes_from_supabase() -> list[dict]:
             break
         for row in batch:
             d = row.get("data") or {}
-            # raw_complexes has no `Опубликовать` flag — uses Статус
-            # (Строится / Построен / Под заказ). Skip only when status
-            # is empty / "Архив" / explicit unpublished.
-            status = str(d.get("Статус") or "").lower()
-            if not status or "архив" in status or "не публик" in status:
-                continue
+            if kind == "complex":
+                status = str(d.get("Статус") or "").lower()
+                if not status or "архив" in status or "не публик" in status:
+                    continue
+            else:
+                if d.get("Опубликовать") is not True:
+                    continue
             lat = parse_geo(d.get("Geo"))
             lon = parse_geo(d.get("Geo 2"))
-            # Complexes use `Project` for the human name.
-            name = d.get("Project") or d.get("Name") or d.get("Название") or row["airtable_id"]
             if lat is None or lon is None:
                 continue
+            seo_title = d.get("SEO:Title")
+            if isinstance(seo_title, dict):
+                seo_title = seo_title.get("value")
+            name = d.get("Project") or seo_title or d.get("Name") or d.get("Название") or row["airtable_id"]
             out.append({
                 "airtable_id": row["airtable_id"],
                 "name": str(name),
                 "lat": lat, "lng": lon,
-                # Optional pass-through fields
                 "types": d.get("Типы юнитов"),
                 "developer": d.get("Developer1") or d.get("Варианты поиска застройщика"),
             })
         if len(batch) < PAGE:
             break
     return out
+
+
+def load_complexes_from_supabase() -> list[dict]:
+    return load_listings_from_supabase("complex")
 
 
 def load_complexes_from_csv(path: str) -> list[dict]:
@@ -394,17 +416,17 @@ def write_excel(out_path: str, complexes: list[dict], summary: dict[str, dict], 
     wb.save(out_path)
 
 
-def upsert_supabase(complexes: list[dict], summary: dict[str, dict]) -> None:
-    """Persist per-complex aggregates to complex_market_stats so the site
-    can render them. Best-effort — failures don't kill the run."""
+def upsert_supabase(listings: list[dict], summary: dict[str, dict], kind: str = "complex") -> None:
+    """Persist per-listing aggregates to <kind>_market_stats."""
     SB_URL = os.environ["NEXT_PUBLIC_SUPABASE_URL"]
     SB_KEY = os.environ["SUPABASE_SERVICE_KEY"]
     h = {"apikey": SB_KEY, "Authorization": f"Bearer {SB_KEY}",
          "Content-Type": "application/json",
          "Prefer": "resolution=merge-duplicates,return=minimal"}
 
+    dest_table = KIND_TO_DEST[kind]
     rows = []
-    for cx in complexes:
+    for cx in listings:
         s = summary.get(cx["airtable_id"]) or {}
         rows.append({
             "airtable_id": cx["airtable_id"],
@@ -424,32 +446,44 @@ def upsert_supabase(complexes: list[dict], summary: dict[str, dict]) -> None:
     for off in range(0, len(rows), BATCH):
         chunk = rows[off: off + BATCH]
         r = requests.post(
-            f"{SB_URL}/rest/v1/complex_market_stats?on_conflict=airtable_id",
+            f"{SB_URL}/rest/v1/{dest_table}?on_conflict=airtable_id",
             json=chunk, headers=h, timeout=30,
         )
         if r.status_code not in (200, 201, 204):
             print(f"  upsert failed: {r.status_code} {r.text[:200]}", file=sys.stderr)
             return
-    print(f"  upserted {len(rows)} rows → complex_market_stats", file=sys.stderr)
+    print(f"  upserted {len(rows)} rows → {dest_table}", file=sys.stderr)
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--input", help="CSV/XLSX with name,lat,lng (default: pull from raw_complexes)")
+    ap.add_argument("--kind", choices=["villa", "apartment", "complex", "all"], default="complex",
+                    help="which raw_* table to pull listings from")
+    ap.add_argument("--input", help="CSV/XLSX with name,lat,lng (default: pull from Supabase)")
     ap.add_argument("--output", default="estatemarket_occupancy_report.xlsx")
     ap.add_argument("--limit", type=int, default=0)
-    ap.add_argument("--no-supabase", action="store_true", help="skip writing complex_market_stats")
+    ap.add_argument("--no-supabase", action="store_true", help="skip writing market_stats tables")
     args = ap.parse_args()
 
     load_env_local()
 
+    if args.kind == "all":
+        for k in ("complex", "villa", "apartment"):
+            args.kind = k
+            run_one(args)
+        return
+    run_one(args)
+
+
+def run_one(args) -> None:
     if args.input:
-        complexes = load_complexes_from_csv(args.input)
+        listings = load_complexes_from_csv(args.input)
     else:
-        complexes = load_complexes_from_supabase()
+        listings = load_listings_from_supabase(args.kind)
     if args.limit:
-        complexes = complexes[: args.limit]
-    print(f"loaded {len(complexes)} complexes", file=sys.stderr)
+        listings = listings[: args.limit]
+    print(f"loaded {len(listings)} {args.kind}s", file=sys.stderr)
+    complexes = listings  # alias to keep the rest of the body unchanged
 
     index = fetch_index()
 
@@ -511,12 +545,15 @@ def main() -> None:
                 "distance_m": ls["distance_m"],
             })
 
-    write_excel(args.output, complexes, summary, details)
-    print(f"wrote {args.output}", file=sys.stderr)
+    out_path = args.output
+    if args.kind != "complex" and out_path == "estatemarket_occupancy_report.xlsx":
+        out_path = f"estatemarket_occupancy_{args.kind}.xlsx"
+    write_excel(out_path, complexes, summary, details)
+    print(f"wrote {out_path}", file=sys.stderr)
 
     if not args.no_supabase:
         try:
-            upsert_supabase(complexes, summary)
+            upsert_supabase(complexes, summary, args.kind)
         except KeyError as e:
             print(f"  Supabase env missing ({e}) — skipping upsert", file=sys.stderr)
 
@@ -525,11 +562,11 @@ def main() -> None:
     total_apts = sum(s.get("apt_count", 0) for s in summary.values())
     empty = sum(1 for s in summary.values() if s.get("villa_count", 0) == 0 and s.get("apt_count", 0) == 0)
     print("", file=sys.stderr)
-    print(f"  complexes processed:    {len(complexes)}", file=sys.stderr)
-    print(f"  villas found total:     {total_villas}", file=sys.stderr)
-    print(f"  apartments found total: {total_apts}", file=sys.stderr)
-    print(f"  complexes with 0 hits:  {empty}  (worth double-checking coords)", file=sys.stderr)
-    print(f"  report:                 {args.output}", file=sys.stderr)
+    print(f"  {args.kind}s processed:    {len(complexes)}", file=sys.stderr)
+    print(f"  villas found total:       {total_villas}", file=sys.stderr)
+    print(f"  apartments found total:   {total_apts}", file=sys.stderr)
+    print(f"  {args.kind}s with 0 hits:  {empty}", file=sys.stderr)
+    print(f"  report:                   {out_path}", file=sys.stderr)
 
 
 if __name__ == "__main__":

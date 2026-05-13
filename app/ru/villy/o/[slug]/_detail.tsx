@@ -27,6 +27,8 @@ import { PageContainer } from '@/components/PageContainer'
 import { PhotoGalleryHero } from '@/components/PhotoGalleryHero'
 import { LandProfileBlock } from '@/components/LandProfileBlock'
 import { loadVillaLandProfile } from '@/lib/land-profile'
+import { loadMarketStats } from '@/lib/complex-market-stats'
+import { MarketStatsBlock } from '@/components/MarketStatsBlock'
 import { VillaCard, type VillaCardData } from '@/components/VillaCard'
 import { InvestmentWidget } from '@/components/InvestmentWidget'
 import { RentalCompareSection } from '@/components/RentalCompareSection'
@@ -463,7 +465,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   const isResale = /перепрод|resale|вторич|secondary/.test(dealTypeRaw)
   const sellerUrl = isResale ? firstString(d['Контакт продавца']) : null
 
-  const [otherVillas, complexes, developers, stylesMap, scoresMap, activeReservation, landProfile] = await Promise.all([
+  const [otherVillas, complexes, developers, stylesMap, scoresMap, activeReservation, landProfile, marketStats] = await Promise.all([
     loadOtherVillasInDistrict(district, v.airtable_id),
     _loadComplexesIndex(),
     _loadDevelopersIndex(),
@@ -471,6 +473,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
     loadAllVillaScores(),
     findActiveReservation('villa', v.airtable_id),
     loadVillaLandProfile(v.airtable_id),
+    loadMarketStats('villa', v.airtable_id),
   ])
   const interiorStyle = stylesMap[v.airtable_id]?.style ?? null
   const villaScore = scoresMap.get(v.airtable_id) ?? null
@@ -723,9 +726,17 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
           </section>
         )}
 
-        {landProfile && (landProfile.zona_code || landProfile.subzona_code) && (
-          <section className="mb-10 max-w-3xl">
-            <LandProfileBlock data={landProfile} lang={lang} />
+        {(
+          (landProfile && (landProfile.zona_code || landProfile.subzona_code))
+          || (marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0))
+        ) && (
+          <section className="mb-10 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+            {landProfile && (landProfile.zona_code || landProfile.subzona_code) && (
+              <LandProfileBlock data={landProfile} lang={lang} />
+            )}
+            {marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0) && (
+              <MarketStatsBlock data={marketStats} lang={lang} />
+            )}
           </section>
         )}
 

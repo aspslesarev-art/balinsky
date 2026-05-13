@@ -26,8 +26,21 @@ export type ComplexMarketStats = {
 }
 
 export async function loadComplexMarketStats(airtable_id: string): Promise<ComplexMarketStats | null> {
+  return loadMarketStats('complex', airtable_id)
+}
+
+const TABLE_BY_KIND: Record<'villa' | 'apartment' | 'complex', string> = {
+  villa:     'villa_market_stats',
+  apartment: 'apartment_market_stats',
+  complex:   'complex_market_stats',
+}
+
+export async function loadMarketStats(
+  kind: 'villa' | 'apartment' | 'complex',
+  airtable_id: string,
+): Promise<ComplexMarketStats | null> {
   const { data, error } = await sb
-    .from('complex_market_stats')
+    .from(TABLE_BY_KIND[kind])
     .select('*')
     .eq('airtable_id', airtable_id)
     .maybeSingle()

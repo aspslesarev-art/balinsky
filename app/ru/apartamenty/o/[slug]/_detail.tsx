@@ -28,6 +28,8 @@ import { PriceCtaCard } from '@/components/PriceCtaCard'
 import { findActiveReservation } from '@/lib/reservations'
 import { loadLandProfile } from '@/lib/land-profile'
 import { LandProfileBlock } from '@/components/LandProfileBlock'
+import { loadMarketStats } from '@/lib/complex-market-stats'
+import { MarketStatsBlock } from '@/components/MarketStatsBlock'
 import { InlinePrice } from '@/components/InlinePrice'
 import { VillaPresentationButton } from '@/components/VillaPresentation'
 import { tField, type Lang } from '@/lib/i18n'
@@ -385,11 +387,12 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
   const parentComplex = findParentComplex(title, complexes)
   const parentComplexName = parentComplex ? firstString(parentComplex.data['Project']) : null
 
-  const [otherApts, managers, activeReservation, landProfile] = await Promise.all([
+  const [otherApts, managers, activeReservation, landProfile, marketStats] = await Promise.all([
     loadOtherApartmentsInDistrict(district, a.airtable_id),
     loadManagersByDeveloperName(devName),
     findActiveReservation('apartment', a.airtable_id),
     loadLandProfile('apartment', a.airtable_id),
+    loadMarketStats('apartment', a.airtable_id),
   ])
   const GMAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? ''
 
@@ -666,9 +669,17 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
 
         {managers.length > 0 && <ManagerCard managers={managers} developerName={devName} />}
 
-        {landProfile && (landProfile.zona_code || landProfile.subzona_code) && (
-          <section className="mb-10 max-w-3xl">
-            <LandProfileBlock data={landProfile} lang={lang} />
+        {(
+          (landProfile && (landProfile.zona_code || landProfile.subzona_code))
+          || (marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0))
+        ) && (
+          <section className="mb-10 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+            {landProfile && (landProfile.zona_code || landProfile.subzona_code) && (
+              <LandProfileBlock data={landProfile} lang={lang} />
+            )}
+            {marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0) && (
+              <MarketStatsBlock data={marketStats} lang={lang} />
+            )}
           </section>
         )}
 
