@@ -1,6 +1,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
+import Image from 'next/image'
 import { Send, MessageCircle, Star, Languages, Video, Clock } from 'lucide-react'
 import type { ManagerItem } from '@/lib/managers'
 import { botLink } from '@/lib/bot-link'
@@ -101,10 +102,9 @@ function ManagerRow({
   return (
     <div className="rounded-2xl border border-[var(--color-border)] bg-white p-4 md:p-6 flex flex-col sm:flex-row sm:items-center gap-4 md:gap-6">
       <div className="flex items-center gap-4 sm:flex-1 min-w-0">
-        <div className="shrink-0 w-[64px] h-[64px] md:w-[80px] md:h-[80px] rounded-full overflow-hidden bg-[var(--color-search-bg)] border border-[var(--color-border)]">
+        <div className="shrink-0 w-[64px] h-[64px] md:w-[80px] md:h-[80px] rounded-full overflow-hidden bg-[var(--color-search-bg)] border border-[var(--color-border)] relative">
           {m.photo ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={m.photo} alt={displayName} className="w-full h-full object-cover" loading="lazy" />
+            <Image src={m.photo} alt={displayName} fill sizes="80px" className="object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-[24px] text-[var(--color-text-muted)]">
               {displayName.slice(0, 1).toUpperCase()}

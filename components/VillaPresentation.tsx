@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import NextImage from 'next/image'
 import { X, ChevronLeft, ChevronRight, Play, Star, MapPin, BedDouble, Square, Trees, Calendar, FileCheck2, Lock, ArrowUpRight, Download, Loader2, UserRound, FileText } from 'lucide-react'
 import type { Snapshot } from '@/components/InvestmentWidget/types'
 import { fmtMoney, fmtMoneyShort, fmtPct, fmtYears, fmtDistance, pluralRu } from '@/components/InvestmentWidget/utils'
@@ -328,7 +329,7 @@ function CoverSlide({ data }: { data: VillaPresentationData }) {
         {/* Photo */}
         <div className="order-1 md:order-2 relative w-full h-[40vh] md:h-full overflow-hidden rounded-2xl md:rounded-3xl bg-[var(--color-search-bg)]">
           {cover ? (
-            <img src={cover} alt={data.title} className="absolute inset-0 w-full h-full object-cover" />
+            <NextImage src={cover} alt={data.title} fill sizes="(max-width: 768px) 100vw, 50vw" priority className="object-cover" />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center text-[var(--color-text-muted)] text-[14px]">
               Нет фото
@@ -346,12 +347,12 @@ function PhotoSetSlide({ photos, layout, alt }: { photos: string[]; layout: 'mos
     return (
       <div className="absolute inset-0 px-4 md:px-12 lg:px-16 py-6 md:py-10">
         <div className="h-full grid gap-2 md:gap-3 grid-cols-2 grid-rows-3 md:grid-cols-3 md:grid-rows-2">
-          <div className={`${tile} col-span-2 row-span-1 md:col-span-1 md:row-span-2`}>
-            {photos[0] && <img src={photos[0]} alt={alt} className="w-full h-full object-cover" />}
+          <div className={`relative ${tile} col-span-2 row-span-1 md:col-span-1 md:row-span-2`}>
+            {photos[0] && <NextImage src={photos[0]} alt={alt} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />}
           </div>
           {[1, 2, 3, 4].map(idx => photos[idx] && (
-            <div key={idx} className={tile}>
-              <img src={photos[idx]} alt={alt} className="w-full h-full object-cover" />
+            <div key={idx} className={`relative ${tile}`}>
+              <NextImage src={photos[idx]} alt={alt} fill sizes="(max-width: 768px) 50vw, 33vw" className="object-cover" />
             </div>
           ))}
         </div>
@@ -363,8 +364,8 @@ function PhotoSetSlide({ photos, layout, alt }: { photos: string[]; layout: 'mos
       <div className="absolute inset-0 px-4 md:px-12 lg:px-16 py-6 md:py-10">
         <div className="h-full grid grid-cols-2 grid-rows-2 gap-2 md:gap-3">
           {photos.slice(0, 4).map((src, idx) => (
-            <div key={idx} className={tile}>
-              <img src={src} alt={alt} className="w-full h-full object-cover" />
+            <div key={idx} className={`relative ${tile}`}>
+              <NextImage src={src} alt={alt} fill sizes="(max-width: 768px) 50vw, 33vw" className="object-cover" />
             </div>
           ))}
         </div>
@@ -379,8 +380,8 @@ function PhotoSetSlide({ photos, layout, alt }: { photos: string[]; layout: 'mos
     <div className="absolute inset-0 px-4 md:px-12 lg:px-16 py-6 md:py-10">
       <div className={`h-full grid gap-2 md:gap-3 ${cols} ${rows}`}>
         {photos.map((src, idx) => (
-          <div key={idx} className={tile}>
-            <img src={src} alt={alt} className="w-full h-full object-cover" />
+          <div key={idx} className={`relative ${tile}`}>
+            <NextImage src={src} alt={alt} fill sizes="(max-width: 768px) 50vw, 33vw" className="object-cover" />
           </div>
         ))}
       </div>

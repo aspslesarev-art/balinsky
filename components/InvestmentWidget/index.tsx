@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import Image from 'next/image'
 import {
   Star, Info, AlertTriangle, Sparkles, ChevronDown, ChevronUp, TrendingUp, RotateCcw,
 } from 'lucide-react'
@@ -403,7 +404,9 @@ function CompetitorsGrid({ snap }: { snap: Snapshot }) {
           <li key={c.id}>
             <a href={c.url ?? undefined} target="_blank" rel="noopener noreferrer nofollow" className="block rounded-2xl border border-[var(--color-border)] bg-white overflow-hidden no-underline text-[#111827] hover:border-[var(--color-primary)]">
               {c.photo ? (
-                <img src={c.photo} alt={c.name} className="w-full h-[140px] object-cover" />
+                <div className="relative w-full h-[140px]">
+                  <Image src={c.photo} alt={c.name} fill sizes="(max-width: 640px) 100vw, 33vw" className="object-cover" />
+                </div>
               ) : (
                 <div className="w-full h-[140px] bg-[var(--color-search-bg)] flex items-center justify-center text-3xl">🏨</div>
               )}

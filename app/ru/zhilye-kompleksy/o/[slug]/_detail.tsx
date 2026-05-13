@@ -5,6 +5,7 @@
 
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { createClient } from '@supabase/supabase-js'
 import { unstable_cache } from 'next/cache'
 import {
@@ -852,8 +853,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
               >
                 <div className="shrink-0 w-[72px] h-[72px] rounded-xl bg-[var(--color-bg)] border border-[var(--color-border)] flex items-center justify-center p-2">
                   {developerLink.logoUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={developerLink.logoUrl} alt={developerLink.name} className="max-w-full max-h-full object-contain" />
+                    <Image src={developerLink.logoUrl} alt={developerLink.name} width={56} height={56} className="max-w-full max-h-full object-contain" />
                   ) : (
                     <Building2 size={28} className="text-[var(--color-text-muted)]" />
                   )}
@@ -958,7 +958,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
                 >
                   <div className="relative h-[160px] bg-[var(--color-search-bg)]">
                     {o.coverUrl ? (
-                      <img src={o.coverUrl} alt={o.name} loading="lazy" className="w-full h-full object-cover" />
+                      <Image src={o.coverUrl} alt={o.name} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-3xl text-[#B8C3BC]">🏝️</div>
                     )}

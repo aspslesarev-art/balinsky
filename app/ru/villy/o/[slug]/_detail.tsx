@@ -5,6 +5,7 @@
 import type { ReactNode } from 'react'
 import { notFound, permanentRedirect } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { createClient } from '@supabase/supabase-js'
 import { unstable_cache } from 'next/cache'
 import {
@@ -738,7 +739,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
               >
                 {parentComplex.coverUrl && (
                   <div className="relative h-[160px] bg-[var(--color-search-bg)]">
-                    <img src={parentComplex.coverUrl} alt={parentComplex.name} className="w-full h-full object-cover" loading="lazy" />
+                    <Image src={parentComplex.coverUrl} alt={parentComplex.name} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
                   </div>
                 )}
                 <div className="p-5">
@@ -777,7 +778,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
                 <div className="p-5 flex items-start gap-4">
                   <div className="shrink-0 w-[72px] h-[72px] rounded-xl bg-[var(--color-bg)] border border-[var(--color-border)] flex items-center justify-center p-2">
                     {developer.logoUrl ? (
-                      <img src={developer.logoUrl} alt={developer.name} className="max-w-full max-h-full object-contain" />
+                      <Image src={developer.logoUrl} alt={developer.name} width={56} height={56} className="max-w-full max-h-full object-contain" />
                     ) : (
                       <HardHat size={28} className="text-[var(--color-text-muted)]" />
                     )}

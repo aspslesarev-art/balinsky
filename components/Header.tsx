@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { Home, Building, Building2, HardHat, KeyRound, Menu, X } from 'lucide-react'
@@ -47,7 +48,7 @@ export function Header({ active }: { active?: NavKey }) {
             the top of the dropdown menu instead, so the bar reads as
             burger | controls without a competing brand mark. */}
         <Link href="/" className="hidden md:flex items-center shrink-0" aria-label="Balinsky">
-          <img src="/logo.svg" alt="Balinsky" className="h-10 w-10" />
+          <Image src="/logo.svg" alt="Balinsky" width={40} height={40} className="h-10 w-10" priority />
         </Link>
 
         <nav className="hidden md:flex items-center gap-8 h-full">
@@ -95,7 +96,7 @@ export function Header({ active }: { active?: NavKey }) {
               className="flex items-center gap-3 px-3 py-3 mb-2 no-underline"
               aria-label="Balinsky"
             >
-              <img src="/logo.svg" alt="Balinsky" className="h-10 w-10" />
+              <Image src="/logo.svg" alt="Balinsky" width={40} height={40} className="h-10 w-10" priority />
               <span className="text-[18px] font-semibold tracking-tight text-[#1A1A1A]">Balinsky</span>
             </Link>
             {NAV.map(({ key, ru, en, labelKey, Icon }) => {

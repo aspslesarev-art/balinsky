@@ -16,6 +16,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import Image from 'next/image'
 import { ChevronLeft, ExternalLink, BedDouble } from 'lucide-react'
 import Link from 'next/link'
 
@@ -180,12 +181,19 @@ export function ComplexVisualizationViewer({
         ) : null}
 
         <div className="relative" onClick={() => setPopup(null)}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          {/* Layer photo can be 4-7 MB at source; let Next/Vercel
+              optimise it. width/height are nominal — CSS overrides
+              with width:100% + height:auto so aspect ratio comes
+              from the source. */}
+          <Image
             src={currentLayer.photoUrl}
             alt={currentLayer.title ?? ''}
+            width={1920}
+            height={1280}
+            sizes="(max-width: 1200px) 100vw, 1180px"
             className="block w-full h-auto select-none"
             draggable={false}
+            priority
           />
           <svg
             viewBox="0 0 1 1"
@@ -278,9 +286,8 @@ function UnitPopup({
       className="bg-white rounded-2xl shadow-[0_12px_32px_rgba(0,0,0,0.18)] border border-[var(--color-border)] overflow-hidden"
     >
       {popup.unit.photoUrl && (
-        <div className="relative">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={popup.unit.photoUrl} alt={popup.unit.title} className="block w-full h-36 object-cover" />
+        <div className="relative w-full h-36">
+          <Image src={popup.unit.photoUrl} alt={popup.unit.title} fill sizes="280px" className="object-cover" />
           {statusBadge && (
             <div className={`absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10.5px] font-semibold uppercase tracking-wide ${statusBadge.cls}`}>
               {statusBadge.text}

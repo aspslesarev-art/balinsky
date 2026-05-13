@@ -3,6 +3,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { ExternalLink } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
@@ -76,8 +77,8 @@ export async function KnowledgeDetail({ slug, lang }: { slug: string; lang: Lang
           </h1>
 
           {k.photo && (
-            <div className="w-full mb-8 rounded-2xl overflow-hidden bg-[var(--color-search-bg)] aspect-[16/9]">
-              <img src={k.photo} alt={k.title} className="w-full h-full object-cover" />
+            <div className="relative w-full mb-8 rounded-2xl overflow-hidden bg-[var(--color-search-bg)] aspect-[16/9]">
+              <Image src={k.photo} alt={k.title} fill sizes="(max-width: 768px) 100vw, 800px" priority className="object-cover" />
             </div>
           )}
 
@@ -101,9 +102,9 @@ export async function KnowledgeDetail({ slug, lang }: { slug: string; lang: Lang
               {related.map(r => (
                 <li key={r.id}>
                   <Link href={`${knowledgeRoot}/${r.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)]">
-                    <div className="w-full aspect-[16/9] bg-[var(--color-search-bg)]">
+                    <div className="relative w-full aspect-[16/9] bg-[var(--color-search-bg)]">
                       {r.photo ? (
-                        <img src={r.photo} alt={r.title} className="w-full h-full object-cover" />
+                        <Image src={r.photo} alt={r.title} fill sizes="(max-width: 768px) 100vw, 25vw" className="object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-2xl">📚</div>
                       )}

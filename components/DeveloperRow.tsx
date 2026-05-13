@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { ChevronDown } from 'lucide-react'
 import type { Lang } from '@/lib/i18n'
 
@@ -96,11 +97,12 @@ export function DeveloperRow({ d, lang = 'ru' }: { d: DeveloperRowData; lang?: L
         <div className="flex items-center gap-3 sm:gap-5 min-w-0 sm:flex-1">
           <div className="shrink-0 w-[56px] h-[40px] sm:w-[100px] sm:h-[48px] md:w-[140px] md:h-[56px] flex items-center justify-center p-1">
             {d.logoUrl ? (
-              <img
+              <Image
                 src={d.logoUrl}
                 alt={d.name}
+                width={140}
+                height={56}
                 className="max-w-full max-h-full object-contain"
-                loading="lazy"
               />
             ) : (
               <span

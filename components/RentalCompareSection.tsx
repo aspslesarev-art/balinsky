@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { ChevronRight, BedDouble, MapPin } from 'lucide-react'
 import { loadCompareRental, type RentalItem } from '@/lib/rental'
 import { InlinePrice } from './InlinePrice'
@@ -118,7 +119,7 @@ function CompareCard({ r }: { r: RentalItem }) {
     >
       <div className="relative aspect-[4/3] bg-[var(--color-search-bg)]">
         {cover ? (
-          <img src={cover} alt={r.title} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+          <Image src={cover} alt={r.title} fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover" />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center text-2xl">🏡</div>
         )}

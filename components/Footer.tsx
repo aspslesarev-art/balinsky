@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { Send, Play } from 'lucide-react'
 import type { Lang } from '@/lib/i18n'
 
@@ -125,7 +126,7 @@ export function Footer({ lang = 'ru' }: { lang?: Lang }) {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
           <div className="md:col-span-4 lg:col-span-4">
             <Link href={lang === 'en' ? '/en' : '/'} aria-label="Balinsky" className="inline-block mb-5">
-              <img src="/logo.svg" alt="Balinsky" className="h-10 w-10" />
+              <Image src="/logo.svg" alt="Balinsky" width={40} height={40} className="h-10 w-10" />
             </Link>
             <p className="text-[13px] leading-[1.6] text-[var(--color-text-muted)] max-w-[380px]">
               {license}

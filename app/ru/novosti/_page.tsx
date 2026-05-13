@@ -2,6 +2,7 @@
 
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { loadAllNews } from '@/lib/news'
@@ -64,7 +65,9 @@ export async function NewsList({ lang }: { lang: Lang }) {
               <li key={n.id}>
                 <Link href={`${detailRoot}/${n.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)] transition-colors">
                   {n.photo ? (
-                    <img src={n.photo} alt={title} className="w-full h-[180px] object-cover" />
+                    <div className="relative w-full h-[180px]">
+                      <Image src={n.photo} alt={title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
+                    </div>
                   ) : (
                     <div className="w-full h-[180px] bg-[var(--color-search-bg)] flex items-center justify-center text-3xl">📰</div>
                   )}

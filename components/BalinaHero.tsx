@@ -11,6 +11,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
+import Image from 'next/image'
 import { Mic, Send, Sparkles } from 'lucide-react'
 import type { Lang } from '@/lib/i18n'
 
@@ -171,12 +172,14 @@ export function BalinaHero() {
               screens, left of copy on md+. */}
           <div className="flex justify-center md:justify-start">
             <div className="relative">
-              <div className="w-[140px] h-[140px] sm:w-[180px] sm:h-[180px] md:w-[260px] md:h-[260px] rounded-full overflow-hidden ring-4 ring-white shadow-[0_20px_50px_-15px_rgba(31,90,52,0.25)]">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+              <div className="relative w-[140px] h-[140px] sm:w-[180px] sm:h-[180px] md:w-[260px] md:h-[260px] rounded-full overflow-hidden ring-4 ring-white shadow-[0_20px_50px_-15px_rgba(31,90,52,0.25)]">
+                <Image
                   src="/balina.jpg"
                   alt={c.altPhoto}
-                  className="w-full h-full object-cover"
+                  fill
+                  sizes="(max-width: 640px) 140px, (max-width: 768px) 180px, 260px"
+                  priority
+                  className="object-cover"
                 />
               </div>
               {/* Sparkle badge — subtle "this is AI" marker so visitors

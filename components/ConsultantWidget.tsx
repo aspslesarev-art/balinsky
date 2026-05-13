@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
+import Image from 'next/image'
 import ReactMarkdown from 'react-markdown'
 import { MessageCircle, X, Send, Loader2, AlertTriangle, BedDouble, MapPin, ExternalLink, Mic, Square, UserRound, Trash2 } from 'lucide-react'
 import { useWishlist } from './WishlistContext'
@@ -638,9 +639,11 @@ export function ConsultantWidget() {
           aria-label={c.triggerAria}
           className="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 pl-1.5 pr-4 py-1.5 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white shadow-lg transition-colors"
         >
-          <img
+          <Image
             src="/balina.jpg"
             alt=""
+            width={36}
+            height={36}
             className="w-9 h-9 rounded-full object-cover ring-2 ring-white/40"
           />
           <span className="text-[14px] font-medium hidden sm:inline">{c.triggerName}</span>
@@ -659,9 +662,11 @@ export function ConsultantWidget() {
             {/* Header */}
             <div className="shrink-0 flex items-center justify-between gap-3 px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-primary-soft)]">
               <div className="flex items-center gap-2.5">
-                <img
+                <Image
                   src="/balina.jpg"
                   alt=""
+                  width={36}
+                  height={36}
                   className="shrink-0 w-9 h-9 rounded-full object-cover"
                 />
                 <div>
@@ -833,9 +838,9 @@ function ListingChatCard({ card, lang }: { card: ListingCard; lang: Lang }) {
       rel="noopener noreferrer"
       className="flex items-stretch gap-3 rounded-2xl border border-[var(--color-border)] bg-white hover:border-[var(--color-primary)] transition-colors no-underline overflow-hidden group"
     >
-      <div className="shrink-0 w-[88px] h-[88px] bg-[var(--color-search-bg)]">
+      <div className="relative shrink-0 w-[88px] h-[88px] bg-[var(--color-search-bg)]">
         {card.photo ? (
-          <img src={card.photo} alt="" className="w-full h-full object-cover" loading="lazy" />
+          <Image src={card.photo} alt="" fill sizes="88px" className="object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-2xl">🏡</div>
         )}

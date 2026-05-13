@@ -5,6 +5,7 @@
 
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { createClient } from '@supabase/supabase-js'
 import { unstable_cache } from 'next/cache'
 import { HardHat, Building2, Award, Wrench, Users, Briefcase, TrendingUp, ChevronRight } from 'lucide-react'
@@ -359,7 +360,7 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
           <div className="flex items-start gap-6 flex-wrap md:flex-nowrap">
             <div className="shrink-0 w-[120px] h-[120px] md:w-[160px] md:h-[160px] rounded-2xl bg-[var(--color-bg)] border border-[var(--color-border)] flex items-center justify-center p-4">
               {logoUrl ? (
-                <img src={logoUrl} alt={name} className="max-w-full max-h-full object-contain" />
+                <Image src={logoUrl} alt={name} width={160} height={160} className="max-w-full max-h-full object-contain" />
               ) : (
                 <HardHat size={48} className="text-[var(--color-text-muted)]" />
               )}
@@ -474,9 +475,9 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
               {devNews.map(n => (
                 <li key={n.id}>
                   <Link href={`${newsBase}/${n.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)]">
-                    <div className="w-full aspect-[16/9] bg-[var(--color-search-bg)]">
+                    <div className="relative w-full aspect-[16/9] bg-[var(--color-search-bg)]">
                       {n.photo ? (
-                        <img src={n.photo} alt={n.title} className="w-full h-full object-cover" />
+                        <Image src={n.photo} alt={n.title} fill sizes="(max-width: 768px) 100vw, 25vw" className="object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-2xl">📰</div>
                       )}
@@ -496,9 +497,9 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
               {devPromo.map(p => (
                 <li key={p.id}>
                   <Link href={`${promoBase}/${p.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)]">
-                    <div className="w-full aspect-[16/9] bg-[var(--color-search-bg)]">
+                    <div className="relative w-full aspect-[16/9] bg-[var(--color-search-bg)]">
                       {p.photo ? (
-                        <img src={p.photo} alt={p.title} className="w-full h-full object-cover" />
+                        <Image src={p.photo} alt={p.title} fill sizes="(max-width: 768px) 100vw, 25vw" className="object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-2xl">🎁</div>
                       )}
@@ -518,9 +519,9 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
               {devEvents.map(e => (
                 <li key={e.id}>
                   <Link href={`${eventsBase}/${e.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)]">
-                    <div className="w-full aspect-[16/9] bg-[var(--color-search-bg)]">
+                    <div className="relative w-full aspect-[16/9] bg-[var(--color-search-bg)]">
                       {e.photo ? (
-                        <img src={e.photo} alt={e.title} className="w-full h-full object-cover" />
+                        <Image src={e.photo} alt={e.title} fill sizes="(max-width: 768px) 100vw, 25vw" className="object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-2xl">🎟️</div>
                       )}

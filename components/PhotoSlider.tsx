@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from 'react'
 import NextImage from 'next/image'
 
-// Lazy slideshow inside a card. The first photo is a regular <img loading=
-// "lazy"> for SEO + LCP; everything else is mounted only after the user
-// hovers/focuses (desktop) or the card dominates the viewport (mobile).
+// Lazy slideshow inside a card. The first photo renders as next/image for
+// SEO + LCP; everything else is mounted only after the user hovers/focuses
+// (desktop) or the card dominates the viewport (mobile).
 //
 // Stack model — only the top photo fades, the next is already at 100 %
 // opacity behind it. Each photo gets ONE continuous motion preset
@@ -201,9 +201,7 @@ export function PhotoSlider({
     >
       {/* Base image — the thing crawlers and first paint see. Goes
           through Vercel image optimization (AVIF / WebP, srcset,
-          year-long edge cache). The animated layers below stay on
-          plain <img> so the JS-driven preload + Ken Burns transitions
-          keep working unchanged. */}
+          year-long edge cache). */}
       <NextImage
         src={photos[0]}
         alt={alt}
@@ -218,13 +216,14 @@ export function PhotoSlider({
       {everActivated && autoCount > 1 && (
         <>
           {/* Layer A — z-index 2 when top, 1 when bottom */}
-          <img
+          <NextImage
             key={`a-${aPhotoIdx}`}
             src={photos[aPhotoIdx]}
             alt=""
             aria-hidden="true"
-            loading="lazy"
-            className={`absolute inset-0 w-full h-full object-cover photo-motion-${aPreset} ${
+            fill
+            sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+            className={`object-cover photo-motion-${aPreset} ${
               aIsTop
                 ? `${fadeTransition} ${topOpacityClass} z-[2]`
                 : 'opacity-100 z-[1]'
@@ -232,13 +231,14 @@ export function PhotoSlider({
             style={animStyle}
           />
           {/* Layer B */}
-          <img
+          <NextImage
             key={`b-${bPhotoIdx}`}
             src={photos[bPhotoIdx]}
             alt=""
             aria-hidden="true"
-            loading="lazy"
-            className={`absolute inset-0 w-full h-full object-cover photo-motion-${bPreset} ${
+            fill
+            sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+            className={`object-cover photo-motion-${bPreset} ${
               !aIsTop
                 ? `${fadeTransition} ${topOpacityClass} z-[2]`
                 : 'opacity-100 z-[1]'

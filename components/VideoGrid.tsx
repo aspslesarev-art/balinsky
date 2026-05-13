@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { Play } from 'lucide-react'
 import type { VideoItem } from '@/lib/videos'
 
@@ -30,7 +31,7 @@ export function VideoGrid({ videos, title = 'Видео' }: { videos: VideoItem[
               >
                 <div className="relative w-full aspect-video bg-[var(--color-search-bg)]">
                   {thumb ? (
-                    <img src={thumb} alt={v.name ?? 'Видео'} className="w-full h-full object-cover" />
+                    <Image src={thumb} alt={v.name ?? 'Видео'} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-3xl">🎬</div>
                   )}

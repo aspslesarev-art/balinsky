@@ -2,6 +2,7 @@
 
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { loadAllPromo } from '@/lib/promo'
@@ -87,8 +88,9 @@ function PromoCard({
   return (
     <Link href={`${detailRoot}/${p.slug}`} className={`block rounded-2xl overflow-hidden border bg-white no-underline text-[#111827] transition-colors ${expired ? 'border-[var(--color-border)]' : 'border-[var(--color-border)] hover:border-[var(--color-primary)]'}`}>
       {p.photo ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={p.photo} alt={p.title} className={`w-full h-[180px] object-cover ${expired ? 'grayscale' : ''}`} />
+        <div className={`relative w-full h-[180px] ${expired ? 'grayscale' : ''}`}>
+          <Image src={p.photo} alt={p.title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
+        </div>
       ) : (
         <div className="w-full h-[180px] bg-[var(--color-search-bg)] flex items-center justify-center text-3xl">🎁</div>
       )}

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
+import Image from 'next/image'
 import { ChevronLeft, ChevronRight, X, ImageIcon } from 'lucide-react'
 import { WishlistButton, type WishlistInput } from './WishlistButton'
 
@@ -82,7 +83,7 @@ export function PhotoGalleryHero({
           className={`relative bg-[var(--color-search-bg)] cursor-pointer overflow-hidden group ${rightCount === 0 ? 'flex-1' : 'flex-1'}`}
           aria-label={c.open}
         >
-          <img src={hero} alt={`${alt} — ${c.mainPhoto}`} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" />
+          <Image src={hero} alt={`${alt} — ${c.mainPhoto}`} fill priority sizes="(max-width: 768px) 100vw, 50vw" className="object-cover transition-transform duration-300 group-hover:scale-[1.02]" />
         </button>
         {rightCount > 0 && (
           <div className={`flex-1 ${rightGridClass} gap-2`}>
@@ -96,7 +97,7 @@ export function PhotoGalleryHero({
                   className="relative bg-[var(--color-search-bg)] cursor-pointer overflow-hidden group"
                   aria-label={c.photoN(i + 2)}
                 >
-                  <img src={src} alt={`${alt} — ${c.photoLabel} ${i + 2}`} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.04]" />
+                  <Image src={src} alt={`${alt} — ${c.photoLabel} ${i + 2}`} fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover transition-transform duration-300 group-hover:scale-[1.04]" />
                   {isLastThumb && remaining > 0 && (
                     <div className="absolute inset-0 bg-black/55 flex items-center justify-center text-white">
                       <div className="flex items-center gap-2 text-[15px] font-medium">
@@ -121,9 +122,9 @@ export function PhotoGalleryHero({
         <button
           type="button"
           onClick={() => setOpenAt(0)}
-          className="block w-full h-[280px] bg-[var(--color-search-bg)]"
+          className="block w-full h-[280px] bg-[var(--color-search-bg)] relative"
         >
-          <img src={hero} alt={`${alt} — ${c.mainPhoto}`} className="w-full h-full object-cover" />
+          <Image src={hero} alt={`${alt} — ${c.mainPhoto}`} fill priority sizes="100vw" className="object-cover" />
           {photos.length > 1 && (
             <div className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/65 text-white text-[13px] font-medium">
               <ImageIcon size={14} />
@@ -224,12 +225,23 @@ function Lightbox({
         </>
       )}
 
-      <img
-        src={photos[i]}
-        alt={alt}
+      {/* Lightbox uses a sized wrapper + fill so Next.js generates a
+          properly-sized AVIF/WebP variant instead of shipping the
+          original 4-7 MB master. Aspect varies per photo so we let
+          object-contain settle it inside the 88vh × 90vw box. */}
+      <div
         onClick={(e) => e.stopPropagation()}
-        className="max-w-full max-h-[88vh] object-contain rounded-lg shadow-2xl select-none"
-      />
+        className="relative w-[90vw] h-[88vh] flex items-center justify-center"
+      >
+        <Image
+          src={photos[i]}
+          alt={alt}
+          fill
+          sizes="90vw"
+          quality={85}
+          className="object-contain rounded-lg shadow-2xl select-none"
+        />
+      </div>
 
       {/* Strip of small thumbs */}
       {count > 1 && (
@@ -246,7 +258,7 @@ function Lightbox({
                 idx === i ? 'border-white' : 'border-transparent opacity-70 hover:opacity-100'
               }`}
             >
-              <img src={src} alt={`${alt} — ${copy.thumb} ${idx + 1}`} className="w-full h-full object-cover" />
+              <Image src={src} alt={`${alt} — ${copy.thumb} ${idx + 1}`} width={64} height={48} className="w-full h-full object-cover" />
             </button>
           ))}
         </div>

@@ -2,6 +2,7 @@
 
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { loadAllKnowledge } from '@/lib/knowledge'
@@ -53,9 +54,9 @@ export async function KnowledgeList({ lang }: { lang: Lang }) {
           {items.map(k => (
             <li key={k.id}>
               <Link href={`${detailRoot}/${k.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)] transition-colors">
-                <div className="w-full aspect-[16/9] bg-[var(--color-search-bg)]">
+                <div className="relative w-full aspect-[16/9] bg-[var(--color-search-bg)]">
                   {k.photo ? (
-                    <img src={k.photo} alt={k.title} className="w-full h-full object-cover" />
+                    <Image src={k.photo} alt={k.title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-3xl">📚</div>
                   )}

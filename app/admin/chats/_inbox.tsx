@@ -630,8 +630,8 @@ function MediaBlock({ m }: { m: MessageRow }) {
       )
     case 'photo':
       return (
-        // eslint-disable-next-line @next/next/no-img-element
         <a href={url} target="_blank" rel="noopener noreferrer">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={url} alt={m.media_filename ?? 'photo'} className="rounded-lg max-h-[260px] w-auto" />
         </a>
       )

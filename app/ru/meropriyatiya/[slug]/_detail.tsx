@@ -3,6 +3,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Calendar, MapPin, HardHat, Video, Send } from 'lucide-react'
 import { botLink } from '@/lib/bot-link'
 import { Header } from '@/components/Header'
@@ -182,8 +183,8 @@ export async function EventDetail({ slug, lang }: { slug: string; lang: Lang }) 
           </div>
 
           {e.photo && (
-            <div className="w-full mb-8 rounded-2xl overflow-hidden bg-[var(--color-search-bg)] aspect-[16/9]">
-              <img src={e.photo} alt={e.title} className="w-full h-full object-cover" />
+            <div className="relative w-full mb-8 rounded-2xl overflow-hidden bg-[var(--color-search-bg)] aspect-[16/9]">
+              <Image src={e.photo} alt={e.title} fill sizes="(max-width: 768px) 100vw, 800px" priority className="object-cover" />
             </div>
           )}
           {e.body && (

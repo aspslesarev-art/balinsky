@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Heart, X, Trash2, Send, Sparkle, Download, Loader2, UserRound, ChevronLeft, AlertTriangle } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
@@ -493,10 +494,9 @@ export function ShortlistView({ lang }: { lang: Lang }) {
                     return (
                       <li key={`m-${it.kind}:${it.slug}`} className="rounded-2xl border border-[var(--color-border)] bg-white overflow-hidden relative">
                         <Link href={detailHref(it, lang)} className="block no-underline text-[var(--color-text)]">
-                          <div className="aspect-[16/9] bg-[var(--color-search-bg)]">
+                          <div className="relative aspect-[16/9] bg-[var(--color-search-bg)]">
                             {it.photo ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={it.photo} alt={it.title} className="w-full h-full object-cover" />
+                              <Image src={it.photo} alt={it.title} fill sizes="100vw" className="object-cover" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-3xl">🏝️</div>
                             )}
@@ -565,10 +565,9 @@ export function ShortlistView({ lang }: { lang: Lang }) {
                           <th key={`${it.kind}:${it.slug}`} className="text-left align-top snap-start">
                             <div className="relative">
                               <Link href={detailHref(it, lang)} className="block group no-underline text-[var(--color-text)]">
-                                <div className="aspect-[4/3] rounded-xl overflow-hidden bg-[var(--color-search-bg)] mb-2">
+                                <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-[var(--color-search-bg)] mb-2">
                                   {it.photo ? (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img src={it.photo} alt={it.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" />
+                                    <Image src={it.photo} alt={it.title} fill sizes="(max-width: 768px) 80vw, 320px" className="object-cover transition-transform duration-300 group-hover:scale-[1.02]" />
                                   ) : (
                                     <div className="w-full h-full flex items-center justify-center text-2xl md:text-3xl">🏝️</div>
                                   )}
@@ -657,10 +656,9 @@ export function ShortlistView({ lang }: { lang: Lang }) {
                           href={detailHref(item, lang)}
                           className="block bg-white rounded-2xl border border-[var(--color-border)] overflow-hidden no-underline text-[var(--color-text)] hover:border-[var(--color-primary)] transition-colors"
                         >
-                          <div className="aspect-[4/3] bg-[var(--color-search-bg)]">
+                          <div className="relative aspect-[4/3] bg-[var(--color-search-bg)]">
                             {item.photo ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={item.photo} alt={item.title} className="w-full h-full object-cover" />
+                              <Image src={item.photo} alt={item.title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-3xl">🏝️</div>
                             )}
@@ -732,10 +730,9 @@ export function ShortlistView({ lang }: { lang: Lang }) {
                           href={detailHref(item, lang)}
                           className="block bg-white rounded-2xl border border-[var(--color-border)] overflow-hidden no-underline text-[var(--color-text)] hover:border-[var(--color-primary)] transition-colors"
                         >
-                          <div className="aspect-[4/3] bg-[var(--color-search-bg)]">
+                          <div className="relative aspect-[4/3] bg-[var(--color-search-bg)]">
                             {item.photo ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={item.photo} alt={item.title} className="w-full h-full object-cover" />
+                              <Image src={item.photo} alt={item.title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-3xl">🏝️</div>
                             )}

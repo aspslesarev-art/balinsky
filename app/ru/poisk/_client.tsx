@@ -7,6 +7,7 @@
 
 import { useState, useRef } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Search, Sparkles, ArrowRight } from 'lucide-react'
 
 type Card = {
@@ -163,8 +164,9 @@ export function SemanticSearchClient({ lang }: { lang: 'ru' | 'en' }) {
                     className="block bg-white border border-[var(--color-border)] hover:border-[var(--color-primary)] rounded-2xl overflow-hidden no-underline text-[var(--color-text)] transition-colors"
                   >
                     {r.photo ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={r.photo} alt={r.title} className="w-full aspect-[4/3] object-cover" />
+                      <div className="relative w-full aspect-[4/3]">
+                        <Image src={r.photo} alt={r.title} fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover" />
+                      </div>
                     ) : (
                       <div className="w-full aspect-[4/3] bg-[#F3F4F6]" />
                     )}

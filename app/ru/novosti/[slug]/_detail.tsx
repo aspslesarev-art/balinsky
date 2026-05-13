@@ -3,6 +3,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Calendar, ExternalLink, Building2, HardHat } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
@@ -118,8 +119,8 @@ export async function NewsDetail({ slug, lang }: { slug: string; lang: Lang }) {
           </div>
 
           {n.photo && (
-            <div className="w-full mb-8 rounded-2xl overflow-hidden bg-[var(--color-search-bg)] aspect-[16/9]">
-              <img src={n.photo} alt={n.title} className="w-full h-full object-cover" />
+            <div className="relative w-full mb-8 rounded-2xl overflow-hidden bg-[var(--color-search-bg)] aspect-[16/9]">
+              <Image src={n.photo} alt={n.title} fill sizes="(max-width: 768px) 100vw, 800px" priority className="object-cover" />
             </div>
           )}
 
@@ -156,7 +157,9 @@ export async function NewsDetail({ slug, lang }: { slug: string; lang: Lang }) {
                 <li key={r.id}>
                   <Link href={`${newsRoot}/${r.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)]">
                     {r.photo ? (
-                      <img src={r.photo} alt={r.title} className="w-full h-[120px] object-cover" />
+                      <div className="relative w-full h-[120px]">
+                        <Image src={r.photo} alt={r.title} fill sizes="(max-width: 768px) 100vw, 25vw" className="object-cover" />
+                      </div>
                     ) : (
                       <div className="w-full h-[120px] bg-[var(--color-search-bg)] flex items-center justify-center text-2xl">📰</div>
                     )}
