@@ -241,31 +241,6 @@ function UseCaseRow({ icon: Icon, label, status, c }: {
   )
 }
 
-// Compact inline pill for the collapsed-block summary row. Same tone
-// vocabulary as UseCaseRow but rendered as a single chip with icon +
-// label + status dot so 4 of them fit on one line next to the
-// existing facts.
-function UseChipMini({ icon: Icon, label, status, c }: {
-  icon: typeof Hotel
-  label: string
-  status: UseCaseStatus
-  c: CopyShape
-}) {
-  if (!status || status === 'unknown') return null
-  const chip = useCaseChip(c, status)
-  return (
-    <span
-      title={`${label}: ${chip.label}`}
-      className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium ${toneClasses(chip.tone)}`}
-    >
-      <Icon size={11} />
-      {label}
-      {chip.tone === 'green' && <CircleCheck size={10} />}
-      {chip.tone === 'red'   && <CircleX size={10} />}
-      {(chip.tone === 'amber' || chip.tone === 'orange') && <CircleAlert size={10} />}
-    </span>
-  )
-}
 
 export function LandProfileBlock({ data, lang = 'ru' }: { data: LandProfileProps; lang?: Lang }) {
   const [open, setOpen] = useState(false)
@@ -372,14 +347,6 @@ export function LandProfileBlock({ data, lang = 'ru' }: { data: LandProfileProps
               {facts.map(f => <span key={f}>{f}</span>)}
             </div>
           )}
-          {hasUseCases && (
-            <div className="mt-1.5 flex flex-wrap gap-1.5">
-              <UseChipMini icon={Hotel}     label={c.hotel}      status={data.uses_hotel}      c={c} />
-              <UseChipMini icon={HomeIcon}  label={c.villa}      status={data.uses_villa}      c={c} />
-              <UseChipMini icon={Bed}       label={c.kos}        status={data.uses_kos}        c={c} />
-              <UseChipMini icon={Utensils}  label={c.restaurant} status={data.uses_restaurant} c={c} />
-            </div>
-          )}
         </div>
         <span className="text-[12px] text-[var(--color-primary)] font-medium inline-flex items-center gap-0.5 shrink-0 mt-1">
           {open ? c.collapse : c.expand}
@@ -387,20 +354,20 @@ export function LandProfileBlock({ data, lang = 'ru' }: { data: LandProfileProps
         </span>
       </button>
 
+      {hasUseCases && (
+        <div className="px-5 pb-4">
+          <div className="text-[11.5px] uppercase tracking-wide text-[var(--color-text-muted)] mb-2">{c.useCases}</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+            <UseCaseRow icon={Hotel} label={c.hotel} status={data.uses_hotel} c={c} />
+            <UseCaseRow icon={HomeIcon} label={c.villa} status={data.uses_villa} c={c} />
+            <UseCaseRow icon={Bed} label={c.kos} status={data.uses_kos} c={c} />
+            <UseCaseRow icon={Utensils} label={c.restaurant} status={data.uses_restaurant} c={c} />
+          </div>
+        </div>
+      )}
+
       {open && (
         <div className="border-t border-[var(--color-border)] px-5 py-4 text-[13.5px] space-y-5">
-          {hasUseCases && (
-            <div>
-              <div className="text-[11.5px] uppercase tracking-wide text-[var(--color-text-muted)] mb-2">{c.useCases}</div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                <UseCaseRow icon={Hotel} label={c.hotel} status={data.uses_hotel} c={c} />
-                <UseCaseRow icon={HomeIcon} label={c.villa} status={data.uses_villa} c={c} />
-                <UseCaseRow icon={Bed} label={c.kos} status={data.uses_kos} c={c} />
-                <UseCaseRow icon={Utensils} label={c.restaurant} status={data.uses_restaurant} c={c} />
-              </div>
-            </div>
-          )}
-
           {mixed && data.mixed_zones && (
             <div className="rounded-lg border border-[#F59E0B]/40 bg-[#FEF3C7] px-3 py-2 text-[12.5px] text-[#78350F]">
               <AlertTriangle size={14} className="inline -mt-0.5 mr-1" />
