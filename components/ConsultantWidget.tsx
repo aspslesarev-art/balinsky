@@ -658,9 +658,21 @@ export function ConsultantWidget() {
             onClick={() => setOpen(false)}
             aria-hidden="true"
           />
-          <div className="fixed inset-0 sm:inset-auto sm:bottom-5 sm:right-5 sm:w-[400px] sm:h-[640px] sm:max-h-[calc(100vh-40px)] z-50 flex flex-col bg-white sm:rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.25)] sm:border sm:border-[var(--color-border)] overflow-hidden">
-            {/* Header */}
-            <div className="shrink-0 flex items-center justify-between gap-3 px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-primary-soft)]">
+          <div
+            className="fixed left-0 right-0 top-0 sm:inset-auto sm:bottom-5 sm:right-5 sm:left-auto sm:top-auto sm:w-[400px] sm:h-[640px] sm:max-h-[calc(100vh-40px)] z-50 flex flex-col bg-white sm:rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.25)] sm:border sm:border-[var(--color-border)] overflow-hidden"
+            style={{
+              // dvh = dynamic viewport height; collapses when the iOS
+              // soft keyboard opens, so the chat panel stays anchored
+              // to the visible area instead of being pushed off-screen
+              // (the symptom: header + close button disappearing once
+              // the visitor taps the input).
+              height: '100dvh',
+            }}
+          >
+            {/* Header — sticky inside the flex container so even if
+                the message list tries to scroll, the title row + ✕
+                button always stay visible. */}
+            <div className="shrink-0 sticky top-0 z-10 flex items-center justify-between gap-3 px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-primary-soft)]">
               <div className="flex items-center gap-2.5">
                 <Image
                   src="/balina.jpg"
