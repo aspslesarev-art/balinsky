@@ -32,6 +32,8 @@ import { listLayers, listHotspots } from '@/lib/complex-visualizations'
 import { ComplexVisualizationViewer } from '@/components/ComplexVisualizationViewer'
 import { loadLandProfile } from '@/lib/land-profile'
 import { LandProfileBlock } from '@/components/LandProfileBlock'
+import { loadComplexMarketStats } from '@/lib/complex-market-stats'
+import { MarketStatsBlock } from '@/components/MarketStatsBlock'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { tField, type Lang } from '@/lib/i18n'
 
@@ -520,10 +522,11 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   const name = firstString(d['Project'])
   if (!name) notFound()
 
-  const [photoManifest, units, landProfile] = await Promise.all([
+  const [photoManifest, units, landProfile, marketStats] = await Promise.all([
     _loadComplexPhotos(),
     loadUnitsInComplex(name),
     loadLandProfile('complex', c.airtable_id),
+    loadComplexMarketStats(c.airtable_id),
   ])
 
   const photos = (photoManifest[c.airtable_id] ?? []).slice(0, 12)
@@ -889,6 +892,12 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
         {landProfile && (landProfile.zona_code || landProfile.subzona_code) && (
           <section className="mb-10 max-w-3xl">
             <LandProfileBlock data={landProfile} lang={lang} />
+          </section>
+        )}
+
+        {marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0) && (
+          <section className="mb-10 max-w-3xl">
+            <MarketStatsBlock data={marketStats} lang={lang} />
           </section>
         )}
 
