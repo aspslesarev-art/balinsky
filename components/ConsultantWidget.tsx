@@ -516,6 +516,28 @@ export function ConsultantWidget() {
     return () => { document.body.style.overflow = prev }
   }, [open])
 
+  // iOS Safari quirk: when the soft keyboard opens, the layout viewport
+  // stays at its full height (so 100dvh is wrong), and the focused
+  // input triggers an auto-scroll that drags `position: fixed` panels
+  // along with the body — the chat header ends up off-screen. Pin the
+  // panel size to `visualViewport` instead, which excludes the
+  // keyboard's height and stays accurate while the visitor types.
+  const [vvSize, setVvSize] = useState<{ h: number; offsetTop: number } | null>(null)
+  useEffect(() => {
+    if (!open) return
+    const vv = typeof window !== 'undefined' ? window.visualViewport : null
+    if (!vv) return
+    const update = () => setVvSize({ h: vv.height, offsetTop: vv.offsetTop })
+    update()
+    vv.addEventListener('resize', update)
+    vv.addEventListener('scroll', update)
+    return () => {
+      vv.removeEventListener('resize', update)
+      vv.removeEventListener('scroll', update)
+      setVvSize(null)
+    }
+  }, [open])
+
   // Esc to close.
   useEffect(() => {
     if (!open) return
@@ -659,14 +681,13 @@ export function ConsultantWidget() {
             aria-hidden="true"
           />
           <div
-            className="fixed left-0 right-0 top-0 sm:inset-auto sm:bottom-5 sm:right-5 sm:left-auto sm:top-auto sm:w-[400px] sm:h-[640px] sm:max-h-[calc(100vh-40px)] z-50 flex flex-col bg-white sm:rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.25)] sm:border sm:border-[var(--color-border)] overflow-hidden"
+            className="fixed left-0 right-0 sm:inset-auto sm:bottom-5 sm:right-5 sm:left-auto sm:top-auto sm:w-[400px] sm:h-[640px] sm:max-h-[calc(100vh-40px)] z-50 flex flex-col bg-white sm:rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.25)] sm:border sm:border-[var(--color-border)] overflow-hidden"
             style={{
-              // dvh = dynamic viewport height; collapses when the iOS
-              // soft keyboard opens, so the chat panel stays anchored
-              // to the visible area instead of being pushed off-screen
-              // (the symptom: header + close button disappearing once
-              // the visitor taps the input).
-              height: '100dvh',
+              // Mobile: pin to the visual viewport so the iOS keyboard
+              // shrinks the panel (not extends it past the screen
+              // bottom). Desktop overrides via the `sm:` utilities.
+              top: vvSize ? `${vvSize.offsetTop}px` : 0,
+              height: vvSize ? `${vvSize.h}px` : '100dvh',
             }}
           >
             {/* Header — sticky inside the flex container so even if
