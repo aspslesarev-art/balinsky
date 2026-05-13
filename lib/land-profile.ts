@@ -21,6 +21,15 @@ export type TranslationFields = Partial<{
   regulation: string
 }>
 
+export type UseCaseStatus =
+  | 'allowed'
+  | 'limited'
+  | 'conditional'
+  | 'limited_conditional'
+  | 'forbidden'
+  | 'unknown'
+  | null
+
 export type LandProfile = {
   airtable_id: string
   lat: number
@@ -42,17 +51,46 @@ export type LandProfile = {
   regulation: string | null
   regulation_pdf: string | null
   str_likely_allowed: string | null
+  // Expanded fields (migration 028):
+  document_perda_url: string | null
+  document_body_url: string | null
+  document_verification_url: string | null
+  uses_hotel: UseCaseStatus
+  uses_villa: UseCaseStatus
+  uses_kos: UseCaseStatus
+  uses_restaurant: UseCaseStatus
+  religious_restrictions: string | null
+  zone_homogeneity: 'uniform' | 'mixed' | null
+  mixed_zones: string | null
+  trust_score: number | null
   translations: { ru?: TranslationFields; en?: TranslationFields } | null
   error: string | null
   synced_at: string
 }
 
-export async function loadVillaLandProfile(airtable_id: string): Promise<LandProfile | null> {
+export type LandProfileKind = 'villa' | 'apartment' | 'complex'
+
+const TABLE_BY_KIND: Record<LandProfileKind, string> = {
+  villa: 'villa_land_profile',
+  apartment: 'apartment_land_profile',
+  complex: 'complex_land_profile',
+}
+
+export async function loadLandProfile(
+  kind: LandProfileKind,
+  airtable_id: string,
+): Promise<LandProfile | null> {
   const { data, error } = await sb
-    .from('villa_land_profile')
+    .from(TABLE_BY_KIND[kind])
     .select('*')
     .eq('airtable_id', airtable_id)
     .maybeSingle()
   if (error || !data) return null
   return data as LandProfile
+}
+
+// Legacy alias — kept so existing villa detail pages don't churn. Prefer
+// `loadLandProfile('villa', id)` in new code.
+export async function loadVillaLandProfile(airtable_id: string): Promise<LandProfile | null> {
+  return loadLandProfile('villa', airtable_id)
 }

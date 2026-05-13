@@ -30,6 +30,8 @@ import { loadNearbyPlaces } from '@/lib/nearby-places'
 import { NearbyPlaces } from '@/components/NearbyPlaces'
 import { listLayers, listHotspots } from '@/lib/complex-visualizations'
 import { ComplexVisualizationViewer } from '@/components/ComplexVisualizationViewer'
+import { loadLandProfile } from '@/lib/land-profile'
+import { LandProfileBlock } from '@/components/LandProfileBlock'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { tField, type Lang } from '@/lib/i18n'
 
@@ -518,9 +520,10 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   const name = firstString(d['Project'])
   if (!name) notFound()
 
-  const [photoManifest, units] = await Promise.all([
+  const [photoManifest, units, landProfile] = await Promise.all([
     _loadComplexPhotos(),
     loadUnitsInComplex(name),
+    loadLandProfile('complex', c.airtable_id),
   ])
 
   const photos = (photoManifest[c.airtable_id] ?? []).slice(0, 12)
@@ -882,6 +885,12 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
         )}
 
         {managers.length > 0 && <ManagerCard managers={managers} developerName={developerName} />}
+
+        {landProfile && (landProfile.zona_code || landProfile.subzona_code) && (
+          <section className="mb-10 max-w-3xl">
+            <LandProfileBlock data={landProfile} lang={lang} />
+          </section>
+        )}
 
         {/* Nearby places — beaches / cafes / nightlife / etc. The
             data is keyed by villa airtable_id; we surface it on

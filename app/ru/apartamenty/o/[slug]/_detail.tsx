@@ -26,6 +26,8 @@ import { ManagerCard } from '@/components/ManagerCard'
 import { loadManagersByDeveloperName } from '@/lib/managers'
 import { PriceCtaCard } from '@/components/PriceCtaCard'
 import { findActiveReservation } from '@/lib/reservations'
+import { loadLandProfile } from '@/lib/land-profile'
+import { LandProfileBlock } from '@/components/LandProfileBlock'
 import { InlinePrice } from '@/components/InlinePrice'
 import { VillaPresentationButton } from '@/components/VillaPresentation'
 import { tField, type Lang } from '@/lib/i18n'
@@ -383,10 +385,11 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
   const parentComplex = findParentComplex(title, complexes)
   const parentComplexName = parentComplex ? firstString(parentComplex.data['Project']) : null
 
-  const [otherApts, managers, activeReservation] = await Promise.all([
+  const [otherApts, managers, activeReservation, landProfile] = await Promise.all([
     loadOtherApartmentsInDistrict(district, a.airtable_id),
     loadManagersByDeveloperName(devName),
     findActiveReservation('apartment', a.airtable_id),
+    loadLandProfile('apartment', a.airtable_id),
   ])
   const GMAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? ''
 
@@ -662,6 +665,12 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
         )}
 
         {managers.length > 0 && <ManagerCard managers={managers} developerName={devName} />}
+
+        {landProfile && (landProfile.zona_code || landProfile.subzona_code) && (
+          <section className="mb-10 max-w-3xl">
+            <LandProfileBlock data={landProfile} lang={lang} />
+          </section>
+        )}
 
         {lat != null && lng != null && (
           <InvestmentWidget villaId={a.airtable_id} apiKey={GMAPS_KEY} kind="apartment" />
