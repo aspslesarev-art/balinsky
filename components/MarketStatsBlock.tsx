@@ -9,39 +9,41 @@ import type { ComplexMarketStats } from '@/lib/complex-market-stats'
 
 const COPY = {
   ru: {
-    title: 'Рынок краткосрочной аренды поблизости',
-    subtitle: 'Booking-данные с estatemarket.io в радиусе 1 км',
+    title: 'Сколько зарабатывают соседи',
+    subtitle: 'По данным estatemarket.io — все объекты на Booking в радиусе 1 км',
     villas: 'Виллы',
     apartments: 'Апартаменты',
-    listings: 'листингов',
-    occupancy: 'Загрузка',
-    adr: 'ADR (ср. ночь)',
-    revpar: 'RevPAR',
-    annual: 'Доход за год',
-    annualHint: 'RevPAR × 365. Ожидаемая годовая выручка с номера при текущей загрузке и ADR.',
-    daysBooked: 'Дней забронировано',
-    daysBookedHint: 'Сколько ночей в году объект сдан в среднем по сегменту.',
-    revparHint: 'RevPAR = Загрузка × ADR. Метрика дохода с номера за ночь.',
+    listings: 'на Booking',
+    occupancy: 'Заполняемость',
+    occupancyHint: 'Сколько процентов ночей в году объект реально сдан.',
+    adr: 'Средняя цена за ночь',
+    adrHint: 'Сколько в среднем платит гость за ночь (ADR — Average Daily Rate).',
+    revpar: 'Доход с номера за ночь',
+    revparHint: 'Средний заработок объекта с одной календарной ночи (RevPAR = заполняемость × цена).',
+    annual: 'Прогноз дохода в год',
+    annualHint: 'Доход с ночи × 365. Сколько примерно вилла этого района приносит за полный год при текущей заполняемости.',
+    daysBooked: 'нед. забронированных в год',
     sourceTitle: 'Источник',
     estateMarket: 'estatemarket.io',
     none: 'нет данных в радиусе',
     fewData: 'мало данных',
-    total: (n: number) => `${n} ${n === 1 ? 'листинг' : n < 5 ? 'листинга' : 'листингов'} в радиусе 1 км`,
+    total: (n: number) => `${n} ${n === 1 ? 'объект' : n < 5 ? 'объекта' : 'объектов'} в радиусе 1 км`,
   },
   en: {
-    title: 'Short-term rental market nearby',
-    subtitle: 'Booking data from estatemarket.io within 1 km',
+    title: 'What neighbours earn',
+    subtitle: 'From estatemarket.io — every Booking listing within 1 km',
     villas: 'Villas',
     apartments: 'Apartments',
-    listings: 'listings',
+    listings: 'on Booking',
     occupancy: 'Occupancy',
-    adr: 'ADR (avg/night)',
-    revpar: 'RevPAR',
-    annual: 'Annual revenue',
-    annualHint: 'RevPAR × 365. Expected per-room annual gross at the current occupancy and ADR.',
-    daysBooked: 'Nights booked',
-    daysBookedHint: 'Average nights per year the segment is rented out.',
-    revparHint: 'RevPAR = Occupancy × ADR. Per-room revenue per night.',
+    occupancyHint: 'Share of nights per year the property is actually rented.',
+    adr: 'Average price per night',
+    adrHint: 'What a guest typically pays for one night (ADR — Average Daily Rate).',
+    revpar: 'Revenue per available night',
+    revparHint: 'Average earnings per calendar night (RevPAR = occupancy × ADR).',
+    annual: 'Estimated annual revenue',
+    annualHint: 'RevPAR × 365. Roughly what a villa of this segment earns over a full year at the current occupancy and rate.',
+    daysBooked: 'nights booked per year',
     sourceTitle: 'Source',
     estateMarket: 'estatemarket.io',
     none: 'no listings in radius',
@@ -148,8 +150,8 @@ function SegmentCard({
         </span>
       </div>
       <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-        <Metric label={c.occupancy} value={fmtPct(occ)} hint={daysBooked != null ? `~${daysBooked} ${c.daysBooked.toLowerCase()}` : null} />
-        <Metric label={c.adr}       value={adr != null ? fmtUsd(adr) : c.fewData} />
+        <Metric label={c.occupancy} value={fmtPct(occ)} hint={c.occupancyHint} sub={daysBooked != null ? `≈ ${daysBooked} ${c.daysBooked}` : null} />
+        <Metric label={c.adr}       value={adr != null ? fmtUsd(adr) : c.fewData} hint={c.adrHint} />
         <Metric label={c.revpar}    value={revpar != null ? fmtUsd(revpar) : '—'} tone="primary" hint={c.revparHint} />
         <Metric label={c.annual}    value={annual != null ? fmtUsd(annual) : '—'} tone="primary" hint={c.annualHint} />
       </div>
@@ -157,8 +159,8 @@ function SegmentCard({
   )
 }
 
-function Metric({ label, value, tone = 'default', hint }: {
-  label: string; value: string; tone?: 'default' | 'primary'; hint?: string | null
+function Metric({ label, value, tone = 'default', hint, sub }: {
+  label: string; value: string; tone?: 'default' | 'primary'; hint?: string | null; sub?: string | null
 }) {
   return (
     <div title={hint ?? undefined}>
@@ -166,6 +168,7 @@ function Metric({ label, value, tone = 'default', hint }: {
       <div className={`text-[17px] font-semibold mt-0.5 leading-none ${tone === 'primary' ? 'text-[var(--color-primary)]' : 'text-[#111827]'}`}>
         {value}
       </div>
+      {sub && <div className="text-[10.5px] text-[var(--color-text-muted)] mt-1">{sub}</div>}
     </div>
   )
 }
