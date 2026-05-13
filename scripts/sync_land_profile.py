@@ -185,9 +185,16 @@ def sync_kind(kind: str, args) -> tuple[int, int]:
     skipped_fresh = 0
     for row in rows:
         d = row["data"] or {}
-        # Apartments / complexes use the same publish flag.
-        if d.get("Опубликовать") is not True:
-            continue
+        # Villas + apartments use the explicit `Опубликовать` checkbox.
+        # Complexes don't have that field — they're gated by `Статус`
+        # ("Строится" / "Построен" / "Под заказ" all count as live).
+        if kind == "complex":
+            status = str(d.get("Статус") or "").lower()
+            if not status or "архив" in status or "не публик" in status:
+                continue
+        else:
+            if d.get("Опубликовать") is not True:
+                continue
         lat = parse_geo(d.get("Geo"))
         lon = parse_geo(d.get("Geo 2"))
         if lat is None or lon is None:
