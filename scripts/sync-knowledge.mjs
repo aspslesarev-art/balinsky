@@ -1,6 +1,7 @@
 // Sync knowledge articles (Знания) from Airtable → Supabase Storage manifest.
 import { createClient } from '@supabase/supabase-js'
 import fs from 'node:fs'
+import { applyAiFallback } from './_ai-fallback.mjs'
 
 const env = fs.readFileSync('.env.local', 'utf8')
 for (const l of env.split('\n')) { const m = l.match(/^([A-Z_]+)=(.*)$/); if (m) process.env[m[1]] = m[2].replace(/^['"]|['"]$/g, '') }
@@ -71,6 +72,8 @@ function urlOfFirstAttachment(att) {
 await ensureBucket()
 console.log('▶ fetching knowledge…')
 const recs = await fetchAll(BASE, TABLE)
+
+await applyAiFallback(recs, 'knowledge article')
 console.log('  records:', recs.length)
 
 const items = []

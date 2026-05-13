@@ -9,6 +9,7 @@ import { createClient } from '@supabase/supabase-js'
 import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
+import { applyAiFallback } from './_ai-fallback.mjs'
 
 const env = fs.readFileSync('.env.local', 'utf8')
 for (const l of env.split('\n')) { const m = l.match(/^([A-Z_]+)=(.*)$/); if (m) process.env[m[1]] = m[2].replace(/^['"]|['"]$/g, '') }
@@ -147,6 +148,8 @@ await ensureBucket(PHOTO_BUCKET)
 console.log('▶ fetching rentals…')
 const recs = await fetchAll(BASE, TABLE)
 console.log('  records:', recs.length, '| photo cache hits start:', Object.keys(photoCache).length)
+
+await applyAiFallback(recs, 'rental listing')
 
 const items = []
 const seenSlugs = new Map()

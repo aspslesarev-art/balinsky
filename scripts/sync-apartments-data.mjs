@@ -3,6 +3,7 @@
 import { createClient } from '@supabase/supabase-js'
 import fs from 'node:fs'
 import { backfillSlug } from './_slug-fallback.mjs'
+import { applyAiFallback } from './_ai-fallback.mjs'
 
 try {
   const env = fs.readFileSync('.env.local', 'utf8')
@@ -35,6 +36,8 @@ async function fetchAirtableAll() {
 console.log('▶ fetching Airtable…')
 const recs = await fetchAirtableAll()
 console.log('  records:', recs.length)
+
+await applyAiFallback(recs, 'apartment')
 
 let filled = 0
 for (const r of recs) {

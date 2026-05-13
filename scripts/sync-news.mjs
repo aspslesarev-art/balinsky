@@ -2,6 +2,7 @@
 import { createClient } from '@supabase/supabase-js'
 import fs from 'node:fs'
 import { downloadAndUpload, ensureBucket as ensureBucketHelper } from './lib-photo-sync.mjs'
+import { applyAiFallback } from './_ai-fallback.mjs'
 
 const env = fs.readFileSync('.env.local', 'utf8')
 for (const l of env.split('\n')) { const m = l.match(/^([A-Z_]+)=(.*)$/); if (m) process.env[m[1]] = m[2].replace(/^['"]|['"]$/g, '') }
@@ -64,6 +65,8 @@ await ensureBucketHelper(sb, PHOTO_BUCKET)
 console.log('▶ fetching news…')
 const newsRecs = await fetchAll(NEWS_BASE, NEWS_TABLE)
 console.log('  news records:', newsRecs.length)
+
+await applyAiFallback(newsRecs, 'news article')
 
 console.log('▶ fetching complexes (in news base)…')
 const complexRecs = await fetchAll(NEWS_BASE, NEWS_COMPLEX_TABLE)

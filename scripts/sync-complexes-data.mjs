@@ -6,6 +6,7 @@
 import { createClient } from '@supabase/supabase-js'
 import fs from 'node:fs'
 import { backfillSlug } from './_slug-fallback.mjs'
+import { applyAiFallback } from './_ai-fallback.mjs'
 
 try {
   const env = fs.readFileSync('.env.local', 'utf8')
@@ -49,6 +50,8 @@ async function fetchAll() {
 console.log('▶ fetching complexes…')
 const records = await fetchAll()
 console.log('  records:', records.length)
+
+await applyAiFallback(records, 'complex')
 
 let filled = 0
 for (const r of records) {

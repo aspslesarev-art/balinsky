@@ -2,6 +2,7 @@
 import { createClient } from '@supabase/supabase-js'
 import fs from 'node:fs'
 import { backfillSlug } from './_slug-fallback.mjs'
+import { applyAiFallback } from './_ai-fallback.mjs'
 
 const env = fs.readFileSync('.env.local', 'utf8')
 for (const l of env.split('\n')) { const m = l.match(/^([A-Z_]+)=(.*)$/); if (m) process.env[m[1]] = m[2].replace(/^['"]|['"]$/g,'') }
@@ -33,9 +34,11 @@ console.log('▶ fetching Airtable…')
 const recs = await fetchAirtableAll()
 console.log('  records:', recs.length)
 
-// Derive SEO:Slug locally when Airtable's AI returned an error so the
-// affected rows still get a real slug and aren't dropped from the
-// site. See scripts/_slug-fallback.mjs for the rule.
+// Backfill AI-errored fields (SEO Text, ИИ Имя, etc.) via Azure GPT
+// BEFORE deriving the slug, so the slug fallback can read the freshly
+// generated SEO:Title instead of the error stub.
+await applyAiFallback(recs, 'villa')
+
 let filled = 0
 for (const r of recs) {
   if (backfillSlug(r.fields)) filled++

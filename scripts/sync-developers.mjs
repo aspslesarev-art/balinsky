@@ -8,6 +8,7 @@
 // migrate-logos.mjs / finalize-logos.mjs).
 import { createClient } from '@supabase/supabase-js'
 import fs from 'node:fs'
+import { applyAiFallback } from './_ai-fallback.mjs'
 
 const env = fs.readFileSync('.env.local', 'utf8')
 for (const l of env.split('\n')) { const m = l.match(/^([A-Z_]+)=(.*)$/); if (m) process.env[m[1]] = m[2].replace(/^['"]|['"]$/g, '') }
@@ -38,6 +39,8 @@ async function fetchAll() {
 console.log('▶ fetching developers from', AIRTABLE_BASE, '/', AIRTABLE_TABLE)
 const records = await fetchAll()
 console.log('  fetched:', records.length)
+
+await applyAiFallback(records, 'developer')
 
 // raw_developers permissions deny INSERT for the service key (table was
 // originally populated by an external pipeline). All 112 records already
