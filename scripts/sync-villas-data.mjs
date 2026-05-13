@@ -1,6 +1,7 @@
 // Sync villa data from Airtable into raw_villas (Supabase) — upserts by airtable_id.
 import { createClient } from '@supabase/supabase-js'
 import fs from 'node:fs'
+import { backfillSlug } from './_slug-fallback.mjs'
 
 const env = fs.readFileSync('.env.local', 'utf8')
 for (const l of env.split('\n')) { const m = l.match(/^([A-Z_]+)=(.*)$/); if (m) process.env[m[1]] = m[2].replace(/^['"]|['"]$/g,'') }
@@ -31,6 +32,15 @@ async function fetchAirtableAll() {
 console.log('▶ fetching Airtable…')
 const recs = await fetchAirtableAll()
 console.log('  records:', recs.length)
+
+// Derive SEO:Slug locally when Airtable's AI returned an error so the
+// affected rows still get a real slug and aren't dropped from the
+// site. See scripts/_slug-fallback.mjs for the rule.
+let filled = 0
+for (const r of recs) {
+  if (backfillSlug(r.fields)) filled++
+}
+if (filled > 0) console.log(`  slug fallback applied to ${filled} record(s)`)
 
 const rows = recs.map(r => ({
   airtable_id: r.id,
