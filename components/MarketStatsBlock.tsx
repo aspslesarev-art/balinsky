@@ -1,8 +1,16 @@
-// "Рынок краткосрочной аренды в радиусе 500 м" — compact comparables block
-// fed from estatemarket.io. Renders nothing when both villa_count and
+'use client'
+
+// "Рынок краткосрочной аренды поблизости" — compact comparables block
+// fed from estatemarket.io. Same collapse/expand pattern as
+// LandProfileBlock so the two render at matching height side-by-side
+// in the complex hero row. Renders nothing when both villa_count and
 // apartment_count are 0 (no listings nearby → no signal to show).
 
-import { TrendingUp, Hotel, Home as HomeIcon, ExternalLink, Info } from 'lucide-react'
+import { useState } from 'react'
+import {
+  TrendingUp, Hotel, Home as HomeIcon, ChevronDown, ChevronUp,
+  ExternalLink, Info,
+} from 'lucide-react'
 import type { ComplexMarketStats } from '@/lib/complex-market-stats'
 
 const COPY = {
@@ -18,9 +26,14 @@ const COPY = {
     revparHint: 'RevPAR = Загрузка × ADR. Метрика дохода с номера за ночь.',
     sourceTitle: 'Источник',
     estateMarket: 'estatemarket.io',
-    none: 'нет данных в радиусе',
+    expand: 'Подробнее',
+    collapse: 'Свернуть',
+    summaryVilla: (n: number, rev: number | null) =>
+      rev != null ? `${n} вилл · RevPAR $${Math.round(rev)}` : `${n} вилл`,
+    summaryApt: (n: number, rev: number | null) =>
+      rev != null ? `${n} апартаментов · RevPAR $${Math.round(rev)}` : `${n} апартаментов`,
+    summaryListings: (n: number) => `${n} ${n === 1 ? 'листинг' : n < 5 ? 'листинга' : 'листингов'} в радиусе 1 км`,
     fewData: 'мало данных',
-    total: (n: number) => `${n} ${n === 1 ? 'листинг' : n < 5 ? 'листинга' : 'листингов'} в радиусе 1 км`,
   },
   en: {
     title: 'Short-term rental market nearby',
@@ -34,11 +47,18 @@ const COPY = {
     revparHint: 'RevPAR = Occupancy × ADR. Per-room revenue per night.',
     sourceTitle: 'Source',
     estateMarket: 'estatemarket.io',
-    none: 'no listings in radius',
+    expand: 'Show details',
+    collapse: 'Hide details',
+    summaryVilla: (n: number, rev: number | null) =>
+      rev != null ? `${n} villas · RevPAR $${Math.round(rev)}` : `${n} villas`,
+    summaryApt: (n: number, rev: number | null) =>
+      rev != null ? `${n} apartments · RevPAR $${Math.round(rev)}` : `${n} apartments`,
+    summaryListings: (n: number) => `${n} listing${n === 1 ? '' : 's'} within 1 km`,
     fewData: 'too few',
-    total: (n: number) => `${n} listing${n === 1 ? '' : 's'} within 1 km`,
   },
 } as const
+
+type Copy = { [K in keyof (typeof COPY)['ru']]: (typeof COPY)['ru'][K] extends (...args: infer A) => infer R ? (...args: A) => R : string }
 
 function fmtPct(v: number | null): string {
   if (v == null) return '—'
@@ -51,71 +71,94 @@ function fmtUsd(v: number | null): string {
 }
 
 export function MarketStatsBlock({ data, lang = 'ru' }: { data: ComplexMarketStats; lang?: 'ru' | 'en' }) {
+  const [open, setOpen] = useState(false)
   const c = COPY[lang]
   if (data.villa_count === 0 && data.apartment_count === 0) return null
 
+  // Pick the segment with more listings as the primary summary chip.
+  // For the headline RevPAR we use the same segment so the number on
+  // the collapsed card matches the one inside.
+  const primaryIsVilla = data.villa_count >= data.apartment_count
+  const summaryChips: string[] = []
+  if (data.villa_count > 0) summaryChips.push(c.summaryVilla(data.villa_count, data.villa_revpar_usd))
+  if (data.apartment_count > 0) summaryChips.push(c.summaryApt(data.apartment_count, data.apartment_revpar_usd))
+
   return (
     <section className="rounded-2xl border border-[var(--color-border)] bg-white overflow-hidden">
-      <div className="px-5 py-4">
-        <div className="flex items-start gap-3">
-          <TrendingUp size={18} className="text-[var(--color-primary)] mt-0.5 shrink-0" />
-          <div className="flex-1 min-w-0">
-            <div className="text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
-              {c.title}
-            </div>
-            <div className="text-[13px] text-[var(--color-text-muted)] leading-snug">
-              {c.subtitle} · {c.total(data.total_listings_500m)}
-            </div>
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        className="w-full text-left px-5 py-4 flex items-start gap-3 hover:bg-[var(--color-search-bg)] transition-colors"
+        aria-expanded={open}
+      >
+        <TrendingUp size={18} className="text-[var(--color-primary)] mt-0.5 shrink-0" />
+        <div className="flex-1 min-w-0">
+          <div className="text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
+            {c.title}
+          </div>
+          <div className="text-[15px] font-medium text-[#111827]">
+            {primaryIsVilla
+              ? c.summaryVilla(data.villa_count, data.villa_revpar_usd)
+              : c.summaryApt(data.apartment_count, data.apartment_revpar_usd)}
+          </div>
+          <div className="text-[12.5px] text-[var(--color-text-muted)] mt-1 flex flex-wrap gap-x-3 gap-y-1 items-center">
+            {summaryChips.length > 1 && summaryChips.slice(1).map(s => <span key={s}>{s}</span>)}
+            <span>{c.summaryListings(data.total_listings_500m)}</span>
           </div>
         </div>
+        <span className="text-[12px] text-[var(--color-primary)] font-medium inline-flex items-center gap-0.5 shrink-0 mt-1">
+          {open ? c.collapse : c.expand}
+          {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+        </span>
+      </button>
 
-        <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {data.villa_count > 0 && (
-            <SegmentCard
-              icon={HomeIcon}
-              label={c.villas}
-              count={data.villa_count}
-              occ={data.villa_occupancy_pct}
-              adr={data.villa_adr_usd}
-              revpar={data.villa_revpar_usd}
-              c={c}
-            />
-          )}
-          {data.apartment_count > 0 && (
-            <SegmentCard
-              icon={Hotel}
-              label={c.apartments}
-              count={data.apartment_count}
-              occ={data.apartment_occupancy_pct}
-              adr={data.apartment_adr_usd}
-              revpar={data.apartment_revpar_usd}
-              c={c}
-            />
-          )}
-        </div>
+      {open && (
+        <div className="border-t border-[var(--color-border)] px-5 py-4 space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {data.villa_count > 0 && (
+              <SegmentCard
+                icon={HomeIcon}
+                label={c.villas}
+                count={data.villa_count}
+                occ={data.villa_occupancy_pct}
+                adr={data.villa_adr_usd}
+                revpar={data.villa_revpar_usd}
+                c={c}
+              />
+            )}
+            {data.apartment_count > 0 && (
+              <SegmentCard
+                icon={Hotel}
+                label={c.apartments}
+                count={data.apartment_count}
+                occ={data.apartment_occupancy_pct}
+                adr={data.apartment_adr_usd}
+                revpar={data.apartment_revpar_usd}
+                c={c}
+              />
+            )}
+          </div>
 
-        <div className="mt-4 pt-3 border-t border-[var(--color-border)] flex items-center justify-between gap-2 text-[11.5px] text-[var(--color-text-muted)]">
-          <span className="inline-flex items-center gap-1.5">
-            <Info size={11} />
-            {c.revparHint}
-          </span>
-          <a
-            href="https://estatemarket.io/booking_data-map"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 hover:text-[var(--color-primary)] no-underline"
-          >
-            {c.sourceTitle}: {c.estateMarket}
-            <ExternalLink size={10} />
-          </a>
+          <div className="pt-2 border-t border-[var(--color-border)] flex items-center justify-between gap-2 text-[11.5px] text-[var(--color-text-muted)]">
+            <span className="inline-flex items-center gap-1.5">
+              <Info size={11} />
+              {c.revparHint}
+            </span>
+            <a
+              href="https://estatemarket.io/booking_data-map"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 hover:text-[var(--color-primary)] no-underline"
+            >
+              {c.sourceTitle}: {c.estateMarket}
+              <ExternalLink size={10} />
+            </a>
+          </div>
         </div>
-      </div>
+      )}
     </section>
   )
 }
-
-// Widen literal-string fields so EN values fit the same shape.
-type Copy = { [K in keyof (typeof COPY)['ru']]: (typeof COPY)['ru'][K] extends (...args: infer A) => infer R ? (...args: A) => R : string }
 
 function SegmentCard({
   icon: Icon, label, count, occ, adr, revpar, c,
