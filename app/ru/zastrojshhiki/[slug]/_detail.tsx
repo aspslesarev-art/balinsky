@@ -22,6 +22,7 @@ import { loadVideosByDeveloperWithComplexes } from '@/lib/videos'
 import { VideoGrid } from '@/components/VideoGrid'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { tField, type Lang } from '@/lib/i18n'
+import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
@@ -58,13 +59,16 @@ function parseBullets(s: string | null): string[] {
 // Next to drop the cache slot and retry on the next request.
 export const _loadAllDevelopers = unstable_cache(
   async (): Promise<DeveloperRow[]> => {
-    const { data, error } = await sb.from('raw_developers').select('airtable_id, data, logo_url').limit(200)
+    const [{ data, error }, enCache] = await Promise.all([
+      sb.from('raw_developers').select('airtable_id, data, logo_url').limit(200),
+      loadEnTranslations('developers'),
+    ])
     if (error) throw new Error(`raw_developers: ${error.message}`)
     const rows = (data as DeveloperRow[] | null) ?? []
     if (rows.length === 0) throw new Error('raw_developers returned 0 rows — refusing to cache empty')
-    return rows
+    return rows.map(r => ({ ...r, data: mergeEnTranslations(r.data, r.airtable_id, enCache) }))
   },
-  ['developers-all-v2'],
+  ['developers-all-v3'],
   { revalidate: 600 },
 )
 

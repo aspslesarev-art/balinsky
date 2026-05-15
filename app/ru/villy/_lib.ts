@@ -4,6 +4,7 @@ import type { Option } from '@/components/filters/MultiSelectFilter'
 import { translit, hasCyrillic } from '@/lib/translit'
 import { loadVillaStyles } from '@/lib/villa-styles'
 import { normalizeSlug } from '@/lib/slug-normalize'
+import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/villa-photos/_manifest.json`
@@ -551,14 +552,16 @@ let _cache: { ts: number; data: CachedAll } | null = null
 let _inflight: Promise<CachedAll> | null = null
 
 async function _loadAllInternal(): Promise<CachedAll> {
-  const [rowsRes, manifest, styles] = await Promise.all([
+  const [rowsRes, manifest, styles, enCache] = await Promise.all([
     sb.from('raw_villas').select('airtable_id, data').limit(1000),
     loadJson<Record<string, string[]>>(PHOTO_MANIFEST_URL, {}),
     loadVillaStyles(),
+    loadEnTranslations('villas'),
   ])
   const rows = (rowsRes.data ?? []) as Row[]
   const enriched = rows
     .filter(r => r.data?.['Опубликовать'] === true)
+    .map(r => ({ ...r, data: mergeEnTranslations(r.data, r.airtable_id, enCache) }))
     .map(r => enrich(r, styles))
   return { enriched, manifest }
 }

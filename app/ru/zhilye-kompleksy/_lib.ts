@@ -3,6 +3,7 @@ import Fuse from 'fuse.js'
 import type { ComplexCardData } from '@/components/ComplexCard'
 import type { Option } from '@/components/filters/MultiSelectFilter'
 import { translit, hasCyrillic } from '@/lib/translit'
+import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/complex-photos/_manifest.json`
@@ -510,13 +511,16 @@ function buildPriceIndex(complexes: EnrichedRow[], villas: { data: Record<string
 }
 
 async function _loadAllInternal(): Promise<CachedAll> {
-  const [rowsRes, manifest, villasRes, aptsRes] = await Promise.all([
+  const [rowsRes, manifest, villasRes, aptsRes, enCache] = await Promise.all([
     sb.from('raw_complexes').select('airtable_id, data, slug, cover_url').limit(500),
     loadJson<Record<string, string[]>>(PHOTO_MANIFEST_URL, {}),
     sb.from('raw_villas').select('data').limit(3000),
     sb.from('raw_apartments').select('data').limit(3000),
+    loadEnTranslations('complexes'),
   ])
-  const enriched = ((rowsRes.data ?? []) as Row[]).map(enrich)
+  const enriched = ((rowsRes.data ?? []) as Row[])
+    .map(r => ({ ...r, data: mergeEnTranslations(r.data, r.airtable_id, enCache) }))
+    .map(enrich)
   const prices = buildPriceIndex(
     enriched,
     (villasRes.data ?? []) as { data: Record<string, unknown> }[],
