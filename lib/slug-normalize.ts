@@ -47,23 +47,32 @@ const RU_TRANSLIT: Record<string, string> = {
   ч: 'ch', ш: 'sh', щ: 'shh', ъ: '', ы: 'y', ь: '', э: 'e', ю: 'yu', я: 'ya',
 }
 
+// Cyrillic letters that have NO visual Latin twin in the look-alike
+// table. Their presence in a slug means the source is real Russian
+// text (e.g. `переренан`, `комплекс`) — and the look-alike pass would
+// mangle it (`н` → `h` is visual but phonetically wrong). When any of
+// these appears, skip look-alikes and go straight to transliteration.
+const DEFINITELY_RUSSIAN_RE = /[бгджзийлпфцчшщъыьэюя]/i
+
 export function normalizeSlug(raw: string | null | undefined): string {
   if (!raw) return ''
-  // 1. Fold cyrillic look-alikes that are visually identical to Latin
-  //    letters. After this step, a "lone cyrillic letter inside a
-  //    Latin word" disappears — `сanggu` → `canggu` — and the rest
-  //    of any genuine Russian text falls through to the transliterator.
-  let s = ''
-  for (const ch of raw) s += CYRILLIC_LATIN_LOOKALIKES[ch] ?? ch
-  // 2. Lowercase before transliteration so the table is half the size.
-  s = s.toLowerCase()
-  // 3. Russian transliteration for any cyrillic still standing.
-  let t = ''
-  for (const ch of s) t += RU_TRANSLIT[ch] ?? ch
-  // 4. Strip everything that isn't a-z0-9 or dash. Collapse runs of
+  const lowered = raw.toLowerCase()
+  // 1. Branch on text type. A slug that contains a clearly-Russian
+  //    letter goes straight to phonetic transliteration; a slug with
+  //    only look-alike-compatible cyrillic (or none) gets the visual
+  //    fold so `сanggu` → `canggu` instead of `sanggu`.
+  let folded: string
+  if (DEFINITELY_RUSSIAN_RE.test(lowered)) {
+    folded = ''
+    for (const ch of lowered) folded += RU_TRANSLIT[ch] ?? ch
+  } else {
+    folded = ''
+    for (const ch of lowered) folded += CYRILLIC_LATIN_LOOKALIKES[ch]?.toLowerCase() ?? ch
+  }
+  // 2. Strip everything that isn't a-z0-9 or dash. Collapse runs of
   //    dashes. Trim. Empty strings stay empty (caller decides whether
   //    that's a 404 or a fallback).
-  return t
+  return folded
     .replace(/[^a-z0-9-]+/g, '-')
     .replace(/-+/g, '-')
     .replace(/^-+|-+$/g, '')

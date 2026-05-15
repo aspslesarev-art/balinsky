@@ -70,7 +70,8 @@ async function loadDeveloperSlugs(): Promise<string[]> {
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date()
 
-  // Top-level pages
+  // Top-level pages (RU + EN). EN catalog uses flat /en/<section> listings
+  // (no dimensional filter URLs like RU has), so only the listing root.
   const top: MetadataRoute.Sitemap = [
     { url: `${SITE_URL}/ru`, lastModified: now, changeFrequency: 'daily', priority: 1.0 },
     { url: `${SITE_URL}/ru/apartamenty`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
@@ -82,89 +83,124 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/ru/akcii`, lastModified: now, changeFrequency: 'daily', priority: 0.7 },
     { url: `${SITE_URL}/ru/meropriyatiya`, lastModified: now, changeFrequency: 'daily', priority: 0.7 },
     { url: `${SITE_URL}/ru/znaniya`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
+    { url: `${SITE_URL}/en`, lastModified: now, changeFrequency: 'daily', priority: 1.0 },
+    { url: `${SITE_URL}/en/apartments`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
+    { url: `${SITE_URL}/en/complexes`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
+    { url: `${SITE_URL}/en/villas`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
+    { url: `${SITE_URL}/en/rental`, lastModified: now, changeFrequency: 'daily', priority: 0.8 },
+    { url: `${SITE_URL}/en/developers`, lastModified: now, changeFrequency: 'daily', priority: 0.8 },
+    { url: `${SITE_URL}/en/news`, lastModified: now, changeFrequency: 'daily', priority: 0.7 },
+    { url: `${SITE_URL}/en/promo`, lastModified: now, changeFrequency: 'daily', priority: 0.7 },
+    { url: `${SITE_URL}/en/events`, lastModified: now, changeFrequency: 'daily', priority: 0.7 },
+    { url: `${SITE_URL}/en/knowledge`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
+    { url: `${SITE_URL}/en/about`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${SITE_URL}/en/how-to-buy`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${SITE_URL}/en/invest-tour`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
   ]
+
+  // One-shot data load — shared between filter routes, RU/EN detail routes
+  // and the developer list. Earlier versions loaded the same manifests twice.
+  let vData: Awaited<ReturnType<typeof loadAllVillas>> | null = null
+  let aData: Awaited<ReturnType<typeof loadAllApartments>> | null = null
+  let cData: Awaited<ReturnType<typeof loadAllComplexes>> | null = null
+  let newsRows: Awaited<ReturnType<typeof loadAllNews>> = []
+  let promoRows: Awaited<ReturnType<typeof loadAllPromo>> = []
+  let eventsRows: Awaited<ReturnType<typeof loadAllEvents>> = []
+  let knowledgeRows: Awaited<ReturnType<typeof loadAllKnowledge>> = []
+  let rentalRows: Awaited<ReturnType<typeof loadAllRental>> = []
+  let devSlugs: string[] = []
+  try {
+    ;[vData, aData, cData, newsRows, promoRows, eventsRows, knowledgeRows, rentalRows, devSlugs] = await Promise.all([
+      loadAllVillas(), loadAllApartments(), loadAllComplexes(),
+      loadAllNews(), loadAllPromo(), loadAllEvents(), loadAllKnowledge(), loadAllRental(),
+      loadDeveloperSlugs(),
+    ])
+  } catch {
+    // Best-effort — partial sitemap still ships.
+  }
 
   // Filter-canonical pages — drop combos with < MIN_OBJECTS_PER_FILTER_PAGE
   // matches so Google doesn't see thin/empty filter pages.
   let apartments: MetadataRoute.Sitemap = []
   let complexes: MetadataRoute.Sitemap = []
   let villas: MetadataRoute.Sitemap = []
-  try {
-    const [aData, cData, vData] = await Promise.all([
-      loadAllApartments(), loadAllComplexes(), loadAllVillas(),
-    ])
+  if (vData && aData && cData) {
     apartments = filterIndexablePaths(listApartmentPaths(), '/ru/apartamenty', aData.enriched, parseAptPath, apartmentPasses)
       .map(path => ({ url: `${SITE_URL}${path}`, lastModified: now, changeFrequency: 'weekly' as const, priority: 0.7 }))
     complexes = filterIndexablePaths(listComplexPaths(), '/ru/zhilye-kompleksy', cData.enriched, parseComplexPath, complexPasses)
       .map(path => ({ url: `${SITE_URL}${path}`, lastModified: now, changeFrequency: 'weekly' as const, priority: 0.7 }))
     villas = filterIndexablePaths(listVillaPaths(), '/ru/villy', vData.enriched, parseVillaPath, villaPasses)
       .map(path => ({ url: `${SITE_URL}${path}`, lastModified: now, changeFrequency: 'weekly' as const, priority: 0.7 }))
-  } catch {
-    // Fall back to the unfiltered list if data load fails — better
-    // partial sitemap than empty filter section.
+  } else {
+    // Fall back to the unfiltered list if data load failed.
     apartments = listApartmentPaths().map(path => ({ url: `${SITE_URL}${path}`, lastModified: now, changeFrequency: 'weekly' as const, priority: 0.7 }))
     complexes = listComplexPaths().map(path => ({ url: `${SITE_URL}${path}`, lastModified: now, changeFrequency: 'weekly' as const, priority: 0.7 }))
     villas = listVillaPaths().map(path => ({ url: `${SITE_URL}${path}`, lastModified: now, changeFrequency: 'weekly' as const, priority: 0.7 }))
   }
 
-  // Detail pages: news / promo / events / knowledge / rental
-  let news: MetadataRoute.Sitemap = []
-  let promo: MetadataRoute.Sitemap = []
-  let events: MetadataRoute.Sitemap = []
-  let knowledge: MetadataRoute.Sitemap = []
-  let rental: MetadataRoute.Sitemap = []
-  let developers: MetadataRoute.Sitemap = []
-  try {
-    const [n, p, e, k, r, devSlugs] = await Promise.all([loadAllNews(), loadAllPromo(), loadAllEvents(), loadAllKnowledge(), loadAllRental(), loadDeveloperSlugs()])
-    news = n.map(x => ({
-      url: `${SITE_URL}/ru/novosti/${x.slug}`,
-      lastModified: x.date ? new Date(x.date) : now,
-      changeFrequency: 'monthly' as const,
-      priority: 0.6,
-    }))
-    promo = p.map(x => ({
-      url: `${SITE_URL}/ru/akcii/${x.slug}`,
-      lastModified: x.expiresAt ? new Date(x.expiresAt) : now,
-      changeFrequency: 'weekly' as const,
-      priority: 0.5,
-    }))
-    events = e.map(x => ({
-      url: `${SITE_URL}/ru/meropriyatiya/${x.slug}`,
-      lastModified: x.startsAt ? new Date(x.startsAt) : now,
-      changeFrequency: 'weekly' as const,
-      priority: 0.5,
-    }))
-    knowledge = k.map(x => ({
-      url: `${SITE_URL}/ru/znaniya/${x.slug}`,
-      lastModified: x.createdTime ? new Date(x.createdTime) : now,
-      changeFrequency: 'monthly' as const,
-      priority: 0.5,
-    }))
-    // Every rental we ever published — even old listings keep their detail
-    // page alive (loadRentalBySlug is no longer fresh-only) so the URLs
-    // stay indexable and inbound links from the comparison block still work.
-    rental = r.map(x => ({
-      url: `${SITE_URL}/ru/arenda/o/${x.slug}`,
-      lastModified: x.updatedAt ? new Date(x.updatedAt) : (x.createdTime ? new Date(x.createdTime) : now),
-      changeFrequency: 'monthly' as const,
-      priority: 0.5,
-    }))
-    // Each developer landing page — high commercial value
-    // ("купить квартиру у [застройщик]"), previously missing from the
-    // sitemap entirely.
-    developers = devSlugs.map(slug => ({
-      url: `${SITE_URL}/ru/zastrojshhiki/${slug}`,
-      lastModified: now,
-      changeFrequency: 'weekly' as const,
-      priority: 0.7,
-    }))
-  } catch {
-    // If manifests are unavailable at build time, ship sitemap without those.
+  // Object detail pages /o/<slug>. Previously absent from the sitemap
+  // entirely for villas/apartments/complexes — Google had to discover them
+  // via internal links from filter routes. Each gets a RU + EN URL.
+  type WithSlug = { slug?: unknown }
+  const slugOf = (e: WithSlug): string | null => (typeof e.slug === 'string' ? e.slug : null)
+  const objectDetails: MetadataRoute.Sitemap = []
+  const emitObjectPair = (enriched: WithSlug[] | undefined, ruSection: string, enSection: string) => {
+    for (const e of enriched ?? []) {
+      const s = slugOf(e); if (!s) continue
+      objectDetails.push({ url: `${SITE_URL}/ru/${ruSection}/o/${s}`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 })
+      objectDetails.push({ url: `${SITE_URL}/en/${enSection}/o/${s}`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 })
+    }
+  }
+  emitObjectPair(vData?.enriched as WithSlug[] | undefined, 'villy', 'villas')
+  emitObjectPair(aData?.enriched as WithSlug[] | undefined, 'apartamenty', 'apartments')
+  emitObjectPair(cData?.enriched as WithSlug[] | undefined, 'zhilye-kompleksy', 'complexes')
+
+  // News / promo / events / knowledge / rental / developers — RU + EN.
+  const news: MetadataRoute.Sitemap = []
+  for (const x of newsRows) {
+    const lm = x.date ? new Date(x.date) : now
+    news.push({ url: `${SITE_URL}/ru/novosti/${x.slug}`, lastModified: lm, changeFrequency: 'monthly', priority: 0.6 })
+    news.push({ url: `${SITE_URL}/en/news/${x.slug}`,    lastModified: lm, changeFrequency: 'monthly', priority: 0.6 })
+  }
+  const promo: MetadataRoute.Sitemap = []
+  for (const x of promoRows) {
+    const lm = x.expiresAt ? new Date(x.expiresAt) : now
+    promo.push({ url: `${SITE_URL}/ru/akcii/${x.slug}`, lastModified: lm, changeFrequency: 'weekly', priority: 0.5 })
+    promo.push({ url: `${SITE_URL}/en/promo/${x.slug}`, lastModified: lm, changeFrequency: 'weekly', priority: 0.5 })
+  }
+  const events: MetadataRoute.Sitemap = []
+  for (const x of eventsRows) {
+    const lm = x.startsAt ? new Date(x.startsAt) : now
+    events.push({ url: `${SITE_URL}/ru/meropriyatiya/${x.slug}`, lastModified: lm, changeFrequency: 'weekly', priority: 0.5 })
+    events.push({ url: `${SITE_URL}/en/events/${x.slug}`,         lastModified: lm, changeFrequency: 'weekly', priority: 0.5 })
+  }
+  const knowledge: MetadataRoute.Sitemap = []
+  for (const x of knowledgeRows) {
+    const lm = x.createdTime ? new Date(x.createdTime) : now
+    knowledge.push({ url: `${SITE_URL}/ru/znaniya/${x.slug}`,  lastModified: lm, changeFrequency: 'monthly', priority: 0.5 })
+    knowledge.push({ url: `${SITE_URL}/en/knowledge/${x.slug}`, lastModified: lm, changeFrequency: 'monthly', priority: 0.5 })
+  }
+  // Every rental we ever published — even old listings keep their detail
+  // page alive (loadRentalBySlug is no longer fresh-only) so the URLs
+  // stay indexable and inbound links from the comparison block still work.
+  const rental: MetadataRoute.Sitemap = []
+  for (const x of rentalRows) {
+    const lm = x.updatedAt ? new Date(x.updatedAt) : (x.createdTime ? new Date(x.createdTime) : now)
+    rental.push({ url: `${SITE_URL}/ru/arenda/o/${x.slug}`, lastModified: lm, changeFrequency: 'monthly', priority: 0.5 })
+    rental.push({ url: `${SITE_URL}/en/rental/o/${x.slug}`, lastModified: lm, changeFrequency: 'monthly', priority: 0.5 })
+  }
+  // Each developer landing page — high commercial value
+  // ("купить квартиру у [застройщик]"), previously missing from the
+  // sitemap entirely.
+  const developers: MetadataRoute.Sitemap = []
+  for (const slug of devSlugs) {
+    developers.push({ url: `${SITE_URL}/ru/zastrojshhiki/${slug}`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 })
+    developers.push({ url: `${SITE_URL}/en/developers/${slug}`,    lastModified: now, changeFrequency: 'weekly', priority: 0.7 })
   }
 
   // Dedupe by URL (top-level pages may also be in section listings)
   const seen = new Set<string>()
-  const all = [...top, ...apartments, ...complexes, ...villas, ...developers, ...news, ...promo, ...events, ...knowledge, ...rental]
+  const all = [...top, ...apartments, ...complexes, ...villas, ...objectDetails, ...developers, ...news, ...promo, ...events, ...knowledge, ...rental]
   return all.filter(entry => {
     if (seen.has(entry.url)) return false
     seen.add(entry.url)
