@@ -11,6 +11,7 @@ import { loadAllPromo } from '@/lib/promo'
 import { loadAllEvents } from '@/lib/events'
 import { loadAllKnowledge } from '@/lib/knowledge'
 import { loadAllRental } from '@/lib/rental'
+import { normalizeSlug } from '@/lib/slug-normalize'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
@@ -141,19 +142,39 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Object detail pages /o/<slug>. Previously absent from the sitemap
   // entirely for villas/apartments/complexes — Google had to discover them
   // via internal links from filter routes. Each gets a RU + EN URL.
-  type WithSlug = { slug?: unknown }
-  const slugOf = (e: WithSlug): string | null => (typeof e.slug === 'string' ? e.slug : null)
+  // Villa/apartment EnrichedRow carries the Airtable row in `data`; the
+  // canonical slug lives under `data['SEO:Slug']`. Complex EnrichedRow
+  // hoists `slug` to the top level. Handle both shapes.
+  type EnrichedLike = { slug?: unknown; data?: Record<string, unknown> }
+  const slugOf = (e: EnrichedLike): string | null => {
+    if (typeof e.slug === 'string' && e.slug) {
+      const s = normalizeSlug(e.slug)
+      return s && !s.startsWith('-') ? s : null
+    }
+    const raw = e.data?.['SEO:Slug']
+    const str = typeof raw === 'string'
+      ? raw
+      : (raw && typeof raw === 'object' && 'value' in raw && typeof (raw as { value: unknown }).value === 'string')
+        ? (raw as { value: string }).value
+        : null
+    if (!str) return null
+    const s = normalizeSlug(str)
+    return s && !s.startsWith('-') ? s : null
+  }
   const objectDetails: MetadataRoute.Sitemap = []
-  const emitObjectPair = (enriched: WithSlug[] | undefined, ruSection: string, enSection: string) => {
+  const emitObjectPair = (enriched: EnrichedLike[] | undefined, ruSection: string, enSection: string) => {
+    const seenSlug = new Set<string>()
     for (const e of enriched ?? []) {
       const s = slugOf(e); if (!s) continue
+      if (seenSlug.has(s)) continue
+      seenSlug.add(s)
       objectDetails.push({ url: `${SITE_URL}/ru/${ruSection}/o/${s}`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 })
       objectDetails.push({ url: `${SITE_URL}/en/${enSection}/o/${s}`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 })
     }
   }
-  emitObjectPair(vData?.enriched as WithSlug[] | undefined, 'villy', 'villas')
-  emitObjectPair(aData?.enriched as WithSlug[] | undefined, 'apartamenty', 'apartments')
-  emitObjectPair(cData?.enriched as WithSlug[] | undefined, 'zhilye-kompleksy', 'complexes')
+  emitObjectPair(vData?.enriched as EnrichedLike[] | undefined, 'villy', 'villas')
+  emitObjectPair(aData?.enriched as EnrichedLike[] | undefined, 'apartamenty', 'apartments')
+  emitObjectPair(cData?.enriched as EnrichedLike[] | undefined, 'zhilye-kompleksy', 'complexes')
 
   // News / promo / events / knowledge / rental / developers — RU + EN.
   const news: MetadataRoute.Sitemap = []
