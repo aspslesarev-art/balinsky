@@ -754,9 +754,19 @@ export function buildMetadataEn(
 ) {
   const title = buildTitleEn(f)
   const description = buildDescriptionEn(f, opts.totalCount)
+  const isSectionRoot = opts.canonicalPath === '/en/villas'
   return {
     title, description,
-    alternates: { canonical: opts.canonicalPath },
+    alternates: isSectionRoot
+      ? {
+        canonical: opts.canonicalPath,
+        languages: {
+          ru: '/ru/villy',
+          en: '/en/villas',
+          'x-default': '/ru/villy',
+        },
+      }
+      : { canonical: opts.canonicalPath },
     robots: opts.noIndex ? { index: false, follow: true } : { index: true, follow: true },
     openGraph: { title, description, type: 'website' as const, url: opts.canonicalPath },
     twitter: { card: 'summary_large_image' as const, title, description },
@@ -796,10 +806,20 @@ export function buildMetadata(
 ) {
   const title = buildTitle(f)
   const description = buildDescription(f, opts.totalCount)
+  const isSectionRoot = opts.canonicalPath === '/ru/villy'
   return {
     title,
     description,
-    alternates: { canonical: opts.canonicalPath },
+    alternates: isSectionRoot
+      ? {
+        canonical: opts.canonicalPath,
+        languages: {
+          ru: '/ru/villy',
+          en: '/en/villas',
+          'x-default': '/ru/villy',
+        },
+      }
+      : { canonical: opts.canonicalPath },
     robots: opts.noIndex
       ? { index: false, follow: true }
       : { index: true, follow: true },

@@ -44,7 +44,7 @@ export async function generatePromoDetailMetadata(slug: string, lang: Lang): Pro
     description: p.seoDescription ?? (p.body?.slice(0, 160) ?? p.title),
     alternates: {
       canonical: path,
-      languages: { ru: `${SITE_URL}${ruPath}`, en: `${SITE_URL}${enPath}` },
+      languages: { ru: `${SITE_URL}${ruPath}`, en: `${SITE_URL}${enPath}` , 'x-default': `${SITE_URL}${ruPath}`},
     },
     openGraph: {
       title: p.title,

@@ -30,7 +30,7 @@ export async function generateKnowledgeDetailMetadata(slug: string, lang: Lang):
     description: k.body.slice(0, 160).replace(/\s+/g, ' ').trim(),
     alternates: {
       canonical: path,
-      languages: { ru: `${SITE_URL}${ruPath}`, en: `${SITE_URL}${enPath}` },
+      languages: { ru: `${SITE_URL}${ruPath}`, en: `${SITE_URL}${enPath}` , 'x-default': `${SITE_URL}${ruPath}`},
     },
     openGraph: {
       title: k.title,

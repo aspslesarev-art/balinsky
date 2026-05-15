@@ -38,6 +38,7 @@ export function generateRentalListMetadata(lang: Lang): Metadata {
       languages: {
         ru: `https://balinsky.info${ruPath}`,
         en: `https://balinsky.info${enPath}`,
+        'x-default': `https://balinsky.info${ruPath}`,
       },
     },
   }

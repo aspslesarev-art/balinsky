@@ -258,7 +258,7 @@ export async function generateDeveloperMetadata(slug: string, lang: Lang) {
     title, description,
     alternates: {
       canonical: path,
-      languages: { ru: `${SITE_URL}${ruPath}`, en: `${SITE_URL}${enPath}` },
+      languages: { ru: `${SITE_URL}${ruPath}`, en: `${SITE_URL}${enPath}` , 'x-default': `${SITE_URL}${ruPath}`},
     },
     openGraph: {
       title: lang === 'en' ? `${name} — Bali property developer` : `${name} — застройщик на Бали`,

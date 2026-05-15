@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: 'What "reserve" means on Bali: 14-day hold, $2–10k holding deposit, where the deposit sits, how refunds work, reservation form vs SPA.',
   alternates: {
     canonical: '/en/reservation',
-    languages: { ru: `${SITE_URL}/ru/rezervirovanie`, en: `${SITE_URL}/en/reservation` },
+    languages: { ru: `${SITE_URL}/ru/rezervirovanie`, en: `${SITE_URL}/en/reservation` , 'x-default': `${SITE_URL}/ru/rezervirovanie`},
   },
   openGraph: {
     title: 'How a Bali property reservation works',

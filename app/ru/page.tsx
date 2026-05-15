@@ -8,7 +8,7 @@ export const metadata = {
     'Каталог недвижимости Бали с фото, ценами и фильтрами. Виллы, апартаменты, жилые комплексы и проверенные застройщики. Свежие новости, акции и мероприятия.',
   alternates: {
     canonical: '/ru',
-    languages: { ru: '/ru', en: '/en' },
+    languages: { ru: '/ru', en: '/en', 'x-default': '/ru' },
   },
   openGraph: {
     title: 'Balinsky — недвижимость на Бали',

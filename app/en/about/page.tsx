@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: 'Balinsky is a Bali property catalogue for foreign buyers: verified documents, on-the-ground video, real managers with photos and spoken languages. Live numbers, who runs the site, our editorial standards.',
   alternates: {
     canonical: '/en/about',
-    languages: { ru: `${SITE_URL}/ru/o-balinsky`, en: `${SITE_URL}/en/about` },
+    languages: { ru: `${SITE_URL}/ru/o-balinsky`, en: `${SITE_URL}/en/about` , 'x-default': `${SITE_URL}/ru/o-balinsky`},
   },
   openGraph: {
     title: 'About Balinsky',

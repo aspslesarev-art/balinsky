@@ -46,7 +46,7 @@ export async function generateNewsDetailMetadata(slug: string, lang: Lang): Prom
     description: n.seoDescription ?? (n.body?.slice(0, 160) ?? n.title),
     alternates: {
       canonical: path,
-      languages: { ru: `${SITE_URL}${ruPath}`, en: `${SITE_URL}${enPath}` },
+      languages: { ru: `${SITE_URL}${ruPath}`, en: `${SITE_URL}${enPath}` , 'x-default': `${SITE_URL}${ruPath}`},
     },
     openGraph: {
       title: n.title,

@@ -510,7 +510,7 @@ export async function generateComplexMetadata(slug: string, lang: Lang) {
     description,
     alternates: {
       canonical: path,
-      languages: { ru: `${SITE_URL}${ruPath}`, en: `${SITE_URL}${enPath}` },
+      languages: { ru: `${SITE_URL}${ruPath}`, en: `${SITE_URL}${enPath}` , 'x-default': `${SITE_URL}${ruPath}`},
     },
     openGraph: {
       title: copy.ogTitle(name),

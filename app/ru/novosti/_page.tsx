@@ -43,7 +43,7 @@ export function generateNewsListMetadata(lang: Lang): Metadata {
     description: c.description,
     alternates: {
       canonical: path,
-      languages: { ru: `https://balinsky.info${ruPath}`, en: `https://balinsky.info${enPath}` },
+      languages: { ru: `https://balinsky.info${ruPath}`, en: `https://balinsky.info${enPath}` , 'x-default': `https://balinsky.info${ruPath}`},
     },
   }
 }

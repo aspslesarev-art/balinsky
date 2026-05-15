@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   keywords: ['Bali property tour', 'Bali real estate investment tour', 'buy villa Bali', 'Bali property foreigner', 'leasehold Bali', 'PT PMA Bali property'],
   alternates: {
     canonical: '/en/invest-tour',
-    languages: { ru: `${SITE_URL}/ru/invest-tour`, en: `${SITE_URL}/en/invest-tour` },
+    languages: { ru: `${SITE_URL}/ru/invest-tour`, en: `${SITE_URL}/en/invest-tour` , 'x-default': `${SITE_URL}/ru/invest-tour`},
   },
   openGraph: {
     title: 'Bali property investment tour',

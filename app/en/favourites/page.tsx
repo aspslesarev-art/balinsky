@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: 'Shortlist and side-by-side comparison of Bali villas, apartments and residential complexes — price, area, leasehold, permits and claimed yield in one table.',
   alternates: {
     canonical: '/en/favourites',
-    languages: { ru: `${SITE_URL}/ru/izbrannoe`, en: `${SITE_URL}/en/favourites` },
+    languages: { ru: `${SITE_URL}/ru/izbrannoe`, en: `${SITE_URL}/en/favourites` , 'x-default': `${SITE_URL}/ru/izbrannoe`},
   },
 }
 

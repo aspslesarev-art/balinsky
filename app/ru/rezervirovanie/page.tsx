@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: 'Что значит «зарезервировать» на Бали: 14-дневный hold, holding deposit $2-10k, где сидит депозит, как возвращаются деньги, отличие reservation form от SPA.',
   alternates: {
     canonical: '/ru/rezervirovanie',
-    languages: { ru: `${SITE_URL}/ru/rezervirovanie`, en: `${SITE_URL}/en/reservation` },
+    languages: { ru: `${SITE_URL}/ru/rezervirovanie`, en: `${SITE_URL}/en/reservation` , 'x-default': `${SITE_URL}/ru/rezervirovanie`},
   },
   openGraph: {
     title: 'Бронирование объекта на Бали',

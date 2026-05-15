@@ -635,9 +635,23 @@ export function buildDescriptionEn(f: FilterState, totalCount?: number): string 
 export function buildMetadataEn(f: FilterState, opts: { canonicalPath: string; noIndex: boolean; totalCount?: number }) {
   const title = buildTitleEn(f)
   const description = buildDescriptionEn(f, opts.totalCount)
+  // Section-root canonical (`/en/apartments`) has a RU twin we can point
+  // hreflang at; deeper filter combos are EN-only on the site, so we skip
+  // languages for those — pointing Google at a Russian filter combo that
+  // doesn't have an EN equivalent would create false duplicates.
+  const isSectionRoot = opts.canonicalPath === '/en/apartments'
   return {
     title, description,
-    alternates: { canonical: opts.canonicalPath },
+    alternates: isSectionRoot
+      ? {
+        canonical: opts.canonicalPath,
+        languages: {
+          ru: '/ru/apartamenty',
+          en: '/en/apartments',
+          'x-default': '/ru/apartamenty',
+        },
+      }
+      : { canonical: opts.canonicalPath },
     robots: opts.noIndex ? { index: false, follow: true } : { index: true, follow: true },
     openGraph: { title, description, type: 'website' as const, url: opts.canonicalPath },
     twitter: { card: 'summary_large_image' as const, title, description },
@@ -669,10 +683,20 @@ export function buildDescription(f: FilterState, totalCount?: number): string {
 export function buildMetadata(f: FilterState, opts: { canonicalPath: string; noIndex: boolean; totalCount?: number }) {
   const title = buildTitle(f)
   const description = buildDescription(f, opts.totalCount)
+  const isSectionRoot = opts.canonicalPath === '/ru/apartamenty'
   return {
     title,
     description,
-    alternates: { canonical: opts.canonicalPath },
+    alternates: isSectionRoot
+      ? {
+        canonical: opts.canonicalPath,
+        languages: {
+          ru: '/ru/apartamenty',
+          en: '/en/apartments',
+          'x-default': '/ru/apartamenty',
+        },
+      }
+      : { canonical: opts.canonicalPath },
     robots: opts.noIndex
       ? { index: false, follow: true }
       : { index: true, follow: true },

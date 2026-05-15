@@ -8,7 +8,7 @@ export const metadata = {
     'Bali real-estate catalog with photos, prices and filters. Villas, apartments, residential complexes and verified developers. Fresh news, promotions and events.',
   alternates: {
     canonical: '/en',
-    languages: { ru: '/ru', en: '/en' },
+    languages: { ru: '/ru', en: '/en' , 'x-default': '/ru'},
   },
   openGraph: {
     title: 'Balinsky — Bali real estate',

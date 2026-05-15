@@ -666,10 +666,20 @@ export function buildMetadataEn(
 ) {
   const title = buildTitleEn(f)
   const description = buildDescriptionEn(f, opts.totalCount)
+  const isSectionRoot = opts.canonicalPath === '/en/complexes'
   return {
     title,
     description,
-    alternates: { canonical: opts.canonicalPath },
+    alternates: isSectionRoot
+      ? {
+        canonical: opts.canonicalPath,
+        languages: {
+          ru: '/ru/zhilye-kompleksy',
+          en: '/en/complexes',
+          'x-default': '/ru/zhilye-kompleksy',
+        },
+      }
+      : { canonical: opts.canonicalPath },
     robots: opts.noIndex ? { index: false, follow: true } : { index: true, follow: true },
     openGraph: { title, description, type: 'website' as const, url: opts.canonicalPath },
     twitter: { card: 'summary_large_image' as const, title, description },
@@ -697,10 +707,20 @@ export function buildMetadata(
 ) {
   const title = buildTitle(f)
   const description = buildDescription(f, opts.totalCount)
+  const isSectionRoot = opts.canonicalPath === '/ru/zhilye-kompleksy'
   return {
     title,
     description,
-    alternates: { canonical: opts.canonicalPath },
+    alternates: isSectionRoot
+      ? {
+        canonical: opts.canonicalPath,
+        languages: {
+          ru: '/ru/zhilye-kompleksy',
+          en: '/en/complexes',
+          'x-default': '/ru/zhilye-kompleksy',
+        },
+      }
+      : { canonical: opts.canonicalPath },
     robots: opts.noIndex
       ? { index: false, follow: true }
       : { index: true, follow: true },

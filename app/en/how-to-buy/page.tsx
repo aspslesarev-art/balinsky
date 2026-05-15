@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: 'Step-by-step guide to buying a villa or apartment in Bali: leasehold and PT PMA, due diligence, PPAT notary, taxes and fees, common mistakes. Real timelines and numbers.',
   alternates: {
     canonical: '/en/how-to-buy',
-    languages: { ru: `${SITE_URL}/ru/kak-kupit`, en: `${SITE_URL}/en/how-to-buy` },
+    languages: { ru: `${SITE_URL}/ru/kak-kupit`, en: `${SITE_URL}/en/how-to-buy` , 'x-default': `${SITE_URL}/ru/kak-kupit`},
   },
   openGraph: {
     title: 'Buying property in Bali as a foreigner',

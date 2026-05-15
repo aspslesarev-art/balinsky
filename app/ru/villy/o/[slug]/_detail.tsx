@@ -427,7 +427,7 @@ export async function generateVillaMetadata(slug: string, lang: Lang) {
     description,
     alternates: {
       canonical: path,
-      languages: { ru: `${SITE_URL}${ruPath}`, en: `${SITE_URL}${enPath}` },
+      languages: { ru: `${SITE_URL}${ruPath}`, en: `${SITE_URL}${enPath}` , 'x-default': `${SITE_URL}${ruPath}`},
     },
     openGraph: { title, description, type: 'website' as const, url: `${SITE_URL}${path}` },
   }

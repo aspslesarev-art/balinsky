@@ -6,7 +6,14 @@ export const metadata = {
   title: 'Застройщики на Бали — каталог девелоперов недвижимости 2026 | Balinsky',
   description:
     'Каталог застройщиков Бали с действующими проектами: виллы, апартаменты, жилые комплексы. Сравнение по рейтингу, надёжности, управляющей компании. 80+ компаний.',
-  alternates: { canonical: '/ru/zastrojshhiki' },
+  alternates: {
+    canonical: '/ru/zastrojshhiki',
+    languages: {
+      ru: '/ru/zastrojshhiki',
+      en: '/en/developers',
+      'x-default': '/ru/zastrojshhiki',
+    },
+  },
   openGraph: {
     title: 'Застройщики на Бали — каталог девелоперов 2026 | Balinsky',
     description: 'Каталог застройщиков Бали: рейтинги, репутация, проекты, управляющие компании.',
