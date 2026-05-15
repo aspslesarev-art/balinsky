@@ -15,6 +15,13 @@ export const metadata = {
     description: 'Виллы, апартаменты и жилые комплексы Бали. Проверенные застройщики.',
     type: 'website',
     url: '/ru',
+    images: [{ url: '/balina.jpg', width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Balinsky — недвижимость на Бали',
+    description: 'Виллы, апартаменты и жилые комплексы Бали. Проверенные застройщики.',
+    images: ['/balina.jpg'],
   },
 }
 

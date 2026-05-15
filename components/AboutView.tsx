@@ -104,10 +104,13 @@ const COPY = {
 
 async function loadCounts() {
   const [v, a, c, d, mgrs] = await Promise.all([
-    sb.from('raw_villas').select('airtable_id', { count: 'exact', head: true }),
-    sb.from('raw_apartments').select('airtable_id', { count: 'exact', head: true }),
+    // Filter on the same `Опубликовать` / `Публикация` flags HomePage uses
+    // so the counts on / and /о-balinsky never diverge — auditors flagged
+    // 828 (home) vs 1272 (about) when this page counted drafts too.
+    sb.from('raw_villas').select('airtable_id', { count: 'exact', head: true }).eq('data->>Опубликовать', 'true' as unknown as string),
+    sb.from('raw_apartments').select('airtable_id', { count: 'exact', head: true }).eq('data->>Опубликовать', 'true' as unknown as string),
     sb.from('raw_complexes').select('airtable_id', { count: 'exact', head: true }),
-    sb.from('raw_developers').select('airtable_id', { count: 'exact', head: true }),
+    sb.from('raw_developers').select('airtable_id', { count: 'exact', head: true }).eq('data->>Публикация', 'true' as unknown as string),
     loadAllManagers(),
   ])
   return {

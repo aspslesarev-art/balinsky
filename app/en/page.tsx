@@ -15,6 +15,13 @@ export const metadata = {
     description: 'Villas, apartments and residential complexes in Bali. Verified developers.',
     type: 'website',
     url: '/en',
+    images: [{ url: '/balina.jpg', width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Balinsky — Bali real estate',
+    description: 'Villas, apartments and residential complexes in Bali. Verified developers.',
+    images: ['/balina.jpg'],
   },
 }
 
