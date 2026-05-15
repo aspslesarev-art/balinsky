@@ -36,6 +36,7 @@ import { loadComplexMarketStats } from '@/lib/complex-market-stats'
 import { MarketStatsBlock } from '@/components/MarketStatsBlock'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { tField, type Lang } from '@/lib/i18n'
+import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
 
 const AIRPORT_LAT = -8.7467
 const AIRPORT_LNG = 115.1667
@@ -313,8 +314,16 @@ const _complexByIdCache = new Map<string, { ts: number; row: ComplexRow | null }
 async function _loadComplexById(id: string): Promise<ComplexRow | null> {
   const c = _complexByIdCache.get(id)
   if (c && Date.now() - c.ts < 5 * 60 * 1000) return c.row
-  const { data } = await sb.from('raw_complexes').select('airtable_id, data, slug, cover_url').eq('airtable_id', id).maybeSingle()
-  const row = (data as ComplexRow | null) ?? null
+  const [{ data }, enCache] = await Promise.all([
+    sb.from('raw_complexes').select('airtable_id, data, slug, cover_url').eq('airtable_id', id).maybeSingle(),
+    loadEnTranslations('complexes'),
+  ])
+  const raw = (data as ComplexRow | null) ?? null
+  // Same hand-merge as villa/apartment detail loaders — detail page
+  // queries raw_complexes directly and bypasses loadAllComplexes.
+  const row: ComplexRow | null = raw
+    ? { ...raw, data: mergeEnTranslations(raw.data, raw.airtable_id, enCache) }
+    : null
   _complexByIdCache.set(id, { ts: Date.now(), row })
   return row
 }

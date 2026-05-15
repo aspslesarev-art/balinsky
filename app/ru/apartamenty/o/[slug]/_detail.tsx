@@ -34,6 +34,7 @@ import { InlinePrice } from '@/components/InlinePrice'
 import { VillaPresentationButton } from '@/components/VillaPresentation'
 import { tField, type Lang } from '@/lib/i18n'
 import { normalizeSlug } from '@/lib/slug-normalize'
+import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
 
 const AIRPORT_LAT = -8.7467
 const AIRPORT_LNG = 115.1667
@@ -184,14 +185,18 @@ async function _loadApartmentIndex(): Promise<AptIndexEntry[]> {
 }
 const _loadApartmentById = unstable_cache(
   async (id: string): Promise<Row | null> => {
-    const { data } = await sb
-      .from('raw_apartments')
-      .select('airtable_id, data')
-      .eq('airtable_id', id)
-      .maybeSingle()
-    return (data as Row | null) ?? null
+    const [{ data }, enCache] = await Promise.all([
+      sb.from('raw_apartments').select('airtable_id, data').eq('airtable_id', id).maybeSingle(),
+      loadEnTranslations('apartments'),
+    ])
+    const raw = (data as Row | null) ?? null
+    if (!raw) return null
+    // Mirror what the catalog loader does — merge cached EN translations
+    // into the row so tField() picks them up. Detail page never hits the
+    // catalog loadAllApartments, so the merge has to live here too.
+    return { ...raw, data: mergeEnTranslations(raw.data, raw.airtable_id, enCache) }
   },
-  ['apartment-by-id-detail'],
+  ['apartment-by-id-detail-v2'],
   { revalidate: 3600 },
 )
 const _loadAptManifest = unstable_cache(
