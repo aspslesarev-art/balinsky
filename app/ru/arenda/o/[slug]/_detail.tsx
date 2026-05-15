@@ -61,7 +61,7 @@ function parseContact(raw: string): { href: string; kind: 'telegram' | 'whatsapp
 }
 
 export async function generateRentalDetailMetadata(slug: string, lang: Lang): Promise<Metadata> {
-  const r = await loadRentalBySlug(slug)
+  const r = await loadRentalBySlug(slug, lang)
   if (!r) return { robots: { index: false, follow: false } }
   const c = COPY[lang]
   const desc = r.notes?.slice(0, 160) ?? c.metaFallback(r.type ?? null, r.location ?? null, fmtUsd(r.priceMonthUsd))
@@ -85,7 +85,7 @@ export async function generateRentalDetailMetadata(slug: string, lang: Lang): Pr
 }
 
 export async function RentalDetail({ slug, lang }: { slug: string; lang: Lang }) {
-  const r = await loadRentalBySlug(slug)
+  const r = await loadRentalBySlug(slug, lang)
   if (!r) notFound()
   const c = COPY[lang]
 

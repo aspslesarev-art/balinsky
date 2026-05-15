@@ -66,7 +66,7 @@ export async function RentalListShell({ initial, lang }: {
   initial: ReturnType<typeof parseRentalSP>
   lang: Lang
 }) {
-  const items = await loadFreshRental()
+  const items = await loadFreshRental(lang)
   const c = COPY[lang]
   return (
     <>

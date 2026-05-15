@@ -18,8 +18,38 @@ export type Section =
   | 'apartments'
   | 'complexes'
   | 'developers'
+  | 'news'
+  | 'promo'
+  | 'events'
+  | 'knowledge'
+  | 'rental'
 
 type SectionCache = Record<string, Record<string, string>>
+
+/**
+ * Manifest-style sections (news / promo / events / knowledge / rental)
+ * surface fields as flat properties on the item (item.title, item.body, ...)
+ * rather than Airtable's `data['<field> EN']` shape. This helper rewrites
+ * those properties in-place when an EN translation exists in the cache.
+ * Returns a new object — callers shouldn't mutate the manifest cache.
+ */
+export function applyManifestTranslation<T extends { id: string }>(
+  item: T,
+  cache: SectionCache,
+  fields: readonly (keyof T)[],
+): T {
+  const tr = cache[item.id]
+  if (!tr) return item
+  let out = item
+  for (const f of fields) {
+    const en = tr[f as string]
+    if (typeof en === 'string' && en.trim()) {
+      if (out === item) out = { ...item }
+      ;(out as Record<string, unknown>)[f as string] = en
+    }
+  }
+  return out
+}
 
 const _cache: Map<Section, { ts: number; data: SectionCache }> = new Map()
 const _inflight: Map<Section, Promise<SectionCache>> = new Map()

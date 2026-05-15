@@ -1,3 +1,6 @@
+import { applyManifestTranslation, loadEnTranslations } from '@/lib/en-translations'
+import type { Lang } from '@/lib/i18n'
+
 export type KnowledgeItem = {
   id: string
   slug: string
@@ -12,7 +15,9 @@ type Manifest = { generatedAt: string; count: number; items: KnowledgeItem[] }
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/knowledge/_knowledge.json`
 
-export async function loadAllKnowledge(): Promise<KnowledgeItem[]> {
+const EN_FIELDS = ['title', 'body'] as const
+
+async function loadRawKnowledge(): Promise<KnowledgeItem[]> {
   try {
     const r = await fetch(MANIFEST_URL, { next: { revalidate: 600, tags: ['content:knowledge'] } })
     if (!r.ok) return []
@@ -22,7 +27,15 @@ export async function loadAllKnowledge(): Promise<KnowledgeItem[]> {
     return []
   }
 }
-export async function loadKnowledgeBySlug(slug: string): Promise<KnowledgeItem | null> {
-  const all = await loadAllKnowledge()
+
+export async function loadAllKnowledge(lang: Lang = 'ru'): Promise<KnowledgeItem[]> {
+  const items = await loadRawKnowledge()
+  if (lang === 'ru' || items.length === 0) return items
+  const cache = await loadEnTranslations('knowledge')
+  return items.map(item => applyManifestTranslation(item, cache, EN_FIELDS))
+}
+
+export async function loadKnowledgeBySlug(slug: string, lang: Lang = 'ru'): Promise<KnowledgeItem | null> {
+  const all = await loadAllKnowledge(lang)
   return all.find(k => k.slug === slug) ?? null
 }

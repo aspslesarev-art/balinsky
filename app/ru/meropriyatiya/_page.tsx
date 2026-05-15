@@ -58,7 +58,7 @@ export function generateEventsListMetadata(lang: Lang): Metadata {
 
 export async function EventsList({ lang }: { lang: Lang }) {
   const c = COPY[lang]
-  const items = await loadAllEvents()
+  const items = await loadAllEvents(lang)
   const upcoming = items.filter(e => !isPast(e.startsAt)).sort((a, b) => startTimeMs(a.startsAt) - startTimeMs(b.startsAt))
   const past = items.filter(e => isPast(e.startsAt)).sort((a, b) => startTimeMs(b.startsAt) - startTimeMs(a.startsAt))
   return (

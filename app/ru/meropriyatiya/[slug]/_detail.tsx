@@ -40,7 +40,7 @@ function isPast(iso: string | null): boolean {
 }
 
 export async function generateEventDetailMetadata(slug: string, lang: Lang): Promise<Metadata> {
-  const e = await loadEventBySlug(slug)
+  const e = await loadEventBySlug(slug, lang)
   if (!e) return { robots: { index: false, follow: false } }
   const ruPath = `/ru/meropriyatiya/${e.slug}`
   const enPath = `/en/events/${e.slug}`
@@ -63,7 +63,7 @@ export async function generateEventDetailMetadata(slug: string, lang: Lang): Pro
 
 export async function EventDetail({ slug, lang }: { slug: string; lang: Lang }) {
   const c = COPY[lang]
-  const e = await loadEventBySlug(slug)
+  const e = await loadEventBySlug(slug, lang)
   if (!e) notFound()
   const home = lang === 'en' ? '/en' : '/ru'
   const eventsRoot = lang === 'en' ? '/en/events' : '/ru/meropriyatiya'

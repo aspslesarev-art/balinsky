@@ -302,9 +302,9 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
   const complexSlugs = complexes.map(c => c.slug).filter((s): s is string => !!s)
 
   const [allNews, allPromo, allEvents, devVideos] = await Promise.all([
-    loadAllNews().catch(() => []),
-    loadAllPromo().catch(() => []),
-    loadAllEvents().catch(() => []),
+    loadAllNews(lang).catch(() => []),
+    loadAllPromo(lang).catch(() => []),
+    loadAllEvents(lang).catch(() => []),
     loadVideosByDeveloperWithComplexes(slug, complexSlugs, 12, lang).catch(() => []),
   ])
   const devNews = allNews.filter(n => n.developers.some(d => d.slug === slug)).slice(0, 4)

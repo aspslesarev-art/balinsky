@@ -36,7 +36,7 @@ function fmtDate(iso: string | null, locale: string): string | null {
 }
 
 export async function generateNewsDetailMetadata(slug: string, lang: Lang): Promise<Metadata> {
-  const n = await loadNewsBySlug(slug)
+  const n = await loadNewsBySlug(slug, lang)
   if (!n) return { robots: { index: false, follow: false } }
   const ruPath = `/ru/novosti/${n.slug}`
   const enPath = `/en/news/${n.slug}`
@@ -60,14 +60,14 @@ export async function generateNewsDetailMetadata(slug: string, lang: Lang): Prom
 
 export async function NewsDetail({ slug, lang }: { slug: string; lang: Lang }) {
   const c = COPY[lang]
-  const n = await loadNewsBySlug(slug)
+  const n = await loadNewsBySlug(slug, lang)
   if (!n) notFound()
   const home = lang === 'en' ? '/en' : '/ru'
   const newsRoot = lang === 'en' ? '/en/news' : '/ru/novosti'
   const developersRoot = lang === 'en' ? '/en/developers' : '/ru/zastrojshhiki'
 
   const date = fmtDate(n.date, c.locale)
-  const allNews = await loadAllNews()
+  const allNews = await loadAllNews(lang)
   const related = n.developers[0]?.slug
     ? allNews.filter(x => x.id !== n.id && x.developers.some(d => d.slug === n.developers[0].slug)).slice(0, 4)
     : []

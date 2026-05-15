@@ -34,7 +34,7 @@ function fmtDate(iso: string | null, locale: string): string | null {
 }
 
 export async function generatePromoDetailMetadata(slug: string, lang: Lang): Promise<Metadata> {
-  const p = await loadPromoBySlug(slug)
+  const p = await loadPromoBySlug(slug, lang)
   if (!p) return { robots: { index: false, follow: false } }
   const ruPath = `/ru/akcii/${p.slug}`
   const enPath = `/en/promo/${p.slug}`
@@ -56,13 +56,13 @@ export async function generatePromoDetailMetadata(slug: string, lang: Lang): Pro
 
 export async function PromoDetail({ slug, lang }: { slug: string; lang: Lang }) {
   const c = COPY[lang]
-  const p = await loadPromoBySlug(slug)
+  const p = await loadPromoBySlug(slug, lang)
   if (!p) notFound()
   const home = lang === 'en' ? '/en' : '/ru'
   const promoRoot = lang === 'en' ? '/en/promo' : '/ru/akcii'
   const developersRoot = lang === 'en' ? '/en/developers' : '/ru/zastrojshhiki'
 
-  const all = await loadAllPromo()
+  const all = await loadAllPromo(lang)
   const related = p.developers[0]?.slug
     ? all.filter(x => x.id !== p.id && x.developers.some(d => d.slug === p.developers[0].slug)).slice(0, 4)
     : []

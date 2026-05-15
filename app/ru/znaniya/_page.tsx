@@ -42,7 +42,7 @@ export function generateKnowledgeListMetadata(lang: Lang): Metadata {
 
 export async function KnowledgeList({ lang }: { lang: Lang }) {
   const c = COPY[lang]
-  const items = await loadAllKnowledge()
+  const items = await loadAllKnowledge(lang)
   const detailRoot = lang === 'en' ? '/en/knowledge' : '/ru/znaniya'
   return (
     <>

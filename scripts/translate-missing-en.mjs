@@ -41,20 +41,28 @@ const sb = createClient(SUPABASE_URL, SERVICE_KEY)
 // these into the matching `<field> EN` slot. Already-translated rows
 // (Airtable's own EN column populated, OR a cached translation present)
 // are skipped on subsequent runs.
+// Two source types: `table` reads JSONB rows out of a raw_* Supabase
+// table; `manifest` reads the public _<section>.json from Supabase
+// Storage. Translation cache shape is the same either way — keyed by
+// the row's stable id, with one entry per missing English field.
 const SECTIONS = {
   villas: {
+    source: 'table',
     table: 'raw_villas',
     fields: ['SEO:Title', 'ИИ Имя', 'SEO Text', 'Notes', 'SEO:Description', 'Social:Title'],
   },
   apartments: {
+    source: 'table',
     table: 'raw_apartments',
     fields: ['SEO:Title', 'ИИ Имя', 'SEO Text', 'Notes', 'SEO:Description'],
   },
   complexes: {
+    source: 'table',
     table: 'raw_complexes',
     fields: ['SEO:Title', 'SEO Text', 'Описание', 'ИИ Описание', 'SEO:Description', 'Social:Title'],
   },
   developers: {
+    source: 'table',
     table: 'raw_developers',
     fields: [
       'SEO:Title', 'SEO Text', 'Описание ИИ', 'SEO:Description',
@@ -62,6 +70,40 @@ const SECTIONS = {
       'Управляющая компания', 'Техника и производство',
       'Строительство и недвижимость', 'Доходность',
     ],
+  },
+  // Manifest-style sections: the JSON-array of items lives at the URL
+  // below. `idField` names the per-item primary key (matches what the
+  // runtime loader uses to look up the translation cache); `fields`
+  // are the item properties that contain free-form Russian text.
+  news: {
+    source: 'manifest',
+    url: `${SUPABASE_URL}/storage/v1/object/public/news/_news.json`,
+    idField: 'id',
+    fields: ['title', 'seoDescription', 'body'],
+  },
+  promo: {
+    source: 'manifest',
+    url: `${SUPABASE_URL}/storage/v1/object/public/promo/_promo.json`,
+    idField: 'id',
+    fields: ['title', 'seoDescription', 'body'],
+  },
+  events: {
+    source: 'manifest',
+    url: `${SUPABASE_URL}/storage/v1/object/public/events/_events.json`,
+    idField: 'id',
+    fields: ['title', 'seoDescription', 'body'],
+  },
+  knowledge: {
+    source: 'manifest',
+    url: `${SUPABASE_URL}/storage/v1/object/public/knowledge/_knowledge.json`,
+    idField: 'id',
+    fields: ['title', 'body'],
+  },
+  rental: {
+    source: 'manifest',
+    url: `${SUPABASE_URL}/storage/v1/object/public/rental/_rental.json`,
+    idField: 'id',
+    fields: ['title', 'notes'],
   },
 }
 
@@ -175,6 +217,37 @@ async function callAzure(payload) {
   throw lastErr ?? new Error('azure: unknown error')
 }
 
+// --- source loaders ------------------------------------------------------
+// Tables: paginate raw_* rows and return [{ id, data }, ...] so the rest
+// of the script can treat both sources uniformly.
+async function loadFromTable(cfg) {
+  const PAGE = 500
+  const rows = []
+  for (let offset = 0; ; offset += PAGE) {
+    const { data, error } = await sb
+      .from(cfg.table)
+      .select('airtable_id, data')
+      .range(offset, offset + PAGE - 1)
+    if (error) throw new Error(`select ${cfg.table}: ${error.message}`)
+    if (!data || data.length === 0) break
+    for (const r of data) rows.push({ id: r.airtable_id, data: r.data || {} })
+    if (data.length < PAGE) break
+  }
+  return rows
+}
+
+// Manifest: the items array is the row list. Field names are top-level
+// properties on each item; the EN-presence check is "is this top-level
+// property already English". We can't sniff that reliably, so the only
+// skip path here is the cache (Airtable doesn't write back to manifests).
+async function loadFromManifest(cfg) {
+  const r = await fetch(cfg.url)
+  if (!r.ok) throw new Error(`fetch ${cfg.url}: ${r.status}`)
+  const j = await r.json()
+  const items = Array.isArray(j.items) ? j.items : Array.isArray(j) ? j : []
+  return items.map(it => ({ id: it[cfg.idField], data: it }))
+}
+
 // --- per-section run -----------------------------------------------------
 async function runSection(name) {
   const cfg = SECTIONS[name]
@@ -183,39 +256,32 @@ async function runSection(name) {
   const cache = await loadCache(name)
   console.log(`  cache loaded: ${Object.keys(cache).length} rows already translated`)
 
-  let rows = []
-  const PAGE = 500
-  for (let offset = 0; ; offset += PAGE) {
-    const { data, error } = await sb
-      .from(cfg.table)
-      .select('airtable_id, data')
-      .range(offset, offset + PAGE - 1)
-    if (error) throw new Error(`select ${cfg.table}: ${error.message}`)
-    if (!data || data.length === 0) break
-    rows = rows.concat(data)
-    if (data.length < PAGE) break
-  }
+  const rows = cfg.source === 'manifest'
+    ? await loadFromManifest(cfg)
+    : await loadFromTable(cfg)
   console.log(`  total rows: ${rows.length}`)
 
-  // Plan: for each row, list fields that need translating (no Airtable EN,
-  // no cached entry, RU source non-empty).
+  // Plan: for each row, list fields that need translating.
+  // Tables: skip when Airtable's `<field> EN` slot is already filled,
+  //         or the cache has a previous translation, or RU is empty.
+  // Manifests: same idea, but there's no separate EN slot to read —
+  //         the cache is the only "translated" marker.
   const plan = []
   for (const r of rows) {
-    const id = r.airtable_id
+    if (!r.id) continue
     const d = r.data || {}
     const missing = {}
     for (const f of cfg.fields) {
-      // Airtable EN slot already filled (string or wrapped value)
-      const enRaw = d[`${f} EN`] ?? d[`${f} En`]
-      if (unwrap(enRaw)) continue
-      // Already cached locally
-      if (cache[id]?.[f]) continue
-      // No RU source to translate
+      if (cfg.source === 'table') {
+        const enRaw = d[`${f} EN`] ?? d[`${f} En`]
+        if (unwrap(enRaw)) continue
+      }
+      if (cache[r.id]?.[f]) continue
       const ruText = unwrap(d[f])
       if (!ruText) continue
       missing[f] = ruText
     }
-    if (Object.keys(missing).length > 0) plan.push({ id, missing })
+    if (Object.keys(missing).length > 0) plan.push({ id: r.id, missing })
   }
 
   console.log(`  rows needing translation: ${plan.length}`)

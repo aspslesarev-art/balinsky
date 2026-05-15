@@ -20,7 +20,7 @@ const COPY = {
 } as const
 
 export async function generateKnowledgeDetailMetadata(slug: string, lang: Lang): Promise<Metadata> {
-  const k = await loadKnowledgeBySlug(slug)
+  const k = await loadKnowledgeBySlug(slug, lang)
   if (!k) return { robots: { index: false, follow: false } }
   const ruPath = `/ru/znaniya/${k.slug}`
   const enPath = `/en/knowledge/${k.slug}`
@@ -42,12 +42,12 @@ export async function generateKnowledgeDetailMetadata(slug: string, lang: Lang):
 
 export async function KnowledgeDetail({ slug, lang }: { slug: string; lang: Lang }) {
   const c = COPY[lang]
-  const k = await loadKnowledgeBySlug(slug)
+  const k = await loadKnowledgeBySlug(slug, lang)
   if (!k) notFound()
   const home = lang === 'en' ? '/en' : '/ru'
   const knowledgeRoot = lang === 'en' ? '/en/knowledge' : '/ru/znaniya'
 
-  const all = await loadAllKnowledge()
+  const all = await loadAllKnowledge(lang)
   const related = all.filter(x => x.id !== k.id).slice(0, 4)
 
   const articleJsonLd = {

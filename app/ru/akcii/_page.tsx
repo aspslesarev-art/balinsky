@@ -119,7 +119,7 @@ function PromoCard({
 
 export async function PromoList({ lang }: { lang: Lang }) {
   const c = COPY[lang]
-  const items = await loadAllPromo()
+  const items = await loadAllPromo(lang)
   const detailRoot = lang === 'en' ? '/en/promo' : '/ru/akcii'
 
   const active = items

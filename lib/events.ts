@@ -1,3 +1,6 @@
+import { applyManifestTranslation, loadEnTranslations } from '@/lib/en-translations'
+import type { Lang } from '@/lib/i18n'
+
 export type EventDev = { name: string; slug: string | null }
 export type EventItem = {
   id: string
@@ -20,7 +23,9 @@ type Manifest = { generatedAt: string; count: number; items: EventItem[] }
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/events/_events.json`
 
-export async function loadAllEvents(): Promise<EventItem[]> {
+const EN_FIELDS = ['title', 'seoDescription', 'body'] as const
+
+async function loadRawEvents(): Promise<EventItem[]> {
   try {
     const r = await fetch(MANIFEST_URL, { next: { revalidate: 600, tags: ['content:events'] } })
     if (!r.ok) return []
@@ -30,7 +35,15 @@ export async function loadAllEvents(): Promise<EventItem[]> {
     return []
   }
 }
-export async function loadEventBySlug(slug: string): Promise<EventItem | null> {
-  const all = await loadAllEvents()
+
+export async function loadAllEvents(lang: Lang = 'ru'): Promise<EventItem[]> {
+  const items = await loadRawEvents()
+  if (lang === 'ru' || items.length === 0) return items
+  const cache = await loadEnTranslations('events')
+  return items.map(item => applyManifestTranslation(item, cache, EN_FIELDS))
+}
+
+export async function loadEventBySlug(slug: string, lang: Lang = 'ru'): Promise<EventItem | null> {
+  const all = await loadAllEvents(lang)
   return all.find(e => e.slug === slug) ?? null
 }

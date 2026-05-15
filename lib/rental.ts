@@ -1,3 +1,6 @@
+import { applyManifestTranslation, loadEnTranslations } from '@/lib/en-translations'
+import type { Lang } from '@/lib/i18n'
+
 export type RentalItem = {
   id: string
   slug: string
@@ -17,6 +20,8 @@ type Manifest = { generatedAt: string; count: number; items: RentalItem[] }
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/rental/_rental.json`
+
+const EN_FIELDS = ['title', 'notes'] as const
 
 // Listings older than FRESH_WINDOW drop out of the /arenda catalog so the
 // page doesn't fill up with stale offers nobody can rent any more.
@@ -39,9 +44,7 @@ function isFresh(item: RentalItem, now: number): boolean {
   return withinDays(item, FRESH_WINDOW_DAYS, now)
 }
 
-// Returns every rental in the manifest, including ones added long ago.
-// Use for analytics / comparison contexts where stale data is still useful.
-export async function loadAllRental(): Promise<RentalItem[]> {
+async function loadRawRental(): Promise<RentalItem[]> {
   try {
     const r = await fetch(MANIFEST_URL, { next: { revalidate: 600, tags: ['content:rental'] } })
     if (!r.ok) return []
@@ -52,16 +55,25 @@ export async function loadAllRental(): Promise<RentalItem[]> {
   }
 }
 
+// Returns every rental in the manifest, including ones added long ago.
+// Use for analytics / comparison contexts where stale data is still useful.
+export async function loadAllRental(lang: Lang = 'ru'): Promise<RentalItem[]> {
+  const items = await loadRawRental()
+  if (lang === 'ru' || items.length === 0) return items
+  const cache = await loadEnTranslations('rental')
+  return items.map(item => applyManifestTranslation(item, cache, EN_FIELDS))
+}
+
 // Listings created within FRESH_WINDOW_DAYS — for the /arenda catalog only.
-export async function loadFreshRental(): Promise<RentalItem[]> {
-  const all = await loadAllRental()
+export async function loadFreshRental(lang: Lang = 'ru'): Promise<RentalItem[]> {
+  const all = await loadAllRental(lang)
   const now = Date.now()
   return all.filter(it => isFresh(it, now))
 }
 
 // Recent enough to be a meaningful benchmark on a villa/apartment page.
-export async function loadCompareRental(): Promise<RentalItem[]> {
-  const all = await loadAllRental()
+export async function loadCompareRental(lang: Lang = 'ru'): Promise<RentalItem[]> {
+  const all = await loadAllRental(lang)
   const now = Date.now()
   return all.filter(it => withinDays(it, COMPARE_WINDOW_DAYS, now))
 }
@@ -69,7 +81,7 @@ export async function loadCompareRental(): Promise<RentalItem[]> {
 // Detail page lookup — works for every slug we ever published, even if the
 // listing is years old. Old detail pages are kept alive for SEO and for
 // links coming from the comparison blocks on villa/apartment pages.
-export async function loadRentalBySlug(slug: string): Promise<RentalItem | null> {
-  const all = await loadAllRental()
+export async function loadRentalBySlug(slug: string, lang: Lang = 'ru'): Promise<RentalItem | null> {
+  const all = await loadAllRental(lang)
   return all.find(r => r.slug === slug) ?? null
 }

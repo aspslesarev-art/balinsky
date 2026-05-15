@@ -49,7 +49,7 @@ export function generateNewsListMetadata(lang: Lang): Metadata {
 }
 
 export async function NewsList({ lang }: { lang: Lang }) {
-  const items = await loadAllNews()
+  const items = await loadAllNews(lang)
   const c = COPY[lang]
   const detailRoot = lang === 'en' ? '/en/news' : '/ru/novosti'
   return (
