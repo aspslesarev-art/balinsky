@@ -38,6 +38,7 @@ const InvestmentWidget = dynamic(
 )
 import { RentalCompareSection } from '@/components/RentalCompareSection'
 import { ManagerCard } from '@/components/ManagerCard'
+import { ContactBlock } from '@/components/ContactBlock'
 import { loadManagersByDeveloperName, loadManagersByDeveloperSlug } from '@/lib/managers'
 import { getDeveloperStats } from '@/lib/developer-stats'
 import { PriceCtaCard } from '@/components/PriceCtaCard'
@@ -845,6 +846,10 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
         )}
 
         {managers.length > 0 && <ManagerCard managers={managers} developerName={developer?.name ?? developerName} />}
+
+        <div className="mt-8">
+          <ContactBlock lang={lang} listing={{ kind: 'villa', slug, title }} />
+        </div>
 
         {lat != null && lng != null && (
           <InvestmentWidget villaId={v.airtable_id} apiKey={GMAPS_KEY} />

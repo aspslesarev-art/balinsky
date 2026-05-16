@@ -28,6 +28,7 @@ const InvestmentWidget = dynamic(
 )
 import { RentalCompareSection } from '@/components/RentalCompareSection'
 import { ManagerCard } from '@/components/ManagerCard'
+import { ContactBlock } from '@/components/ContactBlock'
 import { loadManagersByDeveloperName } from '@/lib/managers'
 import { PriceCtaCard } from '@/components/PriceCtaCard'
 import { findActiveReservation } from '@/lib/reservations'
@@ -678,6 +679,10 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
         )}
 
         {managers.length > 0 && <ManagerCard managers={managers} developerName={devName} />}
+
+        <div className="mt-8">
+          <ContactBlock lang={lang} listing={{ kind: 'apartment', slug, title }} />
+        </div>
 
         {(
           (landProfile && (landProfile.zona_code || landProfile.subzona_code))
