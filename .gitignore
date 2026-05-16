@@ -50,3 +50,8 @@ next-env.d.ts
 scripts/estatemarket_cards.json
 estatemarket_occupancy_report.xlsx
 scripts/_ai-fallback-cache.json
+
+# Local working files — not for the catalog
+BALINSKY_REPORT.md
+estatemarket_occupancy_*.xlsx
+scripts/__pycache__/
