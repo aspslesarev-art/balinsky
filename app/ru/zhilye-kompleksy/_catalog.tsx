@@ -8,6 +8,7 @@ import { ComplexInfiniteScrollClient } from '@/components/ComplexInfiniteScrollC
 import { ComplexFiltersBar } from '@/components/complex-filters/ComplexFiltersBar'
 import { SubscribeCTA } from '@/components/SubscribeCTA'
 import { DistrictIntroBlock } from '@/components/DistrictIntroBlock'
+import { DistrictRelatedLinks } from '@/components/DistrictRelatedLinks'
 import { getDistrictCopy, getDistrictCommercialMeta } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { buildListHref, buildMapHref } from '@/lib/complex-filter-href'
@@ -138,6 +139,15 @@ export async function ComplexesCatalog({
               }}
             />
           </div>
+        )}
+
+        {districtCopy && districtSlug && (
+          <DistrictRelatedLinks
+            lang={lang}
+            districtName={districtCopy.name}
+            districtSlug={districtSlug}
+            currentKind="complex"
+          />
         )}
 
         <ComplexesSeoContent filters={filters} variant="list" />

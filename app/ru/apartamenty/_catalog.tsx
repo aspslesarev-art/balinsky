@@ -4,6 +4,7 @@ import { CatalogTabs } from '@/components/CatalogTabs'
 import { ApartmentCard } from '@/components/ApartmentCard'
 import { SeoContent } from '@/components/SeoContent'
 import { DistrictIntroBlock } from '@/components/DistrictIntroBlock'
+import { DistrictRelatedLinks } from '@/components/DistrictRelatedLinks'
 import { getDistrictCopy, getDistrictCommercialMeta } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { CatalogSearchBar } from '@/components/CatalogSearchBar'
@@ -147,6 +148,15 @@ export async function ApartamentyCatalog({
               }}
             />
           </div>
+        )}
+
+        {districtCopy && districtSlug && (
+          <DistrictRelatedLinks
+            lang={lang}
+            districtName={districtCopy.name}
+            districtSlug={districtSlug}
+            currentKind="apartment"
+          />
         )}
 
         <SeoContent filters={filters} variant="list" lang={lang} />

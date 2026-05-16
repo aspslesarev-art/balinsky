@@ -1,0 +1,87 @@
+// Cross-section linking block shown at the bottom of single-district
+// catalog hubs (/ru/villy/canggu, /en/apartments/uluwatu, etc).
+// Per audit feedback (TASK-06): every district page should send the
+// visitor sideways into the developer / complex / promo / news
+// listings filtered by the same district. Pure presentation — links
+// only, no data fetching.
+
+import Link from 'next/link'
+import { ArrowRight, HardHat, Building2, Tag, Newspaper, TrendingUp } from 'lucide-react'
+import type { Lang } from '@/lib/i18n'
+
+const COPY = {
+  ru: {
+    heading: (district: string) => `Ещё про ${district}`,
+    sub: 'Связанные разделы по этому району',
+    devs: 'Застройщики в районе',
+    complexes: 'Жилые комплексы',
+    promo: 'Действующие акции',
+    news: 'Новости района',
+    pillar: 'Гид по инвестициям',
+  },
+  en: {
+    heading: (district: string) => `More in ${district}`,
+    sub: 'Related sections for this district',
+    devs: 'Developers in the area',
+    complexes: 'Residential complexes',
+    promo: 'Active promotions',
+    news: 'District news',
+    pillar: 'Investment guide',
+  },
+}
+
+export function DistrictRelatedLinks({
+  lang,
+  districtName,
+  districtSlug,
+  currentKind = 'villa',
+}: {
+  lang: Lang
+  districtName: string
+  districtSlug: string
+  // So we don't link back to the page the visitor is already on
+  currentKind?: 'villa' | 'apartment' | 'complex'
+}) {
+  const c = COPY[lang]
+  const isEn = lang === 'en'
+  const devsHref     = isEn ? '/en/developers' : '/ru/zastrojshhiki'
+  const complexesUrl = (isEn ? '/en/complexes' : '/ru/zhilye-kompleksy') + `/${districtSlug}`
+  const villasUrl    = (isEn ? '/en/villas' : '/ru/villy') + `/${districtSlug}`
+  const aptsUrl      = (isEn ? '/en/apartments' : '/ru/apartamenty') + `/${districtSlug}`
+  const promoHref    = isEn ? '/en/promo' : '/ru/akcii'
+  const newsHref     = isEn ? '/en/news' : '/ru/novosti'
+  const pillarHref   = isEn ? '/en/bali-property-investment' : '/ru/investicii-v-nedvizhimost-bali'
+
+  const links = [
+    { Icon: HardHat,    label: c.devs,      href: `${devsHref}?area=${districtSlug}` },
+    currentKind !== 'complex'   ? { Icon: Building2,  label: c.complexes, href: complexesUrl } : null,
+    currentKind !== 'villa'     ? { Icon: Building2,  label: isEn ? 'Villas' : 'Виллы',          href: villasUrl } : null,
+    currentKind !== 'apartment' ? { Icon: Building2,  label: isEn ? 'Apartments' : 'Апартаменты', href: aptsUrl } : null,
+    { Icon: Tag,        label: c.promo,     href: `${promoHref}?area=${districtSlug}` },
+    { Icon: Newspaper,  label: c.news,      href: `${newsHref}?area=${districtSlug}` },
+    { Icon: TrendingUp, label: c.pillar,    href: `${pillarHref}#${districtSlug}` },
+  ].filter((x): x is { Icon: typeof HardHat; label: string; href: string } => x !== null)
+
+  return (
+    <section className="mt-12 mb-10">
+      <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[#111827] mb-1">
+        {c.heading(districtName)}
+      </h2>
+      <p className="text-[13px] text-[var(--color-text-muted)] mb-5">{c.sub}</p>
+      <ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
+        {links.map(l => (
+          <li key={l.href}>
+            <Link
+              href={l.href}
+              className="flex items-center gap-2.5 px-3 py-3 rounded-xl border border-[var(--color-border)] bg-white text-[#111827] no-underline hover:border-[var(--color-primary)] transition-colors"
+            >
+              <l.Icon size={16} className="text-[var(--color-primary)] shrink-0" />
+              <span className="text-[14px] font-medium leading-tight">{l.label}</span>
+              <ArrowRight size={14} className="ml-auto text-[var(--color-text-muted)] shrink-0" />
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}

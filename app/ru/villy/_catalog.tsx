@@ -8,6 +8,7 @@ import { VillaCatalogSearchBar } from '@/components/VillaCatalogSearchBar'
 import { VillaInfiniteScrollClient } from '@/components/VillaInfiniteScrollClient'
 import { VillaFiltersBar } from '@/components/villa-filters/VillaFiltersBar'
 import { DistrictIntroBlock } from '@/components/DistrictIntroBlock'
+import { DistrictRelatedLinks } from '@/components/DistrictRelatedLinks'
 import { getDistrictCopy, getDistrictCommercialMeta } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { SubscribeCTA } from '@/components/SubscribeCTA'
@@ -154,6 +155,15 @@ export async function VillasCatalog({
         )}
 
         <RelatedVillaFilters filters={filters} options={options} lang={lang} />
+
+        {districtCopy && districtSlug && (
+          <DistrictRelatedLinks
+            lang={lang}
+            districtName={districtCopy.name}
+            districtSlug={districtSlug}
+            currentKind="villa"
+          />
+        )}
 
         <VillasSeoContent filters={filters} variant="list" lang={lang} />
 
