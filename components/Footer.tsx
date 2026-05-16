@@ -39,14 +39,17 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
     {
       title: 'Услуги',
       links: [
-        { label: 'Агенты', href: '#' },
+        { label: 'Агенты', href: '/ru/zastrojshhiki' },
       ],
     },
     {
       title: 'Работа',
       links: [
-        { label: 'Вакансии агентств', href: '#' },
-        { label: 'Вакансии застройщиков', href: '#' },
+        // Vacancy boards aren't built yet — route to the contact page so
+        // the link is at least a working «interested in working with us»
+        // entry point instead of a dead `#`.
+        { label: 'Вакансии агентств', href: '/ru/kontakty' },
+        { label: 'Вакансии застройщиков', href: '/ru/kontakty' },
       ],
     },
   ],
@@ -83,14 +86,14 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
     {
       title: 'Services',
       links: [
-        { label: 'Agents', href: '#' },
+        { label: 'Agents', href: '/en/developers' },
       ],
     },
     {
       title: 'Jobs',
       links: [
-        { label: 'Agency vacancies', href: '#' },
-        { label: 'Developer vacancies', href: '#' },
+        { label: 'Agency vacancies', href: '/en/contact' },
+        { label: 'Developer vacancies', href: '/en/contact' },
       ],
     },
   ],

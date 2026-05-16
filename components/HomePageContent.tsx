@@ -265,6 +265,31 @@ export async function HomePageContent({ lang }: { lang: Lang }) {
     logo: `${SITE_BASE}/logo.svg`,
     description: c.orgDescription,
     sameAs: ['https://www.youtube.com/@balinsky_info', 'https://t.me/BalinskyBot'],
+    contactPoint: {
+      '@type': 'ContactPoint',
+      contactType: 'customer service',
+      availableLanguage: ['ru', 'en'],
+      url: 'https://t.me/BalinskyBot',
+    },
+  }
+  // WebSite + SearchAction enables a Google sitelinks-searchbox in the
+  // SERP when the site is recognised — the search target points at our
+  // /search route, which surfaces the AI-broker «Балина» as the answer
+  // engine for that query.
+  const websiteJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'Balinsky',
+    url: `${SITE_BASE}${r.home}`,
+    inLanguage: lang === 'en' ? 'en' : 'ru',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `${SITE_BASE}${r.home}/search?q={search_term_string}`,
+      },
+      'query-input': 'required name=search_term_string',
+    },
   }
   const faqJsonLd = {
     '@context': 'https://schema.org',
@@ -523,6 +548,7 @@ export async function HomePageContent({ lang }: { lang: Lang }) {
         </section>
 
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }} />
 
         <div className="h-16" />
       </PageContainer>

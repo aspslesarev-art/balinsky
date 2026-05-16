@@ -13,6 +13,27 @@ function ytThumb(url: string): string | null {
 
 export function VideoGrid({ videos, title = 'Видео' }: { videos: VideoItem[]; title?: string }) {
   if (videos.length === 0) return null
+  // VideoObject JSON-LD per embedded YouTube clip. Google uses the
+  // thumbnail and title for video-carousel rich results, and the
+  // contentUrl makes the video itself crawlable as a resource.
+  // uploadDate falls back to today's date when Airtable hasn't tagged
+  // the row — required field, can't be missing for a valid record.
+  const today = new Date().toISOString().slice(0, 10)
+  const videosJsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': videos
+      .map(v => ({ v, id: ytId(v.url), thumb: ytThumb(v.url) }))
+      .filter(x => x.id && x.thumb)
+      .map(({ v, thumb }) => ({
+        '@type': 'VideoObject',
+        name: v.name ?? title,
+        description: v.name ?? title,
+        thumbnailUrl: thumb!,
+        uploadDate: v.addedAt ? v.addedAt.slice(0, 10) : today,
+        contentUrl: v.url,
+        embedUrl: v.embedUrl ?? v.url,
+      })),
+  }
   return (
     <section className="mb-10">
       <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
@@ -49,6 +70,9 @@ export function VideoGrid({ videos, title = 'Видео' }: { videos: VideoItem[
           )
         })}
       </ul>
+      {videosJsonLd['@graph'].length > 0 && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(videosJsonLd) }} />
+      )}
     </section>
   )
 }
