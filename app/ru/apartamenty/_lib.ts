@@ -57,12 +57,15 @@ export async function loadJson<T>(url: string, fallback: T): Promise<T> {
 
 export function firstString(v: unknown): string | null {
   if (typeof v === 'string') return v.trim() || null
-  if (Array.isArray(v) && v.length > 0) {
-    const s = v[0]
-    if (typeof s === 'string') return s.trim() || null
-    if (typeof s === 'number') return String(s)
-  }
   if (typeof v === 'number') return String(v)
+  if (Array.isArray(v) && v.length > 0) return firstString(v[0])
+  // Airtable computed-field wrappers: { state: 'generated' | 'error',
+  // value: string | null, isStale?: boolean }. The apt module used to
+  // skip these, which is why SEO:Title EN read as null even though
+  // raw_apartments stored a populated wrapper.
+  if (v && typeof v === 'object' && 'value' in v) {
+    return firstString((v as { value: unknown }).value)
+  }
   return null
 }
 export function numberOrNull(v: unknown): number | null {
@@ -382,7 +385,7 @@ export function toCard(
   const slug = normalizeSlug(firstString(d['SEO:Slug']))
   if (!slug || slug.startsWith('-')) return null
   // Lang-aware title — see villy/_lib.ts toCard() for the same logic.
-  const titleBase = lang === 'en'
+  const title = lang === 'en'
     ? (cleanTitle(firstString(d['SEO:Title EN'])) ??
        firstString(d['ИИ Имя EN']) ??
        cleanTitle(firstString(d['SEO:Title'])) ??
@@ -391,16 +394,7 @@ export function toCard(
     : (cleanTitle(firstString(d['SEO:Title'])) ??
        firstString(d['ИИ Имя']) ??
        firstString(d['Name']))
-  if (!titleBase) return null
-  // DEBUG — encode which field actually returned a string at runtime
-  const __dbg = lang === 'en'
-    ? [
-        firstString(d['SEO:Title EN']) ? 'T' : '_',
-        firstString(d['ИИ Имя EN'])     ? 'A' : '_',
-        firstString(d['SEO:Title'])     ? 't' : '_',
-      ].join('')
-    : ''
-  const title = lang === 'en' ? `🌍[${__dbg}] ${titleBase}` : titleBase
+  if (!title) return null
   // Investor-relevant snapshot fields (same as villas — read straight
   // off the row so heart-tap from the catalog carries them into the
   // wishlist without extra fetches).
