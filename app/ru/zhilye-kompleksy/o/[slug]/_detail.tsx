@@ -42,6 +42,8 @@ import { MarketStatsBlock } from '@/components/MarketStatsBlock'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { tField, type Lang } from '@/lib/i18n'
 import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
+import { StickyContactBar } from '@/components/StickyContactBar'
+import { botLink } from '@/lib/bot-link'
 
 const AIRPORT_LAT = -8.7467
 const AIRPORT_LNG = 115.1667
@@ -1062,6 +1064,12 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
 
         <div className="h-16" />
       </PageContainer>
+      <StickyContactBar
+        priceUsd={minPrice}
+        contactHref={botLink('manager', managers[0]?.id ?? '')}
+        title={name}
+        lang={lang}
+      />
     </>
   )
 }

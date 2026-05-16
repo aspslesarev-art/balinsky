@@ -53,6 +53,8 @@ import { VillaPresentationButton } from '@/components/VillaPresentation'
 import { tField, type Lang } from '@/lib/i18n'
 import { normalizeSlug } from '@/lib/slug-normalize'
 import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
+import { StickyContactBar } from '@/components/StickyContactBar'
+import { botLink } from '@/lib/bot-link'
 
 const COPY = {
   ru: {
@@ -917,6 +919,12 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
 
         <div className="h-16" />
       </PageContainer>
+      <StickyContactBar
+        priceUsd={priceNum}
+        contactHref={sellerUrl ?? botLink('manager', managers[0]?.id ?? '')}
+        title={title}
+        lang={lang}
+      />
     </>
   )
 }

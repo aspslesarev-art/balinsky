@@ -182,18 +182,25 @@ export function ComplexVisualizationViewer({
           </div>
         ) : null}
 
-        <div className="relative" onClick={() => setPopup(null)}>
+        {/* On mobile we keep the photo at a usable height (~68vh) and
+            let the container scroll horizontally so the plan stays
+            legible instead of squashing into 375px of width. Desktop
+            keeps the old fit-to-container layout. */}
+        <div
+          className="overflow-x-auto md:overflow-x-visible touch-pan-x scroll-smooth [scrollbar-width:thin]"
+          onClick={() => setPopup(null)}
+        >
+          <div className="relative w-max md:w-full">
           {/* Layer photo can be 4-7 MB at source; let Next/Vercel
               optimise it. width/height are nominal — CSS overrides
-              with width:100% + height:auto so aspect ratio comes
-              from the source. */}
+              the actual size so aspect ratio comes from the source. */}
           <Image
             src={currentLayer.photoUrl}
             alt={currentLayer.title ?? ''}
             width={1920}
             height={1280}
-            sizes="(max-width: 1200px) 100vw, 1180px"
-            className="block w-full h-auto select-none"
+            sizes="(max-width: 768px) 130vw, (max-width: 1200px) 100vw, 1180px"
+            className="block h-[68vh] w-auto md:h-auto md:w-full select-none"
             draggable={false}
             priority
           />
@@ -262,7 +269,11 @@ export function ComplexVisualizationViewer({
               </button>
             )
           })}
+          </div>
         </div>
+        {/* Subtle right-edge gradient hints at horizontal scroll on mobile.
+            On md+ the parent isn't scrollable so the hint is hidden. */}
+        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white/40 to-transparent md:hidden" />
       </div>
 
       {mounted && popup && createPortal(
@@ -285,14 +296,25 @@ function UnitPopup({
     reserved: { text: 'Забронировано', cls: 'bg-[#F59E0B] text-white' },
     sold:     { text: 'Продано',        cls: 'bg-[#DC2626] text-white' },
   }[popup.availability] : null
-  const ref = useRef<HTMLDivElement>(null)
-  const [pos, setPos] = useState<{ left: number; top: number }>({ left: -9999, top: -9999 })
 
-  // After mount, measure actual popup height and place it relative
-  // to the click point with smart flipping: prefer below+centred,
-  // flip above if not enough room below; clamp to viewport with
-  // 12 px margin so it never bleeds off the edge.
+  // Mobile = bottom-sheet glued to viewport bottom, full-width minus
+  // gutters. Always lands in the same place regardless of where in
+  // the swipeable plan the user tapped. Desktop keeps the smart-flip
+  // anchored to the click point.
+  const ref = useRef<HTMLDivElement>(null)
+  const [isMobile, setIsMobile] = useState(false)
+  const [pos, setPos] = useState<{ left: number; top: number } | null>(null)
+
   useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)')
+    const apply = () => setIsMobile(mq.matches)
+    apply()
+    mq.addEventListener('change', apply)
+    return () => mq.removeEventListener('change', apply)
+  }, [])
+
+  useEffect(() => {
+    if (isMobile) { setPos(null); return }
     const el = ref.current
     if (!el) return
     const w = el.offsetWidth || POPUP_W
@@ -309,21 +331,13 @@ function UnitPopup({
     const left = Math.max(margin, Math.min(vw - w - margin, rawLeft))
 
     setPos({ left, top })
-  }, [popup])
+  }, [popup, isMobile])
 
-  return (
-    <div
-      ref={ref}
-      onClick={e => e.stopPropagation()}
-      style={{ position: 'fixed', left: pos.left, top: pos.top, width: POPUP_W, zIndex: 1000 }}
-      // overflow-hidden + rounded-2xl on the outer card → photo
-      // clips to the rounded corners flush with no inner padding,
-      // text body keeps its p-3 breathing room.
-      className="bg-white rounded-2xl shadow-[0_12px_32px_rgba(0,0,0,0.18)] border border-[var(--color-border)] overflow-hidden"
-    >
+  const cardBody = (
+    <>
       {popup.unit.photoUrl && (
-        <div className="relative w-full h-36">
-          <Image src={popup.unit.photoUrl} alt={popup.unit.title} fill sizes="280px" className="object-cover" />
+        <div className="relative w-full h-36 md:h-36">
+          <Image src={popup.unit.photoUrl} alt={popup.unit.title} fill sizes="(max-width: 767px) 100vw, 280px" className="object-cover" />
           {statusBadge && (
             <div className={`absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10.5px] font-semibold uppercase tracking-wide ${statusBadge.cls}`}>
               {statusBadge.text}
@@ -359,6 +373,46 @@ function UnitPopup({
           </button>
         </div>
       </div>
+    </>
+  )
+
+  if (isMobile) {
+    // Mobile bottom-sheet: tap-anywhere backdrop + sheet pinned to
+    // bottom with a grab handle. Sheet stays in the same screen spot
+    // regardless of which corner of the swipeable plan was tapped.
+    return (
+      <div className="fixed inset-0 z-[1000] flex items-end justify-center" onClick={onDismiss}>
+        <div className="absolute inset-0 bg-black/30" />
+        <div
+          ref={ref}
+          onClick={e => e.stopPropagation()}
+          className="relative w-[calc(100%-16px)] max-w-md mb-2 bg-white rounded-2xl shadow-[0_-12px_32px_rgba(0,0,0,0.18)] border border-[var(--color-border)] overflow-hidden animate-[sheet-up_180ms_ease-out]"
+        >
+          <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-9 h-1 rounded-full bg-black/20 z-10" />
+          {cardBody}
+        </div>
+        <style>{`@keyframes sheet-up { from { transform: translateY(16px); opacity: 0.5 } to { transform: translateY(0); opacity: 1 } }`}</style>
+      </div>
+    )
+  }
+
+  return (
+    <div
+      ref={ref}
+      onClick={e => e.stopPropagation()}
+      style={{
+        position: 'fixed',
+        left: pos?.left ?? -9999,
+        top: pos?.top ?? -9999,
+        width: POPUP_W,
+        zIndex: 1000,
+      }}
+      // overflow-hidden + rounded-2xl on the outer card → photo
+      // clips to the rounded corners flush with no inner padding,
+      // text body keeps its p-3 breathing room.
+      className="bg-white rounded-2xl shadow-[0_12px_32px_rgba(0,0,0,0.18)] border border-[var(--color-border)] overflow-hidden"
+    >
+      {cardBody}
     </div>
   )
 }

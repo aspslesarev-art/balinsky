@@ -8,6 +8,7 @@ import { Home, Building, Building2, HardHat, KeyRound, Menu, X } from 'lucide-re
 import { LangSwitch } from './LangSwitch'
 import { CurrencyToggle } from './CurrencyContext'
 import { WishlistHeaderLink } from './WishlistHeaderLink'
+import { TrustStrip } from './TrustStrip'
 import { t, type Lang } from '@/lib/i18n'
 
 type NavKey = 'villy' | 'apartamenty' | 'zhilye-kompleksy' | 'zastrojshhiki' | 'arenda'
@@ -26,6 +27,7 @@ export function Header({ active }: { active?: NavKey }) {
   const lang: Lang = pathname.startsWith('/en') ? 'en' : 'ru'
 
   return (
+    <>
     <header className="sticky top-0 z-20 w-full bg-[var(--color-header-bg)] border-b border-[var(--color-border)]">
       {/* Mobile shows only burger + right cluster (logo lives inside
           the dropdown). Desktop is the original flex layout — logo
@@ -121,5 +123,7 @@ export function Header({ active }: { active?: NavKey }) {
         </div>
       )}
     </header>
+    <TrustStrip lang={lang} />
+    </>
   )
 }
