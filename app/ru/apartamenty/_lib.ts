@@ -392,8 +392,15 @@ export function toCard(
        firstString(d['ИИ Имя']) ??
        firstString(d['Name']))
   if (!titleBase) return null
-  // DEBUG MARKER — confirms which branch fired in production output
-  const title = lang === 'en' ? `🌍 ${titleBase}` : titleBase
+  // DEBUG — encode which field actually returned a string at runtime
+  const __dbg = lang === 'en'
+    ? [
+        firstString(d['SEO:Title EN']) ? 'T' : '_',
+        firstString(d['ИИ Имя EN'])     ? 'A' : '_',
+        firstString(d['SEO:Title'])     ? 't' : '_',
+      ].join('')
+    : ''
+  const title = lang === 'en' ? `🌍[${__dbg}] ${titleBase}` : titleBase
   // Investor-relevant snapshot fields (same as villas — read straight
   // off the row so heart-tap from the catalog carries them into the
   // wishlist without extra fetches).
