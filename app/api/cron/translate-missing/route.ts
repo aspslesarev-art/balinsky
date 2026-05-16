@@ -65,20 +65,38 @@ function hashSources(missing: Record<string, string>): string {
   return crypto.createHash('sha1').update(ordered).digest('hex').slice(0, 16)
 }
 
+// Per-language search-intent. English is calibrated for google.com
+// vocabulary real foreign buyers actually use, not a calque from RU.
+const SEO_INTENT: Record<Lang, string> = {
+  en: `SEO INTENT (English / google.com):
+Buyers search with patterns like "bali villas for sale", "buy villa in canggu", "off-plan apartment uluwatu", "bali property investment", "bali real estate", "leasehold villa bali", "{project} bali", "{district} apartments for sale". Use that vocabulary naturally.
+- Headlines: "{Project} {Type} for Sale in {District}, Bali — {Area} m², {N}-Bedroom" OR "{N}-Bedroom {Type} in {District} Bali — {Project}". Do not start with the type ("Villa Origins…") — that's a calque from Russian.
+- Avoid stiff Russian word order. Native English real-estate copy puts project name first when recognised, then type, then location.
+- Body may use "for sale", "investment", "ROI", "rental yield", "leasehold", "freehold (PT PMA)", "off-plan", "ready" when they fit the source.
+- Don't stuff keywords. Write like a Bali broker email to a Singapore buyer.`,
+  zh: `SEO INTENT (Simplified Chinese / google.com.hk + baidu): buyers search "巴厘岛别墅出售", "巴厘岛房产投资", "巴厘岛公寓". Keep Latin Bali district + project names.`,
+  fr: `SEO INTENT (French / google.fr): buyers search "villa à vendre bali", "investissement immobilier bali", "appartement bali". Keep Latin Bali district + project names.`,
+  de: `SEO INTENT (German / google.de): buyers search "villa kaufen bali", "immobilien investition bali", "wohnung bali". Keep Latin Bali district + project names.`,
+}
+
 function systemPromptFor(lang: Lang): string {
   const langName = LANGS[lang].name
-  const districtNote = lang === 'zh'
-    ? `Bali place names (Canggu, Pererenan, Ubud, Uluwatu, etc.) stay in Latin script — do not transliterate them into ${langName}.`
-    : `Bali place names (Canggu, Pererenan, Ubud, Uluwatu, etc.) stay in the original Latin spelling.`
-  return `You translate Russian real-estate marketing copy into ${langName} for balinsky.info, a Bali real-estate catalogue. The user message is a JSON object whose keys are Airtable field names and whose values are Russian source strings to translate. Respond with ONE JSON object: same keys, ${langName} translations as values.
+  const seo = SEO_INTENT[lang] ?? ''
+  return `You are rewriting Russian real-estate marketing copy into ${langName} for balinsky.info, a Bali real-estate catalogue. The user message is a JSON object whose keys are Airtable field names and whose values are Russian source strings. Respond with ONE JSON object: same keys, ${langName} rewrites as values.
 
-Guidelines:
-- Preserve markdown / line breaks / bullet markers exactly as in the source.
-- Preserve numbers, prices, dates, units. ${districtNote}
-- Headline fields (SEO:Title, ИИ Имя) ≤ 9-word equivalent, no emoji, no trailing punctuation.
-- SEO:Description: 130-160 chars latin-equivalent, one sentence, no clickbait.
-- Body / Notes / Описание: natural ${langName} broker tone, faithful, no invented facts.
-- Empty / trivial → return empty string.`
+This is not a literal translation. Match the search intent and natural phrasing of ${langName}-speaking buyers — see SEO INTENT below.
+
+${seo}
+
+Universal rules:
+- Preserve formatting: markdown, line breaks, bullet markers exactly as source.
+- Preserve numbers, prices, dates, units. Bali place names (Canggu, Pererenan, Ubud, Uluwatu, Bukit, Nusa Dua, Sanur, Berawa, Batu Bolong, etc.) stay in Latin in every language.
+- Project / villa / complex / developer proper names stay in original Latin if already Latin; transliterate Russian-only names into Latin once.
+- Headline fields (SEO:Title, ИИ Имя) ≤ 9-word equivalent, no emoji, no trailing punctuation. For English, follow the headline pattern in SEO INTENT.
+- SEO:Description: 130-160 chars latin-equivalent, one sentence, factual, naturally include a search keyword like "for sale" / "investment" / "leasehold" where relevant.
+- Body / Notes / Описание: natural ${langName} broker tone. Faithful to facts; no invented prices, addresses, claims.
+- Developer-category bullet fields rewritten bullet-by-bullet, preserving bullet markers.
+- Empty / trivial source → return empty string for that field.`
 }
 
 type AzureEnv = { key: string; endpoint: string; version: string; model: string }
@@ -167,7 +185,7 @@ async function loadFromManifest(url: string, idField: string) {
   return items.map((it: Record<string, unknown>) => ({ id: it[idField] as string, data: it }))
 }
 
-async function runSection(sb: Sb, name: string, cfg: Section, lang: Lang, env: AzureEnv): Promise<{ translated: number; skipped: number }> {
+async function runSection(sb: Sb, name: string, cfg: Section, lang: Lang, env: AzureEnv, force = false): Promise<{ translated: number; skipped: number }> {
   const cache = await loadCache(sb, name, lang)
   const rows = cfg.source === 'manifest'
     ? await loadFromManifest(cfg.url!, cfg.idField!)
@@ -191,6 +209,10 @@ async function runSection(sb: Sb, name: string, cfg: Section, lang: Lang, env: A
 
     const entry = cache[r.id]
     const currentHash = hashSources(sources)
+    if (force) {
+      plan.push({ id: r.id, missing: sources, hash: currentHash, action: 're-translate' })
+      continue
+    }
     if (!entry) {
       plan.push({ id: r.id, missing: sources, hash: currentHash, action: 'new' })
       continue
@@ -269,13 +291,14 @@ export async function GET(req: Request) {
   const targetSections = sectionsParam
     ? sectionsParam.split(',').map(s => s.trim()).filter(s => s in sectionConfig)
     : Object.keys(sectionConfig)
+  const force = url.searchParams.get('force') === 'true'
 
   const results: Record<string, Record<string, { translated: number; skipped: number; error?: string }>> = {}
   for (const lang of langs) {
     results[lang] = {}
     for (const name of targetSections) {
       try {
-        results[lang][name] = await runSection(sb, name, sectionConfig[name], lang, env)
+        results[lang][name] = await runSection(sb, name, sectionConfig[name], lang, env, force)
       } catch (e) {
         results[lang][name] = { translated: 0, skipped: 0, error: e instanceof Error ? e.message : 'unknown' }
       }
