@@ -95,19 +95,23 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
 const BOTTOM_BY_LANG: Record<Lang, { label: string; href: string }[]> = {
   ru: [
     { label: 'О нас', href: '/ru/o-balinsky' },
-    { label: 'Реклама', href: '#' },
-    { label: 'Сотрудничество с застройщиками', href: '#' },
-    { label: 'Сотрудничество с агентствами', href: '#' },
-    { label: 'Политика конфиденциальности', href: '#' },
-    { label: 'Связаться', href: '#' },
+    { label: 'Реклама', href: '/ru/kontakty' },
+    { label: 'Сотрудничество с застройщиками', href: '/ru/kontakty' },
+    { label: 'Сотрудничество с агентствами', href: '/ru/kontakty' },
+    { label: 'Политика конфиденциальности', href: '/ru/politika-konfidencialnosti' },
+    { label: 'Условия использования', href: '/ru/usloviya' },
+    { label: 'Cookie', href: '/ru/cookie' },
+    { label: 'Связаться', href: '/ru/kontakty' },
   ],
   en: [
     { label: 'About', href: '/en/about' },
-    { label: 'Advertising', href: '#' },
-    { label: 'Developer partnerships', href: '#' },
-    { label: 'Agency partnerships', href: '#' },
-    { label: 'Privacy policy', href: '#' },
-    { label: 'Contact', href: '#' },
+    { label: 'Advertising', href: '/en/contact' },
+    { label: 'Developer partnerships', href: '/en/contact' },
+    { label: 'Agency partnerships', href: '/en/contact' },
+    { label: 'Privacy policy', href: '/en/privacy' },
+    { label: 'Terms of use', href: '/en/terms' },
+    { label: 'Cookie', href: '/en/cookie' },
+    { label: 'Contact', href: '/en/contact' },
   ],
 }
 

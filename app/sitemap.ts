@@ -97,6 +97,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/en/about`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${SITE_URL}/en/how-to-buy`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${SITE_URL}/en/invest-tour`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
+    // Trust pages — small priority, but Google reads them for E-E-A-T signals
+    { url: `${SITE_URL}/ru/kontakty`, lastModified: now, changeFrequency: 'monthly', priority: 0.4 },
+    { url: `${SITE_URL}/en/contact`, lastModified: now, changeFrequency: 'monthly', priority: 0.4 },
+    { url: `${SITE_URL}/ru/politika-konfidencialnosti`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${SITE_URL}/en/privacy`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${SITE_URL}/ru/usloviya`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${SITE_URL}/en/terms`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${SITE_URL}/ru/cookie`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${SITE_URL}/en/cookie`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
   ]
 
   // One-shot data load — shared between filter routes, RU/EN detail routes
