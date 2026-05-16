@@ -11,10 +11,6 @@
     {
       "path": "/api/cron/assistant-alerts",
       "schedule": "0 2 * * *"
-    },
-    {
-      "path": "/api/cron/translate-missing?lang=en",
-      "schedule": "30 */6 * * *"
     }
   ]
 }
