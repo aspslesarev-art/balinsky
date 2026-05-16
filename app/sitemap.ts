@@ -112,6 +112,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/en/terms`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${SITE_URL}/ru/cookie`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${SITE_URL}/en/cookie`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
+    // Programmatic landing — district investment pages
+    ...['canggu','uluwatu','ubud','sanur','pererenan','berawa','nusa-dua','nyanyi','melasti','kerobokan','cemagi','umalas'].flatMap(d => [
+      { url: `${SITE_URL}/ru/investicii/${d}`,                    lastModified: now, changeFrequency: 'weekly' as const, priority: 0.7 },
+      { url: `${SITE_URL}/en/bali-property-investment/${d}`,      lastModified: now, changeFrequency: 'weekly' as const, priority: 0.7 },
+    ]),
+    // Programmatic landing — completed/scheduled complexes by year
+    ...['2023','2024','2025','2026','2027','2028'].flatMap(y => [
+      { url: `${SITE_URL}/ru/sdano/${y}`,        lastModified: now, changeFrequency: 'monthly' as const, priority: 0.5 },
+      { url: `${SITE_URL}/en/completed-in/${y}`, lastModified: now, changeFrequency: 'monthly' as const, priority: 0.5 },
+    ]),
   ]
 
   // One-shot data load — shared between filter routes, RU/EN detail routes
@@ -232,6 +242,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const slug of devSlugs) {
     developers.push({ url: `${SITE_URL}/ru/zastrojshhiki/${slug}`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 })
     developers.push({ url: `${SITE_URL}/en/developers/${slug}`,    lastModified: now, changeFrequency: 'weekly', priority: 0.7 })
+    // Per-developer reviews landing
+    developers.push({ url: `${SITE_URL}/ru/zastrojshhiki/${slug}/otzyvy`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 })
   }
 
   // Dedupe by URL (top-level pages may also be in section listings)
