@@ -382,7 +382,7 @@ export function toCard(
   const slug = normalizeSlug(firstString(d['SEO:Slug']))
   if (!slug || slug.startsWith('-')) return null
   // Lang-aware title — see villy/_lib.ts toCard() for the same logic.
-  const title = lang === 'en'
+  const titleBase = lang === 'en'
     ? (cleanTitle(firstString(d['SEO:Title EN'])) ??
        firstString(d['ИИ Имя EN']) ??
        cleanTitle(firstString(d['SEO:Title'])) ??
@@ -391,7 +391,9 @@ export function toCard(
     : (cleanTitle(firstString(d['SEO:Title'])) ??
        firstString(d['ИИ Имя']) ??
        firstString(d['Name']))
-  if (!title) return null
+  if (!titleBase) return null
+  // DEBUG MARKER — confirms which branch fired in production output
+  const title = lang === 'en' ? `🌍 ${titleBase}` : titleBase
   // Investor-relevant snapshot fields (same as villas — read straight
   // off the row so heart-tap from the catalog carries them into the
   // wishlist without extra fetches).
