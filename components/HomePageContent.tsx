@@ -13,6 +13,7 @@ import { BalinaHero } from '@/components/BalinaHero'
 import { PageContainer } from '@/components/PageContainer'
 import { VillaCard, type VillaCardData } from '@/components/VillaCard'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
+import { HomeSeoBlocks } from './HomeSeoBlocks'
 import { loadAll as loadAllVillas, buildAllCards as buildAllVillaCards, type VillaFilterState } from '@/app/ru/villy/_lib'
 import { loadLatestYouTubeVideos } from '@/lib/youtube'
 import { YouTubeBlock } from '@/components/YouTubeBlock'
@@ -502,6 +503,8 @@ export async function HomePageContent({ lang }: { lang: Lang }) {
             <p>{c.seoP1}</p>
             <p className="text-[var(--color-text-muted)]">{c.seoP2}</p>
           </div>
+
+          <HomeSeoBlocks lang={lang} />
 
           <h3 className="text-[18px] font-semibold text-[#111827] mt-10 mb-4">{c.faqTitle}</h3>
           <div className="max-w-3xl divide-y divide-[var(--color-border)] border-t border-b border-[var(--color-border)]">
