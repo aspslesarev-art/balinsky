@@ -8,7 +8,7 @@ import { ComplexInfiniteScrollClient } from '@/components/ComplexInfiniteScrollC
 import { ComplexFiltersBar } from '@/components/complex-filters/ComplexFiltersBar'
 import { SubscribeCTA } from '@/components/SubscribeCTA'
 import { DistrictIntroBlock } from '@/components/DistrictIntroBlock'
-import { getDistrictCopy } from '@/lib/districts'
+import { getDistrictCopy, getDistrictCommercialMeta } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { buildListHref, buildMapHref } from '@/lib/complex-filter-href'
 import { loadCatalogPage, buildHeading, buildHeadingEn, type ComplexFilterState } from './_lib'
@@ -57,7 +57,6 @@ export async function ComplexesCatalog({
   const { cards, totalCount, totalPages, hasMore, options, page: actualPage } =
     await loadCatalogPage(filters, page, lang)
   const isSearch = filters.q.trim().length > 0
-  const heading = lang === 'en' ? buildHeadingEn(filters) : buildHeading(filters)
   const copy = COPY[lang]
 
   // Use complex tab hrefs (not the apartments ones from CatalogTabs defaults).
@@ -69,9 +68,13 @@ export async function ComplexesCatalog({
     && filters.types.length === 0
     && filters.q.trim().length === 0
     && actualPage === 1
-  const districtCopy = isSingleDistrictHub
-    ? getDistrictCopy(DISTRICT_TO_SLUG[filters.district[0]] ?? filters.district[0].toLowerCase(), lang)
+  const districtSlug = isSingleDistrictHub
+    ? (DISTRICT_TO_SLUG[filters.district[0]] ?? filters.district[0].toLowerCase())
     : null
+  const districtCopy = districtSlug ? getDistrictCopy(districtSlug, lang) : null
+  const districtMeta = districtSlug ? getDistrictCommercialMeta(districtSlug, lang, 'complex', totalCount) : null
+  const heading = districtMeta?.heading
+    ?? (lang === 'en' ? buildHeadingEn(filters) : buildHeading(filters))
   const sectionRoot = lang === 'en' ? '/en/complexes' : '/ru/zhilye-kompleksy'
 
   return (

@@ -22,7 +22,15 @@ export async function generateMetadata({ params }: { params: Params }) {
 
   const baseCanonical = buildCanonicalPath(filters) ?? '/ru/villy'
   const canonical = page === 1 ? baseCanonical : `${baseCanonical}/page/${page}`
-  const meta = buildMetadata(filters, { canonicalPath: canonical, noIndex: false })
+  // Need totalCount in title/description for the commercial pattern on
+  // single-district hubs («Купить виллу в Нуса Дуа, Бали — 47 вилл 2026»).
+  // loadCatalogPage is dedupe-cached by Next, so this doesn't double-fetch.
+  let totalCount: number | undefined
+  try {
+    const probe = await loadCatalogPage(filters, page)
+    totalCount = probe.totalCount
+  } catch {}
+  const meta = buildMetadata(filters, { canonicalPath: canonical, noIndex: false, totalCount })
   if (page > 1) {
     const baseTitle = typeof meta.title === 'string' ? meta.title : 'Виллы и дома | Balinsky'
     meta.title = baseTitle.replace(' | Balinsky', '') + ` — страница ${page} | Balinsky`

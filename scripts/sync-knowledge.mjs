@@ -76,18 +76,46 @@ const recs = await fetchAll(BASE, TABLE)
 await applyAiFallback(recs, 'knowledge article')
 console.log('  records:', recs.length)
 
-// Parse leading [audience:investor|agent|both] marker from body.
-// Returns { audience: ('investor'|'agent')[], body: bodyWithoutMarker }.
-// If no marker, defaults to ['investor'] — existing lifestyle/safety articles
-// fit the investor tab; agent-track articles must be explicitly tagged.
+// Parse leading [audience:investor|agent|life|both|all] marker from body.
+// Returns { audience: KnowledgeAudience[], body: bodyWithoutMarker, hasMarker }.
+// 'both' = investor+agent (business content useful for both sides of a deal).
+// 'all' = investor+agent+life (very general content).
+// Caller decides default when hasMarker is false.
 function extractAudience(body) {
-  const m = body.match(/^\s*\[audience:\s*(investor|agent|both|all)\s*\]\s*\n?/i)
-  if (!m) return { audience: ['investor'], body }
+  const m = body.match(/^\s*\[audience:\s*(investor|agent|life|both|all)\s*\]\s*\n?/i)
+  if (!m) return { audience: null, body, hasMarker: false }
   const tag = m[1].toLowerCase()
   const audience = tag === 'investor' ? ['investor']
     : tag === 'agent' ? ['agent']
-    : ['investor', 'agent']
-  return { audience, body: body.slice(m[0].length) }
+    : tag === 'life' ? ['life']
+    : tag === 'both' ? ['investor', 'agent']
+    : ['investor', 'agent', 'life']
+  return { audience, body: body.slice(m[0].length), hasMarker: true }
+}
+
+// Resolve a string tag from the overrides JSON into an audience array.
+function audienceFromTag(tag) {
+  switch ((tag || '').toLowerCase()) {
+    case 'investor': return ['investor']
+    case 'agent': return ['agent']
+    case 'life': return ['life']
+    case 'both': return ['investor', 'agent']
+    case 'all': return ['investor', 'agent', 'life']
+    default: return null
+  }
+}
+
+// Load per-record audience overrides (Airtable id -> tag).
+let audienceOverrides = {}
+try {
+  const raw = fs.readFileSync('scripts/knowledge-audience-overrides.json', 'utf8')
+  const parsed = JSON.parse(raw)
+  for (const [k, v] of Object.entries(parsed)) {
+    if (k.startsWith('_')) continue
+    audienceOverrides[k] = v
+  }
+} catch (e) {
+  console.log('  no audience overrides file:', e.message)
 }
 
 const items = []
@@ -99,7 +127,12 @@ for (const r of recs) {
   const rawBody = fs1(f['Notes'])
   if (!title || !rawBody) { dropped++; continue }
 
-  const { audience, body } = extractAudience(rawBody)
+  const { audience: parsed, body, hasMarker } = extractAudience(rawBody)
+  // Resolution: explicit marker > per-record override > default 'life'.
+  // Default 'life' fits the existing batch of Airtable records (most are
+  // lifestyle / culture / wellness / utility apps).
+  const audience = hasMarker ? parsed
+    : (audienceFromTag(audienceOverrides[r.id]) ?? ['life'])
 
   let slug = slugify(title)
   // dedupe slugs by appending suffix
@@ -137,7 +170,8 @@ try {
     const title = (a.name || '').trim()
     const rawBody = (a.notes || '').trim()
     if (!title || !rawBody) continue
-    const { audience, body } = extractAudience(rawBody)
+    const { audience: parsedStatic, body, hasMarker: staticHasMarker } = extractAudience(rawBody)
+    const audience = staticHasMarker ? parsedStatic : ['investor']
     let slug = slugify(title)
     const n = (seenSlugSet.has(slug) ? 2 : 1)
     if (n > 1) slug = `${slug}-static-${idx + 1}`

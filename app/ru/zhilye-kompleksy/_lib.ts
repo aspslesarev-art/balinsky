@@ -4,6 +4,8 @@ import type { ComplexCardData } from '@/components/ComplexCard'
 import type { Option } from '@/components/filters/MultiSelectFilter'
 import { translit, hasCyrillic } from '@/lib/translit'
 import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
+import { getDistrictCommercialMeta } from '@/lib/districts'
+import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/complex-photos/_manifest.json`
@@ -665,10 +667,25 @@ export function buildMetadataEn(
   opts: { canonicalPath: string; noIndex: boolean; totalCount?: number },
 ) {
   const isSectionRoot = opts.canonicalPath === '/en/complexes'
-  const title = isSectionRoot && opts.totalCount
-    ? `Bali Residential Complexes — ${opts.totalCount} new developments by trusted builders | Balinsky`
-    : buildTitleEn(f)
-  const description = buildDescriptionEn(f, opts.totalCount)
+  const singleDistrict = !isSectionRoot
+    && f.district.length === 1
+    && f.types.length === 0
+    && f.status.length === 0
+    && f.permit.length === 0
+    && f.year.length === 0
+    && f.developer.length === 0
+    && f.q.trim().length === 0
+  const districtSlug = singleDistrict
+    ? (DISTRICT_TO_SLUG[f.district[0]] ?? f.district[0].toLowerCase())
+    : null
+  const districtMeta = districtSlug
+    ? getDistrictCommercialMeta(districtSlug, 'en', 'complex', opts.totalCount)
+    : null
+  const title = districtMeta?.title
+    ?? (isSectionRoot && opts.totalCount
+      ? `Bali Residential Complexes — ${opts.totalCount} new developments by trusted builders | Balinsky`
+      : buildTitleEn(f))
+  const description = districtMeta?.description ?? buildDescriptionEn(f, opts.totalCount)
   return {
     title,
     description,
@@ -708,10 +725,25 @@ export function buildMetadata(
   opts: { canonicalPath: string; noIndex: boolean; totalCount?: number },
 ) {
   const isSectionRoot = opts.canonicalPath === '/ru/zhilye-kompleksy'
-  const title = isSectionRoot && opts.totalCount
-    ? `Жилые комплексы на Бали — ${opts.totalCount} новостроек от застройщиков | Balinsky`
-    : buildTitle(f)
-  const description = buildDescription(f, opts.totalCount)
+  const singleDistrict = !isSectionRoot
+    && f.district.length === 1
+    && f.types.length === 0
+    && f.status.length === 0
+    && f.permit.length === 0
+    && f.year.length === 0
+    && f.developer.length === 0
+    && f.q.trim().length === 0
+  const districtSlug = singleDistrict
+    ? (DISTRICT_TO_SLUG[f.district[0]] ?? f.district[0].toLowerCase())
+    : null
+  const districtMeta = districtSlug
+    ? getDistrictCommercialMeta(districtSlug, 'ru', 'complex', opts.totalCount)
+    : null
+  const title = districtMeta?.title
+    ?? (isSectionRoot && opts.totalCount
+      ? `Жилые комплексы на Бали — ${opts.totalCount} новостроек от застройщиков | Balinsky`
+      : buildTitle(f))
+  const description = districtMeta?.description ?? buildDescription(f, opts.totalCount)
   return {
     title,
     description,

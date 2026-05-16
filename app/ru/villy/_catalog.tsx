@@ -8,7 +8,7 @@ import { VillaCatalogSearchBar } from '@/components/VillaCatalogSearchBar'
 import { VillaInfiniteScrollClient } from '@/components/VillaInfiniteScrollClient'
 import { VillaFiltersBar } from '@/components/villa-filters/VillaFiltersBar'
 import { DistrictIntroBlock } from '@/components/DistrictIntroBlock'
-import { getDistrictCopy } from '@/lib/districts'
+import { getDistrictCopy, getDistrictCommercialMeta } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { SubscribeCTA } from '@/components/SubscribeCTA'
 import { buildListHref, buildMapHref } from '@/lib/villa-filter-href'
@@ -60,7 +60,6 @@ export async function VillasCatalog({
   const { cards, totalCount, totalPages, hasMore, options, page: actualPage } =
     await loadCatalogPage(filters, page, lang)
   const isSearch = filters.q.trim().length > 0
-  const heading = lang === 'en' ? buildHeadingEn(filters) : buildHeading(filters)
   const copy = COPY[lang]
 
   // Single-district filter with no other narrowing → show the rich
@@ -74,9 +73,16 @@ export async function VillasCatalog({
     && filters.priceMin == null && filters.priceMax == null
     && filters.q.trim().length === 0
     && actualPage === 1
-  const districtCopy = isSingleDistrictHub
-    ? getDistrictCopy(DISTRICT_TO_SLUG[filters.district[0]] ?? filters.district[0].toLowerCase(), lang)
+  const districtSlug = isSingleDistrictHub
+    ? (DISTRICT_TO_SLUG[filters.district[0]] ?? filters.district[0].toLowerCase())
     : null
+  const districtCopy = districtSlug ? getDistrictCopy(districtSlug, lang) : null
+  const districtMeta = districtSlug ? getDistrictCommercialMeta(districtSlug, lang, 'villa', totalCount) : null
+  // H1 uses the commercial heading for single-district hubs («Купить
+  // виллу в Нуса Дуа, Бали — 47 вилл 2026»). Other combos keep the
+  // descriptive buildHeading so each combo page has a unique H1.
+  const heading = districtMeta?.heading
+    ?? (lang === 'en' ? buildHeadingEn(filters) : buildHeading(filters))
   const sectionRoot = lang === 'en' ? '/en/villas' : '/ru/villy'
 
   return (

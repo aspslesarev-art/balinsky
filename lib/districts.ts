@@ -463,3 +463,78 @@ export function getDistrictCopy(slug: string, lang: Lang): DistrictCopy | null {
   if (!bundle) return null
   return bundle[lang]
 }
+
+// Commercial title / heading / description for single-district hub pages.
+// Audit feedback: the descriptive defaults («Виллы и дома в районе Nusa Dua»)
+// don't carry the «купить» keyword, year, count or commercial signals.
+// This produces the «Купить виллу в Нуса Дуа, Бали — N объектов 2026 …»
+// pattern + a description with price-from and yield range pulled from the
+// editorial district data.
+export type Kind = 'villa' | 'apartment' | 'complex'
+
+const NOUN: Record<Lang, Record<Kind, { sing: string; plural: (n: number) => string }>> = {
+  ru: {
+    villa:     { sing: 'виллу',  plural: n => pluralRu(n, 'вилла', 'виллы', 'вилл') },
+    apartment: { sing: 'квартиру', plural: n => pluralRu(n, 'апартамент', 'апартамента', 'апартаментов') },
+    complex:   { sing: 'жилой комплекс', plural: n => pluralRu(n, 'жилой комплекс', 'жилых комплекса', 'жилых комплексов') },
+  },
+  en: {
+    villa:     { sing: 'a villa', plural: n => n === 1 ? 'villa' : 'villas' },
+    apartment: { sing: 'an apartment', plural: n => n === 1 ? 'apartment' : 'apartments' },
+    complex:   { sing: 'a residential complex', plural: n => n === 1 ? 'residential complex' : 'residential complexes' },
+  },
+}
+
+function pluralRu(n: number, one: string, few: string, many: string): string {
+  const mod10 = n % 10
+  const mod100 = n % 100
+  if (mod10 === 1 && mod100 !== 11) return one
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 > 20)) return few
+  return many
+}
+
+const YEAR = 2026
+
+export function getDistrictCommercialMeta(
+  slug: string,
+  lang: Lang,
+  kind: Kind,
+  totalCount?: number,
+): { title: string; heading: string; description: string } | null {
+  const copy = getDistrictCopy(slug, lang)
+  if (!copy) return null
+  const n = NOUN[lang][kind]
+  const priceFrom = copy.highlights.find(h => /entry|стартовая|from/i.test(h.label))?.value
+  const yieldRange = copy.highlights.find(h => /yield|доходность/i.test(h.label))?.value
+
+  if (lang === 'ru') {
+    const countWord = totalCount ? `${totalCount} ${n.plural(totalCount)}` : null
+    const heading = countWord
+      ? `Купить ${n.sing} в ${copy.name}, Бали — ${countWord} ${YEAR}`
+      : `Купить ${n.sing} в ${copy.name}, Бали — каталог ${YEAR}`
+    const title = `Купить ${n.sing} в ${copy.name}, Бали — цены ${YEAR} | Balinsky`
+    const descParts: string[] = [`Купить ${n.sing} в ${copy.name}, Бали`]
+    if (countWord) descParts.push(`— ${countWord} от застройщиков`)
+    const tail: string[] = []
+    if (priceFrom) tail.push(`Цены ${priceFrom.toLowerCase()}`)
+    if (yieldRange) tail.push(`доходность ${yieldRange}`)
+    tail.push('лизхолд и фрихолд')
+    const description = `${descParts.join(' ')}. ${tail.join(', ')}. Документы проверены, видео с земли.`
+    return { title, heading, description }
+  }
+
+  // en
+  const countWord = totalCount ? `${totalCount} ${n.plural(totalCount)}` : null
+  const heading = countWord
+    ? `Buy ${n.sing} in ${copy.name}, Bali — ${countWord} ${YEAR}`
+    : `Buy ${n.sing} in ${copy.name}, Bali — ${YEAR} catalogue`
+  const title = `Buy ${n.sing.replace(/^(a |an )/, '')} in ${copy.name}, Bali — ${YEAR} prices | Balinsky`
+  const descParts: string[] = [`Buy ${n.sing} in ${copy.name}, Bali`]
+  if (countWord) descParts.push(`— ${countWord} from developers`)
+  const tail: string[] = []
+  if (priceFrom) tail.push(`prices ${priceFrom.toLowerCase()}`)
+  if (yieldRange) tail.push(`yield ${yieldRange}`)
+  tail.push('leasehold and freehold')
+  const description = `${descParts.join(' ')}. ${tail.join(', ')}. Permits verified, on-the-ground video.`
+  return { title, heading, description }
+}

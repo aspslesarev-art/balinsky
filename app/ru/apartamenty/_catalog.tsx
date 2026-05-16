@@ -4,7 +4,7 @@ import { CatalogTabs } from '@/components/CatalogTabs'
 import { ApartmentCard } from '@/components/ApartmentCard'
 import { SeoContent } from '@/components/SeoContent'
 import { DistrictIntroBlock } from '@/components/DistrictIntroBlock'
-import { getDistrictCopy } from '@/lib/districts'
+import { getDistrictCopy, getDistrictCommercialMeta } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { CatalogSearchBar } from '@/components/CatalogSearchBar'
 import { InfiniteScrollClient } from '@/components/InfiniteScrollClient'
@@ -60,7 +60,6 @@ export async function ApartamentyCatalog({
   const { cards, totalCount, totalPages, hasMore, options, page: actualPage } =
     await loadCatalogPage(filters, page, lang)
   const isSearch = filters.q.trim().length > 0
-  const heading = lang === 'en' ? buildHeadingEn(filters) : buildHeading(filters)
   const copy = COPY[lang]
 
   const isSingleDistrictHub = filters.district.length === 1
@@ -69,9 +68,13 @@ export async function ApartamentyCatalog({
     && filters.priceMin == null && filters.priceMax == null
     && filters.q.trim().length === 0
     && actualPage === 1
-  const districtCopy = isSingleDistrictHub
-    ? getDistrictCopy(DISTRICT_TO_SLUG[filters.district[0]] ?? filters.district[0].toLowerCase(), lang)
+  const districtSlug = isSingleDistrictHub
+    ? (DISTRICT_TO_SLUG[filters.district[0]] ?? filters.district[0].toLowerCase())
     : null
+  const districtCopy = districtSlug ? getDistrictCopy(districtSlug, lang) : null
+  const districtMeta = districtSlug ? getDistrictCommercialMeta(districtSlug, lang, 'apartment', totalCount) : null
+  const heading = districtMeta?.heading
+    ?? (lang === 'en' ? buildHeadingEn(filters) : buildHeading(filters))
   const sectionRoot = lang === 'en' ? '/en/apartments' : '/ru/apartamenty'
 
   return (

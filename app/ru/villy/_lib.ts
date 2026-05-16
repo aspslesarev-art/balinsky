@@ -5,6 +5,8 @@ import { translit, hasCyrillic } from '@/lib/translit'
 import { loadVillaStyles } from '@/lib/villa-styles'
 import { normalizeSlug } from '@/lib/slug-normalize'
 import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
+import { getDistrictCommercialMeta } from '@/lib/districts'
+import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/villa-photos/_manifest.json`
@@ -753,10 +755,27 @@ export function buildMetadataEn(
   opts: { canonicalPath: string; noIndex: boolean; totalCount?: number },
 ) {
   const isSectionRoot = opts.canonicalPath === '/en/villas'
-  const title = isSectionRoot && opts.totalCount
-    ? `Bali Villas for Sale — ${opts.totalCount} houses with prices, photos & yields | Balinsky`
-    : buildTitleEn(f)
-  const description = buildDescriptionEn(f, opts.totalCount)
+  const singleDistrict = !isSectionRoot
+    && f.district.length === 1
+    && f.bedrooms.length === 0
+    && f.status.length === 0
+    && f.style.length === 0
+    && f.permit.length === 0
+    && f.year.length === 0
+    && f.developer.length === 0
+    && f.priceMin == null && f.priceMax == null
+    && f.q.trim().length === 0
+  const districtSlug = singleDistrict
+    ? (DISTRICT_TO_SLUG[f.district[0]] ?? f.district[0].toLowerCase())
+    : null
+  const districtMeta = districtSlug
+    ? getDistrictCommercialMeta(districtSlug, 'en', 'villa', opts.totalCount)
+    : null
+  const title = districtMeta?.title
+    ?? (isSectionRoot && opts.totalCount
+      ? `Bali Villas for Sale — ${opts.totalCount} houses with prices, photos & yields | Balinsky`
+      : buildTitleEn(f))
+  const description = districtMeta?.description ?? buildDescriptionEn(f, opts.totalCount)
   return {
     title, description,
     alternates: isSectionRoot
@@ -780,15 +799,21 @@ export function buildMetadataEn(
 // Mentions count when known, district, bedrooms, style, price range —
 // every input narrows the line further.
 export function buildDescription(f: VillaFilterState, totalCount?: number): string {
-  const noun =
+  // Genitive form for «N вилл и домов» (uses N), nominative for the
+  // no-count fallback («Виллы и дома») — capitalising the genitive
+  // produced grammatically broken «Вилл и домов» on hub pages.
+  const nounGen =
     f.bedrooms.length === 1 ? `${f.bedrooms[0]}-комнатных вилл и домов`
     : 'вилл и домов'
+  const nounNom =
+    f.bedrooms.length === 1 ? `${f.bedrooms[0]}-комнатные виллы и дома`
+    : 'Виллы и дома'
   const where =
     f.district.length === 1 ? `в районе ${f.district[0]}`
     : f.district.length > 1 ? `в районах ${f.district.join(', ')}`
     : 'на Бали'
   const countPart = typeof totalCount === 'number' && totalCount > 0
-    ? `${totalCount} ${noun}` : noun.charAt(0).toUpperCase() + noun.slice(1)
+    ? `${totalCount} ${nounGen}` : nounNom
   let s = `${countPart} ${where}`
   if (f.style.length === 1) s += ` в стиле ${f.style[0]}`
   if (f.status.length === 1) {
@@ -807,14 +832,30 @@ export function buildMetadata(
   opts: { canonicalPath: string; noIndex: boolean; totalCount?: number },
 ) {
   const isSectionRoot = opts.canonicalPath === '/ru/villy'
-  // Section-root title follows the commercial pattern recommended by
-  // the SEO audit: «Купить виллу на Бали — N вилл и домов | Balinsky».
-  // Filter combos still use the descriptive buildTitle so each combo
-  // page has a unique title (Google folds duplicates).
-  const title = isSectionRoot && opts.totalCount
-    ? `Купить виллу на Бали — ${opts.totalCount} вилл и домов с фото и ценами | Balinsky`
-    : buildTitle(f)
-  const description = buildDescription(f, opts.totalCount)
+  // Single-district hub (e.g. /ru/villy/canggu) → commercial pattern with
+  // RU district name, count, price-from, yield, leasehold/freehold —
+  // pulled from the editorial district copy in lib/districts.
+  const singleDistrict = !isSectionRoot
+    && f.district.length === 1
+    && f.bedrooms.length === 0
+    && f.status.length === 0
+    && f.style.length === 0
+    && f.permit.length === 0
+    && f.year.length === 0
+    && f.developer.length === 0
+    && f.priceMin == null && f.priceMax == null
+    && f.q.trim().length === 0
+  const districtSlug = singleDistrict
+    ? (DISTRICT_TO_SLUG[f.district[0]] ?? f.district[0].toLowerCase())
+    : null
+  const districtMeta = districtSlug
+    ? getDistrictCommercialMeta(districtSlug, 'ru', 'villa', opts.totalCount)
+    : null
+  const title = districtMeta?.title
+    ?? (isSectionRoot && opts.totalCount
+      ? `Купить виллу на Бали — ${opts.totalCount} вилл и домов с фото и ценами | Balinsky`
+      : buildTitle(f))
+  const description = districtMeta?.description ?? buildDescription(f, opts.totalCount)
   return {
     title,
     description,

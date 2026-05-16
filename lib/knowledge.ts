@@ -1,7 +1,7 @@
 import { applyManifestTranslation, loadEnTranslations } from '@/lib/en-translations'
 import type { Lang } from '@/lib/i18n'
 
-export type KnowledgeAudience = 'investor' | 'agent'
+export type KnowledgeAudience = 'investor' | 'agent' | 'life'
 
 export type KnowledgeItem = {
   id: string

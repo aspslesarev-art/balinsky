@@ -6,6 +6,8 @@ import type { Option } from '@/components/filters/MultiSelectFilter'
 import { translit, hasCyrillic } from '@/lib/translit'
 import { normalizeSlug } from '@/lib/slug-normalize'
 import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
+import { getDistrictCommercialMeta } from '@/lib/districts'
+import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/apartment-photos/_manifest.json`
@@ -638,10 +640,25 @@ export function buildMetadataEn(f: FilterState, opts: { canonicalPath: string; n
   // languages for those — pointing Google at a Russian filter combo that
   // doesn't have an EN equivalent would create false duplicates.
   const isSectionRoot = opts.canonicalPath === '/en/apartments'
-  const title = isSectionRoot && opts.totalCount
-    ? `Apartments for Sale in Bali — ${opts.totalCount} off-plan & ready units | Balinsky`
-    : buildTitleEn(f)
-  const description = buildDescriptionEn(f, opts.totalCount)
+  const singleDistrict = !isSectionRoot
+    && f.district.length === 1
+    && f.bedrooms.length === 0
+    && f.status.length === 0
+    && f.permit.length === 0
+    && f.developer.length === 0
+    && f.priceMin == null && f.priceMax == null
+    && f.q.trim().length === 0
+  const districtSlug = singleDistrict
+    ? (DISTRICT_TO_SLUG[f.district[0]] ?? f.district[0].toLowerCase())
+    : null
+  const districtMeta = districtSlug
+    ? getDistrictCommercialMeta(districtSlug, 'en', 'apartment', opts.totalCount)
+    : null
+  const title = districtMeta?.title
+    ?? (isSectionRoot && opts.totalCount
+      ? `Apartments for Sale in Bali — ${opts.totalCount} off-plan & ready units | Balinsky`
+      : buildTitleEn(f))
+  const description = districtMeta?.description ?? buildDescriptionEn(f, opts.totalCount)
   return {
     title, description,
     alternates: isSectionRoot
@@ -663,13 +680,14 @@ export function buildMetadataEn(f: FilterState, opts: { canonicalPath: string; n
 // Per-filter unique meta-description so 5–15K combo pages don't share one
 // generic line (Google folds duplicate-meta pages from indexing).
 export function buildDescription(f: FilterState, totalCount?: number): string {
-  const noun = f.bedrooms.length === 1 ? `${f.bedrooms[0]}-комнатных апартаментов` : 'апартаментов'
+  const nounGen = f.bedrooms.length === 1 ? `${f.bedrooms[0]}-комнатных апартаментов` : 'апартаментов'
+  const nounNom = f.bedrooms.length === 1 ? `${f.bedrooms[0]}-комнатные апартаменты` : 'Апартаменты'
   const where =
     f.district.length === 1 ? `в районе ${f.district[0]}`
     : f.district.length > 1 ? `в районах ${f.district.join(', ')}`
     : 'на Бали'
   const countPart = typeof totalCount === 'number' && totalCount > 0
-    ? `${totalCount} ${noun}` : noun.charAt(0).toUpperCase() + noun.slice(1)
+    ? `${totalCount} ${nounGen}` : nounNom
   let s = `${countPart} ${where}`
   if (f.status.length === 1) {
     const lbl = f.status[0] === 'building' ? 'строящихся'
@@ -684,10 +702,25 @@ export function buildDescription(f: FilterState, totalCount?: number): string {
 
 export function buildMetadata(f: FilterState, opts: { canonicalPath: string; noIndex: boolean; totalCount?: number }) {
   const isSectionRoot = opts.canonicalPath === '/ru/apartamenty'
-  const title = isSectionRoot && opts.totalCount
-    ? `Апартаменты на Бали — купить квартиру в новостройке, ${opts.totalCount} объектов | Balinsky`
-    : buildTitle(f)
-  const description = buildDescription(f, opts.totalCount)
+  const singleDistrict = !isSectionRoot
+    && f.district.length === 1
+    && f.bedrooms.length === 0
+    && f.status.length === 0
+    && f.permit.length === 0
+    && f.developer.length === 0
+    && f.priceMin == null && f.priceMax == null
+    && f.q.trim().length === 0
+  const districtSlug = singleDistrict
+    ? (DISTRICT_TO_SLUG[f.district[0]] ?? f.district[0].toLowerCase())
+    : null
+  const districtMeta = districtSlug
+    ? getDistrictCommercialMeta(districtSlug, 'ru', 'apartment', opts.totalCount)
+    : null
+  const title = districtMeta?.title
+    ?? (isSectionRoot && opts.totalCount
+      ? `Апартаменты на Бали — купить квартиру в новостройке, ${opts.totalCount} объектов | Balinsky`
+      : buildTitle(f))
+  const description = districtMeta?.description ?? buildDescription(f, opts.totalCount)
   return {
     title,
     description,

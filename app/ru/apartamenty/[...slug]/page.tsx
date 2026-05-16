@@ -25,7 +25,12 @@ export async function generateMetadata({ params }: { params: Params }) {
 
   const baseCanonical = buildCanonicalPath(filters) ?? '/ru/apartamenty'
   const canonical = page === 1 ? baseCanonical : `${baseCanonical}/page/${page}`
-  const meta = buildMetadata(filters, { canonicalPath: canonical, noIndex: false })
+  let totalCount: number | undefined
+  try {
+    const probe = await loadCatalogPage(filters, page)
+    totalCount = probe.totalCount
+  } catch {}
+  const meta = buildMetadata(filters, { canonicalPath: canonical, noIndex: false, totalCount })
   if (page > 1) {
     const baseTitle =
       typeof meta.title === 'string' ? meta.title : 'Апартаменты | Balinsky'
