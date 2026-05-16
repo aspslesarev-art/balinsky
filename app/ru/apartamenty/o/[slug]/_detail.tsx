@@ -20,7 +20,12 @@ import { getDeveloperStats } from '@/lib/developer-stats'
 import { loadAllVideos, matchesLang as videoMatchesLang } from '@/lib/videos'
 import { VideoGrid } from '@/components/VideoGrid'
 import { PageViewTracker } from '@/components/PageViewTracker'
-import { InvestmentWidget } from '@/components/InvestmentWidget'
+import dynamic from 'next/dynamic'
+// Heavy client widget — pull off the initial JS bundle. Below-the-fold
+// on detail pages, so the late hydration is invisible.
+const InvestmentWidget = dynamic(
+  () => import('@/components/InvestmentWidget').then(m => ({ default: m.InvestmentWidget })),
+)
 import { RentalCompareSection } from '@/components/RentalCompareSection'
 import { ManagerCard } from '@/components/ManagerCard'
 import { loadManagersByDeveloperName } from '@/lib/managers'

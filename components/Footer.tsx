@@ -28,6 +28,7 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
       title: 'Информация',
       links: [
         { label: 'Инвестиции в недвижимость Бали', href: '/ru/investicii-v-nedvizhimost-bali' },
+        { label: 'Жизнь на Бали — ВНЖ и налоги', href: '/ru/zhizn-na-bali' },
         { label: 'Как купить на Бали', href: '/ru/kak-kupit' },
         { label: 'Инвест-тур', href: '/ru/invest-tour' },
         { label: 'Бронирование', href: '/ru/rezervirovanie' },
@@ -71,6 +72,7 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
       title: 'Information',
       links: [
         { label: 'Bali property investment', href: '/en/bali-property-investment' },
+        { label: 'Living in Bali — visas & taxes', href: '/en/living-in-bali' },
         { label: 'How to buy in Bali', href: '/en/how-to-buy' },
         { label: 'Invest tour', href: '/en/invest-tour' },
         { label: 'Reservation', href: '/en/reservation' },

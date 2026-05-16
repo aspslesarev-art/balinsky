@@ -29,7 +29,12 @@ import { VideoGrid } from '@/components/VideoGrid'
 import { loadNearbyPlaces } from '@/lib/nearby-places'
 import { NearbyPlaces } from '@/components/NearbyPlaces'
 import { listLayers, listHotspots } from '@/lib/complex-visualizations'
-import { ComplexVisualizationViewer } from '@/components/ComplexVisualizationViewer'
+import dynamic from 'next/dynamic'
+// Heavy interactive viewer (layers + hotspots) — below-the-fold on
+// complex detail pages, code-split off the initial JS bundle.
+const ComplexVisualizationViewer = dynamic(
+  () => import('@/components/ComplexVisualizationViewer').then(m => ({ default: m.ComplexVisualizationViewer })),
+)
 import { loadLandProfile } from '@/lib/land-profile'
 import { LandProfileBlock } from '@/components/LandProfileBlock'
 import { loadComplexMarketStats } from '@/lib/complex-market-stats'

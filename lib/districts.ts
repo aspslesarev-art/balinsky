@@ -204,6 +204,222 @@ const DISTRICTS: Record<string, DistrictBundle> = {
       bestFor: ['Cost-to-yield investors', '5+ year horizon', 'Surf + calm'],
     },
   },
+  'nusa-dua': {
+    ru: {
+      slug: 'nusa-dua', name: 'Нуса Дуа',
+      hero: 'Корпоративно-семейный курорт с премиум-отелями и спокойной охраняемой территорией.',
+      paragraphs: [
+        'Нуса Дуа — закрытый зонированный курорт на южном побережье Бали, где сконцентрированы 5-звёздочные международные сети (St Regis, Mulia, Ritz-Carlton, Sofitel). Это даёт уникальный для острова инвест-профиль: высокий и стабильный поток корпоративных туристов, делегаций конференций, semi-luxury и luxury family-аудитории.',
+        'Доходность виллы 7-10% годовых чистыми — между Чангу и Сануром. Средний ADR 2BR — $180-260, загрузка 70-78% круглый год, провалов нет даже в low season за счёт корпоративных групп. Цена входа — от $200K за виллу 1BR на периметре зоны, до $1M+ за объекты внутри Nusa Dua Resort.',
+        'Сильная сторона — инфраструктура международного уровня: больница, школы, торговые центры, аэропорт в 15 минутах. Слабая — относительная закрытость района, нет той «местной жизни», за которую любят Чангу и Убуд. Подходит инвесторам с приоритетом стабильность > рост.',
+        'Юридически — стандартно для Бали: лизхолд от частных лендлордов на периметре, freehold через PT PMA в проектах больших застройщиков. Кадастровая стоимость одна из самых высоких на острове.',
+      ],
+      highlights: [
+        { label: 'Стартовая цена 1BR', value: 'от $200K' },
+        { label: 'Доходность', value: '7-10%' },
+        { label: 'Загрузка', value: '70-78%' },
+        { label: 'ADR 2BR', value: '$180-260' },
+      ],
+      bestFor: ['Корпоративные туристы', 'Семейный сегмент', 'Low-risk портфель', 'Long-term'],
+    },
+    en: {
+      slug: 'nusa-dua', name: 'Nusa Dua',
+      hero: 'Corporate-family resort with premium hotels and a quiet gated environment.',
+      paragraphs: [
+        'Nusa Dua is a gated zoned resort on Bali\'s south coast where major 5-star international chains cluster (St Regis, Mulia, Ritz-Carlton, Sofitel). This gives a unique island investment profile: steady high flow of corporate visitors, conference delegations, semi-luxury and luxury family audience.',
+        'Villa yield is 7-10% net annual — between Canggu and Sanur. Average 2BR ADR is $180-260, occupancy 70-78% year-round, no low-season dips thanks to corporate groups. Entry price starts at $200K for a 1BR villa on the perimeter, reaches $1M+ for properties inside the Nusa Dua Resort.',
+        'Strength — international-grade infrastructure: hospital, schools, shopping malls, airport 15 minutes away. Weakness — the area\'s relative isolation, none of the «local life» Canggu and Ubud are loved for. Fits investors who prioritise stability over growth.',
+        'Legally standard for Bali: leasehold from private landlords on the perimeter, freehold via PT PMA in larger developer projects. Cadastral value is among the highest on the island.',
+      ],
+      highlights: [
+        { label: '1BR entry', value: 'from $200K' },
+        { label: 'Yield', value: '7-10%' },
+        { label: 'Occupancy', value: '70-78%' },
+        { label: '2BR ADR', value: '$180-260' },
+      ],
+      bestFor: ['Corporate visitors', 'Family segment', 'Low-risk portfolio', 'Long-term'],
+    },
+  },
+  nyanyi: {
+    ru: {
+      slug: 'nyanyi', name: 'Нянь',
+      hero: 'Следующий тренд-район после Переренан — нетронутые пляжи, ранний вход.',
+      paragraphs: [
+        'Нянь — узкая полоса побережья к северу от Тананлот и Переренан. Несколько лет назад это была чистая сельская местность; сейчас здесь сдают первые beach clubs, открылись первые butik-отели и виллы под аренду. Это «next Pererenan» по логике застройки.',
+        'Цены ниже Переренан на 25-35% при близкой доходности 8-11% годовых: $130-180K за виллу 1BR, $200-280K за 2BR. ADR 2BR — $130-180, загрузка через профессиональную УК 65-75%. Премия за «нетронутость» — туристы, ищущие альтернативу переполненному Чангу.',
+        'Главный риск — инфраструктурный вакуум. Нормальные дороги, супермаркеты, аптеки, медицинский сервис — в 20-30 минутах езды в сторону Чангу. На горизонте 3-5 лет это решится, но владельцу нужно либо мириться, либо использовать объект как pure rental с УК.',
+        'Юридически Нянь — зона с большим количеством сельхозземель. Due diligence по статусу участка и пересмотрам RDTR — критичен. Многие лизхолд-сделки тут от семей с долгой историей владения, проще для верификации.',
+      ],
+      highlights: [
+        { label: 'Стартовая цена 1BR', value: 'от $130K' },
+        { label: 'Доходность', value: '8-11%' },
+        { label: 'ADR 2BR', value: '$130-180' },
+        { label: 'Дисконт к Переренан', value: '−25-35%' },
+      ],
+      bestFor: ['Ранний вход', '3-5 летний горизонт', 'Pure rental', 'Тихий пляж'],
+    },
+    en: {
+      slug: 'nyanyi', name: 'Nyanyi',
+      hero: 'The next trend area after Pererenan — untouched beaches, early entry point.',
+      paragraphs: [
+        'Nyanyi is a narrow coastal strip north of Tanah Lot and Pererenan. A few years ago it was pure agricultural land; now the first beach clubs, boutique hotels and rental villas are appearing. This is the «next Pererenan» on the build-out trajectory.',
+        'Prices sit 25-35% below Pererenan at similar 8-11% yields: $130-180K for a 1BR villa, $200-280K for a 2BR. 2BR ADR is $130-180, managed-rental occupancy 65-75%. The «untouched» premium attracts tourists looking for a Canggu alternative.',
+        'Main risk — infrastructure vacuum. Decent roads, supermarkets, pharmacies, medical care are 20-30 minutes towards Canggu. The 3-5 year horizon should solve this, but owners must either accept it or treat the property as pure rental with a manager.',
+        'Legally, Nyanyi has a high share of agricultural-zoned land. Due diligence on plot status and RDTR reviews is critical. Many leaseholds here come from families with long ownership history — easier to verify.',
+      ],
+      highlights: [
+        { label: '1BR entry', value: 'from $130K' },
+        { label: 'Yield', value: '8-11%' },
+        { label: '2BR ADR', value: '$130-180' },
+        { label: 'Discount to Pererenan', value: '−25-35%' },
+      ],
+      bestFor: ['Early entry', '3-5 year horizon', 'Pure rental', 'Quiet beach'],
+    },
+  },
+  melasti: {
+    ru: {
+      slug: 'melasti', name: 'Меласти',
+      hero: 'Премиум-cliff-зона Букита с лучшими закатами и высокими ставками.',
+      paragraphs: [
+        'Меласти — один из самых живописных участков Букита: вертикальные скалы, белый песок, прозрачная вода, плотная застройка cliff-edge виллами с инфинити-бассейнами. Соседствует с Пандава и Унгасан, входит в premium-кластер южного полуострова.',
+        'Доходность 11-15% годовых — выше Чангу за счёт премиум-аренды и длительных stays. Виллы 2-3BR с видом на океан — от $350K до $1.5M. ADR — $300-500 в высокий сезон, что выше среднего по Бали в полтора-два раза. Audience: HNW туристы, retreats, влоговые группы.',
+        'Меласти отличается от других сабрайонов Букита более «острым» рельефом — много вилл буквально на краю скалы, что даёт уникальный вид но усложняет ландшафтные работы и эвакуацию. Перед сделкой обязательно гео-экспертиза участка (риск эрозии, оползней).',
+        'Юридически — стандартно: лизхолд 50-80 лет от индивидуальных владельцев, freehold через PT PMA у больших застройщиков. Цены за квадратный метр земли — одни из самых высоких на острове ($800-1500 за м²).',
+      ],
+      highlights: [
+        { label: 'Стартовая цена 2BR', value: 'от $350K' },
+        { label: 'Доходность', value: '11-15%' },
+        { label: 'ADR 2-3BR', value: '$300-500' },
+        { label: 'Цена земли', value: '$800-1500/м²' },
+      ],
+      bestFor: ['Премиум-сегмент', 'Океанский вид', 'HNW туристы', 'Long stays'],
+    },
+    en: {
+      slug: 'melasti', name: 'Melasti',
+      hero: 'A premium cliff zone in Bukit with the best sunsets and high rental rates.',
+      paragraphs: [
+        'Melasti is one of Bukit\'s most spectacular stretches: vertical cliffs, white sand, clear water, dense cliff-edge villa development with infinity pools. It borders Pandawa and Ungasan and belongs to the southern peninsula\'s premium cluster.',
+        'Yield is 11-15% net annual — above Canggu thanks to premium rates and long stays. 2-3BR ocean-view villas range from $350K to $1.5M. ADR is $300-500 in high season, 1.5-2x the Bali average. Audience: HNW travellers, retreats, video crews.',
+        'Melasti differs from other Bukit sub-areas in its sharper relief — many villas sit literally on the cliff edge, which gives a unique view but complicates landscaping and evacuation. A geological survey before transacting is mandatory (erosion and landslide risk).',
+        'Legally standard: 50-80 year leasehold from individual owners, freehold via PT PMA in larger developer projects. Land prices per square metre are among the highest on the island ($800-1500/m²).',
+      ],
+      highlights: [
+        { label: '2BR entry', value: 'from $350K' },
+        { label: 'Yield', value: '11-15%' },
+        { label: '2-3BR ADR', value: '$300-500' },
+        { label: 'Land price', value: '$800-1500/m²' },
+      ],
+      bestFor: ['Premium segment', 'Ocean views', 'HNW tourists', 'Long stays'],
+    },
+  },
+  kerobokan: {
+    ru: {
+      slug: 'kerobokan', name: 'Керобокан',
+      hero: 'Сити-район в северном Семиньяке: рестораны, бизнес, expat-аудитория.',
+      paragraphs: [
+        'Керобокан — менее туристический район между Семиньяк и Чангу, ориентированный на резидентский рынок: длительные аренды, expat-семьи, профессионалы среднего уровня. Здесь нет beach front, но плотная сеть кафе, ресторанов, школ и спортзалов даёт уверенный спрос на 1-12-месячные аренды.',
+        'Доходность 7-10% годовых при стабильной загрузке 75-90% — близка к долгосрочной аренде Канберры/Бангкока по экономике. ADR 2BR — $80-130, средний срок stay 30-90 дней. Цена входа — от $170K за виллу 2BR, $300-450K за хороший family-home 3-4BR.',
+        'Сильная сторона — стабильность дохода, минимум сезонности, простота управления (длинные стои = меньше turnover). Слабая — низкий апсайд по апрециации цен (4-6% в год vs 10-15% в Чангу). Подходит инвесторам, которые хотят минимизировать operational headache.',
+        'Юридически Керобокан — преимущественно лизхолд 25-50 лет. Freehold через PT PMA встречается у застройщиков туристических проектов на границе с Семиньяк.',
+      ],
+      highlights: [
+        { label: 'Стартовая цена 2BR', value: 'от $170K' },
+        { label: 'Доходность', value: '7-10%' },
+        { label: 'Загрузка', value: '75-90%' },
+        { label: 'Длительность stay', value: '30-90 дней' },
+      ],
+      bestFor: ['Долгосрочная аренда', 'Expat-семьи', 'Стабильный кэшфлоу', 'Резидентский рынок'],
+    },
+    en: {
+      slug: 'kerobokan', name: 'Kerobokan',
+      hero: 'A city-style district in north Seminyak: restaurants, business, expat audience.',
+      paragraphs: [
+        'Kerobokan is a less touristy district between Seminyak and Canggu, oriented toward the resident market: long-term rentals, expat families, mid-level professionals. No beachfront, but a dense network of cafés, restaurants, schools and gyms drives steady demand for 1-12 month stays.',
+        'Yield is 7-10% net annual with stable 75-90% occupancy — close to the long-term rental economics of Canberra or Bangkok. 2BR ADR is $80-130, average stay 30-90 days. Entry price starts at $170K for a 2BR villa, $300-450K for a good 3-4BR family home.',
+        'Strength — income stability, minimal seasonality, easy management (longer stays = less turnover). Weakness — low price appreciation upside (4-6% per year vs 10-15% in Canggu). Fits investors who want to minimise operational headache.',
+        'Legally Kerobokan is mostly 25-50 year leasehold. Freehold via PT PMA appears in tourism-project developers on the Seminyak border.',
+      ],
+      highlights: [
+        { label: '2BR entry', value: 'from $170K' },
+        { label: 'Yield', value: '7-10%' },
+        { label: 'Occupancy', value: '75-90%' },
+        { label: 'Avg stay', value: '30-90 days' },
+      ],
+      bestFor: ['Long-term rental', 'Expat families', 'Stable cash flow', 'Resident market'],
+    },
+  },
+  cemagi: {
+    ru: {
+      slug: 'cemagi', name: 'Чемаги',
+      hero: 'Тихий западный пляжный район — следующий этап трендовой миграции.',
+      paragraphs: [
+        'Чемаги — пляжный район к западу от Переренан, на полпути к Танахлот. Несколько лет назад был аграрной зоной; сейчас идёт активная застройка вилла-проектами middle и premium-сегмента. По динамике развития напоминает Переренан 2022 года.',
+        'Доходность 8-11% годовых. Виллы 2-3BR — от $200K, премиум beach-front — до $700K. ADR 2BR — $140-200, загрузка через УК 65-75%. Аудитория: digital-nomads ищущие тишину, family-туристы из Австралии и Сингапура.',
+        'Сильная сторона — широкий пляж с черным вулканическим песком, серф-комьюнити, относительно низкая плотность застройки. Слабая — слабая инфраструктура (дороги узкие, мало супермаркетов), 25-35 минут до Чангу.',
+        'Главный риск — пересмотры зонирования. Часть проектов в Чемаги попадает под аграрный статус земли — обязательная проверка по RDTR до сделки.',
+      ],
+      highlights: [
+        { label: 'Стартовая цена 2BR', value: 'от $200K' },
+        { label: 'Доходность', value: '8-11%' },
+        { label: 'ADR 2BR', value: '$140-200' },
+        { label: 'Загрузка', value: '65-75%' },
+      ],
+      bestFor: ['Ранний вход', 'Серф и beach', '4-5 летний горизонт'],
+    },
+    en: {
+      slug: 'cemagi', name: 'Cemagi',
+      hero: 'A quiet western beach area — next stage of the trend migration.',
+      paragraphs: [
+        'Cemagi is a beach district west of Pererenan, halfway to Tanah Lot. A few years ago it was agricultural land; now active villa-project construction is rolling across middle and premium segments. Development pace mirrors Pererenan 2022.',
+        'Yield is 8-11% net annual. 2-3BR villas start at $200K, premium beachfront reaches $700K. 2BR ADR is $140-200, managed-rental occupancy 65-75%. Audience: digital nomads looking for quiet, family travellers from Australia and Singapore.',
+        'Strength — wide black volcanic beach, surf community, relatively low building density. Weakness — limited infrastructure (narrow roads, few supermarkets), 25-35 minutes to Canggu.',
+        'Main risk — zoning reviews. Some Cemagi projects sit on agricultural-status land — mandatory RDTR check before transacting.',
+      ],
+      highlights: [
+        { label: '2BR entry', value: 'from $200K' },
+        { label: 'Yield', value: '8-11%' },
+        { label: '2BR ADR', value: '$140-200' },
+        { label: 'Occupancy', value: '65-75%' },
+      ],
+      bestFor: ['Early entry', 'Surf and beach', '4-5 year horizon'],
+    },
+  },
+  umalas: {
+    ru: {
+      slug: 'umalas', name: 'Умалас',
+      hero: 'Резидентский район между Семиньяк и Чангу — школы, гольф, длительные аренды.',
+      paragraphs: [
+        'Умалас — тихий резидентский район для тех, кто живёт на Бали. Сосредоточенность международных школ (Australian Independent School, Sunrise School, Cita Hati), гольф-полей и family-friendly инфраструктуры даёт стабильный спрос на длительные аренды — преимущественно от expat-семей с детьми и удалёнщиков, выбирающих остров для постоянного проживания.',
+        'Доходность 6-9% годовых от длительной аренды, без сезонных пиков. ADR 2BR — $80-120, средний срок stay 60-180 дней. Цена входа — от $180K за виллу 2BR, $350-500K за family home 3-4BR с садом и бассейном.',
+        'Сильная сторона — низкие операционные расходы (мало turnover), стабильный денежный поток, простота управления. Слабая — низкая ликвидность (продать резидентский объект сложнее, чем виллу для аренды), низкий апрециация капитала (3-5% в год).',
+        'Юридически Умалас — стабильный район с прозрачной историей лендлордов. Большинство сделок лизхолд 25-50 лет, freehold через PT PMA для крупных family-домов.',
+      ],
+      highlights: [
+        { label: 'Стартовая цена 2BR', value: 'от $180K' },
+        { label: 'Доходность', value: '6-9%' },
+        { label: 'ADR 2BR', value: '$80-120' },
+        { label: 'Длительность stay', value: '60-180 дней' },
+      ],
+      bestFor: ['Семейные expats', 'Долгосрочная аренда', 'Школьная аудитория', 'Стабильность'],
+    },
+    en: {
+      slug: 'umalas', name: 'Umalas',
+      hero: 'A residential district between Seminyak and Canggu — schools, golf, long-term rentals.',
+      paragraphs: [
+        'Umalas is a quiet residential district for people who live in Bali full-time. The concentration of international schools (Australian Independent School, Sunrise School, Cita Hati), golf courses and family-friendly infrastructure drives steady demand for long-term rentals — mainly from expat families with kids and remote workers who chose the island for permanent residence.',
+        'Yield is 6-9% net annual from long-term rentals, no seasonal peaks. 2BR ADR is $80-120, average stay 60-180 days. Entry price starts at $180K for a 2BR villa, $350-500K for a 3-4BR family home with garden and pool.',
+        'Strength — low operational overhead (little turnover), stable cash flow, easy management. Weakness — low liquidity (selling a residential property is harder than a rental villa), low capital appreciation (3-5% per year).',
+        'Legally Umalas is a stable district with transparent landlord history. Most deals are 25-50 year leasehold, freehold via PT PMA for larger family homes.',
+      ],
+      highlights: [
+        { label: '2BR entry', value: 'from $180K' },
+        { label: 'Yield', value: '6-9%' },
+        { label: '2BR ADR', value: '$80-120' },
+        { label: 'Avg stay', value: '60-180 days' },
+      ],
+      bestFor: ['Expat families', 'Long-term rental', 'School audience', 'Stability'],
+    },
+  },
   berawa: {
     ru: {
       slug: 'berawa', name: 'Беравa',

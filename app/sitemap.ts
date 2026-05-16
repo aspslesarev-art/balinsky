@@ -100,6 +100,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Pillar pages — commercial hub for «инвестиции» / «bali property investment»
     { url: `${SITE_URL}/ru/investicii-v-nedvizhimost-bali`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${SITE_URL}/en/bali-property-investment`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
+    // Relocation hub for the «жизнь на Бали / living in Bali» information cluster
+    { url: `${SITE_URL}/ru/zhizn-na-bali`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${SITE_URL}/en/living-in-bali`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
     // Trust pages — small priority, but Google reads them for E-E-A-T signals
     { url: `${SITE_URL}/ru/kontakty`, lastModified: now, changeFrequency: 'monthly', priority: 0.4 },
     { url: `${SITE_URL}/en/contact`, lastModified: now, changeFrequency: 'monthly', priority: 0.4 },

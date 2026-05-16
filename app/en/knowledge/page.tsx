@@ -1,8 +1,15 @@
-import { KnowledgeList, generateKnowledgeListMetadata } from '../../ru/znaniya/_page'
+import { KnowledgeList, generateKnowledgeListMetadata, pickAudience } from '../../ru/znaniya/_page'
+
+type SP = Promise<Record<string, string | string[] | undefined>>
 
 export const revalidate = 600
-export const metadata = generateKnowledgeListMetadata('en')
 
-export default async function Page() {
-  return <KnowledgeList lang="en" />
+export async function generateMetadata({ searchParams }: { searchParams: SP }) {
+  const sp = await searchParams
+  return generateKnowledgeListMetadata('en', pickAudience(sp.for))
+}
+
+export default async function Page({ searchParams }: { searchParams: SP }) {
+  const sp = await searchParams
+  return <KnowledgeList lang="en" audience={pickAudience(sp.for)} />
 }

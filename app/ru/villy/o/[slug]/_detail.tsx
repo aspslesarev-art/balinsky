@@ -30,7 +30,12 @@ import { loadVillaLandProfile } from '@/lib/land-profile'
 import { loadMarketStats } from '@/lib/complex-market-stats'
 import { MarketStatsBlock } from '@/components/MarketStatsBlock'
 import { VillaCard, type VillaCardData } from '@/components/VillaCard'
-import { InvestmentWidget } from '@/components/InvestmentWidget'
+import dynamic from 'next/dynamic'
+// Heavy client widget — pull off the initial JS bundle. Below-the-fold
+// on detail pages, so the late hydration is invisible.
+const InvestmentWidget = dynamic(
+  () => import('@/components/InvestmentWidget').then(m => ({ default: m.InvestmentWidget })),
+)
 import { RentalCompareSection } from '@/components/RentalCompareSection'
 import { ManagerCard } from '@/components/ManagerCard'
 import { loadManagersByDeveloperName, loadManagersByDeveloperSlug } from '@/lib/managers'

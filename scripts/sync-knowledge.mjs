@@ -76,14 +76,30 @@ const recs = await fetchAll(BASE, TABLE)
 await applyAiFallback(recs, 'knowledge article')
 console.log('  records:', recs.length)
 
+// Parse leading [audience:investor|agent|both] marker from body.
+// Returns { audience: ('investor'|'agent')[], body: bodyWithoutMarker }.
+// If no marker, defaults to ['investor'] — existing lifestyle/safety articles
+// fit the investor tab; agent-track articles must be explicitly tagged.
+function extractAudience(body) {
+  const m = body.match(/^\s*\[audience:\s*(investor|agent|both|all)\s*\]\s*\n?/i)
+  if (!m) return { audience: ['investor'], body }
+  const tag = m[1].toLowerCase()
+  const audience = tag === 'investor' ? ['investor']
+    : tag === 'agent' ? ['agent']
+    : ['investor', 'agent']
+  return { audience, body: body.slice(m[0].length) }
+}
+
 const items = []
 const seenSlugs = new Map()
 let dropped = 0
 for (const r of recs) {
   const f = r.fields || {}
   const title = fs1(f['ИИ Заголовок']) ?? fs1(f['Name'])
-  const body = fs1(f['Notes'])
-  if (!title || !body) { dropped++; continue }
+  const rawBody = fs1(f['Notes'])
+  if (!title || !rawBody) { dropped++; continue }
+
+  const { audience, body } = extractAudience(rawBody)
 
   let slug = slugify(title)
   // dedupe slugs by appending suffix
@@ -98,11 +114,50 @@ for (const r of recs) {
     slug,
     title,
     body,
+    audience,
     photo,
     externalUrl: fs1(f['Ссылка']),
     createdTime: r.createdTime ?? null,
   })
 }
+
+// Merge in repo-managed static articles from scripts/knowledge-articles.json.
+// These take precedence over Airtable records with the same slug (so curated
+// content survives the user's lifestyle records in Airtable). Each static
+// article carries its own stable id (`kb-...`) and audience marker is parsed
+// from the leading [audience:...] line like Airtable records.
+const STATIC_PATH = 'scripts/knowledge-articles.json'
+const seenSlugSet = new Set(items.map(i => i.slug))
+let staticAdded = 0
+try {
+  const staticRaw = fs.readFileSync(STATIC_PATH, 'utf8')
+  const staticArticles = JSON.parse(staticRaw)
+  for (let idx = 0; idx < staticArticles.length; idx++) {
+    const a = staticArticles[idx]
+    const title = (a.name || '').trim()
+    const rawBody = (a.notes || '').trim()
+    if (!title || !rawBody) continue
+    const { audience, body } = extractAudience(rawBody)
+    let slug = slugify(title)
+    const n = (seenSlugSet.has(slug) ? 2 : 1)
+    if (n > 1) slug = `${slug}-static-${idx + 1}`
+    seenSlugSet.add(slug)
+    items.push({
+      id: a.id || `kb-static-${idx + 1}`,
+      slug,
+      title,
+      body,
+      audience,
+      photo: a.photo || null,
+      externalUrl: a.externalUrl || null,
+      createdTime: a.createdTime || new Date(Date.now() - idx * 1000).toISOString(),
+    })
+    staticAdded++
+  }
+} catch (e) {
+  console.log('  no static articles file or unreadable:', e.message)
+}
+if (staticAdded) console.log('  static articles merged:', staticAdded)
 
 // Sort: newest by createdTime first
 items.sort((a, b) => {
