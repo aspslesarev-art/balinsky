@@ -40,8 +40,6 @@ import { VillaPresentationButton } from '@/components/VillaPresentation'
 import { tField, type Lang } from '@/lib/i18n'
 import { normalizeSlug } from '@/lib/slug-normalize'
 import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
-import { StickyContactBar } from '@/components/StickyContactBar'
-import { botLink } from '@/lib/bot-link'
 
 const AIRPORT_LAT = -8.7467
 const AIRPORT_LNG = 115.1667
@@ -769,12 +767,6 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
 
         <div className="h-16" />
       </PageContainer>
-      <StickyContactBar
-        priceUsd={priceNum}
-        contactHref={botLink('manager', managers[0]?.id ?? '')}
-        title={title}
-        lang={lang}
-      />
     </>
   )
 }
