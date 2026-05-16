@@ -481,17 +481,29 @@ export function toCard(
   e: EnrichedRow,
   manifest: Record<string, string[]>,
   devStats?: Map<string, { ready: number; total: number }>,
+  lang: 'ru' | 'en' = 'ru',
 ): VillaCard | null {
   const d = e.data
   // Canonicalise the Airtable slug at the catalog level so internal
   // links emit the clean URL (no GSC churn from dirty slugs).
   const slug = normalizeSlug(firstString(d['SEO:Slug']))
   if (!slug || slug.startsWith('-')) return null
-  const titleRaw =
-    cleanTitle(firstString(d['SEO:Title'])) ??
-    firstString(d['ИИ Имя']) ??
-    firstString(d['Имя ENG']) ??
-    firstString(d['Name'])
+  // Title lookup is lang-aware. For EN we prefer the `<field> EN` slots
+  // (either Airtable's own EN column or the Azure translation cache
+  // already merged into data via mergeEnTranslations). Without the EN
+  // branch, /en/villas would surface «Вилла Origins в Nyanyi» on cards
+  // while the RU detail page renders the same listing as English.
+  const titleRaw = lang === 'en'
+    ? (cleanTitle(firstString(d['SEO:Title EN'])) ??
+       firstString(d['ИИ Имя EN']) ??
+       firstString(d['Имя ENG']) ??
+       cleanTitle(firstString(d['SEO:Title'])) ??
+       firstString(d['ИИ Имя']) ??
+       firstString(d['Name']))
+    : (cleanTitle(firstString(d['SEO:Title'])) ??
+       firstString(d['ИИ Имя']) ??
+       firstString(d['Имя ENG']) ??
+       firstString(d['Name']))
   if (!titleRaw) return null
   // Optional investor-relevant fields piped into the wishlist snapshot
   // at heart-tap. Read directly off the raw row — the catalog already
@@ -584,11 +596,12 @@ export function buildAllCards(
   scores?: Map<string, { composite: number; goodCapRate: number | null }>,
   sort: SortOrder = 'investment-desc',
   devStats?: Map<string, { ready: number; total: number }>,
+  lang: 'ru' | 'en' = 'ru',
 ): VillaCard[] {
   let filtered = enriched.filter(e => passes(e, filters))
   const isSearch = filters.q.trim().length > 0
   if (isSearch) filtered = applySearch(filtered, filters.q)
-  const mapped = filtered.map(e => toCard(e, manifest, devStats)).filter((c): c is VillaCard => c !== null)
+  const mapped = filtered.map(e => toCard(e, manifest, devStats, lang)).filter((c): c is VillaCard => c !== null)
   if (scores) for (const c of mapped) {
     const s = scores.get(c.id)
     c.investmentScore = s?.composite ?? null
@@ -644,7 +657,7 @@ export async function loadCatalogPage(
     (await import('@/lib/investment/batch-scores')).loadAllVillaScores().catch(() => undefined),
     (await import('@/lib/developer-stats')).loadAllDeveloperStats().catch(() => undefined),
   ])
-  const all = buildAllCards(enriched, manifest, filters, scores, sort, devStats)
+  const all = buildAllCards(enriched, manifest, filters, scores, sort, devStats, lang)
   const totalCount = all.length
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
   const start = (safePage - 1) * PAGE_SIZE

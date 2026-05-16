@@ -373,6 +373,7 @@ export function toCard(
   e: EnrichedRow,
   manifest: Record<string, string[]>,
   devStats?: Map<string, { ready: number; total: number }>,
+  lang: 'ru' | 'en' = 'ru',
 ): Card | null {
   const d = e.data
   // Canonicalise the Airtable slug at the catalog level so every
@@ -380,10 +381,16 @@ export function toCard(
   // dirty cyrillic / paren slugs surfacing from internal navigation.
   const slug = normalizeSlug(firstString(d['SEO:Slug']))
   if (!slug || slug.startsWith('-')) return null
-  const title =
-    cleanTitle(firstString(d['SEO:Title'])) ??
-    firstString(d['ИИ Имя']) ??
-    firstString(d['Name'])
+  // Lang-aware title — see villy/_lib.ts toCard() for the same logic.
+  const title = lang === 'en'
+    ? (cleanTitle(firstString(d['SEO:Title EN'])) ??
+       firstString(d['ИИ Имя EN']) ??
+       cleanTitle(firstString(d['SEO:Title'])) ??
+       firstString(d['ИИ Имя']) ??
+       firstString(d['Name']))
+    : (cleanTitle(firstString(d['SEO:Title'])) ??
+       firstString(d['ИИ Имя']) ??
+       firstString(d['Name']))
   if (!title) return null
   // Investor-relevant snapshot fields (same as villas — read straight
   // off the row so heart-tap from the catalog carries them into the
@@ -472,6 +479,7 @@ export function buildAllCards(
   manifest: Record<string, string[]>,
   filters: FilterState,
   devStats?: Map<string, { ready: number; total: number }>,
+  lang: 'ru' | 'en' = 'ru',
 ): Card[] {
   let filtered = enriched.filter(e => passes(e, filters))
   const isSearch = filters.q.trim().length > 0
@@ -493,7 +501,7 @@ export function buildAllCards(
   }
 
   const sorted = filtered
-    .map(e => toCard(e, manifest, devStats))
+    .map(e => toCard(e, manifest, devStats, lang))
     .filter((c): c is Card => c !== null)
 
   const seen = new Set<string>()
@@ -516,7 +524,7 @@ export async function loadCatalogPage(
   const { enriched, manifest } = await loadAll()
   const options = buildOptions(enriched, filters, lang)
   const devStats = await (await import('@/lib/developer-stats')).loadAllDeveloperStats().catch(() => undefined)
-  const all = buildAllCards(enriched, manifest, filters, devStats)
+  const all = buildAllCards(enriched, manifest, filters, devStats, lang)
   const totalCount = all.length
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
   const start = (safePage - 1) * PAGE_SIZE
