@@ -664,9 +664,11 @@ export function buildMetadataEn(
   f: ComplexFilterState,
   opts: { canonicalPath: string; noIndex: boolean; totalCount?: number },
 ) {
-  const title = buildTitleEn(f)
-  const description = buildDescriptionEn(f, opts.totalCount)
   const isSectionRoot = opts.canonicalPath === '/en/complexes'
+  const title = isSectionRoot && opts.totalCount
+    ? `Bali Residential Complexes — ${opts.totalCount} new developments by trusted builders | Balinsky`
+    : buildTitleEn(f)
+  const description = buildDescriptionEn(f, opts.totalCount)
   return {
     title,
     description,
@@ -705,9 +707,11 @@ export function buildMetadata(
   f: ComplexFilterState,
   opts: { canonicalPath: string; noIndex: boolean; totalCount?: number },
 ) {
-  const title = buildTitle(f)
-  const description = buildDescription(f, opts.totalCount)
   const isSectionRoot = opts.canonicalPath === '/ru/zhilye-kompleksy'
+  const title = isSectionRoot && opts.totalCount
+    ? `Жилые комплексы на Бали — ${opts.totalCount} новостроек от застройщиков | Balinsky`
+    : buildTitle(f)
+  const description = buildDescription(f, opts.totalCount)
   return {
     title,
     description,

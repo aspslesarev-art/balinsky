@@ -7,6 +7,9 @@ import { ComplexCatalogSearchBar } from '@/components/ComplexCatalogSearchBar'
 import { ComplexInfiniteScrollClient } from '@/components/ComplexInfiniteScrollClient'
 import { ComplexFiltersBar } from '@/components/complex-filters/ComplexFiltersBar'
 import { SubscribeCTA } from '@/components/SubscribeCTA'
+import { DistrictIntroBlock } from '@/components/DistrictIntroBlock'
+import { getDistrictCopy } from '@/lib/districts'
+import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { buildListHref, buildMapHref } from '@/lib/complex-filter-href'
 import { loadCatalogPage, buildHeading, buildHeadingEn, type ComplexFilterState } from './_lib'
 import type { Lang } from '@/lib/i18n'
@@ -61,6 +64,16 @@ export async function ComplexesCatalog({
   const listTabHref = buildListHref(filters)
   const mapTabHref = buildMapHref(filters)
 
+  const isSingleDistrictHub = filters.district.length === 1
+    && filters.year.length === 0
+    && filters.types.length === 0
+    && filters.q.trim().length === 0
+    && actualPage === 1
+  const districtCopy = isSingleDistrictHub
+    ? getDistrictCopy(DISTRICT_TO_SLUG[filters.district[0]] ?? filters.district[0].toLowerCase(), lang)
+    : null
+  const sectionRoot = lang === 'en' ? '/en/complexes' : '/ru/zhilye-kompleksy'
+
   return (
     <>
       <Header active="zhilye-kompleksy" />
@@ -78,6 +91,10 @@ export async function ComplexesCatalog({
           {copy.complexes(totalCount)}
           {totalPages > 1 && ` · ${copy.page} ${actualPage} ${copy.of} ${totalPages}`}
         </div>
+
+        {districtCopy && (
+          <DistrictIntroBlock copy={districtCopy} lang={lang} totalCount={totalCount} sectionRoot={sectionRoot} />
+        )}
 
         <CatalogTabs active="list" listHref={listTabHref} mapHref={mapTabHref} />
 

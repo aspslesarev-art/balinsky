@@ -752,9 +752,11 @@ export function buildMetadataEn(
   f: VillaFilterState,
   opts: { canonicalPath: string; noIndex: boolean; totalCount?: number },
 ) {
-  const title = buildTitleEn(f)
-  const description = buildDescriptionEn(f, opts.totalCount)
   const isSectionRoot = opts.canonicalPath === '/en/villas'
+  const title = isSectionRoot && opts.totalCount
+    ? `Bali Villas for Sale — ${opts.totalCount} houses with prices, photos & yields | Balinsky`
+    : buildTitleEn(f)
+  const description = buildDescriptionEn(f, opts.totalCount)
   return {
     title, description,
     alternates: isSectionRoot
@@ -804,9 +806,15 @@ export function buildMetadata(
   f: VillaFilterState,
   opts: { canonicalPath: string; noIndex: boolean; totalCount?: number },
 ) {
-  const title = buildTitle(f)
-  const description = buildDescription(f, opts.totalCount)
   const isSectionRoot = opts.canonicalPath === '/ru/villy'
+  // Section-root title follows the commercial pattern recommended by
+  // the SEO audit: «Купить виллу на Бали — N вилл и домов | Balinsky».
+  // Filter combos still use the descriptive buildTitle so each combo
+  // page has a unique title (Google folds duplicates).
+  const title = isSectionRoot && opts.totalCount
+    ? `Купить виллу на Бали — ${opts.totalCount} вилл и домов с фото и ценами | Balinsky`
+    : buildTitle(f)
+  const description = buildDescription(f, opts.totalCount)
   return {
     title,
     description,

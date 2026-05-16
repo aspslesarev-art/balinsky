@@ -633,13 +633,15 @@ export function buildDescriptionEn(f: FilterState, totalCount?: number): string 
   return `${s}. Photos, current prices, permits, developer contacts.`
 }
 export function buildMetadataEn(f: FilterState, opts: { canonicalPath: string; noIndex: boolean; totalCount?: number }) {
-  const title = buildTitleEn(f)
-  const description = buildDescriptionEn(f, opts.totalCount)
   // Section-root canonical (`/en/apartments`) has a RU twin we can point
   // hreflang at; deeper filter combos are EN-only on the site, so we skip
   // languages for those — pointing Google at a Russian filter combo that
   // doesn't have an EN equivalent would create false duplicates.
   const isSectionRoot = opts.canonicalPath === '/en/apartments'
+  const title = isSectionRoot && opts.totalCount
+    ? `Apartments for Sale in Bali — ${opts.totalCount} off-plan & ready units | Balinsky`
+    : buildTitleEn(f)
+  const description = buildDescriptionEn(f, opts.totalCount)
   return {
     title, description,
     alternates: isSectionRoot
@@ -681,9 +683,11 @@ export function buildDescription(f: FilterState, totalCount?: number): string {
 }
 
 export function buildMetadata(f: FilterState, opts: { canonicalPath: string; noIndex: boolean; totalCount?: number }) {
-  const title = buildTitle(f)
-  const description = buildDescription(f, opts.totalCount)
   const isSectionRoot = opts.canonicalPath === '/ru/apartamenty'
+  const title = isSectionRoot && opts.totalCount
+    ? `Апартаменты на Бали — купить квартиру в новостройке, ${opts.totalCount} объектов | Balinsky`
+    : buildTitle(f)
+  const description = buildDescription(f, opts.totalCount)
   return {
     title,
     description,

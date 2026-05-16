@@ -7,6 +7,9 @@ import { RelatedVillaFilters } from '@/components/RelatedVillaFilters'
 import { VillaCatalogSearchBar } from '@/components/VillaCatalogSearchBar'
 import { VillaInfiniteScrollClient } from '@/components/VillaInfiniteScrollClient'
 import { VillaFiltersBar } from '@/components/villa-filters/VillaFiltersBar'
+import { DistrictIntroBlock } from '@/components/DistrictIntroBlock'
+import { getDistrictCopy } from '@/lib/districts'
+import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { SubscribeCTA } from '@/components/SubscribeCTA'
 import { buildListHref, buildMapHref } from '@/lib/villa-filter-href'
 import { loadCatalogPage, buildHeading, buildHeadingEn, type VillaFilterState } from './_lib'
@@ -60,6 +63,22 @@ export async function VillasCatalog({
   const heading = lang === 'en' ? buildHeadingEn(filters) : buildHeading(filters)
   const copy = COPY[lang]
 
+  // Single-district filter with no other narrowing → show the rich
+  // SEO intro block for that district above the grid. Strict check
+  // keeps the block off mixed filter combos (e.g. district + 2 bedrooms),
+  // which would push the grid down without adding relevant content.
+  const isSingleDistrictHub = filters.district.length === 1
+    && filters.bedrooms.length === 0
+    && filters.status.length === 0
+    && filters.style.length === 0
+    && filters.priceMin == null && filters.priceMax == null
+    && filters.q.trim().length === 0
+    && actualPage === 1
+  const districtCopy = isSingleDistrictHub
+    ? getDistrictCopy(DISTRICT_TO_SLUG[filters.district[0]] ?? filters.district[0].toLowerCase(), lang)
+    : null
+  const sectionRoot = lang === 'en' ? '/en/villas' : '/ru/villy'
+
   return (
     <>
       <Header active="villy" />
@@ -75,6 +94,10 @@ export async function VillasCatalog({
           {copy.objects(totalCount)}
           {totalPages > 1 && ` · ${copy.page} ${actualPage} ${copy.of} ${totalPages}`}
         </div>
+
+        {districtCopy && (
+          <DistrictIntroBlock copy={districtCopy} lang={lang} totalCount={totalCount} sectionRoot={sectionRoot} />
+        )}
 
         <CatalogTabs active="list" listHref={buildListHref(filters)} mapHref={buildMapHref(filters)} />
 

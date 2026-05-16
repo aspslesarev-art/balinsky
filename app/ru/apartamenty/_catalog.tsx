@@ -3,6 +3,9 @@ import { PageContainer } from '@/components/PageContainer'
 import { CatalogTabs } from '@/components/CatalogTabs'
 import { ApartmentCard } from '@/components/ApartmentCard'
 import { SeoContent } from '@/components/SeoContent'
+import { DistrictIntroBlock } from '@/components/DistrictIntroBlock'
+import { getDistrictCopy } from '@/lib/districts'
+import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { CatalogSearchBar } from '@/components/CatalogSearchBar'
 import { InfiniteScrollClient } from '@/components/InfiniteScrollClient'
 import { FiltersBar } from '@/components/filters/FiltersBar'
@@ -60,6 +63,17 @@ export async function ApartamentyCatalog({
   const heading = lang === 'en' ? buildHeadingEn(filters) : buildHeading(filters)
   const copy = COPY[lang]
 
+  const isSingleDistrictHub = filters.district.length === 1
+    && filters.bedrooms.length === 0
+    && filters.status.length === 0
+    && filters.priceMin == null && filters.priceMax == null
+    && filters.q.trim().length === 0
+    && actualPage === 1
+  const districtCopy = isSingleDistrictHub
+    ? getDistrictCopy(DISTRICT_TO_SLUG[filters.district[0]] ?? filters.district[0].toLowerCase(), lang)
+    : null
+  const sectionRoot = lang === 'en' ? '/en/apartments' : '/ru/apartamenty'
+
   return (
     <>
       <Header active="apartamenty" />
@@ -77,6 +91,10 @@ export async function ApartamentyCatalog({
           {copy.objects(totalCount)}
           {totalPages > 1 && ` · ${copy.page} ${actualPage} ${copy.of} ${totalPages}`}
         </div>
+
+        {districtCopy && (
+          <DistrictIntroBlock copy={districtCopy} lang={lang} totalCount={totalCount} sectionRoot={sectionRoot} />
+        )}
 
         <CatalogTabs
           active="list"
