@@ -120,7 +120,8 @@ export async function ApartamentyCatalog({
         ) : (
           <>
             <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-              {cards.map(c => <ApartmentCard key={c.id} a={c} lang={lang} />)}
+              {/* DEBUG: lang=${lang} prefix below confirms code path on prod */}
+              {cards.map(c => <ApartmentCard key={c.id} a={{ ...c, title: lang === 'en' ? `🌍 ${c.title}` : c.title }} lang={lang} />)}
             </div>
 
             <InfiniteScrollClient
