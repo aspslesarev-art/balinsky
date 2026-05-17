@@ -6,6 +6,7 @@ import { translit, hasCyrillic } from '@/lib/translit'
 import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
 import { getDistrictCommercialMeta } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
+import { enLabel, type FilterDim } from '@/lib/filter-i18n'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/complex-photos/_manifest.json`
@@ -307,11 +308,16 @@ export function buildOptions(
     developer: new Map<string, string>(), // brand names — keep as-is
   } : null
 
-  function tr(dim: 'district' | 'types' | 'status' | 'permit' | 'developer', value: string, ruCol: string): string {
+  const DIM_TO_FILTER: Partial<Record<string, FilterDim>> = {
+    status: 'status', permit: 'permit', types: 'type',
+  }
+  function tr(dim: 'district' | 'types' | 'status' | 'permit' | 'developer', value: string, _ruCol: string): string {
     if (!enMap) return value
     if (dim === 'developer') return value
     const en = enMap[dim].get(value)
-    return en ?? `${ruCol} EN`
+    if (en) return en
+    const filterDim = DIM_TO_FILTER[dim]
+    return filterDim ? enLabel(filterDim, value) : value
   }
 
   function countsExcludingDim(

@@ -8,6 +8,7 @@ import { normalizeSlug } from '@/lib/slug-normalize'
 import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
 import { getDistrictCommercialMeta } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
+import { enLabel, type FilterDim } from '@/lib/filter-i18n'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/apartment-photos/_manifest.json`
@@ -296,11 +297,14 @@ export function buildOptions(
     status:   buildLabelMap(allRows, 'Статус', 'Статус EN'),
     permit:   buildLabelMap(allRows, 'Разрешение', 'Разрешение EN'),
   } : null
-  function tr(dim: 'district' | 'status' | 'permit' | 'floor', value: string, ruCol: string): string {
+  const DIM_TO_FILTER: Partial<Record<string, FilterDim>> = { status: 'status', permit: 'permit' }
+  function tr(dim: 'district' | 'status' | 'permit' | 'floor', value: string, _ruCol: string): string {
     if (!enMap) return value
     if (dim === 'floor') return value
     const en = enMap[dim].get(value)
-    return en ?? `${ruCol} EN`
+    if (en) return en
+    const filterDim = DIM_TO_FILTER[dim]
+    return filterDim ? enLabel(filterDim, value) : value
   }
 
   function countsExcludingDim(
