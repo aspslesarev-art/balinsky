@@ -26,6 +26,19 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'),
   title: 'Balinsky — недвижимость на Бали',
   description: 'Каталог вилл, апартаментов и жилых комплексов на Бали с фото, ценами и проверенными застройщиками.',
+  // Static icon paths in /public — no Next.js hash, so Google's favicon
+  // cache key stays stable across deploys. /favicon.ico must exist for
+  // crawlers that ignore <link rel="icon"> and probe the root path.
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: '32x32' },
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/icon-192.png', type: 'image/png', sizes: '192x192' },
+      { url: '/icon-512.png', type: 'image/png', sizes: '512x512' },
+    ],
+    apple: '/apple-touch-icon.png',
+    shortcut: '/favicon.ico',
+  },
 };
 
 // Without this, iOS WebView (Telegram in-app browser, Twitter, etc.)
