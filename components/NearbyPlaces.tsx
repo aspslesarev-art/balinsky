@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Star, MapPin, ExternalLink } from 'lucide-react'
 import type { NearbyCategory, NearbyPlace } from '@/lib/nearby-places'
+import type { Lang } from '@/lib/i18n'
 
 const ICONS: Record<string, string> = {
   beach: '🏝️',
@@ -14,44 +15,83 @@ const ICONS: Record<string, string> = {
   beachclub: '🏖️',
 }
 
-function fmtDistance(km: number): string {
-  if (km < 1) return `${Math.round(km * 1000)} м`
-  return `${km.toFixed(1)} км`
+// EN titles per category key — manifest stores RU titles only.
+const TITLE_EN: Record<string, string> = {
+  beach: 'Beaches',
+  restaurant: 'Restaurants',
+  cafe: 'Cafés',
+  nightlife: 'Bars & clubs',
+  attraction: 'Attractions',
+  school: 'Schools',
+  preschool: 'Nurseries & preschools',
+  supermarket: 'Supermarkets',
+  pharmacy: 'Pharmacies',
+  hospital: 'Hospitals & clinics',
+  wellness: 'Yoga & fitness',
+  beachclub: 'Beach clubs',
+  international_school: 'International schools',
+}
+
+const COPY = {
+  ru: {
+    h2: 'Что рядом',
+    subtitle: 'Популярные места поблизости — данные Google Maps',
+    onMap: 'На карте',
+    free: 'бесплатно',
+  },
+  en: {
+    h2: "What's nearby",
+    subtitle: 'Popular spots nearby — sourced from Google Maps',
+    onMap: 'View on map',
+    free: 'free',
+  },
+} as const
+
+function fmtDistance(km: number, lang: Lang): string {
+  const mUnit = lang === 'en' ? 'm' : 'м'
+  const kmUnit = lang === 'en' ? 'km' : 'км'
+  if (km < 1) return `${Math.round(km * 1000)} ${mUnit}`
+  return `${km.toFixed(1)} ${kmUnit}`
 }
 
 export function NearbyPlaces({
   categories,
   byCategory,
+  lang = 'ru',
 }: {
   categories: NearbyCategory[]
   byCategory: Record<string, NearbyPlace[]>
+  lang?: Lang
 }) {
-  const available = categories.filter(c => (byCategory[c.key] ?? []).length > 0)
+  const c = COPY[lang]
+  const available = categories.filter(cat => (byCategory[cat.key] ?? []).length > 0)
   const [active, setActive] = useState<string | null>(available[0]?.key ?? null)
   if (available.length === 0) return null
 
   const places: NearbyPlace[] = active
     ? [...(byCategory[active] ?? [])].sort((a, b) => a.distanceKm - b.distanceKm)
     : []
+  const numberLocale = lang === 'en' ? 'en-GB' : 'ru-RU'
 
   return (
     <section className="mb-10">
       <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-2">
-        Что рядом
+        {c.h2}
       </h2>
       <div className="text-[14px] text-[var(--color-text-muted)] mb-4">
-        Популярные места поблизости — данные Google Maps
+        {c.subtitle}
       </div>
 
       <div className="flex flex-wrap gap-2 mb-5">
-        {available.map(c => {
-          const isActive = c.key === active
-          const count = byCategory[c.key]?.length ?? 0
+        {available.map(cat => {
+          const isActive = cat.key === active
+          const count = byCategory[cat.key]?.length ?? 0
+          const title = lang === 'en' ? (TITLE_EN[cat.key] ?? cat.title) : cat.title
           return (
             <button
-              key={c.key}
+              key={cat.key}
               type="button"
-              onClick={() => setActive(c.key)}
+              onClick={() => setActive(cat.key)}
               className={
                 'inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-medium border transition-colors cursor-pointer ' +
                 (isActive
@@ -59,8 +99,8 @@ export function NearbyPlaces({
                   : 'bg-white text-[var(--color-text)] border-[var(--color-border)] hover:border-[var(--color-primary)]')
               }
             >
-              <span>{ICONS[c.key] ?? '📍'}</span>
-              <span>{c.title}</span>
+              <span>{ICONS[cat.key] ?? '📍'}</span>
+              <span>{title}</span>
               <span className={isActive ? 'opacity-90' : 'text-[var(--color-text-muted)]'}>· {count}</span>
             </button>
           )
@@ -75,18 +115,18 @@ export function NearbyPlaces({
           >
             <div className="flex items-start justify-between gap-3">
               <div className="text-[15px] font-semibold leading-snug text-[#111827] line-clamp-2">{p.name}</div>
-              <div className="text-[12px] text-[var(--color-text-muted)] shrink-0 mt-0.5">{fmtDistance(p.distanceKm)}</div>
+              <div className="text-[12px] text-[var(--color-text-muted)] shrink-0 mt-0.5">{fmtDistance(p.distanceKm, lang)}</div>
             </div>
             <div className="flex items-center gap-3 text-[12px] text-[var(--color-text-muted)]">
               {p.rating != null && (
                 <span className="inline-flex items-center gap-1">
                   <Star size={12} className="text-[#F59E0B] fill-[#F59E0B]" />
                   <span className="font-medium text-[#111827]">{p.rating.toFixed(1)}</span>
-                  {p.reviews != null && <span>· {p.reviews.toLocaleString('ru-RU').replace(/,/g, ' ')}</span>}
+                  {p.reviews != null && <span>· {p.reviews.toLocaleString(numberLocale).replace(/,/g, ' ')}</span>}
                 </span>
               )}
               {p.priceLevel && (
-                <span>{priceLevelToSymbol(p.priceLevel)}</span>
+                <span>{priceLevelToSymbol(p.priceLevel, c.free)}</span>
               )}
             </div>
             {p.address && (
@@ -103,7 +143,7 @@ export function NearbyPlaces({
                 className="inline-flex items-center gap-1 text-[13px] text-[var(--color-primary-pressed)] hover:text-[var(--color-primary)] no-underline mt-auto"
               >
                 <ExternalLink size={12} />
-                На карте
+                {c.onMap}
               </a>
             )}
           </li>
@@ -113,9 +153,9 @@ export function NearbyPlaces({
   )
 }
 
-function priceLevelToSymbol(level: string): string {
+function priceLevelToSymbol(level: string, freeLabel: string): string {
   const map: Record<string, string> = {
-    PRICE_LEVEL_FREE: 'бесплатно',
+    PRICE_LEVEL_FREE: freeLabel,
     PRICE_LEVEL_INEXPENSIVE: '$',
     PRICE_LEVEL_MODERATE: '$$',
     PRICE_LEVEL_EXPENSIVE: '$$$',

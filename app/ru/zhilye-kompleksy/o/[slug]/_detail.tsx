@@ -929,7 +929,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             the complex page using the first villa unit's nearby
             data because units in the same complex share geo. */}
         {nearby && (
-          <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} />
+          <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />
         )}
 
         {/* RESOURCES */}
