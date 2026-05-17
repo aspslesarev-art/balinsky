@@ -150,7 +150,7 @@ export async function ComplexesCatalog({
           />
         )}
 
-        <ComplexesSeoContent filters={filters} variant="list" />
+        <ComplexesSeoContent filters={filters} variant="list" lang={lang} />
 
         <div className="h-16" />
       </PageContainer>
