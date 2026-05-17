@@ -44,6 +44,9 @@ export const PERMIT_EN: Record<string, string> = {
   'Получены': 'Granted',
   'Не получено': 'Not granted',
   'Не получены': 'Not granted',
+  'Заявка PBG': 'PBG pending',
+  'Заявка SLF': 'SLF pending',
+  'нет': 'None',
 }
 
 export const STYLE_EN: Record<string, string> = {
