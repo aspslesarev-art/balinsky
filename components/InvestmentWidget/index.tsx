@@ -2,21 +2,134 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
+import { usePathname } from 'next/navigation'
 import {
   Star, Info, AlertTriangle, Sparkles, ChevronDown, ChevronUp, TrendingUp, RotateCcw,
 } from 'lucide-react'
 import { InvestmentMap } from './InvestmentMap'
-import { fmtMoney, fmtMoneyShort, fmtPct, fmtYears, fmtDistance, fmtMeters, pluralRu } from './utils'
+import { fmtMoney, fmtMoneyShort, fmtPct, fmtYears, fmtDistance, fmtMeters, pluralRu, pluralEn } from './utils'
 import type { Snapshot } from './types'
 import { useCurrency } from '../CurrencyContext'
 import { computeEconomics, type Economics, type ScenarioKey } from '@/lib/investment/economics'
 import { CURRENCY_RATES } from '@/lib/currency'
+import type { Lang } from '@/lib/i18n'
+
+const COPY = {
+  ru: {
+    sectionH2: 'Инвестиционный потенциал',
+    sectionSub: 'Оценка сценариев аренды по матчингу с Booking-конкурентами и анализу района',
+    confHigh: 'высокая уверенность',
+    confMedium: 'средняя уверенность',
+    confLow: 'низкая уверенность',
+    object: ['объект', 'объекта', 'объектов'] as [string, string, string],
+    villa: ['вилла', 'виллы', 'вилл'] as [string, string, string],
+    similarVilla: ['похожая вилла', 'похожие виллы', 'похожих вилл'] as [string, string, string],
+    restaurant: ['ресторан', 'ресторана', 'ресторанов'] as [string, string, string],
+    perNight: ' / ночь',
+    perYear: '/год',
+    perYearNoi: ' / год NOI',
+    expandedZone: (raw: string, applied: string) =>
+      `Расширенная выборка: в исходной зоне (${raw}) не нашлось матчей, перешли на ${applied}.`,
+    threeNumbers: 'Что значат эти три цифры',
+    threeNumbersBody: (count: number, similar: string, zoneLower: string) =>
+      <>Считаем, сколько эта вилла может зарабатывать на посуточной аренде. За основу — {count > 0 ? <><span className="font-medium text-[var(--color-text)]">{count}</span> {similar}</> : 'похожие виллы'} в той же зоне ({zoneLower}; на карте сверху — синие точки внутри красного круга).</>,
+    threeNumbersScenarios:
+      <>
+        {' '}<strong className="text-[#B91C1C]">Плохой</strong> — пессимистичный прогноз, вилла стоит полупустой.{' '}
+        <strong className="text-[var(--color-primary-pressed)]">Нормальный</strong> — то, что бывает чаще всего.{' '}
+        <strong className="text-[#15803D]">Хороший</strong> — потолок, если работать с управляющей компанией и держать высокий рейтинг.
+        {' '}Под сценариями есть карточки тех самых конкурентов — можно открыть и сравнить площадь / рейтинг / цену с этой виллой.
+      </>,
+    scenarioBad: 'Плохой', scenarioMedian: 'Нормальный', scenarioGood: 'Хороший',
+    resetTitle: 'Сбросить к данным по конкурентам', reset: 'сбросить',
+    inputAdr: 'ADR', inputOccupancy: 'Загрузка', inputMgmt: 'Mgmt fee',
+    payback: 'Окупаемость', capRate: 'Cap rate',
+    howCalced: 'Как считалось',
+    revenue: 'Revenue', platform: 'Platform', mgmt: 'Mgmt', opex: 'OPEX', tax: 'Tax', noi: 'NOI',
+    referencesTitle: 'Малая выборка — показываем референсы',
+    referencesBody: (n: number, plural: string) =>
+      `В радиусе 2км нашлось всего ${n} ${plural}, подходящих под характеристики виллы. Агрегаты не считаем — даём конкретные примеры.`,
+    sqm: 'м²',
+    similarOnBooking: (n: number) => `Похожие объекты на Booking · ${n}`,
+    collapse: 'Свернуть',
+    showAll: (n: number) => `Показать все ${n}`,
+    newDistrictH3: 'Новый район',
+    newDistrictBody:
+      'Район в фазе раннего развития: в радиусе 1км менее 30 листингов на Booking. По траектории сопоставимых рынков (Berawa 2018→2022, Canggu 2014→2018) ADR может вырасти на 30–80% за 4–5 лет. Это историческая аналогия, не прогноз.',
+    newDistrictFootnote: (n: number, plural: string) =>
+      `Локально в радиусе 1км: ${n} ${plural} в общей сложности`,
+    nearbyTitle: 'Что вокруг виллы',
+    catBeach: 'Пляжи', catBeachclub: 'Beach clubs', catRestaurant: 'Рестораны',
+    catCafe: 'Кафе', catWellness: 'Йога и фитнес', catNightlife: 'Бары и клубы',
+    catAttraction: 'Достопримечательности', catIntlSchool: 'Международные школы',
+    catSchool: 'Школы', catPreschool: 'Сады и ясли', catSupermarket: 'Магазины',
+    catPharmacy: 'Аптеки', catHospital: 'Клиники',
+  },
+  en: {
+    sectionH2: 'Investment potential',
+    sectionSub: 'Rental scenarios estimated by matching against Booking competitors and analysing the area',
+    confHigh: 'high confidence',
+    confMedium: 'medium confidence',
+    confLow: 'low confidence',
+    object: ['listing', 'listings'] as [string, string],
+    villa: ['villa', 'villas'] as [string, string],
+    similarVilla: ['similar villa', 'similar villas'] as [string, string],
+    restaurant: ['restaurant', 'restaurants'] as [string, string],
+    perNight: ' / night',
+    perYear: '/yr',
+    perYearNoi: ' / year NOI',
+    expandedZone: (raw: string, applied: string) =>
+      `Expanded sample: no matches in the original zone (${raw}), switched to ${applied}.`,
+    threeNumbers: 'What these three numbers mean',
+    threeNumbersBody: (count: number, similar: string, zoneLower: string) =>
+      <>We estimate what this villa could earn from short-term rentals. The baseline comes from {count > 0 ? <><span className="font-medium text-[var(--color-text)]">{count}</span> {similar}</> : 'similar villas'} in the same zone ({zoneLower}; on the map above — blue dots inside the red circle).</>,
+    threeNumbersScenarios:
+      <>
+        {' '}<strong className="text-[#B91C1C]">Bad</strong> — pessimistic case, villa sits half empty.{' '}
+        <strong className="text-[var(--color-primary-pressed)]">Normal</strong> — what tends to happen most often.{' '}
+        <strong className="text-[#15803D]">Good</strong> — upper bound, with a strong management company and a high rating.
+        {' '}Below the scenarios are the actual competitor cards — open them to compare area / rating / price with this villa.
+      </>,
+    scenarioBad: 'Bad', scenarioMedian: 'Normal', scenarioGood: 'Good',
+    resetTitle: 'Reset to competitor-based defaults', reset: 'reset',
+    inputAdr: 'ADR', inputOccupancy: 'Occupancy', inputMgmt: 'Mgmt fee',
+    payback: 'Payback', capRate: 'Cap rate',
+    howCalced: 'How it was calculated',
+    revenue: 'Revenue', platform: 'Platform', mgmt: 'Mgmt', opex: 'OPEX', tax: 'Tax', noi: 'NOI',
+    referencesTitle: 'Small sample — showing reference listings',
+    referencesBody: (n: number, plural: string) =>
+      `Only ${n} ${plural} matched the villa's profile within a 2 km radius. We're not aggregating — here are concrete examples instead.`,
+    sqm: 'm²',
+    similarOnBooking: (n: number) => `Similar listings on Booking · ${n}`,
+    collapse: 'Collapse',
+    showAll: (n: number) => `Show all ${n}`,
+    newDistrictH3: 'Emerging district',
+    newDistrictBody:
+      'The district is in an early growth phase: fewer than 30 Booking listings within a 1 km radius. Following the trajectory of comparable markets (Berawa 2018→2022, Canggu 2014→2018) ADR can rise 30–80% over 4–5 years. This is a historical analogy, not a forecast.',
+    newDistrictFootnote: (n: number, plural: string) =>
+      `In total within a 1 km radius: ${n} ${plural}`,
+    nearbyTitle: 'Around the villa',
+    catBeach: 'Beaches', catBeachclub: 'Beach clubs', catRestaurant: 'Restaurants',
+    catCafe: 'Cafés', catWellness: 'Yoga & fitness', catNightlife: 'Bars & clubs',
+    catAttraction: 'Attractions', catIntlSchool: 'International schools',
+    catSchool: 'Schools', catPreschool: 'Nurseries & preschools', catSupermarket: 'Supermarkets',
+    catPharmacy: 'Pharmacies', catHospital: 'Clinics',
+  },
+} as const
+
+function pluralize(lang: Lang, n: number, ruForms: [string, string, string], enForms: [string, string]): string {
+  return lang === 'en' ? pluralEn(n, enForms) : pluralRu(n, ruForms)
+}
 
 export function InvestmentWidget({
   villaId,
   apiKey,
   kind = 'villa',
-}: { villaId: string; apiKey: string; kind?: 'villa' | 'apartment' }) {
+  lang,
+}: { villaId: string; apiKey: string; kind?: 'villa' | 'apartment'; lang?: Lang }) {
+  // Allow explicit lang from server caller; default by URL.
+  const pathname = usePathname() ?? ''
+  const resolvedLang: Lang = lang ?? (pathname.startsWith('/en') ? 'en' : 'ru')
   const { currency } = useCurrency()
   const fmtUsd = (n: number | null | undefined) => fmtMoney(n, currency)
   const fmtUsdShort = (n: number | null | undefined) => fmtMoneyShort(n, currency)
@@ -39,22 +152,21 @@ export function InvestmentWidget({
     return () => { cancelled = true }
   }, [villaId, kind])
 
-  if (loading) return <SectionShell><Skeleton /></SectionShell>
+  if (loading) return <SectionShell lang={resolvedLang}><Skeleton /></SectionShell>
   if (error || !snap) return null
 
-  return <InvestmentWidgetView snap={snap} apiKey={apiKey} />
+  return <InvestmentWidgetView snap={snap} apiKey={apiKey} lang={resolvedLang} />
 }
 
-function SectionShell({ children }: { children: React.ReactNode }) {
+function SectionShell({ children, lang }: { children: React.ReactNode; lang: Lang }) {
+  const t = COPY[lang]
   return (
-    // data-investment-block lets the intent toggle hide this whole
-    // section in "Для жизни" mode without removing it from SSR HTML.
     <section className="mb-10" data-investment-block>
       <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-2">
-        Инвестиционный потенциал
+        {t.sectionH2}
       </h2>
       <div className="text-[14px] text-[var(--color-text-muted)] mb-5">
-        Оценка сценариев аренды по матчингу с Booking-конкурентами и анализу района
+        {t.sectionSub}
       </div>
       {children}
     </section>
@@ -73,91 +185,54 @@ function Skeleton() {
   )
 }
 
-function ConfidenceBadge({ confidence, size }: { confidence: 'high' | 'medium' | 'low'; size: number }) {
+function ConfidenceBadge({ confidence, size, lang }: { confidence: 'high' | 'medium' | 'low'; size: number; lang: Lang }) {
+  const t = COPY[lang]
   const map = {
-    high: { color: '#16A34A', label: 'высокая уверенность' },
-    medium: { color: '#F59E0B', label: 'средняя уверенность' },
-    low: { color: '#DC2626', label: 'низкая уверенность' },
+    high: { color: '#16A34A', label: t.confHigh },
+    medium: { color: '#F59E0B', label: t.confMedium },
+    low: { color: '#DC2626', label: t.confLow },
   }
   const c = map[confidence]
+  const objPlural = pluralize(lang, size, COPY.ru.object, COPY.en.object)
   return (
     <span className="inline-flex items-center gap-1.5 text-[13px] text-[#111827]" title={c.label}>
       <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: c.color }} />
-      {c.label} · {size} {pluralRu(size, ['объект', 'объекта', 'объектов'])}
+      {c.label} · {size} {objPlural}
     </span>
   )
 }
 
-function InvestmentWidgetView({ snap, apiKey }: { snap: Snapshot; apiKey: string }) {
+function InvestmentWidgetView({ snap, apiKey, lang }: { snap: Snapshot; apiKey: string; lang: Lang }) {
+  const t = COPY[lang]
   const allPois = useMemo(() => [...snap.anchors.map(a => ({ lat: a.lat, lng: a.lng, name: a.name, category: a.primaryType ?? '' }))], [snap])
   return (
     <>
-      {/* Investment-only block: scenarios + map + comparables. SectionShell
-          carries data-investment-block so the intent toggle hides the whole
-          wrapper in "Для жизни" mode. */}
-      <SectionShell>
-        {snap.scenarios && <ScenariosIntro snap={snap} />}
+      <SectionShell lang={lang}>
+        {snap.scenarios && <ScenariosIntro snap={snap} lang={lang} />}
 
         {snap.scenarios ? (
-          <Scenarios snap={snap} />
+          <Scenarios snap={snap} lang={lang} />
         ) : snap.references ? (
-          <References snap={snap} />
+          <References snap={snap} lang={lang} />
         ) : null}
 
         <div className="mt-4">
-          <InvestmentMap apiKey={apiKey} snap={snap} allPois={allPois} />
+          <InvestmentMap apiKey={apiKey} snap={snap} allPois={allPois} lang={lang} />
         </div>
 
         {snap.flags.expandedZone && (
           <Banner tone="info" icon={<Info size={16} />} className="mt-4">
-            Расширенная выборка: в исходной зоне ({snap.zone.raw}) не нашлось матчей, перешли на {snap.zone.applied}.
+            {t.expandedZone(snap.zone.raw, snap.zone.applied)}
           </Banner>
         )}
 
-        {snap.competitors.length > 0 && <CompetitorsGrid snap={snap} />}
+        {snap.competitors.length > 0 && <CompetitorsGrid snap={snap} lang={lang} />}
 
-        {snap.flags.emergingMarket && <EmergingBlock snap={snap} />}
+        {snap.flags.emergingMarket && <EmergingBlock snap={snap} lang={lang} />}
       </SectionShell>
 
-      {/* "Что вокруг" lives outside the investment wrapper so it stays
-          visible in "Для жизни" mode — it's useful for living-buyers
-          (схools, рестораны, пляжи), not just investors. */}
-      <NearbyPlacesBlock snap={snap} />
+      <NearbyPlacesBlock snap={snap} lang={lang} />
     </>
-  )
-}
-
-function Verdict({ snap }: { snap: Snapshot }) {
-  const { currency } = useCurrency()
-  const fmtUsdShort = (n: number | null | undefined) => fmtMoneyShort(n, currency)
-  const sc = snap.scenarios
-  const noiRange = sc ? `${fmtUsdShort(sc.bad.noi)}–${fmtUsdShort(sc.good.noi)}/год` : null
-  const paybackRange =
-    sc?.good.payback != null && sc.bad.payback != null
-      ? `${fmtYears(sc.good.payback)} – ${fmtYears(sc.bad.payback)}`
-      : null
-  const zoneShort = snap.zone.applied === 'beachfront' ? 'beachfront'
-    : snap.zone.applied === 'walking' ? 'walking-to-beach'
-    : snap.zone.applied === 'scooter' ? 'scooter-to-beach'
-    : 'inland'
-  return (
-    <div className="rounded-2xl border border-[var(--color-border)] bg-white p-5 flex flex-wrap items-center gap-x-6 gap-y-2">
-      <div className="flex items-center gap-3 min-w-0">
-        <Sparkles size={20} className="text-[var(--color-primary)] shrink-0" />
-        <div className="min-w-0">
-          <div className="text-[18px] md:text-[20px] font-semibold text-[#111827] leading-tight">
-            {noiRange ? `NOI ${noiRange}` : 'Оценка NOI недоступна'}
-            {paybackRange ? ` · окупаемость ${paybackRange}` : ''}
-            {' · '}
-            <span className="text-[var(--color-text-muted)] font-normal">{zoneShort}</span>
-          </div>
-          <div className="text-[12px] text-[var(--color-text-muted)] mt-1">
-            {snap.villa.title}
-          </div>
-        </div>
-      </div>
-      <div className="ml-auto"><ConfidenceBadge confidence={snap.confidence} size={snap.matchSampleSize} /></div>
-    </div>
   )
 }
 
@@ -175,47 +250,43 @@ function Banner({ tone, icon, children, className }: { tone: 'info' | 'danger' |
   )
 }
 
-function ScenariosIntro({ snap }: { snap: Snapshot }) {
+function ScenariosIntro({ snap, lang }: { snap: Snapshot; lang: Lang }) {
+  const t = COPY[lang]
   const competitorCount = snap.competitors.length
+  const similar = pluralize(lang, competitorCount, COPY.ru.similarVilla, COPY.en.similarVilla)
   return (
     <div className="mt-5 rounded-2xl border border-[var(--color-border)] bg-[var(--color-search-bg)] px-4 py-3.5 text-[13px] leading-[1.55] text-[var(--color-text)]">
-      <div className="font-semibold text-[var(--color-text)] mb-1">Что значат эти три цифры</div>
+      <div className="font-semibold text-[var(--color-text)] mb-1">{t.threeNumbers}</div>
       <div className="text-[var(--color-text-muted)]">
-        Считаем, сколько эта вилла может зарабатывать на посуточной аренде. За основу — {competitorCount > 0 ? <><span className="font-medium text-[var(--color-text)]">{competitorCount}</span> {pluralRu(competitorCount, ['похожая вилла', 'похожие виллы', 'похожих вилл'])}</> : 'похожие виллы'} в той же зоне ({snap.zone.title.toLowerCase()}; на карте сверху — синие точки внутри красного круга).
-        {' '}
-        <strong className="text-[#B91C1C]">Плохой</strong> — пессимистичный прогноз, вилла стоит полупустой.{' '}
-        <strong className="text-[var(--color-primary-pressed)]">Нормальный</strong> — то, что бывает чаще всего.{' '}
-        <strong className="text-[#15803D]">Хороший</strong> — потолок, если работать с управляющей компанией и держать высокий рейтинг.
-        {' '}
-        Под сценариями есть карточки тех самых конкурентов — можно открыть и сравнить площадь / рейтинг / цену с этой виллой.
+        {t.threeNumbersBody(competitorCount, similar, snap.zone.title.toLowerCase())}
+        {t.threeNumbersScenarios}
       </div>
     </div>
   )
 }
 
-function Scenarios({ snap }: { snap: Snapshot }) {
+function Scenarios({ snap, lang }: { snap: Snapshot; lang: Lang }) {
+  const t = COPY[lang]
   const cards: { key: ScenarioKey; title: string; tone: string }[] = [
-    { key: 'bad',    title: 'Плохой',     tone: 'border-[#FECACA] bg-[#FEF2F2]' },
-    { key: 'median', title: 'Нормальный', tone: 'border-[var(--color-primary)] bg-[var(--color-primary-soft)]' },
-    { key: 'good',   title: 'Хороший',    tone: 'border-[#BBF7D0] bg-[#F0FDF4]' },
+    { key: 'bad',    title: t.scenarioBad,    tone: 'border-[#FECACA] bg-[#FEF2F2]' },
+    { key: 'median', title: t.scenarioMedian, tone: 'border-[var(--color-primary)] bg-[var(--color-primary-soft)]' },
+    { key: 'good',   title: t.scenarioGood,   tone: 'border-[#BBF7D0] bg-[#F0FDF4]' },
   ]
   return (
     <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-4">
       {cards.map(c => (
-        <ScenarioCard key={c.key} sKey={c.key} title={c.title} tone={c.tone} snap={snap} />
+        <ScenarioCard key={c.key} sKey={c.key} title={c.title} tone={c.tone} snap={snap} lang={lang} />
       ))}
     </div>
   )
 }
 
-// One scenario card with editable ADR / occupancy / mgmt fee. Defaults
-// come from the data-driven scenario the API computed; user can dial
-// any number, the rest of the model recomputes via computeEconomics.
 function ScenarioCard({
-  sKey, title, tone, snap,
+  sKey, title, tone, snap, lang,
 }: {
-  sKey: ScenarioKey; title: string; tone: string; snap: Snapshot
+  sKey: ScenarioKey; title: string; tone: string; snap: Snapshot; lang: Lang
 }) {
+  const t = COPY[lang]
   const { currency } = useCurrency()
   const fmtUsd = (n: number | null | undefined) => fmtMoney(n, currency)
   const fxRate = CURRENCY_RATES[currency]
@@ -226,8 +297,6 @@ function ScenarioCard({
   const [mgmtFeePct, setMgmtFeePct] = useState<number>(Math.round(snap.region.mgmtFeePct * 100))
   const [open, setOpen] = useState(false)
 
-  // ADR field shows in the visitor's currency to avoid the "$190 in EUR?"
-  // friction. Underlying math stays in USD.
   const adrInCurrency = Math.round(adrUsd * fxRate)
   const setAdrInCurrency = (n: number) => setAdrUsd(Math.max(1, Math.round(n / fxRate)))
 
@@ -250,6 +319,7 @@ function ScenarioCard({
     setOccupancyPct(Math.round(baseline.occupancy * 100))
     setMgmtFeePct(Math.round(snap.region.mgmtFeePct * 100))
   }
+  const opexUnit = lang === 'en' ? '$/m²/mo' : '$/м²/мес'
 
   return (
     <div className={`rounded-2xl border-2 ${tone} p-5 space-y-3`}>
@@ -259,46 +329,28 @@ function ScenarioCard({
           <button
             type="button"
             onClick={reset}
-            title="Сбросить к данным по конкурентам"
+            title={t.resetTitle}
             className="inline-flex items-center gap-1 text-[11px] text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
           >
-            <RotateCcw size={11} /> сбросить
+            <RotateCcw size={11} /> {t.reset}
           </button>
         )}
       </div>
 
       <div className="space-y-2">
-        <ScenarioInput
-          label="ADR"
-          value={adrInCurrency}
-          onChange={setAdrInCurrency}
-          suffix={currency}
-          step={Math.max(1, Math.round(5 * fxRate))}
-        />
-        <ScenarioInput
-          label="Загрузка"
-          value={occupancyPct}
-          onChange={n => setOccupancyPct(Math.min(100, Math.max(0, n)))}
-          suffix="%"
-          step={1}
-        />
-        <ScenarioInput
-          label="Mgmt fee"
-          value={mgmtFeePct}
-          onChange={n => setMgmtFeePct(Math.min(50, Math.max(0, n)))}
-          suffix="%"
-          step={1}
-        />
+        <ScenarioInput label={t.inputAdr} value={adrInCurrency} onChange={setAdrInCurrency} suffix={currency} step={Math.max(1, Math.round(5 * fxRate))} />
+        <ScenarioInput label={t.inputOccupancy} value={occupancyPct} onChange={n => setOccupancyPct(Math.min(100, Math.max(0, n)))} suffix="%" step={1} />
+        <ScenarioInput label={t.inputMgmt} value={mgmtFeePct} onChange={n => setMgmtFeePct(Math.min(50, Math.max(0, n)))} suffix="%" step={1} />
       </div>
 
       <div className="pt-2 border-t border-[var(--color-border)]">
         <div className="text-[24px] font-semibold text-[#111827] leading-tight">
           {fmtUsd(e.noi)}
-          <span className="text-[13px] font-normal text-[var(--color-text-muted)]"> / год NOI</span>
+          <span className="text-[13px] font-normal text-[var(--color-text-muted)]">{t.perYearNoi}</span>
         </div>
         <div className="text-[13px] text-[var(--color-text-muted)] mt-2 space-y-0.5">
-          <div>Окупаемость: <span className="text-[#111827] font-medium">{fmtYears(e.payback)}</span></div>
-          <div>Cap rate: <span className="text-[#111827] font-medium">{fmtPct(e.capRate)}</span></div>
+          <div>{t.payback}: <span className="text-[#111827] font-medium">{fmtYears(e.payback, lang)}</span></div>
+          <div>{t.capRate}: <span className="text-[#111827] font-medium">{fmtPct(e.capRate)}</span></div>
         </div>
       </div>
 
@@ -307,16 +359,16 @@ function ScenarioCard({
         onClick={() => setOpen(o => !o)}
         className="inline-flex items-center gap-1 text-[12px] text-[var(--color-primary-pressed)] hover:text-[var(--color-primary)] cursor-pointer"
       >
-        Как считалось {open ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+        {t.howCalced} {open ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
       </button>
       {open && (
         <ul className="text-[12px] text-[var(--color-text)] space-y-0.5 border-t border-[var(--color-border)] pt-2">
-          <li>Revenue: {fmtUsd(e.revenue)}</li>
-          <li>− Platform ({Math.round(snap.region.platformFeePct * 100)}%): {fmtUsd(e.platformFee)}</li>
-          <li>− Mgmt ({mgmtFeePct}%): {fmtUsd(e.mgmtFee)}</li>
-          <li>− OPEX ({snap.region.opexPerSqmMonth} $/м²/мес): {fmtUsd(e.opex)}</li>
-          <li>− Tax ({Math.round(snap.region.taxRate * 100)}%): {fmtUsd(e.tax)}</li>
-          <li className="pt-1 border-t border-[var(--color-border)] mt-1 font-medium">= NOI: {fmtUsd(e.noi)}</li>
+          <li>{t.revenue}: {fmtUsd(e.revenue)}</li>
+          <li>− {t.platform} ({Math.round(snap.region.platformFeePct * 100)}%): {fmtUsd(e.platformFee)}</li>
+          <li>− {t.mgmt} ({mgmtFeePct}%): {fmtUsd(e.mgmtFee)}</li>
+          <li>− {t.opex} ({snap.region.opexPerSqmMonth} {opexUnit}): {fmtUsd(e.opex)}</li>
+          <li>− {t.tax} ({Math.round(snap.region.taxRate * 100)}%): {fmtUsd(e.tax)}</li>
+          <li className="pt-1 border-t border-[var(--color-border)] mt-1 font-medium">= {t.noi}: {fmtUsd(e.noi)}</li>
         </ul>
       )}
     </div>
@@ -340,7 +392,6 @@ function ScenarioInput({
           if (Number.isFinite(n)) onChange(n)
         }}
         step={step}
-        // 16px on mobile suppresses iOS Safari's auto-zoom on focus.
         className="flex-1 min-w-0 rounded-md border border-black/10 bg-transparent px-2 py-1 text-[16px] md:text-[13px] tabular-nums text-[#111827] focus:outline-none focus:border-[var(--color-primary)] focus:bg-white/40"
       />
       <span className="text-[11px] text-[var(--color-text-muted)] shrink-0">{suffix}</span>
@@ -348,25 +399,27 @@ function ScenarioInput({
   )
 }
 
-function References({ snap }: { snap: Snapshot }) {
+function References({ snap, lang }: { snap: Snapshot; lang: Lang }) {
+  const t = COPY[lang]
   const { currency } = useCurrency()
   const fmtUsd = (n: number | null | undefined) => fmtMoney(n, currency)
+  const plural = pluralize(lang, snap.matchSampleSize, COPY.ru.object, COPY.en.object)
   return (
     <div className="mt-5 rounded-2xl border border-dashed border-[var(--color-border)] bg-white p-5">
       <div className="flex items-center gap-2 text-[12px] uppercase tracking-wide font-semibold text-[#111827] mb-2">
-        <Info size={14} /> Малая выборка — показываем референсы
+        <Info size={14} /> {t.referencesTitle}
       </div>
       <div className="text-[13px] text-[var(--color-text-muted)] mb-4">
-        В радиусе 2км нашлось всего {snap.matchSampleSize} {pluralRu(snap.matchSampleSize, ['объект', 'объекта', 'объектов'])}, подходящих под характеристики виллы. Агрегаты не считаем — даём конкретные примеры.
+        {t.referencesBody(snap.matchSampleSize, plural)}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {(snap.references ?? []).map(r => (
           <a key={r.id} href={r.url ?? undefined} target="_blank" rel="noopener noreferrer nofollow" className="rounded-xl border border-[var(--color-border)] p-3 hover:border-[var(--color-primary)] no-underline text-[#111827]">
             <div className="text-[14px] font-semibold leading-snug line-clamp-2">{r.complex || r.name}</div>
             <div className="text-[12px] text-[var(--color-text-muted)] mt-1">
-              {r.bedrooms ?? '?'} BR{r.area ? ` · ${r.area} м²` : ''} · {fmtDistance(r.distanceKm)}
+              {r.bedrooms ?? '?'} BR{r.area ? ` · ${r.area} ${t.sqm}` : ''} · {fmtDistance(r.distanceKm, lang)}
             </div>
-            <div className="text-[15px] font-semibold text-[#1D4ED8] mt-2">{fmtUsd(r.adr)}<span className="text-[11px] text-[var(--color-text-muted)] font-normal"> / ночь</span></div>
+            <div className="text-[15px] font-semibold text-[#1D4ED8] mt-2">{fmtUsd(r.adr)}<span className="text-[11px] text-[var(--color-text-muted)] font-normal">{t.perNight}</span></div>
           </a>
         ))}
       </div>
@@ -374,22 +427,8 @@ function References({ snap }: { snap: Snapshot }) {
   )
 }
 
-function Explanation({ snap }: { snap: Snapshot }) {
-  const beachName = snap.zone.nearestBeach?.name ?? 'ближайшего пляжа'
-  const meters = snap.zone.walkingMeters
-  const beds = snap.villa.bedrooms != null ? `${snap.villa.bedrooms} BR` : 'аналоги'
-  const im = snap.infra.metrics
-  return (
-    <div className="mt-5 rounded-2xl border border-[var(--color-border)] bg-[var(--color-search-bg)] p-5 text-[14px] leading-relaxed text-[var(--color-text)]">
-      <span className="font-medium text-[#111827]">Почему такие цифры. </span>
-      Зона: {meters != null ? `${fmtMeters(meters)} до ${beachName}` : 'данных по пляжу нет'}, {snap.zone.title.toLowerCase()}.{' '}
-      Конкурентов в выборке: {snap.matchSampleSize} {pluralRu(snap.matchSampleSize, ['вилла', 'виллы', 'вилл'])} {beds}{snap.villa.area ? ` ~${snap.villa.area} м²` : ''}.{' '}
-      Инфраструктура в радиусе 800 м: {im.beachClubs} beach club, {im.premiumRestaurants} {pluralRu(im.premiumRestaurants, ['ресторан', 'ресторана', 'ресторанов'])} $$$+, {im.fitness} fitness/yoga.
-    </div>
-  )
-}
-
-function CompetitorsGrid({ snap }: { snap: Snapshot }) {
+function CompetitorsGrid({ snap, lang }: { snap: Snapshot; lang: Lang }) {
+  const t = COPY[lang]
   const { currency } = useCurrency()
   const fmtUsd = (n: number | null | undefined) => fmtMoney(n, currency)
   const [showAll, setShowAll] = useState(false)
@@ -397,7 +436,7 @@ function CompetitorsGrid({ snap }: { snap: Snapshot }) {
   return (
     <section className="mt-8">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-[18px] md:text-[20px] font-semibold text-[#111827]">Похожие объекты на Booking · {snap.competitors.length}</h3>
+        <h3 className="text-[18px] md:text-[20px] font-semibold text-[#111827]">{t.similarOnBooking(snap.competitors.length)}</h3>
       </div>
       <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {list.map(c => (
@@ -414,11 +453,11 @@ function CompetitorsGrid({ snap }: { snap: Snapshot }) {
                 <div className="text-[14px] font-semibold leading-snug line-clamp-2 mb-1">{c.complex || c.name}</div>
                 <div className="text-[12px] text-[var(--color-text-muted)] mb-2 flex items-center gap-2">
                   {c.bedrooms != null && <span>{c.bedrooms} BR</span>}
-                  {c.area != null && <span>· {c.area} м²</span>}
-                  <span>· {fmtDistance(c.distanceKm)}</span>
+                  {c.area != null && <span>· {c.area} {t.sqm}</span>}
+                  <span>· {fmtDistance(c.distanceKm, lang)}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <div className="text-[15px] font-semibold text-[#1D4ED8]">{fmtUsd(c.adr)}<span className="text-[11px] font-normal text-[var(--color-text-muted)]"> / ночь</span></div>
+                  <div className="text-[15px] font-semibold text-[#1D4ED8]">{fmtUsd(c.adr)}<span className="text-[11px] font-normal text-[var(--color-text-muted)]">{t.perNight}</span></div>
                   {c.rating != null && (
                     <div className="text-[12px] inline-flex items-center gap-1">
                       <Star size={12} className="text-[#F59E0B] fill-[#F59E0B]" />
@@ -437,49 +476,53 @@ function CompetitorsGrid({ snap }: { snap: Snapshot }) {
           onClick={() => setShowAll(v => !v)}
           className="mt-4 inline-flex items-center gap-1 px-4 py-2 rounded-full bg-white border border-[var(--color-border)] text-[13px] font-medium hover:border-[var(--color-primary)] cursor-pointer"
         >
-          {showAll ? 'Свернуть' : `Показать все ${snap.competitors.length}`}
+          {showAll ? t.collapse : t.showAll(snap.competitors.length)}
         </button>
       )}
     </section>
   )
 }
 
-function EmergingBlock({ snap }: { snap: Snapshot }) {
+function EmergingBlock({ snap, lang }: { snap: Snapshot; lang: Lang }) {
+  const t = COPY[lang]
+  const plural = pluralize(lang, snap.totalCompetitorsInRadius, COPY.ru.object, COPY.en.object)
   return (
     <section className="mt-8 rounded-2xl border border-[var(--color-border)] bg-white p-5">
       <div className="flex items-center gap-2 text-[12px] uppercase tracking-wide font-semibold text-[#111827] mb-2">
-        <TrendingUp size={14} className="text-[var(--color-primary)]" /> Новый район
+        <TrendingUp size={14} className="text-[var(--color-primary)]" /> {t.newDistrictH3}
       </div>
       <div className="text-[14px] text-[var(--color-text)] leading-relaxed">
-        Район в фазе раннего развития: в радиусе 1км менее 30 листингов на Booking. По траектории сопоставимых рынков
-        (Berawa 2018→2022, Canggu 2014→2018) ADR может вырасти на 30–80% за 4–5 лет. Это историческая аналогия, не прогноз.
+        {t.newDistrictBody}
       </div>
       <div className="text-[12px] text-[var(--color-text-muted)] mt-3">
-        Локально в радиусе 1км: {snap.totalCompetitorsInRadius} {pluralRu(snap.totalCompetitorsInRadius, ['объект', 'объекта', 'объектов'])} в общей сложности
+        {t.newDistrictFootnote(snap.totalCompetitorsInRadius, plural)}
       </div>
     </section>
   )
 }
 
-const CAT_META: Record<string, { title: string; icon: string; limit: number }> = {
-  beach: { title: 'Пляжи', icon: '🏝️', limit: 5 },
-  beachclub: { title: 'Beach clubs', icon: '🏖️', limit: 5 },
-  restaurant: { title: 'Рестораны', icon: '🍽️', limit: 6 },
-  cafe: { title: 'Кафе', icon: '☕️', limit: 6 },
-  wellness: { title: 'Йога и фитнес', icon: '🧘', limit: 5 },
-  nightlife: { title: 'Бары и клубы', icon: '🍸', limit: 5 },
-  attraction: { title: 'Достопримечательности', icon: '✨', limit: 5 },
-  international_school: { title: 'Международные школы', icon: '🎓', limit: 5 },
-  school: { title: 'Школы', icon: '🏫', limit: 5 },
-  preschool: { title: 'Сады и ясли', icon: '🧸', limit: 5 },
-  supermarket: { title: 'Магазины', icon: '🛒', limit: 5 },
-  pharmacy: { title: 'Аптеки', icon: '💊', limit: 5 },
-  hospital: { title: 'Клиники', icon: '🏥', limit: 5 },
+function getCatMeta(lang: Lang): Record<string, { title: string; icon: string; limit: number }> {
+  const t = COPY[lang]
+  return {
+    beach: { title: t.catBeach, icon: '🏝️', limit: 5 },
+    beachclub: { title: t.catBeachclub, icon: '🏖️', limit: 5 },
+    restaurant: { title: t.catRestaurant, icon: '🍽️', limit: 6 },
+    cafe: { title: t.catCafe, icon: '☕️', limit: 6 },
+    wellness: { title: t.catWellness, icon: '🧘', limit: 5 },
+    nightlife: { title: t.catNightlife, icon: '🍸', limit: 5 },
+    attraction: { title: t.catAttraction, icon: '✨', limit: 5 },
+    international_school: { title: t.catIntlSchool, icon: '🎓', limit: 5 },
+    school: { title: t.catSchool, icon: '🏫', limit: 5 },
+    preschool: { title: t.catPreschool, icon: '🧸', limit: 5 },
+    supermarket: { title: t.catSupermarket, icon: '🛒', limit: 5 },
+    pharmacy: { title: t.catPharmacy, icon: '💊', limit: 5 },
+    hospital: { title: t.catHospital, icon: '🏥', limit: 5 },
+  }
 }
 
-function NearbyPlacesBlock({ snap }: { snap: Snapshot }) {
-  // Cross-category dedup: place shown in more specific category wins.
-  // Order = specificity priority. Same place won't appear twice.
+function NearbyPlacesBlock({ snap, lang }: { snap: Snapshot; lang: Lang }) {
+  const t = COPY[lang]
+  const CAT_META = getCatMeta(lang)
   const ORDER = [
     'beach', 'beachclub',
     'international_school', 'school', 'preschool',
@@ -488,10 +531,7 @@ function NearbyPlacesBlock({ snap }: { snap: Snapshot }) {
     'supermarket', 'pharmacy', 'hospital',
     'nightlife', 'attraction',
   ]
-  // Quality filters per category. Excludes "warung" (cheap local eateries).
   const isWarung = (name: string | null) => /\bwarung\b/i.test(name ?? '')
-  // 2 пути прохождения: «крепкое качество» (высокий rating + базовый минимум отзывов)
-  // ИЛИ «культовое место» (rating чуть ниже, но тысячи отзывов — Zest, Alchemy и т.п.).
   const wellRated = (p: { rating: number | null; reviews: number | null }, hi: number, hiRev: number, lo: number, loRev: number) =>
     ((p.rating ?? 0) >= hi && (p.reviews ?? 0) >= hiRev) ||
     ((p.rating ?? 0) >= lo && (p.reviews ?? 0) >= loRev)
@@ -530,12 +570,9 @@ function NearbyPlacesBlock({ snap }: { snap: Snapshot }) {
   const cats = ORDER.filter(k => (filtered[k] ?? []).length > 0)
   if (cats.length === 0) return null
   return (
-    // mb-10 matches the rest of the detail-page sections so the rhythm
-    // stays even no matter whether the investment block above it is
-    // visible (Все / Инвестиции) or hidden (Для жизни).
     <section className="mb-10">
       <div className="flex items-baseline gap-3 mb-3">
-        <h3 className="text-[18px] md:text-[20px] font-semibold text-[#111827]">Что вокруг виллы</h3>
+        <h3 className="text-[18px] md:text-[20px] font-semibold text-[#111827]">{t.nearbyTitle}</h3>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {cats.map(cat => {
@@ -571,7 +608,7 @@ function NearbyPlacesBlock({ snap }: { snap: Snapshot }) {
                           <span className="font-medium text-[#111827]">{p.rating.toFixed(1)}</span>
                         </span>
                       )}
-                      <span>{fmtDistance(p.distanceKm)}</span>
+                      <span>{fmtDistance(p.distanceKm, lang)}</span>
                     </span>
                   </li>
                 ))}
@@ -583,4 +620,3 @@ function NearbyPlacesBlock({ snap }: { snap: Snapshot }) {
     </section>
   )
 }
-

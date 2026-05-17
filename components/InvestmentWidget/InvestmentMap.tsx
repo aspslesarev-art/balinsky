@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { APIProvider, Map as GMap, useMap } from '@vis.gl/react-google-maps'
 import { BALINSKY_MAP_STYLE } from '@/lib/google-map-style'
 import type { Snapshot } from './types'
+import type { Lang } from '@/lib/i18n'
 
 const COLORS = {
   villa: '#E0383E',
@@ -13,6 +14,31 @@ const COLORS = {
   anchor: '#16A34A',
   zone: '#E0383E',
 }
+
+const MAP_COPY = {
+  ru: {
+    unavailable: 'Карта недоступна',
+    villa: 'Вилла', competitors: 'Конкуренты', anchors: 'Якоря',
+    anchorsOnly: 'Только якоря', allPois: 'Все POI',
+    perNight: ' / ночь',
+    openBooking: 'Открыть на Booking →',
+    openMaps: 'Открыть на Google Maps →',
+    reviewsSuffix: ' отзывов',
+    bookingTitle: (adr: number, beds: number | null) =>
+      `Booking: ${adr} $/ночь${beds != null ? ` · ${beds} BR` : ''}`,
+  },
+  en: {
+    unavailable: 'Map unavailable',
+    villa: 'Villa', competitors: 'Competitors', anchors: 'Anchors',
+    anchorsOnly: 'Anchors only', allPois: 'All POIs',
+    perNight: ' / night',
+    openBooking: 'Open on Booking →',
+    openMaps: 'Open on Google Maps →',
+    reviewsSuffix: ' reviews',
+    bookingTitle: (adr: number, beds: number | null) =>
+      `Booking: $${adr}/night${beds != null ? ` · ${beds} BR` : ''}`,
+  },
+} as const
 
 function pinSvg({ bg, size, ring, label }: { bg: string; size: number; ring?: string; label?: string }): string {
   const half = size / 2
@@ -30,8 +56,6 @@ function priceLabel(adr: number): string {
   return String(Math.round(adr))
 }
 
-// Crude HTML escape — we render our own InfoWindow body via setContent,
-// and it goes straight into innerHTML inside Google's iframe-less popup.
 function esc(s: string | null | undefined): string {
   if (s == null) return ''
   return String(s)
@@ -47,25 +71,27 @@ function competitorPopupHtml(c: {
   name?: string | null; complex?: string | null; photo?: string | null;
   rating?: number | null; reviews?: number | null; bedrooms?: number | null;
   area?: number | null; adr: number; url?: string | null
-}): string {
+}, lang: Lang): string {
+  const t = MAP_COPY[lang]
+  const sqmU = lang === 'en' ? 'm²' : 'м²'
   const title = c.complex || c.name || 'Booking listing'
   const stars = c.rating != null ? `★ ${c.rating.toFixed(1)}` : ''
-  const reviews = c.reviews != null ? ` · ${c.reviews} отзывов` : ''
+  const reviews = c.reviews != null ? ` · ${c.reviews}${t.reviewsSuffix}` : ''
   const beds = c.bedrooms != null ? `${c.bedrooms} BR` : ''
-  const area = c.area != null ? `${c.area} м²` : ''
+  const area = c.area != null ? `${c.area} ${sqmU}` : ''
   const specs = [beds, area].filter(Boolean).join(' · ')
   const photo = c.photo
     ? `<div style="width:100%;height:120px;border-radius:10px;overflow:hidden;margin-bottom:8px;background:#F2EAD8"><img src="${esc(c.photo)}" alt="" style="width:100%;height:100%;object-fit:cover"></div>`
     : ''
   const link = c.url
-    ? `<a href="${esc(c.url)}" target="_blank" rel="noopener noreferrer nofollow" style="color:#1D4ED8;text-decoration:none;font-size:12px">Открыть на Booking →</a>`
+    ? `<a href="${esc(c.url)}" target="_blank" rel="noopener noreferrer nofollow" style="color:#1D4ED8;text-decoration:none;font-size:12px">${t.openBooking}</a>`
     : ''
   return `
     <div style="font-family:-apple-system,system-ui,sans-serif;max-width:240px;color:#111827">
       ${photo}
       <div style="font-weight:600;font-size:14px;line-height:1.3;margin-bottom:4px">${esc(title)}</div>
       <div style="font-size:12px;color:#6B7280;margin-bottom:6px">${esc([specs, [stars, reviews].join('').trim()].filter(Boolean).join(' · '))}</div>
-      <div style="font-weight:600;color:#1D4ED8;font-size:15px;margin-bottom:6px">${fmtAdr(c.adr)}<span style="color:#6B7280;font-weight:400;font-size:11px"> / ночь</span></div>
+      <div style="font-weight:600;color:#1D4ED8;font-size:15px;margin-bottom:6px">${fmtAdr(c.adr)}<span style="color:#6B7280;font-weight:400;font-size:11px">${t.perNight}</span></div>
       ${link}
     </div>
   `.trim()
@@ -75,13 +101,14 @@ function anchorPopupHtml(a: {
   name?: string | null; primaryType?: string | null;
   rating?: number | null; reviews?: number | null;
   address?: string | null; mapsUrl?: string | null
-}): string {
+}, lang: Lang): string {
+  const t = MAP_COPY[lang]
   const title = a.name || 'POI'
   const stars = a.rating != null ? `★ ${a.rating.toFixed(1)}` : ''
-  const reviews = a.reviews != null ? ` · ${a.reviews} отзывов` : ''
+  const reviews = a.reviews != null ? ` · ${a.reviews}${t.reviewsSuffix}` : ''
   const cat = a.primaryType ? a.primaryType.replace(/_/g, ' ') : ''
   const link = a.mapsUrl
-    ? `<a href="${esc(a.mapsUrl)}" target="_blank" rel="noopener noreferrer" style="color:#16A34A;text-decoration:none;font-size:12px">Открыть на Google Maps →</a>`
+    ? `<a href="${esc(a.mapsUrl)}" target="_blank" rel="noopener noreferrer" style="color:#16A34A;text-decoration:none;font-size:12px">${t.openMaps}</a>`
     : ''
   return `
     <div style="font-family:-apple-system,system-ui,sans-serif;max-width:240px;color:#111827">
@@ -94,11 +121,12 @@ function anchorPopupHtml(a: {
   `.trim()
 }
 
-function MapLayer({ snap, showAllPois, allPois }: { snap: Snapshot; showAllPois: boolean; allPois: { lat: number; lng: number; name: string | null; category: string }[] }) {
+function MapLayer({ snap, showAllPois, allPois, lang }: { snap: Snapshot; showAllPois: boolean; allPois: { lat: number; lng: number; name: string | null; category: string }[]; lang: Lang }) {
   const map = useMap()
   const ref = useRef<{ markers: google.maps.Marker[]; circles: google.maps.Circle[] }>({ markers: [], circles: [] })
   const infoWindowRef = useRef<google.maps.InfoWindow | null>(null)
   const fitOnceRef = useRef(false)
+  const t = MAP_COPY[lang]
 
   useEffect(() => {
     if (!map) return
@@ -108,12 +136,8 @@ function MapLayer({ snap, showAllPois, allPois }: { snap: Snapshot; showAllPois:
     for (const c of ref.current.circles) c.setMap(null)
     ref.current = { markers: [], circles: [] }
 
-    // Map competitors by id so we can pull rich data (photo / rating /
-    // reviews / url) for the popup. mapCompetitors is grouped by lat/lng
-    // and only carries the lean fields we need to draw the marker.
     const compsById = new Map(snap.competitors.map(c => [c.id, c]))
 
-    // Villa pin (red, large)
     const villaSize = 44
     const villaMarker = new google.maps.Marker({
       map,
@@ -129,7 +153,6 @@ function MapLayer({ snap, showAllPois, allPois }: { snap: Snapshot; showAllPois:
     })
     ref.current.markers.push(villaMarker)
 
-    // Zone circles
     for (const r of [100, 500, 1500]) {
       const c = new google.maps.Circle({
         map,
@@ -144,7 +167,6 @@ function MapLayer({ snap, showAllPois, allPois }: { snap: Snapshot; showAllPois:
       ref.current.circles.push(c)
     }
 
-    // Все Booking-объекты в радиусе (mapCompetitors). Матчи — крупные с цифрой, остальные — мелкие точки.
     for (const c of snap.mapCompetitors) {
       const size = c.isMatch ? 32 : 16
       const icon = c.isMatch
@@ -166,17 +188,16 @@ function MapLayer({ snap, showAllPois, allPois }: { snap: Snapshot; showAllPois:
         icon,
         opacity: c.isMatch ? 1 : 0.75,
         zIndex: c.isMatch ? 100 : 10,
-        title: `Booking: ${c.adr} $/ночь${c.bedrooms != null ? ` · ${c.bedrooms} BR` : ''}`,
+        title: t.bookingTitle(c.adr, c.bedrooms ?? null),
       })
       m.addListener('click', () => {
         const card = compsById.get(c.id)
-        iw.setContent(competitorPopupHtml(card ?? { adr: c.adr, bedrooms: c.bedrooms }))
+        iw.setContent(competitorPopupHtml(card ?? { adr: c.adr, bedrooms: c.bedrooms }, lang))
         iw.open(map, m)
       })
       ref.current.markers.push(m)
     }
 
-    // Anchor POIs (green) — show always
     for (const a of snap.anchors) {
       const size = 24
       const m = new google.maps.Marker({
@@ -191,13 +212,12 @@ function MapLayer({ snap, showAllPois, allPois }: { snap: Snapshot; showAllPois:
         title: a.name ?? 'POI',
       })
       m.addListener('click', () => {
-        iw.setContent(anchorPopupHtml(a))
+        iw.setContent(anchorPopupHtml(a, lang))
         iw.open(map, m)
       })
       ref.current.markers.push(m)
     }
 
-    // All POIs in showAll mode
     if (showAllPois) {
       const seen = new Set(snap.anchors.map(a => `${a.lat.toFixed(5)},${a.lng.toFixed(5)}`))
       for (const p of allPois) {
@@ -217,9 +237,7 @@ function MapLayer({ snap, showAllPois, allPois }: { snap: Snapshot; showAllPois:
           title: p.name ?? 'POI',
         })
         m.addListener('click', () => {
-          // showAllPois passes a slimmer record (no rating / address) —
-          // the anchor popup gracefully degrades to just name + category.
-          iw.setContent(anchorPopupHtml({ name: p.name, primaryType: p.category }))
+          iw.setContent(anchorPopupHtml({ name: p.name, primaryType: p.category }, lang))
           iw.open(map, m)
         })
         ref.current.markers.push(m)
@@ -241,7 +259,7 @@ function MapLayer({ snap, showAllPois, allPois }: { snap: Snapshot; showAllPois:
       for (const m of ref.current.markers) m.setMap(null)
       for (const c of ref.current.circles) c.setMap(null)
     }
-  }, [map, snap, showAllPois, allPois])
+  }, [map, snap, showAllPois, allPois, lang, t])
 
   return null
 }
@@ -251,16 +269,19 @@ export function InvestmentMap({
   snap,
   allPois,
   heightClass = 'h-[480px]',
+  lang = 'ru',
 }: {
   apiKey: string
   snap: Snapshot
   allPois: { lat: number; lng: number; name: string | null; category: string }[]
   heightClass?: string
+  lang?: Lang
 }) {
   const [showAllPois, setShowAllPois] = useState(false)
+  const t = MAP_COPY[lang]
 
   if (!apiKey) {
-    return <div className={`${heightClass} bg-[var(--color-search-bg)] rounded-3xl flex items-center justify-center text-[var(--color-text-muted)]`}>Карта недоступна</div>
+    return <div className={`${heightClass} bg-[var(--color-search-bg)] rounded-3xl flex items-center justify-center text-[var(--color-text-muted)]`}>{t.unavailable}</div>
   }
 
   return (
@@ -270,10 +291,6 @@ export function InvestmentMap({
           defaultCenter={{ lat: snap.villa.lat, lng: snap.villa.lng }}
           defaultZoom={14}
           gestureHandling="greedy"
-          // We want the Pegman + zoom (bottom-right) and fullscreen
-          // (top-right) — explicitly enable instead of disableDefaultUI,
-          // so our POI toggle below doesn't have to fight for the same
-          // anchor. mapTypeControl off — we don't need Satellite here.
           streetViewControl={true}
           zoomControl={true}
           fullscreenControl={true}
@@ -284,24 +301,21 @@ export function InvestmentMap({
           styles={BALINSKY_MAP_STYLE}
           backgroundColor="#F2EAD8"
         >
-          <MapLayer snap={snap} showAllPois={showAllPois} allPois={allPois} />
+          <MapLayer snap={snap} showAllPois={showAllPois} allPois={allPois} lang={lang} />
         </GMap>
       </APIProvider>
 
       <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-sm rounded-2xl border border-[var(--color-border)] px-3 py-2 text-[12px] flex items-center gap-3 shadow-sm">
-        <span className="inline-flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#E0383E]" /> Вилла</span>
-        <span className="inline-flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#3B82F6]" /> Конкуренты</span>
-        <span className="inline-flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#16A34A]" /> Якоря</span>
+        <span className="inline-flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#E0383E]" /> {t.villa}</span>
+        <span className="inline-flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#3B82F6]" /> {t.competitors}</span>
+        <span className="inline-flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#16A34A]" /> {t.anchors}</span>
       </div>
-      {/* POI toggle — top-left so it doesn't collide with Google's
-          fullscreen control (top-right) or Pegman + zoom buttons
-          (bottom-right). */}
       <button
         type="button"
         onClick={() => setShowAllPois(v => !v)}
         className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm rounded-full border border-[var(--color-border)] px-3 py-1.5 text-[12px] font-medium hover:border-[var(--color-primary)] cursor-pointer shadow-sm"
       >
-        {showAllPois ? 'Только якоря' : 'Все POI'}
+        {showAllPois ? t.anchorsOnly : t.allPois}
       </button>
     </div>
   )

@@ -852,7 +852,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
         </div>
 
         {lat != null && lng != null && (
-          <InvestmentWidget villaId={v.airtable_id} apiKey={GMAPS_KEY} />
+          <InvestmentWidget villaId={v.airtable_id} apiKey={GMAPS_KEY} lang={lang} />
         )}
 
         <RentalCompareSection
