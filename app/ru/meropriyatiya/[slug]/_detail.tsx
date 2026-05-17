@@ -165,8 +165,8 @@ export async function EventDetail({ slug, lang }: { slug: string; lang: Lang }) 
             {e.startsAt && (
               <span className="inline-flex items-center gap-1.5">
                 <Calendar size={14} />
-                <LocalDateTime iso={e.startsAt} withYear withTime />
-                {e.endsAt && (<><span> – </span><LocalDateTime iso={e.endsAt} withTime /></>)}
+                <LocalDateTime iso={e.startsAt} withYear withTime lang={lang} />
+                {e.endsAt && (<><span> – </span><LocalDateTime iso={e.endsAt} withTime lang={lang} /></>)}
               </span>
             )}
             {e.developers[0] && (

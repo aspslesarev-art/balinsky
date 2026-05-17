@@ -10,13 +10,14 @@ type Props = {
   className?: string
   prefix?: string
   suffix?: string
+  lang?: 'ru' | 'en'
 }
 
 // Renders the Bali-time string on the server (so the initial HTML always shows
 // Bali time). After hydration, if the visitor is not in Bali, swaps to their
 // local time. Original Bali string stays available as a tooltip.
-export function LocalDateTime({ iso, withYear, withTime, className, prefix, suffix }: Props) {
-  const baliText = fmtBali(iso, { withYear, withTime })
+export function LocalDateTime({ iso, withYear, withTime, className, prefix, suffix, lang = 'ru' }: Props) {
+  const baliText = fmtBali(iso, { withYear, withTime, lang })
   const [text, setText] = useState(baliText)
   const [tooltip, setTooltip] = useState<string | undefined>(undefined)
 
@@ -24,15 +25,15 @@ export function LocalDateTime({ iso, withYear, withTime, className, prefix, suff
     try {
       const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone
       if (userTz === BALI_TZ) return
-      const localText = fmtLocal(iso, { withYear, withTime })
+      const localText = fmtLocal(iso, { withYear, withTime, lang })
       if (localText !== baliText) {
         setText(localText)
-        setTooltip(`Бали: ${baliText}`)
+        setTooltip(lang === 'en' ? `Bali: ${baliText}` : `Бали: ${baliText}`)
       }
     } catch {
       // Intl may throw on very old browsers — keep Bali text in that case.
     }
-  }, [iso, withYear, withTime, baliText])
+  }, [iso, withYear, withTime, baliText, lang])
 
   return (
     <time dateTime={iso} title={tooltip} className={className} suppressHydrationWarning>

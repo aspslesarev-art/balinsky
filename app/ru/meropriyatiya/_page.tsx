@@ -119,7 +119,7 @@ function EventCard({ e, lang }: { e: EventItem; lang: Lang }) {
         </div>
         <div className="text-[16px] font-semibold leading-snug mb-2 line-clamp-3">{e.title}</div>
         {e.startsAt && (
-          <LocalDateTime iso={e.startsAt} withTime className="text-[12px] text-[var(--color-text-muted)]" />
+          <LocalDateTime iso={e.startsAt} withTime lang={lang} className="text-[12px] text-[var(--color-text-muted)]" />
         )}
       </div>
     </Link>
