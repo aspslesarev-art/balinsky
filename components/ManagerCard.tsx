@@ -128,7 +128,7 @@ function ManagerRow({
                 <span className="font-medium text-[#111827]">{m.rating.toFixed(1)}</span>
               </span>
             )}
-            {displayLanguages.length > 0 && (
+            {lang !== 'en' && displayLanguages.length > 0 && (
               <span className="inline-flex items-center gap-1 text-[12px] text-[var(--color-text-muted)]">
                 <Languages size={12} />
                 <span className="truncate">{displayLanguages.join(', ')}</span>
