@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { ComplexCard, type ComplexCardData } from './ComplexCard'
 
 type Card = ComplexCardData & { id: string }
@@ -29,6 +30,8 @@ export function ComplexInfiniteScrollClient({
   const [hasMore, setHasMore] = useState(initialHasMore)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const pathname = usePathname() ?? ''
+  const isEn = pathname.startsWith('/en')
   const sentinelRef = useRef<HTMLDivElement | null>(null)
   const inflightRef = useRef<Promise<void> | null>(null)
 
@@ -85,7 +88,7 @@ export function ComplexInfiniteScrollClient({
               disabled={loading}
               className={`inline-block px-6 py-3 rounded-full bg-[var(--color-card-bg)] border border-[var(--color-border)] text-[14px] font-medium text-[var(--color-text)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] transition-colors cursor-pointer ${loading ? 'opacity-60 pointer-events-none' : ''}`}
             >
-              {loading ? 'Загрузка…' : 'Показать ещё'}
+              {loading ? (isEn ? 'Loading…' : 'Загрузка…') : (isEn ? 'Show more' : 'Показать ещё')}
             </button>
           </div>
         </>

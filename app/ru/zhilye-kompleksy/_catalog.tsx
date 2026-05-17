@@ -100,7 +100,7 @@ export async function ComplexesCatalog({
           <DistrictIntroBlock copy={districtCopy} lang={lang} totalCount={totalCount} sectionRoot={sectionRoot} />
         )}
 
-        <CatalogTabs active="list" listHref={listTabHref} mapHref={mapTabHref} />
+        <CatalogTabs active="list" listHref={listTabHref} mapHref={mapTabHref} lang={lang} />
 
         <div className="mt-6">
           <ComplexCatalogSearchBar initial={filters.q} current={filters} view="list" placeholder={copy.searchPlaceholder} />

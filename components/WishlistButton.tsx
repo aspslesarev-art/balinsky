@@ -1,6 +1,7 @@
 'use client'
 
 import { Heart } from 'lucide-react'
+import { usePathname } from 'next/navigation'
 import { useWishlist } from './WishlistContext'
 import type { WishlistItem } from '@/lib/wishlist'
 
@@ -25,10 +26,14 @@ export function WishlistButton({
   const saved = ready ? has(item.kind, item.slug) : false
   const dim = size === 'sm' ? 32 : 38
   const icon = size === 'sm' ? 16 : 18
+  const pathname = usePathname() ?? ''
+  const isEn = pathname.startsWith('/en')
+  const labelSave   = isEn ? 'Add to favorites'    : 'В избранное'
+  const labelRemove = isEn ? 'Remove from favorites' : 'Удалить из избранного'
   return (
     <button
       type="button"
-      aria-label={saved ? 'Удалить из избранного' : 'В избранное'}
+      aria-label={saved ? labelRemove : labelSave}
       aria-pressed={saved}
       onClick={e => {
         e.preventDefault()

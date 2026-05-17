@@ -104,6 +104,7 @@ export async function ApartamentyCatalog({
           active="list"
           listHref={buildListHref(filters)}
           mapHref={buildMapHref(filters)}
+          lang={lang}
         />
 
         <div className="mt-6">

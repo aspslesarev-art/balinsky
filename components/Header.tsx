@@ -37,7 +37,7 @@ export function Header({ active }: { active?: NavKey }) {
         <button
           type="button"
           className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg text-[var(--color-text)]"
-          aria-label={open ? 'Закрыть меню' : 'Открыть меню'}
+          aria-label={lang === 'en' ? (open ? 'Close menu' : 'Open menu') : (open ? 'Закрыть меню' : 'Открыть меню')}
           aria-expanded={open}
           onClick={() => setOpen(v => !v)}
         >

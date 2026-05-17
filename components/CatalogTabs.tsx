@@ -1,15 +1,24 @@
 import Link from 'next/link'
 import { List, Map as MapIcon } from 'lucide-react'
+import type { Lang } from '@/lib/i18n'
+
+const COPY = {
+  ru: { list: 'Каталог', map: 'Карта' },
+  en: { list: 'Catalog', map: 'Map' },
+}
 
 export function CatalogTabs({
   active = 'list',
   listHref = '/ru/apartamenty',
   mapHref = '/ru/apartamenty/karta',
+  lang = 'ru',
 }: {
   active?: 'list' | 'map'
   listHref?: string
   mapHref?: string
+  lang?: Lang
 }) {
+  const c = COPY[lang]
   return (
     <div className="mt-6 border-b border-[var(--color-border)]">
       <div className="flex items-center gap-8">
@@ -22,7 +31,7 @@ export function CatalogTabs({
           }`}
         >
           <List size={18} strokeWidth={2} />
-          Каталог
+          {c.list}
           {active === 'list' && (
             <span className="absolute left-0 right-0 bottom-[-1px] h-[2px] bg-[var(--color-primary)]" />
           )}
@@ -36,7 +45,7 @@ export function CatalogTabs({
           }`}
         >
           <MapIcon size={18} strokeWidth={2} />
-          Карта
+          {c.map}
           {active === 'map' && (
             <span className="absolute left-0 right-0 bottom-[-1px] h-[2px] bg-[var(--color-primary)]" />
           )}
