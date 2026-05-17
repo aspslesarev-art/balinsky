@@ -106,7 +106,7 @@ export async function VillasCatalog({
           <DistrictIntroBlock copy={districtCopy} lang={lang} totalCount={totalCount} sectionRoot={sectionRoot} />
         )}
 
-        <CatalogTabs active="list" listHref={buildListHref(filters)} mapHref={buildMapHref(filters)} lang={lang} />
+        <CatalogTabs active="list" listHref={buildListHref(filters, lang)} mapHref={buildMapHref(filters, lang)} lang={lang} />
 
         <div className="mt-6">
           <VillaCatalogSearchBar initial={filters.q} current={filters} view="list" placeholder={copy.searchPlaceholder} />

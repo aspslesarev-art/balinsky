@@ -61,8 +61,8 @@ export async function ComplexesCatalog({
   const copy = COPY[lang]
 
   // Use complex tab hrefs (not the apartments ones from CatalogTabs defaults).
-  const listTabHref = buildListHref(filters)
-  const mapTabHref = buildMapHref(filters)
+  const listTabHref = buildListHref(filters, lang)
+  const mapTabHref = buildMapHref(filters, lang)
 
   const isSingleDistrictHub = filters.district.length === 1
     && filters.year.length === 0

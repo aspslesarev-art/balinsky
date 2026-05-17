@@ -1,8 +1,11 @@
 import type { VillaFilterState } from '@/app/ru/villy/_lib'
 import { buildCanonicalPath } from './villa-seo-routes'
+import type { Lang } from './i18n'
 
-const LIST_BASE = '/ru/villy'
-const MAP_BASE = '/ru/villy/karta'
+const RU_LIST_BASE = '/ru/villy'
+const RU_MAP_BASE = '/ru/villy/karta'
+const EN_LIST_BASE = '/en/villas'
+const EN_MAP_BASE = '/ru/villy/karta'
 
 function toQueryString(f: VillaFilterState): string {
   const sp = new URLSearchParams()
@@ -21,16 +24,18 @@ function toQueryString(f: VillaFilterState): string {
   return sp.toString()
 }
 
-export function buildListHref(f: VillaFilterState): string {
-  if (!f.q || !f.q.trim()) {
+export function buildListHref(f: VillaFilterState, lang: Lang = 'ru'): string {
+  const base = lang === 'en' ? EN_LIST_BASE : RU_LIST_BASE
+  if (lang === 'ru' && (!f.q || !f.q.trim())) {
     const canonical = buildCanonicalPath(f)
     if (canonical) return canonical
   }
   const qs = toQueryString(f)
-  return qs ? `${LIST_BASE}?${qs}` : LIST_BASE
+  return qs ? `${base}?${qs}` : base
 }
 
-export function buildMapHref(f: VillaFilterState): string {
+export function buildMapHref(f: VillaFilterState, lang: Lang = 'ru'): string {
+  const base = lang === 'en' ? EN_MAP_BASE : RU_MAP_BASE
   const qs = toQueryString(f)
-  return qs ? `${MAP_BASE}?${qs}` : MAP_BASE
+  return qs ? `${base}?${qs}` : base
 }

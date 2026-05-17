@@ -102,8 +102,8 @@ export async function ApartamentyCatalog({
 
         <CatalogTabs
           active="list"
-          listHref={buildListHref(filters)}
-          mapHref={buildMapHref(filters)}
+          listHref={buildListHref(filters, lang)}
+          mapHref={buildMapHref(filters, lang)}
           lang={lang}
         />
 

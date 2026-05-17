@@ -1,8 +1,12 @@
 import type { FilterState } from '@/components/filters/FiltersBar'
 import { buildCanonicalPath } from './seo-routes'
+import type { Lang } from './i18n'
 
-const LIST_BASE = '/ru/apartamenty'
-const MAP_BASE = '/ru/apartamenty/karta'
+const RU_LIST_BASE = '/ru/apartamenty'
+const RU_MAP_BASE = '/ru/apartamenty/karta'
+const EN_LIST_BASE = '/en/apartments'
+// /en/apartments/map doesn't exist yet — map button on EN points at the RU map.
+const EN_MAP_BASE = '/ru/apartamenty/karta'
 
 function toQueryString(f: FilterState): string {
   const sp = new URLSearchParams()
@@ -19,18 +23,21 @@ function toQueryString(f: FilterState): string {
   return sp.toString()
 }
 
-export function buildListHref(f: FilterState): string {
-  // Search query is never canonical — keep it in the query string and let it
-  // drop the user out of any canonical clean URL.
-  if (!f.q || !f.q.trim()) {
+export function buildListHref(f: FilterState, lang: Lang = 'ru'): string {
+  const base = lang === 'en' ? EN_LIST_BASE : RU_LIST_BASE
+  // RU canonical slugs (/ru/apartamenty/canggu/2-spalni) only exist for RU
+  // — EN has no matching route tree, so on EN we always stay at the flat
+  // base with the filters in the query string.
+  if (lang === 'ru' && (!f.q || !f.q.trim())) {
     const canonical = buildCanonicalPath(f)
     if (canonical) return canonical
   }
   const qs = toQueryString(f)
-  return qs ? `${LIST_BASE}?${qs}` : LIST_BASE
+  return qs ? `${base}?${qs}` : base
 }
 
-export function buildMapHref(f: FilterState): string {
+export function buildMapHref(f: FilterState, lang: Lang = 'ru'): string {
+  const base = lang === 'en' ? EN_MAP_BASE : RU_MAP_BASE
   const qs = toQueryString(f)
-  return qs ? `${MAP_BASE}?${qs}` : MAP_BASE
+  return qs ? `${base}?${qs}` : base
 }
