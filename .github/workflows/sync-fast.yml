@@ -56,6 +56,9 @@ jobs:
       - name: Sync managers
         run: node scripts/sync-managers.mjs
 
+      - name: Sync videos
+        run: node scripts/sync-videos.mjs
+
       - name: Sync developers
         run: node scripts/sync-developers.mjs
 
@@ -84,7 +87,7 @@ jobs:
           REVALIDATE_TOKEN: ${{ secrets.REVALIDATE_TOKEN }}
         run: |
           curl --fail --silent --show-error \
-            -X POST "${SITE_URL}/api/revalidate-content?kinds=events,news,promo,knowledge,managers,developers,villas,apartments,complexes" \
+            -X POST "${SITE_URL}/api/revalidate-content?kinds=events,news,promo,knowledge,managers,videos,developers,villas,apartments,complexes" \
             -H "Authorization: Bearer ${REVALIDATE_TOKEN}" \
             -H "Content-Type: application/json" \
             -d '{}' \
