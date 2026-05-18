@@ -116,6 +116,7 @@ const COPY = {
     ogTitle: (name: string) => `${name} на Бали`,
     fallbackDesc: (name: string, district: string | null, types: string, yearRaw: string | null) =>
       `Жилой комплекс ${name}${district ? ` в районе ${district}` : ''} на Бали. ${types ? `Форматы: ${types.toLowerCase()}.` : ''}${yearRaw ? ` Сдача: ${yearRaw}.` : ''} Фото, цены, разрешения.`,
+    sold: 'Продано',
   },
   en: {
     home: 'Home',
@@ -179,6 +180,7 @@ const COPY = {
     ogTitle: (name: string) => `${name} in Bali`,
     fallbackDesc: (name: string, district: string | null, types: string, yearRaw: string | null) =>
       `${name} residential complex${district ? ` in ${district}` : ''} in Bali.${types ? ` Unit types: ${types.toLowerCase()}.` : ''}${yearRaw ? ` Completion: ${yearRaw}.` : ''} Photos, prices, permits.`,
+    sold: 'Sold',
   },
 } as const
 
@@ -549,6 +551,8 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   const district = firstString(d['Location 2']) ?? firstString(d['Location'])
   const types = strList(d['Типы юнитов'])
   const status = firstString(d['Статус'])
+  const salesStatus = firstString(d['Статус продаж'])
+  const isSold = salesStatus === 'Продано'
   const permit = firstString(d['Разрешительные документы'])
   const yearRaw = firstString(d['Year of completion ']) ?? firstString(d['Year of completion'])
   const totalUnits = numberOrNull(d['Total quantity of units'])
@@ -763,6 +767,11 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
           <h1 className="text-[20px] sm:text-[28px] md:text-[44px] font-semibold tracking-tight text-[#111827] leading-[1.2] md:leading-[1.05] mb-2 sm:mb-3 [word-break:break-word] [overflow-wrap:anywhere]">
             {name}
           </h1>
+          {isSold && (
+            <div className="mb-3 sm:mb-4 inline-flex items-center px-3 py-1.5 rounded-full bg-[#DC2626] text-white text-[13px] sm:text-[14px] font-semibold tracking-wide shadow-sm">
+              {copy.sold}
+            </div>
+          )}
           <div className="text-[13px] sm:text-[15px] md:text-[16px] text-[var(--color-text-muted)] leading-snug max-w-3xl mb-3 sm:mb-4">
             {types.length > 0 && <>{types.join(', ')}</>}
             {district && <> · {district}, {copy.bali}</>}

@@ -22,11 +22,14 @@ export type ComplexCardData = {
   villaPriceTo: number | null
   aptPriceFrom: number | null
   aptPriceTo: number | null
+  // Editor-flagged: every unit in the complex is sold. Renders a red
+  // "Продано" / "Sold" pill on the cover photo.
+  isSold?: boolean
 }
 
 const COPY = {
-  ru: { villas: 'Виллы', apartments: 'Апартаменты', permit: 'Разрешение на строительство', noPermit: 'нет', readiness: 'Готовность строительства', from: 'от', to: 'до' },
-  en: { villas: 'Villas', apartments: 'Apartments', permit: 'Building permit',                noPermit: 'none', readiness: 'Construction progress', from: 'from', to: 'to' },
+  ru: { villas: 'Виллы', apartments: 'Апартаменты', permit: 'Разрешение на строительство', noPermit: 'нет', readiness: 'Готовность строительства', from: 'от', to: 'до', sold: 'Продано' },
+  en: { villas: 'Villas', apartments: 'Apartments', permit: 'Building permit',                noPermit: 'none', readiness: 'Construction progress', from: 'from', to: 'to', sold: 'Sold' },
 } as const
 
 function fmtRange(
@@ -64,6 +67,11 @@ export function ComplexCard({ c, lang = 'ru' }: { c: ComplexCardData; lang?: Lan
     >
       <div className="relative">
         <PhotoSlider photos={slides} alt={c.name} heightClass="h-[240px] md:h-[360px]" trackingId={`complex:${c.slug}`} />
+        {c.isSold && (
+          <div className="absolute top-3 left-3 z-10 inline-flex items-center px-2.5 py-1 rounded-full bg-[#DC2626] text-white text-[12px] font-semibold tracking-wide shadow-md">
+            {copy.sold}
+          </div>
+        )}
         <WishlistButton
           className="absolute top-3 right-3 z-10"
           item={{

@@ -159,6 +159,11 @@ export type EnrichedRow = {
   types: string[]
   status: string | null
   permit: string | null
+  // Sales status from Airtable's «Статус продаж» field. Editors mark
+  // a complex as «Продано» when every unit is sold and we render a
+  // red badge on the card + detail hero. Independent from construction
+  // `Статус` ('Строится' / 'Построен' / 'Под заказ').
+  salesStatus: string | null
   year: string | null
   developerName: string | null
   lat: number | null
@@ -191,6 +196,7 @@ function enrich(r: Row): EnrichedRow {
     types: strList(d['Типы юнитов']),
     status: firstString(d['Статус']),
     permit: firstString(d['Разрешительные документы']),
+    salesStatus: firstString(d['Статус продаж']),
     year,
     developerName: firstString(d['Developer1']) ?? firstString(d['Варианты поиска застройщика']),
     lat: parseGeo(d['Geo']),
@@ -436,6 +442,7 @@ export function toCard(
     villaPriceTo: p?.villas?.to ?? null,
     aptPriceFrom: p?.apartments?.from ?? null,
     aptPriceTo: p?.apartments?.to ?? null,
+    isSold: e.salesStatus === 'Продано',
     isTop: e.isTop,
     topRank: e.topRank,
   }
