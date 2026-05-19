@@ -6,8 +6,9 @@ export type NewsDeveloper = { name: string; slug: string | null }
 export type NewsItem = {
   id: string
   slug: string
-  // Legacy slugs from the editor's SEO:Slug column. The detail page
-  // 301-redirects requests for an alias to the canonical (transliterated) slug.
+  // Legacy / cross-lang slugs. On /ru this is empty (or holds the
+  // editor's SEO:Slug if it differs). On /en this holds the RU
+  // transliterated slug so old links still resolve via 301.
   aliases?: string[]
   title: string
   seoDescription: string | null
@@ -29,7 +30,6 @@ type Manifest = { generatedAt: string; count: number; items: NewsItem[] }
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/news/_news.json`
 
-// Fields that get translated to English. Mirrored in scripts/translate-missing-en.mjs.
 const EN_FIELDS = ['title', 'seoDescription', 'body'] as const
 
 async function loadRawNews(): Promise<NewsItem[]> {
@@ -43,11 +43,35 @@ async function loadRawNews(): Promise<NewsItem[]> {
   }
 }
 
+// Slugify an English string: lowercase, ASCII alnum + hyphen, capped.
+function slugifyEn(s: string): string {
+  return s.toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80)
+}
+
 export async function loadAllNews(lang: Lang = 'ru'): Promise<NewsItem[]> {
   const items = await loadRawNews()
   if (lang === 'ru' || items.length === 0) return items
   const cache = await loadEnTranslations('news')
-  return items.map(item => applyManifestTranslation(item, cache, EN_FIELDS))
+  return items.map(item => {
+    const translated = applyManifestTranslation(item, cache, EN_FIELDS)
+    // When we have an EN title, derive an English-friendly slug from it
+    // and keep the original transliterated RU slug as an alias. That
+    // gives Google an English URL on /en (good for SEO) while the RU
+    // slug still 301-redirects on the EN tree for any existing inbound
+    // link.
+    if (translated.title && translated.title !== item.title) {
+      const enSlug = slugifyEn(translated.title)
+      if (enSlug && enSlug !== translated.slug) {
+        const aliases = Array.from(new Set([item.slug, ...(item.aliases ?? [])]))
+          .filter(s => s && s !== enSlug)
+        return { ...translated, slug: enSlug, aliases }
+      }
+    }
+    return translated
+  })
 }
 
 export async function loadNewsBySlug(slug: string, lang: Lang = 'ru'): Promise<NewsItem | null> {

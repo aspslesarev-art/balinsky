@@ -24,67 +24,51 @@ const H3_RE = /^\s*###\s+(.*)$/
 function parse(body: string): Block[] {
   const lines = body.replace(/\r\n?/g, '\n').split('\n')
   const blocks: Block[] = []
-  let buf: string[] = []
+  let listBuf: string[] = []
   let listKind: 'ul' | 'ol' | null = null
 
-  function flushParagraph() {
-    if (buf.length === 0) return
-    const text = buf.join(' ').trim()
-    if (text) blocks.push({ kind: 'p', text })
-    buf = []
-  }
   function flushList() {
-    if (!listKind || buf.length === 0) return
-    blocks.push({ kind: listKind, items: [...buf] })
-    buf = []
+    if (!listKind || listBuf.length === 0) return
+    blocks.push({ kind: listKind, items: [...listBuf] })
+    listBuf = []
     listKind = null
   }
 
   for (const raw of lines) {
-    const line = raw.trimEnd()
-    if (line.trim() === '') {
-      flushParagraph()
+    const line = raw.trim()
+    // Treat a blank line as a soft separator. We don't accumulate
+    // multiple paragraph-lines into one block, so the only thing a
+    // blank line does is close any open list block.
+    if (!line) {
       flushList()
       continue
     }
     const h2 = H2_RE.exec(line)
-    if (h2) {
-      flushParagraph(); flushList()
-      blocks.push({ kind: 'h2', text: h2[1].trim() })
-      continue
-    }
+    if (h2) { flushList(); blocks.push({ kind: 'h2', text: h2[1].trim() }); continue }
     const h3 = H3_RE.exec(line)
-    if (h3) {
-      flushParagraph(); flushList()
-      blocks.push({ kind: 'h3', text: h3[1].trim() })
-      continue
-    }
+    if (h3) { flushList(); blocks.push({ kind: 'h3', text: h3[1].trim() }); continue }
     const q = QUOTE_RE.exec(line)
-    if (q) {
-      flushParagraph(); flushList()
-      blocks.push({ kind: 'quote', text: q[1].trim() })
-      continue
-    }
+    if (q)  { flushList(); blocks.push({ kind: 'quote', text: q[1].trim() }); continue }
     const ul = BULLET_RE.exec(line)
     if (ul) {
       if (listKind === 'ol') flushList()
-      flushParagraph()
       listKind = 'ul'
-      buf.push(ul[1].trim())
+      listBuf.push(ul[1].trim())
       continue
     }
     const ol = NUMBERED_RE.exec(line)
     if (ol) {
       if (listKind === 'ul') flushList()
-      flushParagraph()
       listKind = 'ol'
-      buf.push(ol[1].trim())
+      listBuf.push(ol[1].trim())
       continue
     }
-    if (listKind) flushList()
-    buf.push(line.trim())
+    // Plain text line — its own paragraph. Each Enter in the Airtable
+    // cell becomes a paragraph break with visible spacing, which is
+    // what editors expect from a text-area input.
+    flushList()
+    blocks.push({ kind: 'p', text: line })
   }
-  flushParagraph()
   flushList()
   return blocks
 }
