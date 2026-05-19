@@ -53,6 +53,27 @@ function fs1(v) {
   if (typeof v === 'object' && 'value' in v) return fs1(v.value)
   return null
 }
+
+// Cyrillic → Latin transliteration. Mirrors lib/translit.ts so we
+// can build URL-safe slugs from the Russian news title without
+// shipping the editor's English-translated SEO:Slug as the canonical
+// URL. Aliases keep old indexed URLs alive via 301 redirects.
+const TRANSLIT_MAP = {
+  а:'a',б:'b',в:'v',г:'g',д:'d',е:'e',ё:'e',ж:'zh',з:'z',и:'i',й:'y',
+  к:'k',л:'l',м:'m',н:'n',о:'o',п:'p',р:'r',с:'s',т:'t',у:'u',ф:'f',
+  х:'h',ц:'ts',ч:'ch',ш:'sh',щ:'sch',ъ:'',ы:'y',ь:'',э:'e',ю:'yu',я:'ya',
+}
+function slugifyFromRu(title) {
+  if (!title) return null
+  let out = ''
+  for (const ch of title.toLowerCase()) {
+    out += TRANSLIT_MAP[ch] ?? ch
+  }
+  return out
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80) || null
+}
 function urlOfFirstAttachment(att) {
   if (!Array.isArray(att) || att.length === 0) return null
   const a = att[0]
@@ -102,15 +123,31 @@ for (const d of (prodDevs ?? [])) {
 console.log('  main developers loaded:', mainDevByNameLower.size)
 
 const items = []
+const slugCollisions = new Map()
 let dropped = 0
 for (const r of newsRecs) {
   const f = r.fields || {}
-  const slug = fs1(f['SEO:Slug'])
   const title = fs1(f['ИИ Заголовок']) ?? fs1(f['SEO:Title']) ?? fs1(f['Name'])
   const seoDesc = fs1(f['SEO:Description'])
   const text = fs1(f['Notes'])
   const date = fs1(f['Date'])
+  // Canonical slug = transliterated RU title. Editor's SEO:Slug stays
+  // as an alias so old Google-indexed URLs keep working via the
+  // detail page's 301 redirect.
+  const editorSlug = fs1(f['SEO:Slug'])
+  let slug = slugifyFromRu(title)
+  if (slug) {
+    // Disambiguate: if two news share a transliterated slug, append
+    // -2, -3… based on insertion order.
+    const used = slugCollisions.get(slug) ?? 0
+    if (used > 0) slug = `${slug}-${used + 1}`
+    slugCollisions.set(slug, 1)
+  } else {
+    slug = editorSlug
+  }
   if (!slug || !title) { dropped++; continue }
+  const aliases = []
+  if (editorSlug && editorSlug !== slug) aliases.push(editorSlug)
 
   const tempPhoto = urlOfFirstAttachment(f['Social:Image']) ?? urlOfFirstAttachment(f['Attachments'])
   const photo = tempPhoto ? await downloadAndUpload(sb, PHOTO_BUCKET, r.id, tempPhoto) : null
@@ -133,10 +170,12 @@ for (const r of newsRecs) {
   items.push({
     id: r.id,
     slug,
+    aliases,
     title,
     seoDescription: seoDesc,
     body: text,
     date,
+    createdAt: r.createdTime ?? null,
     photo,
     externalUrl: fs1(f['ссылка']),
     videoUrl: fs1(f['видео']),
@@ -146,12 +185,15 @@ for (const r of newsRecs) {
   })
 }
 
-// Sort: pinned first, then by date desc
+// Sort: pinned first, then by Airtable record creation time desc
+// (newest added shows up first). The editor-set `Date` field stays
+// for display only — it can be off by hours/days from the actual
+// publish moment when the editor backdates an entry.
 items.sort((a, b) => {
   if (a.pinned !== b.pinned) return a.pinned ? -1 : 1
-  const da = a.date ? new Date(a.date).getTime() : 0
-  const db = b.date ? new Date(b.date).getTime() : 0
-  return db - da
+  const ca = a.createdAt ? new Date(a.createdAt).getTime() : 0
+  const cb = b.createdAt ? new Date(b.createdAt).getTime() : 0
+  return cb - ca
 })
 
 console.log('▶ kept:', items.length, 'dropped:', dropped)

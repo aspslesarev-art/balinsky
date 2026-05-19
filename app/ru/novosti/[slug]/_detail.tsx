@@ -1,7 +1,7 @@
 // Shared news-detail renderer.
 
 import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Calendar, ExternalLink, Building2, HardHat } from 'lucide-react'
@@ -9,6 +9,7 @@ import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { PageViewTracker } from '@/components/PageViewTracker'
+import { NewsBody } from '@/components/NewsBody'
 import { loadAllNews, loadNewsBySlug } from '@/lib/news'
 import type { Lang } from '@/lib/i18n'
 
@@ -62,8 +63,11 @@ export async function NewsDetail({ slug, lang }: { slug: string; lang: Lang }) {
   const c = COPY[lang]
   const n = await loadNewsBySlug(slug, lang)
   if (!n) notFound()
-  const home = lang === 'en' ? '/en' : '/ru'
   const newsRoot = lang === 'en' ? '/en/news' : '/ru/novosti'
+  // Editor's legacy SEO:Slug stays as alias — redirect to the canonical
+  // transliterated slug so Google consolidates link equity on one URL.
+  if (n.slug !== slug) permanentRedirect(`${newsRoot}/${n.slug}`)
+  const home = lang === 'en' ? '/en' : '/ru'
   const developersRoot = lang === 'en' ? '/en/developers' : '/ru/zastrojshhiki'
 
   const date = fmtDate(n.date, c.locale)
@@ -124,11 +128,7 @@ export async function NewsDetail({ slug, lang }: { slug: string; lang: Lang }) {
             </div>
           )}
 
-          {n.body && (
-            <div className="text-[16px] leading-[1.7] text-[var(--color-text)] whitespace-pre-wrap">
-              {n.body}
-            </div>
-          )}
+          {n.body && <NewsBody body={n.body} />}
 
           {n.videoUrl && (
             <div className="mt-6">

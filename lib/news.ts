@@ -6,10 +6,16 @@ export type NewsDeveloper = { name: string; slug: string | null }
 export type NewsItem = {
   id: string
   slug: string
+  // Legacy slugs from the editor's SEO:Slug column. The detail page
+  // 301-redirects requests for an alias to the canonical (transliterated) slug.
+  aliases?: string[]
   title: string
   seoDescription: string | null
   body: string | null
   date: string | null
+  // Airtable record creation timestamp — drives the sort order. The
+  // `date` field above is editor-set and may be backdated.
+  createdAt?: string | null
   photo: string | null
   externalUrl: string | null
   videoUrl: string | null
@@ -46,7 +52,7 @@ export async function loadAllNews(lang: Lang = 'ru'): Promise<NewsItem[]> {
 
 export async function loadNewsBySlug(slug: string, lang: Lang = 'ru'): Promise<NewsItem | null> {
   const all = await loadAllNews(lang)
-  return all.find(n => n.slug === slug) ?? null
+  return all.find(n => n.slug === slug || (n.aliases?.includes(slug) ?? false)) ?? null
 }
 
 export async function loadNewsByDeveloperSlug(devSlug: string, limit = 12, lang: Lang = 'ru'): Promise<NewsItem[]> {
