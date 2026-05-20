@@ -16,6 +16,10 @@ export type ApartmentCardData = {
   floor: string | null
   photos: string[]
   district?: string | null
+  // 'resale' / 'secondary' = sold by an owner / agent rather than the
+  // developer. Drives the "Перепродажа" badge and the contact routing
+  // on the detail page (direct seller link instead of dev manager).
+  dealType?: 'resale' | 'secondary' | null
   // Optional fields piped into the wishlist snapshot at heart-tap so
   // saved apartments carry investor-relevant context.
   developerName?: string | null
@@ -34,8 +38,8 @@ export type ApartmentCardData = {
 }
 
 const COPY = {
-  ru: { sqm: 'м²', floor: 'Этаж' },
-  en: { sqm: 'm²', floor: 'Floor' },
+  ru: { sqm: 'м²', floor: 'Этаж', resale: 'Перепродажа', secondary: 'Вторичка' },
+  en: { sqm: 'm²', floor: 'Floor', resale: 'Resale',     secondary: 'Secondary' },
 } as const
 
 export function ApartmentCard({ a, lang = 'ru' }: { a: ApartmentCardData; lang?: Lang }) {
@@ -43,6 +47,9 @@ export function ApartmentCard({ a, lang = 'ru' }: { a: ApartmentCardData; lang?:
   const c = COPY[lang]
   const price = a.priceUsd != null && Number.isFinite(a.priceUsd)
     ? formatPrice(a.priceUsd, currency)
+    : null
+  const dealLabel = a.dealType === 'resale' ? c.resale
+    : a.dealType === 'secondary' ? c.secondary
     : null
   const detailHref = lang === 'en' ? `/en/apartments/o/${a.slug}` : `/ru/apartamenty/o/${a.slug}`
 
@@ -53,6 +60,11 @@ export function ApartmentCard({ a, lang = 'ru' }: { a: ApartmentCardData; lang?:
     >
       <div className="relative">
         <PhotoSlider photos={a.photos} alt={a.title} trackingId={`apt:${a.slug}`} />
+        {dealLabel && (
+          <span className="absolute top-3 left-3 z-10 inline-flex items-center text-[11px] font-semibold uppercase tracking-wide bg-white text-[#111827] rounded-full px-2.5 py-1 shadow-[0_1px_3px_rgba(0,0,0,0.12)]">
+            {dealLabel}
+          </span>
+        )}
         <WishlistButton
           className="absolute top-3 right-3 z-10"
           item={{
@@ -73,6 +85,7 @@ export function ApartmentCard({ a, lang = 'ru' }: { a: ApartmentCardData; lang?:
             completionYear: a.completionYear ?? null,
             claimedYieldPct: a.claimedYieldPct ?? null,
             status: a.status ?? null,
+            dealType: a.dealType === 'resale' ? 'resale' : a.dealType === 'secondary' ? 'secondary' : 'primary',
             airtableId: a.airtableId ?? null,
           }}
         />

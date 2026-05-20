@@ -406,6 +406,11 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
   const lat = parseGeo(d['Geo'])
   const lng = parseGeo(d['Geo 2'])
   const seoText = tField(d, 'SEO Text', lang) ?? tField(d, 'Notes', lang)
+  // Resale: drop the developer-manager CTA and route the visitor to
+  // the owner's direct link stored in «Контакт продавца».
+  const dealTypeRaw = (firstString(d['Тип сделки']) ?? '').toLowerCase()
+  const isResale = /перепрод|resale|вторич|secondary/.test(dealTypeRaw)
+  const sellerUrl = isResale ? firstString(d['Контакт продавца']) : null
 
   // Developer lookup via apartment-base devmap
   const devRefs = Array.isArray(d['Developer']) ? (d['Developer'] as unknown[]) : []
@@ -584,6 +589,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
               pricePerSqmUsd={priceM2}
               updatedAt={priceUpdatedAt}
               managerId={managers[0]?.id ?? null}
+              sellerUrl={sellerUrl}
               listingKind="apartment"
               listingId={a.airtable_id}
               listingSlug={slug}

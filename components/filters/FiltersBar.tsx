@@ -10,11 +10,13 @@ import type { Lang } from '@/lib/i18n'
 const COPY = {
   ru: {
     price: 'Цена', district: 'Район', bedrooms: 'Кол-во спален', floor: 'Этаж',
-    developer: 'Застройщик', status: 'Этап стройки', permit: 'Разрешение', resetAll: 'Сбросить все',
+    developer: 'Застройщик', status: 'Этап стройки', permit: 'Разрешение',
+    dealType: 'Тип сделки', resetAll: 'Сбросить все',
   },
   en: {
     price: 'Price', district: 'District', bedrooms: 'Bedrooms', floor: 'Floor',
-    developer: 'Developer', status: 'Construction stage', permit: 'Permit', resetAll: 'Clear all',
+    developer: 'Developer', status: 'Construction stage', permit: 'Permit',
+    dealType: 'Deal type', resetAll: 'Clear all',
   },
 } as const
 
@@ -28,6 +30,10 @@ export type FilterState = {
   developer: string[]
   status: string[]
   permit: string[]
+  // 'primary' = sold by the developer, 'resale'/'secondary' = sold by
+  // an owner/agent. Mirrors villas. Drives the resale badge on cards
+  // and the seller-contact routing on the detail page.
+  dealType: string[]
   // 'invest' = tourism / commercial land, short-term rental allowed.
   // 'live'   = residential (yellow) zone + livable area.
   goal: 'invest' | 'live' | null
@@ -40,6 +46,7 @@ export type FilterOptions = {
   developer: Option[]
   status: Option[]
   permit: Option[]
+  dealType: Option[]
 }
 
 function ResetAll({ activeCount, current, view, lang }: {
@@ -82,6 +89,7 @@ export function FiltersBar({
     (state.developer.length > 0 ? 1 : 0) +
     (state.status.length > 0 ? 1 : 0) +
     (state.permit.length > 0 ? 1 : 0) +
+    (state.dealType.length > 0 ? 1 : 0) +
     (state.goal != null ? 1 : 0)
 
   return (
@@ -95,6 +103,7 @@ export function FiltersBar({
         <MultiSelectFilter stateKey="developer" label={c.developer} options={options.developer} selected={state.developer} current={state} view={view} lang={lang} searchable />
         <MultiSelectFilter stateKey="status"    label={c.status}    options={options.status}    selected={state.status}    current={state} view={view} lang={lang} />
         <MultiSelectFilter stateKey="permit"    label={c.permit}    options={options.permit}    selected={state.permit}    current={state} view={view} lang={lang} />
+        <MultiSelectFilter stateKey="dealType"  label={c.dealType}  options={options.dealType}  selected={state.dealType}  current={state} view={view} lang={lang} />
         <ResetAll activeCount={activeCount} current={state} view={view} lang={lang} />
       </div>
     </Suspense>

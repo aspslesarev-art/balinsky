@@ -43,7 +43,20 @@ export const EMPTY_FILTERS: FilterState = {
   developer: [],
   status: [],
   permit: [],
+  dealType: [],
   goal: null,
+}
+
+// Map the editor-set «Тип сделки» Airtable column into a closed enum.
+// "Перепродажа" / "Resale" / "Перепродать" → resale.
+// "Вторичка" / "Secondary" → secondary. Anything else (or empty) → primary.
+export type DealType = 'primary' | 'resale' | 'secondary'
+export function dealFromString(s: string | null): DealType {
+  if (!s) return 'primary'
+  const lower = s.toLowerCase()
+  if (/перепрод|resale/.test(lower)) return 'resale'
+  if (/вторич|secondary/.test(lower)) return 'secondary'
+  return 'primary'
 }
 
 export async function loadJson<T>(url: string, fallback: T): Promise<T> {
@@ -134,6 +147,7 @@ export function parseQueryFilters(sp: Record<string, string | undefined>): Filte
     developer: asArray(sp.developer),
     status: asArray(sp.status),
     permit: asArray(sp.permit),
+    dealType: asArray(sp.deal).filter(v => v === 'primary' || v === 'resale' || v === 'secondary'),
     goal: sp.goal === 'invest' || sp.goal === 'live' ? sp.goal : null,
   }
 }
@@ -163,6 +177,7 @@ export type EnrichedRow = {
   lat: number | null
   lng: number | null
   landBucket: LandBucket
+  dealType: DealType
   // Editorial "TOP" checkbox in Airtable — pinned items bubble
   // to the top of the catalog regardless of the active sort.
   isTop: boolean
@@ -208,6 +223,7 @@ function enrich(r: Row, devMap: Record<string, string>): EnrichedRow {
     lat: parseGeo(d['Geo']),
     lng: parseGeo(d['Geo 2']),
     landBucket: landBucket(firstString(d['Land color'])),
+    dealType: dealFromString(firstString(d['Тип сделки'])),
     isTop: d['TOP'] === true,
   }
 }
@@ -279,6 +295,7 @@ export function passes(e: EnrichedRow, f: FilterState): boolean {
     if (!e.status || !wanted.includes(e.status)) return false
   }
   if (f.permit.length > 0 && (!e.permit || !f.permit.includes(e.permit))) return false
+  if (f.dealType.length > 0 && !f.dealType.includes(e.dealType)) return false
   if (f.goal === 'invest' && e.landBucket === 'residential') return false
   if (f.goal === 'live') {
     if (e.landBucket === 'tourism') return false
@@ -392,13 +409,24 @@ export function buildOptions(
   }
   const permitRaw = build('permit', e => e.permit)
 
+  // Deal-type chip — derived directly from `Тип сделки`. Mirrors villas:
+  // "От застройщика · 42 · Перепродажа · 5 · Вторичка · 1" etc.
+  const dealCounts = countsExcludingDim('dealType', e => e.dealType)
+  const DEAL_LABELS: Record<'ru' | 'en', Record<DealType, string>> = {
+    ru: { primary: 'От застройщика', resale: 'Перепродажа', secondary: 'Вторичка' },
+    en: { primary: 'From developer', resale: 'Resale',      secondary: 'Secondary' },
+  }
+  const dealType: Option[] = (['primary', 'resale', 'secondary'] as const)
+    .map(v => ({ value: v, label: DEAL_LABELS[lang][v], count: dealCounts.get(v) ?? 0 }))
+    .filter(o => o.count > 0)
+
   // Translate visible labels for EN. `value` keeps its RU/URL form so
   // existing share-links and filter matching keep working.
   const districts = districtsRaw.map(o => ({ ...o, label: tr('district', o.label, 'Location 2') }))
   const status    = statusRaw   .map(o => ({ ...o, label: tr('status',   o.label, 'Статус') }))
   const permit    = permitRaw   .map(o => ({ ...o, label: tr('permit',   o.label, 'Разрешение') }))
 
-  return { district: districts, bedrooms, floor, developer, status, permit }
+  return { district: districts, bedrooms, floor, developer, status, permit, dealType }
 }
 
 export function toCard(
@@ -476,6 +504,7 @@ export function toCard(
     completionYear,
     claimedYieldPct,
     status: firstString(d['Статус']) ?? null,
+    dealType: e.dealType === 'primary' ? null : e.dealType,
     airtableId: e.id,
   }
 }

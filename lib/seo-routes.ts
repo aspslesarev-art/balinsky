@@ -90,6 +90,7 @@ export function parseCleanPath(segments: string[]): FilterState | null {
     developer: [],
     status: [],
     permit: [],
+    dealType: [],
     goal: null,
   }
   const seen = new Set<string>()
