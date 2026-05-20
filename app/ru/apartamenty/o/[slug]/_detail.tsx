@@ -4,11 +4,12 @@
 import type { ReactNode } from 'react'
 import { notFound, permanentRedirect } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { createClient } from '@supabase/supabase-js'
 import { unstable_cache } from 'next/cache'
 import {
   BedDouble, Square, Building2, Calendar, FileCheck2, Lock, MapPin, Plane,
-  ChevronRight, Layers,
+  ChevronRight, Layers, HardHat, Star,
 } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
@@ -62,6 +63,13 @@ const COPY = {
     factLeaseValue: (l: string) => `${l} лет`,
     descHeading: 'Описание',
     complexLabel: 'Жилой комплекс',
+    developerLabel: 'Застройщик',
+    openComplex: 'Открыть страницу комплекса',
+    openDeveloper: 'Открыть страницу застройщика',
+    completedShort: 'сдан',
+    completion: (y: string) => `сдача ${y}`,
+    units: (n: number) => `${n} юнитов`,
+    sellingSeparately: 'Продаётся отдельно (вне комплекса)',
     locationLine: (d: string | null) => `${d ? `${d}, ` : ''}Бали, Индонезия`,
     relatedHeading: 'По теме',
     related: {
@@ -95,6 +103,13 @@ const COPY = {
     factLeaseValue: (l: string) => `${l} years`,
     descHeading: 'Description',
     complexLabel: 'Residential complex',
+    developerLabel: 'Developer',
+    openComplex: 'Open complex page',
+    openDeveloper: 'Open developer page',
+    completedShort: 'completed',
+    completion: (y: string) => `completion ${y}`,
+    units: (n: number) => `${n} units`,
+    sellingSeparately: 'Sold separately (not part of a complex)',
     locationLine: (d: string | null) => `${d ? `${d}, ` : ''}Bali, Indonesia`,
     relatedHeading: 'Related',
     related: {
@@ -252,6 +267,48 @@ const _loadDevLookup = unstable_cache(
   ['dev-lookup-detail-v2'],
   { revalidate: 600 },
 )
+// Full developer index (slug + logo + a few highlights) so the apartment
+// detail page can render the same rich developer card the villa page
+// shows — clickable link to /ru/zastrojshhiki/<slug>, logo, top 3
+// editorial bullets from «Репутация и опыт». Mirrors villy/_detail.tsx.
+type DeveloperLite = {
+  slug: string
+  name: string
+  logoUrl: string | null
+  highlights: string[]
+}
+const _loadDevelopersIndex = unstable_cache(
+  async (): Promise<DeveloperLite[]> => {
+    const { data, error } = await sb.from('raw_developers').select('airtable_id, data, logo_url').limit(200)
+    if (error) throw new Error(`raw_developers: ${error.message}`)
+    const rows = (data ?? []) as { airtable_id: string; data: Record<string, unknown>; logo_url: string | null }[]
+    if (rows.length === 0) throw new Error('raw_developers returned 0 rows — refusing to cache empty')
+    const out: DeveloperLite[] = []
+    for (const r of rows) {
+      if (r.data['Публикация'] !== true) continue
+      const name = firstString(r.data['Developer'])
+      const slug = firstString(r.data['SEO:Slug'])
+      if (!name || !slug) continue
+      const sourceText = firstString(r.data['Репутация и опыт']) ?? firstString(r.data['Строительство и недвижимость']) ?? ''
+      const highlights = sourceText
+        .split('\n')
+        .map(l => l.replace(/^[\s•\-–—·]+/, '').trim())
+        .filter(Boolean)
+        .slice(0, 3)
+      out.push({ slug, name, logoUrl: r.logo_url, highlights })
+    }
+    return out
+  },
+  ['apt-developers-index-v1'],
+  { revalidate: 600 },
+)
+function findDeveloperByName(targetName: string | null, list: DeveloperLite[]): DeveloperLite | null {
+  if (!targetName) return null
+  const t = targetName.toLowerCase().trim()
+  return list.find(d => d.name.toLowerCase() === t)
+    ?? list.find(d => d.name.toLowerCase().includes(t) || t.includes(d.name.toLowerCase()))
+    ?? null
+}
 // Complexes — small set (186 rows), but full data ~9MB. Module cache + paginated fetch.
 let _complexesCache: { ts: number; data: ComplexRow[] } | null = null
 let _complexesInflight: Promise<ComplexRow[]> | null = null
@@ -433,13 +490,15 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
   const parentComplex = findParentComplex(title, complexes)
   const parentComplexName = parentComplex ? firstString(parentComplex.data['Project']) : null
 
-  const [otherApts, managers, activeReservation, landProfile, marketStats] = await Promise.all([
+  const [otherApts, managers, activeReservation, landProfile, marketStats, developers] = await Promise.all([
     loadOtherApartmentsInDistrict(district, a.airtable_id),
     loadManagersByDeveloperName(devName),
     findActiveReservation('apartment', a.airtable_id),
     loadLandProfile('apartment', a.airtable_id),
     loadMarketStats('apartment', a.airtable_id),
+    _loadDevelopersIndex(),
   ])
+  const developer = findDeveloperByName(devName, developers)
   const GMAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? ''
 
   // Videos for parent complex (or empty), filtered by site language.
@@ -678,28 +737,102 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
           </section>
         )}
 
-        {(parentComplexName || devName) && (
-          <section className="mb-10 grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl">
-            {parentComplexName && parentComplex?.slug && (
+        {(parentComplex || developer || devName) && (
+          <section className="mb-10 grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* COMPLEX (left) */}
+            {parentComplex ? (
               <Link
                 href={`${complexesRoot}/o/${parentComplex.slug}`}
-                className="block bg-white rounded-2xl border border-[var(--color-border)] p-6 hover:border-[var(--color-primary)] transition-colors"
+                className="group block bg-white rounded-2xl border border-[var(--color-border)] overflow-hidden hover:border-[var(--color-primary)] transition-colors"
               >
+                {parentComplex.cover_url && (
+                  <div className="relative h-[160px] bg-[var(--color-search-bg)]">
+                    <Image src={parentComplex.cover_url} alt={parentComplexName ?? ''} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
+                  </div>
+                )}
+                <div className="p-5">
+                  <div className="flex items-center gap-2 text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
+                    <Building2 size={14} /> {c.complexLabel}
+                  </div>
+                  <div className="text-[19px] font-semibold text-[#111827] mb-2">{parentComplexName}</div>
+                  {(() => {
+                    const pcd = parentComplex.data
+                    const pcDistrict = firstString(pcd['Location 2']) ?? firstString(pcd['Location'])
+                    const pcTypesRaw = Array.isArray(pcd['Типы юнитов']) ? (pcd['Типы юнитов'] as unknown[]).map(String) : []
+                    const pcYearRaw = firstString(pcd['Year of completion ']) ?? firstString(pcd['Year of completion'])
+                    const pcStatus = firstString(pcd['Статус'])
+                    const pcUnits = numberOrNull(pcd['Total quantity of units'])
+                    const hasMeta = pcDistrict || pcTypesRaw.length || pcYearRaw || pcUnits != null
+                    return hasMeta ? (
+                      <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-[13px] text-[var(--color-text-muted)] mb-4">
+                        {pcDistrict && <span>{pcDistrict}</span>}
+                        {pcTypesRaw.length > 0 && <span>{pcTypesRaw.join(', ')}</span>}
+                        {pcYearRaw && (
+                          <span>{pcStatus?.toLowerCase().includes('построен') ? c.completedShort : c.completion(pcYearRaw)}</span>
+                        )}
+                        {pcUnits != null && <span>{c.units(pcUnits)}</span>}
+                      </div>
+                    ) : null
+                  })()}
+                  <div className="text-[13px] text-[var(--color-primary-pressed)] font-medium inline-flex items-center gap-1 group-hover:gap-2 transition-all">
+                    {c.openComplex} <ChevronRight size={14} />
+                  </div>
+                </div>
+              </Link>
+            ) : (
+              <div className="bg-white rounded-2xl border border-[var(--color-border)] p-5 opacity-60">
                 <div className="flex items-center gap-2 text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
                   <Building2 size={14} /> {c.complexLabel}
                 </div>
-                <div className="text-[18px] font-semibold text-[#111827] mb-2">{parentComplexName}</div>
-                <div className="text-[13px] text-[var(--color-primary-pressed)] inline-flex items-center gap-1">
-                  {lang === 'en' ? 'Open complex page' : 'Открыть страницу комплекса'} <ChevronRight size={14} />
-                </div>
-              </Link>
-            )}
-            {devName && (
-              <div className="bg-white rounded-2xl border border-[var(--color-border)] p-6">
-                <div className="text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] mb-2">{lang === 'en' ? 'Developer' : 'Застройщик'}</div>
-                <div className="text-[18px] font-semibold text-[#111827]">{devName}</div>
+                <div className="text-[15px] text-[var(--color-text-muted)]">{c.sellingSeparately}</div>
               </div>
             )}
+
+            {/* DEVELOPER (right) */}
+            {developer ? (
+              <Link
+                href={`${developersRoot}/${developer.slug}`}
+                className="group block bg-white rounded-2xl border border-[var(--color-border)] overflow-hidden hover:border-[var(--color-primary)] transition-colors"
+              >
+                <div className="p-5 flex items-start gap-4">
+                  <div className="shrink-0 w-[72px] h-[72px] rounded-xl bg-[var(--color-bg)] border border-[var(--color-border)] flex items-center justify-center p-2">
+                    {developer.logoUrl ? (
+                      <Image src={developer.logoUrl} alt={developer.name} width={56} height={56} className="max-w-full max-h-full object-contain" />
+                    ) : (
+                      <HardHat size={28} className="text-[var(--color-text-muted)]" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
+                      <HardHat size={14} /> {c.developerLabel}
+                    </div>
+                    <div className="text-[19px] font-semibold text-[#111827] truncate">{developer.name}</div>
+                  </div>
+                </div>
+                {developer.highlights.length > 0 && (
+                  <div className="px-5 pb-2">
+                    <ul className="space-y-1.5 text-[13px] text-[var(--color-text)]">
+                      {developer.highlights.map((h, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <Star size={12} className="mt-1 shrink-0 text-[var(--color-primary)]" />
+                          <span>{h}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <div className="px-5 pb-5 pt-2 text-[13px] text-[var(--color-primary-pressed)] font-medium inline-flex items-center gap-1 group-hover:gap-2 transition-all">
+                  {c.openDeveloper} <ChevronRight size={14} />
+                </div>
+              </Link>
+            ) : devName ? (
+              <div className="bg-white rounded-2xl border border-[var(--color-border)] p-5">
+                <div className="flex items-center gap-2 text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
+                  <HardHat size={14} /> {c.developerLabel}
+                </div>
+                <div className="text-[19px] font-semibold text-[#111827]">{devName}</div>
+              </div>
+            ) : null}
           </section>
         )}
 
