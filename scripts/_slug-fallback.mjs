@@ -60,18 +60,43 @@ function looksMalformed(s) {
   return false
 }
 
+// Slug is technically a string but contains parens / dots / uppercase /
+// cyrillic / spaces — chars Google's URL guidelines complain about and
+// our middleware has to 301-rewrite on every request. Normalising in
+// the sync gives us a clean canonical slug in raw_apartments + the
+// index, so internal links emit the clean form straight away.
+function looksDirty(s) {
+  if (typeof s !== 'string') return false
+  // Anything outside [a-z0-9-]
+  return /[^a-z0-9-]/.test(s)
+}
+
 // Mutates `record.fields` in-place: replaces SEO:Slug with a derived
 // fallback when Airtable returned an AI error or a malformed slug.
 // Returns true when a substitution actually happened (for logging).
 export function backfillSlug(fields) {
   if (!fields) return false
   const slugRaw = fields['SEO:Slug']
-  // Already a usable string — nothing to do.
-  if (typeof slugRaw === 'string' && slugRaw.trim() && !looksMalformed(slugRaw)) return false
-  // {state: generated, value: 'real-slug'} — happens on apartments where
-  // SEO:Slug is the wrapped variant. Unwrap and keep as-is.
-  if (slugRaw && typeof slugRaw === 'object' && typeof slugRaw.value === 'string' && slugRaw.value.trim() && !looksMalformed(slugRaw.value)) {
-    fields['SEO:Slug'] = slugRaw.value.trim()
+  // Unwrap Airtable's {state, value} computed-field shape into a plain
+  // string we can inspect uniformly with bare-string slugs.
+  const slugStr = typeof slugRaw === 'string' ? slugRaw
+    : (slugRaw && typeof slugRaw === 'object' && typeof slugRaw.value === 'string' ? slugRaw.value : null)
+  if (slugStr && slugStr.trim() && !looksMalformed(slugStr)) {
+    // Dirty (parens / cyrillic / uppercase / dot / space) but otherwise
+    // valid: normalise in place. This preserves the slug's identity
+    // (and any inbound link equity) instead of regenerating from title.
+    if (looksDirty(slugStr)) {
+      const cleaned = normalizeSlug(slugStr)
+      if (cleaned && cleaned !== slugStr) {
+        fields['SEO:Slug'] = cleaned
+        fields['_slug_normalised_at'] = new Date().toISOString()
+        return true
+      }
+    }
+    // Already a usable string and not dirty — nothing to do.
+    if (typeof slugRaw === 'string') return false
+    // It came as a wrapper, unwrap to a plain string.
+    fields['SEO:Slug'] = slugStr.trim()
     return true
   }
   // Pick the most-trusted source we have for the fallback title.
