@@ -1,0 +1,48 @@
+# Balinsky
+
+> Каталог недвижимости Бали для иностранных покупателей. Виллы, апартаменты, жилые комплексы и аренда от застройщиков с проверенными документами (PBG, SLF). На каждый объект — съёмка с земли, расчёт доходности по реальным данным соседей с Booking, прямой контакт менеджера застройщика. Каталог двуязычный (русский + английский).
+
+## Каталог / Catalog
+
+- [Виллы и дома на Бали](https://balinsky.info/ru/villy): каталог вилл от застройщиков с фильтрами по району, бюджету и срокам сдачи.
+- [Villas and houses in Bali](https://balinsky.info/en/villas): catalog of villas with district, price-range and completion-year filters.
+- [Апартаменты на Бали](https://balinsky.info/ru/apartamenty): юниты в инвестиционных и резидентских комплексах.
+- [Apartments in Bali](https://balinsky.info/en/apartments): units in investment and residential complexes.
+- [Жилые комплексы на Бали](https://balinsky.info/ru/zhilye-kompleksy): кондо- и виллов-комплексы с готовностью строительства и сроками сдачи.
+- [Residential complexes in Bali](https://balinsky.info/en/complexes): condo and villa-style complexes with build progress and handover timelines.
+- [Застройщики Бали](https://balinsky.info/ru/zastrojshhiki): редакционно проверенные девелоперы с проектами, документами и менеджерами.
+- [Bali developers](https://balinsky.info/en/developers): editorially vetted developers with projects, permits and managers.
+- [Долгосрочная аренда](https://balinsky.info/ru/arenda): свежие предложения по месячной и годовой аренде.
+- [Long-term rental](https://balinsky.info/en/rental): fresh monthly and yearly rental listings.
+
+## Pillar-страницы / Pillar pages
+
+- [Инвестиции в недвижимость Бали](https://balinsky.info/ru/investicii-v-nedvizhimost-bali): доходность, окупаемость, налоги, ставки аренды по районам.
+- [Bali property investment guide](https://balinsky.info/en/bali-property-investment): yield, payback, taxes, district rental rates.
+- [Как купить недвижимость на Бали](https://balinsky.info/ru/kak-kupit): пошаговый разбор сделки — лизхолд, нотариус PPAT, документы PBG/SLF.
+- [How to buy property in Bali](https://balinsky.info/en/how-to-buy): step-by-step deal walkthrough — leasehold, PPAT notary, PBG/SLF docs.
+- [Жизнь на Бали](https://balinsky.info/ru/zhizn-na-bali): ВНЖ, налоги, школы, транспорт, коммунальные расходы.
+- [Life in Bali](https://balinsky.info/en/living-in-bali): visa, taxes, schools, transport, utility costs.
+- [База знаний](https://balinsky.info/ru/znaniya): статьи редакции по сделкам, рынку, юридическим нюансам.
+- [Knowledge base](https://balinsky.info/en/knowledge): editorial articles on deals, market, legal details.
+
+## Контент / Content
+
+- [Новости рынка](https://balinsky.info/ru/novosti): новости застройщиков, разрешения, открытия.
+- [News](https://balinsky.info/en/news): developer news, permits, openings.
+- [Мероприятия](https://balinsky.info/ru/meropriyatiya): брокер-туры, презентации, нетворкинг от застройщиков.
+- [Events](https://balinsky.info/en/events): broker tours, project presentations, developer networking.
+- [Акции и спецпредложения](https://balinsky.info/ru/akcii): актуальные скидки и условия от девелоперов.
+- [Promotions](https://balinsky.info/en/promo): live discounts and special terms from developers.
+
+## Источники данных / Data sources
+
+- Объекты и комплексы — собственная редакторская база с проверкой документов и съёмкой с земли.
+- Доходность и сравнения по аренде — Booking-аналитика через estatemarket.io (1 км радиус).
+- Карты и POI — Google Maps Places API.
+
+## Контакты / Contacts
+
+- Сайт: https://balinsky.info
+- Telegram-бот: https://t.me/BalinskyBot
+- Email: info@balinsky.info
