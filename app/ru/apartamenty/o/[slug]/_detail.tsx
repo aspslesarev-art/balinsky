@@ -8,7 +8,7 @@ import { createClient } from '@supabase/supabase-js'
 import { unstable_cache } from 'next/cache'
 import {
   BedDouble, Square, Building2, Calendar, FileCheck2, Lock, MapPin, Plane,
-  ChevronRight, Map as MapIcon, Layers,
+  ChevronRight, Layers,
 } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
@@ -651,6 +651,23 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
           </section>
         )}
 
+        {/* LandProfile + MarketStats — sits right under the description
+            on villa pages too, so the buyer sees the zoning + neighbour
+            rental data before getting to the developer / manager. */}
+        {(
+          (landProfile && (landProfile.zona_code || landProfile.subzona_code))
+          || (marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0))
+        ) && (
+          <section className="mb-10 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+            {landProfile && (landProfile.zona_code || landProfile.subzona_code) && (
+              <LandProfileBlock data={landProfile} lang={lang} />
+            )}
+            {marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0) && (
+              <MarketStatsBlock data={marketStats} lang={lang} />
+            )}
+          </section>
+        )}
+
         {(parentComplexName || devName) && (
           <section className="mb-10 grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl">
             {parentComplexName && parentComplex?.slug && (
@@ -676,54 +693,17 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
           </section>
         )}
 
-        {lat != null && lng != null && (
-          <section className="mb-10">
-            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-2">
-              {lang === 'en' ? 'Location' : 'Расположение'}
-            </h2>
-            <div className="text-[14px] text-[var(--color-text-muted)] mb-4 flex items-center flex-wrap gap-x-4 gap-y-1">
-              <span>{c.locationLine(district)}</span>
-              <a
-                href={`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-[var(--color-primary)] hover:text-[var(--color-primary-pressed)]"
-              >
-                <MapIcon size={14} /> {lang === 'en' ? 'Open in Google Maps' : 'Открыть на Google Maps'}
-              </a>
-            </div>
-            <div className="w-full aspect-[16/9] md:aspect-[21/9] overflow-hidden rounded-3xl border border-[var(--color-border)]">
-              <iframe
-                src={`https://www.google.com/maps?q=${lat},${lng}&hl=${lang}&z=15&output=embed`}
-                title={`${lang === 'en' ? 'Map' : 'Карта'}: ${title}`}
-                className="w-full h-full"
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-              />
-            </div>
-          </section>
-        )}
-
         {managers.length > 0 && <ManagerCard managers={managers} developerName={devName} />}
 
         <div className="mt-8">
           <ContactBlock lang={lang} listing={{ kind: 'apartment', slug, title }} />
         </div>
 
-        {(
-          (landProfile && (landProfile.zona_code || landProfile.subzona_code))
-          || (marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0))
-        ) && (
-          <section className="mb-10 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-            {landProfile && (landProfile.zona_code || landProfile.subzona_code) && (
-              <LandProfileBlock data={landProfile} lang={lang} />
-            )}
-            {marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0) && (
-              <MarketStatsBlock data={marketStats} lang={lang} />
-            )}
-          </section>
-        )}
-
+        {/* InvestmentWidget carries the interactive Google map + the
+            three rental-yield scenarios (bad / normal / good) + Booking
+            comparables grid + nearby places block. Same component
+            villas use; the static iframe map that used to live above
+            was just a worse duplicate. */}
         {lat != null && lng != null && (
           <InvestmentWidget villaId={a.airtable_id} apiKey={GMAPS_KEY} kind="apartment" lang={lang} />
         )}
