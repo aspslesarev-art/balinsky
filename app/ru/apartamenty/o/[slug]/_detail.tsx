@@ -151,8 +151,18 @@ function numberOrNull(v: unknown): number | null {
   return null
 }
 function parseGeo(v: unknown): number | null {
-  const n = numberOrNull(v)
-  return n
+  // Airtable's «Geo» / «Geo 2» columns surface as arrays of strings
+  // (often with stray whitespace, e.g. ['-8.840928 ']) for apartment
+  // rows. The original `numberOrNull(v)` didn't recurse into arrays —
+  // every apartment ended up with lat=null, lng=null, and the
+  // InvestmentWidget + interactive map silently skipped rendering.
+  if (typeof v === 'number') return Number.isFinite(v) ? v : null
+  if (typeof v === 'string') {
+    const n = Number(v.trim())
+    return Number.isFinite(n) ? n : null
+  }
+  if (Array.isArray(v) && v.length > 0) return parseGeo(v[0])
+  return null
 }
 function fmtUsd(n: number | null): string | null {
   if (n == null) return null
