@@ -417,12 +417,18 @@ export async function generateVillaMetadata(slug: string, lang: Lang) {
     : c.metaFallback(title, district, price)
   const bedrooms = numberOrNull(d['Комнаты'])
   const area = numberOrNull(d['Площадь'])
+  // Compose the meta title from the AI title + a few facts. The AI
+  // title often already mentions the district, bedrooms or area —
+  // appending them blindly produces dupes like "… в Nyanyi · Nyanyi"
+  // and pushes the string past Google's ~60-char cutoff. Drop any
+  // part that already appears (case-insensitive) in the title.
+  const titleLower = title.toLowerCase()
   const titleParts = [title]
-  if (district) titleParts.push(district)
-  if (bedrooms != null) titleParts.push(`${bedrooms} BR`)
-  if (area != null) titleParts.push(`${area} ${c.sqm}`)
-  if (price) titleParts.push(price)
-  const seoTitle = `${titleParts.slice(0, 5).join(' · ')} | Balinsky`
+  if (district && !titleLower.includes(district.toLowerCase())) titleParts.push(district)
+  if (bedrooms != null && !titleLower.includes(`${bedrooms} br`) && !titleLower.includes(`${bedrooms} спальн`)) titleParts.push(`${bedrooms} BR`)
+  if (area != null && !titleLower.includes(`${area} ${c.sqm}`) && !titleLower.includes(`${area}m²`)) titleParts.push(`${area} ${c.sqm}`)
+  if (price && !titleLower.includes(price.toLowerCase())) titleParts.push(price)
+  const seoTitle = `${titleParts.slice(0, 4).join(' · ')} | Balinsky`
   const ruPath = `/ru/villy/o/${slug}`
   const enPath = `/en/villas/o/${slug}`
   const path = lang === 'en' ? enPath : ruPath
@@ -607,21 +613,24 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
           geo: { '@type': 'GeoCoordinates', latitude: lat, longitude: lng },
           numberOfRooms: bedrooms ?? undefined,
           floorSize: area != null ? { '@type': 'QuantitativeValue', value: area, unitCode: 'MTK' } : undefined,
-          lotSize: land != null ? { '@type': 'QuantitativeValue', value: land, unitCode: 'MTK' } : undefined,
-          // Investor-relevant Offer — canonical Schema.org pattern for
-          // a property listing. priceCurrency mandatory per Google's
-          // structured-data guidelines.
-          ...(priceNum != null
+          // lotSize isn't part of schema.org SingleFamilyResidence — the
+          // Schema Validator flags it as unknown. Surface land area via
+          // additionalProperty/PropertyValue, which is the canonical
+          // open-ended extension point.
+          ...(land != null
             ? {
-                offers: {
-                  '@type': 'Offer',
-                  price: priceNum,
-                  priceCurrency: 'USD',
-                  availability: 'https://schema.org/InStock',
-                  url: `${SITE_URL}${lang === 'en' ? '/en/villas/o/' : '/ru/villy/o/'}${slug}`,
-                },
+                additionalProperty: [{
+                  '@type': 'PropertyValue',
+                  name: lang === 'en' ? 'Land area' : 'Площадь участка',
+                  value: land,
+                  unitCode: 'MTK',
+                }],
               }
             : {}),
+          // No offers here — price lives on the separate Product node a
+          // bit further down. Validator warns about Offer on
+          // SingleFamilyResidence ("expected on Product / Service"), so
+          // we don't duplicate it.
         }
       : null
 

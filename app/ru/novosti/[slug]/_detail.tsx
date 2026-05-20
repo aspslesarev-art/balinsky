@@ -36,22 +36,38 @@ function fmtDate(iso: string | null, locale: string): string | null {
   catch { return iso }
 }
 
+// Cap any free-form text at ~155 chars for the meta description slot —
+// Google truncates around 160 on desktop, mobile is closer to 120, and
+// editors regularly paste 400+ char paragraphs into seoDescription.
+function trimMetaDescription(s: string | null | undefined): string | undefined {
+  if (!s) return undefined
+  const trimmed = s.trim().replace(/\s+/g, ' ')
+  if (trimmed.length <= 160) return trimmed
+  // Break at the last word boundary before the cap so we don't lop a
+  // word in half and stick the ellipsis on a fragment.
+  const cap = 155
+  const sliced = trimmed.slice(0, cap)
+  const lastSpace = sliced.lastIndexOf(' ')
+  return (lastSpace > cap * 0.6 ? sliced.slice(0, lastSpace) : sliced) + '…'
+}
+
 export async function generateNewsDetailMetadata(slug: string, lang: Lang): Promise<Metadata> {
   const n = await loadNewsBySlug(slug, lang)
   if (!n) return { robots: { index: false, follow: false } }
   const ruPath = `/ru/novosti/${n.slug}`
   const enPath = `/en/news/${n.slug}`
   const path = lang === 'en' ? enPath : ruPath
+  const metaDesc = trimMetaDescription(n.seoDescription ?? n.body ?? n.title)
   return {
     title: `${n.title} | Balinsky`,
-    description: n.seoDescription ?? (n.body?.slice(0, 160) ?? n.title),
+    description: metaDesc,
     alternates: {
       canonical: path,
       languages: { ru: `${SITE_URL}${ruPath}`, en: `${SITE_URL}${enPath}` , 'x-default': `${SITE_URL}${ruPath}`},
     },
     openGraph: {
       title: n.title,
-      description: n.seoDescription ?? undefined,
+      description: metaDesc,
       images: n.photo ? [n.photo] : undefined,
       type: 'article',
       publishedTime: n.date ?? undefined,

@@ -587,20 +587,9 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
           geo: { '@type': 'GeoCoordinates', latitude: lat, longitude: lng },
           numberOfRooms: bedrooms ?? undefined,
           floorSize: area != null ? { '@type': 'QuantitativeValue', value: area, unitCode: 'MTK' } : undefined,
-          // Investor-relevant Offer node — schema.org RealEstateListing
-          // doesn't have its own price field, the canonical form is to
-          // attach an Offer with priceCurrency + price + availability.
-          ...(priceNum != null
-            ? {
-                offers: {
-                  '@type': 'Offer',
-                  price: priceNum,
-                  priceCurrency: 'USD',
-                  availability: 'https://schema.org/InStock',
-                  url: `${SITE_URL}${lang === 'en' ? '/en/apartments/o/' : '/ru/apartamenty/o/'}${slug}`,
-                },
-              }
-            : {}),
+          // No offers on Apartment — Schema Validator warns "Offer
+          // expected on Product / Service". Price lives on the separate
+          // Product JSON-LD a bit below.
         }
       : null
 
