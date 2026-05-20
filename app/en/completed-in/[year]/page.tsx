@@ -112,7 +112,7 @@ export default async function Page({ params }: { params: Params }) {
           </p>
           <p>
             Every complex card lists permits (PBG, SLF), photo and on-the-ground video, developer info and a manager contact.
-            Real neighbour-level rental yield via <a href="https://www.estatemarket.io" target="_blank" rel="noopener" className="text-[var(--color-primary)] no-underline hover:underline">estatemarket.io</a> integration.
+            Real neighbour-level rental yield via <a href="https://www.estatemarket.io" target="_blank" rel="nofollow noopener noreferrer" className="text-[var(--color-primary)] no-underline hover:underline">estatemarket.io</a> integration.
           </p>
         </section>
 

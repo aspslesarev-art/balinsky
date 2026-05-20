@@ -112,7 +112,7 @@ export default async function Page({ params }: { params: Params }) {
               <li>Payback: 7-12 years depending on price segment and yield</li>
             </ul>
             <p className="mt-4 text-[14px] text-[var(--color-text-muted)]">
-              Per-property ROI math runs on every villa/apartment page in this district with real neighbour data from <a href="https://www.estatemarket.io" target="_blank" rel="noopener" className="text-[var(--color-primary)]">estatemarket.io</a>.
+              Per-property ROI math runs on every villa/apartment page in this district with real neighbour data from <a href="https://www.estatemarket.io" target="_blank" rel="nofollow noopener noreferrer" className="text-[var(--color-primary)]">estatemarket.io</a>.
             </p>
           </section>
 

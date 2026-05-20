@@ -118,7 +118,7 @@ export default async function Page({ params }: { params: Params }) {
           </p>
           <p>
             Для каждого комплекса в карточке доступны фото и видео с земли, статус документов (PBG, SLF), список застройщика и контактов менеджеров.
-            Доходность по соседним объектам — через интеграцию с <a href="https://www.estatemarket.io" target="_blank" rel="noopener" className="text-[var(--color-primary)] no-underline hover:underline">estatemarket.io</a>.
+            Доходность по соседним объектам — через интеграцию с <a href="https://www.estatemarket.io" target="_blank" rel="nofollow noopener noreferrer" className="text-[var(--color-primary)] no-underline hover:underline">estatemarket.io</a>.
           </p>
         </section>
 

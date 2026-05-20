@@ -114,7 +114,7 @@ export default async function Page({ params }: { params: Params }) {
               <li>Срок окупаемости: 7-12 лет в зависимости от ценового сегмента и доходности</li>
             </ul>
             <p className="mt-4 text-[14px] text-[var(--color-text-muted)]">
-              Подробный расчёт на каждой странице виллы/апартаментов в этом районе — с реальными цифрами по соседям из <a href="https://www.estatemarket.io" target="_blank" rel="noopener" className="text-[var(--color-primary)]">estatemarket.io</a>.
+              Подробный расчёт на каждой странице виллы/апартаментов в этом районе — с реальными цифрами по соседям из <a href="https://www.estatemarket.io" target="_blank" rel="nofollow noopener noreferrer" className="text-[var(--color-primary)]">estatemarket.io</a>.
             </p>
           </section>
 

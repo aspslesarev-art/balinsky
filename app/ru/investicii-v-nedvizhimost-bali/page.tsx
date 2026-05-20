@@ -134,7 +134,7 @@ export default function Page() {
               <p>
                 Параллельно остров остаётся рекордсменом по входящему туризму: 6-7 миллионов международных гостей в год,
                 загрузка отелей и аренд 70-85% в Чангу и на Буките, средний дневной тариф (ADR) растёт на 8-12% год к году
-                с 2023 года. По данным <a href="https://www.estatemarket.io" target="_blank" rel="noopener" className="text-[var(--color-primary)]">estatemarket.io</a> —
+                с 2023 года. По данным <a href="https://www.estatemarket.io" target="_blank" rel="nofollow noopener noreferrer" className="text-[var(--color-primary)]">estatemarket.io</a> —
                 публичной Booking-аналитики, которую мы используем в карточках объектов, — реальные данные по доходности
                 соседей доступны буквально по каждой улице в радиусе километра.
               </p>
@@ -236,7 +236,7 @@ export default function Page() {
               </ul>
               <p className="mt-4 text-[14px] text-[var(--color-text-muted)]">
                 Подобный расчёт автоматически считается на каждой странице виллы в нашем каталоге — с подстановкой реальных
-                цифр по соседним объектам из <a href="https://www.estatemarket.io" target="_blank" rel="noopener" className="text-[var(--color-primary)]">estatemarket.io</a>.
+                цифр по соседним объектам из <a href="https://www.estatemarket.io" target="_blank" rel="nofollow noopener noreferrer" className="text-[var(--color-primary)]">estatemarket.io</a>.
               </p>
             </div>
           </section>

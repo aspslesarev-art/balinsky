@@ -112,7 +112,7 @@ export function MarketStatsBlock({ data, lang = 'ru' }: { data: ComplexMarketSta
           <a
             href="https://estatemarket.io/booking_data-map"
             target="_blank"
-            rel="noopener noreferrer"
+            rel="nofollow noopener noreferrer"
             className="inline-flex items-center gap-1 hover:text-[var(--color-primary)] no-underline"
           >
             {c.sourceTitle}: {c.estateMarket}

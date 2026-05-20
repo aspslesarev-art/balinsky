@@ -133,7 +133,7 @@ export default function Page() {
               <p>
                 In parallel, the island holds its position as the regional tourism heavyweight: 6-7 million international
                 visitors annually, 70-85% occupancy in Canggu and Bukit hotels and rentals, average daily rate (ADR) growing
-                8-12% year-over-year since 2023. Per <a href="https://www.estatemarket.io" target="_blank" rel="noopener" className="text-[var(--color-primary)]">estatemarket.io</a> —
+                8-12% year-over-year since 2023. Per <a href="https://www.estatemarket.io" target="_blank" rel="nofollow noopener noreferrer" className="text-[var(--color-primary)]">estatemarket.io</a> —
                 the public Booking analytics we surface in every property card — real neighbour-level yield data is available
                 literally street-by-street within a 1 km radius.
               </p>
@@ -235,7 +235,7 @@ export default function Page() {
               </ul>
               <p className="mt-4 text-[14px] text-[var(--color-text-muted)]">
                 A similar calculator runs automatically on every villa page in our catalogue, populated with real
-                neighbour data from <a href="https://www.estatemarket.io" target="_blank" rel="noopener" className="text-[var(--color-primary)]">estatemarket.io</a>.
+                neighbour data from <a href="https://www.estatemarket.io" target="_blank" rel="nofollow noopener noreferrer" className="text-[var(--color-primary)]">estatemarket.io</a>.
               </p>
             </div>
           </section>
