@@ -44,17 +44,33 @@ function isAirtableAiError(v) {
     && (v.value === null || v.value === undefined || v.value === '')
 }
 
+// Slugs the Airtable formula produced with one of its inputs missing —
+// e.g. resale rows that link to "Комплекс вторичка" but the formula
+// pulls from "Комплекс", giving "-38m2-1-bedroom". The detail-index
+// builder rejects anything starting with "-" (line 72 of
+// sync-detail-indexes.mjs), so these rows 404. Treat them as unusable
+// and regenerate.
+function looksMalformed(s) {
+  if (typeof s !== 'string') return false
+  const t = s.trim()
+  if (!t) return false
+  if (t.startsWith('-') || t.endsWith('-')) return true
+  if (/--+/.test(t)) return true
+  if (t.length < 4) return true
+  return false
+}
+
 // Mutates `record.fields` in-place: replaces SEO:Slug with a derived
-// fallback when Airtable returned an AI error. Returns true when a
-// substitution actually happened (for logging).
+// fallback when Airtable returned an AI error or a malformed slug.
+// Returns true when a substitution actually happened (for logging).
 export function backfillSlug(fields) {
   if (!fields) return false
   const slugRaw = fields['SEO:Slug']
   // Already a usable string — nothing to do.
-  if (typeof slugRaw === 'string' && slugRaw.trim()) return false
+  if (typeof slugRaw === 'string' && slugRaw.trim() && !looksMalformed(slugRaw)) return false
   // {state: generated, value: 'real-slug'} — happens on apartments where
   // SEO:Slug is the wrapped variant. Unwrap and keep as-is.
-  if (slugRaw && typeof slugRaw === 'object' && typeof slugRaw.value === 'string' && slugRaw.value.trim()) {
+  if (slugRaw && typeof slugRaw === 'object' && typeof slugRaw.value === 'string' && slugRaw.value.trim() && !looksMalformed(slugRaw.value)) {
     fields['SEO:Slug'] = slugRaw.value.trim()
     return true
   }
@@ -67,15 +83,35 @@ export function backfillSlug(fields) {
       titleSource = v.value; break
     }
   }
-  if (!titleSource) return false
+  if (!titleSource) {
+    // Last resort: keep the row reachable via its stable Name (e.g. A763)
+    // — always unique within the table. Prefixed so the URL hints at
+    // "no nice slug yet" without colliding with editor-set slugs.
+    const name = fields['Name']
+    if (typeof name === 'string' && name.trim()) {
+      fields['SEO:Slug'] = `obyekt-${normalizeSlug(name)}`
+      fields['_slug_fallback_at'] = new Date().toISOString()
+      return true
+    }
+    return false
+  }
   // Strip the "| Balinsky" suffix the Airtable titles carry by convention.
   const clean = titleSource.replace(/\s*\|\s*Balinsky\s*$/i, '').trim()
-  const derived = normalizeSlug(clean)
+  let derived = normalizeSlug(clean)
+  // The title itself may also be missing the complex name, leaving
+  // collapsed dashes after normalisation. Append the unique Name to
+  // disambiguate and avoid colliding with another half-broken row.
+  if (derived) {
+    const name = fields['Name']
+    if (typeof name === 'string' && name.trim() && !derived.includes(normalizeSlug(name))) {
+      derived = `${derived}-${normalizeSlug(name)}`.replace(/-+/g, '-').replace(/^-+|-+$/g, '')
+    }
+  }
   if (!derived) return false
   fields['SEO:Slug'] = derived
   // Drop a marker so the dataset can tell substituted rows apart later.
   // Useful when comparing prod (AI-clean) vs the fallback period.
-  if (isAirtableAiError(slugRaw)) {
+  if (isAirtableAiError(slugRaw) || looksMalformed(typeof slugRaw === 'string' ? slugRaw : slugRaw?.value)) {
     fields['_slug_fallback_at'] = new Date().toISOString()
   }
   return true
