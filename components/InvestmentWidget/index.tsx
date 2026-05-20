@@ -160,8 +160,12 @@ export function InvestmentWidget({
 
 function SectionShell({ children, lang }: { children: React.ReactNode; lang: Lang }) {
   const t = COPY[lang]
+  // mt-12 gives the heading breathing room from the white ContactBlock /
+  // ManagerCard cards that sit immediately above on every detail page —
+  // without it, the h2 was visually touching the contact card's bottom
+  // edge and looked unindented.
   return (
-    <section className="mb-10" data-investment-block>
+    <section className="mt-12 mb-10" data-investment-block>
       <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-2">
         {t.sectionH2}
       </h2>
