@@ -3,12 +3,52 @@ import Image from 'next/image'
 import { ChevronRight, BedDouble, MapPin } from 'lucide-react'
 import { loadCompareRental, type RentalItem } from '@/lib/rental'
 import { InlinePrice } from './InlinePrice'
+import type { Lang } from '@/lib/i18n'
 
 type Props = {
   district: string | null
   bedrooms: number | null
   villaPriceUsd: number | null
+  lang?: Lang
 }
+
+const COPY = {
+  ru: {
+    heading: 'Что сдаётся по соседству на месяц',
+    allInArea: 'Все объекты в районе',
+    perMonth: ' / мес',
+    medianRent: 'Медианная аренда',
+    range: 'Диапазон',
+    grossYield: 'Брутто-доходность',
+    perYear: 'За год',
+    yieldHint: (annual: React.ReactNode, price: React.ReactNode) => (
+      <>{annual} в год от цены виллы {price}</>
+    ),
+    subtitle: (n: number, district: string, brSuffix: string) => {
+      const word = pluralRu(n, ['объект', 'объекта', 'объектов'])
+      return `${n} ${word} в районе ${district}${brSuffix}`
+    },
+    allBedrooms: ' · все спальни',
+    rentalRoot: '/ru/arenda',
+  },
+  en: {
+    heading: 'What rents nearby per month',
+    allInArea: 'All listings in this district',
+    perMonth: ' / mo',
+    medianRent: 'Median rent',
+    range: 'Range',
+    grossYield: 'Gross yield',
+    perYear: 'Per year',
+    yieldHint: (annual: React.ReactNode, price: React.ReactNode) => (
+      <>{annual} per year on a villa priced {price}</>
+    ),
+    subtitle: (n: number, district: string, brSuffix: string) =>
+      `${n} listing${n === 1 ? '' : 's'} in ${district}${brSuffix}`,
+    allBedrooms: ' · any bedrooms',
+    rentalRoot: '/en/rental',
+  },
+} as const
+
 function pluralRu(n: number, forms: [string, string, string]): string {
   const m10 = n % 10, m100 = n % 100
   if (m10 === 1 && m100 !== 11) return forms[0]
@@ -33,11 +73,12 @@ function pickMatches(items: RentalItem[], district: string, bedrooms: number | n
   return { matches: pm1.length >= exact.length ? pm1 : exact, level: pm1.length >= exact.length ? 'pm1' : 'exact' }
 }
 
-export async function RentalCompareSection({ district, bedrooms, villaPriceUsd }: Props) {
+export async function RentalCompareSection({ district, bedrooms, villaPriceUsd, lang = 'ru' }: Props) {
   if (!district) return null
-  const all = await loadCompareRental()
+  const all = await loadCompareRental(lang)
   const { matches, level } = pickMatches(all, district, bedrooms)
   if (matches.length === 0) return null
+  const c = COPY[lang]
 
   const prices = matches.map(r => r.priceMonthUsd).filter(Boolean)
   const med = median(prices)
@@ -47,52 +88,42 @@ export async function RentalCompareSection({ district, bedrooms, villaPriceUsd }
     ? (med * 12) / villaPriceUsd * 100
     : null
 
-  // Cheapest first — readers usually anchor on lower bound for "сколько в среднем стоит"
   const cards = [...matches].sort((a, b) => a.priceMonthUsd - b.priceMonthUsd).slice(0, 6)
 
-  const subtitle = (() => {
-    const n = matches.length
-    const word = pluralRu(n, ['объект', 'объекта', 'объектов'])
-    const brSuffix =
-      bedrooms == null ? ''
-      : level === 'exact' ? ` · ${bedrooms} BR`
-      : level === 'pm1'   ? ` · ${Math.max(1, bedrooms - 1)}–${bedrooms + 1} BR`
-      : ` · все спальни`
-    return `${n} ${word} в районе ${district}${brSuffix}`
-  })()
+  const brSuffix =
+    bedrooms == null ? ''
+    : level === 'exact' ? ` · ${bedrooms} BR`
+    : level === 'pm1'   ? ` · ${Math.max(1, bedrooms - 1)}–${bedrooms + 1} BR`
+    : c.allBedrooms
+  const subtitle = c.subtitle(matches.length, district, brSuffix)
 
   return (
     <section className="mb-10">
       <div className="flex items-baseline justify-between gap-4 flex-wrap mb-2">
         <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827]">
-          Что сдаётся по соседству на месяц
+          {c.heading}
         </h2>
         <Link
-          href={`/ru/arenda?location=${encodeURIComponent(district)}${bedrooms != null ? `&bedrooms=${bedrooms}` : ''}`}
+          href={`${c.rentalRoot}?location=${encodeURIComponent(district)}${bedrooms != null ? `&bedrooms=${bedrooms}` : ''}`}
           className="text-[13px] text-[var(--color-primary)] hover:text-[var(--color-primary-pressed)] inline-flex items-center gap-1 no-underline"
         >
-          Все объекты в районе <ChevronRight size={14} />
+          {c.allInArea} <ChevronRight size={14} />
         </Link>
       </div>
       <div className="text-[14px] text-[var(--color-text-muted)] mb-5">{subtitle}</div>
 
-      {/* Yield / median / range — pure investment metrics. Hidden in
-          "Для жизни" via the global data-investment-block CSS rule;
-          rental cards below stay visible because they're useful in
-          both intents (a living-buyer also wants to see what's around
-          the villa). */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5" data-investment-block>
-        <Stat label="Медианная аренда" value={<><InlinePrice usd={med} /> / мес</>} />
-        <Stat label="Диапазон" value={<><InlinePrice usd={min} /> – <InlinePrice usd={max} /></>} />
+        <Stat label={c.medianRent} value={<><InlinePrice usd={med} />{c.perMonth}</>} />
+        <Stat label={c.range} value={<><InlinePrice usd={min} /> – <InlinePrice usd={max} /></>} />
         <Stat
-          label={annualYieldPct != null ? 'Брутто-доходность' : 'За год'}
-          value={annualYieldPct != null ? `~${annualYieldPct.toFixed(1)}%` : <><InlinePrice usd={med * 12} /> / год</>}
-          hint={annualYieldPct != null ? <><InlinePrice usd={med * 12} /> в год от цены виллы <InlinePrice usd={villaPriceUsd ?? 0} /></> : undefined}
+          label={annualYieldPct != null ? c.grossYield : c.perYear}
+          value={annualYieldPct != null ? `~${annualYieldPct.toFixed(1)}%` : <><InlinePrice usd={med * 12} /> / {lang === 'en' ? 'yr' : 'год'}</>}
+          hint={annualYieldPct != null ? c.yieldHint(<InlinePrice usd={med * 12} />, <InlinePrice usd={villaPriceUsd ?? 0} />) : undefined}
         />
       </div>
 
       <ul className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        {cards.map(r => <li key={r.id}><CompareCard r={r} /></li>)}
+        {cards.map(r => <li key={r.id}><CompareCard r={r} lang={lang} /></li>)}
       </ul>
     </section>
   )
@@ -108,11 +139,13 @@ function Stat({ label, value, hint }: { label: string; value: React.ReactNode; h
   )
 }
 
-function CompareCard({ r }: { r: RentalItem }) {
+function CompareCard({ r, lang }: { r: RentalItem; lang: Lang }) {
   const cover = r.photos[0]
+  const root = lang === 'en' ? '/en/rental' : '/ru/arenda'
+  const perMo = lang === 'en' ? ' / mo' : ' / мес'
   return (
     <Link
-      href={`/ru/arenda/o/${r.slug}`}
+      href={`${root}/o/${r.slug}`}
       target="_blank"
       rel="noopener"
       className="block rounded-xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)] transition-colors"
@@ -126,7 +159,7 @@ function CompareCard({ r }: { r: RentalItem }) {
       </div>
       <div className="p-2.5">
         <div className="text-[14px] font-semibold text-[#111827] leading-tight">
-          <InlinePrice usd={r.priceMonthUsd} /><span className="text-[10px] font-normal text-[var(--color-text-muted)]"> / мес</span>
+          <InlinePrice usd={r.priceMonthUsd} /><span className="text-[10px] font-normal text-[var(--color-text-muted)]">{perMo}</span>
         </div>
         <div className="mt-0.5 flex items-center gap-2 text-[11px] text-[var(--color-text-muted)]">
           {r.bedrooms != null && <span className="inline-flex items-center gap-0.5"><BedDouble size={10} /> {r.bedrooms} BR</span>}

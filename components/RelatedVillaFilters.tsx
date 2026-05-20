@@ -70,11 +70,14 @@ export function RelatedVillaFilters({ filters, options, lang = 'ru' }: {
   }
 
   // 3) By style in the same district (or globally if no district).
+  // Use `s.label` (translated for EN via filter-i18n) for the chip text;
+  // `s.value` stays Russian since it's also the URL slug + the filter
+  // matcher's key — translating it would break the canonical-path build.
   const styles: Cand[] = options.style
     .filter(s => STYLE_TO_SLUG[s.value] && (s.count ?? 0) > 0)
     .filter(s => !filters.style.includes(s.value))
     .slice(0, 6)
-    .map(s => makeLink({ style: [s.value] }, `${s.value}${filters.district.length === 1 ? ` ${c.in} ${filters.district[0]}` : ''}`, s.count))
+    .map(s => makeLink({ style: [s.value] }, `${s.label}${filters.district.length === 1 ? ` ${c.in} ${filters.district[0]}` : ''}`, s.count))
     .filter((x): x is Cand => x !== null)
 
   // 4) Top districts when nothing is filtered yet — entry-level browse cluster.

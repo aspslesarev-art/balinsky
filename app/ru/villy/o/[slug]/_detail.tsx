@@ -608,6 +608,20 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
           numberOfRooms: bedrooms ?? undefined,
           floorSize: area != null ? { '@type': 'QuantitativeValue', value: area, unitCode: 'MTK' } : undefined,
           lotSize: land != null ? { '@type': 'QuantitativeValue', value: land, unitCode: 'MTK' } : undefined,
+          // Investor-relevant Offer — canonical Schema.org pattern for
+          // a property listing. priceCurrency mandatory per Google's
+          // structured-data guidelines.
+          ...(priceNum != null
+            ? {
+                offers: {
+                  '@type': 'Offer',
+                  price: priceNum,
+                  priceCurrency: 'USD',
+                  availability: 'https://schema.org/InStock',
+                  url: `${SITE_URL}${lang === 'en' ? '/en/villas/o/' : '/ru/villy/o/'}${slug}`,
+                },
+              }
+            : {}),
         }
       : null
 
@@ -859,6 +873,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
           district={district}
           bedrooms={bedrooms}
           villaPriceUsd={priceNum}
+          lang={lang}
         />
 
         {videos.length > 0 && (
