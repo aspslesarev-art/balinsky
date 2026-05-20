@@ -162,6 +162,20 @@ function cleanTitle(s: string | null): string | null {
   if (!s) return null
   return s.replace(/\s*\|\s*Balinsky\s*$/i, '').trim() || null
 }
+// Reject titles whose formula was missing the complex slot ("Апартаменты
+// в  - 38 м²"). Same heuristic as in _lib.ts.
+function isMalformedAptTitle(s: string | null): boolean {
+  if (!s) return false
+  return /(?:\s{2}|в\s+-|in\s+-|—\s*-|\bв\s*$)/i.test(s)
+}
+function fallbackAptTitle(district: string | null, area: number | null, bedrooms: number | null, lang: 'ru' | 'en'): string {
+  const parts: string[] = [lang === 'en' ? 'Apartment' : 'Апартаменты']
+  if (district) parts.push(lang === 'en' ? `in ${district}` : `в ${district}`)
+  const tail: string[] = []
+  if (area != null) tail.push(lang === 'en' ? `${area} m²` : `${area} м²`)
+  if (bedrooms != null) tail.push(lang === 'en' ? `${bedrooms} BR` : `${bedrooms} спальня`)
+  return [parts.join(' '), tail.join(', ')].filter(Boolean).join(' — ')
+}
 
 // Slug → id index. Loaded from Storage manifest (avoids 14MB raw_apartments query).
 // `aliases` carries the legacy "dirty" Airtable slug (cyrillic look-
@@ -326,7 +340,10 @@ export async function generateApartmentMetadata(slug: string, lang: Lang) {
   const d = a.data
   const c = COPY[lang]
   const titleRaw = tField(d, 'SEO:Title', lang) ?? tField(d, 'ИИ Имя', lang) ?? slug
-  const title = cleanTitle(titleRaw) ?? slug
+  let title = cleanTitle(titleRaw) ?? slug
+  if (isMalformedAptTitle(title)) {
+    title = fallbackAptTitle(firstString(d['Location filter']), numberOrNull(d['Площадь']), numberOrNull(d['Комнаты']), lang)
+  }
   const seoText = tField(d, 'SEO Text', lang) ?? tField(d, 'Notes', lang)
   const district = firstString(d['Location filter'])
   const price = fmtUsd(numberOrNull(d['price_usd'] ?? d['Цена']))
@@ -370,11 +387,14 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
   ])
 
   const titleRaw = tField(d, 'ИИ Имя', lang) ?? tField(d, 'SEO:Title', lang) ?? slug
-  const title = cleanTitle(titleRaw) ?? slug
+  let title = cleanTitle(titleRaw) ?? slug
   const photos = (manifest[a.airtable_id] ?? []).slice(0, 12)
   const district = firstString(d['Location filter'])
   const bedrooms = numberOrNull(d['Комнаты'])
   const area = numberOrNull(d['Площадь'])
+  if (isMalformedAptTitle(title)) {
+    title = fallbackAptTitle(district, area, bedrooms, lang)
+  }
   const floor = firstString(d['Этаж'])
   const priceNum = numberOrNull(d['price_usd'] ?? d['Цена'])
   const priceM2 = numberOrNull(d['Цена м²'])

@@ -81,6 +81,31 @@ function cleanTitle(s: string | null): string | null {
   if (!s) return null
   return s.replace(/\s*\|\s*Balinsky\s*$/i, '').trim() || null
 }
+
+// Detect titles where Airtable's formula stitched together an empty
+// slot: "Апартаменты  в  - 38 м², 1 спальни" (note double spaces and a
+// dangling "в -"). The same happens on resale rows whose complex link
+// lives in «Комплекс вторичка», not «Комплекс».
+function isMalformedTitle(s: string | null): boolean {
+  if (!s) return false
+  return /(?:\s{2}|в\s+-|in\s+-|—\s*-|\bв\s*$)/i.test(s)
+}
+
+function fallbackAptTitle(args: {
+  district: string | null
+  area: number | null
+  bedrooms: string | null
+  lang: 'ru' | 'en'
+}): string {
+  const { district, area, bedrooms, lang } = args
+  const parts: string[] = []
+  parts.push(lang === 'en' ? 'Apartment' : 'Апартаменты')
+  if (district) parts.push(lang === 'en' ? `in ${district}` : `в ${district}`)
+  const tail: string[] = []
+  if (area != null) tail.push(lang === 'en' ? `${area} m²` : `${area} м²`)
+  if (bedrooms) tail.push(lang === 'en' ? `${bedrooms} BR` : `${bedrooms} спальня`)
+  return [parts.join(' '), tail.join(', ')].filter(Boolean).join(' — ')
+}
 function normFloor(v: unknown): string | null {
   const s = firstString(v)
   if (!s) return null
@@ -389,15 +414,22 @@ export function toCard(
   const slug = normalizeSlug(firstString(d['SEO:Slug']))
   if (!slug || slug.startsWith('-')) return null
   // Lang-aware title — see villy/_lib.ts toCard() for the same logic.
-  const title = lang === 'en'
-    ? (cleanTitle(firstString(d['SEO:Title EN'])) ??
-       firstString(d['ИИ Имя EN']) ??
-       cleanTitle(firstString(d['SEO:Title'])) ??
-       firstString(d['ИИ Имя']) ??
-       firstString(d['Name']))
-    : (cleanTitle(firstString(d['SEO:Title'])) ??
-       firstString(d['ИИ Имя']) ??
-       firstString(d['Name']))
+  // Skip titles whose formula left an empty complex slot ("Апартаменты в  -…").
+  function pick(...candidates: (string | null | undefined)[]): string | null {
+    for (const c of candidates) {
+      const s = typeof c === 'string' ? cleanTitle(c) : null
+      if (s && !isMalformedTitle(s)) return s
+    }
+    return null
+  }
+  const titleArea = numberOrNull(d['Площадь'])
+  const titleBedrooms = e.bedrooms
+  let title: string | null = lang === 'en'
+    ? pick(firstString(d['SEO:Title EN']), firstString(d['ИИ Имя EN']), firstString(d['SEO:Title']), firstString(d['ИИ Имя']))
+    : pick(firstString(d['SEO:Title']), firstString(d['ИИ Имя']))
+  if (!title) {
+    title = fallbackAptTitle({ district: e.district, area: titleArea, bedrooms: titleBedrooms, lang })
+  }
   if (!title) return null
   // Investor-relevant snapshot fields (same as villas — read straight
   // off the row so heart-tap from the catalog carries them into the
