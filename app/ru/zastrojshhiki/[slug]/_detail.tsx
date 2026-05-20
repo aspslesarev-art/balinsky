@@ -8,7 +8,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@supabase/supabase-js'
 import { unstable_cache } from 'next/cache'
-import { HardHat, Building2, Award, Wrench, Users, Briefcase, TrendingUp, ChevronRight } from 'lucide-react'
+import { HardHat, Building2, Award, Wrench, Users, Briefcase, ChevronRight } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { ComplexCard, type ComplexCardData } from '@/components/ComplexCard'
@@ -191,7 +191,7 @@ const COPY = {
     eventsHeading: (name: string) => `Мероприятия ${name}`,
     faqHeading: 'Часто задаваемые вопросы',
     dim: { construction: 'Строительство и недвижимость', reputation: 'Репутация и опыт', equipment: 'Техника и производство', management: 'Управляющая компания' },
-    extras: { team: 'Команда', business: 'Бизнес и сервисы', yield: 'Доходность для инвестора' },
+    extras: { team: 'Команда', business: 'Бизнес и сервисы' },
     related: { allDevs: 'Все застройщики Бали', complexes: 'Жилые комплексы Бали', apartments: 'Апартаменты на Бали', villas: 'Виллы и дома', aptsIn: (d: string) => `Апартаменты в ${d}` },
     faq: (name: string) => [
       { q: `Сколько проектов у застройщика ${name} на Бали?`,
@@ -222,7 +222,7 @@ const COPY = {
     eventsHeading: (name: string) => `Events with ${name}`,
     faqHeading: 'Frequently asked questions',
     dim: { construction: 'Construction & real estate', reputation: 'Reputation & experience', equipment: 'Equipment & production', management: 'Management company' },
-    extras: { team: 'Team', business: 'Business & services', yield: 'Investor yield' },
+    extras: { team: 'Team', business: 'Business & services' },
     related: { allDevs: 'All Bali developers', complexes: 'Bali residential complexes', apartments: 'Apartments in Bali', villas: 'Villas and houses', aptsIn: (d: string) => `Apartments in ${d}` },
     faq: (name: string) => [
       { q: `How many projects does ${name} have in Bali?`,
@@ -292,7 +292,6 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
   const extras = [
     { title: c.extras.team,     bullets: parseBullets(tField(dev.data, 'Команда',           lang)), Icon: Users },
     { title: c.extras.business, bullets: parseBullets(tField(dev.data, 'Бизнес и сервисы',  lang)), Icon: Briefcase },
-    { title: c.extras.yield,    bullets: parseBullets(tField(dev.data, 'Доходность',        lang)), Icon: TrendingUp },
   ].filter(d => d.bullets.length > 0)
 
   const [{ complexes, apartmentCount }, managers] = await Promise.all([
@@ -399,6 +398,25 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
           <ContactBlock lang={lang} listing={{ kind: 'developer', slug, title: name ?? 'Developer' }} />
         </div>
 
+        {extras.length > 0 && (
+          <section className="mt-10 mb-10">
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-5">{c.extrasHeading}</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {extras.map(({ title, bullets, Icon }) => (
+                <div key={title} className="bg-white rounded-2xl border border-[var(--color-border)] p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Icon size={18} className="text-[var(--color-primary)]" />
+                    <h3 className="text-[15px] font-semibold text-[#111827]">{title}</h3>
+                  </div>
+                  <ul className="space-y-2 text-[14px] text-[var(--color-text)] leading-relaxed list-disc pl-5">
+                    {bullets.map((b, i) => <li key={i}>{b}</li>)}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         {dimensions.length > 0 && (
           <section className="mb-10">
             <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-5">{c.ratingHeading}</h2>
@@ -433,25 +451,6 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
             <div className="text-[14px] text-[var(--color-text-muted)] mb-5">{c.projectsSubLine(complexes.length, apartmentCount)}</div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {complexes.map(it => <ComplexCard key={it.id} c={it} lang={lang} />)}
-            </div>
-          </section>
-        )}
-
-        {extras.length > 0 && (
-          <section className="mb-10">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-5">{c.extrasHeading}</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {extras.map(({ title, bullets, Icon }) => (
-                <div key={title} className="bg-white rounded-2xl border border-[var(--color-border)] p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Icon size={18} className="text-[var(--color-primary)]" />
-                    <h3 className="text-[15px] font-semibold text-[#111827]">{title}</h3>
-                  </div>
-                  <ul className="space-y-2 text-[14px] text-[var(--color-text)] leading-relaxed list-disc pl-5">
-                    {bullets.map((b, i) => <li key={i}>{b}</li>)}
-                  </ul>
-                </div>
-              ))}
             </div>
           </section>
         )}
