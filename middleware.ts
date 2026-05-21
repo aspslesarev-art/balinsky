@@ -52,10 +52,6 @@ export const config = {
     '/en/promo/:path*',
     '/en/events/:path*',
     '/en/knowledge/:path*',
-    // Catch-all so we can inject x-pathname for the root layout's
-    // <html lang> resolution. Excludes _next assets, api, files with
-    // an extension, and the static favicon set.
-    '/((?!_next/|api/|favicon|icon-|apple-touch-icon|.+\\.[a-z0-9]+$).*)',
   ],
 }
 
@@ -183,16 +179,6 @@ function handleDirtySlug(req: NextRequest): NextResponse | null {
   return NextResponse.redirect(new URL(target, req.url), 301)
 }
 
-// Pass the current pathname downstream so the root layout can pick
-// the correct <html lang>. Without this Next 16 fixes <html> at build
-// time across the whole site, which (a) hard-codes lang="en" on the
-// RU tree, and (b) blocks any per-locale head logic.
-function nextWithPath(req: NextRequest) {
-  const h = new Headers(req.headers)
-  h.set('x-pathname', req.nextUrl.pathname)
-  return NextResponse.next({ request: { headers: h } })
-}
-
 export async function middleware(req: NextRequest) {
   // Fast path — runs on every matched URL, no I/O.
   const dirty = handleDirtySlug(req)
@@ -200,7 +186,7 @@ export async function middleware(req: NextRequest) {
 
   const path = req.nextUrl.pathname
   const idx = await loadIndex()
-  if (!idx) return nextWithPath(req)
+  if (!idx) return NextResponse.next()
 
   // 1. Query-based: /something?recordId=recXXX
   const recordId = req.nextUrl.searchParams.get('recordId')
@@ -267,5 +253,5 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL(SECTION_FALLBACK[m[1].toLowerCase()] ?? '/ru', req.url), 301)
   }
 
-  return nextWithPath(req)
+  return NextResponse.next()
 }

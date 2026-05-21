@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { headers } from "next/headers";
 import Script from "next/script";
 import "./globals.css";
 import { CurrencyProvider } from "@/components/CurrencyContext";
@@ -55,21 +54,18 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Pick <html lang> from the incoming pathname. middleware.ts sets
-  // `x-pathname` on every page request; SSG/static prerenders fall
-  // through to the default. /en/* → "en", everything else → "ru".
-  // Default to "ru" since RU is the canonical origin of the site.
-  const h = await headers()
-  const pathname = h.get("x-pathname") ?? ""
-  const lang = pathname.startsWith("/en") ? "en" : "ru"
+  // <html lang="ru"> is the canonical default. EN pages override via a
+  // small `<DocumentLangSetter lang="en"/>` client script rendered from
+  // the /en route group's layout — reading `headers()` here turned
+  // every prerendered detail page dynamic and crashed ISR.
   return (
     <html
-      lang={lang}
+      lang="ru"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
