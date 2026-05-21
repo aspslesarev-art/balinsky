@@ -37,6 +37,7 @@ const InvestmentWidget = dynamic(
   () => import('@/components/InvestmentWidget').then(m => ({ default: m.InvestmentWidget })),
 )
 import { RentalCompareSection } from '@/components/RentalCompareSection'
+import { LazyMount } from '@/components/LazyMount'
 import { ManagerCard } from '@/components/ManagerCard'
 import { ContactBlock } from '@/components/ContactBlock'
 import { loadManagersByDeveloperName, loadManagersByDeveloperSlug } from '@/lib/managers'
@@ -885,7 +886,9 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
         </div>
 
         {lat != null && lng != null && (
-          <InvestmentWidget villaId={v.airtable_id} apiKey={GMAPS_KEY} lang={lang} />
+          <LazyMount fallback={<div className="mt-12 mb-10 min-h-[600px]" />}>
+            <InvestmentWidget villaId={v.airtable_id} apiKey={GMAPS_KEY} lang={lang} />
+          </LazyMount>
         )}
 
         <RentalCompareSection

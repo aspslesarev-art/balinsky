@@ -83,7 +83,16 @@ export function PhotoGalleryHero({
           className={`relative bg-[var(--color-search-bg)] cursor-pointer overflow-hidden group ${rightCount === 0 ? 'flex-1' : 'flex-1'}`}
           aria-label={c.open}
         >
-          <Image src={hero} alt={`${alt} — ${c.mainPhoto}`} fill priority sizes="(max-width: 768px) 100vw, 50vw" className="object-cover transition-transform duration-300 group-hover:scale-[1.02]" />
+          <Image
+            src={hero}
+            alt={`${alt} — ${c.mainPhoto}`}
+            fill
+            priority
+            fetchPriority="high"
+            quality={72}
+            sizes="(max-width: 768px) 100vw, 50vw"
+            className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+          />
         </button>
         {rightCount > 0 && (
           <div className={`flex-1 ${rightGridClass} gap-2`}>
@@ -97,7 +106,16 @@ export function PhotoGalleryHero({
                   className="relative bg-[var(--color-search-bg)] cursor-pointer overflow-hidden group"
                   aria-label={c.photoN(i + 2)}
                 >
-                  <Image src={src} alt={`${alt} — ${c.photoLabel} ${i + 2}`} fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover transition-transform duration-300 group-hover:scale-[1.04]" />
+                  <Image
+                    src={src}
+                    alt={`${alt} — ${c.photoLabel} ${i + 2}`}
+                    fill
+                    loading="lazy"
+                    fetchPriority="low"
+                    quality={68}
+                    sizes="(max-width: 768px) 50vw, 25vw"
+                    className="object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+                  />
                   {isLastThumb && remaining > 0 && (
                     <div className="absolute inset-0 bg-black/55 flex items-center justify-center text-white">
                       <div className="flex items-center gap-2 text-[15px] font-medium">
@@ -124,7 +142,16 @@ export function PhotoGalleryHero({
           onClick={() => setOpenAt(0)}
           className="block w-full h-[280px] bg-[var(--color-search-bg)] relative"
         >
-          <Image src={hero} alt={`${alt} — ${c.mainPhoto}`} fill priority sizes="100vw" className="object-cover" />
+          <Image
+            src={hero}
+            alt={`${alt} — ${c.mainPhoto}`}
+            fill
+            priority
+            fetchPriority="high"
+            quality={70}
+            sizes="(max-width: 480px) 100vw, 480px"
+            className="object-cover"
+          />
           {photos.length > 1 && (
             <div className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/65 text-white text-[13px] font-medium">
               <ImageIcon size={14} />

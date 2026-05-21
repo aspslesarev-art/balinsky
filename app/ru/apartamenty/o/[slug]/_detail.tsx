@@ -28,6 +28,7 @@ const InvestmentWidget = dynamic(
   () => import('@/components/InvestmentWidget').then(m => ({ default: m.InvestmentWidget })),
 )
 import { RentalCompareSection } from '@/components/RentalCompareSection'
+import { LazyMount } from '@/components/LazyMount'
 import { ManagerCard } from '@/components/ManagerCard'
 import { ContactBlock } from '@/components/ContactBlock'
 import { loadManagersByDeveloperName } from '@/lib/managers'
@@ -861,7 +862,9 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
             villas use; the static iframe map that used to live above
             was just a worse duplicate. */}
         {lat != null && lng != null && (
-          <InvestmentWidget villaId={a.airtable_id} apiKey={GMAPS_KEY} kind="apartment" lang={lang} />
+          <LazyMount fallback={<div className="mt-12 mb-10 min-h-[600px]" />}>
+            <InvestmentWidget villaId={a.airtable_id} apiKey={GMAPS_KEY} kind="apartment" lang={lang} />
+          </LazyMount>
         )}
 
         <RentalCompareSection
