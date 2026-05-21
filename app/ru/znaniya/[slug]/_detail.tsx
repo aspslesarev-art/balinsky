@@ -10,14 +10,38 @@ import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { loadAllKnowledge, loadKnowledgeBySlug } from '@/lib/knowledge'
+import { ArticleCover } from '@/components/ArticleCover'
 import type { Lang } from '@/lib/i18n'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
-const COPY = {
-  ru: { home: 'Главная', knowledgeCrumb: 'Знания', source: 'Источник', moreArticles: 'Ещё статьи' },
-  en: { home: 'Home', knowledgeCrumb: 'Knowledge', source: 'Source', moreArticles: 'More articles' },
-} as const
+import type { KnowledgeAuthor } from '@/lib/knowledge'
+
+type LangCopy = {
+  home: string; knowledgeCrumb: string; source: string; moreArticles: string
+  published: string; updated: string; locale: string
+  defaultAuthor: KnowledgeAuthor
+}
+const COPY: Record<'ru' | 'en', LangCopy> = {
+  ru: {
+    home: 'Главная', knowledgeCrumb: 'Знания', source: 'Источник', moreArticles: 'Ещё статьи',
+    published: 'Опубликовано', updated: 'Обновлено',
+    defaultAuthor: { name: 'Редакция Balinsky', role: 'Редакция', photo: null, slug: null },
+    locale: 'ru-RU',
+  },
+  en: {
+    home: 'Home', knowledgeCrumb: 'Knowledge', source: 'Source', moreArticles: 'More articles',
+    published: 'Published', updated: 'Updated',
+    defaultAuthor: { name: 'Balinsky editorial', role: 'Editorial', photo: null, slug: null },
+    locale: 'en-GB',
+  },
+}
+
+function fmtDate(iso: string | null | undefined, locale: string): string | null {
+  if (!iso) return null
+  try { return new Date(iso).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' }) }
+  catch { return null }
+}
 
 export async function generateKnowledgeDetailMetadata(slug: string, lang: Lang): Promise<Metadata> {
   const k = await loadKnowledgeBySlug(slug, lang)
@@ -50,13 +74,28 @@ export async function KnowledgeDetail({ slug, lang }: { slug: string; lang: Lang
   const all = await loadAllKnowledge(lang)
   const related = all.filter(x => x.id !== k.id).slice(0, 4)
 
-  const articleJsonLd = {
+  const authorData = k.author ?? c.defaultAuthor
+  const publishedDate = fmtDate(k.createdTime, c.locale)
+  const updatedDate = fmtDate(k.lastModifiedTime, c.locale)
+  const articleJsonLd: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'Article',
     headline: k.title,
     image: k.photo ? [k.photo] : undefined,
     datePublished: k.createdTime ?? undefined,
-    publisher: { '@type': 'Organization', name: 'Balinsky' },
+    dateModified: k.lastModifiedTime ?? k.createdTime ?? undefined,
+    author: {
+      '@type': 'Person',
+      name: authorData.name,
+      ...(authorData.role ? { jobTitle: authorData.role } : {}),
+      ...(authorData.photo ? { image: authorData.photo } : {}),
+      ...((k.author && k.author.slug) ? { url: `${SITE_URL}${lang === 'en' ? '/en/authors/' : '/ru/avtory/'}${k.author.slug}` } : {}),
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Balinsky',
+      logo: { '@type': 'ImageObject', url: `${SITE_URL}/icon-512.png` },
+    },
     mainEntityOfPage: `${SITE_URL}${lang === 'en' ? '/en/knowledge/' : '/ru/znaniya/'}${k.slug}`,
   }
 
@@ -72,9 +111,41 @@ export async function KnowledgeDetail({ slug, lang }: { slug: string; lang: Lang
         ]} />
 
         <article className="mt-4">
-          <h1 className="text-[28px] md:text-[40px] font-semibold leading-tight tracking-tight text-[#111827] mb-6">
+          <h1 className="text-[28px] md:text-[40px] font-semibold leading-tight tracking-tight text-[#111827] mb-4">
             {k.title}
           </h1>
+
+          <div className="flex items-center gap-3 mb-6 text-[13px] text-[var(--color-text-muted)] flex-wrap">
+            <div className="flex items-center gap-2">
+              {authorData.photo ? (
+                <Image src={authorData.photo} alt={authorData.name} width={32} height={32} className="rounded-full object-cover" />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-[var(--color-search-bg)] flex items-center justify-center text-[12px] font-semibold text-[var(--color-text-muted)]">
+                  {authorData.name.split(' ').map(s => s[0]).join('').slice(0, 2)}
+                </div>
+              )}
+              <div className="leading-tight">
+                {k.author && k.author.slug ? (
+                  <Link href={`${lang === 'en' ? '/en/authors' : '/ru/avtory'}/${k.author.slug}`} className="text-[14px] font-medium text-[#111827] hover:text-[var(--color-primary-pressed)] no-underline">
+                    {authorData.name}
+                  </Link>
+                ) : (
+                  <span className="text-[14px] font-medium text-[#111827]">{authorData.name}</span>
+                )}
+                {authorData.role && <div className="text-[12px]">{authorData.role}</div>}
+              </div>
+            </div>
+            {publishedDate && (
+              <span className="before:content-['·'] before:mr-3 before:text-[var(--color-text-faint)]">
+                {c.published} {publishedDate}
+              </span>
+            )}
+            {updatedDate && updatedDate !== publishedDate && (
+              <span className="before:content-['·'] before:mr-3 before:text-[var(--color-text-faint)]">
+                {c.updated} {updatedDate}
+              </span>
+            )}
+          </div>
 
           {k.photo && (
             <div className="relative w-full mb-8 rounded-2xl overflow-hidden bg-[var(--color-search-bg)] aspect-[16/9]">
@@ -106,7 +177,7 @@ export async function KnowledgeDetail({ slug, lang }: { slug: string; lang: Lang
                       {r.photo ? (
                         <Image src={r.photo} alt={r.title} fill sizes="(max-width: 768px) 100vw, 25vw" className="object-cover" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-2xl">📚</div>
+                        <ArticleCover title={r.title} slug={r.slug} />
                       )}
                     </div>
                     <div className="p-3 text-[14px] font-medium leading-snug line-clamp-3">{r.title}</div>

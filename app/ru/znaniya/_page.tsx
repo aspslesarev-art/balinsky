@@ -7,6 +7,7 @@ import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { loadAllKnowledge, filterByAudience, type KnowledgeAudience } from '@/lib/knowledge'
 import type { Lang } from '@/lib/i18n'
+import { ArticleCover } from '@/components/ArticleCover'
 
 const COPY = {
   ru: {
@@ -113,7 +114,7 @@ export async function KnowledgeList({ lang, audience }: { lang: Lang; audience: 
                   {k.photo ? (
                     <Image src={k.photo} alt={k.title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-3xl">📚</div>
+                    <ArticleCover title={k.title} slug={k.slug} />
                   )}
                 </div>
                 <div className="p-4">

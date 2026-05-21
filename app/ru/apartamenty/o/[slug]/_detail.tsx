@@ -42,6 +42,8 @@ import { VillaPresentationButton } from '@/components/VillaPresentation'
 import { tField, type Lang } from '@/lib/i18n'
 import { normalizeSlug } from '@/lib/slug-normalize'
 import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
+import { pluralRu } from '@/lib/plural-ru'
+import { districtRu } from '@/lib/district-ru'
 
 const AIRPORT_LAT = -8.7467
 const AIRPORT_LNG = 115.1667
@@ -68,7 +70,7 @@ const COPY = {
     openDeveloper: 'Открыть страницу застройщика',
     completedShort: 'сдан',
     completion: (y: string) => `сдача ${y}`,
-    units: (n: number) => `${n} юнитов`,
+    units: (n: number) => `${n} ${pluralRu(n, ['юнит', 'юнита', 'юнитов'])}`,
     sellingSeparately: 'Продаётся отдельно (вне комплекса)',
     locationLine: (d: string | null) => `${d ? `${d}, ` : ''}Бали, Индонезия`,
     relatedHeading: 'По теме',
@@ -198,7 +200,10 @@ function fallbackAptTitle(district: string | null, area: number | null, bedrooms
   if (district) parts.push(lang === 'en' ? `in ${district}` : `в ${district}`)
   const tail: string[] = []
   if (area != null) tail.push(lang === 'en' ? `${area} m²` : `${area} м²`)
-  if (bedrooms != null) tail.push(lang === 'en' ? `${bedrooms} BR` : `${bedrooms} спальня`)
+  if (bedrooms != null) {
+    const word = pluralRu(bedrooms, ['спальня', 'спальни', 'спален'])
+    tail.push(lang === 'en' ? `${bedrooms} BR` : `${bedrooms} ${word}`)
+  }
   return [parts.join(' '), tail.join(', ')].filter(Boolean).join(' — ')
 }
 
@@ -412,7 +417,10 @@ export async function generateApartmentMetadata(slug: string, lang: Lang) {
     title = fallbackAptTitle(firstString(d['Location filter']), numberOrNull(d['Площадь']), numberOrNull(d['Комнаты']), lang)
   }
   const seoText = tField(d, 'SEO Text', lang) ?? tField(d, 'Notes', lang)
-  const district = firstString(d['Location filter'])
+  const districtRaw = firstString(d['Location filter'])
+  // Cyrillic district on /ru, raw Latin on /en. Raw is preserved for
+  // Schema.org address fields where Latin is canonical.
+  const district = lang === 'ru' ? districtRu(districtRaw) : districtRaw
   const price = fmtUsd(numberOrNull(d['price_usd'] ?? d['Цена']))
   const description = seoText
     ? seoText.slice(0, 160).trim() + (seoText.length > 160 ? '…' : '')
@@ -456,7 +464,8 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
   const titleRaw = tField(d, 'ИИ Имя', lang) ?? tField(d, 'SEO:Title', lang) ?? slug
   let title = cleanTitle(titleRaw) ?? slug
   const photos = (manifest[a.airtable_id] ?? []).slice(0, 12)
-  const district = firstString(d['Location filter'])
+  const districtRaw = firstString(d['Location filter'])
+  const district = lang === 'ru' ? districtRu(districtRaw) : districtRaw
   const bedrooms = numberOrNull(d['Комнаты'])
   const area = numberOrNull(d['Площадь'])
   if (isMalformedAptTitle(title)) {
@@ -517,7 +526,8 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
     lease && { Icon: Lock, label: c.factLeasehold, value: c.factLeaseValue(lease) },
     district && { Icon: MapPin, label: c.factDistrict, value: district },
     fmtAirportDistance(lat, lng, lang) && { Icon: Plane, label: c.factAirport, value: fmtAirportDistance(lat, lng, lang)! },
-    priceM2 != null && { Icon: Square, label: lang === 'en' ? 'Price per m²' : 'Цена за м²', value: <InlinePrice usd={priceM2} /> },
+    // Price/m² lives in the PriceCtaCard right under the hero, no need
+    // to duplicate it here.
   ].filter(Boolean) as { Icon: typeof BedDouble; label: string; value: ReactNode }[]
 
   const faqItems = c.faq(title, district, fmtUsd(priceNum), lease)
@@ -582,7 +592,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
             '@type': 'PostalAddress',
             addressCountry: 'ID',
             addressRegion: 'Bali',
-            addressLocality: district ?? 'Bali',
+            addressLocality: districtRaw ?? 'Bali',
           },
           geo: { '@type': 'GeoCoordinates', latitude: lat, longitude: lng },
           numberOfRooms: bedrooms ?? undefined,

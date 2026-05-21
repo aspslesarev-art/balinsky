@@ -9,6 +9,7 @@ import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
 import { getDistrictCommercialMeta } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { enLabel, type FilterDim } from '@/lib/filter-i18n'
+import { pluralRu } from '@/lib/plural-ru'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/apartment-photos/_manifest.json`
@@ -116,7 +117,13 @@ function fallbackAptTitle(args: {
   if (district) parts.push(lang === 'en' ? `in ${district}` : `в ${district}`)
   const tail: string[] = []
   if (area != null) tail.push(lang === 'en' ? `${area} m²` : `${area} м²`)
-  if (bedrooms) tail.push(lang === 'en' ? `${bedrooms} BR` : `${bedrooms} спальня`)
+  if (bedrooms) {
+    const n = Number(bedrooms)
+    const word = Number.isFinite(n)
+      ? pluralRu(n, ['спальня', 'спальни', 'спален'])
+      : 'спален'
+    tail.push(lang === 'en' ? `${bedrooms} BR` : `${bedrooms} ${word}`)
+  }
   return [parts.join(' '), tail.join(', ')].filter(Boolean).join(' — ')
 }
 function normFloor(v: unknown): string | null {

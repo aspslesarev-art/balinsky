@@ -54,6 +54,8 @@ import { VillaPresentationButton } from '@/components/VillaPresentation'
 import { tField, type Lang } from '@/lib/i18n'
 import { normalizeSlug } from '@/lib/slug-normalize'
 import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
+import { pluralRu } from '@/lib/plural-ru'
+import { districtRu } from '@/lib/district-ru'
 
 const COPY = {
   ru: {
@@ -69,7 +71,7 @@ const COPY = {
     complexLabel: 'Жилой комплекс',
     completedShort: 'Сдан',
     completion: (y: string) => `Сдача ${y}`,
-    units: (n: number) => `${n} юнитов`,
+    units: (n: number) => `${n} ${pluralRu(n, ['юнит', 'юнита', 'юнитов'])}`,
     openComplex: 'Открыть страницу комплекса',
     sellingSeparately: 'Объект продаётся отдельно (не в составе комплекса)',
     developerLabel: 'Застройщик',
@@ -410,7 +412,11 @@ export async function generateVillaMetadata(slug: string, lang: Lang) {
   const titleRaw = tField(d, 'SEO:Title', lang) ?? tField(d, 'ИИ Имя', lang) ?? slug
   const title = cleanTitle(titleRaw) ?? slug
   const seoText = tField(d, 'SEO Text', lang) ?? tField(d, 'Notes', lang)
-  const district = firstString(d['Location 2']) ?? firstString(d['Location'])
+  const districtRaw = firstString(d['Location 2']) ?? firstString(d['Location'])
+  // Display surface for RU uses the Cyrillic district form to match
+  // the AI-generated H1 / SEO text. Raw Latin name is still used for
+  // canonical-path matching and Schema.org address fields.
+  const district = lang === 'ru' ? districtRu(districtRaw) : districtRaw
   const price = fmtUsd(numberOrNull(d['price'] ?? d['Цена']))
   const description = seoText
     ? seoText.slice(0, 160).trim() + (seoText.length > 160 ? '…' : '')
@@ -466,7 +472,10 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   const titleRaw = tField(d, 'ИИ Имя', lang) ?? tField(d, 'SEO:Title', lang) ?? slug
   const title = cleanTitle(titleRaw) ?? slug
   const photos = (manifest[v.airtable_id] ?? []).slice(0, 12)
-  const district = firstString(d['Location 2']) ?? firstString(d['Location'])
+  const districtRaw = firstString(d['Location 2']) ?? firstString(d['Location'])
+  // Show Cyrillic district on /ru, raw Latin on /en. Raw form is
+  // kept around for the JSON-LD address + canonical-path matching.
+  const district = lang === 'ru' ? districtRu(districtRaw) : districtRaw
   const bedrooms = numberOrNull(d['Комнаты'])
   const area = numberOrNull(d['Площадь'])
   const land = numberOrNull(d['Земля'])
@@ -535,7 +544,8 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
     district && { Icon: MapPin, label: c.factDistrict, value: district },
     fmtAirportDistance(lat, lng, lang) && { Icon: Plane, label: c.factAirport, value: fmtAirportDistance(lat, lng, lang)! },
     interiorStyle && { Icon: Palette, label: c.factStyle, value: interiorStyle },
-    priceM2 != null && { Icon: Square, label: c.factPriceM2, value: <InlinePrice usd={priceM2} /> },
+    // Price/m² lives in the PriceCtaCard right under the hero, no need
+    // to duplicate it here.
   ].filter(Boolean) as { Icon: typeof BedDouble; label: string; value: ReactNode }[]
 
   const faqItems = c.faq(title, district, fmtUsd(priceNum), lease, land)
@@ -608,7 +618,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
             '@type': 'PostalAddress',
             addressCountry: 'ID',
             addressRegion: 'Bali',
-            addressLocality: district ?? 'Bali',
+            addressLocality: districtRaw ?? 'Bali',
           },
           geo: { '@type': 'GeoCoordinates', latitude: lat, longitude: lng },
           numberOfRooms: bedrooms ?? undefined,

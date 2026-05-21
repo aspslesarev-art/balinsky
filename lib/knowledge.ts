@@ -3,6 +3,13 @@ import type { Lang } from '@/lib/i18n'
 
 export type KnowledgeAudience = 'investor' | 'agent' | 'life'
 
+export type KnowledgeAuthor = {
+  name: string
+  role: string | null
+  photo: string | null
+  slug: string | null
+}
+
 export type KnowledgeItem = {
   id: string
   slug: string
@@ -12,6 +19,13 @@ export type KnowledgeItem = {
   photo: string | null
   externalUrl: string | null
   createdTime: string | null
+  // Airtable record timestamps. `createdTime` is the publish moment we
+  // already render. `lastModifiedTime` (when sync exports it) drives the
+  // "Обновлено" line. Both surface in Article JSON-LD too.
+  lastModifiedTime?: string | null
+  // Editorial byline. Filled in Airtable per-article — when missing,
+  // the page falls back to a generic Balinsky redaktsiya block.
+  author?: KnowledgeAuthor | null
 }
 type Manifest = { generatedAt: string; count: number; items: KnowledgeItem[] }
 

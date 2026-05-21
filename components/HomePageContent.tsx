@@ -532,9 +532,12 @@ export async function HomePageContent({ lang }: { lang: Lang }) {
           <HomeSeoBlocks lang={lang} />
 
           <h3 className="text-[18px] font-semibold text-[#111827] mt-10 mb-4">{c.faqTitle}</h3>
-          <div className="max-w-3xl divide-y divide-[var(--color-border)] border-t border-b border-[var(--color-border)]">
+          <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-x-10 border-t border-b border-[var(--color-border)]">
             {c.faq.map((item, i) => (
-              <details key={i} className="group py-4">
+              <details
+                key={i}
+                className="group py-4 border-[var(--color-border)] border-b lg:border-b-0 lg:[&:not(:nth-last-child(-n+2))]:border-b last:border-b-0"
+              >
                 <summary className="cursor-pointer list-none flex items-center justify-between gap-4 text-[15px] font-medium text-[#111827]">
                   {item.q}
                   <span className="text-[var(--color-text-muted)] text-[20px] leading-none transition-transform group-open:rotate-45">+</span>

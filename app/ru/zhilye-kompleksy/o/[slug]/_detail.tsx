@@ -43,6 +43,8 @@ import { MarketStatsBlock } from '@/components/MarketStatsBlock'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { tField, type Lang } from '@/lib/i18n'
 import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
+import { pluralRu } from '@/lib/plural-ru'
+import { districtRu } from '@/lib/district-ru'
 
 const AIRPORT_LAT = -8.7467
 const AIRPORT_LNG = 115.1667
@@ -61,7 +63,7 @@ const COPY = {
     bali: 'Бали',
     completed: 'сдан',
     completion: (y: string) => `сдача ${y}`,
-    units: (n: number) => `${n} юнитов`,
+    units: (n: number) => `${n} ${pluralRu(n, ['юнит', 'юнита', 'юнитов'])}`,
     unitsFrom: 'Юниты от',
     keyFacts: 'Ключевые факты',
     factType: 'Тип юнитов',
@@ -79,8 +81,18 @@ const COPY = {
     aboutPrefix: 'О комплексе',
     availableUnits: 'Доступные юниты',
     publishedSuffix: (n: number, kind: 'mixed' | 'villa' | 'apartment') => {
-      const word = kind === 'mixed' ? 'юнитов' : kind === 'villa' ? 'вилл' : 'апартаментов'
-      return `${n} опубликованных ${word} в`
+      const nouns: [string, string, string] = kind === 'mixed'
+        ? ['юнит', 'юнита', 'юнитов']
+        : kind === 'villa'
+          ? ['вилла', 'виллы', 'вилл']
+          : ['апартамент', 'апартамента', 'апартаментов']
+      // «1 опубликованный юнит / 2 опубликованных юнита / 5 опубликованных юнитов»
+      // — both adjective and noun decline by the same number-form rule.
+      const adjMaleSingular = kind === 'villa' ? 'опубликованная' : 'опубликованный'
+      const m10 = n % 10, m100 = n % 100
+      const isOne = m10 === 1 && m100 !== 11
+      const adj = isOne ? adjMaleSingular : 'опубликованных'
+      return `${n} ${adj} ${pluralRu(n, nouns)} в`
     },
     developer: 'Застройщик',
     builtBy: 'Проект реализует',
@@ -501,7 +513,8 @@ export async function generateComplexMetadata(slug: string, lang: Lang) {
   if (!c) return { robots: { index: false } }
   const copy = COPY[lang]
   const name = firstString(c.data['Project']) ?? slug
-  const district = firstString(c.data['Location 2']) ?? firstString(c.data['Location'])
+  const districtRaw = firstString(c.data['Location 2']) ?? firstString(c.data['Location'])
+  const district = lang === 'ru' ? districtRu(districtRaw) : districtRaw
   const types = strList(c.data['Типы юнитов']).join(', ')
   const yearRaw = firstString(c.data['Year of completion ']) ?? firstString(c.data['Year of completion'])
   const seoText = tField(c.data, 'SEO Text', lang)
@@ -548,7 +561,8 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
 
   const photos = (photoManifest[c.airtable_id] ?? []).slice(0, 12)
   const slidesPhotos = photos.length > 0 ? photos : c.cover_url ? [c.cover_url] : []
-  const district = firstString(d['Location 2']) ?? firstString(d['Location'])
+  const districtRaw = firstString(d['Location 2']) ?? firstString(d['Location'])
+  const district = lang === 'ru' ? districtRu(districtRaw) : districtRaw
   const types = strList(d['Типы юнитов'])
   const status = firstString(d['Статус'])
   const salesStatus = firstString(d['Статус продаж'])
@@ -713,7 +727,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
       '@type': 'PostalAddress',
       addressCountry: 'ID',
       addressRegion: 'Bali',
-      addressLocality: district ?? 'Bali',
+      addressLocality: districtRaw ?? 'Bali',
     },
   }
   if (slidesPhotos.length > 0) placeJsonLd.image = slidesPhotos.slice(0, 5)
