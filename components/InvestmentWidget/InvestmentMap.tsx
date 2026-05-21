@@ -103,27 +103,32 @@ function competitorPopupHtml(c: {
   const kmLabel = lang === 'en' ? 'km' : 'км'
   const title = c.complex || c.name || 'Booking listing'
   const stars = c.rating != null ? `★ ${c.rating.toFixed(1)}` : ''
-  const reviews = c.reviews != null ? ` · ${c.reviews}${t.reviewsSuffix}` : ''
+  const reviews = c.reviews != null ? `${c.reviews} ${lang === 'en' ? 'reviews' : 'отзывов'}` : ''
   const beds = c.bedrooms != null ? `${c.bedrooms} BR` : ''
   const area = c.area != null ? `${c.area} ${sqmU}` : ''
   const specs = [beds, area].filter(Boolean).join(' · ')
+  const meta = [specs, [stars, reviews].filter(Boolean).join(' · ')].filter(Boolean).join(' · ')
   const photo = c.photo
-    ? `<div style="width:100%;height:120px;border-radius:10px;overflow:hidden;margin-bottom:8px;background:#F2EAD8"><img src="${esc(c.photo)}" alt="" style="width:100%;height:100%;object-fit:cover"></div>`
+    ? `<div style="width:280px;height:160px;background:#F2EAD8;overflow:hidden"><img src="${esc(c.photo)}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></div>`
     : ''
   const dist = c.distanceKm != null
-    ? `<div style="font-size:12px;color:#1E3A5F;background:#E6EEF7;display:inline-block;padding:3px 8px;border-radius:999px;margin-bottom:6px">🛵 ${esc(t.minByScooter(scooterMinutes(c.distanceKm)))} · ${c.distanceKm.toFixed(1)} ${kmLabel}</div>`
+    ? `<div style="font-size:12px;color:#1E3A5F;background:#E6EEF7;display:inline-block;padding:3px 8px;border-radius:999px;white-space:nowrap">🛵 ${esc(t.minByScooter(scooterMinutes(c.distanceKm)))} · ${c.distanceKm.toFixed(1)} ${kmLabel}</div>`
     : ''
   const link = c.url
-    ? `<a href="${esc(c.url)}" target="_blank" rel="noopener noreferrer nofollow" style="color:#1D4ED8;text-decoration:none;font-size:12px">${t.openBooking}</a>`
+    ? `<a href="${esc(c.url)}" target="_blank" rel="noopener noreferrer nofollow" style="color:#1D4ED8;text-decoration:none;font-size:12px;font-weight:500;display:inline-flex;align-items:center;gap:2px">${t.openBooking}</a>`
     : ''
   return `
-    <div style="font-family:-apple-system,system-ui,sans-serif;max-width:240px;color:#111827">
+    <div style="font-family:-apple-system,system-ui,sans-serif;width:280px;color:#111827;font-size:13px;line-height:1.4">
       ${photo}
-      <div style="font-weight:600;font-size:14px;line-height:1.3;margin-bottom:4px">${esc(title)}</div>
-      <div style="font-size:12px;color:#6B7280;margin-bottom:6px">${esc([specs, [stars, reviews].join('').trim()].filter(Boolean).join(' · '))}</div>
-      <div style="font-weight:600;color:#1D4ED8;font-size:15px;margin-bottom:6px">${fmtAdr(c.adr)}<span style="color:#6B7280;font-weight:400;font-size:11px">${t.perNight}</span></div>
-      ${dist}
-      ${link}
+      <div style="padding:12px">
+        <div style="font-weight:600;font-size:15px;line-height:1.25;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc(title)}</div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:8px">
+          <div style="font-weight:700;color:#1D4ED8;font-size:17px;line-height:1">${fmtAdr(c.adr)}<span style="color:#6B7280;font-weight:400;font-size:11px;margin-left:2px">${t.perNight}</span></div>
+        </div>
+        ${meta ? `<div style="font-size:12px;color:#6B7280;margin-bottom:8px">${esc(meta)}</div>` : ''}
+        ${dist ? `<div style="margin-bottom:10px">${dist}</div>` : ''}
+        ${link}
+      </div>
     </div>
   `.trim()
 }
@@ -135,28 +140,28 @@ function anchorPopupHtml(a: {
   distanceKm?: number | null
 }, lang: Lang): string {
   const t = MAP_COPY[lang]
+  const kmLabel = lang === 'en' ? 'km' : 'км'
   const title = a.name || 'POI'
   const stars = a.rating != null ? `★ ${a.rating.toFixed(1)}` : ''
-  const reviews = a.reviews != null ? ` · ${a.reviews}${t.reviewsSuffix}` : ''
+  const reviewsTxt = a.reviews != null ? `${a.reviews} ${lang === 'en' ? 'reviews' : 'отзывов'}` : ''
+  const ratingLine = [stars, reviewsTxt].filter(Boolean).join(' · ')
   const cat = a.primaryType ? a.primaryType.replace(/_/g, ' ') : ''
   const link = a.mapsUrl
-    ? `<a href="${esc(a.mapsUrl)}" target="_blank" rel="noopener noreferrer" style="color:#16A34A;text-decoration:none;font-size:12px">${t.openMaps}</a>`
+    ? `<a href="${esc(a.mapsUrl)}" target="_blank" rel="noopener noreferrer" style="color:#16A34A;text-decoration:none;font-size:12px;font-weight:500;display:inline-flex;align-items:center;gap:2px">${t.openMaps}</a>`
     : ''
-  // Travel-time chip — shown when we have distance from the villa.
-  // Renders both "N min by scooter" and "X.X km" so the buyer reads
-  // either as needed.
-  const kmLabel = lang === 'en' ? 'km' : 'км'
   const dist = a.distanceKm != null
-    ? `<div style="font-size:12px;color:#1F3B2F;background:#E8F0EC;display:inline-block;padding:3px 8px;border-radius:999px;margin-bottom:6px">🛵 ${esc(t.minByScooter(scooterMinutes(a.distanceKm)))} · ${a.distanceKm.toFixed(1)} ${kmLabel}</div>`
+    ? `<div style="font-size:12px;color:#1F3B2F;background:#E8F0EC;display:inline-block;padding:3px 8px;border-radius:999px;white-space:nowrap">🛵 ${esc(t.minByScooter(scooterMinutes(a.distanceKm)))} · ${a.distanceKm.toFixed(1)} ${kmLabel}</div>`
     : ''
   return `
-    <div style="font-family:-apple-system,system-ui,sans-serif;max-width:240px;color:#111827">
-      <div style="font-weight:600;font-size:14px;line-height:1.3;margin-bottom:2px">${esc(title)}</div>
-      ${cat ? `<div style="font-size:11px;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px">${esc(cat)}</div>` : ''}
-      ${dist}
-      ${stars ? `<div style="font-size:13px;color:#111827;margin-bottom:4px"><span style="color:#F59E0B">${esc(stars)}</span><span style="color:#6B7280">${esc(reviews)}</span></div>` : ''}
-      ${a.address ? `<div style="font-size:12px;color:#6B7280;margin-bottom:6px;line-height:1.4">${esc(a.address)}</div>` : ''}
-      ${link}
+    <div style="font-family:-apple-system,system-ui,sans-serif;width:260px;color:#111827;font-size:13px;line-height:1.4">
+      <div style="padding:12px">
+        ${cat ? `<div style="font-size:11px;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px">${esc(cat)}</div>` : ''}
+        <div style="font-weight:600;font-size:15px;line-height:1.25;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc(title)}</div>
+        ${ratingLine ? `<div style="font-size:12px;margin-bottom:8px"><span style="color:#F59E0B">${esc(stars)}</span>${reviewsTxt ? `<span style="color:#6B7280"> · ${esc(reviewsTxt)}</span>` : ''}</div>` : ''}
+        ${dist ? `<div style="margin-bottom:10px">${dist}</div>` : ''}
+        ${a.address ? `<div style="font-size:12px;color:#6B7280;margin-bottom:10px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc(a.address)}</div>` : ''}
+        ${link}
+      </div>
     </div>
   `.trim()
 }
@@ -169,7 +174,13 @@ function MapLayer({ map, snap, showAllPois, allPois, lang }: { map: google.maps.
 
   useEffect(() => {
     if (!map) return
-    if (!infoWindowRef.current) infoWindowRef.current = new google.maps.InfoWindow()
+    // InfoWindow with an explicit maxWidth — without it Google
+    // sometimes squeezes the bubble to ~150 px on mobile + cramped
+    // viewports, which broke the popup layout (3-line title, cut-off
+    // price). 320 px is wide enough for the 280-px photo + side padding.
+    if (!infoWindowRef.current) {
+      infoWindowRef.current = new google.maps.InfoWindow({ maxWidth: 320, pixelOffset: new google.maps.Size(0, -8) })
+    }
     const iw = infoWindowRef.current
     for (const m of ref.current.markers) m.setMap(null)
     for (const c of ref.current.circles) c.setMap(null)
