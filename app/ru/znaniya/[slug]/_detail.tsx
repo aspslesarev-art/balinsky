@@ -26,13 +26,13 @@ const COPY: Record<'ru' | 'en', LangCopy> = {
   ru: {
     home: 'Главная', knowledgeCrumb: 'Знания', source: 'Источник', moreArticles: 'Ещё статьи',
     published: 'Опубликовано', updated: 'Обновлено',
-    defaultAuthor: { name: 'Редакция Balinsky', role: 'Редакция', photo: null, slug: null },
+    defaultAuthor: { name: 'Андрей Балинский', role: 'Основатель Balinsky', photo: null, slug: null },
     locale: 'ru-RU',
   },
   en: {
     home: 'Home', knowledgeCrumb: 'Knowledge', source: 'Source', moreArticles: 'More articles',
     published: 'Published', updated: 'Updated',
-    defaultAuthor: { name: 'Balinsky editorial', role: 'Editorial', photo: null, slug: null },
+    defaultAuthor: { name: 'Andrei Balinsky', role: 'Founder of Balinsky', photo: null, slug: null },
     locale: 'en-GB',
   },
 }
