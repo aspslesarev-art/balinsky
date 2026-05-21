@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { APIProvider, Map as GMap, useMap } from '@vis.gl/react-google-maps'
 import { BALINSKY_MAP_STYLE } from '@/lib/google-map-style'
+import { loadGoogleMaps } from '@/lib/google-maps-loader'
 import type { Snapshot } from './types'
 import type { Lang } from '@/lib/i18n'
 
@@ -121,8 +121,7 @@ function anchorPopupHtml(a: {
   `.trim()
 }
 
-function MapLayer({ snap, showAllPois, allPois, lang }: { snap: Snapshot; showAllPois: boolean; allPois: { lat: number; lng: number; name: string | null; category: string }[]; lang: Lang }) {
-  const map = useMap()
+function MapLayer({ map, snap, showAllPois, allPois, lang }: { map: google.maps.Map | null; snap: Snapshot; showAllPois: boolean; allPois: { lat: number; lng: number; name: string | null; category: string }[]; lang: Lang }) {
   const ref = useRef<{ markers: google.maps.Marker[]; circles: google.maps.Circle[] }>({ markers: [], circles: [] })
   const infoWindowRef = useRef<google.maps.InfoWindow | null>(null)
   const fitOnceRef = useRef(false)
@@ -278,7 +277,37 @@ export function InvestmentMap({
   lang?: Lang
 }) {
   const [showAllPois, setShowAllPois] = useState(false)
+  const [map, setMap] = useState<google.maps.Map | null>(null)
+  const containerRef = useRef<HTMLDivElement | null>(null)
   const t = MAP_COPY[lang]
+
+  // Load Google Maps SDK once + instantiate the Map on the container
+  // ref. Replaces @vis.gl/react-google-maps' <APIProvider> + <Map> —
+  // saves ~50 KB gzip on the InvestmentWidget chunk while keeping the
+  // exact same look/feel and gesture handling.
+  useEffect(() => {
+    if (!apiKey || !containerRef.current || map) return
+    let cancelled = false
+    loadGoogleMaps(apiKey).then(() => {
+      if (cancelled || !containerRef.current) return
+      const instance = new google.maps.Map(containerRef.current, {
+        center: { lat: snap.villa.lat, lng: snap.villa.lng },
+        zoom: 14,
+        gestureHandling: 'greedy',
+        streetViewControl: true,
+        zoomControl: true,
+        fullscreenControl: true,
+        mapTypeControl: false,
+        rotateControl: false,
+        scaleControl: false,
+        clickableIcons: false,
+        styles: BALINSKY_MAP_STYLE,
+        backgroundColor: '#F2EAD8',
+      })
+      setMap(instance)
+    }).catch(() => { /* fall through to "unavailable" tile */ })
+    return () => { cancelled = true }
+  }, [apiKey, snap.villa.lat, snap.villa.lng, map])
 
   if (!apiKey) {
     return <div className={`${heightClass} bg-[var(--color-search-bg)] rounded-3xl flex items-center justify-center text-[var(--color-text-muted)]`}>{t.unavailable}</div>
@@ -286,24 +315,8 @@ export function InvestmentMap({
 
   return (
     <div className={`relative ${heightClass} bg-white rounded-3xl overflow-hidden border border-[var(--color-border)]`}>
-      <APIProvider apiKey={apiKey}>
-        <GMap
-          defaultCenter={{ lat: snap.villa.lat, lng: snap.villa.lng }}
-          defaultZoom={14}
-          gestureHandling="greedy"
-          streetViewControl={true}
-          zoomControl={true}
-          fullscreenControl={true}
-          mapTypeControl={false}
-          rotateControl={false}
-          scaleControl={false}
-          clickableIcons={false}
-          styles={BALINSKY_MAP_STYLE}
-          backgroundColor="#F2EAD8"
-        >
-          <MapLayer snap={snap} showAllPois={showAllPois} allPois={allPois} lang={lang} />
-        </GMap>
-      </APIProvider>
+      <div ref={containerRef} className="absolute inset-0" style={{ backgroundColor: '#F2EAD8' }} />
+      <MapLayer map={map} snap={snap} showAllPois={showAllPois} allPois={allPois} lang={lang} />
 
       <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-sm rounded-2xl border border-[var(--color-border)] px-3 py-2 text-[12px] flex items-center gap-3 shadow-sm">
         <span className="inline-flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#E0383E]" /> {t.villa}</span>
