@@ -39,6 +39,12 @@ export const metadata: Metadata = {
     apple: '/apple-touch-icon.png',
     shortcut: '/favicon.ico',
   },
+  // Ownership proof for Яндекс.Вебмастер. Next emits this as
+  // <meta name="yandex-verification" content="..."> once in <head>,
+  // on every page via the root layout — no duplication.
+  verification: {
+    yandex: '2fa357eabff80404',
+  },
 };
 
 // Without this, iOS WebView (Telegram in-app browser, Twitter, etc.)
