@@ -24,6 +24,8 @@ const MAP_COPY = {
     openBooking: 'Открыть на Booking →',
     openMaps: 'Открыть на Google Maps →',
     reviewsSuffix: ' отзывов',
+    minByScooter: (min: number) => `${min} мин на скутере`,
+    distLabel: 'От виллы',
     bookingTitle: (adr: number, beds: number | null) =>
       `Booking: ${adr} $/ночь${beds != null ? ` · ${beds} BR` : ''}`,
   },
@@ -35,10 +37,33 @@ const MAP_COPY = {
     openBooking: 'Open on Booking →',
     openMaps: 'Open on Google Maps →',
     reviewsSuffix: ' reviews',
+    minByScooter: (min: number) => `${min} min by scooter`,
+    distLabel: 'From the villa',
     bookingTitle: (adr: number, beds: number | null) =>
       `Booking: $${adr}/night${beds != null ? ` · ${beds} BR` : ''}`,
   },
 } as const
+
+// Haversine on a sphere — same formula used elsewhere in
+// lib/competitor-utils. Inlined here so the popup HTML formatter is
+// pure (no async lookups).
+function distanceKm(aLat: number, aLng: number, bLat: number, bLng: number): number {
+  const R = 6371
+  const dLat = (bLat - aLat) * Math.PI / 180
+  const dLng = (bLng - aLng) * Math.PI / 180
+  const lat1 = aLat * Math.PI / 180
+  const lat2 = bLat * Math.PI / 180
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2
+  return 2 * R * Math.asin(Math.sqrt(a))
+}
+
+// Bali scooter average is ~25-30 km/h in town. Use 25 km/h to err on
+// the realistic side (traffic, lights, narrow side roads). Caps at 1
+// min so very close POIs don't render as "0 min" — looks broken.
+function scooterMinutes(km: number): number {
+  const m = Math.max(1, Math.round((km / 25) * 60))
+  return m
+}
 
 function pinSvg({ bg, size, ring, label }: { bg: string; size: number; ring?: string; label?: string }): string {
   const half = size / 2
@@ -70,10 +95,12 @@ function fmtAdr(n: number): string {
 function competitorPopupHtml(c: {
   name?: string | null; complex?: string | null; photo?: string | null;
   rating?: number | null; reviews?: number | null; bedrooms?: number | null;
-  area?: number | null; adr: number; url?: string | null
+  area?: number | null; adr: number; url?: string | null;
+  distanceKm?: number | null
 }, lang: Lang): string {
   const t = MAP_COPY[lang]
   const sqmU = lang === 'en' ? 'm²' : 'м²'
+  const kmLabel = lang === 'en' ? 'km' : 'км'
   const title = c.complex || c.name || 'Booking listing'
   const stars = c.rating != null ? `★ ${c.rating.toFixed(1)}` : ''
   const reviews = c.reviews != null ? ` · ${c.reviews}${t.reviewsSuffix}` : ''
@@ -82,6 +109,9 @@ function competitorPopupHtml(c: {
   const specs = [beds, area].filter(Boolean).join(' · ')
   const photo = c.photo
     ? `<div style="width:100%;height:120px;border-radius:10px;overflow:hidden;margin-bottom:8px;background:#F2EAD8"><img src="${esc(c.photo)}" alt="" style="width:100%;height:100%;object-fit:cover"></div>`
+    : ''
+  const dist = c.distanceKm != null
+    ? `<div style="font-size:12px;color:#1E3A5F;background:#E6EEF7;display:inline-block;padding:3px 8px;border-radius:999px;margin-bottom:6px">🛵 ${esc(t.minByScooter(scooterMinutes(c.distanceKm)))} · ${c.distanceKm.toFixed(1)} ${kmLabel}</div>`
     : ''
   const link = c.url
     ? `<a href="${esc(c.url)}" target="_blank" rel="noopener noreferrer nofollow" style="color:#1D4ED8;text-decoration:none;font-size:12px">${t.openBooking}</a>`
@@ -92,6 +122,7 @@ function competitorPopupHtml(c: {
       <div style="font-weight:600;font-size:14px;line-height:1.3;margin-bottom:4px">${esc(title)}</div>
       <div style="font-size:12px;color:#6B7280;margin-bottom:6px">${esc([specs, [stars, reviews].join('').trim()].filter(Boolean).join(' · '))}</div>
       <div style="font-weight:600;color:#1D4ED8;font-size:15px;margin-bottom:6px">${fmtAdr(c.adr)}<span style="color:#6B7280;font-weight:400;font-size:11px">${t.perNight}</span></div>
+      ${dist}
       ${link}
     </div>
   `.trim()
@@ -100,7 +131,8 @@ function competitorPopupHtml(c: {
 function anchorPopupHtml(a: {
   name?: string | null; primaryType?: string | null;
   rating?: number | null; reviews?: number | null;
-  address?: string | null; mapsUrl?: string | null
+  address?: string | null; mapsUrl?: string | null;
+  distanceKm?: number | null
 }, lang: Lang): string {
   const t = MAP_COPY[lang]
   const title = a.name || 'POI'
@@ -110,10 +142,18 @@ function anchorPopupHtml(a: {
   const link = a.mapsUrl
     ? `<a href="${esc(a.mapsUrl)}" target="_blank" rel="noopener noreferrer" style="color:#16A34A;text-decoration:none;font-size:12px">${t.openMaps}</a>`
     : ''
+  // Travel-time chip — shown when we have distance from the villa.
+  // Renders both "N min by scooter" and "X.X km" so the buyer reads
+  // either as needed.
+  const kmLabel = lang === 'en' ? 'km' : 'км'
+  const dist = a.distanceKm != null
+    ? `<div style="font-size:12px;color:#1F3B2F;background:#E8F0EC;display:inline-block;padding:3px 8px;border-radius:999px;margin-bottom:6px">🛵 ${esc(t.minByScooter(scooterMinutes(a.distanceKm)))} · ${a.distanceKm.toFixed(1)} ${kmLabel}</div>`
+    : ''
   return `
     <div style="font-family:-apple-system,system-ui,sans-serif;max-width:240px;color:#111827">
       <div style="font-weight:600;font-size:14px;line-height:1.3;margin-bottom:2px">${esc(title)}</div>
       ${cat ? `<div style="font-size:11px;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px">${esc(cat)}</div>` : ''}
+      ${dist}
       ${stars ? `<div style="font-size:13px;color:#111827;margin-bottom:4px"><span style="color:#F59E0B">${esc(stars)}</span><span style="color:#6B7280">${esc(reviews)}</span></div>` : ''}
       ${a.address ? `<div style="font-size:12px;color:#6B7280;margin-bottom:6px;line-height:1.4">${esc(a.address)}</div>` : ''}
       ${link}
@@ -191,7 +231,8 @@ function MapLayer({ map, snap, showAllPois, allPois, lang }: { map: google.maps.
       })
       m.addListener('click', () => {
         const card = compsById.get(c.id)
-        iw.setContent(competitorPopupHtml(card ?? { adr: c.adr, bedrooms: c.bedrooms }, lang))
+        const km = distanceKm(snap.villa.lat, snap.villa.lng, c.lat, c.lng)
+        iw.setContent(competitorPopupHtml({ ...(card ?? { adr: c.adr, bedrooms: c.bedrooms }), distanceKm: km }, lang))
         iw.open(map, m)
       })
       ref.current.markers.push(m)
@@ -211,7 +252,8 @@ function MapLayer({ map, snap, showAllPois, allPois, lang }: { map: google.maps.
         title: a.name ?? 'POI',
       })
       m.addListener('click', () => {
-        iw.setContent(anchorPopupHtml(a, lang))
+        const km = distanceKm(snap.villa.lat, snap.villa.lng, a.lat, a.lng)
+        iw.setContent(anchorPopupHtml({ ...a, distanceKm: km }, lang))
         iw.open(map, m)
       })
       ref.current.markers.push(m)
@@ -236,7 +278,8 @@ function MapLayer({ map, snap, showAllPois, allPois, lang }: { map: google.maps.
           title: p.name ?? 'POI',
         })
         m.addListener('click', () => {
-          iw.setContent(anchorPopupHtml({ name: p.name, primaryType: p.category }, lang))
+          const km = distanceKm(snap.villa.lat, snap.villa.lng, p.lat, p.lng)
+          iw.setContent(anchorPopupHtml({ name: p.name, primaryType: p.category, distanceKm: km }, lang))
           iw.open(map, m)
         })
         ref.current.markers.push(m)
