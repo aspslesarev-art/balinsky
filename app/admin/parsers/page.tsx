@@ -32,9 +32,9 @@ export default async function ParsersAdmin() {
     >
       {tableMissing && (
         <div className="mb-4 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-[13px] text-[var(--ax-fg)]">
-          <div className="font-semibold mb-1">Миграция 033 не применена</div>
+          <div className="font-semibold mb-1">Миграция не применена</div>
           <div className="text-[var(--ax-fg-soft)]">
-            Сейчас редактор не сможет ничего сохранять. Открой <a href="https://supabase.com/dashboard/project/_/sql/new" target="_blank" rel="noopener noreferrer" className="underline text-[#1F8B5F]">Supabase SQL Editor</a> и выполни <code className="font-mono">migrations/033_complex_parsers.sql</code>. После этого обнови страницу.
+            Сейчас редактор не сможет ничего сохранять. Открой <a href="https://supabase.com/dashboard/project/_/sql/new" target="_blank" rel="noopener noreferrer" className="underline text-[#1F8B5F]">Supabase SQL Editor</a> и выполни сначала <code className="font-mono">migrations/033_complex_parsers.sql</code>, затем <code className="font-mono">migrations/034_complex_parsers_schedule.sql</code>. После этого обнови страницу.
           </div>
         </div>
       )}

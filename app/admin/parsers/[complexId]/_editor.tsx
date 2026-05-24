@@ -2,7 +2,14 @@
 
 import { useState } from 'react'
 import { Play, Save, Trash2, ExternalLink, CheckCircle2, AlertCircle } from 'lucide-react'
-import type { ParserConfig, ParserType } from '@/lib/complex-parsers'
+import { parserHealth, type ParserConfig, type ParserHealth, type ParserType } from '@/lib/complex-parsers'
+
+const HEALTH_PILL: Record<ParserHealth, { cls: string; label: string }> = {
+  green:  { cls: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30', label: 'Онлайн · OK' },
+  yellow: { cls: 'bg-amber-400/10 text-amber-600 border-amber-400/30',      label: 'С предупреждениями' },
+  red:    { cls: 'bg-rose-500/10 text-rose-600 border-rose-500/30',         label: 'Ошибка' },
+  idle:   { cls: 'bg-[var(--ax-hover)] text-[var(--ax-fg-faint)] border-[var(--ax-border)]', label: 'Ещё не запускался' },
+}
 
 const PARSER_TYPES: Array<{ value: ParserType; label: string; hint: string }> = [
   { value: 'bali_baza', label: 'BALI BAZA (Google Sheets)', hint: 'Прайс-лист BALI BAZA с колонками Section / Type / Bedroom / Villa size / Total / Price / Land / Status' },
@@ -21,26 +28,38 @@ export function ParserEditor({ complexId, complexName, initial }: {
 }) {
   const [sourceUrl, setSourceUrl] = useState(initial?.source_url ?? '')
   const [parserType, setParserType] = useState<ParserType>(initial?.parser_type ?? 'bali_baza')
+  // Empty string = "manual only" (interval_minutes null in DB). Default
+  // for new parsers is 60 min — gives once-per-hour refresh out of the box.
+  const [intervalStr, setIntervalStr] = useState<string>(
+    initial?.interval_minutes != null ? String(initial.interval_minutes) : '60',
+  )
   const [notes, setNotes] = useState(initial?.notes ?? '')
   const [savedAt, setSavedAt] = useState<string | null>(initial?.updated_at ?? null)
   const [lastRun, setLastRun] = useState<RunResult | null>(null)
   const [busy, setBusy] = useState<null | 'save' | 'run' | 'delete'>(null)
   const [err, setErr] = useState<string | null>(null)
+  const [currentState, setCurrentState] = useState<ParserConfig | null>(initial)
 
   const typeMeta = PARSER_TYPES.find(t => t.value === parserType)!
 
   async function save() {
     if (!sourceUrl.trim()) { setErr('Укажи source URL'); return }
+    const intervalNum = intervalStr.trim() === '' ? null : Number(intervalStr)
+    if (intervalNum != null && (!Number.isFinite(intervalNum) || intervalNum < 5)) {
+      setErr('Интервал — минимум 5 минут или оставь пустым для ручного режима')
+      return
+    }
     setBusy('save'); setErr(null)
     try {
       const r = await fetch(`/api/admin/parsers/${encodeURIComponent(complexId)}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ source_url: sourceUrl.trim(), parser_type: parserType, notes }),
+        body: JSON.stringify({ source_url: sourceUrl.trim(), parser_type: parserType, interval_minutes: intervalNum, notes }),
       })
       const j = await r.json()
       if (!r.ok) throw new Error(j.error || 'save_failed')
       setSavedAt(j.parser?.updated_at ?? new Date().toISOString())
+      if (j.parser) setCurrentState(j.parser as ParserConfig)
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'save_failed')
     } finally { setBusy(null) }
@@ -66,16 +85,31 @@ export function ParserEditor({ complexId, complexName, initial }: {
     try {
       const r = await fetch(`/api/admin/parsers/${encodeURIComponent(complexId)}`, { method: 'DELETE' })
       if (!r.ok) throw new Error('delete_failed')
-      setSavedAt(null); setSourceUrl(''); setNotes('')
+      setSavedAt(null); setSourceUrl(''); setNotes(''); setCurrentState(null)
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'delete_failed')
     } finally { setBusy(null) }
   }
 
+  const health = parserHealth(currentState)
+  const pill = HEALTH_PILL[health]
+
   return (
     <div className="space-y-5">
       {/* Config form */}
       <section className="rounded-2xl bg-[var(--ax-panel)] border border-[var(--ax-border)] p-5 space-y-4">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11.5px] font-medium ${pill.cls}`}>
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-current" />
+            {pill.label}
+          </span>
+          {currentState?.last_run_at && (
+            <span className="text-[11.5px] text-[var(--ax-fg-faint)]">
+              последний запуск {new Date(currentState.last_run_at).toLocaleString('ru-RU')}
+            </span>
+          )}
+        </div>
+
         <div>
           <label className="block text-[12px] uppercase tracking-wide text-[var(--ax-fg-muted)] mb-1.5">Тип парсера</label>
           <select
@@ -86,6 +120,51 @@ export function ParserEditor({ complexId, complexName, initial }: {
             {PARSER_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
           <div className="mt-1 text-[12px] text-[var(--ax-fg-faint)]">{typeMeta.hint}</div>
+        </div>
+
+        <div>
+          <label className="block text-[12px] uppercase tracking-wide text-[var(--ax-fg-muted)] mb-1.5">Интервал обновления, минут</label>
+          <div className="flex items-center gap-2 flex-wrap">
+            <input
+              type="number"
+              min={5}
+              step={5}
+              value={intervalStr}
+              onChange={e => setIntervalStr(e.target.value)}
+              placeholder="напр. 60"
+              className="w-32 px-3 py-2 rounded-lg bg-[var(--ax-input-bg)] border border-[var(--ax-input-border)] text-[14px] text-[var(--ax-fg)] tabular-nums"
+            />
+            {/* Quick chips for common cadences. Clicking "вручную" clears
+                the field — server treats null as "cron skips this row". */}
+            {[15, 30, 60, 180, 720].map(n => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => setIntervalStr(String(n))}
+                className={`px-2.5 py-1 rounded-full text-[11.5px] border ${
+                  intervalStr === String(n)
+                    ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white'
+                    : 'bg-[var(--ax-input-bg)] border-[var(--ax-input-border)] text-[var(--ax-fg-soft)] hover:bg-[var(--ax-hover)]'
+                }`}
+              >
+                {n < 60 ? `${n} мин` : `${n / 60} ч`}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => setIntervalStr('')}
+              className={`px-2.5 py-1 rounded-full text-[11.5px] border ${
+                intervalStr === ''
+                  ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white'
+                  : 'bg-[var(--ax-input-bg)] border-[var(--ax-input-border)] text-[var(--ax-fg-soft)] hover:bg-[var(--ax-hover)]'
+              }`}
+            >
+              вручную
+            </button>
+          </div>
+          <div className="mt-1 text-[12px] text-[var(--ax-fg-faint)]">
+            Минимум 5 минут. Пусто = только по кнопке «Запустить сейчас», без автообновления.
+          </div>
         </div>
 
         <div>
@@ -170,13 +249,17 @@ export function ParserEditor({ complexId, complexName, initial }: {
         </section>
       )}
 
-      {/* Last sync info from DB */}
-      {initial?.last_run_at && (
+      {/* Last sync info from DB — pulled from currentState so save/run
+          updates render without reload. */}
+      {currentState?.last_run_at && (
         <section className="rounded-2xl bg-[var(--ax-panel)] border border-[var(--ax-border)] p-4 text-[12.5px] text-[var(--ax-fg-soft)] space-y-1">
-          <div>Предыдущий запуск: <span className="text-[var(--ax-fg)]">{new Date(initial.last_run_at).toLocaleString('ru-RU')}</span></div>
-          <div>Статус: <span className={initial.last_status === 'ok' ? 'text-emerald-500' : 'text-rose-500'}>{initial.last_status ?? '—'}</span></div>
-          {initial.last_units_count != null && <div>Юнитов: <span className="text-[var(--ax-fg)] tabular-nums">{initial.last_units_count}</span></div>}
-          {initial.last_error && <div className="text-rose-500 break-words">⚠️ {initial.last_error}</div>}
+          <div>Предыдущий запуск: <span className="text-[var(--ax-fg)]">{new Date(currentState.last_run_at).toLocaleString('ru-RU')}</span></div>
+          <div>Статус: <span className={currentState.last_status === 'ok' ? 'text-emerald-500' : 'text-rose-500'}>{currentState.last_status ?? '—'}</span></div>
+          {currentState.last_units_count != null && <div>Юнитов: <span className="text-[var(--ax-fg)] tabular-nums">{currentState.last_units_count}</span></div>}
+          {(currentState.last_warning_count ?? 0) > 0 && (
+            <div className="text-amber-600">⚠ Предупреждений: <span className="tabular-nums">{currentState.last_warning_count}</span></div>
+          )}
+          {currentState.last_error && <div className="text-rose-500 break-words">⚠️ {currentState.last_error}</div>}
         </section>
       )}
     </div>

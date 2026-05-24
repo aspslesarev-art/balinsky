@@ -14,13 +14,29 @@ export type ParserConfig = {
   complex_id: string
   source_url: string
   parser_type: ParserType
+  interval_minutes: number | null
   last_run_at: string | null
   last_status: ParserStatus
   last_error: string | null
   last_units_count: number | null
+  last_warning_count: number | null
   notes: string | null
   created_at: string
   updated_at: string
+}
+
+// Visual state derived from the last run + presence of warnings.
+//  - 'green'  → last run was ok and no warnings.
+//  - 'yellow' → last run was ok but produced non-fatal warnings.
+//  - 'red'    → last run errored.
+//  - 'idle'   → never been run.
+export type ParserHealth = 'green' | 'yellow' | 'red' | 'idle'
+
+export function parserHealth(p: ParserConfig | null): ParserHealth {
+  if (!p || !p.last_status) return 'idle'
+  if (p.last_status === 'error') return 'red'
+  if ((p.last_warning_count ?? 0) > 0) return 'yellow'
+  return 'green'
 }
 
 export type ComplexListEntry = {
@@ -28,6 +44,7 @@ export type ComplexListEntry = {
   name: string
   slug: string | null
   district: string | null
+  developer: string | null
   parser: ParserConfig | null
 }
 
@@ -66,6 +83,7 @@ export async function listComplexesWithParserStatus(): Promise<ComplexListEntry[
       name,
       slug: r.slug,
       district: fs1(r.data['Location 2']) ?? fs1(r.data['Location']),
+      developer: fs1(r.data['Developer1']) ?? fs1(r.data['Варианты поиска застройщика']),
       parser: parserById.get(r.airtable_id) ?? null,
     })
   }
@@ -94,6 +112,7 @@ export async function upsertParser(input: {
   complex_id: string
   source_url: string
   parser_type: ParserType
+  interval_minutes?: number | null
   notes?: string | null
 }): Promise<ParserConfig> {
   const c = sb()
@@ -103,6 +122,7 @@ export async function upsertParser(input: {
       complex_id: input.complex_id,
       source_url: input.source_url,
       parser_type: input.parser_type,
+      interval_minutes: input.interval_minutes ?? null,
       notes: input.notes ?? null,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'complex_id' })
@@ -118,15 +138,35 @@ export async function deleteParser(complexId: string): Promise<void> {
   if (error) throw error
 }
 
-export async function recordRun(complexId: string, status: 'ok' | 'error', unitsCount: number, errorMsg: string | null = null): Promise<void> {
+export async function recordRun(complexId: string, status: 'ok' | 'error', unitsCount: number, errorMsg: string | null = null, warningCount = 0): Promise<void> {
   const c = sb()
   await c.from('complex_parsers').update({
     last_run_at: new Date().toISOString(),
     last_status: status,
     last_error: errorMsg,
     last_units_count: unitsCount,
+    last_warning_count: warningCount,
     updated_at: new Date().toISOString(),
   }).eq('complex_id', complexId)
+}
+
+// Returns parsers whose interval has elapsed since their last run (or
+// have never run). Used by the cron hook — caller iterates and runs each.
+export async function listDueParsers(now = new Date()): Promise<ParserConfig[]> {
+  const c = sb()
+  const { data, error } = await c
+    .from('complex_parsers')
+    .select('*')
+    .not('interval_minutes', 'is', null)
+  if (error) return []
+  const rows = (data ?? []) as ParserConfig[]
+  return rows.filter(r => {
+    const mins = r.interval_minutes ?? 0
+    if (mins <= 0) return false
+    if (!r.last_run_at) return true
+    const elapsedMs = now.getTime() - new Date(r.last_run_at).getTime()
+    return elapsedMs >= mins * 60_000
+  })
 }
 
 // === Parser engines ====================================================

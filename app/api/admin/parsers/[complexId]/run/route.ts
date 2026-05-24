@@ -29,17 +29,23 @@ export async function POST(_req: Request, { params }: { params: Params }) {
         sourceUrl: cfg.source_url,
         airtableToken,
       })
-      await recordRun(complexId, 'ok', unitsCount, warnings.length ? warnings.join('; ').slice(0, 800) : null)
+      await recordRun(
+        complexId,
+        'ok',
+        unitsCount,
+        warnings.length ? warnings.join('; ').slice(0, 800) : null,
+        warnings.length,
+      )
       return NextResponse.json({ ok: true, unitsCount, warnings })
     }
     if (cfg.parser_type === 'generic_gsheet' || cfg.parser_type === 'manual_csv') {
-      await recordRun(complexId, 'error', 0, 'Тип парсера пока не реализован')
+      await recordRun(complexId, 'error', 0, 'Тип парсера пока не реализован', 0)
       return NextResponse.json({ error: 'parser_type_not_implemented', type: cfg.parser_type }, { status: 501 })
     }
     return NextResponse.json({ error: 'unknown_parser_type' }, { status: 400 })
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'run_failed'
-    await recordRun(complexId, 'error', 0, msg.slice(0, 800))
+    await recordRun(complexId, 'error', 0, msg.slice(0, 800), 0)
     return NextResponse.json({ error: 'run_failed', detail: msg }, { status: 500 })
   }
 }
