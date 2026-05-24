@@ -173,9 +173,12 @@ export async function listDueParsers(now = new Date()): Promise<ParserConfig[]> 
 
 // BALI BAZA Google Sheets price list parser. Source URL is the
 // /edit?gid=NNN sheet URL — we transform it to the CSV export URL,
-// fetch, parse the «Section / Type / Bedroom / Villa size / Rooftop /
-// Staff building / Total / Price / $ / Land / $ / Status» table, and
-// push to Airtable «Юниты Виллы» (appPrMGM6h24IekkS / tblfyveBxB1yJbR7d).
+// fetch, locate the row whose first cell is «Section», map columns by
+// header name (so different BALI BAZA tabs with slightly different
+// schemas work without code changes), and push to Airtable «Юниты Виллы»
+// (appPrMGM6h24IekkS / tblfyveBxB1yJbR7d). PATCH-by-Name is the
+// dedup key — make sure Name is globally unique across complexes
+// (BALI BAZA's section codes are unique by construction).
 export async function runBaliBazaParser(opts: {
   complexId: string
   sourceUrl: string
@@ -194,9 +197,50 @@ export async function runBaliBazaParser(opts: {
   if (!r.ok) throw new Error(`Google Sheets вернул ${r.status} — проверь что таблица доступна по ссылке (share с правом View)`)
   const csv = await r.text()
   const rows = parseCsv(csv)
-  const headerIdx = rows.findIndex(r => r[0] === 'Section')
+  const headerIdx = rows.findIndex(r => (r[0] || '').trim() === 'Section')
   if (headerIdx < 0) throw new Error('Не нашёл строку с заголовком «Section» — формат прайса BALI BAZA не распознан')
-  const data = rows.slice(headerIdx + 1).filter(r => /^\d+$/.test((r[0] || '').trim()))
+  // Normalise headers: BALI BAZA tabs use multi-line cells like
+  // "Villa size\nm2" or "Off-plan\nPrice" — collapse whitespace + lowercase
+  // so substring matching below works reliably across all tabs.
+  const norm = (s: string) => s.replace(/\s+/g, ' ').trim().toLowerCase()
+  const header = rows[headerIdx].map(c => norm(c || ''))
+
+  // Column index by header name. Substring match — header just has to
+  // *contain* one of the aliases. findIndex returns the first match, so
+  // order aliases from most-specific to most-generic if multiple columns
+  // could conflict (e.g. "Price" vs "Price m2" — both contain "price",
+  // but the actual price column always comes first in BALI BAZA tabs).
+  // Only Section and Price are required; the rest is best-effort.
+  const col = (...names: string[]): number => {
+    for (const n of names) {
+      const needle = norm(n)
+      const i = header.findIndex(h => h.includes(needle))
+      if (i >= 0) return i
+    }
+    return -1
+  }
+  const idxSection = col('Section')
+  const idxPrice   = col('Price', 'Цена')
+  const idxBedroom = col('Bedroom', 'Bedrooms', 'BDR', 'Спальни')
+  const idxVilla   = col('Villa size', 'Villa m2', 'Жилая площадь')
+  const idxTotal   = col('Total', 'Общая площадь', 'Total m2')
+  const idxLand    = col('Land', 'Land m2', 'Площадь земли')
+  const idxRoof    = col('Rooftop', 'Roof')
+  const idxStaff   = col('Staff building', 'Staff')
+  const idxStatus  = col('Status', 'Статус')
+  if (idxSection < 0 || idxPrice < 0) {
+    throw new Error('В заголовке нет колонок Section и/или Price — этот формат не похож на прайс BALI BAZA')
+  }
+
+  // Data rows: anything below the header that has a non-empty Section
+  // and a parseable, positive Price. Filters out section dividers like
+  // "2 BDR VILLA", blank rows, and footer notes.
+  const data = rows.slice(headerIdx + 1).filter(r => {
+    const sec = (r[idxSection] || '').trim()
+    if (!sec) return false
+    const p = num(r[idxPrice])
+    return p != null && p > 0
+  })
 
   const BASE = 'appPrMGM6h24IekkS', UNITS = 'tblfyveBxB1yJbR7d'
   const STATUS: Record<string, string> = { Sold: 'Продана', Available: 'Доступна', Reserved: 'Бронь' }
@@ -215,27 +259,30 @@ export async function runBaliBazaParser(opts: {
   const toCreate: Array<{ fields: Record<string, unknown> }> = []
   const toUpdate: Array<{ id: string; fields: Record<string, unknown> }> = []
   for (const r of data) {
-    const sec = (r[0] || '').trim()
-    const bd = parseInt(r[2] || '0', 10)
-    const villaSize = num(r[3])
-    const rooftop = num(r[4])
-    const staff = num(r[5])
-    const totalSize = num(r[6])
-    const price = num(r[7])
-    const land = num(r[9])
-    const status = (r[11] || '').trim()
-    if (!sec || !price) { warnings.push(`#${sec || '?'} — пропущен (нет цены или номера)`); continue }
+    const sec = (r[idxSection] || '').trim()
+    const price = num(r[idxPrice])
+    if (!sec || price == null) { warnings.push(`#${sec || '?'} — пропущен (нет цены или номера)`); continue }
+    const bd = idxBedroom >= 0 ? parseInt(r[idxBedroom] || '0', 10) : null
+    const villaSize = idxVilla >= 0 ? num(r[idxVilla]) : null
+    const totalSize = idxTotal >= 0 ? num(r[idxTotal]) : null
+    const land = idxLand >= 0 ? num(r[idxLand]) : null
+    const rooftop = idxRoof >= 0 ? num(r[idxRoof]) : null
+    const staff = idxStaff >= 0 ? num(r[idxStaff]) : null
+    const status = idxStatus >= 0 ? (r[idxStatus] || '').trim() : ''
     const fields: Record<string, unknown> = {
       Name: sec,
       Цена: price,
-      'Жилая площадь': villaSize,
-      'Площадь руфтопа': rooftop,
-      'Staff building': staff,
-      'Площадь земли': land,
-      Спальни: bd,
-      'Общая площадь': totalSize,
       Тип: ['Вилла'],
     }
+    if (villaSize != null) fields['Жилая площадь'] = villaSize
+    if (rooftop != null) fields['Площадь руфтопа'] = rooftop
+    if (staff != null) fields['Staff building'] = staff
+    if (land != null) fields['Площадь земли'] = land
+    if (bd != null && Number.isFinite(bd)) fields['Спальни'] = bd
+    // If sheet has no separate Total, fall back to Villa m2 — for
+    // single-storey villas they're the same number anyway.
+    if (totalSize != null) fields['Общая площадь'] = totalSize
+    else if (villaSize != null) fields['Общая площадь'] = villaSize
     if (STATUS[status]) fields['Статус'] = STATUS[status]
     if (byName[sec]) toUpdate.push({ id: byName[sec], fields })
     else toCreate.push({ fields })
