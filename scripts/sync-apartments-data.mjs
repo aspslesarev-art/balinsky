@@ -45,6 +45,38 @@ for (const r of recs) {
 }
 if (filled > 0) console.log(`  slug fallback applied to ${filled} record(s)`)
 
+// === Per-unit slug suffix ===========================================
+// Each unit gets a -N number appended to its slug so the URL is a
+// stable product ID (… -39m2-1-bedroom-1 / -2 / …). Without this,
+// two units with the same complex + area + bedrooms collided on one
+// URL — only one was reachable. The previous (un-suffixed) slug is
+// kept on the row as `_slug_alias` so sync-detail-indexes can ship
+// it as a 301-redirect entry for any inbound link to the old URL.
+//
+// Ordering within a collision group is by Name (A662 < A743), so the
+// number assignment is deterministic across syncs.
+{
+  const bySlug = new Map()
+  for (const r of recs) {
+    const slugRaw = r.fields?.['SEO:Slug']
+    const slug = typeof slugRaw === 'string' ? slugRaw.trim() : null
+    if (!slug) continue
+    if (!bySlug.has(slug)) bySlug.set(slug, [])
+    bySlug.get(slug).push(r)
+  }
+  let renamed = 0
+  for (const [slug, group] of bySlug) {
+    group.sort((a, b) => String(a.fields?.['Name'] ?? '').localeCompare(String(b.fields?.['Name'] ?? '')))
+    group.forEach((r, idx) => {
+      const newSlug = `${slug}-${idx + 1}`
+      r.fields['_slug_alias'] = slug
+      r.fields['SEO:Slug'] = newSlug
+      renamed++
+    })
+  }
+  console.log(`  slug -N suffix: assigned to ${renamed} record(s) across ${bySlug.size} group(s)`)
+}
+
 const rows = recs.map(r => ({
   airtable_id: r.id,
   data: r.fields,

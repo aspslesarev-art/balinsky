@@ -98,6 +98,7 @@ async function buildApartmentIndex() {
   const rows = await paginated('raw_apartments')
   const out = []
   let dirtied = 0
+  let aliased = 0
   for (const r of rows) {
     if (r.data?.['Опубликовать'] !== true) continue
     const slug = fs1(r.data['SEO:Slug'])
@@ -105,9 +106,18 @@ async function buildApartmentIndex() {
     const e = buildEntry(slug, r.airtable_id, fs1(r.data['Location filter']))
     if (!e) continue
     if (e.aliases) dirtied++
+    // sync-apartments-data appends -N to every slug; the previous
+    // un-suffixed slug lives in `_slug_alias`. Push it as an alias so
+    // any inbound link to the old URL 301-redirects via the detail
+    // page's resolveApartment alias lookup.
+    const alias = fs1(r.data['_slug_alias'])
+    if (alias && alias !== e.slug) {
+      e.aliases = [...(e.aliases ?? []), alias]
+      aliased++
+    }
     out.push(e)
   }
-  console.log(`  published with slug: ${out.length} (normalised ${dirtied})`)
+  console.log(`  published with slug: ${out.length} (normalised ${dirtied}, with -N alias ${aliased})`)
   return out
 }
 
