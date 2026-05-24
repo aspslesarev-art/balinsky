@@ -24,7 +24,7 @@ export async function POST(_req: Request, { params }: { params: Params }) {
 
   try {
     if (cfg.parser_type === 'bali_baza') {
-      const { unitsCount, warnings } = await runBaliBazaParser({
+      const { unitsCount, warnings, linked } = await runBaliBazaParser({
         complexId,
         sourceUrl: cfg.source_url,
         airtableToken,
@@ -36,7 +36,7 @@ export async function POST(_req: Request, { params }: { params: Params }) {
         warnings.length ? warnings.join('; ').slice(0, 800) : null,
         warnings.length,
       )
-      return NextResponse.json({ ok: true, unitsCount, warnings })
+      return NextResponse.json({ ok: true, unitsCount, warnings, linked })
     }
     if (cfg.parser_type === 'generic_gsheet' || cfg.parser_type === 'manual_csv') {
       await recordRun(complexId, 'error', 0, 'Тип парсера пока не реализован', 0)

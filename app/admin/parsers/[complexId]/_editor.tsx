@@ -18,7 +18,7 @@ const PARSER_TYPES: Array<{ value: ParserType; label: string; hint: string }> = 
 ]
 
 type RunResult =
-  | { ok: true; unitsCount: number; warnings: string[] }
+  | { ok: true; unitsCount: number; warnings: string[]; linked?: number }
   | { ok: false; error: string; detail?: string }
 
 export function ParserEditor({ complexId, complexName, initial }: {
@@ -73,7 +73,7 @@ export function ParserEditor({ complexId, complexName, initial }: {
       const r = await fetch(`/api/admin/parsers/${encodeURIComponent(complexId)}/run`, { method: 'POST' })
       const j = await r.json()
       if (!r.ok) setLastRun({ ok: false, error: j.error || 'run_failed', detail: j.detail })
-      else setLastRun({ ok: true, unitsCount: j.unitsCount, warnings: j.warnings ?? [] })
+      else setLastRun({ ok: true, unitsCount: j.unitsCount, warnings: j.warnings ?? [], linked: j.linked })
     } catch (e) {
       setLastRun({ ok: false, error: e instanceof Error ? e.message : 'run_failed' })
     } finally { setBusy(null) }
@@ -236,7 +236,9 @@ export function ParserEditor({ complexId, complexName, initial }: {
         <section className={`rounded-2xl border p-4 ${lastRun.ok ? 'border-emerald-500/40 bg-emerald-500/5' : 'border-rose-500/40 bg-rose-500/5'}`}>
           <div className="flex items-center gap-2 text-[14px] font-semibold mb-2 text-[var(--ax-fg)]">
             {lastRun.ok ? <CheckCircle2 size={16} className="text-emerald-500" /> : <AlertCircle size={16} className="text-rose-500" />}
-            {lastRun.ok ? `Парсер отработал — ${lastRun.unitsCount} юнитов` : `Ошибка: ${lastRun.error}`}
+            {lastRun.ok
+              ? `Парсер отработал — ${lastRun.unitsCount} юнитов${lastRun.linked != null && lastRun.linked > 0 ? `, привязал ${lastRun.linked} к планировкам` : ''}`
+              : `Ошибка: ${lastRun.error}`}
           </div>
           {lastRun.ok && lastRun.warnings.length > 0 && (
             <ul className="text-[12px] text-[var(--ax-fg-muted)] list-disc pl-5 space-y-0.5">

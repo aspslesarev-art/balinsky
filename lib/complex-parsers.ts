@@ -183,7 +183,7 @@ export async function runBaliBazaParser(opts: {
   complexId: string
   sourceUrl: string
   airtableToken: string
-}): Promise<{ unitsCount: number; warnings: string[] }> {
+}): Promise<{ unitsCount: number; warnings: string[]; linked: number }> {
   const { sourceUrl, airtableToken } = opts
   // Extract /spreadsheets/d/<id> and gid from the URL.
   const idMatch = sourceUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/)
@@ -305,7 +305,142 @@ export async function runBaliBazaParser(opts: {
   }
   const updated = await push(toUpdate, 'PATCH')
   const created = await push(toCreate, 'POST')
-  return { unitsCount: updated + created, warnings }
+
+  // Auto-link units to their Villa planning record so the «Виллы»
+  // lookup (Slug, Комплекс, etc.) populates without manual work in
+  // Airtable. Matches by (villa_size, bedrooms) extracted from the
+  // planning record's SEO:Slug (`...75m2-2-bedroom`). Skips units
+  // that already have a link — manual edits win.
+  const ourSections = new Set<string>(
+    [...toUpdate.map(u => (u.fields.Name as string)), ...toCreate.map(u => (u.fields.Name as string))]
+  )
+  const sectionData = new Map<string, { villaSize: number | null; bedrooms: number | null }>()
+  for (const r of data) {
+    const sec = (r[idxSection] || '').trim()
+    if (!sec) continue
+    const vs = idxVilla >= 0 ? num(r[idxVilla]) : null
+    const bd = idxBedroom >= 0 ? parseInt(r[idxBedroom] || '0', 10) : null
+    sectionData.set(sec, { villaSize: vs, bedrooms: Number.isFinite(bd) ? bd : null })
+  }
+  const linked = await autoLinkUnits({
+    complexId: opts.complexId,
+    airtableToken,
+    ourSections,
+    sectionData,
+    existingByName: byName,
+    existingRecords: existing,
+    warnings,
+  })
+
+  return { unitsCount: updated + created, warnings, linked }
+}
+
+// === Auto-link helper ==================================================
+
+const VILLAS = 'tblmphwvyvunVSXFl' // «Виллы» (планировки) в parser-базе
+
+async function autoLinkUnits(opts: {
+  complexId: string
+  airtableToken: string
+  ourSections: Set<string>
+  sectionData: Map<string, { villaSize: number | null; bedrooms: number | null }>
+  existingByName: Record<string, string>
+  existingRecords: Array<{ id: string; fields: Record<string, unknown> }>
+  warnings: string[]
+}): Promise<number> {
+  const BASE = 'appPrMGM6h24IekkS'
+  // 1. Find the complex name from raw_complexes — that's how we filter
+  //    the Виллы table (it has a {Комплекс 1} lookup-text field).
+  const c = sb()
+  const { data: complexRow } = await c.from('raw_complexes').select('data').eq('airtable_id', opts.complexId).maybeSingle()
+  const complexName = complexRow?.data ? fs1((complexRow.data as Record<string, unknown>)['Project']) : null
+  if (!complexName) {
+    opts.warnings.push('autolink: не нашёл имя комплекса в raw_complexes — пропускаю')
+    return 0
+  }
+  // 2. Pull Villa planning records for this complex.
+  const escaped = complexName.replace(/'/g, "\\'")
+  const filter = encodeURIComponent(`{Комплекс 1}='${escaped}'`)
+  const vr = await fetch(`https://api.airtable.com/v0/${BASE}/${VILLAS}?filterByFormula=${filter}&pageSize=100`, {
+    headers: { Authorization: `Bearer ${opts.airtableToken}` },
+  })
+  if (!vr.ok) {
+    opts.warnings.push(`autolink: Airtable Villas fetch ${vr.status}`)
+    return 0
+  }
+  const villas = ((await vr.json()).records ?? []) as Array<{ id: string; fields: Record<string, unknown> }>
+  if (villas.length === 0) {
+    opts.warnings.push(`autolink: нет планировок в Виллах с {Комплекс 1}='${complexName}'`)
+    return 0
+  }
+  // 3. Build (size, bd) → villa-id map from each planning's SEO:Slug
+  //    (`...75m2-2-bedroom`). Multiple villas with the same key → ambiguous,
+  //    skip both rather than guess.
+  const sizeBdToVilla = new Map<string, string | 'ambiguous'>()
+  for (const v of villas) {
+    const slug = v.fields['SEO:Slug']
+    if (typeof slug !== 'string') continue
+    const m = slug.match(/(\d+)m2-(\d+)-bedroom/i)
+    if (!m) continue
+    const key = `${m[1]}-${m[2]}`
+    const prev = sizeBdToVilla.get(key)
+    sizeBdToVilla.set(key, prev && prev !== v.id ? 'ambiguous' : v.id)
+  }
+  if (sizeBdToVilla.size === 0) return 0
+
+  // 4. For each unit we just processed, link to its Villa if (size, bd)
+  //    matches uniquely and the unit doesn't already have a link.
+  const byNameRecord = new Map<string, { id: string; fields: Record<string, unknown> }>()
+  for (const e of opts.existingRecords) {
+    const n = e.fields['Name']
+    if (typeof n === 'string') byNameRecord.set(n, e)
+  }
+  // Also re-fetch in case parser just created records — that's needed
+  // for new units to be visible. Cheap call (~one extra GET per run).
+  const after = await fetch(`https://api.airtable.com/v0/${BASE}/tblfyveBxB1yJbR7d?maxRecords=500`, {
+    headers: { Authorization: `Bearer ${opts.airtableToken}` },
+  })
+  if (after.ok) {
+    const recs = ((await after.json()).records ?? []) as Array<{ id: string; fields: Record<string, unknown> }>
+    for (const e of recs) {
+      const n = e.fields['Name']
+      if (typeof n === 'string') byNameRecord.set(n, e)
+    }
+  }
+
+  const toPatch: Array<{ id: string; fields: Record<string, unknown> }> = []
+  let skippedAmbiguous = 0, skippedNoMatch = 0
+  for (const sec of opts.ourSections) {
+    const unit = byNameRecord.get(sec)
+    if (!unit) continue
+    const existingLink = unit.fields['Виллы']
+    if (Array.isArray(existingLink) && existingLink.length > 0) continue // manual link wins
+    const sd = opts.sectionData.get(sec)
+    if (!sd || sd.villaSize == null || sd.bedrooms == null) { skippedNoMatch++; continue }
+    const key = `${sd.villaSize}-${sd.bedrooms}`
+    const villaId = sizeBdToVilla.get(key)
+    if (!villaId) { skippedNoMatch++; continue }
+    if (villaId === 'ambiguous') { skippedAmbiguous++; continue }
+    toPatch.push({ id: unit.id, fields: { 'Виллы': [villaId] } })
+  }
+  if (skippedNoMatch > 0) opts.warnings.push(`autolink: ${skippedNoMatch} юнитов без планировки в Виллах — заведи планировки в master-базе`)
+  if (skippedAmbiguous > 0) opts.warnings.push(`autolink: ${skippedAmbiguous} юнитов с неоднозначным (размер, спальни) — несколько планировок подходят`)
+
+  let linked = 0
+  for (let i = 0; i < toPatch.length; i += 10) {
+    const batch = toPatch.slice(i, i + 10)
+    const resp = await fetch(`https://api.airtable.com/v0/${BASE}/tblfyveBxB1yJbR7d`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${opts.airtableToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ records: batch }),
+    })
+    if (!resp.ok) {
+      opts.warnings.push(`autolink: PATCH ${resp.status}: ${(await resp.text()).slice(0, 200)}`)
+      break
+    }
+    linked += batch.length
+  }
+  return linked
 }
 
 function parseCsv(text: string): string[][] {

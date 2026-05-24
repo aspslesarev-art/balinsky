@@ -34,7 +34,7 @@ export async function GET(req: Request) {
   const due = await listDueParsers()
   if (due.length === 0) return NextResponse.json({ ok: true, ran: 0 })
 
-  const results: Array<{ complex_id: string; status: 'ok' | 'error'; units?: number; warnings?: number; error?: string }> = []
+  const results: Array<{ complex_id: string; status: 'ok' | 'error'; units?: number; warnings?: number; linked?: number; error?: string }> = []
   for (const cfg of due) {
     try {
       if (cfg.parser_type !== 'bali_baza') {
@@ -42,7 +42,7 @@ export async function GET(req: Request) {
         await recordRun(cfg.complex_id, 'error', 0, `Тип ${cfg.parser_type} пока не реализован`, 0)
         continue
       }
-      const { unitsCount, warnings } = await runBaliBazaParser({
+      const { unitsCount, warnings, linked } = await runBaliBazaParser({
         complexId: cfg.complex_id,
         sourceUrl: cfg.source_url,
         airtableToken,
@@ -54,7 +54,7 @@ export async function GET(req: Request) {
         warnings.length ? warnings.join('; ').slice(0, 800) : null,
         warnings.length,
       )
-      results.push({ complex_id: cfg.complex_id, status: 'ok', units: unitsCount, warnings: warnings.length })
+      results.push({ complex_id: cfg.complex_id, status: 'ok', units: unitsCount, warnings: warnings.length, linked })
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'run_failed'
       await recordRun(cfg.complex_id, 'error', 0, msg.slice(0, 800), 0)
