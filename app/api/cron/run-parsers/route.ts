@@ -1,23 +1,14 @@
 import { NextResponse } from 'next/server'
-import { listDueParsers, recordRun, runBaliBazaParser } from '@/lib/complex-parsers'
+import { listDueParsers, recordRun } from '@/lib/complex-parsers'
+import { getParserModule } from '@/lib/parsers/_registry'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-// Each BALI BAZA run does ~6-8 Airtable requests; with a handful of
-// configured parsers and a 5-minute Vercel cron we have plenty of room
-// inside the default 300s timeout, but bump explicitly so a slow Sheets
-// fetch can't tip a single complex over.
 export const maxDuration = 300
 
-// Vercel cron tick. Iterates all parsers with interval_minutes set and
-// runs the ones whose interval has elapsed since their last run. Auth:
-// Vercel sends `Authorization: Bearer <CRON_SECRET>`, same convention as
-// /api/cron/sync-trigger.
-//
-// Required env:
-//   CRON_SECRET             — random string, also in Vercel cron config
-//   PARSERS_AIRTABLE_TOKEN  — PAT with write access on appPrMGM6h24IekkS
-//                             (falls back to AIRTABLE_TOKEN if missing)
+// Vercel cron tick. Перебирает все парсеры с заданным интервалом, для
+// каждого ищет реализацию в реестре и запускает. Auth: Bearer
+// CRON_SECRET (как у /api/cron/sync-trigger).
 export async function GET(req: Request) {
   const expected = process.env.CRON_SECRET
   if (!expected) return NextResponse.json({ ok: false, error: 'no_secret' }, { status: 500 })
@@ -37,12 +28,13 @@ export async function GET(req: Request) {
   const results: Array<{ complex_id: string; status: 'ok' | 'error'; units?: number; warnings?: number; linked?: number; error?: string }> = []
   for (const cfg of due) {
     try {
-      if (cfg.parser_type !== 'bali_baza') {
-        results.push({ complex_id: cfg.complex_id, status: 'error', error: 'type_not_implemented' })
-        await recordRun(cfg.complex_id, 'error', 0, `Тип ${cfg.parser_type} пока не реализован`, 0)
+      const mod = getParserModule(cfg.complex_id)
+      if (!mod) {
+        results.push({ complex_id: cfg.complex_id, status: 'error', error: 'parser_not_implemented' })
+        await recordRun(cfg.complex_id, 'error', 0, 'Парсер удалён из реестра', 0)
         continue
       }
-      const { unitsCount, warnings, linked } = await runBaliBazaParser({
+      const { unitsCount, warnings, linked } = await mod.run({
         complexId: cfg.complex_id,
         sourceUrl: cfg.source_url,
         airtableToken,

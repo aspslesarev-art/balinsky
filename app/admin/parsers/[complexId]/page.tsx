@@ -3,6 +3,7 @@ import { requireAdmin } from '@/lib/admin-auth'
 import { AdminThemeShell } from '@/components/admin/AdminThemeShell'
 import { createClient } from '@supabase/supabase-js'
 import { getParser } from '@/lib/complex-parsers'
+import { getParserModule } from '@/lib/parsers/_registry'
 import { ParserEditor } from './_editor'
 
 export const dynamic = 'force-dynamic'
@@ -28,6 +29,7 @@ export default async function ParserPage({ params }: { params: Params }) {
   const district = firstString((complex.data as Record<string, unknown>)['Location 2']) ?? firstString((complex.data as Record<string, unknown>)['Location'])
 
   const parser = await getParser(complexId).catch(() => null)
+  const mod = getParserModule(complexId)
 
   return (
     <AdminThemeShell
@@ -35,7 +37,7 @@ export default async function ParserPage({ params }: { params: Params }) {
       description={`${district ?? '—'} · slug: ${complex.slug ?? '—'} · airtable_id: ${complexId}`}
     >
       <a href="/admin/parsers" className="inline-block mb-4 text-[12.5px] text-[var(--ax-fg-soft)] hover:text-[var(--ax-fg)] no-underline">← К списку парсеров</a>
-      <ParserEditor complexId={complexId} complexName={name} initial={parser} />
+      <ParserEditor complexId={complexId} complexName={name} initial={parser} parserLabel={mod?.label ?? null} />
     </AdminThemeShell>
   )
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-auth'
-import { getParser, recordRun, runBaliBazaParser } from '@/lib/complex-parsers'
+import { getParser, recordRun } from '@/lib/complex-parsers'
+import { getParserModule } from '@/lib/parsers/_registry'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -12,37 +13,29 @@ export async function POST(_req: Request, { params }: { params: Params }) {
   const { complexId } = await params
   const cfg = await getParser(complexId)
   if (!cfg) return NextResponse.json({ error: 'parser_not_configured' }, { status: 404 })
+  const mod = getParserModule(complexId)
+  if (!mod) return NextResponse.json({ error: 'parser_not_implemented' }, { status: 501 })
 
-  // Source-of-truth for the writable Airtable token is env. Read-only
-  // AIRTABLE_TOKEN already covers public-site syncs; PARSERS_AIRTABLE_TOKEN
-  // is the PAT with write access on appPrMGM6h24IekkS (Юниты Виллы).
   const airtableToken = process.env.PARSERS_AIRTABLE_TOKEN || process.env.AIRTABLE_TOKEN
   if (!airtableToken) {
-    await recordRun(complexId, 'error', 0, 'PARSERS_AIRTABLE_TOKEN не задан в env')
+    await recordRun(complexId, 'error', 0, 'PARSERS_AIRTABLE_TOKEN не задан в env', 0)
     return NextResponse.json({ error: 'token_missing', detail: 'PARSERS_AIRTABLE_TOKEN не настроен в env' }, { status: 500 })
   }
 
   try {
-    if (cfg.parser_type === 'bali_baza') {
-      const { unitsCount, warnings, linked } = await runBaliBazaParser({
-        complexId,
-        sourceUrl: cfg.source_url,
-        airtableToken,
-      })
-      await recordRun(
-        complexId,
-        'ok',
-        unitsCount,
-        warnings.length ? warnings.join('; ').slice(0, 800) : null,
-        warnings.length,
-      )
-      return NextResponse.json({ ok: true, unitsCount, warnings, linked })
-    }
-    if (cfg.parser_type === 'generic_gsheet' || cfg.parser_type === 'manual_csv') {
-      await recordRun(complexId, 'error', 0, 'Тип парсера пока не реализован', 0)
-      return NextResponse.json({ error: 'parser_type_not_implemented', type: cfg.parser_type }, { status: 501 })
-    }
-    return NextResponse.json({ error: 'unknown_parser_type' }, { status: 400 })
+    const { unitsCount, warnings, linked } = await mod.run({
+      complexId,
+      sourceUrl: cfg.source_url,
+      airtableToken,
+    })
+    await recordRun(
+      complexId,
+      'ok',
+      unitsCount,
+      warnings.length ? warnings.join('; ').slice(0, 800) : null,
+      warnings.length,
+    )
+    return NextResponse.json({ ok: true, unitsCount, warnings, linked })
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'run_failed'
     await recordRun(complexId, 'error', 0, msg.slice(0, 800), 0)

@@ -23,6 +23,14 @@ function fmtInterval(mins: number | null): string {
   return `каждые ${h} ч`
 }
 
+// Three buckets: настроены / реализованы но не настроены / парсер не написан
+type Bucket = 'configured' | 'available' | 'unimplemented'
+function bucketOf(it: ComplexListEntry): Bucket {
+  if (it.parser) return 'configured'
+  if (it.parser_label) return 'available'
+  return 'unimplemented'
+}
+
 // Dot colour: green ok / yellow warnings / red error / grey never.
 const HEALTH_DOT: Record<ParserHealth, { cls: string; title: string }> = {
   green:  { cls: 'bg-emerald-500',   title: 'OK' },
@@ -52,8 +60,9 @@ export function ParsersBrowser({ items }: { items: ComplexListEntry[] }) {
     })
   }, [items, query, developer])
 
-  const withParser = filtered.filter(c => c.parser)
-  const empty = filtered.filter(c => !c.parser)
+  const configured = filtered.filter(c => bucketOf(c) === 'configured')
+  const available = filtered.filter(c => bucketOf(c) === 'available')
+  const unimplemented = filtered.filter(c => bucketOf(c) === 'unimplemented')
 
   return (
     <div className="space-y-5">
@@ -112,11 +121,11 @@ export function ParsersBrowser({ items }: { items: ComplexListEntry[] }) {
         </div>
       ) : (
         <div className="space-y-8">
-          {withParser.length > 0 && (
+          {configured.length > 0 && (
             <section>
-              <h2 className="text-[15px] font-semibold mb-3 text-[var(--ax-fg)]">Подключены ({withParser.length})</h2>
+              <h2 className="text-[15px] font-semibold mb-3 text-[var(--ax-fg)]">Подключены ({configured.length})</h2>
               <div className="rounded-2xl bg-[var(--ax-panel)] border border-[var(--ax-border)] divide-y divide-[var(--ax-border-soft)] overflow-hidden">
-                {withParser.map(c => {
+                {configured.map(c => {
                   const p = c.parser!
                   const health = parserHealth(p)
                   const dot = HEALTH_DOT[health]
@@ -137,8 +146,8 @@ export function ParsersBrowser({ items }: { items: ComplexListEntry[] }) {
                           {c.developer && <span className="text-[11px] font-normal text-[var(--ax-fg-faint)] truncate">· {c.developer}</span>}
                         </div>
                         <div className="text-[11.5px] text-[var(--ax-fg-faint)] mt-0.5 flex items-center gap-2 flex-wrap">
-                          {c.slug && <span className="font-mono truncate max-w-[260px]">{c.slug}</span>}
-                          {c.district && <span>· {c.district}</span>}
+                          {c.parser_label && <span className="font-mono">{c.parser_label}</span>}
+                          {c.slug && <span>· <span className="font-mono">{c.slug}</span></span>}
                           <span>· {fmtInterval(p.interval_minutes)}</span>
                           {p.last_units_count != null && <span>· {p.last_units_count} юнитов</span>}
                           {(p.last_warning_count ?? 0) > 0 && <span className="text-amber-500">· {p.last_warning_count} ⚠</span>}
@@ -154,17 +163,45 @@ export function ParsersBrowser({ items }: { items: ComplexListEntry[] }) {
             </section>
           )}
 
-          {empty.length > 0 && (
+          {available.length > 0 && (
             <section>
-              <h2 className="text-[15px] font-semibold mb-3 text-[var(--ax-fg)]">Без парсера ({empty.length})</h2>
+              <h2 className="text-[15px] font-semibold mb-3 text-[var(--ax-fg)]">Парсер написан, но не настроен ({available.length})</h2>
               <div className="rounded-2xl bg-[var(--ax-panel)] border border-[var(--ax-border)] divide-y divide-[var(--ax-border-soft)] overflow-hidden">
-                {empty.map(c => (
+                {available.map(c => (
                   <Link
                     key={c.airtable_id}
                     href={`/admin/parsers/${encodeURIComponent(c.airtable_id)}`}
                     className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--ax-hover)] no-underline text-[var(--ax-fg)]"
                   >
-                    <span className="shrink-0 w-2.5 h-2.5 rounded-full bg-[var(--ax-fg-faint)] opacity-30" />
+                    <span className="shrink-0 w-2.5 h-2.5 rounded-full bg-[var(--ax-fg-faint)] opacity-50" title="Готов к настройке" />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[14px] font-medium truncate flex items-center gap-2">
+                        {c.name}
+                        {c.developer && <span className="text-[11px] font-normal text-[var(--ax-fg-faint)] truncate">· {c.developer}</span>}
+                      </div>
+                      <div className="text-[11.5px] text-[var(--ax-fg-faint)] mt-0.5 flex items-center gap-2 flex-wrap">
+                        <span className="font-mono">{c.parser_label}</span>
+                        {c.slug && <span>· <span className="font-mono">{c.slug}</span></span>}
+                      </div>
+                    </div>
+                    <div className="text-[12px] text-[var(--color-primary)] shrink-0">настроить →</div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {unimplemented.length > 0 && (
+            <section>
+              <h2 className="text-[15px] font-semibold mb-3 text-[var(--ax-fg)]">Парсер не написан ({unimplemented.length})</h2>
+              <div className="rounded-2xl bg-[var(--ax-panel)] border border-[var(--ax-border)] divide-y divide-[var(--ax-border-soft)] overflow-hidden">
+                {unimplemented.map(c => (
+                  <Link
+                    key={c.airtable_id}
+                    href={`/admin/parsers/${encodeURIComponent(c.airtable_id)}`}
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--ax-hover)] no-underline text-[var(--ax-fg)] opacity-70"
+                  >
+                    <span className="shrink-0 w-2.5 h-2.5 rounded-full bg-[var(--ax-fg-faint)] opacity-20" />
                     <div className="min-w-0 flex-1">
                       <div className="text-[14px] font-medium truncate flex items-center gap-2">
                         {c.name}
@@ -175,7 +212,7 @@ export function ParsersBrowser({ items }: { items: ComplexListEntry[] }) {
                         {c.district && <span>· {c.district}</span>}
                       </div>
                     </div>
-                    <div className="text-[12px] text-[var(--ax-fg-faint)] tabular-nums shrink-0">не настроен</div>
+                    <div className="text-[12px] text-[var(--ax-fg-faint)] tabular-nums shrink-0">нужен код</div>
                   </Link>
                 ))}
               </div>

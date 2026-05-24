@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Play, Save, Trash2, ExternalLink, CheckCircle2, AlertCircle } from 'lucide-react'
-import { parserHealth, type ParserConfig, type ParserHealth, type ParserType } from '@/lib/complex-parsers'
+import { Play, Save, Trash2, ExternalLink, CheckCircle2, AlertCircle, Code2 } from 'lucide-react'
+import { parserHealth, type ParserConfig, type ParserHealth } from '@/lib/complex-parsers'
 
 const HEALTH_PILL: Record<ParserHealth, { cls: string; label: string }> = {
   green:  { cls: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30', label: 'Онлайн · OK' },
@@ -11,25 +11,18 @@ const HEALTH_PILL: Record<ParserHealth, { cls: string; label: string }> = {
   idle:   { cls: 'bg-[var(--ax-hover)] text-[var(--ax-fg-faint)] border-[var(--ax-border)]', label: 'Ещё не запускался' },
 }
 
-const PARSER_TYPES: Array<{ value: ParserType; label: string; hint: string }> = [
-  { value: 'bali_baza', label: 'BALI BAZA (Google Sheets)', hint: 'Прайс-лист BALI BAZA с колонками Section / Type / Bedroom / Villa size / Total / Price / Land / Status' },
-  { value: 'generic_gsheet', label: 'Generic Google Sheets (скоро)', hint: 'Любой Google Sheets — пока не реализовано' },
-  { value: 'manual_csv', label: 'Ручной CSV (скоро)', hint: 'Загрузить CSV-файл руками — пока не реализовано' },
-]
-
 type RunResult =
   | { ok: true; unitsCount: number; warnings: string[]; linked?: number }
   | { ok: false; error: string; detail?: string }
 
-export function ParserEditor({ complexId, complexName, initial }: {
+export function ParserEditor({ complexId, complexName, initial, parserLabel }: {
   complexId: string
   complexName: string
   initial: ParserConfig | null
+  // Из реестра. null = парсер ещё не написан для этого ЖК.
+  parserLabel: string | null
 }) {
   const [sourceUrl, setSourceUrl] = useState(initial?.source_url ?? '')
-  const [parserType, setParserType] = useState<ParserType>(initial?.parser_type ?? 'bali_baza')
-  // Empty string = "manual only" (interval_minutes null in DB). Default
-  // for new parsers is 60 min — gives once-per-hour refresh out of the box.
   const [intervalStr, setIntervalStr] = useState<string>(
     initial?.interval_minutes != null ? String(initial.interval_minutes) : '60',
   )
@@ -40,7 +33,29 @@ export function ParserEditor({ complexId, complexName, initial }: {
   const [err, setErr] = useState<string | null>(null)
   const [currentState, setCurrentState] = useState<ParserConfig | null>(initial)
 
-  const typeMeta = PARSER_TYPES.find(t => t.value === parserType)!
+  // Парсер не зарегистрирован — показываем разъяснение и блокируем форму.
+  if (!parserLabel) {
+    return (
+      <div className="space-y-5">
+        <section className="rounded-2xl border border-amber-500/40 bg-amber-500/5 p-5 space-y-3">
+          <div className="flex items-center gap-2 text-[14px] font-semibold text-[var(--ax-fg)]">
+            <Code2 size={16} className="text-amber-500" />
+            Парсер для «{complexName}» ещё не написан
+          </div>
+          <div className="text-[13px] text-[var(--ax-fg-soft)] leading-relaxed">
+            У каждого ЖК свой файл парсера в <code className="font-mono">lib/parsers/</code>.
+            Чтобы подключить этот комплекс:
+            <ol className="list-decimal pl-5 mt-2 space-y-1">
+              <li>Создай <code className="font-mono">lib/parsers/&lt;slug&gt;.ts</code> по образцу <code className="font-mono">origins.ts</code> / <code className="font-mono">sunset-village.ts</code>.</li>
+              <li>Захардкодь колонки прайса этого ЖК (CSV/HTML/JSON — что угодно).</li>
+              <li>Импортни и добавь в <code className="font-mono">lib/parsers/_registry.ts</code> запись <code className="font-mono">{`'${complexId}': { key, label, run }`}</code>.</li>
+              <li>После деплоя страница автоматически покажет форму.</li>
+            </ol>
+          </div>
+        </section>
+      </div>
+    )
+  }
 
   async function save() {
     if (!sourceUrl.trim()) { setErr('Укажи source URL'); return }
@@ -54,7 +69,7 @@ export function ParserEditor({ complexId, complexName, initial }: {
       const r = await fetch(`/api/admin/parsers/${encodeURIComponent(complexId)}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ source_url: sourceUrl.trim(), parser_type: parserType, interval_minutes: intervalNum, notes }),
+        body: JSON.stringify({ source_url: sourceUrl.trim(), interval_minutes: intervalNum, notes }),
       })
       const j = await r.json()
       if (!r.ok) throw new Error(j.error || 'save_failed')
@@ -68,7 +83,6 @@ export function ParserEditor({ complexId, complexName, initial }: {
   async function run() {
     setBusy('run'); setErr(null); setLastRun(null)
     try {
-      // Save first to ensure DB has the latest URL/type
       await save()
       const r = await fetch(`/api/admin/parsers/${encodeURIComponent(complexId)}/run`, { method: 'POST' })
       const j = await r.json()
@@ -96,7 +110,6 @@ export function ParserEditor({ complexId, complexName, initial }: {
 
   return (
     <div className="space-y-5">
-      {/* Config form */}
       <section className="rounded-2xl bg-[var(--ax-panel)] border border-[var(--ax-border)] p-5 space-y-4">
         <div className="flex items-center gap-2 flex-wrap">
           <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11.5px] font-medium ${pill.cls}`}>
@@ -111,15 +124,32 @@ export function ParserEditor({ complexId, complexName, initial }: {
         </div>
 
         <div>
-          <label className="block text-[12px] uppercase tracking-wide text-[var(--ax-fg-muted)] mb-1.5">Тип парсера</label>
-          <select
-            value={parserType}
-            onChange={e => setParserType(e.target.value as ParserType)}
-            className="w-full px-3 py-2 rounded-lg bg-[var(--ax-input-bg)] border border-[var(--ax-input-border)] text-[14px] text-[var(--ax-fg)]"
-          >
-            {PARSER_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-          </select>
-          <div className="mt-1 text-[12px] text-[var(--ax-fg-faint)]">{typeMeta.hint}</div>
+          <div className="text-[12px] uppercase tracking-wide text-[var(--ax-fg-muted)] mb-1.5">Парсер</div>
+          <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--ax-hover)] border border-[var(--ax-border)] text-[13.5px] text-[var(--ax-fg)]">
+            <Code2 size={14} className="text-[var(--color-primary)]" />
+            <span className="font-medium">{parserLabel}</span>
+            <span className="text-[11px] text-[var(--ax-fg-faint)] font-mono">lib/parsers/</span>
+          </div>
+          <div className="mt-1 text-[12px] text-[var(--ax-fg-faint)]">
+            Привязка ЖК → парсер захардкожена в коде (lib/parsers/_registry.ts).
+            Поменять через UI нельзя — это by design, чтобы правки одного парсера не ломали другие.
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-[12px] uppercase tracking-wide text-[var(--ax-fg-muted)] mb-1.5">Source URL</label>
+          <input
+            type="url"
+            value={sourceUrl}
+            onChange={e => setSourceUrl(e.target.value)}
+            placeholder="https://docs.google.com/spreadsheets/d/.../edit?gid=NNN"
+            className="w-full px-3 py-2 rounded-lg bg-[var(--ax-input-bg)] border border-[var(--ax-input-border)] text-[14px] font-mono text-[var(--ax-fg)]"
+          />
+          {sourceUrl && (
+            <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="mt-1 inline-flex items-center gap-1 text-[12px] text-[var(--color-primary)] no-underline">
+              открыть источник <ExternalLink size={11} />
+            </a>
+          )}
         </div>
 
         <div>
@@ -134,8 +164,6 @@ export function ParserEditor({ complexId, complexName, initial }: {
               placeholder="напр. 60"
               className="w-32 px-3 py-2 rounded-lg bg-[var(--ax-input-bg)] border border-[var(--ax-input-border)] text-[14px] text-[var(--ax-fg)] tabular-nums"
             />
-            {/* Quick chips for common cadences. Clicking "вручную" clears
-                the field — server treats null as "cron skips this row". */}
             {[15, 30, 60, 180, 720].map(n => (
               <button
                 key={n}
@@ -165,22 +193,6 @@ export function ParserEditor({ complexId, complexName, initial }: {
           <div className="mt-1 text-[12px] text-[var(--ax-fg-faint)]">
             Минимум 5 минут. Пусто = только по кнопке «Запустить сейчас», без автообновления.
           </div>
-        </div>
-
-        <div>
-          <label className="block text-[12px] uppercase tracking-wide text-[var(--ax-fg-muted)] mb-1.5">Source URL</label>
-          <input
-            type="url"
-            value={sourceUrl}
-            onChange={e => setSourceUrl(e.target.value)}
-            placeholder="https://docs.google.com/spreadsheets/d/.../edit?gid=NNN"
-            className="w-full px-3 py-2 rounded-lg bg-[var(--ax-input-bg)] border border-[var(--ax-input-border)] text-[14px] font-mono text-[var(--ax-fg)]"
-          />
-          {sourceUrl && (
-            <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="mt-1 inline-flex items-center gap-1 text-[12px] text-[var(--color-primary)] no-underline">
-              открыть источник <ExternalLink size={11} />
-            </a>
-          )}
         </div>
 
         <div>
@@ -231,7 +243,6 @@ export function ParserEditor({ complexId, complexName, initial }: {
         </div>
       </section>
 
-      {/* Last run results */}
       {lastRun && (
         <section className={`rounded-2xl border p-4 ${lastRun.ok ? 'border-emerald-500/40 bg-emerald-500/5' : 'border-rose-500/40 bg-rose-500/5'}`}>
           <div className="flex items-center gap-2 text-[14px] font-semibold mb-2 text-[var(--ax-fg)]">
@@ -251,8 +262,6 @@ export function ParserEditor({ complexId, complexName, initial }: {
         </section>
       )}
 
-      {/* Last sync info from DB — pulled from currentState so save/run
-          updates render without reload. */}
       {currentState?.last_run_at && (
         <section className="rounded-2xl bg-[var(--ax-panel)] border border-[var(--ax-border)] p-4 text-[12.5px] text-[var(--ax-fg-soft)] space-y-1">
           <div>Предыдущий запуск: <span className="text-[var(--ax-fg)]">{new Date(currentState.last_run_at).toLocaleString('ru-RU')}</span></div>
