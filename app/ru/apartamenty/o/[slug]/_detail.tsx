@@ -151,7 +151,22 @@ const sb = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY!)
 
 type Params = Promise<{ slug: string }>
 type Row = { airtable_id: string; data: Record<string, unknown> }
-type ComplexRow = { airtable_id: string; data: Record<string, unknown>; slug: string | null; cover_url: string | null }
+// Slim: проекция только нужных полей вместо всего data (~75кб/строка
+// → ~300б/строка, -99% egress). findParentComplex матчит по name;
+// карточка parentComplex в правой колонке статьи использует остальное.
+type ComplexRow = {
+  airtable_id: string
+  slug: string | null
+  cover_url: string | null
+  name: string | null
+  district: string | null
+  district_alt: string | null
+  types: unknown
+  year: string | null
+  year_trail: string | null
+  units: number | null
+  status: string | null
+}
 
 function firstString(v: unknown): string | null {
   if (typeof v === 'string') return v.trim() || null
@@ -283,29 +298,44 @@ type DeveloperLite = {
   logoUrl: string | null
   highlights: string[]
 }
+// JSON-projection вместо `data` целиком: -98% egress на этом индексе.
+type DeveloperSlimRow = {
+  airtable_id: string
+  logo_url: string | null
+  published: boolean | null
+  name: string | null
+  slug: string | null
+  reputation: string | null
+  construction: string | null
+}
 const _loadDevelopersIndex = unstable_cache(
   async (): Promise<DeveloperLite[]> => {
-    const { data, error } = await sb.from('raw_developers').select('airtable_id, data, logo_url').limit(200)
+    const { data, error } = await sb.from('raw_developers').select(`
+      airtable_id, logo_url,
+      published:data->"Публикация",
+      name:data->Developer,
+      slug:data->"SEO:Slug",
+      reputation:data->"Репутация и опыт",
+      construction:data->"Строительство и недвижимость"
+    `).limit(200)
     if (error) throw new Error(`raw_developers: ${error.message}`)
-    const rows = (data ?? []) as { airtable_id: string; data: Record<string, unknown>; logo_url: string | null }[]
+    const rows = (data ?? []) as DeveloperSlimRow[]
     if (rows.length === 0) throw new Error('raw_developers returned 0 rows — refusing to cache empty')
     const out: DeveloperLite[] = []
     for (const r of rows) {
-      if (r.data['Публикация'] !== true) continue
-      const name = firstString(r.data['Developer'])
-      const slug = firstString(r.data['SEO:Slug'])
-      if (!name || !slug) continue
-      const sourceText = firstString(r.data['Репутация и опыт']) ?? firstString(r.data['Строительство и недвижимость']) ?? ''
+      if (r.published !== true) continue
+      if (!r.name || !r.slug) continue
+      const sourceText = r.reputation ?? r.construction ?? ''
       const highlights = sourceText
         .split('\n')
         .map(l => l.replace(/^[\s•\-–—·]+/, '').trim())
         .filter(Boolean)
         .slice(0, 3)
-      out.push({ slug, name, logoUrl: r.logo_url, highlights })
+      out.push({ slug: r.slug, name: r.name, logoUrl: r.logo_url, highlights })
     }
     return out
   },
-  ['apt-developers-index-v1'],
+  ['apt-developers-index-v2'],
   { revalidate: 600 },
 )
 function findDeveloperByName(targetName: string | null, list: DeveloperLite[]): DeveloperLite | null {
@@ -326,7 +356,18 @@ async function _loadAllComplexes(): Promise<ComplexRow[]> {
     try {
       const out: ComplexRow[] = []
       for (let from = 0; from < 1000; from += 100) {
-        const { data, error } = await sb.from('raw_complexes').select('airtable_id, data, slug, cover_url').range(from, from + 99)
+        // Slim projection: 189 строк × ~75кб/data = ~14МБ → теперь ~70кб.
+        const { data, error } = await sb.from('raw_complexes').select(`
+          airtable_id, slug, cover_url,
+          name:data->Project,
+          district_alt:data->Location,
+          district:data->"Location 2",
+          types:data->"Типы юнитов",
+          year:data->"Year of completion",
+          year_trail:data->"Year of completion ",
+          units:data->"Total quantity of units",
+          status:data->"Статус"
+        `).range(from, from + 99)
         if (error || !data || data.length === 0) break
         out.push(...(data as ComplexRow[]))
         if (data.length < 100) break
@@ -367,12 +408,10 @@ async function loadApartmentBySlug(slug: string): Promise<Row | null> {
 // complex name from the SEO:Title and finding it in raw_complexes.
 function findParentComplex(aptTitle: string, complexes: ComplexRow[]): ComplexRow | null {
   const lower = aptTitle.toLowerCase()
-  // try each complex's project name as substring
   let best: { c: ComplexRow; len: number } | null = null
   for (const c of complexes) {
-    const name = firstString(c.data['Project'])
-    if (!name) continue
-    const n = name.toLowerCase()
+    if (!c.name) continue
+    const n = c.name.toLowerCase()
     if (n.length < 4) continue
     if (lower.includes(n)) {
       if (!best || n.length > best.len) best = { c, len: n.length }
@@ -498,7 +537,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
 
   // Parent complex (best-effort by name match in title)
   const parentComplex = findParentComplex(title, complexes)
-  const parentComplexName = parentComplex ? firstString(parentComplex.data['Project']) : null
+  const parentComplexName = parentComplex?.name ?? null
 
   const [otherApts, managers, activeReservation, landProfile, marketStats, developers] = await Promise.all([
     loadOtherApartmentsInDistrict(district, a.airtable_id),
@@ -770,12 +809,11 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
                   </div>
                   <div className="text-[19px] font-semibold text-[#111827] mb-2">{parentComplexName}</div>
                   {(() => {
-                    const pcd = parentComplex.data
-                    const pcDistrict = firstString(pcd['Location 2']) ?? firstString(pcd['Location'])
-                    const pcTypesRaw = Array.isArray(pcd['Типы юнитов']) ? (pcd['Типы юнитов'] as unknown[]).map(String) : []
-                    const pcYearRaw = firstString(pcd['Year of completion ']) ?? firstString(pcd['Year of completion'])
-                    const pcStatus = firstString(pcd['Статус'])
-                    const pcUnits = numberOrNull(pcd['Total quantity of units'])
+                    const pcDistrict = parentComplex.district ?? parentComplex.district_alt
+                    const pcTypesRaw = Array.isArray(parentComplex.types) ? (parentComplex.types as unknown[]).map(String) : []
+                    const pcYearRaw = parentComplex.year_trail ?? parentComplex.year
+                    const pcStatus = parentComplex.status
+                    const pcUnits = parentComplex.units
                     const hasMeta = pcDistrict || pcTypesRaw.length || pcYearRaw || pcUnits != null
                     return hasMeta ? (
                       <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-[13px] text-[var(--color-text-muted)] mb-4">

@@ -228,19 +228,30 @@ function firstString(v: unknown): string | null {
 // developer list churns slowly.
 type DeveloperLink = { name: string; slug: string; logoUrl: string | null }
 
+type DeveloperSlimRow = {
+  airtable_id: string
+  logo_url: string | null
+  published: boolean | null
+  name: string | null
+  slug: string | null
+}
 const _loadDevelopersIndex = unstable_cache(
   async (): Promise<DeveloperLink[]> => {
-    const { data, error } = await sb.from('raw_developers').select('airtable_id, data, logo_url').limit(200)
+    // JSON-projection вместо `data` целиком: -98% egress на этом индексе.
+    const { data, error } = await sb.from('raw_developers').select(`
+      airtable_id, logo_url,
+      published:data->"Публикация",
+      name:data->Developer,
+      slug:data->"SEO:Slug"
+    `).limit(200)
     if (error) throw new Error(`raw_developers: ${error.message}`)
-    const rows = (data ?? []) as { airtable_id: string; data: Record<string, unknown>; logo_url: string | null }[]
+    const rows = (data ?? []) as DeveloperSlimRow[]
     if (rows.length === 0) throw new Error('raw_developers returned 0 rows — refusing to cache empty')
     const out: DeveloperLink[] = []
     for (const r of rows) {
-      if (r.data['Публикация'] !== true) continue
-      const name = firstString(r.data['Developer'])
-      const slug = firstString(r.data['SEO:Slug'])
-      if (!name || !slug) continue
-      out.push({ name, slug, logoUrl: r.logo_url })
+      if (r.published !== true) continue
+      if (!r.name || !r.slug) continue
+      out.push({ name: r.name, slug: r.slug, logoUrl: r.logo_url })
     }
     return out
   },
@@ -360,32 +371,48 @@ const _loadComplexPhotos = unstable_cache(
   { revalidate: 3600 },
 )
 
-// Module-level cache (unstable_cache silently fails on 14MB+ apartments data)
-type AptRow = { airtable_id: string; data: Record<string, unknown> }
-let _aptCache: { ts: number; rows: AptRow[]; manifest: Record<string, string[]> } | null = null
-let _aptInflight: Promise<{ rows: AptRow[]; manifest: Record<string, string[]> }> | null = null
-
-async function _loadApartments(): Promise<{ rows: AptRow[]; manifest: Record<string, string[]> }> {
-  if (_aptCache && Date.now() - _aptCache.ts < 5 * 60 * 1000) return { rows: _aptCache.rows, manifest: _aptCache.manifest }
-  if (_aptInflight) return _aptInflight
-  _aptInflight = (async () => {
-    try {
-      // Paginated fetch to avoid Postgres statement timeout
-      const rows: AptRow[] = []
-      for (let from = 0; from < 1500; from += 100) {
-        const { data, error } = await sb.from('raw_apartments').select('airtable_id, data').range(from, from + 99)
-        if (error || !data || data.length === 0) break
-        rows.push(...(data as AptRow[]))
-        if (data.length < 100) break
-      }
-      const manifest = await fetch(APT_PHOTO_MANIFEST_URL).then(r => r.ok ? r.json() : {}).catch(() => ({})) as Record<string, string[]>
-      _aptCache = { ts: Date.now(), rows, manifest }
-      return { rows, manifest }
-    } catch {
-      return _aptCache ? { rows: _aptCache.rows, manifest: _aptCache.manifest } : { rows: [], manifest: {} }
-    }
-  })().finally(() => { _aptInflight = null })
-  return _aptInflight
+// Slim-проекция + DB-фильтр по подстроке в SEO:Title.
+// Раньше тянули всё (708 строк ~33МБ) и фильтровали в JS по includes()
+// — это был один из главных каналов egress. Теперь только те юниты,
+// чей SEO:Title содержит имя комплекса (1-30 строк, ~10-50КБ).
+type AptRow = {
+  airtable_id: string
+  title: string | null
+  slug: string | null
+  published: boolean | null
+  price_usd: number | null
+  price_rub: number | null
+  bedrooms: number | null
+  area: number | null
+  floor: string | null
+  opt_photos: unknown
+  image_opt: unknown
+}
+const _aptManifestCache: { ts: number; manifest: Record<string, string[]> } = { ts: 0, manifest: {} }
+async function _loadAptManifest(): Promise<Record<string, string[]>> {
+  if (Date.now() - _aptManifestCache.ts < 30 * 60 * 1000) return _aptManifestCache.manifest
+  const m = await fetch(APT_PHOTO_MANIFEST_URL).then(r => r.ok ? r.json() : {}).catch(() => ({})) as Record<string, string[]>
+  _aptManifestCache.ts = Date.now()
+  _aptManifestCache.manifest = m
+  return m
+}
+async function _loadApartmentsForComplex(complexName: string): Promise<{ rows: AptRow[]; manifest: Record<string, string[]> }> {
+  const manifest = await _loadAptManifest()
+  const { data, error } = await sb.from('raw_apartments').select(`
+    airtable_id,
+    title:data->"SEO:Title",
+    slug:data->"SEO:Slug",
+    published:data->"Опубликовать",
+    price_usd:data->price_usd,
+    price_rub:data->"Цена",
+    bedrooms:data->"Комнаты",
+    area:data->"Площадь",
+    floor:data->"Этаж",
+    opt_photos:data->"Opt photos",
+    image_opt:data->"Image Opt"
+  `).ilike(`data->>"SEO:Title"`, `%${complexName.replace(/[%_]/g, '\\$&')}%`).limit(200)
+  if (error || !data) return { rows: [], manifest }
+  return { rows: data as AptRow[], manifest }
 }
 
 async function loadComplexBySlug(slug: string): Promise<ComplexRow | null> {
@@ -415,32 +442,53 @@ async function loadOtherComplexesInDistrict(district: string | null, exceptId: s
     .filter(c => c.slug && c.name)
 }
 
-// Villas live in raw_villas. Some complexes (like Maison Boheme) have villa
-// units, not apartment units. Load them with the same paginated pattern.
-type VillaRow = { airtable_id: string; data: Record<string, unknown> }
-let _villaCache: { ts: number; rows: VillaRow[]; manifest: Record<string, string[]> } | null = null
-let _villaInflight: Promise<{ rows: VillaRow[]; manifest: Record<string, string[]> }> | null = null
-
-async function _loadVillas(): Promise<{ rows: VillaRow[]; manifest: Record<string, string[]> }> {
-  if (_villaCache && Date.now() - _villaCache.ts < 5 * 60 * 1000) return { rows: _villaCache.rows, manifest: _villaCache.manifest }
-  if (_villaInflight) return _villaInflight
-  _villaInflight = (async () => {
-    try {
-      const rows: VillaRow[] = []
-      for (let from = 0; from < 1500; from += 100) {
-        const { data, error } = await sb.from('raw_villas').select('airtable_id, data').range(from, from + 99)
-        if (error || !data || data.length === 0) break
-        rows.push(...(data as VillaRow[]))
-        if (data.length < 100) break
-      }
-      const manifest = await fetch(VILLA_PHOTO_MANIFEST_URL).then(r => r.ok ? r.json() : {}).catch(() => ({})) as Record<string, string[]>
-      _villaCache = { ts: Date.now(), rows, manifest }
-      return { rows, manifest }
-    } catch {
-      return _villaCache ? { rows: _villaCache.rows, manifest: _villaCache.manifest } : { rows: [], manifest: {} }
-    }
-  })().finally(() => { _villaInflight = null })
-  return _villaInflight
+// Villas — тот же подход, что и для apartments выше: DB-фильтр по
+// SEO:Title + slim projection. Maison Boheme и подобные комплексы
+// держат юниты в raw_villas — это нужно догрузить рядом.
+type VillaRow = {
+  airtable_id: string
+  title: string | null
+  slug: string | null
+  published: boolean | null
+  price_usd: number | null
+  price_rub: number | null
+  bedrooms: string | null
+  area: number | null
+  land: number | null
+  district: string | null
+  district_alt: string | null
+  status: string | null
+  opt_photos: unknown
+  image_opt: unknown
+}
+const _villaManifestCache: { ts: number; manifest: Record<string, string[]> } = { ts: 0, manifest: {} }
+async function _loadVillaManifest(): Promise<Record<string, string[]>> {
+  if (Date.now() - _villaManifestCache.ts < 30 * 60 * 1000) return _villaManifestCache.manifest
+  const m = await fetch(VILLA_PHOTO_MANIFEST_URL).then(r => r.ok ? r.json() : {}).catch(() => ({})) as Record<string, string[]>
+  _villaManifestCache.ts = Date.now()
+  _villaManifestCache.manifest = m
+  return m
+}
+async function _loadVillasForComplex(complexName: string): Promise<{ rows: VillaRow[]; manifest: Record<string, string[]> }> {
+  const manifest = await _loadVillaManifest()
+  const { data, error } = await sb.from('raw_villas').select(`
+    airtable_id,
+    title:data->"SEO:Title",
+    slug:data->"SEO:Slug",
+    published:data->"Опубликовать",
+    price_usd:data->price,
+    price_rub:data->"Цена",
+    bedrooms:data->"Комнаты",
+    area:data->"Площадь",
+    land:data->"Земля",
+    district:data->"Location 2",
+    district_alt:data->Location,
+    status:data->"Статус",
+    opt_photos:data->"Opt photos",
+    image_opt:data->"Image Opt"
+  `).ilike(`data->>"SEO:Title"`, `%${complexName.replace(/[%_]/g, '\\$&')}%`).limit(200)
+  if (error || !data) return { rows: [], manifest }
+  return { rows: data as VillaRow[], manifest }
 }
 
 type ApartmentUnit = ApartmentCardData & { id: string; kind: 'apartment' }
@@ -448,31 +496,30 @@ type VillaUnit = VillaCardData & { id: string; kind: 'villa' }
 type Unit = ApartmentUnit | VillaUnit
 
 async function loadUnitsInComplex(complexName: string): Promise<Unit[]> {
-  const lower = complexName.toLowerCase()
-  if (lower.length < 3) return []
-  const [apt, vil] = await Promise.all([_loadApartments(), _loadVillas()])
+  if (complexName.length < 3) return []
+  const [apt, vil] = await Promise.all([
+    _loadApartmentsForComplex(complexName),
+    _loadVillasForComplex(complexName),
+  ])
 
   const units: Unit[] = []
   const seenSlug = new Set<string>()
 
   for (const r of apt.rows) {
-    if (r.data['Опубликовать'] !== true) continue
-    const titleRaw = firstString(r.data['SEO:Title'])
-    if (!titleRaw || !titleRaw.toLowerCase().includes(lower)) continue
-    const slug = firstString(r.data['SEO:Slug'])
-    if (!slug || slug.startsWith('-')) continue
-    if (seenSlug.has('a:' + slug)) continue
-    seenSlug.add('a:' + slug)
-    const title = titleRaw.replace(/\s*\|\s*Balinsky\s*$/i, '').trim()
+    if (r.published !== true) continue
+    if (!r.title || !r.slug || r.slug.startsWith('-')) continue
+    if (seenSlug.has('a:' + r.slug)) continue
+    seenSlug.add('a:' + r.slug)
+    const title = r.title.replace(/\s*\|\s*Balinsky\s*$/i, '').trim()
     units.push({
       kind: 'apartment',
       id: r.airtable_id,
-      slug,
+      slug: r.slug,
       title,
-      priceUsd: numberOrNull(r.data['price_usd'] ?? r.data['Цена']),
-      bedrooms: numberOrNull(r.data['Комнаты']),
-      area: numberOrNull(r.data['Площадь']),
-      floor: firstString(r.data['Этаж']),
+      priceUsd: r.price_usd ?? r.price_rub,
+      bedrooms: r.bedrooms,
+      area: r.area,
+      floor: r.floor,
       photos: apt.manifest[r.airtable_id] ?? [],
     })
   }
@@ -481,25 +528,22 @@ async function loadUnitsInComplex(complexName: string): Promise<Unit[]> {
   // the same project are meaningful — show each unit).
   const seenVillaId = new Set<string>()
   for (const r of vil.rows) {
-    if (r.data['Опубликовать'] !== true) continue
-    const titleRaw = firstString(r.data['SEO:Title'])
-    if (!titleRaw || !titleRaw.toLowerCase().includes(lower)) continue
-    const slug = firstString(r.data['SEO:Slug'])
-    if (!slug || slug.startsWith('-')) continue
+    if (r.published !== true) continue
+    if (!r.title || !r.slug || r.slug.startsWith('-')) continue
     if (seenVillaId.has(r.airtable_id)) continue
     seenVillaId.add(r.airtable_id)
-    const title = titleRaw.replace(/\s*\|\s*Balinsky\s*$/i, '').trim()
+    const title = r.title.replace(/\s*\|\s*Balinsky\s*$/i, '').trim()
     units.push({
       kind: 'villa',
       id: r.airtable_id,
-      slug,
+      slug: r.slug,
       title,
-      priceUsd: numberOrNull(r.data['price']) ?? numberOrNull(r.data['Цена']),
-      bedrooms: numberOrNull(firstString(r.data['Комнаты'])),
-      area: numberOrNull(r.data['Площадь']),
-      land: numberOrNull(r.data['Земля']),
-      district: firstString(r.data['Location 2']) ?? firstString(r.data['Location']),
-      status: firstString(r.data['Статус']),
+      priceUsd: r.price_usd ?? r.price_rub,
+      bedrooms: numberOrNull(r.bedrooms),
+      area: r.area,
+      land: r.land,
+      district: r.district ?? r.district_alt,
+      status: r.status,
       photos: vil.manifest[r.airtable_id] ?? [],
     })
   }
@@ -659,10 +703,13 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
     }
     return null
   }
-  // Module-cached loaders return instantly the second time, so this
-  // adds no real cost. We need them to read `Image Opt` which isn't
-  // carried through the units[] array.
-  const [aptForOpt, vilForOpt] = await Promise.all([_loadApartments(), _loadVillas()])
+  // Per-complex slim fetch (same DB-filter + projection как
+  // loadUnitsInComplex). Нужно для попап-фото на карте: Opt photos /
+  // Image Opt не пробрасываются через units[].
+  const [aptForOpt, vilForOpt] = await Promise.all([
+    _loadApartmentsForComplex(name),
+    _loadVillasForComplex(name),
+  ])
   const aptRowsById = new Map(aptForOpt.rows.map(r => [r.airtable_id, r]))
   const vilRowsById = new Map(vilForOpt.rows.map(r => [r.airtable_id, r]))
 
@@ -682,7 +729,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
     // master, not a thumbnail. Manifest is the bucket-cached
     // fallback when neither attachment field is filled.
     const optUrl = row
-      ? (attachmentUrl(row.data['Opt photos']) ?? attachmentUrl(row.data['Image Opt']))
+      ? (attachmentUrl(row.opt_photos) ?? attachmentUrl(row.image_opt))
       : null
     unitInfoBySlug[u.slug] = {
       kind: u.kind,

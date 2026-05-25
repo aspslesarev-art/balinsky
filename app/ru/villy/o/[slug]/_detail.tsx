@@ -290,34 +290,57 @@ type ComplexLite = {
 // Defensive: throw on PG error or empty result so the cache slot
 // never gets poisoned with [] for the next hour. Bumped key v2 to
 // drop the existing slot at deploy.
+// JSON-projection: вместо `data` целиком (~75кб/строка) тянем только
+// нужные поля (~250б/строка → -99% egress). Поля с пробелами и
+// кириллицей оборачиваем в "..." — PostgREST это понимает.
+type ComplexSlimRow = {
+  airtable_id: string
+  slug: string | null
+  cover_url: string | null
+  name: string | null
+  district_alt: string | null
+  district: string | null
+  types: unknown
+  year: string | null
+  year_trail: string | null
+  units: number | null
+  status: string | null
+}
 const _loadComplexesIndex = unstable_cache(
   async (): Promise<ComplexLite[]> => {
-    const { data, error } = await sb.from('raw_complexes').select('airtable_id, data, slug, cover_url').limit(500)
+    const { data, error } = await sb.from('raw_complexes').select(`
+      airtable_id, slug, cover_url,
+      name:data->Project,
+      district_alt:data->Location,
+      district:data->"Location 2",
+      types:data->"Типы юнитов",
+      year:data->"Year of completion",
+      year_trail:data->"Year of completion ",
+      units:data->"Total quantity of units",
+      status:data->"Статус"
+    `).limit(500)
     if (error) throw new Error(`raw_complexes: ${error.message}`)
-    const rows = (data ?? []) as { airtable_id: string; data: Record<string, unknown>; slug: string | null; cover_url: string | null }[]
+    const rows = (data ?? []) as ComplexSlimRow[]
     if (rows.length === 0) throw new Error('raw_complexes returned 0 rows — refusing to cache empty')
     const out: ComplexLite[] = []
     for (const c of rows) {
-      const name = firstString(c.data['Project'])
-      if (!name || !c.slug) continue
-      const types = Array.isArray(c.data['Типы юнитов'])
-        ? (c.data['Типы юнитов'] as unknown[]).map(x => String(x))
-        : []
+      if (!c.name || !c.slug) continue
+      const types = Array.isArray(c.types) ? (c.types as unknown[]).map(x => String(x)) : []
       out.push({
         id: c.airtable_id,
         slug: c.slug,
-        name,
-        district: firstString(c.data['Location 2']) ?? firstString(c.data['Location']),
+        name: c.name,
+        district: c.district ?? c.district_alt,
         types,
-        year: firstString(c.data['Year of completion ']) ?? firstString(c.data['Year of completion']),
-        units: numberOrNull(c.data['Total quantity of units']),
-        status: firstString(c.data['Статус']),
+        year: c.year_trail ?? c.year,
+        units: c.units,
+        status: c.status,
         coverUrl: c.cover_url,
       })
     }
     return out
   },
-  ['villy-complex-index-v2'],
+  ['villy-complex-index-v3'],
   { revalidate: 600 },
 )
 
@@ -341,30 +364,43 @@ type DeveloperLite = {
   highlights: string[]
 }
 
+type DeveloperSlimRow = {
+  airtable_id: string
+  logo_url: string | null
+  published: boolean | null
+  name: string | null
+  slug: string | null
+  reputation: string | null
+  construction: string | null
+}
 const _loadDevelopersIndex = unstable_cache(
   async (): Promise<DeveloperLite[]> => {
-    const { data, error } = await sb.from('raw_developers').select('airtable_id, data, logo_url').limit(200)
+    const { data, error } = await sb.from('raw_developers').select(`
+      airtable_id, logo_url,
+      published:data->"Публикация",
+      name:data->Developer,
+      slug:data->"SEO:Slug",
+      reputation:data->"Репутация и опыт",
+      construction:data->"Строительство и недвижимость"
+    `).limit(200)
     if (error) throw new Error(`raw_developers: ${error.message}`)
-    const rows = (data ?? []) as { airtable_id: string; data: Record<string, unknown>; logo_url: string | null }[]
+    const rows = (data ?? []) as DeveloperSlimRow[]
     if (rows.length === 0) throw new Error('raw_developers returned 0 rows — refusing to cache empty')
     const out: DeveloperLite[] = []
     for (const r of rows) {
-      if (r.data['Публикация'] !== true) continue
-      const name = firstString(r.data['Developer'])
-      const slug = firstString(r.data['SEO:Slug'])
-      if (!name || !slug) continue
-      // first 2 bullets from "Репутация и опыт" or "Строительство и недвижимость" as quick highlights
-      const sourceText = firstString(r.data['Репутация и опыт']) ?? firstString(r.data['Строительство и недвижимость']) ?? ''
+      if (r.published !== true) continue
+      if (!r.name || !r.slug) continue
+      const sourceText = r.reputation ?? r.construction ?? ''
       const highlights = sourceText
         .split('\n')
         .map(l => l.replace(/^[\s•\-–—·]+/, '').trim())
         .filter(Boolean)
         .slice(0, 3)
-      out.push({ slug, name, logoUrl: r.logo_url, highlights })
+      out.push({ slug: r.slug, name: r.name, logoUrl: r.logo_url, highlights })
     }
     return out
   },
-  ['villy-developers-index-v2'],
+  ['villy-developers-index-v3'],
   { revalidate: 600 },
 )
 
