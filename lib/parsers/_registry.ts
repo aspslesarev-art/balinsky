@@ -8,6 +8,7 @@
 import type { ParserResult } from './_shared'
 import { runOriginsParser } from './origins'
 import { runSunsetVillageParser } from './sunset-village'
+import { runUbudDreamParser } from './ubud-dream'
 
 export type ParserRunner = (opts: {
   complexId: string
@@ -33,6 +34,11 @@ export const PARSERS: Record<string, ParserModule> = {
     key: 'sunset_village',
     label: 'BALI BAZA Sunset Village (resale)',
     run: runSunsetVillageParser,
+  },
+  recOR5CZuEd8x1Ddv: {
+    key: 'ubud_dream',
+    label: 'Ubud Dream (LB Group, xlsx + colour-coded)',
+    run: runUbudDreamParser,
   },
 }
 

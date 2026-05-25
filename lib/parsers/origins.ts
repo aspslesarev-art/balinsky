@@ -69,7 +69,7 @@ export async function runOriginsParser(opts: {
     const land = num(r[COL.LAND]); if (land != null) fields['Площадь земли'] = land
     if (BALI_BAZA_STATUS[status]) fields['Статус'] = BALI_BAZA_STATUS[status]
 
-    units.push({ name: sec, fields })
+    units.push({ section: sec, fields })
     matchKeys.set(sec, {
       villaSize: villaSize,
       bedrooms: Number.isFinite(bd) ? bd : null,
@@ -77,14 +77,10 @@ export async function runOriginsParser(opts: {
   }
 
   const existing = await fetchExistingUnits(opts.airtableToken)
-  const byName = new Map<string, string>()
-  for (const e of existing) {
-    const n = e.fields['Name']
-    if (typeof n === 'string') byName.set(n, e.id)
-  }
-  const unitsCount = await pushUnits(units, byName, opts.airtableToken)
+  const unitsCount = await pushUnits(units, existing, 'origins', opts.airtableToken)
   const linked = await autoLinkUnits({
     complexId: opts.complexId,
+    parserKey: 'origins',
     airtableToken: opts.airtableToken,
     units: matchKeys,
     warnings,

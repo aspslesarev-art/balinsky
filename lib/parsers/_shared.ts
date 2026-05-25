@@ -24,9 +24,12 @@ export const BALI_BAZA_STATUS: Record<string, string> = {
 
 export type ParserResult = { unitsCount: number; warnings: string[]; linked: number }
 
-// Что парсер хочет сказать про юнит: его уникальное имя (= ключ
-// дедупликации в Юнитах Виллы) и набор Airtable-полей.
-export type UnitInput = { name: string; fields: Record<string, unknown> }
+// Что парсер хочет сказать про юнит: section-id (для дедупа) и
+// набор Airtable-полей. Дедуп идёт по полю «Парсер ключ» =
+// `${parserKey}:${section}` — Name может коллидировать между
+// комплексами (Origins "1" и Ubud Dream "1" — разные юниты),
+// «Парсер ключ» уникален.
+export type UnitInput = { section: string; fields: Record<string, unknown> }
 
 // Минимум, который автолинковка должна знать про юнит чтобы сматчить
 // его с планировкой в Виллах. Парсер передаёт это отдельно от fields
@@ -92,20 +95,39 @@ export async function fetchExistingUnits(token: string): Promise<Array<{ id: str
   return ((await r.json()).records ?? []) as Array<{ id: string; fields: Record<string, unknown> }>
 }
 
-// Пишет юниты в Юниты Виллы: существующие (по Name) PATCH'аются, новые
-// POST'ятся. Возвращает количество затронутых записей. Любой Airtable
-// 4xx пробрасывает как throw — caller сам решит как записать в recordRun.
+// Пишет юниты в Юниты Виллы. Дедуп идёт по полю «Парсер ключ»
+// (`<parser_key>:<section>`) — Name может коллидировать между
+// комплексами (Origins "1" и Ubud Dream "1" — разные юниты), а
+// «Парсер ключ» уникален в пределах parser_key.
+//
+// parserKey — стабильный ключ парсера (из реестра, например 'origins').
+// Парсер передаёт `section` (номер юнита в его источнике), мы
+// формируем «Парсер ключ» = `${parserKey}:${section}` и кладём его в
+// fields автоматически.
+//
+// Любой Airtable 4xx пробрасывается как throw — caller решит как
+// записать в recordRun.
 export async function pushUnits(
   units: UnitInput[],
-  existingByName: Map<string, string>,
+  existing: Array<{ id: string; fields: Record<string, unknown> }>,
+  parserKey: string,
   token: string,
 ): Promise<number> {
+  const byParserKey = new Map<string, string>()
+  for (const e of existing) {
+    const k = e.fields['Парсер ключ']
+    if (typeof k === 'string') byParserKey.set(k, e.id)
+  }
   const toUpdate: Array<{ id: string; fields: Record<string, unknown> }> = []
   const toCreate: Array<{ fields: Record<string, unknown> }> = []
   for (const u of units) {
-    const existingId = existingByName.get(u.name)
-    if (existingId) toUpdate.push({ id: existingId, fields: u.fields })
-    else toCreate.push({ fields: u.fields })
+    const fullKey = `${parserKey}:${u.section}`
+    // Стэмпим «Парсер ключ» — без него Airtable PATCH не поставит новые
+    // юниты в эту таксономию, и следующий прогон создаст дубль.
+    const fields = { ...u.fields, 'Парсер ключ': fullKey }
+    const existingId = byParserKey.get(fullKey)
+    if (existingId) toUpdate.push({ id: existingId, fields })
+    else toCreate.push({ fields })
   }
   const push = async (records: Array<{ id?: string; fields: Record<string, unknown> }>, method: 'POST' | 'PATCH') => {
     let done = 0
@@ -145,8 +167,9 @@ export async function pushUnits(
 //   ключом) — пропускаем и кидаем в warnings.
 export async function autoLinkUnits(opts: {
   complexId: string
+  parserKey: string                   // 'origins' / 'ubud_dream' / ...
   airtableToken: string
-  units: Map<string, UnitMatchKey>  // section name → (size, bd)
+  units: Map<string, UnitMatchKey>    // section → (size, bd)
   warnings: string[]
 }): Promise<number> {
   const c = sb()
@@ -191,16 +214,21 @@ export async function autoLinkUnits(opts: {
     opts.warnings.push(`autolink: повторный fetch юнитов ${after.status}`)
     return 0
   }
-  const byNameRecord = new Map<string, { id: string; fields: Record<string, unknown> }>()
+  // Юнит ищется по «Парсер ключ» = `${parserKey}:${section}` — Name
+  // может коллидировать между комплексами, parser-key уникален.
+  const bySection = new Map<string, { id: string; fields: Record<string, unknown> }>()
   for (const e of ((await after.json()).records ?? []) as Array<{ id: string; fields: Record<string, unknown> }>) {
-    const n = e.fields['Name']
-    if (typeof n === 'string') byNameRecord.set(n, e)
+    const k = e.fields['Парсер ключ']
+    if (typeof k !== 'string') continue
+    const [pk, sec] = k.split(':')
+    if (pk !== opts.parserKey || !sec) continue
+    bySection.set(sec, e)
   }
 
   const toPatch: Array<{ id: string; fields: Record<string, unknown> }> = []
   let skippedAmbiguous = 0, skippedNoMatch = 0
   for (const [sec, key] of opts.units) {
-    const unit = byNameRecord.get(sec)
+    const unit = bySection.get(sec)
     if (!unit) continue
     const existingLink = unit.fields['Виллы']
     if (Array.isArray(existingLink) && existingLink.length > 0) continue

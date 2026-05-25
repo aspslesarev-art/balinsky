@@ -65,7 +65,7 @@ export async function runSunsetVillageParser(opts: {
     if (land != null) fields['Площадь земли'] = land
     if (BALI_BAZA_STATUS[status]) fields['Статус'] = BALI_BAZA_STATUS[status]
 
-    units.push({ name: sec, fields })
+    units.push({ section: sec, fields })
     matchKeys.set(sec, {
       villaSize,
       bedrooms: Number.isFinite(bd) ? bd : null,
@@ -73,14 +73,10 @@ export async function runSunsetVillageParser(opts: {
   }
 
   const existing = await fetchExistingUnits(opts.airtableToken)
-  const byName = new Map<string, string>()
-  for (const e of existing) {
-    const n = e.fields['Name']
-    if (typeof n === 'string') byName.set(n, e.id)
-  }
-  const unitsCount = await pushUnits(units, byName, opts.airtableToken)
+  const unitsCount = await pushUnits(units, existing, 'sunset_village', opts.airtableToken)
   const linked = await autoLinkUnits({
     complexId: opts.complexId,
+    parserKey: 'sunset_village',
     airtableToken: opts.airtableToken,
     units: matchKeys,
     warnings,
