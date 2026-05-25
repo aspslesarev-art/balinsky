@@ -518,8 +518,11 @@ export function toCard(
 
 // Module-level cache — same reason as villas/_lib.ts (unstable_cache hits
 // the 2MB per-item limit and silently fails).
+// 10 мин (раньше 60с) — 10x reduction в egress на raw_apartments.
+// Module cache, Vercel function lifetime ~15 мин = ~1 fetch на инстанс.
+// Свежесть после Airtable изменения — до 10 мин (приемлемо для прайса).
 type CachedAll = { enriched: EnrichedRow[]; manifest: Record<string, string[]> }
-const TTL_MS = 60_000
+const TTL_MS = 600_000
 let _cache: { ts: number; data: CachedAll } | null = null
 let _inflight: Promise<CachedAll> | null = null
 

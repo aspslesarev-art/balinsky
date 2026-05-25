@@ -9,6 +9,11 @@ import { createClient } from '@supabase/supabase-js'
 // to avoid SEO duplication on the partner site.
 
 
+// ISR-кэш самого route output: 10 минут. Раньше каждый GET перегенерил
+// XML с нуля, дёргая все 3 raw-таблицы — теперь Next отдаёт закэшированный
+// результат, до Supabase запрос идёт максимум раз в 10 мин.
+export const revalidate = 600
+
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/complex-photos/_manifest.json`
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
@@ -211,23 +216,38 @@ type ComplexRow = {
 
 type UnitPrice = { titleLower: string; price: number }
 
+// Slim-проекция: только то что нужно для price-index (title + цена +
+// published). Раньше тянули `data` целиком (~70 МБ на оба запроса),
+// теперь — ~300 КБ.
+type SlimPriceRow = {
+  title: string | null
+  published: boolean | null
+  price: number | null
+  price_usd: number | null
+  price_rub: number | null
+}
 async function loadUnitPrices(): Promise<UnitPrice[]> {
   const out: UnitPrice[] = []
+  const fields = `
+    title:data->"SEO:Title",
+    published:data->"Опубликовать",
+    price:data->price,
+    price_usd:data->price_usd,
+    price_rub:data->"Цена"
+  `
   const [{ data: apts }, { data: villas }] = await Promise.all([
-    sb.from('raw_apartments').select('data').limit(1000),
-    sb.from('raw_villas').select('data').limit(1000),
+    sb.from('raw_apartments').select(fields).limit(1000),
+    sb.from('raw_villas').select(fields).limit(1000),
   ])
-  for (const r of (apts ?? []) as { data: Record<string, unknown> }[]) {
-    if (r.data?.['Опубликовать'] !== true) continue
-    const title = firstString(r.data['SEO:Title'])
-    const price = numberOrNull(r.data['price_usd'] ?? r.data['Цена'])
-    if (title && price && price > 1000) out.push({ titleLower: title.toLowerCase(), price })
+  for (const r of (apts ?? []) as SlimPriceRow[]) {
+    if (r.published !== true) continue
+    const price = r.price_usd ?? r.price_rub
+    if (r.title && price && price > 1000) out.push({ titleLower: r.title.toLowerCase(), price })
   }
-  for (const r of (villas ?? []) as { data: Record<string, unknown> }[]) {
-    if (r.data?.['Опубликовать'] !== true) continue
-    const title = firstString(r.data['SEO:Title'])
-    const price = numberOrNull(r.data['price'] ?? r.data['Цена'])
-    if (title && price && price > 1000) out.push({ titleLower: title.toLowerCase(), price })
+  for (const r of (villas ?? []) as SlimPriceRow[]) {
+    if (r.published !== true) continue
+    const price = r.price ?? r.price_rub
+    if (r.title && price && price > 1000) out.push({ titleLower: r.title.toLowerCase(), price })
   }
   return out
 }

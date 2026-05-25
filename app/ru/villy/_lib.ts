@@ -566,8 +566,15 @@ export function toCard(
 
 // Module-level cache. unstable_cache can't hold villa data — exceeds the 2MB
 // per-cache-item limit and silently fails (catalog renders empty).
+// TTL: 10 минут. Раньше было 60с, что приводило к перерасходу Supabase
+// egress (~36МБ raw_villas × ~каждую минуту на каждом warm instance).
+// Vercel function instance живёт ~15 мин, так что 10 мин ≈ ~1 fetch
+// за всё время жизни процесса. Свежесть данных гарантирует Airtable
+// webhook — он зовёт revalidatePath для каталогов, но module-cache он
+// не очищает, поэтому до 10 мин юзер видит stale цены/статусы. Для
+// прайса вилл это приемлемо.
 type CachedAll = { enriched: EnrichedRow[]; manifest: Record<string, string[]> }
-const TTL_MS = 60_000
+const TTL_MS = 600_000
 let _cache: { ts: number; data: CachedAll } | null = null
 let _inflight: Promise<CachedAll> | null = null
 

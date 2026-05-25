@@ -458,7 +458,11 @@ type CachedAll = {
   manifest: Record<string, string[]>
   prices: Map<string, ComplexPrices>
 }
-const TTL_MS = 60_000
+// 10 мин (раньше 60с) — 10x reduction. Module cache живёт ~15 мин на
+// инстанс Vercel, поэтому 10 мин ≈ один fetch за процесс. Свежесть
+// гарантирует Airtable webhook через revalidatePath (для ISR-страниц);
+// для самого module-cache актуальность догоняет за TTL.
+const TTL_MS = 600_000
 let _cache: { ts: number; data: CachedAll } | null = null
 let _inflight: Promise<CachedAll> | null = null
 
@@ -474,9 +478,32 @@ function priceOf(d: Record<string, unknown>): number | null {
   return null
 }
 
+// Slim-форма того что buildPriceIndex реально использует от raw_villas /
+// raw_apartments: только title + цена. Раньше тащили `data` целиком
+// (36+33 МБ за загрузку каталога), теперь — несколько килобайт.
+type PriceRow = {
+  title: string | null
+  ai_name: string | null
+  name: string | null
+  price: number | null
+  price_usd: number | null
+  price_rub: number | null
+}
+function priceOfRow(r: PriceRow): number | null {
+  const candidates = [r.price_usd, r.price, r.price_rub]
+  for (const v of candidates) {
+    if (typeof v === 'number' && Number.isFinite(v) && v > 0) return v
+    if (typeof v === 'string') {
+      const n = Number((v as string).replace(/\s/g, ''))
+      if (Number.isFinite(n) && n > 0) return n
+    }
+  }
+  return null
+}
+
 // Match villa/apartment titles to complexes by longest-substring match on
 // the complex's Project name. Same heuristic the detail pages use.
-function buildPriceIndex(complexes: EnrichedRow[], villas: { data: Record<string, unknown> }[], apts: { data: Record<string, unknown> }[]): Map<string, ComplexPrices> {
+function buildPriceIndex(complexes: EnrichedRow[], villas: PriceRow[], apts: PriceRow[]): Map<string, ComplexPrices> {
   const projects: { id: string; lower: string; len: number }[] = []
   for (const c of complexes) {
     const name = c.name?.toLowerCase()
@@ -495,17 +522,17 @@ function buildPriceIndex(complexes: EnrichedRow[], villas: { data: Record<string
   }
 
   for (const v of villas) {
-    const price = priceOf(v.data)
+    const price = priceOfRow(v)
     if (price == null) continue
-    const title = (firstString(v.data['SEO:Title']) ?? firstString(v.data['ИИ Имя']) ?? firstString(v.data['Name']) ?? '').toLowerCase()
+    const title = (v.title ?? v.ai_name ?? v.name ?? '').toLowerCase()
     if (!title) continue
     const match = projects.find(p => title.includes(p.lower))
     if (match) tally(match.id, 'villas', price)
   }
   for (const a of apts) {
-    const price = priceOf(a.data)
+    const price = priceOfRow(a)
     if (price == null) continue
-    const title = (firstString(a.data['SEO:Title']) ?? firstString(a.data['ИИ Имя']) ?? firstString(a.data['Name']) ?? '').toLowerCase()
+    const title = (a.title ?? a.ai_name ?? a.name ?? '').toLowerCase()
     if (!title) continue
     const match = projects.find(p => title.includes(p.lower))
     if (match) tally(match.id, 'apartments', price)
@@ -526,11 +553,22 @@ function buildPriceIndex(complexes: EnrichedRow[], villas: { data: Record<string
 }
 
 async function _loadAllInternal(): Promise<CachedAll> {
+  // Slim-проекция для buildPriceIndex: вместо `data` целиком (~70 МБ
+  // на оба запроса вместе) тянем 6 полей × 1100 строк ≈ ~300 КБ.
+  // raw_complexes пока не слимим — enrich использует ~25 полей.
+  const slimPriceFields = `
+    title:data->"SEO:Title",
+    ai_name:data->"ИИ Имя",
+    name:data->Name,
+    price:data->price,
+    price_usd:data->price_usd,
+    price_rub:data->"Цена"
+  `
   const [rowsRes, manifest, villasRes, aptsRes, enCache] = await Promise.all([
     sb.from('raw_complexes').select('airtable_id, data, slug, cover_url').limit(500),
     loadJson<Record<string, string[]>>(PHOTO_MANIFEST_URL, {}),
-    sb.from('raw_villas').select('data').limit(3000),
-    sb.from('raw_apartments').select('data').limit(3000),
+    sb.from('raw_villas').select(slimPriceFields).limit(3000),
+    sb.from('raw_apartments').select(slimPriceFields).limit(3000),
     loadEnTranslations('complexes'),
   ])
   const enriched = ((rowsRes.data ?? []) as Row[])
@@ -538,8 +576,8 @@ async function _loadAllInternal(): Promise<CachedAll> {
     .map(enrich)
   const prices = buildPriceIndex(
     enriched,
-    (villasRes.data ?? []) as { data: Record<string, unknown> }[],
-    (aptsRes.data ?? []) as { data: Record<string, unknown> }[],
+    (villasRes.data ?? []) as PriceRow[],
+    (aptsRes.data ?? []) as PriceRow[],
   )
   return { enriched, manifest, prices }
 }

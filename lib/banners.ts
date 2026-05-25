@@ -101,21 +101,11 @@ export async function loadEligibleBanners(): Promise<Banner[]> {
     return true
   })
   if (active.length === 0) return []
-  // Cross-check the live disabled flags from ad_banner_stats.
-  try {
-    const { data } = await sb
-      .from('ad_banner_stats')
-      .select('banner_id, auto_disabled')
-      .in('banner_id', active.map(b => b.id))
-    const disabled = new Set(
-      ((data ?? []) as { banner_id: string; auto_disabled: boolean }[])
-        .filter(r => r.auto_disabled)
-        .map(r => r.banner_id),
-    )
-    return active.filter(b => !disabled.has(b.id))
-  } catch {
-    return active
-  }
+  // Раньше тут перепроверяли auto_disabled-флаг из ad_banner_stats —
+  // но таблица никогда не была создана (~1850 404 в сутки в логах,
+  // Cloudkoda заметил). Статистика баннеров не используется, поэтому
+  // считаем что все активные баннеры в эфире.
+  return active
 }
 
 // Pick one banner to render. Round-robin by minute keeps a fair-ish
