@@ -62,8 +62,8 @@ const COPY = {
     },
     villasSection: {
       eyebrow: '01 · ВИЛЛЫ',
-      heading: 'Виллы с лучшей доходностью.',
-      sub: 'Топ-6 по нашему инвест-скору — комбинация цены за м², заявленной доходности и сравнения с локальным рынком.',
+      heading: 'Виллы с полученным PBG или SLF.',
+      sub: 'Только объекты, у которых разрешения уже получены — без серых зон с правами на землю. Ранжированы по нашему инвест-скору: цена за м², заявленная доходность и сравнение с локальным рынком аренды.',
       linkAll: 'Все виллы каталога',
     },
     ai: {
@@ -150,8 +150,8 @@ const COPY = {
     },
     villasSection: {
       eyebrow: '01 · VILLAS',
-      heading: 'Top villas by investment score.',
-      sub: 'Ranked by our investment score — a blend of price-per-sqm, claimed yield and benchmark against the local rental market.',
+      heading: 'Villas with PBG or SLF in hand.',
+      sub: 'Only properties with permits already issued — no grey-zone land titles. Ranked by our investment score: price-per-sqm, claimed yield and benchmark against the local rental market.',
       linkAll: 'All villas',
     },
     ai: {
@@ -233,11 +233,16 @@ async function loadTopVillas(lang: Lang): Promise<VillaCardData[]> {
       loadAllVillas(),
       loadAllVillaScores().catch(() => undefined),
     ])
-    const emptyFilters: VillaFilterState = {
+    // Фильтр: только виллы с ПОЛУЧЕННЫМ PBG или SLF. Заявки и «нет»
+    // на главную не идут — покупатель должен сразу видеть «чистые»
+    // объекты, это buyer-first позиционирование.
+    //   PBG = Persetujuan Bangunan Gedung — разрешение на строительство (получено)
+    //   SLF = Sertifikat Laik Fungsi      — сертификат пригодности (получен, выше PBG)
+    const filters: VillaFilterState = {
       q: '', priceMin: null, priceMax: null,
-      district: [], bedrooms: [], status: [], permit: [], year: [], developer: [], style: [], goal: null, dealType: [],
+      district: [], bedrooms: [], status: [], permit: ['PBG', 'SLF'], year: [], developer: [], style: [], goal: null, dealType: [],
     }
-    const cards = buildAllVillaCards(enriched, manifest, emptyFilters, scores, 'investment-desc', undefined, lang)
+    const cards = buildAllVillaCards(enriched, manifest, filters, scores, 'investment-desc', undefined, lang)
     return cards.slice(0, 6)
   } catch { return [] }
 }
@@ -289,7 +294,9 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
     loadTopComplexes(),
   ])
   const totalUnits = stats.villas + stats.apartments
-  const telegram = 'https://t.me/balinsky_bali'
+  // Telegram-бот Balinsky — единая точка входа для всех CTA «спросить»/
+  // «AI-консьерж» с главной. На стороне бота вшит AI-flow.
+  const telegram = 'https://t.me/BalinskyBot'
 
   return (
     <div className="min-h-screen bg-white text-[#111827]">
