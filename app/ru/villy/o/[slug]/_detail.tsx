@@ -25,16 +25,21 @@ function fmtAirportDistance(lat: number | null, lng: number | null, lang: 'ru' |
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { PhotoGalleryHero } from '@/components/PhotoGalleryHero'
-import { LandProfileBlock } from '@/components/LandProfileBlock'
 import { loadVillaLandProfile } from '@/lib/land-profile'
 import { loadMarketStats } from '@/lib/complex-market-stats'
 import { MarketStatsBlock } from '@/components/MarketStatsBlock'
 import { VillaCard, type VillaCardData } from '@/components/VillaCard'
 import dynamic from 'next/dynamic'
-// Heavy client widget — pull off the initial JS bundle. Below-the-fold
-// on detail pages, so the late hydration is invisible.
+// Heavy client widgets — pulled off the initial JS bundle. Both
+// render below the fold on detail pages, so late hydration is invisible.
+// LandProfileBlock — 474 LOC of charts/sliders; InvestmentWidget — 626 +
+// Google Maps loader. Together ~30 KB gzipped that no longer ships in
+// the initial chunk.
 const InvestmentWidget = dynamic(
   () => import('@/components/InvestmentWidget').then(m => ({ default: m.InvestmentWidget })),
+)
+const LandProfileBlock = dynamic(
+  () => import('@/components/LandProfileBlock').then(m => ({ default: m.LandProfileBlock })),
 )
 import { RentalCompareSection } from '@/components/RentalCompareSection'
 import { LazyMount } from '@/components/LazyMount'
@@ -819,7 +824,9 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
         ) && (
           <section className="mb-10 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
             {landProfile && (landProfile.zona_code || landProfile.subzona_code) && (
-              <LandProfileBlock data={landProfile} lang={lang} />
+              <LazyMount fallback={<div className="min-h-[480px] rounded-2xl bg-[var(--color-search-bg)]" />}>
+                <LandProfileBlock data={landProfile} lang={lang} />
+              </LazyMount>
             )}
             {marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0) && (
               <MarketStatsBlock data={marketStats} lang={lang} />

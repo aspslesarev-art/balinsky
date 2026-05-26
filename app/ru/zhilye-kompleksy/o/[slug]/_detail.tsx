@@ -31,13 +31,17 @@ import { loadNearbyPlaces } from '@/lib/nearby-places'
 import { NearbyPlaces } from '@/components/NearbyPlaces'
 import { listLayers, listHotspots } from '@/lib/complex-visualizations'
 import dynamic from 'next/dynamic'
-// Heavy interactive viewer (layers + hotspots) — below-the-fold on
-// complex detail pages, code-split off the initial JS bundle.
+// Heavy client widgets — code-split off the initial JS bundle.
+// ComplexVisualizationViewer = layers/hotspots, LandProfileBlock = charts.
+// Both render below the fold on complex detail pages.
 const ComplexVisualizationViewer = dynamic(
   () => import('@/components/ComplexVisualizationViewer').then(m => ({ default: m.ComplexVisualizationViewer })),
 )
+const LandProfileBlock = dynamic(
+  () => import('@/components/LandProfileBlock').then(m => ({ default: m.LandProfileBlock })),
+)
+import { LazyMount } from '@/components/LazyMount'
 import { loadLandProfile } from '@/lib/land-profile'
-import { LandProfileBlock } from '@/components/LandProfileBlock'
 import { loadComplexMarketStats } from '@/lib/complex-market-stats'
 import { MarketStatsBlock } from '@/components/MarketStatsBlock'
 import { PageViewTracker } from '@/components/PageViewTracker'
@@ -883,7 +887,9 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
         ) && (
           <section className="mb-10 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
             {landProfile && (landProfile.zona_code || landProfile.subzona_code) && (
-              <LandProfileBlock data={landProfile} lang={lang} />
+              <LazyMount fallback={<div className="min-h-[480px] rounded-2xl bg-[var(--color-search-bg)]" />}>
+                <LandProfileBlock data={landProfile} lang={lang} />
+              </LazyMount>
             )}
             {marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0) && (
               <MarketStatsBlock data={marketStats} lang={lang} />
