@@ -37,7 +37,7 @@ import { ContactBlock } from '@/components/ContactBlock'
 import { loadManagersByDeveloperName } from '@/lib/managers'
 import { PriceCtaCard } from '@/components/PriceCtaCard'
 import { findActiveReservation } from '@/lib/reservations'
-import { loadLandProfile } from '@/lib/land-profile'
+import { loadLandProfile, landAllowsBuilding } from '@/lib/land-profile'
 import { loadMarketStats } from '@/lib/complex-market-stats'
 import { MarketStatsBlock } from '@/components/MarketStatsBlock'
 import { InlinePrice } from '@/components/InlinePrice'
@@ -779,13 +779,13 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
             on villa pages too, so the buyer sees the zoning + neighbour
             rental data before getting to the developer / manager. */}
         {(
-          (landProfile && (landProfile.zona_code || landProfile.subzona_code))
+          landAllowsBuilding(landProfile, 'apartment')
           || (marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0))
         ) && (
           <section className="mb-10 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-            {landProfile && (landProfile.zona_code || landProfile.subzona_code) && (
+            {landAllowsBuilding(landProfile, 'apartment') && (
               <LazyMount fallback={<div className="min-h-[480px] rounded-2xl bg-[var(--color-search-bg)]" />}>
-                <LandProfileBlock data={landProfile} lang={lang} />
+                <LandProfileBlock data={landProfile!} lang={lang} />
               </LazyMount>
             )}
             {marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0) && (

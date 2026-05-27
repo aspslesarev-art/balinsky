@@ -94,3 +94,24 @@ export async function loadLandProfile(
 export async function loadVillaLandProfile(airtable_id: string): Promise<LandProfile | null> {
   return loadLandProfile('villa', airtable_id)
 }
+
+// Гейт для рендера <LandProfileBlock> на detail-страницах. Покупателю
+// этот блок имеет смысл показать только когда мы можем сказать
+// «земля позволяет строить» — иначе он создаёт больше вопросов, чем
+// решает.
+//
+// Логика: статус по нужному виду использования должен быть «allowed»
+// или «limited» (limited = можно, с оговорками по типу). Conditional,
+// limited_conditional, forbidden, unknown и null — не показываем.
+//
+// Для виллы смотрим uses_villa. Для апартов/комплекса — uses_villa
+// ИЛИ uses_hotel (апартаменты часто в hotel-зонированных проектах).
+export function landAllowsBuilding(
+  profile: LandProfile | null,
+  kind: LandProfileKind,
+): boolean {
+  if (!profile) return false
+  const ok = (s: UseCaseStatus): boolean => s === 'allowed' || s === 'limited'
+  if (kind === 'villa') return ok(profile.uses_villa)
+  return ok(profile.uses_villa) || ok(profile.uses_hotel)
+}

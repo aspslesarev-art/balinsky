@@ -25,7 +25,7 @@ function fmtAirportDistance(lat: number | null, lng: number | null, lang: 'ru' |
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { PhotoGalleryHero } from '@/components/PhotoGalleryHero'
-import { loadVillaLandProfile } from '@/lib/land-profile'
+import { loadVillaLandProfile, landAllowsBuilding } from '@/lib/land-profile'
 import { loadMarketStats } from '@/lib/complex-market-stats'
 import { MarketStatsBlock } from '@/components/MarketStatsBlock'
 import { VillaCard, type VillaCardData } from '@/components/VillaCard'
@@ -819,13 +819,13 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
         )}
 
         {(
-          (landProfile && (landProfile.zona_code || landProfile.subzona_code))
+          landAllowsBuilding(landProfile, 'villa')
           || (marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0))
         ) && (
           <section className="mb-10 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-            {landProfile && (landProfile.zona_code || landProfile.subzona_code) && (
+            {landAllowsBuilding(landProfile, 'villa') && (
               <LazyMount fallback={<div className="min-h-[480px] rounded-2xl bg-[var(--color-search-bg)]" />}>
-                <LandProfileBlock data={landProfile} lang={lang} />
+                <LandProfileBlock data={landProfile!} lang={lang} />
               </LazyMount>
             )}
             {marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0) && (

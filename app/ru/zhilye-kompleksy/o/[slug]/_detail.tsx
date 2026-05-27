@@ -41,7 +41,7 @@ const LandProfileBlock = dynamic(
   () => import('@/components/LandProfileBlock').then(m => ({ default: m.LandProfileBlock })),
 )
 import { LazyMount } from '@/components/LazyMount'
-import { loadLandProfile } from '@/lib/land-profile'
+import { loadLandProfile, landAllowsBuilding } from '@/lib/land-profile'
 import { loadComplexMarketStats } from '@/lib/complex-market-stats'
 import { MarketStatsBlock } from '@/components/MarketStatsBlock'
 import { PageViewTracker } from '@/components/PageViewTracker'
@@ -882,13 +882,13 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             nearby occupancy are visible before the visitor scrolls past
             the photo galleries. */}
         {(
-          (landProfile && (landProfile.zona_code || landProfile.subzona_code))
+          landAllowsBuilding(landProfile, 'complex')
           || (marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0))
         ) && (
           <section className="mb-10 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-            {landProfile && (landProfile.zona_code || landProfile.subzona_code) && (
+            {landAllowsBuilding(landProfile, 'complex') && (
               <LazyMount fallback={<div className="min-h-[480px] rounded-2xl bg-[var(--color-search-bg)]" />}>
-                <LandProfileBlock data={landProfile} lang={lang} />
+                <LandProfileBlock data={landProfile!} lang={lang} />
               </LazyMount>
             )}
             {marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0) && (
