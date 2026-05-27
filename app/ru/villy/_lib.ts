@@ -578,14 +578,60 @@ const TTL_MS = 600_000
 let _cache: { ts: number; data: CachedAll } | null = null
 let _inflight: Promise<CachedAll> | null = null
 
+// Slim JSONB projection. Pulling full `data` from raw_villas was 568 rows ×
+// ~51 KB ≈ 29 MB per warm-instance refresh — biggest single egress source
+// after the competitors manifest. enrich() touches only ~30 named keys so
+// we hand them back as `data` and the rest of the loader code is unchanged.
+const SLIM_VILLA_FIELDS = [
+  ['Опубликовать', 'pub'],
+  ['SEO:Title', 'seo_title'],
+  ['SEO:Title EN', 'seo_title_en'],
+  ['SEO:Slug', 'seo_slug'],
+  ['ИИ Имя', 'ai_name'],
+  ['ИИ Имя EN', 'ai_name_en'],
+  ['Имя ENG', 'imya_eng'],
+  ['Name', 'name'],
+  ['Notes', 'notes'],
+  ['Year of completion', 'year'],
+  ['Location', 'loc'],
+  ['Location 2', 'loc2'],
+  ['Комнаты', 'rooms'],
+  ['Статус', 'status'],
+  ['Разрешение', 'permit'],
+  ['Тип сделки', 'deal'],
+  ['TOP', 'top'],
+  ['Developer', 'dev'],
+  ['Developer1', 'dev1'],
+  ['price', 'price'],
+  ['Цена', 'price_rub'],
+  ['Площадь', 'area'],
+  ['Земля', 'land'],
+  ['Geo', 'geo'],
+  ['Geo 2', 'geo2'],
+  ['Land color', 'land_color'],
+  ['Leasehold', 'leasehold'],
+  ['Leashold', 'leashold'],
+  ['Цена м²', 'price_m2'],
+  ['Цена м² в год', 'price_m2_y'],
+  ['Заявленная доходность', 'yield_decl'],
+] as const
+
+const VILLA_SELECT = ['airtable_id', ...SLIM_VILLA_FIELDS.map(([k, a]) => `${a}:data->"${k}"`)].join(',')
+
+function reassembleVilla(raw: Record<string, unknown>): Row {
+  const data: Record<string, unknown> = {}
+  for (const [k, a] of SLIM_VILLA_FIELDS) data[k] = raw[a]
+  return { airtable_id: raw.airtable_id as string, data }
+}
+
 async function _loadAllInternal(): Promise<CachedAll> {
   const [rowsRes, manifest, styles, enCache] = await Promise.all([
-    sb.from('raw_villas').select('airtable_id, data').limit(1000),
+    sb.from('raw_villas').select(VILLA_SELECT).limit(1000),
     loadJson<Record<string, string[]>>(PHOTO_MANIFEST_URL, {}),
     loadVillaStyles(),
     loadEnTranslations('villas'),
   ])
-  const rows = (rowsRes.data ?? []) as Row[]
+  const rows = ((rowsRes.data ?? []) as unknown as Record<string, unknown>[]).map(reassembleVilla)
   const enriched = rows
     .filter(r => r.data?.['Опубликовать'] === true)
     .map(r => ({ ...r, data: mergeEnTranslations(r.data, r.airtable_id, enCache) }))

@@ -526,14 +526,58 @@ const TTL_MS = 600_000
 let _cache: { ts: number; data: CachedAll } | null = null
 let _inflight: Promise<CachedAll> | null = null
 
+// See villy/_lib.ts for rationale — full `data` projection was ~17 MB per
+// warm-instance refresh on raw_apartments.
+const SLIM_APT_FIELDS = [
+  ['Опубликовать', 'pub'],
+  ['SEO:Title', 'seo_title'],
+  ['SEO:Title EN', 'seo_title_en'],
+  ['SEO:Slug', 'seo_slug'],
+  ['ИИ Имя', 'ai_name'],
+  ['ИИ Имя EN', 'ai_name_en'],
+  ['Notes', 'notes'],
+  ['Year of completion', 'year'],
+  ['Year of completion ', 'year_sp'],
+  ['Location filter', 'loc_filter'],
+  ['Комнаты', 'rooms'],
+  ['Статус', 'status'],
+  ['Разрешение', 'permit'],
+  ['Тип сделки', 'deal'],
+  ['TOP', 'top'],
+  ['Developer', 'dev'],
+  ['price_usd', 'price_usd'],
+  ['Цена', 'price_rub'],
+  ['Площадь', 'area'],
+  ['Geo', 'geo'],
+  ['Geo 2', 'geo2'],
+  ['Land color', 'land_color'],
+  ['Leasehold', 'leasehold'],
+  ['Leashold', 'leashold'],
+  ['Цена м²', 'price_m2'],
+  ['Цена м² в год', 'price_m2_y'],
+  ['Заявленная доходность', 'yield_decl'],
+  ['Этаж', 'floor'],
+  ['Обновление цены', 'price_upd'],
+  ['Обновлено', 'updated_at'],
+  ['Последнее обновление', 'last_upd'],
+] as const
+
+const APT_SELECT = ['airtable_id', ...SLIM_APT_FIELDS.map(([k, a]) => `${a}:data->"${k}"`)].join(',')
+
+function reassembleApt(raw: Record<string, unknown>): Row {
+  const data: Record<string, unknown> = {}
+  for (const [k, a] of SLIM_APT_FIELDS) data[k] = raw[a]
+  return { airtable_id: raw.airtable_id as string, data }
+}
+
 async function _loadAllInternal(): Promise<CachedAll> {
   const [rowsRes, manifest, devMap, enCache] = await Promise.all([
-    sb.from('raw_apartments').select('airtable_id, data').limit(1000),
+    sb.from('raw_apartments').select(APT_SELECT).limit(1000),
     loadJson<Record<string, string[]>>(PHOTO_MANIFEST_URL, {}),
     loadJson<Record<string, string>>(DEV_LOOKUP_URL, {}),
     loadEnTranslations('apartments'),
   ])
-  const rows = (rowsRes.data ?? []) as Row[]
+  const rows = ((rowsRes.data ?? []) as unknown as Record<string, unknown>[]).map(reassembleApt)
   const enriched = rows
     .filter(r => r.data?.['Опубликовать'] === true)
     .map(r => ({ ...r, data: mergeEnTranslations(r.data, r.airtable_id, enCache) }))
