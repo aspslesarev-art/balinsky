@@ -54,10 +54,12 @@ function pairEntry(args: {
 async function loadDeveloperSlugs(): Promise<string[]> {
   try {
     const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
-    const { data } = await sb.from('raw_developers').select('data').limit(500)
+    // Only the SEO:Slug is needed — comment above said as much, but the
+    // select was still pulling the whole `data` blob (~2 MB).
+    const { data } = await sb.from('raw_developers').select('slug:data->"SEO:Slug"').limit(500)
     const out: string[] = []
-    for (const r of (data ?? []) as { data: Record<string, unknown> }[]) {
-      const v = r.data?.['SEO:Slug']
+    for (const r of (data ?? []) as { slug: unknown }[]) {
+      const v = r.slug
       const slug = typeof v === 'string' ? v
         : (v && typeof v === 'object' && 'value' in v && typeof (v as { value: unknown }).value === 'string')
           ? (v as { value: string }).value
