@@ -250,9 +250,47 @@ if (process.argv.includes('--test')) {
   process.exit(0)
 }
 
-const payload = { generatedAt: new Date().toISOString(), categories: CATEGORIES.map(c => ({ key: c.key, title: c.title })), villas: out }
-const body = JSON.stringify(payload)
-console.log('payload:', (body.length / 1024).toFixed(1), 'KB')
-const { error } = await sb.storage.from(BUCKET).upload(MANIFEST_KEY, body, { contentType: 'application/json', upsert: true })
-if (error) throw error
-console.log('uploaded to', `${BUCKET}/${MANIFEST_KEY}`)
+// Splitting into per-listing JSON files instead of one fat manifest.
+// The bundled manifest crossed Supabase Storage's 50 MB upload limit
+// once apartments were added (777 listings × 12 categories × 30 places).
+// Per-listing keeps single uploads tiny and lets `loadNearbyPlaces`
+// fetch only what the page needs.
+const index = {
+  generatedAt: new Date().toISOString(),
+  categories: CATEGORIES.map(c => ({ key: c.key, title: c.title })),
+  ids: Object.keys(out),
+}
+const indexBody = JSON.stringify(index)
+console.log('index:', (indexBody.length / 1024).toFixed(1), 'KB,', index.ids.length, 'listings')
+{
+  const { error } = await sb.storage.from(BUCKET).upload(MANIFEST_KEY, indexBody, { contentType: 'application/json', upsert: true })
+  if (error) throw error
+  console.log('uploaded index to', `${BUCKET}/${MANIFEST_KEY}`)
+}
+
+let uploaded = 0
+let failed = 0
+const concurrency = 4
+const entries = Object.entries(out)
+async function uploadOne(id, byCategory, attempt = 1) {
+  const key = `_nearby_places/${id}.json`
+  const body = JSON.stringify(byCategory)
+  const { error } = await sb.storage.from(BUCKET).upload(key, body, { contentType: 'application/json', upsert: true })
+  if (!error) return
+  // Supabase Storage occasionally returns 504 under load — retry with backoff.
+  if (attempt < 4) {
+    await new Promise(res => setTimeout(res, 500 * attempt))
+    return uploadOne(id, byCategory, attempt + 1)
+  }
+  failed++
+  console.warn(`  ✖ ${id}: ${error.message}`)
+}
+for (let i = 0; i < entries.length; i += concurrency) {
+  const batch = entries.slice(i, i + concurrency)
+  await Promise.all(batch.map(([id, bc]) => uploadOne(id, bc)))
+  uploaded += batch.length
+  if (uploaded % 40 === 0 || uploaded === entries.length) {
+    console.log(`  uploaded ${uploaded}/${entries.length} listings (${failed} failed)`)
+  }
+}
+console.log(`done — ${entries.length - failed}/${entries.length} uploaded`)
