@@ -208,7 +208,13 @@ function ConfidenceBadge({ confidence, size, lang }: { confidence: 'high' | 'med
 
 function InvestmentWidgetView({ snap, apiKey, lang }: { snap: Snapshot; apiKey: string; lang: Lang }) {
   const t = COPY[lang]
-  const allPois = useMemo(() => [...snap.anchors.map(a => ({ lat: a.lat, lng: a.lng, name: a.name, category: a.primaryType ?? '' }))], [snap])
+  const allPois = useMemo(() => {
+    const out: { lat: number; lng: number; name: string | null; category: string }[] = []
+    for (const [cat, list] of Object.entries(snap.nearbyByCategory)) {
+      for (const p of list) out.push({ lat: p.lat, lng: p.lng, name: p.name, category: cat })
+    }
+    return out
+  }, [snap])
   return (
     <>
       <SectionShell lang={lang}>
