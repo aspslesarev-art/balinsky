@@ -82,12 +82,47 @@ export async function DevelopersCatalog({
   lang?: Lang
 }) {
   const copy = COPY[lang]
+  // Slim JSONB projection. raw_complexes full data = ~7 MB; we only read
+  // Developer1, Статус, Готовность, Total quantity of units here. raw_developers
+  // similarly touches ~11 fields out of dozens.
+  const DEV_FIELDS = [
+    ['Developer', 'dev'],
+    ['Developer1', 'dev1'],
+    ['Logo', 'logo'],
+    ['SEO:Slug', 'seo_slug'],
+    ['Total quantity of units', 'units'],
+    ['Бизнес и сервисы', 'biz'],
+    ['Готовность', 'ready'],
+    ['Доходность', 'yield'],
+    ['Команда', 'team'],
+    ['Опыт вне бали №', 'outside'],
+    ['Публикация', 'pub'],
+    ['Репутация и опыт', 'reputation'],
+    ['Статус', 'status'],
+    ['Строительство и недвижимость', 'construction'],
+    ['Техника и производство', 'tech'],
+  ] as const
+  const CPX_FIELDS = [
+    ['Developer1', 'dev1'],
+    ['Статус', 'status'],
+    ['Готовность', 'ready'],
+    ['Total quantity of units', 'units'],
+  ] as const
+  const devSelect = ['logo_url', ...DEV_FIELDS.map(([k, a]) => `${a}:data->"${k}"`)].join(',')
+  const cpxSelect = CPX_FIELDS.map(([k, a]) => `${a}:data->"${k}"`).join(',')
+  const reassemble = (raw: Record<string, unknown>, fields: ReadonlyArray<readonly [string, string]>) => {
+    const data: Record<string, unknown> = {}
+    for (const [k, a] of fields) data[k] = raw[a]
+    return data
+  }
+
   const [{ data: devData }, { data: complexData }] = await Promise.all([
-    sb.from('raw_developers').select('data, logo_url').limit(200),
-    sb.from('raw_complexes').select('data').limit(2000),
+    sb.from('raw_developers').select(devSelect).limit(200),
+    sb.from('raw_complexes').select(cpxSelect).limit(2000),
   ])
 
-  const rows = (devData ?? []) as Row[]
+  const rows = ((devData ?? []) as unknown as Record<string, unknown>[])
+    .map(r => ({ data: reassemble(r, DEV_FIELDS), logo_url: r.logo_url as string | null })) as Row[]
   const canonicalize = (s: string) => s.replace(/\s*\([^)]*\)\s*$/, '').trim().toLowerCase()
   // Aggregate complex *and* unit counts per developer. Units come
   // from the complex's "Total quantity of units" field — same lookup
@@ -103,7 +138,9 @@ export async function DevelopersCatalog({
     return 0
   }
   const statsByDev = new Map<string, ComplexStats>()
-  for (const cr of (complexData ?? []) as { data: Record<string, unknown> }[]) {
+  const complexRows = ((complexData ?? []) as unknown as Record<string, unknown>[])
+    .map(r => ({ data: reassemble(r, CPX_FIELDS) }))
+  for (const cr of complexRows) {
     const dev = (cr.data['Developer1'] ?? '').toString().trim()
     if (!dev) continue
     const status = (cr.data['Статус'] ?? cr.data['Готовность'] ?? '').toString()

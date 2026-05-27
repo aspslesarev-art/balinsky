@@ -158,12 +158,46 @@ function buildComplex(r: Row, manifest: Record<string, string[]>): string | null
   return lines.join('\n')
 }
 
+// Slim JSONB projection — feed touches ~22 named keys, not the whole blob.
+const SLIM_FIELDS = [
+  ['Опубликовать', 'pub'],
+  ['SEO:Title', 'seo_title'],
+  ['SEO_Title_EN', 'seo_title_en'],
+  ['SEO:Slug', 'seo_slug'],
+  ['SEO Text', 'seo_text'],
+  ['ИИ Имя', 'ai_name'],
+  ['Имя ENG', 'imya_eng'],
+  ['Notes', 'notes'],
+  ['Year of completion', 'year'],
+  ['Location', 'loc'],
+  ['Location 2', 'loc2'],
+  ['Статус', 'status'],
+  ['price', 'price'],
+  ['Цена', 'price_rub'],
+  ['currency', 'currency'],
+  ['Geo', 'geo'],
+  ['Geo 2', 'geo2'],
+  ['address', 'address'],
+  ['user_name', 'user_name'],
+  ['user_surname', 'user_surname'],
+  ['user_phone', 'user_phone'],
+  ['user_email', 'user_email'],
+] as const
+
+const SELECT = ['airtable_id', ...SLIM_FIELDS.map(([k, a]) => `${a}:data->"${k}"`)].join(',')
+
+function reassemble(raw: Record<string, unknown>): Row {
+  const data: Record<string, unknown> = {}
+  for (const [k, a] of SLIM_FIELDS) data[k] = raw[a]
+  return { airtable_id: raw.airtable_id as string, data } as Row
+}
+
 export async function GET() {
   const [rowsRes, manifest] = await Promise.all([
-    sb.from('raw_villas').select('airtable_id, data').limit(1000),
+    sb.from('raw_villas').select(SELECT).limit(1000),
     loadManifest(),
   ])
-  const rows = (rowsRes.data ?? []) as Row[]
+  const rows = ((rowsRes.data ?? []) as unknown as Record<string, unknown>[]).map(reassemble)
 
   const items: string[] = []
   for (const r of rows) {
