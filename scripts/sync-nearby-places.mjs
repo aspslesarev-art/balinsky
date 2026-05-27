@@ -151,11 +151,22 @@ function compactPlace(p, villaLat, villaLng) {
   }
 }
 
-const { data: villaRows } = await sb.from('raw_villas').select('airtable_id, data').limit(2000)
-console.log('total villas:', villaRows?.length)
+// Manifest key is `villas` for historic reasons — but the consumer
+// (loadNearbyPlaces in lib/nearby-places.ts) just keys by airtable_id,
+// so we feed it both villas and apartments. Without apartments here,
+// apartment detail pages get a null infra block and the investment map
+// renders zero green anchors. Coordinate cache means apartments inside
+// an already-synced complex re-use the villa's place lookups for free.
+const [villaRes, apartmentRes] = await Promise.all([
+  sb.from('raw_villas').select('airtable_id, data').limit(2000),
+  sb.from('raw_apartments').select('airtable_id, data').limit(5000),
+])
+const villaRows = villaRes.data ?? []
+const apartmentRows = apartmentRes.data ?? []
+console.log('total villas:', villaRows.length, '/ apartments:', apartmentRows.length)
 
 const villas = []
-for (const r of villaRows ?? []) {
+for (const r of [...villaRows, ...apartmentRows]) {
   if (r.data?.['Опубликовать'] !== true) continue
   const lat = asNum(r.data['Geo'])
   const lng = asNum(r.data['Geo 2'])
