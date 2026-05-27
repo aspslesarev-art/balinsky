@@ -348,14 +348,37 @@ function buildComplexXml(
   return lines.join('\n')
 }
 
+// Slim JSONB projection — feed reads ~11 named keys, full `data` was
+// ~6.8 MB. raw_complexes scan + slim = ~50 KB (~140× smaller).
+const CPX_SLIM = [
+  ['Project', 'project'],
+  ['Geo', 'geo'],
+  ['Geo 2', 'geo2'],
+  ['Location', 'loc'],
+  ['Location 2', 'loc2'],
+  ['Year of completion', 'year'],
+  ['Year of completion ', 'year_sp'],
+  ['Total quantity of units', 'units'],
+  ['Разрешительные документы', 'permits'],
+  ['Статус', 'status'],
+  ['Типы юнитов', 'unit_types'],
+] as const
+const CPX_SELECT = ['airtable_id, slug', ...CPX_SLIM.map(([k, a]) => `${a}:data->"${k}"`)].join(',')
+
+function reassembleComplex(raw: Record<string, unknown>): ComplexRow {
+  const data: Record<string, unknown> = {}
+  for (const [k, a] of CPX_SLIM) data[k] = raw[a]
+  return { airtable_id: raw.airtable_id as string, slug: raw.slug as string | null, data }
+}
+
 export async function GET() {
   const [rowsRes, manifest, apartmentPrices] = await Promise.all([
-    sb.from('raw_complexes').select('airtable_id, data, slug').limit(500),
+    sb.from('raw_complexes').select(CPX_SELECT).limit(500),
     loadManifest(),
     loadUnitPrices(),
   ])
 
-  const all = (rowsRes.data ?? []) as ComplexRow[]
+  const all = ((rowsRes.data ?? []) as unknown as Record<string, unknown>[]).map(reassembleComplex)
 
   // Quality bar only: enough photos + slug + name. District filter dropped —
   // this is a lead-gen feed, broader coverage is better.
