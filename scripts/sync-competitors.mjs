@@ -129,3 +129,47 @@ const { error: upErr } = await sb.storage.from(BUCKET).upload(MANIFEST_KEY, body
 })
 if (upErr) throw upErr
 console.log('Uploaded to', `${BUCKET}/${MANIFEST_KEY}`)
+
+// Spatial shards: 0.05° ≈ 5.5 km cells. loadNearby (2 km radius) fetches at
+// most 4 cells (~280 KB) instead of the full 10.5 MB manifest. Each snapshot
+// build was egressing the whole file — multiply by views = bulk of our bill.
+const CELL = 0.05
+const cellKey = (lat, lng) => `${Math.floor(lat / CELL)}_${Math.floor(lng / CELL)}`
+const byCell = new Map()
+for (const it of items) {
+  if (typeof it.lat !== 'number' || typeof it.lng !== 'number') continue
+  const k = cellKey(it.lat, it.lng)
+  let bucket = byCell.get(k)
+  if (!bucket) { bucket = []; byCell.set(k, bucket) }
+  bucket.push(it)
+}
+const cellIndex = { generatedAt: new Date().toISOString(), cellDeg: CELL, cells: [...byCell.keys()] }
+const { error: idxErr } = await sb.storage.from(BUCKET).upload('_cells.json',
+  JSON.stringify(cellIndex), { contentType: 'application/json', upsert: true })
+if (idxErr) throw idxErr
+console.log('Cells:', byCell.size, 'index uploaded')
+
+let cellUploaded = 0
+let cellFailed = 0
+const cellEntries = [...byCell.entries()]
+async function uploadCell(k, list, attempt = 1) {
+  const key = `_cells/${k}.json`
+  const cellBody = JSON.stringify(list)
+  const { error } = await sb.storage.from(BUCKET).upload(key, cellBody, { contentType: 'application/json', upsert: true })
+  if (!error) return
+  if (attempt < 4) {
+    await new Promise(res => setTimeout(res, 500 * attempt))
+    return uploadCell(k, list, attempt + 1)
+  }
+  cellFailed++
+  console.warn(`  ✖ ${k}: ${error.message}`)
+}
+for (let i = 0; i < cellEntries.length; i += 4) {
+  const batch = cellEntries.slice(i, i + 4)
+  await Promise.all(batch.map(([k, list]) => uploadCell(k, list)))
+  cellUploaded += batch.length
+  if (cellUploaded % 20 === 0 || cellUploaded === cellEntries.length) {
+    console.log(`  cell uploads: ${cellUploaded}/${cellEntries.length} (${cellFailed} failed)`)
+  }
+}
+console.log(`done — ${cellEntries.length - cellFailed}/${cellEntries.length} cells uploaded`)
