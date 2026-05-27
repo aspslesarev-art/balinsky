@@ -65,6 +65,9 @@ jobs:
       - name: Sync villas (data only)
         run: node scripts/sync-villas-data.mjs
 
+      - name: Sync villa units (data only)
+        run: node scripts/sync-villa-units-data.mjs
+
       - name: Sync apartments (data only)
         run: node scripts/sync-apartments-data.mjs
 

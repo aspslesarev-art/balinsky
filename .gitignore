@@ -55,3 +55,5 @@ scripts/_ai-fallback-cache.json
 BALINSKY_REPORT.md
 estatemarket_occupancy_*.xlsx
 scripts/__pycache__/
+
+graphify-out/
