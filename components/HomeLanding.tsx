@@ -119,8 +119,6 @@ const COPY = {
       primary: 'Открыть каталог вилл',
       secondary: 'Написать менеджеру',
     },
-    techStrip: 'AI работает на Anthropic Claude, OpenAI, ElevenLabs. Хостинг — Vercel · Supabase · Airtable.',
-    footStrip: 'Balinsky — резидент Bali Capital Group · 2024–2026 · Сделано в Бали, Берлине и Москве.',
   },
   en: {
     locale: 'en-US',
@@ -207,8 +205,6 @@ const COPY = {
       primary: 'Open villa catalog',
       secondary: 'Message a manager',
     },
-    techStrip: 'AI powered by Anthropic Claude, OpenAI, ElevenLabs. Hosted on Vercel · Supabase · Airtable.',
-    footStrip: 'Balinsky — Bali Capital Group resident · 2024–2026 · Built in Bali, Berlin and Moscow.',
   },
 } as const
 
@@ -510,23 +506,6 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
         </PageContainer>
       </section>
 
-      {/* === Tech trust strip (quiet, for grants / VC, not for buyers) === */}
-      <div className="border-t border-[var(--color-border)] py-5 bg-white">
-        <PageContainer>
-          <div className="text-[12px] text-[#9CA59F] text-center leading-[1.5]">
-            {c.techStrip}
-          </div>
-        </PageContainer>
-      </div>
-
-      {/* Footer-strip */}
-      <div className="border-t border-[var(--color-border)] py-5 bg-[#FAFCFB]">
-        <PageContainer>
-          <div className="text-[12px] text-[#9CA59F] text-center">
-            {c.footStrip}
-          </div>
-        </PageContainer>
-      </div>
     </div>
   )
 }
