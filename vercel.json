@@ -15,6 +15,10 @@
     {
       "path": "/api/cron/run-parsers",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/translate-missing?section=news,promo,events,knowledge,villas,apartments,complexes",
+      "schedule": "27 * * * *"
     }
   ]
 }

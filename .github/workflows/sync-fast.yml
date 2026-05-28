@@ -39,6 +39,10 @@ jobs:
           AIRTABLE_TOKEN=${{ secrets.AIRTABLE_TOKEN }}
           NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_KEY=${{ secrets.SUPABASE_SERVICE_KEY }}
+          AZURE_OPENAI_API_KEY=${{ secrets.AZURE_OPENAI_API_KEY }}
+          AZURE_OPENAI_ENDPOINT=${{ secrets.AZURE_OPENAI_ENDPOINT }}
+          AZURE_OPENAI_API_VERSION=${{ secrets.AZURE_OPENAI_API_VERSION }}
+          AZURE_OPENAI_CHAT_DEPLOYMENT=${{ secrets.AZURE_OPENAI_CHAT_DEPLOYMENT }}
           EOF
 
       - name: Sync events
@@ -61,6 +65,18 @@ jobs:
 
       - name: Sync developers
         run: node scripts/sync-developers.mjs
+
+      # EN-перевод свежезалитых строк. Без этого новые новости/акции/события
+      # на /en/* отображаются с русскими заголовками — что и поймали глазом.
+      # Скрипт смотрит на _translations-<section>.json и переводит только
+      # отсутствующие или изменившиеся записи, поэтому стоит дёшево и быстро.
+      - name: Translate missing EN (news / promo / events / knowledge)
+        run: |
+          node scripts/translate-missing.mjs news
+          node scripts/translate-missing.mjs promo
+          node scripts/translate-missing.mjs events
+          node scripts/translate-missing.mjs knowledge
+        continue-on-error: true
 
       - name: Sync villas (data only)
         run: node scripts/sync-villas-data.mjs
