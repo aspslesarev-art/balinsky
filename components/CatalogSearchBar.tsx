@@ -5,7 +5,7 @@ import { Search, X } from 'lucide-react'
 import { useFilterUrl, type FilterView } from './filters/useFilterUrl'
 import type { FilterState } from './filters/FiltersBar'
 
-const DEBOUNCE_MS = 350
+const DEBOUNCE_MS = 600
 
 export function CatalogSearchBar({
   initial,
@@ -23,9 +23,16 @@ export function CatalogSearchBar({
   // Track the last value we pushed, so URL changes don't bounce a stale push.
   const pushedRef = useRef(initial)
 
+  // Sync from URL only when the user isn't mid-typing. Without this guard,
+  // a slow typist whose debounce fires between keystrokes gets the new
+  // server-rendered `initial` clobbering their in-progress text — letters
+  // disappear, the page feels like it's fighting the input.
   useEffect(() => {
-    setValue(initial)
-    pushedRef.current = initial
+    if (value === pushedRef.current) {
+      setValue(initial)
+      pushedRef.current = initial
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initial])
 
   useEffect(() => {

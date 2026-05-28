@@ -5,7 +5,7 @@ import { Search, X } from 'lucide-react'
 import { useComplexFilterUrl, type FilterView } from './complex-filters/useComplexFilterUrl'
 import type { ComplexFilterState } from '@/app/ru/zhilye-kompleksy/_lib'
 
-const DEBOUNCE_MS = 350
+const DEBOUNCE_MS = 600
 
 export function ComplexCatalogSearchBar({
   initial,
@@ -22,9 +22,16 @@ export function ComplexCatalogSearchBar({
   const [value, setValue] = useState(initial)
   const pushedRef = useRef(initial)
 
+  // Sync from URL only when the user isn't mid-typing. Without this guard,
+  // a slow typist whose debounce fires between keystrokes gets the new
+  // server-rendered `initial` clobbering their in-progress text — letters
+  // disappear, the page feels like it's fighting the input.
   useEffect(() => {
-    setValue(initial)
-    pushedRef.current = initial
+    if (value === pushedRef.current) {
+      setValue(initial)
+      pushedRef.current = initial
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initial])
 
   useEffect(() => {
