@@ -32,6 +32,38 @@ function isBeachClub(p: NearbyPlace): boolean {
   if (!p.name) return false
   return /beach club|beachclub/i.test(p.name)
 }
+// Fast-food and global chains hijack "crowd-favourite" filters: a Bali
+// McDonald's has 12 000 reviews because every tourist stops there at 2 AM,
+// not because it's a worthwhile destination. Drop them from anchors.
+function isJunkChain(p: NearbyPlace): boolean {
+  if (hasType(p, 'fast_food_restaurant')) return true
+  if (!p.name) return false
+  return /\b(mcdonald|kfc|starbucks|burger king|pizza hut|dunkin|domino|subway|wendy)/i.test(p.name)
+}
+// International / serious medical centres a buyer/tenant actually cares about.
+// Heuristic: name signals "international", "BIMC", "bali international",
+// "international hospital", or a strict score gate.
+function isPremiumHospital(p: NearbyPlace): boolean {
+  if (!p.name) return false
+  const n = p.name
+  if (/bimc|international|internasional|bali (international|royal)|kasih ibu|prima medika|siloam|silloam/i.test(n)) {
+    return (p.rating ?? 0) >= 4.0
+  }
+  return (p.rating ?? 0) >= 4.5 && (p.reviews ?? 0) >= 200
+}
+// Shopping malls / large retail. Until the sync layer queries `shopping_mall`
+// type directly, we match by name as a stopgap so Icon Bali Mall et al. get
+// pinned on the map.
+function looksLikeMall(p: NearbyPlace): boolean {
+  if (!p.name) return false
+  return /\b(mall|plaza|shopping center|shopping centre|department store)\b/i.test(p.name)
+    || hasType(p, 'shopping_mall')
+}
+// Ferries / harbours (Sanur → Nusa Penida etc).
+function looksLikeFerry(p: NearbyPlace): boolean {
+  if (!p.name) return false
+  return /harbour|harbor|ferry|pelabuhan|terminal/i.test(p.name) || hasType(p, 'ferry_terminal')
+}
 
 export function scoreInfra(byCategory: Record<string, NearbyPlace[]>): InfraScore {
   const all = Object.values(byCategory).flat()
@@ -47,13 +79,19 @@ export function scoreInfra(byCategory: Record<string, NearbyPlace[]>): InfraScor
   // Премиум по priceLevel ИЛИ по rating>=4.6 + reviews>=100 (priceLevel у большинства Bali-ресторанов не проставлен).
   // Composite score keeps the tight isNotable. Anchor selection below uses
   // isAnchorWorthy, which additionally accepts crowd-favourites
-  // (rating>=4.4 + 300+ reviews) — these are the «кайфовые» places users
+  // (rating>=4.4 + 600+ reviews) — these are the «кайфовые» places users
   // expect to see pinned on the map even if they aren't priceLevel-premium.
+  // We exclude fast-food chains (McDonald's, KFC) — they game the review
+  // count without being worth surfacing.
   const isNotable = (p: NearbyPlace): boolean =>
-    (p.priceLevel != null && PRICE_HIGH.has(p.priceLevel) && (p.rating ?? 0) >= 4.3) ||
-    ((p.rating ?? 0) >= 4.6 && (p.reviews ?? 0) >= 100)
+    !isJunkChain(p) && (
+      (p.priceLevel != null && PRICE_HIGH.has(p.priceLevel) && (p.rating ?? 0) >= 4.3) ||
+      ((p.rating ?? 0) >= 4.6 && (p.reviews ?? 0) >= 100)
+    )
   const isAnchorWorthy = (p: NearbyPlace): boolean =>
-    isNotable(p) || ((p.rating ?? 0) >= 4.4 && (p.reviews ?? 0) >= 300)
+    !isJunkChain(p) && (
+      isNotable(p) || ((p.rating ?? 0) >= 4.4 && (p.reviews ?? 0) >= 600)
+    )
   const premiumRestaurants = restaurants.filter(isNotable).length
   const beachClubs = beachClubsList.length || nightlife.filter(isBeachClub).length
   const topCafes = cafes.filter(p => (p.rating ?? 0) >= 4.5).length
@@ -75,14 +113,41 @@ export function scoreInfra(byCategory: Record<string, NearbyPlace[]>): InfraScor
   const rd = Math.min(1, reviewDensity / 800) * 10
   const composite = Math.round(r + bc + cf + ft + nc + ar + rd)
 
-  const restaurantsForAnchors = (byCategory.restaurant ?? []).filter(p => p.distanceKm <= ANCHOR_RADIUS_KM)
-  const beachClubsForAnchors = (byCategory.beachclub ?? []).filter(p => p.distanceKm <= ANCHOR_RADIUS_KM)
-  const attractionsForAnchors = (byCategory.attraction ?? []).filter(p => p.distanceKm <= ANCHOR_RADIUS_KM)
+  const withinAnchorRadius = (list: NearbyPlace[] | undefined) =>
+    (list ?? []).filter(p => p.distanceKm <= ANCHOR_RADIUS_KM)
+  const restaurantsForAnchors = withinAnchorRadius(byCategory.restaurant)
+  const beachClubsForAnchors = withinAnchorRadius(byCategory.beachclub)
+  const attractionsForAnchors = withinAnchorRadius(byCategory.attraction)
+  const hospitalsForAnchors = withinAnchorRadius(byCategory.hospital)
+  // Attractions: drop the 4.5-rating wall — Sanur Harbour (4.3 ★ × 7600) is
+  // a real anchor users want to see. Anything with 1000+ reviews and 4.3+
+  // is a known landmark.
+  const notableAttractions = attractionsForAnchors.filter(p =>
+    ((p.rating ?? 0) >= 4.5) ||
+    ((p.rating ?? 0) >= 4.3 && (p.reviews ?? 0) >= 1000)
+  )
+  // Ferries / malls hide inside other categories (attraction, beachclub, ...)
+  // until the sync gets dedicated includedTypes. Scrape them out by name.
+  const malls = Object.values(byCategory).flat()
+    .filter(p => p.distanceKm <= ANCHOR_RADIUS_KM && looksLikeMall(p))
+  const ferries = Object.values(byCategory).flat()
+    .filter(p => p.distanceKm <= ANCHOR_RADIUS_KM && looksLikeFerry(p))
+  const premiumHospitals = hospitalsForAnchors.filter(isPremiumHospital)
+
+  const seen = new Set<string>()
+  const dedup = (p: NearbyPlace) => {
+    if (seen.has(p.id)) return false
+    seen.add(p.id)
+    return true
+  }
   const anchors: NearbyPlace[] = [
-    ...(byCategory.beach ?? []).slice(0, 1),
-    ...restaurantsForAnchors.filter(isAnchorWorthy).slice(0, 8),
-    ...beachClubsForAnchors.filter(p => (p.rating ?? 0) >= 4.3).slice(0, 4),
-    ...attractionsForAnchors.filter(p => (p.rating ?? 0) >= 4.5).slice(0, 3),
+    ...(byCategory.beach ?? []).slice(0, 1).filter(dedup),
+    ...restaurantsForAnchors.filter(isAnchorWorthy).slice(0, 6).filter(dedup),
+    ...beachClubsForAnchors.filter(p => (p.rating ?? 0) >= 4.3).slice(0, 4).filter(dedup),
+    ...notableAttractions.slice(0, 3).filter(dedup),
+    ...malls.slice(0, 2).filter(dedup),
+    ...ferries.slice(0, 1).filter(dedup),
+    ...premiumHospitals.slice(0, 2).filter(dedup),
   ]
 
   return {
