@@ -86,6 +86,25 @@ if (stale.length > 0) {
 }
 console.log('✓ done')
 
+// Push fresh items to subscribed agents. Only previously-unseen Airtable
+// records actually fire — see lib/agent-notify.ts for the dedup ledger.
+const { notifyAgents } = await import('./_agent-notify.mjs')
+function _fs(v) {
+  if (typeof v === 'string') return v
+  if (Array.isArray(v) && v.length) return _fs(v[0])
+  if (v && typeof v === 'object' && 'value' in v) return _fs(v.value)
+  return null
+}
+await notifyAgents('villas', recs
+  .filter(r => r.fields?.['Опубликовать'] === true)
+  .map(r => ({
+    sourceId: r.id,
+    developerNames: [r.fields['Developer1'], r.fields['Developer']].map(_fs).filter(Boolean),
+    title: _fs(r.fields['SEO:Title']) ?? _fs(r.fields['ИИ Имя']) ?? _fs(r.fields['Name']) ?? r.id,
+    body: null,
+    path: _fs(r.fields['SEO:Slug']) ? `/ru/villy/o/${_fs(r.fields['SEO:Slug'])}` : null,
+  })))
+
 // Quick verify
 const sample = recs.find(r => r.fields[' Aggregator:RU '] || r.fields['Aggregator:RU'])
 if (sample) {

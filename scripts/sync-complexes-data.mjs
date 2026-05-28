@@ -100,3 +100,20 @@ if (stale.length > 0) {
   }
   console.log(`  ✓ deleted ${stale.length} stale rows`)
 }
+
+const { notifyAgents } = await import('./_agent-notify.mjs')
+function _fs(v) {
+  if (typeof v === 'string') return v
+  if (Array.isArray(v) && v.length) return _fs(v[0])
+  if (v && typeof v === 'object' && 'value' in v) return _fs(v.value)
+  return null
+}
+await notifyAgents('complexes', recs
+  .filter(r => r.fields?.['Опубликовать'] === true || r.fields?.['Публикация'] === true)
+  .map(r => ({
+    sourceId: r.id,
+    developerNames: [r.fields['Developer1'], r.fields['Developer']].map(_fs).filter(Boolean),
+    title: _fs(r.fields['Project']) ?? _fs(r.fields['SEO:Title']) ?? r.id,
+    body: null,
+    path: _fs(r.fields['SEO:Slug']) ? `/ru/zhilye-kompleksy/o/${_fs(r.fields['SEO:Slug'])}` : null,
+  })))

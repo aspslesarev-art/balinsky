@@ -145,3 +145,12 @@ const { error } = await sb.storage.from(BUCKET).upload(KEY, body, {
 })
 if (error) throw error
 console.log(`✓ uploaded ${BUCKET}/${KEY}`)
+
+const { notifyAgents } = await import('./_agent-notify.mjs')
+await notifyAgents('events', items.map(it => ({
+  sourceId: it.id,
+  developerNames: (it.developers ?? []).map(d => d.name).filter(Boolean),
+  title: it.title || '(без заголовка)',
+  body: it.seoDescription ?? null,
+  path: it.slug ? `/ru/meropriyatiya/${it.slug}` : null,
+})))
