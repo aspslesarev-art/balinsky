@@ -220,8 +220,11 @@ function LogoTile({ src, alt }: { src: string | null; alt: string }) {
 }
 
 function Row({ dev, variant, pending, onClick }: { dev: Developer; variant: 'sub' | 'unsub'; pending: boolean; onClick: () => void }) {
-  const subLabel = pending ? '…' : 'Подписаться'
-  const unsubLabel = pending ? '…' : 'Отписаться'
+  // Icon-only round buttons — Telegram Desktop opens the Mini App in a
+  // narrow ~500px panel and any text label here gets clipped. The icon
+  // pair (+ / ✓) reads instantly and never overflows.
+  const label = variant === 'sub' ? 'Подписаться' : 'Отписаться'
+  const symbol = pending ? '…' : variant === 'sub' ? '+' : '✓'
   return (
     <li style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 4px', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
       <LogoTile src={dev.logo} alt={dev.name} />
@@ -230,15 +233,18 @@ function Row({ dev, variant, pending, onClick }: { dev: Developer; variant: 'sub
         type="button"
         onClick={onClick}
         disabled={pending}
+        aria-label={label}
+        title={label}
         style={{
-          flex: '0 0 auto', padding: '7px 14px', fontSize: 13, fontWeight: 600, borderRadius: 999, cursor: pending ? 'default' : 'pointer',
-          border: variant === 'sub' ? 'none' : '1px solid var(--tg-theme-hint-color, #D1D5DB)',
+          flex: '0 0 36px', width: 36, height: 36, padding: 0, fontSize: 18, fontWeight: 600, borderRadius: 999, cursor: pending ? 'default' : 'pointer',
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1,
+          border: variant === 'sub' ? 'none' : '1px solid var(--tg-theme-hint-color, #4A5568)',
           background: variant === 'sub' ? 'var(--tg-theme-button-color, #2563EB)' : 'transparent',
-          color: variant === 'sub' ? 'var(--tg-theme-button-text-color, white)' : 'var(--tg-theme-text-color, #374151)',
+          color: variant === 'sub' ? 'var(--tg-theme-button-text-color, white)' : 'var(--tg-theme-text-color, #E5E7EB)',
           opacity: pending ? 0.55 : 1,
         }}
       >
-        {variant === 'sub' ? subLabel : unsubLabel}
+        {symbol}
       </button>
     </li>
   )
