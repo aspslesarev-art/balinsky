@@ -13,7 +13,7 @@ const TOKEN = process.env.TELEGRAM_BOT_TOKEN
 if (!TOKEN) { console.error('TELEGRAM_BOT_TOKEN missing'); process.exit(1) }
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
-const WEB_APP_URL = `${SITE_URL}/agent/subscribe`
+const WEB_APP_URL = `${SITE_URL}/bot/subscribe`
 
 const body = {
   menu_button: {

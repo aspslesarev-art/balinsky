@@ -40,6 +40,14 @@ const nextConfig: NextConfig = {
         source: '/(.*)\\.(jpg|jpeg|png|webp|avif|svg|ico|woff|woff2|otf|ttf)',
         headers: [{ key: 'cache-control', value: 'public, max-age=31536000, immutable' }],
       },
+      {
+        // Telegram Mini App / agent-only pages — explicitly out of the index.
+        source: '/bot/:path*',
+        headers: [
+          { key: 'x-robots-tag', value: 'noindex, nofollow' },
+          { key: 'cache-control', value: 'no-store' },
+        ],
+      },
     ]
   },
   async redirects() {

@@ -102,6 +102,16 @@ function extract(html, url) {
     } catch { /* ignore malformed JSON-LD */ }
   }
 
+  // Rating + reviews aren't in baliforum's JSON-LD — they're rendered next to
+  // the "Рейтинг на Google картах" link as plain text: " 4.9 / 535 <a ... ".
+  if (rating == null || reviews == null) {
+    const m = html.match(/(\d+(?:\.\d+)?)\s*\/\s*(\d+)\s*<a[^>]*location-widget__rating-url/)
+    if (m) {
+      if (rating == null) rating = Number(m[1])
+      if (reviews == null) reviews = Number(m[2])
+    }
+  }
+
   // Fallbacks from meta tags / title.
   if (!name) {
     const t = html.match(/<meta property="og:title" content="([^"]+)"/)?.[1]
@@ -123,25 +133,53 @@ const urls = await fetchSlugs()
 console.log('sitemap places:', urls.length)
 if (urls.length === 0) throw new Error('empty sitemap — refusing to proceed')
 
-const CONCURRENCY = 8
-const out = []
+// Streaming pipeline: workers push extracted rows into a pending buffer,
+// drainer flushes batches to Supabase. Keeps memory bounded — the previous
+// version held 4 290 HTML responses + 4 290 records in RAM and OOM'd at ~3 300.
+const CONCURRENCY = 6
+const BATCH_SIZE = 200
+const liveSlugs = new Set()
+let pending = []
 let done = 0
 let failed = 0
 let skipped = 0
+let upserted = 0
+let flushPromise = Promise.resolve()
+
+async function flush() {
+  if (pending.length === 0) return
+  const batch = pending.splice(0, pending.length).map(r => ({
+    ...r,
+    tags: r.tags && r.tags.length ? r.tags : null,
+    synced_at: new Date().toISOString(),
+  }))
+  const { error } = await sb.from('baliforum_places').upsert(batch, { onConflict: 'slug' })
+  if (error) { console.error('  ✖ upsert batch:', error.message); throw error }
+  upserted += batch.length
+}
 
 async function worker(slice) {
   for (const url of slice) {
     try {
       const html = await fetchHtml(url)
       const rec = extract(html, url)
-      if (rec) out.push(rec)
-      else skipped++
+      if (rec) {
+        liveSlugs.add(rec.slug)
+        pending.push(rec)
+        if (pending.length >= BATCH_SIZE) {
+          // Chain flushes so we never run two batches in parallel (would race
+          // on the same upsert path) but we don't block worker fetches.
+          flushPromise = flushPromise.then(flush)
+        }
+      } else {
+        skipped++
+      }
     } catch (e) {
       failed++
       if (failed < 10) console.warn(`  ✖ ${url}: ${e.message}`)
     }
     done++
-    if (done % 100 === 0) console.log(`  ${done}/${urls.length} (kept ${out.length}, skipped ${skipped}, failed ${failed})`)
+    if (done % 200 === 0) console.log(`  ${done}/${urls.length} (kept ${liveSlugs.size}, upserted ${upserted}, skipped ${skipped}, failed ${failed})`)
   }
 }
 
@@ -149,35 +187,22 @@ const slices = Array.from({ length: CONCURRENCY }, (_, i) =>
   urls.filter((_, idx) => idx % CONCURRENCY === i)
 )
 await Promise.all(slices.map(worker))
-console.log(`fetched ${out.length}/${urls.length}, skipped ${skipped}, failed ${failed}`)
+await flushPromise
+await flush() // final partial batch
+console.log(`fetched ${liveSlugs.size}/${urls.length}, upserted ${upserted}, skipped ${skipped}, failed ${failed}`)
 
-// Upsert in batches. PRIMARY KEY = slug, so re-runs are idempotent.
-console.log('upserting…')
-let upserted = 0
-for (let i = 0; i < out.length; i += 200) {
-  const batch = out.slice(i, i + 200).map(r => ({
-    ...r,
-    tags: r.tags && r.tags.length ? r.tags : null,
-    synced_at: new Date().toISOString(),
-  }))
-  const { error } = await sb.from('baliforum_places').upsert(batch, { onConflict: 'slug' })
-  if (error) { console.error('  ✖ batch', i, error.message); process.exit(1) }
-  upserted += batch.length
-  console.log(`  ${upserted}/${out.length}`)
-}
-
-// Prune stale: anything in DB but missing from this run was removed upstream.
-const liveSlugs = new Set(out.map(r => r.slug))
-const { data: existing } = await sb.from('baliforum_places').select('slug')
-const stale = (existing ?? []).map(r => r.slug).filter(s => !liveSlugs.has(s))
-if (stale.length > 0 && out.length > urls.length * 0.5) {
-  // Sanity guard: only prune if we got at least half the sitemap. A network
-  // blip that drops to 0 results shouldn't wipe the table.
-  console.log('pruning', stale.length, 'stale rows')
-  for (let i = 0; i < stale.length; i += 500) {
-    const slice = stale.slice(i, i + 500)
-    const { error } = await sb.from('baliforum_places').delete().in('slug', slice)
-    if (error) console.warn('  ✖ prune:', error.message)
+// Prune stale rows. Sanity guard: only if we got at least half the sitemap;
+// a network blip that drops to 0 results shouldn't wipe the table.
+if (liveSlugs.size > urls.length * 0.5) {
+  const { data: existing } = await sb.from('baliforum_places').select('slug')
+  const stale = (existing ?? []).map(r => r.slug).filter(s => !liveSlugs.has(s))
+  if (stale.length > 0) {
+    console.log('pruning', stale.length, 'stale rows')
+    for (let i = 0; i < stale.length; i += 500) {
+      const slice = stale.slice(i, i + 500)
+      const { error } = await sb.from('baliforum_places').delete().in('slug', slice)
+      if (error) console.warn('  ✖ prune:', error.message)
+    }
   }
 }
 console.log('done')
