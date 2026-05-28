@@ -53,22 +53,27 @@ function slugifyEn(s: string): string {
 
 export async function loadAllNews(lang: Lang = 'ru'): Promise<NewsItem[]> {
   const items = await loadRawNews()
-  if (lang === 'ru' || items.length === 0) return items
+  if (items.length === 0) return items
+  // RU also loads the EN translation cache — not to translate, but to know
+  // the English-derived slug and stash it in aliases. Without this, the
+  // language switch on /en/news/<en-slug> sends users to
+  // /ru/novosti/<en-slug>, which 404s because the RU manifest only knows
+  // the Cyrillic-transliterated slug. With the alias in place, RU lookup
+  // resolves the EN slug just like the EN tree resolves the RU one.
   const cache = await loadEnTranslations('news')
   return items.map(item => {
-    const translated = applyManifestTranslation(item, cache, EN_FIELDS)
-    // When we have an EN title, derive an English-friendly slug from it
-    // and keep the original transliterated RU slug as an alias. That
-    // gives Google an English URL on /en (good for SEO) while the RU
-    // slug still 301-redirects on the EN tree for any existing inbound
-    // link.
-    if (translated.title && translated.title !== item.title) {
-      const enSlug = slugifyEn(translated.title)
-      if (enSlug && enSlug !== translated.slug) {
-        const aliases = Array.from(new Set([item.slug, ...(item.aliases ?? [])]))
-          .filter(s => s && s !== enSlug)
-        return { ...translated, slug: enSlug, aliases }
-      }
+    const translated = lang === 'en' ? applyManifestTranslation(item, cache, EN_FIELDS) : item
+    // Compute the EN-derived slug from whatever EN title we have in cache —
+    // even on the RU branch, where we'll only stash it into aliases.
+    const enTitle = cache[item.id]?.title
+    const enSlug = enTitle ? slugifyEn(enTitle) : ''
+    if (lang === 'en' && enSlug && enSlug !== translated.slug) {
+      const aliases = Array.from(new Set([item.slug, ...(item.aliases ?? [])]))
+        .filter(s => s && s !== enSlug)
+      return { ...translated, slug: enSlug, aliases }
+    }
+    if (lang === 'ru' && enSlug && enSlug !== item.slug && !(item.aliases ?? []).includes(enSlug)) {
+      return { ...item, aliases: [...(item.aliases ?? []), enSlug] }
     }
     return translated
   })
