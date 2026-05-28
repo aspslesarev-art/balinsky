@@ -27,12 +27,32 @@ async function insertBatch(source, ids) {
   console.log(`  ${source}: ${ids.length} seeded`)
 }
 
-// Tables — full airtable_id list
-for (const t of ['raw_villas', 'raw_apartments', 'raw_complexes']) {
-  const source = t.replace('raw_', '')
-  const { data, error } = await sb.from(t).select('airtable_id')
+// villas / apartments: seed *only* published ids so that a future draft →
+// published transition triggers a fresh notification. complexes have no
+// publish flag, so all rows are seeded.
+async function seedTable(t, source, requirePublished) {
+  const { data, error } = await sb.from(t).select('airtable_id, data')
   if (error) { console.error(`✖ ${t}:`, error.message); process.exit(1) }
-  await insertBatch(source, (data ?? []).map(r => r.airtable_id))
+  const ids = (data ?? [])
+    .filter(r => !requirePublished || r.data?.['Опубликовать'] === true)
+    .map(r => r.airtable_id)
+  await insertBatch(source, ids)
+}
+await seedTable('raw_villas',      'villas',     true)
+await seedTable('raw_apartments',  'apartments', true)
+await seedTable('raw_complexes',   'complexes',  false)
+// Clean up any draft ids from a previous seed that didn't filter — keep the
+// log in sync with the "published only" policy.
+for (const t of ['raw_villas', 'raw_apartments']) {
+  const source = t.replace('raw_', '')
+  const { data } = await sb.from(t).select('airtable_id, data')
+  const drafts = (data ?? []).filter(r => r.data?.['Опубликовать'] !== true).map(r => r.airtable_id)
+  for (let i = 0; i < drafts.length; i += 500) {
+    const slice = drafts.slice(i, i + 500)
+    const { error } = await sb.from('agent_notification_log').delete().eq('source_table', source).in('source_id', slice)
+    if (error) console.warn('  ✖ prune draft:', error.message)
+  }
+  if (drafts.length) console.log(`  ${source}: pruned ${drafts.length} draft entries`)
 }
 
 // Storage manifests for news / promo / events

@@ -134,12 +134,24 @@ function _fs(v) {
   if (v && typeof v === 'object' && 'value' in v) return _fs(v.value)
   return null
 }
-await notifyAgents('apartments', recs
-  .filter(r => r.fields?.['Опубликовать'] === true)
-  .map(r => ({
-    sourceId: r.id,
-    developerNames: [r.fields['Developer1'], r.fields['Developer']].map(_fs).filter(Boolean),
-    title: _fs(r.fields['SEO:Title']) ?? _fs(r.fields['ИИ Имя']) ?? r.id,
-    body: null,
-    path: _fs(r.fields['SEO:Slug']) ? `/ru/apartamenty/o/${_fs(r.fields['SEO:Slug'])}` : null,
-  })))
+const pubRecs = recs.filter(r => r.fields?.['Опубликовать'] === true)
+await notifyAgents('apartments', pubRecs.map(r => ({
+  sourceId: r.id,
+  developerNames: [r.fields['Developer1'], r.fields['Developer']].map(_fs).filter(Boolean),
+  title: _fs(r.fields['SEO:Title']) ?? _fs(r.fields['ИИ Имя']) ?? r.id,
+  body: null,
+  path: _fs(r.fields['SEO:Slug']) ? `/ru/apartamenty/o/${_fs(r.fields['SEO:Slug'])}` : null,
+})))
+
+const { syncPriceChanges } = await import('./_price-diff.mjs')
+await syncPriceChanges({
+  source: 'apartments',
+  snapshotKey: '_prices-apartments.json',
+  records: pubRecs,
+  describe: ({ id, fields }) => ({
+    priceRaw: fields['price_usd'] ?? fields['Цена'],
+    developerNames: [fields['Developer1'], fields['Developer']].map(_fs).filter(Boolean),
+    title: _fs(fields['SEO:Title']) ?? _fs(fields['ИИ Имя']) ?? id,
+    path: _fs(fields['SEO:Slug']) ? `/ru/apartamenty/o/${_fs(fields['SEO:Slug'])}` : null,
+  }),
+})

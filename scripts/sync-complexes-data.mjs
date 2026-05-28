@@ -108,8 +108,9 @@ function _fs(v) {
   if (v && typeof v === 'object' && 'value' in v) return _fs(v.value)
   return null
 }
+// raw_complexes has no publish flag — every row is visible on the site, so
+// we notify on every new airtable_id.
 await notifyAgents('complexes', recs
-  .filter(r => r.fields?.['Опубликовать'] === true || r.fields?.['Публикация'] === true)
   .map(r => ({
     sourceId: r.id,
     developerNames: [r.fields['Developer1'], r.fields['Developer']].map(_fs).filter(Boolean),

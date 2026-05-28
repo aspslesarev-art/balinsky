@@ -28,7 +28,7 @@ type Body = {
   items: ItemInput[]
 }
 
-const VALID_SOURCES = new Set<AgentNotifySource>(['news', 'promo', 'events', 'villas', 'apartments', 'complexes'])
+const VALID_SOURCES = new Set<AgentNotifySource>(['news', 'promo', 'events', 'villas', 'apartments', 'complexes', 'villa_units', 'price_change'])
 
 function normalize(s: string | null | undefined): string {
   if (!s) return ''
