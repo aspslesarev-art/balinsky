@@ -17,6 +17,9 @@ export function SiteChrome() {
   const pathname = usePathname() ?? ''
   // Admin is its own self-contained UI: no public footer, no AI consultant.
   if (pathname === '/admin' || pathname.startsWith('/admin/')) return null
+  // Telegram Mini App pages are rendered inside the Telegram WebView — they
+  // don't want a site footer or AI chat bubble.
+  if (pathname === '/bot' || pathname.startsWith('/bot/')) return null
   const lang: Lang = pathname.startsWith('/en') ? 'en' : 'ru'
   return (
     <>

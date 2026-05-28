@@ -190,17 +190,41 @@ function EmptyHint({ children }: { children: React.ReactNode }) {
   return <div style={{ padding: '14px 4px', color: 'var(--tg-theme-hint-color, #9CA3AF)', fontSize: 13 }}>{children}</div>
 }
 
+// Uniform square tile, white background, source image fits inside via
+// object-fit: contain — so a tall narrow logo and a square logo both occupy
+// the exact same footprint in the list.
+function LogoTile({ src, alt }: { src: string | null; alt: string }) {
+  const size = 40
+  const wrap: React.CSSProperties = {
+    flex: `0 0 ${size}px`,
+    width: size,
+    height: size,
+    borderRadius: 8,
+    background: '#FFFFFF',
+    border: '1px solid rgba(0,0,0,0.06)',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    boxSizing: 'border-box',
+  }
+  if (!src) {
+    return <span style={wrap} aria-hidden="true" />
+  }
+  return (
+    <span style={wrap}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={src} alt={alt} loading="lazy" style={{ maxWidth: '85%', maxHeight: '85%', width: 'auto', height: 'auto', objectFit: 'contain', display: 'block' }} />
+    </span>
+  )
+}
+
 function Row({ dev, variant, pending, onClick }: { dev: Developer; variant: 'sub' | 'unsub'; pending: boolean; onClick: () => void }) {
   const subLabel = pending ? '…' : 'Подписаться'
   const unsubLabel = pending ? '…' : 'Отписаться'
   return (
-    <li style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 4px', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
-      {dev.logo ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={dev.logo} alt="" width={32} height={32} style={{ borderRadius: 6, objectFit: 'cover', flex: '0 0 32px', background: '#F3F4F6' }} />
-      ) : (
-        <div style={{ width: 32, height: 32, borderRadius: 6, flex: '0 0 32px', background: 'var(--tg-theme-secondary-bg-color, #F3F4F6)' }} />
-      )}
+    <li style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 4px', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
+      <LogoTile src={dev.logo} alt={dev.name} />
       <span style={{ fontSize: 15, fontWeight: 500, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{dev.name}</span>
       <button
         type="button"
