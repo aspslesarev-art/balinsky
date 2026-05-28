@@ -8,6 +8,7 @@ import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
 import { getDistrictCommercialMeta } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { enLabel, type FilterDim } from '@/lib/filter-i18n'
+import { isTopBlacklisted } from '@/lib/top-blacklist'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/villa-photos/_manifest.json`
@@ -276,7 +277,15 @@ export function enrich(r: Row, styles: StylesMap = {}): EnrichedRow {
     style: styles[r.airtable_id]?.style ?? null,
     landBucket: landBucket(firstString(d['Land color'])),
     dealType: dealFromString(firstString(d['Тип сделки'])),
-    isTop: d['TOP'] === true,
+    // TOP flag respects an explicit developer blacklist — historically Bali
+    // Baza objects had TOP=true in Airtable but they should no longer surface
+    // in any top section. See lib/top-blacklist.ts.
+    isTop: d['TOP'] === true && !isTopBlacklisted(
+      firstString(d['Developer1']),
+      firstString(d['Developer']),
+      firstString(d['SEO:Title']),
+      firstString(d['ИИ Имя']),
+    ),
   }
 }
 

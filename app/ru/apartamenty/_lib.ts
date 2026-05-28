@@ -10,6 +10,7 @@ import { getDistrictCommercialMeta } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { enLabel, type FilterDim } from '@/lib/filter-i18n'
 import { pluralRu } from '@/lib/plural-ru'
+import { isTopBlacklisted } from '@/lib/top-blacklist'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/apartment-photos/_manifest.json`
@@ -231,7 +232,12 @@ function enrich(r: Row, devMap: Record<string, string>): EnrichedRow {
     lng: parseGeo(d['Geo 2']),
     landBucket: landBucket(firstString(d['Land color'])),
     dealType: dealFromString(firstString(d['Тип сделки'])),
-    isTop: d['TOP'] === true,
+    isTop: d['TOP'] === true && !isTopBlacklisted(
+      ...developerNames,
+      firstString(d['Developer']),
+      firstString(d['SEO:Title']),
+      firstString(d['ИИ Имя']),
+    ),
   }
 }
 

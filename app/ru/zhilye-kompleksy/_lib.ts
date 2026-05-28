@@ -7,6 +7,7 @@ import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
 import { getDistrictCommercialMeta } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { enLabel, type FilterDim } from '@/lib/filter-i18n'
+import { isTopBlacklisted } from '@/lib/top-blacklist'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/complex-photos/_manifest.json`
@@ -207,7 +208,13 @@ function enrich(r: Row): EnrichedRow {
     // either a number-rank or sometimes a checkbox boolean. We
     // honour any truthy value as a pin; numeric values double as
     // the rank within the pinned group.
-    isTop: d['ТОП'] === true || d['TOP'] === true || typeof d['TOP'] === 'number',
+    isTop: (d['ТОП'] === true || d['TOP'] === true || typeof d['TOP'] === 'number')
+      && !isTopBlacklisted(
+        firstString(d['Developer1']),
+        firstString(d['Варианты поиска застройщика']),
+        firstString(d['Project']),
+        firstString(d['Варианты поиска комлпекса']),
+      ),
     topRank: typeof d['TOP'] === 'number' ? d['TOP'] : null,
   }
 }
