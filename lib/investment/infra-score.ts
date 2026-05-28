@@ -49,18 +49,23 @@ function isBeachClub(p: NearbyPlace): boolean {
 //   - coworking spaces (digital-nomad rental demand)
 //   - ferry terminals / harbours (Sanur → Nusa Penida etc)
 //   - genuine fine-dining (priceLevel high OR rating 4.7 with 500+ reviews)
-function isJunkChain(p: NearbyPlace): boolean {
-  if (hasType(p, 'fast_food_restaurant')) return true
+// Global brands (McDonald's, KFC, Starbucks, ...) pour millions into
+// site selection — their presence is itself a signal that the spot
+// cleared a corporate real-estate filter. They don't belong in the
+// "fine dining" or "Bali institution" buckets, but they earn a small
+// dedicated slot as a brand-anchor signal.
+function isGlobalBrandAnchor(p: NearbyPlace): boolean {
   if (!p.name) return false
-  return /\b(mcdonald|kfc|starbucks|burger king|pizza hut|dunkin|domino|subway|wendy)/i.test(p.name)
+  return /\b(mcdonald|kfc|starbucks|burger king|pizza hut|domino)/i.test(p.name)
 }
 function isFineDining(p: NearbyPlace): boolean {
-  if (isJunkChain(p)) return false
+  // Chains never count as fine dining even if their rating is high.
+  if (isGlobalBrandAnchor(p)) return false
+  if (hasType(p, 'fast_food_restaurant')) return false
   if (hasType(p, 'fine_dining_restaurant')) return (p.rating ?? 0) >= 4.4
   if (p.priceLevel != null && PRICE_HIGH.has(p.priceLevel) && (p.rating ?? 0) >= 4.4) return true
-  // Stricter than the old isNotable — 4.7 + 500 reviews is "Bali institution"
-  // territory, not "popular warung." Keeps Naughty Nuri's / Mason / La Brisa,
-  // drops Warung Mak Beng / Soul on the Beach.
+  // 4.7 + 500 reviews is "Bali institution" territory, not "popular warung."
+  // Keeps Naughty Nuri's / Mason / La Brisa, drops Warung Mak Beng.
   return (p.rating ?? 0) >= 4.7 && (p.reviews ?? 0) >= 500
 }
 function isPremiumHospital(p: NearbyPlace): boolean {
@@ -98,7 +103,7 @@ export function scoreInfra(byCategory: Record<string, NearbyPlace[]>): InfraScor
   // Composite-score restaurant gate (kept loose for the 0-100 number) —
   // the anchor map uses the much tighter isFineDining above.
   const isNotable = (p: NearbyPlace): boolean =>
-    !isJunkChain(p) && (
+    !isGlobalBrandAnchor(p) && !hasType(p, 'fast_food_restaurant') && (
       (p.priceLevel != null && PRICE_HIGH.has(p.priceLevel) && (p.rating ?? 0) >= 4.3) ||
       ((p.rating ?? 0) >= 4.6 && (p.reviews ?? 0) >= 100)
     )
@@ -144,6 +149,10 @@ export function scoreInfra(byCategory: Record<string, NearbyPlace[]>): InfraScor
   const coworkings = withinAnchorRadius(byCategory.coworking)
     .filter(p => (p.rating ?? 0) >= 4.4)
   const internationalHospitals = withinAnchorRadius(byCategory.hospital).filter(isPremiumHospital)
+  // Brand anchors — McDonald's, KFC, Starbucks etc. Their real-estate teams
+  // already underwrote the location, so seeing one nearby is third-party
+  // validation that the address cleared a corporate due-diligence bar.
+  const brandAnchors = withinAnchorRadius(byCategory.restaurant).filter(isGlobalBrandAnchor)
 
   const seen = new Set<string>()
   const dedup = (p: NearbyPlace) => {
@@ -163,6 +172,7 @@ export function scoreInfra(byCategory: Record<string, NearbyPlace[]>): InfraScor
     ...internationalSchools.slice(0, 2).filter(dedup),
     ...coworkings.slice(0, 2).filter(dedup),
     ...premiumBeachClubs.slice(0, 3).filter(dedup),
+    ...brandAnchors.slice(0, 2).filter(dedup),
     ...fineDining.slice(0, 4).filter(dedup),
     ...realLandmarks.slice(0, 2).filter(dedup),
   ]
