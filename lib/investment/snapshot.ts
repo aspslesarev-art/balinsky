@@ -118,10 +118,11 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
 
   const region = regionFor(lat, lng)
 
-  // Pull data: 2km competitors + nearby places
-  const [allInRadius, places] = await Promise.all([
+  // Pull data: 2km competitors + nearby places + baliforum curated places
+  const [allInRadius, places, baliforum] = await Promise.all([
     loadNearby(lat, lng, 2),
     loadNearbyPlaces(villaId),
+    loadBaliforumNearby(lat, lng, 1.5),
   ])
   const beaches = places?.byCategory.beach ?? []
   const zoneInfo = classifyZone(beaches)
@@ -169,7 +170,13 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
     bedrooms: g.beds.length ? Math.round(g.beds.reduce((s, v) => s + v, 0) / g.beds.length) : null,
     isMatch: g.matchAny,
   })).slice(0, 250)
-  const infra = places ? scoreInfra(places.byCategory) : { metrics: { premiumRestaurants: 0, beachClubs: 0, topCafes: 0, fitness: 0, nightclubs: 0, avgRating: null, reviewDensity: 0, totalAnchors: 0 }, composite: 0, anchors: [] }
+  // Merge baliforum curated places into byCategory under their mapped category
+  // keys before scoring. They appear with the same NearbyPlace shape so the
+  // existing anchor selectors pick them up without further glue.
+  const byCategoryEnriched = mergeBaliforumIntoCategories(places?.byCategory ?? {}, baliforum)
+  const infra = places || baliforum.length
+    ? scoreInfra(byCategoryEnriched)
+    : { metrics: { premiumRestaurants: 0, beachClubs: 0, topCafes: 0, fitness: 0, nightclubs: 0, avgRating: null, reviewDensity: 0, totalAnchors: 0 }, composite: 0, anchors: [] }
 
   // Photo from corresponding photos manifest (best-effort)
   const photo = await firstPhoto(villaId, kind)
@@ -197,7 +204,7 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
     totalCompetitorsInRadius: allInRadius.length,
     infra,
     anchors: infra.anchors,
-    nearbyByCategory: places?.byCategory ?? {},
+    nearbyByCategory: byCategoryEnriched,
     flags: {
       emergingMarket,
       weakPerformance,
@@ -206,6 +213,89 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
       expandedZone: matchResult.expanded,
     },
   }
+}
+
+// Baliforum-curated places are stored in public.baliforum_places (see migration
+// 036). The list is hand-picked by Russian-speaking community moderators, so
+// it doubles as a third-party "is this address actually nice?" signal alongside
+// Google rating counts. We pull a small bounding-box slice per snapshot and
+// merge into the existing category map so the anchor selector reuses them.
+type BaliforumRow = {
+  slug: string
+  name: string | null
+  category: string | null
+  lat: number
+  lng: number
+  rating: number | null
+  reviews: number | null
+  google_place_id: string | null
+  address: string | null
+  url: string | null
+  photo: string | null
+}
+
+function distanceKm(aLat: number, aLng: number, bLat: number, bLng: number): number {
+  const R = 6371
+  const dLat = ((bLat - aLat) * Math.PI) / 180
+  const dLng = ((bLng - aLng) * Math.PI) / 180
+  const lat1 = (aLat * Math.PI) / 180
+  const lat2 = (bLat * Math.PI) / 180
+  const h = Math.sin(dLat / 2) ** 2 + Math.sin(dLng / 2) ** 2 * Math.cos(lat1) * Math.cos(lat2)
+  return 2 * R * Math.asin(Math.sqrt(h))
+}
+
+async function loadBaliforumNearby(lat: number, lng: number, radiusKm: number): Promise<NearbyPlace[]> {
+  const dLat = radiusKm / 111
+  const dLng = radiusKm / (111 * Math.cos((lat * Math.PI) / 180))
+  const { data, error } = await sb
+    .from('baliforum_places')
+    .select('slug,name,category,lat,lng,rating,reviews,google_place_id,address,url,photo')
+    .gte('lat', lat - dLat).lte('lat', lat + dLat)
+    .gte('lng', lng - dLng).lte('lng', lng + dLng)
+    .limit(200)
+  if (error) {
+    // Don't blow the snapshot if the table is missing/empty — fall through
+    // to the Google-only path. Errors in this path are non-fatal.
+    return []
+  }
+  const out: NearbyPlace[] = []
+  for (const r of (data ?? []) as BaliforumRow[]) {
+    const d = distanceKm(lat, lng, r.lat, r.lng)
+    if (d > radiusKm) continue
+    out.push({
+      id: r.google_place_id ?? `baliforum:${r.slug}`,
+      name: r.name,
+      rating: r.rating,
+      reviews: r.reviews,
+      primaryType: r.category,
+      types: r.category ? [r.category, 'baliforum'] : ['baliforum'],
+      priceLevel: null,
+      address: r.address,
+      mapsUrl: r.url,
+      lat: r.lat,
+      lng: r.lng,
+      distanceKm: d,
+    })
+  }
+  return out
+}
+
+function mergeBaliforumIntoCategories(
+  byCategory: Record<string, NearbyPlace[]>,
+  baliforum: NearbyPlace[],
+): Record<string, NearbyPlace[]> {
+  if (baliforum.length === 0) return byCategory
+  const out: Record<string, NearbyPlace[]> = { ...byCategory }
+  for (const p of baliforum) {
+    const cat = p.primaryType || 'baliforum'
+    const existing = out[cat] ?? []
+    // Dedupe by Google place_id when both Google sync and Baliforum found
+    // the same spot — keep whichever entry was already there (Google's data
+    // tends to have more accurate review counts).
+    if (existing.some(e => e.id === p.id)) continue
+    out[cat] = [...existing, p]
+  }
+  return out
 }
 
 function toCard(m: import('../competitor-utils').CompetitorWithDistance): NearbyMatchCard {
