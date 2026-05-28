@@ -29,12 +29,19 @@ const CATEGORIES_NEARBY = [
   { key: 'supermarket', title: 'Магазины',              includedTypes: ['supermarket', 'grocery_store'],         radiusM: 1500 },
   { key: 'pharmacy',    title: 'Аптеки',                includedTypes: ['pharmacy', 'drugstore'],                radiusM: 2000 },
   { key: 'hospital',    title: 'Больницы и клиники',    includedTypes: ['hospital', 'medical_clinic', 'doctor'], radiusM: 5000 },
+  // Investor-anchor categories: mall, ferry, transit. Names get butchered when
+  // mall-as-restaurant text-search results bleed through name regex — go
+  // through structured types instead.
+  { key: 'shopping_mall', title: 'Торговые центры',     includedTypes: ['shopping_mall', 'department_store'],    radiusM: 5000 },
+  { key: 'ferry_terminal',title: 'Порты и переправы',   includedTypes: ['ferry_terminal'],                       radiusM: 8000 },
 ]
 // searchText категории — для тех, что плохо ловятся через includedTypes
 const CATEGORIES_TEXT = [
   { key: 'wellness',          title: 'Йога и фитнес',          query: 'yoga studio wellness spa fitness',           radiusM: 1500 },
   { key: 'beachclub',         title: 'Beach clubs',            query: 'beach club',                                  radiusM: 5000 },
   { key: 'international_school', title: 'Международные школы', query: 'international school Bali',                   radiusM: 8000 },
+  // Coworking is a top-3 anchor for digital-nomad-driven rental yield.
+  { key: 'coworking',         title: 'Коворкинги',             query: 'coworking space',                             radiusM: 3000 },
 ]
 const CATEGORIES = [...CATEGORIES_NEARBY, ...CATEGORIES_TEXT]
 
