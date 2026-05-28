@@ -42,6 +42,10 @@ const CATEGORIES_TEXT = [
   { key: 'international_school', title: 'Международные школы', query: 'international school Bali',                   radiusM: 8000 },
   // Coworking is a top-3 anchor for digital-nomad-driven rental yield.
   { key: 'coworking',         title: 'Коворкинги',             query: 'coworking space',                             radiusM: 3000 },
+  // 5-star hotels — corporate chains pour eight-figure due diligence into
+  // siting their flagship resorts (Hyatt, Marriott, Four Seasons, Aman, ...).
+  // Their presence is a strong third-party validation of the address.
+  { key: 'luxury_hotel',      title: 'Премиум-отели',          query: 'luxury 5 star resort hotel',                  radiusM: 4000, keepLodging: true },
 ]
 const CATEGORIES = [...CATEGORIES_NEARBY, ...CATEGORIES_TEXT]
 
@@ -227,7 +231,10 @@ for (const v of targets) {
       const items = r.results
         .map(p => compactPlace(p, v.lat, v.lng))
         .filter(Boolean)
-        .filter(p => !p.types?.includes('lodging'))
+        // luxury_hotel deliberately wants lodging results; everywhere else
+        // we strip them so beach/cafe/etc lists aren't polluted by villa
+        // listings.
+        .filter(p => cat.keepLodging || !p.types?.includes('lodging'))
         .filter(p => p.distanceKm * 1000 <= cat.radiusM)
         .sort((a, b) => {
           // Composite score: rating × log10(reviews+10). Promotes well-known places

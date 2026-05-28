@@ -85,6 +85,14 @@ function isReligiousOrCivic(p: NearbyPlace): boolean {
 function isMall(p: NearbyPlace): boolean {
   return hasType(p, 'shopping_mall') || hasType(p, 'department_store')
 }
+// 5-star hotel chains — international flag-brand whitelist + rating sanity
+// check. Domestic guesthouses and homestays that come through luxury_hotel
+// text search get filtered out by name match.
+function isLuxuryHotel(p: NearbyPlace): boolean {
+  if (!p.name) return false
+  if ((p.rating ?? 0) < 4.3) return false
+  return /\b(hyatt|marriott|westin|hilton|sofitel|mandarin oriental|four seasons|ritz[- ]carlton|st\.? regis|w hotel|intercontinental|conrad|anantara|banyan tree|aman|como|capella|mulia|ayana|bulgari|nihi|alila|raffles|park hyatt|grand hyatt|andaz|edition|kempinski|fairmont|jw marriott|le meridien|swissôtel|swissotel|movenpick|mövenpick|shangri[- ]la|peninsula|rosewood|jumeirah)\b/i.test(p.name)
+}
 function isFerry(p: NearbyPlace): boolean {
   return hasType(p, 'ferry_terminal')
 }
@@ -153,6 +161,7 @@ export function scoreInfra(byCategory: Record<string, NearbyPlace[]>): InfraScor
   // already underwrote the location, so seeing one nearby is third-party
   // validation that the address cleared a corporate due-diligence bar.
   const brandAnchors = withinAnchorRadius(byCategory.restaurant).filter(isGlobalBrandAnchor)
+  const luxuryHotels = withinAnchorRadius(byCategory.luxury_hotel).filter(isLuxuryHotel)
 
   const seen = new Set<string>()
   const dedup = (p: NearbyPlace) => {
@@ -170,6 +179,7 @@ export function scoreInfra(byCategory: Record<string, NearbyPlace[]>): InfraScor
     ...malls.slice(0, 2).filter(dedup),
     ...ferries.slice(0, 1).filter(dedup),
     ...internationalSchools.slice(0, 2).filter(dedup),
+    ...luxuryHotels.slice(0, 3).filter(dedup),
     ...coworkings.slice(0, 2).filter(dedup),
     ...premiumBeachClubs.slice(0, 3).filter(dedup),
     ...brandAnchors.slice(0, 2).filter(dedup),
