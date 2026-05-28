@@ -74,57 +74,6 @@ if (stale.length > 0) {
 }
 console.log('✓ done')
 
-// Notify agents on new unit appearances. Units don't carry a developer field
-// themselves — they link to a parent villa, so we build a villa_id → developer
-// map once and look up each unit through it.
-const { notifyAgents } = await import('./_agent-notify.mjs')
-function _fs(v) {
-  if (typeof v === 'string') return v
-  if (Array.isArray(v) && v.length) return _fs(v[0])
-  if (v && typeof v === 'object' && 'value' in v) return _fs(v.value)
-  return null
-}
-const { data: parentVillas } = await sb.from('raw_villas').select('airtable_id, dev:data->Developer, dev1:data->Developer1')
-const devByVilla = new Map()
-for (const v of parentVillas ?? []) {
-  const name = _fs(v.dev1) ?? _fs(v.dev)
-  if (name) devByVilla.set(v.airtable_id, name)
-}
-const items = recs.map(r => {
-  const villaIds = Array.isArray(r.fields['Виллы']) ? r.fields['Виллы'] : []
-  const devs = villaIds.map(id => devByVilla.get(id)).filter(Boolean)
-  const status = _fs(r.fields['Статус'])
-  // Skip units that are obviously not bookable / saleable (sold, blocked).
-  if (status && /продан|sold|снят/i.test(status)) return null
-  const seoSlug = _fs(r.fields['SEO:Slug'])
-  return {
-    sourceId: r.id,
-    developerNames: devs,
-    title: `Юнит ${_fs(r.fields['Name']) ?? r.id} (${_fs(r.fields['Цена']) ? '$' + Number(r.fields['Цена']).toLocaleString('en-US') : 'цена не указана'})`,
-    body: [
-      _fs(r.fields['Спальни']) ? `Спален: ${r.fields['Спальни']}` : null,
-      _fs(r.fields['Жилая площадь']) ? `Площадь: ${r.fields['Жилая площадь']} м²` : null,
-      status,
-    ].filter(Boolean).join(' · '),
-    path: seoSlug ? `/ru/villy/o/${seoSlug.split('/')[0]}` : null,
-  }
-}).filter(Boolean)
-await notifyAgents('villa_units', items)
-
-const { syncPriceChanges } = await import('./_price-diff.mjs')
-await syncPriceChanges({
-  source: 'villa_units',
-  snapshotKey: '_prices-villa-units.json',
-  records: recs.filter(r => !/продан|sold|снят/i.test(_fs(r.fields?.['Статус']) ?? '')),
-  describe: ({ id, fields }) => {
-    const villaIds = Array.isArray(fields['Виллы']) ? fields['Виллы'] : []
-    const devs = villaIds.map(vid => devByVilla.get(vid)).filter(Boolean)
-    const seoSlug = _fs(fields['SEO:Slug'])
-    return {
-      priceRaw: fields['Цена'],
-      developerNames: devs,
-      title: `Юнит ${_fs(fields['Name']) ?? id}`,
-      path: seoSlug ? `/ru/villy/o/${seoSlug.split('/')[0]}` : null,
-    }
-  },
-})
+// Agent push notifications are intentionally NOT wired up for villa units —
+// the product is still being shaped, so we don't broadcast on changes here.
+// Notifications continue to fire from raw_villas and raw_apartments only.

@@ -16,7 +16,7 @@ const sb = createClient(
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
-export type AgentNotifySource = 'news' | 'promo' | 'events' | 'villas' | 'apartments' | 'complexes' | 'villa_units' | 'price_change'
+export type AgentNotifySource = 'news' | 'promo' | 'events' | 'villas' | 'apartments' | 'complexes' | 'price_change'
 
 export type AgentNotifyItem = {
   // The unique key that goes into agent_notification_log alongside `source`.
@@ -81,7 +81,6 @@ function buildMessage(item: AgentNotifyItem, source: AgentNotifySource): string 
     villas: '🏝 Новая вилла',
     apartments: '🏢 Новый апартамент',
     complexes: '🏗 Новый ЖК',
-    villa_units: '🔑 Новый юнит виллы',
     price_change: '💰 Изменение цены',
   }
   const lines = [`<b>${TYPE_LABEL[source]}</b>`, `<b>${escapeHtml(item.title)}</b>`]
