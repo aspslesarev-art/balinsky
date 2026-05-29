@@ -528,7 +528,10 @@ async function loadUnitsInComplex(complexName: string, lang: Lang = 'ru'): Promi
     if (!r.title || !r.slug || r.slug.startsWith('-')) continue
     if (seenSlug.has('a:' + r.slug)) continue
     seenSlug.add('a:' + r.slug)
-    const titleSource = (lang === 'en' && r.title_en) ? r.title_en : r.title
+    // SEO:Title EN comes back as { state, value } wrapper for some rows,
+    // so unwrap through firstString before .replace — otherwise we'd
+    // hit "replace is not a function" on the EN tree.
+    const titleSource = (lang === 'en' ? firstString(r.title_en) : null) ?? r.title
     const title = titleSource.replace(/\s*\|\s*Balinsky\s*$/i, '').trim()
     units.push({
       kind: 'apartment',
@@ -551,7 +554,7 @@ async function loadUnitsInComplex(complexName: string, lang: Lang = 'ru'): Promi
     if (!r.title || !r.slug || r.slug.startsWith('-')) continue
     if (seenVillaId.has(r.airtable_id)) continue
     seenVillaId.add(r.airtable_id)
-    const titleSource = (lang === 'en' && r.title_en) ? r.title_en : r.title
+    const titleSource = (lang === 'en' ? firstString(r.title_en) : null) ?? r.title
     const title = titleSource.replace(/\s*\|\s*Balinsky\s*$/i, '').trim()
     units.push({
       kind: 'villa',
