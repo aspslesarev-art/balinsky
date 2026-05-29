@@ -240,7 +240,7 @@ function CloseButton({ onClose }: { onClose: () => void }) {
   )
 }
 
-function SinglePopup({ p, onClose }: { p: MapPoint; onClose: () => void }) {
+function SinglePopup({ p, onClose, lang }: { p: MapPoint; onClose: () => void; lang: 'ru' | 'en' }) {
   const fmtPrice = useFmtPrice()
   const price = fmtPrice(p.priceUsd)
   return (
@@ -262,28 +262,28 @@ function SinglePopup({ p, onClose }: { p: MapPoint; onClose: () => void }) {
         </div>
       )}
       <a
-        href={`/ru/apartamenty/o/${p.slug}`}
+        href={lang === 'en' ? `/en/apartments/o/${p.slug}` : `/ru/apartamenty/o/${p.slug}`}
         className="block text-center w-full px-3 py-2 rounded-lg bg-[#33A474] hover:bg-[#2C8E65] text-white text-[13px] font-medium no-underline transition-colors"
       >
-        Открыть карточку
+        {lang === 'en' ? 'Open listing' : 'Открыть карточку'}
       </a>
     </div>
   )
 }
 
-function MultiPopup({ items, onClose }: { items: MapPoint[]; onClose: () => void }) {
+function MultiPopup({ items, onClose, lang }: { items: MapPoint[]; onClose: () => void; lang: 'ru' | 'en' }) {
   const fmtPrice = useFmtPrice()
   return (
     <div className="relative w-[300px] p-1">
       <CloseButton onClose={onClose} />
       <div className="text-[13px] font-medium text-[#6B7280] mb-2 pr-6">
-        {items.length} объектов в одной точке
+        {lang === 'en' ? `${items.length} listings at this point` : `${items.length} объектов в одной точке`}
       </div>
       <ul className="max-h-[340px] overflow-y-auto -mx-1 px-1 divide-y divide-[#E5E7EB]">
         {items.map(p => (
           <li key={p.id}>
             <a
-              href={`/ru/apartamenty/o/${p.slug}`}
+              href={lang === 'en' ? `/en/apartments/o/${p.slug}` : `/ru/apartamenty/o/${p.slug}`}
               className="flex items-center gap-3 py-2.5 no-underline text-[#111827] hover:bg-[#F8FAF8] rounded-md px-1"
             >
               {p.thumb ? (
@@ -354,7 +354,11 @@ export function ApartmentsMap({
           defaultCenter={BALI_CENTER}
           defaultZoom={BALI_DEFAULT_ZOOM}
           gestureHandling="greedy"
-          disableDefaultUI={false}
+          disableDefaultUI={true}
+          streetViewControl={true}
+          fullscreenControl={true}
+          mapTypeControl={false}
+          zoomControl={false}
           clickableIcons={false}
           styles={BALINSKY_MAP_STYLE}
           backgroundColor="#F2EAD8"
@@ -373,9 +377,9 @@ export function ApartmentsMap({
               headerDisabled
             >
               {selected.items.length === 1 ? (
-                <SinglePopup p={selected.items[0]} onClose={() => setSelectedKey(null)} />
+                <SinglePopup p={selected.items[0]} onClose={() => setSelectedKey(null)} lang={lang} />
               ) : (
-                <MultiPopup items={selected.items} onClose={() => setSelectedKey(null)} />
+                <MultiPopup items={selected.items} onClose={() => setSelectedKey(null)} lang={lang} />
               )}
             </InfoWindow>
           )}

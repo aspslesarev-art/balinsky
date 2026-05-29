@@ -134,7 +134,7 @@ function MapMarkers({ points, selectedId, onSelect }: { points: VillaPoint[]; se
   return null
 }
 
-function PopupCard({ p, onClose }: { p: VillaPoint; onClose: () => void }) {
+function PopupCard({ p, onClose, lang }: { p: VillaPoint; onClose: () => void; lang: 'ru' | 'en' }) {
   const { currency } = useCurrency()
   const price = p.priceUsd != null && Number.isFinite(p.priceUsd) ? formatPrice(p.priceUsd, currency) : null
   return (
@@ -157,10 +157,10 @@ function PopupCard({ p, onClose }: { p: VillaPoint; onClose: () => void }) {
         <div className="text-[15px] font-semibold text-[#2C8E65] mb-3">{price}</div>
       )}
       <a
-        href={`/ru/villy/o/${p.slug}`}
+        href={lang === 'en' ? `/en/villas/o/${p.slug}` : `/ru/villy/o/${p.slug}`}
         className="block text-center w-full px-3 py-2 rounded-lg bg-[#33A474] hover:bg-[#2C8E65] text-white text-[13px] font-medium no-underline transition-colors"
       >
-        Открыть карточку
+        {lang === 'en' ? 'Open listing' : 'Открыть карточку'}
       </a>
     </div>
   )
@@ -198,7 +198,14 @@ export function VillasMap({
           defaultCenter={BALI_CENTER}
           defaultZoom={BALI_DEFAULT_ZOOM}
           gestureHandling="greedy"
-          disableDefaultUI={false}
+          disableDefaultUI={true}
+          // Keep Street View pegman + fullscreen, ditch Map/Satellite type
+          // toggle and zoom buttons — the styled Bali map doesn't need a
+          // satellite swap and the controls were just visual noise.
+          streetViewControl={true}
+          fullscreenControl={true}
+          mapTypeControl={false}
+          zoomControl={false}
           clickableIcons={false}
           styles={BALINSKY_MAP_STYLE}
           backgroundColor="#F2EAD8"
@@ -211,7 +218,7 @@ export function VillasMap({
               pixelOffset={[0, -28]}
               headerDisabled
             >
-              <PopupCard p={selected} onClose={() => setSelectedId(null)} />
+              <PopupCard p={selected} onClose={() => setSelectedId(null)} lang={lang} />
             </InfoWindow>
           )}
         </Map>

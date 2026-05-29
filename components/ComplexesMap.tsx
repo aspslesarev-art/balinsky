@@ -186,7 +186,7 @@ function MapMarkers({
   return null
 }
 
-function PopupCard({ p, onClose }: { p: ComplexPoint; onClose: () => void }) {
+function PopupCard({ p, onClose, lang }: { p: ComplexPoint; onClose: () => void; lang: 'ru' | 'en' }) {
   return (
     <div className="relative w-[280px] p-1">
       <button
@@ -215,10 +215,10 @@ function PopupCard({ p, onClose }: { p: ComplexPoint; onClose: () => void }) {
         {p.types && <span className="line-clamp-1">{p.types}</span>}
       </div>
       <a
-        href={`/ru/zhilye-kompleksy/${p.slug}`}
+        href={lang === 'en' ? `/en/complexes/o/${p.slug}` : `/ru/zhilye-kompleksy/o/${p.slug}`}
         className="block text-center w-full px-3 py-2 rounded-lg bg-[#33A474] hover:bg-[#2C8E65] text-white text-[13px] font-medium no-underline transition-colors"
       >
-        Открыть карточку
+        {lang === 'en' ? 'Open listing' : 'Открыть карточку'}
       </a>
     </div>
   )
@@ -265,7 +265,11 @@ export function ComplexesMap({
           defaultCenter={BALI_CENTER}
           defaultZoom={BALI_DEFAULT_ZOOM}
           gestureHandling="greedy"
-          disableDefaultUI={false}
+          disableDefaultUI={true}
+          streetViewControl={true}
+          fullscreenControl={true}
+          mapTypeControl={false}
+          zoomControl={false}
           clickableIcons={false}
           styles={BALINSKY_MAP_STYLE}
           backgroundColor="#F2EAD8"
@@ -283,7 +287,7 @@ export function ComplexesMap({
               pixelOffset={[0, -28]}
               headerDisabled
             >
-              <PopupCard p={selected} onClose={() => setSelectedId(null)} />
+              <PopupCard p={selected} onClose={() => setSelectedId(null)} lang={lang} />
             </InfoWindow>
           )}
         </Map>
