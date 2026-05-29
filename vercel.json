@@ -17,7 +17,7 @@
       "schedule": "*/5 * * * *"
     },
     {
-      "path": "/api/cron/translate-missing?section=news,promo,events,knowledge,villas,apartments,complexes",
+      "path": "/api/cron/translate-missing?section=news,promo,events,knowledge,villas,apartments,complexes,developers",
       "schedule": "27 * * * *"
     }
   ]

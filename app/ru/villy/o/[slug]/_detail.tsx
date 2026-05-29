@@ -62,6 +62,7 @@ import { normalizeSlug } from '@/lib/slug-normalize'
 import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
 import { districtRu } from '@/lib/district-ru'
+import { enLabel } from '@/lib/filter-i18n'
 
 const COPY = {
   ru: {
@@ -585,7 +586,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
     lease && { Icon: Lock, label: c.factLeasehold, value: c.factLeaseValue(lease) },
     district && { Icon: MapPin, label: c.factDistrict, value: district },
     fmtAirportDistance(lat, lng, lang) && { Icon: Plane, label: c.factAirport, value: fmtAirportDistance(lat, lng, lang)! },
-    interiorStyle && { Icon: Palette, label: c.factStyle, value: interiorStyle },
+    interiorStyle && { Icon: Palette, label: c.factStyle, value: lang === 'en' ? enLabel('style', interiorStyle) : interiorStyle },
     // Price/m² lives in the PriceCtaCard right under the hero, no need
     // to duplicate it here.
   ].filter(Boolean) as { Icon: typeof BedDouble; label: string; value: ReactNode }[]
@@ -766,6 +767,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
               presentationButton={
                 <VillaPresentationButton
                   variant="outline"
+                  lang={lang}
                   villaId={v.airtable_id}
                   slug={slug}
                   title={title}

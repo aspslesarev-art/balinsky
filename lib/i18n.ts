@@ -46,8 +46,12 @@ export function tField(
   if (lang === 'ru') return unwrap(d[field])
   const en = unwrap(d[`${field} EN`]) ?? unwrap(d[`${field} En`])
   if (en) return en
-  const ru = unwrap(d[field])
-  return ru ? `${field} EN` : null
+  // Fall back to the RU original instead of returning the "<field> EN"
+  // placeholder. The placeholder was meant as an editor hint, but it
+  // shipped to production and shows up as literal "Строительство и
+  // недвижимость EN" text on developer pages whenever a translation is
+  // missing. Better to render the Russian source than a debug stub.
+  return unwrap(d[field])
 }
 
 /** Same as tField but never shows the placeholder — falls back to RU. */

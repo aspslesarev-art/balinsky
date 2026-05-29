@@ -60,9 +60,13 @@ type Slide =
 
 export function VillaPresentationButton({
   variant = 'primary',
+  lang = 'ru',
   ...props
-}: VillaPresentationData & { variant?: 'primary' | 'outline' }) {
+}: VillaPresentationData & { variant?: 'primary' | 'outline'; lang?: 'ru' | 'en' }) {
   const [open, setOpen] = useState(false)
+  const t = lang === 'en'
+    ? { outline: 'PDF presentation', primary: 'Presentation', aria: 'Open villa presentation' }
+    : { outline: 'Презентация PDF',  primary: 'Презентация',  aria: 'Открыть презентацию виллы' }
   // 'outline' matches the new PriceCtaCard CTA row — same 54px height
   // as the green Buy button, white background with a hairline border so
   // the two CTAs read as siblings rather than mismatched controls.
@@ -75,12 +79,12 @@ export function VillaPresentationButton({
         type="button"
         onClick={() => setOpen(true)}
         className={`inline-flex items-center justify-center gap-2 ${styles}`}
-        aria-label="Открыть презентацию виллы"
+        aria-label={t.aria}
       >
         {variant === 'outline'
           ? <FileText size={18} strokeWidth={1.6} />
           : <Play size={15} fill="currentColor" />}
-        {variant === 'outline' ? 'Презентация PDF' : 'Презентация'}
+        {variant === 'outline' ? t.outline : t.primary}
       </button>
       {open && <VillaPresentation data={props} onClose={() => setOpen(false)} />}
     </>
