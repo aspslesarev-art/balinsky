@@ -110,7 +110,7 @@ function _fs(v) {
 }
 // raw_complexes has no publish flag — every row is visible on the site, so
 // we notify on every new airtable_id.
-await notifyAgents('complexes', recs
+await notifyAgents('complexes', records
   .map(r => ({
     sourceId: r.id,
     developerNames: [r.fields['Developer1'], r.fields['Developer']].map(_fs).filter(Boolean),
