@@ -723,6 +723,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
               presentationButton={
                 <VillaPresentationButton
                   variant="outline"
+                  lang={lang}
                   villaId={a.airtable_id}
                   slug={slug}
                   kind="apartment"
