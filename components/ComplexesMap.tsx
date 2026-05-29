@@ -102,6 +102,30 @@ function makeIcon(opts: { selected?: boolean; hover?: boolean }) {
   }
 }
 
+// Coincident lat/lng kills the "click → fly-in → see markers" flow: the
+// clusterer ends up with all points at the same coordinate, max zoom is
+// reached and the badge still says "N", but nothing reveals. Spread them
+// across a tiny circle so the last zoom levels fan them out.
+function spreadCoincident<T extends { lat: number; lng: number }>(items: T[]): T[] {
+  const buckets = new globalThis.Map<string, T[]>()
+  for (const p of items) {
+    const k = `${p.lat.toFixed(5)},${p.lng.toFixed(5)}`
+    const arr = buckets.get(k) ?? []
+    arr.push(p)
+    buckets.set(k, arr)
+  }
+  const STEP = 0.00010
+  const out: T[] = []
+  for (const arr of buckets.values()) {
+    if (arr.length === 1) { out.push(arr[0]); continue }
+    for (let i = 0; i < arr.length; i++) {
+      const angle = (i / arr.length) * 2 * Math.PI
+      out.push({ ...arr[i], lat: arr[i].lat + STEP * Math.cos(angle), lng: arr[i].lng + STEP * Math.sin(angle) })
+    }
+  }
+  return out
+}
+
 function MapMarkers({
   points,
   selectedId,
@@ -114,7 +138,8 @@ function MapMarkers({
   const map = useMap()
   const markersRef = useRef<Map<string, google.maps.Marker> | null>(null)
   const clustererRef = useRef<MarkerClusterer | null>(null)
-  const pointsKey = points.map(p => p.id).join('|')
+  const spread = useMemo(() => spreadCoincident(points), [points])
+  const pointsKey = spread.map(p => p.id).join('|')
 
   useEffect(() => {
     if (!map) return
@@ -125,7 +150,7 @@ function MapMarkers({
     }
     const map2 = new globalThis.Map<string, google.maps.Marker>()
 
-    for (const p of points) {
+    for (const p of spread) {
       const marker = new google.maps.Marker({
         position: { lat: p.lat, lng: p.lng },
         icon: makeIcon({}),

@@ -83,11 +83,36 @@ function makeIcon(opts: { selected?: boolean; hover?: boolean }) {
     scaledSize: new google.maps.Size(size, size),
   }
 }
+// Markers sharing identical lat/lng can't be separated by zooming — at max
+// zoom the clusterer keeps them under one badge and the map looks empty.
+// Spread coincident points across a ~10m circle so they fan out at the last
+// few zoom levels.
+function spreadCoincident<T extends { lat: number; lng: number }>(points: T[]): T[] {
+  const buckets = new globalThis.Map<string, T[]>()
+  for (const p of points) {
+    const k = `${p.lat.toFixed(5)},${p.lng.toFixed(5)}`
+    const arr = buckets.get(k) ?? []
+    arr.push(p)
+    buckets.set(k, arr)
+  }
+  const STEP = 0.00010
+  const out: T[] = []
+  for (const arr of buckets.values()) {
+    if (arr.length === 1) { out.push(arr[0]); continue }
+    for (let i = 0; i < arr.length; i++) {
+      const angle = (i / arr.length) * 2 * Math.PI
+      out.push({ ...arr[i], lat: arr[i].lat + STEP * Math.cos(angle), lng: arr[i].lng + STEP * Math.sin(angle) })
+    }
+  }
+  return out
+}
+
 function MapMarkers({ points, selectedId, onSelect }: { points: VillaPoint[]; selectedId: string | null; onSelect: (id: string | null) => void }) {
+  const spread = useMemo(() => spreadCoincident(points), [points])
   const map = useMap()
   const markersRef = useRef<Map<string, google.maps.Marker> | null>(null)
   const clustererRef = useRef<MarkerClusterer | null>(null)
-  const pointsKey = points.map(p => p.id).join('|')
+  const pointsKey = spread.map(p => p.id).join('|')
 
   useEffect(() => {
     if (!map) return
@@ -95,7 +120,7 @@ function MapMarkers({ points, selectedId, onSelect }: { points: VillaPoint[]; se
     clustererRef.current = null
     if (markersRef.current) for (const m of markersRef.current.values()) m.setMap(null)
     const map2 = new globalThis.Map<string, google.maps.Marker>()
-    for (const p of points) {
+    for (const p of spread) {
       const marker = new google.maps.Marker({ position: { lat: p.lat, lng: p.lng }, icon: makeIcon({}), cursor: 'pointer' })
       marker.addListener('click', () => onSelect(p.id))
       marker.addListener('mouseover', () => { if (p.id !== selectedId) marker.setIcon(makeIcon({ hover: true })) })
