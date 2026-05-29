@@ -422,7 +422,7 @@ function findParentComplex(aptTitle: string, complexes: ComplexRow[]): ComplexRo
   return best?.c ?? null
 }
 
-async function loadOtherApartmentsInDistrict(district: string | null, exceptId: string) {
+async function loadOtherApartmentsInDistrict(district: string | null, exceptId: string, lang: Lang = 'ru') {
   if (!district) return []
   const [idx, manifest] = await Promise.all([_loadApartmentIndex(), _loadAptManifest()])
   const candidates = idx.filter(e => e.id !== exceptId && e.district === district).slice(0, 4)
@@ -432,7 +432,8 @@ async function loadOtherApartmentsInDistrict(district: string | null, exceptId: 
     if (!r) continue
     const slug = firstString(r.data['SEO:Slug'])
     if (!slug) continue
-    const titleRaw = firstString(r.data['SEO:Title']) ?? firstString(r.data['ИИ Имя']) ?? slug
+    // tField returns EN if available (RU fallback after the i18n fix).
+    const titleRaw = tField(r.data, 'SEO:Title', lang) ?? tField(r.data, 'ИИ Имя', lang) ?? slug
     const title = titleRaw.replace(/\s*\|\s*Balinsky\s*$/i, '').trim()
     out.push({
       id: r.airtable_id,
@@ -542,7 +543,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
   const parentComplexName = parentComplex?.name ?? null
 
   const [otherApts, managers, activeReservation, landProfile, marketStats, developers] = await Promise.all([
-    loadOtherApartmentsInDistrict(district, a.airtable_id),
+    loadOtherApartmentsInDistrict(district, a.airtable_id, lang),
     loadManagersByDeveloperName(devName),
     findActiveReservation('apartment', a.airtable_id),
     loadLandProfile('apartment', a.airtable_id),

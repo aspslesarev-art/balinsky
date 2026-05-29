@@ -419,7 +419,7 @@ function findDeveloperByName(targetName: string | null, list: DeveloperLite[]): 
     ?? null
 }
 
-async function loadOtherVillasInDistrict(district: string | null, exceptId: string) {
+async function loadOtherVillasInDistrict(district: string | null, exceptId: string, lang: Lang = 'ru') {
   if (!district) return []
   const [idx, manifest] = await Promise.all([_loadVillaIndex(), _loadManifest()])
   const candidates = idx.filter(e => e.id !== exceptId && e.district === district).slice(0, 4)
@@ -429,7 +429,10 @@ async function loadOtherVillasInDistrict(district: string | null, exceptId: stri
     if (!r) continue
     const slug = firstString(r.data['SEO:Slug'])
     if (!slug) continue
-    const titleRaw = firstString(r.data['SEO:Title']) ?? firstString(r.data['ИИ Имя']) ?? slug
+    // tField returns EN if available (or RU fallback after the i18n.ts fix).
+    // Without this the EN villa detail page was rendering Russian card
+    // titles in the "Other villas in <district>" rail.
+    const titleRaw = tField(r.data, 'SEO:Title', lang) ?? tField(r.data, 'ИИ Имя', lang) ?? slug
     const title = titleRaw.replace(/\s*\|\s*Balinsky\s*$/i, '').trim()
     out.push({
       id: r.airtable_id,
@@ -541,7 +544,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   const sellerUrl = isResale ? firstString(d['Контакт продавца']) : null
 
   const [otherVillas, complexes, developers, stylesMap, scoresMap, activeReservation, landProfile, marketStats] = await Promise.all([
-    loadOtherVillasInDistrict(district, v.airtable_id),
+    loadOtherVillasInDistrict(district, v.airtable_id, lang),
     _loadComplexesIndex(),
     _loadDevelopersIndex(),
     loadVillaStyles(),

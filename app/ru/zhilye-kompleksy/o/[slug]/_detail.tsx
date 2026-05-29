@@ -428,20 +428,30 @@ async function loadComplexBySlug(slug: string): Promise<ComplexRow | null> {
   return _loadComplexById(entry.id)
 }
 
-async function loadOtherComplexesInDistrict(district: string | null, exceptId: string) {
+async function loadOtherComplexesInDistrict(district: string | null, exceptId: string, lang: Lang = 'ru') {
   if (!district) return []
   const [idx, manifest] = await Promise.all([_loadComplexIndex(), _loadComplexPhotos()])
   const candidates = idx.filter(c => c.id !== exceptId && c.district === district).slice(0, 4)
   const rows = await Promise.all(candidates.map(c => _loadComplexById(c.id)))
+  // Same RU→EN type label map as the main complex page above.
+  const TYPE_EN: Record<string, string> = {
+    'Апартаменты': 'Apartments',
+    'Виллы': 'Villas',
+    'Виллы и дома': 'Villas',
+    'Таунхаусы': 'Townhouses',
+    'Дома': 'Houses',
+  }
   return rows
     .filter((c): c is ComplexRow => c != null)
     .map(c => {
       const photos = manifest[c.airtable_id] ?? []
+      const typesRaw = strList(c.data['Типы юнитов'])
+      const types = lang === 'en' ? typesRaw.map(t => TYPE_EN[t] ?? t) : typesRaw
       return {
         slug: c.slug as string,
         name: firstString(c.data['Project']) as string,
         location: firstString(c.data['Location 2']) ?? firstString(c.data['Location']),
-        types: strList(c.data['Типы юнитов']).join(', ') || null,
+        types: types.join(', ') || null,
         coverUrl: c.cover_url ?? photos[0] ?? null,
       }
     })
@@ -691,7 +701,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   ].filter(Boolean) as { Icon: typeof Building2; label: string; value: string }[]
 
   const ready = readiness(d)
-  const otherComplexes = await loadOtherComplexesInDistrict(district, c.airtable_id)
+  const otherComplexes = await loadOtherComplexesInDistrict(district, c.airtable_id, lang)
   const complexVideos = await loadVideosByComplexSlug(slug, 6, lang).catch(() => [])
 
   // Nearby places — keyed by villa airtable_id in the manifest. The
