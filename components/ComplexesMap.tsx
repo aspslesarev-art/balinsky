@@ -228,10 +228,12 @@ export function ComplexesMap({
   apiKey,
   points,
   heightClass = 'h-[calc(100vh_-_280px)] min-h-[480px]',
+  lang = 'ru',
 }: {
   apiKey: string
   points: ComplexPoint[]
   heightClass?: string
+  lang?: 'ru' | 'en'
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const selected = useMemo(
@@ -245,7 +247,7 @@ export function ComplexesMap({
         style={{ width: '100%' }}
         className={`${heightClass} bg-[var(--color-search-bg)] rounded-3xl flex items-center justify-center text-[var(--color-text-muted)]`}
       >
-        Карта недоступна (нет API ключа)
+        {lang === 'en' ? 'Map unavailable (no API key)' : 'Карта недоступна (нет API ключа)'}
       </div>
     )
   }
@@ -258,7 +260,7 @@ export function ComplexesMap({
       }}
       className={`${heightClass} bg-white rounded-3xl overflow-hidden border border-[var(--color-border)]`}
     >
-      <APIProvider apiKey={apiKey}>
+      <APIProvider apiKey={apiKey} language={lang}>
         <Map
           defaultCenter={BALI_CENTER}
           defaultZoom={BALI_DEFAULT_ZOOM}

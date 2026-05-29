@@ -76,18 +76,18 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
         <CatalogTabs active="map" listHref={buildListHref(filters, 'en')} mapHref={buildMapHref(filters, 'en')} lang="en" />
 
         <div className="mt-6">
-          <CatalogSearchBar initial={filters.q} current={filters} view="map" />
+          <CatalogSearchBar initial={filters.q} current={filters} view="map" placeholder="Search by name, district, developer…" />
         </div>
 
         <div className="mt-4">
-          <FiltersBar state={filters} options={options} view="map" />
+          <FiltersBar state={filters} options={options} view="map" lang="en" />
         </div>
 
         <div className="mt-6">
-          <ApartmentsMap apiKey={apiKey} groups={groups} />
+          <ApartmentsMap apiKey={apiKey} groups={groups} lang="en" />
         </div>
 
-        <SeoContent filters={filters} variant="map" />
+        <SeoContent filters={filters} variant="map" lang="en" />
 
         <div className="h-16" />
       </PageContainer>

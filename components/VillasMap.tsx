@@ -170,10 +170,12 @@ export function VillasMap({
   apiKey,
   points,
   heightClass = 'h-[calc(100vh_-_280px)] min-h-[480px]',
+  lang = 'ru',
 }: {
   apiKey: string
   points: VillaPoint[]
   heightClass?: string
+  lang?: 'ru' | 'en'
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const selected = useMemo(() => points.find(p => p.id === selectedId) ?? null, [points, selectedId])
@@ -181,7 +183,7 @@ export function VillasMap({
   if (!apiKey) {
     return (
       <div style={{ width: '100%' }} className={`${heightClass} bg-[var(--color-search-bg)] rounded-3xl flex items-center justify-center text-[var(--color-text-muted)]`}>
-        Карта недоступна (нет API ключа)
+        {lang === 'en' ? 'Map unavailable (no API key)' : 'Карта недоступна (нет API ключа)'}
       </div>
     )
   }
@@ -191,7 +193,7 @@ export function VillasMap({
       style={{ width: '100%', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06)' }}
       className={`${heightClass} bg-white rounded-3xl overflow-hidden border border-[var(--color-border)]`}
     >
-      <APIProvider apiKey={apiKey}>
+      <APIProvider apiKey={apiKey} language={lang}>
         <Map
           defaultCenter={BALI_CENTER}
           defaultZoom={BALI_DEFAULT_ZOOM}
