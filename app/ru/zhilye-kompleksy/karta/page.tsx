@@ -2,7 +2,7 @@ import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { CatalogTabs } from '@/components/CatalogTabs'
 import { ComplexFiltersBar } from '@/components/complex-filters/ComplexFiltersBar'
-import { ComplexesMap, type ComplexPoint } from '@/components/ComplexesMap'
+import { ComplexesMap, type ComplexPoint, type ComplexPointGroup } from '@/components/ComplexesMap'
 import { ComplexesSeoContent } from '@/components/ComplexesSeoContent'
 import { ComplexCatalogSearchBar } from '@/components/ComplexCatalogSearchBar'
 import { buildListHref, buildMapHref } from '@/lib/complex-filter-href'
@@ -35,24 +35,28 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
   let filtered = enriched.filter(e => passes(e, filters))
   if (filters.q.trim()) filtered = applySearch(filtered, filters.q)
 
-  const points: ComplexPoint[] = []
   const seenSlug = new Set<string>()
+  const groupsByCoord = new globalThis.Map<string, ComplexPointGroup>()
+  let totalPoints = 0
   for (const e of filtered) {
     if (e.lat == null || e.lng == null) continue
     if (!e.slug || !e.name) continue
     if (seenSlug.has(e.slug)) continue
     seenSlug.add(e.slug)
-    points.push({
-      id: e.id,
-      slug: e.slug,
-      name: e.name,
-      location: e.district,
+    const item: ComplexPoint = {
+      id: e.id, slug: e.slug, name: e.name, location: e.district,
       types: e.types.length > 0 ? e.types.join(', ') : null,
       coverUrl: e.coverUrl,
-      lat: e.lat,
-      lng: e.lng,
-    })
+    }
+    const lat = Number(e.lat.toFixed(4))
+    const lng = Number(e.lng.toFixed(4))
+    const key = `${lat},${lng}`
+    let g = groupsByCoord.get(key)
+    if (!g) { g = { key, lat, lng, items: [] }; groupsByCoord.set(key, g) }
+    g.items.push(item)
+    totalPoints++
   }
+  const groups: ComplexPointGroup[] = [...groupsByCoord.values()]
 
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? ''
 
@@ -65,7 +69,7 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
           {buildHeading(filters)}
         </h1>
         <div className="text-[14px] text-[var(--color-text-muted)] mb-6">
-          {points.length} комплексов на карте
+          {totalPoints} комплексов на карте{totalPoints !== groups.length && ` · ${groups.length} точек`}
         </div>
 
         <CatalogTabs
@@ -83,7 +87,7 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
         </div>
 
         <div className="mt-6">
-          <ComplexesMap apiKey={apiKey} points={points} />
+          <ComplexesMap apiKey={apiKey} groups={groups} />
         </div>
 
         <ComplexesSeoContent filters={filters} variant="map" />
