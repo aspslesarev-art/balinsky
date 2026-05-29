@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
     // complex / rental photo is served from it.
     remotePatterns: [
       { protocol: 'https', hostname: 'ifdgiwxothmcalibmydv.supabase.co' },
+      // Bunny pull-zone hostname for the photo CDN. The default name
+      // `balinsky.b-cdn.net` matches the convention; if you provision a
+      // different pull-zone, update here too. Both are whitelisted so a
+      // staged rollout (Bunny on, Bunny off) doesn't need a redeploy.
+      { protocol: 'https', hostname: '**.b-cdn.net' },
       { protocol: 'https', hostname: 'v5.airtableusercontent.com' },
       { protocol: 'https', hostname: 'dl.airtable.com' },
       // YouTube serves thumbnails from i1.ytimg.com, i2.ytimg.com, etc.,

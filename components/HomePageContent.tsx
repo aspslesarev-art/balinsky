@@ -22,6 +22,7 @@ import { loadAllNews } from '@/lib/news'
 import { loadAllPromo } from '@/lib/promo'
 import { loadAllEvents } from '@/lib/events'
 import type { Lang } from '@/lib/i18n'
+import { cdnBucketBase } from '@/lib/photo-cdn'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const sb = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY!)
@@ -183,7 +184,7 @@ async function loadTopComplexes(): Promise<ComplexHomeCard[]> {
   try {
     const { data } = await sb.from('raw_complexes').select('airtable_id, data, slug, cover_url').limit(500)
     const items: ComplexHomeCard[] = []
-    const COVER_BUCKET = `${SUPABASE_URL}/storage/v1/object/public/complex-covers`
+    const COVER_BUCKET = cdnBucketBase('complex-covers')
     for (const r of (data ?? []) as { airtable_id: string; data: Record<string, unknown>; slug: string | null; cover_url: string | null }[]) {
       const slug = r.slug
       const name = typeof r.data['Project'] === 'string' ? (r.data['Project'] as string) : null

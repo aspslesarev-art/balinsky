@@ -27,6 +27,7 @@ import { VillaCard, type VillaCardData } from '@/components/VillaCard'
 import { loadAll as loadAllVillas, buildAllCards as buildAllVillaCards, type VillaFilterState } from '@/app/ru/villy/_lib'
 import { loadAllVillaScores } from '@/lib/investment/batch-scores'
 import type { Lang } from '@/lib/i18n'
+import { cdnBucketBase } from '@/lib/photo-cdn'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const sb = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY!)
@@ -253,7 +254,7 @@ async function loadTopComplexes(): Promise<ComplexHomeCard[]> {
       units:data->"Total quantity of units",
       status:data->"Статус"
     `).limit(500)
-    const COVER_BUCKET = `${SUPABASE_URL}/storage/v1/object/public/complex-covers`
+    const COVER_BUCKET = cdnBucketBase('complex-covers')
     const items: ComplexHomeCard[] = []
     for (const r of (data ?? []) as Array<{ airtable_id: string; slug: string | null; cover_url: string | null; name: string | null; district: string | null; district_alt: string | null; units: number | null; status: string | null }>) {
       if (!r.slug || !r.name) continue

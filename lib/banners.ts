@@ -190,7 +190,10 @@ export async function deleteBanner(id: string): Promise<void> {
 // public URL or an Error with the actual Storage message so the
 // admin sees what's wrong instead of a vague "upload failed".
 const BANNER_BUCKET = process.env.BANNERS_BUCKET ?? 'viz-photos'
-const BANNER_PUBLIC = `${SUPABASE_URL}/storage/v1/object/public/${BANNER_BUCKET}`
+// Route through optional Bunny CDN when configured.
+const BANNER_PUBLIC = (process.env.NEXT_PUBLIC_PHOTO_CDN_BASE || '').replace(/\/$/, '')
+  ? `${(process.env.NEXT_PUBLIC_PHOTO_CDN_BASE || '').replace(/\/$/, '')}/${BANNER_BUCKET}`
+  : `${SUPABASE_URL}/storage/v1/object/public/${BANNER_BUCKET}`
 
 export async function uploadBannerPhoto(opts: {
   filename: string

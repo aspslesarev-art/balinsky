@@ -5,6 +5,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import { renderOgImage, ogSize, ogContentType } from '@/lib/og-image'
+import { cdnBucketBase } from '@/lib/photo-cdn'
 
 export const size = ogSize
 export const contentType = ogContentType
@@ -44,7 +45,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
   const area = firstString(d['Площадь'])
   const priceUsd = firstString(d['price_usd']) ?? firstString(d['Цена'])
   const photoUrl = data?.airtable_id
-    ? `${SUPABASE_URL}/storage/v1/object/public/villa-photos/${data.airtable_id}/0.jpg`
+    ? `${cdnBucketBase('villa-photos')}/${data.airtable_id}/0.jpg`
     : null
 
   const facts = [

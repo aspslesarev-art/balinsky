@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import fs from 'node:fs'
+import { cdnRewrite } from './_cdn.mjs'
 
 const env = fs.readFileSync('.env.local', 'utf8')
 for (const line of env.split('\n')) {
@@ -116,7 +117,7 @@ async function uploadOne(recId, idx, att) {
   const buf = await downloadWithRetry(src)
   const path = `${recId}/${idx}.jpg`
   await uploadWithRetry(path, buf)
-  const baseUrl = sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl
+  const baseUrl = cdnRewrite(sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl)
   const v = attVersion(att)
   return v ? `${baseUrl}?v=${v}` : baseUrl
 }
@@ -272,11 +273,14 @@ for (const [recId, urls] of Object.entries(manifest)) {
   if (!Array.isArray(photos) || photos.length === 0) continue
   let changed = false
   const next = urls.map((u, i) => {
-    if (typeof u !== 'string' || u.includes('?v=')) return u
+    if (typeof u !== 'string') return u
+    const rewritten = cdnRewrite(u)
+    if (rewritten !== u) changed = true
+    if (rewritten.includes('?v=')) return rewritten
     const v = attVersion(photos[i])
-    if (!v) return u
+    if (!v) return rewritten
     changed = true
-    return `${u}?v=${v}`
+    return `${rewritten}?v=${v}`
   })
   if (changed) { manifest[recId] = next; normalised++ }
 }

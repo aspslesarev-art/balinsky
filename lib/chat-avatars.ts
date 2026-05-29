@@ -1,7 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
-const PUBLIC_BASE = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/chat-avatars`
+import { cdnBucketBase } from './photo-cdn'
+const PUBLIC_BASE = cdnBucketBase('chat-avatars')
 
 const REFRESH_TTL_MS = 24 * 60 * 60 * 1000 // re-fetch at most once per day per chat
 

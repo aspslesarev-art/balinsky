@@ -14,8 +14,9 @@ const sb = createClient(
   process.env.SUPABASE_SERVICE_KEY!,
 )
 
+import { cdnBucketBase } from './photo-cdn'
 const VIZ_BUCKET = 'viz-photos'
-const PUBLIC_BASE = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${VIZ_BUCKET}`
+const PUBLIC_BASE = cdnBucketBase(VIZ_BUCKET)
 
 // Public types used by the admin pages and the public viewer.
 export type Layer = {

@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import fs from 'node:fs'
+import { cdnRewrite } from './_cdn.mjs'
 
 // Load .env.local for local runs. In CI env vars come from secrets and
 // .env.local doesn't exist — try/catch keeps the script working in both.
@@ -85,7 +86,7 @@ async function uploadAttachment(bucket, recId, attachment) {
     upsert: true,
   })
   if (error) throw error
-  const baseUrl = sb.storage.from(bucket).getPublicUrl(path).data.publicUrl
+  const baseUrl = cdnRewrite(sb.storage.from(bucket).getPublicUrl(path).data.publicUrl)
   const v = attVersion(attachment)
   return v ? `${baseUrl}?v=${v}` : baseUrl
 }
