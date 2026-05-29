@@ -382,6 +382,7 @@ const _loadComplexPhotos = unstable_cache(
 type AptRow = {
   airtable_id: string
   title: string | null
+  title_en: string | null
   slug: string | null
   published: boolean | null
   price_usd: number | null
@@ -405,6 +406,7 @@ async function _loadApartmentsForComplex(complexName: string): Promise<{ rows: A
   const { data, error } = await sb.from('raw_apartments').select(`
     airtable_id,
     title:data->"SEO:Title",
+    title_en:data->"SEO:Title EN",
     slug:data->"SEO:Slug",
     published:data->"Опубликовать",
     price_usd:data->price_usd,
@@ -452,6 +454,7 @@ async function loadOtherComplexesInDistrict(district: string | null, exceptId: s
 type VillaRow = {
   airtable_id: string
   title: string | null
+  title_en: string | null
   slug: string | null
   published: boolean | null
   price_usd: number | null
@@ -478,6 +481,7 @@ async function _loadVillasForComplex(complexName: string): Promise<{ rows: Villa
   const { data, error } = await sb.from('raw_villas').select(`
     airtable_id,
     title:data->"SEO:Title",
+    title_en:data->"SEO:Title EN",
     slug:data->"SEO:Slug",
     published:data->"Опубликовать",
     price_usd:data->price,
@@ -499,7 +503,7 @@ type ApartmentUnit = ApartmentCardData & { id: string; kind: 'apartment' }
 type VillaUnit = VillaCardData & { id: string; kind: 'villa' }
 type Unit = ApartmentUnit | VillaUnit
 
-async function loadUnitsInComplex(complexName: string): Promise<Unit[]> {
+async function loadUnitsInComplex(complexName: string, lang: Lang = 'ru'): Promise<Unit[]> {
   if (complexName.length < 3) return []
   const [apt, vil] = await Promise.all([
     _loadApartmentsForComplex(complexName),
@@ -514,7 +518,8 @@ async function loadUnitsInComplex(complexName: string): Promise<Unit[]> {
     if (!r.title || !r.slug || r.slug.startsWith('-')) continue
     if (seenSlug.has('a:' + r.slug)) continue
     seenSlug.add('a:' + r.slug)
-    const title = r.title.replace(/\s*\|\s*Balinsky\s*$/i, '').trim()
+    const titleSource = (lang === 'en' && r.title_en) ? r.title_en : r.title
+    const title = titleSource.replace(/\s*\|\s*Balinsky\s*$/i, '').trim()
     units.push({
       kind: 'apartment',
       id: r.airtable_id,
@@ -536,7 +541,8 @@ async function loadUnitsInComplex(complexName: string): Promise<Unit[]> {
     if (!r.title || !r.slug || r.slug.startsWith('-')) continue
     if (seenVillaId.has(r.airtable_id)) continue
     seenVillaId.add(r.airtable_id)
-    const title = r.title.replace(/\s*\|\s*Balinsky\s*$/i, '').trim()
+    const titleSource = (lang === 'en' && r.title_en) ? r.title_en : r.title
+    const title = titleSource.replace(/\s*\|\s*Balinsky\s*$/i, '').trim()
     units.push({
       kind: 'villa',
       id: r.airtable_id,
@@ -602,7 +608,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
 
   const [photoManifest, units, landProfile, marketStats] = await Promise.all([
     _loadComplexPhotos(),
-    loadUnitsInComplex(name),
+    loadUnitsInComplex(name, lang),
     loadLandProfile('complex', c.airtable_id),
     loadComplexMarketStats(c.airtable_id),
   ])
@@ -611,8 +617,28 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   const slidesPhotos = photos.length > 0 ? photos : c.cover_url ? [c.cover_url] : []
   const districtRaw = firstString(d['Location 2']) ?? firstString(d['Location'])
   const district = lang === 'ru' ? districtRu(districtRaw) : districtRaw
-  const types = strList(d['Типы юнитов'])
-  const status = firstString(d['Статус'])
+  // Unit types / status / permits are stored as RU labels in Airtable —
+  // translate them to EN labels for the English tree so we don't print
+  // «Апартаменты, Виллы» / «Строится» on /en/.
+  const TYPE_EN: Record<string, string> = {
+    'Апартаменты': 'Apartments',
+    'Виллы': 'Villas',
+    'Виллы и дома': 'Villas',
+    'Таунхаусы': 'Townhouses',
+    'Дома': 'Houses',
+  }
+  const STATUS_EN: Record<string, string> = {
+    'Строится': 'Under construction',
+    'Построен': 'Completed',
+    'Сдан': 'Completed',
+    'Под заказ': 'On request',
+    'Готов': 'Ready',
+  }
+  const enLabelFor = (map: Record<string, string>, v: string | null): string | null => v ? (lang === 'en' ? (map[v] ?? v) : v) : null
+  const typesRaw = strList(d['Типы юнитов'])
+  const types = lang === 'en' ? typesRaw.map(t => TYPE_EN[t] ?? t) : typesRaw
+  const statusRaw = firstString(d['Статус'])
+  const status = enLabelFor(STATUS_EN, statusRaw)
   const salesStatus = firstString(d['Статус продаж'])
   const isSold = salesStatus === 'Продано'
   const permit = firstString(d['Разрешительные документы'])
@@ -943,8 +969,8 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {units.slice(0, 12).map(u =>
                 u.kind === 'villa'
-                  ? <VillaCard key={u.id} a={u} />
-                  : <ApartmentCard key={u.id} a={u} />,
+                  ? <VillaCard key={u.id} a={u} lang={lang} />
+                  : <ApartmentCard key={u.id} a={u} lang={lang} />,
               )}
             </div>
           </section>
