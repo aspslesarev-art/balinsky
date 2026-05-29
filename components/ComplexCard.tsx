@@ -7,6 +7,7 @@ import { useCurrency } from './CurrencyContext'
 import { WishlistButton } from './WishlistButton'
 import { formatPrice } from '@/lib/currency'
 import type { Lang } from '@/lib/i18n'
+import { enLabel } from '@/lib/filter-i18n'
 
 export type ComplexCardData = {
   slug: string
@@ -106,7 +107,7 @@ export function ComplexCard({ c, lang = 'ru' }: { c: ComplexCardData; lang?: Lan
           </div>
         )}
         <div className="text-[14px] text-[var(--color-text-muted)]">
-          {copy.permit}: {c.permit ?? copy.noPermit}
+          {copy.permit}: {c.permit ? (lang === 'en' ? enLabel('permit', c.permit) : c.permit) : copy.noPermit}
         </div>
 
         {/* mt-auto pins the readiness block to the bottom of the card so
