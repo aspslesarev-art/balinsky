@@ -5,8 +5,7 @@ import type { Lang } from './i18n'
 const RU_LIST_BASE = '/ru/apartamenty'
 const RU_MAP_BASE = '/ru/apartamenty/karta'
 const EN_LIST_BASE = '/en/apartments'
-// /en/apartments/map doesn't exist yet — map button on EN points at the RU map.
-const EN_MAP_BASE = '/ru/apartamenty/karta'
+const EN_MAP_BASE = '/en/apartments/map'
 
 function toQueryString(f: FilterState): string {
   const sp = new URLSearchParams()

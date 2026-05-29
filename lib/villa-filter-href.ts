@@ -5,7 +5,7 @@ import type { Lang } from './i18n'
 const RU_LIST_BASE = '/ru/villy'
 const RU_MAP_BASE = '/ru/villy/karta'
 const EN_LIST_BASE = '/en/villas'
-const EN_MAP_BASE = '/ru/villy/karta'
+const EN_MAP_BASE = '/en/villas/map'
 
 function toQueryString(f: VillaFilterState): string {
   const sp = new URLSearchParams()

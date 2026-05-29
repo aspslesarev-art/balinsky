@@ -5,7 +5,7 @@ import type { Lang } from './i18n'
 const RU_LIST_BASE = '/ru/zhilye-kompleksy'
 const RU_MAP_BASE = '/ru/zhilye-kompleksy/karta'
 const EN_LIST_BASE = '/en/complexes'
-const EN_MAP_BASE = '/ru/zhilye-kompleksy/karta'
+const EN_MAP_BASE = '/en/complexes/map'
 
 function toQueryString(f: ComplexFilterState): string {
   const sp = new URLSearchParams()
