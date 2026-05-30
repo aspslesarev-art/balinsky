@@ -8,10 +8,11 @@ const nextConfig: NextConfig = {
     // complex / rental photo is served from it.
     remotePatterns: [
       { protocol: 'https', hostname: 'ifdgiwxothmcalibmydv.supabase.co' },
-      // Bunny pull-zone hostname for the photo CDN. The default name
-      // `balinsky.b-cdn.net` matches the convention; if you provision a
-      // different pull-zone, update here too. Both are whitelisted so a
-      // staged rollout (Bunny on, Bunny off) doesn't need a redeploy.
+      // Photo CDN (Cloudflare Worker in front of Supabase Storage).
+      // Without this entry Vercel Image Optimization returns
+      // INVALID_IMAGE_OPTIMIZE_REQUEST for every <Image src=...> pointing
+      // at the CDN, and the site loads with broken thumbnails.
+      { protocol: 'https', hostname: 'images.balinsky.info' },
       { protocol: 'https', hostname: '**.b-cdn.net' },
       { protocol: 'https', hostname: 'v5.airtableusercontent.com' },
       { protocol: 'https', hostname: 'dl.airtable.com' },
