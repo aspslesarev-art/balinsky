@@ -20,3 +20,19 @@ export function cdnBucketBase(bucket: string): string {
   if (CDN_BASE) return `${CDN_BASE}/${bucket}`
   return SUPABASE_URL ? `${SUPABASE_URL}/storage/v1/object/public/${bucket}` : `/${bucket}`
 }
+
+// Rewrite every URL in a photo manifest (`{ <id>: [url1, url2, ...] }`).
+// Lets us migrate to the CDN immediately, without waiting for the next sync
+// run to re-emit the manifest with CDN URLs.
+export function cdnRewriteManifest(
+  manifest: Record<string, string[]> | null | undefined,
+): Record<string, string[]> {
+  if (!manifest) return {}
+  if (!CDN_BASE || !PREFIX) return manifest
+  const out: Record<string, string[]> = {}
+  for (const [id, urls] of Object.entries(manifest)) {
+    if (!Array.isArray(urls)) continue
+    out[id] = urls.map(u => (typeof u === 'string' && u.startsWith(PREFIX) ? CDN_BASE + '/' + u.slice(PREFIX.length) : u))
+  }
+  return out
+}

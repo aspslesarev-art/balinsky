@@ -11,6 +11,7 @@ import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { enLabel, type FilterDim } from '@/lib/filter-i18n'
 import { pluralRu } from '@/lib/plural-ru'
 import { isTopBlacklisted } from '@/lib/top-blacklist'
+import { cdnRewriteManifest } from '@/lib/photo-cdn'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/apartment-photos/_manifest.json`
@@ -577,12 +578,13 @@ function reassembleApt(raw: Record<string, unknown>): Row {
 }
 
 async function _loadAllInternal(): Promise<CachedAll> {
-  const [rowsRes, manifest, devMap, enCache] = await Promise.all([
+  const [rowsRes, manifestRaw, devMap, enCache] = await Promise.all([
     sb.from('raw_apartments').select(APT_SELECT).limit(1000),
     loadJson<Record<string, string[]>>(PHOTO_MANIFEST_URL, {}),
     loadJson<Record<string, string>>(DEV_LOOKUP_URL, {}),
     loadEnTranslations('apartments'),
   ])
+  const manifest = cdnRewriteManifest(manifestRaw)
   const rows = ((rowsRes.data ?? []) as unknown as Record<string, unknown>[]).map(reassembleApt)
   const enriched = rows
     .filter(r => r.data?.['Опубликовать'] === true)

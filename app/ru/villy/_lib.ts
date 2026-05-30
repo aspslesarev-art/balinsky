@@ -9,6 +9,7 @@ import { getDistrictCommercialMeta } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { enLabel, type FilterDim } from '@/lib/filter-i18n'
 import { isTopBlacklisted } from '@/lib/top-blacklist'
+import { cdnRewriteManifest } from '@/lib/photo-cdn'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/villa-photos/_manifest.json`
@@ -634,12 +635,15 @@ function reassembleVilla(raw: Record<string, unknown>): Row {
 }
 
 async function _loadAllInternal(): Promise<CachedAll> {
-  const [rowsRes, manifest, styles, enCache] = await Promise.all([
+  const [rowsRes, manifestRaw, styles, enCache] = await Promise.all([
     sb.from('raw_villas').select(VILLA_SELECT).limit(1000),
     loadJson<Record<string, string[]>>(PHOTO_MANIFEST_URL, {}),
     loadVillaStyles(),
     loadEnTranslations('villas'),
   ])
+  // Rewrite manifest URLs to the Bunny/Cloudflare CDN host at runtime so we
+  // don't have to wait for the next sync-heavy to re-emit URLs.
+  const manifest = cdnRewriteManifest(manifestRaw)
   const rows = ((rowsRes.data ?? []) as unknown as Record<string, unknown>[]).map(reassembleVilla)
   const enriched = rows
     .filter(r => r.data?.['Опубликовать'] === true)
