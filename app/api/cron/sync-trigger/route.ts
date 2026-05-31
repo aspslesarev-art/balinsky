@@ -26,6 +26,13 @@ export async function GET(req: Request) {
     return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 })
   }
 
+  // Kill-switch: once the admin "Базы" panel is the source of truth, set
+  // SYNC_DISABLED=1 to stop dispatching the Airtable→Supabase sync workflows.
+  // Reversible — unset the env to resume.
+  if (process.env.SYNC_DISABLED === '1') {
+    return NextResponse.json({ ok: true, skipped: 'sync_disabled' })
+  }
+
   const url = new URL(req.url)
   const which = url.searchParams.get('which') ?? 'fast'
   const workflow =

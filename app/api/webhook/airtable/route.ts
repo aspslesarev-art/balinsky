@@ -158,6 +158,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   }
 
+  // Kill-switch: when the admin "Базы" panel becomes the source of truth, set
+  // SYNC_DISABLED=1 to stop Airtable Automations from overwriting Supabase.
+  if (process.env.SYNC_DISABLED === '1') {
+    return NextResponse.json({ ok: true, skipped: 'sync_disabled' })
+  }
+
   const airtableToken = process.env.AIRTABLE_TOKEN
   if (!airtableToken) {
     return NextResponse.json({ error: 'AIRTABLE_TOKEN is not configured' }, { status: 500 })

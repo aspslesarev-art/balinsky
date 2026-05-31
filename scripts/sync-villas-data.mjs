@@ -74,7 +74,9 @@ console.log('▶ pruning rows missing from Airtable…')
 const liveIds = new Set(rows.map(r => r.airtable_id))
 const { data: existing, error: listErr } = await sb.from('raw_villas').select('airtable_id')
 if (listErr) { console.error('  ✖ list:', listErr.message); process.exit(1) }
-const stale = (existing ?? []).map(r => r.airtable_id).filter(id => !liveIds.has(id))
+// Never prune admin-created rows (adm_ prefix) — they live only in Supabase
+// and aren't in Airtable, so they'd otherwise look "stale" and get deleted.
+const stale = (existing ?? []).map(r => r.airtable_id).filter(id => !liveIds.has(id) && !String(id).startsWith('adm_'))
 console.log(`  stale rows: ${stale.length}`)
 if (stale.length > 0) {
   for (let i = 0; i < stale.length; i += 500) {

@@ -26,6 +26,10 @@ concurrency:
 
 jobs:
   sync:
+    # Kill-switch: set repo variable SYNC_DISABLED=1 to neutralize the
+    # Airtable→Supabase sync once the admin "Базы" panel is source of truth.
+    # The cron still wakes but the job no-ops; unset the var to resume.
+    if: ${{ vars.SYNC_DISABLED != '1' }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
