@@ -67,13 +67,17 @@ export type CollectionConfig = {
 export type RecordRow = { id: string; fields: Record<string, unknown> }
 
 export type ListQuery = {
+  page?: number
+  pageSize?: number
   sort?: { field: string; dir: 'asc' | 'desc' }
+  /** Free-text search (matched against the title field / all text fields). */
+  q?: string
 }
 
 export type ListResult = { rows: RecordRow[]; total: number }
 
 export interface DataSourceAdapter {
-  /** Grid rows — projected to `showInGrid` fields only (egress-safe). */
+  /** One page of rows with their FULL field set (Airtable-parity). */
   list(cfg: CollectionConfig, q: ListQuery): Promise<ListResult>
   /** Full record (all modelled fields) for the side panel. */
   get(cfg: CollectionConfig, id: string): Promise<RecordRow | null>

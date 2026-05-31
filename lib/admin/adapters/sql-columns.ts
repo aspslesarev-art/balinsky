@@ -2,49 +2,26 @@
 // e.g. baliforum_places (PK `slug`). The UI's `fields` map directly to table
 // columns.
 
-import type { CollectionConfig, DataSourceAdapter, ListQuery, ListResult, RecordRow } from './types'
+import type { DataSourceAdapter, ListQuery, ListResult, RecordRow } from './types'
 import { adminSb } from '../sb'
-
-const MAX_ROWS = 5000
-
-function gridFields(cfg: CollectionConfig) {
-  return cfg.fields.filter(f => f.showInGrid && f.type !== 'photos')
-}
-
-const isEmpty = (v: unknown) => v == null || v === ''
-
-function sortRows(cfg: CollectionConfig, rows: RecordRow[], sort?: { field: string; dir: 'asc' | 'desc' }) {
-  const s = sort ?? cfg.defaultSort
-  if (!s) return rows
-  const numeric = cfg.fields.find(f => f.key === s.field)?.type === 'number'
-  const mul = s.dir === 'desc' ? -1 : 1
-  return [...rows].sort((a, b) => {
-    const av = a.fields[s.field], bv = b.fields[s.field]
-    const ae = isEmpty(av), be = isEmpty(bv)
-    if (ae && be) return 0
-    if (ae) return 1
-    if (be) return -1
-    if (numeric) return (Number(av) - Number(bv)) * mul
-    return String(av).localeCompare(String(bv), 'ru') * mul
-  })
-}
 
 export const sqlColumnsAdapter: DataSourceAdapter = {
   async list(cfg, q: ListQuery): Promise<ListResult> {
     const pk = cfg.primaryKey ?? 'id'
-    const grid = gridFields(cfg)
-    const cols = [pk, ...grid.map(f => f.key)].join(',')
-    const { data, error, count } = await adminSb()
-      .from(cfg.table!)
-      .select(cols, { count: 'exact' })
-      .limit(MAX_ROWS)
+    const page = q.page ?? 0
+    const pageSize = q.pageSize ?? 50
+    let query = adminSb().from(cfg.table!).select('*', { count: 'exact' })
+    if (q.q && q.q.trim()) query = query.ilike(cfg.titleField, `%${q.q.trim()}%`)
+    if (q.sort) query = query.order(q.sort.field, { ascending: q.sort.dir === 'asc', nullsFirst: false })
+    else query = query.order(pk, { ascending: true })
+    query = query.range(page * pageSize, page * pageSize + pageSize - 1)
+    const { data, error, count } = await query
     if (error) throw new Error(error.message)
-    const rows: RecordRow[] = ((data ?? []) as unknown as Record<string, unknown>[]).map(r => {
-      const fields: Record<string, unknown> = {}
-      for (const f of grid) fields[f.key] = r[f.key]
-      return { id: String(r[pk]), fields }
-    })
-    return { rows: sortRows(cfg, rows, q.sort), total: count ?? rows.length }
+    const rows: RecordRow[] = ((data ?? []) as unknown as Record<string, unknown>[]).map(r => ({
+      id: String(r[pk]),
+      fields: { ...r },
+    }))
+    return { rows, total: count ?? rows.length }
   },
 
   async get(cfg, id): Promise<RecordRow | null> {

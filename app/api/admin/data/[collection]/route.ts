@@ -18,10 +18,13 @@ export async function GET(req: Request, { params }: { params: Promise<{ collecti
   const sortField = url.searchParams.get('sort')
   const dir = url.searchParams.get('dir') === 'asc' ? 'asc' : 'desc'
   const sort = sortField ? { field: sortField, dir: dir as 'asc' | 'desc' } : undefined
+  const page = Math.max(0, Number(url.searchParams.get('page') ?? 0) || 0)
+  const pageSize = Math.min(200, Math.max(1, Number(url.searchParams.get('pageSize') ?? 50) || 50))
+  const q = url.searchParams.get('q') ?? undefined
 
   try {
-    const { rows, total } = await adapterFor(cfg).list(cfg, { sort })
-    return NextResponse.json({ rows, total })
+    const { rows, total } = await adapterFor(cfg).list(cfg, { sort, page, pageSize, q })
+    return NextResponse.json({ rows, total, page, pageSize })
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'list_failed' }, { status: 500 })
   }

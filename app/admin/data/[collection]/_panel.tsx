@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { X, Save, Trash2, Loader2, AlertTriangle } from 'lucide-react'
+import { X, Save, Trash2, Loader2, AlertTriangle, Plus } from 'lucide-react'
 import type { CollectionConfig, FieldDef, RecordRow } from '@/lib/admin/adapters/types'
+import { resolveRecordFields } from '@/lib/admin/fields'
 import { PhotoManager } from './_photos'
 
 // Slide-over record editor. Loads the full record (sql_jsonb stores only
@@ -52,10 +53,8 @@ export function RecordPanel({
     // PATCH sends only changed fields; create sends everything that's set.
     const payload: Record<string, unknown> = {}
     if (isNew) {
-      for (const f of cfg.fields) {
-        if (f.type === 'photos') continue
-        const v = fields[f.key]
-        if (v !== undefined && v !== '') payload[f.key] = v
+      for (const [k, v] of Object.entries(fields)) {
+        if (v !== undefined && v !== '') payload[k] = v
       }
     } else {
       for (const key of dirty) payload[key] = fields[key]
@@ -106,9 +105,10 @@ export function RecordPanel({
             <div className="flex items-center gap-2 text-[13px] text-[var(--ax-fg-muted)]"><Loader2 size={15} className="animate-spin" /> Загрузка…</div>
           ) : (
             <>
-              {cfg.fields.map(f => (
+              {resolveRecordFields(cfg, fields).map(f => (
                 <FieldEditor key={f.key} f={f} value={fields[f.key]} onChange={v => setField(f.key, v)} />
               ))}
+              <AddField onAdd={(k, v) => setField(k, v)} existing={fields} />
               {cfg.photo && (
                 isNew ? (
                   <div className="text-[12px] text-[var(--ax-fg-faint)] rounded-xl border border-dashed border-[var(--ax-border)] px-3 py-3">
@@ -219,4 +219,37 @@ function asText(v: unknown): string {
   if (v == null) return ''
   if (typeof v === 'object') return JSON.stringify(v)
   return String(v)
+}
+
+// Add a brand-new field (Airtable "add column" parity, per record).
+function AddField({ onAdd, existing }: { onAdd: (key: string, value: unknown) => void; existing: Record<string, unknown> }) {
+  const [open, setOpen] = useState(false)
+  const [key, setKey] = useState('')
+  const [val, setVal] = useState('')
+  const add = () => {
+    const k = key.trim()
+    if (!k || k in existing) { setKey(''); setVal(''); setOpen(false); return }
+    onAdd(k, val)
+    setKey(''); setVal(''); setOpen(false)
+  }
+  if (!open) {
+    return (
+      <button type="button" onClick={() => setOpen(true)}
+        className="inline-flex items-center gap-1.5 text-[12px] text-[var(--ax-fg-soft)] hover:text-[var(--ax-fg)] mt-1">
+        <Plus size={13} /> Добавить поле
+      </button>
+    )
+  }
+  return (
+    <div className="rounded-xl border border-[var(--ax-border)] p-2.5 space-y-2">
+      <input autoFocus value={key} onChange={e => setKey(e.target.value)} placeholder="Имя поля (как в Airtable)"
+        className={inputCls} />
+      <input value={val} onChange={e => setVal(e.target.value)} placeholder="Значение"
+        onKeyDown={e => { if (e.key === 'Enter') add() }} className={inputCls} />
+      <div className="flex gap-2">
+        <button type="button" onClick={add} className="px-3 py-1.5 rounded-lg text-[12px] bg-[var(--color-primary)] text-white">Добавить</button>
+        <button type="button" onClick={() => setOpen(false)} className="px-3 py-1.5 rounded-lg text-[12px] border border-[var(--ax-border)]">Отмена</button>
+      </div>
+    </div>
+  )
 }

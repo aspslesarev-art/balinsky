@@ -64,13 +64,17 @@ export const storageManifestAdapter: DataSourceAdapter = {
   async list(cfg, q: ListQuery): Promise<ListResult> {
     const { idKey } = loc(cfg)
     const items = await loadItems(cfg)
-    const grid = cfg.fields.filter(f => f.showInGrid && f.type !== 'photos')
-    const rows: RecordRow[] = items.map(it => {
-      const fields: Record<string, unknown> = {}
-      for (const f of grid) fields[f.key] = it[f.key]
-      return { id: String(it[idKey] ?? ''), fields }
-    })
-    return { rows: sortRows(cfg, rows, q.sort), total: rows.length }
+    let rows: RecordRow[] = items.map(it => ({ id: String(it[idKey] ?? ''), fields: { ...it } }))
+    // Full-table search across every string value (manifest is already in mem).
+    if (q.q && q.q.trim()) {
+      const needle = q.q.trim().toLowerCase()
+      rows = rows.filter(r => Object.values(r.fields).some(v => typeof v === 'string' && v.toLowerCase().includes(needle)))
+    }
+    rows = sortRows(cfg, rows, q.sort)
+    const total = rows.length
+    const page = q.page ?? 0
+    const pageSize = q.pageSize ?? 50
+    return { rows: rows.slice(page * pageSize, page * pageSize + pageSize), total }
   },
 
   async get(cfg, id): Promise<RecordRow | null> {
