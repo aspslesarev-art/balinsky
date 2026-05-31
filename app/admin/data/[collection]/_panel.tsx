@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { X, Save, Trash2, Loader2, AlertTriangle, Plus } from 'lucide-react'
+import { X, Save, Trash2, Loader2, AlertTriangle, Plus, Link2, Search } from 'lucide-react'
 import type { CollectionConfig, FieldDef, RecordRow } from '@/lib/admin/adapters/types'
 import { resolveRecordFields } from '@/lib/admin/fields'
 import { PhotoManager } from './_photos'
@@ -106,7 +106,21 @@ export function RecordPanel({
           ) : (
             <>
               {resolveRecordFields(cfg, fields).map(f => (
-                <FieldEditor key={f.key} f={f} value={fields[f.key]} onChange={v => setField(f.key, v)} />
+                f.type === 'link' && f.link ? (
+                  <LinkEditor
+                    key={f.key}
+                    f={f}
+                    value={fields[f.key]}
+                    nameHint={f.link.nameField ? fields[f.link.nameField] : undefined}
+                    onPick={opt => {
+                      const lk = f.link!
+                      setField(f.key, opt ? (lk.store === 'name' ? opt.title : [opt.id]) : (lk.store === 'name' ? '' : []))
+                      if (lk.nameField) setField(lk.nameField, opt ? opt.title : '')
+                    }}
+                  />
+                ) : (
+                  <FieldEditor key={f.key} f={f} value={fields[f.key]} onChange={v => setField(f.key, v)} />
+                )
               ))}
               <AddField onAdd={(k, v) => setField(k, v)} existing={fields} />
               {cfg.photo && (
@@ -219,6 +233,99 @@ function asText(v: unknown): string {
   if (v == null) return ''
   if (typeof v === 'object') return JSON.stringify(v)
   return String(v)
+}
+
+type LinkOption = { id: string; title: string }
+
+// Airtable-style link picker: search records in another collection and pick one.
+// Sets this field (id-array or name) + optional companion name field via onPick.
+function LinkEditor({
+  f, value, nameHint, onPick,
+}: {
+  f: FieldDef
+  value: unknown
+  nameHint: unknown
+  onPick: (opt: LinkOption | null) => void
+}) {
+  const target = f.link!.collection
+  const isName = f.link!.store === 'name'
+  const currentId = isName ? '' : (Array.isArray(value) ? String(value[0] ?? '') : '')
+  const hasValue = isName ? !!(value && String(value)) : !!currentId
+
+  const [display, setDisplay] = useState<string>('')
+  const [query, setQuery] = useState('')
+  const [opts, setOpts] = useState<LinkOption[]>([])
+  const [open, setOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  // Resolve current selection's name for display.
+  useEffect(() => {
+    if (isName) { setDisplay(value ? String(value) : ''); return }
+    if (nameHint) { setDisplay(String(nameHint)); return }
+    if (!currentId) { setDisplay(''); return }
+    let alive = true
+    fetch(`/api/admin/data/${target}/options?ids=${encodeURIComponent(currentId)}`)
+      .then(r => r.json()).then(j => { if (alive) setDisplay(j.titles?.[currentId] ?? currentId) }).catch(() => {})
+    return () => { alive = false }
+  }, [target, currentId, nameHint, isName, value])
+
+  // Debounced option search.
+  useEffect(() => {
+    if (!open) return
+    let alive = true
+    setLoading(true)
+    const t = setTimeout(() => {
+      fetch(`/api/admin/data/${target}/options?q=${encodeURIComponent(query)}`)
+        .then(r => r.json()).then(j => { if (alive) setOpts(j.options ?? []) })
+        .catch(() => {}).finally(() => { if (alive) setLoading(false) })
+    }, 250)
+    return () => { alive = false; clearTimeout(t) }
+  }, [open, query, target])
+
+  return (
+    <div>
+      <label className="block text-[12px] font-medium text-[var(--ax-fg-soft)] mb-1">
+        <span className="inline-flex items-center gap-1"><Link2 size={12} /> {f.label}</span>
+      </label>
+
+      {hasValue && !open ? (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--ax-input-bg)] border border-[var(--ax-input-border)]">
+          <span className="flex-1 text-[13px] text-[var(--ax-fg)] truncate">{display || currentId || '—'}</span>
+          <button type="button" onClick={() => setOpen(true)} className="text-[12px] text-[var(--color-primary)]">сменить</button>
+          <button type="button" onClick={() => onPick(null)} className="text-[var(--ax-fg-faint)] hover:text-red-500"><X size={14} /></button>
+        </div>
+      ) : (
+        <div className="relative">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--ax-fg-faint)]" />
+          <input
+            autoFocus={open}
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            onFocus={() => setOpen(true)}
+            placeholder="Поиск записи…"
+            className={`${inputCls} pl-9`}
+          />
+          {open && (
+            <div className="absolute z-10 mt-1 w-full max-h-56 overflow-y-auto rounded-xl border border-[var(--ax-border)] bg-[var(--ax-panel)] shadow-lg">
+              {loading && <div className="px-3 py-2 text-[12px] text-[var(--ax-fg-faint)]">Загрузка…</div>}
+              {!loading && opts.length === 0 && <div className="px-3 py-2 text-[12px] text-[var(--ax-fg-faint)]">Ничего не найдено</div>}
+              {opts.map(o => (
+                <button key={o.id} type="button"
+                  onClick={() => { onPick(o); setOpen(false); setQuery('') }}
+                  className="block w-full text-left px-3 py-2 text-[13px] text-[var(--ax-fg)] hover:bg-[var(--ax-hover)]">
+                  {o.title}
+                </button>
+              ))}
+              {hasValue && (
+                <button type="button" onClick={() => setOpen(false)}
+                  className="block w-full text-left px-3 py-2 text-[12px] text-[var(--ax-fg-faint)] border-t border-[var(--ax-border-soft)]">Отмена</button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
 }
 
 // Add a brand-new field (Airtable "add column" parity, per record).
