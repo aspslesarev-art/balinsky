@@ -27,7 +27,9 @@ const villas: CollectionConfig = {
     { key: 'SEO:Title', label: 'Заголовок', type: 'text', showInGrid: true, width: 260 },
     { key: 'SEO:Slug', label: 'Slug', type: 'text', showInGrid: true, width: 200 },
     { key: 'Статус', label: 'Статус', type: 'enum', enumOptions: ['Строится', 'Построен', 'Под заказ'], showInGrid: true, width: 130 },
-    { key: 'Location 2', label: 'Район', type: 'text', showInGrid: true, width: 150 },
+    { key: 'Location 2', label: 'Под-район', type: 'text', showInGrid: true, width: 150 },
+    { key: 'Location filter', label: 'Район', type: 'link', link: { collection: 'districts', store: 'id-array', nameField: 'Location' } },
+    { key: 'Location', label: 'Район (имя)', type: 'text', readOnly: true },
     { key: 'Комнаты', label: 'Комнаты', type: 'number', showInGrid: true, width: 90 },
     { key: 'price', label: 'Цена $', type: 'number', showInGrid: true, width: 110 },
     { key: 'Площадь', label: 'Площадь', type: 'number' },
@@ -68,7 +70,8 @@ const apartments: CollectionConfig = {
     { key: 'SEO:Title', label: 'Заголовок', type: 'text', showInGrid: true, width: 260 },
     { key: 'SEO:Slug', label: 'Slug', type: 'text', showInGrid: true, width: 200 },
     { key: 'Статус', label: 'Статус', type: 'text', showInGrid: true, width: 130 },
-    { key: 'Location filter', label: 'Район', type: 'text', showInGrid: true, width: 150 },
+    { key: 'Location', label: 'Район', type: 'link', link: { collection: 'districts', store: 'id-array', nameField: 'Location filter' } },
+    { key: 'Location filter', label: 'Район (имя)', type: 'text', readOnly: true, showInGrid: true, width: 150 },
     { key: 'Комнаты', label: 'Комнаты', type: 'number', showInGrid: true, width: 90 },
     { key: 'price_usd', label: 'Цена $', type: 'number', showInGrid: true, width: 110 },
     { key: 'Площадь', label: 'Площадь', type: 'number' },
@@ -361,12 +364,31 @@ const baliforumPlaces: CollectionConfig = {
   ],
 }
 
+const districts: CollectionConfig = {
+  key: 'districts',
+  label: 'Районы',
+  store: 'storage_manifest',
+  bucket: 'districts',
+  manifestKey: '_districts.json',
+  itemIdKey: 'id',
+  caps: { create: true, update: true, delete: true },
+  titleField: 'name',
+  defaultSort: { field: 'name', dir: 'asc' },
+  fields: [
+    { key: 'name', label: 'Район', type: 'text', showInGrid: true, width: 200 },
+    { key: 'source', label: 'Источник', type: 'text', readOnly: true, showInGrid: true, width: 220 },
+    { key: 'descRu', label: 'Описание (RU)', type: 'longtext' },
+    { key: 'descEn', label: 'Описание (EN)', type: 'longtext' },
+  ],
+}
+
 export const COLLECTIONS: Record<string, CollectionConfig> = {
   villas,
   apartments,
   complexes,
   villa_units: villaUnits,
   developers,
+  districts,
   news,
   events,
   promo,
