@@ -1,0 +1,380 @@
+// Collection registry — the single source of truth for the admin data engine.
+// Adding a table later == adding one entry here (no new code if it reuses an
+// existing adapter/store type).
+//
+// Field keys are the REAL Airtable/JSONB keys / manifest item properties read
+// by the public catalog loaders (app/ru/villy/_lib.ts, lib/news.ts, …), so
+// admin writes stay compatible with what the site renders.
+
+import type { CollectionConfig } from './adapters/types'
+
+// --- SQL JSONB catalogs (raw_* tables, PK airtable_id, JSONB `data`) -------
+
+const villas: CollectionConfig = {
+  key: 'villas',
+  label: 'Виллы',
+  store: 'sql_jsonb',
+  table: 'raw_villas',
+  primaryKey: 'airtable_id',
+  photo: { bucket: 'villa-photos' },
+  caps: { create: true, update: true, delete: true },
+  titleField: 'SEO:Title',
+  publishedField: 'Опубликовать',
+  defaultSort: { field: 'price', dir: 'desc' },
+  revalidateKind: 'villas',
+  fields: [
+    { key: 'Опубликовать', label: 'Опубл.', type: 'bool', showInGrid: true, width: 70 },
+    { key: 'SEO:Title', label: 'Заголовок', type: 'text', showInGrid: true, width: 260 },
+    { key: 'SEO:Slug', label: 'Slug', type: 'text', showInGrid: true, width: 200 },
+    { key: 'Статус', label: 'Статус', type: 'enum', enumOptions: ['Строится', 'Построен', 'Под заказ'], showInGrid: true, width: 130 },
+    { key: 'Location 2', label: 'Район', type: 'text', showInGrid: true, width: 150 },
+    { key: 'Комнаты', label: 'Комнаты', type: 'number', showInGrid: true, width: 90 },
+    { key: 'price', label: 'Цена $', type: 'number', showInGrid: true, width: 110 },
+    { key: 'Площадь', label: 'Площадь', type: 'number' },
+    { key: 'Земля', label: 'Земля', type: 'number' },
+    { key: 'Year of completion', label: 'Год сдачи', type: 'text' },
+    { key: 'Разрешение', label: 'Разрешение', type: 'text' },
+    { key: 'Тип сделки', label: 'Тип сделки', type: 'text' },
+    { key: 'Developer', label: 'Застройщик', type: 'text' },
+    { key: 'Developer1', label: 'Застройщик (связь)', type: 'text' },
+    { key: 'Geo', label: 'Geo (lat,lng)', type: 'geo' },
+    { key: 'Geo 2', label: 'Geo 2', type: 'geo' },
+    { key: 'Land color', label: 'Land color', type: 'text' },
+    { key: 'Leasehold', label: 'Leasehold', type: 'text' },
+    { key: 'Цена м²', label: 'Цена м²', type: 'number' },
+    { key: 'Цена м² в год', label: 'Цена м² в год', type: 'number' },
+    { key: 'Заявленная доходность', label: 'Заявл. доходность', type: 'number' },
+    { key: 'TOP', label: 'TOP', type: 'bool' },
+    { key: 'Notes', label: 'Заметки', type: 'longtext' },
+  ],
+}
+
+const apartments: CollectionConfig = {
+  key: 'apartments',
+  label: 'Апартаменты',
+  store: 'sql_jsonb',
+  table: 'raw_apartments',
+  primaryKey: 'airtable_id',
+  photo: { bucket: 'apartment-photos' },
+  caps: { create: true, update: true, delete: true },
+  titleField: 'SEO:Title',
+  publishedField: 'Опубликовать',
+  defaultSort: { field: 'price_usd', dir: 'desc' },
+  revalidateKind: 'apartments',
+  fields: [
+    { key: 'Опубликовать', label: 'Опубл.', type: 'bool', showInGrid: true, width: 70 },
+    { key: 'SEO:Title', label: 'Заголовок', type: 'text', showInGrid: true, width: 260 },
+    { key: 'SEO:Slug', label: 'Slug', type: 'text', showInGrid: true, width: 200 },
+    { key: 'Статус', label: 'Статус', type: 'text', showInGrid: true, width: 130 },
+    { key: 'Location filter', label: 'Район', type: 'text', showInGrid: true, width: 150 },
+    { key: 'Комнаты', label: 'Комнаты', type: 'number', showInGrid: true, width: 90 },
+    { key: 'price_usd', label: 'Цена $', type: 'number', showInGrid: true, width: 110 },
+    { key: 'Площадь', label: 'Площадь', type: 'number' },
+    { key: 'Этаж', label: 'Этаж', type: 'text' },
+    { key: 'Year of completion', label: 'Год сдачи', type: 'text' },
+    { key: 'Разрешение', label: 'Разрешение', type: 'text' },
+    { key: 'Тип сделки', label: 'Тип сделки', type: 'text' },
+    { key: 'Developer', label: 'Застройщик', type: 'text' },
+    { key: 'Geo', label: 'Geo', type: 'geo' },
+    { key: 'Geo 2', label: 'Geo 2', type: 'geo' },
+    { key: 'Land color', label: 'Land color', type: 'text' },
+    { key: 'Leasehold', label: 'Leasehold', type: 'text' },
+    { key: 'Цена м²', label: 'Цена м²', type: 'number' },
+    { key: 'Цена м² в год', label: 'Цена м² в год', type: 'number' },
+    { key: 'Заявленная доходность', label: 'Заявл. доходность', type: 'number' },
+    { key: 'TOP', label: 'TOP', type: 'bool' },
+    { key: 'Notes', label: 'Заметки', type: 'longtext' },
+  ],
+}
+
+const complexes: CollectionConfig = {
+  key: 'complexes',
+  label: 'Жилые комплексы',
+  store: 'sql_jsonb',
+  table: 'raw_complexes',
+  primaryKey: 'airtable_id',
+  photo: { bucket: 'complex-photos' },
+  caps: { create: true, update: true, delete: true },
+  titleField: 'Project',
+  publishedField: 'Опубликовать',
+  defaultSort: { field: 'Project', dir: 'asc' },
+  revalidateKind: 'complexes',
+  fields: [
+    { key: 'Опубликовать', label: 'Опубл.', type: 'bool', showInGrid: true, width: 70 },
+    { key: 'Project', label: 'Название', type: 'text', showInGrid: true, width: 240 },
+    { key: 'Статус', label: 'Статус', type: 'text', showInGrid: true, width: 130 },
+    { key: 'Статус продаж', label: 'Продажи', type: 'text', showInGrid: true, width: 130 },
+    { key: 'Готовность', label: 'Готовность', type: 'text', showInGrid: true, width: 130 },
+    { key: 'price_usd', label: 'Цена $', type: 'number', showInGrid: true, width: 110 },
+    { key: 'Year of completion', label: 'Год сдачи', type: 'text' },
+    { key: 'price', label: 'Цена', type: 'number' },
+    { key: 'Location', label: 'Локация', type: 'text' },
+    { key: 'Location 2', label: 'Район', type: 'text' },
+    { key: 'Developer1', label: 'Застройщик', type: 'text' },
+    { key: 'Типы юнитов', label: 'Типы юнитов', type: 'text' },
+    { key: 'TOP', label: 'TOP', type: 'bool' },
+    { key: 'Разрешительные документы', label: 'Документы', type: 'longtext' },
+  ],
+}
+
+const villaUnits: CollectionConfig = {
+  key: 'villa_units',
+  label: 'Юниты вилл',
+  store: 'sql_jsonb',
+  table: 'raw_villa_units',
+  primaryKey: 'airtable_id',
+  caps: { create: true, update: true, delete: true },
+  titleField: 'SEO:Title',
+  publishedField: 'Опубликовать',
+  defaultSort: { field: 'price', dir: 'desc' },
+  fields: [
+    { key: 'Опубликовать', label: 'Опубл.', type: 'bool', showInGrid: true, width: 70 },
+    { key: 'SEO:Title', label: 'Заголовок', type: 'text', showInGrid: true, width: 260 },
+    { key: 'Статус', label: 'Статус', type: 'text', showInGrid: true, width: 130 },
+    { key: 'Комнаты', label: 'Комнаты', type: 'number', showInGrid: true, width: 90 },
+    { key: 'price', label: 'Цена $', type: 'number', showInGrid: true, width: 110 },
+    { key: 'Площадь', label: 'Площадь', type: 'number' },
+    { key: 'Developer', label: 'Застройщик', type: 'text' },
+    { key: 'Geo', label: 'Geo', type: 'geo' },
+    { key: 'Notes', label: 'Заметки', type: 'longtext' },
+  ],
+}
+
+const developers: CollectionConfig = {
+  key: 'developers',
+  label: 'Застройщики',
+  store: 'sql_jsonb',
+  table: 'raw_developers',
+  primaryKey: 'airtable_id',
+  // raw_developers is historically UPDATE-only for service_role (migration
+  // 010) — expose edit, not insert/delete.
+  caps: { create: false, update: true, delete: false },
+  titleField: 'Developer',
+  publishedField: 'Публикация',
+  defaultSort: { field: 'Developer', dir: 'asc' },
+  revalidateKind: 'developers',
+  fields: [
+    { key: 'Публикация', label: 'Публикация', type: 'bool', showInGrid: true, width: 90 },
+    { key: 'Developer', label: 'Название', type: 'text', showInGrid: true, width: 220 },
+    { key: 'SEO:Slug', label: 'Slug', type: 'text', showInGrid: true, width: 200 },
+    { key: 'Доходность', label: 'Доходность', type: 'longtext' },
+    { key: 'Команда', label: 'Команда', type: 'longtext' },
+    { key: 'Репутация и опыт', label: 'Репутация и опыт', type: 'longtext' },
+    { key: 'AI Описание', label: 'AI-описание', type: 'longtext' },
+    { key: 'Total quantity of units', label: 'Всего юнитов', type: 'number' },
+    { key: 'Активные проекты', label: 'Активные проекты', type: 'text' },
+    { key: 'Сданные проекты', label: 'Сданные проекты', type: 'text' },
+    { key: 'Location 2', label: 'Район', type: 'text' },
+    { key: 'Logo', label: 'Логотип (Airtable)', type: 'json', readOnly: true },
+  ],
+}
+
+// --- Storage manifest content ({ generatedAt, count, items: [] }) ----------
+
+const news: CollectionConfig = {
+  key: 'news',
+  label: 'Новости',
+  store: 'storage_manifest',
+  bucket: 'news',
+  manifestKey: '_news.json',
+  itemIdKey: 'id',
+  caps: { create: true, update: true, delete: true },
+  titleField: 'title',
+  publishedField: 'pinned',
+  defaultSort: { field: 'createdAt', dir: 'desc' },
+  revalidateKind: 'news',
+  fields: [
+    { key: 'pinned', label: 'На главной', type: 'bool', showInGrid: true, width: 90 },
+    { key: 'title', label: 'Заголовок', type: 'text', showInGrid: true, width: 280 },
+    { key: 'slug', label: 'Slug', type: 'text', showInGrid: true, width: 200 },
+    { key: 'date', label: 'Дата', type: 'text', showInGrid: true, width: 120 },
+    { key: 'createdAt', label: 'Создано', type: 'text', readOnly: true, showInGrid: true, width: 160 },
+    { key: 'seoDescription', label: 'SEO-описание', type: 'longtext' },
+    { key: 'body', label: 'Текст', type: 'longtext' },
+    { key: 'photo', label: 'Фото (URL)', type: 'text' },
+    { key: 'externalUrl', label: 'Внешняя ссылка', type: 'text' },
+    { key: 'videoUrl', label: 'Видео (URL)', type: 'text' },
+    { key: 'complexNames', label: 'Комплексы', type: 'json', readOnly: true },
+    { key: 'developers', label: 'Застройщики', type: 'json', readOnly: true },
+  ],
+}
+
+const events: CollectionConfig = {
+  key: 'events',
+  label: 'Мероприятия',
+  store: 'storage_manifest',
+  bucket: 'events',
+  manifestKey: '_events.json',
+  itemIdKey: 'id',
+  caps: { create: true, update: true, delete: true },
+  titleField: 'title',
+  publishedField: 'pinned',
+  defaultSort: { field: 'startsAt', dir: 'desc' },
+  revalidateKind: 'events',
+  fields: [
+    { key: 'pinned', label: 'На главной', type: 'bool', showInGrid: true, width: 90 },
+    { key: 'title', label: 'Заголовок', type: 'text', showInGrid: true, width: 280 },
+    { key: 'slug', label: 'Slug', type: 'text', showInGrid: true, width: 200 },
+    { key: 'startsAt', label: 'Начало', type: 'text', showInGrid: true, width: 140 },
+    { key: 'endsAt', label: 'Окончание', type: 'text' },
+    { key: 'format', label: 'Формат', type: 'text', showInGrid: true, width: 120 },
+    { key: 'seoDescription', label: 'SEO-описание', type: 'longtext' },
+    { key: 'body', label: 'Текст', type: 'longtext' },
+    { key: 'photo', label: 'Фото (URL)', type: 'text' },
+    { key: 'locationUrl', label: 'Локация (URL)', type: 'text' },
+    { key: 'registerUrl', label: 'Регистрация (URL)', type: 'text' },
+    { key: 'videoUrl', label: 'Видео (URL)', type: 'text' },
+  ],
+}
+
+const promo: CollectionConfig = {
+  key: 'promo',
+  label: 'Акции',
+  store: 'storage_manifest',
+  bucket: 'promo',
+  manifestKey: '_promo.json',
+  itemIdKey: 'id',
+  caps: { create: true, update: true, delete: true },
+  titleField: 'title',
+  publishedField: 'pinned',
+  defaultSort: { field: 'expiresAt', dir: 'desc' },
+  revalidateKind: 'promo',
+  fields: [
+    { key: 'pinned', label: 'На главной', type: 'bool', showInGrid: true, width: 90 },
+    { key: 'top10', label: 'ТОП-10', type: 'bool', showInGrid: true, width: 80 },
+    { key: 'title', label: 'Заголовок', type: 'text', showInGrid: true, width: 280 },
+    { key: 'slug', label: 'Slug', type: 'text', showInGrid: true, width: 200 },
+    { key: 'expiresAt', label: 'Истекает', type: 'text', showInGrid: true, width: 140 },
+    { key: 'seoDescription', label: 'SEO-описание', type: 'longtext' },
+    { key: 'body', label: 'Текст', type: 'longtext' },
+    { key: 'photo', label: 'Фото (URL)', type: 'text' },
+    { key: 'externalUrl', label: 'Внешняя ссылка', type: 'text' },
+    { key: 'complexNames', label: 'Комплексы', type: 'json', readOnly: true },
+  ],
+}
+
+const rental: CollectionConfig = {
+  key: 'rental',
+  label: 'Аренда',
+  store: 'storage_manifest',
+  bucket: 'rental',
+  manifestKey: '_rental.json',
+  itemIdKey: 'id',
+  caps: { create: true, update: true, delete: true },
+  titleField: 'title',
+  defaultSort: { field: 'updatedAt', dir: 'desc' },
+  revalidateKind: 'rental',
+  fields: [
+    { key: 'title', label: 'Заголовок', type: 'text', showInGrid: true, width: 260 },
+    { key: 'slug', label: 'Slug', type: 'text', showInGrid: true, width: 180 },
+    { key: 'type', label: 'Тип', type: 'text', showInGrid: true, width: 120 },
+    { key: 'bedrooms', label: 'Спальни', type: 'number', showInGrid: true, width: 90 },
+    { key: 'location', label: 'Локация', type: 'text', showInGrid: true, width: 150 },
+    { key: 'priceMonthUsd', label: 'Цена/мес $', type: 'number', showInGrid: true, width: 110 },
+    { key: 'priceSegment', label: 'Сегмент', type: 'text' },
+    { key: 'notes', label: 'Заметки', type: 'longtext' },
+    { key: 'telegram', label: 'Telegram', type: 'text' },
+    { key: 'createdTime', label: 'Создано', type: 'text', readOnly: true },
+    { key: 'updatedAt', label: 'Обновлено', type: 'text', readOnly: true },
+    { key: 'photos', label: 'Фото (массив URL)', type: 'json', readOnly: true },
+  ],
+}
+
+const knowledge: CollectionConfig = {
+  key: 'knowledge',
+  label: 'Знания',
+  store: 'storage_manifest',
+  bucket: 'knowledge',
+  manifestKey: '_knowledge.json',
+  itemIdKey: 'id',
+  caps: { create: true, update: true, delete: true },
+  titleField: 'title',
+  defaultSort: { field: 'createdTime', dir: 'desc' },
+  revalidateKind: 'knowledge',
+  fields: [
+    { key: 'title', label: 'Заголовок', type: 'text', showInGrid: true, width: 300 },
+    { key: 'slug', label: 'Slug', type: 'text', showInGrid: true, width: 220 },
+    { key: 'createdTime', label: 'Создано', type: 'text', readOnly: true, showInGrid: true, width: 160 },
+    { key: 'body', label: 'Текст', type: 'longtext' },
+    { key: 'photo', label: 'Фото (URL)', type: 'text' },
+    { key: 'externalUrl', label: 'Внешняя ссылка', type: 'text' },
+  ],
+}
+
+const managers: CollectionConfig = {
+  key: 'managers',
+  label: 'Менеджеры',
+  store: 'storage_manifest',
+  bucket: 'managers',
+  manifestKey: '_managers.json',
+  itemIdKey: 'id',
+  caps: { create: true, update: true, delete: true },
+  titleField: 'name',
+  defaultSort: { field: 'name', dir: 'asc' },
+  revalidateKind: 'managers',
+  fields: [
+    { key: 'name', label: 'Имя', type: 'text', showInGrid: true, width: 200 },
+    { key: 'nameEn', label: 'Имя (EN)', type: 'text', showInGrid: true, width: 200 },
+    { key: 'telegram', label: 'Telegram', type: 'text', showInGrid: true, width: 160 },
+    { key: 'rating', label: 'Рейтинг', type: 'number', showInGrid: true, width: 90 },
+    { key: 'telegramHandle', label: 'TG handle', type: 'text' },
+    { key: 'whatsapp', label: 'WhatsApp', type: 'text' },
+    { key: 'botRequest', label: 'Bot request', type: 'text' },
+    { key: 'photo', label: 'Фото (URL)', type: 'text' },
+    { key: 'regalia', label: 'Регалии', type: 'longtext' },
+    { key: 'languages', label: 'Языки', type: 'json', readOnly: true },
+    { key: 'developerNames', label: 'Застройщики', type: 'json', readOnly: true },
+    { key: 'developerSlugs', label: 'Slugs застройщиков', type: 'json', readOnly: true },
+  ],
+}
+
+// --- Plain SQL columns (denormalized table) --------------------------------
+
+const baliforumPlaces: CollectionConfig = {
+  key: 'baliforum_places',
+  label: 'Baliforum места',
+  store: 'sql_columns',
+  table: 'baliforum_places',
+  primaryKey: 'slug',
+  caps: { create: true, update: true, delete: true },
+  titleField: 'name',
+  defaultSort: { field: 'rating', dir: 'desc' },
+  fields: [
+    { key: 'slug', label: 'Slug', type: 'text', showInGrid: true, width: 200 },
+    { key: 'name', label: 'Название', type: 'text', showInGrid: true, width: 220 },
+    { key: 'category', label: 'Категория', type: 'text', showInGrid: true, width: 150 },
+    { key: 'district', label: 'Район', type: 'text', showInGrid: true, width: 150 },
+    { key: 'rating', label: 'Рейтинг', type: 'number', showInGrid: true, width: 90 },
+    { key: 'reviews', label: 'Отзывы', type: 'number', showInGrid: true, width: 90 },
+    { key: 'lat', label: 'Lat', type: 'number' },
+    { key: 'lng', label: 'Lng', type: 'number' },
+    { key: 'address', label: 'Адрес', type: 'text' },
+    { key: 'google_place_id', label: 'Google Place ID', type: 'text' },
+    { key: 'photo', label: 'Фото (URL)', type: 'text' },
+    { key: 'url', label: 'Ссылка', type: 'text' },
+    { key: 'tags', label: 'Теги', type: 'json', readOnly: true },
+  ],
+}
+
+export const COLLECTIONS: Record<string, CollectionConfig> = {
+  villas,
+  apartments,
+  complexes,
+  villa_units: villaUnits,
+  developers,
+  news,
+  events,
+  promo,
+  rental,
+  knowledge,
+  managers,
+  baliforum_places: baliforumPlaces,
+}
+
+export function getCollection(key: string): CollectionConfig | null {
+  return COLLECTIONS[key] ?? null
+}
+
+export function listCollections(): CollectionConfig[] {
+  return Object.values(COLLECTIONS)
+}
