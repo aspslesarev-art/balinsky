@@ -1,20 +1,14 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Plus, ArrowUp, ArrowDown, Search, Check, X, Loader2 } from 'lucide-react'
+import { Plus, ArrowUp, ArrowDown, Search, Loader2, Maximize2, Link2 } from 'lucide-react'
 import type { CollectionConfig, FieldDef, RecordRow } from '@/lib/admin/adapters/types'
-import { resolveFields } from '@/lib/admin/fields'
+import { resolveFields, displayValue, editableText, coerceValue } from '@/lib/admin/fields'
 import { RecordPanel } from './_panel'
 
 type SortState = { field: string; dir: 'asc' | 'desc' } | null
+type EditCell = { rowId: string; key: string } | null
 const PAGE_SIZE = 50
-
-function cellText(f: FieldDef, v: unknown): string {
-  if (v == null || v === '') return ''
-  if (f.type === 'bool') return v === true ? '✓' : ''
-  if (typeof v === 'object') return JSON.stringify(v)
-  return String(v)
-}
 
 export function DataGridScreen({
   cfg,
@@ -33,14 +27,14 @@ export function DataGridScreen({
   const [loading, setLoading] = useState(false)
   const [selectedId, setSelectedId] = useState<string | 'new' | null>(null)
 
-  // Columns accumulate every key ever seen (config fields first, then the rest),
-  // so the header is stable as you page through sparse Airtable data.
+  const [edit, setEdit] = useState<EditCell>(null)
+  const [editText, setEditText] = useState('')
+
   const seenKeys = useRef<Set<string>>(new Set())
   const [cols, setCols] = useState<FieldDef[]>(() => resolveFields(cfg, initialRows))
   const learnColumns = useCallback((rs: RecordRow[]) => {
     for (const r of rs) for (const k of Object.keys(r.fields)) seenKeys.current.add(k)
     const synthetic: RecordRow = { id: '_schema', fields: Object.fromEntries([...seenKeys.current].map(k => [k, ''])) }
-    // Merge actual sample values so types infer correctly.
     setCols(resolveFields(cfg, [...rs, synthetic]))
   }, [cfg])
   useEffect(() => { learnColumns(initialRows) }, [initialRows, learnColumns])
@@ -55,17 +49,10 @@ export function DataGridScreen({
     try {
       const res = await fetch(`/api/admin/data/${cfg.key}?${params}`)
       const j = await res.json()
-      if (res.ok) {
-        setRows(j.rows ?? [])
-        setTotal(j.total ?? 0)
-        learnColumns(j.rows ?? [])
-      }
-    } finally {
-      setLoading(false)
-    }
+      if (res.ok) { setRows(j.rows ?? []); setTotal(j.total ?? 0); learnColumns(j.rows ?? []) }
+    } finally { setLoading(false) }
   }, [cfg.key, learnColumns])
 
-  // Debounced search → reset to page 0.
   const firstRender = useRef(true)
   useEffect(() => {
     if (firstRender.current) { firstRender.current = false; return }
@@ -74,10 +61,7 @@ export function DataGridScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q])
 
-  const go = (nextPage: number, nextSort: SortState) => {
-    setPage(nextPage); setSort(nextSort); fetchPage({ page: nextPage, sort: nextSort, q })
-  }
-
+  const go = (nextPage: number, nextSort: SortState) => { setPage(nextPage); setSort(nextSort); fetchPage({ page: nextPage, sort: nextSort, q }) }
   const toggleSort = (field: string) => {
     let next: SortState
     if (!sort || sort.field !== field) next = { field, dir: 'asc' }
@@ -85,15 +69,39 @@ export function DataGridScreen({
     else next = null
     go(0, next)
   }
-
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE))
-
   const refresh = useCallback(() => fetchPage({ page, sort, q }), [fetchPage, page, sort, q])
 
-  const onSaved = useCallback((_row: RecordRow, _isNew: boolean) => { setSelectedId(null); refresh() }, [refresh])
-  const onDeleted = useCallback(() => { setSelectedId(null); refresh() }, [refresh])
+  // Persist a single field (or several, for links) on one row. Optimistic.
+  const patchRow = useCallback(async (rowId: string, fieldsPatch: Record<string, unknown>) => {
+    setRows(prev => prev.map(r => (r.id === rowId ? { ...r, fields: { ...r.fields, ...fieldsPatch } } : r)))
+    try {
+      const res = await fetch(`/api/admin/data/${cfg.key}/${encodeURIComponent(rowId)}`, {
+        method: 'PATCH', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ fields: fieldsPatch }),
+      })
+      if (!res.ok) refresh()
+    } catch { refresh() }
+  }, [cfg.key, refresh])
 
-  const titleOf = (r: RecordRow) => cellText({ key: titleKey, label: '', type: 'text' }, r.fields[titleKey]) || r.id
+  const startEdit = (r: RecordRow, c: FieldDef) => {
+    if (c.readOnly || c.type === 'bool' || c.type === 'link') return
+    setEdit({ rowId: r.id, key: c.key }); setEditText(editableText(r.fields[c.key]))
+  }
+  const commitEdit = () => {
+    if (!edit) return
+    const c = cols.find(x => x.key === edit.key)
+    const r = rows.find(x => x.id === edit.rowId)
+    if (c && r) {
+      const orig = r.fields[edit.key]
+      const next = coerceValue(c, orig, editText)
+      if (JSON.stringify(next) !== JSON.stringify(orig)) patchRow(edit.rowId, { [edit.key]: next })
+    }
+    setEdit(null)
+  }
+
+  const onSaved = useCallback(() => { setSelectedId(null); refresh() }, [refresh])
+  const onDeleted = useCallback(() => { setSelectedId(null); refresh() }, [refresh])
 
   return (
     <div>
@@ -101,12 +109,9 @@ export function DataGridScreen({
       <div className="flex items-center gap-2 mb-3">
         <div className="relative flex-1 max-w-[360px]">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--ax-fg-faint)]" />
-          <input
-            value={q}
-            onChange={e => setQ(e.target.value)}
+          <input value={q} onChange={e => setQ(e.target.value)}
             placeholder={`Поиск по «${cfg.fields.find(f => f.key === titleKey)?.label ?? titleKey}»…`}
-            className="w-full pl-9 pr-3 py-2 rounded-xl text-[13px] bg-[var(--ax-input-bg)] border border-[var(--ax-input-border)] text-[var(--ax-fg)] outline-none focus:border-[var(--color-primary)]"
-          />
+            className="w-full pl-9 pr-3 py-2 rounded-xl text-[13px] bg-[var(--ax-input-bg)] border border-[var(--ax-input-border)] text-[var(--ax-fg)] outline-none focus:border-[var(--color-primary)]" />
         </div>
         {loading && <Loader2 size={15} className="animate-spin text-[var(--ax-fg-faint)]" />}
         <div className="text-[12px] text-[var(--ax-fg-faint)]">{total} записей · {cols.length} полей</div>
@@ -119,22 +124,20 @@ export function DataGridScreen({
         )}
       </div>
 
-      {/* grid — ALL columns, horizontal scroll, title column sticky-left */}
-      <div className="overflow-x-auto rounded-2xl border border-[var(--ax-border)] max-h-[70vh]">
+      <div className="overflow-auto rounded-2xl border border-[var(--ax-border)] max-h-[72vh]">
         <table className="border-collapse text-[13px] w-max min-w-full">
           <thead>
             <tr className="bg-[var(--ax-panel)]">
-              {cols.map((c, ci) => {
+              <th className="sticky top-0 left-0 z-30 w-9 bg-[var(--ax-panel)] border-b border-r border-[var(--ax-border)]" />
+              {cols.map(c => {
                 const active = sort?.field === c.key
                 const sticky = c.key === titleKey
                 return (
-                  <th
-                    key={c.key}
-                    onClick={() => toggleSort(c.key)}
-                    style={{ minWidth: c.width ?? 130, ...(sticky ? { left: 0 } : {}) }}
-                    className={`text-left font-semibold text-[var(--ax-fg-soft)] px-3 py-2.5 border-b border-[var(--ax-border)] cursor-pointer select-none whitespace-nowrap bg-[var(--ax-panel)] hover:text-[var(--ax-fg)] sticky top-0 z-10 ${sticky ? 'z-20 border-r border-[var(--ax-border)]' : ''}`}
-                  >
+                  <th key={c.key} onClick={() => toggleSort(c.key)}
+                    style={{ minWidth: c.width ?? 130, ...(sticky ? { left: 36 } : {}) }}
+                    className={`text-left font-semibold text-[var(--ax-fg-soft)] px-3 py-2.5 border-b border-[var(--ax-border)] cursor-pointer select-none whitespace-nowrap bg-[var(--ax-panel)] hover:text-[var(--ax-fg)] sticky top-0 z-10 ${sticky ? 'z-20 border-r border-[var(--ax-border)]' : ''}`}>
                     <span className="inline-flex items-center gap-1">
+                      {c.type === 'link' && <Link2 size={11} className="text-[var(--ax-fg-faint)]" />}
                       {c.label}
                       {active && (sort!.dir === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />)}
                     </span>
@@ -145,32 +148,81 @@ export function DataGridScreen({
           </thead>
           <tbody>
             {rows.map(r => (
-              <tr key={r.id} onClick={() => setSelectedId(r.id)}
-                className="cursor-pointer hover:bg-[var(--ax-hover)] border-b border-[var(--ax-border-soft)] group">
+              <tr key={r.id} className="border-b border-[var(--ax-border-soft)] group">
+                {/* expand → full card (photos / everything) */}
+                <td className="sticky left-0 z-10 w-9 bg-[var(--ax-bg)] group-hover:bg-[var(--ax-hover)] border-r border-[var(--ax-border-soft)] text-center align-middle">
+                  <button type="button" onClick={() => setSelectedId(r.id)} title="Открыть карточку"
+                    className="p-1 text-[var(--ax-fg-faint)] hover:text-[var(--color-primary)]"><Maximize2 size={13} /></button>
+                </td>
                 {cols.map(c => {
                   const sticky = c.key === titleKey
+                  const isEditing = edit?.rowId === r.id && edit?.key === c.key
+                  const base = `px-2 py-1.5 align-top text-[var(--ax-fg)] border-r border-[var(--ax-border-soft)]/50 ${sticky ? 'sticky left-9 z-10 bg-[var(--ax-bg)] group-hover:bg-[var(--ax-hover)] border-r border-[var(--ax-border-soft)] font-medium' : ''}`
+                  // bool — toggle in place
+                  if (c.type === 'bool') {
+                    return (
+                      <td key={c.key} style={sticky ? { left: 36 } : undefined} className={base}>
+                        <input type="checkbox" disabled={c.readOnly} checked={r.fields[c.key] === true}
+                          onChange={e => patchRow(r.id, { [c.key]: e.target.checked })}
+                          className="w-4 h-4 accent-[var(--color-primary)] cursor-pointer" />
+                      </td>
+                    )
+                  }
+                  // link — inline picker
+                  if (c.type === 'link' && c.link) {
+                    return (
+                      <td key={c.key} style={sticky ? { left: 36 } : undefined} className={`${base} min-w-[160px]`}>
+                        <InlineLink cfg={cfg} field={c} row={r}
+                          onPick={opt => {
+                            const lk = c.link!
+                            const p: Record<string, unknown> = { [c.key]: opt ? (lk.store === 'name' ? opt.title : [opt.id]) : (lk.store === 'name' ? '' : []) }
+                            if (lk.nameField) p[lk.nameField] = opt ? opt.title : ''
+                            patchRow(r.id, p)
+                          }} />
+                      </td>
+                    )
+                  }
+                  // editing this cell
+                  if (isEditing) {
+                    return (
+                      <td key={c.key} style={sticky ? { left: 36 } : undefined} className={`${base} p-0`}>
+                        {c.type === 'enum' ? (
+                          <select autoFocus value={editText} onChange={e => setEditText(e.target.value)} onBlur={commitEdit}
+                            className="w-full px-2 py-1.5 text-[13px] bg-[var(--ax-input-bg)] border-2 border-[var(--color-primary)] outline-none">
+                            <option value="">—</option>
+                            {(c.enumOptions ?? []).map(o => <option key={o} value={o}>{o}</option>)}
+                          </select>
+                        ) : (
+                          <input autoFocus type={c.type === 'number' ? 'number' : 'text'} value={editText}
+                            onChange={e => setEditText(e.target.value)} onBlur={commitEdit}
+                            onKeyDown={e => { if (e.key === 'Enter') commitEdit(); if (e.key === 'Escape') setEdit(null) }}
+                            className="w-full px-2 py-1.5 text-[13px] bg-[var(--ax-input-bg)] border-2 border-[var(--color-primary)] outline-none" />
+                        )}
+                      </td>
+                    )
+                  }
+                  // display
+                  const display = (c.type === 'link' && c.link?.store === 'id-array' && c.link.nameField)
+                    ? displayValue(r.fields[c.link.nameField] ?? r.fields[c.key])
+                    : displayValue(r.fields[c.key])
                   return (
-                    <td key={c.key}
-                      style={sticky ? { left: 0 } : undefined}
-                      className={`px-3 py-2 align-top text-[var(--ax-fg)] max-w-[320px] truncate ${sticky ? 'sticky left-0 z-10 bg-[var(--ax-bg)] group-hover:bg-[var(--ax-hover)] border-r border-[var(--ax-border-soft)] font-medium' : ''}`}>
-                      {c.type === 'bool'
-                        ? (r.fields[c.key] === true ? <Check size={15} className="text-emerald-500" /> : (r.fields[c.key] === false ? <X size={14} className="text-[var(--ax-fg-faint)]" /> : ''))
-                        : c.type === 'link' && c.link?.store === 'id-array' && c.link.nameField
-                          ? cellText({ key: c.key, label: '', type: 'text' }, r.fields[c.link.nameField] ?? r.fields[c.key])
-                          : cellText(c, r.fields[c.key])}
+                    <td key={c.key} style={sticky ? { left: 36 } : undefined}
+                      onClick={() => startEdit(r, c)}
+                      className={`${base} max-w-[340px] truncate ${c.readOnly ? '' : 'cursor-text hover:bg-[var(--ax-hover)]/60'}`}
+                      title={display}>
+                      {display}
                     </td>
                   )
                 })}
               </tr>
             ))}
             {rows.length === 0 && !loading && (
-              <tr><td colSpan={cols.length} className="px-3 py-8 text-center text-[var(--ax-fg-faint)]">Ничего не найдено</td></tr>
+              <tr><td colSpan={cols.length + 1} className="px-3 py-8 text-center text-[var(--ax-fg-faint)]">Ничего не найдено</td></tr>
             )}
           </tbody>
         </table>
       </div>
 
-      {/* pagination */}
       <div className="flex items-center justify-center gap-2 mt-3 text-[13px]">
         <button type="button" disabled={page === 0 || loading} onClick={() => go(page - 1, sort)}
           className="px-3 py-1.5 rounded-lg border border-[var(--ax-border)] disabled:opacity-40 hover:bg-[var(--ax-hover)]">←</button>
@@ -180,15 +232,72 @@ export function DataGridScreen({
       </div>
 
       {selectedId && (
-        <RecordPanel
-          cfg={cfg}
-          id={selectedId}
-          title={selectedId === 'new' ? 'Новая запись' : titleOf(rows.find(r => r.id === selectedId) ?? { id: selectedId, fields: {} })}
-          onClose={() => setSelectedId(null)}
-          onSaved={onSaved}
-          onDeleted={onDeleted}
-        />
+        <RecordPanel cfg={cfg} id={selectedId}
+          title={selectedId === 'new' ? 'Новая запись' : displayValue(rows.find(r => r.id === selectedId)?.fields[titleKey]) || String(selectedId)}
+          onClose={() => setSelectedId(null)} onSaved={onSaved} onDeleted={onDeleted} />
       )}
+    </div>
+  )
+}
+
+// Compact inline link picker used directly inside a grid cell.
+type LinkOption = { id: string; title: string }
+function InlineLink({ cfg, field, row, onPick }: { cfg: CollectionConfig; field: FieldDef; row: RecordRow; onPick: (o: LinkOption | null) => void }) {
+  const lk = field.link!
+  const isName = lk.store === 'name'
+  const cur = isName ? (row.fields[field.key] ? String(row.fields[field.key]) : '') : (lk.nameField ? displayValue(row.fields[lk.nameField]) : '')
+  const curId = !isName && Array.isArray(row.fields[field.key]) ? String((row.fields[field.key] as unknown[])[0] ?? '') : ''
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState('')
+  const [opts, setOpts] = useState<LinkOption[]>([])
+  const [loading, setLoading] = useState(false)
+  const [name, setName] = useState(cur)
+
+  useEffect(() => { setName(cur) }, [cur])
+  // Resolve name from id when no companion name is present.
+  useEffect(() => {
+    if (isName || cur || !curId) return
+    let alive = true
+    fetch(`/api/admin/data/${lk.collection}/options?ids=${encodeURIComponent(curId)}`)
+      .then(r => r.json()).then(j => { if (alive) setName(j.titles?.[curId] ?? curId) }).catch(() => {})
+    return () => { alive = false }
+  }, [isName, cur, curId, lk.collection])
+
+  useEffect(() => {
+    if (!open) return
+    let alive = true; setLoading(true)
+    const t = setTimeout(() => {
+      fetch(`/api/admin/data/${lk.collection}/options?q=${encodeURIComponent(query)}`)
+        .then(r => r.json()).then(j => { if (alive) setOpts(j.options ?? []) }).catch(() => {}).finally(() => { if (alive) setLoading(false) })
+    }, 250)
+    return () => { alive = false; clearTimeout(t) }
+  }, [open, query, lk.collection])
+
+  if (!open) {
+    return (
+      <button type="button" onClick={() => setOpen(true)}
+        className="w-full text-left text-[13px] text-[var(--ax-fg)] hover:bg-[var(--ax-hover)]/60 rounded px-1 py-0.5 truncate">
+        {name || <span className="text-[var(--ax-fg-faint)]">— выбрать —</span>}
+      </button>
+    )
+  }
+  return (
+    <div className="relative">
+      <input autoFocus value={query} onChange={e => setQuery(e.target.value)} placeholder="поиск…"
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        className="w-full px-2 py-1.5 text-[13px] bg-[var(--ax-input-bg)] border-2 border-[var(--color-primary)] outline-none rounded" />
+      <div className="absolute z-30 mt-1 w-[240px] max-h-56 overflow-y-auto rounded-xl border border-[var(--ax-border)] bg-[var(--ax-panel)] shadow-lg">
+        {loading && <div className="px-3 py-2 text-[12px] text-[var(--ax-fg-faint)]">Загрузка…</div>}
+        {!loading && opts.length === 0 && <div className="px-3 py-2 text-[12px] text-[var(--ax-fg-faint)]">Ничего не найдено</div>}
+        {(name || curId) && (
+          <button type="button" onMouseDown={e => { e.preventDefault(); onPick(null); setOpen(false) }}
+            className="block w-full text-left px-3 py-1.5 text-[12px] text-red-500 hover:bg-[var(--ax-hover)] border-b border-[var(--ax-border-soft)]">× очистить</button>
+        )}
+        {opts.map(o => (
+          <button key={o.id} type="button" onMouseDown={e => { e.preventDefault(); onPick(o); setOpen(false); setQuery('') }}
+            className="block w-full text-left px-3 py-1.5 text-[13px] text-[var(--ax-fg)] hover:bg-[var(--ax-hover)]">{o.title}</button>
+        ))}
+      </div>
     </div>
   )
 }
