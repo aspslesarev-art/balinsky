@@ -12,6 +12,9 @@ export const sqlColumnsAdapter: DataSourceAdapter = {
     const pageSize = q.pageSize ?? 50
     let query = adminSb().from(cfg.table!).select('*', { count: 'exact' })
     if (q.q && q.q.trim()) query = query.ilike(cfg.titleField, `%${q.q.trim()}%`)
+    for (const f of q.filters ?? []) {
+      if (f.value) query = query.ilike(f.key, `%${f.value}%`)
+    }
     if (q.sort) query = query.order(q.sort.field, { ascending: q.sort.dir === 'asc', nullsFirst: false })
     else query = query.order(pk, { ascending: true })
     query = query.range(page * pageSize, page * pageSize + pageSize - 1)

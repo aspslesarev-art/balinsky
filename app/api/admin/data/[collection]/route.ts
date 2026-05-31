@@ -21,9 +21,13 @@ export async function GET(req: Request, { params }: { params: Promise<{ collecti
   const page = Math.max(0, Number(url.searchParams.get('page') ?? 0) || 0)
   const pageSize = Math.min(200, Math.max(1, Number(url.searchParams.get('pageSize') ?? 50) || 50))
   const q = url.searchParams.get('q') ?? undefined
+  // Per-column filters arrive as `filter.<key>=<value>`.
+  const filters = [...url.searchParams.entries()]
+    .filter(([k, v]) => k.startsWith('filter.') && v !== '')
+    .map(([k, v]) => ({ key: k.slice('filter.'.length), value: v }))
 
   try {
-    const { rows, total } = await adapterFor(cfg).list(cfg, { sort, page, pageSize, q })
+    const { rows, total } = await adapterFor(cfg).list(cfg, { sort, page, pageSize, q, filters })
     return NextResponse.json({ rows, total, page, pageSize })
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'list_failed' }, { status: 500 })

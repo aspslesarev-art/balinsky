@@ -27,6 +27,9 @@ export const sqlJsonbAdapter: DataSourceAdapter = {
       // Search the title field (the realistic "find by name" case).
       query = query.ilike(jsonPath(cfg.titleField), `%${q.q.trim()}%`)
     }
+    for (const f of q.filters ?? []) {
+      if (f.value) query = query.ilike(jsonPath(f.key), `%${f.value}%`)
+    }
     if (q.sort) {
       query = query.order(jsonPath(q.sort.field), { ascending: q.sort.dir === 'asc', nullsFirst: false })
     } else {
