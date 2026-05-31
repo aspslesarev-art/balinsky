@@ -4,6 +4,51 @@
 
 import type { CollectionConfig, FieldDef, FieldType, RecordRow } from './adapters/types'
 
+// Render any stored value as plain, human-readable text — flattening Airtable
+// wrappers ({state,value}), record-id/lookup arrays, and objects into something
+// the grid can show without raw JSON.
+export function displayValue(v: unknown): string {
+  if (v == null || v === '') return ''
+  if (typeof v === 'boolean') return v ? 'Да' : 'Нет'
+  if (typeof v === 'number' || typeof v === 'string') return String(v)
+  if (Array.isArray(v)) return v.map(displayValue).filter(Boolean).join(', ')
+  if (typeof v === 'object') {
+    const o = v as Record<string, unknown>
+    // Airtable AI/generated field wrapper.
+    if ('value' in o && (typeof o.value === 'string' || typeof o.value === 'number')) return String(o.value)
+    // Common human-readable keys on linked/object values.
+    for (const k of ['name', 'title', 'label', 'Project', 'Developer', 'text']) {
+      if (typeof o[k] === 'string') return o[k] as string
+    }
+    if (typeof o.url === 'string') return o.url as string
+    return ''
+  }
+  return String(v)
+}
+
+// The editable text for a value (what the user types into an inline editor).
+export function editableText(v: unknown): string {
+  if (v == null) return ''
+  if (Array.isArray(v)) return v.map(x => (typeof x === 'string' || typeof x === 'number') ? String(x) : displayValue(x)).filter(Boolean).join(', ')
+  if (typeof v === 'object') {
+    const o = v as Record<string, unknown>
+    if ('value' in o && (typeof o.value === 'string' || typeof o.value === 'number')) return String(o.value)
+    return ''
+  }
+  return String(v)
+}
+
+// Coerce inline-editor text back into the field's stored shape, preserving
+// Airtable wrappers and arrays.
+export function coerceValue(field: { type: FieldType }, original: unknown, text: string): unknown {
+  if (field.type === 'number') return text.trim() === '' ? null : Number(text)
+  if (original && typeof original === 'object' && !Array.isArray(original) && 'value' in (original as object)) {
+    return { ...(original as Record<string, unknown>), value: text }
+  }
+  if (Array.isArray(original)) return text.split(',').map(s => s.trim()).filter(Boolean)
+  return text
+}
+
 export function inferType(v: unknown): FieldType {
   if (typeof v === 'boolean') return 'bool'
   if (typeof v === 'number') return 'number'
