@@ -22,6 +22,7 @@ const villas: CollectionConfig = {
   publishedField: 'Опубликовать',
   defaultSort: { field: 'price', dir: 'desc' },
   revalidateKind: 'villas',
+  hideFields: ['photos', 'Renders', 'PDF code', 'Post ID'],
   fields: [
     { key: 'Опубликовать', label: 'Опубл.', type: 'bool', showInGrid: true, width: 70 },
     { key: 'SEO:Title', label: 'Заголовок', type: 'text', showInGrid: true, width: 260 },
@@ -65,6 +66,7 @@ const apartments: CollectionConfig = {
   publishedField: 'Опубликовать',
   defaultSort: { field: 'price_usd', dir: 'desc' },
   revalidateKind: 'apartments',
+  hideFields: ['photos', 'Renders', 'PDF code', 'Post ID'],
   fields: [
     { key: 'Опубликовать', label: 'Опубл.', type: 'bool', showInGrid: true, width: 70 },
     { key: 'SEO:Title', label: 'Заголовок', type: 'text', showInGrid: true, width: 260 },
@@ -105,6 +107,7 @@ const complexes: CollectionConfig = {
   publishedField: 'Опубликовать',
   defaultSort: { field: 'Project', dir: 'asc' },
   revalidateKind: 'complexes',
+  hideFields: ['photos', 'Renders', 'PDF code', 'Post ID', 'Opt photos'],
   fields: [
     { key: 'Опубликовать', label: 'Опубл.', type: 'bool', showInGrid: true, width: 70 },
     { key: 'Project', label: 'Название', type: 'text', showInGrid: true, width: 240 },
