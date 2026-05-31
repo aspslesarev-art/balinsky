@@ -49,6 +49,13 @@ export function coerceValue(field: { type: FieldType }, original: unknown, text:
   return text
 }
 
+// Does a value look like a single image URL we can render as a thumbnail?
+export function isImageUrl(v: unknown): boolean {
+  if (typeof v !== 'string') return false
+  if (!/^https?:\/\//.test(v)) return false
+  return /\.(jpe?g|png|webp|gif|avif)(\?|$)/i.test(v) || /\/storage\/v1\/object\/public\//.test(v) || /images\.balinsky\.info/.test(v)
+}
+
 export function inferType(v: unknown): FieldType {
   if (typeof v === 'boolean') return 'bool'
   if (typeof v === 'number') return 'number'
@@ -69,12 +76,13 @@ function inferTypeFromRows(rows: RecordRow[], key: string): FieldType {
 // config-declared fields first (their labels/types win), then any remaining
 // data keys appended alphabetically with an inferred type.
 export function resolveFields(cfg: CollectionConfig, rows: RecordRow[]): FieldDef[] {
+  const hide = new Set(cfg.hideFields ?? [])
   const known = new Map(cfg.fields.map(f => [f.key, f]))
-  const out: FieldDef[] = cfg.fields.filter(f => f.type !== 'photos').map(f => ({ ...f }))
+  const out: FieldDef[] = cfg.fields.filter(f => f.type !== 'photos' && !f.hidden && !hide.has(f.key)).map(f => ({ ...f }))
   const seen = new Set(known.keys())
   const extra = new Set<string>()
   for (const r of rows) for (const k of Object.keys(r.fields)) {
-    if (!seen.has(k) && !extra.has(k)) extra.add(k)
+    if (!seen.has(k) && !extra.has(k) && !hide.has(k)) extra.add(k)
   }
   for (const k of [...extra].sort((a, b) => a.localeCompare(b, 'ru'))) {
     out.push({ key: k, label: k, type: inferTypeFromRows(rows, k) })
@@ -85,10 +93,11 @@ export function resolveFields(cfg: CollectionConfig, rows: RecordRow[]): FieldDe
 // Field defs for a single record's editor: every config field (so empty ones
 // can still be filled) plus any extra keys the record itself carries.
 export function resolveRecordFields(cfg: CollectionConfig, fields: Record<string, unknown>): FieldDef[] {
-  const out: FieldDef[] = cfg.fields.filter(f => f.type !== 'photos').map(f => ({ ...f }))
+  const hide = new Set(cfg.hideFields ?? [])
+  const out: FieldDef[] = cfg.fields.filter(f => f.type !== 'photos' && !f.hidden && !hide.has(f.key)).map(f => ({ ...f }))
   const seen = new Set(cfg.fields.map(f => f.key))
   for (const k of Object.keys(fields).sort((a, b) => a.localeCompare(b, 'ru'))) {
-    if (seen.has(k)) continue
+    if (seen.has(k) || hide.has(k)) continue
     out.push({ key: k, label: k, type: inferType(fields[k]) })
   }
   return out

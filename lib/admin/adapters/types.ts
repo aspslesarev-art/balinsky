@@ -49,6 +49,8 @@ export type FieldDef = {
   help?: string
   /** For type 'link' — where to pick from and how to store. */
   link?: LinkConfig
+  /** Never show this field (e.g. raw Airtable attachment text). */
+  hidden?: boolean
 }
 
 export type Caps = { create: boolean; update: boolean; delete: boolean }
@@ -76,6 +78,8 @@ export type CollectionConfig = {
   defaultSort?: { field: string; dir: 'asc' | 'desc' }
   /** key passed to the content-revalidate map after a mutation. */
   revalidateKind?: string
+  /** Data keys to never surface (raw Airtable attachment / junk fields). */
+  hideFields?: string[]
   fields: FieldDef[]
 }
 

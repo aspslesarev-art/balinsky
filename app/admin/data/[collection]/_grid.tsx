@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Plus, ArrowUp, ArrowDown, Search, Loader2, Maximize2, Link2, Filter, X } from 'lucide-react'
 import type { CollectionConfig, FieldDef, RecordRow } from '@/lib/admin/adapters/types'
-import { resolveFields, displayValue, editableText, coerceValue } from '@/lib/admin/fields'
+import { resolveFields, displayValue, editableText, coerceValue, isImageUrl } from '@/lib/admin/fields'
 import { RecordPanel } from './_panel'
 
 type SortState = { field: string; dir: 'asc' | 'desc' } | null
@@ -31,6 +31,19 @@ export function DataGridScreen({
 
   const [edit, setEdit] = useState<EditCell>(null)
   const [editText, setEditText] = useState('')
+
+  // Photo thumbnails come from the Supabase Storage manifest (id → URL[]),
+  // not the raw Airtable `photos` text field.
+  const [photoMap, setPhotoMap] = useState<Record<string, string[]>>({})
+  useEffect(() => {
+    if (!cfg.photo) return
+    const base = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const key = cfg.photo.manifestKey ?? '_manifest.json'
+    fetch(`${base}/storage/v1/object/public/${cfg.photo.bucket}/${key}?t=${Date.now()}`)
+      .then(r => (r.ok ? r.json() : {}))
+      .then((m: unknown) => setPhotoMap(m && typeof m === 'object' ? (m as Record<string, string[]>) : {}))
+      .catch(() => {})
+  }, [cfg.photo])
 
   const seenKeys = useRef<Set<string>>(new Set())
   const [cols, setCols] = useState<FieldDef[]>(() => resolveFields(cfg, initialRows))
@@ -141,6 +154,9 @@ export function DataGridScreen({
           <thead>
             <tr className="bg-[var(--ax-panel)]">
               <th className="sticky top-0 left-0 z-30 w-9 bg-[var(--ax-panel)] border-b border-r border-[var(--ax-border)]" />
+              {cfg.photo && (
+                <th className="sticky top-0 z-10 text-left font-semibold text-[var(--ax-fg-soft)] px-3 py-2.5 border-b border-r border-[var(--ax-border)] bg-[var(--ax-panel)] whitespace-nowrap" style={{ minWidth: 130 }}>Фото</th>
+              )}
               {cols.map(c => {
                 const active = sort?.field === c.key
                 const sticky = c.key === titleKey
@@ -166,6 +182,11 @@ export function DataGridScreen({
                   <button type="button" onClick={() => setSelectedId(r.id)} title="Открыть карточку"
                     className="p-1 text-[var(--ax-fg-faint)] hover:text-[var(--color-primary)]"><Maximize2 size={13} /></button>
                 </td>
+                {cfg.photo && (
+                  <td className="px-2 py-1.5 border-r border-[var(--ax-border-soft)]/50 align-middle" onClick={() => setSelectedId(r.id)}>
+                    <PhotoThumbs urls={photoMap[r.id] ?? []} />
+                  </td>
+                )}
                 {cols.map(c => {
                   const sticky = c.key === titleKey
                   const isEditing = edit?.rowId === r.id && edit?.key === c.key
@@ -213,6 +234,15 @@ export function DataGridScreen({
                       </td>
                     )
                   }
+                  // image-URL value → thumbnail
+                  if (isImageUrl(r.fields[c.key])) {
+                    return (
+                      <td key={c.key} style={sticky ? { left: 36 } : undefined} className={base} onClick={() => startEdit(r, c)}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={String(r.fields[c.key])} alt="" className="h-9 w-9 rounded object-cover border border-[var(--ax-border)]" />
+                      </td>
+                    )
+                  }
                   // display
                   const display = (c.type === 'link' && c.link?.store === 'id-array' && c.link.nameField)
                     ? displayValue(r.fields[c.link.nameField] ?? r.fields[c.key])
@@ -229,7 +259,7 @@ export function DataGridScreen({
               </tr>
             ))}
             {rows.length === 0 && !loading && (
-              <tr><td colSpan={cols.length + 1} className="px-3 py-8 text-center text-[var(--ax-fg-faint)]">Ничего не найдено</td></tr>
+              <tr><td colSpan={cols.length + 1 + (cfg.photo ? 1 : 0)} className="px-3 py-8 text-center text-[var(--ax-fg-faint)]">Ничего не найдено</td></tr>
             )}
           </tbody>
         </table>
@@ -248,6 +278,20 @@ export function DataGridScreen({
           title={selectedId === 'new' ? 'Новая запись' : displayValue(rows.find(r => r.id === selectedId)?.fields[titleKey]) || String(selectedId)}
           onClose={() => setSelectedId(null)} onSaved={onSaved} onDeleted={onDeleted} />
       )}
+    </div>
+  )
+}
+
+// Row photo preview — up to 3 Supabase thumbnails + count.
+function PhotoThumbs({ urls }: { urls: string[] }) {
+  if (!urls.length) return <span className="text-[var(--ax-fg-faint)] text-[11px]">—</span>
+  return (
+    <div className="flex items-center gap-1 cursor-pointer">
+      {urls.slice(0, 3).map((u, i) => (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img key={i} src={u} alt="" className="h-9 w-9 rounded object-cover border border-[var(--ax-border)]" />
+      ))}
+      {urls.length > 3 && <span className="text-[11px] text-[var(--ax-fg-faint)]">+{urls.length - 3}</span>}
     </div>
   )
 }
