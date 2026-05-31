@@ -19,7 +19,7 @@ export default async function CollectionPage({ params }: { params: Promise<{ col
   let total = 0
   let loadError: string | null = null
   try {
-    const res = await adapterFor(cfg).list(cfg, { sort: cfg.defaultSort })
+    const res = await adapterFor(cfg).list(cfg, { sort: cfg.defaultSort, page: 0, pageSize: 50 })
     rows = res.rows
     total = res.total
   } catch (e) {

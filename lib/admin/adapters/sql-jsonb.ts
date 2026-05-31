@@ -1,64 +1,45 @@
 // Adapter for raw_* tables: one JSONB `data` column keyed by a TEXT primary
-// key (`airtable_id`). The UI's flat `fields` map IS the `data` blob.
+// key (`airtable_id`). The UI's flat `fields` map IS the full `data` blob.
 //
-// Egress: the grid pulls only `showInGrid` keys via a JSONB projection
-// (`gN:data->"Key"`), mirroring VILLA_SELECT in app/ru/villy/_lib.ts:629.
-// Full `data` is fetched only by get() for the side panel.
+// raw_* rows are large (villas ~60 KB × 140 keys), so the grid is
+// SERVER-PAGINATED: each list() pulls one page of full rows. Sorting and
+// title search run in Postgres via the JSONB path operators.
 
 import type { CollectionConfig, DataSourceAdapter, ListQuery, ListResult, RecordRow } from './types'
 import { adminSb } from '../sb'
 
-// Hard cap on grid rows loaded at once. Current catalogs are < 1000 rows; the
-// projection keeps each row tiny so loading all of them is cheap. If a table
-// ever exceeds this, the grid shows the cap and we add server pagination.
-const MAX_ROWS = 3000
+const DEFAULT_PAGE_SIZE = 50
 
-function gridFields(cfg: CollectionConfig) {
-  return cfg.fields.filter(f => f.showInGrid && f.type !== 'photos')
-}
-
-function projection(cfg: CollectionConfig): string {
-  const pk = cfg.primaryKey ?? 'airtable_id'
-  const cols = gridFields(cfg).map((f, i) => `g${i}:data->"${f.key}"`)
-  return [pk, ...cols].join(',')
-}
-
-const isEmpty = (v: unknown) => v == null || v === ''
-
-// Comparator that keeps empty values last regardless of sort direction.
-function compareFor(cfg: CollectionConfig, field: string, dir: 'asc' | 'desc') {
-  const def = cfg.fields.find(f => f.key === field)
-  const numeric = def?.type === 'number'
-  const mul = dir === 'desc' ? -1 : 1
-  return (a: unknown, b: unknown): number => {
-    const ae = isEmpty(a), be = isEmpty(b)
-    if (ae && be) return 0
-    if (ae) return 1
-    if (be) return -1
-    if (numeric) return (Number(a) - Number(b)) * mul
-    return String(a).localeCompare(String(b), 'ru') * mul
-  }
+// PostgREST JSONB path for ordering/filtering on a (possibly spaced/colon'd)
+// key — double-quote the key so `SEO:Title` / `Location 2` parse correctly.
+function jsonPath(key: string): string {
+  return `data->>"${key}"`
 }
 
 export const sqlJsonbAdapter: DataSourceAdapter = {
   async list(cfg, q: ListQuery): Promise<ListResult> {
     const pk = cfg.primaryKey ?? 'airtable_id'
-    const grid = gridFields(cfg)
-    const { data, error, count } = await adminSb()
-      .from(cfg.table!)
-      .select(projection(cfg), { count: 'exact' })
-      .limit(MAX_ROWS)
-    if (error) throw new Error(error.message)
-    const rows: RecordRow[] = ((data ?? []) as unknown as Record<string, unknown>[]).map(raw => {
-      const fields: Record<string, unknown> = {}
-      grid.forEach((f, i) => { fields[f.key] = raw[`g${i}`] })
-      return { id: String(raw[pk]), fields }
-    })
-    const sort = q.sort ?? cfg.defaultSort
-    if (sort) {
-      const cmp = compareFor(cfg, sort.field, sort.dir)
-      rows.sort((a, b) => cmp(a.fields[sort.field], b.fields[sort.field]))
+    const page = q.page ?? 0
+    const pageSize = q.pageSize ?? DEFAULT_PAGE_SIZE
+    let query = adminSb().from(cfg.table!).select(`${pk}, data`, { count: 'exact' })
+
+    if (q.q && q.q.trim()) {
+      // Search the title field (the realistic "find by name" case).
+      query = query.ilike(jsonPath(cfg.titleField), `%${q.q.trim()}%`)
     }
+    if (q.sort) {
+      query = query.order(jsonPath(q.sort.field), { ascending: q.sort.dir === 'asc', nullsFirst: false })
+    } else {
+      query = query.order(pk, { ascending: true })
+    }
+    query = query.range(page * pageSize, page * pageSize + pageSize - 1)
+
+    const { data, error, count } = await query
+    if (error) throw new Error(error.message)
+    const rows: RecordRow[] = ((data ?? []) as unknown as Record<string, unknown>[]).map(r => ({
+      id: String(r[pk]),
+      fields: { ...((r.data as Record<string, unknown>) ?? {}) },
+    }))
     return { rows, total: count ?? rows.length }
   },
 
@@ -88,7 +69,7 @@ export const sqlJsonbAdapter: DataSourceAdapter = {
     const pk = cfg.primaryKey ?? 'airtable_id'
     const sb = adminSb()
     // Read-modify-write: merge the patch into the existing `data` blob so we
-    // never drop un-modelled Airtable keys the panel didn't show.
+    // never drop un-edited keys.
     const { data: existing, error: readErr } = await sb
       .from(cfg.table!).select('data').eq(pk, id).maybeSingle()
     if (readErr) throw new Error(readErr.message)
@@ -107,9 +88,7 @@ export const sqlJsonbAdapter: DataSourceAdapter = {
   },
 }
 
-// adm_-prefixed ids mark admin-created rows so the sync prune can skip them
-// (see scripts/sync-*-data.mjs once SYNC_DISABLED work lands). Random, not
-// time-based, so concurrent inserts don't collide.
+// adm_-prefixed ids mark admin-created rows so the sync prune skips them.
 function randomId(): string {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
   let s = ''
