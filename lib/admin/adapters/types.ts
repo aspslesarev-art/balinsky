@@ -15,7 +15,21 @@ export type FieldType =
   | 'date'
   | 'photos' // synthetic — backed by a per-record photo manifest (lib/admin/photos.ts)
   | 'geo'
+  | 'link' // Airtable-style link to a record in another collection
   | 'json' // raw fallback for un-modelled / complex values (read-only in the panel)
+
+// How a `link` field stores its value in the data, mirroring Airtable.
+export type LinkConfig = {
+  /** Target collection key to pick from (e.g. 'complexes'). */
+  collection: string
+  /** How the picked record is stored on THIS field:
+   *  - 'id-array'  → [airtable_id]   (villas/apartments Комплекс, Developer)
+   *  - 'name'      → "Project name"  (complexes Developer) */
+  store: 'id-array' | 'name'
+  /** Optional companion field to also set with the picked record's title
+   *  (Airtable lookup column, e.g. 'Комплекс 1' / 'Developer1'). */
+  nameField?: string
+}
 
 export type StoreType = 'sql_jsonb' | 'storage_manifest' | 'sql_columns'
 
@@ -33,6 +47,8 @@ export type FieldDef = {
   /** Grid column width hint, px. */
   width?: number
   help?: string
+  /** For type 'link' — where to pick from and how to store. */
+  link?: LinkConfig
 }
 
 export type Caps = { create: boolean; update: boolean; delete: boolean }

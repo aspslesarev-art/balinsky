@@ -155,7 +155,9 @@ export function DataGridScreen({
                       className={`px-3 py-2 align-top text-[var(--ax-fg)] max-w-[320px] truncate ${sticky ? 'sticky left-0 z-10 bg-[var(--ax-bg)] group-hover:bg-[var(--ax-hover)] border-r border-[var(--ax-border-soft)] font-medium' : ''}`}>
                       {c.type === 'bool'
                         ? (r.fields[c.key] === true ? <Check size={15} className="text-emerald-500" /> : (r.fields[c.key] === false ? <X size={14} className="text-[var(--ax-fg-faint)]" /> : ''))
-                        : cellText(c, r.fields[c.key])}
+                        : c.type === 'link' && c.link?.store === 'id-array' && c.link.nameField
+                          ? cellText({ key: c.key, label: '', type: 'text' }, r.fields[c.link.nameField] ?? r.fields[c.key])
+                          : cellText(c, r.fields[c.key])}
                     </td>
                   )
                 })}
