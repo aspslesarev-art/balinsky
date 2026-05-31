@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Plus, ArrowUp, ArrowDown, Search, Loader2, Maximize2, Link2 } from 'lucide-react'
+import { Plus, ArrowUp, ArrowDown, Search, Loader2, Maximize2, Link2, Filter, X } from 'lucide-react'
 import type { CollectionConfig, FieldDef, RecordRow } from '@/lib/admin/adapters/types'
 import { resolveFields, displayValue, editableText, coerceValue } from '@/lib/admin/fields'
 import { RecordPanel } from './_panel'
@@ -24,6 +24,8 @@ export function DataGridScreen({
   const [page, setPage] = useState(0)
   const [sort, setSort] = useState<SortState>(cfg.defaultSort ?? null)
   const [q, setQ] = useState('')
+  const [filters, setFilters] = useState<{ key: string; value: string }[]>([])
+  const [showFilters, setShowFilters] = useState(false)
   const [loading, setLoading] = useState(false)
   const [selectedId, setSelectedId] = useState<string | 'new' | null>(null)
 
@@ -41,11 +43,12 @@ export function DataGridScreen({
 
   const titleKey = cfg.titleField
 
-  const fetchPage = useCallback(async (opts: { page: number; sort: SortState; q: string }) => {
+  const fetchPage = useCallback(async (opts: { page: number; sort: SortState; q: string; filters: { key: string; value: string }[] }) => {
     setLoading(true)
     const params = new URLSearchParams({ page: String(opts.page), pageSize: String(PAGE_SIZE) })
     if (opts.sort) { params.set('sort', opts.sort.field); params.set('dir', opts.sort.dir) }
     if (opts.q.trim()) params.set('q', opts.q.trim())
+    for (const f of opts.filters) if (f.key && f.value) params.set(`filter.${f.key}`, f.value)
     try {
       const res = await fetch(`/api/admin/data/${cfg.key}?${params}`)
       const j = await res.json()
@@ -53,15 +56,16 @@ export function DataGridScreen({
     } finally { setLoading(false) }
   }, [cfg.key, learnColumns])
 
+  // Debounced reload when search or filters change.
   const firstRender = useRef(true)
   useEffect(() => {
     if (firstRender.current) { firstRender.current = false; return }
-    const t = setTimeout(() => { setPage(0); fetchPage({ page: 0, sort, q }) }, 300)
+    const t = setTimeout(() => { setPage(0); fetchPage({ page: 0, sort, q, filters }) }, 300)
     return () => clearTimeout(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q])
+  }, [q, filters])
 
-  const go = (nextPage: number, nextSort: SortState) => { setPage(nextPage); setSort(nextSort); fetchPage({ page: nextPage, sort: nextSort, q }) }
+  const go = (nextPage: number, nextSort: SortState) => { setPage(nextPage); setSort(nextSort); fetchPage({ page: nextPage, sort: nextSort, q, filters }) }
   const toggleSort = (field: string) => {
     let next: SortState
     if (!sort || sort.field !== field) next = { field, dir: 'asc' }
@@ -70,7 +74,7 @@ export function DataGridScreen({
     go(0, next)
   }
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE))
-  const refresh = useCallback(() => fetchPage({ page, sort, q }), [fetchPage, page, sort, q])
+  const refresh = useCallback(() => fetchPage({ page, sort, q, filters }), [fetchPage, page, sort, q, filters])
 
   // Persist a single field (or several, for links) on one row. Optimistic.
   const patchRow = useCallback(async (rowId: string, fieldsPatch: Record<string, unknown>) => {
@@ -113,6 +117,10 @@ export function DataGridScreen({
             placeholder={`Поиск по «${cfg.fields.find(f => f.key === titleKey)?.label ?? titleKey}»…`}
             className="w-full pl-9 pr-3 py-2 rounded-xl text-[13px] bg-[var(--ax-input-bg)] border border-[var(--ax-input-border)] text-[var(--ax-fg)] outline-none focus:border-[var(--color-primary)]" />
         </div>
+        <button type="button" onClick={() => setShowFilters(v => !v)}
+          className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-[13px] border ${filters.length ? 'border-[var(--color-primary)] text-[var(--color-primary)]' : 'border-[var(--ax-border)] text-[var(--ax-fg-soft)]'} hover:bg-[var(--ax-hover)]`}>
+          <Filter size={14} /> Фильтры{filters.length ? ` (${filters.length})` : ''}
+        </button>
         {loading && <Loader2 size={15} className="animate-spin text-[var(--ax-fg-faint)]" />}
         <div className="text-[12px] text-[var(--ax-fg-faint)]">{total} записей · {cols.length} полей</div>
         <div className="flex-1" />
@@ -124,7 +132,11 @@ export function DataGridScreen({
         )}
       </div>
 
-      <div className="overflow-auto rounded-2xl border border-[var(--ax-border)] max-h-[72vh]">
+      {showFilters && (
+        <FilterPanel cols={cols} filters={filters} setFilters={setFilters} />
+      )}
+
+      <div className="overflow-auto rounded-2xl border border-[var(--ax-border)] h-[calc(100vh-200px)]">
         <table className="border-collapse text-[13px] w-max min-w-full">
           <thead>
             <tr className="bg-[var(--ax-panel)]">
@@ -236,6 +248,58 @@ export function DataGridScreen({
           title={selectedId === 'new' ? 'Новая запись' : displayValue(rows.find(r => r.id === selectedId)?.fields[titleKey]) || String(selectedId)}
           onClose={() => setSelectedId(null)} onSaved={onSaved} onDeleted={onDeleted} />
       )}
+    </div>
+  )
+}
+
+// Airtable-style filter bar: add column filters (AND-ed, contains-match).
+function FilterPanel({ cols, filters, setFilters }: {
+  cols: FieldDef[]
+  filters: { key: string; value: string }[]
+  setFilters: (f: { key: string; value: string }[]) => void
+}) {
+  const update = (i: number, patch: Partial<{ key: string; value: string }>) =>
+    setFilters(filters.map((f, k) => (k === i ? { ...f, ...patch } : f)))
+  const remove = (i: number) => setFilters(filters.filter((_, k) => k !== i))
+  const add = () => setFilters([...filters, { key: cols.find(c => c.showInGrid)?.key ?? cols[0]?.key ?? '', value: '' }])
+
+  return (
+    <div className="mb-3 rounded-2xl border border-[var(--ax-border)] bg-[var(--ax-panel)] p-3 space-y-2">
+      {filters.length === 0 && <div className="text-[12px] text-[var(--ax-fg-faint)]">Фильтров нет. Добавьте условие по любому столбцу.</div>}
+      {filters.map((f, i) => {
+        const col = cols.find(c => c.key === f.key)
+        return (
+          <div key={i} className="flex items-center gap-2">
+            <span className="text-[11px] text-[var(--ax-fg-faint)] w-10">{i === 0 ? 'где' : 'и'}</span>
+            <select value={f.key} onChange={e => update(i, { key: e.target.value })}
+              className="px-2 py-1.5 rounded-lg text-[12.5px] bg-[var(--ax-input-bg)] border border-[var(--ax-input-border)] text-[var(--ax-fg)] outline-none max-w-[200px]">
+              {cols.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
+            </select>
+            {col?.type === 'enum' ? (
+              <select value={f.value} onChange={e => update(i, { value: e.target.value })}
+                className="flex-1 px-2 py-1.5 rounded-lg text-[12.5px] bg-[var(--ax-input-bg)] border border-[var(--ax-input-border)] text-[var(--ax-fg)] outline-none">
+                <option value="">— любое —</option>
+                {(col.enumOptions ?? []).map(o => <option key={o} value={o}>{o}</option>)}
+              </select>
+            ) : col?.type === 'bool' ? (
+              <select value={f.value} onChange={e => update(i, { value: e.target.value })}
+                className="flex-1 px-2 py-1.5 rounded-lg text-[12.5px] bg-[var(--ax-input-bg)] border border-[var(--ax-input-border)] text-[var(--ax-fg)] outline-none">
+                <option value="">— любое —</option>
+                <option value="true">Да</option>
+                <option value="false">Нет</option>
+              </select>
+            ) : (
+              <input value={f.value} onChange={e => update(i, { value: e.target.value })} placeholder="содержит…"
+                className="flex-1 px-2 py-1.5 rounded-lg text-[12.5px] bg-[var(--ax-input-bg)] border border-[var(--ax-input-border)] text-[var(--ax-fg)] outline-none" />
+            )}
+            <button type="button" onClick={() => remove(i)} className="p-1 text-[var(--ax-fg-faint)] hover:text-red-500"><X size={15} /></button>
+          </div>
+        )
+      })}
+      <div className="flex items-center gap-3 pt-1">
+        <button type="button" onClick={add} className="inline-flex items-center gap-1 text-[12.5px] text-[var(--color-primary)]"><Plus size={13} /> Добавить фильтр</button>
+        {filters.length > 0 && <button type="button" onClick={() => setFilters([])} className="text-[12px] text-[var(--ax-fg-faint)] hover:text-red-500">очистить все</button>}
+      </div>
     </div>
   )
 }

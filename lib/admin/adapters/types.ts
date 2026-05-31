@@ -82,12 +82,16 @@ export type CollectionConfig = {
 /** A record as the UI sees it: an id plus a flat key→value map. */
 export type RecordRow = { id: string; fields: Record<string, unknown> }
 
+export type ColumnFilter = { key: string; value: string }
+
 export type ListQuery = {
   page?: number
   pageSize?: number
   sort?: { field: string; dir: 'asc' | 'desc' }
   /** Free-text search (matched against the title field / all text fields). */
   q?: string
+  /** Per-column "contains" filters (AND-ed). */
+  filters?: ColumnFilter[]
 }
 
 export type ListResult = { rows: RecordRow[]; total: number }

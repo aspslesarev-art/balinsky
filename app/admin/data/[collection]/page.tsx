@@ -33,6 +33,8 @@ export default async function CollectionPage({ params }: { params: Promise<{ col
     <AdminThemeShell
       title={cfg.label}
       description={`${total} ${total === 1 ? 'запись' : 'записей'} · ${cfg.table ?? cfg.bucket ?? cfg.key}`}
+      fullWidth
+      back={{ href: '/admin/data', label: 'Все базы' }}
     >
       {syncOn && (
         <div className="mb-4 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-3 text-[12.5px] text-[var(--ax-fg)] leading-snug">

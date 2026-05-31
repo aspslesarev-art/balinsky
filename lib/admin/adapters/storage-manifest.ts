@@ -70,6 +70,11 @@ export const storageManifestAdapter: DataSourceAdapter = {
       const needle = q.q.trim().toLowerCase()
       rows = rows.filter(r => Object.values(r.fields).some(v => typeof v === 'string' && v.toLowerCase().includes(needle)))
     }
+    for (const f of q.filters ?? []) {
+      if (!f.value) continue
+      const needle = f.value.toLowerCase()
+      rows = rows.filter(r => String(r.fields[f.key] ?? '').toLowerCase().includes(needle))
+    }
     rows = sortRows(cfg, rows, q.sort)
     const total = rows.length
     const page = q.page ?? 0
