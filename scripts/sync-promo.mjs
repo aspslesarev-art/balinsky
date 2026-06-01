@@ -1,7 +1,7 @@
 // Sync promotions (Акции) from Airtable → Supabase Storage manifest.
 import { createClient } from '@supabase/supabase-js'
 import fs from 'node:fs'
-import { downloadAndUpload, ensureBucket as ensureBucketHelper } from './lib-photo-sync.mjs'
+import { ensureBucket as ensureBucketHelper, loadPhotoCache, savePhotoCache, attachmentOf, syncAttachment } from './lib-photo-sync.mjs'
 import { applyAiFallback } from './_ai-fallback.mjs'
 
 const env = fs.readFileSync('.env.local', 'utf8')
@@ -86,16 +86,17 @@ console.log('  prod developers:', mainDevByName.size)
 
 const items = []
 let dropped = 0
+const photoCache = await loadPhotoCache(sb, PHOTO_BUCKET)
 for (const r of recs) {
   const f = r.fields || {}
   const slug = fs1(f['SEO:Slug'])
   const title = fs1(f['Заголовок ИИ']) ?? fs1(f['SEO:Title']) ?? fs1(f['Name'])
   if (!slug || !title) { dropped++; continue }
 
-  const tempPhoto = urlOfFirstAttachment(f['Opt Image'])
-              ?? urlOfFirstAttachment(f['Social:image'])
-              ?? urlOfFirstAttachment(f['Attachments'])
-  const photo = tempPhoto ? await downloadAndUpload(sb, PHOTO_BUCKET, r.id, tempPhoto) : null
+  const att = attachmentOf(f['Opt Image'])
+              ?? attachmentOf(f['Social:image'])
+              ?? attachmentOf(f['Attachments'])
+  const photo = att ? await syncAttachment(sb, PHOTO_BUCKET, r.id, att, photoCache) : null
 
   const complexLinks = (f['Комплекс'] || []).map(id => complexById.get(id)).filter(Boolean)
   const complexNames = complexLinks.map(c => c.name).filter(Boolean)
@@ -122,6 +123,7 @@ for (const r of recs) {
     developers,
   })
 }
+await savePhotoCache(sb, PHOTO_BUCKET, photoCache)
 
 // Sort: pinned/top10 first, then by expiresAt asc (ближайшие к окончанию выше)
 const now = Date.now()

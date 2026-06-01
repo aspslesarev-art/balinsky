@@ -1,7 +1,7 @@
 // Sync news from Airtable → Supabase Storage manifest.
 import { createClient } from '@supabase/supabase-js'
 import fs from 'node:fs'
-import { downloadAndUpload, ensureBucket as ensureBucketHelper } from './lib-photo-sync.mjs'
+import { ensureBucket as ensureBucketHelper, loadPhotoCache, savePhotoCache, attachmentOf, syncAttachment } from './lib-photo-sync.mjs'
 import { applyAiFallback } from './_ai-fallback.mjs'
 
 const env = fs.readFileSync('.env.local', 'utf8')
@@ -125,6 +125,8 @@ console.log('  main developers loaded:', mainDevByNameLower.size)
 const items = []
 const slugCollisions = new Map()
 let dropped = 0
+// Persistent photo cache (Supabase Storage) — skip re-downloading unchanged photos.
+const photoCache = await loadPhotoCache(sb, PHOTO_BUCKET)
 for (const r of newsRecs) {
   const f = r.fields || {}
   const title = fs1(f['ИИ Заголовок']) ?? fs1(f['SEO:Title']) ?? fs1(f['Name'])
@@ -149,8 +151,8 @@ for (const r of newsRecs) {
   const aliases = []
   if (editorSlug && editorSlug !== slug) aliases.push(editorSlug)
 
-  const tempPhoto = urlOfFirstAttachment(f['Social:Image']) ?? urlOfFirstAttachment(f['Attachments'])
-  const photo = tempPhoto ? await downloadAndUpload(sb, PHOTO_BUCKET, r.id, tempPhoto) : null
+  const att = attachmentOf(f['Social:Image']) ?? attachmentOf(f['Attachments'])
+  const photo = att ? await syncAttachment(sb, PHOTO_BUCKET, r.id, att, photoCache) : null
 
   // Тема → developer (this is the primary link). Резолвим через news-base devs table, потом через main devs manifest для slug.
   const developerNames = new Set()
@@ -184,6 +186,7 @@ for (const r of newsRecs) {
     developers,
   })
 }
+await savePhotoCache(sb, PHOTO_BUCKET, photoCache)
 
 // Sort: pinned first, then by Airtable record creation time desc
 // (newest added shows up first). The editor-set `Date` field stays

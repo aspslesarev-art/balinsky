@@ -1,7 +1,7 @@
 // Sync events (Мероприятия) from Airtable → Supabase Storage manifest.
 import { createClient } from '@supabase/supabase-js'
 import fs from 'node:fs'
-import { downloadAndUpload, ensureBucket as ensureBucketHelper } from './lib-photo-sync.mjs'
+import { ensureBucket as ensureBucketHelper, loadPhotoCache, savePhotoCache, attachmentOf, syncAttachment } from './lib-photo-sync.mjs'
 import { applyAiFallback } from './_ai-fallback.mjs'
 
 const env = fs.readFileSync('.env.local', 'utf8')
@@ -83,6 +83,7 @@ console.log('  prod developers:', mainDevByName.size)
 
 const items = []
 let dropped = 0
+const photoCache = await loadPhotoCache(sb, PHOTO_BUCKET)
 for (const r of recs) {
   const f = r.fields || {}
   if (f['Опубликовать'] !== true) { dropped++; continue }
@@ -90,10 +91,10 @@ for (const r of recs) {
   const title = fs1(f['Название ИИ']) ?? fs1(f['Name']) ?? fs1(f['post name'])
   if (!slug || !title) { dropped++; continue }
 
-  const tempPhoto = urlOfFirstAttachment(f['Opt image'])
-              ?? urlOfFirstAttachment(f['Social:image'])
-              ?? urlOfFirstAttachment(f['Attachments'])
-  const photo = tempPhoto ? await downloadAndUpload(sb, PHOTO_BUCKET, r.id, tempPhoto) : null
+  const att = attachmentOf(f['Opt image'])
+              ?? attachmentOf(f['Social:image'])
+              ?? attachmentOf(f['Attachments'])
+  const photo = att ? await syncAttachment(sb, PHOTO_BUCKET, r.id, att, photoCache) : null
 
   const developerNames = new Set()
   for (const id of (f['Developer'] || [])) {
@@ -123,6 +124,7 @@ for (const r of recs) {
     developers,
   })
 }
+await savePhotoCache(sb, PHOTO_BUCKET, photoCache)
 
 // Sort: pinned first, then upcoming by start date asc, past events at the end.
 const now = Date.now()
