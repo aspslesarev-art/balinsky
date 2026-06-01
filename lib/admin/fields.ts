@@ -49,6 +49,23 @@ export function coerceValue(field: { type: FieldType }, original: unknown, text:
   return text
 }
 
+// Raw Airtable attachment value (URL or attachment object[]) — these point at
+// Airtable, not our Supabase storage, so we hide them in favour of the
+// Supabase photo manifest / `image` fields.
+export function isAirtableAttachment(v: unknown): boolean {
+  if (v == null || v === '') return false
+  const s = typeof v === 'string' ? v : JSON.stringify(v)
+  return /airtableusercontent\.com|dl\.airtable\.com|\.airtable\.com\//.test(s)
+}
+
+function dynamicIsAirtable(rows: RecordRow[], key: string): boolean {
+  for (const r of rows) {
+    const v = r.fields[key]
+    if (v != null && v !== '') return isAirtableAttachment(v)
+  }
+  return false
+}
+
 // Does a value look like a single image URL we can render as a thumbnail?
 export function isImageUrl(v: unknown): boolean {
   if (typeof v !== 'string') return false
@@ -85,6 +102,7 @@ export function resolveFields(cfg: CollectionConfig, rows: RecordRow[]): FieldDe
     if (!seen.has(k) && !extra.has(k) && !hide.has(k)) extra.add(k)
   }
   for (const k of [...extra].sort((a, b) => a.localeCompare(b, 'ru'))) {
+    if (dynamicIsAirtable(rows, k)) continue // hide raw Airtable attachment fields
     out.push({ key: k, label: k, type: inferTypeFromRows(rows, k) })
   }
   return out
@@ -98,6 +116,7 @@ export function resolveRecordFields(cfg: CollectionConfig, fields: Record<string
   const seen = new Set(cfg.fields.map(f => f.key))
   for (const k of Object.keys(fields).sort((a, b) => a.localeCompare(b, 'ru'))) {
     if (seen.has(k) || hide.has(k)) continue
+    if (isAirtableAttachment(fields[k])) continue // hide raw Airtable attachment fields
     out.push({ key: k, label: k, type: inferType(fields[k]) })
   }
   return out
