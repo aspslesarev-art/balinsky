@@ -52,6 +52,9 @@ export type FieldDef = {
   link?: LinkConfig
   /** Never show this field (e.g. raw Airtable attachment text). */
   hidden?: boolean
+  /** For sql_jsonb stores: this key is a real top-level COLUMN (e.g.
+   *  developers.logo_url), not a key inside the `data` JSONB blob. */
+  column?: boolean
 }
 
 export type Caps = { create: boolean; update: boolean; delete: boolean }
