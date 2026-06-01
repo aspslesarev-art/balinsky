@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-auth'
 import { getCollection } from '@/lib/admin/collections'
-import { uploadPhoto } from '@/lib/admin/photos'
+import { uploadToBucket } from '@/lib/admin/photos'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -14,7 +14,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ collect
   const { collection } = await params
   const cfg = getCollection(collection)
   if (!cfg) return NextResponse.json({ error: 'unknown_collection' }, { status: 404 })
-  if (!cfg.photo) return NextResponse.json({ error: 'no_photo_bucket' }, { status: 400 })
+  const bucket = cfg.photo?.bucket ?? cfg.uploadBucket
+  if (!bucket) return NextResponse.json({ error: 'no_bucket' }, { status: 400 })
 
   const form = await req.formData().catch(() => null)
   if (!form) return NextResponse.json({ error: 'invalid_form' }, { status: 400 })
@@ -22,7 +23,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ collect
   if (!(file instanceof File)) return NextResponse.json({ error: 'no_file' }, { status: 400 })
   const buf = Buffer.from(await file.arrayBuffer())
   try {
-    const url = await uploadPhoto(cfg, { filename: file.name, buf, contentType: file.type || 'image/jpeg' })
+    const url = await uploadToBucket(bucket, { filename: file.name, buf, contentType: file.type || 'image/jpeg' })
     return NextResponse.json({ url })
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'upload_failed' }, { status: 500 })

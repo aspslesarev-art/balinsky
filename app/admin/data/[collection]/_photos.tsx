@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Upload, Trash2, ArrowUp, ArrowDown, Loader2, Plus } from 'lucide-react'
+import { Upload, Trash2, ArrowUp, ArrowDown, Loader2, Plus, Download } from 'lucide-react'
 import type { CollectionConfig } from '@/lib/admin/adapters/types'
 
 // Photo manager for a record: upload, remove, reorder, add-by-URL. Every
@@ -96,7 +96,10 @@ export function PhotoManager({ cfg, id }: { cfg: CollectionConfig; id: string })
                   <button type="button" onClick={() => move(i, -1)} disabled={i === 0 || busy} className="p-1 rounded bg-black/50 text-white disabled:opacity-30"><ArrowUp size={12} /></button>
                   <button type="button" onClick={() => move(i, 1)} disabled={i === photos.length - 1 || busy} className="p-1 rounded bg-black/50 text-white disabled:opacity-30"><ArrowDown size={12} /></button>
                 </div>
-                <button type="button" onClick={() => remove(i)} disabled={busy} className="p-1 rounded bg-red-600/80 text-white"><Trash2 size={12} /></button>
+                <div className="flex gap-1">
+                  <a href={url} download target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="p-1 rounded bg-black/50 text-white" title="Скачать"><Download size={12} /></a>
+                  <button type="button" onClick={() => remove(i)} disabled={busy} className="p-1 rounded bg-red-600/80 text-white"><Trash2 size={12} /></button>
+                </div>
               </div>
             </div>
           ))}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { X, Save, Trash2, Loader2, AlertTriangle, Plus, Link2, Search } from 'lucide-react'
 import type { CollectionConfig, FieldDef, RecordRow } from '@/lib/admin/adapters/types'
 import { resolveRecordFields } from '@/lib/admin/fields'
@@ -118,6 +118,8 @@ export function RecordPanel({
                       if (lk.nameField) setField(lk.nameField, opt ? opt.title : '')
                     }}
                   />
+                ) : f.type === 'image' ? (
+                  <ImageField key={f.key} f={f} collection={cfg.key} value={fields[f.key]} onChange={v => setField(f.key, v)} />
                 ) : (
                   <FieldEditor key={f.key} f={f} value={fields[f.key]} onChange={v => setField(f.key, v)} />
                 )
@@ -233,6 +235,55 @@ function asText(v: unknown): string {
   if (v == null) return ''
   if (typeof v === 'object') return JSON.stringify(v)
   return String(v)
+}
+
+// Single-image field: thumbnail + upload (Supabase) + download + delete.
+function ImageField({ f, collection, value, onChange }: { f: FieldDef; collection: string; value: unknown; onChange: (v: unknown) => void }) {
+  const url = typeof value === 'string' && value ? value : ''
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  const upload = async (file: File) => {
+    setBusy(true); setErr(null)
+    try {
+      const fd = new FormData(); fd.append('file', file)
+      const res = await fetch(`/api/admin/data/${collection}/upload`, { method: 'POST', body: fd })
+      const j = await res.json()
+      if (!res.ok || !j.url) { setErr(j.error ?? 'upload_failed') } else onChange(j.url)
+    } catch { setErr('upload_error') } finally { setBusy(false) }
+  }
+
+  return (
+    <div>
+      <Label f={f} />
+      <div className="flex items-start gap-3">
+        {url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={url} alt="" className="h-20 w-20 rounded-lg object-cover border border-[var(--ax-border)]" />
+        ) : (
+          <div className="h-20 w-20 rounded-lg border border-dashed border-[var(--ax-border)] flex items-center justify-center text-[11px] text-[var(--ax-fg-faint)]">нет фото</div>
+        )}
+        <div className="flex flex-col gap-1.5">
+          <button type="button" onClick={() => fileRef.current?.click()} disabled={busy}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] border border-[var(--ax-border)] hover:bg-[var(--ax-hover)] disabled:opacity-40">
+            {busy ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />} {url ? 'Заменить' : 'Загрузить'}
+          </button>
+          {url && (
+            <>
+              <a href={url} download target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] border border-[var(--ax-border)] hover:bg-[var(--ax-hover)] no-underline text-[var(--ax-fg)]">Скачать</a>
+              <button type="button" onClick={() => onChange('')}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] text-red-500 hover:bg-red-500/10"><Trash2 size={13} /> Удалить</button>
+            </>
+          )}
+          <input ref={fileRef} type="file" accept="image/*" className="hidden"
+            onChange={e => { const fl = e.target.files?.[0]; if (fl) upload(fl); e.target.value = '' }} />
+        </div>
+      </div>
+      {err && <div className="mt-1 text-[12px] text-red-500">{err}</div>}
+    </div>
+  )
 }
 
 type LinkOption = { id: string; title: string }
