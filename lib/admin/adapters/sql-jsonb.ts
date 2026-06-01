@@ -16,12 +16,28 @@ function jsonPath(key: string): string {
   return `data->>"${key}"`
 }
 
+// Real top-level columns this collection exposes alongside the `data` blob
+// (e.g. developers.logo_url).
+function columnKeys(cfg: CollectionConfig): string[] {
+  return cfg.fields.filter(f => f.column).map(f => f.key)
+}
+function selectList(cfg: CollectionConfig): string {
+  const pk = cfg.primaryKey ?? 'airtable_id'
+  return [pk, 'data', ...columnKeys(cfg)].join(', ')
+}
+// Merge `data` keys + exposed column values into one flat field map.
+function flatten(cfg: CollectionConfig, r: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = { ...((r.data as Record<string, unknown>) ?? {}) }
+  for (const k of columnKeys(cfg)) out[k] = r[k]
+  return out
+}
+
 export const sqlJsonbAdapter: DataSourceAdapter = {
   async list(cfg, q: ListQuery): Promise<ListResult> {
     const pk = cfg.primaryKey ?? 'airtable_id'
     const page = q.page ?? 0
     const pageSize = q.pageSize ?? DEFAULT_PAGE_SIZE
-    let query = adminSb().from(cfg.table!).select(`${pk}, data`, { count: 'exact' })
+    let query = adminSb().from(cfg.table!).select(selectList(cfg), { count: 'exact' })
 
     if (q.q && q.q.trim()) {
       // Search the title field (the realistic "find by name" case).
@@ -41,7 +57,7 @@ export const sqlJsonbAdapter: DataSourceAdapter = {
     if (error) throw new Error(error.message)
     const rows: RecordRow[] = ((data ?? []) as unknown as Record<string, unknown>[]).map(r => ({
       id: String(r[pk]),
-      fields: { ...((r.data as Record<string, unknown>) ?? {}) },
+      fields: flatten(cfg, r),
     }))
     return { rows, total: count ?? rows.length }
   },
@@ -50,19 +66,22 @@ export const sqlJsonbAdapter: DataSourceAdapter = {
     const pk = cfg.primaryKey ?? 'airtable_id'
     const { data, error } = await adminSb()
       .from(cfg.table!)
-      .select(`${pk}, data`)
+      .select(selectList(cfg))
       .eq(pk, id)
       .maybeSingle()
     if (error) throw new Error(error.message)
     if (!data) return null
-    const row = data as { data?: Record<string, unknown> }
-    return { id, fields: { ...(row.data ?? {}) } }
+    return { id, fields: flatten(cfg, data as unknown as Record<string, unknown>) }
   },
 
   async create(cfg, fields): Promise<RecordRow> {
     const pk = cfg.primaryKey ?? 'airtable_id'
     const id = `adm_${randomId()}`
-    const insert: Record<string, unknown> = { [pk]: id, data: fields, synced_at: new Date().toISOString() }
+    const cols = new Set(columnKeys(cfg))
+    const dataFields: Record<string, unknown> = {}
+    const colFields: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(fields)) (cols.has(k) ? colFields : dataFields)[k] = v
+    const insert: Record<string, unknown> = { [pk]: id, data: dataFields, ...colFields, synced_at: new Date().toISOString() }
     const { error } = await adminSb().from(cfg.table!).insert(insert)
     if (error) throw new Error(error.message)
     return { id, fields }
@@ -71,16 +90,20 @@ export const sqlJsonbAdapter: DataSourceAdapter = {
   async update(cfg, id, patch): Promise<void> {
     const pk = cfg.primaryKey ?? 'airtable_id'
     const sb = adminSb()
-    // Read-modify-write: merge the patch into the existing `data` blob so we
-    // never drop un-edited keys.
-    const { data: existing, error: readErr } = await sb
-      .from(cfg.table!).select('data').eq(pk, id).maybeSingle()
-    if (readErr) throw new Error(readErr.message)
-    const merged = { ...((existing as { data?: Record<string, unknown> } | null)?.data ?? {}), ...patch }
-    const { error } = await sb
-      .from(cfg.table!)
-      .update({ data: merged, synced_at: new Date().toISOString() })
-      .eq(pk, id)
+    const cols = new Set(columnKeys(cfg))
+    const dataPatch: Record<string, unknown> = {}
+    const colPatch: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(patch)) (cols.has(k) ? colPatch : dataPatch)[k] = v
+
+    const update: Record<string, unknown> = { synced_at: new Date().toISOString(), ...colPatch }
+    if (Object.keys(dataPatch).length) {
+      // Read-modify-write the `data` blob so un-edited keys survive.
+      const { data: existing, error: readErr } = await sb
+        .from(cfg.table!).select('data').eq(pk, id).maybeSingle()
+      if (readErr) throw new Error(readErr.message)
+      update.data = { ...((existing as { data?: Record<string, unknown> } | null)?.data ?? {}), ...dataPatch }
+    }
+    const { error } = await sb.from(cfg.table!).update(update).eq(pk, id)
     if (error) throw new Error(error.message)
   },
 
