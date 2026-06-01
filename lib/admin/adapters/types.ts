@@ -16,6 +16,7 @@ export type FieldType =
   | 'photos' // synthetic — backed by a per-record photo manifest (lib/admin/photos.ts)
   | 'geo'
   | 'link' // Airtable-style link to a record in another collection
+  | 'image' // single image stored as a URL — upload/download/delete via Supabase
   | 'json' // raw fallback for un-modelled / complex values (read-only in the panel)
 
 // How a `link` field stores its value in the data, mirroring Airtable.
@@ -70,6 +71,8 @@ export type CollectionConfig = {
   itemIdKey?: string // property used as record id inside items[]
   // photos (optional):
   photo?: { bucket: string; manifestKey?: string /* default _manifest.json */ }
+  /** Storage bucket for single-image (`image`) field uploads. */
+  uploadBucket?: string
   caps: Caps
   /** Field used as the row's headline in the grid + panel title. */
   titleField: string

@@ -61,8 +61,16 @@ export async function uploadPhoto(cfg: CollectionConfig, opts: {
   buf: Buffer
   contentType: string
 }): Promise<string> {
-  const { bucket } = manifestPath(cfg)
-  const safe = opts.filename.replace(/[^A-Za-z0-9._-]+/g, '_').slice(0, 80) || 'photo'
+  return uploadToBucket(manifestPath(cfg).bucket, opts)
+}
+
+// Upload one file to an arbitrary Storage bucket, return its public/CDN URL.
+export async function uploadToBucket(bucket: string, opts: {
+  filename: string
+  buf: Buffer
+  contentType: string
+}): Promise<string> {
+  const safe = opts.filename.replace(/[^A-Za-z0-9._-]+/g, '_').slice(0, 80) || 'file'
   const key = `admin/${Date.now()}-${safe}`
   const { error } = await adminSb().storage.from(bucket).upload(key, opts.buf, {
     contentType: opts.contentType,

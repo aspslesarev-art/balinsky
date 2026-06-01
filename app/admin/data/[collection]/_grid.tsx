@@ -102,7 +102,7 @@ export function DataGridScreen({
   }, [cfg.key, refresh])
 
   const startEdit = (r: RecordRow, c: FieldDef) => {
-    if (c.readOnly || c.type === 'bool' || c.type === 'link') return
+    if (c.readOnly || c.type === 'bool' || c.type === 'link' || c.type === 'image') return
     setEdit({ rowId: r.id, key: c.key }); setEditText(editableText(r.fields[c.key]))
   }
   const commitEdit = () => {
@@ -234,12 +234,14 @@ export function DataGridScreen({
                       </td>
                     )
                   }
-                  // image-URL value → thumbnail
-                  if (isImageUrl(r.fields[c.key])) {
+                  // image-URL value → thumbnail (click opens the card to manage the file)
+                  if (c.type === 'image' || isImageUrl(r.fields[c.key])) {
                     return (
-                      <td key={c.key} style={sticky ? { left: 36 } : undefined} className={base} onClick={() => startEdit(r, c)}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={String(r.fields[c.key])} alt="" className="h-9 w-9 rounded object-cover border border-[var(--ax-border)]" />
+                      <td key={c.key} style={sticky ? { left: 36 } : undefined} className={`${base} cursor-pointer`} onClick={() => setSelectedId(r.id)}>
+                        {isImageUrl(r.fields[c.key])
+                          // eslint-disable-next-line @next/next/no-img-element
+                          ? <img src={String(r.fields[c.key])} alt="" className="h-9 w-9 rounded object-cover border border-[var(--ax-border)]" />
+                          : <span className="text-[var(--ax-fg-faint)] text-[11px]">—</span>}
                       </td>
                     )
                   }
