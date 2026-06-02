@@ -374,6 +374,16 @@ async function _loadAllComplexes(): Promise<ComplexRow[]> {
         out.push(...(data as ComplexRow[]))
         if (data.length < 100) break
       }
+      // raw_complexes.cover_url указывает на мёртвый путь complex-covers/* (404).
+      // Подменяем первым фото из синк-манифеста complex-photos (как ComplexCard),
+      // исходный cover_url остаётся fallback'ом.
+      try {
+        const r = await fetch(COMPLEX_PHOTO_MANIFEST_URL, { next: { revalidate: 600 } })
+        if (r.ok) {
+          const manifest = (await r.json()) as Record<string, string[]>
+          for (const c of out) c.cover_url = manifest[c.airtable_id]?.[0] ?? c.cover_url
+        }
+      } catch { /* fallback to cover_url */ }
       _complexesCache = { ts: Date.now(), data: out }
       return out
     } catch { return _complexesCache?.data ?? [] }
