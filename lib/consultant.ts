@@ -5,6 +5,7 @@ import { createClient } from '@supabase/supabase-js'
 import type { ChatCompletionTool } from 'openai/resources/chat/completions'
 import { loadAllVillaScores } from './investment/batch-scores'
 import { loadAllRental } from './rental'
+import { cdnManifestUrl } from './photo-cdn'
 
 const sb = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -907,7 +908,7 @@ function classifyLandZone(purpose: string | null, color: string | null): Listing
 
 async function searchRental(args: SearchArgs): Promise<ListingCard[]> {
   const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/rental/_rental.json`
-  const r = await fetch(url, { cache: 'no-store' })
+  const r = await fetch(cdnManifestUrl(url, 600), { cache: 'no-store' })
   if (!r.ok) return []
   const j = await r.json() as { items?: { id: string; slug: string; title: string; type: string | null; bedrooms: number | null; location: string | null; priceMonthUsd: number; photos: string[] }[] }
   const items = Array.isArray(j.items) ? j.items : []
@@ -1213,7 +1214,7 @@ async function getListingFull(args: { kind?: string; slug?: string }): Promise<R
     // Rental lives in a Storage manifest, not Supabase row — load
     // and find by slug.
     const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/rental/_rental.json`
-    const r = await fetch(url, { cache: 'no-store' })
+    const r = await fetch(cdnManifestUrl(url, 600), { cache: 'no-store' })
     if (!r.ok) return { error: 'rental_manifest_failed' }
     const j = await r.json() as { items?: unknown[] }
     const items = (j.items ?? []) as Array<{ slug: string }>

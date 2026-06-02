@@ -8,7 +8,7 @@ import { getDistrictCommercialMeta } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { enLabel, type FilterDim } from '@/lib/filter-i18n'
 import { isTopBlacklisted } from '@/lib/top-blacklist'
-import { cdnRewriteManifest } from '@/lib/photo-cdn'
+import { cdnRewriteManifest, cdnManifestUrl } from '@/lib/photo-cdn'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/complex-photos/_manifest.json`
@@ -574,7 +574,7 @@ async function _loadAllInternal(): Promise<CachedAll> {
   `
   const [rowsRes, manifestRaw, villasRes, aptsRes, enCache] = await Promise.all([
     sb.from('raw_complexes').select('airtable_id, data, slug, cover_url').limit(500),
-    loadJson<Record<string, string[]>>(PHOTO_MANIFEST_URL, {}),
+    loadJson<Record<string, string[]>>(cdnManifestUrl(PHOTO_MANIFEST_URL, 600), {}),
     sb.from('raw_villas').select(slimPriceFields).limit(3000),
     sb.from('raw_apartments').select(slimPriceFields).limit(3000),
     loadEnTranslations('complexes'),

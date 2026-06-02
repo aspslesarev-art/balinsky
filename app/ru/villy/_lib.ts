@@ -9,6 +9,7 @@ import { getDistrictCommercialMeta } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { enLabel, type FilterDim } from '@/lib/filter-i18n'
 import { isTopBlacklisted } from '@/lib/top-blacklist'
+import { cdnManifestUrl } from '@/lib/photo-cdn'
 import { cdnRewriteManifest } from '@/lib/photo-cdn'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -637,7 +638,7 @@ function reassembleVilla(raw: Record<string, unknown>): Row {
 async function _loadAllInternal(): Promise<CachedAll> {
   const [rowsRes, manifestRaw, styles, enCache] = await Promise.all([
     sb.from('raw_villas').select(VILLA_SELECT).limit(1000),
-    loadJson<Record<string, string[]>>(PHOTO_MANIFEST_URL, {}),
+    loadJson<Record<string, string[]>>(cdnManifestUrl(PHOTO_MANIFEST_URL, 600), {}),
     loadVillaStyles(),
     loadEnTranslations('villas'),
   ])

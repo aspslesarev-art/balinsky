@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { normalizeSlug } from '@/lib/slug-normalize'
+import { cdnManifestUrl } from '@/lib/photo-cdn'
 
 export const config = {
   matcher: [
@@ -65,7 +66,9 @@ const TTL_MS = 30 * 60 * 1000
 async function loadIndex(): Promise<Index | null> {
   if (_cache && Date.now() - _cache.ts < TTL_MS) return _cache.data
   try {
-    const r = await fetch(INDEX_URL, { next: { revalidate: 1800 } })
+    // Via CDN edge cache — middleware runs per-request and can't use Next's
+    // data cache, so the raw URL hammered Supabase egress on cold instances.
+    const r = await fetch(cdnManifestUrl(INDEX_URL, 1800), { next: { revalidate: 1800 } })
     if (!r.ok) return _cache?.data ?? null
     const j = (await r.json()) as Index
     _cache = { ts: Date.now(), data: j }

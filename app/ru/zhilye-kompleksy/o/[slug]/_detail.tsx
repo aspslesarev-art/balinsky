@@ -49,6 +49,7 @@ import { tField, type Lang } from '@/lib/i18n'
 import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
 import { districtRu } from '@/lib/district-ru'
+import { cdnManifestUrl } from '@/lib/photo-cdn'
 
 const AIRPORT_LAT = -8.7467
 const AIRPORT_LNG = 115.1667
@@ -366,7 +367,7 @@ async function _loadComplexById(id: string): Promise<ComplexRow | null> {
 const _loadComplexPhotos = unstable_cache(
   async (): Promise<Record<string, string[]>> => {
     try {
-      const r = await fetch(COMPLEX_PHOTO_MANIFEST_URL)
+      const r = await fetch(cdnManifestUrl(COMPLEX_PHOTO_MANIFEST_URL, 600))
       if (!r.ok) return {}
       return (await r.json()) as Record<string, string[]>
     } catch { return {} }
@@ -396,7 +397,7 @@ type AptRow = {
 const _aptManifestCache: { ts: number; manifest: Record<string, string[]> } = { ts: 0, manifest: {} }
 async function _loadAptManifest(): Promise<Record<string, string[]>> {
   if (Date.now() - _aptManifestCache.ts < 30 * 60 * 1000) return _aptManifestCache.manifest
-  const m = await fetch(APT_PHOTO_MANIFEST_URL).then(r => r.ok ? r.json() : {}).catch(() => ({})) as Record<string, string[]>
+  const m = await fetch(cdnManifestUrl(APT_PHOTO_MANIFEST_URL, 600)).then(r => r.ok ? r.json() : {}).catch(() => ({})) as Record<string, string[]>
   _aptManifestCache.ts = Date.now()
   _aptManifestCache.manifest = m
   return m
@@ -481,7 +482,7 @@ type VillaRow = {
 const _villaManifestCache: { ts: number; manifest: Record<string, string[]> } = { ts: 0, manifest: {} }
 async function _loadVillaManifest(): Promise<Record<string, string[]>> {
   if (Date.now() - _villaManifestCache.ts < 30 * 60 * 1000) return _villaManifestCache.manifest
-  const m = await fetch(VILLA_PHOTO_MANIFEST_URL).then(r => r.ok ? r.json() : {}).catch(() => ({})) as Record<string, string[]>
+  const m = await fetch(cdnManifestUrl(VILLA_PHOTO_MANIFEST_URL, 600)).then(r => r.ok ? r.json() : {}).catch(() => ({})) as Record<string, string[]>
   _villaManifestCache.ts = Date.now()
   _villaManifestCache.manifest = m
   return m

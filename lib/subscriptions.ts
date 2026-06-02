@@ -22,6 +22,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import { randomBytes } from 'crypto'
+import { cdnManifestUrl } from '@/lib/photo-cdn'
 
 const sb = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -393,7 +394,7 @@ async function findRentalMatches(
   limit: number,
 ): Promise<MatchedObject[]> {
   const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/rental/_rental.json`
-  const r = await fetch(url, { cache: 'no-store' })
+  const r = await fetch(cdnManifestUrl(url, 600), { cache: 'no-store' })
   if (!r.ok) return []
   const j = await r.json() as { items?: Array<{ id: string; slug: string; title: string; bedrooms: number | null; location: string | null; priceMonthUsd: number; photos: string[] }> }
   const items = Array.isArray(j.items) ? j.items : []

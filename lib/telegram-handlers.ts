@@ -8,6 +8,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import type { ManagerItem } from '@/lib/managers'
 import type { RentalItem } from '@/lib/rental'
 import { loadAllEvents, type EventItem } from '@/lib/events'
+import { cdnManifestUrl } from '@/lib/photo-cdn'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const MANAGERS_URL = `${SUPABASE_URL}/storage/v1/object/public/managers/_managers.json`
@@ -35,7 +36,7 @@ async function loadManagers(): Promise<ManagerItem[]> {
 async function loadRentals(): Promise<RentalItem[]> {
   if (_rentalCache && Date.now() - _rentalCache.ts < TTL_MS) return _rentalCache.items
   try {
-    const r = await fetch(RENTAL_URL, { cache: 'no-store' })
+    const r = await fetch(cdnManifestUrl(RENTAL_URL, 600), { cache: 'no-store' })
     if (!r.ok) return _rentalCache?.items ?? []
     const j = await r.json() as { items?: RentalItem[] }
     const items = Array.isArray(j.items) ? j.items : []

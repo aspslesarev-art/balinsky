@@ -11,7 +11,7 @@ import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { enLabel, type FilterDim } from '@/lib/filter-i18n'
 import { pluralRu } from '@/lib/plural-ru'
 import { isTopBlacklisted } from '@/lib/top-blacklist'
-import { cdnRewriteManifest } from '@/lib/photo-cdn'
+import { cdnRewriteManifest, cdnManifestUrl } from '@/lib/photo-cdn'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/apartment-photos/_manifest.json`
@@ -580,8 +580,8 @@ function reassembleApt(raw: Record<string, unknown>): Row {
 async function _loadAllInternal(): Promise<CachedAll> {
   const [rowsRes, manifestRaw, devMap, enCache] = await Promise.all([
     sb.from('raw_apartments').select(APT_SELECT).limit(1000),
-    loadJson<Record<string, string[]>>(PHOTO_MANIFEST_URL, {}),
-    loadJson<Record<string, string>>(DEV_LOOKUP_URL, {}),
+    loadJson<Record<string, string[]>>(cdnManifestUrl(PHOTO_MANIFEST_URL, 600), {}),
+    loadJson<Record<string, string>>(cdnManifestUrl(DEV_LOOKUP_URL, 600), {}),
     loadEnTranslations('apartments'),
   ])
   const manifest = cdnRewriteManifest(manifestRaw)
