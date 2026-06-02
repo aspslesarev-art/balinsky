@@ -47,6 +47,7 @@ import { normalizeSlug } from '@/lib/slug-normalize'
 import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
 import { districtRu } from '@/lib/district-ru'
+import { cdnManifestUrl } from '@/lib/photo-cdn'
 
 const AIRPORT_LAT = -8.7467
 const AIRPORT_LNG = 115.1667
@@ -270,7 +271,7 @@ const _loadApartmentById = unstable_cache(
 const _loadAptManifest = unstable_cache(
   async (): Promise<Record<string, string[]>> => {
     try {
-      const r = await fetch(PHOTO_MANIFEST_URL)
+      const r = await fetch(cdnManifestUrl(PHOTO_MANIFEST_URL, 600))
       return r.ok ? r.json() : {}
     } catch { return {} }
   },
@@ -378,7 +379,7 @@ async function _loadAllComplexes(): Promise<ComplexRow[]> {
       // Подменяем первым фото из синк-манифеста complex-photos (как ComplexCard),
       // исходный cover_url остаётся fallback'ом.
       try {
-        const r = await fetch(COMPLEX_PHOTO_MANIFEST_URL, { next: { revalidate: 600 } })
+        const r = await fetch(cdnManifestUrl(COMPLEX_PHOTO_MANIFEST_URL, 600), { next: { revalidate: 600 } })
         if (r.ok) {
           const manifest = (await r.json()) as Record<string, string[]>
           for (const c of out) c.cover_url = manifest[c.airtable_id]?.[0] ?? c.cover_url

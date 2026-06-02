@@ -1,4 +1,5 @@
 import { applyManifestTranslation, loadEnTranslations } from '@/lib/en-translations'
+import { cdnManifestUrl } from '@/lib/photo-cdn'
 import type { Lang } from '@/lib/i18n'
 
 export type RentalItem = {
@@ -46,7 +47,9 @@ function isFresh(item: RentalItem, now: number): boolean {
 
 async function loadRawRental(): Promise<RentalItem[]> {
   try {
-    const r = await fetch(MANIFEST_URL, { next: { revalidate: 600, tags: ['content:rental'] } })
+    // Served via CDN edge cache (the 2MB file exceeds Next's fetch-cache
+    // limit, so without this every render re-pulls it from Supabase egress).
+    const r = await fetch(cdnManifestUrl(MANIFEST_URL, 600), { next: { revalidate: 600, tags: ['content:rental'] } })
     if (!r.ok) return []
     const j = (await r.json()) as Manifest
     return Array.isArray(j.items) ? j.items : []

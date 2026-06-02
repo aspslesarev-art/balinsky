@@ -28,6 +28,7 @@ import { PhotoGalleryHero } from '@/components/PhotoGalleryHero'
 import { loadVillaLandProfile, landAllowsBuilding } from '@/lib/land-profile'
 import { loadMarketStats } from '@/lib/complex-market-stats'
 import { MarketStatsBlock } from '@/components/MarketStatsBlock'
+import { cdnManifestUrl } from '@/lib/photo-cdn'
 import { VillaCard, type VillaCardData } from '@/components/VillaCard'
 import dynamic from 'next/dynamic'
 // Heavy client widgets — pulled off the initial JS bundle. Both
@@ -255,7 +256,7 @@ let _manifestCache: { ts: number; data: Record<string, string[]> } | null = null
 async function _loadManifest(): Promise<Record<string, string[]>> {
   if (_manifestCache && Date.now() - _manifestCache.ts < 30 * 60 * 1000) return _manifestCache.data
   try {
-    const r = await fetch(PHOTO_MANIFEST_URL, { next: { revalidate: 600 } })
+    const r = await fetch(cdnManifestUrl(PHOTO_MANIFEST_URL, 600), { next: { revalidate: 600 } })
     const j = r.ok ? await r.json() : {}
     _manifestCache = { ts: Date.now(), data: j }
     return j
@@ -334,7 +335,7 @@ const _loadComplexesIndex = unstable_cache(
     // cover_url оставляем fallback'ом.
     let complexPhotos: Record<string, string[]> = {}
     try {
-      const r = await fetch(COMPLEX_PHOTO_MANIFEST_URL, { next: { revalidate: 600 } })
+      const r = await fetch(cdnManifestUrl(COMPLEX_PHOTO_MANIFEST_URL, 600), { next: { revalidate: 600 } })
       if (r.ok) complexPhotos = await r.json()
     } catch { /* fallback to cover_url below */ }
     const out: ComplexLite[] = []
