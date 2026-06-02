@@ -164,6 +164,7 @@ export function generateStaticParams() { return [] }
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/villa-photos/_manifest.json`
+const COMPLEX_PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/complex-photos/_manifest.json`
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
 const sb = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY!)
@@ -328,6 +329,14 @@ const _loadComplexesIndex = unstable_cache(
     if (error) throw new Error(`raw_complexes: ${error.message}`)
     const rows = (data ?? []) as ComplexSlimRow[]
     if (rows.length === 0) throw new Error('raw_complexes returned 0 rows — refusing to cache empty')
+    // raw_complexes.cover_url указывает на мёртвый путь complex-covers/* (404).
+    // Берём первое фото из синк-манифеста complex-photos (как ComplexCard),
+    // cover_url оставляем fallback'ом.
+    let complexPhotos: Record<string, string[]> = {}
+    try {
+      const r = await fetch(COMPLEX_PHOTO_MANIFEST_URL, { next: { revalidate: 600 } })
+      if (r.ok) complexPhotos = await r.json()
+    } catch { /* fallback to cover_url below */ }
     const out: ComplexLite[] = []
     for (const c of rows) {
       if (!c.name || !c.slug) continue
@@ -341,12 +350,12 @@ const _loadComplexesIndex = unstable_cache(
         year: c.year_trail ?? c.year,
         units: c.units,
         status: c.status,
-        coverUrl: c.cover_url,
+        coverUrl: complexPhotos[c.airtable_id]?.[0] ?? c.cover_url,
       })
     }
     return out
   },
-  ['villy-complex-index-v3'],
+  ['villy-complex-index-v4'],
   { revalidate: 600 },
 )
 
