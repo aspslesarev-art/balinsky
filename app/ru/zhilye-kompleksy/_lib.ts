@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { unstable_cache } from 'next/cache'
 import Fuse from 'fuse.js'
 import type { ComplexCardData } from '@/components/ComplexCard'
 import type { Option } from '@/components/filters/MultiSelectFilter'
@@ -560,34 +561,101 @@ function buildPriceIndex(complexes: EnrichedRow[], villas: PriceRow[], apts: Pri
   return out
 }
 
+// Slim projection for the complex catalog — was select('airtable_id, data,
+// slug, cover_url') = ~8MB of full JSONB across 500 rows. enrich/buildLabelMap/
+// readinessOf touch only these fields; `->` returns the raw JSON value so the
+// reassembled `data` is identical. Deliberately NOT projected:
+//  • 'Opt photos' — only its length fed photoCount, and the photo manifest is
+//    the real source (falls back to 1 when the manifest is empty);
+//  • 'Варианты поиска *' — 13KB/row of search-alias strings (2.4MB of the 8MB),
+//    used only as a redundant TOP-blacklist signal that Developer1/Project
+//    already cover (the blacklist targets one developer).
+// Result: ~0.11MB → fits the cache. EN twins are kept so Airtable-authored EN
+// values survive (mergeEnTranslations only fills empty slots from the cache).
+const CPX_CARD_FIELDS = [
+  ['Year of completion ', 'f_year_sp'],
+  ['Year of completion', 'f_year'],
+  ['Project', 'f_project'],
+  ['Location 2', 'f_loc2'],
+  ['Location', 'f_loc'],
+  ['Типы юнитов', 'f_types'],
+  ['Статус', 'f_status'],
+  ['Разрешительные документы', 'f_permit'],
+  ['Статус продаж', 'f_sales'],
+  ['Developer1', 'f_dev'],
+  ['Geo', 'f_geo'],
+  ['Geo 2', 'f_geo2'],
+  ['ТОП', 'f_top_ru'],
+  ['TOP', 'f_top'],
+  ['Готовность', 'f_ready'],
+  ['Location 2 EN', 'f_loc2_en'],
+  ['Типы юнитов EN', 'f_types_en'],
+  ['Статус EN', 'f_status_en'],
+  ['Разрешительные документы EN', 'f_permit_en'],
+] as const
+const CPX_CARD_SELECT = ['airtable_id, slug, cover_url', ...CPX_CARD_FIELDS.map(([k, a]) => `${a}:data->"${k}"`)].join(',')
+
+// Slim projection for buildPriceIndex (6 fields × ~1100 rows ≈ ~300KB instead
+// of the full `data` column).
+const SLIM_PRICE_SELECT = `
+  title:data->"SEO:Title",
+  ai_name:data->"ИИ Имя",
+  name:data->Name,
+  price:data->price,
+  price_usd:data->price_usd,
+  price_rub:data->"Цена"
+`
+
+// All three reads cached cross-request — collapses the catalog's raw_complexes /
+// raw_villas / raw_apartments queries from per-render to ~hourly. Returns plain
+// arrays (Map results are built per-request downstream — Maps aren't cacheable).
+const _loadComplexCardRows = unstable_cache(
+  async (): Promise<Row[]> => {
+    const { data } = await sb.from('raw_complexes').select(CPX_CARD_SELECT).limit(500)
+    return ((data ?? []) as unknown as Record<string, unknown>[]).map(raw => {
+      const d: Record<string, unknown> = {}
+      for (const [k, a] of CPX_CARD_FIELDS) d[k] = raw[a]
+      return {
+        airtable_id: raw.airtable_id as string,
+        slug: (raw.slug ?? null) as string | null,
+        cover_url: (raw.cover_url ?? null) as string | null,
+        data: d,
+      }
+    })
+  },
+  ['zhilye-complex-card-rows-v1'],
+  { revalidate: 3600 },
+)
+const _loadVillaPriceRows = unstable_cache(
+  async (): Promise<PriceRow[]> => {
+    const { data } = await sb.from('raw_villas').select(SLIM_PRICE_SELECT).limit(3000)
+    return (data ?? []) as unknown as PriceRow[]
+  },
+  ['zhilye-villa-price-rows-v1'],
+  { revalidate: 3600 },
+)
+const _loadAptPriceRows = unstable_cache(
+  async (): Promise<PriceRow[]> => {
+    const { data } = await sb.from('raw_apartments').select(SLIM_PRICE_SELECT).limit(3000)
+    return (data ?? []) as unknown as PriceRow[]
+  },
+  ['zhilye-apt-price-rows-v1'],
+  { revalidate: 3600 },
+)
+
 async function _loadAllInternal(): Promise<CachedAll> {
-  // Slim-проекция для buildPriceIndex: вместо `data` целиком (~70 МБ
-  // на оба запроса вместе) тянем 6 полей × 1100 строк ≈ ~300 КБ.
-  // raw_complexes пока не слимим — enrich использует ~25 полей.
-  const slimPriceFields = `
-    title:data->"SEO:Title",
-    ai_name:data->"ИИ Имя",
-    name:data->Name,
-    price:data->price,
-    price_usd:data->price_usd,
-    price_rub:data->"Цена"
-  `
-  const [rowsRes, manifestRaw, villasRes, aptsRes, enCache] = await Promise.all([
-    sb.from('raw_complexes').select('airtable_id, data, slug, cover_url').limit(500),
+  const [rows, manifestRaw, villas, apts, enCache] = await Promise.all([
+    _loadComplexCardRows(),
     loadJson<Record<string, string[]>>(cdnManifestUrl(PHOTO_MANIFEST_URL, 600), {}),
-    sb.from('raw_villas').select(slimPriceFields).limit(3000),
-    sb.from('raw_apartments').select(slimPriceFields).limit(3000),
+    _loadVillaPriceRows(),
+    _loadAptPriceRows(),
     loadEnTranslations('complexes'),
   ])
   const manifest = cdnRewriteManifest(manifestRaw)
-  const enriched = ((rowsRes.data ?? []) as Row[])
+  const enriched = rows
     .map(r => ({ ...r, data: mergeEnTranslations(r.data, r.airtable_id, enCache) }))
     .map(enrich)
-  const prices = buildPriceIndex(
-    enriched,
-    (villasRes.data ?? []) as PriceRow[],
-    (aptsRes.data ?? []) as PriceRow[],
-  )
+  const prices = buildPriceIndex(enriched, villas, apts)
   return { enriched, manifest, prices }
 }
 
