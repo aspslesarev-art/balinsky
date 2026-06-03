@@ -33,14 +33,21 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '22'
           cache: npm
 
       - run: npm ci --no-audit --no-fund
+
+      # Retry transient network blips (ETIMEDOUT/ENETUNREACH/429/5xx) on the
+      # sync steps below, so a single flaky Airtable/Supabase call doesn't fail
+      # the whole run. Set here (not job-level env) so the --import preload file
+      # already exists from checkout; applies to every later node step.
+      - name: Enable transient-fetch retry
+        run: echo "NODE_OPTIONS=--import=./scripts/_fetch-retry.mjs" >> "$GITHUB_ENV"
 
       - name: Write .env.local from secrets
         run: |
