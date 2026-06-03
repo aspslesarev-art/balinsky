@@ -8,6 +8,7 @@
 // per-row server round-trip.
 
 import { cache } from 'react'
+import { unstable_cache } from 'next/cache'
 import { createClient } from '@supabase/supabase-js'
 import { buildDeveloperStats, type ComplexStats } from './developer-score'
 
@@ -16,13 +17,40 @@ const sb = createClient(
   process.env.SUPABASE_SERVICE_KEY!,
 )
 
-// Per-request cached map of developer name → { ready, total }. Internal
-// to per-name lookups below, also exported so catalog builders can read
-// the full map once and look up dozens of cards without each trying to
-// hit Supabase. React's cache() makes both call paths share the fetch.
+// buildDeveloperStats only reads these four complex fields — projecting them
+// out of the `data` JSONB (~8MB for the full column) drops the response to
+// ~14KB, which also lets unstable_cache actually store it (the cache store has
+// the same ~2MB ceiling as the fetch cache). `->` returns the raw JSON value,
+// so reconstructing { data: {...} } is byte-identical to the old full read.
+type StatRow = { dev: unknown; status: unknown; ready: unknown; units: unknown }
+const CPX_STATS_SELECT =
+  'dev:data->Developer1,' +
+  'status:data->"Статус",' +
+  'ready:data->"Готовность",' +
+  'units:data->"Total quantity of units"'
+
+// Cross-request cache of the slim rows (serialisable — unstable_cache can't
+// store a Map). At ~10k req/day this collapsed raw_complexes reads to ~hourly.
+const _loadStatRows = unstable_cache(
+  async (): Promise<StatRow[]> => {
+    const { data } = await sb.from('raw_complexes').select(CPX_STATS_SELECT).limit(2000)
+    return (data ?? []) as unknown as StatRow[]
+  },
+  ['developer-stat-rows-v1'],
+  { revalidate: 3600 },
+)
+
+// Per-request map build from the cached rows (react cache dedups within a render).
 export const loadAllDeveloperStats = cache(async (): Promise<Map<string, ComplexStats>> => {
-  const { data } = await sb.from('raw_complexes').select('data').limit(2000)
-  return buildDeveloperStats((data ?? []) as { data: Record<string, unknown> }[])
+  const rows = (await _loadStatRows()).map(r => ({
+    data: {
+      Developer1: r.dev,
+      'Статус': r.status,
+      'Готовность': r.ready,
+      'Total quantity of units': r.units,
+    } as Record<string, unknown>,
+  }))
+  return buildDeveloperStats(rows)
 })
 
 const loadAllStats = loadAllDeveloperStats

@@ -7,6 +7,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@supabase/supabase-js'
+import { unstable_cache } from 'next/cache'
 import { Home as HomeIcon, Building, Building2, HardHat, ArrowRight, Calendar, Sparkles, Newspaper, BookOpen } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { BalinaHero } from '@/components/BalinaHero'
@@ -180,12 +181,29 @@ type ComplexHomeCard = {
   yearOfCompletion: string | null
 }
 
-async function loadTopComplexes(): Promise<ComplexHomeCard[]> {
+const loadTopComplexes = unstable_cache(async (): Promise<ComplexHomeCard[]> => {
   try {
-    const { data } = await sb.from('raw_complexes').select('airtable_id, data, slug, cover_url').limit(500)
+    // Slim projection — was select('airtable_id, data, slug, cover_url') (~8MB
+    // of full JSONB for 500 rows). `->` returns raw JSON values, so the
+    // reconstructed `data` below is byte-identical to the old full read.
+    const { data } = await sb.from('raw_complexes').select(`
+      airtable_id, slug, cover_url,
+      project:data->Project,
+      status:data->"Статус",
+      district:data->"Location 2",
+      district_alt:data->Location,
+      units:data->"Total quantity of units",
+      year:data->"Year of completion ",
+      year_alt:data->"Year of completion"
+    `).limit(500)
     const items: ComplexHomeCard[] = []
     const COVER_BUCKET = cdnBucketBase('complex-covers')
-    for (const r of (data ?? []) as { airtable_id: string; data: Record<string, unknown>; slug: string | null; cover_url: string | null }[]) {
+    type ProjRow = { airtable_id: string; slug: string | null; cover_url: string | null; project: unknown; status: unknown; district: unknown; district_alt: unknown; units: unknown; year: unknown; year_alt: unknown }
+    for (const raw of (data ?? []) as ProjRow[]) {
+      const r = { airtable_id: raw.airtable_id, slug: raw.slug, cover_url: raw.cover_url, data: {
+        'Project': raw.project, 'Статус': raw.status, 'Location 2': raw.district, 'Location': raw.district_alt,
+        'Total quantity of units': raw.units, 'Year of completion ': raw.year, 'Year of completion': raw.year_alt,
+      } as Record<string, unknown> }
       const slug = r.slug
       const name = typeof r.data['Project'] === 'string' ? (r.data['Project'] as string) : null
       if (!slug || !name) continue
@@ -206,7 +224,7 @@ async function loadTopComplexes(): Promise<ComplexHomeCard[]> {
     })
     return items.slice(0, 4)
   } catch { return [] }
-}
+}, ['home-page-top-complexes-v1'], { revalidate: 3600 })
 
 const SITE_BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
