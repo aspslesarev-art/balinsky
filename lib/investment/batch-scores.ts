@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { unstable_cache } from 'next/cache'
 import { type CompetitorWithDistance, distanceKm } from '@/lib/competitor-utils'
 import { loadCompetitors } from '@/lib/competitors'
 import type { NearbyPlace } from '@/lib/nearby-places'
@@ -10,6 +11,42 @@ import { scoreInfra } from './infra-score'
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
 
 type Row = { airtable_id: string; data: Record<string, unknown> }
+
+// buildOneScore reads only these villa fields. Projecting them out of `data`
+// (~33MB for the full column across 2000 villas — it was timing out 520/500)
+// drops the response to a few hundred KB and makes the cache below viable.
+// `->` returns the raw JSON value, so the reconstructed `data` is identical.
+const VILLA_SCORE_SELECT =
+  'airtable_id,' +
+  'pub:data->"Опубликовать",geo:data->Geo,geo2:data->"Geo 2",' +
+  'rooms:data->"Комнаты",area:data->"Площадь",' +
+  'price:data->price,price_ru:data->"Цена",' +
+  'lh:data->Leasehold,lh2:data->Leashold,' +
+  'pool:data->Pool,pool_ru:data->"Бассейн"'
+
+type VillaScoreRow = {
+  airtable_id: string
+  pub: unknown; geo: unknown; geo2: unknown; rooms: unknown; area: unknown
+  price: unknown; price_ru: unknown; lh: unknown; lh2: unknown; pool: unknown; pool_ru: unknown
+}
+
+// Cross-instance cache of the slim rows (the module-level _cache below is only
+// per-warm-instance). Collapses the raw_villas scan to ~hourly.
+const _loadVillaScoreRows = unstable_cache(
+  async (): Promise<Row[]> => {
+    const { data } = await sb.from('raw_villas').select(VILLA_SCORE_SELECT).limit(2000)
+    return ((data ?? []) as unknown as VillaScoreRow[]).map(r => ({
+      airtable_id: r.airtable_id,
+      data: {
+        'Опубликовать': r.pub, 'Geo': r.geo, 'Geo 2': r.geo2,
+        'Комнаты': r.rooms, 'Площадь': r.area, 'price': r.price, 'Цена': r.price_ru,
+        'Leasehold': r.lh, 'Leashold': r.lh2, 'Pool': r.pool, 'Бассейн': r.pool_ru,
+      } as Record<string, unknown>,
+    }))
+  },
+  ['villa-score-rows-v1'],
+  { revalidate: 3600 },
+)
 
 function fs1(v: unknown): string | null {
   if (typeof v === 'string') return v.trim() || null
@@ -126,8 +163,8 @@ function buildOneScore(
 }
 
 async function loadAllScoresInternal(): Promise<Map<string, VillaScore>> {
-  const [{ data: rows }, allComps, placesManifest] = await Promise.all([
-    sb.from('raw_villas').select('airtable_id, data').limit(2000),
+  const [rows, allComps, placesManifest] = await Promise.all([
+    _loadVillaScoreRows(),
     loadCompetitors(),
     fetchPlacesManifest(),
   ])

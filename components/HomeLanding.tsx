@@ -20,6 +20,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@supabase/supabase-js'
+import { unstable_cache } from 'next/cache'
 import { Search, ArrowRight, Send, FileCheck2, TrendingUp, Video, Phone, Sparkles, MapPin } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
@@ -244,7 +245,7 @@ async function loadTopVillas(lang: Lang): Promise<VillaCardData[]> {
   } catch { return [] }
 }
 
-async function loadTopComplexes(): Promise<ComplexHomeCard[]> {
+const loadTopComplexes = unstable_cache(async (): Promise<ComplexHomeCard[]> => {
   try {
     const { data } = await sb.from('raw_complexes').select(`
       airtable_id, slug, cover_url,
@@ -269,7 +270,7 @@ async function loadTopComplexes(): Promise<ComplexHomeCard[]> {
     items.sort((a, b) => (b.units ?? 0) - (a.units ?? 0))
     return items.slice(0, 4)
   } catch { return [] }
-}
+}, ['home-landing-top-complexes-v1'], { revalidate: 3600 })
 
 async function loadStats() {
   const [v, a, k] = await Promise.all([

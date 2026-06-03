@@ -12,8 +12,10 @@
 // flip when impressions_count >= impression_limit.
 
 import { createClient } from '@supabase/supabase-js'
+import { unstable_cache, revalidateTag } from 'next/cache'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const BANNERS_TAG = 'ad-banners'
 
 const sb = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY!)
 
@@ -75,19 +77,32 @@ function rowToBanner(r: BannerRow): Banner {
   }
 }
 
+// ad_banners?select=* was the single most-requested PostgREST query
+// (~17.5k/week — every page render). The table is tiny, so we cache the rows
+// for 5 min cross-request; admin mutations bust the tag for instant refresh.
+const _loadBannerRows = unstable_cache(
+  async (): Promise<BannerRow[] | { _missing: true }> => {
+    const { data, error } = await sb
+      .from('ad_banners')
+      .select('*')
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: false })
+    if (error) {
+      if (isMissingTableError(error)) return { _missing: true }
+      console.error('[banners] load failed:', error.message)
+      return []
+    }
+    return (data ?? []) as BannerRow[]
+  },
+  ['ad-banner-rows-v1'],
+  { revalidate: 300, tags: [BANNERS_TAG] },
+)
+
 export async function loadAllBanners(): Promise<Banner[]> {
-  const { data, error } = await sb
-    .from('ad_banners')
-    .select('*')
-    .order('sort_order', { ascending: true })
-    .order('created_at', { ascending: false })
-  if (error) {
-    if (isMissingTableError(error)) { _bannersTableMissing = true; return [] }
-    console.error('[banners] load failed:', error.message)
-    return []
-  }
+  const res = await _loadBannerRows()
+  if (!Array.isArray(res)) { _bannersTableMissing = true; return [] }
   _bannersTableMissing = false
-  return ((data ?? []) as BannerRow[]).map(rowToBanner)
+  return res.map(rowToBanner)
 }
 
 export async function loadEligibleBanners(): Promise<Banner[]> {
@@ -160,6 +175,7 @@ export async function createBanner(input: BannerInput): Promise<Banner> {
   }
   const { data, error } = await sb.from('ad_banners').insert(row).select('*').single()
   if (error || !data) throw error ?? new Error('insert_failed')
+  revalidateTag(BANNERS_TAG, 'max')
   return rowToBanner(data as BannerRow)
 }
 
@@ -177,11 +193,13 @@ export async function updateBanner(id: string, patch: Partial<BannerInput>): Pro
   if (patch.sortOrder !== undefined) update.sort_order = patch.sortOrder
   const { error } = await sb.from('ad_banners').update(update).eq('id', id)
   if (error) throw error
+  revalidateTag(BANNERS_TAG, 'max')
 }
 
 export async function deleteBanner(id: string): Promise<void> {
   const { error } = await sb.from('ad_banners').delete().eq('id', id)
   if (error) throw error
+  revalidateTag(BANNERS_TAG, 'max')
 }
 
 // Photo upload to Supabase Storage. Uses the `viz-photos` bucket
