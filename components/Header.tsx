@@ -4,7 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { Home, Building, Building2, HardHat, KeyRound, Menu, X } from 'lucide-react'
+import { Home, Building, Building2, HardHat, Menu, X } from 'lucide-react'
 import { LangSwitch } from './LangSwitch'
 import { CurrencyToggle } from './CurrencyContext'
 import { WishlistHeaderLink } from './WishlistHeaderLink'
@@ -17,7 +17,8 @@ const NAV: { key: NavKey; ru: { href: string }; en: { href: string }; labelKey: 
   { key: 'apartamenty',      ru: { href: '/ru/apartamenty' },       en: { href: '/en/apartments' }, labelKey: 'nav.apartments', Icon: Building },
   { key: 'zhilye-kompleksy', ru: { href: '/ru/zhilye-kompleksy' },  en: { href: '/en/complexes' },  labelKey: 'nav.complexes',  Icon: Building2 },
   { key: 'zastrojshhiki',    ru: { href: '/ru/zastrojshhiki' },     en: { href: '/en/developers' }, labelKey: 'nav.developers', Icon: HardHat },
-  { key: 'arenda',           ru: { href: '/ru/arenda' },            en: { href: '/en/rental' },     labelKey: 'nav.rental',     Icon: KeyRound },
+  // Аренда убрана из верхнего меню (страницы /ru/arenda и /en/rental
+  // остаются доступны по прямым ссылкам и в sitemap).
 ]
 
 export function Header({ active }: { active?: NavKey }) {
