@@ -37,13 +37,6 @@ jobs:
 
       - run: npm ci --no-audit --no-fund
 
-      # Retry transient network blips (ETIMEDOUT/ENETUNREACH/429/5xx) on the
-      # sync steps below, so a single flaky Airtable/Supabase call doesn't fail
-      # the whole run. Set here (not job-level env) so the --import preload file
-      # already exists from checkout; applies to every later node step.
-      - name: Enable transient-fetch retry
-        run: echo "NODE_OPTIONS=--import=./scripts/_fetch-retry.mjs" >> "$GITHUB_ENV"
-
       - name: Write .env.local from secrets
         run: |
           cat > .env.local <<EOF
@@ -58,25 +51,25 @@ jobs:
           EOF
 
       - name: Sync events
-        run: node scripts/sync-events.mjs
+        run: node --import=./scripts/_fetch-retry.mjs scripts/sync-events.mjs
 
       - name: Sync news
-        run: node scripts/sync-news.mjs
+        run: node --import=./scripts/_fetch-retry.mjs scripts/sync-news.mjs
 
       - name: Sync promo
-        run: node scripts/sync-promo.mjs
+        run: node --import=./scripts/_fetch-retry.mjs scripts/sync-promo.mjs
 
       - name: Sync knowledge
-        run: node scripts/sync-knowledge.mjs
+        run: node --import=./scripts/_fetch-retry.mjs scripts/sync-knowledge.mjs
 
       - name: Sync managers
-        run: node scripts/sync-managers.mjs
+        run: node --import=./scripts/_fetch-retry.mjs scripts/sync-managers.mjs
 
       - name: Sync videos
-        run: node scripts/sync-videos.mjs
+        run: node --import=./scripts/_fetch-retry.mjs scripts/sync-videos.mjs
 
       - name: Sync developers
-        run: node scripts/sync-developers.mjs
+        run: node --import=./scripts/_fetch-retry.mjs scripts/sync-developers.mjs
 
       # EN-перевод свежезалитых строк. Без этого новые новости/акции/события
       # на /en/* отображаются с русскими заголовками — что и поймали глазом.
@@ -84,33 +77,33 @@ jobs:
       # отсутствующие или изменившиеся записи, поэтому стоит дёшево и быстро.
       - name: Translate missing EN (news / promo / events / knowledge)
         run: |
-          node scripts/translate-missing.mjs news
-          node scripts/translate-missing.mjs promo
-          node scripts/translate-missing.mjs events
-          node scripts/translate-missing.mjs knowledge
+          node --import=./scripts/_fetch-retry.mjs scripts/translate-missing.mjs news
+          node --import=./scripts/_fetch-retry.mjs scripts/translate-missing.mjs promo
+          node --import=./scripts/_fetch-retry.mjs scripts/translate-missing.mjs events
+          node --import=./scripts/_fetch-retry.mjs scripts/translate-missing.mjs knowledge
         continue-on-error: true
 
       - name: Sync villas (data only)
-        run: node scripts/sync-villas-data.mjs
+        run: node --import=./scripts/_fetch-retry.mjs scripts/sync-villas-data.mjs
 
       - name: Sync villa units (data only)
-        run: node scripts/sync-villa-units-data.mjs
+        run: node --import=./scripts/_fetch-retry.mjs scripts/sync-villa-units-data.mjs
 
       - name: Sync apartments (data only)
-        run: node scripts/sync-apartments-data.mjs
+        run: node --import=./scripts/_fetch-retry.mjs scripts/sync-apartments-data.mjs
 
       - name: Sync complexes (data only)
-        run: node scripts/sync-complexes-data.mjs
+        run: node --import=./scripts/_fetch-retry.mjs scripts/sync-complexes-data.mjs
 
       - name: Merge complex EN translations
-        run: node scripts/sync-complexes-en.mjs
+        run: node --import=./scripts/_fetch-retry.mjs scripts/sync-complexes-en.mjs
 
       - name: Rebuild villa / apartment / complex slug indexes
         # The detail-page slug index is used by /ru/zhilye-kompleksy/o/<slug>
         # to resolve slug → airtable_id (avoiding a 9MB+ full-table read).
         # Without this step a newly-published complex 404s until the index
         # is regenerated. Cheap (a few hundred slugs → ~15 KB JSON).
-        run: node scripts/sync-detail-indexes.mjs
+        run: node --import=./scripts/_fetch-retry.mjs scripts/sync-detail-indexes.mjs
 
       - name: Revalidate site caches (fast kinds)
         env:

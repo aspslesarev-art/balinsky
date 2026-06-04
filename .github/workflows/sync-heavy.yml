@@ -42,13 +42,6 @@ jobs:
 
       - run: npm ci --no-audit --no-fund
 
-      # Retry transient network blips (ETIMEDOUT/ENETUNREACH/429/5xx) on the
-      # sync steps below, so a single flaky Airtable/Supabase call doesn't fail
-      # the whole run. Set here (not job-level env) so the --import preload file
-      # already exists from checkout; applies to every later node step.
-      - name: Enable transient-fetch retry
-        run: echo "NODE_OPTIONS=--import=./scripts/_fetch-retry.mjs" >> "$GITHUB_ENV"
-
       - name: Write .env.local from secrets
         run: |
           cat > .env.local <<EOF
@@ -63,14 +56,14 @@ jobs:
           EOF
 
       - name: Sync rental
-        run: node scripts/sync-rental.mjs
+        run: node --import=./scripts/_fetch-retry.mjs scripts/sync-rental.mjs
 
       - name: Translate missing EN (rental)
-        run: node scripts/translate-missing.mjs rental
+        run: node --import=./scripts/_fetch-retry.mjs scripts/translate-missing.mjs rental
         continue-on-error: true
 
       - name: Sync complex logos + covers
-        run: node scripts/sync-complexes.mjs
+        run: node --import=./scripts/_fetch-retry.mjs scripts/sync-complexes.mjs
 
       - name: Sync villa photos
         env:
@@ -78,7 +71,7 @@ jobs:
         run: |
           ARGS=""
           if [ -n "${FORCE_SLUGS}" ]; then ARGS="--force-slugs=${FORCE_SLUGS}"; fi
-          node scripts/sync-villa-photos.mjs $ARGS
+          node --import=./scripts/_fetch-retry.mjs scripts/sync-villa-photos.mjs $ARGS
 
       - name: Sync apartment photos
         env:
@@ -86,7 +79,7 @@ jobs:
         run: |
           ARGS=""
           if [ -n "${FORCE_SLUGS}" ]; then ARGS="--force-slugs=${FORCE_SLUGS}"; fi
-          node scripts/sync-apartments-photos.mjs $ARGS
+          node --import=./scripts/_fetch-retry.mjs scripts/sync-apartments-photos.mjs $ARGS
 
       - name: Sync complex photos
         env:
@@ -94,7 +87,7 @@ jobs:
         run: |
           ARGS=""
           if [ -n "${FORCE_SLUGS}" ]; then ARGS="--force-slugs=${FORCE_SLUGS}"; fi
-          node scripts/sync-complex-photos.mjs $ARGS
+          node --import=./scripts/_fetch-retry.mjs scripts/sync-complex-photos.mjs $ARGS
 
       - name: Revalidate rental + villa + apartment + complex caches
         env:

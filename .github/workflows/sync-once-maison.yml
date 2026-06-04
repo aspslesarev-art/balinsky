@@ -32,13 +32,6 @@ jobs:
 
       - run: npm ci --no-audit --no-fund
 
-      # Retry transient network blips (ETIMEDOUT/ENETUNREACH/429/5xx) on the
-      # sync steps below, so a single flaky Airtable/Supabase call doesn't fail
-      # the whole run. Set here (not job-level env) so the --import preload file
-      # already exists from checkout; applies to every later node step.
-      - name: Enable transient-fetch retry
-        run: echo "NODE_OPTIONS=--import=./scripts/_fetch-retry.mjs" >> "$GITHUB_ENV"
-
       - name: Write .env.local from secrets
         run: |
           cat > .env.local <<EOF
@@ -52,19 +45,19 @@ jobs:
       # source. This is what removes the $135k Maison apartment that
       # was deleted in Airtable but stayed on the site.
       - name: Sync villa data + prune deletes
-        run: node scripts/sync-villas-data.mjs
+        run: node --import=./scripts/_fetch-retry.mjs scripts/sync-villas-data.mjs
 
       - name: Sync apartment data + prune deletes
-        run: node scripts/sync-apartments-data.mjs
+        run: node --import=./scripts/_fetch-retry.mjs scripts/sync-apartments-data.mjs
 
       - name: Sync complex data + prune deletes
-        run: node scripts/sync-complexes-data.mjs
+        run: node --import=./scripts/_fetch-retry.mjs scripts/sync-complexes-data.mjs
 
       - name: Force-resync villa photos for Maison Boheme
-        run: node scripts/sync-villa-photos.mjs --force-slugs=maison-boheme
+        run: node --import=./scripts/_fetch-retry.mjs scripts/sync-villa-photos.mjs --force-slugs=maison-boheme
 
       - name: Force-resync apartment photos for Maison Boheme
-        run: node scripts/sync-apartments-photos.mjs --force-slugs=maison-boheme
+        run: node --import=./scripts/_fetch-retry.mjs scripts/sync-apartments-photos.mjs --force-slugs=maison-boheme
 
       - name: Revalidate villa + apartment + complex caches
         env:
