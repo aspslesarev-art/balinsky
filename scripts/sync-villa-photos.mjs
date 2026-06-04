@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import fs from 'node:fs'
 import { cdnRewrite } from './_cdn.mjs'
+import { optimizeImage, photosOf } from './_photo-opt.mjs'
 
 const env = fs.readFileSync('.env.local', 'utf8')
 for (const line of env.split('\n')) {
@@ -116,7 +117,8 @@ function attVersion(att) {
 async function uploadOne(recId, idx, att) {
   const src = photoUrl(att)
   if (!src) return null
-  const buf = await downloadWithRetry(src)
+  const raw = await downloadWithRetry(src)
+  const buf = await optimizeImage(raw)
   const path = `${recId}/${idx}.jpg`
   await uploadWithRetry(path, buf)
   const baseUrl = cdnRewrite(sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl)
@@ -168,10 +170,9 @@ console.log(`Airtable records: ${records.length}`)
 
 const candidates = records.filter(rec => {
   if (PUBLISHED_ONLY && rec.fields?.['Опубликовать'] !== true) return false
-  const photos = rec.fields?.['Opt photos']
-  return Array.isArray(photos) && photos.length > 0
+  return photosOf(rec).length > 0
 })
-console.log(`with Opt photos${PUBLISHED_ONLY ? ' (published)' : ''}: ${candidates.length}`)
+console.log(`with photos${PUBLISHED_ONLY ? ' (published)' : ''} (Opt photos → Фотографии fallback): ${candidates.length}`)
 
 const manifest = await loadExistingManifest()
 const atts = await loadExistingAtts()
@@ -207,7 +208,7 @@ const afterResume = []
 for (const rec of candidates) {
   if (matchesForceSlugs(rec)) { afterResume.push(rec); continue }
   if (!RESUME) { afterResume.push(rec); continue }
-  const photos = rec.fields['Opt photos']
+  const photos = photosOf(rec)
   const haveUrls = manifest[rec.id] && manifest[rec.id].length > 0
   if (!haveUrls) { afterResume.push(rec); continue }
   // Catch-up: if the manifest has fewer photos than the current
@@ -230,7 +231,7 @@ const slice = Number.isFinite(LIMIT) ? afterResume.slice(0, LIMIT) : afterResume
 console.log(`processing: ${slice.length} (resume=${RESUME})`)
 
 async function processOne(rec) {
-  const photos = rec.fields['Opt photos'].slice(0, MAX_PHOTOS)
+  const photos = photosOf(rec).slice(0, MAX_PHOTOS)
   const results = await Promise.all(
     photos.map((att, i) =>
       uploadOne(rec.id, i, att).catch(e => {
@@ -253,7 +254,7 @@ async function worker(queue) {
     try {
       const urls = await processOne(rec)
       manifest[rec.id] = urls
-      atts[rec.id] = attsKeyOf(rec.fields['Opt photos'])
+      atts[rec.id] = attsKeyOf(photosOf(rec))
       total_photos += urls.length
       done++
     } catch (e) {
@@ -281,7 +282,7 @@ await Promise.all(Array.from({ length: CONCURRENCY }, () => worker(queue)))
 // scope from this run (Airtable was already fetched above), so no
 // extra download / API roundtrip.
 const attsByRec = new Map()
-for (const rec of candidates) attsByRec.set(rec.id, rec.fields['Opt photos'])
+for (const rec of candidates) attsByRec.set(rec.id, photosOf(rec))
 let normalised = 0
 for (const [recId, urls] of Object.entries(manifest)) {
   if (!Array.isArray(urls)) continue

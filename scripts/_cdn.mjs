@@ -7,6 +7,9 @@ export function cdnRewrite(url) {
   const cdn = (process.env.PHOTO_CDN_BASE || '').replace(/\/$/, '')
   const sb = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace(/\/$/, '')
   if (!cdn || !sb) return url
-  const prefix = `${sb}/storage/v1/object/public/`
-  return url.startsWith(prefix) ? cdn + '/' + url.slice(prefix.length) : url
+  // Host-only swap — keep the /storage/v1/object/public/ path. The Cloudflare
+  // Worker at images.balinsky.info mirrors the FULL Supabase path, so the old
+  // Bunny-style strip (`cdn + '/' + url.slice(prefix.length)`) produced 404s
+  // for every freshly-synced photo after the CDN moved from Bunny to Cloudflare.
+  return url.startsWith(sb + '/') ? cdn + url.slice(sb.length) : url
 }

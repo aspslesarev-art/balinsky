@@ -28,7 +28,7 @@ import { VillaCard, type VillaCardData } from '@/components/VillaCard'
 import { loadAll as loadAllVillas, buildAllCards as buildAllVillaCards, type VillaFilterState } from '@/app/ru/villy/_lib'
 import { loadAllVillaScores } from '@/lib/investment/batch-scores'
 import type { Lang } from '@/lib/i18n'
-import { cdnBucketBase } from '@/lib/photo-cdn'
+import { cdnBucketBase, cdnManifestUrl } from '@/lib/photo-cdn'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const sb = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY!)
@@ -255,6 +255,14 @@ const loadTopComplexes = unstable_cache(async (): Promise<ComplexHomeCard[]> => 
       units:data->"Total quantity of units",
       status:data->"Статус"
     `).limit(500)
+    // Real photos live in the complex-photos manifest. cover_url and the
+    // complex-covers/<id>.jpg bucket both point at a dead path (404), so they
+    // are only last-resort fallbacks.
+    let manifest: Record<string, string[]> = {}
+    try {
+      const mr = await fetch(cdnManifestUrl(`${SUPABASE_URL}/storage/v1/object/public/complex-photos/_manifest.json`, 600), { next: { revalidate: 600 } })
+      if (mr.ok) manifest = await mr.json()
+    } catch { /* fall back below */ }
     const COVER_BUCKET = cdnBucketBase('complex-covers')
     const items: ComplexHomeCard[] = []
     for (const r of (data ?? []) as Array<{ airtable_id: string; slug: string | null; cover_url: string | null; name: string | null; district: string | null; district_alt: string | null; units: number | null; status: string | null }>) {
@@ -264,7 +272,7 @@ const loadTopComplexes = unstable_cache(async (): Promise<ComplexHomeCard[]> => 
         title: r.name,
         district: r.district ?? r.district_alt,
         units: r.units,
-        cover: r.cover_url ?? `${COVER_BUCKET}/${r.airtable_id}.jpg`,
+        cover: manifest[r.airtable_id]?.[0] ?? r.cover_url ?? `${COVER_BUCKET}/${r.airtable_id}.jpg`,
       })
     }
     items.sort((a, b) => (b.units ?? 0) - (a.units ?? 0))

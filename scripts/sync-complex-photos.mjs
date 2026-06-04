@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import fs from 'node:fs'
 import { cdnRewrite } from './_cdn.mjs'
+import { optimizeImage, photosOf } from './_photo-opt.mjs'
 
 const env = fs.readFileSync('.env.local', 'utf8')
 for (const line of env.split('\n')) {
@@ -114,7 +115,8 @@ function attVersion(att) {
 async function uploadOne(recId, idx, att) {
   const src = photoUrl(att)
   if (!src) return null
-  const buf = await downloadWithRetry(src)
+  const raw = await downloadWithRetry(src)
+  const buf = await optimizeImage(raw)
   const path = `${recId}/${idx}.jpg`
   await uploadWithRetry(path, buf)
   const baseUrl = cdnRewrite(sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl)
@@ -164,11 +166,8 @@ await ensureBucket()
 const records = await fetchAirtableAll()
 console.log(`Airtable records: ${records.length}`)
 
-const candidates = records.filter(rec => {
-  const photos = rec.fields?.['Opt photos']
-  return Array.isArray(photos) && photos.length > 0
-})
-console.log(`with Opt photos: ${candidates.length}`)
+const candidates = records.filter(rec => photosOf(rec).length > 0)
+console.log(`with photos (Opt photos → Фотографии fallback): ${candidates.length}`)
 
 const manifest = await loadExistingManifest()
 const atts = await loadExistingAtts()
@@ -201,7 +200,7 @@ const afterResume = []
 for (const rec of candidates) {
   if (matchesForceSlugs(rec)) { afterResume.push(rec); continue }
   if (!RESUME) { afterResume.push(rec); continue }
-  const photos = rec.fields['Opt photos']
+  const photos = photosOf(rec)
   const haveUrls = manifest[rec.id] && manifest[rec.id].length > 0
   if (!haveUrls) { afterResume.push(rec); continue }
   // Manifest length should match min(MAX_PHOTOS, current att count).
@@ -217,7 +216,7 @@ const slice = Number.isFinite(LIMIT) ? afterResume.slice(0, LIMIT) : afterResume
 console.log(`processing: ${slice.length} (resume=${RESUME})`)
 
 async function processOne(rec) {
-  const photos = rec.fields['Opt photos'].slice(0, MAX_PHOTOS)
+  const photos = photosOf(rec).slice(0, MAX_PHOTOS)
   const results = await Promise.all(
     photos.map((att, i) =>
       uploadOne(rec.id, i, att).catch(e => {
@@ -240,7 +239,7 @@ async function worker(queue) {
     try {
       const urls = await processOne(rec)
       manifest[rec.id] = urls
-      atts[rec.id] = attsKeyOf(rec.fields['Opt photos'])
+      atts[rec.id] = attsKeyOf(photosOf(rec))
       total_photos += urls.length
       done++
     } catch (e) {
@@ -265,7 +264,7 @@ await Promise.all(Array.from({ length: CONCURRENCY }, () => worker(queue)))
 // One-time normalisation: stamp ?v= onto legacy unversioned URLs
 // using the att-lists we already fetched above. Idempotent.
 const attsByRec = new Map()
-for (const rec of candidates) attsByRec.set(rec.id, rec.fields['Opt photos'])
+for (const rec of candidates) attsByRec.set(rec.id, photosOf(rec))
 let normalised = 0
 for (const [recId, urls] of Object.entries(manifest)) {
   if (!Array.isArray(urls)) continue
@@ -288,5 +287,30 @@ if (normalised) console.log(`\nnormalised ${normalised} manifest entries to ?v=�
 
 await saveManifest(manifest)
 await saveAtts(atts)
+
+// Keep raw_complexes.cover_url pointing at a REAL image. The legacy
+// complex-covers/<id> bucket 404s, so every surface that reads cover_url
+// directly (map popups, search thumbnails, OG images, /sdano year pages)
+// rendered broken images. Stamp the first synced complex-photo as the cover.
+// Only touches the cover_url column of already-existing rows; failures here
+// never fail the photo sync.
+try {
+  const covers = Object.entries(manifest)
+    .filter(([, urls]) => Array.isArray(urls) && urls.length > 0 && typeof urls[0] === 'string')
+    .map(([recId, urls]) => ({ recId, url: urls[0] }))
+  let stamped = 0
+  const cq = [...covers]
+  await Promise.all(Array.from({ length: 6 }, async () => {
+    while (cq.length) {
+      const { recId, url } = cq.pop()
+      const { error } = await sb.from('raw_complexes').update({ cover_url: url }).eq('airtable_id', recId)
+      if (!error) stamped++
+    }
+  }))
+  console.log(`cover_url stamped from manifest for ${stamped}/${covers.length} complexes`)
+} catch (e) {
+  console.error(`cover_url backfill failed (non-fatal): ${e.message}`)
+}
+
 console.log(`\nfinished: done=${done} failed=${failed} total_photos=${total_photos}`)
 console.log(`manifest at: ${sb.storage.from(BUCKET).getPublicUrl(MANIFEST_KEY).data.publicUrl}`)
