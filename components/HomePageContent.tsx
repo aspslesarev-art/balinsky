@@ -23,7 +23,7 @@ import { loadAllNews } from '@/lib/news'
 import { loadAllPromo } from '@/lib/promo'
 import { loadAllEvents } from '@/lib/events'
 import type { Lang } from '@/lib/i18n'
-import { cdnBucketBase } from '@/lib/photo-cdn'
+import { cdnBucketBase, cdnManifestUrl } from '@/lib/photo-cdn'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const sb = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY!)
@@ -196,6 +196,13 @@ const loadTopComplexes = unstable_cache(async (): Promise<ComplexHomeCard[]> => 
       year:data->"Year of completion ",
       year_alt:data->"Year of completion"
     `).limit(500)
+    // Real photos live in the complex-photos manifest. cover_url and the
+    // complex-covers/<id>.jpg bucket both 404, so they are last-resort only.
+    let manifest: Record<string, string[]> = {}
+    try {
+      const mr = await fetch(cdnManifestUrl(`${SUPABASE_URL}/storage/v1/object/public/complex-photos/_manifest.json`, 600), { next: { revalidate: 600 } })
+      if (mr.ok) manifest = await mr.json()
+    } catch { /* fall back below */ }
     const items: ComplexHomeCard[] = []
     const COVER_BUCKET = cdnBucketBase('complex-covers')
     type ProjRow = { airtable_id: string; slug: string | null; cover_url: string | null; project: unknown; status: unknown; district: unknown; district_alt: unknown; units: unknown; year: unknown; year_alt: unknown }
@@ -213,7 +220,7 @@ const loadTopComplexes = unstable_cache(async (): Promise<ComplexHomeCard[]> => 
       const yearOfCompletion = (typeof r.data['Year of completion '] === 'string' ? r.data['Year of completion '] as string : null) ?? (typeof r.data['Year of completion'] === 'string' ? r.data['Year of completion'] as string : null)
       items.push({
         slug, title: name, district, status, units, yearOfCompletion,
-        cover: r.cover_url ?? `${COVER_BUCKET}/${r.airtable_id}.jpg`,
+        cover: manifest[r.airtable_id]?.[0] ?? r.cover_url ?? `${COVER_BUCKET}/${r.airtable_id}.jpg`,
       })
     }
     items.sort((a, b) => {

@@ -453,7 +453,10 @@ async function loadOtherComplexesInDistrict(district: string | null, exceptId: s
         name: firstString(c.data['Project']) as string,
         location: firstString(c.data['Location 2']) ?? firstString(c.data['Location']),
         types: types.join(', ') || null,
-        coverUrl: c.cover_url ?? photos[0] ?? null,
+        // Prefer the synced complex-photos manifest; raw_complexes.cover_url
+        // points at the dead complex-covers/* path (404), so it must be the
+        // last-resort fallback, not the first choice.
+        coverUrl: photos[0] ?? c.cover_url ?? null,
       }
     })
     .filter(c => c.slug && c.name)
