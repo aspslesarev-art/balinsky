@@ -58,19 +58,44 @@ function parseBullets(s: string | null): string[] {
 // during the last regeneration, the cache would poison and every
 // dev detail page returns 404 for the next hour. Throwing forces
 // Next to drop the cache slot and retry on the next request.
+// Slim projection — selecting the full `data` column (~3.9MB for 200 devs) blew
+// past the 2MB cache ceiling, so unstable_cache silently re-ran on every request
+// (~700/day). These are the only developer fields this page, /otzyvy and the OG
+// image read; `->` returns the raw JSON value so the reassembled `data` is
+// identical. EN twins are projected too so tField's `<field> EN` lookups survive
+// (mergeEnTranslations still fills any empty EN slot from the cache).
+const DEV_FIELDS = [
+  ['Developer', 'f0'], ['AI Описание', 'f1'], ['SEO Text', 'f2'], ['Описание ИИ', 'f3'],
+  ['Строительство и недвижимость', 'f4'], ['Репутация и опыт', 'f5'], ['Техника и производство', 'f6'],
+  ['Управляющая компания', 'f7'], ['Команда', 'f8'], ['Бизнес и сервисы', 'f9'],
+  ['Общий рейтинг', 'f10'], ['Публикация', 'f11'], ['SEO:Slug', 'f12'], ['Logo', 'f13'],
+  ['SEO Text EN', 'f14'], ['Описание ИИ EN', 'f15'], ['Строительство и недвижимость EN', 'f16'],
+  ['Репутация и опыт EN', 'f17'], ['Техника и производство EN', 'f18'], ['Управляющая компания EN', 'f19'],
+  ['Команда EN', 'f20'], ['Бизнес и сервисы EN', 'f21'],
+] as const
+const DEV_SELECT = ['airtable_id, logo_url', ...DEV_FIELDS.map(([k, a]) => `${a}:data->"${k}"`)].join(', ')
+
 export const _loadAllDevelopers = unstable_cache(
   async (): Promise<DeveloperRow[]> => {
     const [{ data, error }, enCache] = await Promise.all([
-      sb.from('raw_developers').select('airtable_id, data, logo_url').limit(200),
+      sb.from('raw_developers').select(DEV_SELECT).limit(200),
       loadEnTranslations('developers'),
     ])
     if (error) throw new Error(`raw_developers: ${error.message}`)
-    const rows = (data as DeveloperRow[] | null) ?? []
-    if (rows.length === 0) throw new Error('raw_developers returned 0 rows — refusing to cache empty')
-    return rows.map(r => ({ ...r, data: mergeEnTranslations(r.data, r.airtable_id, enCache) }))
+    const raw = (data ?? []) as unknown as Record<string, unknown>[]
+    if (raw.length === 0) throw new Error('raw_developers returned 0 rows — refusing to cache empty')
+    return raw.map(rr => {
+      const d: Record<string, unknown> = {}
+      for (const [k, a] of DEV_FIELDS) d[k] = rr[a]
+      return {
+        airtable_id: rr.airtable_id as string,
+        logo_url: (rr.logo_url ?? null) as string | null,
+        data: mergeEnTranslations(d, rr.airtable_id as string, enCache),
+      }
+    })
   },
-  ['developers-all-v3'],
-  { revalidate: 600 },
+  ['developers-all-v4'],
+  { revalidate: 3600 },
 )
 
 export async function loadDeveloper(slug: string): Promise<DeveloperRow | null> {
@@ -84,12 +109,33 @@ export async function loadDeveloper(slug: string): Promise<DeveloperRow | null> 
       ?? null
 }
 
+// Slim projection — full `data` was ~8.4MB (over the 2MB cache ceiling, so it
+// re-ran on every request, ~600/day). loadProjectsByDeveloper reads only these
+// fields. `Варианты поиска застройщика` (a 2MB+ search-alias string) is dropped
+// on purpose: it was only a fallback when Developer1 is empty — rare for a
+// published complex — and keeping it kept the whole result uncacheable.
+const CPX_DEV_FIELDS = [
+  ['Developer1', 'c0'], ['Project', 'c1'], ['Location 2', 'c2'], ['Location', 'c3'],
+  ['Типы юнитов', 'c4'], ['Разрешительные документы', 'c5'], ['Готовность', 'c6'],
+  ['Статус', 'c7'], ['Year of completion ', 'c8'], ['Year of completion', 'c9'],
+] as const
+const CPX_DEV_SELECT = ['airtable_id, slug, cover_url', ...CPX_DEV_FIELDS.map(([k, a]) => `${a}:data->"${k}"`)].join(', ')
+
 const _loadAllComplexes = unstable_cache(
   async () => {
-    const { data } = await sb.from('raw_complexes').select('airtable_id, data, slug, cover_url').limit(500)
-    return (data ?? []) as { airtable_id: string; data: Record<string, unknown>; slug: string | null; cover_url: string | null }[]
+    const { data } = await sb.from('raw_complexes').select(CPX_DEV_SELECT).limit(500)
+    return ((data ?? []) as unknown as Record<string, unknown>[]).map(rr => {
+      const d: Record<string, unknown> = {}
+      for (const [k, a] of CPX_DEV_FIELDS) d[k] = rr[a]
+      return {
+        airtable_id: rr.airtable_id as string,
+        slug: (rr.slug ?? null) as string | null,
+        cover_url: (rr.cover_url ?? null) as string | null,
+        data: d,
+      }
+    })
   },
-  ['complexes-all-for-dev'],
+  ['complexes-all-for-dev-v2'],
   { revalidate: 3600 },
 )
 
