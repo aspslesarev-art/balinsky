@@ -5,7 +5,7 @@ import type { ReactNode } from 'react'
 import { usePathname } from 'next/navigation'
 import { Send, ArrowRight, FileText, MapPinned, UserRound, Lock } from 'lucide-react'
 import { useCurrency } from './CurrencyContext'
-import { formatPrice } from '@/lib/currency'
+import { formatPriceExact } from '@/lib/currency'
 import { botLink } from '@/lib/bot-link'
 import { ReserveButton } from './ReserveButton'
 import type { Lang } from '@/lib/i18n'
@@ -88,9 +88,9 @@ export function PriceCtaCard({
   const pathname = usePathname() ?? ''
   const lang: Lang = pathname.startsWith('/en') ? 'en' : 'ru'
   const c = COPY[lang]
-  const main = formatPrice(priceUsd, currency)
+  const main = formatPriceExact(priceUsd, currency)
   const perSqm = pricePerSqmUsd != null && Number.isFinite(pricePerSqmUsd) && pricePerSqmUsd > 0
-    ? formatPrice(pricePerSqmUsd, currency)
+    ? formatPriceExact(pricePerSqmUsd, currency)
     : null
   const updated = updatedAt ? formatUpdated(updatedAt, c.locale) : null
 

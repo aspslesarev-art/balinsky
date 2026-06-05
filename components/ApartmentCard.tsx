@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { PhotoSlider } from './PhotoSlider'
 import { useCurrency } from './CurrencyContext'
 import { WishlistButton } from './WishlistButton'
-import { formatPrice } from '@/lib/currency'
+import { formatPriceExact } from '@/lib/currency'
 import type { Lang } from '@/lib/i18n'
 
 export type ApartmentCardData = {
@@ -46,7 +46,7 @@ export function ApartmentCard({ a, lang = 'ru' }: { a: ApartmentCardData; lang?:
   const { currency } = useCurrency()
   const c = COPY[lang]
   const price = a.priceUsd != null && Number.isFinite(a.priceUsd)
-    ? formatPrice(a.priceUsd, currency)
+    ? formatPriceExact(a.priceUsd, currency)
     : null
   const dealLabel = a.dealType === 'resale' ? c.resale
     : a.dealType === 'secondary' ? c.secondary
