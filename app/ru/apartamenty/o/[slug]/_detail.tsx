@@ -788,6 +788,14 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
           </section>
         )}
 
+        {/* Investment potential + interactive map — right under the description,
+            above the land profile and the neighbour-rental block. */}
+        {lat != null && lng != null && (
+          <LazyMount fallback={<div className="mt-12 mb-10 min-h-[600px]" />}>
+            <InvestmentWidget villaId={a.airtable_id} apiKey={GMAPS_KEY} kind="apartment" lang={lang} />
+          </LazyMount>
+        )}
+
         {/* LandProfile + MarketStats — sits right under the description
             on villa pages too, so the buyer sees the zoning + neighbour
             rental data before getting to the developer / manager. */}
@@ -910,17 +918,6 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
         <div className="mt-8">
           <ContactBlock lang={lang} listing={{ kind: 'apartment', slug, title }} />
         </div>
-
-        {/* InvestmentWidget carries the interactive Google map + the
-            three rental-yield scenarios (bad / normal / good) + Booking
-            comparables grid + nearby places block. Same component
-            villas use; the static iframe map that used to live above
-            was just a worse duplicate. */}
-        {lat != null && lng != null && (
-          <LazyMount fallback={<div className="mt-12 mb-10 min-h-[600px]" />}>
-            <InvestmentWidget villaId={a.airtable_id} apiKey={GMAPS_KEY} kind="apartment" lang={lang} />
-          </LazyMount>
-        )}
 
         <RentalCompareSection
           district={district}
