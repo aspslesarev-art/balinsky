@@ -534,9 +534,9 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
         {devNews.length > 0 && (
           <section className="mb-10">
             <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">{c.newsHeading(name)}</h2>
-            <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <ul className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-1 -mx-6 px-6 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-4 md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {devNews.map(n => (
-                <li key={n.id}>
+                <li key={n.id} className="snap-start shrink-0 w-[72%] sm:w-[42%] md:w-auto">
                   <Link href={`${newsBase}/${n.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)]">
                     <div className="relative w-full aspect-[16/9] bg-[var(--color-search-bg)]">
                       {n.photo ? (
@@ -556,9 +556,9 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
         {devPromo.length > 0 && (
           <section className="mb-10">
             <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">{c.promoHeading(name)}</h2>
-            <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <ul className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-1 -mx-6 px-6 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-4 md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {devPromo.map(p => (
-                <li key={p.id}>
+                <li key={p.id} className="snap-start shrink-0 w-[72%] sm:w-[42%] md:w-auto">
                   <Link href={`${promoBase}/${p.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)]">
                     <div className="relative w-full aspect-[16/9] bg-[var(--color-search-bg)]">
                       {p.photo ? (
@@ -578,9 +578,9 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
         {devEvents.length > 0 && (
           <section className="mb-10">
             <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">{c.eventsHeading(name)}</h2>
-            <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <ul className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-1 -mx-6 px-6 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-4 md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {devEvents.map(e => (
-                <li key={e.id}>
+                <li key={e.id} className="snap-start shrink-0 w-[72%] sm:w-[42%] md:w-auto">
                   <Link href={`${eventsBase}/${e.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)]">
                     <div className="relative w-full aspect-[16/9] bg-[var(--color-search-bg)]">
                       {e.photo ? (
