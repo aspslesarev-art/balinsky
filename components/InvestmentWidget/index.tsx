@@ -4,13 +4,13 @@ import { useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import {
-  Star, Info, AlertTriangle, Sparkles, ChevronDown, ChevronUp, TrendingUp, RotateCcw,
+  Star, Info, AlertTriangle, Sparkles, ChevronDown, ChevronUp, TrendingUp,
 } from 'lucide-react'
 import { InvestmentMap } from './InvestmentMap'
 import { fmtMoney, fmtMoneyShort, fmtPct, fmtYears, fmtDistance, fmtMeters, pluralRu, pluralEn } from './utils'
 import type { Snapshot } from './types'
 import { useCurrency } from '../CurrencyContext'
-import { computeEconomics, type Economics, type ScenarioKey } from '@/lib/investment/economics'
+import { computeEconomics, type Economics } from '@/lib/investment/economics'
 import { CURRENCY_RATES } from '@/lib/currency'
 import type { Lang } from '@/lib/i18n'
 
@@ -42,7 +42,9 @@ const COPY = {
       </>,
     scenarioBad: 'Плохой', scenarioMedian: 'Нормальный', scenarioGood: 'Хороший',
     resetTitle: 'Сбросить к данным по конкурентам', reset: 'сбросить',
-    inputAdr: 'ADR', inputOccupancy: 'Загрузка', inputMgmt: 'Mgmt fee',
+    inputPrice: 'Цена', inputAdr: 'ADR', inputOccupancy: 'Загрузка', inputMgmt: 'Mgmt fee',
+    calcTitle: 'Калькулятор доходности',
+    calcSub: 'Подвигайте ползунки. ADR и загрузка по умолчанию — медиана по похожим объектам на Booking поблизости; цену можно менять ±25%.',
     payback: 'Окупаемость', capRate: 'Cap rate',
     howCalced: 'Как считалось',
     revenue: 'Revenue', platform: 'Platform', mgmt: 'Mgmt', opex: 'OPEX', tax: 'Tax', noi: 'NOI',
@@ -92,7 +94,9 @@ const COPY = {
       </>,
     scenarioBad: 'Bad', scenarioMedian: 'Normal', scenarioGood: 'Good',
     resetTitle: 'Reset to competitor-based defaults', reset: 'reset',
-    inputAdr: 'ADR', inputOccupancy: 'Occupancy', inputMgmt: 'Mgmt fee',
+    inputPrice: 'Price', inputAdr: 'ADR', inputOccupancy: 'Occupancy', inputMgmt: 'Mgmt fee',
+    calcTitle: 'Yield calculator',
+    calcSub: 'Drag the sliders. ADR and occupancy default to the median of similar nearby Booking listings; the price can be adjusted ±25%.',
     payback: 'Payback', capRate: 'Cap rate',
     howCalced: 'How it was calculated',
     revenue: 'Revenue', platform: 'Platform', mgmt: 'Mgmt', opex: 'OPEX', tax: 'Tax', noi: 'NOI',
@@ -218,10 +222,8 @@ function InvestmentWidgetView({ snap, apiKey, lang }: { snap: Snapshot; apiKey: 
   return (
     <>
       <SectionShell lang={lang}>
-        {snap.scenarios && <ScenariosIntro snap={snap} lang={lang} />}
-
         {snap.scenarios ? (
-          <Scenarios snap={snap} lang={lang} />
+          <Calculator snap={snap} lang={lang} />
         ) : snap.references ? (
           <References snap={snap} lang={lang} />
         ) : null}
@@ -260,122 +262,76 @@ function Banner({ tone, icon, children, className }: { tone: 'info' | 'danger' |
   )
 }
 
-function ScenariosIntro({ snap, lang }: { snap: Snapshot; lang: Lang }) {
-  const t = COPY[lang]
-  const competitorCount = snap.competitors.length
-  const similar = pluralize(lang, competitorCount, COPY.ru.similarVilla, COPY.en.similarVilla)
-  return (
-    <div className="mt-5 rounded-2xl border border-[var(--color-border)] bg-[var(--color-search-bg)] px-4 py-3.5 text-[13px] leading-[1.55] text-[var(--color-text)]">
-      <div className="font-semibold text-[var(--color-text)] mb-1">{t.threeNumbers}</div>
-      <div className="text-[var(--color-text-muted)]">
-        {t.threeNumbersBody(competitorCount, similar, snap.zone.title.toLowerCase())}
-        {t.threeNumbersScenarios}
-      </div>
-    </div>
-  )
-}
-
-function Scenarios({ snap, lang }: { snap: Snapshot; lang: Lang }) {
-  const t = COPY[lang]
-  const cards: { key: ScenarioKey; title: string; tone: string }[] = [
-    { key: 'bad',    title: t.scenarioBad,    tone: 'border-[#FECACA] bg-[#FEF2F2]' },
-    { key: 'median', title: t.scenarioMedian, tone: 'border-[var(--color-primary)] bg-[var(--color-primary-soft)]' },
-    { key: 'good',   title: t.scenarioGood,   tone: 'border-[#BBF7D0] bg-[#F0FDF4]' },
-  ]
-  return (
-    <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-4">
-      {cards.map(c => (
-        <ScenarioCard key={c.key} sKey={c.key} title={c.title} tone={c.tone} snap={snap} lang={lang} />
-      ))}
-    </div>
-  )
-}
-
-function ScenarioCard({
-  sKey, title, tone, snap, lang,
-}: {
-  sKey: ScenarioKey; title: string; tone: string; snap: Snapshot; lang: Lang
-}) {
+function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
   const t = COPY[lang]
   const { currency } = useCurrency()
   const fmtUsd = (n: number | null | undefined) => fmtMoney(n, currency)
   const fxRate = CURRENCY_RATES[currency]
-  const baseline = snap.scenarios![sKey]
+  const sc = snap.scenarios!
+  const basePrice = snap.villa.askingPrice
 
-  const [adrUsd, setAdrUsd] = useState<number>(baseline.adr)
-  const [occupancyPct, setOccupancyPct] = useState<number>(Math.round(baseline.occupancy * 100))
-  const [mgmtFeePct, setMgmtFeePct] = useState<number>(Math.round(snap.region.mgmtFeePct * 100))
+  // ADR slider band derived from the competitor percentiles (p25…p75),
+  // widened so the user can explore a bit beyond the observed range.
+  const adrLo = Math.max(1, Math.floor(sc.bad.adr * 0.6))
+  const adrHi = Math.max(adrLo + 1, Math.ceil(sc.good.adr * 1.5))
+
+  const [price, setPrice] = useState<number>(basePrice ?? 0)
+  const [adr, setAdr] = useState<number>(sc.median.adr)
+  const [occ, setOcc] = useState<number>(Math.round(snap.region.occupancyByScenario.median * 100))
+  const [mgmt, setMgmt] = useState<number>(Math.round(snap.region.mgmtFeePct * 100))
   const [open, setOpen] = useState(false)
 
-  const adrInCurrency = Math.round(adrUsd * fxRate)
-  const setAdrInCurrency = (n: number) => setAdrUsd(Math.max(1, Math.round(n / fxRate)))
-
   const e: Economics = useMemo(() => computeEconomics({
-    adr: adrUsd,
-    occupancy: occupancyPct / 100,
+    adr,
+    occupancy: occ / 100,
     area: snap.villa.area,
-    askingPrice: snap.villa.askingPrice,
+    askingPrice: basePrice != null ? price : null,
     leaseholdYearsLeft: snap.villa.leaseholdYearsLeft,
-    region: { ...snap.region, mgmtFeePct: mgmtFeePct / 100 },
-  }), [adrUsd, occupancyPct, mgmtFeePct, snap])
+    region: { ...snap.region, mgmtFeePct: mgmt / 100 },
+  }), [adr, occ, mgmt, price, basePrice, snap])
 
-  const isCustom =
-    adrUsd !== baseline.adr ||
-    occupancyPct !== Math.round(baseline.occupancy * 100) ||
-    mgmtFeePct !== Math.round(snap.region.mgmtFeePct * 100)
-
-  const reset = () => {
-    setAdrUsd(baseline.adr)
-    setOccupancyPct(Math.round(baseline.occupancy * 100))
-    setMgmtFeePct(Math.round(snap.region.mgmtFeePct * 100))
-  }
+  const priceLo = basePrice != null ? Math.round(basePrice * 0.75) : 0
+  const priceHi = basePrice != null ? Math.round(basePrice * 1.25) : 0
   const opexUnit = lang === 'en' ? '$/m²/mo' : '$/м²/мес'
 
   return (
-    <div className={`rounded-2xl border-2 ${tone} p-5 space-y-3`}>
-      <div className="flex items-center justify-between">
-        <div className="text-[12px] uppercase tracking-wide font-semibold text-[#111827]">{title}</div>
-        {isCustom && (
-          <button
-            type="button"
-            onClick={reset}
-            title={t.resetTitle}
-            className="inline-flex items-center gap-1 text-[11px] text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
-          >
-            <RotateCcw size={11} /> {t.reset}
-          </button>
+    <div className="mt-5 rounded-2xl border border-[var(--color-border)] bg-white p-5">
+      <div className="text-[16px] font-semibold text-[#111827]">{t.calcTitle}</div>
+      <div className="text-[13px] text-[var(--color-text-muted)] mt-1 mb-5">{t.calcSub}</div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+        {basePrice != null && (
+          <Slider label={t.inputPrice} value={price} min={priceLo} max={priceHi} step={500}
+            onChange={setPrice} display={fmtUsd(Math.round(price * fxRate))} />
         )}
+        <Slider label={t.inputAdr} value={adr} min={adrLo} max={adrHi} step={1}
+          onChange={setAdr} display={fmtUsd(Math.round(adr * fxRate))} />
+        <Slider label={t.inputOccupancy} value={occ} min={0} max={100} step={1}
+          onChange={setOcc} display={`${occ}%`} />
+        <Slider label={t.inputMgmt} value={mgmt} min={0} max={80} step={1}
+          onChange={setMgmt} display={`${mgmt}%`} />
       </div>
 
-      <div className="space-y-2">
-        <ScenarioInput label={t.inputAdr} value={adrInCurrency} onChange={setAdrInCurrency} suffix={currency} step={Math.max(1, Math.round(5 * fxRate))} />
-        <ScenarioInput label={t.inputOccupancy} value={occupancyPct} onChange={n => setOccupancyPct(Math.min(100, Math.max(0, n)))} suffix="%" step={1} />
-        <ScenarioInput label={t.inputMgmt} value={mgmtFeePct} onChange={n => setMgmtFeePct(Math.min(50, Math.max(0, n)))} suffix="%" step={1} />
-      </div>
-
-      <div className="pt-2 border-t border-[var(--color-border)]">
-        <div className="text-[24px] font-semibold text-[#111827] leading-tight">
-          {fmtUsd(e.noi)}
-          <span className="text-[13px] font-normal text-[var(--color-text-muted)]">{t.perYearNoi}</span>
+      <div className="mt-6 pt-4 border-t border-[var(--color-border)] flex flex-wrap items-baseline gap-x-8 gap-y-2">
+        <div className="text-[30px] font-semibold text-[#111827] leading-none">
+          {fmtUsd(e.noi)}<span className="text-[14px] font-normal text-[var(--color-text-muted)]">{t.perYearNoi}</span>
         </div>
-        <div className="text-[13px] text-[var(--color-text-muted)] mt-2 space-y-0.5">
-          <div>{t.payback}: <span className="text-[#111827] font-medium">{fmtYears(e.payback, lang)}</span></div>
-          <div>{t.capRate}: <span className="text-[#111827] font-medium">{fmtPct(e.capRate)}</span></div>
-        </div>
+        <div className="text-[13px] text-[var(--color-text-muted)]">{t.payback}: <span className="text-[#111827] font-medium">{fmtYears(e.payback, lang)}</span></div>
+        <div className="text-[13px] text-[var(--color-text-muted)]">{t.capRate}: <span className="text-[#111827] font-medium">{fmtPct(e.capRate)}</span></div>
       </div>
 
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="inline-flex items-center gap-1 text-[12px] text-[var(--color-primary-pressed)] hover:text-[var(--color-primary)] cursor-pointer"
+        className="mt-3 inline-flex items-center gap-1 text-[12px] text-[var(--color-primary-pressed)] hover:text-[var(--color-primary)] cursor-pointer"
       >
         {t.howCalced} {open ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
       </button>
       {open && (
-        <ul className="text-[12px] text-[var(--color-text)] space-y-0.5 border-t border-[var(--color-border)] pt-2">
+        <ul className="mt-2 text-[12px] text-[var(--color-text)] space-y-0.5 border-t border-[var(--color-border)] pt-2">
           <li>{t.revenue}: {fmtUsd(e.revenue)}</li>
           <li>− {t.platform} ({Math.round(snap.region.platformFeePct * 100)}%): {fmtUsd(e.platformFee)}</li>
-          <li>− {t.mgmt} ({mgmtFeePct}%): {fmtUsd(e.mgmtFee)}</li>
+          <li>− {t.mgmt} ({mgmt}%): {fmtUsd(e.mgmtFee)}</li>
           <li>− {t.opex} ({snap.region.opexPerSqmMonth} {opexUnit}): {fmtUsd(e.opex)}</li>
           <li>− {t.tax} ({Math.round(snap.region.taxRate * 100)}%): {fmtUsd(e.tax)}</li>
           <li className="pt-1 border-t border-[var(--color-border)] mt-1 font-medium">= {t.noi}: {fmtUsd(e.noi)}</li>
@@ -385,29 +341,31 @@ function ScenarioCard({
   )
 }
 
-function ScenarioInput({
-  label, value, onChange, suffix, step,
+function Slider({
+  label, value, min, max, step, onChange, display,
 }: {
-  label: string; value: number; onChange: (v: number) => void; suffix: string; step: number
+  label: string; value: number; min: number; max: number; step: number; onChange: (v: number) => void; display: string
 }) {
+  const clamped = Math.min(max, Math.max(min, value))
   return (
-    <div className="flex items-center gap-2 text-[12px]">
-      <span className="text-[var(--color-text-muted)] w-[64px] shrink-0">{label}</span>
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[13px] text-[var(--color-text-muted)]">{label}</span>
+        <span className="text-[15px] font-semibold text-[#111827] tabular-nums">{display}</span>
+      </div>
       <input
-        type="number"
-        inputMode="numeric"
-        value={value}
-        onChange={e => {
-          const n = Number(e.target.value)
-          if (Number.isFinite(n)) onChange(n)
-        }}
+        type="range"
+        min={min}
+        max={max}
         step={step}
-        className="flex-1 min-w-0 rounded-md border border-black/10 bg-transparent px-2 py-1 text-[16px] md:text-[13px] tabular-nums text-[#111827] focus:outline-none focus:border-[var(--color-primary)] focus:bg-white/40"
+        value={clamped}
+        onChange={ev => onChange(Number(ev.target.value))}
+        className="w-full h-1.5 cursor-pointer accent-[var(--color-primary)]"
       />
-      <span className="text-[11px] text-[var(--color-text-muted)] shrink-0">{suffix}</span>
     </div>
   )
 }
+
 
 function References({ snap, lang }: { snap: Snapshot; lang: Lang }) {
   const t = COPY[lang]
