@@ -11,6 +11,7 @@ import { unstable_cache } from 'next/cache'
 import { HardHat, Building2, Award, Wrench, Users, Briefcase, ChevronRight } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
+import { ExpandableText } from '@/components/ExpandableText'
 import { ComplexCard, type ComplexCardData } from '@/components/ComplexCard'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { ManagerCard } from '@/components/ManagerCard'
@@ -491,9 +492,11 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
         {aiText && (
           <section className="mb-10">
             <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">{c.aboutHeading}</h2>
-            <div className="prose-balinsky max-w-3xl text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
-              {aiText}
-            </div>
+            <ExpandableText className="max-w-3xl" more={lang === 'en' ? 'Read more' : 'Подробнее'} less={lang === 'en' ? 'Show less' : 'Свернуть'}>
+              <div className="prose-balinsky text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
+                {aiText}
+              </div>
+            </ExpandableText>
           </section>
         )}
 

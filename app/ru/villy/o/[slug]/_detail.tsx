@@ -23,6 +23,7 @@ function fmtAirportDistance(lat: number | null, lng: number | null, lang: 'ru' |
   return km < 1 ? `${Math.round(km * 1000)} м` : `${km.toFixed(km < 10 ? 1 : 0)} км`
 }
 import { Header } from '@/components/Header'
+import { ExpandableText } from '@/components/ExpandableText'
 import { PageContainer } from '@/components/PageContainer'
 import { PhotoGalleryHero } from '@/components/PhotoGalleryHero'
 import { loadVillaLandProfile, landAllowsBuilding } from '@/lib/land-profile'
@@ -827,9 +828,11 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
             <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
               {c.descHeading}
             </h2>
-            <div className="prose-balinsky max-w-3xl text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
-              {seoText}
-            </div>
+            <ExpandableText className="max-w-3xl" more={lang === 'en' ? 'Read more' : 'Подробнее'} less={lang === 'en' ? 'Show less' : 'Свернуть'}>
+              <div className="prose-balinsky text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
+                {seoText}
+              </div>
+            </ExpandableText>
           </section>
         )}
 
