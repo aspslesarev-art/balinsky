@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
+import { ExpandableText } from '@/components/ExpandableText'
 import { PhotoGalleryHero } from '@/components/PhotoGalleryHero'
 import { ProgressBar } from '@/components/ProgressBar'
 import { ApartmentCard, type ApartmentCardData } from '@/components/ApartmentCard'
@@ -946,9 +947,11 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             <h2 className="text-[19px] sm:text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
               {copy.aboutPrefix} {name}
             </h2>
-            <div className="prose-balinsky max-w-3xl text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
-              {seoText}
-            </div>
+            <ExpandableText className="max-w-3xl" more={lang === 'en' ? 'Read more' : 'Подробнее'} less={lang === 'en' ? 'Show less' : 'Свернуть'}>
+              <div className="prose-balinsky text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
+                {seoText}
+              </div>
+            </ExpandableText>
           </section>
         )}
 

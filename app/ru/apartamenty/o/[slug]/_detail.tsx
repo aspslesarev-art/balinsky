@@ -12,6 +12,7 @@ import {
   ChevronRight, Layers, HardHat, Star,
 } from 'lucide-react'
 import { Header } from '@/components/Header'
+import { ExpandableText } from '@/components/ExpandableText'
 import { PageContainer } from '@/components/PageContainer'
 import { PhotoGalleryHero } from '@/components/PhotoGalleryHero'
 import { ApartmentCard, type ApartmentCardData } from '@/components/ApartmentCard'
@@ -782,9 +783,11 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
             <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
               {c.descHeading}
             </h2>
-            <div className="prose-balinsky max-w-3xl text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
-              {seoText}
-            </div>
+            <ExpandableText className="max-w-3xl" more={lang === 'en' ? 'Read more' : 'Подробнее'} less={lang === 'en' ? 'Show less' : 'Свернуть'}>
+              <div className="prose-balinsky text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
+                {seoText}
+              </div>
+            </ExpandableText>
           </section>
         )}
 
