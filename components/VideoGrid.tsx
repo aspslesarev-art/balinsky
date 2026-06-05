@@ -39,11 +39,12 @@ export function VideoGrid({ videos, title = 'Видео' }: { videos: VideoItem[
       <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
         {title}
       </h2>
-      <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Mobile: horizontal swipe with the next card peeking; desktop: grid. */}
+      <ul className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-1 -mx-6 px-6 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {videos.map(v => {
           const thumb = ytThumb(v.url)
           return (
-            <li key={v.id}>
+            <li key={v.id} className="snap-start shrink-0 w-[80%] sm:w-[46%] md:w-auto">
               <a
                 href={v.url}
                 target="_blank"
