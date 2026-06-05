@@ -833,6 +833,12 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
           </section>
         )}
 
+        {lat != null && lng != null && (
+          <LazyMount fallback={<div className="mt-12 mb-10 min-h-[600px]" />}>
+            <InvestmentWidget villaId={v.airtable_id} apiKey={GMAPS_KEY} lang={lang} />
+          </LazyMount>
+        )}
+
         {(
           landAllowsBuilding(landProfile, 'villa')
           || (marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0))
@@ -942,12 +948,6 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
         <div className="mt-8">
           <ContactBlock lang={lang} listing={{ kind: 'villa', slug, title }} />
         </div>
-
-        {lat != null && lng != null && (
-          <LazyMount fallback={<div className="mt-12 mb-10 min-h-[600px]" />}>
-            <InvestmentWidget villaId={v.airtable_id} apiKey={GMAPS_KEY} lang={lang} />
-          </LazyMount>
-        )}
 
         <RentalCompareSection
           district={district}

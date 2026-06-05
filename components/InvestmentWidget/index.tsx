@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import {
   Star, Info, AlertTriangle, Sparkles, ChevronDown, ChevronUp, TrendingUp,
@@ -238,8 +237,6 @@ function InvestmentWidgetView({ snap, apiKey, lang }: { snap: Snapshot; apiKey: 
           </Banner>
         )}
 
-        {snap.competitors.length > 0 && <CompetitorsGrid snap={snap} lang={lang} />}
-
         {snap.flags.emergingMarket && <EmergingBlock snap={snap} lang={lang} />}
       </SectionShell>
 
@@ -395,61 +392,6 @@ function References({ snap, lang }: { snap: Snapshot; lang: Lang }) {
   )
 }
 
-function CompetitorsGrid({ snap, lang }: { snap: Snapshot; lang: Lang }) {
-  const t = COPY[lang]
-  const { currency } = useCurrency()
-  const fmtUsd = (n: number | null | undefined) => fmtMoney(n, currency)
-  const [showAll, setShowAll] = useState(false)
-  const list = showAll ? snap.competitors : snap.competitors.slice(0, 9)
-  return (
-    <section className="mt-8">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-[18px] md:text-[20px] font-semibold text-[#111827]">{t.similarOnBooking(snap.competitors.length)}</h3>
-      </div>
-      <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {list.map(c => (
-          <li key={c.id}>
-            <a href={c.url ?? undefined} target="_blank" rel="noopener noreferrer nofollow" className="block rounded-2xl border border-[var(--color-border)] bg-white overflow-hidden no-underline text-[#111827] hover:border-[var(--color-primary)]">
-              {c.photo ? (
-                <div className="relative w-full h-[140px]">
-                  <Image src={c.photo} alt={c.name} fill sizes="(max-width: 640px) 100vw, 33vw" className="object-cover" />
-                </div>
-              ) : (
-                <div className="w-full h-[140px] bg-[var(--color-search-bg)] flex items-center justify-center text-3xl">🏨</div>
-              )}
-              <div className="p-3">
-                <div className="text-[14px] font-semibold leading-snug line-clamp-2 mb-1">{c.complex || c.name}</div>
-                <div className="text-[12px] text-[var(--color-text-muted)] mb-2 flex items-center gap-2">
-                  {c.bedrooms != null && <span>{c.bedrooms} BR</span>}
-                  {c.area != null && <span>· {c.area} {t.sqm}</span>}
-                  <span>· {fmtDistance(c.distanceKm, lang)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="text-[15px] font-semibold text-[#1D4ED8]">{fmtUsd(c.adr)}<span className="text-[11px] font-normal text-[var(--color-text-muted)]">{t.perNight}</span></div>
-                  {c.rating != null && (
-                    <div className="text-[12px] inline-flex items-center gap-1">
-                      <Star size={12} className="text-[#F59E0B] fill-[#F59E0B]" />
-                      <span className="font-medium">{c.rating.toFixed(1)}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </a>
-          </li>
-        ))}
-      </ul>
-      {snap.competitors.length > 9 && (
-        <button
-          type="button"
-          onClick={() => setShowAll(v => !v)}
-          className="mt-4 inline-flex items-center gap-1 px-4 py-2 rounded-full bg-white border border-[var(--color-border)] text-[13px] font-medium hover:border-[var(--color-primary)] cursor-pointer"
-        >
-          {showAll ? t.collapse : t.showAll(snap.competitors.length)}
-        </button>
-      )}
-    </section>
-  )
-}
 
 function EmergingBlock({ snap, lang }: { snap: Snapshot; lang: Lang }) {
   const t = COPY[lang]
