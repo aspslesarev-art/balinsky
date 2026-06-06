@@ -141,7 +141,7 @@ export function PhotoGalleryHero({
               key={i}
               type="button"
               onClick={() => setOpenAt(i)}
-              className="relative shrink-0 w-screen aspect-[4/3] bg-[var(--color-search-bg)] snap-center"
+              className="relative shrink-0 w-full aspect-[4/3] bg-[var(--color-search-bg)] snap-center"
             >
               <Image
                 src={src}

@@ -44,7 +44,7 @@ export function VideoGrid({ videos, title = 'Видео' }: { videos: VideoItem[
         {videos.map(v => {
           const thumb = ytThumb(v.url)
           return (
-            <li key={v.id} className="snap-start shrink-0 w-[80%] sm:w-[46%] md:w-auto">
+            <li key={v.id} className="snap-start shrink-0 w-[280px] md:w-auto">
               <a
                 href={v.url}
                 target="_blank"
