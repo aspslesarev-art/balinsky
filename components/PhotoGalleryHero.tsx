@@ -131,36 +131,40 @@ export function PhotoGalleryHero({
         )}
       </div>
 
-      {/* Mobile: hero + count badge. mx-3 pushes the card off the
-          page padding (px-6 on PageContainer) so the gallery reads
-          as an inset element with breathing room on the sides,
-          matching how cards on the catalog feel framed instead of
-          flush with the screen edge. */}
-      <div className="md:hidden mx-3 rounded-2xl overflow-hidden border border-[var(--color-border)] relative">
-        <button
-          type="button"
-          onClick={() => setOpenAt(0)}
-          className="block w-full h-[280px] bg-[var(--color-search-bg)] relative"
-        >
-          <Image
-            src={hero}
-            alt={`${alt} — ${c.mainPhoto}`}
-            fill
-            priority
-            fetchPriority="high"
-            quality={70}
-            sizes="(max-width: 480px) 100vw, 480px"
-            className="object-cover"
-          />
-          {photos.length > 1 && (
-            <div className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/65 text-white text-[13px] font-medium">
-              <ImageIcon size={14} />
-              {c.count(photos.length)}
-            </div>
-          )}
-        </button>
+      {/* Mobile: full-bleed swipe carousel. Each photo spans the full screen
+          width; swipe left/right to flip. -mx-6 cancels the page's px-6 so the
+          photos reach the screen edges. Tap opens the lightbox for zoom. */}
+      <div className="md:hidden -mx-6 relative">
+        <div className="flex overflow-x-auto snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {photos.map((src, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => setOpenAt(i)}
+              className="relative shrink-0 w-screen aspect-[4/3] bg-[var(--color-search-bg)] snap-center"
+            >
+              <Image
+                src={src}
+                alt={`${alt} — ${c.photoLabel} ${i + 1}`}
+                fill
+                priority={i === 0}
+                fetchPriority={i === 0 ? 'high' : 'low'}
+                loading={i === 0 ? undefined : 'lazy'}
+                quality={70}
+                sizes="100vw"
+                className="object-cover"
+              />
+            </button>
+          ))}
+        </div>
         {wishlistItem && (
           <WishlistButton item={wishlistItem} className="absolute top-3 right-3 z-10" />
+        )}
+        {photos.length > 1 && (
+          <div className="pointer-events-none absolute bottom-3 right-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/65 text-white text-[13px] font-medium">
+            <ImageIcon size={14} />
+            {c.count(photos.length)}
+          </div>
         )}
       </div>
 
