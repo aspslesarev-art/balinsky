@@ -134,14 +134,14 @@ export function PhotoGalleryHero({
       {/* Mobile: full-bleed swipe carousel. Each photo spans the full screen
           width; swipe left/right to flip. -mx-6 cancels the page's px-6 so the
           photos reach the screen edges. Tap opens the lightbox for zoom. */}
-      <div className="md:hidden -mx-6 relative">
+      <div className="md:hidden -mx-6 w-screen max-w-none relative">
         <div className="flex overflow-x-auto snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {photos.map((src, i) => (
             <button
               key={i}
               type="button"
               onClick={() => setOpenAt(i)}
-              className="relative shrink-0 w-[100vw] aspect-[4/3] bg-[var(--color-search-bg)] snap-center"
+              className="relative shrink-0 w-full aspect-[4/3] bg-[var(--color-search-bg)] snap-center"
             >
               <Image
                 src={src}
