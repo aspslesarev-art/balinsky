@@ -239,8 +239,6 @@ function InvestmentWidgetView({ snap, apiKey, lang }: { snap: Snapshot; apiKey: 
 
         {snap.flags.emergingMarket && <EmergingBlock snap={snap} lang={lang} />}
       </SectionShell>
-
-      <NearbyPlacesBlock snap={snap} lang={lang} />
     </>
   )
 }

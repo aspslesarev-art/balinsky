@@ -845,6 +845,10 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
           </LazyMount>
         )}
 
+        {nearby && (
+          <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />
+        )}
+
         {(
           landAllowsBuilding(landProfile, 'villa')
           || (marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0))
@@ -954,10 +958,6 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
         <div className="mb-10">
           <ContactBlock lang={lang} listing={{ kind: 'villa', slug, title }} />
         </div>
-
-        {nearby && (
-          <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />
-        )}
 
         <RentalCompareSection
           district={district}

@@ -802,6 +802,10 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
           </LazyMount>
         )}
 
+        {nearby && (
+          <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />
+        )}
+
         {/* LandProfile + MarketStats — sits right under the description
             on villa pages too, so the buyer sees the zoning + neighbour
             rental data before getting to the developer / manager. */}
@@ -924,10 +928,6 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
         <div className="mb-10">
           <ContactBlock lang={lang} listing={{ kind: 'apartment', slug, title }} />
         </div>
-
-        {nearby && (
-          <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />
-        )}
 
         <RentalCompareSection
           district={district}
