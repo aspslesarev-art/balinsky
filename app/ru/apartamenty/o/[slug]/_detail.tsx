@@ -918,7 +918,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
 
         {managers.length > 0 && <ManagerCard managers={managers} developerName={devName} />}
 
-        <div className="mt-8">
+        <div className="mb-10">
           <ContactBlock lang={lang} listing={{ kind: 'apartment', slug, title }} />
         </div>
 

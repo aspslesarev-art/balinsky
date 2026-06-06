@@ -948,7 +948,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
 
         {managers.length > 0 && <ManagerCard managers={managers} developerName={developer?.name ?? developerName} />}
 
-        <div className="mt-8">
+        <div className="mb-10">
           <ContactBlock lang={lang} listing={{ kind: 'villa', slug, title }} />
         </div>
 

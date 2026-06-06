@@ -82,7 +82,8 @@ export function NearbyPlaces({
         {c.subtitle}
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-5">
+      {/* Mobile: single-row horizontal swipe; desktop: wrap. */}
+      <div className="flex gap-2 mb-5 overflow-x-auto -mx-6 px-6 max-w-none md:max-w-full md:mx-0 md:px-0 md:flex-wrap md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {available.map(cat => {
           const isActive = cat.key === active
           const count = byCategory[cat.key]?.length ?? 0
@@ -93,7 +94,7 @@ export function NearbyPlaces({
               type="button"
               onClick={() => setActive(cat.key)}
               className={
-                'inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-medium border transition-colors cursor-pointer ' +
+                'shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-medium border transition-colors cursor-pointer ' +
                 (isActive
                   ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)]'
                   : 'bg-white text-[var(--color-text)] border-[var(--color-border)] hover:border-[var(--color-primary)]')
