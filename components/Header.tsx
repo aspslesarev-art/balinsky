@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { Home, Building, Building2, HardHat, Menu, X } from 'lucide-react'
 import { LangSwitch } from './LangSwitch'
@@ -23,11 +23,41 @@ const NAV: { key: NavKey; ru: { href: string }; en: { href: string }; labelKey: 
 
 export function Header({ active }: { active?: NavKey }) {
   const [open, setOpen] = useState(false)
+  // Mobile: hide the bar on scroll-down, reveal on scroll-up. Desktop
+  // ignores this (md:translate-y-0 below pins it). The dropdown being
+  // open forces it visible so the close button never scrolls away.
+  const [hidden, setHidden] = useState(false)
   const pathname = usePathname() ?? ''
   const lang: Lang = pathname.startsWith('/en') ? 'en' : 'ru'
 
+  useEffect(() => {
+    let lastY = window.scrollY
+    let ticking = false
+    const onScroll = () => {
+      if (ticking) return
+      ticking = true
+      requestAnimationFrame(() => {
+        const y = window.scrollY
+        // Ignore sub-pixel jitter / rubber-band bounce.
+        if (Math.abs(y - lastY) > 6) {
+          // Never hide while near the top — avoids a flicker on the
+          // first few pixels of scroll.
+          setHidden(y > lastY && y > 80)
+          lastY = y
+        }
+        ticking = false
+      })
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
   return (
-    <header className="sticky top-0 z-20 w-full bg-[var(--color-header-bg)] border-b border-[var(--color-border)]">
+    <header
+      className={`sticky top-0 z-20 w-full bg-[var(--color-header-bg)] border-b border-[var(--color-border)] transition-transform duration-300 will-change-transform md:translate-y-0 ${
+        hidden && !open ? '-translate-y-full' : 'translate-y-0'
+      }`}
+    >
       {/* Mobile shows only burger + right cluster (logo lives inside
           the dropdown). Desktop is the original flex layout — logo
           first, nav, invest-pill, right cluster at the end. */}
