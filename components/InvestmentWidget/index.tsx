@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import {
-  Star, Info, AlertTriangle, Sparkles, ChevronDown, ChevronUp, TrendingUp,
+  Info, AlertTriangle, Sparkles, ChevronDown, ChevronUp, TrendingUp,
 } from 'lucide-react'
 import { InvestmentMap } from './InvestmentMap'
 import { fmtMoney, fmtMoneyShort, fmtPct, fmtYears, fmtDistance, fmtMeters, pluralRu, pluralEn } from './utils'
@@ -404,126 +404,6 @@ function EmergingBlock({ snap, lang }: { snap: Snapshot; lang: Lang }) {
       </div>
       <div className="text-[12px] text-[var(--color-text-muted)] mt-3">
         {t.newDistrictFootnote(snap.totalCompetitorsInRadius, plural)}
-      </div>
-    </section>
-  )
-}
-
-function getCatMeta(lang: Lang): Record<string, { title: string; icon: string; limit: number }> {
-  const t = COPY[lang]
-  return {
-    beach: { title: t.catBeach, icon: '🏝️', limit: 5 },
-    beachclub: { title: t.catBeachclub, icon: '🏖️', limit: 5 },
-    restaurant: { title: t.catRestaurant, icon: '🍽️', limit: 6 },
-    cafe: { title: t.catCafe, icon: '☕️', limit: 6 },
-    wellness: { title: t.catWellness, icon: '🧘', limit: 5 },
-    nightlife: { title: t.catNightlife, icon: '🍸', limit: 5 },
-    attraction: { title: t.catAttraction, icon: '✨', limit: 5 },
-    international_school: { title: t.catIntlSchool, icon: '🎓', limit: 5 },
-    school: { title: t.catSchool, icon: '🏫', limit: 5 },
-    preschool: { title: t.catPreschool, icon: '🧸', limit: 5 },
-    supermarket: { title: t.catSupermarket, icon: '🛒', limit: 5 },
-    pharmacy: { title: t.catPharmacy, icon: '💊', limit: 5 },
-    hospital: { title: t.catHospital, icon: '🏥', limit: 5 },
-  }
-}
-
-function NearbyPlacesBlock({ snap, lang }: { snap: Snapshot; lang: Lang }) {
-  const t = COPY[lang]
-  const CAT_META = getCatMeta(lang)
-  const ORDER = [
-    'beach', 'beachclub',
-    'international_school', 'school', 'preschool',
-    'wellness',
-    'restaurant', 'cafe',
-    'supermarket', 'pharmacy', 'hospital',
-    'nightlife', 'attraction',
-  ]
-  const isWarung = (name: string | null) => /\bwarung\b/i.test(name ?? '')
-  const wellRated = (p: { rating: number | null; reviews: number | null }, hi: number, hiRev: number, lo: number, loRev: number) =>
-    ((p.rating ?? 0) >= hi && (p.reviews ?? 0) >= hiRev) ||
-    ((p.rating ?? 0) >= lo && (p.reviews ?? 0) >= loRev)
-  const QUALITY: Record<string, (p: { name: string | null; rating: number | null; reviews: number | null }) => boolean> = {
-    beach:       p => (p.rating ?? 0) >= 4.0 && (p.reviews ?? 0) >= 100,
-    beachclub:   p => !isWarung(p.name) && /beach/i.test(p.name ?? '') && wellRated(p, 4.3, 100, 4.0, 500),
-    wellness:    p => wellRated(p, 4.6, 50, 4.3, 500),
-    restaurant:  p => !isWarung(p.name) && wellRated(p, 4.5, 100, 4.2, 1000),
-    cafe:        p => !isWarung(p.name) && wellRated(p, 4.6, 50, 4.3, 500),
-    nightlife:   p => !isWarung(p.name) && wellRated(p, 4.4, 100, 4.1, 500),
-    attraction:  p => wellRated(p, 4.6, 300, 4.3, 2000),
-    international_school: p => (p.reviews ?? 0) >= 10,
-    school:      p => (p.rating ?? 0) >= 4.2 && (p.reviews ?? 0) >= 30,
-    preschool:   p => (p.rating ?? 0) >= 4.3 && (p.reviews ?? 0) >= 15,
-    supermarket: p => (p.rating ?? 0) >= 4.0 && (p.reviews ?? 0) >= 50,
-    pharmacy:    p => (p.rating ?? 0) >= 4.0 && (p.reviews ?? 0) >= 20,
-    hospital:    p => (p.rating ?? 0) >= 4.0 && (p.reviews ?? 0) >= 30,
-  }
-  const seen = new Set<string>()
-  const filtered: Record<string, typeof snap.nearbyByCategory[string]> = {}
-  for (const cat of ORDER) {
-    const list = snap.nearbyByCategory[cat] ?? []
-    const qualityFn = QUALITY[cat] ?? (() => true)
-    const out: typeof list = []
-    for (const p of list) {
-      if (!qualityFn(p)) continue
-      const idKey = `id:${p.id}`
-      const nameKey = `n:${(p.name ?? '').toLowerCase().trim()}`
-      if (seen.has(idKey) || (p.name && seen.has(nameKey))) continue
-      seen.add(idKey)
-      if (p.name) seen.add(nameKey)
-      out.push(p)
-    }
-    if (out.length > 0) filtered[cat] = out
-  }
-  const cats = ORDER.filter(k => (filtered[k] ?? []).length > 0)
-  if (cats.length === 0) return null
-  return (
-    <section className="mb-10">
-      <div className="flex items-baseline gap-3 mb-3">
-        <h3 className="text-[18px] md:text-[20px] font-semibold text-[#111827]">{t.nearbyTitle}</h3>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {cats.map(cat => {
-          const meta = CAT_META[cat]
-          const items = [...(filtered[cat] ?? [])]
-            .sort((a, b) => a.distanceKm - b.distanceKm)
-            .slice(0, meta.limit)
-          return (
-            <div key={cat} className="rounded-2xl border border-[var(--color-border)] bg-white p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-[18px]">{meta.icon}</span>
-                <span className="text-[14px] font-semibold text-[#111827]">{meta.title}</span>
-                <span className="text-[12px] text-[var(--color-text-muted)] ml-auto">
-                  {(filtered[cat] ?? []).length}
-                </span>
-              </div>
-              <ul className="space-y-2">
-                {items.map(p => (
-                  <li key={p.id} className="flex items-baseline justify-between gap-3 text-[13px]">
-                    <a
-                      href={p.mapsUrl ?? undefined}
-                      target={p.mapsUrl ? '_blank' : undefined}
-                      rel={p.mapsUrl ? 'noopener noreferrer' : undefined}
-                      className={`min-w-0 truncate text-[#111827] ${p.mapsUrl ? 'hover:text-[var(--color-primary-pressed)]' : ''} no-underline`}
-                      title={p.name ?? ''}
-                    >
-                      {p.name}
-                    </a>
-                    <span className="shrink-0 inline-flex items-center gap-2 text-[12px] text-[var(--color-text-muted)]">
-                      {p.rating != null && (
-                        <span className="inline-flex items-center gap-0.5">
-                          <Star size={11} className="text-[#F59E0B] fill-[#F59E0B]" />
-                          <span className="font-medium text-[#111827]">{p.rating.toFixed(1)}</span>
-                        </span>
-                      )}
-                      <span>{fmtDistance(p.distanceKm, lang)}</span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )
-        })}
       </div>
     </section>
   )
