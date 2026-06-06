@@ -40,7 +40,7 @@ export function VideoGrid({ videos, title = 'Видео' }: { videos: VideoItem[
         {title}
       </h2>
       {/* Mobile: horizontal swipe with the next card peeking; desktop: grid. */}
-      <ul className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-1 -mx-6 px-6 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <ul className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-1 -mx-6 px-6 max-w-none md:max-w-full md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {videos.map(v => {
           const thumb = ytThumb(v.url)
           return (

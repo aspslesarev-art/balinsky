@@ -107,11 +107,14 @@ export function NearbyPlaces({
         })}
       </div>
 
-      <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      {/* Mobile: horizontal swipe with the next card peeking; desktop: grid.
+          max-w-none releases the `main * { max-width: 100% }` guard so the
+          -mx-6 track reaches the screen edges instead of leaving a gap. */}
+      <ul className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 -mx-6 px-6 max-w-none md:max-w-full md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {places.map(p => (
           <li
             key={p.id}
-            className="rounded-2xl border border-[var(--color-border)] bg-white p-4 flex flex-col gap-2"
+            className="snap-start shrink-0 w-[280px] md:w-auto rounded-2xl border border-[var(--color-border)] bg-white p-4 flex flex-col gap-2"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="text-[15px] font-semibold leading-snug text-[#111827] line-clamp-2">{p.name}</div>
