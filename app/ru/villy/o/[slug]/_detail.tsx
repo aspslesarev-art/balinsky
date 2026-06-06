@@ -47,6 +47,8 @@ import { RentalCompareSection } from '@/components/RentalCompareSection'
 import { LazyMount } from '@/components/LazyMount'
 import { ManagerCard } from '@/components/ManagerCard'
 import { ContactBlock } from '@/components/ContactBlock'
+import { loadNearbyPlaces } from '@/lib/nearby-places'
+import { NearbyPlaces } from '@/components/NearbyPlaces'
 import { loadManagersByDeveloperName, loadManagersByDeveloperSlug } from '@/lib/managers'
 import { getDeveloperStats } from '@/lib/developer-stats'
 import { PriceCtaCard } from '@/components/PriceCtaCard'
@@ -554,7 +556,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   const isResale = /перепрод|resale|вторич|secondary/.test(dealTypeRaw)
   const sellerUrl = isResale ? firstString(d['Контакт продавца']) : null
 
-  const [otherVillas, complexes, developers, stylesMap, scoresMap, activeReservation, landProfile, marketStats] = await Promise.all([
+  const [otherVillas, complexes, developers, stylesMap, scoresMap, activeReservation, landProfile, marketStats, nearby] = await Promise.all([
     loadOtherVillasInDistrict(district, v.airtable_id, lang),
     _loadComplexesIndex(),
     _loadDevelopersIndex(),
@@ -563,6 +565,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
     findActiveReservation('villa', v.airtable_id),
     loadVillaLandProfile(v.airtable_id),
     loadMarketStats('villa', v.airtable_id),
+    loadNearbyPlaces(v.airtable_id).catch(() => null),
   ])
   const interiorStyle = stylesMap[v.airtable_id]?.style ?? null
   const villaScore = scoresMap.get(v.airtable_id) ?? null
@@ -951,6 +954,10 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
         <div className="mb-10">
           <ContactBlock lang={lang} listing={{ kind: 'villa', slug, title }} />
         </div>
+
+        {nearby && (
+          <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />
+        )}
 
         <RentalCompareSection
           district={district}

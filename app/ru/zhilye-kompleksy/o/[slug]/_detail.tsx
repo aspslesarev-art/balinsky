@@ -1042,7 +1042,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
 
         {managers.length > 0 && <ManagerCard managers={managers} developerName={developerName} />}
 
-        <div className="mt-8">
+        <div className="mb-10">
           <ContactBlock lang={lang} listing={{ kind: 'complex', slug, title: name }} />
         </div>
 

@@ -35,6 +35,8 @@ import { RentalCompareSection } from '@/components/RentalCompareSection'
 import { LazyMount } from '@/components/LazyMount'
 import { ManagerCard } from '@/components/ManagerCard'
 import { ContactBlock } from '@/components/ContactBlock'
+import { loadNearbyPlaces } from '@/lib/nearby-places'
+import { NearbyPlaces } from '@/components/NearbyPlaces'
 import { loadManagersByDeveloperName } from '@/lib/managers'
 import { PriceCtaCard } from '@/components/PriceCtaCard'
 import { findActiveReservation } from '@/lib/reservations'
@@ -554,13 +556,14 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
   const parentComplex = findParentComplex(title, complexes)
   const parentComplexName = parentComplex?.name ?? null
 
-  const [otherApts, managers, activeReservation, landProfile, marketStats, developers] = await Promise.all([
+  const [otherApts, managers, activeReservation, landProfile, marketStats, developers, nearby] = await Promise.all([
     loadOtherApartmentsInDistrict(district, a.airtable_id, lang),
     loadManagersByDeveloperName(devName),
     findActiveReservation('apartment', a.airtable_id),
     loadLandProfile('apartment', a.airtable_id),
     loadMarketStats('apartment', a.airtable_id),
     _loadDevelopersIndex(),
+    loadNearbyPlaces(a.airtable_id).catch(() => null),
   ])
   const developer = findDeveloperByName(devName, developers)
   const GMAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? ''
@@ -921,6 +924,10 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
         <div className="mb-10">
           <ContactBlock lang={lang} listing={{ kind: 'apartment', slug, title }} />
         </div>
+
+        {nearby && (
+          <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />
+        )}
 
         <RentalCompareSection
           district={district}
