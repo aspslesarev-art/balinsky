@@ -1,25 +1,28 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { useMap, useMapsLibrary } from '@vis.gl/react-google-maps'
+import { useMap } from '@vis.gl/react-google-maps'
 import { Flame } from 'lucide-react'
 import type { HeatCell } from '@/lib/reviews-heat'
 
-// Blue (few reviews) → red (many). First stop must be transparent so empty
-// areas don't tint the map.
-const GRADIENT = [
-  'rgba(0, 80, 255, 0)',
-  'rgba(0, 80, 255, 0.55)',
-  'rgba(0, 170, 255, 0.65)',
-  'rgba(0, 230, 180, 0.7)',
-  'rgba(140, 230, 0, 0.8)',
-  'rgba(255, 210, 0, 0.9)',
-  'rgba(255, 120, 0, 0.95)',
-  'rgba(255, 0, 0, 1)',
-]
+// Google removed visualization.HeatmapLayer in Maps JS v3.65, so we render the
+// heat as translucent weight-coloured circles (core Circle API). One ~0.65 km
+// disc per grid cell, blue (few reviews) → red (many); overlapping discs in
+// busy areas blend into a continuous hot zone.
+function heatHex(t: number): string {
+  const h = 220 * (1 - Math.max(0, Math.min(1, t))) // 220°=blue → 0°=red
+  const s = 0.85, l = 0.5
+  const c = (1 - Math.abs(2 * l - 1)) * s
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1))
+  const m = l - c / 2
+  let r = 0, g = 0, b = 0
+  if (h < 60) { r = c; g = x } else if (h < 120) { r = x; g = c }
+  else if (h < 180) { g = c; b = x } else if (h < 240) { g = x; b = c }
+  else if (h < 300) { r = x; b = c } else { r = c; b = x }
+  const to = (v: number) => Math.round((v + m) * 255).toString(16).padStart(2, '0')
+  return `#${to(r)}${to(g)}${to(b)}`
+}
 
-// Heatmap overlay driven by Google review density. Lives INSIDE <Map> so it
-// can grab the map instance + lazily load the `visualization` library.
 export function ReviewsHeatLayer({
   cells,
   max,
@@ -30,29 +33,36 @@ export function ReviewsHeatLayer({
   visible: boolean
 }) {
   const map = useMap()
-  const viz = useMapsLibrary('visualization')
-  const layerRef = useRef<google.maps.visualization.HeatmapLayer | null>(null)
+  const circlesRef = useRef<google.maps.Circle[] | null>(null)
 
   useEffect(() => {
-    if (!map || !viz || cells.length === 0) return
-    if (!layerRef.current) {
-      layerRef.current = new viz.HeatmapLayer({
-        data: cells.map(c => ({
-          location: new google.maps.LatLng(c.lat, c.lng),
-          weight: c.weight,
-        })),
-        radius: 38,
-        opacity: 0.62,
-        dissipating: true,
-        maxIntensity: max,
-        gradient: GRADIENT,
-      })
+    if (!map || cells.length === 0 || typeof google === 'undefined' || !google.maps?.Circle) return
+    try {
+      if (!circlesRef.current) {
+        circlesRef.current = cells.map(c => {
+          // sqrt lifts the mid-range so zones read as a gradient rather than a
+          // few red dots on an all-blue map (review weights are very skewed).
+          const t = Math.min(1, Math.sqrt(c.weight / max))
+          return new google.maps.Circle({
+            center: { lat: c.lat, lng: c.lng },
+            radius: 650,
+            fillColor: heatHex(t),
+            fillOpacity: 0.4,
+            strokeWeight: 0,
+            clickable: false,
+            zIndex: 1,
+          })
+        })
+      }
+      for (const circle of circlesRef.current) circle.setMap(visible ? map : null)
+    } catch {
+      // Never let the overlay take the whole map page down.
+      circlesRef.current?.forEach(c => c.setMap(null))
+      circlesRef.current = null
     }
-    layerRef.current.setMap(visible ? map : null)
-  }, [map, viz, cells, max, visible])
+  }, [map, cells, max, visible])
 
-  // Detach on unmount so a torn-down map doesn't keep the layer alive.
-  useEffect(() => () => { layerRef.current?.setMap(null) }, [])
+  useEffect(() => () => { circlesRef.current?.forEach(c => c.setMap(null)) }, [])
 
   return null
 }
@@ -88,7 +98,7 @@ export function ReviewsHeatToggle({
           <span>{lang === 'en' ? 'few' : 'мало'}</span>
           <span
             className="h-2 w-24 rounded-full"
-            style={{ background: 'linear-gradient(90deg, #0050FF, #00E6B4, #FFD200, #FF0000)' }}
+            style={{ background: 'linear-gradient(90deg, #2b6cff, #00c2c7, #8ed11f, #ffd200, #ff2d00)' }}
           />
           <span>{lang === 'en' ? 'many' : 'много'}</span>
         </div>
