@@ -5,12 +5,9 @@ import { useMap } from '@vis.gl/react-google-maps'
 import { Flame } from 'lucide-react'
 import type { HeatCell } from '@/lib/reviews-heat'
 
-// Google removed visualization.HeatmapLayer in Maps JS v3.65, so we render the
-// heat as translucent weight-coloured circles (core Circle API). One ~0.65 km
-// disc per grid cell, blue (few reviews) → red (many); overlapping discs in
-// busy areas blend into a continuous hot zone.
-function heatHex(t: number): string {
-  const h = 220 * (1 - Math.max(0, Math.min(1, t))) // 220°=blue → 0°=red
+// "r, g, b" for a blue(0)→red(1) ramp via HSL 220°→0°.
+function heatRGB(t: number): string {
+  const h = 220 * (1 - Math.max(0, Math.min(1, t)))
   const s = 0.85, l = 0.5
   const c = (1 - Math.abs(2 * l - 1)) * s
   const x = c * (1 - Math.abs(((h / 60) % 2) - 1))
@@ -19,10 +16,13 @@ function heatHex(t: number): string {
   if (h < 60) { r = c; g = x } else if (h < 120) { r = x; g = c }
   else if (h < 180) { g = c; b = x } else if (h < 240) { g = x; b = c }
   else if (h < 300) { r = x; b = c } else { r = c; b = x }
-  const to = (v: number) => Math.round((v + m) * 255).toString(16).padStart(2, '0')
-  return `#${to(r)}${to(g)}${to(b)}`
+  return `${Math.round((r + m) * 255)}, ${Math.round((g + m) * 255)}, ${Math.round((b + m) * 255)}`
 }
 
+// Google removed visualization.HeatmapLayer (Maps JS v3.65). We draw our own
+// heatmap on a canvas OverlayView: screen-space radial blobs (fixed pixel
+// radius) so it stays visible and crisp at any zoom — a metre-radius circle is
+// a few pixels wide at the island-wide zoom and effectively invisible.
 export function ReviewsHeatLayer({
   cells,
   max,
@@ -33,59 +33,80 @@ export function ReviewsHeatLayer({
   visible: boolean
 }) {
   const map = useMap()
-  const circlesRef = useRef<google.maps.Circle[] | null>(null)
-  const zoomListenerRef = useRef<google.maps.MapsEventListener | null>(null)
+  const overlayRef = useRef<google.maps.OverlayView | null>(null)
 
   useEffect(() => {
-    if (!map || cells.length === 0 || typeof google === 'undefined' || !google.maps?.Circle) return
+    if (!map || cells.length === 0 || typeof google === 'undefined' || !google.maps?.OverlayView) return
     try {
-      if (!circlesRef.current) {
-        circlesRef.current = cells.map(c => {
-          // sqrt lifts the mid-range so zones read as a gradient rather than a
-          // few red dots on an all-blue map (review weights are very skewed).
-          const t = Math.min(1, Math.sqrt(c.weight / max))
-          return new google.maps.Circle({
-            center: { lat: c.lat, lng: c.lng },
-            fillColor: heatHex(t),
-            fillOpacity: 0.5,
-            strokeWeight: 0,
-            clickable: false,
-            zIndex: 1,
-          })
-        })
+      if (!overlayRef.current) {
+        const BLOB = 46 // on-screen blob radius in px
+
+        class HeatOverlay extends google.maps.OverlayView {
+          canvas: HTMLCanvasElement | null = null
+          onAdd() {
+            const cv = document.createElement('canvas')
+            cv.style.position = 'absolute'
+            cv.style.pointerEvents = 'none'
+            cv.style.top = '0'
+            cv.style.left = '0'
+            this.canvas = cv
+            this.getPanes()?.overlayLayer.appendChild(cv)
+          }
+          draw() {
+            const proj = this.getProjection()
+            const cv = this.canvas
+            if (!proj || !cv) return
+            const bounds = this.getMap()?.getBounds?.()
+            if (!bounds) return
+            const ne = proj.fromLatLngToDivPixel(bounds.getNorthEast())
+            const sw = proj.fromLatLngToDivPixel(bounds.getSouthWest())
+            if (!ne || !sw) return
+            // Pad the canvas so blobs whose centre sits just off-screen still
+            // bleed in.
+            const pad = BLOB * 2
+            const left = Math.min(sw.x, ne.x) - pad
+            const top = Math.min(ne.y, sw.y) - pad
+            const w = Math.abs(ne.x - sw.x) + pad * 2
+            const h = Math.abs(sw.y - ne.y) + pad * 2
+            cv.style.left = `${left}px`
+            cv.style.top = `${top}px`
+            if (cv.width !== Math.round(w)) cv.width = Math.round(w)
+            if (cv.height !== Math.round(h)) cv.height = Math.round(h)
+            const ctx = cv.getContext('2d')
+            if (!ctx) return
+            ctx.clearRect(0, 0, cv.width, cv.height)
+            for (const cell of cells) {
+              const p = proj.fromLatLngToDivPixel(new google.maps.LatLng(cell.lat, cell.lng))
+              if (!p) continue
+              const x = p.x - left, y = p.y - top
+              if (x < -pad || y < -pad || x > w + pad || y > h + pad) continue
+              const t = Math.min(1, Math.sqrt(cell.weight / max))
+              const rgb = heatRGB(t)
+              const grd = ctx.createRadialGradient(x, y, 0, x, y, BLOB)
+              grd.addColorStop(0, `rgba(${rgb}, 0.5)`)
+              grd.addColorStop(1, `rgba(${rgb}, 0)`)
+              ctx.fillStyle = grd
+              ctx.beginPath()
+              ctx.arc(x, y, BLOB, 0, Math.PI * 2)
+              ctx.fill()
+            }
+          }
+          onRemove() {
+            this.canvas?.remove()
+            this.canvas = null
+          }
+        }
+
+        overlayRef.current = new HeatOverlay()
       }
-      const circles = circlesRef.current
-      // Keep each disc ≈ a constant on-screen size (the removed HeatmapLayer
-      // used a pixel radius). A fixed metre radius is invisible at the
-      // island-wide default zoom — 650 m is ~3 px there.
-      const applyRadius = () => {
-        const z = map.getZoom() ?? 10
-        const metresPerPx = (156543.03392 * Math.cos((-8.5 * Math.PI) / 180)) / 2 ** z
-        const r = 30 * metresPerPx
-        for (const c of circles) c.setRadius(r)
-      }
-      if (visible) {
-        applyRadius()
-        for (const c of circles) c.setMap(map)
-        zoomListenerRef.current?.remove()
-        zoomListenerRef.current = map.addListener('zoom_changed', applyRadius)
-      } else {
-        for (const c of circles) c.setMap(null)
-        zoomListenerRef.current?.remove()
-        zoomListenerRef.current = null
-      }
+      overlayRef.current.setMap(visible ? map : null)
     } catch {
-      // Never let the overlay take the whole map page down.
-      zoomListenerRef.current?.remove()
-      circlesRef.current?.forEach(c => c.setMap(null))
-      circlesRef.current = null
+      overlayRef.current?.setMap(null)
+      overlayRef.current = null
     }
   }, [map, cells, max, visible])
 
-  useEffect(() => () => {
-    zoomListenerRef.current?.remove()
-    circlesRef.current?.forEach(c => c.setMap(null))
-  }, [])
+  useEffect(() => () => { overlayRef.current?.setMap(null) }, [])
 
   return null
 }
