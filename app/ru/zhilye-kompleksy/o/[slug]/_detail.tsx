@@ -16,6 +16,7 @@ import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { ExpandableText } from '@/components/ExpandableText'
 import { PhotoGalleryHero } from '@/components/PhotoGalleryHero'
+import { NeighborhoodHeatMap } from '@/components/NeighborhoodHeatMap'
 import { ProgressBar } from '@/components/ProgressBar'
 import { ApartmentCard, type ApartmentCardData } from '@/components/ApartmentCard'
 import { ManagerCard } from '@/components/ManagerCard'
@@ -1085,6 +1086,17 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             <div className="text-[14px] text-[var(--color-text)] mb-3">
               {copy.locationLine(district)}
             </div>
+            {process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY && (
+              <div className="mb-4">
+                <NeighborhoodHeatMap
+                  apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}
+                  lat={lat}
+                  lng={lng}
+                  title={name}
+                  lang={lang}
+                />
+              </div>
+            )}
             <a
               href={gmap ?? `https://www.google.com/maps?q=${lat},${lng}`}
               target="_blank"

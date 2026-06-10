@@ -1,8 +1,10 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { Flame } from 'lucide-react'
 import { BALINSKY_MAP_STYLE } from '@/lib/google-map-style'
 import { loadGoogleMaps } from '@/lib/google-maps-loader'
+import { createHeatOverlay, fetchHeatCells } from '@/lib/heat-overlay'
 import type { Snapshot } from './types'
 import type { Lang } from '@/lib/i18n'
 
@@ -20,6 +22,7 @@ const MAP_COPY = {
     unavailable: 'Карта недоступна',
     villa: 'Вилла', competitors: 'Конкуренты', anchors: 'Якоря',
     anchorsOnly: 'Только якоря', allPois: 'Все POI',
+    heat: 'Тепловая карта мест',
     perNight: ' / ночь',
     openBooking: 'Открыть на Booking →',
     openMaps: 'Открыть на Google Maps →',
@@ -33,6 +36,7 @@ const MAP_COPY = {
     unavailable: 'Map unavailable',
     villa: 'Villa', competitors: 'Competitors', anchors: 'Anchors',
     anchorsOnly: 'Anchors only', allPois: 'All POIs',
+    heat: 'Places heatmap',
     perNight: ' / night',
     openBooking: 'Open on Booking →',
     openMaps: 'Open on Google Maps →',
@@ -331,9 +335,32 @@ export function InvestmentMap({
   lang?: Lang
 }) {
   const [showAllPois, setShowAllPois] = useState(false)
+  const [showHeat, setShowHeat] = useState(false)
   const [map, setMap] = useState<google.maps.Map | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const heatRef = useRef<google.maps.OverlayView | null>(null)
+  const heatDataRef = useRef<{ cells: { lat: number; lng: number; weight: number }[]; max: number } | null>(null)
   const t = MAP_COPY[lang]
+
+  // Island-wide Google-places heat overlay — fetched lazily on first toggle.
+  useEffect(() => {
+    if (!map) return
+    let cancelled = false
+    if (showHeat) {
+      void (async () => {
+        if (!heatDataRef.current) heatDataRef.current = await fetchHeatCells()
+        if (cancelled || !heatDataRef.current || heatDataRef.current.cells.length === 0) return
+        try {
+          if (!heatRef.current) heatRef.current = createHeatOverlay(heatDataRef.current.cells, heatDataRef.current.max)
+          heatRef.current.setMap(map)
+        } catch { heatRef.current?.setMap(null); heatRef.current = null }
+      })()
+    } else {
+      heatRef.current?.setMap(null)
+    }
+    return () => { cancelled = true }
+  }, [map, showHeat])
+  useEffect(() => () => { heatRef.current?.setMap(null) }, [])
 
   // Load Google Maps SDK once + instantiate the Map on the container
   // ref. Replaces @vis.gl/react-google-maps' <APIProvider> + <Map> —
@@ -377,13 +404,36 @@ export function InvestmentMap({
         <span className="inline-flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#3B82F6]" /> {t.competitors}</span>
         <span className="inline-flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#16A34A]" /> {t.anchors}</span>
       </div>
-      <button
-        type="button"
-        onClick={() => setShowAllPois(v => !v)}
-        className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm rounded-full border border-[var(--color-border)] px-3 py-1.5 text-[12px] font-medium hover:border-[var(--color-primary)] cursor-pointer shadow-sm"
-      >
-        {showAllPois ? t.anchorsOnly : t.allPois}
-      </button>
+      <div className="absolute top-3 left-3 flex flex-col items-start gap-2">
+        <button
+          type="button"
+          onClick={() => setShowHeat(v => !v)}
+          aria-pressed={showHeat}
+          className={
+            'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-medium cursor-pointer shadow-sm backdrop-blur-sm ' +
+            (showHeat
+              ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)]'
+              : 'bg-white/95 text-[#111827] border-[var(--color-border)] hover:border-[var(--color-primary)]')
+          }
+        >
+          <Flame size={13} className={showHeat ? 'text-white' : 'text-[#FF5A36]'} />
+          {t.heat}
+        </button>
+        {showHeat && (
+          <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/95 backdrop-blur-sm shadow-sm text-[10px] text-[var(--color-text-muted)]">
+            <span>{lang === 'en' ? 'few' : 'мало'}</span>
+            <span className="h-1.5 w-16 rounded-full" style={{ background: 'linear-gradient(90deg,#2b6cff,#00c2c7,#8ed11f,#ffd200,#ff2d00)' }} />
+            <span>{lang === 'en' ? 'many' : 'много'}</span>
+          </div>
+        )}
+        <button
+          type="button"
+          onClick={() => setShowAllPois(v => !v)}
+          className="bg-white/95 backdrop-blur-sm rounded-full border border-[var(--color-border)] px-3 py-1.5 text-[12px] font-medium hover:border-[var(--color-primary)] cursor-pointer shadow-sm"
+        >
+          {showAllPois ? t.anchorsOnly : t.allPois}
+        </button>
+      </div>
     </div>
   )
 }
