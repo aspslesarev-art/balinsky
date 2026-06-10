@@ -70,15 +70,25 @@ export function ReviewsHeatLayer({
             cv.style.left = '0'
             cv.style.pointerEvents = 'none'
             this.canvas = cv
-            // Pin to the map container itself (not a transformed pane) and draw
-            // in container pixels — immune to pane translation, so it stays
-            // aligned through pan/zoom. Translucent, so markers stay readable.
-            safeMap.getDiv().appendChild(cv)
+            // overlayLayer sits BELOW the marker pane, so object pins stay on
+            // top of the heat. We draw in container (viewport) pixels and
+            // cancel this pane's translate each frame, which keeps the heat
+            // locked to the map through pan/zoom (a plain div-pixel canvas in
+            // this pane drifts).
+            this.getPanes()?.overlayLayer.appendChild(cv)
           }
           draw() {
             const proj = this.getProjection()
             const cv = this.canvas
             if (!proj || !cv) return
+            const center = safeMap.getCenter()
+            if (!center) return
+            const divC = proj.fromLatLngToDivPixel(center)
+            const conC = proj.fromLatLngToContainerPixel(center)
+            if (!divC || !conC) return
+            // Position the canvas so container-pixel (0,0) lands at its origin.
+            cv.style.left = `${divC.x - conC.x}px`
+            cv.style.top = `${divC.y - conC.y}px`
             const div = safeMap.getDiv()
             const w = div.offsetWidth, h = div.offsetHeight
             if (w <= 0 || h <= 0) return
