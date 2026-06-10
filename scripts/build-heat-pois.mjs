@@ -66,7 +66,18 @@ await mapLimit(ids, 24, async (id) => {
     }
   }
 })
-console.log(`unique tourist POIs: ${places.size}`)
+// Fold in the one-off anchor sweep for districts with no listings
+// (collect-anchor-pois.mjs), applying the same tourist + price filter.
+const anchors = await fetchJson(`${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/_heat_anchors.json`).catch(() => null)
+let anchorAdded = 0
+for (const p of (anchors?.places ?? [])) {
+  if (!p || !p.id || typeof p.lat !== 'number' || typeof p.lng !== 'number') continue
+  if ((p.reviews ?? 0) <= 0) continue
+  if (!TOURIST.has(p.cat)) continue
+  if (PRICED.has(p.cat) && p.priceLevel && CHEAP.has(p.priceLevel)) continue
+  if (!places.has(p.id)) { places.set(p.id, { lat: p.lat, lng: p.lng, reviews: p.reviews }); anchorAdded++ }
+}
+console.log(`unique tourist POIs: ${places.size} (incl ${anchorAdded} from anchor districts)`)
 
 // Aggregate into a grid.
 const grid = new Map()
