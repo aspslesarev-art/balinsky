@@ -34,6 +34,7 @@ export function ReviewsHeatLayer({
 }) {
   const map = useMap()
   const circlesRef = useRef<google.maps.Circle[] | null>(null)
+  const zoomListenerRef = useRef<google.maps.MapsEventListener | null>(null)
 
   useEffect(() => {
     if (!map || cells.length === 0 || typeof google === 'undefined' || !google.maps?.Circle) return
@@ -45,24 +46,46 @@ export function ReviewsHeatLayer({
           const t = Math.min(1, Math.sqrt(c.weight / max))
           return new google.maps.Circle({
             center: { lat: c.lat, lng: c.lng },
-            radius: 650,
             fillColor: heatHex(t),
-            fillOpacity: 0.4,
+            fillOpacity: 0.5,
             strokeWeight: 0,
             clickable: false,
             zIndex: 1,
           })
         })
       }
-      for (const circle of circlesRef.current) circle.setMap(visible ? map : null)
+      const circles = circlesRef.current
+      // Keep each disc ≈ a constant on-screen size (the removed HeatmapLayer
+      // used a pixel radius). A fixed metre radius is invisible at the
+      // island-wide default zoom — 650 m is ~3 px there.
+      const applyRadius = () => {
+        const z = map.getZoom() ?? 10
+        const metresPerPx = (156543.03392 * Math.cos((-8.5 * Math.PI) / 180)) / 2 ** z
+        const r = 30 * metresPerPx
+        for (const c of circles) c.setRadius(r)
+      }
+      if (visible) {
+        applyRadius()
+        for (const c of circles) c.setMap(map)
+        zoomListenerRef.current?.remove()
+        zoomListenerRef.current = map.addListener('zoom_changed', applyRadius)
+      } else {
+        for (const c of circles) c.setMap(null)
+        zoomListenerRef.current?.remove()
+        zoomListenerRef.current = null
+      }
     } catch {
       // Never let the overlay take the whole map page down.
+      zoomListenerRef.current?.remove()
       circlesRef.current?.forEach(c => c.setMap(null))
       circlesRef.current = null
     }
   }, [map, cells, max, visible])
 
-  useEffect(() => () => { circlesRef.current?.forEach(c => c.setMap(null)) }, [])
+  useEffect(() => () => {
+    zoomListenerRef.current?.remove()
+    circlesRef.current?.forEach(c => c.setMap(null))
+  }, [])
 
   return null
 }
