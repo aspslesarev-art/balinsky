@@ -37,6 +37,7 @@ export function ReviewsHeatLayer({
 
   useEffect(() => {
     if (!map || cells.length === 0 || typeof google === 'undefined' || !google.maps?.OverlayView) return
+    const safeMap = map
     try {
       if (!overlayRef.current) {
         const BLOB = 46 // on-screen blob radius in px
@@ -56,7 +57,7 @@ export function ReviewsHeatLayer({
             const proj = this.getProjection()
             const cv = this.canvas
             if (!proj || !cv) return
-            const bounds = this.getMap()?.getBounds?.()
+            const bounds = safeMap.getBounds()
             if (!bounds) return
             const ne = proj.fromLatLngToDivPixel(bounds.getNorthEast())
             const sw = proj.fromLatLngToDivPixel(bounds.getSouthWest())
