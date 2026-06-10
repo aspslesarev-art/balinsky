@@ -174,7 +174,7 @@ export function ReviewsHeatToggle({
         }
       >
         <Flame size={15} className={on ? 'text-white' : 'text-[#FF5A36]'} />
-        {lang === 'en' ? 'Reviews heatmap' : 'Тепловая карта отзывов'}
+        {lang === 'en' ? 'Google places heatmap' : 'Тепловая карта Google-мест'}
       </button>
       {on && (
         <div className="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white/90 backdrop-blur shadow-sm text-[11px] text-[var(--color-text-muted)]">
