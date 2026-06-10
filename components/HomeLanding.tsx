@@ -27,6 +27,8 @@ import { PageContainer } from '@/components/PageContainer'
 import { VillaCard, type VillaCardData } from '@/components/VillaCard'
 import { loadAll as loadAllVillas, buildAllCards as buildAllVillaCards, type VillaFilterState } from '@/app/ru/villy/_lib'
 import { loadAllVillaScores } from '@/lib/investment/batch-scores'
+import { loadHomeCollections } from '@/lib/home-collections'
+import { HomeCollections } from '@/components/HomeCollections'
 import type { Lang } from '@/lib/i18n'
 import { cdnBucketBase, cdnManifestUrl } from '@/lib/photo-cdn'
 
@@ -294,10 +296,11 @@ async function loadStats() {
 export async function HomeLanding({ lang }: { lang: Lang }) {
   const c = COPY[lang]
   const r = ROUTES[lang]
-  const [stats, topVillas, topComplexes] = await Promise.all([
+  const [stats, topVillas, topComplexes, collections] = await Promise.all([
     loadStats(),
     loadTopVillas(lang),
     loadTopComplexes(),
+    loadHomeCollections(lang),
   ])
   const totalUnits = stats.villas + stats.apartments
   // Telegram-бот Balinsky — единая точка входа для всех CTA «спросить»/
@@ -365,6 +368,22 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
             <Link href={r.villas} className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[var(--color-primary)] hover:gap-2.5 transition-all no-underline">
               {c.villasSection.linkAll} <ArrowRight size={15} />
             </Link>
+          </div>
+        </SectionWrap>
+      )}
+
+      {/* === 2b. Collections by budget + district ================= */}
+      {collections.length > 0 && (
+        <SectionWrap className="border-t border-[var(--color-border)] bg-[#FAFCFB]">
+          <SectionHead
+            eyebrow={lang === 'ru' ? 'Подборки' : 'Collections'}
+            title={lang === 'ru' ? 'Лучшее в вашем бюджете' : 'The best in your budget'}
+            sub={lang === 'ru'
+              ? 'Топ-объекты по доходности и популярности — выберите бюджет и район'
+              : 'Top listings by yield and popularity — pick a budget and a district'}
+          />
+          <div className="mt-8 md:mt-10">
+            <HomeCollections tiers={collections} lang={lang} />
           </div>
         </SectionWrap>
       )}
