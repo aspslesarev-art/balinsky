@@ -838,7 +838,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
         <Breadcrumbs items={[
           { label: copy.home, href: home },
           { label: copy.crumbComplexes, href: complexesRoot },
-          ...(district ? [{ label: district, href: `${complexesRoot}/${district.toLowerCase().replace(/\s+/g, '-')}` }] : []),
+          ...(district ? [{ label: district, href: `${complexesRoot}/${districtRaw!.toLowerCase().replace(/\s+/g, '-')}` }] : []),
           { label: name },
         ]} />
 
@@ -1146,8 +1146,8 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
               { href: villasRoot, label: copy.related.villas },
               { href: developersRoot, label: copy.related.developers },
               ...(district ? [
-                { href: `${complexesRoot}/${district.toLowerCase().replace(/\s+/g, '-')}`, label: copy.related.complexesIn(district) },
-                { href: `${apartmentsRoot}/${district.toLowerCase().replace(/\s+/g, '-')}`, label: copy.related.apartmentsIn(district) },
+                { href: `${complexesRoot}/${districtRaw!.toLowerCase().replace(/\s+/g, '-')}`, label: copy.related.complexesIn(district) },
+                { href: `${apartmentsRoot}/${districtRaw!.toLowerCase().replace(/\s+/g, '-')}`, label: copy.related.apartmentsIn(district) },
               ] : []),
             ].map(l => (
               <li key={l.href + l.label}>

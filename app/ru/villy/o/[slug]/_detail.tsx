@@ -716,7 +716,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
         <Breadcrumbs items={[
           { label: c.home, href: home },
           { label: c.villasCrumb, href: villasRoot },
-          ...(district ? [{ label: district, href: `${villasRoot}/${district.toLowerCase().replace(/\s+/g, '-')}` }] : []),
+          ...(district ? [{ label: district, href: `${villasRoot}/${districtRaw!.toLowerCase().replace(/\s+/g, '-')}` }] : []),
           { label: title },
         ]} />
 
@@ -988,7 +988,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
               { href: complexesRoot, label: c.related.complexes },
               { href: developersRoot, label: c.related.developers },
               ...(district ? [
-                { href: `${villasRoot}/${district.toLowerCase().replace(/\s+/g, '-')}`, label: c.related.villasIn(district) },
+                { href: `${villasRoot}/${districtRaw!.toLowerCase().replace(/\s+/g, '-')}`, label: c.related.villasIn(district) },
               ] : []),
             ].map(l => (
               <li key={l.href + l.label}>

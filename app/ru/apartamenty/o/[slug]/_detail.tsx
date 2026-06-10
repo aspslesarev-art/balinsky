@@ -673,7 +673,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
         <Breadcrumbs items={[
           { label: c.home, href: home },
           { label: c.aptCrumb, href: apartmentsRoot },
-          ...(district ? [{ label: district, href: `${apartmentsRoot}/${district.toLowerCase().replace(/\s+/g, '-')}` }] : []),
+          ...(district ? [{ label: district, href: `${apartmentsRoot}/${districtRaw!.toLowerCase().replace(/\s+/g, '-')}` }] : []),
           { label: title },
         ]} />
 
@@ -958,7 +958,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
               { href: villasRoot, label: c.related.villas },
               { href: developersRoot, label: c.related.developers },
               ...(district ? [
-                { href: `${apartmentsRoot}/${district.toLowerCase().replace(/\s+/g, '-')}`, label: c.related.apartmentsIn(district) },
+                { href: `${apartmentsRoot}/${districtRaw!.toLowerCase().replace(/\s+/g, '-')}`, label: c.related.apartmentsIn(district) },
               ] : []),
               ...(bedrooms ? [
                 { href: `${apartmentsRoot}/${bedrooms}-spaln${bedrooms === 1 ? 'ya' : 'i'}`, label: lang === 'en' ? `${bedrooms}-bedroom apartments` : `${bedrooms}-комнатные апартаменты` },
