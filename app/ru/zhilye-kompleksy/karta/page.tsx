@@ -3,6 +3,7 @@ import { PageContainer } from '@/components/PageContainer'
 import { CatalogTabs } from '@/components/CatalogTabs'
 import { ComplexFiltersBar } from '@/components/complex-filters/ComplexFiltersBar'
 import { ComplexesMap, type ComplexPoint, type ComplexPointGroup } from '@/components/ComplexesMap'
+import { loadReviewHeat } from '@/lib/reviews-heat'
 import { ComplexesSeoContent } from '@/components/ComplexesSeoContent'
 import { ComplexCatalogSearchBar } from '@/components/ComplexCatalogSearchBar'
 import { buildListHref, buildMapHref } from '@/lib/complex-filter-href'
@@ -59,6 +60,7 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
   const groups: ComplexPointGroup[] = [...groupsByCoord.values()]
 
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? ''
+  const heat = await loadReviewHeat()
 
   return (
     <>
@@ -87,7 +89,7 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
         </div>
 
         <div className="mt-6">
-          <ComplexesMap apiKey={apiKey} groups={groups} />
+          <ComplexesMap apiKey={apiKey} groups={groups} heatCells={heat.cells} heatMax={heat.max} />
         </div>
 
         <ComplexesSeoContent filters={filters} variant="map" />
