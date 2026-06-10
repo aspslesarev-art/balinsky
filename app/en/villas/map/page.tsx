@@ -3,6 +3,7 @@ import { PageContainer } from '@/components/PageContainer'
 import { CatalogTabs } from '@/components/CatalogTabs'
 import { VillaFiltersBar } from '@/components/villa-filters/VillaFiltersBar'
 import { VillasMap, type VillaPoint, type VillaPointGroup } from '@/components/VillasMap'
+import { loadReviewHeat } from '@/lib/reviews-heat'
 import { VillasSeoContent } from '@/components/VillasSeoContent'
 import { VillaCatalogSearchBar } from '@/components/VillaCatalogSearchBar'
 import { buildListHref, buildMapHref } from '@/lib/villa-filter-href'
@@ -60,6 +61,7 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
   const groups: VillaPointGroup[] = [...groupsByCoord.values()]
 
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? ''
+  const heat = await loadReviewHeat()
 
   return (
     <>
@@ -80,7 +82,7 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
         </div>
 
         <div className="mt-6">
-          <VillasMap apiKey={apiKey} groups={groups} lang="en" />
+          <VillasMap apiKey={apiKey} groups={groups} heatCells={heat.cells} heatMax={heat.max} lang="en" />
         </div>
 
         <VillasSeoContent filters={filters} variant="map" lang="en" />

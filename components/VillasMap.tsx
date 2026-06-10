@@ -7,6 +7,8 @@ import { X } from 'lucide-react'
 import { BALINSKY_MAP_STYLE } from '@/lib/google-map-style'
 import { useCurrency } from './CurrencyContext'
 import { formatPrice } from '@/lib/currency'
+import { ReviewsHeatLayer, ReviewsHeatToggle } from './ReviewsHeatLayer'
+import type { HeatCell } from '@/lib/reviews-heat'
 
 export type VillaPoint = {
   id: string
@@ -238,15 +240,20 @@ function MultiPopup({ items, onClose, lang }: { items: VillaPoint[]; onClose: ()
 export function VillasMap({
   apiKey,
   groups,
+  heatCells = [],
+  heatMax = 1,
   heightClass = 'h-[calc(100vh_-_280px)] min-h-[480px]',
   lang = 'ru',
 }: {
   apiKey: string
   groups: VillaPointGroup[]
+  heatCells?: HeatCell[]
+  heatMax?: number
   heightClass?: string
   lang?: 'ru' | 'en'
 }) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
+  const [showHeat, setShowHeat] = useState(false)
   const selected = useMemo(() => groups.find(g => g.key === selectedKey) ?? null, [groups, selectedKey])
 
   if (!apiKey) {
@@ -260,8 +267,11 @@ export function VillasMap({
   return (
     <div
       style={{ width: '100%', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06)' }}
-      className={`${heightClass} bg-white rounded-3xl overflow-hidden border border-[var(--color-border)]`}
+      className={`${heightClass} relative bg-white rounded-3xl overflow-hidden border border-[var(--color-border)]`}
     >
+      {heatCells.length > 0 && (
+        <ReviewsHeatToggle on={showHeat} onToggle={() => setShowHeat(v => !v)} lang={lang} />
+      )}
       <APIProvider apiKey={apiKey} language={lang}>
         <Map
           defaultCenter={BALI_CENTER}
@@ -276,6 +286,7 @@ export function VillasMap({
           styles={BALINSKY_MAP_STYLE}
           backgroundColor="#F2EAD8"
         >
+          <ReviewsHeatLayer cells={heatCells} max={heatMax} visible={showHeat} />
           <MapMarkers groups={groups} selectedKey={selectedKey} onSelect={k => setSelectedKey(prev => (prev === k ? null : k))} />
           {selected && (
             <InfoWindow

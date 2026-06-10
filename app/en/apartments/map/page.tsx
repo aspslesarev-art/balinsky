@@ -3,6 +3,7 @@ import { PageContainer } from '@/components/PageContainer'
 import { CatalogTabs } from '@/components/CatalogTabs'
 import { FiltersBar } from '@/components/filters/FiltersBar'
 import { ApartmentsMap, type MapPoint, type MapPointGroup } from '@/components/ApartmentsMap'
+import { loadReviewHeat } from '@/lib/reviews-heat'
 import { SeoContent } from '@/components/SeoContent'
 import { CatalogSearchBar } from '@/components/CatalogSearchBar'
 import { buildListHref, buildMapHref } from '@/lib/filter-href'
@@ -61,6 +62,7 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
 
   const groups: MapPointGroup[] = [...groupsByCoord.values()]
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? ''
+  const heat = await loadReviewHeat()
 
   return (
     <>
@@ -84,7 +86,7 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
         </div>
 
         <div className="mt-6">
-          <ApartmentsMap apiKey={apiKey} groups={groups} lang="en" />
+          <ApartmentsMap apiKey={apiKey} groups={groups} heatCells={heat.cells} heatMax={heat.max} lang="en" />
         </div>
 
         <SeoContent filters={filters} variant="map" lang="en" />

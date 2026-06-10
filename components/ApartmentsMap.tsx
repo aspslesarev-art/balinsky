@@ -9,6 +9,8 @@ import {
 } from '@vis.gl/react-google-maps'
 import { MarkerClusterer, type Renderer } from '@googlemaps/markerclusterer'
 import { X } from 'lucide-react'
+import { ReviewsHeatLayer, ReviewsHeatToggle } from './ReviewsHeatLayer'
+import type { HeatCell } from '@/lib/reviews-heat'
 import { BALINSKY_MAP_STYLE } from '@/lib/google-map-style'
 import { useCurrency } from './CurrencyContext'
 import { formatPrice } from '@/lib/currency'
@@ -318,15 +320,20 @@ function MultiPopup({ items, onClose, lang }: { items: MapPoint[]; onClose: () =
 export function ApartmentsMap({
   apiKey,
   groups,
+  heatCells = [],
+  heatMax = 1,
   heightClass = 'h-[calc(100vh_-_280px)] min-h-[480px]',
   lang = 'ru',
 }: {
   apiKey: string
   groups: MapPointGroup[]
+  heatCells?: HeatCell[]
+  heatMax?: number
   heightClass?: string
   lang?: 'ru' | 'en'
 }) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
+  const [showHeat, setShowHeat] = useState(false)
   const selected = useMemo(
     () => groups.find(g => g.key === selectedKey) ?? null,
     [groups, selectedKey],
@@ -349,8 +356,11 @@ export function ApartmentsMap({
         width: '100%',
         boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06)',
       }}
-      className={`${heightClass} bg-white rounded-3xl overflow-hidden border border-[var(--color-border)]`}
+      className={`${heightClass} relative bg-white rounded-3xl overflow-hidden border border-[var(--color-border)]`}
     >
+      {heatCells.length > 0 && (
+        <ReviewsHeatToggle on={showHeat} onToggle={() => setShowHeat(v => !v)} lang={lang} />
+      )}
       <APIProvider apiKey={apiKey} language={lang}>
         <Map
           defaultCenter={BALI_CENTER}
@@ -365,6 +375,7 @@ export function ApartmentsMap({
           styles={BALINSKY_MAP_STYLE}
           backgroundColor="#F2EAD8"
         >
+          <ReviewsHeatLayer cells={heatCells} max={heatMax} visible={showHeat} />
           <MapMarkers
             groups={groups}
             selectedKey={selectedKey}
