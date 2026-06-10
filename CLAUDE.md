@@ -13,6 +13,12 @@ balinsky.info — a bilingual (RU primary / EN mirror) Bali real-estate site: vi
 - `npm run lint` — ESLint. There is **no unit-test framework** (no jest/vitest); the only tests are ad-hoc node scripts, e.g. `node scripts/test-investment.mjs`.
 - Deploy is automatic: push to `main` → Vercel production. Push any other branch → Vercel preview URL (use this to preview before prod without touching `main`).
 
+## Working rules (definition of done)
+
+1. **Typecheck + lint before calling a task done.** Run `npx tsc --noEmit` (there is no `typecheck` script) and `npm run lint`, and fix any errors you introduced yourself — don't hand back a task with a red typecheck/lint.
+2. **Verify layout changes with Playwright.** For any UI/markup change, open the affected page and take screenshots at **both mobile (~412px) and desktop (~1280px)** viewports, and actually look at them. Playwright is not yet a dependency — install on first use (`npm i -D @playwright/test && npx playwright install chromium`).
+3. **Change only what was asked.** No drive-by refactors, renames, reformatting, or "while I'm here" cleanups in files you're touching for another reason. If you spot something worth fixing, mention it instead of doing it unprompted.
+
 ## graphify
 
 This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
