@@ -67,6 +67,42 @@ Google Maps is loaded **client-side** per route via `lib/google-maps-loader.ts` 
 
 `app/globals.css` has a defensive `@layer base { main * { max-width: 100% } ... { min-width: 0 } }` net: **every element under `<main>` is capped at its parent's width**. This silently clamps `w-full`/`w-screen`/`calc()`/inline widths. The sanctioned escape hatch (utilities beat base layer) is an explicit Tailwind `max-w-*` utility — use `max-w-none` to make an element full-bleed (e.g. edge-to-edge carousels/galleries use `-mx-6 w-screen max-w-none`). `<main>` itself is not covered by `main *`, so it needs its own `min-w-0` to avoid being blown wide by a carousel's min-content. See `components/PageContainer.tsx`. Inline `<style jsx>` is broken by Turbopack — put keyframes in `globals.css`.
 
+## Reviews heatmap (Google POIs)
+
+A "Тепловая карта Google-мест" toggle shows where it's lively for tourists —
+density of well-reviewed restaurants/bars/attractions/wellness/beach clubs
+(cheap warungs filtered out), **not** rental density.
+- Data: `competitors/_heat_pois.json` — tourist POIs aggregated to a ~0.5 km grid
+  (cells + p92 `max`). Built by `scripts/build-heat-pois.mjs` from the
+  per-listing `_nearby_places` files **plus** `scripts/collect-anchor-pois.mjs`
+  (a one-off Google Places sweep, `competitors/_heat_anchors.json`, for districts
+  with no listings — Lovina/Amed/Ubud-gaps etc.). Re-run `node
+  scripts/build-heat-pois.mjs` after a nearby sync to refresh.
+- **Server-side Places calls use `GOOGLE_PLACES_KEY`** (dedicated key, no
+  referrer restriction). The public `NEXT_PUBLIC_GOOGLE_MAPS_KEY` 403s on
+  server-side Places (it's referrer-locked to balinsky.info) — so localhost
+  also can't render the maps at all.
+- Render: `lib/heat-overlay.ts` is a framework-agnostic canvas `OverlayView`
+  (Google removed `visualization.HeatmapLayer` in Maps JS v3.65) — accumulate
+  density in screen space then colourise blue→red; pinned to the map container
+  in container-pixels so it can't drift. Used by `ReviewsHeatLayer` (@vis.gl
+  catalog maps), `InvestmentMap` and `NeighborhoodHeatMap` (raw google.maps
+  detail maps). `lib/reviews-heat.ts` is the server loader (fallback: competitor
+  manifest). Heat cells fetched lazily client-side (`fetchHeatCells`).
+
+## Catalog smart sort & homepage collections
+
+- `lib/catalog-rank.ts`: `loadViewCounts(kind)` (page_views aggregate per
+  listing, cached) + `smartSort` — the default catalog order. Ranks by villa
+  investment score + views + freshness, then a **3h-bucketed jitter** so the
+  list rotates through the day without breaking pagination/caching. TOP pins
+  (Airtable `ТОП`) still float to the top. Wired into all three `_lib.ts`
+  build functions; `views` rides along on the enriched rows.
+- `lib/home-collections.ts` + `components/HomeCollections.tsx`: the homepage
+  "Подборки" — budget-tier chips (villas ≤$200/300/500k, apts ≤$100/200k) →
+  district chips → top-10 per district. Catalog rows store the **raw Latin**
+  district name (`Location 2`), so match against both languages' display names.
+
 ## Migrations
 
 SQL migrations live in `migrations/` (numbered, e.g. `033_complex_parsers.sql`), applied against Supabase. RLS is enabled on public tables. A separate `presentation` schema is used for the presentation.estate features (kept out of `public.raw_*`).
