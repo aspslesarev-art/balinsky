@@ -52,7 +52,7 @@ async function build(): Promise<ReviewHeat> {
   return buildFromCompetitors()
 }
 
-export const loadReviewHeat = unstable_cache(build, ['reviews-heat-v2-pois'], {
+export const loadReviewHeat = unstable_cache(build, ['reviews-heat-v3-allbali'], {
   revalidate: 3600,
   tags: ['content:competitors'],
 })

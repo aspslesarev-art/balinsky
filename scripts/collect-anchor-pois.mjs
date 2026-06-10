@@ -13,7 +13,9 @@ for (const l of env.split('\n')) { const m = l.match(/^([A-Z_]+)=(.*)$/); if (m)
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY
-const GMAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY
+// Dedicated server key (no referrer restriction) — the public maps key 403s
+// on server-side Places calls.
+const GMAPS_KEY = process.env.GOOGLE_PLACES_KEY
 const BUCKET = 'competitors'
 const OUT_KEY = '_heat_anchors.json'
 
@@ -22,7 +24,7 @@ const ANCHORS = [
   ['Lovina', -8.158, 115.025], ['Singaraja', -8.112, 115.088], ['Pemuteran', -8.140, 114.660],
   ['Munduk', -8.265, 115.070], ['Bedugul', -8.275, 115.165], ['Jatiluwih', -8.371, 115.130],
   ['Kintamani', -8.245, 115.375], ['Sidemen', -8.435, 115.445], ['Candidasa', -8.510, 115.567],
-  ['Amed', -8.075, 115.595], ['Tulamben', -8.275, 115.592], ['Medewi', -8.420, 114.800],
+  ['Amed', -8.339, 115.687], ['Tulamben', -8.275, 115.592], ['Medewi', -8.420, 114.800],
   ['Nusa Penida', -8.727, 115.545], ['Nusa Ceningan', -8.690, 115.455],
 ]
 
