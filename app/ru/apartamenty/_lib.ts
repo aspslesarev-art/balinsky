@@ -11,6 +11,7 @@ import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { enLabel, type FilterDim } from '@/lib/filter-i18n'
 import { pluralRu } from '@/lib/plural-ru'
 import { isTopBlacklisted } from '@/lib/top-blacklist'
+import { loadViewCounts, smartSort } from '@/lib/catalog-rank'
 import { cdnRewriteManifest, cdnManifestUrl } from '@/lib/photo-cdn'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -190,6 +191,7 @@ export type EnrichedRow = {
   // Editorial "TOP" checkbox in Airtable — pinned items bubble
   // to the top of the catalog regardless of the active sort.
   isTop: boolean
+  views?: number
 }
 
 function priceUpdatedMs(d: Record<string, unknown>): number {
@@ -578,11 +580,12 @@ function reassembleApt(raw: Record<string, unknown>): Row {
 }
 
 async function _loadAllInternal(): Promise<CachedAll> {
-  const [rowsRes, manifestRaw, devMap, enCache] = await Promise.all([
+  const [rowsRes, manifestRaw, devMap, enCache, viewCounts] = await Promise.all([
     sb.from('raw_apartments').select(APT_SELECT).limit(1000),
     loadJson<Record<string, string[]>>(cdnManifestUrl(PHOTO_MANIFEST_URL, 600), {}),
     loadJson<Record<string, string>>(cdnManifestUrl(DEV_LOOKUP_URL, 600), {}),
     loadEnTranslations('apartments'),
+    loadViewCounts('apartment'),
   ])
   const manifest = cdnRewriteManifest(manifestRaw)
   const rows = ((rowsRes.data ?? []) as unknown as Record<string, unknown>[]).map(reassembleApt)
@@ -590,6 +593,7 @@ async function _loadAllInternal(): Promise<CachedAll> {
     .filter(r => r.data?.['Опубликовать'] === true)
     .map(r => ({ ...r, data: mergeEnTranslations(r.data, r.airtable_id, enCache) }))
     .map(r => enrich(r, devMap))
+    .map(e => ({ ...e, views: viewCounts[e.id] ?? 0 }))
   return { enriched, manifest }
 }
 
@@ -621,12 +625,12 @@ export function buildAllCards(
     // for legacy rows. Then editorial-pin pass: TOP-flagged listings
     // float to the top regardless of the recency sort. Stable secondary
     // ordering preserves the recency tie-breaker within both groups.
-    filtered = [...filtered].sort((a, b) => {
-      const ta = priceUpdatedMs(a.data)
-      const tb = priceUpdatedMs(b.data)
-      if (ta !== tb) return tb - ta
-      return (b.priceUsd ?? 0) - (a.priceUsd ?? 0)
-    })
+    filtered = smartSort(filtered, e => ({
+      id: e.id,
+      views: e.views,
+      updatedMs: priceUpdatedMs(e.data) || null,
+      hasPhoto: (manifest[e.id]?.length ?? 0) > 0,
+    }))
     filtered = [...filtered].sort((a, b) => (b.isTop ? 1 : 0) - (a.isTop ? 1 : 0))
   }
 

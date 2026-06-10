@@ -9,6 +9,7 @@ import { getDistrictCommercialMeta } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { enLabel, type FilterDim } from '@/lib/filter-i18n'
 import { isTopBlacklisted } from '@/lib/top-blacklist'
+import { loadViewCounts, smartSort } from '@/lib/catalog-rank'
 import { cdnRewriteManifest, cdnManifestUrl } from '@/lib/photo-cdn'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -62,6 +63,7 @@ export type ComplexCard = ComplexCardData & {
   // group; lower number wins.
   isTop: boolean
   topRank: number | null
+  views?: number
 }
 
 export type CatalogPage = {
@@ -181,6 +183,7 @@ export type EnrichedRow = {
   // it's a number; checkbox-only pins arrive as null and tie-break
   // by name afterwards.
   topRank: number | null
+  views?: number
 }
 
 function enrich(r: Row): EnrichedRow {
@@ -454,6 +457,7 @@ export function toCard(
     isSold: e.salesStatus === 'Продано',
     isTop: e.isTop,
     topRank: e.topRank,
+    views: e.views ?? 0,
   }
 }
 
@@ -632,17 +636,19 @@ const _loadAptPriceRows = unstable_cache(
 )
 
 async function _loadAllInternal(): Promise<CachedAll> {
-  const [rows, manifestRaw, villas, apts, enCache] = await Promise.all([
+  const [rows, manifestRaw, villas, apts, enCache, viewCounts] = await Promise.all([
     _loadComplexCardRows(),
     loadJson<Record<string, string[]>>(cdnManifestUrl(PHOTO_MANIFEST_URL, 600), {}),
     _loadVillaPriceRows(),
     _loadAptPriceRows(),
     loadEnTranslations('complexes'),
+    loadViewCounts('complex'),
   ])
   const manifest = cdnRewriteManifest(manifestRaw)
   const enriched = rows
     .map(r => ({ ...r, data: mergeEnTranslations(r.data, r.airtable_id, enCache) }))
     .map(enrich)
+    .map(e => ({ ...e, views: viewCounts[e.id] ?? 0 }))
   const prices = buildPriceIndex(enriched, villas, apts)
   return { enriched, manifest, prices }
 }
@@ -673,14 +679,18 @@ export function buildAllCards(
   // `TOP` numeric rank), then alphabetical by name. Within the
   // pinned group, lower `topRank` wins; null ranks tie-break by
   // name, so a checkbox-only pin still sorts deterministically.
-  return [...mapped].sort((a, b) => {
+  // Smart default order (views + freshness + rotation), then float TOP-pinned
+  // to the front. Array sort is stable, so returning 0 keeps the smart order
+  // for the unpinned tail.
+  const ranked = smartSort(mapped, c => ({ id: c.slug, views: c.views, hasPhoto: c.photos.length > 0 }))
+  return [...ranked].sort((a, b) => {
     if (a.isTop !== b.isTop) return a.isTop ? -1 : 1
     if (a.isTop && b.isTop) {
       const ra = a.topRank ?? Number.POSITIVE_INFINITY
       const rb = b.topRank ?? Number.POSITIVE_INFINITY
       if (ra !== rb) return ra - rb
     }
-    return a.name.localeCompare(b.name, 'ru')
+    return 0
   })
 }
 

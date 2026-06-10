@@ -9,6 +9,7 @@ import { getDistrictCommercialMeta } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { enLabel, type FilterDim } from '@/lib/filter-i18n'
 import { isTopBlacklisted } from '@/lib/top-blacklist'
+import { loadViewCounts, smartSort } from '@/lib/catalog-rank'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
 import { cdnRewriteManifest } from '@/lib/photo-cdn'
 
@@ -94,6 +95,8 @@ export type VillaCard = {
   // Editorial pin — surfaced at the top of the catalog regardless of
   // sort. Sourced from the Airtable "TOP" checkbox in raw_villas.
   isTop: boolean
+  // Page-view tally (last ~4 months) — a signal in the smart default sort.
+  views?: number
 }
 
 export type SortOrder = 'price-desc' | 'investment-desc'
@@ -254,6 +257,7 @@ export type EnrichedRow = {
   // bubble to the top of the catalog regardless of the active sort,
   // so promoted developers / hand-picked listings appear first.
   isTop: boolean
+  views?: number
 }
 
 export type StylesMap = Record<string, { style: string | null }>
@@ -570,6 +574,7 @@ export function toCard(
     interiorStyle: e.style,
     airtableId: e.id,
     isTop: e.isTop,
+    views: e.views ?? 0,
   }
 }
 
@@ -636,11 +641,12 @@ function reassembleVilla(raw: Record<string, unknown>): Row {
 }
 
 async function _loadAllInternal(): Promise<CachedAll> {
-  const [rowsRes, manifestRaw, styles, enCache] = await Promise.all([
+  const [rowsRes, manifestRaw, styles, enCache, viewCounts] = await Promise.all([
     sb.from('raw_villas').select(VILLA_SELECT).limit(1000),
     loadJson<Record<string, string[]>>(cdnManifestUrl(PHOTO_MANIFEST_URL, 600), {}),
     loadVillaStyles(),
     loadEnTranslations('villas'),
+    loadViewCounts('villa'),
   ])
   // Rewrite manifest URLs to the Bunny/Cloudflare CDN host at runtime so we
   // don't have to wait for the next sync-heavy to re-emit URLs.
@@ -650,6 +656,7 @@ async function _loadAllInternal(): Promise<CachedAll> {
     .filter(r => r.data?.['Опубликовать'] === true)
     .map(r => ({ ...r, data: mergeEnTranslations(r.data, r.airtable_id, enCache) }))
     .map(r => enrich(r, styles))
+    .map(e => ({ ...e, views: viewCounts[e.id] ?? 0 }))
   return { enriched, manifest }
 }
 
@@ -682,7 +689,7 @@ export function buildAllCards(
   }
   let sorted: VillaCard[]
   if (isSearch) sorted = mapped
-  else if (sort === 'investment-desc') sorted = [...mapped].sort((a, b) => (b.investmentScore ?? -1) - (a.investmentScore ?? -1))
+  else if (sort === 'investment-desc') sorted = smartSort(mapped, c => ({ id: c.id, investmentScore: c.investmentScore, views: c.views, hasPhoto: c.photos.length > 0 }))
   else sorted = [...mapped].sort((a, b) => (b.priceUsd ?? 0) - (a.priceUsd ?? 0))
   // Editorial pin pass: TOP-flagged listings bubble to the top of
   // the catalog regardless of the active sort. Stable within both
