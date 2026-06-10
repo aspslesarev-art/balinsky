@@ -5,24 +5,43 @@ import { useMap } from '@vis.gl/react-google-maps'
 import { Flame } from 'lucide-react'
 import type { HeatCell } from '@/lib/reviews-heat'
 
-// "r, g, b" for a blue(0)→red(1) ramp via HSL 220°→0°.
-function heatRGB(t: number): string {
-  const h = 220 * (1 - Math.max(0, Math.min(1, t)))
-  const s = 0.85, l = 0.5
-  const c = (1 - Math.abs(2 * l - 1)) * s
-  const x = c * (1 - Math.abs(((h / 60) % 2) - 1))
-  const m = l - c / 2
-  let r = 0, g = 0, b = 0
-  if (h < 60) { r = c; g = x } else if (h < 120) { r = x; g = c }
-  else if (h < 180) { g = c; b = x } else if (h < 240) { g = x; b = c }
-  else if (h < 300) { r = x; b = c } else { r = c; b = x }
-  return `${Math.round((r + m) * 255)}, ${Math.round((g + m) * 255)}, ${Math.round((b + m) * 255)}`
+const BLOB = 42 // on-screen blob radius (px)
+
+// Grayscale radial brush — drawn once per point with alpha = intensity so
+// overlapping points accumulate density (classic heatmap.js / simpleheat).
+function makeBrush(): HTMLCanvasElement {
+  const c = document.createElement('canvas')
+  c.width = c.height = BLOB * 2
+  const ctx = c.getContext('2d')!
+  const g = ctx.createRadialGradient(BLOB, BLOB, 0, BLOB, BLOB, BLOB)
+  g.addColorStop(0, 'rgba(0,0,0,1)')
+  g.addColorStop(1, 'rgba(0,0,0,0)')
+  ctx.fillStyle = g
+  ctx.fillRect(0, 0, BLOB * 2, BLOB * 2)
+  return c
 }
 
-// Google removed visualization.HeatmapLayer (Maps JS v3.65). We draw our own
-// heatmap on a canvas OverlayView: screen-space radial blobs (fixed pixel
-// radius) so it stays visible and crisp at any zoom — a metre-radius circle is
-// a few pixels wide at the island-wide zoom and effectively invisible.
+// 256-entry blue→red palette indexed by accumulated alpha.
+function makePalette(): Uint8ClampedArray {
+  const c = document.createElement('canvas')
+  c.width = 1
+  c.height = 256
+  const ctx = c.getContext('2d')!
+  const g = ctx.createLinearGradient(0, 0, 0, 256)
+  g.addColorStop(0.0, '#2b6cff')
+  g.addColorStop(0.35, '#00c2c7')
+  g.addColorStop(0.55, '#8ed11f')
+  g.addColorStop(0.78, '#ffd200')
+  g.addColorStop(1.0, '#ff2d00')
+  ctx.fillStyle = g
+  ctx.fillRect(0, 0, 1, 256)
+  return ctx.getImageData(0, 0, 1, 256).data
+}
+
+// Google removed visualization.HeatmapLayer (Maps JS v3.65), so we paint our
+// own on a canvas OverlayView: accumulate per-point density in screen space,
+// then colourise — a real, smooth heatmap that stays aligned and crisp at any
+// zoom (a metre-radius circle is invisible at the island-wide default zoom).
 export function ReviewsHeatLayer({
   cells,
   max,
@@ -40,16 +59,14 @@ export function ReviewsHeatLayer({
     const safeMap = map
     try {
       if (!overlayRef.current) {
-        const BLOB = 46 // on-screen blob radius in px
-
         class HeatOverlay extends google.maps.OverlayView {
           canvas: HTMLCanvasElement | null = null
+          brush = makeBrush()
+          palette = makePalette()
           onAdd() {
             const cv = document.createElement('canvas')
             cv.style.position = 'absolute'
             cv.style.pointerEvents = 'none'
-            cv.style.top = '0'
-            cv.style.left = '0'
             this.canvas = cv
             this.getPanes()?.overlayLayer.appendChild(cv)
           }
@@ -62,45 +79,60 @@ export function ReviewsHeatLayer({
             const ne = proj.fromLatLngToDivPixel(bounds.getNorthEast())
             const sw = proj.fromLatLngToDivPixel(bounds.getSouthWest())
             if (!ne || !sw) return
-            // Pad the canvas so blobs whose centre sits just off-screen still
-            // bleed in.
             const pad = BLOB * 2
             const left = Math.min(sw.x, ne.x) - pad
             const top = Math.min(ne.y, sw.y) - pad
-            const w = Math.abs(ne.x - sw.x) + pad * 2
-            const h = Math.abs(sw.y - ne.y) + pad * 2
+            const w = Math.round(Math.abs(ne.x - sw.x) + pad * 2)
+            const h = Math.round(Math.abs(sw.y - ne.y) + pad * 2)
+            if (w <= 0 || h <= 0) return
             cv.style.left = `${left}px`
             cv.style.top = `${top}px`
-            if (cv.width !== Math.round(w)) cv.width = Math.round(w)
-            if (cv.height !== Math.round(h)) cv.height = Math.round(h)
+            if (cv.width !== w) cv.width = w
+            if (cv.height !== h) cv.height = h
             const ctx = cv.getContext('2d')
             if (!ctx) return
-            ctx.clearRect(0, 0, cv.width, cv.height)
+            ctx.clearRect(0, 0, w, h)
+
+            // Pass 1 — accumulate grayscale density.
+            let minX = w, minY = h, maxX = 0, maxY = 0, drew = false
             for (const cell of cells) {
               const p = proj.fromLatLngToDivPixel(new google.maps.LatLng(cell.lat, cell.lng))
               if (!p) continue
               const x = p.x - left, y = p.y - top
               if (x < -pad || y < -pad || x > w + pad || y > h + pad) continue
-              const t = Math.min(1, Math.sqrt(cell.weight / max))
-              const rgb = heatRGB(t)
-              const grd = ctx.createRadialGradient(x, y, 0, x, y, BLOB)
-              grd.addColorStop(0, `rgba(${rgb}, 0.5)`)
-              grd.addColorStop(1, `rgba(${rgb}, 0)`)
-              ctx.fillStyle = grd
-              ctx.beginPath()
-              ctx.arc(x, y, BLOB, 0, Math.PI * 2)
-              ctx.fill()
+              const t = Math.max(0.08, Math.min(1, Math.sqrt(cell.weight / max)))
+              ctx.globalAlpha = t
+              ctx.drawImage(this.brush, x - BLOB, y - BLOB)
+              drew = true
+              minX = Math.min(minX, x - BLOB); minY = Math.min(minY, y - BLOB)
+              maxX = Math.max(maxX, x + BLOB); maxY = Math.max(maxY, y + BLOB)
             }
+            ctx.globalAlpha = 1
+            if (!drew) return
+
+            // Pass 2 — colourise the accumulated alpha (only the touched rect).
+            const rx = Math.max(0, Math.floor(minX)), ry = Math.max(0, Math.floor(minY))
+            const rw = Math.min(w, Math.ceil(maxX)) - rx, rh = Math.min(h, Math.ceil(maxY)) - ry
+            if (rw <= 0 || rh <= 0) return
+            const img = ctx.getImageData(rx, ry, rw, rh)
+            const d = img.data, pal = this.palette
+            for (let i = 0; i < d.length; i += 4) {
+              const a = d[i + 3]
+              if (a === 0) continue
+              const j = a * 4
+              d[i] = pal[j]; d[i + 1] = pal[j + 1]; d[i + 2] = pal[j + 2]
+              d[i + 3] = Math.min(210, a + 40) // soft, see-through heat
+            }
+            ctx.putImageData(img, rx, ry)
           }
           onRemove() {
             this.canvas?.remove()
             this.canvas = null
           }
         }
-
         overlayRef.current = new HeatOverlay()
       }
-      overlayRef.current.setMap(visible ? map : null)
+      overlayRef.current.setMap(visible ? safeMap : null)
     } catch {
       overlayRef.current?.setMap(null)
       overlayRef.current = null
