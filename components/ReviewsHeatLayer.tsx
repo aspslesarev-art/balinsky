@@ -66,39 +66,35 @@ export function ReviewsHeatLayer({
           onAdd() {
             const cv = document.createElement('canvas')
             cv.style.position = 'absolute'
+            cv.style.top = '0'
+            cv.style.left = '0'
             cv.style.pointerEvents = 'none'
             this.canvas = cv
-            this.getPanes()?.overlayLayer.appendChild(cv)
+            // Pin to the map container itself (not a transformed pane) and draw
+            // in container pixels — immune to pane translation, so it stays
+            // aligned through pan/zoom. Translucent, so markers stay readable.
+            safeMap.getDiv().appendChild(cv)
           }
           draw() {
             const proj = this.getProjection()
             const cv = this.canvas
             if (!proj || !cv) return
-            const bounds = safeMap.getBounds()
-            if (!bounds) return
-            const ne = proj.fromLatLngToDivPixel(bounds.getNorthEast())
-            const sw = proj.fromLatLngToDivPixel(bounds.getSouthWest())
-            if (!ne || !sw) return
-            const pad = BLOB * 2
-            const left = Math.min(sw.x, ne.x) - pad
-            const top = Math.min(ne.y, sw.y) - pad
-            const w = Math.round(Math.abs(ne.x - sw.x) + pad * 2)
-            const h = Math.round(Math.abs(sw.y - ne.y) + pad * 2)
+            const div = safeMap.getDiv()
+            const w = div.offsetWidth, h = div.offsetHeight
             if (w <= 0 || h <= 0) return
-            cv.style.left = `${left}px`
-            cv.style.top = `${top}px`
             if (cv.width !== w) cv.width = w
             if (cv.height !== h) cv.height = h
             const ctx = cv.getContext('2d')
             if (!ctx) return
             ctx.clearRect(0, 0, w, h)
+            const pad = BLOB * 2
 
             // Pass 1 — accumulate grayscale density.
             let minX = w, minY = h, maxX = 0, maxY = 0, drew = false
             for (const cell of cells) {
-              const p = proj.fromLatLngToDivPixel(new google.maps.LatLng(cell.lat, cell.lng))
+              const p = proj.fromLatLngToContainerPixel(new google.maps.LatLng(cell.lat, cell.lng))
               if (!p) continue
-              const x = p.x - left, y = p.y - top
+              const x = p.x, y = p.y
               if (x < -pad || y < -pad || x > w + pad || y > h + pad) continue
               const t = Math.max(0.08, Math.min(1, Math.sqrt(cell.weight / max)))
               ctx.globalAlpha = t
