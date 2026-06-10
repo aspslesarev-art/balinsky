@@ -26,6 +26,9 @@ const ANCHORS = [
   ['Kintamani', -8.245, 115.375], ['Sidemen', -8.435, 115.445], ['Candidasa', -8.510, 115.567],
   ['Amed', -8.339, 115.687], ['Tulamben', -8.275, 115.592], ['Medewi', -8.420, 114.800],
   ['Nusa Penida', -8.727, 115.545], ['Nusa Ceningan', -8.690, 115.455],
+  // Emerging west-coast strip Canggu→Tanah Lot (no listings yet, big anchors
+  // like Nuanu Creative City / Luna Beach Club).
+  ['Nuanu/Kedungu', -8.553, 115.085], ['Nyanyi/Beraban', -8.575, 115.092], ['Cemagi/Seseh', -8.628, 115.103],
 ]
 
 const NEARBY_CATS = [
