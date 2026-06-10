@@ -9,7 +9,7 @@ import Image from 'next/image'
 import { createClient } from '@supabase/supabase-js'
 import { unstable_cache } from 'next/cache'
 import {
-  Building2, MapPin, Calendar, FileCheck2, Lock, Users, Home, Plane,
+  Building2, MapPin, Calendar, FileCheck2, Lock, Home, Plane,
   ChevronRight, ExternalLink, Box, Map as MapIcon, Film, FileText, BedDouble,
 } from 'lucide-react'
 import { Header } from '@/components/Header'
@@ -211,7 +211,6 @@ const CURRENT_YEAR = 2026
 
 const sb = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY!)
 
-type Params = Promise<{ slug: string }>
 type ComplexRow = {
   airtable_id: string
   data: Record<string, unknown>
@@ -317,9 +316,6 @@ function readiness(d: Record<string, unknown>): number {
     return 20
   }
   return 50
-}
-function fmtUsd(n: number): string {
-  return Math.round(n).toLocaleString('ru-RU').replace(/,/g, ' ') + ' $'
 }
 
 // Lightweight index from Storage manifest (avoids 9MB+ raw_complexes full-data query)

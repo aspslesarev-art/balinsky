@@ -247,6 +247,7 @@ function SinglePopup({ p, onClose, lang }: { p: MapPoint; onClose: () => void; l
     <div className="relative w-[260px] p-1">
       <CloseButton onClose={onClose} />
       {p.thumb && (
+        // eslint-disable-next-line @next/next/no-img-element -- map InfoWindow popup, not a Next image
         <img
           src={p.thumb}
           alt={p.title}
@@ -287,6 +288,7 @@ function MultiPopup({ items, onClose, lang }: { items: MapPoint[]; onClose: () =
               className="flex items-center gap-3 py-2.5 no-underline text-[#111827] hover:bg-[#F8FAF8] rounded-md px-1"
             >
               {p.thumb ? (
+                // eslint-disable-next-line @next/next/no-img-element -- map InfoWindow popup, not a Next image
                 <img
                   src={p.thumb}
                   alt=""

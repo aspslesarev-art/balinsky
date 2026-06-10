@@ -213,6 +213,7 @@ function SinglePopup({ p, onClose, lang }: { p: ComplexPoint; onClose: () => voi
     <div className="relative w-[280px] p-1">
       <CloseButton onClose={onClose} />
       {p.coverUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element -- map InfoWindow popup, not a Next image
         <img src={p.coverUrl} alt={p.name} className="w-full h-[150px] object-cover rounded-xl mb-3" />
       ) : (
         <div className="w-full h-[150px] rounded-xl mb-3 bg-[#F1F5F1] flex items-center justify-center text-3xl">🏝️</div>
@@ -248,6 +249,7 @@ function MultiPopup({ items, onClose, lang }: { items: ComplexPoint[]; onClose: 
               className="flex items-center gap-3 py-2.5 no-underline text-[#111827] hover:bg-[#F8FAF8] rounded-md px-1"
             >
               {p.coverUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element -- map InfoWindow popup, not a Next image
                 <img src={p.coverUrl} alt="" className="w-12 h-12 object-cover rounded-md shrink-0" />
               ) : (
                 <div className="w-12 h-12 bg-[#F1F5F1] rounded-md shrink-0" />

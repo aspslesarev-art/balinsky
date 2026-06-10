@@ -33,14 +33,12 @@ const inBox = (g, g2) => {
 }
 
 let needsGeo = 0
-let hasPriceAndAddress = 0
 const uniqueAddrs = new Set()
 for (const r of recs) {
   const f = r.fields || {}
   const price = Number(f['Цена за ночь'])
   if (!Number.isFinite(price) || price <= 0) continue
   if (inBox(f['Geo'], f['Geo 2'])) continue
-  hasPriceAndAddress++
   const addr = (f['Адрес'] || f['Adress'] || '').trim()
   if (!addr || addr === ', Bali, Indonesia' || addr.length < 10) continue
   needsGeo++

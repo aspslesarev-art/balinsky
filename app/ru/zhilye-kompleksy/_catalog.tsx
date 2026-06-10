@@ -47,7 +47,6 @@ function toQueryString(f: ComplexFilterState): string {
 export async function ComplexesCatalog({
   filters,
   page = 1,
-  basePath,
   lang = 'ru',
 }: {
   filters: ComplexFilterState

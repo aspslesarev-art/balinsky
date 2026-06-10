@@ -52,7 +52,6 @@ import { NearbyPlaces } from '@/components/NearbyPlaces'
 import { loadManagersByDeveloperName, loadManagersByDeveloperSlug } from '@/lib/managers'
 import { getDeveloperStats } from '@/lib/developer-stats'
 import { PriceCtaCard } from '@/components/PriceCtaCard'
-import { InlinePrice } from '@/components/InlinePrice'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { loadAllVideos, matchesLang as videoMatchesLang } from '@/lib/videos'
 import { loadVillaStyles } from '@/lib/villa-styles'
@@ -173,7 +172,6 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
 const sb = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY!)
 
-type Params = Promise<{ slug: string }>
 type Row = { airtable_id: string; data: Record<string, unknown> }
 
 function firstString(v: unknown): string | null {

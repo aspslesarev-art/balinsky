@@ -1,4 +1,5 @@
 import { notFound, redirect } from 'next/navigation'
+import Link from 'next/link'
 import { requireAdmin } from '@/lib/admin-auth'
 import { AdminThemeShell } from '@/components/admin/AdminThemeShell'
 import { createClient } from '@supabase/supabase-js'
@@ -36,7 +37,7 @@ export default async function ParserPage({ params }: { params: Params }) {
       title={`Парсер: ${name}`}
       description={`${district ?? '—'} · slug: ${complex.slug ?? '—'} · airtable_id: ${complexId}`}
     >
-      <a href="/admin/parsers" className="inline-block mb-4 text-[12.5px] text-[var(--ax-fg-soft)] hover:text-[var(--ax-fg)] no-underline">← К списку парсеров</a>
+      <Link href="/admin/parsers" className="inline-block mb-4 text-[12.5px] text-[var(--ax-fg-soft)] hover:text-[var(--ax-fg)] no-underline">← К списку парсеров</Link>
       <ParserEditor complexId={complexId} complexName={name} initial={parser} parserLabel={mod?.label ?? null} />
     </AdminThemeShell>
   )

@@ -43,6 +43,7 @@ export function MultiSelectFilter({
   const [draft, setDraft] = useState<string[]>(selected)
   const copy = COPY[lang]
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: deps deliberately scoped
   useEffect(() => { setDraft(selected) }, [selected.join(',')])
 
   const summary =

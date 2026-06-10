@@ -163,7 +163,7 @@ function VillaPresentation({ data, onClose }: { data: VillaPresentationData; onC
   const onTouchEnd = (e: React.TouchEvent) => {
     if (touchX.current == null) return
     const dx = e.changedTouches[0].clientX - touchX.current
-    if (Math.abs(dx) > 50) { dx < 0 ? next() : prev() }
+    if (Math.abs(dx) > 50) { if (dx < 0) next(); else prev() }
     touchX.current = null
   }
 

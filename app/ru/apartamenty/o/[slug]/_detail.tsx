@@ -43,7 +43,6 @@ import { findActiveReservation } from '@/lib/reservations'
 import { loadLandProfile, landAllowsBuilding } from '@/lib/land-profile'
 import { loadMarketStats } from '@/lib/complex-market-stats'
 import { MarketStatsBlock } from '@/components/MarketStatsBlock'
-import { InlinePrice } from '@/components/InlinePrice'
 import { VillaPresentationButton } from '@/components/VillaPresentation'
 import { tField, type Lang } from '@/lib/i18n'
 import { normalizeSlug } from '@/lib/slug-normalize'
@@ -155,7 +154,6 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
 const sb = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY!)
 
-type Params = Promise<{ slug: string }>
 type Row = { airtable_id: string; data: Record<string, unknown> }
 // Slim: проекция только нужных полей вместо всего data (~75кб/строка
 // → ~300б/строка, -99% egress). findParentComplex матчит по name;

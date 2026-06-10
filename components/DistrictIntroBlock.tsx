@@ -12,7 +12,6 @@ export function DistrictIntroBlock({
   copy,
   lang,
   totalCount,
-  sectionRoot,
 }: {
   copy: DistrictCopy
   lang: Lang

@@ -15,8 +15,6 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
-
 function firstString(v: unknown): string | null {
   if (typeof v === 'string') return v.trim() || null
   if (typeof v === 'number') return String(v)

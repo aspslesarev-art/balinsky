@@ -205,6 +205,7 @@ function PopupCard({ p, onClose }: { p: CompetitorPoint; onClose: () => void }) 
         <X size={14} strokeWidth={2.5} />
       </button>
       {p.photo ? (
+        // eslint-disable-next-line @next/next/no-img-element -- map InfoWindow popup, not a Next image
         <img src={p.photo} alt={titleText} className="w-full h-[140px] object-cover rounded-xl mb-3" />
       ) : (
         <div className="w-full h-[140px] rounded-xl mb-3 bg-[#EFF4FB] flex items-center justify-center text-3xl">🏨</div>

@@ -3,10 +3,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import {
-  Info, AlertTriangle, Sparkles, ChevronDown, ChevronUp, TrendingUp,
+  Info, ChevronDown, ChevronUp, TrendingUp,
 } from 'lucide-react'
 import { InvestmentMap } from './InvestmentMap'
-import { fmtMoney, fmtMoneyShort, fmtPct, fmtYears, fmtDistance, fmtMeters, pluralRu, pluralEn } from './utils'
+import { fmtMoney, fmtPct, fmtYears, fmtDistance, pluralRu, pluralEn } from './utils'
 import type { Snapshot } from './types'
 import { useCurrency } from '../CurrencyContext'
 import { computeEconomics, type Economics } from '@/lib/investment/economics'
@@ -133,9 +133,6 @@ export function InvestmentWidget({
   // Allow explicit lang from server caller; default by URL.
   const pathname = usePathname() ?? ''
   const resolvedLang: Lang = lang ?? (pathname.startsWith('/en') ? 'en' : 'ru')
-  const { currency } = useCurrency()
-  const fmtUsd = (n: number | null | undefined) => fmtMoney(n, currency)
-  const fmtUsdShort = (n: number | null | undefined) => fmtMoneyShort(n, currency)
   const [snap, setSnap] = useState<Snapshot | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -189,23 +186,6 @@ function Skeleton() {
         {[0, 1, 2].map(i => <div key={i} className="h-32 rounded-2xl bg-[var(--color-search-bg)] animate-pulse" />)}
       </div>
     </div>
-  )
-}
-
-function ConfidenceBadge({ confidence, size, lang }: { confidence: 'high' | 'medium' | 'low'; size: number; lang: Lang }) {
-  const t = COPY[lang]
-  const map = {
-    high: { color: '#16A34A', label: t.confHigh },
-    medium: { color: '#F59E0B', label: t.confMedium },
-    low: { color: '#DC2626', label: t.confLow },
-  }
-  const c = map[confidence]
-  const objPlural = pluralize(lang, size, COPY.ru.object, COPY.en.object)
-  return (
-    <span className="inline-flex items-center gap-1.5 text-[13px] text-[#111827]" title={c.label}>
-      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: c.color }} />
-      {c.label} · {size} {objPlural}
-    </span>
   )
 }
 

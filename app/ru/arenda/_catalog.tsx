@@ -85,9 +85,11 @@ export function RentalCatalog({ items, initial, lang = 'ru' }: { items: RentalIt
 
   // Single source of truth = URL. State is derived from searchParams so the
   // browser back/forward buttons restore filters automatically.
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: deps deliberately scoped
   const districts = parseList(searchParams.get('location')).length > 0
     ? parseList(searchParams.get('location'))
     : (initial?.districts ?? [])
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: deps deliberately scoped
   const bedrooms = parseList(searchParams.get('bedrooms')).length > 0
     ? parseList(searchParams.get('bedrooms'))
     : (initial?.bedrooms ?? [])
@@ -209,6 +211,7 @@ export function RentalCatalog({ items, initial, lang = 'ru' }: { items: RentalIt
 
   // Lazy mount: render PAGE_SIZE items, expose more on scroll near bottom.
   const [visible, setVisible] = useState(PAGE_SIZE)
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: deps deliberately scoped
   useEffect(() => { setVisible(PAGE_SIZE) }, [districts.join(','), bedrooms.join(','), priceMin, priceMax, sort])
 
   const sentinelRef = useRef<HTMLDivElement | null>(null)
@@ -544,7 +547,7 @@ function CheckboxList({
   )
 }
 
-function RentalCard({ r, currency, lang, perMonth, bali }: {
+function RentalCard({ r, currency, lang, perMonth }: {
   r: RentalItem; currency: Currency; lang: Lang; perMonth: string; bali: string
 }) {
   const price = formatPrice(r.priceMonthUsd, currency)

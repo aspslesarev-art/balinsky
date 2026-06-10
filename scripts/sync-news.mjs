@@ -74,11 +74,6 @@ function slugifyFromRu(title) {
     .replace(/^-+|-+$/g, '')
     .slice(0, 80) || null
 }
-function urlOfFirstAttachment(att) {
-  if (!Array.isArray(att) || att.length === 0) return null
-  const a = att[0]
-  return a.thumbnails?.large?.url ?? a.url ?? null
-}
 
 await ensureBucket()
 await ensureBucketHelper(sb, PHOTO_BUCKET)

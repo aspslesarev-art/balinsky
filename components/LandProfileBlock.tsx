@@ -202,7 +202,7 @@ const USE_TONE: Record<NonNullable<UseCaseStatus>, 'green' | 'amber' | 'orange' 
   unknown: 'gray',
 }
 
-function useCaseChip(c: CopyShape, status: UseCaseStatus): { tone: 'green' | 'amber' | 'orange' | 'red' | 'gray'; label: string } {
+function caseChipMeta(c: CopyShape, status: UseCaseStatus): { tone: 'green' | 'amber' | 'orange' | 'red' | 'gray'; label: string } {
   if (!status) return { tone: 'gray', label: c.statusUnknown }
   const tone = USE_TONE[status]
   const label =
@@ -232,7 +232,7 @@ function UseCaseRow({ icon: Icon, label, status, c }: {
   c: CopyShape
 }) {
   if (!status) return null
-  const chip = useCaseChip(c, status)
+  const chip = caseChipMeta(c, status)
   return (
     <div className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-[var(--color-search-bg)]">
       <span className="inline-flex items-center gap-1.5 text-[13px] text-[#111827]">

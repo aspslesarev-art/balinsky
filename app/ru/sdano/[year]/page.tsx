@@ -57,7 +57,6 @@ export default async function Page({ params }: { params: Params }) {
     .select('airtable_id, data, slug, cover_url')
     .limit(500)
 
-  const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const matched: (ComplexCardData & { id: string })[] = []
   for (const r of (rows ?? []) as Array<{ airtable_id: string; data: Record<string, unknown>; slug: string | null; cover_url: string | null }>) {
     const y = firstString(r.data['Year of completion ']) ?? firstString(r.data['Year of completion'])

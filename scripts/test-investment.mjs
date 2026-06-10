@@ -14,13 +14,6 @@ function classifyZone(beaches) {
   return { zone, nearestBeach: n, walkingMeters: m }
 }
 
-function dist(aLat, aLng, bLat, bLng) {
-  const R = 6371, dLat = ((bLat - aLat) * Math.PI) / 180, dLng = ((bLng - aLng) * Math.PI) / 180
-  const la1 = (aLat * Math.PI) / 180, la2 = (bLat * Math.PI) / 180
-  const h = Math.sin(dLat / 2) ** 2 + Math.sin(dLng / 2) ** 2 * Math.cos(la1) * Math.cos(la2)
-  return 2 * R * Math.asin(Math.sqrt(h))
-}
-
 function quantile(s, q) {
   const pos = (s.length - 1) * q
   const lo = Math.floor(pos), hi = Math.ceil(pos)
@@ -48,8 +41,6 @@ const BALI = {
 }
 
 // Mock fixtures
-const villaPererenan = { lat: -8.6475, lng: 115.1202, bedrooms: 3, area: 200, hasPool: true, askingPrice: 500_000, leaseholdYearsLeft: 30 }
-const villaPererenanNarrow = { ...villaPererenan, leaseholdYearsLeft: 10 }
 const beachClose = [{ lat: -8.6485, lng: 115.1170, distanceKm: 0.05, name: 'Pererenan Beach' }]
 const beachWalking = [{ lat: -8.6520, lng: 115.1216, distanceKm: 0.55, name: 'Pererenan Beach' }]
 

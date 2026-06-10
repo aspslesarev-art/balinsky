@@ -78,7 +78,7 @@ export function SemanticSearchClient({ lang }: { lang: 'ru' | 'en' }) {
     }
   }
 
-  function useSuggestion(s: string) {
+  function applySuggestion(s: string) {
     setQuery(s)
     submit(s)
     inputRef.current?.focus()
@@ -133,7 +133,7 @@ export function SemanticSearchClient({ lang }: { lang: 'ru' | 'en' }) {
                 <button
                   key={s}
                   type="button"
-                  onClick={() => useSuggestion(s)}
+                  onClick={() => applySuggestion(s)}
                   className="px-3.5 py-2 rounded-full bg-white border border-[var(--color-border)] hover:border-[var(--color-primary)] text-[12.5px] text-[var(--color-text)]"
                 >
                   {s}

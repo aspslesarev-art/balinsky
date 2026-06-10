@@ -50,7 +50,6 @@ function toQueryString(f: VillaFilterState): string {
 export async function VillasCatalog({
   filters,
   page = 1,
-  basePath,
   lang = 'ru',
 }: {
   filters: VillaFilterState

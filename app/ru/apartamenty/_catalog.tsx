@@ -50,7 +50,6 @@ function toQueryString(f: FilterState): string {
 export async function ApartamentyCatalog({
   filters,
   page = 1,
-  basePath,
   lang = 'ru',
 }: {
   filters: FilterState

@@ -22,7 +22,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import {
-  Plus, Upload, Trash2, Save, ChevronRight, ChevronLeft, Image as ImageIcon,
+  Plus, Upload, Trash2, Save, ChevronRight, Image as ImageIcon,
   Loader2, AlertTriangle, Check, X, Maximize2, Minimize2, ZoomIn, ZoomOut, ArrowLeft,
   GripVertical,
 } from 'lucide-react'
@@ -73,7 +73,7 @@ type DraftHotspot = {
 }
 
 export function VisualizationEditor({
-  complexId, complexSlug, complexName,
+  complexId, complexSlug,
   initialLayers, initialHotspots, units,
 }: {
   complexId: string

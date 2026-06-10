@@ -1,6 +1,5 @@
 // Helper: download a single attachment URL, upload to a Supabase Storage bucket.
 // Returns the permanent public URL or null on failure.
-import path from 'node:path'
 import crypto from 'node:crypto'
 
 export async function downloadAndUpload(sb, bucket, recordId, attachmentUrl) {

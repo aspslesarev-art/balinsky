@@ -14,7 +14,6 @@ import { PageViewTracker } from '@/components/PageViewTracker'
 import type { Lang } from '@/lib/i18n'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
-type Params = Promise<{ slug: string }>
 
 const COPY = {
   ru: {

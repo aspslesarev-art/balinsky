@@ -104,7 +104,6 @@ export function scoreInfra(byCategory: Record<string, NearbyPlace[]>): InfraScor
   const restaurants = (byCategory.restaurant ?? []).filter(p => p.distanceKm <= RADIUS_KM)
   const cafes = (byCategory.cafe ?? []).filter(p => p.distanceKm <= RADIUS_KM)
   const nightlife = (byCategory.nightlife ?? []).filter(p => p.distanceKm <= RADIUS_KM)
-  const attractions = (byCategory.attraction ?? []).filter(p => p.distanceKm <= RADIUS_KM)
   const wellness = (byCategory.wellness ?? []).filter(p => p.distanceKm <= RADIUS_KM)
   const beachClubsList = (byCategory.beachclub ?? []).filter(p => p.distanceKm <= 1.2)
 

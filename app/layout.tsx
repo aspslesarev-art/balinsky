@@ -118,6 +118,7 @@ ym(${YM_ID}, 'init', {ssr:true, clickmap:true, trackLinks:true, ecommerce:"dataL
             style={{ display: "none", visibility: "hidden" }}
           />
           <div>
+            {/* eslint-disable-next-line @next/next/no-img-element -- tracking pixel, not a Next image */}
             <img
               src={`https://mc.yandex.ru/watch/${YM_ID}`}
               style={{ position: "absolute", left: "-9999px" }}

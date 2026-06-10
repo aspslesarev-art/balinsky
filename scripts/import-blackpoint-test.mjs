@@ -7,7 +7,6 @@
 
 import { createClient } from '@supabase/supabase-js'
 import fs from 'node:fs'
-import path from 'node:path'
 
 const env = fs.readFileSync('.env.local', 'utf8')
 for (const line of env.split('\n')) {

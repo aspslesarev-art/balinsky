@@ -475,18 +475,6 @@ const TTL_MS = 600_000
 let _cache: { ts: number; data: CachedAll } | null = null
 let _inflight: Promise<CachedAll> | null = null
 
-function priceOf(d: Record<string, unknown>): number | null {
-  const candidates = [d['price_usd'], d['price'], d['Цена']]
-  for (const v of candidates) {
-    if (typeof v === 'number' && Number.isFinite(v) && v > 0) return v
-    if (typeof v === 'string') {
-      const n = Number(v.replace(/\s/g, ''))
-      if (Number.isFinite(n) && n > 0) return n
-    }
-  }
-  return null
-}
-
 // Slim-форма того что buildPriceIndex реально использует от raw_villas /
 // raw_apartments: только title + цена. Раньше тащили `data` целиком
 // (36+33 МБ за загрузку каталога), теперь — несколько килобайт.

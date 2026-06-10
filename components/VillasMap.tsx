@@ -182,6 +182,7 @@ function SinglePopup({ p, onClose, lang }: { p: VillaPoint; onClose: () => void;
     <div className="relative w-[260px] p-1">
       <CloseButton onClose={onClose} />
       {p.thumb ? (
+        // eslint-disable-next-line @next/next/no-img-element -- map InfoWindow popup, not a Next image
         <img src={p.thumb} alt={p.title} className="w-full h-[140px] object-cover rounded-xl mb-3" />
       ) : (
         <div className="w-full h-[140px] rounded-xl mb-3 bg-[#F1F5F1] flex items-center justify-center text-3xl">🏝️</div>
@@ -216,6 +217,7 @@ function MultiPopup({ items, onClose, lang }: { items: VillaPoint[]; onClose: ()
                 className="flex items-center gap-3 py-2.5 no-underline text-[#111827] hover:bg-[#F8FAF8] rounded-md px-1"
               >
                 {p.thumb ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- map InfoWindow popup, not a Next image
                   <img src={p.thumb} alt="" className="w-12 h-12 object-cover rounded-md shrink-0" />
                 ) : (
                   <div className="w-12 h-12 bg-[#F1F5F1] rounded-md shrink-0" />

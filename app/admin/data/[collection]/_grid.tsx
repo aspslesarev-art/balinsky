@@ -352,7 +352,7 @@ function FilterPanel({ cols, filters, setFilters }: {
 
 // Compact inline link picker used directly inside a grid cell.
 type LinkOption = { id: string; title: string }
-function InlineLink({ cfg, field, row, onPick }: { cfg: CollectionConfig; field: FieldDef; row: RecordRow; onPick: (o: LinkOption | null) => void }) {
+function InlineLink({ field, row, onPick }: { cfg: CollectionConfig; field: FieldDef; row: RecordRow; onPick: (o: LinkOption | null) => void }) {
   const lk = field.link!
   const isName = lk.store === 'name'
   const cur = isName ? (row.fields[field.key] ? String(row.fields[field.key]) : '') : (lk.nameField ? displayValue(row.fields[lk.nameField]) : '')

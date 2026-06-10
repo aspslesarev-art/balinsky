@@ -76,7 +76,6 @@ const todo = [...addresses].filter(a => !(a.toLowerCase() in cache))
 console.log('Unique addresses:', addresses.size, 'cached:', addresses.size - todo.length, 'todo:', todo.length)
 
 let done = 0
-let saved = 0
 async function worker(list) {
   for (const addr of list) {
     const result = await geocode(addr)
@@ -84,7 +83,7 @@ async function worker(list) {
     done++
     if (done % 50 === 0) {
       console.log(`  ${done}/${todo.length}  last: "${addr.slice(0, 50)}" ->`, result.lat ? `${result.lat.toFixed(4)},${result.lng.toFixed(4)}` : result.error)
-      saveCache(cache); saved = done
+      saveCache(cache)
     }
   }
 }
