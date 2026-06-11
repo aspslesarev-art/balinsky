@@ -67,31 +67,31 @@ const COPY = {
     howItWorks: {
       eyebrow: 'КАК ЭТО РАБОТАЕТ',
       heading: 'Купить виллу на Бали — не выходя из переписки.',
-      sub: 'Маркетплейс, AI-брокер и команда на земле в одном месте. Вы ведёте выбор сами, мы даём данные и подстраховываем на сделке.',
+      sub: 'Маркетплейс, AI-брокер и команда на земле — в одном месте.',
       cta: 'Спросить AI-брокера',
       steps: [
-        { n: '01', Icon: Sparkles, title: 'Спросите AI-брокера', body: 'Опишите задачу словами — подберёт объекты, ответит на большинство вопросов и проконсультирует по юридике. Бесплатно, 24/7, на вашем языке.' },
-        { n: '02', Icon: TrendingUp, title: 'Изучите объект по-настоящему', body: 'Не рендеры застройщика: реальная доходность соседей, конкуренты, что рядом на карте, документы и история застройщика — всё в одном месте.' },
-        { n: '03', Icon: Phone, title: 'Оставьте заявку — включимся', body: 'Захотели человека — оставьте заявку. Проведём Zoom-презентацию, организуем показ, разберём риски и доведём до безопасной сделки. Можно и напрямую к застройщику — но через нас безопаснее.' },
+        { n: '01', Icon: Sparkles, title: 'Спросите AI-брокера', body: 'Подберёт объекты и ответит на вопросы. Бесплатно, 24/7.' },
+        { n: '02', Icon: TrendingUp, title: 'Изучите объект', body: 'Доходность соседей, конкуренты, документы, застройщик — без рендеров.' },
+        { n: '03', Icon: Phone, title: 'Оставьте заявку', body: 'Zoom-презентация, показ, безопасная сделка с гарантиями.' },
       ],
     },
     features: {
       eyebrow: 'АНАЛИТИКА ПО ОБЪЕКТУ',
       heading: 'Что вы видите по каждому объекту.',
-      sub: 'Сайт показывает не только красивое. Цифры и факты, чтобы понять, хороший объект или нет — ещё до разговора с продавцом.',
+      sub: 'Цифры, чтобы решить — ещё до разговора с продавцом.',
       items: [
-        { Icon: TrendingUp, title: 'Реальная доходность соседей', body: 'Сколько зарабатывают объекты по соседству — по фактической загрузке и ценам с Booking и Airbnb за 12 месяцев, а не из прайса застройщика.' },
-        { Icon: BarChart3, title: 'Конкуренты объекта', body: 'С какими виллами и апартаментами рядом конкурирует эта недвижимость — и как она выглядит на их фоне по цене и метражу.' },
-        { Icon: MapPin, title: 'Что рядом и сколько ехать', body: 'Кафе, пляжи, школы, сёрф-споты — на карте, с временем в пути. Плюс карта туризма: где живее для туристов и аренды.' },
-        { Icon: FileCheck2, title: 'Документы и зональность', body: 'PBG, SLF, leasehold или freehold, зона земли — проверяем, чтобы вы не купили объект в серой зоне.' },
-        { Icon: Building2, title: 'Профиль застройщика', body: 'Что застройщик уже построил и что в процессе, новости и активность. Застройщики публикуют хорошее — мы помогаем увидеть полную картину.' },
-        { Icon: Video, title: 'Съёмка с земли', body: 'Оригинальное видео и фото со стройки у каждого объекта. Не рендеры, а как это выглядит на самом деле.' },
+        { Icon: TrendingUp, title: 'Доходность соседей', body: 'Сколько реально зарабатывают рядом — по Booking и Airbnb.' },
+        { Icon: BarChart3, title: 'Конкуренты объекта', body: 'С чем сравнить и как объект на их фоне.' },
+        { Icon: MapPin, title: 'Что рядом и сколько ехать', body: 'Кафе, пляжи, школы, споты — с временем в пути.' },
+        { Icon: FileCheck2, title: 'Документы и зональность', body: 'PBG, SLF, leasehold — без серых зон с землёй.' },
+        { Icon: Building2, title: 'Профиль застройщика', body: 'Что построил, что строит, какие новости.' },
+        { Icon: Video, title: 'Съёмка с земли', body: 'Реальное видео со стройки, а не рендеры.' },
       ],
     },
     safety: {
       eyebrow: 'БЕЗОПАСНОСТЬ СДЕЛКИ',
       heading: 'Сами или через нас — но через нас безопаснее.',
-      body: 'Вся информация на сайте — наша. Но мы знаем и то, что не публикуется: внутренние нюансы по объектам и застройщикам. Поможем приехать, провести сделку комфортно и с гарантиями — чтобы вы безопасно купили максимально доходную (или просто отличную) недвижимость на Бали, под любые цели, включая жизнь для себя.',
+      body: 'Вся информация — наша, плюс внутренние нюансы, которых нет на сайте. Поможем приехать и закрыть сделку с гарантиями.',
       points: [
         'Независимый маркетплейс, а не лендинг одного застройщика',
         'Знаем внутренние нюансы по объектам и застройщикам',
@@ -104,13 +104,13 @@ const COPY = {
     villasSection: {
       eyebrow: '01 · ВИЛЛЫ',
       heading: 'Виллы с полученным PBG или SLF.',
-      sub: 'Только объекты, у которых разрешения уже получены — без серых зон с правами на землю. Ранжированы по нашему инвест-скору: цена за м², заявленная доходность и сравнение с локальным рынком аренды.',
+      sub: 'Только с полученными разрешениями. Ранжированы по инвест-скору.',
       linkAll: 'Все виллы каталога',
     },
     ai: {
       eyebrow: '02 · AI-КОНСЬЕРЖ',
       heading: 'Опишите что ищете. Получите шорт-лист за минуту.',
-      body: 'Не нужно листать каталог часами и сравнивать вкладки. AI-консьерж знает каждый объект на платформе. Спросите голосом или текстом — на русском, английском или индонезийском — и получите подходящие варианты с цифрами, документами и расчётом доходности.',
+      body: 'Знает каждый объект на платформе. Спросите голосом или текстом — получите варианты с цифрами, документами и доходностью.',
       pointHeading1: 'Описание вместо фильтров',
       pointBody1: '«Двушка в Чангу до $300k для жены и удалённой работы» — этого достаточно. AI разберёт намерение и подберёт то, что подходит.',
       pointHeading2: 'Вопросы по любому объекту',
@@ -119,7 +119,7 @@ const COPY = {
       pointBody3: 'Не нужно ждать утра по Бали — спросили ночью, получили ответ ночью. На том языке, на котором удобно.',
       cta: 'Открыть AI-консьерж в Telegram',
       hint: 'Тот же диалог хранится — спросили вчера, продолжаем сегодня. История, документы, расчёты в одном чате.',
-      anon: 'Спрашивайте анонимно — голосом или текстом. Менеджер подключится, только если вы сами оставите контакты.',
+      anon: 'Спрашивайте анонимно. Менеджер подключится, только если оставите контакты.',
     },
     complexesSection: {
       eyebrow: '03 · ЖИЛЫЕ КОМПЛЕКСЫ',
@@ -157,7 +157,7 @@ const COPY = {
     },
     finalCta: {
       h2: 'Найдите недвижимость, которую реально купите.',
-      sub: 'Спросите AI-брокера или оставьте заявку — подключим команду и доведём до безопасной сделки.',
+      sub: 'Спросите AI-брокера или оставьте заявку — доведём до безопасной сделки.',
       primary: 'Спросить AI-брокера',
       secondary: 'Оставить заявку',
       secondaryText: 'Хочу оставить заявку — подключите менеджера: нужна презентация объекта и помощь со сделкой.',
@@ -184,31 +184,31 @@ const COPY = {
     howItWorks: {
       eyebrow: 'HOW IT WORKS',
       heading: 'Buy a villa in Bali — without leaving the chat.',
-      sub: 'A marketplace, an AI broker and a team on the ground in one place. You drive the choice; we bring the data and de-risk the deal.',
+      sub: 'A marketplace, an AI broker and a team on the ground — in one place.',
       cta: 'Ask the AI broker',
       steps: [
-        { n: '01', Icon: Sparkles, title: 'Ask the AI broker', body: 'Describe what you need in plain words — it shortlists properties, answers most questions and advises on the legal side. Free, 24/7, in your language.' },
-        { n: '02', Icon: TrendingUp, title: 'Study the property for real', body: 'Not the developer\'s renders: real neighbour yield, competitors, what\'s nearby on the map, documents and the developer\'s track record — all in one place.' },
-        { n: '03', Icon: Phone, title: 'Leave a request — we step in', body: 'Want a human? Leave a request. We run a Zoom presentation, arrange a viewing, walk through the risks and see the deal through safely. You can go to the developer directly — but through us is safer.' },
+        { n: '01', Icon: Sparkles, title: 'Ask the AI broker', body: 'It shortlists properties and answers your questions. Free, 24/7.' },
+        { n: '02', Icon: TrendingUp, title: 'Study the property', body: 'Neighbour yield, competitors, documents, developer — no renders.' },
+        { n: '03', Icon: Phone, title: 'Leave a request', body: 'A Zoom presentation, a viewing, a safe deal with guarantees.' },
       ],
     },
     features: {
       eyebrow: 'PER-PROPERTY ANALYTICS',
       heading: 'What you see on every property.',
-      sub: 'The site shows more than pretty photos. Numbers and facts to judge whether a property is any good — before you ever talk to the seller.',
+      sub: 'Numbers to decide — before you talk to the seller.',
       items: [
-        { Icon: TrendingUp, title: 'Real neighbour yield', body: 'What nearby properties actually earn — from real occupancy and pricing on Booking and Airbnb over 12 months, not a developer\'s pitch.' },
-        { Icon: BarChart3, title: 'The property\'s competitors', body: 'Which villas and apartments nearby it competes with — and how it stacks up on price and size.' },
-        { Icon: MapPin, title: 'What\'s nearby and how far', body: 'Cafés, beaches, schools, surf spots — on the map, with travel times. Plus a tourism map: where it\'s livelier for tourists and rentals.' },
-        { Icon: FileCheck2, title: 'Documents and zoning', body: 'PBG, SLF, leasehold or freehold, land zone — checked so you don\'t buy into a grey zone.' },
-        { Icon: Building2, title: 'Developer profile', body: 'What the developer has built and what\'s in progress, news and activity. Developers post the good news — we help you see the full picture.' },
-        { Icon: Video, title: 'Ground-level footage', body: 'Original video and photos from the construction site on every property. Not renders — how it actually looks.' },
+        { Icon: TrendingUp, title: 'Neighbour yield', body: 'What nearby properties actually earn — from Booking and Airbnb.' },
+        { Icon: BarChart3, title: 'The competitors', body: 'What to compare against, and how it stacks up.' },
+        { Icon: MapPin, title: 'What\'s nearby and how far', body: 'Cafés, beaches, schools, surf spots — with travel times.' },
+        { Icon: FileCheck2, title: 'Documents and zoning', body: 'PBG, SLF, leasehold — no grey land zones.' },
+        { Icon: Building2, title: 'Developer profile', body: 'What they\'ve built, what\'s in progress, the news.' },
+        { Icon: Video, title: 'Ground-level footage', body: 'Real video from the site — not renders.' },
       ],
     },
     safety: {
       eyebrow: 'A SAFER DEAL',
       heading: 'On your own or through us — through us is safer.',
-      body: 'All the information on the site is ours. But we also know what isn\'t published: the internal details on properties and developers. We\'ll help you get here and close the deal comfortably and with guarantees — so you safely buy the most profitable (or simply great) property in Bali, for any goal, including living in it yourself.',
+      body: 'All the data is ours, plus the internal details you won\'t find on the site. We\'ll help you get here and close the deal with guarantees.',
       points: [
         'An independent marketplace, not one developer\'s landing page',
         'We know the internal details on properties and developers',
@@ -221,13 +221,13 @@ const COPY = {
     villasSection: {
       eyebrow: '01 · VILLAS',
       heading: 'Villas with PBG or SLF in hand.',
-      sub: 'Only properties with permits already issued — no grey-zone land titles. Ranked by our investment score: price-per-sqm, claimed yield and benchmark against the local rental market.',
+      sub: 'Only with permits issued. Ranked by our investment score.',
       linkAll: 'All villas',
     },
     ai: {
       eyebrow: '02 · AI CONCIERGE',
       heading: 'Describe what you want. Get a shortlist in a minute.',
-      body: 'No more scrolling for hours and comparing tabs. The AI concierge knows every property on the platform. Ask in voice or text — in English, Russian, or Indonesian — and receive fitting options with numbers, documents and yield projections.',
+      body: 'It knows every property on the platform. Ask by voice or text — get options with numbers, documents and yield.',
       pointHeading1: 'Description instead of filters',
       pointBody1: '"2BR in Canggu under $300k for my partner and remote work" — that\'s enough. The AI parses intent and surfaces what fits.',
       pointHeading2: 'Questions on any property',
@@ -236,7 +236,7 @@ const COPY = {
       pointBody3: 'No need to wait for Bali morning — ask at midnight, get an answer at midnight. In the language that\'s comfortable for you.',
       cta: 'Open AI concierge in Telegram',
       hint: 'Conversation persists — ask yesterday, continue today. History, documents, calculations in one thread.',
-      anon: 'Ask anonymously — by voice or text. A manager steps in only if you choose to leave your contacts.',
+      anon: 'Ask anonymously. A manager steps in only if you leave your contacts.',
     },
     complexesSection: {
       eyebrow: '03 · RESIDENTIAL COMPLEXES',
@@ -274,7 +274,7 @@ const COPY = {
     },
     finalCta: {
       h2: 'Find the property you\'ll actually buy.',
-      sub: 'Ask the AI broker or leave a request — we\'ll bring in the team and see the deal through safely.',
+      sub: 'Ask the AI broker or leave a request — we\'ll see the deal through safely.',
       primary: 'Ask the AI broker',
       secondary: 'Leave a request',
       secondaryText: 'I\'d like to leave a request — please connect a manager: I need a property presentation and help with the deal.',
@@ -535,11 +535,6 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
             <p className="mt-4 text-[14.5px] leading-[1.6] text-[#1A2620] font-medium border-l-2 border-[var(--color-primary)] pl-4">
               {c.ai.anon}
             </p>
-            <div className="mt-7 grid gap-5">
-              <AiPoint heading={c.ai.pointHeading1} body={c.ai.pointBody1} />
-              <AiPoint heading={c.ai.pointHeading2} body={c.ai.pointBody2} />
-              <AiPoint heading={c.ai.pointHeading3} body={c.ai.pointBody3} />
-            </div>
             <div className="mt-8 flex items-center gap-3 flex-wrap">
               <BalinaCTA className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[var(--color-primary)] text-white text-[14.5px] font-medium hover:bg-[var(--color-primary-pressed)] transition-colors cursor-pointer">
                 <Sparkles size={15} /> {c.howItWorks.cta}
@@ -783,15 +778,6 @@ function TrustCell({ value, label }: { value: string; label: string }) {
       <div className="mt-2 text-[12px] md:text-[12.5px] text-[#4B5563] leading-[1.4]">
         {label}
       </div>
-    </div>
-  )
-}
-
-function AiPoint({ heading, body }: { heading: string; body: string }) {
-  return (
-    <div className="border-l-2 border-[var(--color-primary)] pl-5 py-1">
-      <div className="text-[16px] font-medium text-[#0E1A14] leading-tight">{heading}</div>
-      <p className="mt-2 text-[14px] leading-[1.6] text-[#4B5563]">{body}</p>
     </div>
   )
 }
