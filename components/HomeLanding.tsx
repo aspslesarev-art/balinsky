@@ -31,6 +31,7 @@ import { loadHomeCollections } from '@/lib/home-collections'
 import { HomeCollections } from '@/components/HomeCollections'
 import { HeroBalinaSearch } from '@/components/HeroBalinaSearch'
 import { BalinaCTA } from '@/components/BalinaCTA'
+import { BalinaChatMock } from '@/components/BalinaChatMock'
 import type { Lang } from '@/lib/i18n'
 import { cdnBucketBase, cdnManifestUrl } from '@/lib/photo-cdn'
 
@@ -113,6 +114,7 @@ const COPY = {
       pointBody3: 'Не нужно ждать утра по Бали — спросили ночью, получили ответ ночью. На том языке, на котором удобно.',
       cta: 'Открыть AI-консьерж в Telegram',
       hint: 'Тот же диалог хранится — спросили вчера, продолжаем сегодня. История, документы, расчёты в одном чате.',
+      anon: 'Спрашивайте анонимно — голосом или текстом. Менеджер подключится, только если вы сами оставите контакты.',
     },
     complexesSection: {
       eyebrow: '03 · ЖИЛЫЕ КОМПЛЕКСЫ',
@@ -229,6 +231,7 @@ const COPY = {
       pointBody3: 'No need to wait for Bali morning — ask at midnight, get an answer at midnight. In the language that\'s comfortable for you.',
       cta: 'Open AI concierge in Telegram',
       hint: 'Conversation persists — ask yesterday, continue today. History, documents, calculations in one thread.',
+      anon: 'Ask anonymously — by voice or text. A manager steps in only if you choose to leave your contacts.',
     },
     complexesSection: {
       eyebrow: '03 · RESIDENTIAL COMPLEXES',
@@ -494,10 +497,10 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
         </div>
       </SectionWrap>
 
-      {/* === AI concierge (one strong block, not a tech showcase) === */}
+      {/* === AI broker — copy + live chat mockup ================ */}
       <SectionWrap className="border-t border-[var(--color-border)]">
-        <div className="grid lg:grid-cols-12 gap-10 lg:gap-16">
-          <div className="lg:col-span-5">
+        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 lg:items-center">
+          <div>
             <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-primary)] font-medium mb-4 flex items-center gap-2">
               <Sparkles size={13} strokeWidth={2} /> {c.ai.eyebrow}
             </div>
@@ -507,7 +510,15 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
             <p className="mt-6 text-[15px] leading-[1.65] text-[#4B5563]">
               {c.ai.body}
             </p>
-            <div className="mt-7 flex items-center gap-3 flex-wrap">
+            <p className="mt-4 text-[14.5px] leading-[1.6] text-[#1A2620] font-medium border-l-2 border-[var(--color-primary)] pl-4">
+              {c.ai.anon}
+            </p>
+            <div className="mt-7 grid gap-5">
+              <AiPoint heading={c.ai.pointHeading1} body={c.ai.pointBody1} />
+              <AiPoint heading={c.ai.pointHeading2} body={c.ai.pointBody2} />
+              <AiPoint heading={c.ai.pointHeading3} body={c.ai.pointBody3} />
+            </div>
+            <div className="mt-8 flex items-center gap-3 flex-wrap">
               <BalinaCTA className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[var(--color-primary)] text-white text-[14.5px] font-medium hover:bg-[var(--color-primary-pressed)] transition-colors cursor-pointer">
                 <Sparkles size={15} /> {c.howItWorks.cta}
               </BalinaCTA>
@@ -515,12 +526,9 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
                 <Send size={15} /> {c.ai.cta}
               </a>
             </div>
-            <p className="mt-3 text-[12.5px] text-[#9CA59F] max-w-[380px]">{c.ai.hint}</p>
           </div>
-          <div className="lg:col-span-7 grid gap-6 content-start">
-            <AiPoint heading={c.ai.pointHeading1} body={c.ai.pointBody1} />
-            <AiPoint heading={c.ai.pointHeading2} body={c.ai.pointBody2} />
-            <AiPoint heading={c.ai.pointHeading3} body={c.ai.pointBody3} />
+          <div className="lg:pl-4">
+            <BalinaChatMock lang={lang} />
           </div>
         </div>
       </SectionWrap>
