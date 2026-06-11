@@ -307,30 +307,58 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
   // «AI-консьерж» с главной. На стороне бота вшит AI-flow.
   const telegram = 'https://t.me/BalinskyBot'
 
+  // Immersive hero: a real catalog photo behind the headline. Top villas are
+  // ranked by investment score with a clean-document filter, so [0] is a strong
+  // hero shot. (Complex covers can 404, villa manifest photos are reliable.)
+  const heroPhoto = topVillas.find(v => v.photos[0])?.photos[0] ?? null
+  // Per-district cover for the photo tiles — reuse the covers already loaded for
+  // the collections block (no extra fetch). First listing with a photo wins.
+  const districtCovers: Record<string, string> = {}
+  for (const t of collections)
+    for (const d of t.districts) {
+      if (districtCovers[d.slug]) continue
+      const cov = d.items.find(it => it.cover)?.cover
+      if (cov) districtCovers[d.slug] = cov
+    }
+
   return (
     <div className="min-h-screen bg-white text-[#111827]">
       <Header />
 
-      {/* === 1. Hero ============================================== */}
-      <section className="relative pt-12 pb-16 md:pt-20 md:pb-24 border-b border-[var(--color-border)] bg-[var(--color-bg)]">
+      {/* === 1. Hero — immersive photo =========================== */}
+      <section className="relative flex items-end min-h-[80vh] md:min-h-[88vh] overflow-hidden bg-[#0E1A14]">
+        {heroPhoto && (
+          <Image
+            src={heroPhoto}
+            alt={c.hero.h1}
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
+          />
+        )}
+        {/* Legibility wash — dark from the bottom where the copy sits. */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#091310]/92 via-[#091310]/45 to-[#091310]/15" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#091310]/55 via-transparent to-transparent" />
+
         <PageContainer>
-          <div className="max-w-[820px]">
-            <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-primary)] font-medium mb-5">
+          <div className="relative max-w-[760px] pt-32 pb-14 md:pt-40 md:pb-20">
+            <div className="text-[11px] uppercase tracking-[0.18em] text-white/80 font-medium mb-5">
               {c.hero.eyebrow}
             </div>
-            <h1 className="text-[34px] md:text-[54px] leading-[1.08] font-light tracking-[-0.02em] text-[#0E1A14]">
+            <h1 className="text-[36px] md:text-[60px] leading-[1.05] font-light tracking-[-0.02em] text-white [text-shadow:0_2px_28px_rgba(0,0,0,0.35)]">
               {c.hero.h1}
             </h1>
-            <p className="mt-5 md:mt-7 text-[15.5px] md:text-[17px] leading-[1.55] text-[#3D4D44] max-w-[680px]">
+            <p className="mt-5 md:mt-7 text-[15.5px] md:text-[18px] leading-[1.55] text-white/85 max-w-[600px]">
               {c.hero.sub}
             </p>
 
             <div className="mt-8 md:mt-10">
               <HeroSearch lang={lang} />
-              <div className="mt-3 text-[12.5px] text-[#6B7570] flex items-baseline flex-wrap gap-x-2 gap-y-1">
-                <span className="uppercase tracking-wider text-[11px] text-[#9CA59F]">{c.hero.tryLabel}:</span>
+              <div className="mt-3 text-[12.5px] text-white/75 flex items-baseline flex-wrap gap-x-2 gap-y-1">
+                <span className="uppercase tracking-wider text-[11px] text-white/55">{c.hero.tryLabel}:</span>
                 {c.hero.suggestions.map((s, i) => (
-                  <Link key={i} href={s.href} className="underline decoration-[#CFDDD4] underline-offset-2 hover:decoration-[var(--color-primary)] hover:text-[var(--color-primary)] no-underline-mobile">
+                  <Link key={i} href={s.href} className="text-white/85 underline decoration-white/30 underline-offset-2 hover:decoration-white hover:text-white no-underline-mobile">
                     {s.label}{i < c.hero.suggestions.length - 1 ? ' ·' : ''}
                   </Link>
                 ))}
@@ -338,18 +366,22 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
             </div>
 
             <div className="mt-8 flex items-center gap-3 flex-wrap">
-              <Link href={r.villas} className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[var(--color-primary)] text-white text-[14.5px] font-medium hover:bg-[var(--color-primary-pressed)] transition-colors">
+              <Link href={r.villas} className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[var(--color-primary)] text-white text-[14.5px] font-medium hover:bg-[var(--color-primary-pressed)] transition-colors no-underline">
                 {c.hero.ctaPrimary} <ArrowRight size={16} />
               </Link>
-              <a href={telegram} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-[#D5DDD8] text-[14.5px] font-medium text-[#1A2620] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors no-underline">
+              <a href={telegram} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-white/35 bg-white/5 backdrop-blur-sm text-[14.5px] font-medium text-white hover:border-white hover:bg-white/15 transition-colors no-underline">
                 <Send size={15} /> {c.hero.ctaSecondary}
               </a>
-              <span className="text-[12.5px] text-[#9CA59F] ml-1">{c.hero.foot}</span>
+              <span className="w-full mt-1 text-[12.5px] text-white/60">{c.hero.foot}</span>
             </div>
           </div>
+        </PageContainer>
+      </section>
 
-          {/* Trust strip — quiet, below CTA */}
-          <div className="mt-12 md:mt-16 pt-7 border-t border-[var(--color-border)] grid grid-cols-3 gap-6 max-w-[820px]">
+      {/* Trust strip — quiet light band under the photo. */}
+      <section className="border-b border-[var(--color-border)] bg-[var(--color-bg)]">
+        <PageContainer>
+          <div className="py-7 md:py-8 grid grid-cols-3 gap-6 max-w-[820px]">
             <TrustCell value={fmtInt(totalUnits, c.locale)} label={lang === 'ru' ? 'объектов в каталоге' : 'properties in the catalog'} />
             <TrustCell value="100%" label={lang === 'ru' ? 'с проверенными документами' : 'with verified documents'} />
             <TrustCell value="3-4" label={lang === 'ru' ? 'страны покупателей' : 'buyer nationalities'} />
@@ -461,16 +493,37 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
         </SectionWrap>
       )}
 
-      {/* === 6. Districts ======================================= */}
+      {/* === 6. Districts — photo tiles ========================= */}
       <SectionWrap className="border-t border-[var(--color-border)]">
         <SectionHead eyebrow={c.districts.eyebrow} title={c.districts.heading} />
         <div className="mt-10 md:mt-12 grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {c.districts.items.map(d => (
-            <Link key={d.name} href={`${r.villas}?district=${d.slug}`} className="rounded-xl border border-[var(--color-border)] p-5 hover:border-[var(--color-primary)] transition-colors no-underline">
-              <div className="text-[16px] font-medium text-[#0E1A14]">{d.name}</div>
-              <div className="mt-1.5 text-[12.5px] text-[#6B7570] leading-[1.5]">{d.tagline}</div>
-            </Link>
-          ))}
+          {c.districts.items.map(d => {
+            const cover = districtCovers[d.slug.toLowerCase()]
+            return (
+              <Link
+                key={d.name}
+                href={`${r.villas}?district=${d.slug}`}
+                className="group relative flex items-end overflow-hidden rounded-2xl aspect-[3/4] bg-[#0E1A14] no-underline"
+              >
+                {cover ? (
+                  <Image
+                    src={cover}
+                    alt={d.name}
+                    fill
+                    sizes="(max-width: 1024px) 50vw, 25vw"
+                    className="object-cover transition-transform duration-500 group-hover:scale-[1.06]"
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#16352A] to-[#0E1A14]" />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#091310]/85 via-[#091310]/15 to-transparent" />
+                <div className="relative p-4 md:p-5">
+                  <div className="text-[17px] md:text-[18px] font-medium text-white">{d.name}</div>
+                  <div className="mt-1 text-[12.5px] text-white/75 leading-[1.45]">{d.tagline}</div>
+                </div>
+              </Link>
+            )
+          })}
         </div>
       </SectionWrap>
 
