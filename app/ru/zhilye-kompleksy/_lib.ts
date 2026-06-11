@@ -9,6 +9,7 @@ import { getDistrictCommercialMeta } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { enLabel, type FilterDim } from '@/lib/filter-i18n'
 import { isTopBlacklisted } from '@/lib/top-blacklist'
+import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import { loadViewCounts, smartSort } from '@/lib/catalog-rank'
 import { cdnRewriteManifest, cdnManifestUrl } from '@/lib/photo-cdn'
 
@@ -646,6 +647,7 @@ async function _loadAllInternal(): Promise<CachedAll> {
   ])
   const manifest = cdnRewriteManifest(manifestRaw)
   const enriched = rows
+    .filter(r => !isHiddenDeveloper(firstString(r.data['Developer1']), firstString(r.data['Варианты поиска застройщика'])))
     .map(r => ({ ...r, data: mergeEnTranslations(r.data, r.airtable_id, enCache) }))
     .map(enrich)
     .map(e => ({ ...e, views: viewCounts[e.id] ?? 0 }))

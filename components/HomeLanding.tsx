@@ -32,6 +32,7 @@ import { HomeCollections } from '@/components/HomeCollections'
 import { HeroBalinaSearch } from '@/components/HeroBalinaSearch'
 import { BalinaCTA } from '@/components/BalinaCTA'
 import { BalinaChatMock } from '@/components/BalinaChatMock'
+import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import {
   StepChat, StepStudy, StepRequest,
   VizYield, VizCompetitors, VizNearby, VizDocs, VizDeveloper, VizFootage,
@@ -325,7 +326,8 @@ const loadTopComplexes = unstable_cache(async (): Promise<ComplexHomeCard[]> => 
       district:data->"Location 2",
       district_alt:data->Location,
       units:data->"Total quantity of units",
-      status:data->"Статус"
+      status:data->"Статус",
+      developer:data->Developer1
     `).limit(500)
     // Real photos live in the complex-photos manifest. cover_url and the
     // complex-covers/<id>.jpg bucket both point at a dead path (404), so they
@@ -337,8 +339,9 @@ const loadTopComplexes = unstable_cache(async (): Promise<ComplexHomeCard[]> => 
     } catch { /* fall back below */ }
     const COVER_BUCKET = cdnBucketBase('complex-covers')
     const items: ComplexHomeCard[] = []
-    for (const r of (data ?? []) as Array<{ airtable_id: string; slug: string | null; cover_url: string | null; name: string | null; district: string | null; district_alt: string | null; units: number | null; status: string | null }>) {
+    for (const r of (data ?? []) as Array<{ airtable_id: string; slug: string | null; cover_url: string | null; name: string | null; district: string | null; district_alt: string | null; units: number | null; status: string | null; developer: string | string[] | null }>) {
       if (!r.slug || !r.name) continue
+      if (isHiddenDeveloper(Array.isArray(r.developer) ? r.developer[0] : r.developer)) continue
       items.push({
         slug: r.slug,
         title: r.name,
@@ -350,7 +353,7 @@ const loadTopComplexes = unstable_cache(async (): Promise<ComplexHomeCard[]> => 
     items.sort((a, b) => (b.units ?? 0) - (a.units ?? 0))
     return items.slice(0, 4)
   } catch { return [] }
-}, ['home-landing-top-complexes-v1'], { revalidate: 3600 })
+}, ['home-landing-top-complexes-v2'], { revalidate: 3600 })
 
 async function loadStats() {
   const [v, a, k, d, unitRows] = await Promise.all([

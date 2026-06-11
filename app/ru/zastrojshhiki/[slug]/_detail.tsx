@@ -24,6 +24,7 @@ import { loadVideosByDeveloperWithComplexes } from '@/lib/videos'
 import { VideoGrid } from '@/components/VideoGrid'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { tField, type Lang } from '@/lib/i18n'
+import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -108,9 +109,12 @@ export async function loadDeveloper(slug: string): Promise<DeveloperRow | null> 
   // alongside the live record with the same SEO:Slug. Prefer the
   // published row so the page doesn't 404 just because an editor
   // forgot to delete the placeholder.
-  return all.find(r => firstString(r.data['SEO:Slug']) === slug && r.data['Публикация'] === true)
+  const found = all.find(r => firstString(r.data['SEO:Slug']) === slug && r.data['Публикация'] === true)
       ?? all.find(r => firstString(r.data['SEO:Slug']) === slug)
       ?? null
+  // Hidden developers (lib/hidden-developers) must 404 even on a direct URL.
+  if (found && isHiddenDeveloper(firstString(found.data['Developer']))) return null
+  return found
 }
 
 // Slim projection — full `data` was ~8.4MB (over the 2MB cache ceiling, so it

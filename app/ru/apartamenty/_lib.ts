@@ -11,6 +11,7 @@ import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { enLabel, type FilterDim } from '@/lib/filter-i18n'
 import { pluralRu } from '@/lib/plural-ru'
 import { isTopBlacklisted } from '@/lib/top-blacklist'
+import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import { loadViewCounts, smartSort } from '@/lib/catalog-rank'
 import { cdnRewriteManifest, cdnManifestUrl } from '@/lib/photo-cdn'
 
@@ -591,6 +592,7 @@ async function _loadAllInternal(): Promise<CachedAll> {
   const rows = ((rowsRes.data ?? []) as unknown as Record<string, unknown>[]).map(reassembleApt)
   const enriched = rows
     .filter(r => r.data?.['Опубликовать'] === true)
+    .filter(r => !isHiddenDeveloper(firstString(r.data['Developer1']), firstString(r.data['Developer'])))
     .map(r => ({ ...r, data: mergeEnTranslations(r.data, r.airtable_id, enCache) }))
     .map(r => enrich(r, devMap))
     .map(e => ({ ...e, views: viewCounts[e.id] ?? 0 }))

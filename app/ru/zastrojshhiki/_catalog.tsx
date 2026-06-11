@@ -11,6 +11,7 @@ import { DevelopersSeoContent } from '@/components/DevelopersSeoContent'
 import { DevelopersSortToggle, type DevelopersSortKey } from '@/components/DevelopersSortToggle'
 import type { DeveloperRowData } from '@/components/DeveloperRow'
 import { scoreDeveloper, type ComplexStats } from '@/lib/developer-score'
+import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import type { Lang } from '@/lib/i18n'
 
 const sb = createClient(
@@ -166,6 +167,7 @@ export async function DevelopersCatalog({
 
   const enriched = rows
     .filter(r => r.data['Публикация'] === true && r.data['SEO:Slug'] && r.data['Developer'])
+    .filter(r => !isHiddenDeveloper(String(r.data['Developer'] ?? '')))
     .map(r => {
       const name = String(r.data['Developer'])
       const stats = statsByDev.get(canonicalize(name)) ?? { total: 0, ready: 0, unitsTotal: 0, unitsReady: 0 }

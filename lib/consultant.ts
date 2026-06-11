@@ -4,6 +4,7 @@
 import { createClient } from '@supabase/supabase-js'
 import type { ChatCompletionTool } from 'openai/resources/chat/completions'
 import { loadAllVillaScores } from './investment/batch-scores'
+import { isHiddenDeveloper } from './hidden-developers'
 import { loadAllRental } from './rental'
 import { cdnManifestUrl } from './photo-cdn'
 
@@ -558,6 +559,7 @@ async function searchSupabaseTable(
   const filtered = rows.filter(r => {
     const d = r.data
     if (d['Опубликовать'] !== true && d['Публикация'] !== true) return false
+    if (isHiddenDeveloper(fs1(d['Developer1']), fs1(d['Developer']))) return false
     const slug = fs1(d['SEO:Slug'])
     if (!slug || slug.startsWith('-')) return false
 
@@ -754,6 +756,7 @@ function attachDistrictBenchmarks(
   for (const r of rows) {
     const d = r.data
     if (d['Опубликовать'] !== true && d['Публикация'] !== true) continue
+    if (isHiddenDeveloper(fs1(d['Developer1']), fs1(d['Developer']))) continue
     const districtRaw = fs1(d['Location filter']) ?? fs1(d['Location 2']) ?? fs1(d['Location'])
     if (!districtRaw || /^rec[A-Za-z0-9]{14,}$/.test(districtRaw)) continue
     const area = num(d['Площадь'])
