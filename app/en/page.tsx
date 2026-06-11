@@ -3,24 +3,24 @@ import { HomeLanding } from '@/components/HomeLanding'
 export const revalidate = 1800
 
 export const metadata = {
-  title: 'Balinsky — AI search for Bali real estate and Southeast Asia',
+  title: 'Buy real estate in Bali — independent marketplace with analytics | Balinsky',
   description:
-    'An AI broker that knows every villa, apartment and complex on Bali. Search in English, Russian or Indonesian. Shortlist, evaluate and close — in one platform.',
+    'Villas, apartments and complexes from dozens of developers in one catalog. Verified documents (PBG, SLF) and real rental yield from neighbour data. Photos, current prices, contacts — your choice.',
   alternates: {
     canonical: '/en',
     languages: { ru: '/ru', en: '/en', 'x-default': '/ru' },
   },
   openGraph: {
-    title: 'Balinsky — AI search for Bali real estate',
-    description: 'Every property on the island in a single AI system. From the first question to signing the deal.',
+    title: 'Buy real estate in Bali — independent marketplace with analytics',
+    description: 'Villas, apartments and complexes from dozens of developers. Verified documents and real rental yield from neighbour data — the choice and the numbers are on your side.',
     type: 'website',
     url: '/en',
     images: [{ url: '/balina.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Balinsky — AI search for Bali real estate',
-    description: 'Every property on the island in a single AI system.',
+    title: 'Buy real estate in Bali — marketplace with analytics',
+    description: 'Villas, apartments and complexes from dozens of developers with verified documents and real rental yield.',
     images: ['/balina.jpg'],
   },
 }

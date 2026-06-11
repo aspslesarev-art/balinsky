@@ -42,9 +42,9 @@ const COPY = {
   ru: {
     locale: 'ru-RU',
     hero: {
-      eyebrow: 'BALI · ЮВА',
-      h1: 'Виллы и апартаменты на Бали с проверенными документами и понятной доходностью.',
-      sub: 'Опишите AI-консьержу что ищете — за минуту получите 5–7 подходящих объектов. С PBG, SLF, расчётом доходности по реальным данным соседей и контактом местного менеджера.',
+      eyebrow: 'НЕЗАВИСИМЫЙ МАРКЕТПЛЕЙС · БАЛИ',
+      h1: 'Купить виллу или апартаменты на Бали — с проверенными документами и реальной доходностью.',
+      sub: 'Независимый маркетплейс: объекты от десятков застройщиков в одном каталоге, проверенные документы (PBG, SLF) и доходность по фактическим данным аренды соседей — не прайс одного девелопера. Опишите, что ищете, и подберём за минуту.',
       placeholder: '2-спальная вилла рядом с Чангу до $300 000, под аренду…',
       tryLabel: 'Попробуйте',
       suggestions: [
@@ -129,9 +129,9 @@ const COPY = {
   en: {
     locale: 'en-US',
     hero: {
-      eyebrow: 'BALI · SOUTHEAST ASIA',
-      h1: 'Villas and apartments on Bali with verified documents and real-data yield.',
-      sub: 'Tell the AI concierge what you\'re looking for — get 5–7 shortlisted properties in a minute. Each one with PBG/SLF documents, rental-yield based on actual neighbour Booking data, and a local manager you can talk to.',
+      eyebrow: 'INDEPENDENT MARKETPLACE · BALI',
+      h1: 'Buy a villa or apartment in Bali — with verified documents and real rental yield.',
+      sub: 'An independent marketplace: listings from dozens of developers in one catalog, verified documents (PBG, SLF) and yield from real neighbour rental data — not one developer\'s price list. Tell us what you\'re looking for and we\'ll shortlist in a minute.',
       placeholder: '2-bedroom villa near Canggu under $300k with rental potential…',
       tryLabel: 'Try',
       suggestions: [
