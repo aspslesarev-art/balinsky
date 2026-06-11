@@ -82,7 +82,7 @@ const COPY = {
       items: [
         { Icon: TrendingUp, title: 'Реальная доходность соседей', body: 'Сколько зарабатывают объекты по соседству — по фактической загрузке и ценам с Booking и Airbnb за 12 месяцев, а не из прайса застройщика.' },
         { Icon: BarChart3, title: 'Конкуренты объекта', body: 'С какими виллами и апартаментами рядом конкурирует эта недвижимость — и как она выглядит на их фоне по цене и метражу.' },
-        { Icon: MapPin, title: 'Что рядом и сколько ехать', body: 'Кафе, пляжи, школы, сёрф-споты — на карте, с временем в пути. Плюс тепловая карта мест: где живее для туристов и аренды.' },
+        { Icon: MapPin, title: 'Что рядом и сколько ехать', body: 'Кафе, пляжи, школы, сёрф-споты — на карте, с временем в пути. Плюс карта туризма: где живее для туристов и аренды.' },
         { Icon: FileCheck2, title: 'Документы и зональность', body: 'PBG, SLF, leasehold или freehold, зона земли — проверяем, чтобы вы не купили объект в серой зоне.' },
         { Icon: Building2, title: 'Профиль застройщика', body: 'Что застройщик уже построил и что в процессе, новости и активность. Застройщики публикуют хорошее — мы помогаем увидеть полную картину.' },
         { Icon: Video, title: 'Съёмка с земли', body: 'Оригинальное видео и фото со стройки у каждого объекта. Не рендеры, а как это выглядит на самом деле.' },
@@ -199,7 +199,7 @@ const COPY = {
       items: [
         { Icon: TrendingUp, title: 'Real neighbour yield', body: 'What nearby properties actually earn — from real occupancy and pricing on Booking and Airbnb over 12 months, not a developer\'s pitch.' },
         { Icon: BarChart3, title: 'The property\'s competitors', body: 'Which villas and apartments nearby it competes with — and how it stacks up on price and size.' },
-        { Icon: MapPin, title: 'What\'s nearby and how far', body: 'Cafés, beaches, schools, surf spots — on the map, with travel times. Plus a places heatmap: where it\'s livelier for tourists and rentals.' },
+        { Icon: MapPin, title: 'What\'s nearby and how far', body: 'Cafés, beaches, schools, surf spots — on the map, with travel times. Plus a tourism map: where it\'s livelier for tourists and rentals.' },
         { Icon: FileCheck2, title: 'Documents and zoning', body: 'PBG, SLF, leasehold or freehold, land zone — checked so you don\'t buy into a grey zone.' },
         { Icon: Building2, title: 'Developer profile', body: 'What the developer has built and what\'s in progress, news and activity. Developers post the good news — we help you see the full picture.' },
         { Icon: Video, title: 'Ground-level footage', body: 'Original video and photos from the construction site on every property. Not renders — how it actually looks.' },

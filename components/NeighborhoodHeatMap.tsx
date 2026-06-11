@@ -103,7 +103,7 @@ export function NeighborhoodHeatMap({
           }
         >
           <Flame size={13} className={showHeat ? 'text-white' : 'text-[#FF5A36]'} />
-          {lang === 'en' ? 'Places heatmap' : 'Тепловая карта мест'}
+          {lang === 'en' ? 'Tourism map' : 'Карта туризма'}
         </button>
         {showHeat && (
           <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/95 backdrop-blur-sm shadow-sm text-[10px] text-[var(--color-text-muted)]">
