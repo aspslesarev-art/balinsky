@@ -101,8 +101,11 @@ export function HomeCollections({ tiers, lang = 'ru' }: { tiers: CollTier[]; lan
 
       {/* Cards */}
       <div className="mt-5 grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-        {district.items.map(it => (
-          <CollCard key={it.slug} it={it} href={`${root}/o/${it.slug}`} />
+        {/* slug is NOT unique — multiple physical units of one project share a
+            slug — so include the index, else duplicate keys break React's
+            reconciliation and the cards don't refresh on district switch. */}
+        {district.items.map((it, i) => (
+          <CollCard key={`${tier.key}:${district.slug}:${it.slug}:${i}`} it={it} href={`${root}/o/${it.slug}`} />
         ))}
       </div>
 
