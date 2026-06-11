@@ -33,6 +33,11 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# secrets & generated reports
+gsc-service-account.json
+*-service-account.json
+/reports/
+
 # vercel
 .vercel
 
