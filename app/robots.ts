@@ -40,6 +40,12 @@ const AI_USER_AGENTS = [
   'Applebot-Extended',
   // Yandex AI (Нейро)
   'YandexAdditional',
+  // Microsoft Bing — ChatGPT search leans on the Bing index, so green-light
+  // it explicitly even though the '*' rule already covers it.
+  'Bingbot',
+  // xAI Grok
+  'GrokBot',
+  'xAI',
 ]
 
 export default function robots(): MetadataRoute.Robots {

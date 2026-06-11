@@ -6,6 +6,8 @@ import { CurrencyProvider } from "@/components/CurrencyContext";
 import { WishlistProvider } from "@/components/WishlistContext";
 import { SiteChrome } from "@/components/SiteChrome";
 import { TmaModeMarker } from "@/components/TmaModeMarker";
+import { JsonLd } from "@/components/JsonLd";
+import { organizationLd, websiteLd } from "@/lib/json-ld";
 
 const GTM_ID = "GTM-TM6D54Z3";
 const YM_ID = 104881153;
@@ -126,6 +128,7 @@ ym(${YM_ID}, 'init', {ssr:true, clickmap:true, trackLinks:true, ecommerce:"dataL
             />
           </div>
         </noscript>
+        <JsonLd data={[organizationLd(), websiteLd()]} />
         <TmaModeMarker />
         <CurrencyProvider>
           <WishlistProvider>
