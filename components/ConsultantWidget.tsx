@@ -523,8 +523,22 @@ export function ConsultantWidget() {
   // panel size to `visualViewport` instead, which excludes the
   // keyboard's height and stays accurate while the visitor types.
   const [vvSize, setVvSize] = useState<{ h: number; w: number; offsetTop: number; offsetLeft: number } | null>(null)
+  // The visual-viewport pin (and the full-screen inline sizing it drives) is a
+  // MOBILE-only workaround. On desktop the panel must be the 400px corner card
+  // the `sm:` utilities describe — but inline width/height/top/left would
+  // override those classes and blow the panel up to fill the whole window. So
+  // we only apply the inline sizing below the `sm` breakpoint (640px).
+  const [isMobile, setIsMobile] = useState(false)
   useEffect(() => {
-    if (!open) return
+    if (typeof window === 'undefined') return
+    const mq = window.matchMedia('(max-width: 639px)')
+    const onChange = () => setIsMobile(mq.matches)
+    onChange()
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+  useEffect(() => {
+    if (!open || !isMobile) return
     const vv = typeof window !== 'undefined' ? window.visualViewport : null
     if (!vv) return
     const update = () => setVvSize({
@@ -541,7 +555,7 @@ export function ConsultantWidget() {
       vv.removeEventListener('scroll', update)
       setVvSize(null)
     }
-  }, [open])
+  }, [open, isMobile])
 
   // Esc to close.
   useEffect(() => {
@@ -687,18 +701,20 @@ export function ConsultantWidget() {
           />
           <div
             className="fixed sm:inset-auto sm:bottom-5 sm:right-5 sm:left-auto sm:top-auto sm:w-[400px] sm:h-[640px] sm:max-h-[calc(100vh-40px)] z-50 flex flex-col bg-white sm:rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.25)] sm:border sm:border-[var(--color-border)] overflow-hidden"
-            style={{
-              // Mobile: pin both POSITION and SIZE to the visual
+            style={isMobile ? {
+              // Mobile only: pin both POSITION and SIZE to the visual
               // viewport. iOS Safari can resize *either* axis when
               // the keyboard / accessibility zoom kicks in; binding
               // width too keeps the panel from spilling past the
-              // visible screen on the right. Desktop overrides via
-              // the `sm:` utilities.
+              // visible screen on the right. On desktop we pass no
+              // inline style so the `sm:` utilities (400px corner
+              // card) win — an inline width/height/top/left would
+              // override them and fill the whole window.
               top: vvSize ? `${vvSize.offsetTop}px` : 0,
               left: vvSize ? `${vvSize.offsetLeft}px` : 0,
               width: vvSize ? `${vvSize.w}px` : '100vw',
               height: vvSize ? `${vvSize.h}px` : '100dvh',
-            }}
+            } : undefined}
           >
             {/* Header — sticky inside the flex container so even if
                 the message list tries to scroll, the title row + ✕

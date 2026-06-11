@@ -21,7 +21,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@supabase/supabase-js'
 import { unstable_cache } from 'next/cache'
-import { Search, ArrowRight, Send, FileCheck2, TrendingUp, Video, Phone, Sparkles, MapPin } from 'lucide-react'
+import { ArrowRight, Send, FileCheck2, TrendingUp, Video, Phone, Sparkles, MapPin } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { VillaCard, type VillaCardData } from '@/components/VillaCard'
@@ -29,6 +29,7 @@ import { loadAll as loadAllVillas, buildAllCards as buildAllVillaCards, type Vil
 import { loadAllVillaScores } from '@/lib/investment/batch-scores'
 import { loadHomeCollections } from '@/lib/home-collections'
 import { HomeCollections } from '@/components/HomeCollections'
+import { HeroBalinaSearch } from '@/components/HeroBalinaSearch'
 import type { Lang } from '@/lib/i18n'
 import { cdnBucketBase, cdnManifestUrl } from '@/lib/photo-cdn'
 
@@ -53,6 +54,7 @@ const COPY = {
       ],
       ctaPrimary: 'Найти виллу',
       ctaSecondary: 'Спросить менеджера',
+      voiceAria: 'Спросить голосом',
       foot: 'Без регистрации.',
     },
     promises: {
@@ -139,6 +141,7 @@ const COPY = {
       ],
       ctaPrimary: 'Find a villa',
       ctaSecondary: 'Talk to a manager',
+      voiceAria: 'Ask by voice',
       foot: 'No signup.',
     },
     promises: {
@@ -354,15 +357,14 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
             </p>
 
             <div className="mt-8 md:mt-10">
-              <HeroSearch lang={lang} />
-              <div className="mt-3 text-[12.5px] text-white/75 flex items-baseline flex-wrap gap-x-2 gap-y-1">
-                <span className="uppercase tracking-wider text-[11px] text-white/55">{c.hero.tryLabel}:</span>
-                {c.hero.suggestions.map((s, i) => (
-                  <Link key={i} href={s.href} className="text-white/85 underline decoration-white/30 underline-offset-2 hover:decoration-white hover:text-white no-underline-mobile">
-                    {s.label}{i < c.hero.suggestions.length - 1 ? ' ·' : ''}
-                  </Link>
-                ))}
-              </div>
+              <HeroBalinaSearch
+                lang={lang}
+                placeholder={c.hero.placeholder}
+                tryLabel={c.hero.tryLabel}
+                suggestions={c.hero.suggestions}
+                sendAria={c.hero.ctaPrimary}
+                voiceAria={c.hero.voiceAria}
+              />
             </div>
 
             <div className="mt-8 flex items-center gap-3 flex-wrap">
@@ -637,31 +639,6 @@ function AiPoint({ heading, body }: { heading: string; body: string }) {
       <div className="text-[16px] font-medium text-[#0E1A14] leading-tight">{heading}</div>
       <p className="mt-2 text-[14px] leading-[1.6] text-[#4B5563]">{body}</p>
     </div>
-  )
-}
-
-function HeroSearch({ lang }: { lang: Lang }) {
-  const c = COPY[lang]
-  const action = lang === 'en' ? '/en/villas' : '/ru/villy'
-  return (
-    <form action={action} method="get" className="relative">
-      <Search size={18} strokeWidth={1.8} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#6B7570] pointer-events-none" />
-      <input
-        type="text"
-        name="q"
-        placeholder={c.hero.placeholder}
-        autoComplete="off"
-        spellCheck={false}
-        className="w-full pl-12 pr-16 py-4 md:py-5 text-[15px] md:text-[16px] rounded-2xl bg-white border border-[#D5DDD8] focus:border-[var(--color-primary)] focus:outline-none focus:ring-4 focus:ring-[var(--color-primary)]/10 transition-shadow shadow-[0_1px_2px_rgba(0,0,0,0.03)] placeholder:text-[#9CA59F]"
-      />
-      <button
-        type="submit"
-        className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-11 h-11 rounded-xl bg-[#0E1A14] text-white hover:bg-[#1F2C25] transition-colors"
-        aria-label={c.hero.ctaPrimary}
-      >
-        <ArrowRight size={16} />
-      </button>
-    </form>
   )
 }
 
