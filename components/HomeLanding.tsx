@@ -52,7 +52,7 @@ const COPY = {
     hero: {
       eyebrow: 'НЕЗАВИСИМЫЙ МАРКЕТПЛЕЙС · БАЛИ',
       h1: 'Купить виллу или апартаменты на Бали',
-      h1sub: 'С проверенными документами и понятной доходностью.',
+      h1sub: 'Безопасно, с проверенными документами и понятной доходностью.',
       placeholder: '2-спальная вилла рядом с Чангу до $300 000, под аренду…',
       tryLabel: 'Попробуйте',
       suggestions: [
@@ -67,8 +67,8 @@ const COPY = {
     },
     howItWorks: {
       eyebrow: 'КАК ЭТО РАБОТАЕТ',
-      heading: 'Купить виллу на Бали — не выходя из переписки.',
-      sub: 'Маркетплейс, AI-брокер и команда на земле — в одном месте.',
+      heading: 'Купите спокойно — даже не приезжая на Бали.',
+      sub: 'AI-брокер и команда на земле проведут от вопроса до ключей.',
       cta: 'Спросить AI-брокера',
       steps: [
         { n: '01', Icon: Sparkles, title: 'Спросите AI-брокера', body: 'Подберёт объекты и ответит на вопросы. Бесплатно, 24/7.' },
@@ -77,9 +77,9 @@ const COPY = {
       ],
     },
     features: {
-      eyebrow: 'АНАЛИТИКА ПО ОБЪЕКТУ',
-      heading: 'Что вы видите по каждому объекту.',
-      sub: 'Цифры, чтобы решить — ещё до разговора с продавцом.',
+      eyebrow: 'ЦИФРЫ, А НЕ ОБЕЩАНИЯ',
+      heading: 'Решайте по реальным цифрам, а не по словам застройщика.',
+      sub: 'Всё видно ещё до разговора с продавцом.',
       items: [
         { Icon: TrendingUp, title: 'Доходность соседей', body: 'Сколько реально зарабатывают рядом — по Booking и Airbnb.' },
         { Icon: BarChart3, title: 'Конкуренты объекта', body: 'С чем сравнить и как объект на их фоне.' },
@@ -91,7 +91,7 @@ const COPY = {
     },
     safety: {
       eyebrow: 'БЕЗОПАСНОСТЬ СДЕЛКИ',
-      heading: 'Сами или через нас — но через нас безопаснее.',
+      heading: 'Без серых схем и риска потерять деньги.',
       body: 'Вся информация — наша, плюс внутренние нюансы, которых нет на сайте. Поможем приехать и закрыть сделку с гарантиями.',
       points: [
         'Независимый маркетплейс, а не лендинг одного застройщика',
@@ -104,13 +104,13 @@ const COPY = {
     },
     villasSection: {
       eyebrow: '01 · ВИЛЛЫ',
-      heading: 'Виллы с полученным PBG или SLF.',
-      sub: 'Только с полученными разрешениями. Ранжированы по инвест-скору.',
+      heading: 'Только виллы с готовыми документами.',
+      sub: 'Без серых зон с землёй. Сверху — самые выгодные.',
       linkAll: 'Все виллы каталога',
     },
     ai: {
-      eyebrow: '02 · AI-КОНСЬЕРЖ',
-      heading: 'Опишите что ищете. Получите шорт-лист за минуту.',
+      eyebrow: '02 · AI-БРОКЕР',
+      heading: 'Спросите что угодно — без агента, без спама, бесплатно.',
       body: 'Знает каждый объект на платформе. Спросите голосом или текстом — получите варианты с цифрами, документами и доходностью.',
       pointHeading1: 'Описание вместо фильтров',
       pointBody1: '«Двушка в Чангу до $300k для жены и удалённой работы» — этого достаточно. AI разберёт намерение и подберёт то, что подходит.',
@@ -130,7 +130,7 @@ const COPY = {
     },
     districts: {
       eyebrow: '04 · РАЙОНЫ',
-      heading: 'Где покупать — короткий гид.',
+      heading: 'В каком районе купить под вашу цель.',
       items: [
         { name: 'Чангу', tagline: 'сёрфинг, кафе, посуточная аренда', slug: 'Berawa' },
         { name: 'Убуд', tagline: 'природа, рисовые террасы, спокойствие', slug: 'Ubud' },
@@ -140,7 +140,7 @@ const COPY = {
     },
     knowledge: {
       eyebrow: '05 · ЗНАНИЯ',
-      heading: 'Что важно знать до сделки.',
+      heading: 'Поймёте сделку до того, как платить.',
       items: [
         { title: 'Как купить недвижимость на Бали', body: 'Leasehold vs freehold, налоги, нотариус, регистрация — пошагово.', href: '/ru/znaniya' },
         { title: 'Документы PBG и SLF — зачем', body: 'Без них объект — серая зона. Что проверять и где.', href: '/ru/znaniya' },
@@ -149,7 +149,7 @@ const COPY = {
       linkAll: 'База знаний',
     },
     proof: {
-      heading: 'Что говорят покупатели.',
+      heading: 'Уже купили через нас.',
       items: [
         { quote: 'Купил виллу за две недели. Без перелёта на Бали. Все документы и проверки — внутри платформы.', author: 'Александр К., Москва', role: 'купил Origins Villa 75 м² в декабре 2025' },
         { quote: 'Сравнили семь объектов в одном Telegram-чате. AI-брокер отвечал ночью, когда я не мог уснуть от расчётов.', author: 'Anna L., Berlin', role: 'купила апартаменты в Canggu' },
@@ -169,7 +169,7 @@ const COPY = {
     hero: {
       eyebrow: 'INDEPENDENT MARKETPLACE · BALI',
       h1: 'Buy a villa or apartment in Bali',
-      h1sub: 'With verified documents and transparent yield.',
+      h1sub: 'Safely, with verified documents and transparent yield.',
       placeholder: '2-bedroom villa near Canggu under $300k with rental potential…',
       tryLabel: 'Try',
       suggestions: [
@@ -184,8 +184,8 @@ const COPY = {
     },
     howItWorks: {
       eyebrow: 'HOW IT WORKS',
-      heading: 'Buy a villa in Bali — without leaving the chat.',
-      sub: 'A marketplace, an AI broker and a team on the ground — in one place.',
+      heading: 'Buy with confidence — without flying to Bali.',
+      sub: 'An AI broker and a team on the ground take you from question to keys.',
       cta: 'Ask the AI broker',
       steps: [
         { n: '01', Icon: Sparkles, title: 'Ask the AI broker', body: 'It shortlists properties and answers your questions. Free, 24/7.' },
@@ -194,9 +194,9 @@ const COPY = {
       ],
     },
     features: {
-      eyebrow: 'PER-PROPERTY ANALYTICS',
-      heading: 'What you see on every property.',
-      sub: 'Numbers to decide — before you talk to the seller.',
+      eyebrow: 'NUMBERS, NOT PROMISES',
+      heading: 'Decide on real numbers, not the developer\'s pitch.',
+      sub: 'All visible before you talk to the seller.',
       items: [
         { Icon: TrendingUp, title: 'Neighbour yield', body: 'What nearby properties actually earn — from Booking and Airbnb.' },
         { Icon: BarChart3, title: 'The competitors', body: 'What to compare against, and how it stacks up.' },
@@ -208,7 +208,7 @@ const COPY = {
     },
     safety: {
       eyebrow: 'A SAFER DEAL',
-      heading: 'On your own or through us — through us is safer.',
+      heading: 'No grey schemes, no risk of losing your money.',
       body: 'All the data is ours, plus the internal details you won\'t find on the site. We\'ll help you get here and close the deal with guarantees.',
       points: [
         'An independent marketplace, not one developer\'s landing page',
@@ -221,13 +221,13 @@ const COPY = {
     },
     villasSection: {
       eyebrow: '01 · VILLAS',
-      heading: 'Villas with PBG or SLF in hand.',
-      sub: 'Only with permits issued. Ranked by our investment score.',
+      heading: 'Only villas with documents in hand.',
+      sub: 'No grey-zone land. The best-value ones on top.',
       linkAll: 'All villas',
     },
     ai: {
-      eyebrow: '02 · AI CONCIERGE',
-      heading: 'Describe what you want. Get a shortlist in a minute.',
+      eyebrow: '02 · AI BROKER',
+      heading: 'Ask anything — no agent, no spam, free.',
       body: 'It knows every property on the platform. Ask by voice or text — get options with numbers, documents and yield.',
       pointHeading1: 'Description instead of filters',
       pointBody1: '"2BR in Canggu under $300k for my partner and remote work" — that\'s enough. The AI parses intent and surfaces what fits.',
@@ -247,7 +247,7 @@ const COPY = {
     },
     districts: {
       eyebrow: '04 · DISTRICTS',
-      heading: 'Where to buy — a short guide.',
+      heading: 'Which district fits your goal.',
       items: [
         { name: 'Canggu', tagline: 'surf, cafés, daily rental', slug: 'Berawa' },
         { name: 'Ubud', tagline: 'nature, rice terraces, calm', slug: 'Ubud' },
@@ -257,7 +257,7 @@ const COPY = {
     },
     knowledge: {
       eyebrow: '05 · LEARN',
-      heading: 'What to know before the deal.',
+      heading: 'Understand the deal before you pay.',
       items: [
         { title: 'How to buy property in Bali', body: 'Leasehold vs freehold, taxes, notary, registration — step by step.', href: '/en/knowledge' },
         { title: 'PBG and SLF — what they are', body: 'Without them, a property is grey-zone. What to check and where.', href: '/en/knowledge' },
@@ -266,7 +266,7 @@ const COPY = {
       linkAll: 'Knowledge base',
     },
     proof: {
-      heading: 'What buyers say.',
+      heading: 'Already bought through us.',
       items: [
         { quote: 'Bought a villa in two weeks. Without flying to Bali. All paperwork and checks inside the platform.', author: 'Alexander K., Moscow', role: 'bought Origins Villa 75 m² in December 2025' },
         { quote: 'We compared seven properties in one Telegram thread. The AI broker answered me at night when I couldn\'t sleep from the math.', author: 'Anna L., Berlin', role: 'bought an apartment in Canggu' },
