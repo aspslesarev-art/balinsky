@@ -32,6 +32,11 @@ import { HomeCollections } from '@/components/HomeCollections'
 import { HeroBalinaSearch } from '@/components/HeroBalinaSearch'
 import { BalinaCTA } from '@/components/BalinaCTA'
 import { BalinaChatMock } from '@/components/BalinaChatMock'
+import {
+  StepChat, StepStudy, StepRequest,
+  VizYield, VizCompetitors, VizNearby, VizDocs, VizDeveloper, VizFootage,
+  SafetyFlow,
+} from '@/components/LandingVisuals'
 import type { Lang } from '@/lib/i18n'
 import { cdnBucketBase, cdnManifestUrl } from '@/lib/photo-cdn'
 
@@ -45,8 +50,8 @@ const COPY = {
     locale: 'ru-RU',
     hero: {
       eyebrow: 'НЕЗАВИСИМЫЙ МАРКЕТПЛЕЙС · БАЛИ',
-      h1: 'Купить виллу или апартаменты на Бали — с проверенными документами и реальной доходностью.',
-      sub: 'Независимый маркетплейс: объекты от десятков застройщиков в одном каталоге, проверенные документы (PBG, SLF) и доходность по фактическим данным аренды соседей — не прайс одного девелопера. Опишите, что ищете, и подберём за минуту.',
+      h1: 'Купить виллу или апартаменты на Бали',
+      h1sub: 'С проверенными документами и понятной доходностью.',
       placeholder: '2-спальная вилла рядом с Чангу до $300 000, под аренду…',
       tryLabel: 'Попробуйте',
       suggestions: [
@@ -162,8 +167,8 @@ const COPY = {
     locale: 'en-US',
     hero: {
       eyebrow: 'INDEPENDENT MARKETPLACE · BALI',
-      h1: 'Buy a villa or apartment in Bali — with verified documents and real rental yield.',
-      sub: 'An independent marketplace: listings from dozens of developers in one catalog, verified documents (PBG, SLF) and yield from real neighbour rental data — not one developer\'s price list. Tell us what you\'re looking for and we\'ll shortlist in a minute.',
+      h1: 'Buy a villa or apartment in Bali',
+      h1sub: 'With verified documents and transparent yield.',
       placeholder: '2-bedroom villa near Canggu under $300k with rental potential…',
       tryLabel: 'Try',
       suggestions: [
@@ -411,11 +416,11 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
             <div className="text-[11px] md:text-[12px] uppercase tracking-[0.2em] text-white font-semibold mb-5 [text-shadow:0_1px_10px_rgba(0,0,0,0.6)]">
               {c.hero.eyebrow}
             </div>
-            <h1 className="text-[34px] md:text-[56px] leading-[1.08] font-extrabold tracking-[-0.015em] text-white [text-shadow:0_2px_22px_rgba(0,0,0,0.65),0_1px_3px_rgba(0,0,0,0.55)]">
+            <h1 className="text-[34px] md:text-[56px] leading-[1.06] font-extrabold tracking-[-0.015em] text-white [text-shadow:0_2px_22px_rgba(0,0,0,0.65),0_1px_3px_rgba(0,0,0,0.55)]">
               {c.hero.h1}
             </h1>
-            <p className="mt-5 md:mt-7 text-[15.5px] md:text-[18px] leading-[1.55] text-white/85 max-w-[600px]">
-              {c.hero.sub}
+            <p className="mt-4 md:mt-5 text-[18px] md:text-[26px] leading-[1.25] font-semibold text-white/95 max-w-[620px] [text-shadow:0_1px_12px_rgba(0,0,0,0.6)]">
+              {c.hero.h1sub}
             </p>
 
             <div className="mt-8 md:mt-10">
@@ -459,16 +464,22 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
         <div className="mt-10 md:mt-14 grid md:grid-cols-3 gap-6 md:gap-7">
           {c.howItWorks.steps.map((s, i) => {
             const Icon = s.Icon
+            const Visual = [StepChat, StepStudy, StepRequest][i]
             return (
-              <div key={i} className="rounded-2xl border border-[var(--color-border)] bg-white p-6 md:p-7">
-                <div className="flex items-center gap-3">
-                  <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary-pressed)]">
-                    <Icon size={19} strokeWidth={1.7} />
-                  </span>
-                  <span className="text-[13px] font-mono text-[#9CA59F]">{s.n}</span>
+              <div key={i} className="rounded-2xl border border-[var(--color-border)] bg-white overflow-hidden">
+                <div className="relative h-[150px] bg-[var(--color-search-bg)] border-b border-[var(--color-border)]">
+                  {Visual && <Visual lang={lang} />}
                 </div>
-                <h3 className="mt-5 text-[18px] font-medium text-[#0E1A14] leading-tight">{s.title}</h3>
-                <p className="mt-2.5 text-[14px] leading-[1.6] text-[#4B5563]">{s.body}</p>
+                <div className="p-6 md:p-7">
+                  <div className="flex items-center gap-3">
+                    <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary-pressed)]">
+                      <Icon size={19} strokeWidth={1.7} />
+                    </span>
+                    <span className="text-[13px] font-mono text-[#9CA59F]">{s.n}</span>
+                  </div>
+                  <h3 className="mt-5 text-[18px] font-medium text-[#0E1A14] leading-tight">{s.title}</h3>
+                  <p className="mt-2.5 text-[14px] leading-[1.6] text-[#4B5563]">{s.body}</p>
+                </div>
               </div>
             )
           })}
@@ -486,11 +497,17 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
         <div className="mt-10 md:mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {c.features.items.map((p, i) => {
             const Icon = p.Icon
+            const Visual = [VizYield, VizCompetitors, VizNearby, VizDocs, VizDeveloper, VizFootage][i]
             return (
-              <div key={i}>
-                <Icon size={22} strokeWidth={1.5} className="text-[var(--color-primary)]" />
-                <h3 className="mt-4 text-[17px] font-medium text-[#0E1A14] leading-tight">{p.title}</h3>
-                <p className="mt-2.5 text-[14px] leading-[1.6] text-[#4B5563]">{p.body}</p>
+              <div key={i} className="rounded-2xl border border-[var(--color-border)] bg-white overflow-hidden">
+                <div className="relative h-[124px] bg-[var(--color-search-bg)] border-b border-[var(--color-border)]">
+                  {Visual && <Visual lang={lang} />}
+                </div>
+                <div className="p-5">
+                  <Icon size={20} strokeWidth={1.5} className="text-[var(--color-primary)]" />
+                  <h3 className="mt-3 text-[16.5px] font-medium text-[#0E1A14] leading-tight">{p.title}</h3>
+                  <p className="mt-2 text-[13.5px] leading-[1.6] text-[#4B5563]">{p.body}</p>
+                </div>
               </div>
             )
           })}
@@ -536,6 +553,9 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
       {/* === On your own or through us = safer =================== */}
       <SectionWrap className="border-t border-[var(--color-border)]">
         <div className="rounded-3xl bg-gradient-to-br from-[var(--color-primary-soft)] via-[#F1F7F3] to-white border border-[var(--color-border)] p-7 md:p-12">
+          <div className="mb-8 md:mb-10 max-w-[560px]">
+            <SafetyFlow lang={lang} />
+          </div>
           <div className="grid lg:grid-cols-12 gap-8 lg:gap-14 lg:items-center">
             <div className="lg:col-span-7">
               <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-primary-pressed)] font-medium mb-4 flex items-center gap-2">
