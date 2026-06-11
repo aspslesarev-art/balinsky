@@ -21,7 +21,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@supabase/supabase-js'
 import { unstable_cache } from 'next/cache'
-import { ArrowRight, Send, FileCheck2, TrendingUp, Video, Phone, Sparkles, MapPin } from 'lucide-react'
+import { ArrowRight, Send, FileCheck2, TrendingUp, Video, Phone, Sparkles, MapPin, Building2, BarChart3, ShieldCheck } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { VillaCard, type VillaCardData } from '@/components/VillaCard'
@@ -30,6 +30,7 @@ import { loadAllVillaScores } from '@/lib/investment/batch-scores'
 import { loadHomeCollections } from '@/lib/home-collections'
 import { HomeCollections } from '@/components/HomeCollections'
 import { HeroBalinaSearch } from '@/components/HeroBalinaSearch'
+import { BalinaCTA } from '@/components/BalinaCTA'
 import type { Lang } from '@/lib/i18n'
 import { cdnBucketBase, cdnManifestUrl } from '@/lib/photo-cdn'
 
@@ -57,14 +58,42 @@ const COPY = {
       voiceAria: 'Спросить голосом',
       foot: 'Без регистрации.',
     },
-    promises: {
-      heading: 'Что отличает наш каталог.',
-      items: [
-        { Icon: FileCheck2, title: 'Документы проверены', body: 'PBG, SLF, leasehold, владелец — каждый объект проходит ручную проверку. Без объектов с серыми правами на землю.' },
-        { Icon: TrendingUp, title: 'Доходность по реальным данным', body: 'Не прайс-лист застройщика, а расчёт по фактической загрузке и ценам соседей с Booking и Airbnb за последние 12 месяцев.' },
-        { Icon: Video, title: 'Съёмка с земли', body: 'У каждого объекта — оригинальное видео и фото со стройки. Не рендеры, а как это выглядит на самом деле.' },
-        { Icon: Phone, title: 'Менеджер на связи', body: 'Андрей Балинский плюс команда на Бали. Сопровождение от просмотра до получения ключей и сдачи в аренду.' },
+    howItWorks: {
+      eyebrow: 'КАК ЭТО РАБОТАЕТ',
+      heading: 'Купить виллу на Бали — не выходя из переписки.',
+      sub: 'Маркетплейс, AI-брокер и команда на земле в одном месте. Вы ведёте выбор сами, мы даём данные и подстраховываем на сделке.',
+      cta: 'Спросить AI-брокера',
+      steps: [
+        { n: '01', Icon: Sparkles, title: 'Спросите AI-брокера', body: 'Опишите задачу словами — подберёт объекты, ответит на большинство вопросов и проконсультирует по юридике. Бесплатно, 24/7, на вашем языке.' },
+        { n: '02', Icon: TrendingUp, title: 'Изучите объект по-настоящему', body: 'Не рендеры застройщика: реальная доходность соседей, конкуренты, что рядом на карте, документы и история застройщика — всё в одном месте.' },
+        { n: '03', Icon: Phone, title: 'Оставьте заявку — включимся', body: 'Захотели человека — оставьте заявку. Проведём Zoom-презентацию, организуем показ, разберём риски и доведём до безопасной сделки. Можно и напрямую к застройщику — но через нас безопаснее.' },
       ],
+    },
+    features: {
+      eyebrow: 'АНАЛИТИКА ПО ОБЪЕКТУ',
+      heading: 'Что вы видите по каждому объекту.',
+      sub: 'Сайт показывает не только красивое. Цифры и факты, чтобы понять, хороший объект или нет — ещё до разговора с продавцом.',
+      items: [
+        { Icon: TrendingUp, title: 'Реальная доходность соседей', body: 'Сколько зарабатывают объекты по соседству — по фактической загрузке и ценам с Booking и Airbnb за 12 месяцев, а не из прайса застройщика.' },
+        { Icon: BarChart3, title: 'Конкуренты объекта', body: 'С какими виллами и апартаментами рядом конкурирует эта недвижимость — и как она выглядит на их фоне по цене и метражу.' },
+        { Icon: MapPin, title: 'Что рядом и сколько ехать', body: 'Кафе, пляжи, школы, сёрф-споты — на карте, с временем в пути. Плюс тепловая карта мест: где живее для туристов и аренды.' },
+        { Icon: FileCheck2, title: 'Документы и зональность', body: 'PBG, SLF, leasehold или freehold, зона земли — проверяем, чтобы вы не купили объект в серой зоне.' },
+        { Icon: Building2, title: 'Профиль застройщика', body: 'Что застройщик уже построил и что в процессе, новости и активность. Застройщики публикуют хорошее — мы помогаем увидеть полную картину.' },
+        { Icon: Video, title: 'Съёмка с земли', body: 'Оригинальное видео и фото со стройки у каждого объекта. Не рендеры, а как это выглядит на самом деле.' },
+      ],
+    },
+    safety: {
+      eyebrow: 'БЕЗОПАСНОСТЬ СДЕЛКИ',
+      heading: 'Сами или через нас — но через нас безопаснее.',
+      body: 'Вся информация на сайте — наша. Но мы знаем и то, что не публикуется: внутренние нюансы по объектам и застройщикам. Поможем приехать, провести сделку комфортно и с гарантиями — чтобы вы безопасно купили максимально доходную (или просто отличную) недвижимость на Бали, под любые цели, включая жизнь для себя.',
+      points: [
+        'Независимый маркетплейс, а не лендинг одного застройщика',
+        'Знаем внутренние нюансы по объектам и застройщикам',
+        'Прямые контакты менеджеров — общайтесь сами или через нас',
+        'Сопровождение, гарантии и страховки на сделке',
+      ],
+      cta: 'Оставить заявку',
+      ctaText: 'Хочу оставить заявку — подключите менеджера: нужна презентация объекта и помощь с безопасной сделкой.',
     },
     villasSection: {
       eyebrow: '01 · ВИЛЛЫ',
@@ -120,10 +149,11 @@ const COPY = {
       ],
     },
     finalCta: {
-      h2: 'Найдите объект, который купите.',
-      sub: 'Один поиск с AI-консьержем — точнее, чем три месяца изучения каталогов.',
-      primary: 'Открыть каталог вилл',
-      secondary: 'Написать менеджеру',
+      h2: 'Найдите недвижимость, которую реально купите.',
+      sub: 'Спросите AI-брокера или оставьте заявку — подключим команду и доведём до безопасной сделки.',
+      primary: 'Спросить AI-брокера',
+      secondary: 'Оставить заявку',
+      secondaryText: 'Хочу оставить заявку — подключите менеджера: нужна презентация объекта и помощь со сделкой.',
     },
   },
   en: {
@@ -144,14 +174,42 @@ const COPY = {
       voiceAria: 'Ask by voice',
       foot: 'No signup.',
     },
-    promises: {
-      heading: 'What sets our catalog apart.',
-      items: [
-        { Icon: FileCheck2, title: 'Documents verified', body: 'PBG, SLF, leasehold, owner — every property passes manual due diligence. No grey-zone land titles.' },
-        { Icon: TrendingUp, title: 'Yield from real data', body: 'Not a developer\'s pitch deck — actual occupancy and pricing from neighbour Booking and Airbnb data over the last 12 months.' },
-        { Icon: Video, title: 'Ground-level footage', body: 'Every property has original video and photos from the construction site. Not renders — how it actually looks.' },
-        { Icon: Phone, title: 'Manager on call', body: 'Andrei Balinsky and the Bali team. Hand-holding from viewing to keys, and rental ramp-up.' },
+    howItWorks: {
+      eyebrow: 'HOW IT WORKS',
+      heading: 'Buy a villa in Bali — without leaving the chat.',
+      sub: 'A marketplace, an AI broker and a team on the ground in one place. You drive the choice; we bring the data and de-risk the deal.',
+      cta: 'Ask the AI broker',
+      steps: [
+        { n: '01', Icon: Sparkles, title: 'Ask the AI broker', body: 'Describe what you need in plain words — it shortlists properties, answers most questions and advises on the legal side. Free, 24/7, in your language.' },
+        { n: '02', Icon: TrendingUp, title: 'Study the property for real', body: 'Not the developer\'s renders: real neighbour yield, competitors, what\'s nearby on the map, documents and the developer\'s track record — all in one place.' },
+        { n: '03', Icon: Phone, title: 'Leave a request — we step in', body: 'Want a human? Leave a request. We run a Zoom presentation, arrange a viewing, walk through the risks and see the deal through safely. You can go to the developer directly — but through us is safer.' },
       ],
+    },
+    features: {
+      eyebrow: 'PER-PROPERTY ANALYTICS',
+      heading: 'What you see on every property.',
+      sub: 'The site shows more than pretty photos. Numbers and facts to judge whether a property is any good — before you ever talk to the seller.',
+      items: [
+        { Icon: TrendingUp, title: 'Real neighbour yield', body: 'What nearby properties actually earn — from real occupancy and pricing on Booking and Airbnb over 12 months, not a developer\'s pitch.' },
+        { Icon: BarChart3, title: 'The property\'s competitors', body: 'Which villas and apartments nearby it competes with — and how it stacks up on price and size.' },
+        { Icon: MapPin, title: 'What\'s nearby and how far', body: 'Cafés, beaches, schools, surf spots — on the map, with travel times. Plus a places heatmap: where it\'s livelier for tourists and rentals.' },
+        { Icon: FileCheck2, title: 'Documents and zoning', body: 'PBG, SLF, leasehold or freehold, land zone — checked so you don\'t buy into a grey zone.' },
+        { Icon: Building2, title: 'Developer profile', body: 'What the developer has built and what\'s in progress, news and activity. Developers post the good news — we help you see the full picture.' },
+        { Icon: Video, title: 'Ground-level footage', body: 'Original video and photos from the construction site on every property. Not renders — how it actually looks.' },
+      ],
+    },
+    safety: {
+      eyebrow: 'A SAFER DEAL',
+      heading: 'On your own or through us — through us is safer.',
+      body: 'All the information on the site is ours. But we also know what isn\'t published: the internal details on properties and developers. We\'ll help you get here and close the deal comfortably and with guarantees — so you safely buy the most profitable (or simply great) property in Bali, for any goal, including living in it yourself.',
+      points: [
+        'An independent marketplace, not one developer\'s landing page',
+        'We know the internal details on properties and developers',
+        'Direct manager contacts — reach out yourself or through us',
+        'Hand-holding, guarantees and insurance on the deal',
+      ],
+      cta: 'Leave a request',
+      ctaText: 'I\'d like to leave a request — please connect a manager: I need a property presentation and help with a safe deal.',
     },
     villasSection: {
       eyebrow: '01 · VILLAS',
@@ -208,9 +266,10 @@ const COPY = {
     },
     finalCta: {
       h2: 'Find the property you\'ll actually buy.',
-      sub: 'One search with the AI concierge — sharper than three months of scrolling catalogs.',
-      primary: 'Open villa catalog',
-      secondary: 'Message a manager',
+      sub: 'Ask the AI broker or leave a request — we\'ll bring in the team and see the deal through safely.',
+      primary: 'Ask the AI broker',
+      secondary: 'Leave a request',
+      secondaryText: 'I\'d like to leave a request — please connect a manager: I need a property presentation and help with the deal.',
     },
   },
 } as const
@@ -341,15 +400,15 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
           />
         )}
         {/* Legibility wash — dark from the bottom where the copy sits. */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#091310]/92 via-[#091310]/45 to-[#091310]/15" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#091310]/55 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#06100C]/96 via-[#06100C]/62 to-[#06100C]/20" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#06100C]/70 via-[#06100C]/10 to-transparent" />
 
         <PageContainer>
           <div className="relative max-w-[760px] pt-32 pb-14 md:pt-40 md:pb-20">
-            <div className="text-[11px] uppercase tracking-[0.18em] text-white/80 font-medium mb-5">
+            <div className="text-[11px] md:text-[12px] uppercase tracking-[0.2em] text-white font-semibold mb-5 [text-shadow:0_1px_10px_rgba(0,0,0,0.6)]">
               {c.hero.eyebrow}
             </div>
-            <h1 className="text-[36px] md:text-[60px] leading-[1.05] font-light tracking-[-0.02em] text-white [text-shadow:0_2px_28px_rgba(0,0,0,0.35)]">
+            <h1 className="text-[34px] md:text-[56px] leading-[1.08] font-extrabold tracking-[-0.015em] text-white [text-shadow:0_2px_22px_rgba(0,0,0,0.65),0_1px_3px_rgba(0,0,0,0.55)]">
               {c.hero.h1}
             </h1>
             <p className="mt-5 md:mt-7 text-[15.5px] md:text-[18px] leading-[1.55] text-white/85 max-w-[600px]">
@@ -391,9 +450,114 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
         </PageContainer>
       </section>
 
-      {/* === 2. Featured villas ================================== */}
+      {/* === How it works — sell the service, not the villa ===== */}
+      <SectionWrap className="border-t border-[var(--color-border)]">
+        <SectionHead eyebrow={c.howItWorks.eyebrow} title={c.howItWorks.heading} sub={c.howItWorks.sub} />
+        <div className="mt-10 md:mt-14 grid md:grid-cols-3 gap-6 md:gap-7">
+          {c.howItWorks.steps.map((s, i) => {
+            const Icon = s.Icon
+            return (
+              <div key={i} className="rounded-2xl border border-[var(--color-border)] bg-white p-6 md:p-7">
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary-pressed)]">
+                    <Icon size={19} strokeWidth={1.7} />
+                  </span>
+                  <span className="text-[13px] font-mono text-[#9CA59F]">{s.n}</span>
+                </div>
+                <h3 className="mt-5 text-[18px] font-medium text-[#0E1A14] leading-tight">{s.title}</h3>
+                <p className="mt-2.5 text-[14px] leading-[1.6] text-[#4B5563]">{s.body}</p>
+              </div>
+            )
+          })}
+        </div>
+        <div className="mt-9">
+          <BalinaCTA className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[var(--color-primary)] text-white text-[14.5px] font-medium hover:bg-[var(--color-primary-pressed)] transition-colors cursor-pointer">
+            <Sparkles size={15} /> {c.howItWorks.cta}
+          </BalinaCTA>
+        </div>
+      </SectionWrap>
+
+      {/* === Per-property analytics — "what you actually see" ==== */}
+      <SectionWrap className="border-t border-[var(--color-border)] bg-[#FAFCFB]">
+        <SectionHead eyebrow={c.features.eyebrow} title={c.features.heading} sub={c.features.sub} />
+        <div className="mt-10 md:mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+          {c.features.items.map((p, i) => {
+            const Icon = p.Icon
+            return (
+              <div key={i}>
+                <Icon size={22} strokeWidth={1.5} className="text-[var(--color-primary)]" />
+                <h3 className="mt-4 text-[17px] font-medium text-[#0E1A14] leading-tight">{p.title}</h3>
+                <p className="mt-2.5 text-[14px] leading-[1.6] text-[#4B5563]">{p.body}</p>
+              </div>
+            )
+          })}
+        </div>
+      </SectionWrap>
+
+      {/* === AI concierge (one strong block, not a tech showcase) === */}
+      <SectionWrap className="border-t border-[var(--color-border)]">
+        <div className="grid lg:grid-cols-12 gap-10 lg:gap-16">
+          <div className="lg:col-span-5">
+            <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-primary)] font-medium mb-4 flex items-center gap-2">
+              <Sparkles size={13} strokeWidth={2} /> {c.ai.eyebrow}
+            </div>
+            <h2 className="text-[28px] md:text-[40px] leading-[1.1] font-light tracking-[-0.02em] text-[#0E1A14]">
+              {c.ai.heading}
+            </h2>
+            <p className="mt-6 text-[15px] leading-[1.65] text-[#4B5563]">
+              {c.ai.body}
+            </p>
+            <div className="mt-7 flex items-center gap-3 flex-wrap">
+              <BalinaCTA className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[var(--color-primary)] text-white text-[14.5px] font-medium hover:bg-[var(--color-primary-pressed)] transition-colors cursor-pointer">
+                <Sparkles size={15} /> {c.howItWorks.cta}
+              </BalinaCTA>
+              <a href={telegram} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-[#D5DDD8] text-[14.5px] font-medium text-[#1A2620] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors no-underline">
+                <Send size={15} /> {c.ai.cta}
+              </a>
+            </div>
+            <p className="mt-3 text-[12.5px] text-[#9CA59F] max-w-[380px]">{c.ai.hint}</p>
+          </div>
+          <div className="lg:col-span-7 grid gap-6 content-start">
+            <AiPoint heading={c.ai.pointHeading1} body={c.ai.pointBody1} />
+            <AiPoint heading={c.ai.pointHeading2} body={c.ai.pointBody2} />
+            <AiPoint heading={c.ai.pointHeading3} body={c.ai.pointBody3} />
+          </div>
+        </div>
+      </SectionWrap>
+
+      {/* === On your own or through us = safer =================== */}
+      <SectionWrap className="border-t border-[var(--color-border)]">
+        <div className="rounded-3xl bg-gradient-to-br from-[var(--color-primary-soft)] via-[#F1F7F3] to-white border border-[var(--color-border)] p-7 md:p-12">
+          <div className="grid lg:grid-cols-12 gap-8 lg:gap-14 lg:items-center">
+            <div className="lg:col-span-7">
+              <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-primary-pressed)] font-medium mb-4 flex items-center gap-2">
+                <ShieldCheck size={14} strokeWidth={2} /> {c.safety.eyebrow}
+              </div>
+              <h2 className="text-[26px] md:text-[38px] leading-[1.15] font-light tracking-[-0.02em] text-[#0E1A14]">
+                {c.safety.heading}
+              </h2>
+              <p className="mt-5 text-[15px] leading-[1.65] text-[#3D4D44]">{c.safety.body}</p>
+              <div className="mt-7">
+                <BalinaCTA text={c.safety.ctaText} className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[var(--color-primary)] text-white text-[14.5px] font-medium hover:bg-[var(--color-primary-pressed)] transition-colors cursor-pointer">
+                  <Send size={15} /> {c.safety.cta}
+                </BalinaCTA>
+              </div>
+            </div>
+            <ul className="lg:col-span-5 grid gap-3">
+              {c.safety.points.map((pt, i) => (
+                <li key={i} className="flex items-start gap-3 rounded-xl bg-white/70 border border-[var(--color-border)] p-4">
+                  <ShieldCheck size={17} strokeWidth={1.8} className="text-[var(--color-primary)] shrink-0 mt-0.5" />
+                  <span className="text-[14px] leading-[1.5] text-[#1A2620]">{pt}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </SectionWrap>
+
+      {/* === Proof: featured villas ============================= */}
       {topVillas.length > 0 && (
-        <SectionWrap>
+        <SectionWrap className="border-t border-[var(--color-border)] bg-[#FAFCFB]">
           <SectionHead eyebrow={c.villasSection.eyebrow} title={c.villasSection.heading} sub={c.villasSection.sub} />
           <div className="mt-10 md:mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
             {topVillas.map(v => <VillaCard key={v.slug} a={v} lang={lang} />)}
@@ -406,9 +570,9 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
         </SectionWrap>
       )}
 
-      {/* === 2b. Collections by budget + district ================= */}
+      {/* === Proof: collections by budget + district ============= */}
       {collections.length > 0 && (
-        <SectionWrap className="border-t border-[var(--color-border)] bg-[#FAFCFB]">
+        <SectionWrap className="border-t border-[var(--color-border)]">
           <SectionHead
             eyebrow={lang === 'ru' ? 'Подборки' : 'Collections'}
             title={lang === 'ru' ? 'Лучшее в вашем бюджете' : 'The best in your budget'}
@@ -422,50 +586,7 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
         </SectionWrap>
       )}
 
-      {/* === 3. Promises (4 cards) =============================== */}
-      <SectionWrap className="border-t border-[var(--color-border)] bg-[#FAFCFB]">
-        <SectionHead title={c.promises.heading} />
-        <div className="mt-10 md:mt-12 grid sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-          {c.promises.items.map((p, i) => {
-            const Icon = p.Icon
-            return (
-              <div key={i}>
-                <Icon size={22} strokeWidth={1.5} className="text-[var(--color-primary)]" />
-                <h3 className="mt-4 text-[17px] font-medium text-[#0E1A14] leading-tight">{p.title}</h3>
-                <p className="mt-2.5 text-[14px] leading-[1.6] text-[#4B5563]">{p.body}</p>
-              </div>
-            )
-          })}
-        </div>
-      </SectionWrap>
-
-      {/* === 4. AI concierge (one strong block, not a tech showcase) === */}
-      <SectionWrap className="border-t border-[var(--color-border)]">
-        <div className="grid lg:grid-cols-12 gap-10 lg:gap-16">
-          <div className="lg:col-span-5">
-            <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-primary)] font-medium mb-4 flex items-center gap-2">
-              <Sparkles size={13} strokeWidth={2} /> {c.ai.eyebrow}
-            </div>
-            <h2 className="text-[28px] md:text-[40px] leading-[1.1] font-light tracking-[-0.02em] text-[#0E1A14]">
-              {c.ai.heading}
-            </h2>
-            <p className="mt-6 text-[15px] leading-[1.65] text-[#4B5563]">
-              {c.ai.body}
-            </p>
-            <a href={telegram} target="_blank" rel="noopener noreferrer" className="mt-7 inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[var(--color-primary)] text-white text-[14.5px] font-medium hover:bg-[var(--color-primary-pressed)] transition-colors no-underline">
-              <Send size={15} /> {c.ai.cta}
-            </a>
-            <p className="mt-3 text-[12.5px] text-[#9CA59F] max-w-[380px]">{c.ai.hint}</p>
-          </div>
-          <div className="lg:col-span-7 grid gap-6 content-start">
-            <AiPoint heading={c.ai.pointHeading1} body={c.ai.pointBody1} />
-            <AiPoint heading={c.ai.pointHeading2} body={c.ai.pointBody2} />
-            <AiPoint heading={c.ai.pointHeading3} body={c.ai.pointBody3} />
-          </div>
-        </div>
-      </SectionWrap>
-
-      {/* === 5. Featured complexes ============================== */}
+      {/* === Proof: featured complexes ========================= */}
       {topComplexes.length > 0 && (
         <SectionWrap className="border-t border-[var(--color-border)] bg-[#FAFCFB]">
           <SectionHead eyebrow={c.complexesSection.eyebrow} title={c.complexesSection.heading} sub={c.complexesSection.sub} />
@@ -579,12 +700,12 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
               {c.finalCta.sub}
             </p>
             <div className="mt-9 flex items-center gap-3 flex-wrap justify-center">
-              <Link href={r.villas} className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-[var(--color-primary)] text-white text-[15px] font-medium hover:bg-[var(--color-primary-pressed)] transition-colors">
-                {c.finalCta.primary} <ArrowRight size={16} />
-              </Link>
-              <a href={telegram} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-[15px] font-medium text-[#1A2620] hover:text-[var(--color-primary)] transition-colors no-underline">
+              <BalinaCTA className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-[var(--color-primary)] text-white text-[15px] font-medium hover:bg-[var(--color-primary-pressed)] transition-colors cursor-pointer">
+                <Sparkles size={16} /> {c.finalCta.primary}
+              </BalinaCTA>
+              <BalinaCTA text={c.finalCta.secondaryText} className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-[15px] font-medium text-[#1A2620] hover:text-[var(--color-primary)] transition-colors cursor-pointer">
                 <Send size={15} /> {c.finalCta.secondary} <ArrowRight size={14} />
-              </a>
+              </BalinaCTA>
             </div>
           </div>
         </PageContainer>
