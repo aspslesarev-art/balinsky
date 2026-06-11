@@ -353,12 +353,26 @@ const loadTopComplexes = unstable_cache(async (): Promise<ComplexHomeCard[]> => 
 }, ['home-landing-top-complexes-v1'], { revalidate: 3600 })
 
 async function loadStats() {
-  const [v, a, k] = await Promise.all([
+  const [v, a, k, d, unitRows] = await Promise.all([
     sb.from('raw_villas').select('airtable_id', { count: 'exact', head: true }),
     sb.from('raw_apartments').select('airtable_id', { count: 'exact', head: true }),
     sb.from('raw_complexes').select('airtable_id', { count: 'exact', head: true }),
+    sb.from('raw_developers').select('airtable_id', { count: 'exact', head: true }),
+    // Total units on the site = sum of every complex's unit count.
+    sb.from('raw_complexes').select('u:data->"Total quantity of units"').limit(2000),
   ])
-  return { villas: v.count ?? 0, apartments: a.count ?? 0, complexes: k.count ?? 0 }
+  let units = 0
+  for (const r of (unitRows.data ?? []) as Array<{ u: unknown }>) {
+    const n = Number(r.u)
+    if (Number.isFinite(n)) units += n
+  }
+  return {
+    villas: v.count ?? 0,
+    apartments: a.count ?? 0,
+    complexes: k.count ?? 0,
+    developers: d.count ?? 0,
+    units,
+  }
 }
 
 // === COMPONENT =======================================================
@@ -372,7 +386,6 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
     loadTopComplexes(),
     loadHomeCollections(lang),
   ])
-  const totalUnits = stats.villas + stats.apartments
   // Telegram-бот Balinsky — единая точка входа для всех CTA «спросить»/
   // «AI-консьерж» с главной. На стороне бота вшит AI-flow.
   const telegram = 'https://t.me/BalinskyBot'
@@ -433,16 +446,6 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
                 voiceAria={c.hero.voiceAria}
               />
             </div>
-
-            <div className="mt-8 flex items-center gap-3 flex-wrap">
-              <Link href={r.villas} className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[var(--color-primary)] text-white text-[14.5px] font-medium hover:bg-[var(--color-primary-pressed)] transition-colors no-underline">
-                {c.hero.ctaPrimary} <ArrowRight size={16} />
-              </Link>
-              <a href={telegram} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-white/35 bg-white/5 backdrop-blur-sm text-[14.5px] font-medium text-white hover:border-white hover:bg-white/15 transition-colors no-underline">
-                <Send size={15} /> {c.hero.ctaSecondary}
-              </a>
-              <span className="w-full mt-1 text-[12.5px] text-white/60">{c.hero.foot}</span>
-            </div>
           </div>
         </PageContainer>
       </section>
@@ -450,10 +453,12 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
       {/* Trust strip — quiet light band under the photo. */}
       <section className="border-b border-[var(--color-border)] bg-[var(--color-bg)]">
         <PageContainer>
-          <div className="py-7 md:py-8 grid grid-cols-3 gap-6 max-w-[820px]">
-            <TrustCell value={fmtInt(totalUnits, c.locale)} label={lang === 'ru' ? 'объектов в каталоге' : 'properties in the catalog'} />
-            <TrustCell value="100%" label={lang === 'ru' ? 'с проверенными документами' : 'with verified documents'} />
-            <TrustCell value="3-4" label={lang === 'ru' ? 'страны покупателей' : 'buyer nationalities'} />
+          <div className="py-7 md:py-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-x-6 gap-y-6">
+            <TrustCell value={fmtInt(stats.complexes, c.locale)} label={lang === 'ru' ? 'жилых комплексов' : 'residential complexes'} />
+            <TrustCell value={fmtInt(stats.developers, c.locale)} label={lang === 'ru' ? 'застройщиков' : 'developers'} />
+            <TrustCell value={fmtInt(stats.villas, c.locale)} label={lang === 'ru' ? 'планировок вилл' : 'villa layouts'} />
+            <TrustCell value={fmtInt(stats.apartments, c.locale)} label={lang === 'ru' ? 'планировок апартаментов' : 'apartment layouts'} />
+            <TrustCell value={fmtInt(stats.units, c.locale)} label={lang === 'ru' ? 'юнитов на сайте' : 'units on the site'} />
           </div>
         </PageContainer>
       </section>
