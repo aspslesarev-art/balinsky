@@ -94,7 +94,7 @@ const COPY = {
     safety: {
       eyebrow: 'БЕЗОПАСНОСТЬ СДЕЛКИ',
       heading: 'Без серых схем и риска потерять деньги.',
-      body: 'Вся информация — наша, плюс внутренние нюансы, которых нет на сайте. Поможем приехать и закрыть сделку с гарантиями.',
+      body: 'Вся информация — наша, плюс внутренние нюансы, которых нет на сайте. Поможем закрыть сделку с гарантиями.',
       points: [
         'Независимый маркетплейс, а не лендинг одного застройщика',
         'Знаем внутренние нюансы по объектам и застройщикам',
@@ -211,7 +211,7 @@ const COPY = {
     safety: {
       eyebrow: 'A SAFER DEAL',
       heading: 'No grey schemes, no risk of losing your money.',
-      body: 'All the data is ours, plus the internal details you won\'t find on the site. We\'ll help you get here and close the deal with guarantees.',
+      body: 'All the data is ours, plus the internal details you won\'t find on the site. We\'ll help you close the deal with guarantees.',
       points: [
         'An independent marketplace, not one developer\'s landing page',
         'We know the internal details on properties and developers',
