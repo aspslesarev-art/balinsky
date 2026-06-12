@@ -224,7 +224,12 @@ export async function DevelopersCatalog({
       if (b.intlRank == null) return -1
       return a.intlRank - b.intlRank
     }
+    // Balanced (default) = «Рейтинг Митюхина». Many builders share 100, so
+    // break ties by what's actually proven — delivered units, then delivered
+    // complexes — instead of arbitrary DB order.
     return b.score - a.score
+      || b.stats.unitsReady - a.stats.unitsReady
+      || b.stats.ready - a.stats.ready
   })
 
   const items: DeveloperRowData[] = enriched.map(({ r, name, stats, construction, reputation, equipment, management }) => ({
