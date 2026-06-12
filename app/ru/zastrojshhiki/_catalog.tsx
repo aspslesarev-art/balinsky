@@ -110,6 +110,7 @@ export async function DevelopersCatalog({
     ['Техника и производство EN', 'tech_en'],
     ['Управляющая компания', 'mgmt'],
     ['Управляющая компания EN', 'mgmt_en'],
+    ['Рейтинг Митюхина', 'mityukhin'],
   ] as const
   const CPX_FIELDS = [
     ['Developer1', 'dev1'],
@@ -178,7 +179,12 @@ export async function DevelopersCatalog({
       const team = asText(r.data['Команда'])
       const business = asText(r.data['Бизнес и сервисы'])
       const yieldText = asText(r.data['Доходность'])
-      const score = scoreDeveloper(stats, { construction, reputation, equipment, management, team, business, yieldText })
+      // Rating order follows «Рейтинг Митюхина» (0–100) from Airtable; fall
+      // back to the computed editorial score only when it's not filled in.
+      const mityukhin = Number(r.data['Рейтинг Митюхина'])
+      const score = Number.isFinite(mityukhin) && mityukhin > 0
+        ? mityukhin
+        : scoreDeveloper(stats, { construction, reputation, equipment, management, team, business, yieldText })
       const expScore =
         richnessLen(r.data['Репутация и опыт']) +
         richnessLen(r.data['Строительство и недвижимость']) +
