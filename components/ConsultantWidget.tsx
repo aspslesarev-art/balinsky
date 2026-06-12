@@ -759,6 +759,19 @@ export function ConsultantWidget() {
   }
   const send = () => sendText(input)
 
+  // Open the chat AND immediately ask Балину to walk the current listing — so a
+  // tap on the proactive nudge / greeting lands the visitor straight into a
+  // short rundown instead of a question they'd have to answer themselves.
+  const tellAboutCurrent = () => {
+    setOpen(true)
+    setError(null)
+    const prompt = lang === 'en'
+      ? 'Give me a short rundown of this listing — the essentials: what it is, documents (PBG/SLF), real yield, handover date, what\'s nearby and any risks.'
+      : 'Расскажи коротко про этот объект — самое главное: что это, документы (PBG/SLF), реальная доходность, сроки сдачи, что рядом и есть ли риски.'
+    // Defer one tick so the panel paints before the request kicks off.
+    setTimeout(() => { void sendText(prompt) }, 60)
+  }
+
   return (
     <>
       {!open && (
@@ -785,7 +798,7 @@ export function ConsultantWidget() {
         <div className="fixed bottom-[78px] right-5 z-40 max-w-[240px] flex items-stretch rounded-2xl bg-white shadow-[0_10px_34px_rgba(0,0,0,0.18)] border border-[var(--color-border)] overflow-hidden">
           <button
             type="button"
-            onClick={() => { dismissTeaser(); setOpen(true) }}
+            onClick={() => { dismissTeaser(); tellAboutCurrent() }}
             className="flex items-center gap-2 pl-2.5 pr-1.5 py-2 text-left"
           >
             <Image src="/balina.jpg" alt="" width={28} height={28} className="w-7 h-7 rounded-full object-cover shrink-0" />
