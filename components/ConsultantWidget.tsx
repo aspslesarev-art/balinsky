@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
 import ReactMarkdown from 'react-markdown'
@@ -30,6 +30,10 @@ type Message = {
   // (polled via /api/chat/inbound). Rendered with a small badge so the
   // visitor can tell a human jumped in.
   source?: 'bot' | 'manager';
+  // true for the opening greeting (generic OR the per-listing contextual
+  // one). Used to detect a "fresh" chat we may swap, and to drop the
+  // greeting before sending history to the model.
+  greeting?: boolean;
 }
 
 // Strips a trailing `[CHIPS] a | b | c` block off an assistant message and
@@ -49,16 +53,49 @@ function extractChips(content: string): { text: string; chips: string[] } {
 const GREETING_BY_LANG: Record<Lang, Message> = {
   ru: {
     role: 'assistant',
+    greeting: true,
     content:
       'Я Балина — AI-брокер по недвижимости на Бали. Помогу подобрать объект под ваш бюджет и цели. Что вы ищете?\n\n' +
       '[CHIPS] Подобрать виллу | Подобрать апартаменты | Помесячная аренда | Юридика покупки | Связаться с менеджером',
   },
   en: {
     role: 'assistant',
+    greeting: true,
     content:
       "I'm Balina — AI broker for Bali real estate. I'll help match a property to your budget and goals. What are you looking for?\n\n" +
       '[CHIPS] Pick a villa | Pick an apartment | Monthly rental | Legal side of buying | Contact a manager',
   },
+}
+
+// On a listing detail page Балина greets ABOUT that listing and offers to dig
+// in — so the visitor lands straight into a conversation about what they're
+// looking at. Only villa / apartment / complex get this (the user's ask).
+type ListingKind = 'villa' | 'apartment' | 'complex'
+
+function parseListingPath(pathname: string): { kind: ListingKind; slug: string } | null {
+  const patterns: { re: RegExp; kind: ListingKind }[] = [
+    { re: /^\/(?:ru\/villy|en\/villas)\/o\/([^/?#]+)/, kind: 'villa' },
+    { re: /^\/(?:ru\/apartamenty|en\/apartments)\/o\/([^/?#]+)/, kind: 'apartment' },
+    { re: /^\/(?:ru\/zhilye-kompleksy|en\/complexes)\/o\/([^/?#]+)/, kind: 'complex' },
+  ]
+  for (const p of patterns) {
+    const m = pathname.match(p.re)
+    if (m) return { kind: p.kind, slug: m[1] }
+  }
+  return null
+}
+
+function contextualGreeting(kind: ListingKind, title: string | null, lang: Lang): Message {
+  const obj = {
+    villa: { ru: 'эту виллу', en: 'this villa' },
+    apartment: { ru: 'эти апартаменты', en: 'these apartments' },
+    complex: { ru: 'этот комплекс', en: 'this complex' },
+  }[kind][lang]
+  const name = title ? (lang === 'en' ? `“${title}”` : `«${title}»`) : (lang === 'en' ? 'this listing' : 'этот объект')
+  const content = lang === 'en'
+    ? `You're looking at ${name}. Want me to walk you through ${obj}? I'll check the base and answer precisely — documents, real yield, handover date, what's nearby, risks.\n\n[CHIPS] Tell me about it | Documents & risks | Real yield | Handover date | What's nearby`
+    : `Вижу, вы смотрите ${name}. Рассказать про ${obj}? Сверюсь с базой и отвечу точно — документы, реальная доходность, сроки сдачи, что рядом, риски.\n\n[CHIPS] Рассказать про объект | Документы и риски | Реальная доходность | Когда сдают? | Что рядом`
+  return { role: 'assistant', greeting: true, content }
 }
 
 // All UI copy in one place. The chat replies themselves come from the
@@ -146,8 +183,19 @@ export function ConsultantWidget() {
   const pathname = usePathname() ?? ''
   const lang: Lang = pathname.startsWith('/en') ? 'en' : 'ru'
   const c = COPY[lang]
-  const greeting = GREETING_BY_LANG[lang]
   const { items: wishlistItems } = useWishlist()
+
+  // Per-listing context for the page the visitor is on. `pageTitle` is read
+  // from recentlyViewed (PageViewTracker writes it on mount) so the greeting
+  // can name the object; falls back to a generic "this listing".
+  const listingPage = parseListingPath(pathname)
+  const listingKey = listingPage ? `${listingPage.kind}:${listingPage.slug}` : null
+  const [pageTitle, setPageTitle] = useState<string | null>(null)
+  const greeting = useMemo<Message>(
+    () => (listingPage ? contextualGreeting(listingPage.kind, pageTitle, lang) : GREETING_BY_LANG[lang]),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [listingKey, pageTitle, lang],
+  )
 
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([greeting])
@@ -327,16 +375,56 @@ export function ConsultantWidget() {
     return () => { cancelled = true; clearInterval(id) }
   }, [open])
 
-  // Swap the greeting if the visitor navigated between /ru and /en
-  // before saying anything — keeps the entry chips in the same
-  // language as the rest of the page. Don't touch in-progress chats.
+  // Swap the lone greeting when it changes — language flip OR navigating onto
+  // a listing page (generic → contextual "tell me about THIS object"). Never
+  // touch an in-progress chat (length > 1).
   useEffect(() => {
     setMessages(prev => {
       if (prev.length !== 1) return prev
-      const wasGreeting = prev[0] === GREETING_BY_LANG.ru || prev[0] === GREETING_BY_LANG.en
-      return wasGreeting ? [greeting] : prev
+      return prev[0]?.greeting === true ? [greeting] : prev
     })
   }, [greeting])
+
+  // Read the current listing's title from recentlyViewed. PageViewTracker
+  // writes it on the detail page's mount, which can be a tick after the widget
+  // mounts — retry a few times, then give up (greeting falls back to generic
+  // "this listing").
+  useEffect(() => {
+    if (!listingPage) { setPageTitle(null); return }
+    let tries = 0
+    const read = (): boolean => {
+      try {
+        const raw = localStorage.getItem(RECENT_KEY)
+        if (raw) {
+          const rv = JSON.parse(raw) as RecentlyViewedEntry[]
+          const hit = rv.find(r => r.kind === listingPage.kind && r.slug === listingPage.slug)
+          if (hit?.title) { setPageTitle(hit.title); return true }
+        }
+      } catch { /* storage off — stay on the generic phrasing */ }
+      return false
+    }
+    if (read()) return
+    const id = setInterval(() => { tries++; if (read() || tries > 6) clearInterval(id) }, 400)
+    return () => clearInterval(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listingKey])
+
+  // Proactive nudge above the launcher on a listing page — Балина offers to
+  // walk through the object. Appears after a short beat, dismissable per
+  // listing for the session so it doesn't nag.
+  const [teaserReady, setTeaserReady] = useState(false)
+  const [teaserClosed, setTeaserClosed] = useState(false)
+  useEffect(() => {
+    setTeaserReady(false); setTeaserClosed(false)
+    if (!listingKey) return
+    try { if (sessionStorage.getItem('balina.teaser.' + listingKey) === '1') { setTeaserClosed(true); return } } catch {}
+    const id = setTimeout(() => setTeaserReady(true), 1300)
+    return () => clearTimeout(id)
+  }, [listingKey])
+  const dismissTeaser = () => {
+    setTeaserClosed(true)
+    try { if (listingKey) sessionStorage.setItem('balina.teaser.' + listingKey, '1') } catch {}
+  }
 
   // Clear all voice resources — stream tracks, audio context, RAF.
   // Safe to call from anywhere; idempotent.
@@ -632,7 +720,7 @@ export function ConsultantWidget() {
           // Drop the greeting before sending — model never needs to
           // see it. Pass current site language so the API can append
           // a "respond in English" directive when the visitor's on /en.
-          messages: next.filter((m, i) => !(i === 0 && (m === GREETING_BY_LANG.ru || m === GREETING_BY_LANG.en))),
+          messages: next.filter((m, i) => !(i === 0 && m.greeting)),
           lang,
           // Visitor's catalog footprint — wishlist + recently opened
           // detail pages. The model uses this to skip "what are you
@@ -690,6 +778,30 @@ export function ConsultantWidget() {
           <span className="text-[14px] font-medium hidden sm:inline">{c.triggerName}</span>
           <MessageCircle size={16} className="sm:hidden" />
         </button>
+      )}
+
+      {/* Proactive nudge on a listing page — Балина offers to walk the object. */}
+      {!open && listingPage && teaserReady && !teaserClosed && (
+        <div className="fixed bottom-[78px] right-5 z-40 max-w-[240px] flex items-stretch rounded-2xl bg-white shadow-[0_10px_34px_rgba(0,0,0,0.18)] border border-[var(--color-border)] overflow-hidden">
+          <button
+            type="button"
+            onClick={() => { dismissTeaser(); setOpen(true) }}
+            className="flex items-center gap-2 pl-2.5 pr-1.5 py-2 text-left"
+          >
+            <Image src="/balina.jpg" alt="" width={28} height={28} className="w-7 h-7 rounded-full object-cover shrink-0" />
+            <span className="text-[12.5px] leading-snug text-[#111827]">
+              {lang === 'en' ? 'Want the rundown on this one?' : 'Рассказать про этот объект?'}
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={dismissTeaser}
+            aria-label={c.closeAria}
+            className="shrink-0 px-1.5 text-[var(--color-text-muted)] hover:text-[#111827]"
+          >
+            <X size={14} />
+          </button>
+        </div>
       )}
 
       {open && (
