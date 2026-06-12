@@ -885,11 +885,19 @@ async function attachInvestmentMetrics(
       const matches = rentals.filter(r => {
         if (!r.location || !r.location.toLowerCase().includes(dLower)) return false
         if (r.bedrooms == null) return false
+        // Drop garbage prices ($0.0013, $0, a mis-typed nightly rate) so they
+        // can't pollute the comp set.
+        if (!(r.priceMonthUsd >= 200 && r.priceMonthUsd <= 30000)) return false
         return Math.abs(r.bedrooms - (card.bedrooms ?? 0)) <= 1
       })
       if (matches.length === 0) continue
-      const avg = matches.reduce((s, r) => s + r.priceMonthUsd, 0) / matches.length
-      card.monthly_rent_comp_usd = Math.round(avg)
+      // Median, not mean — a couple of luxury outliers shouldn't drag the
+      // "fair monthly rent" estimate up. For a new/quality villa the prompt
+      // positions the answer at the upper part of the comp range.
+      const sorted = matches.map(r => r.priceMonthUsd).sort((a, b) => a - b)
+      const mid = Math.floor(sorted.length / 2)
+      const median = sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2
+      card.monthly_rent_comp_usd = Math.round(median)
       card.monthly_rent_comp_count = matches.length
     }
   }
