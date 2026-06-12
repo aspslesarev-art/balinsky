@@ -5,6 +5,7 @@ import { createClient } from '@supabase/supabase-js'
 import type { ChatCompletionTool } from 'openai/resources/chat/completions'
 import { loadAllVillaScores } from './investment/batch-scores'
 import { isHiddenDeveloper } from './hidden-developers'
+import { loadReviewHeat, type HeatCell } from './reviews-heat'
 import { loadAllRental } from './rental'
 import { cdnManifestUrl } from './photo-cdn'
 
@@ -99,6 +100,10 @@ export type ListingCard = {
   lng: number | null
   distance_to_beach_km: number | null
   nearest_beach: string | null
+  // 0–100 "how lively is the area around this object" from our tourism map
+  // (Google-reviewed POI density: cafés, bars, beach clubs, attractions).
+  // High = strong tourist footfall → better rental occupancy; low = quiet.
+  tourism_score?: number | null
 }
 
 // Editable knowledge base lives in DB + lib/assistant-knowledge.ts.
@@ -517,6 +522,21 @@ function num(v: unknown): number | null {
   return null
 }
 
+// Sample the tourism heatmap at a listing's coordinates → 0–100: how much
+// reviewed-POI activity sits within ~1 km. Sum of nearby cell weights (so a
+// dense cluster beats a lone hot spot), normalised by the single hottest cell
+// ×2 with a sqrt curve. Calibrated against real villa coords — Berawa ~85,
+// Sanur ~52, Ubud ~36, Uluwatu ~26 — so the 30/55 thresholds discriminate.
+function tourismDensityAt(lat: number | null, lng: number | null, heat: { cells: HeatCell[]; max: number }): number | null {
+  if (lat == null || lng == null || !heat.cells.length) return null
+  let trueMax = 1
+  for (const c of heat.cells) if (c.weight > trueMax) trueMax = c.weight
+  let sum = 0
+  for (const c of heat.cells) if (haversineKm(lat, lng, c.lat, c.lng) <= 1.0) sum += c.weight
+  if (sum <= 0) return 0
+  return Math.round(Math.min(1, Math.sqrt(sum / (trueMax * 2))) * 100)
+}
+
 // Map the freeform `Статус` / `Готовность` field to a stable bucket so the
 // search status-filter is deterministic. Unknown / empty → null (a strict
 // status ask then drops the row rather than guessing it's ready).
@@ -687,6 +707,9 @@ async function searchSupabaseTable(
   })
 
   const photoManifest = photoBucket ? await loadPhotoManifest(photoBucket) : {}
+  // Tourism map (Google-reviewed POI density) — used to tell the model how
+  // lively the area around each result is. Cached loader; never blocks search.
+  const heat = await loadReviewHeat().catch(() => ({ cells: [] as HeatCell[], max: 1 }))
 
   const sliced = filtered.slice(0, limit)
   const cards = sliced.map(r => {
@@ -779,6 +802,7 @@ async function searchSupabaseTable(
       lng,
       distance_to_beach_km: beach?.km ?? null,
       nearest_beach: beach?.name ?? null,
+      tourism_score: tourismDensityAt(lat, lng, heat),
     }
   })
   await attachInvestmentMetrics(cards, kind, sliced.map(r => r.airtable_id))
