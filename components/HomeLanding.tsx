@@ -33,6 +33,8 @@ import { HeroBalinaSearch } from '@/components/HeroBalinaSearch'
 import { BalinaCTA } from '@/components/BalinaCTA'
 import { BalinaChatMock } from '@/components/BalinaChatMock'
 import { isHiddenDeveloper } from '@/lib/hidden-developers'
+import { loadHomeFinder } from '@/lib/home-finder'
+import { HomeFinder } from '@/components/HomeFinder'
 import {
   StepChat, StepStudy, StepRequest,
   VizYield, VizCompetitors, VizNearby, VizDocs, VizDeveloper, VizFootage,
@@ -383,11 +385,12 @@ async function loadStats() {
 export async function HomeLanding({ lang }: { lang: Lang }) {
   const c = COPY[lang]
   const r = ROUTES[lang]
-  const [stats, topVillas, topComplexes, collections] = await Promise.all([
+  const [stats, topVillas, topComplexes, collections, finderItems] = await Promise.all([
     loadStats(),
     loadTopVillas(lang),
     loadTopComplexes(),
     loadHomeCollections(lang),
+    loadHomeFinder(lang),
   ])
   // Telegram-бот Balinsky — единая точка входа для всех CTA «спросить»/
   // «AI-консьерж» с главной. На стороне бота вшит AI-flow.
@@ -465,6 +468,16 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
           </div>
         </PageContainer>
       </section>
+
+      {/* === Guided finder — easy mode: 3 taps → ranked shortlist == */}
+      {finderItems.length > 0 && (
+        <SectionWrap className="border-t border-[var(--color-border)]">
+          <SectionHead title={lang === 'ru' ? 'Подберём виллу за 3 ответа.' : 'Find your villa in 3 taps.'} />
+          <div className="mt-8 md:mt-10">
+            <HomeFinder items={finderItems} lang={lang} />
+          </div>
+        </SectionWrap>
+      )}
 
       {/* === How it works — sell the service, not the villa ===== */}
       <SectionWrap className="border-t border-[var(--color-border)]">
