@@ -526,15 +526,9 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
       <SectionWrap className="border-t border-[var(--color-border)]">
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 lg:items-center">
           <div>
-            <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-primary)] font-medium mb-4 flex items-center gap-2">
-              <Sparkles size={13} strokeWidth={2} /> {c.ai.eyebrow}
-            </div>
             <h2 className="text-[28px] md:text-[40px] leading-[1.1] font-light tracking-[-0.02em] text-[#0E1A14]">
               {c.ai.heading}
             </h2>
-            <p className="mt-6 text-[15px] leading-[1.65] text-[#4B5563]">
-              {c.ai.body}
-            </p>
             <p className="mt-4 text-[14.5px] leading-[1.6] text-[#1A2620] font-medium border-l-2 border-[var(--color-primary)] pl-4">
               {c.ai.anon}
             </p>
@@ -561,9 +555,6 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
           </div>
           <div className="grid lg:grid-cols-12 gap-8 lg:gap-14 lg:items-center">
             <div className="lg:col-span-7">
-              <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-primary-pressed)] font-medium mb-4 flex items-center gap-2">
-                <ShieldCheck size={14} strokeWidth={2} /> {c.safety.eyebrow}
-              </div>
               <h2 className="text-[26px] md:text-[38px] leading-[1.15] font-light tracking-[-0.02em] text-[#0E1A14]">
                 {c.safety.heading}
               </h2>
@@ -756,18 +747,14 @@ function SectionWrap({ children, className = '' }: { children: React.ReactNode; 
   )
 }
 
-function SectionHead({ eyebrow, title, sub }: { eyebrow?: string; title: string; sub?: string }) {
+// Eyebrow + sub intentionally dropped — kept in the signature so existing call
+// sites don't need editing; the homepage shows only the heading now.
+function SectionHead({ title }: { eyebrow?: string; title: string; sub?: string }) {
   return (
     <div className="max-w-[820px]">
-      {eyebrow && (
-        <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-primary)] font-medium mb-4">
-          {eyebrow}
-        </div>
-      )}
       <h2 className="text-[26px] md:text-[38px] leading-[1.15] font-light tracking-[-0.02em] text-[#0E1A14]">
         {title}
       </h2>
-      {sub && <p className="mt-4 text-[15px] leading-[1.6] text-[#4B5563] max-w-[680px]">{sub}</p>}
     </div>
   )
 }
