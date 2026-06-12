@@ -143,6 +143,19 @@ export const TOOLS: ChatCompletionTool[] = [
             type: 'boolean',
             description: 'true = вернуть ТОЛЬКО объекты на земле, где разрешена краткосрочная аренда (tourism / commercial / pink). Yellow / green / unknown отфильтруются. Ставь true, когда клиент явно сказал "под аренду", "посуточно", "Booking", "Airbnb", "STR", "сдавать туристам".',
           },
+          status: {
+            type: 'string',
+            enum: ['ready', 'building', 'planned', 'any'],
+            description: 'Готовность стройки (жёсткий фильтр по факту из базы): ready = уже ПОСТРОЕН/сдан (только готовые, БЕЗ строящихся!), building = строится, planned = под заказ / на стадии планирования / котлован, any = не важно. Ставь ready, когда клиент просит "готовое", "уже построено", "сдан", "можно заехать/сдавать сейчас". Никогда не показывай строящиеся, если просили готовое.',
+          },
+          require_pbg: {
+            type: 'boolean',
+            description: 'true = ТОЛЬКО объекты, у которых PBG (разрешение на строительство) уже ПОЛУЧЕН (не "заявка", не "нет"). Ставь при "с PBG", "с документами", "легально", "без рисков по разрешениям".',
+          },
+          require_slf: {
+            type: 'boolean',
+            description: 'true = ТОЛЬКО объекты с уже полученным SLF (сертификат пригодности, выше PBG — без него нельзя легально сдавать). Ставь при "с SLF", "полностью узаконено", "можно официально сдавать".',
+          },
           max_distance_to_beach: {
             type: 'string',
             enum: ['beachfront', 'walking', 'scooter', 'any'],
@@ -242,6 +255,9 @@ type SearchArgs = {
   limit?: number
   exclude_urls?: string[]
   str_only?: boolean
+  status?: 'ready' | 'building' | 'planned' | 'any'
+  require_pbg?: boolean
+  require_slf?: boolean
   max_distance_to_beach?: 'beachfront' | 'walking' | 'scooter' | 'any'
   near_lat?: number
   near_lng?: number
@@ -500,6 +516,18 @@ function num(v: unknown): number | null {
   if (Array.isArray(v) && v.length) return num(v[0])
   return null
 }
+
+// Map the freeform `Статус` / `Готовность` field to a stable bucket so the
+// search status-filter is deterministic. Unknown / empty → null (a strict
+// status ask then drops the row rather than guessing it's ready).
+function normalizeStatus(raw: string | null): 'ready' | 'building' | 'planned' | null {
+  if (!raw) return null
+  const s = raw.toLowerCase()
+  if (/постро|сдан|готов|заверш|complet|built|ready|done/.test(s)) return 'ready'
+  if (/строит|строящ|возвод|in progress|under con|building/.test(s)) return 'building'
+  if (/заказ|план|котлован|проект|pre.?sale|off.?plan|офф.?план|planned/.test(s)) return 'planned'
+  return null
+}
 // District names (RU + EN substrings, lowercased) that are clearly
 // inland on Bali — anything containing one of these is dropped when
 // the visitor asked for proximity to the ocean. Whitelisting coastal
@@ -602,6 +630,22 @@ async function searchSupabaseTable(
       if (price == null) return false
       if (args.price_min_usd != null && price < args.price_min_usd) return false
       if (args.price_max_usd != null && price > args.price_max_usd) return false
+    }
+
+    // Build-status filter — "готовое" must mean ONLY ready, never under
+    // construction. Status lives in `Статус` (villas/apts) or `Готовность`
+    // (complexes). Anything we can't classify is dropped under a strict ask.
+    if (args.status && args.status !== 'any') {
+      if (normalizeStatus(fs1(d['Статус']) ?? fs1(d['Готовность'])) !== args.status) return false
+    }
+
+    // Permit filter — "с PBG" / "с SLF" must be a hard fact from the base,
+    // not a guess. parsePermitStatus turns the raw field into есть/заявка/нет.
+    if (args.require_pbg || args.require_slf) {
+      const permitRaw = fs1(d['Разрешение']) ?? fs1(d['Разрешительные документы']) ?? fs1(d['PBG'])
+      const ps = parsePermitStatus(permitRaw)
+      if (args.require_pbg && ps.pbg !== 'есть') return false
+      if (args.require_slf && ps.slf !== 'есть') return false
     }
 
     if (args.query) {
