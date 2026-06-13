@@ -66,6 +66,9 @@ export function NearbyPlaces({
   const c = COPY[lang]
   const available = categories.filter(cat => (byCategory[cat.key] ?? []).length > 0)
   const [active, setActive] = useState<string | null>(available[0]?.key ?? null)
+  // Desktop shows the first 3 place cards (one row); the rest hide behind a
+  // "Показать остальные" toggle. Mobile keeps the horizontal swipe untouched.
+  const [placesExpanded, setPlacesExpanded] = useState(false)
 
   // Desktop the chips wrap onto several rows; collapse to the first row with a
   // "Показать все" toggle (mobile is already a single horizontal-swipe row).
@@ -118,7 +121,7 @@ export function NearbyPlaces({
             <button
               key={cat.key}
               type="button"
-              onClick={() => setActive(cat.key)}
+              onClick={() => { setActive(cat.key); setPlacesExpanded(false) }}
               className={
                 'shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-medium border transition-colors cursor-pointer ' +
                 (isActive
@@ -149,10 +152,15 @@ export function NearbyPlaces({
           max-w-none releases the `main * { max-width: 100% }` guard so the
           -mx-6 track reaches the screen edges instead of leaving a gap. */}
       <ul className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 -mx-6 px-6 max-w-none md:max-w-full md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {places.map(p => (
+        {places.map((p, i) => (
           <li
             key={p.id}
-            className="snap-start shrink-0 w-[280px] md:w-auto rounded-2xl border border-[var(--color-border)] bg-white p-4 flex flex-col gap-2"
+            className={
+              'snap-start shrink-0 w-[280px] md:w-auto rounded-2xl border border-[var(--color-border)] bg-white p-4 flex flex-col gap-2' +
+              // Desktop only: hide the 4th+ card until expanded (mobile keeps
+              // every card in the swipe).
+              (!placesExpanded && i >= 3 ? ' md:hidden' : '')
+            }
           >
             <div className="flex items-start justify-between gap-3">
               <div className="text-[15px] font-semibold leading-snug text-[#111827] line-clamp-2">{p.name}</div>
@@ -190,6 +198,18 @@ export function NearbyPlaces({
           </li>
         ))}
       </ul>
+      {places.length > 3 && (
+        <button
+          type="button"
+          onClick={() => setPlacesExpanded(v => !v)}
+          className="hidden md:inline-flex items-center gap-1 mt-4 text-[13px] font-medium text-[var(--color-primary)] hover:gap-1.5 transition-all cursor-pointer"
+        >
+          {placesExpanded
+            ? (lang === 'en' ? 'Collapse' : 'Свернуть')
+            : (lang === 'en' ? `Show the rest · ${places.length - 3}` : `Показать остальные · ${places.length - 3}`)}
+          <ChevronDown size={15} className={`transition-transform ${placesExpanded ? 'rotate-180' : ''}`} />
+        </button>
+      )}
     </section>
   )
 }
