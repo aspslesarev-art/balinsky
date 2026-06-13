@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Star, MapPin, ExternalLink } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Star, MapPin, ExternalLink, ChevronDown } from 'lucide-react'
 import type { NearbyCategory, NearbyPlace } from '@/lib/nearby-places'
 import type { Lang } from '@/lib/i18n'
 
@@ -66,6 +66,27 @@ export function NearbyPlaces({
   const c = COPY[lang]
   const available = categories.filter(cat => (byCategory[cat.key] ?? []).length > 0)
   const [active, setActive] = useState<string | null>(available[0]?.key ?? null)
+
+  // Desktop the chips wrap onto several rows; collapse to the first row with a
+  // "Показать все" toggle (mobile is already a single horizontal-swipe row).
+  const chipsRef = useRef<HTMLDivElement>(null)
+  const [expanded, setExpanded] = useState(false)
+  const [collapse, setCollapse] = useState<{ rowH: number; overflow: boolean }>({ rowH: 0, overflow: false })
+  useEffect(() => {
+    const el = chipsRef.current
+    if (!el) return
+    const measure = () => {
+      const desktop = window.matchMedia('(min-width: 768px)').matches
+      const first = el.firstElementChild as HTMLElement | null
+      const rowH = first?.offsetHeight ?? 0
+      // scrollHeight is the full content height even while clamped/hidden.
+      setCollapse({ rowH, overflow: desktop && rowH > 0 && el.scrollHeight > rowH + 8 })
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [available.length])
+
   if (available.length === 0) return null
 
   const places: NearbyPlace[] = active
@@ -82,8 +103,13 @@ export function NearbyPlaces({
         {c.subtitle}
       </div>
 
-      {/* Mobile: single-row horizontal swipe; desktop: wrap. */}
-      <div className="flex gap-2 mb-5 overflow-x-auto -mx-6 px-6 max-w-none md:max-w-full md:mx-0 md:px-0 md:flex-wrap md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {/* Mobile: single-row horizontal swipe; desktop: wrap, collapsed to row 1. */}
+      <div className="mb-5">
+      <div
+        ref={chipsRef}
+        style={collapse.overflow && !expanded ? { maxHeight: collapse.rowH, overflowY: 'hidden' } : undefined}
+        className="flex gap-2 overflow-x-auto -mx-6 px-6 max-w-none md:max-w-full md:mx-0 md:px-0 md:flex-wrap md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
         {available.map(cat => {
           const isActive = cat.key === active
           const count = byCategory[cat.key]?.length ?? 0
@@ -106,6 +132,17 @@ export function NearbyPlaces({
             </button>
           )
         })}
+      </div>
+      {collapse.overflow && (
+        <button
+          type="button"
+          onClick={() => setExpanded(v => !v)}
+          className="hidden md:inline-flex items-center gap-1 mt-2.5 text-[13px] font-medium text-[var(--color-primary)] hover:gap-1.5 transition-all cursor-pointer"
+        >
+          {expanded ? (lang === 'en' ? 'Collapse' : 'Свернуть') : (lang === 'en' ? 'Show all' : 'Показать все')}
+          <ChevronDown size={15} className={`transition-transform ${expanded ? 'rotate-180' : ''}`} />
+        </button>
+      )}
       </div>
 
       {/* Mobile: horizontal swipe with the next card peeking; desktop: grid.
