@@ -114,7 +114,137 @@ function lastmodOfObject(d: Record<string, unknown> | undefined, fallback: Date)
   return fallback
 }
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+// Sitemap split. A single sitemap.xml grew past the point where Google /
+// Yandex re-fetch it comfortably, so we serve a sitemap *index* at
+// /sitemap.xml (app/sitemap.xml/route.ts) that points at one child per
+// content cluster, each served by app/sitemap/[id]/route.ts:
+//   /sitemap/pages.xml, /sitemap/villy.xml, /sitemap/apartamenty.xml,
+//   /sitemap/zhilye-kompleksy.xml, /sitemap/arenda.xml,
+//   /sitemap/zastrojshhiki.xml, /sitemap/statyi.xml
+// We DON'T use Next's metadata `sitemap.ts` + generateSitemaps convention:
+// in Next 16 it serves the children at /sitemap/<id>.xml but does NOT emit
+// an index at /sitemap.xml (404s), and that single index URL is exactly
+// what gets submitted to GSC / Яндекс.Вебмастер. Hence the hand-rolled
+// route handlers + serializers below.
+//
+// A cluster that would exceed MAX_URLS_PER_SITEMAP is sharded into <cat>,
+// <cat>-2, <cat>-3 … so every file stays well under the 50k-URL / 50 MB
+// protocol cap and the ≤1 MB target.
+export const CATEGORY_ORDER = [
+  'pages', 'villy', 'apartamenty', 'zhilye-kompleksy', 'arenda', 'zastrojshhiki', 'statyi',
+] as const
+type Category = typeof CATEGORY_ORDER[number]
+type Categorized = Record<Category, SitemapEntry[]>
+
+// Kept low on purpose to hold every file under the ≤1 MB target. The
+// fattest cluster is /arenda (rental): long translit slugs make a paired
+// entry with 3 xhtml:link alternates ~730 bytes, so 1200 entries ≈ 0.85 MB.
+const MAX_URLS_PER_SITEMAP = 1200
+
+// The two route handlers need the full categorised set, and Next calls them
+// back-to-back per regeneration (index, then each child). A short
+// module-level memo means we build (and hit the underlying egress-cached
+// loaders) once per ISR window instead of once per file.
+let _memo: { ts: number; data: Categorized } | null = null
+const MEMO_TTL_MS = 60_000
+
+function chunkCount(n: number): number {
+  return Math.max(1, Math.ceil(n / MAX_URLS_PER_SITEMAP))
+}
+
+// Resolve a sitemap id ("villy", "zhilye-kompleksy-2") back to its category
+// and 1-based shard. Category names themselves contain hyphens, so match
+// against the known list rather than splitting on "-".
+function parseSitemapId(id: string): { category: Category; shard: number } | null {
+  const category = CATEGORY_ORDER.find(c => id === c || id.startsWith(`${c}-`))
+  if (!category) return null
+  const shard = id === category ? 1 : Number(id.slice(category.length + 1))
+  if (!Number.isInteger(shard) || shard < 1) return null
+  return { category, shard }
+}
+
+async function buildCategorized(): Promise<Categorized> {
+  if (_memo && Date.now() - _memo.ts < MEMO_TTL_MS) return _memo.data
+  const data = await buildAll()
+  _memo = { ts: Date.now(), data }
+  return data
+}
+
+// Ordered list of child sitemap ids (with shards), e.g.
+// ['pages','villy','villy-2','apartamenty', …]. Drives both the index and
+// the [id] route's generateStaticParams.
+export async function listSitemapIds(): Promise<string[]> {
+  const data = await buildCategorized()
+  const ids: string[] = []
+  for (const cat of CATEGORY_ORDER) {
+    const chunks = chunkCount(data[cat].length)
+    for (let i = 0; i < chunks; i++) ids.push(i === 0 ? cat : `${cat}-${i + 1}`)
+  }
+  return ids
+}
+
+// Entries for one child sitemap, or null for an unknown id.
+export async function getSitemapEntries(id: string): Promise<SitemapEntry[] | null> {
+  const parsed = parseSitemapId(id)
+  if (!parsed) return null
+  const data = await buildCategorized()
+  const entries = data[parsed.category]
+  const chunks = chunkCount(entries.length)
+  if (parsed.shard > chunks) return null
+  const start = (parsed.shard - 1) * MAX_URLS_PER_SITEMAP
+  return entries.slice(start, start + MAX_URLS_PER_SITEMAP)
+}
+
+// --- XML serialisers -------------------------------------------------------
+// Only `&` realistically appears in our values (URLs are clean [a-z0-9-]
+// paths + known segments), but escape the XML-significant five for safety.
+function xmlEscape(s: string): string {
+  return s.replace(/[&<>"']/g, ch =>
+    ch === '&' ? '&amp;' : ch === '<' ? '&lt;' : ch === '>' ? '&gt;' : ch === '"' ? '&quot;' : '&apos;')
+}
+
+// <urlset> for one child. Mirrors Next's own resolveSitemap() output
+// (loc + xhtml:link alternates + lastmod/changefreq/priority).
+export function serializeUrlset(entries: SitemapEntry[]): string {
+  const hasAlternates = entries.some(e => Object.keys(e.alternates?.languages ?? {}).length > 0)
+  let out = '<?xml version="1.0" encoding="UTF-8"?>\n'
+  out += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"'
+  out += hasAlternates ? ' xmlns:xhtml="http://www.w3.org/1999/xhtml">\n' : '>\n'
+  for (const e of entries) {
+    out += '<url>\n'
+    out += `<loc>${xmlEscape(e.url)}</loc>\n`
+    const languages = e.alternates?.languages
+    if (languages) {
+      for (const lang in languages) {
+        const href = languages[lang as keyof typeof languages]
+        if (href) out += `<xhtml:link rel="alternate" hreflang="${xmlEscape(lang)}" href="${xmlEscape(String(href))}" />\n`
+      }
+    }
+    if (e.lastModified) {
+      const d = e.lastModified instanceof Date ? e.lastModified.toISOString() : e.lastModified
+      out += `<lastmod>${d}</lastmod>\n`
+    }
+    if (e.changeFrequency) out += `<changefreq>${e.changeFrequency}</changefreq>\n`
+    if (typeof e.priority === 'number') out += `<priority>${e.priority}</priority>\n`
+    out += '</url>\n'
+  }
+  out += '</urlset>\n'
+  return out
+}
+
+// <sitemapindex> pointing at every child at /sitemap/<id>.xml.
+export function serializeIndex(ids: string[], siteUrl: string): string {
+  const items = ids
+    .map(id => `  <sitemap><loc>${xmlEscape(`${siteUrl}/sitemap/${id}.xml`)}</loc></sitemap>`)
+    .join('\n')
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${items}
+</sitemapindex>
+`
+}
+
+async function buildAll(): Promise<Categorized> {
   const now = new Date()
 
   // Top-level pages — every one of these has a RU↔EN pair, emit as such.
@@ -215,24 +345,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const s = normalizeSlug(str)
     return s && !s.startsWith('-') ? s : null
   }
-  const objectDetails: SitemapEntry[] = []
-  const emitObjectPair = (enriched: EnrichedLike[] | undefined, ruSection: string, enSection: string) => {
+  const villaObjects: SitemapEntry[] = []
+  const apartmentObjects: SitemapEntry[] = []
+  const complexObjects: SitemapEntry[] = []
+  const emitObjectPair = (target: SitemapEntry[], enriched: EnrichedLike[] | undefined, ruSection: string, enSection: string) => {
     const seenSlug = new Set<string>()
     for (const e of enriched ?? []) {
       const s = slugOf(e); if (!s) continue
       if (seenSlug.has(s)) continue
       seenSlug.add(s)
       const lm = lastmodOfObject(e.data, now)
-      objectDetails.push(...pairEntry({
+      target.push(...pairEntry({
         ruPath: `/ru/${ruSection}/o/${s}`,
         enPath: `/en/${enSection}/o/${s}`,
         lastModified: lm, changeFrequency: 'weekly', priority: 0.7,
       }))
     }
   }
-  emitObjectPair(vData?.enriched as EnrichedLike[] | undefined, 'villy', 'villas')
-  emitObjectPair(aData?.enriched as EnrichedLike[] | undefined, 'apartamenty', 'apartments')
-  emitObjectPair(cData?.enriched as EnrichedLike[] | undefined, 'zhilye-kompleksy', 'complexes')
+  emitObjectPair(villaObjects, vData?.enriched as EnrichedLike[] | undefined, 'villy', 'villas')
+  emitObjectPair(apartmentObjects, aData?.enriched as EnrichedLike[] | undefined, 'apartamenty', 'apartments')
+  emitObjectPair(complexObjects, cData?.enriched as EnrichedLike[] | undefined, 'zhilye-kompleksy', 'complexes')
 
   // News / promo / events / knowledge / rental — RU + EN pairs.
   const news: SitemapEntry[] = newsRows.flatMap(x => pairEntry({
@@ -276,12 +408,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })
   }
 
-  // Dedupe by URL.
+  // Global dedupe by URL, applied in CATEGORY_ORDER so a URL only ever
+  // lands in one child sitemap (the first category that claims it).
   const seen = new Set<string>()
-  const all = [...top, ...apartments, ...complexes, ...villas, ...objectDetails, ...developers, ...news, ...promo, ...events, ...knowledge, ...rental]
-  return all.filter(entry => {
-    if (seen.has(entry.url)) return false
-    seen.add(entry.url)
-    return true
-  })
+  const dedupe = (entries: SitemapEntry[]): SitemapEntry[] =>
+    entries.filter(e => (seen.has(e.url) ? false : (seen.add(e.url), true)))
+
+  return {
+    pages: dedupe(top),
+    villy: dedupe([...villas, ...villaObjects]),
+    apartamenty: dedupe([...apartments, ...apartmentObjects]),
+    'zhilye-kompleksy': dedupe([...complexes, ...complexObjects]),
+    arenda: dedupe(rental),
+    zastrojshhiki: dedupe(developers),
+    statyi: dedupe([...news, ...promo, ...events, ...knowledge]),
+  }
 }
