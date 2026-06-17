@@ -16,11 +16,19 @@ const GA4_ID = "G-YPJC0S54ME";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap",
 });
 
+// Geist Mono (`font-mono`) is only used on /admin/* editors — never on the
+// public catalog / detail pages. Keep the CSS variable available, but
+// `preload: false` so its woff2 isn't preloaded at high priority on every
+// public page, where it just competes with the LCP hero image for the
+// early mobile bandwidth.
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
+  preload: false,
 });
 
 // metadataBase makes every relative canonical / og:image across the app
