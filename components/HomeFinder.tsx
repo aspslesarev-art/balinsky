@@ -94,9 +94,11 @@ export function HomeFinder({ items, lang = 'ru' }: { items: FinderItem[]; lang?:
       if (districts && (!it.district || !districts.includes(it.district))) return false
       return true
     })
-    // Invest-minded buyers want yield first; otherwise keep the smart rank.
+    // Invest-minded buyers want yield first — but rank by OUR cap rate, not
+    // the developer's claimed yield (inflated, esp. inland Ubud). Listings
+    // with no cap rate we can stand behind (incl. yellow land) sort last.
     if (goal === 'invest' || goal === 'both') {
-      list = [...list].sort((a, b) => (b.yieldPct ?? -1) - (a.yieldPct ?? -1))
+      list = [...list].sort((a, b) => (b.capRatePct ?? -1) - (a.capRatePct ?? -1))
     }
     return list
   }, [items, goal, budget, vibe])
