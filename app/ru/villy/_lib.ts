@@ -96,6 +96,11 @@ export type VillaCard = {
   // Editorial pin — surfaced at the top of the catalog regardless of
   // sort. Sourced from the Airtable "TOP" checkbox in raw_villas.
   isTop: boolean
+  // Yellow (residential) land — daily rental is illegal, so it's not an
+  // investment object. In the default investment-ranked order these are
+  // demoted below every investable villa (they're still reachable via the
+  // "goal=live" filter and on later pages).
+  rentalRestricted: boolean
   // Page-view tally (last ~4 months) — a signal in the smart default sort.
   views?: number
 }
@@ -575,6 +580,7 @@ export function toCard(
     interiorStyle: e.style,
     airtableId: e.id,
     isTop: e.isTop,
+    rentalRestricted: e.landBucket === 'residential',
     views: e.views ?? 0,
   }
 }
@@ -697,6 +703,16 @@ export function buildAllCards(
   if (isSearch) sorted = mapped
   else if (sort === 'investment-desc') sorted = smartSort(mapped, c => ({ id: c.id, investmentScore: c.investmentScore, views: c.views, hasPhoto: c.photos.length > 0 }))
   else sorted = [...mapped].sort((a, b) => (b.priceUsd ?? 0) - (a.priceUsd ?? 0))
+  // Yellow-land demotion: in the default investment-ranked order, residential
+  // (yellow) land can't be daily-rented, so it's not an investment object —
+  // push every such villa below all investable ones. Nulling its score only
+  // made it neutral, so a popular yellow villa still floated into the TOP
+  // (Cassandra 4 was #1). A stable tier sort keeps the smart order within
+  // each tier. Only for investment-desc — when the user explicitly sorts by
+  // price, yellow listings stay in their price position.
+  if (!isSearch && sort === 'investment-desc') {
+    sorted = [...sorted].sort((a, b) => (a.rentalRestricted ? 1 : 0) - (b.rentalRestricted ? 1 : 0))
+  }
   // Editorial pin pass: TOP-flagged listings bubble to the top of
   // the catalog regardless of the active sort. Stable within both
   // groups (pinned/unpinned), so the existing sort order is
