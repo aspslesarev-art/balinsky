@@ -134,9 +134,15 @@ export function HomeFinder({ items, lang = 'ru' }: { items: FinderItem[]; lang?:
         ))}
       </ChipRow>
 
-      {/* Live count */}
-      <div className="mt-6 mb-4 flex items-center justify-between gap-3 flex-wrap">
-        <div className="text-[14px] text-[var(--color-text-muted)]">{c.found(results.length)}</div>
+      {/* Results panel — a closed, framed container so it's unmistakable
+          where the finder's filtered output ends. The rails further down the
+          homepage ("Только виллы с готовыми документами", "Лучшее в бюджете"
+          …) are independent showcases, NOT finder results — without this
+          frame a single match reads as if those over-budget / wrong-district
+          cards below belong to the query too. */}
+      <div className="mt-6 rounded-3xl border border-[var(--color-border)] bg-[var(--color-search-bg)]/50 p-4 md:p-5">
+      <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
+        <div className="text-[14px] font-medium text-[var(--color-text)]">{c.found(results.length)}</div>
         <BalinaCTA
           text={balinaText}
           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary-pressed)] text-[13px] font-medium hover:bg-[var(--color-primary)] hover:text-white transition-colors cursor-pointer"
@@ -195,6 +201,7 @@ export function HomeFinder({ items, lang = 'ru' }: { items: FinderItem[]; lang?:
           </div>
         </>
       )}
+      </div>
     </div>
   )
 }
