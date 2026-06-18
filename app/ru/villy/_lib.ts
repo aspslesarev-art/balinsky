@@ -675,7 +675,7 @@ export function buildAllCards(
   enriched: EnrichedRow[],
   manifest: Record<string, string[]>,
   filters: VillaFilterState,
-  scores?: Map<string, { composite: number; goodCapRate: number | null }>,
+  scores?: Map<string, { composite: number; goodCapRate: number | null; rentalRestricted?: boolean }>,
   sort: SortOrder = 'investment-desc',
   devStats?: Map<string, { ready: number; total: number }>,
   lang: 'ru' | 'en' = 'ru',
@@ -686,7 +686,11 @@ export function buildAllCards(
   const mapped = filtered.map(e => toCard(e, manifest, devStats, lang)).filter((c): c is VillaCard => c !== null)
   if (scores) for (const c of mapped) {
     const s = scores.get(c.id)
-    c.investmentScore = s?.composite ?? null
+    // Yellow (residential) land can't be daily-rented, so it gets no
+    // daily-rental investment score — leave it out of the yield-ranked
+    // ordering (smartSort treats null as a neutral mid score) and don't
+    // pipe a meaningless cap rate into the comparison snapshot.
+    c.investmentScore = s && !s.rentalRestricted ? s.composite : null
     c.bestCapRate = s?.goodCapRate ?? null
   }
   let sorted: VillaCard[]

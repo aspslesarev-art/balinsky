@@ -50,6 +50,8 @@ const COPY = {
     referencesTitle: 'Малая выборка — показываем референсы',
     referencesBody: (n: number, plural: string) =>
       `В радиусе 2км нашлось всего ${n} ${plural}, подходящих под характеристики виллы. Агрегаты не считаем — даём конкретные примеры.`,
+    restrictedTitle: 'Жёлтая земля — посуточная аренда не разрешена',
+    restrictedBody: 'Объект на жёлтой (жилой) земле. По индонезийскому зонированию посуточная/туристическая аренда здесь нелегальна, поэтому доходность от посуточной аренды для него не считаем. Земля подходит под собственное проживание или долгосрочную аренду.',
     sqm: 'м²',
     similarOnBooking: (n: number) => `Похожие объекты на Booking · ${n}`,
     collapse: 'Свернуть',
@@ -102,6 +104,8 @@ const COPY = {
     referencesTitle: 'Small sample — showing reference listings',
     referencesBody: (n: number, plural: string) =>
       `Only ${n} ${plural} matched the villa's profile within a 2 km radius. We're not aggregating — here are concrete examples instead.`,
+    restrictedTitle: 'Residential land — daily rental not permitted',
+    restrictedBody: "This property sits on yellow (residential) land. Under Indonesian zoning, short-term / tourist rental is not legal here, so we don't compute a daily-rental yield for it. The land suits personal use or long-term rental.",
     sqm: 'm²',
     similarOnBooking: (n: number) => `Similar listings on Booking · ${n}`,
     collapse: 'Collapse',
@@ -201,7 +205,14 @@ function InvestmentWidgetView({ snap, apiKey, lang }: { snap: Snapshot; apiKey: 
   return (
     <>
       <SectionShell lang={lang}>
-        {snap.scenarios ? (
+        {snap.flags.rentalRestricted ? (
+          <Banner tone="warn" icon={<Info size={16} />}>
+            <div>
+              <div className="font-medium text-[#111827] mb-1">{t.restrictedTitle}</div>
+              <div>{t.restrictedBody}</div>
+            </div>
+          </Banner>
+        ) : snap.scenarios ? (
           <Calculator snap={snap} lang={lang} />
         ) : snap.references ? (
           <References snap={snap} lang={lang} />
@@ -217,7 +228,7 @@ function InvestmentWidgetView({ snap, apiKey, lang }: { snap: Snapshot; apiKey: 
           </Banner>
         )}
 
-        {snap.flags.emergingMarket && <EmergingBlock snap={snap} lang={lang} />}
+        {snap.flags.emergingMarket && !snap.flags.rentalRestricted && <EmergingBlock snap={snap} lang={lang} />}
       </SectionShell>
     </>
   )

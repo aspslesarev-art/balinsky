@@ -6,6 +6,7 @@ import { classifyZone, type BeachZone, zoneTitle } from './zones'
 import { matchCompetitors, type MatchMode } from './matching'
 import { adrPercentiles, buildScenarios, type ScenarioBundle } from './economics'
 import { scoreInfra, type InfraScore } from './infra-score'
+import { isDailyRentalRestricted } from '@/lib/land-use'
 
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
 
@@ -56,7 +57,7 @@ export type InvestmentSnapshot = {
   infra: InfraScore
   anchors: NearbyPlace[]
   nearbyByCategory: Record<string, NearbyPlace[]>
-  flags: { emergingMarket: boolean; weakPerformance: boolean; leaseholdRisk: boolean; isLuxury: boolean; expandedZone: boolean }
+  flags: { emergingMarket: boolean; weakPerformance: boolean; leaseholdRisk: boolean; isLuxury: boolean; expandedZone: boolean; rentalRestricted: boolean }
 }
 
 export type MapCompetitor = {
@@ -132,9 +133,16 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
   const within1km = allInRadius.filter(c => c.distanceKm <= 1).length
   const emergingMarket = within1km < 30
 
+  // Residential (yellow) land — daily/short-term tourist rental is illegal,
+  // so a daily-rental yield calculator is misleading. Skip the scenarios and
+  // the rental references; the widget shows an explanatory note instead.
+  const rentalRestricted = isDailyRentalRestricted(firstString(d['Land color']))
+
   let scenarios: ScenarioBundle | null = null
   let references: NearbyMatchCard[] | null = null
-  if (matchResult.mode === 'references') {
+  if (rentalRestricted) {
+    // leave scenarios + references null
+  } else if (matchResult.mode === 'references') {
     references = matchResult.matches.slice(0, 5).map(toCard)
   } else {
     const pcts = adrPercentiles(matchResult.matches)
@@ -211,6 +219,7 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
       leaseholdRisk,
       isLuxury: matchResult.isLuxury,
       expandedZone: matchResult.expanded,
+      rentalRestricted,
     },
   }
 }

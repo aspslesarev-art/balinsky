@@ -7,6 +7,7 @@ import { regionFor } from './regions'
 import { matchCompetitors, type MatchResult } from './matching'
 import { adrPercentiles, computeEconomics } from './economics'
 import { scoreInfra } from './infra-score'
+import { isDailyRentalRestricted } from '@/lib/land-use'
 
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
 
@@ -22,12 +23,14 @@ const VILLA_SCORE_SELECT =
   'rooms:data->"Комнаты",area:data->"Площадь",' +
   'price:data->price,price_ru:data->"Цена",' +
   'lh:data->Leasehold,lh2:data->Leashold,' +
-  'pool:data->Pool,pool_ru:data->"Бассейн"'
+  'pool:data->Pool,pool_ru:data->"Бассейн",' +
+  'land_color:data->"Land color"'
 
 type VillaScoreRow = {
   airtable_id: string
   pub: unknown; geo: unknown; geo2: unknown; rooms: unknown; area: unknown
   price: unknown; price_ru: unknown; lh: unknown; lh2: unknown; pool: unknown; pool_ru: unknown
+  land_color: unknown
 }
 
 // Cross-instance cache of the slim rows (the module-level _cache below is only
@@ -41,10 +44,12 @@ const _loadVillaScoreRows = unstable_cache(
         'Опубликовать': r.pub, 'Geo': r.geo, 'Geo 2': r.geo2,
         'Комнаты': r.rooms, 'Площадь': r.area, 'price': r.price, 'Цена': r.price_ru,
         'Leasehold': r.lh, 'Leashold': r.lh2, 'Pool': r.pool, 'Бассейн': r.pool_ru,
+        'Land color': r.land_color,
       } as Record<string, unknown>,
     }))
   },
-  ['villa-score-rows-v1'],
+  // v2: added "Land color" to the projection (yellow-land rental gate).
+  ['villa-score-rows-v2'],
   { revalidate: 3600 },
 )
 
@@ -82,6 +87,11 @@ export type VillaScore = {
   matches: number
   hasScenarios: boolean
   leaseholdRisk: boolean
+  // True when the land is residential (yellow) — daily rental is illegal,
+  // so capRate/goodCapRate are left null and the listing carries no
+  // daily-rental investment score. Callers use this to drop it out of the
+  // yield-ranked catalog ordering.
+  rentalRestricted: boolean
 }
 
 const TTL_MS = 60 * 60 * 1000
@@ -109,12 +119,18 @@ function buildOneScore(
   const inRadius = loadCompForVilla(lat, lng)
   const matchResult: MatchResult = matchCompetitors(inRadius, { lat, lng, bedrooms, area, hasPool }, beaches)
 
+  // Residential (yellow) land — daily/short-term rental is illegal there, so
+  // a daily-rental cap rate is meaningless. Skip the rental economics
+  // entirely: no capRate, no scenarios, and the composite falls back to the
+  // infra-only score so the listing isn't boosted into the yield-ranked TOP.
+  const rentalRestricted = isDailyRentalRestricted(fs1(d['Land color']))
+
   let capRate: number | null = null
   let goodCapRate: number | null = null
   let noi: number | null = null
   let leaseholdRisk = false
   let hasScenarios = false
-  if (matchResult.mode !== 'references') {
+  if (!rentalRestricted && matchResult.mode !== 'references') {
     const pcts = adrPercentiles(matchResult.matches)
     const median = computeEconomics({
       adr: pcts.p50, occupancy: region.occupancyByScenario.median,
@@ -159,6 +175,7 @@ function buildOneScore(
     matches: matchResult.matches.length,
     hasScenarios,
     leaseholdRisk,
+    rentalRestricted,
   }
 }
 
