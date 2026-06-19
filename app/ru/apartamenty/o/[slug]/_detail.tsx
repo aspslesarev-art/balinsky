@@ -49,6 +49,7 @@ import { normalizeSlug } from '@/lib/slug-normalize'
 import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
 import { districtRu } from '@/lib/district-ru'
+import { loadKbPageContent } from '@/lib/kb-page-content'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
 
 const AIRPORT_LAT = -8.7467
@@ -537,6 +538,8 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
   const lat = parseGeo(d['Geo'])
   const lng = parseGeo(d['Geo 2'])
   const seoText = tField(d, 'SEO Text', lang) ?? tField(d, 'Notes', lang)
+  const kb = await loadKbPageContent('apartment', a.airtable_id, lang)
+  const pageBody = kb?.body ?? seoText
   // Resale: drop the developer-manager CTA and route the visitor to
   // the owner's direct link stored in «Контакт продавца».
   const dealTypeRaw = (firstString(d['Тип сделки']) ?? '').toLowerCase()
@@ -586,7 +589,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
     // to duplicate it here.
   ].filter(Boolean) as { Icon: typeof BedDouble; label: string; value: ReactNode }[]
 
-  const faqItems = c.faq(title, district, fmtUsd(priceNum), lease)
+  const faqItems = (kb?.faq && kb.faq.length) ? kb.faq : c.faq(title, district, fmtUsd(priceNum), lease)
   const faqJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
@@ -753,7 +756,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
                   permit={permit}
                   lat={lat}
                   lng={lng}
-                  seoText={seoText}
+                  seoText={pageBody}
                 />
               }
             />

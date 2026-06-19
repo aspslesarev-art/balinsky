@@ -51,6 +51,7 @@ import { tField, type Lang } from '@/lib/i18n'
 import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
 import { districtRu } from '@/lib/district-ru'
+import { loadKbPageContent } from '@/lib/kb-page-content'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
 
 const AIRPORT_LAT = -8.7467
@@ -675,6 +676,8 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
     ?? tField(d, 'Описание', lang)
     ?? firstString(d['ИИ Описание 2'])
     ?? firstString(d['ИИ Описание'])
+  const kb = await loadKbPageContent('complex', c.airtable_id, lang)
+  const pageBody = kb?.body ?? seoText
 
   // External resources
   const resources: { label: string; url: string; Icon: typeof Box }[] = []
@@ -788,7 +791,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
     }
   }
 
-  const faqItems = copy.faq(name, district, lease)
+  const faqItems = (kb?.faq && kb.faq.length) ? kb.faq : copy.faq(name, district, lease)
   const faqJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
@@ -938,15 +941,15 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
           </section>
         )}
 
-        {/* ABOUT (long text from SEO Text) */}
-        {seoText && (
+        {/* ABOUT (unique AI write-up, falls back to SEO Text) */}
+        {pageBody && (
           <section className="mb-10">
             <h2 className="text-[19px] sm:text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
               {copy.aboutPrefix} {name}
             </h2>
             <ExpandableText className="max-w-3xl" more={lang === 'en' ? 'Read more' : 'Подробнее'} less={lang === 'en' ? 'Show less' : 'Свернуть'}>
               <div className="prose-balinsky text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
-                {seoText}
+                {pageBody}
               </div>
             </ExpandableText>
           </section>

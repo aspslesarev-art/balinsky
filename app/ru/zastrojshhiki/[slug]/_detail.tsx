@@ -25,6 +25,7 @@ import { VideoGrid } from '@/components/VideoGrid'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { tField, type Lang } from '@/lib/i18n'
 import { isHiddenDeveloper } from '@/lib/hidden-developers'
+import { loadKbPageContent } from '@/lib/kb-page-content'
 import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -335,9 +336,11 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
   const c = COPY[lang]
   const name = firstString(dev.data['Developer']) ?? slug
   const logoUrl = dev.logo_url ?? logoFromJson(dev.data)
-  const aiText = tField(dev.data, 'SEO Text', lang)
+  const aiTextRaw = tField(dev.data, 'SEO Text', lang)
     ?? tField(dev.data, 'Описание ИИ', lang)
     ?? firstString(dev.data['AI Описание'])
+  const kb = await loadKbPageContent('developer', dev.airtable_id, lang)
+  const aiText = kb?.body ?? aiTextRaw
 
   const dimensions = [
     { title: c.dim.construction, bullets: parseBullets(tField(dev.data, 'Строительство и недвижимость', lang)), Icon: Building2 },
@@ -368,7 +371,7 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
   const devPromo = allPromo.filter(p => p.developers.some(d => d.slug === slug)).slice(0, 4)
   const devEvents = allEvents.filter(e => e.developers.some(d => d.slug === slug)).slice(0, 4)
 
-  const faqItems = c.faq(name)
+  const faqItems = (kb?.faq && kb.faq.length) ? kb.faq : c.faq(name)
   const faqJsonLd = {
     '@context': 'https://schema.org', '@type': 'FAQPage',
     mainEntity: faqItems.map(item => ({

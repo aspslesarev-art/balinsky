@@ -65,6 +65,7 @@ import { normalizeSlug } from '@/lib/slug-normalize'
 import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
 import { districtRu } from '@/lib/district-ru'
+import { loadKbPageContent } from '@/lib/kb-page-content'
 import { enLabel } from '@/lib/filter-i18n'
 
 const COPY = {
@@ -546,6 +547,10 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   const lat = parseGeo(d['Geo'])
   const lng = parseGeo(d['Geo 2'])
   const seoText = tField(d, 'SEO Text', lang) ?? tField(d, 'Notes', lang)
+  // Unique, AI-generated on-page write-up + FAQ (assistant_kb). Falls back to
+  // the Airtable SEO Text / templated FAQ when not generated yet.
+  const kb = await loadKbPageContent('villa', v.airtable_id, lang)
+  const pageBody = kb?.body ?? seoText
   const developerName = firstString(d['Developer1']) ?? firstString(d['Developer'])
   const devStats = await getDeveloperStats(developerName)
   // Resale / secondary listings carry a direct seller URL — bypass the
@@ -606,7 +611,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
     // to duplicate it here.
   ].filter(Boolean) as { Icon: typeof BedDouble; label: string; value: ReactNode }[]
 
-  const faqItems = c.faq(title, district, fmtUsd(priceNum), lease, land)
+  const faqItems = (kb?.faq && kb.faq.length) ? kb.faq : c.faq(title, district, fmtUsd(priceNum), lease, land)
   const faqJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
@@ -798,7 +803,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
                   permit={permit}
                   lat={lat}
                   lng={lng}
-                  seoText={seoText}
+                  seoText={pageBody}
                 />
               }
             />
