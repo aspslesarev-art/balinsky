@@ -22,6 +22,39 @@ export type SemanticOptions = {
   kinds?: Array<'villa' | 'apartment' | 'complex'>
 }
 
+// Unified knowledge-base search over assistant_kb (migration 040): every
+// kind — villa/apartment/complex/developer/rental + aggregate district/market
+// guides — embedded on an LLM-written investor summary. Supersedes the
+// catalog-only `semanticSearch` above for the assistant.
+export type KbHit = {
+  kind: string
+  ref_id: string
+  slug: string | null
+  title: string | null
+  summary: string
+  meta: Record<string, unknown>
+  distance: number
+}
+
+export async function kbSearch(
+  query: string,
+  opts: { limit?: number; kinds?: string[] } = {},
+): Promise<KbHit[]> {
+  const vec = await embedText(query)
+  if (!vec) return []
+  const literal = '[' + vec.join(',') + ']'
+  const { data, error } = await sb.rpc('kb_search', {
+    query_embedding: literal,
+    match_count: opts.limit ?? 10,
+    kinds: opts.kinds && opts.kinds.length ? opts.kinds : null,
+  })
+  if (error) {
+    console.error('[kb-search] rpc failed:', error.message)
+    return []
+  }
+  return (data ?? []) as KbHit[]
+}
+
 export async function semanticSearch(query: string, opts: SemanticOptions = {}): Promise<SemanticHit[]> {
   const limit = opts.limit ?? 12
   const kinds = opts.kinds ?? ['villa', 'apartment', 'complex']

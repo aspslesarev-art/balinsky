@@ -208,15 +208,15 @@ export const TOOLS: ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'semantic_search',
-      description: 'Семантический поиск по каталогу — НЕ field-based, а по СМЫСЛУ описания. Используй когда посетитель упоминает мягкие/качественные атрибуты, которые не маппятся на структурные поля Airtable: «инфинити-бассейн», «вид на закат», «среди джунглей», «тропический минимализм», «для digital-nomad пары», «семейная атмосфера», «лофт-формат», «крыша с jacuzzi», «pet-friendly». Эмбеддит запрос через text-embedding-3-large и возвращает топ-N объектов по косинусной близости описаний. Жёсткие фильтры (район, цена, спальни) — это для search_listings. Если запрос смешанный («вилла в Чангу с инфинити-бассейном до 600k») — сначала зови semantic_search со всем текстом запроса, потом мягко фильтруй результаты по цене / району в своём ответе (или вызывай оба tool и мерджи).',
+      description: 'Семантический поиск по ВСЕЙ базе знаний Балины (assistant_kb) — НЕ field-based, а по СМЫСЛУ. Каждый объект, застройщик, район и сам рынок описаны инвесторским саммари (плюсы/риски/кому подходит), на котором построены эмбеддинги. Возвращает {results} (карточки объектов: villa/apartment/complex) и {knowledge} (текстовые сводки: developer — профиль и репутация застройщика; rental — помесячная аренда; district — инвест-гайд района с медианами цен и объёмом предложения; market — обзор рынка Бали). Используй когда: мягкие/качественные признаки («инфинити-бассейн», «среди джунглей», «для digital-nomad», «pet-friendly»); вопрос про застройщика («что за контора X, надёжные?»); вопрос про район («что брать в Чангу под аренду», «где дешевле войти», «медианная цена в Берава»); про помесячную аренду; общий обзор рынка. Для жёстких фильтров (точные район/цена/спальни) есть search_listings; при смешанном запросе зови оба и мерджи. Текст из {knowledge} можно цитировать в ответе вместе с url.',
       parameters: {
         type: 'object',
         properties: {
-          query: { type: 'string', description: 'Свободно-текстовый запрос как сказал посетитель — все мягкие признаки, описание стиля, образ жизни и т.д.' },
+          query: { type: 'string', description: 'Свободно-текстовый запрос как сказал посетитель — все мягкие признаки, стиль жизни, имя застройщика, название района и т.д.' },
           kinds: {
             type: 'array',
-            items: { type: 'string', enum: ['villa', 'apartment', 'complex'] },
-            description: 'Ограничить выдачу одним или несколькими типами объектов. По умолчанию ищем по всем трём.',
+            items: { type: 'string', enum: ['villa', 'apartment', 'complex', 'developer', 'rental', 'district', 'market'] },
+            description: 'Ограничить выдачу видами знаний. По умолчанию ищем по всем. Примеры: ["developer"] — только застройщики; ["district","market"] — гайды районов и рынок; ["rental"] — аренда; ["villa","apartment","complex"] — только каталог продажи.',
           },
           limit: { type: 'number', description: 'Сколько вернуть (по умолчанию 8, максимум 20)' },
         },
@@ -1134,7 +1134,7 @@ export async function executeToolCall(name: string, rawArgs: string): Promise<st
   }
   if (name === 'semantic_search') {
     const result = await searchSemantic(args as SemanticArgs)
-    return JSON.stringify({ results: result })
+    return JSON.stringify(result)
   }
   return JSON.stringify({ error: 'unknown_tool' })
 }
@@ -1147,26 +1147,52 @@ export async function executeToolCall(name: string, rawArgs: string): Promise<st
 // `semantic_search_catalog` RPC for the nearest rows across all three
 // catalogs. The RPC already filters non-published rows server-side.
 
+type KbKind = 'villa' | 'apartment' | 'complex' | 'developer' | 'rental' | 'district' | 'market'
 type SemanticArgs = {
   query?: string
-  kinds?: Array<'villa' | 'apartment' | 'complex'>
+  kinds?: KbKind[]
   limit?: number
 }
+type KnowledgeSnippet = { kind: string; title: string | null; summary: string; url: string | null }
+type SemanticResult = { results: ListingCard[]; knowledge: KnowledgeSnippet[] }
 
-async function searchSemantic(args: SemanticArgs): Promise<ListingCard[]> {
+const CATALOG_KINDS = new Set(['villa', 'apartment', 'complex'])
+
+async function searchSemantic(args: SemanticArgs): Promise<SemanticResult> {
   const q = (args.query ?? '').trim()
-  if (q.length < 3) return []
+  if (q.length < 3) return { results: [], knowledge: [] }
   const limit = Math.max(1, Math.min(20, args.limit ?? 8))
-  const kinds: Array<'villa' | 'apartment' | 'complex'> =
-    args.kinds && args.kinds.length ? args.kinds : ['villa', 'apartment', 'complex']
+  const kinds = args.kinds && args.kinds.length ? args.kinds : undefined
 
-  const { semanticSearch } = await import('@/lib/semantic-search')
-  const hits = await semanticSearch(q, { limit, kinds })
-  if (hits.length === 0) return []
+  // kb_search (migration 040) ranks the whole knowledge base: catalog rows,
+  // developer profiles, rental listings, district guides + market overview,
+  // each embedded on an LLM-written investor summary.
+  const { kbSearch } = await import('@/lib/semantic-search')
+  // Pull a few extra so cards and knowledge snippets can coexist.
+  const hits = await kbSearch(q, { limit: Math.min(20, limit + 6), kinds })
+  if (hits.length === 0) return { results: [], knowledge: [] }
+
+  // Non-catalog kinds (developer/rental/district/market) become quotable text
+  // snippets — there is no listing card for them.
+  const knowledge: KnowledgeSnippet[] = hits
+    .filter(h => !CATALOG_KINDS.has(h.kind))
+    .slice(0, limit)
+    .map(h => ({
+      kind: h.kind,
+      title: h.title,
+      summary: h.summary,
+      url: (h.meta && typeof (h.meta as { url?: unknown }).url === 'string') ? (h.meta as { url: string }).url : null,
+    }))
+
+  // Catalog kinds resolve to fully-rendered listing cards (logic below).
+  const catalogHits = hits
+    .filter(h => CATALOG_KINDS.has(h.kind))
+    .slice(0, limit)
+    .map(h => ({ kind: h.kind as 'villa' | 'apartment' | 'complex', airtable_id: h.ref_id }))
 
   // Fetch rows in batch from the three tables.
   const byKind: Record<'villa' | 'apartment' | 'complex', string[]> = { villa: [], apartment: [], complex: [] }
-  for (const h of hits) byKind[h.kind].push(h.airtable_id)
+  for (const h of catalogHits) byKind[h.kind].push(h.airtable_id)
 
   type AnyRow = { airtable_id: string; data: Record<string, unknown>; logo_url?: string | null }
   const rowsByKey = new Map<string, AnyRow>()
@@ -1201,7 +1227,7 @@ async function searchSemantic(args: SemanticArgs): Promise<ListingCard[]> {
   }
 
   const cards: ListingCard[] = []
-  for (const h of hits) {
+  for (const h of catalogHits) {
     const row = rowsByKey.get(`${h.kind}:${h.airtable_id}`)
     if (!row) continue
     const d = row.data
@@ -1268,7 +1294,7 @@ async function searchSemantic(args: SemanticArgs): Promise<ListingCard[]> {
       nearest_beach: beach?.name ?? null,
     })
   }
-  return cards
+  return { results: cards, knowledge }
 }
 
 // Full deep-read of one listing — everything in the Airtable row,

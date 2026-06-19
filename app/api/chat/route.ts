@@ -320,7 +320,7 @@ export async function POST(req: Request) {
         tool_call_id: tc.id,
         content: result,
       })
-      if (tc.function.name === 'search_listings') {
+      if (tc.function.name === 'search_listings' || tc.function.name === 'semantic_search') {
         try {
           const parsed = JSON.parse(result) as { results?: ListingCard[] }
           for (const card of parsed.results ?? []) {
