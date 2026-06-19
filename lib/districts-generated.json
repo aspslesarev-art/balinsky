@@ -1,0 +1,1524 @@
+{
+  "padonan": {
+    "ru": {
+      "slug": "padonan",
+      "name": "Падонан",
+      "hero": "Падонан — район с доступным входом в рынок вилл Бали и активным предложением в помесячной аренде.",
+      "paragraphs": [
+        "Падонан — компактный рынок покупки: в продаже всего 3 виллы, апартаментов нет, жилых комплексов — 1. Виллы здесь стоят от $170,000 до $360,000, медианная цена — $180,000, медиана — $2,250 за м².",
+        "Типичный формат для района — вилла с 2 спальнями. Это делает Падонан понятным выбором для покупателя, который ищет объект под аренду или для собственного проживания с умеренным бюджетом входа.",
+        "Рынок аренды здесь представлен активнее, чем рынок продажи: 23 объекта в помесячной аренде против 3 объектов на продажу. Диапазон аренды — от $611.11 до $6,370 в месяц, медиана — $1,780, что даёт ориентир по среднему сегменту для 2-bedroom вилл."
+      ],
+      "highlights": [
+        {
+          "label": "Вилл в продаже",
+          "value": "3"
+        },
+        {
+          "label": "Медиана цены виллы",
+          "value": "$180,000"
+        },
+        {
+          "label": "Жилых комплексов",
+          "value": "1"
+        },
+        {
+          "label": "Аренда, предложений",
+          "value": "23"
+        }
+      ],
+      "bestFor": [
+        "Под аренду",
+        "Бюджетный вход",
+        "2-спальные виллы",
+        "Собственное проживание"
+      ]
+    },
+    "en": {
+      "slug": "padonan",
+      "name": "Padonan",
+      "hero": "Padonan is an accessible entry point to Bali’s villa market with a more active monthly rental supply than sales stock.",
+      "paragraphs": [
+        "Padonan is a compact buy-side market: just 3 villas are listed for sale, there are no apartments, and there is 1 residential complex. Villa prices range from $170,000 to $360,000, with a median price of $180,000 and a median of $2,250 per sq m.",
+        "The typical local product is a 2-bedroom villa. That makes Padonan a clear option for buyers looking for a rental-oriented villa or a home for personal use with a moderate entry budget.",
+        "The rental market is more active than the sales market here: 23 monthly rental listings versus 3 properties for sale. Monthly rents range from $611.11 to $6,370, with a median of $1,780, giving a practical benchmark for the mid-segment 2-bedroom format."
+      ],
+      "highlights": [
+        {
+          "label": "Villas for sale",
+          "value": "3"
+        },
+        {
+          "label": "Median villa price",
+          "value": "$180,000"
+        },
+        {
+          "label": "Complexes",
+          "value": "1"
+        },
+        {
+          "label": "Rentals listed",
+          "value": "23"
+        }
+      ],
+      "bestFor": [
+        "Rental property",
+        "Affordable entry",
+        "2-bedroom villas",
+        "Own residence"
+      ]
+    }
+  },
+  "gwk": {
+    "ru": {
+      "slug": "gwk",
+      "name": "Джи-дабл-ю-кей",
+      "hero": "GWK — небольшой рынок для точечного входа: здесь мало лотов, а основной спрос логично смотреть в апартаментах с низким бюджетом входа и виллах среднего чека.",
+      "paragraphs": [
+        "GWK — район с ограниченным предложением: в продаже всего 20 лотов, из них 9 вилл и 11 апартаментов, плюс 1 жилой комплекс. Это небольшой по объёму рынок, где выбор точечный, а конкуренция в продаже ограничена.",
+        "По ценам апартаменты в GWK находятся во входном и среднем сегменте: диапазон $94,000–$262,000 при медиане $105,000. Виллы требуют более высокого бюджета входа — от $205,000 до $510,000, медианная цена составляет $320,000, при медиане $3,158 за м². При этом апартаменты дешевле по общему чеку, но дороже по цене метра: медиана $4,000 за м² против $3,158 у вилл.",
+        "Типичный формат предложения — 1 спальня, поэтому район в первую очередь подходит для компактных инвестиционных лотов и небольшого собственного проживания. По аренде текущая выборка не даёт подтверждённого рынка: помесячная аренда сейчас не представлена, 0 предложений."
+      ],
+      "highlights": [
+        {
+          "label": "Вилл в продаже",
+          "value": "9"
+        },
+        {
+          "label": "Медиана цены виллы",
+          "value": "$320,000"
+        },
+        {
+          "label": "Апартаментов",
+          "value": "11"
+        },
+        {
+          "label": "Медиана цены апарт.",
+          "value": "$105,000"
+        },
+        {
+          "label": "Жилых комплексов",
+          "value": "1"
+        }
+      ],
+      "bestFor": [
+        "Бюджетный вход",
+        "Компактные апартаменты",
+        "Виллы среднего бюджета",
+        "Небольшое собственное проживание"
+      ]
+    },
+    "en": {
+      "slug": "gwk",
+      "name": "GWK",
+      "hero": "GWK is a small market for selective entry, with limited stock and the clearest opportunities in lower-ticket apartments and mid-budget villas.",
+      "paragraphs": [
+        "GWK is a supply-constrained area with just 20 listings for sale: 9 villas and 11 apartments, plus 1 residential complex. It is a small market with selective choice and limited competition on the sales side.",
+        "In pricing, apartments in GWK sit in the entry-to-mid segment, ranging from $94,000 to $262,000 with a median of $105,000. Villas require a higher entry budget, from $205,000 to $510,000, with a median price of $320,000 and a median of $3,158 per sq m. Apartments are cheaper by total ticket, but more expensive per square meter: a median of $4,000 per sq m versus $3,158 for villas.",
+        "The typical listing format is 1 bedroom, so the area is better suited to compact investment lots and small-format owner occupancy than to larger family properties. Rental data is currently weak: there are 0 monthly rental listings in the sample, so the rental market is not confirmed by the current dataset."
+      ],
+      "highlights": [
+        {
+          "label": "Villas for sale",
+          "value": "9"
+        },
+        {
+          "label": "Median villa price",
+          "value": "$320,000"
+        },
+        {
+          "label": "Apartments",
+          "value": "11"
+        },
+        {
+          "label": "Median apt price",
+          "value": "$105,000"
+        },
+        {
+          "label": "Complexes",
+          "value": "1"
+        }
+      ],
+      "bestFor": [
+        "Budget entry",
+        "Compact apartments",
+        "Mid-budget villas",
+        "Small-format owner occupancy"
+      ]
+    }
+  },
+  "tumbak bayuh": {
+    "ru": {
+      "slug": "tumbak bayuh",
+      "name": "Тумбак-Баюх",
+      "hero": "Тумбак-Баюх — район с минимальным выбором на покупку и более активным рынком аренды вилл.",
+      "paragraphs": [
+        "Тумбак-Баюх — небольшой рынок недвижимости с крайне ограниченным предложением на покупку. Сейчас в продаже всего 1 вилла по цене $180,000, медиана также составляет $180,000, или около $2,400 за м².",
+        "Апартаменты в районе на продажу отсутствуют, при этом представлено 3 жилых комплекса. Типичный формат предложения — вилла с 2 спальнями, поэтому район больше подходит тем, кто ищет конкретно такой формат, а не выбирает между разными типами недвижимости.",
+        "Рынок аренды здесь заметно шире: 18 объектов с диапазоном $1,000–$33,400 в месяц и медианой $3,181. Это делает Тумбак-Баюх более наполненной локацией для поиска виллы в аренду или под помесячный формат, чем для покупки с широким выбором."
+      ],
+      "highlights": [
+        {
+          "label": "Вилл в продаже",
+          "value": "1"
+        },
+        {
+          "label": "Медиана цены виллы",
+          "value": "$180,000"
+        },
+        {
+          "label": "Жилых комплексов",
+          "value": "3"
+        },
+        {
+          "label": "Аренда, предложений",
+          "value": "18"
+        }
+      ],
+      "bestFor": [
+        "2-спальные виллы",
+        "Собственное проживание",
+        "Помесячная аренда",
+        "Точка входа $180,000"
+      ]
+    },
+    "en": {
+      "slug": "tumbak bayuh",
+      "name": "Tumbak Bayuh",
+      "hero": "Tumbak Bayuh is a location with very limited buying options and a more active villa rental market.",
+      "paragraphs": [
+        "Tumbak Bayuh is a small property market with extremely limited options for purchase. There is currently just 1 villa for sale at $180,000, with the median also at $180,000, or about $2,400 per sq.m.",
+        "There are no apartments for sale in the area, while 3 residential complexes are present. The typical format here is a 2-bedroom villa, so the area suits buyers looking specifically for this product rather than comparing multiple property types.",
+        "The rental market is notably broader: 18 listings with a monthly range of $1,000–$33,400 and a median of $3,181. This makes Tumbak Bayuh more active for villa rental search or monthly-rental format than for purchase with broad choice."
+      ],
+      "highlights": [
+        {
+          "label": "Villas for sale",
+          "value": "1"
+        },
+        {
+          "label": "Median villa price",
+          "value": "$180,000"
+        },
+        {
+          "label": "Complexes",
+          "value": "3"
+        },
+        {
+          "label": "Rentals listed",
+          "value": "18"
+        }
+      ],
+      "bestFor": [
+        "2-bedroom villas",
+        "Own residence",
+        "Monthly rental",
+        "$180,000 entry point"
+      ]
+    }
+  },
+  "bingin": {
+    "ru": {
+      "slug": "bingin",
+      "name": "Бингин",
+      "hero": "Бингин — компактный курортный район с ограниченным предложением на покупку и фокусом на готовые виллы среднего и выше среднего бюджета.",
+      "paragraphs": [
+        "Рынок продажи в Бингине небольшой: 6 вилл в продаже, апартаменты отсутствуют, жилых комплексов — 2. Это не массовый рынок, а точечное предложение с явным уклоном в виллы.",
+        "Вход в сегмент вилл здесь выше среднего: диапазон цен составляет $661,000–$805,000, медианная цена — $732,000, медиана — $2,697 за м². Типичный формат предложения — вилла с 3 спальнями, поэтому район логично рассматривать для собственного проживания или покупки готовой виллы в курортной локации.",
+        "Арендный рынок шире рынка продажи: 11 объектов в помесячной аренде против 6 объектов на продажу. Диапазон аренды — $1,516.13–$27,272.73 в месяц, медиана — $8,454.55, поэтому при выборе Бингина стоит учитывать активный арендный формат района и узкий выбор объектов на покупку."
+      ],
+      "highlights": [
+        {
+          "label": "Вилл в продаже",
+          "value": "6"
+        },
+        {
+          "label": "Медиана цены виллы",
+          "value": "$732,000"
+        },
+        {
+          "label": "Жилых комплексов",
+          "value": "2"
+        },
+        {
+          "label": "Аренда, предложений",
+          "value": "11"
+        }
+      ],
+      "bestFor": [
+        "Готовые виллы",
+        "Собственное проживание",
+        "Вилла под аренду",
+        "Курортная локация"
+      ]
+    },
+    "en": {
+      "slug": "bingin",
+      "name": "Bingin",
+      "hero": "Bingin is a compact resort area with limited supply for sale and a clear focus on ready villas in the mid-to-upper budget segment.",
+      "paragraphs": [
+        "The for-sale market in Bingin is small: 6 villas are listed for sale, there are no apartments, and only 2 residential complexes. This is not a mass-market location but a limited-supply area clearly focused on villas.",
+        "The entry level for villas here is above average: prices range from $661,000 to $805,000, with a median price of $732,000 and a median of $2,697 per sq m. The typical product is a 3-bedroom villa, making the area relevant for personal use or for buying a ready villa in a resort location.",
+        "The rental market is broader than the sales market: 11 monthly rental listings versus 6 properties for sale. Rental prices range from $1,516.13 to $27,272.73 per month, with a median of $8,454.55, so buyers should factor in the area’s active rental format and the limited choice of properties to purchase."
+      ],
+      "highlights": [
+        {
+          "label": "Villas for sale",
+          "value": "6"
+        },
+        {
+          "label": "Median villa price",
+          "value": "$732,000"
+        },
+        {
+          "label": "Complexes",
+          "value": "2"
+        },
+        {
+          "label": "Rentals listed",
+          "value": "11"
+        }
+      ],
+      "bestFor": [
+        "Ready villas",
+        "Own residence",
+        "Villa for rent",
+        "Resort location"
+      ]
+    }
+  },
+  "penestanan": {
+    "ru": {
+      "slug": "penestanan",
+      "name": "Пенестанан",
+      "hero": "Penestanan — нишевый район Убуда с небольшим выбором вилл и относительно доступным входом в сегмент готового жилья.",
+      "paragraphs": [
+        "Penestanan — небольшой рынок с ограниченным предложением: в продаже всего 6 вилл, апартаментов на продажу нет, жилых комплексов — 1. Это не массовая локация с большим выбором, а компактный район для точечного поиска объекта.",
+        "По ценам район выглядит как входной сегмент для Убуда: виллы стоят от $129,000 до $389,000, медианная цена — $184,000, медиана — $1,945 за м². Типичный формат предложения — вилла с 2 спальнями, что делает район понятным для покупки под собственное проживание или компактный арендный формат.",
+        "Рынок аренды тоже небольшой: всего 5 предложений в диапазоне $768–$930 в месяц, медиана — $832.5. Объём продажи и аренды близок по числу лотов, поэтому при выборе объекта важно учитывать ограниченность предложения и отсутствие апартаментов в бюджете до $200,000."
+      ],
+      "highlights": [
+        {
+          "label": "Вилл в продаже",
+          "value": "6"
+        },
+        {
+          "label": "Медиана цены виллы",
+          "value": "$184,000"
+        },
+        {
+          "label": "Жилых комплексов",
+          "value": "1"
+        },
+        {
+          "label": "Аренда, предложений",
+          "value": "5"
+        }
+      ],
+      "bestFor": [
+        "Бюджетный вход в Убуд",
+        "Компактные виллы 2BR",
+        "Для собственного проживания",
+        "Нишевый рынок"
+      ]
+    },
+    "en": {
+      "slug": "penestanan",
+      "name": "Penestanan",
+      "hero": "Penestanan is a niche Ubud area with limited villa supply and a relatively accessible entry point into the ready-home segment.",
+      "paragraphs": [
+        "Penestanan is a small market with limited supply: only 6 villas are listed for sale, there are no apartments for sale, and there is 1 residential complex. This is not a mass-market location with broad choice, but a compact area for targeted property search.",
+        "In pricing terms, the area sits in Ubud’s entry segment: villas range from $129,000 to $389,000, with a median price of $184,000 and a median of $1,945 per sq m. The typical product is a 2-bedroom villa, making the area easy to read for buyers seeking either personal use or a compact rental-format property.",
+        "The rental market is also small: just 5 monthly rental listings in the $768–$930 range, with a median of $832.5. Sale and rental volumes are close in number, so buyers should factor in the limited supply and the absence of apartment stock under $200,000."
+      ],
+      "highlights": [
+        {
+          "label": "Villas for sale",
+          "value": "6"
+        },
+        {
+          "label": "Median villa price",
+          "value": "$184,000"
+        },
+        {
+          "label": "Complexes",
+          "value": "1"
+        },
+        {
+          "label": "Rentals listed",
+          "value": "5"
+        }
+      ],
+      "bestFor": [
+        "Budget entry to Ubud",
+        "Compact 2BR villas",
+        "For personal use",
+        "Niche market"
+      ]
+    }
+  },
+  "nusa-penida": {
+    "ru": {
+      "slug": "nusa-penida",
+      "name": "Нуса Пенида",
+      "hero": "Нуса Пенида — компактный рынок с дефицитным предложением, где покупка заметно доминирует над арендой.",
+      "paragraphs": [
+        "Нуса Пенида — очень небольшой рынок недвижимости: в продаже всего 6 вилл, 3 апартамента и 1 жилой комплекс. Выбор ограничен, поэтому район подходит тем, кто рассматривает точечную покупку в условиях дефицита предложения.",
+        "Виллы здесь находятся в среднем ценовом сегменте: медианная цена составляет $437,000, диапазон — $399,000–$489,000, медиана — $2,819 за м². Апартаменты заметно доступнее по входному бюджету: медианная цена $180,000 при диапазоне $105,000–$250,000 и медиане $4,000 за м².",
+        "Типичный формат — объекты с 2 спальнями, подходящие для собственного проживания, отдыха или покупки готовой виллы. При этом в статистике нет ни одного предложения по аренде, поэтому долгосрочный арендный рынок здесь фактически не сформирован или крайне ограничен."
+      ],
+      "highlights": [
+        {
+          "label": "Вилл в продаже",
+          "value": "6"
+        },
+        {
+          "label": "Медиана цены виллы",
+          "value": "$437,000"
+        },
+        {
+          "label": "Апартаментов",
+          "value": "3"
+        },
+        {
+          "label": "Медиана цены апарт.",
+          "value": "$180,000"
+        },
+        {
+          "label": "Жилых комплексов",
+          "value": "1"
+        }
+      ],
+      "bestFor": [
+        "Дефицитное предложение",
+        "Покупка виллы",
+        "Низкий бюджет входа в апартаменты",
+        "Для собственного проживания"
+      ]
+    },
+    "en": {
+      "slug": "nusa-penida",
+      "name": "Nusa Penida",
+      "hero": "Nusa Penida is a compact, supply-constrained market where buying clearly outweighs renting.",
+      "paragraphs": [
+        "Nusa Penida is a very small property market with just 6 villas for sale, 3 apartments, and 1 residential complex. Choice is limited, making the area more suitable for targeted purchases in a supply-constrained market.",
+        "Villas sit in the island’s mid-price segment with a median price of $437,000, a range of $399,000–$489,000, and a median of $2,819 per sq m. Apartments offer a lower entry budget, with a median price of $180,000, a range of $105,000–$250,000, and a median of $4,000 per sq m.",
+        "The typical format is 2-bedroom properties, suitable for personal use, holiday stays, or buying a ready villa. At the same time, there are 0 rental listings in the statistics, so the long-term rental market here is effectively absent or extremely limited."
+      ],
+      "highlights": [
+        {
+          "label": "Villas for sale",
+          "value": "6"
+        },
+        {
+          "label": "Median villa price",
+          "value": "$437,000"
+        },
+        {
+          "label": "Apartments",
+          "value": "3"
+        },
+        {
+          "label": "Median apt price",
+          "value": "$180,000"
+        },
+        {
+          "label": "Complexes",
+          "value": "1"
+        }
+      ],
+      "bestFor": [
+        "Limited supply market",
+        "Villa purchase",
+        "Lower apartment entry budget",
+        "Own residence"
+      ]
+    }
+  },
+  "balangan": {
+    "ru": {
+      "slug": "balangan",
+      "name": "Баланган",
+      "hero": "Баланган — район с практически отсутствующим рынком покупки и ограниченным, но заметно разнородным предложением по аренде.",
+      "paragraphs": [
+        "В текущей выборке в Балангане нет объектов на продажу: 0 вилл, 0 апартаментов и 0 жилых комплексов. Рынок района в имеющихся данных полностью смещён в сторону аренды.",
+        "По помесячной аренде доступно 9 предложений в диапазоне от $525 до $8820 в месяц, медиана — $4062.5. Это говорит о неоднородном ценовом позиционировании: в районе есть как более доступные варианты, так и выраженный верхний сегмент.",
+        "Баланган скорее подходит тем, кто рассматривает готовое проживание или изучает арендный формат, чем покупку с быстрым выбором объекта. Для инвестора, ориентированного на покупку апартаментов или широкий выбор лотов, текущий объём предложения здесь неудобен."
+      ],
+      "highlights": [
+        {
+          "label": "Аренда, предложений",
+          "value": "9"
+        }
+      ],
+      "bestFor": [
+        "Долгосрочная аренда",
+        "Готовое проживание",
+        "Премиальный арендный сегмент",
+        "Ограниченное предложение"
+      ]
+    },
+    "en": {
+      "slug": "balangan",
+      "name": "Balangan",
+      "hero": "Balangan is an area with virtually no for-sale market and a limited but clearly mixed rental supply.",
+      "paragraphs": [
+        "In the current dataset, Balangan has no properties for sale: 0 villas, 0 apartments, and 0 residential complexes. In these data, the local market is entirely shifted toward rentals.",
+        "There are 9 monthly rental listings available, ranging from $525 to $8820 per month, with a median of $4062.5. This points to uneven pricing: the area includes both more affordable options and a distinct upper segment.",
+        "Balangan is better suited to those considering ready-to-live options or exploring the rental format than to buyers seeking a quick property selection. For investors focused on apartment purchases or broad for-sale inventory, the current supply here is not convenient."
+      ],
+      "highlights": [
+        {
+          "label": "Rentals listed",
+          "value": "9"
+        }
+      ],
+      "bestFor": [
+        "Long-term rental",
+        "Ready-to-live options",
+        "Premium rental segment",
+        "Limited supply"
+      ]
+    }
+  },
+  "kedungu": {
+    "ru": {
+      "slug": "kedungu",
+      "name": "Кедунгу",
+      "hero": "Кедунгу — нишевый район с очень ограниченным предложением, где основной формат покупки сейчас — 1-bedroom апартаменты с медианной ценой $121,450.",
+      "paragraphs": [
+        "Рынок продажи в Кедунгу сейчас очень узкий: виллы в продаже отсутствуют, доступно только 6 апартаментов в диапазоне от $92,500 до $349,500 при медианной цене $121,450. Это делает район заметным прежде всего для покупателя, который рассматривает апартаменты с бюджетом до $125k, а не виллу.",
+        "По структуре предложения Кедунгу — компактный рынок: типичный формат здесь 1-bedroom апартаменты, медианная цена составляет $3,028 за м², а жилых комплексов всего 1. Выбор ограничен, поэтому район скорее подходит для точечного входа, чем для широкого сравнения объектов.",
+        "Арендное предложение представлено минимально: в открытом рынке есть только 1 объект с помесячной ставкой $1,077. Это указывает на слабую представленность аренды и нишевую ликвидность, поэтому при покупке здесь важно учитывать небольшую глубину рынка."
+      ],
+      "highlights": [
+        {
+          "label": "Апартаментов",
+          "value": "6"
+        },
+        {
+          "label": "Медиана цены апарт.",
+          "value": "$121,450"
+        },
+        {
+          "label": "Жилых комплексов",
+          "value": "1"
+        },
+        {
+          "label": "Аренда, предложений",
+          "value": "1"
+        }
+      ],
+      "bestFor": [
+        "Бюджетный вход",
+        "1-bedroom апартаменты",
+        "Тестовая покупка",
+        "Покупка вместо аренды"
+      ]
+    },
+    "en": {
+      "slug": "kedungu",
+      "name": "Kedungu",
+      "hero": "Kedungu is a niche area with very limited supply, where the main purchase format today is 1-bedroom apartments with a median price of $121,450.",
+      "paragraphs": [
+        "The sales market in Kedungu is currently very narrow: there are no villas for sale, and only 6 apartments are available, priced from $92,500 to $349,500 with a median of $121,450. This makes the area relevant mainly for buyers looking at apartments up to $125k rather than villas.",
+        "By supply structure, Kedungu is a compact market: the typical format is a 1-bedroom apartment, the median price is $3,028 per sq.m, and there is only 1 residential complex. Choice is limited, so the area is better suited for a targeted entry than for broad market comparison.",
+        "Rental supply is minimal: there is only 1 monthly rental listing on the open market at $1,077 per month. This points to weak rental market representation and niche liquidity, so buyers should account for the market’s limited depth."
+      ],
+      "highlights": [
+        {
+          "label": "Apartments",
+          "value": "6"
+        },
+        {
+          "label": "Median apt price",
+          "value": "$121,450"
+        },
+        {
+          "label": "Complexes",
+          "value": "1"
+        },
+        {
+          "label": "Rentals listed",
+          "value": "1"
+        }
+      ],
+      "bestFor": [
+        "Budget entry",
+        "1-bedroom apartments",
+        "Test purchase",
+        "Buying instead of renting"
+      ]
+    }
+  },
+  "karanggasem": {
+    "ru": {
+      "slug": "karanggasem",
+      "name": "Карангасем",
+      "hero": "Карангасем — район с крайне ограниченным предложением, где покупка сейчас сводится в основном к компактным апартаментам.",
+      "paragraphs": [
+        "Карангасем — очень узкий рынок для покупки: в текущей статистике нет вилл в продаже и представлено всего 5 апартаментов. В продаже только 1 жилой комплекс, поэтому выбор форматов и проектов здесь минимальный.",
+        "Основной продукт района — апартаменты с бюджетом входа от $243,100 до $527,300. Медианная цена составляет $262,850, медианная цена за м² — $5,022, а типичный формат — 1 спальня.",
+        "Район в первую очередь подходит тем, кто рассматривает компактный объект для личного проживания или точечного входа в небольшой формат. Для стратегии покупки виллы под аренду локация сейчас не подходит: виллы в продаже отсутствуют, а по аренде в статистике нет ни одного предложения, поэтому оценить арендный сегмент по текущим данным сложно."
+      ],
+      "highlights": [
+        {
+          "label": "Апартаментов",
+          "value": "5"
+        },
+        {
+          "label": "Медиана цены апарт.",
+          "value": "$262,850"
+        },
+        {
+          "label": "Жилых комплексов",
+          "value": "1"
+        }
+      ],
+      "bestFor": [
+        "Компактные апартаменты",
+        "Личное проживание",
+        "Точечный вход",
+        "Бюджет до $300,000"
+      ]
+    },
+    "en": {
+      "slug": "karanggasem",
+      "name": "Karanggasem",
+      "hero": "Karanggasem is a highly limited market where current buying options are focused mainly on compact apartments.",
+      "paragraphs": [
+        "Karanggasem is a very narrow market for buyers: current statistics show no villas for sale and only 5 apartments available. There is just 1 residential complex on the market, so the choice of formats and projects is minimal.",
+        "The core product here is apartments with entry prices ranging from $243,100 to $527,300. The median apartment price is $262,850, the median price per square meter is $5,022, and the typical format is a 1-bedroom unit.",
+        "This area is best suited to buyers looking for a compact property for personal use or a targeted entry into a small-format asset. It is not suitable for a villa rental strategy at the moment: there are no villas for sale, and there are no rental listings in the current statistics, making the rental segment hard to assess from the available data."
+      ],
+      "highlights": [
+        {
+          "label": "Apartments",
+          "value": "5"
+        },
+        {
+          "label": "Median apt price",
+          "value": "$262,850"
+        },
+        {
+          "label": "Complexes",
+          "value": "1"
+        }
+      ],
+      "bestFor": [
+        "Compact apartments",
+        "Personal use",
+        "Targeted entry",
+        "Budget up to $300,000"
+      ]
+    }
+  },
+  "nuanu": {
+    "ru": {
+      "slug": "nuanu",
+      "name": "Нуану",
+      "hero": "Нуану — дефицитный район с почти отсутствующим рынком покупки и ограниченным предложением в помесячной аренде.",
+      "paragraphs": [
+        "В текущей статистике в Нуану нет вилл на продажу, апартаментов на продажу и жилых комплексов: рынок покупки фактически пуст. Рассматривать район как локацию с доступным входом в готовый объект сейчас не приходится.",
+        "В помесячной аренде представлено всего 5 предложений, что указывает на очень ограниченный объём экспозиции. Диапазон ставок широкий — от $1550 до $7810 в месяц, медианная аренда составляет $3080, поэтому район относится к более дорогому арендному сегменту.",
+        "Для инвестора Нуану сейчас скорее подходит для наблюдения за рынком и точечного входа при появлении редких лотов. Для конечного пользователя район можно рассматривать для проживания или теста локации через аренду, но не как место с широким выбором объектов для покупки."
+      ],
+      "highlights": [
+        {
+          "label": "Аренда, предложений",
+          "value": "5"
+        }
+      ],
+      "bestFor": [
+        "Наблюдение за рынком",
+        "Тест локации через аренду",
+        "Проживание",
+        "Дефицитные лоты"
+      ]
+    },
+    "en": {
+      "slug": "nuanu",
+      "name": "Nuanu",
+      "hero": "Nuanu is a supply-constrained area with an almost absent purchase market and very limited monthly rental inventory.",
+      "paragraphs": [
+        "Current statistics show no villas for sale, no apartments for sale, and no residential complexes in Nuanu, so the purchase market is effectively empty. At this stage, the area cannot be viewed as a location with accessible entry into a ready property.",
+        "There are only 5 monthly rental listings, pointing to very limited exposure. The rental range is broad — from $1,550 to $7,810 per month, with a median rent of $3,080, placing Nuanu in the higher rental segment rather than the mass market.",
+        "For investors, Nuanu is currently more of a market to watch and enter selectively when rare lots appear. For end users, the area may suit living or testing the location through rent, but not as a place with broad buying options."
+      ],
+      "highlights": [
+        {
+          "label": "Rentals listed",
+          "value": "5"
+        }
+      ],
+      "bestFor": [
+        "Market watching",
+        "Testing the location through rent",
+        "Living",
+        "Scarce listings"
+      ]
+    }
+  },
+  "nunggalan": {
+    "ru": {
+      "slug": "nunggalan",
+      "name": "Нунггалан",
+      "hero": "Нунггалан — компактный рынок вилл в южной части Бали для покупателя, который ищет 2-спальную виллу в среднем ценовом сегменте.",
+      "paragraphs": [
+        "Нунггалан — очень небольшой по объёму рынок: в продаже всего 4 виллы, апартаментов на продажу нет, жилых комплексов только 1. Формат предложения узкий и понятный: вход в район фактически возможен только через покупку виллы.",
+        "По ценам район находится в среднем сегменте вилл: диапазон $420,000–$530,000, медианная цена $483,550 и медиана $3,120 за м². Типичный объект здесь — вилла с 2 спальнями, поэтому район логичен для собственного проживания или покупки виллы в южной части Бали при ограниченном выборе.",
+        "Для инвестора это рынок с низким объёмом экспозиции: выбор ограничен, но и прямой конкуренции среди объектов немного. По аренде статистики нет — помесячная аренда представлена 0 предложениями, поэтому оценивать район сейчас можно только как рынок продажи без подтверждённого арендного массива."
+      ],
+      "highlights": [
+        {
+          "label": "Вилл в продаже",
+          "value": "4"
+        },
+        {
+          "label": "Медиана цены виллы",
+          "value": "$483,550"
+        },
+        {
+          "label": "Жилых комплексов",
+          "value": "1"
+        }
+      ],
+      "bestFor": [
+        "Покупка виллы",
+        "2-спальные виллы",
+        "Средний бюджет",
+        "Ограниченное предложение"
+      ]
+    },
+    "en": {
+      "slug": "nunggalan",
+      "name": "Nunggalan",
+      "hero": "Nunggalan is a compact villa market in South Bali for buyers looking for a 2-bedroom villa in the mid-price segment.",
+      "paragraphs": [
+        "Nunggalan is a very small market by volume: only 4 villas are listed for sale, there are no apartments for sale, and just 1 residential complex. The product mix is narrow and clear, with market entry effectively available only through buying a villa.",
+        "In terms of pricing, the area sits in the mid villa segment: $420,000–$530,000 with a median price of $483,550 and a median of $3,120 per sq.m. The typical property here is a 2-bedroom villa, making the area a practical choice for personal use or for buying a villa in South Bali with limited supply.",
+        "For investors, this is a low-exposure market: selection is limited, but direct competition between listings is also relatively low. There is no rental statistics here — monthly rental supply stands at 0 listings, so the area can currently be assessed only as a sales market without a confirmed rental inventory."
+      ],
+      "highlights": [
+        {
+          "label": "Villas for sale",
+          "value": "4"
+        },
+        {
+          "label": "Median villa price",
+          "value": "$483,550"
+        },
+        {
+          "label": "Complexes",
+          "value": "1"
+        }
+      ],
+      "bestFor": [
+        "Villa purchase",
+        "2-bedroom villas",
+        "Mid-range budget",
+        "Limited supply"
+      ]
+    }
+  },
+  "tabanan": {
+    "ru": {
+      "slug": "tabanan",
+      "name": "Табанан",
+      "hero": "Табанан — нишевый район Бали с почти пустым рынком покупки и точечным предложением по помесячной аренде.",
+      "paragraphs": [
+        "Рынок покупки в Табанане сейчас практически отсутствует: в продаже 0 вилл, 0 апартаментов и всего 1 жилой комплекс. Для покупателя это означает крайне низкий объём предложения и ограниченные возможности для быстрого входа в сделку.",
+        "Арендный сегмент тоже небольшой: всего 4 предложения помесячно в диапазоне от $384.62 до $2062.5 в месяц, медианная ставка — $528. Район может быть интересен тем, кто рассматривает недорогую аренду на Бали, но выбор здесь ограничен.",
+        "Табанан скорее подойдёт покупателю или инвестору, который готов ждать редкие лоты и рассматривает район для спокойного проживания, а не для активного выбора среди большого числа объектов. Для массового инвестиционного входа локация сейчас неудобна из-за фактически пустого рынка покупки."
+      ],
+      "highlights": [
+        {
+          "label": "Жилых комплексов",
+          "value": "1"
+        },
+        {
+          "label": "Аренда, предложений",
+          "value": "4"
+        }
+      ],
+      "bestFor": [
+        "Спокойное проживание",
+        "Помесячная аренда",
+        "Бюджетная аренда",
+        "Редкие лоты"
+      ]
+    },
+    "en": {
+      "slug": "tabanan",
+      "name": "Tabanan",
+      "hero": "Tabanan is a niche Bali area with an almost empty purchase market and a very limited monthly rental supply.",
+      "paragraphs": [
+        "The purchase market in Tabanan is currently almost absent: 0 villas for sale, 0 apartments for sale, and only 1 residential complex. For buyers, this means extremely low supply and limited opportunities for a quick deal.",
+        "The rental segment is also small: just 4 monthly listings, priced from $384.62 to $2062.5 per month, with a median rate of $528. The area may suit those looking for relatively affordable monthly rent in Bali, but the choice is limited.",
+        "Tabanan is better suited to a buyer or investor willing to wait for rare listings and considering the area more for quiet living than for active property selection. For broad investment entry, the location is currently inconvenient due to the effectively empty purchase market."
+      ],
+      "highlights": [
+        {
+          "label": "Complexes",
+          "value": "1"
+        },
+        {
+          "label": "Rentals listed",
+          "value": "4"
+        }
+      ],
+      "bestFor": [
+        "Quiet living",
+        "Monthly rental",
+        "Affordable rent",
+        "Rare listings"
+      ]
+    }
+  },
+  "kuta": {
+    "ru": {
+      "slug": "kuta",
+      "name": "Кута",
+      "hero": "Кута на текущем срезе — район почти исключительно для аренды, без подтверждённого предложения на покупку.",
+      "paragraphs": [
+        "В базе по Куте сейчас нет предложения на покупку: 0 вилл в продаже, 0 апартаментов в продаже и 0 жилых комплексов. Для покупателя это означает фактическое отсутствие выбора и очень низкий объём рынка для входа в сделку.",
+        "Арендный сегмент представлен 4 объектами помесячной аренды. Диапазон ставок — от $426 до $1270 в месяц, медианная ставка составляет $1062.",
+        "По текущим данным район логичнее рассматривать для личного проживания или теста локации через аренду, чем для быстрого подбора объекта в покупку. Если цель — купить недвижимость в Куте, на этот момент предложение в выборке отсутствует."
+      ],
+      "highlights": [
+        {
+          "label": "Аренда, предложений",
+          "value": "4"
+        }
+      ],
+      "bestFor": [
+        "Помесячная аренда",
+        "Тест локации",
+        "Личное проживание",
+        "Без покупки на текущем срезе"
+      ]
+    },
+    "en": {
+      "slug": "kuta",
+      "name": "Kuta",
+      "hero": "At the current snapshot, Kuta is a rental-only area in practice, with no confirmed properties available for purchase.",
+      "paragraphs": [
+        "There is currently no purchase inventory in Kuta in the database: 0 villas for sale, 0 apartments for sale, and 0 residential complexes. For a buyer, this means virtually no choice and a very low market volume for entering a deal.",
+        "The rental segment is limited but not empty, with 4 monthly rental listings available. Asking rates range from $426 to $1270 per month, with a median of $1062.",
+        "Based on the current data, the area is better suited for personal living or testing the location through rent rather than quickly selecting a property to buy. If the goal is to purchase real estate in Kuta, there is no available supply in this snapshot."
+      ],
+      "highlights": [
+        {
+          "label": "Rentals listed",
+          "value": "4"
+        }
+      ],
+      "bestFor": [
+        "Monthly rental",
+        "Location testing",
+        "Personal living",
+        "No purchase supply at present"
+      ]
+    }
+  },
+  "mengwi": {
+    "ru": {
+      "slug": "mengwi",
+      "name": "Менгви",
+      "hero": "Менгви — небольшой рынок вилл с доступным по меркам Бали входом и фокусом на компактные 2-спальные объекты.",
+      "paragraphs": [
+        "В базе по Менгви всего 3 виллы на продажу и 1 жилой комплекс. Апартаментов на продажу нет, как и предложений по помесячной аренде, поэтому район в текущей статистике представлен именно виллами.",
+        "По цене это доступный вход для Бали: виллы в Менгви стоят от $198,000 до $250,000, медианная цена — $210,000, медианная цена за м² — $1,603. Типичный формат предложения — 2-спальная вилла.",
+        "Рынок нельзя назвать широким по выбору из-за очень малого объёма предложения, но конкуренция среди объектов на продажу здесь также ограничена. Для покупателя основной сценарий входа — компактная вилла для проживания или покупки без высокого бюджета; формат апартаментов до $200,000 для района сейчас неактуален."
+      ],
+      "highlights": [
+        {
+          "label": "Вилл в продаже",
+          "value": "3"
+        },
+        {
+          "label": "Медиана цены виллы",
+          "value": "$210,000"
+        },
+        {
+          "label": "Жилых комплексов",
+          "value": "1"
+        }
+      ],
+      "bestFor": [
+        "Бюджетный вход",
+        "Компактная вилла",
+        "Для проживания",
+        "Покупка виллы"
+      ]
+    },
+    "en": {
+      "slug": "mengwi",
+      "name": "Mengwi",
+      "hero": "Mengwi is a small villa market with an accessible Bali entry point and a focus on compact 2-bedroom properties.",
+      "paragraphs": [
+        "The Mengwi database currently includes just 3 villas for sale and 1 residential complex. There are no apartments for sale and no monthly rental listings, so the area is represented by villas rather than apartment product.",
+        "In pricing terms, this is an accessible Bali entry point: villas in Mengwi range from $198,000 to $250,000, with a median price of $210,000 and a median price per sqm of $1,603. The typical listing format is a 2-bedroom villa.",
+        "Choice is limited because supply is very small, but competition among properties for sale is also constrained. The main entry scenario here is a compact villa for personal use or purchase without a high budget; apartments below $200,000 are not a relevant format for this area in the current data."
+      ],
+      "highlights": [
+        {
+          "label": "Villas for sale",
+          "value": "3"
+        },
+        {
+          "label": "Median villa price",
+          "value": "$210,000"
+        },
+        {
+          "label": "Complexes",
+          "value": "1"
+        }
+      ],
+      "bestFor": [
+        "Budget entry",
+        "Compact villa",
+        "Own residence",
+        "Villa purchase"
+      ]
+    }
+  },
+  "bukit": {
+    "ru": {
+      "slug": "bukit",
+      "name": "Букит",
+      "hero": "Букит — район с фокусом на виллы среднего и средне-высокого бюджета для собственного проживания и последующей аренды.",
+      "paragraphs": [
+        "Букит — рынок с явным упором на виллы: в продаже 32 объекта, апартаментов на продажу нет. Это делает район в первую очередь релевантным для покупателей, которые ищут именно дом, а не компактный формат жилья.",
+        "Ценовое позиционирование района средне-высокое: виллы продаются в диапазоне $287,100–$1,350,000, медианная цена составляет $560,230, медиана — $3,303 за м². Типичный формат предложения — вилла с 3 спальнями, поэтому район особенно понятен для семейного проживания и арендаторов, которым нужен полноценный дом.",
+        "Объём предложения на продажу умеренный: всего 5 комплексов и 32 объекта в продаже. При этом рынок аренды активнее рынка продаж — 79 предложений с диапазоном $312.5–$7,840 в месяц и медианой $1,590, поэтому Букит стоит рассматривать для покупки виллы с последующей сдачей в аренду или для собственного проживания."
+      ],
+      "highlights": [
+        {
+          "label": "Вилл в продаже",
+          "value": "32"
+        },
+        {
+          "label": "Медиана цены виллы",
+          "value": "$560,230"
+        },
+        {
+          "label": "Жилых комплексов",
+          "value": "5"
+        },
+        {
+          "label": "Аренда, предложений",
+          "value": "79"
+        }
+      ],
+      "bestFor": [
+        "Покупка виллы",
+        "Семейное проживание",
+        "Под аренду",
+        "Бюджет от среднего и выше"
+      ]
+    },
+    "en": {
+      "slug": "bukit",
+      "name": "Bukit",
+      "hero": "Bukit is a villa-focused area in the mid to upper-mid price segment for both personal living and future rental use.",
+      "paragraphs": [
+        "Bukit is clearly a villa-led market: there are 32 villas for sale and no apartments on the market. That makes the area primarily relevant for buyers looking for a house rather than a compact residential format.",
+        "The area sits in the mid to upper-mid price segment: villas are listed from $287,100 to $1,350,000, with a median price of $560,230 and a median of $3,303 per sq m. The typical product is a 3-bedroom villa, which makes Bukit a straightforward choice for family living and for tenants who need a full house rather than an apartment.",
+        "Supply for sale is moderate: only 5 residential complexes and 32 properties on the market. At the same time, the rental market is more active than the sales market, with 79 monthly rental listings priced from $312.5 to $7,840 and a median rent of $1,590, so Bukit is best considered for buying a villa for future rental or owner-occupation."
+      ],
+      "highlights": [
+        {
+          "label": "Villas for sale",
+          "value": "32"
+        },
+        {
+          "label": "Median villa price",
+          "value": "$560,230"
+        },
+        {
+          "label": "Complexes",
+          "value": "5"
+        },
+        {
+          "label": "Rentals listed",
+          "value": "79"
+        }
+      ],
+      "bestFor": [
+        "Villa purchase",
+        "Family living",
+        "Rental use",
+        "Mid-budget and above"
+      ]
+    }
+  },
+  "ungasan": {
+    "ru": {
+      "slug": "ungasan",
+      "name": "Унгасан",
+      "hero": "Унгасан — точечный рынок для входа через апартаменты от $160,000 или виллы от $300,000 на фоне более активного арендного предложения.",
+      "paragraphs": [
+        "В продаже в Унгасане 10 лотов: 4 виллы и 6 апартаментов. Это ограниченный объём предложения, поэтому район скорее подходит для точечного выбора, чем для массового поиска. В жилых комплексах представлено 6 проектов.",
+        "По цене вход в район начинается с апартаментов: медиана по апартаментам составляет $160,000. Виллы стартуют от $300,000, медианная цена виллы — $377,500. При этом по цене за метр виллы выглядят доступнее апартаментов: медиана $2,493/м² против $4,777/м².",
+        "Арендный рынок заметно шире рынка продаж: 93 предложения в месяц. Диапазон помесячной аренды — от $262 до $12,600, медиана — $2,462. Для компактного бюджета район подходит через 1-bedroom апартаменты, а для покупки виллы под аренду или собственного проживания выбор здесь ограничен по количеству объектов."
+      ],
+      "highlights": [
+        {
+          "label": "Вилл в продаже",
+          "value": "4"
+        },
+        {
+          "label": "Медиана цены виллы",
+          "value": "$377,500"
+        },
+        {
+          "label": "Апартаментов",
+          "value": "6"
+        },
+        {
+          "label": "Медиана цены апарт.",
+          "value": "$160,000"
+        },
+        {
+          "label": "Жилых комплексов",
+          "value": "6"
+        }
+      ],
+      "bestFor": [
+        "Апартаменты от $160,000",
+        "1-bedroom формат",
+        "Под аренду",
+        "Виллы от $300,000"
+      ]
+    },
+    "en": {
+      "slug": "ungasan",
+      "name": "Ungasan",
+      "hero": "Ungasan is a niche market for entering through apartments from $160,000 or villas from $300,000, with a much more active rental supply.",
+      "paragraphs": [
+        "There are 10 properties for sale in Ungasan: 4 villas and 6 apartments. Supply is limited, so the area is better suited to targeted selection rather than broad market search. There are also 6 residential complexes in the area.",
+        "The entry point here starts with apartments: the median apartment price is $160,000. Villas start from $300,000, with a median villa price of $377,500. On a price-per-square-meter basis, villas look more affordable than apartments: the median is $2,493/m² versus $4,777/m².",
+        "The rental market is much broader than the sales market, with 93 monthly rental listings. Monthly rents range from $262 to $12,600, with a median of $2,462. For a compact budget, the area fits a 1-bedroom apartment strategy, while villa buyers for rental or personal use should expect limited choice."
+      ],
+      "highlights": [
+        {
+          "label": "Villas for sale",
+          "value": "4"
+        },
+        {
+          "label": "Median villa price",
+          "value": "$377,500"
+        },
+        {
+          "label": "Apartments",
+          "value": "6"
+        },
+        {
+          "label": "Median apt price",
+          "value": "$160,000"
+        },
+        {
+          "label": "Complexes",
+          "value": "6"
+        }
+      ],
+      "bestFor": [
+        "Apartments from $160,000",
+        "1-bedroom format",
+        "Rental strategy",
+        "Villas from $300,000"
+      ]
+    }
+  },
+  "perenenan": {
+    "ru": {
+      "slug": "perenenan",
+      "name": "Переренан",
+      "hero": "Переренан сейчас — это локация с почти полностью арендным рынком и без актуального предложения на покупку.",
+      "paragraphs": [
+        "По текущей статистике в районе нет объектов в продаже: 0 вилл, 0 апартаментов и 0 жилых комплексов. Для покупателя это означает фактическое отсутствие выбора, если задача — зайти в сделку по вилле или апартаментам прямо сейчас.",
+        "Зато в аренде представлено 87 предложений с диапазоном ставок от $157 до $30 000 в месяц, медианная ставка — $2 812.5. Рынок явно смещён в rental-сегмент: район подходит тем, кто хочет протестировать локацию через помесячную аренду или подобрать формат в широком бюджете — от доступных вариантов до премиальных лотов.",
+        "Если запрос связан с арендой в Переренане, район сейчас релевантен. Если цель — покупка, стоит учитывать низкий объём предложения на продажу и отсутствие объектов в экспозиции по текущим данным."
+      ],
+      "highlights": [
+        {
+          "label": "Аренда, предложений",
+          "value": "87"
+        }
+      ],
+      "bestFor": [
+        "Помесячная аренда",
+        "Тест локации перед покупкой",
+        "Широкий бюджет аренды",
+        "Премиальная аренда"
+      ]
+    },
+    "en": {
+      "slug": "perenenan",
+      "name": "Perenenan",
+      "hero": "Perenenan is currently a rental-led area with virtually no active inventory for purchase.",
+      "paragraphs": [
+        "Current statistics show no properties for sale in the area: 0 villas, 0 apartments, and 0 residential complexes. For a buyer, this means there is effectively no choice if the goal is to purchase a villa or apartment right now.",
+        "At the same time, there are 87 rental listings with monthly rates ranging from $157 to $30,000, and a median asking rent of $2,812.5. The market is clearly tilted toward rentals, making the area suitable for those who want to test the location through monthly rent or choose across a wide budget range, from affordable options to premium lots.",
+        "If the search is focused on renting in Perenenan, the area is currently relevant. If the goal is to buy, it is important to account for the very limited sales supply and the absence of active listings in the current data."
+      ],
+      "highlights": [
+        {
+          "label": "Rentals listed",
+          "value": "87"
+        }
+      ],
+      "bestFor": [
+        "Monthly rental",
+        "Testing the area before buying",
+        "Wide rental budget range",
+        "Premium rental"
+      ]
+    }
+  },
+  "batu-bolong": {
+    "ru": {
+      "slug": "batu-bolong",
+      "name": "Бату Болонг",
+      "hero": "Бату Болонг — район Canggu с широким выбором апартаментов и более доступным входом в покупку по сравнению с виллами.",
+      "paragraphs": [
+        "В Batu Bolong в продаже 60 объектов: 50 апартаментов и 10 вилл, а также 16 жилых комплексов. Это рынок с явным перевесом в сторону апартаментов, поэтому вход для покупателя с умеренным бюджетом здесь проще.",
+        "Апартаменты стоят от $120,000, медианная цена — $220,400, медиана $/м² — $3,891. Виллы продаются в диапазоне от $250,000 до $1,439,900 при медианной цене $404,950 и медиане $3,063 за м². Самый массовый формат входа — апартаменты до $250,000, тогда как вилла — вариант для бюджета от $250,000+.",
+        "Типичный формат в районе — 2 спальни, что подходит и под аренду, и для личного использования. На рынке аренды представлено 22 помесячных предложения в диапазоне $1,270–$5,450 в месяц, медиана — $3,045: аренда активна, но по объёму заметно уступает рынку продаж, поэтому стратегию покупки и выхода стоит оценивать именно через рынок продажи."
+      ],
+      "highlights": [
+        {
+          "label": "Вилл в продаже",
+          "value": "10"
+        },
+        {
+          "label": "Медиана цены виллы",
+          "value": "$404,950"
+        },
+        {
+          "label": "Апартаментов",
+          "value": "50"
+        },
+        {
+          "label": "Медиана цены апарт.",
+          "value": "$220,400"
+        },
+        {
+          "label": "Жилых комплексов",
+          "value": "16"
+        }
+      ],
+      "bestFor": [
+        "Бюджетный вход",
+        "Апартаменты до $250k",
+        "Под аренду",
+        "Для жизни в Canggu"
+      ]
+    },
+    "en": {
+      "slug": "batu-bolong",
+      "name": "Batu Bolong",
+      "hero": "Batu Bolong is a Canggu area with a broad apartment supply and a more accessible entry point for buyers compared to villas.",
+      "paragraphs": [
+        "Batu Bolong has 60 properties for sale: 50 apartments and 10 villas, plus 16 residential complexes. Supply is clearly skewed toward apartments, making entry easier for buyers with a more moderate budget.",
+        "Apartments start from $120,000, with a median price of $220,400 and a median of $3,891 per sq m. Villas range from $250,000 to $1,439,900, with a median price of $404,950 and a median of $3,063 per sq m. The most common entry format is apartments below $250,000, while villas are a choice for budgets from $250,000+.",
+        "The typical format here is 2 bedrooms, which works for both rental and personal use. The rental market includes 22 monthly listings priced from $1,270 to $5,450 per month, with a median of $3,045: rental activity is present, but sales volume is notably stronger, so purchase and exit strategy should be assessed through the sales market first."
+      ],
+      "highlights": [
+        {
+          "label": "Villas for sale",
+          "value": "10"
+        },
+        {
+          "label": "Median villa price",
+          "value": "$404,950"
+        },
+        {
+          "label": "Apartments",
+          "value": "50"
+        },
+        {
+          "label": "Median apt price",
+          "value": "$220,400"
+        },
+        {
+          "label": "Complexes",
+          "value": "16"
+        }
+      ],
+      "bestFor": [
+        "Budget entry",
+        "Apartments under $250k",
+        "Rental use",
+        "Living in Canggu"
+      ]
+    }
+  },
+  "pandawa": {
+    "ru": {
+      "slug": "pandawa",
+      "name": "Пандава",
+      "hero": "Пандава — район с умеренным объёмом предложения и доступным входом в апартаменты, где можно выбрать как компактный инвестиционный формат, так и виллу среднего сегмента.",
+      "paragraphs": [
+        "В Пандаве в продаже 26 вилл, 42 апартамента и 21 жилой комплекс. Предложение достаточно широкое для выбора, но рынок не выглядит перегретым. По апартаментам район особенно заметен в бюджете до $150k: медианная цена составляет $137,000 при медиане $3,536 за м².",
+        "Виллы в Пандаве стоят медианно $269,500 при $3,241 за м², что делает район более доступным по входу по сравнению с премиальными локациями Бали. Диапазон по виллам широкий — от $80,000 до $6,500,000, но центр рынка находится в среднем сегменте. По апартаментам диапазон $90,000–$480,000 выглядит более собранным для массового спроса.",
+        "В аренде представлено 12 объектов с медианной ставкой $1,875 в месяц и диапазоном $525–$2,133.33. Типичный формат — 1 спальня, поэтому район в первую очередь подходит тем, кто ищет компактные апартаменты или небольшую виллу под аренду либо для собственного проживания."
+      ],
+      "highlights": [
+        {
+          "label": "Вилл в продаже",
+          "value": "26"
+        },
+        {
+          "label": "Медиана цены виллы",
+          "value": "$269,500"
+        },
+        {
+          "label": "Апартаментов",
+          "value": "42"
+        },
+        {
+          "label": "Медиана цены апарт.",
+          "value": "$137,000"
+        },
+        {
+          "label": "Жилых комплексов",
+          "value": "21"
+        }
+      ],
+      "bestFor": [
+        "Апартаменты до $150k",
+        "Компактный инвестиционный формат",
+        "Небольшая вилла под аренду",
+        "Средний бюджет входа"
+      ]
+    },
+    "en": {
+      "slug": "pandawa",
+      "name": "Pandawa",
+      "hero": "Pandawa is an area with a balanced supply and an accessible entry point for apartments, offering both compact investment formats and mid-market villas.",
+      "paragraphs": [
+        "Pandawa has 26 villas, 42 apartments, and 21 residential complexes for sale. Supply is broad enough to provide choice, but the market does not look overheated. The area stands out especially for apartments below $150k, with a median price of $137,000 and a median of $3,536 per sq.m.",
+        "The median villa price in Pandawa is $269,500 at $3,241 per sq.m., making the area more accessible than Bali’s premium locations. The villa price range is wide — from $80,000 to $6,500,000 — but the core of the market sits in the mid segment. For apartments, the $90,000–$480,000 range looks more concentrated for mass demand.",
+        "The rental market is limited, with 12 listings, a median monthly rate of $1,875, and a range of $525–$2,133.33. The typical format is 1 bedroom, so the area is best suited to buyers looking for compact apartments or a small villa for rental use or personal living."
+      ],
+      "highlights": [
+        {
+          "label": "Villas for sale",
+          "value": "26"
+        },
+        {
+          "label": "Median villa price",
+          "value": "$269,500"
+        },
+        {
+          "label": "Apartments",
+          "value": "42"
+        },
+        {
+          "label": "Median apt price",
+          "value": "$137,000"
+        },
+        {
+          "label": "Complexes",
+          "value": "21"
+        }
+      ],
+      "bestFor": [
+        "Apartments under $150k",
+        "Compact investment format",
+        "Small villa for rental",
+        "Mid-budget entry"
+      ]
+    }
+  },
+  "seseh": {
+    "ru": {
+      "slug": "seseh",
+      "name": "Сесех",
+      "hero": "Сесех — нишевый район с ограниченным предложением, где виллы дают более понятный бюджет входа, а апартаменты представлены в более дорогом сегменте.",
+      "paragraphs": [
+        "Сесех — небольшой по объёму предложения район: в продаже 5 вилл, 32 апартамента и 3 жилых комплекса. Структура рынка смещена в сторону апартаментов, при этом выбор вилл заметно ограничен.",
+        "По цене входа виллы здесь выглядят доступнее: $222,000–$435,000 при медиане $278,000 и медиане $2,254 за м². Апартаменты стоят $150,000–$1,280,000, но медиана выше — $534,500 и $6,800 за м², поэтому сегмент апартаментов в районе позиционируется дороже, несмотря на широкий разброс лотов.",
+        "Район подходит тем, кто рассматривает виллу под аренду или для собственного проживания с более понятным бюджетом входа, особенно в типовом формате 2-bedroom. В аренде представлено 26 объектов со ставками $355–$8,130 в месяц и медианой $1,746: рынок есть, но он не массовый, поэтому при покупке стоит внимательно смотреть на качество конкретного объекта и его ликвидность."
+      ],
+      "highlights": [
+        {
+          "label": "Вилл в продаже",
+          "value": "5"
+        },
+        {
+          "label": "Медиана цены виллы",
+          "value": "$278,000"
+        },
+        {
+          "label": "Апартаментов",
+          "value": "32"
+        },
+        {
+          "label": "Медиана цены апарт.",
+          "value": "$534,500"
+        },
+        {
+          "label": "Жилых комплексов",
+          "value": "3"
+        }
+      ],
+      "bestFor": [
+        "Вилла под аренду",
+        "Собственное проживание",
+        "Ограниченное предложение",
+        "Бюджетный вход в виллы"
+      ]
+    },
+    "en": {
+      "slug": "seseh",
+      "name": "Seseh",
+      "hero": "Seseh is a niche area with limited supply, where villas offer a clearer entry budget while apartments sit in a higher-priced segment.",
+      "paragraphs": [
+        "Seseh is a small-supply area with 5 villas, 32 apartments, and 3 residential complexes for sale. The market is clearly tilted toward apartments, while villa inventory remains very limited.",
+        "In terms of entry price, villas look more accessible here: $222,000–$435,000 with a median of $278,000 and a median of $2,254 per sq m. Apartments range from $150,000 to $1,280,000, but the median is much higher at $534,500 and $6,800 per sq m, so the apartment segment is positioned above villas despite the wide spread of listings.",
+        "The area suits buyers looking for a villa for rental or personal use with a more predictable entry budget, especially in the typical 2-bedroom format. There are 26 rental listings priced from $355 to $8,130 per month with a median of $1,746: the rental market exists, but it is not mass-scale, so buyers should focus closely on asset quality and liquidity."
+      ],
+      "highlights": [
+        {
+          "label": "Villas for sale",
+          "value": "5"
+        },
+        {
+          "label": "Median villa price",
+          "value": "$278,000"
+        },
+        {
+          "label": "Apartments",
+          "value": "32"
+        },
+        {
+          "label": "Median apt price",
+          "value": "$534,500"
+        },
+        {
+          "label": "Complexes",
+          "value": "3"
+        }
+      ],
+      "bestFor": [
+        "Villa for rental",
+        "Own residence",
+        "Limited supply",
+        "Affordable villa entry"
+      ]
+    }
+  },
+  "seminyak": {
+    "ru": {
+      "slug": "seminyak",
+      "name": "Семиньяк",
+      "hero": "Семиньяк — сформированный туристический район с ограниченным выбором покупки и фокусом на компактные виллы в средне-высоком бюджете.",
+      "paragraphs": [
+        "В Семиньяке на продажу представлено 9 вилл, апартаментов нет, жилых комплексов — 2, поэтому выбор для покупки ограничен. Основной формат предложения — виллы, чаще всего с 2 спальнями.",
+        "По ценам это средне-высокий сегмент: виллы стоят от $130,000 до $665,900, медианная цена — $320,000, медиана — $2,426 за м². Для входа в район можно рассматривать объекты от $130,000, а основной рыночный ориентир — около $320,000 за виллу.",
+        "Рынок аренды здесь заметно шире рынка продаж: 41 предложение против 9 объектов на продажу. Помесячная аренда находится в диапазоне от $585 до $6,336, медианная ставка — $2,380, поэтому район в первую очередь стоит рассматривать тем, кто ищет виллу под аренду или объект для собственного проживания в уже сложившейся локации."
+      ],
+      "highlights": [
+        {
+          "label": "Вилл в продаже",
+          "value": "9"
+        },
+        {
+          "label": "Медиана цены виллы",
+          "value": "$320,000"
+        },
+        {
+          "label": "Жилых комплексов",
+          "value": "2"
+        },
+        {
+          "label": "Аренда, предложений",
+          "value": "41"
+        }
+      ],
+      "bestFor": [
+        "Под аренду",
+        "Собственное проживание",
+        "Виллы с 2 спальнями",
+        "Сформированный туристический район"
+      ]
+    },
+    "en": {
+      "slug": "seminyak",
+      "name": "Seminyak",
+      "hero": "Seminyak is an established tourist area with limited buying supply and a focus on compact villas in the mid-to-upper price segment.",
+      "paragraphs": [
+        "Seminyak has 9 villas for sale, no apartments for sale, and 2 residential complexes, so buying options are limited. The typical product here is a villa, most often with 2 bedrooms.",
+        "Pricing sits in the mid-to-upper segment: villas range from $130,000 to $665,900, with a median price of $320,000 and a median of $2,426 per sq m. Entry into the area starts from $130,000, while the main market benchmark is around $320,000 per villa.",
+        "The rental market is notably broader than the sales market: 41 monthly rental listings versus 9 properties for sale. Monthly rents range from $585 to $6,336, with a median of $2,380, making the area primarily relevant for buyers considering a rental villa or a home in an established location."
+      ],
+      "highlights": [
+        {
+          "label": "Villas for sale",
+          "value": "9"
+        },
+        {
+          "label": "Median villa price",
+          "value": "$320,000"
+        },
+        {
+          "label": "Complexes",
+          "value": "2"
+        },
+        {
+          "label": "Rentals listed",
+          "value": "41"
+        }
+      ],
+      "bestFor": [
+        "Rental investment",
+        "Own residence",
+        "2-bedroom villas",
+        "Established tourist area"
+      ]
+    }
+  },
+  "jimbaran": {
+    "ru": {
+      "slug": "jimbaran",
+      "name": "Джимбаран",
+      "hero": "Джимбаран — район с очень ограниченным выбором для покупки, но с заметно более активным рынком аренды.",
+      "paragraphs": [
+        "Сейчас рынок покупки в Джимбаране узкий: в продаже всего 1 вилла с медианной ценой $265,000 и медианой $2,477 за м². Апартаментов в продаже нет, жилых комплексов — 2, поэтому выбор для входа в сделку здесь и сейчас сильно ограничен.",
+        "По текущим данным район прежде всего подходит тем, кто рассматривает виллу с бюджетом около $265,000, в первую очередь в формате 2-bedroom, так как типичная спальность — 2. Если цель — купить апартаменты до $265,000, в статистике Джимбарана таких лотов сейчас нет.",
+        "Арендный рынок выглядит значительно активнее: 41 предложение в помесячной аренде, диапазон ставок — от $315 до $8,920 в месяц, медиана — $3,532. Поэтому Джимбаран логичнее рассматривать для проживания или теста локации через аренду, чем как район с широким выбором объектов для покупки."
+      ],
+      "highlights": [
+        {
+          "label": "Вилл в продаже",
+          "value": "1"
+        },
+        {
+          "label": "Медиана цены виллы",
+          "value": "$265,000"
+        },
+        {
+          "label": "Жилых комплексов",
+          "value": "2"
+        },
+        {
+          "label": "Аренда, предложений",
+          "value": "41"
+        }
+      ],
+      "bestFor": [
+        "Аренда для теста локации",
+        "Проживание",
+        "Вход через 2-bedroom виллу",
+        "Ограниченный выбор на покупку"
+      ]
+    },
+    "en": {
+      "slug": "jimbaran",
+      "name": "Jimbaran",
+      "hero": "Jimbaran is a very limited market for buying, but with a noticeably more active rental supply.",
+      "paragraphs": [
+        "Jimbaran is currently a narrow buying market: there is only 1 villa for sale with a median price of $265,000 and a median of $2,477 per sq.m. There are no apartments for sale, and only 2 residential complexes, so immediate buying options are very limited.",
+        "Based on current data, the area mainly fits buyers considering a villa with an entry budget around $265,000, primarily in a 2-bedroom format, as the typical bedroom count is 2. If the goal is to buy an apartment up to $265,000, there are no such listings in Jimbaran right now.",
+        "The rental market is much more active: 41 monthly rental listings, with prices ranging from $315 to $8,920 per month and a median of $3,532. That makes Jimbaran more practical for living or testing the location through rent than for choosing from a broad pool of properties to buy."
+      ],
+      "highlights": [
+        {
+          "label": "Villas for sale",
+          "value": "1"
+        },
+        {
+          "label": "Median villa price",
+          "value": "$265,000"
+        },
+        {
+          "label": "Complexes",
+          "value": "2"
+        },
+        {
+          "label": "Rentals listed",
+          "value": "41"
+        }
+      ],
+      "bestFor": [
+        "Renting to test the location",
+        "Living",
+        "Entry via a 2-bedroom villa",
+        "Limited buying selection"
+      ]
+    }
+  },
+  "babakan": {
+    "ru": {
+      "slug": "babakan",
+      "name": "Бабакан",
+      "hero": "Бабакан — район с ограниченным выбором для покупки и более активным рынком аренды, где основной формат предложения — виллы с 3 спальнями.",
+      "paragraphs": [
+        "В Бабакане в продаже всего 8 вилл и 2 жилых комплекса, апартаментов на продажу сейчас нет. По объёму это небольшой рынок, поэтому выбор для покупки ограничен.",
+        "По ценам район относится к сегменту вилл среднего бюджета и выше: диапазон составляет $160,000–$432,000, медианная цена виллы — $422,000, медиана — $2,128 за м². Типичный продукт — вилла с 3 спальнями, подходящая как для собственного проживания, так и для аренды.",
+        "Арендный рынок здесь заметно шире рынка продаж: 21 объект в помесячной аренде против 8 вилл на продажу. Ставки аренды находятся в диапазоне от $650 до $6,772 в месяц, медиана — $1,796. Если цель — апартаменты до $200,000, в Бабакане таких предложений сейчас нет."
+      ],
+      "highlights": [
+        {
+          "label": "Вилл в продаже",
+          "value": "8"
+        },
+        {
+          "label": "Медиана цены виллы",
+          "value": "$422,000"
+        },
+        {
+          "label": "Жилых комплексов",
+          "value": "2"
+        },
+        {
+          "label": "Аренда, предложений",
+          "value": "21"
+        }
+      ],
+      "bestFor": [
+        "Виллы 3 спальни",
+        "Собственное проживание",
+        "Под аренду",
+        "Средний бюджет и выше"
+      ]
+    },
+    "en": {
+      "slug": "babakan",
+      "name": "Babakan",
+      "hero": "Babakan is a low-supply buying market with a more active rental segment, where 3-bedroom villas are the core product.",
+      "paragraphs": [
+        "Babakan has just 8 villas for sale and 2 residential complexes, with no apartments currently listed for sale. By volume, this is a small market, so buying options are limited.",
+        "In pricing, the area sits in the mid-budget and above villa segment: the range is $160,000–$432,000, with a median villa price of $422,000 and a median of $2,128 per sq.m. The typical product is a 3-bedroom villa, suitable for both personal use and rental.",
+        "The rental market is notably broader than the sales market: 21 monthly rental listings versus 8 villas for sale. Rental rates range from $650 to $6,772 per month, with a median of $1,796. If your target is apartments below $200,000, there are currently no such listings in Babakan."
+      ],
+      "highlights": [
+        {
+          "label": "Villas for sale",
+          "value": "8"
+        },
+        {
+          "label": "Median villa price",
+          "value": "$422,000"
+        },
+        {
+          "label": "Complexes",
+          "value": "2"
+        },
+        {
+          "label": "Rentals listed",
+          "value": "21"
+        }
+      ],
+      "bestFor": [
+        "3-bedroom villas",
+        "Own residence",
+        "Rental property",
+        "Mid-budget and above"
+      ]
+    }
+  }
+}

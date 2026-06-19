@@ -5,6 +5,9 @@
 // words of real content per district, not just a property list.
 
 import type { Lang } from '@/lib/i18n'
+// Long-tail districts (beyond the ~12 curated below) generated from
+// assistant_kb guides + real stats by scripts/kb-district-pages.mjs.
+import generatedDistricts from './districts-generated.json'
 
 export type DistrictCopy = {
   slug: string
@@ -458,8 +461,11 @@ const DISTRICTS: Record<string, DistrictBundle> = {
   },
 }
 
+const GENERATED_DISTRICTS = generatedDistricts as Record<string, DistrictBundle>
+
 export function getDistrictCopy(slug: string, lang: Lang): DistrictCopy | null {
-  const bundle = DISTRICTS[slug]
+  // Curated entries win; generated long-tail fills the rest.
+  const bundle = DISTRICTS[slug] ?? GENERATED_DISTRICTS[slug]
   if (!bundle) return null
   return bundle[lang]
 }
