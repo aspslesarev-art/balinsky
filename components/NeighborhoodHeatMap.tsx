@@ -25,7 +25,9 @@ export function NeighborhoodHeatMap({
   heightClass?: string
 }) {
   const [map, setMap] = useState<google.maps.Map | null>(null)
-  const [showHeat, setShowHeat] = useState(false)
+  // Tourism heat overlay is on by default on listing pages; the toggle
+  // still lets the visitor turn it off.
+  const [showHeat, setShowHeat] = useState(true)
   const containerRef = useRef<HTMLDivElement | null>(null)
   const heatRef = useRef<google.maps.OverlayView | null>(null)
   const heatDataRef = useRef<{ cells: { lat: number; lng: number; weight: number }[]; max: number } | null>(null)
