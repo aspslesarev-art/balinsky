@@ -82,7 +82,14 @@ export async function loadFeatureFlagsMap(kind: FeatureKind): Promise<Record<str
   return out
 }
 
-export function altFor(entry: VisionEntry | undefined, index: number, lang: Lang, fallback: string): string {
+// One listing's vision entry (features + alts). Uses the ISR-cached manifest.
+export async function loadListingVision(kind: FeatureKind, airtableId: string | null | undefined): Promise<VisionEntry | null> {
+  if (!airtableId) return null
+  const man = await loadVisionManifest(kind)
+  return man[airtableId] ?? null
+}
+
+export function altFor(entry: VisionEntry | undefined | null, index: number, lang: Lang, fallback: string): string {
   if (!entry) return fallback
   const arr = lang === 'en' ? entry.alt_en : entry.alt_ru
   const a = arr?.[index]

@@ -66,6 +66,7 @@ import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
 import { districtRu } from '@/lib/district-ru'
 import { loadKbPageContent } from '@/lib/kb-page-content'
+import { loadListingVision, altFor } from '@/lib/listing-features'
 import { enLabel } from '@/lib/filter-i18n'
 
 const COPY = {
@@ -551,6 +552,9 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   // the Airtable SEO Text / templated FAQ when not generated yet.
   const kb = await loadKbPageContent('villa', v.airtable_id, lang)
   const pageBody = kb?.body ?? seoText
+  // Per-photo vision alt text (image SEO/accessibility).
+  const vision = await loadListingVision('villa', v.airtable_id)
+  const photoAlts = photos.map((_, i) => altFor(vision, i, lang, title))
   const developerName = firstString(d['Developer1']) ?? firstString(d['Developer'])
   const devStats = await getDeveloperStats(developerName)
   // Resale / secondary listings carry a direct seller URL — bypass the
@@ -729,6 +733,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
           <PhotoGalleryHero
             photos={photos}
             alt={title}
+            alts={photoAlts}
             wishlistItem={{
               kind: 'villa', slug, title,
               photo: photos[0] ?? null,

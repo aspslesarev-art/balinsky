@@ -52,6 +52,7 @@ import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
 import { districtRu } from '@/lib/district-ru'
 import { loadKbPageContent } from '@/lib/kb-page-content'
+import { loadListingVision, altFor } from '@/lib/listing-features'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
 
 const AIRPORT_LAT = -8.7467
@@ -678,6 +679,8 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
     ?? firstString(d['ИИ Описание'])
   const kb = await loadKbPageContent('complex', c.airtable_id, lang)
   const pageBody = kb?.body ?? seoText
+  const vision = await loadListingVision('complex', c.airtable_id)
+  const photoAlts = slidesPhotos.map((_, i) => altFor(vision, i, lang, name))
 
   // External resources
   const resources: { label: string; url: string; Icon: typeof Box }[] = []
@@ -851,6 +854,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
           <PhotoGalleryHero
             photos={slidesPhotos}
             alt={name}
+            alts={photoAlts}
             wishlistItem={{
               kind: 'complex', slug, title: name,
               photo: slidesPhotos[0] ?? null,

@@ -14,10 +14,14 @@ const COPY = {
 export function PhotoGalleryHero({
   photos,
   alt,
+  alts,
   wishlistItem,
 }: {
   photos: string[]
   alt: string
+  // Optional per-photo alt text (vision-generated), index-aligned to `photos`.
+  // Falls back to the "<title> — фото N" pattern when missing for an index.
+  alts?: (string | undefined)[]
   // When provided, a heart toggle is overlaid on the gallery's
   // top-right corner. Plain object only — no thunks (would break RSC
   // serialisation when called from a server-rendered detail page).
@@ -85,7 +89,7 @@ export function PhotoGalleryHero({
         >
           <Image
             src={hero}
-            alt={`${alt} — ${c.mainPhoto}`}
+            alt={alts?.[0] ?? `${alt} — ${c.mainPhoto}`}
             fill
             priority
             fetchPriority="high"
@@ -108,7 +112,7 @@ export function PhotoGalleryHero({
                 >
                   <Image
                     src={src}
-                    alt={`${alt} — ${c.photoLabel} ${i + 2}`}
+                    alt={alts?.[i + 1] ?? `${alt} — ${c.photoLabel} ${i + 2}`}
                     fill
                     loading="lazy"
                     fetchPriority="low"
@@ -145,7 +149,7 @@ export function PhotoGalleryHero({
             >
               <Image
                 src={src}
-                alt={`${alt} — ${c.photoLabel} ${i + 1}`}
+                alt={alts?.[i] ?? `${alt} — ${c.photoLabel} ${i + 1}`}
                 fill
                 priority={i === 0}
                 fetchPriority={i === 0 ? 'high' : 'low'}
@@ -173,6 +177,7 @@ export function PhotoGalleryHero({
           photos={photos}
           startIndex={openAt}
           alt={alt}
+          alts={alts}
           onClose={() => setOpenAt(null)}
           copy={c}
         />
@@ -185,12 +190,14 @@ function Lightbox({
   photos,
   startIndex,
   alt,
+  alts,
   onClose,
   copy,
 }: {
   photos: string[]
   startIndex: number
   alt: string
+  alts?: (string | undefined)[]
   onClose: () => void
   copy: { close: string; prev: string; next: string; thumb: string }
 }) {
@@ -273,7 +280,7 @@ function Lightbox({
       >
         <Image
           src={photos[i]}
-          alt={alt}
+          alt={alts?.[i] ?? alt}
           fill
           sizes="90vw"
           quality={85}
@@ -296,7 +303,7 @@ function Lightbox({
                 idx === i ? 'border-white' : 'border-transparent opacity-70 hover:opacity-100'
               }`}
             >
-              <Image src={src} alt={`${alt} — ${copy.thumb} ${idx + 1}`} width={64} height={48} className="w-full h-full object-cover" />
+              <Image src={src} alt={alts?.[idx] ?? `${alt} — ${copy.thumb} ${idx + 1}`} width={64} height={48} className="w-full h-full object-cover" />
             </button>
           ))}
         </div>

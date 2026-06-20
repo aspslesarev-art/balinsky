@@ -50,6 +50,7 @@ import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
 import { districtRu } from '@/lib/district-ru'
 import { loadKbPageContent } from '@/lib/kb-page-content'
+import { loadListingVision, altFor } from '@/lib/listing-features'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
 
 const AIRPORT_LAT = -8.7467
@@ -540,6 +541,8 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
   const seoText = tField(d, 'SEO Text', lang) ?? tField(d, 'Notes', lang)
   const kb = await loadKbPageContent('apartment', a.airtable_id, lang)
   const pageBody = kb?.body ?? seoText
+  const vision = await loadListingVision('apartment', a.airtable_id)
+  const photoAlts = photos.map((_, i) => altFor(vision, i, lang, title))
   // Resale: drop the developer-manager CTA and route the visitor to
   // the owner's direct link stored in «Контакт продавца».
   const dealTypeRaw = (firstString(d['Тип сделки']) ?? '').toLowerCase()
@@ -684,6 +687,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
           <PhotoGalleryHero
             photos={photos}
             alt={title}
+            alts={photoAlts}
             wishlistItem={{
               kind: 'apartment', slug, title,
               photo: photos[0] ?? null,
