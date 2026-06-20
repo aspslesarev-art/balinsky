@@ -67,6 +67,9 @@ import { pluralRu } from '@/lib/plural-ru'
 import { districtRu } from '@/lib/district-ru'
 import { loadKbPageContent } from '@/lib/kb-page-content'
 import { loadListingVision, altFor } from '@/lib/listing-features'
+import { DistrictAboutCard } from '@/components/DistrictAboutCard'
+import { getDistrictCopy } from '@/lib/districts'
+import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { enLabel } from '@/lib/filter-i18n'
 
 const COPY = {
@@ -535,6 +538,10 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   // Show Cyrillic district on /ru, raw Latin on /en. Raw form is
   // kept around for the JSON-LD address + canonical-path matching.
   const district = lang === 'ru' ? districtRu(districtRaw) : districtRaw
+  // District orientation card: only when the listing's district maps to a
+  // real hub slug (DISTRICT_TO_SLUG) AND we have editorial copy for it.
+  const districtSlug = districtRaw ? DISTRICT_TO_SLUG[districtRaw] ?? null : null
+  const districtCopy = districtSlug ? getDistrictCopy(districtSlug, lang) : null
   const bedrooms = numberOrNull(d['Комнаты'])
   const area = numberOrNull(d['Площадь'])
   const land = numberOrNull(d['Земля'])
@@ -855,6 +862,10 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
 
         {nearby && (
           <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />
+        )}
+
+        {districtCopy && districtSlug && (
+          <DistrictAboutCard copy={districtCopy} lang={lang} kind="villa" hubHref={`${villasRoot}/${districtSlug}`} />
         )}
 
         {(

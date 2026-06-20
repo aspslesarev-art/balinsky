@@ -53,6 +53,9 @@ import { pluralRu } from '@/lib/plural-ru'
 import { districtRu } from '@/lib/district-ru'
 import { loadKbPageContent } from '@/lib/kb-page-content'
 import { loadListingVision, altFor } from '@/lib/listing-features'
+import { DistrictAboutCard } from '@/components/DistrictAboutCard'
+import { getDistrictCopy } from '@/lib/districts'
+import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
 
 const AIRPORT_LAT = -8.7467
@@ -634,6 +637,10 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   const slidesPhotos = photos.length > 0 ? photos : c.cover_url ? [c.cover_url] : []
   const districtRaw = firstString(d['Location 2']) ?? firstString(d['Location'])
   const district = lang === 'ru' ? districtRu(districtRaw) : districtRaw
+  // District orientation card: only when the district maps to a real hub
+  // slug (DISTRICT_TO_SLUG) AND we have editorial copy for it.
+  const districtSlug = districtRaw ? DISTRICT_TO_SLUG[districtRaw] ?? null : null
+  const districtCopy = districtSlug ? getDistrictCopy(districtSlug, lang) : null
   // Unit types / status / permits are stored as RU labels in Airtable —
   // translate them to EN labels for the English tree so we don't print
   // «Апартаменты, Виллы» / «Строится» on /en/.
@@ -1056,6 +1063,10 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             data because units in the same complex share geo. */}
         {nearby && (
           <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />
+        )}
+
+        {districtCopy && districtSlug && (
+          <DistrictAboutCard copy={districtCopy} lang={lang} kind="complex" hubHref={`${complexesRoot}/${districtSlug}`} />
         )}
 
         {/* RESOURCES */}

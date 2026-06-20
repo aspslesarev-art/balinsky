@@ -51,6 +51,9 @@ import { pluralRu } from '@/lib/plural-ru'
 import { districtRu } from '@/lib/district-ru'
 import { loadKbPageContent } from '@/lib/kb-page-content'
 import { loadListingVision, altFor } from '@/lib/listing-features'
+import { DistrictAboutCard } from '@/components/DistrictAboutCard'
+import { getDistrictCopy } from '@/lib/districts'
+import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
 
 const AIRPORT_LAT = -8.7467
@@ -523,6 +526,10 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
   const photos = (manifest[a.airtable_id] ?? []).slice(0, 12)
   const districtRaw = firstString(d['Location filter'])
   const district = lang === 'ru' ? districtRu(districtRaw) : districtRaw
+  // District orientation card: only when the district maps to a real hub
+  // slug (DISTRICT_TO_SLUG) AND we have editorial copy for it.
+  const districtSlug = districtRaw ? DISTRICT_TO_SLUG[districtRaw] ?? null : null
+  const districtCopy = districtSlug ? getDistrictCopy(districtSlug, lang) : null
   const bedrooms = numberOrNull(d['Комнаты'])
   const area = numberOrNull(d['Площадь'])
   if (isMalformedAptTitle(title)) {
@@ -809,6 +816,10 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
 
         {nearby && (
           <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />
+        )}
+
+        {districtCopy && districtSlug && (
+          <DistrictAboutCard copy={districtCopy} lang={lang} kind="apartment" hubHref={`${apartmentsRoot}/${districtSlug}`} />
         )}
 
         {/* LandProfile + MarketStats — sits right under the description
