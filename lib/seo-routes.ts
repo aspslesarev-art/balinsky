@@ -91,6 +91,7 @@ export function parseCleanPath(segments: string[]): FilterState | null {
     status: [],
     permit: [],
     dealType: [],
+    features: [],
     goal: null,
   }
   const seen = new Set<string>()
@@ -134,6 +135,7 @@ export function buildCanonicalPath(f: FilterState): string | null {
   if (f.floor.length > 0) return null
   if (f.developer.length > 0) return null
   if (f.permit.length > 0) return null
+  if (f.features.length > 0) return null
   if (f.goal) return null
   // multi-value disallowed
   if (f.district.length > 1) return null

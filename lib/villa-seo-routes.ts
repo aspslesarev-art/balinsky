@@ -87,6 +87,7 @@ export function buildCanonicalPath(f: VillaFilterState): string | null {
   if (f.permit.length > 0) return null
   if (f.year.length > 0) return null
   if (f.developer.length > 0) return null
+  if (f.features.length > 0) return null
   if (f.goal) return null
   if (f.dealType.length > 0) return null
   if (f.priceMin != null || f.priceMax != null) return null

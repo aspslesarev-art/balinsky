@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 import Fuse from 'fuse.js'
 import type { ApartmentCardData } from '@/components/ApartmentCard'
 import type { FilterOptions, FilterState } from '@/components/filters/FiltersBar'
+import { loadFeatureFlagsMap, FEATURE_FLAGS, FEATURE_LABELS } from '@/lib/listing-features'
 import type { Option } from '@/components/filters/MultiSelectFilter'
 import { translit, hasCyrillic } from '@/lib/translit'
 import { normalizeSlug } from '@/lib/slug-normalize'
@@ -49,6 +50,7 @@ export const EMPTY_FILTERS: FilterState = {
   status: [],
   permit: [],
   dealType: [],
+  features: [],
   goal: null,
 }
 
@@ -159,6 +161,7 @@ export function parseQueryFilters(sp: Record<string, string | undefined>): Filte
     status: asArray(sp.status),
     permit: asArray(sp.permit),
     dealType: asArray(sp.deal).filter(v => v === 'primary' || v === 'resale' || v === 'secondary'),
+    features: asArray(sp.features).filter(v => (FEATURE_FLAGS as readonly string[]).includes(v)),
     goal: sp.goal === 'invest' || sp.goal === 'live' ? sp.goal : null,
   }
 }
@@ -181,6 +184,7 @@ export type EnrichedRow = {
   bedrooms: string | null
   floor: string | null
   developerNames: string[]
+  features: string[]
   status: string | null
   permit: string | null
   priceUsd: number | null
@@ -214,7 +218,7 @@ function parseGeo(v: unknown): number | null {
   return null
 }
 
-function enrich(r: Row, devMap: Record<string, string>): EnrichedRow {
+function enrich(r: Row, devMap: Record<string, string>, featuresMap: Record<string, string[]> = {}): EnrichedRow {
   const d = r.data
   const devRefs = Array.isArray(d['Developer']) ? (d['Developer'] as unknown[]) : []
   const developerNames = devRefs
@@ -228,6 +232,7 @@ function enrich(r: Row, devMap: Record<string, string>): EnrichedRow {
     bedrooms: firstString(d['Комнаты']),
     floor: normFloor(d['Этаж']),
     developerNames,
+    features: featuresMap[r.airtable_id] ?? [],
     status: firstString(d['Статус']),
     permit: firstString(d['Разрешение']),
     priceUsd: numberOrNull(d['price_usd'] ?? d['Цена']),
@@ -313,6 +318,7 @@ export function passes(e: EnrichedRow, f: FilterState): boolean {
   }
   if (f.permit.length > 0 && (!e.permit || !f.permit.includes(e.permit))) return false
   if (f.dealType.length > 0 && !f.dealType.includes(e.dealType)) return false
+  if (f.features.length > 0 && !f.features.every(fl => e.features.includes(fl))) return false
   if (f.goal === 'invest' && e.landBucket === 'residential') return false
   if (f.goal === 'live') {
     if (e.landBucket === 'tourism') return false
@@ -443,7 +449,12 @@ export function buildOptions(
   const status    = statusRaw   .map(o => ({ ...o, label: tr('status',   o.label, 'Статус') }))
   const permit    = permitRaw   .map(o => ({ ...o, label: tr('permit',   o.label, 'Разрешение') }))
 
-  return { district: districts, bedrooms, floor, developer, status, permit, dealType }
+  const featureCounts = countsExcludingDim('features', e => e.features)
+  const features: Option[] = FEATURE_FLAGS
+    .map(fl => ({ value: fl, label: FEATURE_LABELS[fl][lang], count: featureCounts.get(fl) ?? 0 }))
+    .filter(o => o.count > 0)
+
+  return { district: districts, bedrooms, floor, developer, status, permit, dealType, features }
 }
 
 export function toCard(
@@ -581,12 +592,13 @@ function reassembleApt(raw: Record<string, unknown>): Row {
 }
 
 async function _loadAllInternal(): Promise<CachedAll> {
-  const [rowsRes, manifestRaw, devMap, enCache, viewCounts] = await Promise.all([
+  const [rowsRes, manifestRaw, devMap, enCache, viewCounts, featuresMap] = await Promise.all([
     sb.from('raw_apartments').select(APT_SELECT).limit(1000),
     loadJson<Record<string, string[]>>(cdnManifestUrl(PHOTO_MANIFEST_URL, 600), {}),
     loadJson<Record<string, string>>(cdnManifestUrl(DEV_LOOKUP_URL, 600), {}),
     loadEnTranslations('apartments'),
     loadViewCounts('apartment'),
+    loadFeatureFlagsMap('apartment'),
   ])
   const manifest = cdnRewriteManifest(manifestRaw)
   const rows = ((rowsRes.data ?? []) as unknown as Record<string, unknown>[]).map(reassembleApt)
@@ -594,7 +606,7 @@ async function _loadAllInternal(): Promise<CachedAll> {
     .filter(r => r.data?.['Опубликовать'] === true)
     .filter(r => !isHiddenDeveloper(firstString(r.data['Developer1']), firstString(r.data['Developer'])))
     .map(r => ({ ...r, data: mergeEnTranslations(r.data, r.airtable_id, enCache) }))
-    .map(r => enrich(r, devMap))
+    .map(r => enrich(r, devMap, featuresMap))
     .map(e => ({ ...e, views: viewCounts[e.id] ?? 0 }))
   return { enriched, manifest }
 }
@@ -691,7 +703,8 @@ export function hasAnyFilter(f: FilterState): boolean {
     f.floor.length > 0 ||
     f.developer.length > 0 ||
     f.status.length > 0 ||
-    f.permit.length > 0
+    f.permit.length > 0 ||
+    f.features.length > 0
   )
 }
 

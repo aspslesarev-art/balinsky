@@ -19,6 +19,7 @@ function toQueryString(f: FilterState): string {
   if (f.status.length) sp.set('status', f.status.join(','))
   if (f.permit.length) sp.set('permit', f.permit.join(','))
   if (f.dealType.length) sp.set('deal', f.dealType.join(','))
+  if (f.features.length) sp.set('features', f.features.join(','))
   if (f.goal) sp.set('goal', f.goal)
   return sp.toString()
 }
