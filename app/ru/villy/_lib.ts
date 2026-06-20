@@ -3,6 +3,7 @@ import Fuse from 'fuse.js'
 import type { Option } from '@/components/filters/MultiSelectFilter'
 import { translit, hasCyrillic } from '@/lib/translit'
 import { loadVillaStyles } from '@/lib/villa-styles'
+import { loadFeatureFlagsMap, FEATURE_FLAGS, FEATURE_LABELS } from '@/lib/listing-features'
 import { normalizeSlug } from '@/lib/slug-normalize'
 import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
 import { getDistrictCommercialMeta } from '@/lib/districts'
@@ -42,6 +43,8 @@ export type VillaFilterState = {
   year: string[]
   developer: string[]
   style: string[]
+  // Vision-derived feature flags (pool, infinity_pool, ocean_view, …).
+  features: string[]
   // 'invest' = land color is anything but Yellow (Pink/Tourism/C1/Orange/etc.) —
   // only zones where short-term tourist rental is legal.
   // 'live'   = land color is Yellow (residential) plus a minimum livable area.
@@ -61,6 +64,7 @@ export type VillaFilterOptions = {
   year: Option[]
   developer: Option[]
   style: Option[]
+  features: Option[]
   dealType: Option[]
 }
 
@@ -129,6 +133,7 @@ export const EMPTY_FILTERS: VillaFilterState = {
   year: [],
   developer: [],
   style: [],
+  features: [],
   goal: null,
   dealType: [],
 }
@@ -189,6 +194,7 @@ export function parseQueryFilters(sp: Record<string, string | undefined>): Villa
     year: asArray(sp.year),
     developer: asArray(sp.developer),
     style: asArray(sp.style),
+    features: asArray(sp.features).filter(v => (FEATURE_FLAGS as readonly string[]).includes(v)),
     goal: sp.goal === 'invest' || sp.goal === 'live' ? sp.goal : null,
     dealType: asArray(sp.deal).filter(v => v === 'primary' || v === 'resale' || v === 'secondary'),
   }
@@ -206,6 +212,7 @@ export function hasAnyFilter(f: VillaFilterState): boolean {
     f.year.length > 0 ||
     f.developer.length > 0 ||
     f.style.length > 0 ||
+    f.features.length > 0 ||
     f.goal != null ||
     f.dealType.length > 0
   )
@@ -257,6 +264,7 @@ export type EnrichedRow = {
   lat: number | null
   lng: number | null
   style: string | null
+  features: string[]
   landBucket: LandBucket
   dealType: DealType
   // Editorial pin — the "TOP" checkbox in Airtable. Pinned listings
@@ -268,7 +276,7 @@ export type EnrichedRow = {
 
 export type StylesMap = Record<string, { style: string | null }>
 
-export function enrich(r: Row, styles: StylesMap = {}): EnrichedRow {
+export function enrich(r: Row, styles: StylesMap = {}, featuresMap: Record<string, string[]> = {}): EnrichedRow {
   const d = r.data
   const yearRaw = firstString(d['Year of completion'])
   const year = yearRaw && /^\d{4}$/.test(yearRaw) ? yearRaw : null
@@ -287,6 +295,7 @@ export function enrich(r: Row, styles: StylesMap = {}): EnrichedRow {
     lat: parseGeo(d['Geo']),
     lng: parseGeo(d['Geo 2']),
     style: styles[r.airtable_id]?.style ?? null,
+    features: featuresMap[r.airtable_id] ?? [],
     landBucket: landBucket(firstString(d['Land color'])),
     dealType: dealFromString(firstString(d['Тип сделки'])),
     // TOP flag respects an explicit developer blacklist — historically Bali
@@ -314,6 +323,7 @@ export function passes(e: EnrichedRow, f: VillaFilterState): boolean {
   if (f.year.length > 0 && (!e.year || !f.year.includes(e.year))) return false
   if (f.developer.length > 0 && (!e.developerName || !f.developer.includes(e.developerName))) return false
   if (f.style.length > 0 && (!e.style || !f.style.includes(e.style))) return false
+  if (f.features.length > 0 && !f.features.every(fl => e.features.includes(fl))) return false
   if (f.goal === 'invest') {
     // Tourism / commercial zoning only — Yellow is illegal for short-term
     // rental in Bali, so it's the wrong land for an investment buyer.
@@ -491,6 +501,12 @@ export function buildOptions(
     .map(v => ({ value: v, label: DEAL_LABELS[lang][v], count: dealCounts.get(v) ?? 0 }))
     .filter(o => o.count > 0)
 
+  // Vision feature flags — fixed vocabulary, localized labels, count > 0 only.
+  const featureCounts = countsExcludingDim('features', e => e.features)
+  const features: Option[] = FEATURE_FLAGS
+    .map(fl => ({ value: fl, label: FEATURE_LABELS[fl][lang], count: featureCounts.get(fl) ?? 0 }))
+    .filter(o => o.count > 0)
+
   // Apply EN-translation pass — `value` keeps its original (URL slug or
   // RU value) so existing URLs and filter matching keep working; only
   // visible labels change for EN catalogues.
@@ -499,7 +515,7 @@ export function buildOptions(
   const style    = styleRaw   .map(o => ({ ...o, label: tr('style',    o.label, 'Стиль интерьера') }))
   const status   = statusRaw  .map(o => ({ ...o, label: tr('status',   o.label, 'Статус') }))
 
-  return { district, bedrooms, status, permit, year, developer, style, dealType }
+  return { district, bedrooms, status, permit, year, developer, style, features, dealType }
 }
 
 // === card mapping ===
@@ -648,12 +664,13 @@ function reassembleVilla(raw: Record<string, unknown>): Row {
 }
 
 async function _loadAllInternal(): Promise<CachedAll> {
-  const [rowsRes, manifestRaw, styles, enCache, viewCounts] = await Promise.all([
+  const [rowsRes, manifestRaw, styles, enCache, viewCounts, featuresMap] = await Promise.all([
     sb.from('raw_villas').select(VILLA_SELECT).limit(1000),
     loadJson<Record<string, string[]>>(cdnManifestUrl(PHOTO_MANIFEST_URL, 600), {}),
     loadVillaStyles(),
     loadEnTranslations('villas'),
     loadViewCounts('villa'),
+    loadFeatureFlagsMap('villa'),
   ])
   // Rewrite manifest URLs to the Bunny/Cloudflare CDN host at runtime so we
   // don't have to wait for the next sync-heavy to re-emit URLs.
@@ -663,7 +680,7 @@ async function _loadAllInternal(): Promise<CachedAll> {
     .filter(r => r.data?.['Опубликовать'] === true)
     .filter(r => !isHiddenDeveloper(firstString(r.data['Developer1']), firstString(r.data['Developer'])))
     .map(r => ({ ...r, data: mergeEnTranslations(r.data, r.airtable_id, enCache) }))
-    .map(r => enrich(r, styles))
+    .map(r => enrich(r, styles, featuresMap))
     .map(e => ({ ...e, views: viewCounts[e.id] ?? 0 }))
   return { enriched, manifest }
 }

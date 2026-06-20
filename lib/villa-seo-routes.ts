@@ -52,6 +52,7 @@ export function parseCleanPath(segments: string[]): VillaFilterState | null {
     year: [],
     developer: [],
     style: [],
+    features: [],
     goal: null,
     dealType: [],
   }

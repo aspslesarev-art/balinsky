@@ -12,12 +12,12 @@ const COPY = {
   ru: {
     price: 'Цена', district: 'Район', bedrooms: 'Кол-во спален', status: 'Этап стройки',
     dealType: 'Тип сделки', style: 'Стиль', year: 'Год сдачи', developer: 'Застройщик',
-    permit: 'Разрешение', resetAll: 'Сбросить все',
+    permit: 'Разрешение', features: 'Особенности', resetAll: 'Сбросить все',
   },
   en: {
     price: 'Price', district: 'District', bedrooms: 'Bedrooms', status: 'Construction stage',
     dealType: 'Deal type', style: 'Style', year: 'Completion year', developer: 'Developer',
-    permit: 'Permit', resetAll: 'Clear all',
+    permit: 'Permit', features: 'Features', resetAll: 'Clear all',
   },
 } as const
 
@@ -62,6 +62,7 @@ export function VillaFiltersBar({
     (state.year.length > 0 ? 1 : 0) +
     (state.developer.length > 0 ? 1 : 0) +
     (state.style.length > 0 ? 1 : 0) +
+    (state.features.length > 0 ? 1 : 0) +
     (state.goal != null ? 1 : 0) +
     (state.dealType.length > 0 ? 1 : 0)
 
@@ -75,6 +76,7 @@ export function VillaFiltersBar({
         <VillaMultiSelect stateKey="status"    label={c.status}    options={options.status}    selected={state.status}    current={state} view={view} lang={lang} />
         <VillaMultiSelect stateKey="dealType"  label={c.dealType}  options={options.dealType}  selected={state.dealType}  current={state} view={view} lang={lang} />
         <VillaMultiSelect stateKey="style"     label={c.style}     options={options.style}     selected={state.style}     current={state} view={view} lang={lang} />
+        <VillaMultiSelect stateKey="features"  label={c.features}  options={options.features}  selected={state.features}  current={state} view={view} lang={lang} />
         <VillaMultiSelect stateKey="year"      label={c.year}      options={options.year}      selected={state.year}      current={state} view={view} lang={lang} />
         <VillaMultiSelect stateKey="developer" label={c.developer} options={options.developer} selected={state.developer} current={state} view={view} lang={lang} searchable />
         <VillaMultiSelect stateKey="permit"    label={c.permit}    options={options.permit}    selected={state.permit}    current={state} view={view} lang={lang} />

@@ -313,7 +313,7 @@ async function loadTopVillas(lang: Lang): Promise<VillaCardData[]> {
     //   SLF = Sertifikat Laik Fungsi      — сертификат пригодности (получен, выше PBG)
     const filters: VillaFilterState = {
       q: '', priceMin: null, priceMax: null,
-      district: [], bedrooms: [], status: [], permit: ['PBG', 'SLF'], year: [], developer: [], style: [], goal: null, dealType: [],
+      district: [], bedrooms: [], status: [], permit: ['PBG', 'SLF'], year: [], developer: [], style: [], features: [], goal: null, dealType: [],
     }
     const cards = buildAllVillaCards(enriched, manifest, filters, scores, 'investment-desc', undefined, lang)
     return cards.slice(0, 6)
