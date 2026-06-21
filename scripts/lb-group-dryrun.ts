@@ -20,7 +20,7 @@ for (const [cid, info] of Object.entries(LB_COMPLEXES)) {
       for (const u of units) bs[u.status ?? '?'] = (bs[u.status ?? '?'] ?? 0) + 1
       const noBr = units.filter(u => u.bedrooms == null).length
       const noPrice = units.filter(u => u.price == null).length
-      const tag = layout === 'apartment' ? 'A' : layout === 'villa' ? 'V' : 'G'
+      const tag = { apartment: 'A', villa: 'V', grid: 'G', id: 'I' }[layout]
       console.log(`   [${tag}] gid ${String(gid).padEnd(11)} ${String(units.length).padStart(3)} юн  ${Object.entries(bs).map(([k, v]) => `${k}:${v}`).join(' ')}${noBr ? `  no-BR:${noBr}` : ''}${noPrice ? `  no-price:${noPrice}` : ''}`)
       cTotal += units.length
     } catch (e) {

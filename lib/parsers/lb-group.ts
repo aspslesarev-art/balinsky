@@ -61,7 +61,7 @@ export type LbUnit = {
 
 export type LbExtract = {
   units: LbUnit[]
-  layout: 'villa' | 'apartment' | 'grid'
+  layout: 'villa' | 'apartment' | 'grid' | 'id'
   legend: Partial<Record<LegendWord, string>>
   warnings: string[]
 }
@@ -94,8 +94,9 @@ function nearestLegendWord(color: string, legend: Partial<Record<LegendWord, str
     const d = colorDistance(color, lcolor)
     if (!best || d < best.d) best = { word: w as LegendWord, d }
   }
-  // > ~100 ед. на канал — это другой цвет, лучше промолчать (unknown).
-  if (!best || best.d > 30000) return null
+  // Порог ~50 ед. на канал: принимает округления Google (±1-5), но
+  // отвергает цвета вне легенды (напр. EA9999) → их добьёт фолбэк по оттенку.
+  if (!best || best.d > 2500) return null
   return best.word
 }
 
@@ -253,8 +254,36 @@ function extractGrid(cells: XlsxSheet, legend: Partial<Record<LegendWord, string
   return units
 }
 
+// === Раскладка I: буквенно-цифровые ID по этажам/блокам =================
+// Юнит = ячейка «A119»/«B105»{цвет=статус}, площадь — справа («32m²»,
+// «43,2m²»). Цена — общая по листу, если она единственная (Green Village
+// 110000), иначе оставляем null (Pandawa Dream — цена по блокам, на ревью).
+function extractIds(cells: XlsxSheet, legend: Partial<Record<LegendWord, string>>): LbUnit[] {
+  const priceSet = new Set<number>()
+  for (const [, c] of cells) {
+    if (typeof c.value !== 'string') continue
+    const pm = c.value.trim().match(/^([\d][\d\s]{3,})\s*\$$/)
+    if (pm) { const p = parseInt(pm[1].replace(/\s/g, ''), 10); if (Number.isFinite(p)) priceSet.add(p) }
+  }
+  const globalPrice = priceSet.size === 1 ? [...priceSet][0] : null
+  const units: LbUnit[] = []
+  for (const [k, c] of cells) {
+    if (!c.color || typeof c.value !== 'string') continue
+    if (!/^[A-Za-z]\d{2,4}$/.test(c.value.trim())) continue
+    const [row, col] = k.split(':').map(Number)
+    const status = resolveStatus(c.color, legend)
+    if (!status) continue
+    const areaCell = cells.get(row + ':' + (col + 1))?.value
+    const am = typeof areaCell === 'string' ? areaCell.trim().match(/^(\d+(?:[.,]\d+)?)\s*m²$/i) : null
+    const areaM2 = am ? parseFloat(am[1].replace(',', '.')) : null
+    units.push({ number: c.value.trim(), bedrooms: null, areaM2, price: globalPrice, status })
+  }
+  return units
+}
+
 // Авто-детекция раскладки: «№N» (виллы) / «N- AREAm2» (апарты) /
-// «голые числа» (сетка). Берём раскладку, нашедшую больше юнитов.
+// «голые числа» (сетка) / «A119» (ID по этажам). Берём раскладку,
+// нашедшую больше юнитов.
 export function extractLbUnits(cells: XlsxSheet): LbExtract {
   const legend = legendFromCells(cells)
   const warnings: string[] = []
@@ -265,6 +294,7 @@ export function extractLbUnits(cells: XlsxSheet): LbExtract {
     { layout: 'apartment', units: extractApartments(cells, legend) },
     { layout: 'villa', units: extractVillas(cells, legend) },
     { layout: 'grid', units: extractGrid(cells, legend) },
+    { layout: 'id', units: extractIds(cells, legend) },
   ]
   candidates.sort((a, b) => b.units.length - a.units.length)
   const best = candidates[0]
@@ -281,8 +311,8 @@ export function lbGroupRunner(parserKey: string) {
     const cells = await fetchXlsxFromGoogleSheet(opts.sourceUrl)
     const { units: raw, layout, warnings } = extractLbUnits(cells)
 
-    // grid-вкладки LB Group — все виллы; apartment → апартаменты.
-    const typeLabel = layout === 'apartment' ? 'Апартаменты' : 'Вилла'
+    // grid-вкладки LB Group — виллы; apartment/id → апартаменты.
+    const typeLabel = (layout === 'apartment' || layout === 'id') ? 'Апартаменты' : 'Вилла'
     const units: UnitInput[] = []
     const matchKeys = new Map<string, UnitMatchKey>()
     let unmatched = 0
