@@ -10,14 +10,13 @@
 //   • Апарты — вертикальный стек «Nbr» → «N-  AREAm2» → цена{цвет}; площадь
 //     и цена индивидуальны для юнита, статус = цвет ячейки цены.
 //
-// Дедуп между комплексами — по «Парсер ключ» = `${parserKey}:${number}`,
-// поэтому каждый комплекс регистрируется со своим parserKey через фабрику
-// lbGroupRunner('<key>').
+// Запись — в Supabase-таблицу parser_units (НЕ в Airtable): источник
+// истины теперь Supabase, управление через /admin/data. unit_key =
+// `${complexId}#${gid}#${number}` уникален между вкладками/комплексами,
+// поэтому повторный прогон апдейтит запись, а не плодит дубль.
 
-import {
-  fetchExistingUnits, pushUnits, autoLinkUnits, num,
-  type ParserResult, type UnitInput, type UnitMatchKey,
-} from './_shared'
+import { createClient } from '@supabase/supabase-js'
+import { num, type ParserResult } from './_shared'
 import { fetchXlsxFromGoogleSheet, colorDistance, hexToRgb, type XlsxSheet } from './_xlsx'
 
 // complexId (raw_complexes.airtable_id) → вкладки (gid) в общей таблице
@@ -312,12 +311,11 @@ export function extractLbUnits(cells: XlsxSheet): LbExtract {
 export async function runLbComplex(opts: {
   complexId: string
   sourceUrl?: string
-  airtableToken: string
+  airtableToken?: string
 }): Promise<ParserResult> {
   const cfg = LB_COMPLEXES[opts.complexId]
   if (!cfg) throw new Error(`LB Group: complexId ${opts.complexId} не в LB_COMPLEXES`)
-  const units: UnitInput[] = []
-  const matchKeys = new Map<string, UnitMatchKey>()
+  const rows: { unit_key: string; data: Record<string, unknown> }[] = []
   const warnings: string[] = []
   let unmatched = 0
   for (const gid of cfg.gids) {
@@ -327,26 +325,36 @@ export async function runLbComplex(opts: {
     const typeLabel = (layout === 'apartment' || layout === 'id') ? 'Апартаменты' : 'Вилла'
     for (const u of raw) {
       if (!u.status) { unmatched++; continue }
-      const section = `${gid}#${u.number}`
-      const fields: Record<string, unknown> = { Name: u.number, Тип: [typeLabel], Статус: STATUS_MAP[u.status] }
-      if (u.price != null) fields['Цена'] = u.price
-      if (u.bedrooms != null) fields['Спальни'] = u.bedrooms
-      if (u.areaM2 != null) fields['Площадь'] = u.areaM2
-      units.push({ section, fields })
-      matchKeys.set(section, { villaSize: u.areaM2, bedrooms: u.bedrooms })
+      const unit_key = `${opts.complexId}#${gid}#${u.number}`
+      const data: Record<string, unknown> = {
+        Name: u.number,
+        Тип: typeLabel,
+        Статус: STATUS_MAP[u.status],
+        complex_id: opts.complexId,
+        Комплекс: cfg.name,
+        source: 'lb_group',
+        gid,
+      }
+      if (u.price != null) data['Цена'] = u.price
+      if (u.bedrooms != null) data['Спальни'] = u.bedrooms
+      if (u.areaM2 != null) data['Площадь'] = u.areaM2
+      rows.push({ unit_key, data })
     }
   }
   if (unmatched > 0) warnings.push(`${unmatched} юнитов с нераспознанным цветом — пропущены`)
-  if (units.length === 0) throw new Error(`LB Group (${cfg.name}): ни один юнит не распознан`)
+  if (rows.length === 0) throw new Error(`LB Group (${cfg.name}): ни один юнит не распознан`)
 
-  const existing = await fetchExistingUnits(opts.airtableToken)
-  const unitsCount = await pushUnits(units, existing, opts.complexId, opts.airtableToken)
-  const linked = await autoLinkUnits({
-    complexId: opts.complexId,
-    parserKey: opts.complexId,
-    airtableToken: opts.airtableToken,
-    units: matchKeys,
-    warnings,
-  })
-  return { unitsCount, warnings, linked }
+  const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
+  // Свежий снимок: удаляем прежние юниты этого комплекса, которых больше
+  // нет в листе (проданные/убранные), затем upsert текущих.
+  const { data: existing } = await sb.from('parser_units').select('unit_key').eq('data->>complex_id', opts.complexId)
+  const keep = new Set(rows.map(r => r.unit_key))
+  const stale = (existing ?? []).map(r => r.unit_key as string).filter(k => !keep.has(k))
+  if (stale.length) await sb.from('parser_units').delete().in('unit_key', stale)
+  const stamped = rows.map(r => ({ ...r, updated_at: new Date().toISOString() }))
+  for (let i = 0; i < stamped.length; i += 500) {
+    const { error } = await sb.from('parser_units').upsert(stamped.slice(i, i + 500), { onConflict: 'unit_key' })
+    if (error) throw new Error(`parser_units upsert: ${error.message}`)
+  }
+  return { unitsCount: rows.length, warnings, linked: 0 }
 }

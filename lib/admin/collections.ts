@@ -151,6 +151,30 @@ const villaUnits: CollectionConfig = {
   ],
 }
 
+// Юниты от парсера цен/наличия (lib/parsers/*) — пишутся прямо в Supabase
+// (parser_units), без Airtable. PK = unit_key (`complexId#gid#номер`).
+const parserUnits: CollectionConfig = {
+  key: 'parser_units',
+  label: 'Юниты (парсер)',
+  store: 'sql_jsonb',
+  table: 'parser_units',
+  primaryKey: 'unit_key',
+  caps: { create: false, update: true, delete: true },
+  titleField: 'Name',
+  defaultSort: { field: 'Комплекс', dir: 'asc' },
+  fields: [
+    { key: 'Комплекс', label: 'Комплекс', type: 'text', showInGrid: true, width: 200 },
+    { key: 'Name', label: 'Юнит', type: 'text', showInGrid: true, width: 90 },
+    { key: 'Тип', label: 'Тип', type: 'text', showInGrid: true, width: 130 },
+    { key: 'Статус', label: 'Статус', type: 'enum', enumOptions: ['Доступна', 'Бронь', 'Продана', 'Блок', 'Resale'], showInGrid: true, width: 120 },
+    { key: 'Спальни', label: 'Спальни', type: 'number', showInGrid: true, width: 90 },
+    { key: 'Цена', label: 'Цена $', type: 'number', showInGrid: true, width: 110 },
+    { key: 'Площадь', label: 'Площадь', type: 'number', showInGrid: true, width: 100 },
+    { key: 'source', label: 'Источник', type: 'text', readOnly: true, width: 100 },
+    { key: 'complex_id', label: 'complex_id', type: 'text', readOnly: true },
+  ],
+}
+
 const developers: CollectionConfig = {
   key: 'developers',
   label: 'Застройщики',
@@ -398,6 +422,7 @@ export const COLLECTIONS: Record<string, CollectionConfig> = {
   apartments,
   complexes,
   villa_units: villaUnits,
+  parser_units: parserUnits,
   developers,
   districts,
   news,
