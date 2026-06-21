@@ -8,7 +8,7 @@
 import type { ParserResult } from './_shared'
 import { runOriginsParser } from './origins'
 import { runSunsetVillageParser } from './sunset-village'
-import { runUbudDreamParser } from './ubud-dream'
+import { LB_COMPLEXES, runLbComplex } from './lb-group'
 
 export type ParserRunner = (opts: {
   complexId: string
@@ -24,6 +24,16 @@ export type ParserModule = {
   run: ParserRunner
 }
 
+// LB Group: единый движок runLbComplex на все комплексы — он сам читает все
+// вкладки комплекса (gids из LB_COMPLEXES) и пишет ТОЛЬКО в базу «Юниты».
+// Заменяет прежний одно-вкладочный ubud-dream.
+const LB_ENTRIES: Record<string, ParserModule> = Object.fromEntries(
+  Object.entries(LB_COMPLEXES).map(([cid, { name }]) => [
+    cid,
+    { key: 'lb_group', label: `LB Group — ${name}`, run: runLbComplex },
+  ]),
+)
+
 export const PARSERS: Record<string, ParserModule> = {
   recHuHZIAmVcIln0L: {
     key: 'origins',
@@ -35,11 +45,7 @@ export const PARSERS: Record<string, ParserModule> = {
     label: 'BALI BAZA Sunset Village (resale)',
     run: runSunsetVillageParser,
   },
-  recOR5CZuEd8x1Ddv: {
-    key: 'ubud_dream',
-    label: 'Ubud Dream (LB Group, xlsx + colour-coded)',
-    run: runUbudDreamParser,
-  },
+  ...LB_ENTRIES,
 }
 
 export function getParserModule(complexId: string): ParserModule | null {

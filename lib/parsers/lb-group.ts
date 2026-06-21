@@ -302,45 +302,51 @@ export function extractLbUnits(cells: XlsxSheet): LbExtract {
 }
 
 // === Раннер (фабрика на комплекс) =======================================
-export function lbGroupRunner(parserKey: string) {
-  return async function runLbGroupParser(opts: {
-    complexId: string
-    sourceUrl: string
-    airtableToken: string
-  }): Promise<ParserResult> {
-    const cells = await fetchXlsxFromGoogleSheet(opts.sourceUrl)
-    const { units: raw, layout, warnings } = extractLbUnits(cells)
-
-    // grid-вкладки LB Group — виллы; apartment/id → апартаменты.
+// Раннер комплекса: читает ВСЕ его вкладки (gids из LB_COMPLEXES — у
+// комплекса бывает villa+apart и больше), парсит каждую, мёржит и пишет
+// одним батчем. parserKey = complexId (уникален между комплексами),
+// section = `${gid}#${number}` (уникален между вкладками — иначе villa №1
+// и apart №1 одного комплекса коллидировали бы). sourceUrl из реестра не
+// используется (gids берём из LB_COMPLEXES), но оставлен в сигнатуре для
+// совместимости с ParserModule.run.
+export async function runLbComplex(opts: {
+  complexId: string
+  sourceUrl?: string
+  airtableToken: string
+}): Promise<ParserResult> {
+  const cfg = LB_COMPLEXES[opts.complexId]
+  if (!cfg) throw new Error(`LB Group: complexId ${opts.complexId} не в LB_COMPLEXES`)
+  const units: UnitInput[] = []
+  const matchKeys = new Map<string, UnitMatchKey>()
+  const warnings: string[] = []
+  let unmatched = 0
+  for (const gid of cfg.gids) {
+    const url = `https://docs.google.com/spreadsheets/d/${LB_SPREADSHEET_ID}/edit?gid=${gid}`
+    const cells = await fetchXlsxFromGoogleSheet(url)
+    const { units: raw, layout } = extractLbUnits(cells)
     const typeLabel = (layout === 'apartment' || layout === 'id') ? 'Апартаменты' : 'Вилла'
-    const units: UnitInput[] = []
-    const matchKeys = new Map<string, UnitMatchKey>()
-    let unmatched = 0
     for (const u of raw) {
       if (!u.status) { unmatched++; continue }
-      const fields: Record<string, unknown> = {
-        Name: u.number,
-        Тип: [typeLabel],
-        Статус: STATUS_MAP[u.status],
-      }
+      const section = `${gid}#${u.number}`
+      const fields: Record<string, unknown> = { Name: u.number, Тип: [typeLabel], Статус: STATUS_MAP[u.status] }
       if (u.price != null) fields['Цена'] = u.price
       if (u.bedrooms != null) fields['Спальни'] = u.bedrooms
       if (u.areaM2 != null) fields['Площадь'] = u.areaM2
-      units.push({ section: u.number, fields })
-      matchKeys.set(u.number, { villaSize: u.areaM2, bedrooms: u.bedrooms })
+      units.push({ section, fields })
+      matchKeys.set(section, { villaSize: u.areaM2, bedrooms: u.bedrooms })
     }
-    if (unmatched > 0) warnings.push(`${unmatched} юнитов с нераспознанным цветом ячейки — статус пропущен`)
-    if (units.length === 0) throw new Error(`LB Group (${parserKey}): ни один юнит не распознан (layout=${layout})`)
-
-    const existing = await fetchExistingUnits(opts.airtableToken)
-    const unitsCount = await pushUnits(units, existing, parserKey, opts.airtableToken)
-    const linked = await autoLinkUnits({
-      complexId: opts.complexId,
-      parserKey,
-      airtableToken: opts.airtableToken,
-      units: matchKeys,
-      warnings,
-    })
-    return { unitsCount, warnings, linked }
   }
+  if (unmatched > 0) warnings.push(`${unmatched} юнитов с нераспознанным цветом — пропущены`)
+  if (units.length === 0) throw new Error(`LB Group (${cfg.name}): ни один юнит не распознан`)
+
+  const existing = await fetchExistingUnits(opts.airtableToken)
+  const unitsCount = await pushUnits(units, existing, opts.complexId, opts.airtableToken)
+  const linked = await autoLinkUnits({
+    complexId: opts.complexId,
+    parserKey: opts.complexId,
+    airtableToken: opts.airtableToken,
+    units: matchKeys,
+    warnings,
+  })
+  return { unitsCount, warnings, linked }
 }
