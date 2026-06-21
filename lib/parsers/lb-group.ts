@@ -18,7 +18,7 @@ import {
   fetchExistingUnits, pushUnits, autoLinkUnits, num,
   type ParserResult, type UnitInput, type UnitMatchKey,
 } from './_shared'
-import { fetchXlsxFromGoogleSheet, colorDistance, type XlsxSheet } from './_xlsx'
+import { fetchXlsxFromGoogleSheet, colorDistance, hexToRgb, type XlsxSheet } from './_xlsx'
 
 const LEGEND_WORDS = ['Free', 'Booked', 'Sold', 'Resale', 'Block'] as const
 type LegendWord = (typeof LEGEND_WORDS)[number]
@@ -77,6 +77,34 @@ function nearestLegendWord(color: string, legend: Partial<Record<LegendWord, str
   return best.word
 }
 
+// Фолбэк «по оттенку» когда легенду на листе не нашли / цвет от неё далёк.
+// Палитра LB Group: зелёный=Free, жёлтый=Booked, серый=Block, синий=Resale,
+// фиолетовый/красный=Sold (у LB продано — фиолетовый; красный — на всякий).
+function classifyByHue(hex: string): LegendWord | null {
+  const [r, g, b] = hexToRgb(hex)
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 510
+  const s = max === min ? 0 : (max - min) / (255 - Math.abs(max + min - 255))
+  if (l > 0.93) return null            // белый / почти белый = пусто
+  if (s < 0.18) return 'Block'         // серый = блок
+  let h: number
+  const d = max - min
+  if (max === r) h = ((g - b) / d) % 6
+  else if (max === g) h = (b - r) / d + 2
+  else h = (r - g) / d + 4
+  h = (h * 60 + 360) % 360
+  if (h < 20 || h >= 330) return 'Sold'    // красный
+  if (h < 65) return 'Booked'              // жёлтый/оранжевый
+  if (h < 175) return 'Free'               // зелёный
+  if (h < 255) return 'Resale'             // голубой/синий
+  return 'Sold'                            // фиолетовый = продано (LB)
+}
+
+// Статус: сначала по легенде листа, иначе фолбэк по оттенку.
+function resolveStatus(color: string | null, legend: Partial<Record<LegendWord, string>>): LegendWord | null {
+  if (!color) return null
+  return nearestLegendWord(color, legend) ?? classifyByHue(color)
+}
+
 // Цена по типу спален: «N bedroom» в колонке A + «Price NNN$» ниже (виллы).
 function pricesPerBedrooms(cells: XlsxSheet): Record<number, number> {
   const bedroomRows: { br: number; row: number }[] = []
@@ -114,7 +142,7 @@ function extractApartments(cells: XlsxSheet, legend: Partial<Record<LegendWord, 
     const price = priceCell
       ? (typeof priceCell.value === 'number' ? priceCell.value : num(typeof priceCell.value === 'string' ? priceCell.value : null))
       : null
-    const status = priceCell?.color ? nearestLegendWord(priceCell.color, legend) : null
+    const status = resolveStatus(priceCell?.color ?? null, legend)
     units.push({ number: m[1], bedrooms: brM ? parseInt(brM[1], 10) : null, areaM2: parseInt(m[2], 10), price, status })
   }
   return units
@@ -133,7 +161,7 @@ function extractVillas(cells: XlsxSheet, legend: Partial<Record<LegendWord, stri
     const brCell = cells.get(row + ':' + (col + 1))
     const brM = typeof brCell?.value === 'string' ? brCell.value.trim().match(/^(\d+)\s*br$/i) : null
     const br = brM ? parseInt(brM[1], 10) : null
-    const status = c.color ? nearestLegendWord(c.color, legend) : null
+    const status = resolveStatus(c.color, legend)
     units.push({ number: m[1], bedrooms: br, areaM2: null, price: br && prices[br] ? prices[br] : null, status })
   }
   return units
