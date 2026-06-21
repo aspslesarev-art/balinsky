@@ -52,7 +52,56 @@ const KINDS = {
   developer: { table: 'raw_developers', build: developerFacts },
 }
 
+// ---- Vision features → factText (so the summary/embeddings carry what
+// computer vision saw in the photos, not just Airtable fields). The line
+// is appended before hashing, so adding it re-summarizes every listing. ----
+const VISION_BUCKETS = { villa: 'villa-photos', apartment: 'apartment-photos', complex: 'complex-photos' }
+const STYLE_RU = {
+  minimalist: 'минимализм', modern: 'современный', tropical: 'тропический',
+  balinese: 'балийский', mediterranean: 'средиземноморский', scandinavian: 'скандинавский',
+  luxury: 'люкс', classic: 'классический', industrial: 'индустриальный', japandi: 'джапанди',
+}
+const VIEW_RU = { ocean: 'вид на океан', jungle: 'вид на джунгли', rice_field: 'вид на рисовые поля', garden: 'вид на сад', mountain: 'вид на горы' }
+const AMENITY_RU = { jacuzzi: 'джакузи', gym: 'спортзал', coworking: 'коворкинг', sauna: 'сауна' }
+const OUTDOOR_RU = { terrace: 'терраса', rooftop: 'руфтоп', balcony: 'балкон' }
+
+function visionFeaturesLineRu(entry) {
+  const f = entry?.features
+  if (!f) return null
+  const parts = []
+  if (f.pool) parts.push(f.pool_type === 'infinity' ? 'инфинити-бассейн' : 'бассейн')
+  for (const v of f.view ?? []) if (VIEW_RU[v]) parts.push(VIEW_RU[v])
+  for (const a of f.amenities ?? []) if (AMENITY_RU[a]) parts.push(AMENITY_RU[a])
+  for (const o of f.outdoor ?? []) if (OUTDOOR_RU[o]) parts.push(OUTDOOR_RU[o])
+  if (f.style) parts.push(`стиль ${STYLE_RU[f.style] ?? f.style}`)
+  if (f.furnished === true) parts.push('меблировано')
+  // de-dup while preserving order
+  const uniq = [...new Set(parts)]
+  return uniq.length ? `Особенности (распознано по фото): ${uniq.join(', ')}` : null
+}
+
+async function loadVisionMap(kind) {
+  const bucket = VISION_BUCKETS[kind]
+  if (!bucket) return null
+  const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${bucket}/_vision.json`
+  try {
+    const r = await fetch(url)
+    if (!r.ok) { console.warn(`  ⚠ vision manifest ${bucket} HTTP ${r.status} — proceeding without photo features`); return null }
+    const man = await r.json()
+    const map = new Map()
+    for (const [id, entry] of Object.entries(man)) {
+      const line = visionFeaturesLineRu(entry)
+      if (line) map.set(id, line)
+    }
+    return map
+  } catch (e) {
+    console.warn(`  ⚠ vision manifest ${bucket} load failed (${e.message}) — proceeding without photo features`)
+    return null
+  }
+}
+
 let totalPrompt = 0, totalCompletion = 0, totalCost = 0, generated = 0, skipped = 0, failed = 0
+let visionApplied = 0
 let usageLogDisabled = false
 
 function trackUsage(pt, ct) {
@@ -97,6 +146,7 @@ async function existingHashes(kind) {
 async function collectPending(kind) {
   const { table, build } = KINDS[kind]
   const seen = (SAMPLE || FORCE) ? new Map() : await existingHashes(kind)
+  const visionMap = await loadVisionMap(kind)
   const items = []
   const PAGE = 200
   for (let from = 0; from < 20000; from += PAGE) {
@@ -106,6 +156,10 @@ async function collectPending(kind) {
     for (const row of data) {
       const facts = build(row)
       if (!facts) continue
+      // Append computer-vision features before hashing so the LLM summary
+      // (and thus the embedding) incorporates what the photos show.
+      const visionLine = visionMap?.get(row.airtable_id)
+      if (visionLine) { facts.factText += `\n${visionLine}`; visionApplied++ }
       const hash = sha1(facts.factText)
       if (!FORCE && !SAMPLE && seen.get(facts.refId) === hash) { skipped++; continue }
       items.push({ kind, ...facts, hash })
@@ -172,5 +226,6 @@ console.log(`Total to summarize: ${allItems.length} (${skipped} unchanged skippe
 await runPool(allItems)
 console.log(`\n========================================`)
 console.log(`Done in ${Math.round((Date.now() - start) / 1000)}s — generated ${generated}, failed ${failed}, skipped ${skipped}`)
+console.log(`Vision features applied to ${visionApplied} listings' facts`)
 console.log(`Tokens: ${totalPrompt} in + ${totalCompletion} out = est $${totalCost.toFixed(3)}`)
 if (!DRY) await new Promise(r => setTimeout(r, 1500))
