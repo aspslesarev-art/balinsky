@@ -342,19 +342,26 @@ export async function runLbComplex(opts: {
     }
   }
   if (unmatched > 0) warnings.push(`${unmatched} юнитов с нераспознанным цветом — пропущены`)
-  if (rows.length === 0) throw new Error(`LB Group (${cfg.name}): ни один юнит не распознан`)
+  // Один номер может встретиться в нескольких клетках листа → одинаковый
+  // unit_key. Дедупим (последний выигрывает) — иначе upsert падает на
+  // "ON CONFLICT cannot affect row a second time".
+  const byKey = new Map<string, { unit_key: string; data: Record<string, unknown> }>()
+  for (const r of rows) byKey.set(r.unit_key, r)
+  const deduped = [...byKey.values()]
+  if (deduped.length < rows.length) warnings.push(`${rows.length - deduped.length} дублей номера в листе — схлопнуты`)
+  if (deduped.length === 0) throw new Error(`LB Group (${cfg.name}): ни один юнит не распознан`)
 
   const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
   // Свежий снимок: удаляем прежние юниты этого комплекса, которых больше
   // нет в листе (проданные/убранные), затем upsert текущих.
   const { data: existing } = await sb.from('parser_units').select('unit_key').eq('data->>complex_id', opts.complexId)
-  const keep = new Set(rows.map(r => r.unit_key))
+  const keep = new Set(deduped.map(r => r.unit_key))
   const stale = (existing ?? []).map(r => r.unit_key as string).filter(k => !keep.has(k))
   if (stale.length) await sb.from('parser_units').delete().in('unit_key', stale)
-  const stamped = rows.map(r => ({ ...r, updated_at: new Date().toISOString() }))
+  const stamped = deduped.map(r => ({ ...r, updated_at: new Date().toISOString() }))
   for (let i = 0; i < stamped.length; i += 500) {
     const { error } = await sb.from('parser_units').upsert(stamped.slice(i, i + 500), { onConflict: 'unit_key' })
     if (error) throw new Error(`parser_units upsert: ${error.message}`)
   }
-  return { unitsCount: rows.length, warnings, linked: 0 }
+  return { unitsCount: deduped.length, warnings, linked: 0 }
 }
