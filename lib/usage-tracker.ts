@@ -85,6 +85,36 @@ export function logUsage(u: UsageInput): void {
   })
 }
 
+// === Spend cap =========================================================
+// Hard daily ceiling on Azure spend so an unauthenticated abuser can't
+// run up the bill via the public chat/transcribe endpoints. Cached ~60s
+// to avoid a DB read on every request. Fails OPEN on a read error (we'd
+// rather serve users than hard-block on a transient Supabase glitch) —
+// the rate limiter is the second line of defence.
+const DAILY_USD_CAP = Number(process.env.BALINA_DAILY_USD_CAP ?? '25')
+let _spendCache: { ts: number; usd: number } | null = null
+
+export async function todaySpendUsd(): Promise<number> {
+  const now = Date.now()
+  if (_spendCache && now - _spendCache.ts < 60_000) return _spendCache.usd
+  const d = new Date()
+  const todayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate())
+  const { data, error } = await sb
+    .from('balina_usage')
+    .select('cost_usd')
+    .gte('ts', todayStart.toISOString())
+  if (error) { console.error('[usage] spend read failed:', error.message); return 0 }
+  const usd = (data ?? []).reduce((s, r) => s + Number(r.cost_usd ?? 0), 0)
+  _spendCache = { ts: now, usd }
+  return usd
+}
+
+// True when today's spend is at/over the configured cap.
+export async function overDailySpendCap(): Promise<boolean> {
+  if (!Number.isFinite(DAILY_USD_CAP) || DAILY_USD_CAP <= 0) return false
+  return (await todaySpendUsd()) >= DAILY_USD_CAP
+}
+
 // === Admin-page aggregators ============================================
 //
 // Heavy lifting via SQL — we lean on Postgres rather than dragging

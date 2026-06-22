@@ -179,8 +179,12 @@ export async function autoLinkUnits(opts: {
     opts.warnings.push('autolink: не нашёл имя комплекса в raw_complexes — пропускаю')
     return 0
   }
-  const escaped = complexName.replace(/'/g, "\\'")
-  const filter = encodeURIComponent(`{Комплекс 1}='${escaped}'`)
+  // Airtable formula string literals don't support backslash-escaping, so
+  // a name with a quote could break out and alter the formula. Wrap the
+  // value in double quotes and strip the delimiter/backslash/newlines —
+  // legit complex names never contain those.
+  const safeName = complexName.replace(/["\\\r\n]/g, ' ').trim()
+  const filter = encodeURIComponent(`{Комплекс 1}="${safeName}"`)
   const vr = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE}/${VILLAS_TABLE}?filterByFormula=${filter}&pageSize=100`, {
     headers: { Authorization: `Bearer ${opts.airtableToken}` },
   })

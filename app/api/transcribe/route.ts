@@ -12,7 +12,8 @@
 
 import { NextResponse } from 'next/server'
 import { AzureOpenAI } from 'openai'
-import { logUsage } from '@/lib/usage-tracker'
+import { logUsage, overDailySpendCap } from '@/lib/usage-tracker'
+import { clientIp, rateLimit } from '@/lib/rate-limit'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -28,6 +29,14 @@ function buildClient(): { client: AzureOpenAI; deployment: string } | null {
 }
 
 export async function POST(req: Request) {
+  // Abuse guards — unauthenticated paid (Azure transcribe) endpoint.
+  if (!rateLimit(`transcribe:${clientIp(req)}`, 12, 60_000)) {
+    return NextResponse.json({ error: 'rate_limited' }, { status: 429 })
+  }
+  if (await overDailySpendCap()) {
+    return NextResponse.json({ error: 'temporarily_unavailable' }, { status: 503 })
+  }
+
   const built = buildClient()
   if (!built) return NextResponse.json({ error: 'transcribe_not_configured' }, { status: 500 })
 

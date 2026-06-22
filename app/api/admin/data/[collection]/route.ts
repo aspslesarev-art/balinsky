@@ -15,16 +15,22 @@ export async function GET(req: Request, { params }: { params: Promise<{ collecti
   if (!cfg) return NextResponse.json({ error: 'unknown_collection' }, { status: 404 })
 
   const url = new URL(req.url)
-  const sortField = url.searchParams.get('sort')
+  // Allowlist sort/filter keys to declared fields — the adapter builds
+  // JSONB path identifiers from these (data->>"<key>"), so unvalidated
+  // keys would be identifier injection into the PostgREST query.
+  const allowedKeys = new Set<string>([cfg.primaryKey ?? 'airtable_id', cfg.titleField, ...cfg.fields.map(f => f.key)].filter(Boolean) as string[])
+  const sortFieldRaw = url.searchParams.get('sort')
+  const sortField = sortFieldRaw && allowedKeys.has(sortFieldRaw) ? sortFieldRaw : null
   const dir = url.searchParams.get('dir') === 'asc' ? 'asc' : 'desc'
   const sort = sortField ? { field: sortField, dir: dir as 'asc' | 'desc' } : undefined
   const page = Math.max(0, Number(url.searchParams.get('page') ?? 0) || 0)
   const pageSize = Math.min(200, Math.max(1, Number(url.searchParams.get('pageSize') ?? 50) || 50))
   const q = url.searchParams.get('q') ?? undefined
-  // Per-column filters arrive as `filter.<key>=<value>`.
+  // Per-column filters arrive as `filter.<key>=<value>` — keys allowlisted.
   const filters = [...url.searchParams.entries()]
     .filter(([k, v]) => k.startsWith('filter.') && v !== '')
     .map(([k, v]) => ({ key: k.slice('filter.'.length), value: v }))
+    .filter(f => allowedKeys.has(f.key))
 
   try {
     const { rows, total } = await adapterFor(cfg).list(cfg, { sort, page, pageSize, q, filters })

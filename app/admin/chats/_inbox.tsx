@@ -606,7 +606,7 @@ function MessageBody({ m }: { m: MessageRow }) {
         <MediaBlock m={m} />
       )}
       {hasText && (
-        <div dangerouslySetInnerHTML={{ __html: linkify(m.text ?? '') }} />
+        <div dangerouslySetInnerHTML={{ __html: linkify(m.text ?? '', m.source === 'bot') }} />
       )}
       {!m.media_type && !hasText && (
         <span className="opacity-60 italic text-[13px]">[пусто]</span>
@@ -673,13 +673,23 @@ function formatBytes(n: number): string {
 // Conservative linkify: only HTML-escape + auto-link bare URLs. Bot replies
 // already contain <a href> tags from the auto-reply HTML; we trust them since
 // they originate from our own server-side handlers.
-function linkify(text: string): string {
-  // Heuristic: if text already contains "<a " or "<b>", treat as HTML and
-  // pass through; otherwise escape and auto-link.
-  if (/<(a |b>|i>|br\s*\/?>)/i.test(text)) return text
-  const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-  return escaped.replace(
-    /(https?:\/\/\S+)/g,
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+}
+
+// `trusted` is ONLY true for source==='bot' — server-generated HTML
+// (Balina replies, already Telegram-HTML-constrained). For visitor
+// (source==='user') and manager messages we NEVER pass raw HTML: escape
+// everything (incl. quotes, to block <a href> attribute injection) then
+// auto-link bare URLs. Inbound text is attacker-controlled (anyone can
+// message the bot), so this is the boundary that prevents stored XSS in
+// the admin inbox.
+function linkify(text: string, trusted: boolean): string {
+  if (trusted && /<(a |b>|i>|br\s*\/?>)/i.test(text)) return text
+  return escapeHtml(text).replace(
+    /(https?:\/\/[^\s<]+)/g,
     '<a href="$1" target="_blank" rel="noopener noreferrer" class="underline opacity-90">$1</a>',
   )
 }

@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'node:crypto'
 import { NextResponse } from 'next/server'
 import { handleStart, fallbackReply, handleSubscriptionCommand, handleDeleteCommand } from '@/lib/telegram-handlers'
 import { replyAsBalina } from '@/lib/balina-telegram'
@@ -44,10 +45,15 @@ export async function POST(req: Request) {
   const token = process.env.TELEGRAM_BOT_TOKEN
   if (!token) return NextResponse.json({ ok: false, error: 'token_missing' }, { status: 500 })
 
+  // Webhook secret is MANDATORY — fail closed if unset (don't silently
+  // accept unauthenticated updates). Set it in env and in Telegram's
+  // setWebhook (secret_token). Constant-time compare to avoid leaking it.
   const expectedSecret = process.env.TELEGRAM_WEBHOOK_SECRET
-  if (expectedSecret) {
-    const got = req.headers.get('x-telegram-bot-api-secret-token')
-    if (got !== expectedSecret) return NextResponse.json({ ok: false }, { status: 401 })
+  if (!expectedSecret) return NextResponse.json({ ok: false, error: 'webhook_secret_unset' }, { status: 500 })
+  const gotBuf = Buffer.from(req.headers.get('x-telegram-bot-api-secret-token') ?? '')
+  const expBuf = Buffer.from(expectedSecret)
+  if (gotBuf.length !== expBuf.length || !timingSafeEqual(gotBuf, expBuf)) {
+    return NextResponse.json({ ok: false }, { status: 401 })
   }
 
   let update: TgUpdate

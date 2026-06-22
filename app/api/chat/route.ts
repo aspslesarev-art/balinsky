@@ -2,13 +2,19 @@ import { AzureOpenAI } from 'openai'
 import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions'
 import { getSystemPrompt, TOOLS, executeToolCall, ensureFeedbackBucket, type ListingCard } from '@/lib/consultant'
 import { ensureAssistantSession, logAssistantTurn } from '@/lib/assistant-session'
-import { logUsage } from '@/lib/usage-tracker'
+import { logUsage, overDailySpendCap } from '@/lib/usage-tracker'
+import { clientIp, rateLimit } from '@/lib/rate-limit'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 const MAX_TOOL_HOPS = 4
 const MAX_INPUT_MESSAGES = 14
+// Abuse guards for this unauthenticated, paid (gpt-5.4) endpoint.
+const RL_MAX = 20            // requests
+const RL_WINDOW_MS = 60_000  // per minute per IP
+const MAX_MSG_CHARS = 8_000  // per message
+const MAX_TOTAL_CHARS = 32_000 // combined across the kept messages
 
 // The model insists on inlining URLs / markdown links / image embeds in its
 // reply even when the system prompt says cards render below. Strip them so
@@ -210,6 +216,11 @@ export async function POST(req: Request) {
     return Response.json({ error: 'Azure OpenAI is not configured on the server' }, { status: 500 })
   }
 
+  // Rate limit per IP — blunts scripted cost-amplification abuse.
+  if (!rateLimit(`chat:${clientIp(req)}`, RL_MAX, RL_WINDOW_MS)) {
+    return Response.json({ error: 'rate_limited' }, { status: 429 })
+  }
+
   let body: unknown
   try { body = await req.json() } catch { return Response.json({ error: 'invalid_json' }, { status: 400 }) }
   const incoming: IncomingMessage[] = Array.isArray((body as { messages?: unknown }).messages)
@@ -220,7 +231,28 @@ export async function POST(req: Request) {
   }
   const langRaw = (body as { lang?: unknown }).lang
   const lang: 'ru' | 'en' = langRaw === 'en' ? 'en' : 'ru'
-  const trimmed = incoming.slice(-MAX_INPUT_MESSAGES)
+  // Clamp input size before it reaches the LLM — caps per-request token
+  // cost (each message bounded, and total bounded) regardless of how much
+  // text the client sends.
+  const trimmed = incoming.slice(-MAX_INPUT_MESSAGES).map(m => ({
+    ...m,
+    content: m.content.length > MAX_MSG_CHARS ? m.content.slice(0, MAX_MSG_CHARS) : m.content,
+  }))
+  let budget = MAX_TOTAL_CHARS
+  for (let i = trimmed.length - 1; i >= 0; i--) {
+    if (budget <= 0) { trimmed.splice(0, i + 1); break }
+    if (trimmed[i].content.length > budget) trimmed[i] = { ...trimmed[i], content: trimmed[i].content.slice(0, budget) }
+    budget -= trimmed[i].content.length
+  }
+
+  // Daily Azure spend ceiling — hard stop on cost-DoS. Returns a graceful
+  // assistant message so the widget shows it instead of an error.
+  if (await overDailySpendCap()) {
+    const text = lang === 'en'
+      ? 'The assistant is taking a short break and will be back soon. Meanwhile you can browse the catalog or leave a request — a manager will get back to you.'
+      : 'Ассистент временно недоступен и скоро вернётся. Пока можно посмотреть каталог или оставить заявку — менеджер свяжется с вами.'
+    return Response.json({ message: { role: 'assistant', content: text }, listings: [] }, { status: 200 })
+  }
 
   const userContext: UserContext = (body as { userContext?: UserContext }).userContext ?? {}
 
