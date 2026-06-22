@@ -18,6 +18,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { num, type ParserResult } from './_shared'
 import { fetchXlsxFromGoogleSheet, colorDistance, hexToRgb, type XlsxSheet } from './_xlsx'
+import { sendAdminAlert } from '../admin-alert'
 
 // complexId (raw_complexes.airtable_id) → вкладки (gid) в общей таблице
 // LB Group. У комплекса может быть несколько вкладок (виллы + апарты).
@@ -317,12 +318,14 @@ export async function runLbComplex(opts: {
   if (!cfg) throw new Error(`LB Group: complexId ${opts.complexId} не в LB_COMPLEXES`)
   const rows: { unit_key: string; data: Record<string, unknown> }[] = []
   const warnings: string[] = []
+  const gidCounts: Record<number, number> = {}
   let unmatched = 0
   for (const gid of cfg.gids) {
     const url = `https://docs.google.com/spreadsheets/d/${LB_SPREADSHEET_ID}/edit?gid=${gid}`
     const cells = await fetchXlsxFromGoogleSheet(url)
     const { units: raw, layout } = extractLbUnits(cells)
     const typeLabel = (layout === 'apartment' || layout === 'id') ? 'Апартаменты' : 'Вилла'
+    let gidN = 0
     for (const u of raw) {
       if (!u.status) { unmatched++; continue }
       const unit_key = `${opts.complexId}#${gid}#${u.number}`
@@ -339,7 +342,9 @@ export async function runLbComplex(opts: {
       if (u.bedrooms != null) data['Спальни'] = u.bedrooms
       if (u.areaM2 != null) data['Площадь'] = u.areaM2
       rows.push({ unit_key, data })
+      gidN++
     }
+    gidCounts[gid] = gidN
   }
   if (unmatched > 0) warnings.push(`${unmatched} юнитов с нераспознанным цветом — пропущены`)
   // Один номер может встретиться в нескольких клетках листа → одинаковый
@@ -352,16 +357,61 @@ export async function runLbComplex(opts: {
   if (deduped.length === 0) throw new Error(`LB Group (${cfg.name}): ни один юнит не распознан`)
 
   const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
-  // Свежий снимок: удаляем прежние юниты этого комплекса, которых больше
-  // нет в листе (проданные/убранные), затем upsert текущих.
-  const { data: existing } = await sb.from('parser_units').select('unit_key').eq('data->>complex_id', opts.complexId)
+  // Текущие записи комплекса (с data — нужны для merge правок админа и
+  // защиты заблокированных). Данные админа ПРИОРИТЕТНЕЕ парсера.
+  const { data: existingRows } = await sb.from('parser_units').select('unit_key, data').eq('data->>complex_id', opts.complexId)
+  const existingMap = new Map<string, Record<string, unknown>>(
+    (existingRows ?? []).map(r => [r.unit_key as string, (r.data ?? {}) as Record<string, unknown>]),
+  )
+  const prevCount = existingMap.size
+  const isLocked = (d: Record<string, unknown> | undefined): boolean => d?.['Заблокировано'] === true
+
+  const divergences: string[] = []
+  const now = new Date().toISOString()
+  const upserts: { unit_key: string; data: Record<string, unknown>; updated_at: string }[] = []
+  for (const r of deduped) {
+    const prev = existingMap.get(r.unit_key)
+    if (isLocked(prev)) {
+      // Защищено админом — НЕ перезаписываем. При расхождении с листом
+      // копим текстовый алерт (что поменялось в шахматке).
+      const sheetPrice = r.data['Цена']
+      if (prev!['Статус'] !== r.data['Статус'] || (sheetPrice != null && prev!['Цена'] !== sheetPrice)) {
+        divergences.push(`№${r.data['Name']}: лист=${r.data['Статус']}${sheetPrice != null ? `/$${sheetPrice}` : ''} ↔ у нас=${prev!['Статус'] ?? '—'}${prev!['Цена'] != null ? `/$${prev!['Цена']}` : ''}`)
+      }
+      continue
+    }
+    // Не заблокировано: парсер владеет статусом/ценой/площадью, остальные
+    // поля админа (заметки и т.п.) сохраняем через merge.
+    upserts.push({ unit_key: r.unit_key, data: { ...(prev ?? {}), ...r.data }, updated_at: now })
+  }
+
+  // Пропавшие из листа: незащищённые удаляем (продано/снято), защищённые
+  // оставляем + алерт.
   const keep = new Set(deduped.map(r => r.unit_key))
-  const stale = (existing ?? []).map(r => r.unit_key as string).filter(k => !keep.has(k))
-  if (stale.length) await sb.from('parser_units').delete().in('unit_key', stale)
-  const stamped = deduped.map(r => ({ ...r, updated_at: new Date().toISOString() }))
-  for (let i = 0; i < stamped.length; i += 500) {
-    const { error } = await sb.from('parser_units').upsert(stamped.slice(i, i + 500), { onConflict: 'unit_key' })
+  const staleUnlocked: string[] = []
+  for (const [k, d] of existingMap) {
+    if (keep.has(k)) continue
+    if (isLocked(d)) divergences.push(`№${d['Name']}: больше нет в листе (защищён — оставлен)`)
+    else staleUnlocked.push(k)
+  }
+  if (staleUnlocked.length) await sb.from('parser_units').delete().in('unit_key', staleUnlocked)
+
+  for (let i = 0; i < upserts.length; i += 500) {
+    const { error } = await sb.from('parser_units').upsert(upserts.slice(i, i + 500), { onConflict: 'unit_key' })
     if (error) throw new Error(`parser_units upsert: ${error.message}`)
   }
+
+  // Оповещения: смена формата шахматки / резкое падение / расхождения по
+  // защищённым записям — всё уходит в Telegram админу (sendAdminAlert).
+  const alerts: string[] = []
+  const zeroGids = cfg.gids.filter(g => (gidCounts[g] ?? 0) === 0)
+  if (zeroGids.length) alerts.push(`вкладки без распознанных юнитов (возможно изменился формат шахматки): gid ${zeroGids.join(', ')}`)
+  if (prevCount >= 8 && deduped.length < prevCount * 0.5) alerts.push(`резкое падение числа юнитов: было ${prevCount}, стало ${deduped.length} — проверь лист`)
+  if (divergences.length) alerts.push(`расхождения по защищённым записям (${divergences.length}):\n${divergences.slice(0, 15).join('\n')}`)
+  if (alerts.length) {
+    warnings.push(...alerts)
+    void sendAdminAlert(`⚠️ Парсер LB Group «${cfg.name}»\n\n${alerts.join('\n\n')}`)
+  }
+
   return { unitsCount: deduped.length, warnings, linked: 0 }
 }

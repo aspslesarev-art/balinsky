@@ -163,9 +163,13 @@ const parserUnits: CollectionConfig = {
   titleField: 'Name',
   defaultSort: { field: 'Комплекс', dir: 'asc' },
   fields: [
+    // Защита: если включено — парсер НЕ перезаписывает и не удаляет эту
+    // запись (данные админа приоритетнее), а при расхождении с листом шлёт
+    // алерт в Telegram.
+    { key: 'Заблокировано', label: '🔒 Защита', type: 'bool', showInGrid: true, width: 90 },
     { key: 'Комплекс', label: 'Комплекс', type: 'text', showInGrid: true, width: 200 },
     { key: 'Name', label: 'Юнит', type: 'text', showInGrid: true, width: 90 },
-    { key: 'Тип', label: 'Тип', type: 'text', showInGrid: true, width: 130 },
+    { key: 'Тип', label: 'Тип', type: 'enum', enumOptions: ['Вилла', 'Апартаменты'], showInGrid: true, width: 130 },
     { key: 'Статус', label: 'Статус', type: 'enum', enumOptions: ['Доступна', 'Бронь', 'Продана', 'Блок', 'Resale'], showInGrid: true, width: 120 },
     { key: 'Спальни', label: 'Спальни', type: 'number', showInGrid: true, width: 90 },
     { key: 'Цена', label: 'Цена $', type: 'number', showInGrid: true, width: 110 },

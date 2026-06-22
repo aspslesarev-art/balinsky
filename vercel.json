@@ -20,6 +20,10 @@
     {
       "path": "/api/cron/translate-missing?section=news,promo,events,knowledge,villas,apartments,complexes,developers,rental",
       "schedule": "27 * * * *"
+    },
+    {
+      "path": "/api/cron/units-snapshot",
+      "schedule": "30 1 * * *"
     }
   ]
 }
