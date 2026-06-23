@@ -1,19 +1,18 @@
 'use client'
 
-import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { usePathname } from 'next/navigation'
-import { Send, ArrowRight, FileText, MapPinned, UserRound, Lock } from 'lucide-react'
+import { Send, FileText, MapPinned, UserRound, Lock } from 'lucide-react'
 import { useCurrency } from './CurrencyContext'
 import { formatPriceExact } from '@/lib/currency'
-import { botLink } from '@/lib/bot-link'
+import { LeadButton } from './LeadButton'
 import { ReserveButton } from './ReserveButton'
 import type { Lang } from '@/lib/i18n'
 
 const COPY = {
   ru: {
-    buyChat: 'Купить — чат в Telegram',
-    buySeller: 'Купить — связаться с продавцом',
+    buyChat: 'Купить',
+    buySeller: 'Купить',
     perSqm: '/ м²',
     priceUpdated: (d: string) => `Цена обновлена ${d}`,
     reservedTitle: 'Объект сейчас забронирован',
@@ -30,8 +29,8 @@ const COPY = {
     locale: 'ru-RU',
   },
   en: {
-    buyChat: 'Buy — chat on Telegram',
-    buySeller: 'Buy — contact seller',
+    buyChat: 'Buy',
+    buySeller: 'Buy',
     perSqm: '/ m²',
     priceUpdated: (d: string) => `Price updated ${d}`,
     reservedTitle: 'Currently reserved',
@@ -95,8 +94,8 @@ export function PriceCtaCard({
   const updated = updatedAt ? formatUpdated(updatedAt, c.locale) : null
 
   const isResale = !!sellerUrl
-  const buyHref = isResale ? sellerUrl! : botLink('manager', managerId ?? '')
   const buyLabel = isResale ? c.buySeller : c.buyChat
+  void managerId // lead capture is now on-site; managerId no longer routes a TG link
 
   return (
     <div className="rounded-2xl bg-white border border-[var(--color-border)] px-5 py-5 md:px-6 md:py-[22px] grid grid-cols-1 md:grid-cols-[1fr_auto] gap-5 md:gap-6 md:items-center">
@@ -147,16 +146,13 @@ export function PriceCtaCard({
               />
             )}
             {presentationButton}
-            <Link
-              href={buyHref}
-              target="_blank"
-              rel={isResale ? 'noopener noreferrer' : 'noopener'}
-              className="inline-flex w-full md:w-auto items-center justify-center gap-2 min-h-[54px] py-2 px-6 rounded-[10px] bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[15px] md:text-[16px] font-semibold text-center leading-tight transition-colors no-underline shadow-[0_1px_0_rgba(255,255,255,0.15)_inset,0_6px_16px_-8px_rgba(31,90,52,0.6)]"
-            >
-              <Send size={18} strokeWidth={1.6} />
-              {buyLabel}
-              <ArrowRight size={16} strokeWidth={1.6} className="-mr-0.5" />
-            </Link>
+            <LeadButton
+              label={buyLabel}
+              lang={lang}
+              context={{ listingKind, listingSlug, listingTitle, source: isResale ? 'resale' : 'buy' }}
+              icon={<Send size={18} strokeWidth={1.6} />}
+              className="inline-flex w-full md:w-auto items-center justify-center gap-2 min-h-[54px] py-2 px-6 rounded-[10px] bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[15px] md:text-[16px] font-semibold text-center leading-tight transition-colors shadow-[0_1px_0_rgba(255,255,255,0.15)_inset,0_6px_16px_-8px_rgba(31,90,52,0.6)]"
+            />
           </div>
         )}
 

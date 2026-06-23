@@ -7,6 +7,7 @@ import ReactMarkdown from 'react-markdown'
 import { MessageCircle, X, Send, Loader2, AlertTriangle, BedDouble, MapPin, ExternalLink, Mic, Square, UserRound, Trash2 } from 'lucide-react'
 import { useWishlist } from './WishlistContext'
 import { RECENT_KEY, type RecentlyViewedEntry } from './PageViewTracker'
+import { LeadButton } from './LeadButton'
 import type { Lang } from '@/lib/i18n'
 
 type ListingCard = {
@@ -911,16 +912,18 @@ export function ConsultantWidget() {
                     )}
                     {isLastAssistant && chips.length > 0 && !loading && (
                       <div className="self-start flex flex-wrap gap-1.5 mt-0.5 max-w-[95%]">
-                        {chips.map(c => (
-                          <button
-                            key={c}
-                            type="button"
-                            onClick={() => sendText(c)}
-                            className="text-[12px] px-3 py-1.5 rounded-full bg-white border border-[var(--color-border)] text-[#111827] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] transition-colors"
-                          >
-                            {c}
-                          </button>
-                        ))}
+                        {chips.map(c => {
+                          const chipCls = 'text-[12px] px-3 py-1.5 rounded-full bg-white border border-[var(--color-border)] text-[#111827] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] transition-colors'
+                          // «Связаться с менеджером» chip → on-site lead form
+                          // (name + phone) instead of pushing the visitor to TG.
+                          return /менеджер|manager/i.test(c) ? (
+                            <LeadButton key={c} label={c} lang={lang} context={{ source: 'chat' }} className={chipCls} />
+                          ) : (
+                            <button key={c} type="button" onClick={() => sendText(c)} className={chipCls}>
+                              {c}
+                            </button>
+                          )
+                        })}
                       </div>
                     )}
                   </div>

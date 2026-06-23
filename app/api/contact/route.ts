@@ -86,10 +86,18 @@ export async function POST(req: Request) {
   if (!name || name.length > 100) {
     return NextResponse.json({ ok: false, error: 'invalid_name' }, { status: 400 })
   }
-  if (!isValidEmail(email)) {
+  // At least one contact channel; email validated only when provided.
+  // The phone-first lead form sends name + phone (no email / message).
+  if (email && !isValidEmail(email)) {
     return NextResponse.json({ ok: false, error: 'invalid_email' }, { status: 400 })
   }
-  if (!message || message.length > 4000) {
+  if (!phone && !email) {
+    return NextResponse.json({ ok: false, error: 'no_contact' }, { status: 400 })
+  }
+  if (phone.length > 40) {
+    return NextResponse.json({ ok: false, error: 'invalid_phone' }, { status: 400 })
+  }
+  if (message.length > 4000) {
     return NextResponse.json({ ok: false, error: 'invalid_message' }, { status: 400 })
   }
 
@@ -106,9 +114,9 @@ export async function POST(req: Request) {
     '🆕 <b>Новая заявка с сайта</b>',
     '',
     `<b>Имя:</b> ${escapeHtml(name)}`,
-    `<b>Email:</b> ${escapeHtml(email)}`,
   ]
   if (phone) lines.push(`<b>Телефон:</b> ${escapeHtml(phone)}`)
+  if (email) lines.push(`<b>Email:</b> ${escapeHtml(email)}`)
   if (body.listingTitle) {
     lines.push('')
     lines.push(`<b>Объект:</b> ${escapeHtml(body.listingTitle)}`)
@@ -117,9 +125,11 @@ export async function POST(req: Request) {
     }
   }
   if (body.page) lines.push(`<i>Со страницы: ${escapeHtml(body.page)}</i>`)
-  lines.push('')
-  lines.push('<b>Сообщение:</b>')
-  lines.push(escapeHtml(message))
+  if (message) {
+    lines.push('')
+    lines.push('<b>Сообщение:</b>')
+    lines.push(escapeHtml(message))
+  }
   lines.push('')
   lines.push(`<code>${leadId}</code>`)
 

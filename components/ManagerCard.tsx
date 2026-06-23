@@ -2,9 +2,9 @@
 
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
-import { Send, MessageCircle, Star, Languages, Video, Clock } from 'lucide-react'
+import { Star, Languages, Video, Clock } from 'lucide-react'
 import type { ManagerItem } from '@/lib/managers'
-import { botLink } from '@/lib/bot-link'
+import { LeadButton } from '@/components/LeadButton'
 import type { Lang } from '@/lib/i18n'
 
 const COPY = {
@@ -14,6 +14,7 @@ const COPY = {
     role: (dev?: string | null) => `Менеджер ${dev ? dev : 'застройщика'}`,
     sla: 'Обычно отвечает в течение часа в рабочее время Бали (UTC+8)',
     videoCall: 'Видеозвонок',
+    lead: 'Оставить заявку',
   },
   en: {
     heading: 'Contact the manager',
@@ -21,6 +22,7 @@ const COPY = {
     role: (dev?: string | null) => `${dev ? dev : 'Developer'} manager`,
     sla: 'Usually replies within an hour during Bali working hours (UTC+8)',
     videoCall: 'Video call',
+    lead: 'Leave a request',
   },
 } as const
 
@@ -50,9 +52,9 @@ export function ManagerCard({
   const videoUrl = process.env.NEXT_PUBLIC_VIDEO_CALL_URL?.trim() || null
 
   // Drop entries that have no actionable contact channel — render
-  // nothing if the whole list is empty after filtering.
-  const renderable = list.filter(m => m.telegram || m.whatsapp || videoUrl)
-  if (renderable.length === 0) return null
+  // Every manager is contactable via the on-site lead form, so render
+  // them all (no longer dependent on having a TG/WA channel).
+  const renderable = list
 
   const heading = renderable.length > 1 ? c.headingMany : c.heading
 
@@ -74,6 +76,7 @@ type ManagerCopy = {
   role: (dev?: string | null) => string
   sla: string
   videoCall: string
+  lead: string
 }
 function ManagerRow({
   m,
@@ -88,9 +91,6 @@ function ManagerRow({
   developerName: string | null
   videoUrl: string | null
 }) {
-  const tg = m.telegram ? botLink('manager', m.id) : null
-  const wa = m.whatsapp
-
   // Silent fallback to the RU value when an EN counterpart isn't
   // filled in Airtable yet — manager cards already render fine in
   // mixed locales and a literal "Name En" placeholder would look odd.
@@ -153,26 +153,12 @@ function ManagerRow({
             <Video size={16} /> {c.videoCall}
           </a>
         )}
-        {wa && (
-          <a
-            href={wa}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full bg-[#25D366] hover:bg-[#1EBE5B] text-white text-[14px] font-medium no-underline transition-colors"
-          >
-            <MessageCircle size={16} /> WhatsApp
-          </a>
-        )}
-        {tg && (
-          <a
-            href={tg}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full bg-[#229ED9] hover:bg-[#1A8CC2] text-white text-[14px] font-medium no-underline transition-colors"
-          >
-            <Send size={16} /> Telegram
-          </a>
-        )}
+        <LeadButton
+          label={c.lead}
+          lang={lang}
+          context={{ source: developerName ? `manager:${developerName}` : 'manager' }}
+          className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[14px] font-medium transition-colors"
+        />
       </div>
     </div>
   )

@@ -31,6 +31,7 @@ import { loadHomeCollections } from '@/lib/home-collections'
 import { HomeCollections } from '@/components/HomeCollections'
 import { HeroBalinaSearch } from '@/components/HeroBalinaSearch'
 import { BalinaCTA } from '@/components/BalinaCTA'
+import { LeadButton } from '@/components/LeadButton'
 import { BalinaChatMock } from '@/components/BalinaChatMock'
 import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import { loadHomeFinder } from '@/lib/home-finder'
@@ -392,10 +393,6 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
     loadHomeCollections(lang),
     loadHomeFinder(lang),
   ])
-  // Telegram-бот Balinsky — единая точка входа для всех CTA «спросить»/
-  // «AI-консьерж» с главной. На стороне бота вшит AI-flow.
-  const telegram = 'https://t.me/BalinskyBot'
-
   // Immersive hero: a real catalog photo behind the headline. Top villas are
   // ranked by investment score with a clean-document filter, so [0] is a strong
   // hero shot. (Complex covers can 404, villa manifest photos are reliable.)
@@ -549,9 +546,13 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
               <BalinaCTA className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[var(--color-primary)] text-white text-[14.5px] font-medium hover:bg-[var(--color-primary-pressed)] transition-colors cursor-pointer">
                 <Sparkles size={15} /> {c.howItWorks.cta}
               </BalinaCTA>
-              <a href={telegram} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-[#D5DDD8] text-[14.5px] font-medium text-[#1A2620] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors no-underline">
-                <Send size={15} /> {c.ai.cta}
-              </a>
+              <LeadButton
+                label={c.ai.cta}
+                lang={lang}
+                context={{ source: 'home' }}
+                icon={<Send size={15} />}
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-[#D5DDD8] text-[14.5px] font-medium text-[#1A2620] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors"
+              />
             </div>
           </div>
           <div className="lg:pl-4">
