@@ -20,7 +20,6 @@ import { NeighborhoodHeatMap } from '@/components/NeighborhoodHeatMap'
 import { ProgressBar } from '@/components/ProgressBar'
 import { ApartmentCard, type ApartmentCardData } from '@/components/ApartmentCard'
 import { ManagerCard } from '@/components/ManagerCard'
-import { ContactBlock } from '@/components/ContactBlock'
 import { InlinePrice } from '@/components/InlinePrice'
 import { loadManagersByDeveloperName } from '@/lib/managers'
 import { getDeveloperStats } from '@/lib/developer-stats'
@@ -1053,9 +1052,6 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
 
         {managers.length > 0 && <ManagerCard managers={managers} developerName={developerName} />}
 
-        <div className="mb-10">
-          <ContactBlock lang={lang} listing={{ kind: 'complex', slug, title: name }} />
-        </div>
 
         {/* Nearby places — beaches / cafes / nightlife / etc. The
             data is keyed by villa airtable_id; we surface it on

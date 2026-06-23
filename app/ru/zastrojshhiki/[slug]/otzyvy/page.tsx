@@ -13,7 +13,6 @@ import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
-import { ContactBlock } from '@/components/ContactBlock'
 import { botLink } from '@/lib/bot-link'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
@@ -182,13 +181,6 @@ export default async function Page({ params }: { params: Params }) {
             </div>
           </section>
 
-          <section className="mb-10">
-            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-3">Связь с менеджером</h2>
-            <p className="text-[15px] text-[var(--color-text-muted)] mb-5">
-              Передадим запрос менеджеру {name} напрямую через @BalinskyBot. Стандарт ответа — в течение часа в рабочее время.
-            </p>
-            <ContactBlock lang="ru" listing={{ kind: 'developer', slug, title: name }} />
-          </section>
 
           <section className="mb-10">
             <h2 className="text-[18px] font-semibold text-[#111827] mb-3">Связанные разделы</h2>

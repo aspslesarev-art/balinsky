@@ -15,7 +15,6 @@ import { ExpandableText } from '@/components/ExpandableText'
 import { ComplexCard, type ComplexCardData } from '@/components/ComplexCard'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { ManagerCard } from '@/components/ManagerCard'
-import { ContactBlock } from '@/components/ContactBlock'
 import { loadManagersByDeveloperSlug } from '@/lib/managers'
 import { loadAllNews } from '@/lib/news'
 import { loadAllPromo } from '@/lib/promo'
@@ -453,10 +452,6 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
         </section>
 
         {managers.length > 0 && <ManagerCard managers={managers} developerName={name} />}
-
-        <div className="mt-8">
-          <ContactBlock lang={lang} listing={{ kind: 'developer', slug, title: name ?? 'Developer' }} />
-        </div>
 
         {extras.length > 0 && (
           <section className="mt-10 mb-10">

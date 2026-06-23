@@ -34,7 +34,6 @@ const LandProfileBlock = dynamic(
 import { RentalCompareSection } from '@/components/RentalCompareSection'
 import { LazyMount } from '@/components/LazyMount'
 import { ManagerCard } from '@/components/ManagerCard'
-import { ContactBlock } from '@/components/ContactBlock'
 import { loadNearbyPlaces } from '@/lib/nearby-places'
 import { NearbyPlaces } from '@/components/NearbyPlaces'
 import { loadManagersByDeveloperName } from '@/lib/managers'
@@ -940,10 +939,6 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
         )}
 
         {managers.length > 0 && <ManagerCard managers={managers} developerName={devName} />}
-
-        <div className="mb-10">
-          <ContactBlock lang={lang} listing={{ kind: 'apartment', slug, title }} />
-        </div>
 
         <RentalCompareSection
           district={district}
