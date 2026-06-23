@@ -2,14 +2,14 @@
 
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { BedDouble, MapPin, MessageCircle, Send, Tag } from 'lucide-react'
+import { BedDouble, MapPin, Tag } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { PhotoGalleryHero } from '@/components/PhotoGalleryHero'
 import { PriceDisplay } from '@/components/PriceDisplay'
 import { loadRentalBySlug } from '@/lib/rental'
-import { botLink } from '@/lib/bot-link'
+import { LeadButton } from '@/components/LeadButton'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import type { Lang } from '@/lib/i18n'
 
@@ -35,29 +35,6 @@ const COPY = {
 } as const
 
 function fmtUsd(n: number): string { return '$' + Math.round(n).toLocaleString('en-US') }
-
-// The Airtable "Контакт Телеграм" field is used loosely: most rows are full
-// https://t.me/... URLs, some are WhatsApp wa.me URLs, and some may be a bare
-// @username. Normalise into a clickable link + label.
-function parseContact(raw: string): { href: string; kind: 'telegram' | 'whatsapp' | 'other' } | null {
-  const v = raw.trim()
-  if (!v) return null
-  if (/^https?:\/\//i.test(v)) {
-    try {
-      const u = new URL(v)
-      const host = u.hostname.replace(/^www\./, '').toLowerCase()
-      if (host === 't.me' || host.endsWith('.t.me') || host === 'telegram.me') return { href: v, kind: 'telegram' }
-      if (host === 'wa.me' || host === 'api.whatsapp.com' || host === 'whatsapp.com') return { href: v, kind: 'whatsapp' }
-      return { href: v, kind: 'other' }
-    } catch {
-      return null
-    }
-  }
-  // Bare @handle or handle — assume Telegram
-  const handle = v.replace(/^@/, '').replace(/[^A-Za-z0-9_]/g, '')
-  if (!handle) return null
-  return { href: `https://t.me/${handle}`, kind: 'telegram' }
-}
 
 export async function generateRentalDetailMetadata(slug: string, lang: Lang): Promise<Metadata> {
   const r = await loadRentalBySlug(slug, lang)
@@ -87,17 +64,6 @@ export async function RentalDetail({ slug, lang }: { slug: string; lang: Lang })
   const r = await loadRentalBySlug(slug, lang)
   if (!r) notFound()
   const c = COPY[lang]
-
-  const rawContact = r.telegram ? parseContact(r.telegram) : null
-  // TG-flavoured contacts route through @BalinskyBot first; the bot then
-  // forwards the user to the actual handle stored on the listing.
-  const contact = rawContact?.kind === 'telegram'
-    ? { href: botLink('rental', r.id), kind: 'telegram' as const }
-    : rawContact
-  const contactLabel = contact?.kind === 'whatsapp' ? c.contactWa
-    : contact?.kind === 'telegram' ? c.contactTg
-    : c.contactOther
-  const ContactIcon = contact?.kind === 'whatsapp' ? MessageCircle : Send
 
   const rentalUrl = `${SITE_URL}${lang === 'en' ? '/en/rental/o/' : '/ru/arenda/o/'}${r.slug}`
   const productJsonLd: Record<string, unknown> = {
@@ -192,18 +158,14 @@ export async function RentalDetail({ slug, lang }: { slug: string; lang: Lang })
           </section>
         )}
 
-        {contact && (
-          <section className="mb-10">
-            <a
-              href={contact.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[15px] font-medium no-underline transition-colors"
-            >
-              <ContactIcon size={16} /> {contactLabel}
-            </a>
-          </section>
-        )}
+        <section className="mb-10">
+          <LeadButton
+            label={lang === 'en' ? 'Leave a request' : 'Оставить заявку'}
+            lang={lang}
+            context={{ listingKind: 'rental', listingSlug: r.slug, source: 'rental' }}
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[15px] font-medium transition-colors"
+          />
+        </section>
 
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }} />
         <div className="h-16" />
