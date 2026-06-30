@@ -501,8 +501,12 @@ export async function generateVillaMetadata(slug: string, lang: Lang) {
   const path = lang === 'en' ? enPath : ruPath
   const inText = lang === 'en' ? 'in' : 'в'
   const dashPrice = price ? ` — ${price}` : ''
+  // Same dedup as titleParts above — the AI base title usually already
+  // contains the district, so only append it when it's genuinely missing
+  // (otherwise we get "… в Bukit … в Bukit").
+  const fallbackDistrict = district && !titleLower.includes(district.toLowerCase()) ? ` ${inText} ${district}` : ''
   return {
-    title: seoTitle.length > 70 ? `${title}${district ? ` ${inText} ${district}` : ''}${dashPrice} | Balinsky` : seoTitle,
+    title: seoTitle.length > 70 ? `${title}${fallbackDistrict}${dashPrice} | Balinsky` : seoTitle,
     description,
     alternates: {
       canonical: path,
