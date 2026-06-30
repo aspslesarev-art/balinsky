@@ -11,14 +11,39 @@ function ytThumb(url: string): string | null {
   return id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : null
 }
 
+// Schema.org VideoObject.uploadDate must be ISO 8601 *with* a timezone —
+// a bare yyyy-mm-dd trips a validator warning. Airtable's "Дата добавления"
+// often gives a date only, so attach Bali local time (WITA = UTC+8). A row
+// that already carries a full timestamp (e.g. ...T08:00:00.000Z) is kept.
+function toUploadDate(raw: string | null): string {
+  const s = (raw ?? '').trim()
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return `${s}T10:00:00+08:00`
+  if (s && !Number.isNaN(Date.parse(s))) return s
+  return `${new Date().toISOString().slice(0, 10)}T10:00:00+08:00`
+}
+
+// Drop YouTube share/tracking params (?si=, utm_*, feature) so contentUrl
+// is the canonical clean URL.
+function cleanVideoUrl(url: string): string {
+  try {
+    const u = new URL(url)
+    for (const k of [...u.searchParams.keys()]) {
+      if (k === 'si' || k === 'feature' || k.startsWith('utm_')) u.searchParams.delete(k)
+    }
+    return u.toString()
+  } catch {
+    return url
+  }
+}
+
 export function VideoGrid({ videos, title = 'Видео' }: { videos: VideoItem[]; title?: string }) {
   if (videos.length === 0) return null
   // VideoObject JSON-LD per embedded YouTube clip. Google uses the
   // thumbnail and title for video-carousel rich results, and the
   // contentUrl makes the video itself crawlable as a resource.
-  // uploadDate falls back to today's date when Airtable hasn't tagged
-  // the row — required field, can't be missing for a valid record.
-  const today = new Date().toISOString().slice(0, 10)
+  // uploadDate is normalized to ISO 8601 with a timezone (see
+  // toUploadDate), falling back to today when Airtable hasn't tagged the
+  // row — required field, can't be missing for a valid record.
   const videosJsonLd = {
     '@context': 'https://schema.org',
     '@graph': videos
@@ -29,9 +54,9 @@ export function VideoGrid({ videos, title = 'Видео' }: { videos: VideoItem[
         name: v.name ?? title,
         description: v.name ?? title,
         thumbnailUrl: thumb!,
-        uploadDate: v.addedAt ? v.addedAt.slice(0, 10) : today,
-        contentUrl: v.url,
-        embedUrl: v.embedUrl ?? v.url,
+        uploadDate: toUploadDate(v.addedAt),
+        contentUrl: cleanVideoUrl(v.url),
+        embedUrl: cleanVideoUrl(v.embedUrl ?? v.url),
       })),
   }
   return (
