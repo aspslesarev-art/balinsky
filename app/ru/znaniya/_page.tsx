@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { loadAllKnowledge, filterByAudience, type KnowledgeAudience } from '@/lib/knowledge'
+import { enKnowledgeSlug } from '@/lib/knowledge-en-slugs'
 import type { Lang } from '@/lib/i18n'
 import { ArticleCover } from '@/components/ArticleCover'
 
@@ -109,7 +110,7 @@ export async function KnowledgeList({ lang, audience }: { lang: Lang; audience: 
         <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {items.map(k => (
             <li key={k.id}>
-              <Link href={`${detailRoot}/${k.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)] transition-colors">
+              <Link href={`${detailRoot}/${lang === 'en' ? enKnowledgeSlug(k.slug) : k.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)] transition-colors">
                 <div className="relative w-full aspect-[16/9] bg-[var(--color-search-bg)]">
                   {k.photo ? (
                     <Image src={k.photo} alt={k.title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />

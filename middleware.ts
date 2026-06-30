@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { normalizeSlug } from '@/lib/slug-normalize'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
+import { EN_KNOWLEDGE_SLUG_OVERRIDES } from '@/lib/knowledge-en-slugs'
 
 export const config = {
   matcher: [
@@ -149,6 +150,17 @@ function decodeSegment(raw: string): string {
   try { return decodeURIComponent(raw) } catch { return raw }
 }
 
+// 301 the old transliterated-Russian /en/knowledge/<ru-slug> to its English
+// slug so ranking signals and clicks consolidate on the readable URL. Keyed
+// off EN_KNOWLEDGE_SLUG_OVERRIDES — adding a map entry auto-enables its 301.
+function handleEnKnowledgeSlug(req: NextRequest): NextResponse | null {
+  const m = req.nextUrl.pathname.match(/^\/en\/knowledge\/([^/]+)\/?$/)
+  if (!m) return null
+  const en = EN_KNOWLEDGE_SLUG_OVERRIDES[decodeSegment(m[1])]
+  if (!en) return null
+  return NextResponse.redirect(new URL(`/en/knowledge/${en}`, req.url), 301)
+}
+
 function handleDirtySlug(req: NextRequest): NextResponse | null {
   const path = req.nextUrl.pathname
   const m = path.match(/^\/(ru|en)\/([a-z-]+)(\/.*)?$/i)
@@ -184,6 +196,9 @@ function handleDirtySlug(req: NextRequest): NextResponse | null {
 
 export async function middleware(req: NextRequest) {
   // Fast path — runs on every matched URL, no I/O.
+  const enSlug = handleEnKnowledgeSlug(req)
+  if (enSlug) return enSlug
+
   const dirty = handleDirtySlug(req)
   if (dirty) return dirty
 
