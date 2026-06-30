@@ -12,6 +12,7 @@
 // `ru-slug: 'english-slug'` line (lowercase, hyphenated, ASCII, keyword-first).
 // The loader, detail paths, sitemap and the middleware 301 all read this map.
 export const EN_KNOWLEDGE_SLUG_OVERRIDES: Record<string, string> = {
+  "skolko-stoit-villa-na-bali-tseny-po-rayonam-v-2026-godu": "bali-villa-prices-by-area-2026",
   "zony-zemli-na-bali-tsveta-kody-rdtr-chto-nuzhno-znat-investoru": "bali-land-zones-colors-codes-rdtr-investors",
   "leasehold-ili-freehold-na-bali-dlya-inostrantsa-chto-vybrat-v-2026-godu": "leasehold-freehold-bali-foreigners-choose-2026",
   "kitas-investora-i-pma-kompaniya-na-bali-protsess-sroki-realnye-tseny": "investor-kitas-pma-company-bali-process-timelines",
