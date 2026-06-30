@@ -1,5 +1,6 @@
 import { applyManifestTranslation, loadEnTranslations } from '@/lib/en-translations'
 import type { Lang } from '@/lib/i18n'
+import { enKnowledgeSlug } from '@/lib/knowledge-en-slugs'
 
 export type KnowledgeAudience = 'investor' | 'agent' | 'life'
 
@@ -64,5 +65,11 @@ export async function loadAllKnowledge(lang: Lang = 'ru'): Promise<KnowledgeItem
 
 export async function loadKnowledgeBySlug(slug: string, lang: Lang = 'ru'): Promise<KnowledgeItem | null> {
   const all = await loadAllKnowledge(lang)
+  // On /en, resolve by the English-facing slug; also accept the old shared
+  // (transliterated) slug so legacy URLs still render before middleware 301s
+  // them to the English one.
+  if (lang === 'en') {
+    return all.find(k => enKnowledgeSlug(k.slug) === slug || k.slug === slug) ?? null
+  }
   return all.find(k => k.slug === slug) ?? null
 }

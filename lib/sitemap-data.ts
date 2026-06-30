@@ -10,6 +10,7 @@ import { loadAllNews } from '@/lib/news'
 import { loadAllPromo } from '@/lib/promo'
 import { loadAllEvents } from '@/lib/events'
 import { loadAllKnowledge } from '@/lib/knowledge'
+import { enKnowledgeSlug } from '@/lib/knowledge-en-slugs'
 import { loadAllRental } from '@/lib/rental'
 import { normalizeSlug } from '@/lib/slug-normalize'
 
@@ -383,7 +384,7 @@ async function buildAll(): Promise<Categorized> {
     changeFrequency: 'weekly', priority: 0.5,
   }))
   const knowledge: SitemapEntry[] = knowledgeRows.flatMap(x => pairEntry({
-    ruPath: `/ru/znaniya/${x.slug}`, enPath: `/en/knowledge/${x.slug}`,
+    ruPath: `/ru/znaniya/${x.slug}`, enPath: `/en/knowledge/${enKnowledgeSlug(x.slug)}`,
     lastModified: x.createdTime ? new Date(x.createdTime) : now,
     changeFrequency: 'monthly', priority: 0.5,
   }))

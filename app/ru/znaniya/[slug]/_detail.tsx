@@ -10,6 +10,7 @@ import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { loadAllKnowledge, loadKnowledgeBySlug } from '@/lib/knowledge'
+import { enKnowledgeSlug } from '@/lib/knowledge-en-slugs'
 import { ArticleCover } from '@/components/ArticleCover'
 import type { Lang } from '@/lib/i18n'
 
@@ -47,7 +48,7 @@ export async function generateKnowledgeDetailMetadata(slug: string, lang: Lang):
   const k = await loadKnowledgeBySlug(slug, lang)
   if (!k) return { robots: { index: false, follow: false } }
   const ruPath = `/ru/znaniya/${k.slug}`
-  const enPath = `/en/knowledge/${k.slug}`
+  const enPath = `/en/knowledge/${enKnowledgeSlug(k.slug)}`
   const path = lang === 'en' ? enPath : ruPath
   return {
     title: `${k.title} | Balinsky`,
@@ -96,7 +97,7 @@ export async function KnowledgeDetail({ slug, lang }: { slug: string; lang: Lang
       name: 'Balinsky',
       logo: { '@type': 'ImageObject', url: `${SITE_URL}/icon-512.png` },
     },
-    mainEntityOfPage: `${SITE_URL}${lang === 'en' ? '/en/knowledge/' : '/ru/znaniya/'}${k.slug}`,
+    mainEntityOfPage: `${SITE_URL}${lang === 'en' ? `/en/knowledge/${enKnowledgeSlug(k.slug)}` : `/ru/znaniya/${k.slug}`}`,
   }
 
   return (
@@ -172,7 +173,7 @@ export async function KnowledgeDetail({ slug, lang }: { slug: string; lang: Lang
             <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {related.map(r => (
                 <li key={r.id}>
-                  <Link href={`${knowledgeRoot}/${r.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)]">
+                  <Link href={`${knowledgeRoot}/${lang === 'en' ? enKnowledgeSlug(r.slug) : r.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)]">
                     <div className="relative w-full aspect-[16/9] bg-[var(--color-search-bg)]">
                       {r.photo ? (
                         <Image src={r.photo} alt={r.title} fill sizes="(max-width: 768px) 100vw, 25vw" className="object-cover" />
