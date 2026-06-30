@@ -5,6 +5,22 @@ import type { Lang } from '@/lib/i18n'
 
 type Col = { title: string; links: { label: string; href: string }[] }
 
+// "Built with" credibility row. Wording follows the official Microsoft for
+// Startups PR toolkit (allowed: "part of Microsoft for Startups", "Microsoft
+// Azure"; not allowed: "backed by"/"partner"/MS logo — the badge is the
+// sanctioned visual). The ElevenLabs link satisfies the Grants requirement to
+// link elevenlabs.io. Only render when the claims are actually true.
+const TECH: Record<Lang, { label: string; note: string }> = {
+  ru: {
+    label: 'На технологиях',
+    note: 'Balinsky — участник Microsoft for Startups, работает на Microsoft Azure. Голосовые технологии — ElevenLabs Grants.',
+  },
+  en: {
+    label: 'Built with',
+    note: 'Balinsky is part of Microsoft for Startups, built on Microsoft Azure. Voice by ElevenLabs Grants.',
+  },
+}
+
 const COLS_BY_LANG: Record<Lang, Col[]> = {
   ru: [
     {
@@ -130,6 +146,7 @@ const LICENSE_BY_LANG: Record<Lang, string> = {
 export function Footer({ lang = 'ru' }: { lang?: Lang }) {
   const cols = COLS_BY_LANG[lang]
   const bottom = BOTTOM_BY_LANG[lang]
+  const tech = TECH[lang]
   const license = LICENSE_BY_LANG[lang]
   return (
     <footer className="mt-auto bg-[var(--color-header-bg)] border-t border-[var(--color-border)]">
@@ -197,6 +214,32 @@ export function Footer({ lang = 'ru' }: { lang?: Lang }) {
               </li>
             ))}
           </ul>
+          <div className="mt-8 flex flex-col items-center gap-3">
+            <div className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">{tech.label}</div>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <a
+                href="https://startups.microsoft.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="opacity-85 hover:opacity-100 transition-opacity"
+                aria-label="Microsoft for Startups"
+              >
+                <Image src="/badges/microsoft-for-startups.jpg" alt="Microsoft for Startups" width={120} height={51} className="h-9 w-auto" />
+              </a>
+              <a
+                href="https://elevenlabs.io"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="ElevenLabs Grants"
+                className="inline-flex items-center gap-1.5 rounded-md border border-[var(--color-border)] px-3 h-9 text-[13px] text-[#111827] no-underline hover:border-[var(--color-primary)] transition-colors"
+              >
+                <span className="font-semibold">ElevenLabs</span>
+                <span className="text-[var(--color-text-muted)]">Grants</span>
+              </a>
+            </div>
+            <p className="text-[12px] text-[var(--color-text-muted)] text-center max-w-[520px] leading-[1.5]">{tech.note}</p>
+          </div>
+
           <div className="mt-5 text-center text-[12px] text-[var(--color-text-muted)]">
             Copyright © 2022–2026 Balinsky.info. All rights reserved.
           </div>
