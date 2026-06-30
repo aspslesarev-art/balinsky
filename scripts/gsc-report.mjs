@@ -6,19 +6,17 @@
 // slice (купить / продажа / buy / price …) so we can size transactional demand
 // before leaning the site harder into "купить недвижимость".
 //
-// Auth: a Google service account with read access to the GSC property. No npm
-// deps — the OAuth2 JWT is signed with Node's built-in crypto.
+// Auth (either works, no npm deps):
+//   a) Application Default Credentials — your own Google account (must have
+//      access to the GSC property). One-off setup:
+//        gcloud auth application-default login \
+//          --scopes=https://www.googleapis.com/auth/webmasters.readonly,https://www.googleapis.com/auth/cloud-platform
+//      (org policy blocks service-account key creation, so this is the default path)
+//   b) Service-account JSON key, if you ever get one: point GSC_SA_KEY_FILE at
+//      it and add the SA e-mail as a Restricted user on the property.
 //
-// Setup (one-off, in the existing GCP project):
-//   1. APIs & Services → enable "Google Search Console API".
-//   2. Create a service account, add a JSON key, download it.
-//   3. In Search Console → Settings → Users and permissions, add the service
-//      account e-mail (…@…iam.gserviceaccount.com) as a Restricted user on the
-//      balinsky.info property.
-//   4. Save the JSON somewhere gitignored and point GSC_SA_KEY_FILE at it.
-//
-// .env.local:
-//   GSC_SA_KEY_FILE=./gsc-service-account.json
+// .env.local (all optional):
+//   GSC_SA_KEY_FILE=./gsc-service-account.json  # only for path (b)
 //   GSC_SITE_URL=sc-domain:balinsky.info        # Domain property (default)
 //   # …or for a URL-prefix property: GSC_SITE_URL=https://balinsky.info/
 //
@@ -37,20 +35,58 @@ try {
 } catch { /* no .env.local — rely on real env */ }
 
 const KEY_FILE = process.env.GSC_SA_KEY_FILE || './gsc-service-account.json'
+const ADC_FILE = process.env.GOOGLE_APPLICATION_CREDENTIALS
+  || `${process.env.HOME}/.config/gcloud/application_default_credentials.json`
 const SITE_URL = process.env.GSC_SITE_URL || 'sc-domain:balinsky.info'
 const DAYS = Number(process.argv[2]) || 28
 
-// ---- service-account auth (JWT → access token), zero deps -----------------
+// ---- auth: SA key (JWT) or ADC (refresh token), zero deps ------------------
 const b64url = (buf) =>
   Buffer.from(buf).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 
+const readJson = (p) => { try { return JSON.parse(fs.readFileSync(p, 'utf8')) } catch { return null } }
+
+// User-credential ADC (path a) requires a billing/quota project, sent via the
+// x-goog-user-project header — without it Google bills the shared gcloud OAuth
+// project (where the API is disabled) and returns 403. Service-account auth
+// (path b) doesn't need this. Source: GSC_QUOTA_PROJECT env or the
+// quota_project_id `gcloud auth application-default set-quota-project` writes.
+const QUOTA_PROJECT =
+  process.env.GSC_QUOTA_PROJECT || readJson(ADC_FILE)?.quota_project_id || null
+
+async function tokenRequest(params) {
+  const res = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams(params),
+  })
+  const j = await res.json()
+  if (!res.ok || !j.access_token) {
+    console.error('\n✗ Не удалось получить токен:', JSON.stringify(j))
+    process.exit(1)
+  }
+  return j.access_token
+}
+
 async function getAccessToken() {
-  let key
-  try {
-    key = JSON.parse(fs.readFileSync(KEY_FILE, 'utf8'))
-  } catch {
-    console.error(`\n✗ Не найден ключ сервис-аккаунта: ${KEY_FILE}`)
-    console.error('  Создайте его (см. шапку файла) и пропишите GSC_SA_KEY_FILE в .env.local.\n')
+  // (a) ADC — your own account via `gcloud auth application-default login`.
+  const adc = readJson(ADC_FILE)
+  if (adc?.type === 'authorized_user') {
+    return tokenRequest({
+      grant_type: 'refresh_token',
+      client_id: adc.client_id,
+      client_secret: adc.client_secret,
+      refresh_token: adc.refresh_token,
+    })
+  }
+
+  // (b) Service-account JSON key.
+  const key = readJson(KEY_FILE)
+  if (!key) {
+    console.error('\n✗ Нет учётных данных. Либо выполните один раз:')
+    console.error('    gcloud auth application-default login \\')
+    console.error('      --scopes=https://www.googleapis.com/auth/webmasters.readonly,https://www.googleapis.com/auth/cloud-platform')
+    console.error(`  либо положите ключ сервис-аккаунта в ${KEY_FILE} (см. шапку файла).\n`)
     process.exit(1)
   }
   const now = Math.floor(Date.now() / 1000)
@@ -68,20 +104,10 @@ async function getAccessToken() {
   )
   const assertion = `${signingInput}.${signature}`
 
-  const res = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-      assertion,
-    }),
+  return tokenRequest({
+    grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+    assertion,
   })
-  const j = await res.json()
-  if (!res.ok || !j.access_token) {
-    console.error('\n✗ Не удалось получить токен:', JSON.stringify(j))
-    process.exit(1)
-  }
-  return j.access_token
 }
 
 // ---- Search Analytics query ----------------------------------------------
@@ -94,7 +120,11 @@ async function query(token, body) {
   const url = `https://searchconsole.googleapis.com/webmasters/v3/sites/${encodeURIComponent(SITE_URL)}/searchAnalytics/query`
   const res = await fetch(url, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      ...(QUOTA_PROJECT ? { 'x-goog-user-project': QUOTA_PROJECT } : {}),
+    },
     body: JSON.stringify(body),
   })
   const j = await res.json()
