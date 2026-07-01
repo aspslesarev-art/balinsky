@@ -787,6 +787,22 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
             {land != null && <span>{land} {c.sqm} {c.land}</span>}
             {district && <span>{district}, {c.bali}</span>}
           </div>
+          {/* Part-of-complex link near the top (TASK-13a): a strong internal
+              link to the complex card, which is the canonical page for the
+              cluster of same-name URLs. Villa stays a standalone product
+              (no canonical), this is just prominent navigation. */}
+          {parentComplex && (
+            <div className="mb-4">
+              <Link
+                href={`${complexesRoot}/o/${parentComplex.slug}`}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-primary-soft)] px-3 py-1.5 text-[13.5px] font-medium text-[var(--color-primary-pressed)] no-underline hover:opacity-80 transition-opacity"
+              >
+                {lang === 'en'
+                  ? `Part of the ${parentComplex.name} complex →`
+                  : `Часть жилого комплекса «${parentComplex.name}» →`}
+              </Link>
+            </div>
+          )}
           {priceNum != null && (
             <PriceCtaCard
               priceUsd={priceNum}
