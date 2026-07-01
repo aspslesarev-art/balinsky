@@ -1,8 +1,15 @@
 import { DevelopersCatalog, parseSort } from './_catalog'
+import { generateCategoryMeta } from '@/lib/seo'
+import { publishedDeveloperCount } from '@/lib/category-stats'
 
 export const revalidate = 3600
 
-export const metadata = {
+export async function generateMetadata() {
+  const cat = generateCategoryMeta({ category: 'developers', locale: 'ru', ...(await publishedDeveloperCount()) })
+  return { ...metadata, title: cat.title, description: cat.description }
+}
+
+const metadata = {
   title: 'Застройщики на Бали — каталог девелоперов недвижимости 2026 | Balinsky',
   description:
     'Каталог застройщиков Бали с действующими проектами: виллы, апартаменты, жилые комплексы. Сравнение по рейтингу, надёжности, управляющей компании. 80+ компаний.',

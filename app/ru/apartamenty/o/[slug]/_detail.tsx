@@ -48,6 +48,7 @@ import { normalizeSlug } from '@/lib/slug-normalize'
 import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
 import { districtRu } from '@/lib/district-ru'
+import { regencyLabel, geoChainString } from '@/lib/regency'
 import { loadKbPageContent } from '@/lib/kb-page-content'
 import { loadListingVision, altFor } from '@/lib/listing-features'
 import { DistrictAboutCard } from '@/components/DistrictAboutCard'
@@ -685,6 +686,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
         <Breadcrumbs items={[
           { label: c.home, href: home },
           { label: c.aptCrumb, href: apartmentsRoot },
+          ...(regencyLabel(districtRaw) ? [{ label: regencyLabel(districtRaw)! }] : []),
           ...(district ? [{ label: district, href: `${apartmentsRoot}/${districtRaw!.toLowerCase().replace(/\s+/g, '-')}` }] : []),
           { label: title },
         ]} />
@@ -732,7 +734,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
             {bedrooms != null && <span>{bedrooms} BR</span>}
             {area != null && <span>{area} {c.sqm}</span>}
             {floor && <span>{c.floor}: {floor}</span>}
-            {district && <span>{district}, {c.bali}</span>}
+            {district && <span>{districtRaw ? geoChainString(districtRaw) : `${district}, ${c.bali}`}</span>}
           </div>
           {priceNum != null && (
             <PriceCtaCard

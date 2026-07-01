@@ -11,6 +11,8 @@ import { unstable_cache } from 'next/cache'
 import { HardHat, Building2, Award, Wrench, Users, Briefcase, ChevronRight } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
+import { StarRating } from '@/components/StarRating'
+import { reliabilityForDeveloper } from '@/lib/developer-reliability'
 import { ExpandableText } from '@/components/ExpandableText'
 import { ComplexCard, type ComplexCardData } from '@/components/ComplexCard'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
@@ -387,12 +389,15 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
   }
   if (logoUrl) orgJsonLd.logo = logoUrl
   if (aiText) orgJsonLd.description = aiText.slice(0, 500)
-  const totalScore = typeof dev.data['Общий рейтинг'] === 'number' ? dev.data['Общий рейтинг'] as number : null
-  if (totalScore != null && totalScore > 0) {
-    const ratingValue = Math.round((totalScore / 20) * 10) / 10
+  // TASK-13b (option 2): editorial "reliability index" from objective delivery
+  // data (completed/active projects) — an expert Review by Balinsky, not user
+  // reviews. Replaces the unusable 0–100 "Общий рейтинг" (77/114 = 100). The
+  // score is rendered visibly below, so the markup mirrors on-page content.
+  const reliability = await reliabilityForDeveloper(name)
+  if (reliability) {
     orgJsonLd.review = {
       '@type': 'Review',
-      reviewRating: { '@type': 'Rating', ratingValue, bestRating: 5, worstRating: 1 },
+      reviewRating: { '@type': 'Rating', ratingValue: reliability.score, bestRating: 5, worstRating: 1 },
       author: { '@type': 'Organization', name: 'Balinsky', url: `${SITE_URL}/${lang}` },
       itemReviewed: { '@type': 'RealEstateAgent', name },
     }
@@ -447,6 +452,17 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
                   </div>
                 )}
               </div>
+              {reliability && (
+                <div className="flex items-center gap-2 mt-3">
+                  <StarRating value={reliability.score} size={16} />
+                  <span className="text-[15px] font-semibold text-[#111827]">{reliability.score.toFixed(1)}</span>
+                  <span className="text-[13px] text-[var(--color-text-muted)]">
+                    {lang === 'en'
+                      ? `Balinsky reliability index · ${reliability.completed} completed`
+                      : `Индекс надёжности Balinsky · ${reliability.completed} сданных`}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </section>

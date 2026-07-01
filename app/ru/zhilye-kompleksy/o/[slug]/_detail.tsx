@@ -23,6 +23,8 @@ import { ManagerCard } from '@/components/ManagerCard'
 import { InlinePrice } from '@/components/InlinePrice'
 import { loadManagersByDeveloperName } from '@/lib/managers'
 import { getDeveloperStats } from '@/lib/developer-stats'
+import { reliabilityScore } from '@/lib/developer-reliability'
+import { StarRating } from '@/components/StarRating'
 import { VillaCard, type VillaCardData } from '@/components/VillaCard'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { distanceKm as haversineKm } from '@/lib/competitor-utils'
@@ -50,6 +52,7 @@ import { tField, type Lang } from '@/lib/i18n'
 import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
 import { districtRu } from '@/lib/district-ru'
+import { regencyLabel, geoChainString } from '@/lib/regency'
 import { loadKbPageContent } from '@/lib/kb-page-content'
 import { loadListingVision, altFor } from '@/lib/listing-features'
 import { DistrictAboutCard } from '@/components/DistrictAboutCard'
@@ -671,6 +674,12 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   const developerName = firstString(d['Developer1']) ?? firstString(d['Варианты поиска застройщика'])
   const managers = await loadManagersByDeveloperName(developerName)
   const devStats = await getDeveloperStats(developerName)
+  // TASK-13b: developer reliability index shown on the complex (trust signal
+  // for the buyer). Visible only — the rating markup lives on the developer
+  // page, not duplicated across every complex.
+  const devReliability = devStats && (devStats.ready > 0 || devStats.inProgress > 0)
+    ? { score: reliabilityScore(devStats), completed: devStats.ready }
+    : null
   // Resolve the developer by name → slug + logo so we can link to
   // /ru/zastrojshhiki/<slug> directly instead of just to the
   // developers index. Mirrors the lookup the villa detail page
@@ -851,6 +860,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
         <Breadcrumbs items={[
           { label: copy.home, href: home },
           { label: copy.crumbComplexes, href: complexesRoot },
+          ...(regencyLabel(districtRaw) ? [{ label: regencyLabel(districtRaw)! }] : []),
           ...(district ? [{ label: district, href: `${complexesRoot}/${districtRaw!.toLowerCase().replace(/\s+/g, '-')}` }] : []),
           { label: name },
         ]} />
@@ -1030,6 +1040,15 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
                 <div className="flex-1 min-w-0">
                   <div className="text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] mb-1">{copy.builtBy}</div>
                   <div className="text-[19px] font-semibold text-[#111827] truncate">{developerLink.name}</div>
+                  {devReliability && (
+                    <div className="mt-1.5 flex items-center gap-1.5">
+                      <StarRating value={devReliability.score} size={14} />
+                      <span className="text-[13px] font-semibold text-[#111827]">{devReliability.score.toFixed(1)}</span>
+                      <span className="text-[12px] text-[var(--color-text-muted)]">
+                        {lang === 'en' ? `Balinsky reliability · ${devReliability.completed} completed` : `надёжность Balinsky · ${devReliability.completed} сданных`}
+                      </span>
+                    </div>
+                  )}
                   <div className="mt-1 text-[13px] text-[var(--color-primary-pressed)] font-medium inline-flex items-center gap-1 group-hover:gap-2 transition-all">
                     {copy.developer} <ChevronRight size={14} />
                   </div>
@@ -1098,7 +1117,10 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
               {copy.location}
             </h2>
             <div className="text-[14px] text-[var(--color-text)] mb-3">
-              {copy.locationLine(district)}
+              {/* TASK-13d: full geo chain (area → kecamatan → regency → island)
+                  so "Badung Regency" is present on the page, fixing the
+                  "Missing: badung regency" flag in our snippets. */}
+              {districtRaw ? geoChainString(districtRaw) : copy.locationLine(district)}
             </div>
             {process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY && (
               <div className="mb-4">

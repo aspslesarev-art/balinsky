@@ -5,6 +5,7 @@ import { notFound, permanentRedirect } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Calendar, ExternalLink, Building2, HardHat } from 'lucide-react'
+import { complexSlugForText } from '@/lib/complex-index'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
@@ -56,14 +57,27 @@ export async function generateNewsDetailMetadata(slug: string, lang: Lang): Prom
   if (!n) return { robots: { index: false, follow: false } }
   const ruPath = `/ru/novosti/${n.slug}`
   const enPath = `/en/news/${n.slug}`
-  const path = lang === 'en' ? enPath : ruPath
   const metaDesc = trimMetaDescription(n.seoDescription ?? n.body ?? n.title)
+
+  // TASK-13a: a news item about a specific complex canonicals to that complex
+  // card — the canonical page for the entity — so our news/villa/complex URLs
+  // stop cannibalizing the same "<complex> ..." query. hreflang follows the
+  // canonical target for consistency. Falls back to self-canonical.
+  let ruCanon = ruPath
+  let enCanon = enPath
+  const complexSlug = await complexSlugForText(n.title, n.complexNames?.[0])
+  if (complexSlug) {
+    ruCanon = `/ru/zhilye-kompleksy/o/${complexSlug}`
+    enCanon = `/en/complexes/o/${complexSlug}`
+  }
+  const canonical = lang === 'en' ? enCanon : ruCanon
+
   return {
     title: `${n.title} | Balinsky`,
     description: metaDesc,
     alternates: {
-      canonical: path,
-      languages: { ru: `${SITE_URL}${ruPath}`, en: `${SITE_URL}${enPath}` , 'x-default': `${SITE_URL}${ruPath}`},
+      canonical,
+      languages: { ru: `${SITE_URL}${ruCanon}`, en: `${SITE_URL}${enCanon}` , 'x-default': `${SITE_URL}${ruCanon}`},
     },
     openGraph: {
       title: n.title,
