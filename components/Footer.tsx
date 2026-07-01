@@ -231,10 +231,10 @@ export function Footer({ lang = 'ru' }: { lang?: Lang }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="ElevenLabs Grants"
-                className="inline-flex items-center gap-1.5 rounded-md border border-[var(--color-border)] px-3 h-9 text-[13px] text-[#111827] no-underline hover:border-[var(--color-primary)] transition-colors"
+                className="inline-flex items-center gap-2 h-9 no-underline opacity-85 hover:opacity-100 transition-opacity"
               >
-                <span className="font-semibold">ElevenLabs</span>
-                <span className="text-[var(--color-text-muted)]">Grants</span>
+                <Image src="/badges/elevenlabs-logo.png" alt="ElevenLabs" width={123} height={16} className="h-4 w-auto" />
+                <span className="text-[12px] text-[var(--color-text-muted)]">Grants</span>
               </a>
             </div>
             <p className="text-[12px] text-[var(--color-text-muted)] text-center max-w-[520px] leading-[1.5]">{tech.note}</p>

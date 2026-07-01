@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
 import ReactMarkdown from 'react-markdown'
-import { MessageCircle, X, Send, Loader2, AlertTriangle, BedDouble, MapPin, ExternalLink, Mic, Square, UserRound, Trash2 } from 'lucide-react'
+import { MessageCircle, X, Send, Loader2, AlertTriangle, BedDouble, MapPin, ExternalLink, Mic, Square, UserRound, Trash2, Volume2, VolumeX } from 'lucide-react'
 import { useWishlist } from './WishlistContext'
 import { RECENT_KEY, type RecentlyViewedEntry } from './PageViewTracker'
 import { LeadButton } from './LeadButton'
@@ -205,6 +205,32 @@ export function ConsultantWidget() {
   const [error, setError] = useState<string | null>(null)
   const [voiceSupported, setVoiceSupported] = useState(false)
   const scrollRef = useRef<HTMLDivElement | null>(null)
+
+  // ===== Voice output (Балина speaks) ==================================
+  // voiceMode on → every assistant reply is auto-spoken via /api/tts
+  // (ElevenLabs, key server-side). Combined with the existing mic input
+  // this makes a hands-tap voice conversation: talk → Балина answers aloud.
+  const [voiceMode, setVoiceMode] = useState(false)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const speak = async (text: string) => {
+    const clean = extractChips(text).text.replace(/\s+/g, ' ').trim()
+    if (!clean) return
+    try {
+      audioRef.current?.pause()
+      const res = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: clean }),
+      })
+      if (!res.ok) return
+      const url = URL.createObjectURL(await res.blob())
+      const audio = new Audio(url)
+      audioRef.current = audio
+      audio.onended = () => URL.revokeObjectURL(url)
+      audio.onerror = () => URL.revokeObjectURL(url)
+      await audio.play()
+    } catch { /* playback best-effort */ }
+  }
 
   // ===== Voice input (dictaphone-style) ================================
   //
@@ -751,6 +777,8 @@ export function ConsultantWidget() {
       }
       const j = await res.json() as { message: Message; listings?: ListingCard[] }
       setMessages([...next, { ...j.message, listings: j.listings }])
+      // In voice mode Балина reads her reply aloud (id = index in the new list).
+      if (voiceMode && j.message?.content) void speak(j.message.content)
     } catch (e) {
       console.error('[consultant] error:', e)
       setError(c.sendError)
@@ -860,6 +888,24 @@ export function ConsultantWidget() {
                 </div>
               </div>
               <div className="flex items-center gap-1.5">
+                {/* Voice mode — when on, Балина speaks every reply aloud
+                    (ElevenLabs TTS). Turning it off stops any playback. */}
+                <button
+                  type="button"
+                  onClick={() => setVoiceMode(v => {
+                    const nv = !v
+                    if (!nv) audioRef.current?.pause()
+                    return nv
+                  })}
+                  aria-pressed={voiceMode}
+                  aria-label={lang === 'en' ? 'Voice mode' : 'Голосовой режим'}
+                  title={lang === 'en'
+                    ? (voiceMode ? 'Voice on — Балина speaks' : 'Turn on voice')
+                    : (voiceMode ? 'Голос включён — Балина говорит' : 'Включить голос')}
+                  className={`inline-flex items-center justify-center w-9 h-9 rounded-full ${voiceMode ? 'bg-[var(--color-primary)] text-white' : 'bg-white/60 hover:bg-white text-[#111827]'}`}
+                >
+                  {voiceMode ? <Volume2 size={16} /> : <VolumeX size={16} />}
+                </button>
                 {/* Clear-history is a manual escape hatch when the
                     visitor wants to start over. Hidden when the chat
                     is just the greeting (nothing to clear yet). */}
