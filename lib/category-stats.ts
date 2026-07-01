@@ -2,7 +2,11 @@
 // developer count — computed from each section's existing loader so the
 // snippet numbers are always current. Kept loader-agnostic (accepts the
 // loader fn) so RU and EN roots share one implementation.
+import { createClient } from '@supabase/supabase-js'
 import type { CategoryStats } from './seo'
+import { isHiddenDeveloper } from './hidden-developers'
+
+const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
 
 type VillaRow = { priceUsd?: number | null; developerName?: string | null }
 type AptRow = { priceUsd?: number | null; developerNames?: string[] | null }
@@ -24,4 +28,17 @@ export function apartmentCategoryStats(rows: AptRow[]): CategoryStats {
   const devs = new Set<string>()
   for (const r of rows) for (const d of r.developerNames ?? []) if (d) devs.add(d)
   return { count: rows.length, ...priceRangeK(rows.map(r => Number(r.priceUsd)).filter(Number.isFinite)), devCount: devs.size || null }
+}
+
+/** Published, non-hidden developer count (mirrors the catalog's filter). */
+export async function publishedDeveloperCount(): Promise<CategoryStats> {
+  const { data } = await sb
+    .from('raw_developers')
+    .select('pub:data->Публикация, slug:data->"SEO:Slug", dev:data->Developer')
+    .limit(500)
+  // Cast via unknown — the typed client can't parse a renamed field whose
+  // source key is Cyrillic (Публикация), though it runs fine.
+  const rows = (data ?? []) as unknown as { pub: unknown; slug: unknown; dev: unknown }[]
+  const count = rows.filter(r => r.pub === true && r.slug && r.dev && !isHiddenDeveloper(String(r.dev))).length
+  return { count }
 }
