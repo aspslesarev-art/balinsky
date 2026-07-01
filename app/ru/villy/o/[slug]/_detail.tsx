@@ -64,6 +64,7 @@ import { normalizeSlug } from '@/lib/slug-normalize'
 import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
 import { districtRu } from '@/lib/district-ru'
+import { regencyLabel, geoChainString } from '@/lib/regency'
 import { loadKbPageContent } from '@/lib/kb-page-content'
 import { loadListingVision, altFor } from '@/lib/listing-features'
 import { DistrictAboutCard } from '@/components/DistrictAboutCard'
@@ -735,6 +736,9 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
         <Breadcrumbs items={[
           { label: c.home, href: home },
           { label: c.villasCrumb, href: villasRoot },
+          // TASK-13d/13e: Regency level in the breadcrumb (+ its JSON-LD) —
+          // restores the "… Regency, Bali" chain Google flagged as missing.
+          ...(regencyLabel(districtRaw) ? [{ label: regencyLabel(districtRaw)! }] : []),
           ...(district ? [{ label: district, href: `${villasRoot}/${districtRaw!.toLowerCase().replace(/\s+/g, '-')}` }] : []),
           { label: title },
         ]} />
@@ -785,7 +789,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
             {bedrooms != null && <span>{bedrooms} BR</span>}
             {area != null && <span>{area} {c.sqm} {c.house}</span>}
             {land != null && <span>{land} {c.sqm} {c.land}</span>}
-            {district && <span>{district}, {c.bali}</span>}
+            {district && <span>{districtRaw ? geoChainString(districtRaw) : `${district}, ${c.bali}`}</span>}
           </div>
           {/* Part-of-complex link near the top (TASK-13a): a strong internal
               link to the complex card, which is the canonical page for the

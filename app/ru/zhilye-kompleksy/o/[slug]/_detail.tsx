@@ -50,6 +50,7 @@ import { tField, type Lang } from '@/lib/i18n'
 import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
 import { districtRu } from '@/lib/district-ru'
+import { regencyLabel, geoChainString } from '@/lib/regency'
 import { loadKbPageContent } from '@/lib/kb-page-content'
 import { loadListingVision, altFor } from '@/lib/listing-features'
 import { DistrictAboutCard } from '@/components/DistrictAboutCard'
@@ -851,6 +852,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
         <Breadcrumbs items={[
           { label: copy.home, href: home },
           { label: copy.crumbComplexes, href: complexesRoot },
+          ...(regencyLabel(districtRaw) ? [{ label: regencyLabel(districtRaw)! }] : []),
           ...(district ? [{ label: district, href: `${complexesRoot}/${districtRaw!.toLowerCase().replace(/\s+/g, '-')}` }] : []),
           { label: name },
         ]} />
@@ -1098,7 +1100,10 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
               {copy.location}
             </h2>
             <div className="text-[14px] text-[var(--color-text)] mb-3">
-              {copy.locationLine(district)}
+              {/* TASK-13d: full geo chain (area → kecamatan → regency → island)
+                  so "Badung Regency" is present on the page, fixing the
+                  "Missing: badung regency" flag in our snippets. */}
+              {districtRaw ? geoChainString(districtRaw) : copy.locationLine(district)}
             </div>
             {process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY && (
               <div className="mb-4">
