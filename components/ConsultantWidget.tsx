@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import Image from 'next/image'
 import ReactMarkdown from 'react-markdown'
 import { MessageCircle, X, Send, Loader2, AlertTriangle, BedDouble, MapPin, ExternalLink, Mic, Square, UserRound, Trash2, Phone, PhoneOff } from 'lucide-react'
+import { ConversationProvider, useConversation } from '@elevenlabs/react'
 import { useWishlist } from './WishlistContext'
 import { RECENT_KEY, type RecentlyViewedEntry } from './PageViewTracker'
 import { LeadButton } from './LeadButton'
@@ -177,6 +178,28 @@ const COPY = {
   },
 } as const
 
+// Call session controls lifted out of the ConversationProvider subtree.
+export type CallControls = {
+  startSession: (opts: { signedUrl: string; connectionType: 'websocket' }) => Promise<unknown> | void
+  endSession: () => Promise<unknown> | void
+}
+
+// Headless bridge: useConversation() must live INSIDE <ConversationProvider>,
+// so this tiny child lifts start/endSession into a ref the widget can call.
+// (Calling useConversation at the widget's top level crashes with
+// "must be used within a ConversationProvider".)
+function CallEngine({ controlsRef }: { controlsRef: React.MutableRefObject<CallControls | null> }) {
+  const conversation = useConversation()
+  useEffect(() => {
+    controlsRef.current = {
+      startSession: conversation.startSession as CallControls['startSession'],
+      endSession: conversation.endSession,
+    }
+    return () => { controlsRef.current = null }
+  }, [conversation.startSession, conversation.endSession, controlsRef])
+  return null
+}
+
 export function ConsultantWidget() {
   // Lang follows the URL: /en/* → English, anything else → Russian.
   // Greeting + UI copy + voice recognition locale + the lang directive
@@ -270,36 +293,69 @@ export function ConsultantWidget() {
     try { void r.ctx.close() } catch { /* already closed */ }
     ringRef.current = null
   }
-  // (Re)open the mic hands-free — the core of the call loop.
+  // Legacy dictated-input helper (chat text input still uses the recorder).
   const listenInCall = () => { if (callActiveRef.current) void startRecording() }
-  const startCall = () => {
-    setError(null)
-    setCallState('ringing')
-    startRingback()
-    ringTimeoutRef.current = window.setTimeout(() => {
-      ringTimeoutRef.current = null
-      stopRingback()
-      setCallState('connected')
-      callActiveRef.current = true
-      const g = lang === 'en'
-        ? 'Hi, Balina here! What are you looking for in Bali?'
-        : 'Алло, это Балина! Слушаю — что вам подобрать на Бали?'
-      setMessages(prev => (prev.some(m => m.content === g) ? prev : [...prev, { role: 'assistant', content: g }]))
-      // Greet by voice, then start listening → user talks → silence auto-stops
-      // → transcribe → send → reply spoken → listen again (the loop lives in
-      // the recorder's silence handler and the /api/chat reply handler).
-      void speak(g, listenInCall)
-    }, 3400)
-  }
-  const endCall = () => {
+
+  // ===== Realtime call via ElevenLabs Conversational AI ================
+  // The call agent has NO database — it gathers the visitor's requirements in
+  // real time (fast). Controls come from <CallEngine> (inside the provider);
+  // on hang-up we hand the transcript to /api/chat and show matches in chat.
+  const callControlsRef = useRef<CallControls | null>(null)
+  const transcriptRef = useRef<string[]>([])
+
+  // End the call; on handoff, search the chat brain on what the visitor said.
+  const finishCall = async (handoff: boolean) => {
+    if (!callActiveRef.current) return
     callActiveRef.current = false
     if (ringTimeoutRef.current) { clearTimeout(ringTimeoutRef.current); ringTimeoutRef.current = null }
     stopRingback()
-    audioRef.current?.pause()
     setIsSpeaking(false)
-    cancelRecording()
+    try { await callControlsRef.current?.endSession() } catch { /* already ended */ }
     setCallState('idle')
+    const turns = transcriptRef.current.filter(Boolean)
+    transcriptRef.current = []
+    if (!handoff || turns.length === 0) return
+    setOpen(true)
+    const brief = lang === 'en'
+      ? `We just spoke on a call — here is what I'm looking for: ${turns.join('. ')}. Please pick matching options now.`
+      : `Мы только что поговорили по звонку — вот что я ищу: ${turns.join('. ')}. Подбери подходящие варианты сейчас.`
+    setTimeout(() => { void sendText(brief) }, 80)
   }
+  const startCall = async () => {
+    setError(null)
+    transcriptRef.current = []
+    callActiveRef.current = true
+    setCallState('ringing')
+    startRingback()
+    try {
+      const r = await fetch('/api/convai/signed-url')
+      if (!r.ok) throw new Error('signed_url')
+      const { signedUrl } = await r.json() as { signedUrl: string }
+      await callControlsRef.current?.startSession({ signedUrl, connectionType: 'websocket' })
+      // onConnect (provider callback) flips to 'connected' + stops ringback.
+    } catch {
+      stopRingback()
+      callActiveRef.current = false
+      setCallState('idle')
+      setError(lang === 'en' ? "Couldn't start the call." : 'Не удалось начать звонок.')
+    }
+  }
+  const endCall = () => { void finishCall(true) }
+
+  // Provider callbacks — reference component state (in scope here).
+  const onCallConnect = () => {
+    if (ringTimeoutRef.current) { clearTimeout(ringTimeoutRef.current); ringTimeoutRef.current = null }
+    stopRingback()
+    setCallState('connected')
+  }
+  const onCallMessage = (m: { source?: string; message?: string }) => {
+    if (m?.source === 'user' && typeof m.message === 'string' && m.message.trim()) {
+      transcriptRef.current.push(m.message.trim())
+    }
+  }
+  const onCallModeChange = (m: { mode?: string }) => setIsSpeaking(m?.mode === 'speaking')
+  const onCallDisconnect = () => { void finishCall(true) }
+  const onCallError = () => { void finishCall(false) }
   useEffect(() => () => { stopRingback(); if (ringTimeoutRef.current) clearTimeout(ringTimeoutRef.current) }, [])
 
   // ===== Voice input (dictaphone-style) ================================
@@ -884,33 +940,36 @@ export function ConsultantWidget() {
   }
 
   const callStatusText = callState === 'ringing'
-    ? (lang === 'en' ? 'ringing…' : 'идут гудки…')
+    ? (lang === 'en' ? 'connecting…' : 'соединяем…')
     : isSpeaking
       ? (lang === 'en' ? 'Balina is speaking…' : 'Балина говорит…')
-      : loading
-        ? (lang === 'en' ? 'Balina is thinking…' : 'Балина думает…')
-        : recState.kind === 'recording'
-          ? (lang === 'en' ? 'Listening…' : 'Слушаю вас…')
-          : recState.kind === 'transcribing'
-            ? (lang === 'en' ? 'One sec…' : 'Распознаю…')
-            : (lang === 'en' ? 'Connected' : 'На связи')
+      : (lang === 'en' ? 'Listening…' : 'Слушаю вас…')
 
   return (
     <>
+      {/* Headless bridge — must sit inside ConversationProvider so
+          useConversation() works; lifts call controls to callControlsRef. */}
+      <ConversationProvider
+        onConnect={onCallConnect}
+        onMessage={onCallMessage}
+        onModeChange={onCallModeChange}
+        onDisconnect={onCallDisconnect}
+        onError={onCallError}
+      >
+        <CallEngine controlsRef={callControlsRef} />
+      </ConversationProvider>
+
       {/* CALL — a separate full-screen experience, independent of the text chat. */}
       {callState !== 'idle' && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:justify-end p-0 sm:p-5">
           <div className="w-full sm:w-[360px] max-w-[100vw] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-[var(--color-border)] px-8 py-10 flex flex-col items-center gap-6 text-center">
             <div className="relative">
               <Image src="/balina.jpg" alt="" width={112} height={112} className="w-28 h-28 rounded-full object-cover" />
-              <span className={`absolute -inset-1.5 rounded-full ring-4 ${callState === 'ringing' || isSpeaking || recState.kind === 'recording' ? 'ring-[#22C55E]/40 animate-ping' : 'ring-transparent'}`} />
+              <span className={`absolute -inset-1.5 rounded-full ring-4 ${callState === 'ringing' || isSpeaking ? 'ring-[#22C55E]/40 animate-ping' : 'ring-[#22C55E]/20'}`} />
             </div>
             <div>
               <div className="text-[22px] font-semibold text-[#111827]">Балина</div>
               <div className="text-[14px] text-[var(--color-text-muted)] mt-1">{callStatusText}</div>
-            </div>
-            <div className="h-1.5 w-40 rounded-full bg-[var(--color-border)] overflow-hidden">
-              <div className="h-full bg-[#22C55E] transition-[width] duration-100" style={{ width: callState === 'connected' && recState.kind === 'recording' ? `${Math.min(100, Math.round(recLevel * 160))}%` : '0%' }} />
             </div>
             <button
               type="button"
