@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import Image from 'next/image'
 import ReactMarkdown from 'react-markdown'
 import { MessageCircle, X, Send, Loader2, AlertTriangle, BedDouble, MapPin, ExternalLink, Mic, Square, UserRound, Trash2, Phone, PhoneOff } from 'lucide-react'
+import { useConversation } from '@elevenlabs/react'
 import { useWishlist } from './WishlistContext'
 import { RECENT_KEY, type RecentlyViewedEntry } from './PageViewTracker'
 import { LeadButton } from './LeadButton'
@@ -210,7 +211,6 @@ export function ConsultantWidget() {
   // speak() plays a reply via /api/tts (ElevenLabs, key server-side) and
   // fires onDone when the audio ends — that callback drives the hands-free
   // call loop (reply spoken → reopen mic). isSpeaking powers the call UI.
-  const [isSpeaking, setIsSpeaking] = useState(false)
   const callActiveRef = useRef(false) // true only during an active call
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const speak = async (text: string, onDone?: () => void) => {
@@ -227,12 +227,11 @@ export function ConsultantWidget() {
       const url = URL.createObjectURL(await res.blob())
       const audio = new Audio(url)
       audioRef.current = audio
-      setIsSpeaking(true)
-      const done = () => { setIsSpeaking(false); URL.revokeObjectURL(url); onDone?.() }
+      const done = () => { URL.revokeObjectURL(url); onDone?.() }
       audio.onended = done
       audio.onerror = done
       await audio.play()
-    } catch { setIsSpeaking(false); onDone?.() }
+    } catch { onDone?.() }
   }
 
   // ===== Call mode ("phone" UX) ========================================
@@ -270,36 +269,65 @@ export function ConsultantWidget() {
     try { void r.ctx.close() } catch { /* already closed */ }
     ringRef.current = null
   }
-  // (Re)open the mic hands-free — the core of the call loop.
+  // Legacy dictated-input helper (chat text input still uses the recorder).
   const listenInCall = () => { if (callActiveRef.current) void startRecording() }
-  const startCall = () => {
-    setError(null)
-    setCallState('ringing')
-    startRingback()
-    ringTimeoutRef.current = window.setTimeout(() => {
-      ringTimeoutRef.current = null
+
+  // ===== Realtime call via ElevenLabs Conversational AI ================
+  // The call agent has NO database — it gathers the visitor's requirements in
+  // real time (fast). After the call we hand the transcript to /api/chat
+  // (Балина's full brain) and show the matches in the text chat.
+  const transcriptRef = useRef<string[]>([])
+  const conversation = useConversation({
+    onConnect: () => {
+      if (ringTimeoutRef.current) { clearTimeout(ringTimeoutRef.current); ringTimeoutRef.current = null }
       stopRingback()
       setCallState('connected')
-      callActiveRef.current = true
-      const g = lang === 'en'
-        ? 'Hi, Balina here! What are you looking for in Bali?'
-        : 'Алло, это Балина! Слушаю — что вам подобрать на Бали?'
-      setMessages(prev => (prev.some(m => m.content === g) ? prev : [...prev, { role: 'assistant', content: g }]))
-      // Greet by voice, then start listening → user talks → silence auto-stops
-      // → transcribe → send → reply spoken → listen again (the loop lives in
-      // the recorder's silence handler and the /api/chat reply handler).
-      void speak(g, listenInCall)
-    }, 3400)
-  }
-  const endCall = () => {
+    },
+    onMessage: (m: { source?: string; message?: string }) => {
+      if (m?.source === 'user' && typeof m.message === 'string' && m.message.trim()) {
+        transcriptRef.current.push(m.message.trim())
+      }
+    },
+    onError: () => { setError(lang === 'en' ? 'Call error, please try again.' : 'Ошибка звонка, попробуйте ещё раз.'); void finishCall(false) },
+    onDisconnect: () => { void finishCall(true) },
+  })
+
+  // End the call; on handoff, search the chat brain on what the visitor said.
+  const finishCall = async (handoff: boolean) => {
+    if (!callActiveRef.current) return
     callActiveRef.current = false
     if (ringTimeoutRef.current) { clearTimeout(ringTimeoutRef.current); ringTimeoutRef.current = null }
     stopRingback()
-    audioRef.current?.pause()
-    setIsSpeaking(false)
-    cancelRecording()
+    try { await conversation.endSession() } catch { /* already ended */ }
     setCallState('idle')
+    const turns = transcriptRef.current.filter(Boolean)
+    transcriptRef.current = []
+    if (!handoff || turns.length === 0) return
+    setOpen(true)
+    const brief = lang === 'en'
+      ? `We just spoke on a call — here is what I'm looking for: ${turns.join('. ')}. Please pick matching options now.`
+      : `Мы только что поговорили по звонку — вот что я ищу: ${turns.join('. ')}. Подбери подходящие варианты сейчас.`
+    setTimeout(() => { void sendText(brief) }, 80)
   }
+  const startCall = async () => {
+    setError(null)
+    transcriptRef.current = []
+    callActiveRef.current = true
+    setCallState('ringing')
+    startRingback()
+    try {
+      const r = await fetch('/api/convai/signed-url')
+      if (!r.ok) throw new Error('signed_url')
+      const { signedUrl } = await r.json() as { signedUrl: string }
+      await conversation.startSession({ signedUrl })
+    } catch {
+      stopRingback()
+      callActiveRef.current = false
+      setCallState('idle')
+      setError(lang === 'en' ? "Couldn't start the call." : 'Не удалось начать звонок.')
+    }
+  }
+  const endCall = () => { void finishCall(true) }
   useEffect(() => () => { stopRingback(); if (ringTimeoutRef.current) clearTimeout(ringTimeoutRef.current) }, [])
 
   // ===== Voice input (dictaphone-style) ================================
@@ -884,16 +912,10 @@ export function ConsultantWidget() {
   }
 
   const callStatusText = callState === 'ringing'
-    ? (lang === 'en' ? 'ringing…' : 'идут гудки…')
-    : isSpeaking
+    ? (lang === 'en' ? 'connecting…' : 'соединяем…')
+    : conversation.isSpeaking
       ? (lang === 'en' ? 'Balina is speaking…' : 'Балина говорит…')
-      : loading
-        ? (lang === 'en' ? 'Balina is thinking…' : 'Балина думает…')
-        : recState.kind === 'recording'
-          ? (lang === 'en' ? 'Listening…' : 'Слушаю вас…')
-          : recState.kind === 'transcribing'
-            ? (lang === 'en' ? 'One sec…' : 'Распознаю…')
-            : (lang === 'en' ? 'Connected' : 'На связи')
+      : (lang === 'en' ? 'Listening…' : 'Слушаю вас…')
 
   return (
     <>
@@ -903,14 +925,11 @@ export function ConsultantWidget() {
           <div className="w-full sm:w-[360px] max-w-[100vw] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-[var(--color-border)] px-8 py-10 flex flex-col items-center gap-6 text-center">
             <div className="relative">
               <Image src="/balina.jpg" alt="" width={112} height={112} className="w-28 h-28 rounded-full object-cover" />
-              <span className={`absolute -inset-1.5 rounded-full ring-4 ${callState === 'ringing' || isSpeaking || recState.kind === 'recording' ? 'ring-[#22C55E]/40 animate-ping' : 'ring-transparent'}`} />
+              <span className={`absolute -inset-1.5 rounded-full ring-4 ${callState === 'ringing' || conversation.isSpeaking ? 'ring-[#22C55E]/40 animate-ping' : 'ring-[#22C55E]/20'}`} />
             </div>
             <div>
               <div className="text-[22px] font-semibold text-[#111827]">Балина</div>
               <div className="text-[14px] text-[var(--color-text-muted)] mt-1">{callStatusText}</div>
-            </div>
-            <div className="h-1.5 w-40 rounded-full bg-[var(--color-border)] overflow-hidden">
-              <div className="h-full bg-[#22C55E] transition-[width] duration-100" style={{ width: callState === 'connected' && recState.kind === 'recording' ? `${Math.min(100, Math.round(recLevel * 160))}%` : '0%' }} />
             </div>
             <button
               type="button"
