@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
 import ReactMarkdown from 'react-markdown'
-import { MessageCircle, X, Send, Loader2, AlertTriangle, BedDouble, MapPin, ExternalLink, Mic, Square, UserRound, Trash2, Volume2, VolumeX } from 'lucide-react'
+import { MessageCircle, X, Send, Loader2, AlertTriangle, BedDouble, MapPin, ExternalLink, Mic, Square, UserRound, Trash2, Volume2, VolumeX, Phone, PhoneOff } from 'lucide-react'
 import { useWishlist } from './WishlistContext'
 import { RECENT_KEY, type RecentlyViewedEntry } from './PageViewTracker'
 import { LeadButton } from './LeadButton'
@@ -231,6 +231,63 @@ export function ConsultantWidget() {
       await audio.play()
     } catch { /* playback best-effort */ }
   }
+
+  // ===== Call mode ("phone" UX) ========================================
+  // Tap the call icon → ringback tone (гудки) → Балина "picks up" and
+  // greets by voice, then voice mode stays on for the conversation.
+  type CallState = 'idle' | 'ringing' | 'connected'
+  const [callState, setCallState] = useState<CallState>('idle')
+  const ringRef = useRef<{ ctx: AudioContext; iv: number; osc: OscillatorNode } | null>(null)
+  const startRingback = () => {
+    try {
+      const AC = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+      if (!AC) return
+      const ctx = new AC()
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.type = 'sine'
+      osc.frequency.value = 425 // Russian ringback tone
+      gain.gain.value = 0
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.start()
+      let on = false
+      const beat = () => { on = !on; gain.gain.setTargetAtTime(on ? 0.08 : 0.0001, ctx.currentTime, 0.02) }
+      beat()
+      const iv = window.setInterval(beat, 1000)
+      ringRef.current = { ctx, iv, osc }
+    } catch { /* audio best-effort */ }
+  }
+  const stopRingback = () => {
+    const r = ringRef.current
+    if (!r) return
+    clearInterval(r.iv)
+    try { r.osc.stop() } catch { /* already stopped */ }
+    try { void r.ctx.close() } catch { /* already closed */ }
+    ringRef.current = null
+  }
+  const startCall = () => {
+    setOpen(true)
+    setError(null)
+    setCallState('ringing')
+    startRingback()
+    window.setTimeout(() => {
+      stopRingback()
+      setCallState('connected')
+      setVoiceMode(true)
+      const g = lang === 'en'
+        ? 'Hi, Balina here! What are you looking for in Bali?'
+        : 'Алло, это Балина! Слушаю — что подобрать на Бали?'
+      setMessages(prev => (prev.some(m => m.content === g) ? prev : [...prev, { role: 'assistant', content: g }]))
+      void speak(g)
+    }, 3400)
+  }
+  const endCall = () => {
+    stopRingback()
+    audioRef.current?.pause()
+    setCallState('idle')
+  }
+  useEffect(() => () => stopRingback(), [])
 
   // ===== Voice input (dictaphone-style) ================================
   //
@@ -804,22 +861,34 @@ export function ConsultantWidget() {
   return (
     <>
       {!open && (
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          aria-label={c.triggerAria}
-          className="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 pl-1.5 pr-4 py-1.5 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white shadow-lg transition-colors"
-        >
-          <Image
-            src="/balina.jpg"
-            alt=""
-            width={36}
-            height={36}
-            className="w-9 h-9 rounded-full object-cover ring-2 ring-white/40"
-          />
-          <span className="text-[14px] font-medium hidden sm:inline">{c.triggerName}</span>
-          <MessageCircle size={16} className="sm:hidden" />
-        </button>
+        <div className="fixed bottom-5 right-5 z-40 flex items-center gap-2">
+          {/* Call button — ring Балину and talk to her by voice. */}
+          <button
+            type="button"
+            onClick={startCall}
+            aria-label={lang === 'en' ? 'Call Balina' : 'Позвонить Балине'}
+            title={lang === 'en' ? 'Call Balina' : 'Позвонить Балине'}
+            className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#22C55E] hover:bg-[#16A34A] text-white shadow-lg transition-colors"
+          >
+            <Phone size={20} />
+          </button>
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            aria-label={c.triggerAria}
+            className="inline-flex items-center gap-2 pl-1.5 pr-4 py-1.5 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white shadow-lg transition-colors"
+          >
+            <Image
+              src="/balina.jpg"
+              alt=""
+              width={36}
+              height={36}
+              className="w-9 h-9 rounded-full object-cover ring-2 ring-white/40"
+            />
+            <span className="text-[14px] font-medium hidden sm:inline">{c.triggerName}</span>
+            <MessageCircle size={16} className="sm:hidden" />
+          </button>
+        </div>
       )}
 
       {/* Proactive nudge on a listing page — Балина offers to walk the object. */}
@@ -888,6 +957,16 @@ export function ConsultantWidget() {
                 </div>
               </div>
               <div className="flex items-center gap-1.5">
+                {/* Call — ring Балину; she picks up and greets by voice. */}
+                <button
+                  type="button"
+                  onClick={callState === 'idle' ? startCall : endCall}
+                  aria-label={callState === 'idle' ? (lang === 'en' ? 'Call' : 'Позвонить') : (lang === 'en' ? 'End call' : 'Завершить звонок')}
+                  title={callState === 'idle' ? (lang === 'en' ? 'Call Balina' : 'Позвонить Балине') : (lang === 'en' ? 'End call' : 'Завершить звонок')}
+                  className={`inline-flex items-center justify-center w-9 h-9 rounded-full text-white ${callState === 'idle' ? 'bg-[#22C55E] hover:bg-[#16A34A]' : 'bg-[#EF4444] hover:bg-[#DC2626]'}`}
+                >
+                  {callState === 'idle' ? <Phone size={16} /> : <PhoneOff size={16} />}
+                </button>
                 {/* Voice mode — when on, Балина speaks every reply aloud
                     (ElevenLabs TTS). Turning it off stops any playback. */}
                 <button
@@ -933,8 +1012,23 @@ export function ConsultantWidget() {
               </div>
             </div>
 
+            {/* Ringing screen — while the call connects. */}
+            {callState === 'ringing' && (
+              <div className="flex-1 min-h-0 flex flex-col items-center justify-center gap-4 bg-[var(--color-search-bg)] px-6 text-center">
+                <div className="relative">
+                  <Image src="/balina.jpg" alt="" width={96} height={96} className="w-24 h-24 rounded-full object-cover" />
+                  <span className="absolute -inset-1 rounded-full ring-4 ring-[#22C55E]/40 animate-ping" />
+                </div>
+                <div className="text-[17px] font-semibold text-[#111827]">{lang === 'en' ? 'Calling Balina…' : 'Звоним Балине…'}</div>
+                <div className="text-[13px] text-[var(--color-text-muted)]">{lang === 'en' ? 'ringing…' : 'идут гудки…'}</div>
+                <button type="button" onClick={endCall} className="mt-2 inline-flex items-center gap-2 px-4 h-10 rounded-full bg-[#EF4444] text-white text-[14px] font-medium hover:bg-[#DC2626]">
+                  <PhoneOff size={16} /> {lang === 'en' ? 'Cancel' : 'Отменить'}
+                </button>
+              </div>
+            )}
+
             {/* Messages */}
-            <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto px-4 py-4 bg-[var(--color-search-bg)] flex flex-col gap-3">
+            <div ref={scrollRef} className={`flex-1 min-h-0 overflow-y-auto px-4 py-4 bg-[var(--color-search-bg)] flex flex-col gap-3 ${callState === 'ringing' ? 'hidden' : ''}`}>
               {messages.map((m, i) => {
                 const isLastAssistant = m.role === 'assistant' && i === messages.length - 1
                 const { text, chips } = m.role === 'assistant' ? extractChips(m.content) : { text: m.content, chips: [] }
