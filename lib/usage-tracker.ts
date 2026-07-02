@@ -43,7 +43,7 @@ const AUDIO_PRICES: Record<string, AudioPrice> = {
 }
 
 export type Feature =
-  | 'chat-web' | 'chat-tg'
+  | 'chat-web' | 'chat-tg' | 'chat-voice-call'
   | 'embed-search' | 'embed-backfill'
   | 'transcribe'
   | 'other'
