@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
 import ReactMarkdown from 'react-markdown'
-import { MessageCircle, X, Send, Loader2, AlertTriangle, BedDouble, MapPin, ExternalLink, Mic, Square, UserRound, Trash2, Volume2, VolumeX, Phone, PhoneOff } from 'lucide-react'
+import { MessageCircle, X, Send, Loader2, AlertTriangle, BedDouble, MapPin, ExternalLink, Mic, Square, UserRound, Trash2, Phone, PhoneOff } from 'lucide-react'
 import { useWishlist } from './WishlistContext'
 import { RECENT_KEY, type RecentlyViewedEntry } from './PageViewTracker'
 import { LeadButton } from './LeadButton'
@@ -206,15 +206,16 @@ export function ConsultantWidget() {
   const [voiceSupported, setVoiceSupported] = useState(false)
   const scrollRef = useRef<HTMLDivElement | null>(null)
 
-  // ===== Voice output (Балина speaks) ==================================
-  // voiceMode on → every assistant reply is auto-spoken via /api/tts
-  // (ElevenLabs, key server-side). Combined with the existing mic input
-  // this makes a hands-tap voice conversation: talk → Балина answers aloud.
-  const [voiceMode, setVoiceMode] = useState(false)
+  // ===== Voice output (Балина speaks) — used by call mode ==============
+  // speak() plays a reply via /api/tts (ElevenLabs, key server-side) and
+  // fires onDone when the audio ends — that callback drives the hands-free
+  // call loop (reply spoken → reopen mic). isSpeaking powers the call UI.
+  const [isSpeaking, setIsSpeaking] = useState(false)
+  const callActiveRef = useRef(false) // true only during an active call
   const audioRef = useRef<HTMLAudioElement | null>(null)
-  const speak = async (text: string) => {
+  const speak = async (text: string, onDone?: () => void) => {
     const clean = extractChips(text).text.replace(/\s+/g, ' ').trim()
-    if (!clean) return
+    if (!clean) { onDone?.(); return }
     try {
       audioRef.current?.pause()
       const res = await fetch('/api/tts', {
@@ -222,14 +223,16 @@ export function ConsultantWidget() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: clean }),
       })
-      if (!res.ok) return
+      if (!res.ok) { onDone?.(); return }
       const url = URL.createObjectURL(await res.blob())
       const audio = new Audio(url)
       audioRef.current = audio
-      audio.onended = () => URL.revokeObjectURL(url)
-      audio.onerror = () => URL.revokeObjectURL(url)
+      setIsSpeaking(true)
+      const done = () => { setIsSpeaking(false); URL.revokeObjectURL(url); onDone?.() }
+      audio.onended = done
+      audio.onerror = done
       await audio.play()
-    } catch { /* playback best-effort */ }
+    } catch { setIsSpeaking(false); onDone?.() }
   }
 
   // ===== Call mode ("phone" UX) ========================================
@@ -238,6 +241,7 @@ export function ConsultantWidget() {
   type CallState = 'idle' | 'ringing' | 'connected'
   const [callState, setCallState] = useState<CallState>('idle')
   const ringRef = useRef<{ ctx: AudioContext; iv: number; osc: OscillatorNode } | null>(null)
+  const ringTimeoutRef = useRef<number | null>(null)
   const startRingback = () => {
     try {
       const AC = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
@@ -266,28 +270,37 @@ export function ConsultantWidget() {
     try { void r.ctx.close() } catch { /* already closed */ }
     ringRef.current = null
   }
+  // (Re)open the mic hands-free — the core of the call loop.
+  const listenInCall = () => { if (callActiveRef.current) void startRecording() }
   const startCall = () => {
-    setOpen(true)
     setError(null)
     setCallState('ringing')
     startRingback()
-    window.setTimeout(() => {
+    ringTimeoutRef.current = window.setTimeout(() => {
+      ringTimeoutRef.current = null
       stopRingback()
       setCallState('connected')
-      setVoiceMode(true)
+      callActiveRef.current = true
       const g = lang === 'en'
         ? 'Hi, Balina here! What are you looking for in Bali?'
-        : 'Алло, это Балина! Слушаю — что подобрать на Бали?'
+        : 'Алло, это Балина! Слушаю — что вам подобрать на Бали?'
       setMessages(prev => (prev.some(m => m.content === g) ? prev : [...prev, { role: 'assistant', content: g }]))
-      void speak(g)
+      // Greet by voice, then start listening → user talks → silence auto-stops
+      // → transcribe → send → reply spoken → listen again (the loop lives in
+      // the recorder's silence handler and the /api/chat reply handler).
+      void speak(g, listenInCall)
     }, 3400)
   }
   const endCall = () => {
+    callActiveRef.current = false
+    if (ringTimeoutRef.current) { clearTimeout(ringTimeoutRef.current); ringTimeoutRef.current = null }
     stopRingback()
     audioRef.current?.pause()
+    setIsSpeaking(false)
+    cancelRecording()
     setCallState('idle')
   }
-  useEffect(() => () => stopRingback(), [])
+  useEffect(() => () => { stopRingback(); if (ringTimeoutRef.current) clearTimeout(ringTimeoutRef.current) }, [])
 
   // ===== Voice input (dictaphone-style) ================================
   //
@@ -557,9 +570,10 @@ export function ConsultantWidget() {
         const blob = new Blob(chunksRef.current, { type: mime || 'audio/webm' })
         cleanupRecording()
         if (blob.size < 1024) {
-          // Less than 1 KB — visitor tapped record then immediately
-          // stop with no audible speech. Just return to idle.
+          // Less than 1 KB — no audible speech. In a call keep listening;
+          // otherwise just return to idle.
           setRecState({ kind: 'idle' })
+          if (callActiveRef.current) listenInCall()
           return
         }
         void submitAudio(blob, 0)
@@ -597,6 +611,10 @@ export function ConsultantWidget() {
         const sinceSound = now - lastSoundAtRef.current
         const silent = sinceSound > SILENCE_MS && elapsed > SILENCE_MS
         setRecState(prev => (prev.kind === 'recording' && prev.silent !== silent ? { kind: 'recording', silent } : prev))
+
+        // In a call the mic is hands-free: once the visitor goes quiet, end the
+        // turn automatically and let the pipeline transcribe → send → reply.
+        if (callActiveRef.current && silent) { recorder.stop(); return }
 
         // Hard cap — force-stop at MAX_RECORDING_MS.
         if (elapsed > MAX_RECORDING_MS) { recorder.stop(); return }
@@ -658,6 +676,9 @@ export function ConsultantWidget() {
         const sep = baseInputRef.current && text ? ' ' : ''
         const full = baseInputRef.current + sep + text
         void sendText(full)
+      } else if (callActiveRef.current) {
+        // Empty transcript during a call — keep the line open.
+        listenInCall()
       }
     } catch {
       if (attempt < 2) {
@@ -670,9 +691,10 @@ export function ConsultantWidget() {
     }
   }
 
-  // Stop recording / drop the audio context when the widget closes.
+  // Stop recording / drop the audio context when the widget closes — but NOT
+  // during a call (the call runs its own mic loop with the chat closed).
   useEffect(() => {
-    if (!open) {
+    if (!open && !callActiveRef.current) {
       cancelRecording()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -834,11 +856,14 @@ export function ConsultantWidget() {
       }
       const j = await res.json() as { message: Message; listings?: ListingCard[] }
       setMessages([...next, { ...j.message, listings: j.listings }])
-      // In voice mode Балина reads her reply aloud (id = index in the new list).
-      if (voiceMode && j.message?.content) void speak(j.message.content)
+      if (callActiveRef.current && j.message?.content) {
+        // Call: speak the reply, then reopen the mic — hands-free turn-taking.
+        void speak(j.message.content, listenInCall)
+      }
     } catch (e) {
       console.error('[consultant] error:', e)
       setError(c.sendError)
+      if (callActiveRef.current) listenInCall() // keep the call alive on a failed turn
     } finally {
       setLoading(false)
     }
@@ -858,9 +883,48 @@ export function ConsultantWidget() {
     setTimeout(() => { void sendText(prompt) }, 60)
   }
 
+  const callStatusText = callState === 'ringing'
+    ? (lang === 'en' ? 'ringing…' : 'идут гудки…')
+    : isSpeaking
+      ? (lang === 'en' ? 'Balina is speaking…' : 'Балина говорит…')
+      : loading
+        ? (lang === 'en' ? 'Balina is thinking…' : 'Балина думает…')
+        : recState.kind === 'recording'
+          ? (lang === 'en' ? 'Listening…' : 'Слушаю вас…')
+          : recState.kind === 'transcribing'
+            ? (lang === 'en' ? 'One sec…' : 'Распознаю…')
+            : (lang === 'en' ? 'Connected' : 'На связи')
+
   return (
     <>
-      {!open && (
+      {/* CALL — a separate full-screen experience, independent of the text chat. */}
+      {callState !== 'idle' && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:justify-end p-0 sm:p-5">
+          <div className="w-full sm:w-[360px] max-w-[100vw] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-[var(--color-border)] px-8 py-10 flex flex-col items-center gap-6 text-center">
+            <div className="relative">
+              <Image src="/balina.jpg" alt="" width={112} height={112} className="w-28 h-28 rounded-full object-cover" />
+              <span className={`absolute -inset-1.5 rounded-full ring-4 ${callState === 'ringing' || isSpeaking || recState.kind === 'recording' ? 'ring-[#22C55E]/40 animate-ping' : 'ring-transparent'}`} />
+            </div>
+            <div>
+              <div className="text-[22px] font-semibold text-[#111827]">Балина</div>
+              <div className="text-[14px] text-[var(--color-text-muted)] mt-1">{callStatusText}</div>
+            </div>
+            <div className="h-1.5 w-40 rounded-full bg-[var(--color-border)] overflow-hidden">
+              <div className="h-full bg-[#22C55E] transition-[width] duration-100" style={{ width: callState === 'connected' && recState.kind === 'recording' ? `${Math.min(100, Math.round(recLevel * 160))}%` : '0%' }} />
+            </div>
+            <button
+              type="button"
+              onClick={endCall}
+              aria-label={lang === 'en' ? 'End call' : 'Завершить звонок'}
+              className="mt-1 inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#EF4444] text-white hover:bg-[#DC2626] shadow-lg transition-colors"
+            >
+              <PhoneOff size={26} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!open && callState === 'idle' && (
         <div className="fixed bottom-5 right-5 z-40 flex items-center gap-2">
           {/* Call button — ring Балину and talk to her by voice. */}
           <button
@@ -957,34 +1021,6 @@ export function ConsultantWidget() {
                 </div>
               </div>
               <div className="flex items-center gap-1.5">
-                {/* Call — ring Балину; she picks up and greets by voice. */}
-                <button
-                  type="button"
-                  onClick={callState === 'idle' ? startCall : endCall}
-                  aria-label={callState === 'idle' ? (lang === 'en' ? 'Call' : 'Позвонить') : (lang === 'en' ? 'End call' : 'Завершить звонок')}
-                  title={callState === 'idle' ? (lang === 'en' ? 'Call Balina' : 'Позвонить Балине') : (lang === 'en' ? 'End call' : 'Завершить звонок')}
-                  className={`inline-flex items-center justify-center w-9 h-9 rounded-full text-white ${callState === 'idle' ? 'bg-[#22C55E] hover:bg-[#16A34A]' : 'bg-[#EF4444] hover:bg-[#DC2626]'}`}
-                >
-                  {callState === 'idle' ? <Phone size={16} /> : <PhoneOff size={16} />}
-                </button>
-                {/* Voice mode — when on, Балина speaks every reply aloud
-                    (ElevenLabs TTS). Turning it off stops any playback. */}
-                <button
-                  type="button"
-                  onClick={() => setVoiceMode(v => {
-                    const nv = !v
-                    if (!nv) audioRef.current?.pause()
-                    return nv
-                  })}
-                  aria-pressed={voiceMode}
-                  aria-label={lang === 'en' ? 'Voice mode' : 'Голосовой режим'}
-                  title={lang === 'en'
-                    ? (voiceMode ? 'Voice on — Балина speaks' : 'Turn on voice')
-                    : (voiceMode ? 'Голос включён — Балина говорит' : 'Включить голос')}
-                  className={`inline-flex items-center justify-center w-9 h-9 rounded-full ${voiceMode ? 'bg-[var(--color-primary)] text-white' : 'bg-white/60 hover:bg-white text-[#111827]'}`}
-                >
-                  {voiceMode ? <Volume2 size={16} /> : <VolumeX size={16} />}
-                </button>
                 {/* Clear-history is a manual escape hatch when the
                     visitor wants to start over. Hidden when the chat
                     is just the greeting (nothing to clear yet). */}
@@ -1012,23 +1048,8 @@ export function ConsultantWidget() {
               </div>
             </div>
 
-            {/* Ringing screen — while the call connects. */}
-            {callState === 'ringing' && (
-              <div className="flex-1 min-h-0 flex flex-col items-center justify-center gap-4 bg-[var(--color-search-bg)] px-6 text-center">
-                <div className="relative">
-                  <Image src="/balina.jpg" alt="" width={96} height={96} className="w-24 h-24 rounded-full object-cover" />
-                  <span className="absolute -inset-1 rounded-full ring-4 ring-[#22C55E]/40 animate-ping" />
-                </div>
-                <div className="text-[17px] font-semibold text-[#111827]">{lang === 'en' ? 'Calling Balina…' : 'Звоним Балине…'}</div>
-                <div className="text-[13px] text-[var(--color-text-muted)]">{lang === 'en' ? 'ringing…' : 'идут гудки…'}</div>
-                <button type="button" onClick={endCall} className="mt-2 inline-flex items-center gap-2 px-4 h-10 rounded-full bg-[#EF4444] text-white text-[14px] font-medium hover:bg-[#DC2626]">
-                  <PhoneOff size={16} /> {lang === 'en' ? 'Cancel' : 'Отменить'}
-                </button>
-              </div>
-            )}
-
             {/* Messages */}
-            <div ref={scrollRef} className={`flex-1 min-h-0 overflow-y-auto px-4 py-4 bg-[var(--color-search-bg)] flex flex-col gap-3 ${callState === 'ringing' ? 'hidden' : ''}`}>
+            <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto px-4 py-4 bg-[var(--color-search-bg)] flex flex-col gap-3">
               {messages.map((m, i) => {
                 const isLastAssistant = m.role === 'assistant' && i === messages.length - 1
                 const { text, chips } = m.role === 'assistant' ? extractChips(m.content) : { text: m.content, chips: [] }
