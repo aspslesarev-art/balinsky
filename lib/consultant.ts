@@ -8,6 +8,15 @@ import { isHiddenDeveloper } from './hidden-developers'
 import { loadReviewHeat, type HeatCell } from './reviews-heat'
 import { loadAllRental } from './rental'
 import { cdnManifestUrl } from './photo-cdn'
+import { type Lang, tField, switchLangPath } from './i18n'
+
+// Build a listing URL for the visitor's language: RU keeps the /ru/... path,
+// EN swaps the section segments to their English form (villy→villas, etc.).
+// The listing slug is identical across languages.
+function listingUrl(pathPrefix: string, slug: string, lang: Lang): string {
+  const path = `${pathPrefix}${slug}`
+  return `${SITE_URL}${lang === 'en' ? switchLangPath(path, 'en') : path}`
+}
 
 const sb = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -598,6 +607,7 @@ async function searchSupabaseTable(
   args: SearchArgs,
   pathPrefix: string,
   photoBucket: string | null,
+  lang: Lang = 'ru',
 ): Promise<ListingCard[]> {
   const select = table === 'raw_developers' ? 'airtable_id, data, logo_url' : 'airtable_id, data'
   const { data } = await sb.from(table).select(select).limit(2000)
@@ -715,7 +725,7 @@ async function searchSupabaseTable(
   const cards = sliced.map(r => {
     const d = r.data
     const slug = fs1(d['SEO:Slug'])!
-    const title = fs1(d['SEO:Title']) ?? fs1(d['ИИ Имя']) ?? fs1(d['Name']) ?? fs1(d['Project']) ?? fs1(d['Developer']) ?? ''
+    const title = tField(d, 'SEO:Title', lang) ?? tField(d, 'ИИ Имя', lang) ?? tField(d, 'Name', lang) ?? fs1(d['Project']) ?? fs1(d['Developer']) ?? ''
     const districtRaw = fs1(d['Location filter']) ?? fs1(d['Location 2']) ?? fs1(d['Location'])
     // Some villa rows have airtable record IDs in 'Location' (linked record).
     // Drop them so the chat card shows nothing instead of "recXXX".
@@ -769,7 +779,7 @@ async function searchSupabaseTable(
     return {
       kind,
       title: title.replace(/\s*\|\s*Balinsky\s*$/, '').trim(),
-      url: `${SITE_URL}${pathPrefix}${slug}`,
+      url: listingUrl(pathPrefix, slug, lang),
       photo,
       district,
       bedrooms,
@@ -985,7 +995,7 @@ function classifyLandZone(purpose: string | null, color: string | null): Listing
   return 'unknown'
 }
 
-async function searchRental(args: SearchArgs): Promise<ListingCard[]> {
+async function searchRental(args: SearchArgs, lang: Lang = 'ru'): Promise<ListingCard[]> {
   const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/rental/_rental.json`
   const r = await fetch(cdnManifestUrl(url, 600), { cache: 'no-store' })
   if (!r.ok) return []
@@ -1007,7 +1017,7 @@ async function searchRental(args: SearchArgs): Promise<ListingCard[]> {
   return filtered.slice(0, limit).map<ListingCard>(it => ({
     kind: 'rental',
     title: it.title,
-    url: `${SITE_URL}/ru/arenda/o/${it.slug}`,
+    url: listingUrl('/ru/arenda/o/', it.slug, lang),
     photo: it.photos?.[0] ?? null,
     district: it.location,
     bedrooms: it.bedrooms,
@@ -1041,8 +1051,8 @@ async function searchRental(args: SearchArgs): Promise<ListingCard[]> {
   }))
 }
 
-async function searchListings(args: SearchArgs): Promise<ListingCard[]> {
-  let raw = await searchOneKind(args)
+async function searchListings(args: SearchArgs, lang: Lang = 'ru'): Promise<ListingCard[]> {
+  let raw = await searchOneKind(args, lang)
 
   // Server-side fan-out for name searches. The model frequently
   // queries `kind=villa` first and gives up after 0 hits — but the
@@ -1055,7 +1065,7 @@ async function searchListings(args: SearchArgs): Promise<ListingCard[]> {
     const fallbackKinds: SearchArgs['kind'][] = ['villa', 'apartment', 'complex']
     for (const k of fallbackKinds) {
       if (tried.has(k)) continue
-      const probe = await searchOneKind({ ...args, kind: k })
+      const probe = await searchOneKind({ ...args, kind: k }, lang)
       if (probe.length > 0) { raw = probe; break }
     }
   }
@@ -1068,13 +1078,13 @@ async function searchListings(args: SearchArgs): Promise<ListingCard[]> {
   return raw
 }
 
-async function searchOneKind(args: SearchArgs): Promise<ListingCard[]> {
+async function searchOneKind(args: SearchArgs, lang: Lang = 'ru'): Promise<ListingCard[]> {
   switch (args.kind) {
-    case 'villa':     return searchSupabaseTable('raw_villas', 'villa', args, '/ru/villy/o/', 'villa-photos')
-    case 'apartment': return searchSupabaseTable('raw_apartments', 'apartment', args, '/ru/apartamenty/o/', 'apartment-photos')
-    case 'complex':   return searchSupabaseTable('raw_complexes', 'complex', args, '/ru/zhilye-kompleksy/o/', 'complex-photos')
-    case 'developer': return searchSupabaseTable('raw_developers', 'developer', args, '/ru/zastrojshhiki/', null)
-    case 'rental':    return searchRental(args)
+    case 'villa':     return searchSupabaseTable('raw_villas', 'villa', args, '/ru/villy/o/', 'villa-photos', lang)
+    case 'apartment': return searchSupabaseTable('raw_apartments', 'apartment', args, '/ru/apartamenty/o/', 'apartment-photos', lang)
+    case 'complex':   return searchSupabaseTable('raw_complexes', 'complex', args, '/ru/zhilye-kompleksy/o/', 'complex-photos', lang)
+    case 'developer': return searchSupabaseTable('raw_developers', 'developer', args, '/ru/zastrojshhiki/', null, lang)
+    case 'rental':    return searchRental(args, lang)
     default:          return []
   }
 }
@@ -1112,11 +1122,11 @@ export async function ensureFeedbackBucket() {
   }
 }
 
-export async function executeToolCall(name: string, rawArgs: string): Promise<string> {
+export async function executeToolCall(name: string, rawArgs: string, lang: Lang = 'ru'): Promise<string> {
   let args: unknown
   try { args = JSON.parse(rawArgs) } catch { return JSON.stringify({ error: 'invalid_arguments' }) }
   if (name === 'search_listings') {
-    const result = await searchListings(args as SearchArgs)
+    const result = await searchListings(args as SearchArgs, lang)
     return JSON.stringify({ results: result })
   }
   if (name === 'submit_feedback') {
@@ -1133,7 +1143,7 @@ export async function executeToolCall(name: string, rawArgs: string): Promise<st
     return JSON.stringify(result)
   }
   if (name === 'semantic_search') {
-    const result = await searchSemantic(args as SemanticArgs)
+    const result = await searchSemantic(args as SemanticArgs, lang)
     return JSON.stringify(result)
   }
   return JSON.stringify({ error: 'unknown_tool' })
@@ -1158,7 +1168,7 @@ type SemanticResult = { results: ListingCard[]; knowledge: KnowledgeSnippet[] }
 
 const CATALOG_KINDS = new Set(['villa', 'apartment', 'complex'])
 
-async function searchSemantic(args: SemanticArgs): Promise<SemanticResult> {
+async function searchSemantic(args: SemanticArgs, lang: Lang = 'ru'): Promise<SemanticResult> {
   const q = (args.query ?? '').trim()
   if (q.length < 3) return { results: [], knowledge: [] }
   const limit = Math.max(1, Math.min(20, args.limit ?? 8))
@@ -1233,7 +1243,7 @@ async function searchSemantic(args: SemanticArgs): Promise<SemanticResult> {
     const d = row.data
     const slug = fs1(d['SEO:Slug']) ?? null
     if (!slug || slug.startsWith('-')) continue
-    const title = fs1(d['SEO:Title']) ?? fs1(d['ИИ Имя']) ?? fs1(d['Name']) ?? fs1(d['Project']) ?? ''
+    const title = tField(d, 'SEO:Title', lang) ?? tField(d, 'ИИ Имя', lang) ?? tField(d, 'Name', lang) ?? fs1(d['Project']) ?? ''
     const districtRaw = fs1(d['Location filter']) ?? fs1(d['Location 2']) ?? fs1(d['Location'])
     const district = districtRaw && /^rec[A-Za-z0-9]{14,}$/.test(districtRaw) ? null : districtRaw
     const bedrooms = num(d['Комнаты']) ?? num(d['Спальни']) ?? null
@@ -1252,7 +1262,7 @@ async function searchSemantic(args: SemanticArgs): Promise<SemanticResult> {
     cards.push({
       kind: h.kind,
       title: title.replace(/\s*\|\s*Balinsky\s*$/, '').trim(),
-      url: `${SITE_URL}${pathByKind[h.kind]}${slug}`,
+      url: listingUrl(pathByKind[h.kind], slug, lang),
       photo,
       district,
       bedrooms,
