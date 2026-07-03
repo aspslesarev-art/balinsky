@@ -72,7 +72,7 @@ export default function Page() {
     '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Главная', item: `${SITE_URL}/ru` },
-      { '@type': 'ListItem', position: 2, name: 'Инвестиции в недвижимость на Бали' },
+      { '@type': 'ListItem', position: 2, name: 'Инвестиции в недвижимость на Бали', item: `${SITE_URL}/ru/investicii-v-nedvizhimost-bali` },
     ],
   }
   const faqJsonLd = {

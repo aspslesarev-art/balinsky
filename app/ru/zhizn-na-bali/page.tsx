@@ -63,7 +63,7 @@ export default function Page() {
     '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Главная', item: `${SITE_URL}/ru` },
-      { '@type': 'ListItem', position: 2, name: 'Жизнь на Бали' },
+      { '@type': 'ListItem', position: 2, name: 'Жизнь на Бали', item: `${SITE_URL}/ru/zhizn-na-bali` },
     ],
   }
   const faqJsonLd = {
