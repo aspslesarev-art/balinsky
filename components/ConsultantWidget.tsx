@@ -328,7 +328,7 @@ export function ConsultantWidget() {
     setCallState('ringing')
     startRingback()
     try {
-      const r = await fetch('/api/convai/signed-url')
+      const r = await fetch(`/api/convai/signed-url?lang=${lang}`)
       if (!r.ok) throw new Error('signed_url')
       const { signedUrl } = await r.json() as { signedUrl: string }
       await callControlsRef.current?.startSession({ signedUrl, connectionType: 'websocket' })

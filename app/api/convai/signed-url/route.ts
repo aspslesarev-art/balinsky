@@ -10,9 +10,12 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(req: Request) {
   const key = process.env.ELEVENLABS_API_KEY
-  // agent_id is public (not secret); constant fallback so prod works with just
-  // ELEVENLABS_API_KEY, env override optional.
-  const agentId = process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID ?? 'agent_5001kwgqxtfaed9r9bf3jv11nhm5'
+  // Two call agents (ids are public, not secrets): Балина speaks the site's
+  // language — Russian on /ru, English on /en. Picked by ?lang.
+  const RU_AGENT = 'agent_5001kwgqxtfaed9r9bf3jv11nhm5'
+  const EN_AGENT = 'agent_1201kwjv3mfqeyb9bzveh97vnzeb'
+  const lang = new URL(req.url).searchParams.get('lang')
+  const agentId = lang === 'en' ? EN_AGENT : RU_AGENT
   if (!key) return NextResponse.json({ error: 'convai_unconfigured' }, { status: 503 })
   if (!rateLimit(`convai:${clientIp(req)}`, 10, 60_000)) {
     return NextResponse.json({ error: 'rate_limited' }, { status: 429 })
