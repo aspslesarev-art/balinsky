@@ -11,7 +11,6 @@ import { unstable_cache } from 'next/cache'
 import { HardHat, Building2, Award, Wrench, Users, Briefcase, ChevronRight } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
-import { StarRating } from '@/components/StarRating'
 import { reliabilityForDeveloper } from '@/lib/developer-reliability'
 import { ExpandableText } from '@/components/ExpandableText'
 import { ComplexCard, type ComplexCardData } from '@/components/ComplexCard'
@@ -452,17 +451,10 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
                   </div>
                 )}
               </div>
-              {reliability && (
-                <div className="flex items-center gap-2 mt-3">
-                  <StarRating value={reliability.score} size={16} />
-                  <span className="text-[15px] font-semibold text-[#111827]">{reliability.score.toFixed(1)}</span>
-                  <span className="text-[13px] text-[var(--color-text-muted)]">
-                    {lang === 'en'
-                      ? `Balinsky reliability index · ${reliability.completed} completed`
-                      : `Индекс надёжности Balinsky · ${reliability.completed} сданных`}
-                  </span>
-                </div>
-              )}
+              {/* Visible star rating hidden for now — developers raised
+                  questions about how it's derived. The reliability Review
+                  JSON-LD above stays (for SERP rich snippets) until we settle
+                  on an objective, defensible rating methodology. */}
             </div>
           </div>
         </section>

@@ -138,7 +138,10 @@ const COPY = {
       { q: 'Какие документы должны быть у комплекса?',
         a: 'Главные — PBG (разрешение на строительство) и SLF (сертификат пригодности). Без SLF юнит нельзя легально сдавать в аренду. Документы видны выше в блоке «Ключевые факты».' },
     ],
-    titlePart: (name: string, district: string | null) => `${name} — жилой комплекс${district ? ` в ${district}` : ''} на Бали | Balinsky`,
+    titlePart: (name: string, district: string | null, objects: string | null) => {
+      const where = district ? `в ${district}, Бали` : 'Бали'
+      return objects ? `ЖК ${name} — ${objects} ${where} | Balinsky` : `ЖК ${name} ${where} | Balinsky`
+    },
     ogTitle: (name: string) => `${name} на Бали`,
     fallbackDesc: (name: string, district: string | null, types: string, yearRaw: string | null) =>
       `Жилой комплекс ${name}${district ? ` в районе ${district}` : ''} на Бали. ${types ? `Форматы: ${types.toLowerCase()}.` : ''}${yearRaw ? ` Сдача: ${yearRaw}.` : ''} Фото, цены, разрешения.`,
@@ -202,7 +205,10 @@ const COPY = {
       { q: 'What documents should the complex have?',
         a: 'The main ones are PBG (construction permit) and SLF (suitability certificate). Without SLF a unit cannot be legally rented out. Permits are listed above in the "Key facts" block.' },
     ],
-    titlePart: (name: string, district: string | null) => `${name} — residential complex${district ? ` in ${district}` : ''} in Bali | Balinsky`,
+    titlePart: (name: string, district: string | null, objects: string | null) => {
+      const where = district ? `in ${district}, Bali` : 'in Bali'
+      return objects ? `${name} — ${objects} ${where} | Balinsky` : `${name} — Residential Complex ${where} | Balinsky`
+    },
     ogTitle: (name: string) => `${name} in Bali`,
     fallbackDesc: (name: string, district: string | null, types: string, yearRaw: string | null) =>
       `${name} residential complex${district ? ` in ${district}` : ''} in Bali.${types ? ` Unit types: ${types.toLowerCase()}.` : ''}${yearRaw ? ` Completion: ${yearRaw}.` : ''} Photos, prices, permits.`,
@@ -293,6 +299,25 @@ function strList(v: unknown): string[] {
   if (Array.isArray(v)) return v.map(x => String(x).trim()).filter(Boolean)
   if (typeof v === 'string') return v.split(',').map(s => s.trim()).filter(Boolean)
   return []
+}
+// Turn the raw "Типы юнитов" values into a short, buyer-facing phrase for the
+// SEO title — like the competitor's "Apartments, Villas". Detects by substring
+// so it survives commas/pipes/array shapes and RU or EN source spellings.
+// Hotel/Commercial are dropped (not what a complex buyer searches for).
+function unitTypesPhrase(rawTypes: unknown, lang: Lang): string | null {
+  const src = strList(rawTypes).join('|').toLowerCase()
+  const found: string[] = []
+  if (/апартамент|apartment/.test(src)) found.push('apartment')
+  if (/вилл|villa/.test(src)) found.push('villa')          // Виллы + Смарт виллы
+  if (/таунхаус|townhouse/.test(src)) found.push('townhouse')
+  if (/пентхаус|penthouse/.test(src)) found.push('penthouse')
+  if (found.length === 0) return null
+  const RU: Record<string, string> = { apartment: 'апартаменты', villa: 'виллы', townhouse: 'таунхаусы', penthouse: 'пентхаусы' }
+  const EN: Record<string, string> = { apartment: 'Apartments', villa: 'Villas', townhouse: 'Townhouses', penthouse: 'Penthouses' }
+  const words = found.map(k => (lang === 'en' ? EN : RU)[k])
+  if (words.length === 1) return words[0]
+  const sep = lang === 'en' ? ' & ' : ' и '
+  return words.slice(0, -1).join(', ') + sep + words[words.length - 1]
 }
 function parseGeo(v: unknown): number | null {
   if (typeof v === 'number') return Number.isFinite(v) ? v : null
@@ -603,7 +628,7 @@ export async function generateComplexMetadata(slug: string, lang: Lang) {
   const enPath = `/en/complexes/o/${slug}`
   const path = lang === 'en' ? enPath : ruPath
   return {
-    title: copy.titlePart(name, district),
+    title: copy.titlePart(name, district, unitTypesPhrase(c.data['Типы юнитов'], lang)),
     description,
     alternates: {
       canonical: path,
