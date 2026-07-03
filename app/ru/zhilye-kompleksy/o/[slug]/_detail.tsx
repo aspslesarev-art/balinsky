@@ -319,6 +319,36 @@ function unitTypesPhrase(rawTypes: unknown, lang: Lang): string | null {
   const sep = lang === 'en' ? ' & ' : ' и '
   return words.slice(0, -1).join(', ') + sep + words[words.length - 1]
 }
+
+function minMax(nums: number[]): [number, number] | null {
+  const v = nums.filter(n => typeof n === 'number' && Number.isFinite(n) && n > 0)
+  return v.length ? [Math.min(...v), Math.max(...v)] : null
+}
+// Competitor-style factual meta description: types + area/bedroom/price ranges
+// from the actual units, like "…Apartments & Villas in Bukit, Bali. 45–210 m²,
+// 1–3 bedrooms, from $180,000 to $650,000." Returns null when there's no price
+// AND no area to state (then we fall back to editorial text).
+function factsDescription(opts: {
+  name: string; district: string | null; phrase: string | null; year: string | null
+  prices: number[]; areas: number[]; beds: number[]
+}, lang: Lang): string | null {
+  const ar = minMax(opts.areas), pr = minMax(opts.prices), br = minMax(opts.beds)
+  if (!ar && !pr) return null
+  const usd = (n: number) => '$' + Math.round(n).toLocaleString('en-US')
+  const parts: string[] = []
+  if (lang === 'en') {
+    const head = `${opts.name} — ${opts.phrase ?? 'residential complex'}${opts.district ? ` in ${opts.district}` : ''}, Bali.`
+    if (ar) parts.push(ar[0] === ar[1] ? `${ar[0]} m²` : `${ar[0]}–${ar[1]} m²`)
+    if (br) parts.push(br[0] === br[1] ? `${br[0]}-bedroom` : `${br[0]}–${br[1]} bedrooms`)
+    if (pr) parts.push(pr[0] === pr[1] ? usd(pr[0]) : `from ${usd(pr[0])} to ${usd(pr[1])}`)
+    return `${head} ${parts.join(', ')}.${opts.year ? ` Completion ${opts.year}.` : ''}`.slice(0, 200)
+  }
+  const head = `${opts.name} — ${opts.phrase ?? 'жилой комплекс'}${opts.district ? ` в ${opts.district}` : ''}, Бали.`
+  if (ar) parts.push(ar[0] === ar[1] ? `${ar[0]} м²` : `${ar[0]}–${ar[1]} м²`)
+  if (br) parts.push(br[0] === br[1] ? `${br[0]} спальни` : `${br[0]}–${br[1]} спальни`)
+  if (pr) parts.push(pr[0] === pr[1] ? usd(pr[0]) : `от ${usd(pr[0])} до ${usd(pr[1])}`)
+  return `${head} ${parts.join(', ')}.${opts.year ? ` Сдача ${opts.year}.` : ''}`.slice(0, 200)
+}
 function parseGeo(v: unknown): number | null {
   if (typeof v === 'number') return Number.isFinite(v) ? v : null
   if (typeof v === 'string') {
@@ -621,9 +651,20 @@ export async function generateComplexMetadata(slug: string, lang: Lang) {
   const seoText = tField(c.data, 'SEO Text', lang)
     ?? tField(c.data, 'Описание', lang)
     ?? firstString(c.data['ИИ Описание 2'])
-  const description = seoText
-    ? seoText.slice(0, 160).trim() + (seoText.length > 160 ? '…' : '')
-    : copy.fallbackDesc(name, district, types, yearRaw)
+  // Facts-first snippet — types + area/bedroom/price ranges from the real
+  // units (like competitors). Falls back to editorial text, then the generic
+  // line, when the complex has no priced/measured units.
+  const units = await loadUnitsInComplex(name, lang).catch(() => [] as Awaited<ReturnType<typeof loadUnitsInComplex>>)
+  const facts = factsDescription({
+    name, district, phrase: unitTypesPhrase(c.data['Типы юнитов'], lang), year: yearRaw,
+    prices: units.map(u => Number(u.priceUsd)).filter(n => Number.isFinite(n)),
+    areas: units.map(u => Number(u.area)).filter(n => Number.isFinite(n)),
+    beds: units.map(u => Number(u.bedrooms)).filter(n => Number.isFinite(n)),
+  }, lang)
+  const description = facts
+    ?? (seoText
+      ? seoText.slice(0, 160).trim() + (seoText.length > 160 ? '…' : '')
+      : copy.fallbackDesc(name, district, types, yearRaw))
   const ruPath = `/ru/zhilye-kompleksy/o/${slug}`
   const enPath = `/en/complexes/o/${slug}`
   const path = lang === 'en' ? enPath : ruPath
