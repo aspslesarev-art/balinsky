@@ -346,7 +346,7 @@ export async function POST(req: Request) {
 
     for (const tc of msg.tool_calls) {
       if (tc.type !== 'function') continue
-      const result = await executeToolCall(tc.function.name, tc.function.arguments)
+      const result = await executeToolCall(tc.function.name, tc.function.arguments, lang)
       messages.push({
         role: 'tool',
         tool_call_id: tc.id,
