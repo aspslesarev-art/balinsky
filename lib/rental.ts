@@ -1,5 +1,6 @@
 import { applyManifestTranslation, loadEnTranslations } from '@/lib/en-translations'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
+import { normalizeSlug } from '@/lib/slug-normalize'
 import type { Lang } from '@/lib/i18n'
 
 export type RentalItem = {
@@ -52,7 +53,13 @@ async function loadRawRental(): Promise<RentalItem[]> {
     const r = await fetch(cdnManifestUrl(MANIFEST_URL, 600), { next: { revalidate: 600, tags: ['content:rental'] } })
     if (!r.ok) return []
     const j = (await r.json()) as Manifest
-    return Array.isArray(j.items) ? j.items : []
+    if (!Array.isArray(j.items)) return []
+    // Normalize slugs on the way in: ~93 manifest slugs carry trailing/double
+    // dashes from truncated titles (e.g. "…120 m² —" → "…-120-m-"). The detail
+    // route resolves the normalized form, so an un-normalized slug in the
+    // sitemap / cards / canonical 404s. Normalizing here fixes all of them in
+    // one place — sitemap, list cards, canonical and lookup all agree.
+    return j.items.map(it => ({ ...it, slug: normalizeSlug(it.slug) }))
   } catch {
     return []
   }
@@ -86,5 +93,6 @@ export async function loadCompareRental(lang: Lang = 'ru'): Promise<RentalItem[]
 // links coming from the comparison blocks on villa/apartment pages.
 export async function loadRentalBySlug(slug: string, lang: Lang = 'ru'): Promise<RentalItem | null> {
   const all = await loadAllRental(lang)
-  return all.find(r => r.slug === slug) ?? null
+  const target = normalizeSlug(slug)
+  return all.find(r => r.slug === target) ?? null
 }
