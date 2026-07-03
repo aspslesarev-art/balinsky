@@ -48,7 +48,7 @@ import { normalizeSlug } from '@/lib/slug-normalize'
 import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
 import { districtRu } from '@/lib/district-ru'
-import { regencyLabel, geoChainString } from '@/lib/regency'
+import { geoChainString } from '@/lib/regency'
 import { loadKbPageContent } from '@/lib/kb-page-content'
 import { loadListingVision, altFor } from '@/lib/listing-features'
 import { DistrictAboutCard } from '@/components/DistrictAboutCard'
@@ -683,10 +683,10 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
       <Header active="apartamenty" />
       <PageViewTracker kind="apartment" slug={slug} title={title} airtableId={a.airtable_id} lang={lang} />
       <PageContainer>
-        <Breadcrumbs items={[
+        <Breadcrumbs currentUrl={`${apartmentsRoot}/o/${slug}`} items={[
           { label: c.home, href: home },
           { label: c.aptCrumb, href: apartmentsRoot },
-          ...(regencyLabel(districtRaw) ? [{ label: regencyLabel(districtRaw)! }] : []),
+          // Regency crumb dropped (no page → no `item` → GSC error).
           ...(district ? [{ label: district, href: `${apartmentsRoot}/${districtRaw!.toLowerCase().replace(/\s+/g, '-')}` }] : []),
           { label: title },
         ]} />

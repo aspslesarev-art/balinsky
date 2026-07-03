@@ -52,7 +52,7 @@ import { tField, type Lang } from '@/lib/i18n'
 import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
 import { districtRu } from '@/lib/district-ru'
-import { regencyLabel, geoChainString } from '@/lib/regency'
+import { geoChainString } from '@/lib/regency'
 import { loadKbPageContent } from '@/lib/kb-page-content'
 import { loadListingVision, altFor } from '@/lib/listing-features'
 import { DistrictAboutCard } from '@/components/DistrictAboutCard'
@@ -857,10 +857,10 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
       <Header active="zhilye-kompleksy" />
       <PageViewTracker kind="complex" slug={slug} title={name} airtableId={c.airtable_id} lang={lang} />
       <PageContainer>
-        <Breadcrumbs items={[
+        <Breadcrumbs currentUrl={`${complexesRoot}/o/${slug}`} items={[
           { label: copy.home, href: home },
           { label: copy.crumbComplexes, href: complexesRoot },
-          ...(regencyLabel(districtRaw) ? [{ label: regencyLabel(districtRaw)! }] : []),
+          // Regency crumb dropped (no page → no `item` → GSC error).
           ...(district ? [{ label: district, href: `${complexesRoot}/${districtRaw!.toLowerCase().replace(/\s+/g, '-')}` }] : []),
           { label: name },
         ]} />

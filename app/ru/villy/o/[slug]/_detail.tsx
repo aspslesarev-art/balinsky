@@ -64,7 +64,7 @@ import { normalizeSlug } from '@/lib/slug-normalize'
 import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
 import { districtRu } from '@/lib/district-ru'
-import { regencyLabel, geoChainString } from '@/lib/regency'
+import { geoChainString } from '@/lib/regency'
 import { loadKbPageContent } from '@/lib/kb-page-content'
 import { loadListingVision, altFor } from '@/lib/listing-features'
 import { DistrictAboutCard } from '@/components/DistrictAboutCard'
@@ -733,12 +733,12 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
       <Header active="villy" />
       <PageViewTracker kind="villa" slug={slug} title={title} airtableId={v.airtable_id} lang={lang} />
       <PageContainer>
-        <Breadcrumbs items={[
+        <Breadcrumbs currentUrl={`${villasRoot}/o/${slug}`} items={[
           { label: c.home, href: home },
           { label: c.villasCrumb, href: villasRoot },
-          // TASK-13d/13e: Regency level in the breadcrumb (+ its JSON-LD) —
-          // restores the "… Regency, Bali" chain Google flagged as missing.
-          ...(regencyLabel(districtRaw) ? [{ label: regencyLabel(districtRaw)! }] : []),
+          // Regency level dropped: it has no page, so its crumb had no `item`
+          // and GSC flagged the whole BreadcrumbList. Chain goes straight to
+          // the district (which does have a page).
           ...(district ? [{ label: district, href: `${villasRoot}/${districtRaw!.toLowerCase().replace(/\s+/g, '-')}` }] : []),
           { label: title },
         ]} />
