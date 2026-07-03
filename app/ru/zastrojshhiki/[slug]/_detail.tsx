@@ -417,7 +417,7 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
       <Header active="zastrojshhiki" />
       <PageViewTracker kind="developer" slug={slug} title={name} airtableId={dev.airtable_id} lang={lang} />
       <PageContainer>
-        <Breadcrumbs items={[
+        <Breadcrumbs currentUrl={`${devsRoot}/${slug}`} items={[
           { label: c.home, href: home },
           { label: c.devsCrumb, href: devsRoot },
           { label: name },
