@@ -81,7 +81,7 @@ export default async function Page({ params }: { params: Params }) {
       { '@type': 'ListItem', position: 1, name: 'Главная', item: `${SITE_URL}/ru` },
       { '@type': 'ListItem', position: 2, name: 'Застройщики', item: `${SITE_URL}/ru/zastrojshhiki` },
       { '@type': 'ListItem', position: 3, name, item: `${SITE_URL}/ru/zastrojshhiki/${slug}` },
-      { '@type': 'ListItem', position: 4, name: 'Отзывы' },
+      { '@type': 'ListItem', position: 4, name: 'Отзывы', item: `${SITE_URL}/ru/zastrojshhiki/${slug}/otzyvy` },
     ],
   }
   const aggregateJsonLd = rating ? {

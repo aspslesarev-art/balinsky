@@ -61,7 +61,7 @@ export default function Page() {
     '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/en` },
-      { '@type': 'ListItem', position: 2, name: 'Living in Bali' },
+      { '@type': 'ListItem', position: 2, name: 'Living in Bali', item: `${SITE_URL}/en/living-in-bali` },
     ],
   }
   const faqJsonLd = {

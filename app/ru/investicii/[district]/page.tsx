@@ -64,7 +64,7 @@ export default async function Page({ params }: { params: Params }) {
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Главная', item: `${SITE_URL}/ru` },
       { '@type': 'ListItem', position: 2, name: 'Инвестиции в недвижимость на Бали', item: `${SITE_URL}/ru/investicii-v-nedvizhimost-bali` },
-      { '@type': 'ListItem', position: 3, name: copy.name },
+      { '@type': 'ListItem', position: 3, name: copy.name, item: `${SITE_URL}/ru/investicii/${district}` },
     ],
   }
 

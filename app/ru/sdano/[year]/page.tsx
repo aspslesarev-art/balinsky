@@ -86,7 +86,7 @@ export default async function Page({ params }: { params: Params }) {
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Главная', item: `${SITE_URL}/ru` },
       { '@type': 'ListItem', position: 2, name: 'Жилые комплексы', item: `${SITE_URL}/ru/zhilye-kompleksy` },
-      { '@type': 'ListItem', position: 3, name: `Сданные ${year}` },
+      { '@type': 'ListItem', position: 3, name: `Сданные ${year}`, item: `${SITE_URL}/ru/sdano/${year}` },
     ],
   }
 

@@ -71,7 +71,7 @@ export default function Page() {
     '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/en` },
-      { '@type': 'ListItem', position: 2, name: 'Bali property investment' },
+      { '@type': 'ListItem', position: 2, name: 'Bali property investment', item: `${SITE_URL}/en/bali-property-investment` },
     ],
   }
   const faqJsonLd = {
