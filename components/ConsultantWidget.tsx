@@ -968,7 +968,7 @@ export function ConsultantWidget() {
               <span className={`absolute -inset-1.5 rounded-full ring-4 ${callState === 'ringing' || isSpeaking ? 'ring-[#22C55E]/40 animate-ping' : 'ring-[#22C55E]/20'}`} />
             </div>
             <div>
-              <div className="text-[22px] font-semibold text-[#111827]">Балина</div>
+              <div className="text-[22px] font-semibold text-[#111827]">{lang === 'en' ? 'Balina' : 'Балина'}</div>
               <div className="text-[14px] text-[var(--color-text-muted)] mt-1">{callStatusText}</div>
             </div>
             <button
