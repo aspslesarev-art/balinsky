@@ -8,7 +8,8 @@ import { isHiddenDeveloper } from './hidden-developers'
 import { loadReviewHeat, type HeatCell } from './reviews-heat'
 import { loadAllRental } from './rental'
 import { cdnManifestUrl } from './photo-cdn'
-import { type Lang, tField, switchLangPath } from './i18n'
+import { type Lang, switchLangPath } from './i18n'
+import { loadEnTranslations, mergeEnTranslations, type Section } from './en-translations'
 
 // Build a listing URL for the visitor's language: RU keeps the /ru/... path,
 // EN swaps the section segments to their English form (villy→villas, etc.).
@@ -16,6 +17,25 @@ import { type Lang, tField, switchLangPath } from './i18n'
 function listingUrl(pathPrefix: string, slug: string, lang: Lang): string {
   const path = `${pathPrefix}${slug}`
   return `${SITE_URL}${lang === 'en' ? switchLangPath(path, 'en') : path}`
+}
+
+// Section holding the Azure EN translations for a listing kind (same cache
+// the site's /en pages read via mergeEnTranslations).
+const SECTION_BY_KIND: Partial<Record<ListingCard['kind'], Section>> = {
+  villa: 'villas', apartment: 'apartments', complex: 'complexes', developer: 'developers', rental: 'rental',
+}
+
+// Pick the display title in the visitor's language, mirroring the site's
+// /en title lookup: EN slots first (Airtable's own `<field> EN` column OR the
+// Azure translation merged in), then RU fallback. Using the `<field> EN`
+// slots directly (not a per-field RU fallback) is what makes an EN-only
+// `ИИ Имя EN` win over an empty `SEO:Title EN`.
+function pickTitle(d: Record<string, unknown>, lang: Lang): string {
+  const en = (f: string) => fs1(d[`${f} EN`]) ?? fs1(d[`${f} En`])
+  const t = lang === 'en'
+    ? (en('SEO:Title') ?? en('ИИ Имя') ?? fs1(d['Имя ENG']) ?? fs1(d['SEO:Title']) ?? fs1(d['ИИ Имя']) ?? fs1(d['Name']))
+    : (fs1(d['SEO:Title']) ?? fs1(d['ИИ Имя']) ?? fs1(d['Name']))
+  return (t ?? fs1(d['Project']) ?? fs1(d['Developer']) ?? '').replace(/\s*\|\s*Balinsky\s*$/i, '').trim()
 }
 
 const sb = createClient(
@@ -722,10 +742,15 @@ async function searchSupabaseTable(
   const heat = await loadReviewHeat().catch(() => ({ cells: [] as HeatCell[], max: 1 }))
 
   const sliced = filtered.slice(0, limit)
+  // For EN, overlay the Azure translation cache (titles/text) exactly like the
+  // site's /en pages do, so chat cards read the same English titles.
+  const enCache = lang === 'en' && SECTION_BY_KIND[kind]
+    ? await loadEnTranslations(SECTION_BY_KIND[kind]!).catch(() => ({}))
+    : {}
   const cards = sliced.map(r => {
-    const d = r.data
+    const d = lang === 'en' ? mergeEnTranslations(r.data, r.airtable_id, enCache) : r.data
     const slug = fs1(d['SEO:Slug'])!
-    const title = tField(d, 'SEO:Title', lang) ?? tField(d, 'ИИ Имя', lang) ?? tField(d, 'Name', lang) ?? fs1(d['Project']) ?? fs1(d['Developer']) ?? ''
+    const title = pickTitle(d, lang)
     const districtRaw = fs1(d['Location filter']) ?? fs1(d['Location 2']) ?? fs1(d['Location'])
     // Some villa rows have airtable record IDs in 'Location' (linked record).
     // Drop them so the chat card shows nothing instead of "recXXX".
@@ -1240,10 +1265,13 @@ async function searchSemantic(args: SemanticArgs, lang: Lang = 'ru'): Promise<Se
   for (const h of catalogHits) {
     const row = rowsByKey.get(`${h.kind}:${h.airtable_id}`)
     if (!row) continue
-    const d = row.data
+    const sec = SECTION_BY_KIND[h.kind]
+    const d = lang === 'en' && sec
+      ? mergeEnTranslations(row.data, row.airtable_id, await loadEnTranslations(sec).catch(() => ({})))
+      : row.data
     const slug = fs1(d['SEO:Slug']) ?? null
     if (!slug || slug.startsWith('-')) continue
-    const title = tField(d, 'SEO:Title', lang) ?? tField(d, 'ИИ Имя', lang) ?? tField(d, 'Name', lang) ?? fs1(d['Project']) ?? ''
+    const title = pickTitle(d, lang)
     const districtRaw = fs1(d['Location filter']) ?? fs1(d['Location 2']) ?? fs1(d['Location'])
     const district = districtRaw && /^rec[A-Za-z0-9]{14,}$/.test(districtRaw) ? null : districtRaw
     const bedrooms = num(d['Комнаты']) ?? num(d['Спальни']) ?? null
