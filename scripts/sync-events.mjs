@@ -76,13 +76,24 @@ for (const d of (prodDevs ?? [])) {
 }
 console.log('  prod developers:', mainDevByName.size)
 
+// SEO:Slug is hand-entered in Airtable and occasionally carries junk —
+// markdown bold (**…**), stray spaces, uppercase. A slug with '*' makes the
+// /meropriyatiya/[slug] route 404 (and lands the URL in the sitemap → GSC
+// "Not found (404)"). Normalise to a clean [a-z0-9-] slug so the manifest,
+// sitemap and detail route all agree.
+const cleanSlug = (s) => {
+  const raw = (s ?? '').toString().trim().toLowerCase()
+  const c = raw.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+  return c || null
+}
+
 const items = []
 let dropped = 0
 const photoCache = await loadPhotoCache(sb, PHOTO_BUCKET)
 for (const r of recs) {
   const f = r.fields || {}
   if (f['Опубликовать'] !== true) { dropped++; continue }
-  const slug = fs1(f['SEO:Slug'])
+  const slug = cleanSlug(fs1(f['SEO:Slug']))
   const title = fs1(f['Название ИИ']) ?? fs1(f['Name']) ?? fs1(f['post name'])
   if (!slug || !title) { dropped++; continue }
 
