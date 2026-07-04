@@ -382,8 +382,12 @@ async function buildAll(): Promise<Categorized> {
   // "duplicate, Google chose a different canonical". Its canonical target
   // (the complex) is already in the sitemap.
   const newsComplex = await Promise.all(newsRows.map(x => complexSlugForText(x.title, x.complexNames?.[0])))
+  // EN news uses an English-derived slug (the RU slug becomes an alias); the
+  // sitemap must emit that, otherwise /en/news/<ru-slug> 308-redirects to the
+  // English one → GSC "Page with redirect".
+  const newsEnSlug = new Map((await loadAllNews('en')).map(n => [n.id, n.slug]))
   const news: SitemapEntry[] = newsRows.flatMap((x, i) => newsComplex[i] ? [] : pairEntry({
-    ruPath: `/ru/novosti/${x.slug}`, enPath: `/en/news/${x.slug}`,
+    ruPath: `/ru/novosti/${x.slug}`, enPath: `/en/news/${newsEnSlug.get(x.id) ?? x.slug}`,
     lastModified: x.date ? new Date(x.date) : now,
     changeFrequency: 'monthly', priority: 0.6,
   }))
