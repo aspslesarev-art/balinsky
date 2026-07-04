@@ -7,6 +7,8 @@ import { loadAll as loadAllVillas, passes as villaPasses } from '@/app/ru/villy/
 import { loadAll as loadAllApartments, passes as apartmentPasses } from '@/app/ru/apartamenty/_lib'
 import { loadAll as loadAllComplexes, passes as complexPasses } from '@/app/ru/zhilye-kompleksy/_lib'
 import { loadAllNews } from '@/lib/news'
+import { complexSlugForText } from '@/lib/complex-index'
+import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import { loadAllPromo } from '@/lib/promo'
 import { loadAllEvents } from '@/lib/events'
 import { loadAllKnowledge } from '@/lib/knowledge'
@@ -57,14 +59,20 @@ async function loadDeveloperSlugs(): Promise<string[]> {
     const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
     // Only the SEO:Slug is needed — comment above said as much, but the
     // select was still pulling the whole `data` blob (~2 MB).
-    const { data } = await sb.from('raw_developers').select('slug:data->"SEO:Slug"').limit(500)
-    const out: string[] = []
-    for (const r of (data ?? []) as { slug: unknown }[]) {
-      const v = r.slug
-      const slug = typeof v === 'string' ? v
+    const { data } = await sb.from('raw_developers')
+      .select('slug:data->"SEO:Slug", pub:data->"Публикация", dev:data->"Developer"').limit(500)
+    const unwrap = (v: unknown): string | null =>
+      typeof v === 'string' ? v
         : (v && typeof v === 'object' && 'value' in v && typeof (v as { value: unknown }).value === 'string')
           ? (v as { value: string }).value
           : null
+    const out: string[] = []
+    for (const r of (data ?? []) as { slug: unknown; pub: unknown; dev: unknown }[]) {
+      // Match what the detail page actually serves: published + not hidden.
+      // Unpublished/hidden developers 404 → GSC "Not found (404)".
+      if (r.pub !== true) continue
+      if (isHiddenDeveloper(unwrap(r.dev))) continue
+      const slug = unwrap(r.slug)
       if (slug && !slug.startsWith('-')) out.push(slug)
     }
     return [...new Set(out)]
@@ -368,7 +376,13 @@ async function buildAll(): Promise<Categorized> {
   emitObjectPair(complexObjects, cData?.enriched as EnrichedLike[] | undefined, 'zhilye-kompleksy', 'complexes')
 
   // News / promo / events / knowledge / rental — RU + EN pairs.
-  const news: SitemapEntry[] = newsRows.flatMap(x => pairEntry({
+  // A news item about a specific complex canonicals to that complex card
+  // (anti-cannibalization, TASK-13a), so it must NOT appear in the sitemap —
+  // a URL that declares a different canonical is what GSC flags as
+  // "duplicate, Google chose a different canonical". Its canonical target
+  // (the complex) is already in the sitemap.
+  const newsComplex = await Promise.all(newsRows.map(x => complexSlugForText(x.title, x.complexNames?.[0])))
+  const news: SitemapEntry[] = newsRows.flatMap((x, i) => newsComplex[i] ? [] : pairEntry({
     ruPath: `/ru/novosti/${x.slug}`, enPath: `/en/news/${x.slug}`,
     lastModified: x.date ? new Date(x.date) : now,
     changeFrequency: 'monthly', priority: 0.6,
