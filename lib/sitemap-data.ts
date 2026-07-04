@@ -13,7 +13,6 @@ import { loadAllPromo } from '@/lib/promo'
 import { loadAllEvents } from '@/lib/events'
 import { loadAllKnowledge } from '@/lib/knowledge'
 import { enKnowledgeSlug } from '@/lib/knowledge-en-slugs'
-import { loadAllRental } from '@/lib/rental'
 import { normalizeSlug } from '@/lib/slug-normalize'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
@@ -128,8 +127,8 @@ function lastmodOfObject(d: Record<string, unknown> | undefined, fallback: Date)
 // /sitemap.xml (app/sitemap.xml/route.ts) that points at one child per
 // content cluster, each served by app/sitemap/[id]/route.ts:
 //   /sitemap/pages.xml, /sitemap/villy.xml, /sitemap/apartamenty.xml,
-//   /sitemap/zhilye-kompleksy.xml, /sitemap/arenda.xml,
-//   /sitemap/zastrojshhiki.xml, /sitemap/statyi.xml
+//   /sitemap/zhilye-kompleksy.xml, /sitemap/zastrojshhiki.xml,
+//   /sitemap/statyi.xml   (rental deliberately excluded — see CATEGORY_ORDER)
 // We DON'T use Next's metadata `sitemap.ts` + generateSitemaps convention:
 // in Next 16 it serves the children at /sitemap/<id>.xml but does NOT emit
 // an index at /sitemap.xml (404s), and that single index URL is exactly
@@ -139,15 +138,24 @@ function lastmodOfObject(d: Record<string, unknown> | undefined, fallback: Date)
 // A cluster that would exceed MAX_URLS_PER_SITEMAP is sharded into <cat>,
 // <cat>-2, <cat>-3 … so every file stays well under the 50k-URL / 50 MB
 // protocol cap and the ≤1 MB target.
+// NOTE: `arenda` (rental) is intentionally NOT in the sitemap. Rentals are a
+// large, template-similar cluster (~2.8k RU+EN URLs) that Google discovered
+// but declined to crawl ("Discovered — currently not indexed"), spending crawl
+// budget we'd rather spend on the sale clusters (villas/apartments/complexes),
+// which are the business priority. Rental pages stay live and crawlable for
+// users; we just stop actively asking Google to index them via the sitemap.
+// (Preferred over `noindex`: noindex would still require Google to crawl each
+// page to see the tag — the opposite of protecting crawl budget.)
 export const CATEGORY_ORDER = [
-  'pages', 'villy', 'apartamenty', 'zhilye-kompleksy', 'arenda', 'zastrojshhiki', 'statyi',
+  'pages', 'villy', 'apartamenty', 'zhilye-kompleksy', 'zastrojshhiki', 'statyi',
 ] as const
 type Category = typeof CATEGORY_ORDER[number]
 type Categorized = Record<Category, SitemapEntry[]>
 
-// Kept low on purpose to hold every file under the ≤1 MB target. The
-// fattest cluster is /arenda (rental): long translit slugs make a paired
-// entry with 3 xhtml:link alternates ~730 bytes, so 1200 entries ≈ 0.85 MB.
+// Kept low on purpose to hold every file under the ≤1 MB target: a paired
+// RU+EN entry with 3 xhtml:link alternates and a long translit slug runs
+// ~730 bytes, so 1200 entries ≈ 0.85 MB. Clusters above this shard into
+// <cat>, <cat>-2, … (see chunkCount / parseSitemapId).
 const MAX_URLS_PER_SITEMAP = 1200
 
 // The two route handlers need the full categorised set, and Next calls them
@@ -306,12 +314,11 @@ async function buildAll(): Promise<Categorized> {
   let promoRows: Awaited<ReturnType<typeof loadAllPromo>> = []
   let eventsRows: Awaited<ReturnType<typeof loadAllEvents>> = []
   let knowledgeRows: Awaited<ReturnType<typeof loadAllKnowledge>> = []
-  let rentalRows: Awaited<ReturnType<typeof loadAllRental>> = []
   let devSlugs: string[] = []
   try {
-    ;[vData, aData, cData, newsRows, promoRows, eventsRows, knowledgeRows, rentalRows, devSlugs] = await Promise.all([
+    ;[vData, aData, cData, newsRows, promoRows, eventsRows, knowledgeRows, devSlugs] = await Promise.all([
       loadAllVillas(), loadAllApartments(), loadAllComplexes(),
-      loadAllNews(), loadAllPromo(), loadAllEvents(), loadAllKnowledge(), loadAllRental(),
+      loadAllNews(), loadAllPromo(), loadAllEvents(), loadAllKnowledge(),
       loadDeveloperSlugs(),
     ])
   } catch {
@@ -406,11 +413,6 @@ async function buildAll(): Promise<Categorized> {
     lastModified: x.createdTime ? new Date(x.createdTime) : now,
     changeFrequency: 'monthly', priority: 0.5,
   }))
-  const rental: SitemapEntry[] = rentalRows.flatMap(x => pairEntry({
-    ruPath: `/ru/arenda/o/${x.slug}`, enPath: `/en/rental/o/${x.slug}`,
-    lastModified: x.updatedAt ? new Date(x.updatedAt) : (x.createdTime ? new Date(x.createdTime) : now),
-    changeFrequency: 'monthly', priority: 0.5,
-  }))
 
   // Developer landings — RU + EN pair, plus per-developer reviews (RU-only).
   const developers: SitemapEntry[] = []
@@ -438,7 +440,6 @@ async function buildAll(): Promise<Categorized> {
     villy: dedupe([...villas, ...villaObjects]),
     apartamenty: dedupe([...apartments, ...apartmentObjects]),
     'zhilye-kompleksy': dedupe([...complexes, ...complexObjects]),
-    arenda: dedupe(rental),
     zastrojshhiki: dedupe(developers),
     statyi: dedupe([...news, ...promo, ...events, ...knowledge]),
   }
