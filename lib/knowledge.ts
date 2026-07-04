@@ -1,6 +1,7 @@
 import { applyManifestTranslation, loadEnTranslations } from '@/lib/en-translations'
 import type { Lang } from '@/lib/i18n'
 import { enKnowledgeSlug } from '@/lib/knowledge-en-slugs'
+import { normalizeSlug } from '@/lib/slug-normalize'
 
 export type KnowledgeAudience = 'investor' | 'agent' | 'life'
 
@@ -50,7 +51,13 @@ async function loadRawKnowledge(): Promise<KnowledgeItem[]> {
     const r = await fetch(MANIFEST_URL, { next: { revalidate: 600, tags: ['content:knowledge'] } })
     if (!r.ok) return []
     const j = (await r.json()) as Manifest
-    return Array.isArray(j.items) ? j.items : []
+    if (!Array.isArray(j.items)) return []
+    // Normalize slugs: a few article slugs carry trailing/double dashes from
+    // truncated titles. The route resolves the normalized form, so the raw
+    // slug in the sitemap/canonical 301s → GSC "Page with redirect". Cleaning
+    // here makes sitemap, canonical and lookup agree. Map keys in
+    // enKnowledgeSlug are already dash-clean, so this doesn't disturb EN slugs.
+    return j.items.map(it => ({ ...it, slug: normalizeSlug(it.slug) }))
   } catch {
     return []
   }
@@ -68,8 +75,9 @@ export async function loadKnowledgeBySlug(slug: string, lang: Lang = 'ru'): Prom
   // On /en, resolve by the English-facing slug; also accept the old shared
   // (transliterated) slug so legacy URLs still render before middleware 301s
   // them to the English one.
+  const target = normalizeSlug(slug)
   if (lang === 'en') {
-    return all.find(k => enKnowledgeSlug(k.slug) === slug || k.slug === slug) ?? null
+    return all.find(k => enKnowledgeSlug(k.slug) === slug || k.slug === target) ?? null
   }
-  return all.find(k => k.slug === slug) ?? null
+  return all.find(k => k.slug === target) ?? null
 }
