@@ -10,6 +10,7 @@ import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { loadAllPromo, loadPromoBySlug } from '@/lib/promo'
+import { RelatedContent } from '@/components/RelatedContent'
 import type { Lang } from '@/lib/i18n'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
@@ -116,6 +117,8 @@ export async function PromoDetail({ slug, lang }: { slug: string; lang: Lang }) 
             </div>
           )}
         </article>
+
+        <RelatedContent lang={lang} developers={p.developers} complexNames={p.complexNames} title={p.title} />
 
         {related.length > 0 && (
           <section className="mt-14">

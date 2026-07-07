@@ -11,6 +11,7 @@ import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { NewsBody } from '@/components/NewsBody'
+import { RelatedContent } from '@/components/RelatedContent'
 import { loadAllNews, loadNewsBySlug } from '@/lib/news'
 import type { Lang } from '@/lib/i18n'
 
@@ -176,6 +177,8 @@ export async function NewsDetail({ slug, lang }: { slug: string; lang: Lang }) {
             </div>
           )}
         </article>
+
+        <RelatedContent lang={lang} developers={n.developers} complexNames={n.complexNames} title={n.title} />
 
         {related.length > 0 && (
           <section className="mt-14">

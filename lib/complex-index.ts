@@ -8,8 +8,13 @@ import { createClient } from '@supabase/supabase-js'
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const sb = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY!)
 
-const loadComplexNameToSlug = unstable_cache(
-  async (): Promise<Record<string, string>> => {
+// One cached query, both directions: name→slug (for canonical/link
+// resolution) and slug→name (so a resolved slug can be turned back into
+// the true `Project` name to match units by — complexNames often carries
+// a developer name, so the slug is the reliable anchor). Egress-light:
+// projects slug + name only. Cached 10 min.
+const loadComplexIndex = unstable_cache(
+  async (): Promise<{ nameToSlug: Record<string, string>; slugToName: Record<string, string> }> => {
     const { data, error } = await sb
       .from('raw_complexes')
       .select('slug, name:data->Project')
@@ -17,17 +22,23 @@ const loadComplexNameToSlug = unstable_cache(
     if (error) throw new Error(`raw_complexes name index: ${error.message}`)
     const rows = (data ?? []) as { slug: string | null; name: string | null }[]
     if (rows.length === 0) throw new Error('raw_complexes returned 0 rows — refusing to cache empty')
-    const map: Record<string, string> = {}
+    const nameToSlug: Record<string, string> = {}
+    const slugToName: Record<string, string> = {}
     for (const r of rows) {
       if (!r.slug || !r.name) continue
       const key = r.name.trim().toLowerCase()
-      if (!(key in map)) map[key] = r.slug
+      if (!(key in nameToSlug)) nameToSlug[key] = r.slug
+      if (!(r.slug in slugToName)) slugToName[r.slug] = r.name.trim()
     }
-    return map
+    return { nameToSlug, slugToName }
   },
-  ['complex-name-to-slug-v1'],
+  ['complex-index-v2'],
   { revalidate: 600 },
 )
+
+async function loadComplexNameToSlug(): Promise<Record<string, string>> {
+  return (await loadComplexIndex()).nameToSlug
+}
 
 /** Resolve a complex display name to its card slug (exact, case-insensitive). */
 export async function complexSlugByName(name: string | null | undefined): Promise<string | null> {
@@ -59,6 +70,17 @@ export async function complexSlugForText(...texts: (string | null | undefined)[]
       if (hay.includes(name) && (!best || name.length > best.len)) best = { slug, len: name.length }
     }
     return best?.slug ?? null
+  } catch {
+    return null
+  }
+}
+
+/** Resolve a complex card slug back to its canonical `Project` display name. */
+export async function complexNameBySlug(slug: string | null | undefined): Promise<string | null> {
+  if (!slug || !slug.trim()) return null
+  try {
+    const { slugToName } = await loadComplexIndex()
+    return slugToName[slug.trim()] ?? null
   } catch {
     return null
   }
