@@ -93,8 +93,15 @@ export function DeveloperRow({ d, lang = 'ru' }: { d: DeveloperRowData; lang?: L
   return (
     <div className="w-full bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-2xl hover:shadow-sm transition-shadow">
       <div className="px-3 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5">
-        {/* Top row on mobile: logo + name. Inline on sm+. */}
-        <div className="flex items-center gap-3 sm:gap-5 min-w-0 sm:flex-1">
+        {/* Top row on mobile: logo + name. Inline on sm+. The whole
+            developer block toggles the details panel; the green "Open"
+            link (a sibling, not nested here) still navigates to the page. */}
+        <button
+          type="button"
+          onClick={() => setOpen(v => !v)}
+          aria-expanded={open}
+          className="flex items-center gap-3 sm:gap-5 min-w-0 w-full sm:w-auto sm:flex-1 text-left cursor-pointer"
+        >
           <div className="shrink-0 w-[56px] h-[40px] sm:w-[100px] sm:h-[48px] md:w-[140px] md:h-[56px] flex items-center justify-center p-1">
             {d.logoUrl ? (
               <Image
@@ -150,7 +157,7 @@ export function DeveloperRow({ d, lang = 'ru' }: { d: DeveloperRowData; lang?: L
               </div>
             )}
           </div>
-        </div>
+        </button>
 
         {/* Actions: full-width row on mobile, inline on sm+ */}
         <div className="flex items-center gap-2 sm:gap-3 sm:shrink-0">
