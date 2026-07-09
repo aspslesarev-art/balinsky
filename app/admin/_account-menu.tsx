@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import {
-  MessageCircle, Lock, Megaphone, Image as ImageIcon, FileText, Heart, Eye, Brain, Layers, Database, Table,
+  MessageCircle, Lock, Megaphone, Image as ImageIcon, FileText, Heart, Eye, Brain, Layers, Database, Table, Link2,
   Sun, Moon, LogOut, ChevronUp, UserRound,
 } from 'lucide-react'
 import { useAdminTheme } from './_theme'
@@ -37,6 +37,7 @@ const ITEMS: Item[] = [
   { href: '/admin/visualizations', label: 'Визуализации', Icon: Layers },
   { href: '/admin/parsers',       label: 'Парсеры',      Icon: Database },
   { href: '/admin/data',          label: 'Базы',         Icon: Table },
+  { href: '/admin/dev-chats',     label: 'Чаты застройщиков', Icon: Link2 },
 ]
 
 export function AdminAccountMenu({ variant = 'sidebar' }: { variant?: Variant }) {
