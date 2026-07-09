@@ -156,7 +156,7 @@ function ManagerRow({
         <LeadButton
           label={c.lead}
           lang={lang}
-          context={{ source: developerName ? `manager:${developerName}` : 'manager' }}
+          context={{ developerName: developerName ?? undefined, source: developerName ? `manager:${developerName}` : 'manager' }}
           className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[14px] font-medium transition-colors"
         />
       </div>

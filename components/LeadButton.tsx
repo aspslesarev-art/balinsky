@@ -44,6 +44,10 @@ export type LeadContext = {
   listingKind?: string | null
   listingSlug?: string | null
   listingTitle?: string | null
+  // Developer the lead belongs to — routes it to that developer's Telegram
+  // chat. Pass when the form is on a developer-scoped surface.
+  developerName?: string | null
+  developerSlug?: string | null
   source?: string
 }
 
@@ -89,7 +93,12 @@ export function LeadButton({
           listingKind: context?.listingKind ?? undefined,
           listingSlug: context?.listingSlug ?? undefined,
           listingTitle: context?.listingTitle ?? undefined,
+          developerName: context?.developerName ?? undefined,
+          developerSlug: context?.developerSlug ?? undefined,
           page: context?.source ?? (typeof window !== 'undefined' ? window.location.pathname : undefined),
+          // Always send the real page path (independent of the source label)
+          // so the lead can link back to the exact source page.
+          pagePath: typeof window !== 'undefined' ? window.location.pathname : undefined,
         }),
       })
       if (!res.ok) throw new Error(String(res.status))

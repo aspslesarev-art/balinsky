@@ -8,6 +8,7 @@
 // in hCaptcha / Cloudflare Turnstile.
 
 import { NextResponse } from 'next/server'
+import { developerChatId, resolveListingDeveloperName } from '@/lib/developer-chat'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -39,24 +40,44 @@ type Body = {
   listingKind?: string
   listingSlug?: string
   listingTitle?: string
+  // Developer context (optional). When the form knows the developer directly
+  // (e.g. a developer page or manager card), it passes name/slug so the lead
+  // routes to that developer's Telegram chat.
+  developerName?: string
+  developerSlug?: string
   // Honeypot — bots typically fill every input; real users don't see
   // this field (CSS-hidden in the form component).
   website?: string
   // Where on the site the visitor submitted from, for routing context.
   page?: string
+  // Real page path (e.g. /ru/villy/o/some-villa), used to link the lead
+  // back to its exact source page.
+  pagePath?: string
+}
+
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info').replace(/\/$/, '')
+
+// Human label for the source page, derived from its path prefix.
+function sourceLabel(path: string): string {
+  if (/\/(villy|villas)\/o\//.test(path)) return 'Вилла'
+  if (/\/(apartamenty|apartments)\/o\//.test(path)) return 'Апартаменты'
+  if (/\/(zhilye-kompleksy|complexes)\/o\//.test(path)) return 'Жилой комплекс'
+  if (/\/(zastrojshhiki|developers)\//.test(path)) return 'Страница застройщика'
+  if (/\/(arenda|rental)\//.test(path)) return 'Аренда'
+  return 'Страница сайта'
 }
 
 function isValidEmail(s: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)
 }
 
-async function sendToTelegram(text: string): Promise<void> {
-  if (!TG_TOKEN || !ADMIN_CHAT) return
+async function sendToTelegram(chatId: string, text: string): Promise<void> {
+  if (!TG_TOKEN || !chatId) return
   await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      chat_id: ADMIN_CHAT,
+      chat_id: chatId,
       text,
       parse_mode: 'HTML',
       disable_web_page_preview: true,
@@ -110,6 +131,18 @@ export async function POST(req: Request) {
 
   const leadId = `lead_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`
 
+  // Route to the developer's own Telegram chat when we can identify one.
+  // Explicit name/slug (developer/manager forms) wins; otherwise resolve the
+  // developer from the listing context. Resale leads are owner-sold, never
+  // routed to a developer.
+  const isResale = body.page === 'resale'
+  let developerName = (body.developerName ?? '').trim() || null
+  const developerSlug = (body.developerSlug ?? '').trim() || null
+  if (!isResale && !developerName && !developerSlug && body.listingKind && body.listingSlug) {
+    developerName = await resolveListingDeveloperName(body.listingKind, body.listingSlug)
+  }
+  const devChat = isResale ? null : await developerChatId({ name: developerName, slug: developerSlug })
+
   const lines: string[] = [
     '🆕 <b>Новая заявка с сайта</b>',
     '',
@@ -117,6 +150,7 @@ export async function POST(req: Request) {
   ]
   if (phone) lines.push(`<b>Телефон:</b> ${escapeHtml(phone)}`)
   if (email) lines.push(`<b>Email:</b> ${escapeHtml(email)}`)
+  if (developerName) lines.push(`<b>Застройщик:</b> ${escapeHtml(developerName)}`)
   if (body.listingTitle) {
     lines.push('')
     lines.push(`<b>Объект:</b> ${escapeHtml(body.listingTitle)}`)
@@ -124,7 +158,15 @@ export async function POST(req: Request) {
       lines.push(`<i>${escapeHtml(body.listingKind)} · ${escapeHtml(body.listingSlug)}</i>`)
     }
   }
-  if (body.page) lines.push(`<i>Со страницы: ${escapeHtml(body.page)}</i>`)
+  const pagePath = (body.pagePath ?? '').trim()
+  if (pagePath.startsWith('/')) {
+    const url = `${SITE_URL}${pagePath}`
+    lines.push('')
+    lines.push(`<b>Источник:</b> ${escapeHtml(sourceLabel(pagePath))}`)
+    lines.push(`<a href="${escapeHtml(url)}">${escapeHtml(url)}</a>`)
+  } else if (body.page) {
+    lines.push(`<i>Со страницы: ${escapeHtml(body.page)}</i>`)
+  }
   if (message) {
     lines.push('')
     lines.push('<b>Сообщение:</b>')
@@ -133,7 +175,11 @@ export async function POST(req: Request) {
   lines.push('')
   lines.push(`<code>${leadId}</code>`)
 
-  await sendToTelegram(lines.join('\n'))
+  const text = lines.join('\n')
+  // Always keep the admin copy; also deliver to the developer's chat when we
+  // resolved one (and it isn't the admin chat itself).
+  await sendToTelegram(ADMIN_CHAT, text)
+  if (devChat && devChat !== ADMIN_CHAT) await sendToTelegram(devChat, text)
 
   return NextResponse.json({ ok: true, leadId })
 }

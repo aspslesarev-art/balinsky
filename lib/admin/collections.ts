@@ -199,6 +199,7 @@ const developers: CollectionConfig = {
     { key: 'Публикация', label: 'Публикация', type: 'bool', showInGrid: true, width: 90 },
     { key: 'Developer', label: 'Название', type: 'text', showInGrid: true, width: 220 },
     { key: 'SEO:Slug', label: 'Slug', type: 'text', showInGrid: true, width: 200 },
+    { key: 'telegram_chat_id', label: 'Telegram chat заявок', type: 'text', column: true, showInGrid: true, width: 170 },
     { key: 'Доходность', label: 'Доходность', type: 'longtext' },
     { key: 'Команда', label: 'Команда', type: 'longtext' },
     { key: 'Репутация и опыт', label: 'Репутация и опыт', type: 'longtext' },
