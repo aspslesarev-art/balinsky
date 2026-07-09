@@ -9,6 +9,7 @@ import Link from 'next/link'
 import { createClient } from '@supabase/supabase-js'
 import { requireAdmin } from '@/lib/admin-auth'
 import { LoginForm } from '../_login'
+import { DevAssignTable } from './_assign'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -19,7 +20,7 @@ const sb = createClient(
   process.env.SUPABASE_SERVICE_KEY!,
 )
 
-type Dev = { name: string; slug: string | null; chatId: string | null; published: boolean }
+type Dev = { airtableId: string; name: string; slug: string | null; chatId: string | null; published: boolean }
 type Chat = { chatId: string; title: string; type: string }
 
 function firstString(v: unknown): string | null {
@@ -33,11 +34,12 @@ function firstString(v: unknown): string | null {
 async function loadDevelopers(): Promise<Dev[]> {
   const { data } = await sb
     .from('raw_developers')
-    .select(`telegram_chat_id, name:data->Developer, slug:data->"SEO:Slug", published:data->"Публикация"`)
+    .select(`airtable_id, telegram_chat_id, name:data->Developer, slug:data->"SEO:Slug", published:data->"Публикация"`)
     .limit(500)
-  const rows = (data ?? []) as { telegram_chat_id: string | null; name: unknown; slug: unknown; published: unknown }[]
+  const rows = (data ?? []) as { airtable_id: string; telegram_chat_id: string | null; name: unknown; slug: unknown; published: unknown }[]
   return rows
     .map(r => ({
+      airtableId: r.airtable_id,
       name: firstString(r.name) ?? '—',
       slug: firstString(r.slug),
       chatId: (r.telegram_chat_id ?? '').trim() || null,
@@ -62,7 +64,6 @@ export default async function DevChatsPage() {
 
   const [devs, chats] = await Promise.all([loadDevelopers(), loadChats()])
 
-  const chatTitleById = new Map(chats.map(c => [c.chatId, c.title]))
   // Which developer each chat is assigned to (by telegram_chat_id).
   const devByChatId = new Map<string, string>()
   for (const d of devs) if (d.chatId) devByChatId.set(d.chatId, d.name)
@@ -95,41 +96,12 @@ export default async function DevChatsPage() {
         {/* DEVELOPERS */}
         <section className="bg-[var(--ax-panel)] border border-[var(--ax-border)] rounded-2xl p-5">
           <div className="text-[12px] uppercase tracking-wide text-[var(--ax-fg-muted)] mb-3">
-            Застройщики ({devs.length})
+            Застройщики ({devs.length}) — выбери чат в выпадающем списке, сохраняется сразу
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-[13px]">
-              <thead>
-                <tr className="text-left text-[var(--ax-fg-muted)] border-b border-[var(--ax-border-soft)]">
-                  <th className="py-2 font-medium w-[44px]">Чат</th>
-                  <th className="py-2 font-medium">Застройщик</th>
-                  <th className="py-2 font-medium">Чат / chat_id</th>
-                </tr>
-              </thead>
-              <tbody>
-                {devOrder.map(d => (
-                  <tr key={d.slug ?? d.name} className="border-b border-[var(--ax-border-soft)] last:border-0">
-                    <td className="py-2 text-center">
-                      {d.chatId
-                        ? <span className="text-[#1F8B5F] font-semibold" title="Чат привязан">✓</span>
-                        : <span className="text-[var(--ax-fg-faint)]" title="Чат не привязан">—</span>}
-                    </td>
-                    <td className="py-2">
-                      {d.slug
-                        ? <Link href={`/ru/zastrojshhiki/${d.slug}`} className="hover:underline">{d.name}</Link>
-                        : d.name}
-                      {!d.published && <span className="ml-2 text-[11px] text-[var(--ax-fg-faint)]">(скрыт)</span>}
-                    </td>
-                    <td className="py-2 text-[var(--ax-fg-muted)]">
-                      {d.chatId
-                        ? <span>{chatTitleById.get(d.chatId) ?? '—'} <span className="font-mono text-[11.5px] text-[var(--ax-fg-faint)]">{d.chatId}</span></span>
-                        : <span className="text-[var(--ax-fg-faint)]">не привязан</span>}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DevAssignTable
+            devs={devOrder.map(d => ({ airtableId: d.airtableId, name: d.name, slug: d.slug, chatId: d.chatId, published: d.published }))}
+            chats={chats.map(c => ({ chatId: c.chatId, title: c.title }))}
+          />
         </section>
 
         {/* CHATS */}
