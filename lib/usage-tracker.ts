@@ -46,6 +46,7 @@ export type Feature =
   | 'chat-web' | 'chat-tg' | 'chat-voice-call'
   | 'embed-search' | 'embed-backfill'
   | 'transcribe'
+  | 'admin-ai'
   | 'other'
 
 export type UsageInput = {
