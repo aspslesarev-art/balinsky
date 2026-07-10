@@ -63,7 +63,7 @@ const SYSTEM =
   'Строго не выдумывай факты, цифры и характеристики, которых нет во входных данных. ' +
   'Верни ТОЛЬКО итоговое значение поля — без кавычек, без markdown, без заголовков и без пояснений.'
 
-const TASKS: Record<AiTask, (ctx: string) => string> = {
+const TASKS: Partial<Record<AiTask, (ctx: string) => string>> = {
   seo_title: ctx =>
     `Сгенерируй идеальный SEO-заголовок (meta title) страницы.\n` +
     `Требования: русский; до 60 символов; включи тип объекта и район, а при наличии — сильное преимущество или цену; ` +
@@ -94,5 +94,19 @@ const TASKS: Record<AiTask, (ctx: string) => string> = {
 export function resolvePrompt(field: string, row: Record<string, unknown>): Prompt | null {
   const task = aiTaskFor(field)
   if (!task) return null
-  return { system: SYSTEM, user: TASKS[task](buildContext(row)) }
+
+  // EN mirror: translate the RU sibling field (same key without trailing " EN").
+  if (task === 'en_translate') {
+    const base = field.trim().replace(/\s+en$/i, '')
+    const src = firstString(row[base]) ?? firstString(row[field]) ?? ''
+    const user =
+      `Переведи на естественный английский текст для англоязычной версии сайта недвижимости Бали. ` +
+      `Сохрани смысл, тон и SEO-ключевые слова; ничего не добавляй от себя; верни только перевод.\n\n` +
+      `Исходный текст (RU):\n${src || '(пусто — верни пустую строку)'}`
+    return { system: SYSTEM, user }
+  }
+
+  const build = TASKS[task]
+  if (!build) return null
+  return { system: SYSTEM, user: build(buildContext(row)) }
 }

@@ -12,11 +12,16 @@ export type AiTask =
   | 'yield'
   | 'team'
   | 'reputation'
+  | 'en_translate'
 
 /** Map a field key to an AI task, or null if this field has no generator. */
 export function aiTaskFor(field: string): AiTask | null {
-  const k = field.trim().toLowerCase()
-  if (!k) return null
+  const raw = field.trim()
+  if (!raw) return null
+  // English mirror fields ("SEO:Title EN", "Описание EN", "title EN") →
+  // translate the RU sibling. Checked first so it wins over the base task.
+  if (/\sen$/i.test(raw)) return 'en_translate'
+  const k = raw.toLowerCase()
   // SEO title first — it also contains "заголовок", so it must win over headline.
   if (k === 'seo:title' || k === 'seo title' || k === 'seotitle' || k === 'заголовок') return 'seo_title'
   if (k === 'seodescription' || (k.includes('seo') && (k.includes('desc') || k.includes('описан')))) return 'seo_desc'

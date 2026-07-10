@@ -1,9 +1,10 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Plus, ArrowUp, ArrowDown, Search, Loader2, Maximize2, Link2, Filter, X } from 'lucide-react'
+import { Plus, ArrowUp, ArrowDown, Search, Loader2, Maximize2, Link2, Filter, X, Sparkles } from 'lucide-react'
 import type { CollectionConfig, FieldDef, RecordRow } from '@/lib/admin/adapters/types'
 import { resolveFields, displayValue, editableText, coerceValue, isImageUrl } from '@/lib/admin/fields'
+import { hasAi } from '@/lib/admin/ai-fields'
 import { RecordPanel } from './_panel'
 
 type SortState = { field: string; dir: 'asc' | 'desc' } | null
@@ -101,6 +102,34 @@ export function DataGridScreen({
     } catch { refresh() }
   }, [cfg.key, refresh])
 
+  // ── AI: fill the collection's title/SEO field via Azure ───────────
+  const aiField = titleKey
+  const aiOn = hasAi(aiField)
+  const [bulk, setBulk] = useState<{ done: number; total: number } | null>(null)
+
+  const genRow = useCallback(async (rowId: string, fields: Record<string, unknown>) => {
+    const res = await fetch(`/api/admin/data/${cfg.key}/ai`, {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ field: aiField, row: fields }),
+    })
+    const j = await res.json().catch(() => null)
+    if (res.ok && j && typeof j.text === 'string' && j.text) await patchRow(rowId, { [aiField]: j.text })
+  }, [cfg.key, aiField, patchRow])
+
+  // Bulk-fill only the empty cells on the current page. Sequential to keep
+  // Azure spend controlled; capped to what's loaded (PAGE_SIZE).
+  const genEmpty = useCallback(async () => {
+    const targets = rows.filter(r => !editableText(r.fields[aiField]).trim())
+    if (targets.length === 0) { alert('Пустых ячеек на этой странице нет.'); return }
+    if (!confirm(`Сгенерировать «${aiField}» для ${targets.length} записей на этой странице? Это потратит Azure.`)) return
+    setBulk({ done: 0, total: targets.length })
+    for (let i = 0; i < targets.length; i++) {
+      await genRow(targets[i].id, targets[i].fields)
+      setBulk({ done: i + 1, total: targets.length })
+    }
+    setBulk(null)
+  }, [rows, aiField, genRow])
+
   const startEdit = (r: RecordRow, c: FieldDef) => {
     if (c.readOnly || c.type === 'bool' || c.type === 'link' || c.type === 'image') return
     setEdit({ rowId: r.id, key: c.key }); setEditText(editableText(r.fields[c.key]))
@@ -137,6 +166,14 @@ export function DataGridScreen({
         {loading && <Loader2 size={15} className="animate-spin text-[var(--ax-fg-faint)]" />}
         <div className="text-[12px] text-[var(--ax-fg-faint)]">{total} записей · {cols.length} полей</div>
         <div className="flex-1" />
+        {aiOn && (
+          <button type="button" onClick={genEmpty} disabled={!!bulk}
+            title={`Сгенерировать «${aiField}» для пустых записей на этой странице через ИИ`}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-[13px] font-medium border border-[var(--color-primary)] text-[var(--color-primary)] hover:bg-[var(--ax-hover)] disabled:opacity-50">
+            {bulk ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
+            {bulk ? `Генерю ${bulk.done}/${bulk.total}…` : 'Заполнить SEO'}
+          </button>
+        )}
         {cfg.caps.create && (
           <button type="button" onClick={() => setSelectedId('new')}
             className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-[13px] font-medium bg-[var(--color-primary)] text-white hover:opacity-90">
