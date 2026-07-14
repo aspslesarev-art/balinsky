@@ -35,6 +35,7 @@ import { LeadButton } from '@/components/LeadButton'
 import { BalinaChatMock } from '@/components/BalinaChatMock'
 import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import { loadHomeFinder } from '@/lib/home-finder'
+import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { HomeFinder } from '@/components/HomeFinder'
 import {
   StepChat, StepStudy, StepRequest,
@@ -658,10 +659,18 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
         <div className="mt-10 md:mt-12 grid grid-cols-2 lg:grid-cols-4 gap-4">
           {c.districts.items.map(d => {
             const cover = districtCovers[d.slug.toLowerCase()]
+            // Link to the crawlable canonical filter path (/ru/villy/<slug>,
+            // which is in the sitemap) instead of ?district=, which robots.txt
+            // blocks via `Disallow: /*?`. EN has no clean filter routes, so it
+            // keeps the query form (its filter pages aren't indexed anyway).
+            const districtSlug = DISTRICT_TO_SLUG[d.slug]
+            const districtHref = lang === 'ru' && districtSlug
+              ? `${r.villas}/${districtSlug}`
+              : `${r.villas}?district=${d.slug}`
             return (
               <Link
                 key={d.name}
-                href={`${r.villas}?district=${d.slug}`}
+                href={districtHref}
                 className="group relative flex items-end overflow-hidden rounded-2xl aspect-[3/4] bg-[#0E1A14] no-underline"
               >
                 {cover ? (
