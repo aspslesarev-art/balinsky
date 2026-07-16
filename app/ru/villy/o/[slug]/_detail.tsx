@@ -61,7 +61,7 @@ import { PageViewTracker } from '@/components/PageViewTracker'
 import { VillaPresentationButton } from '@/components/VillaPresentation'
 import { tField, pickCopy, type Lang } from '@/lib/i18n'
 import { normalizeSlug } from '@/lib/slug-normalize'
-import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
+import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
 import { districtRu } from '@/lib/district-ru'
 import { geoChainString } from '@/lib/regency'
@@ -244,7 +244,7 @@ async function _loadVillaById(id: string): Promise<Row | null> {
   if (cached && Date.now() - cached.ts < BY_ID_TTL_MS) return cached.row
   const [{ data }, enCache] = await Promise.all([
     sb.from('raw_villas').select('airtable_id, data').eq('airtable_id', id).maybeSingle(),
-    loadEnTranslations('villas'),
+    loadAllTranslations('villas'),
   ])
   const raw = (data as Row | null) ?? null
   // Merge cached EN translations into the row's data so tField('SEO Text', 'en')
@@ -252,7 +252,7 @@ async function _loadVillaById(id: string): Promise<Row | null> {
   // The detail page never hits loadAllVillas — its own _loadVillaById is the
   // only Supabase read path, so the merge has to happen here too.
   const row: Row | null = raw
-    ? { ...raw, data: mergeEnTranslations(raw.data, raw.airtable_id, enCache) }
+    ? { ...raw, data: mergeAllTranslations(raw.data, raw.airtable_id, enCache) }
     : null
   _byIdCache.set(id, { ts: Date.now(), row })
   return row

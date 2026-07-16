@@ -4,7 +4,7 @@ import Fuse from 'fuse.js'
 import type { ComplexCardData } from '@/components/ComplexCard'
 import type { Option } from '@/components/filters/MultiSelectFilter'
 import { translit, hasCyrillic } from '@/lib/translit'
-import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
+import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
 import { getDistrictCommercialMeta } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { enLabel, type FilterDim } from '@/lib/filter-i18n'
@@ -643,13 +643,13 @@ async function _loadAllInternal(): Promise<CachedAll> {
     loadJson<Record<string, string[]>>(cdnManifestUrl(PHOTO_MANIFEST_URL, 600), {}),
     _loadVillaPriceRows(),
     _loadAptPriceRows(),
-    loadEnTranslations('complexes'),
+    loadAllTranslations('complexes'),
     loadViewCounts('complex'),
   ])
   const manifest = cdnRewriteManifest(manifestRaw)
   const enriched = rows
     .filter(r => !isHiddenDeveloper(firstString(r.data['Developer1']), firstString(r.data['Варианты поиска застройщика'])))
-    .map(r => ({ ...r, data: mergeEnTranslations(r.data, r.airtable_id, enCache) }))
+    .map(r => ({ ...r, data: mergeAllTranslations(r.data, r.airtable_id, enCache) }))
     .map(enrich)
     .map(e => ({ ...e, views: viewCounts[e.id] ?? 0 }))
   const prices = buildPriceIndex(enriched, villas, apts)

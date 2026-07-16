@@ -26,7 +26,7 @@ import { PageViewTracker } from '@/components/PageViewTracker'
 import { tField, pickCopy, type Lang } from '@/lib/i18n'
 import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import { loadKbPageContent } from '@/lib/kb-page-content'
-import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
+import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
@@ -82,7 +82,7 @@ export const _loadAllDevelopers = unstable_cache(
   async (): Promise<DeveloperRow[]> => {
     const [{ data, error }, enCache] = await Promise.all([
       sb.from('raw_developers').select(DEV_SELECT).limit(200),
-      loadEnTranslations('developers'),
+      loadAllTranslations('developers'),
     ])
     if (error) throw new Error(`raw_developers: ${error.message}`)
     const raw = (data ?? []) as unknown as Record<string, unknown>[]
@@ -93,7 +93,7 @@ export const _loadAllDevelopers = unstable_cache(
       return {
         airtable_id: rr.airtable_id as string,
         logo_url: (rr.logo_url ?? null) as string | null,
-        data: mergeEnTranslations(d, rr.airtable_id as string, enCache),
+        data: mergeAllTranslations(d, rr.airtable_id as string, enCache),
       }
     })
   },

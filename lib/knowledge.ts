@@ -1,4 +1,4 @@
-import { applyManifestTranslation, loadEnTranslations } from '@/lib/en-translations'
+import { applyManifestTranslation, loadTranslations } from '@/lib/en-translations'
 import type { Lang } from '@/lib/i18n'
 import { enKnowledgeSlug } from '@/lib/knowledge-en-slugs'
 import { normalizeSlug } from '@/lib/slug-normalize'
@@ -66,7 +66,7 @@ async function loadRawKnowledge(): Promise<KnowledgeItem[]> {
 export async function loadAllKnowledge(lang: Lang = 'ru'): Promise<KnowledgeItem[]> {
   const items = await loadRawKnowledge()
   if (lang === 'ru' || items.length === 0) return items
-  const cache = await loadEnTranslations('knowledge')
+  const cache = await loadTranslations('knowledge', lang)
   return items.map(item => applyManifestTranslation(item, cache, EN_FIELDS))
 }
 

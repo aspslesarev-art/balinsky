@@ -5,7 +5,7 @@ import { translit, hasCyrillic } from '@/lib/translit'
 import { loadVillaStyles } from '@/lib/villa-styles'
 import { loadFeatureFlagsMap, FEATURE_FLAGS, FEATURE_LABELS } from '@/lib/listing-features'
 import { normalizeSlug } from '@/lib/slug-normalize'
-import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
+import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
 import { getDistrictCommercialMeta } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { enLabel, type FilterDim } from '@/lib/filter-i18n'
@@ -669,7 +669,7 @@ async function _loadAllInternal(): Promise<CachedAll> {
     sb.from('raw_villas').select(VILLA_SELECT).limit(1000),
     loadJson<Record<string, string[]>>(cdnManifestUrl(PHOTO_MANIFEST_URL, 600), {}),
     loadVillaStyles(),
-    loadEnTranslations('villas'),
+    loadAllTranslations('villas'),
     loadViewCounts('villa'),
     loadFeatureFlagsMap('villa'),
   ])
@@ -680,7 +680,7 @@ async function _loadAllInternal(): Promise<CachedAll> {
   const enriched = rows
     .filter(r => r.data?.['Опубликовать'] === true)
     .filter(r => !isHiddenDeveloper(firstString(r.data['Developer1']), firstString(r.data['Developer'])))
-    .map(r => ({ ...r, data: mergeEnTranslations(r.data, r.airtable_id, enCache) }))
+    .map(r => ({ ...r, data: mergeAllTranslations(r.data, r.airtable_id, enCache) }))
     .map(r => enrich(r, styles, featuresMap))
     .map(e => ({ ...e, views: viewCounts[e.id] ?? 0 }))
   return { enriched, manifest }
