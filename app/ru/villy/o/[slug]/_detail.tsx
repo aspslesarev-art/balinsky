@@ -70,7 +70,7 @@ import { loadListingVision, altFor } from '@/lib/listing-features'
 import { DistrictAboutCard } from '@/components/DistrictAboutCard'
 import { getDistrictCopy } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
-import { enLabel } from '@/lib/filter-i18n'
+import { facetLabel } from '@/lib/filter-i18n'
 
 const COPY = {
   ru: {
@@ -711,7 +711,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
     lease && { Icon: Lock, label: c.factLeasehold, value: c.factLeaseValue(lease) },
     district && { Icon: MapPin, label: c.factDistrict, value: district },
     fmtAirportDistance(lat, lng, lang) && { Icon: Plane, label: c.factAirport, value: fmtAirportDistance(lat, lng, lang)! },
-    interiorStyle && { Icon: Palette, label: c.factStyle, value: lang === 'ru' ? interiorStyle : enLabel('style', interiorStyle) },
+    interiorStyle && { Icon: Palette, label: c.factStyle, value: facetLabel('style', interiorStyle, lang) },
     // Price/m² lives in the PriceCtaCard right under the hero, no need
     // to duplicate it here.
   ].filter(Boolean) as { Icon: typeof BedDouble; label: string; value: ReactNode }[]

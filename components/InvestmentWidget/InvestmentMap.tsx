@@ -7,6 +7,14 @@ import { loadGoogleMaps } from '@/lib/google-maps-loader'
 import { createHeatOverlay, fetchHeatCells } from '@/lib/heat-overlay'
 import type { Snapshot } from './types'
 import { pickCopy, type Lang } from '@/lib/i18n'
+import { translit, hasCyrillic } from '@/lib/translit'
+
+// POI names/addresses come from Google Places in Russian only. Transliterate
+// to Latin on non-RU pages so infowindows don't show Cyrillic.
+function locTx(s: string | null | undefined, lang: Lang): string {
+  if (!s) return ''
+  return lang !== 'ru' && hasCyrillic(s) ? translit(s) : s
+}
 
 const COLORS = {
   villa: '#E0383E',
@@ -173,7 +181,7 @@ function anchorPopupHtml(a: {
 }, lang: Lang): string {
   const t = pickCopy(MAP_COPY, lang)
   const kmLabel = lang === 'ru' ? 'км' : 'km'
-  const title = a.name || 'POI'
+  const title = locTx(a.name, lang) || 'POI'
   const stars = a.rating != null ? `★ ${a.rating.toFixed(1)}` : ''
   const reviewsTxt = a.reviews != null ? `${a.reviews} ${lang === 'ru' ? 'отзывов' : 'reviews'}` : ''
   const ratingLine = [stars, reviewsTxt].filter(Boolean).join(' · ')
@@ -191,7 +199,7 @@ function anchorPopupHtml(a: {
         <div style="font-weight:600;font-size:15px;line-height:1.25;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc(title)}</div>
         ${ratingLine ? `<div style="font-size:12px;margin-bottom:8px"><span style="color:#F59E0B">${esc(stars)}</span>${reviewsTxt ? `<span style="color:#6B7280"> · ${esc(reviewsTxt)}</span>` : ''}</div>` : ''}
         ${dist ? `<div style="margin-bottom:10px">${dist}</div>` : ''}
-        ${a.address ? `<div style="font-size:12px;color:#6B7280;margin-bottom:10px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc(a.address)}</div>` : ''}
+        ${a.address ? `<div style="font-size:12px;color:#6B7280;margin-bottom:10px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc(locTx(a.address, lang))}</div>` : ''}
         ${link}
       </div>
     </div>

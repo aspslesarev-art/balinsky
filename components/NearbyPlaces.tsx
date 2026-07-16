@@ -243,7 +243,7 @@ export function NearbyPlaces({
             {p.address && (
               <div className="flex items-start gap-1.5 text-[12px] text-[var(--color-text-muted)]">
                 <MapPin size={12} className="shrink-0 mt-0.5" />
-                <span className="line-clamp-1">{p.address}</span>
+                <span className="line-clamp-1">{loc(p.address, lang)}</span>
               </div>
             )}
             {p.mapsUrl && (

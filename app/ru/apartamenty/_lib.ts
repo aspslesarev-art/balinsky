@@ -9,7 +9,7 @@ import { normalizeSlug } from '@/lib/slug-normalize'
 import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
 import { getDistrictCommercialMeta } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
-import { enLabel, type FilterDim } from '@/lib/filter-i18n'
+import { facetLabel, type FilterDim } from '@/lib/filter-i18n'
 import { pluralRu } from '@/lib/plural-ru'
 import { isTopBlacklisted } from '@/lib/top-blacklist'
 import { isHiddenDeveloper } from '@/lib/hidden-developers'
@@ -372,7 +372,7 @@ export function buildOptions(
     const en = enMap[dim].get(value)
     if (en) return en
     const filterDim = DIM_TO_FILTER[dim]
-    return filterDim ? enLabel(filterDim, value) : value
+    return filterDim ? facetLabel(filterDim, value, lang) : value
   }
 
   function countsExcludingDim(
