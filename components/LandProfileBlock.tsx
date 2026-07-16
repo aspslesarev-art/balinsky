@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import type { UseCaseStatus } from '@/lib/land-profile'
 import { pickCopy, type Lang } from '@/lib/i18n'
+import { translit, hasCyrillic } from '@/lib/translit'
 
 type Tx = Partial<{
   kabupaten: string
@@ -369,7 +370,13 @@ export function LandProfileBlock({ data, lang = 'ru' }: { data: LandProfileProps
   const c = pickCopy(COPY, lang)
 
   const tx = (lang === 'ru' ? data.translations?.ru : data.translations?.en) ?? {}
-  const t = (key: keyof Tx, raw: string | null): string | null => tx[key] ?? raw
+  // Fall back to the raw value; but on non-RU pages, transliterate any
+  // untranslated Cyrillic term (kabupaten/zone names imported RU-only) so
+  // an id/fr visitor sees Latin (e.g. "Бадунг" → "Badung").
+  const t = (key: keyof Tx, raw: string | null): string | null => {
+    const v = tx[key] ?? raw
+    return lang !== 'ru' && v && hasCyrillic(v) ? translit(v) : v
+  }
 
   // One-line summary: subzone code + (translated) subzone name + STR verdict + facts.
   const subZoneShort = [data.subzona_code, t('subzona_name', data.subzona_name)].filter(Boolean).join(' · ')

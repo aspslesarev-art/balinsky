@@ -4,6 +4,16 @@ import { useEffect, useRef, useState } from 'react'
 import { Star, MapPin, ExternalLink, ChevronDown } from 'lucide-react'
 import type { NearbyCategory, NearbyPlace } from '@/lib/nearby-places'
 import { pickCopy, type Lang } from '@/lib/i18n'
+import { translit, hasCyrillic } from '@/lib/translit'
+
+// Google-Places POI names/addresses are stored in Russian only. On non-RU
+// pages, transliterate Cyrillic to Latin so an Indonesian/French visitor
+// doesn't see Cyrillic (e.g. "Блу Пойнт Бич" → "Blu Poynt Bich",
+// "Бадунг" → "Badung"). RU keeps the original.
+function loc(s: string | null | undefined, lang: Lang): string {
+  if (!s) return ''
+  return lang !== 'ru' && hasCyrillic(s) ? translit(s) : s
+}
 
 const ICONS: Record<string, string> = {
   beach: '🏝️',
@@ -165,10 +175,10 @@ export function NearbyPlaces({
           const title = lang === 'ru'
             ? cat.title
             : lang === 'id'
-              ? (TITLE_ID[cat.key] ?? cat.title)
+              ? (TITLE_ID[cat.key] ?? loc(cat.title, lang))
               : lang === 'fr'
-                ? (TITLE_FR[cat.key] ?? cat.title)
-                : (TITLE_EN[cat.key] ?? cat.title)
+                ? (TITLE_FR[cat.key] ?? loc(cat.title, lang))
+                : (TITLE_EN[cat.key] ?? loc(cat.title, lang))
           return (
             <button
               key={cat.key}
@@ -215,7 +225,7 @@ export function NearbyPlaces({
             }
           >
             <div className="flex items-start justify-between gap-3">
-              <div className="text-[15px] font-semibold leading-snug text-[#111827] line-clamp-2">{p.name}</div>
+              <div className="text-[15px] font-semibold leading-snug text-[#111827] line-clamp-2">{loc(p.name, lang)}</div>
               <div className="text-[12px] text-[var(--color-text-muted)] shrink-0 mt-0.5">{fmtDistance(p.distanceKm, lang)}</div>
             </div>
             <div className="flex items-center gap-3 text-[12px] text-[var(--color-text-muted)]">
