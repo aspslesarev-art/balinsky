@@ -47,6 +47,42 @@ const COPY = {
     ],
     locale: 'en-GB',
   },
+  id: {
+    buyChat: 'Beli',
+    buySeller: 'Beli',
+    perSqm: '/ m²',
+    priceUpdated: (d: string) => `Harga diperbarui ${d}`,
+    reservedTitle: 'Saat ini dipesan',
+    reservedUntil: (d: string) => `Hold berlaku hingga ${d}. Jika hold dilepas, kami akan menghubungi manajer.`,
+    chipsResale: [
+      { icon: 'user', label: 'Kontak langsung penjual' },
+      { icon: 'file', label: 'Dokumen properti' },
+    ],
+    chipsPrimary: [
+      { icon: 'file', label: 'Dokumen & due diligence' },
+      { icon: 'map',  label: 'Master plan & denah' },
+      { icon: 'user', label: 'Kontak langsung pengembang' },
+    ],
+    locale: 'id-ID',
+  },
+  fr: {
+    buyChat: 'Acheter',
+    buySeller: 'Acheter',
+    perSqm: '/ m²',
+    priceUpdated: (d: string) => `Prix mis à jour ${d}`,
+    reservedTitle: 'Actuellement réservé',
+    reservedUntil: (d: string) => `Le blocage expire le ${d}. Si le blocage est levé, nous contacterons le conseiller.`,
+    chipsResale: [
+      { icon: 'user', label: 'Contact direct du vendeur' },
+      { icon: 'file', label: 'Documents du bien' },
+    ],
+    chipsPrimary: [
+      { icon: 'file', label: 'Documents & due diligence' },
+      { icon: 'map',  label: 'Plan directeur & plans' },
+      { icon: 'user', label: 'Contact direct du promoteur' },
+    ],
+    locale: 'fr-FR',
+  },
 } as const
 
 // Single bordered container that joins the price + the two CTAs +

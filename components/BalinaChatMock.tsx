@@ -26,6 +26,24 @@ const COPY = {
     placeholder: 'Type or speak…',
     note: 'By voice or text, anonymously. You leave contacts only if you want to be reached.',
   },
+  id: {
+    subtitle: 'Broker AI · anonim',
+    greeting: 'Saya Balina — broker AI. Jelaskan apa yang Anda cari, dan saya akan menyusun daftar pilihan dalam satu menit.',
+    voice: 'Pesan suara',
+    reply: 'Menemukan 5 vila di Canggu untuk disewakan, imbal hasil 9–11%. Tampilkan beserta dokumen dan perhitungannya?',
+    chips: ['Tampilkan vila', 'Dokumen apa saja?'],
+    placeholder: 'Ketik atau ucapkan…',
+    note: 'Lewat suara atau teks, secara anonim. Anda meninggalkan kontak hanya jika ingin dihubungi.',
+  },
+  fr: {
+    subtitle: 'Courtier IA · anonyme',
+    greeting: 'Je suis Balina — votre courtier IA. Décrivez ce que vous cherchez et je vous fais une présélection en une minute.',
+    voice: 'Message vocal',
+    reply: 'J’ai trouvé 5 villas à Canggu pour la location, rendement de 9 à 11 %. Les afficher avec les documents et les calculs ?',
+    chips: ['Afficher les villas', 'Quels documents ?'],
+    placeholder: 'Écrivez ou parlez…',
+    note: 'Par la voix ou le texte, en toute anonymité. Vous ne laissez vos coordonnées que si vous souhaitez être contacté.',
+  },
 } as const
 
 // Fixed bar heights for the voice waveform (no Math.random — stable render).

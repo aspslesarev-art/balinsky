@@ -494,9 +494,11 @@ export function buildOptions(
   // Deal type — counts derived directly so the chip shows
   // "Перепродажа · 12" etc.
   const dealCounts = countsExcludingDim('dealType', e => e.dealType)
-  const DEAL_LABELS: Record<'ru' | 'en', Record<string, string>> = {
+  const DEAL_LABELS: Record<Lang, Record<string, string>> = {
     ru: { primary: 'От застройщика', resale: 'Перепродажа', secondary: 'Вторичка' },
     en: { primary: 'From developer', resale: 'Resale',      secondary: 'Secondary' },
+    id: { primary: 'Dari pengembang', resale: 'Jual kembali', secondary: 'Sekunder' },
+    fr: { primary: 'Du promoteur',   resale: 'Revente',     secondary: 'Seconde main' },
   }
   const dealType: Option[] = (['primary', 'resale', 'secondary'] as const)
     .map(v => ({ value: v, label: pickCopy(DEAL_LABELS, lang)[v], count: dealCounts.get(v) ?? 0 }))

@@ -5,6 +5,8 @@ import { pickCopy, type Lang } from '@/lib/i18n'
 const COPY = {
   ru: { list: 'Каталог', map: 'Карта' },
   en: { list: 'Catalog', map: 'Map' },
+  id: { list: 'Katalog', map: 'Peta' },
+  fr: { list: 'Catalogue', map: 'Carte' },
 }
 
 export function CatalogTabs({

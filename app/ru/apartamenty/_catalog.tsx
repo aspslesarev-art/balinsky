@@ -31,6 +31,20 @@ const COPY = {
     emptyFilters: 'Nothing matches the selected filters',
     searchPlaceholder: 'Search apartments, districts, developers…',
   },
+  id: {
+    page: 'halaman', of: 'dari',
+    objects: (n: number) => `${n} properti`,
+    emptySearch: (q: string) => `Tidak ada hasil untuk "${q}"`,
+    emptyFilters: 'Tidak ada yang cocok dengan filter yang dipilih',
+    searchPlaceholder: 'Cari apartemen, area, pengembang…',
+  },
+  fr: {
+    page: 'page', of: 'sur',
+    objects: (n: number) => `${n} biens`,
+    emptySearch: (q: string) => `Aucun résultat pour « ${q} »`,
+    emptyFilters: 'Aucun résultat pour les filtres sélectionnés',
+    searchPlaceholder: 'Rechercher appartements, quartiers, promoteurs…',
+  },
 } as const
 
 function toQueryString(f: FilterState): string {

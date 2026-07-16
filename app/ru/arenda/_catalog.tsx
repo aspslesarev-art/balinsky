@@ -42,6 +42,30 @@ const COPY = {
     perMonth: '/ mo',
     bali: 'Bali',
   },
+  id: {
+    sort: { newest: 'Terbaru dulu', 'price-asc': 'Harga ↑', 'price-desc': 'Harga ↓', 'br-asc': 'Kamar tidur ↑', 'br-desc': 'Kamar tidur ↓' } as Record<SortKey, string>,
+    presets: ['Hingga $1000', '$1000–2000', '$2000–3000', '$3000+'] as const,
+    district: 'Area', bedrooms: 'Kamar tidur', price: 'Harga', sortLabel: 'Urutkan',
+    reset: 'Hapus', clear: 'Hapus', search: 'Cari…', noResults: 'Tidak ada hasil',
+    priceMonthHeader: 'Harga per bulan, USD', priceFrom: 'Dari', priceTo: 'Sampai',
+    objects: (n: number) => `${n} unit`,
+    showingOfTotal: (shown: number, total: number) => `Menampilkan ${shown} dari ${total} — muat lebih banyak`,
+    emptyByFilters: 'Tidak ada yang cocok dengan filter yang dipilih. Hapus filter atau coba yang lain.',
+    perMonth: '/ bln',
+    bali: 'Bali',
+  },
+  fr: {
+    sort: { newest: 'Plus récents', 'price-asc': 'Prix ↑', 'price-desc': 'Prix ↓', 'br-asc': 'Chambres ↑', 'br-desc': 'Chambres ↓' } as Record<SortKey, string>,
+    presets: ['Jusqu’à $1000', '$1000–2000', '$2000–3000', '$3000+'] as const,
+    district: 'Quartier', bedrooms: 'Chambres', price: 'Prix', sortLabel: 'Trier',
+    reset: 'Effacer', clear: 'Effacer', search: 'Rechercher…', noResults: 'Aucun résultat',
+    priceMonthHeader: 'Prix mensuel, USD', priceFrom: 'De', priceTo: 'À',
+    objects: (n: number) => `${n} ${n === 1 ? 'bien' : 'biens'}`,
+    showingOfTotal: (shown: number, total: number) => `Affichage de ${shown} sur ${total} — afficher plus`,
+    emptyByFilters: 'Aucun bien ne correspond aux filtres sélectionnés. Effacez les filtres ou essayez-en d’autres.',
+    perMonth: '/ mois',
+    bali: 'Bali',
+  },
 } as const
 
 function pluralRu(n: number, forms: [string, string, string]): string {

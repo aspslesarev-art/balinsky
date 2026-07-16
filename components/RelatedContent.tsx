@@ -38,6 +38,26 @@ const COPY = {
     unitsHeading: 'Units in this complex',
     reliability: (n: number) => `Balinsky reliability · ${n} completed`,
   },
+  id: {
+    developerHeading: 'Pengembang',
+    builtBy: 'Pengembang',
+    viewDeveloper: 'Lihat pengembang',
+    allDevelopers: 'Semua pengembang',
+    complexHeading: 'Kompleks hunian',
+    viewComplex: 'Lihat kompleks',
+    unitsHeading: 'Unit di kompleks ini',
+    reliability: (n: number) => `keandalan Balinsky · ${n} selesai`,
+  },
+  fr: {
+    developerHeading: 'Promoteur',
+    builtBy: 'Promoteur',
+    viewDeveloper: 'Voir le promoteur',
+    allDevelopers: 'Tous les promoteurs',
+    complexHeading: 'Résidence',
+    viewComplex: 'Voir la résidence',
+    unitsHeading: 'Biens de cette résidence',
+    reliability: (n: number) => `fiabilité Balinsky · ${n} livrés`,
+  },
 } as const
 
 export async function RelatedContent({

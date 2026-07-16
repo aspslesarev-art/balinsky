@@ -45,6 +45,8 @@ export type VillaCardData = {
 const COPY = {
   ru: { resale: 'Перепродажа', secondary: 'Вторичка', house: 'Дом', land: 'Земля', sqm: 'м²' },
   en: { resale: 'Resale',      secondary: 'Secondary', house: 'House', land: 'Land', sqm: 'm²' },
+  id: { resale: 'Jual kembali', secondary: 'Sekunder',  house: 'Rumah', land: 'Luas tanah', sqm: 'm²' },
+  fr: { resale: 'Revente',      secondary: 'Secondaire', house: 'Maison', land: 'Terrain', sqm: 'm²' },
 } as const
 
 export function VillaCard({ a, lang = 'ru' }: { a: VillaCardData; lang?: Lang }) {

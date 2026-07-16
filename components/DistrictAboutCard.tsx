@@ -27,6 +27,20 @@ const LABELS = {
       : kind === 'apartment' ? `All apartments in ${name}`
       : `All complexes in ${name}`,
   },
+  id: {
+    eyebrow: 'Tentang wilayah',
+    cta: (kind: Kind, name: string) =>
+      kind === 'villa' ? `Semua vila di ${name}`
+      : kind === 'apartment' ? `Semua apartemen di ${name}`
+      : `Semua kompleks hunian di ${name}`,
+  },
+  fr: {
+    eyebrow: 'À propos du quartier',
+    cta: (kind: Kind, name: string) =>
+      kind === 'villa' ? `Toutes les villas à ${name}`
+      : kind === 'apartment' ? `Tous les appartements à ${name}`
+      : `Toutes les résidences à ${name}`,
+  },
 } as const
 
 export function DistrictAboutCard({

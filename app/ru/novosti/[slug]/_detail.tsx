@@ -30,6 +30,18 @@ const COPY = {
     moreFrom: (n: string) => `More from ${n}`,
     locale: 'en-GB',
   },
+  id: {
+    home: 'Beranda', newsCrumb: 'Berita',
+    watchVideo: 'Tonton video', source: 'Sumber',
+    moreFrom: (n: string) => `Lainnya dari ${n}`,
+    locale: 'id-ID',
+  },
+  fr: {
+    home: 'Accueil', newsCrumb: 'Actualités',
+    watchVideo: 'Regarder la vidéo', source: 'Source',
+    moreFrom: (n: string) => `Plus de ${n}`,
+    locale: 'fr-FR',
+  },
 } as const
 
 function fmtDate(iso: string | null, locale: string): string | null {

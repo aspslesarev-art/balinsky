@@ -21,6 +21,22 @@ const COPY = {
     popularDistricts: 'Popular districts',
     in: 'in',
   },
+  id: {
+    sectionTitle: 'Lihat juga',
+    bedroomsHere: 'Kamar tidur',
+    otherDistricts: 'Area lain',
+    byStyle: 'Berdasarkan gaya interior',
+    popularDistricts: 'Area populer',
+    in: 'di',
+  },
+  fr: {
+    sectionTitle: 'Voir aussi',
+    bedroomsHere: 'Chambres',
+    otherDistricts: 'Autres quartiers',
+    byStyle: 'Par style intérieur',
+    popularDistricts: 'Quartiers populaires',
+    in: 'à',
+  },
 } as const
 
 // Internal-link cluster under the catalog: spreads PageRank across
@@ -45,7 +61,7 @@ export function RelatedVillaFilters({ filters, options, lang = 'ru' }: {
     if (!path) return null
     return { label, href: rewrite(path), count }
   }
-  const brWord = (n: string) => lang === 'ru' ? labelBR(n) : labelBREn(n)
+  const brWord = (n: string) => lang === 'ru' ? labelBR(n) : lang === 'id' ? labelBRId(n) : lang === 'fr' ? labelBRFr(n) : labelBREn(n)
 
   // 1) Same district — other bedrooms (only if a single district is picked).
   let sameDistrictBedrooms: Cand[] = []
@@ -139,4 +155,14 @@ function labelBR(n: string): string {
 function labelBREn(n: string): string {
   const x = parseInt(n, 10)
   return x === 1 ? 'bedroom' : 'bedrooms'
+}
+
+function labelBRId(_n: string): string {
+  // Indonesian nouns don't inflect for number
+  return 'kamar tidur'
+}
+
+function labelBRFr(n: string): string {
+  const x = parseInt(n, 10)
+  return x === 1 ? 'chambre' : 'chambres'
 }

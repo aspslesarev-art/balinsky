@@ -34,6 +34,18 @@ const COPY = {
     intro: 'A directory of Bali developers with active projects — villas, apartments and residential complexes. Each company is rated across four dimensions: construction and real-estate quality, reputation and experience, equipment and production, and post-handover management.',
     sortHint: 'Pick the sort that matches your priority: the balanced score blends everything, “Completed projects” shows who has actually delivered, “Active projects” reveals who’s building right now, and “Experience” reflects how much editorial data we have on the company.',
   },
+  id: {
+    h1: 'Pengembang di Bali',
+    count: (n: number) => `${n} perusahaan dalam katalog`,
+    intro: 'Direktori pengembang Bali dengan proyek aktif — vila, apartemen, dan kompleks hunian. Setiap perusahaan dinilai pada empat dimensi: kualitas konstruksi dan properti, reputasi dan pengalaman, peralatan dan produksi, serta pengelolaan pasca-serah terima.',
+    sortHint: 'Pilih pengurutan sesuai prioritas Anda: skor seimbang menggabungkan semuanya, «Proyek selesai» menunjukkan siapa yang benar-benar menyerahkan, «Proyek aktif» mengungkap siapa yang sedang membangun sekarang, dan «Pengalaman» mencerminkan seberapa banyak data editorial yang kami miliki tentang perusahaan tersebut.',
+  },
+  fr: {
+    h1: 'Promoteurs à Bali',
+    count: (n: number) => `${n} sociétés dans le catalogue`,
+    intro: 'Un annuaire des promoteurs de Bali avec des projets actifs — villas, appartements et résidences. Chaque société est évaluée selon quatre dimensions : qualité de construction et immobilière, réputation et expérience, équipement et production, et gestion après livraison.',
+    sortHint: 'Choisissez le tri qui correspond à votre priorité : le score équilibré combine tout, « Projets livrés » montre qui a réellement livré, « Projets actifs » révèle qui construit en ce moment, et « Expérience » reflète la quantité de données éditoriales dont nous disposons sur la société.',
+  },
 } as const
 
 function logoFromJson(data: Record<string, unknown>): string | null {

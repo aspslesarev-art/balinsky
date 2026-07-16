@@ -28,6 +28,24 @@ const COPY = {
     news: 'District news',
     pillar: 'Investment guide',
   },
+  id: {
+    heading: (district: string) => `Selengkapnya di ${district}`,
+    sub: 'Bagian terkait untuk wilayah ini',
+    devs: 'Pengembang di wilayah ini',
+    complexes: 'Kompleks hunian',
+    promo: 'Promo aktif',
+    news: 'Berita wilayah',
+    pillar: 'Panduan investasi',
+  },
+  fr: {
+    heading: (district: string) => `Plus à ${district}`,
+    sub: 'Sections liées à ce quartier',
+    devs: 'Promoteurs de la zone',
+    complexes: 'Résidences',
+    promo: 'Promotions en cours',
+    news: 'Actualités du quartier',
+    pillar: 'Guide d’investissement',
+  },
 }
 
 export function DistrictRelatedLinks({

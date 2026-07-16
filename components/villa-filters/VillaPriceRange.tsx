@@ -11,6 +11,8 @@ import { pickCopy, type Lang } from '@/lib/i18n'
 const COPY = {
   ru: { from: 'от', to: 'до', clear: 'Сбросить', apply: 'Применить', quick: 'Быстрый выбор' },
   en: { from: 'from', to: 'to', clear: 'Clear', apply: 'Apply', quick: 'Quick presets' },
+  id: { from: 'dari', to: 'sampai', clear: 'Hapus', apply: 'Terapkan', quick: 'Pilihan cepat' },
+  fr: { from: 'de', to: 'à', clear: 'Effacer', apply: 'Appliquer', quick: 'Préréglages rapides' },
 } as const
 
 const SYMBOLS: Record<string, string> = { USD: '$', EUR: '€', RUB: '₽', UAH: '₴', IDR: 'Rp' }

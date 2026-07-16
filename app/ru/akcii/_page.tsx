@@ -35,6 +35,32 @@ const COPY = {
     empty: 'No active promotions yet.',
     locale: 'en-GB',
   },
+  id: {
+    title: 'Promosi dan penawaran khusus dari pengembang Bali | Balinsky',
+    description: 'Diskon, cicilan, dan penawaran khusus dari pengembang untuk vila dan apartemen di Bali.',
+    h1: 'Promosi',
+    sub: 'Diskon, cicilan, dan penawaran khusus dari pengembang Bali',
+    active: 'Aktif',
+    expiredHeading: 'Berakhir',
+    expired: 'berakhir',
+    top: 'top',
+    until: (d: string) => `Sampai ${d}`,
+    empty: 'Belum ada promosi aktif.',
+    locale: 'id-ID',
+  },
+  fr: {
+    title: 'Promotions et offres spéciales des promoteurs de Bali | Balinsky',
+    description: 'Réductions, paiements échelonnés et offres spéciales des promoteurs sur les villas et appartements de Bali.',
+    h1: 'Promotions',
+    sub: 'Réductions, paiements échelonnés et offres spéciales des promoteurs de Bali',
+    active: 'Actives',
+    expiredHeading: 'Terminées',
+    expired: 'terminée',
+    top: 'top',
+    until: (d: string) => `Jusqu’au ${d}`,
+    empty: 'Aucune promotion active pour le moment.',
+    locale: 'fr-FR',
+  },
 } as const
 
 function fmtDate(iso: string | null, locale: string): string | null {

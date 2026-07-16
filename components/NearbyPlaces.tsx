@@ -32,6 +32,40 @@ const TITLE_EN: Record<string, string> = {
   international_school: 'International schools',
 }
 
+// ID titles per category key.
+const TITLE_ID: Record<string, string> = {
+  beach: 'Pantai',
+  restaurant: 'Restoran',
+  cafe: 'Kafe',
+  nightlife: 'Bar & klub',
+  attraction: 'Atraksi',
+  school: 'Sekolah',
+  preschool: 'Penitipan & prasekolah',
+  supermarket: 'Supermarket',
+  pharmacy: 'Apotek',
+  hospital: 'Rumah sakit & klinik',
+  wellness: 'Yoga & kebugaran',
+  beachclub: 'Beach club',
+  international_school: 'Sekolah internasional',
+}
+
+// FR titles per category key.
+const TITLE_FR: Record<string, string> = {
+  beach: 'Plages',
+  restaurant: 'Restaurants',
+  cafe: 'Cafés',
+  nightlife: 'Bars & clubs',
+  attraction: 'Attractions',
+  school: 'Écoles',
+  preschool: 'Crèches & maternelles',
+  supermarket: 'Supermarchés',
+  pharmacy: 'Pharmacies',
+  hospital: 'Hôpitaux & cliniques',
+  wellness: 'Yoga & fitness',
+  beachclub: 'Beach clubs',
+  international_school: 'Écoles internationales',
+}
+
 const COPY = {
   ru: {
     h2: 'Что рядом',
@@ -44,6 +78,18 @@ const COPY = {
     subtitle: 'Popular spots nearby — sourced from Google Maps',
     onMap: 'View on map',
     free: 'free',
+  },
+  id: {
+    h2: 'Apa yang ada di sekitar',
+    subtitle: 'Tempat populer di sekitar — data dari Google Maps',
+    onMap: 'Lihat di peta',
+    free: 'gratis',
+  },
+  fr: {
+    h2: 'À proximité',
+    subtitle: 'Lieux populaires à proximité — données Google Maps',
+    onMap: 'Voir sur la carte',
+    free: 'gratuit',
   },
 } as const
 
@@ -116,7 +162,13 @@ export function NearbyPlaces({
         {available.map(cat => {
           const isActive = cat.key === active
           const count = byCategory[cat.key]?.length ?? 0
-          const title = lang === 'ru' ? cat.title : (TITLE_EN[cat.key] ?? cat.title)
+          const title = lang === 'ru'
+            ? cat.title
+            : lang === 'id'
+              ? (TITLE_ID[cat.key] ?? cat.title)
+              : lang === 'fr'
+                ? (TITLE_FR[cat.key] ?? cat.title)
+                : (TITLE_EN[cat.key] ?? cat.title)
           return (
             <button
               key={cat.key}

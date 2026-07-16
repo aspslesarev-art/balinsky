@@ -25,6 +25,22 @@ const COPY = {
     videoCall: 'Video call',
     lead: 'Leave a request',
   },
+  id: {
+    heading: 'Hubungi manajer',
+    headingMany: 'Hubungi para manajer',
+    role: (dev?: string | null) => `Manajer ${dev ? dev : 'pengembang'}`,
+    sla: 'Biasanya membalas dalam satu jam pada jam kerja Bali (UTC+8)',
+    videoCall: 'Panggilan video',
+    lead: 'Kirim permintaan',
+  },
+  fr: {
+    heading: 'Contacter le conseiller',
+    headingMany: 'Contacter les conseillers',
+    role: (dev?: string | null) => `Conseiller ${dev ? dev : 'du promoteur'}`,
+    sla: 'Répond généralement dans l’heure pendant les horaires de travail de Bali (UTC+8)',
+    videoCall: 'Appel vidéo',
+    lead: 'Envoyer une demande',
+  },
 } as const
 
 // Accept either a single manager (legacy callsites) or an array of

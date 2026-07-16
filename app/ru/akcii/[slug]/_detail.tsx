@@ -26,6 +26,16 @@ const COPY = {
     until: 'Until', moreFrom: (n: string) => `More promotions from ${n}`,
     learnMore: 'Learn more', locale: 'en-GB',
   },
+  id: {
+    home: 'Beranda', promoCrumb: 'Promosi',
+    until: 'Sampai', moreFrom: (n: string) => `Promosi lain dari ${n}`,
+    learnMore: 'Selengkapnya', locale: 'id-ID',
+  },
+  fr: {
+    home: 'Accueil', promoCrumb: 'Promotions',
+    until: 'Jusqu’au', moreFrom: (n: string) => `Plus de promotions de ${n}`,
+    learnMore: 'En savoir plus', locale: 'fr-FR',
+  },
 } as const
 
 function fmtDate(iso: string | null, locale: string): string | null {

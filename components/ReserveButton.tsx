@@ -53,6 +53,52 @@ const COPY = {
     trustRefund: 'If you walk inside 14 days based on DD findings — full refund.',
     trustMore: 'Read the full reservation policy',
   },
+  id: {
+    cta: 'Reservasi',
+    titleOpen: 'Reservasi objek ini',
+    titleDone: 'Reservasi diterima',
+    close: 'Tutup',
+    submitted: 'Terkirim ke manajer',
+    explainer: (email: string) => (
+      <>Dalam satu jam kami akan mengirim ke <strong className="text-[#111827] break-all">{email}</strong> faktur untuk pembayaran deposit reservasi. Objek ditahan untuk Anda selama 14 hari. Kirim data paspor Anda sebagai balasan ke email yang sama.</>
+    ),
+    ok: 'Mengerti',
+    intro: 'Objek akan ditahan (hold) selama 14 hari. Manajer akan mengirim faktur pembayaran deposit ke alamat yang Anda berikan.',
+    name: 'Nama lengkap', namePh: 'John Smith',
+    email: 'Email', emailPh: 'john@example.com',
+    phone: 'Telepon', phonePh: '+62 812 345 6789',
+    consent: 'Saya menyetujui pemrosesan data pribadi dan syarat deposit reservasi.',
+    failed: 'Gagal mengirim. Silakan coba lagi.',
+    sending: 'Mengirim…',
+    trustHold: 'Hold eksklusif 14 hari — tidak ada orang lain yang bisa menyelesaikan pembelian dalam jendela itu.',
+    trustForm: 'Reservation form adalah dokumen singkat, bukan SPA. SPA ditandatangani kemudian di hadapan notaris PPAT, setelah due diligence.',
+    trustDeposit: 'Deposit ($2–10k) disimpan di escrow notaris — tidak pernah di rekening pribadi.',
+    trustRefund: 'Jika Anda mundur dalam 14 hari berdasarkan temuan DD — pengembalian penuh.',
+    trustMore: 'Baca kebijakan reservasi selengkapnya',
+  },
+  fr: {
+    cta: 'Réserver',
+    titleOpen: 'Réserver ce bien',
+    titleDone: 'Réservation reçue',
+    close: 'Fermer',
+    submitted: 'Envoyé au manager',
+    explainer: (email: string) => (
+      <>Sous une heure, nous enverrons à <strong className="text-[#111827] break-all">{email}</strong> une facture pour l’acompte de réservation. Le bien est bloqué pour vous pendant 14 jours. Envoyez vos données de passeport en réponse au même email.</>
+    ),
+    ok: 'Compris',
+    intro: 'Le bien est bloqué pendant 14 jours. Le manager enverra une facture pour l’acompte à l’adresse que vous indiquez.',
+    name: 'Nom complet', namePh: 'John Smith',
+    email: 'Email', emailPh: 'john@example.com',
+    phone: 'Téléphone', phonePh: '+33 6 12 34 56 78',
+    consent: 'J’accepte le traitement des données personnelles et les conditions de l’acompte de réservation.',
+    failed: 'Échec de l’envoi. Veuillez réessayer.',
+    sending: 'Envoi…',
+    trustHold: 'Blocage exclusif de 14 jours — personne d’autre ne peut finaliser un achat durant cette fenêtre.',
+    trustForm: 'Le reservation form est un court document, pas le SPA. Le SPA est signé plus tard devant un notaire PPAT, après la due diligence.',
+    trustDeposit: 'L’acompte (2–10k $) est détenu par le séquestre du notaire — jamais sur un compte personnel.',
+    trustRefund: 'Si vous vous retirez sous 14 jours sur la base des conclusions de la DD — remboursement intégral.',
+    trustMore: 'Lire la politique de réservation complète',
+  },
 } as const
 
 // Stage-1 reservation flow: visitor leaves name + email + phone. Backend

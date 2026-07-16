@@ -23,7 +23,7 @@ type LangCopy = {
   published: string; updated: string; locale: string
   defaultAuthor: KnowledgeAuthor
 }
-const COPY: Record<'ru' | 'en', LangCopy> = {
+const COPY: Record<Lang, LangCopy> = {
   ru: {
     home: 'Главная', knowledgeCrumb: 'Знания', source: 'Источник', moreArticles: 'Ещё статьи',
     published: 'Опубликовано', updated: 'Обновлено',
@@ -35,6 +35,18 @@ const COPY: Record<'ru' | 'en', LangCopy> = {
     published: 'Published', updated: 'Updated',
     defaultAuthor: { name: 'Andrei Balinsky', role: 'Founder of Balinsky', photo: null, slug: null },
     locale: 'en-GB',
+  },
+  id: {
+    home: 'Beranda', knowledgeCrumb: 'Pengetahuan', source: 'Sumber', moreArticles: 'Artikel lainnya',
+    published: 'Diterbitkan', updated: 'Diperbarui',
+    defaultAuthor: { name: 'Andrei Balinsky', role: 'Pendiri Balinsky', photo: null, slug: null },
+    locale: 'id-ID',
+  },
+  fr: {
+    home: 'Accueil', knowledgeCrumb: 'Connaissances', source: 'Source', moreArticles: 'Plus d\'articles',
+    published: 'Publié', updated: 'Mis à jour',
+    defaultAuthor: { name: 'Andrei Balinsky', role: 'Fondateur de Balinsky', photo: null, slug: null },
+    locale: 'fr-FR',
   },
 }
 

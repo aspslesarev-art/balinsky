@@ -46,6 +46,34 @@ const MAP_COPY = {
     bookingTitle: (adr: number, beds: number | null) =>
       `Booking: $${adr}/night${beds != null ? ` · ${beds} BR` : ''}`,
   },
+  id: {
+    unavailable: 'Peta tidak tersedia',
+    villa: 'Vila', competitors: 'Pesaing', anchors: 'Jangkar',
+    anchorsOnly: 'Hanya jangkar', allPois: 'Semua POI',
+    heat: 'Peta pariwisata',
+    perNight: ' / malam',
+    openBooking: 'Buka di Booking →',
+    openMaps: 'Buka di Google Maps →',
+    reviewsSuffix: ' ulasan',
+    minByScooter: (min: number) => `${min} mnt naik skuter`,
+    distLabel: 'Dari vila',
+    bookingTitle: (adr: number, beds: number | null) =>
+      `Booking: $${adr}/malam${beds != null ? ` · ${beds} BR` : ''}`,
+  },
+  fr: {
+    unavailable: 'Carte indisponible',
+    villa: 'Villa', competitors: 'Concurrents', anchors: 'Points de repère',
+    anchorsOnly: 'Repères seuls', allPois: 'Tous les POI',
+    heat: 'Carte du tourisme',
+    perNight: ' / nuit',
+    openBooking: 'Ouvrir sur Booking →',
+    openMaps: 'Ouvrir sur Google Maps →',
+    reviewsSuffix: ' avis',
+    minByScooter: (min: number) => `${min} min en scooter`,
+    distLabel: 'Depuis la villa',
+    bookingTitle: (adr: number, beds: number | null) =>
+      `Booking : ${adr} $/nuit${beds != null ? ` · ${beds} BR` : ''}`,
+  },
 } as const
 
 // Haversine on a sphere — same formula used elsewhere in

@@ -32,6 +32,22 @@ const COPY = {
       `${type ?? 'Property'} for rent in Bali${location ? `, ${location}` : ''}. ${price} / mo.`,
     title: (t: string, p: string) => `${t} — ${p}/mo | Balinsky`,
   },
+  id: {
+    home: 'Beranda', rental: 'Sewa jangka panjang', bali: 'Bali',
+    descHeading: 'Deskripsi', perMonth: '/ bln',
+    contactTg: 'Kirim pesan di Telegram', contactWa: 'Kirim pesan di WhatsApp', contactOther: 'Hubungi',
+    metaFallback: (type: string | null, location: string | null, price: string) =>
+      `${type ?? 'Properti'} disewakan di Bali${location ? `, ${location}` : ''}. ${price} / bln.`,
+    title: (t: string, p: string) => `${t} — ${p}/bln | Balinsky`,
+  },
+  fr: {
+    home: 'Accueil', rental: 'Location longue durée', bali: 'Bali',
+    descHeading: 'Description', perMonth: '/ mois',
+    contactTg: 'Écrire sur Telegram', contactWa: 'Écrire sur WhatsApp', contactOther: 'Contacter',
+    metaFallback: (type: string | null, location: string | null, price: string) =>
+      `${type ?? 'Bien'} à louer à Bali${location ? `, ${location}` : ''}. ${price} / mois.`,
+    title: (t: string, p: string) => `${t} — ${p}/mois | Balinsky`,
+  },
 } as const
 
 function fmtUsd(n: number): string { return '$' + Math.round(n).toLocaleString('en-US') }

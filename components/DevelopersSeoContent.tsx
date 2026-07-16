@@ -18,7 +18,7 @@ const POPULAR_DISTRICTS = [
 ]
 
 type FaqItem = { q: string; a: string }
-const FAQ_ITEMS: Record<'ru' | 'en', FaqItem[]> = {
+const FAQ_ITEMS: Record<Lang, FaqItem[]> = {
   ru: [
     { q: 'Какие застройщики работают на Бали?',
       a: 'На острове активно более 80 застройщиков. Среди заметных — Alex Villas, Magnum Estate, BREIG, Bali Capital Group, Anta Group, Taryan Group, Oceaniq, Sunny Development. Большинство специализируется на 1–2 районах Бали.' },
@@ -42,6 +42,30 @@ const FAQ_ITEMS: Record<'ru' | 'en', FaqItem[]> = {
       a: 'Yes. Most Bali developers sell directly without intermediaries. The deal is closed at a PPAT notary, payment runs on a schedule tied to construction milestones.' },
     { q: 'What is the agent commission?',
       a: 'When buying through an agent, expect 3–5% of the property price. Many developers will pass this saving to a buyer who comes directly.' },
+  ],
+  id: [
+    { q: 'Pengembang mana saja yang aktif di Bali?',
+      a: 'Ada 80+ pengembang aktif di pulau ini. Nama-nama terkemuka: Alex Villas, Magnum Estate, BREIG, Bali Capital Group, Anta Group, Taryan Group, Oceaniq, Sunny Development. Sebagian besar berfokus pada 1–2 wilayah.' },
+    { q: 'Bagaimana cara memverifikasi keandalan pengembang?',
+      a: 'Sinyal standar: jumlah proyek yang telah selesai, keberadaan perusahaan pengelola yang nyata, izin PBG/SLF yang aktif pada pembangunan saat ini, kepemilikan yang transparan (leasehold / freehold), dan ulasan dari pembeli sebelumnya. Kami mengagregasi semua ini pada setiap kartu pengembang.' },
+    { q: 'Di mana sebagian besar proyek baru dibangun?',
+      a: 'Kawasan paling aktif saat ini adalah Canggu (Berawa, Batu Bolong, Pererenan), Bukit (Uluwatu, Pandawa, Melasti), dan Ubud. Sanur berkembang di pesisir timur, dan Cemagi / Seseh di utara semenanjung.' },
+    { q: 'Bisakah saya membeli properti langsung dari pengembang?',
+      a: 'Ya. Sebagian besar pengembang Bali menjual langsung tanpa perantara. Transaksi diselesaikan di hadapan notaris PPAT, pembayaran mengikuti jadwal yang terkait dengan tahapan konstruksi.' },
+    { q: 'Berapa komisi agen?',
+      a: 'Saat membeli melalui agen, perkirakan 3–5% dari harga properti. Banyak pengembang akan memberikan penghematan ini kepada pembeli yang datang langsung.' },
+  ],
+  fr: [
+    { q: 'Quels promoteurs sont actifs à Bali ?',
+      a: 'Il y a plus de 80 promoteurs actifs sur l’île. Noms notables : Alex Villas, Magnum Estate, BREIG, Bali Capital Group, Anta Group, Taryan Group, Oceaniq, Sunny Development. La plupart se spécialisent dans 1 à 2 quartiers.' },
+    { q: 'Comment vérifier qu’un promoteur est fiable ?',
+      a: 'Signaux standards : nombre de projets livrés, présence d’une véritable société de gestion, permis PBG/SLF actif sur le chantier en cours, propriété transparente (leasehold / freehold) et avis d’anciens acheteurs. Nous agrégeons ces éléments sur chaque fiche promoteur.' },
+    { q: 'Où se construisent la plupart des nouveaux projets ?',
+      a: 'Les zones les plus actives en ce moment sont Canggu (Berawa, Batu Bolong, Pererenan), Bukit (Uluwatu, Pandawa, Melasti) et Ubud. Sanur se développe sur la côte est, et Cemagi / Seseh au nord de la péninsule.' },
+    { q: 'Puis-je acheter un bien directement auprès du promoteur ?',
+      a: 'Oui. La plupart des promoteurs balinais vendent directement sans intermédiaires. La transaction est conclue chez un notaire PPAT, le paiement suit un calendrier lié aux étapes de construction.' },
+    { q: 'Quelle est la commission de l’agent ?',
+      a: 'En achetant via un agent, comptez 3 à 5 % du prix du bien. De nombreux promoteurs répercutent cette économie sur l’acheteur qui vient en direct.' },
   ],
 }
 
@@ -89,6 +113,50 @@ const COPY = {
       { href: '/en/apartments/100000-200000', label: 'Apartments $100k–200k' },
     ],
     faqHeading: 'Frequently asked questions',
+  },
+  id: {
+    chooseHeading: 'Cara memilih pengembang di Bali',
+    chooseP1: 'Kriteria utamanya adalah proyek yang telah selesai, struktur hukum yang transparan, dan perusahaan pengelola setelah serah terima. Proyek yang selesai menunjukkan bahwa pengembang mampu menuntaskan pembangunan dan memenuhi kualitas yang dijanjikan. Struktur hukum (leasehold atau freehold, izin PBG / SLF yang aktif) menjamin Anda menerima kepemilikan yang terdaftar dengan benar. Perusahaan pengelola sangat penting jika Anda membeli apartemen untuk disewakan — tanpanya, imbal hasil 8–12% per tahun berubah menjadi pekerjaan penuh waktu bagi pemilik.',
+    chooseP2: 'Pada setiap kartu kami mengagregasi skor di empat dimensi: konstruksi & properti, reputasi & pengalaman, peralatan & produksi, dan perusahaan pengelola. Ini memungkinkan Anda membandingkan puluhan pemain dengan cepat tanpa bergantung pada satu ulasan saja.',
+    districtsHeading: 'Pengembang berdasarkan wilayah Bali',
+    districtsLead: 'Sebagian besar proyek baru terkonsentrasi di Canggu (Berawa, Batu Bolong, Pererenan), di Bukit (Uluwatu, Pandawa), dan di Ubud. Wilayah-wilayah ini menampung pengembang paling aktif dengan apartemen, vila, dan kompleks investasi.',
+    devsIn: (n: string) => `Pengembang di ${n}`,
+    newIn: (n: string) => `Proyek baru di ${n}`,
+    allComplexes: 'Kompleks hunian Bali',
+    relatedHeading: 'Terkait',
+    related: [
+      { href: '/id/kompleks', label: 'Kompleks hunian Bali' },
+      { href: '/id/apartemen', label: 'Apartemen dari pengembang' },
+      { href: '/id/vila', label: 'Vila dan rumah' },
+      { href: `/id/apartemen/${BEDROOM_TO_SLUG['1']}`, label: 'Apartemen 1 kamar tidur' },
+      { href: `/id/apartemen/${BEDROOM_TO_SLUG['2']}`, label: 'Apartemen 2 kamar tidur' },
+      { href: `/id/apartemen/${STATUS_TO_SLUG.building}`, label: 'Apartemen dalam pembangunan' },
+      { href: `/id/apartemen/${STATUS_TO_SLUG.built}`, label: 'Apartemen selesai' },
+      { href: '/id/apartemen/100000-200000', label: 'Apartemen $100k–200k' },
+    ],
+    faqHeading: 'Pertanyaan yang sering diajukan',
+  },
+  fr: {
+    chooseHeading: 'Comment choisir un promoteur à Bali',
+    chooseP1: 'Les critères principaux sont les projets livrés, une structure juridique transparente et une société de gestion après la livraison. Les projets livrés montrent que le promoteur sait mener un chantier à terme et tenir la qualité promise. La structure juridique (leasehold ou freehold, un permis PBG / SLF actif) garantit que vous recevez une propriété correctement enregistrée. La société de gestion est cruciale si vous achetez un appartement pour le louer — sans elle, le rendement annuel de 8 à 12 % se transforme en emploi à plein temps pour le propriétaire.',
+    chooseP2: 'Sur chaque fiche, nous agrégeons des scores selon quatre dimensions : construction & immobilier, réputation & expérience, équipement & production, et société de gestion. Cela permet de comparer rapidement des dizaines d’acteurs sans dépendre d’un seul avis.',
+    districtsHeading: 'Promoteurs par quartier de Bali',
+    districtsLead: 'La plupart des nouveaux projets se concentrent à Canggu (Berawa, Batu Bolong, Pererenan), sur Bukit (Uluwatu, Pandawa) et à Ubud. Ces quartiers accueillent les promoteurs les plus actifs avec appartements, villas et résidences d’investissement.',
+    devsIn: (n: string) => `Promoteurs à ${n}`,
+    newIn: (n: string) => `Programmes neufs à ${n}`,
+    allComplexes: 'Résidences de Bali',
+    relatedHeading: 'Sur le même thème',
+    related: [
+      { href: '/fr/residences', label: 'Résidences de Bali' },
+      { href: '/fr/appartements', label: 'Appartements de promoteurs' },
+      { href: '/fr/villas', label: 'Villas et maisons' },
+      { href: `/fr/appartements/${BEDROOM_TO_SLUG['1']}`, label: 'Appartements 1 chambre' },
+      { href: `/fr/appartements/${BEDROOM_TO_SLUG['2']}`, label: 'Appartements 2 chambres' },
+      { href: `/fr/appartements/${STATUS_TO_SLUG.building}`, label: 'Appartements en construction' },
+      { href: `/fr/appartements/${STATUS_TO_SLUG.built}`, label: 'Appartements livrés' },
+      { href: '/fr/appartements/100000-200000', label: 'Appartements $100k–200k' },
+    ],
+    faqHeading: 'Questions fréquentes',
   },
 } as const
 

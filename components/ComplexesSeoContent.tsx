@@ -100,6 +100,94 @@ const T = {
       },
     ],
   },
+  id: {
+    where: (one?: string, many?: string[]) =>
+      one ? `wilayah ${one}` : many && many.length ? `wilayah ${many.join(', ')}` : 'Bali',
+    leadList: (where: string) => `Halaman ini menampilkan kompleks hunian di ${where}.`,
+    leadMap: (where: string) => `Halaman ini menampilkan kompleks hunian di ${where} yang ditandai di peta.`,
+    tail: ' Setiap proyek menampilkan foto, wilayah, tipe unit, status pembangunan, dan jadwal serah terima — sehingga Anda dapat membandingkan puluhan proyek secara berdampingan dan memilih yang paling sesuai.',
+    titleBase: 'Kompleks hunian',
+    titleInDistrict: (d: string) => ` di ${d}`,
+    titleMapSuffix: ' di peta Bali',
+    titleListSuffix: ' di Bali — katalog',
+    h3Districts: 'Kompleks berdasarkan wilayah',
+    h3Type: 'Berdasarkan tipe dan status',
+    chipBuilding: 'Dalam pembangunan',
+    chipBuilt: 'Selesai',
+    chipDevelopers: 'Semua pengembang',
+    faqTitle: 'Pertanyaan yang sering diajukan',
+    contextUbud: 'Ubud adalah proyek bertingkat rendah yang dikelilingi hutan dan terasering sawah — untuk pembeli yang mencari suasana lebih tenang jauh dari keramaian pantai.',
+    contextCanggu: (d: string) => `${d} adalah bagian dari Canggu, kawasan peselancar dan digital nomad — pipeline pembangunan paling aktif di Bali, pasar sewa yang padat, dan infrastruktur harian yang hidup.`,
+    contextBukit: (d: string) => `${d} adalah semenanjung Bukit — proyek dengan pemandangan tebing dan kompleks premium yang dibangun untuk pasar investasi dan sewa jangka pendek.`,
+    contextSanur: 'Sanur adalah pesisir timur yang lebih tenang dengan lagunanya — populer di kalangan keluarga dan mereka yang pindah jangka panjang.',
+    contextDefault: 'Ada beberapa ratus kompleks hunian di Bali. Kawasan paling aktif adalah Canggu (Berawa, Batu Bolong, Pererenan), Bukit (Uluwatu, Pandawa, Melasti), Ubud, Sanur, dan Nusa Dua. Sebagian besar proyek berupa leasehold 25–80 tahun dengan serah terima dalam 1–3 tahun; tipe unit mencakup apartemen, vila, dan rumah bandar.',
+    faq: [
+      {
+        q: 'Apa itu kompleks hunian di Bali?',
+        a: 'Sebuah properti berpagar dengan sekelompok bangunan — apartemen, vila, atau rumah bandar — di bawah satu pengelolaan, dengan keamanan dan biasanya kolam renang, gym, serta resepsionis. Kompleks di sini terbagi dua: investasi (dibangun untuk disewakan) dan hunian (dibangun untuk ditinggali).',
+      },
+      {
+        q: 'Apa perbedaan kompleks yang masih dibangun dengan yang sudah selesai?',
+        a: 'Unit yang masih dibangun dijual hingga 30% lebih murah, tetapi risikonya lebih tinggi: serah terima bisa mundur dan kualitas finishing belum diketahui. Kompleks yang sudah selesai bisa Anda lihat langsung dan segera disewakan, tetapi harganya lebih tinggi.',
+      },
+      {
+        q: 'Izin apa yang harus dimiliki sebuah kompleks?',
+        a: 'Dua dokumen utama adalah PBG (izin mendirikan bangunan) dan SLF (sertifikat laik fungsi). Tanpa PBG, pembangunan tidak legal; tanpa SLF, sebuah unit tidak dapat disewakan secara resmi.',
+      },
+      {
+        q: 'Berapa lama leasehold pada umumnya?',
+        a: 'Sewa standar berlangsung 25–30 tahun dengan opsi perpanjangan. Proyek premium menawarkan 50–80 tahun pada periode pertama. Semakin panjang masa sewa, semakin tinggi likuiditas penjualan kembali.',
+      },
+      {
+        q: 'Bisakah saya membeli unit sebelum konstruksi dimulai?',
+        a: 'Ya — melalui pra-penjualan. Harganya 15–25% di bawah level pasca serah terima, tetapi Anda perlu memverifikasi pengembang dan memastikan PBG sudah ada. Pembayaran mengikuti jadwal konstruksi.',
+      },
+    ],
+  },
+  fr: {
+    where: (one?: string, many?: string[]) =>
+      one ? `quartier de ${one}` : many && many.length ? `quartiers de ${many.join(', ')}` : 'Bali',
+    leadList: (where: string) => `Cette page répertorie les résidences dans ${where}.`,
+    leadMap: (where: string) => `Cette page répertorie les résidences dans ${where} localisées sur la carte.`,
+    tail: ' Chaque projet affiche les photos, le quartier, les types d’unités, l’état de construction et le calendrier de livraison — pour comparer des dizaines de projets côte à côte et choisir celui qui vous convient.',
+    titleBase: 'Résidences',
+    titleInDistrict: (d: string) => ` à ${d}`,
+    titleMapSuffix: ' sur la carte de Bali',
+    titleListSuffix: ' à Bali — catalogue',
+    h3Districts: 'Résidences par quartier',
+    h3Type: 'Par type et statut',
+    chipBuilding: 'En construction',
+    chipBuilt: 'Livrées',
+    chipDevelopers: 'Tous les promoteurs',
+    faqTitle: 'Questions fréquentes',
+    contextUbud: 'Ubud, ce sont des projets de faible hauteur entourés de jungle et de rizières en terrasses — pour les acheteurs en quête d’une atmosphère plus calme, loin de la foule des plages.',
+    contextCanggu: (d: string) => `${d} fait partie de Canggu, le fief des surfeurs et des nomades numériques — le pipeline de construction le plus actif de Bali, un marché locatif dense et une infrastructure quotidienne animée.`,
+    contextBukit: (d: string) => `${d}, c’est la péninsule de Bukit — des projets avec vue sur les falaises et des résidences premium conçus pour le marché de l’investissement et de la location courte durée.`,
+    contextSanur: 'Sanur, c’est la côte est plus tranquille avec son lagon — prisée des familles et des installations de longue durée.',
+    contextDefault: 'Il existe plusieurs centaines de résidences à Bali. Les zones les plus actives sont Canggu (Berawa, Batu Bolong, Pererenan), Bukit (Uluwatu, Pandawa, Melasti), Ubud, Sanur et Nusa Dua. La plupart des projets sont en leasehold de 25 à 80 ans avec livraison sous 1 à 3 ans ; les types d’unités incluent appartements, villas et maisons de ville.',
+    faq: [
+      {
+        q: 'Qu’est-ce qu’une résidence à Bali ?',
+        a: 'Une propriété clôturée regroupant plusieurs bâtiments — appartements, villas ou maisons de ville — sous une gestion unique, avec sécurité et généralement piscine, salle de sport et réception. Les résidences se répartissent en deux catégories : investissement (construites pour la location) et résidentielle (construites pour y vivre).',
+      },
+      {
+        q: 'Quelle différence entre une résidence en construction et une résidence livrée ?',
+        a: 'Les unités en construction se vendent jusqu’à 30 % moins cher, mais le risque est plus élevé : la livraison peut glisser et la qualité des finitions reste inconnue. Une résidence livrée, vous pouvez la visiter et la louer immédiatement, mais le prix est plus élevé.',
+      },
+      {
+        q: 'Quels permis une résidence doit-elle détenir ?',
+        a: 'Les deux documents clés sont le PBG (permis de construire) et le SLF (certificat d’occupation). Sans PBG, la construction n’est pas légale ; sans SLF, une unité ne peut pas être louée officiellement.',
+      },
+      {
+        q: 'Quelle est la durée typique d’un leasehold ?',
+        a: 'Les baux standard durent 25 à 30 ans avec option de prolongation. Les projets premium offrent 50 à 80 ans sur la première période. Plus le bail est long, plus la liquidité à la revente est élevée.',
+      },
+      {
+        q: 'Puis-je acheter une unité avant le début de la construction ?',
+        a: 'Oui — via la prévente. Les prix sont 15 à 25 % en dessous des niveaux post-livraison, mais vous devez vérifier le promoteur et confirmer que le PBG est en place. Le paiement suit le calendrier de construction.',
+      },
+    ],
+  },
 } as const
 
 function intro(f: ComplexFilterState, variant: Variant, lang: Lang): string {

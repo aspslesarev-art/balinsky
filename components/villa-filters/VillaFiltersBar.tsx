@@ -19,6 +19,16 @@ const COPY = {
     dealType: 'Deal type', style: 'Style', year: 'Completion year', developer: 'Developer',
     permit: 'Permit', features: 'Features', resetAll: 'Clear all',
   },
+  id: {
+    price: 'Harga', district: 'Wilayah', bedrooms: 'Kamar tidur', status: 'Tahap konstruksi',
+    dealType: 'Jenis transaksi', style: 'Gaya', year: 'Tahun serah terima', developer: 'Pengembang',
+    permit: 'Izin', features: 'Fitur', resetAll: 'Hapus semua',
+  },
+  fr: {
+    price: 'Prix', district: 'Quartier', bedrooms: 'Chambres', status: 'Étape de construction',
+    dealType: 'Type de transaction', style: 'Style', year: 'Année de livraison', developer: 'Promoteur',
+    permit: 'Permis', features: 'Caractéristiques', resetAll: 'Tout effacer',
+  },
 } as const
 
 function ResetAll({ activeCount, current, view, lang }: {

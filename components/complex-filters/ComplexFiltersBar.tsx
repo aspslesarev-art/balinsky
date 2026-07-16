@@ -25,6 +25,24 @@ const COPY = {
     permit:    'Permit',
     resetAll:  'Clear all',
   },
+  id: {
+    district:  'Kawasan',
+    types:     'Tipe',
+    status:    'Tahap pembangunan',
+    year:      'Tahun serah terima',
+    developer: 'Pengembang',
+    permit:    'Izin',
+    resetAll:  'Hapus semua',
+  },
+  fr: {
+    district:  'Quartier',
+    types:     'Type',
+    status:    'Étape de construction',
+    year:      'Année de livraison',
+    developer: 'Promoteur',
+    permit:    'Permis',
+    resetAll:  'Tout effacer',
+  },
 } as const
 
 function ResetAll({ activeCount, current, view, lang }: {

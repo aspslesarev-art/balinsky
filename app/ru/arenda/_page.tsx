@@ -23,6 +23,20 @@ const COPY = {
     sub: 'Villas and apartments for long-term rent — updates automatically',
     loading: 'Loading…',
   },
+  id: {
+    title: 'Sewa bulanan vila dan apartemen di Bali | Balinsky',
+    description: 'Vila, apartemen, dan rumah untuk sewa jangka panjang di Bali — Canggu, Ubud, Seminyak, Bukit, dan area lainnya. Diperbarui setiap hari.',
+    h1: 'Sewa bulanan',
+    sub: 'Vila dan apartemen untuk sewa jangka panjang — diperbarui otomatis',
+    loading: 'Memuat…',
+  },
+  fr: {
+    title: 'Location mensuelle de villas et appartements à Bali | Balinsky',
+    description: 'Villas, appartements et maisons en location longue durée à Bali — Canggu, Ubud, Seminyak, Bukit et autres quartiers. Mis à jour quotidiennement.',
+    h1: 'Location longue durée',
+    sub: 'Villas et appartements en location longue durée — mise à jour automatique',
+    loading: 'Chargement…',
+  },
 } as const
 
 export function generateRentalListMetadata(lang: Lang): Metadata {

@@ -32,6 +32,20 @@ const COPY = {
     onMap: 'On the map',
     video: 'Video',
   },
+  id: {
+    home: 'Beranda', eventsCrumb: 'Acara',
+    pastBadge: 'selesai',
+    register: 'Daftar via Telegram',
+    onMap: 'Di peta',
+    video: 'Video',
+  },
+  fr: {
+    home: 'Accueil', eventsCrumb: 'Événements',
+    pastBadge: 'passé',
+    register: 'S’inscrire via Telegram',
+    onMap: 'Sur la carte',
+    video: 'Vidéo',
+  },
 } as const
 
 function isPast(iso: string | null): boolean {

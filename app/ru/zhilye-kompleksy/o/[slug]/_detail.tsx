@@ -214,6 +214,140 @@ const COPY = {
       `${name} residential complex${district ? ` in ${district}` : ''} in Bali.${types ? ` Unit types: ${types.toLowerCase()}.` : ''}${yearRaw ? ` Completion: ${yearRaw}.` : ''} Photos, prices, permits.`,
     sold: 'Sold',
   },
+  id: {
+    home: 'Beranda',
+    crumbComplexes: 'Kompleks hunian',
+    backToComplexes: 'Kompleks hunian',
+    bali: 'Bali',
+    completed: 'selesai',
+    completion: (y: string) => `serah terima ${y}`,
+    units: (n: number) => `${n} unit`,
+    unitsFrom: 'Unit mulai dari',
+    keyFacts: 'Fakta utama',
+    factType: 'Tipe unit',
+    factCompletion: 'Serah terima',
+    factCompletionDone: 'Selesai',
+    factPermits: 'Izin',
+    factLeasehold: 'Hak sewa',
+    factLeaseValue: (l: string) => `${l} tahun`,
+    factUnits: 'Unit',
+    factDistrict: 'Wilayah',
+    factAirport: 'Ke bandara',
+    progress: 'Progres konstruksi',
+    statusUnknown: 'status tidak diketahui',
+    estimate: 'perkiraan',
+    aboutPrefix: 'Tentang',
+    availableUnits: 'Unit tersedia',
+    publishedSuffix: (n: number, kind: 'mixed' | 'villa' | 'apartment') => {
+      const word = kind === 'mixed' ? 'unit' : kind === 'villa' ? 'vila' : 'apartemen'
+      return `${n} ${word} dipublikasikan di`
+    },
+    developer: 'Pengembang',
+    builtBy: 'Dibangun oleh',
+    allDevelopers: 'Semua pengembang Bali',
+    docsHeading: 'Dokumen dan materi',
+    location: 'Lokasi',
+    locationLine: (d: string | null) => `${d ? `${d}, ` : ''}Bali, Indonesia`,
+    openInMaps: 'Buka di Google Maps',
+    videosTitle: (n: string) => `Video tentang ${n}`,
+    otherProjectsIn: (d: string) => `Proyek lain di ${d}`,
+    relatedHeading: 'Terkait',
+    related: {
+      allComplexes: 'Semua kompleks hunian Bali',
+      apartments: 'Apartemen di Bali',
+      villas: 'Vila dan rumah',
+      developers: 'Pengembang Bali',
+      complexesIn: (d: string) => `Kompleks hunian di ${d}`,
+      apartmentsIn: (d: string) => `Apartemen di ${d}`,
+    },
+    faqHeading: 'Pertanyaan yang sering diajukan',
+    res: { presentation: 'Presentasi proyek', renders: 'Render', masterplan: 'Master plan', tour3d: 'Tur 3D', video: 'Video ulasan', booking: 'Booking.com', airbnb: 'AirBnB' },
+    faq: (name: string, district: string | null, lease: string | null) => [
+      { q: `Di mana lokasi ${name}?`,
+        a: district ? `Kompleks hunian ${name} berada di ${district}, Bali, Indonesia.` : `Kompleks hunian ${name} berada di Bali, Indonesia. Koordinat pastinya ada di peta di atas.` },
+      { q: `Berapa jangka waktu hak sewa di ${name}?`,
+        a: lease ? `Jangka waktu dasar hak sewa — ${lease} tahun. Tanyakan kemungkinan perpanjangan kepada pengembang.` : 'Tanyakan jangka waktu hak sewa kepada pengembang. Untuk sebagian besar proyek di Bali — 25–80 tahun dengan opsi perpanjangan.' },
+      { q: `Bisakah warga asing membeli unit di ${name}?`,
+        a: 'Ya. Transaksi dilakukan melalui skema hak sewa (leasehold, sewa tanah jangka panjang) di notaris PPAT. Warga asing membeli dengan cara yang sama seperti penduduk lokal.' },
+      { q: 'Dokumen apa yang harus dimiliki kompleks?',
+        a: 'Yang utama adalah PBG (izin mendirikan bangunan) dan SLF (sertifikat laik fungsi). Tanpa SLF, unit tidak dapat disewakan secara legal. Dokumen terlihat di atas pada blok «Fakta utama».' },
+    ],
+    titlePart: (name: string, district: string | null, objects: string | null) => {
+      const where = district ? `di ${district}, Bali` : 'Bali'
+      return objects ? `${name} — ${objects} ${where} | Balinsky` : `${name} — Kompleks Hunian ${where} | Balinsky`
+    },
+    ogTitle: (name: string) => `${name} di Bali`,
+    fallbackDesc: (name: string, district: string | null, types: string, yearRaw: string | null) =>
+      `Kompleks hunian ${name}${district ? ` di ${district}` : ''} di Bali.${types ? ` Tipe unit: ${types.toLowerCase()}.` : ''}${yearRaw ? ` Serah terima: ${yearRaw}.` : ''} Foto, harga, izin.`,
+    sold: 'Terjual',
+  },
+  fr: {
+    home: 'Accueil',
+    crumbComplexes: 'Résidences',
+    backToComplexes: 'Résidences',
+    bali: 'Bali',
+    completed: 'livré',
+    completion: (y: string) => `livraison ${y}`,
+    units: (n: number) => `${n} unités`,
+    unitsFrom: 'Unités à partir de',
+    keyFacts: 'Chiffres clés',
+    factType: 'Type d\'unité',
+    factCompletion: 'Livraison',
+    factCompletionDone: 'Livré',
+    factPermits: 'Permis',
+    factLeasehold: 'Bail emphytéotique',
+    factLeaseValue: (l: string) => `${l} ans`,
+    factUnits: 'Unités',
+    factDistrict: 'Quartier',
+    factAirport: "Vers l'aéroport",
+    progress: 'Avancement des travaux',
+    statusUnknown: 'statut inconnu',
+    estimate: 'estimation',
+    aboutPrefix: 'À propos de',
+    availableUnits: 'Unités disponibles',
+    publishedSuffix: (n: number, kind: 'mixed' | 'villa' | 'apartment') => {
+      const word = kind === 'mixed' ? 'unités' : kind === 'villa' ? 'villas' : 'appartements'
+      return `${n} ${word} disponibles à`
+    },
+    developer: 'Promoteur',
+    builtBy: 'Réalisé par',
+    allDevelopers: 'Tous les promoteurs de Bali',
+    docsHeading: 'Documents et supports',
+    location: 'Emplacement',
+    locationLine: (d: string | null) => `${d ? `${d}, ` : ''}Bali, Indonésie`,
+    openInMaps: 'Ouvrir dans Google Maps',
+    videosTitle: (n: string) => `Vidéos sur ${n}`,
+    otherProjectsIn: (d: string) => `Autres projets à ${d}`,
+    relatedHeading: 'Sur le même thème',
+    related: {
+      allComplexes: 'Toutes les résidences de Bali',
+      apartments: 'Appartements à Bali',
+      villas: 'Villas et maisons',
+      developers: 'Promoteurs de Bali',
+      complexesIn: (d: string) => `Résidences à ${d}`,
+      apartmentsIn: (d: string) => `Appartements à ${d}`,
+    },
+    faqHeading: 'Questions fréquentes',
+    res: { presentation: 'Présentation du projet', renders: 'Rendus', masterplan: 'Plan masse', tour3d: 'Visite 3D', video: 'Vidéo de présentation', booking: 'Booking.com', airbnb: 'AirBnB' },
+    faq: (name: string, district: string | null, lease: string | null) => [
+      { q: `Où se situe ${name} ?`,
+        a: district ? `La résidence ${name} se trouve à ${district}, Bali, Indonésie.` : `La résidence ${name} se trouve à Bali, Indonésie. Les coordonnées exactes sont sur la carte ci-dessus.` },
+      { q: `Quelle est la durée du bail à ${name} ?`,
+        a: lease ? `La durée de base du bail est de ${lease} ans. Renseignez-vous auprès du promoteur sur les possibilités de renouvellement.` : 'Vérifiez la durée du bail auprès du promoteur. Pour la plupart des projets à Bali — 25 à 80 ans avec options de renouvellement.' },
+      { q: `Un étranger peut-il acheter une unité à ${name} ?`,
+        a: 'Oui. La transaction se conclut via un bail longue durée (leasehold, location du terrain à long terme) chez un notaire PPAT. Les étrangers achètent aux mêmes conditions que les locaux.' },
+      { q: 'Quels documents la résidence doit-elle avoir ?',
+        a: 'Les principaux sont le PBG (permis de construire) et le SLF (certificat de conformité). Sans SLF, une unité ne peut pas être louée légalement. Les permis figurent ci-dessus dans le bloc « Chiffres clés ».' },
+    ],
+    titlePart: (name: string, district: string | null, objects: string | null) => {
+      const where = district ? `à ${district}, Bali` : 'à Bali'
+      return objects ? `${name} — ${objects} ${where} | Balinsky` : `${name} — Résidence ${where} | Balinsky`
+    },
+    ogTitle: (name: string) => `${name} à Bali`,
+    fallbackDesc: (name: string, district: string | null, types: string, yearRaw: string | null) =>
+      `Résidence ${name}${district ? ` à ${district}` : ''} à Bali.${types ? ` Types d'unités : ${types.toLowerCase()}.` : ''}${yearRaw ? ` Livraison : ${yearRaw}.` : ''} Photos, prix, permis.`,
+    sold: 'Vendu',
+  },
 } as const
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -314,9 +448,11 @@ function unitTypesPhrase(rawTypes: unknown, lang: Lang): string | null {
   if (found.length === 0) return null
   const RU: Record<string, string> = { apartment: 'апартаменты', villa: 'виллы', townhouse: 'таунхаусы', penthouse: 'пентхаусы' }
   const EN: Record<string, string> = { apartment: 'Apartments', villa: 'Villas', townhouse: 'Townhouses', penthouse: 'Penthouses' }
-  const words = found.map(k => (lang === 'ru' ? RU : EN)[k])
+  const ID: Record<string, string> = { apartment: 'apartemen', villa: 'vila', townhouse: 'rumah bandar', penthouse: 'penthouse' }
+  const FR: Record<string, string> = { apartment: 'appartements', villa: 'villas', townhouse: 'maisons de ville', penthouse: 'penthouses' }
+  const words = found.map(k => (lang === 'ru' ? RU : lang === 'id' ? ID : lang === 'fr' ? FR : EN)[k])
   if (words.length === 1) return words[0]
-  const sep = lang === 'ru' ? ' и ' : ' & '
+  const sep = lang === 'ru' ? ' и ' : lang === 'id' ? ' dan ' : lang === 'fr' ? ' et ' : ' & '
   return words.slice(0, -1).join(', ') + sep + words[words.length - 1]
 }
 
@@ -494,20 +630,38 @@ async function loadOtherComplexesInDistrict(district: string | null, exceptId: s
   const [idx, manifest] = await Promise.all([_loadComplexIndex(), _loadComplexPhotos()])
   const candidates = idx.filter(c => c.id !== exceptId && c.district === district).slice(0, 4)
   const rows = await Promise.all(candidates.map(c => _loadComplexById(c.id)))
-  // Same RU→EN type label map as the main complex page above.
+  // Same RU→locale type label maps as the main complex page above.
   const TYPE_EN: Record<string, string> = {
     'Апартаменты': 'Apartments',
     'Виллы': 'Villas',
     'Виллы и дома': 'Villas',
     'Таунхаусы': 'Townhouses',
+    'Пентхаусы': 'Penthouses',
     'Дома': 'Houses',
   }
+  const TYPE_ID: Record<string, string> = {
+    'Апартаменты': 'Apartemen',
+    'Виллы': 'Vila',
+    'Виллы и дома': 'Vila',
+    'Таунхаусы': 'Rumah bandar',
+    'Пентхаусы': 'Penthouse',
+    'Дома': 'Rumah',
+  }
+  const TYPE_FR: Record<string, string> = {
+    'Апартаменты': 'Appartements',
+    'Виллы': 'Villas',
+    'Виллы и дома': 'Villas',
+    'Таунхаусы': 'Maisons de ville',
+    'Пентхаусы': 'Penthouses',
+    'Дома': 'Maisons',
+  }
+  const TYPE_MAP = lang === 'id' ? TYPE_ID : lang === 'fr' ? TYPE_FR : TYPE_EN
   return rows
     .filter((c): c is ComplexRow => c != null)
     .map(c => {
       const photos = manifest[c.airtable_id] ?? []
       const typesRaw = strList(c.data['Типы юнитов'])
-      const types = lang === 'ru' ? typesRaw : typesRaw.map(t => TYPE_EN[t] ?? t)
+      const types = lang === 'ru' ? typesRaw : typesRaw.map(t => TYPE_MAP[t] ?? t)
       return {
         slug: c.slug as string,
         name: firstString(c.data['Project']) as string,
@@ -717,7 +871,24 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
     'Виллы': 'Villas',
     'Виллы и дома': 'Villas',
     'Таунхаусы': 'Townhouses',
+    'Пентхаусы': 'Penthouses',
     'Дома': 'Houses',
+  }
+  const TYPE_ID: Record<string, string> = {
+    'Апартаменты': 'Apartemen',
+    'Виллы': 'Vila',
+    'Виллы и дома': 'Vila',
+    'Таунхаусы': 'Rumah bandar',
+    'Пентхаусы': 'Penthouse',
+    'Дома': 'Rumah',
+  }
+  const TYPE_FR: Record<string, string> = {
+    'Апартаменты': 'Appartements',
+    'Виллы': 'Villas',
+    'Виллы и дома': 'Villas',
+    'Таунхаусы': 'Maisons de ville',
+    'Пентхаусы': 'Penthouses',
+    'Дома': 'Maisons',
   }
   const STATUS_EN: Record<string, string> = {
     'Строится': 'Under construction',
@@ -726,11 +897,27 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
     'Под заказ': 'On request',
     'Готов': 'Ready',
   }
+  const STATUS_ID: Record<string, string> = {
+    'Строится': 'Dalam pembangunan',
+    'Построен': 'Selesai',
+    'Сдан': 'Selesai',
+    'Под заказ': 'Sesuai permintaan',
+    'Готов': 'Siap',
+  }
+  const STATUS_FR: Record<string, string> = {
+    'Строится': 'En construction',
+    'Построен': 'Livré',
+    'Сдан': 'Livré',
+    'Под заказ': 'Sur demande',
+    'Готов': 'Prêt',
+  }
+  const TYPE_MAP = lang === 'id' ? TYPE_ID : lang === 'fr' ? TYPE_FR : TYPE_EN
+  const STATUS_MAP = lang === 'id' ? STATUS_ID : lang === 'fr' ? STATUS_FR : STATUS_EN
   const enLabelFor = (map: Record<string, string>, v: string | null): string | null => v ? (lang === 'ru' ? v : (map[v] ?? v)) : null
   const typesRaw = strList(d['Типы юнитов'])
-  const types = lang === 'ru' ? typesRaw : typesRaw.map(t => TYPE_EN[t] ?? t)
+  const types = lang === 'ru' ? typesRaw : typesRaw.map(t => TYPE_MAP[t] ?? t)
   const statusRaw = firstString(d['Статус'])
-  const status = enLabelFor(STATUS_EN, statusRaw)
+  const status = enLabelFor(STATUS_MAP, statusRaw)
   const salesStatus = firstString(d['Статус продаж'])
   const isSold = salesStatus === 'Продано'
   const permit = firstString(d['Разрешительные документы'])

@@ -28,6 +28,24 @@ const COPY = {
     past: 'Past',
     empty: 'No scheduled events yet.',
   },
+  id: {
+    title: 'Acara dari pengembang Bali | Balinsky',
+    description: 'Tur broker, presentasi proyek, networking, dan acara dari pengembang Bali.',
+    h1: 'Acara',
+    sub: 'Tur broker, presentasi proyek, networking',
+    upcoming: 'Akan datang',
+    past: 'Sudah lewat',
+    empty: 'Belum ada acara terjadwal.',
+  },
+  fr: {
+    title: 'Événements des promoteurs de Bali | Balinsky',
+    description: 'Tours pour brokers, présentations de projets, networking et événements des promoteurs de Bali.',
+    h1: 'Événements',
+    sub: 'Tours pour brokers, présentations de projets, networking',
+    upcoming: 'À venir',
+    past: 'Passés',
+    empty: 'Aucun événement programmé pour le moment.',
+  },
 } as const
 
 function startTimeMs(iso: string | null): number {

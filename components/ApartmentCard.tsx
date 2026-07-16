@@ -40,6 +40,8 @@ export type ApartmentCardData = {
 const COPY = {
   ru: { sqm: 'м²', floor: 'Этаж', resale: 'Перепродажа', secondary: 'Вторичка' },
   en: { sqm: 'm²', floor: 'Floor', resale: 'Resale',     secondary: 'Secondary' },
+  id: { sqm: 'm²', floor: 'Lantai', resale: 'Jual kembali', secondary: 'Sekunder' },
+  fr: { sqm: 'm²', floor: 'Étage', resale: 'Revente',    secondary: 'Ancien' },
 } as const
 
 export function ApartmentCard({ a, lang = 'ru' }: { a: ApartmentCardData; lang?: Lang }) {

@@ -150,6 +150,142 @@ const COPY = {
     ctaApartments: 'Open apartments',
     ctaGuide: 'Full "How to buy in Bali" guide',
   },
+  id: {
+    home: 'Beranda',
+    crumb: 'Reservasi',
+    h1: 'Cara kerja reservasi properti di Bali',
+    intro: 'Ketika Anda menekan «Reservasi» pada sebuah objek, properti tersebut ditahan (hold) khusus untuk Anda selama 14 hari. Halaman ini menjelaskan apa yang terjadi selanjutnya, siapa yang memegang deposit Anda, dan bagaimana pengembalian dana bila Anda berubah pikiran.',
+
+    h2What: 'Apa itu reservasi di Bali',
+    pWhat: 'Reservasi adalah langkah pertama transaksi yang tercatat secara hukum. Anda menandatangani reservation form singkat (bukan perjanjian jual beli), membayar holding deposit, dan properti ditarik dari pasar selama 14 hari — tidak ada pembeli lain yang bisa menyelesaikan pembelian pada periode itu. Waktu ini Anda gunakan untuk due diligence, menyepakati revisi SPA bersama pengacara, dan menyiapkan transfer dana berikutnya.',
+
+    h2Hold: '14 hari eksklusivitas — apa manfaatnya',
+    pHold: 'Stand-still bekerja dua arah: harga dikunci dalam reservation form, pengembang tidak bisa menaikkannya; properti benar-benar menunggu Anda. Jika dalam 14 hari itu muncul penawaran lebih tinggi, pengembang tidak boleh menerimanya. Jendela ini cukup bagi pengacara untuk menyelesaikan due diligence (biasanya 7–10 hari) dan bagi Anda untuk menegosiasikan revisi SPA.',
+
+    h2Sign: 'Apa persisnya yang Anda tanda tangani',
+    pSign: 'Reservation form adalah dokumen 1–3 halaman: harga properti, besar deposit, durasi hold (14 hari), syarat pengembalian, dan rekening bank Anda untuk pengembalian dana bila mundur. Ini BUKAN perjanjian jual beli (SPA). SPA adalah dokumen terpisah yang ditandatangani 1–2 minggu kemudian di hadapan notaris PPAT, setelah due diligence selesai. Reservation form bisa memuat klausul «non-refundable tanpa alasan hukum», tetapi praktik yang lebih umum adalah pengembalian penuh saat mundur setelah DD.',
+
+    h2Deposit: 'Di mana deposit disimpan',
+    pDeposit: 'Holding deposit di Bali biasanya $2.000–10.000 (vila premium hingga $25.000). Dana ditransfer melalui salah satu dari tiga cara: ke rekening escrow notaris PPAT (paling aman), ke rekening korporat pengembang (butuh kepercayaan pada pengembang), atau ke rekening firma hukum perantara. Jangan pernah ke rekening pribadi penjual, rekening pribadi direktur, atau rekening agen — itulah kanal penipuan paling umum dalam properti Indonesia. Selalu cocokkan instruksi transfer dengan reservation form itu sendiri, bukan dari chat messenger.',
+
+    h2Refund: 'Bagaimana uang dikembalikan',
+    pRefund: 'Praktik standar: pengembalian penuh jika Anda mundur dalam jendela 14 hari berdasarkan temuan DD. Alasan hukum (sitaan, ketidaksesuaian zonasi, masalah PBG) selalu memicu pengembalian 100%. Mundur karena «berubah pikiran» tanpa alasan — sebagian pengembang menahan deposit sebagai penalti, sebagian lain mengembalikan penuh. Syarat pengembalian selalu tertulis dalam reservation form — baca klausul itu sebelum Anda menandatangani. Setelah 14 hari tanpa SPA yang ditandatangani, deposit diperhitungkan ke termin SPA pertama atau dikembalikan, tergantung isi form.',
+
+    h2After: 'Apa yang terjadi setelah 14 hari',
+    pAfter: 'Tiga skenario. Terbaik: di akhir jendela pengacara Anda menuntaskan DD, Anda menandatangani SPA di notaris PPAT, dan holding deposit diperhitungkan ke termin SPA pertama. Tengah: Anda memperpanjang hold 7–14 hari (DD belum selesai), secara tertulis. Terburuk: Anda mundur, deposit dikembalikan, properti kembali ke pasar. Diam setelah 14 hari tanpa keputusan formal ditafsirkan berbeda-beda per form — selalu kirim keputusan tertulis (perpanjang atau mundur).',
+
+    h2Risks: 'Hal yang perlu diperhatikan',
+    risks: [
+      'Instruksi transfer untuk deposit harus ada di reservation form — jangan pernah menerimanya dari chat.',
+      'Baca klausul pengembalian sebelum menandatangani. «Non-refundable in any case» adalah bendera merah — mintalah revisi.',
+      'Durasi hold harus dinyatakan secara eksplisit (14 hari atau lainnya). Hold tanpa batas waktu perlu dipertanyakan.',
+      'Reservation form harus ditandatangani oleh pejabat PT pengembang yang tercantum dalam Akta Pendirian (dokumen pendirian). Tanda tangan agen tanpa surat kuasa adalah titik lemah.',
+      'Simpan salinan PDF form yang ditandatangani, bukti transfer bank, dan percakapan messenger dengan manajer — semuanya membantu bila timbul sengketa.',
+    ],
+
+    h2What2: 'Reservation form vs SPA',
+    table: {
+      headLeft: '',
+      headRsv: 'Reservation form',
+      headSpa: 'SPA / Lease Agreement',
+      rows: [
+        { l: 'Kapan ditandatangani',   r: '1–3 hari pertama',                            s: '1–4 minggu setelah reservasi' },
+        { l: 'Panjang dokumen',        r: '1–3 halaman',                                 s: '15–40 halaman' },
+        { l: 'Kekuatan hukum',         r: 'Mengunci harga dan hold; tidak mengalihkan hak', s: 'Mengalihkan leasehold / HGB; terdaftar di BPN' },
+        { l: 'Nominal uang',           r: 'Holding deposit ($2k–25k)',                   s: 'Harga penuh dalam termin' },
+        { l: 'Tempat tanda tangan',    r: 'Online atau di pengembang',                   s: 'Hanya di notaris PPAT, secara langsung' },
+        { l: 'Pengembalian dana',      r: 'Biasanya penuh (baca syarat)',                s: 'Hanya melalui pembatalan SPA dengan penalti' },
+      ],
+    },
+
+    faqHeading: 'Pertanyaan yang sering diajukan',
+    faq: [
+      { q: 'Saya sudah bayar deposit — apakah berarti sudah beli?',
+        a: 'Tidak. Deposit reservasi mengunci harga dan hold 14 hari, tetapi tidak mengalihkan hak apa pun. Kepemilikan (atau leasehold) baru berpindah setelah SPA ditandatangani di hadapan notaris PPAT dan terdaftar di BPN.' },
+      { q: 'Bisakah hold diperpanjang?',
+        a: 'Ya, biasanya gratis dengan alasan yang wajar (misalnya pengacara belum menyelesaikan DD). Diminta secara tertulis kepada pengembang; didokumentasikan sebagai perpanjangan reservation form. 7–14 hari tambahan adalah hal standar.' },
+      { q: 'Bisakah reservasi dialihkan ke pembeli lain?',
+        a: 'Sebagian pengembang mengizinkan pengalihan sebelum SPA dengan persetujuan tertulis. Di pasar sekunder (resale) hampir selalu tidak — Anda harus menyelesaikan atau membatalkan.' },
+      { q: 'Bagaimana jika pengembang berubah pikiran setelah deposit saya?',
+        a: 'Reservation form biasanya memuat klausul simetris: jika pengembang mundur tanpa alasan hukum, mereka mengembalikan deposit dan membayar penalti (sering setara deposit). Dalam praktik, pengembang besar tidak melakukan ini — terlalu merusak reputasi.' },
+      { q: 'Bisakah deposit dibayar dengan kripto?',
+        a: 'Tidak. Semua transaksi legal melalui notaris PPAT dicatat dalam IDR/USD via transfer bank. Transfer kripto tidak meninggalkan jejak bagi notaris maupun kantor pajak Indonesia — membuktikan bahwa Anda pernah membayar kelak menjadi mustahil.' },
+    ],
+
+    ctaHeading: 'Siap memesan',
+    ctaText: 'Buka objek mana pun dan tekan «Reservasi» — manajer akan mengirimkan reservation form dalam waktu satu jam.',
+    ctaVillas: 'Ke vila',
+    ctaApartments: 'Ke apartemen',
+    ctaGuide: 'Panduan lengkap «Cara membeli di Bali»',
+  },
+  fr: {
+    home: 'Accueil',
+    crumb: 'Réservation',
+    h1: 'Comment fonctionne la réservation d’un bien à Bali',
+    intro: 'Lorsque vous appuyez sur « Réserver » sur une annonce, le bien est bloqué pendant 14 jours exclusivement pour vous. Cette page explique ce qui se passe ensuite, qui détient votre acompte et comment se déroule le remboursement si vous changez d’avis.',
+
+    h2What: 'Ce qu’est une réservation à Bali',
+    pWhat: 'La réservation est la première étape juridiquement enregistrée de la transaction. Vous signez un court reservation form (et non un contrat de vente), versez un holding deposit, et le bien est retiré du marché pendant 14 jours — aucun autre acheteur ne peut finaliser un achat durant cette fenêtre. Vous utilisez ce temps pour la due diligence, négocier les modifications du SPA avec votre avocat et préparer le virement suivant.',
+
+    h2Hold: 'Les 14 jours exclusifs — ce qu’ils vous apportent',
+    pHold: 'Le gel fonctionne dans les deux sens : le prix est verrouillé dans le reservation form, le promoteur ne peut pas l’augmenter ; le bien vous attend réellement. Si une offre plus élevée arrive durant ces 14 jours, le promoteur ne peut pas l’accepter. La fenêtre suffit à l’avocat pour finir la DD (généralement 7–10 jours) et à vous pour négocier les modifications du SPA.',
+
+    h2Sign: 'Ce que vous signez réellement',
+    pSign: 'Le reservation form est un document de 1 à 3 pages : prix du bien, montant de l’acompte, durée du blocage (14 jours), conditions de remboursement, et vos coordonnées bancaires pour le remboursement en cas de retrait. Ce n’est PAS le contrat de vente (SPA). Le SPA est un document distinct signé 1 à 2 semaines plus tard devant un notaire PPAT, une fois la DD validée. Le reservation form peut inclure une clause « non remboursable sans motif légal », mais la pratique la plus courante est un remboursement intégral en cas de retrait après DD.',
+
+    h2Deposit: 'Où se trouve l’acompte',
+    pDeposit: 'Un holding deposit à Bali est généralement de 2 000 à 10 000 $ (villas premium jusqu’à 25 000 $). Les fonds sont virés de trois manières : vers le compte séquestre du notaire PPAT (le plus sûr), vers le compte de société du promoteur (exige de lui faire confiance), ou vers le compte d’un cabinet d’avocats intermédiaire. Jamais vers le compte personnel du vendeur, le compte personnel du dirigeant, ou le compte d’un agent — c’est le canal de fraude le plus courant dans l’immobilier indonésien. Vérifiez toujours les instructions de virement sur le reservation form lui-même, jamais depuis une messagerie.',
+
+    h2Refund: 'Comment l’argent revient',
+    pRefund: 'Pratique standard : remboursement intégral si vous vous retirez dans la fenêtre de 14 jours sur la base des conclusions de la DD. Les motifs légaux (charges, non-conformité de zonage, problèmes de PBG) déclenchent toujours un remboursement à 100 %. Un retrait « j’ai changé d’avis » sans motif — certains promoteurs conservent l’acompte à titre de pénalité, d’autres remboursent intégralement. Les conditions de remboursement sont toujours inscrites dans le reservation form — lisez cette clause avant de signer. Passé 14 jours sans SPA signé, l’acompte est soit imputé sur la première tranche du SPA, soit remboursé, selon le formulaire.',
+
+    h2After: 'Ce qui se passe après 14 jours',
+    pAfter: 'Trois scénarios. Meilleur cas : en fin de fenêtre votre avocat a validé la DD, vous signez le SPA chez le notaire PPAT, et le holding deposit s’impute sur la première tranche du SPA. Cas intermédiaire : vous prolongez le blocage de 7 à 14 jours (DD non terminée), par écrit. Pire cas : vous vous retirez, l’acompte est remboursé, le bien retourne sur le marché. Le silence après 14 jours sans décision formelle est interprété différemment selon le formulaire — envoyez toujours une décision écrite (prolonger ou se retirer).',
+
+    h2Risks: 'Points de vigilance',
+    risks: [
+      'Les instructions de virement de l’acompte doivent figurer dans le reservation form — ne les acceptez jamais depuis une messagerie.',
+      'Lisez la clause de remboursement avant de signer. « Non-refundable in any case » est un signal d’alerte — exigez une modification.',
+      'La durée du blocage doit être indiquée explicitement (14 jours ou autre). Un blocage à durée indéterminée doit être questionné.',
+      'Le reservation form doit être signé par un dirigeant de la PT du promoteur nommé dans l’Akta Pendirian (documents constitutifs). Une signature d’agent sans procuration est un point faible.',
+      'Conservez une copie PDF du formulaire signé, le reçu du virement bancaire et l’échange de messagerie avec le manager — ils aident en cas de litige.',
+    ],
+
+    h2What2: 'Reservation form vs SPA',
+    table: {
+      headLeft: '',
+      headRsv: 'Reservation form',
+      headSpa: 'SPA / Lease Agreement',
+      rows: [
+        { l: 'Signé quand',            r: 'Les 1–3 premiers jours',                      s: '1–4 semaines après la réservation' },
+        { l: 'Longueur du document',   r: '1–3 pages',                                   s: '15–40 pages' },
+        { l: 'Portée juridique',       r: 'Verrouille le prix et le blocage ; ne transfère aucun droit', s: 'Transfère le leasehold / HGB ; enregistré au BPN' },
+        { l: 'Montant en jeu',         r: 'Holding deposit (2k–25k $)',                  s: 'Prix total en tranches' },
+        { l: 'Lieu de signature',     r: 'En ligne ou chez le promoteur',               s: 'Notaire PPAT uniquement, en personne' },
+        { l: 'Remboursements',         r: 'Généralement intégral (lire les conditions)', s: 'Uniquement via résiliation du SPA avec pénalités' },
+      ],
+    },
+
+    faqHeading: 'Questions fréquentes',
+    faq: [
+      { q: 'J’ai payé l’acompte — cela signifie-t-il que j’ai acheté ?',
+        a: 'Non. L’acompte de réservation verrouille le prix et le blocage de 14 jours, mais ne transfère aucun droit. La propriété (ou le leasehold) n’est transférée qu’après la signature du SPA devant un notaire PPAT et son enregistrement au BPN.' },
+      { q: 'Puis-je prolonger le blocage ?',
+        a: 'Oui, généralement gratuitement avec un motif justifié (par exemple, l’avocat n’a pas terminé la DD). Demandé par écrit au promoteur ; documenté comme un avenant au reservation form. 7 à 14 jours supplémentaires sont la norme.' },
+      { q: 'Puis-je céder la réservation à un autre acheteur ?',
+        a: 'Certains promoteurs autorisent la cession avant le SPA avec accord écrit. Sur le marché de la revente, c’est presque toujours non — vous devez conclure ou annuler.' },
+      { q: 'Que se passe-t-il si le promoteur change d’avis après mon acompte ?',
+        a: 'Le reservation form contient généralement une clause symétrique : si le promoteur se retire sans motif légal, il rembourse l’acompte et paie une pénalité (souvent égale à l’acompte). En pratique, les grands promoteurs ne le font pas — trop néfaste pour la réputation.' },
+      { q: 'Puis-je payer l’acompte en crypto ?',
+        a: 'Non. Toutes les transactions légales passant par un notaire PPAT sont enregistrées en IDR/USD par virement bancaire. Un virement crypto ne laisse aucune trace pour le notaire ni pour le fisc indonésien — prouver que vous avez payé quoi que ce soit deviendrait impossible.' },
+    ],
+
+    ctaHeading: 'Prêt à réserver',
+    ctaText: 'Ouvrez n’importe quelle annonce et appuyez sur « Réserver » — le manager vous enverra un reservation form sous une heure.',
+    ctaVillas: 'Voir les villas',
+    ctaApartments: 'Voir les appartements',
+    ctaGuide: 'Guide complet « Comment acheter à Bali »',
+  },
 } as const
 
 export function ReservationGuide({ lang }: { lang: Lang }) {

@@ -47,6 +47,38 @@ const COPY = {
     allBedrooms: ' · any bedrooms',
     rentalRoot: '/en/rental',
   },
+  id: {
+    heading: 'Yang disewakan di sekitar per bulan',
+    allInArea: 'Semua objek di area ini',
+    perMonth: ' / bln',
+    medianRent: 'Sewa median',
+    range: 'Rentang',
+    grossYield: 'Imbal hasil bruto',
+    perYear: 'Per tahun',
+    yieldHint: (annual: React.ReactNode, price: React.ReactNode) => (
+      <>{annual} per tahun dari harga vila {price}</>
+    ),
+    subtitle: (n: number, district: string, brSuffix: string) =>
+      `${n} objek di ${district}${brSuffix}`,
+    allBedrooms: ' · semua kamar tidur',
+    rentalRoot: '/id/sewa',
+  },
+  fr: {
+    heading: 'Locations mensuelles à proximité',
+    allInArea: 'Tous les biens de ce quartier',
+    perMonth: ' / mois',
+    medianRent: 'Loyer médian',
+    range: 'Fourchette',
+    grossYield: 'Rendement brut',
+    perYear: 'Par an',
+    yieldHint: (annual: React.ReactNode, price: React.ReactNode) => (
+      <>{annual} par an sur une villa au prix de {price}</>
+    ),
+    subtitle: (n: number, district: string, brSuffix: string) =>
+      `${n} bien${n === 1 ? '' : 's'} à ${district}${brSuffix}`,
+    allBedrooms: ' · toutes chambres',
+    rentalRoot: '/fr/location',
+  },
 } as const
 
 function pluralRu(n: number, forms: [string, string, string]): string {

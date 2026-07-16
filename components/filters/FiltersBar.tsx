@@ -18,6 +18,16 @@ const COPY = {
     developer: 'Developer', status: 'Construction stage', permit: 'Permit',
     dealType: 'Deal type', features: 'Features', resetAll: 'Clear all',
   },
+  id: {
+    price: 'Harga', district: 'Kawasan', bedrooms: 'Kamar tidur', floor: 'Lantai',
+    developer: 'Pengembang', status: 'Tahap pembangunan', permit: 'Izin',
+    dealType: 'Jenis transaksi', features: 'Fasilitas', resetAll: 'Hapus semua',
+  },
+  fr: {
+    price: 'Prix', district: 'Quartier', bedrooms: 'Chambres', floor: 'Étage',
+    developer: 'Promoteur', status: 'Étape de construction', permit: 'Permis',
+    dealType: 'Type de transaction', features: 'Caractéristiques', resetAll: 'Tout effacer',
+  },
 } as const
 
 export type FilterState = {

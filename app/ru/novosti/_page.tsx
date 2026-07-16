@@ -25,6 +25,22 @@ const COPY = {
     empty: 'No news yet.',
     locale: 'en-GB',
   },
+  id: {
+    title: 'Berita pengembang Bali | Balinsky',
+    description: 'Berita terbaru dari pengembang dan pasar properti Bali.',
+    h1: 'Berita',
+    sub: (n: number) => `${n} berita dari pengembang Bali`,
+    empty: 'Belum ada berita.',
+    locale: 'id-ID',
+  },
+  fr: {
+    title: 'Actualités des promoteurs de Bali | Balinsky',
+    description: 'Dernières actualités des promoteurs et du marché immobilier de Bali.',
+    h1: 'Actualités',
+    sub: (n: number) => `${n} ${n === 1 ? 'actualité' : 'actualités'} des promoteurs de Bali`,
+    empty: 'Aucune actualité pour le moment.',
+    locale: 'fr-FR',
+  },
 } as const
 
 function fmtDate(iso: string | null, locale: string): string | null {

@@ -122,6 +122,114 @@ const COPY = {
     catSchool: 'Schools', catPreschool: 'Nurseries & preschools', catSupermarket: 'Supermarkets',
     catPharmacy: 'Pharmacies', catHospital: 'Clinics',
   },
+  id: {
+    sectionH2: 'Potensi investasi',
+    sectionSub: 'Skenario sewa diperkirakan dengan mencocokkan pesaing Booking dan menganalisis kawasan',
+    confHigh: 'keyakinan tinggi',
+    confMedium: 'keyakinan sedang',
+    confLow: 'keyakinan rendah',
+    object: ['listing', 'listing'] as [string, string],
+    villa: ['vila', 'vila'] as [string, string],
+    similarVilla: ['vila serupa', 'vila serupa'] as [string, string],
+    restaurant: ['restoran', 'restoran'] as [string, string],
+    perNight: ' / malam',
+    perYear: '/thn',
+    perYearNoi: ' / tahun NOI',
+    expandedZone: (raw: string, applied: string) =>
+      `Sampel diperluas: tidak ada kecocokan di zona awal (${raw}), beralih ke ${applied}.`,
+    threeNumbers: 'Arti ketiga angka ini',
+    threeNumbersBody: (count: number, similar: string, zoneLower: string) =>
+      <>Kami memperkirakan potensi pendapatan vila ini dari sewa jangka pendek. Dasarnya diambil dari {count > 0 ? <><span className="font-medium text-[var(--color-text)]">{count}</span> {similar}</> : 'vila serupa'} di zona yang sama ({zoneLower}; di peta atas — titik biru di dalam lingkaran merah).</>,
+    threeNumbersScenarios:
+      <>
+        {' '}<strong className="text-[#B91C1C]">Buruk</strong> — skenario pesimis, vila setengah kosong.{' '}
+        <strong className="text-[var(--color-primary-pressed)]">Normal</strong> — yang paling sering terjadi.{' '}
+        <strong className="text-[#15803D]">Baik</strong> — batas atas, dengan perusahaan pengelola yang kuat dan rating tinggi.
+        {' '}Di bawah skenario ada kartu pesaing sesungguhnya — buka untuk membandingkan luas / rating / harga dengan vila ini.
+      </>,
+    scenarioBad: 'Buruk', scenarioMedian: 'Normal', scenarioGood: 'Baik',
+    resetTitle: 'Setel ulang ke nilai default berbasis pesaing', reset: 'setel ulang',
+    inputPrice: 'Harga', inputAdr: 'ADR', inputOccupancy: 'Okupansi', inputMgmt: 'Biaya pengelolaan',
+    calcTitle: 'Kalkulator imbal hasil',
+    calcSub: 'Geser slider. ADR dan okupansi secara default memakai median listing Booking serupa di sekitar; harga bisa disesuaikan ±25%.',
+    payback: 'Balik modal', capRate: 'Cap rate',
+    howCalced: 'Cara perhitungannya',
+    revenue: 'Pendapatan', platform: 'Platform', mgmt: 'Pengelolaan', opex: 'OPEX', tax: 'Pajak', noi: 'NOI',
+    referencesTitle: 'Sampel kecil — menampilkan listing referensi',
+    referencesBody: (n: number, plural: string) =>
+      `Hanya ${n} ${plural} yang cocok dengan profil vila dalam radius 2 km. Kami tidak mengagregasi — berikut contoh konkretnya.`,
+    restrictedTitle: 'Tanah hunian — sewa harian tidak diizinkan',
+    restrictedBody: 'Properti ini berada di tanah kuning (hunian). Menurut zonasi Indonesia, sewa jangka pendek / turis tidak legal di sini, jadi kami tidak menghitung imbal hasil sewa harian untuknya. Tanah ini cocok untuk hunian pribadi atau sewa jangka panjang.',
+    sqm: 'm²',
+    similarOnBooking: (n: number) => `Listing serupa di Booking · ${n}`,
+    collapse: 'Tutup',
+    showAll: (n: number) => `Tampilkan semua ${n}`,
+    newDistrictH3: 'Kawasan berkembang',
+    newDistrictBody:
+      'Kawasan ini dalam fase pertumbuhan awal: kurang dari 30 listing Booking dalam radius 1 km. Mengikuti tren pasar sebanding (Berawa 2018→2022, Canggu 2014→2018), ADR bisa naik 30–80% dalam 4–5 tahun. Ini analogi historis, bukan prakiraan.',
+    newDistrictFootnote: (n: number, plural: string) =>
+      `Total dalam radius 1 km: ${n} ${plural}`,
+    nearbyTitle: 'Di sekitar vila',
+    catBeach: 'Pantai', catBeachclub: 'Beach club', catRestaurant: 'Restoran',
+    catCafe: 'Kafe', catWellness: 'Yoga & kebugaran', catNightlife: 'Bar & klub',
+    catAttraction: 'Atraksi', catIntlSchool: 'Sekolah internasional',
+    catSchool: 'Sekolah', catPreschool: 'PAUD & TK', catSupermarket: 'Supermarket',
+    catPharmacy: 'Apotek', catHospital: 'Klinik',
+  },
+  fr: {
+    sectionH2: 'Potentiel d\'investissement',
+    sectionSub: 'Scénarios locatifs estimés par comparaison avec les concurrents Booking et analyse du quartier',
+    confHigh: 'confiance élevée',
+    confMedium: 'confiance moyenne',
+    confLow: 'confiance faible',
+    object: ['annonce', 'annonces'] as [string, string],
+    villa: ['villa', 'villas'] as [string, string],
+    similarVilla: ['villa similaire', 'villas similaires'] as [string, string],
+    restaurant: ['restaurant', 'restaurants'] as [string, string],
+    perNight: ' / nuit',
+    perYear: '/an',
+    perYearNoi: ' / an NOI',
+    expandedZone: (raw: string, applied: string) =>
+      `Échantillon élargi : aucune correspondance dans la zone initiale (${raw}), passage à ${applied}.`,
+    threeNumbers: 'Ce que signifient ces trois chiffres',
+    threeNumbersBody: (count: number, similar: string, zoneLower: string) =>
+      <>Nous estimons ce que cette villa pourrait rapporter en location courte durée. La base provient de {count > 0 ? <><span className="font-medium text-[var(--color-text)]">{count}</span> {similar}</> : 'villas similaires'} dans la même zone ({zoneLower} ; sur la carte ci-dessus — points bleus à l&apos;intérieur du cercle rouge).</>,
+    threeNumbersScenarios:
+      <>
+        {' '}<strong className="text-[#B91C1C]">Mauvais</strong> — cas pessimiste, la villa reste à moitié vide.{' '}
+        <strong className="text-[var(--color-primary-pressed)]">Normal</strong> — ce qui arrive le plus souvent.{' '}
+        <strong className="text-[#15803D]">Bon</strong> — plafond, avec une bonne société de gestion et une note élevée.
+        {' '}Sous les scénarios se trouvent les fiches des concurrents réels — ouvrez-les pour comparer surface / note / prix avec cette villa.
+      </>,
+    scenarioBad: 'Mauvais', scenarioMedian: 'Normal', scenarioGood: 'Bon',
+    resetTitle: 'Réinitialiser aux valeurs par défaut basées sur les concurrents', reset: 'réinitialiser',
+    inputPrice: 'Prix', inputAdr: 'ADR', inputOccupancy: 'Occupation', inputMgmt: 'Frais de gestion',
+    calcTitle: 'Calculateur de rendement',
+    calcSub: 'Déplacez les curseurs. L\'ADR et l\'occupation prennent par défaut la médiane des annonces Booking similaires à proximité ; le prix est ajustable de ±25 %.',
+    payback: 'Amortissement', capRate: 'Cap rate',
+    howCalced: 'Méthode de calcul',
+    revenue: 'Revenus', platform: 'Plateforme', mgmt: 'Gestion', opex: 'OPEX', tax: 'Taxe', noi: 'NOI',
+    referencesTitle: 'Échantillon réduit — annonces de référence affichées',
+    referencesBody: (n: number, plural: string) =>
+      `Seulement ${n} ${plural} correspondent au profil de la villa dans un rayon de 2 km. Nous n'agrégeons pas — voici plutôt des exemples concrets.`,
+    restrictedTitle: 'Terrain résidentiel — location journalière non autorisée',
+    restrictedBody: "Ce bien se situe sur un terrain jaune (résidentiel). Selon le zonage indonésien, la location courte durée / touristique n'y est pas légale, nous ne calculons donc pas de rendement locatif journalier. Le terrain convient à un usage personnel ou à la location longue durée.",
+    sqm: 'm²',
+    similarOnBooking: (n: number) => `Annonces similaires sur Booking · ${n}`,
+    collapse: 'Réduire',
+    showAll: (n: number) => `Afficher les ${n}`,
+    newDistrictH3: 'Quartier émergent',
+    newDistrictBody:
+      "Le quartier est en phase de croissance précoce : moins de 30 annonces Booking dans un rayon de 1 km. En suivant la trajectoire de marchés comparables (Berawa 2018→2022, Canggu 2014→2018), l'ADR peut augmenter de 30–80 % en 4–5 ans. C'est une analogie historique, pas une prévision.",
+    newDistrictFootnote: (n: number, plural: string) =>
+      `Au total dans un rayon de 1 km : ${n} ${plural}`,
+    nearbyTitle: 'Autour de la villa',
+    catBeach: 'Plages', catBeachclub: 'Beach clubs', catRestaurant: 'Restaurants',
+    catCafe: 'Cafés', catWellness: 'Yoga & fitness', catNightlife: 'Bars & clubs',
+    catAttraction: 'Attractions', catIntlSchool: 'Écoles internationales',
+    catSchool: 'Écoles', catPreschool: 'Crèches & maternelles', catSupermarket: 'Supermarchés',
+    catPharmacy: 'Pharmacies', catHospital: 'Cliniques',
+  },
 } as const
 
 function pluralize(lang: Lang, n: number, ruForms: [string, string, string], enForms: [string, string]): string {

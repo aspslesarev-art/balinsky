@@ -100,6 +100,84 @@ const COPY = {
     contactBot: 'Message the bot',
     contactGuide: 'Read the buying guide first',
   },
+  id: {
+    home: 'Beranda',
+    crumb: 'Tentang Balinsky',
+    h1: 'Balinsky — apa itu dan mengapa Anda bisa mempercayainya',
+    intro: 'Balinsky adalah katalog properti Bali untuk pembeli asing: vila, apartemen, kompleks hunian, dan sewa. Situs ini menampilkan proyek dari pengembang yang dokumennya kami periksa sendiri, lokasinya kami datangi, dan objeknya kami rekam. Harga ditampilkan dalam USD terkini. Manajer penjualan adalah orang sungguhan dengan foto, peringkat, dan bahasa yang mereka gunakan.',
+
+    h2Numbers: 'Angka hari ini',
+    numbersLead: 'Angka-angka ini diperbarui otomatis — yang Anda lihat di situs persis dengan yang dipublikasikan di basis data saat ini.',
+    statVillas: 'vila dan rumah',
+    statApts: 'apartemen',
+    statComplexes: 'kompleks hunian',
+    statDevs: 'pengembang',
+    statMgrs: 'manajer siap dihubungi',
+
+    h2How: 'Bagaimana kami memutuskan apa yang dipublikasikan',
+    standards: [
+      { Icon: FileSearch, title: 'Pemeriksaan dokumen', body: 'Setiap properti dalam katalog harus memiliki PBG yang sah, struktur tanah yang jelas (SHM / HGB / Hak Pakai), dan pengembang nyata dengan registrasi PT. Tanpa rangkaian itu, properti tidak akan masuk ke situs.' },
+      { Icon: Video,      title: 'Video dan foto dari lokasi', body: 'Untuk sebagian besar proyek, tim kami merekam rekaman asli — drone, kemajuan konstruksi, lingkungan sekitar. Bukan siaran pers dari pengembang, melainkan kondisi nyata pada tanggal yang diketahui.' },
+      { Icon: UsersRound, title: 'Manajer dengan wajah', body: 'Setiap pengembang di situs memiliki manajer yang ditunjuk dengan foto, bahasa yang dikuasai, Telegram dan WhatsApp langsung. Bukan "departemen penjualan" anonim — melainkan orang nyata yang bisa Anda ajak panggilan video.' },
+      { Icon: BookOpen,   title: 'Daftar pendek editorial', body: 'Kami tidak mempublikasikan semuanya. Properti, proyek, dan pengembang yang tidak lolos QA di atas tidak akan pernah masuk ke katalog.' },
+    ],
+
+    h2Stack: 'Apa yang Anda dapatkan',
+    stackItems: [
+      { title: 'Harga USD terkini', body: 'Harga dihitung ulang terhadap kurs saat ini; pengalih mata uang ada di header. Tampilan perbandingan menghitung ulang otomatis saat Anda beralih.' },
+      { title: 'Corong yang transparan', body: 'Dari ketukan "reservasi" pertama hingga serah terima — setiap langkah dan jumlah didokumentasikan di halaman Reservasi dan Panduan Membeli.' },
+      { title: 'Manajer siap dihubungi', body: 'Balasan Telegram / WhatsApp biasanya dalam satu jam selama jam kerja Bali. Untuk transaksi besar — panggilan video sebelum deposit dipindahkan.' },
+      { title: 'Bandingkan dan daftar pendek', body: 'Setiap listing tersimpan ke daftar pendek Anda; vila dan apartemen dibandingkan berdasarkan 14 parameter kelas investor dalam satu tabel.' },
+    ],
+
+    h2Cases: 'Studi kasus pembeli',
+    pCases: 'Kami mengumpulkan kisah transaksi yang telah selesai dari klien kami — apa yang mereka cari, bagaimana mereka mencari, di mana negosiasi SPA berakhir, apa hasilnya, dan imbal hasil aktual hari ini. Setiap kasus dianonimkan — tanpa nama atau alamat, tetapi dengan angka nyata. Bagian ini akan bertambah seiring klien setuju untuk berbagi. Jika Anda membeli melalui Balinsky dan ingin berbagi kisah Anda (anonim atau dengan nama — terserah Anda), kirim pesan ke bot — biasanya butuh panggilan 20 menit.',
+    casesCta: 'Bagikan kisah pembelian saya',
+
+    h2Contact: 'Hubungi kami',
+    pContact: 'Untuk apa pun — katalog, properti tertentu, uji tuntas, pengambilan video untuk vila Anda sendiri — kirim pesan ke bot di Telegram. Jika Telegram tidak nyaman, email ada di footer situs.',
+    contactBot: 'Kirim pesan ke bot',
+    contactGuide: 'Baca panduan membeli dulu',
+  },
+  fr: {
+    home: 'Accueil',
+    crumb: 'À propos de Balinsky',
+    h1: 'Balinsky — ce que c’est et pourquoi vous pouvez lui faire confiance',
+    intro: 'Balinsky est un catalogue immobilier de Bali pour les acheteurs étrangers : villas, appartements, résidences et locations. Le site répertorie des projets de promoteurs dont nous avons personnellement vérifié les documents, dont nous avons visité les sites et filmé les biens. Les prix sont affichés en USD actuels. Les commerciaux sont de vraies personnes, avec photo, note et langues parlées.',
+
+    h2Numbers: 'Les chiffres aujourd’hui',
+    numbersLead: 'Ces chiffres se mettent à jour automatiquement — ce que vous voyez sur le site correspond exactement à ce qui est publié dans la base de données en ce moment.',
+    statVillas: 'villas et maisons',
+    statApts: 'appartements',
+    statComplexes: 'résidences',
+    statDevs: 'promoteurs',
+    statMgrs: 'gestionnaires disponibles',
+
+    h2How: 'Comment nous décidons ce que nous publions',
+    standards: [
+      { Icon: FileSearch, title: 'Vérification des documents', body: 'Chaque bien du catalogue doit disposer d’un PBG valide, d’une structure foncière claire (SHM / HGB / Hak Pakai) et d’un vrai promoteur enregistré en PT. Sans cet ensemble, le bien n’apparaît tout simplement pas sur le site.' },
+      { Icon: Video,      title: 'Vidéo et photos sur place', body: 'Pour la plupart des projets, notre équipe a tourné ses propres images — drone, avancement du chantier, environs. Pas un communiqué du promoteur, mais l’état réel à une date connue.' },
+      { Icon: UsersRound, title: 'Un gestionnaire avec un visage', body: 'Chaque promoteur sur le site a un gestionnaire attitré avec photo, langues parlées, Telegram et WhatsApp directs. Pas un « service commercial » anonyme — une personne réelle que vous pouvez appeler en visio.' },
+      { Icon: BookOpen,   title: 'Sélection éditoriale', body: 'Nous ne publions pas tout. Les biens, projets et promoteurs qui ne passent pas le contrôle qualité ci-dessus n’entrent jamais dans le catalogue.' },
+    ],
+
+    h2Stack: 'Ce que vous obtenez',
+    stackItems: [
+      { title: 'Prix en USD en temps réel', body: 'Les prix sont recalculés selon le taux actuel ; le sélecteur de devise est dans l’en-tête. La vue comparative se recalcule automatiquement lorsque vous changez.' },
+      { title: 'Un parcours transparent', body: 'Du premier clic sur « réserver » jusqu’à la livraison — chaque étape et chaque montant sont documentés sur les pages Réservation et Guide d’achat.' },
+      { title: 'Gestionnaire disponible', body: 'Réponse sur Telegram / WhatsApp généralement en moins d’une heure pendant les heures de bureau de Bali. Pour les transactions importantes — un appel visio avant tout versement d’acompte.' },
+      { title: 'Comparer et présélectionner', body: 'Chaque annonce s’enregistre dans votre sélection ; villas et appartements se comparent sur 14 paramètres de niveau investisseur dans un seul tableau.' },
+    ],
+
+    h2Cases: 'Études de cas d’acheteurs',
+    pCases: 'Nous rassemblons les histoires de transactions conclues de nos clients — ce qu’ils cherchaient, comment ils ont cherché, où la négociation du SPA a abouti, ce qui en est ressorti et le rendement réel aujourd’hui. Chaque cas est anonymisé — sans noms ni adresses, mais avec de vrais chiffres. Cette section s’étoffera à mesure que les clients acceptent de partager. Si vous avez acheté via Balinsky et souhaitez partager votre histoire (anonymement ou avec votre nom — à votre choix), écrivez au bot — cela prend en général un appel de 20 minutes.',
+    casesCta: 'Partager mon histoire d’achat',
+
+    h2Contact: 'Nous contacter',
+    pContact: 'Pour tout — le catalogue, un bien précis, la due diligence, un tournage vidéo pour votre propre villa — écrivez au bot sur Telegram. Si Telegram ne vous convient pas, l’e-mail est dans le pied de page du site.',
+    contactBot: 'Écrire au bot',
+    contactGuide: 'Lire d’abord le guide d’achat',
+  },
 } as const
 
 async function loadCounts() {

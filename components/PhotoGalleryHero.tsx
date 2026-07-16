@@ -10,6 +10,8 @@ import { WishlistButton, type WishlistInput } from './WishlistButton'
 const COPY = {
   ru: { open: 'Открыть галерею', photoN: (n: number) => `Фото ${n}`, more: (n: number) => `+${n} фото`, count: (n: number) => `${n} фото`, close: 'Закрыть', prev: 'Предыдущее', next: 'Следующее', mainPhoto: 'главное фото', photoLabel: 'фото', thumb: 'миниатюра' },
   en: { open: 'Open gallery',    photoN: (n: number) => `Photo ${n}`, more: (n: number) => `+${n} photos`, count: (n: number) => `${n} photos`, close: 'Close', prev: 'Previous', next: 'Next', mainPhoto: 'main photo', photoLabel: 'photo', thumb: 'thumb' },
+  id: { open: 'Buka galeri',      photoN: (n: number) => `Foto ${n}`,  more: (n: number) => `+${n} foto`,   count: (n: number) => `${n} foto`,   close: 'Tutup', prev: 'Sebelumnya', next: 'Berikutnya', mainPhoto: 'foto utama', photoLabel: 'foto', thumb: 'gambar kecil' },
+  fr: { open: 'Ouvrir la galerie', photoN: (n: number) => `Photo ${n}`, more: (n: number) => `+${n} photos`, count: (n: number) => `${n} photos`, close: 'Fermer', prev: 'Précédent', next: 'Suivant', mainPhoto: 'photo principale', photoLabel: 'photo', thumb: 'miniature' },
 } as const
 
 export function PhotoGalleryHero({

@@ -10,6 +10,8 @@ import { pickCopy, type Lang } from '@/lib/i18n'
 const COPY = {
   ru: { search: 'Поиск…', noOptions: 'Нет вариантов', clear: 'Сбросить', apply: 'Применить' },
   en: { search: 'Search…', noOptions: 'No options', clear: 'Clear',     apply: 'Apply' },
+  id: { search: 'Cari…', noOptions: 'Tidak ada pilihan', clear: 'Hapus', apply: 'Terapkan' },
+  fr: { search: 'Rechercher…', noOptions: 'Aucune option', clear: 'Effacer', apply: 'Appliquer' },
 } as const
 
 type StringArrayKey = {

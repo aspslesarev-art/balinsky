@@ -31,6 +31,8 @@ export type ComplexCardData = {
 const COPY = {
   ru: { villas: 'Виллы', apartments: 'Апартаменты', permit: 'Разрешение на строительство', noPermit: 'нет', readiness: 'Готовность строительства', from: 'от', to: 'до', sold: 'Продано' },
   en: { villas: 'Villas', apartments: 'Apartments', permit: 'Building permit',                noPermit: 'none', readiness: 'Construction progress', from: 'from', to: 'to', sold: 'Sold' },
+  id: { villas: 'Vila', apartments: 'Apartemen', permit: 'Izin mendirikan bangunan',   noPermit: 'tidak ada', readiness: 'Kemajuan konstruksi', from: 'dari', to: 'sampai', sold: 'Terjual' },
+  fr: { villas: 'Villas', apartments: 'Appartements', permit: 'Permis de construire',      noPermit: 'aucun', readiness: 'Avancement des travaux', from: 'de', to: 'à', sold: 'Vendu' },
 } as const
 
 function fmtRange(

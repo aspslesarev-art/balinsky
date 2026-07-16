@@ -237,6 +237,228 @@ const COPY = {
     ctaCatalog: 'Open the catalogue',
     ctaCall: 'Talk to a manager',
   },
+  id: {
+    home: 'Beranda',
+    crumb: 'Cara membeli di Bali',
+    h1: 'Membeli properti di Bali sebagai orang asing',
+    intro: 'Properti Bali dibeli untuk investasi, gaya hidup, atau untuk dijual kembali. Orang asing tidak dapat memegang hak milik (freehold), tetapi melalui leasehold dan PT PMA transaksi diselesaikan di hadapan notaris PPAT dan melindungi Anda secara hukum sama seperti pembelian properti lainnya. Halaman ini adalah peta langkah demi langkah dari prosesnya — jangka waktu nyata, biaya nyata, dan titik-titik di mana kebanyakan orang asing kehilangan uang.',
+    tocTitle: 'Di halaman ini',
+    tocSteps: 'Tujuh langkah',
+    tocOwnership: 'Struktur kepemilikan',
+    tocCosts: 'Biaya total sebenarnya',
+    tocMistakes: 'Kesalahan umum',
+    tocCountries: 'Catatan per negara',
+    tocFaq: 'FAQ',
+
+    h2Steps: 'Tujuh langkah',
+    stepsLead: 'Jalur standar untuk properti off-plan (dibeli dari pengembang). Transaksi resale lebih cepat dan melewati tahap angsuran, tetapi langkah 2 dan 3 sama persis.',
+    steps: [
+      { Icon: ClipboardList, title: 'Reservasi', time: '1–3 hari', body: 'Anda menandatangani formulir reservasi dan membayar holding deposit (biasanya $2.000–10.000). Unit ditarik dari pasar selama 14 hari. Deposit dapat dikembalikan jika Anda mundur setelah uji tuntas — ini mengunci harga tanpa mengikat Anda untuk membeli.' },
+      { Icon: FileSearch, title: 'Uji tuntas (due diligence)', time: '2–3 minggu', body: 'Pengacara memverifikasi sertifikat tanah (SHM / HGB / Hak Pakai), PBG yang sah, zonasi, tidak ada sengketa, dan hak pengembang untuk menjual. Secara paralel, uji tuntas keuangan atas pengembang: proyek yang telah selesai, perkara pengadilan, registrasi PT.' },
+      { Icon: Stamp, title: 'Notaris (PPAT)', time: '4–6 minggu', body: 'Anda menandatangani SPA (Sale & Purchase Agreement) atau Perjanjian Sewa di hadapan notaris PPAT — pejabat negara, satu-satunya orang yang berwenang secara hukum untuk mendaftarkan transaksi tanah di Bali. Tanpa PPAT, transaksi tidak dianggap selesai.' },
+      { Icon: CreditCard, title: 'Angsuran', time: 'jadwal pengembang', body: 'Off-plan biasanya dibayar dalam 3–4 angsuran: 30/40/30 atau 50/50. Setiap angsuran terikat pada tahap pembangunan (fondasi, topping out, serah terima). Dana ditransfer langsung ke pengembang atau ke rekening escrow notaris, sesuai ketentuan SPA.' },
+      { Icon: KeyRound, title: 'Serah terima', time: 'tanggal sesuai SPA', body: 'Pembayaran akhir, inspeksi daftar cacat (snag list), penerbitan SLF (sertifikat laik fungsi). Kunci diserahkan hanya setelah pembayaran penuh. Setiap penyimpangan dari paket desain dicatat saat serah terima — membuktikannya kemudian akan sulit.' },
+      { Icon: Building2, title: 'PT PMA / penyiapan kepemilikan', time: '4–8 minggu', body: 'Jika Anda membeli melalui PT PMA (perusahaan Indonesia milik asing), registrasi memakan waktu 4–8 minggu dan biayanya $1.500–3.500. Leasehold murni melewati tahap ini — PT PMA hanya diperlukan jika Anda juga menginginkan KITAS (visa tinggal melalui investasi).' },
+      { Icon: Settings2, title: 'Pengelolaan dan penyewaan', time: 'berkelanjutan', body: 'Perusahaan pengelola mengambil 18–25% dari pendapatan kotor dan menangani kebersihan, pemasaran, check-in tamu. Alternatif: kelola sendiri lewat Booking + staf Anda sendiri (margin lebih tinggi, ketahanan lebih rendah, membutuhkan kehadiran fisik).' },
+    ],
+
+    h2Ownership: 'Struktur kepemilikan',
+    ownershipLead: 'Tiga pilihan untuk orang asing. Masing-masing cocok untuk tujuan berbeda — pilih berdasarkan horizon Anda dan apakah Anda juga menginginkan visa KITAS.',
+    ownership: [
+      {
+        title: 'Leasehold (Hak Sewa)',
+        body: 'Sewa tanah jangka panjang — biasanya 25, 30, 50 atau 80 tahun. Jalur tercepat dan termurah: ditandatangani di hadapan notaris langsung dengan pemilik atau pengembang. Dapat diperpanjang jika kontrak mengizinkan. Cocok untuk vila sewa atau rumah kedua. Kekurangan: horizon kepemilikan terbatas — begitu sisa masa kurang dari 15 tahun, likuiditas menurun.',
+      },
+      {
+        title: 'PT PMA',
+        body: 'Perusahaan Indonesia milik asing, berkedudukan di Indonesia. Memiliki HGB (Hak Guna Bangunan) — hak membangun selama 30 tahun, dapat diperpanjang hingga 80. PT PMA juga membuka KITAS (visa tinggal), hak mempekerjakan staf lokal, dan operasi bisnis yang legal. Modal dasar minimum adalah IDR 10 miliar (≈$640rb), dalam praktiknya Anda harus menunjukkan IDR 2,5 miliar yang disetor. Terbaik untuk investor berhorizon panjang.',
+      },
+      {
+        title: 'Hak Pakai',
+        body: 'Hak pakai yang diberikan kepada orang asing dengan KITAP (izin tinggal tetap). Jangka waktu 30 tahun, dapat diperpanjang. Hanya berlaku jika Anda sudah memegang KITAP, sehingga jarang digunakan di awal. Berguna sebagai jalur "bersih" bagi mereka yang berkomitmen tinggal di Bali secara penuh.',
+      },
+    ],
+
+    h2Costs: 'Biaya total sebenarnya — contoh pada vila off-plan $400.000',
+    costsLead: 'Harga utama adalah harga kontrak. Pajak dan biaya bertumpuk di atasnya — anggarkan +12–14% di atas harga yang tercantum. Angka di bawah untuk transaksi leasehold; PT PMA menambah ~$2.000–3.500 sekali bayar.',
+    costsRows: [
+      { label: 'Harga properti', value: '$400,000', note: 'harga dasar SPA' },
+      { label: 'PPN', value: '$44,000', note: '11% untuk bangunan baru; 0% untuk resale' },
+      { label: 'BPHTB (pajak peralihan)', value: '$20,000', note: '5% dari transaksi, dibayar pembeli' },
+      { label: 'Notaris (PPAT)', value: '$4,000–6,000', note: '1–1,5%, biasanya dibagi 50/50 dengan penjual' },
+      { label: 'Pengacara (DD + penutupan)', value: '$1,500–3,500', note: 'opsional tetapi sangat disarankan' },
+      { label: 'Registrasi BPN', value: '$0–500', note: 'registrasi leasehold' },
+      { label: 'Total tambahan', value: '$69,500–73,500', note: '+17–18% di atas harga properti' },
+    ],
+    costsFooter: 'PT PMA sebagai struktur kepemilikan — terpisah $1.500–3.500 untuk registrasi dan ~$1.200–1.800/tahun untuk akuntansi dan pelaporan pajak.',
+
+    h2Mistakes: 'Tujuh kesalahan umum orang asing',
+    mistakes: [
+      'Tidak memeriksa PBG / IMB sebelum menandatangani SPA. Tanpa PBG = konstruksi ilegal; regency dapat memerintahkan pembongkaran.',
+      'Membeli leasehold tanpa klausul perpanjangan. Setelah 25 tahun Anda kehilangan properti; dengan perpanjangan Anda berlanjut hingga 50–80.',
+      'Mentransfer dana ke rekening pribadi penjual alih-alih ke escrow notaris. Dalam sengketa, uang itu hilang.',
+      'Melewatkan pengacara. Template SPA pengembang selalu ditulis untuk kepentingan mereka — pengacara independen menulis ulang klausul-klausul berisiko.',
+      'Tidak punya izin Pondok Wisata tetapi merencanakan pendapatan sewa jangka pendek. Tanpa itu, Airbnb secara teknis ilegal; Anda berisiko denda atau penutupan.',
+      'Mempercayai ROI utama begitu saja. Klaim 12% net mengasumsikan okupansi 75%+ dan ADR kuartil teratas untuk distrik tersebut — mungkin, tapi tidak dijamin.',
+      'Mengabaikan zonasi. Zonasi hunian melarang sewa komersial; zonasi pariwisata mengizinkannya. Periksa peta zonasi regency.',
+    ],
+
+    h2Countries: 'Catatan per negara',
+    countries: [
+      {
+        title: 'Amerika Serikat',
+        body: 'IRS mewajibkan pelaporan properti asing melalui FBAR (FinCEN 114) jika total rekening asing melewati $10.000, dan Form 8938 untuk kepemilikan lebih besar. Pendapatan sewa dilaporkan pada Schedule E; withholding Indonesia 10% dapat dikreditkan sebagai foreign tax credit. Pewarisan lebih rapi melalui PT PMA.',
+      },
+      {
+        title: 'Australia',
+        body: 'Aturan FIRB tidak berlaku untuk pembelian leasehold di luar negeri — itu bukan tanah Australia. Namun pendapatan yang direpatriasi dikenai CGT, dan penduduk pajak Australia harus melaporkan pendapatan sewa asing. Perhatikan jendela 15 tahun untuk foreign tax offset.',
+      },
+      {
+        title: 'Uni Eropa',
+        body: 'AML/KYC standar untuk transfer keluar dalam jumlah besar. Belgia / Jerman / Prancis menerapkan pajak sipil atas properti luar negeri berdasarkan perjanjian pajak mereka dengan Indonesia. Polandia / Ceko / Baltik lebih lunak — biasanya kredit untuk PPh Indonesia yang dibayar.',
+      },
+      {
+        title: 'Tiongkok',
+        body: 'Batas arus keluar modal RRT adalah $50.000 per individu per tahun. Pembelian $400rb membutuhkan penataan (banyak orang, rekening investasi, jalur korporat Hong Kong). Ini tugas tersendiri — biasanya diselesaikan dengan penasihat pajak Tiongkok sebelum deposit apa pun. Sisi Bali dari transaksi ini terlihat identik dengan pembelian oleh warga Eropa: notaris yang sama, SPA yang sama.',
+      },
+    ],
+
+    faqHeading: 'Pertanyaan yang sering diajukan',
+    faq: [
+      { q: 'Bisakah orang asing membeli hak milik (freehold) di Bali?',
+        a: 'Tidak. Hak Milik (freehold) terbatas untuk warga negara Indonesia. Orang asing memiliki melalui leasehold (hingga 80 tahun dengan perpanjangan) atau melalui perusahaan Indonesia PT PMA yang memegang HGB (Hak Guna Bangunan).' },
+      { q: 'Apa itu PT PMA dan apakah saya membutuhkannya?',
+        a: 'PT PMA adalah perusahaan Indonesia dengan 100% modal asing — cara legal untuk memiliki HGB dan menjalankan bisnis. Terbaik jika Anda berencana tinggal di Bali (KITAS), mempekerjakan staf, atau memiliki beberapa properti. Untuk satu vila sewa, leasehold sudah cukup.' },
+      { q: 'Berapa lama proses pembeliannya?',
+        a: 'Off-plan — 6–12 bulan dari reservasi hingga serah terima (tergantung tahap konstruksi). Bagian hukumnya saja (DD + notaris) adalah 4–6 minggu. Transaksi resale bisa selesai dalam 6–8 minggu secara keseluruhan.' },
+      { q: 'Apakah aman mentransfer uang ke Indonesia?',
+        a: 'Ya, asalkan pembayaran masuk ke rekening notaris atau escrow, bukan ke rekening pribadi penjual. Selalu minta instruksi transfer dari SPA itu sendiri, bukan dari aplikasi pesan — itulah saluran penipuan paling umum.' },
+      { q: 'Bisakah saya mendapatkan visa melalui pembelian?',
+        a: 'Pembelian saja tidak memberikan visa. Dengan mendaftarkan PT PMA dengan modal disetor dan karyawan lokal, Anda memenuhi syarat KITAS yang berlaku 1–2 tahun dan dapat diperpanjang. Pensiunan memiliki Retirement KITAS terpisah mulai usia 55, dengan deposit ~$45.000.' },
+      { q: 'Berapa imbal hasil sewa yang realistis?',
+        a: 'Di Canggu dan Bukit pada okupansi 70–80%: biasanya 8–12% net per tahun. Ubud: 6–9% karena musiman. Apa pun di atas 14% dalam klaim pengembang layak diuji dengan model keuangan tersendiri dengan ADR distrik dan biaya pengelolaan (18–25%).' },
+      { q: 'Bagaimana jika pengembang gagal menyerahkan?',
+        a: 'SPA standar mencakup penalti keterlambatan (biasanya 0,05–0,1% dari harga per hari setelah masa tenggang 3–6 bulan) dan hak pembatalan dengan pengembalian dana. Dalam praktiknya pengembang besar terlambat 2–6 bulan; kegagalan total jarang terjadi dan disaring saat DD melalui rekam jejak.' },
+      { q: 'Bisakah saya menjual leasehold di kemudian hari?',
+        a: 'Ya — peralihan leasehold dilakukan di notaris PPAT yang sama. Ada permintaan sekunder yang aktif untuk unit berusia 2–3 tahun dengan riwayat sewa. Likuiditas menurun begitu sisa leasehold di bawah 15 tahun — perhitungkan itu dalam strategi keluar Anda.' },
+    ],
+
+    ctaHeading: 'Apa selanjutnya',
+    ctaText: 'Ingin melihat listing tertentu atau membahas strategi secara langsung?',
+    ctaCatalog: 'Buka katalog',
+    ctaCall: 'Bicara dengan manajer',
+  },
+  fr: {
+    home: 'Accueil',
+    crumb: 'Comment acheter à Bali',
+    h1: 'Acheter un bien immobilier à Bali en tant qu’étranger',
+    intro: 'L’immobilier à Bali s’achète pour investir, pour y vivre ou pour revendre. Les étrangers ne peuvent pas détenir la pleine propriété, mais via le leasehold et la PT PMA, la transaction se conclut chez un notaire PPAT et vous protège juridiquement comme n’importe quel achat immobilier. Cette page est une carte étape par étape du processus — délais réels, frais réels, et les endroits où la plupart des étrangers perdent de l’argent.',
+    tocTitle: 'Sur cette page',
+    tocSteps: 'Les sept étapes',
+    tocOwnership: 'Structures de propriété',
+    tocCosts: 'Coûts réels tout compris',
+    tocMistakes: 'Erreurs fréquentes',
+    tocCountries: 'Notes par pays',
+    tocFaq: 'FAQ',
+
+    h2Steps: 'Les sept étapes',
+    stepsLead: 'Parcours standard pour un bien off-plan (acheté auprès d’un promoteur). Les transactions de revente sont plus rapides et sautent les tranches, mais les étapes 2 et 3 sont identiques.',
+    steps: [
+      { Icon: ClipboardList, title: 'Réservation', time: '1–3 jours', body: 'Vous signez un formulaire de réservation et versez un acompte de blocage (généralement 2 000–10 000 $). Le bien est retiré du marché pendant 14 jours. L’acompte est remboursable si vous vous retirez après la due diligence — cela verrouille le prix sans vous engager.' },
+      { Icon: FileSearch, title: 'Due diligence', time: '2–3 semaines', body: 'Un avocat vérifie le titre foncier (SHM / HGB / Hak Pakai), un PBG valide, le zonage, l’absence de charges et le droit du promoteur à vendre. En parallèle, une due diligence financière sur le promoteur : projets livrés, procédures judiciaires, enregistrement de la PT.' },
+      { Icon: Stamp, title: 'Notaire (PPAT)', time: '4–6 semaines', body: 'Vous signez le SPA (Sale & Purchase Agreement) ou le contrat de bail devant un notaire PPAT — un officier public, la seule personne légalement habilitée à enregistrer les transactions foncières à Bali. Pas de PPAT, pas de transaction conclue.' },
+      { Icon: CreditCard, title: 'Tranches', time: 'échéancier du promoteur', body: 'L’off-plan se paie généralement en 3–4 tranches : 30/40/30 ou 50/50. Chaque tranche est liée à un jalon de construction (fondations, gros œuvre achevé, livraison). Les fonds sont virés directement au promoteur ou sur le compte séquestre du notaire, selon les termes du SPA.' },
+      { Icon: KeyRound, title: 'Livraison', time: 'date du SPA', body: 'Paiement final, inspection de la liste des réserves (snag list), délivrance du SLF (certificat de conformité). Les clés ne sont remises qu’après le paiement intégral. Tout écart par rapport au dossier de conception est consigné à la livraison — le prouver plus tard est difficile.' },
+      { Icon: Building2, title: 'Mise en place PT PMA / propriété', time: '4–8 semaines', body: 'Si vous achetez via une PT PMA (société indonésienne à capitaux étrangers), l’enregistrement prend 4–8 semaines et coûte 1 500–3 500 $. Le leasehold pur saute cette étape — la PT PMA n’est nécessaire que si vous voulez aussi un KITAS (visa de résidence par investissement).' },
+      { Icon: Settings2, title: 'Gestion et location', time: 'en continu', body: 'Une société de gestion prend 18–25 % des revenus bruts et s’occupe du ménage, du marketing, de l’accueil des voyageurs. Alternative : autogestion via Booking + votre propre personnel (marge supérieure, résilience moindre, présence physique requise).' },
+    ],
+
+    h2Ownership: 'Structures de propriété',
+    ownershipLead: 'Trois options pour les étrangers. Chacune répond à un objectif différent — choisissez selon votre horizon et selon que vous voulez aussi un visa KITAS.',
+    ownership: [
+      {
+        title: 'Leasehold (Hak Sewa)',
+        body: 'Bail foncier de longue durée — généralement 25, 30, 50 ou 80 ans. La voie la plus rapide et la moins chère : signé chez un notaire directement avec le propriétaire ou le promoteur. Renouvelable si le contrat le permet. Convient à une villa locative ou une résidence secondaire. Inconvénient : horizon de propriété limité — dès qu’il reste moins de 15 ans, la liquidité chute.',
+      },
+      {
+        title: 'PT PMA',
+        body: 'Société indonésienne à capitaux étrangers, résidente en Indonésie. Détient un HGB (Hak Guna Bangunan) — droit de construire pour 30 ans, extensible à 80. La PT PMA ouvre aussi le KITAS (visa de résident), le droit d’embaucher du personnel local et l’exploitation légale d’une entreprise. Le capital nominal minimum est de 10 milliards IDR (≈640 k$), en pratique vous devez montrer 2,5 milliards IDR libérés. Idéal pour les investisseurs à long horizon.',
+      },
+      {
+        title: 'Hak Pakai',
+        body: 'Droit d’usage accordé à un étranger titulaire d’un KITAP (résidence permanente). Durée de 30 ans, extensible. Applicable uniquement si vous détenez déjà un KITAP, donc rarement utilisé au départ. Utile comme voie « propre » pour ceux qui s’installent à Bali à plein temps.',
+      },
+    ],
+
+    h2Costs: 'Coûts réels tout compris — exemple sur une villa off-plan à 400 000 $',
+    costsLead: 'Le prix affiché est le prix du contrat. Les taxes et frais s’ajoutent par-dessus — prévoyez +12–14 % au-dessus du prix indiqué. Les chiffres ci-dessous concernent une transaction leasehold ; la PT PMA ajoute ~2 000–3 500 $ en une fois.',
+    costsRows: [
+      { label: 'Prix du bien', value: '$400,000', note: 'prix de base du SPA' },
+      { label: 'PPN (TVA)', value: '$44,000', note: '11 % sur le neuf ; 0 % sur la revente' },
+      { label: 'BPHTB (droit de mutation)', value: '$20,000', note: '5 % de la transaction, payé par l’acheteur' },
+      { label: 'Notaire (PPAT)', value: '$4,000–6,000', note: '1–1,5 %, généralement partagé 50/50 avec le vendeur' },
+      { label: 'Avocat (DD + closing)', value: '$1,500–3,500', note: 'facultatif mais fortement recommandé' },
+      { label: 'Enregistrement BPN', value: '$0–500', note: 'enregistrement du leasehold' },
+      { label: 'Total en sus', value: '$69,500–73,500', note: '+17–18 % au-dessus du prix du bien' },
+    ],
+    costsFooter: 'La PT PMA comme structure de détention — 1 500–3 500 $ à part pour l’enregistrement et ~1 200–1 800 $/an pour la comptabilité et les déclarations fiscales.',
+
+    h2Mistakes: 'Sept erreurs fréquentes des étrangers',
+    mistakes: [
+      'Ne pas vérifier le PBG / IMB avant de signer le SPA. Pas de PBG = construction illégale ; la regency peut ordonner la démolition.',
+      'Acheter un leasehold sans clause de renouvellement. Après 25 ans vous perdez le bien ; avec renouvellement vous continuez jusqu’à 50–80.',
+      'Virer les fonds sur le compte personnel du vendeur au lieu du séquestre du notaire. En cas de litige, cet argent est perdu.',
+      'Faire l’impasse sur l’avocat. Le SPA type du promoteur est toujours rédigé en sa faveur — un avocat indépendant réécrit les clauses à risque.',
+      'Pas de licence Pondok Wisata mais des revenus de location courte durée prévus. Sans elle, Airbnb est techniquement illégal ; vous risquez des amendes ou une fermeture.',
+      'Croire le ROI affiché. Une promesse de 12 % net suppose un taux d’occupation de 75 %+ et un ADR du quartile supérieur pour le quartier — possible, pas garanti.',
+      'Ignorer le zonage. Le zonage résidentiel interdit la location commerciale ; le zonage touristique l’autorise. Vérifiez la carte de zonage de la regency.',
+    ],
+
+    h2Countries: 'Notes par pays',
+    countries: [
+      {
+        title: 'États-Unis',
+        body: 'L’IRS impose de déclarer les biens étrangers via le FBAR (FinCEN 114) si le total des comptes étrangers dépasse 10 000 $, et le Form 8938 pour les avoirs plus importants. Les revenus locatifs se déclarent au Schedule E ; la retenue indonésienne de 10 % est imputable en foreign tax credit. La transmission est plus simple via une PT PMA.',
+      },
+      {
+        title: 'Australie',
+        body: 'Les règles du FIRB ne s’appliquent pas aux achats en leasehold à l’étranger — ce n’est pas un terrain australien. Mais les revenus rapatriés sont soumis à la CGT, et les résidents fiscaux australiens doivent déclarer les revenus locatifs étrangers. Attention à la fenêtre de 15 ans pour le foreign tax offset.',
+      },
+      {
+        title: 'UE',
+        body: 'AML/KYC standard sur les transferts sortants importants. Belgique / Allemagne / France appliquent un impôt civil sur les biens à l’étranger selon leurs conventions fiscales avec l’Indonésie. Pologne / Tchéquie / pays baltes sont plus souples — généralement un crédit pour le PPh indonésien payé.',
+      },
+      {
+        title: 'Chine',
+        body: 'La limite de sortie de capitaux de la RPC est de 50 000 $ par personne et par an. Un achat de 400 k$ nécessite un montage (plusieurs personnes, comptes d’investissement, voie corporative de Hong Kong). C’est une tâche à part — généralement réglée avec un conseiller fiscal chinois avant tout acompte. Le volet balinais de la transaction est identique à un achat européen : même notaire, même SPA.',
+      },
+    ],
+
+    faqHeading: 'Questions fréquentes',
+    faq: [
+      { q: 'Un étranger peut-il acheter en pleine propriété à Bali ?',
+        a: 'Non. Le Hak Milik (pleine propriété) est réservé aux citoyens indonésiens. Les étrangers détiennent via le leasehold (jusqu’à 80 ans avec renouvellement) ou via une société indonésienne PT PMA détenant un HGB (Hak Guna Bangunan).' },
+      { q: 'Qu’est-ce qu’une PT PMA et en ai-je besoin ?',
+        a: 'Une PT PMA est une société indonésienne à 100 % de capitaux étrangers — la voie légale pour détenir un HGB et exploiter une entreprise. Idéale si vous prévoyez de vivre à Bali (KITAS), d’employer du personnel ou de détenir plusieurs biens. Pour une seule villa locative, le leasehold suffit.' },
+      { q: 'Combien de temps prend l’achat ?',
+        a: 'Off-plan — 6–12 mois de la réservation à la livraison (selon l’état d’avancement). La seule partie juridique (DD + notaire) prend 4–6 semaines. Une transaction de revente peut se conclure en 6–8 semaines au total.' },
+      { q: 'Est-il sûr de virer de l’argent vers l’Indonésie ?',
+        a: 'Oui, à condition que les paiements aillent au compte du notaire ou au séquestre, et non au compte personnel du vendeur. Exigez toujours les instructions de virement du SPA lui-même, jamais d’une messagerie — c’est le canal de fraude le plus courant.' },
+      { q: 'Puis-je obtenir un visa via l’achat ?',
+        a: 'L’achat seul ne donne pas de visa. En enregistrant une PT PMA avec un capital libéré et un employé local, vous êtes éligible à un KITAS valable 1–2 ans et renouvelable. Les retraités disposent d’un Retirement KITAS distinct à partir de 55 ans, avec un dépôt de ~45 000 $.' },
+      { q: 'Quel est le rendement locatif réaliste ?',
+        a: 'À Canggu et Bukit avec 70–80 % d’occupation : généralement 8–12 % net par an. Ubud : 6–9 % du fait de la saisonnalité. Tout ce qui dépasse 14 % dans une promesse de promoteur mérite un modèle financier distinct intégrant l’ADR du quartier et les frais de gestion (18–25 %).' },
+      { q: 'Que se passe-t-il si le promoteur ne livre pas ?',
+        a: 'Les SPA standard prévoient des pénalités de retard (généralement 0,05–0,1 % du prix par jour après un délai de grâce de 3–6 mois) et un droit de résiliation avec remboursement. En pratique, les grands promoteurs accusent 2–6 mois de retard ; les échecs complets sont rares et détectés lors de la DD via l’historique.' },
+      { q: 'Puis-je revendre le leasehold plus tard ?',
+        a: 'Oui — les cessions de leasehold se font chez le même notaire PPAT. Il existe une demande secondaire active pour des biens de 2–3 ans avec un historique locatif. La liquidité chute dès que la durée restante du leasehold passe sous 15 ans — intégrez cela dans votre stratégie de sortie.' },
+    ],
+
+    ctaHeading: 'Et ensuite',
+    ctaText: 'Envie de voir des annonces précises ou de parler stratégie en direct ?',
+    ctaCatalog: 'Ouvrir le catalogue',
+    ctaCall: 'Parler à un gestionnaire',
+  },
 } as const
 
 export function BuyingGuide({ lang }: { lang: Lang }) {

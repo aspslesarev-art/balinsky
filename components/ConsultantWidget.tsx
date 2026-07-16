@@ -52,7 +52,7 @@ function extractChips(content: string): { text: string; chips: string[] } {
 // First message in every conversation. Includes its own [CHIPS] block,
 // so the entry-point picks render through the same chip pipeline as
 // every later step — chips lead to chips end-to-end.
-const GREETING_BY_LANG: Record<'ru' | 'en', Message> = {
+const GREETING_BY_LANG: Record<Lang, Message> = {
   ru: {
     role: 'assistant',
     greeting: true,
@@ -66,6 +66,20 @@ const GREETING_BY_LANG: Record<'ru' | 'en', Message> = {
     content:
       "I'm Balina — AI broker for Bali real estate. I'll help match a property to your budget and goals. What are you looking for?\n\n" +
       '[CHIPS] Pick a villa | Pick an apartment | Monthly rental | Legal side of buying | Contact a manager',
+  },
+  id: {
+    role: 'assistant',
+    greeting: true,
+    content:
+      'Saya Balina — broker AI untuk properti Bali. Saya bantu mencocokkan properti dengan anggaran dan tujuan Anda. Apa yang Anda cari?\n\n' +
+      '[CHIPS] Pilih vila | Pilih apartemen | Sewa bulanan | Aspek hukum pembelian | Hubungi manager',
+  },
+  fr: {
+    role: 'assistant',
+    greeting: true,
+    content:
+      'Je suis Balina — courtière IA en immobilier à Bali. Je vous aide à trouver un bien adapté à votre budget et à vos objectifs. Que recherchez-vous ?\n\n' +
+      '[CHIPS] Choisir une villa | Choisir un appartement | Location mensuelle | Aspect juridique de l’achat | Contacter un manager',
   },
 }
 
@@ -89,9 +103,9 @@ function parseListingPath(pathname: string): { kind: ListingKind; slug: string }
 
 function contextualGreeting(kind: ListingKind, title: string | null, lang: Lang): Message {
   const obj = pickCopy({
-    villa: { ru: 'эту виллу', en: 'this villa' },
-    apartment: { ru: 'эти апартаменты', en: 'these apartments' },
-    complex: { ru: 'этот комплекс', en: 'this complex' },
+    villa: { ru: 'эту виллу', en: 'this villa', id: 'vila ini', fr: 'cette villa' },
+    apartment: { ru: 'эти апартаменты', en: 'these apartments', id: 'apartemen ini', fr: 'ces appartements' },
+    complex: { ru: 'этот комплекс', en: 'this complex', id: 'kompleks ini', fr: 'cette résidence' },
   }[kind], lang)
   const name = title ? (lang === 'ru' ? `«${title}»` : `“${title}”`) : (lang === 'ru' ? 'этот объект' : 'this listing')
   const content = lang === 'ru'
@@ -174,6 +188,78 @@ const COPY = {
       retryBtn: 'Retry',
       micDenied: 'Microphone access denied',
       micError: 'Could not start the microphone',
+    },
+  },
+  id: {
+    triggerAria: 'Buka broker AI Balina',
+    triggerName: 'Balina',
+    title: 'Balina',
+    subtitle: 'Broker AI · bisa keliru',
+    closeAria: 'Tutup',
+    typing: 'mengetik…',
+    placeholder: 'Apa yang Anda cari? Mis. vila di Canggu dengan 3 kamar tidur',
+    listening: 'Mendengarkan…',
+    sendError: 'Gagal mengirim pesan. Silakan coba lagi.',
+    micDenied: 'Akses mikrofon ditolak.',
+    micError: (e: string) => `Kesalahan pengenalan: ${e}`,
+    voiceStartAria: 'Rekam dengan suara',
+    voiceStopAria: 'Hentikan rekaman',
+    voiceStartTitle: 'Rekam dengan suara',
+    voiceStopTitle: 'Hentikan',
+    sendAria: 'Kirim',
+    perMonth: ' / bln',
+    perSqm: '/ m²',
+    voiceLang: 'id-ID',
+    rec: {
+      recording: 'Merekam',
+      transcribing: 'Mentranskripsi…',
+      retrying: 'Gangguan jaringan, mencoba lagi…',
+      failed: 'Gagal mentranskripsi',
+      silentTitle: 'Anda diam',
+      silentHint: 'Selesai atau lanjut merekam?',
+      finishBtn: 'Selesai',
+      continueBtn: 'Lanjut merekam',
+      stopBtn: 'Hentikan',
+      cancelBtn: 'Batal',
+      retryBtn: 'Coba lagi',
+      micDenied: 'Akses mikrofon ditolak',
+      micError: 'Gagal menyalakan mikrofon',
+    },
+  },
+  fr: {
+    triggerAria: 'Ouvrir la courtière IA Balina',
+    triggerName: 'Balina',
+    title: 'Balina',
+    subtitle: 'Courtière IA · peut se tromper',
+    closeAria: 'Fermer',
+    typing: 'écrit…',
+    placeholder: 'Que recherchez-vous ? Ex. une villa à Canggu avec 3 chambres',
+    listening: 'À l’écoute…',
+    sendError: 'Impossible d’envoyer le message. Veuillez réessayer.',
+    micDenied: 'Accès au microphone refusé.',
+    micError: (e: string) => `Erreur de reconnaissance : ${e}`,
+    voiceStartAria: 'Enregistrer par la voix',
+    voiceStopAria: 'Arrêter l’enregistrement',
+    voiceStartTitle: 'Enregistrer par la voix',
+    voiceStopTitle: 'Arrêter',
+    sendAria: 'Envoyer',
+    perMonth: ' / mois',
+    perSqm: '/ m²',
+    voiceLang: 'fr-FR',
+    rec: {
+      recording: 'Enregistrement',
+      transcribing: 'Transcription…',
+      retrying: 'Coupure réseau, nouvel essai…',
+      failed: 'Échec de la transcription',
+      silentTitle: 'Vous êtes silencieux',
+      silentHint: 'Terminer ou continuer l’enregistrement ?',
+      finishBtn: 'Terminé',
+      continueBtn: 'Continuer',
+      stopBtn: 'Arrêter',
+      cancelBtn: 'Annuler',
+      retryBtn: 'Réessayer',
+      micDenied: 'Accès au microphone refusé',
+      micError: 'Impossible de démarrer le microphone',
     },
   },
 } as const
