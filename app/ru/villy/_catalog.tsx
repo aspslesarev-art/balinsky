@@ -95,7 +95,7 @@ export async function VillasCatalog({
   // H1 uses the commercial heading for single-district hubs («Купить
   // виллу в Нуса Дуа, Бали — 47 вилл 2026»). Other combos keep the
   // descriptive buildHeading so each combo page has a unique H1.
-  const heading = districtMeta?.heading
+  const heading = (lang === 'ru' ? districtMeta?.heading : undefined)
     ?? (lang === 'ru' ? buildHeading(filters) : buildHeadingEn(filters))
   const sectionRoot = switchLangPath('/ru/villy', lang)
 

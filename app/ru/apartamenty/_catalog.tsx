@@ -88,7 +88,7 @@ export async function ApartamentyCatalog({
     : null
   const districtCopy = districtSlug ? getDistrictCopy(districtSlug, lang) : null
   const districtMeta = districtSlug ? getDistrictCommercialMeta(districtSlug, lang, 'apartment', totalCount) : null
-  const heading = districtMeta?.heading
+  const heading = (lang === 'ru' ? districtMeta?.heading : undefined)
     ?? (lang === 'ru' ? buildHeading(filters) : buildHeadingEn(filters))
   const sectionRoot = switchLangPath('/ru/apartamenty', lang)
 

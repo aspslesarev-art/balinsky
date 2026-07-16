@@ -87,7 +87,7 @@ export async function ComplexesCatalog({
     : null
   const districtCopy = districtSlug ? getDistrictCopy(districtSlug, lang) : null
   const districtMeta = districtSlug ? getDistrictCommercialMeta(districtSlug, lang, 'complex', totalCount) : null
-  const heading = districtMeta?.heading
+  const heading = (lang === 'ru' ? districtMeta?.heading : undefined)
     ?? (lang === 'ru' ? buildHeading(filters) : buildHeadingEn(filters))
   const sectionRoot = switchLangPath('/ru/zhilye-kompleksy', lang)
 
