@@ -1,4 +1,5 @@
 import type { FilterState } from '@/components/filters/FiltersBar'
+import type { Lang } from './i18n'
 
 // Slug maps. We keep a closed list per dimension so that any unknown segment
 // in a path means "not a canonical SEO route" (and we can safely 404 / fall back).
@@ -62,6 +63,18 @@ export const PRICE_SEGMENTS: PriceSegment[] = [
   { slug: 'ot-500000', min: 500000, max: null, label: 'от 500 000 $' },
 ]
 const PRICE_BY_SLUG = Object.fromEntries(PRICE_SEGMENTS.map(s => [s.slug, s])) as Record<string, PriceSegment>
+
+/** Localized label for a price segment (the static `label` is Russian). */
+export function priceSegmentLabel(s: PriceSegment, lang: Lang): string {
+  if (lang === 'ru') return s.label
+  const f = (n: number) => (n >= 1000 ? `$${Math.round(n / 1000)}k` : `$${n}`)
+  const upTo = lang === 'id' ? 'Hingga' : lang === 'fr' ? "Jusqu'à" : 'Up to'
+  const from = lang === 'id' ? 'Mulai' : lang === 'fr' ? 'À partir de' : 'From'
+  if (s.min == null && s.max != null) return `${upTo} ${f(s.max)}`
+  if (s.min != null && s.max == null) return `${from} ${f(s.min)}`
+  if (s.min != null && s.max != null) return `${f(s.min)} – ${f(s.max)}`
+  return s.label
+}
 
 function matchPriceSegment(min: number | null, max: number | null): PriceSegment | null {
   return PRICE_SEGMENTS.find(s => s.min === min && s.max === max) ?? null

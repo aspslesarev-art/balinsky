@@ -5,6 +5,7 @@ import {
   BEDROOM_TO_SLUG,
   STATUS_TO_SLUG,
   PRICE_SEGMENTS,
+  priceSegmentLabel,
 } from '@/lib/seo-routes'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
@@ -285,7 +286,7 @@ export function SeoContent({
                   href={`${aptRoot}/${seg.slug}`}
                   className="inline-block px-3 py-1.5 rounded-full bg-[var(--color-card-bg)] border border-[var(--color-border)] text-[13px] text-[var(--color-text)] hover:border-[var(--color-primary)] transition-colors"
                 >
-                  {seg.label}
+                  {priceSegmentLabel(seg, lang)}
                 </Link>
               </li>
             ))}
