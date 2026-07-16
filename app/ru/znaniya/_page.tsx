@@ -7,7 +7,7 @@ import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { loadAllKnowledge, filterByAudience, type KnowledgeAudience } from '@/lib/knowledge'
 import { enKnowledgeSlug } from '@/lib/knowledge-en-slugs'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 import { ArticleCover } from '@/components/ArticleCover'
 
 const COPY = {
@@ -61,7 +61,7 @@ function audienceMetaPath(audience: KnowledgeAudience, base: string): string {
 }
 
 export function generateKnowledgeListMetadata(lang: Lang, audience: KnowledgeAudience = 'investor'): Metadata {
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const ruPath = audienceMetaPath(audience, '/ru/znaniya')
   const enPath = audienceMetaPath(audience, '/en/knowledge')
   const path = lang === 'en' ? enPath : ruPath
@@ -78,7 +78,7 @@ export function generateKnowledgeListMetadata(lang: Lang, audience: KnowledgeAud
 }
 
 export async function KnowledgeList({ lang, audience }: { lang: Lang; audience: KnowledgeAudience }) {
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const all = await loadAllKnowledge(lang)
   const items = filterByAudience(all, audience)
   const detailRoot = lang === 'en' ? '/en/knowledge' : '/ru/znaniya'

@@ -5,7 +5,7 @@
 
 import Image from 'next/image'
 import { Mic, ArrowUp, Play, ShieldCheck } from 'lucide-react'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const COPY = {
   ru: {
@@ -32,7 +32,7 @@ const COPY = {
 const WAVE = [5, 9, 14, 8, 17, 11, 6, 13, 18, 10, 7, 15, 9, 5, 12, 8]
 
 export function BalinaChatMock({ lang }: { lang: Lang }) {
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   return (
     <div className="w-full max-w-[420px] mx-auto">
       <div className="rounded-[26px] bg-white border border-[var(--color-border)] shadow-[0_24px_60px_-20px_rgba(16,42,30,0.35)] overflow-hidden">

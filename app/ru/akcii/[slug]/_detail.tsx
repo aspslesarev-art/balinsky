@@ -11,7 +11,7 @@ import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { loadAllPromo, loadPromoBySlug } from '@/lib/promo'
 import { RelatedContent } from '@/components/RelatedContent'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
@@ -56,7 +56,7 @@ export async function generatePromoDetailMetadata(slug: string, lang: Lang): Pro
 }
 
 export async function PromoDetail({ slug, lang }: { slug: string; lang: Lang }) {
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const p = await loadPromoBySlug(slug, lang)
   if (!p) notFound()
   const home = lang === 'en' ? '/en' : '/ru'

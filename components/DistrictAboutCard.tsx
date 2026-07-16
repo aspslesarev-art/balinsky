@@ -8,7 +8,7 @@
 import Link from 'next/link'
 import { MapPin, ArrowRight } from 'lucide-react'
 import type { DistrictCopy } from '@/lib/districts'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 type Kind = 'villa' | 'apartment' | 'complex'
 
@@ -40,7 +40,7 @@ export function DistrictAboutCard({
   kind: Kind
   hubHref: string
 }) {
-  const L = LABELS[lang]
+  const L = pickCopy(LABELS, lang)
   return (
     <section className="mb-10">
       <div className="rounded-2xl border border-[var(--color-border)] bg-white p-5 md:p-6">

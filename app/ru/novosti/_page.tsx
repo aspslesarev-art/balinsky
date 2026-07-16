@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { loadAllNews } from '@/lib/news'
-import { tField, type Lang } from '@/lib/i18n'
+import { pickCopy, tField, type Lang } from '@/lib/i18n'
 
 const COPY = {
   ru: {
@@ -34,7 +34,7 @@ function fmtDate(iso: string | null, locale: string): string | null {
 }
 
 export function generateNewsListMetadata(lang: Lang): Metadata {
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const ruPath = '/ru/novosti'
   const enPath = '/en/news'
   const path = lang === 'en' ? enPath : ruPath
@@ -50,7 +50,7 @@ export function generateNewsListMetadata(lang: Lang): Metadata {
 
 export async function NewsList({ lang }: { lang: Lang }) {
   const items = await loadAllNews(lang)
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const detailRoot = lang === 'en' ? '/en/news' : '/ru/novosti'
   return (
     <>

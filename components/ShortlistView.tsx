@@ -12,7 +12,7 @@ import { useWishlist } from './WishlistContext'
 import { useCurrency } from './CurrencyContext'
 import { formatPrice } from '@/lib/currency'
 import { classifyLandUse } from '@/lib/land-use'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 import type { WishlistItem } from '@/lib/wishlist'
 
 const COPY = {
@@ -151,7 +151,7 @@ function detailHref(item: WishlistItem, lang: Lang): string {
 export function ShortlistView({ lang }: { lang: Lang }) {
   const { items, ready, remove, clear } = useWishlist()
   const { currency } = useCurrency()
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const home = lang === 'en' ? '/en' : '/ru'
   const [downloadOpen, setDownloadOpen] = useState(false)
   // Cap PDF generation at a length where the comparison table still
@@ -799,7 +799,7 @@ function DownloadShortlistModal({
 }: {
   items: WishlistItem[]
   lang: Lang
-  c: typeof COPY[Lang]
+  c: typeof COPY['ru' | 'en']
   onClose: () => void
 }) {
   // Currency at download time. Threaded into the PDF builder so the

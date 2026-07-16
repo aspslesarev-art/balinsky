@@ -6,6 +6,7 @@
 
 import { TrendingUp, Hotel, Home as HomeIcon, ExternalLink } from 'lucide-react'
 import type { ComplexMarketStats } from '@/lib/complex-market-stats'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const COPY = {
   ru: {
@@ -64,8 +65,8 @@ function fmtUsd(v: number | null): string {
   return `$${Math.round(v)}`
 }
 
-export function MarketStatsBlock({ data, lang = 'ru' }: { data: ComplexMarketStats; lang?: 'ru' | 'en' }) {
-  const c = COPY[lang]
+export function MarketStatsBlock({ data, lang = 'ru' }: { data: ComplexMarketStats; lang?: Lang }) {
+  const c = pickCopy(COPY, lang)
   if (data.villa_count === 0 && data.apartment_count === 0) return null
 
   return (

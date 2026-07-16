@@ -14,7 +14,7 @@ import {
   Building2, Home, BedDouble, HardHat, UsersRound,
   ShieldCheck, FileSearch, Video, BookOpen, Send,
 } from 'lucide-react'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const sb = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -123,7 +123,7 @@ async function loadCounts() {
 }
 
 export async function AboutView({ lang }: { lang: Lang }) {
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const counts = await loadCounts()
   const home = lang === 'en' ? '/en' : '/ru'
 

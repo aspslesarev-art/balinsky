@@ -22,7 +22,7 @@ import { loadAllVillaScores } from '@/lib/investment/batch-scores'
 import { loadAllNews } from '@/lib/news'
 import { loadAllPromo } from '@/lib/promo'
 import { loadAllEvents } from '@/lib/events'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 import { cdnBucketBase, cdnManifestUrl } from '@/lib/photo-cdn'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -249,8 +249,8 @@ function isPast(iso: string | null): boolean {
 }
 
 export async function HomePageContent({ lang }: { lang: Lang }) {
-  const c = COPY[lang]
-  const r = ROUTES[lang]
+  const c = pickCopy(COPY, lang)
+  const r = pickCopy(ROUTES, lang)
 
   const [counts, villaThumb, apartmentThumb, complexThumb, topVillas, topComplexes, allNews, allPromo, allEvents, ytVideos] = await Promise.all([
     loadCounts(),

@@ -6,7 +6,7 @@ import { useVillaFilterUrl, type FilterView } from './useVillaFilterUrl'
 import type { VillaFilterState } from '@/app/ru/villy/_lib'
 import { useCurrency } from '../CurrencyContext'
 import { CURRENCY_RATES, formatPrice } from '@/lib/currency'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const COPY = {
   ru: { from: 'от', to: 'до', clear: 'Сбросить', apply: 'Применить', quick: 'Быстрый выбор' },
@@ -51,7 +51,7 @@ export function VillaPriceRange({
   const { currency } = useCurrency()
   const rate = CURRENCY_RATES[currency]
   const sym = SYMBOLS[currency] ?? '$'
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
 
   const usdToInput = (usd: number | null): string => usd == null ? '' : fmtRu(usd * rate)
   const inputToUsd = (s: string): number | null => {

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { FilterDropdown } from '../FilterDropdown'
 import { useFilterUrl, type FilterView } from './useFilterUrl'
 import type { FilterState } from './FiltersBar'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const COPY = {
   ru: { search: 'Поиск…', noOptions: 'Нет вариантов', clear: 'Сбросить', apply: 'Применить' },
@@ -41,7 +41,7 @@ export function MultiSelectFilter({
   const { apply } = useFilterUrl(current, view)
   const [query, setQuery] = useState('')
   const [draft, setDraft] = useState<string[]>(selected)
-  const copy = COPY[lang]
+  const copy = pickCopy(COPY, lang)
 
   // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: deps deliberately scoped
   useEffect(() => { setDraft(selected) }, [selected.join(',')])

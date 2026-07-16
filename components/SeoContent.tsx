@@ -6,7 +6,7 @@ import {
   STATUS_TO_SLUG,
   PRICE_SEGMENTS,
 } from '@/lib/seo-routes'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const POPULAR_DISTRICTS = ['Berawa', 'Sanur', 'Ubud', 'Uluwatu', 'Pererenan', 'Pandawa', 'Batu Bolong', 'Cemagi']
 
@@ -94,7 +94,7 @@ const COPY = {
 } as const
 
 function intro(f: FilterState, variant: Variant, lang: Lang): string {
-  const C = COPY[lang]
+  const C = pickCopy(COPY, lang)
   const where =
     f.district.length === 1 ? C.introWhereDistrict(f.district[0]) :
     f.district.length > 1 ? C.introWhereDistricts(f.district) :
@@ -106,7 +106,7 @@ function intro(f: FilterState, variant: Variant, lang: Lang): string {
 }
 
 function context(f: FilterState, lang: Lang): string {
-  const C = COPY[lang]
+  const C = pickCopy(COPY, lang)
   const dist = f.district[0]
   if (dist === 'Ubud') return C.ctxUbud
   if (dist === 'Berawa' || dist === 'Batu Bolong' || dist === 'Pererenan') return C.ctxCanggu(dist)
@@ -116,7 +116,7 @@ function context(f: FilterState, lang: Lang): string {
 }
 
 function buildSeoTitle(f: FilterState, variant: Variant, lang: Lang): string {
-  const C = COPY[lang]
+  const C = pickCopy(COPY, lang)
   const adj: string[] = []
   if (f.bedrooms.length === 1) adj.push(C.titleAdj(f.bedrooms[0]))
   let s = adj.length ? `${adj.join(' ')} ${C.titleNoun}` : C.titleNounCap
@@ -135,7 +135,7 @@ export function SeoContent({
   variant?: Variant
   lang?: Lang
 }) {
-  const C = COPY[lang]
+  const C = pickCopy(COPY, lang)
   const h2 = buildSeoTitle(filters, variant, lang)
   const currentDistrict = filters.district[0]
   const districts = POPULAR_DISTRICTS.filter(d => d !== currentDistrict)

@@ -13,7 +13,7 @@ import { loadUnitsForComplex } from '@/lib/complex-units'
 import { developerLogoBySlug } from '@/lib/developer-logo'
 import { reliabilityForDeveloper } from '@/lib/developer-reliability'
 import { isHiddenDeveloper } from '@/lib/hidden-developers'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 export type RelatedDeveloper = { name: string; slug: string | null }
 
@@ -51,7 +51,7 @@ export async function RelatedContent({
   complexNames: string[]
   title: string
 }) {
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const dev = developers?.find(d => d.name?.trim()) ?? null
 
   // Hidden developers must not surface anywhere — suppress the whole block,

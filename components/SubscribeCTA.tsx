@@ -17,6 +17,7 @@
 
 import { useState } from 'react'
 import { Bell, Check, ExternalLink, Loader2, AlertTriangle } from 'lucide-react'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 type SubscriptionFilter = {
   kind: 'villa' | 'apartment' | 'complex' | 'rental'
@@ -41,10 +42,10 @@ export function SubscribeCTA({
   lang = 'ru',
 }: {
   filter: SubscriptionFilter
-  lang?: 'ru' | 'en'
+  lang?: Lang
 }) {
   const [state, setState] = useState<State>({ stage: 'idle' })
-  const copy = COPY[lang]
+  const copy = pickCopy(COPY, lang)
 
   async function subscribe() {
     setState({ stage: 'loading' })

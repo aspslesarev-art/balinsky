@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { VillaFilterState, VillaFilterOptions } from '@/app/ru/villy/_lib'
 import { buildCanonicalPath, STYLE_TO_SLUG } from '@/lib/villa-seo-routes'
 import { DISTRICT_TO_SLUG, BEDROOM_TO_SLUG } from '@/lib/seo-routes'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const COPY = {
   ru: {
@@ -32,7 +32,7 @@ export function RelatedVillaFilters({ filters, options, lang = 'ru' }: {
   options: VillaFilterOptions
   lang?: Lang
 }) {
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const enPrefix = lang === 'en' ? '/en/villas' : null
   function rewrite(p: string): string {
     if (enPrefix && p.startsWith('/ru/villy')) return enPrefix + p.slice('/ru/villy'.length)

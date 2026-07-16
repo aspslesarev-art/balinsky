@@ -19,6 +19,7 @@ import { createPortal } from 'react-dom'
 import Image from 'next/image'
 import { ChevronLeft, ExternalLink, BedDouble } from 'lucide-react'
 import Link from 'next/link'
+import type { Lang } from '@/lib/i18n'
 
 type Layer = {
   id: number
@@ -68,7 +69,7 @@ export function ComplexVisualizationViewer({
   layers: Layer[]
   hotspots: Hotspot[]
   unitsBySlug: Record<string, UnitInfo>
-  lang?: 'ru' | 'en'
+  lang?: Lang
 }) {
   // Root-level layers — top-level "views" the visitor can switch
   // between (Апартаменты / Вилла / Апарты 2 …). Trust the order the

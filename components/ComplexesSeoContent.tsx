@@ -5,7 +5,7 @@ import {
   STATUS_TO_SLUG,
 } from '@/lib/complex-seo-routes'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const POPULAR_DISTRICTS = ['Berawa', 'Sanur', 'Ubud', 'Uluwatu', 'Pererenan', 'Pandawa', 'Batu Bolong', 'Cemagi']
 
@@ -103,14 +103,14 @@ const T = {
 } as const
 
 function intro(f: ComplexFilterState, variant: Variant, lang: Lang): string {
-  const t = T[lang]
+  const t = pickCopy(T, lang)
   const where = t.where(f.district.length === 1 ? f.district[0] : undefined, f.district.length > 1 ? f.district : undefined)
   const lead = variant === 'map' ? t.leadMap(where) : t.leadList(where)
   return lead + t.tail
 }
 
 function context(f: ComplexFilterState, lang: Lang): string {
-  const t = T[lang]
+  const t = pickCopy(T, lang)
   const dist = f.district[0]
   if (dist === 'Ubud') return t.contextUbud
   if (dist === 'Berawa' || dist === 'Batu Bolong' || dist === 'Pererenan') return t.contextCanggu(dist)
@@ -120,7 +120,7 @@ function context(f: ComplexFilterState, lang: Lang): string {
 }
 
 function buildSeoTitle(f: ComplexFilterState, variant: Variant, lang: Lang): string {
-  const t = T[lang]
+  const t = pickCopy(T, lang)
   const adj: string[] = []
   if (f.types.length === 1) adj.push(f.types[0])
   let s = adj.length ? adj.join(' ') + ' ' + t.titleBase.toLowerCase() : t.titleBase
@@ -138,7 +138,7 @@ export function ComplexesSeoContent({
   variant?: Variant
   lang?: Lang
 }) {
-  const t = T[lang]
+  const t = pickCopy(T, lang)
   const h2 = buildSeoTitle(filters, variant, lang)
   const currentDistrict = filters.district[0]
   const districts = POPULAR_DISTRICTS.filter(d => d !== currentDistrict)

@@ -14,6 +14,7 @@ import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import { loadViewCounts, smartSort } from '@/lib/catalog-rank'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
 import { cdnRewriteManifest } from '@/lib/photo-cdn'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/villa-photos/_manifest.json`
@@ -414,7 +415,7 @@ function buildLabelMap(rows: EnrichedRow[], colRu: string, colEn: string): Map<s
 export function buildOptions(
   allRows: EnrichedRow[],
   current: VillaFilterState,
-  lang: 'ru' | 'en' = 'ru',
+  lang: Lang = 'ru',
 ): VillaFilterOptions {
   // Per-filter EN translation maps. Add `<RU column> EN` columns in
   // Airtable to translate filter labels — until then EN catalogues
@@ -498,13 +499,13 @@ export function buildOptions(
     en: { primary: 'From developer', resale: 'Resale',      secondary: 'Secondary' },
   }
   const dealType: Option[] = (['primary', 'resale', 'secondary'] as const)
-    .map(v => ({ value: v, label: DEAL_LABELS[lang][v], count: dealCounts.get(v) ?? 0 }))
+    .map(v => ({ value: v, label: pickCopy(DEAL_LABELS, lang)[v], count: dealCounts.get(v) ?? 0 }))
     .filter(o => o.count > 0)
 
   // Vision feature flags — fixed vocabulary, localized labels, count > 0 only.
   const featureCounts = countsExcludingDim('features', e => e.features)
   const features: Option[] = FEATURE_FLAGS
-    .map(fl => ({ value: fl, label: FEATURE_LABELS[fl][lang], count: featureCounts.get(fl) ?? 0 }))
+    .map(fl => ({ value: fl, label: pickCopy(FEATURE_LABELS[fl], lang), count: featureCounts.get(fl) ?? 0 }))
     .filter(o => o.count > 0)
 
   // Apply EN-translation pass — `value` keeps its original (URL slug or
@@ -524,7 +525,7 @@ export function toCard(
   e: EnrichedRow,
   manifest: Record<string, string[]>,
   devStats?: Map<string, { ready: number; total: number }>,
-  lang: 'ru' | 'en' = 'ru',
+  lang: Lang = 'ru',
 ): VillaCard | null {
   const d = e.data
   // Canonicalise the Airtable slug at the catalog level so internal
@@ -701,7 +702,7 @@ export function buildAllCards(
   scores?: Map<string, { composite: number; goodCapRate: number | null; rentalRestricted?: boolean }>,
   sort: SortOrder = 'investment-desc',
   devStats?: Map<string, { ready: number; total: number }>,
-  lang: 'ru' | 'en' = 'ru',
+  lang: Lang = 'ru',
 ): VillaCard[] {
   let filtered = enriched.filter(e => passes(e, filters))
   const isSearch = filters.q.trim().length > 0
@@ -763,7 +764,7 @@ export type CatalogPage = {
 export async function loadCatalogPage(
   filters: VillaFilterState,
   page: number,
-  lang: 'ru' | 'en' = 'ru',
+  lang: Lang = 'ru',
   sort: SortOrder = 'investment-desc',
 ): Promise<CatalogPage> {
   const safePage = Math.max(1, Math.floor(page))

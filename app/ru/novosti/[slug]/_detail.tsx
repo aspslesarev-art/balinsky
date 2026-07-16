@@ -13,7 +13,7 @@ import { PageViewTracker } from '@/components/PageViewTracker'
 import { NewsBody } from '@/components/NewsBody'
 import { RelatedContent } from '@/components/RelatedContent'
 import { loadAllNews, loadNewsBySlug } from '@/lib/news'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
@@ -91,7 +91,7 @@ export async function generateNewsDetailMetadata(slug: string, lang: Lang): Prom
 }
 
 export async function NewsDetail({ slug, lang }: { slug: string; lang: Lang }) {
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const n = await loadNewsBySlug(slug, lang)
   if (!n) notFound()
   const newsRoot = lang === 'en' ? '/en/news' : '/ru/novosti'

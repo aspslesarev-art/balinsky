@@ -11,6 +11,7 @@
 
 import { cookies } from 'next/headers'
 import { upsertChat, logMessage } from './bot-storage'
+import type { Lang } from '@/lib/i18n'
 
 export const ASSISTANT_COOKIE = 'bal_assistant_sid'
 const COOKIE_MAX_AGE_SEC = 60 * 60 * 24 * 365  // 1 year
@@ -54,7 +55,7 @@ export async function logAssistantTurn(args: {
   isNew: boolean
   userText: string
   assistantText: string
-  lang: 'ru' | 'en'
+  lang: Lang
 }): Promise<void> {
   const { chatId, isNew, userText, assistantText, lang } = args
 

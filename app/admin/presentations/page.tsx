@@ -16,6 +16,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 import { requireAdmin } from '@/lib/admin-auth'
 import { AdminThemeShell } from '@/components/admin/AdminThemeShell'
+import type { Lang } from '@/lib/i18n'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { robots: { index: false, follow: false }, title: 'Презентации · Balinsky Admin' }
@@ -59,7 +60,7 @@ type EventRow = {
   items_detail: ItemDetail[] | null
   orientation: 'portrait' | 'landscape' | null
   has_agent: boolean
-  lang: 'ru' | 'en' | null
+  lang: Lang | null
   agent_name: string | null
   agent_telegram: string | null
   agent_whatsapp: string | null

@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useMemo, useSyncExternalStore, type ReactNode } from 'react'
 import { WISHLIST_LS_KEY, WISHLIST_MAX, CAPPED_KINDS, type WishlistItem, type WishlistKind } from '@/lib/wishlist'
+import type { Lang } from '@/lib/i18n'
 
 type Ctx = {
   items: WishlistItem[]
@@ -107,7 +108,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   // removes are signal-poor for "what do users like". Failures are
   // swallowed; analytics never blocks the heart-tap.
   const trackAdd = (item: WishlistItem) => {
-    const lang: 'ru' | 'en' = typeof window !== 'undefined' && /^\/en(\/|$)/.test(window.location.pathname) ? 'en' : 'ru'
+    const lang: Lang = typeof window !== 'undefined' && /^\/en(\/|$)/.test(window.location.pathname) ? 'en' : 'ru'
     fetch('/api/track/wishlist', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },

@@ -43,7 +43,7 @@ import { loadLandProfile, landAllowsBuilding } from '@/lib/land-profile'
 import { loadMarketStats } from '@/lib/complex-market-stats'
 import { MarketStatsBlock } from '@/components/MarketStatsBlock'
 import { VillaPresentationButton } from '@/components/VillaPresentation'
-import { tField, type Lang } from '@/lib/i18n'
+import { tField, pickCopy, type Lang } from '@/lib/i18n'
 import { normalizeSlug } from '@/lib/slug-normalize'
 import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
@@ -220,7 +220,7 @@ function isMalformedAptTitle(s: string | null): boolean {
   if (!s) return false
   return /(?:\s{2}|в\s+-|in\s+-|—\s*-|\bв\s*$)/i.test(s)
 }
-function fallbackAptTitle(district: string | null, area: number | null, bedrooms: number | null, lang: 'ru' | 'en'): string {
+function fallbackAptTitle(district: string | null, area: number | null, bedrooms: number | null, lang: Lang): string {
   const parts: string[] = [lang === 'en' ? 'Apartment' : 'Апартаменты']
   if (district) parts.push(lang === 'en' ? `in ${district}` : `в ${district}`)
   const tail: string[] = []
@@ -470,7 +470,7 @@ export async function generateApartmentMetadata(slug: string, lang: Lang) {
   const a = await loadApartmentBySlug(slug)
   if (!a) return { robots: { index: false } }
   const d = a.data
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const titleRaw = tField(d, 'SEO:Title', lang) ?? tField(d, 'ИИ Имя', lang) ?? slug
   let title = cleanTitle(titleRaw) ?? slug
   if (isMalformedAptTitle(title)) {
@@ -500,7 +500,7 @@ export async function generateApartmentMetadata(slug: string, lang: Lang) {
 }
 
 export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang }) {
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   // Canonical-slug redirect: legacy GSC links carry dirty slugs
   // (cyrillic look-alikes, parens). Resolve resolves either form and
   // tells us the canonical; redirect 301 if the URL doesn't match.

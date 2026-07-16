@@ -11,7 +11,7 @@ import { PriceDisplay } from '@/components/PriceDisplay'
 import { loadRentalBySlug } from '@/lib/rental'
 import { LeadButton } from '@/components/LeadButton'
 import { PageViewTracker } from '@/components/PageViewTracker'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
@@ -39,7 +39,7 @@ function fmtUsd(n: number): string { return '$' + Math.round(n).toLocaleString('
 export async function generateRentalDetailMetadata(slug: string, lang: Lang): Promise<Metadata> {
   const r = await loadRentalBySlug(slug, lang)
   if (!r) return { robots: { index: false, follow: false } }
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const desc = r.notes?.slice(0, 160) ?? c.metaFallback(r.type ?? null, r.location ?? null, fmtUsd(r.priceMonthUsd))
   const ruPath = `/ru/arenda/o/${r.slug}`
   const enPath = `/en/rental/o/${r.slug}`
@@ -63,7 +63,7 @@ export async function generateRentalDetailMetadata(slug: string, lang: Lang): Pr
 export async function RentalDetail({ slug, lang }: { slug: string; lang: Lang }) {
   const r = await loadRentalBySlug(slug, lang)
   if (!r) notFound()
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
 
   const rentalUrl = `${SITE_URL}${lang === 'en' ? '/en/rental/o/' : '/ru/arenda/o/'}${r.slug}`
   const productJsonLd: Record<string, unknown> = {

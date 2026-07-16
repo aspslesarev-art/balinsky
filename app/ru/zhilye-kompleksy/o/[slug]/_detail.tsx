@@ -48,7 +48,7 @@ import { loadLandProfile, landAllowsBuilding } from '@/lib/land-profile'
 import { loadComplexMarketStats } from '@/lib/complex-market-stats'
 import { MarketStatsBlock } from '@/components/MarketStatsBlock'
 import { PageViewTracker } from '@/components/PageViewTracker'
-import { tField, type Lang } from '@/lib/i18n'
+import { tField, pickCopy, type Lang } from '@/lib/i18n'
 import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
 import { districtRu } from '@/lib/district-ru'
@@ -642,7 +642,7 @@ async function loadUnitsInComplex(complexName: string, lang: Lang = 'ru'): Promi
 export async function generateComplexMetadata(slug: string, lang: Lang) {
   const c = await loadComplexBySlug(slug)
   if (!c) return { robots: { index: false } }
-  const copy = COPY[lang]
+  const copy = pickCopy(COPY, lang)
   const name = firstString(c.data['Project']) ?? slug
   const districtRaw = firstString(c.data['Location 2']) ?? firstString(c.data['Location'])
   const district = lang === 'ru' ? districtRu(districtRaw) : districtRaw
@@ -686,7 +686,7 @@ export async function generateComplexMetadata(slug: string, lang: Lang) {
 }
 
 export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }) {
-  const copy = COPY[lang]
+  const copy = pickCopy(COPY, lang)
   const c = await loadComplexBySlug(slug)
   if (!c) notFound()
 

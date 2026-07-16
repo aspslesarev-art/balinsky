@@ -6,6 +6,7 @@
 
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import type { Lang } from '@/lib/i18n'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -29,7 +30,7 @@ type Body = {
   slug?: string
   title?: string | null
   airtableId?: string | null
-  lang?: 'ru' | 'en'
+  lang?: Lang
 }
 
 // Cheap bot filter on user-agent. Catches the major crawlers without

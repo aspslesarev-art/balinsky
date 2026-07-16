@@ -1,6 +1,5 @@
 import { formatPrice, formatPriceExact, type Currency } from '@/lib/currency'
-
-type Lang = 'ru' | 'en'
+import type { Lang } from '@/lib/i18n'
 
 export function fmtMoney(n: number | null | undefined, currency: Currency): string {
   if (n == null || !Number.isFinite(n)) return '—'

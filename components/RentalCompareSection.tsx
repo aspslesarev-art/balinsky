@@ -3,7 +3,7 @@ import Image from 'next/image'
 import { ChevronRight, BedDouble, MapPin } from 'lucide-react'
 import { loadCompareRental, type RentalItem } from '@/lib/rental'
 import { InlinePrice } from './InlinePrice'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 type Props = {
   district: string | null
@@ -78,7 +78,7 @@ export async function RentalCompareSection({ district, bedrooms, villaPriceUsd, 
   const all = await loadCompareRental(lang)
   const { matches, level } = pickMatches(all, district, bedrooms)
   if (matches.length === 0) return null
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
 
   const prices = matches.map(r => r.priceMonthUsd).filter(Boolean)
   const med = median(prices)

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ChevronDown } from 'lucide-react'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const COPY = {
   ru: {
@@ -87,7 +87,7 @@ function BulletMetric({ title, value, unknown }: { title: string; value: string 
 
 export function DeveloperRow({ d, lang = 'ru' }: { d: DeveloperRowData; lang?: Lang }) {
   const [open, setOpen] = useState(false)
-  const copy = COPY[lang]
+  const copy = pickCopy(COPY, lang)
   const detailHref = lang === 'en' ? `/en/developers/${d.slug}` : `/ru/zastrojshhiki/${d.slug}`
 
   return (

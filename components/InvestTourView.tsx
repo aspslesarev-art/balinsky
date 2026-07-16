@@ -12,7 +12,7 @@ import {
   Plane, Car, Building2, Users, Scale, MapPin, Send,
   Clock, Star, Sparkles, ChevronRight,
 } from 'lucide-react'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const COPY = {
   ru: {
@@ -202,7 +202,7 @@ const COPY = {
 } as const
 
 export function InvestTourView({ lang }: { lang: Lang }) {
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const home = lang === 'en' ? '/en' : '/ru'
   const contact = botLink('manager', '')
 

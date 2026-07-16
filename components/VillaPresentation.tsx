@@ -6,6 +6,7 @@ import { X, ChevronLeft, ChevronRight, Play, Star, MapPin, BedDouble, Square, Tr
 import type { Snapshot } from '@/components/InvestmentWidget/types'
 import { fmtMoney, fmtMoneyShort, fmtPct, fmtYears, fmtDistance, pluralRu } from '@/components/InvestmentWidget/utils'
 import { useCurrency } from '@/components/CurrencyContext'
+import type { Lang } from '@/lib/i18n'
 
 export type VillaPresentationData = {
   villaId: string
@@ -62,7 +63,7 @@ export function VillaPresentationButton({
   variant = 'primary',
   lang = 'ru',
   ...props
-}: VillaPresentationData & { variant?: 'primary' | 'outline'; lang?: 'ru' | 'en' }) {
+}: VillaPresentationData & { variant?: 'primary' | 'outline'; lang?: Lang }) {
   const [open, setOpen] = useState(false)
   const t = lang === 'en'
     ? { outline: 'PDF presentation', primary: 'Presentation', aria: 'Open villa presentation' }

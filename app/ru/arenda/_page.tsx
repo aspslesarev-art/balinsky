@@ -6,7 +6,7 @@ import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { loadFreshRental } from '@/lib/rental'
 import { RentalCatalog } from './_catalog'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const COPY = {
   ru: {
@@ -26,7 +26,7 @@ const COPY = {
 } as const
 
 export function generateRentalListMetadata(lang: Lang): Metadata {
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const ruPath = '/ru/arenda'
   const enPath = '/en/rental'
   const path = lang === 'en' ? enPath : ruPath
@@ -68,7 +68,7 @@ export async function RentalListShell({ initial, lang }: {
   lang: Lang
 }) {
   const items = await loadFreshRental(lang)
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   return (
     <>
       <Header active="arenda" />

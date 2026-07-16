@@ -9,6 +9,7 @@ import { useState, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Search, Sparkles, ArrowRight } from 'lucide-react'
+import type { Lang } from '@/lib/i18n'
 
 type Card = {
   kind: 'villa' | 'apartment' | 'complex'
@@ -31,7 +32,7 @@ const SUGGESTIONS = [
   'инвестиция до 250k с хорошей доходностью',
 ]
 
-export function SemanticSearchClient({ lang }: { lang: 'ru' | 'en' }) {
+export function SemanticSearchClient({ lang }: { lang: Lang }) {
   const [query, setQuery] = useState('')
   const [busy, setBusy] = useState(false)
   const [results, setResults] = useState<Card[] | null>(null)

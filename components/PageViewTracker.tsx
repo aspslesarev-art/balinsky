@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import type { Lang } from '@/lib/i18n'
 
 // One row in `page_views` per detail-page mount. Drop into any
 // _detail.tsx with the matching kind + slug. Title piped through so
@@ -38,7 +39,7 @@ export function PageViewTracker({
   slug: string
   title?: string | null
   airtableId?: string | null
-  lang?: 'ru' | 'en'
+  lang?: Lang
 }) {
   useEffect(() => {
     if (typeof window === 'undefined') return

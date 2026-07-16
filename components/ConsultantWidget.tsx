@@ -9,7 +9,7 @@ import { ConversationProvider, useConversation } from '@elevenlabs/react'
 import { useWishlist } from './WishlistContext'
 import { RECENT_KEY, type RecentlyViewedEntry } from './PageViewTracker'
 import { LeadButton } from './LeadButton'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 type ListingCard = {
   kind: 'villa' | 'apartment' | 'complex' | 'developer' | 'rental'
@@ -52,7 +52,7 @@ function extractChips(content: string): { text: string; chips: string[] } {
 // First message in every conversation. Includes its own [CHIPS] block,
 // so the entry-point picks render through the same chip pipeline as
 // every later step — chips lead to chips end-to-end.
-const GREETING_BY_LANG: Record<Lang, Message> = {
+const GREETING_BY_LANG: Record<'ru' | 'en', Message> = {
   ru: {
     role: 'assistant',
     greeting: true,
@@ -88,11 +88,11 @@ function parseListingPath(pathname: string): { kind: ListingKind; slug: string }
 }
 
 function contextualGreeting(kind: ListingKind, title: string | null, lang: Lang): Message {
-  const obj = {
+  const obj = pickCopy({
     villa: { ru: 'эту виллу', en: 'this villa' },
     apartment: { ru: 'эти апартаменты', en: 'these apartments' },
     complex: { ru: 'этот комплекс', en: 'this complex' },
-  }[kind][lang]
+  }[kind], lang)
   const name = title ? (lang === 'en' ? `“${title}”` : `«${title}»`) : (lang === 'en' ? 'this listing' : 'этот объект')
   const content = lang === 'en'
     ? `You're looking at ${name}. Want me to walk you through ${obj}? I'll check the base and answer precisely — documents, real yield, handover date, what's nearby, risks.\n\n[CHIPS] Tell me about it | Documents & risks | Real yield | Handover date | What's nearby`
@@ -206,7 +206,7 @@ export function ConsultantWidget() {
   // we send to the chat API all key off this.
   const pathname = usePathname() ?? ''
   const lang: Lang = pathname.startsWith('/en') ? 'en' : 'ru'
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const { items: wishlistItems } = useWishlist()
 
   // Per-listing context for the page the visitor is on. `pageTitle` is read
@@ -216,7 +216,7 @@ export function ConsultantWidget() {
   const listingKey = listingPage ? `${listingPage.kind}:${listingPage.slug}` : null
   const [pageTitle, setPageTitle] = useState<string | null>(null)
   const greeting = useMemo<Message>(
-    () => (listingPage ? contextualGreeting(listingPage.kind, pageTitle, lang) : GREETING_BY_LANG[lang]),
+    () => (listingPage ? contextualGreeting(listingPage.kind, pageTitle, lang) : pickCopy(GREETING_BY_LANG, lang)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [listingKey, pageTitle, lang],
   )
@@ -1242,7 +1242,7 @@ function fmtUsd(n: number | null): string | null {
 function ListingChatCard({ card, lang }: { card: ListingCard; lang: Lang }) {
   const isRental = card.kind === 'rental'
   const mainPrice = isRental ? fmtUsd(card.rent_per_month_usd) : fmtUsd(card.price_usd)
-  const priceSuffix = isRental ? COPY[lang].perMonth : ''
+  const priceSuffix = isRental ? pickCopy(COPY, lang).perMonth : ''
   return (
     <a
       href={card.url}
@@ -1266,7 +1266,7 @@ function ListingChatCard({ card, lang }: { card: ListingCard; lang: Lang }) {
             </span>
           )}
           {card.price_per_sqm_usd != null && card.price_per_sqm_usd > 0 && (
-            <span>{fmtUsd(card.price_per_sqm_usd)} {COPY[lang].perSqm}</span>
+            <span>{fmtUsd(card.price_per_sqm_usd)} {pickCopy(COPY, lang).perSqm}</span>
           )}
           {card.bedrooms != null && (
             <span className="inline-flex items-center gap-0.5"><BedDouble size={11} /> {card.bedrooms} BR</span>

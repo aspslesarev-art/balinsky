@@ -12,7 +12,7 @@ import { DevelopersSortToggle, type DevelopersSortKey } from '@/components/Devel
 import type { DeveloperRowData } from '@/components/DeveloperRow'
 import { scoreDeveloper, type ComplexStats } from '@/lib/developer-score'
 import { isHiddenDeveloper } from '@/lib/hidden-developers'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const sb = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -82,7 +82,7 @@ export async function DevelopersCatalog({
   sort: DevelopersSortKey
   lang?: Lang
 }) {
-  const copy = COPY[lang]
+  const copy = pickCopy(COPY, lang)
   // Slim JSONB projection. raw_complexes full data = ~7 MB; we only read
   // Developer1, Статус, Готовность, Total quantity of units here. raw_developers
   // similarly touches ~11 fields out of dozens.

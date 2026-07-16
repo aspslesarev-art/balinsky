@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 // Bottom-of-page editorial copy for the shortlist / comparison route.
 // Two jobs:
@@ -71,7 +71,7 @@ const COPY = {
 } as const
 
 export function ShortlistSeoContent({ lang }: { lang: Lang }) {
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const link = (path: string, label: string) => (
     <Link
       key={label}

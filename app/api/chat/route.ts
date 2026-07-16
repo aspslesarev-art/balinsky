@@ -4,6 +4,7 @@ import { getSystemPrompt, TOOLS, executeToolCall, ensureFeedbackBucket, type Lis
 import { ensureAssistantSession, logAssistantTurn } from '@/lib/assistant-session'
 import { logUsage, overDailySpendCap } from '@/lib/usage-tracker'
 import { clientIp, rateLimit } from '@/lib/rate-limit'
+import type { Lang } from '@/lib/i18n'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -76,7 +77,7 @@ const KIND_LABEL_EN: Record<string, string> = {
 // because it's a completely different signal: "current focus" >
 // "history". The model needs to treat any "эту виллу / этот объект /
 // здесь / тут" as referring to THIS slug, not ask "о какой вилле речь".
-function buildCurrentPageSystemMessage(cp: CurrentPage | null | undefined, lang: 'ru' | 'en'): string | null {
+function buildCurrentPageSystemMessage(cp: CurrentPage | null | undefined, lang: Lang): string | null {
   if (!cp) return null
   const labelsRu: Record<string, string> = {
     villa: 'виллы', apartment: 'апартаментов', complex: 'жилого комплекса',
@@ -113,7 +114,7 @@ function buildCurrentPageSystemMessage(cp: CurrentPage | null | undefined, lang:
   ].join('\n')
 }
 
-function buildUserContextSystemMessage(ctx: UserContext, lang: 'ru' | 'en'): string | null {
+function buildUserContextSystemMessage(ctx: UserContext, lang: Lang): string | null {
   const wl = (ctx.wishlist ?? []).slice(0, 10)
   const rv = (ctx.recentlyViewed ?? []).slice(0, 6)
   if (wl.length === 0 && rv.length === 0) return null
@@ -190,7 +191,7 @@ function detectFunnelStage(
   return 'browsing'
 }
 
-function funnelStageDirective(stage: FunnelStage, lang: 'ru' | 'en'): string {
+function funnelStageDirective(stage: FunnelStage, lang: Lang): string {
   if (lang === 'ru') {
     if (stage === 'ready') return 'СТАДИЯ: ready — посетитель готов действовать. Тон: коротко, конкретно, цифры/сроки. После ответа предложи связь с менеджером (через [CHIPS] или явно).'
     if (stage === 'comparing') return 'СТАДИЯ: comparing — посетитель сравнивает варианты. Тон: бок-о-бок, плюсы/минусы каждого, без воды. Можно подсветить лучший по критерию.'
@@ -230,7 +231,7 @@ export async function POST(req: Request) {
     return Response.json({ error: 'no_messages' }, { status: 400 })
   }
   const langRaw = (body as { lang?: unknown }).lang
-  const lang: 'ru' | 'en' = langRaw === 'en' ? 'en' : 'ru'
+  const lang: Lang = langRaw === 'en' ? 'en' : 'ru'
   // Clamp input size before it reaches the LLM — caps per-request token
   // cost (each message bounded, and total bounded) regardless of how much
   // text the client sends.

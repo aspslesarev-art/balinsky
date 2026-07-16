@@ -11,6 +11,7 @@ import { MarkerClusterer, type Renderer } from '@googlemaps/markerclusterer'
 import { X } from 'lucide-react'
 import { ReviewsHeatLayer, ReviewsHeatToggle } from './ReviewsHeatLayer'
 import type { HeatCell } from '@/lib/reviews-heat'
+import type { Lang } from '@/lib/i18n'
 import { BALINSKY_MAP_STYLE } from '@/lib/google-map-style'
 import { useCurrency } from './CurrencyContext'
 import { formatPrice } from '@/lib/currency'
@@ -242,7 +243,7 @@ function CloseButton({ onClose }: { onClose: () => void }) {
   )
 }
 
-function SinglePopup({ p, onClose, lang }: { p: MapPoint; onClose: () => void; lang: 'ru' | 'en' }) {
+function SinglePopup({ p, onClose, lang }: { p: MapPoint; onClose: () => void; lang: Lang }) {
   const fmtPrice = useFmtPrice()
   const price = fmtPrice(p.priceUsd)
   return (
@@ -274,7 +275,7 @@ function SinglePopup({ p, onClose, lang }: { p: MapPoint; onClose: () => void; l
   )
 }
 
-function MultiPopup({ items, onClose, lang }: { items: MapPoint[]; onClose: () => void; lang: 'ru' | 'en' }) {
+function MultiPopup({ items, onClose, lang }: { items: MapPoint[]; onClose: () => void; lang: Lang }) {
   const fmtPrice = useFmtPrice()
   return (
     <div className="relative w-[300px] p-1">
@@ -330,7 +331,7 @@ export function ApartmentsMap({
   heatCells?: HeatCell[]
   heatMax?: number
   heightClass?: string
-  lang?: 'ru' | 'en'
+  lang?: Lang
 }) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
   const [showHeat, setShowHeat] = useState(false)

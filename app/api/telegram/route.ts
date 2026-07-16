@@ -6,6 +6,7 @@ import { logMessage, upsertChat, getChat, shouldBotAutoReply, addChatTags } from
 import { handleReservationCallback } from '@/lib/telegram-reservation'
 import { refreshChatAvatar } from '@/lib/chat-avatars'
 import { uploadChatMedia, downloadTelegramFile, type ChatMediaKind } from '@/lib/chat-media'
+import type { Lang } from '@/lib/i18n'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -181,7 +182,7 @@ export async function POST(req: Request) {
     // without caption, etc.) falls through to the boilerplate.
     const voiceFileId = msg.voice?.file_id ?? null
     if (text || voiceFileId) {
-      const lang: 'ru' | 'en' = (msg.from?.language_code ?? '').startsWith('en') ? 'en' : 'ru'
+      const lang: Lang = (msg.from?.language_code ?? '').startsWith('en') ? 'en' : 'ru'
       const balina = await replyAsBalina({
         chatId: msg.chat.id, token, lang,
         userText: text || undefined,

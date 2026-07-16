@@ -11,7 +11,7 @@ import type { Snapshot } from './types'
 import { useCurrency } from '../CurrencyContext'
 import { computeEconomics, type Economics } from '@/lib/investment/economics'
 import { CURRENCY_RATES } from '@/lib/currency'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const COPY = {
   ru: {
@@ -163,7 +163,7 @@ export function InvestmentWidget({
 }
 
 function SectionShell({ children, lang }: { children: React.ReactNode; lang: Lang }) {
-  const t = COPY[lang]
+  const t = pickCopy(COPY, lang)
   // mt-12 gives the heading breathing room from the white ContactBlock /
   // ManagerCard cards that sit immediately above on every detail page —
   // without it, the h2 was visually touching the contact card's bottom
@@ -194,7 +194,7 @@ function Skeleton() {
 }
 
 function InvestmentWidgetView({ snap, apiKey, lang }: { snap: Snapshot; apiKey: string; lang: Lang }) {
-  const t = COPY[lang]
+  const t = pickCopy(COPY, lang)
   const allPois = useMemo(() => {
     const out: { lat: number; lng: number; name: string | null; category: string }[] = []
     for (const [cat, list] of Object.entries(snap.nearbyByCategory)) {
@@ -249,7 +249,7 @@ function Banner({ tone, icon, children, className }: { tone: 'info' | 'danger' |
 }
 
 function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
-  const t = COPY[lang]
+  const t = pickCopy(COPY, lang)
   const { currency } = useCurrency()
   const fmtUsd = (n: number | null | undefined) => fmtMoney(n, currency)
   const fxRate = CURRENCY_RATES[currency]
@@ -354,7 +354,7 @@ function Slider({
 
 
 function References({ snap, lang }: { snap: Snapshot; lang: Lang }) {
-  const t = COPY[lang]
+  const t = pickCopy(COPY, lang)
   const { currency } = useCurrency()
   const fmtUsd = (n: number | null | undefined) => fmtMoney(n, currency)
   const plural = pluralize(lang, snap.matchSampleSize, COPY.ru.object, COPY.en.object)
@@ -383,7 +383,7 @@ function References({ snap, lang }: { snap: Snapshot; lang: Lang }) {
 
 
 function EmergingBlock({ snap, lang }: { snap: Snapshot; lang: Lang }) {
-  const t = COPY[lang]
+  const t = pickCopy(COPY, lang)
   const plural = pluralize(lang, snap.totalCompetitorsInRadius, COPY.ru.object, COPY.en.object)
   return (
     <section className="mt-8 rounded-2xl border border-[var(--color-border)] bg-white p-5">

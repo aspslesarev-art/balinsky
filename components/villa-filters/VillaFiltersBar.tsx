@@ -6,7 +6,7 @@ import { VillaPriceRange } from './VillaPriceRange'
 import { VillaGoalFilter } from './VillaGoalFilter'
 import { useVillaFilterUrl, type FilterView } from './useVillaFilterUrl'
 import type { VillaFilterState, VillaFilterOptions } from '@/app/ru/villy/_lib'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const COPY = {
   ru: {
@@ -35,7 +35,7 @@ function ResetAll({ activeCount, current, view, lang }: {
       onClick={clearAll}
       className="text-[13px] text-[var(--color-text-muted)] underline-offset-2 hover:underline ml-2"
     >
-      {COPY[lang].resetAll}
+      {pickCopy(COPY, lang).resetAll}
     </button>
   )
 }
@@ -51,7 +51,7 @@ export function VillaFiltersBar({
   view?: FilterView
   lang?: Lang
 }) {
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const activeCount =
     (state.q.trim() ? 1 : 0) +
     (state.priceMin != null || state.priceMax != null ? 1 : 0) +

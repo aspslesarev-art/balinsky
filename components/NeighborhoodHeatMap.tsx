@@ -5,6 +5,7 @@ import { Flame } from 'lucide-react'
 import { BALINSKY_MAP_STYLE } from '@/lib/google-map-style'
 import { loadGoogleMaps } from '@/lib/google-maps-loader'
 import { createHeatOverlay, fetchHeatCells } from '@/lib/heat-overlay'
+import type { Lang } from '@/lib/i18n'
 
 // Compact location map with a Google-places heat toggle, for pages that don't
 // already embed a map (e.g. the complex detail page). Centred on the listing
@@ -21,7 +22,7 @@ export function NeighborhoodHeatMap({
   lat: number
   lng: number
   title: string
-  lang?: 'ru' | 'en'
+  lang?: Lang
   heightClass?: string
 }) {
   const [map, setMap] = useState<google.maps.Map | null>(null)

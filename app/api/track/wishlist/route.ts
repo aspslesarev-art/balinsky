@@ -9,6 +9,7 @@
 
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import type { Lang } from '@/lib/i18n'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -27,7 +28,7 @@ type Body = {
   bedrooms?: number | null
   area?: number | null
   priceUsd?: number | null
-  lang?: 'ru' | 'en'
+  lang?: Lang
 }
 
 const VALID_KINDS = new Set(['villa', 'apartment', 'complex', 'rental'])

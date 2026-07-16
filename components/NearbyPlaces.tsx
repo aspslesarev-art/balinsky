@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Star, MapPin, ExternalLink, ChevronDown } from 'lucide-react'
 import type { NearbyCategory, NearbyPlace } from '@/lib/nearby-places'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const ICONS: Record<string, string> = {
   beach: '🏝️',
@@ -63,7 +63,7 @@ export function NearbyPlaces({
   byCategory: Record<string, NearbyPlace[]>
   lang?: Lang
 }) {
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const available = categories.filter(cat => (byCategory[cat.key] ?? []).length > 0)
   const [active, setActive] = useState<string | null>(available[0]?.key ?? null)
   // Desktop shows the first 3 place cards (one row); the rest hide behind a

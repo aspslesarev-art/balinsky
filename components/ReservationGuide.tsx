@@ -11,7 +11,7 @@ import {
   Lock, Calendar, FileText, Wallet, Undo2, ArrowRight,
   ShieldCheck, AlertTriangle,
 } from 'lucide-react'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const COPY = {
   ru: {
@@ -153,7 +153,7 @@ const COPY = {
 } as const
 
 export function ReservationGuide({ lang }: { lang: Lang }) {
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const home = lang === 'en' ? '/en' : '/ru'
 
   const faqJsonLd = {

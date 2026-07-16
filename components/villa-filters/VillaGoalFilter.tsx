@@ -3,9 +3,9 @@
 import { FilterDropdown } from '../FilterDropdown'
 import { useVillaFilterUrl, type FilterView } from './useVillaFilterUrl'
 import type { VillaFilterState } from '@/app/ru/villy/_lib'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
-const OPTS_BY_LANG: Record<Lang, { v: 'invest' | 'live'; label: string }[]> = {
+const OPTS_BY_LANG: Record<'ru' | 'en', { v: 'invest' | 'live'; label: string }[]> = {
   ru: [{ v: 'invest', label: 'Под инвестиции' }, { v: 'live', label: 'Для жизни' }],
   en: [{ v: 'invest', label: 'For investment' }, { v: 'live', label: 'To live in' }],
 }
@@ -21,8 +21,8 @@ export function VillaGoalFilter({ current, view = 'list', lang = 'ru' }: {
   lang?: Lang
 }) {
   const { apply } = useVillaFilterUrl(current, view)
-  const opts = OPTS_BY_LANG[lang]
-  const c = COPY[lang]
+  const opts = pickCopy(OPTS_BY_LANG, lang)
+  const c = pickCopy(COPY, lang)
   const active = opts.find(o => o.v === current.goal) ?? null
   const summary = active?.label ?? ''
 

@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { createClient } from '@supabase/supabase-js'
 import { requireAdmin } from '@/lib/admin-auth'
 import { AdminThemeShell } from '@/components/admin/AdminThemeShell'
+import type { Lang } from '@/lib/i18n'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { robots: { index: false, follow: false }, title: 'Просмотры · Balinsky Admin' }
@@ -57,7 +58,7 @@ type EventRow = {
   slug: string
   title: string | null
   airtable_id: string | null
-  lang: 'ru' | 'en' | null
+  lang: Lang | null
 }
 
 async function loadEvents(range: Range): Promise<EventRow[]> {

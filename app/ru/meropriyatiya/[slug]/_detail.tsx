@@ -13,7 +13,7 @@ import { LocalDateTime } from '@/components/LocalDateTime'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { loadEventBySlug } from '@/lib/events'
 import { RelatedContent } from '@/components/RelatedContent'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
@@ -63,7 +63,7 @@ export async function generateEventDetailMetadata(slug: string, lang: Lang): Pro
 }
 
 export async function EventDetail({ slug, lang }: { slug: string; lang: Lang }) {
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const e = await loadEventBySlug(slug, lang)
   if (!e) notFound()
   const home = lang === 'en' ? '/en' : '/ru'

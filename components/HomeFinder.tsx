@@ -11,7 +11,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { BedDouble, Square, TrendingUp, Check, ArrowRight, Sparkles } from 'lucide-react'
 import type { FinderItem } from '@/lib/home-finder'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 import { BalinaCTA } from './BalinaCTA'
 
 type Goal = 'invest' | 'live' | 'both'
@@ -82,7 +82,7 @@ function chip(active: boolean): string {
 }
 
 export function HomeFinder({ items, lang = 'ru' }: { items: FinderItem[]; lang?: Lang }) {
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const [goal, setGoal] = useState<Goal | null>(null)
   const [budget, setBudget] = useState<number | null>(null) // 0 = no cap
   const [vibe, setVibe] = useState<Vibe | null>(null)

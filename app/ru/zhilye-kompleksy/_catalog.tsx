@@ -13,7 +13,7 @@ import { getDistrictCopy, getDistrictCommercialMeta } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { buildListHref, buildMapHref } from '@/lib/complex-filter-href'
 import { loadCatalogPage, buildHeading, buildHeadingEn, type ComplexFilterState } from './_lib'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const COPY = {
   ru: {
@@ -57,7 +57,7 @@ export async function ComplexesCatalog({
   const { cards, totalCount, totalPages, hasMore, options, page: actualPage } =
     await loadCatalogPage(filters, page, lang)
   const isSearch = filters.q.trim().length > 0
-  const copy = COPY[lang]
+  const copy = pickCopy(COPY, lang)
 
   // Use complex tab hrefs (not the apartments ones from CatalogTabs defaults).
   const listTabHref = buildListHref(filters, lang)

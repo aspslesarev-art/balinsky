@@ -26,6 +26,7 @@ import { appendLearnedRule } from '@/lib/assistant-knowledge'
 import { listMessages, logMessage } from '@/lib/bot-storage'
 import { downloadTelegramFile } from '@/lib/chat-media'
 import { logUsage } from '@/lib/usage-tracker'
+import type { Lang } from '@/lib/i18n'
 
 const MAX_HISTORY = 12                  // rows pulled from bot_messages → assistant context (12 ≈ 6 user + 6 assistant)
 const MAX_TOOL_HOPS = 4
@@ -61,7 +62,7 @@ export async function replyAsBalina({
 }: {
   chatId: number
   token: string
-  lang?: 'ru' | 'en'
+  lang?: Lang
   userText?: string
   voiceFileId?: string | null
 }): Promise<{ handled: boolean; reason?: string }> {
@@ -108,7 +109,7 @@ function buildTranscribeClient(): AzureOpenAI | null {
 
 async function runTurn(
   { chatId, token, lang, userText, voiceFileId }: {
-    chatId: number; token: string; lang: 'ru' | 'en'; userText?: string; voiceFileId?: string | null
+    chatId: number; token: string; lang: Lang; userText?: string; voiceFileId?: string | null
   },
 ): Promise<{ handled: boolean; reason?: string }> {
 
@@ -690,7 +691,7 @@ async function sendText(token: string, chatId: number, text: string): Promise<bo
   } catch (err) { console.error('[balina-tg] sendMessage:', err); return false }
 }
 
-async function sendListingCard(token: string, chatId: number, card: ListingCard, lang: 'ru' | 'en'): Promise<void> {
+async function sendListingCard(token: string, chatId: number, card: ListingCard, lang: Lang): Promise<void> {
   const caption = formatCaption(card, lang)
   const openLabel = lang === 'en' ? 'Open' : 'Открыть'
   const reply_markup = {
@@ -738,7 +739,7 @@ async function sendListingCard(token: string, chatId: number, card: ListingCard,
 // Compact card caption — title (linked), 1 line of facts, optional
 // 1 line of investment cues. Capped at Telegram's 1024-char caption
 // limit with safety margin.
-function formatCaption(card: ListingCard, lang: 'ru' | 'en'): string {
+function formatCaption(card: ListingCard, lang: Lang): string {
   const facts: string[] = []
   if (card.district) facts.push(escape(card.district))
   if (card.bedrooms != null) facts.push(`${card.bedrooms} BR`)

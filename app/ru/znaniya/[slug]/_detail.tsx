@@ -12,7 +12,7 @@ import { PageViewTracker } from '@/components/PageViewTracker'
 import { loadAllKnowledge, loadKnowledgeBySlug } from '@/lib/knowledge'
 import { enKnowledgeSlug } from '@/lib/knowledge-en-slugs'
 import { ArticleCover } from '@/components/ArticleCover'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
@@ -66,7 +66,7 @@ export async function generateKnowledgeDetailMetadata(slug: string, lang: Lang):
 }
 
 export async function KnowledgeDetail({ slug, lang }: { slug: string; lang: Lang }) {
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const k = await loadKnowledgeBySlug(slug, lang)
   if (!k) notFound()
   const home = lang === 'en' ? '/en' : '/ru'

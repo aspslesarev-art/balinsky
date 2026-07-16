@@ -1,6 +1,6 @@
 import { Document, Page, Text, View, Image, Link, StyleSheet, Font, pdf } from '@react-pdf/renderer'
 import type { WishlistItem } from '@/lib/wishlist'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 import { classifyLandUse } from '@/lib/land-use'
 import { telegramUrl, whatsappUrl } from '@/lib/agent-links'
 import { formatPriceExact, type Currency } from '@/lib/currency'
@@ -234,7 +234,7 @@ const COPY = {
   },
 } as const
 
-type Copy = typeof COPY[Lang]
+type Copy = typeof COPY['ru' | 'en']
 
 function pluralRu(n: number, forms: [string, string, string]): string {
   const mod10 = n % 10, mod100 = n % 100
@@ -593,7 +593,7 @@ export function ShortlistPdfDocument({ items, agent, orientation = 'landscape', 
 }) {
   const isPortrait = orientation === 'portrait'
   const pageProps = { size: 'A4' as const, orientation }
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const agentMode = !!agent
 
   // Per-item pages: villas + apartments + complexes + rentals all get

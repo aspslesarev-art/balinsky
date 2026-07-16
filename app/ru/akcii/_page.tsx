@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { loadAllPromo } from '@/lib/promo'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const COPY = {
   ru: {
@@ -48,7 +48,7 @@ function isExpired(iso: string | null): boolean {
 }
 
 export function generatePromoListMetadata(lang: Lang): Metadata {
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const ruPath = '/ru/akcii'
   const enPath = '/en/promo'
   const path = lang === 'en' ? enPath : ruPath
@@ -118,7 +118,7 @@ function PromoCard({
 }
 
 export async function PromoList({ lang }: { lang: Lang }) {
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const items = await loadAllPromo(lang)
   const detailRoot = lang === 'en' ? '/en/promo' : '/ru/akcii'
 

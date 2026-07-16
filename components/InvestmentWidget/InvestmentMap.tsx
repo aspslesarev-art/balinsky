@@ -6,7 +6,7 @@ import { BALINSKY_MAP_STYLE } from '@/lib/google-map-style'
 import { loadGoogleMaps } from '@/lib/google-maps-loader'
 import { createHeatOverlay, fetchHeatCells } from '@/lib/heat-overlay'
 import type { Snapshot } from './types'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const COLORS = {
   villa: '#E0383E',
@@ -102,7 +102,7 @@ function competitorPopupHtml(c: {
   area?: number | null; adr: number; url?: string | null;
   distanceKm?: number | null
 }, lang: Lang): string {
-  const t = MAP_COPY[lang]
+  const t = pickCopy(MAP_COPY, lang)
   const sqmU = lang === 'en' ? 'm²' : 'м²'
   const kmLabel = lang === 'en' ? 'km' : 'км'
   const title = c.complex || c.name || 'Booking listing'
@@ -143,7 +143,7 @@ function anchorPopupHtml(a: {
   address?: string | null; mapsUrl?: string | null;
   distanceKm?: number | null
 }, lang: Lang): string {
-  const t = MAP_COPY[lang]
+  const t = pickCopy(MAP_COPY, lang)
   const kmLabel = lang === 'en' ? 'km' : 'км'
   const title = a.name || 'POI'
   const stars = a.rating != null ? `★ ${a.rating.toFixed(1)}` : ''
@@ -174,7 +174,7 @@ function MapLayer({ map, snap, showAllPois, allPois, lang }: { map: google.maps.
   const ref = useRef<{ markers: google.maps.Marker[]; circles: google.maps.Circle[] }>({ markers: [], circles: [] })
   const infoWindowRef = useRef<google.maps.InfoWindow | null>(null)
   const fitOnceRef = useRef(false)
-  const t = MAP_COPY[lang]
+  const t = pickCopy(MAP_COPY, lang)
 
   useEffect(() => {
     if (!map) return
@@ -342,7 +342,7 @@ export function InvestmentMap({
   const containerRef = useRef<HTMLDivElement | null>(null)
   const heatRef = useRef<google.maps.OverlayView | null>(null)
   const heatDataRef = useRef<{ cells: { lat: number; lng: number; weight: number }[]; max: number } | null>(null)
-  const t = MAP_COPY[lang]
+  const t = pickCopy(MAP_COPY, lang)
 
   // Island-wide Google-places heat overlay — fetched lazily on first toggle.
   useEffect(() => {

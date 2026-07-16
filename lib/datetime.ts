@@ -1,6 +1,8 @@
+import type { Lang } from '@/lib/i18n'
+
 export const BALI_TZ = 'Asia/Makassar' // UTC+8
 
-type FmtOpts = { withYear?: boolean; withTime?: boolean; lang?: 'ru' | 'en' }
+type FmtOpts = { withYear?: boolean; withTime?: boolean; lang?: Lang }
 
 function buildOptions(opts: FmtOpts): Intl.DateTimeFormatOptions {
   return {

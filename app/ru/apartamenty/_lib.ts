@@ -15,6 +15,7 @@ import { isTopBlacklisted } from '@/lib/top-blacklist'
 import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import { loadViewCounts, smartSort } from '@/lib/catalog-rank'
 import { cdnRewriteManifest, cdnManifestUrl } from '@/lib/photo-cdn'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/apartment-photos/_manifest.json`
@@ -115,7 +116,7 @@ function fallbackAptTitle(args: {
   district: string | null
   area: number | null
   bedrooms: string | null
-  lang: 'ru' | 'en'
+  lang: Lang
 }): string {
   const { district, area, bedrooms, lang } = args
   const parts: string[] = []
@@ -354,7 +355,7 @@ function buildLabelMap(rows: EnrichedRow[], colRu: string, colEn: string): Map<s
 export function buildOptions(
   allRows: EnrichedRow[],
   current: FilterState,
-  lang: 'ru' | 'en' = 'ru',
+  lang: Lang = 'ru',
 ): FilterOptions {
   const enMap = lang === 'en' ? {
     district: buildLabelMap(allRows, 'Location 2', 'Location 2 EN'),
@@ -440,7 +441,7 @@ export function buildOptions(
     en: { primary: 'From developer', resale: 'Resale',      secondary: 'Secondary' },
   }
   const dealType: Option[] = (['primary', 'resale', 'secondary'] as const)
-    .map(v => ({ value: v, label: DEAL_LABELS[lang][v], count: dealCounts.get(v) ?? 0 }))
+    .map(v => ({ value: v, label: pickCopy(DEAL_LABELS, lang)[v], count: dealCounts.get(v) ?? 0 }))
     .filter(o => o.count > 0)
 
   // Translate visible labels for EN. `value` keeps its RU/URL form so
@@ -451,7 +452,7 @@ export function buildOptions(
 
   const featureCounts = countsExcludingDim('features', e => e.features)
   const features: Option[] = FEATURE_FLAGS
-    .map(fl => ({ value: fl, label: FEATURE_LABELS[fl][lang], count: featureCounts.get(fl) ?? 0 }))
+    .map(fl => ({ value: fl, label: pickCopy(FEATURE_LABELS[fl], lang), count: featureCounts.get(fl) ?? 0 }))
     .filter(o => o.count > 0)
 
   return { district: districts, bedrooms, floor, developer, status, permit, dealType, features }
@@ -461,7 +462,7 @@ export function toCard(
   e: EnrichedRow,
   manifest: Record<string, string[]>,
   devStats?: Map<string, { ready: number; total: number }>,
-  lang: 'ru' | 'en' = 'ru',
+  lang: Lang = 'ru',
 ): Card | null {
   const d = e.data
   // Canonicalise the Airtable slug at the catalog level so every
@@ -627,7 +628,7 @@ export function buildAllCards(
   manifest: Record<string, string[]>,
   filters: FilterState,
   devStats?: Map<string, { ready: number; total: number }>,
-  lang: 'ru' | 'en' = 'ru',
+  lang: Lang = 'ru',
 ): Card[] {
   let filtered = enriched.filter(e => passes(e, filters))
   const isSearch = filters.q.trim().length > 0
@@ -666,7 +667,7 @@ export function buildAllCards(
 export async function loadCatalogPage(
   filters: FilterState,
   page: number,
-  lang: 'ru' | 'en' = 'ru',
+  lang: Lang = 'ru',
 ): Promise<CatalogPage & { options: ReturnType<typeof buildOptions> }> {
   const safePage = Math.max(1, Math.floor(page))
   const { enriched, manifest } = await loadAll()

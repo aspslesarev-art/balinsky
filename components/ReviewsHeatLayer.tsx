@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import { useMap } from '@vis.gl/react-google-maps'
 import { Flame } from 'lucide-react'
 import { createHeatOverlay, type HeatCell } from '@/lib/heat-overlay'
+import type { Lang } from '@/lib/i18n'
 
 // Thin @vis.gl wrapper around the shared heat overlay (lib/heat-overlay).
 export function ReviewsHeatLayer({
@@ -42,7 +43,7 @@ export function ReviewsHeatToggle({
 }: {
   on: boolean
   onToggle: () => void
-  lang?: 'ru' | 'en'
+  lang?: Lang
 }) {
   return (
     <div className="absolute top-3 left-3 z-10 flex flex-col items-start gap-2">

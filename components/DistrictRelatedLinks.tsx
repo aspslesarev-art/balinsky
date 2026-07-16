@@ -7,7 +7,7 @@
 
 import Link from 'next/link'
 import { ArrowRight, HardHat, Building2, Tag, Newspaper, TrendingUp } from 'lucide-react'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const COPY = {
   ru: {
@@ -42,7 +42,7 @@ export function DistrictRelatedLinks({
   // So we don't link back to the page the visitor is already on
   currentKind?: 'villa' | 'apartment' | 'complex'
 }) {
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const isEn = lang === 'en'
   const devsHref     = isEn ? '/en/developers' : '/ru/zastrojshhiki'
   const complexesUrl = (isEn ? '/en/complexes' : '/ru/zhilye-kompleksy') + `/${districtSlug}`

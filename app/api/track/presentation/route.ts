@@ -5,6 +5,7 @@
 
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import type { Lang } from '@/lib/i18n'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -41,7 +42,7 @@ type Body = {
   // Common context
   orientation?: 'portrait' | 'landscape'
   hasAgent?: boolean
-  lang?: 'ru' | 'en'
+  lang?: Lang
 }
 
 export async function POST(req: Request) {

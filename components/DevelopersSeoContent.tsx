@@ -4,7 +4,7 @@ import {
   BEDROOM_TO_SLUG,
   STATUS_TO_SLUG,
 } from '@/lib/seo-routes'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const POPULAR_DISTRICTS = [
   'Berawa',
@@ -18,7 +18,7 @@ const POPULAR_DISTRICTS = [
 ]
 
 type FaqItem = { q: string; a: string }
-const FAQ_ITEMS: Record<Lang, FaqItem[]> = {
+const FAQ_ITEMS: Record<'ru' | 'en', FaqItem[]> = {
   ru: [
     { q: 'Какие застройщики работают на Бали?',
       a: 'На острове активно более 80 застройщиков. Среди заметных — Alex Villas, Magnum Estate, BREIG, Bali Capital Group, Anta Group, Taryan Group, Oceaniq, Sunny Development. Большинство специализируется на 1–2 районах Бали.' },
@@ -93,8 +93,8 @@ const COPY = {
 } as const
 
 export function DevelopersSeoContent({ lang = 'ru' }: { lang?: Lang }) {
-  const c = COPY[lang]
-  const items = FAQ_ITEMS[lang]
+  const c = pickCopy(COPY, lang)
+  const items = pickCopy(FAQ_ITEMS, lang)
   const districtRoot = lang === 'en' ? '/en/apartments' : '/ru/apartamenty'
 
   const districtLinks = POPULAR_DISTRICTS.map(d => ({

@@ -16,7 +16,7 @@ import { distanceKm as haversineKm } from '@/lib/competitor-utils'
 
 const AIRPORT_LAT = -8.7467
 const AIRPORT_LNG = 115.1667
-function fmtAirportDistance(lat: number | null, lng: number | null, lang: 'ru' | 'en'): string | null {
+function fmtAirportDistance(lat: number | null, lng: number | null, lang: Lang): string | null {
   if (lat == null || lng == null) return null
   const km = haversineKm(lat, lng, AIRPORT_LAT, AIRPORT_LNG)
   if (lang === 'en') return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(km < 10 ? 1 : 0)} km`
@@ -59,7 +59,7 @@ import { findActiveReservation } from '@/lib/reservations'
 import { VideoGrid } from '@/components/VideoGrid'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { VillaPresentationButton } from '@/components/VillaPresentation'
-import { tField, type Lang } from '@/lib/i18n'
+import { tField, pickCopy, type Lang } from '@/lib/i18n'
 import { normalizeSlug } from '@/lib/slug-normalize'
 import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
@@ -470,7 +470,7 @@ export async function generateVillaMetadata(slug: string, lang: Lang) {
   const v = await loadVillaBySlug(slug)
   if (!v) return { robots: { index: false } }
   const d = v.data
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const titleRaw = tField(d, 'SEO:Title', lang) ?? tField(d, 'ИИ Имя', lang) ?? slug
   const title = cleanTitle(titleRaw) ?? slug
   const seoText = tField(d, 'SEO Text', lang) ?? tField(d, 'Notes', lang)
@@ -518,7 +518,7 @@ export async function generateVillaMetadata(slug: string, lang: Lang) {
 }
 
 export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) {
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   // Canonical-slug redirect: legacy GSC links carry dirty slugs
   // (cyrillic look-alikes, parens). resolveVilla finds either form
   // and tells us the canonical; we 301 if URL doesn't match.

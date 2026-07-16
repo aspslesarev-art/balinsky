@@ -8,6 +8,7 @@ import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
 import { getDistrictCommercialMeta } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { enLabel, type FilterDim } from '@/lib/filter-i18n'
+import type { Lang } from '@/lib/i18n'
 import { isTopBlacklisted } from '@/lib/top-blacklist'
 import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import { loadViewCounts, smartSort } from '@/lib/catalog-rank'
@@ -313,7 +314,7 @@ function buildLabelMap(rows: EnrichedRow[], colRu: string, colEn: string): Map<s
 export function buildOptions(
   allRows: EnrichedRow[],
   current: ComplexFilterState,
-  lang: 'ru' | 'en' = 'ru',
+  lang: Lang = 'ru',
 ): ComplexFilterOptions {
   // Per-filter EN translation maps. Add a `<RU column> EN` column in
   // Airtable to translate filter labels — until then EN catalogues
@@ -699,7 +700,7 @@ export function buildAllCards(
 export async function loadCatalogPage(
   filters: ComplexFilterState,
   page: number,
-  lang: 'ru' | 'en' = 'ru',
+  lang: Lang = 'ru',
 ): Promise<CatalogPage> {
   const safePage = Math.max(1, Math.floor(page))
   const { enriched, manifest, prices } = await loadAll()

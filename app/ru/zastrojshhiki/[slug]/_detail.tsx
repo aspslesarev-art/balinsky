@@ -23,7 +23,7 @@ import { loadAllEvents } from '@/lib/events'
 import { loadVideosByDeveloperWithComplexes } from '@/lib/videos'
 import { VideoGrid } from '@/components/VideoGrid'
 import { PageViewTracker } from '@/components/PageViewTracker'
-import { tField, type Lang } from '@/lib/i18n'
+import { tField, pickCopy, type Lang } from '@/lib/i18n'
 import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import { loadKbPageContent } from '@/lib/kb-page-content'
 import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
@@ -333,7 +333,7 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
   if (!dev) notFound()
   if (dev.data['Публикация'] !== true) notFound()
 
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const name = firstString(dev.data['Developer']) ?? slug
   const logoUrl = dev.logo_url ?? logoFromJson(dev.data)
   const aiTextRaw = tField(dev.data, 'SEO Text', lang)

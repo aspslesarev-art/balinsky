@@ -11,6 +11,7 @@ import { MarkerClusterer, type Renderer } from '@googlemaps/markerclusterer'
 import { X } from 'lucide-react'
 import { ReviewsHeatLayer, ReviewsHeatToggle } from './ReviewsHeatLayer'
 import type { HeatCell } from '@/lib/reviews-heat'
+import type { Lang } from '@/lib/i18n'
 import { BALINSKY_MAP_STYLE } from '@/lib/google-map-style'
 
 export type ComplexPoint = {
@@ -210,7 +211,7 @@ function CloseButton({ onClose }: { onClose: () => void }) {
   )
 }
 
-function SinglePopup({ p, onClose, lang }: { p: ComplexPoint; onClose: () => void; lang: 'ru' | 'en' }) {
+function SinglePopup({ p, onClose, lang }: { p: ComplexPoint; onClose: () => void; lang: Lang }) {
   return (
     <div className="relative w-[280px] p-1">
       <CloseButton onClose={onClose} />
@@ -236,7 +237,7 @@ function SinglePopup({ p, onClose, lang }: { p: ComplexPoint; onClose: () => voi
   )
 }
 
-function MultiPopup({ items, onClose, lang }: { items: ComplexPoint[]; onClose: () => void; lang: 'ru' | 'en' }) {
+function MultiPopup({ items, onClose, lang }: { items: ComplexPoint[]; onClose: () => void; lang: Lang }) {
   return (
     <div className="relative w-[300px] p-1">
       <CloseButton onClose={onClose} />
@@ -285,7 +286,7 @@ export function ComplexesMap({
   heatCells?: HeatCell[]
   heatMax?: number
   heightClass?: string
-  lang?: 'ru' | 'en'
+  lang?: Lang
 }) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
   const [showHeat, setShowHeat] = useState(false)
