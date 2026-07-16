@@ -7,7 +7,7 @@
 
 import { useState, useCallback } from 'react'
 import { X, Phone, Check } from 'lucide-react'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const COPY = {
   ru: {
@@ -64,7 +64,7 @@ export function LeadButton({
   context?: LeadContext
   icon?: React.ReactNode
 }) {
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')

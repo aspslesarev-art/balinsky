@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 export type DevelopersSortKey =
   | 'balanced'
@@ -13,7 +13,7 @@ export type DevelopersSortKey =
   | 'international'
 
 type Option = { key: DevelopersSortKey; label: string; hint: string }
-const OPTIONS_BY_LANG: Record<Lang, Option[]> = {
+const OPTIONS_BY_LANG: Record<'ru' | 'en', Option[]> = {
   ru: [
     { key: 'balanced',         label: 'Сбалансированный',     hint: 'Сданные + в работе + редакторская оценка' },
     { key: 'ready',            label: 'Сданные ЖК',           hint: 'Кто реально построил больше всего' },
@@ -46,7 +46,7 @@ export function DevelopersSortToggle({ current, lang = 'ru' }: { current: Develo
     router.replace(qs ? `?${qs}` : '?', { scroll: false })
   }
 
-  const options = OPTIONS_BY_LANG[lang]
+  const options = pickCopy(OPTIONS_BY_LANG, lang)
   return (
     <div className="mb-5 flex flex-wrap gap-1.5">
       {options.map(o => (

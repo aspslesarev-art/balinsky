@@ -1,6 +1,7 @@
 'use client'
 
 import { Heart } from 'lucide-react'
+import { detectLang } from '@/lib/i18n'
 import { usePathname } from 'next/navigation'
 import { useWishlist } from './WishlistContext'
 import type { WishlistItem } from '@/lib/wishlist'
@@ -27,7 +28,7 @@ export function WishlistButton({
   const dim = size === 'sm' ? 32 : 38
   const icon = size === 'sm' ? 16 : 18
   const pathname = usePathname() ?? ''
-  const isEn = pathname.startsWith('/en')
+  const isEn = detectLang(pathname) !== 'ru'
   const labelSave   = isEn ? 'Add to favorites'    : 'В избранное'
   const labelRemove = isEn ? 'Remove from favorites' : 'Удалить из избранного'
   return (

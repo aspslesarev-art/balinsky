@@ -4,7 +4,7 @@
 // copy is around 1500 words per language as the audit asked for.
 
 import Link from 'next/link'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 type Block = {
   id: string
@@ -13,7 +13,7 @@ type Block = {
   links?: { label: string; href: string }[]
 }
 
-const BLOCKS: Record<Lang, Block[]> = {
+const BLOCKS: Record<'ru' | 'en', Block[]> = {
   ru: [
     {
       id: 'why-bali',
@@ -139,7 +139,7 @@ const BLOCKS: Record<Lang, Block[]> = {
 export function HomeSeoBlocks({ lang }: { lang: Lang }) {
   return (
     <div className="space-y-10 max-w-3xl mt-10">
-      {BLOCKS[lang].map(b => (
+      {pickCopy(BLOCKS, lang).map(b => (
         <section key={b.id}>
           <h3 className="text-[18px] md:text-[20px] font-semibold text-[#111827] mb-3">{b.h3}</h3>
           <div className="space-y-3 text-[15px] leading-[1.7] text-[var(--color-text)]">

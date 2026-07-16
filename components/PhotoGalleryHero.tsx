@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { detectLang, pickCopy } from '@/lib/i18n'
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
 import { ChevronLeft, ChevronRight, X, ImageIcon } from 'lucide-react'
@@ -29,8 +30,8 @@ export function PhotoGalleryHero({
 }) {
   const [openAt, setOpenAt] = useState<number | null>(null)
   const pathname = usePathname() ?? ''
-  const lang = pathname.startsWith('/en') ? 'en' : 'ru'
-  const c = COPY[lang]
+  const lang = detectLang(pathname)
+  const c = pickCopy(COPY, lang)
 
   if (photos.length === 0) {
     return (

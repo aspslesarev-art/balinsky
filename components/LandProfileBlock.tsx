@@ -11,6 +11,7 @@ import {
   MapPin,
 } from 'lucide-react'
 import type { UseCaseStatus } from '@/lib/land-profile'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 type Tx = Partial<{
   kabupaten: string
@@ -174,7 +175,6 @@ const COPY = {
   },
 } as const
 
-type Lang = 'ru' | 'en'
 // Widen the literal-string properties of COPY['ru'] so EN can also fit.
 type CopyShape = { [K in keyof (typeof COPY)['ru']]: (typeof COPY)['ru'][K] extends (...args: infer A) => infer R ? (...args: A) => R : string }
 
@@ -252,9 +252,9 @@ function UseCaseRow({ icon: Icon, label, status, c }: {
 
 export function LandProfileBlock({ data, lang = 'ru' }: { data: LandProfileProps; lang?: Lang }) {
   const [open, setOpen] = useState(false)
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
 
-  const tx = data.translations?.[lang] ?? {}
+  const tx = (lang === 'ru' ? data.translations?.ru : data.translations?.en) ?? {}
   const t = (key: keyof Tx, raw: string | null): string | null => tx[key] ?? raw
 
   // One-line summary: subzone code + (translated) subzone name + STR verdict + facts.

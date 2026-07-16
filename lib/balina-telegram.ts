@@ -26,6 +26,7 @@ import { appendLearnedRule } from '@/lib/assistant-knowledge'
 import { listMessages, logMessage } from '@/lib/bot-storage'
 import { downloadTelegramFile } from '@/lib/chat-media'
 import { logUsage } from '@/lib/usage-tracker'
+import type { Lang } from '@/lib/i18n'
 
 const MAX_HISTORY = 12                  // rows pulled from bot_messages → assistant context (12 ≈ 6 user + 6 assistant)
 const MAX_TOOL_HOPS = 4
@@ -61,7 +62,7 @@ export async function replyAsBalina({
 }: {
   chatId: number
   token: string
-  lang?: 'ru' | 'en'
+  lang?: Lang
   userText?: string
   voiceFileId?: string | null
 }): Promise<{ handled: boolean; reason?: string }> {
@@ -108,7 +109,7 @@ function buildTranscribeClient(): AzureOpenAI | null {
 
 async function runTurn(
   { chatId, token, lang, userText, voiceFileId }: {
-    chatId: number; token: string; lang: 'ru' | 'en'; userText?: string; voiceFileId?: string | null
+    chatId: number; token: string; lang: Lang; userText?: string; voiceFileId?: string | null
   },
 ): Promise<{ handled: boolean; reason?: string }> {
 
@@ -116,9 +117,9 @@ async function runTurn(
   // do this BEFORE Whisper so a bored visitor can't burn quota on
   // transcriptions either.
   if (await isOverDailyLimit(chatId)) {
-    await sendText(token, chatId, lang === 'en'
-      ? `Daily message limit reached for this chat (${DAILY_LIMIT_PER_CHAT}/day). Try again tomorrow, or open <a href="https://balinsky.info">balinsky.info</a> — there's no limit on the website.`
-      : `На сегодня лимит сообщений по этому чату исчерпан (${DAILY_LIMIT_PER_CHAT}/сутки). Попробуйте завтра или откройте <a href="https://balinsky.info">balinsky.info</a> — на сайте без лимита.`)
+    await sendText(token, chatId, lang === 'ru'
+      ? `На сегодня лимит сообщений по этому чату исчерпан (${DAILY_LIMIT_PER_CHAT}/сутки). Попробуйте завтра или откройте <a href="https://balinsky.info">balinsky.info</a> — на сайте без лимита.`
+      : `Daily message limit reached for this chat (${DAILY_LIMIT_PER_CHAT}/day). Try again tomorrow, or open <a href="https://balinsky.info">balinsky.info</a> — there's no limit on the website.`)
     return { handled: true, reason: 'rate_limited' }
   }
 
@@ -134,9 +135,9 @@ async function runTurn(
         })
       : null
     if (!transcript) {
-      await sendText(token, chatId, lang === 'en'
-        ? 'Sorry, I couldn\'t transcribe that voice message. Try sending it as text?'
-        : 'Не получилось распознать голосовое. Можно текстом?')
+      await sendText(token, chatId, lang === 'ru'
+        ? 'Не получилось распознать голосовое. Можно текстом?'
+        : 'Sorry, I couldn\'t transcribe that voice message. Try sending it as text?')
       return { handled: true, reason: 'transcribe_failed' }
     }
     textIn = transcript
@@ -189,7 +190,7 @@ async function runTurn(
     { role: 'system', content: await getSystemPrompt() },
     {
       role: 'system',
-      content: lang === 'en'
+      content: lang !== 'ru'
         ? [
             'CHANNEL: Telegram, NOT the website. Hard rules:',
             '1. SHORT. 3–5 lines max. NEVER repeat listing facts (price, area, lease, land, status) in prose — the cards already show all of that. Listing those again is the single most annoying thing you can do here.',
@@ -690,9 +691,9 @@ async function sendText(token: string, chatId: number, text: string): Promise<bo
   } catch (err) { console.error('[balina-tg] sendMessage:', err); return false }
 }
 
-async function sendListingCard(token: string, chatId: number, card: ListingCard, lang: 'ru' | 'en'): Promise<void> {
+async function sendListingCard(token: string, chatId: number, card: ListingCard, lang: Lang): Promise<void> {
   const caption = formatCaption(card, lang)
-  const openLabel = lang === 'en' ? 'Open' : 'Открыть'
+  const openLabel = lang === 'ru' ? 'Открыть' : 'Open'
   const reply_markup = {
     inline_keyboard: [[
       { text: `🔗 ${openLabel}`, url: card.url },
@@ -738,7 +739,7 @@ async function sendListingCard(token: string, chatId: number, card: ListingCard,
 // Compact card caption — title (linked), 1 line of facts, optional
 // 1 line of investment cues. Capped at Telegram's 1024-char caption
 // limit with safety margin.
-function formatCaption(card: ListingCard, lang: 'ru' | 'en'): string {
+function formatCaption(card: ListingCard, lang: Lang): string {
   const facts: string[] = []
   if (card.district) facts.push(escape(card.district))
   if (card.bedrooms != null) facts.push(`${card.bedrooms} BR`)
@@ -758,7 +759,7 @@ function formatCaption(card: ListingCard, lang: 'ru' | 'en'): string {
   ]
   if (investBits.length > 0) lines.push(`<i>${investBits.join(' · ')}</i>`)
   const out = lines.filter(Boolean).join('\n')
-  if (lang === 'en') {
+  if (lang !== 'ru') {
     // simple swap for ru-only labels
     return out.replace(/лизхолд (\d+)л/g, 'lease $1y').replace(/\$(\S+)\/мес/, '$$$1/mo').replace(/(\d+) м²/g, '$1 m²')
   }

@@ -141,7 +141,7 @@ const loadUnitsCached = unstable_cache(
       if (!r.title || !r.slug || r.slug.startsWith('-')) continue
       if (seenApt.has(r.slug)) continue
       seenApt.add(r.slug)
-      const titleSource = (lang === 'en' ? firstString(r.title_en) : null) ?? r.title
+      const titleSource = (lang !== 'ru' ? firstString(r.title_en) : null) ?? r.title
       const title = titleSource.replace(/\s*\|\s*Balinsky\s*$/i, '').trim()
       units.push({
         kind: 'apartment',
@@ -162,7 +162,7 @@ const loadUnitsCached = unstable_cache(
       if (!r.title || !r.slug || r.slug.startsWith('-')) continue
       if (seenVilla.has(r.airtable_id)) continue
       seenVilla.add(r.airtable_id)
-      const titleSource = (lang === 'en' ? firstString(r.title_en) : null) ?? r.title
+      const titleSource = (lang !== 'ru' ? firstString(r.title_en) : null) ?? r.title
       const title = titleSource.replace(/\s*\|\s*Balinsky\s*$/i, '').trim()
       units.push({
         kind: 'villa',

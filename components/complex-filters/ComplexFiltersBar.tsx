@@ -4,7 +4,7 @@ import { Suspense } from 'react'
 import { ComplexMultiSelect } from './ComplexMultiSelect'
 import { useComplexFilterUrl, type FilterView } from './useComplexFilterUrl'
 import type { ComplexFilterState, ComplexFilterOptions } from '@/app/ru/zhilye-kompleksy/_lib'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const COPY = {
   ru: {
@@ -41,7 +41,7 @@ function ResetAll({ activeCount, current, view, lang }: {
       onClick={clearAll}
       className="text-[13px] text-[var(--color-text-muted)] underline-offset-2 hover:underline ml-2"
     >
-      {COPY[lang].resetAll}
+      {pickCopy(COPY, lang).resetAll}
     </button>
   )
 }
@@ -57,7 +57,7 @@ export function ComplexFiltersBar({
   view?: FilterView
   lang?: Lang
 }) {
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const activeCount =
     (state.q.trim() ? 1 : 0) +
     (state.district.length > 0 ? 1 : 0) +

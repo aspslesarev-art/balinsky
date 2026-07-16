@@ -3,9 +3,9 @@
 import { FilterDropdown } from '../FilterDropdown'
 import { useFilterUrl, type FilterView } from './useFilterUrl'
 import type { FilterState } from './FiltersBar'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
-const OPTS_BY_LANG: Record<Lang, { v: 'invest' | 'live'; label: string }[]> = {
+const OPTS_BY_LANG: Record<'ru' | 'en', { v: 'invest' | 'live'; label: string }[]> = {
   ru: [{ v: 'invest', label: 'Под инвестиции' }, { v: 'live', label: 'Для жизни' }],
   en: [{ v: 'invest', label: 'For investment' }, { v: 'live', label: 'To live in' }],
 }
@@ -21,8 +21,8 @@ export function GoalFilter({ current, view = 'list', lang = 'ru' }: {
   lang?: Lang
 }) {
   const { apply } = useFilterUrl(current, view)
-  const opts = OPTS_BY_LANG[lang]
-  const c = COPY[lang]
+  const opts = pickCopy(OPTS_BY_LANG, lang)
+  const c = pickCopy(COPY, lang)
   const active = opts.find(o => o.v === current.goal) ?? null
   const summary = active?.label ?? ''
 

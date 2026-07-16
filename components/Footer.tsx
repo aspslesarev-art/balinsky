@@ -1,11 +1,11 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { Send, Play } from 'lucide-react'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 type Col = { title: string; links: { label: string; href: string }[] }
 
-const COLS_BY_LANG: Record<Lang, Col[]> = {
+const COLS_BY_LANG: Record<'ru' | 'en', Col[]> = {
   ru: [
     {
       title: 'Застройщики',
@@ -99,7 +99,7 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
   ],
 }
 
-const BOTTOM_BY_LANG: Record<Lang, { label: string; href: string }[]> = {
+const BOTTOM_BY_LANG: Record<'ru' | 'en', { label: string; href: string }[]> = {
   ru: [
     { label: 'О нас', href: '/ru/o-balinsky' },
     { label: 'Реклама', href: '/ru/kontakty' },
@@ -122,21 +122,21 @@ const BOTTOM_BY_LANG: Record<Lang, { label: string; href: string }[]> = {
   ],
 }
 
-const LICENSE_BY_LANG: Record<Lang, string> = {
+const LICENSE_BY_LANG: Record<'ru' | 'en', string> = {
   ru: 'Все материалы сайта доступны по лицензии Creative Commons Attribution 4.0 International. Вы должны указать имя автора (создателя) произведения (материала) и стороны атрибуции, уведомление об авторских правах, название лицензии, уведомление об оговорке и ссылку на материал, если они предоставлены вместе с материалом.',
   en: 'All site materials are available under the Creative Commons Attribution 4.0 International licence. You must give appropriate credit to the author of the work, indicate the licence with a notice and link to the material when it is provided alongside the original.',
 }
 
 export function Footer({ lang = 'ru' }: { lang?: Lang }) {
-  const cols = COLS_BY_LANG[lang]
-  const bottom = BOTTOM_BY_LANG[lang]
-  const license = LICENSE_BY_LANG[lang]
+  const cols = pickCopy(COLS_BY_LANG, lang)
+  const bottom = pickCopy(BOTTOM_BY_LANG, lang)
+  const license = pickCopy(LICENSE_BY_LANG, lang)
   return (
     <footer className="mt-auto bg-[var(--color-header-bg)] border-t border-[var(--color-border)]">
       <div className="max-w-[1280px] mx-auto px-6 pt-12 pb-8">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
           <div className="md:col-span-4 lg:col-span-4">
-            <Link href={lang === 'en' ? '/en' : '/'} aria-label="Balinsky" className="inline-block mb-5">
+            <Link href={lang === 'ru' ? '/' : '/en'} aria-label="Balinsky" className="inline-block mb-5">
               <Image src="/logo.svg" alt="Balinsky" width={40} height={40} className="h-10 w-10" />
             </Link>
             <p className="text-[13px] leading-[1.6] text-[var(--color-text-muted)] max-w-[380px]">

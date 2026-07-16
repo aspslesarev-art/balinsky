@@ -8,15 +8,15 @@ import { isHiddenDeveloper } from './hidden-developers'
 import { loadReviewHeat, type HeatCell } from './reviews-heat'
 import { loadAllRental } from './rental'
 import { cdnManifestUrl } from './photo-cdn'
-import { type Lang, switchLangPath } from './i18n'
-import { loadEnTranslations, mergeEnTranslations, type Section } from './en-translations'
+import { type Lang, switchLangPath, tField } from './i18n'
+import { loadTranslations, mergeTranslations, type Section } from './en-translations'
 
 // Build a listing URL for the visitor's language: RU keeps the /ru/... path,
 // EN swaps the section segments to their English form (villy→villas, etc.).
 // The listing slug is identical across languages.
 function listingUrl(pathPrefix: string, slug: string, lang: Lang): string {
   const path = `${pathPrefix}${slug}`
-  return `${SITE_URL}${lang === 'en' ? switchLangPath(path, 'en') : path}`
+  return `${SITE_URL}${lang === 'ru' ? path : switchLangPath(path, lang)}`
 }
 
 // Section holding the Azure EN translations for a listing kind (same cache
@@ -31,10 +31,11 @@ const SECTION_BY_KIND: Partial<Record<ListingCard['kind'], Section>> = {
 // slots directly (not a per-field RU fallback) is what makes an EN-only
 // `ИИ Имя EN` win over an empty `SEO:Title EN`.
 function pickTitle(d: Record<string, unknown>, lang: Lang): string {
-  const en = (f: string) => fs1(d[`${f} EN`]) ?? fs1(d[`${f} En`])
-  const t = lang === 'en'
-    ? (en('SEO:Title') ?? en('ИИ Имя') ?? fs1(d['Имя ENG']) ?? fs1(d['SEO:Title']) ?? fs1(d['ИИ Имя']) ?? fs1(d['Name']))
-    : (fs1(d['SEO:Title']) ?? fs1(d['ИИ Имя']) ?? fs1(d['Name']))
+  // tField resolves the active language with an id/fr → en → ru fallback,
+  // reading both Airtable `<field> LANG` columns and the Azure cache merged in.
+  const t = lang === 'ru'
+    ? (fs1(d['SEO:Title']) ?? fs1(d['ИИ Имя']) ?? fs1(d['Name']))
+    : (tField(d, 'SEO:Title', lang) ?? tField(d, 'ИИ Имя', lang) ?? fs1(d['Имя ENG']) ?? fs1(d['Name']))
   return (t ?? fs1(d['Project']) ?? fs1(d['Developer']) ?? '').replace(/\s*\|\s*Balinsky\s*$/i, '').trim()
 }
 
@@ -744,11 +745,11 @@ async function searchSupabaseTable(
   const sliced = filtered.slice(0, limit)
   // For EN, overlay the Azure translation cache (titles/text) exactly like the
   // site's /en pages do, so chat cards read the same English titles.
-  const enCache = lang === 'en' && SECTION_BY_KIND[kind]
-    ? await loadEnTranslations(SECTION_BY_KIND[kind]!).catch(() => ({}))
+  const trCache = lang !== 'ru' && SECTION_BY_KIND[kind]
+    ? await loadTranslations(SECTION_BY_KIND[kind]!, lang).catch(() => ({}))
     : {}
   const cards = sliced.map(r => {
-    const d = lang === 'en' ? mergeEnTranslations(r.data, r.airtable_id, enCache) : r.data
+    const d = lang !== 'ru' ? mergeTranslations(r.data, r.airtable_id, trCache, lang) : r.data
     const slug = fs1(d['SEO:Slug'])!
     const title = pickTitle(d, lang)
     const districtRaw = fs1(d['Location filter']) ?? fs1(d['Location 2']) ?? fs1(d['Location'])
@@ -1266,8 +1267,8 @@ async function searchSemantic(args: SemanticArgs, lang: Lang = 'ru'): Promise<Se
     const row = rowsByKey.get(`${h.kind}:${h.airtable_id}`)
     if (!row) continue
     const sec = SECTION_BY_KIND[h.kind]
-    const d = lang === 'en' && sec
-      ? mergeEnTranslations(row.data, row.airtable_id, await loadEnTranslations(sec).catch(() => ({})))
+    const d = lang !== 'ru' && sec
+      ? mergeTranslations(row.data, row.airtable_id, await loadTranslations(sec, lang).catch(() => ({})), lang)
       : row.data
     const slug = fs1(d['SEO:Slug']) ?? null
     if (!slug || slug.startsWith('-')) continue

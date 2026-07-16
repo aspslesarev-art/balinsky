@@ -6,7 +6,7 @@ import { useFilterUrl, type FilterView } from './useFilterUrl'
 import type { FilterState } from './FiltersBar'
 import { useCurrency } from '../CurrencyContext'
 import { CURRENCY_RATES, formatPrice } from '@/lib/currency'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const COPY = {
   ru: { from: 'от', to: 'до', clear: 'Сбросить', apply: 'Применить', quick: 'Быстрый выбор' },
@@ -53,7 +53,7 @@ export function PriceRangeFilter({
   const { currency } = useCurrency()
   const rate = CURRENCY_RATES[currency]
   const sym = SYMBOLS[currency] ?? '$'
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
 
   // URL stores USD; the input shows the currently-selected currency.
   const usdToInput = (usd: number | null): string => usd == null ? '' : fmtRu(usd * rate)

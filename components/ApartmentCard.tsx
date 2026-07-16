@@ -5,7 +5,7 @@ import { PhotoSlider } from './PhotoSlider'
 import { useCurrency } from './CurrencyContext'
 import { WishlistButton } from './WishlistButton'
 import { formatPriceExact } from '@/lib/currency'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
 export type ApartmentCardData = {
   slug: string
@@ -44,14 +44,14 @@ const COPY = {
 
 export function ApartmentCard({ a, lang = 'ru' }: { a: ApartmentCardData; lang?: Lang }) {
   const { currency } = useCurrency()
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const price = a.priceUsd != null && Number.isFinite(a.priceUsd)
     ? formatPriceExact(a.priceUsd, currency)
     : null
   const dealLabel = a.dealType === 'resale' ? c.resale
     : a.dealType === 'secondary' ? c.secondary
     : null
-  const detailHref = lang === 'en' ? `/en/apartments/o/${a.slug}` : `/ru/apartamenty/o/${a.slug}`
+  const detailHref = switchLangPath(`/ru/apartamenty/o/${a.slug}`, lang)
 
   return (
     <Link

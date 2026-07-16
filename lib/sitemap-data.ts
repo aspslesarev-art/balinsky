@@ -14,6 +14,7 @@ import { loadAllEvents } from '@/lib/events'
 import { loadAllKnowledge } from '@/lib/knowledge'
 import { enKnowledgeSlug } from '@/lib/knowledge-en-slugs'
 import { normalizeSlug } from '@/lib/slug-normalize'
+import { switchLangPath } from '@/lib/i18n'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
@@ -41,12 +42,19 @@ function pairEntry(args: {
   const { ruPath, enPath, lastModified, changeFrequency, priority } = args
   const ruUrl = `${SITE_URL}${ruPath}`
   const enUrl = `${SITE_URL}${enPath}`
+  // id/fr paths are derived from the EN path — its segments are the
+  // canonical keys of SEGMENT_TABLE, so switchLangPath maps them cleanly
+  // (e.g. /en/bali-property-investment/canggu → /id/investasi-properti-bali/canggu).
+  const idUrl = `${SITE_URL}${switchLangPath(enPath, 'id')}`
+  const frUrl = `${SITE_URL}${switchLangPath(enPath, 'fr')}`
   // x-default = RU per our metadata.alternates convention (the site's
   // origin language). Mirrors what generateMetadata() emits per page.
-  const alternates = { languages: { ru: ruUrl, en: enUrl, 'x-default': ruUrl } }
+  const alternates = { languages: { ru: ruUrl, en: enUrl, id: idUrl, fr: frUrl, 'x-default': ruUrl } }
   return [
     { url: ruUrl, lastModified, changeFrequency, priority, alternates },
     { url: enUrl, lastModified, changeFrequency, priority, alternates },
+    { url: idUrl, lastModified, changeFrequency, priority, alternates },
+    { url: frUrl, lastModified, changeFrequency, priority, alternates },
   ]
 }
 

@@ -12,7 +12,7 @@ import {
   Plane, Car, Building2, Users, Scale, MapPin, Send,
   Clock, Star, Sparkles, ChevronRight,
 } from 'lucide-react'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
 const COPY = {
   ru: {
@@ -202,8 +202,8 @@ const COPY = {
 } as const
 
 export function InvestTourView({ lang }: { lang: Lang }) {
-  const c = COPY[lang]
-  const home = lang === 'en' ? '/en' : '/ru'
+  const c = pickCopy(COPY, lang)
+  const home = switchLangPath('/ru', lang)
   const contact = botLink('manager', '')
 
   // FAQ JSON-LD so Google can pick this up as a rich-snippet candidate.

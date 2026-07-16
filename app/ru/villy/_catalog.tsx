@@ -14,7 +14,7 @@ import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { SubscribeCTA } from '@/components/SubscribeCTA'
 import { buildListHref, buildMapHref } from '@/lib/villa-filter-href'
 import { loadCatalogPage, buildHeading, buildHeadingEn, type VillaFilterState } from './_lib'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
 const COPY = {
   ru: {
@@ -60,7 +60,7 @@ export async function VillasCatalog({
   const { cards, totalCount, totalPages, hasMore, options, page: actualPage } =
     await loadCatalogPage(filters, page, lang)
   const isSearch = filters.q.trim().length > 0
-  const copy = COPY[lang]
+  const copy = pickCopy(COPY, lang)
 
   // Single-district filter with no other narrowing → show the rich
   // SEO intro block for that district above the grid. Strict check
@@ -82,8 +82,8 @@ export async function VillasCatalog({
   // виллу в Нуса Дуа, Бали — 47 вилл 2026»). Other combos keep the
   // descriptive buildHeading so each combo page has a unique H1.
   const heading = districtMeta?.heading
-    ?? (lang === 'en' ? buildHeadingEn(filters) : buildHeading(filters))
-  const sectionRoot = lang === 'en' ? '/en/villas' : '/ru/villy'
+    ?? (lang === 'ru' ? buildHeading(filters) : buildHeadingEn(filters))
+  const sectionRoot = switchLangPath('/ru/villy', lang)
 
   return (
     <>

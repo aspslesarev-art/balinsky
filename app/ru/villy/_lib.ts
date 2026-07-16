@@ -5,7 +5,7 @@ import { translit, hasCyrillic } from '@/lib/translit'
 import { loadVillaStyles } from '@/lib/villa-styles'
 import { loadFeatureFlagsMap, FEATURE_FLAGS, FEATURE_LABELS } from '@/lib/listing-features'
 import { normalizeSlug } from '@/lib/slug-normalize'
-import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
+import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
 import { getDistrictCommercialMeta } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { enLabel, type FilterDim } from '@/lib/filter-i18n'
@@ -14,6 +14,7 @@ import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import { loadViewCounts, smartSort } from '@/lib/catalog-rank'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
 import { cdnRewriteManifest } from '@/lib/photo-cdn'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/villa-photos/_manifest.json`
@@ -414,12 +415,12 @@ function buildLabelMap(rows: EnrichedRow[], colRu: string, colEn: string): Map<s
 export function buildOptions(
   allRows: EnrichedRow[],
   current: VillaFilterState,
-  lang: 'ru' | 'en' = 'ru',
+  lang: Lang = 'ru',
 ): VillaFilterOptions {
   // Per-filter EN translation maps. Add `<RU column> EN` columns in
   // Airtable to translate filter labels — until then EN catalogues
   // render the literal column name as a placeholder.
-  const enMap = lang === 'en' ? {
+  const enMap = lang !== 'ru' ? {
     district:  buildLabelMap(allRows, 'Location 2', 'Location 2 EN'),
     bedrooms:  new Map<string, string>(), // numbers, no translation
     status:    buildLabelMap(allRows, 'Статус', 'Статус EN'),
@@ -498,13 +499,13 @@ export function buildOptions(
     en: { primary: 'From developer', resale: 'Resale',      secondary: 'Secondary' },
   }
   const dealType: Option[] = (['primary', 'resale', 'secondary'] as const)
-    .map(v => ({ value: v, label: DEAL_LABELS[lang][v], count: dealCounts.get(v) ?? 0 }))
+    .map(v => ({ value: v, label: pickCopy(DEAL_LABELS, lang)[v], count: dealCounts.get(v) ?? 0 }))
     .filter(o => o.count > 0)
 
   // Vision feature flags — fixed vocabulary, localized labels, count > 0 only.
   const featureCounts = countsExcludingDim('features', e => e.features)
   const features: Option[] = FEATURE_FLAGS
-    .map(fl => ({ value: fl, label: FEATURE_LABELS[fl][lang], count: featureCounts.get(fl) ?? 0 }))
+    .map(fl => ({ value: fl, label: pickCopy(FEATURE_LABELS[fl], lang), count: featureCounts.get(fl) ?? 0 }))
     .filter(o => o.count > 0)
 
   // Apply EN-translation pass — `value` keeps its original (URL slug or
@@ -524,7 +525,7 @@ export function toCard(
   e: EnrichedRow,
   manifest: Record<string, string[]>,
   devStats?: Map<string, { ready: number; total: number }>,
-  lang: 'ru' | 'en' = 'ru',
+  lang: Lang = 'ru',
 ): VillaCard | null {
   const d = e.data
   // Canonicalise the Airtable slug at the catalog level so internal
@@ -536,16 +537,16 @@ export function toCard(
   // already merged into data via mergeEnTranslations). Without the EN
   // branch, /en/villas would surface «Вилла Origins в Nyanyi» on cards
   // while the RU detail page renders the same listing as English.
-  const titleRaw = lang === 'en'
-    ? (cleanTitle(firstString(d['SEO:Title EN'])) ??
+  const titleRaw = lang === 'ru'
+    ? (cleanTitle(firstString(d['SEO:Title'])) ??
+       firstString(d['ИИ Имя']) ??
+       firstString(d['Имя ENG']) ??
+       firstString(d['Name']))
+    : (cleanTitle(firstString(d['SEO:Title EN'])) ??
        firstString(d['ИИ Имя EN']) ??
        firstString(d['Имя ENG']) ??
        cleanTitle(firstString(d['SEO:Title'])) ??
        firstString(d['ИИ Имя']) ??
-       firstString(d['Name']))
-    : (cleanTitle(firstString(d['SEO:Title'])) ??
-       firstString(d['ИИ Имя']) ??
-       firstString(d['Имя ENG']) ??
        firstString(d['Name']))
   if (!titleRaw) return null
   // Optional investor-relevant fields piped into the wishlist snapshot
@@ -668,7 +669,7 @@ async function _loadAllInternal(): Promise<CachedAll> {
     sb.from('raw_villas').select(VILLA_SELECT).limit(1000),
     loadJson<Record<string, string[]>>(cdnManifestUrl(PHOTO_MANIFEST_URL, 600), {}),
     loadVillaStyles(),
-    loadEnTranslations('villas'),
+    loadAllTranslations('villas'),
     loadViewCounts('villa'),
     loadFeatureFlagsMap('villa'),
   ])
@@ -679,7 +680,7 @@ async function _loadAllInternal(): Promise<CachedAll> {
   const enriched = rows
     .filter(r => r.data?.['Опубликовать'] === true)
     .filter(r => !isHiddenDeveloper(firstString(r.data['Developer1']), firstString(r.data['Developer'])))
-    .map(r => ({ ...r, data: mergeEnTranslations(r.data, r.airtable_id, enCache) }))
+    .map(r => ({ ...r, data: mergeAllTranslations(r.data, r.airtable_id, enCache) }))
     .map(r => enrich(r, styles, featuresMap))
     .map(e => ({ ...e, views: viewCounts[e.id] ?? 0 }))
   return { enriched, manifest }
@@ -701,7 +702,7 @@ export function buildAllCards(
   scores?: Map<string, { composite: number; goodCapRate: number | null; rentalRestricted?: boolean }>,
   sort: SortOrder = 'investment-desc',
   devStats?: Map<string, { ready: number; total: number }>,
-  lang: 'ru' | 'en' = 'ru',
+  lang: Lang = 'ru',
 ): VillaCard[] {
   let filtered = enriched.filter(e => passes(e, filters))
   const isSearch = filters.q.trim().length > 0
@@ -763,7 +764,7 @@ export type CatalogPage = {
 export async function loadCatalogPage(
   filters: VillaFilterState,
   page: number,
-  lang: 'ru' | 'en' = 'ru',
+  lang: Lang = 'ru',
   sort: SortOrder = 'investment-desc',
 ): Promise<CatalogPage> {
   const safePage = Math.max(1, Math.floor(page))

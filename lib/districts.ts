@@ -4,7 +4,7 @@
 // intro block above the grid — gives Google and the visitor 400-600
 // words of real content per district, not just a property list.
 
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 // Long-tail districts (beyond the ~12 curated below) generated from
 // assistant_kb guides + real stats by scripts/kb-district-pages.mjs.
 import generatedDistricts from './districts-generated.json'
@@ -467,7 +467,7 @@ export function getDistrictCopy(slug: string, lang: Lang): DistrictCopy | null {
   // Curated entries win; generated long-tail fills the rest.
   const bundle = DISTRICTS[slug] ?? GENERATED_DISTRICTS[slug]
   if (!bundle) return null
-  return bundle[lang]
+  return pickCopy(bundle, lang)
 }
 
 // Commercial title / heading / description for single-district hub pages.
@@ -478,7 +478,7 @@ export function getDistrictCopy(slug: string, lang: Lang): DistrictCopy | null {
 // editorial district data.
 export type Kind = 'villa' | 'apartment' | 'complex'
 
-const NOUN: Record<Lang, Record<Kind, { sing: string; plural: (n: number) => string }>> = {
+const NOUN: Record<'ru' | 'en', Record<Kind, { sing: string; plural: (n: number) => string }>> = {
   ru: {
     villa:     { sing: 'виллу',  plural: n => pluralRu(n, 'вилла', 'виллы', 'вилл') },
     apartment: { sing: 'квартиру', plural: n => pluralRu(n, 'апартамент', 'апартамента', 'апартаментов') },
@@ -509,7 +509,7 @@ export function getDistrictCommercialMeta(
 ): { title: string; heading: string; description: string } | null {
   const copy = getDistrictCopy(slug, lang)
   if (!copy) return null
-  const n = NOUN[lang][kind]
+  const n = pickCopy(NOUN, lang)[kind]
   const priceFrom = copy.highlights.find(h => /entry|стартовая|from/i.test(h.label))?.value
   const yieldRange = copy.highlights.find(h => /yield|доходность/i.test(h.label))?.value
 

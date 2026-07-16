@@ -1,4 +1,4 @@
-import { applyManifestTranslation, loadEnTranslations } from '@/lib/en-translations'
+import { applyManifestTranslation, loadTranslations } from '@/lib/en-translations'
 import type { Lang } from '@/lib/i18n'
 
 export type NewsDeveloper = { name: string; slug: string | null }
@@ -60,14 +60,14 @@ export async function loadAllNews(lang: Lang = 'ru'): Promise<NewsItem[]> {
   // /ru/novosti/<en-slug>, which 404s because the RU manifest only knows
   // the Cyrillic-transliterated slug. With the alias in place, RU lookup
   // resolves the EN slug just like the EN tree resolves the RU one.
-  const cache = await loadEnTranslations('news')
+  const cache = await loadTranslations('news', lang)
   return items.map(item => {
-    const translated = lang === 'en' ? applyManifestTranslation(item, cache, EN_FIELDS) : item
+    const translated = lang !== 'ru' ? applyManifestTranslation(item, cache, EN_FIELDS) : item
     // Compute the EN-derived slug from whatever EN title we have in cache —
     // even on the RU branch, where we'll only stash it into aliases.
     const enTitle = cache[item.id]?.title
     const enSlug = enTitle ? slugifyEn(enTitle) : ''
-    if (lang === 'en' && enSlug && enSlug !== translated.slug) {
+    if (lang !== 'ru' && enSlug && enSlug !== translated.slug) {
       const aliases = Array.from(new Set([item.slug, ...(item.aliases ?? [])]))
         .filter(s => s && s !== enSlug)
       return { ...translated, slug: enSlug, aliases }

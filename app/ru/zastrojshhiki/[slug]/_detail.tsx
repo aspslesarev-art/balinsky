@@ -23,10 +23,10 @@ import { loadAllEvents } from '@/lib/events'
 import { loadVideosByDeveloperWithComplexes } from '@/lib/videos'
 import { VideoGrid } from '@/components/VideoGrid'
 import { PageViewTracker } from '@/components/PageViewTracker'
-import { tField, type Lang } from '@/lib/i18n'
+import { tField, pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import { loadKbPageContent } from '@/lib/kb-page-content'
-import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
+import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
@@ -82,7 +82,7 @@ export const _loadAllDevelopers = unstable_cache(
   async (): Promise<DeveloperRow[]> => {
     const [{ data, error }, enCache] = await Promise.all([
       sb.from('raw_developers').select(DEV_SELECT).limit(200),
-      loadEnTranslations('developers'),
+      loadAllTranslations('developers'),
     ])
     if (error) throw new Error(`raw_developers: ${error.message}`)
     const raw = (data ?? []) as unknown as Record<string, unknown>[]
@@ -93,7 +93,7 @@ export const _loadAllDevelopers = unstable_cache(
       return {
         airtable_id: rr.airtable_id as string,
         logo_url: (rr.logo_url ?? null) as string | null,
-        data: mergeEnTranslations(d, rr.airtable_id as string, enCache),
+        data: mergeAllTranslations(d, rr.airtable_id as string, enCache),
       }
     })
   },
@@ -304,15 +304,15 @@ export async function generateDeveloperMetadata(slug: string, lang: Lang) {
     ?? firstString(dev.data['AI Описание'])
   const description = aiDesc
     ? aiDesc.slice(0, 160).trim() + (aiDesc.length > 160 ? '…' : '')
-    : (lang === 'en'
-      ? `${name} — Bali property developer. Score across four dimensions, projects, commission, reliability.`
-      : `Застройщик ${name} на Бали — рейтинг по 4 направлениям, проекты, комиссия, надёжность.`)
+    : (lang === 'ru'
+      ? `Застройщик ${name} на Бали — рейтинг по 4 направлениям, проекты, комиссия, надёжность.`
+      : `${name} — Bali property developer. Score across four dimensions, projects, commission, reliability.`)
   const ruPath = `/ru/zastrojshhiki/${slug}`
   const enPath = `/en/developers/${slug}`
-  const path = lang === 'en' ? enPath : ruPath
-  const title = lang === 'en'
-    ? `${name} — Bali property developer | projects, score, reviews | Balinsky`
-    : `Застройщик ${name} на Бали — проекты, рейтинг, отзывы | Balinsky`
+  const path = switchLangPath(ruPath, lang)
+  const title = lang === 'ru'
+    ? `Застройщик ${name} на Бали — проекты, рейтинг, отзывы | Balinsky`
+    : `${name} — Bali property developer | projects, score, reviews | Balinsky`
   return {
     title, description,
     alternates: {
@@ -320,7 +320,7 @@ export async function generateDeveloperMetadata(slug: string, lang: Lang) {
       languages: { ru: `${SITE_URL}${ruPath}`, en: `${SITE_URL}${enPath}` , 'x-default': `${SITE_URL}${ruPath}`},
     },
     openGraph: {
-      title: lang === 'en' ? `${name} — Bali property developer` : `${name} — застройщик на Бали`,
+      title: lang === 'ru' ? `${name} — застройщик на Бали` : `${name} — Bali property developer`,
       description, type: 'website' as const,
       url: `${SITE_URL}${path}`,
       images: dev.logo_url ? [{ url: dev.logo_url }] : [],
@@ -333,7 +333,7 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
   if (!dev) notFound()
   if (dev.data['Публикация'] !== true) notFound()
 
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const name = firstString(dev.data['Developer']) ?? slug
   const logoUrl = dev.logo_url ?? logoFromJson(dev.data)
   const aiTextRaw = tField(dev.data, 'SEO Text', lang)
@@ -380,7 +380,7 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
     })),
   }
 
-  const detailUrl = lang === 'en' ? `${SITE_URL}/en/developers/${slug}` : `${SITE_URL}/ru/zastrojshhiki/${slug}`
+  const detailUrl = `${SITE_URL}${switchLangPath(`/ru/zastrojshhiki/${slug}`, lang)}`
   const orgJsonLd: Record<string, unknown> = {
     '@context': 'https://schema.org', '@type': 'RealEstateAgent',
     name, url: detailUrl,
@@ -402,14 +402,14 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
     }
   }
 
-  const home = lang === 'en' ? '/en' : '/ru'
-  const devsRoot = lang === 'en' ? '/en/developers' : '/ru/zastrojshhiki'
-  const complexesRoot = lang === 'en' ? '/en/complexes' : '/ru/zhilye-kompleksy'
-  const apartmentsRoot = lang === 'en' ? '/en/apartments' : '/ru/apartamenty'
-  const villasRoot = lang === 'en' ? '/en/villas' : '/ru/villy'
-  const newsBase = lang === 'en' ? '/en/news' : '/ru/novosti'
-  const promoBase = lang === 'en' ? '/en/promo' : '/ru/akcii'
-  const eventsBase = lang === 'en' ? '/en/events' : '/ru/meropriyatiya'
+  const home = switchLangPath('/ru', lang)
+  const devsRoot = switchLangPath('/ru/zastrojshhiki', lang)
+  const complexesRoot = switchLangPath('/ru/zhilye-kompleksy', lang)
+  const apartmentsRoot = switchLangPath('/ru/apartamenty', lang)
+  const villasRoot = switchLangPath('/ru/villy', lang)
+  const newsBase = switchLangPath('/ru/novosti', lang)
+  const promoBase = switchLangPath('/ru/akcii', lang)
+  const eventsBase = switchLangPath('/ru/meropriyatiya', lang)
 
   return (
     <>
@@ -502,7 +502,7 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
         {aiText && (
           <section className="mb-10">
             <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">{c.aboutHeading}</h2>
-            <ExpandableText className="max-w-3xl" more={lang === 'en' ? 'Read more' : 'Подробнее'} less={lang === 'en' ? 'Show less' : 'Свернуть'}>
+            <ExpandableText className="max-w-3xl" more={lang === 'ru' ? 'Подробнее' : 'Read more'} less={lang === 'ru' ? 'Свернуть' : 'Show less'}>
               <div className="prose-balinsky text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
                 {aiText}
               </div>

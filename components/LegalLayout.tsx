@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
-import type { Lang } from '@/lib/i18n'
+import { switchLangPath, type Lang } from '@/lib/i18n'
 
 // Shared shell for the legal / contact pages so the four documents
 // (privacy, terms, cookie, contact) keep the same typography rhythm
@@ -20,13 +20,13 @@ export function LegalLayout({
   breadcrumbLabel: string
   children: ReactNode
 }) {
-  const home = lang === 'en' ? '/en' : '/ru'
+  const home = switchLangPath('/ru', lang)
   return (
     <>
       <Header />
       <PageContainer>
         <Breadcrumbs items={[
-          { label: lang === 'en' ? 'Home' : 'Главная', href: home },
+          { label: lang === 'ru' ? 'Главная' : 'Home', href: home },
           { label: breadcrumbLabel },
         ]} />
         <article className="mt-6 mb-16 max-w-3xl">

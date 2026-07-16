@@ -14,7 +14,7 @@ import type { FilterState } from '@/components/filters/FiltersBar'
 import { SubscribeCTA } from '@/components/SubscribeCTA'
 import { buildListHref, buildMapHref } from '@/lib/filter-href'
 import { loadCatalogPage, buildHeading, buildHeadingEn } from './_lib'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
 const COPY = {
   ru: {
@@ -61,7 +61,7 @@ export async function ApartamentyCatalog({
   const { cards, totalCount, totalPages, hasMore, options, page: actualPage } =
     await loadCatalogPage(filters, page, lang)
   const isSearch = filters.q.trim().length > 0
-  const copy = COPY[lang]
+  const copy = pickCopy(COPY, lang)
 
   const isSingleDistrictHub = filters.district.length === 1
     && filters.bedrooms.length === 0
@@ -75,8 +75,8 @@ export async function ApartamentyCatalog({
   const districtCopy = districtSlug ? getDistrictCopy(districtSlug, lang) : null
   const districtMeta = districtSlug ? getDistrictCommercialMeta(districtSlug, lang, 'apartment', totalCount) : null
   const heading = districtMeta?.heading
-    ?? (lang === 'en' ? buildHeadingEn(filters) : buildHeading(filters))
-  const sectionRoot = lang === 'en' ? '/en/apartments' : '/ru/apartamenty'
+    ?? (lang === 'ru' ? buildHeading(filters) : buildHeadingEn(filters))
+  const sectionRoot = switchLangPath('/ru/apartamenty', lang)
 
   return (
     <>

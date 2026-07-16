@@ -8,7 +8,7 @@ import { Home, Building, Building2, HardHat, Menu, X } from 'lucide-react'
 import { LangSwitch } from './LangSwitch'
 import { CurrencyToggle } from './CurrencyContext'
 import { WishlistHeaderLink } from './WishlistHeaderLink'
-import { t, type Lang } from '@/lib/i18n'
+import { t, detectLang, localizeSegment, type Lang } from '@/lib/i18n'
 
 type NavKey = 'villy' | 'apartamenty' | 'zhilye-kompleksy' | 'zastrojshhiki' | 'arenda'
 
@@ -28,7 +28,7 @@ export function Header({ active }: { active?: NavKey }) {
   // open forces it visible so the close button never scrolls away.
   const [hidden, setHidden] = useState(false)
   const pathname = usePathname() ?? ''
-  const lang: Lang = pathname.startsWith('/en') ? 'en' : 'ru'
+  const lang: Lang = detectLang(pathname)
 
   useEffect(() => {
     let lastY = window.scrollY
@@ -68,7 +68,7 @@ export function Header({ active }: { active?: NavKey }) {
         <button
           type="button"
           className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg text-[var(--color-text)]"
-          aria-label={lang === 'en' ? (open ? 'Close menu' : 'Open menu') : (open ? 'Закрыть меню' : 'Открыть меню')}
+          aria-label={lang === 'ru' ? (open ? 'Закрыть меню' : 'Открыть меню') : (open ? 'Close menu' : 'Open menu')}
           aria-expanded={open}
           onClick={() => setOpen(v => !v)}
         >
@@ -83,9 +83,9 @@ export function Header({ active }: { active?: NavKey }) {
         </Link>
 
         <nav className="hidden md:flex items-center gap-8 h-full">
-          {NAV.map(({ key, ru, en, labelKey, Icon }) => {
+          {NAV.map(({ key, labelKey, Icon }) => {
             const isActive = key === active
-            const href = lang === 'en' ? en.href : ru.href
+            const href = `/${lang}/${localizeSegment(key, lang)}`
             const label = t(labelKey, lang)
             return (
               <Link
@@ -130,9 +130,9 @@ export function Header({ active }: { active?: NavKey }) {
               <Image src="/logo.svg" alt="Balinsky" width={40} height={40} className="h-10 w-10" priority />
               <span className="text-[18px] font-semibold tracking-tight text-[#1A1A1A]">Balinsky</span>
             </Link>
-            {NAV.map(({ key, ru, en, labelKey, Icon }) => {
+            {NAV.map(({ key, labelKey, Icon }) => {
               const isActive = key === active
-              const href = lang === 'en' ? en.href : ru.href
+              const href = `/${lang}/${localizeSegment(key, lang)}`
               const label = t(labelKey, lang)
               return (
                 <Link

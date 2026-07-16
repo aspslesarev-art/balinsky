@@ -1,4 +1,4 @@
-import { applyManifestTranslation, loadEnTranslations } from '@/lib/en-translations'
+import { applyManifestTranslation, loadTranslations } from '@/lib/en-translations'
 import type { Lang } from '@/lib/i18n'
 
 export type EventDev = { name: string; slug: string | null }
@@ -39,7 +39,7 @@ async function loadRawEvents(): Promise<EventItem[]> {
 export async function loadAllEvents(lang: Lang = 'ru'): Promise<EventItem[]> {
   const items = await loadRawEvents()
   if (lang === 'ru' || items.length === 0) return items
-  const cache = await loadEnTranslations('events')
+  const cache = await loadTranslations('events', lang)
   return items.map(item => applyManifestTranslation(item, cache, EN_FIELDS))
 }
 

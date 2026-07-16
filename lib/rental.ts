@@ -1,4 +1,4 @@
-import { applyManifestTranslation, loadEnTranslations } from '@/lib/en-translations'
+import { applyManifestTranslation, loadTranslations } from '@/lib/en-translations'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
 import { normalizeSlug } from '@/lib/slug-normalize'
 import type { Lang } from '@/lib/i18n'
@@ -70,7 +70,7 @@ async function loadRawRental(): Promise<RentalItem[]> {
 export async function loadAllRental(lang: Lang = 'ru'): Promise<RentalItem[]> {
   const items = await loadRawRental()
   if (lang === 'ru' || items.length === 0) return items
-  const cache = await loadEnTranslations('rental')
+  const cache = await loadTranslations('rental', lang)
   return items.map(item => applyManifestTranslation(item, cache, EN_FIELDS))
 }
 

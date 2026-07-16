@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Star, MapPin, ExternalLink, ChevronDown } from 'lucide-react'
 import type { NearbyCategory, NearbyPlace } from '@/lib/nearby-places'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const ICONS: Record<string, string> = {
   beach: '🏝️',
@@ -48,8 +48,8 @@ const COPY = {
 } as const
 
 function fmtDistance(km: number, lang: Lang): string {
-  const mUnit = lang === 'en' ? 'm' : 'м'
-  const kmUnit = lang === 'en' ? 'km' : 'км'
+  const mUnit = lang === 'ru' ? 'м' : 'm'
+  const kmUnit = lang === 'ru' ? 'км' : 'km'
   if (km < 1) return `${Math.round(km * 1000)} ${mUnit}`
   return `${km.toFixed(1)} ${kmUnit}`
 }
@@ -63,7 +63,7 @@ export function NearbyPlaces({
   byCategory: Record<string, NearbyPlace[]>
   lang?: Lang
 }) {
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const available = categories.filter(cat => (byCategory[cat.key] ?? []).length > 0)
   const [active, setActive] = useState<string | null>(available[0]?.key ?? null)
   // Desktop shows the first 3 place cards (one row); the rest hide behind a
@@ -95,7 +95,7 @@ export function NearbyPlaces({
   const places: NearbyPlace[] = active
     ? [...(byCategory[active] ?? [])].sort((a, b) => a.distanceKm - b.distanceKm)
     : []
-  const numberLocale = lang === 'en' ? 'en-GB' : 'ru-RU'
+  const numberLocale = ({ ru: 'ru-RU', en: 'en-GB', id: 'id-ID', fr: 'fr-FR' } as const)[lang]
 
   return (
     <section className="mb-10">
@@ -116,7 +116,7 @@ export function NearbyPlaces({
         {available.map(cat => {
           const isActive = cat.key === active
           const count = byCategory[cat.key]?.length ?? 0
-          const title = lang === 'en' ? (TITLE_EN[cat.key] ?? cat.title) : cat.title
+          const title = lang === 'ru' ? cat.title : (TITLE_EN[cat.key] ?? cat.title)
           return (
             <button
               key={cat.key}
@@ -142,7 +142,7 @@ export function NearbyPlaces({
           onClick={() => setExpanded(v => !v)}
           className="hidden md:inline-flex items-center gap-1 mt-2.5 text-[13px] font-medium text-[var(--color-primary)] hover:gap-1.5 transition-all cursor-pointer"
         >
-          {expanded ? (lang === 'en' ? 'Collapse' : 'Свернуть') : (lang === 'en' ? 'Show all' : 'Показать все')}
+          {expanded ? (lang === 'ru' ? 'Свернуть' : 'Collapse') : (lang === 'ru' ? 'Показать все' : 'Show all')}
           <ChevronDown size={15} className={`transition-transform ${expanded ? 'rotate-180' : ''}`} />
         </button>
       )}
@@ -205,8 +205,8 @@ export function NearbyPlaces({
           className="hidden md:inline-flex items-center gap-1 mt-4 text-[13px] font-medium text-[var(--color-primary)] hover:gap-1.5 transition-all cursor-pointer"
         >
           {placesExpanded
-            ? (lang === 'en' ? 'Collapse' : 'Свернуть')
-            : (lang === 'en' ? `Show the rest · ${places.length - 3}` : `Показать остальные · ${places.length - 3}`)}
+            ? (lang === 'ru' ? 'Свернуть' : 'Collapse')
+            : (lang === 'ru' ? `Показать остальные · ${places.length - 3}` : `Show the rest · ${places.length - 3}`)}
           <ChevronDown size={15} className={`transition-transform ${placesExpanded ? 'rotate-180' : ''}`} />
         </button>
       )}

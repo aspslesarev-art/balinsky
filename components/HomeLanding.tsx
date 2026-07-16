@@ -42,7 +42,7 @@ import {
   VizYield, VizCompetitors, VizNearby, VizDocs, VizDeveloper, VizFootage,
   SafetyFlow,
 } from '@/components/LandingVisuals'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 import { cdnBucketBase, cdnManifestUrl } from '@/lib/photo-cdn'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -385,8 +385,8 @@ async function loadStats() {
 // === COMPONENT =======================================================
 
 export async function HomeLanding({ lang }: { lang: Lang }) {
-  const c = COPY[lang]
-  const r = ROUTES[lang]
+  const c = pickCopy(COPY, lang)
+  const r = pickCopy(ROUTES, lang)
   const [stats, topVillas, topComplexes, collections, finderItems] = await Promise.all([
     loadStats(),
     loadTopVillas(lang),

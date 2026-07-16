@@ -71,7 +71,54 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
     },
   }
 
-  const m = (lang === 'en' ? en : ru)[kind]
+  const id: Record<CategoryKind, CategoryMeta> = {
+    villas: {
+      title: `${n} vila di Bali${from ? ` mulai ${from}` : ''} dengan cek PBG/SLF | Balinsky`,
+      description: `${n} vila di Bali${from && to ? ` dari ${from} hingga ${to}` : from ? ` mulai ${from}` : ''}${dev ? ` dari ${dev} pengembang tepercaya` : ''}. Pererenan, Uluwatu, Ubud, Sanur. Video langsung dari lokasi, kontak langsung.`,
+    },
+    apartments: {
+      title: `${n} apartemen di Bali${from ? ` mulai ${from}` : ''} | Balinsky`,
+      description: `${n} apartemen di kompleks tepercaya. Berawa, Pererenan, Pandawa. Perusahaan pengelola, imbal hasil sewa 8–15%, promo dan cicilan.`,
+    },
+    complexes: {
+      title: `${n} kompleks hunian di Bali dengan cek PBG/SLF | Balinsky`,
+      description: `${n} kompleks di Bali dengan infrastruktur. Cek PBG/SLF/RDTR, tanggal serah terima nyata${dev ? `, promo dari ${dev} pengembang` : ''}.`,
+    },
+    developers: {
+      title: `${n} pengembang di Bali dengan peringkat | Balinsky`,
+      description: `${n} pengembang Bali dengan peringkat 4 kriteria: kualitas, pengalaman, teknik, pengelolaan. Proyek selesai, pembangunan aktif, promo.`,
+    },
+    rental: {
+      title: `Sewa di Bali: ${n} properti bulanan & harian | Balinsky`,
+      description: `${n} pilihan sewa di Bali. Vila, apartemen, rumah. Bulanan dan harian. Kontak langsung pemilik.`,
+    },
+  }
+
+  const fr: Record<CategoryKind, CategoryMeta> = {
+    villas: {
+      title: `${n} villas à Bali${from ? ` à partir de ${from}` : ''} avec vérification PBG/SLF | Balinsky`,
+      description: `${n} villas à Bali${from && to ? ` de ${from} à ${to}` : from ? ` à partir de ${from}` : ''}${dev ? ` de ${dev} promoteurs vérifiés` : ''}. Pererenan, Uluwatu, Ubud, Sanur. Vidéo sur place, contacts directs.`,
+    },
+    apartments: {
+      title: `${n} appartements à Bali${from ? ` à partir de ${from}` : ''} | Balinsky`,
+      description: `${n} appartements dans des résidences vérifiées. Berawa, Pererenan, Pandawa. Sociétés de gestion, rendement locatif 8–15%, offres et paiements échelonnés.`,
+    },
+    complexes: {
+      title: `${n} résidences à Bali avec vérification PBG/SLF | Balinsky`,
+      description: `${n} résidences à Bali avec infrastructures. Vérification PBG/SLF/RDTR, dates de livraison réelles${dev ? `, offres de ${dev} promoteurs` : ''}.`,
+    },
+    developers: {
+      title: `${n} promoteurs à Bali avec notation | Balinsky`,
+      description: `${n} promoteurs de Bali notés sur 4 critères : qualité, expérience, ingénierie, gestion. Projets livrés, chantiers actifs, offres.`,
+    },
+    rental: {
+      title: `Location à Bali : ${n} biens au mois et à la journée | Balinsky`,
+      description: `${n} options de location à Bali. Villas, appartements, maisons. Au mois et à la journée. Contacts directs des propriétaires.`,
+    },
+  }
+
+  const byLang: Record<Lang, Record<CategoryKind, CategoryMeta>> = { ru, en, id, fr }
+  const m = byLang[lang][kind]
   // Collapse any double spaces left when an optional stat was empty.
   return {
     title: m.title.replace(/\s{2,}/g, ' ').replace(/\s+\|/, ' |').trim(),

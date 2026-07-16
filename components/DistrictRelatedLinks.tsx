@@ -7,7 +7,7 @@
 
 import Link from 'next/link'
 import { ArrowRight, HardHat, Building2, Tag, Newspaper, TrendingUp } from 'lucide-react'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
 const COPY = {
   ru: {
@@ -42,21 +42,20 @@ export function DistrictRelatedLinks({
   // So we don't link back to the page the visitor is already on
   currentKind?: 'villa' | 'apartment' | 'complex'
 }) {
-  const c = COPY[lang]
-  const isEn = lang === 'en'
-  const devsHref     = isEn ? '/en/developers' : '/ru/zastrojshhiki'
-  const complexesUrl = (isEn ? '/en/complexes' : '/ru/zhilye-kompleksy') + `/${districtSlug}`
-  const villasUrl    = (isEn ? '/en/villas' : '/ru/villy') + `/${districtSlug}`
-  const aptsUrl      = (isEn ? '/en/apartments' : '/ru/apartamenty') + `/${districtSlug}`
-  const promoHref    = isEn ? '/en/promo' : '/ru/akcii'
-  const newsHref     = isEn ? '/en/news' : '/ru/novosti'
-  const pillarHref   = isEn ? '/en/bali-property-investment' : '/ru/investicii-v-nedvizhimost-bali'
+  const c = pickCopy(COPY, lang)
+  const devsHref     = switchLangPath('/ru/zastrojshhiki', lang)
+  const complexesUrl = switchLangPath('/ru/zhilye-kompleksy', lang) + `/${districtSlug}`
+  const villasUrl    = switchLangPath('/ru/villy', lang) + `/${districtSlug}`
+  const aptsUrl      = switchLangPath('/ru/apartamenty', lang) + `/${districtSlug}`
+  const promoHref    = switchLangPath('/ru/akcii', lang)
+  const newsHref     = switchLangPath('/ru/novosti', lang)
+  const pillarHref   = switchLangPath('/ru/investicii-v-nedvizhimost-bali', lang)
 
   const links = [
     { Icon: HardHat,    label: c.devs,      href: `${devsHref}?area=${districtSlug}` },
     currentKind !== 'complex'   ? { Icon: Building2,  label: c.complexes, href: complexesUrl } : null,
-    currentKind !== 'villa'     ? { Icon: Building2,  label: isEn ? 'Villas' : 'Виллы',          href: villasUrl } : null,
-    currentKind !== 'apartment' ? { Icon: Building2,  label: isEn ? 'Apartments' : 'Апартаменты', href: aptsUrl } : null,
+    currentKind !== 'villa'     ? { Icon: Building2,  label: lang === 'ru' ? 'Виллы' : 'Villas',          href: villasUrl } : null,
+    currentKind !== 'apartment' ? { Icon: Building2,  label: lang === 'ru' ? 'Апартаменты' : 'Apartments', href: aptsUrl } : null,
     { Icon: Tag,        label: c.promo,     href: `${promoHref}?area=${districtSlug}` },
     { Icon: Newspaper,  label: c.news,      href: `${newsHref}?area=${districtSlug}` },
     { Icon: TrendingUp, label: c.pillar,    href: `${pillarHref}#${districtSlug}` },

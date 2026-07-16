@@ -22,7 +22,7 @@ import { loadAllVillaScores } from '@/lib/investment/batch-scores'
 import { loadAllNews } from '@/lib/news'
 import { loadAllPromo } from '@/lib/promo'
 import { loadAllEvents } from '@/lib/events'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 import { cdnBucketBase, cdnManifestUrl } from '@/lib/photo-cdn'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -249,8 +249,8 @@ function isPast(iso: string | null): boolean {
 }
 
 export async function HomePageContent({ lang }: { lang: Lang }) {
-  const c = COPY[lang]
-  const r = ROUTES[lang]
+  const c = pickCopy(COPY, lang)
+  const r = pickCopy(ROUTES, lang)
 
   const [counts, villaThumb, apartmentThumb, complexThumb, topVillas, topComplexes, allNews, allPromo, allEvents, ytVideos] = await Promise.all([
     loadCounts(),
@@ -307,7 +307,7 @@ export async function HomePageContent({ lang }: { lang: Lang }) {
     '@type': 'WebSite',
     name: 'Balinsky',
     url: `${SITE_BASE}${r.home}`,
-    inLanguage: lang === 'en' ? 'en' : 'ru',
+    inLanguage: lang === 'ru' ? 'ru' : 'en',
     potentialAction: {
       '@type': 'SearchAction',
       target: {
@@ -522,7 +522,7 @@ export async function HomePageContent({ lang }: { lang: Lang }) {
             {districts.map(d => (
               <li key={d.slug}>
                 <Link
-                  href={lang === 'en' ? `${r.apartments}?district=${encodeURIComponent(d.name)}` : `${r.apartments}/${d.slug}`}
+                  href={lang === 'ru' ? `${r.apartments}/${d.slug}` : `${r.apartments}?district=${encodeURIComponent(d.name)}`}
                   className="inline-block px-4 py-2 rounded-full bg-white border border-[var(--color-border)] text-[14px] text-[var(--color-text)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] transition-colors"
                 >
                   {d.name}

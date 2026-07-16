@@ -13,7 +13,7 @@ import { LocalDateTime } from '@/components/LocalDateTime'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { loadEventBySlug } from '@/lib/events'
 import { RelatedContent } from '@/components/RelatedContent'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
@@ -45,7 +45,7 @@ export async function generateEventDetailMetadata(slug: string, lang: Lang): Pro
   if (!e) return { robots: { index: false, follow: false } }
   const ruPath = `/ru/meropriyatiya/${e.slug}`
   const enPath = `/en/events/${e.slug}`
-  const path = lang === 'en' ? enPath : ruPath
+  const path = switchLangPath(ruPath, lang)
   return {
     title: `${e.title} | Balinsky`,
     description: e.seoDescription ?? (e.body?.slice(0, 160) ?? e.title),
@@ -63,12 +63,12 @@ export async function generateEventDetailMetadata(slug: string, lang: Lang): Pro
 }
 
 export async function EventDetail({ slug, lang }: { slug: string; lang: Lang }) {
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const e = await loadEventBySlug(slug, lang)
   if (!e) notFound()
-  const home = lang === 'en' ? '/en' : '/ru'
-  const eventsRoot = lang === 'en' ? '/en/events' : '/ru/meropriyatiya'
-  const developersRoot = lang === 'en' ? '/en/developers' : '/ru/zastrojshhiki'
+  const home = switchLangPath('/ru', lang)
+  const eventsRoot = switchLangPath('/ru/meropriyatiya', lang)
+  const developersRoot = switchLangPath('/ru/zastrojshhiki', lang)
 
   const past = isPast(e.startsAt)
 
@@ -82,11 +82,11 @@ export async function EventDetail({ slug, lang }: { slug: string; lang: Lang }) 
   const location = isOnline
     ? {
         '@type': 'VirtualLocation',
-        url: e.locationUrl ?? e.registerUrl ?? `${SITE_URL}${lang === 'en' ? '/en/events/' : '/ru/meropriyatiya/'}${e.slug}`,
+        url: e.locationUrl ?? e.registerUrl ?? `${SITE_URL}${switchLangPath(`/ru/meropriyatiya/${e.slug}`, lang)}`,
       }
     : {
         '@type': 'Place',
-        name: e.format?.trim() || (lang === 'en' ? 'Bali, Indonesia' : 'Бали, Индонезия'),
+        name: e.format?.trim() || (lang === 'ru' ? 'Бали, Индонезия' : 'Bali, Indonesia'),
         address: {
           '@type': 'PostalAddress',
           addressCountry: 'ID',
@@ -100,8 +100,8 @@ export async function EventDetail({ slug, lang }: { slug: string; lang: Lang }) 
   // hosting their own pitch IS the performer in our context).
   const organizerName = e.developers[0]?.name ?? 'Balinsky'
   const organizerUrl = e.developers[0]?.slug
-    ? `${SITE_URL}${lang === 'en' ? '/en/developers/' : '/ru/zastrojshhiki/'}${e.developers[0].slug}`
-    : `${SITE_URL}${lang === 'en' ? '/en' : '/ru'}`
+    ? `${SITE_URL}${switchLangPath(`/ru/zastrojshhiki/${e.developers[0].slug}`, lang)}`
+    : `${SITE_URL}${switchLangPath('/ru', lang)}`
 
   // Event JSON-LD only when we have the required fields. `startDate`
   // is mandatory per schema.org/Event — without it Google rejects
@@ -137,13 +137,13 @@ export async function EventDetail({ slug, lang }: { slug: string; lang: Lang }) 
     // the spec; without it the page can't qualify as a rich result.
     offers: {
       '@type': 'Offer',
-      url: e.registerUrl ?? `${SITE_URL}${lang === 'en' ? '/en/events/' : '/ru/meropriyatiya/'}${e.slug}`,
+      url: e.registerUrl ?? `${SITE_URL}${switchLangPath(`/ru/meropriyatiya/${e.slug}`, lang)}`,
       price: 0,
       priceCurrency: 'USD',
       availability: 'https://schema.org/InStock',
       validFrom: e.startsAt,
     },
-    url: `${SITE_URL}${lang === 'en' ? '/en/events/' : '/ru/meropriyatiya/'}${e.slug}`,
+    url: `${SITE_URL}${switchLangPath(`/ru/meropriyatiya/${e.slug}`, lang)}`,
   } : null
 
   return (

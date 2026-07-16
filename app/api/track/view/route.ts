@@ -6,6 +6,7 @@
 
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { LANGS, type Lang } from '@/lib/i18n'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -29,7 +30,7 @@ type Body = {
   slug?: string
   title?: string | null
   airtableId?: string | null
-  lang?: 'ru' | 'en'
+  lang?: Lang
 }
 
 // Cheap bot filter on user-agent. Catches the major crawlers without
@@ -57,7 +58,7 @@ export async function POST(req: Request) {
     slug:        body.slug.slice(0, 200),
     title:       typeof body.title === 'string' ? body.title.slice(0, 300) : null,
     airtable_id: typeof body.airtableId === 'string' ? body.airtableId : null,
-    lang:        body.lang === 'en' ? 'en' : 'ru',
+    lang:        body.lang && (LANGS as readonly string[]).includes(body.lang) ? body.lang : 'ru',
   }
 
   const { error } = await sb.from('page_views').insert(row)

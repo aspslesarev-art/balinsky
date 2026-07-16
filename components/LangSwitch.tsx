@@ -1,15 +1,17 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
-import { switchLangPath, type Lang } from '@/lib/i18n'
+import { switchLangPath, detectLang, LANGS, type Lang } from '@/lib/i18n'
+
+const LANG_LABEL: Record<Lang, string> = { ru: 'RU', en: 'EN', id: 'ID', fr: 'FR' }
 
 // Same visual treatment as CurrencyToggle — appearance-none <select> with a
 // chevron overlay. Keeps the header's right-side controls consistent.
 export function LangSwitch({ className = '' }: { className?: string }) {
   const pathname = usePathname() ?? '/'
   const router = useRouter()
-  const current: Lang = pathname.startsWith('/en') ? 'en' : 'ru'
-  const label = current === 'en' ? 'Language' : 'Язык'
+  const current: Lang = detectLang(pathname)
+  const label = current === 'ru' ? 'Язык' : 'Language'
 
   return (
     <label className={`relative inline-flex items-center ${className}`}>
@@ -23,8 +25,9 @@ export function LangSwitch({ className = '' }: { className?: string }) {
         aria-label={label}
         className="appearance-none rounded-full border border-[var(--color-border)] bg-white pl-3 pr-7 py-1.5 text-[12px] font-medium text-[#111827] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] cursor-pointer"
       >
-        <option value="ru">RU</option>
-        <option value="en">EN</option>
+        {LANGS.map(l => (
+          <option key={l} value={l}>{LANG_LABEL[l]}</option>
+        ))}
       </select>
       <svg
         aria-hidden="true"

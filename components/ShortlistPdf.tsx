@@ -1,6 +1,6 @@
 import { Document, Page, Text, View, Image, Link, StyleSheet, Font, pdf } from '@react-pdf/renderer'
 import type { WishlistItem } from '@/lib/wishlist'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { classifyLandUse } from '@/lib/land-use'
 import { telegramUrl, whatsappUrl } from '@/lib/agent-links'
 import { formatPriceExact, type Currency } from '@/lib/currency'
@@ -234,7 +234,7 @@ const COPY = {
   },
 } as const
 
-type Copy = typeof COPY[Lang]
+type Copy = typeof COPY['ru' | 'en']
 
 function pluralRu(n: number, forms: [string, string, string]): string {
   const mod10 = n % 10, mod100 = n % 100
@@ -253,15 +253,15 @@ function fmtMoney(n: number | null | undefined, currency: Currency): string {
 
 function fmtDate(lang: Lang): string {
   const d = new Date()
-  return d.toLocaleDateString(lang === 'en' ? 'en-GB' : 'ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
+  return d.toLocaleDateString(({ ru: 'ru-RU', en: 'en-GB', id: 'id-ID', fr: 'fr-FR' } as const)[lang], { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
 function detailUrl(it: WishlistItem, lang: Lang): string {
   switch (it.kind) {
-    case 'villa':     return `${SITE_URL}${lang === 'en' ? `/en/villas/o/${it.slug}` : `/ru/villy/o/${it.slug}`}`
-    case 'apartment': return `${SITE_URL}${lang === 'en' ? `/en/apartments/o/${it.slug}` : `/ru/apartamenty/o/${it.slug}`}`
-    case 'complex':   return `${SITE_URL}${lang === 'en' ? `/en/complexes/o/${it.slug}` : `/ru/zhilye-kompleksy/o/${it.slug}`}`
-    case 'rental':    return `${SITE_URL}${lang === 'en' ? `/en/rental/o/${it.slug}` : `/ru/arenda/o/${it.slug}`}`
+    case 'villa':     return `${SITE_URL}${switchLangPath(`/ru/villy/o/${it.slug}`, lang)}`
+    case 'apartment': return `${SITE_URL}${switchLangPath(`/ru/apartamenty/o/${it.slug}`, lang)}`
+    case 'complex':   return `${SITE_URL}${switchLangPath(`/ru/zhilye-kompleksy/o/${it.slug}`, lang)}`
+    case 'rental':    return `${SITE_URL}${switchLangPath(`/ru/arenda/o/${it.slug}`, lang)}`
   }
 }
 
@@ -593,7 +593,7 @@ export function ShortlistPdfDocument({ items, agent, orientation = 'landscape', 
 }) {
   const isPortrait = orientation === 'portrait'
   const pageProps = { size: 'A4' as const, orientation }
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const agentMode = !!agent
 
   // Per-item pages: villas + apartments + complexes + rentals all get

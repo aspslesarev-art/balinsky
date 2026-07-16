@@ -5,7 +5,7 @@
 // `absolute inset-0` parent the consumer sizes/frames.
 
 import { Mic, ArrowUp, Play, MapPin, Footprints, Check, Building2, ShieldCheck, ArrowRight } from 'lucide-react'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const L = {
   ru: {
@@ -71,7 +71,7 @@ const WAVE = [4, 7, 10, 6, 11, 5, 8, 12, 6, 9, 7, 5]
 // ===== How-it-works step visuals ===================================
 
 export function StepChat({ lang }: { lang: Lang }) {
-  const t = L[lang]
+  const t = pickCopy(L, lang)
   return (
     <div className="absolute inset-0 p-4 flex flex-col justify-center gap-2">
       <div className="self-start max-w-[82%] rounded-xl rounded-bl-sm bg-white border border-[var(--color-border)] px-3 py-1.5 text-[11.5px] leading-snug text-[#111827]">
@@ -94,7 +94,7 @@ export function StepChat({ lang }: { lang: Lang }) {
 }
 
 export function StepStudy({ lang }: { lang: Lang }) {
-  const t = L[lang]
+  const t = pickCopy(L, lang)
   return (
     <div className="absolute inset-0 p-4 flex items-center">
       <div className="w-full rounded-xl bg-white border border-[var(--color-border)] overflow-hidden">
@@ -115,7 +115,7 @@ export function StepStudy({ lang }: { lang: Lang }) {
 }
 
 export function StepRequest({ lang }: { lang: Lang }) {
-  const t = L[lang]
+  const t = pickCopy(L, lang)
   return (
     <div className="absolute inset-0 p-4 flex flex-col items-center justify-center text-center gap-1.5">
       <div className="w-10 h-10 rounded-full bg-[var(--color-primary-soft)] flex items-center justify-center">
@@ -152,7 +152,7 @@ function RentRow({ brand, price, occ, night }: { brand: 'booking' | 'airbnb'; pr
 }
 
 export function VizYield({ lang }: { lang: Lang }) {
-  const t = L[lang]
+  const t = pickCopy(L, lang)
   return (
     <div className="absolute inset-0 p-3 flex flex-col gap-2">
       <div className="flex items-baseline justify-between">
@@ -171,7 +171,7 @@ export function VizYield({ lang }: { lang: Lang }) {
 }
 
 export function VizCompetitors({ lang }: { lang: Lang }) {
-  const t = L[lang]
+  const t = pickCopy(L, lang)
   const rows = [
     { l: t.thisOne, v: '$2 850', w: 70, accent: true },
     { l: t.nearby, v: '$3 100', w: 86, accent: false },
@@ -194,7 +194,7 @@ export function VizCompetitors({ lang }: { lang: Lang }) {
 }
 
 export function VizNearby({ lang }: { lang: Lang }) {
-  const t = L[lang]
+  const t = pickCopy(L, lang)
   return (
     <div className="absolute inset-0 bg-[#E8F0EA]">
       <div
@@ -223,7 +223,7 @@ export function VizNearby({ lang }: { lang: Lang }) {
 }
 
 export function VizDocs({ lang }: { lang: Lang }) {
-  const t = L[lang]
+  const t = pickCopy(L, lang)
   const rows: [string, string][] = [['PBG', t.received], ['SLF', t.received], ['Leasehold', t.lease]]
   return (
     <div className="absolute inset-0 p-3 flex flex-col gap-1.5">
@@ -240,7 +240,7 @@ export function VizDocs({ lang }: { lang: Lang }) {
 }
 
 export function VizDeveloper({ lang }: { lang: Lang }) {
-  const t = L[lang]
+  const t = pickCopy(L, lang)
   return (
     <div className="absolute inset-0 p-3.5 flex flex-col justify-center gap-2.5">
       <div className="flex items-center gap-2.5">
@@ -260,7 +260,7 @@ export function VizDeveloper({ lang }: { lang: Lang }) {
 }
 
 export function VizFootage({ lang }: { lang: Lang }) {
-  const t = L[lang]
+  const t = pickCopy(L, lang)
   return (
     <div className="absolute inset-0 bg-gradient-to-br from-[#1b3a2c] to-[#0E1A14] flex items-center justify-center">
       <span className="w-11 h-11 rounded-full bg-white/20 backdrop-blur-sm inline-flex items-center justify-center ring-1 ring-white/30">
@@ -288,7 +288,7 @@ function FlowNode({ icon, title, sub, accent }: { icon: React.ReactNode; title: 
 }
 
 export function SafetyFlow({ lang }: { lang: Lang }) {
-  const t = L[lang]
+  const t = pickCopy(L, lang)
   return (
     <div className="flex items-center gap-1.5">
       <FlowNode icon={<span className="inline-block w-4 h-4 rounded-full bg-[var(--color-primary-pressed)]" />} title={t.you} />

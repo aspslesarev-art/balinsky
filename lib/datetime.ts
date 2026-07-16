@@ -1,6 +1,8 @@
+import type { Lang } from '@/lib/i18n'
+
 export const BALI_TZ = 'Asia/Makassar' // UTC+8
 
-type FmtOpts = { withYear?: boolean; withTime?: boolean; lang?: 'ru' | 'en' }
+type FmtOpts = { withYear?: boolean; withTime?: boolean; lang?: Lang }
 
 function buildOptions(opts: FmtOpts): Intl.DateTimeFormatOptions {
   return {
@@ -12,7 +14,7 @@ function buildOptions(opts: FmtOpts): Intl.DateTimeFormatOptions {
 }
 
 function locale(opts: FmtOpts): string {
-  return opts.lang === 'en' ? 'en-GB' : 'ru-RU'
+  return ({ ru: 'ru-RU', en: 'en-GB', id: 'id-ID', fr: 'fr-FR' } as const)[opts.lang ?? 'ru']
 }
 
 export function fmtBali(iso: string, opts: FmtOpts = {}): string {

@@ -4,7 +4,7 @@ import {
   BEDROOM_TO_SLUG,
   STATUS_TO_SLUG,
 } from '@/lib/seo-routes'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
 const POPULAR_DISTRICTS = [
   'Berawa',
@@ -18,7 +18,7 @@ const POPULAR_DISTRICTS = [
 ]
 
 type FaqItem = { q: string; a: string }
-const FAQ_ITEMS: Record<Lang, FaqItem[]> = {
+const FAQ_ITEMS: Record<'ru' | 'en', FaqItem[]> = {
   ru: [
     { q: 'Какие застройщики работают на Бали?',
       a: 'На острове активно более 80 застройщиков. Среди заметных — Alex Villas, Magnum Estate, BREIG, Bali Capital Group, Anta Group, Taryan Group, Oceaniq, Sunny Development. Большинство специализируется на 1–2 районах Бали.' },
@@ -93,9 +93,9 @@ const COPY = {
 } as const
 
 export function DevelopersSeoContent({ lang = 'ru' }: { lang?: Lang }) {
-  const c = COPY[lang]
-  const items = FAQ_ITEMS[lang]
-  const districtRoot = lang === 'en' ? '/en/apartments' : '/ru/apartamenty'
+  const c = pickCopy(COPY, lang)
+  const items = pickCopy(FAQ_ITEMS, lang)
+  const districtRoot = switchLangPath('/ru/apartamenty', lang)
 
   const districtLinks = POPULAR_DISTRICTS.map(d => ({
     name: d,
@@ -159,7 +159,7 @@ export function DevelopersSeoContent({ lang = 'ru' }: { lang?: Lang }) {
           ))}
           <li>
             <Link
-              href={lang === 'en' ? '/en/complexes' : '/ru/zhilye-kompleksy'}
+              href={switchLangPath('/ru/zhilye-kompleksy', lang)}
               className="inline-block px-3 py-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-card-bg)] text-[13px] text-[var(--color-text)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] transition-colors"
             >
               {c.allComplexes}

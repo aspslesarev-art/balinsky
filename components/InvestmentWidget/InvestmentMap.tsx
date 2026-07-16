@@ -6,7 +6,7 @@ import { BALINSKY_MAP_STYLE } from '@/lib/google-map-style'
 import { loadGoogleMaps } from '@/lib/google-maps-loader'
 import { createHeatOverlay, fetchHeatCells } from '@/lib/heat-overlay'
 import type { Snapshot } from './types'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const COLORS = {
   villa: '#E0383E',
@@ -102,12 +102,12 @@ function competitorPopupHtml(c: {
   area?: number | null; adr: number; url?: string | null;
   distanceKm?: number | null
 }, lang: Lang): string {
-  const t = MAP_COPY[lang]
-  const sqmU = lang === 'en' ? 'm²' : 'м²'
-  const kmLabel = lang === 'en' ? 'km' : 'км'
+  const t = pickCopy(MAP_COPY, lang)
+  const sqmU = lang === 'ru' ? 'м²' : 'm²'
+  const kmLabel = lang === 'ru' ? 'км' : 'km'
   const title = c.complex || c.name || 'Booking listing'
   const stars = c.rating != null ? `★ ${c.rating.toFixed(1)}` : ''
-  const reviews = c.reviews != null ? `${c.reviews} ${lang === 'en' ? 'reviews' : 'отзывов'}` : ''
+  const reviews = c.reviews != null ? `${c.reviews} ${lang === 'ru' ? 'отзывов' : 'reviews'}` : ''
   const beds = c.bedrooms != null ? `${c.bedrooms} BR` : ''
   const area = c.area != null ? `${c.area} ${sqmU}` : ''
   const specs = [beds, area].filter(Boolean).join(' · ')
@@ -143,11 +143,11 @@ function anchorPopupHtml(a: {
   address?: string | null; mapsUrl?: string | null;
   distanceKm?: number | null
 }, lang: Lang): string {
-  const t = MAP_COPY[lang]
-  const kmLabel = lang === 'en' ? 'km' : 'км'
+  const t = pickCopy(MAP_COPY, lang)
+  const kmLabel = lang === 'ru' ? 'км' : 'km'
   const title = a.name || 'POI'
   const stars = a.rating != null ? `★ ${a.rating.toFixed(1)}` : ''
-  const reviewsTxt = a.reviews != null ? `${a.reviews} ${lang === 'en' ? 'reviews' : 'отзывов'}` : ''
+  const reviewsTxt = a.reviews != null ? `${a.reviews} ${lang === 'ru' ? 'отзывов' : 'reviews'}` : ''
   const ratingLine = [stars, reviewsTxt].filter(Boolean).join(' · ')
   const cat = a.primaryType ? a.primaryType.replace(/_/g, ' ') : ''
   const link = a.mapsUrl
@@ -174,7 +174,7 @@ function MapLayer({ map, snap, showAllPois, allPois, lang }: { map: google.maps.
   const ref = useRef<{ markers: google.maps.Marker[]; circles: google.maps.Circle[] }>({ markers: [], circles: [] })
   const infoWindowRef = useRef<google.maps.InfoWindow | null>(null)
   const fitOnceRef = useRef(false)
-  const t = MAP_COPY[lang]
+  const t = pickCopy(MAP_COPY, lang)
 
   useEffect(() => {
     if (!map) return
@@ -342,7 +342,7 @@ export function InvestmentMap({
   const containerRef = useRef<HTMLDivElement | null>(null)
   const heatRef = useRef<google.maps.OverlayView | null>(null)
   const heatDataRef = useRef<{ cells: { lat: number; lng: number; weight: number }[]; max: number } | null>(null)
-  const t = MAP_COPY[lang]
+  const t = pickCopy(MAP_COPY, lang)
 
   // Island-wide Google-places heat overlay — fetched lazily on first toggle.
   useEffect(() => {
@@ -423,9 +423,9 @@ export function InvestmentMap({
         </button>
         {showHeat && (
           <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/95 backdrop-blur-sm shadow-sm text-[10px] text-[var(--color-text-muted)]">
-            <span>{lang === 'en' ? 'few' : 'мало'}</span>
+            <span>{lang === 'ru' ? 'мало' : 'few'}</span>
             <span className="h-1.5 w-16 rounded-full" style={{ background: 'linear-gradient(90deg,#2b6cff,#00c2c7,#8ed11f,#ffd200,#ff2d00)' }} />
-            <span>{lang === 'en' ? 'many' : 'много'}</span>
+            <span>{lang === 'ru' ? 'много' : 'many'}</span>
           </div>
         )}
         <button

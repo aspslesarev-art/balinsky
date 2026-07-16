@@ -6,7 +6,7 @@
 import Link from 'next/link'
 import { TrendingUp, ChevronRight } from 'lucide-react'
 import type { DistrictCopy } from '@/lib/districts'
-import type { Lang } from '@/lib/i18n'
+import { switchLangPath, type Lang } from '@/lib/i18n'
 
 export function DistrictIntroBlock({
   copy,
@@ -18,7 +18,7 @@ export function DistrictIntroBlock({
   totalCount: number
   sectionRoot: string
 }) {
-  const pillarHref = lang === 'en' ? '/en/bali-property-investment' : '/ru/investicii-v-nedvizhimost-bali'
+  const pillarHref = switchLangPath('/ru/investicii-v-nedvizhimost-bali', lang)
   return (
     <section className="mt-2 mb-8 max-w-4xl">
       <p className="text-[16px] md:text-[17px] text-[var(--color-text-muted)] leading-relaxed mb-5">
@@ -36,7 +36,7 @@ export function DistrictIntroBlock({
 
       <details className="rounded-2xl border border-[var(--color-border)] p-4 bg-white mb-6 [&[open]>summary]:mb-3">
         <summary className="cursor-pointer list-none flex items-center justify-between gap-3 text-[15px] font-semibold text-[#111827]">
-          <span>{lang === 'en' ? `About ${copy.name} — district guide` : `О районе ${copy.name} — гид инвестора`}</span>
+          <span>{lang === 'ru' ? `О районе ${copy.name} — гид инвестора` : `About ${copy.name} — district guide`}</span>
           <ChevronRight size={18} className="shrink-0 transition-transform [details[open]_&]:rotate-90" />
         </summary>
         <div className="space-y-3 text-[14px] leading-[1.7] text-[#1f2937]">
@@ -50,15 +50,15 @@ export function DistrictIntroBlock({
         <div className="mt-4 text-[13px]">
           <Link href={pillarHref} className="inline-flex items-center gap-1 text-[var(--color-primary)] no-underline hover:underline">
             <TrendingUp size={14} />
-            {lang === 'en' ? 'Full Bali investment guide' : 'Полный гайд по инвестициям на Бали'}
+            {lang === 'ru' ? 'Полный гайд по инвестициям на Бали' : 'Full Bali investment guide'}
           </Link>
         </div>
       </details>
 
       <p className="text-[14px] text-[var(--color-text-muted)]">
-        {lang === 'en'
-          ? `Currently ${totalCount} properties available in ${copy.name}. Each listing passed our editorial QA — PBG, SLF, developer registration and on-the-ground verification.`
-          : `Сейчас в каталоге ${totalCount} объектов в районе ${copy.name}. Каждый прошёл редакторский QA — PBG, SLF, регистрация застройщика и проверка на месте.`}
+        {lang === 'ru'
+          ? `Сейчас в каталоге ${totalCount} объектов в районе ${copy.name}. Каждый прошёл редакторский QA — PBG, SLF, регистрация застройщика и проверка на месте.`
+          : `Currently ${totalCount} properties available in ${copy.name}. Each listing passed our editorial QA — PBG, SLF, developer registration and on-the-ground verification.`}
       </p>
     </section>
   )

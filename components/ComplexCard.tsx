@@ -6,7 +6,7 @@ import { PhotoSlider } from './PhotoSlider'
 import { useCurrency } from './CurrencyContext'
 import { WishlistButton } from './WishlistButton'
 import { formatPrice } from '@/lib/currency'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { enLabel } from '@/lib/filter-i18n'
 
 export type ComplexCardData = {
@@ -41,7 +41,7 @@ function fmtRange(
   if (from == null && to == null) return null
   const f = from != null ? formatPrice(from, currency) : null
   const tt = to != null ? formatPrice(to, currency) : null
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   if (f && tt && from === to) return f
   if (f && tt) return `${c.from} ${f} ${c.to} ${tt}`
   if (f) return `${c.from} ${f}`
@@ -51,10 +51,8 @@ function fmtRange(
 
 export function ComplexCard({ c, lang = 'ru' }: { c: ComplexCardData; lang?: Lang }) {
   const { currency } = useCurrency()
-  const copy = COPY[lang]
-  const detailHref = lang === 'en'
-    ? `/en/complexes/o/${c.slug}`
-    : `/ru/zhilye-kompleksy/o/${c.slug}`
+  const copy = pickCopy(COPY, lang)
+  const detailHref = switchLangPath(`/ru/zhilye-kompleksy/o/${c.slug}`, lang)
   // Prefer the synced storage photos (multi-image slider). Fallback to the
   // single cover image if the manifest doesn't have entries yet.
   const slides = c.photos.length > 0 ? c.photos : c.coverUrl ? [c.coverUrl] : []
@@ -107,7 +105,7 @@ export function ComplexCard({ c, lang = 'ru' }: { c: ComplexCardData; lang?: Lan
           </div>
         )}
         <div className="text-[14px] text-[var(--color-text-muted)]">
-          {copy.permit}: {c.permit ? (lang === 'en' ? enLabel('permit', c.permit) : c.permit) : copy.noPermit}
+          {copy.permit}: {c.permit ? (lang === 'ru' ? c.permit : enLabel('permit', c.permit)) : copy.noPermit}
         </div>
 
         {/* mt-auto pins the readiness block to the bottom of the card so

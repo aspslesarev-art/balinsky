@@ -11,7 +11,7 @@ import { PriceDisplay } from '@/components/PriceDisplay'
 import { loadRentalBySlug } from '@/lib/rental'
 import { LeadButton } from '@/components/LeadButton'
 import { PageViewTracker } from '@/components/PageViewTracker'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
@@ -39,11 +39,11 @@ function fmtUsd(n: number): string { return '$' + Math.round(n).toLocaleString('
 export async function generateRentalDetailMetadata(slug: string, lang: Lang): Promise<Metadata> {
   const r = await loadRentalBySlug(slug, lang)
   if (!r) return { robots: { index: false, follow: false } }
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const desc = r.notes?.slice(0, 160) ?? c.metaFallback(r.type ?? null, r.location ?? null, fmtUsd(r.priceMonthUsd))
   const ruPath = `/ru/arenda/o/${r.slug}`
   const enPath = `/en/rental/o/${r.slug}`
-  const path = lang === 'en' ? enPath : ruPath
+  const path = switchLangPath(ruPath, lang)
   return {
     title: c.title(r.title, fmtUsd(r.priceMonthUsd)),
     description: desc,
@@ -63,9 +63,9 @@ export async function generateRentalDetailMetadata(slug: string, lang: Lang): Pr
 export async function RentalDetail({ slug, lang }: { slug: string; lang: Lang }) {
   const r = await loadRentalBySlug(slug, lang)
   if (!r) notFound()
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
 
-  const rentalUrl = `${SITE_URL}${lang === 'en' ? '/en/rental/o/' : '/ru/arenda/o/'}${r.slug}`
+  const rentalUrl = `${SITE_URL}${switchLangPath(`/ru/arenda/o/${r.slug}`, lang)}`
   const productJsonLd: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'Product',
@@ -75,9 +75,9 @@ export async function RentalDetail({ slug, lang }: { slug: string; lang: Lang })
     // Google's Product validator flags missing description; fall back to a
     // generated "<bedrooms>-BR rental in <location>, Bali" line so the
     // field is never empty.
-    description: (r.notes?.trim() || (lang === 'en'
-      ? `${r.bedrooms ? r.bedrooms + '-bedroom ' : ''}rental${r.location ? ` in ${r.location}` : ''}, Bali, Indonesia`
-      : `${r.bedrooms ? r.bedrooms + '-комнатная ' : ''}аренда${r.location ? ` в ${r.location}` : ''} на Бали, Индонезия`)).slice(0, 500),
+    description: (r.notes?.trim() || (lang === 'ru'
+      ? `${r.bedrooms ? r.bedrooms + '-комнатная ' : ''}аренда${r.location ? ` в ${r.location}` : ''} на Бали, Индонезия`
+      : `${r.bedrooms ? r.bedrooms + '-bedroom ' : ''}rental${r.location ? ` in ${r.location}` : ''}, Bali, Indonesia`)).slice(0, 500),
     // Brand → generic "Balinsky" so the GTIN/brand validator stops flagging.
     brand: { '@type': 'Brand', name: 'Balinsky' },
     offers: {
@@ -113,8 +113,8 @@ export async function RentalDetail({ slug, lang }: { slug: string; lang: Lang })
       <PageViewTracker kind="rental" slug={r.slug} title={r.title} airtableId={r.id} lang={lang} />
       <PageContainer>
         <Breadcrumbs items={[
-          { label: c.home, href: lang === 'en' ? '/en' : '/ru' },
-          { label: c.rental, href: lang === 'en' ? '/en/rental' : '/ru/arenda' },
+          { label: c.home, href: switchLangPath('/ru', lang) },
+          { label: c.rental, href: switchLangPath('/ru/arenda', lang) },
           { label: r.title },
         ]} />
 
@@ -160,7 +160,7 @@ export async function RentalDetail({ slug, lang }: { slug: string; lang: Lang })
 
         <section className="mb-10">
           <LeadButton
-            label={lang === 'en' ? 'Leave a request' : 'Оставить заявку'}
+            label={lang === 'ru' ? 'Оставить заявку' : 'Leave a request'}
             lang={lang}
             context={{ listingKind: 'rental', listingSlug: r.slug, source: 'rental' }}
             className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[15px] font-medium transition-colors"

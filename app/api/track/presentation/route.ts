@@ -5,6 +5,7 @@
 
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { LANGS, type Lang } from '@/lib/i18n'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -41,7 +42,7 @@ type Body = {
   // Common context
   orientation?: 'portrait' | 'landscape'
   hasAgent?: boolean
-  lang?: 'ru' | 'en'
+  lang?: Lang
 }
 
 export async function POST(req: Request) {
@@ -57,7 +58,7 @@ export async function POST(req: Request) {
     kind: body.kind,
     orientation: body.orientation === 'portrait' ? 'portrait' : 'landscape',
     has_agent: body.hasAgent === true,
-    lang: body.lang === 'en' ? 'en' : 'ru',
+    lang: body.lang && (LANGS as readonly string[]).includes(body.lang) ? body.lang : 'ru',
   }
 
   // Agent contact stored only when the visitor explicitly generated

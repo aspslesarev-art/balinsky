@@ -1,4 +1,4 @@
-import { applyManifestTranslation, loadEnTranslations } from '@/lib/en-translations'
+import { applyManifestTranslation, loadTranslations } from '@/lib/en-translations'
 import type { Lang } from '@/lib/i18n'
 
 export type PromoDev = { name: string; slug: string | null }
@@ -37,7 +37,7 @@ async function loadRawPromo(): Promise<PromoItem[]> {
 export async function loadAllPromo(lang: Lang = 'ru'): Promise<PromoItem[]> {
   const items = await loadRawPromo()
   if (lang === 'ru' || items.length === 0) return items
-  const cache = await loadEnTranslations('promo')
+  const cache = await loadTranslations('promo', lang)
   return items.map(item => applyManifestTranslation(item, cache, EN_FIELDS))
 }
 

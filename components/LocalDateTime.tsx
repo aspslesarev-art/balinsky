@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { BALI_TZ, fmtBali, fmtLocal } from '@/lib/datetime'
+import type { Lang } from '@/lib/i18n'
 
 type Props = {
   iso: string
@@ -10,7 +11,7 @@ type Props = {
   className?: string
   prefix?: string
   suffix?: string
-  lang?: 'ru' | 'en'
+  lang?: Lang
 }
 
 // Renders the Bali-time string on the server (so the initial HTML always shows
@@ -28,7 +29,7 @@ export function LocalDateTime({ iso, withYear, withTime, className, prefix, suff
       const localText = fmtLocal(iso, { withYear, withTime, lang })
       if (localText !== baliText) {
         setText(localText)
-        setTooltip(lang === 'en' ? `Bali: ${baliText}` : `Бали: ${baliText}`)
+        setTooltip(lang === 'ru' ? `Бали: ${baliText}` : `Bali: ${baliText}`)
       }
     } catch {
       // Intl may throw on very old browsers — keep Bali text in that case.

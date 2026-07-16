@@ -12,7 +12,7 @@ import { PageViewTracker } from '@/components/PageViewTracker'
 import { loadAllKnowledge, loadKnowledgeBySlug } from '@/lib/knowledge'
 import { enKnowledgeSlug } from '@/lib/knowledge-en-slugs'
 import { ArticleCover } from '@/components/ArticleCover'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
@@ -49,7 +49,7 @@ export async function generateKnowledgeDetailMetadata(slug: string, lang: Lang):
   if (!k) return { robots: { index: false, follow: false } }
   const ruPath = `/ru/znaniya/${k.slug}`
   const enPath = `/en/knowledge/${enKnowledgeSlug(k.slug)}`
-  const path = lang === 'en' ? enPath : ruPath
+  const path = lang === 'ru' ? ruPath : switchLangPath(enPath, lang)
   return {
     title: `${k.title} | Balinsky`,
     description: k.body.slice(0, 160).replace(/\s+/g, ' ').trim(),
@@ -66,11 +66,11 @@ export async function generateKnowledgeDetailMetadata(slug: string, lang: Lang):
 }
 
 export async function KnowledgeDetail({ slug, lang }: { slug: string; lang: Lang }) {
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const k = await loadKnowledgeBySlug(slug, lang)
   if (!k) notFound()
-  const home = lang === 'en' ? '/en' : '/ru'
-  const knowledgeRoot = lang === 'en' ? '/en/knowledge' : '/ru/znaniya'
+  const home = switchLangPath('/ru', lang)
+  const knowledgeRoot = switchLangPath('/ru/znaniya', lang)
 
   const all = await loadAllKnowledge(lang)
   const related = all.filter(x => x.id !== k.id).slice(0, 4)
@@ -90,14 +90,14 @@ export async function KnowledgeDetail({ slug, lang }: { slug: string; lang: Lang
       name: authorData.name,
       ...(authorData.role ? { jobTitle: authorData.role } : {}),
       ...(authorData.photo ? { image: authorData.photo } : {}),
-      ...((k.author && k.author.slug) ? { url: `${SITE_URL}${lang === 'en' ? '/en/authors/' : '/ru/avtory/'}${k.author.slug}` } : {}),
+      ...((k.author && k.author.slug) ? { url: `${SITE_URL}${lang === 'ru' ? '/ru/avtory/' : '/en/authors/'}${k.author.slug}` } : {}),
     },
     publisher: {
       '@type': 'Organization',
       name: 'Balinsky',
       logo: { '@type': 'ImageObject', url: `${SITE_URL}/icon-512.png` },
     },
-    mainEntityOfPage: `${SITE_URL}${lang === 'en' ? `/en/knowledge/${enKnowledgeSlug(k.slug)}` : `/ru/znaniya/${k.slug}`}`,
+    mainEntityOfPage: `${SITE_URL}${lang === 'ru' ? `/ru/znaniya/${k.slug}` : switchLangPath(`/en/knowledge/${enKnowledgeSlug(k.slug)}`, lang)}`,
   }
 
   return (
@@ -127,7 +127,7 @@ export async function KnowledgeDetail({ slug, lang }: { slug: string; lang: Lang
               )}
               <div className="leading-tight">
                 {k.author && k.author.slug ? (
-                  <Link href={`${lang === 'en' ? '/en/authors' : '/ru/avtory'}/${k.author.slug}`} className="text-[14px] font-medium text-[#111827] hover:text-[var(--color-primary-pressed)] no-underline">
+                  <Link href={`${lang === 'ru' ? '/ru/avtory' : '/en/authors'}/${k.author.slug}`} className="text-[14px] font-medium text-[#111827] hover:text-[var(--color-primary-pressed)] no-underline">
                     {authorData.name}
                   </Link>
                 ) : (
@@ -173,7 +173,7 @@ export async function KnowledgeDetail({ slug, lang }: { slug: string; lang: Lang
             <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {related.map(r => (
                 <li key={r.id}>
-                  <Link href={`${knowledgeRoot}/${lang === 'en' ? enKnowledgeSlug(r.slug) : r.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)]">
+                  <Link href={`${knowledgeRoot}/${lang === 'ru' ? r.slug : enKnowledgeSlug(r.slug)}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)]">
                     <div className="relative w-full aspect-[16/9] bg-[var(--color-search-bg)]">
                       {r.photo ? (
                         <Image src={r.photo} alt={r.title} fill sizes="(max-width: 768px) 100vw, 25vw" className="object-cover" />

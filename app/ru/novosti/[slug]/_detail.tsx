@@ -13,7 +13,7 @@ import { PageViewTracker } from '@/components/PageViewTracker'
 import { NewsBody } from '@/components/NewsBody'
 import { RelatedContent } from '@/components/RelatedContent'
 import { loadAllNews, loadNewsBySlug } from '@/lib/news'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
@@ -71,7 +71,7 @@ export async function generateNewsDetailMetadata(slug: string, lang: Lang): Prom
     ruCanon = `/ru/zhilye-kompleksy/o/${complexSlug}`
     enCanon = `/en/complexes/o/${complexSlug}`
   }
-  const canonical = lang === 'en' ? enCanon : ruCanon
+  const canonical = switchLangPath(ruCanon, lang)
 
   return {
     title: `${n.title} | Balinsky`,
@@ -91,15 +91,15 @@ export async function generateNewsDetailMetadata(slug: string, lang: Lang): Prom
 }
 
 export async function NewsDetail({ slug, lang }: { slug: string; lang: Lang }) {
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const n = await loadNewsBySlug(slug, lang)
   if (!n) notFound()
-  const newsRoot = lang === 'en' ? '/en/news' : '/ru/novosti'
+  const newsRoot = switchLangPath('/ru/novosti', lang)
   // Editor's legacy SEO:Slug stays as alias — redirect to the canonical
   // transliterated slug so Google consolidates link equity on one URL.
   if (n.slug !== slug) permanentRedirect(`${newsRoot}/${n.slug}`)
-  const home = lang === 'en' ? '/en' : '/ru'
-  const developersRoot = lang === 'en' ? '/en/developers' : '/ru/zastrojshhiki'
+  const home = switchLangPath('/ru', lang)
+  const developersRoot = switchLangPath('/ru/zastrojshhiki', lang)
 
   const date = fmtDate(n.date, c.locale)
   const allNews = await loadAllNews(lang)
@@ -116,7 +116,7 @@ export async function NewsDetail({ slug, lang }: { slug: string; lang: Lang }) {
     description: n.seoDescription ?? undefined,
     author: n.developers[0]?.name ? { '@type': 'Organization', name: n.developers[0].name } : undefined,
     publisher: { '@type': 'Organization', name: 'Balinsky' },
-    mainEntityOfPage: `${SITE_URL}${lang === 'en' ? '/en/news/' : '/ru/novosti/'}${n.slug}`,
+    mainEntityOfPage: `${SITE_URL}${switchLangPath(`/ru/novosti/${n.slug}`, lang)}`,
   }
 
   return (

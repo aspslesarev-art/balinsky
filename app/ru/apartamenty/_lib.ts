@@ -6,7 +6,7 @@ import { loadFeatureFlagsMap, FEATURE_FLAGS, FEATURE_LABELS } from '@/lib/listin
 import type { Option } from '@/components/filters/MultiSelectFilter'
 import { translit, hasCyrillic } from '@/lib/translit'
 import { normalizeSlug } from '@/lib/slug-normalize'
-import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
+import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
 import { getDistrictCommercialMeta } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { enLabel, type FilterDim } from '@/lib/filter-i18n'
@@ -15,6 +15,7 @@ import { isTopBlacklisted } from '@/lib/top-blacklist'
 import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import { loadViewCounts, smartSort } from '@/lib/catalog-rank'
 import { cdnRewriteManifest, cdnManifestUrl } from '@/lib/photo-cdn'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/apartment-photos/_manifest.json`
@@ -115,20 +116,20 @@ function fallbackAptTitle(args: {
   district: string | null
   area: number | null
   bedrooms: string | null
-  lang: 'ru' | 'en'
+  lang: Lang
 }): string {
   const { district, area, bedrooms, lang } = args
   const parts: string[] = []
-  parts.push(lang === 'en' ? 'Apartment' : 'Апартаменты')
-  if (district) parts.push(lang === 'en' ? `in ${district}` : `в ${district}`)
+  parts.push(lang === 'ru' ? 'Апартаменты' : 'Apartment')
+  if (district) parts.push(lang === 'ru' ? `в ${district}` : `in ${district}`)
   const tail: string[] = []
-  if (area != null) tail.push(lang === 'en' ? `${area} m²` : `${area} м²`)
+  if (area != null) tail.push(lang === 'ru' ? `${area} м²` : `${area} m²`)
   if (bedrooms) {
     const n = Number(bedrooms)
     const word = Number.isFinite(n)
       ? pluralRu(n, ['спальня', 'спальни', 'спален'])
       : 'спален'
-    tail.push(lang === 'en' ? `${bedrooms} BR` : `${bedrooms} ${word}`)
+    tail.push(lang === 'ru' ? `${bedrooms} ${word}` : `${bedrooms} BR`)
   }
   return [parts.join(' '), tail.join(', ')].filter(Boolean).join(' — ')
 }
@@ -354,9 +355,11 @@ function buildLabelMap(rows: EnrichedRow[], colRu: string, colEn: string): Map<s
 export function buildOptions(
   allRows: EnrichedRow[],
   current: FilterState,
-  lang: 'ru' | 'en' = 'ru',
+  lang: Lang = 'ru',
 ): FilterOptions {
-  const enMap = lang === 'en' ? {
+  // Non-RU (en/id/fr) all use the EN label map — English is the id/fr
+  // fallback and the only non-Russian facet columns that exist.
+  const enMap = lang !== 'ru' ? {
     district: buildLabelMap(allRows, 'Location 2', 'Location 2 EN'),
     floor:    new Map<string, string>(),
     status:   buildLabelMap(allRows, 'Статус', 'Статус EN'),
@@ -417,7 +420,7 @@ export function buildOptions(
 
   const districtsRaw = build('district', e => e.district)
   const bedrooms = build('bedrooms', e => e.bedrooms, 'value')
-  const groundLabel = lang === 'en' ? 'Ground floor' : 'Цокольный'
+  const groundLabel = lang === 'ru' ? 'Цокольный' : 'Ground floor'
   const floor = build('floor', e => e.floor, 'value').map(o => ({
     ...o,
     label: o.value === '0' ? groundLabel : o.label,
@@ -440,7 +443,7 @@ export function buildOptions(
     en: { primary: 'From developer', resale: 'Resale',      secondary: 'Secondary' },
   }
   const dealType: Option[] = (['primary', 'resale', 'secondary'] as const)
-    .map(v => ({ value: v, label: DEAL_LABELS[lang][v], count: dealCounts.get(v) ?? 0 }))
+    .map(v => ({ value: v, label: pickCopy(DEAL_LABELS, lang)[v], count: dealCounts.get(v) ?? 0 }))
     .filter(o => o.count > 0)
 
   // Translate visible labels for EN. `value` keeps its RU/URL form so
@@ -451,7 +454,7 @@ export function buildOptions(
 
   const featureCounts = countsExcludingDim('features', e => e.features)
   const features: Option[] = FEATURE_FLAGS
-    .map(fl => ({ value: fl, label: FEATURE_LABELS[fl][lang], count: featureCounts.get(fl) ?? 0 }))
+    .map(fl => ({ value: fl, label: pickCopy(FEATURE_LABELS[fl], lang), count: featureCounts.get(fl) ?? 0 }))
     .filter(o => o.count > 0)
 
   return { district: districts, bedrooms, floor, developer, status, permit, dealType, features }
@@ -461,7 +464,7 @@ export function toCard(
   e: EnrichedRow,
   manifest: Record<string, string[]>,
   devStats?: Map<string, { ready: number; total: number }>,
-  lang: 'ru' | 'en' = 'ru',
+  lang: Lang = 'ru',
 ): Card | null {
   const d = e.data
   // Canonicalise the Airtable slug at the catalog level so every
@@ -480,9 +483,9 @@ export function toCard(
   }
   const titleArea = numberOrNull(d['Площадь'])
   const titleBedrooms = e.bedrooms
-  let title: string | null = lang === 'en'
-    ? pick(firstString(d['SEO:Title EN']), firstString(d['ИИ Имя EN']), firstString(d['SEO:Title']), firstString(d['ИИ Имя']))
-    : pick(firstString(d['SEO:Title']), firstString(d['ИИ Имя']))
+  let title: string | null = lang === 'ru'
+    ? pick(firstString(d['SEO:Title']), firstString(d['ИИ Имя']))
+    : pick(firstString(d['SEO:Title EN']), firstString(d['ИИ Имя EN']), firstString(d['SEO:Title']), firstString(d['ИИ Имя']))
   if (!title) {
     title = fallbackAptTitle({ district: e.district, area: titleArea, bedrooms: titleBedrooms, lang })
   }
@@ -596,7 +599,7 @@ async function _loadAllInternal(): Promise<CachedAll> {
     sb.from('raw_apartments').select(APT_SELECT).limit(1000),
     loadJson<Record<string, string[]>>(cdnManifestUrl(PHOTO_MANIFEST_URL, 600), {}),
     loadJson<Record<string, string>>(cdnManifestUrl(DEV_LOOKUP_URL, 600), {}),
-    loadEnTranslations('apartments'),
+    loadAllTranslations('apartments'),
     loadViewCounts('apartment'),
     loadFeatureFlagsMap('apartment'),
   ])
@@ -605,7 +608,7 @@ async function _loadAllInternal(): Promise<CachedAll> {
   const enriched = rows
     .filter(r => r.data?.['Опубликовать'] === true)
     .filter(r => !isHiddenDeveloper(firstString(r.data['Developer1']), firstString(r.data['Developer'])))
-    .map(r => ({ ...r, data: mergeEnTranslations(r.data, r.airtable_id, enCache) }))
+    .map(r => ({ ...r, data: mergeAllTranslations(r.data, r.airtable_id, enCache) }))
     .map(r => enrich(r, devMap, featuresMap))
     .map(e => ({ ...e, views: viewCounts[e.id] ?? 0 }))
   return { enriched, manifest }
@@ -627,7 +630,7 @@ export function buildAllCards(
   manifest: Record<string, string[]>,
   filters: FilterState,
   devStats?: Map<string, { ready: number; total: number }>,
-  lang: 'ru' | 'en' = 'ru',
+  lang: Lang = 'ru',
 ): Card[] {
   let filtered = enriched.filter(e => passes(e, filters))
   const isSearch = filters.q.trim().length > 0
@@ -666,7 +669,7 @@ export function buildAllCards(
 export async function loadCatalogPage(
   filters: FilterState,
   page: number,
-  lang: 'ru' | 'en' = 'ru',
+  lang: Lang = 'ru',
 ): Promise<CatalogPage & { options: ReturnType<typeof buildOptions> }> {
   const safePage = Math.max(1, Math.floor(page))
   const { enriched, manifest } = await loadAll()

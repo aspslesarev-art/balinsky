@@ -11,7 +11,7 @@ import { SubscribeCTA } from '@/components/SubscribeCTA'
 import { formatPrice, type Currency } from '@/lib/currency'
 import type { RentalItem } from '@/lib/rental'
 import { PhotoSlider } from '@/components/PhotoSlider'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
 const PAGE_SIZE = 24
 
@@ -74,7 +74,7 @@ function isSortKey(v: string | null): v is SortKey {
 export function RentalCatalog({ items, initial, lang = 'ru' }: { items: RentalItem[]; initial?: Initial; lang?: Lang }) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const COPY_L = COPY[lang]
+  const COPY_L = pickCopy(COPY, lang)
   const SORT_LABELS = COPY_L.sort
   const PRICE_PRESETS: { label: string; min: number | null; max: number | null }[] = [
     { label: COPY_L.presets[0], min: null, max: 1000 },
@@ -390,7 +390,7 @@ function PriceRangePopover({
   presets: { label: string; min: number | null; max: number | null }[]
   lang: Lang
 }) {
-  const C = COPY[lang]
+  const C = pickCopy(COPY, lang)
   const [minDraft, setMinDraft] = useState(priceMin == null ? '' : String(priceMin))
   const [maxDraft, setMaxDraft] = useState(priceMax == null ? '' : String(priceMax))
 
@@ -494,7 +494,7 @@ function CheckboxList({
   const filteredOptions = !searchable || query.trim() === ''
     ? options
     : options.filter(o => (o.label ?? o.value).toLowerCase().includes(query.toLowerCase()))
-  const C = COPY[lang]
+  const C = pickCopy(COPY, lang)
 
   const toggle = (value: string) => {
     onChange(selected.includes(value) ? selected.filter(v => v !== value) : [...selected, value])
@@ -551,7 +551,7 @@ function RentalCard({ r, currency, lang, perMonth }: {
   r: RentalItem; currency: Currency; lang: Lang; perMonth: string; bali: string
 }) {
   const price = formatPrice(r.priceMonthUsd, currency)
-  const detailHref = lang === 'en' ? `/en/rental/o/${r.slug}` : `/ru/arenda/o/${r.slug}`
+  const detailHref = switchLangPath(`/ru/arenda/o/${r.slug}`, lang)
   return (
     <Link
       href={detailHref}

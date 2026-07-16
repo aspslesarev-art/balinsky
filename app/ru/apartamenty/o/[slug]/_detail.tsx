@@ -43,9 +43,9 @@ import { loadLandProfile, landAllowsBuilding } from '@/lib/land-profile'
 import { loadMarketStats } from '@/lib/complex-market-stats'
 import { MarketStatsBlock } from '@/components/MarketStatsBlock'
 import { VillaPresentationButton } from '@/components/VillaPresentation'
-import { tField, type Lang } from '@/lib/i18n'
+import { tField, pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { normalizeSlug } from '@/lib/slug-normalize'
-import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
+import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
 import { districtRu } from '@/lib/district-ru'
 import { geoChainString } from '@/lib/regency'
@@ -61,8 +61,8 @@ const AIRPORT_LNG = 115.1667
 function fmtAirportDistance(lat: number | null, lng: number | null, lang: Lang): string | null {
   if (lat == null || lng == null) return null
   const km = haversineKm(lat, lng, AIRPORT_LAT, AIRPORT_LNG)
-  if (lang === 'en') return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(km < 10 ? 1 : 0)} km`
-  return km < 1 ? `${Math.round(km * 1000)} м` : `${km.toFixed(km < 10 ? 1 : 0)} км`
+  if (lang === 'ru') return km < 1 ? `${Math.round(km * 1000)} м` : `${km.toFixed(km < 10 ? 1 : 0)} км`
+  return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(km < 10 ? 1 : 0)} km`
 }
 
 const COPY = {
@@ -220,14 +220,14 @@ function isMalformedAptTitle(s: string | null): boolean {
   if (!s) return false
   return /(?:\s{2}|в\s+-|in\s+-|—\s*-|\bв\s*$)/i.test(s)
 }
-function fallbackAptTitle(district: string | null, area: number | null, bedrooms: number | null, lang: 'ru' | 'en'): string {
-  const parts: string[] = [lang === 'en' ? 'Apartment' : 'Апартаменты']
-  if (district) parts.push(lang === 'en' ? `in ${district}` : `в ${district}`)
+function fallbackAptTitle(district: string | null, area: number | null, bedrooms: number | null, lang: Lang): string {
+  const parts: string[] = [lang === 'ru' ? 'Апартаменты' : 'Apartment']
+  if (district) parts.push(lang === 'ru' ? `в ${district}` : `in ${district}`)
   const tail: string[] = []
-  if (area != null) tail.push(lang === 'en' ? `${area} m²` : `${area} м²`)
+  if (area != null) tail.push(lang === 'ru' ? `${area} м²` : `${area} m²`)
   if (bedrooms != null) {
     const word = pluralRu(bedrooms, ['спальня', 'спальни', 'спален'])
-    tail.push(lang === 'en' ? `${bedrooms} BR` : `${bedrooms} ${word}`)
+    tail.push(lang === 'ru' ? `${bedrooms} ${word}` : `${bedrooms} BR`)
   }
   return [parts.join(' '), tail.join(', ')].filter(Boolean).join(' — ')
 }
@@ -262,14 +262,14 @@ const _loadApartmentById = unstable_cache(
   async (id: string): Promise<Row | null> => {
     const [{ data }, enCache] = await Promise.all([
       sb.from('raw_apartments').select('airtable_id, data').eq('airtable_id', id).maybeSingle(),
-      loadEnTranslations('apartments'),
+      loadAllTranslations('apartments'),
     ])
     const raw = (data as Row | null) ?? null
     if (!raw) return null
     // Mirror what the catalog loader does — merge cached EN translations
     // into the row so tField() picks them up. Detail page never hits the
     // catalog loadAllApartments, so the merge has to live here too.
-    return { ...raw, data: mergeEnTranslations(raw.data, raw.airtable_id, enCache) }
+    return { ...raw, data: mergeAllTranslations(raw.data, raw.airtable_id, enCache) }
   },
   ['apartment-by-id-detail-v2'],
   { revalidate: 3600 },
@@ -470,7 +470,7 @@ export async function generateApartmentMetadata(slug: string, lang: Lang) {
   const a = await loadApartmentBySlug(slug)
   if (!a) return { robots: { index: false } }
   const d = a.data
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const titleRaw = tField(d, 'SEO:Title', lang) ?? tField(d, 'ИИ Имя', lang) ?? slug
   let title = cleanTitle(titleRaw) ?? slug
   if (isMalformedAptTitle(title)) {
@@ -487,7 +487,7 @@ export async function generateApartmentMetadata(slug: string, lang: Lang) {
     : c.metaFallback(title, district, price)
   const ruPath = `/ru/apartamenty/o/${slug}`
   const enPath = `/en/apartments/o/${slug}`
-  const path = lang === 'en' ? enPath : ruPath
+  const path = switchLangPath(ruPath, lang)
   return {
     title: `${title} | Balinsky`,
     description,
@@ -500,16 +500,14 @@ export async function generateApartmentMetadata(slug: string, lang: Lang) {
 }
 
 export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang }) {
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   // Canonical-slug redirect: legacy GSC links carry dirty slugs
   // (cyrillic look-alikes, parens). Resolve resolves either form and
   // tells us the canonical; redirect 301 if the URL doesn't match.
   const resolved = await resolveApartment(slug)
   if (!resolved) notFound()
   if (resolved.canonicalSlug !== slug) {
-    const path = lang === 'en'
-      ? `/en/apartments/o/${resolved.canonicalSlug}`
-      : `/ru/apartamenty/o/${resolved.canonicalSlug}`
+    const path = switchLangPath(`/ru/apartamenty/o/${resolved.canonicalSlug}`, lang)
     permanentRedirect(path)
   }
   const a = resolved.row
@@ -587,7 +585,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
     : []
 
   const facts: { Icon: typeof BedDouble; label: string; value: ReactNode }[] = [
-    bedrooms != null && { Icon: BedDouble, label: lang === 'en' ? 'Bedrooms' : 'Спальни', value: `${bedrooms} BR` },
+    bedrooms != null && { Icon: BedDouble, label: lang === 'ru' ? 'Спальни' : 'Bedrooms', value: `${bedrooms} BR` },
     area != null && { Icon: Square, label: c.factArea, value: `${area} ${c.sqm}` },
     floor && { Icon: Layers, label: c.factFloor, value: floor === 'GROUND FLOOR' ? c.factGround : floor },
     yearRaw && { Icon: Calendar, label: c.factCompletion, value: status?.toLowerCase().includes('построен') ? c.completed : yearRaw },
@@ -614,14 +612,14 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: title,
-    url: lang === 'en' ? `${SITE_URL}/en/apartments/o/${slug}` : `${SITE_URL}/ru/apartamenty/o/${slug}`,
+    url: `${SITE_URL}${switchLangPath(`/ru/apartamenty/o/${slug}`, lang)}`,
     category: 'Apartment',
   }
   if (photos.length > 0) productJsonLd.image = photos.slice(0, 5)
   productJsonLd.description = seoText?.slice(0, 500)
-    ?? (lang === 'en'
-      ? `${bedrooms ? bedrooms + '-bedroom ' : ''}apartment${district ? ` in ${district}` : ''}, Bali, Indonesia`
-      : `${bedrooms ? bedrooms + '-комнатные ' : ''}апартаменты${district ? ` в ${district}` : ''} на Бали, Индонезия`)
+    ?? (lang === 'ru'
+      ? `${bedrooms ? bedrooms + '-комнатные ' : ''}апартаменты${district ? ` в ${district}` : ''} на Бали, Индонезия`
+      : `${bedrooms ? bedrooms + '-bedroom ' : ''}apartment${district ? ` in ${district}` : ''}, Bali, Indonesia`)
   productJsonLd.brand = { '@type': 'Brand', name: devName ?? 'Balinsky' }
   if (priceNum != null) {
     productJsonLd.offers = {
@@ -629,7 +627,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
       price: Math.round(priceNum),
       priceCurrency: 'USD',
       availability: 'https://schema.org/InStock',
-      url: lang === 'en' ? `${SITE_URL}/en/apartments/o/${slug}` : `${SITE_URL}/ru/apartamenty/o/${slug}`,
+      url: `${SITE_URL}${switchLangPath(`/ru/apartamenty/o/${slug}`, lang)}`,
       // Real-estate sales don't ship and don't return — explicit
       // declarations satisfy Google Merchant validator without faking
       // e-commerce semantics.
@@ -672,11 +670,11 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
         }
       : null
 
-  const home = lang === 'en' ? '/en' : '/ru'
-  const apartmentsRoot = lang === 'en' ? '/en/apartments' : '/ru/apartamenty'
-  const complexesRoot = lang === 'en' ? '/en/complexes' : '/ru/zhilye-kompleksy'
-  const villasRoot = lang === 'en' ? '/en/villas' : '/ru/villy'
-  const developersRoot = lang === 'en' ? '/en/developers' : '/ru/zastrojshhiki'
+  const home = switchLangPath('/ru', lang)
+  const apartmentsRoot = switchLangPath('/ru/apartamenty', lang)
+  const complexesRoot = switchLangPath('/ru/zhilye-kompleksy', lang)
+  const villasRoot = switchLangPath('/ru/villy', lang)
+  const developersRoot = switchLangPath('/ru/zastrojshhiki', lang)
 
   return (
     <>
@@ -799,7 +797,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
             <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
               {c.descHeading}
             </h2>
-            <ExpandableText className="max-w-3xl" more={lang === 'en' ? 'Read more' : 'Подробнее'} less={lang === 'en' ? 'Show less' : 'Свернуть'}>
+            <ExpandableText className="max-w-3xl" more={lang === 'ru' ? 'Подробнее' : 'Read more'} less={lang === 'ru' ? 'Свернуть' : 'Show less'}>
               <div className="prose-balinsky text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
                 {seoText}
               </div>
@@ -950,13 +948,13 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
         />
 
         {aptVideos.length > 0 && (
-          <VideoGrid videos={aptVideos} title={parentComplexName ? (lang === 'en' ? `Videos: ${parentComplexName}` : `Видео: ${parentComplexName}`) : (lang === 'en' ? 'Videos' : 'Видео')} />
+          <VideoGrid videos={aptVideos} title={parentComplexName ? (lang === 'ru' ? `Видео: ${parentComplexName}` : `Videos: ${parentComplexName}`) : (lang === 'ru' ? 'Видео' : 'Videos')} />
         )}
 
         {otherApts.length > 0 && district && (
           <section className="mb-10">
             <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
-              {lang === 'en' ? `Other apartments in ${district}` : `Другие апартаменты в районе ${district}`}
+              {lang === 'ru' ? `Другие апартаменты в районе ${district}` : `Other apartments in ${district}`}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {otherApts.map(o => <ApartmentCard key={o.id} a={o} lang={lang} />)}
@@ -976,7 +974,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
                 { href: `${apartmentsRoot}/${districtRaw!.toLowerCase().replace(/\s+/g, '-')}`, label: c.related.apartmentsIn(district) },
               ] : []),
               ...(bedrooms ? [
-                { href: `${apartmentsRoot}/${bedrooms}-spaln${bedrooms === 1 ? 'ya' : 'i'}`, label: lang === 'en' ? `${bedrooms}-bedroom apartments` : `${bedrooms}-комнатные апартаменты` },
+                { href: `${apartmentsRoot}/${bedrooms}-spaln${bedrooms === 1 ? 'ya' : 'i'}`, label: lang === 'ru' ? `${bedrooms}-комнатные апартаменты` : `${bedrooms}-bedroom apartments` },
               ] : []),
             ].map(l => (
               <li key={l.href + l.label}>

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { BedDouble, Square, ArrowRight } from 'lucide-react'
 import type { CollTier, CollItem } from '@/lib/home-collections'
-import type { Lang } from '@/lib/i18n'
+import { switchLangPath, type Lang } from '@/lib/i18n'
 
 function fmtPrice(n: number | null): string {
   if (n == null) return '—'
@@ -15,8 +15,8 @@ function fmtPrice(n: number | null): string {
 
 function tierLabel(t: CollTier, lang: Lang): string {
   const max = `$${Math.round(t.max / 1000)}k`
-  if (t.type === 'villa') return lang === 'en' ? `Villas up to ${max}` : `Виллы до ${max}`
-  return lang === 'en' ? `Apartments up to ${max}` : `Апартаменты до ${max}`
+  if (t.type === 'villa') return lang === 'ru' ? `Виллы до ${max}` : `Villas up to ${max}`
+  return lang === 'ru' ? `Апартаменты до ${max}` : `Apartments up to ${max}`
 }
 
 function chip(active: boolean): string {
@@ -64,8 +64,8 @@ export function HomeCollections({ tiers, lang = 'ru' }: { tiers: CollTier[]; lan
   const district = tier.districts.find(d => d.slug === dslug) ?? tier.districts[0]
 
   const root = tier.type === 'villa'
-    ? (lang === 'en' ? '/en/villas' : '/ru/villy')
-    : (lang === 'en' ? '/en/apartments' : '/ru/apartamenty')
+    ? switchLangPath('/ru/villy', lang)
+    : switchLangPath('/ru/apartamenty', lang)
   const seeAllHref = `${root}?price_max=${tier.max}`
 
   return (
@@ -111,7 +111,7 @@ export function HomeCollections({ tiers, lang = 'ru' }: { tiers: CollTier[]; lan
 
       <div className="mt-5">
         <Link href={seeAllHref} className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[var(--color-primary)] hover:gap-2.5 transition-all no-underline">
-          {lang === 'en' ? `All ${tierLabel(tier, lang).toLowerCase()}` : `Все ${tierLabel(tier, lang).toLowerCase()}`}
+          {lang === 'ru' ? `Все ${tierLabel(tier, lang).toLowerCase()}` : `All ${tierLabel(tier, lang).toLowerCase()}`}
           <ArrowRight size={16} />
         </Link>
       </div>

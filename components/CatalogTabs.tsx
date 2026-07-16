@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { List, Map as MapIcon } from 'lucide-react'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const COPY = {
   ru: { list: 'Каталог', map: 'Карта' },
@@ -18,7 +18,7 @@ export function CatalogTabs({
   mapHref?: string
   lang?: Lang
 }) {
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   return (
     <div className="mt-6 border-b border-[var(--color-border)]">
       <div className="flex items-center gap-8">

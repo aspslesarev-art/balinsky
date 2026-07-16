@@ -5,7 +5,7 @@ import { FilterDropdown } from '../FilterDropdown'
 import { useVillaFilterUrl, type FilterView } from './useVillaFilterUrl'
 import type { Option } from '../filters/MultiSelectFilter'
 import type { VillaFilterState } from '@/app/ru/villy/_lib'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 const COPY = {
   ru: { search: 'Поиск…', noOptions: 'Нет вариантов', clear: 'Сбросить', apply: 'Применить' },
@@ -38,7 +38,7 @@ export function VillaMultiSelect({
   const { apply } = useVillaFilterUrl(current, view)
   const [query, setQuery] = useState('')
   const [draft, setDraft] = useState<string[]>(selected)
-  const copy = COPY[lang]
+  const copy = pickCopy(COPY, lang)
 
   // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: deps deliberately scoped
   useEffect(() => { setDraft(selected) }, [selected.join(',')])

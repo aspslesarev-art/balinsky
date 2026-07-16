@@ -4,10 +4,11 @@ import Fuse from 'fuse.js'
 import type { ComplexCardData } from '@/components/ComplexCard'
 import type { Option } from '@/components/filters/MultiSelectFilter'
 import { translit, hasCyrillic } from '@/lib/translit'
-import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
+import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
 import { getDistrictCommercialMeta } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { enLabel, type FilterDim } from '@/lib/filter-i18n'
+import type { Lang } from '@/lib/i18n'
 import { isTopBlacklisted } from '@/lib/top-blacklist'
 import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import { loadViewCounts, smartSort } from '@/lib/catalog-rank'
@@ -313,13 +314,13 @@ function buildLabelMap(rows: EnrichedRow[], colRu: string, colEn: string): Map<s
 export function buildOptions(
   allRows: EnrichedRow[],
   current: ComplexFilterState,
-  lang: 'ru' | 'en' = 'ru',
+  lang: Lang = 'ru',
 ): ComplexFilterOptions {
   // Per-filter EN translation maps. Add a `<RU column> EN` column in
   // Airtable to translate filter labels — until then EN catalogues
   // render the literal column name as a placeholder so editors can
   // see what to create.
-  const enMap = lang === 'en' ? {
+  const enMap = lang !== 'ru' ? {
     district:  buildLabelMap(allRows, 'Location 2', 'Location 2 EN'),
     types:     buildLabelMap(allRows, 'Типы юнитов', 'Типы юнитов EN'),
     status:    buildLabelMap(allRows, 'Статус', 'Статус EN'),
@@ -642,13 +643,13 @@ async function _loadAllInternal(): Promise<CachedAll> {
     loadJson<Record<string, string[]>>(cdnManifestUrl(PHOTO_MANIFEST_URL, 600), {}),
     _loadVillaPriceRows(),
     _loadAptPriceRows(),
-    loadEnTranslations('complexes'),
+    loadAllTranslations('complexes'),
     loadViewCounts('complex'),
   ])
   const manifest = cdnRewriteManifest(manifestRaw)
   const enriched = rows
     .filter(r => !isHiddenDeveloper(firstString(r.data['Developer1']), firstString(r.data['Варианты поиска застройщика'])))
-    .map(r => ({ ...r, data: mergeEnTranslations(r.data, r.airtable_id, enCache) }))
+    .map(r => ({ ...r, data: mergeAllTranslations(r.data, r.airtable_id, enCache) }))
     .map(enrich)
     .map(e => ({ ...e, views: viewCounts[e.id] ?? 0 }))
   const prices = buildPriceIndex(enriched, villas, apts)
@@ -699,7 +700,7 @@ export function buildAllCards(
 export async function loadCatalogPage(
   filters: ComplexFilterState,
   page: number,
-  lang: 'ru' | 'en' = 'ru',
+  lang: Lang = 'ru',
 ): Promise<CatalogPage> {
   const safePage = Math.max(1, Math.floor(page))
   const { enriched, manifest, prices } = await loadAll()

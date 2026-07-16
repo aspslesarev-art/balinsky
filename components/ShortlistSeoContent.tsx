@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
 // Bottom-of-page editorial copy for the shortlist / comparison route.
 // Two jobs:
@@ -71,7 +71,7 @@ const COPY = {
 } as const
 
 export function ShortlistSeoContent({ lang }: { lang: Lang }) {
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const link = (path: string, label: string) => (
     <Link
       key={label}
@@ -81,10 +81,10 @@ export function ShortlistSeoContent({ lang }: { lang: Lang }) {
       {label}
     </Link>
   )
-  const villasHref     = lang === 'en' ? '/en/villas'      : '/ru/villy'
-  const apartmentsHref = lang === 'en' ? '/en/apartments'  : '/ru/apartamenty'
-  const complexesHref  = lang === 'en' ? '/en/complexes'   : '/ru/zhilye-kompleksy'
-  const developersHref = lang === 'en' ? '/en/developers'  : '/ru/zastrojshhiki'
+  const villasHref     = switchLangPath('/ru/villy', lang)
+  const apartmentsHref = switchLangPath('/ru/apartamenty', lang)
+  const complexesHref  = switchLangPath('/ru/zhilye-kompleksy', lang)
+  const developersHref = switchLangPath('/ru/zastrojshhiki', lang)
 
   // FAQ JSON-LD lets Google render rich Q&A snippets in search even
   // though the rest of the page is per-visitor data.

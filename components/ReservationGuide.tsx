@@ -11,7 +11,7 @@ import {
   Lock, Calendar, FileText, Wallet, Undo2, ArrowRight,
   ShieldCheck, AlertTriangle,
 } from 'lucide-react'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
 const COPY = {
   ru: {
@@ -153,8 +153,8 @@ const COPY = {
 } as const
 
 export function ReservationGuide({ lang }: { lang: Lang }) {
-  const c = COPY[lang]
-  const home = lang === 'en' ? '/en' : '/ru'
+  const c = pickCopy(COPY, lang)
+  const home = switchLangPath('/ru', lang)
 
   const faqJsonLd = {
     '@context': 'https://schema.org',
@@ -259,9 +259,9 @@ export function ReservationGuide({ lang }: { lang: Lang }) {
               <h2 className="text-[20px] font-semibold text-[#111827] mb-2">{c.ctaHeading}</h2>
               <p className="text-[15px] text-[var(--color-text-muted)] mb-4">{c.ctaText}</p>
               <div className="flex flex-wrap gap-2">
-                <Link href={lang === 'en' ? '/en/villas'      : '/ru/villy'}        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[13px] font-medium no-underline">{c.ctaVillas}</Link>
-                <Link href={lang === 'en' ? '/en/apartments'  : '/ru/apartamenty'}  className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--color-border)] text-[13px] no-underline text-[var(--color-text)] hover:border-[var(--color-primary)] bg-white">{c.ctaApartments}</Link>
-                <Link href={lang === 'en' ? '/en/how-to-buy'  : '/ru/kak-kupit'}    className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--color-border)] text-[13px] no-underline text-[var(--color-text)] hover:border-[var(--color-primary)] bg-white">{c.ctaGuide}</Link>
+                <Link href={switchLangPath('/ru/villy', lang)}        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[13px] font-medium no-underline">{c.ctaVillas}</Link>
+                <Link href={switchLangPath('/ru/apartamenty', lang)}  className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--color-border)] text-[13px] no-underline text-[var(--color-text)] hover:border-[var(--color-primary)] bg-white">{c.ctaApartments}</Link>
+                <Link href={switchLangPath('/ru/kak-kupit', lang)}    className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--color-border)] text-[13px] no-underline text-[var(--color-text)] hover:border-[var(--color-primary)] bg-white">{c.ctaGuide}</Link>
               </div>
             </div>
           </div>

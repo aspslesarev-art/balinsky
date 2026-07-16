@@ -15,7 +15,9 @@ export async function GET(req: Request) {
   const RU_AGENT = 'agent_5001kwgqxtfaed9r9bf3jv11nhm5'
   const EN_AGENT = 'agent_1201kwjv3mfqeyb9bzveh97vnzeb'
   const lang = new URL(req.url).searchParams.get('lang')
-  const agentId = lang === 'en' ? EN_AGENT : RU_AGENT
+  // Only two voice agents exist (RU + EN). Non-RU visitors (en/id/fr) get the
+  // English-speaking agent; anything else falls back to the Russian one.
+  const agentId = lang === 'en' || lang === 'id' || lang === 'fr' ? EN_AGENT : RU_AGENT
   if (!key) return NextResponse.json({ error: 'convai_unconfigured' }, { status: 503 })
   if (!rateLimit(`convai:${clientIp(req)}`, 10, 60_000)) {
     return NextResponse.json({ error: 'rate_limited' }, { status: 429 })

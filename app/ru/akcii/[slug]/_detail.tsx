@@ -11,7 +11,7 @@ import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { loadAllPromo, loadPromoBySlug } from '@/lib/promo'
 import { RelatedContent } from '@/components/RelatedContent'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
@@ -39,7 +39,7 @@ export async function generatePromoDetailMetadata(slug: string, lang: Lang): Pro
   if (!p) return { robots: { index: false, follow: false } }
   const ruPath = `/ru/akcii/${p.slug}`
   const enPath = `/en/promo/${p.slug}`
-  const path = lang === 'en' ? enPath : ruPath
+  const path = switchLangPath(ruPath, lang)
   return {
     title: `${p.title} | Balinsky`,
     description: p.seoDescription ?? (p.body?.slice(0, 160) ?? p.title),
@@ -56,12 +56,12 @@ export async function generatePromoDetailMetadata(slug: string, lang: Lang): Pro
 }
 
 export async function PromoDetail({ slug, lang }: { slug: string; lang: Lang }) {
-  const c = COPY[lang]
+  const c = pickCopy(COPY, lang)
   const p = await loadPromoBySlug(slug, lang)
   if (!p) notFound()
-  const home = lang === 'en' ? '/en' : '/ru'
-  const promoRoot = lang === 'en' ? '/en/promo' : '/ru/akcii'
-  const developersRoot = lang === 'en' ? '/en/developers' : '/ru/zastrojshhiki'
+  const home = switchLangPath('/ru', lang)
+  const promoRoot = switchLangPath('/ru/akcii', lang)
+  const developersRoot = switchLangPath('/ru/zastrojshhiki', lang)
 
   const all = await loadAllPromo(lang)
   const related = p.developers[0]?.slug

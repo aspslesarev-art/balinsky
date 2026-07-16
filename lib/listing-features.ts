@@ -91,7 +91,7 @@ export async function loadListingVision(kind: FeatureKind, airtableId: string | 
 
 export function altFor(entry: VisionEntry | undefined | null, index: number, lang: Lang, fallback: string): string {
   if (!entry) return fallback
-  const arr = lang === 'en' ? entry.alt_en : entry.alt_ru
+  const arr = lang === 'ru' ? entry.alt_ru : entry.alt_en
   const a = arr?.[index]
   return (typeof a === 'string' && a.trim()) ? a.trim() : fallback
 }

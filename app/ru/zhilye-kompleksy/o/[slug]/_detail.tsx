@@ -48,8 +48,8 @@ import { loadLandProfile, landAllowsBuilding } from '@/lib/land-profile'
 import { loadComplexMarketStats } from '@/lib/complex-market-stats'
 import { MarketStatsBlock } from '@/components/MarketStatsBlock'
 import { PageViewTracker } from '@/components/PageViewTracker'
-import { tField, type Lang } from '@/lib/i18n'
-import { loadEnTranslations, mergeEnTranslations } from '@/lib/en-translations'
+import { tField, pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
+import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
 import { districtRu } from '@/lib/district-ru'
 import { geoChainString } from '@/lib/regency'
@@ -65,7 +65,7 @@ const AIRPORT_LNG = 115.1667
 function fmtAirportDistance(lat: number | null, lng: number | null, lang: Lang): string | null {
   if (lat == null || lng == null) return null
   const km = haversineKm(lat, lng, AIRPORT_LAT, AIRPORT_LNG)
-  if (lang === 'en') return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(km < 10 ? 1 : 0)} km`
+  if (lang !== 'ru') return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(km < 10 ? 1 : 0)} km`
   return km < 1 ? `${Math.round(km * 1000)} м` : `${km.toFixed(km < 10 ? 1 : 0)} км`
 }
 
@@ -314,9 +314,9 @@ function unitTypesPhrase(rawTypes: unknown, lang: Lang): string | null {
   if (found.length === 0) return null
   const RU: Record<string, string> = { apartment: 'апартаменты', villa: 'виллы', townhouse: 'таунхаусы', penthouse: 'пентхаусы' }
   const EN: Record<string, string> = { apartment: 'Apartments', villa: 'Villas', townhouse: 'Townhouses', penthouse: 'Penthouses' }
-  const words = found.map(k => (lang === 'en' ? EN : RU)[k])
+  const words = found.map(k => (lang === 'ru' ? RU : EN)[k])
   if (words.length === 1) return words[0]
-  const sep = lang === 'en' ? ' & ' : ' и '
+  const sep = lang === 'ru' ? ' и ' : ' & '
   return words.slice(0, -1).join(', ') + sep + words[words.length - 1]
 }
 
@@ -336,7 +336,7 @@ function factsDescription(opts: {
   if (!ar && !pr) return null
   const usd = (n: number) => '$' + Math.round(n).toLocaleString('en-US')
   const parts: string[] = []
-  if (lang === 'en') {
+  if (lang !== 'ru') {
     const head = `${opts.name} — ${opts.phrase ?? 'residential complex'}${opts.district ? ` in ${opts.district}` : ''}, Bali.`
     if (ar) parts.push(ar[0] === ar[1] ? `${ar[0]} m²` : `${ar[0]}–${ar[1]} m²`)
     if (br) parts.push(br[0] === br[1] ? `${br[0]}-bedroom` : `${br[0]}–${br[1]} bedrooms`)
@@ -412,13 +412,13 @@ async function _loadComplexById(id: string): Promise<ComplexRow | null> {
   if (c && Date.now() - c.ts < 5 * 60 * 1000) return c.row
   const [{ data }, enCache] = await Promise.all([
     sb.from('raw_complexes').select('airtable_id, data, slug, cover_url').eq('airtable_id', id).maybeSingle(),
-    loadEnTranslations('complexes'),
+    loadAllTranslations('complexes'),
   ])
   const raw = (data as ComplexRow | null) ?? null
   // Same hand-merge as villa/apartment detail loaders — detail page
   // queries raw_complexes directly and bypasses loadAllComplexes.
   const row: ComplexRow | null = raw
-    ? { ...raw, data: mergeEnTranslations(raw.data, raw.airtable_id, enCache) }
+    ? { ...raw, data: mergeAllTranslations(raw.data, raw.airtable_id, enCache) }
     : null
   _complexByIdCache.set(id, { ts: Date.now(), row })
   return row
@@ -507,7 +507,7 @@ async function loadOtherComplexesInDistrict(district: string | null, exceptId: s
     .map(c => {
       const photos = manifest[c.airtable_id] ?? []
       const typesRaw = strList(c.data['Типы юнитов'])
-      const types = lang === 'en' ? typesRaw.map(t => TYPE_EN[t] ?? t) : typesRaw
+      const types = lang === 'ru' ? typesRaw : typesRaw.map(t => TYPE_EN[t] ?? t)
       return {
         slug: c.slug as string,
         name: firstString(c.data['Project']) as string,
@@ -595,7 +595,7 @@ async function loadUnitsInComplex(complexName: string, lang: Lang = 'ru'): Promi
     // SEO:Title EN comes back as { state, value } wrapper for some rows,
     // so unwrap through firstString before .replace — otherwise we'd
     // hit "replace is not a function" on the EN tree.
-    const titleSource = (lang === 'en' ? firstString(r.title_en) : null) ?? r.title
+    const titleSource = (lang !== 'ru' ? firstString(r.title_en) : null) ?? r.title
     const title = titleSource.replace(/\s*\|\s*Balinsky\s*$/i, '').trim()
     units.push({
       kind: 'apartment',
@@ -618,7 +618,7 @@ async function loadUnitsInComplex(complexName: string, lang: Lang = 'ru'): Promi
     if (!r.title || !r.slug || r.slug.startsWith('-')) continue
     if (seenVillaId.has(r.airtable_id)) continue
     seenVillaId.add(r.airtable_id)
-    const titleSource = (lang === 'en' ? firstString(r.title_en) : null) ?? r.title
+    const titleSource = (lang !== 'ru' ? firstString(r.title_en) : null) ?? r.title
     const title = titleSource.replace(/\s*\|\s*Balinsky\s*$/i, '').trim()
     units.push({
       kind: 'villa',
@@ -642,7 +642,7 @@ async function loadUnitsInComplex(complexName: string, lang: Lang = 'ru'): Promi
 export async function generateComplexMetadata(slug: string, lang: Lang) {
   const c = await loadComplexBySlug(slug)
   if (!c) return { robots: { index: false } }
-  const copy = COPY[lang]
+  const copy = pickCopy(COPY, lang)
   const name = firstString(c.data['Project']) ?? slug
   const districtRaw = firstString(c.data['Location 2']) ?? firstString(c.data['Location'])
   const district = lang === 'ru' ? districtRu(districtRaw) : districtRaw
@@ -667,7 +667,7 @@ export async function generateComplexMetadata(slug: string, lang: Lang) {
       : copy.fallbackDesc(name, district, types, yearRaw))
   const ruPath = `/ru/zhilye-kompleksy/o/${slug}`
   const enPath = `/en/complexes/o/${slug}`
-  const path = lang === 'en' ? enPath : ruPath
+  const path = switchLangPath(ruPath, lang)
   return {
     title: copy.titlePart(name, district, unitTypesPhrase(c.data['Типы юнитов'], lang)),
     description,
@@ -686,7 +686,7 @@ export async function generateComplexMetadata(slug: string, lang: Lang) {
 }
 
 export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }) {
-  const copy = COPY[lang]
+  const copy = pickCopy(COPY, lang)
   const c = await loadComplexBySlug(slug)
   if (!c) notFound()
 
@@ -726,9 +726,9 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
     'Под заказ': 'On request',
     'Готов': 'Ready',
   }
-  const enLabelFor = (map: Record<string, string>, v: string | null): string | null => v ? (lang === 'en' ? (map[v] ?? v) : v) : null
+  const enLabelFor = (map: Record<string, string>, v: string | null): string | null => v ? (lang === 'ru' ? v : (map[v] ?? v)) : null
   const typesRaw = strList(d['Типы юнитов'])
-  const types = lang === 'en' ? typesRaw.map(t => TYPE_EN[t] ?? t) : typesRaw
+  const types = lang === 'ru' ? typesRaw : typesRaw.map(t => TYPE_EN[t] ?? t)
   const statusRaw = firstString(d['Статус'])
   const status = enLabelFor(STATUS_EN, statusRaw)
   const salesStatus = firstString(d['Статус продаж'])
@@ -821,7 +821,6 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   const vizHotspots = vizLayers.length > 0
     ? await listHotspots(vizLayers.map(l => l.id)).catch(() => [] as Awaited<ReturnType<typeof listHotspots>>)
     : []
-  const unitsRoot = lang === 'en' ? '/en' : '/ru'
   // For the popup we prefer the optimised single-image attachment
   // (`Image Opt` in Airtable — a pre-compressed thumbnail) over the
   // full-quality first photo from the manifest. The interactive plan
@@ -852,8 +851,8 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   }> = {}
   for (const u of units) {
     const path = u.kind === 'villa'
-      ? `${unitsRoot === '/en' ? '/en/villas' : '/ru/villy'}/o/${u.slug}`
-      : `${unitsRoot === '/en' ? '/en/apartments' : '/ru/apartamenty'}/o/${u.slug}`
+      ? switchLangPath(`/ru/villy/o/${u.slug}`, lang)
+      : switchLangPath(`/ru/apartamenty/o/${u.slug}`, lang)
     const row = (u.kind === 'villa' ? vilRowsById : aptRowsById).get(u.id)
     // Preference order for the popup hero: `Opt photos[0]` is the
     // truly compressed variant (~140 KB, 800 px wide). `Image Opt`
@@ -887,14 +886,12 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   }
 
   // Locale-aware path roots used in breadcrumbs / internal links.
-  const home = lang === 'en' ? '/en' : '/ru'
-  const complexesRoot = lang === 'en' ? '/en/complexes' : '/ru/zhilye-kompleksy'
-  const apartmentsRoot = lang === 'en' ? '/en/apartments' : '/ru/apartamenty'
-  const villasRoot = lang === 'en' ? '/en/villas' : '/ru/villy'
-  const developersRoot = lang === 'en' ? '/en/developers' : '/ru/zastrojshhiki'
-  const detailUrl = lang === 'en'
-    ? `${SITE_URL}/en/complexes/o/${slug}`
-    : `${SITE_URL}/ru/zhilye-kompleksy/o/${slug}`
+  const home = switchLangPath('/ru', lang)
+  const complexesRoot = switchLangPath('/ru/zhilye-kompleksy', lang)
+  const apartmentsRoot = switchLangPath('/ru/apartamenty', lang)
+  const villasRoot = switchLangPath('/ru/villy', lang)
+  const developersRoot = switchLangPath('/ru/zastrojshhiki', lang)
+  const detailUrl = `${SITE_URL}${switchLangPath(`/ru/zhilye-kompleksy/o/${slug}`, lang)}`
 
   // ApartmentComplex schema (Google understands it)
   const placeJsonLd: Record<string, unknown> = {
@@ -1033,7 +1030,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             <h2 className="text-[19px] sm:text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
               {copy.aboutPrefix} {name}
             </h2>
-            <ExpandableText className="max-w-3xl" more={lang === 'en' ? 'Read more' : 'Подробнее'} less={lang === 'en' ? 'Show less' : 'Свернуть'}>
+            <ExpandableText className="max-w-3xl" more={lang === 'ru' ? 'Подробнее' : 'Read more'} less={lang === 'ru' ? 'Свернуть' : 'Show less'}>
               <div className="prose-balinsky text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
                 {pageBody}
               </div>
@@ -1111,7 +1108,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
                       <StarRating value={devReliability.score} size={14} />
                       <span className="text-[13px] font-semibold text-[#111827]">{devReliability.score.toFixed(1)}</span>
                       <span className="text-[12px] text-[var(--color-text-muted)]">
-                        {lang === 'en' ? `Balinsky reliability · ${devReliability.completed} completed` : `надёжность Balinsky · ${devReliability.completed} сданных`}
+                        {lang === 'ru' ? `надёжность Balinsky · ${devReliability.completed} сданных` : `Balinsky reliability · ${devReliability.completed} completed`}
                       </span>
                     </div>
                   )}

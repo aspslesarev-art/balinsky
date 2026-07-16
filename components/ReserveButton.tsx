@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { Lock, Loader2, X, CheckCircle2, Calendar, FileText, Wallet, Undo2, ChevronRight } from 'lucide-react'
-import type { Lang } from '@/lib/i18n'
+import { switchLangPath, type Lang, detectLang, pickCopy } from '@/lib/i18n'
 
 const COPY = {
   ru: {
@@ -83,8 +83,8 @@ export function ReserveButton({
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
   const pathname = usePathname() ?? ''
-  const lang: Lang = pathname.startsWith('/en') ? 'en' : 'ru'
-  const c = COPY[lang]
+  const lang: Lang = detectLang(pathname)
+  const c = pickCopy(COPY, lang)
 
   const canSubmit = name.trim().length > 0
     && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
@@ -220,7 +220,7 @@ export function ReserveButton({
                     ))}
                   </ul>
                   <Link
-                    href={lang === 'en' ? '/en/reservation' : '/ru/rezervirovanie'}
+                    href={switchLangPath('/ru/rezervirovanie', lang)}
                     target="_blank"
                     className="inline-flex items-center gap-1 text-[12px] text-[var(--color-primary)] hover:text-[var(--color-primary-pressed)] mb-5 no-underline"
                   >
