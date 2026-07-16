@@ -43,6 +43,7 @@ import {
   SafetyFlow,
 } from '@/components/LandingVisuals'
 import { pickCopy, type Lang } from '@/lib/i18n'
+import { translit, hasCyrillic } from '@/lib/translit'
 import { cdnBucketBase, cdnManifestUrl } from '@/lib/photo-cdn'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -870,7 +871,7 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
                   </div>
                 )}
                 <div className="p-4">
-                  <div className="text-[15px] font-medium text-[#0E1A14] truncate">{k.title}</div>
+                  <div className="text-[15px] font-medium text-[#0E1A14] truncate">{lang !== 'ru' && k.title && hasCyrillic(k.title) ? translit(k.title) : k.title}</div>
                   <div className="mt-1 text-[12.5px] text-[#6B7570] flex items-center gap-1.5">
                     {k.district && <><MapPin size={11} /> {k.district}</>}
                     {k.units != null && <span className="ml-auto tabular-nums">{k.units} {lang === 'ru' ? 'юнитов' : 'units'}</span>}
