@@ -920,7 +920,21 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   const status = enLabelFor(STATUS_MAP, statusRaw)
   const salesStatus = firstString(d['Статус продаж'])
   const isSold = salesStatus === 'Продано'
-  const permit = firstString(d['Разрешительные документы'])
+  // Permit is a free-text combo of Russian status words + acronyms (PBG/SLF/
+  // RDTR). Translate the Russian tokens for non-RU; acronyms pass through.
+  const PERMIT_TOKENS: Record<'en' | 'id' | 'fr', Record<string, string>> = {
+    en: { 'Заявка': 'Applied', 'заявка': 'applied', 'Подано': 'Submitted', 'подано': 'submitted', 'Получено': 'Obtained', 'получено': 'obtained', 'В процессе': 'In progress', 'в процессе': 'in progress', 'Оформляется': 'In progress', 'оформляется': 'in progress', 'Есть': 'Yes', 'есть': 'yes', 'нет': 'none' },
+    id: { 'Заявка': 'Diajukan', 'заявка': 'diajukan', 'Подано': 'Diajukan', 'подано': 'diajukan', 'Получено': 'Diterima', 'получено': 'diterima', 'В процессе': 'Dalam proses', 'в процессе': 'dalam proses', 'Оформляется': 'Dalam proses', 'оформляется': 'dalam proses', 'Есть': 'Ada', 'есть': 'ada', 'нет': 'tidak ada' },
+    fr: { 'Заявка': 'Demande déposée', 'заявка': 'demande déposée', 'Подано': 'Déposé', 'подано': 'déposé', 'Получено': 'Obtenu', 'получено': 'obtenu', 'В процессе': 'En cours', 'в процессе': 'en cours', 'Оформляется': 'En cours', 'оформляется': 'en cours', 'Есть': 'Oui', 'есть': 'oui', 'нет': 'aucun' },
+  }
+  const translatePermit = (v: string | null): string | null => {
+    if (!v || lang === 'ru') return v
+    let out = v
+    for (const [ru, tr] of Object.entries(PERMIT_TOKENS[lang])) out = out.split(ru).join(tr)
+    return out
+  }
+  const permitRaw = firstString(d['Разрешительные документы'])
+  const permit = translatePermit(permitRaw)
   const yearRaw = firstString(d['Year of completion ']) ?? firstString(d['Year of completion'])
   const totalUnits = numberOrNull(d['Total quantity of units'])
   const lease = firstString(d['Leasehold']) ?? firstString(d['Leashold'])
@@ -972,7 +986,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   const facts: { Icon: typeof Building2; label: string; value: string }[] = [
     types.length > 0 && { Icon: Home, label: copy.factType, value: types.join(', ') },
     yearRaw && { Icon: Calendar, label: copy.factCompletion, value: status?.toLowerCase().includes('построен') ? copy.factCompletionDone : yearRaw },
-    permit && permit.toLowerCase() !== 'нет' && { Icon: FileCheck2, label: copy.factPermits, value: permit },
+    permitRaw && permitRaw.toLowerCase() !== 'нет' && { Icon: FileCheck2, label: copy.factPermits, value: permit },
     lease && { Icon: Lock, label: copy.factLeasehold, value: copy.factLeaseValue(lease) },
     totalUnits != null && { Icon: BedDouble, label: copy.factUnits, value: String(totalUnits) },
     district && { Icon: MapPin, label: copy.factDistrict, value: district },
