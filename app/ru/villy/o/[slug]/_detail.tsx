@@ -61,7 +61,7 @@ import { PageViewTracker } from '@/components/PageViewTracker'
 import { VillaPresentationButton } from '@/components/VillaPresentation'
 import { tField, pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { normalizeSlug } from '@/lib/slug-normalize'
-import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
+import { loadAllTranslations, mergeAllTranslations, loadTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
 import { districtRu } from '@/lib/district-ru'
 import { geoChainString } from '@/lib/regency'
@@ -487,16 +487,19 @@ type DeveloperSlimRow = {
   reputation: string | null
   construction: string | null
 }
-const _loadDevelopersIndex = unstable_cache(
+const _loadDevelopersIndex = (lang: Lang) => unstable_cache(
   async (): Promise<DeveloperLite[]> => {
-    const { data, error } = await sb.from('raw_developers').select(`
-      airtable_id, logo_url,
-      published:data->"Публикация",
-      name:data->Developer,
-      slug:data->"SEO:Slug",
-      reputation:data->"Репутация и опыт",
-      construction:data->"Строительство и недвижимость"
-    `).limit(200)
+    const [{ data, error }, tr] = await Promise.all([
+      sb.from('raw_developers').select(`
+        airtable_id, logo_url,
+        published:data->"Публикация",
+        name:data->Developer,
+        slug:data->"SEO:Slug",
+        reputation:data->"Репутация и опыт",
+        construction:data->"Строительство и недвижимость"
+      `).limit(200),
+      loadTranslations('developers', lang),
+    ])
     if (error) throw new Error(`raw_developers: ${error.message}`)
     const rows = (data ?? []) as DeveloperSlimRow[]
     if (rows.length === 0) throw new Error('raw_developers returned 0 rows — refusing to cache empty')
@@ -504,7 +507,12 @@ const _loadDevelopersIndex = unstable_cache(
     for (const r of rows) {
       if (r.published !== true) continue
       if (!r.name || !r.slug) continue
-      const sourceText = r.reputation ?? r.construction ?? ''
+      // For non-RU, prefer the translated reputation/construction text from
+      // the developers translation cache; fall back to the RU source.
+      const trf = tr[r.airtable_id] ?? {}
+      const sourceText = (lang !== 'ru'
+        ? (trf['Репутация и опыт'] ?? trf['Строительство и недвижимость'])
+        : null) ?? r.reputation ?? r.construction ?? ''
       const highlights = sourceText
         .split('\n')
         .map(l => l.replace(/^[\s•\-–—·]+/, '').trim())
@@ -514,9 +522,9 @@ const _loadDevelopersIndex = unstable_cache(
     }
     return out
   },
-  ['villy-developers-index-v3'],
+  ['villy-developers-index-v4', lang],
   { revalidate: 600 },
-)
+)()
 
 function findDeveloperByName(targetName: string | null, list: DeveloperLite[]): DeveloperLite | null {
   if (!targetName) return null
@@ -667,7 +675,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   const [otherVillas, complexes, developers, stylesMap, scoresMap, activeReservation, landProfile, marketStats, nearby] = await Promise.all([
     loadOtherVillasInDistrict(district, v.airtable_id, lang),
     _loadComplexesIndex(),
-    _loadDevelopersIndex(),
+    _loadDevelopersIndex(lang),
     loadVillaStyles(),
     loadAllVillaScores(),
     findActiveReservation('villa', v.airtable_id),
@@ -1017,7 +1025,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
                   <div className="text-[19px] font-semibold text-[#111827] mb-2">{parentComplex.name}</div>
                   <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-[13px] text-[var(--color-text-muted)] mb-4">
                     {parentComplex.district && <span>{parentComplex.district}</span>}
-                    {parentComplex.types.length > 0 && <span>{parentComplex.types.join(', ')}</span>}
+                    {parentComplex.types.length > 0 && <span>{parentComplex.types.map(tp => facetLabel('type', tp, lang)).join(', ')}</span>}
                     {parentComplex.year && (
                       <span>{parentComplex.status?.toLowerCase().includes('построен') ? c.completedShort : c.completion(parentComplex.year)}</span>
                     )}

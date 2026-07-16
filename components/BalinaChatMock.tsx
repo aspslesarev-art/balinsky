@@ -58,7 +58,7 @@ export function BalinaChatMock({ lang }: { lang: Lang }) {
         <div className="flex items-center gap-2.5 px-4 py-3 bg-[var(--color-primary-soft)] border-b border-[var(--color-border)]">
           <Image src="/balina.jpg" alt="" width={36} height={36} className="w-9 h-9 rounded-full object-cover" />
           <div>
-            <div className="text-[14px] font-semibold text-[#111827] leading-tight">Балина</div>
+            <div className="text-[14px] font-semibold text-[#111827] leading-tight">{lang === 'ru' ? 'Балина' : 'Balina'}</div>
             <div className="text-[11px] text-[var(--color-text-muted)] leading-tight flex items-center gap-1">
               <ShieldCheck size={11} className="text-[var(--color-primary)]" /> {c.subtitle}
             </div>

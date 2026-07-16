@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { BedDouble, Square, ArrowRight } from 'lucide-react'
 import type { CollTier, CollItem } from '@/lib/home-collections'
 import { switchLangPath, type Lang } from '@/lib/i18n'
+import { translit, hasCyrillic } from '@/lib/translit'
 
 function fmtPrice(n: number | null): string {
   if (n == null) return '—'
@@ -28,7 +29,7 @@ function chip(active: boolean): string {
   )
 }
 
-function CollCard({ it, href }: { it: CollItem; href: string }) {
+function CollCard({ it, href, lang }: { it: CollItem; href: string; lang: Lang }) {
   return (
     <Link
       href={href}
@@ -45,10 +46,10 @@ function CollCard({ it, href }: { it: CollItem; href: string }) {
         </div>
       </div>
       <div className="p-3">
-        <div className="text-[13.5px] font-medium leading-snug line-clamp-2 min-h-[2.6em]">{it.title}</div>
+        <div className="text-[13.5px] font-medium leading-snug line-clamp-2 min-h-[2.6em]">{lang !== 'ru' && it.title && hasCyrillic(it.title) ? translit(it.title) : it.title}</div>
         <div className="mt-1.5 flex items-center gap-3 text-[12px] text-[var(--color-text-muted)]">
           {it.bedrooms != null && <span className="inline-flex items-center gap-1"><BedDouble size={13} /> {it.bedrooms}</span>}
-          {it.area != null && <span className="inline-flex items-center gap-1"><Square size={12} /> {it.area} м²</span>}
+          {it.area != null && <span className="inline-flex items-center gap-1"><Square size={12} /> {it.area} {lang === 'ru' ? 'м²' : 'm²'}</span>}
         </div>
       </div>
     </Link>
@@ -105,7 +106,7 @@ export function HomeCollections({ tiers, lang = 'ru' }: { tiers: CollTier[]; lan
             slug — so include the index, else duplicate keys break React's
             reconciliation and the cards don't refresh on district switch. */}
         {district.items.map((it, i) => (
-          <CollCard key={`${tier.key}:${district.slug}:${it.slug}:${i}`} it={it} href={`${root}/o/${it.slug}`} />
+          <CollCard key={`${tier.key}:${district.slug}:${it.slug}:${i}`} it={it} href={`${root}/o/${it.slug}`} lang={lang} />
         ))}
       </div>
 
