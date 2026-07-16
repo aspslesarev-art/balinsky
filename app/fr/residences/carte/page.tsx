@@ -74,7 +74,7 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
         <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[#111827]">Map · Residential complexes in Bali</h1>
         <div className="text-[14px] text-[var(--color-text-muted)] mb-6">{totalPoints} complexes on the map{totalPoints !== groups.length && ` · ${groups.length} points`}</div>
 
-        <CatalogTabs active="map" listHref={buildListHref(filters, 'en')} mapHref={buildMapHref(filters, 'en')} lang="fr" />
+        <CatalogTabs active="map" listHref={buildListHref(filters, 'fr')} mapHref={buildMapHref(filters, 'fr')} lang="fr" />
 
         <div className="mt-6">
           <ComplexCatalogSearchBar initial={filters.q} current={filters} view="map" placeholder="Search complexes, districts, developers…" />

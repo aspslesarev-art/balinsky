@@ -1,6 +1,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
+import { detectLang, pickCopy } from '@/lib/i18n'
 import Image from 'next/image'
 import { Star, Languages, Video, Clock } from 'lucide-react'
 import type { ManagerItem } from '@/lib/managers'
@@ -39,8 +40,8 @@ export function ManagerCard({
   developerName?: string | null
 }) {
   const pathname = usePathname() ?? ''
-  const lang: Lang = pathname.startsWith('/en') ? 'en' : 'ru'
-  const c = COPY[lang]
+  const lang: Lang = detectLang(pathname)
+  const c = pickCopy(COPY, lang)
 
   const list = managers && managers.length > 0
     ? managers
@@ -94,8 +95,8 @@ function ManagerRow({
   // Silent fallback to the RU value when an EN counterpart isn't
   // filled in Airtable yet — manager cards already render fine in
   // mixed locales and a literal "Name En" placeholder would look odd.
-  const displayName = lang === 'en' && m.nameEn ? m.nameEn : m.name
-  const displayLanguages = lang === 'en' && m.languagesEn && m.languagesEn.length > 0
+  const displayName = lang !== 'ru' && m.nameEn ? m.nameEn : m.name
+  const displayLanguages = lang !== 'ru' && m.languagesEn && m.languagesEn.length > 0
     ? m.languagesEn
     : m.languages
 
@@ -128,7 +129,7 @@ function ManagerRow({
                 <span className="font-medium text-[#111827]">{m.rating.toFixed(1)}</span>
               </span>
             )}
-            {lang !== 'en' && displayLanguages.length > 0 && (
+            {lang === 'ru' && displayLanguages.length > 0 && (
               <span className="inline-flex items-center gap-1 text-[12px] text-[var(--color-text-muted)]">
                 <Languages size={12} />
                 <span className="truncate">{displayLanguages.join(', ')}</span>

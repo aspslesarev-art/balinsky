@@ -15,19 +15,19 @@ export function fmtPct(n: number | null | undefined, digits = 1): string {
 }
 export function fmtYears(n: number | null | undefined, lang: Lang = 'ru'): string {
   if (n == null || !Number.isFinite(n)) return '—'
-  const unit = lang === 'en' ? 'yrs' : 'лет'
+  const unit = lang === 'ru' ? 'лет' : 'yrs'
   if (n > 100) return `>100 ${unit}`
   return n < 10 ? `${n.toFixed(1)} ${unit}` : `${Math.round(n)} ${unit}`
 }
 export function fmtDistance(km: number, lang: Lang = 'ru'): string {
-  const mU = lang === 'en' ? 'm' : 'м'
-  const kmU = lang === 'en' ? 'km' : 'км'
+  const mU = lang === 'ru' ? 'м' : 'm'
+  const kmU = lang === 'ru' ? 'км' : 'km'
   if (km < 1) return `${Math.round(km * 1000)} ${mU}`
   return `${km.toFixed(1)} ${kmU}`
 }
 export function fmtMeters(m: number, lang: Lang = 'ru'): string {
-  const mU = lang === 'en' ? 'm' : 'м'
-  const kmU = lang === 'en' ? 'km' : 'км'
+  const mU = lang === 'ru' ? 'м' : 'm'
+  const kmU = lang === 'ru' ? 'км' : 'km'
   if (m < 1000) return `${Math.round(m)} ${mU}`
   return `${(m / 1000).toFixed(1)} ${kmU}`
 }

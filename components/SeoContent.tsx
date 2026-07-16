@@ -6,7 +6,7 @@ import {
   STATUS_TO_SLUG,
   PRICE_SEGMENTS,
 } from '@/lib/seo-routes'
-import { pickCopy, type Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
 const POPULAR_DISTRICTS = ['Berawa', 'Sanur', 'Ubud', 'Uluwatu', 'Pererenan', 'Pandawa', 'Batu Bolong', 'Cemagi']
 
@@ -142,7 +142,7 @@ export function SeoContent({
     .slice(0, 6)
     .map(d => ({ name: d, slug: DISTRICT_TO_SLUG[d] }))
     .filter(x => x.slug)
-  const aptRoot = lang === 'en' ? '/en/apartments' : '/ru/apartamenty'
+  const aptRoot = switchLangPath('/ru/apartamenty', lang)
 
   const faqJsonLd = {
     '@context': 'https://schema.org', '@type': 'FAQPage',

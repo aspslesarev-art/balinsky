@@ -19,7 +19,7 @@ type Params = Promise<{ district: string }>
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { district } = await params
-  const copy = getDistrictCopy(district, 'en')
+  const copy = getDistrictCopy(district, 'fr')
   if (!copy) return { robots: { index: false, follow: false } }
   const priceFrom = copy.highlights.find(h => /entry|from/i.test(h.label))?.value
   const yieldR    = copy.highlights.find(h => /yield/i.test(h.label))?.value
@@ -48,7 +48,7 @@ export const revalidate = 86400
 
 export default async function Page({ params }: { params: Params }) {
   const { district } = await params
-  const copy = getDistrictCopy(district, 'en')
+  const copy = getDistrictCopy(district, 'fr')
   if (!copy) notFound()
 
   const priceFrom = copy.highlights.find(h => /entry|from/i.test(h.label))?.value

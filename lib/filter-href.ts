@@ -1,11 +1,9 @@
 import type { FilterState } from '@/components/filters/FiltersBar'
 import { buildCanonicalPath } from './seo-routes'
-import type { Lang } from './i18n'
+import { switchLangPath, type Lang } from './i18n'
 
 const RU_LIST_BASE = '/ru/apartamenty'
 const RU_MAP_BASE = '/ru/apartamenty/karta'
-const EN_LIST_BASE = '/en/apartments'
-const EN_MAP_BASE = '/en/apartments/map'
 
 function toQueryString(f: FilterState): string {
   const sp = new URLSearchParams()
@@ -25,7 +23,7 @@ function toQueryString(f: FilterState): string {
 }
 
 export function buildListHref(f: FilterState, lang: Lang = 'ru'): string {
-  const base = lang === 'en' ? EN_LIST_BASE : RU_LIST_BASE
+  const base = switchLangPath(RU_LIST_BASE, lang)
   // RU canonical slugs (/ru/apartamenty/canggu/2-spalni) only exist for RU
   // — EN has no matching route tree, so on EN we always stay at the flat
   // base with the filters in the query string.
@@ -38,7 +36,7 @@ export function buildListHref(f: FilterState, lang: Lang = 'ru'): string {
 }
 
 export function buildMapHref(f: FilterState, lang: Lang = 'ru'): string {
-  const base = lang === 'en' ? EN_MAP_BASE : RU_MAP_BASE
+  const base = switchLangPath(RU_MAP_BASE, lang)
   const qs = toQueryString(f)
   return qs ? `${base}?${qs}` : base
 }

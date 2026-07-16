@@ -48,7 +48,7 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
     if (seenSlug.has(slug)) continue
     seenSlug.add(slug)
     const titleRaw =
-      tField(e.data, 'SEO:Title', 'en') ?? firstString(e.data['Name']) ?? slug
+      tField(e.data, 'SEO:Title', 'fr') ?? firstString(e.data['Name']) ?? slug
     const title = titleRaw.replace(/\s*\|\s*Balinsky\s*$/i, '').trim()
     const point: MapPoint = { id: e.id, slug, title, priceUsd: e.priceUsd, thumb: manifest[e.id]?.[0] ?? null }
     const lat = Number(e.lat.toFixed(4))
@@ -75,7 +75,7 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
           {pointCount !== groups.length && ` · ${groups.length} points`}
         </div>
 
-        <CatalogTabs active="map" listHref={buildListHref(filters, 'en')} mapHref={buildMapHref(filters, 'en')} lang="fr" />
+        <CatalogTabs active="map" listHref={buildListHref(filters, 'fr')} mapHref={buildMapHref(filters, 'fr')} lang="fr" />
 
         <div className="mt-6">
           <CatalogSearchBar initial={filters.q} current={filters} view="map" placeholder="Search by name, district, developer…" />

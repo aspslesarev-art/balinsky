@@ -7,7 +7,7 @@ type Params = Promise<{ slug: string }>
 
 export async function generateMetadata({ params }: { params: Params }) {
   const { slug } = await params
-  return generateRentalDetailMetadata(slug, 'en')
+  return generateRentalDetailMetadata(slug, 'id')
 }
 
 export default async function Page({ params }: { params: Params }) {

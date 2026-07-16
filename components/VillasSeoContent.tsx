@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { VillaFilterState } from '@/app/ru/villy/_lib'
 import { STATUS_TO_SLUG } from '@/lib/villa-seo-routes'
 import { DISTRICT_TO_SLUG, BEDROOM_TO_SLUG } from '@/lib/seo-routes'
-import { pickCopy, type Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
 const POPULAR_DISTRICTS = ['Berawa', 'Sanur', 'Ubud', 'Uluwatu', 'Pererenan', 'Pandawa', 'Batu Bolong', 'Cemagi']
 
@@ -127,8 +127,8 @@ export function VillasSeoContent({
   const currentDistrict = filters.district[0]
   const districts = POPULAR_DISTRICTS.filter(d => d !== currentDistrict).slice(0, 6)
     .map(d => ({ name: d, slug: DISTRICT_TO_SLUG[d] })).filter(x => x.slug)
-  const villasRoot = lang === 'en' ? '/en/villas' : '/ru/villy'
-  const complexesVillasRoot = lang === 'en' ? '/en/complexes/villas' : '/ru/zhilye-kompleksy/villy'
+  const villasRoot = switchLangPath('/ru/villy', lang)
+  const complexesVillasRoot = switchLangPath('/ru/zhilye-kompleksy/villy', lang)
 
   const faqJsonLd = {
     '@context': 'https://schema.org', '@type': 'FAQPage',

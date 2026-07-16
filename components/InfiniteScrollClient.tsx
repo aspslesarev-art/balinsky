@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { detectLang } from '@/lib/i18n'
 import { usePathname } from 'next/navigation'
 import { ApartmentCard, type ApartmentCardData } from './ApartmentCard'
 
@@ -30,7 +31,7 @@ export function InfiniteScrollClient({
   const [hasMore, setHasMore] = useState(initialHasMore)
   const [loading, setLoading] = useState(false)
   const pathname = usePathname() ?? ''
-  const isEn = pathname.startsWith('/en')
+  const isEn = detectLang(pathname) !== 'ru'
   const [error, setError] = useState<string | null>(null)
   const sentinelRef = useRef<HTMLDivElement | null>(null)
   const inflightRef = useRef<Promise<void> | null>(null)

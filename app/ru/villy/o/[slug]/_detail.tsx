@@ -19,7 +19,7 @@ const AIRPORT_LNG = 115.1667
 function fmtAirportDistance(lat: number | null, lng: number | null, lang: Lang): string | null {
   if (lat == null || lng == null) return null
   const km = haversineKm(lat, lng, AIRPORT_LAT, AIRPORT_LNG)
-  if (lang === 'en') return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(km < 10 ? 1 : 0)} km`
+  if (lang !== 'ru') return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(km < 10 ? 1 : 0)} km`
   return km < 1 ? `${Math.round(km * 1000)} м` : `${km.toFixed(km < 10 ? 1 : 0)} км`
 }
 import { Header } from '@/components/Header'
@@ -59,7 +59,7 @@ import { findActiveReservation } from '@/lib/reservations'
 import { VideoGrid } from '@/components/VideoGrid'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { VillaPresentationButton } from '@/components/VillaPresentation'
-import { tField, pickCopy, type Lang } from '@/lib/i18n'
+import { tField, pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { normalizeSlug } from '@/lib/slug-normalize'
 import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
@@ -499,8 +499,8 @@ export async function generateVillaMetadata(slug: string, lang: Lang) {
   const seoTitle = `${titleParts.slice(0, 4).join(' · ')} | Balinsky`
   const ruPath = `/ru/villy/o/${slug}`
   const enPath = `/en/villas/o/${slug}`
-  const path = lang === 'en' ? enPath : ruPath
-  const inText = lang === 'en' ? 'in' : 'в'
+  const path = switchLangPath(ruPath, lang)
+  const inText = lang === 'ru' ? 'в' : 'in'
   const dashPrice = price ? ` — ${price}` : ''
   // Same dedup as titleParts above — the AI base title usually already
   // contains the district, so only append it when it's genuinely missing
@@ -525,9 +525,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   const resolved = await resolveVilla(slug)
   if (!resolved) notFound()
   if (resolved.canonicalSlug !== slug) {
-    const path = lang === 'en'
-      ? `/en/villas/o/${resolved.canonicalSlug}`
-      : `/ru/villy/o/${resolved.canonicalSlug}`
+    const path = switchLangPath(`/ru/villy/o/${resolved.canonicalSlug}`, lang)
     permanentRedirect(path)
   }
   const v = resolved.row
@@ -621,7 +619,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
     lease && { Icon: Lock, label: c.factLeasehold, value: c.factLeaseValue(lease) },
     district && { Icon: MapPin, label: c.factDistrict, value: district },
     fmtAirportDistance(lat, lng, lang) && { Icon: Plane, label: c.factAirport, value: fmtAirportDistance(lat, lng, lang)! },
-    interiorStyle && { Icon: Palette, label: c.factStyle, value: lang === 'en' ? enLabel('style', interiorStyle) : interiorStyle },
+    interiorStyle && { Icon: Palette, label: c.factStyle, value: lang === 'ru' ? interiorStyle : enLabel('style', interiorStyle) },
     // Price/m² lives in the PriceCtaCard right under the hero, no need
     // to duplicate it here.
   ].filter(Boolean) as { Icon: typeof BedDouble; label: string; value: ReactNode }[]
@@ -641,7 +639,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: title,
-    url: lang === 'en' ? `${SITE_URL}/en/villas/o/${slug}` : `${SITE_URL}/ru/villy/o/${slug}`,
+    url: `${SITE_URL}${switchLangPath(`/ru/villy/o/${slug}`, lang)}`,
     category: 'Villa',
   }
   if (photos.length > 0) productJsonLd.image = photos.slice(0, 5)
@@ -649,9 +647,9 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   // a generated "<bedrooms>-BR villa in <district>, Bali" line so the
   // field is never empty.
   productJsonLd.description = seoText?.slice(0, 500)
-    ?? (lang === 'en'
-      ? `${bedrooms ? bedrooms + '-bedroom ' : ''}villa${district ? ` in ${district}` : ''}, Bali, Indonesia`
-      : `${bedrooms ? bedrooms + '-комнатная ' : ''}вилла${district ? ` в ${district}` : ''} на Бали, Индонезия`)
+    ?? (lang === 'ru'
+      ? `${bedrooms ? bedrooms + '-комнатная ' : ''}вилла${district ? ` в ${district}` : ''} на Бали, Индонезия`
+      : `${bedrooms ? bedrooms + '-bedroom ' : ''}villa${district ? ` in ${district}` : ''}, Bali, Indonesia`)
   // Brand → developer name when known, otherwise generic "Balinsky"
   // so the GTIN/brand validator stops flagging this row.
   productJsonLd.brand = { '@type': 'Brand', name: developerName ?? 'Balinsky' }
@@ -661,7 +659,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
       price: Math.round(priceNum),
       priceCurrency: 'USD',
       availability: 'https://schema.org/InStock',
-      url: lang === 'en' ? `${SITE_URL}/en/villas/o/${slug}` : `${SITE_URL}/ru/villy/o/${slug}`,
+      url: `${SITE_URL}${switchLangPath(`/ru/villy/o/${slug}`, lang)}`,
       // Real-estate sales don't ship and don't return — explicit
       // declarations that say so satisfy Google Merchant validator
       // without faking e-commerce semantics.
@@ -709,7 +707,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
             ? {
                 additionalProperty: [{
                   '@type': 'PropertyValue',
-                  name: lang === 'en' ? 'Land area' : 'Площадь участка',
+                  name: lang === 'ru' ? 'Площадь участка' : 'Land area',
                   value: land,
                   unitCode: 'MTK',
                 }],
@@ -722,11 +720,11 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
         }
       : null
 
-  const home = lang === 'en' ? '/en' : '/ru'
-  const villasRoot = lang === 'en' ? '/en/villas' : '/ru/villy'
-  const apartmentsRoot = lang === 'en' ? '/en/apartments' : '/ru/apartamenty'
-  const complexesRoot = lang === 'en' ? '/en/complexes' : '/ru/zhilye-kompleksy'
-  const developersRoot = lang === 'en' ? '/en/developers' : '/ru/zastrojshhiki'
+  const home = switchLangPath('/ru', lang)
+  const villasRoot = switchLangPath('/ru/villy', lang)
+  const apartmentsRoot = switchLangPath('/ru/apartamenty', lang)
+  const complexesRoot = switchLangPath('/ru/zhilye-kompleksy', lang)
+  const developersRoot = switchLangPath('/ru/zastrojshhiki', lang)
 
   return (
     <>
@@ -801,9 +799,9 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
                 href={`${complexesRoot}/o/${parentComplex.slug}`}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-primary-soft)] px-3 py-1.5 text-[13.5px] font-medium text-[var(--color-primary-pressed)] no-underline hover:opacity-80 transition-opacity"
               >
-                {lang === 'en'
-                  ? `Part of the ${parentComplex.name} complex →`
-                  : `Часть жилого комплекса «${parentComplex.name}» →`}
+                {lang === 'ru'
+                  ? `Часть жилого комплекса «${parentComplex.name}» →`
+                  : `Part of the ${parentComplex.name} complex →`}
               </Link>
             </div>
           )}
@@ -869,7 +867,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
             <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
               {c.descHeading}
             </h2>
-            <ExpandableText className="max-w-3xl" more={lang === 'en' ? 'Read more' : 'Подробнее'} less={lang === 'en' ? 'Show less' : 'Свернуть'}>
+            <ExpandableText className="max-w-3xl" more={lang === 'ru' ? 'Подробнее' : 'Read more'} less={lang === 'ru' ? 'Свернуть' : 'Show less'}>
               <div className="prose-balinsky text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
                 {seoText}
               </div>

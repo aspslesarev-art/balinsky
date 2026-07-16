@@ -420,7 +420,7 @@ export function buildOptions(
   // Per-filter EN translation maps. Add `<RU column> EN` columns in
   // Airtable to translate filter labels — until then EN catalogues
   // render the literal column name as a placeholder.
-  const enMap = lang === 'en' ? {
+  const enMap = lang !== 'ru' ? {
     district:  buildLabelMap(allRows, 'Location 2', 'Location 2 EN'),
     bedrooms:  new Map<string, string>(), // numbers, no translation
     status:    buildLabelMap(allRows, 'Статус', 'Статус EN'),
@@ -537,16 +537,16 @@ export function toCard(
   // already merged into data via mergeEnTranslations). Without the EN
   // branch, /en/villas would surface «Вилла Origins в Nyanyi» on cards
   // while the RU detail page renders the same listing as English.
-  const titleRaw = lang === 'en'
-    ? (cleanTitle(firstString(d['SEO:Title EN'])) ??
+  const titleRaw = lang === 'ru'
+    ? (cleanTitle(firstString(d['SEO:Title'])) ??
+       firstString(d['ИИ Имя']) ??
+       firstString(d['Имя ENG']) ??
+       firstString(d['Name']))
+    : (cleanTitle(firstString(d['SEO:Title EN'])) ??
        firstString(d['ИИ Имя EN']) ??
        firstString(d['Имя ENG']) ??
        cleanTitle(firstString(d['SEO:Title'])) ??
        firstString(d['ИИ Имя']) ??
-       firstString(d['Name']))
-    : (cleanTitle(firstString(d['SEO:Title'])) ??
-       firstString(d['ИИ Имя']) ??
-       firstString(d['Имя ENG']) ??
        firstString(d['Name']))
   if (!titleRaw) return null
   // Optional investor-relevant fields piped into the wishlist snapshot

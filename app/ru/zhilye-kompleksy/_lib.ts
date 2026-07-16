@@ -320,7 +320,7 @@ export function buildOptions(
   // Airtable to translate filter labels — until then EN catalogues
   // render the literal column name as a placeholder so editors can
   // see what to create.
-  const enMap = lang === 'en' ? {
+  const enMap = lang !== 'ru' ? {
     district:  buildLabelMap(allRows, 'Location 2', 'Location 2 EN'),
     types:     buildLabelMap(allRows, 'Типы юнитов', 'Типы юнитов EN'),
     status:    buildLabelMap(allRows, 'Статус', 'Статус EN'),

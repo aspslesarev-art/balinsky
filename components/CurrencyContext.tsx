@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { detectLang } from '@/lib/i18n'
 import { usePathname } from 'next/navigation'
 import { ALL_CURRENCIES, isCurrency, type Currency } from '@/lib/currency'
 
@@ -65,7 +66,7 @@ export function useCurrency(): Ctx {
 export function CurrencyToggle({ className = '' }: { className?: string }) {
   const { currency, setCurrency } = useCurrency()
   const pathname = usePathname() ?? ''
-  const label = pathname.startsWith('/en') ? 'Currency' : 'Валюта'
+  const label = detectLang(pathname) === 'ru' ? 'Валюта' : 'Currency'
   return (
     <label className={`relative inline-flex items-center ${className}`}>
       <span className="sr-only">{label}</span>

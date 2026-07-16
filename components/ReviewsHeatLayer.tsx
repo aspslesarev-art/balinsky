@@ -59,16 +59,16 @@ export function ReviewsHeatToggle({
         }
       >
         <Flame size={15} className={on ? 'text-white' : 'text-[#FF5A36]'} />
-        {lang === 'en' ? 'Tourism map' : 'Карта туризма'}
+        {lang === 'ru' ? 'Карта туризма' : 'Tourism map'}
       </button>
       {on && (
         <div className="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white/90 backdrop-blur shadow-sm text-[11px] text-[var(--color-text-muted)]">
-          <span>{lang === 'en' ? 'few' : 'мало'}</span>
+          <span>{lang === 'ru' ? 'мало' : 'few'}</span>
           <span
             className="h-2 w-24 rounded-full"
             style={{ background: 'linear-gradient(90deg, #2b6cff, #00c2c7, #8ed11f, #ffd200, #ff2d00)' }}
           />
-          <span>{lang === 'en' ? 'many' : 'много'}</span>
+          <span>{lang === 'ru' ? 'много' : 'many'}</span>
         </div>
       )}
     </div>

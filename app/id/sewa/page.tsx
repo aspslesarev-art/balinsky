@@ -5,8 +5,8 @@ import { generateCategoryMeta } from '@/lib/seo'
 export const revalidate = 600
 
 export async function generateMetadata() {
-  const base = generateRentalListMetadata('en')
-  const cat = generateCategoryMeta({ category: 'rental', locale: 'id', count: (await loadFreshRental('en')).length })
+  const base = generateRentalListMetadata('id')
+  const cat = generateCategoryMeta({ category: 'rental', locale: 'id', count: (await loadFreshRental('id')).length })
   return { ...base, title: cat.title, description: cat.description }
 }
 

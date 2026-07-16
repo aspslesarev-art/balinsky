@@ -3,7 +3,7 @@ import Image from 'next/image'
 import { ChevronRight, BedDouble, MapPin } from 'lucide-react'
 import { loadCompareRental, type RentalItem } from '@/lib/rental'
 import { InlinePrice } from './InlinePrice'
-import { pickCopy, type Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
 type Props = {
   district: string | null
@@ -117,7 +117,7 @@ export async function RentalCompareSection({ district, bedrooms, villaPriceUsd, 
         <Stat label={c.range} value={<><InlinePrice usd={min} /> – <InlinePrice usd={max} /></>} />
         <Stat
           label={annualYieldPct != null ? c.grossYield : c.perYear}
-          value={annualYieldPct != null ? `~${annualYieldPct.toFixed(1)}%` : <><InlinePrice usd={med * 12} /> / {lang === 'en' ? 'yr' : 'год'}</>}
+          value={annualYieldPct != null ? `~${annualYieldPct.toFixed(1)}%` : <><InlinePrice usd={med * 12} /> / {lang === 'ru' ? 'год' : 'yr'}</>}
           hint={annualYieldPct != null ? c.yieldHint(<InlinePrice usd={med * 12} />, <InlinePrice usd={villaPriceUsd ?? 0} />) : undefined}
         />
       </div>
@@ -141,8 +141,8 @@ function Stat({ label, value, hint }: { label: string; value: React.ReactNode; h
 
 function CompareCard({ r, lang }: { r: RentalItem; lang: Lang }) {
   const cover = r.photos[0]
-  const root = lang === 'en' ? '/en/rental' : '/ru/arenda'
-  const perMo = lang === 'en' ? ' / mo' : ' / мес'
+  const root = switchLangPath('/ru/arenda', lang)
+  const perMo = lang === 'ru' ? ' / мес' : ' / mo'
   return (
     <Link
       href={`${root}/o/${r.slug}`}

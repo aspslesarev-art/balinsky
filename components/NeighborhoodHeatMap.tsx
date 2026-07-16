@@ -106,13 +106,13 @@ export function NeighborhoodHeatMap({
           }
         >
           <Flame size={13} className={showHeat ? 'text-white' : 'text-[#FF5A36]'} />
-          {lang === 'en' ? 'Tourism map' : 'Карта туризма'}
+          {lang === 'ru' ? 'Карта туризма' : 'Tourism map'}
         </button>
         {showHeat && (
           <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/95 backdrop-blur-sm shadow-sm text-[10px] text-[var(--color-text-muted)]">
-            <span>{lang === 'en' ? 'few' : 'мало'}</span>
+            <span>{lang === 'ru' ? 'мало' : 'few'}</span>
             <span className="h-1.5 w-16 rounded-full" style={{ background: 'linear-gradient(90deg,#2b6cff,#00c2c7,#8ed11f,#ffd200,#ff2d00)' }} />
-            <span>{lang === 'en' ? 'many' : 'много'}</span>
+            <span>{lang === 'ru' ? 'много' : 'many'}</span>
           </div>
         )}
       </div>

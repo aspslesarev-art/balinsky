@@ -5,7 +5,7 @@ import {
   STATUS_TO_SLUG,
 } from '@/lib/complex-seo-routes'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
-import { pickCopy, type Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
 const POPULAR_DISTRICTS = ['Berawa', 'Sanur', 'Ubud', 'Uluwatu', 'Pererenan', 'Pandawa', 'Batu Bolong', 'Cemagi']
 
@@ -146,8 +146,8 @@ export function ComplexesSeoContent({
     .map(d => ({ name: d, slug: DISTRICT_TO_SLUG[d] }))
     .filter(x => x.slug)
 
-  const sectionRoot = lang === 'en' ? '/en/complexes' : '/ru/zhilye-kompleksy'
-  const developersRoot = lang === 'en' ? '/en/developers' : '/ru/zastrojshhiki'
+  const sectionRoot = switchLangPath('/ru/zhilye-kompleksy', lang)
+  const developersRoot = switchLangPath('/ru/zastrojshhiki', lang)
 
   const faqJsonLd = {
     '@context': 'https://schema.org',

@@ -47,7 +47,7 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
     if (seenSlug.has(slug)) continue
     seenSlug.add(slug)
     const titleRaw =
-      tField(e.data, 'SEO:Title', 'en') ?? firstString(e.data['Имя ENG']) ?? firstString(e.data['Name']) ?? slug
+      tField(e.data, 'SEO:Title', 'fr') ?? firstString(e.data['Имя ENG']) ?? firstString(e.data['Name']) ?? slug
     const title = titleRaw.replace(/\s*\|\s*Balinsky\s*$/i, '').trim()
     const item: VillaPoint = { id: e.id, slug, title, priceUsd: e.priceUsd, thumb: manifest[e.id]?.[0] ?? null }
     const lat = Number(e.lat.toFixed(4))
@@ -71,7 +71,7 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
         <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[#111827]">Map · Villas in Bali</h1>
         <div className="text-[14px] text-[var(--color-text-muted)] mb-6">{totalPoints} objects on the map{totalPoints !== groups.length && ` · ${groups.length} points`}</div>
 
-        <CatalogTabs active="map" listHref={buildListHref(filters, 'en')} mapHref={buildMapHref(filters, 'en')} lang="fr" />
+        <CatalogTabs active="map" listHref={buildListHref(filters, 'fr')} mapHref={buildMapHref(filters, 'fr')} lang="fr" />
 
         <div className="mt-6">
           <VillaCatalogSearchBar initial={filters.q} current={filters} view="map" placeholder="Search villas, districts, developers…" />

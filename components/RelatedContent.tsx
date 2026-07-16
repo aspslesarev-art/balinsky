@@ -13,7 +13,7 @@ import { loadUnitsForComplex } from '@/lib/complex-units'
 import { developerLogoBySlug } from '@/lib/developer-logo'
 import { reliabilityForDeveloper } from '@/lib/developer-reliability'
 import { isHiddenDeveloper } from '@/lib/hidden-developers'
-import { pickCopy, type Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
 export type RelatedDeveloper = { name: string; slug: string | null }
 
@@ -77,8 +77,8 @@ export async function RelatedContent({
   const showComplex = !!(complexSlug && complexName)
   if (!dev && !showComplex && units.length === 0) return null
 
-  const developersRoot = lang === 'en' ? '/en/developers' : '/ru/zastrojshhiki'
-  const complexesRoot = lang === 'en' ? '/en/complexes' : '/ru/zhilye-kompleksy'
+  const developersRoot = switchLangPath('/ru/zastrojshhiki', lang)
+  const complexesRoot = switchLangPath('/ru/zhilye-kompleksy', lang)
 
   return (
     <div className="mt-14 space-y-12">

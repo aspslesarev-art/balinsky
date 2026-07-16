@@ -14,7 +14,7 @@ function buildOptions(opts: FmtOpts): Intl.DateTimeFormatOptions {
 }
 
 function locale(opts: FmtOpts): string {
-  return opts.lang === 'en' ? 'en-GB' : 'ru-RU'
+  return ({ ru: 'ru-RU', en: 'en-GB', id: 'id-ID', fr: 'fr-FR' } as const)[opts.lang ?? 'ru']
 }
 
 export function fmtBali(iso: string, opts: FmtOpts = {}): string {

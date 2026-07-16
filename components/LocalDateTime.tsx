@@ -29,7 +29,7 @@ export function LocalDateTime({ iso, withYear, withTime, className, prefix, suff
       const localText = fmtLocal(iso, { withYear, withTime, lang })
       if (localText !== baliText) {
         setText(localText)
-        setTooltip(lang === 'en' ? `Bali: ${baliText}` : `Бали: ${baliText}`)
+        setTooltip(lang === 'ru' ? `Бали: ${baliText}` : `Bali: ${baliText}`)
       }
     } catch {
       // Intl may throw on very old browsers — keep Bali text in that case.

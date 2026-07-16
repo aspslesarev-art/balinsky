@@ -9,7 +9,7 @@ import { ConversationProvider, useConversation } from '@elevenlabs/react'
 import { useWishlist } from './WishlistContext'
 import { RECENT_KEY, type RecentlyViewedEntry } from './PageViewTracker'
 import { LeadButton } from './LeadButton'
-import { pickCopy, type Lang } from '@/lib/i18n'
+import { pickCopy, type Lang, detectLang } from '@/lib/i18n'
 
 type ListingCard = {
   kind: 'villa' | 'apartment' | 'complex' | 'developer' | 'rental'
@@ -93,10 +93,10 @@ function contextualGreeting(kind: ListingKind, title: string | null, lang: Lang)
     apartment: { ru: 'эти апартаменты', en: 'these apartments' },
     complex: { ru: 'этот комплекс', en: 'this complex' },
   }[kind], lang)
-  const name = title ? (lang === 'en' ? `“${title}”` : `«${title}»`) : (lang === 'en' ? 'this listing' : 'этот объект')
-  const content = lang === 'en'
-    ? `You're looking at ${name}. Want me to walk you through ${obj}? I'll check the base and answer precisely — documents, real yield, handover date, what's nearby, risks.\n\n[CHIPS] Tell me about it | Documents & risks | Real yield | Handover date | What's nearby`
-    : `Вижу, вы смотрите ${name}. Рассказать про ${obj}? Сверюсь с базой и отвечу точно — документы, реальная доходность, сроки сдачи, что рядом, риски.\n\n[CHIPS] Рассказать про объект | Документы и риски | Реальная доходность | Когда сдают? | Что рядом`
+  const name = title ? (lang === 'ru' ? `«${title}»` : `“${title}”`) : (lang === 'ru' ? 'этот объект' : 'this listing')
+  const content = lang === 'ru'
+    ? `Вижу, вы смотрите ${name}. Рассказать про ${obj}? Сверюсь с базой и отвечу точно — документы, реальная доходность, сроки сдачи, что рядом, риски.\n\n[CHIPS] Рассказать про объект | Документы и риски | Реальная доходность | Когда сдают? | Что рядом`
+    : `You're looking at ${name}. Want me to walk you through ${obj}? I'll check the base and answer precisely — documents, real yield, handover date, what's nearby, risks.\n\n[CHIPS] Tell me about it | Documents & risks | Real yield | Handover date | What's nearby`
   return { role: 'assistant', greeting: true, content }
 }
 
@@ -205,7 +205,7 @@ export function ConsultantWidget() {
   // Greeting + UI copy + voice recognition locale + the lang directive
   // we send to the chat API all key off this.
   const pathname = usePathname() ?? ''
-  const lang: Lang = pathname.startsWith('/en') ? 'en' : 'ru'
+  const lang: Lang = detectLang(pathname)
   const c = pickCopy(COPY, lang)
   const { items: wishlistItems } = useWishlist()
 
@@ -316,9 +316,9 @@ export function ConsultantWidget() {
     transcriptRef.current = []
     if (!handoff || turns.length === 0) return
     setOpen(true)
-    const brief = lang === 'en'
-      ? `We just spoke on a call — here is what I'm looking for: ${turns.join('. ')}. Please pick matching options now.`
-      : `Мы только что поговорили по звонку — вот что я ищу: ${turns.join('. ')}. Подбери подходящие варианты сейчас.`
+    const brief = lang === 'ru'
+      ? `Мы только что поговорили по звонку — вот что я ищу: ${turns.join('. ')}. Подбери подходящие варианты сейчас.`
+      : `We just spoke on a call — here is what I'm looking for: ${turns.join('. ')}. Please pick matching options now.`
     setTimeout(() => { void sendText(brief) }, 80)
   }
   const startCall = async () => {
@@ -337,7 +337,7 @@ export function ConsultantWidget() {
       stopRingback()
       callActiveRef.current = false
       setCallState('idle')
-      setError(lang === 'en' ? "Couldn't start the call." : 'Не удалось начать звонок.')
+      setError(lang === 'ru' ? 'Не удалось начать звонок.' : "Couldn't start the call.")
     }
   }
   const endCall = () => { void finishCall(true) }
@@ -932,18 +932,18 @@ export function ConsultantWidget() {
   const tellAboutCurrent = () => {
     setOpen(true)
     setError(null)
-    const prompt = lang === 'en'
-      ? 'Give me a short rundown of this listing — the essentials: what it is, documents (PBG/SLF), real yield, handover date, what\'s nearby and any risks.'
-      : 'Расскажи коротко про этот объект — самое главное: что это, документы (PBG/SLF), реальная доходность, сроки сдачи, что рядом и есть ли риски.'
+    const prompt = lang === 'ru'
+      ? 'Расскажи коротко про этот объект — самое главное: что это, документы (PBG/SLF), реальная доходность, сроки сдачи, что рядом и есть ли риски.'
+      : 'Give me a short rundown of this listing — the essentials: what it is, documents (PBG/SLF), real yield, handover date, what\'s nearby and any risks.'
     // Defer one tick so the panel paints before the request kicks off.
     setTimeout(() => { void sendText(prompt) }, 60)
   }
 
   const callStatusText = callState === 'ringing'
-    ? (lang === 'en' ? 'connecting…' : 'соединяем…')
+    ? (lang === 'ru' ? 'соединяем…' : 'connecting…')
     : isSpeaking
-      ? (lang === 'en' ? 'Balina is speaking…' : 'Балина говорит…')
-      : (lang === 'en' ? 'Listening…' : 'Слушаю вас…')
+      ? (lang === 'ru' ? 'Балина говорит…' : 'Balina is speaking…')
+      : (lang === 'ru' ? 'Слушаю вас…' : 'Listening…')
 
   return (
     <>
@@ -968,13 +968,13 @@ export function ConsultantWidget() {
               <span className={`absolute -inset-1.5 rounded-full ring-4 ${callState === 'ringing' || isSpeaking ? 'ring-[#22C55E]/40 animate-ping' : 'ring-[#22C55E]/20'}`} />
             </div>
             <div>
-              <div className="text-[22px] font-semibold text-[#111827]">{lang === 'en' ? 'Balina' : 'Балина'}</div>
+              <div className="text-[22px] font-semibold text-[#111827]">{lang === 'ru' ? 'Балина' : 'Balina'}</div>
               <div className="text-[14px] text-[var(--color-text-muted)] mt-1">{callStatusText}</div>
             </div>
             <button
               type="button"
               onClick={endCall}
-              aria-label={lang === 'en' ? 'End call' : 'Завершить звонок'}
+              aria-label={lang === 'ru' ? 'Завершить звонок' : 'End call'}
               className="mt-1 inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#EF4444] text-white hover:bg-[#DC2626] shadow-lg transition-colors"
             >
               <PhoneOff size={26} />
@@ -989,8 +989,8 @@ export function ConsultantWidget() {
           <button
             type="button"
             onClick={startCall}
-            aria-label={lang === 'en' ? 'Call Balina' : 'Позвонить Балине'}
-            title={lang === 'en' ? 'Call Balina' : 'Позвонить Балине'}
+            aria-label={lang === 'ru' ? 'Позвонить Балине' : 'Call Balina'}
+            title={lang === 'ru' ? 'Позвонить Балине' : 'Call Balina'}
             className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#22C55E] hover:bg-[#16A34A] text-white shadow-lg transition-colors"
           >
             <Phone size={20} />
@@ -1024,7 +1024,7 @@ export function ConsultantWidget() {
           >
             <Image src="/balina.jpg" alt="" width={28} height={28} className="w-7 h-7 rounded-full object-cover shrink-0" />
             <span className="text-[12.5px] leading-snug text-[#111827]">
-              {lang === 'en' ? 'Want the rundown on this one?' : 'Рассказать про этот объект?'}
+              {lang === 'ru' ? 'Рассказать про этот объект?' : 'Want the rundown on this one?'}
             </span>
           </button>
           <button
@@ -1087,10 +1087,10 @@ export function ConsultantWidget() {
                   <button
                     type="button"
                     onClick={() => {
-                      if (window.confirm(lang === 'en' ? 'Clear the chat history?' : 'Очистить переписку?')) clearHistory()
+                      if (window.confirm(lang === 'ru' ? 'Очистить переписку?' : 'Clear the chat history?')) clearHistory()
                     }}
-                    aria-label={lang === 'en' ? 'Clear chat' : 'Очистить чат'}
-                    title={lang === 'en' ? 'Clear chat' : 'Очистить чат'}
+                    aria-label={lang === 'ru' ? 'Очистить чат' : 'Clear chat'}
+                    title={lang === 'ru' ? 'Очистить чат' : 'Clear chat'}
                     className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/60 hover:bg-white text-[#111827]"
                   >
                     <Trash2 size={16} />
@@ -1121,7 +1121,7 @@ export function ConsultantWidget() {
                     {m.source === 'manager' && (
                       <span className="self-start inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary-pressed)] text-[10px] font-medium uppercase tracking-wide">
                         <UserRound size={10} strokeWidth={2.4} />
-                        {lang === 'en' ? 'Manager' : 'Менеджер'}
+                        {lang === 'ru' ? 'Менеджер' : 'Manager'}
                       </span>
                     )}
                     {text && <Bubble role={m.role}>{text}</Bubble>}

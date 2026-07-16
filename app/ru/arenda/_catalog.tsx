@@ -11,7 +11,7 @@ import { SubscribeCTA } from '@/components/SubscribeCTA'
 import { formatPrice, type Currency } from '@/lib/currency'
 import type { RentalItem } from '@/lib/rental'
 import { PhotoSlider } from '@/components/PhotoSlider'
-import { pickCopy, type Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
 const PAGE_SIZE = 24
 
@@ -551,7 +551,7 @@ function RentalCard({ r, currency, lang, perMonth }: {
   r: RentalItem; currency: Currency; lang: Lang; perMonth: string; bali: string
 }) {
   const price = formatPrice(r.priceMonthUsd, currency)
-  const detailHref = lang === 'en' ? `/en/rental/o/${r.slug}` : `/ru/arenda/o/${r.slug}`
+  const detailHref = switchLangPath(`/ru/arenda/o/${r.slug}`, lang)
   return (
     <Link
       href={detailHref}

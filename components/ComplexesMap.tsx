@@ -11,7 +11,7 @@ import { MarkerClusterer, type Renderer } from '@googlemaps/markerclusterer'
 import { X } from 'lucide-react'
 import { ReviewsHeatLayer, ReviewsHeatToggle } from './ReviewsHeatLayer'
 import type { HeatCell } from '@/lib/reviews-heat'
-import type { Lang } from '@/lib/i18n'
+import { switchLangPath, type Lang } from '@/lib/i18n'
 import { BALINSKY_MAP_STYLE } from '@/lib/google-map-style'
 
 export type ComplexPoint = {
@@ -228,10 +228,10 @@ function SinglePopup({ p, onClose, lang }: { p: ComplexPoint; onClose: () => voi
         {p.types && <span className="line-clamp-1">{p.types}</span>}
       </div>
       <a
-        href={lang === 'en' ? `/en/complexes/o/${p.slug}` : `/ru/zhilye-kompleksy/o/${p.slug}`}
+        href={switchLangPath(`/ru/zhilye-kompleksy/o/${p.slug}`, lang)}
         className="block text-center w-full px-3 py-2 rounded-lg bg-[#33A474] hover:bg-[#2C8E65] text-white text-[13px] font-medium no-underline transition-colors"
       >
-        {lang === 'en' ? 'Open listing' : 'Открыть карточку'}
+        {lang === 'ru' ? 'Открыть карточку' : 'Open listing'}
       </a>
     </div>
   )
@@ -242,13 +242,13 @@ function MultiPopup({ items, onClose, lang }: { items: ComplexPoint[]; onClose: 
     <div className="relative w-[300px] p-1">
       <CloseButton onClose={onClose} />
       <div className="text-[13px] font-medium text-[#6B7280] mb-2 pr-6">
-        {lang === 'en' ? `${items.length} complexes at this point` : `${items.length} комплексов в одной точке`}
+        {lang === 'ru' ? `${items.length} комплексов в одной точке` : `${items.length} complexes at this point`}
       </div>
       <ul className="max-h-[340px] overflow-y-auto -mx-1 px-1 divide-y divide-[#E5E7EB]">
         {items.map(p => (
           <li key={p.id}>
             <a
-              href={lang === 'en' ? `/en/complexes/o/${p.slug}` : `/ru/zhilye-kompleksy/o/${p.slug}`}
+              href={switchLangPath(`/ru/zhilye-kompleksy/o/${p.slug}`, lang)}
               className="flex items-center gap-3 py-2.5 no-underline text-[#111827] hover:bg-[#F8FAF8] rounded-md px-1"
             >
               {p.coverUrl ? (
@@ -301,7 +301,7 @@ export function ComplexesMap({
         style={{ width: '100%' }}
         className={`${heightClass} bg-[var(--color-search-bg)] rounded-3xl flex items-center justify-center text-[var(--color-text-muted)]`}
       >
-        {lang === 'en' ? 'Map unavailable (no API key)' : 'Карта недоступна (нет API ключа)'}
+        {lang === 'ru' ? 'Карта недоступна (нет API ключа)' : 'Map unavailable (no API key)'}
       </div>
     )
   }

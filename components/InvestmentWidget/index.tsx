@@ -11,7 +11,7 @@ import type { Snapshot } from './types'
 import { useCurrency } from '../CurrencyContext'
 import { computeEconomics, type Economics } from '@/lib/investment/economics'
 import { CURRENCY_RATES } from '@/lib/currency'
-import { pickCopy, type Lang } from '@/lib/i18n'
+import { pickCopy, type Lang, detectLang } from '@/lib/i18n'
 
 const COPY = {
   ru: {
@@ -125,7 +125,7 @@ const COPY = {
 } as const
 
 function pluralize(lang: Lang, n: number, ruForms: [string, string, string], enForms: [string, string]): string {
-  return lang === 'en' ? pluralEn(n, enForms) : pluralRu(n, ruForms)
+  return lang === 'ru' ? pluralRu(n, ruForms) : pluralEn(n, enForms)
 }
 
 export function InvestmentWidget({
@@ -136,7 +136,7 @@ export function InvestmentWidget({
 }: { villaId: string; apiKey: string; kind?: 'villa' | 'apartment'; lang?: Lang }) {
   // Allow explicit lang from server caller; default by URL.
   const pathname = usePathname() ?? ''
-  const resolvedLang: Lang = lang ?? (pathname.startsWith('/en') ? 'en' : 'ru')
+  const resolvedLang: Lang = lang ?? (detectLang(pathname))
   const [snap, setSnap] = useState<Snapshot | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -278,7 +278,7 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
 
   const priceLo = basePrice != null ? Math.round(basePrice * 0.75) : 0
   const priceHi = basePrice != null ? Math.round(basePrice * 1.25) : 0
-  const opexUnit = lang === 'en' ? '$/m²/mo' : '$/м²/мес'
+  const opexUnit = lang === 'ru' ? '$/м²/мес' : '$/m²/mo'
 
   return (
     <div className="mt-5 rounded-2xl border border-[var(--color-border)] bg-white p-5">

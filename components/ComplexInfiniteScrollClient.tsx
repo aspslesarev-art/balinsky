@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { detectLang } from '@/lib/i18n'
 import { usePathname } from 'next/navigation'
 import { ComplexCard, type ComplexCardData } from './ComplexCard'
 
@@ -31,7 +32,7 @@ export function ComplexInfiniteScrollClient({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const pathname = usePathname() ?? ''
-  const isEn = pathname.startsWith('/en')
+  const isEn = detectLang(pathname) !== 'ru'
   const sentinelRef = useRef<HTMLDivElement | null>(null)
   const inflightRef = useRef<Promise<void> | null>(null)
 

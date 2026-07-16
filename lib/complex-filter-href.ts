@@ -1,11 +1,9 @@
 import type { ComplexFilterState } from '@/app/ru/zhilye-kompleksy/_lib'
 import { buildCanonicalPath } from './complex-seo-routes'
-import type { Lang } from './i18n'
+import { switchLangPath, type Lang } from './i18n'
 
 const RU_LIST_BASE = '/ru/zhilye-kompleksy'
 const RU_MAP_BASE = '/ru/zhilye-kompleksy/karta'
-const EN_LIST_BASE = '/en/complexes'
-const EN_MAP_BASE = '/en/complexes/map'
 
 function toQueryString(f: ComplexFilterState): string {
   const sp = new URLSearchParams()
@@ -20,7 +18,7 @@ function toQueryString(f: ComplexFilterState): string {
 }
 
 export function buildListHref(f: ComplexFilterState, lang: Lang = 'ru'): string {
-  const base = lang === 'en' ? EN_LIST_BASE : RU_LIST_BASE
+  const base = switchLangPath(RU_LIST_BASE, lang)
   if (lang === 'ru' && (!f.q || !f.q.trim())) {
     const canonical = buildCanonicalPath(f)
     if (canonical) return canonical
@@ -30,7 +28,7 @@ export function buildListHref(f: ComplexFilterState, lang: Lang = 'ru'): string 
 }
 
 export function buildMapHref(f: ComplexFilterState, lang: Lang = 'ru'): string {
-  const base = lang === 'en' ? EN_MAP_BASE : RU_MAP_BASE
+  const base = switchLangPath(RU_MAP_BASE, lang)
   const qs = toQueryString(f)
   return qs ? `${base}?${qs}` : base
 }

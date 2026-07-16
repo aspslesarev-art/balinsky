@@ -30,8 +30,8 @@ export async function loadKbPageContent(
     .eq('ref_id', airtableId)
     .maybeSingle()
   if (error || !data) return null
-  const body = ((lang === 'en' ? data.page_body_en : data.page_body) as string | null) ?? null
-  const faqRaw = (lang === 'en' ? data.faq_en : data.faq) as unknown
+  const body = ((lang === 'ru' ? data.page_body : data.page_body_en) as string | null) ?? null
+  const faqRaw = (lang === 'ru' ? data.faq : data.faq_en) as unknown
   const faq: KbFaq[] = Array.isArray(faqRaw)
     ? faqRaw
         .filter((x): x is { q: unknown; a: unknown } => !!x && typeof x === 'object' && 'q' in x && 'a' in x)

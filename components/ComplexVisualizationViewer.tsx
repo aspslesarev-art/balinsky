@@ -128,19 +128,19 @@ export function ComplexVisualizationViewer({
     setPopup(null)
   }
 
-  const COPY = lang === 'en'
-    ? { back: 'Back', open: 'Open', sqm: 'm²', br: 'BR' }
-    : { back: 'Назад', open: 'Открыть', sqm: 'м²', br: 'BR' }
+  const COPY = lang === 'ru'
+    ? { back: 'Назад', open: 'Открыть', sqm: 'м²', br: 'BR' }
+    : { back: 'Back', open: 'Open', sqm: 'm²', br: 'BR' }
 
   return (
     <section className="mb-10">
       <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-2">
-        {lang === 'en' ? 'Interactive plan' : 'Интерактивный план'}
+        {lang === 'ru' ? 'Интерактивный план' : 'Interactive plan'}
       </h2>
       <div className="text-[13px] text-[var(--color-text-muted)] mb-4">
-        {lang === 'en'
-          ? 'Tap a highlighted area to drill in or open the unit\'s page.'
-          : 'Тап по подсвеченной зоне — детализация или страница юнита.'}
+        {lang === 'ru'
+          ? 'Тап по подсвеченной зоне — детализация или страница юнита.'
+          : 'Tap a highlighted area to drill in or open the unit\'s page.'}
       </div>
 
       <div className="rounded-2xl overflow-hidden bg-[var(--color-search-bg)] border border-[var(--color-border)] relative">

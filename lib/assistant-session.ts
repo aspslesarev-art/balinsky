@@ -63,11 +63,11 @@ export async function logAssistantTurn(args: {
     await upsertChat({
       chat_id: chatId,
       username: null,
-      first_name: lang === 'en' ? 'Visitor' : 'Гость',
+      first_name: lang === 'ru' ? 'Гость' : 'Visitor',
       last_name: null,
       language_code: lang,
       chat_type: 'assistant',
-      title: lang === 'en' ? 'AI broker chat' : 'Чат с AI-брокером',
+      title: lang === 'ru' ? 'Чат с AI-брокером' : 'AI broker chat',
     }, userText)
   } else {
     // Existing session — touch the row so the inbox sorts by recency.
@@ -75,11 +75,11 @@ export async function logAssistantTurn(args: {
     await upsertChat({
       chat_id: chatId,
       username: null,
-      first_name: lang === 'en' ? 'Visitor' : 'Гость',
+      first_name: lang === 'ru' ? 'Гость' : 'Visitor',
       last_name: null,
       language_code: lang,
       chat_type: 'assistant',
-      title: lang === 'en' ? 'AI broker chat' : 'Чат с AI-брокером',
+      title: lang === 'ru' ? 'Чат с AI-брокером' : 'AI broker chat',
     }, userText)
   }
 

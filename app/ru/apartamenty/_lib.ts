@@ -120,16 +120,16 @@ function fallbackAptTitle(args: {
 }): string {
   const { district, area, bedrooms, lang } = args
   const parts: string[] = []
-  parts.push(lang === 'en' ? 'Apartment' : 'Апартаменты')
-  if (district) parts.push(lang === 'en' ? `in ${district}` : `в ${district}`)
+  parts.push(lang === 'ru' ? 'Апартаменты' : 'Apartment')
+  if (district) parts.push(lang === 'ru' ? `в ${district}` : `in ${district}`)
   const tail: string[] = []
-  if (area != null) tail.push(lang === 'en' ? `${area} m²` : `${area} м²`)
+  if (area != null) tail.push(lang === 'ru' ? `${area} м²` : `${area} m²`)
   if (bedrooms) {
     const n = Number(bedrooms)
     const word = Number.isFinite(n)
       ? pluralRu(n, ['спальня', 'спальни', 'спален'])
       : 'спален'
-    tail.push(lang === 'en' ? `${bedrooms} BR` : `${bedrooms} ${word}`)
+    tail.push(lang === 'ru' ? `${bedrooms} ${word}` : `${bedrooms} BR`)
   }
   return [parts.join(' '), tail.join(', ')].filter(Boolean).join(' — ')
 }
@@ -357,7 +357,9 @@ export function buildOptions(
   current: FilterState,
   lang: Lang = 'ru',
 ): FilterOptions {
-  const enMap = lang === 'en' ? {
+  // Non-RU (en/id/fr) all use the EN label map — English is the id/fr
+  // fallback and the only non-Russian facet columns that exist.
+  const enMap = lang !== 'ru' ? {
     district: buildLabelMap(allRows, 'Location 2', 'Location 2 EN'),
     floor:    new Map<string, string>(),
     status:   buildLabelMap(allRows, 'Статус', 'Статус EN'),
@@ -418,7 +420,7 @@ export function buildOptions(
 
   const districtsRaw = build('district', e => e.district)
   const bedrooms = build('bedrooms', e => e.bedrooms, 'value')
-  const groundLabel = lang === 'en' ? 'Ground floor' : 'Цокольный'
+  const groundLabel = lang === 'ru' ? 'Цокольный' : 'Ground floor'
   const floor = build('floor', e => e.floor, 'value').map(o => ({
     ...o,
     label: o.value === '0' ? groundLabel : o.label,
@@ -481,9 +483,9 @@ export function toCard(
   }
   const titleArea = numberOrNull(d['Площадь'])
   const titleBedrooms = e.bedrooms
-  let title: string | null = lang === 'en'
-    ? pick(firstString(d['SEO:Title EN']), firstString(d['ИИ Имя EN']), firstString(d['SEO:Title']), firstString(d['ИИ Имя']))
-    : pick(firstString(d['SEO:Title']), firstString(d['ИИ Имя']))
+  let title: string | null = lang === 'ru'
+    ? pick(firstString(d['SEO:Title']), firstString(d['ИИ Имя']))
+    : pick(firstString(d['SEO:Title EN']), firstString(d['ИИ Имя EN']), firstString(d['SEO:Title']), firstString(d['ИИ Имя']))
   if (!title) {
     title = fallbackAptTitle({ district: e.district, area: titleArea, bedrooms: titleBedrooms, lang })
   }

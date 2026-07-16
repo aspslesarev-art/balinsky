@@ -12,7 +12,7 @@ import {
   ClipboardList, FileSearch, Stamp, CreditCard, KeyRound,
   Building2, Settings2, AlertTriangle, Lock, Globe, MessageCircle,
 } from 'lucide-react'
-import { pickCopy, type Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
 const COPY = {
   ru: {
@@ -241,8 +241,8 @@ const COPY = {
 
 export function BuyingGuide({ lang }: { lang: Lang }) {
   const c = pickCopy(COPY, lang)
-  const home = lang === 'en' ? '/en' : '/ru'
-  const villasHref = lang === 'en' ? '/en/villas' : '/ru/villy'
+  const home = switchLangPath('/ru', lang)
+  const villasHref = switchLangPath('/ru/villy', lang)
 
   // Surface every Q+A as JSON-LD so Google can render Q&A rich
   // snippets for "how to buy property in Bali" queries.

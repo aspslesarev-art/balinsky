@@ -307,7 +307,7 @@ export async function HomePageContent({ lang }: { lang: Lang }) {
     '@type': 'WebSite',
     name: 'Balinsky',
     url: `${SITE_BASE}${r.home}`,
-    inLanguage: lang === 'en' ? 'en' : 'ru',
+    inLanguage: lang === 'ru' ? 'ru' : 'en',
     potentialAction: {
       '@type': 'SearchAction',
       target: {
@@ -522,7 +522,7 @@ export async function HomePageContent({ lang }: { lang: Lang }) {
             {districts.map(d => (
               <li key={d.slug}>
                 <Link
-                  href={lang === 'en' ? `${r.apartments}?district=${encodeURIComponent(d.name)}` : `${r.apartments}/${d.slug}`}
+                  href={lang === 'ru' ? `${r.apartments}/${d.slug}` : `${r.apartments}?district=${encodeURIComponent(d.name)}`}
                   className="inline-block px-4 py-2 rounded-full bg-white border border-[var(--color-border)] text-[14px] text-[var(--color-text)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] transition-colors"
                 >
                   {d.name}

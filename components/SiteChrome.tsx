@@ -1,6 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import { detectLang } from '@/lib/i18n'
 import { usePathname } from 'next/navigation'
 import { Footer } from './Footer'
 import type { Lang } from '@/lib/i18n'
@@ -20,7 +21,7 @@ export function SiteChrome() {
   // Telegram Mini App pages are rendered inside the Telegram WebView — they
   // don't want a site footer or AI chat bubble.
   if (pathname === '/bot' || pathname.startsWith('/bot/')) return null
-  const lang: Lang = pathname.startsWith('/en') ? 'en' : 'ru'
+  const lang: Lang = detectLang(pathname)
   return (
     <>
       <Footer lang={lang} />

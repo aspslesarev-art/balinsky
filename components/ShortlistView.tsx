@@ -12,7 +12,7 @@ import { useWishlist } from './WishlistContext'
 import { useCurrency } from './CurrencyContext'
 import { formatPrice } from '@/lib/currency'
 import { classifyLandUse } from '@/lib/land-use'
-import { pickCopy, type Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import type { WishlistItem } from '@/lib/wishlist'
 
 const COPY = {
@@ -132,7 +132,7 @@ const COPY = {
 
 type Copy = { countOne: string; countFew: string; countMany: string }
 function plural(n: number, lang: Lang, copy: Copy): string {
-  if (lang === 'en') return n === 1 ? copy.countOne : copy.countMany
+  if (lang !== 'ru') return n === 1 ? copy.countOne : copy.countMany
   const mod10 = n % 10, mod100 = n % 100
   if (mod10 === 1 && mod100 !== 11) return copy.countOne
   if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return copy.countFew
@@ -141,10 +141,10 @@ function plural(n: number, lang: Lang, copy: Copy): string {
 
 function detailHref(item: WishlistItem, lang: Lang): string {
   switch (item.kind) {
-    case 'villa':     return lang === 'en' ? `/en/villas/o/${item.slug}` : `/ru/villy/o/${item.slug}`
-    case 'apartment': return lang === 'en' ? `/en/apartments/o/${item.slug}` : `/ru/apartamenty/o/${item.slug}`
-    case 'complex':   return lang === 'en' ? `/en/complexes/o/${item.slug}` : `/ru/zhilye-kompleksy/o/${item.slug}`
-    case 'rental':    return lang === 'en' ? `/en/rental/o/${item.slug}` : `/ru/arenda/o/${item.slug}`
+    case 'villa':     return switchLangPath(`/ru/villy/o/${item.slug}`, lang)
+    case 'apartment': return switchLangPath(`/ru/apartamenty/o/${item.slug}`, lang)
+    case 'complex':   return switchLangPath(`/ru/zhilye-kompleksy/o/${item.slug}`, lang)
+    case 'rental':    return switchLangPath(`/ru/arenda/o/${item.slug}`, lang)
   }
 }
 
@@ -152,7 +152,7 @@ export function ShortlistView({ lang }: { lang: Lang }) {
   const { items, ready, remove, clear } = useWishlist()
   const { currency } = useCurrency()
   const c = pickCopy(COPY, lang)
-  const home = lang === 'en' ? '/en' : '/ru'
+  const home = switchLangPath('/ru', lang)
   const [downloadOpen, setDownloadOpen] = useState(false)
   // Cap PDF generation at a length where the comparison table still
   // fits one landscape page (5 columns) — beyond that we'd be paginating
@@ -430,7 +430,7 @@ export function ShortlistView({ lang }: { lang: Lang }) {
               </a>
               <button
                 type="button"
-                onClick={() => { if (confirm(lang === 'en' ? 'Clear the whole shortlist?' : 'Очистить весь шортлист?')) clear() }}
+                onClick={() => { if (confirm(lang === 'ru' ? 'Очистить весь шортлист?' : 'Clear the whole shortlist?')) clear() }}
                 className="inline-flex items-center gap-2 px-3 py-2 rounded-full text-[12px] sm:text-[13px] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-search-bg)]"
               >
                 <Trash2 size={14} /> {c.clear}
@@ -450,9 +450,9 @@ export function ShortlistView({ lang }: { lang: Lang }) {
             <Heart size={36} className="mx-auto mb-3 text-[var(--color-text-muted)]" />
             <div className="text-[15px] text-[var(--color-text)] max-w-md mx-auto mb-6">{c.empty}</div>
             <div className="flex items-center justify-center gap-2 flex-wrap">
-              <Link href={lang === 'en' ? '/en/villas' : '/ru/villy'}                  className="px-4 py-2 rounded-full bg-[var(--color-primary)] text-white text-[13px] font-medium no-underline">{c.villasLink}</Link>
-              <Link href={lang === 'en' ? '/en/apartments' : '/ru/apartamenty'}        className="px-4 py-2 rounded-full border border-[var(--color-border)] text-[13px] no-underline">{c.apartmentsLink}</Link>
-              <Link href={lang === 'en' ? '/en/complexes' : '/ru/zhilye-kompleksy'}    className="px-4 py-2 rounded-full border border-[var(--color-border)] text-[13px] no-underline">{c.complexesLink}</Link>
+              <Link href={switchLangPath('/ru/villy', lang)}                  className="px-4 py-2 rounded-full bg-[var(--color-primary)] text-white text-[13px] font-medium no-underline">{c.villasLink}</Link>
+              <Link href={switchLangPath('/ru/apartamenty', lang)}        className="px-4 py-2 rounded-full border border-[var(--color-border)] text-[13px] no-underline">{c.apartmentsLink}</Link>
+              <Link href={switchLangPath('/ru/zhilye-kompleksy', lang)}    className="px-4 py-2 rounded-full border border-[var(--color-border)] text-[13px] no-underline">{c.complexesLink}</Link>
             </div>
           </div>
         ) : (
@@ -965,7 +965,7 @@ function DownloadShortlistModal({
               onSubmit={e => { e.preventDefault(); submitAgent() }}
               className="space-y-3"
             >
-              <PdfField id="sl-name" label={c.pdfFieldName} value={name} onChange={setName} placeholder={lang === 'en' ? 'Andrey' : 'Андрей'} autoFocus required />
+              <PdfField id="sl-name" label={c.pdfFieldName} value={name} onChange={setName} placeholder={lang === 'ru' ? 'Андрей' : 'Andrey'} autoFocus required />
               <PdfField id="sl-telegram" label={c.pdfFieldTg} value={telegram} onChange={setTelegram} placeholder="@username" />
               <PdfField id="sl-whatsapp" label={c.pdfFieldWa} value={whatsapp} onChange={setWhatsapp} placeholder="+62 812 345 67 89" inputMode="tel" />
               {!canSubmitAgent && trimmedName.length > 0 && trimmedTg.length === 0 && trimmedWa.length === 0 && !busy && (

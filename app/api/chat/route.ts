@@ -231,7 +231,12 @@ export async function POST(req: Request) {
     return Response.json({ error: 'no_messages' }, { status: 400 })
   }
   const langRaw = (body as { lang?: unknown }).lang
-  const lang: Lang = langRaw === 'en' ? 'en' : 'ru'
+  // The consultant only has Russian and English system prompts/directives, so
+  // non-RU visitors (en/id/fr) are served the English experience; everything
+  // else falls back to Russian. Mapping id/fr → 'en' here means every
+  // downstream `lang === 'en'` branch (labels, EN directive) serves them
+  // correctly without per-branch changes.
+  const lang: Lang = langRaw === 'en' || langRaw === 'id' || langRaw === 'fr' ? 'en' : 'ru'
   // Clamp input size before it reaches the LLM — caps per-request token
   // cost (each message bounded, and total bounded) regardless of how much
   // text the client sends.

@@ -11,7 +11,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { BedDouble, Square, TrendingUp, Check, ArrowRight, Sparkles } from 'lucide-react'
 import type { FinderItem } from '@/lib/home-finder'
-import { pickCopy, type Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { BalinaCTA } from './BalinaCTA'
 
 type Goal = 'invest' | 'live' | 'both'
@@ -104,14 +104,14 @@ export function HomeFinder({ items, lang = 'ru' }: { items: FinderItem[]; lang?:
   }, [items, goal, budget, vibe])
 
   const top = results.slice(0, 6)
-  const root = lang === 'en' ? '/en/villas' : '/ru/villy'
+  const root = switchLangPath('/ru/villy', lang)
   const seeAllHref = budget && budget > 0 ? `${root}?price_max=${budget}` : root
 
   const balinaText = (() => {
     const parts: string[] = ['Подбери виллу']
-    if (lang === 'en') parts[0] = 'Find me a villa'
-    if (goal) parts.push(lang === 'en' ? `(${c.goals[goal].toLowerCase()})` : c.goals[goal].toLowerCase())
-    if (budget && budget > 0) parts.push(lang === 'en' ? `up to ${fmtPrice(budget)}` : `до ${fmtPrice(budget)}`)
+    if (lang !== 'ru') parts[0] = 'Find me a villa'
+    if (goal) parts.push(lang === 'ru' ? c.goals[goal].toLowerCase() : `(${c.goals[goal].toLowerCase()})`)
+    if (budget && budget > 0) parts.push(lang === 'ru' ? `до ${fmtPrice(budget)}` : `up to ${fmtPrice(budget)}`)
     if (vibe && vibe !== 'any') parts.push(c.vibes[vibe].toLowerCase())
     return parts.join(' ') + '.'
   })()

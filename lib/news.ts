@@ -67,7 +67,7 @@ export async function loadAllNews(lang: Lang = 'ru'): Promise<NewsItem[]> {
     // even on the RU branch, where we'll only stash it into aliases.
     const enTitle = cache[item.id]?.title
     const enSlug = enTitle ? slugifyEn(enTitle) : ''
-    if (lang === 'en' && enSlug && enSlug !== translated.slug) {
+    if (lang !== 'ru' && enSlug && enSlug !== translated.slug) {
       const aliases = Array.from(new Set([item.slug, ...(item.aliases ?? [])]))
         .filter(s => s && s !== enSlug)
       return { ...translated, slug: enSlug, aliases }

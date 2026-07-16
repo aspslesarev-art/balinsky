@@ -9,7 +9,7 @@ import { useState, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Search, Sparkles, ArrowRight } from 'lucide-react'
-import type { Lang } from '@/lib/i18n'
+import { switchLangPath, type Lang } from '@/lib/i18n'
 
 type Card = {
   kind: 'villa' | 'apartment' | 'complex'
@@ -39,7 +39,7 @@ export function SemanticSearchClient({ lang }: { lang: Lang }) {
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
-  const c = lang === 'en' ? {
+  const c = lang !== 'ru' ? {
     title: 'Describe your dream property',
     hint: 'Type freely — we find by meaning, not just filters.',
     placeholder: 'e.g. villa with infinity pool 5 min from beach in Canggu, under $600k',
@@ -195,8 +195,8 @@ export function SemanticSearchClient({ lang }: { lang: Lang }) {
         )}
 
         <div className="mt-12 text-center">
-          <Link href={lang === 'en' ? '/en' : '/ru'} className="text-[13px] text-[#6B7280] hover:text-[var(--color-primary)] inline-flex items-center gap-1">
-            <ArrowRight size={13} className="rotate-180" /> {lang === 'en' ? 'Back to catalog' : 'К каталогу'}
+          <Link href={switchLangPath('/ru', lang)} className="text-[13px] text-[#6B7280] hover:text-[var(--color-primary)] inline-flex items-center gap-1">
+            <ArrowRight size={13} className="rotate-180" /> {lang === 'ru' ? 'К каталогу' : 'Back to catalog'}
           </Link>
         </div>
       </main>

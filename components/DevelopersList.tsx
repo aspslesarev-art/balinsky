@@ -13,12 +13,12 @@ export function DevelopersList({ items, lang = 'ru' }: { items: DeveloperRowData
     return items.filter(d => d.name.toLowerCase().includes(t))
   }, [q, items])
 
-  const empty = lang === 'en' ? 'Nothing found' : 'Ничего не найдено'
+  const empty = lang === 'ru' ? 'Ничего не найдено' : 'Nothing found'
 
   return (
     <>
       <div className="mb-6">
-        <SearchBar value={q} onChange={setQ} placeholder={lang === 'en' ? 'Search developers…' : undefined} />
+        <SearchBar value={q} onChange={setQ} placeholder={lang === 'ru' ? undefined : 'Search developers…'} />
       </div>
       {filtered.length === 0 ? (
         <div className="py-16 text-center text-[var(--color-text-muted)]">{empty}</div>

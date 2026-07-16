@@ -7,7 +7,7 @@ import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { LocalDateTime } from '@/components/LocalDateTime'
 import { loadAllEvents, type EventItem } from '@/lib/events'
-import { pickCopy, type Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
 const COPY = {
   ru: {
@@ -45,7 +45,7 @@ export function generateEventsListMetadata(lang: Lang): Metadata {
   const c = pickCopy(COPY, lang)
   const ruPath = '/ru/meropriyatiya'
   const enPath = '/en/events'
-  const path = lang === 'en' ? enPath : ruPath
+  const path = switchLangPath(ruPath, lang)
   return {
     title: c.title,
     description: c.description,
@@ -98,7 +98,7 @@ export async function EventsList({ lang }: { lang: Lang }) {
 }
 
 function EventCard({ e, lang }: { e: EventItem; lang: Lang }) {
-  const detailRoot = lang === 'en' ? '/en/events' : '/ru/meropriyatiya'
+  const detailRoot = switchLangPath('/ru/meropriyatiya', lang)
   return (
     <Link href={`${detailRoot}/${e.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)] transition-colors">
       {e.photo ? (

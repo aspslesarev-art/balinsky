@@ -9,7 +9,7 @@
 
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import type { Lang } from '@/lib/i18n'
+import { LANGS, type Lang } from '@/lib/i18n'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
     bedrooms:    typeof body.bedrooms === 'number' ? body.bedrooms : null,
     area:        typeof body.area === 'number' ? body.area : null,
     price_usd:   typeof body.priceUsd === 'number' ? body.priceUsd : null,
-    lang:        body.lang === 'en' ? 'en' : 'ru',
+    lang:        body.lang && (LANGS as readonly string[]).includes(body.lang) ? body.lang : 'ru',
   }
 
   const { error } = await sb.from('wishlist_events').insert(row)

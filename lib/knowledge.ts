@@ -76,7 +76,7 @@ export async function loadKnowledgeBySlug(slug: string, lang: Lang = 'ru'): Prom
   // (transliterated) slug so legacy URLs still render before middleware 301s
   // them to the English one.
   const target = normalizeSlug(slug)
-  if (lang === 'en') {
+  if (lang !== 'ru') {
     return all.find(k => enKnowledgeSlug(k.slug) === slug || k.slug === target) ?? null
   }
   return all.find(k => k.slug === target) ?? null

@@ -5,7 +5,7 @@ import { PhotoSlider } from './PhotoSlider'
 import { useCurrency } from './CurrencyContext'
 import { WishlistButton } from './WishlistButton'
 import { formatPriceExact } from '@/lib/currency'
-import { pickCopy, type Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
 export type ApartmentCardData = {
   slug: string
@@ -51,7 +51,7 @@ export function ApartmentCard({ a, lang = 'ru' }: { a: ApartmentCardData; lang?:
   const dealLabel = a.dealType === 'resale' ? c.resale
     : a.dealType === 'secondary' ? c.secondary
     : null
-  const detailHref = lang === 'en' ? `/en/apartments/o/${a.slug}` : `/ru/apartamenty/o/${a.slug}`
+  const detailHref = switchLangPath(`/ru/apartamenty/o/${a.slug}`, lang)
 
   return (
     <Link

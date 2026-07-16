@@ -14,7 +14,7 @@ import {
   Building2, Home, BedDouble, HardHat, UsersRound,
   ShieldCheck, FileSearch, Video, BookOpen, Send,
 } from 'lucide-react'
-import { pickCopy, type Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
 const sb = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -125,14 +125,14 @@ async function loadCounts() {
 export async function AboutView({ lang }: { lang: Lang }) {
   const c = pickCopy(COPY, lang)
   const counts = await loadCounts()
-  const home = lang === 'en' ? '/en' : '/ru'
+  const home = switchLangPath('/ru', lang)
 
   const stats: { Icon: typeof Home; n: number; label: string; href: string }[] = [
-    { Icon: Home,       n: counts.villas,     label: c.statVillas,    href: lang === 'en' ? '/en/villas'      : '/ru/villy' },
-    { Icon: BedDouble,  n: counts.apartments, label: c.statApts,      href: lang === 'en' ? '/en/apartments'  : '/ru/apartamenty' },
-    { Icon: Building2,  n: counts.complexes,  label: c.statComplexes, href: lang === 'en' ? '/en/complexes'   : '/ru/zhilye-kompleksy' },
-    { Icon: HardHat,    n: counts.developers, label: c.statDevs,      href: lang === 'en' ? '/en/developers'  : '/ru/zastrojshhiki' },
-    { Icon: UsersRound, n: counts.managers,   label: c.statMgrs,      href: lang === 'en' ? '/en/developers'  : '/ru/zastrojshhiki' },
+    { Icon: Home,       n: counts.villas,     label: c.statVillas,    href: switchLangPath('/ru/villy', lang) },
+    { Icon: BedDouble,  n: counts.apartments, label: c.statApts,      href: switchLangPath('/ru/apartamenty', lang) },
+    { Icon: Building2,  n: counts.complexes,  label: c.statComplexes, href: switchLangPath('/ru/zhilye-kompleksy', lang) },
+    { Icon: HardHat,    n: counts.developers, label: c.statDevs,      href: switchLangPath('/ru/zastrojshhiki', lang) },
+    { Icon: UsersRound, n: counts.managers,   label: c.statMgrs,      href: switchLangPath('/ru/zastrojshhiki', lang) },
   ]
 
   return (
@@ -229,7 +229,7 @@ export async function AboutView({ lang }: { lang: Lang }) {
                 <Send size={14} /> {c.contactBot}
               </a>
               <Link
-                href={lang === 'en' ? '/en/how-to-buy' : '/ru/kak-kupit'}
+                href={switchLangPath('/ru/kak-kupit', lang)}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--color-border)] text-[13px] no-underline text-[var(--color-text)] hover:border-[var(--color-primary)] bg-white"
               >
                 {c.contactGuide}

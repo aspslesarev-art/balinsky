@@ -10,6 +10,7 @@
 // /balina.jpg.
 
 import { useState, useRef, useEffect } from 'react'
+import { detectLang, pickCopy } from '@/lib/i18n'
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
 import { Mic, Send, Sparkles } from 'lucide-react'
@@ -122,8 +123,8 @@ const COPY = {
 
 export function BalinaHero() {
   const pathname = usePathname() ?? ''
-  const lang: Lang = pathname.startsWith('/en') ? 'en' : 'ru'
-  const c = COPY[lang]
+  const lang: Lang = detectLang(pathname)
+  const c = pickCopy(COPY, lang)
 
   const [value, setValue] = useState('')
   const [voiceSupported, setVoiceSupported] = useState(false)

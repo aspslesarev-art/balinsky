@@ -5,7 +5,7 @@ import { PhotoSlider } from './PhotoSlider'
 import { useCurrency } from './CurrencyContext'
 import { WishlistButton } from './WishlistButton'
 import { formatPriceExact } from '@/lib/currency'
-import { pickCopy, type Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
 export type VillaCardData = {
   slug: string
@@ -56,7 +56,7 @@ export function VillaCard({ a, lang = 'ru' }: { a: VillaCardData; lang?: Lang })
   const dealLabel = a.dealType === 'resale' ? copy.resale
     : a.dealType === 'secondary' ? copy.secondary
     : null
-  const detailHref = lang === 'en' ? `/en/villas/o/${a.slug}` : `/ru/villy/o/${a.slug}`
+  const detailHref = switchLangPath(`/ru/villy/o/${a.slug}`, lang)
   return (
     <Link
       href={detailHref}

@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { VillaFilterState, VillaFilterOptions } from '@/app/ru/villy/_lib'
 import { buildCanonicalPath, STYLE_TO_SLUG } from '@/lib/villa-seo-routes'
 import { DISTRICT_TO_SLUG, BEDROOM_TO_SLUG } from '@/lib/seo-routes'
-import { pickCopy, type Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
 const COPY = {
   ru: {
@@ -33,10 +33,8 @@ export function RelatedVillaFilters({ filters, options, lang = 'ru' }: {
   lang?: Lang
 }) {
   const c = pickCopy(COPY, lang)
-  const enPrefix = lang === 'en' ? '/en/villas' : null
   function rewrite(p: string): string {
-    if (enPrefix && p.startsWith('/ru/villy')) return enPrefix + p.slice('/ru/villy'.length)
-    return p
+    return switchLangPath(p, lang)
   }
   // Build a candidate filter, ask buildCanonicalPath for the canonical URL.
   // If it's not buildable (out of slug map etc.), the link is dropped.
@@ -47,7 +45,7 @@ export function RelatedVillaFilters({ filters, options, lang = 'ru' }: {
     if (!path) return null
     return { label, href: rewrite(path), count }
   }
-  const brWord = (n: string) => lang === 'en' ? labelBREn(n) : labelBR(n)
+  const brWord = (n: string) => lang === 'ru' ? labelBR(n) : labelBREn(n)
 
   // 1) Same district — other bedrooms (only if a single district is picked).
   let sameDistrictBedrooms: Cand[] = []
