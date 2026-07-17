@@ -22,3 +22,19 @@ export function translit(s: string): string {
 export function hasCyrillic(s: string): boolean {
   return /[а-яёА-ЯЁ]/.test(s)
 }
+
+// Case- and Latin-preserving transliteration: only Cyrillic characters are
+// mapped, everything else (Latin, digits, punctuation, case) is kept as-is.
+// "LAGUNA (Комплекс 7)" → "LAGUNA (Kompleks 7)". Used as a last-resort
+// de-Cyrillic fallback for non-RU pages when no translation exists.
+export function translitPreserveCase(s: string): string {
+  if (!s) return ''
+  let out = ''
+  for (const ch of s) {
+    const lower = ch.toLowerCase()
+    const mapped = MAP[lower]
+    if (mapped === undefined) { out += ch; continue }
+    out += ch === lower || !mapped ? mapped : mapped.charAt(0).toUpperCase() + mapped.slice(1)
+  }
+  return out
+}

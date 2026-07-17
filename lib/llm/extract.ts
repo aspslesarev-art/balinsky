@@ -32,8 +32,29 @@ function tag(node: HTMLElement): string {
   return (node.rawTagName || '').toLowerCase()
 }
 
+const NAMED: Record<string, string> = {
+  amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ',
+  laquo: '«', raquo: '»', mdash: '—', ndash: '–', hellip: '…',
+  copy: '©', reg: '®', trade: '™', deg: '°', times: '×', middot: '·',
+  rsquo: '’', lsquo: '‘', ldquo: '“', rdquo: '”', euro: '€',
+}
+
+function decodeEntities(s: string): string {
+  if (!s.includes('&')) return s
+  return s.replace(/&(#x?[0-9a-f]+|[a-z][a-z0-9]*);/gi, (m, body) => {
+    if (body[0] === '#') {
+      const code = body[1] === 'x' || body[1] === 'X'
+        ? parseInt(body.slice(2), 16)
+        : parseInt(body.slice(1), 10)
+      return Number.isFinite(code) ? String.fromCodePoint(code) : m
+    }
+    const named = NAMED[body.toLowerCase()]
+    return named ?? m
+  })
+}
+
 function collapse(s: string): string {
-  return s.replace(/\s+/g, ' ').trim()
+  return decodeEntities(s).replace(/\s+/g, ' ').trim()
 }
 
 // Depth-first text of an element with inline markup flattened.

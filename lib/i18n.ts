@@ -1,3 +1,5 @@
+import { hasCyrillic, translitPreserveCase } from './translit'
+
 // Site-wide internationalization.
 //
 // 1) Airtable field translation (tField). For a non-RU lang we look up
@@ -101,7 +103,11 @@ export function tField(
     const v = fieldForLang(d, field, next)
     if (v) return v
   }
-  return unwrap(d[field])
+  // Last resort: the raw RU value. On a non-RU page, de-Cyrillic it so no
+  // Russian text leaks — transliterate Cyrillic to Latin, preserve the rest.
+  const raw = unwrap(d[field])
+  if (raw && hasCyrillic(raw)) return translitPreserveCase(raw)
+  return raw
 }
 
 /**
