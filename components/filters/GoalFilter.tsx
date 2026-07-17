@@ -5,7 +5,7 @@ import { useFilterUrl, type FilterView } from './useFilterUrl'
 import type { FilterState } from './FiltersBar'
 import { pickCopy, type Lang } from '@/lib/i18n'
 
-const OPTS_BY_LANG: Record<Lang, { v: 'invest' | 'live'; label: string }[]> = {
+const OPTS_BY_LANG: Record<'ru' | 'en' | 'id' | 'fr', { v: 'invest' | 'live'; label: string }[]> = {
   ru: [{ v: 'invest', label: 'Под инвестиции' }, { v: 'live', label: 'Для жизни' }],
   en: [{ v: 'invest', label: 'For investment' }, { v: 'live', label: 'To live in' }],
   id: [{ v: 'invest', label: 'Untuk investasi' }, { v: 'live', label: 'Untuk tinggal' }],

@@ -348,7 +348,7 @@ const COPY = {
   },
 } as const
 
-type Copy = typeof COPY[Lang]
+type Copy = typeof COPY['ru' | 'en' | 'id' | 'fr']
 
 function pluralRu(n: number, forms: [string, string, string]): string {
   const mod10 = n % 10, mod100 = n % 100
@@ -367,7 +367,7 @@ function fmtMoney(n: number | null | undefined, currency: Currency): string {
 
 function fmtDate(lang: Lang): string {
   const d = new Date()
-  return d.toLocaleDateString(({ ru: 'ru-RU', en: 'en-GB', id: 'id-ID', fr: 'fr-FR' } as const)[lang], { day: 'numeric', month: 'long', year: 'numeric' })
+  return d.toLocaleDateString(({ ru: 'ru-RU', en: 'en-GB', id: 'id-ID', fr: 'fr-FR', de: 'de-DE', zh: 'zh-CN', nl: 'nl-NL', ban: 'id-ID' } as const)[lang], { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
 function detailUrl(it: WishlistItem, lang: Lang): string {

@@ -68,8 +68,20 @@ const PRICE_BY_SLUG = Object.fromEntries(PRICE_SEGMENTS.map(s => [s.slug, s])) a
 export function priceSegmentLabel(s: PriceSegment, lang: Lang): string {
   if (lang === 'ru') return s.label
   const f = (n: number) => (n >= 1000 ? `$${Math.round(n / 1000)}k` : `$${n}`)
-  const upTo = lang === 'id' ? 'Hingga' : lang === 'fr' ? "Jusqu'à" : 'Up to'
-  const from = lang === 'id' ? 'Mulai' : lang === 'fr' ? 'À partir de' : 'From'
+  const upTo =
+    lang === 'id' ? 'Hingga'
+    : lang === 'fr' ? "Jusqu'à"
+    : lang === 'de' ? 'Bis'
+    : lang === 'zh' ? '最高'
+    : lang === 'nl' ? 'Tot'
+    : 'Up to'
+  const from =
+    lang === 'id' ? 'Mulai'
+    : lang === 'fr' ? 'À partir de'
+    : lang === 'de' ? 'Ab'
+    : lang === 'zh' ? '起'
+    : lang === 'nl' ? 'Vanaf'
+    : 'From'
   if (s.min == null && s.max != null) return `${upTo} ${f(s.max)}`
   if (s.min != null && s.max == null) return `${from} ${f(s.min)}`
   if (s.min != null && s.max != null) return `${f(s.min)} – ${f(s.max)}`

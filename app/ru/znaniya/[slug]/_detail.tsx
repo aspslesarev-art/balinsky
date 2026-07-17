@@ -23,7 +23,7 @@ type LangCopy = {
   published: string; updated: string; locale: string
   defaultAuthor: KnowledgeAuthor
 }
-const COPY: Record<Lang, LangCopy> = {
+const COPY: Record<'ru' | 'en' | 'id' | 'fr', LangCopy> = {
   ru: {
     home: 'Главная', knowledgeCrumb: 'Знания', source: 'Источник', moreArticles: 'Ещё статьи',
     published: 'Опубликовано', updated: 'Обновлено',

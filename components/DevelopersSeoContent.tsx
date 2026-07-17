@@ -18,7 +18,7 @@ const POPULAR_DISTRICTS = [
 ]
 
 type FaqItem = { q: string; a: string }
-const FAQ_ITEMS: Record<Lang, FaqItem[]> = {
+const FAQ_ITEMS: Record<'ru' | 'en' | 'id' | 'fr', FaqItem[]> = {
   ru: [
     { q: 'Какие застройщики работают на Бали?',
       a: 'На острове активно более 80 застройщиков. Среди заметных — Alex Villas, Magnum Estate, BREIG, Bali Capital Group, Anta Group, Taryan Group, Oceaniq, Sunny Development. Большинство специализируется на 1–2 районах Бали.' },

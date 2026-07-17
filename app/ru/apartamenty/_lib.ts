@@ -438,7 +438,7 @@ export function buildOptions(
   // Deal-type chip — derived directly from `Тип сделки`. Mirrors villas:
   // "От застройщика · 42 · Перепродажа · 5 · Вторичка · 1" etc.
   const dealCounts = countsExcludingDim('dealType', e => e.dealType)
-  const DEAL_LABELS: Record<Lang, Record<DealType, string>> = {
+  const DEAL_LABELS: Record<'ru' | 'en' | 'id' | 'fr', Record<DealType, string>> = {
     ru: { primary: 'От застройщика', resale: 'Перепродажа', secondary: 'Вторичка' },
     en: { primary: 'From developer', resale: 'Resale',      secondary: 'Secondary' },
     id: { primary: 'Dari pengembang', resale: 'Jual kembali', secondary: 'Sekunder' },

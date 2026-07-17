@@ -494,7 +494,7 @@ export function buildOptions(
   // Deal type — counts derived directly so the chip shows
   // "Перепродажа · 12" etc.
   const dealCounts = countsExcludingDim('dealType', e => e.dealType)
-  const DEAL_LABELS: Record<Lang, Record<string, string>> = {
+  const DEAL_LABELS: Record<'ru' | 'en' | 'id' | 'fr', Record<string, string>> = {
     ru: { primary: 'От застройщика', resale: 'Перепродажа', secondary: 'Вторичка' },
     en: { primary: 'From developer', resale: 'Resale',      secondary: 'Secondary' },
     id: { primary: 'Dari pengembang', resale: 'Jual kembali', secondary: 'Sekunder' },

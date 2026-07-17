@@ -930,7 +930,8 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   const translatePermit = (v: string | null): string | null => {
     if (!v || lang === 'ru') return v
     let out = v
-    for (const [ru, tr] of Object.entries(PERMIT_TOKENS[lang])) out = out.split(ru).join(tr)
+    const tokens = PERMIT_TOKENS[lang as 'en' | 'id' | 'fr'] ?? PERMIT_TOKENS.en
+    for (const [ru, tr] of Object.entries(tokens)) out = out.split(ru).join(tr)
     return out
   }
   const permitRaw = firstString(d['Разрешительные документы'])

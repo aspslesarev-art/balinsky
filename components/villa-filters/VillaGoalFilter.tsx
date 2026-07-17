@@ -5,7 +5,7 @@ import { useVillaFilterUrl, type FilterView } from './useVillaFilterUrl'
 import type { VillaFilterState } from '@/app/ru/villy/_lib'
 import { pickCopy, type Lang } from '@/lib/i18n'
 
-const OPTS_BY_LANG: Record<Lang, { v: 'invest' | 'live'; label: string }[]> = {
+const OPTS_BY_LANG: Record<'ru' | 'en' | 'id' | 'fr', { v: 'invest' | 'live'; label: string }[]> = {
   ru: [{ v: 'invest', label: 'Под инвестиции' }, { v: 'live', label: 'Для жизни' }],
   en: [{ v: 'invest', label: 'For investment' }, { v: 'live', label: 'To live in' }],
   id: [{ v: 'invest', label: 'Untuk investasi' }, { v: 'live', label: 'Untuk tinggal' }],

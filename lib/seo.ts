@@ -117,7 +117,100 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
     },
   }
 
-  const byLang: Record<Lang, Record<CategoryKind, CategoryMeta>> = { ru, en, id, fr }
+  const de: Record<CategoryKind, CategoryMeta> = {
+    villas: {
+      title: `${n} Villen auf Bali${from ? ` ab ${from}` : ''} mit PBG/SLF-Prüfung | Balinsky`,
+      description: `${n} Villen auf Bali${from && to ? ` von ${from} bis ${to}` : from ? ` ab ${from}` : ''}${dev ? ` von ${dev} geprüften Bauträgern` : ''}. Pererenan, Uluwatu, Ubud, Sanur. Video vor Ort, direkte Kontakte.`,
+    },
+    apartments: {
+      title: `${n} Apartments auf Bali${from ? ` ab ${from}` : ''} | Balinsky`,
+      description: `${n} Apartments in geprüften Anlagen. Berawa, Pererenan, Pandawa. Hausverwaltungen, Mietrendite 8–15%, Angebote und Ratenzahlung.`,
+    },
+    complexes: {
+      title: `${n} Wohnanlagen auf Bali mit PBG/SLF-Prüfung | Balinsky`,
+      description: `${n} Bali-Anlagen mit Infrastruktur. PBG/SLF/RDTR-Prüfung, echte Übergabetermine${dev ? `, Angebote von ${dev} Bauträgern` : ''}.`,
+    },
+    developers: {
+      title: `${n} Bali-Bauträger mit Bewertung | Balinsky`,
+      description: `${n} Bali-Bauträger bewertet nach 4 Kriterien: Qualität, Erfahrung, Technik, Verwaltung. Fertige Projekte, aktive Bauten, Angebote.`,
+    },
+    rental: {
+      title: `Miete auf Bali: ${n} Monats- & Tagesangebote | Balinsky`,
+      description: `${n} Mietoptionen auf Bali. Villen, Apartments, Häuser. Monatlich und täglich. Direkte Eigentümerkontakte.`,
+    },
+  }
+
+  const zh: Record<CategoryKind, CategoryMeta> = {
+    villas: {
+      title: `${n} 套巴厘岛别墅${from ? `，${from} 起` : ''}，含 PBG/SLF 核验 | Balinsky`,
+      description: `${n} 套巴厘岛别墅${from && to ? `，${from} 至 ${to}` : from ? `，${from} 起` : ''}${dev ? `，来自 ${dev} 家已核验开发商` : ''}。Pererenan、Uluwatu、Ubud、Sanur。实地视频，直接联系。`,
+    },
+    apartments: {
+      title: `${n} 套巴厘岛公寓${from ? `，${from} 起` : ''} | Balinsky`,
+      description: `${n} 套已核验社区公寓。Berawa、Pererenan、Pandawa。物业管理公司，租金收益 8–15%，优惠与分期。`,
+    },
+    complexes: {
+      title: `${n} 个巴厘岛住宅区，含 PBG/SLF 核验 | Balinsky`,
+      description: `${n} 个配套齐全的巴厘岛住宅区。PBG/SLF/RDTR 核验，真实交房日期${dev ? `，${dev} 家开发商优惠` : ''}。`,
+    },
+    developers: {
+      title: `${n} 家巴厘岛开发商及评级 | Balinsky`,
+      description: `${n} 家巴厘岛开发商，按 4 项标准评级：质量、经验、工程、管理。已完工项目、在建工程、优惠。`,
+    },
+    rental: {
+      title: `巴厘岛租赁：${n} 套月租与日租房源 | Balinsky`,
+      description: `${n} 套巴厘岛租赁选择。别墅、公寓、住宅。月租与日租。业主直接联系。`,
+    },
+  }
+
+  const nl: Record<CategoryKind, CategoryMeta> = {
+    villas: {
+      title: `${n} villa's op Bali${from ? ` vanaf ${from}` : ''} met PBG/SLF-controle | Balinsky`,
+      description: `${n} villa's op Bali${from && to ? ` van ${from} tot ${to}` : from ? ` vanaf ${from}` : ''}${dev ? ` van ${dev} geverifieerde ontwikkelaars` : ''}. Pererenan, Uluwatu, Ubud, Sanur. Video ter plaatse, directe contacten.`,
+    },
+    apartments: {
+      title: `${n} appartementen op Bali${from ? ` vanaf ${from}` : ''} | Balinsky`,
+      description: `${n} appartementen in geverifieerde complexen. Berawa, Pererenan, Pandawa. Beheermaatschappijen, huurrendement 8–15%, aanbiedingen en termijnbetaling.`,
+    },
+    complexes: {
+      title: `${n} wooncomplexen op Bali met PBG/SLF-controle | Balinsky`,
+      description: `${n} Bali-complexen met voorzieningen. PBG/SLF/RDTR-controle, echte opleverdata${dev ? `, aanbiedingen van ${dev} ontwikkelaars` : ''}.`,
+    },
+    developers: {
+      title: `${n} Bali-ontwikkelaars met beoordeling | Balinsky`,
+      description: `${n} Bali-ontwikkelaars beoordeeld op 4 criteria: kwaliteit, ervaring, techniek, beheer. Voltooide projecten, actieve bouw, aanbiedingen.`,
+    },
+    rental: {
+      title: `Huur op Bali: ${n} maand- & dagverhuur | Balinsky`,
+      description: `${n} huuropties op Bali. Villa's, appartementen, huizen. Per maand en per dag. Directe contacten met eigenaren.`,
+    },
+  }
+
+  // Balinese — best-effort; content otherwise falls back to en/ru.
+  const ban: Record<CategoryKind, CategoryMeta> = {
+    villas: {
+      title: `${n} vila ring Bali${from ? ` saking ${from}` : ''} sareng cek PBG/SLF | Balinsky`,
+      description: `${n} vila ring Bali${from && to ? ` saking ${from} kantos ${to}` : from ? ` saking ${from}` : ''}${dev ? ` saking ${dev} pangwangun sané kacihnayang` : ''}. Pererenan, Uluwatu, Ubud, Sanur. Video ring genah, kontak langsung.`,
+    },
+    apartments: {
+      title: `${n} apartemen ring Bali${from ? ` saking ${from}` : ''} | Balinsky`,
+      description: `${n} apartemen ring kompleks sané kacihnayang. Berawa, Pererenan, Pandawa. Perusahaan pangelola, asil sewa 8–15%, promo miwah cicilan.`,
+    },
+    complexes: {
+      title: `${n} kompleks umah ring Bali sareng cek PBG/SLF | Balinsky`,
+      description: `${n} kompleks ring Bali sareng infrastruktur. Cek PBG/SLF/RDTR, tanggal serah terima sujati${dev ? `, promo saking ${dev} pangwangun` : ''}.`,
+    },
+    developers: {
+      title: `${n} pangwangun ring Bali sareng peringkat | Balinsky`,
+      description: `${n} pangwangun Bali sareng peringkat 4 kriteria: kualitas, pengalaman, teknik, pangelolaan. Proyék sané puput, wangunan sané kantun mamargi, promo.`,
+    },
+    rental: {
+      title: `Sewa ring Bali: ${n} umah sewa bulanan miwah harian | Balinsky`,
+      description: `${n} pilihan sewa ring Bali. Vila, apartemen, umah. Bulanan miwah harian. Kontak langsung sang nuénang.`,
+    },
+  }
+
+  const byLang: Record<Lang, Record<CategoryKind, CategoryMeta>> = { ru, en, id, fr, de, zh, nl, ban }
   const m = byLang[lang][kind]
   // Collapse any double spaces left when an optional stat was empty.
   return {

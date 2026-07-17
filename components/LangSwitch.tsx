@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation'
 import { switchLangPath, detectLang, LANGS, type Lang } from '@/lib/i18n'
 
-const LANG_LABEL: Record<Lang, string> = { ru: 'RU', en: 'EN', id: 'ID', fr: 'FR' }
+const LANG_LABEL: Record<Lang, string> = { ru: 'RU', en: 'EN', id: 'ID', fr: 'FR', de: 'DE', zh: 'ZH', nl: 'NL', ban: 'BAN' }
 
 // Same visual treatment as CurrencyToggle — appearance-none <select> with a
 // chevron overlay. Keeps the header's right-side controls consistent.

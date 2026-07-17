@@ -35,8 +35,12 @@ type SectionCache = Record<string, Record<string, string>>
 
 // Filename suffix + Airtable field suffix per language. RU is the source
 // (never translated) and has no cache file.
-const FILE_SUFFIX: Record<Exclude<Lang, 'ru'>, string> = { en: '', id: '-id', fr: '-fr' }
-const FIELD_SUFFIX: Record<Exclude<Lang, 'ru'>, string> = { en: ' EN', id: ' ID', fr: ' FR' }
+const FILE_SUFFIX: Record<Exclude<Lang, 'ru'>, string> = {
+  en: '', id: '-id', fr: '-fr', de: '-de', zh: '-zh', nl: '-nl', ban: '-ban',
+}
+const FIELD_SUFFIX: Record<Exclude<Lang, 'ru'>, string> = {
+  en: ' EN', id: ' ID', fr: ' FR', de: ' DE', zh: ' ZH', nl: ' NL', ban: ' BAN',
+}
 
 /**
  * Manifest-style sections (news / promo / events / knowledge / rental)
@@ -149,18 +153,28 @@ export function mergeEnTranslations(
 // All non-RU translation caches for a section, loaded together. The catalog
 // loaders build one lang-agnostic dataset (cached once) with every language's
 // slots populated, so tField() can resolve any active language off it.
-export type AllTranslations = { en: SectionCache; id: SectionCache; fr: SectionCache }
+export type AllTranslations = {
+  en: SectionCache
+  id: SectionCache
+  fr: SectionCache
+  de: SectionCache
+  zh: SectionCache
+  nl: SectionCache
+}
 
 export async function loadAllTranslations(section: Section): Promise<AllTranslations> {
-  const [en, id, fr] = await Promise.all([
+  const [en, id, fr, de, zh, nl] = await Promise.all([
     loadTranslations(section, 'en'),
     loadTranslations(section, 'id'),
     loadTranslations(section, 'fr'),
+    loadTranslations(section, 'de'),
+    loadTranslations(section, 'zh'),
+    loadTranslations(section, 'nl'),
   ])
-  return { en, id, fr }
+  return { en, id, fr, de, zh, nl }
 }
 
-/** Merge EN+ID+FR translation slots into a row's data blob. */
+/** Merge EN+ID+FR+DE+ZH+NL translation slots into a row's data blob. */
 export function mergeAllTranslations(
   data: Record<string, unknown>,
   airtableId: string,
@@ -169,5 +183,8 @@ export function mergeAllTranslations(
   let out = mergeTranslations(data, airtableId, all.en, 'en')
   out = mergeTranslations(out, airtableId, all.id, 'id')
   out = mergeTranslations(out, airtableId, all.fr, 'fr')
+  out = mergeTranslations(out, airtableId, all.de, 'de')
+  out = mergeTranslations(out, airtableId, all.zh, 'zh')
+  out = mergeTranslations(out, airtableId, all.nl, 'nl')
   return out
 }

@@ -6,7 +6,7 @@ export const revalidate = 600
 
 export async function generateMetadata({ searchParams }: { searchParams: SP }) {
   const sp = await searchParams
-  return generateKnowledgeListMetadata('en', pickAudience(sp.for))
+  return generateKnowledgeListMetadata('fr', pickAudience(sp.for))
 }
 
 export default async function Page({ searchParams }: { searchParams: SP }) {

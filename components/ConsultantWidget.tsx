@@ -52,7 +52,7 @@ function extractChips(content: string): { text: string; chips: string[] } {
 // First message in every conversation. Includes its own [CHIPS] block,
 // so the entry-point picks render through the same chip pipeline as
 // every later step — chips lead to chips end-to-end.
-const GREETING_BY_LANG: Record<Lang, Message> = {
+const GREETING_BY_LANG: Record<'ru' | 'en' | 'id' | 'fr', Message> = {
   ru: {
     role: 'assistant',
     greeting: true,
