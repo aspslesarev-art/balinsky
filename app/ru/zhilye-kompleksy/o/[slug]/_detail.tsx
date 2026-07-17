@@ -1177,12 +1177,16 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   const developerLink = await findDeveloperLink(developerName)
   const lat = parseGeo(d['Geo'])
   const lng = parseGeo(d['Geo 2'])
-  const seoText = tField(d, 'SEO Text', lang)
+  const nativeBody = tField(d, 'SEO Text', lang)
     ?? tField(d, 'Описание', lang)
-    ?? firstString(d['ИИ Описание 2'])
+  const rawBody = firstString(d['ИИ Описание 2'])
     ?? firstString(d['ИИ Описание'])
+  const seoText = nativeBody ?? rawBody
   const kb = await loadKbPageContent('complex', c.airtable_id, lang)
-  const pageBody = kb?.body ?? seoText
+  // Non-RU: prefer the native-language field over the RU/EN-only KB body.
+  const pageBody = lang === 'ru'
+    ? (kb?.body ?? seoText)
+    : (nativeBody ?? kb?.body ?? rawBody)
   const vision = await loadListingVision('complex', c.airtable_id)
   const photoAlts = slidesPhotos.map((_, i) => altFor(vision, i, lang, name))
 

@@ -855,7 +855,8 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   // Unique, AI-generated on-page write-up + FAQ (assistant_kb). Falls back to
   // the Airtable SEO Text / templated FAQ when not generated yet.
   const kb = await loadKbPageContent('villa', v.airtable_id, lang)
-  const pageBodyRaw = kb?.body ?? seoText
+  // Non-RU: prefer the native-language SEO Text over the RU/EN-only KB body.
+  const pageBodyRaw = lang === 'ru' ? (kb?.body ?? seoText) : (seoText ?? kb?.body ?? null)
   const pageBody = lang !== 'ru' && pageBodyRaw && hasCyrillic(pageBodyRaw) ? translitPreserveCase(pageBodyRaw) : pageBodyRaw
   // Per-photo vision alt text (image SEO/accessibility).
   const vision = await loadListingVision('villa', v.airtable_id)

@@ -524,11 +524,16 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
   const c = pickCopy(COPY, lang)
   const name = firstString(dev.data['Developer']) ?? slug
   const logoUrl = dev.logo_url ?? logoFromJson(dev.data)
-  const aiTextRaw = tField(dev.data, 'SEO Text', lang)
+  const nativeBody = tField(dev.data, 'SEO Text', lang)
     ?? tField(dev.data, 'Описание ИИ', lang)
-    ?? firstString(dev.data['AI Описание'])
+  const rawBody = firstString(dev.data['AI Описание'])
   const kb = await loadKbPageContent('developer', dev.airtable_id, lang)
-  const aiTextResolved = kb?.body ?? aiTextRaw
+  // Non-RU: prefer the native-language Airtable field over the KB body, which
+  // only exists in RU + EN — otherwise DE/ZH/NL render the English KB body.
+  // RU keeps the KB body first (unchanged).
+  const aiTextResolved = lang === 'ru'
+    ? (kb?.body ?? nativeBody ?? rawBody)
+    : (nativeBody ?? kb?.body ?? rawBody)
   // Free-text body: no Russian may leak on a non-RU page. tField already
   // translits its RU last-resort, but the `AI Описание` raw fallback and the
   // kb body are not guaranteed de-Cyrillicized — guard here.

@@ -795,7 +795,8 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
   // into the on-page description / Product schema on a non-RU page.
   const seoText = lang !== 'ru' && seoTextRaw && hasCyrillic(seoTextRaw) ? translitPreserveCase(seoTextRaw) : seoTextRaw
   const kb = await loadKbPageContent('apartment', a.airtable_id, lang)
-  const pageBodyRaw = kb?.body ?? seoText
+  // Non-RU: prefer the native-language SEO Text over the RU/EN-only KB body.
+  const pageBodyRaw = lang === 'ru' ? (kb?.body ?? seoText) : (seoText ?? kb?.body ?? null)
   const pageBody = lang !== 'ru' && pageBodyRaw && hasCyrillic(pageBodyRaw) ? translitPreserveCase(pageBodyRaw) : pageBodyRaw
   const vision = await loadListingVision('apartment', a.airtable_id)
   const photoAlts = photos.map((_, i) => altFor(vision, i, lang, title))
