@@ -11,10 +11,10 @@ export const metadata: Metadata = {
   title: 'Contact | Balinsky',
   description: 'How to reach Balinsky: Telegram bot, Telegram channel, email, YouTube. Partnership contacts for developers and agencies.',
   alternates: {
-    canonical: '/de/contact',
+    canonical: '/de/kontakt',
     languages: {
       ru: `${SITE_URL}/ru/kontakty`,
-      en: `${SITE_URL}/de/contact`,
+      en: `${SITE_URL}/de/kontakt`,
       'x-default': `${SITE_URL}/ru/kontakty`,
     },
   },
