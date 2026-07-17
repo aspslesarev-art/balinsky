@@ -16,6 +16,7 @@
 // last good copy so we never strip translations off a page mid-flight.
 
 import type { Lang } from '@/lib/i18n'
+import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
 const TTL_MS = 5 * 60 * 1000
@@ -55,14 +56,24 @@ export function applyManifestTranslation<T extends { id: string }>(
   cache: SectionCache,
   fields: readonly (keyof T)[],
 ): T {
+  // This helper only runs for non-RU languages, so any Cyrillic that survives
+  // (no cache entry, or a field the cache didn't cover) is an untranslated
+  // leak — transliterate it to Latin so no Russian text reaches the page.
   const tr = cache[item.id]
-  if (!tr) return item
   let out = item
   for (const f of fields) {
-    const v = tr[f as string]
+    const key = f as string
+    const v = tr?.[key]
+    let next: string | undefined
     if (typeof v === 'string' && v.trim()) {
+      next = v
+    } else {
+      const cur = (item as Record<string, unknown>)[key]
+      if (typeof cur === 'string' && hasCyrillic(cur)) next = translitPreserveCase(cur)
+    }
+    if (next !== undefined && next !== (item as Record<string, unknown>)[key]) {
       if (out === item) out = { ...item }
-      ;(out as Record<string, unknown>)[f as string] = v
+      ;(out as Record<string, unknown>)[key] = next
     }
   }
   return out
