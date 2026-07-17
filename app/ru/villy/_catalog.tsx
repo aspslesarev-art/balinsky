@@ -45,6 +45,34 @@ const COPY = {
     emptyFilters: 'Aucun résultat pour les filtres sélectionnés',
     searchPlaceholder: 'Rechercher villas, quartiers, promoteurs…',
   },
+  de: {
+    page: 'Seite', of: 'von',
+    objects: (n: number) => `${n} Objekte`,
+    emptySearch: (q: string) => `Nichts gefunden für „${q}“`,
+    emptyFilters: 'Keine Treffer für die gewählten Filter',
+    searchPlaceholder: 'Villen, Regionen, Bauträger suchen…',
+  },
+  zh: {
+    page: '页', of: '共',
+    objects: (n: number) => `${n} 套房源`,
+    emptySearch: (q: string) => `未找到与“${q}”相关的结果`,
+    emptyFilters: '没有符合所选筛选条件的结果',
+    searchPlaceholder: '搜索别墅、地区、开发商…',
+  },
+  nl: {
+    page: 'pagina', of: 'van',
+    objects: (n: number) => `${n} objecten`,
+    emptySearch: (q: string) => `Niets gevonden voor "${q}"`,
+    emptyFilters: 'Niets komt overeen met de geselecteerde filters',
+    searchPlaceholder: "Zoek villa's, wijken, ontwikkelaars…",
+  },
+  ban: {
+    page: 'kaca', of: 'saking',
+    objects: (n: number) => `${n} properti`,
+    emptySearch: (q: string) => `Nenten wenten sane kapanggih antuk "${q}"`,
+    emptyFilters: 'Nenten wenten sane cocok sareng filter sane kapilih',
+    searchPlaceholder: 'Rereh vila, wewengkon, pangwangun…',
+  },
 } as const
 
 function toQueryString(f: VillaFilterState): string {

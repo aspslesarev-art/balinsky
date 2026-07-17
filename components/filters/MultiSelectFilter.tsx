@@ -11,6 +11,10 @@ const COPY = {
   en: { search: 'Search…', noOptions: 'No options', clear: 'Clear', apply: 'Apply' },
   id: { search: 'Cari…', noOptions: 'Tidak ada pilihan', clear: 'Hapus', apply: 'Terapkan' },
   fr: { search: 'Rechercher…', noOptions: 'Aucune option', clear: 'Effacer', apply: 'Appliquer' },
+  de: { search: 'Suchen…', noOptions: 'Keine Optionen', clear: 'Zurücksetzen', apply: 'Anwenden' },
+  zh: { search: '搜索…', noOptions: '无选项', clear: '清除', apply: '应用' },
+  nl: { search: 'Zoeken…', noOptions: 'Geen opties', clear: 'Wissen', apply: 'Toepassen' },
+  ban: { search: 'Ngerereh…', noOptions: 'Nenten wenten pilihan', clear: 'Kosongin', apply: 'Terapang' },
 } as const
 
 export type Option = { value: string; label: string; count?: number }

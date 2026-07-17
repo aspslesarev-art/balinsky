@@ -23,7 +23,7 @@ type LangCopy = {
   published: string; updated: string; locale: string
   defaultAuthor: KnowledgeAuthor
 }
-const COPY: Record<'ru' | 'en' | 'id' | 'fr', LangCopy> = {
+const COPY: Record<Lang, LangCopy> = {
   ru: {
     home: 'Главная', knowledgeCrumb: 'Знания', source: 'Источник', moreArticles: 'Ещё статьи',
     published: 'Опубликовано', updated: 'Обновлено',
@@ -47,6 +47,30 @@ const COPY: Record<'ru' | 'en' | 'id' | 'fr', LangCopy> = {
     published: 'Publié', updated: 'Mis à jour',
     defaultAuthor: { name: 'Andrei Balinsky', role: 'Fondateur de Balinsky', photo: null, slug: null },
     locale: 'fr-FR',
+  },
+  de: {
+    home: 'Startseite', knowledgeCrumb: 'Wissen', source: 'Quelle', moreArticles: 'Weitere Artikel',
+    published: 'Veröffentlicht', updated: 'Aktualisiert',
+    defaultAuthor: { name: 'Andrei Balinsky', role: 'Gründer von Balinsky', photo: null, slug: null },
+    locale: 'de-DE',
+  },
+  zh: {
+    home: '首页', knowledgeCrumb: '知识', source: '来源', moreArticles: '更多文章',
+    published: '发布于', updated: '更新于',
+    defaultAuthor: { name: 'Andrei Balinsky', role: 'Balinsky 创始人', photo: null, slug: null },
+    locale: 'zh-CN',
+  },
+  nl: {
+    home: 'Home', knowledgeCrumb: 'Kennis', source: 'Bron', moreArticles: 'Meer artikelen',
+    published: 'Gepubliceerd', updated: 'Bijgewerkt',
+    defaultAuthor: { name: 'Andrei Balinsky', role: 'Oprichter van Balinsky', photo: null, slug: null },
+    locale: 'nl-NL',
+  },
+  ban: {
+    home: 'Beranda', knowledgeCrumb: 'Pangweruh', source: 'Sumber', moreArticles: 'Artikel lianan',
+    published: 'Kawedar', updated: 'Kaanyarin',
+    defaultAuthor: { name: 'Andrei Balinsky', role: 'Pangadeg Balinsky', photo: null, slug: null },
+    locale: 'id-ID',
   },
 }
 

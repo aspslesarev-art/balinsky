@@ -101,6 +101,30 @@ const COPY = {
     onMap: 'Voir sur la carte',
     free: 'gratuit',
   },
+  de: {
+    h2: 'Was ist in der Nähe',
+    subtitle: 'Beliebte Orte in der Nähe — Daten von Google Maps',
+    onMap: 'Auf Karte ansehen',
+    free: 'kostenlos',
+  },
+  zh: {
+    h2: '附近有什么',
+    subtitle: '附近的热门地点 — 数据来自 Google Maps',
+    onMap: '在地图上查看',
+    free: '免费',
+  },
+  nl: {
+    h2: 'Wat is er in de buurt',
+    subtitle: 'Populaire plekken in de buurt — gegevens van Google Maps',
+    onMap: 'Bekijk op kaart',
+    free: 'gratis',
+  },
+  ban: {
+    h2: 'Napi sané wénten ring samping',
+    subtitle: 'Genah kasub ring samping — data saking Google Maps',
+    onMap: 'Cingak ring peta',
+    free: 'gratis',
+  },
 } as const
 
 function fmtDistance(km: number, lang: Lang): string {

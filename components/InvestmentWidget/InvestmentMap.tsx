@@ -82,6 +82,62 @@ const MAP_COPY = {
     bookingTitle: (adr: number, beds: number | null) =>
       `Booking : ${adr} $/nuit${beds != null ? ` · ${beds} BR` : ''}`,
   },
+  de: {
+    unavailable: 'Karte nicht verfügbar',
+    villa: 'Villa', competitors: 'Wettbewerber', anchors: 'Ankerpunkte',
+    anchorsOnly: 'Nur Ankerpunkte', allPois: 'Alle POIs',
+    heat: 'Tourismuskarte',
+    perNight: ' / Nacht',
+    openBooking: 'Auf Booking öffnen →',
+    openMaps: 'Auf Google Maps öffnen →',
+    reviewsSuffix: ' Bewertungen',
+    minByScooter: (min: number) => `${min} Min mit dem Roller`,
+    distLabel: 'Von der Villa',
+    bookingTitle: (adr: number, beds: number | null) =>
+      `Booking: $${adr}/Nacht${beds != null ? ` · ${beds} BR` : ''}`,
+  },
+  zh: {
+    unavailable: '地图不可用',
+    villa: '别墅', competitors: '竞争对手', anchors: '地标',
+    anchorsOnly: '仅地标', allPois: '全部POI',
+    heat: '旅游热力图',
+    perNight: ' / 晚',
+    openBooking: '在Booking打开 →',
+    openMaps: '在Google Maps打开 →',
+    reviewsSuffix: ' 条评价',
+    minByScooter: (min: number) => `骑摩托${min}分钟`,
+    distLabel: '距别墅',
+    bookingTitle: (adr: number, beds: number | null) =>
+      `Booking: $${adr}/晚${beds != null ? ` · ${beds} BR` : ''}`,
+  },
+  nl: {
+    unavailable: 'Kaart niet beschikbaar',
+    villa: 'Villa', competitors: 'Concurrenten', anchors: 'Ankerpunten',
+    anchorsOnly: 'Alleen ankerpunten', allPois: 'Alle POI\'s',
+    heat: 'Toerismekaart',
+    perNight: ' / nacht',
+    openBooking: 'Openen op Booking →',
+    openMaps: 'Openen op Google Maps →',
+    reviewsSuffix: ' beoordelingen',
+    minByScooter: (min: number) => `${min} min met de scooter`,
+    distLabel: 'Vanaf de villa',
+    bookingTitle: (adr: number, beds: number | null) =>
+      `Booking: $${adr}/nacht${beds != null ? ` · ${beds} BR` : ''}`,
+  },
+  ban: {
+    unavailable: 'Peta nenten wenten',
+    villa: 'Vila', competitors: 'Saingan', anchors: 'Jangkar',
+    anchorsOnly: 'Wantah jangkar', allPois: 'Sami POI',
+    heat: 'Peta pariwisata',
+    perNight: ' / wengi',
+    openBooking: 'Ngampakang ring Booking →',
+    openMaps: 'Ngampakang ring Google Maps →',
+    reviewsSuffix: ' ulasan',
+    minByScooter: (min: number) => `${min} menit nganggen sepéda motor`,
+    distLabel: 'Saking vila',
+    bookingTitle: (adr: number, beds: number | null) =>
+      `Booking: $${adr}/wengi${beds != null ? ` · ${beds} BR` : ''}`,
+  },
 } as const
 
 // Haversine on a sphere — same formula used elsewhere in

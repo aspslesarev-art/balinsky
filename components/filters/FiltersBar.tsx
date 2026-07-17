@@ -28,6 +28,26 @@ const COPY = {
     developer: 'Promoteur', status: 'Étape de construction', permit: 'Permis',
     dealType: 'Type de transaction', features: 'Caractéristiques', resetAll: 'Tout effacer',
   },
+  de: {
+    price: 'Preis', district: 'Lage', bedrooms: 'Schlafzimmer', floor: 'Etage',
+    developer: 'Bauträger', status: 'Bauphase', permit: 'Genehmigung',
+    dealType: 'Art des Geschäfts', features: 'Ausstattung', resetAll: 'Alle zurücksetzen',
+  },
+  zh: {
+    price: '价格', district: '地区', bedrooms: '卧室', floor: '楼层',
+    developer: '开发商', status: '施工阶段', permit: '许可',
+    dealType: '交易类型', features: '特色', resetAll: '清除全部',
+  },
+  nl: {
+    price: 'Prijs', district: 'Regio', bedrooms: 'Slaapkamers', floor: 'Verdieping',
+    developer: 'Ontwikkelaar', status: 'Bouwfase', permit: 'Vergunning',
+    dealType: 'Transactietype', features: 'Kenmerken', resetAll: 'Alles wissen',
+  },
+  ban: {
+    price: 'Aji', district: 'Genah', bedrooms: 'Kamar', floor: 'Lantai',
+    developer: 'Pangwangun', status: 'Tahap pembangunan', permit: 'Ijin',
+    dealType: 'Jinis transaksi', features: 'Fitur', resetAll: 'Kosongang makasami',
+  },
 } as const
 
 export type FilterState = {

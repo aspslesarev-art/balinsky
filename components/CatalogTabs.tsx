@@ -7,6 +7,10 @@ const COPY = {
   en: { list: 'Catalog', map: 'Map' },
   id: { list: 'Katalog', map: 'Peta' },
   fr: { list: 'Catalogue', map: 'Carte' },
+  de: { list: 'Katalog', map: 'Karte' },
+  zh: { list: '目录', map: '地图' },
+  nl: { list: 'Catalogus', map: 'Kaart' },
+  ban: { list: 'Katalog', map: 'Peta' },
 }
 
 export function CatalogTabs({

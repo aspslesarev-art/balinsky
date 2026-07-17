@@ -44,6 +44,34 @@ const COPY = {
     emptyFilters: 'Aucun résultat pour les filtres sélectionnés',
     searchPlaceholder: 'Rechercher résidences, quartiers, promoteurs…',
   },
+  de: {
+    page: 'Seite', of: 'von',
+    complexes: (n: number) => `${n} Wohnanlagen`,
+    emptySearch: (q: string) => `Nichts gefunden für „${q}“`,
+    emptyFilters: 'Keine Treffer für die gewählten Filter',
+    searchPlaceholder: 'Wohnanlagen, Gegenden, Bauträger suchen…',
+  },
+  zh: {
+    page: '页', of: '/',
+    complexes: (n: number) => `${n} 个住宅区`,
+    emptySearch: (q: string) => `未找到“${q}”的结果`,
+    emptyFilters: '没有符合所选筛选条件的结果',
+    searchPlaceholder: '搜索住宅区、地区、开发商…',
+  },
+  nl: {
+    page: 'pagina', of: 'van',
+    complexes: (n: number) => `${n} wooncomplexen`,
+    emptySearch: (q: string) => `Niets gevonden voor „${q}”`,
+    emptyFilters: 'Niets komt overeen met de geselecteerde filters',
+    searchPlaceholder: 'Zoek wooncomplexen, gebieden, ontwikkelaars…',
+  },
+  ban: {
+    page: 'kaca', of: 'saking',
+    complexes: (n: number) => `${n} kompleks`,
+    emptySearch: (q: string) => `Nenten wenten hasil antuk «${q}»`,
+    emptyFilters: 'Nenten wenten sane cocok ring filter sane kapilih',
+    searchPlaceholder: 'Rerehin kompleks, wewidangan, pangwangun…',
+  },
 } as const
 
 function toQueryString(f: ComplexFilterState): string {

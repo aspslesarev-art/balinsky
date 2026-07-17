@@ -188,6 +188,182 @@ const T = {
       },
     ],
   },
+  de: {
+    where: (one?: string, many?: string[]) =>
+      one ? `der Lage ${one}` : many && many.length ? `den Lagen ${many.join(', ')}` : 'Bali',
+    leadList: (where: string) => `Diese Seite listet Wohnanlagen in ${where}.`,
+    leadMap: (where: string) => `Diese Seite listet Wohnanlagen in ${where} mit Markierungen auf der Karte.`,
+    tail: ' Jedes Projekt zeigt Fotos, Lage, Einheitentypen, Baustatus und Fertigstellungstermin — so vergleichen Sie Dutzende Projekte nebeneinander und wählen das passende aus.',
+    titleBase: 'Wohnanlagen',
+    titleInDistrict: (d: string) => ` in ${d}`,
+    titleMapSuffix: ' auf der Bali-Karte',
+    titleListSuffix: ' auf Bali — Katalog',
+    h3Districts: 'Wohnanlagen nach Lage',
+    h3Type: 'Nach Typ und Status',
+    chipBuilding: 'Im Bau',
+    chipBuilt: 'Fertiggestellt',
+    chipDevelopers: 'Alle Bauträger',
+    faqTitle: 'Häufig gestellte Fragen',
+    contextUbud: 'In Ubud gibt es niedrig gebaute Projekte inmitten von Dschungel und Reisterrassen — für Käufer, die eine ruhigere Atmosphäre abseits der Strandmengen suchen.',
+    contextCanggu: (d: string) => `${d} gehört zu Canggu, dem Viertel der Surfer und digitalen Nomaden — die aktivste Bau-Pipeline auf Bali, ein dichter Mietmarkt und eine lebendige Alltagsinfrastruktur.`,
+    contextBukit: (d: string) => `${d} ist die Bukit-Halbinsel — Projekte mit Klippenblick und Premium-Anlagen für den Investitions- und Kurzzeitmietmarkt.`,
+    contextSanur: 'Sanur ist die ruhigere Ostküste mit ihrer Lagune — beliebt bei Familien und für langfristige Umzüge.',
+    contextDefault: 'Auf Bali gibt es mehrere Hundert Wohnanlagen. Die aktivsten Gebiete sind Canggu (Berawa, Batu Bolong, Pererenan), Bukit (Uluwatu, Pandawa, Melasti), Ubud, Sanur und Nusa Dua. Die meisten Projekte sind Leasehold über 25–80 Jahre mit Fertigstellung in 1–3 Jahren; Einheitentypen sind Apartments, Villen und Reihenhäuser.',
+    faq: [
+      {
+        q: 'Was ist eine Wohnanlage auf Bali?',
+        a: 'Ein umzäuntes Areal mit einer Gruppe von Gebäuden — Apartments, Villen oder Reihenhäuser — unter einer gemeinsamen Verwaltung, mit Sicherheitsdienst und meist Pool, Fitnessraum und Rezeption. Die Anlagen teilen sich in zwei Lager: Investment (für die Vermietung gebaut) und Residenz (zum Wohnen gebaut).',
+      },
+      {
+        q: 'Worin unterscheidet sich eine Anlage im Bau von einer fertiggestellten?',
+        a: 'Einheiten im Bau werden bis zu 30 % günstiger verkauft, doch das Risiko ist höher: Die Übergabe kann sich verschieben und die Ausbauqualität ist unbekannt. Eine fertiggestellte Anlage können Sie besichtigen und sofort vermieten, der Preis ist jedoch höher.',
+      },
+      {
+        q: 'Welche Genehmigungen sollte eine Anlage haben?',
+        a: 'Die beiden wichtigsten Dokumente sind PBG (Baugenehmigung) und SLF (Nutzungszertifikat). Ohne PBG ist der Bau nicht legal; ohne SLF darf eine Einheit nicht offiziell vermietet werden.',
+      },
+      {
+        q: 'Über wie viele Jahre läuft ein typischer Leasehold?',
+        a: 'Standardverträge laufen 25–30 Jahre mit Verlängerungsoption. Premium-Projekte bieten in der ersten Periode 50–80 Jahre. Je länger der Leasehold, desto höher die Wiederverkaufsliquidität.',
+      },
+      {
+        q: 'Kann ich eine Einheit vor Baubeginn kaufen?',
+        a: 'Ja — über den Vorverkauf. Die Preise liegen 15–25 % unter dem Niveau nach Übergabe, doch Sie müssen den Bauträger prüfen und bestätigen, dass die PBG vorliegt. Die Zahlung folgt dem Bauzeitplan.',
+      },
+    ],
+  },
+  zh: {
+    where: (one?: string, many?: string[]) =>
+      one ? `${one}区` : many && many.length ? `${many.join('、')}等区域` : '巴厘岛',
+    leadList: (where: string) => `本页列出${where}范围内的住宅区。`,
+    leadMap: (where: string) => `本页在地图上标注${where}范围内的住宅区。`,
+    tail: ' 每个项目都会显示照片、区域、户型、施工状态和交付时间——方便您并排比较数十个项目并选出最合适的一个。',
+    titleBase: '住宅区',
+    titleInDistrict: (d: string) => `(${d})`,
+    titleMapSuffix: '——巴厘岛地图',
+    titleListSuffix: '——巴厘岛目录',
+    h3Districts: '按区域划分的住宅区',
+    h3Type: '按类型和状态',
+    chipBuilding: '在建',
+    chipBuilt: '现房',
+    chipDevelopers: '所有开发商',
+    faqTitle: '常见问题',
+    contextUbud: 'Ubud 是被丛林和梯田环绕的低层项目——适合追求远离海滩人群、氛围更宁静的买家。',
+    contextCanggu: (d: string) => `${d}属于 Canggu,是冲浪者和数字游民聚集区——巴厘岛最活跃的施工区域,租赁市场密集,日常配套设施活跃。`,
+    contextBukit: (d: string) => `${d}位于 Bukit 半岛——悬崖景观项目和为投资及短租市场打造的高端住宅区。`,
+    contextSanur: 'Sanur 是拥有泻湖、较为宁静的东海岸——深受家庭和长期定居者青睐。',
+    contextDefault: '巴厘岛有数百个住宅区。最活跃的区域是 Canggu(Berawa、Batu Bolong、Pererenan)、Bukit(Uluwatu、Pandawa、Melasti)、Ubud、Sanur 和 Nusa Dua。大多数项目为 25–80 年租赁产权,1–3 年内交付;户型包括公寓、别墅和联排别墅。',
+    faq: [
+      {
+        q: '什么是巴厘岛的住宅区?',
+        a: '这是一个封闭式地块,由一组建筑——公寓、别墅或联排别墅——组成,统一管理,配有安保,通常还有泳池、健身房和前台。这里的住宅区分为两类:投资型(为出租而建)和居住型(为居住而建)。',
+      },
+      {
+        q: '在建住宅区与现房有何区别?',
+        a: '在建户型售价最多可低 30%,但风险更高:交付可能延迟,装修质量未知。现房住宅区可实地参观并立即出租,但价格更高。',
+      },
+      {
+        q: '住宅区应持有哪些许可?',
+        a: '两份关键文件是 PBG(建筑许可)和 SLF(使用证书)。没有 PBG 无法合法施工;没有 SLF,户型不能正式出租。',
+      },
+      {
+        q: '典型租赁产权为期多少年?',
+        a: '标准租约为 25–30 年,可选择续期。高端项目首期提供 50–80 年。租期越长,转售流动性越高。',
+      },
+      {
+        q: '我可以在开工前购买户型吗?',
+        a: '可以——通过预售。价格比交付后低 15–25%,但您需要核实开发商并确认 PBG 已就位。付款按施工进度进行。',
+      },
+    ],
+  },
+  nl: {
+    where: (one?: string, many?: string[]) =>
+      one ? `de wijk ${one}` : many && many.length ? `de wijken ${many.join(', ')}` : 'Bali',
+    leadList: (where: string) => `Deze pagina toont wooncomplexen binnen ${where}.`,
+    leadMap: (where: string) => `Deze pagina toont wooncomplexen binnen ${where} met markeringen op de kaart.`,
+    tail: ' Elk project toont foto\'s, wijk, woningtypes, bouwstatus en opleveringsdatum — zodat u tientallen projecten naast elkaar kunt vergelijken en het passende kunt kiezen.',
+    titleBase: 'Wooncomplexen',
+    titleInDistrict: (d: string) => ` in ${d}`,
+    titleMapSuffix: ' op de kaart van Bali',
+    titleListSuffix: ' op Bali — catalogus',
+    h3Districts: 'Complexen per wijk',
+    h3Type: 'Op type en status',
+    chipBuilding: 'In aanbouw',
+    chipBuilt: 'Opgeleverd',
+    chipDevelopers: 'Alle ontwikkelaars',
+    faqTitle: 'Veelgestelde vragen',
+    contextUbud: 'Ubud bestaat uit laagbouwprojecten omringd door jungle en rijstterrassen — voor kopers die een rustigere sfeer zoeken, weg van de stranddrukte.',
+    contextCanggu: (d: string) => `${d} maakt deel uit van Canggu, de zone van surfers en digitale nomaden — de meest actieve bouwpijplijn op Bali, een dichte huurmarkt en een levendige dagelijkse infrastructuur.`,
+    contextBukit: (d: string) => `${d} is het schiereiland Bukit — projecten met uitzicht vanaf de kliffen en premiumcomplexen gebouwd voor de investerings- en kortetermijnverhuurmarkt.`,
+    contextSanur: 'Sanur is de rustigere oostkust met zijn lagune — populair bij gezinnen en langdurige verhuizingen.',
+    contextDefault: 'Er zijn enkele honderden wooncomplexen op Bali. De meest actieve gebieden zijn Canggu (Berawa, Batu Bolong, Pererenan), Bukit (Uluwatu, Pandawa, Melasti), Ubud, Sanur en Nusa Dua. De meeste projecten zijn leasehold van 25–80 jaar met oplevering binnen 1–3 jaar; woningtypes omvatten appartementen, villa\'s en herenhuizen.',
+    faq: [
+      {
+        q: 'Wat is een wooncomplex op Bali?',
+        a: 'Een omheind terrein met een groep gebouwen — appartementen, villa\'s of herenhuizen — onder één beheer, met beveiliging en meestal een zwembad, sportschool en receptie. De complexen vallen hier in twee kampen: investering (gebouwd voor verhuur) en residentieel (gebouwd om te wonen).',
+      },
+      {
+        q: 'Wat is het verschil tussen een complex in aanbouw en een opgeleverd complex?',
+        a: 'Eenheden in aanbouw worden tot 30% goedkoper verkocht, maar het risico is hoger: de oplevering kan uitlopen en de afwerkingskwaliteit is onbekend. Een opgeleverd complex kunt u bezichtigen en direct verhuren, maar de prijs is hoger.',
+      },
+      {
+        q: 'Welke vergunningen moet een complex hebben?',
+        a: 'De twee belangrijkste documenten zijn PBG (bouwvergunning) en SLF (gebruiksvergunning). Zonder PBG is de bouw niet legaal; zonder SLF mag een eenheid niet officieel worden verhuurd.',
+      },
+      {
+        q: 'Hoe lang loopt een typische leasehold?',
+        a: 'Standaardcontracten lopen 25–30 jaar met een verlengingsoptie. Premiumprojecten bieden 50–80 jaar in de eerste periode. Hoe langer de leasehold, hoe hoger de doorverkoopliquiditeit.',
+      },
+      {
+        q: 'Kan ik een eenheid kopen voordat de bouw begint?',
+        a: 'Ja — via voorverkoop. De prijzen liggen 15–25% onder het niveau na oplevering, maar u moet de ontwikkelaar verifiëren en bevestigen dat de PBG aanwezig is. De betaling volgt het bouwschema.',
+      },
+    ],
+  },
+  ban: {
+    where: (one?: string, many?: string[]) =>
+      one ? `wewidangan ${one}` : many && many.length ? `wewidangan ${many.join(', ')}` : 'Bali',
+    leadList: (where: string) => `Kaca puniki nyihnayang kompleks hunian ring ${where}.`,
+    leadMap: (where: string) => `Kaca puniki nyihnayang kompleks hunian ring ${where} sane katandain ring peta.`,
+    tail: ' Soang-soang proyek nyihnayang foto, wewidangan, tipe unit, status wewangunan, miwah galah serah terima — mangda Ida Dane prasida mabanding puluhan proyek miwah milih sane cocok.',
+    titleBase: 'Kompleks hunian',
+    titleInDistrict: (d: string) => ` ring ${d}`,
+    titleMapSuffix: ' ring peta Bali',
+    titleListSuffix: ' ring Bali — katalog',
+    h3Districts: 'Kompleks manut wewidangan',
+    h3Type: 'Manut tipe miwah status',
+    chipBuilding: 'Kantun kawangun',
+    chipBuilt: 'Sampun puput',
+    chipDevelopers: 'Sami pangwangun',
+    faqTitle: 'Patakon sane sering katakenang',
+    contextUbud: 'Ubud inggih punika proyek endep sane kaiterin alas miwah tegalan carik — pabuat sane numbas sane ngrereh suasana sane tenang doh saking rame pasisi.',
+    contextCanggu: (d: string) => `${d} wantah bagian saking Canggu, wewidangan peselancar miwah digital nomad — pipeline wewangunan sane pinih aktif ring Bali, pasar sewa sane padet, miwah infrastruktur sarahina sane urip.`,
+    contextBukit: (d: string) => `${d} inggih punika semenanjung Bukit — proyek madue pemandangan bukit miwah kompleks premium sane kawangun pabuat pasar investasi miwah sewa jangka pendek.`,
+    contextSanur: 'Sanur inggih punika pesisi kangin sane tenang sareng lagunanyane — kasenengin olih kulawarga miwah sane pindah jangka panjang.',
+    contextDefault: 'Wenten atusan kompleks hunian ring Bali. Wewidangan sane pinih aktif inggih punika Canggu (Berawa, Batu Bolong, Pererenan), Bukit (Uluwatu, Pandawa, Melasti), Ubud, Sanur, miwah Nusa Dua. Akehan proyek maupa leasehold 25–80 warsa sareng serah terima ring 1–3 warsa; tipe unit ngranjing apartemen, vila, miwah townhouse.',
+    faq: [
+      {
+        q: 'Napi kompleks hunian ring Bali?',
+        a: 'Wewidangan mapagehan sareng makudang-kudang wangunan — apartemen, vila, utawi townhouse — ring sor asiki pangelola, sareng keamanan miwah biasane kolam, gym, taler resepsionis. Kompleks iriki kepah dados kalih: investasi (kawangun anggen kasewaang) miwah hunian (kawangun anggen kagenahin).',
+      },
+      {
+        q: 'Napi bina kompleks sane kantun kawangun sareng sane sampun puput?',
+        a: 'Unit sane kantun kawangun kaadol nyantos 30% lebih murah, nanging risikone lebih tegeh: serah terima prasida mundur miwah kualitas finishing durung kauningin. Kompleks sane sampun puput prasida kacingak langsung miwah gelis kasewaang, nanging ajine lebih tegeh.',
+      },
+      {
+        q: 'Izin napi sane patut kagamel olih kompleks?',
+        a: 'Kalih dokumen utama inggih punika PBG (izin ngwangun) miwah SLF (sertifikat laik fungsi). Tanpa PBG, wewangunan nenten legal; tanpa SLF, unit nenten prasida kasewaang sacara resmi.',
+      },
+      {
+        q: 'Sapunapi sue leasehold biasane?',
+        a: 'Sewa standar mamargi 25–30 warsa sareng opsi perpanjangan. Proyek premium nawarin 50–80 warsa ring periode kapertama. Sayan sue masa sewa, sayan tegeh likuiditas panjualan malih.',
+      },
+      {
+        q: 'Punapi tiang prasida numbas unit sadurung wewangunan kakawitin?',
+        a: 'Inggih — nganggen pra-penjualan. Ajine 15–25% ring sor tingkat sasampun serah terima, nanging Ida Dane patut ngecek pangwangun miwah mastiang PBG sampun wenten. Pambayaran manut jadwal wewangunan.',
+      },
+    ],
+  },
 } as const
 
 function intro(f: ComplexFilterState, variant: Variant, lang: Lang): string {

@@ -41,6 +41,34 @@ const LABELS = {
       : kind === 'apartment' ? `Tous les appartements à ${name}`
       : `Toutes les résidences à ${name}`,
   },
+  de: {
+    eyebrow: 'Über die Lage',
+    cta: (kind: Kind, name: string) =>
+      kind === 'villa' ? `Alle Villen in ${name}`
+      : kind === 'apartment' ? `Alle Apartments in ${name}`
+      : `Alle Wohnanlagen in ${name}`,
+  },
+  zh: {
+    eyebrow: '关于区域',
+    cta: (kind: Kind, name: string) =>
+      kind === 'villa' ? `${name}的所有别墅`
+      : kind === 'apartment' ? `${name}的所有公寓`
+      : `${name}的所有住宅区`,
+  },
+  nl: {
+    eyebrow: 'Over de wijk',
+    cta: (kind: Kind, name: string) =>
+      kind === 'villa' ? `Alle villa's in ${name}`
+      : kind === 'apartment' ? `Alle appartementen in ${name}`
+      : `Alle wooncomplexen in ${name}`,
+  },
+  ban: {
+    eyebrow: 'Indik wewidangan',
+    cta: (kind: Kind, name: string) =>
+      kind === 'villa' ? `Sami vila ring ${name}`
+      : kind === 'apartment' ? `Sami apartemen ring ${name}`
+      : `Sami kompleks ring ${name}`,
+  },
 } as const
 
 export function DistrictAboutCard({

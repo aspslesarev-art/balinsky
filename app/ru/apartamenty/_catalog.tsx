@@ -45,6 +45,34 @@ const COPY = {
     emptyFilters: 'Aucun résultat pour les filtres sélectionnés',
     searchPlaceholder: 'Rechercher appartements, quartiers, promoteurs…',
   },
+  de: {
+    page: 'Seite', of: 'von',
+    objects: (n: number) => `${n} ${n === 1 ? 'Objekt' : 'Objekte'}`,
+    emptySearch: (q: string) => `Nichts gefunden für „${q}“`,
+    emptyFilters: 'Keine Treffer für die gewählten Filter',
+    searchPlaceholder: 'Apartments, Gebiete, Bauträger suchen…',
+  },
+  zh: {
+    page: '页', of: '/',
+    objects: (n: number) => `${n} 套房源`,
+    emptySearch: (q: string) => `未找到与"${q}"相关的结果`,
+    emptyFilters: '没有符合所选筛选条件的结果',
+    searchPlaceholder: '搜索公寓、地区、开发商…',
+  },
+  nl: {
+    page: 'pagina', of: 'van',
+    objects: (n: number) => `${n} ${n === 1 ? 'woning' : 'woningen'}`,
+    emptySearch: (q: string) => `Niets gevonden voor "${q}"`,
+    emptyFilters: 'Geen resultaten voor de geselecteerde filters',
+    searchPlaceholder: 'Zoek appartementen, gebieden, ontwikkelaars…',
+  },
+  ban: {
+    page: 'kaca', of: 'saking',
+    objects: (n: number) => `${n} properti`,
+    emptySearch: (q: string) => `Nénten wénten asil kanggo "${q}"`,
+    emptyFilters: 'Nénten wénten sané cocok sareng saringan sané kapilih',
+    searchPlaceholder: 'Rerehin apartemen, wewidangan, pangwangun…',
+  },
 } as const
 
 function toQueryString(f: FilterState): string {

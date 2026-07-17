@@ -29,6 +29,26 @@ const COPY = {
     dealType: 'Type de transaction', style: 'Style', year: 'Année de livraison', developer: 'Promoteur',
     permit: 'Permis', features: 'Caractéristiques', resetAll: 'Tout effacer',
   },
+  de: {
+    price: 'Preis', district: 'Bezirk', bedrooms: 'Schlafzimmer', status: 'Bauphase',
+    dealType: 'Geschäftsart', style: 'Stil', year: 'Fertigstellungsjahr', developer: 'Bauträger',
+    permit: 'Genehmigung', features: 'Ausstattung', resetAll: 'Alle zurücksetzen',
+  },
+  zh: {
+    price: '价格', district: '区域', bedrooms: '卧室', status: '建设阶段',
+    dealType: '交易类型', style: '风格', year: '交付年份', developer: '开发商',
+    permit: '许可证', features: '特色', resetAll: '全部清除',
+  },
+  nl: {
+    price: 'Prijs', district: 'District', bedrooms: 'Slaapkamers', status: 'Bouwfase',
+    dealType: 'Transactietype', style: 'Stijl', year: 'Opleveringsjaar', developer: 'Ontwikkelaar',
+    permit: 'Vergunning', features: 'Kenmerken', resetAll: 'Alles wissen',
+  },
+  ban: {
+    price: 'Aji', district: 'Wewidangan', bedrooms: 'Kamar pules', status: 'Tahap pangwangunan',
+    dealType: 'Jenis transaksi', style: 'Gaya', year: 'Warsa serah terima', developer: 'Pangwangun',
+    permit: 'Ijin', features: 'Fitur', resetAll: 'Kosongin makasami',
+  },
 } as const
 
 function ResetAll({ activeCount, current, view, lang }: {

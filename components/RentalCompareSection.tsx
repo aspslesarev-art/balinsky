@@ -79,6 +79,70 @@ const COPY = {
     allBedrooms: ' · toutes chambres',
     rentalRoot: '/fr/location',
   },
+  de: {
+    heading: 'Was in der Nähe monatlich vermietet wird',
+    allInArea: 'Alle Angebote in diesem Gebiet',
+    perMonth: ' / Mon.',
+    medianRent: 'Median-Miete',
+    range: 'Spanne',
+    grossYield: 'Bruttorendite',
+    perYear: 'Pro Jahr',
+    yieldHint: (annual: React.ReactNode, price: React.ReactNode) => (
+      <>{annual} pro Jahr bei einem Villenpreis von {price}</>
+    ),
+    subtitle: (n: number, district: string, brSuffix: string) =>
+      `${n} ${n === 1 ? 'Angebot' : 'Angebote'} in ${district}${brSuffix}`,
+    allBedrooms: ' · alle Schlafzimmer',
+    rentalRoot: '/de/miete',
+  },
+  zh: {
+    heading: '附近每月出租的房源',
+    allInArea: '该区域的所有房源',
+    perMonth: ' / 月',
+    medianRent: '租金中位数',
+    range: '区间',
+    grossYield: '毛收益率',
+    perYear: '每年',
+    yieldHint: (annual: React.ReactNode, price: React.ReactNode) => (
+      <>{annual} 每年，别墅价格为 {price}</>
+    ),
+    subtitle: (n: number, district: string, brSuffix: string) =>
+      `${district} 的 ${n} 套房源${brSuffix}`,
+    allBedrooms: ' · 所有卧室',
+    rentalRoot: '/zh/zulin',
+  },
+  nl: {
+    heading: 'Wat in de buurt per maand wordt verhuurd',
+    allInArea: 'Alle objecten in dit gebied',
+    perMonth: ' / mnd',
+    medianRent: 'Mediane huur',
+    range: 'Bereik',
+    grossYield: 'Brutorendement',
+    perYear: 'Per jaar',
+    yieldHint: (annual: React.ReactNode, price: React.ReactNode) => (
+      <>{annual} per jaar op een villa met een prijs van {price}</>
+    ),
+    subtitle: (n: number, district: string, brSuffix: string) =>
+      `${n} ${n === 1 ? 'object' : 'objecten'} in ${district}${brSuffix}`,
+    allBedrooms: ' · alle slaapkamers',
+    rentalRoot: '/nl/huur',
+  },
+  ban: {
+    heading: 'Sane kasewaang ring sisi nyabran bulan',
+    allInArea: 'Sami objek ring wewengkon puniki',
+    perMonth: ' / bln',
+    medianRent: 'Sewa median',
+    range: 'Rentang',
+    grossYield: 'Asil bruto',
+    perYear: 'Nyabran warsa',
+    yieldHint: (annual: React.ReactNode, price: React.ReactNode) => (
+      <>{annual} nyabran warsa saking aji vila {price}</>
+    ),
+    subtitle: (n: number, district: string, brSuffix: string) =>
+      `${n} objek ring ${district}${brSuffix}`,
+    allBedrooms: ' · sami kamar',
+    rentalRoot: '/ban/sewa',
+  },
 } as const
 
 function pluralRu(n: number, forms: [string, string, string]): string {

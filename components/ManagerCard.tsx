@@ -41,6 +41,38 @@ const COPY = {
     videoCall: 'Appel vidéo',
     lead: 'Envoyer une demande',
   },
+  de: {
+    heading: 'Manager kontaktieren',
+    headingMany: 'Manager kontaktieren',
+    role: (dev?: string | null) => `Manager ${dev ? dev : 'des Bauträgers'}`,
+    sla: 'Antwortet in der Regel innerhalb einer Stunde während der Geschäftszeiten auf Bali (UTC+8)',
+    videoCall: 'Videoanruf',
+    lead: 'Anfrage senden',
+  },
+  zh: {
+    heading: '联系经理',
+    headingMany: '联系经理',
+    role: (dev?: string | null) => `${dev ? dev : '开发商'}经理`,
+    sla: '通常在巴厘岛工作时间内一小时内回复 (UTC+8)',
+    videoCall: '视频通话',
+    lead: '提交请求',
+  },
+  nl: {
+    heading: 'Neem contact op met de manager',
+    headingMany: 'Neem contact op met de managers',
+    role: (dev?: string | null) => `Manager ${dev ? dev : 'van de ontwikkelaar'}`,
+    sla: 'Reageert doorgaans binnen een uur tijdens de werkuren op Bali (UTC+8)',
+    videoCall: 'Videogesprek',
+    lead: 'Aanvraag versturen',
+  },
+  ban: {
+    heading: 'Nghubungin manajer',
+    headingMany: 'Nghubungin para manajer',
+    role: (dev?: string | null) => `Manajer ${dev ? dev : 'pangwangun'}`,
+    sla: 'Biasané malas ring jero abesik jam ring jam kerja Bali (UTC+8)',
+    videoCall: 'Panggilan video',
+    lead: 'Ngirim panagih',
+  },
 } as const
 
 // Accept either a single manager (legacy callsites) or an array of

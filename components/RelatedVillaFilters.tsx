@@ -37,6 +37,38 @@ const COPY = {
     popularDistricts: 'Quartiers populaires',
     in: 'à',
   },
+  de: {
+    sectionTitle: 'Siehe auch',
+    bedroomsHere: 'Schlafzimmer',
+    otherDistricts: 'Andere Gebiete',
+    byStyle: 'Nach Einrichtungsstil',
+    popularDistricts: 'Beliebte Gebiete',
+    in: 'in',
+  },
+  zh: {
+    sectionTitle: '另请参阅',
+    bedroomsHere: '卧室',
+    otherDistricts: '其他区域',
+    byStyle: '按室内风格',
+    popularDistricts: '热门区域',
+    in: '·',
+  },
+  nl: {
+    sectionTitle: 'Zie ook',
+    bedroomsHere: 'Slaapkamers',
+    otherDistricts: 'Andere gebieden',
+    byStyle: 'Op interieurstijl',
+    popularDistricts: 'Populaire gebieden',
+    in: 'in',
+  },
+  ban: {
+    sectionTitle: 'Cingak taler',
+    bedroomsHere: 'Kamar',
+    otherDistricts: 'Wewengkon lianan',
+    byStyle: 'Manut gaya interior',
+    popularDistricts: 'Wewengkon kasub',
+    in: 'ring',
+  },
 } as const
 
 // Internal-link cluster under the catalog: spreads PageRank across

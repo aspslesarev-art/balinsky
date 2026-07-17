@@ -46,6 +46,42 @@ const COPY = {
     past: 'Passés',
     empty: 'Aucun événement programmé pour le moment.',
   },
+  de: {
+    title: 'Veranstaltungen von Bali-Bauträgern | Balinsky',
+    description: 'Broker-Touren, Projektpräsentationen, Networking und Veranstaltungen von Bali-Bauträgern.',
+    h1: 'Veranstaltungen',
+    sub: 'Broker-Touren, Projektpräsentationen, Networking',
+    upcoming: 'Bevorstehend',
+    past: 'Vergangen',
+    empty: 'Noch keine geplanten Veranstaltungen.',
+  },
+  zh: {
+    title: '巴厘岛开发商活动 | Balinsky',
+    description: '巴厘岛开发商的经纪人考察、项目发布会、社交活动及各类活动。',
+    h1: '活动',
+    sub: '经纪人考察、项目发布会、社交活动',
+    upcoming: '即将举行',
+    past: '已结束',
+    empty: '暂无已安排的活动。',
+  },
+  nl: {
+    title: 'Evenementen van Bali-ontwikkelaars | Balinsky',
+    description: 'Broker-tours, projectpresentaties, netwerken en evenementen van Bali-ontwikkelaars.',
+    h1: 'Evenementen',
+    sub: 'Broker-tours, projectpresentaties, netwerken',
+    upcoming: 'Aankomend',
+    past: 'Afgelopen',
+    empty: 'Nog geen geplande evenementen.',
+  },
+  ban: {
+    title: 'Acara saking pangwangun Bali | Balinsky',
+    description: 'Tur broker, presentasi proyek, networking, lan acara saking pangwangun Bali.',
+    h1: 'Acara',
+    sub: 'Tur broker, presentasi proyek, networking',
+    upcoming: 'Sane jagi rauh',
+    past: 'Sane sampun lintang',
+    empty: 'Durung wenten acara sane kajadwalang.',
+  },
 } as const
 
 function startTimeMs(iso: string | null): number {

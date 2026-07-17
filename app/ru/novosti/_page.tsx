@@ -41,6 +41,38 @@ const COPY = {
     empty: 'Aucune actualité pour le moment.',
     locale: 'fr-FR',
   },
+  de: {
+    title: 'News von Bali-Bauträgern | Balinsky',
+    description: 'Aktuelle News von Bauträgern und über den Immobilienmarkt auf Bali.',
+    h1: 'News',
+    sub: (n: number) => `${n} ${n === 1 ? 'Meldung' : 'Meldungen'} von Bali-Bauträgern`,
+    empty: 'Noch keine News.',
+    locale: 'de-DE',
+  },
+  zh: {
+    title: '巴厘岛开发商新闻 | Balinsky',
+    description: '来自巴厘岛开发商及房地产市场的最新新闻。',
+    h1: '新闻',
+    sub: (n: number) => `${n} 条来自巴厘岛开发商的新闻`,
+    empty: '暂无新闻。',
+    locale: 'zh-CN',
+  },
+  nl: {
+    title: 'Nieuws van Bali-ontwikkelaars | Balinsky',
+    description: 'Laatste nieuws van ontwikkelaars en over de vastgoedmarkt op Bali.',
+    h1: 'Nieuws',
+    sub: (n: number) => `${n} ${n === 1 ? 'bericht' : 'berichten'} van Bali-ontwikkelaars`,
+    empty: 'Nog geen nieuws.',
+    locale: 'nl-NL',
+  },
+  ban: {
+    title: 'Berita pangwangun Bali | Balinsky',
+    description: 'Berita anyar saking pangwangun lan indik pasar properti Bali.',
+    h1: 'Berita',
+    sub: (n: number) => `${n} berita saking pangwangun Bali`,
+    empty: 'Durung wenten berita.',
+    locale: 'id-ID',
+  },
 } as const
 
 function fmtDate(iso: string | null, locale: string): string | null {

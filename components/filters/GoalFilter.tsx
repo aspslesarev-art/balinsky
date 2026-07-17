@@ -5,11 +5,15 @@ import { useFilterUrl, type FilterView } from './useFilterUrl'
 import type { FilterState } from './FiltersBar'
 import { pickCopy, type Lang } from '@/lib/i18n'
 
-const OPTS_BY_LANG: Record<'ru' | 'en' | 'id' | 'fr', { v: 'invest' | 'live'; label: string }[]> = {
+const OPTS_BY_LANG: Record<Lang, { v: 'invest' | 'live'; label: string }[]> = {
   ru: [{ v: 'invest', label: 'Под инвестиции' }, { v: 'live', label: 'Для жизни' }],
   en: [{ v: 'invest', label: 'For investment' }, { v: 'live', label: 'To live in' }],
   id: [{ v: 'invest', label: 'Untuk investasi' }, { v: 'live', label: 'Untuk tinggal' }],
   fr: [{ v: 'invest', label: 'Pour investir' }, { v: 'live', label: 'Pour y vivre' }],
+  de: [{ v: 'invest', label: 'Als Kapitalanlage' }, { v: 'live', label: 'Zum Wohnen' }],
+  zh: [{ v: 'invest', label: '用于投资' }, { v: 'live', label: '用于居住' }],
+  nl: [{ v: 'invest', label: 'Voor belegging' }, { v: 'live', label: 'Om in te wonen' }],
+  ban: [{ v: 'invest', label: 'Anggen investasi' }, { v: 'live', label: 'Anggen magenah' }],
 }
 
 const COPY = {
@@ -17,6 +21,10 @@ const COPY = {
   en: { dropdown: 'Buying goal',  clear: 'Clear' },
   id: { dropdown: 'Tujuan pembelian', clear: 'Hapus' },
   fr: { dropdown: "Objectif d'achat", clear: 'Effacer' },
+  de: { dropdown: 'Kaufzweck', clear: 'Zurücksetzen' },
+  zh: { dropdown: '购买目的', clear: '清除' },
+  nl: { dropdown: 'Koopdoel', clear: 'Wissen' },
+  ban: { dropdown: 'Tetujon numbas', clear: 'Kosongin' },
 } as const
 
 export function GoalFilter({ current, view = 'list', lang = 'ru' }: {

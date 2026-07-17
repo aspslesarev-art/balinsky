@@ -83,6 +83,78 @@ const COPY = {
     ],
     locale: 'fr-FR',
   },
+  de: {
+    buyChat: 'Kaufen',
+    buySeller: 'Kaufen',
+    perSqm: '/ m²',
+    priceUpdated: (d: string) => `Preis aktualisiert ${d}`,
+    reservedTitle: 'Derzeit reserviert',
+    reservedUntil: (d: string) => `Reservierung gilt bis ${d}. Wird die Reservierung aufgehoben, benachrichtigen wir den Manager.`,
+    chipsResale: [
+      { icon: 'user', label: 'Direkter Verkäuferkontakt' },
+      { icon: 'file', label: 'Objektunterlagen' },
+    ],
+    chipsPrimary: [
+      { icon: 'file', label: 'Unterlagen & Due Diligence' },
+      { icon: 'map',  label: 'Masterplan & Grundrisse' },
+      { icon: 'user', label: 'Direkter Bauträgerkontakt' },
+    ],
+    locale: 'de-DE',
+  },
+  zh: {
+    buyChat: '购买',
+    buySeller: '购买',
+    perSqm: '/ m²',
+    priceUpdated: (d: string) => `价格更新于 ${d}`,
+    reservedTitle: '目前已预订',
+    reservedUntil: (d: string) => `保留有效期至 ${d}。若保留取消，我们会通知经理。`,
+    chipsResale: [
+      { icon: 'user', label: '卖家直接联系' },
+      { icon: 'file', label: '房产文件' },
+    ],
+    chipsPrimary: [
+      { icon: 'file', label: '文件与尽职调查' },
+      { icon: 'map',  label: '总体规划与户型图' },
+      { icon: 'user', label: '开发商直接联系' },
+    ],
+    locale: 'zh-CN',
+  },
+  nl: {
+    buyChat: 'Kopen',
+    buySeller: 'Kopen',
+    perSqm: '/ m²',
+    priceUpdated: (d: string) => `Prijs bijgewerkt ${d}`,
+    reservedTitle: 'Momenteel gereserveerd',
+    reservedUntil: (d: string) => `Reservering geldt tot ${d}. Als de reservering vervalt, nemen we contact op met de manager.`,
+    chipsResale: [
+      { icon: 'user', label: 'Direct contact met verkoper' },
+      { icon: 'file', label: 'Objectdocumenten' },
+    ],
+    chipsPrimary: [
+      { icon: 'file', label: 'Documenten & due diligence' },
+      { icon: 'map',  label: 'Masterplan & plattegronden' },
+      { icon: 'user', label: 'Direct contact met ontwikkelaar' },
+    ],
+    locale: 'nl-NL',
+  },
+  ban: {
+    buyChat: 'Numbas',
+    buySeller: 'Numbas',
+    perSqm: '/ m²',
+    priceUpdated: (d: string) => `Aji kaanyarin ${d}`,
+    reservedTitle: 'Sané mangkin kareservasi',
+    reservedUntil: (d: string) => `Hold mamargi kantos ${d}. Yén hold kaicalin, tiang jaga ngabarin manajer.`,
+    chipsResale: [
+      { icon: 'user', label: 'Kontak langsung sang adol' },
+      { icon: 'file', label: 'Dokumen properti' },
+    ],
+    chipsPrimary: [
+      { icon: 'file', label: 'Dokumen & due diligence' },
+      { icon: 'map',  label: 'Master plan & denah' },
+      { icon: 'user', label: 'Kontak langsung pangwangun' },
+    ],
+    locale: 'id-ID',
+  },
 } as const
 
 // Single bordered container that joins the price + the two CTAs +

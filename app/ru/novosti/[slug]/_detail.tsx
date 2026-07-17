@@ -42,6 +42,30 @@ const COPY = {
     moreFrom: (n: string) => `Plus de ${n}`,
     locale: 'fr-FR',
   },
+  de: {
+    home: 'Startseite', newsCrumb: 'News',
+    watchVideo: 'Video ansehen', source: 'Quelle',
+    moreFrom: (n: string) => `Mehr von ${n}`,
+    locale: 'de-DE',
+  },
+  zh: {
+    home: '首页', newsCrumb: '新闻',
+    watchVideo: '观看视频', source: '来源',
+    moreFrom: (n: string) => `${n}的更多内容`,
+    locale: 'zh-CN',
+  },
+  nl: {
+    home: 'Home', newsCrumb: 'Nieuws',
+    watchVideo: 'Video bekijken', source: 'Bron',
+    moreFrom: (n: string) => `Meer van ${n}`,
+    locale: 'nl-NL',
+  },
+  ban: {
+    home: 'Beranda', newsCrumb: 'Berita',
+    watchVideo: 'Nonton video', source: 'Sumber',
+    moreFrom: (n: string) => `Sane lianan saking ${n}`,
+    locale: 'id-ID',
+  },
 } as const
 
 function fmtDate(iso: string | null, locale: string): string | null {

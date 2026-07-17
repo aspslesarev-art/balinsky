@@ -47,6 +47,10 @@ const COPY = {
   en: { resale: 'Resale',      secondary: 'Secondary', house: 'House', land: 'Land', sqm: 'm²' },
   id: { resale: 'Jual kembali', secondary: 'Sekunder',  house: 'Rumah', land: 'Luas tanah', sqm: 'm²' },
   fr: { resale: 'Revente',      secondary: 'Secondaire', house: 'Maison', land: 'Terrain', sqm: 'm²' },
+  de: { resale: 'Weiterverkauf', secondary: 'Zweitmarkt', house: 'Haus', land: 'Grundstück', sqm: 'm²' },
+  zh: { resale: '转售',          secondary: '二手',        house: '房屋',  land: '土地',       sqm: 'm²' },
+  nl: { resale: 'Doorverkoop',   secondary: 'Bestaand',   house: 'Huis', land: 'Grond',      sqm: 'm²' },
+  ban: { resale: 'Adol malih',   secondary: 'Sekunder',   house: 'Umah', land: 'Tanah',      sqm: 'm²' },
 } as const
 
 export function VillaCard({ a, lang = 'ru' }: { a: VillaCardData; lang?: Lang }) {

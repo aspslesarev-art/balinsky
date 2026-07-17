@@ -37,6 +37,34 @@ const COPY = {
     sub: 'Villas et appartements en location longue durée — mise à jour automatique',
     loading: 'Chargement…',
   },
+  de: {
+    title: 'Langzeitmiete von Villen und Apartments auf Bali | Balinsky',
+    description: 'Villen, Apartments und Häuser zur Langzeitmiete auf Bali — Canggu, Ubud, Seminyak, Bukit und weitere Gebiete. Täglich aktualisiert.',
+    h1: 'Langzeitmiete',
+    sub: 'Villen und Apartments zur Langzeitmiete — automatisch aktualisiert',
+    loading: 'Wird geladen…',
+  },
+  zh: {
+    title: '巴厘岛别墅和公寓长租 | Balinsky',
+    description: '巴厘岛长租别墅、公寓和房屋——Canggu、Ubud、Seminyak、Bukit 及其他地区。每日更新。',
+    h1: '长租',
+    sub: '长租别墅和公寓——自动更新',
+    loading: '加载中…',
+  },
+  nl: {
+    title: 'Langdurige verhuur van villa\'s en appartementen op Bali | Balinsky',
+    description: 'Villa\'s, appartementen en huizen voor langdurige verhuur op Bali — Canggu, Ubud, Seminyak, Bukit en andere gebieden. Dagelijks bijgewerkt.',
+    h1: 'Langdurige verhuur',
+    sub: 'Villa\'s en appartementen voor langdurige verhuur — automatisch bijgewerkt',
+    loading: 'Laden…',
+  },
+  ban: {
+    title: 'Séwa jangka panjang vila lan apartemen ring Bali | Balinsky',
+    description: 'Vila, apartemen, lan umah kanggo séwa jangka panjang ring Bali — Canggu, Ubud, Seminyak, Bukit lan wewidangan lianan. Kaanyarin nyabran rahina.',
+    h1: 'Séwa jangka panjang',
+    sub: 'Vila lan apartemen kanggo séwa jangka panjang — kaanyarin otomatis',
+    loading: 'Ngemuat…',
+  },
 } as const
 
 export function generateRentalListMetadata(lang: Lang): Metadata {

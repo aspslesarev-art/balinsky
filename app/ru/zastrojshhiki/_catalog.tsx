@@ -46,6 +46,30 @@ const COPY = {
     intro: 'Un annuaire des promoteurs de Bali avec des projets actifs — villas, appartements et résidences. Chaque société est évaluée selon quatre dimensions : qualité de construction et immobilière, réputation et expérience, équipement et production, et gestion après livraison.',
     sortHint: 'Choisissez le tri qui correspond à votre priorité : le score équilibré combine tout, « Projets livrés » montre qui a réellement livré, « Projets actifs » révèle qui construit en ce moment, et « Expérience » reflète la quantité de données éditoriales dont nous disposons sur la société.',
   },
+  de: {
+    h1: 'Bauträger auf Bali',
+    count: (n: number) => `${n} Unternehmen im Katalog`,
+    intro: 'Ein Verzeichnis der Bali-Bauträger mit aktiven Projekten — Villen, Apartments und Wohnanlagen. Jedes Unternehmen wird in vier Dimensionen bewertet: Bau- und Immobilienqualität, Reputation und Erfahrung, Technik und Produktion sowie Verwaltung nach der Fertigstellung.',
+    sortHint: 'Wählen Sie die Sortierung, die zu Ihrer Priorität passt: die ausgewogene Bewertung berücksichtigt alles zugleich, „Fertiggestellte Projekte“ zeigt, wer tatsächlich geliefert hat, „Aktive Projekte“ zeigt, wer gerade baut, und „Erfahrung“ spiegelt wider, wie viele redaktionelle Daten wir über das Unternehmen haben.',
+  },
+  zh: {
+    h1: '巴厘岛开发商',
+    count: (n: number) => `目录中有 ${n} 家公司`,
+    intro: '巴厘岛在建项目开发商名录——别墅、公寓和住宅区。每家公司按四个维度评分：建筑与房产质量、声誉与经验、设备与生产，以及交付后的管理公司。',
+    sortHint: '选择符合您优先事项的排序：综合评分兼顾一切，“已完成项目”显示谁真正交付了，“在建项目”揭示谁正在施工，“经验”反映我们对该公司掌握的编辑数据量。',
+  },
+  nl: {
+    h1: 'Ontwikkelaars op Bali',
+    count: (n: number) => `${n} bedrijven in de catalogus`,
+    intro: 'Een directory van Bali-ontwikkelaars met actieve projecten — villa\'s, appartementen en wooncomplexen. Elk bedrijf wordt beoordeeld op vier dimensies: bouw- en vastgoedkwaliteit, reputatie en ervaring, techniek en productie, en beheer na oplevering.',
+    sortHint: 'Kies de sortering die past bij uw prioriteit: de gebalanceerde score combineert alles, „Opgeleverde projecten” toont wie daadwerkelijk heeft opgeleverd, „Actieve projecten” laat zien wie er nu bouwt, en „Ervaring” weerspiegelt hoeveel redactionele gegevens we over het bedrijf hebben.',
+  },
+  ban: {
+    h1: 'Pangwangun ring Bali',
+    count: (n: number) => `${n} pausahaan ring katalog`,
+    intro: 'Direktori pangwangun Bali sane madue proyek aktif — vila, apartemen, miwah kompleks. Suang-suang pausahaan kanilai ring petang dimensi: kualitas konstruksi lan properti, reputasi lan pengalaman, peralatan lan produksi, miwah pangelola sasampun serah terima.',
+    sortHint: 'Pilih pengurutan sane cocok ring prioritas Ragane: skor seimbang nggabungang makasami, «Proyek puput» nyinahang sira sane sampun nyerahang, «Proyek aktif» nyinahang sira sane sedeng ngwangun, miwah «Pengalaman» nyinahang akeh data editorial sane iraga madue indik pausahaan punika.',
+  },
 } as const
 
 function logoFromJson(data: Record<string, unknown>): string | null {

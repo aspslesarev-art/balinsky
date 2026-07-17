@@ -48,6 +48,38 @@ const COPY = {
       `${type ?? 'Bien'} à louer à Bali${location ? `, ${location}` : ''}. ${price} / mois.`,
     title: (t: string, p: string) => `${t} — ${p}/mois | Balinsky`,
   },
+  de: {
+    home: 'Startseite', rental: 'Langzeitmiete', bali: 'Bali',
+    descHeading: 'Beschreibung', perMonth: '/ Mon.',
+    contactTg: 'Auf Telegram schreiben', contactWa: 'Auf WhatsApp schreiben', contactOther: 'Kontakt',
+    metaFallback: (type: string | null, location: string | null, price: string) =>
+      `${type ?? 'Immobilie'} zur Miete auf Bali${location ? `, ${location}` : ''}. ${price} / Mon.`,
+    title: (t: string, p: string) => `${t} — ${p}/Mon. | Balinsky`,
+  },
+  zh: {
+    home: '首页', rental: '长期租赁', bali: '巴厘岛',
+    descHeading: '描述', perMonth: '/ 月',
+    contactTg: '在 Telegram 上留言', contactWa: '在 WhatsApp 上留言', contactOther: '联系',
+    metaFallback: (type: string | null, location: string | null, price: string) =>
+      `${type ?? '房产'}在巴厘岛出租${location ? `，${location}` : ''}。${price} / 月。`,
+    title: (t: string, p: string) => `${t} — ${p}/月 | Balinsky`,
+  },
+  nl: {
+    home: 'Home', rental: 'Langlopende verhuur', bali: 'Bali',
+    descHeading: 'Beschrijving', perMonth: '/ mnd',
+    contactTg: 'Bericht op Telegram', contactWa: 'Bericht op WhatsApp', contactOther: 'Contact',
+    metaFallback: (type: string | null, location: string | null, price: string) =>
+      `${type ?? 'Object'} te huur op Bali${location ? `, ${location}` : ''}. ${price} / mnd.`,
+    title: (t: string, p: string) => `${t} — ${p}/mnd | Balinsky`,
+  },
+  ban: {
+    home: 'Beranda', rental: 'Sewa jangka panjang', bali: 'Bali',
+    descHeading: 'Deskripsi', perMonth: '/ bln',
+    contactTg: 'Kirim pesan ring Telegram', contactWa: 'Kirim pesan ring WhatsApp', contactOther: 'Ngubungin',
+    metaFallback: (type: string | null, location: string | null, price: string) =>
+      `${type ?? 'Properti'} sane kasewaang ring Bali${location ? `, ${location}` : ''}. ${price} / bln.`,
+    title: (t: string, p: string) => `${t} — ${p}/bln | Balinsky`,
+  },
 } as const
 
 function fmtUsd(n: number): string { return '$' + Math.round(n).toLocaleString('en-US') }

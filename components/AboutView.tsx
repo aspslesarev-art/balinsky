@@ -178,6 +178,162 @@ const COPY = {
     contactBot: 'Écrire au bot',
     contactGuide: 'Lire d’abord le guide d’achat',
   },
+  de: {
+    home: 'Startseite',
+    crumb: 'Über Balinsky',
+    h1: 'Balinsky — was es ist und warum Sie ihm vertrauen können',
+    intro: 'Balinsky ist ein Bali-Immobilienkatalog für ausländische Käufer: Villen, Apartments, Wohnanlagen und Vermietungen. Die Website listet Projekte von Bauträgern, deren Unterlagen wir persönlich geprüft, deren Standorte wir begangen und deren Objekte wir gefilmt haben. Preise werden in aktuellen USD angezeigt. Vertriebsmanager sind echte Menschen mit Foto, Bewertung und den Sprachen, die sie sprechen.',
+
+    h2Numbers: 'Die Zahlen heute',
+    numbersLead: 'Diese Zahlen aktualisieren sich automatisch — was Sie auf der Website sehen, ist genau das, was gerade in der Datenbank veröffentlicht ist.',
+    statVillas: 'Villen und Häuser',
+    statApts: 'Apartments',
+    statComplexes: 'Wohnanlagen',
+    statDevs: 'Bauträger',
+    statMgrs: 'Manager erreichbar',
+
+    h2How: 'Wie wir entscheiden, was wir veröffentlichen',
+    standards: [
+      { Icon: FileSearch, title: 'Dokumentenprüfung', body: 'Jede Immobilie im Katalog muss ein gültiges PBG, eine klare Landstruktur (SHM / HGB / Hak Pakai) und einen echten Bauträger mit PT-Registrierung haben. Ohne dieses Set schafft es die Immobilie schlicht nicht auf die Website.' },
+      { Icon: Video,      title: 'Video und Fotos vor Ort', body: 'Für die meisten Projekte hat unser Team eigenes Material gedreht — Drohne, Baufortschritt, Umgebung. Keine Pressemitteilung des Bauträgers, sondern der reale Zustand zu einem bekannten Datum.' },
+      { Icon: UsersRound, title: 'Ein Manager mit Gesicht', body: 'Jeder Bauträger auf der Website hat einen benannten Manager mit Foto, gesprochenen Sprachen, direktem Telegram und WhatsApp. Keine anonyme „Vertriebsabteilung“ — eine echte Person, die Sie per Videoanruf erreichen können.' },
+      { Icon: BookOpen,   title: 'Redaktionelle Auswahl', body: 'Wir veröffentlichen nicht alles. Objekte, Projekte und Bauträger, die unsere oben genannte QA nicht bestehen, kommen nie in den Katalog.' },
+    ],
+
+    h2Stack: 'Was Sie bekommen',
+    stackItems: [
+      { title: 'Preise in Echtzeit-USD', body: 'Preise werden zum aktuellen Kurs neu berechnet; der Währungsumschalter ist im Header. Die Vergleichsansicht berechnet automatisch neu, wenn Sie umschalten.' },
+      { title: 'Transparenter Ablauf', body: 'Vom ersten „Reservieren“-Tippen bis zur Übergabe — jeder Schritt und Betrag ist auf den Seiten Reservierung und Kaufratgeber dokumentiert.' },
+      { title: 'Erreichbarer Manager', body: 'Antwort auf Telegram / WhatsApp meist innerhalb einer Stunde während der Bali-Geschäftszeiten. Bei größeren Deals — ein Videoanruf, bevor eine Anzahlung fließt.' },
+      { title: 'Vergleichen und Merkliste', body: 'Jedes Inserat wird in Ihrer Merkliste gespeichert; Villen und Apartments werden anhand von 14 investorenrelevanten Parametern in einer Tabelle verglichen.' },
+    ],
+
+    h2Cases: 'Käufer-Fallstudien',
+    pCases: 'Wir sammeln Geschichten abgeschlossener Deals unserer Kunden — was sie suchten, wie sie suchten, wo die SPA-Verhandlung landete, was daraus wurde und welche Rendite heute tatsächlich erzielt wird. Jeder Fall ist anonymisiert — ohne Namen oder Adressen, aber mit echten Zahlen. Dieser Bereich wächst, sobald Kunden zustimmen zu teilen. Wenn Sie über Balinsky gekauft haben und Ihre Geschichte teilen möchten (anonym oder mit Namen — Ihre Wahl), schreiben Sie dem Bot — das dauert meist ein 20-minütiges Gespräch.',
+    casesCta: 'Meine Kaufgeschichte teilen',
+
+    h2Contact: 'Kontakt aufnehmen',
+    pContact: 'Für alles — den Katalog, eine bestimmte Immobilie, Due Diligence, Videoaufnahmen für Ihre eigene Villa — schreiben Sie dem Bot auf Telegram. Wenn Telegram unpraktisch ist, steht die E-Mail im Footer der Website.',
+    contactBot: 'Dem Bot schreiben',
+    contactGuide: 'Zuerst den Kaufratgeber lesen',
+  },
+  zh: {
+    home: '首页',
+    crumb: '关于 Balinsky',
+    h1: 'Balinsky——它是什么，以及为什么您可以信任它',
+    intro: 'Balinsky 是面向外国买家的巴厘岛房产目录：别墅、公寓、住宅区和租赁。本站列出的项目来自我们亲自核验过文件、实地走访过地块并拍摄过实景的开发商。价格以当前美元显示。销售经理是真实的人，配有照片、评分及所讲语言。',
+
+    h2Numbers: '今日数据',
+    numbersLead: '这些数字自动更新——您在网站上看到的，正是数据库当前发布的内容。',
+    statVillas: '别墅和房屋',
+    statApts: '公寓',
+    statComplexes: '住宅区',
+    statDevs: '开发商',
+    statMgrs: '在线经理',
+
+    h2How: '我们如何决定发布什么',
+    standards: [
+      { Icon: FileSearch, title: '文件核查', body: '目录中的每处房产都必须具备有效的 PBG、清晰的土地结构（SHM / HGB / Hak Pakai）以及拥有 PT 注册的真实开发商。缺少这一套，房产根本无法登上网站。' },
+      { Icon: Video,      title: '实地视频与照片', body: '对于大多数项目，我们的团队拍摄了原创素材——无人机、施工进度、周边环境。不是开发商的新闻稿，而是某一确定日期的真实状态。' },
+      { Icon: UsersRound, title: '有面孔的经理', body: '网站上每家开发商都有一位指定经理，配有照片、所讲语言、直接的 Telegram 和 WhatsApp。不是匿名的"销售部门"——而是您可以视频通话的真实的人。' },
+      { Icon: BookOpen,   title: '编辑精选', body: '我们不会什么都发布。未通过上述质检的房产、项目和开发商，绝不会进入目录。' },
+    ],
+
+    h2Stack: '您将获得什么',
+    stackItems: [
+      { title: '实时美元定价', body: '价格按当前汇率重新计算；货币切换器在页眉。切换时对比视图会自动重新计算。' },
+      { title: '透明的流程', body: '从第一次点击"预订"到交付——每一步和每一笔金额都记录在预订页和购买指南页上。' },
+      { title: '在线经理', body: '在巴厘岛工作时间内，Telegram / WhatsApp 通常一小时内回复。大额交易——在任何定金转出前先视频通话。' },
+      { title: '对比与候选清单', body: '任何房源都可保存到您的候选清单；别墅和公寓在一张表中按 14 项投资级参数进行对比。' },
+    ],
+
+    h2Cases: '买家案例',
+    pCases: '我们正在收集客户的成交案例——他们在找什么、如何寻找、SPA 谈判落在何处、最终结果如何，以及如今的实际收益。每个案例均已匿名——没有姓名或地址，但有真实数字。随着客户同意分享，本栏目会不断充实。如果您通过 Balinsky 购买并愿意分享您的故事（匿名或署名——由您决定），请给机器人留言——通常需要 20 分钟的通话。',
+    casesCta: '分享我的购买故事',
+
+    h2Contact: '联系我们',
+    pContact: '任何事宜——目录、某处具体房产、尽职调查、为您自己的别墅拍摄视频——都请在 Telegram 上给机器人留言。如果 Telegram 不方便，邮箱在网站页脚。',
+    contactBot: '给机器人留言',
+    contactGuide: '先阅读购买指南',
+  },
+  nl: {
+    home: 'Home',
+    crumb: 'Over Balinsky',
+    h1: 'Balinsky — wat het is en waarom u het kunt vertrouwen',
+    intro: "Balinsky is een Bali-vastgoedcatalogus voor buitenlandse kopers: villa's, appartementen, wooncomplexen en verhuur. De site toont projecten van ontwikkelaars van wie wij persoonlijk de documenten hebben geverifieerd, de locaties hebben bezocht en de objecten hebben gefilmd. Prijzen worden in actuele USD getoond. Verkoopmanagers zijn echte mensen met foto, beoordeling en de talen die zij spreken.",
+
+    h2Numbers: 'De cijfers vandaag',
+    numbersLead: 'Deze cijfers werken automatisch bij — wat u op de site ziet is precies wat er op dit moment in de database is gepubliceerd.',
+    statVillas: "villa's en huizen",
+    statApts: 'appartementen',
+    statComplexes: 'wooncomplexen',
+    statDevs: 'ontwikkelaars',
+    statMgrs: 'managers bereikbaar',
+
+    h2How: 'Hoe wij beslissen wat we publiceren',
+    standards: [
+      { Icon: FileSearch, title: 'Documentcontrole', body: 'Elk object in de catalogus moet een geldig PBG, een heldere grondstructuur (SHM / HGB / Hak Pakai) en een echte ontwikkelaar met PT-registratie hebben. Zonder die set haalt het object simpelweg de site niet.' },
+      { Icon: Video,      title: 'Video en foto\'s ter plaatse', body: 'Voor de meeste projecten heeft ons team eigen beelden gemaakt — drone, bouwvoortgang, de omgeving. Geen persbericht van de ontwikkelaar, maar de echte staat op een bekende datum.' },
+      { Icon: UsersRound, title: 'Een manager met een gezicht', body: 'Elke ontwikkelaar op de site heeft een aangewezen manager met foto, gesproken talen, directe Telegram en WhatsApp. Geen anonieme "verkoopafdeling" — een echt persoon die u kunt videobellen.' },
+      { Icon: BookOpen,   title: 'Redactionele selectie', body: 'Wij publiceren niet alles. Objecten, projecten en ontwikkelaars die onze bovenstaande QA niet doorstaan, komen nooit in de catalogus.' },
+    ],
+
+    h2Stack: 'Wat u krijgt',
+    stackItems: [
+      { title: 'Live USD-prijzen', body: 'Prijzen worden herberekend tegen de huidige koers; de valutaschakelaar staat in de header. De vergelijkingsweergave herberekent automatisch wanneer u wisselt.' },
+      { title: 'Transparant traject', body: 'Van de eerste "reserveren"-tik tot de oplevering — elke stap en elk bedrag is gedocumenteerd op de pagina\'s Reservering en Koopgids.' },
+      { title: 'Bereikbare manager', body: 'Antwoord op Telegram / WhatsApp meestal binnen een uur tijdens Bali-kantooruren. Voor grotere deals — een videogesprek voordat er een aanbetaling gaat.' },
+      { title: 'Vergelijken en shortlist', body: "Elk aanbod wordt in uw shortlist bewaard; villa's en appartementen worden op 14 investeringsparameters in één tabel vergeleken." },
+    ],
+
+    h2Cases: 'Klantcasussen',
+    pCases: 'We verzamelen verhalen van afgesloten deals van onze klanten — wat ze zochten, hoe ze zochten, waar de SPA-onderhandeling uitkwam, wat eruit voortkwam en het werkelijke rendement vandaag. Elke casus is geanonimiseerd — zonder namen of adressen, maar met echte cijfers. Deze sectie groeit naarmate klanten instemmen om te delen. Als u via Balinsky heeft gekocht en uw verhaal wilt delen (anoniem of met naam — uw keuze), stuur de bot een bericht — het kost meestal een gesprek van 20 minuten.',
+    casesCta: 'Mijn koopverhaal delen',
+
+    h2Contact: 'Neem contact op',
+    pContact: 'Voor alles — de catalogus, een specifiek object, due diligence, video-opnames voor uw eigen villa — stuur de bot een bericht op Telegram. Als Telegram onhandig is, staat het e-mailadres in de footer van de site.',
+    contactBot: 'Bericht de bot',
+    contactGuide: 'Lees eerst de koopgids',
+  },
+  ban: {
+    home: 'Beranda',
+    crumb: 'Indik Balinsky',
+    h1: 'Balinsky — napi puniki tur ngudiang dados kapracaya',
+    intro: 'Balinsky inggih punika katalog properti Bali buat pameli saking dura negara: vila, apartemen, kompleks hunian, miwah sewa. Situs puniki nyantenang proyek saking pangwangun sane dokumenipun sampun periksa titiang padidi, genahipun sampun rauhin titiang, tur objekipun sampun rekam titiang. Aji kasantenang ring USD kekinian. Manajer penjualan inggih punika jadma sujati sareng foto, peringkat, miwah basa sane kaanggen.',
+
+    h2Numbers: 'Angka rahinane mangkin',
+    numbersLead: 'Angka-angka puniki kaperbarui otomatis — sane cingak Ragane ring situs pateh sareng sane kapublikasi ring basis data mangkin.',
+    statVillas: 'vila miwah umah',
+    statApts: 'apartemen',
+    statComplexes: 'kompleks hunian',
+    statDevs: 'pangwangun',
+    statMgrs: 'manajer siap kahubungin',
+
+    h2How: 'Sapunapi titiang mutusang napi sane kapublikasi',
+    standards: [
+      { Icon: FileSearch, title: 'Pameriksaan dokumen', body: 'Sabilang properti ring katalog patut madue PBG sane sah, struktur tanah sane cetha (SHM / HGB / Hak Pakai), miwah pangwangun sujati sareng registrasi PT. Yening nenten wenten punika, properti nenten jagi ngranjing ka situs.' },
+      { Icon: Video,      title: 'Video miwah foto saking genah', body: 'Buat akehan proyek, tim titiang ngrekam gambar padidi — drone, kamajuan konstruksi, wewengkon. Boya siaran pers saking pangwangun, sakewanten kahanan sujati ring tanggal sane kauningin.' },
+      { Icon: UsersRound, title: 'Manajer sareng muan', body: 'Sabilang pangwangun ring situs madue manajer sane katunjuk sareng foto, basa sane kaanggen, Telegram miwah WhatsApp langsung. Boya "departemen penjualan" anonim — sakewanten jadma sujati sane dados kahubungin video.' },
+      { Icon: BookOpen,   title: 'Daftar cutet editorial', body: 'Titiang nenten mublikasi sami. Properti, proyek, miwah pangwangun sane nenten lulus QA ring baduur nenten jagi ngranjing ka katalog.' },
+    ],
+
+    h2Stack: 'Napi sane kapolihang Ragane',
+    stackItems: [
+      { title: 'Aji USD kekinian', body: 'Aji kaitung malih manut kurs mangkin; pangalih mata uang wenten ring header. Tampilan pabandingan ngitung malih otomatis rikala Ragane ngalih.' },
+      { title: 'Alur sane transparan', body: 'Saking ketukan "reservasi" kaping pertama kantos serah terima — sabilang langkah miwah jumlah kadokumentasi ring lembar Reservasi miwah Tuntunan Numbas.' },
+      { title: 'Manajer siap kahubungin', body: 'Waled Telegram / WhatsApp biasane sajeroning ajam sajeroning jam kerja Bali. Buat transaksi ageng — telpon video sadurung deposit kakirim.' },
+      { title: 'Pabandingan miwah daftar cutet', body: 'Sabilang listing kasimpen ring daftar cutet Ragane; vila miwah apartemen kabandingang manut 14 parameter kelas investor ring satu tabel.' },
+    ],
+
+    h2Cases: 'Studi kasus pameli',
+    pCases: 'Titiang ngumpulang carita transaksi sane sampun puput saking klien titiang — napi sane karereh, sapunapi ngrereh, ring dija negosiasi SPA rauh, napi asilipun, miwah imbal hasil sujati rahinane mangkin. Sabilang kasus kaanonimang — nenten wenten wasta utawi alamat, sakewanten sareng angka sujati. Bagian puniki jagi nincap manut klien sane cumpu maang. Yening Ragane numbas lewat Balinsky tur meled maang carita (anonim utawi sareng wasta — manut pikayun Ragane), kirim pesan ka bot — biasane ngamerluang telpon 20 menit.',
+    casesCta: 'Maang carita numbas titiang',
+
+    h2Contact: 'Ngwentenang kontak',
+    pContact: 'Buat sakancan — katalog, properti tinutu, due diligence, ngrekam video buat vila Ragane padidi — kirim pesan ka bot ring Telegram. Yening Telegram nenten nyaman, email wenten ring footer situs.',
+    contactBot: 'Kirim pesan ka bot',
+    contactGuide: 'Wacen dumun tuntunan numbas',
+  },
 } as const
 
 async function loadCounts() {

@@ -286,6 +286,278 @@ const COPY = {
     ctaApartments: 'Voir les appartements',
     ctaGuide: 'Guide complet « Comment acheter à Bali »',
   },
+  de: {
+    home: 'Startseite',
+    crumb: 'Reservierung',
+    h1: 'Wie eine Immobilienreservierung auf Bali funktioniert',
+    intro: 'Wenn Sie bei einem Angebot auf „Reservieren“ tippen, wird die Immobilie exklusiv für Sie 14 Tage lang blockiert. Diese Seite erklärt, was danach passiert, wer Ihre Anzahlung hält und wie die Rückerstattung funktioniert, falls Sie es sich anders überlegen.',
+
+    h2What: 'Was eine Reservierung auf Bali ist',
+    pWhat: 'Eine Reservierung ist der erste rechtlich erfasste Schritt im Geschäft. Sie unterschreiben ein kurzes reservation form (keinen Kaufvertrag), zahlen ein holding deposit, und die Immobilie wird für 14 Tage vom Markt genommen — kein anderer Käufer kann in diesem Zeitfenster einen Kauf abschließen. Diese Zeit nutzen Sie für die Due Diligence, stimmen SPA-Änderungen mit Ihrem Anwalt ab und bereiten die nächste Überweisung vor.',
+
+    h2Hold: 'Die 14 exklusiven Tage — was sie Ihnen bringen',
+    pHold: 'Der Stillstand wirkt in beide Richtungen: Der Preis ist im reservation form festgeschrieben, der Bauträger kann ihn nicht erhöhen; die Immobilie wartet wirklich auf Sie. Trifft in diesen 14 Tagen ein höheres Angebot ein, darf der Bauträger es nicht annehmen. Das Fenster reicht dem Anwalt, um die DD abzuschließen (in der Regel 7–10 Tage), und Ihnen, um SPA-Änderungen zu verhandeln.',
+
+    h2Sign: 'Was Sie tatsächlich unterschreiben',
+    pSign: 'Das reservation form ist ein 1–3-seitiges Dokument: Immobilienpreis, Höhe der Anzahlung, Dauer der Blockierung (14 Tage), Rückerstattungsbedingungen und Ihre Bankverbindung für die Rückerstattung, falls Sie zurücktreten. Es ist NICHT der Kaufvertrag (SPA). Der SPA ist ein separates Dokument, das 1–2 Wochen später vor einem PPAT-Notar unterzeichnet wird, nachdem die DD abgeschlossen ist. Reservation forms können eine Klausel „nicht erstattungsfähig ohne rechtlichen Grund“ enthalten, doch üblicher ist die vollständige Rückerstattung bei einem Rücktritt nach der DD.',
+
+    h2Deposit: 'Wo die Anzahlung liegt',
+    pDeposit: 'Ein holding deposit auf Bali beträgt in der Regel 2.000–10.000 $ (Premium-Villen bis zu 25.000 $). Die Gelder werden auf eine von drei Arten überwiesen: auf das Treuhandkonto des PPAT-Notars (am sichersten), auf das Firmenkonto des Bauträgers (setzt Vertrauen in ihn voraus) oder auf das Konto einer vermittelnden Anwaltskanzlei. Niemals auf das Privatkonto des Verkäufers, das Privatkonto des Direktors oder das Konto eines Maklers — das ist der häufigste Betrugsweg in der indonesischen Immobilienbranche. Prüfen Sie die Überweisungsdaten stets anhand des reservation form selbst, niemals aus einem Messenger-Chat.',
+
+    h2Refund: 'Wie das Geld zurückkommt',
+    pRefund: 'Übliche Praxis: vollständige Rückerstattung, wenn Sie innerhalb des 14-Tage-Fensters aufgrund von DD-Ergebnissen zurücktreten. Rechtliche Gründe (Belastungen, Zonierungswidersprüche, PBG-Probleme) lösen immer eine 100%ige Rückzahlung aus. Ein Rücktritt „habe es mir anders überlegt“ ohne Grund — manche Bauträger behalten die Anzahlung als Strafe, andere erstatten sie vollständig. Die Rückerstattungsbedingungen stehen immer im reservation form — lesen Sie diese Klausel, bevor Sie unterschreiben. Nach 14 Tagen ohne unterzeichneten SPA wird die Anzahlung je nach Formular entweder mit der ersten SPA-Rate verrechnet oder zurückerstattet.',
+
+    h2After: 'Was nach 14 Tagen passiert',
+    pAfter: 'Drei Wege. Bestfall: Zum Ende des Fensters hat Ihr Anwalt die DD freigegeben, Sie unterschreiben den SPA beim PPAT-Notar, und das holding deposit wird auf die erste SPA-Rate angerechnet. Mittelfall: Sie verlängern die Blockierung schriftlich um 7–14 Tage (DD nicht fertig). Schlimmster Fall: Sie treten zurück, die Anzahlung wird erstattet, die Immobilie kommt zurück auf den Markt. Schweigen nach 14 Tagen ohne formelle Entscheidung wird je nach Formular unterschiedlich ausgelegt — senden Sie immer eine schriftliche Entscheidung (verlängern oder zurücktreten).',
+
+    h2Risks: 'Worauf Sie achten sollten',
+    risks: [
+      'Die Überweisungsdaten für die Anzahlung müssen im reservation form stehen — akzeptieren Sie sie nie aus einem Chat.',
+      'Lesen Sie die Rückerstattungsklausel vor der Unterschrift. „Non-refundable in any case“ ist ein Warnsignal — bestehen Sie auf einer Änderung.',
+      'Die Dauer der Blockierung muss ausdrücklich angegeben sein (14 Tage oder anders). Eine unbefristete Blockierung ist zu hinterfragen.',
+      'Das reservation form muss von einem im Akta Pendirian (Gründungsurkunde) genannten Vertreter der PT des Bauträgers unterzeichnet werden. Eine Maklerunterschrift ohne Vollmacht ist eine Schwachstelle.',
+      'Bewahren Sie eine PDF-Kopie des unterzeichneten Formulars, den Überweisungsbeleg der Bank und den Messenger-Verlauf mit dem Manager auf — sie helfen im Streitfall.',
+    ],
+
+    h2What2: 'Reservation form vs SPA',
+    table: {
+      headLeft: '',
+      headRsv: 'Reservation form',
+      headSpa: 'SPA / Lease Agreement',
+      rows: [
+        { l: 'Wann unterzeichnet',     r: 'Erste 1–3 Tage',                              s: '1–4 Wochen nach der Reservierung' },
+        { l: 'Dokumentlänge',          r: '1–3 Seiten',                                  s: '15–40 Seiten' },
+        { l: 'Rechtliche Wirkung',     r: 'Sperrt Preis und Blockierung; überträgt keine Rechte', s: 'Überträgt Leasehold / HGB; beim BPN registriert' },
+        { l: 'Beteiligter Betrag',     r: 'Holding deposit (2k–25k $)',                  s: 'Vollständiger Preis in Raten' },
+        { l: 'Wo unterzeichnet',       r: 'Online oder beim Bauträger',                  s: 'Nur beim PPAT-Notar, persönlich' },
+        { l: 'Rückerstattung',         r: 'Meist vollständig (Bedingungen lesen)',       s: 'Nur über SPA-Kündigung mit Strafen' },
+      ],
+    },
+
+    faqHeading: 'Häufige Fragen',
+    faq: [
+      { q: 'Ich habe die Anzahlung gezahlt — heißt das, ich habe gekauft?',
+        a: 'Nein. Die Reservierungsanzahlung sperrt den Preis und die 14-tägige Blockierung, überträgt aber keine Rechte. Das Eigentum (oder Leasehold) geht erst über, nachdem der SPA vor einem PPAT-Notar unterzeichnet und beim BPN registriert wurde.' },
+      { q: 'Kann ich die Blockierung verlängern?',
+        a: 'Ja, meist kostenlos mit begründetem Anlass (zum Beispiel hat der Anwalt die DD nicht abgeschlossen). Schriftlich beim Bauträger anzufragen; als Nachtrag zum reservation form dokumentiert. 7–14 zusätzliche Tage sind Standard.' },
+      { q: 'Kann ich die Reservierung auf einen anderen Käufer übertragen?',
+        a: 'Manche Bauträger erlauben eine Übertragung vor dem SPA mit schriftlicher Zustimmung. Auf dem Zweitmarkt ist es fast immer nein — Sie müssen abschließen oder stornieren.' },
+      { q: 'Was, wenn der Bauträger es sich nach meiner Anzahlung anders überlegt?',
+        a: 'Das reservation form enthält meist eine symmetrische Klausel: Tritt der Bauträger ohne rechtlichen Grund zurück, erstattet er die Anzahlung und zahlt eine Strafe (oft in Höhe der Anzahlung). In der Praxis tun große Bauträger das nicht — zu schädlich für den Ruf.' },
+      { q: 'Kann ich die Anzahlung in Krypto zahlen?',
+        a: 'Nein. Alle legalen Geschäfte über einen PPAT-Notar werden in IDR/USD per Banküberweisung erfasst. Eine Krypto-Überweisung hinterlässt keine Spur für den Notar oder das indonesische Finanzamt — später zu beweisen, dass Sie etwas gezahlt haben, wird unmöglich.' },
+    ],
+
+    ctaHeading: 'Bereit zu reservieren',
+    ctaText: 'Öffnen Sie ein beliebiges Angebot und tippen Sie auf „Reservieren“ — der Manager sendet Ihnen innerhalb einer Stunde ein reservation form.',
+    ctaVillas: 'Villen ansehen',
+    ctaApartments: 'Apartments ansehen',
+    ctaGuide: 'Vollständiger Leitfaden „Auf Bali kaufen“',
+  },
+  zh: {
+    home: '首页',
+    crumb: '预订',
+    h1: '巴厘岛房产预订如何运作',
+    intro: '当您在房源上点击“预订”时，该房产将为您专属保留 14 天。本页说明接下来会发生什么、谁保管您的定金，以及如果您改变主意如何退款。',
+
+    h2What: '什么是巴厘岛的预订',
+    pWhat: '预订是交易中第一个有法律记录的步骤。您签署一份简短的 reservation form（并非买卖合同），支付 holding deposit，房产将下架 14 天——在此期间没有其他买家能够完成购买。您可利用这段时间进行尽职调查（due diligence），与律师商定 SPA 的修改，并准备下一笔汇款。',
+
+    h2Hold: '专属的 14 天——它们为您带来什么',
+    pHold: '这种冻结是双向的：价格锁定在 reservation form 中，开发商不能提价；房产确实为您保留。若在这 14 天内出现更高报价，开发商也不能接受。这个窗口足够律师完成尽职调查（通常 7–10 天），也足够您协商 SPA 的修改。',
+
+    h2Sign: '您实际签署的是什么',
+    pSign: 'reservation form 是一份 1–3 页的文件：房产价格、定金金额、保留期限（14 天）、退款条款，以及您退出时用于退款的银行信息。它不是买卖合同（SPA）。SPA 是另一份文件，在尽职调查通过后 1–2 周于 PPAT 公证人面前签署。reservation form 可能包含“无法律理由不予退款”的条款，但更常见的做法是在尽职调查后退出时全额退款。',
+
+    h2Deposit: '定金存放在哪里',
+    pDeposit: '巴厘岛的 holding deposit 通常为 2,000–10,000 美元（高端别墅可达 25,000 美元）。资金以三种方式之一汇出：汇入 PPAT 公证人的托管账户（最安全）、汇入开发商的公司账户（需信任开发商），或汇入中介律师事务所账户。切勿汇入卖方个人账户、董事个人账户或中介账户——这是印度尼西亚房地产中最常见的欺诈渠道。务必对照 reservation form 本身核对汇款信息，绝不要凭消息聊天。',
+
+    h2Refund: '钱如何退回',
+    pRefund: '标准做法：若您根据尽职调查结果在 14 天窗口内退出，全额退款。法律理由（留置权、分区不符、PBG 问题）始终触发 100% 退还。无理由的“改变主意”退出——有些开发商将定金作为罚金扣留，有些则全额退还。退款条件始终写在 reservation form 中——签署前请阅读该条款。超过 14 天仍未签署 SPA，定金将根据表格计入第一期 SPA 款项或予以退还。',
+
+    h2After: '14 天后会发生什么',
+    pAfter: '三种路径。最佳情况：窗口结束时您的律师已通过尽职调查，您在 PPAT 公证人处签署 SPA，holding deposit 计入第一期 SPA 款项。中间情况：您以书面形式将保留期延长 7–14 天（尽职调查未完成）。最坏情况：您退出，定金退还，房产重新上市。14 天后不作正式决定而保持沉默，会因表格不同而有不同解释——请务必发送书面决定（延长或退出）。',
+
+    h2Risks: '需要注意的事项',
+    risks: [
+      '定金的汇款信息必须写在 reservation form 中——切勿从聊天中接受。',
+      '签署前阅读退款条款。“Non-refundable in any case”（任何情况下不退款）是危险信号——坚持要求修改。',
+      '保留期限必须明确说明（14 天或其他）。无期限的保留应当质疑。',
+      'reservation form 必须由 Akta Pendirian（公司设立文件）中列明的开发商 PT 高管签署。中介无授权书的签名是薄弱环节。',
+      '保存已签署表格的 PDF 副本、银行汇款回执，以及与经理的消息记录——发生争议时会有帮助。',
+    ],
+
+    h2What2: 'Reservation form 与 SPA 对比',
+    table: {
+      headLeft: '',
+      headRsv: 'Reservation form',
+      headSpa: 'SPA / Lease Agreement',
+      rows: [
+        { l: '何时签署',   r: '最初 1–3 天',                                 s: '预订后 1–4 周' },
+        { l: '文件长度',   r: '1–3 页',                                      s: '15–40 页' },
+        { l: '法律效力',   r: '锁定价格与保留；不转移任何权利',              s: '转移 leasehold / HGB；在 BPN 登记' },
+        { l: '涉及金额',   r: 'Holding deposit（2k–25k 美元）',              s: '分期支付全款' },
+        { l: '签署地点',   r: '线上或在开发商处',                            s: '仅在 PPAT 公证人处，亲自办理' },
+        { l: '退款',       r: '通常全额（阅读条款）',                        s: '仅通过解除 SPA 并支付罚金' },
+      ],
+    },
+
+    faqHeading: '常见问题',
+    faq: [
+      { q: '我付了定金——这意味着我已经买下了吗？',
+        a: '不。预订定金锁定价格和 14 天保留，但不转移任何权利。所有权（或 leasehold）只有在 SPA 于 PPAT 公证人面前签署并在 BPN 登记后才转移。' },
+      { q: '我可以延长保留期吗？',
+        a: '可以，通常在有正当理由时免费（例如律师尚未完成尽职调查）。以书面形式向开发商申请；作为 reservation form 的补充记录。7–14 天的额外时间是标准做法。' },
+      { q: '我可以把预订转让给其他买家吗？',
+        a: '部分开发商允许在签署 SPA 前经书面同意转让。在二手市场几乎总是不行——您必须完成或取消。' },
+      { q: '如果开发商在我付定金后改变主意怎么办？',
+        a: 'reservation form 通常包含对称条款：若开发商无法律理由退出，须退还定金并支付罚金（通常与定金相等）。实践中大型开发商不会这样做——对声誉损害太大。' },
+      { q: '定金可以用加密货币支付吗？',
+        a: '不。所有通过 PPAT 公证人的合法交易均以 IDR/USD 通过银行汇款记录。加密货币汇款不会为公证人或印度尼西亚税务机关留下痕迹——日后要证明您支付过任何款项将变得不可能。' },
+    ],
+
+    ctaHeading: '准备好预订了',
+    ctaText: '打开任意房源并点击“预订”——经理将在一小时内向您发送 reservation form。',
+    ctaVillas: '查看别墅',
+    ctaApartments: '查看公寓',
+    ctaGuide: '完整的“如何在巴厘岛购房”指南',
+  },
+  nl: {
+    home: 'Home',
+    crumb: 'Reservering',
+    h1: 'Hoe een vastgoedreservering op Bali werkt',
+    intro: 'Wanneer u bij een aanbod op „Reserveren“ tikt, wordt het object 14 dagen exclusief voor u vastgehouden. Deze pagina legt uit wat er daarna gebeurt, wie uw aanbetaling beheert en hoe restitutie werkt als u van gedachten verandert.',
+
+    h2What: 'Wat een reservering op Bali is',
+    pWhat: 'Een reservering is de eerste juridisch vastgelegde stap in de transactie. U ondertekent een kort reservation form (geen koopovereenkomst), betaalt een holding deposit, en het object wordt 14 dagen uit de markt gehaald — geen andere koper kan in dat venster een aankoop afronden. Deze tijd gebruikt u voor due diligence, om SPA-aanpassingen met uw advocaat af te stemmen en de volgende overboeking voor te bereiden.',
+
+    h2Hold: 'De 14 exclusieve dagen — wat ze u opleveren',
+    pHold: 'De stilstand werkt beide kanten op: de prijs staat vast in het reservation form, de ontwikkelaar kan hem niet verhogen; het object wacht echt op u. Komt er in die 14 dagen een hoger bod, dan mag de ontwikkelaar het niet accepteren. Het venster is voldoende voor een advocaat om de DD af te ronden (doorgaans 7–10 dagen) en voor u om SPA-aanpassingen te onderhandelen.',
+
+    h2Sign: 'Wat u daadwerkelijk ondertekent',
+    pSign: 'Het reservation form is een document van 1–3 pagina’s: objectprijs, hoogte van de aanbetaling, duur van de vasthouding (14 dagen), restitutievoorwaarden en uw bankgegevens voor restitutie als u afziet. Het is NIET de koopovereenkomst (SPA). De SPA is een apart document dat 1–2 weken later voor een PPAT-notaris wordt ondertekend, nadat de DD is afgerond. Reservation forms kunnen een clausule „niet-restitueerbaar zonder juridische grond“ bevatten, maar gebruikelijker is volledige restitutie bij afzien na de DD.',
+
+    h2Deposit: 'Waar de aanbetaling staat',
+    pDeposit: 'Een holding deposit op Bali is doorgaans $2.000–10.000 (premium villa’s tot $25.000). Het geld wordt op een van drie manieren overgemaakt: naar de escrow van de PPAT-notaris (het veiligst), naar de zakelijke rekening van de ontwikkelaar (vereist vertrouwen in de ontwikkelaar), of naar de rekening van een tussenkomend advocatenkantoor. Nooit naar de privérekening van de verkoper, de privérekening van de directeur of de rekening van een makelaar — dat is het meest voorkomende fraudekanaal in het Indonesische vastgoed. Controleer de overboekingsgegevens altijd aan de hand van het reservation form zelf, nooit uit een messengerchat.',
+
+    h2Refund: 'Hoe het geld terugkomt',
+    pRefund: 'Standaardpraktijk: volledige restitutie als u binnen het venster van 14 dagen afziet op basis van DD-bevindingen. Juridische gronden (beslagen, bestemmingsconflict, PBG-problemen) leiden altijd tot 100% teruggave. Een „ik heb me bedacht“-afzien zonder grond — sommige ontwikkelaars houden de aanbetaling als boete, andere betalen volledig terug. De restitutievoorwaarden staan altijd in het reservation form — lees die clausule voordat u tekent. Na 14 dagen zonder ondertekende SPA wordt de aanbetaling ofwel met de eerste SPA-termijn verrekend, ofwel terugbetaald, afhankelijk van het formulier.',
+
+    h2After: 'Wat er na 14 dagen gebeurt',
+    pAfter: 'Drie paden. Beste geval: aan het einde van het venster heeft uw advocaat de DD goedgekeurd, tekent u de SPA bij de PPAT-notaris en telt het holding deposit mee voor de eerste SPA-termijn. Middengeval: u verlengt de vasthouding schriftelijk met 7–14 dagen (DD niet klaar). Slechtste geval: u ziet af, de aanbetaling wordt terugbetaald, het object gaat terug de markt op. Stilte na 14 dagen zonder formeel besluit wordt per formulier anders uitgelegd — stuur altijd een schriftelijk besluit (verlengen of afzien).',
+
+    h2Risks: 'Waar u op moet letten',
+    risks: [
+      'De overboekingsgegevens voor de aanbetaling moeten in het reservation form staan — accepteer ze nooit uit een chat.',
+      'Lees de restitutieclausule voordat u tekent. „Non-refundable in any case“ is een rode vlag — dring aan op een aanpassing.',
+      'De duur van de vasthouding moet expliciet vermeld zijn (14 dagen of anders). Een vasthouding zonder einddatum vraagt om een vraag.',
+      'Het reservation form moet worden ondertekend door een functionaris van de PT van de ontwikkelaar die in de Akta Pendirian (oprichtingsdocumenten) is genoemd. Een makelaarshandtekening zonder volmacht is een zwakke schakel.',
+      'Bewaar een pdf-kopie van het ondertekende formulier, het bankoverschrijvingsbewijs en de messengerthread met de manager — die helpen bij een geschil.',
+    ],
+
+    h2What2: 'Reservation form vs SPA',
+    table: {
+      headLeft: '',
+      headRsv: 'Reservation form',
+      headSpa: 'SPA / Lease Agreement',
+      rows: [
+        { l: 'Wanneer ondertekend',    r: 'Eerste 1–3 dagen',                            s: '1–4 weken na de reservering' },
+        { l: 'Documentlengte',         r: '1–3 pagina’s',                                s: '15–40 pagina’s' },
+        { l: 'Juridisch gewicht',      r: 'Zet prijs en vasthouding vast; draagt geen rechten over', s: 'Draagt leasehold / HGB over; geregistreerd bij BPN' },
+        { l: 'Betrokken bedrag',       r: 'Holding deposit ($2k–25k)',                   s: 'Volledige prijs in termijnen' },
+        { l: 'Waar ondertekend',       r: 'Online of bij de ontwikkelaar',               s: 'Alleen bij PPAT-notaris, in persoon' },
+        { l: 'Restitutie',             r: 'Meestal volledig (lees voorwaarden)',         s: 'Alleen via SPA-beëindiging met boetes' },
+      ],
+    },
+
+    faqHeading: 'Veelgestelde vragen',
+    faq: [
+      { q: 'Ik heb de aanbetaling betaald — betekent dat dat ik het gekocht heb?',
+        a: 'Nee. De reserveringsaanbetaling zet de prijs en de vasthouding van 14 dagen vast, maar draagt geen rechten over. Eigendom (of leasehold) gaat pas over nadat de SPA voor een PPAT-notaris is ondertekend en bij BPN is geregistreerd.' },
+      { q: 'Kan ik de vasthouding verlengen?',
+        a: 'Ja, meestal kosteloos met een gegronde reden (bijvoorbeeld de advocaat heeft de DD niet afgerond). Schriftelijk aan te vragen bij de ontwikkelaar; gedocumenteerd als aanvulling op het reservation form. 7–14 extra dagen is standaard.' },
+      { q: 'Kan ik de reservering overdragen aan een andere koper?',
+        a: 'Sommige ontwikkelaars staan overdracht vóór de SPA toe met schriftelijke toestemming. Op de doorverkoopmarkt is het bijna altijd nee — u moet afronden of annuleren.' },
+      { q: 'Wat als de ontwikkelaar zich bedenkt na mijn aanbetaling?',
+        a: 'Het reservation form bevat meestal een symmetrische clausule: ziet de ontwikkelaar zonder juridische grond af, dan betaalt hij de aanbetaling terug en een boete (vaak gelijk aan de aanbetaling). In de praktijk doen grote ontwikkelaars dit niet — te schadelijk voor de reputatie.' },
+      { q: 'Kan ik de aanbetaling in crypto betalen?',
+        a: 'Nee. Alle legale transacties via een PPAT-notaris worden in IDR/USD via bankoverschrijving vastgelegd. Een crypto-overboeking laat geen spoor na voor de notaris of de Indonesische Belastingdienst — later bewijzen dat u iets betaald hebt, wordt onmogelijk.' },
+    ],
+
+    ctaHeading: 'Klaar om te reserveren',
+    ctaText: 'Open een willekeurig aanbod en tik op „Reserveren“ — de manager stuurt u binnen een uur een reservation form.',
+    ctaVillas: 'Villa’s bekijken',
+    ctaApartments: 'Appartementen bekijken',
+    ctaGuide: 'Volledige gids „Kopen op Bali“',
+  },
+  ban: {
+    home: 'Beranda',
+    crumb: 'Reservasi',
+    h1: 'Sapunapi carane reservasi properti ring Bali',
+    intro: 'Rikala Ragane nyentuh „Reservasi“ ring listing, properti punika katahan khusus antuk Ragane salami 14 dina. Kaca puniki nlatarang napi sane wenten salanturnyane, sira sane ngamong deposit Ragane, miwah sapunapi carane ngwaliang jinah yening Ragane magentos pikayun.',
+
+    h2What: 'Napi reservasi ring Bali punika',
+    pWhat: 'Reservasi inggih punika langkah kapertama sane kacatet secara hukum ring transaksi. Ragane nandatangani reservation form sane bawak (boya perjanjian adol-tumbas), mayah holding deposit, tur properti kaangkat saking pasar salami 14 dina — nenten wenten pembeli lianan sane prasida muputang tumbasan ring periode punika. Galah puniki kanggen due diligence, ngraosang revisi SPA sareng pengacara, tur nyiagayang transfer jinah salanturnyane.',
+
+    h2Hold: '14 dina eksklusif — napi paikenan ipun',
+    pHold: 'Stand-still puniki mamargi kalih arah: aji kakunci ring reservation form, pangwangun nenten prasida ngunggahang; properti janten nyantosang Ragane. Yening ring 14 dina punika wenten penawaran sane luwihan, pangwangun nenten dados nampi. Jendela puniki cukup antuk pengacara muputang due diligence (biasane 7–10 dina) tur antuk Ragane ngraosang revisi SPA.',
+
+    h2Sign: 'Napi sane sujatinnyane katandatangani Ragane',
+    pSign: 'Reservation form inggih punika dokumen 1–3 kaca: aji properti, ageng deposit, durasi hold (14 dina), syarat pengembalian, miwah rekening bank Ragane antuk pengembalian yening mundur. Puniki BOYA perjanjian adol-tumbas (SPA). SPA inggih punika dokumen sane malianan, katandatangani 1–2 minggu salanturnyane ring ajeng notaris PPAT, sasampun due diligence puput. Reservation form dados madaging klausul „non-refundable tanpa alasan hukum“, nanging praktik sane lumrah inggih punika pengembalian penuh yening mundur sasampun DD.',
+
+    h2Deposit: 'Ring dija deposit kagenahang',
+    pDeposit: 'Holding deposit ring Bali biasane $2.000–10.000 (vila premium ngantos $25.000). Jinah katransfer nganggen silih tunggil saking tigang cara: ka rekening escrow notaris PPAT (pinih aman), ka rekening korporat pangwangun (merluang kapercayan ring pangwangun), utawi ka rekening firma hukum perantara. Sampunang pisan ka rekening pribadi sang adol, rekening pribadi direktur, utawi rekening agen — punika kanal penipuan sane pinih lumrah ring properti Indonesia. Setata cocokang instruksi transfer sareng reservation form punika newek, boya saking chat messenger.',
+
+    h2Refund: 'Sapunapi jinah kawaliang',
+    pRefund: 'Praktik standar: pengembalian penuh yening Ragane mundur ring jendela 14 dina manut temuan DD. Alasan hukum (sita, zonasi nenten cocok, pikobet PBG) setata ngwetuang pengembalian 100%. Mundur „magentos pikayun“ tanpa alasan — wenten pangwangun sane nahan deposit dados denda, wenten sane ngwaliang penuh. Syarat pengembalian setata kasurat ring reservation form — wacen klausul punika sadurung nandatangani. Sasampun 14 dina tanpa SPA sane katandatangani, deposit kaetang ring termin SPA kapertama utawi kawaliang, manut isin form.',
+
+    h2After: 'Napi sane wenten sasampun 14 dina',
+    pAfter: 'Tigang skenario. Pinih becik: ring pamuput jendela pengacara Ragane sampun muputang DD, Ragane nandatangani SPA ring notaris PPAT, tur holding deposit kaetang ring termin SPA kapertama. Tengah: Ragane ngelanturang hold 7–14 dina (DD durung puput), secara tertulis. Pinih kaon: Ragane mundur, deposit kawaliang, properti mawali ka pasar. Meneng sasampun 14 dina tanpa kaputusan formal kaartiang malianan manut form — setata kirim kaputusan tertulis (lanturang utawi mundur).',
+
+    h2Risks: 'Sane patut kauratiang',
+    risks: [
+      'Instruksi transfer antuk deposit patut wenten ring reservation form — sampunang pisan nampi saking chat.',
+      'Wacen klausul pengembalian sadurung nandatangani. „Non-refundable in any case“ inggih punika tanda bahaya — tunas revisi.',
+      'Durasi hold patut kasurat secara jelas (14 dina utawi lianan). Hold tanpa wates galah patut katakenang.',
+      'Reservation form patut katandatangani olih pejabat PT pangwangun sane kasebut ring Akta Pendirian (dokumen pendirian). Tandatangan agen tanpa surat kuasa inggih punika titik lemah.',
+      'Simpen salinan PDF form sane katandatangani, bukti transfer bank, miwah percakapan messenger sareng manajer — sami nulungin yening wenten sengketa.',
+    ],
+
+    h2What2: 'Reservation form vs SPA',
+    table: {
+      headLeft: '',
+      headRsv: 'Reservation form',
+      headSpa: 'SPA / Lease Agreement',
+      rows: [
+        { l: 'Rikala katandatangani',  r: '1–3 dina kapertama',                          s: '1–4 minggu sasampun reservasi' },
+        { l: 'Panjang dokumen',        r: '1–3 kaca',                                    s: '15–40 kaca' },
+        { l: 'Kekuatan hukum',         r: 'Ngunci aji lan hold; nenten ngalihang hak',   s: 'Ngalihang leasehold / HGB; kadaftar ring BPN' },
+        { l: 'Nominal jinah',          r: 'Holding deposit ($2k–25k)',                   s: 'Aji penuh ring termin' },
+        { l: 'Genah tandatangan',      r: 'Online utawi ring pangwangun',                s: 'Wantah ring notaris PPAT, secara langsung' },
+        { l: 'Pengembalian jinah',     r: 'Biasane penuh (wacen syarat)',                s: 'Wantah malarapan pembatalan SPA madaging denda' },
+      ],
+    },
+
+    faqHeading: 'Patakon sane sering katakenang',
+    faq: [
+      { q: 'Tiang sampun mayah deposit — punapi mateges tiang sampun numbas?',
+        a: 'Nenten. Deposit reservasi ngunci aji lan hold 14 dina, nanging nenten ngalihang hak napi ja. Kepemilikan (utawi leasehold) wau mawali sasampun SPA katandatangani ring ajeng notaris PPAT tur kadaftar ring BPN.' },
+      { q: 'Punapi hold prasida kalanturang?',
+        a: 'Inggih, biasane gratis yening wenten alasan sane wajar (upami pengacara durung muputang DD). Katunas secara tertulis ring pangwangun; kadokumentasiang dados perpanjangan reservation form. 7–14 dina tambahan inggih punika hal standar.' },
+      { q: 'Punapi reservasi prasida kaalihang ka pembeli lianan?',
+        a: 'Wenten pangwangun sane ngwehin pengalihan sadurung SPA madasar persetujuan tertulis. Ring pasar sekunder (resale) meh setata nenten — Ragane patut muputang utawi mbatalang.' },
+      { q: 'Sapunapi yening pangwangun magentos pikayun sasampun deposit tiang?',
+        a: 'Reservation form biasane madaging klausul simetris: yening pangwangun mundur tanpa alasan hukum, ipun ngwaliang deposit tur mayah denda (sering pateh sareng deposit). Ring praktik, pangwangun ageng nenten nglaksanayang puniki — kaon pisan antuk reputasi.' },
+      { q: 'Punapi deposit prasida kabayah nganggen kripto?',
+        a: 'Nenten. Sami transaksi legal malarapan notaris PPAT kacatet ring IDR/USD via transfer bank. Transfer kripto nenten ninggalang jejak antuk notaris utawi kantor pajak Indonesia — ngwuktiang Ragane naenin mayah punapa-punapi salanturnyane dados nenten mresidayang.' },
+    ],
+
+    ctaHeading: 'Sampun sayaga reservasi',
+    ctaText: 'Bukak listing sane encen ja tur cotot „Reservasi“ — manajer jagi ngirim reservation form ring galah asiki jam.',
+    ctaVillas: 'Ka vila',
+    ctaApartments: 'Ka apartemen',
+    ctaGuide: 'Panduan lengkap „Sapunapi numbas ring Bali“',
+  },
 } as const
 
 export function ReservationGuide({ lang }: { lang: Lang }) {

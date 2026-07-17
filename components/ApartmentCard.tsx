@@ -42,6 +42,10 @@ const COPY = {
   en: { sqm: 'm²', floor: 'Floor', resale: 'Resale',     secondary: 'Secondary' },
   id: { sqm: 'm²', floor: 'Lantai', resale: 'Jual kembali', secondary: 'Sekunder' },
   fr: { sqm: 'm²', floor: 'Étage', resale: 'Revente',    secondary: 'Ancien' },
+  de: { sqm: 'm²', floor: 'Etage', resale: 'Wiederverkauf', secondary: 'Bestand' },
+  zh: { sqm: 'm²', floor: '楼层', resale: '转售',        secondary: '二手' },
+  nl: { sqm: 'm²', floor: 'Verdieping', resale: 'Doorverkoop', secondary: 'Bestaand' },
+  ban: { sqm: 'm²', floor: 'Lantai', resale: 'Adol malih', secondary: 'Sekunder' },
 } as const
 
 export function ApartmentCard({ a, lang = 'ru' }: { a: ApartmentCardData; lang?: Lang }) {

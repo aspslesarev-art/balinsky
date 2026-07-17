@@ -46,6 +46,42 @@ const COPY = {
     news: 'Actualités du quartier',
     pillar: 'Guide d’investissement',
   },
+  de: {
+    heading: (district: string) => `Mehr in ${district}`,
+    sub: 'Verwandte Bereiche für diese Lage',
+    devs: 'Bauträger in der Umgebung',
+    complexes: 'Wohnanlagen',
+    promo: 'Aktuelle Angebote',
+    news: 'Neuigkeiten aus der Lage',
+    pillar: 'Investitionsleitfaden',
+  },
+  zh: {
+    heading: (district: string) => `更多${district}的内容`,
+    sub: '该区域的相关板块',
+    devs: '该区域的开发商',
+    complexes: '住宅区',
+    promo: '当前优惠',
+    news: '区域资讯',
+    pillar: '投资指南',
+  },
+  nl: {
+    heading: (district: string) => `Meer in ${district}`,
+    sub: 'Gerelateerde secties voor deze wijk',
+    devs: 'Ontwikkelaars in de omgeving',
+    complexes: 'Wooncomplexen',
+    promo: 'Actieve aanbiedingen',
+    news: 'Nieuws uit de wijk',
+    pillar: 'Investeringsgids',
+  },
+  ban: {
+    heading: (district: string) => `Sane lianan ring ${district}`,
+    sub: 'Bagian sane matehan ring wewidangan puniki',
+    devs: 'Pangwangun ring wewidangan',
+    complexes: 'Kompleks hunian',
+    promo: 'Promo sane kantun',
+    news: 'Orti wewidangan',
+    pillar: 'Panduan investasi',
+  },
 }
 
 export function DistrictRelatedLinks({

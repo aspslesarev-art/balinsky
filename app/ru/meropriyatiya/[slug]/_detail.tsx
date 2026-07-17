@@ -46,6 +46,34 @@ const COPY = {
     onMap: 'Sur la carte',
     video: 'Vidéo',
   },
+  de: {
+    home: 'Startseite', eventsCrumb: 'Veranstaltungen',
+    pastBadge: 'vorbei',
+    register: 'Über Telegram anmelden',
+    onMap: 'Auf der Karte',
+    video: 'Video',
+  },
+  zh: {
+    home: '首页', eventsCrumb: '活动',
+    pastBadge: '已结束',
+    register: '通过 Telegram 报名',
+    onMap: '在地图上',
+    video: '视频',
+  },
+  nl: {
+    home: 'Home', eventsCrumb: 'Evenementen',
+    pastBadge: 'voorbij',
+    register: 'Aanmelden via Telegram',
+    onMap: 'Op de kaart',
+    video: 'Video',
+  },
+  ban: {
+    home: 'Beranda', eventsCrumb: 'Acara',
+    pastBadge: 'sampun puput',
+    register: 'Ndaftar liwat Telegram',
+    onMap: 'Ring peta',
+    video: 'Video',
+  },
 } as const
 
 function isPast(iso: string | null): boolean {

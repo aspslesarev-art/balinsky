@@ -230,6 +230,222 @@ const COPY = {
     catSchool: 'Écoles', catPreschool: 'Crèches & maternelles', catSupermarket: 'Supermarchés',
     catPharmacy: 'Pharmacies', catHospital: 'Cliniques',
   },
+  de: {
+    sectionH2: 'Investitionspotenzial',
+    sectionSub: 'Mietszenarien geschätzt durch Abgleich mit Booking-Wettbewerbern und Analyse der Region',
+    confHigh: 'hohe Sicherheit',
+    confMedium: 'mittlere Sicherheit',
+    confLow: 'geringe Sicherheit',
+    object: ['Angebot', 'Angebote'] as [string, string],
+    villa: ['Villa', 'Villen'] as [string, string],
+    similarVilla: ['ähnliche Villa', 'ähnliche Villen'] as [string, string],
+    restaurant: ['Restaurant', 'Restaurants'] as [string, string],
+    perNight: ' / Nacht',
+    perYear: '/Jahr',
+    perYearNoi: ' / Jahr NOI',
+    expandedZone: (raw: string, applied: string) =>
+      `Erweiterte Stichprobe: keine Treffer in der ursprünglichen Zone (${raw}), gewechselt zu ${applied}.`,
+    threeNumbers: 'Was diese drei Zahlen bedeuten',
+    threeNumbersBody: (count: number, similar: string, zoneLower: string) =>
+      <>Wir schätzen, was diese Villa mit Kurzzeitvermietung verdienen könnte. Die Basis stammt aus {count > 0 ? <><span className="font-medium text-[var(--color-text)]">{count}</span> {similar}</> : 'ähnlichen Villen'} in derselben Zone ({zoneLower}; auf der Karte oben — blaue Punkte innerhalb des roten Kreises).</>,
+    threeNumbersScenarios:
+      <>
+        {' '}<strong className="text-[#B91C1C]">Schlecht</strong> — pessimistischer Fall, die Villa steht halb leer.{' '}
+        <strong className="text-[var(--color-primary-pressed)]">Normal</strong> — was am häufigsten vorkommt.{' '}
+        <strong className="text-[#15803D]">Gut</strong> — Obergrenze, mit einer starken Hausverwaltung und hoher Bewertung.
+        {' '}Unter den Szenarien stehen die tatsächlichen Wettbewerberkarten — öffnen Sie sie, um Fläche / Bewertung / Preis mit dieser Villa zu vergleichen.
+      </>,
+    scenarioBad: 'Schlecht', scenarioMedian: 'Normal', scenarioGood: 'Gut',
+    resetTitle: 'Auf wettbewerbsbasierte Standardwerte zurücksetzen', reset: 'zurücksetzen',
+    inputPrice: 'Preis', inputAdr: 'ADR', inputOccupancy: 'Auslastung', inputMgmt: 'Verwaltungsgebühr',
+    calcTitle: 'Rendite-Rechner',
+    calcSub: 'Bewegen Sie die Regler. ADR und Auslastung entsprechen standardmäßig dem Median ähnlicher Booking-Angebote in der Nähe; der Preis ist um ±25% anpassbar.',
+    payback: 'Amortisation', capRate: 'Cap Rate',
+    howCalced: 'Wie es berechnet wurde',
+    revenue: 'Umsatz', platform: 'Plattform', mgmt: 'Verwaltung', opex: 'OPEX', tax: 'Steuer', noi: 'NOI',
+    referencesTitle: 'Kleine Stichprobe — Referenzangebote werden gezeigt',
+    referencesBody: (n: number, plural: string) =>
+      `Nur ${n} ${plural} entsprachen dem Profil der Villa im Umkreis von 2 km. Wir aggregieren nicht — hier stattdessen konkrete Beispiele.`,
+    restrictedTitle: 'Wohnland — Tagesvermietung nicht erlaubt',
+    restrictedBody: 'Dieses Objekt liegt auf gelbem (Wohn-)Land. Nach indonesischer Zonierung ist Kurzzeit-/Touristenvermietung hier nicht legal, daher berechnen wir keine Tagesvermietungsrendite dafür. Das Land eignet sich zur Eigennutzung oder Langzeitvermietung.',
+    sqm: 'm²',
+    similarOnBooking: (n: number) => `Ähnliche Angebote auf Booking · ${n}`,
+    collapse: 'Einklappen',
+    showAll: (n: number) => `Alle ${n} anzeigen`,
+    newDistrictH3: 'Aufstrebende Region',
+    newDistrictBody:
+      'Die Region ist in einer frühen Wachstumsphase: weniger als 30 Booking-Angebote im Umkreis von 1 km. Nach der Entwicklung vergleichbarer Märkte (Berawa 2018→2022, Canggu 2014→2018) kann der ADR über 4–5 Jahre um 30–80% steigen. Dies ist eine historische Analogie, keine Prognose.',
+    newDistrictFootnote: (n: number, plural: string) =>
+      `Insgesamt im Umkreis von 1 km: ${n} ${plural}`,
+    nearbyTitle: 'Rund um die Villa',
+    catBeach: 'Strände', catBeachclub: 'Beach Clubs', catRestaurant: 'Restaurants',
+    catCafe: 'Cafés', catWellness: 'Yoga & Fitness', catNightlife: 'Bars & Clubs',
+    catAttraction: 'Sehenswürdigkeiten', catIntlSchool: 'Internationale Schulen',
+    catSchool: 'Schulen', catPreschool: 'Kitas & Vorschulen', catSupermarket: 'Supermärkte',
+    catPharmacy: 'Apotheken', catHospital: 'Kliniken',
+  },
+  zh: {
+    sectionH2: '投资潜力',
+    sectionSub: '通过与Booking竞品匹配并分析区域来估算租赁情景',
+    confHigh: '高置信度',
+    confMedium: '中等置信度',
+    confLow: '低置信度',
+    object: ['套房源', '套房源'] as [string, string],
+    villa: ['别墅', '别墅'] as [string, string],
+    similarVilla: ['类似别墅', '类似别墅'] as [string, string],
+    restaurant: ['餐厅', '餐厅'] as [string, string],
+    perNight: ' / 晚',
+    perYear: '/年',
+    perYearNoi: ' / 年 NOI',
+    expandedZone: (raw: string, applied: string) =>
+      `扩大样本：原始区域（${raw}）没有匹配，已切换到 ${applied}。`,
+    threeNumbers: '这三个数字的含义',
+    threeNumbersBody: (count: number, similar: string, zoneLower: string) =>
+      <>我们估算这套别墅通过短租可能赚多少。基准来自同一区域内的 {count > 0 ? <><span className="font-medium text-[var(--color-text)]">{count}</span> {similar}</> : '类似别墅'}（{zoneLower}；上方地图中——红圈内的蓝点）。</>,
+    threeNumbersScenarios:
+      <>
+        {' '}<strong className="text-[#B91C1C]">差</strong> — 悲观情形，别墅半空置。{' '}
+        <strong className="text-[var(--color-primary-pressed)]">正常</strong> — 最常出现的情况。{' '}
+        <strong className="text-[#15803D]">好</strong> — 上限，配备强物业管理公司并保持高评分。
+        {' '}情景下方是实际竞品卡片——可打开对比面积/评分/价格与这套别墅。
+      </>,
+    scenarioBad: '差', scenarioMedian: '正常', scenarioGood: '好',
+    resetTitle: '重置为基于竞品的默认值', reset: '重置',
+    inputPrice: '价格', inputAdr: 'ADR', inputOccupancy: '入住率', inputMgmt: '管理费',
+    calcTitle: '收益计算器',
+    calcSub: '拖动滑块。ADR和入住率默认取附近类似Booking房源的中位数；价格可调整±25%。',
+    payback: '回本周期', capRate: '资本化率',
+    howCalced: '如何计算',
+    revenue: '收入', platform: '平台', mgmt: '管理', opex: 'OPEX', tax: '税费', noi: 'NOI',
+    referencesTitle: '样本较小——展示参考房源',
+    referencesBody: (n: number, plural: string) =>
+      `在2公里半径内只有 ${n} ${plural} 符合别墅的特征。我们不做汇总——而是给出具体示例。`,
+    restrictedTitle: '住宅用地——不允许日租',
+    restrictedBody: '该房产位于黄色（住宅）用地。按印尼分区规定，此处短租/旅游出租不合法，因此我们不为其计算日租收益。该地块适合自住或长期出租。',
+    sqm: 'm²',
+    similarOnBooking: (n: number) => `Booking上的类似房源 · ${n}`,
+    collapse: '收起',
+    showAll: (n: number) => `显示全部 ${n}`,
+    newDistrictH3: '新兴区域',
+    newDistrictBody:
+      '该区域处于早期成长阶段：1公里半径内Booking房源不足30处。参照可比市场的轨迹（Berawa 2018→2022，Canggu 2014→2018），ADR在4–5年内可能上涨30–80%。这是历史类比，并非预测。',
+    newDistrictFootnote: (n: number, plural: string) =>
+      `1公里半径内共计：${n} ${plural}`,
+    nearbyTitle: '别墅周边',
+    catBeach: '海滩', catBeachclub: '海滩俱乐部', catRestaurant: '餐厅',
+    catCafe: '咖啡馆', catWellness: '瑜伽与健身', catNightlife: '酒吧与夜店',
+    catAttraction: '景点', catIntlSchool: '国际学校',
+    catSchool: '学校', catPreschool: '托儿所与幼儿园', catSupermarket: '超市',
+    catPharmacy: '药店', catHospital: '诊所',
+  },
+  nl: {
+    sectionH2: 'Investeringspotentieel',
+    sectionSub: 'Huurscenario\'s geschat door vergelijking met Booking-concurrenten en analyse van de regio',
+    confHigh: 'hoge zekerheid',
+    confMedium: 'gemiddelde zekerheid',
+    confLow: 'lage zekerheid',
+    object: ['advertentie', 'advertenties'] as [string, string],
+    villa: ['villa', "villa's"] as [string, string],
+    similarVilla: ['vergelijkbare villa', "vergelijkbare villa's"] as [string, string],
+    restaurant: ['restaurant', 'restaurants'] as [string, string],
+    perNight: ' / nacht',
+    perYear: '/jr',
+    perYearNoi: ' / jaar NOI',
+    expandedZone: (raw: string, applied: string) =>
+      `Uitgebreide steekproef: geen matches in de oorspronkelijke zone (${raw}), overgeschakeld naar ${applied}.`,
+    threeNumbers: 'Wat deze drie cijfers betekenen',
+    threeNumbersBody: (count: number, similar: string, zoneLower: string) =>
+      <>We schatten wat deze villa zou kunnen opbrengen met kortverhuur. De basis komt van {count > 0 ? <><span className="font-medium text-[var(--color-text)]">{count}</span> {similar}</> : "vergelijkbare villa's"} in dezelfde zone ({zoneLower}; op de kaart hierboven — blauwe stippen binnen de rode cirkel).</>,
+    threeNumbersScenarios:
+      <>
+        {' '}<strong className="text-[#B91C1C]">Slecht</strong> — pessimistisch geval, de villa staat half leeg.{' '}
+        <strong className="text-[var(--color-primary-pressed)]">Normaal</strong> — wat het vaakst voorkomt.{' '}
+        <strong className="text-[#15803D]">Goed</strong> — bovengrens, met een sterke beheermaatschappij en een hoge beoordeling.
+        {' '}Onder de scenario\'s staan de echte concurrentkaarten — open ze om oppervlakte / beoordeling / prijs met deze villa te vergelijken.
+      </>,
+    scenarioBad: 'Slecht', scenarioMedian: 'Normaal', scenarioGood: 'Goed',
+    resetTitle: 'Terugzetten naar op concurrenten gebaseerde standaardwaarden', reset: 'reset',
+    inputPrice: 'Prijs', inputAdr: 'ADR', inputOccupancy: 'Bezetting', inputMgmt: 'Beheerkosten',
+    calcTitle: 'Rendementscalculator',
+    calcSub: 'Sleep de schuifregelaars. ADR en bezetting nemen standaard de mediaan van vergelijkbare Booking-advertenties in de buurt; de prijs is met ±25% aanpasbaar.',
+    payback: 'Terugverdientijd', capRate: 'Cap rate',
+    howCalced: 'Hoe het is berekend',
+    revenue: 'Omzet', platform: 'Platform', mgmt: 'Beheer', opex: 'OPEX', tax: 'Belasting', noi: 'NOI',
+    referencesTitle: 'Kleine steekproef — referentieadvertenties getoond',
+    referencesBody: (n: number, plural: string) =>
+      `Slechts ${n} ${plural} kwamen overeen met het profiel van de villa binnen een straal van 2 km. We aggregeren niet — hier in plaats daarvan concrete voorbeelden.`,
+    restrictedTitle: 'Woongrond — dagverhuur niet toegestaan',
+    restrictedBody: 'Dit object staat op gele (woon-)grond. Volgens de Indonesische bestemming is kortverhuur / toeristische verhuur hier niet legaal, dus berekenen we er geen dagverhuurrendement voor. De grond is geschikt voor eigen gebruik of langetermijnverhuur.',
+    sqm: 'm²',
+    similarOnBooking: (n: number) => `Vergelijkbare advertenties op Booking · ${n}`,
+    collapse: 'Inklappen',
+    showAll: (n: number) => `Toon alle ${n}`,
+    newDistrictH3: 'Opkomende regio',
+    newDistrictBody:
+      'De regio zit in een vroege groeifase: minder dan 30 Booking-advertenties binnen een straal van 1 km. Volgens het traject van vergelijkbare markten (Berawa 2018→2022, Canggu 2014→2018) kan de ADR over 4–5 jaar met 30–80% stijgen. Dit is een historische analogie, geen voorspelling.',
+    newDistrictFootnote: (n: number, plural: string) =>
+      `In totaal binnen een straal van 1 km: ${n} ${plural}`,
+    nearbyTitle: 'Rond de villa',
+    catBeach: 'Stranden', catBeachclub: 'Beach clubs', catRestaurant: 'Restaurants',
+    catCafe: 'Cafés', catWellness: 'Yoga & fitness', catNightlife: 'Bars & clubs',
+    catAttraction: 'Attracties', catIntlSchool: 'Internationale scholen',
+    catSchool: 'Scholen', catPreschool: 'Crèches & kleuterscholen', catSupermarket: 'Supermarkten',
+    catPharmacy: 'Apotheken', catHospital: 'Klinieken',
+  },
+  ban: {
+    sectionH2: 'Potensi investasi',
+    sectionSub: 'Skenario sewa kaperkiraang antuk nyocokang saingan Booking lan nganalisa wewidangan',
+    confHigh: 'keyakinan tegeh',
+    confMedium: 'keyakinan tengah',
+    confLow: 'keyakinan endep',
+    object: ['listing', 'listing'] as [string, string],
+    villa: ['vila', 'vila'] as [string, string],
+    similarVilla: ['vila sane pateh', 'vila sane pateh'] as [string, string],
+    restaurant: ['restoran', 'restoran'] as [string, string],
+    perNight: ' / wengi',
+    perYear: '/thn',
+    perYearNoi: ' / warsa NOI',
+    expandedZone: (raw: string, applied: string) =>
+      `Sampel kaperluas: nenten wenten kecocokan ring zona kapertama (${raw}), magentos ka ${applied}.`,
+    threeNumbers: 'Arti tetiga angka puniki',
+    threeNumbersBody: (count: number, similar: string, zoneLower: string) =>
+      <>Tiang ngaperkiraang potensi pikolih vila puniki saking sewa jangka cutet. Dasarne kaambil saking {count > 0 ? <><span className="font-medium text-[var(--color-text)]">{count}</span> {similar}</> : 'vila sane pateh'} ring zona sane pateh ({zoneLower}; ring peta baduur — titik pelung ring tengah bunderan barak).</>,
+    threeNumbersScenarios:
+      <>
+        {' '}<strong className="text-[#B91C1C]">Kaon</strong> — skenario pesimis, vila setengah kosong.{' '}
+        <strong className="text-[var(--color-primary-pressed)]">Normal</strong> — sane pinih sering mamargi.{' '}
+        <strong className="text-[#15803D]">Becik</strong> — wates baduur, sareng perusahaan pangelola sane kuat lan rating tegeh.
+        {' '}Ring sor skenario wenten kartu saingan sujati — ampakang anggen ngbandingang luas / rating / aji sareng vila puniki.
+      </>,
+    scenarioBad: 'Kaon', scenarioMedian: 'Normal', scenarioGood: 'Becik',
+    resetTitle: 'Setel malih ka nilai default madasar saingan', reset: 'setel malih',
+    inputPrice: 'Aji', inputAdr: 'ADR', inputOccupancy: 'Okupansi', inputMgmt: 'Prabéya pangelola',
+    calcTitle: 'Kalkulator hasil',
+    calcSub: 'Sred slider. ADR lan okupansi default nganggen median listing Booking pateh ring sisi; aji dados kasesuaiang ±25%.',
+    payback: 'Balik modal', capRate: 'Cap rate',
+    howCalced: 'Sapunapi itunganne',
+    revenue: 'Pikolih', platform: 'Platform', mgmt: 'Pangelola', opex: 'OPEX', tax: 'Pajak', noi: 'NOI',
+    referencesTitle: 'Sampel cenik — nyinahang listing referensi',
+    referencesBody: (n: number, plural: string) =>
+      `Wantah ${n} ${plural} sane cocok sareng profil vila ring radius 2 km. Tiang nenten ngagregasi — puniki conto konkret.`,
+    restrictedTitle: 'Tanah hunian — sewa harian nenten kadadosang',
+    restrictedBody: 'Properti puniki wenten ring tanah kuning (hunian). Manut zonasi Indonesia, sewa jangka cutet / turis nenten legal iriki, dados tiang nenten ngitung hasil sewa harian antuk ipun. Tanah puniki cocok anggen hunian pribadi utawi sewa jangka panjang.',
+    sqm: 'm²',
+    similarOnBooking: (n: number) => `Listing sane pateh ring Booking · ${n}`,
+    collapse: 'Nutup',
+    showAll: (n: number) => `Nyinahang sami ${n}`,
+    newDistrictH3: 'Wewidangan sedeng nglimbak',
+    newDistrictBody:
+      'Wewidangan puniki ring fase tumbuh awal: kirang saking 30 listing Booking ring radius 1 km. Nuutin tren pasar sane pateh (Berawa 2018→2022, Canggu 2014→2018), ADR dados menek 30–80% ring 4–5 warsa. Puniki analogi historis, boya prakiraan.',
+    newDistrictFootnote: (n: number, plural: string) =>
+      `Total ring radius 1 km: ${n} ${plural}`,
+    nearbyTitle: 'Ring kiwa tengen vila',
+    catBeach: 'Pasih', catBeachclub: 'Beach club', catRestaurant: 'Restoran',
+    catCafe: 'Kafe', catWellness: 'Yoga & kebugaran', catNightlife: 'Bar & klub',
+    catAttraction: 'Objek wisata', catIntlSchool: 'Sekolah internasional',
+    catSchool: 'Sekolah', catPreschool: 'PAUD & TK', catSupermarket: 'Supermarket',
+    catPharmacy: 'Apotek', catHospital: 'Klinik',
+  },
 } as const
 
 function pluralize(lang: Lang, n: number, ruForms: [string, string, string], enForms: [string, string]): string {

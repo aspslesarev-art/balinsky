@@ -12,6 +12,10 @@ const COPY = {
   en: { open: 'Open gallery',    photoN: (n: number) => `Photo ${n}`, more: (n: number) => `+${n} photos`, count: (n: number) => `${n} photos`, close: 'Close', prev: 'Previous', next: 'Next', mainPhoto: 'main photo', photoLabel: 'photo', thumb: 'thumb' },
   id: { open: 'Buka galeri',      photoN: (n: number) => `Foto ${n}`,  more: (n: number) => `+${n} foto`,   count: (n: number) => `${n} foto`,   close: 'Tutup', prev: 'Sebelumnya', next: 'Berikutnya', mainPhoto: 'foto utama', photoLabel: 'foto', thumb: 'gambar kecil' },
   fr: { open: 'Ouvrir la galerie', photoN: (n: number) => `Photo ${n}`, more: (n: number) => `+${n} photos`, count: (n: number) => `${n} photos`, close: 'Fermer', prev: 'Précédent', next: 'Suivant', mainPhoto: 'photo principale', photoLabel: 'photo', thumb: 'miniature' },
+  de: { open: 'Galerie öffnen', photoN: (n: number) => `Foto ${n}`, more: (n: number) => `+${n} Fotos`, count: (n: number) => `${n} Fotos`, close: 'Schließen', prev: 'Zurück', next: 'Weiter', mainPhoto: 'Hauptfoto', photoLabel: 'Foto', thumb: 'Miniatur' },
+  zh: { open: '打开图库', photoN: (n: number) => `照片 ${n}`, more: (n: number) => `+${n} 张照片`, count: (n: number) => `${n} 张照片`, close: '关闭', prev: '上一张', next: '下一张', mainPhoto: '主图', photoLabel: '照片', thumb: '缩略图' },
+  nl: { open: 'Galerij openen', photoN: (n: number) => `Foto ${n}`, more: (n: number) => `+${n} foto's`, count: (n: number) => `${n} foto's`, close: 'Sluiten', prev: 'Vorige', next: 'Volgende', mainPhoto: 'hoofdfoto', photoLabel: 'foto', thumb: 'miniatuur' },
+  ban: { open: 'Ngwacén galeri', photoN: (n: number) => `Foto ${n}`, more: (n: number) => `+${n} foto`, count: (n: number) => `${n} foto`, close: 'Nutup', prev: 'Sadurungné', next: 'Salanturné', mainPhoto: 'foto utama', photoLabel: 'foto', thumb: 'gambar alit' },
 } as const
 
 export function PhotoGalleryHero({

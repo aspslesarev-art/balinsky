@@ -44,6 +44,42 @@ const COPY = {
     placeholder: 'Écrivez ou parlez…',
     note: 'Par la voix ou le texte, en toute anonymité. Vous ne laissez vos coordonnées que si vous souhaitez être contacté.',
   },
+  de: {
+    subtitle: 'KI-Makler · anonym',
+    greeting: 'Ich bin Balina — Ihr KI-Makler. Beschreiben Sie, was Sie suchen, und ich stelle in einer Minute eine Auswahl zusammen.',
+    voice: 'Sprachnachricht',
+    reply: 'Ich habe 5 Villen in Canggu zur Vermietung gefunden, 9–11 % Rendite. Mit Unterlagen und Kalkulation anzeigen?',
+    chips: ['Villen anzeigen', 'Welche Unterlagen?'],
+    placeholder: 'Schreiben oder sprechen…',
+    note: 'Per Sprache oder Text, anonym. Kontaktdaten hinterlassen Sie nur, wenn Sie erreicht werden möchten.',
+  },
+  zh: {
+    subtitle: 'AI 经纪人 · 匿名',
+    greeting: '我是 Balina——您的 AI 经纪人。描述您想要的，我一分钟内为您筛选。',
+    voice: '语音消息',
+    reply: '在 Canggu 找到 5 套可出租别墅，收益率 9–11%。要连同文件和测算一起展示吗？',
+    chips: ['查看别墅', '需要哪些文件？'],
+    placeholder: '输入或说话…',
+    note: '通过语音或文字，匿名进行。只有在您希望被联系时才留下联系方式。',
+  },
+  nl: {
+    subtitle: 'AI-makelaar · anoniem',
+    greeting: 'Ik ben Balina — uw AI-makelaar. Beschrijf wat u zoekt en ik stel binnen een minuut een selectie samen.',
+    voice: 'Spraakbericht',
+    reply: '5 villa\'s in Canggu voor verhuur gevonden, rendement 9–11%. Tonen met documenten en berekening?',
+    chips: ["Villa's tonen", 'Welke documenten?'],
+    placeholder: 'Typ of spreek…',
+    note: 'Via spraak of tekst, anoniem. U laat alleen contactgegevens achter als u benaderd wilt worden.',
+  },
+  ban: {
+    subtitle: 'Broker AI · anonim',
+    greeting: 'Tiang Balina — broker AI. Jlentrehang napi sane karereh, tiang jagi nyiapang pilihan sajeroning awai.',
+    voice: 'Pesan suara',
+    reply: 'Manggihin 5 vila ring Canggu buat kasewaang, hasil 9–11%. Edengang sareng dokumen miwah itungan?',
+    chips: ['Edengang vila', 'Dokumen napi?'],
+    placeholder: 'Tulis utawi baosang…',
+    note: 'Lewat suara utawi teks, anonim. Kontak kakutang wantah yening meled kahubungin.',
+  },
 } as const
 
 // Fixed bar heights for the voice waveform (no Math.random — stable render).

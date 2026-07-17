@@ -12,6 +12,10 @@ const COPY = {
   en: { search: 'Search…', noOptions: 'No options', clear: 'Clear',     apply: 'Apply' },
   id: { search: 'Cari…',   noOptions: 'Tidak ada pilihan', clear: 'Hapus', apply: 'Terapkan' },
   fr: { search: 'Rechercher…', noOptions: 'Aucune option', clear: 'Effacer', apply: 'Appliquer' },
+  de: { search: 'Suchen…', noOptions: 'Keine Optionen', clear: 'Zurücksetzen', apply: 'Anwenden' },
+  zh: { search: '搜索…', noOptions: '无选项', clear: '清除', apply: '应用' },
+  nl: { search: 'Zoeken…', noOptions: 'Geen opties', clear: 'Wissen', apply: 'Toepassen' },
+  ban: { search: 'Ngrereh…', noOptions: 'Tan wenten pilihan', clear: 'Kosongang', apply: 'Terapang' },
 } as const
 
 type StringArrayKey = {

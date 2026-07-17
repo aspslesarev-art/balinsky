@@ -13,6 +13,10 @@ const COPY = {
   en: { from: 'from', to: 'to', clear: 'Clear', apply: 'Apply', quick: 'Quick presets' },
   id: { from: 'dari', to: 'sampai', clear: 'Hapus', apply: 'Terapkan', quick: 'Pilihan cepat' },
   fr: { from: 'de', to: 'à', clear: 'Effacer', apply: 'Appliquer', quick: 'Préréglages rapides' },
+  de: { from: 'von', to: 'bis', clear: 'Zurücksetzen', apply: 'Anwenden', quick: 'Schnellauswahl' },
+  zh: { from: '从', to: '到', clear: '清除', apply: '应用', quick: '快速选择' },
+  nl: { from: 'van', to: 'tot', clear: 'Wissen', apply: 'Toepassen', quick: 'Snelkeuze' },
+  ban: { from: 'saking', to: 'kantos', clear: 'Kosongin', apply: 'Terapang', quick: 'Pilihan gelis' },
 } as const
 
 const SYMBOLS: Record<string, string> = { USD: '$', EUR: '€', RUB: '₽', UAH: '₴', IDR: 'Rp' }

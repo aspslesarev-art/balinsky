@@ -43,6 +43,42 @@ const COPY = {
     permit:    'Permis',
     resetAll:  'Tout effacer',
   },
+  de: {
+    district:  'Lage',
+    types:     'Typ',
+    status:    'Bauphase',
+    year:      'Fertigstellungsjahr',
+    developer: 'Bauträger',
+    permit:    'Genehmigung',
+    resetAll:  'Alle zurücksetzen',
+  },
+  zh: {
+    district:  '地区',
+    types:     '类型',
+    status:    '施工阶段',
+    year:      '交付年份',
+    developer: '开发商',
+    permit:    '许可',
+    resetAll:  '清除全部',
+  },
+  nl: {
+    district:  'Regio',
+    types:     'Type',
+    status:    'Bouwfase',
+    year:      'Opleveringsjaar',
+    developer: 'Ontwikkelaar',
+    permit:    'Vergunning',
+    resetAll:  'Alles wissen',
+  },
+  ban: {
+    district:  'Genah',
+    types:     'Tipe',
+    status:    'Tahap pembangunan',
+    year:      'Warsa serah terima',
+    developer: 'Pangwangun',
+    permit:    'Ijin',
+    resetAll:  'Kosongang makasami',
+  },
 } as const
 
 function ResetAll({ activeCount, current, view, lang }: {

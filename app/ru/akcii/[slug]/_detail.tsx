@@ -36,6 +36,26 @@ const COPY = {
     until: 'Jusqu’au', moreFrom: (n: string) => `Plus de promotions de ${n}`,
     learnMore: 'En savoir plus', locale: 'fr-FR',
   },
+  de: {
+    home: 'Startseite', promoCrumb: 'Aktionen',
+    until: 'Bis', moreFrom: (n: string) => `Weitere Aktionen von ${n}`,
+    learnMore: 'Mehr erfahren', locale: 'de-DE',
+  },
+  zh: {
+    home: '首页', promoCrumb: '促销',
+    until: '截止', moreFrom: (n: string) => `${n} 的更多促销`,
+    learnMore: '了解更多', locale: 'zh-CN',
+  },
+  nl: {
+    home: 'Home', promoCrumb: 'Acties',
+    until: 'Tot', moreFrom: (n: string) => `Meer acties van ${n}`,
+    learnMore: 'Meer weten', locale: 'nl-NL',
+  },
+  ban: {
+    home: 'Beranda', promoCrumb: 'Promosi',
+    until: 'Nganti', moreFrom: (n: string) => `Promosi lianan uli ${n}`,
+    learnMore: 'Selengkapnya', locale: 'id-ID',
+  },
 } as const
 
 function fmtDate(iso: string | null, locale: string): string | null {
