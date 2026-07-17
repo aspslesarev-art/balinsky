@@ -107,8 +107,10 @@ function txt(data: Record<string, unknown>, key: string, lang: Lang): string | n
   if (lang === 'ru') return asText(data[key])
   const en = asText(data[`${key} EN`])
   if (en) return en
-  const ru = asText(data[key])
-  return ru ? `${key} EN` : null
+  // Last resort: the raw RU value (de-Cyrillicized downstream by
+  // cleanDeveloperBullets). Previously returned the field-name string
+  // (`${key} EN`), which leaked untranslated Cyrillic onto non-RU pages.
+  return asText(data[key])
 }
 
 export async function DevelopersCatalog({

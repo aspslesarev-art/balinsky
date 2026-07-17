@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import Fuse from 'fuse.js'
 import type { Option } from '@/components/filters/MultiSelectFilter'
-import { translit, hasCyrillic } from '@/lib/translit'
+import { translit, hasCyrillic, translitPreserveCase } from '@/lib/translit'
 import { loadVillaStyles } from '@/lib/villa-styles'
 import { loadFeatureFlagsMap, FEATURE_FLAGS, FEATURE_LABELS } from '@/lib/listing-features'
 import { normalizeSlug } from '@/lib/slug-normalize'
@@ -433,11 +433,22 @@ export function buildOptions(
   }
   function tr(dim: 'district' | 'status' | 'permit' | 'developer' | 'style' | 'bedrooms', value: string, _ruCol: string): string {
     if (!enMap) return value
-    if (dim === 'developer' || dim === 'bedrooms') return value
+    if (dim === 'developer' || dim === 'bedrooms') return value // brand names / numbers
+    const filterDim = DIM_TO_FILTER[dim]
+    // EN prefers the curated Airtable `<col> EN` value; all other languages
+    // must use the native 8-lang taxonomy from facetLabel — the Airtable EN
+    // column is English, so returning it on /zh, /de, … would leak English.
+    if (lang === 'en') {
+      const en = enMap[dim].get(value)
+      if (en) return en
+      return filterDim ? facetLabel(filterDim, value, lang) : value
+    }
+    if (filterDim) return facetLabel(filterDim, value, lang)
+    // district — proper-noun place name: prefer the Airtable EN spelling,
+    // else de-Cyrillic so a Russian district never renders on a non-RU page.
     const en = enMap[dim].get(value)
     if (en) return en
-    const filterDim = DIM_TO_FILTER[dim]
-    return filterDim ? facetLabel(filterDim, value, lang) : value
+    return hasCyrillic(value) ? translitPreserveCase(value) : value
   }
 
   function countsExcludingDim(
@@ -555,6 +566,11 @@ export function toCard(
        firstString(d['ИИ Имя']) ??
        firstString(d['Name']))
   if (!titleRaw) return null
+  // Last-resort de-Cyrillic: some rows have no `<field> EN` translation, so
+  // the non-RU branch still falls back to the RU-composed SEO:Title
+  // («Вилла … в … — 165 м², 2 спальни»). Transliterate leftover Cyrillic so
+  // no card on /en, /zh, /de, … ever renders a Russian title.
+  const title = lang !== 'ru' && hasCyrillic(titleRaw) ? translitPreserveCase(titleRaw) : titleRaw
   // Optional investor-relevant fields piped into the wishlist snapshot
   // at heart-tap. Read directly off the raw row — the catalog already
   // has them in scope, no extra fetch.
@@ -570,7 +586,7 @@ export function toCard(
   return {
     id: e.id,
     slug,
-    title: titleRaw,
+    title,
     priceUsd: e.priceUsd,
     bedrooms: e.bedrooms ? Number(e.bedrooms) : null,
     area: e.area,
@@ -869,6 +885,68 @@ export function buildHeadingEn(f: VillaFilterState): string {
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
 export function buildTitleEn(f: VillaFilterState): string { return buildHeadingEn(f) + ' | Balinsky' }
+
+// Native-language H1 for id/fr/de/zh/nl/ban. Qualifiers hang off a
+// "·"-separated tail so we sidestep per-language adjective agreement while
+// keeping every word in the page's language (no English on /zh, /de, …).
+type HeadingTerms = {
+  noun: string
+  inBali: string
+  inDistrict: (d: string) => string
+  building: string; built: string; planned: string
+  bedroomWord: string
+  by: string; styleWord: string; permitWord: string; completionWord: string
+  upTo: string; from: string
+}
+const VILLA_HEADING_TERMS: Record<Exclude<Lang, 'ru' | 'en'>, HeadingTerms> = {
+  id: { noun: 'Vila dan rumah', inBali: 'di Bali', inDistrict: d => `di ${d}`,
+    building: 'sedang dibangun', built: 'selesai', planned: 'direncanakan',
+    bedroomWord: 'kamar tidur', by: 'oleh', styleWord: 'gaya', permitWord: 'izin',
+    completionWord: 'serah terima', upTo: 'hingga', from: 'mulai' },
+  fr: { noun: 'Villas et maisons', inBali: 'à Bali', inDistrict: d => `à ${d}`,
+    building: 'en construction', built: 'achevées', planned: 'planifiées',
+    bedroomWord: 'chambres', by: 'par', styleWord: 'style', permitWord: 'permis',
+    completionWord: 'livraison', upTo: "jusqu'à", from: 'à partir de' },
+  de: { noun: 'Villen und Häuser', inBali: 'auf Bali', inDistrict: d => `in ${d}`,
+    building: 'im Bau', built: 'fertiggestellt', planned: 'geplant',
+    bedroomWord: 'Schlafzimmer', by: 'von', styleWord: 'Stil', permitWord: 'Genehmigung',
+    completionWord: 'Fertigstellung', upTo: 'bis', from: 'ab' },
+  zh: { noun: '别墅和房屋', inBali: '巴厘岛', inDistrict: d => d,
+    building: '在建', built: '已完工', planned: '规划中',
+    bedroomWord: '卧室', by: '开发商', styleWord: '风格', permitWord: '许可证',
+    completionWord: '交付', upTo: '最高', from: '起' },
+  nl: { noun: "Villa's en huizen", inBali: 'op Bali', inDistrict: d => `in ${d}`,
+    building: 'in aanbouw', built: 'opgeleverd', planned: 'gepland',
+    bedroomWord: 'slaapkamers', by: 'door', styleWord: 'stijl', permitWord: 'vergunning',
+    completionWord: 'oplevering', upTo: 'tot', from: 'vanaf' },
+  ban: { noun: 'Vila lan umah', inBali: 'ring Bali', inDistrict: d => `ring ${d}`,
+    building: 'sedeng kawangun', built: 'puput', planned: 'karencanayang',
+    bedroomWord: 'kamar pules', by: 'olih', styleWord: 'gaya', permitWord: 'ijin',
+    completionWord: 'serah terima', upTo: 'nyantos', from: 'ngawit' },
+}
+function fmtUsdEn(n: number): string { return '$' + Math.round(n).toLocaleString('en-US') }
+export function buildHeadingLoc(f: VillaFilterState, lang: Lang): string {
+  if (lang === 'ru') return buildHeading(f)
+  if (lang === 'en') return buildHeadingEn(f)
+  const T = VILLA_HEADING_TERMS[lang]
+  const loc = f.district.length >= 1 ? T.inDistrict(f.district.join(', ')) : T.inBali
+  let s = lang === 'zh' ? `${loc}${T.noun}` : `${T.noun} ${loc}`
+  const clauses: string[] = []
+  if (f.status.length === 1) {
+    const st = f.status[0]
+    clauses.push(st === 'building' ? T.building : st === 'built' ? T.built : T.planned)
+  }
+  if (f.bedrooms.length > 0) clauses.push(`${[...f.bedrooms].sort().join(', ')} ${T.bedroomWord}`)
+  if (f.developer.length === 1) clauses.push(`${T.by} ${f.developer[0]}`)
+  if (f.style.length >= 1) clauses.push(`${T.styleWord} ${f.style.join(', ')}`)
+  if (f.priceMin != null && f.priceMax != null) clauses.push(`${fmtUsdEn(f.priceMin)}–${fmtUsdEn(f.priceMax)}`)
+  else if (f.priceMax != null) clauses.push(`${T.upTo} ${fmtUsdEn(f.priceMax)}`)
+  else if (f.priceMin != null) clauses.push(`${T.from} ${fmtUsdEn(f.priceMin)}`)
+  if (f.permit.length === 1) clauses.push(`${T.permitWord} ${f.permit[0]}`)
+  if (f.year.length === 1) clauses.push(`${T.completionWord} ${f.year[0]}`)
+  if (clauses.length) s += ` · ${clauses.join(' · ')}`
+  return s
+}
 export function buildDescriptionEn(f: VillaFilterState, totalCount?: number): string {
   const noun = f.bedrooms.length === 1 ? `${f.bedrooms[0]}-bedroom villas and houses` : 'villas and houses'
   const where =

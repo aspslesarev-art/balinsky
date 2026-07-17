@@ -3,7 +3,7 @@ import { unstable_cache } from 'next/cache'
 import Fuse from 'fuse.js'
 import type { ComplexCardData } from '@/components/ComplexCard'
 import type { Option } from '@/components/filters/MultiSelectFilter'
-import { translit, hasCyrillic } from '@/lib/translit'
+import { translit, hasCyrillic, translitPreserveCase } from '@/lib/translit'
 import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
 import { getDistrictCommercialMeta } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
@@ -332,12 +332,26 @@ export function buildOptions(
     status: 'status', permit: 'permit', types: 'type',
   }
   function tr(dim: 'district' | 'types' | 'status' | 'permit' | 'developer', value: string, _ruCol: string): string {
-    if (!enMap) return value
-    if (dim === 'developer') return value
+    if (!enMap) return value // ru
+    if (dim === 'developer') return value // brand names — keep as-is
+    const filterDim = DIM_TO_FILTER[dim]
+    if (filterDim) {
+      // Enum-like taxonomy (status / permit / type): route through the
+      // 8-language facet map so de/zh/nl/… get their own label instead of
+      // the Airtable `<col> EN` value (which would leak English on every
+      // non-EN page). Only for EN do we let an editor-authored EN override win.
+      if (lang === 'en') {
+        const en = enMap[dim].get(value)
+        if (en) return en
+      }
+      return facetLabel(filterDim, value, lang)
+    }
+    // district: no taxonomy map. Prefer an Airtable-authored EN value
+    // (English is an acceptable fallback), otherwise de-Cyrillic so no
+    // Russian leaks onto a non-RU page.
     const en = enMap[dim].get(value)
     if (en) return en
-    const filterDim = DIM_TO_FILTER[dim]
-    return filterDim ? facetLabel(filterDim, value, lang) : value
+    return hasCyrillic(value) ? translitPreserveCase(value) : value
   }
 
   function countsExcludingDim(
@@ -761,7 +775,7 @@ export function buildHeadingEn(f: ComplexFilterState): string {
   const noun = adj.length || hasAnyFilter(f) ? 'residential complexes' : 'Residential complexes'
   let s = adj.length ? adj.join(' ') + ' ' + noun : noun
 
-  if (f.types.length === 1) s += ` (${f.types[0].toLowerCase()})`
+  if (f.types.length === 1) s += ` (${facetLabel('type', f.types[0], 'en').toLowerCase()})`
 
   if (f.district.length === 1) s += ` in ${f.district[0]}`
   else if (f.district.length > 1) s += ` in ${f.district.join(', ')}`
@@ -769,13 +783,210 @@ export function buildHeadingEn(f: ComplexFilterState): string {
 
   if (f.developer.length === 1) s += ` by ${f.developer[0]}`
   if (f.year.length === 1) s += `, completion ${f.year[0]}`
-  if (f.permit.length === 1) s += `, permit ${f.permit[0]}`
+  if (f.permit.length === 1) s += `, permit ${facetLabel('permit', f.permit[0], 'en')}`
 
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
 export function buildTitleEn(f: ComplexFilterState): string {
   return buildHeadingEn(f) + ' | Balinsky'
+}
+
+// === localized heading / title / description (de/zh/nl/fr/id/ban) ===
+
+// Per-language H1/title builders. RU and EN keep their dedicated functions
+// byte-for-byte; every other language gets a natively-worded template so a
+// non-RU catalog never shows an English or Russian heading. `type` and
+// `permit` arrive already localized via facetLabel; district / developer /
+// year are proper nouns / numbers and pass through unchanged.
+type HeadingBuilder = (
+  f: ComplexFilterState,
+  parts: { type: string | null; permit: string | null },
+) => string
+
+const HEADING_BUILDERS: Record<Exclude<Lang, 'ru' | 'en'>, HeadingBuilder> = {
+  de: (f, { type, permit }) => {
+    const adj = f.status.length === 1
+      ? ({ building: 'im Bau', built: 'fertiggestellt', planned: 'geplant' }[f.status[0]] ?? '')
+      : ''
+    let s = 'Wohnanlagen'
+    if (adj) s += ` ${adj}`
+    if (type) s += ` (${type})`
+    if (f.district.length === 1) s += ` in ${f.district[0]}`
+    else if (f.district.length > 1) s += ` in ${f.district.join(', ')}`
+    else s += ' auf Bali'
+    if (f.developer.length === 1) s += ` von ${f.developer[0]}`
+    if (f.year.length === 1) s += `, Fertigstellung ${f.year[0]}`
+    if (permit) s += `, Genehmigung ${permit}`
+    return s
+  },
+  fr: (f, { type, permit }) => {
+    const adj = f.status.length === 1
+      ? ({ building: 'en construction', built: 'livrées', planned: 'planifiées' }[f.status[0]] ?? '')
+      : ''
+    let s = 'Résidences'
+    if (adj) s += ` ${adj}`
+    if (type) s += ` (${type.toLowerCase()})`
+    if (f.district.length === 1) s += ` à ${f.district[0]}`
+    else if (f.district.length > 1) s += ` à ${f.district.join(', ')}`
+    else s += ' à Bali'
+    if (f.developer.length === 1) s += ` du promoteur ${f.developer[0]}`
+    if (f.year.length === 1) s += `, livraison ${f.year[0]}`
+    if (permit) s += `, permis ${permit}`
+    return s
+  },
+  nl: (f, { type, permit }) => {
+    const adj = f.status.length === 1
+      ? ({ building: 'in aanbouw', built: 'opgeleverd', planned: 'gepland' }[f.status[0]] ?? '')
+      : ''
+    let s = 'Wooncomplexen'
+    if (adj) s += ` ${adj}`
+    if (type) s += ` (${type.toLowerCase()})`
+    if (f.district.length === 1) s += ` in ${f.district[0]}`
+    else if (f.district.length > 1) s += ` in ${f.district.join(', ')}`
+    else s += ' op Bali'
+    if (f.developer.length === 1) s += ` van ontwikkelaar ${f.developer[0]}`
+    if (f.year.length === 1) s += `, oplevering ${f.year[0]}`
+    if (permit) s += `, vergunning ${permit}`
+    return s
+  },
+  id: (f, { type, permit }) => {
+    const adj = f.status.length === 1
+      ? ({ building: 'dalam pembangunan', built: 'selesai dibangun', planned: 'direncanakan' }[f.status[0]] ?? '')
+      : ''
+    let s = 'Kompleks hunian'
+    if (adj) s += ` ${adj}`
+    if (type) s += ` (${type.toLowerCase()})`
+    if (f.district.length === 1) s += ` di ${f.district[0]}`
+    else if (f.district.length > 1) s += ` di ${f.district.join(', ')}`
+    else s += ' di Bali'
+    if (f.developer.length === 1) s += ` dari pengembang ${f.developer[0]}`
+    if (f.year.length === 1) s += `, serah terima ${f.year[0]}`
+    if (permit) s += `, izin ${permit}`
+    return s
+  },
+  ban: (f, { type, permit }) => {
+    const adj = f.status.length === 1
+      ? ({ building: 'sane kantun kawangun', built: 'sane sampun puput', planned: 'sane karencanayang' }[f.status[0]] ?? '')
+      : ''
+    let s = 'Kompleks hunian'
+    if (adj) s += ` ${adj}`
+    if (type) s += ` (${type.toLowerCase()})`
+    if (f.district.length === 1) s += ` ring ${f.district[0]}`
+    else if (f.district.length > 1) s += ` ring ${f.district.join(', ')}`
+    else s += ' ring Bali'
+    if (f.developer.length === 1) s += ` saking pangwangun ${f.developer[0]}`
+    if (f.year.length === 1) s += `, serah terima ${f.year[0]}`
+    if (permit) s += `, izin ${permit}`
+    return s
+  },
+  zh: (f, { type, permit }) => {
+    const adj = f.status.length === 1
+      ? ({ building: '在建', built: '现房', planned: '规划中' }[f.status[0]] ?? '')
+      : ''
+    const loc = f.district.length === 1
+      ? f.district[0]
+      : f.district.length > 1 ? f.district.join('、') : '巴厘岛'
+    let s = `${loc}${adj}住宅区`
+    if (type) s += `（${type}）`
+    if (f.developer.length === 1) s += `，开发商${f.developer[0]}`
+    if (f.year.length === 1) s += `，${f.year[0]}年交付`
+    if (permit) s += `，${permit}`
+    return s
+  },
+}
+
+/**
+ * Localized H1/heading for any language. RU and EN delegate to their
+ * dedicated builders (unchanged); other languages use a native template.
+ */
+export function buildHeadingLocalized(f: ComplexFilterState, lang: Lang): string {
+  if (lang === 'ru') return buildHeading(f)
+  if (lang === 'en') return buildHeadingEn(f)
+  const builder = HEADING_BUILDERS[lang]
+  if (!builder) return buildHeadingEn(f)
+  const type = f.types.length === 1 ? facetLabel('type', f.types[0], lang) : null
+  const permit = f.permit.length === 1 ? facetLabel('permit', f.permit[0], lang) : null
+  const s = builder(f, { type, permit })
+  // Latin-script languages capitalize the leading character; CJK is left as-is.
+  return lang === 'zh' ? s : s.charAt(0).toUpperCase() + s.slice(1)
+}
+
+export function buildTitleLocalized(f: ComplexFilterState, lang: Lang): string {
+  if (lang === 'en') return buildTitleEn(f)
+  return buildHeadingLocalized(f, lang) + ' | Balinsky'
+}
+
+// Per-language meta-description parts. Mirrors buildDescriptionEn's shape
+// ("<count> <noun> <where>[, type][, completion]. <tail>") so combinatorial
+// pages get a unique, native-language description instead of an English one.
+type DescParts = {
+  noun: string
+  where: (d: string) => string
+  inBali: string
+  type: (t: string) => string
+  year: (y: string) => string
+  tail: string
+  join: (count: string, where: string) => string
+}
+const DESC_PARTS: Record<Exclude<Lang, 'ru' | 'en'>, DescParts> = {
+  de: {
+    noun: 'Wohnanlagen', where: d => `in ${d}`, inBali: 'auf Bali',
+    type: t => `, Typ: ${t}`, year: y => `, Fertigstellung ${y}`,
+    tail: 'Fotos, Bauträgerpreise, Fertigstellungstermine, Genehmigungen und Kontakte.',
+    join: (c, w) => `${c} ${w}`,
+  },
+  fr: {
+    noun: 'résidences', where: d => `à ${d}`, inBali: 'à Bali',
+    type: t => `, type : ${t}`, year: y => `, livraison ${y}`,
+    tail: 'Photos, prix promoteur, dates de livraison, permis et contacts.',
+    join: (c, w) => `${c} ${w}`,
+  },
+  nl: {
+    noun: 'wooncomplexen', where: d => `in ${d}`, inBali: 'op Bali',
+    type: t => `, type: ${t}`, year: y => `, oplevering ${y}`,
+    tail: 'Foto\'s, ontwikkelaarsprijzen, opleverdata, vergunningen en contacten.',
+    join: (c, w) => `${c} ${w}`,
+  },
+  id: {
+    noun: 'kompleks hunian', where: d => `di ${d}`, inBali: 'di Bali',
+    type: t => `, tipe: ${t}`, year: y => `, serah terima ${y}`,
+    tail: 'Foto, harga pengembang, jadwal serah terima, izin, dan kontak.',
+    join: (c, w) => `${c} ${w}`,
+  },
+  ban: {
+    noun: 'kompleks hunian', where: d => `ring ${d}`, inBali: 'ring Bali',
+    type: t => `, tipe: ${t}`, year: y => `, serah terima ${y}`,
+    tail: 'Foto, aji pangwangun, galah serah terima, izin, miwah kontak.',
+    join: (c, w) => `${c} ${w}`,
+  },
+  zh: {
+    noun: '住宅区', where: d => `${d}`, inBali: '巴厘岛',
+    type: t => `,类型：${t}`, year: y => `,${y}年交付`,
+    tail: '照片、开发商价格、交付时间、许可与联系方式。',
+    join: (c, w) => `${w}${c}`,
+  },
+}
+
+export function buildDescriptionLocalized(
+  f: ComplexFilterState,
+  lang: Lang,
+  totalCount?: number,
+): string {
+  if (lang === 'ru') return buildDescription(f, totalCount)
+  if (lang === 'en') return buildDescriptionEn(f, totalCount)
+  const p = DESC_PARTS[lang]
+  if (!p) return buildDescriptionEn(f, totalCount)
+  const where =
+    f.district.length === 1 ? p.where(f.district[0])
+    : f.district.length > 1 ? p.where(f.district.join(', '))
+    : p.inBali
+  const hasCount = typeof totalCount === 'number' && totalCount > 0
+  const countPart = hasCount ? `${totalCount} ${p.noun}` : (p.noun.charAt(0).toUpperCase() + p.noun.slice(1))
+  let s = p.join(countPart, where)
+  if (f.types.length === 1) s += p.type(facetLabel('type', f.types[0], lang))
+  if (f.year.length === 1) s += p.year(f.year[0])
+  return lang === 'zh' ? `${s}。${p.tail}` : `${s}. ${p.tail}`
 }
 
 export function buildDescriptionEn(f: ComplexFilterState, totalCount?: number): string {
@@ -794,6 +1005,7 @@ export function buildDescriptionEn(f: ComplexFilterState, totalCount?: number): 
 export function buildMetadataEn(
   f: ComplexFilterState,
   opts: { canonicalPath: string; noIndex: boolean; totalCount?: number },
+  lang: Lang = 'en',
 ) {
   const isSectionRoot = opts.canonicalPath === '/en/complexes'
   const singleDistrict = !isSectionRoot
@@ -807,14 +1019,17 @@ export function buildMetadataEn(
   const districtSlug = singleDistrict
     ? (DISTRICT_TO_SLUG[f.district[0]] ?? f.district[0].toLowerCase())
     : null
-  const districtMeta = districtSlug
+  // getDistrictCommercialMeta only localizes ru/en; for other languages it
+  // would emit an English commercial title. Skip it there and let the native
+  // buildTitleLocalized/buildDescriptionLocalized templates handle the page.
+  const districtMeta = districtSlug && lang === 'en'
     ? getDistrictCommercialMeta(districtSlug, 'en', 'complex', opts.totalCount)
     : null
   const title = districtMeta?.title
     ?? (isSectionRoot && opts.totalCount
       ? `Bali Residential Complexes — ${opts.totalCount} new developments by trusted builders | Balinsky`
-      : buildTitleEn(f))
-  const description = districtMeta?.description ?? buildDescriptionEn(f, opts.totalCount)
+      : buildTitleLocalized(f, lang))
+  const description = districtMeta?.description ?? buildDescriptionLocalized(f, lang, opts.totalCount)
   return {
     title,
     description,

@@ -622,7 +622,7 @@ function CheckboxList({
 function RentalCard({ r, currency, lang, perMonth }: {
   r: RentalItem; currency: Currency; lang: Lang; perMonth: string; bali: string
 }) {
-  const price = formatPrice(r.priceMonthUsd, currency)
+  const price = formatPrice(r.priceMonthUsd, currency, lang)
   const detailHref = switchLangPath(`/ru/arenda/o/${r.slug}`, lang)
   return (
     <Link

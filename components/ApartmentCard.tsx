@@ -52,7 +52,7 @@ export function ApartmentCard({ a, lang = 'ru' }: { a: ApartmentCardData; lang?:
   const { currency } = useCurrency()
   const c = pickCopy(COPY, lang)
   const price = a.priceUsd != null && Number.isFinite(a.priceUsd)
-    ? formatPriceExact(a.priceUsd, currency)
+    ? formatPriceExact(a.priceUsd, currency, lang)
     : null
   const dealLabel = a.dealType === 'resale' ? c.resale
     : a.dealType === 'secondary' ? c.secondary

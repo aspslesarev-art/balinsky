@@ -57,7 +57,7 @@ export function VillaCard({ a, lang = 'ru' }: { a: VillaCardData; lang?: Lang })
   const { currency } = useCurrency()
   const copy = pickCopy(COPY, lang)
   const price = a.priceUsd != null && Number.isFinite(a.priceUsd)
-    ? formatPriceExact(a.priceUsd, currency)
+    ? formatPriceExact(a.priceUsd, currency, lang)
     : null
   const dealLabel = a.dealType === 'resale' ? copy.resale
     : a.dealType === 'secondary' ? copy.secondary

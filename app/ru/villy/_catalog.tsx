@@ -13,7 +13,7 @@ import { getDistrictCopy, getDistrictCommercialMeta } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { SubscribeCTA } from '@/components/SubscribeCTA'
 import { buildListHref, buildMapHref } from '@/lib/villa-filter-href'
-import { loadCatalogPage, buildHeading, buildHeadingEn, type VillaFilterState } from './_lib'
+import { loadCatalogPage, buildHeadingLoc, type VillaFilterState } from './_lib'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
 const COPY = {
@@ -124,7 +124,7 @@ export async function VillasCatalog({
   // виллу в Нуса Дуа, Бали — 47 вилл 2026»). Other combos keep the
   // descriptive buildHeading so each combo page has a unique H1.
   const heading = (lang === 'ru' ? districtMeta?.heading : undefined)
-    ?? (lang === 'ru' ? buildHeading(filters) : buildHeadingEn(filters))
+    ?? buildHeadingLoc(filters, lang)
   const sectionRoot = switchLangPath('/ru/villy', lang)
 
   return (

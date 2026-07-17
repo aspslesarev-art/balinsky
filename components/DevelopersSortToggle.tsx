@@ -13,7 +13,7 @@ export type DevelopersSortKey =
   | 'international'
 
 type Option = { key: DevelopersSortKey; label: string; hint: string }
-const OPTIONS_BY_LANG: Record<'ru' | 'en', Option[]> = {
+const OPTIONS_BY_LANG: Record<Lang, Option[]> = {
   ru: [
     { key: 'balanced',         label: 'Сбалансированный',     hint: 'Сданные + в работе + редакторская оценка' },
     { key: 'ready',            label: 'Сданные ЖК',           hint: 'Кто реально построил больше всего' },
@@ -31,6 +31,60 @@ const OPTIONS_BY_LANG: Record<'ru' | 'en', Option[]> = {
     { key: 'units-inprogress', label: 'Units under build',  hint: 'By total number of units currently under construction' },
     { key: 'experience',       label: 'Experience',         hint: 'By depth of editorial data on reputation and team' },
     { key: 'international',    label: '🌍 International',   hint: 'Developers with projects outside Bali' },
+  ],
+  id: [
+    { key: 'balanced',         label: 'Seimbang',              hint: 'Selesai + aktif + skor editorial' },
+    { key: 'ready',            label: 'Proyek selesai',        hint: 'Yang paling banyak membangun' },
+    { key: 'inprogress',       label: 'Proyek aktif',          hint: 'Yang punya proyek berjalan terbanyak' },
+    { key: 'units-ready',      label: 'Unit diserahkan',       hint: 'Berdasarkan total unit yang telah diserahkan' },
+    { key: 'units-inprogress', label: 'Unit dalam pembangunan', hint: 'Berdasarkan total unit yang sedang dibangun' },
+    { key: 'experience',       label: 'Pengalaman',            hint: 'Berdasarkan kedalaman data editorial tentang reputasi dan tim' },
+    { key: 'international',    label: '🌍 Internasional',      hint: 'Pengembang dengan proyek di luar Bali' },
+  ],
+  fr: [
+    { key: 'balanced',         label: 'Équilibré',              hint: 'Livrés + actifs + score éditorial' },
+    { key: 'ready',            label: 'Projets livrés',         hint: 'Qui a réellement le plus construit' },
+    { key: 'inprogress',       label: 'Projets actifs',         hint: 'Qui a le plus de chantiers en cours' },
+    { key: 'units-ready',      label: 'Unités livrées',         hint: "Par nombre total d'unités livrées" },
+    { key: 'units-inprogress', label: 'Unités en construction', hint: "Par nombre total d'unités en construction" },
+    { key: 'experience',       label: 'Expérience',             hint: "Selon la profondeur des données éditoriales sur la réputation et l'équipe" },
+    { key: 'international',    label: '🌍 International',        hint: 'Promoteurs avec des projets hors de Bali' },
+  ],
+  de: [
+    { key: 'balanced',         label: 'Ausgewogen',              hint: 'Fertiggestellt + aktiv + redaktionelle Bewertung' },
+    { key: 'ready',            label: 'Fertige Projekte',        hint: 'Wer tatsächlich am meisten gebaut hat' },
+    { key: 'inprogress',       label: 'Aktive Projekte',         hint: 'Wer die meisten laufenden Bauten hat' },
+    { key: 'units-ready',      label: 'Übergebene Einheiten',    hint: 'Nach Gesamtzahl der übergebenen Einheiten' },
+    { key: 'units-inprogress', label: 'Einheiten im Bau',        hint: 'Nach Gesamtzahl der aktuell im Bau befindlichen Einheiten' },
+    { key: 'experience',       label: 'Erfahrung',               hint: 'Nach Tiefe der redaktionellen Daten zu Reputation und Team' },
+    { key: 'international',    label: '🌍 International',         hint: 'Bauträger mit Projekten außerhalb Balis' },
+  ],
+  zh: [
+    { key: 'balanced',         label: '综合',        hint: '已交付 + 在建 + 编辑评分' },
+    { key: 'ready',            label: '已完成项目',  hint: '实际建成最多的开发商' },
+    { key: 'inprogress',       label: '在建项目',    hint: '当前在建项目最多的开发商' },
+    { key: 'units-ready',      label: '已交付单元',  hint: '按已交付单元总数排序' },
+    { key: 'units-inprogress', label: '在建单元',    hint: '按当前在建单元总数排序' },
+    { key: 'experience',       label: '经验',        hint: '按声誉与团队的编辑数据深度排序' },
+    { key: 'international',    label: '🌍 国际经验', hint: '在巴厘岛以外有项目的开发商' },
+  ],
+  nl: [
+    { key: 'balanced',         label: 'Gebalanceerd',           hint: 'Opgeleverd + actief + redactionele score' },
+    { key: 'ready',            label: 'Opgeleverde projecten',  hint: 'Wie feitelijk het meest heeft gebouwd' },
+    { key: 'inprogress',       label: 'Actieve projecten',      hint: 'Wie de meeste lopende bouwprojecten heeft' },
+    { key: 'units-ready',      label: 'Opgeleverde eenheden',   hint: 'Op totaal aantal opgeleverde eenheden' },
+    { key: 'units-inprogress', label: 'Eenheden in aanbouw',    hint: 'Op totaal aantal eenheden momenteel in aanbouw' },
+    { key: 'experience',       label: 'Ervaring',               hint: 'Op diepte van redactionele data over reputatie en team' },
+    { key: 'international',    label: '🌍 Internationaal',      hint: 'Ontwikkelaars met projecten buiten Bali' },
+  ],
+  ban: [
+    { key: 'balanced',         label: 'Seimbang',               hint: 'Puput + aktif + skor editorial' },
+    { key: 'ready',            label: 'Proyek puput',           hint: 'Sane pinih akeh ngwangun' },
+    { key: 'inprogress',       label: 'Proyek aktif',           hint: 'Sane pinih akeh proyek mamargi' },
+    { key: 'units-ready',      label: 'Unit kaserahang',        hint: 'Manut akeh unit sane sampun kaserahang' },
+    { key: 'units-inprogress', label: 'Unit kantun kawangun',   hint: 'Manut akeh unit sane kantun kawangun' },
+    { key: 'experience',       label: 'Pengalaman',             hint: 'Manut kedalaman data editorial indik reputasi lan tim' },
+    { key: 'international',    label: '🌍 Internasional',       hint: 'Pangwangun sane madue proyek ring jaba Bali' },
   ],
 }
 

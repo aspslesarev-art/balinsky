@@ -196,9 +196,9 @@ export function PriceCtaCard({
   const pathname = usePathname() ?? ''
   const lang: Lang = detectLang(pathname)
   const c = pickCopy(COPY, lang)
-  const main = formatPriceExact(priceUsd, currency)
+  const main = formatPriceExact(priceUsd, currency, lang)
   const perSqm = pricePerSqmUsd != null && Number.isFinite(pricePerSqmUsd) && pricePerSqmUsd > 0
-    ? formatPriceExact(pricePerSqmUsd, currency)
+    ? formatPriceExact(pricePerSqmUsd, currency, lang)
     : null
   const updated = updatedAt ? formatUpdated(updatedAt, c.locale) : null
 

@@ -12,7 +12,7 @@ import { DistrictRelatedLinks } from '@/components/DistrictRelatedLinks'
 import { getDistrictCopy, getDistrictCommercialMeta } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { buildListHref, buildMapHref } from '@/lib/complex-filter-href'
-import { loadCatalogPage, buildHeading, buildHeadingEn, type ComplexFilterState } from './_lib'
+import { loadCatalogPage, buildHeading, buildHeadingLocalized, type ComplexFilterState } from './_lib'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
 const COPY = {
@@ -116,7 +116,7 @@ export async function ComplexesCatalog({
   const districtCopy = districtSlug ? getDistrictCopy(districtSlug, lang) : null
   const districtMeta = districtSlug ? getDistrictCommercialMeta(districtSlug, lang, 'complex', totalCount) : null
   const heading = (lang === 'ru' ? districtMeta?.heading : undefined)
-    ?? (lang === 'ru' ? buildHeading(filters) : buildHeadingEn(filters))
+    ?? (lang === 'ru' ? buildHeading(filters) : buildHeadingLocalized(filters, lang))
   const sectionRoot = switchLangPath('/ru/zhilye-kompleksy', lang)
 
   return (

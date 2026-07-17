@@ -24,6 +24,8 @@ import { loadVideosByDeveloperWithComplexes } from '@/lib/videos'
 import { VideoGrid } from '@/components/VideoGrid'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { tField, pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
+import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
+import { cleanDeveloperBullets } from '@/lib/developer-highlights'
 import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import { loadKbPageContent } from '@/lib/kb-page-content'
 import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
@@ -526,18 +528,26 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
     ?? tField(dev.data, 'Описание ИИ', lang)
     ?? firstString(dev.data['AI Описание'])
   const kb = await loadKbPageContent('developer', dev.airtable_id, lang)
-  const aiText = kb?.body ?? aiTextRaw
+  const aiTextResolved = kb?.body ?? aiTextRaw
+  // Free-text body: no Russian may leak on a non-RU page. tField already
+  // translits its RU last-resort, but the `AI Описание` raw fallback and the
+  // kb body are not guaranteed de-Cyrillicized — guard here.
+  const aiText = aiTextResolved && lang !== 'ru' && hasCyrillic(aiTextResolved)
+    ? translitPreserveCase(aiTextResolved)
+    : aiTextResolved
 
+  // Editorial bullets: drop AI meta-commentary junk and de-Cyrillic any RU
+  // last-resort text (cleanDeveloperBullets handles both).
   const dimensions = [
-    { title: c.dim.construction, bullets: parseBullets(tField(dev.data, 'Строительство и недвижимость', lang)), Icon: Building2 },
-    { title: c.dim.reputation,   bullets: parseBullets(tField(dev.data, 'Репутация и опыт',             lang)), Icon: Award },
-    { title: c.dim.equipment,    bullets: parseBullets(tField(dev.data, 'Техника и производство',       lang)), Icon: Wrench },
-    { title: c.dim.management,   bullets: parseBullets(tField(dev.data, 'Управляющая компания',         lang)), Icon: Users },
+    { title: c.dim.construction, bullets: cleanDeveloperBullets(parseBullets(tField(dev.data, 'Строительство и недвижимость', lang)), lang), Icon: Building2 },
+    { title: c.dim.reputation,   bullets: cleanDeveloperBullets(parseBullets(tField(dev.data, 'Репутация и опыт',             lang)), lang), Icon: Award },
+    { title: c.dim.equipment,    bullets: cleanDeveloperBullets(parseBullets(tField(dev.data, 'Техника и производство',       lang)), lang), Icon: Wrench },
+    { title: c.dim.management,   bullets: cleanDeveloperBullets(parseBullets(tField(dev.data, 'Управляющая компания',         lang)), lang), Icon: Users },
   ].filter(d => d.bullets.length > 0)
 
   const extras = [
-    { title: c.extras.team,     bullets: parseBullets(tField(dev.data, 'Команда',           lang)), Icon: Users },
-    { title: c.extras.business, bullets: parseBullets(tField(dev.data, 'Бизнес и сервисы',  lang)), Icon: Briefcase },
+    { title: c.extras.team,     bullets: cleanDeveloperBullets(parseBullets(tField(dev.data, 'Команда',           lang)), lang), Icon: Users },
+    { title: c.extras.business, bullets: cleanDeveloperBullets(parseBullets(tField(dev.data, 'Бизнес и сервисы',  lang)), lang), Icon: Briefcase },
   ].filter(d => d.bullets.length > 0)
 
   const [{ complexes, apartmentCount }, managers] = await Promise.all([

@@ -51,6 +51,7 @@ import { NearbyPlaces } from '@/components/NearbyPlaces'
 import { loadManagersByDeveloperName, loadManagersByDeveloperSlug } from '@/lib/managers'
 import { getDeveloperStats } from '@/lib/developer-stats'
 import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
+import { cleanDeveloperBullets } from '@/lib/developer-highlights'
 import { PriceCtaCard } from '@/components/PriceCtaCard'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { loadAllVideos, matchesLang as videoMatchesLang } from '@/lib/videos'
@@ -698,11 +699,13 @@ const _loadDevelopersIndex = (lang: Lang) => unstable_cache(
       const sourceText = (lang !== 'ru'
         ? (trf['Репутация и опыт'] ?? trf['Строительство и недвижимость'])
         : null) ?? r.reputation ?? r.construction ?? ''
-      const highlights = sourceText
+      const rawHighlights = sourceText
         .split('\n')
         .map(l => l.replace(/^[\s•\-–—·]+/, '').trim())
         .filter(Boolean)
-        .slice(0, 3)
+      // Drop AI meta-commentary junk before slicing so we keep up to 3 real
+      // bullets (cleanDeveloperBullets also de-Cyrillics off RU).
+      const highlights = cleanDeveloperBullets(rawHighlights, lang).slice(0, 3)
       out.push({ slug: r.slug, name: r.name, logoUrl: r.logo_url, highlights })
     }
     return out

@@ -497,7 +497,7 @@ export function ShortlistView({ lang }: { lang: Lang }) {
   const pdfDisabled = items.length > PDF_MAX_ITEMS
 
   const fmt = (v: number | null | undefined) =>
-    v != null && Number.isFinite(v) ? formatPrice(v, currency) : null
+    v != null && Number.isFinite(v) ? formatPrice(v, currency, lang) : null
   const dealTypeLabel = (t: WishlistItem['dealType']): string | null => {
     if (!t) return null
     if (t === 'resale')    return c.dealResale
@@ -1058,7 +1058,7 @@ export function ShortlistView({ lang }: { lang: Lang }) {
                 <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {rentals.map(item => {
                     const price = item.priceUsd != null && Number.isFinite(item.priceUsd)
-                      ? formatPrice(item.priceUsd, currency)
+                      ? formatPrice(item.priceUsd, currency, lang)
                       : null
                     return (
                       <li key={`${item.kind}:${item.slug}`} className="relative">

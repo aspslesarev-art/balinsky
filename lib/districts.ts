@@ -5,6 +5,7 @@
 // words of real content per district, not just a property list.
 
 import { pickCopy, type Lang } from '@/lib/i18n'
+import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
 // Long-tail districts (beyond the ~12 curated below) generated from
 // assistant_kb guides + real stats by scripts/kb-district-pages.mjs.
 import generatedDistricts from './districts-generated.json'
@@ -463,11 +464,27 @@ const DISTRICTS: Record<string, DistrictBundle> = {
 
 const GENERATED_DISTRICTS = generatedDistricts as Record<string, DistrictBundle>
 
+// Free-text district content only ships ru/en bundles; non-RU pages fall
+// back to en (no Cyrillic). This guard de-Cyrillicizes as a last resort so
+// no Russian ever leaks if a bundle's fallback text is Cyrillic. The `name`
+// (a place name) and `slug` are left untouched.
+function deCyrillicCopy(copy: DistrictCopy): DistrictCopy {
+  const fix = (s: string) => (hasCyrillic(s) ? translitPreserveCase(s) : s)
+  return {
+    ...copy,
+    hero: fix(copy.hero),
+    paragraphs: copy.paragraphs.map(fix),
+    bestFor: copy.bestFor.map(fix),
+    highlights: copy.highlights.map(h => ({ label: fix(h.label), value: fix(h.value) })),
+  }
+}
+
 export function getDistrictCopy(slug: string, lang: Lang): DistrictCopy | null {
   // Curated entries win; generated long-tail fills the rest.
   const bundle = DISTRICTS[slug] ?? GENERATED_DISTRICTS[slug]
   if (!bundle) return null
-  return pickCopy(bundle, lang)
+  const copy = pickCopy(bundle, lang)
+  return lang === 'ru' ? copy : deCyrillicCopy(copy)
 }
 
 // Commercial title / heading / description for single-district hub pages.

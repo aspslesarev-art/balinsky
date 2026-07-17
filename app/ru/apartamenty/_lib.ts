@@ -4,7 +4,7 @@ import type { ApartmentCardData } from '@/components/ApartmentCard'
 import type { FilterOptions, FilterState } from '@/components/filters/FiltersBar'
 import { loadFeatureFlagsMap, FEATURE_FLAGS, FEATURE_LABELS } from '@/lib/listing-features'
 import type { Option } from '@/components/filters/MultiSelectFilter'
-import { translit, hasCyrillic } from '@/lib/translit'
+import { translit, hasCyrillic, translitPreserveCase } from '@/lib/translit'
 import { normalizeSlug } from '@/lib/slug-normalize'
 import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
 import { getDistrictCommercialMeta } from '@/lib/districts'
@@ -112,6 +112,21 @@ function isMalformedTitle(s: string | null): boolean {
   return /(?:\s{2}|в\s+-|in\s+-|—\s*-|\bв\s*$)/i.test(s)
 }
 
+// Localized parts for the composed fallback title. RU keeps its declined
+// plural via pluralRu; every other language gets a native noun, district
+// preposition and bedroom word so no card renders «Апартаменты в … спальни»
+// on /en, /zh, /de, …
+const APT_TITLE_TERMS: Record<Exclude<Lang, 'ru'>, {
+  noun: string; inDistrict: (d: string) => string; bedroomWord: string
+}> = {
+  en: { noun: 'Apartment', inDistrict: d => `in ${d}`, bedroomWord: 'BR' },
+  id: { noun: 'Apartemen', inDistrict: d => `di ${d}`, bedroomWord: 'kamar tidur' },
+  fr: { noun: 'Appartement', inDistrict: d => `à ${d}`, bedroomWord: 'chambres' },
+  de: { noun: 'Apartment', inDistrict: d => `in ${d}`, bedroomWord: 'Schlafzimmer' },
+  zh: { noun: '公寓', inDistrict: d => d, bedroomWord: '卧室' },
+  nl: { noun: 'Appartement', inDistrict: d => `in ${d}`, bedroomWord: 'slaapkamers' },
+  ban: { noun: 'Apartemen', inDistrict: d => `ring ${d}`, bedroomWord: 'kamar pules' },
+}
 function fallbackAptTitle(args: {
   district: string | null
   area: number | null
@@ -120,16 +135,22 @@ function fallbackAptTitle(args: {
 }): string {
   const { district, area, bedrooms, lang } = args
   const parts: string[] = []
-  parts.push(lang === 'ru' ? 'Апартаменты' : 'Apartment')
-  if (district) parts.push(lang === 'ru' ? `в ${district}` : `in ${district}`)
   const tail: string[] = []
-  if (area != null) tail.push(lang === 'ru' ? `${area} м²` : `${area} m²`)
-  if (bedrooms) {
-    const n = Number(bedrooms)
-    const word = Number.isFinite(n)
-      ? pluralRu(n, ['спальня', 'спальни', 'спален'])
-      : 'спален'
-    tail.push(lang === 'ru' ? `${bedrooms} ${word}` : `${bedrooms} BR`)
+  if (lang === 'ru') {
+    parts.push('Апартаменты')
+    if (district) parts.push(`в ${district}`)
+    if (area != null) tail.push(`${area} м²`)
+    if (bedrooms) {
+      const n = Number(bedrooms)
+      const word = Number.isFinite(n) ? pluralRu(n, ['спальня', 'спальни', 'спален']) : 'спален'
+      tail.push(`${bedrooms} ${word}`)
+    }
+  } else {
+    const T = APT_TITLE_TERMS[lang]
+    parts.push(T.noun)
+    if (district) parts.push(T.inDistrict(district))
+    if (area != null) tail.push(`${area} m²`)
+    if (bedrooms) tail.push(`${bedrooms} ${T.bedroomWord}`)
   }
   return [parts.join(' '), tail.join(', ')].filter(Boolean).join(' — ')
 }
@@ -369,10 +390,21 @@ export function buildOptions(
   function tr(dim: 'district' | 'status' | 'permit' | 'floor', value: string, _ruCol: string): string {
     if (!enMap) return value
     if (dim === 'floor') return value
+    const filterDim = DIM_TO_FILTER[dim]
+    // EN prefers the curated Airtable `<col> EN` value; every other language
+    // must use the native 8-lang taxonomy — the Airtable EN column is
+    // English, so returning it on /zh, /de, … would leak English.
+    if (lang === 'en') {
+      const en = enMap[dim].get(value)
+      if (en) return en
+      return filterDim ? facetLabel(filterDim, value, lang) : value
+    }
+    if (filterDim) return facetLabel(filterDim, value, lang)
+    // district — proper-noun place name: prefer the Airtable EN spelling,
+    // else de-Cyrillic so a Russian district never renders on a non-RU page.
     const en = enMap[dim].get(value)
     if (en) return en
-    const filterDim = DIM_TO_FILTER[dim]
-    return filterDim ? facetLabel(filterDim, value, lang) : value
+    return hasCyrillic(value) ? translitPreserveCase(value) : value
   }
 
   function countsExcludingDim(
@@ -420,7 +452,11 @@ export function buildOptions(
 
   const districtsRaw = build('district', e => e.district)
   const bedrooms = build('bedrooms', e => e.bedrooms, 'value')
-  const groundLabel = lang === 'ru' ? 'Цокольный' : 'Ground floor'
+  const GROUND_LABELS: Record<Lang, string> = {
+    ru: 'Цокольный', en: 'Ground floor', id: 'Lantai dasar', fr: 'Rez-de-chaussée',
+    de: 'Erdgeschoss', zh: '底层', nl: 'Begane grond', ban: 'Lantai dasar',
+  }
+  const groundLabel = pickCopy(GROUND_LABELS, lang)
   const floor = build('floor', e => e.floor, 'value').map(o => ({
     ...o,
     label: o.value === '0' ? groundLabel : o.label,
@@ -496,6 +532,10 @@ export function toCard(
     title = fallbackAptTitle({ district: e.district, area: titleArea, bedrooms: titleBedrooms, lang })
   }
   if (!title) return null
+  // Last-resort de-Cyrillic: a row with no `<field> EN` still falls back to
+  // the RU-composed SEO:Title, so transliterate leftover Cyrillic to keep
+  // Russian off non-RU cards.
+  if (lang !== 'ru' && hasCyrillic(title)) title = translitPreserveCase(title)
   // Investor-relevant snapshot fields (same as villas — read straight
   // off the row so heart-tap from the catalog carries them into the
   // wishlist without extra fetches).
@@ -781,6 +821,64 @@ export function buildHeadingEn(f: FilterState): string {
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
 export function buildTitleEn(f: FilterState): string { return buildHeadingEn(f) + ' | Balinsky' }
+
+// Native-language H1 for id/fr/de/zh/nl/ban. Qualifiers hang off a
+// "·"-separated tail to avoid per-language adjective agreement while keeping
+// every word in the page's language.
+type AptHeadingTerms = {
+  noun: string
+  inBali: string
+  inDistrict: (d: string) => string
+  building: string; built: string
+  bedroomWord: string
+  by: string; permitWord: string; floorWord: string; groundFloor: string
+  upTo: string; from: string
+}
+const APT_HEADING_TERMS: Record<Exclude<Lang, 'ru' | 'en'>, AptHeadingTerms> = {
+  id: { noun: 'Apartemen', inBali: 'di Bali', inDistrict: d => `di ${d}`,
+    building: 'sedang dibangun', built: 'selesai', bedroomWord: 'kamar tidur',
+    by: 'oleh', permitWord: 'izin', floorWord: 'lantai', groundFloor: 'lantai dasar',
+    upTo: 'hingga', from: 'mulai' },
+  fr: { noun: 'Appartements', inBali: 'à Bali', inDistrict: d => `à ${d}`,
+    building: 'en construction', built: 'achevés', bedroomWord: 'chambres',
+    by: 'par', permitWord: 'permis', floorWord: 'étage', groundFloor: 'rez-de-chaussée',
+    upTo: "jusqu'à", from: 'à partir de' },
+  de: { noun: 'Apartments', inBali: 'auf Bali', inDistrict: d => `in ${d}`,
+    building: 'im Bau', built: 'fertiggestellt', bedroomWord: 'Schlafzimmer',
+    by: 'von', permitWord: 'Genehmigung', floorWord: 'Etage', groundFloor: 'Erdgeschoss',
+    upTo: 'bis', from: 'ab' },
+  zh: { noun: '公寓', inBali: '巴厘岛', inDistrict: d => d,
+    building: '在建', built: '已完工', bedroomWord: '卧室',
+    by: '开发商', permitWord: '许可证', floorWord: '楼层', groundFloor: '底层',
+    upTo: '最高', from: '起' },
+  nl: { noun: 'Appartementen', inBali: 'op Bali', inDistrict: d => `in ${d}`,
+    building: 'in aanbouw', built: 'opgeleverd', bedroomWord: 'slaapkamers',
+    by: 'door', permitWord: 'vergunning', floorWord: 'verdieping', groundFloor: 'begane grond',
+    upTo: 'tot', from: 'vanaf' },
+  ban: { noun: 'Apartemen', inBali: 'ring Bali', inDistrict: d => `ring ${d}`,
+    building: 'sedeng kawangun', built: 'puput', bedroomWord: 'kamar pules',
+    by: 'olih', permitWord: 'ijin', floorWord: 'lantai', groundFloor: 'lantai dasar',
+    upTo: 'nyantos', from: 'ngawit' },
+}
+function fmtUsdEnApt(n: number): string { return '$' + Math.round(n).toLocaleString('en-US') }
+export function buildHeadingLoc(f: FilterState, lang: Lang): string {
+  if (lang === 'ru') return buildHeading(f)
+  if (lang === 'en') return buildHeadingEn(f)
+  const T = APT_HEADING_TERMS[lang]
+  const loc = f.district.length >= 1 ? T.inDistrict(f.district.join(', ')) : T.inBali
+  let s = lang === 'zh' ? `${loc}${T.noun}` : `${T.noun} ${loc}`
+  const clauses: string[] = []
+  if (f.status.length === 1) clauses.push(f.status[0] === 'building' ? T.building : T.built)
+  if (f.bedrooms.length > 0) clauses.push(`${[...f.bedrooms].sort().join(', ')} ${T.bedroomWord}`)
+  if (f.developer.length === 1) clauses.push(`${T.by} ${f.developer[0]}`)
+  if (f.priceMin != null && f.priceMax != null) clauses.push(`${fmtUsdEnApt(f.priceMin)}–${fmtUsdEnApt(f.priceMax)}`)
+  else if (f.priceMax != null) clauses.push(`${T.upTo} ${fmtUsdEnApt(f.priceMax)}`)
+  else if (f.priceMin != null) clauses.push(`${T.from} ${fmtUsdEnApt(f.priceMin)}`)
+  if (f.permit.length === 1) clauses.push(`${T.permitWord} ${f.permit[0]}`)
+  if (f.floor.length === 1) clauses.push(f.floor[0] === '0' ? T.groundFloor : `${f.floor[0]} ${T.floorWord}`)
+  if (clauses.length) s += ` · ${clauses.join(' · ')}`
+  return s
+}
 export function buildDescriptionEn(f: FilterState, totalCount?: number): string {
   const noun = f.bedrooms.length === 1 ? `${f.bedrooms[0]}-bedroom apartments` : 'apartments'
   const where =

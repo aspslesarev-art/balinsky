@@ -13,7 +13,7 @@ import { FiltersBar } from '@/components/filters/FiltersBar'
 import type { FilterState } from '@/components/filters/FiltersBar'
 import { SubscribeCTA } from '@/components/SubscribeCTA'
 import { buildListHref, buildMapHref } from '@/lib/filter-href'
-import { loadCatalogPage, buildHeading, buildHeadingEn } from './_lib'
+import { loadCatalogPage, buildHeadingLoc } from './_lib'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
 const COPY = {
@@ -117,7 +117,7 @@ export async function ApartamentyCatalog({
   const districtCopy = districtSlug ? getDistrictCopy(districtSlug, lang) : null
   const districtMeta = districtSlug ? getDistrictCommercialMeta(districtSlug, lang, 'apartment', totalCount) : null
   const heading = (lang === 'ru' ? districtMeta?.heading : undefined)
-    ?? (lang === 'ru' ? buildHeading(filters) : buildHeadingEn(filters))
+    ?? buildHeadingLoc(filters, lang)
   const sectionRoot = switchLangPath('/ru/apartamenty', lang)
 
   return (

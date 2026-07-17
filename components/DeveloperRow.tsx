@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { ChevronDown } from 'lucide-react'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
+import { cleanDeveloperBullets } from '@/lib/developer-highlights'
 
 const COPY = {
   ru: {
@@ -140,19 +141,22 @@ export type DeveloperRowData = {
   unitsTotal?: number
 }
 
-function parseBullets(s: string | null): string[] | null {
+function parseBullets(s: string | null, lang: Lang): string[] | null {
   if (!s) return null
   const trimmed = s.trim()
   if (!trimmed) return null
   if (/^(не известно|no data)$/i.test(trimmed)) return null
-  return trimmed
+  const lines = trimmed
     .split('\n')
     .map(line => line.replace(/^[\s•\-–—·]+/, '').trim())
     .filter(Boolean)
+  // Drop AI meta-commentary junk and de-Cyrillic any RU last-resort text.
+  const cleaned = cleanDeveloperBullets(lines, lang)
+  return cleaned.length > 0 ? cleaned : null
 }
 
-function BulletMetric({ title, value, unknown }: { title: string; value: string | null; unknown: string }) {
-  const bullets = parseBullets(value)
+function BulletMetric({ title, value, unknown, lang }: { title: string; value: string | null; unknown: string; lang: Lang }) {
+  const bullets = parseBullets(value, lang)
   return (
     <div>
       <div className="text-[15px] font-medium text-[var(--color-text)] mb-2">{title}</div>
@@ -273,10 +277,10 @@ export function DeveloperRow({ d, lang = 'ru' }: { d: DeveloperRowData; lang?: L
         <div className="px-4 sm:px-6 pb-5">
           <div className="pt-5 border-t border-[var(--color-border)]">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
-              <BulletMetric title={copy.construction} value={d.construction} unknown={copy.unknown} />
-              <BulletMetric title={copy.reputation}   value={d.reputation}   unknown={copy.unknown} />
-              <BulletMetric title={copy.equipment}    value={d.equipment}    unknown={copy.unknown} />
-              <BulletMetric title={copy.management}   value={d.management}   unknown={copy.unknown} />
+              <BulletMetric title={copy.construction} value={d.construction} unknown={copy.unknown} lang={lang} />
+              <BulletMetric title={copy.reputation}   value={d.reputation}   unknown={copy.unknown} lang={lang} />
+              <BulletMetric title={copy.equipment}    value={d.equipment}    unknown={copy.unknown} lang={lang} />
+              <BulletMetric title={copy.management}   value={d.management}   unknown={copy.unknown} lang={lang} />
             </div>
           </div>
         </div>

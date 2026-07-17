@@ -20,6 +20,7 @@ import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { distanceKm as haversineKm } from '@/lib/competitor-utils'
 import { getDeveloperStats } from '@/lib/developer-stats'
 import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
+import { isMetaBullet } from '@/lib/developer-highlights'
 import { loadAllVideos, matchesLang as videoMatchesLang } from '@/lib/videos'
 import { VideoGrid } from '@/components/VideoGrid'
 import { PageViewTracker } from '@/components/PageViewTracker'
@@ -580,6 +581,7 @@ const _loadDevelopersIndex = unstable_cache(
         .split('\n')
         .map(l => l.replace(/^[\s•\-–—·]+/, '').trim())
         .filter(Boolean)
+        .filter(l => !isMetaBullet(l)) // drop AI meta-commentary junk
         .slice(0, 3)
       out.push({ slug: r.slug, name: r.name, logoUrl: r.logo_url, highlights })
     }

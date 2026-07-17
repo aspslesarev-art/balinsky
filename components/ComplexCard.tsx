@@ -8,6 +8,7 @@ import { WishlistButton } from './WishlistButton'
 import { formatPrice } from '@/lib/currency'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { facetLabel } from '@/lib/filter-i18n'
+import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
 
 export type ComplexCardData = {
   slug: string
@@ -45,8 +46,8 @@ function fmtRange(
   lang: Lang,
 ): string | null {
   if (from == null && to == null) return null
-  const f = from != null ? formatPrice(from, currency) : null
-  const tt = to != null ? formatPrice(to, currency) : null
+  const f = from != null ? formatPrice(from, currency, lang) : null
+  const tt = to != null ? formatPrice(to, currency, lang) : null
   const c = pickCopy(COPY, lang)
   if (f && tt && from === to) return f
   if (f && tt) return `${c.from} ${f} ${c.to} ${tt}`
@@ -64,6 +65,11 @@ export function ComplexCard({ c, lang = 'ru' }: { c: ComplexCardData; lang?: Lan
   const slides = c.photos.length > 0 ? c.photos : c.coverUrl ? [c.coverUrl] : []
   const villaRange = fmtRange(c.villaPriceFrom, c.villaPriceTo, currency, lang)
   const aptRange   = fmtRange(c.aptPriceFrom,   c.aptPriceTo,   currency, lang)
+  // District is usually a Latin place name, but de-Cyrillic it as a safety net
+  // so a Russian value never leaks onto a non-RU card.
+  const location = c.location && lang !== 'ru' && hasCyrillic(c.location)
+    ? translitPreserveCase(c.location)
+    : c.location
 
   return (
     <Link
@@ -91,8 +97,8 @@ export function ComplexCard({ c, lang = 'ru' }: { c: ComplexCardData; lang?: Lan
 
       <div className="flex flex-1 flex-col p-6">
         <h3 className="text-[24px] font-semibold text-[var(--color-text)] mb-3 truncate">{c.name}</h3>
-        {c.location && (
-          <div className="text-[15px] text-[var(--color-text)] mb-3">{c.location}</div>
+        {location && (
+          <div className="text-[15px] text-[var(--color-text)] mb-3">{location}</div>
         )}
         {(villaRange || aptRange) && (
           <div className="space-y-1 mb-4 text-[14px]">
