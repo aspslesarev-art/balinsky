@@ -4,16 +4,16 @@ import { InvestTourView } from '@/components/InvestTourView'
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
 export const metadata: Metadata = {
-  title: 'Bali property investment tour — on-site viewings and due diligence | Balinsky',
-  description: 'On-the-ground programme for foreign buyers: inspect 5–10 listings, sit with developer founders, an hour with a foreigner-deal lawyer, drive through Canggu / Bukit / Ubud / Sanur. Express, Standard and Premium formats.',
-  keywords: ['Bali property tour', 'Bali real estate investment tour', 'buy villa Bali', 'Bali property foreigner', 'leasehold Bali', 'PT PMA Bali property'],
+  title: 'Tur investasi properti Bali — peninjauan langsung dan uji tuntas | Balinsky',
+  description: 'Program di lapangan untuk pembeli asing: meninjau 5–10 listing, bertemu para pendiri pengembang, satu jam dengan pengacara transaksi orang asing, berkeliling Canggu / Bukit / Ubud / Sanur. Format Express, Standard, dan Premium.',
+  keywords: ['tur properti Bali', 'tur investasi real estat Bali', 'beli vila Bali', 'properti Bali orang asing', 'leasehold Bali', 'PT PMA properti Bali'],
   alternates: {
     canonical: '/id/invest-tour',
-    languages: { ru: `${SITE_URL}/ru/invest-tour`, en: `${SITE_URL}/id/invest-tour` , 'x-default': `${SITE_URL}/ru/invest-tour`},
+    languages: { ru: `${SITE_URL}/ru/invest-tour`, en: `${SITE_URL}/en/invest-tour`, id: `${SITE_URL}/id/invest-tour`, 'x-default': `${SITE_URL}/ru/invest-tour`},
   },
   openGraph: {
-    title: 'Bali property investment tour',
-    description: 'On-site viewings of 5–10 listings, developer meetings, lawyer for foreign buyers, investment districts overview. Concierge service by Balinsky.',
+    title: 'Tur investasi properti Bali',
+    description: 'Peninjauan langsung 5–10 listing, pertemuan dengan pengembang, pengacara untuk pembeli asing, gambaran distrik investasi. Layanan concierge oleh Balinsky.',
     url: `${SITE_URL}/id/invest-tour`,
     type: 'article',
   },

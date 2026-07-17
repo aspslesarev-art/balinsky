@@ -2,16 +2,17 @@ import type { Metadata } from 'next'
 import { LegalLayout } from '@/components/LegalLayout'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
-const UPDATED = 'May 15, 2026'
+const UPDATED = '15 Mei 2026'
 
 export const metadata: Metadata = {
-  title: 'Cookie Policy | Balinsky',
-  description: 'Which cookies Balinsky.info uses: strictly necessary, analytics, marketing — and how to turn them off.',
+  title: 'Kebijakan Cookie | Balinsky',
+  description: 'Cookie mana yang digunakan Balinsky.info: benar-benar diperlukan, analitik, pemasaran — dan cara mematikannya.',
   alternates: {
     canonical: '/id/cookie',
     languages: {
       ru: `${SITE_URL}/ru/cookie`,
-      en: `${SITE_URL}/id/cookie`,
+      en: `${SITE_URL}/en/cookie`,
+      id: `${SITE_URL}/id/cookie`,
       'x-default': `${SITE_URL}/ru/cookie`,
     },
   },
@@ -20,46 +21,46 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <LegalLayout lang="id" title="Cookie Policy" updated={`Last updated: ${UPDATED}`} breadcrumbLabel="Cookie Policy">
+    <LegalLayout lang="id" title="Kebijakan Cookie" updated={`Terakhir diperbarui: ${UPDATED}`} breadcrumbLabel="Kebijakan Cookie">
       <p>
-        Cookies are small text files the site stores in your browser. They keep your preferences sticky and help us understand
-        how the catalogue is used.
+        Cookie adalah berkas teks kecil yang disimpan situs di browser Anda. Cookie menjaga preferensi Anda tetap tersimpan dan membantu kami memahami
+        bagaimana katalog digunakan.
       </p>
 
-      <h2>1. Cookie categories we use</h2>
-      <h3>Strictly necessary (site won&apos;t work without them)</h3>
+      <h2>1. Kategori cookie yang kami gunakan</h2>
+      <h3>Benar-benar diperlukan (situs tidak berfungsi tanpanya)</h3>
       <ul>
-        <li>Session support — remembers your chosen language (RU or EN).</li>
-        <li>Form protection (CSRF tokens).</li>
-        <li>Local storage of your favourites list — not a cookie in the strict sense, but technical.</li>
+        <li>Dukungan sesi — mengingat bahasa yang Anda pilih (RU atau EN).</li>
+        <li>Perlindungan formulir (token CSRF).</li>
+        <li>Penyimpanan lokal daftar favorit Anda — bukan cookie dalam arti sebenarnya, tetapi bersifat teknis.</li>
       </ul>
-      <h3>Analytics (help us improve the site)</h3>
+      <h3>Analitik (membantu kami meningkatkan situs)</h3>
       <ul>
-        <li><strong>Google Analytics 4</strong> via Google Tag Manager (container GTM-TM6D54Z3) — anonymised page-view and event statistics.</li>
-        <li><strong>Yandex.Metrica</strong> (counter 104881153) — behavioural analytics, heatmaps, session replays.</li>
+        <li><strong>Google Analytics 4</strong> melalui Google Tag Manager (kontainer GTM-TM6D54Z3) — statistik tampilan halaman dan peristiwa yang dianonimkan.</li>
+        <li><strong>Yandex.Metrica</strong> (penghitung 104881153) — analitik perilaku, peta panas, pemutaran ulang sesi.</li>
       </ul>
-      <h3>Marketing</h3>
+      <h3>Pemasaran</h3>
       <p>
-        We currently do not set advertising cookies. If we run retargeting on Google or Yandex in the future, the relevant cookies will be added
-        and this page will be updated.
+        Saat ini kami tidak menyetel cookie iklan. Jika di masa depan kami menjalankan penargetan ulang di Google atau Yandex, cookie yang relevan akan ditambahkan
+        dan halaman ini akan diperbarui.
       </p>
 
-      <h2>2. How to disable cookies</h2>
+      <h2>2. Cara menonaktifkan cookie</h2>
       <p>
-        Analytics and marketing cookies can be turned off in your browser settings. Strictly necessary cookies can&apos;t be disabled —
-        the favourites list and language switcher need them.
+        Cookie analitik dan pemasaran dapat dimatikan di pengaturan browser Anda. Cookie yang benar-benar diperlukan tidak dapat dinonaktifkan —
+        daftar favorit dan pengalih bahasa membutuhkannya.
       </p>
       <ul>
-        <li>Chrome — <a href="https://support.google.com/chrome/answer/95647" target="_blank" rel="noopener">Settings → Privacy and security → Cookies</a></li>
-        <li>Safari — <a href="https://support.apple.com/guide/safari/manage-cookies-sfri11471/mac" target="_blank" rel="noopener">Preferences → Privacy</a></li>
-        <li>Firefox — <a href="https://support.mozilla.org/en-US/kb/cookies-information-websites-store-on-your-computer" target="_blank" rel="noopener">Options → Privacy &amp; Security</a></li>
+        <li>Chrome — <a href="https://support.google.com/chrome/answer/95647" target="_blank" rel="noopener">Setelan → Privasi dan keamanan → Cookie</a></li>
+        <li>Safari — <a href="https://support.apple.com/guide/safari/manage-cookies-sfri11471/mac" target="_blank" rel="noopener">Preferensi → Privasi</a></li>
+        <li>Firefox — <a href="https://support.mozilla.org/en-US/kb/cookies-information-websites-store-on-your-computer" target="_blank" rel="noopener">Opsi → Privasi &amp; Keamanan</a></li>
       </ul>
-      <p>You can also install uBlock Origin, Privacy Badger, or enable Do Not Track.</p>
+      <p>Anda juga dapat memasang uBlock Origin, Privacy Badger, atau mengaktifkan Do Not Track.</p>
 
-      <h2>3. Related documents</h2>
+      <h2>3. Dokumen terkait</h2>
       <ul>
-        <li><a href="/id/privasi">Privacy Policy</a></li>
-        <li><a href="/id/ketentuan">Terms of Use</a></li>
+        <li><a href="/id/privasi">Kebijakan Privasi</a></li>
+        <li><a href="/id/ketentuan">Ketentuan Penggunaan</a></li>
       </ul>
 
       {/* TODO: when retargeting is enabled, add a Marketing section listing campaign IDs and cookie identifiers. */}

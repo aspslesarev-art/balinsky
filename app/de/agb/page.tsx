@@ -2,16 +2,17 @@ import type { Metadata } from 'next'
 import { LegalLayout } from '@/components/LegalLayout'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
-const UPDATED = 'May 15, 2026'
+const UPDATED = '15. Mai 2026'
 
 export const metadata: Metadata = {
-  title: 'Terms of Use | Balinsky',
-  description: 'Terms of use for the Balinsky.info catalogue: what we are (and what we are not), content boundaries, responsibilities of buyer and operator.',
+  title: 'Nutzungsbedingungen | Balinsky',
+  description: 'Nutzungsbedingungen für den Katalog Balinsky.info: was wir sind (und was nicht), inhaltliche Grenzen, Verantwortlichkeiten von Käufer und Anbieter.',
   alternates: {
     canonical: '/de/agb',
     languages: {
       ru: `${SITE_URL}/ru/usloviya`,
-      en: `${SITE_URL}/de/agb`,
+      en: `${SITE_URL}/en/terms`,
+      de: `${SITE_URL}/de/agb`,
       'x-default': `${SITE_URL}/ru/usloviya`,
     },
   },
@@ -20,76 +21,76 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <LegalLayout lang="de" title="Terms of Use" updated={`Last updated: ${UPDATED}`} breadcrumbLabel="Terms of Use">
+    <LegalLayout lang="de" title="Nutzungsbedingungen" updated={`Zuletzt aktualisiert: ${UPDATED}`} breadcrumbLabel="Nutzungsbedingungen">
       <p>
-        By using Balinsky.info you agree to the terms below. If something here does not work for you, please do not use the site.
+        Mit der Nutzung von Balinsky.info stimmen Sie den nachstehenden Bedingungen zu. Wenn etwas davon für Sie nicht passt, nutzen Sie die Website bitte nicht.
       </p>
 
-      <h2>1. What Balinsky.info is</h2>
+      <h2>1. Was Balinsky.info ist</h2>
       <p>
-        Balinsky.info is an aggregator catalogue of Bali real-estate listings (villas, apartments, residential complexes,
-        long-term rentals), developer information, news, promotions and educational material. The site is built for foreign buyers.
+        Balinsky.info ist ein Aggregator-Katalog von Immobilienangeboten auf Bali (Villen, Apartments, Wohnkomplexe,
+        Langzeitmieten), Informationen zu Bauträgern, Nachrichten, Aktionen und Bildungsmaterial. Die Website richtet sich an ausländische Käufer.
       </p>
       <p>
-        We are not a party to any sale-and-purchase transaction. We surface information about available units and connect buyers
-        with the operator of each unit (developer, agency or owner). The deal is closed directly between buyer and operator.
-      </p>
-
-      <h2>2. Accuracy</h2>
-      <p>
-        We work to keep the catalogue current, but prices, availability, permits (PBG, SLF) and terms can change.
-        Before closing a deal, verify the data with the operator directly and through Indonesia&apos;s official registers.
-      </p>
-      <p>
-        Each video and photo was captured on a specific date — we are not responsible for changes after that capture.
+        Wir sind nicht Vertragspartei eines Kaufgeschäfts. Wir stellen Informationen über verfügbare Objekte bereit und verbinden Käufer
+        mit dem Anbieter des jeweiligen Objekts (Bauträger, Agentur oder Eigentümer). Der Abschluss erfolgt direkt zwischen Käufer und Anbieter.
       </p>
 
-      <h2>3. User content</h2>
+      <h2>2. Richtigkeit</h2>
       <p>
-        When you contact us through Telegram, our bot, a form, or email, you submit text and contact data and confirm you have the
-        right to share them. How that data is used: see our <a href="/de/datenschutz">Privacy Policy</a>.
+        Wir bemühen uns, den Katalog aktuell zu halten, aber Preise, Verfügbarkeit, Genehmigungen (PBG, SLF) und Konditionen können sich ändern.
+        Prüfen Sie die Daten vor Vertragsabschluss direkt beim Anbieter und über die offiziellen Register Indonesiens.
       </p>
       <p>
-        It is forbidden to use the site for spam, automated scraping, attempts to bypass protections, load attacks, or reverse-engineering of internal APIs.
-      </p>
-
-      <h2>4. Intellectual property</h2>
-      <p>
-        Texts, schemes and editorial materials on the site (unless otherwise marked) are licensed under
-        Creative Commons Attribution 4.0 International — credit the author and link to the original when reusing them.
-      </p>
-      <p>
-        Photos and videos of individual properties may belong to developers or third parties — request a separate licence for commercial reuse.
+        Jedes Video und Foto wurde an einem bestimmten Datum aufgenommen — für Änderungen nach dieser Aufnahme übernehmen wir keine Verantwortung.
       </p>
 
-      <h2>5. Balina AI assistant</h2>
+      <h2>3. Nutzerinhalte</h2>
       <p>
-        Balina is an experimental AI assistant on the site. Its answers are informational and do not replace consultation with a licensed agent,
-        lawyer or notary. Balina can make mistakes — confirm anything that affects a deal with the appropriate specialist before acting on it.
+        Wenn Sie uns über Telegram, unseren Bot, ein Formular oder per E-Mail kontaktieren, übermitteln Sie Text- und Kontaktdaten und bestätigen, dass Sie
+        berechtigt sind, diese weiterzugeben. Wie diese Daten verwendet werden: siehe unsere <a href="/de/datenschutz">Datenschutzerklärung</a>.
+      </p>
+      <p>
+        Es ist untersagt, die Website für Spam, automatisiertes Scraping, Versuche zur Umgehung von Schutzmaßnahmen, Lastangriffe oder Reverse Engineering interner APIs zu nutzen.
       </p>
 
-      <h2>6. External links</h2>
+      <h2>4. Geistiges Eigentum</h2>
       <p>
-        The site links to third-party resources (YouTube, Telegram, estatemarket.io, developer sites). We do not control their content
-        and are not responsible for their availability or policies.
+        Texte, Schemata und redaktionelle Materialien auf der Website (sofern nicht anders gekennzeichnet) stehen unter der Lizenz
+        Creative Commons Attribution 4.0 International — nennen Sie bei einer Weiterverwendung den Autor und verlinken Sie auf das Original.
+      </p>
+      <p>
+        Fotos und Videos einzelner Objekte können Bauträgern oder Dritten gehören — fordern Sie für eine kommerzielle Weiterverwendung eine gesonderte Lizenz an.
       </p>
 
-      <h2>7. Liability</h2>
+      <h2>5. KI-Assistent Balina</h2>
       <p>
-        The site is provided &ldquo;as is&rdquo;. We do not guarantee uninterrupted availability, absence of technical issues, or that the listings
-        fit your specific investment goals. Decisions are at the buyer&apos;s risk.
+        Balina ist ein experimenteller KI-Assistent auf der Website. Ihre Antworten dienen der Information und ersetzen keine Beratung durch einen zugelassenen Makler,
+        Anwalt oder Notar. Balina kann Fehler machen — lassen Sie alles, was einen Abschluss betrifft, vor dem Handeln durch den entsprechenden Fachmann bestätigen.
       </p>
 
-      <h2>8. Changes</h2>
+      <h2>6. Externe Links</h2>
       <p>
-        These terms can change. The current version always lives on this page. Significant updates are announced in the
-        <a href="https://t.me/itrealtor" target="_blank" rel="noopener"> @itrealtor Telegram channel</a>.
+        Die Website verlinkt auf Ressourcen Dritter (YouTube, Telegram, estatemarket.io, Websites von Bauträgern). Wir kontrollieren deren Inhalte nicht
+        und sind nicht für deren Verfügbarkeit oder Richtlinien verantwortlich.
       </p>
 
-      <h2>9. Governing law and jurisdiction</h2>
+      <h2>7. Haftung</h2>
       <p>
-        Disputes are governed by the laws of Georgia (the operator&apos;s country of registration), unless mandatory rules of your country of residence
-        provide otherwise.
+        Die Website wird &ldquo;wie besehen&rdquo; bereitgestellt. Wir garantieren keine ununterbrochene Verfügbarkeit, keine Freiheit von technischen Problemen und nicht, dass die Angebote
+        Ihren konkreten Investitionszielen entsprechen. Entscheidungen erfolgen auf eigenes Risiko des Käufers.
+      </p>
+
+      <h2>8. Änderungen</h2>
+      <p>
+        Diese Bedingungen können sich ändern. Die aktuelle Fassung befindet sich stets auf dieser Seite. Wesentliche Aktualisierungen werden im
+        <a href="https://t.me/itrealtor" target="_blank" rel="noopener"> Telegram-Kanal @itrealtor</a> angekündigt.
+      </p>
+
+      <h2>9. Anwendbares Recht und Gerichtsstand</h2>
+      <p>
+        Streitigkeiten unterliegen dem Recht Georgiens (dem Land der Registrierung des Betreibers), sofern nicht zwingende Vorschriften Ihres Wohnsitzlandes
+        etwas anderes bestimmen.
       </p>
 
       {/* TODO: confirm jurisdiction / arbitration wording with counsel. Default is Georgia (sole-proprietor country). */}

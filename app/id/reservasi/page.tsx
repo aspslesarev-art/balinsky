@@ -4,15 +4,15 @@ import { ReservationGuide } from '@/components/ReservationGuide'
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
 export const metadata: Metadata = {
-  title: 'How a Bali property reservation works | Balinsky',
-  description: 'What "reserve" means on Bali: 14-day hold, $2–10k holding deposit, where the deposit sits, how refunds work, reservation form vs SPA.',
+  title: 'Cara kerja reservasi properti Bali | Balinsky',
+  description: 'Apa arti "reservasi" di Bali: penahanan 14 hari, deposit penahanan $2–10k, di mana deposit disimpan, cara pengembalian dana, formulir reservasi vs SPA.',
   alternates: {
     canonical: '/id/reservasi',
-    languages: { ru: `${SITE_URL}/ru/rezervirovanie`, en: `${SITE_URL}/id/reservasi` , 'x-default': `${SITE_URL}/ru/rezervirovanie`},
+    languages: { ru: `${SITE_URL}/ru/rezervirovanie`, en: `${SITE_URL}/en/reservation`, id: `${SITE_URL}/id/reservasi`, 'x-default': `${SITE_URL}/ru/rezervirovanie`},
   },
   openGraph: {
-    title: 'How a Bali property reservation works',
-    description: '14-day exclusive hold, $2–10k deposit, clear refunds — how reservations work on Balinsky.',
+    title: 'Cara kerja reservasi properti Bali',
+    description: 'Penahanan eksklusif 14 hari, deposit $2–10k, pengembalian dana yang jelas — cara kerja reservasi di Balinsky.',
     url: `${SITE_URL}/id/reservasi`,
     type: 'article',
   },

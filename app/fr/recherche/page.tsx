@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import { SemanticSearchClient } from '../../ru/poisk/_client'
 
 export const metadata: Metadata = {
-  title: 'AI property search · Balinsky',
-  description: 'Describe your ideal property in plain English — the system finds villas, apartments and complexes by meaning.',
+  title: 'Recherche immobilière par IA · Balinsky',
+  description: 'Décrivez votre bien idéal en langage naturel — le système trouve villas, appartements et complexes par le sens.',
 }
 
 export default function Page() {

@@ -2,16 +2,17 @@ import type { Metadata } from 'next'
 import { LegalLayout } from '@/components/LegalLayout'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
-const UPDATED = 'May 15, 2026'
+const UPDATED = '15 Mei 2026'
 
 export const metadata: Metadata = {
-  title: 'Terms of Use | Balinsky',
-  description: 'Terms of use for the Balinsky.info catalogue: what we are (and what we are not), content boundaries, responsibilities of buyer and operator.',
+  title: 'Ketentuan Penggunaan | Balinsky',
+  description: 'Ketentuan penggunaan katalog Balinsky.info: apa kami ini (dan apa yang bukan), batasan konten, tanggung jawab pembeli dan operator.',
   alternates: {
     canonical: '/id/ketentuan',
     languages: {
       ru: `${SITE_URL}/ru/usloviya`,
-      en: `${SITE_URL}/id/ketentuan`,
+      en: `${SITE_URL}/en/terms`,
+      id: `${SITE_URL}/id/ketentuan`,
       'x-default': `${SITE_URL}/ru/usloviya`,
     },
   },
@@ -20,76 +21,76 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <LegalLayout lang="id" title="Terms of Use" updated={`Last updated: ${UPDATED}`} breadcrumbLabel="Terms of Use">
+    <LegalLayout lang="id" title="Ketentuan Penggunaan" updated={`Terakhir diperbarui: ${UPDATED}`} breadcrumbLabel="Ketentuan Penggunaan">
       <p>
-        By using Balinsky.info you agree to the terms below. If something here does not work for you, please do not use the site.
+        Dengan menggunakan Balinsky.info, Anda menyetujui ketentuan di bawah ini. Jika ada sesuatu di sini yang tidak cocok bagi Anda, mohon jangan gunakan situs ini.
       </p>
 
-      <h2>1. What Balinsky.info is</h2>
+      <h2>1. Apa itu Balinsky.info</h2>
       <p>
-        Balinsky.info is an aggregator catalogue of Bali real-estate listings (villas, apartments, residential complexes,
-        long-term rentals), developer information, news, promotions and educational material. The site is built for foreign buyers.
+        Balinsky.info adalah katalog agregator listing real estat Bali (vila, apartemen, kompleks hunian,
+        sewa jangka panjang), informasi pengembang, berita, promosi, dan materi edukasi. Situs ini dibuat untuk pembeli asing.
       </p>
       <p>
-        We are not a party to any sale-and-purchase transaction. We surface information about available units and connect buyers
-        with the operator of each unit (developer, agency or owner). The deal is closed directly between buyer and operator.
-      </p>
-
-      <h2>2. Accuracy</h2>
-      <p>
-        We work to keep the catalogue current, but prices, availability, permits (PBG, SLF) and terms can change.
-        Before closing a deal, verify the data with the operator directly and through Indonesia&apos;s official registers.
-      </p>
-      <p>
-        Each video and photo was captured on a specific date — we are not responsible for changes after that capture.
+        Kami bukan pihak dalam transaksi jual beli apa pun. Kami menampilkan informasi tentang unit yang tersedia dan menghubungkan pembeli
+        dengan operator setiap unit (pengembang, agensi, atau pemilik). Kesepakatan ditutup langsung antara pembeli dan operator.
       </p>
 
-      <h2>3. User content</h2>
+      <h2>2. Akurasi</h2>
       <p>
-        When you contact us through Telegram, our bot, a form, or email, you submit text and contact data and confirm you have the
-        right to share them. How that data is used: see our <a href="/id/privasi">Privacy Policy</a>.
+        Kami berupaya menjaga katalog tetap terkini, tetapi harga, ketersediaan, izin (PBG, SLF), dan ketentuan dapat berubah.
+        Sebelum menutup kesepakatan, verifikasi data langsung dengan operator dan melalui register resmi Indonesia.
       </p>
       <p>
-        It is forbidden to use the site for spam, automated scraping, attempts to bypass protections, load attacks, or reverse-engineering of internal APIs.
-      </p>
-
-      <h2>4. Intellectual property</h2>
-      <p>
-        Texts, schemes and editorial materials on the site (unless otherwise marked) are licensed under
-        Creative Commons Attribution 4.0 International — credit the author and link to the original when reusing them.
-      </p>
-      <p>
-        Photos and videos of individual properties may belong to developers or third parties — request a separate licence for commercial reuse.
+        Setiap video dan foto diambil pada tanggal tertentu — kami tidak bertanggung jawab atas perubahan setelah pengambilan tersebut.
       </p>
 
-      <h2>5. Balina AI assistant</h2>
+      <h2>3. Konten pengguna</h2>
       <p>
-        Balina is an experimental AI assistant on the site. Its answers are informational and do not replace consultation with a licensed agent,
-        lawyer or notary. Balina can make mistakes — confirm anything that affects a deal with the appropriate specialist before acting on it.
+        Saat Anda menghubungi kami melalui Telegram, bot kami, formulir, atau email, Anda mengirimkan teks dan data kontak serta menyatakan bahwa Anda memiliki
+        hak untuk membagikannya. Bagaimana data itu digunakan: lihat <a href="/id/privasi">Kebijakan Privasi</a> kami.
+      </p>
+      <p>
+        Dilarang menggunakan situs untuk spam, scraping otomatis, upaya melewati perlindungan, serangan beban, atau rekayasa balik API internal.
       </p>
 
-      <h2>6. External links</h2>
+      <h2>4. Kekayaan intelektual</h2>
       <p>
-        The site links to third-party resources (YouTube, Telegram, estatemarket.io, developer sites). We do not control their content
-        and are not responsible for their availability or policies.
+        Teks, skema, dan materi editorial di situs (kecuali ditandai lain) dilisensikan di bawah
+        Creative Commons Attribution 4.0 International — cantumkan penulis dan tautkan ke sumber asli saat menggunakannya kembali.
+      </p>
+      <p>
+        Foto dan video properti tertentu mungkin milik pengembang atau pihak ketiga — mintalah lisensi terpisah untuk penggunaan komersial.
       </p>
 
-      <h2>7. Liability</h2>
+      <h2>5. Asisten AI Balina</h2>
       <p>
-        The site is provided &ldquo;as is&rdquo;. We do not guarantee uninterrupted availability, absence of technical issues, or that the listings
-        fit your specific investment goals. Decisions are at the buyer&apos;s risk.
+        Balina adalah asisten AI eksperimental di situs. Jawabannya bersifat informasional dan tidak menggantikan konsultasi dengan agen berlisensi,
+        pengacara, atau notaris. Balina bisa membuat kesalahan — konfirmasikan apa pun yang memengaruhi kesepakatan dengan spesialis yang tepat sebelum bertindak atasnya.
       </p>
 
-      <h2>8. Changes</h2>
+      <h2>6. Tautan eksternal</h2>
       <p>
-        These terms can change. The current version always lives on this page. Significant updates are announced in the
-        <a href="https://t.me/itrealtor" target="_blank" rel="noopener"> @itrealtor Telegram channel</a>.
+        Situs ini menautkan ke sumber daya pihak ketiga (YouTube, Telegram, estatemarket.io, situs pengembang). Kami tidak mengontrol kontennya
+        dan tidak bertanggung jawab atas ketersediaan atau kebijakannya.
       </p>
 
-      <h2>9. Governing law and jurisdiction</h2>
+      <h2>7. Tanggung jawab</h2>
       <p>
-        Disputes are governed by the laws of Georgia (the operator&apos;s country of registration), unless mandatory rules of your country of residence
-        provide otherwise.
+        Situs disediakan &ldquo;sebagaimana adanya&rdquo;. Kami tidak menjamin ketersediaan tanpa gangguan, tidak adanya masalah teknis, atau bahwa listing
+        sesuai dengan tujuan investasi spesifik Anda. Keputusan menjadi risiko pembeli.
+      </p>
+
+      <h2>8. Perubahan</h2>
+      <p>
+        Ketentuan ini dapat berubah. Versi terkini selalu ada di halaman ini. Pembaruan penting diumumkan di
+        <a href="https://t.me/itrealtor" target="_blank" rel="noopener"> saluran Telegram @itrealtor</a>.
+      </p>
+
+      <h2>9. Hukum yang berlaku dan yurisdiksi</h2>
+      <p>
+        Sengketa diatur oleh hukum Georgia (negara pendaftaran operator), kecuali aturan wajib di negara tempat tinggal Anda
+        menentukan lain.
       </p>
 
       {/* TODO: confirm jurisdiction / arbitration wording with counsel. Default is Georgia (sole-proprietor country). */}

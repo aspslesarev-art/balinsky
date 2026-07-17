@@ -2,17 +2,18 @@ import type { Metadata } from 'next'
 import { LegalLayout } from '@/components/LegalLayout'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
-const UPDATED = 'May 15, 2026'
+const UPDATED = '15 mei 2026'
 const CONTACT_EMAIL = 'asp.slesarev@gmail.com'
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy | Balinsky',
-  description: 'How Balinsky processes personal data: what we collect, why, how long we keep it, who the third parties are, and how to request deletion.',
+  title: 'Privacybeleid | Balinsky',
+  description: 'Hoe Balinsky persoonsgegevens verwerkt: wat we verzamelen, waarom, hoe lang we het bewaren, wie de derde partijen zijn en hoe je verwijdering aanvraagt.',
   alternates: {
     canonical: '/nl/privacy',
     languages: {
       ru: `${SITE_URL}/ru/politika-konfidencialnosti`,
-      en: `${SITE_URL}/nl/privacy`,
+      en: `${SITE_URL}/en/privacy`,
+      nl: `${SITE_URL}/nl/privacy`,
       'x-default': `${SITE_URL}/ru/politika-konfidencialnosti`,
     },
   },
@@ -21,78 +22,78 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <LegalLayout lang="nl" title="Privacy Policy" updated={`Last updated: ${UPDATED}`} breadcrumbLabel="Privacy Policy">
+    <LegalLayout lang="nl" title="Privacybeleid" updated={`Laatst bijgewerkt: ${UPDATED}`} breadcrumbLabel="Privacybeleid">
       <p>
-        This policy explains what personal data the site <a href="/nl">Balinsky.info</a> collects, why,
-        how it is stored, who it is shared with, and what rights you have as a user.
+        Dit beleid legt uit welke persoonsgegevens de site <a href="/nl">Balinsky.info</a> verzamelt, waarom,
+        hoe ze worden opgeslagen, met wie ze worden gedeeld en welke rechten je als gebruiker hebt.
       </p>
 
-      <h2>1. Site operator</h2>
+      <h2>1. Beheerder van de site</h2>
       <p>
-        Balinsky.info is operated by Andrei Slesarev (sole proprietor, Georgia). For data-protection
-        enquiries: <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>,
+        Balinsky.info wordt beheerd door Andrei Slesarev (eenmanszaak, Georgië). Voor vragen over
+        gegevensbescherming: <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>,
         Telegram <a href="https://t.me/itrealtor" target="_blank" rel="noopener">@itrealtor</a>.
       </p>
 
-      <h2>2. What we collect</h2>
-      <h3>2.1. Data you provide</h3>
+      <h2>2. Wat we verzamelen</h2>
+      <h3>2.1. Gegevens die je verstrekt</h3>
       <ul>
-        <li>Name, phone and email when you submit a reservation enquiry or request a callback.</li>
-        <li>Messages sent to the @BalinskyBot Telegram bot and to our agents in direct chats.</li>
-        <li>Your favourites list, stored locally in your browser only — never uploaded to our servers.</li>
+        <li>Naam, telefoonnummer en e-mail wanneer je een reserveringsaanvraag indient of om een terugbelverzoek vraagt.</li>
+        <li>Berichten die je naar de @BalinskyBot Telegram-bot en naar onze agenten in directe chats stuurt.</li>
+        <li>Je favorietenlijst, die alleen lokaal in je browser wordt bewaard — nooit geüpload naar onze servers.</li>
       </ul>
-      <h3>2.2. Data collected automatically</h3>
+      <h3>2.2. Automatisch verzamelde gegevens</h3>
       <ul>
-        <li>IP address, browser and device type, operating system, screen resolution.</li>
-        <li>URLs visited, referrer, session duration, on-page interactions (Google Analytics 4, Yandex.Metrica).</li>
-        <li>Cookies — see the <a href="/nl/cookie">Cookie Policy</a> for details.</li>
-      </ul>
-
-      <h2>3. Why we process it</h2>
-      <ul>
-        <li>To contact you about specific property enquiries.</li>
-        <li>To understand which parts of the site work and to improve the catalogue.</li>
-        <li>To send informational messages through the Telegram bot if you opted in.</li>
-        <li>Security — detecting bots, spam, and intrusion attempts.</li>
+        <li>IP-adres, browser- en apparaattype, besturingssysteem, schermresolutie.</li>
+        <li>Bezochte URL&apos;s, verwijzende pagina, sessieduur, interacties op de pagina (Google Analytics 4, Yandex.Metrica).</li>
+        <li>Cookies — zie het <a href="/nl/cookie">Cookiebeleid</a> voor details.</li>
       </ul>
 
-      <h2>4. Third parties</h2>
-      <p>The site relies on the following providers:</p>
+      <h2>3. Waarom we het verwerken</h2>
       <ul>
-        <li><strong>Vercel</strong> — hosting and CDN (US / EU).</li>
-        <li><strong>Supabase</strong> — database and media storage (EU).</li>
-        <li><strong>Google Analytics 4</strong> and <strong>Google Tag Manager</strong> — analytics.</li>
-        <li><strong>Yandex.Metrica</strong> — analytics and behavioural signals for Yandex Search.</li>
-        <li><strong>Telegram</strong> — message routing through @BalinskyBot.</li>
-        <li><strong>OpenAI / Azure OpenAI</strong> — powering the Balina AI assistant. If you message the assistant, your message and surrounding context are sent to the provider&apos;s API.</li>
+        <li>Om contact met je op te nemen over specifieke vastgoedaanvragen.</li>
+        <li>Om te begrijpen welke delen van de site werken en om de catalogus te verbeteren.</li>
+        <li>Om informatieve berichten via de Telegram-bot te sturen als je je hebt aangemeld.</li>
+        <li>Beveiliging — het detecteren van bots, spam en inbraakpogingen.</li>
       </ul>
 
-      <h2>5. Retention</h2>
+      <h2>4. Derde partijen</h2>
+      <p>De site maakt gebruik van de volgende aanbieders:</p>
+      <ul>
+        <li><strong>Vercel</strong> — hosting en CDN (VS / EU).</li>
+        <li><strong>Supabase</strong> — database en media-opslag (EU).</li>
+        <li><strong>Google Analytics 4</strong> en <strong>Google Tag Manager</strong> — analytics.</li>
+        <li><strong>Yandex.Metrica</strong> — analytics en gedragssignalen voor Yandex Search.</li>
+        <li><strong>Telegram</strong> — het routeren van berichten via @BalinskyBot.</li>
+        <li><strong>OpenAI / Azure OpenAI</strong> — voor de Balina AI-assistent. Als je de assistent een bericht stuurt, worden je bericht en de bijbehorende context naar de API van de aanbieder gestuurd.</li>
+      </ul>
+
+      <h2>5. Bewaartermijn</h2>
       <p>
-        Enquiries and conversations are kept only as long as needed to handle your request and continue serving you afterwards.
-        Technical logs and analytics — up to 14 months. We will delete personal data sooner on request.
+        Aanvragen en gesprekken worden alleen bewaard zolang dat nodig is om je verzoek af te handelen en je daarna van dienst te blijven.
+        Technische logs en analytics — tot 14 maanden. Op verzoek verwijderen we persoonsgegevens eerder.
       </p>
 
-      <h2>6. Your rights</h2>
+      <h2>6. Je rechten</h2>
       <ul>
-        <li>Receive a copy of the personal data we hold about you.</li>
-        <li>Request a correction of inaccurate data.</li>
-        <li>Request deletion of your data (unless we have a competing legal obligation to retain it).</li>
-        <li>Withdraw consent for marketing communications.</li>
-        <li>File a complaint with the data-protection authority in your country of residence.</li>
+        <li>Een kopie ontvangen van de persoonsgegevens die we over je bewaren.</li>
+        <li>Een correctie aanvragen van onjuiste gegevens.</li>
+        <li>Verwijdering van je gegevens aanvragen (tenzij we een tegenstrijdige wettelijke verplichting hebben om ze te bewaren).</li>
+        <li>Toestemming voor marketingcommunicatie intrekken.</li>
+        <li>Een klacht indienen bij de gegevensbeschermingsautoriteit in je land van verblijf.</li>
       </ul>
-      <p>Email <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. We respond within 30 days.</p>
+      <p>E-mail <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. We reageren binnen 30 dagen.</p>
 
-      <h2>7. Security</h2>
+      <h2>7. Beveiliging</h2>
       <p>
-        Access to the back office is restricted. The connection is HTTPS-encrypted. We do not accept or store payment data —
-        all payments go directly to the property operator&apos;s bank account.
+        De toegang tot de backoffice is beperkt. De verbinding is versleuteld met HTTPS. We accepteren of bewaren geen betaalgegevens —
+        alle betalingen gaan rechtstreeks naar de bankrekening van de vastgoedaanbieder.
       </p>
 
-      <h2>8. Changes</h2>
+      <h2>8. Wijzigingen</h2>
       <p>
-        We update this policy as our data-handling practices change. The current version is always visible on this page;
-        the date at the top reflects the most recent change.
+        We werken dit beleid bij naarmate onze omgang met gegevens verandert. De actuele versie is altijd op deze pagina te zien;
+        de datum bovenaan geeft de meest recente wijziging weer.
       </p>
 
       {/* TODO: legal review once the entity status is final. Sole-proprietor Georgia is the current footer block. */}

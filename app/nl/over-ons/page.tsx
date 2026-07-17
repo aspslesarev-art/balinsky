@@ -4,15 +4,15 @@ import { AboutView } from '@/components/AboutView'
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
 export const metadata: Metadata = {
-  title: 'About Balinsky — what we are and why you can trust us | Balinsky',
-  description: 'Balinsky is a Bali property catalogue for foreign buyers: verified documents, on-the-ground video, real managers with photos and spoken languages. Live numbers, who runs the site, our editorial standards.',
+  title: 'Over Balinsky — wat we zijn en waarom je ons kunt vertrouwen | Balinsky',
+  description: 'Balinsky is een vastgoedcatalogus voor Bali gericht op buitenlandse kopers: geverifieerde documenten, video ter plaatse, echte managers met foto’s en gesproken talen. Live cijfers, wie de site beheert, onze redactionele standaarden.',
   alternates: {
     canonical: '/nl/over-ons',
-    languages: { ru: `${SITE_URL}/ru/o-balinsky`, en: `${SITE_URL}/nl/over-ons` , 'x-default': `${SITE_URL}/ru/o-balinsky`},
+    languages: { ru: `${SITE_URL}/ru/o-balinsky`, en: `${SITE_URL}/en/about`, nl: `${SITE_URL}/nl/over-ons` , 'x-default': `${SITE_URL}/ru/o-balinsky`},
   },
   openGraph: {
-    title: 'About Balinsky',
-    description: 'Bali property catalogue for foreign buyers — verified documents, on-the-ground video, live managers.',
+    title: 'Over Balinsky',
+    description: 'Vastgoedcatalogus voor Bali gericht op buitenlandse kopers — geverifieerde documenten, video ter plaatse, live managers.',
     url: `${SITE_URL}/nl/over-ons`,
     type: 'article',
   },

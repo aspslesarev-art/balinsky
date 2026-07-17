@@ -4,11 +4,11 @@ import { ShortlistView } from '@/components/ShortlistView'
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
 export const metadata: Metadata = {
-  title: 'Compare Bali property — shortlist | Balinsky',
-  description: 'Shortlist and side-by-side comparison of Bali villas, apartments and residential complexes — price, area, leasehold, permits and claimed yield in one table.',
+  title: 'Bali-Immobilien vergleichen — Merkliste | Balinsky',
+  description: 'Merkliste und direkter Vergleich von Villen, Apartments und Wohnkomplexen auf Bali — Preis, Fläche, Leasehold, Genehmigungen und angegebene Rendite in einer Tabelle.',
   alternates: {
     canonical: '/de/favoriten',
-    languages: { ru: `${SITE_URL}/ru/izbrannoe`, en: `${SITE_URL}/de/favoriten` , 'x-default': `${SITE_URL}/ru/izbrannoe`},
+    languages: { ru: `${SITE_URL}/ru/izbrannoe`, en: `${SITE_URL}/en/favourites`, de: `${SITE_URL}/de/favoriten` , 'x-default': `${SITE_URL}/ru/izbrannoe`},
   },
 }
 

@@ -2,16 +2,17 @@ import type { Metadata } from 'next'
 import { LegalLayout } from '@/components/LegalLayout'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
-const UPDATED = 'May 15, 2026'
+const UPDATED = '15 mei 2026'
 
 export const metadata: Metadata = {
-  title: 'Cookie Policy | Balinsky',
-  description: 'Which cookies Balinsky.info uses: strictly necessary, analytics, marketing — and how to turn them off.',
+  title: 'Cookiebeleid | Balinsky',
+  description: 'Welke cookies Balinsky.info gebruikt: strikt noodzakelijk, analytics, marketing — en hoe je ze uitschakelt.',
   alternates: {
     canonical: '/nl/cookie',
     languages: {
       ru: `${SITE_URL}/ru/cookie`,
-      en: `${SITE_URL}/nl/cookie`,
+      en: `${SITE_URL}/en/cookie`,
+      nl: `${SITE_URL}/nl/cookie`,
       'x-default': `${SITE_URL}/ru/cookie`,
     },
   },
@@ -20,46 +21,46 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <LegalLayout lang="nl" title="Cookie Policy" updated={`Last updated: ${UPDATED}`} breadcrumbLabel="Cookie Policy">
+    <LegalLayout lang="nl" title="Cookiebeleid" updated={`Laatst bijgewerkt: ${UPDATED}`} breadcrumbLabel="Cookiebeleid">
       <p>
-        Cookies are small text files the site stores in your browser. They keep your preferences sticky and help us understand
-        how the catalogue is used.
+        Cookies zijn kleine tekstbestanden die de site in je browser opslaat. Ze zorgen dat je voorkeuren behouden blijven en helpen ons begrijpen
+        hoe de catalogus wordt gebruikt.
       </p>
 
-      <h2>1. Cookie categories we use</h2>
-      <h3>Strictly necessary (site won&apos;t work without them)</h3>
+      <h2>1. Cookiecategorieën die we gebruiken</h2>
+      <h3>Strikt noodzakelijk (de site werkt niet zonder deze)</h3>
       <ul>
-        <li>Session support — remembers your chosen language (RU or EN).</li>
-        <li>Form protection (CSRF tokens).</li>
-        <li>Local storage of your favourites list — not a cookie in the strict sense, but technical.</li>
+        <li>Sessie-ondersteuning — onthoudt je gekozen taal (RU of EN).</li>
+        <li>Formulierbeveiliging (CSRF-tokens).</li>
+        <li>Lokale opslag van je favorietenlijst — geen cookie in strikte zin, maar technisch.</li>
       </ul>
-      <h3>Analytics (help us improve the site)</h3>
+      <h3>Analytics (helpen ons de site te verbeteren)</h3>
       <ul>
-        <li><strong>Google Analytics 4</strong> via Google Tag Manager (container GTM-TM6D54Z3) — anonymised page-view and event statistics.</li>
-        <li><strong>Yandex.Metrica</strong> (counter 104881153) — behavioural analytics, heatmaps, session replays.</li>
+        <li><strong>Google Analytics 4</strong> via Google Tag Manager (container GTM-TM6D54Z3) — geanonimiseerde statistieken over paginaweergaven en events.</li>
+        <li><strong>Yandex.Metrica</strong> (teller 104881153) — gedragsanalyse, heatmaps, sessieopnames.</li>
       </ul>
       <h3>Marketing</h3>
       <p>
-        We currently do not set advertising cookies. If we run retargeting on Google or Yandex in the future, the relevant cookies will be added
-        and this page will be updated.
+        We plaatsen momenteel geen advertentiecookies. Als we in de toekomst retargeting op Google of Yandex inzetten, worden de betreffende cookies toegevoegd
+        en wordt deze pagina bijgewerkt.
       </p>
 
-      <h2>2. How to disable cookies</h2>
+      <h2>2. Hoe je cookies uitschakelt</h2>
       <p>
-        Analytics and marketing cookies can be turned off in your browser settings. Strictly necessary cookies can&apos;t be disabled —
-        the favourites list and language switcher need them.
+        Analytics- en marketingcookies kun je uitschakelen in je browserinstellingen. Strikt noodzakelijke cookies kunnen niet worden uitgeschakeld —
+        de favorietenlijst en de taalwisselaar hebben ze nodig.
       </p>
       <ul>
-        <li>Chrome — <a href="https://support.google.com/chrome/answer/95647" target="_blank" rel="noopener">Settings → Privacy and security → Cookies</a></li>
-        <li>Safari — <a href="https://support.apple.com/guide/safari/manage-cookies-sfri11471/mac" target="_blank" rel="noopener">Preferences → Privacy</a></li>
-        <li>Firefox — <a href="https://support.mozilla.org/en-US/kb/cookies-information-websites-store-on-your-computer" target="_blank" rel="noopener">Options → Privacy &amp; Security</a></li>
+        <li>Chrome — <a href="https://support.google.com/chrome/answer/95647" target="_blank" rel="noopener">Instellingen → Privacy en beveiliging → Cookies</a></li>
+        <li>Safari — <a href="https://support.apple.com/guide/safari/manage-cookies-sfri11471/mac" target="_blank" rel="noopener">Voorkeuren → Privacy</a></li>
+        <li>Firefox — <a href="https://support.mozilla.org/en-US/kb/cookies-information-websites-store-on-your-computer" target="_blank" rel="noopener">Opties → Privacy &amp; beveiliging</a></li>
       </ul>
-      <p>You can also install uBlock Origin, Privacy Badger, or enable Do Not Track.</p>
+      <p>Je kunt ook uBlock Origin of Privacy Badger installeren, of Do Not Track inschakelen.</p>
 
-      <h2>3. Related documents</h2>
+      <h2>3. Gerelateerde documenten</h2>
       <ul>
-        <li><a href="/nl/privacy">Privacy Policy</a></li>
-        <li><a href="/nl/voorwaarden">Terms of Use</a></li>
+        <li><a href="/nl/privacy">Privacybeleid</a></li>
+        <li><a href="/nl/voorwaarden">Gebruiksvoorwaarden</a></li>
       </ul>
 
       {/* TODO: when retargeting is enabled, add a Marketing section listing campaign IDs and cookie identifiers. */}

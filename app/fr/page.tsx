@@ -3,24 +3,24 @@ import { HomeLanding } from '@/components/HomeLanding'
 export const revalidate = 1800
 
 export const metadata = {
-  title: 'Buy real estate in Bali — independent marketplace with analytics | Balinsky',
+  title: 'Acheter un bien immobilier à Bali — marketplace indépendante avec analytique | Balinsky',
   description:
-    'Villas, apartments and complexes from dozens of developers in one catalog. Verified documents (PBG, SLF) and real rental yield from neighbour data. Photos, current prices, contacts — your choice.',
+    "Villas, appartements et complexes de dizaines de promoteurs dans un seul catalogue. Documents vérifiés (PBG, SLF) et rendement locatif réel issu des données du voisinage. Photos, prix actuels, contacts — à vous de choisir.",
   alternates: {
     canonical: '/fr',
-    languages: { ru: '/ru', en: '/fr', 'x-default': '/ru' },
+    languages: { ru: '/ru', en: '/en', fr: '/fr', 'x-default': '/ru' },
   },
   openGraph: {
-    title: 'Buy real estate in Bali — independent marketplace with analytics',
-    description: 'Villas, apartments and complexes from dozens of developers. Verified documents and real rental yield from neighbour data — the choice and the numbers are on your side.',
+    title: 'Acheter un bien immobilier à Bali — marketplace indépendante avec analytique',
+    description: "Villas, appartements et complexes de dizaines de promoteurs. Documents vérifiés et rendement locatif réel issu des données du voisinage — le choix et les chiffres sont de votre côté.",
     type: 'website',
     url: '/fr',
     images: [{ url: '/balina.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Buy real estate in Bali — marketplace with analytics',
-    description: 'Villas, apartments and complexes from dozens of developers with verified documents and real rental yield.',
+    title: 'Acheter un bien immobilier à Bali — marketplace avec analytique',
+    description: "Villas, appartements et complexes de dizaines de promoteurs, avec documents vérifiés et rendement locatif réel.",
     images: ['/balina.jpg'],
   },
 }

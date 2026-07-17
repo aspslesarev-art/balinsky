@@ -10,47 +10,48 @@ import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
-const UPDATED = 'May 15, 2026'
+const UPDATED = '15. Mai 2026'
 
 export const metadata: Metadata = {
-  title: 'Living in Bali — Visas, Taxes, Schools, Healthcare 2026 | Balinsky',
-  description: 'Bali relocation guide: KITAS, Second Home Visa, Golden Visa, resident foreigner taxes, international schools, BIMC and Siloam hospitals, real family budgets.',
+  title: 'Leben auf Bali — Visa, Steuern, Schulen, Gesundheit 2026 | Balinsky',
+  description: 'Umzugsratgeber für Bali: KITAS, Second Home Visa, Golden Visa, Steuern für ausländische Residenten, internationale Schulen, BIMC- und Siloam-Kliniken, reale Familienbudgets.',
   alternates: {
     canonical: '/de/leben-auf-bali',
     languages: {
       ru: `${SITE_URL}/ru/zhizn-na-bali`,
-      en: `${SITE_URL}/de/leben-auf-bali`,
+      en: `${SITE_URL}/en/living-in-bali`,
+      de: `${SITE_URL}/de/leben-auf-bali`,
       'x-default': `${SITE_URL}/ru/zhizn-na-bali`,
     },
   },
   openGraph: {
-    title: 'Living in Bali — 2026 Relocation Guide',
-    description: 'KITAS, Second Home Visa, Golden Visa, resident taxes, schools, healthcare, family budget — from operators who\'ve lived here 5+ years.',
+    title: 'Leben auf Bali — Umzugsratgeber 2026',
+    description: 'KITAS, Second Home Visa, Golden Visa, Steuern für Residenten, Schulen, Gesundheit, Familienbudget — von Praktikern, die seit über 5 Jahren hier leben.',
     type: 'article',
     url: '/de/leben-auf-bali',
     images: [{ url: '/balina.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Living in Bali — 2026 Relocation Guide',
-    description: 'Visas, taxes, schools, healthcare, budget.',
+    title: 'Leben auf Bali — Umzugsratgeber 2026',
+    description: 'Visa, Steuern, Schulen, Gesundheit, Budget.',
     images: ['/balina.jpg'],
   },
 }
 
 const FAQ = [
-  { q: 'Which visa works for long-term relocation to Bali?',
-    a: 'Baseline: B211A (tourist, up to 6 months with extensions) for a trial period. KITAS Investor (1-2 years, from $40K invested in a PT PMA) for entrepreneurs and investors. KITAS Working — through an Indonesian employer. Second Home Visa (5-10 years, $130K deposit in a local bank) for financially independent applicants. Golden Visa (5-10 years, $350K+ investment) — top-tier for HNW individuals.' },
-  { q: 'What taxes does a foreign Bali resident pay?',
-    a: 'After 183 days in Indonesia in a calendar year you become a tax resident. Progressive PIT: 5% up to IDR 60M (~$4K), 15% up to 250M, 25% up to 500M, 30% up to 5B, 35% above. Worldwide income, but offsets through double taxation treaties (Indonesia has DTAs with 70+ countries including US, UK, Singapore, Australia, EU members).' },
-  { q: 'How much does international school cost?',
-    a: 'Standard tier: Sunrise School, Australian Independent School, Cita Hati — $7-15K/year per primary-school child. Premium: Green School Bali — $20-28K, Australian International School — $18-25K. Preschool (ages 3-5) — $5-10K/year. Budget for two children in middle school: $20-35K/year.' },
-  { q: 'What healthcare is available?',
-    a: 'International standard: BIMC Kuta (Cleveland Clinic affiliate), BIMC Nusa Dua, Siloam Hospital Denpasar, Kasih Ibu. Specialist consultation $40-80, CT/MRI $200-400, emergency surgery $5-15K. International insurance is mandatory (Allianz, Cigna, Bupa) — $1500-3500/year per adult. Serious surgery and oncology typically routed to Singapore or Malaysia.' },
-  { q: 'What\'s the monthly budget for a family of four?',
-    a: 'Comfortable (two kids in international school, 3BR house with garden and pool in Umalas, helper 4 days/week, one car): $5500-7500/month = $66-90K/year. Premium (Green School, villa in Berawa, full-time driver and helper, two cars): $9000-13000/month = $108-156K/year. Minimum (no school, modest 2BR villa in Sanur): $2200-3000/month.' },
-  { q: 'Can I work remotely from Bali — internet and infrastructure?',
-    a: 'Yes. Business infrastructure is solid: fibre 200-1000 Mbps in Canggu, Berawa, Umalas, Sanur, most Bukit complexes. 24/7 coworking (Outpost, Tropical Nomad, Dojo, Soul & Surf). Electricity is stable, outages rare. KITAS Investor or B211A (with the new E33G digital nomad visa from October 2025) legally cover remote work.' },
+  { q: 'Welches Visum eignet sich für einen langfristigen Umzug nach Bali?',
+    a: 'Grundlage: B211A (Touristenvisum, mit Verlängerungen bis zu 6 Monate) für eine Probephase. KITAS Investor (1-2 Jahre, ab 40.000 $ Investition in eine PT PMA) für Unternehmer und Investoren. KITAS Working — über einen indonesischen Arbeitgeber. Second Home Visa (5-10 Jahre, 130.000 $ Einlage bei einer lokalen Bank) für finanziell unabhängige Antragsteller. Golden Visa (5-10 Jahre, ab 350.000 $ Investition) — Spitzenklasse für vermögende Personen.' },
+  { q: 'Welche Steuern zahlt ein ausländischer Bali-Resident?',
+    a: 'Nach 183 Tagen in Indonesien innerhalb eines Kalenderjahres werden Sie steuerlich ansässig. Progressive Einkommensteuer: 5 % bis IDR 60 Mio. (~4.000 $), 15 % bis 250 Mio., 25 % bis 500 Mio., 30 % bis 5 Mrd., 35 % darüber. Welteinkommen, aber Anrechnung über Doppelbesteuerungsabkommen (Indonesien hat DBA mit über 70 Ländern, darunter USA, Großbritannien, Singapur, Australien, EU-Staaten).' },
+  { q: 'Wie viel kostet eine internationale Schule?',
+    a: 'Standardklasse: Sunrise School, Australian Independent School, Cita Hati — 7.000-15.000 $/Jahr pro Grundschulkind. Premium: Green School Bali — 20.000-28.000 $, Australian International School — 18.000-25.000 $. Vorschule (3-5 Jahre) — 5.000-10.000 $/Jahr. Budget für zwei Kinder in der Mittelstufe: 20.000-35.000 $/Jahr.' },
+  { q: 'Welche medizinische Versorgung gibt es?',
+    a: 'Internationaler Standard: BIMC Kuta (Partner der Cleveland Clinic), BIMC Nusa Dua, Siloam Hospital Denpasar, Kasih Ibu. Facharztkonsultation 40-80 $, CT/MRT 200-400 $, Notoperation 5.000-15.000 $. Eine internationale Versicherung ist Pflicht (Allianz, Cigna, Bupa) — 1.500-3.500 $/Jahr pro Erwachsenem. Schwere Operationen und Onkologie werden meist nach Singapur oder Malaysia verlegt.' },
+  { q: 'Wie hoch ist das Monatsbudget für eine vierköpfige Familie?',
+    a: 'Komfortabel (zwei Kinder in internationaler Schule, 3-Zimmer-Haus mit Garten und Pool in Umalas, Haushaltshilfe 4 Tage/Woche, ein Auto): 5.500-7.500 $/Monat = 66.000-90.000 $/Jahr. Premium (Green School, Villa in Berawa, Vollzeit-Fahrer und -Hilfe, zwei Autos): 9.000-13.000 $/Monat = 108.000-156.000 $/Jahr. Minimum (ohne Schule, bescheidene 2-Zimmer-Villa in Sanur): 2.200-3.000 $/Monat.' },
+  { q: 'Kann ich von Bali aus remote arbeiten — Internet und Infrastruktur?',
+    a: 'Ja. Die Geschäftsinfrastruktur ist solide: Glasfaser 200-1000 Mbit/s in Canggu, Berawa, Umalas, Sanur und den meisten Bukit-Anlagen. Coworking rund um die Uhr (Outpost, Tropical Nomad, Dojo, Soul & Surf). Der Strom ist stabil, Ausfälle sind selten. KITAS Investor oder B211A (mit dem neuen E33G-Digital-Nomad-Visum seit Oktober 2025) decken Remote-Arbeit rechtlich ab.' },
 ]
 
 export const revalidate = 86400
@@ -60,8 +61,8 @@ export default function Page() {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/de` },
-      { '@type': 'ListItem', position: 2, name: 'Living in Bali', item: `${SITE_URL}/de/leben-auf-bali` },
+      { '@type': 'ListItem', position: 1, name: 'Startseite', item: `${SITE_URL}/de` },
+      { '@type': 'ListItem', position: 2, name: 'Leben auf Bali', item: `${SITE_URL}/de/leben-auf-bali` },
     ],
   }
   const faqJsonLd = {
@@ -75,12 +76,12 @@ export default function Page() {
   }
 
   const SECTIONS = [
-    { Icon: Plane, title: 'Visas & residence', body: 'KITAS Investor from $40K, Second Home Visa from $130K deposit, Golden Visa from $350K investment. Tourist B211A for the 6-month trial period.' },
-    { Icon: FileCheck2, title: 'Resident taxes', body: 'Tax resident after 183 days in year. Progressive 5-35% bracket. DTA offsets available with 70+ countries — most Western and CIS markets covered.' },
-    { Icon: GraduationCap, title: 'Schools', body: 'Sunrise / AIS / Cita Hati: $7-15K/year. Premium — Green School ($20-28K) and AIS Premium. Strong international community.' },
-    { Icon: Stethoscope, title: 'Healthcare', body: 'BIMC, Siloam, Kasih Ibu — international-grade clinics. Insurance mandatory ($1500-3500/year). Major surgery routed to Singapore.' },
-    { Icon: Wallet, title: 'Family budget', body: 'Family of 4: comfortable $66-90K/year, premium $108-156K/year. Baseline minimum without schools — from $2200/month.' },
-    { Icon: Wifi, title: 'Remote work', body: 'Fibre 200-1000 Mbps in all investment districts. Coworking at Outpost / Tropical Nomad / Dojo. KITAS Investor or new E33G digital nomad visa cover remote work legally.' },
+    { Icon: Plane, title: 'Visa & Aufenthalt', body: 'KITAS Investor ab 40.000 $, Second Home Visa ab 130.000 $ Einlage, Golden Visa ab 350.000 $ Investition. Touristen-B211A für die 6-monatige Probephase.' },
+    { Icon: FileCheck2, title: 'Steuern für Residenten', body: 'Steuerlich ansässig nach 183 Tagen im Jahr. Progressive Sätze von 5-35 %. DBA-Anrechnung mit über 70 Ländern — die meisten westlichen und GUS-Märkte abgedeckt.' },
+    { Icon: GraduationCap, title: 'Schulen', body: 'Sunrise / AIS / Cita Hati: 7.000-15.000 $/Jahr. Premium — Green School (20.000-28.000 $) und AIS Premium. Starke internationale Community.' },
+    { Icon: Stethoscope, title: 'Gesundheit', body: 'BIMC, Siloam, Kasih Ibu — Kliniken auf internationalem Niveau. Versicherung Pflicht (1.500-3.500 $/Jahr). Große Operationen werden nach Singapur verlegt.' },
+    { Icon: Wallet, title: 'Familienbudget', body: 'Vierköpfige Familie: komfortabel 66.000-90.000 $/Jahr, Premium 108.000-156.000 $/Jahr. Grundminimum ohne Schulen — ab 2.200 $/Monat.' },
+    { Icon: Wifi, title: 'Remote-Arbeit', body: 'Glasfaser 200-1000 Mbit/s in allen Investitionsbezirken. Coworking bei Outpost / Tropical Nomad / Dojo. KITAS Investor oder das neue E33G-Digital-Nomad-Visum decken Remote-Arbeit rechtlich ab.' },
   ]
 
   return (
@@ -88,21 +89,21 @@ export default function Page() {
       <Header />
       <PageContainer>
         <Breadcrumbs items={[
-          { label: 'Home', href: '/de' },
-          { label: 'Living in Bali' },
+          { label: 'Startseite', href: '/de' },
+          { label: 'Leben auf Bali' },
         ]} />
 
         <article className="mt-6 mb-16 max-w-4xl">
           <header className="mb-10">
             <h1 className="text-[32px] md:text-[44px] font-semibold tracking-tight text-[#111827] mb-4 leading-tight">
-              Living in Bali — Relocation Guide
+              Leben auf Bali — Umzugsratgeber
             </h1>
             <p className="text-[18px] text-[var(--color-text-muted)] leading-relaxed">
-              Residence permits through KITAS, Second Home and Golden Visa, foreigner-resident taxes, real family budgets,
-              international schools, healthcare and remote-work infrastructure — collected from operators who&apos;ve lived
-              on the island for 5+ years.
+              Aufenthaltstitel über KITAS, Second Home und Golden Visa, Steuern für ausländische Residenten, reale
+              Familienbudgets, internationale Schulen, Gesundheitsversorgung und Infrastruktur für Remote-Arbeit — gesammelt
+              von Praktikern, die seit über 5 Jahren auf der Insel leben.
             </p>
-            <p className="text-[13px] text-[var(--color-text-muted)] mt-3">Updated: {UPDATED}</p>
+            <p className="text-[13px] text-[var(--color-text-muted)] mt-3">Aktualisiert: {UPDATED}</p>
           </header>
 
           <section className="mb-12 grid sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -116,67 +117,67 @@ export default function Page() {
           </section>
 
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">Visas — what fits which situation</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">Visa — was passt zu welcher Situation</h2>
             <div className="space-y-4 text-[16px] leading-[1.7] text-[#1f2937]">
-              <p><strong>B211A — tourist visa.</strong> 60 days with extensions up to 6 months. Fits the trial period before committing to relocation. Cost $50-100 + agent fee $50-150.</p>
-              <p><strong>E33G — digital nomad visa (since October 2025).</strong> Up to 1 year, requires verified income of $60K+/year from outside Indonesia. Doesn&apos;t allow working for local companies but legalises remote work. Ideal for freelancers and remote workers.</p>
-              <p><strong>KITAS Investor.</strong> 1-2 years with extensions, linked to a PT PMA with at least $40K invested. Allows residence, opening a local bank account, buying a car, getting resident health insurance. Most popular format for entrepreneurs.</p>
-              <p><strong>Second Home Visa.</strong> 5-10 years, requires a $130K deposit in an Indonesian bank (gradually withdrawable). For financially independent applicants, retirees, well-off families.</p>
-              <p><strong>Golden Visa.</strong> 5-10 years, $350K (individual) or $25M (company) investment. Top-tier format — maximum rights and minimal renewal checks.</p>
+              <p><strong>B211A — Touristenvisum.</strong> 60 Tage mit Verlängerungen bis zu 6 Monate. Passend für die Probephase, bevor Sie sich zum Umzug entscheiden. Kosten 50-100 $ + Agenturgebühr 50-150 $.</p>
+              <p><strong>E33G — Digital-Nomad-Visum (seit Oktober 2025).</strong> Bis zu 1 Jahr, erfordert ein nachgewiesenes Einkommen von über 60.000 $/Jahr aus dem Ausland. Erlaubt keine Arbeit für lokale Unternehmen, legalisiert aber Remote-Arbeit. Ideal für Freelancer und Remote-Mitarbeiter.</p>
+              <p><strong>KITAS Investor.</strong> 1-2 Jahre mit Verlängerungen, gebunden an eine PT PMA mit einer Investition von mindestens 40.000 $. Ermöglicht Aufenthalt, Eröffnung eines lokalen Bankkontos, Autokauf und eine Krankenversicherung für Residenten. Das beliebteste Format für Unternehmer.</p>
+              <p><strong>Second Home Visa.</strong> 5-10 Jahre, erfordert eine Einlage von 130.000 $ bei einer indonesischen Bank (schrittweise abhebbar). Für finanziell unabhängige Antragsteller, Rentner und wohlhabende Familien.</p>
+              <p><strong>Golden Visa.</strong> 5-10 Jahre, Investition von 350.000 $ (Einzelperson) oder 25 Mio. $ (Unternehmen). Spitzenformat — maximale Rechte und minimale Verlängerungsprüfungen.</p>
             </div>
           </section>
 
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">Resident taxes for foreigners</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">Steuern für ausländische Residenten</h2>
             <div className="space-y-4 text-[16px] leading-[1.7] text-[#1f2937]">
-              <p>After 183 days in Indonesia within 12 months, you&apos;re a tax resident. Since 2025 Indonesia applies worldwide taxation: PIT is paid on all global income, not just local.</p>
-              <p>Progressive bracket: 5% up to IDR 60M (~$4K), 15% up to 250M (~$16K), 25% up to 500M (~$32K), 30% up to 5B (~$320K), 35% above. Tax year = calendar year, return due by March 31.</p>
-              <p>Double taxation treaties reduce the load. Indonesia has DTAs with the US, UK, Singapore, Australia, all EU members, Russia, Kazakhstan, Belarus, Ukraine — about 70 countries. Tax paid abroad credits against the Indonesian liability.</p>
-              <p>For income structuring through a PT PMA: 22% corporate tax + 10% dividend withholding when paid to a non-resident (DTA-adjusted). Often the effective rate is lower than personal PIT on large incomes.</p>
+              <p>Nach 183 Tagen in Indonesien innerhalb von 12 Monaten sind Sie steuerlich ansässig. Seit 2025 wendet Indonesien die Welteinkommensbesteuerung an: Einkommensteuer wird auf das gesamte weltweite Einkommen gezahlt, nicht nur auf das lokale.</p>
+              <p>Progressive Sätze: 5 % bis IDR 60 Mio. (~4.000 $), 15 % bis 250 Mio. (~16.000 $), 25 % bis 500 Mio. (~32.000 $), 30 % bis 5 Mrd. (~320.000 $), 35 % darüber. Steuerjahr = Kalenderjahr, Erklärung bis zum 31. März fällig.</p>
+              <p>Doppelbesteuerungsabkommen senken die Last. Indonesien hat DBA mit den USA, Großbritannien, Singapur, Australien, allen EU-Staaten, Russland, Kasachstan, Belarus und der Ukraine — rund 70 Länder. Im Ausland gezahlte Steuern werden auf die indonesische Schuld angerechnet.</p>
+              <p>Bei Einkommensstrukturierung über eine PT PMA: 22 % Körperschaftsteuer + 10 % Quellensteuer auf Dividenden bei Zahlung an Nichtansässige (DBA-angepasst). Oft ist der effektive Satz niedriger als die persönliche Einkommensteuer bei hohen Einkommen.</p>
             </div>
           </section>
 
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">International schools</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">Internationale Schulen</h2>
             <div className="space-y-4 text-[16px] leading-[1.7] text-[#1f2937]">
-              <p><strong>Preschool (3-5 years):</strong> Sunrise Preschool, Sanggar Anak Tangguh, Australian Independent (early years) — $5-10K/year. Strong Montessori, Reggio Emilia, Waldorf programmes.</p>
-              <p><strong>Primary and middle school (standard tier):</strong> Sunrise School (Bumin Sanur), Australian Independent School (Sanur), Cita Hati (Denpasar), Bali Island School (Sanur) — $7-15K/year. Cambridge and International Baccalaureate curricula, English plus Spanish/Mandarin/Indonesian.</p>
-              <p><strong>Premium:</strong> Green School Bali ($20-28K/year) — internationally famous eco-friendly bamboo school. Australian International School (Sanur, premium tier $18-25K) — Cambridge IGCSE / A-level.</p>
-              <p>Large international community (5000+ expat families) — active parent networks, weekend clubs, language exchanges. Full 1-12 grade coverage available.</p>
+              <p><strong>Vorschule (3-5 Jahre):</strong> Sunrise Preschool, Sanggar Anak Tangguh, Australian Independent (Frühjahre) — 5.000-10.000 $/Jahr. Starke Montessori-, Reggio-Emilia- und Waldorf-Programme.</p>
+              <p><strong>Grund- und Mittelstufe (Standardklasse):</strong> Sunrise School (Bumin Sanur), Australian Independent School (Sanur), Cita Hati (Denpasar), Bali Island School (Sanur) — 7.000-15.000 $/Jahr. Cambridge- und International-Baccalaureate-Lehrpläne, Englisch plus Spanisch/Mandarin/Indonesisch.</p>
+              <p><strong>Premium:</strong> Green School Bali (20.000-28.000 $/Jahr) — international bekannte, umweltfreundliche Bambusschule. Australian International School (Sanur, Premiumklasse 18.000-25.000 $) — Cambridge IGCSE / A-Level.</p>
+              <p>Große internationale Community (über 5.000 Expat-Familien) — aktive Elternnetzwerke, Wochenendclubs, Sprach-Tandems. Vollständige Abdeckung der Klassen 1-12 verfügbar.</p>
             </div>
           </section>
 
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">Healthcare</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">Gesundheitsversorgung</h2>
             <div className="space-y-4 text-[16px] leading-[1.7] text-[#1f2937]">
-              <p><strong>International-grade clinics:</strong> BIMC Kuta (Cleveland Clinic affiliate), BIMC Nusa Dua, Siloam Hospital Denpasar, Kasih Ibu Hospital. Most doctors speak English, several have international certifications (US Board, AHPRA, GMC).</p>
-              <p><strong>Out-of-pocket pricing:</strong> specialist consultation $40-80, full blood panel $25-40, CT/MRI $200-400, moderate emergency surgery $5-15K, natural birth $2-4K, C-section $4-7K.</p>
-              <p><strong>Insurance is mandatory:</strong> Allianz Worldwide Care, Cigna Global, Bupa Global, Aetna International. Basic plan for an adult 30-40 — $1500-2500/year, premium with Singapore hospitalisation — $3500-6000/year.</p>
-              <p>Serious oncology, cardiac surgery, neurosurgery — typically evacuated to Singapore (Mount Elizabeth, Gleneagles) or Malaysia (Sunway Medical). Most insurance plans cover evacuation.</p>
+              <p><strong>Kliniken auf internationalem Niveau:</strong> BIMC Kuta (Partner der Cleveland Clinic), BIMC Nusa Dua, Siloam Hospital Denpasar, Kasih Ibu Hospital. Die meisten Ärzte sprechen Englisch, mehrere haben internationale Zertifizierungen (US Board, AHPRA, GMC).</p>
+              <p><strong>Selbstzahler-Preise:</strong> Facharztkonsultation 40-80 $, vollständiges Blutbild 25-40 $, CT/MRT 200-400 $, moderate Notoperation 5.000-15.000 $, natürliche Geburt 2.000-4.000 $, Kaiserschnitt 4.000-7.000 $.</p>
+              <p><strong>Versicherung ist Pflicht:</strong> Allianz Worldwide Care, Cigna Global, Bupa Global, Aetna International. Basistarif für einen Erwachsenen von 30-40 Jahren — 1.500-2.500 $/Jahr, Premium mit Krankenhausaufenthalt in Singapur — 3.500-6.000 $/Jahr.</p>
+              <p>Schwere Onkologie, Herz- und Neurochirurgie — werden in der Regel nach Singapur (Mount Elizabeth, Gleneagles) oder Malaysia (Sunway Medical) verlegt. Die meisten Versicherungen decken die Verlegung ab.</p>
             </div>
           </section>
 
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">Real cost of living</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">Reale Lebenshaltungskosten</h2>
             <div className="overflow-x-auto">
               <table className="w-full text-[14px] border-collapse">
                 <thead>
                   <tr className="text-left text-[var(--color-text-muted)] uppercase tracking-wide text-[12px]">
-                    <th className="py-3 px-3 border-b border-[var(--color-border)]">Category</th>
+                    <th className="py-3 px-3 border-b border-[var(--color-border)]">Kategorie</th>
                     <th className="py-3 px-3 border-b border-[var(--color-border)]">Minimum</th>
-                    <th className="py-3 px-3 border-b border-[var(--color-border)]">Comfortable</th>
+                    <th className="py-3 px-3 border-b border-[var(--color-border)]">Komfortabel</th>
                     <th className="py-3 px-3 border-b border-[var(--color-border)]">Premium</th>
                   </tr>
                 </thead>
                 <tbody className="[&_td]:py-2 [&_td]:px-3 [&_td]:border-b [&_td]:border-[var(--color-border)]">
-                  <tr><td className="font-semibold">Rent (3BR)</td><td>$1000-1500</td><td>$2500-3500</td><td>$5000-9000</td></tr>
-                  <tr><td className="font-semibold">Transport</td><td>$150 (scooter)</td><td>$500 (car+scooter)</td><td>$1500 (driver)</td></tr>
-                  <tr><td className="font-semibold">Food</td><td>$400</td><td>$1200</td><td>$2500</td></tr>
-                  <tr><td className="font-semibold">Helper</td><td>—</td><td>$200 (3 days/wk)</td><td>$600 (full-time)</td></tr>
-                  <tr><td className="font-semibold">School (2 kids)</td><td>—</td><td>$1500</td><td>$3500</td></tr>
-                  <tr><td className="font-semibold">Family insurance</td><td>$300</td><td>$600</td><td>$1200</td></tr>
-                  <tr><td className="font-semibold">Other</td><td>$200</td><td>$700</td><td>$1500</td></tr>
-                  <tr className="font-semibold"><td>TOTAL /month</td><td>$2050-2550</td><td>$7200-8200</td><td>$15800-19800</td></tr>
+                  <tr><td className="font-semibold">Miete (3 Zimmer)</td><td>$1000-1500</td><td>$2500-3500</td><td>$5000-9000</td></tr>
+                  <tr><td className="font-semibold">Transport</td><td>$150 (Roller)</td><td>$500 (Auto+Roller)</td><td>$1500 (Fahrer)</td></tr>
+                  <tr><td className="font-semibold">Essen</td><td>$400</td><td>$1200</td><td>$2500</td></tr>
+                  <tr><td className="font-semibold">Haushaltshilfe</td><td>—</td><td>$200 (3 Tage/Woche)</td><td>$600 (Vollzeit)</td></tr>
+                  <tr><td className="font-semibold">Schule (2 Kinder)</td><td>—</td><td>$1500</td><td>$3500</td></tr>
+                  <tr><td className="font-semibold">Familienversicherung</td><td>$300</td><td>$600</td><td>$1200</td></tr>
+                  <tr><td className="font-semibold">Sonstiges</td><td>$200</td><td>$700</td><td>$1500</td></tr>
+                  <tr className="font-semibold"><td>GESAMT /Monat</td><td>$2050-2550</td><td>$7200-8200</td><td>$15800-19800</td></tr>
                 </tbody>
               </table>
             </div>
@@ -184,7 +185,7 @@ export default function Page() {
 
           <section className="mb-12">
             <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
-              Frequently Asked Questions
+              Häufig gestellte Fragen
             </h2>
             <div className="space-y-3">
               {FAQ.map((it, i) => (
@@ -200,23 +201,23 @@ export default function Page() {
           </section>
 
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">Next steps</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">Nächste Schritte</h2>
             <div className="grid sm:grid-cols-2 gap-4">
               <Link href="/de/bali-immobilien-investment" className="block rounded-2xl border border-[var(--color-border)] p-5 bg-white no-underline hover:border-[var(--color-primary)] transition-colors">
-                <h3 className="text-[16px] font-semibold text-[#111827] mb-1">Bali property investment</h3>
-                <p className="text-[13px] text-[var(--color-text-muted)]">Yields, leasehold, taxes, ROI — full investor guide.</p>
+                <h3 className="text-[16px] font-semibold text-[#111827] mb-1">Immobilieninvestment auf Bali</h3>
+                <p className="text-[13px] text-[var(--color-text-muted)]">Renditen, Leasehold, Steuern, ROI — der vollständige Investorenratgeber.</p>
               </Link>
               <Link href="/de/villen/umalas" className="block rounded-2xl border border-[var(--color-border)] p-5 bg-white no-underline hover:border-[var(--color-primary)] transition-colors">
-                <h3 className="text-[16px] font-semibold text-[#111827] mb-1">Villas in Umalas — residential district</h3>
-                <p className="text-[13px] text-[var(--color-text-muted)]">Quiet area for families with kids, schools and infrastructure nearby.</p>
+                <h3 className="text-[16px] font-semibold text-[#111827] mb-1">Villen in Umalas — Wohnviertel</h3>
+                <p className="text-[13px] text-[var(--color-text-muted)]">Ruhige Gegend für Familien mit Kindern, Schulen und Infrastruktur in der Nähe.</p>
               </Link>
               <Link href="/de/villen/sanur" className="block rounded-2xl border border-[var(--color-border)] p-5 bg-white no-underline hover:border-[var(--color-primary)] transition-colors">
-                <h3 className="text-[16px] font-semibold text-[#111827] mb-1">Villas in Sanur — calm coast</h3>
-                <p className="text-[13px] text-[var(--color-text-muted)]">Family audience, beachfront promenade, low risk.</p>
+                <h3 className="text-[16px] font-semibold text-[#111827] mb-1">Villen in Sanur — ruhige Küste</h3>
+                <p className="text-[13px] text-[var(--color-text-muted)]">Familienpublikum, Strandpromenade, geringes Risiko.</p>
               </Link>
               <Link href="/de/contact" className="block rounded-2xl border border-[var(--color-border)] p-5 bg-white no-underline hover:border-[var(--color-primary)] transition-colors">
-                <h3 className="text-[16px] font-semibold text-[#111827] mb-1">Contact</h3>
-                <p className="text-[13px] text-[var(--color-text-muted)]">Telegram, email, partner contacts.</p>
+                <h3 className="text-[16px] font-semibold text-[#111827] mb-1">Kontakt</h3>
+                <p className="text-[13px] text-[var(--color-text-muted)]">Telegram, E-Mail, Partnerkontakte.</p>
               </Link>
             </div>
           </section>

@@ -3,24 +3,24 @@ import { HomeLanding } from '@/components/HomeLanding'
 export const revalidate = 1800
 
 export const metadata = {
-  title: 'Buy real estate in Bali — independent marketplace with analytics | Balinsky',
+  title: 'Beli properti di Bali — marketplace independen dengan analitik | Balinsky',
   description:
-    'Villas, apartments and complexes from dozens of developers in one catalog. Verified documents (PBG, SLF) and real rental yield from neighbour data. Photos, current prices, contacts — your choice.',
+    'Vila, apartemen, dan kompleks dari puluhan pengembang dalam satu katalog. Dokumen terverifikasi (PBG, SLF) dan imbal hasil sewa nyata dari data tetangga. Foto, harga terkini, kontak — pilihan ada di tangan Anda.',
   alternates: {
     canonical: '/id',
-    languages: { ru: '/ru', en: '/id', 'x-default': '/ru' },
+    languages: { ru: '/ru', en: '/en', id: '/id', 'x-default': '/ru' },
   },
   openGraph: {
-    title: 'Buy real estate in Bali — independent marketplace with analytics',
-    description: 'Villas, apartments and complexes from dozens of developers. Verified documents and real rental yield from neighbour data — the choice and the numbers are on your side.',
+    title: 'Beli properti di Bali — marketplace independen dengan analitik',
+    description: 'Vila, apartemen, dan kompleks dari puluhan pengembang. Dokumen terverifikasi dan imbal hasil sewa nyata dari data tetangga — pilihan dan angkanya ada di pihak Anda.',
     type: 'website',
     url: '/id',
     images: [{ url: '/balina.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Buy real estate in Bali — marketplace with analytics',
-    description: 'Villas, apartments and complexes from dozens of developers with verified documents and real rental yield.',
+    title: 'Beli properti di Bali — marketplace dengan analitik',
+    description: 'Vila, apartemen, dan kompleks dari puluhan pengembang dengan dokumen terverifikasi dan imbal hasil sewa nyata.',
     images: ['/balina.jpg'],
   },
 }

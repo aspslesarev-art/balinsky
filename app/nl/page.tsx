@@ -3,24 +3,24 @@ import { HomeLanding } from '@/components/HomeLanding'
 export const revalidate = 1800
 
 export const metadata = {
-  title: 'Buy real estate in Bali — independent marketplace with analytics | Balinsky',
+  title: 'Vastgoed kopen op Bali — onafhankelijke marktplaats met analyses | Balinsky',
   description:
-    'Villas, apartments and complexes from dozens of developers in one catalog. Verified documents (PBG, SLF) and real rental yield from neighbour data. Photos, current prices, contacts — your choice.',
+    "Villa's, appartementen en complexen van tientallen ontwikkelaars in één catalogus. Geverifieerde documenten (PBG, SLF) en reëel huurrendement op basis van buurtdata. Foto's, actuele prijzen, contacten — de keuze is aan u.",
   alternates: {
     canonical: '/nl',
-    languages: { ru: '/ru', en: '/nl', 'x-default': '/ru' },
+    languages: { ru: '/ru', en: '/en', nl: '/nl', 'x-default': '/ru' },
   },
   openGraph: {
-    title: 'Buy real estate in Bali — independent marketplace with analytics',
-    description: 'Villas, apartments and complexes from dozens of developers. Verified documents and real rental yield from neighbour data — the choice and the numbers are on your side.',
+    title: 'Vastgoed kopen op Bali — onafhankelijke marktplaats met analyses',
+    description: "Villa's, appartementen en complexen van tientallen ontwikkelaars. Geverifieerde documenten en reëel huurrendement op basis van buurtdata — de keuze en de cijfers staan aan uw kant.",
     type: 'website',
     url: '/nl',
     images: [{ url: '/balina.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Buy real estate in Bali — marketplace with analytics',
-    description: 'Villas, apartments and complexes from dozens of developers with verified documents and real rental yield.',
+    title: 'Vastgoed kopen op Bali — marktplaats met analyses',
+    description: "Villa's, appartementen en complexen van tientallen ontwikkelaars met geverifieerde documenten en reëel huurrendement.",
     images: ['/balina.jpg'],
   },
 }

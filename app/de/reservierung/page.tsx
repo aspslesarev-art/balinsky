@@ -4,15 +4,15 @@ import { ReservationGuide } from '@/components/ReservationGuide'
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
 export const metadata: Metadata = {
-  title: 'How a Bali property reservation works | Balinsky',
-  description: 'What "reserve" means on Bali: 14-day hold, $2–10k holding deposit, where the deposit sits, how refunds work, reservation form vs SPA.',
+  title: 'So funktioniert eine Immobilienreservierung auf Bali | Balinsky',
+  description: 'Was "reservieren" auf Bali bedeutet: 14-tägige Reservierung, Reservierungsanzahlung von $2–10k, wo die Anzahlung liegt, wie Rückerstattungen funktionieren, Reservierungsformular vs. SPA.',
   alternates: {
     canonical: '/de/reservierung',
-    languages: { ru: `${SITE_URL}/ru/rezervirovanie`, en: `${SITE_URL}/de/reservierung` , 'x-default': `${SITE_URL}/ru/rezervirovanie`},
+    languages: { ru: `${SITE_URL}/ru/rezervirovanie`, en: `${SITE_URL}/en/reservation`, de: `${SITE_URL}/de/reservierung` , 'x-default': `${SITE_URL}/ru/rezervirovanie`},
   },
   openGraph: {
-    title: 'How a Bali property reservation works',
-    description: '14-day exclusive hold, $2–10k deposit, clear refunds — how reservations work on Balinsky.',
+    title: 'So funktioniert eine Immobilienreservierung auf Bali',
+    description: '14-tägige exklusive Reservierung, Anzahlung von $2–10k, klare Rückerstattungen — so funktionieren Reservierungen bei Balinsky.',
     url: `${SITE_URL}/de/reservierung`,
     type: 'article',
   },

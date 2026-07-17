@@ -4,15 +4,15 @@ import { BuyingGuide } from '@/components/BuyingGuide'
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
 export const metadata: Metadata = {
-  title: 'Buying property in Bali as a foreigner — guide | Balinsky',
-  description: 'Step-by-step guide to buying a villa or apartment in Bali: leasehold and PT PMA, due diligence, PPAT notary, taxes and fees, common mistakes. Real timelines and numbers.',
+  title: 'Membeli properti di Bali sebagai orang asing — panduan | Balinsky',
+  description: 'Panduan langkah demi langkah membeli vila atau apartemen di Bali: leasehold dan PT PMA, uji tuntas, notaris PPAT, pajak dan biaya, kesalahan umum. Jangka waktu dan angka yang nyata.',
   alternates: {
     canonical: '/id/cara-beli',
-    languages: { ru: `${SITE_URL}/ru/kak-kupit`, en: `${SITE_URL}/id/cara-beli` , 'x-default': `${SITE_URL}/ru/kak-kupit`},
+    languages: { ru: `${SITE_URL}/ru/kak-kupit`, en: `${SITE_URL}/en/how-to-buy`, id: `${SITE_URL}/id/cara-beli`, 'x-default': `${SITE_URL}/ru/kak-kupit`},
   },
   openGraph: {
-    title: 'Buying property in Bali as a foreigner',
-    description: 'Seven steps, ownership structures, real all-in costs, and FAQ. The Balinsky guide.',
+    title: 'Membeli properti di Bali sebagai orang asing',
+    description: 'Tujuh langkah, struktur kepemilikan, total biaya sebenarnya, dan FAQ. Panduan Balinsky.',
     url: `${SITE_URL}/id/cara-beli`,
     type: 'article',
   },

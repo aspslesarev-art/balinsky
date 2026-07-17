@@ -3,24 +3,24 @@ import { HomeLanding } from '@/components/HomeLanding'
 export const revalidate = 1800
 
 export const metadata = {
-  title: 'Buy real estate in Bali — independent marketplace with analytics | Balinsky',
+  title: 'Immobilien auf Bali kaufen — unabhängiger Marktplatz mit Analytik | Balinsky',
   description:
-    'Villas, apartments and complexes from dozens of developers in one catalog. Verified documents (PBG, SLF) and real rental yield from neighbour data. Photos, current prices, contacts — your choice.',
+    'Villen, Apartments und Anlagen von Dutzenden Bauträgern in einem Katalog. Geprüfte Dokumente (PBG, SLF) und reale Mietrendite aus Nachbarschaftsdaten. Fotos, aktuelle Preise, Kontakte — Ihre Wahl.',
   alternates: {
     canonical: '/de',
-    languages: { ru: '/ru', en: '/de', 'x-default': '/ru' },
+    languages: { ru: '/ru', en: '/en', de: '/de', 'x-default': '/ru' },
   },
   openGraph: {
-    title: 'Buy real estate in Bali — independent marketplace with analytics',
-    description: 'Villas, apartments and complexes from dozens of developers. Verified documents and real rental yield from neighbour data — the choice and the numbers are on your side.',
+    title: 'Immobilien auf Bali kaufen — unabhängiger Marktplatz mit Analytik',
+    description: 'Villen, Apartments und Anlagen von Dutzenden Bauträgern. Geprüfte Dokumente und reale Mietrendite aus Nachbarschaftsdaten — die Wahl und die Zahlen sprechen für Sie.',
     type: 'website',
     url: '/de',
     images: [{ url: '/balina.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Buy real estate in Bali — marketplace with analytics',
-    description: 'Villas, apartments and complexes from dozens of developers with verified documents and real rental yield.',
+    title: 'Immobilien auf Bali kaufen — Marktplatz mit Analytik',
+    description: 'Villen, Apartments und Anlagen von Dutzenden Bauträgern mit geprüften Dokumenten und realer Mietrendite.',
     images: ['/balina.jpg'],
   },
 }
