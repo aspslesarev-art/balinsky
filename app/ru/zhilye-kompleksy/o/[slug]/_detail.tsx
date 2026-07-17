@@ -49,6 +49,7 @@ import { loadComplexMarketStats } from '@/lib/complex-market-stats'
 import { MarketStatsBlock } from '@/components/MarketStatsBlock'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { tField, pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
+import { facetLabel } from '@/lib/filter-i18n'
 import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
 import { districtRu } from '@/lib/district-ru'
@@ -898,38 +899,14 @@ async function loadOtherComplexesInDistrict(district: string | null, exceptId: s
   const [idx, manifest] = await Promise.all([_loadComplexIndex(), _loadComplexPhotos()])
   const candidates = idx.filter(c => c.id !== exceptId && c.district === district).slice(0, 4)
   const rows = await Promise.all(candidates.map(c => _loadComplexById(c.id)))
-  // Same RU→locale type label maps as the main complex page above.
-  const TYPE_EN: Record<string, string> = {
-    'Апартаменты': 'Apartments',
-    'Виллы': 'Villas',
-    'Виллы и дома': 'Villas',
-    'Таунхаусы': 'Townhouses',
-    'Пентхаусы': 'Penthouses',
-    'Дома': 'Houses',
-  }
-  const TYPE_ID: Record<string, string> = {
-    'Апартаменты': 'Apartemen',
-    'Виллы': 'Vila',
-    'Виллы и дома': 'Vila',
-    'Таунхаусы': 'Rumah bandar',
-    'Пентхаусы': 'Penthouse',
-    'Дома': 'Rumah',
-  }
-  const TYPE_FR: Record<string, string> = {
-    'Апартаменты': 'Appartements',
-    'Виллы': 'Villas',
-    'Виллы и дома': 'Villas',
-    'Таунхаусы': 'Maisons de ville',
-    'Пентхаусы': 'Penthouses',
-    'Дома': 'Maisons',
-  }
-  const TYPE_MAP = lang === 'id' ? TYPE_ID : lang === 'fr' ? TYPE_FR : TYPE_EN
   return rows
     .filter((c): c is ComplexRow => c != null)
     .map(c => {
       const photos = manifest[c.airtable_id] ?? []
       const typesRaw = strList(c.data['Типы юнитов'])
-      const types = lang === 'ru' ? typesRaw : typesRaw.map(t => TYPE_MAP[t] ?? t)
+      // Localize unit-type labels via the central facetLabel map (all 8 langs
+      // + translit fallback) so no Cyrillic type ever leaks on a non-RU page.
+      const types = lang === 'ru' ? typesRaw : typesRaw.map(t => facetLabel('type', t, lang))
       return {
         slug: c.slug as string,
         name: firstString(c.data['Project']) as string,
@@ -1131,33 +1108,9 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   // slug (DISTRICT_TO_SLUG) AND we have editorial copy for it.
   const districtSlug = districtRaw ? DISTRICT_TO_SLUG[districtRaw] ?? null : null
   const districtCopy = districtSlug ? getDistrictCopy(districtSlug, lang) : null
-  // Unit types / status / permits are stored as RU labels in Airtable —
-  // translate them to EN labels for the English tree so we don't print
-  // «Апартаменты, Виллы» / «Строится» on /en/.
-  const TYPE_EN: Record<string, string> = {
-    'Апартаменты': 'Apartments',
-    'Виллы': 'Villas',
-    'Виллы и дома': 'Villas',
-    'Таунхаусы': 'Townhouses',
-    'Пентхаусы': 'Penthouses',
-    'Дома': 'Houses',
-  }
-  const TYPE_ID: Record<string, string> = {
-    'Апартаменты': 'Apartemen',
-    'Виллы': 'Vila',
-    'Виллы и дома': 'Vila',
-    'Таунхаусы': 'Rumah bandar',
-    'Пентхаусы': 'Penthouse',
-    'Дома': 'Rumah',
-  }
-  const TYPE_FR: Record<string, string> = {
-    'Апартаменты': 'Appartements',
-    'Виллы': 'Villas',
-    'Виллы и дома': 'Villas',
-    'Таунхаусы': 'Maisons de ville',
-    'Пентхаусы': 'Penthouses',
-    'Дома': 'Maisons',
-  }
+  // Status / permits are stored as RU labels in Airtable — translate them to
+  // localized labels for the non-RU tree so we don't print «Строится» on /en/.
+  // Unit types go through the central facetLabel map (see below).
   const STATUS_EN: Record<string, string> = {
     'Строится': 'Under construction',
     'Построен': 'Completed',
@@ -1179,11 +1132,11 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
     'Под заказ': 'Sur demande',
     'Готов': 'Prêt',
   }
-  const TYPE_MAP = lang === 'id' ? TYPE_ID : lang === 'fr' ? TYPE_FR : TYPE_EN
   const STATUS_MAP = lang === 'id' ? STATUS_ID : lang === 'fr' ? STATUS_FR : STATUS_EN
   const enLabelFor = (map: Record<string, string>, v: string | null): string | null => v ? (lang === 'ru' ? v : (map[v] ?? v)) : null
   const typesRaw = strList(d['Типы юнитов'])
-  const types = lang === 'ru' ? typesRaw : typesRaw.map(t => TYPE_MAP[t] ?? t)
+  // Central facetLabel covers all 8 langs + translit fallback → never Cyrillic on non-RU.
+  const types = lang === 'ru' ? typesRaw : typesRaw.map(t => facetLabel('type', t, lang))
   const statusRaw = firstString(d['Статус'])
   const status = enLabelFor(STATUS_MAP, statusRaw)
   const salesStatus = firstString(d['Статус продаж'])

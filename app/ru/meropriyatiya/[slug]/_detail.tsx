@@ -12,6 +12,7 @@ import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { LocalDateTime } from '@/components/LocalDateTime'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { loadEventBySlug } from '@/lib/events'
+import { localizeEventFormat } from '@/lib/event-format'
 import { RelatedContent } from '@/components/RelatedContent'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
@@ -221,7 +222,7 @@ export async function EventDetail({ slug, lang }: { slug: string; lang: Lang }) 
                 <span className="inline-flex items-center gap-1.5"><HardHat size={14} /> {e.developers[0].name}</span>
               )
             )}
-            {e.format && <span className="inline-flex items-center gap-1.5">📍 {e.format}</span>}
+            {e.format && <span className="inline-flex items-center gap-1.5">📍 {localizeEventFormat(e.format, lang)}</span>}
             {past && <span className="text-[10px] uppercase tracking-wide bg-[#E5E7EB] text-[#374151] px-1.5 py-0.5 rounded">{c.pastBadge}</span>}
           </div>
 

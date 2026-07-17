@@ -50,6 +50,7 @@ import { loadNearbyPlaces } from '@/lib/nearby-places'
 import { NearbyPlaces } from '@/components/NearbyPlaces'
 import { loadManagersByDeveloperName, loadManagersByDeveloperSlug } from '@/lib/managers'
 import { getDeveloperStats } from '@/lib/developer-stats'
+import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
 import { PriceCtaCard } from '@/components/PriceCtaCard'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { loadAllVideos, matchesLang as videoMatchesLang } from '@/lib/videos'
@@ -757,7 +758,11 @@ export async function generateVillaMetadata(slug: string, lang: Lang) {
   const c = pickCopy(COPY, lang)
   const titleRaw = tField(d, 'SEO:Title', lang) ?? tField(d, 'ИИ Имя', lang) ?? slug
   const title = cleanTitle(titleRaw) ?? slug
-  const seoText = tField(d, 'SEO Text', lang) ?? tField(d, 'Notes', lang)
+  const seoTextRaw = tField(d, 'SEO Text', lang) ?? tField(d, 'Notes', lang)
+  // A bad AI translation may have stored Russian into `SEO Text EN` (or the
+  // suffix is missing and tField returns the raw RU). Never emit Cyrillic on a
+  // non-RU page — transliterate to Latin as a last resort.
+  const seoText = lang !== 'ru' && seoTextRaw && hasCyrillic(seoTextRaw) ? translitPreserveCase(seoTextRaw) : seoTextRaw
   const districtRaw = firstString(d['Location 2']) ?? firstString(d['Location'])
   // Display surface for RU uses the Cyrillic district form to match
   // the AI-generated H1 / SEO text. Raw Latin name is still used for
@@ -840,11 +845,15 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   const lease = firstString(d['Leasehold']) ?? firstString(d['Leashold'])
   const lat = parseGeo(d['Geo'])
   const lng = parseGeo(d['Geo 2'])
-  const seoText = tField(d, 'SEO Text', lang) ?? tField(d, 'Notes', lang)
+  const seoTextRaw = tField(d, 'SEO Text', lang) ?? tField(d, 'Notes', lang)
+  // De-Cyrillic guard: a bad `SEO Text EN` (or missing suffix) can leak Russian
+  // into the on-page description / Product schema on a non-RU page.
+  const seoText = lang !== 'ru' && seoTextRaw && hasCyrillic(seoTextRaw) ? translitPreserveCase(seoTextRaw) : seoTextRaw
   // Unique, AI-generated on-page write-up + FAQ (assistant_kb). Falls back to
   // the Airtable SEO Text / templated FAQ when not generated yet.
   const kb = await loadKbPageContent('villa', v.airtable_id, lang)
-  const pageBody = kb?.body ?? seoText
+  const pageBodyRaw = kb?.body ?? seoText
+  const pageBody = lang !== 'ru' && pageBodyRaw && hasCyrillic(pageBodyRaw) ? translitPreserveCase(pageBodyRaw) : pageBodyRaw
   // Per-photo vision alt text (image SEO/accessibility).
   const vision = await loadListingVision('villa', v.airtable_id)
   const photoAlts = photos.map((_, i) => altFor(vision, i, lang, title))
@@ -1256,7 +1265,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
                       {developer.highlights.map((h, i) => (
                         <li key={i} className="flex items-start gap-2">
                           <Star size={12} className="mt-1 shrink-0 text-[var(--color-primary)]" />
-                          <span>{h}</span>
+                          <span>{lang !== 'ru' && hasCyrillic(h) ? translitPreserveCase(h) : h}</span>
                         </li>
                       ))}
                     </ul>

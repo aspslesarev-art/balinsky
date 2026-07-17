@@ -7,6 +7,7 @@ import { loadReviewHeat } from '@/lib/reviews-heat'
 import { ComplexesSeoContent } from '@/components/ComplexesSeoContent'
 import { ComplexCatalogSearchBar } from '@/components/ComplexCatalogSearchBar'
 import { buildListHref, buildMapHref } from '@/lib/complex-filter-href'
+import { facetLabel } from '@/lib/filter-i18n'
 import {
   parseQueryFilters,
   buildOptions,
@@ -17,14 +18,6 @@ import {
 } from '../../../ru/zhilye-kompleksy/_lib'
 
 type SP = Promise<Record<string, string | undefined>>
-
-const TYPE_EN: Record<string, string> = {
-  'Апартаменты': 'Apartments',
-  'Виллы': 'Villas',
-  'Виллы и дома': 'Villas',
-  'Таунхаусы': 'Townhouses',
-  'Дома': 'Houses',
-}
 
 export async function generateMetadata({ searchParams }: { searchParams: SP }) {
   const sp = await searchParams
@@ -51,7 +44,7 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
     if (!e.slug || !e.name) continue
     if (seenSlug.has(e.slug)) continue
     seenSlug.add(e.slug)
-    const types = e.types.length > 0 ? e.types.map(t => TYPE_EN[t] ?? t).join(', ') : null
+    const types = e.types.length > 0 ? e.types.map(t => facetLabel('type', t, 'ban')).join(', ') : null
     const item: ComplexPoint = { id: e.id, slug: e.slug, name: e.name, location: e.district, types, coverUrl: e.coverUrl }
     const lat = Number(e.lat.toFixed(4))
     const lng = Number(e.lng.toFixed(4))

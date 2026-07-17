@@ -198,26 +198,32 @@ const STYLE_NL: Record<string, string> = {
 export const TYPE_EN: Record<string, string> = {
   'Виллы': 'Villas', 'Апартаменты': 'Apartments', 'Таунхаусы': 'Townhouses',
   'Hotel': 'Hotel', 'Смарт виллы': 'Smart villas', 'Пентхаусы': 'Penthouses', 'Commercial': 'Commercial',
+  'Виллы и дома': 'Villas', 'Дома': 'Houses',
 }
 const TYPE_ID: Record<string, string> = {
   'Виллы': 'Vila', 'Апартаменты': 'Apartemen', 'Таунхаусы': 'Rumah bandar',
   'Hotel': 'Hotel', 'Смарт виллы': 'Vila pintar', 'Пентхаусы': 'Penthouse', 'Commercial': 'Komersial',
+  'Виллы и дома': 'Vila', 'Дома': 'Rumah',
 }
 const TYPE_FR: Record<string, string> = {
   'Виллы': 'Villas', 'Апартаменты': 'Appartements', 'Таунхаусы': 'Maisons de ville',
   'Hotel': 'Hôtel', 'Смарт виллы': 'Villas intelligentes', 'Пентхаусы': 'Penthouses', 'Commercial': 'Commercial',
+  'Виллы и дома': 'Villas', 'Дома': 'Maisons',
 }
 const TYPE_DE: Record<string, string> = {
   'Виллы': 'Villen', 'Апартаменты': 'Apartments', 'Таунхаусы': 'Reihenhäuser',
   'Hotel': 'Hotel', 'Смарт виллы': 'Smart-Villen', 'Пентхаусы': 'Penthäuser', 'Commercial': 'Gewerbe',
+  'Виллы и дома': 'Villen', 'Дома': 'Häuser',
 }
 const TYPE_ZH: Record<string, string> = {
   'Виллы': '别墅', 'Апартаменты': '公寓', 'Таунхаусы': '联排别墅',
   'Hotel': '酒店', 'Смарт виллы': '智能别墅', 'Пентхаусы': '顶层公寓', 'Commercial': '商业地产',
+  'Виллы и дома': '别墅', 'Дома': '房屋',
 }
 const TYPE_NL: Record<string, string> = {
   'Виллы': "Villa's", 'Апартаменты': 'Appartementen', 'Таунхаусы': 'Herenhuizen',
   'Hotel': 'Hotel', 'Смарт виллы': "Smart villa's", 'Пентхаусы': 'Penthouses', 'Commercial': 'Commercieel',
+  'Виллы и дома': "Villa's", 'Дома': 'Huizen',
 }
 
 export type FilterDim = 'status' | 'permit' | 'style' | 'type'
