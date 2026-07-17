@@ -88,7 +88,7 @@ const WAVE = [5, 9, 14, 8, 17, 11, 6, 13, 18, 10, 7, 15, 9, 5, 12, 8]
 export function BalinaChatMock({ lang }: { lang: Lang }) {
   const c = pickCopy(COPY, lang)
   return (
-    <div className="w-full max-w-[420px] mx-auto">
+    <div className="w-full max-w-[420px] mx-auto" data-llm-skip="">
       <div className="rounded-[26px] bg-white border border-[var(--color-border)] shadow-[0_24px_60px_-20px_rgba(16,42,30,0.35)] overflow-hidden">
         {/* Header */}
         <div className="flex items-center gap-2.5 px-4 py-3 bg-[var(--color-primary-soft)] border-b border-[var(--color-border)]">

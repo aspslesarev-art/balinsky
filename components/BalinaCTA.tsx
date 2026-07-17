@@ -27,7 +27,7 @@ export function BalinaCTA({
     window.dispatchEvent(new CustomEvent('balina:open', { detail }))
   }
   return (
-    <button type="button" onClick={onClick} className={className}>
+    <button type="button" onClick={onClick} className={className} data-llm-skip="">
       {children}
     </button>
   )

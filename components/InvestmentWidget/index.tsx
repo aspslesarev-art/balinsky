@@ -493,7 +493,7 @@ function SectionShell({ children, lang }: { children: React.ReactNode; lang: Lan
   // without it, the h2 was visually touching the contact card's bottom
   // edge and looked unindented.
   return (
-    <section className="mt-12 mb-10" data-investment-block>
+    <section className="mt-12 mb-10" data-investment-block data-llm-skip="">
       <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-2">
         {t.sectionH2}
       </h2>
@@ -710,7 +710,7 @@ function EmergingBlock({ snap, lang }: { snap: Snapshot; lang: Lang }) {
   const t = pickCopy(COPY, lang)
   const plural = pluralize(lang, snap.totalCompetitorsInRadius, COPY.ru.object, COPY.en.object)
   return (
-    <section className="mt-8 rounded-2xl border border-[var(--color-border)] bg-white p-5">
+    <section className="mt-8 rounded-2xl border border-[var(--color-border)] bg-white p-5" data-llm-skip="">
       <div className="flex items-center gap-2 text-[12px] uppercase tracking-wide font-semibold text-[#111827] mb-2">
         <TrendingUp size={14} className="text-[var(--color-primary)]" /> {t.newDistrictH3}
       </div>

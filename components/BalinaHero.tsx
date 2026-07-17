@@ -315,7 +315,7 @@ export function BalinaHero() {
   }
 
   return (
-    <section className="pt-8 md:pt-14 pb-8 md:pb-10">
+    <section className="pt-8 md:pt-14 pb-8 md:pb-10" data-llm-skip="">
       <div className="rounded-3xl bg-gradient-to-br from-[var(--color-primary-soft)] via-white to-white border border-[var(--color-border)] overflow-hidden">
         <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-5 md:gap-10 p-5 md:p-10 md:items-center">
           {/* Portrait — smaller on mobile so the input row gets the

@@ -53,7 +53,7 @@ export function HeroBalinaSearch({
 
   return (
     <>
-      <form onSubmit={submit} className="relative">
+      <form onSubmit={submit} className="relative" data-llm-skip="">
         <Search size={18} strokeWidth={1.8} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#6B7570] pointer-events-none" />
         <input
           type="text"
@@ -86,7 +86,7 @@ export function HeroBalinaSearch({
         </div>
       </form>
 
-      <div className="mt-3 text-[12.5px] text-white/75 flex items-baseline flex-wrap gap-x-2 gap-y-1.5">
+      <div className="mt-3 text-[12.5px] text-white/75 flex items-baseline flex-wrap gap-x-2 gap-y-1.5" data-llm-skip="">
         <span className="uppercase tracking-wider text-[11px] text-white/55">{tryLabel}:</span>
         {suggestions.map((s, i) => (
           <button

@@ -1,6 +1,18 @@
 # Balinsky
 
-> Каталог недвижимости Бали для иностранных покупателей. Виллы, апартаменты, жилые комплексы и аренда от застройщиков с проверенными документами (PBG, SLF). На каждый объект — съёмка с земли, расчёт доходности по реальным данным соседей с Booking, прямой контакт менеджера застройщика. Каталог двуязычный (русский + английский).
+> Каталог недвижимости Бали для иностранных покупателей. Виллы, апартаменты, жилые комплексы и аренда от застройщиков с проверенными документами (PBG, SLF). На каждый объект — съёмка с земли, расчёт доходности по реальным данным соседей с Booking, прямой контакт менеджера застройщика. Сайт на 8 языках (ru, en, id, fr, de, zh, nl, ban).
+
+## For AI agents / machine-readable text
+
+Any page has a clean text and structured view — append `.md` or `.json` to its URL:
+
+- `https://balinsky.info/en/villas.md` — page as Markdown (headings, text, numbers)
+- `https://balinsky.info/en/villas.json` — structured `{title, description, headings, blocks, text, numbers}`
+- Works for every page and every language, e.g. `/de/villen.md`, `/en/complexes/<slug>.json`.
+
+These views strip navigation, scripts and proprietary analytics (yield estimates,
+competitor comparisons, the Balina AI consultant) — they carry the public listing
+copy and facts only. Served to verified AI crawlers (reverse-DNS confirmed).
 
 ## Каталог / Catalog
 
@@ -14,6 +26,10 @@
 - [Bali developers](https://balinsky.info/en/developers): editorially vetted developers with projects, permits and managers.
 - [Долгосрочная аренда](https://balinsky.info/ru/arenda): свежие предложения по месячной и годовой аренде.
 - [Long-term rental](https://balinsky.info/en/rental): fresh monthly and yearly rental listings.
+- [Villen auf Bali (DE)](https://balinsky.info/de/villen) · [Wohnanlagen](https://balinsky.info/de/wohnanlagen) · [Bauträger](https://balinsky.info/de/bautraeger)
+- [巴厘岛别墅 (ZH)](https://balinsky.info/zh/bieshu) · [住宅区](https://balinsky.info/zh/zhuzhaiqu) · [开发商](https://balinsky.info/zh/kaifashang)
+- [Villa's op Bali (NL)](https://balinsky.info/nl/villas) · [Wooncomplexen](https://balinsky.info/nl/wooncomplexen) · [Ontwikkelaars](https://balinsky.info/nl/ontwikkelaars)
+- [Villa di Bali (ID)](https://balinsky.info/id/villa) · [Vila ring Bali (BAN)](https://balinsky.info/ban/vila)
 
 ## Pillar-страницы / Pillar pages
 

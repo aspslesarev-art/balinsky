@@ -281,7 +281,7 @@ export function CompetitorsMap({
 
   if (!apiKey) {
     return (
-      <div className={`${heightClass} bg-[var(--color-search-bg)] rounded-3xl flex items-center justify-center text-[var(--color-text-muted)]`}>
+      <div className={`${heightClass} bg-[var(--color-search-bg)] rounded-3xl flex items-center justify-center text-[var(--color-text-muted)]`} data-llm-skip="">
         Карта недоступна (нет API ключа)
       </div>
     )
@@ -289,6 +289,7 @@ export function CompetitorsMap({
 
   return (
     <div
+      data-llm-skip=""
       style={{ width: '100%', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06)' }}
       className={`${heightClass} bg-white rounded-3xl overflow-hidden border border-[var(--color-border)]`}
     >

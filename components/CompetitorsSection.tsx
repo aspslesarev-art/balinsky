@@ -80,7 +80,7 @@ export function CompetitorsSection({
   const radiusLabel = radiusKm < 1 ? `${Math.round(radiusKm * 1000)} м` : `${radiusKm} км`
 
   return (
-    <section className="mb-10">
+    <section className="mb-10" data-llm-skip="">
       <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-2">
         Расположение и аренда поблизости
       </h2>

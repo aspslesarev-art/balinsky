@@ -54,6 +54,10 @@ export const config = {
     '/en/promo/:path*',
     '/en/events/:path*',
     '/en/knowledge/:path*',
+    // LLM text layer — any page URL + `.md` or `.json` is rewritten to the
+    // /api/llm handler (verified-crawler-gated). Infra paths excluded.
+    '/((?!api/|_next/|feeds/|admin/|sitemap).*)\\.md',
+    '/((?!api/|_next/|feeds/|admin/|sitemap).*)\\.json',
   ],
 }
 
@@ -194,8 +198,26 @@ function handleDirtySlug(req: NextRequest): NextResponse | null {
   return NextResponse.redirect(new URL(target, req.url), 301)
 }
 
+// `<path>.md` / `<path>.json` → internal rewrite to the LLM text handler.
+// Rewrite (not redirect) so the crawler-facing URL keeps its suffix.
+function handleLlmSuffix(req: NextRequest): NextResponse | null {
+  const m = req.nextUrl.pathname.match(/^(\/.*?)\.(md|json)$/)
+  if (!m) return null
+  const [, base, ext] = m
+  if (/^\/(api|_next|feeds|admin|sitemap)/.test(base)) return null
+  const target = new URL('/api/llm', req.url)
+  target.searchParams.set('path', base)
+  target.searchParams.set('format', ext === 'json' ? 'json' : 'md')
+  const preview = req.nextUrl.searchParams.get('preview')
+  if (preview) target.searchParams.set('preview', preview)
+  return NextResponse.rewrite(target)
+}
+
 export async function middleware(req: NextRequest) {
   // Fast path — runs on every matched URL, no I/O.
+  const llm = handleLlmSuffix(req)
+  if (llm) return llm
+
   const enSlug = handleEnKnowledgeSlug(req)
   if (enSlug) return enSlug
 

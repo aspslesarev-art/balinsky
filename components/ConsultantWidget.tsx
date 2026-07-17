@@ -1219,7 +1219,7 @@ export function ConsultantWidget() {
 
       {/* CALL — a separate full-screen experience, independent of the text chat. */}
       {callState !== 'idle' && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:justify-end p-0 sm:p-5">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:justify-end p-0 sm:p-5" data-llm-skip="">
           <div className="w-full sm:w-[360px] max-w-[100vw] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-[var(--color-border)] px-8 py-10 flex flex-col items-center gap-6 text-center">
             <div className="relative">
               <Image src="/balina.jpg" alt="" width={112} height={112} className="w-28 h-28 rounded-full object-cover" />
@@ -1242,7 +1242,7 @@ export function ConsultantWidget() {
       )}
 
       {!open && callState === 'idle' && (
-        <div className="fixed bottom-5 right-5 z-40 flex items-center gap-2">
+        <div className="fixed bottom-5 right-5 z-40 flex items-center gap-2" data-llm-skip="">
           {/* Call button — ring Балину and talk to her by voice. */}
           <button
             type="button"
@@ -1274,7 +1274,7 @@ export function ConsultantWidget() {
 
       {/* Proactive nudge on a listing page — Балина offers to walk the object. */}
       {!open && listingPage && teaserReady && !teaserClosed && (
-        <div className="fixed bottom-[78px] right-5 z-40 max-w-[240px] flex items-stretch rounded-2xl bg-white shadow-[0_10px_34px_rgba(0,0,0,0.18)] border border-[var(--color-border)] overflow-hidden">
+        <div className="fixed bottom-[78px] right-5 z-40 max-w-[240px] flex items-stretch rounded-2xl bg-white shadow-[0_10px_34px_rgba(0,0,0,0.18)] border border-[var(--color-border)] overflow-hidden" data-llm-skip="">
           <button
             type="button"
             onClick={() => { dismissTeaser(); tellAboutCurrent() }}
@@ -1302,8 +1302,10 @@ export function ConsultantWidget() {
             className="fixed inset-0 z-40 bg-black/40 sm:hidden"
             onClick={() => setOpen(false)}
             aria-hidden="true"
+            data-llm-skip=""
           />
           <div
+            data-llm-skip=""
             className="fixed sm:inset-auto sm:bottom-5 sm:right-5 sm:left-auto sm:top-auto sm:w-[400px] sm:h-[640px] sm:max-h-[calc(100vh-40px)] z-50 flex flex-col bg-white sm:rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.25)] sm:border sm:border-[var(--color-border)] overflow-hidden"
             style={isMobile ? {
               // Mobile only: pin both POSITION and SIZE to the visual
