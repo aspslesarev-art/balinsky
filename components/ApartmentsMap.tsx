@@ -15,6 +15,14 @@ import { switchLangPath, type Lang } from '@/lib/i18n'
 import { BALINSKY_MAP_STYLE } from '@/lib/google-map-style'
 import { useCurrency } from './CurrencyContext'
 import { formatPrice } from '@/lib/currency'
+import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
+
+// Marker titles come from the raw RU `SEO:Title`. On non-RU maps, listings
+// with no translation would otherwise show Cyrillic; transliterate as a last
+// resort so the popup stays in the Latin alphabet.
+function displayTitle(t: string, lang: Lang): string {
+  return lang !== 'ru' && hasCyrillic(t) ? translitPreserveCase(t) : t
+}
 
 export type MapPoint = {
   id: string
@@ -46,9 +54,9 @@ const COLORS = {
   white: '#FFFFFF',
 }
 
-function useFmtPrice(): (v: number | null) => string | null {
+function useFmtPrice(lang: Lang): (v: number | null) => string | null {
   const { currency } = useCurrency()
-  return (v) => (v == null || !Number.isFinite(v)) ? null : formatPrice(v, currency)
+  return (v) => (v == null || !Number.isFinite(v)) ? null : formatPrice(v, currency, lang)
 }
 
 // SVG pin: a filled circle with an inner white dot, OR a count number when
@@ -244,8 +252,9 @@ function CloseButton({ onClose }: { onClose: () => void }) {
 }
 
 function SinglePopup({ p, onClose, lang }: { p: MapPoint; onClose: () => void; lang: Lang }) {
-  const fmtPrice = useFmtPrice()
+  const fmtPrice = useFmtPrice(lang)
   const price = fmtPrice(p.priceUsd)
+  const title = displayTitle(p.title, lang)
   return (
     <div className="relative w-[260px] p-1">
       <CloseButton onClose={onClose} />
@@ -253,12 +262,12 @@ function SinglePopup({ p, onClose, lang }: { p: MapPoint; onClose: () => void; l
         // eslint-disable-next-line @next/next/no-img-element -- map InfoWindow popup, not a Next image
         <img
           src={p.thumb}
-          alt={p.title}
+          alt={title}
           className="w-full h-[140px] object-cover rounded-xl mb-3"
         />
       )}
       <div className="text-[14px] font-semibold leading-snug mb-1.5 line-clamp-2 text-[#111827] pr-6">
-        {p.title}
+        {title}
       </div>
       {price && (
         <div className="text-[15px] font-semibold text-[#2C8E65] mb-3">
@@ -276,7 +285,7 @@ function SinglePopup({ p, onClose, lang }: { p: MapPoint; onClose: () => void; l
 }
 
 function MultiPopup({ items, onClose, lang }: { items: MapPoint[]; onClose: () => void; lang: Lang }) {
-  const fmtPrice = useFmtPrice()
+  const fmtPrice = useFmtPrice(lang)
   return (
     <div className="relative w-[300px] p-1">
       <CloseButton onClose={onClose} />
@@ -302,7 +311,7 @@ function MultiPopup({ items, onClose, lang }: { items: MapPoint[]; onClose: () =
               )}
               <div className="min-w-0 flex-1">
                 <div className="text-[13px] font-medium leading-tight line-clamp-2">
-                  {p.title}
+                  {displayTitle(p.title, lang)}
                 </div>
                 {fmtPrice(p.priceUsd) && (
                   <div className="text-[13px] font-semibold text-[#2C8E65] mt-1">

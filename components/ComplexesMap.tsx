@@ -12,7 +12,12 @@ import { X } from 'lucide-react'
 import { ReviewsHeatLayer, ReviewsHeatToggle } from './ReviewsHeatLayer'
 import type { HeatCell } from '@/lib/reviews-heat'
 import { switchLangPath, type Lang } from '@/lib/i18n'
+import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
 import { BALINSKY_MAP_STYLE } from '@/lib/google-map-style'
+
+// De-Cyrillic a raw listing name on non-RU maps (last-resort, no translation).
+const displayName = (t: string, lang: Lang) =>
+  lang !== 'ru' && hasCyrillic(t) ? translitPreserveCase(t) : t
 
 export type ComplexPoint = {
   id: string
@@ -217,11 +222,11 @@ function SinglePopup({ p, onClose, lang }: { p: ComplexPoint; onClose: () => voi
       <CloseButton onClose={onClose} />
       {p.coverUrl ? (
         // eslint-disable-next-line @next/next/no-img-element -- map InfoWindow popup, not a Next image
-        <img src={p.coverUrl} alt={p.name} className="w-full h-[150px] object-cover rounded-xl mb-3" />
+        <img src={p.coverUrl} alt={displayName(p.name, lang)} className="w-full h-[150px] object-cover rounded-xl mb-3" />
       ) : (
         <div className="w-full h-[150px] rounded-xl mb-3 bg-[#F1F5F1] flex items-center justify-center text-3xl">🏝️</div>
       )}
-      <div className="text-[15px] font-semibold leading-snug mb-1.5 line-clamp-2 text-[#111827] pr-6">{p.name}</div>
+      <div className="text-[15px] font-semibold leading-snug mb-1.5 line-clamp-2 text-[#111827] pr-6">{displayName(p.name, lang)}</div>
       <div className="flex items-center gap-2 text-[13px] text-[#6B7280] mb-3">
         {p.location && <span>{p.location}</span>}
         {p.location && p.types && <span>·</span>}
@@ -258,7 +263,7 @@ function MultiPopup({ items, onClose, lang }: { items: ComplexPoint[]; onClose: 
                 <div className="w-12 h-12 bg-[#F1F5F1] rounded-md shrink-0" />
               )}
               <div className="flex-1 min-w-0">
-                <div className="text-[13px] font-medium leading-tight line-clamp-2">{p.name}</div>
+                <div className="text-[13px] font-medium leading-tight line-clamp-2">{displayName(p.name, lang)}</div>
                 {(p.location || p.types) && (
                   <div className="text-[12px] text-[#6B7280] mt-0.5 line-clamp-1">
                     {p.location}{p.location && p.types ? ' · ' : ''}{p.types}

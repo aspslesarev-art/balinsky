@@ -1401,7 +1401,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
           </div>
           {minPrice != null && (
             <div className="text-[16px] sm:text-[18px] md:text-[20px] font-semibold text-[#16A34A]">
-              {copy.unitsFrom} <InlinePrice usd={minPrice} />
+              {copy.unitsFrom} <InlinePrice usd={minPrice} lang={lang} />
             </div>
           )}
         </section>

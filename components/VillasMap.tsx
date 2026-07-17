@@ -10,6 +10,14 @@ import { formatPrice } from '@/lib/currency'
 import { ReviewsHeatLayer, ReviewsHeatToggle } from './ReviewsHeatLayer'
 import type { HeatCell } from '@/lib/reviews-heat'
 import { switchLangPath, type Lang } from '@/lib/i18n'
+import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
+
+// Marker titles come from the raw RU `SEO:Title`. On non-RU maps, listings
+// with no translation would otherwise show Cyrillic (e.g. "Вилла … в Ubud");
+// transliterate as a last resort so the popup stays in the Latin alphabet.
+function displayTitle(t: string, lang: Lang): string {
+  return lang !== 'ru' && hasCyrillic(t) ? translitPreserveCase(t) : t
+}
 
 export type VillaPoint = {
   id: string
@@ -159,10 +167,10 @@ function MapMarkers({ groups, selectedKey, onSelect }: {
   return null
 }
 
-function useFmtPrice() {
+function useFmtPrice(lang: Lang) {
   const { currency } = useCurrency()
   return (priceUsd: number | null) =>
-    priceUsd != null && Number.isFinite(priceUsd) ? formatPrice(priceUsd, currency) : null
+    priceUsd != null && Number.isFinite(priceUsd) ? formatPrice(priceUsd, currency, lang) : null
 }
 
 function CloseButton({ onClose }: { onClose: () => void }) {
@@ -179,18 +187,19 @@ function CloseButton({ onClose }: { onClose: () => void }) {
 }
 
 function SinglePopup({ p, onClose, lang }: { p: VillaPoint; onClose: () => void; lang: Lang }) {
-  const fmt = useFmtPrice()
+  const fmt = useFmtPrice(lang)
   const price = fmt(p.priceUsd)
+  const title = displayTitle(p.title, lang)
   return (
     <div className="relative w-[260px] p-1">
       <CloseButton onClose={onClose} />
       {p.thumb ? (
         // eslint-disable-next-line @next/next/no-img-element -- map InfoWindow popup, not a Next image
-        <img src={p.thumb} alt={p.title} className="w-full h-[140px] object-cover rounded-xl mb-3" />
+        <img src={p.thumb} alt={title} className="w-full h-[140px] object-cover rounded-xl mb-3" />
       ) : (
         <div className="w-full h-[140px] rounded-xl mb-3 bg-[#F1F5F1] flex items-center justify-center text-3xl">🏝️</div>
       )}
-      <div className="text-[14px] font-semibold leading-snug mb-1.5 line-clamp-2 text-[#111827] pr-6">{p.title}</div>
+      <div className="text-[14px] font-semibold leading-snug mb-1.5 line-clamp-2 text-[#111827] pr-6">{title}</div>
       {price && <div className="text-[15px] font-semibold text-[#2C8E65] mb-3">{price}</div>}
       <a
         href={switchLangPath(`/ru/villy/o/${p.slug}`, lang)}
@@ -203,7 +212,7 @@ function SinglePopup({ p, onClose, lang }: { p: VillaPoint; onClose: () => void;
 }
 
 function MultiPopup({ items, onClose, lang }: { items: VillaPoint[]; onClose: () => void; lang: Lang }) {
-  const fmt = useFmtPrice()
+  const fmt = useFmtPrice(lang)
   return (
     <div className="relative w-[300px] p-1">
       <CloseButton onClose={onClose} />
@@ -226,7 +235,7 @@ function MultiPopup({ items, onClose, lang }: { items: VillaPoint[]; onClose: ()
                   <div className="w-12 h-12 bg-[#F1F5F1] rounded-md shrink-0" />
                 )}
                 <div className="flex-1 min-w-0">
-                  <div className="text-[13px] font-medium leading-tight line-clamp-2">{p.title}</div>
+                  <div className="text-[13px] font-medium leading-tight line-clamp-2">{displayTitle(p.title, lang)}</div>
                   {price && <div className="text-[13px] font-semibold text-[#2C8E65] mt-0.5">{price}</div>}
                 </div>
               </a>

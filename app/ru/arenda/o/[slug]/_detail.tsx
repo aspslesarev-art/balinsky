@@ -192,7 +192,7 @@ export async function RentalDetail({ slug, lang }: { slug: string; lang: Lang })
             {r.location && <span className="inline-flex items-center gap-1.5"><MapPin size={14} /> {r.location}, {c.bali}</span>}
             {r.priceSegment && <span className="inline-flex items-center gap-1.5"><Tag size={14} /> {r.priceSegment}</span>}
           </div>
-          <PriceDisplay usd={r.priceMonthUsd} suffix={c.perMonth} />
+          <PriceDisplay usd={r.priceMonthUsd} suffix={c.perMonth} lang={lang} />
         </section>
 
         {r.notes && (

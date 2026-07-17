@@ -15,6 +15,7 @@ import {
   applySearch,
   loadAll,
   buildMetadataEn,
+  buildHeadingLocalized,
 } from '../../../ru/zhilye-kompleksy/_lib'
 
 type SP = Promise<Record<string, string | undefined>>
@@ -23,7 +24,7 @@ export async function generateMetadata({ searchParams }: { searchParams: SP }) {
   const sp = await searchParams
   const f = parseQueryFilters(sp)
   const meta = buildMetadataEn(f, { canonicalPath: '/de/wohnanlagen', noIndex: true })
-  meta.title = `Map · Residential complexes | Balinsky`
+  meta.title = `Karte · ${buildHeadingLocalized(f, 'de')} | Balinsky`
   return meta
 }
 
@@ -32,7 +33,7 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
   const filters = parseQueryFilters(sp)
 
   const { enriched } = await loadAll()
-  const options = buildOptions(enriched, filters)
+  const options = buildOptions(enriched, filters, 'de')
   let filtered = enriched.filter(e => passes(e, filters))
   if (filters.q.trim()) filtered = applySearch(filtered, filters.q)
 
@@ -64,13 +65,13 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
       <Header active="zhilye-kompleksy" />
 
       <PageContainer>
-        <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[#111827]">Map · Residential complexes in Bali</h1>
-        <div className="text-[14px] text-[var(--color-text-muted)] mb-6">{totalPoints} complexes on the map{totalPoints !== groups.length && ` · ${groups.length} points`}</div>
+        <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[#111827]">{`Karte · ${buildHeadingLocalized(filters, 'de')}`}</h1>
+        <div className="text-[14px] text-[var(--color-text-muted)] mb-6">{totalPoints} Wohnanlagen auf der Karte{totalPoints !== groups.length && ` · ${groups.length} Punkte`}</div>
 
         <CatalogTabs active="map" listHref={buildListHref(filters, 'de')} mapHref={buildMapHref(filters, 'de')} lang="de" />
 
         <div className="mt-6">
-          <ComplexCatalogSearchBar initial={filters.q} current={filters} view="map" placeholder="Search complexes, districts, developers…" />
+          <ComplexCatalogSearchBar initial={filters.q} current={filters} view="map" placeholder="Wohnanlagen, Regionen, Bauträger suchen…" />
         </div>
 
         <div className="mt-4">

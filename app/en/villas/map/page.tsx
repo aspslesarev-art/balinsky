@@ -14,6 +14,7 @@ import {
   applySearch,
   loadAll,
   buildMetadataEn,
+  buildHeadingLoc,
   firstString,
 } from '../../../ru/villy/_lib'
 import { tField } from '@/lib/i18n'
@@ -68,7 +69,7 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
       <Header active="villy" />
 
       <PageContainer>
-        <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[#111827]">Map · Villas in Bali</h1>
+        <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[#111827]">{buildHeadingLoc(filters, 'en')}</h1>
         <div className="text-[14px] text-[var(--color-text-muted)] mb-6">{totalPoints} objects on the map{totalPoints !== groups.length && ` · ${groups.length} points`}</div>
 
         <CatalogTabs active="map" listHref={buildListHref(filters, 'en')} mapHref={buildMapHref(filters, 'en')} lang="en" />

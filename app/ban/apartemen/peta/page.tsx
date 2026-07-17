@@ -14,6 +14,7 @@ import {
   applySearch,
   loadAll,
   buildMetadataEn,
+  buildHeadingLoc,
   firstString,
 } from '../../../ru/apartamenty/_lib'
 import { tField } from '@/lib/i18n'
@@ -69,16 +70,16 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
       <Header active="apartamenty" />
 
       <PageContainer>
-        <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[#1A1A1A]">Map · Apartments in Bali</h1>
+        <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[#1A1A1A]">{buildHeadingLoc(filters, 'ban')}</h1>
         <div className="text-[14px] text-[var(--color-text-muted)] mb-6">
-          {pointCount} objects on the map
-          {pointCount !== groups.length && ` · ${groups.length} points`}
+          {pointCount} objek ring peta
+          {pointCount !== groups.length && ` · ${groups.length} titik`}
         </div>
 
         <CatalogTabs active="map" listHref={buildListHref(filters, 'ban')} mapHref={buildMapHref(filters, 'ban')} lang="ban" />
 
         <div className="mt-6">
-          <CatalogSearchBar initial={filters.q} current={filters} view="map" placeholder="Search by name, district, developer…" />
+          <CatalogSearchBar initial={filters.q} current={filters} view="map" placeholder="Rerehin manut wasta, wewengkon, pangwangun…" />
         </div>
 
         <div className="mt-4">

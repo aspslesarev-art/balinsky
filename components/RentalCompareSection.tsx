@@ -209,12 +209,12 @@ export async function RentalCompareSection({ district, bedrooms, villaPriceUsd, 
       <div className="text-[14px] text-[var(--color-text-muted)] mb-5">{subtitle}</div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5" data-investment-block>
-        <Stat label={c.medianRent} value={<><InlinePrice usd={med} />{c.perMonth}</>} />
-        <Stat label={c.range} value={<><InlinePrice usd={min} /> – <InlinePrice usd={max} /></>} />
+        <Stat label={c.medianRent} value={<><InlinePrice usd={med} lang={lang} />{c.perMonth}</>} />
+        <Stat label={c.range} value={<><InlinePrice usd={min} lang={lang} /> – <InlinePrice usd={max} lang={lang} /></>} />
         <Stat
           label={annualYieldPct != null ? c.grossYield : c.perYear}
-          value={annualYieldPct != null ? `~${annualYieldPct.toFixed(1)}%` : <><InlinePrice usd={med * 12} /> / {lang === 'ru' ? 'год' : 'yr'}</>}
-          hint={annualYieldPct != null ? c.yieldHint(<InlinePrice usd={med * 12} />, <InlinePrice usd={villaPriceUsd ?? 0} />) : undefined}
+          value={annualYieldPct != null ? `~${annualYieldPct.toFixed(1)}%` : <><InlinePrice usd={med * 12} lang={lang} /> / {lang === 'ru' ? 'год' : 'yr'}</>}
+          hint={annualYieldPct != null ? c.yieldHint(<InlinePrice usd={med * 12} lang={lang} />, <InlinePrice usd={villaPriceUsd ?? 0} lang={lang} />) : undefined}
         />
       </div>
 
@@ -255,7 +255,7 @@ function CompareCard({ r, lang }: { r: RentalItem; lang: Lang }) {
       </div>
       <div className="p-2.5">
         <div className="text-[14px] font-semibold text-[#111827] leading-tight">
-          <InlinePrice usd={r.priceMonthUsd} /><span className="text-[10px] font-normal text-[var(--color-text-muted)]">{perMo}</span>
+          <InlinePrice usd={r.priceMonthUsd} lang={lang} /><span className="text-[10px] font-normal text-[var(--color-text-muted)]">{perMo}</span>
         </div>
         <div className="mt-0.5 flex items-center gap-2 text-[11px] text-[var(--color-text-muted)]">
           {r.bedrooms != null && <span className="inline-flex items-center gap-0.5"><BedDouble size={10} /> {r.bedrooms} BR</span>}

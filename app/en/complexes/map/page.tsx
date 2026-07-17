@@ -15,6 +15,7 @@ import {
   applySearch,
   loadAll,
   buildMetadataEn,
+  buildHeadingLocalized,
 } from '../../../ru/zhilye-kompleksy/_lib'
 
 type SP = Promise<Record<string, string | undefined>>
@@ -23,7 +24,7 @@ export async function generateMetadata({ searchParams }: { searchParams: SP }) {
   const sp = await searchParams
   const f = parseQueryFilters(sp)
   const meta = buildMetadataEn(f, { canonicalPath: '/en/complexes', noIndex: true })
-  meta.title = `Map · Residential complexes | Balinsky`
+  meta.title = `Map · ${buildHeadingLocalized(f, 'en')} | Balinsky`
   return meta
 }
 
@@ -32,7 +33,7 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
   const filters = parseQueryFilters(sp)
 
   const { enriched } = await loadAll()
-  const options = buildOptions(enriched, filters)
+  const options = buildOptions(enriched, filters, 'en')
   let filtered = enriched.filter(e => passes(e, filters))
   if (filters.q.trim()) filtered = applySearch(filtered, filters.q)
 
@@ -64,7 +65,7 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
       <Header active="zhilye-kompleksy" />
 
       <PageContainer>
-        <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[#111827]">Map · Residential complexes in Bali</h1>
+        <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[#111827]">{`Map · ${buildHeadingLocalized(filters, 'en')}`}</h1>
         <div className="text-[14px] text-[var(--color-text-muted)] mb-6">{totalPoints} complexes on the map{totalPoints !== groups.length && ` · ${groups.length} points`}</div>
 
         <CatalogTabs active="map" listHref={buildListHref(filters, 'en')} mapHref={buildMapHref(filters, 'en')} lang="en" />

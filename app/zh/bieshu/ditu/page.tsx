@@ -14,6 +14,7 @@ import {
   applySearch,
   loadAll,
   buildMetadataEn,
+  buildHeadingLoc,
   firstString,
 } from '../../../ru/villy/_lib'
 import { tField } from '@/lib/i18n'
@@ -68,13 +69,13 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
       <Header active="villy" />
 
       <PageContainer>
-        <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[#111827]">Map · Villas in Bali</h1>
-        <div className="text-[14px] text-[var(--color-text-muted)] mb-6">{totalPoints} objects on the map{totalPoints !== groups.length && ` · ${groups.length} points`}</div>
+        <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[#111827]">{buildHeadingLoc(filters, 'zh')}</h1>
+        <div className="text-[14px] text-[var(--color-text-muted)] mb-6">{totalPoints} 个房源在地图上{totalPoints !== groups.length && ` · ${groups.length} 个坐标点`}</div>
 
         <CatalogTabs active="map" listHref={buildListHref(filters, 'zh')} mapHref={buildMapHref(filters, 'zh')} lang="zh" />
 
         <div className="mt-6">
-          <VillaCatalogSearchBar initial={filters.q} current={filters} view="map" placeholder="Search villas, districts, developers…" />
+          <VillaCatalogSearchBar initial={filters.q} current={filters} view="map" placeholder="搜索别墅、地区、开发商…" />
         </div>
 
         <div className="mt-4">

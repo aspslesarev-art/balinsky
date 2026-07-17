@@ -14,6 +14,7 @@ import {
   applySearch,
   loadAll,
   buildMetadataEn,
+  buildHeadingLoc,
   firstString,
 } from '../../../ru/apartamenty/_lib'
 import { tField } from '@/lib/i18n'
@@ -69,16 +70,16 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
       <Header active="apartamenty" />
 
       <PageContainer>
-        <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[#1A1A1A]">Map · Apartments in Bali</h1>
+        <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[#1A1A1A]">{buildHeadingLoc(filters, 'nl')}</h1>
         <div className="text-[14px] text-[var(--color-text-muted)] mb-6">
-          {pointCount} objects on the map
-          {pointCount !== groups.length && ` · ${groups.length} points`}
+          {pointCount} objecten op de kaart
+          {pointCount !== groups.length && ` · ${groups.length} punten`}
         </div>
 
         <CatalogTabs active="map" listHref={buildListHref(filters, 'nl')} mapHref={buildMapHref(filters, 'nl')} lang="nl" />
 
         <div className="mt-6">
-          <CatalogSearchBar initial={filters.q} current={filters} view="map" placeholder="Search by name, district, developer…" />
+          <CatalogSearchBar initial={filters.q} current={filters} view="map" placeholder="Zoek op naam, district, ontwikkelaar…" />
         </div>
 
         <div className="mt-4">

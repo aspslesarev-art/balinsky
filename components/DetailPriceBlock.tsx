@@ -2,6 +2,7 @@
 
 import { useCurrency } from './CurrencyContext'
 import { formatPrice } from '@/lib/currency'
+import type { Lang } from '@/lib/i18n'
 
 // Price block used at the top of villa / apartment / complex detail pages.
 // Reactive to the global currency toggle, optionally renders the price per
@@ -10,15 +11,17 @@ export function DetailPriceBlock({
   priceUsd,
   pricePerSqmUsd,
   updatedAt,
+  lang = 'ru',
 }: {
   priceUsd: number
   pricePerSqmUsd?: number | null
   updatedAt?: string | null
+  lang?: Lang
 }) {
   const { currency } = useCurrency()
-  const main = formatPrice(priceUsd, currency)
+  const main = formatPrice(priceUsd, currency, lang)
   const perSqm = pricePerSqmUsd != null && Number.isFinite(pricePerSqmUsd) && pricePerSqmUsd > 0
-    ? formatPrice(pricePerSqmUsd, currency)
+    ? formatPrice(pricePerSqmUsd, currency, lang)
     : null
   const updated = updatedAt ? formatUpdated(updatedAt) : null
   return (
