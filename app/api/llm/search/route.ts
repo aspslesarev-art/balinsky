@@ -14,6 +14,7 @@ import { gate } from '@/lib/llm/bots'
 import { rateLimited, clientIp } from '@/lib/llm/ratelimit'
 import { kbSearch } from '@/lib/semantic-search'
 import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
+import { loadKbSummaryCache } from '@/lib/kb-summary-i18n'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -52,6 +53,7 @@ export async function GET(req: Request) {
   const limit = Math.min(Math.max(Number(url.searchParams.get('limit')) || 10, 1), 25)
   const kindsRaw = (url.searchParams.get('kinds') || '').split(',').map(s => s.trim()).filter(Boolean)
   const kinds = kindsRaw.filter(k => KNOWN_KINDS.has(k))
+  const lang = (url.searchParams.get('lang') || 'en').toLowerCase()
 
   let hits
   try {
@@ -60,23 +62,29 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'search failed', detail: String(e) }, { status: 502 })
   }
 
+  // Native-language title/summary where translated; else the RU value
+  // (de-Cyrillic'd so no Cyrillic leaks into the response).
+  const tr = lang === 'ru' ? {} : await loadKbSummaryCache(lang)
+  const deCyr = (s: string | null | undefined) => (s && hasCyrillic(s) ? translitPreserveCase(s) : s ?? null)
+
   const results = hits.map(h => {
     const path = pagePath(h.kind, h.slug)
-    // KB titles are stored RU; de-Cyrillic for the (English-facing) API.
-    const title = h.title && hasCyrillic(h.title) ? translitPreserveCase(h.title) : h.title
+    const t = tr[h.ref_id]
+    const title = t?.title ?? deCyr(h.title)
+    const summary = t?.summary ?? deCyr(h.summary)
     return {
       title,
       kind: h.kind,
       url: path ? `${url.origin}${path}` : null,
       text_url: path ? `${url.origin}${path}.md` : null,
-      summary: h.summary,
+      summary,
       facts: h.meta ?? {},
       score: Math.round((1 - h.distance) * 1000) / 1000,
     }
   })
 
   return NextResponse.json(
-    { query: q, kinds: kinds.length ? kinds : 'all', count: results.length, results },
+    { query: q, lang, kinds: kinds.length ? kinds : 'all', count: results.length, results },
     { headers: { 'cache-control': 'public, s-maxage=300, stale-while-revalidate=3600', 'x-robots-tag': 'noindex', 'x-llm-bot': g.bot ?? '' } },
   )
 }

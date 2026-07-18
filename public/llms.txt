@@ -21,9 +21,12 @@ developers, districts) — Azure-embedded, always current:
 - Returns ranked results with title, page URL, `.md` full-text URL, an investor summary and key facts. Optional `&kinds=villa,complex` and `&limit=15`.
 
 **Full catalogue corpus** — every listing with a summary + links to its full text,
-one machine-readable file, regenerated hourly from the live knowledge base:
+one machine-readable file, regenerated from the live knowledge base, **in any of
+the 8 languages**:
 
-- `https://balinsky.info/llms-full.txt`
+- `https://balinsky.info/llms-full.txt` (English by default)
+- `https://balinsky.info/llms-full.txt?lang=de` (or fr / id / zh / nl / ru / en)
+- Search also takes `&lang=`: `/api/llm/search?q=...&lang=zh`
 
 ## Каталог / Catalog
 
