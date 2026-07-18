@@ -6,6 +6,7 @@ import {
 } from '@/lib/complex-seo-routes'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
+import { facetLabel } from '@/lib/filter-i18n'
 
 const POPULAR_DISTRICTS = ['Berawa', 'Sanur', 'Ubud', 'Uluwatu', 'Pererenan', 'Pandawa', 'Batu Bolong', 'Cemagi']
 
@@ -460,7 +461,7 @@ export function ComplexesSeoContent({
                   href={`${sectionRoot}/${slug}`}
                   className="inline-block px-3 py-1.5 rounded-full bg-[var(--color-card-bg)] border border-[var(--color-border)] text-[13px] text-[var(--color-text)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] transition-colors"
                 >
-                  {name}
+                  {facetLabel('type', name, lang)}
                 </Link>
               </li>
             ))}
