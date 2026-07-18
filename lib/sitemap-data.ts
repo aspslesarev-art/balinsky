@@ -47,14 +47,32 @@ function pairEntry(args: {
   // (e.g. /en/bali-property-investment/canggu → /id/investasi-properti-bali/canggu).
   const idUrl = `${SITE_URL}${switchLangPath(enPath, 'id')}`
   const frUrl = `${SITE_URL}${switchLangPath(enPath, 'fr')}`
-  // x-default = RU per our metadata.alternates convention (the site's
-  // origin language). Mirrors what generateMetadata() emits per page.
-  const alternates = { languages: { ru: ruUrl, en: enUrl, id: idUrl, fr: frUrl, 'x-default': ruUrl } }
+  const deUrl = `${SITE_URL}${switchLangPath(enPath, 'de')}`
+  const zhUrl = `${SITE_URL}${switchLangPath(enPath, 'zh')}`
+  const nlUrl = `${SITE_URL}${switchLangPath(enPath, 'nl')}`
+  const banUrl = `${SITE_URL}${switchLangPath(enPath, 'ban')}`
+  // hreflang cluster — self-referential + reciprocal, per Google's spec.
+  // Codes must be ISO 639-1 (+ optional ISO 3166-1 region). Simplified
+  // Chinese uses `zh-Hans` (script) rather than the ambiguous bare `zh`.
+  // Balinese (`ban`, ISO 639-3) has NO valid hreflang code, so it's excluded
+  // from the cluster; its URL is still emitted as a plain <loc> below so
+  // Google can crawl it. x-default = RU (the site's origin language).
+  const alternates = {
+    languages: {
+      ru: ruUrl, en: enUrl, id: idUrl, fr: frUrl,
+      de: deUrl, 'zh-Hans': zhUrl, nl: nlUrl, 'x-default': ruUrl,
+    },
+  }
   return [
     { url: ruUrl, lastModified, changeFrequency, priority, alternates },
     { url: enUrl, lastModified, changeFrequency, priority, alternates },
     { url: idUrl, lastModified, changeFrequency, priority, alternates },
     { url: frUrl, lastModified, changeFrequency, priority, alternates },
+    { url: deUrl, lastModified, changeFrequency, priority, alternates },
+    { url: zhUrl, lastModified, changeFrequency, priority, alternates },
+    { url: nlUrl, lastModified, changeFrequency, priority, alternates },
+    // Balinese: crawlable <loc>, no hreflang (unsupported code).
+    { url: banUrl, lastModified, changeFrequency, priority },
   ]
 }
 
