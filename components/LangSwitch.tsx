@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
-import { switchLangPath, detectLang, LANGS, type Lang } from '@/lib/i18n'
+import { switchLangPath, detectLang, LANGS, pickCopy, type Lang } from '@/lib/i18n'
 
 const LANG_LABEL: Record<Lang, string> = { ru: 'RU', en: 'EN', id: 'ID', fr: 'FR', de: 'DE', zh: 'ZH', nl: 'NL', ban: 'BAN' }
 
@@ -11,7 +11,7 @@ export function LangSwitch({ className = '' }: { className?: string }) {
   const pathname = usePathname() ?? '/'
   const router = useRouter()
   const current: Lang = detectLang(pathname)
-  const label = current === 'ru' ? 'Язык' : 'Language'
+  const label = pickCopy({ ru: 'Язык', en: 'Language', id: 'Bahasa', fr: 'Langue', de: 'Sprache', zh: '语言', nl: 'Taal', ban: 'Basa' }, current)
 
   return (
     <label className={`relative inline-flex items-center ${className}`}>
