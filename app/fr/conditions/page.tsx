@@ -63,10 +63,10 @@ export default function Page() {
         Les photos et vidéos de biens individuels peuvent appartenir à des promoteurs ou à des tiers — demandez une licence distincte pour toute réutilisation commerciale.
       </p>
 
-      <h2>5. Assistant IA Balina</h2>
+      <h2>5. Assistant IA Balisa</h2>
       <p>
-        Balina est un assistant IA expérimental présent sur le site. Ses réponses sont informatives et ne remplacent pas la consultation d&apos;un agent, avocat ou notaire agréé.
-        Balina peut se tromper — confirmez auprès du spécialiste compétent tout élément qui touche à une transaction avant d&apos;agir.
+        Balisa est un assistant IA expérimental présent sur le site. Ses réponses sont informatives et ne remplacent pas la consultation d&apos;un agent, avocat ou notaire agréé.
+        Balisa peut se tromper — confirmez auprès du spécialiste compétent tout élément qui touche à une transaction avant d&apos;agir.
       </p>
 
       <h2>6. Liens externes</h2>

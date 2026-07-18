@@ -65,7 +65,7 @@ export default function Page() {
         <li><strong>Google Analytics 4</strong> 和 <strong>Google Tag Manager</strong> — 分析统计。</li>
         <li><strong>Yandex.Metrica</strong> — 面向 Yandex 搜索的分析与行为信号。</li>
         <li><strong>Telegram</strong> — 通过 @BalinskyBot 转发消息。</li>
-        <li><strong>OpenAI / Azure OpenAI</strong> — 为 Balina AI 助手提供支持。若您向助手发送消息，您的消息及相关上下文会被发送至该服务商的 API。</li>
+        <li><strong>OpenAI / Azure OpenAI</strong> — 为 Balisa AI 助手提供支持。若您向助手发送消息，您的消息及相关上下文会被发送至该服务商的 API。</li>
       </ul>
 
       <h2>5. 保存期限</h2>

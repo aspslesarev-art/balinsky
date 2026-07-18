@@ -62,10 +62,10 @@ export default function Page() {
         Photos and videos of individual properties may belong to developers or third parties — request a separate licence for commercial reuse.
       </p>
 
-      <h2>5. Balina AI assistant</h2>
+      <h2>5. Balisa AI assistant</h2>
       <p>
-        Balina is an experimental AI assistant on the site. Its answers are informational and do not replace consultation with a licensed agent,
-        lawyer or notary. Balina can make mistakes — confirm anything that affects a deal with the appropriate specialist before acting on it.
+        Balisa is an experimental AI assistant on the site. Its answers are informational and do not replace consultation with a licensed agent,
+        lawyer or notary. Balisa can make mistakes — confirm anything that affects a deal with the appropriate specialist before acting on it.
       </p>
 
       <h2>6. External links</h2>

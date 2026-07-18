@@ -63,10 +63,10 @@ export default function Page() {
         Fotos und Videos einzelner Objekte können Bauträgern oder Dritten gehören — fordern Sie für eine kommerzielle Weiterverwendung eine gesonderte Lizenz an.
       </p>
 
-      <h2>5. KI-Assistent Balina</h2>
+      <h2>5. KI-Assistent Balisa</h2>
       <p>
-        Balina ist ein experimenteller KI-Assistent auf der Website. Ihre Antworten dienen der Information und ersetzen keine Beratung durch einen zugelassenen Makler,
-        Anwalt oder Notar. Balina kann Fehler machen — lassen Sie alles, was einen Abschluss betrifft, vor dem Handeln durch den entsprechenden Fachmann bestätigen.
+        Balisa ist ein experimenteller KI-Assistent auf der Website. Ihre Antworten dienen der Information und ersetzen keine Beratung durch einen zugelassenen Makler,
+        Anwalt oder Notar. Balisa kann Fehler machen — lassen Sie alles, was einen Abschluss betrifft, vor dem Handeln durch den entsprechenden Fachmann bestätigen.
       </p>
 
       <h2>6. Externe Links</h2>

@@ -161,7 +161,7 @@ async function runTurn(
   if (correction) {
     if (!OWNER_CHAT_IDS.has(chatId)) {
       await sendText(token, chatId,
-        '🔒 Обучение Балины доступно только владельцу. Ваше сообщение я обработаю как обычный запрос — пишите, что ищете.')
+        '🔒 Обучение Балисы доступно только владельцу. Ваше сообщение я обработаю как обычный запрос — пишите, что ищете.')
       // fall through into the normal chat flow with the original
       // text (still containing the trigger phrase — model can choose
       // to reply normally to it).

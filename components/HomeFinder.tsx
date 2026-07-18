@@ -3,7 +3,7 @@
 // Homepage guided finder: goal → budget → vibe → a live, ranked shortlist.
 // Three taps, no typing, instant results — the "easy mode" for a buyer who
 // doesn't know Bali districts or legal terms. Filters a pre-ranked villa pool
-// (lib/home-finder) in-browser; "Спросить Балину" hands the same intent to the
+// (lib/home-finder) in-browser; "Спросить Балису" hands the same intent to the
 // AI broker, "Смотреть все" drops into the full catalog with the budget applied.
 
 import { useMemo, useState } from 'react'
@@ -34,11 +34,11 @@ const COPY = {
     qVibe: 'Что вокруг?',
     vibes: { surf: 'Сёрф и тусовка', ocean: 'Океан и виды', calm: 'Тихо и природа', family: 'Семья и пляж', any: 'Не важно' } as Record<Vibe, string>,
     found: (n: number) => `${n} ${plural(n, 'вилла', 'виллы', 'вилл')} под ваш запрос`,
-    empty: 'Под такой запрос пока пусто. Ослабьте бюджет или район — или спросите Балину.',
+    empty: 'Под такой запрос пока пусто. Ослабьте бюджет или район — или спросите Балису.',
     yield: 'дох.',
     ready: 'Готово',
     seeAll: 'Смотреть все в каталоге',
-    askBalina: 'Спросить Балину',
+    askBalina: 'Спросить Балису',
     perMo: '',
   },
   en: {
@@ -49,11 +49,11 @@ const COPY = {
     qVibe: 'What\'s around?',
     vibes: { surf: 'Surf & buzz', ocean: 'Ocean & views', calm: 'Calm & nature', family: 'Family & beach', any: 'Any' } as Record<Vibe, string>,
     found: (n: number) => `${n} ${n === 1 ? 'villa' : 'villas'} for your brief`,
-    empty: 'Nothing fits yet. Loosen the budget or area — or ask Balina.',
+    empty: 'Nothing fits yet. Loosen the budget or area — or ask Balisa.',
     yield: 'yield',
     ready: 'Ready',
     seeAll: 'See all in the catalog',
-    askBalina: 'Ask Balina',
+    askBalina: 'Ask Balisa',
     perMo: '',
   },
   id: {
@@ -64,11 +64,11 @@ const COPY = {
     qVibe: 'Apa di sekitarnya?',
     vibes: { surf: 'Selancar & keramaian', ocean: 'Laut & pemandangan', calm: 'Tenang & alam', family: 'Keluarga & pantai', any: 'Tidak masalah' } as Record<Vibe, string>,
     found: (n: number) => `${n} vila untuk permintaan Anda`,
-    empty: 'Belum ada yang cocok. Longgarkan anggaran atau wilayah — atau tanya Balina.',
+    empty: 'Belum ada yang cocok. Longgarkan anggaran atau wilayah — atau tanya Balisa.',
     yield: 'imbal',
     ready: 'Siap',
     seeAll: 'Lihat semua di katalog',
-    askBalina: 'Tanya Balina',
+    askBalina: 'Tanya Balisa',
     perMo: '',
   },
   fr: {
@@ -79,11 +79,11 @@ const COPY = {
     qVibe: 'Qu\'y a-t-il autour ?',
     vibes: { surf: 'Surf & animation', ocean: 'Océan & vues', calm: 'Calme & nature', family: 'Famille & plage', any: 'Peu importe' } as Record<Vibe, string>,
     found: (n: number) => `${n} ${n === 1 ? 'villa' : 'villas'} pour votre demande`,
-    empty: 'Rien ne correspond encore. Élargissez le budget ou la zone — ou demandez à Balina.',
+    empty: 'Rien ne correspond encore. Élargissez le budget ou la zone — ou demandez à Balisa.',
     yield: 'rend.',
     ready: 'Prêt',
     seeAll: 'Tout voir dans le catalogue',
-    askBalina: 'Demander à Balina',
+    askBalina: 'Demander à Balisa',
     perMo: '',
   },
   de: {
@@ -94,11 +94,11 @@ const COPY = {
     qVibe: 'Was ist drumherum?',
     vibes: { surf: 'Surfen & Trubel', ocean: 'Ozean & Ausblick', calm: 'Ruhe & Natur', family: 'Familie & Strand', any: 'Egal' } as Record<Vibe, string>,
     found: (n: number) => `${n} ${n === 1 ? 'Villa' : 'Villen'} für Ihre Anfrage`,
-    empty: 'Noch passt nichts. Lockern Sie Budget oder Lage — oder fragen Sie Balina.',
+    empty: 'Noch passt nichts. Lockern Sie Budget oder Lage — oder fragen Sie Balisa.',
     yield: 'Rend.',
     ready: 'Fertig',
     seeAll: 'Alle im Katalog ansehen',
-    askBalina: 'Balina fragen',
+    askBalina: 'Balisa fragen',
     perMo: '',
   },
   zh: {
@@ -109,11 +109,11 @@ const COPY = {
     qVibe: '周边环境?',
     vibes: { surf: '冲浪与热闹', ocean: '海景', calm: '宁静与自然', family: '家庭与海滩', any: '无所谓' } as Record<Vibe, string>,
     found: (n: number) => `为您的需求找到 ${n} 套别墅`,
-    empty: '暂时没有匹配的。放宽预算或区域——或询问 Balina。',
+    empty: '暂时没有匹配的。放宽预算或区域——或询问 Balisa。',
     yield: '收益',
     ready: '现房',
     seeAll: '在目录中查看全部',
-    askBalina: '询问 Balina',
+    askBalina: '询问 Balisa',
     perMo: '',
   },
   nl: {
@@ -124,11 +124,11 @@ const COPY = {
     qVibe: 'Wat is er in de buurt?',
     vibes: { surf: 'Surf & reuring', ocean: 'Oceaan & uitzicht', calm: 'Rust & natuur', family: 'Gezin & strand', any: 'Maakt niet uit' } as Record<Vibe, string>,
     found: (n: number) => `${n} ${n === 1 ? 'villa' : 'villa\'s'} voor uw aanvraag`,
-    empty: 'Nog niets passends. Versoepel het budget of gebied — of vraag het Balina.',
+    empty: 'Nog niets passends. Versoepel het budget of gebied — of vraag het Balisa.',
     yield: 'rend.',
     ready: 'Klaar',
     seeAll: 'Alles in de catalogus bekijken',
-    askBalina: 'Vraag het Balina',
+    askBalina: 'Vraag het Balisa',
     perMo: '',
   },
   ban: {
@@ -139,11 +139,11 @@ const COPY = {
     qVibe: 'Napi sane wenten ring kiwa tengen?',
     vibes: { surf: 'Selancar & rame', ocean: 'Segara & pemandangan', calm: 'Tenang & alam', family: 'Kulawarga & pasisi', any: 'Nenten dados soal' } as Record<Vibe, string>,
     found: (n: number) => `${n} vila anggen pinunas Ida Dane`,
-    empty: 'Durung wenten sane cocok. Lugrayang anggaran utawi wewidangan — utawi takenang ring Balina.',
+    empty: 'Durung wenten sane cocok. Lugrayang anggaran utawi wewidangan — utawi takenang ring Balisa.',
     yield: 'hasil',
     ready: 'Sampun puput',
     seeAll: 'Cingak sami ring katalog',
-    askBalina: 'Takenang ring Balina',
+    askBalina: 'Takenang ring Balisa',
     perMo: '',
   },
 } as const

@@ -1,6 +1,6 @@
 'use client'
 
-// Home-page hero block: Балина — our AI broker.
+// Home-page hero block: Балиса — our AI broker.
 //
 // Big circular portrait + intro copy + a fat input row with a voice
 // mic and a send button. Submitting (Enter or send) opens the
@@ -68,7 +68,7 @@ function useTypewriter(examples: readonly string[], paused: boolean): string {
 const COPY = {
   ru: {
     eyebrow: 'AI-брокер',
-    name: 'Балина',
+    name: 'Балиса',
     title: 'Помогу подобрать недвижимость на Бали',
     subtitle: 'Расскажу что есть в продаже, помогу определиться и свяжу с менеджером застройщика.',
     // Static fallback shown on mobile + first render (before animation
@@ -78,7 +78,7 @@ const COPY = {
     sendAria: 'Отправить сообщение',
     voiceAria: 'Записать голосом',
     voiceUnsupported: 'Голос не поддерживается этим браузером',
-    altPhoto: 'AI-брокер Балина',
+    altPhoto: 'AI-брокер Балиса',
     examples: [
       'Семья с двумя детьми, важны школы — бюджет ~$600K',
       'Вилла 2 спальни, Букит или Санур, до $400K',
@@ -96,14 +96,14 @@ const COPY = {
   },
   en: {
     eyebrow: 'AI broker',
-    name: 'Balina',
+    name: 'Balisa',
     title: "I'll help you find Bali real estate",
     subtitle: "I'll tell you what's on the market, help you choose, and connect you with a developer manager.",
     placeholderMobile: 'What are you looking for?',
     sendAria: 'Send message',
     voiceAria: 'Record by voice',
     voiceUnsupported: 'Voice input is not supported in this browser',
-    altPhoto: 'AI broker Balina',
+    altPhoto: 'AI broker Balisa',
     examples: [
       'Family with two kids, schools matter — budget ~$600K',
       'Villa, 2BR, Bukit or Sanur, up to $400K',
@@ -121,14 +121,14 @@ const COPY = {
   },
   id: {
     eyebrow: 'Broker AI',
-    name: 'Balina',
+    name: 'Balisa',
     title: 'Saya bantu Anda menemukan properti di Bali',
     subtitle: 'Saya beri tahu apa yang ada di pasar, bantu Anda memilih, dan hubungkan Anda dengan manajer pengembang.',
     placeholderMobile: 'Apa yang Anda cari?',
     sendAria: 'Kirim pesan',
     voiceAria: 'Rekam dengan suara',
     voiceUnsupported: 'Input suara tidak didukung di peramban ini',
-    altPhoto: 'Broker AI Balina',
+    altPhoto: 'Broker AI Balisa',
     examples: [
       'Keluarga dengan dua anak, sekolah penting — anggaran ~$600K',
       'Vila 2 kamar tidur, Bukit atau Sanur, hingga $400K',
@@ -146,14 +146,14 @@ const COPY = {
   },
   fr: {
     eyebrow: 'Courtier IA',
-    name: 'Balina',
+    name: 'Balisa',
     title: 'Je vous aide à trouver un bien immobilier à Bali',
     subtitle: 'Je vous dis ce qui est sur le marché, je vous aide à choisir et je vous mets en relation avec un gestionnaire promoteur.',
     placeholderMobile: 'Que recherchez-vous ?',
     sendAria: 'Envoyer le message',
     voiceAria: 'Enregistrer par la voix',
     voiceUnsupported: 'La saisie vocale n’est pas prise en charge par ce navigateur',
-    altPhoto: 'Courtier IA Balina',
+    altPhoto: 'Courtier IA Balisa',
     examples: [
       'Famille avec deux enfants, les écoles comptent — budget ~$600K',
       'Villa, 2 chambres, Bukit ou Sanur, jusqu’à $400K',
@@ -171,14 +171,14 @@ const COPY = {
   },
   de: {
     eyebrow: 'KI-Makler',
-    name: 'Balina',
+    name: 'Balisa',
     title: 'Ich helfe Ihnen, Immobilien auf Bali zu finden',
     subtitle: 'Ich sage Ihnen, was auf dem Markt ist, helfe bei der Auswahl und verbinde Sie mit einem Bauträger-Manager.',
     placeholderMobile: 'Wonach suchen Sie?',
     sendAria: 'Nachricht senden',
     voiceAria: 'Per Sprache aufnehmen',
     voiceUnsupported: 'Spracheingabe wird von diesem Browser nicht unterstützt',
-    altPhoto: 'KI-Makler Balina',
+    altPhoto: 'KI-Makler Balisa',
     examples: [
       'Familie mit zwei Kindern, Schulen wichtig — Budget ~$600K',
       'Villa, 2 Schlafzimmer, Bukit oder Sanur, bis $400K',
@@ -196,14 +196,14 @@ const COPY = {
   },
   zh: {
     eyebrow: 'AI 经纪人',
-    name: 'Balina',
+    name: 'Balisa',
     title: '我帮您在巴厘岛找到房产',
     subtitle: '我会告诉您市场上有什么，帮您做选择，并为您对接开发商经理。',
     placeholderMobile: '您在找什么？',
     sendAria: '发送消息',
     voiceAria: '用语音录制',
     voiceUnsupported: '此浏览器不支持语音输入',
-    altPhoto: 'AI 经纪人 Balina',
+    altPhoto: 'AI 经纪人 Balisa',
     examples: [
       '一家四口，两个孩子，重视学校——预算约 $600K',
       '别墅，2 卧，Bukit 或 Sanur，$400K 以内',
@@ -221,14 +221,14 @@ const COPY = {
   },
   nl: {
     eyebrow: 'AI-makelaar',
-    name: 'Balina',
+    name: 'Balisa',
     title: 'Ik help u vastgoed op Bali te vinden',
     subtitle: 'Ik vertel u wat er op de markt is, help u kiezen en breng u in contact met een projectontwikkelaar-manager.',
     placeholderMobile: 'Waar bent u naar op zoek?',
     sendAria: 'Bericht verzenden',
     voiceAria: 'Opnemen met spraak',
     voiceUnsupported: 'Spraakinvoer wordt niet ondersteund in deze browser',
-    altPhoto: 'AI-makelaar Balina',
+    altPhoto: 'AI-makelaar Balisa',
     examples: [
       'Gezin met twee kinderen, scholen zijn belangrijk — budget ~$600K',
       'Villa, 2 slaapkamers, Bukit of Sanur, tot $400K',
@@ -246,14 +246,14 @@ const COPY = {
   },
   ban: {
     eyebrow: 'Broker AI',
-    name: 'Balina',
+    name: 'Balisa',
     title: 'Tiang nulungin ngrereh properti ring Bali',
     subtitle: 'Tiang jagi nyritayang napi sane wenten ring pasar, nulungin milih, tur nyambungang ka manajer pangwangun.',
     placeholderMobile: 'Napi sane karereh?',
     sendAria: 'Kirim pesan',
     voiceAria: 'Rekam nganggen suara',
     voiceUnsupported: 'Input suara nenten kadukung ring peramban puniki',
-    altPhoto: 'Broker AI Balina',
+    altPhoto: 'Broker AI Balisa',
     examples: [
       'Kulawarga sareng pianak kalih, sekolah penting — anggaran ~$600K',
       'Vila, 2 kamar, Bukit utawi Sanur, kantos $400K',

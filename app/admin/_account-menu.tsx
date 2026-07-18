@@ -33,7 +33,7 @@ const ITEMS: Item[] = [
   { href: '/admin/presentations', label: 'Презентации',  Icon: FileText },
   { href: '/admin/wishlist',      label: 'Лайки',        Icon: Heart },
   { href: '/admin/views',         label: 'Просмотры',    Icon: Eye },
-  { href: '/admin/balina',        label: 'Балина',       Icon: Brain },
+  { href: '/admin/balina',        label: 'Балиса',       Icon: Brain },
   { href: '/admin/visualizations', label: 'Визуализации', Icon: Layers },
   { href: '/admin/parsers',       label: 'Парсеры',      Icon: Database },
   { href: '/admin/data',          label: 'Базы',         Icon: Table },

@@ -11,8 +11,19 @@ Any page has a clean text and structured view — append `.md` or `.json` to its
 - Works for every page and every language, e.g. `/de/villen.md`, `/en/complexes/<slug>.json`.
 
 These views strip navigation, scripts and proprietary analytics (yield estimates,
-competitor comparisons, the Balina AI consultant) — they carry the public listing
+competitor comparisons, the Balisa AI consultant) — they carry the public listing
 copy and facts only. Served to verified AI crawlers (reverse-DNS confirmed).
+
+**Semantic search** over the whole catalogue (villas, apartments, complexes,
+developers, districts) — Azure-embedded, always current:
+
+- `https://balinsky.info/api/llm/search?q=<query>` — e.g. `?q=2-bedroom villa in Canggu under $400k with strong rental yield`
+- Returns ranked results with title, page URL, `.md` full-text URL, an investor summary and key facts. Optional `&kinds=villa,complex` and `&limit=15`.
+
+**Full catalogue corpus** — every listing with a summary + links to its full text,
+one machine-readable file, regenerated hourly from the live knowledge base:
+
+- `https://balinsky.info/llms-full.txt`
 
 ## Каталог / Catalog
 

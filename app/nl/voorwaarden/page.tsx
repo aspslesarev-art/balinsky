@@ -63,10 +63,10 @@ export default function Page() {
         Foto&apos;s en video&apos;s van afzonderlijke objecten kunnen toebehoren aan ontwikkelaars of derden — vraag een aparte licentie aan voor commercieel hergebruik.
       </p>
 
-      <h2>5. Balina AI-assistent</h2>
+      <h2>5. Balisa AI-assistent</h2>
       <p>
-        Balina is een experimentele AI-assistent op de site. De antwoorden zijn informatief en vervangen geen advies van een erkende agent,
-        advocaat of notaris. Balina kan fouten maken — bevestig alles wat een deal beïnvloedt bij de juiste specialist voordat je ernaar handelt.
+        Balisa is een experimentele AI-assistent op de site. De antwoorden zijn informatief en vervangen geen advies van een erkende agent,
+        advocaat of notaris. Balisa kan fouten maken — bevestig alles wat een deal beïnvloedt bij de juiste specialist voordat je ernaar handelt.
       </p>
 
       <h2>6. Externe links</h2>

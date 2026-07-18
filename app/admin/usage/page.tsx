@@ -68,7 +68,7 @@ export default async function UsagePage() {
         <section className="bg-[var(--ax-panel)] border border-[var(--ax-border)] rounded-2xl p-5">
           <div className="text-[12px] uppercase tracking-wide text-[var(--ax-fg-muted)] mb-3">По фичам (последние 30 дней)</div>
           {u.byFeature.length === 0 ? (
-            <div className="text-[13px] text-[var(--ax-fg-faint)] py-2">Пока пусто. Запросы появятся как только Балина обработает первый чат.</div>
+            <div className="text-[13px] text-[var(--ax-fg-faint)] py-2">Пока пусто. Запросы появятся как только Балиса обработает первый чат.</div>
           ) : (
             <table className="w-full text-[13px]">
               <thead>

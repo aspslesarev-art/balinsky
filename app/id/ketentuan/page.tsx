@@ -63,10 +63,10 @@ export default function Page() {
         Foto dan video properti tertentu mungkin milik pengembang atau pihak ketiga — mintalah lisensi terpisah untuk penggunaan komersial.
       </p>
 
-      <h2>5. Asisten AI Balina</h2>
+      <h2>5. Asisten AI Balisa</h2>
       <p>
-        Balina adalah asisten AI eksperimental di situs. Jawabannya bersifat informasional dan tidak menggantikan konsultasi dengan agen berlisensi,
-        pengacara, atau notaris. Balina bisa membuat kesalahan — konfirmasikan apa pun yang memengaruhi kesepakatan dengan spesialis yang tepat sebelum bertindak atasnya.
+        Balisa adalah asisten AI eksperimental di situs. Jawabannya bersifat informasional dan tidak menggantikan konsultasi dengan agen berlisensi,
+        pengacara, atau notaris. Balisa bisa membuat kesalahan — konfirmasikan apa pun yang memengaruhi kesepakatan dengan spesialis yang tepat sebelum bertindak atasnya.
       </p>
 
       <h2>6. Tautan eksternal</h2>

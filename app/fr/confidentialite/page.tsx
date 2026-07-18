@@ -65,7 +65,7 @@ export default function Page() {
         <li><strong>Google Analytics 4</strong> et <strong>Google Tag Manager</strong> — analyse d&apos;audience.</li>
         <li><strong>Yandex.Metrica</strong> — analyse d&apos;audience et signaux comportementaux pour Yandex Search.</li>
         <li><strong>Telegram</strong> — acheminement des messages via @BalinskyBot.</li>
-        <li><strong>OpenAI / Azure OpenAI</strong> — moteur de l&apos;assistant IA Balina. Si vous écrivez à l&apos;assistant, votre message et son contexte immédiat sont transmis à l&apos;API du prestataire.</li>
+        <li><strong>OpenAI / Azure OpenAI</strong> — moteur de l&apos;assistant IA Balisa. Si vous écrivez à l&apos;assistant, votre message et son contexte immédiat sont transmis à l&apos;API du prestataire.</li>
       </ul>
 
       <h2>5. Conservation</h2>
