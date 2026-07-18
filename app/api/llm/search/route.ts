@@ -13,6 +13,7 @@ import { NextResponse } from 'next/server'
 import { gate } from '@/lib/llm/bots'
 import { rateLimited, clientIp } from '@/lib/llm/ratelimit'
 import { kbSearch } from '@/lib/semantic-search'
+import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -61,8 +62,10 @@ export async function GET(req: Request) {
 
   const results = hits.map(h => {
     const path = pagePath(h.kind, h.slug)
+    // KB titles are stored RU; de-Cyrillic for the (English-facing) API.
+    const title = h.title && hasCyrillic(h.title) ? translitPreserveCase(h.title) : h.title
     return {
-      title: h.title,
+      title,
       kind: h.kind,
       url: path ? `${url.origin}${path}` : null,
       text_url: path ? `${url.origin}${path}.md` : null,

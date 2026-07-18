@@ -51,8 +51,10 @@ const AI_USER_AGENTS = [
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
-      { userAgent: '*',          allow: '/', disallow: DISALLOW },
-      { userAgent: AI_USER_AGENTS, allow: '/', disallow: DISALLOW },
+      // Allow '/api/llm/' (the AI semantic-search + text endpoints) explicitly —
+      // the more specific Allow overrides the '/api/' Disallow below.
+      { userAgent: '*',          allow: ['/', '/api/llm/'], disallow: DISALLOW },
+      { userAgent: AI_USER_AGENTS, allow: ['/', '/api/llm/'], disallow: DISALLOW },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,
   }
