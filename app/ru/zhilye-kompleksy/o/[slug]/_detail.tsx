@@ -1304,7 +1304,11 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
     }
   }
 
-  const faqItems = (kb?.faq && kb.faq.length) ? kb.faq : copy.faq(name, district, lease)
+  // kb.faq is EN-only (KB stores RU + EN). For non-RU pages prefer the native
+  // localized copy.faq(...) template so de/zh/nl/id/fr/ban don't render English.
+  const faqItems = lang === 'ru'
+    ? ((kb?.faq && kb.faq.length) ? kb.faq : copy.faq(name, district, lease))
+    : copy.faq(name, district, lease)
   const faqJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',

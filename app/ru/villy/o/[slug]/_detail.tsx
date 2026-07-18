@@ -921,7 +921,11 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
     // to duplicate it here.
   ].filter(Boolean) as { Icon: typeof BedDouble; label: string; value: ReactNode }[]
 
-  const faqItems = (kb?.faq && kb.faq.length) ? kb.faq : c.faq(title, district, fmtUsd(priceNum), lease, land)
+  // kb.faq is EN-only (KB stores RU + EN). For non-RU pages prefer the native
+  // localized c.faq(...) template so de/zh/nl/id/fr/ban don't render English.
+  const faqItems = lang === 'ru'
+    ? ((kb?.faq && kb.faq.length) ? kb.faq : c.faq(title, district, fmtUsd(priceNum), lease, land))
+    : c.faq(title, district, fmtUsd(priceNum), lease, land)
   const faqJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',

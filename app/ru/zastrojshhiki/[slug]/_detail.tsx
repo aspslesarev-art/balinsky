@@ -572,7 +572,11 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
   const devPromo = allPromo.filter(p => p.developers.some(d => d.slug === slug)).slice(0, 4)
   const devEvents = allEvents.filter(e => e.developers.some(d => d.slug === slug)).slice(0, 4)
 
-  const faqItems = (kb?.faq && kb.faq.length) ? kb.faq : c.faq(name)
+  // kb.faq is EN-only (KB stores RU + EN). For non-RU pages prefer the native
+  // localized c.faq(...) template so de/zh/nl/id/fr/ban don't render English.
+  const faqItems = lang === 'ru'
+    ? ((kb?.faq && kb.faq.length) ? kb.faq : c.faq(name))
+    : c.faq(name)
   const faqJsonLd = {
     '@context': 'https://schema.org', '@type': 'FAQPage',
     mainEntity: faqItems.map(item => ({
