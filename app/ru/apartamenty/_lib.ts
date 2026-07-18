@@ -15,7 +15,7 @@ import { isTopBlacklisted } from '@/lib/top-blacklist'
 import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import { loadViewCounts, smartSort } from '@/lib/catalog-rank'
 import { cdnRewriteManifest, cdnManifestUrl } from '@/lib/photo-cdn'
-import { pickCopy, type Lang } from '@/lib/i18n'
+import { pickCopy, tField, type Lang } from '@/lib/i18n'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/apartment-photos/_manifest.json`
@@ -527,7 +527,9 @@ export function toCard(
   const titleBedrooms = e.bedrooms
   let title: string | null = lang === 'ru'
     ? pick(firstString(d['SEO:Title']), firstString(d['ИИ Имя']))
-    : pick(firstString(d['SEO:Title EN']), firstString(d['ИИ Имя EN']), firstString(d['SEO:Title']), firstString(d['ИИ Имя']))
+    // Active-language title first (`SEO:Title ZH|DE|NL…` merged from the
+    // translation cache), then EN, then RU (tField translits RU leftover).
+    : pick(firstString(tField(d, 'SEO:Title', lang)), firstString(tField(d, 'ИИ Имя', lang)))
   if (!title) {
     title = fallbackAptTitle({ district: e.district, area: titleArea, bedrooms: titleBedrooms, lang })
   }

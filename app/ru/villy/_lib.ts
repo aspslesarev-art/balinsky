@@ -14,7 +14,7 @@ import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import { loadViewCounts, smartSort } from '@/lib/catalog-rank'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
 import { cdnRewriteManifest } from '@/lib/photo-cdn'
-import { pickCopy, type Lang } from '@/lib/i18n'
+import { pickCopy, tField, type Lang } from '@/lib/i18n'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/villa-photos/_manifest.json`
@@ -559,11 +559,11 @@ export function toCard(
        firstString(d['ИИ Имя']) ??
        firstString(d['Имя ENG']) ??
        firstString(d['Name']))
-    : (cleanTitle(firstString(d['SEO:Title EN'])) ??
-       firstString(d['ИИ Имя EN']) ??
+    // Active-language title first (`SEO:Title ZH|DE|NL…` merged from the
+    // translation cache), then EN, then RU (tField translits any RU leftover).
+    : (cleanTitle(tField(d, 'SEO:Title', lang)) ??
+       firstString(tField(d, 'ИИ Имя', lang)) ??
        firstString(d['Имя ENG']) ??
-       cleanTitle(firstString(d['SEO:Title'])) ??
-       firstString(d['ИИ Имя']) ??
        firstString(d['Name']))
   if (!titleRaw) return null
   // Last-resort de-Cyrillic: some rows have no `<field> EN` translation, so
