@@ -208,7 +208,7 @@ export async function RentalDetail({ slug, lang }: { slug: string; lang: Lang })
 
         <section className="mb-10">
           <LeadButton
-            label={lang === 'ru' ? 'Оставить заявку' : 'Leave a request'}
+            label={pickCopy({ ru: 'Оставить заявку', en: 'Leave a request', id: 'Kirim permintaan', fr: 'Envoyer une demande', de: 'Anfrage senden', zh: '提交请求', nl: 'Aanvraag versturen', ban: 'Kirim panuunan' }, lang)}
             lang={lang}
             context={{ listingKind: 'rental', listingSlug: r.slug, source: 'rental' }}
             className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[15px] font-medium transition-colors"

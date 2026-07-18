@@ -462,14 +462,49 @@ function isMalformedAptTitle(s: string | null): boolean {
   if (!s) return false
   return /(?:\s{2}|в\s+-|in\s+-|—\s*-|\bв\s*$)/i.test(s)
 }
+// Localized parts for the composed fallback apartment title. Mirrors
+// apartamenty/_lib.ts APT_TITLE_TERMS so a card and its detail page agree.
+// RU keeps its declined plural via pluralRu; every other language gets a
+// native noun + district preposition + bedroom word — no English on
+// /id, /fr, /de, /zh, /nl, /ban.
+const APT_TITLE_TERMS: Record<Exclude<Lang, 'ru'>, {
+  noun: string; inDistrict: (d: string) => string; bedroomWord: string
+}> = {
+  en:  { noun: 'Apartment',   inDistrict: d => `in ${d}`,   bedroomWord: 'BR' },
+  id:  { noun: 'Apartemen',   inDistrict: d => `di ${d}`,   bedroomWord: 'kamar tidur' },
+  fr:  { noun: 'Appartement', inDistrict: d => `à ${d}`,    bedroomWord: 'chambres' },
+  de:  { noun: 'Apartment',   inDistrict: d => `in ${d}`,   bedroomWord: 'Schlafzimmer' },
+  zh:  { noun: '公寓',         inDistrict: d => d,           bedroomWord: '卧室' },
+  nl:  { noun: 'Appartement', inDistrict: d => `in ${d}`,   bedroomWord: 'slaapkamers' },
+  ban: { noun: 'Apartemen',   inDistrict: d => `ring ${d}`, bedroomWord: 'kamar pules' },
+}
+// Native-language fallback for the Product schema description (only reached
+// when the row has no SEO Text). Replaces the old `lang === 'ru' ? RU : EN`
+// ternary so non-RU pages never leak English into structured data.
+const APT_PRODUCT_DESC: Record<Lang, (bedrooms: number | null, district: string | null) => string> = {
+  ru: (b, d) => `${b ? `${b}-комнатные ` : ''}апартаменты${d ? ` в ${d}` : ''} на Бали, Индонезия`,
+  en: (b, d) => `${b ? `${b}-bedroom ` : ''}apartment${d ? ` in ${d}` : ''}, Bali, Indonesia`,
+  id: (b, d) => `Apartemen${b ? ` ${b} kamar tidur` : ''}${d ? ` di ${d}` : ''}, Bali, Indonesia`,
+  fr: (b, d) => `Appartement${b ? ` de ${b} chambres` : ''}${d ? ` à ${d}` : ''}, Bali, Indonésie`,
+  de: (b, d) => `${b ? `${b}-Zimmer-` : ''}Apartment${d ? ` in ${d}` : ''}, Bali, Indonesien`,
+  zh: (b, d) => `${d ? `${d}` : ''}${b ? `${b}居室` : ''}公寓，印度尼西亚巴厘岛`,
+  nl: (b, d) => `${b ? `${b}-slaapkamer ` : ''}appartement${d ? ` in ${d}` : ''}, Bali, Indonesië`,
+  ban: (b, d) => `Apartemen${b ? ` ${b} kamar pules` : ''}${d ? ` ring ${d}` : ''}, Bali, Indonesia`,
+}
 function fallbackAptTitle(district: string | null, area: number | null, bedrooms: number | null, lang: Lang): string {
-  const parts: string[] = [lang === 'ru' ? 'Апартаменты' : 'Apartment']
-  if (district) parts.push(lang === 'ru' ? `в ${district}` : `in ${district}`)
+  const parts: string[] = []
   const tail: string[] = []
-  if (area != null) tail.push(lang === 'ru' ? `${area} м²` : `${area} m²`)
-  if (bedrooms != null) {
-    const word = pluralRu(bedrooms, ['спальня', 'спальни', 'спален'])
-    tail.push(lang === 'ru' ? `${bedrooms} ${word}` : `${bedrooms} BR`)
+  if (lang === 'ru') {
+    parts.push('Апартаменты')
+    if (district) parts.push(`в ${district}`)
+    if (area != null) tail.push(`${area} м²`)
+    if (bedrooms != null) tail.push(`${bedrooms} ${pluralRu(bedrooms, ['спальня', 'спальни', 'спален'])}`)
+  } else {
+    const T = APT_TITLE_TERMS[lang]
+    parts.push(T.noun)
+    if (district) parts.push(T.inDistrict(district))
+    if (area != null) tail.push(`${area} m²`)
+    if (bedrooms != null) tail.push(`${bedrooms} ${T.bedroomWord}`)
   }
   return [parts.join(' '), tail.join(', ')].filter(Boolean).join(' — ')
 }
@@ -837,7 +872,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
     : []
 
   const facts: { Icon: typeof BedDouble; label: string; value: ReactNode }[] = [
-    bedrooms != null && { Icon: BedDouble, label: lang === 'ru' ? 'Спальни' : 'Bedrooms', value: `${bedrooms} BR` },
+    bedrooms != null && { Icon: BedDouble, label: pickCopy({ ru: 'Спальни', en: 'Bedrooms', id: 'Kamar tidur', fr: 'Chambres', de: 'Schlafzimmer', zh: '卧室', nl: 'Slaapkamers', ban: 'Kamar pules' }, lang), value: `${bedrooms} BR` },
     area != null && { Icon: Square, label: c.factArea, value: `${area} ${c.sqm}` },
     floor && { Icon: Layers, label: c.factFloor, value: floor === 'GROUND FLOOR' ? c.factGround : floor },
     yearRaw && { Icon: Calendar, label: c.factCompletion, value: status?.toLowerCase().includes('построен') ? c.completed : yearRaw },
@@ -873,9 +908,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
   }
   if (photos.length > 0) productJsonLd.image = photos.slice(0, 5)
   productJsonLd.description = seoText?.slice(0, 500)
-    ?? (lang === 'ru'
-      ? `${bedrooms ? bedrooms + '-комнатные ' : ''}апартаменты${district ? ` в ${district}` : ''} на Бали, Индонезия`
-      : `${bedrooms ? bedrooms + '-bedroom ' : ''}apartment${district ? ` in ${district}` : ''}, Bali, Indonesia`)
+    ?? pickCopy(APT_PRODUCT_DESC, lang)(bedrooms, district)
   productJsonLd.brand = { '@type': 'Brand', name: devName ?? 'Balinsky' }
   if (priceNum != null) {
     productJsonLd.offers = {
@@ -1053,7 +1086,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
             <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
               {c.descHeading}
             </h2>
-            <ExpandableText className="max-w-3xl" more={lang === 'ru' ? 'Подробнее' : 'Read more'} less={lang === 'ru' ? 'Свернуть' : 'Show less'}>
+            <ExpandableText className="max-w-3xl" more={pickCopy({ ru: 'Подробнее', en: 'Read more', id: 'Selengkapnya', fr: 'En savoir plus', de: 'Mehr anzeigen', zh: '展开', nl: 'Meer', ban: 'Selengkapnya' }, lang)} less={pickCopy({ ru: 'Свернуть', en: 'Show less', id: 'Tutup', fr: 'Réduire', de: 'Weniger', zh: '收起', nl: 'Minder', ban: 'Tutup' }, lang)}>
               <div className="prose-balinsky text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
                 {seoText}
               </div>
@@ -1204,13 +1237,13 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
         />
 
         {aptVideos.length > 0 && (
-          <VideoGrid videos={aptVideos} title={parentComplexName ? (lang === 'ru' ? `Видео: ${parentComplexName}` : `Videos: ${parentComplexName}`) : (lang === 'ru' ? 'Видео' : 'Videos')} />
+          <VideoGrid videos={aptVideos} title={parentComplexName ? `${pickCopy({ ru: 'Видео', en: 'Videos', id: 'Video', fr: 'Vidéos', de: 'Videos', zh: '视频', nl: "Video's", ban: 'Video' }, lang)}: ${parentComplexName}` : pickCopy({ ru: 'Видео', en: 'Videos', id: 'Video', fr: 'Vidéos', de: 'Videos', zh: '视频', nl: "Video's", ban: 'Video' }, lang)} />
         )}
 
         {otherApts.length > 0 && district && (
           <section className="mb-10">
             <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
-              {lang === 'ru' ? `Другие апартаменты в районе ${district}` : `Other apartments in ${district}`}
+              {pickCopy({ ru: `Другие апартаменты в районе ${district}`, en: `Other apartments in ${district}`, id: `Apartemen lain di ${district}`, fr: `Autres appartements à ${district}`, de: `Weitere Apartments in ${district}`, zh: `${district}的其他公寓`, nl: `Andere appartementen in ${district}`, ban: `Apartemen lianan ring ${district}` }, lang)}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {otherApts.map(o => <ApartmentCard key={o.id} a={o} lang={lang} />)}
@@ -1230,7 +1263,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
                 { href: `${apartmentsRoot}/${districtRaw!.toLowerCase().replace(/\s+/g, '-')}`, label: c.related.apartmentsIn(district) },
               ] : []),
               ...(bedrooms ? [
-                { href: `${apartmentsRoot}/${bedrooms}-spaln${bedrooms === 1 ? 'ya' : 'i'}`, label: lang === 'ru' ? `${bedrooms}-комнатные апартаменты` : `${bedrooms}-bedroom apartments` },
+                { href: `${apartmentsRoot}/${bedrooms}-spaln${bedrooms === 1 ? 'ya' : 'i'}`, label: pickCopy({ ru: `${bedrooms}-комнатные апартаменты`, en: `${bedrooms}-bedroom apartments`, id: `Apartemen ${bedrooms} kamar`, fr: `Appartements ${bedrooms} chambres`, de: `${bedrooms}-Zimmer-Apartments`, zh: `${bedrooms}居室公寓`, nl: `${bedrooms}-slaapkamerappartementen`, ban: `Apartemen ${bedrooms} kamar` }, lang) },
               ] : []),
             ].map(l => (
               <li key={l.href + l.label}>

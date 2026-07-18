@@ -196,10 +196,10 @@ function competitorPopupHtml(c: {
 }, lang: Lang): string {
   const t = pickCopy(MAP_COPY, lang)
   const sqmU = lang === 'ru' ? 'м²' : 'm²'
-  const kmLabel = lang === 'ru' ? 'км' : 'km'
+  const kmLabel = pickCopy({ ru: 'км', en: 'km', id: 'km', fr: 'km', de: 'km', zh: '公里', nl: 'km', ban: 'km' }, lang)
   const title = c.complex || c.name || 'Booking listing'
   const stars = c.rating != null ? `★ ${c.rating.toFixed(1)}` : ''
-  const reviews = c.reviews != null ? `${c.reviews} ${lang === 'ru' ? 'отзывов' : 'reviews'}` : ''
+  const reviews = c.reviews != null ? `${c.reviews} ${pickCopy({ ru: 'отзывов', en: 'reviews', id: 'ulasan', fr: 'avis', de: 'Bewertungen', zh: '条评价', nl: 'beoordelingen', ban: 'ulasan' }, lang)}` : ''
   const beds = c.bedrooms != null ? `${c.bedrooms} BR` : ''
   const area = c.area != null ? `${c.area} ${sqmU}` : ''
   const specs = [beds, area].filter(Boolean).join(' · ')
@@ -236,10 +236,10 @@ function anchorPopupHtml(a: {
   distanceKm?: number | null
 }, lang: Lang): string {
   const t = pickCopy(MAP_COPY, lang)
-  const kmLabel = lang === 'ru' ? 'км' : 'km'
+  const kmLabel = pickCopy({ ru: 'км', en: 'km', id: 'km', fr: 'km', de: 'km', zh: '公里', nl: 'km', ban: 'km' }, lang)
   const title = locTx(a.name, lang) || 'POI'
   const stars = a.rating != null ? `★ ${a.rating.toFixed(1)}` : ''
-  const reviewsTxt = a.reviews != null ? `${a.reviews} ${lang === 'ru' ? 'отзывов' : 'reviews'}` : ''
+  const reviewsTxt = a.reviews != null ? `${a.reviews} ${pickCopy({ ru: 'отзывов', en: 'reviews', id: 'ulasan', fr: 'avis', de: 'Bewertungen', zh: '条评价', nl: 'beoordelingen', ban: 'ulasan' }, lang)}` : ''
   const ratingLine = [stars, reviewsTxt].filter(Boolean).join(' · ')
   const cat = a.primaryType ? a.primaryType.replace(/_/g, ' ') : ''
   const link = a.mapsUrl
@@ -515,9 +515,9 @@ export function InvestmentMap({
         </button>
         {showHeat && (
           <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/95 backdrop-blur-sm shadow-sm text-[10px] text-[var(--color-text-muted)]">
-            <span>{lang === 'ru' ? 'мало' : 'few'}</span>
+            <span>{pickCopy({ ru: 'мало', en: 'few', id: 'sedikit', fr: 'peu', de: 'wenig', zh: '少', nl: 'weinig', ban: 'akidik' }, lang)}</span>
             <span className="h-1.5 w-16 rounded-full" style={{ background: 'linear-gradient(90deg,#2b6cff,#00c2c7,#8ed11f,#ffd200,#ff2d00)' }} />
-            <span>{lang === 'ru' ? 'много' : 'many'}</span>
+            <span>{pickCopy({ ru: 'много', en: 'many', id: 'banyak', fr: 'beaucoup', de: 'viel', zh: '多', nl: 'veel', ban: 'akeh' }, lang)}</span>
           </div>
         )}
         <button

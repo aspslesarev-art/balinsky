@@ -11,7 +11,7 @@ import { MarkerClusterer, type Renderer } from '@googlemaps/markerclusterer'
 import { X } from 'lucide-react'
 import { ReviewsHeatLayer, ReviewsHeatToggle } from './ReviewsHeatLayer'
 import type { HeatCell } from '@/lib/reviews-heat'
-import { switchLangPath, type Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
 import { BALINSKY_MAP_STYLE } from '@/lib/google-map-style'
 
@@ -236,7 +236,7 @@ function SinglePopup({ p, onClose, lang }: { p: ComplexPoint; onClose: () => voi
         href={switchLangPath(`/ru/zhilye-kompleksy/o/${p.slug}`, lang)}
         className="block text-center w-full px-3 py-2 rounded-lg bg-[#33A474] hover:bg-[#2C8E65] text-white text-[13px] font-medium no-underline transition-colors"
       >
-        {lang === 'ru' ? 'Открыть карточку' : 'Open listing'}
+        {pickCopy({ ru: 'Открыть карточку', en: 'Open listing', id: 'Buka listing', fr: 'Voir le bien', de: 'Objekt öffnen', zh: '查看房源', nl: 'Bekijk woning', ban: 'Buka listing' }, lang)}
       </a>
     </div>
   )
@@ -247,7 +247,7 @@ function MultiPopup({ items, onClose, lang }: { items: ComplexPoint[]; onClose: 
     <div className="relative w-[300px] p-1">
       <CloseButton onClose={onClose} />
       <div className="text-[13px] font-medium text-[#6B7280] mb-2 pr-6">
-        {lang === 'ru' ? `${items.length} комплексов в одной точке` : `${items.length} complexes at this point`}
+        {`${items.length} ${pickCopy({ ru: 'комплексов в одной точке', en: 'complexes at this point', id: 'kompleks di titik ini', fr: 'complexes à cet endroit', de: 'Komplexe an diesem Punkt', zh: '个项目位于此处', nl: 'complexen op dit punt', ban: 'kompleks di titik puniki' }, lang)}`}
       </div>
       <ul className="max-h-[340px] overflow-y-auto -mx-1 px-1 divide-y divide-[#E5E7EB]">
         {items.map(p => (
@@ -306,7 +306,7 @@ export function ComplexesMap({
         style={{ width: '100%' }}
         className={`${heightClass} bg-[var(--color-search-bg)] rounded-3xl flex items-center justify-center text-[var(--color-text-muted)]`}
       >
-        {lang === 'ru' ? 'Карта недоступна (нет API ключа)' : 'Map unavailable (no API key)'}
+        {pickCopy({ ru: 'Карта недоступна (нет API ключа)', en: 'Map unavailable (no API key)', id: 'Peta tidak tersedia (tanpa API key)', fr: 'Carte indisponible (pas de clé API)', de: 'Karte nicht verfügbar (kein API-Schlüssel)', zh: '地图不可用（缺少 API 密钥）', nl: 'Kaart niet beschikbaar (geen API-sleutel)', ban: 'Peta nenten wenten (tanpa API key)' }, lang)}
       </div>
     )
   }

@@ -19,7 +19,7 @@ import { createPortal } from 'react-dom'
 import Image from 'next/image'
 import { ChevronLeft, ExternalLink, BedDouble } from 'lucide-react'
 import Link from 'next/link'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 type Layer = {
   id: number
@@ -135,7 +135,7 @@ export function ComplexVisualizationViewer({
   return (
     <section className="mb-10">
       <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-2">
-        {lang === 'ru' ? 'Интерактивный план' : 'Interactive plan'}
+        {pickCopy({ ru: 'Интерактивный план', en: 'Interactive plan', id: 'Denah interaktif', fr: 'Plan interactif', de: 'Interaktiver Plan', zh: '交互式平面图', nl: 'Interactieve plattegrond', ban: 'Denah interaktif' }, lang)}
       </h2>
       <div className="text-[13px] text-[var(--color-text-muted)] mb-4">
         {lang === 'ru'

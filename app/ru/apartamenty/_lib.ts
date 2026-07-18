@@ -964,6 +964,42 @@ export function buildDescription(f: FilterState, totalCount?: number): string {
   return `${s}. Фото, актуальные цены, разрешения, контакты застройщиков.`
 }
 
+// Native-language catalog meta for id/fr/de/zh/nl/ban (mirrors buildHeadingLoc).
+// getDistrictCommercialMeta is ru/en-only, so we compose the title/description
+// straight from the localized heading — no English on filtered non-RU combos.
+const APT_DESC_TAIL: Record<Exclude<Lang, 'ru' | 'en'>, string> = {
+  id: 'Foto, harga terkini, izin, kontak pengembang.',
+  fr: 'Photos, prix actuels, permis, contacts des promoteurs.',
+  de: 'Fotos, aktuelle Preise, Genehmigungen, Bauträgerkontakte.',
+  zh: '照片、最新价格、许可证、开发商联系方式。',
+  nl: "Foto's, actuele prijzen, vergunningen, ontwikkelaarscontacten.",
+  ban: 'Foto, aji anyar, izin, kontak pangwangun.',
+}
+export function buildDescriptionLoc(f: FilterState, lang: Lang, totalCount?: number): string {
+  if (lang === 'ru') return buildDescription(f, totalCount)
+  if (lang === 'en') return buildDescriptionEn(f, totalCount)
+  const heading = buildHeadingLoc(f, lang)
+  return lang === 'zh' ? `${heading}。${APT_DESC_TAIL[lang]}` : `${heading}. ${APT_DESC_TAIL[lang]}`
+}
+export function buildMetadataLoc(
+  f: FilterState,
+  lang: Lang,
+  opts: { canonicalPath: string; noIndex: boolean; totalCount?: number },
+) {
+  if (lang === 'ru') return buildMetadata(f, opts)
+  if (lang === 'en') return buildMetadataEn(f, opts)
+  const title = `${buildHeadingLoc(f, lang)} | Balinsky`
+  const description = buildDescriptionLoc(f, lang, opts.totalCount)
+  return {
+    title,
+    description,
+    alternates: { canonical: opts.canonicalPath },
+    robots: opts.noIndex ? { index: false, follow: true } : { index: true, follow: true },
+    openGraph: { title, description, type: 'website' as const, url: opts.canonicalPath },
+    twitter: { card: 'summary_large_image' as const, title, description },
+  }
+}
+
 export function buildMetadata(f: FilterState, opts: { canonicalPath: string; noIndex: boolean; totalCount?: number }) {
   const isSectionRoot = opts.canonicalPath === '/ru/apartamenty'
   const singleDistrict = !isSectionRoot

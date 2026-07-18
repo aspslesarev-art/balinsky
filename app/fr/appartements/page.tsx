@@ -1,5 +1,5 @@
 import { ApartamentyCatalog } from '../../ru/apartamenty/_catalog'
-import { parseQueryFilters, buildMetadataEn, hasAnyFilter, loadAll } from '../../ru/apartamenty/_lib'
+import { parseQueryFilters, buildMetadataLoc, hasAnyFilter, loadAll } from '../../ru/apartamenty/_lib'
 import { buildCanonicalPath } from '@/lib/seo-routes'
 import { generateCategoryMeta } from '@/lib/seo'
 import { apartmentCategoryStats } from '@/lib/category-stats'
@@ -9,7 +9,7 @@ type SP = Promise<Record<string, string | undefined>>
 export async function generateMetadata({ searchParams }: { searchParams: SP }) {
   const sp = await searchParams
   const f = parseQueryFilters(sp)
-  const base = buildMetadataEn(f, {
+  const base = buildMetadataLoc(f, 'fr', {
     canonicalPath: '/fr/appartements',
     noIndex: hasAnyFilter(f) && buildCanonicalPath(f) !== null,
   })

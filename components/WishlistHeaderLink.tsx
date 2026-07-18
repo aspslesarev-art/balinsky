@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { detectLang, switchLangPath } from '@/lib/i18n'
+import { detectLang, pickCopy, switchLangPath } from '@/lib/i18n'
 import { usePathname } from 'next/navigation'
 import { Heart } from 'lucide-react'
 import { useWishlist } from './WishlistContext'
@@ -13,7 +13,7 @@ export function WishlistHeaderLink({ className = '' }: { className?: string }) {
   const pathname = usePathname() ?? ''
   const lang = detectLang(pathname)
   const href = switchLangPath('/ru/izbrannoe', lang)
-  const label = lang === 'ru' ? 'Избранное' : 'Shortlist'
+  const label = pickCopy({ ru: 'Избранное', en: 'Shortlist', id: 'Favorit', fr: 'Favoris', de: 'Favoriten', zh: '收藏', nl: 'Favorieten', ban: 'Kaplihan' }, lang)
   const count = items.length
   return (
     <Link

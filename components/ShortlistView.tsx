@@ -766,7 +766,7 @@ export function ShortlistView({ lang }: { lang: Lang }) {
               </a>
               <button
                 type="button"
-                onClick={() => { if (confirm(lang === 'ru' ? 'Очистить весь шортлист?' : 'Clear the whole shortlist?')) clear() }}
+                onClick={() => { if (confirm(pickCopy({ ru: 'Очистить весь шортлист?', en: 'Clear the whole shortlist?', id: 'Kosongkan seluruh shortlist?', fr: 'Vider toute la liste ?', de: 'Die gesamte Merkliste leeren?', zh: '清空整个候选清单？', nl: 'De hele shortlist wissen?', ban: 'Kosongang makasami shortlist?' }, lang))) clear() }}
                 className="inline-flex items-center gap-2 px-3 py-2 rounded-full text-[12px] sm:text-[13px] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-search-bg)]"
               >
                 <Trash2 size={14} /> {c.clear}
@@ -1301,7 +1301,7 @@ function DownloadShortlistModal({
               onSubmit={e => { e.preventDefault(); submitAgent() }}
               className="space-y-3"
             >
-              <PdfField id="sl-name" label={c.pdfFieldName} value={name} onChange={setName} placeholder={lang === 'ru' ? 'Андрей' : 'Andrey'} autoFocus required />
+              <PdfField id="sl-name" label={c.pdfFieldName} value={name} onChange={setName} placeholder={pickCopy({ ru: 'Андрей', en: 'Andrey', id: 'Budi', fr: 'Antoine', de: 'Andreas', zh: '张伟', nl: 'Jan', ban: 'Wayan' }, lang)} autoFocus required />
               <PdfField id="sl-telegram" label={c.pdfFieldTg} value={telegram} onChange={setTelegram} placeholder="@username" />
               <PdfField id="sl-whatsapp" label={c.pdfFieldWa} value={whatsapp} onChange={setWhatsapp} placeholder="+62 812 345 67 89" inputMode="tel" />
               {!canSubmitAgent && trimmedName.length > 0 && trimmedTg.length === 0 && trimmedWa.length === 0 && !busy && (

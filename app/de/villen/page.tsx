@@ -1,5 +1,5 @@
 import { VillasCatalog } from '../../ru/villy/_catalog'
-import { parseQueryFilters, buildMetadataEn, hasAnyFilter, loadAll } from '../../ru/villy/_lib'
+import { parseQueryFilters, buildMetadataLoc, hasAnyFilter, loadAll } from '../../ru/villy/_lib'
 import { buildCanonicalPath } from '@/lib/villa-seo-routes'
 import { generateCategoryMeta } from '@/lib/seo'
 import { villaCategoryStats } from '@/lib/category-stats'
@@ -12,7 +12,7 @@ export async function generateMetadata({ searchParams }: { searchParams: SP }) {
   // EN has no canonical sub-route tree of its own — keep canonical at the
   // flat base path and rely on noindex for filtered combos to avoid
   // SEO duplication.
-  const base = buildMetadataEn(f, {
+  const base = buildMetadataLoc(f, 'de', {
     canonicalPath: '/de/villen',
     noIndex: hasAnyFilter(f) && buildCanonicalPath(f) !== null,
   })

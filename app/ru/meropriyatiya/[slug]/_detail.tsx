@@ -129,7 +129,7 @@ export async function EventDetail({ slug, lang }: { slug: string; lang: Lang }) 
       }
     : {
         '@type': 'Place',
-        name: e.format?.trim() || (lang === 'ru' ? 'Бали, Индонезия' : 'Bali, Indonesia'),
+        name: e.format?.trim() || pickCopy({ ru: 'Бали, Индонезия', en: 'Bali, Indonesia', id: 'Bali, Indonesia', fr: 'Bali, Indonésie', de: 'Bali, Indonesien', zh: '印度尼西亚巴厘岛', nl: 'Bali, Indonesië', ban: 'Bali, Indonesia' }, lang),
         address: {
           '@type': 'PostalAddress',
           addressCountry: 'ID',

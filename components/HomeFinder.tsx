@@ -198,10 +198,9 @@ export function HomeFinder({ items, lang = 'ru' }: { items: FinderItem[]; lang?:
   const seeAllHref = budget && budget > 0 ? `${root}?price_max=${budget}` : root
 
   const balinaText = (() => {
-    const parts: string[] = ['Подбери виллу']
-    if (lang !== 'ru') parts[0] = 'Find me a villa'
+    const parts: string[] = [pickCopy({ ru: 'Подбери виллу', en: 'Find me a villa', id: 'Carikan saya vila', fr: 'Trouve-moi une villa', de: 'Finde mir eine Villa', zh: '帮我找一套别墅', nl: 'Vind een villa voor mij', ban: 'Alihang tiang villa' }, lang)]
     if (goal) parts.push(lang === 'ru' ? c.goals[goal].toLowerCase() : `(${c.goals[goal].toLowerCase()})`)
-    if (budget && budget > 0) parts.push(lang === 'ru' ? `до ${fmtPrice(budget)}` : `up to ${fmtPrice(budget)}`)
+    if (budget && budget > 0) parts.push(`${pickCopy({ ru: 'до', en: 'up to', id: 'hingga', fr: 'jusqu’à', de: 'bis', zh: '预算', nl: 'tot', ban: 'nyantos' }, lang)} ${fmtPrice(budget)}`)
     if (vibe && vibe !== 'any') parts.push(c.vibes[vibe].toLowerCase())
     return parts.join(' ') + '.'
   })()

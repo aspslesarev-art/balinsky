@@ -135,10 +135,17 @@ function contextualGreeting(kind: ListingKind, title: string | null, lang: Lang)
     apartment: { ru: 'эти апартаменты', en: 'these apartments', id: 'apartemen ini', fr: 'ces appartements', de: 'dieses Apartment', zh: '这套公寓', nl: 'dit appartement', ban: 'apartemen puniki' },
     complex: { ru: 'этот комплекс', en: 'this complex', id: 'kompleks ini', fr: 'cette résidence', de: 'diese Wohnanlage', zh: '这个住宅区', nl: 'dit wooncomplex', ban: 'kompleks puniki' },
   }[kind], lang)
-  const name = title ? (lang === 'ru' ? `«${title}»` : `“${title}”`) : (lang === 'ru' ? 'этот объект' : 'this listing')
-  const content = lang === 'ru'
-    ? `Вижу, вы смотрите ${name}. Рассказать про ${obj}? Сверюсь с базой и отвечу точно — документы, реальная доходность, сроки сдачи, что рядом, риски.\n\n[CHIPS] Рассказать про объект | Документы и риски | Реальная доходность | Когда сдают? | Что рядом`
-    : `You're looking at ${name}. Want me to walk you through ${obj}? I'll check the base and answer precisely — documents, real yield, handover date, what's nearby, risks.\n\n[CHIPS] Tell me about it | Documents & risks | Real yield | Handover date | What's nearby`
+  const name = title ? (lang === 'ru' ? `«${title}»` : `“${title}”`) : pickCopy({ ru: 'этот объект', en: 'this listing', id: 'properti ini', fr: 'ce bien', de: 'dieses Objekt', zh: '这处房产', nl: 'dit object', ban: 'properti puniki' }, lang)
+  const content = pickCopy({
+    ru: `Вижу, вы смотрите ${name}. Рассказать про ${obj}? Сверюсь с базой и отвечу точно — документы, реальная доходность, сроки сдачи, что рядом, риски.\n\n[CHIPS] Рассказать про объект | Документы и риски | Реальная доходность | Когда сдают? | Что рядом`,
+    en: `You're looking at ${name}. Want me to walk you through ${obj}? I'll check the base and answer precisely — documents, real yield, handover date, what's nearby, risks.\n\n[CHIPS] Tell me about it | Documents & risks | Real yield | Handover date | What's nearby`,
+    id: `Anda sedang melihat ${name}. Mau saya jelaskan tentang ${obj}? Saya cek basis data dan jawab dengan tepat — dokumen, imbal hasil nyata, tanggal serah terima, apa yang di sekitar, risiko.\n\n[CHIPS] Ceritakan tentang properti ini | Dokumen & risiko | Imbal hasil nyata | Kapan serah terima? | Apa yang di sekitar`,
+    fr: `Vous consultez ${name}. Je vous présente ${obj} ? Je vérifie la base et réponds avec précision — documents, rendement réel, date de livraison, ce qu'il y a à proximité, risques.\n\n[CHIPS] Parlez-moi de ce bien | Documents & risques | Rendement réel | Date de livraison | À proximité`,
+    de: `Sie schauen sich ${name} an. Soll ich Ihnen ${obj} vorstellen? Ich prüfe die Datenbank und antworte präzise — Dokumente, reale Rendite, Übergabetermin, was in der Nähe ist, Risiken.\n\n[CHIPS] Erzähl mir davon | Dokumente & Risiken | Reale Rendite | Übergabetermin | Was ist in der Nähe`,
+    zh: `您正在查看${name}。要我为您介绍${obj}吗？我会核对数据库并给出准确回答——文件、真实收益、交房时间、周边配套、风险。\n\n[CHIPS] 介绍一下这处房产 | 文件与风险 | 真实收益 | 何时交房？ | 周边有什么`,
+    nl: `U bekijkt ${name}. Zal ik u ${obj} toelichten? Ik controleer de database en antwoord nauwkeurig — documenten, reëel rendement, opleverdatum, wat er in de buurt is, risico's.\n\n[CHIPS] Vertel me erover | Documenten & risico's | Reëel rendement | Opleverdatum | Wat is er in de buurt`,
+    ban: `Ragane sedeng nyingakin ${name}. Dados tiang nyritayang indik ${obj}? Tiang jagi ngecek basis data tur nyawis sane patut — dokumen, hasil nyata, galah serah terima, napi sane wenten ring kiwangan, risiko.\n\n[CHIPS] Critayang indik properti puniki | Dokumen & risiko | Hasil nyata | Galah serah terima? | Napi sane wenten ring kiwangan`,
+  }, lang)
   return { role: 'assistant', greeting: true, content }
 }
 
@@ -574,9 +581,16 @@ export function ConsultantWidget() {
     transcriptRef.current = []
     if (!handoff || turns.length === 0) return
     setOpen(true)
-    const brief = lang === 'ru'
-      ? `Мы только что поговорили по звонку — вот что я ищу: ${turns.join('. ')}. Подбери подходящие варианты сейчас.`
-      : `We just spoke on a call — here is what I'm looking for: ${turns.join('. ')}. Please pick matching options now.`
+    const brief = pickCopy({
+      ru: `Мы только что поговорили по звонку — вот что я ищу: ${turns.join('. ')}. Подбери подходящие варианты сейчас.`,
+      en: `We just spoke on a call — here is what I'm looking for: ${turns.join('. ')}. Please pick matching options now.`,
+      id: `Kita baru saja bicara lewat telepon — inilah yang saya cari: ${turns.join('. ')}. Tolong pilihkan opsi yang cocok sekarang.`,
+      fr: `Nous venons de parler au téléphone — voici ce que je recherche : ${turns.join('. ')}. Merci de me proposer les options correspondantes maintenant.`,
+      de: `Wir haben gerade telefoniert — das suche ich: ${turns.join('. ')}. Bitte wähle jetzt passende Optionen aus.`,
+      zh: `我们刚通过电话聊过——这是我在找的：${turns.join('. ')}。请现在为我挑选匹配的选项。`,
+      nl: `We hebben net gebeld — dit is wat ik zoek: ${turns.join('. ')}. Kies nu alsjeblieft passende opties.`,
+      ban: `Iwau tiang wau maderbe telepon — puniki sane rereh tiang: ${turns.join('. ')}. Ngiring pilihang opsi sane cocok mangkin.`,
+    }, lang)
     setTimeout(() => { void sendText(brief) }, 80)
   }
   const startCall = async () => {
@@ -595,7 +609,7 @@ export function ConsultantWidget() {
       stopRingback()
       callActiveRef.current = false
       setCallState('idle')
-      setError(lang === 'ru' ? 'Не удалось начать звонок.' : "Couldn't start the call.")
+      setError(pickCopy({ ru: 'Не удалось начать звонок.', en: "Couldn't start the call.", id: 'Gagal memulai panggilan.', fr: "Impossible de démarrer l'appel.", de: 'Anruf konnte nicht gestartet werden.', zh: '无法发起通话。', nl: 'Kan de oproep niet starten.', ban: 'Nenten prasida ngawitin telepon.' }, lang))
     }
   }
   const endCall = () => { void finishCall(true) }
@@ -1190,18 +1204,25 @@ export function ConsultantWidget() {
   const tellAboutCurrent = () => {
     setOpen(true)
     setError(null)
-    const prompt = lang === 'ru'
-      ? 'Расскажи коротко про этот объект — самое главное: что это, документы (PBG/SLF), реальная доходность, сроки сдачи, что рядом и есть ли риски.'
-      : 'Give me a short rundown of this listing — the essentials: what it is, documents (PBG/SLF), real yield, handover date, what\'s nearby and any risks.'
+    const prompt = pickCopy({
+      ru: 'Расскажи коротко про этот объект — самое главное: что это, документы (PBG/SLF), реальная доходность, сроки сдачи, что рядом и есть ли риски.',
+      en: 'Give me a short rundown of this listing — the essentials: what it is, documents (PBG/SLF), real yield, handover date, what\'s nearby and any risks.',
+      id: 'Beri saya ringkasan singkat properti ini — yang terpenting: apa ini, dokumen (PBG/SLF), imbal hasil nyata, tanggal serah terima, apa yang di sekitar dan risikonya.',
+      fr: 'Donne-moi un aperçu rapide de ce bien — l\'essentiel : ce que c\'est, les documents (PBG/SLF), le rendement réel, la date de livraison, ce qu\'il y a à proximité et les risques éventuels.',
+      de: 'Gib mir einen kurzen Überblick über dieses Objekt — das Wichtigste: was es ist, Dokumente (PBG/SLF), reale Rendite, Übergabetermin, was in der Nähe ist und mögliche Risiken.',
+      zh: '给我简要介绍一下这处房产——重点：它是什么、文件（PBG/SLF）、真实收益、交房时间、周边配套以及有无风险。',
+      nl: 'Geef me een kort overzicht van dit object — het belangrijkste: wat het is, documenten (PBG/SLF), reëel rendement, opleverdatum, wat er in de buurt is en eventuele risico\'s.',
+      ban: 'Icenin tiang ringkesan bawak indik properti puniki — sane pinih utama: napi puniki, dokumen (PBG/SLF), hasil nyata, galah serah terima, napi sane wenten ring kiwangan tur wenten risiko.',
+    }, lang)
     // Defer one tick so the panel paints before the request kicks off.
     setTimeout(() => { void sendText(prompt) }, 60)
   }
 
   const callStatusText = callState === 'ringing'
-    ? (lang === 'ru' ? 'соединяем…' : 'connecting…')
+    ? pickCopy({ ru: 'соединяем…', en: 'connecting…', id: 'menyambungkan…', fr: 'connexion…', de: 'verbinden…', zh: '正在接通…', nl: 'verbinden…', ban: 'nyambungang…' }, lang)
     : isSpeaking
-      ? (lang === 'ru' ? 'Балина говорит…' : 'Balina is speaking…')
-      : (lang === 'ru' ? 'Слушаю вас…' : 'Listening…')
+      ? pickCopy({ ru: 'Балина говорит…', en: 'Balina is speaking…', id: 'Balina sedang berbicara…', fr: 'Balina parle…', de: 'Balina spricht…', zh: 'Balina 正在说话…', nl: 'Balina is aan het woord…', ban: 'Balina sedeng mabaos…' }, lang)
+      : pickCopy({ ru: 'Слушаю вас…', en: 'Listening…', id: 'Mendengarkan…', fr: 'À l\'écoute…', de: 'Ich höre zu…', zh: '正在聆听…', nl: 'Ik luister…', ban: 'Mirengang…' }, lang)
 
   return (
     <>
@@ -1226,13 +1247,13 @@ export function ConsultantWidget() {
               <span className={`absolute -inset-1.5 rounded-full ring-4 ${callState === 'ringing' || isSpeaking ? 'ring-[#22C55E]/40 animate-ping' : 'ring-[#22C55E]/20'}`} />
             </div>
             <div>
-              <div className="text-[22px] font-semibold text-[#111827]">{lang === 'ru' ? 'Балина' : 'Balina'}</div>
+              <div className="text-[22px] font-semibold text-[#111827]">{pickCopy({ ru: 'Балина', en: 'Balina', id: 'Balina', fr: 'Balina', de: 'Balina', zh: 'Balina', nl: 'Balina', ban: 'Balina' }, lang)}</div>
               <div className="text-[14px] text-[var(--color-text-muted)] mt-1">{callStatusText}</div>
             </div>
             <button
               type="button"
               onClick={endCall}
-              aria-label={lang === 'ru' ? 'Завершить звонок' : 'End call'}
+              aria-label={pickCopy({ ru: 'Завершить звонок', en: 'End call', id: 'Akhiri panggilan', fr: 'Terminer l\'appel', de: 'Anruf beenden', zh: '结束通话', nl: 'Gesprek beëindigen', ban: 'Muputang telepon' }, lang)}
               className="mt-1 inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#EF4444] text-white hover:bg-[#DC2626] shadow-lg transition-colors"
             >
               <PhoneOff size={26} />
@@ -1247,8 +1268,8 @@ export function ConsultantWidget() {
           <button
             type="button"
             onClick={startCall}
-            aria-label={lang === 'ru' ? 'Позвонить Балине' : 'Call Balina'}
-            title={lang === 'ru' ? 'Позвонить Балине' : 'Call Balina'}
+            aria-label={pickCopy({ ru: 'Позвонить Балине', en: 'Call Balina', id: 'Telepon Balina', fr: 'Appeler Balina', de: 'Balina anrufen', zh: '致电 Balina', nl: 'Bel Balina', ban: 'Nelepon Balina' }, lang)}
+            title={pickCopy({ ru: 'Позвонить Балине', en: 'Call Balina', id: 'Telepon Balina', fr: 'Appeler Balina', de: 'Balina anrufen', zh: '致电 Balina', nl: 'Bel Balina', ban: 'Nelepon Balina' }, lang)}
             className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#22C55E] hover:bg-[#16A34A] text-white shadow-lg transition-colors"
           >
             <Phone size={20} />
@@ -1282,7 +1303,7 @@ export function ConsultantWidget() {
           >
             <Image src="/balina.jpg" alt="" width={28} height={28} className="w-7 h-7 rounded-full object-cover shrink-0" />
             <span className="text-[12.5px] leading-snug text-[#111827]">
-              {lang === 'ru' ? 'Рассказать про этот объект?' : 'Want the rundown on this one?'}
+              {pickCopy({ ru: 'Рассказать про этот объект?', en: 'Want the rundown on this one?', id: 'Mau tahu soal properti ini?', fr: 'Un aperçu de ce bien ?', de: 'Überblick zu diesem Objekt?', zh: '想了解这处房产吗？', nl: 'Meer weten over dit object?', ban: 'Meled uning indik properti puniki?' }, lang)}
             </span>
           </button>
           <button
@@ -1347,10 +1368,10 @@ export function ConsultantWidget() {
                   <button
                     type="button"
                     onClick={() => {
-                      if (window.confirm(lang === 'ru' ? 'Очистить переписку?' : 'Clear the chat history?')) clearHistory()
+                      if (window.confirm(pickCopy({ ru: 'Очистить переписку?', en: 'Clear the chat history?', id: 'Hapus riwayat obrolan?', fr: 'Effacer l\'historique de la conversation ?', de: 'Chatverlauf löschen?', zh: '清除聊天记录？', nl: 'Chatgeschiedenis wissen?', ban: 'Kaicalang riwayat obrolan?' }, lang))) clearHistory()
                     }}
-                    aria-label={lang === 'ru' ? 'Очистить чат' : 'Clear chat'}
-                    title={lang === 'ru' ? 'Очистить чат' : 'Clear chat'}
+                    aria-label={pickCopy({ ru: 'Очистить чат', en: 'Clear chat', id: 'Hapus obrolan', fr: 'Effacer la conversation', de: 'Chat löschen', zh: '清除聊天', nl: 'Chat wissen', ban: 'Kaicalang obrolan' }, lang)}
+                    title={pickCopy({ ru: 'Очистить чат', en: 'Clear chat', id: 'Hapus obrolan', fr: 'Effacer la conversation', de: 'Chat löschen', zh: '清除聊天', nl: 'Chat wissen', ban: 'Kaicalang obrolan' }, lang)}
                     className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/60 hover:bg-white text-[#111827]"
                   >
                     <Trash2 size={16} />
@@ -1381,7 +1402,7 @@ export function ConsultantWidget() {
                     {m.source === 'manager' && (
                       <span className="self-start inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary-pressed)] text-[10px] font-medium uppercase tracking-wide">
                         <UserRound size={10} strokeWidth={2.4} />
-                        {lang === 'ru' ? 'Менеджер' : 'Manager'}
+                        {pickCopy({ ru: 'Менеджер', en: 'Manager', id: 'Manajer', fr: 'Conseiller', de: 'Manager', zh: '经理', nl: 'Manager', ban: 'Manajer' }, lang)}
                       </span>
                     )}
                     {text && <Bubble role={m.role}>{text}</Bubble>}

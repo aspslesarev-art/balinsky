@@ -213,7 +213,7 @@ export async function RentalCompareSection({ district, bedrooms, villaPriceUsd, 
         <Stat label={c.range} value={<><InlinePrice usd={min} lang={lang} /> – <InlinePrice usd={max} lang={lang} /></>} />
         <Stat
           label={annualYieldPct != null ? c.grossYield : c.perYear}
-          value={annualYieldPct != null ? `~${annualYieldPct.toFixed(1)}%` : <><InlinePrice usd={med * 12} lang={lang} /> / {lang === 'ru' ? 'год' : 'yr'}</>}
+          value={annualYieldPct != null ? `~${annualYieldPct.toFixed(1)}%` : <><InlinePrice usd={med * 12} lang={lang} /> / {pickCopy({ ru: 'год', en: 'yr', id: 'thn', fr: 'an', de: 'Jahr', zh: '年', nl: 'jr', ban: 'thn' }, lang)}</>}
           hint={annualYieldPct != null ? c.yieldHint(<InlinePrice usd={med * 12} lang={lang} />, <InlinePrice usd={villaPriceUsd ?? 0} lang={lang} />) : undefined}
         />
       </div>
@@ -238,7 +238,7 @@ function Stat({ label, value, hint }: { label: string; value: React.ReactNode; h
 function CompareCard({ r, lang }: { r: RentalItem; lang: Lang }) {
   const cover = r.photos[0]
   const root = switchLangPath('/ru/arenda', lang)
-  const perMo = lang === 'ru' ? ' / мес' : ' / mo'
+  const perMo = ' / ' + pickCopy({ ru: 'мес', en: 'mo', id: 'bln', fr: 'mois', de: 'Mon.', zh: '月', nl: 'mnd', ban: 'bln' }, lang)
   return (
     <Link
       href={`${root}/o/${r.slug}`}

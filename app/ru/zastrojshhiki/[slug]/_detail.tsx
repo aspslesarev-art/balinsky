@@ -717,7 +717,7 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
         {aiText && (
           <section className="mb-10">
             <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">{c.aboutHeading}</h2>
-            <ExpandableText className="max-w-3xl" more={lang === 'ru' ? 'Подробнее' : 'Read more'} less={lang === 'ru' ? 'Свернуть' : 'Show less'}>
+            <ExpandableText className="max-w-3xl" more={pickCopy({ ru: 'Подробнее', en: 'Read more', id: 'Selengkapnya', fr: 'En savoir plus', de: 'Mehr anzeigen', zh: '展开', nl: 'Meer', ban: 'Selengkapnya' }, lang)} less={pickCopy({ ru: 'Свернуть', en: 'Show less', id: 'Tutup', fr: 'Réduire', de: 'Weniger', zh: '收起', nl: 'Minder', ban: 'Tutup' }, lang)}>
               <div className="prose-balinsky text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
                 {aiText}
               </div>

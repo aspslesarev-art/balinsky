@@ -716,14 +716,26 @@ function unitTypesPhrase(rawTypes: unknown, lang: Lang): string | null {
   if (/таунхаус|townhouse/.test(src)) found.push('townhouse')
   if (/пентхаус|penthouse/.test(src)) found.push('penthouse')
   if (found.length === 0) return null
-  const RU: Record<string, string> = { apartment: 'апартаменты', villa: 'виллы', townhouse: 'таунхаусы', penthouse: 'пентхаусы' }
-  const EN: Record<string, string> = { apartment: 'Apartments', villa: 'Villas', townhouse: 'Townhouses', penthouse: 'Penthouses' }
-  const ID: Record<string, string> = { apartment: 'apartemen', villa: 'vila', townhouse: 'rumah bandar', penthouse: 'penthouse' }
-  const FR: Record<string, string> = { apartment: 'appartements', villa: 'villas', townhouse: 'maisons de ville', penthouse: 'penthouses' }
-  const words = found.map(k => (lang === 'ru' ? RU : lang === 'id' ? ID : lang === 'fr' ? FR : EN)[k])
+  // Native unit-type words for every one of the 8 site languages — never fall
+  // back to English for de/zh/nl/ban.
+  const TYPE_WORDS: Record<Lang, Record<string, string>> = {
+    ru: { apartment: 'апартаменты', villa: 'виллы', townhouse: 'таунхаусы', penthouse: 'пентхаусы' },
+    en: { apartment: 'Apartments', villa: 'Villas', townhouse: 'Townhouses', penthouse: 'Penthouses' },
+    id: { apartment: 'apartemen', villa: 'vila', townhouse: 'rumah bandar', penthouse: 'penthouse' },
+    fr: { apartment: 'appartements', villa: 'villas', townhouse: 'maisons de ville', penthouse: 'penthouses' },
+    de: { apartment: 'Apartments', villa: 'Villen', townhouse: 'Reihenhäuser', penthouse: 'Penthouses' },
+    zh: { apartment: '公寓', villa: '别墅', townhouse: '联排别墅', penthouse: '顶层公寓' },
+    nl: { apartment: 'appartementen', villa: "villa's", townhouse: 'herenhuizen', penthouse: 'penthouses' },
+    ban: { apartment: 'apartemen', villa: 'vila', townhouse: 'rumah bandar', penthouse: 'penthouse' },
+  }
+  // Final connective ("and") per language. Chinese enumerates with '、'.
+  const SEP: Record<Lang, string> = {
+    ru: ' и ', en: ' & ', id: ' dan ', fr: ' et ', de: ' & ', zh: '、', nl: ' & ', ban: ' dan ',
+  }
+  const words = found.map(k => (TYPE_WORDS[lang] ?? TYPE_WORDS.en)[k])
   if (words.length === 1) return words[0]
-  const sep = lang === 'ru' ? ' и ' : lang === 'id' ? ' dan ' : lang === 'fr' ? ' et ' : ' & '
-  return words.slice(0, -1).join(', ') + sep + words[words.length - 1]
+  if (lang === 'zh') return words.join('、')
+  return words.slice(0, -1).join(', ') + (SEP[lang] ?? ' & ') + words[words.length - 1]
 }
 
 function minMax(nums: number[]): [number, number] | null {
@@ -743,11 +755,43 @@ function factsDescription(opts: {
   const usd = (n: number) => '$' + Math.round(n).toLocaleString('en-US')
   const parts: string[] = []
   if (lang !== 'ru') {
-    const head = `${opts.name} — ${opts.phrase ?? 'residential complex'}${opts.district ? ` in ${opts.district}` : ''}, Bali.`
+    // Native connective words for each non-RU language — no English leaks for
+    // de/zh/nl/ban (or id/fr). Numbers, m², $ prices and place names verbatim.
+    // Chinese has no plural forms.
+    const FACTS: Record<Exclude<Lang, 'ru'>, {
+      complex: string; in: string; bali: string
+      bed: (a: number, b: number) => string
+      price: (lo: string, hi: string) => string
+      completion: (y: string) => string
+    }> = {
+      en: { complex: 'residential complex', in: 'in', bali: 'Bali',
+        bed: (a, b) => a === b ? `${a}-bedroom` : `${a}–${b} bedrooms`,
+        price: (lo, hi) => `from ${lo} to ${hi}`, completion: y => ` Completion ${y}.` },
+      id: { complex: 'kompleks hunian', in: 'di', bali: 'Bali',
+        bed: (a, b) => a === b ? `${a} kamar tidur` : `${a}–${b} kamar tidur`,
+        price: (lo, hi) => `dari ${lo} hingga ${hi}`, completion: y => ` Serah terima ${y}.` },
+      fr: { complex: 'résidence', in: 'à', bali: 'Bali',
+        bed: (a, b) => a === b ? `${a} chambre` : `${a}–${b} chambres`,
+        price: (lo, hi) => `de ${lo} à ${hi}`, completion: y => ` Livraison ${y}.` },
+      de: { complex: 'Wohnanlage', in: 'in', bali: 'Bali',
+        bed: (a, b) => a === b ? `${a} Schlafzimmer` : `${a}–${b} Schlafzimmer`,
+        price: (lo, hi) => `von ${lo} bis ${hi}`, completion: y => ` Fertigstellung ${y}.` },
+      zh: { complex: '住宅区', in: '位于', bali: '巴厘岛',
+        bed: (a, b) => a === b ? `${a} 间卧室` : `${a}–${b} 间卧室`,
+        price: (lo, hi) => `${lo} 至 ${hi}`, completion: y => ` 交付 ${y}。` },
+      nl: { complex: 'wooncomplex', in: 'in', bali: 'Bali',
+        bed: (a, b) => a === b ? `${a} slaapkamer` : `${a}–${b} slaapkamers`,
+        price: (lo, hi) => `van ${lo} tot ${hi}`, completion: y => ` Oplevering ${y}.` },
+      ban: { complex: 'kompleks', in: 'ring', bali: 'Bali',
+        bed: (a, b) => a === b ? `${a} kamar tidur` : `${a}–${b} kamar tidur`,
+        price: (lo, hi) => `dari ${lo} hingga ${hi}`, completion: y => ` Serah terima ${y}.` },
+    }
+    const L = FACTS[lang] ?? FACTS.en
+    const head = `${opts.name} — ${opts.phrase ?? L.complex}${opts.district ? ` ${L.in} ${opts.district}` : ''}, ${L.bali}.`
     if (ar) parts.push(ar[0] === ar[1] ? `${ar[0]} m²` : `${ar[0]}–${ar[1]} m²`)
-    if (br) parts.push(br[0] === br[1] ? `${br[0]}-bedroom` : `${br[0]}–${br[1]} bedrooms`)
-    if (pr) parts.push(pr[0] === pr[1] ? usd(pr[0]) : `from ${usd(pr[0])} to ${usd(pr[1])}`)
-    return `${head} ${parts.join(', ')}.${opts.year ? ` Completion ${opts.year}.` : ''}`.slice(0, 200)
+    if (br) parts.push(L.bed(br[0], br[1]))
+    if (pr) parts.push(pr[0] === pr[1] ? usd(pr[0]) : L.price(usd(pr[0]), usd(pr[1])))
+    return `${head} ${parts.join(', ')}.${opts.year ? L.completion(opts.year) : ''}`.slice(0, 200)
   }
   const head = `${opts.name} — ${opts.phrase ?? 'жилой комплекс'}${opts.district ? ` в ${opts.district}` : ''}, Бали.`
   if (ar) parts.push(ar[0] === ar[1] ? `${ar[0]} м²` : `${ar[0]}–${ar[1]} м²`)
@@ -1048,7 +1092,10 @@ export async function generateComplexMetadata(slug: string, lang: Lang) {
   const name = firstString(c.data['Project']) ?? slug
   const districtRaw = firstString(c.data['Location 2']) ?? firstString(c.data['Location'])
   const district = lang === 'ru' ? districtRu(districtRaw) : districtRaw
-  const types = strList(c.data['Типы юнитов']).join(', ')
+  // Localize unit-type labels for the fallback description too — raw Airtable
+  // values are Russian, so non-RU langs would otherwise show Cyrillic types.
+  const typesArr = strList(c.data['Типы юнитов'])
+  const types = (lang === 'ru' ? typesArr : typesArr.map(t => facetLabel('type', t, lang))).join(', ')
   const yearRaw = firstString(c.data['Year of completion ']) ?? firstString(c.data['Year of completion'])
   const seoText = tField(c.data, 'SEO Text', lang)
     ?? tField(c.data, 'Описание', lang)
@@ -1464,7 +1511,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             <h2 className="text-[19px] sm:text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
               {copy.aboutPrefix} {name}
             </h2>
-            <ExpandableText className="max-w-3xl" more={lang === 'ru' ? 'Подробнее' : 'Read more'} less={lang === 'ru' ? 'Свернуть' : 'Show less'}>
+            <ExpandableText className="max-w-3xl" more={pickCopy({ ru: 'Подробнее', en: 'Read more', id: 'Selengkapnya', fr: 'En savoir plus', de: 'Mehr anzeigen', zh: '展开', nl: 'Meer', ban: 'Selengkapnya' }, lang)} less={pickCopy({ ru: 'Свернуть', en: 'Show less', id: 'Tutup', fr: 'Réduire', de: 'Weniger', zh: '收起', nl: 'Minder', ban: 'Tutup' }, lang)}>
               <div className="prose-balinsky text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
                 {pageBody}
               </div>
@@ -1542,7 +1589,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
                       <StarRating value={devReliability.score} size={14} />
                       <span className="text-[13px] font-semibold text-[#111827]">{devReliability.score.toFixed(1)}</span>
                       <span className="text-[12px] text-[var(--color-text-muted)]">
-                        {lang === 'ru' ? `надёжность Balinsky · ${devReliability.completed} сданных` : `Balinsky reliability · ${devReliability.completed} completed`}
+                        {pickCopy({ ru: `надёжность Balinsky · ${devReliability.completed} сданных`, en: `Balinsky reliability · ${devReliability.completed} completed`, id: `Keandalan Balinsky · ${devReliability.completed} selesai`, fr: `Fiabilité Balinsky · ${devReliability.completed} livrés`, de: `Balinsky-Zuverlässigkeit · ${devReliability.completed} fertiggestellt`, zh: `Balinsky 可靠性 · ${devReliability.completed} 套已交付`, nl: `Balinsky-betrouwbaarheid · ${devReliability.completed} opgeleverd`, ban: `Kapercayan Balinsky · ${devReliability.completed} pragat` }, lang)}
                       </span>
                     </div>
                   )}

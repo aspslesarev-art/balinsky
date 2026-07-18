@@ -445,6 +445,30 @@ const COPY = {
   },
 } as const
 
+// Localized "in <district>" connective for the fallback meta title (used
+// when the composed seoTitle exceeds ~70 chars). zh drops the preposition;
+// RU keeps the leading-space "в" form so the RU title stays byte-identical.
+const VILLA_META_IN_DISTRICT: Record<Lang, (d: string) => string> = {
+  ru: d => ` в ${d}`, en: d => ` in ${d}`, id: d => ` di ${d}`,
+  fr: d => ` à ${d}`, de: d => ` in ${d}`, zh: d => ` ${d}`,
+  nl: d => ` in ${d}`, ban: d => ` ring ${d}`,
+}
+
+// Native-language fallback for the Product schema description (only reached
+// when the row has no SEO Text at all). Replaces the old
+// `lang === 'ru' ? RU : EN` ternary so /id, /fr, /de, /zh, /nl, /ban never
+// leak English into structured data.
+const VILLA_PRODUCT_DESC: Record<Lang, (bedrooms: number | null, district: string | null) => string> = {
+  ru: (b, d) => `${b ? `${b}-комнатная ` : ''}вилла${d ? ` в ${d}` : ''} на Бали, Индонезия`,
+  en: (b, d) => `${b ? `${b}-bedroom ` : ''}villa${d ? ` in ${d}` : ''}, Bali, Indonesia`,
+  id: (b, d) => `Vila${b ? ` ${b} kamar tidur` : ''}${d ? ` di ${d}` : ''}, Bali, Indonesia`,
+  fr: (b, d) => `Villa${b ? ` de ${b} chambres` : ''}${d ? ` à ${d}` : ''}, Bali, Indonésie`,
+  de: (b, d) => `${b ? `${b}-Zimmer-` : ''}Villa${d ? ` in ${d}` : ''}, Bali, Indonesien`,
+  zh: (b, d) => `${d ? `${d}` : ''}${b ? `${b}居室` : ''}别墅，印度尼西亚巴厘岛`,
+  nl: (b, d) => `${b ? `${b}-slaapkamer ` : ''}villa${d ? ` in ${d}` : ''}, Bali, Indonesië`,
+  ban: (b, d) => `Vila${b ? ` ${b} kamar pules` : ''}${d ? ` ring ${d}` : ''}, Bali, Indonesia`,
+}
+
 export const revalidate = 3600
 export function generateStaticParams() { return [] }
 
@@ -792,12 +816,12 @@ export async function generateVillaMetadata(slug: string, lang: Lang) {
   const ruPath = `/ru/villy/o/${slug}`
   const enPath = `/en/villas/o/${slug}`
   const path = switchLangPath(ruPath, lang)
-  const inText = lang === 'ru' ? 'в' : 'in'
   const dashPrice = price ? ` — ${price}` : ''
   // Same dedup as titleParts above — the AI base title usually already
   // contains the district, so only append it when it's genuinely missing
-  // (otherwise we get "… в Bukit … в Bukit").
-  const fallbackDistrict = district && !titleLower.includes(district.toLowerCase()) ? ` ${inText} ${district}` : ''
+  // (otherwise we get "… в Bukit … в Bukit"). Connective localized per lang
+  // (VILLA_META_IN_DISTRICT) so /de, /zh, /nl, /ban never emit "in".
+  const fallbackDistrict = district && !titleLower.includes(district.toLowerCase()) ? VILLA_META_IN_DISTRICT[lang](district) : ''
   return {
     title: seoTitle.length > 70 ? `${title}${fallbackDistrict}${dashPrice} | Balinsky` : seoTitle,
     description,
@@ -948,9 +972,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   // a generated "<bedrooms>-BR villa in <district>, Bali" line so the
   // field is never empty.
   productJsonLd.description = seoText?.slice(0, 500)
-    ?? (lang === 'ru'
-      ? `${bedrooms ? bedrooms + '-комнатная ' : ''}вилла${district ? ` в ${district}` : ''} на Бали, Индонезия`
-      : `${bedrooms ? bedrooms + '-bedroom ' : ''}villa${district ? ` in ${district}` : ''}, Bali, Indonesia`)
+    ?? pickCopy(VILLA_PRODUCT_DESC, lang)(bedrooms, district)
   // Brand → developer name when known, otherwise generic "Balinsky"
   // so the GTIN/brand validator stops flagging this row.
   productJsonLd.brand = { '@type': 'Brand', name: developerName ?? 'Balinsky' }
@@ -1008,7 +1030,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
             ? {
                 additionalProperty: [{
                   '@type': 'PropertyValue',
-                  name: lang === 'ru' ? 'Площадь участка' : 'Land area',
+                  name: pickCopy({ ru: 'Площадь участка', en: 'Land area', id: 'Luas tanah', fr: 'Surface du terrain', de: 'Grundstücksfläche', zh: '土地面积', nl: 'Perceeloppervlak', ban: 'Luas tanah' }, lang),
                   value: land,
                   unitCode: 'MTK',
                 }],
@@ -1168,7 +1190,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
             <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
               {c.descHeading}
             </h2>
-            <ExpandableText className="max-w-3xl" more={lang === 'ru' ? 'Подробнее' : 'Read more'} less={lang === 'ru' ? 'Свернуть' : 'Show less'}>
+            <ExpandableText className="max-w-3xl" more={pickCopy({ ru: 'Подробнее', en: 'Read more', id: 'Selengkapnya', fr: 'En savoir plus', de: 'Mehr anzeigen', zh: '展开', nl: 'Meer', ban: 'Selengkapnya' }, lang)} less={pickCopy({ ru: 'Свернуть', en: 'Show less', id: 'Tutup', fr: 'Réduire', de: 'Weniger', zh: '收起', nl: 'Minder', ban: 'Tutup' }, lang)}>
               <div className="prose-balinsky text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
                 {seoText}
               </div>

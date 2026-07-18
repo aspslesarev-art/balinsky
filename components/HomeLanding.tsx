@@ -1161,11 +1161,11 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
       <section className="border-b border-[var(--color-border)] bg-[var(--color-bg)]">
         <PageContainer>
           <div className="py-7 md:py-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-x-6 gap-y-6">
-            <TrustCell value={fmtInt(stats.complexes, c.locale)} label={lang === 'ru' ? 'жилых комплексов' : 'residential complexes'} />
-            <TrustCell value={fmtInt(stats.developers, c.locale)} label={lang === 'ru' ? 'застройщиков' : 'developers'} />
-            <TrustCell value={fmtInt(stats.villas, c.locale)} label={lang === 'ru' ? 'планировок вилл' : 'villa layouts'} />
-            <TrustCell value={fmtInt(stats.apartments, c.locale)} label={lang === 'ru' ? 'планировок апартаментов' : 'apartment layouts'} />
-            <TrustCell value={fmtInt(stats.units, c.locale)} label={lang === 'ru' ? 'юнитов на сайте' : 'units on the site'} />
+            <TrustCell value={fmtInt(stats.complexes, c.locale)} label={pickCopy({ ru: 'жилых комплексов', en: 'residential complexes', id: 'kompleks hunian', fr: 'complexes résidentiels', de: 'Wohnkomplexe', zh: '住宅社区', nl: 'wooncomplexen', ban: 'komplek hunian' }, lang)} />
+            <TrustCell value={fmtInt(stats.developers, c.locale)} label={pickCopy({ ru: 'застройщиков', en: 'developers', id: 'pengembang', fr: 'promoteurs', de: 'Bauträger', zh: '开发商', nl: 'ontwikkelaars', ban: 'pengembang' }, lang)} />
+            <TrustCell value={fmtInt(stats.villas, c.locale)} label={pickCopy({ ru: 'планировок вилл', en: 'villa layouts', id: 'denah vila', fr: 'plans de villas', de: 'Villa-Grundrisse', zh: '别墅户型', nl: 'villaplattegronden', ban: 'denah villa' }, lang)} />
+            <TrustCell value={fmtInt(stats.apartments, c.locale)} label={pickCopy({ ru: 'планировок апартаментов', en: 'apartment layouts', id: 'denah apartemen', fr: 'plans d’appartements', de: 'Apartment-Grundrisse', zh: '公寓户型', nl: 'appartementplattegronden', ban: 'denah apartemen' }, lang)} />
+            <TrustCell value={fmtInt(stats.units, c.locale)} label={pickCopy({ ru: 'юнитов на сайте', en: 'units on the site', id: 'unit di situs', fr: 'lots sur le site', de: 'Einheiten auf der Seite', zh: '在售单元', nl: 'units op de site', ban: 'unit ring situs' }, lang)} />
           </div>
         </PageContainer>
       </section>
@@ -1173,7 +1173,7 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
       {/* === Guided finder — easy mode: 3 taps → ranked shortlist == */}
       {finderItems.length > 0 && (
         <SectionWrap className="border-t border-[var(--color-border)]">
-          <SectionHead title={lang === 'ru' ? 'Подберём виллу за 3 ответа.' : 'Find your villa in 3 taps.'} />
+          <SectionHead title={pickCopy({ ru: 'Подберём виллу за 3 ответа.', en: 'Find your villa in 3 taps.', id: 'Temukan vila Anda dalam 3 langkah.', fr: 'Trouvez votre villa en 3 réponses.', de: 'Finden Sie Ihre Villa in 3 Schritten.', zh: '三步找到你的别墅。', nl: 'Vind uw villa in 3 stappen.', ban: 'Alih villa Ragane ring 3 lengkah.' }, lang)} />
           <div className="mt-8 md:mt-10">
             <HomeFinder items={finderItems} lang={lang} />
           </div>
@@ -1314,11 +1314,18 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
       {collections.length > 0 && (
         <SectionWrap className="border-t border-[var(--color-border)]">
           <SectionHead
-            eyebrow={lang === 'ru' ? 'Подборки' : 'Collections'}
-            title={lang === 'ru' ? 'Лучшее в вашем бюджете' : 'The best in your budget'}
-            sub={lang === 'ru'
-              ? 'Топ-объекты по доходности и популярности — выберите бюджет и район'
-              : 'Top listings by yield and popularity — pick a budget and a district'}
+            eyebrow={pickCopy({ ru: 'Подборки', en: 'Collections', id: 'Koleksi', fr: 'Sélections', de: 'Kollektionen', zh: '精选', nl: 'Collecties', ban: 'Koleksi' }, lang)}
+            title={pickCopy({ ru: 'Лучшее в вашем бюджете', en: 'The best in your budget', id: 'Yang terbaik sesuai anggaran Anda', fr: 'Le meilleur dans votre budget', de: 'Das Beste in Ihrem Budget', zh: '预算之内的精选', nl: 'Het beste binnen uw budget', ban: 'Sane pinih becik ring anggaran Ragane' }, lang)}
+            sub={pickCopy({
+              ru: 'Топ-объекты по доходности и популярности — выберите бюджет и район',
+              en: 'Top listings by yield and popularity — pick a budget and a district',
+              id: 'Properti teratas berdasarkan imbal hasil dan popularitas — pilih anggaran dan area',
+              fr: 'Les meilleurs biens par rendement et popularité — choisissez un budget et un quartier',
+              de: 'Top-Objekte nach Rendite und Beliebtheit — Budget und Gebiet wählen',
+              zh: '按收益和热度排名的优质房源 — 选择预算和区域',
+              nl: 'Topaanbod op rendement en populariteit — kies een budget en een gebied',
+              ban: 'Properti utama manut hasil lan popularitas — pilih anggaran lan wewidangan',
+            }, lang)}
           />
           <div className="mt-8 md:mt-10">
             <HomeCollections tiers={collections} lang={lang} />
@@ -1342,7 +1349,7 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
                   <div className="text-[15px] font-medium text-[#0E1A14] truncate">{lang !== 'ru' && k.title && hasCyrillic(k.title) ? translit(k.title) : k.title}</div>
                   <div className="mt-1 text-[12.5px] text-[#6B7570] flex items-center gap-1.5">
                     {k.district && <><MapPin size={11} /> {k.district}</>}
-                    {k.units != null && <span className="ml-auto tabular-nums">{k.units} {lang === 'ru' ? 'юнитов' : 'units'}</span>}
+                    {k.units != null && <span className="ml-auto tabular-nums">{k.units} {pickCopy({ ru: 'юнитов', en: 'units', id: 'unit', fr: 'lots', de: 'Einheiten', zh: '套', nl: 'units', ban: 'unit' }, lang)}</span>}
                   </div>
                 </div>
               </Link>
@@ -1407,7 +1414,7 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
               <div className="text-[16px] font-medium text-[#0E1A14] leading-tight">{k.title}</div>
               <p className="mt-2 text-[13.5px] text-[#4B5563] leading-[1.55]">{k.body}</p>
               <div className="mt-4 inline-flex items-center gap-1 text-[12.5px] text-[var(--color-primary)]">
-                {lang === 'ru' ? 'Читать' : 'Read'} <ArrowRight size={12} />
+                {pickCopy({ ru: 'Читать', en: 'Read', id: 'Baca', fr: 'Lire', de: 'Lesen', zh: '阅读', nl: 'Lezen', ban: 'Wacen' }, lang)} <ArrowRight size={12} />
               </div>
             </Link>
           ))}

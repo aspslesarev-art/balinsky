@@ -128,8 +128,8 @@ const COPY = {
 } as const
 
 function fmtDistance(km: number, lang: Lang): string {
-  const mUnit = lang === 'ru' ? 'м' : 'm'
-  const kmUnit = lang === 'ru' ? 'км' : 'km'
+  const mUnit = pickCopy({ ru: 'м', en: 'm', id: 'm', fr: 'm', de: 'm', zh: '米', nl: 'm', ban: 'm' }, lang)
+  const kmUnit = pickCopy({ ru: 'км', en: 'km', id: 'km', fr: 'km', de: 'km', zh: '公里', nl: 'km', ban: 'km' }, lang)
   if (km < 1) return `${Math.round(km * 1000)} ${mUnit}`
   return `${km.toFixed(1)} ${kmUnit}`
 }
@@ -228,7 +228,9 @@ export function NearbyPlaces({
           onClick={() => setExpanded(v => !v)}
           className="hidden md:inline-flex items-center gap-1 mt-2.5 text-[13px] font-medium text-[var(--color-primary)] hover:gap-1.5 transition-all cursor-pointer"
         >
-          {expanded ? (lang === 'ru' ? 'Свернуть' : 'Collapse') : (lang === 'ru' ? 'Показать все' : 'Show all')}
+          {expanded
+            ? pickCopy({ ru: 'Свернуть', en: 'Collapse', id: 'Ciutkan', fr: 'Réduire', de: 'Einklappen', zh: '收起', nl: 'Inklappen', ban: 'Ciutang' }, lang)
+            : pickCopy({ ru: 'Показать все', en: 'Show all', id: 'Tampilkan semua', fr: 'Tout afficher', de: 'Alle anzeigen', zh: '显示全部', nl: 'Alles tonen', ban: 'Cingakin makejang' }, lang)}
           <ChevronDown size={15} className={`transition-transform ${expanded ? 'rotate-180' : ''}`} />
         </button>
       )}
@@ -291,8 +293,8 @@ export function NearbyPlaces({
           className="hidden md:inline-flex items-center gap-1 mt-4 text-[13px] font-medium text-[var(--color-primary)] hover:gap-1.5 transition-all cursor-pointer"
         >
           {placesExpanded
-            ? (lang === 'ru' ? 'Свернуть' : 'Collapse')
-            : (lang === 'ru' ? `Показать остальные · ${places.length - 3}` : `Show the rest · ${places.length - 3}`)}
+            ? pickCopy({ ru: 'Свернуть', en: 'Collapse', id: 'Ciutkan', fr: 'Réduire', de: 'Einklappen', zh: '收起', nl: 'Inklappen', ban: 'Ciutang' }, lang)
+            : `${pickCopy({ ru: 'Показать остальные', en: 'Show the rest', id: 'Tampilkan sisanya', fr: 'Afficher le reste', de: 'Rest anzeigen', zh: '显示其余', nl: 'Toon de rest', ban: 'Cingakin sané lianan' }, lang)} · ${places.length - 3}`}
           <ChevronDown size={15} className={`transition-transform ${placesExpanded ? 'rotate-180' : ''}`} />
         </button>
       )}

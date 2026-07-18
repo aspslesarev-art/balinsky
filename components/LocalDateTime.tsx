@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { BALI_TZ, fmtBali, fmtLocal } from '@/lib/datetime'
-import type { Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 
 type Props = {
   iso: string
@@ -29,7 +29,7 @@ export function LocalDateTime({ iso, withYear, withTime, className, prefix, suff
       const localText = fmtLocal(iso, { withYear, withTime, lang })
       if (localText !== baliText) {
         setText(localText)
-        setTooltip(lang === 'ru' ? `Бали: ${baliText}` : `Bali: ${baliText}`)
+        setTooltip(`${pickCopy({ ru: 'Бали', en: 'Bali', id: 'Bali', fr: 'Bali', de: 'Bali', zh: '巴厘岛', nl: 'Bali', ban: 'Bali' }, lang)}: ${baliText}`)
       }
     } catch {
       // Intl may throw on very old browsers — keep Bali text in that case.

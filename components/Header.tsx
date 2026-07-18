@@ -8,7 +8,7 @@ import { Home, Building, Building2, HardHat, Menu, X } from 'lucide-react'
 import { LangSwitch } from './LangSwitch'
 import { CurrencyToggle } from './CurrencyContext'
 import { WishlistHeaderLink } from './WishlistHeaderLink'
-import { t, detectLang, localizeSegment, type Lang } from '@/lib/i18n'
+import { t, detectLang, localizeSegment, pickCopy, type Lang } from '@/lib/i18n'
 
 type NavKey = 'villy' | 'apartamenty' | 'zhilye-kompleksy' | 'zastrojshhiki' | 'arenda'
 
@@ -68,7 +68,9 @@ export function Header({ active }: { active?: NavKey }) {
         <button
           type="button"
           className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg text-[var(--color-text)]"
-          aria-label={lang === 'ru' ? (open ? 'Закрыть меню' : 'Открыть меню') : (open ? 'Close menu' : 'Open menu')}
+          aria-label={open
+            ? pickCopy({ ru: 'Закрыть меню', en: 'Close menu', id: 'Tutup menu', fr: 'Fermer le menu', de: 'Menü schließen', zh: '关闭菜单', nl: 'Menu sluiten', ban: 'Nutup menu' }, lang)
+            : pickCopy({ ru: 'Открыть меню', en: 'Open menu', id: 'Buka menu', fr: 'Ouvrir le menu', de: 'Menü öffnen', zh: '打开菜单', nl: 'Menu openen', ban: 'Ngampakang menu' }, lang)}
           aria-expanded={open}
           onClick={() => setOpen(v => !v)}
         >

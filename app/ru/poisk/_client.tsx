@@ -9,7 +9,7 @@ import { useState, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Search, Sparkles, ArrowRight } from 'lucide-react'
-import { switchLangPath, type Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
 type Card = {
   kind: 'villa' | 'apartment' | 'complex'
@@ -39,25 +39,88 @@ export function SemanticSearchClient({ lang }: { lang: Lang }) {
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
-  const c = lang !== 'ru' ? {
-    title: 'Describe your dream property',
-    hint: 'Type freely — we find by meaning, not just filters.',
-    placeholder: 'e.g. villa with infinity pool 5 min from beach in Canggu, under $600k',
-    cta: 'Find',
-    busy: 'Searching…',
-    examples: 'Try:',
-    empty: 'No matches yet — try rephrasing or broadening.',
-    headline: (n: number) => `${n} matches`,
-  } : {
-    title: 'Опишите идеальный объект',
-    hint: 'Пишите как угодно — ищем по смыслу, а не по галочкам в фильтре.',
-    placeholder: 'например, вилла с инфинити-бассейном в 5 минутах от океана в Чангу до $600k',
-    cta: 'Найти',
-    busy: 'Ищем…',
-    examples: 'Попробуйте:',
-    empty: 'Ничего не нашли — попробуй переформулировать.',
-    headline: (n: number) => `${n} ${n === 1 ? 'совпадение' : n < 5 ? 'совпадения' : 'совпадений'}`,
-  }
+  const c = pickCopy({
+    en: {
+      title: 'Describe your dream property',
+      hint: 'Type freely — we find by meaning, not just filters.',
+      placeholder: 'e.g. villa with infinity pool 5 min from beach in Canggu, under $600k',
+      cta: 'Find',
+      busy: 'Searching…',
+      examples: 'Try:',
+      empty: 'No matches yet — try rephrasing or broadening.',
+      headline: (n: number) => `${n} matches`,
+    },
+    ru: {
+      title: 'Опишите идеальный объект',
+      hint: 'Пишите как угодно — ищем по смыслу, а не по галочкам в фильтре.',
+      placeholder: 'например, вилла с инфинити-бассейном в 5 минутах от океана в Чангу до $600k',
+      cta: 'Найти',
+      busy: 'Ищем…',
+      examples: 'Попробуйте:',
+      empty: 'Ничего не нашли — попробуй переформулировать.',
+      headline: (n: number) => `${n} ${n === 1 ? 'совпадение' : n < 5 ? 'совпадения' : 'совпадений'}`,
+    },
+    id: {
+      title: 'Jelaskan properti impian Anda',
+      hint: 'Tulis dengan bebas — kami mencari berdasarkan makna, bukan sekadar filter.',
+      placeholder: 'mis. vila dengan kolam infinity 5 menit dari pantai di Canggu, di bawah $600k',
+      cta: 'Cari',
+      busy: 'Mencari…',
+      examples: 'Coba:',
+      empty: 'Belum ada yang cocok — coba ubah kata atau perluas pencarian.',
+      headline: (n: number) => `${n} hasil`,
+    },
+    fr: {
+      title: 'Décrivez le bien de vos rêves',
+      hint: 'Écrivez librement — nous cherchons par le sens, pas seulement par filtres.',
+      placeholder: 'ex. villa avec piscine à débordement à 5 min de la plage à Canggu, moins de $600k',
+      cta: 'Rechercher',
+      busy: 'Recherche…',
+      examples: 'Essayez :',
+      empty: 'Aucun résultat — reformulez ou élargissez la recherche.',
+      headline: (n: number) => `${n} résultats`,
+    },
+    de: {
+      title: 'Beschreiben Sie Ihre Traumimmobilie',
+      hint: 'Schreiben Sie frei — wir suchen nach Bedeutung, nicht nur nach Filtern.',
+      placeholder: 'z. B. Villa mit Infinity-Pool 5 Min. vom Strand in Canggu, unter $600k',
+      cta: 'Suchen',
+      busy: 'Suche…',
+      examples: 'Versuchen Sie:',
+      empty: 'Noch keine Treffer — formulieren Sie um oder erweitern Sie die Suche.',
+      headline: (n: number) => `${n} Treffer`,
+    },
+    zh: {
+      title: '描述您理想的房产',
+      hint: '自由输入——我们按语义查找，而不仅仅是筛选条件。',
+      placeholder: '例如：Canggu 海滩 5 分钟车程、带无边泳池的别墅，$600k 以内',
+      cta: '查找',
+      busy: '搜索中…',
+      examples: '试试：',
+      empty: '暂无匹配——试试换个说法或放宽条件。',
+      headline: (n: number) => `${n} 个匹配结果`,
+    },
+    nl: {
+      title: 'Beschrijf uw droomwoning',
+      hint: 'Schrijf vrijuit — we zoeken op betekenis, niet alleen op filters.',
+      placeholder: 'bijv. villa met infinity pool 5 min van het strand in Canggu, onder $600k',
+      cta: 'Zoeken',
+      busy: 'Zoeken…',
+      examples: 'Probeer:',
+      empty: 'Nog geen resultaten — herformuleer of verbreed de zoekopdracht.',
+      headline: (n: number) => `${n} resultaten`,
+    },
+    ban: {
+      title: 'Sambatang properti sane kaaptiang',
+      hint: 'Nulisang sakita arep — tiang ngrereh manut arti, boya ja saking filter kemanten.',
+      placeholder: 'conto: vila madue kolam infinity 5 menit saking pasih ring Canggu, kirang saking $600k',
+      cta: 'Rereh',
+      busy: 'Ngrereh…',
+      examples: 'Cobain:',
+      empty: 'Durung wenten sane cocok — cobain ubah kruna utawi linggahang panyeledikan.',
+      headline: (n: number) => `${n} hasil`,
+    },
+  }, lang)
 
   async function submit(text?: string) {
     const q = (text ?? query).trim()
@@ -196,7 +259,7 @@ export function SemanticSearchClient({ lang }: { lang: Lang }) {
 
         <div className="mt-12 text-center">
           <Link href={switchLangPath('/ru', lang)} className="text-[13px] text-[#6B7280] hover:text-[var(--color-primary)] inline-flex items-center gap-1">
-            <ArrowRight size={13} className="rotate-180" /> {lang === 'ru' ? 'К каталогу' : 'Back to catalog'}
+            <ArrowRight size={13} className="rotate-180" /> {pickCopy({ ru: 'К каталогу', en: 'Back to catalog', id: 'Ke katalog', fr: 'Retour au catalogue', de: 'Zurück zum Katalog', zh: '返回目录', nl: 'Terug naar catalogus', ban: 'Mawali ka katalog' }, lang)}
           </Link>
         </div>
       </main>

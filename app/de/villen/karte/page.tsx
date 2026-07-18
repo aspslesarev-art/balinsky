@@ -13,7 +13,7 @@ import {
   passes,
   applySearch,
   loadAll,
-  buildMetadataEn,
+  buildMetadataLoc,
   buildHeadingLoc,
   firstString,
 } from '../../../ru/villy/_lib'
@@ -24,7 +24,7 @@ type SP = Promise<Record<string, string | undefined>>
 export async function generateMetadata({ searchParams }: { searchParams: SP }) {
   const sp = await searchParams
   const f = parseQueryFilters(sp)
-  const meta = buildMetadataEn(f, { canonicalPath: '/de/villen', noIndex: true })
+  const meta = buildMetadataLoc(f, 'de', { canonicalPath: '/de/villen', noIndex: true })
   meta.title = `Map · Villas | Balinsky`
   return meta
 }

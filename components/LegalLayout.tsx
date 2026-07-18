@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
-import { switchLangPath, type Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
 // Shared shell for the legal / contact pages so the four documents
 // (privacy, terms, cookie, contact) keep the same typography rhythm
@@ -26,7 +26,7 @@ export function LegalLayout({
       <Header />
       <PageContainer>
         <Breadcrumbs items={[
-          { label: lang === 'ru' ? 'Главная' : 'Home', href: home },
+          { label: pickCopy({ ru: 'Главная', en: 'Home', id: 'Beranda', fr: 'Accueil', de: 'Startseite', zh: '首页', nl: 'Home', ban: 'Beranda' }, lang), href: home },
           { label: breadcrumbLabel },
         ]} />
         <article className="mt-6 mb-16 max-w-3xl">
