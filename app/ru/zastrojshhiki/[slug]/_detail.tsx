@@ -490,17 +490,27 @@ export async function generateDeveloperMetadata(slug: string, lang: Lang) {
   const aiDesc = tField(dev.data, 'SEO Text', lang)
     ?? tField(dev.data, 'Описание ИИ', lang)
     ?? firstString(dev.data['AI Описание'])
+  // Localized meta templates (title / description / OG) per language — the
+  // metadata was previously RU-or-English only, so de/zh/nl/id/fr/ban tabs
+  // and SERP snippets showed English.
+  const META: Record<Lang, { title: (n: string) => string; desc: (n: string) => string; og: (n: string) => string }> = {
+    ru: { title: n => `Застройщик ${n} на Бали — проекты, рейтинг, отзывы | Balinsky`, desc: n => `Застройщик ${n} на Бали — рейтинг по 4 направлениям, проекты, комиссия, надёжность.`, og: n => `${n} — застройщик на Бали` },
+    en: { title: n => `${n} — Bali property developer | projects, score, reviews | Balinsky`, desc: n => `${n} — Bali property developer. Score across four dimensions, projects, commission, reliability.`, og: n => `${n} — Bali property developer` },
+    de: { title: n => `${n} — Bali-Bauträger | Projekte, Bewertung, Rezensionen | Balinsky`, desc: n => `${n} — Bali-Bauträger. Bewertung in vier Dimensionen, Projekte, Provision, Zuverlässigkeit.`, og: n => `${n} — Bali-Bauträger` },
+    zh: { title: n => `${n} — 巴厘岛开发商 | 项目、评分、评价 | Balinsky`, desc: n => `${n} — 巴厘岛开发商。四个维度评分、项目、佣金、可靠性。`, og: n => `${n} — 巴厘岛开发商` },
+    nl: { title: n => `${n} — Bali-ontwikkelaar | projecten, score, reviews | Balinsky`, desc: n => `${n} — Bali-ontwikkelaar. Beoordeling op vier dimensies, projecten, commissie, betrouwbaarheid.`, og: n => `${n} — Bali-ontwikkelaar` },
+    id: { title: n => `${n} — Pengembang properti Bali | proyek, skor, ulasan | Balinsky`, desc: n => `${n} — Pengembang properti Bali. Skor empat dimensi, proyek, komisi, keandalan.`, og: n => `${n} — Pengembang properti Bali` },
+    fr: { title: n => `${n} — Promoteur immobilier à Bali | projets, note, avis | Balinsky`, desc: n => `${n} — Promoteur immobilier à Bali. Note sur quatre dimensions, projets, commission, fiabilité.`, og: n => `${n} — Promoteur immobilier à Bali` },
+    ban: { title: n => `${n} — Pangwangun properti Bali | proyek, skor, ulasan | Balinsky`, desc: n => `${n} — Pangwangun properti Bali. Skor patpat dimensi, proyek, komisi, kaandelan.`, og: n => `${n} — Pangwangun properti Bali` },
+  }
+  const meta = META[lang] ?? META.en
   const description = aiDesc
     ? aiDesc.slice(0, 160).trim() + (aiDesc.length > 160 ? '…' : '')
-    : (lang === 'ru'
-      ? `Застройщик ${name} на Бали — рейтинг по 4 направлениям, проекты, комиссия, надёжность.`
-      : `${name} — Bali property developer. Score across four dimensions, projects, commission, reliability.`)
+    : meta.desc(name)
   const ruPath = `/ru/zastrojshhiki/${slug}`
   const enPath = `/en/developers/${slug}`
   const path = switchLangPath(ruPath, lang)
-  const title = lang === 'ru'
-    ? `Застройщик ${name} на Бали — проекты, рейтинг, отзывы | Balinsky`
-    : `${name} — Bali property developer | projects, score, reviews | Balinsky`
+  const title = meta.title(name)
   return {
     title, description,
     alternates: {
@@ -508,7 +518,7 @@ export async function generateDeveloperMetadata(slug: string, lang: Lang) {
       languages: { ru: `${SITE_URL}${ruPath}`, en: `${SITE_URL}${enPath}` , 'x-default': `${SITE_URL}${ruPath}`},
     },
     openGraph: {
-      title: lang === 'ru' ? `${name} — застройщик на Бали` : `${name} — Bali property developer`,
+      title: meta.og(name),
       description, type: 'website' as const,
       url: `${SITE_URL}${path}`,
       images: dev.logo_url ? [{ url: dev.logo_url }] : [],
