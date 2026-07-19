@@ -124,17 +124,28 @@ async function stageChangeFromText(chatId: number, token: string, text: string):
 
   // Build the whitelisted patch.
   const built = buildPatch(entity.collection, parsed.changes)
-  if (built.writes.length === 0) {
-    await sendText(token, chatId,
-      `Не смог сопоставить ни одно поле для ${entity.label}.` +
-      (built.errors.length ? `\n${built.errors.map(e => '• ' + escapeHtml(e)).join('\n')}` : ''))
+  if (built.changes.length === 0) {
+    const looksLikeText = /описан|текст|репутац|about|description/i.test(text)
+    await sendText(token, chatId, looksLikeText
+      ? 'Описания и тексты правятся только из админки — через бот меняем факты: цену, PBG/SLF, статус, готовность, публикацию.'
+      : `Не смог сопоставить ни одно изменяемое поле для «${escapeHtml(entity.label)}».` +
+        (built.errors.length ? `\n${built.errors.map(e => '• ' + escapeHtml(e)).join('\n')}` : ''))
     return
   }
 
   const patch: Record<string, unknown> = {}
-  for (const w of built.writes) patch[w.key] = w.value
+  for (const c of built.changes) for (const w of c.writes) patch[w.key] = w.value
 
   const title = String(match.fields[cfg.titleField] ?? parsed.name)
+  // Developer context line for objects that carry it (complex/villa/apartment).
+  const devName = firstString(match.fields['Developer1']) ?? firstString(match.fields['Developer1 (имя)'])
+
+  // "current → new" line per change, computed against the resolved record.
+  const humanLines = built.changes.map(c => {
+    const current = describeCurrent(entity.collection, c.field, match.fields)
+    return `${rowTitle(c.field)}: ${current} → ${c.newLabel}`
+  })
+
   await setPending(chatId, {
     collection: entity.collection,
     entity_type: parsed.entity_type,
@@ -142,18 +153,19 @@ async function stageChangeFromText(chatId: number, token: string, text: string):
     ref_id: match.id,
     entity_name: title,
     patch,
-    human: built.human,
+    human: humanLines,
     raw_message: text,
   })
 
   const lines = [
-    `Нашёл: <b>${escapeHtml(entity.label)} «${escapeHtml(title)}»</b>`,
+    '❓ <b>Правильно ли я поняла:</b>',
     '',
-    'Изменения:',
-    ...built.human.map(h => `• ${escapeHtml(h)}`),
+    `🏢 ${escapeHtml(entity.label)} <b>«${escapeHtml(title)}»</b>`,
   ]
+  if (devName) lines.push(`👷 застройщик ${escapeHtml(devName)}`)
+  lines.push('', ...humanLines.map(h => `• ${escapeHtml(h)}`))
   if (built.errors.length) lines.push('', '<i>Пропущено (не понял):</i>', ...built.errors.map(e => `• ${escapeHtml(e)}`))
-  lines.push('', 'Применить?')
+  lines.push('', 'Меняем?')
   await sendConfirm(token, chatId, lines.join('\n'))
 }
 
@@ -204,7 +216,7 @@ const PARSE_TOOL: ChatCompletionTool = {
           items: {
             type: 'object',
             properties: {
-              field: { type: 'string', enum: ['pbg', 'slf', 'status', 'sales_status', 'readiness', 'price_usd', 'completion_year', 'published', 'yield', 'reputation', 'ai_description', 'units_total', 'locked'], description: 'pbg/slf=permits; status=стадия готовности; sales_status=статус продаж; readiness=готовность %; price_usd=цена в USD; completion_year=год сдачи; published=опубликован; yield=доходность (developer); reputation=репутация (developer); ai_description=AI-описание (developer); units_total=всего юнитов (developer); locked=защита юнита.' },
+              field: { type: 'string', enum: ['pbg', 'slf', 'status', 'sales_status', 'readiness', 'price_usd', 'completion_year', 'published', 'units_total', 'locked'], description: 'ONLY operational/changeable facts. pbg/slf=permits; status=стадия готовности (Строится/Построен); sales_status=статус продаж; readiness=готовность %; price_usd=цена в USD; completion_year=год сдачи; published=опубликован; units_total=всего юнитов (developer); locked=защита юнита. Descriptive text (описание, репутация, AI-текст) is NOT editable here — the admin edits those in the admin panel.' },
               value: { type: 'string', description: 'New value in words. For pbg/slf use exactly one of: granted, applied, none. For published/locked use: yes or no. Otherwise the literal value (number for price/year/units, text for status).' },
             },
             required: ['field', 'value'],
@@ -275,35 +287,41 @@ async function resolveEntity(collectionKey: string, name: string): Promise<Recor
 // === field whitelist / patch builder =====================================
 
 type Write = { key: string; value: unknown }
-type BuiltPatch = { writes: Write[]; human: string[]; errors: string[] }
+type BuiltChange = { field: string; writes: Write[]; newLabel: string }
+type BuiltPatch = { changes: BuiltChange[]; errors: string[] }
 
 // Which canonical fields are valid per collection.
 const FIELDS_BY_COLLECTION: Record<string, Set<string>> = {
   complexes:    new Set(['pbg', 'slf', 'status', 'sales_status', 'readiness', 'price_usd', 'completion_year', 'published']),
-  developers:   new Set(['published', 'yield', 'reputation', 'ai_description', 'units_total']),
+  developers:   new Set(['published', 'units_total']),
   villas:       new Set(['pbg', 'slf', 'status', 'price_usd', 'published']),
   apartments:   new Set(['pbg', 'slf', 'status', 'price_usd', 'published']),
   parser_units: new Set(['status', 'price_usd', 'locked']),
 }
 
-function buildPatch(collectionKey: string, changes: { field: string; value: string }[]): BuiltPatch {
+// Human title for a canonical field, used in the confirmation card.
+const FIELD_TITLE: Record<string, string> = {
+  pbg: 'PBG', slf: 'SLF', status: 'Статус', sales_status: 'Статус продаж',
+  readiness: 'Готовность', price_usd: 'Цена', completion_year: 'Год сдачи',
+  published: 'Публикация', units_total: 'Всего юнитов', locked: 'Защита юнита',
+}
+
+function buildPatch(collectionKey: string, rawChanges: { field: string; value: string }[]): BuiltPatch {
   const allowed = FIELDS_BY_COLLECTION[collectionKey] ?? new Set<string>()
-  const writes: Write[] = []
-  const human: string[] = []
+  const changes: BuiltChange[] = []
   const errors: string[] = []
 
-  for (const ch of changes) {
-    if (!allowed.has(ch.field)) { errors.push(`поле «${ch.field}» тут не поддерживается`); continue }
+  for (const ch of rawChanges) {
+    if (!allowed.has(ch.field)) { errors.push(`поле «${ch.field}» тут не меняется через бот`); continue }
     const res = mapFieldWrite(collectionKey, ch.field, ch.value)
     if ('error' in res) { errors.push(res.error); continue }
-    writes.push(...res.writes)
-    human.push(res.human)
+    changes.push({ field: ch.field, writes: res.writes, newLabel: res.newLabel })
   }
-  return { writes, human, errors }
+  return { changes, errors }
 }
 
 function mapFieldWrite(collectionKey: string, field: string, rawValue: string):
-  { writes: Write[]; human: string } | { error: string } {
+  { writes: Write[]; newLabel: string } | { error: string } {
   const v = rawValue.trim()
   switch (field) {
     case 'pbg':
@@ -313,52 +331,88 @@ function mapFieldWrite(collectionKey: string, field: string, rawValue: string):
       const writes: Write[] = [{ key: 'Разрешение', value: permitStr }, { key: 'Разрешительные документы', value: permitStr }]
       // A PBG certificate number → also store it on complexes/villas.
       if (field === 'pbg' && st === 'granted' && /[0-9]/.test(v) && v.length >= 6) writes.push({ key: 'PBG', value: v })
-      return { writes, human: `${field.toUpperCase()} → ${st === 'granted' ? 'получен' : st === 'applied' ? 'заявка подана' : 'нет'}` }
+      return { writes, newLabel: describePermitRaw(permitStr) }
     }
-    case 'status':        return { writes: [{ key: statusKey(collectionKey), value: v }], human: `Статус → ${v}` }
-    case 'sales_status':  return { writes: [{ key: 'Статус продаж', value: v }], human: `Статус продаж → ${v}` }
-    case 'readiness':     return { writes: [{ key: 'Готовность', value: v }], human: `Готовность → ${v}` }
-    case 'completion_year': return { writes: [{ key: 'Year of completion', value: v }], human: `Год сдачи → ${v}` }
+    case 'status':        return { writes: [{ key: 'Статус', value: v }], newLabel: v }
+    case 'sales_status':  return { writes: [{ key: 'Статус продаж', value: v }], newLabel: v }
+    case 'readiness':     return { writes: [{ key: 'Готовность', value: v }], newLabel: v }
+    case 'completion_year': return { writes: [{ key: 'Year of completion', value: v }], newLabel: v }
     case 'price_usd': {
       const n = parseNumber(v)
       if (n == null) return { error: `цена «${v}» — не число` }
       const key = collectionKey === 'parser_units' ? 'Цена' : 'price_usd'
       const writes: Write[] = [{ key, value: n }]
       if (collectionKey !== 'parser_units') writes.push({ key: 'price', value: n })
-      return { writes, human: `Цена → $${n.toLocaleString('en-US')}` }
+      return { writes, newLabel: `$${n.toLocaleString('en-US')}` }
     }
     case 'published': {
       const b = normBool(v)
       if (b == null) return { error: `«${v}» — не да/нет` }
       const key = collectionKey === 'developers' ? 'Публикация' : 'Опубликовать'
-      return { writes: [{ key, value: b }], human: `${key} → ${b ? 'да' : 'нет'}` }
+      return { writes: [{ key, value: b }], newLabel: b ? 'да' : 'нет' }
     }
     case 'locked': {
       const b = normBool(v)
       if (b == null) return { error: `«${v}» — не да/нет` }
-      return { writes: [{ key: 'Заблокировано', value: b }], human: `Защита юнита → ${b ? 'вкл' : 'выкл'}` }
+      return { writes: [{ key: 'Заблокировано', value: b }], newLabel: b ? 'вкл' : 'выкл' }
     }
-    case 'yield':          return { writes: [{ key: 'Доходность', value: v }], human: `Доходность → ${v}` }
-    case 'reputation':     return { writes: [{ key: 'Репутация и опыт', value: v }], human: `Репутация → ${v}` }
-    case 'ai_description':  return { writes: [{ key: 'AI Описание', value: v }], human: `AI-описание → ${v.slice(0, 60)}…` }
     case 'units_total': {
       const n = parseNumber(v)
       if (n == null) return { error: `«${v}» — не число` }
-      return { writes: [{ key: 'Total quantity of units', value: n }], human: `Всего юнитов → ${n}` }
+      return { writes: [{ key: 'Total quantity of units', value: n }], newLabel: String(n) }
     }
     default: return { error: `неизвестное поле «${field}»` }
   }
 }
 
-// Complexes store readiness stage in `Статус`; parser_units use the same
-// key name but a constrained enum — we don't validate the enum here, the
-// admin's word wins (they know the pipeline).
-function statusKey(_collectionKey: string): string { return 'Статус' }
-
 function permitToRaw(field: 'pbg' | 'slf', state: 'granted' | 'applied' | 'none'): string {
   if (state === 'none') return 'нет'
   if (field === 'slf') return state === 'granted' ? 'SLF' : 'Заявка SLF'
   return state === 'granted' ? 'PBG' : 'Заявка PBG'
+}
+
+// Friendly wording for a raw permit string — used for BOTH the current and
+// the new value so the confirmation reads naturally.
+function describePermitRaw(raw: string | null | undefined): string {
+  const s = (raw ?? '').trim()
+  if (!s) return 'не указано'
+  const l = s.toLowerCase()
+  if (l === 'slf') return 'SLF получен (значит и PBG есть)'
+  if (l.includes('заявка') && l.includes('slf')) return 'PBG есть, заявка на SLF'
+  if (l === 'pbg') return 'PBG получен'
+  if (l.includes('заявка') && l.includes('pbg')) return 'заявка на PBG'
+  if (l === 'нет' || l === 'no' || l === 'none') return 'разрешений нет'
+  return s
+}
+
+// Human-readable CURRENT value of a field, read from the resolved record.
+function describeCurrent(collectionKey: string, field: string, fields: Record<string, unknown>): string {
+  const s = (k: string) => { const v = fields[k]; return v == null || v === '' ? null : String(v) }
+  switch (field) {
+    case 'pbg':
+    case 'slf': return describePermitRaw(s('Разрешение') ?? s('Разрешительные документы') ?? s('PBG'))
+    case 'status':        return s('Статус') ?? 'не указан'
+    case 'sales_status':  return s('Статус продаж') ?? 'не указан'
+    case 'readiness':     return s('Готовность') ?? 'не указана'
+    case 'completion_year': return s('Year of completion') ?? 'не указан'
+    case 'price_usd': {
+      const n = parseNumber(s('price_usd') ?? s('price') ?? s('Цена') ?? '')
+      return n != null ? `$${n.toLocaleString('en-US')}` : 'не указана'
+    }
+    case 'published': {
+      const b = fields[collectionKey === 'developers' ? 'Публикация' : 'Опубликовать']
+      return b === true ? 'да' : b === false ? 'нет' : 'не указано'
+    }
+    case 'units_total': return s('Total quantity of units') ?? 'не указано'
+    case 'locked':      return fields['Заблокировано'] === true ? 'вкл' : 'выкл'
+    default: return '—'
+  }
+}
+
+// Row title in the confirmation: permits collapse to "Разрешение".
+function rowTitle(field: string): string {
+  if (field === 'pbg' || field === 'slf') return 'Разрешение'
+  return FIELD_TITLE[field] ?? field
 }
 
 function normPermitState(v: string): 'granted' | 'applied' | 'none' {
@@ -471,3 +525,11 @@ async function answerCallback(token: string, callbackQueryId: string): Promise<v
 }
 
 function escapeHtml(s: string): string { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }
+
+// A raw field may hold a string or an array (Airtable link fields). Return
+// the first non-empty string, or null.
+function firstString(v: unknown): string | null {
+  if (typeof v === 'string') return v.trim() || null
+  if (Array.isArray(v)) { for (const x of v) { if (typeof x === 'string' && x.trim()) return x.trim() } }
+  return null
+}
