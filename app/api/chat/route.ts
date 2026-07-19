@@ -217,8 +217,20 @@ const LANG_NAMES: Record<Lang, string> = {
 function replyLangDirective(replyLang: Lang): string {
   if (replyLang === 'ru') return ''
   const name = LANG_NAMES[replyLang]
-  return `\n\nCRITICAL — RESPONSE LANGUAGE: Write EVERY reply to the visitor in ${name} only, including all [CHIPS] suggestions. Translate ALL descriptive text naturally into ${name}; never leave Russian or mixed-language text. Keep Bali place names (Canggu, Ubud, Uluwatu, Sanur, Berawa, Pererenan…), project/developer names, numbers, prices, m², PBG/SLF/leasehold in their usual Latin/original form.${replyLang === 'zh' ? ' Use Simplified Chinese characters.' : ''}`
+  return `\n\nCRITICAL — RESPONSE LANGUAGE: Write EVERY reply to the visitor in ${name} only, including all [CHIPS] suggestions. Translate ALL descriptive text — including real-estate terms like leasehold/freehold, zone/land status, "under construction", yield/payback — naturally into ${name}. Never leave Russian, English, or mixed-language words in a ${name} reply. Keep ONLY these in Latin/original form: Bali place names (Canggu, Ubud, Uluwatu, Sanur, Berawa, Pererenan…), project & developer names, the permit codes PBG and SLF, and numbers/prices/m².${replyLang === 'zh' ? ' Use Simplified Chinese characters.' : ''}`
 }
+
+// Language-agnostic quality contract, appended to EVERY request (all 8 langs).
+// Directly targets the eval's weak axes: grounding visibility (name the concrete
+// object, never bare "option #1"), no unverified claims, and showing the math
+// when the investment calculator is used.
+const QUALITY_DIRECTIVE = `
+
+QUALITY CONTRACT (applies in every language):
+- GROUNDING: State a project, developer, price, yield, permit or district figure ONLY if it came from a tool result in THIS conversation. Never invent or estimate them. If a tool returned nothing that fits, say so plainly and offer the closest real alternative or a next step — do not fabricate to seem helpful.
+- BE CONCRETE: When you recommend listings, name the top pick(s) explicitly by project name with its price, district and PBG/SLF status drawn from the tool result. Never refer to results only as "option 1 / option 2" — the visitor cannot see your numbering.
+- SHOW THE MATH: For any yield / payback / ROI answer, first call calculate_investment, then show the one-line basis — gross = annual rent ÷ price, net ≈ gross × 0.75 (after ~25% costs), payback ≈ 100 ÷ net% — and state the assumptions (occupancy, that leasehold has no residual value after the term). Never give investment numbers without running the calculator.
+- DIRECT ANSWERS: If the visitor asks for a price range, median or "how much", give the concrete figure from data first; ask a clarifying question only after providing that.`
 
 export async function POST(req: Request) {
   const apiKey = process.env.AZURE_OPENAI_API_KEY
@@ -287,7 +299,7 @@ export async function POST(req: Request) {
 
   const client = new AzureOpenAI({ apiKey, endpoint, apiVersion })
   const basePrompt = await getSystemPrompt()
-  const systemPrompt = basePrompt + replyLangDirective(replyLang)
+  const systemPrompt = basePrompt + QUALITY_DIRECTIVE + replyLangDirective(replyLang)
 
   // Per-turn dynamic context: visitor's wishlist + recently-viewed
   // pages + funnel stage. Both go in as separate system messages
