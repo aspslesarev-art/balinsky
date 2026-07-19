@@ -21,7 +21,7 @@ import { adminSb } from '@/lib/admin/sb'
 import { getCollection } from '@/lib/admin/collections'
 import { adapterFor } from '@/lib/admin/adapters'
 import { revalidateCollection } from '@/lib/admin/revalidate'
-import { isOwnerChat } from '@/lib/balina-telegram'
+import { isOwnerChat } from '@/lib/balina-owners'
 import { logUsage } from '@/lib/usage-tracker'
 import type { RecordRow } from '@/lib/admin/adapters/types'
 

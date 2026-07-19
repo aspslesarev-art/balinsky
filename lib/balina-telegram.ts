@@ -23,6 +23,8 @@ import { AzureOpenAI } from 'openai'
 import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions'
 import { getSystemPrompt, TOOLS, executeToolCall, type ListingCard } from '@/lib/consultant'
 import { appendLearnedRule } from '@/lib/assistant-knowledge'
+import { isOwnerChat } from '@/lib/balina-owners'
+import { tryHandleAdminEdit } from '@/lib/balina-admin-edit'
 import { listMessages, logMessage } from '@/lib/bot-storage'
 import { downloadTelegramFile } from '@/lib/chat-media'
 import { logUsage } from '@/lib/usage-tracker'
@@ -37,22 +39,8 @@ const MAX_LISTING_CARDS = 5             // top-N to actually send as photos
 // it working out of the box; comma-separated env var
 // BALINA_OWNER_CHAT_IDS can extend the set without a code change
 // (still needs a deploy on Vercel, but no edit here).
-const DEFAULT_OWNER_IDS = new Set<number>([555450800])
-const OWNER_CHAT_IDS: Set<number> = (() => {
-  const env = (process.env.BALINA_OWNER_CHAT_IDS ?? '').trim()
-  if (!env) return DEFAULT_OWNER_IDS
-  const set = new Set<number>(DEFAULT_OWNER_IDS)
-  for (const tok of env.split(',')) {
-    const n = Number(tok.trim())
-    if (Number.isFinite(n)) set.add(n)
-  }
-  return set
-})()
-// Owner check shared with the admin-edit feature (lib/balina-admin-edit.ts)
-// so both gate on the exact same allowlist — single source of truth.
-export function isOwnerChat(chatId: number): boolean {
-  return OWNER_CHAT_IDS.has(chatId)
-}
+// Owner allowlist lives in lib/balina-owners.ts (shared with admin-edit).
+// isOwnerChat is imported above.
 
 // Daily cap disabled — owner wants unlimited testing. Re-enable by
 // setting this to a positive number; isOverDailyLimit returns false
@@ -157,6 +145,15 @@ async function runTurn(
   }
   if (!textIn) return { handled: false, reason: 'no_text' }
 
+  // Owner data-edit mode — checked AFTER transcription so it works for BOTH
+  // typed and voice messages (the earlier route-level check only saw typed
+  // text; dictated edits fell through to the consultant, which just chatted
+  // instead of writing). Returns handled:false for non-owners and for owners
+  // not in edit mode, so normal chat is unaffected.
+  const adminEdit = await tryHandleAdminEdit({ chatId, token, text: textIn })
+    .catch(err => { console.error('[balina-tg] admin-edit failed:', err); return { handled: false } })
+  if (adminEdit.handled) return { handled: true, reason: 'admin_edit' }
+
   // Trainer mode: "слушай и запоминай: <правило>" appends a line
   // to the learned_rules section in assistant_knowledge so future
   // turns honour the correction. Owner-gated — random visitors must
@@ -165,7 +162,7 @@ async function runTurn(
   // normal turn (so they don't sit in a dead end).
   const correction = extractCorrection(textIn)
   if (correction) {
-    if (!OWNER_CHAT_IDS.has(chatId)) {
+    if (!isOwnerChat(chatId)) {
       await sendText(token, chatId,
         '🔒 Обучение Балисы доступно только владельцу. Ваше сообщение я обработаю как обычный запрос — пишите, что ищете.')
       // fall through into the normal chat flow with the original

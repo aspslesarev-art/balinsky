@@ -4,7 +4,7 @@ import { handleStart, fallbackReply, handleSubscriptionCommand, handleDeleteComm
 import { replyAsBalina } from '@/lib/balina-telegram'
 import { logMessage, upsertChat, getChat, shouldBotAutoReply, addChatTags } from '@/lib/bot-storage'
 import { handleReservationCallback } from '@/lib/telegram-reservation'
-import { tryHandleAdminEdit, handleAdminCallback } from '@/lib/balina-admin-edit'
+import { handleAdminCallback } from '@/lib/balina-admin-edit'
 import { refreshChatAvatar } from '@/lib/chat-avatars'
 import { uploadChatMedia, downloadTelegramFile, type ChatMediaKind } from '@/lib/chat-media'
 import type { Lang } from '@/lib/i18n'
@@ -188,18 +188,9 @@ export async function POST(req: Request) {
     // without caption, etc.) falls through to the boilerplate.
     const voiceFileId = msg.voice?.file_id ?? null
 
-    // Owner data-edit mode: code word unlocks it, then free-text messages
-    // update the database (with confirmation) instead of going to the
-    // consultant. Returns handled:false for non-owners and for owners not
-    // in edit mode, so normal chat is unaffected.
-    if (text) {
-      const admin = await tryHandleAdminEdit({ chatId: msg.chat.id, token, text })
-        .catch(err => { console.error('[telegram] admin-edit failed:', err); return { handled: false } })
-      if (admin.handled) {
-        return NextResponse.json({ ok: true, adminEdit: true })
-      }
-    }
-
+    // Owner data-edit mode (code word → parse → confirm → write) is handled
+    // INSIDE replyAsBalina, right after transcription, so it works for both
+    // typed and dictated messages. See lib/balina-telegram.ts.
     if (text || voiceFileId) {
       const lang: Lang = (msg.from?.language_code ?? '').startsWith('en') ? 'en' : 'ru'
       const balina = await replyAsBalina({
