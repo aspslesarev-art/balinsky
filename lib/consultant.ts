@@ -275,6 +275,62 @@ export const TOOLS: ChatCompletionTool[] = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'calculate_investment',
+      description: 'Точный расчёт инвестиционной математики по объекту или по числам: валовая/чистая доходность, срок окупаемости, годовой возврат с поправкой на лизхолд, цена за м². Используй когда посетитель спрашивает "какая доходность/окупаемость/ROI", "выгодно ли", "за сколько отобью", "с учётом лизхолда". Можно передать slug объекта (тогда числа берутся из карточки) ИЛИ передать числа напрямую.',
+      parameters: {
+        type: 'object',
+        properties: {
+          slug: { type: 'string', description: 'Точный SEO-slug объекта. Если задан (вместе с kind), цена/площадь/срок лизхолда/заявленная доходность подтягиваются из карточки объекта.' },
+          kind: {
+            type: 'string',
+            enum: ['villa', 'apartment', 'complex'],
+            description: 'Тип объекта для slug: villa (виллы), apartment (апартаменты), complex (жилой комплекс). По умолчанию villa.',
+          },
+          price_usd: { type: 'number', description: 'Цена объекта в USD. Переопределяет значение из карточки, если задан slug.' },
+          area_sqm: { type: 'number', description: 'Площадь в м² — для расчёта цены за м².' },
+          monthly_rent_usd: { type: 'number', description: 'Ожидаемая аренда в USD/мес. Годовая = ×12.' },
+          annual_rent_usd: { type: 'number', description: 'Ожидаемая аренда в USD/год (приоритетнее monthly_rent_usd).' },
+          leasehold_years: { type: 'number', description: 'Срок лизхолда (лет). Если задан — считается суммарный возврат за весь срок аренды земли.' },
+          occupancy_pct: { type: 'number', description: 'Загрузка в % (по умолчанию 65). Информационная поправка к ожиданиям по аренде.' },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'compare_listings',
+      description: 'Сравнить 2-4 объекта бок о бок по ключевым фактам (цена, площадь, цена/м², спальни, лизхолд, разрешения PBG/SLF, застройщик, заявленная доходность). Используй когда посетитель просит "сравни", "что лучше", "чем отличаются".',
+      parameters: {
+        type: 'object',
+        properties: {
+          items: {
+            type: 'array',
+            minItems: 2,
+            maxItems: 4,
+            description: 'Список из 2–4 объектов для сравнения. Для каждого укажи kind и точный slug.',
+            items: {
+              type: 'object',
+              properties: {
+                kind: {
+                  type: 'string',
+                  enum: ['villa', 'apartment', 'complex'],
+                  description: 'Тип объекта: villa, apartment или complex.',
+                },
+                slug: { type: 'string', description: 'Точный SEO-slug объекта (как в URL после /o/).' },
+              },
+              required: ['kind', 'slug'],
+            },
+          },
+        },
+        required: ['items'],
+      },
+    },
+  },
 ]
 
 const SITE_URL = 'https://balinsky.info'
@@ -1173,7 +1229,197 @@ export async function executeToolCall(name: string, rawArgs: string, lang: Lang 
     const result = await searchSemantic(args as SemanticArgs, lang, replyLang)
     return JSON.stringify(result)
   }
+  if (name === 'calculate_investment') {
+    const result = await calculateInvestment(args as CalcArgs)
+    return JSON.stringify(result)
+  }
+  if (name === 'compare_listings') {
+    const result = await compareListings(args as CompareArgs)
+    return JSON.stringify(result)
+  }
   return JSON.stringify({ error: 'unknown_tool' })
+}
+
+// =========== Investment math + side-by-side comparison ===============
+//
+// Two "reasoning" tools that let Балина speak in numbers instead of
+// hand-waving. Both reuse the normalized ListingCard produced by
+// searchListings({slug}) — that card already maps the messy Airtable
+// keys to clean numeric fields (price_usd, area_sqm, lease_years,
+// claimed_yield_pct), so we don't re-parse raw fields here.
+
+// Assume ~25% of gross rent goes to operating costs: property
+// management, maintenance, and vacancy/void periods. Net = gross×0.75.
+const OPEX_RATIO = 0.25
+const DEFAULT_OCCUPANCY_PCT = 65
+
+type CalcArgs = {
+  slug?: string
+  kind?: 'villa' | 'apartment' | 'complex'
+  price_usd?: number
+  area_sqm?: number
+  monthly_rent_usd?: number
+  annual_rent_usd?: number
+  leasehold_years?: number
+  occupancy_pct?: number
+}
+
+type CompareArgs = {
+  items?: Array<{ kind?: string; slug?: string }>
+}
+
+function round1(n: number): number {
+  return Math.round(n * 10) / 10
+}
+
+// Fetch the normalized card for a single listing by slug. searchListings
+// with a slug returns at most one card (all other filters are ignored).
+async function loadCardBySlug(kind: string, slug: string): Promise<ListingCard | null> {
+  const k = String(kind ?? 'villa').toLowerCase() as SearchArgs['kind']
+  const cards = await searchListings({ kind: k, slug }, 'ru')
+  return cards[0] ?? null
+}
+
+// Developer name isn't on the ListingCard — pull it from the raw
+// Airtable fields exposed by getListingFull.
+async function developerBySlug(kind: string, slug: string): Promise<string | null> {
+  const full = await getListingFull({ kind: String(kind ?? 'villa').toLowerCase(), slug })
+  const fields = (full as { fields?: Record<string, unknown> }).fields
+  if (!fields) return null
+  return fs1(fields['Developer']) ?? fs1(fields['Developer1']) ?? fs1(fields['Project'])
+}
+
+async function calculateInvestment(args: CalcArgs): Promise<Record<string, unknown>> {
+  let priceUsd = num(args.price_usd)
+  let areaSqm = num(args.area_sqm)
+  let leaseYears = num(args.leasehold_years)
+  let claimedYield: number | null = null // developer's declared annual yield, fraction 0..1
+  let title: string | null = null
+  let url: string | null = null
+
+  // Pull anything not supplied directly from the listing card.
+  if (args.slug) {
+    const card = await loadCardBySlug(args.kind ?? 'villa', args.slug)
+    if (!card) return { error: 'listing_not_found', slug: args.slug }
+    title = card.title
+    url = card.url
+    if (priceUsd == null) priceUsd = card.price_usd
+    if (areaSqm == null) areaSqm = card.area_sqm
+    if (leaseYears == null) leaseYears = card.lease_years
+    claimedYield = card.claimed_yield_pct
+  }
+
+  if (priceUsd == null || priceUsd <= 0) {
+    return { error: 'need_price', need: ['price_usd (или slug объекта, у которого в карточке указана цена)'] }
+  }
+
+  const pricePerSqm = areaSqm != null && areaSqm > 0 ? Math.round(priceUsd / areaSqm) : null
+
+  // Annual rent priority: explicit annual → monthly×12 → price×claimed_yield.
+  const monthly = num(args.monthly_rent_usd)
+  const annual = num(args.annual_rent_usd)
+  const annualRent =
+    (annual != null ? annual : null) ??
+    (monthly != null ? monthly * 12 : null) ??
+    (claimedYield != null ? priceUsd * claimedYield : null)
+
+  if (annualRent == null || annualRent <= 0) {
+    return {
+      error: 'need_rent',
+      need: ['monthly_rent_usd или annual_rent_usd — в карточке нет заявленной доходности, спроси у посетителя ожидаемую аренду'],
+      price_usd: priceUsd,
+      area_sqm: areaSqm,
+      price_per_sqm_usd: pricePerSqm,
+    }
+  }
+
+  const rentSource = annual != null
+    ? 'annual_rent_usd'
+    : monthly != null
+      ? 'monthly_rent_usd×12'
+      : 'заявленная доходность застройщика (claimed_yield_pct)'
+
+  const grossYieldPct = (annualRent / priceUsd) * 100
+  const netYieldPct = grossYieldPct * (1 - OPEX_RATIO)
+  const paybackYears = netYieldPct > 0 ? round1(100 / netYieldPct) : null
+  const opexPct = Math.round(OPEX_RATIO * 100)
+
+  const result: Record<string, unknown> = {
+    title,
+    url,
+    price_usd: priceUsd,
+    area_sqm: areaSqm,
+    price_per_sqm_usd: pricePerSqm,
+    annual_rent_usd: Math.round(annualRent),
+    rent_source: rentSource,
+    gross_yield_pct: round1(grossYieldPct),
+    net_yield_pct: round1(netYieldPct),
+    payback_years: paybackYears,
+    assumptions: `Чистая доходность = валовая × ${100 - opexPct}% (заложено ~${opexPct}% операционных расходов: управление, обслуживание, простои/вакансия). Окупаемость = 100 / чистая доходность, лет (без учёта роста стоимости и инфляции).`,
+  }
+
+  const occupancyPct = num(args.occupancy_pct) ?? DEFAULT_OCCUPANCY_PCT
+  if (occupancyPct !== DEFAULT_OCCUPANCY_PCT) {
+    result.occupancy_pct = occupancyPct
+    result.occupancy_note = `Передана загрузка ${occupancyPct}% (база — ${DEFAULT_OCCUPANCY_PCT}%). Если аренда указана из расчёта полной загрузки, скорректируй ожидания пропорционально.`
+  }
+
+  if (leaseYears != null && leaseYears > 0) {
+    const totalNetOverLease = round1(netYieldPct * leaseYears)
+    result.leasehold_years = leaseYears
+    result.leasehold_adjusted = {
+      total_net_return_over_lease_pct: totalNetOverLease,
+      note: `За ${leaseYears} лет лизхолда чистая аренда вернёт ~${totalNetOverLease}% от цены. Это лизхолд (право аренды земли на срок), а не фрихолд: после окончания срока актив, как правило, НЕ остаётся в собственности и остаточная стоимость обычно не сохраняется. Учитывай это при сравнении с freehold-объектами.`,
+    }
+    result.note = `Валовая доходность ~${round1(grossYieldPct)}%/год, чистая ~${round1(netYieldPct)}%/год, окупаемость ~${paybackYears} лет. Объект в лизхолде на ${leaseYears} лет — за весь срок аренда вернёт ~${totalNetOverLease}% цены, после чего право владения истекает.`
+  } else {
+    result.note = `Валовая доходность ~${round1(grossYieldPct)}%/год, чистая ~${round1(netYieldPct)}%/год (после ~${opexPct}% расходов), окупаемость ~${paybackYears} лет.`
+  }
+
+  return result
+}
+
+async function compareListings(args: CompareArgs): Promise<Record<string, unknown>> {
+  const rawItems = Array.isArray(args.items) ? args.items.slice(0, 4) : []
+  if (rawItems.length < 2) {
+    return { error: 'need_items', need: ['минимум 2 объекта в формате [{kind, slug}, ...]'] }
+  }
+
+  const rows: Array<Record<string, unknown>> = []
+  const notFound: Array<{ kind?: string; slug?: string }> = []
+
+  for (const it of rawItems) {
+    if (!it?.slug) { notFound.push(it); continue }
+    const card = await loadCardBySlug(it.kind ?? 'villa', it.slug)
+    if (!card) { notFound.push(it); continue }
+    const developer = await developerBySlug(it.kind ?? 'villa', it.slug)
+    rows.push({
+      title: card.title,
+      url: card.url,
+      kind: card.kind,
+      district: card.district,
+      price_usd: card.price_usd,
+      area_sqm: card.area_sqm,
+      price_per_sqm_usd: card.price_per_sqm_usd,
+      bedrooms: card.bedrooms,
+      lease_years: card.lease_years,
+      permit_pbg: card.permit_pbg,
+      permit_slf: card.permit_slf,
+      permit_summary: card.permit_summary,
+      claimed_yield_pct: card.claimed_yield_pct,
+      developer,
+    })
+  }
+
+  if (rows.length < 2) {
+    return { error: 'not_enough_found', found: rows.length, not_found: notFound }
+  }
+
+  return {
+    columns: ['title', 'price_usd', 'area_sqm', 'price_per_sqm_usd', 'bedrooms', 'lease_years', 'permit_pbg', 'permit_slf', 'claimed_yield_pct', 'developer'],
+    rows,
+    ...(notFound.length ? { not_found: notFound } : {}),
+  }
 }
 
 // =========== Semantic search via pgvector ============================
