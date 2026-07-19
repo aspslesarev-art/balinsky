@@ -4,6 +4,7 @@ import { handleStart, fallbackReply, handleSubscriptionCommand, handleDeleteComm
 import { replyAsBalina } from '@/lib/balina-telegram'
 import { logMessage, upsertChat, getChat, shouldBotAutoReply, addChatTags } from '@/lib/bot-storage'
 import { handleReservationCallback } from '@/lib/telegram-reservation'
+import { tryHandleAdminEdit, handleAdminCallback } from '@/lib/balina-admin-edit'
 import { refreshChatAvatar } from '@/lib/chat-avatars'
 import { uploadChatMedia, downloadTelegramFile, type ChatMediaKind } from '@/lib/chat-media'
 import type { Lang } from '@/lib/i18n'
@@ -64,6 +65,11 @@ export async function POST(req: Request) {
   // the bot but bypass the chat handover/auto-reply pipeline below.
   if (update.callback_query?.data?.startsWith('rsv:')) {
     await handleReservationCallback(token, update.callback_query)
+    return NextResponse.json({ ok: true, callback: true })
+  }
+  // Admin data-edit confirm/cancel taps (owner-gated inside the handler).
+  if (update.callback_query?.data?.startsWith('admin:')) {
+    await handleAdminCallback(token, update.callback_query)
     return NextResponse.json({ ok: true, callback: true })
   }
 
@@ -181,6 +187,19 @@ export async function POST(req: Request) {
     // text uses `text` directly. Anything else (sticker, document
     // without caption, etc.) falls through to the boilerplate.
     const voiceFileId = msg.voice?.file_id ?? null
+
+    // Owner data-edit mode: code word unlocks it, then free-text messages
+    // update the database (with confirmation) instead of going to the
+    // consultant. Returns handled:false for non-owners and for owners not
+    // in edit mode, so normal chat is unaffected.
+    if (text) {
+      const admin = await tryHandleAdminEdit({ chatId: msg.chat.id, token, text })
+        .catch(err => { console.error('[telegram] admin-edit failed:', err); return { handled: false } })
+      if (admin.handled) {
+        return NextResponse.json({ ok: true, adminEdit: true })
+      }
+    }
+
     if (text || voiceFileId) {
       const lang: Lang = (msg.from?.language_code ?? '').startsWith('en') ? 'en' : 'ru'
       const balina = await replyAsBalina({

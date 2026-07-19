@@ -48,6 +48,12 @@ const OWNER_CHAT_IDS: Set<number> = (() => {
   }
   return set
 })()
+// Owner check shared with the admin-edit feature (lib/balina-admin-edit.ts)
+// so both gate on the exact same allowlist — single source of truth.
+export function isOwnerChat(chatId: number): boolean {
+  return OWNER_CHAT_IDS.has(chatId)
+}
+
 // Daily cap disabled — owner wants unlimited testing. Re-enable by
 // setting this to a positive number; isOverDailyLimit returns false
 // while it's null/<=0 so the gate becomes a no-op.
