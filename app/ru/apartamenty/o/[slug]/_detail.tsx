@@ -1292,7 +1292,14 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
           </div>
         </section>
 
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }} />
+        {/* Emit the Product/merchant-listing schema ONLY when it carries an
+            image — Google's merchant validator marks an image-less Product
+            invalid ("Отсутствует поле image"), and an image-less listing
+            can't be a valid rich result anyway. The page keeps its
+            Apartment (place) + FAQ schema regardless. */}
+        {photos.length > 0 && (
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }} />
+        )}
         {placeJsonLd && (
           <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(placeJsonLd) }} />
         )}
