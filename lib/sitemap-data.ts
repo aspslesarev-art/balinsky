@@ -50,13 +50,18 @@ function pairEntry(args: {
   const deUrl = `${SITE_URL}${switchLangPath(enPath, 'de')}`
   const zhUrl = `${SITE_URL}${switchLangPath(enPath, 'zh')}`
   const nlUrl = `${SITE_URL}${switchLangPath(enPath, 'nl')}`
-  const banUrl = `${SITE_URL}${switchLangPath(enPath, 'ban')}`
   // hreflang cluster — self-referential + reciprocal, per Google's spec.
   // Codes must be ISO 639-1 (+ optional ISO 3166-1 region). Simplified
   // Chinese uses `zh-Hans` (script) rather than the ambiguous bare `zh`.
-  // Balinese (`ban`, ISO 639-3) has NO valid hreflang code, so it's excluded
-  // from the cluster; its URL is still emitted as a plain <loc> below so
-  // Google can crawl it. x-default = RU (the site's origin language).
+  // x-default = RU (the site's origin language).
+  //
+  // Balinese (`ban`) is DELIBERATELY NOT in the sitemap: it's a UI scaffold,
+  // not a search-content language — it has no valid hreflang code and
+  // effectively zero search demand, so every /ban/ URL only ever landed in
+  // GSC as "URL unknown to Google" / "Discovered — currently not indexed",
+  // flooding the Page-Indexing report and diluting crawl budget with pages
+  // that can never rank. The /ban/ pages stay live and reachable via the
+  // language switcher; we just stop advertising them to crawlers.
   const alternates = {
     languages: {
       ru: ruUrl, en: enUrl, id: idUrl, fr: frUrl,
@@ -71,8 +76,6 @@ function pairEntry(args: {
     { url: deUrl, lastModified, changeFrequency, priority, alternates },
     { url: zhUrl, lastModified, changeFrequency, priority, alternates },
     { url: nlUrl, lastModified, changeFrequency, priority, alternates },
-    // Balinese: crawlable <loc>, no hreflang (unsupported code).
-    { url: banUrl, lastModified, changeFrequency, priority },
   ]
 }
 
