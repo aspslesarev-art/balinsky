@@ -205,8 +205,20 @@ function funnelStageDirective(stage: FunnelStage, lang: Lang): string {
 // SYSTEM_PROMPT is in Russian. When the visitor is on the English
 // site we tack on a short directive so the model replies in English.
 // Cheaper than maintaining a parallel translated prompt.
-const EN_LANG_DIRECTIVE =
-  '\n\nIMPORTANT: The user is on the English version of the site. Always respond in English, including any [CHIPS] suggestions. Translate any examples (city names like "Чангу" → "Canggu", "Убуд" → "Ubud") naturally.'
+// Reply-language names for the response directive. Balisa's system prompt /
+// knowledge / stage directives stay RU+EN, but gpt-5.4 is fully multilingual,
+// so a strong "reply ONLY in <language>" directive makes her answer natively in
+// the visitor's language. Balinese has no reliable model support → English.
+const LANG_NAMES: Record<Lang, string> = {
+  ru: 'Russian', en: 'English', id: 'Indonesian', fr: 'French',
+  de: 'German', zh: 'Simplified Chinese', nl: 'Dutch', ban: 'English',
+}
+
+function replyLangDirective(replyLang: Lang): string {
+  if (replyLang === 'ru') return ''
+  const name = LANG_NAMES[replyLang]
+  return `\n\nCRITICAL — RESPONSE LANGUAGE: Write EVERY reply to the visitor in ${name} only, including all [CHIPS] suggestions. Translate ALL descriptive text naturally into ${name}; never leave Russian or mixed-language text. Keep Bali place names (Canggu, Ubud, Uluwatu, Sanur, Berawa, Pererenan…), project/developer names, numbers, prices, m², PBG/SLF/leasehold in their usual Latin/original form.${replyLang === 'zh' ? ' Use Simplified Chinese characters.' : ''}`
+}
 
 export async function POST(req: Request) {
   const apiKey = process.env.AZURE_OPENAI_API_KEY
@@ -231,12 +243,13 @@ export async function POST(req: Request) {
     return Response.json({ error: 'no_messages' }, { status: 400 })
   }
   const langRaw = (body as { lang?: unknown }).lang
-  // The consultant only has Russian and English system prompts/directives, so
-  // non-RU visitors (en/id/fr) are served the English experience; everything
-  // else falls back to Russian. Mapping id/fr → 'en' here means every
-  // downstream `lang === 'en'` branch (labels, EN directive) serves them
-  // correctly without per-branch changes.
-  const lang: Lang = langRaw === 'en' || langRaw === 'id' || langRaw === 'fr' ? 'en' : 'ru'
+  // replyLang = the visitor's actual language (all 8) — drives the reply
+  // language via a directive (gpt-5.4 is multilingual). `lang` stays the
+  // internal RU/EN switch that the RU/EN-built helpers (titles, page/stage
+  // directives) use: RU for Russian visitors, EN context for everyone else.
+  const VALID = new Set(['ru', 'en', 'id', 'fr', 'de', 'zh', 'nl', 'ban'])
+  const replyLang: Lang = (typeof langRaw === 'string' && VALID.has(langRaw) ? langRaw : 'ru') as Lang
+  const lang: Lang = replyLang === 'ru' ? 'ru' : 'en'
   // Clamp input size before it reaches the LLM — caps per-request token
   // cost (each message bounded, and total bounded) regardless of how much
   // text the client sends.
@@ -274,7 +287,7 @@ export async function POST(req: Request) {
 
   const client = new AzureOpenAI({ apiKey, endpoint, apiVersion })
   const basePrompt = await getSystemPrompt()
-  const systemPrompt = lang === 'en' ? basePrompt + EN_LANG_DIRECTIVE : basePrompt
+  const systemPrompt = basePrompt + replyLangDirective(replyLang)
 
   // Per-turn dynamic context: visitor's wishlist + recently-viewed
   // pages + funnel stage. Both go in as separate system messages
@@ -352,7 +365,7 @@ export async function POST(req: Request) {
 
     for (const tc of msg.tool_calls) {
       if (tc.type !== 'function') continue
-      const result = await executeToolCall(tc.function.name, tc.function.arguments, lang)
+      const result = await executeToolCall(tc.function.name, tc.function.arguments, lang, replyLang)
       messages.push({
         role: 'tool',
         tool_call_id: tc.id,

@@ -9,6 +9,7 @@ import { loadReviewHeat, type HeatCell } from './reviews-heat'
 import { loadAllRental } from './rental'
 import { cdnManifestUrl } from './photo-cdn'
 import { type Lang, switchLangPath, tField } from './i18n'
+import { hasCyrillic, translitPreserveCase } from './translit'
 import { loadTranslations, mergeTranslations, type Section } from './en-translations'
 
 // Build a listing URL for the visitor's language: RU keeps the /ru/... path,
@@ -1148,7 +1149,7 @@ export async function ensureFeedbackBucket() {
   }
 }
 
-export async function executeToolCall(name: string, rawArgs: string, lang: Lang = 'ru'): Promise<string> {
+export async function executeToolCall(name: string, rawArgs: string, lang: Lang = 'ru', replyLang: Lang = lang): Promise<string> {
   let args: unknown
   try { args = JSON.parse(rawArgs) } catch { return JSON.stringify({ error: 'invalid_arguments' }) }
   if (name === 'search_listings') {
@@ -1169,7 +1170,7 @@ export async function executeToolCall(name: string, rawArgs: string, lang: Lang 
     return JSON.stringify(result)
   }
   if (name === 'semantic_search') {
-    const result = await searchSemantic(args as SemanticArgs, lang)
+    const result = await searchSemantic(args as SemanticArgs, lang, replyLang)
     return JSON.stringify(result)
   }
   return JSON.stringify({ error: 'unknown_tool' })
@@ -1194,7 +1195,7 @@ type SemanticResult = { results: ListingCard[]; knowledge: KnowledgeSnippet[] }
 
 const CATALOG_KINDS = new Set(['villa', 'apartment', 'complex'])
 
-async function searchSemantic(args: SemanticArgs, lang: Lang = 'ru'): Promise<SemanticResult> {
+async function searchSemantic(args: SemanticArgs, lang: Lang = 'ru', replyLang: Lang = lang): Promise<SemanticResult> {
   const q = (args.query ?? '').trim()
   if (q.length < 3) return { results: [], knowledge: [] }
   const limit = Math.max(1, Math.min(20, args.limit ?? 8))
@@ -1208,6 +1209,13 @@ async function searchSemantic(args: SemanticArgs, lang: Lang = 'ru'): Promise<Se
   const hits = await kbSearch(q, { limit: Math.min(20, limit + 6), kinds })
   if (hits.length === 0) return { results: [], knowledge: [] }
 
+  // Serve the knowledge summaries in the visitor's language when a translation
+  // exists (feeds/_kb-summary-<lang>.json), else de-Cyrillic the RU source so
+  // Balisa never quotes Russian to a non-RU visitor.
+  const { loadKbSummaryCache } = await import('@/lib/kb-summary-i18n')
+  const tr = replyLang === 'ru' ? {} : await loadKbSummaryCache(replyLang)
+  const deCy = (s: string | null): string => (s && replyLang !== 'ru' && hasCyrillic(s) ? translitPreserveCase(s) : (s ?? ''))
+
   // Non-catalog kinds (developer/rental/district/market) become quotable text
   // snippets — there is no listing card for them.
   const knowledge: KnowledgeSnippet[] = hits
@@ -1215,8 +1223,8 @@ async function searchSemantic(args: SemanticArgs, lang: Lang = 'ru'): Promise<Se
     .slice(0, limit)
     .map(h => ({
       kind: h.kind,
-      title: h.title,
-      summary: h.summary,
+      title: deCy(tr[h.ref_id]?.title ?? h.title) || h.title,
+      summary: deCy(tr[h.ref_id]?.summary ?? h.summary),
       url: (h.meta && typeof (h.meta as { url?: unknown }).url === 'string') ? (h.meta as { url: string }).url : null,
     }))
 
