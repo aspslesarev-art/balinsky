@@ -3,7 +3,10 @@
 import { usePathname, useRouter } from 'next/navigation'
 import { switchLangPath, detectLang, LANGS, pickCopy, type Lang } from '@/lib/i18n'
 
-const LANG_LABEL: Record<Lang, string> = { ru: 'RU', en: 'EN', id: 'ID', fr: 'FR', de: 'DE', zh: 'ZH', nl: 'NL', ban: 'BAN', pl: 'PL', uk: 'UK' }
+// NB: `uk` is the ISO 639-1 language code for Ukrainian (used in URLs /uk/ and
+// hreflang — must not change). The visible switcher label is UA (country code)
+// so it doesn't read as "United Kingdom".
+const LANG_LABEL: Record<Lang, string> = { ru: 'RU', en: 'EN', id: 'ID', fr: 'FR', de: 'DE', zh: 'ZH', nl: 'NL', ban: 'BAN', pl: 'PL', uk: 'UA' }
 
 // Same visual treatment as CurrencyToggle — appearance-none <select> with a
 // chevron overlay. Keeps the header's right-side controls consistent.
