@@ -24,7 +24,7 @@ if (!SUPABASE_URL || !SERVICE_KEY) throw new Error('Supabase env not set')
 if (!AZURE_KEY || !AZURE_ENDPOINT || !AZURE_MODEL) throw new Error('Azure env not set')
 const sb = createClient(SUPABASE_URL, SERVICE_KEY)
 
-const LANGS = { de: 'German', zh: 'Simplified Chinese', nl: 'Dutch', fr: 'French', id: 'Indonesian' }
+const LANGS = { de: 'German', zh: 'Simplified Chinese', nl: 'Dutch', fr: 'French', id: 'Indonesian', pl: 'Polish', uk: 'Ukrainian' }
 const args = process.argv.slice(2)
 const li = args.indexOf('--lang')
 const lang = li >= 0 ? args[li + 1] : 'de'

@@ -22,7 +22,7 @@ const AZURE_MODEL = process.env.AZURE_OPENAI_TRANSLATE_DEPLOYMENT || process.env
 if (!SUPABASE_URL || !SERVICE_KEY || !AZURE_KEY || !AZURE_ENDPOINT || !AZURE_MODEL) throw new Error('env not set')
 const sb = createClient(SUPABASE_URL, SERVICE_KEY)
 
-const LANGS = { en: 'English', de: 'German', id: 'Indonesian', fr: 'French', zh: 'Simplified Chinese', nl: 'Dutch' }
+const LANGS = { en: 'English', de: 'German', id: 'Indonesian', fr: 'French', zh: 'Simplified Chinese', nl: 'Dutch', pl: 'Polish', uk: 'Ukrainian' }
 const args = process.argv.slice(2)
 const li = args.indexOf('--lang'); const lang = li >= 0 ? args[li + 1] : 'en'
 const onlyIdx = args.indexOf('--only'); const only = onlyIdx >= 0 ? args[onlyIdx + 1].split(',') : null
