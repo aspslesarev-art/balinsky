@@ -96,6 +96,34 @@ const STATUS_NL: Record<string, string> = {
   'Подготовка к строительству': 'Voorbereiding bouw',
   'Заморожен': 'Bevroren',
 }
+const STATUS_PL: Record<string, string> = {
+  'Строится': 'W budowie',
+  'Построен': 'Ukończony',
+  'Под заказ': 'Na zamówienie',
+  'Сдан': 'Oddany',
+  'Готов': 'Gotowy',
+  'Готовый': 'Gotowy',
+  'Готовые': 'Gotowe',
+  'Планируется': 'Planowany',
+  'На стадии планирования': 'Etap planowania',
+  'Проектирование': 'W projektowaniu',
+  'Подготовка к строительству': 'Przygotowanie do budowy',
+  'Заморожен': 'Wstrzymany',
+}
+const STATUS_UK: Record<string, string> = {
+  'Строится': 'Будується',
+  'Построен': 'Збудований',
+  'Под заказ': 'На замовлення',
+  'Сдан': 'Зданий',
+  'Готов': 'Готовий',
+  'Готовый': 'Готовий',
+  'Готовые': 'Готові',
+  'Планируется': 'Планується',
+  'На стадии планирования': 'На стадії планування',
+  'Проектирование': 'Проєктування',
+  'Подготовка к строительству': 'Підготовка до будівництва',
+  'Заморожен': 'Заморожений',
+}
 
 export const PERMIT_EN: Record<string, string> = {
   'Лизхолд': 'Leasehold', 'Фрихолд': 'Freehold', 'Хак Пакай': 'Hak Pakai',
@@ -151,6 +179,24 @@ const PERMIT_NL: Record<string, string> = {
   'Не получено': 'Niet verleend', 'Не получены': 'Niet verleend',
   'Заявка PBG': 'PBG aangevraagd', 'Заявка SLF': 'SLF aangevraagd', 'Заявка': 'Aangevraagd', 'нет': 'geen',
 }
+const PERMIT_PL: Record<string, string> = {
+  'Лизхолд': 'Leasehold', 'Фрихолд': 'Freehold', 'Хак Пакай': 'Hak Pakai',
+  'PBG': 'PBG', 'SLF': 'SLF', 'IMB': 'IMB', 'SHM': 'SHM', 'HGB': 'HGB', 'Hak Pakai': 'Hak Pakai',
+  'Туристическая зона': 'Strefa turystyczna', 'Жилая зона': 'Strefa mieszkaniowa',
+  'С разрешением': 'Z pozwoleniem', 'Без разрешения': 'Bez pozwolenia',
+  'В процессе оформления': 'Pozwolenie w toku', 'Получено': 'Uzyskane', 'Получены': 'Uzyskane',
+  'Не получено': 'Nieuzyskane', 'Не получены': 'Nieuzyskane',
+  'Заявка PBG': 'Wniosek PBG', 'Заявка SLF': 'Wniosek SLF', 'Заявка': 'Złożono wniosek', 'нет': 'brak',
+}
+const PERMIT_UK: Record<string, string> = {
+  'Лизхолд': 'Лізгольд', 'Фрихолд': 'Фрігольд', 'Хак Пакай': 'Hak Pakai',
+  'PBG': 'PBG', 'SLF': 'SLF', 'IMB': 'IMB', 'SHM': 'SHM', 'HGB': 'HGB', 'Hak Pakai': 'Hak Pakai',
+  'Туристическая зона': 'Туристична зона', 'Жилая зона': 'Житлова зона',
+  'С разрешением': 'З дозволом', 'Без разрешения': 'Без дозволу',
+  'В процессе оформления': 'Оформлення триває', 'Получено': 'Отримано', 'Получены': 'Отримано',
+  'Не получено': 'Не отримано', 'Не получены': 'Не отримано',
+  'Заявка PBG': 'Заявка PBG', 'Заявка SLF': 'Заявка SLF', 'Заявка': 'Подано заявку', 'нет': 'немає',
+}
 
 export const STYLE_EN: Record<string, string> = {
   'Балийский тропический': 'Balinese tropical', 'Современный минимализм': 'Modern minimalism',
@@ -194,6 +240,20 @@ const STYLE_NL: Record<string, string> = {
   'Лофт / индустриальный': 'Loft / industrieel', 'Бохо / эклектика': 'Boho / eclectisch',
   'Классический': 'Klassiek', 'Колониальный': 'Koloniaal',
 }
+const STYLE_PL: Record<string, string> = {
+  'Балийский тропический': 'Balijski tropikalny', 'Современный минимализм': 'Nowoczesny minimalizm',
+  'Тропический модерн': 'Tropikalny modern', 'Средиземноморский': 'Śródziemnomorski',
+  'Скандинавский': 'Skandynawski', 'Японский / wabi-sabi': 'Japoński / wabi-sabi',
+  'Лофт / индустриальный': 'Loft / industrialny', 'Бохо / эклектика': 'Boho / eklektyzm',
+  'Классический': 'Klasyczny', 'Колониальный': 'Kolonialny',
+}
+const STYLE_UK: Record<string, string> = {
+  'Балийский тропический': 'Балійський тропічний', 'Современный минимализм': 'Сучасний мінімалізм',
+  'Тропический модерн': 'Тропічний модерн', 'Средиземноморский': 'Середземноморський',
+  'Скандинавский': 'Скандинавський', 'Японский / wabi-sabi': 'Японський / wabi-sabi',
+  'Лофт / индустриальный': 'Лофт / індустріальний', 'Бохо / эклектика': 'Бохо / еклектика',
+  'Классический': 'Класичний', 'Колониальный': 'Колоніальний',
+}
 
 export const TYPE_EN: Record<string, string> = {
   'Виллы': 'Villas', 'Апартаменты': 'Apartments', 'Таунхаусы': 'Townhouses',
@@ -225,6 +285,16 @@ const TYPE_NL: Record<string, string> = {
   'Hotel': 'Hotel', 'Смарт виллы': "Smart villa's", 'Пентхаусы': 'Penthouses', 'Commercial': 'Commercieel',
   'Виллы и дома': "Villa's", 'Дома': 'Huizen',
 }
+const TYPE_PL: Record<string, string> = {
+  'Виллы': 'Wille', 'Апартаменты': 'Apartamenty', 'Таунхаусы': 'Domy szeregowe',
+  'Hotel': 'Hotel', 'Смарт виллы': 'Inteligentne wille', 'Пентхаусы': 'Penthouse’y', 'Commercial': 'Komercyjne',
+  'Виллы и дома': 'Wille', 'Дома': 'Domy',
+}
+const TYPE_UK: Record<string, string> = {
+  'Виллы': 'Вілли', 'Апартаменты': 'Апартаменти', 'Таунхаусы': 'Таунхауси',
+  'Hotel': 'Готель', 'Смарт виллы': 'Смарт-вілли', 'Пентхаусы': 'Пентхауси', 'Commercial': 'Комерційна',
+  'Виллы и дома': 'Вілли', 'Дома': 'Будинки',
+}
 
 export type FilterDim = 'status' | 'permit' | 'style' | 'type'
 
@@ -238,6 +308,8 @@ const TABLE: Record<Lang, Record<FilterDim, Record<string, string>>> = {
   nl: { status: STATUS_NL, permit: PERMIT_NL, style: STYLE_NL, type: TYPE_NL },
   // Balinese: reuse EN maps (no Balinese taxonomy translation).
   ban: { status: STATUS_EN, permit: PERMIT_EN, style: STYLE_EN, type: TYPE_EN },
+  pl: { status: STATUS_PL, permit: PERMIT_PL, style: STYLE_PL, type: TYPE_PL },
+  uk: { status: STATUS_UK, permit: PERMIT_UK, style: STYLE_UK, type: TYPE_UK },
 }
 
 /**

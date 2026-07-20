@@ -72,6 +72,18 @@ const COPY: Record<Lang, LangCopy> = {
     defaultAuthor: { name: 'Andrei Balinsky', role: 'Pangadeg Balinsky', photo: null, slug: null },
     locale: 'id-ID',
   },
+  pl: {
+    home: 'Strona główna', knowledgeCrumb: 'Wiedza', source: 'Źródło', moreArticles: 'Więcej artykułów',
+    published: 'Opublikowano', updated: 'Zaktualizowano',
+    defaultAuthor: { name: 'Andrei Balinsky', role: 'Założyciel Balinsky', photo: null, slug: null },
+    locale: 'pl-PL',
+  },
+  uk: {
+    home: 'Головна', knowledgeCrumb: 'Знання', source: 'Джерело', moreArticles: 'Більше статей',
+    published: 'Опубліковано', updated: 'Оновлено',
+    defaultAuthor: { name: 'Andrei Balinsky', role: 'Засновник Balinsky', photo: null, slug: null },
+    locale: 'uk-UA',
+  },
 }
 
 function fmtDate(iso: string | null | undefined, locale: string): string | null {

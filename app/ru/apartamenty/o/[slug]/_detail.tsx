@@ -477,6 +477,8 @@ const APT_TITLE_TERMS: Record<Exclude<Lang, 'ru'>, {
   zh:  { noun: '公寓',         inDistrict: d => d,           bedroomWord: '卧室' },
   nl:  { noun: 'Appartement', inDistrict: d => `in ${d}`,   bedroomWord: 'slaapkamers' },
   ban: { noun: 'Apartemen',   inDistrict: d => `ring ${d}`, bedroomWord: 'kamar pules' },
+  pl:  { noun: 'Apartament',  inDistrict: d => `w ${d}`,    bedroomWord: 'sypialnie' },
+  uk:  { noun: 'Апартаменти', inDistrict: d => `в ${d}`,    bedroomWord: 'спальні' },
 }
 // Native-language fallback for the Product schema description (only reached
 // when the row has no SEO Text). Replaces the old `lang === 'ru' ? RU : EN`
@@ -490,6 +492,8 @@ const APT_PRODUCT_DESC: Record<Lang, (bedrooms: number | null, district: string 
   zh: (b, d) => `${d ? `${d}` : ''}${b ? `${b}居室` : ''}公寓，印度尼西亚巴厘岛`,
   nl: (b, d) => `${b ? `${b}-slaapkamer ` : ''}appartement${d ? ` in ${d}` : ''}, Bali, Indonesië`,
   ban: (b, d) => `Apartemen${b ? ` ${b} kamar pules` : ''}${d ? ` ring ${d}` : ''}, Bali, Indonesia`,
+  pl: (b, d) => `Apartament${b ? ` z ${b} sypialniami` : ''}${d ? ` w ${d}` : ''}, Bali, Indonezja`,
+  uk: (b, d) => `Апартаменти${b ? ` з ${b} спальнями` : ''}${d ? ` в ${d}` : ''}, Балі, Індонезія`,
 }
 function fallbackAptTitle(district: string | null, area: number | null, bedrooms: number | null, lang: Lang): string {
   const parts: string[] = []

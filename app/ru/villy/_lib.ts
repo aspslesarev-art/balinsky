@@ -514,6 +514,8 @@ export function buildOptions(
     zh: { primary: '开发商一手',       resale: '转售',          secondary: '二手' },
     nl: { primary: 'Van ontwikkelaar', resale: 'Doorverkoop', secondary: 'Bestaand' },
     ban: { primary: 'Saking pangwangun', resale: 'Adol malih', secondary: 'Sekunder' },
+    pl: { primary: 'Od dewelopera', resale: 'Odsprzedaż', secondary: 'Rynek wtórny' },
+    uk: { primary: 'Від забудовника', resale: 'Перепродаж', secondary: 'Вторинний ринок' },
   }
   const dealType: Option[] = (['primary', 'resale', 'secondary'] as const)
     .map(v => ({ value: v, label: pickCopy(DEAL_LABELS, lang)[v], count: dealCounts.get(v) ?? 0 }))
@@ -923,6 +925,14 @@ const VILLA_HEADING_TERMS: Record<Exclude<Lang, 'ru' | 'en'>, HeadingTerms> = {
     building: 'sedeng kawangun', built: 'puput', planned: 'karencanayang',
     bedroomWord: 'kamar pules', by: 'olih', styleWord: 'gaya', permitWord: 'ijin',
     completionWord: 'serah terima', upTo: 'nyantos', from: 'ngawit' },
+  pl: { noun: 'Wille i domy', inBali: 'na Bali', inDistrict: d => `w ${d}`,
+    building: 'w budowie', built: 'ukończone', planned: 'planowane',
+    bedroomWord: 'sypialnie', by: 'od', styleWord: 'styl', permitWord: 'pozwolenie',
+    completionWord: 'oddanie', upTo: 'do', from: 'od' },
+  uk: { noun: 'Вілли та будинки', inBali: 'на Балі', inDistrict: d => `у ${d}`,
+    building: 'будуються', built: 'готові', planned: 'заплановані',
+    bedroomWord: 'спальні', by: 'від', styleWord: 'стиль', permitWord: 'дозвіл',
+    completionWord: 'здача', upTo: 'до', from: 'від' },
 }
 function fmtUsdEn(n: number): string { return '$' + Math.round(n).toLocaleString('en-US') }
 export function buildHeadingLoc(f: VillaFilterState, lang: Lang): string {
@@ -1055,6 +1065,8 @@ const VILLA_DESC_TAIL: Record<Exclude<Lang, 'ru' | 'en'>, string> = {
   zh: '照片、最新价格、许可证、开发商联系方式。',
   nl: "Foto's, actuele prijzen, vergunningen, ontwikkelaarscontacten.",
   ban: 'Foto, aji anyar, izin, kontak pangwangun.',
+  pl: 'Zdjęcia, aktualne ceny, pozwolenia, kontakty deweloperów.',
+  uk: 'Фото, актуальні ціни, дозволи, контакти забудовників.',
 }
 export function buildDescriptionLoc(f: VillaFilterState, lang: Lang, totalCount?: number): string {
   if (lang === 'ru') return buildDescription(f, totalCount)

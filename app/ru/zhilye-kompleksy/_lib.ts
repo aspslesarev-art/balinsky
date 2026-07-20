@@ -894,6 +894,36 @@ const HEADING_BUILDERS: Record<Exclude<Lang, 'ru' | 'en'>, HeadingBuilder> = {
     if (permit) s += `，${permit}`
     return s
   },
+  pl: (f, { type, permit }) => {
+    const adj = f.status.length === 1
+      ? ({ building: 'w budowie', built: 'ukończone', planned: 'planowane' }[f.status[0]] ?? '')
+      : ''
+    let s = 'Kompleksy mieszkaniowe'
+    if (adj) s += ` ${adj}`
+    if (type) s += ` (${type.toLowerCase()})`
+    if (f.district.length === 1) s += ` w ${f.district[0]}`
+    else if (f.district.length > 1) s += ` w ${f.district.join(', ')}`
+    else s += ' na Bali'
+    if (f.developer.length === 1) s += ` od dewelopera ${f.developer[0]}`
+    if (f.year.length === 1) s += `, oddanie ${f.year[0]}`
+    if (permit) s += `, pozwolenie ${permit}`
+    return s
+  },
+  uk: (f, { type, permit }) => {
+    const adj = f.status.length === 1
+      ? ({ building: 'що будуються', built: 'здані', planned: 'заплановані' }[f.status[0]] ?? '')
+      : ''
+    let s = 'Житлові комплекси'
+    if (adj) s += ` ${adj}`
+    if (type) s += ` (${type.toLowerCase()})`
+    if (f.district.length === 1) s += ` в ${f.district[0]}`
+    else if (f.district.length > 1) s += ` в ${f.district.join(', ')}`
+    else s += ' на Балі'
+    if (f.developer.length === 1) s += ` від забудовника ${f.developer[0]}`
+    if (f.year.length === 1) s += `, здача ${f.year[0]}`
+    if (permit) s += `, дозвіл ${permit}`
+    return s
+  },
 }
 
 /**
@@ -965,6 +995,18 @@ const DESC_PARTS: Record<Exclude<Lang, 'ru' | 'en'>, DescParts> = {
     type: t => `,类型：${t}`, year: y => `,${y}年交付`,
     tail: '照片、开发商价格、交付时间、许可与联系方式。',
     join: (c, w) => `${w}${c}`,
+  },
+  pl: {
+    noun: 'kompleksy mieszkaniowe', where: d => `w ${d}`, inBali: 'na Bali',
+    type: t => `, typ: ${t}`, year: y => `, oddanie ${y}`,
+    tail: 'Zdjęcia, ceny deweloperów, terminy oddania, pozwolenia i kontakty.',
+    join: (c, w) => `${c} ${w}`,
+  },
+  uk: {
+    noun: 'житлові комплекси', where: d => `в ${d}`, inBali: 'на Балі',
+    type: t => `, тип: ${t}`, year: y => `, здача ${y}`,
+    tail: 'Фото, ціни забудовників, терміни здачі, дозволи та контакти.',
+    join: (c, w) => `${c} ${w}`,
   },
 }
 

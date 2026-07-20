@@ -212,6 +212,7 @@ function funnelStageDirective(stage: FunnelStage, lang: Lang): string {
 const LANG_NAMES: Record<Lang, string> = {
   ru: 'Russian', en: 'English', id: 'Indonesian', fr: 'French',
   de: 'German', zh: 'Simplified Chinese', nl: 'Dutch', ban: 'English',
+  pl: 'Polish', uk: 'Ukrainian',
 }
 
 function replyLangDirective(replyLang: Lang): string {
@@ -259,7 +260,7 @@ export async function POST(req: Request) {
   // language via a directive (gpt-5.4 is multilingual). `lang` stays the
   // internal RU/EN switch that the RU/EN-built helpers (titles, page/stage
   // directives) use: RU for Russian visitors, EN context for everyone else.
-  const VALID = new Set(['ru', 'en', 'id', 'fr', 'de', 'zh', 'nl', 'ban'])
+  const VALID = new Set(['ru', 'en', 'id', 'fr', 'de', 'zh', 'nl', 'ban', 'pl', 'uk'])
   const replyLang: Lang = (typeof langRaw === 'string' && VALID.has(langRaw) ? langRaw : 'ru') as Lang
   const lang: Lang = replyLang === 'ru' ? 'ru' : 'en'
   // Clamp input size before it reaches the LLM — caps per-request token

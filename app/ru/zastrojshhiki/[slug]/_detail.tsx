@@ -502,6 +502,8 @@ export async function generateDeveloperMetadata(slug: string, lang: Lang) {
     id: { title: n => `${n} — Pengembang properti Bali | proyek, skor, ulasan | Balinsky`, desc: n => `${n} — Pengembang properti Bali. Skor empat dimensi, proyek, komisi, keandalan.`, og: n => `${n} — Pengembang properti Bali` },
     fr: { title: n => `${n} — Promoteur immobilier à Bali | projets, note, avis | Balinsky`, desc: n => `${n} — Promoteur immobilier à Bali. Note sur quatre dimensions, projets, commission, fiabilité.`, og: n => `${n} — Promoteur immobilier à Bali` },
     ban: { title: n => `${n} — Pangwangun properti Bali | proyek, skor, ulasan | Balinsky`, desc: n => `${n} — Pangwangun properti Bali. Skor patpat dimensi, proyek, komisi, kaandelan.`, og: n => `${n} — Pangwangun properti Bali` },
+    pl: { title: n => `${n} — deweloper na Bali | inwestycje, ocena, opinie | Balinsky`, desc: n => `${n} — deweloper na Bali. Ocena w czterech wymiarach, inwestycje, prowizja, wiarygodność.`, og: n => `${n} — deweloper na Bali` },
+    uk: { title: n => `${n} — забудовник на Балі | проєкти, рейтинг, відгуки | Balinsky`, desc: n => `${n} — забудовник на Балі. Оцінка за чотирма напрямами, проєкти, комісія, надійність.`, og: n => `${n} — забудовник на Балі` },
   }
   const meta = META[lang] ?? META.en
   const description = aiDesc

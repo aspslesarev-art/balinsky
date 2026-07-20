@@ -210,7 +210,53 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
     },
   }
 
-  const byLang: Record<Lang, Record<CategoryKind, CategoryMeta>> = { ru, en, id, fr, de, zh, nl, ban }
+  const pl: Record<CategoryKind, CategoryMeta> = {
+    villas: {
+      title: `${n} willi na Bali${from ? ` od ${from}` : ''} ze sprawdzeniem PBG/SLF | Balinsky`,
+      description: `${n} willi na Bali${from && to ? ` od ${from} do ${to}` : from ? ` od ${from}` : ''}${dev ? ` od ${dev} zweryfikowanych deweloperów` : ''}. Pererenan, Uluwatu, Ubud, Sanur. Wideo z miejsca, bezpośredni kontakt.`,
+    },
+    apartments: {
+      title: `${n} apartamentów na Bali${from ? ` od ${from}` : ''} | Balinsky`,
+      description: `${n} apartamentów w zweryfikowanych kompleksach. Berawa, Pererenan, Pandawa. Firmy zarządzające, rentowność najmu 8–15%, promocje i raty.`,
+    },
+    complexes: {
+      title: `${n} kompleksów mieszkaniowych na Bali ze sprawdzeniem PBG/SLF | Balinsky`,
+      description: `${n} kompleksów na Bali z infrastrukturą. Sprawdzenie PBG/SLF/RDTR, realne terminy oddania${dev ? `, promocje od ${dev} deweloperów` : ''}.`,
+    },
+    developers: {
+      title: `${n} deweloperów na Bali z oceną | Balinsky`,
+      description: `${n} deweloperów na Bali ocenianych według 4 kryteriów: jakość, doświadczenie, inżynieria, zarządzanie. Ukończone projekty, aktywne budowy, promocje.`,
+    },
+    rental: {
+      title: `Wynajem na Bali: ${n} ofert miesięcznych i dobowych | Balinsky`,
+      description: `${n} opcji wynajmu na Bali. Wille, apartamenty, domy. Miesięcznie i na doby. Bezpośredni kontakt z właścicielami.`,
+    },
+  }
+
+  const uk: Record<CategoryKind, CategoryMeta> = {
+    villas: {
+      title: `${n} вілл на Балі${from ? ` від ${from}` : ''} з перевіркою PBG/SLF | Balinsky`,
+      description: `${n} вілл на Балі${from && to ? ` від ${from} до ${to}` : from ? ` від ${from}` : ''}${dev ? ` від ${dev} перевірених забудовників` : ''}. Pererenan, Uluwatu, Ubud, Sanur. Відео з місця, прямі контакти.`,
+    },
+    apartments: {
+      title: `${n} апартаментів на Балі${from ? ` від ${from}` : ''} | Balinsky`,
+      description: `${n} апартаментів у перевірених комплексах. Berawa, Pererenan, Pandawa. Керуючі компанії, дохідність оренди 8–15%, акції та розстрочки.`,
+    },
+    complexes: {
+      title: `${n} житлових комплексів на Балі з перевіркою PBG/SLF | Balinsky`,
+      description: `${n} комплексів на Балі з інфраструктурою. Перевірка PBG/SLF/RDTR, реальні терміни здачі${dev ? `, акції від ${dev} забудовників` : ''}.`,
+    },
+    developers: {
+      title: `${n} забудовників на Балі з рейтингом | Balinsky`,
+      description: `${n} забудовників Балі з рейтингом за 4 критеріями: якість, досвід, техніка, управління. Здані проєкти, активні будівництва, акції.`,
+    },
+    rental: {
+      title: `Оренда на Балі: ${n} об'єктів помісячно та подобово | Balinsky`,
+      description: `${n} варіантів оренди на Балі. Вілли, апартаменти, будинки. Помісячно та подобово. Прямі контакти власників.`,
+    },
+  }
+
+  const byLang: Record<Lang, Record<CategoryKind, CategoryMeta>> = { ru, en, id, fr, de, zh, nl, ban, pl, uk }
   const m = byLang[lang][kind]
   // Collapse any double spaces left when an optional stat was empty.
   return {

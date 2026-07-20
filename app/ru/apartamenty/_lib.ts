@@ -126,6 +126,8 @@ const APT_TITLE_TERMS: Record<Exclude<Lang, 'ru'>, {
   zh: { noun: '公寓', inDistrict: d => d, bedroomWord: '卧室' },
   nl: { noun: 'Appartement', inDistrict: d => `in ${d}`, bedroomWord: 'slaapkamers' },
   ban: { noun: 'Apartemen', inDistrict: d => `ring ${d}`, bedroomWord: 'kamar pules' },
+  pl: { noun: 'Apartament', inDistrict: d => `w ${d}`, bedroomWord: 'sypialnie' },
+  uk: { noun: 'Апартаменти', inDistrict: d => `в ${d}`, bedroomWord: 'спальні' },
 }
 function fallbackAptTitle(args: {
   district: string | null
@@ -455,6 +457,7 @@ export function buildOptions(
   const GROUND_LABELS: Record<Lang, string> = {
     ru: 'Цокольный', en: 'Ground floor', id: 'Lantai dasar', fr: 'Rez-de-chaussée',
     de: 'Erdgeschoss', zh: '底层', nl: 'Begane grond', ban: 'Lantai dasar',
+    pl: 'Parter', uk: 'Цокольний поверх',
   }
   const groundLabel = pickCopy(GROUND_LABELS, lang)
   const floor = build('floor', e => e.floor, 'value').map(o => ({
@@ -483,6 +486,8 @@ export function buildOptions(
     zh: { primary: '开发商直售',      resale: '转售',          secondary: '二手' },
     nl: { primary: 'Van ontwikkelaar', resale: 'Doorverkoop', secondary: 'Bestaand' },
     ban: { primary: 'Saking pangwangun', resale: 'Adol malih', secondary: 'Bekas' },
+    pl: { primary: 'Od dewelopera', resale: 'Odsprzedaż', secondary: 'Rynek wtórny' },
+    uk: { primary: 'Від забудовника', resale: 'Перепродаж', secondary: 'Вторинний ринок' },
   }
   const dealType: Option[] = (['primary', 'resale', 'secondary'] as const)
     .map(v => ({ value: v, label: pickCopy(DEAL_LABELS, lang)[v], count: dealCounts.get(v) ?? 0 }))
@@ -861,6 +866,14 @@ const APT_HEADING_TERMS: Record<Exclude<Lang, 'ru' | 'en'>, AptHeadingTerms> = {
     building: 'sedeng kawangun', built: 'puput', bedroomWord: 'kamar pules',
     by: 'olih', permitWord: 'ijin', floorWord: 'lantai', groundFloor: 'lantai dasar',
     upTo: 'nyantos', from: 'ngawit' },
+  pl: { noun: 'Apartamenty', inBali: 'na Bali', inDistrict: d => `w ${d}`,
+    building: 'w budowie', built: 'gotowe', bedroomWord: 'sypialnie',
+    by: 'od', permitWord: 'pozwolenie', floorWord: 'piętro', groundFloor: 'parter',
+    upTo: 'do', from: 'od' },
+  uk: { noun: 'Апартаменти', inBali: 'на Балі', inDistrict: d => `в ${d}`,
+    building: 'будуються', built: 'готові', bedroomWord: 'спальні',
+    by: 'від', permitWord: 'дозвіл', floorWord: 'поверх', groundFloor: 'цокольний поверх',
+    upTo: 'до', from: 'від' },
 }
 function fmtUsdEnApt(n: number): string { return '$' + Math.round(n).toLocaleString('en-US') }
 export function buildHeadingLoc(f: FilterState, lang: Lang): string {
@@ -976,6 +989,8 @@ const APT_DESC_TAIL: Record<Exclude<Lang, 'ru' | 'en'>, string> = {
   zh: '照片、最新价格、许可证、开发商联系方式。',
   nl: "Foto's, actuele prijzen, vergunningen, ontwikkelaarscontacten.",
   ban: 'Foto, aji anyar, izin, kontak pangwangun.',
+  pl: 'Zdjęcia, aktualne ceny, pozwolenia, kontakty deweloperów.',
+  uk: 'Фото, актуальні ціни, дозволи, контакти забудовників.',
 }
 export function buildDescriptionLoc(f: FilterState, lang: Lang, totalCount?: number): string {
   if (lang === 'ru') return buildDescription(f, totalCount)

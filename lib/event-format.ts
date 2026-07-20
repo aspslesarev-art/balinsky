@@ -9,10 +9,12 @@ const FORMAT_LABELS: Record<string, Record<Lang, string>> = {
   живой: {
     ru: 'Живой', en: 'Live', id: 'Langsung', fr: 'En direct',
     de: 'Live', zh: '现场', nl: 'Live', ban: 'Langsung',
+    pl: 'Na żywo', uk: 'Наживо',
   },
   онлайн: {
     ru: 'Онлайн', en: 'Online', id: 'Online', fr: 'En ligne',
     de: 'Online', zh: '线上', nl: 'Online', ban: 'Online',
+    pl: 'Online', uk: 'Онлайн',
   },
 }
 

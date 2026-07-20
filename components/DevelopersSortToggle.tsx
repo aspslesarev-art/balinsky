@@ -86,6 +86,24 @@ const OPTIONS_BY_LANG: Record<Lang, Option[]> = {
     { key: 'experience',       label: 'Pengalaman',             hint: 'Manut kedalaman data editorial indik reputasi lan tim' },
     { key: 'international',    label: '🌍 Internasional',       hint: 'Pangwangun sane madue proyek ring jaba Bali' },
   ],
+  pl: [
+    { key: 'balanced',         label: 'Zrównoważony',           hint: 'Ukończone + w trakcie + ocena redakcyjna' },
+    { key: 'ready',            label: 'Ukończone projekty',     hint: 'Kto faktycznie zbudował najwięcej' },
+    { key: 'inprogress',       label: 'Aktywne budowy',         hint: 'Kto ma najwięcej trwających budów' },
+    { key: 'units-ready',      label: 'Oddane lokale',          hint: 'Według łącznej liczby oddanych lokali' },
+    { key: 'units-inprogress', label: 'Lokale w budowie',       hint: 'Według łącznej liczby lokali obecnie w budowie' },
+    { key: 'experience',       label: 'Doświadczenie',          hint: 'Według głębi danych redakcyjnych o reputacji i zespole' },
+    { key: 'international',    label: '🌍 Międzynarodowy',      hint: 'Deweloperzy z projektami poza Bali' },
+  ],
+  uk: [
+    { key: 'balanced',         label: 'Збалансований',          hint: 'Здані + у роботі + редакційна оцінка' },
+    { key: 'ready',            label: 'Здані проєкти',          hint: 'Хто реально збудував найбільше' },
+    { key: 'inprogress',       label: 'Активні будови',         hint: 'У кого найбільше проєктів зараз у роботі' },
+    { key: 'units-ready',      label: 'Здані юніти',            hint: 'За загальною кількістю зданих юнітів' },
+    { key: 'units-inprogress', label: 'Юніти в будівництві',    hint: 'За загальною кількістю юнітів у роботі' },
+    { key: 'experience',       label: 'Досвід',                 hint: 'За глибиною редакційних даних про репутацію та команду' },
+    { key: 'international',    label: '🌍 Міжнародний',         hint: 'Забудовники з проєктами за межами Балі' },
+  ],
 }
 
 export function DevelopersSortToggle({ current, lang = 'ru' }: { current: DevelopersSortKey; lang?: Lang }) {

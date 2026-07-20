@@ -14,7 +14,7 @@ function buildOptions(opts: FmtOpts): Intl.DateTimeFormatOptions {
 }
 
 function locale(opts: FmtOpts): string {
-  return ({ ru: 'ru-RU', en: 'en-GB', id: 'id-ID', fr: 'fr-FR', de: 'de-DE', zh: 'zh-CN', nl: 'nl-NL', ban: 'id-ID' } as const)[opts.lang ?? 'ru']
+  return ({ ru: 'ru-RU', en: 'en-GB', id: 'id-ID', fr: 'fr-FR', de: 'de-DE', zh: 'zh-CN', nl: 'nl-NL', ban: 'id-ID', pl: 'pl-PL', uk: 'uk-UA' } as const)[opts.lang ?? 'ru']
 }
 
 export function fmtBali(iso: string, opts: FmtOpts = {}): string {

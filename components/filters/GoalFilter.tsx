@@ -14,6 +14,8 @@ const OPTS_BY_LANG: Record<Lang, { v: 'invest' | 'live'; label: string }[]> = {
   zh: [{ v: 'invest', label: '用于投资' }, { v: 'live', label: '用于居住' }],
   nl: [{ v: 'invest', label: 'Voor belegging' }, { v: 'live', label: 'Om in te wonen' }],
   ban: [{ v: 'invest', label: 'Anggen investasi' }, { v: 'live', label: 'Anggen magenah' }],
+  pl: [{ v: 'invest', label: 'Na inwestycję' }, { v: 'live', label: 'Do zamieszkania' }],
+  uk: [{ v: 'invest', label: 'Під інвестиції' }, { v: 'live', label: 'Для життя' }],
 }
 
 const COPY = {
@@ -25,6 +27,8 @@ const COPY = {
   zh: { dropdown: '购买目的', clear: '清除' },
   nl: { dropdown: 'Koopdoel', clear: 'Wissen' },
   ban: { dropdown: 'Tetujon numbas', clear: 'Kosongin' },
+  pl: { dropdown: 'Cel zakupu', clear: 'Wyczyść' },
+  uk: { dropdown: 'Мета покупки', clear: 'Скинути' },
 } as const
 
 export function GoalFilter({ current, view = 'list', lang = 'ru' }: {

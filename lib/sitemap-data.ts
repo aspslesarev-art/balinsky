@@ -50,6 +50,8 @@ function pairEntry(args: {
   const deUrl = `${SITE_URL}${switchLangPath(enPath, 'de')}`
   const zhUrl = `${SITE_URL}${switchLangPath(enPath, 'zh')}`
   const nlUrl = `${SITE_URL}${switchLangPath(enPath, 'nl')}`
+  const plUrl = `${SITE_URL}${switchLangPath(enPath, 'pl')}`
+  const ukUrl = `${SITE_URL}${switchLangPath(enPath, 'uk')}`
   // hreflang cluster — self-referential + reciprocal, per Google's spec.
   // Codes must be ISO 639-1 (+ optional ISO 3166-1 region). Simplified
   // Chinese uses `zh-Hans` (script) rather than the ambiguous bare `zh`.
@@ -65,7 +67,7 @@ function pairEntry(args: {
   const alternates = {
     languages: {
       ru: ruUrl, en: enUrl, id: idUrl, fr: frUrl,
-      de: deUrl, 'zh-Hans': zhUrl, nl: nlUrl, 'x-default': ruUrl,
+      de: deUrl, 'zh-Hans': zhUrl, nl: nlUrl, pl: plUrl, uk: ukUrl, 'x-default': ruUrl,
     },
   }
   return [
@@ -76,6 +78,8 @@ function pairEntry(args: {
     { url: deUrl, lastModified, changeFrequency, priority, alternates },
     { url: zhUrl, lastModified, changeFrequency, priority, alternates },
     { url: nlUrl, lastModified, changeFrequency, priority, alternates },
+    { url: plUrl, lastModified, changeFrequency, priority, alternates },
+    { url: ukUrl, lastModified, changeFrequency, priority, alternates },
   ]
 }
 

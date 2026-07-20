@@ -109,6 +109,20 @@ const GREETING_BY_LANG: Record<Lang, Message> = {
       'Tiang Balisa — broker AI properti Bali. Tiang jagi ngwantu ngrereh properti sane cocok sareng anggaran miwah tetujon Ida Dane. Napi sane karerehin?\n\n' +
       '[CHIPS] Milih vila | Milih apartemen | Sewa bulanan | Indik hukum numbas | Ngubungin manager',
   },
+  pl: {
+    role: 'assistant',
+    greeting: true,
+    content:
+      'Jestem Balisa — broker AI od nieruchomości na Bali. Pomogę dobrać obiekt do Twojego budżetu i celów. Czego szukasz?\n\n' +
+      '[CHIPS] Dobierz willę | Dobierz apartament | Wynajem miesięczny | Prawne aspekty zakupu | Kontakt z managerem',
+  },
+  uk: {
+    role: 'assistant',
+    greeting: true,
+    content:
+      'Я Баліса — AI-брокер з нерухомості на Балі. Допоможу підібрати обʼєкт під ваш бюджет і цілі. Що ви шукаєте?\n\n' +
+      '[CHIPS] Підібрати вілу | Підібрати апартаменти | Помісячна оренда | Юридичні аспекти покупки | Звʼязатися з менеджером',
+  },
 }
 
 // On a listing detail page Балиса greets ABOUT that listing and offers to dig

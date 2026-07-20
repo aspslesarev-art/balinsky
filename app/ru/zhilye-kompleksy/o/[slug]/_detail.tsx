@@ -727,10 +727,13 @@ function unitTypesPhrase(rawTypes: unknown, lang: Lang): string | null {
     zh: { apartment: '公寓', villa: '别墅', townhouse: '联排别墅', penthouse: '顶层公寓' },
     nl: { apartment: 'appartementen', villa: "villa's", townhouse: 'herenhuizen', penthouse: 'penthouses' },
     ban: { apartment: 'apartemen', villa: 'vila', townhouse: 'rumah bandar', penthouse: 'penthouse' },
+    pl: { apartment: 'apartamenty', villa: 'wille', townhouse: 'domy szeregowe', penthouse: "penthouse'y" },
+    uk: { apartment: 'апартаменти', villa: 'вілли', townhouse: 'таунхауси', penthouse: 'пентхауси' },
   }
   // Final connective ("and") per language. Chinese enumerates with '、'.
   const SEP: Record<Lang, string> = {
     ru: ' и ', en: ' & ', id: ' dan ', fr: ' et ', de: ' & ', zh: '、', nl: ' & ', ban: ' dan ',
+    pl: ' i ', uk: ' та ',
   }
   const words = found.map(k => (TYPE_WORDS[lang] ?? TYPE_WORDS.en)[k])
   if (words.length === 1) return words[0]
@@ -785,6 +788,12 @@ function factsDescription(opts: {
       ban: { complex: 'kompleks', in: 'ring', bali: 'Bali',
         bed: (a, b) => a === b ? `${a} kamar tidur` : `${a}–${b} kamar tidur`,
         price: (lo, hi) => `dari ${lo} hingga ${hi}`, completion: y => ` Serah terima ${y}.` },
+      pl: { complex: 'kompleks mieszkaniowy', in: 'w', bali: 'Bali',
+        bed: (a, b) => a === b ? `${a} sypialnia` : `${a}–${b} sypialni`,
+        price: (lo, hi) => `od ${lo} do ${hi}`, completion: y => ` Oddanie ${y}.` },
+      uk: { complex: 'житловий комплекс', in: 'в', bali: 'Балі',
+        bed: (a, b) => a === b ? `${a} спальня` : `${a}–${b} спальні`,
+        price: (lo, hi) => `від ${lo} до ${hi}`, completion: y => ` Здача ${y}.` },
     }
     const L = FACTS[lang] ?? FACTS.en
     const head = `${opts.name} — ${opts.phrase ?? L.complex}${opts.district ? ` ${L.in} ${opts.district}` : ''}, ${L.bali}.`

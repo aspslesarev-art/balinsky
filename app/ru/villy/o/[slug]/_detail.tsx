@@ -452,6 +452,7 @@ const VILLA_META_IN_DISTRICT: Record<Lang, (d: string) => string> = {
   ru: d => ` в ${d}`, en: d => ` in ${d}`, id: d => ` di ${d}`,
   fr: d => ` à ${d}`, de: d => ` in ${d}`, zh: d => ` ${d}`,
   nl: d => ` in ${d}`, ban: d => ` ring ${d}`,
+  pl: d => ` w ${d}`, uk: d => ` у ${d}`,
 }
 
 // Native-language fallback for the Product schema description (only reached
@@ -467,6 +468,8 @@ const VILLA_PRODUCT_DESC: Record<Lang, (bedrooms: number | null, district: strin
   zh: (b, d) => `${d ? `${d}` : ''}${b ? `${b}居室` : ''}别墅，印度尼西亚巴厘岛`,
   nl: (b, d) => `${b ? `${b}-slaapkamer ` : ''}villa${d ? ` in ${d}` : ''}, Bali, Indonesië`,
   ban: (b, d) => `Vila${b ? ` ${b} kamar pules` : ''}${d ? ` ring ${d}` : ''}, Bali, Indonesia`,
+  pl: (b, d) => `Willa${b ? ` z ${b} sypialniami` : ''}${d ? ` w ${d}` : ''}, Bali, Indonezja`,
+  uk: (b, d) => `Вілла${b ? ` з ${b} спальнями` : ''}${d ? ` у ${d}` : ''}, Балі, Індонезія`,
 }
 
 export const revalidate = 3600

@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { Send, Play } from 'lucide-react'
-import { pickCopy, type Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
 type Col = { title: string; links: { label: string; href: string }[] }
 
@@ -361,6 +361,94 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
       ],
     },
   ],
+  pl: [
+    {
+      title: 'Deweloperzy',
+      links: [
+        { label: 'Katalog', href: '/en/developers' },
+        { label: 'Wydarzenia', href: '/en/events' },
+        { label: 'Promocje', href: '/en/promo' },
+      ],
+    },
+    {
+      title: 'Nieruchomości',
+      links: [
+        { label: 'Kompleksy mieszkaniowe', href: '/en/complexes' },
+        { label: 'Wille', href: '/en/villas' },
+        { label: 'Apartamenty', href: '/en/apartments' },
+        { label: 'Wynajem długoterminowy', href: '/en/rental' },
+      ],
+    },
+    {
+      title: 'Informacje',
+      links: [
+        { label: 'Inwestycje w nieruchomości na Bali', href: '/en/bali-property-investment' },
+        { label: 'Życie na Bali — wizy i podatki', href: '/en/living-in-bali' },
+        { label: 'Jak kupić na Bali', href: '/en/how-to-buy' },
+        { label: 'Wyjazd inwestycyjny', href: '/en/invest-tour' },
+        { label: 'Rezerwacja', href: '/en/reservation' },
+        { label: 'Aktualności', href: '/en/news' },
+        { label: 'Wiedza', href: '/en/knowledge' },
+      ],
+    },
+    {
+      title: 'Usługi',
+      links: [
+        { label: 'Agenci', href: '/en/developers' },
+      ],
+    },
+    {
+      title: 'Praca',
+      links: [
+        { label: 'Oferty pracy w agencjach', href: '/en/contact' },
+        { label: 'Oferty pracy u deweloperów', href: '/en/contact' },
+      ],
+    },
+  ],
+  uk: [
+    {
+      title: 'Забудовники',
+      links: [
+        { label: 'Каталог', href: '/en/developers' },
+        { label: 'Заходи', href: '/en/events' },
+        { label: 'Акції', href: '/en/promo' },
+      ],
+    },
+    {
+      title: 'Нерухомість',
+      links: [
+        { label: 'Житлові комплекси', href: '/en/complexes' },
+        { label: 'Вілли', href: '/en/villas' },
+        { label: 'Апартаменти', href: '/en/apartments' },
+        { label: 'Довгострокова оренда', href: '/en/rental' },
+      ],
+    },
+    {
+      title: 'Інформація',
+      links: [
+        { label: 'Інвестиції в нерухомість Балі', href: '/en/bali-property-investment' },
+        { label: 'Життя на Балі — візи та податки', href: '/en/living-in-bali' },
+        { label: 'Як купити на Балі', href: '/en/how-to-buy' },
+        { label: 'Інвестиційний тур', href: '/en/invest-tour' },
+        { label: 'Бронювання', href: '/en/reservation' },
+        { label: 'Новини', href: '/en/news' },
+        { label: 'Знання', href: '/en/knowledge' },
+      ],
+    },
+    {
+      title: 'Послуги',
+      links: [
+        { label: 'Агенти', href: '/en/developers' },
+      ],
+    },
+    {
+      title: 'Робота',
+      links: [
+        { label: 'Вакансії агентств', href: '/en/contact' },
+        { label: 'Вакансії забудовників', href: '/en/contact' },
+      ],
+    },
+  ],
 }
 
 const BOTTOM_BY_LANG: Record<Lang, { label: string; href: string }[]> = {
@@ -444,6 +532,26 @@ const BOTTOM_BY_LANG: Record<Lang, { label: string; href: string }[]> = {
     { label: 'Cookie', href: '/en/cookie' },
     { label: 'Kontak', href: '/en/contact' },
   ],
+  pl: [
+    { label: 'O nas', href: '/en/about' },
+    { label: 'Reklama', href: '/en/contact' },
+    { label: 'Współpraca z deweloperami', href: '/en/contact' },
+    { label: 'Współpraca z agencjami', href: '/en/contact' },
+    { label: 'Polityka prywatności', href: '/en/privacy' },
+    { label: 'Warunki korzystania', href: '/en/terms' },
+    { label: 'Cookie', href: '/en/cookie' },
+    { label: 'Kontakt', href: '/en/contact' },
+  ],
+  uk: [
+    { label: 'Про нас', href: '/en/about' },
+    { label: 'Реклама', href: '/en/contact' },
+    { label: 'Співпраця із забудовниками', href: '/en/contact' },
+    { label: 'Співпраця з агентствами', href: '/en/contact' },
+    { label: 'Політика конфіденційності', href: '/en/privacy' },
+    { label: 'Умови використання', href: '/en/terms' },
+    { label: 'Cookie', href: '/en/cookie' },
+    { label: 'Контакти', href: '/en/contact' },
+  ],
 }
 
 const LICENSE_BY_LANG: Record<Lang, string> = {
@@ -455,6 +563,8 @@ const LICENSE_BY_LANG: Record<Lang, string> = {
   zh: '本网站的所有材料均依据「知识共享署名 4.0 国际」（Creative Commons Attribution 4.0 International）许可协议提供。您必须适当署名原作者，通过声明标明该许可协议，并在材料随原件一同提供时附上材料链接。',
   nl: 'Alle materialen op deze website zijn beschikbaar onder de Creative Commons Attribution 4.0 International-licentie. U moet de auteur van het werk op passende wijze vermelden, de licentie met een kennisgeving aangeven en een link naar het materiaal opnemen wanneer deze samen met het origineel worden verstrekt.',
   ban: 'Sami materi ring situs puniki kasayagayang ring sor lisensi Creative Commons Attribution 4.0 International. Ragane patut nyantenang kredit sane manut ring sang ngwangun karya, nyinahang lisensine antuk pawarah-warah, tur nyantenang tautan ka materine yening kasayagayang sinarengan ring materi aslinnyane.',
+  pl: 'Wszystkie materiały w tym serwisie są dostępne na licencji Creative Commons Attribution 4.0 International. Musisz odpowiednio wskazać autora dzieła, oznaczyć licencję stosowną informacją oraz podać link do materiału, jeśli zostały one udostępnione wraz z oryginałem.',
+  uk: 'Усі матеріали сайту доступні за ліцензією Creative Commons Attribution 4.0 International. Ви повинні належним чином зазначити автора твору, позначити ліцензію відповідним повідомленням і надати посилання на матеріал, якщо вони надані разом з оригіналом.',
 }
 
 export function Footer({ lang = 'ru' }: { lang?: Lang }) {
@@ -466,7 +576,7 @@ export function Footer({ lang = 'ru' }: { lang?: Lang }) {
       <div className="max-w-[1280px] mx-auto px-6 pt-12 pb-8">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
           <div className="md:col-span-4 lg:col-span-4">
-            <Link href={lang === 'ru' ? '/' : '/en'} aria-label="Balinsky" className="inline-block mb-5">
+            <Link href={lang === 'ru' ? '/' : `/${lang}`} aria-label="Balinsky" className="inline-block mb-5">
               <Image src="/logo.svg" alt="Balinsky" width={40} height={40} className="h-10 w-10" />
             </Link>
             <p className="text-[13px] leading-[1.6] text-[var(--color-text-muted)] max-w-[380px]">
@@ -504,7 +614,7 @@ export function Footer({ lang = 'ru' }: { lang?: Lang }) {
                   {col.links.map(l => (
                     <li key={l.label}>
                       <Link
-                        href={l.href}
+                        href={switchLangPath(l.href, lang)}
                         className="text-[14px] text-[#111827] hover:text-[var(--color-primary-pressed)] no-underline"
                       >
                         {l.label}
@@ -521,7 +631,7 @@ export function Footer({ lang = 'ru' }: { lang?: Lang }) {
           <ul className="flex flex-wrap items-center justify-center gap-x-7 gap-y-2 text-[13px] text-[var(--color-text)]">
             {bottom.map(l => (
               <li key={l.label}>
-                <Link href={l.href} className="hover:text-[var(--color-primary-pressed)] no-underline">
+                <Link href={switchLangPath(l.href, lang)} className="hover:text-[var(--color-primary-pressed)] no-underline">
                   {l.label}
                 </Link>
               </li>

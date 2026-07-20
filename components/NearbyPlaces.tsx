@@ -175,7 +175,7 @@ export function NearbyPlaces({
   const places: NearbyPlace[] = active
     ? [...(byCategory[active] ?? [])].sort((a, b) => a.distanceKm - b.distanceKm)
     : []
-  const numberLocale = ({ ru: 'ru-RU', en: 'en-GB', id: 'id-ID', fr: 'fr-FR', de: 'de-DE', zh: 'zh-CN', nl: 'nl-NL', ban: 'id-ID' } as const)[lang]
+  const numberLocale = ({ ru: 'ru-RU', en: 'en-GB', id: 'id-ID', fr: 'fr-FR', de: 'de-DE', zh: 'zh-CN', nl: 'nl-NL', ban: 'id-ID', pl: 'pl-PL', uk: 'uk-UA' } as const)[lang]
 
   return (
     <section className="mb-10">

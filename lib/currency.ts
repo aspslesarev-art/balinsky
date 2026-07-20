@@ -37,6 +37,8 @@ const LANG_SUFFIXES: Record<Lang, Suffixes> = {
   zh:  { thou: 'K',    mln: 'M',    mlrd: 'B',    decimal: '.' },
   nl:  { thou: 'K',    mln: 'mln',  mlrd: 'mld',  decimal: ',' },
   ban: { thou: 'K',    mln: 'M',    mlrd: 'B',    decimal: '.' },
+  pl:  { thou: 'tys.', mln: 'mln',  mlrd: 'mld',  decimal: ',' },
+  uk:  { thou: 'тис.', mln: 'млн',  mlrd: 'млрд', decimal: ',' },
 }
 
 // Thousands grouping for the exact (non-compact) number, per page language.
@@ -50,6 +52,8 @@ const EXACT_LOCALE: Record<Lang, string> = {
   zh:  'zh-CN',
   nl:  'nl-NL',
   ban: 'id-ID',
+  pl:  'pl-PL',
+  uk:  'uk-UA',
 }
 
 // $ and € on the Russian page keep Latin K/M/B (existing convention); every

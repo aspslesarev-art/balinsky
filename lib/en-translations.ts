@@ -37,10 +37,10 @@ type SectionCache = Record<string, Record<string, string>>
 // Filename suffix + Airtable field suffix per language. RU is the source
 // (never translated) and has no cache file.
 const FILE_SUFFIX: Record<Exclude<Lang, 'ru'>, string> = {
-  en: '', id: '-id', fr: '-fr', de: '-de', zh: '-zh', nl: '-nl', ban: '-ban',
+  en: '', id: '-id', fr: '-fr', de: '-de', zh: '-zh', nl: '-nl', ban: '-ban', pl: '-pl', uk: '-uk',
 }
 const FIELD_SUFFIX: Record<Exclude<Lang, 'ru'>, string> = {
-  en: ' EN', id: ' ID', fr: ' FR', de: ' DE', zh: ' ZH', nl: ' NL', ban: ' BAN',
+  en: ' EN', id: ' ID', fr: ' FR', de: ' DE', zh: ' ZH', nl: ' NL', ban: ' BAN', pl: ' PL', uk: ' UK',
 }
 
 /**

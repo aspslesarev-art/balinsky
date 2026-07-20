@@ -14,10 +14,10 @@ import { hasCyrillic, translitPreserveCase } from './translit'
 // 3) UI dictionary. Hardcoded labels (breadcrumbs, sections, buttons) by
 //    language, with the same fallback chain as tField.
 
-export type Lang = 'ru' | 'en' | 'id' | 'fr' | 'de' | 'zh' | 'nl' | 'ban'
+export type Lang = 'ru' | 'en' | 'id' | 'fr' | 'de' | 'zh' | 'nl' | 'ban' | 'pl' | 'uk'
 
 /** All supported languages, RU first (source/x-default). */
-export const LANGS: readonly Lang[] = ['ru', 'en', 'id', 'fr', 'de', 'zh', 'nl', 'ban'] as const
+export const LANGS: readonly Lang[] = ['ru', 'en', 'id', 'fr', 'de', 'zh', 'nl', 'ban', 'pl', 'uk'] as const
 
 /** Non-RU languages that have a fallback chain toward RU. */
 type NonRuLang = Exclude<Lang, 'ru'>
@@ -34,6 +34,8 @@ const FALLBACK: Record<NonRuLang, NonRuLang[]> = {
   zh: ['en'],
   nl: ['en'],
   ban: ['en'],
+  pl: ['en'],
+  uk: ['en'],
 }
 
 // Airtable column suffixes to probe for each non-RU language. Case
@@ -46,6 +48,8 @@ const FIELD_SUFFIX: Record<NonRuLang, string[]> = {
   zh: [' ZH', ' Zh'],
   nl: [' NL', ' Nl'],
   ban: [' BAN', ' Ban'],
+  pl: [' PL', ' Pl'],
+  uk: [' UK', ' Uk'],
 }
 
 // ---- Airtable field unwrap + translate -----------------------------------
@@ -124,36 +128,36 @@ export const tFieldOrRu = tField
 // identical across languages. Folder names under app/<lang>/ MUST match
 // these exact values so the URLs and the hreflang cluster line up.
 const SEGMENT_TABLE: Record<string, Record<NonRuLang, string>> = {
-  villy:              { en: 'villas',      id: 'vila',       fr: 'villas',              de: 'villen',          zh: 'bieshu',      nl: 'villas',          ban: 'vila' },
-  apartamenty:        { en: 'apartments',  id: 'apartemen',  fr: 'appartements',        de: 'apartments',      zh: 'gongyu',      nl: 'appartementen',   ban: 'apartemen' },
-  'zhilye-kompleksy': { en: 'complexes',   id: 'kompleks',   fr: 'residences',          de: 'wohnanlagen',     zh: 'zhuzhaiqu',   nl: 'wooncomplexen',   ban: 'kompleks' },
-  zastrojshhiki:      { en: 'developers',  id: 'pengembang', fr: 'promoteurs',          de: 'bautraeger',      zh: 'kaifashang',  nl: 'ontwikkelaars',   ban: 'pangwangun' },
-  arenda:             { en: 'rental',      id: 'sewa',       fr: 'location',            de: 'miete',           zh: 'zulin',       nl: 'huur',            ban: 'sewa' },
-  meropriyatiya:      { en: 'events',      id: 'acara',      fr: 'evenements',          de: 'veranstaltungen', zh: 'huodong',     nl: 'evenementen',     ban: 'acara' },
-  novosti:            { en: 'news',        id: 'berita',     fr: 'actualites',          de: 'nachrichten',     zh: 'xinwen',      nl: 'nieuws',          ban: 'orti' },
-  znaniya:            { en: 'knowledge',   id: 'panduan',    fr: 'guide',               de: 'ratgeber',        zh: 'zhinan',      nl: 'gids',            ban: 'kaweruhan' },
-  akcii:              { en: 'promo',       id: 'promo',      fr: 'offres',              de: 'angebote',        zh: 'youhui',      nl: 'aanbiedingen',    ban: 'promo' },
-  izbrannoe:          { en: 'favourites',  id: 'favorit',    fr: 'favoris',             de: 'favoriten',       zh: 'shoucang',    nl: 'favorieten',      ban: 'kaplihan' },
-  'kak-kupit':        { en: 'how-to-buy',  id: 'cara-beli',  fr: 'comment-acheter',     de: 'kaufen',          zh: 'ruhe-goumai', nl: 'hoe-te-kopen',    ban: 'carane-numbas' },
-  rezervirovanie:     { en: 'reservation', id: 'reservasi',  fr: 'reservation',         de: 'reservierung',    zh: 'yuding',      nl: 'reservering',     ban: 'reservasi' },
-  'o-balinsky':       { en: 'about',       id: 'tentang',    fr: 'a-propos',            de: 'ueber-uns',       zh: 'guanyu',      nl: 'over-ons',        ban: 'indik' },
-  karta:              { en: 'map',         id: 'peta',       fr: 'carte',               de: 'karte',           zh: 'ditu',        nl: 'kaart',           ban: 'peta' },
-  poisk:              { en: 'search',      id: 'cari',       fr: 'recherche',           de: 'suche',           zh: 'sousuo',      nl: 'zoeken',          ban: 'ngrereh' },
-  kontakty:           { en: 'contact',     id: 'kontak',     fr: 'contact',             de: 'kontakt',         zh: 'lianxi',      nl: 'contact',         ban: 'kontak' },
-  sdano:              { en: 'completed-in', id: 'selesai-tahun', fr: 'livre-en',        de: 'fertig-in',       zh: 'jungong',     nl: 'opgeleverd-in',   ban: 'puput-ring' },
-  'zhizn-na-bali':    { en: 'living-in-bali', id: 'hidup-di-bali', fr: 'vivre-a-bali',  de: 'leben-auf-bali',  zh: 'bali-shenghuo', nl: 'wonen-op-bali', ban: 'urip-ring-bali' },
-  'investicii-v-nedvizhimost-bali': { en: 'bali-property-investment', id: 'investasi-properti-bali', fr: 'investissement-immobilier-bali', de: 'bali-immobilien-investment', zh: 'bali-fangchan-touzi', nl: 'bali-vastgoed-investering', ban: 'investasi-properti-bali' },
-  'invest-tour':      { en: 'invest-tour', id: 'invest-tour', fr: 'invest-tour',        de: 'invest-tour',     zh: 'invest-tour', nl: 'invest-tour',     ban: 'invest-tour' },
-  cookie:             { en: 'cookie',      id: 'cookie',     fr: 'cookie',              de: 'cookie',          zh: 'cookie',      nl: 'cookie',          ban: 'cookie' },
-  'politika-konfidencialnosti': { en: 'privacy', id: 'privasi', fr: 'confidentialite',  de: 'datenschutz',     zh: 'yinsi',       nl: 'privacy',         ban: 'privasi' },
-  usloviya:           { en: 'terms',       id: 'ketentuan',  fr: 'conditions',          de: 'agb',             zh: 'tiaokuan',    nl: 'voorwaarden',     ban: 'ketentuan' },
+  villy:              { en: 'villas',      id: 'vila',       fr: 'villas',              de: 'villen',          zh: 'bieshu',      nl: 'villas',          ban: 'vila',            pl: 'wille',                    uk: 'vily' },
+  apartamenty:        { en: 'apartments',  id: 'apartemen',  fr: 'appartements',        de: 'apartments',      zh: 'gongyu',      nl: 'appartementen',   ban: 'apartemen',       pl: 'apartamenty',              uk: 'apartamenty' },
+  'zhilye-kompleksy': { en: 'complexes',   id: 'kompleks',   fr: 'residences',          de: 'wohnanlagen',     zh: 'zhuzhaiqu',   nl: 'wooncomplexen',   ban: 'kompleks',        pl: 'kompleksy',                uk: 'kompleksy' },
+  zastrojshhiki:      { en: 'developers',  id: 'pengembang', fr: 'promoteurs',          de: 'bautraeger',      zh: 'kaifashang',  nl: 'ontwikkelaars',   ban: 'pangwangun',      pl: 'deweloperzy',              uk: 'zabudovnyky' },
+  arenda:             { en: 'rental',      id: 'sewa',       fr: 'location',            de: 'miete',           zh: 'zulin',       nl: 'huur',            ban: 'sewa',            pl: 'wynajem',                  uk: 'orenda' },
+  meropriyatiya:      { en: 'events',      id: 'acara',      fr: 'evenements',          de: 'veranstaltungen', zh: 'huodong',     nl: 'evenementen',     ban: 'acara',           pl: 'wydarzenia',               uk: 'podiyi' },
+  novosti:            { en: 'news',        id: 'berita',     fr: 'actualites',          de: 'nachrichten',     zh: 'xinwen',      nl: 'nieuws',          ban: 'orti',            pl: 'aktualnosci',              uk: 'novyny' },
+  znaniya:            { en: 'knowledge',   id: 'panduan',    fr: 'guide',               de: 'ratgeber',        zh: 'zhinan',      nl: 'gids',            ban: 'kaweruhan',       pl: 'poradnik',                 uk: 'poradnyk' },
+  akcii:              { en: 'promo',       id: 'promo',      fr: 'offres',              de: 'angebote',        zh: 'youhui',      nl: 'aanbiedingen',    ban: 'promo',           pl: 'promocje',                 uk: 'aktsiyi' },
+  izbrannoe:          { en: 'favourites',  id: 'favorit',    fr: 'favoris',             de: 'favoriten',       zh: 'shoucang',    nl: 'favorieten',      ban: 'kaplihan',        pl: 'ulubione',                 uk: 'obrane' },
+  'kak-kupit':        { en: 'how-to-buy',  id: 'cara-beli',  fr: 'comment-acheter',     de: 'kaufen',          zh: 'ruhe-goumai', nl: 'hoe-te-kopen',    ban: 'carane-numbas',   pl: 'jak-kupic',                uk: 'yak-kupyty' },
+  rezervirovanie:     { en: 'reservation', id: 'reservasi',  fr: 'reservation',         de: 'reservierung',    zh: 'yuding',      nl: 'reservering',     ban: 'reservasi',       pl: 'rezerwacja',               uk: 'rezervuvannia' },
+  'o-balinsky':       { en: 'about',       id: 'tentang',    fr: 'a-propos',            de: 'ueber-uns',       zh: 'guanyu',      nl: 'over-ons',        ban: 'indik',           pl: 'o-nas',                    uk: 'pro-nas' },
+  karta:              { en: 'map',         id: 'peta',       fr: 'carte',               de: 'karte',           zh: 'ditu',        nl: 'kaart',           ban: 'peta',            pl: 'mapa',                     uk: 'karta' },
+  poisk:              { en: 'search',      id: 'cari',       fr: 'recherche',           de: 'suche',           zh: 'sousuo',      nl: 'zoeken',          ban: 'ngrereh',         pl: 'szukaj',                   uk: 'poshuk' },
+  kontakty:           { en: 'contact',     id: 'kontak',     fr: 'contact',             de: 'kontakt',         zh: 'lianxi',      nl: 'contact',         ban: 'kontak',          pl: 'kontakt',                  uk: 'kontakty' },
+  sdano:              { en: 'completed-in', id: 'selesai-tahun', fr: 'livre-en',        de: 'fertig-in',       zh: 'jungong',     nl: 'opgeleverd-in',   ban: 'puput-ring',      pl: 'oddane-w',                 uk: 'zdano-v' },
+  'zhizn-na-bali':    { en: 'living-in-bali', id: 'hidup-di-bali', fr: 'vivre-a-bali',  de: 'leben-auf-bali',  zh: 'bali-shenghuo', nl: 'wonen-op-bali', ban: 'urip-ring-bali', pl: 'zycie-na-bali',            uk: 'zhyttia-na-bali' },
+  'investicii-v-nedvizhimost-bali': { en: 'bali-property-investment', id: 'investasi-properti-bali', fr: 'investissement-immobilier-bali', de: 'bali-immobilien-investment', zh: 'bali-fangchan-touzi', nl: 'bali-vastgoed-investering', ban: 'investasi-properti-bali', pl: 'inwestycje-nieruchomosci-bali', uk: 'investytsiyi-nerukhomist-bali' },
+  'invest-tour':      { en: 'invest-tour', id: 'invest-tour', fr: 'invest-tour',        de: 'invest-tour',     zh: 'invest-tour', nl: 'invest-tour',     ban: 'invest-tour',     pl: 'invest-tour',              uk: 'invest-tour' },
+  cookie:             { en: 'cookie',      id: 'cookie',     fr: 'cookie',              de: 'cookie',          zh: 'cookie',      nl: 'cookie',          ban: 'cookie',          pl: 'cookie',                   uk: 'cookie' },
+  'politika-konfidencialnosti': { en: 'privacy', id: 'privasi', fr: 'confidentialite',  de: 'datenschutz',     zh: 'yinsi',       nl: 'privacy',         ban: 'privasi',         pl: 'prywatnosc',               uk: 'konfidentsiynist' },
+  usloviya:           { en: 'terms',       id: 'ketentuan',  fr: 'conditions',          de: 'agb',             zh: 'tiaokuan',    nl: 'voorwaarden',     ban: 'ketentuan',       pl: 'regulamin',                uk: 'umovy' },
 }
 
 // value(in any language) -> canonical RU key. Built once at module load.
 const SEG_TO_CANON: Record<string, string> = {}
 for (const [ru, m] of Object.entries(SEGMENT_TABLE)) {
   SEG_TO_CANON[ru] = ru
-  for (const l of ['en', 'id', 'fr', 'de', 'zh', 'nl', 'ban'] as const) SEG_TO_CANON[m[l]] = ru
+  for (const l of ['en', 'id', 'fr', 'de', 'zh', 'nl', 'ban', 'pl', 'uk'] as const) SEG_TO_CANON[m[l]] = ru
 }
 
 /** Convert a single path segment to `target`. Pass-through for unknowns. */
@@ -515,6 +519,88 @@ export const UI = {
     'misc.loading': 'Ngamuat…',
     'misc.empty': 'Puyung',
     'misc.notFound': 'Nenten kapanggih',
+  },
+  pl: {
+    'nav.villas': 'Wille',
+    'nav.apartments': 'Apartamenty',
+    'nav.complexes': 'Kompleksy mieszkaniowe',
+    'nav.developers': 'Deweloperzy',
+    'nav.rental': 'Wynajem długoterminowy',
+    'breadcrumbs.home': 'Strona główna',
+    'breadcrumbs.villas': 'Wille',
+    'breadcrumbs.apartments': 'Apartamenty',
+    'breadcrumbs.complexes': 'Kompleksy mieszkaniowe',
+    'breadcrumbs.developers': 'Deweloperzy',
+    'price.label': 'Cena',
+    'price.priceUpdated': 'Cena zaktualizowana',
+    'price.perSqm': 'za m²',
+    'cta.buy': 'Kup',
+    'cta.buyChat': 'Kup — czat na Telegramie',
+    'cta.buySeller': 'Kup — skontaktuj się ze sprzedawcą',
+    'cta.reserve': 'Zarezerwuj',
+    'facts.bedrooms': 'Sypialnie',
+    'facts.area': 'Powierzchnia',
+    'facts.land': 'Działka',
+    'facts.year': 'Termin oddania',
+    'facts.district': 'Rejon',
+    'facts.airport': 'Do lotniska',
+    'facts.priceM2': 'Cena za m²',
+    'sections.faq': 'Najczęściej zadawane pytania',
+    'sections.location': 'Lokalizacja',
+    'sections.about': 'O nieruchomości',
+    'sections.description': 'Opis',
+    'sections.priceBreakdown': 'Rozbicie ceny',
+    'sections.investment': 'Potencjał inwestycyjny',
+    'sections.developer': 'Deweloper',
+    'sections.complex': 'Kompleks mieszkaniowy',
+    'sections.related': 'Podobne nieruchomości',
+    'reserved.banner.title': 'Obecnie zarezerwowane',
+    'reserved.banner.until': 'Rezerwacja ważna do',
+    'misc.viewAll': 'Zobacz wszystkie →',
+    'misc.loading': 'Ładowanie…',
+    'misc.empty': 'Pusto',
+    'misc.notFound': 'Nie znaleziono',
+  },
+  uk: {
+    'nav.villas': 'Вілли',
+    'nav.apartments': 'Апартаменти',
+    'nav.complexes': 'Житлові комплекси',
+    'nav.developers': 'Забудовники',
+    'nav.rental': 'Довгострокова оренда',
+    'breadcrumbs.home': 'Головна',
+    'breadcrumbs.villas': 'Вілли',
+    'breadcrumbs.apartments': 'Апартаменти',
+    'breadcrumbs.complexes': 'Житлові комплекси',
+    'breadcrumbs.developers': 'Забудовники',
+    'price.label': 'Ціна',
+    'price.priceUpdated': 'Ціну оновлено',
+    'price.perSqm': 'за м²',
+    'cta.buy': 'Купити',
+    'cta.buyChat': 'Купити — чат у Telegram',
+    'cta.buySeller': 'Купити — зв’язатися з продавцем',
+    'cta.reserve': 'Зарезервувати',
+    'facts.bedrooms': 'Спальні',
+    'facts.area': 'Площа',
+    'facts.land': 'Ділянка',
+    'facts.year': 'Здача',
+    'facts.district': 'Район',
+    'facts.airport': 'До аеропорту',
+    'facts.priceM2': 'Ціна за м²',
+    'sections.faq': 'Часті запитання',
+    'sections.location': 'Розташування',
+    'sections.about': 'Про об’єкт',
+    'sections.description': 'Опис',
+    'sections.priceBreakdown': 'Розбивка ціни',
+    'sections.investment': 'Інвестиційний потенціал',
+    'sections.developer': 'Забудовник',
+    'sections.complex': 'Житловий комплекс',
+    'sections.related': 'Схожі об’єкти',
+    'reserved.banner.title': 'Наразі заброньовано',
+    'reserved.banner.until': 'Бронювання діє до',
+    'misc.viewAll': 'Переглянути всі →',
+    'misc.loading': 'Завантаження…',
+    'misc.empty': 'Порожньо',
+    'misc.notFound': 'Не знайдено',
   },
 } as const
 

@@ -115,6 +115,30 @@ const FAQ_ITEMS: Record<Lang, FaqItem[]> = {
     { q: 'Sapunapi komisi agen?',
       a: 'Yening numbas nganggen agen, kira-kira 3–5% saking aji properti. Akeh pangwangun maicayang penghematan puniki ring sane numbas langsung.' },
   ],
+  pl: [
+    { q: 'Którzy deweloperzy działają na Bali?',
+      a: 'Na wyspie działa ponad 80 deweloperów. Znane nazwy: Alex Villas, Magnum Estate, BREIG, Bali Capital Group, Anta Group, Taryan Group, Oceaniq, Sunny Development. Większość specjalizuje się w 1–2 dzielnicach.' },
+    { q: 'Jak sprawdzić wiarygodność dewelopera?',
+      a: 'Standardowe sygnały: liczba ukończonych projektów, obecność prawdziwej firmy zarządzającej, ważne pozwolenie PBG/SLF na bieżącej budowie, przejrzysta forma własności (leasehold / freehold) oraz opinie wcześniejszych nabywców. Zbieramy te dane na karcie każdego dewelopera.' },
+    { q: 'Gdzie powstaje najwięcej nowych projektów?',
+      a: 'Najbardziej aktywne rejony to obecnie Canggu (Berawa, Batu Bolong, Pererenan), Bukit (Uluwatu, Pandawa, Melasti) i Ubud. Sanur rozwija się na wschodnim wybrzeżu, a Cemagi / Seseh na północy półwyspu.' },
+    { q: 'Czy mogę kupić nieruchomość bezpośrednio od dewelopera?',
+      a: 'Tak. Większość deweloperów na Bali sprzedaje bezpośrednio, bez pośredników. Transakcję finalizuje się u notariusza PPAT, a płatność przebiega według harmonogramu powiązanego z etapami budowy.' },
+    { q: 'Jaka jest prowizja agenta?',
+      a: 'Przy zakupie przez agenta należy liczyć się z 3–5% ceny nieruchomości. Wielu deweloperów przekazuje tę oszczędność nabywcy, który przychodzi bezpośrednio.' },
+  ],
+  uk: [
+    { q: 'Які забудовники працюють на Балі?',
+      a: 'На острові активно працює понад 80 забудовників. Помітні імена: Alex Villas, Magnum Estate, BREIG, Bali Capital Group, Anta Group, Taryan Group, Oceaniq, Sunny Development. Більшість спеціалізується на 1–2 районах.' },
+    { q: 'Як перевірити надійність забудовника?',
+      a: 'Стандартні сигнали: кількість зданих проєктів, наявність справжньої керуючої компанії, чинний дозвіл PBG/SLF на поточному будівництві, прозора форма власності (leasehold / freehold) та відгуки попередніх покупців. Ми агрегуємо ці дані на картці кожного забудовника.' },
+    { q: 'Де будується найбільше нових проєктів?',
+      a: 'Найактивніші райони зараз — Чангу (Berawa, Batu Bolong, Pererenan), Букіт (Uluwatu, Pandawa, Melasti) та Убуд. Санур зростає на східному узбережжі, а Cemagi / Seseh — на півночі півострова.' },
+    { q: 'Чи можна купити обʼєкт безпосередньо у забудовника?',
+      a: 'Так. Більшість забудовників на Балі продають безпосередньо, без посередників. Угода оформлюється у нотаріуса PPAT, оплата відбувається за графіком, привʼязаним до етапів будівництва.' },
+    { q: 'Яка комісія агента?',
+      a: 'При купівлі через агента зазвичай це 3–5% від вартості обʼєкта. Багато забудовників віддають цю економію покупцеві, який приходить безпосередньо.' },
+  ],
 }
 
 const COPY = {
