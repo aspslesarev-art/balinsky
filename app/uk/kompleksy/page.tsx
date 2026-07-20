@@ -18,7 +18,7 @@ export async function generateMetadata({ searchParams }: { searchParams: SP }) {
     noIndex: hasAnyFilter(f) && buildCanonicalPath(f) !== null,
   })
   if (!hasAnyFilter(f)) {
-    const cat = generateCategoryMeta({ category: 'complexes', locale: 'en', ...villaCategoryStats((await loadAll()).enriched) })
+    const cat = generateCategoryMeta({ category: 'complexes', locale: 'uk', ...villaCategoryStats((await loadAll()).enriched) })
     return { ...base, title: cat.title, description: cat.description }
   }
   return base

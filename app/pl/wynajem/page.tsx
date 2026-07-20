@@ -6,7 +6,7 @@ export const revalidate = 600
 
 export async function generateMetadata() {
   const base = generateRentalListMetadata('pl')
-  const cat = generateCategoryMeta({ category: 'rental', locale: 'en', count: (await loadFreshRental('pl')).length })
+  const cat = generateCategoryMeta({ category: 'rental', locale: 'pl', count: (await loadFreshRental('pl')).length })
   return { ...base, title: cat.title, description: cat.description }
 }
 

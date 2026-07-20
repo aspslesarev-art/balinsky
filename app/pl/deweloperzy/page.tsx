@@ -5,7 +5,7 @@ import { publishedDeveloperCount } from '@/lib/category-stats'
 export const revalidate = 3600
 
 export async function generateMetadata() {
-  const cat = generateCategoryMeta({ category: 'developers', locale: 'en', ...(await publishedDeveloperCount()) })
+  const cat = generateCategoryMeta({ category: 'developers', locale: 'pl', ...(await publishedDeveloperCount()) })
   return { ...metadata, title: cat.title, description: cat.description }
 }
 
