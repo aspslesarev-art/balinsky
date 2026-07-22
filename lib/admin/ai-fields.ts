@@ -12,6 +12,7 @@ export type AiTask =
   | 'yield'
   | 'team'
   | 'reputation'
+  | 'search_variants'
   | 'en_translate'
 
 /** Map a field key to an AI task, or null if this field has no generator. */
@@ -28,6 +29,9 @@ export function aiTaskFor(field: string): AiTask | null {
   if (k === 'доходность' || k === 'заявленная доходность') return 'yield'
   if (k === 'команда') return 'team'
   if (k.includes('репутац')) return 'reputation'
+  // «Варианты поиска застройщика / комплекса» — список написаний под которые
+  // матчится запись (латиница/кириллица, сокращения, опечатки).
+  if (k.startsWith('варианты поиска') || k.includes('варианты написания')) return 'search_variants'
   // Headline for editorial items (news/promo/events manifest field is `title`).
   if (k === 'title' || k === 'название материала') return 'headline'
   // Long descriptive text (villa/apt/complex descriptions, developer AI text,

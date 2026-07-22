@@ -12,6 +12,7 @@ export type FieldType =
   | 'number'
   | 'bool'
   | 'enum'
+  | 'multienum' // several values from the same list; stored as a string[]
   | 'date'
   | 'photos' // synthetic — backed by a per-record photo manifest (lib/admin/photos.ts)
   | 'geo'
@@ -40,6 +41,9 @@ export type FieldDef = {
   /** RU label shown in the grid header + side panel. */
   label: string
   type: FieldType
+  /** Fixed choices for enum/multienum. Omit to offer the values already
+   *  present in the column instead (see lib/admin/field-values.ts) — that
+   *  stays correct as editors introduce new statuses. */
   enumOptions?: string[]
   /** Computed / Airtable-owned — render but block editing. */
   readOnly?: boolean

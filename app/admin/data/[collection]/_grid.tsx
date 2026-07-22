@@ -131,7 +131,7 @@ export function DataGridScreen({
   }, [rows, aiField, genRow])
 
   const startEdit = (r: RecordRow, c: FieldDef) => {
-    if (c.readOnly || c.type === 'bool' || c.type === 'link' || c.type === 'image') return
+    if (c.readOnly || c.type === 'bool' || c.type === 'link' || c.type === 'image' || c.type === 'multienum') return
     setEdit({ rowId: r.id, key: c.key }); setEditText(editableText(r.fields[c.key]))
   }
   const commitEdit = () => {
@@ -256,7 +256,7 @@ export function DataGridScreen({
                   if (isEditing) {
                     return (
                       <td key={c.key} style={sticky ? { left: 36 } : undefined} className={`${base} p-0`}>
-                        {c.type === 'enum' ? (
+                        {c.type === 'enum' && c.enumOptions?.length ? (
                           <select autoFocus value={editText} onChange={e => setEditText(e.target.value)} onBlur={commitEdit}
                             className="w-full px-2 py-1.5 text-[13px] bg-[var(--ax-input-bg)] border-2 border-[var(--color-primary)] outline-none">
                             <option value="">—</option>
@@ -358,7 +358,7 @@ function FilterPanel({ cols, filters, setFilters }: {
               className="px-2 py-1.5 rounded-lg text-[12.5px] bg-[var(--ax-input-bg)] border border-[var(--ax-input-border)] text-[var(--ax-fg)] outline-none max-w-[200px]">
               {cols.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
             </select>
-            {col?.type === 'enum' ? (
+            {col?.type === 'enum' && col.enumOptions?.length ? (
               <select value={f.value} onChange={e => update(i, { value: e.target.value })}
                 className="flex-1 px-2 py-1.5 rounded-lg text-[12.5px] bg-[var(--ax-input-bg)] border border-[var(--ax-input-border)] text-[var(--ax-fg)] outline-none">
                 <option value="">— любое —</option>

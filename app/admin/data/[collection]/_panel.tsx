@@ -215,6 +215,14 @@ function FieldEditor({ f, value, onChange, collection, row }: { f: FieldDef; val
     return <JsonField f={f} value={value} onChange={onChange} />
   }
 
+  if ((f.type === 'enum' || f.type === 'multienum') && !f.readOnly && collection) {
+    return <ChoiceField f={f} collection={collection} value={value} onChange={onChange} />
+  }
+
+  if (f.type === 'date' && !f.readOnly) {
+    return <DateField f={f} value={value} onChange={onChange} />
+  }
+
   const showAi = !f.readOnly && collection && (f.type === 'text' || f.type === 'longtext') && hasAi(f.key)
   return (
     <div>
@@ -273,6 +281,143 @@ function JsonField({ f, value, onChange }: { f: FieldDef; value: unknown; onChan
         className={`w-full rounded-xl border px-3 py-2 text-[12px] font-mono bg-[var(--ax-panel)] text-[var(--ax-fg)] ${invalid ? 'border-red-500' : 'border-[var(--ax-border)]'}`}
       />
       {invalid && <div className="mt-1 text-[11px] text-red-500">Невалидный JSON — правка не сохранится, пока не исправите</div>}
+    </div>
+  )
+}
+
+
+// Choices come from the column itself unless the config pins them, so a new
+// status an editor invents shows up for everyone next time. Typing a value
+// that isn't on the list is still allowed — the list is a shortcut, not a
+// constraint.
+function useFieldValues(collection: string, f: FieldDef): { values: string[]; loading: boolean } {
+  const [values, setValues] = useState<string[]>(f.enumOptions ?? [])
+  const [loading, setLoading] = useState(!f.enumOptions)
+
+  useEffect(() => {
+    if (f.enumOptions) return
+    let alive = true
+    setLoading(true)
+    fetch(`/api/admin/data/${collection}/values?field=${encodeURIComponent(f.key)}`)
+      .then(r => r.ok ? r.json() : { values: [] })
+      .then((j: { values?: string[] }) => { if (alive) setValues(j.values ?? []) })
+      .catch(() => { if (alive) setValues([]) })
+      .finally(() => { if (alive) setLoading(false) })
+    return () => { alive = false }
+  }, [collection, f.key, f.enumOptions])
+
+  return { values, loading }
+}
+
+function asStringList(v: unknown): string[] {
+  if (Array.isArray(v)) return v.map(x => String(x).trim()).filter(Boolean)
+  if (typeof v === 'string') return v.split(',').map(x => x.trim()).filter(Boolean)
+  if (v == null) return []
+  return [String(v)]
+}
+
+function ChoiceField({ f, collection, value, onChange }: { f: FieldDef; collection: string; value: unknown; onChange: (v: unknown) => void }) {
+  const { values, loading } = useFieldValues(collection, f)
+  const [custom, setCustom] = useState('')
+  const multi = f.type === 'multienum'
+  const selected = multi ? asStringList(value) : []
+  const single = multi ? '' : asText(value)
+
+  // Whatever this record already holds belongs in the list even if no other
+  // record uses it — otherwise opening the panel would silently drop it.
+  const options = [...new Set([...(multi ? selected : single ? [single] : []), ...values])]
+
+  function toggle(v: string) {
+    onChange(selected.includes(v) ? selected.filter(x => x !== v) : [...selected, v])
+  }
+
+  function addCustom() {
+    const v = custom.trim()
+    if (!v) return
+    if (multi) { if (!selected.includes(v)) onChange([...selected, v]) }
+    else onChange(v)
+    setCustom('')
+  }
+
+  return (
+    <div>
+      <Label f={f} />
+      {multi ? (
+        <div className="rounded-xl border border-[var(--ax-border)] bg-[var(--ax-panel)] px-3 py-2">
+          {selected.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {selected.map(v => (
+                <button key={v} type="button" onClick={() => toggle(v)}
+                  className="inline-flex items-center gap-1 rounded-lg bg-[var(--ax-accent-soft,rgba(59,130,246,0.14))] text-[var(--ax-fg)] px-2 py-0.5 text-[12px]">
+                  {v}<span className="opacity-60">×</span>
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="max-h-40 overflow-y-auto flex flex-col gap-1">
+            {loading && <div className="text-[12px] text-[var(--ax-fg-faint)]">Загружаю варианты…</div>}
+            {options.filter(v => !selected.includes(v)).map(v => (
+              <button key={v} type="button" onClick={() => toggle(v)}
+                className="text-left text-[13px] text-[var(--ax-fg-soft)] hover:text-[var(--ax-fg)] px-1 py-0.5 rounded">
+                + {v}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <select
+          value={single}
+          onChange={e => onChange(e.target.value || null)}
+          className="w-full rounded-xl border border-[var(--ax-border)] bg-[var(--ax-panel)] text-[var(--ax-fg)] px-3 py-2 text-[13px]"
+        >
+          <option value="">—</option>
+          {options.map(v => <option key={v} value={v}>{v}</option>)}
+        </select>
+      )}
+      <div className="mt-1.5 flex gap-1.5">
+        <input
+          type="text"
+          value={custom}
+          placeholder={loading ? 'Загружаю варианты…' : 'Свой вариант'}
+          onChange={e => setCustom(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustom() } }}
+          className="flex-1 rounded-xl border border-[var(--ax-border)] bg-[var(--ax-panel)] text-[var(--ax-fg)] px-3 py-1.5 text-[12px]"
+        />
+        <button type="button" onClick={addCustom}
+          className="rounded-xl border border-[var(--ax-border)] px-3 py-1.5 text-[12px] text-[var(--ax-fg-soft)] hover:text-[var(--ax-fg)]">
+          Добавить
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// Dates arrive in several shapes across the tables (ISO timestamps from the
+// manifests, plain YYYY-MM-DD elsewhere). The picker edits the date part and
+// keeps the original time when there was one, so saving a date doesn't
+// silently reset a timestamp to midnight.
+function DateField({ f, value, onChange }: { f: FieldDef; value: unknown; onChange: (v: unknown) => void }) {
+  const raw = asText(value)
+  const hasTime = /\d{2}:\d{2}/.test(raw)
+  const datePart = raw.slice(0, 10)
+
+  function edit(next: string) {
+    if (!next) { onChange(null); return }
+    onChange(hasTime ? next + raw.slice(10) : next)
+  }
+
+  return (
+    <div>
+      <Label f={f} />
+      <input
+        type="date"
+        value={/^\d{4}-\d{2}-\d{2}$/.test(datePart) ? datePart : ''}
+        onChange={e => edit(e.target.value)}
+        className="w-full rounded-xl border border-[var(--ax-border)] bg-[var(--ax-panel)] text-[var(--ax-fg)] px-3 py-2 text-[13px]"
+      />
+      {raw && !/^\d{4}-\d{2}-\d{2}/.test(raw) && (
+        <div className="mt-1 text-[11px] text-[var(--ax-fg-faint)]">Текущее значение: {raw}</div>
+      )}
     </div>
   )
 }
