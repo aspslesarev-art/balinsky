@@ -739,8 +739,8 @@ export function LandProfileBlock({ data, lang = 'ru' }: { data: LandProfileProps
     : buildHeightRaw
   const facts = [
     kecShort,
-    data.kdb_percent != null ? (lang === 'ru' ? `застройка до ${data.kdb_percent}%` : `up to ${data.kdb_percent}% built`) : null,
-    buildHeight ? (lang === 'ru' ? `высота ${buildHeight}` : `height ${buildHeight}`) : null,
+    data.kdb_percent != null ? pickCopy({ ru: `застройка до ${data.kdb_percent}%`, en: `up to ${data.kdb_percent}% built`, id: `terbangun hingga ${data.kdb_percent}%`, fr: `jusqu'à ${data.kdb_percent}% bâti`, de: `bis zu ${data.kdb_percent}% bebaut`, zh: `最多建${data.kdb_percent}%`, nl: `tot ${data.kdb_percent}% bebouwd`, ban: `kantos ${data.kdb_percent}% kawangun`, pl: `zabudowa do ${data.kdb_percent}%`, uk: `забудова до ${data.kdb_percent}%` }, lang) : null,
+    buildHeight ? pickCopy({ ru: `высота ${buildHeight}`, en: `height ${buildHeight}`, id: `tinggi ${buildHeight}`, fr: `hauteur ${buildHeight}`, de: `Höhe ${buildHeight}`, zh: `高度 ${buildHeight}`, nl: `hoogte ${buildHeight}`, ban: `tegeh ${buildHeight}`, pl: `wysokość ${buildHeight}`, uk: `висота ${buildHeight}` }, lang) : null,
   ].filter(Boolean)
 
   // 3 documents, only those that exist.

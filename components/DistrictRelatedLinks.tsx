@@ -126,8 +126,8 @@ export function DistrictRelatedLinks({
   const links = [
     { Icon: HardHat,    label: c.devs,      href: `${devsHref}?area=${districtSlug}` },
     currentKind !== 'complex'   ? { Icon: Building2,  label: c.complexes, href: complexesUrl } : null,
-    currentKind !== 'villa'     ? { Icon: Building2,  label: lang === 'ru' ? 'Виллы' : 'Villas',          href: villasUrl } : null,
-    currentKind !== 'apartment' ? { Icon: Building2,  label: lang === 'ru' ? 'Апартаменты' : 'Apartments', href: aptsUrl } : null,
+    currentKind !== 'villa'     ? { Icon: Building2,  label: pickCopy({ ru: 'Виллы', en: 'Villas', id: 'Vila', fr: 'Villas', de: 'Villen', zh: '别墅', nl: 'Villa’s', ban: 'Vila', pl: 'Wille', uk: 'Вілли' }, lang),          href: villasUrl } : null,
+    currentKind !== 'apartment' ? { Icon: Building2,  label: pickCopy({ ru: 'Апартаменты', en: 'Apartments', id: 'Apartemen', fr: 'Appartements', de: 'Apartments', zh: '公寓', nl: 'Appartementen', ban: 'Apartemen', pl: 'Apartamenty', uk: 'Апартаменти' }, lang), href: aptsUrl } : null,
     { Icon: Tag,        label: c.promo,     href: `${promoHref}?area=${districtSlug}` },
     { Icon: Newspaper,  label: c.news,      href: `${newsHref}?area=${districtSlug}` },
     { Icon: TrendingUp, label: c.pillar,    href: `${pillarHref}#${districtSlug}` },
