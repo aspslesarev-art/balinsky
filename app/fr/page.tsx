@@ -15,13 +15,13 @@ export const metadata = {
     description: "Villas, appartements et complexes de dizaines de promoteurs. Documents vérifiés et rendement locatif réel issu des données du voisinage — le choix et les chiffres sont de votre côté.",
     type: 'website',
     url: '/fr',
-    images: [{ url: '/balina.jpg', width: 1200, height: 630 }],
+    images: [{ url: '/andrei.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Acheter un bien immobilier à Bali — marketplace avec analytique',
     description: "Villas, appartements et complexes de dizaines de promoteurs, avec documents vérifiés et rendement locatif réel.",
-    images: ['/balina.jpg'],
+    images: ['/andrei.jpg'],
   },
 }
 

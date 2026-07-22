@@ -15,13 +15,13 @@ export const metadata = {
     description: 'Wille, apartamenty i kompleksy od dziesiątek deweloperów. Zweryfikowane dokumenty i realna rentowność najmu na podstawie danych z sąsiednich obiektów — wybór i liczby są po Twojej stronie.',
     type: 'website',
     url: '/pl',
-    images: [{ url: '/balina.jpg', width: 1200, height: 630 }],
+    images: [{ url: '/andrei.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Kup nieruchomość na Bali — marketplace z analityką',
     description: 'Wille, apartamenty i kompleksy od dziesiątek deweloperów ze zweryfikowanymi dokumentami i realną rentownością najmu.',
-    images: ['/balina.jpg'],
+    images: ['/andrei.jpg'],
   },
 }
 

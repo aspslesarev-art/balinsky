@@ -30,13 +30,13 @@ export const metadata: Metadata = {
     description: '8-15%净收益、leasehold与PT PMA对比、税费、按区域划分的投资回报。数据源自Booking级分析与买家真实案例。',
     type: 'article',
     url: '/zh/bali-fangchan-touzi',
-    images: [{ url: '/balina.jpg', width: 1200, height: 630 }],
+    images: [{ url: '/andrei.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
     title: '2026年巴厘岛房产投资',
     description: '真实收益、租赁产权、税费、按区域划分的投资回报。经核实的数据。',
-    images: ['/balina.jpg'],
+    images: ['/andrei.jpg'],
   },
 }
 

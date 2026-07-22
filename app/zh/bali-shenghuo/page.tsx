@@ -29,13 +29,13 @@ export const metadata: Metadata = {
     description: 'KITAS、Second Home Visa、Golden Visa、居民税费、学校、医疗、家庭预算 — 来自在此生活5年以上的运营者。',
     type: 'article',
     url: '/zh/bali-shenghuo',
-    images: [{ url: '/balina.jpg', width: 1200, height: 630 }],
+    images: [{ url: '/andrei.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
     title: '在巴厘岛生活 — 2026年移居指南',
     description: '签证、税费、学校、医疗、预算。',
-    images: ['/balina.jpg'],
+    images: ['/andrei.jpg'],
   },
 }
 

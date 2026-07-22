@@ -78,14 +78,14 @@ const GREETING_BY_LANG: Record<Lang, Message> = {
     role: 'assistant',
     greeting: true,
     content:
-      'Je suis Andrei — courtière IA en immobilier à Bali. Je vous aide à trouver un bien adapté à votre budget et à vos objectifs. Que recherchez-vous ?\n\n' +
+      'Je suis Andrei — courtier IA en immobilier à Bali. Je vous aide à trouver un bien adapté à votre budget et à vos objectifs. Que recherchez-vous ?\n\n' +
       '[CHIPS] Choisir une villa | Choisir un appartement | Location mensuelle | Aspect juridique de l’achat | Contacter un manager',
   },
   de: {
     role: 'assistant',
     greeting: true,
     content:
-      'Ich bin Andrei — KI-Maklerin für Immobilien auf Bali. Ich helfe Ihnen, eine Immobilie passend zu Ihrem Budget und Ihren Zielen zu finden. Wonach suchen Sie?\n\n' +
+      'Ich bin Andrei — KI-Makler für Immobilien auf Bali. Ich helfe Ihnen, eine Immobilie passend zu Ihrem Budget und Ihren Zielen zu finden. Wonach suchen Sie?\n\n' +
       '[CHIPS] Villa auswählen | Apartment auswählen | Monatsmiete | Rechtliches zum Kauf | Manager kontaktieren',
   },
   zh: {
@@ -120,7 +120,7 @@ const GREETING_BY_LANG: Record<Lang, Message> = {
     role: 'assistant',
     greeting: true,
     content:
-      'Я Баліса — AI-брокер з нерухомості на Балі. Допоможу підібрати обʼєкт під ваш бюджет і цілі. Що ви шукаєте?\n\n' +
+      'Я Андрій — AI-брокер з нерухомості на Балі. Допоможу підібрати обʼєкт під ваш бюджет і цілі. Що ви шукаєте?\n\n' +
       '[CHIPS] Підібрати вілу | Підібрати апартаменти | Помісячна оренда | Юридичні аспекти покупки | Звʼязатися з менеджером',
   },
 }
@@ -170,7 +170,7 @@ function contextualGreeting(kind: ListingKind, title: string | null, lang: Lang)
 // also injects an explicit lang directive when lang === 'en').
 const COPY = {
   ru: {
-    triggerAria: 'Открыть AI-брокера Балису',
+    triggerAria: 'Открыть AI-брокера Андрея',
     triggerName: 'Андрей',
     title: 'Андрей',
     subtitle: 'AI-брокер · может ошибаться',
@@ -278,7 +278,7 @@ const COPY = {
     },
   },
   fr: {
-    triggerAria: 'Ouvrir la courtière IA Andrei',
+    triggerAria: 'Ouvrir le courtier IA Andrei',
     triggerName: 'Andrei',
     title: 'Andrei',
     subtitle: 'Courtière IA · peut se tromper',
@@ -314,10 +314,10 @@ const COPY = {
     },
   },
   de: {
-    triggerAria: 'KI-Maklerin Andrei öffnen',
+    triggerAria: 'KI-Makler Andrei öffnen',
     triggerName: 'Andrei',
     title: 'Andrei',
-    subtitle: 'KI-Maklerin · kann sich irren',
+    subtitle: 'KI-Makler · kann sich irren',
     closeAria: 'Schließen',
     typing: 'schreibt…',
     placeholder: 'Wonach suchen Sie? Z. B. eine Villa in Canggu mit 3 Schlafzimmern',
@@ -458,7 +458,7 @@ const COPY = {
     },
   },
   pl: {
-    triggerAria: 'Otwórz AI-brokera Balisę',
+    triggerAria: 'Otwórz AI-brokera Andreia',
     triggerName: 'Andrei',
     title: 'Andrei',
     subtitle: 'AI-broker · może się mylić',
@@ -494,9 +494,9 @@ const COPY = {
     },
   },
   uk: {
-    triggerAria: 'Відкрити AI-брокера Балісу',
-    triggerName: 'Баліса',
-    title: 'Баліса',
+    triggerAria: 'Відкрити AI-брокера Андрія',
+    triggerName: 'Андрій',
+    title: 'Андрій',
     subtitle: 'AI-брокер · може помилятися',
     closeAria: 'Закрити',
     typing: 'друкує…',
@@ -1313,7 +1313,7 @@ export function ConsultantWidget() {
   const callStatusText = callState === 'ringing'
     ? pickCopy({ ru: 'соединяем…', en: 'connecting…', id: 'menyambungkan…', fr: 'connexion…', de: 'verbinden…', zh: '正在接通…', nl: 'verbinden…', ban: 'nyambungang…', pl: 'łączymy…', uk: 'зʼєднуємо…' }, lang)
     : isSpeaking
-      ? pickCopy({ ru: 'Андрей говорит…', en: 'Andrei is speaking…', id: 'Andrei sedang berbicara…', fr: 'Andrei parle…', de: 'Andrei spricht…', zh: 'Andrei 正在说话…', nl: 'Andrei is aan het woord…', ban: 'Andrei sedeng mabaos…', pl: 'Andrei mówi…', uk: 'Баліса говорить…' }, lang)
+      ? pickCopy({ ru: 'Андрей говорит…', en: 'Andrei is speaking…', id: 'Andrei sedang berbicara…', fr: 'Andrei parle…', de: 'Andrei spricht…', zh: 'Andrei 正在说话…', nl: 'Andrei is aan het woord…', ban: 'Andrei sedeng mabaos…', pl: 'Andrei mówi…', uk: 'Андрій говорить…' }, lang)
       : pickCopy({ ru: 'Слушаю вас…', en: 'Listening…', id: 'Mendengarkan…', fr: 'À l\'écoute…', de: 'Ich höre zu…', zh: '正在聆听…', nl: 'Ik luister…', ban: 'Mirengang…', pl: 'Słucham…', uk: 'Слухаю вас…' }, lang)
 
   return (
@@ -1335,11 +1335,11 @@ export function ConsultantWidget() {
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:justify-end p-0 sm:p-5" data-llm-skip="">
           <div className="w-full sm:w-[360px] max-w-[100vw] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-[var(--color-border)] px-8 py-10 flex flex-col items-center gap-6 text-center">
             <div className="relative">
-              <Image src="/balina.jpg" alt="" width={112} height={112} className="w-28 h-28 rounded-full object-cover" />
+              <Image src="/andrei.jpg" alt="" width={112} height={112} className="w-28 h-28 rounded-full object-cover" />
               <span className={`absolute -inset-1.5 rounded-full ring-4 ${callState === 'ringing' || isSpeaking ? 'ring-[#22C55E]/40 animate-ping' : 'ring-[#22C55E]/20'}`} />
             </div>
             <div>
-              <div className="text-[22px] font-semibold text-[#111827]">{pickCopy({ ru: 'Андрей', en: 'Andrei', id: 'Andrei', fr: 'Andrei', de: 'Andrei', zh: 'Andrei', nl: 'Andrei', ban: 'Andrei', pl: 'Andrei', uk: 'Баліса' }, lang)}</div>
+              <div className="text-[22px] font-semibold text-[#111827]">{pickCopy({ ru: 'Андрей', en: 'Andrei', id: 'Andrei', fr: 'Andrei', de: 'Andrei', zh: 'Andrei', nl: 'Andrei', ban: 'Andrei', pl: 'Andrei', uk: 'Андрій' }, lang)}</div>
               <div className="text-[14px] text-[var(--color-text-muted)] mt-1">{callStatusText}</div>
             </div>
             <button
@@ -1360,8 +1360,8 @@ export function ConsultantWidget() {
           <button
             type="button"
             onClick={startCall}
-            aria-label={pickCopy({ ru: 'Позвонить Балисе', en: 'Call Andrei', id: 'Telepon Andrei', fr: 'Appeler Andrei', de: 'Andrei anrufen', zh: '致电 Andrei', nl: 'Bel Andrei', ban: 'Nelepon Andrei', pl: 'Zadzwoń do Balisy', uk: 'Зателефонувати Балісі' }, lang)}
-            title={pickCopy({ ru: 'Позвонить Балисе', en: 'Call Andrei', id: 'Telepon Andrei', fr: 'Appeler Andrei', de: 'Andrei anrufen', zh: '致电 Andrei', nl: 'Bel Andrei', ban: 'Nelepon Andrei', pl: 'Zadzwoń do Balisy', uk: 'Зателефонувати Балісі' }, lang)}
+            aria-label={pickCopy({ ru: 'Позвонить Андрею', en: 'Call Andrei', id: 'Telepon Andrei', fr: 'Appeler Andrei', de: 'Andrei anrufen', zh: '致电 Andrei', nl: 'Bel Andrei', ban: 'Nelepon Andrei', pl: 'Zadzwoń do Andreia', uk: 'Зателефонувати Андрію' }, lang)}
+            title={pickCopy({ ru: 'Позвонить Андрею', en: 'Call Andrei', id: 'Telepon Andrei', fr: 'Appeler Andrei', de: 'Andrei anrufen', zh: '致电 Andrei', nl: 'Bel Andrei', ban: 'Nelepon Andrei', pl: 'Zadzwoń do Andreia', uk: 'Зателефонувати Андрію' }, lang)}
             className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#22C55E] hover:bg-[#16A34A] text-white shadow-lg transition-colors"
           >
             <Phone size={20} />
@@ -1373,7 +1373,7 @@ export function ConsultantWidget() {
             className="inline-flex items-center gap-2 pl-1.5 pr-4 py-1.5 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white shadow-lg transition-colors"
           >
             <Image
-              src="/balina.jpg"
+              src="/andrei.jpg"
               alt=""
               width={36}
               height={36}
@@ -1393,7 +1393,7 @@ export function ConsultantWidget() {
             onClick={() => { dismissTeaser(); tellAboutCurrent() }}
             className="flex items-center gap-2 pl-2.5 pr-1.5 py-2 text-left"
           >
-            <Image src="/balina.jpg" alt="" width={28} height={28} className="w-7 h-7 rounded-full object-cover shrink-0" />
+            <Image src="/andrei.jpg" alt="" width={28} height={28} className="w-7 h-7 rounded-full object-cover shrink-0" />
             <span className="text-[12.5px] leading-snug text-[#111827]">
               {pickCopy({ ru: 'Рассказать про этот объект?', en: 'Want the rundown on this one?', id: 'Mau tahu soal properti ini?', fr: 'Un aperçu de ce bien ?', de: 'Überblick zu diesem Objekt?', zh: '想了解这处房产吗？', nl: 'Meer weten over dit object?', ban: 'Meled uning indik properti puniki?', pl: 'Opowiedzieć o tym obiekcie?', uk: 'Розповісти про цей обʼєкт?' }, lang)}
             </span>
@@ -1441,7 +1441,7 @@ export function ConsultantWidget() {
             <div className="shrink-0 sticky top-0 z-10 flex items-center justify-between gap-3 px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-primary-soft)]">
               <div className="flex items-center gap-2.5">
                 <Image
-                  src="/balina.jpg"
+                  src="/andrei.jpg"
                   alt=""
                   width={36}
                   height={36}

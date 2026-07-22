@@ -15,13 +15,13 @@ export const metadata = {
     description: 'Villas, apartments and complexes from dozens of developers. Verified documents and real rental yield from neighbour data — the choice and the numbers are on your side.',
     type: 'website',
     url: '/ban',
-    images: [{ url: '/balina.jpg', width: 1200, height: 630 }],
+    images: [{ url: '/andrei.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Buy real estate in Bali — marketplace with analytics',
     description: 'Villas, apartments and complexes from dozens of developers with verified documents and real rental yield.',
-    images: ['/balina.jpg'],
+    images: ['/andrei.jpg'],
   },
 }
 

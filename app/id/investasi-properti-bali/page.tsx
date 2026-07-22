@@ -30,13 +30,13 @@ export const metadata: Metadata = {
     description: 'Imbal hasil bersih 8-15%, leasehold vs PT PMA, pajak, ROI per kawasan. Angka nyata dari analitik setara Booking dan studi kasus pembeli.',
     type: 'article',
     url: '/id/investasi-properti-bali',
-    images: [{ url: '/balina.jpg', width: 1200, height: 630 }],
+    images: [{ url: '/andrei.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Investasi Properti Bali 2026',
     description: 'Imbal hasil nyata, leasehold, pajak, ROI per kawasan. Data terverifikasi.',
-    images: ['/balina.jpg'],
+    images: ['/andrei.jpg'],
   },
 }
 

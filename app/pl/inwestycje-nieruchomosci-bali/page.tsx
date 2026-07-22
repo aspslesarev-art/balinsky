@@ -29,13 +29,13 @@ export const metadata: Metadata = {
     description: '8-15% zysku netto, leasehold vs PT PMA, podatki, ROI według dzielnic. Realne liczby z analityki klasy Booking i studiów przypadków kupujących.',
     type: 'article',
     url: '/pl/inwestycje-nieruchomosci-bali',
-    images: [{ url: '/balina.jpg', width: 1200, height: 630 }],
+    images: [{ url: '/andrei.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Inwestycje w nieruchomości na Bali 2026',
     description: 'Realne stopy zwrotu, leasehold, podatki, ROI według dzielnic. Zweryfikowane dane.',
-    images: ['/balina.jpg'],
+    images: ['/andrei.jpg'],
   },
 }
 

@@ -29,13 +29,13 @@ export const metadata: Metadata = {
     description: 'KITAS, Second Home Visa, Golden Visa, Steuern für Residenten, Schulen, Gesundheit, Familienbudget — von Praktikern, die seit über 5 Jahren hier leben.',
     type: 'article',
     url: '/de/leben-auf-bali',
-    images: [{ url: '/balina.jpg', width: 1200, height: 630 }],
+    images: [{ url: '/andrei.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Leben auf Bali — Umzugsratgeber 2026',
     description: 'Visa, Steuern, Schulen, Gesundheit, Budget.',
-    images: ['/balina.jpg'],
+    images: ['/andrei.jpg'],
   },
 }
 

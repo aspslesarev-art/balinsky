@@ -30,13 +30,13 @@ export const metadata: Metadata = {
     description: 'Доходность 8-15%, лизхолд vs PT PMA, налоги, окупаемость по 6 районам. Реальные цифры от Booking-аналитики и кейсы покупателей.',
     type: 'article',
     url: '/ru/investicii-v-nedvizhimost-bali',
-    images: [{ url: '/balina.jpg', width: 1200, height: 630 }],
+    images: [{ url: '/andrei.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Инвестиции в недвижимость на Бали 2026',
     description: 'Доходность, лизхолд, налоги, окупаемость по районам. Реальные цифры.',
-    images: ['/balina.jpg'],
+    images: ['/andrei.jpg'],
   },
 }
 

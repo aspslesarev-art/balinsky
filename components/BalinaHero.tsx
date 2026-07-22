@@ -7,7 +7,7 @@
 // existing ConsultantWidget chat panel pre-filled with the typed
 // text and auto-sends it. The voice button opens the widget and
 // kicks the speech-recognition state straight away. Image lives at
-// /balina.jpg.
+// /andrei.jpg.
 
 import { useState, useRef, useEffect } from 'react'
 import { detectLang, pickCopy } from '@/lib/i18n'
@@ -375,7 +375,7 @@ export function BalinaHero() {
             <div className="relative">
               <div className="relative w-[140px] h-[140px] sm:w-[180px] sm:h-[180px] md:w-[260px] md:h-[260px] rounded-full overflow-hidden ring-4 ring-white shadow-[0_20px_50px_-15px_rgba(31,90,52,0.25)]">
                 <Image
-                  src="/balina.jpg"
+                  src="/andrei.jpg"
                   alt={c.altPhoto}
                   fill
                   sizes="(max-width: 640px) 140px, (max-width: 768px) 180px, 260px"

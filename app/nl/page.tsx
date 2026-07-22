@@ -15,13 +15,13 @@ export const metadata = {
     description: "Villa's, appartementen en complexen van tientallen ontwikkelaars. Geverifieerde documenten en reëel huurrendement op basis van buurtdata — de keuze en de cijfers staan aan uw kant.",
     type: 'website',
     url: '/nl',
-    images: [{ url: '/balina.jpg', width: 1200, height: 630 }],
+    images: [{ url: '/andrei.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Vastgoed kopen op Bali — marktplaats met analyses',
     description: "Villa's, appartementen en complexen van tientallen ontwikkelaars met geverifieerde documenten en reëel huurrendement.",
-    images: ['/balina.jpg'],
+    images: ['/andrei.jpg'],
   },
 }
 

@@ -15,13 +15,13 @@ export const metadata = {
     description: '数十家开发商的别墅、公寓和住宅项目。经核实的证件以及来自周边邻里数据的真实租金收益 — 选择权和数据都在你这一边。',
     type: 'website',
     url: '/zh',
-    images: [{ url: '/balina.jpg', width: 1200, height: 630 }],
+    images: [{ url: '/andrei.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
     title: '在巴厘岛购买房产 — 带分析数据的市场平台',
     description: '数十家开发商的别墅、公寓和住宅项目，附经核实的证件与真实租金收益。',
-    images: ['/balina.jpg'],
+    images: ['/andrei.jpg'],
   },
 }
 

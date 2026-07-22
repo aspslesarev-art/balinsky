@@ -91,7 +91,7 @@ const COPY = {
   },
   uk: {
     subtitle: 'AI-брокер · анонімно',
-    greeting: 'Я Баліса — ваш AI-брокер. Опишіть, що шукаєте, — за хвилину підберу варіанти.',
+    greeting: 'Я Андрій — ваш AI-брокер. Опишіть, що шукаєте, — за хвилину підберу варіанти.',
     voice: 'Голосове',
     reply: 'Знайшла 5 віл у Canggu під оренду, дохідність 9–11%. Показати з документами й розрахунком?',
     chips: ['Показати вілли', 'Які документи?'],
@@ -110,7 +110,7 @@ export function BalinaChatMock({ lang }: { lang: Lang }) {
       <div className="rounded-[26px] bg-white border border-[var(--color-border)] shadow-[0_24px_60px_-20px_rgba(16,42,30,0.35)] overflow-hidden">
         {/* Header */}
         <div className="flex items-center gap-2.5 px-4 py-3 bg-[var(--color-primary-soft)] border-b border-[var(--color-border)]">
-          <Image src="/balina.jpg" alt="" width={36} height={36} className="w-9 h-9 rounded-full object-cover" />
+          <Image src="/andrei.jpg" alt="" width={36} height={36} className="w-9 h-9 rounded-full object-cover" />
           <div>
             <div className="text-[14px] font-semibold text-[#111827] leading-tight">{pickCopy({ ru: 'Андрей', en: 'Andrei', id: 'Andrei', fr: 'Andrei', de: 'Andrei', zh: 'Andrei', nl: 'Andrei', ban: 'Andrei', pl: 'Andrei', uk: 'Andrei' }, lang)}</div>
             <div className="text-[11px] text-[var(--color-text-muted)] leading-tight flex items-center gap-1">

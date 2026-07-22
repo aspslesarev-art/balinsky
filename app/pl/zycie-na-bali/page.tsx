@@ -28,13 +28,13 @@ export const metadata: Metadata = {
     description: 'KITAS, Second Home Visa, Golden Visa, podatki dla rezydentów, szkoły, opieka zdrowotna, budżet rodzinny — od praktyków, którzy mieszkają tu ponad 5 lat.',
     type: 'article',
     url: '/pl/zycie-na-bali',
-    images: [{ url: '/balina.jpg', width: 1200, height: 630 }],
+    images: [{ url: '/andrei.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Życie na Bali — przewodnik po przeprowadzce 2026',
     description: 'Wizy, podatki, szkoły, opieka zdrowotna, budżet.',
-    images: ['/balina.jpg'],
+    images: ['/andrei.jpg'],
   },
 }
 

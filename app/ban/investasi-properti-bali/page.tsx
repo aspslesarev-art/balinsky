@@ -29,13 +29,13 @@ export const metadata: Metadata = {
     description: '8-15% net yields, leasehold vs PT PMA, taxes, ROI by district. Real numbers from Booking-grade analytics and buyer case studies.',
     type: 'article',
     url: '/ban/investasi-properti-bali',
-    images: [{ url: '/balina.jpg', width: 1200, height: 630 }],
+    images: [{ url: '/andrei.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Bali Property Investment 2026',
     description: 'Real yields, leasehold, taxes, ROI by district. Verified data.',
-    images: ['/balina.jpg'],
+    images: ['/andrei.jpg'],
   },
 }
 

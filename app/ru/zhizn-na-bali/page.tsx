@@ -30,13 +30,13 @@ export const metadata: Metadata = {
     description: 'ВНЖ через KITAS / Second Home Visa / Golden Visa, налоги, школы, медицина, бюджет на семью — на основе опыта операторов сайта.',
     type: 'article',
     url: '/ru/zhizn-na-bali',
-    images: [{ url: '/balina.jpg', width: 1200, height: 630 }],
+    images: [{ url: '/andrei.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Жизнь на Бали — гайд для переезжающих',
     description: 'ВНЖ, визы, налоги, школы, медицина, бюджет.',
-    images: ['/balina.jpg'],
+    images: ['/andrei.jpg'],
   },
 }
 

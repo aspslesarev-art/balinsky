@@ -15,13 +15,13 @@ export const metadata = {
     description: 'Vila, apartemen, dan kompleks dari puluhan pengembang. Dokumen terverifikasi dan imbal hasil sewa nyata dari data tetangga — pilihan dan angkanya ada di pihak Anda.',
     type: 'website',
     url: '/id',
-    images: [{ url: '/balina.jpg', width: 1200, height: 630 }],
+    images: [{ url: '/andrei.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Beli properti di Bali — marketplace dengan analitik',
     description: 'Vila, apartemen, dan kompleks dari puluhan pengembang dengan dokumen terverifikasi dan imbal hasil sewa nyata.',
-    images: ['/balina.jpg'],
+    images: ['/andrei.jpg'],
   },
 }
 

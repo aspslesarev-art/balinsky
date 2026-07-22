@@ -30,13 +30,13 @@ export const metadata: Metadata = {
     description: '8-15% netto rendement, leasehold versus PT PMA, belastingen, ROI per regio. Echte cijfers uit analyses op Booking-niveau en praktijkcases van kopers.',
     type: 'article',
     url: '/nl/bali-vastgoed-investering',
-    images: [{ url: '/balina.jpg', width: 1200, height: 630 }],
+    images: [{ url: '/andrei.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Investeren in vastgoed op Bali 2026',
     description: 'Reële rendementen, leasehold, belastingen, ROI per regio. Geverifieerde data.',
-    images: ['/balina.jpg'],
+    images: ['/andrei.jpg'],
   },
 }
 

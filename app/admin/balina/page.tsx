@@ -29,7 +29,7 @@ export default async function BalinaAdmin() {
 
   return (
     <AdminThemeShell
-      title="База знаний Балисы"
+      title="База знаний Андрея"
       description={`Системный промпт AI-консультанта по секциям. Каждое сохранение мгновенно подхватывается чатом. Всего ${sections.length} секций, ${totalChars.toLocaleString('ru-RU')} символов.`}
     >
       {tableMissing && (

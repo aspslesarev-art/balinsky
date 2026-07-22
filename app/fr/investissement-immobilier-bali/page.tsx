@@ -30,13 +30,13 @@ export const metadata: Metadata = {
     description: "Rendements nets de 8-15 %, leasehold vs PT PMA, taxes, ROI par quartier. Chiffres réels issus d'analytiques de niveau Booking et d'études de cas d'acheteurs.",
     type: 'article',
     url: '/fr/investissement-immobilier-bali',
-    images: [{ url: '/balina.jpg', width: 1200, height: 630 }],
+    images: [{ url: '/andrei.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
     title: "Investir dans l'immobilier à Bali 2026",
     description: 'Rendements réels, leasehold, taxes, ROI par quartier. Données vérifiées.',
-    images: ['/balina.jpg'],
+    images: ['/andrei.jpg'],
   },
 }
 

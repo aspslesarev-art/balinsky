@@ -15,13 +15,13 @@ export const metadata = {
     description: 'Виллы, апартаменты и ЖК от десятков застройщиков. Проверенные документы и реальная доходность по данным соседей — выбор и цифры на вашей стороне.',
     type: 'website',
     url: '/ru',
-    images: [{ url: '/balina.jpg', width: 1200, height: 630 }],
+    images: [{ url: '/andrei.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Купить недвижимость на Бали — маркетплейс с аналитикой',
     description: 'Виллы, апартаменты и ЖК от десятков застройщиков с проверенными документами и реальной доходностью.',
-    images: ['/balina.jpg'],
+    images: ['/andrei.jpg'],
   },
 }
 

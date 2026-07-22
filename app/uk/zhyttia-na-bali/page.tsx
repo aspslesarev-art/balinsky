@@ -28,13 +28,13 @@ export const metadata: Metadata = {
     description: 'KITAS, Second Home Visa, Golden Visa, resident taxes, schools, healthcare, family budget — from operators who\'ve lived here 5+ years.',
     type: 'article',
     url: '/uk/zhyttia-na-bali',
-    images: [{ url: '/balina.jpg', width: 1200, height: 630 }],
+    images: [{ url: '/andrei.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Living in Bali — 2026 Relocation Guide',
     description: 'Visas, taxes, schools, healthcare, budget.',
-    images: ['/balina.jpg'],
+    images: ['/andrei.jpg'],
   },
 }
 

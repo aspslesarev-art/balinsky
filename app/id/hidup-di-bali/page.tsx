@@ -29,13 +29,13 @@ export const metadata: Metadata = {
     description: 'KITAS, Second Home Visa, Golden Visa, pajak penetap, sekolah, layanan kesehatan, anggaran keluarga — dari operator yang sudah tinggal di sini 5+ tahun.',
     type: 'article',
     url: '/id/hidup-di-bali',
-    images: [{ url: '/balina.jpg', width: 1200, height: 630 }],
+    images: [{ url: '/andrei.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Hidup di Bali — Panduan Relokasi 2026',
     description: 'Visa, pajak, sekolah, layanan kesehatan, anggaran.',
-    images: ['/balina.jpg'],
+    images: ['/andrei.jpg'],
   },
 }
 

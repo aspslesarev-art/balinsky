@@ -30,13 +30,13 @@ export const metadata: Metadata = {
     description: '8-15 % Nettorendite, Leasehold vs. PT PMA, Steuern, ROI nach Bezirk. Reale Zahlen aus Booking-Analytik und Käufer-Fallstudien.',
     type: 'article',
     url: '/de/bali-immobilien-investment',
-    images: [{ url: '/balina.jpg', width: 1200, height: 630 }],
+    images: [{ url: '/andrei.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Immobilieninvestment auf Bali 2026',
     description: 'Reale Renditen, Leasehold, Steuern, ROI nach Bezirk. Geprüfte Daten.',
-    images: ['/balina.jpg'],
+    images: ['/andrei.jpg'],
   },
 }
 

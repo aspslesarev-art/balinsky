@@ -15,13 +15,13 @@ export const metadata = {
     description: 'Villen, Apartments und Anlagen von Dutzenden Bauträgern. Geprüfte Dokumente und reale Mietrendite aus Nachbarschaftsdaten — die Wahl und die Zahlen sprechen für Sie.',
     type: 'website',
     url: '/de',
-    images: [{ url: '/balina.jpg', width: 1200, height: 630 }],
+    images: [{ url: '/andrei.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Immobilien auf Bali kaufen — Marktplatz mit Analytik',
     description: 'Villen, Apartments und Anlagen von Dutzenden Bauträgern mit geprüften Dokumenten und realer Mietrendite.',
-    images: ['/balina.jpg'],
+    images: ['/andrei.jpg'],
   },
 }
 
