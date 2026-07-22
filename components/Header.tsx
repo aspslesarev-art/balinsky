@@ -8,7 +8,7 @@ import { Home, Building, Building2, HardHat, Menu, X } from 'lucide-react'
 import { LangSwitch } from './LangSwitch'
 import { CurrencyToggle } from './CurrencyContext'
 import { WishlistHeaderLink } from './WishlistHeaderLink'
-import { t, detectLang, localizeSegment, pickCopy, type Lang } from '@/lib/i18n'
+import { t, detectLang, localizeSegment, langToSegment, pickCopy, type Lang } from '@/lib/i18n'
 
 type NavKey = 'villy' | 'apartamenty' | 'zhilye-kompleksy' | 'zastrojshhiki' | 'arenda'
 
@@ -87,7 +87,7 @@ export function Header({ active }: { active?: NavKey }) {
         <nav className="hidden md:flex items-center gap-8 h-full">
           {NAV.map(({ key, labelKey, Icon }) => {
             const isActive = key === active
-            const href = `/${lang}/${localizeSegment(key, lang)}`
+            const href = `/${langToSegment(lang)}/${localizeSegment(key, lang)}`
             const label = t(labelKey, lang)
             return (
               <Link
@@ -134,7 +134,7 @@ export function Header({ active }: { active?: NavKey }) {
             </Link>
             {NAV.map(({ key, labelKey, Icon }) => {
               const isActive = key === active
-              const href = `/${lang}/${localizeSegment(key, lang)}`
+              const href = `/${langToSegment(lang)}/${localizeSegment(key, lang)}`
               const label = t(labelKey, lang)
               return (
                 <Link

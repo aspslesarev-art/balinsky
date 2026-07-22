@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { Send, Play } from 'lucide-react'
-import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, langToSegment, type Lang } from '@/lib/i18n'
 
 type Col = { title: string; links: { label: string; href: string }[] }
 
@@ -576,7 +576,7 @@ export function Footer({ lang = 'ru' }: { lang?: Lang }) {
       <div className="max-w-[1280px] mx-auto px-6 pt-12 pb-8">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
           <div className="md:col-span-4 lg:col-span-4">
-            <Link href={lang === 'ru' ? '/' : `/${lang}`} aria-label="Balinsky" className="inline-block mb-5">
+            <Link href={lang === 'ru' ? '/' : `/${langToSegment(lang)}`} aria-label="Balinsky" className="inline-block mb-5">
               <Image src="/logo.svg" alt="Balinsky" width={40} height={40} className="h-10 w-10" />
             </Link>
             <p className="text-[13px] leading-[1.6] text-[var(--color-text-muted)] max-w-[380px]">

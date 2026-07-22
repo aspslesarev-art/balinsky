@@ -59,6 +59,11 @@ const nextConfig: NextConfig = {
   async redirects() {
     // 301 redirects from old Wix site (balinsky.info) → new Next routes.
     return [
+      // Ukrainian moved from /uk to /ua: `uk` is the ISO language code (still
+      // used in hreflang and <html lang>) but reads as "United Kingdom" in a
+      // URL. Keep the old paths alive so nothing already linked or indexed 404s.
+      { source: '/uk',        destination: '/ua',        permanent: true },
+      { source: '/uk/:path*', destination: '/ua/:path*', permanent: true },
       // Root → /ru as a permanent (301) redirect. Next's automatic root
       // routing returns 307, which doesn't pass full link equity.
       { source: '/',                   destination: '/ru',                  permanent: true },

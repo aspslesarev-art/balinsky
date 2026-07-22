@@ -173,7 +173,7 @@ const COPY = {
     subtitle: (n: number, district: string, brSuffix: string) =>
       `${n} ${n === 1 ? 'оголошення' : 'оголошень'} у ${district}${brSuffix}`,
     allBedrooms: ' · будь-які спальні',
-    rentalRoot: '/uk/orenda',
+    rentalRoot: '/ua/orenda',
   },
 } as const
 

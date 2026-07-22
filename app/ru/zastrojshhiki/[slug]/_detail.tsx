@@ -24,7 +24,7 @@ import { loadAllEvents } from '@/lib/events'
 import { loadVideosByDeveloperWithComplexes } from '@/lib/videos'
 import { VideoGrid } from '@/components/VideoGrid'
 import { PageViewTracker } from '@/components/PageViewTracker'
-import { tField, pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
+import { tField, pickCopy, switchLangPath, langToSegment, type Lang } from '@/lib/i18n'
 import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
 import { cleanDeveloperBullets } from '@/lib/developer-highlights'
 import { isHiddenDeveloper } from '@/lib/hidden-developers'
@@ -677,7 +677,7 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
     orgJsonLd.review = {
       '@type': 'Review',
       reviewRating: { '@type': 'Rating', ratingValue: reliability.score, bestRating: 5, worstRating: 1 },
-      author: { '@type': 'Organization', name: 'Balinsky', url: `${SITE_URL}/${lang}` },
+      author: { '@type': 'Organization', name: 'Balinsky', url: `${SITE_URL}/${langToSegment(lang)}` },
       itemReviewed: { '@type': 'RealEstateAgent', name },
     }
   }

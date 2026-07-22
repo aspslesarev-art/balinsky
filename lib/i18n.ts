@@ -169,24 +169,48 @@ export function localizeSegment(seg: string, target: Lang): string {
   return SEGMENT_TABLE[canon]?.[target] ?? canon
 }
 
+// Ukrainian is the one language whose URL segment differs from its code.
+// `uk` is the ISO 639-1 language code and stays that way everywhere a code is
+// required — hreflang, <html lang>, the ElevenLabs call — but readers see /uk
+// as "United Kingdom", so the visible segment is /ua (matching the UA label in
+// the language switcher). Everything else maps one-to-one.
+const LANG_TO_SEG: Partial<Record<Lang, string>> = { uk: 'ua' }
+const SEG_TO_LANG: Record<string, Lang> = { ua: 'uk' }
+
+/** URL segment for a language code — `uk` → `ua`, everything else unchanged. */
+export function langToSegment(lang: Lang): string {
+  return LANG_TO_SEG[lang] ?? lang
+}
+
+/** Language code for a URL segment, or null when the segment isn't a language. */
+export function segmentToLang(seg: string): Lang | null {
+  const mapped = SEG_TO_LANG[seg]
+  if (mapped) return mapped
+  // A bare `uk` in the path is the pre-/ua URL; still resolve it so old links
+  // and the 301 both land on Ukrainian rather than silently falling back to RU.
+  return (LANGS as readonly string[]).includes(seg) ? (seg as Lang) : null
+}
+
 /** Detect the language from a pathname's first segment. Defaults to RU. */
 export function detectLang(pathname: string): Lang {
   const head = pathname.split('/').filter(Boolean)[0]
-  return (LANGS as readonly string[]).includes(head) ? (head as Lang) : 'ru'
+  return (head && segmentToLang(head)) || 'ru'
 }
 
 /** Map e.g. `/ru/villy/o/X` ↔ `/en/villas/o/X` ↔ `/id/vila/o/X`. */
 export function switchLangPath(pathname: string, target: Lang): string {
   if (!pathname.startsWith('/')) pathname = '/' + pathname
   const parts = pathname.split('/').filter(Boolean)
-  if (parts.length === 0) return `/${target}`
+  if (parts.length === 0) return `/${langToSegment(target)}`
   const [head, ...rest] = parts
-  if (!(LANGS as readonly string[]).includes(head)) return `/${target}`
-  if (head === target) return pathname
+  const current = segmentToLang(head)
+  if (!current) return `/${langToSegment(target)}`
+  // Same language already — but a legacy /uk path still needs rewriting to /ua.
+  if (current === target) return head === langToSegment(target) ? pathname : '/' + [langToSegment(target), ...rest].join('/')
   // Translate every section-name segment along the way; opaque tail
   // segments (slugs, IDs) pass through unchanged.
   const translated = rest.map(p => localizeSegment(p, target))
-  return '/' + [target, ...translated].join('/')
+  return '/' + [langToSegment(target), ...translated].join('/')
 }
 
 // ---- UI dictionary -------------------------------------------------------
