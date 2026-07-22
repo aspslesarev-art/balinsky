@@ -1,13 +1,6 @@
+import { asList } from './as-list'
 import type { Lang } from './i18n'
 import { revisionedCache } from './revisioned-cache'
-
-// Records written by hand in /admin/data only carry the fields the editor
-// actually filled in, so an optional list can simply be absent — the Airtable
-// sync used to guarantee every key existed. One manager saved without
-// developers took every /zastrojshhiki/<slug> page down with a 500.
-function asList<T>(v: T[] | undefined | null): T[] {
-  return Array.isArray(v) ? v : []
-}
 
 export type VideoLink = { name: string; slug: string | null }
 export type VideoItem = {

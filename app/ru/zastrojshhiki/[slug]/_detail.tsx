@@ -16,6 +16,7 @@ import { ExpandableText } from '@/components/ExpandableText'
 import { ComplexCard, type ComplexCardData } from '@/components/ComplexCard'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { ManagerCard } from '@/components/ManagerCard'
+import { asList } from '@/lib/as-list'
 import { loadManagersByDeveloperSlug } from '@/lib/managers'
 import { loadAllNews } from '@/lib/news'
 import { loadAllPromo } from '@/lib/promo'
@@ -642,9 +643,9 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
     loadAllEvents(lang).catch(() => []),
     loadVideosByDeveloperWithComplexes(slug, complexSlugs, 12, lang).catch(() => []),
   ])
-  const devNews = allNews.filter(n => n.developers.some(d => d.slug === slug)).slice(0, 4)
-  const devPromo = allPromo.filter(p => p.developers.some(d => d.slug === slug)).slice(0, 4)
-  const devEvents = allEvents.filter(e => e.developers.some(d => d.slug === slug)).slice(0, 4)
+  const devNews = allNews.filter(n => asList(n.developers).some(d => d.slug === slug)).slice(0, 4)
+  const devPromo = allPromo.filter(p => asList(p.developers).some(d => d.slug === slug)).slice(0, 4)
+  const devEvents = allEvents.filter(e => asList(e.developers).some(d => d.slug === slug)).slice(0, 4)
 
   // kb.faq is EN-only (KB stores RU + EN). For non-RU pages prefer the native
   // localized c.faq(...) template so de/zh/nl/id/fr/ban don't render English.
