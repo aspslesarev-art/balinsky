@@ -8,6 +8,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@supabase/supabase-js'
 import { unstable_cache } from 'next/cache'
+import { revisionedCache } from '@/lib/revisioned-cache'
+import { contentRev } from '@/lib/content-version'
 import {
   BedDouble, Square, Trees, Calendar, FileCheck2, Lock, MapPin, Plane,
   ChevronRight, Building2, HardHat, Star, Palette,
@@ -518,35 +520,29 @@ function cleanTitle(s: string | null): string | null {
 type IndexEntry = { id: string; slug: string; district: string | null; aliases?: string[] }
 const INDEX_URL = `${SUPABASE_URL}/storage/v1/object/public/feeds/_villas-index.json`
 const INDEX_TTL_MS = 30 * 60 * 1000
-let _indexCache: { ts: number; data: IndexEntry[] } | null = null
-let _indexInflight: Promise<IndexEntry[]> | null = null
+let _lastGoodIndex: IndexEntry[] = []
 
-async function _loadVillaIndex(): Promise<IndexEntry[]> {
-  if (_indexCache && Date.now() - _indexCache.ts < INDEX_TTL_MS) return _indexCache.data
-  if (_indexInflight) return _indexInflight
-  _indexInflight = (async () => {
-    try {
-      // no-store + 30-min in-memory cache: bypass Next data cache so a
-      // freshly-uploaded _villas-index.json is picked up on the next
-      // Lambda cold start instead of waiting for the ISR window to expire.
-      const r = await fetch(INDEX_URL, { next: { revalidate: 10 } })
-      if (!r.ok) return _indexCache?.data ?? []
-      const j = await r.json() as { items: IndexEntry[] }
-      const items = j.items ?? []
-      _indexCache = { ts: Date.now(), data: items }
-      return items
-    } catch {
-      return _indexCache?.data ?? []
-    }
-  })().finally(() => { _indexInflight = null })
-  return _indexInflight
-}
+// Wrapped in revisionedCache so an admin edit (which rewrites the index file)
+// is picked up within seconds instead of waiting out the 30-min TTL.
+const _loadVillaIndex = revisionedCache(['villas'], INDEX_TTL_MS, async (): Promise<IndexEntry[]> => {
+  try {
+    const r = await fetch(INDEX_URL, { next: { revalidate: 10 } })
+    if (!r.ok) return _lastGoodIndex
+    const j = await r.json() as { items: IndexEntry[] }
+    const items = j.items ?? []
+    if (items.length) _lastGoodIndex = items
+    return items
+  } catch {
+    return _lastGoodIndex
+  }
+})
 
-const _byIdCache = new Map<string, { ts: number; row: Row | null }>()
+const _byIdCache = new Map<string, { ts: number; rev: number; row: Row | null }>()
 const BY_ID_TTL_MS = 5 * 60 * 1000
 async function _loadVillaById(id: string): Promise<Row | null> {
+  const rev = await contentRev('villas')
   const cached = _byIdCache.get(id)
-  if (cached && Date.now() - cached.ts < BY_ID_TTL_MS) return cached.row
+  if (cached && cached.rev === rev && Date.now() - cached.ts < BY_ID_TTL_MS) return cached.row
   const [{ data }, enCache] = await Promise.all([
     sb.from('raw_villas').select('airtable_id, data').eq('airtable_id', id).maybeSingle(),
     loadAllTranslations('villas'),
@@ -559,7 +555,7 @@ async function _loadVillaById(id: string): Promise<Row | null> {
   const row: Row | null = raw
     ? { ...raw, data: mergeAllTranslations(raw.data, raw.airtable_id, enCache) }
     : null
-  _byIdCache.set(id, { ts: Date.now(), row })
+  _byIdCache.set(id, { ts: Date.now(), rev, row })
   return row
 }
 
@@ -667,8 +663,8 @@ const _loadComplexesIndex = unstable_cache(
     }
     return out
   },
-  ['villy-complex-index-v4'],
-  { revalidate: 600 },
+  ['villy-complex-index-v5'],
+  { revalidate: 600, tags: ['content:complexes'] },
 )
 
 function findParentComplex(villaTitle: string, complexes: ComplexLite[]): ComplexLite | null {
@@ -737,8 +733,8 @@ const _loadDevelopersIndex = (lang: Lang) => unstable_cache(
     }
     return out
   },
-  ['villy-developers-index-v4', lang],
-  { revalidate: 600 },
+  ['villy-developers-index-v5', lang],
+  { revalidate: 600, tags: ['content:developers'] },
 )()
 
 function findDeveloperByName(targetName: string | null, list: DeveloperLite[]): DeveloperLite | null {

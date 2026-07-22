@@ -1,0 +1,40 @@
+name: Rebuild detail slug indexes (nightly safety net)
+
+# Detail pages resolve /o/<slug> through feeds/_{villas,apartments,complexes}
+# -index.json. Admin mutations patch their own entry inline
+# (lib/admin/detail-index.ts), so this is only a repair pass for anything
+# written outside that path — a direct SQL edit, or an index write that
+# failed. Reads Supabase only; Airtable is retired and no longer involved.
+
+on:
+  schedule:
+    - cron: '20 3 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: rebuild-detail-indexes
+  cancel-in-progress: false
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci --no-audit --no-fund
+
+      - name: Write .env.local from secrets
+        run: |
+          cat > .env.local <<EOF
+          NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY=${{ secrets.SUPABASE_SERVICE_KEY }}
+          EOF
+
+      - name: Rebuild slug indexes
+        run: node --import=./scripts/_fetch-retry.mjs scripts/sync-detail-indexes.mjs

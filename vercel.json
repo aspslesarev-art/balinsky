@@ -2,14 +2,6 @@
   "regions": ["hnd1"],
   "crons": [
     {
-      "path": "/api/cron/sync-trigger?which=fast",
-      "schedule": "13 * * * *"
-    },
-    {
-      "path": "/api/cron/sync-trigger?which=heavy",
-      "schedule": "40 */6 * * *"
-    },
-    {
       "path": "/api/cron/assistant-alerts",
       "schedule": "0 2 * * *"
     },

@@ -50,7 +50,7 @@ const _loadVillaScoreRows = unstable_cache(
   },
   // v2: added "Land color" to the projection (yellow-land rental gate).
   ['villa-score-rows-v2'],
-  { revalidate: 3600 },
+  { revalidate: 3600, tags: ['content:villas', 'content:apartments'] },
 )
 
 function fs1(v: unknown): string | null {

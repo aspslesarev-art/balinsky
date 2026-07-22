@@ -111,6 +111,10 @@ const complexes: CollectionConfig = {
   fields: [
     { key: 'Опубликовать', label: 'Опубл.', type: 'bool', showInGrid: true, width: 70 },
     { key: 'Project', label: 'Название', type: 'text', showInGrid: true, width: 240 },
+    // Real column, not a `data` key: the detail page resolves /o/<slug>
+    // through it, so a complex without a slug is unreachable. Editable
+    // because renaming a complex has to be able to move its URL.
+    { key: 'slug', label: 'Slug (URL)', type: 'text', column: true, showInGrid: true, width: 200 },
     { key: 'Статус', label: 'Статус', type: 'text', showInGrid: true, width: 130 },
     { key: 'Статус продаж', label: 'Продажи', type: 'text', showInGrid: true, width: 130 },
     { key: 'Готовность', label: 'Готовность', type: 'text', showInGrid: true, width: 130 },

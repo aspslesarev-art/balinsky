@@ -4,6 +4,7 @@ import Fuse from 'fuse.js'
 import type { ComplexCardData } from '@/components/ComplexCard'
 import type { Option } from '@/components/filters/MultiSelectFilter'
 import { translit, hasCyrillic, translitPreserveCase } from '@/lib/translit'
+import { revisionedCache } from '@/lib/revisioned-cache'
 import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
 import { getDistrictCommercialMeta } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
@@ -492,8 +493,7 @@ type CachedAll = {
 // гарантирует Airtable webhook через revalidatePath (для ISR-страниц);
 // для самого module-cache актуальность догоняет за TTL.
 const TTL_MS = 600_000
-let _cache: { ts: number; data: CachedAll } | null = null
-let _inflight: Promise<CachedAll> | null = null
+
 
 // Slim-форма того что buildPriceIndex реально использует от raw_villas /
 // raw_apartments: только title + цена. Раньше тащили `data` целиком
@@ -631,24 +631,24 @@ const _loadComplexCardRows = unstable_cache(
       }
     })
   },
-  ['zhilye-complex-card-rows-v1'],
-  { revalidate: 3600 },
+  ['zhilye-complex-card-rows-v2'],
+  { revalidate: 3600, tags: ['content:complexes'] },
 )
 const _loadVillaPriceRows = unstable_cache(
   async (): Promise<PriceRow[]> => {
     const { data } = await sb.from('raw_villas').select(SLIM_PRICE_SELECT).limit(3000)
     return (data ?? []) as unknown as PriceRow[]
   },
-  ['zhilye-villa-price-rows-v1'],
-  { revalidate: 3600 },
+  ['zhilye-villa-price-rows-v2'],
+  { revalidate: 3600, tags: ['content:villas'] },
 )
 const _loadAptPriceRows = unstable_cache(
   async (): Promise<PriceRow[]> => {
     const { data } = await sb.from('raw_apartments').select(SLIM_PRICE_SELECT).limit(3000)
     return (data ?? []) as unknown as PriceRow[]
   },
-  ['zhilye-apt-price-rows-v1'],
-  { revalidate: 3600 },
+  ['zhilye-apt-price-rows-v2'],
+  { revalidate: 3600, tags: ['content:apartments'] },
 )
 
 async function _loadAllInternal(): Promise<CachedAll> {
@@ -670,14 +670,10 @@ async function _loadAllInternal(): Promise<CachedAll> {
   return { enriched, manifest, prices }
 }
 
-export async function loadAll(): Promise<CachedAll> {
-  if (_cache && Date.now() - _cache.ts < TTL_MS) return _cache.data
-  if (_inflight) return _inflight
-  _inflight = _loadAllInternal()
-    .then(data => { _cache = { ts: Date.now(), data }; return data })
-    .finally(() => { _inflight = null })
-  return _inflight
-}
+// Цены каталога складываются из вилл и апартаментов, поэтому правка в любой
+// из трёх баз должна сбрасывать эту запись.
+export const loadAll: () => Promise<CachedAll> =
+  revisionedCache(['complexes', 'villas', 'apartments'], TTL_MS, _loadAllInternal)
 
 export function buildAllCards(
   enriched: EnrichedRow[],

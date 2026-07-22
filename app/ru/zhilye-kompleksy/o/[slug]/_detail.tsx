@@ -8,6 +8,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@supabase/supabase-js'
 import { unstable_cache } from 'next/cache'
+import { revisionedCache } from '@/lib/revisioned-cache'
+import { contentRev } from '@/lib/content-version'
 import {
   Building2, MapPin, Calendar, FileCheck2, Lock, Home, Plane,
   ChevronRight, ExternalLink, Box, Map as MapIcon, Film, FileText, BedDouble,
@@ -844,31 +846,29 @@ function readiness(d: Record<string, unknown>): number {
 type ComplexIndexEntry = { id: string; slug: string; district: string | null }
 const COMPLEX_INDEX_URL = `${SUPABASE_URL}/storage/v1/object/public/feeds/_complexes-index.json`
 const COMPLEX_INDEX_TTL_MS = 30 * 60 * 1000
-let _complexIndexCache: { ts: number; data: ComplexIndexEntry[] } | null = null
-let _complexIndexInflight: Promise<ComplexIndexEntry[]> | null = null
+let _lastGoodComplexIndex: ComplexIndexEntry[] = []
 
-async function _loadComplexIndex(): Promise<ComplexIndexEntry[]> {
-  if (_complexIndexCache && Date.now() - _complexIndexCache.ts < COMPLEX_INDEX_TTL_MS) return _complexIndexCache.data
-  if (_complexIndexInflight) return _complexIndexInflight
-  _complexIndexInflight = (async () => {
-    try {
-      const r = await fetch(COMPLEX_INDEX_URL, { next: { revalidate: 10 } })
-      if (!r.ok) return _complexIndexCache?.data ?? []
-      const j = await r.json() as { items: ComplexIndexEntry[] }
-      const items = j.items ?? []
-      _complexIndexCache = { ts: Date.now(), data: items }
-      return items
-    } catch {
-      return _complexIndexCache?.data ?? []
-    }
-  })().finally(() => { _complexIndexInflight = null })
-  return _complexIndexInflight
-}
+// revisionedCache: an admin edit rewrites _complexes-index.json and bumps the
+// `complexes` revision, so a renamed slug or a new complex resolves right
+// away instead of 404'ing until the 30-min TTL lapses.
+const _loadComplexIndex = revisionedCache(['complexes'], COMPLEX_INDEX_TTL_MS, async (): Promise<ComplexIndexEntry[]> => {
+  try {
+    const r = await fetch(COMPLEX_INDEX_URL, { next: { revalidate: 10 } })
+    if (!r.ok) return _lastGoodComplexIndex
+    const j = await r.json() as { items: ComplexIndexEntry[] }
+    const items = j.items ?? []
+    if (items.length) _lastGoodComplexIndex = items
+    return items
+  } catch {
+    return _lastGoodComplexIndex
+  }
+})
 
-const _complexByIdCache = new Map<string, { ts: number; row: ComplexRow | null }>()
+const _complexByIdCache = new Map<string, { ts: number; rev: number; row: ComplexRow | null }>()
 async function _loadComplexById(id: string): Promise<ComplexRow | null> {
+  const rev = await contentRev('complexes')
   const c = _complexByIdCache.get(id)
-  if (c && Date.now() - c.ts < 5 * 60 * 1000) return c.row
+  if (c && c.rev === rev && Date.now() - c.ts < 5 * 60 * 1000) return c.row
   const [{ data }, enCache] = await Promise.all([
     sb.from('raw_complexes').select('airtable_id, data, slug, cover_url').eq('airtable_id', id).maybeSingle(),
     loadAllTranslations('complexes'),
@@ -879,7 +879,7 @@ async function _loadComplexById(id: string): Promise<ComplexRow | null> {
   const row: ComplexRow | null = raw
     ? { ...raw, data: mergeAllTranslations(raw.data, raw.airtable_id, enCache) }
     : null
-  _complexByIdCache.set(id, { ts: Date.now(), row })
+  _complexByIdCache.set(id, { ts: Date.now(), rev, row })
   return row
 }
 
@@ -891,8 +891,8 @@ const _loadComplexPhotos = unstable_cache(
       return (await r.json()) as Record<string, string[]>
     } catch { return {} }
   },
-  ['complex-photo-manifest-detail'],
-  { revalidate: 3600 },
+  ['complex-photo-manifest-detail-v2'],
+  { revalidate: 3600, tags: ['content:complexes'] },
 )
 
 // Slim-проекция + DB-фильтр по подстроке в SEO:Title.

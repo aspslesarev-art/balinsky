@@ -37,7 +37,7 @@ export async function PUT(req: Request, { params }: Ctx) {
   if (!photos) return NextResponse.json({ error: 'photos_array_required' }, { status: 400 })
   try {
     await setPhotos(cfg, id, photos)
-    revalidateCollection(cfg)
+    await revalidateCollection(cfg, id)
     return NextResponse.json({ ok: true })
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'save_failed' }, { status: 500 })

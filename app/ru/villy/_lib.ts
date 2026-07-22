@@ -5,6 +5,7 @@ import { translit, hasCyrillic, translitPreserveCase } from '@/lib/translit'
 import { loadVillaStyles } from '@/lib/villa-styles'
 import { loadFeatureFlagsMap, FEATURE_FLAGS, FEATURE_LABELS } from '@/lib/listing-features'
 import { normalizeSlug } from '@/lib/slug-normalize'
+import { revisionedCache } from '@/lib/revisioned-cache'
 import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
 import { getDistrictCommercialMeta } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
@@ -633,14 +634,11 @@ export function toCard(
 // TTL: 10 минут. Раньше было 60с, что приводило к перерасходу Supabase
 // egress (~36МБ raw_villas × ~каждую минуту на каждом warm instance).
 // Vercel function instance живёт ~15 мин, так что 10 мин ≈ ~1 fetch
-// за всё время жизни процесса. Свежесть данных гарантирует Airtable
-// webhook — он зовёт revalidatePath для каталогов, но module-cache он
-// не очищает, поэтому до 10 мин юзер видит stale цены/статусы. Для
-// прайса вилл это приемлемо.
+// за всё время жизни процесса. Правка в админке не ждёт этот TTL:
+// revisionedCache сбрасывает запись, как только мутация подняла
+// content_version для kind `villas` (см. lib/content-version.ts).
 type CachedAll = { enriched: EnrichedRow[]; manifest: Record<string, string[]> }
 const TTL_MS = 600_000
-let _cache: { ts: number; data: CachedAll } | null = null
-let _inflight: Promise<CachedAll> | null = null
 
 // Slim JSONB projection. Pulling full `data` from raw_villas was 568 rows ×
 // ~51 KB ≈ 29 MB per warm-instance refresh — biggest single egress source
@@ -710,14 +708,8 @@ async function _loadAllInternal(): Promise<CachedAll> {
   return { enriched, manifest }
 }
 
-export async function loadAll(): Promise<CachedAll> {
-  if (_cache && Date.now() - _cache.ts < TTL_MS) return _cache.data
-  if (_inflight) return _inflight
-  _inflight = _loadAllInternal()
-    .then(data => { _cache = { ts: Date.now(), data }; return data })
-    .finally(() => { _inflight = null })
-  return _inflight
-}
+export const loadAll: () => Promise<CachedAll> =
+  revisionedCache(['villas'], TTL_MS, _loadAllInternal)
 
 export function buildAllCards(
   enriched: EnrichedRow[],

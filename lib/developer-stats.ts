@@ -37,7 +37,7 @@ const _loadStatRows = unstable_cache(
     return (data ?? []) as unknown as StatRow[]
   },
   ['developer-stat-rows-v1'],
-  { revalidate: 3600 },
+  { revalidate: 3600, tags: ['content:developers', 'content:complexes'] },
 )
 
 // Per-request map build from the cached rows (react cache dedups within a render).
