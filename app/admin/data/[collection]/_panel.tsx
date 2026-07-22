@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { X, Save, Trash2, Loader2, AlertTriangle, Plus, Link2, Search, Sparkles } from 'lucide-react'
-import type { CollectionConfig, FieldDef, RecordRow } from '@/lib/admin/adapters/types'
+import type { CollectionConfig, FieldDef, FieldType, RecordRow } from '@/lib/admin/adapters/types'
 import { resolveRecordFields } from '@/lib/admin/fields'
 import { hasAi } from '@/lib/admin/ai-fields'
 import { PhotoManager } from './_photos'
@@ -17,6 +17,7 @@ export function RecordPanel({
   onClose,
   onSaved,
   onDeleted,
+  typeHints,
 }: {
   cfg: CollectionConfig
   id: string | 'new'
@@ -24,6 +25,9 @@ export function RecordPanel({
   onClose: () => void
   onSaved: (row: RecordRow, isNew: boolean) => void
   onDeleted: (id: string) => void
+  /** Types the grid worked out from a whole page of records — a single
+   *  record can't reveal that a column repeats only a few values. */
+  typeHints?: Record<string, FieldType>
 }) {
   const isNew = id === 'new'
   const [fields, setFields] = useState<Record<string, unknown>>({})
@@ -106,7 +110,7 @@ export function RecordPanel({
             <div className="flex items-center gap-2 text-[13px] text-[var(--ax-fg-muted)]"><Loader2 size={15} className="animate-spin" /> Загрузка…</div>
           ) : (
             <>
-              {resolveRecordFields(cfg, fields).map(f => (
+              {resolveRecordFields(cfg, fields, typeHints).map(f => (
                 f.type === 'link' && f.link ? (
                   <LinkEditor
                     key={f.key}

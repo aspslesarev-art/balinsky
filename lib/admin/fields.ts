@@ -73,20 +73,71 @@ export function isImageUrl(v: unknown): boolean {
   return /\.(jpe?g|png|webp|gif|avif)(\?|$)/i.test(v) || /\/storage\/v1\/object\/public\//.test(v) || /images\.balinsky\.info/.test(v)
 }
 
+// Airtable had a declared type per column; our JSONB doesn't, so we recover it
+// from the values. Nearly every key in these tables is undeclared (the config
+// only names ~15 of ~140), and leaving them all as free text is how the same
+// status ends up spelled three ways.
+
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}([T ]|$)/
+// Airtable record ids — an array of these is a link, not a set of choices.
+const RECORD_ID = /^rec[A-Za-z0-9]{10,}$/
+
+function isDateString(v: unknown): boolean {
+  return typeof v === 'string' && ISO_DATE.test(v.trim())
+}
+
+function stringArray(v: unknown): string[] | null {
+  if (!Array.isArray(v) || v.length === 0) return null
+  if (!v.every(x => typeof x === 'string')) return null
+  const arr = v as string[]
+  if (arr.every(x => RECORD_ID.test(x))) return null
+  return arr
+}
+
 export function inferType(v: unknown): FieldType {
   if (typeof v === 'boolean') return 'bool'
   if (typeof v === 'number') return 'number'
+  if (stringArray(v)) return 'multienum'
   if (v !== null && typeof v === 'object') return 'json'
+  if (isDateString(v)) return 'date'
   if (typeof v === 'string' && v.length > 120) return 'longtext'
   return 'text'
 }
 
-function inferTypeFromRows(rows: RecordRow[], key: string): FieldType {
+// Thresholds for calling a text column a set of choices. Tuned against the
+// grid's page size (50 rows): "Статус" has 3 distinct values over 50 records,
+// while a name column has ~50 distinct and must stay free text.
+const ENUM_MIN_SAMPLES = 5
+const ENUM_MAX_DISTINCT = 25
+const ENUM_MAX_LENGTH = 80
+
+// Type for a key across MANY records — the extra samples are what make
+// "few repeated values" (enum) distinguishable from "a different value every
+// time" (text).
+export function inferTypeFromRows(rows: RecordRow[], key: string): FieldType {
+  const values: unknown[] = []
   for (const r of rows) {
     const v = r.fields[key]
-    if (v !== null && v !== undefined && v !== '') return inferType(v)
+    if (v !== null && v !== undefined && v !== '') values.push(v)
   }
-  return 'text'
+  if (values.length === 0) return 'text'
+
+  // One array anywhere means the column holds sets of values.
+  if (values.some(v => stringArray(v))) return 'multienum'
+
+  const base = inferType(values[0])
+  if (base !== 'text' && base !== 'longtext') return base
+  if (values.every(isDateString)) return 'date'
+
+  const strings = values.filter((v): v is string => typeof v === 'string')
+  if (strings.length !== values.length) return base
+  if (strings.some(v => v.length > ENUM_MAX_LENGTH)) return base
+
+  const distinct = new Set(strings.map(v => v.trim()))
+  const repeats = strings.length >= ENUM_MIN_SAMPLES
+    && distinct.size <= ENUM_MAX_DISTINCT
+    && distinct.size <= Math.max(3, Math.floor(strings.length / 2))
+  return repeats ? 'enum' : base
 }
 
 // Ordered column/field list covering ALL keys present across `rows`, with
@@ -110,14 +161,21 @@ export function resolveFields(cfg: CollectionConfig, rows: RecordRow[]): FieldDe
 
 // Field defs for a single record's editor: every config field (so empty ones
 // can still be filled) plus any extra keys the record itself carries.
-export function resolveRecordFields(cfg: CollectionConfig, fields: Record<string, unknown>): FieldDef[] {
+export function resolveRecordFields(
+  cfg: CollectionConfig,
+  fields: Record<string, unknown>,
+  // Types inferred by the grid from a full page of records. A single record
+  // can't reveal that a column repeats only a handful of values, so without
+  // these every undeclared field would fall back to free text in the panel.
+  hints?: Record<string, FieldType>,
+): FieldDef[] {
   const hide = new Set(cfg.hideFields ?? [])
   const out: FieldDef[] = cfg.fields.filter(f => f.type !== 'photos' && !f.hidden && !hide.has(f.key)).map(f => ({ ...f }))
   const seen = new Set(cfg.fields.map(f => f.key))
   for (const k of Object.keys(fields).sort((a, b) => a.localeCompare(b, 'ru'))) {
     if (seen.has(k) || hide.has(k)) continue
     if (isAirtableAttachment(fields[k])) continue // hide raw Airtable attachment fields
-    out.push({ key: k, label: k, type: inferType(fields[k]) })
+    out.push({ key: k, label: k, type: hints?.[k] ?? inferType(fields[k]) })
   }
   return out
 }

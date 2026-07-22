@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Plus, ArrowUp, ArrowDown, Search, Loader2, Maximize2, Link2, Filter, X, Sparkles } from 'lucide-react'
 import type { CollectionConfig, FieldDef, RecordRow } from '@/lib/admin/adapters/types'
 import { resolveFields, displayValue, editableText, coerceValue, isImageUrl } from '@/lib/admin/fields'
@@ -10,6 +10,124 @@ import { RecordPanel } from './_panel'
 type SortState = { field: string; dir: 'asc' | 'desc' } | null
 type EditCell = { rowId: string; key: string } | null
 const PAGE_SIZE = 50
+
+
+// One click on a status/type cell has to land on a pickable list — an admin
+// edits dozens of rows in a sitting, so an extra click to open a native
+// <select>, or a detour into the side panel, is the whole cost of the task.
+// The list opens immediately, filters as you type, and writes on pick.
+function ChoiceCell({ collection, field, value, onPick, onClose }: {
+  collection: string
+  field: FieldDef
+  value: unknown
+  onPick: (v: unknown) => void
+  onClose: () => void
+}) {
+  const multi = field.type === 'multienum'
+  const selected = useMemo(() => {
+    if (Array.isArray(value)) return value.map(x => String(x)).filter(Boolean)
+    if (typeof value === 'string' && value) return multi ? value.split(',').map(x => x.trim()).filter(Boolean) : [value]
+    return []
+  }, [value, multi])
+
+  const [options, setOptions] = useState<string[]>(field.enumOptions ?? [])
+  const [query, setQuery] = useState('')
+  const box = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (field.enumOptions) return
+    let alive = true
+    fetch(`/api/admin/data/${collection}/values?field=${encodeURIComponent(field.key)}`)
+      .then(r => r.ok ? r.json() : { values: [] })
+      .then((j: { values?: string[] }) => { if (alive) setOptions(j.values ?? []) })
+      .catch(() => {})
+    return () => { alive = false }
+  }, [collection, field.key, field.enumOptions])
+
+  // Click-away closes; without it the popover would trap the next edit.
+  useEffect(() => {
+    const onDown = (e: MouseEvent) => { if (box.current && !box.current.contains(e.target as Node)) onClose() }
+    document.addEventListener('mousedown', onDown)
+    return () => document.removeEventListener('mousedown', onDown)
+  }, [onClose])
+
+  const all = [...new Set([...selected, ...options])]
+  const shown = query.trim() ? all.filter(o => o.toLowerCase().includes(query.trim().toLowerCase())) : all
+
+  const pick = (v: string) => {
+    if (!multi) { onPick(v); return }
+    onPick(selected.includes(v) ? selected.filter(x => x !== v) : [...selected, v])
+  }
+
+  return (
+    <div ref={box} className="relative">
+      <input
+        autoFocus
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        onKeyDown={e => {
+          if (e.key === 'Escape') onClose()
+          if (e.key === 'Enter') {
+            e.preventDefault()
+            const first = shown[0]
+            if (first) pick(first)
+            else if (query.trim()) { pick(query.trim()); setQuery('') }
+          }
+        }}
+        placeholder={multi ? 'Фильтр / своё значение' : 'Выберите или впишите'}
+        className="w-full px-2 py-1.5 text-[13px] bg-[var(--ax-input-bg)] border-2 border-[var(--color-primary)] outline-none"
+      />
+      <div className="absolute z-30 left-0 top-full min-w-full w-max max-w-[320px] max-h-56 overflow-y-auto rounded-b-lg border border-[var(--ax-border)] bg-[var(--ax-panel)] shadow-lg">
+        {!multi && (
+          <button type="button" onMouseDown={e => { e.preventDefault(); onPick(null) }}
+            className="block w-full text-left px-2.5 py-1.5 text-[13px] text-[var(--ax-fg-faint)] hover:bg-[var(--ax-hover)]">—  очистить</button>
+        )}
+        {shown.map(o => (
+          <button key={o} type="button" onMouseDown={e => { e.preventDefault(); pick(o) }}
+            className={`block w-full text-left px-2.5 py-1.5 text-[13px] hover:bg-[var(--ax-hover)] ${selected.includes(o) ? 'text-[var(--color-primary)] font-medium' : 'text-[var(--ax-fg)]'}`}>
+            {multi && (selected.includes(o) ? '☑ ' : '☐ ')}{o}
+          </button>
+        ))}
+        {shown.length === 0 && (
+          <div className="px-2.5 py-1.5 text-[12px] text-[var(--ax-fg-faint)]">
+            {query.trim() ? 'Enter — записать своё значение' : 'Нет вариантов'}
+          </div>
+        )}
+        {multi && (
+          <button type="button" onMouseDown={e => { e.preventDefault(); onClose() }}
+            className="block w-full text-left px-2.5 py-1.5 text-[12px] border-t border-[var(--ax-border)] text-[var(--ax-fg-soft)] hover:bg-[var(--ax-hover)]">Готово</button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// Native calendar, opened on focus so picking a date is click → click.
+function DateCell({ value, onPick, onClose }: { value: unknown; onPick: (v: unknown) => void; onClose: () => void }) {
+  const raw = typeof value === 'string' ? value : ''
+  const hasTime = /\d{2}:\d{2}/.test(raw)
+  const day = raw.slice(0, 10)
+  const ref = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    // showPicker() is what makes it one click instead of two; not every
+    // browser has it, and it throws without a user gesture.
+    try { (ref.current as unknown as { showPicker?: () => void })?.showPicker?.() } catch { /* focus alone is fine */ }
+  }, [])
+
+  return (
+    <input
+      ref={ref}
+      autoFocus
+      type="date"
+      value={/^\d{4}-\d{2}-\d{2}$/.test(day) ? day : ''}
+      onChange={e => onPick(e.target.value ? (hasTime ? e.target.value + raw.slice(10) : e.target.value) : null)}
+      onBlur={onClose}
+      onKeyDown={e => { if (e.key === 'Escape') onClose() }}
+      className="w-full px-2 py-1.5 text-[13px] bg-[var(--ax-input-bg)] border-2 border-[var(--color-primary)] outline-none"
+    />
+  )
+}
 
 export function DataGridScreen({
   cfg,
@@ -131,7 +249,7 @@ export function DataGridScreen({
   }, [rows, aiField, genRow])
 
   const startEdit = (r: RecordRow, c: FieldDef) => {
-    if (c.readOnly || c.type === 'bool' || c.type === 'link' || c.type === 'image' || c.type === 'multienum') return
+    if (c.readOnly || c.type === 'bool' || c.type === 'link' || c.type === 'image') return
     setEdit({ rowId: r.id, key: c.key }); setEditText(editableText(r.fields[c.key]))
   }
   const commitEdit = () => {
@@ -145,6 +263,13 @@ export function DataGridScreen({
     }
     setEdit(null)
   }
+
+  // Share the grid's inference with the panel: it saw 50 records, the panel
+  // only ever sees one.
+  const typeHints = useMemo(
+    () => Object.fromEntries(cols.map(c => [c.key, c.type])),
+    [cols],
+  )
 
   const onSaved = useCallback(() => { setSelectedId(null); refresh() }, [refresh])
   const onDeleted = useCallback(() => { setSelectedId(null); refresh() }, [refresh])
@@ -256,12 +381,20 @@ export function DataGridScreen({
                   if (isEditing) {
                     return (
                       <td key={c.key} style={sticky ? { left: 36 } : undefined} className={`${base} p-0`}>
-                        {c.type === 'enum' && c.enumOptions?.length ? (
-                          <select autoFocus value={editText} onChange={e => setEditText(e.target.value)} onBlur={commitEdit}
-                            className="w-full px-2 py-1.5 text-[13px] bg-[var(--ax-input-bg)] border-2 border-[var(--color-primary)] outline-none">
-                            <option value="">—</option>
-                            {(c.enumOptions ?? []).map(o => <option key={o} value={o}>{o}</option>)}
-                          </select>
+                        {c.type === 'enum' || c.type === 'multienum' ? (
+                          <ChoiceCell
+                            collection={cfg.key}
+                            field={c}
+                            value={r.fields[c.key]}
+                            onPick={v => { patchRow(r.id, { [c.key]: v }); if (c.type === 'enum') setEdit(null) }}
+                            onClose={() => setEdit(null)}
+                          />
+                        ) : c.type === 'date' ? (
+                          <DateCell
+                            value={r.fields[c.key]}
+                            onPick={v => { patchRow(r.id, { [c.key]: v }); setEdit(null) }}
+                            onClose={() => setEdit(null)}
+                          />
                         ) : (
                           <input autoFocus type={c.type === 'number' ? 'number' : 'text'} value={editText}
                             onChange={e => setEditText(e.target.value)} onBlur={commitEdit}
@@ -313,7 +446,7 @@ export function DataGridScreen({
       </div>
 
       {selectedId && (
-        <RecordPanel cfg={cfg} id={selectedId}
+        <RecordPanel cfg={cfg} id={selectedId} typeHints={typeHints}
           title={selectedId === 'new' ? 'Новая запись' : displayValue(rows.find(r => r.id === selectedId)?.fields[titleKey]) || String(selectedId)}
           onClose={() => setSelectedId(null)} onSaved={onSaved} onDeleted={onDeleted} />
       )}
