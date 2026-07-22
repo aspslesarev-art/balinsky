@@ -7,6 +7,7 @@
 
 import type { CollectionConfig, DataSourceAdapter, ListQuery, ListResult, RecordRow } from './types'
 import { adminSb } from '../sb'
+import { normalizeSlug } from '../../slug-normalize'
 
 const DEFAULT_PAGE_SIZE = 50
 
@@ -81,6 +82,13 @@ export const sqlJsonbAdapter: DataSourceAdapter = {
     const dataFields: Record<string, unknown> = {}
     const colFields: Record<string, unknown> = {}
     for (const [k, v] of Object.entries(fields)) (cols.has(k) ? colFields : dataFields)[k] = v
+    // A row whose slug column is empty is unreachable — the detail page
+    // resolves /o/<slug> through the slug index. Derive one from the title
+    // rather than silently creating a 404.
+    if (cols.has('slug') && !colFields.slug) {
+      const title = dataFields[cfg.titleField]
+      colFields.slug = normalizeSlug(typeof title === 'string' ? title : null) || id
+    }
     const insert: Record<string, unknown> = { [pk]: id, data: dataFields, ...colFields, synced_at: new Date().toISOString() }
     const { error } = await adminSb().from(cfg.table!).insert(insert)
     if (error) throw new Error(error.message)

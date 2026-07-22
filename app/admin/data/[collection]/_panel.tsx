@@ -202,14 +202,17 @@ function FieldEditor({ f, value, onChange, collection, row }: { f: FieldDef; val
   }
 
   if (f.type === 'json') {
-    return (
-      <div>
-        <Label f={f} />
-        <pre className="text-[11px] font-mono bg-[var(--ax-panel)] border border-[var(--ax-border)] rounded-xl p-2.5 overflow-x-auto max-h-40 text-[var(--ax-fg-soft)]">
-          {value == null ? '—' : JSON.stringify(value, null, 2)}
-        </pre>
-      </div>
-    )
+    if (f.readOnly) {
+      return (
+        <div>
+          <Label f={f} />
+          <pre className="text-[11px] font-mono bg-[var(--ax-panel)] border border-[var(--ax-border)] rounded-xl p-2.5 overflow-x-auto max-h-40 text-[var(--ax-fg-soft)]">
+            {value == null ? '—' : JSON.stringify(value, null, 2)}
+          </pre>
+        </div>
+      )
+    }
+    return <JsonField f={f} value={value} onChange={onChange} />
   }
 
   const showAi = !f.readOnly && collection && (f.type === 'text' || f.type === 'longtext') && hasAi(f.key)
@@ -232,6 +235,44 @@ function FieldEditor({ f, value, onChange, collection, row }: { f: FieldDef; val
       ) : (
         <input type="text" disabled={f.readOnly} value={asText(value)} onChange={e => onChange(e.target.value)} className={inputCls} />
       )}
+    </div>
+  )
+}
+
+// Editable structured value (arrays of tags or {name, slug} pairs — videos
+// attach to developers and complexes that way). Typing JSON goes through an
+// invalid intermediate state on nearly every keystroke, so the textarea keeps
+// its own text and only pushes up once it parses.
+function JsonField({ f, value, onChange }: { f: FieldDef; value: unknown; onChange: (v: unknown) => void }) {
+  const [text, setText] = useState(() => (value == null ? '' : JSON.stringify(value, null, 2)))
+  const [invalid, setInvalid] = useState(false)
+
+  function edit(next: string) {
+    setText(next)
+    if (next.trim() === '') {
+      setInvalid(false)
+      onChange(null)
+      return
+    }
+    try {
+      onChange(JSON.parse(next))
+      setInvalid(false)
+    } catch {
+      setInvalid(true)
+    }
+  }
+
+  return (
+    <div>
+      <Label f={f} />
+      <textarea
+        rows={4}
+        value={text}
+        onChange={e => edit(e.target.value)}
+        spellCheck={false}
+        className={`w-full rounded-xl border px-3 py-2 text-[12px] font-mono bg-[var(--ax-panel)] text-[var(--ax-fg)] ${invalid ? 'border-red-500' : 'border-[var(--ax-border)]'}`}
+      />
+      {invalid && <div className="mt-1 text-[11px] text-red-500">Невалидный JSON — правка не сохранится, пока не исправите</div>}
     </div>
   )
 }

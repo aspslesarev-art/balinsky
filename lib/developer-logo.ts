@@ -29,7 +29,7 @@ const loadLogoIndex = unstable_cache(
     return map
   },
   ['developer-logo-by-slug-v1'],
-  { revalidate: 600 },
+  { revalidate: 600, tags: ['content:developers'] },
 )
 
 /** Resolve a developer route slug to its logo URL, or null. */

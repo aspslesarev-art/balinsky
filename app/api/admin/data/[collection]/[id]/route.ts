@@ -37,7 +37,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
   const patch = body.fields ?? {}
   try {
     await adapterFor(cfg).update(cfg, id, patch)
-    revalidateCollection(cfg)
+    await revalidateCollection(cfg, id)
     return NextResponse.json({ ok: true })
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'update_failed' }, { status: 500 })
@@ -53,7 +53,7 @@ export async function DELETE(_req: Request, { params }: Ctx) {
   if (!cfg.caps.delete) return NextResponse.json({ error: 'delete_not_allowed' }, { status: 403 })
   try {
     await adapterFor(cfg).remove(cfg, id)
-    revalidateCollection(cfg)
+    await revalidateCollection(cfg, id)
     return NextResponse.json({ ok: true })
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'delete_failed' }, { status: 500 })

@@ -46,7 +46,7 @@ const loadChatIndex = unstable_cache(
     return { byName, bySlug }
   },
   ['developer-lead-chat-index-v1'],
-  { revalidate: 300 },
+  { revalidate: 300, tags: ['content:developers'] },
 )
 
 /** Telegram chat id for a developer identified by name and/or slug, or null. */

@@ -53,7 +53,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ collect
   const fields = body.fields ?? {}
   try {
     const row = await adapterFor(cfg).create(cfg, fields)
-    revalidateCollection(cfg)
+    await revalidateCollection(cfg, row.id)
     return NextResponse.json({ row })
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'create_failed' }, { status: 500 })

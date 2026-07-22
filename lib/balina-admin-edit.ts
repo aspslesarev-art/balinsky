@@ -180,7 +180,7 @@ async function applyPending(chatId: number, token: string): Promise<void> {
 
   try {
     await adapterFor(cfg).update(cfg, p.ref_id, p.patch)
-    try { revalidateCollection(cfg) } catch (e) { console.error('[admin-edit] revalidate:', e) }
+    try { await revalidateCollection(cfg, p.ref_id) } catch (e) { console.error('[admin-edit] revalidate:', e) }
     await flagKbForReembed(p.kbKind, p.ref_id).catch(e => console.error('[admin-edit] kb flag:', e))
     await auditLog(chatId, p, true)
     await clearPending(chatId)

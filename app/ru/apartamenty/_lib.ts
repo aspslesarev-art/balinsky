@@ -6,6 +6,7 @@ import { loadFeatureFlagsMap, FEATURE_FLAGS, FEATURE_LABELS } from '@/lib/listin
 import type { Option } from '@/components/filters/MultiSelectFilter'
 import { translit, hasCyrillic, translitPreserveCase } from '@/lib/translit'
 import { normalizeSlug } from '@/lib/slug-normalize'
+import { revisionedCache } from '@/lib/revisioned-cache'
 import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
 import { getDistrictCommercialMeta } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
@@ -600,8 +601,7 @@ export function toCard(
 // Свежесть после Airtable изменения — до 10 мин (приемлемо для прайса).
 type CachedAll = { enriched: EnrichedRow[]; manifest: Record<string, string[]> }
 const TTL_MS = 600_000
-let _cache: { ts: number; data: CachedAll } | null = null
-let _inflight: Promise<CachedAll> | null = null
+
 
 // See villy/_lib.ts for rationale — full `data` projection was ~17 MB per
 // warm-instance refresh on raw_apartments.
@@ -667,14 +667,8 @@ async function _loadAllInternal(): Promise<CachedAll> {
   return { enriched, manifest }
 }
 
-export async function loadAll(): Promise<CachedAll> {
-  if (_cache && Date.now() - _cache.ts < TTL_MS) return _cache.data
-  if (_inflight) return _inflight
-  _inflight = _loadAllInternal()
-    .then(data => { _cache = { ts: Date.now(), data }; return data })
-    .finally(() => { _inflight = null })
-  return _inflight
-}
+export const loadAll: () => Promise<CachedAll> =
+  revisionedCache(['apartments'], TTL_MS, _loadAllInternal)
 
 // Returns ALL cards (post-filter, post-search, post-dedupe, post-sort) — used
 // when callers need the full set (map view, total counts, facets).

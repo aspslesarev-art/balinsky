@@ -1,6 +1,7 @@
 import { revalidateTag, revalidatePath } from 'next/cache'
 import { NextResponse } from 'next/server'
 import { KIND_TO_TAGS, KIND_TO_PATHS } from '@/lib/content-revalidate-map'
+import { bumpContentRev } from '@/lib/content-version'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,6 +25,9 @@ export async function POST(request: Request) {
   }
 
   for (const k of kinds) {
+    // Bump first — the module-level catalog caches only notice a change
+    // through content_version (see lib/content-version.ts).
+    await bumpContentRev(k).catch(e => console.error('[revalidate-content] bump:', e))
     revalidateTag(KIND_TO_TAGS[k], 'max')
     for (const route of KIND_TO_PATHS[k]) {
       revalidatePath(route.path, route.type)

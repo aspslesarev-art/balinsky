@@ -32,8 +32,8 @@ const loadComplexIndex = unstable_cache(
     }
     return { nameToSlug, slugToName }
   },
-  ['complex-index-v2'],
-  { revalidate: 600 },
+  ['complex-index-v3'],
+  { revalidate: 600, tags: ['content:complexes'] },
 )
 
 async function loadComplexNameToSlug(): Promise<Record<string, string>> {

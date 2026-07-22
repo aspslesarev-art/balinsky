@@ -7,6 +7,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@supabase/supabase-js'
 import { unstable_cache } from 'next/cache'
+import { revisionedCache } from '@/lib/revisioned-cache'
 import {
   BedDouble, Square, Building2, Calendar, FileCheck2, Lock, MapPin, Plane,
   ChevronRight, Layers, HardHat, Star,
@@ -519,26 +520,22 @@ function fallbackAptTitle(district: string | null, area: number | null, bedrooms
 // same id and 301 to the canonical clean slug.
 type AptIndexEntry = { id: string; slug: string; district: string | null; aliases?: string[] }
 const APT_INDEX_URL = `${SUPABASE_URL}/storage/v1/object/public/feeds/_apartments-index.json`
-let _aptIndexCache: { ts: number; data: AptIndexEntry[] } | null = null
-let _aptIndexInflight: Promise<AptIndexEntry[]> | null = null
+let _lastGoodAptIndex: AptIndexEntry[] = []
 
-async function _loadApartmentIndex(): Promise<AptIndexEntry[]> {
-  if (_aptIndexCache && Date.now() - _aptIndexCache.ts < 30 * 60 * 1000) return _aptIndexCache.data
-  if (_aptIndexInflight) return _aptIndexInflight
-  _aptIndexInflight = (async () => {
-    try {
-      const r = await fetch(APT_INDEX_URL, { next: { revalidate: 10 } })
-      if (!r.ok) return _aptIndexCache?.data ?? []
-      const j = await r.json() as { items: AptIndexEntry[] }
-      const items = j.items ?? []
-      _aptIndexCache = { ts: Date.now(), data: items }
-      return items
-    } catch {
-      return _aptIndexCache?.data ?? []
-    }
-  })().finally(() => { _aptIndexInflight = null })
-  return _aptIndexInflight
-}
+// See villy/o/[slug]/_detail.tsx — revisionedCache lets an admin edit flush
+// this in-process index instead of waiting out the 30-min TTL.
+const _loadApartmentIndex = revisionedCache(['apartments'], 30 * 60 * 1000, async (): Promise<AptIndexEntry[]> => {
+  try {
+    const r = await fetch(APT_INDEX_URL, { next: { revalidate: 10 } })
+    if (!r.ok) return _lastGoodAptIndex
+    const j = await r.json() as { items: AptIndexEntry[] }
+    const items = j.items ?? []
+    if (items.length) _lastGoodAptIndex = items
+    return items
+  } catch {
+    return _lastGoodAptIndex
+  }
+})
 const _loadApartmentById = unstable_cache(
   async (id: string): Promise<Row | null> => {
     const [{ data }, enCache] = await Promise.all([
@@ -552,8 +549,8 @@ const _loadApartmentById = unstable_cache(
     // catalog loadAllApartments, so the merge has to live here too.
     return { ...raw, data: mergeAllTranslations(raw.data, raw.airtable_id, enCache) }
   },
-  ['apartment-by-id-detail-v2'],
-  { revalidate: 3600 },
+  ['apartment-by-id-detail-v3'],
+  { revalidate: 3600, tags: ['content:apartments'] },
 )
 const _loadAptManifest = unstable_cache(
   async (): Promise<Record<string, string[]>> => {
@@ -562,8 +559,8 @@ const _loadAptManifest = unstable_cache(
       return r.ok ? r.json() : {}
     } catch { return {} }
   },
-  ['apt-manifest-detail'],
-  { revalidate: 3600 },
+  ['apt-manifest-detail-v2'],
+  { revalidate: 3600, tags: ['content:apartments'] },
 )
 const _loadDevLookup = unstable_cache(
   async (): Promise<Record<string, string>> => {
@@ -626,8 +623,8 @@ const _loadDevelopersIndex = unstable_cache(
     }
     return out
   },
-  ['apt-developers-index-v2'],
-  { revalidate: 600 },
+  ['apt-developers-index-v3'],
+  { revalidate: 600, tags: ['content:developers'] },
 )
 function findDeveloperByName(targetName: string | null, list: DeveloperLite[]): DeveloperLite | null {
   if (!targetName) return null
