@@ -2,11 +2,11 @@ import type { Metadata } from 'next'
 import { LegalLayout } from '@/components/LegalLayout'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
-const UPDATED = 'May 15, 2026'
+const UPDATED = '15 maja 2026'
 
 export const metadata: Metadata = {
-  title: 'Cookie Policy | Balinsky',
-  description: 'Which cookies Balinsky.info uses: strictly necessary, analytics, marketing — and how to turn them off.',
+  title: 'Polityka plików cookie | Balinsky',
+  description: 'Jakie pliki cookie wykorzystuje Balinsky.info: ściśle niezbędne, analityczne, marketingowe — oraz jak je wyłączyć.',
   alternates: {
     canonical: '/pl/cookie',
     languages: {
@@ -20,46 +20,46 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <LegalLayout lang="pl" title="Cookie Policy" updated={`Last updated: ${UPDATED}`} breadcrumbLabel="Cookie Policy">
+    <LegalLayout lang="pl" title="Polityka plików cookie" updated={`Ostatnia aktualizacja: ${UPDATED}`} breadcrumbLabel="Polityka plików cookie">
       <p>
-        Cookies are small text files the site stores in your browser. They keep your preferences sticky and help us understand
-        how the catalogue is used.
+        Pliki cookie to niewielkie pliki tekstowe, które witryna zapisuje w Twojej przeglądarce. Utrwalają one Twoje preferencje i pomagają nam
+        zrozumieć, w jaki sposób korzystasz z katalogu.
       </p>
 
-      <h2>1. Cookie categories we use</h2>
-      <h3>Strictly necessary (site won&apos;t work without them)</h3>
+      <h2>1. Kategorie plików cookie, których używamy</h2>
+      <h3>Ściśle niezbędne (bez nich witryna nie działa)</h3>
       <ul>
-        <li>Session support — remembers your chosen language (RU or EN).</li>
-        <li>Form protection (CSRF tokens).</li>
-        <li>Local storage of your favourites list — not a cookie in the strict sense, but technical.</li>
+        <li>Obsługa sesji — zapamiętuje wybrany przez Ciebie język (RU lub EN).</li>
+        <li>Ochrona formularzy (tokeny CSRF).</li>
+        <li>Lokalne przechowywanie listy ulubionych — w ścisłym sensie nie jest to plik cookie, lecz element techniczny.</li>
       </ul>
-      <h3>Analytics (help us improve the site)</h3>
+      <h3>Analityczne (pomagają nam ulepszać witrynę)</h3>
       <ul>
-        <li><strong>Google Analytics 4</strong> via Google Tag Manager (container GTM-TM6D54Z3) — anonymised page-view and event statistics.</li>
-        <li><strong>Yandex.Metrica</strong> (counter 104881153) — behavioural analytics, heatmaps, session replays.</li>
+        <li><strong>Google Analytics 4</strong> za pośrednictwem Google Tag Manager (kontener GTM-TM6D54Z3) — zanonimizowane statystyki odsłon i zdarzeń.</li>
+        <li><strong>Yandex.Metrica</strong> (licznik 104881153) — analityka behawioralna, mapy ciepła, nagrania sesji.</li>
       </ul>
-      <h3>Marketing</h3>
+      <h3>Marketingowe</h3>
       <p>
-        We currently do not set advertising cookies. If we run retargeting on Google or Yandex in the future, the relevant cookies will be added
-        and this page will be updated.
+        Obecnie nie stosujemy reklamowych plików cookie. Jeśli w przyszłości uruchomimy retargeting w Google lub Yandex, odpowiednie pliki cookie zostaną dodane,
+        a ta strona zaktualizowana.
       </p>
 
-      <h2>2. How to disable cookies</h2>
+      <h2>2. Jak wyłączyć pliki cookie</h2>
       <p>
-        Analytics and marketing cookies can be turned off in your browser settings. Strictly necessary cookies can&apos;t be disabled —
-        the favourites list and language switcher need them.
+        Analityczne i marketingowe pliki cookie można wyłączyć w ustawieniach przeglądarki. Ściśle niezbędnych plików cookie nie da się wyłączyć —
+        są potrzebne liście ulubionych i przełącznikowi języka.
       </p>
       <ul>
-        <li>Chrome — <a href="https://support.google.com/chrome/answer/95647" target="_blank" rel="noopener">Settings → Privacy and security → Cookies</a></li>
-        <li>Safari — <a href="https://support.apple.com/guide/safari/manage-cookies-sfri11471/mac" target="_blank" rel="noopener">Preferences → Privacy</a></li>
-        <li>Firefox — <a href="https://support.mozilla.org/en-US/kb/cookies-information-websites-store-on-your-computer" target="_blank" rel="noopener">Options → Privacy &amp; Security</a></li>
+        <li>Chrome — <a href="https://support.google.com/chrome/answer/95647" target="_blank" rel="noopener">Ustawienia → Prywatność i bezpieczeństwo → Pliki cookie</a></li>
+        <li>Safari — <a href="https://support.apple.com/guide/safari/manage-cookies-sfri11471/mac" target="_blank" rel="noopener">Preferencje → Prywatność</a></li>
+        <li>Firefox — <a href="https://support.mozilla.org/en-US/kb/cookies-information-websites-store-on-your-computer" target="_blank" rel="noopener">Opcje → Prywatność i bezpieczeństwo</a></li>
       </ul>
-      <p>You can also install uBlock Origin, Privacy Badger, or enable Do Not Track.</p>
+      <p>Możesz też zainstalować uBlock Origin, Privacy Badger lub włączyć Do Not Track.</p>
 
-      <h2>3. Related documents</h2>
+      <h2>3. Powiązane dokumenty</h2>
       <ul>
-        <li><a href="/pl/prywatnosc">Privacy Policy</a></li>
-        <li><a href="/pl/regulamin">Terms of Use</a></li>
+        <li><a href="/pl/prywatnosc">Polityka prywatności</a></li>
+        <li><a href="/pl/regulamin">Regulamin</a></li>
       </ul>
 
       {/* TODO: when retargeting is enabled, add a Marketing section listing campaign IDs and cookie identifiers. */}

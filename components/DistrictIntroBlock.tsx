@@ -49,6 +49,16 @@ const COPY = {
     fullGuide: 'Panduan jangkep investasi ring Bali',
     count: (n: number, name: string) => `Mangkin wenten ${n} properti ring ${name}. Suang-suang listing sampun lulus QA editorial — PBG, SLF, registrasi pangwangun, lan verifikasi ring genah.`,
   },
+  pl: {
+    guide: (name: string) => `O rejonie ${name} — przewodnik po dzielnicy`,
+    fullGuide: 'Pełny przewodnik inwestycyjny po Bali',
+    count: (n: number, name: string) => `Obecnie ${n} nieruchomości dostępnych w ${name}. Każda oferta przeszła naszą redakcyjną kontrolę jakości — PBG, SLF, rejestrację dewelopera i weryfikację na miejscu.`,
+  },
+  uk: {
+    guide: (name: string) => `Про район ${name} — гід інвестора`,
+    fullGuide: 'Повний гід з інвестицій на Балі',
+    count: (n: number, name: string) => `Наразі в каталозі ${n} об’єктів у районі ${name}. Кожен пройшов редакторський QA — PBG, SLF, реєстрація забудовника та перевірка на місці.`,
+  },
 } as const
 
 export function DistrictIntroBlock({

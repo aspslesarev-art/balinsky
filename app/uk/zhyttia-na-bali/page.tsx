@@ -10,11 +10,11 @@ import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
-const UPDATED = 'May 15, 2026'
+const UPDATED = '15 травня 2026'
 
 export const metadata: Metadata = {
-  title: 'Living in Bali — Visas, Taxes, Schools, Healthcare 2026 | Balinsky',
-  description: 'Bali relocation guide: KITAS, Second Home Visa, Golden Visa, resident foreigner taxes, international schools, BIMC and Siloam hospitals, real family budgets.',
+  title: 'Життя на Балі — візи, податки, школи, охорона здоровʼя 2026 | Balinsky',
+  description: 'Гід із переїзду на Балі: KITAS, Second Home Visa, Golden Visa, податки для іноземців-резидентів, міжнародні школи, лікарні BIMC і Siloam, реальні сімейні бюджети.',
   alternates: {
     canonical: '/uk/zhyttia-na-bali',
     languages: {

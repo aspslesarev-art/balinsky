@@ -205,7 +205,7 @@ function SinglePopup({ p, onClose, lang }: { p: VillaPoint; onClose: () => void;
         href={switchLangPath(`/ru/villy/o/${p.slug}`, lang)}
         className="block text-center w-full px-3 py-2 rounded-lg bg-[#33A474] hover:bg-[#2C8E65] text-white text-[13px] font-medium no-underline transition-colors"
       >
-        {pickCopy({ ru: 'Открыть карточку', en: 'Open listing', id: 'Buka listing', fr: 'Voir le bien', de: 'Objekt öffnen', zh: '查看房源', nl: 'Bekijk woning', ban: 'Buka listing' }, lang)}
+        {pickCopy({ ru: 'Открыть карточку', en: 'Open listing', id: 'Buka listing', fr: 'Voir le bien', de: 'Objekt öffnen', zh: '查看房源', nl: 'Bekijk woning', ban: 'Buka listing', pl: 'Otwórz ofertę', uk: 'Відкрити картку' }, lang)}
       </a>
     </div>
   )
@@ -217,7 +217,7 @@ function MultiPopup({ items, onClose, lang }: { items: VillaPoint[]; onClose: ()
     <div className="relative w-[300px] p-1">
       <CloseButton onClose={onClose} />
       <div className="text-[13px] font-medium text-[#6B7280] mb-2 pr-6">
-        {`${items.length} ${pickCopy({ ru: 'вилл в одной точке', en: 'villas at this point', id: 'vila di titik ini', fr: 'villas à cet endroit', de: 'Villen an diesem Punkt', zh: '栋别墅位于此处', nl: 'villa’s op dit punt', ban: 'vila di titik puniki' }, lang)}`}
+        {`${items.length} ${pickCopy({ ru: 'вилл в одной точке', en: 'villas at this point', id: 'vila di titik ini', fr: 'villas à cet endroit', de: 'Villen an diesem Punkt', zh: '栋别墅位于此处', nl: 'villa’s op dit punt', ban: 'vila di titik puniki', pl: 'willi w tym miejscu', uk: 'вілл у цій точці' }, lang)}`}
       </div>
       <ul className="max-h-[340px] overflow-y-auto -mx-1 px-1 divide-y divide-[#E5E7EB]">
         {items.map(p => {
@@ -269,7 +269,7 @@ export function VillasMap({
   if (!apiKey) {
     return (
       <div style={{ width: '100%' }} className={`${heightClass} bg-[var(--color-search-bg)] rounded-3xl flex items-center justify-center text-[var(--color-text-muted)]`}>
-        {pickCopy({ ru: 'Карта недоступна (нет API ключа)', en: 'Map unavailable (no API key)', id: 'Peta tidak tersedia (tanpa API key)', fr: 'Carte indisponible (pas de clé API)', de: 'Karte nicht verfügbar (kein API-Schlüssel)', zh: '地图不可用（缺少 API 密钥）', nl: 'Kaart niet beschikbaar (geen API-sleutel)', ban: 'Peta nenten wenten (tanpa API key)' }, lang)}
+        {pickCopy({ ru: 'Карта недоступна (нет API ключа)', en: 'Map unavailable (no API key)', id: 'Peta tidak tersedia (tanpa API key)', fr: 'Carte indisponible (pas de clé API)', de: 'Karte nicht verfügbar (kein API-Schlüssel)', zh: '地图不可用（缺少 API 密钥）', nl: 'Kaart niet beschikbaar (geen API-sleutel)', ban: 'Peta nenten wenten (tanpa API key)', pl: 'Mapa niedostępna (brak klucza API)', uk: 'Карта недоступна (немає API ключа)' }, lang)}
       </div>
     )
   }

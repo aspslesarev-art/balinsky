@@ -155,6 +155,42 @@ const COPY = {
     ],
     locale: 'id-ID',
   },
+  pl: {
+    buyChat: 'Kup',
+    buySeller: 'Kup',
+    perSqm: '/ m²',
+    priceUpdated: (d: string) => `Cena zaktualizowana ${d}`,
+    reservedTitle: 'Obecnie zarezerwowane',
+    reservedUntil: (d: string) => `Rezerwacja wygasa ${d}. Jeśli rezerwacja zostanie zwolniona, napiszemy do menedżera.`,
+    chipsResale: [
+      { icon: 'user', label: 'Bezpośredni kontakt ze sprzedającym' },
+      { icon: 'file', label: 'Dokumenty nieruchomości' },
+    ],
+    chipsPrimary: [
+      { icon: 'file', label: 'Dokumenty i due diligence' },
+      { icon: 'map',  label: 'Master plan i rzuty' },
+      { icon: 'user', label: 'Bezpośredni kontakt z deweloperem' },
+    ],
+    locale: 'pl-PL',
+  },
+  uk: {
+    buyChat: 'Купити',
+    buySeller: 'Купити',
+    perSqm: '/ m²',
+    priceUpdated: (d: string) => `Ціну оновлено ${d}`,
+    reservedTitle: 'Зараз заброньовано',
+    reservedUntil: (d: string) => `Бронь діє до ${d}. Якщо бронь знімуть — напишемо менеджеру.`,
+    chipsResale: [
+      { icon: 'user', label: 'Прямий контакт продавця' },
+      { icon: 'file', label: 'Документи обʼєкта' },
+    ],
+    chipsPrimary: [
+      { icon: 'file', label: 'Документи та due diligence' },
+      { icon: 'map',  label: 'Майстер-план і планування' },
+      { icon: 'user', label: 'Прямий контакт забудовника' },
+    ],
+    locale: 'uk-UA',
+  },
 } as const
 
 // Single bordered container that joins the price + the two CTAs +

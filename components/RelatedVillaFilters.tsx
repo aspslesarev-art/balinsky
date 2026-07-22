@@ -69,6 +69,22 @@ const COPY = {
     popularDistricts: 'Wewengkon kasub',
     in: 'ring',
   },
+  pl: {
+    sectionTitle: 'Zobacz także',
+    bedroomsHere: 'Sypialnie',
+    otherDistricts: 'Inne dzielnice',
+    byStyle: 'Według stylu wnętrza',
+    popularDistricts: 'Popularne dzielnice',
+    in: 'w',
+  },
+  uk: {
+    sectionTitle: 'Дивіться також',
+    bedroomsHere: 'Спальні',
+    otherDistricts: 'Інші райони',
+    byStyle: 'За стилем інтер’єру',
+    popularDistricts: 'Популярні райони',
+    in: 'в',
+  },
 } as const
 
 // Internal-link cluster under the catalog: spreads PageRank across

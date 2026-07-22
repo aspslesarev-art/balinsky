@@ -79,6 +79,24 @@ const COPY = {
     permit:    'Ijin',
     resetAll:  'Kosongang makasami',
   },
+  pl: {
+    district:  'Dzielnica',
+    types:     'Typ',
+    status:    'Etap budowy',
+    year:      'Rok oddania',
+    developer: 'Deweloper',
+    permit:    'Pozwolenie',
+    resetAll:  'Wyczyść wszystko',
+  },
+  uk: {
+    district:  'Район',
+    types:     'Тип',
+    status:    'Етап будівництва',
+    year:      'Рік здачі',
+    developer: 'Забудовник',
+    permit:    'Дозвіл',
+    resetAll:  'Очистити все',
+  },
 } as const
 
 function ResetAll({ activeCount, current, view, lang }: {

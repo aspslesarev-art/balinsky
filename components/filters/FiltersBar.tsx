@@ -48,6 +48,16 @@ const COPY = {
     developer: 'Pangwangun', status: 'Tahap pembangunan', permit: 'Ijin',
     dealType: 'Jinis transaksi', features: 'Fitur', resetAll: 'Kosongang makasami',
   },
+  pl: {
+    price: 'Cena', district: 'Dzielnica', bedrooms: 'Sypialnie', floor: 'Piętro',
+    developer: 'Deweloper', status: 'Etap budowy', permit: 'Pozwolenie',
+    dealType: 'Rodzaj transakcji', features: 'Udogodnienia', resetAll: 'Wyczyść wszystko',
+  },
+  uk: {
+    price: 'Ціна', district: 'Район', bedrooms: 'Спальні', floor: 'Поверх',
+    developer: 'Забудовник', status: 'Етап будівництва', permit: 'Дозвіл',
+    dealType: 'Тип угоди', features: 'Особливості', resetAll: 'Очистити все',
+  },
 } as const
 
 export type FilterState = {

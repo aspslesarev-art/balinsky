@@ -75,6 +75,20 @@ const COPY = {
     onMap: 'Ring peta',
     video: 'Video',
   },
+  pl: {
+    home: 'Strona główna', eventsCrumb: 'Wydarzenia',
+    pastBadge: 'zakończone',
+    register: 'Zapisz się przez Telegram',
+    onMap: 'Na mapie',
+    video: 'Wideo',
+  },
+  uk: {
+    home: 'Головна', eventsCrumb: 'Заходи',
+    pastBadge: 'завершено',
+    register: 'Записатися через Telegram',
+    onMap: 'На карті',
+    video: 'Відео',
+  },
 } as const
 
 function isPast(iso: string | null): boolean {
@@ -129,7 +143,7 @@ export async function EventDetail({ slug, lang }: { slug: string; lang: Lang }) 
       }
     : {
         '@type': 'Place',
-        name: e.format?.trim() || pickCopy({ ru: 'Бали, Индонезия', en: 'Bali, Indonesia', id: 'Bali, Indonesia', fr: 'Bali, Indonésie', de: 'Bali, Indonesien', zh: '印度尼西亚巴厘岛', nl: 'Bali, Indonesië', ban: 'Bali, Indonesia' }, lang),
+        name: e.format?.trim() || pickCopy({ ru: 'Бали, Индонезия', en: 'Bali, Indonesia', id: 'Bali, Indonesia', fr: 'Bali, Indonésie', de: 'Bali, Indonesien', zh: '印度尼西亚巴厘岛', nl: 'Bali, Indonesië', ban: 'Bali, Indonesia', pl: 'Bali, Indonezja', uk: 'Балі, Індонезія' }, lang),
         address: {
           '@type': 'PostalAddress',
           addressCountry: 'ID',

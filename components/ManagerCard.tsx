@@ -73,6 +73,22 @@ const COPY = {
     videoCall: 'Panggilan video',
     lead: 'Ngirim panagih',
   },
+  pl: {
+    heading: 'Skontaktuj się z menedżerem',
+    headingMany: 'Skontaktuj się z menedżerami',
+    role: (dev?: string | null) => `Menedżer ${dev ? dev : 'dewelopera'}`,
+    sla: 'Zwykle odpowiada w ciągu godziny w godzinach pracy na Bali (UTC+8)',
+    videoCall: 'Rozmowa wideo',
+    lead: 'Zostaw zapytanie',
+  },
+  uk: {
+    heading: 'Зв’язатися з менеджером',
+    headingMany: 'Зв’язатися з менеджерами',
+    role: (dev?: string | null) => `Менеджер ${dev ? dev : 'забудовника'}`,
+    sla: 'Зазвичай відповідає протягом години в робочі години Балі (UTC+8)',
+    videoCall: 'Відеодзвінок',
+    lead: 'Залишити заявку',
+  },
 } as const
 
 // Accept either a single manager (legacy callsites) or an array of

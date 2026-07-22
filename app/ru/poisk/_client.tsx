@@ -120,6 +120,26 @@ export function SemanticSearchClient({ lang }: { lang: Lang }) {
       empty: 'Durung wenten sane cocok — cobain ubah kruna utawi linggahang panyeledikan.',
       headline: (n: number) => `${n} hasil`,
     },
+    pl: {
+      title: 'Opisz swoją wymarzoną nieruchomość',
+      hint: 'Pisz swobodnie — szukamy po znaczeniu, nie tylko po filtrach.',
+      placeholder: 'np. willa z basenem infinity 5 min od plaży w Canggu, poniżej $600k',
+      cta: 'Znajdź',
+      busy: 'Szukamy…',
+      examples: 'Spróbuj:',
+      empty: 'Brak wyników — spróbuj przeformułować lub poszerzyć zapytanie.',
+      headline: (n: number) => `${n} dopasowań`,
+    },
+    uk: {
+      title: 'Опишіть ідеальний об’єкт',
+      hint: 'Пишіть як завгодно — шукаємо за змістом, а не за галочками у фільтрі.',
+      placeholder: 'наприклад, вілла з інфініті-басейном за 5 хвилин від океану в Чангу до $600k',
+      cta: 'Знайти',
+      busy: 'Шукаємо…',
+      examples: 'Спробуйте:',
+      empty: 'Нічого не знайшли — спробуйте переформулювати або розширити запит.',
+      headline: (n: number) => `${n} збігів`,
+    },
   }, lang)
 
   async function submit(text?: string) {
@@ -259,7 +279,7 @@ export function SemanticSearchClient({ lang }: { lang: Lang }) {
 
         <div className="mt-12 text-center">
           <Link href={switchLangPath('/ru', lang)} className="text-[13px] text-[#6B7280] hover:text-[var(--color-primary)] inline-flex items-center gap-1">
-            <ArrowRight size={13} className="rotate-180" /> {pickCopy({ ru: 'К каталогу', en: 'Back to catalog', id: 'Ke katalog', fr: 'Retour au catalogue', de: 'Zurück zum Katalog', zh: '返回目录', nl: 'Terug naar catalogus', ban: 'Mawali ka katalog' }, lang)}
+            <ArrowRight size={13} className="rotate-180" /> {pickCopy({ ru: 'К каталогу', en: 'Back to catalog', id: 'Ke katalog', fr: 'Retour au catalogue', de: 'Zurück zum Katalog', zh: '返回目录', nl: 'Terug naar catalogus', ban: 'Mawali ka katalog', pl: 'Powrót do katalogu', uk: 'До каталогу' }, lang)}
           </Link>
         </div>
       </main>

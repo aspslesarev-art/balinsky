@@ -135,7 +135,7 @@ export function ComplexVisualizationViewer({
   return (
     <section className="mb-10">
       <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-2">
-        {pickCopy({ ru: 'Интерактивный план', en: 'Interactive plan', id: 'Denah interaktif', fr: 'Plan interactif', de: 'Interaktiver Plan', zh: '交互式平面图', nl: 'Interactieve plattegrond', ban: 'Denah interaktif' }, lang)}
+        {pickCopy({ ru: 'Интерактивный план', en: 'Interactive plan', id: 'Denah interaktif', fr: 'Plan interactif', de: 'Interaktiver Plan', zh: '交互式平面图', nl: 'Interactieve plattegrond', ban: 'Denah interaktif', pl: 'Plan interaktywny', uk: 'Інтерактивний план' }, lang)}
       </h2>
       <div className="text-[13px] text-[var(--color-text-muted)] mb-4">
         {lang === 'ru'

@@ -2,11 +2,11 @@ import type { Metadata } from 'next'
 import { LegalLayout } from '@/components/LegalLayout'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
-const UPDATED = 'May 15, 2026'
+const UPDATED = '15 травня 2026'
 
 export const metadata: Metadata = {
-  title: 'Terms of Use | Balinsky',
-  description: 'Terms of use for the Balinsky.info catalogue: what we are (and what we are not), content boundaries, responsibilities of buyer and operator.',
+  title: 'Умови використання | Balinsky',
+  description: 'Умови використання каталогу Balinsky.info: хто ми є (і хто ми не є), межі контенту, обовʼязки покупця та оператора.',
   alternates: {
     canonical: '/uk/umovy',
     languages: {
@@ -20,76 +20,76 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <LegalLayout lang="uk" title="Terms of Use" updated={`Last updated: ${UPDATED}`} breadcrumbLabel="Terms of Use">
+    <LegalLayout lang="uk" title="Умови використання" updated={`Останнє оновлення: ${UPDATED}`} breadcrumbLabel="Умови використання">
       <p>
-        By using Balinsky.info you agree to the terms below. If something here does not work for you, please do not use the site.
+        Користуючись Balinsky.info, ви погоджуєтесь із наведеними нижче умовами. Якщо щось тут вам не підходить, будь ласка, не користуйтеся сайтом.
       </p>
 
-      <h2>1. What Balinsky.info is</h2>
+      <h2>1. Що таке Balinsky.info</h2>
       <p>
-        Balinsky.info is an aggregator catalogue of Bali real-estate listings (villas, apartments, residential complexes,
-        long-term rentals), developer information, news, promotions and educational material. The site is built for foreign buyers.
+        Balinsky.info — це каталог-агрегатор оголошень про нерухомість Балі (вілли, апартаменти, житлові комплекси,
+        довгострокова оренда), інформації про забудовників, новин, акцій та освітніх матеріалів. Сайт створено для іноземних покупців.
       </p>
       <p>
-        We are not a party to any sale-and-purchase transaction. We surface information about available units and connect buyers
-        with the operator of each unit (developer, agency or owner). The deal is closed directly between buyer and operator.
-      </p>
-
-      <h2>2. Accuracy</h2>
-      <p>
-        We work to keep the catalogue current, but prices, availability, permits (PBG, SLF) and terms can change.
-        Before closing a deal, verify the data with the operator directly and through Indonesia&apos;s official registers.
-      </p>
-      <p>
-        Each video and photo was captured on a specific date — we are not responsible for changes after that capture.
+        Ми не є стороною жодної угоди купівлі-продажу. Ми надаємо інформацію про доступні обʼєкти та зʼєднуємо покупців
+        з оператором кожного обʼєкта (забудовником, агенцією чи власником). Угода укладається безпосередньо між покупцем і оператором.
       </p>
 
-      <h2>3. User content</h2>
+      <h2>2. Достовірність</h2>
       <p>
-        When you contact us through Telegram, our bot, a form, or email, you submit text and contact data and confirm you have the
-        right to share them. How that data is used: see our <a href="/uk/konfidentsiynist">Privacy Policy</a>.
+        Ми працюємо над тим, щоб каталог був актуальним, проте ціни, наявність, дозволи (PBG, SLF) та умови можуть змінюватися.
+        Перед укладенням угоди перевіряйте дані безпосередньо в оператора та через офіційні реєстри Індонезії.
       </p>
       <p>
-        It is forbidden to use the site for spam, automated scraping, attempts to bypass protections, load attacks, or reverse-engineering of internal APIs.
-      </p>
-
-      <h2>4. Intellectual property</h2>
-      <p>
-        Texts, schemes and editorial materials on the site (unless otherwise marked) are licensed under
-        Creative Commons Attribution 4.0 International — credit the author and link to the original when reusing them.
-      </p>
-      <p>
-        Photos and videos of individual properties may belong to developers or third parties — request a separate licence for commercial reuse.
+        Кожне відео та фото було зроблено в конкретну дату — ми не несемо відповідальності за зміни після цієї зйомки.
       </p>
 
-      <h2>5. Balisa AI assistant</h2>
+      <h2>3. Контент користувача</h2>
       <p>
-        Balisa is an experimental AI assistant on the site. Its answers are informational and do not replace consultation with a licensed agent,
-        lawyer or notary. Balisa can make mistakes — confirm anything that affects a deal with the appropriate specialist before acting on it.
+        Звертаючись до нас через Telegram, нашого бота, форму або електронну пошту, ви надаєте текст і контактні дані та підтверджуєте, що маєте
+        право ними ділитися. Як використовуються ці дані: дивіться нашу <a href="/uk/konfidentsiynist">Політику конфіденційності</a>.
+      </p>
+      <p>
+        Забороняється використовувати сайт для спаму, автоматизованого збору даних, спроб обходу захисту, атак на навантаження чи зворотної розробки внутрішніх API.
       </p>
 
-      <h2>6. External links</h2>
+      <h2>4. Інтелектуальна власність</h2>
       <p>
-        The site links to third-party resources (YouTube, Telegram, estatemarket.io, developer sites). We do not control their content
-        and are not responsible for their availability or policies.
+        Тексти, схеми та редакційні матеріали на сайті (якщо не зазначено інше) ліцензовані на умовах
+        Creative Commons Attribution 4.0 International — під час повторного використання зазначайте автора та посилайтеся на оригінал.
+      </p>
+      <p>
+        Фото та відео окремих обʼєктів можуть належати забудовникам або третім особам — для комерційного використання запитуйте окрему ліцензію.
       </p>
 
-      <h2>7. Liability</h2>
+      <h2>5. AI-асистент Balisa</h2>
       <p>
-        The site is provided &ldquo;as is&rdquo;. We do not guarantee uninterrupted availability, absence of technical issues, or that the listings
-        fit your specific investment goals. Decisions are at the buyer&apos;s risk.
+        Balisa — це експериментальний AI-асистент на сайті. Його відповіді мають інформаційний характер і не замінюють консультацію з ліцензованим агентом,
+        юристом чи нотаріусом. Balisa може помилятися — усе, що впливає на угоду, підтверджуйте у відповідного фахівця, перш ніж діяти.
       </p>
 
-      <h2>8. Changes</h2>
+      <h2>6. Зовнішні посилання</h2>
       <p>
-        These terms can change. The current version always lives on this page. Significant updates are announced in the
-        <a href="https://t.me/itrealtor" target="_blank" rel="noopener"> @itrealtor Telegram channel</a>.
+        Сайт містить посилання на ресурси третіх сторін (YouTube, Telegram, estatemarket.io, сайти забудовників). Ми не контролюємо їхній вміст
+        і не несемо відповідальності за їхню доступність чи політики.
       </p>
 
-      <h2>9. Governing law and jurisdiction</h2>
+      <h2>7. Відповідальність</h2>
       <p>
-        Disputes are governed by the laws of Georgia (the operator&apos;s country of registration), unless mandatory rules of your country of residence
-        provide otherwise.
+        Сайт надається &ldquo;як є&rdquo;. Ми не гарантуємо безперебійної доступності, відсутності технічних проблем чи того, що оголошення
+        відповідають вашим конкретним інвестиційним цілям. Рішення ухвалюються на ризик покупця.
+      </p>
+
+      <h2>8. Зміни</h2>
+      <p>
+        Ці умови можуть змінюватися. Актуальна версія завжди розміщена на цій сторінці. Про суттєві оновлення повідомляємо на
+        <a href="https://t.me/itrealtor" target="_blank" rel="noopener"> каналі Telegram @itrealtor</a>.
+      </p>
+
+      <h2>9. Застосовне право та юрисдикція</h2>
+      <p>
+        Спори регулюються законодавством Грузії (країни реєстрації оператора), якщо імперативні норми країни вашого проживання
+        не передбачають іншого.
       </p>
 
       {/* TODO: confirm jurisdiction / arbitration wording with counsel. Default is Georgia (sole-proprietor country). */}

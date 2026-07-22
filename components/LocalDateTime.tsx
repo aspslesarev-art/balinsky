@@ -29,7 +29,7 @@ export function LocalDateTime({ iso, withYear, withTime, className, prefix, suff
       const localText = fmtLocal(iso, { withYear, withTime, lang })
       if (localText !== baliText) {
         setText(localText)
-        setTooltip(`${pickCopy({ ru: 'Бали', en: 'Bali', id: 'Bali', fr: 'Bali', de: 'Bali', zh: '巴厘岛', nl: 'Bali', ban: 'Bali' }, lang)}: ${baliText}`)
+        setTooltip(`${pickCopy({ ru: 'Бали', en: 'Bali', id: 'Bali', fr: 'Bali', de: 'Bali', zh: '巴厘岛', nl: 'Bali', ban: 'Bali', pl: 'Bali', uk: 'Балі' }, lang)}: ${baliText}`)
       }
     } catch {
       // Intl may throw on very old browsers — keep Bali text in that case.

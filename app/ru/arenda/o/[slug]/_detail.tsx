@@ -80,6 +80,22 @@ const COPY = {
       `${type ?? 'Properti'} sane kasewaang ring Bali${location ? `, ${location}` : ''}. ${price} / bln.`,
     title: (t: string, p: string) => `${t} — ${p}/bln | Balinsky`,
   },
+  pl: {
+    home: 'Strona główna', rental: 'Wynajem długoterminowy', bali: 'Bali',
+    descHeading: 'Opis', perMonth: '/ mies.',
+    contactTg: 'Napisz na Telegramie', contactWa: 'Napisz na WhatsAppie', contactOther: 'Kontakt',
+    metaFallback: (type: string | null, location: string | null, price: string) =>
+      `${type ?? 'Nieruchomość'} do wynajęcia na Bali${location ? `, ${location}` : ''}. ${price} / mies.`,
+    title: (t: string, p: string) => `${t} — ${p}/mies. | Balinsky`,
+  },
+  uk: {
+    home: 'Головна', rental: 'Довгострокова оренда', bali: 'Балі',
+    descHeading: 'Опис', perMonth: '/ міс',
+    contactTg: 'Написати в Telegram', contactWa: 'Написати у WhatsApp', contactOther: 'Звʼязатися',
+    metaFallback: (type: string | null, location: string | null, price: string) =>
+      `${type ?? 'Обʼєкт'} в оренду на Балі${location ? `, ${location}` : ''}. ${price} / міс.`,
+    title: (t: string, p: string) => `${t} — ${p}/міс | Balinsky`,
+  },
 } as const
 
 function fmtUsd(n: number): string { return '$' + Math.round(n).toLocaleString('en-US') }
@@ -208,7 +224,7 @@ export async function RentalDetail({ slug, lang }: { slug: string; lang: Lang })
 
         <section className="mb-10">
           <LeadButton
-            label={pickCopy({ ru: 'Оставить заявку', en: 'Leave a request', id: 'Kirim permintaan', fr: 'Envoyer une demande', de: 'Anfrage senden', zh: '提交请求', nl: 'Aanvraag versturen', ban: 'Kirim panuunan' }, lang)}
+            label={pickCopy({ ru: 'Оставить заявку', en: 'Leave a request', id: 'Kirim permintaan', fr: 'Envoyer une demande', de: 'Anfrage senden', zh: '提交请求', nl: 'Aanvraag versturen', ban: 'Kirim panuunan', pl: 'Zostaw zgłoszenie', uk: 'Залишити заявку' }, lang)}
             lang={lang}
             context={{ listingKind: 'rental', listingSlug: r.slug, source: 'rental' }}
             className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[15px] font-medium transition-colors"

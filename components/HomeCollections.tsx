@@ -16,8 +16,8 @@ function fmtPrice(n: number | null): string {
 
 function tierLabel(t: CollTier, lang: Lang): string {
   const max = `$${Math.round(t.max / 1000)}k`
-  if (t.type === 'villa') return `${pickCopy({ ru: 'Виллы до', en: 'Villas up to', id: 'Vila hingga', fr: 'Villas jusqu’à', de: 'Villen bis', zh: '别墅 至', nl: 'Villa’s tot', ban: 'Villa nyantos' }, lang)} ${max}`
-  return `${pickCopy({ ru: 'Апартаменты до', en: 'Apartments up to', id: 'Apartemen hingga', fr: 'Appartements jusqu’à', de: 'Apartments bis', zh: '公寓 至', nl: 'Appartementen tot', ban: 'Apartemen nyantos' }, lang)} ${max}`
+  if (t.type === 'villa') return `${pickCopy({ ru: 'Виллы до', en: 'Villas up to', id: 'Vila hingga', fr: 'Villas jusqu’à', de: 'Villen bis', zh: '别墅 至', nl: 'Villa’s tot', ban: 'Villa nyantos', pl: 'Wille do', uk: 'Вілли до' }, lang)} ${max}`
+  return `${pickCopy({ ru: 'Апартаменты до', en: 'Apartments up to', id: 'Apartemen hingga', fr: 'Appartements jusqu’à', de: 'Apartments bis', zh: '公寓 至', nl: 'Appartementen tot', ban: 'Apartemen nyantos', pl: 'Apartamenty do', uk: 'Апартаменти до' }, lang)} ${max}`
 }
 
 function chip(active: boolean): string {
@@ -49,7 +49,7 @@ function CollCard({ it, href, lang }: { it: CollItem; href: string; lang: Lang }
         <div className="text-[13.5px] font-medium leading-snug line-clamp-2 min-h-[2.6em]">{lang !== 'ru' && it.title && hasCyrillic(it.title) ? translit(it.title) : it.title}</div>
         <div className="mt-1.5 flex items-center gap-3 text-[12px] text-[var(--color-text-muted)]">
           {it.bedrooms != null && <span className="inline-flex items-center gap-1"><BedDouble size={13} /> {it.bedrooms}</span>}
-          {it.area != null && <span className="inline-flex items-center gap-1"><Square size={12} /> {it.area} {pickCopy({ ru: 'м²', en: 'm²', id: 'm²', fr: 'm²', de: 'm²', zh: 'm²', nl: 'm²', ban: 'm²' }, lang)}</span>}
+          {it.area != null && <span className="inline-flex items-center gap-1"><Square size={12} /> {it.area} {pickCopy({ ru: 'м²', en: 'm²', id: 'm²', fr: 'm²', de: 'm²', zh: 'm²', nl: 'm²', ban: 'm²', pl: 'm²', uk: 'м²' }, lang)}</span>}
         </div>
       </div>
     </Link>
@@ -112,7 +112,7 @@ export function HomeCollections({ tiers, lang = 'ru' }: { tiers: CollTier[]; lan
 
       <div className="mt-5">
         <Link href={seeAllHref} className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[var(--color-primary)] hover:gap-2.5 transition-all no-underline">
-          {`${pickCopy({ ru: 'Все', en: 'All', id: 'Semua', fr: 'Tous les', de: 'Alle', zh: '全部', nl: 'Alle', ban: 'Sami' }, lang)} ${tierLabel(tier, lang).toLowerCase()}`}
+          {`${pickCopy({ ru: 'Все', en: 'All', id: 'Semua', fr: 'Tous les', de: 'Alle', zh: '全部', nl: 'Alle', ban: 'Sami', pl: 'Wszystkie', uk: 'Усі' }, lang)} ${tierLabel(tier, lang).toLowerCase()}`}
           <ArrowRight size={16} />
         </Link>
       </div>

@@ -46,6 +46,8 @@ const COPY = {
   zh: { sqm: 'm²', floor: '楼层', resale: '转售',        secondary: '二手' },
   nl: { sqm: 'm²', floor: 'Verdieping', resale: 'Doorverkoop', secondary: 'Bestaand' },
   ban: { sqm: 'm²', floor: 'Lantai', resale: 'Adol malih', secondary: 'Sekunder' },
+  pl: { sqm: 'm²', floor: 'Piętro', resale: 'Odsprzedaż', secondary: 'Rynek wtórny' },
+  uk: { sqm: 'm²', floor: 'Поверх', resale: 'Перепродаж', secondary: 'Вторинний ринок' },
 } as const
 
 export function ApartmentCard({ a, lang = 'ru' }: { a: ApartmentCardData; lang?: Lang }) {

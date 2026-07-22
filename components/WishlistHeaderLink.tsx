@@ -13,7 +13,7 @@ export function WishlistHeaderLink({ className = '' }: { className?: string }) {
   const pathname = usePathname() ?? ''
   const lang = detectLang(pathname)
   const href = switchLangPath('/ru/izbrannoe', lang)
-  const label = pickCopy({ ru: 'Избранное', en: 'Shortlist', id: 'Favorit', fr: 'Favoris', de: 'Favoriten', zh: '收藏', nl: 'Favorieten', ban: 'Kaplihan' }, lang)
+  const label = pickCopy({ ru: 'Избранное', en: 'Shortlist', id: 'Favorit', fr: 'Favoris', de: 'Favoriten', zh: '收藏', nl: 'Favorieten', ban: 'Kaplihan', pl: 'Ulubione', uk: 'Обране' }, lang)
   const count = items.length
   return (
     <Link

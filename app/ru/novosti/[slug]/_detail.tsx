@@ -66,6 +66,18 @@ const COPY = {
     moreFrom: (n: string) => `Sane lianan saking ${n}`,
     locale: 'id-ID',
   },
+  pl: {
+    home: 'Strona główna', newsCrumb: 'Aktualności',
+    watchVideo: 'Obejrzyj wideo', source: 'Źródło',
+    moreFrom: (n: string) => `Więcej od ${n}`,
+    locale: 'pl-PL',
+  },
+  uk: {
+    home: 'Головна', newsCrumb: 'Новини',
+    watchVideo: 'Дивитися відео', source: 'Джерело',
+    moreFrom: (n: string) => `Більше від ${n}`,
+    locale: 'uk-UA',
+  },
 } as const
 
 function fmtDate(iso: string | null, locale: string): string | null {

@@ -10,9 +10,9 @@ export async function generateMetadata() {
 }
 
 const metadata = {
-  title: 'Bali property developers — 2026 directory | Balinsky',
+  title: 'Deweloperzy nieruchomości na Bali — katalog 2026 | Balinsky',
   description:
-    'Directory of Bali developers with active projects: villas, apartments, residential complexes. Compare on score, reliability and post-handover management. 80+ companies.',
+    'Katalog deweloperów z Bali z aktywnymi projektami: wille, apartamenty, kompleksy mieszkaniowe. Porównuj według oceny, wiarygodności i zarządzania po oddaniu. 80+ firm.',
   alternates: {
     canonical: '/pl/deweloperzy',
     languages: {
@@ -22,8 +22,8 @@ const metadata = {
     },
   },
   openGraph: {
-    title: 'Bali property developers — 2026 directory | Balinsky',
-    description: 'Bali developer directory: scores, reputation, projects, management companies.',
+    title: 'Deweloperzy nieruchomości na Bali — katalog 2026 | Balinsky',
+    description: 'Katalog deweloperów z Bali: oceny, wiarygodność, projekty, firmy zarządzające.',
     type: 'website',
     url: '/pl/deweloperzy',
   },

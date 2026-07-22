@@ -65,6 +65,20 @@ const COPY = {
     sub: 'Vila lan apartemen kanggo séwa jangka panjang — kaanyarin otomatis',
     loading: 'Ngemuat…',
   },
+  pl: {
+    title: 'Długoterminowy wynajem willi i apartamentów na Bali | Balinsky',
+    description: 'Wille, apartamenty i domy do wynajęcia długoterminowego na Bali — Canggu, Ubud, Seminyak, Bukit i inne dzielnice. Aktualizowane codziennie.',
+    h1: 'Wynajem długoterminowy',
+    sub: 'Wille i apartamenty do wynajęcia długoterminowego — aktualizowane automatycznie',
+    loading: 'Ładowanie…',
+  },
+  uk: {
+    title: 'Довгострокова оренда вілл та апартаментів на Балі | Balinsky',
+    description: 'Вілли, апартаменти та будинки в довгострокову оренду на Балі — Чангу, Убуд, Семіньяк, Букіт та інші райони. Оновлюється щодня.',
+    h1: 'Довгострокова оренда',
+    sub: 'Вілли та апартаменти в довгострокову оренду — оновлюється автоматично',
+    loading: 'Завантаження…',
+  },
 } as const
 
 export function generateRentalListMetadata(lang: Lang): Metadata {

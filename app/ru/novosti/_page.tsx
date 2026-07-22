@@ -73,6 +73,22 @@ const COPY = {
     empty: 'Durung wenten berita.',
     locale: 'id-ID',
   },
+  pl: {
+    title: 'Wiadomości deweloperów na Bali | Balinsky',
+    description: 'Najnowsze wiadomości od deweloperów i o rynku nieruchomości na Bali.',
+    h1: 'Wiadomości',
+    sub: (n: number) => `${n} ${n === 1 ? 'wiadomość' : 'wiadomości'} od deweloperów na Bali`,
+    empty: 'Brak wiadomości.',
+    locale: 'pl-PL',
+  },
+  uk: {
+    title: 'Новини забудовників Балі | Balinsky',
+    description: 'Свіжі новини від забудовників та про ринок нерухомості Балі.',
+    h1: 'Новини',
+    sub: (n: number) => `${n} ${n === 1 ? 'новина' : 'новин'} від забудовників Балі`,
+    empty: 'Поки немає новин.',
+    locale: 'uk-UA',
+  },
 } as const
 
 function fmtDate(iso: string | null, locale: string): string | null {

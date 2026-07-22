@@ -38,6 +38,8 @@ const COPY = {
   zh: { villas: '别墅', apartments: '公寓', permit: '建筑许可',                             noPermit: '无', readiness: '施工进度', from: '从', to: '至', sold: '已售' },
   nl: { villas: "Villa's", apartments: 'Appartementen', permit: 'Bouwvergunning',          noPermit: 'geen', readiness: 'Bouwvoortgang', from: 'vanaf', to: 'tot', sold: 'Verkocht' },
   ban: { villas: 'Vila', apartments: 'Apartemen', permit: 'Izin ngwangun bangunan',        noPermit: 'nenten wenten', readiness: 'Kamajuan konstruksi', from: 'saking', to: 'kantos', sold: 'Sampun kaadol' },
+  pl: { villas: 'Wille', apartments: 'Apartamenty', permit: 'Pozwolenie na budowę',        noPermit: 'brak', readiness: 'Postęp budowy', from: 'od', to: 'do', sold: 'Sprzedane' },
+  uk: { villas: 'Вілли', apartments: 'Апартаменти', permit: 'Дозвіл на будівництво',       noPermit: 'немає', readiness: 'Хід будівництва', from: 'від', to: 'до', sold: 'Продано' },
 } as const
 
 function fmtRange(

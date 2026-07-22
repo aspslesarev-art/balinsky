@@ -3,24 +3,24 @@ import { HomeLanding } from '@/components/HomeLanding'
 export const revalidate = 1800
 
 export const metadata = {
-  title: 'Buy real estate in Bali — independent marketplace with analytics | Balinsky',
+  title: 'Купівля нерухомості на Балі — незалежний маркетплейс з аналітикою | Balinsky',
   description:
-    'Villas, apartments and complexes from dozens of developers in one catalog. Verified documents (PBG, SLF) and real rental yield from neighbour data. Photos, current prices, contacts — your choice.',
+    'Вілли, апартаменти та комплекси від десятків забудовників в одному каталозі. Перевірені документи (PBG, SLF) і реальна дохідність від оренди на основі даних сусідніх обʼєктів. Фото, актуальні ціни, контакти — вибір за вами.',
   alternates: {
     canonical: '/uk',
     languages: { ru: '/ru', uk: '/uk', 'x-default': '/ru' },
   },
   openGraph: {
-    title: 'Buy real estate in Bali — independent marketplace with analytics',
-    description: 'Villas, apartments and complexes from dozens of developers. Verified documents and real rental yield from neighbour data — the choice and the numbers are on your side.',
+    title: 'Купівля нерухомості на Балі — незалежний маркетплейс з аналітикою',
+    description: 'Вілли, апартаменти та комплекси від десятків забудовників. Перевірені документи і реальна дохідність від оренди на основі даних сусідніх обʼєктів — вибір і цифри на вашому боці.',
     type: 'website',
     url: '/uk',
     images: [{ url: '/balina.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Buy real estate in Bali — marketplace with analytics',
-    description: 'Villas, apartments and complexes from dozens of developers with verified documents and real rental yield.',
+    title: 'Купівля нерухомості на Балі — маркетплейс з аналітикою',
+    description: 'Вілли, апартаменти та комплекси від десятків забудовників з перевіреними документами та реальною дохідністю від оренди.',
     images: ['/balina.jpg'],
   },
 }

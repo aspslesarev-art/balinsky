@@ -146,6 +146,36 @@ const COPY = {
     askBalina: 'Takenang ring Balisa',
     perMo: '',
   },
+  pl: {
+    qGoal: 'Dlaczego kupujesz?',
+    goals: { invest: 'Pod inwestycję', live: 'Do zamieszkania', both: 'Mieszkać i wynajmować' } as Record<Goal, string>,
+    qBudget: 'Budżet',
+    budgets: [['do $200k', 200_000], ['do $400k', 400_000], ['do $700k', 700_000], ['do $1.2M', 1_200_000], ['Bez limitu', 0]] as [string, number][],
+    qVibe: 'Co jest w okolicy?',
+    vibes: { surf: 'Surfing i życie', ocean: 'Ocean i widoki', calm: 'Cisza i natura', family: 'Rodzina i plaża', any: 'Bez znaczenia' } as Record<Vibe, string>,
+    found: (n: number) => `${n} ${plural(n, 'willa', 'wille', 'willi')} dla Twojego zapytania`,
+    empty: 'Na razie nic nie pasuje. Poluzuj budżet lub okolicę — albo zapytaj Balisę.',
+    yield: 'rent.',
+    ready: 'Gotowe',
+    seeAll: 'Zobacz wszystkie w katalogu',
+    askBalina: 'Zapytaj Balisę',
+    perMo: '',
+  },
+  uk: {
+    qGoal: 'Навіщо купуєте?',
+    goals: { invest: 'Для інвестицій', live: 'Для життя', both: 'Жити й здавати' } as Record<Goal, string>,
+    qBudget: 'Бюджет',
+    budgets: [['до $200k', 200_000], ['до $400k', 400_000], ['до $700k', 700_000], ['до $1.2M', 1_200_000], ['Без обмежень', 0]] as [string, number][],
+    qVibe: 'Що навколо?',
+    vibes: { surf: 'Серфінг і тусовка', ocean: 'Океан і краєвиди', calm: 'Тиша й природа', family: 'Сім’я і пляж', any: 'Не важливо' } as Record<Vibe, string>,
+    found: (n: number) => `${n} ${plural(n, 'віла', 'віли', 'віл')} за вашим запитом`,
+    empty: 'Поки що нічого не підходить. Послабте бюджет або район — або запитайте Балісу.',
+    yield: 'дох.',
+    ready: 'Готово',
+    seeAll: 'Дивитися всі в каталозі',
+    askBalina: 'Запитати Балісу',
+    perMo: '',
+  },
 } as const
 
 function plural(n: number, one: string, few: string, many: string): string {
@@ -198,9 +228,9 @@ export function HomeFinder({ items, lang = 'ru' }: { items: FinderItem[]; lang?:
   const seeAllHref = budget && budget > 0 ? `${root}?price_max=${budget}` : root
 
   const balinaText = (() => {
-    const parts: string[] = [pickCopy({ ru: 'Подбери виллу', en: 'Find me a villa', id: 'Carikan saya vila', fr: 'Trouve-moi une villa', de: 'Finde mir eine Villa', zh: '帮我找一套别墅', nl: 'Vind een villa voor mij', ban: 'Alihang tiang villa' }, lang)]
+    const parts: string[] = [pickCopy({ ru: 'Подбери виллу', en: 'Find me a villa', id: 'Carikan saya vila', fr: 'Trouve-moi une villa', de: 'Finde mir eine Villa', zh: '帮我找一套别墅', nl: 'Vind een villa voor mij', ban: 'Alihang tiang villa', pl: 'Dobierz mi willę', uk: 'Підбери мені вілу' }, lang)]
     if (goal) parts.push(lang === 'ru' ? c.goals[goal].toLowerCase() : `(${c.goals[goal].toLowerCase()})`)
-    if (budget && budget > 0) parts.push(`${pickCopy({ ru: 'до', en: 'up to', id: 'hingga', fr: 'jusqu’à', de: 'bis', zh: '预算', nl: 'tot', ban: 'nyantos' }, lang)} ${fmtPrice(budget)}`)
+    if (budget && budget > 0) parts.push(`${pickCopy({ ru: 'до', en: 'up to', id: 'hingga', fr: 'jusqu’à', de: 'bis', zh: '预算', nl: 'tot', ban: 'nyantos', pl: 'do', uk: 'до' }, lang)} ${fmtPrice(budget)}`)
     if (vibe && vibe !== 'any') parts.push(c.vibes[vibe].toLowerCase())
     return parts.join(' ') + '.'
   })()

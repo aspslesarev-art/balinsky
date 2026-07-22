@@ -11,6 +11,8 @@ const COPY = {
   zh: { list: '目录', map: '地图' },
   nl: { list: 'Catalogus', map: 'Kaart' },
   ban: { list: 'Katalog', map: 'Peta' },
+  pl: { list: 'Katalog', map: 'Mapa' },
+  uk: { list: 'Каталог', map: 'Карта' },
 }
 
 export function CatalogTabs({

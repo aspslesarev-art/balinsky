@@ -16,6 +16,8 @@ const COPY = {
   zh: { search: '搜索…', noOptions: '无选项', clear: '清除', apply: '应用' },
   nl: { search: 'Zoeken…', noOptions: 'Geen opties', clear: 'Wissen', apply: 'Toepassen' },
   ban: { search: 'Ngrereh…', noOptions: 'Tan wenten pilihan', clear: 'Kosongang', apply: 'Terapang' },
+  pl: { search: 'Szukaj…', noOptions: 'Brak opcji', clear: 'Wyczyść', apply: 'Zastosuj' },
+  uk: { search: 'Пошук…', noOptions: 'Немає варіантів', clear: 'Очистити', apply: 'Застосувати' },
 } as const
 
 type StringArrayKey = {

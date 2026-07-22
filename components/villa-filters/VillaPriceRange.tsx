@@ -17,6 +17,8 @@ const COPY = {
   zh: { from: '从', to: '到', clear: '清除', apply: '应用', quick: '快速选择' },
   nl: { from: 'van', to: 'tot', clear: 'Wissen', apply: 'Toepassen', quick: 'Snelkeuze' },
   ban: { from: 'saking', to: 'kantos', clear: 'Kosongin', apply: 'Terapang', quick: 'Pilihan gelis' },
+  pl: { from: 'od', to: 'do', clear: 'Wyczyść', apply: 'Zastosuj', quick: 'Szybki wybór' },
+  uk: { from: 'від', to: 'до', clear: 'Очистити', apply: 'Застосувати', quick: 'Швидкий вибір' },
 } as const
 
 const SYMBOLS: Record<string, string> = { USD: '$', EUR: '€', RUB: '₽', UAH: '₴', IDR: 'Rp' }

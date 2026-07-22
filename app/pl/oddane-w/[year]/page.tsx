@@ -18,8 +18,8 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const { year } = await params
   if (!VALID_YEARS.has(year)) return { robots: { index: false, follow: false } }
   return {
-    title: `Bali residential complexes completed in ${year} — verified projects | Balinsky`,
-    description: `Bali residential complexes with completion year ${year}. Ready units, real schedule, PBG/SLF permits, developer contacts.`,
+    title: `Kompleksy mieszkaniowe na Bali oddane w ${year} — zweryfikowane projekty | Balinsky`,
+    description: `Kompleksy mieszkaniowe na Bali z rokiem oddania ${year}. Gotowe jednostki, realny harmonogram, pozwolenia PBG/SLF, kontakty do deweloperów.`,
     alternates: {
       canonical: `/pl/oddane-w/${year}`,
       languages: {
@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
         'x-default': `${SITE_URL}/ru/sdano/${year}`,
       },
     },
-    openGraph: { title: `Bali residential complexes completed in ${year}`, type: 'website' },
+    openGraph: { title: `Kompleksy mieszkaniowe na Bali oddane w ${year}`, type: 'website' },
     twitter: { card: 'summary_large_image' },
   }
 }
@@ -79,9 +79,9 @@ export default async function Page({ params }: { params: Params }) {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/en` },
-      { '@type': 'ListItem', position: 2, name: 'Residential complexes', item: `${SITE_URL}/pl/kompleksy` },
-      { '@type': 'ListItem', position: 3, name: `Completed ${year}`, item: `${SITE_URL}/pl/oddane-w/${year}` },
+      { '@type': 'ListItem', position: 1, name: 'Strona główna', item: `${SITE_URL}/en` },
+      { '@type': 'ListItem', position: 2, name: 'Kompleksy mieszkaniowe', item: `${SITE_URL}/pl/kompleksy` },
+      { '@type': 'ListItem', position: 3, name: `Oddane w ${year}`, item: `${SITE_URL}/pl/oddane-w/${year}` },
     ],
   }
 
@@ -92,33 +92,33 @@ export default async function Page({ params }: { params: Params }) {
       <Header active="zhilye-kompleksy" />
       <PageContainer>
         <Breadcrumbs items={[
-          { label: 'Home', href: '/pl' },
-          { label: 'Residential complexes', href: '/pl/kompleksy' },
-          { label: `Completed ${year}` },
+          { label: 'Strona główna', href: '/pl' },
+          { label: 'Kompleksy mieszkaniowe', href: '/pl/kompleksy' },
+          { label: `Oddane w ${year}` },
         ]} />
 
         <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[#111827]">
-          {isPast ? `Bali residential complexes completed in ${year}` : `Bali residential complexes scheduled for ${year}`}
+          {isPast ? `Kompleksy mieszkaniowe na Bali oddane w ${year}` : `Kompleksy mieszkaniowe na Bali planowane na ${year}`}
         </h1>
         <div className="text-[14px] text-[var(--color-text-muted)] mb-6">
-          {matched.length} {matched.length === 1 ? 'complex' : 'complexes'}
+          {matched.length} {matched.length === 1 ? 'kompleks' : 'kompleksów'}
         </div>
 
         <section className="max-w-3xl mb-8 text-[15px] leading-[1.7] text-[#1f2937] space-y-3">
           <p>
             {isPast
-              ? `Bali residential complexes that completed construction in ${year}. All units passed final inspection, hold an SLF certificate, and can be legally rented out or occupied.`
-              : `Bali residential complexes with a stated ${year} completion date. Some projects are in the final construction stage, others still off-plan. Always cross-check actual progress against the stated schedule before transacting.`}
+              ? `Kompleksy mieszkaniowe na Bali, które ukończyły budowę w ${year}. Wszystkie jednostki przeszły odbiór końcowy, posiadają certyfikat SLF i mogą być legalnie wynajmowane lub zamieszkane.`
+              : `Kompleksy mieszkaniowe na Bali z deklarowaną datą oddania ${year}. Niektóre projekty są na końcowym etapie budowy, inne wciąż na etapie off-plan. Zawsze weryfikuj rzeczywisty postęp z deklarowanym harmonogramem przed zawarciem transakcji.`}
           </p>
           <p>
-            Every complex card lists permits (PBG, SLF), photo and on-the-ground video, developer info and a manager contact.
-            Real neighbour-level rental yield via <a href="https://www.estatemarket.io" target="_blank" rel="nofollow noopener noreferrer" className="text-[var(--color-primary)] no-underline hover:underline">estatemarket.io</a> integration.
+            Każda karta kompleksu zawiera pozwolenia (PBG, SLF), zdjęcia i wideo z miejsca, informacje o deweloperze i kontakt do menedżera.
+            Realna rentowność najmu na poziomie sąsiedztwa dzięki integracji z <a href="https://www.estatemarket.io" target="_blank" rel="nofollow noopener noreferrer" className="text-[var(--color-primary)] no-underline hover:underline">estatemarket.io</a>.
           </p>
         </section>
 
         {matched.length === 0 ? (
           <div className="py-16 text-center text-[var(--color-text-muted)]">
-            No matching complexes yet. Browse the <Link href="/pl/kompleksy" className="text-[var(--color-primary)] no-underline hover:underline">full catalogue</Link>.
+            Brak pasujących kompleksów. Przejrzyj <Link href="/pl/kompleksy" className="text-[var(--color-primary)] no-underline hover:underline">pełny katalog</Link>.
           </div>
         ) : (
           <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -127,18 +127,18 @@ export default async function Page({ params }: { params: Params }) {
         )}
 
         <section className="mt-12 mb-8 max-w-3xl">
-          <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[#111827] mb-3">See also</h2>
+          <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[#111827] mb-3">Zobacz również</h2>
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {[...VALID_YEARS].filter(y => y !== year).slice(0, 6).map(y => (
               <li key={y}>
                 <Link href={`/pl/oddane-w/${y}`} className="inline-flex items-center gap-2 px-3 py-2.5 rounded-xl border border-[var(--color-border)] bg-white text-[#111827] no-underline hover:border-[var(--color-primary)] transition-colors">
-                  Complexes completed in {y}
+                  Kompleksy oddane w {y}
                 </Link>
               </li>
             ))}
             <li>
               <Link href="/pl/inwestycje-nieruchomosci-bali" className="inline-flex items-center gap-2 px-3 py-2.5 rounded-xl border border-[var(--color-border)] bg-white text-[#111827] no-underline hover:border-[var(--color-primary)] transition-colors">
-                Bali property investment guide
+                Przewodnik inwestora nieruchomości na Bali
               </Link>
             </li>
           </ul>

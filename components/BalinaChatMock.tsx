@@ -80,6 +80,24 @@ const COPY = {
     placeholder: 'Tulis utawi baosang…',
     note: 'Lewat suara utawi teks, anonim. Kontak kakutang wantah yening meled kahubungin.',
   },
+  pl: {
+    subtitle: 'Broker AI · anonimowo',
+    greeting: 'Jestem Balisa — Twój broker AI. Opisz, czego szukasz, a w minutę przygotuję listę.',
+    voice: 'Wiadomość głosowa',
+    reply: 'Znalazłam 5 willi w Canggu pod wynajem, rentowność 9–11%. Pokazać je z dokumentami i wyliczeniami?',
+    chips: ['Pokaż wille', 'Jakie dokumenty?'],
+    placeholder: 'Napisz lub powiedz…',
+    note: 'Głosowo lub tekstem, anonimowo. Kontakt zostawiasz tylko wtedy, gdy chcesz, aby się z Tobą skontaktowano.',
+  },
+  uk: {
+    subtitle: 'AI-брокер · анонімно',
+    greeting: 'Я Баліса — ваш AI-брокер. Опишіть, що шукаєте, — за хвилину підберу варіанти.',
+    voice: 'Голосове',
+    reply: 'Знайшла 5 віл у Canggu під оренду, дохідність 9–11%. Показати з документами й розрахунком?',
+    chips: ['Показати вілли', 'Які документи?'],
+    placeholder: 'Напишіть або скажіть…',
+    note: 'Голосом або текстом, анонімно. Контакти залишаєте, лише якщо хочете, щоб з вами зв’язалися.',
+  },
 } as const
 
 // Fixed bar heights for the voice waveform (no Math.random — stable render).
@@ -94,7 +112,7 @@ export function BalinaChatMock({ lang }: { lang: Lang }) {
         <div className="flex items-center gap-2.5 px-4 py-3 bg-[var(--color-primary-soft)] border-b border-[var(--color-border)]">
           <Image src="/balina.jpg" alt="" width={36} height={36} className="w-9 h-9 rounded-full object-cover" />
           <div>
-            <div className="text-[14px] font-semibold text-[#111827] leading-tight">{pickCopy({ ru: 'Балиса', en: 'Balisa', id: 'Balisa', fr: 'Balisa', de: 'Balisa', zh: 'Balisa', nl: 'Balisa', ban: 'Balisa' }, lang)}</div>
+            <div className="text-[14px] font-semibold text-[#111827] leading-tight">{pickCopy({ ru: 'Балиса', en: 'Balisa', id: 'Balisa', fr: 'Balisa', de: 'Balisa', zh: 'Balisa', nl: 'Balisa', ban: 'Balisa', pl: 'Balisa', uk: 'Balisa' }, lang)}</div>
             <div className="text-[11px] text-[var(--color-text-muted)] leading-tight flex items-center gap-1">
               <ShieldCheck size={11} className="text-[var(--color-primary)]" /> {c.subtitle}
             </div>

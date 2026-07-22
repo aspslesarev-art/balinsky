@@ -69,8 +69,8 @@ export function Header({ active }: { active?: NavKey }) {
           type="button"
           className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg text-[var(--color-text)]"
           aria-label={open
-            ? pickCopy({ ru: 'Закрыть меню', en: 'Close menu', id: 'Tutup menu', fr: 'Fermer le menu', de: 'Menü schließen', zh: '关闭菜单', nl: 'Menu sluiten', ban: 'Nutup menu' }, lang)
-            : pickCopy({ ru: 'Открыть меню', en: 'Open menu', id: 'Buka menu', fr: 'Ouvrir le menu', de: 'Menü öffnen', zh: '打开菜单', nl: 'Menu openen', ban: 'Ngampakang menu' }, lang)}
+            ? pickCopy({ ru: 'Закрыть меню', en: 'Close menu', id: 'Tutup menu', fr: 'Fermer le menu', de: 'Menü schließen', zh: '关闭菜单', nl: 'Menu sluiten', ban: 'Nutup menu', pl: 'Zamknij menu', uk: 'Закрити меню' }, lang)
+            : pickCopy({ ru: 'Открыть меню', en: 'Open menu', id: 'Buka menu', fr: 'Ouvrir le menu', de: 'Menü öffnen', zh: '打开菜单', nl: 'Menu openen', ban: 'Ngampakang menu', pl: 'Otwórz menu', uk: 'Відкрити меню' }, lang)}
           aria-expanded={open}
           onClick={() => setOpen(v => !v)}
         >

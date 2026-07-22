@@ -83,6 +83,24 @@ const COPY = {
     past: 'Sane sampun lintang',
     empty: 'Durung wenten acara sane kajadwalang.',
   },
+  pl: {
+    title: 'Wydarzenia od deweloperów na Bali | Balinsky',
+    description: 'Tury dla brokerów, prezentacje projektów, networking i wydarzenia od deweloperów na Bali.',
+    h1: 'Wydarzenia',
+    sub: 'Tury dla brokerów, prezentacje projektów, networking',
+    upcoming: 'Nadchodzące',
+    past: 'Minione',
+    empty: 'Brak zaplanowanych wydarzeń.',
+  },
+  uk: {
+    title: 'Заходи від забудовників Балі | Balinsky',
+    description: 'Брокер-тури, презентації проєктів, нетворкінг та події від забудовників Балі.',
+    h1: 'Заходи',
+    sub: 'Брокер-тури, презентації проєктів, нетворкінг',
+    upcoming: 'Найближчі',
+    past: 'Минулі',
+    empty: 'Поки немає запланованих заходів.',
+  },
 } as const
 
 function startTimeMs(iso: string | null): number {

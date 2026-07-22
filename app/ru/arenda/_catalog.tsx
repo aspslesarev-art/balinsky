@@ -114,6 +114,30 @@ const COPY = {
     perMonth: '/ bulan',
     bali: 'Bali',
   },
+  pl: {
+    sort: { newest: 'Najnowsze', 'price-asc': 'Cena ↑', 'price-desc': 'Cena ↓', 'br-asc': 'Sypialnie ↑', 'br-desc': 'Sypialnie ↓' } as Record<SortKey, string>,
+    presets: ['Do $1000', '$1000–2000', '$2000–3000', '$3000+'] as const,
+    district: 'Dzielnica', bedrooms: 'Sypialnie', price: 'Cena', sortLabel: 'Sortuj',
+    reset: 'Wyczyść', clear: 'Wyczyść', search: 'Szukaj…', noResults: 'Nic nie znaleziono',
+    priceMonthHeader: 'Cena miesięczna, USD', priceFrom: 'Od', priceTo: 'Do',
+    objects: (n: number) => `${n} ${n === 1 ? 'oferta' : 'ofert'}`,
+    showingOfTotal: (shown: number, total: number) => `Wyświetlono ${shown} z ${total} — załaduj więcej`,
+    emptyByFilters: 'Brak ofert pasujących do wybranych filtrów. Wyczyść filtry lub wypróbuj inne.',
+    perMonth: '/ mies.',
+    bali: 'Bali',
+  },
+  uk: {
+    sort: { newest: 'Спершу нові', 'price-asc': 'Ціна ↑', 'price-desc': 'Ціна ↓', 'br-asc': 'Спальні ↑', 'br-desc': 'Спальні ↓' } as Record<SortKey, string>,
+    presets: ['До $1000', '$1000–2000', '$2000–3000', '$3000+'] as const,
+    district: 'Район', bedrooms: 'Спальні', price: 'Ціна', sortLabel: 'Сортування',
+    reset: 'Скинути', clear: 'Очистити', search: 'Пошук…', noResults: 'Нічого не знайдено',
+    priceMonthHeader: 'Ціна за місяць, USD', priceFrom: 'Від', priceTo: 'До',
+    objects: (n: number) => `${n} ${n === 1 ? 'об’єкт' : 'об’єктів'}`,
+    showingOfTotal: (shown: number, total: number) => `Показано ${shown} з ${total} — завантажити ще`,
+    emptyByFilters: 'За вибраними фільтрами нічого не знайдено. Скиньте фільтри або спробуйте інші.',
+    perMonth: '/ міс',
+    bali: 'Балі',
+  },
 } as const
 
 function pluralRu(n: number, forms: [string, string, string]): string {

@@ -10,9 +10,9 @@ export async function generateMetadata() {
 }
 
 const metadata = {
-  title: 'Bali property developers — 2026 directory | Balinsky',
+  title: 'Забудовники нерухомості на Балі — каталог 2026 | Balinsky',
   description:
-    'Directory of Bali developers with active projects: villas, apartments, residential complexes. Compare on score, reliability and post-handover management. 80+ companies.',
+    'Каталог забудовників Балі з активними проєктами: вілли, апартаменти, житлові комплекси. Порівнюйте за оцінкою, надійністю та управлінням після здачі. 80+ компаній.',
   alternates: {
     canonical: '/uk/zabudovnyky',
     languages: {
@@ -22,8 +22,8 @@ const metadata = {
     },
   },
   openGraph: {
-    title: 'Bali property developers — 2026 directory | Balinsky',
-    description: 'Bali developer directory: scores, reputation, projects, management companies.',
+    title: 'Забудовники нерухомості на Балі — каталог 2026 | Balinsky',
+    description: 'Каталог забудовників Балі: оцінки, репутація, проєкти, керуючі компанії.',
     type: 'website',
     url: '/uk/zabudovnyky',
   },

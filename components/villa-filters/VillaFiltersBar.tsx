@@ -49,6 +49,16 @@ const COPY = {
     dealType: 'Jenis transaksi', style: 'Gaya', year: 'Warsa serah terima', developer: 'Pangwangun',
     permit: 'Ijin', features: 'Fitur', resetAll: 'Kosongin makasami',
   },
+  pl: {
+    price: 'Cena', district: 'Dzielnica', bedrooms: 'Sypialnie', status: 'Etap budowy',
+    dealType: 'Rodzaj transakcji', style: 'Styl', year: 'Rok oddania', developer: 'Deweloper',
+    permit: 'Pozwolenie', features: 'Udogodnienia', resetAll: 'Wyczyść wszystko',
+  },
+  uk: {
+    price: 'Ціна', district: 'Район', bedrooms: 'Спальні', status: 'Етап будівництва',
+    dealType: 'Тип угоди', style: 'Стиль', year: 'Рік здачі', developer: 'Забудовник',
+    permit: 'Дозвіл', features: 'Особливості', resetAll: 'Очистити все',
+  },
 } as const
 
 function ResetAll({ activeCount, current, view, lang }: {

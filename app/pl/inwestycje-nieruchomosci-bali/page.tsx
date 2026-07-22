@@ -11,11 +11,11 @@ import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
-const UPDATED = 'May 15, 2026'
+const UPDATED = '15 maja 2026'
 
 export const metadata: Metadata = {
-  title: 'Bali Property Investment 2026 — Real Yields, Leasehold, Taxes | Balinsky',
-  description: 'Complete Bali property investment guide for foreigners: real 8-15% net yields, leasehold vs PT PMA structures, taxes, ROI calculations and case studies across Canggu, Bukit, Ubud.',
+  title: 'Inwestycje w nieruchomości na Bali 2026 — realne stopy zwrotu, leasehold, podatki | Balinsky',
+  description: 'Kompletny przewodnik po inwestycjach w nieruchomości na Bali dla obcokrajowców: realne 8-15% zysku netto, struktury leasehold i PT PMA, podatki, wyliczenia ROI oraz analizy przypadków w Canggu, Bukit i Ubud.',
   alternates: {
     canonical: '/pl/inwestycje-nieruchomosci-bali',
     languages: {
@@ -25,42 +25,42 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: 'Bali Property Investment 2026 — Complete Guide for Foreigners',
-    description: '8-15% net yields, leasehold vs PT PMA, taxes, ROI by district. Real numbers from Booking-grade analytics and buyer case studies.',
+    title: 'Inwestycje w nieruchomości na Bali 2026 — kompletny przewodnik dla obcokrajowców',
+    description: '8-15% zysku netto, leasehold vs PT PMA, podatki, ROI według dzielnic. Realne liczby z analityki klasy Booking i studiów przypadków kupujących.',
     type: 'article',
     url: '/pl/inwestycje-nieruchomosci-bali',
     images: [{ url: '/balina.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Bali Property Investment 2026',
-    description: 'Real yields, leasehold, taxes, ROI by district. Verified data.',
+    title: 'Inwestycje w nieruchomości na Bali 2026',
+    description: 'Realne stopy zwrotu, leasehold, podatki, ROI według dzielnic. Zweryfikowane dane.',
     images: ['/balina.jpg'],
   },
 }
 
 const FAQ = [
-  { q: 'What is the realistic rental yield for a Bali villa in 2026?',
-    a: 'Based on live Booking-grade data via estatemarket.io: 8-12% net annual yield in Canggu and Bukit at 70-80% occupancy with professional management. Premium-segment villas (new builds with ocean views, 4+ bedrooms) reach up to 15%. Ubud and Sanur yield 6-9% due to lower ADR. These are net figures, after management fees (15-20% of revenue), utilities, depreciation, taxes and vacancy.' },
-  { q: 'Leasehold or PT PMA — which structure should a foreign investor pick?',
-    a: 'Leasehold (long-term land lease, 25-80 years) suits 1-2 individual property purchases. Cheaper, faster (1-2 months), no corporate structure needed. PT PMA (Indonesian company with foreign shareholders) makes sense for a portfolio of 3+ units or commercial real estate. It enables freehold ownership but requires $25K in paid-up capital, annual reporting and corporate tax.' },
-  { q: 'What taxes does a foreigner pay when buying and owning property in Bali?',
-    a: 'On purchase: 5% acquisition tax (BPHTB) + 1-2% notary + 3-5% agent commission if applicable. On ownership: PBB (property tax) 0.1-0.3% of cadastral value annually. On rental income: 20% personal income tax for foreigners (can be reduced through PT PMA). On sale: 2.5% income tax on the sale price.' },
-  { q: 'How many years until a Bali villa pays back?',
-    a: 'At 10% annual yield — 10 years. At 12% — 8.3 years. In practice: 7-10 years in Canggu/Bukit with active management; 12-15 years in quieter districts. Watch out for leaseholds under 30 years remaining at purchase — they often don\'t complete a full payback cycle plus profitable resale.' },
-  { q: 'What are PBG and SLF, and why are they critical?',
-    a: 'PBG (Persetujuan Bangunan Gedung) is the building permit, issued before construction. SLF (Sertifikat Laik Fungsi) is the certificate of fitness for use, issued upon completion. Without SLF, the unit cannot legally be rented out — your investment model doesn\'t work officially. Every property in the Balinsky catalogue is QA-checked for these documents before publication — that\'s what makes us an editorial shortlist, not an aggregator.' },
-  { q: 'Can I get an Indonesian residence permit through property investment?',
-    a: 'There is no direct «property for residency» scheme. There is a KITAS Investor Visa (from $40K invested in PT PMA), Second Home Visa (from $130K deposited in an Indonesian bank), Golden Visa (from $350K individual investment, $25M for companies). Buying a villa alone does not grant residency — you need either a corporate or deposit structure.' },
+  { q: 'Jaka jest realna rentowność najmu willi na Bali w 2026 roku?',
+    a: 'Na podstawie aktualnych danych klasy Booking z estatemarket.io: 8-12% rocznego zysku netto w Canggu i Bukit przy obłożeniu 70-80% z profesjonalnym zarządzaniem. Wille segmentu premium (nowe budynki z widokiem na ocean, 4+ sypialnie) sięgają nawet 15%. Ubud i Sanur dają 6-9% ze względu na niższe ADR. To wartości netto, po odliczeniu opłat za zarządzanie (15-20% przychodu), mediów, amortyzacji, podatków i okresów pustostanu.' },
+  { q: 'Leasehold czy PT PMA — którą strukturę powinien wybrać inwestor zagraniczny?',
+    a: 'Leasehold (długoterminowa dzierżawa gruntu, 25-80 lat) sprawdza się przy zakupie 1-2 nieruchomości indywidualnych. Taniej, szybciej (1-2 miesiące), bez potrzeby zakładania struktury korporacyjnej. PT PMA (indonezyjska spółka z udziałowcami zagranicznymi) ma sens przy portfelu 3+ jednostek lub nieruchomości komercyjnych. Umożliwia własność freehold, ale wymaga $25K kapitału wpłaconego, rocznej sprawozdawczości i podatku dochodowego od osób prawnych.' },
+  { q: 'Jakie podatki płaci obcokrajowiec przy zakupie i posiadaniu nieruchomości na Bali?',
+    a: 'Przy zakupie: 5% podatku od nabycia (BPHTB) + 1-2% notariusz + 3-5% prowizji agenta, jeśli dotyczy. Przy posiadaniu: PBB (podatek od nieruchomości) 0.1-0.3% wartości katastralnej rocznie. Od dochodu z najmu: 20% podatku dochodowego od osób fizycznych dla obcokrajowców (można obniżyć przez PT PMA). Przy sprzedaży: 2.5% podatku dochodowego od ceny sprzedaży.' },
+  { q: 'Po ilu latach willa na Bali się zwraca?',
+    a: 'Przy 10% rocznego zysku — 10 lat. Przy 12% — 8.3 roku. W praktyce: 7-10 lat w Canggu/Bukit z aktywnym zarządzaniem; 12-15 lat w spokojniejszych dzielnicach. Uważaj na leasehold z pozostałym okresem poniżej 30 lat w momencie zakupu — często nie domykają pełnego cyklu zwrotu wraz z zyskowną odsprzedażą.' },
+  { q: 'Czym są PBG i SLF i dlaczego są kluczowe?',
+    a: 'PBG (Persetujuan Bangunan Gedung) to pozwolenie na budowę, wydawane przed rozpoczęciem budowy. SLF (Sertifikat Laik Fungsi) to certyfikat zdatności do użytkowania, wydawany po zakończeniu budowy. Bez SLF jednostki nie można legalnie wynająć — Twój model inwestycyjny oficjalnie nie działa. Każda nieruchomość w katalogu Balinsky przechodzi kontrolę jakości tych dokumentów przed publikacją — to właśnie czyni nas redakcyjną, wyselekcjonowaną listą, a nie agregatorem.' },
+  { q: 'Czy mogę uzyskać indonezyjskie zezwolenie na pobyt poprzez inwestycję w nieruchomość?',
+    a: 'Nie istnieje bezpośredni program «nieruchomość za pobyt». Istnieje wiza inwestorska KITAS (od $40K zainwestowanych w PT PMA), Second Home Visa (od $130K zdeponowanych w banku indonezyjskim), Golden Visa (od $350K inwestycji indywidualnej, $25M dla firm). Sam zakup willi nie daje prawa pobytu — potrzebna jest struktura korporacyjna albo depozytowa.' },
 ]
 
 const REGIONS = [
-  { name: 'Canggu', slug: 'canggu', yieldRange: '10-13%', priceFrom: '$180K', niche: 'trend district, events, networking, daily rentals' },
-  { name: 'Bukit (Uluwatu/Pandawa/Ungasan)', slug: 'uluwatu', yieldRange: '10-15%', priceFrom: '$130K', niche: 'premium ocean views, surf community, high ADR' },
-  { name: 'Ubud', slug: 'ubud', yieldRange: '6-9%', priceFrom: '$120K', niche: 'wellness, yoga tourism, longer stays' },
-  { name: 'Sanur', slug: 'sanur', yieldRange: '5-8%', priceFrom: '$150K', niche: 'family segment, low risk, steady demand' },
-  { name: 'Nusa Dua', slug: 'nusa-dua', yieldRange: '7-10%', priceFrom: '$200K', niche: 'premium hotels nearby, corporate travel' },
-  { name: 'Pererenan', slug: 'pererenan', yieldRange: '9-12%', priceFrom: '$160K', niche: 'quieter Canggu adjacent, growing trend area' },
+  { name: 'Canggu', slug: 'canggu', yieldRange: '10-13%', priceFrom: '$180K', niche: 'modna dzielnica, eventy, networking, najem dobowy' },
+  { name: 'Bukit (Uluwatu/Pandawa/Ungasan)', slug: 'uluwatu', yieldRange: '10-15%', priceFrom: '$130K', niche: 'premium widoki na ocean, społeczność surferów, wysokie ADR' },
+  { name: 'Ubud', slug: 'ubud', yieldRange: '6-9%', priceFrom: '$120K', niche: 'wellness, turystyka jogi, dłuższe pobyty' },
+  { name: 'Sanur', slug: 'sanur', yieldRange: '5-8%', priceFrom: '$150K', niche: 'segment rodzinny, niskie ryzyko, stabilny popyt' },
+  { name: 'Nusa Dua', slug: 'nusa-dua', yieldRange: '7-10%', priceFrom: '$200K', niche: 'premium hotele w pobliżu, podróże służbowe' },
+  { name: 'Pererenan', slug: 'pererenan', yieldRange: '9-12%', priceFrom: '$160K', niche: 'spokojniejsze sąsiedztwo Canggu, rosnąca modna okolica' },
 ]
 
 export const revalidate = 86400
@@ -70,8 +70,8 @@ export default function Page() {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/en` },
-      { '@type': 'ListItem', position: 2, name: 'Bali property investment', item: `${SITE_URL}/pl/inwestycje-nieruchomosci-bali` },
+      { '@type': 'ListItem', position: 1, name: 'Strona główna', item: `${SITE_URL}/en` },
+      { '@type': 'ListItem', position: 2, name: 'Inwestycje w nieruchomości na Bali', item: `${SITE_URL}/pl/inwestycje-nieruchomosci-bali` },
     ],
   }
   const faqJsonLd = {
@@ -89,28 +89,28 @@ export default function Page() {
       <Header />
       <PageContainer>
         <Breadcrumbs items={[
-          { label: 'Home', href: '/pl' },
-          { label: 'Bali property investment' },
+          { label: 'Strona główna', href: '/pl' },
+          { label: 'Inwestycje w nieruchomości na Bali' },
         ]} />
 
         <article className="mt-6 mb-16 max-w-4xl">
           <header className="mb-10">
             <h1 className="text-[32px] md:text-[44px] font-semibold tracking-tight text-[#111827] mb-4 leading-tight">
-              Bali Property Investment — 2026 Guide
+              Inwestycje w nieruchomości na Bali — przewodnik 2026
             </h1>
             <p className="text-[18px] text-[var(--color-text-muted)] leading-relaxed">
-              Real 8-15% net annual yields, ROI breakdown across 6 districts, legal structures (leasehold and PT PMA),
-              taxes for foreign owners, and an editorial shortlist of properties with verified permits.
+              Realne 8-15% rocznego zysku netto, rozbicie ROI na 6 dzielnic, struktury prawne (leasehold i PT PMA),
+              podatki dla właścicieli zagranicznych oraz redakcyjnie wyselekcjonowana lista nieruchomości ze zweryfikowanymi pozwoleniami.
             </p>
-            <p className="text-[13px] text-[var(--color-text-muted)] mt-3">Updated: {UPDATED}</p>
+            <p className="text-[13px] text-[var(--color-text-muted)] mt-3">Aktualizacja: {UPDATED}</p>
           </header>
 
           <section className="mb-12 grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { Icon: TrendingUp, n: '8–15%', label: 'annual net yield' },
-              { Icon: Building2, n: '828+', label: 'units in catalogue' },
-              { Icon: ShieldCheck, n: '100%', label: 'PBG + SLF verified' },
-              { Icon: BarChart3, n: '6', label: 'investment districts' },
+              { Icon: TrendingUp, n: '8–15%', label: 'roczny zysk netto' },
+              { Icon: Building2, n: '828+', label: 'jednostek w katalogu' },
+              { Icon: ShieldCheck, n: '100%', label: 'zweryfikowane PBG + SLF' },
+              { Icon: BarChart3, n: '6', label: 'dzielnic inwestycyjnych' },
             ].map(({ Icon, n, label }) => (
               <div key={label} className="rounded-2xl border border-[var(--color-border)] p-4 bg-white">
                 <Icon size={20} className="text-[var(--color-primary)] mb-2" />
@@ -122,45 +122,45 @@ export default function Page() {
 
           <section className="mb-12">
             <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
-              Why Bali Is the #1 Market for Foreign Investors in 2026
+              Dlaczego Bali to rynek nr 1 dla inwestorów zagranicznych w 2026 roku
             </h2>
             <div className="space-y-4 text-[16px] leading-[1.7] text-[#1f2937]">
               <p>
-                Bali is the one tourist market in Southeast Asia where a foreigner can legally hold property despite
-                Indonesia&apos;s freehold-for-foreigners ban. Through leasehold and PT PMA structures, transactions close fast
-                and cleanly, and tax rates are among the lowest in the region.
+                Bali to jedyny rynek turystyczny w Azji Południowo-Wschodniej, gdzie obcokrajowiec może legalnie posiadać nieruchomość mimo
+                indonezyjskiego zakazu freehold dla obcokrajowców. Dzięki strukturom leasehold i PT PMA transakcje domykają się szybko
+                i czysto, a stawki podatkowe należą do najniższych w regionie.
               </p>
               <p>
-                In parallel, the island holds its position as the regional tourism heavyweight: 6-7 million international
-                visitors annually, 70-85% occupancy in Canggu and Bukit hotels and rentals, average daily rate (ADR) growing
-                8-12% year-over-year since 2023. Per <a href="https://www.estatemarket.io" target="_blank" rel="nofollow noopener noreferrer" className="text-[var(--color-primary)]">estatemarket.io</a> —
-                the public Booking analytics we surface in every property card — real neighbour-level yield data is available
-                literally street-by-street within a 1 km radius.
+                Równolegle wyspa utrzymuje pozycję regionalnego lidera turystyki: 6-7 milionów zagranicznych
+                turystów rocznie, 70-85% obłożenia w hotelach i wynajmach w Canggu i Bukit, średnia stawka dobowa (ADR) rosnąca
+                o 8-12% rok do roku od 2023. Według <a href="https://www.estatemarket.io" target="_blank" rel="nofollow noopener noreferrer" className="text-[var(--color-primary)]">estatemarket.io</a> —
+                publicznej analityki Booking, którą pokazujemy w każdej karcie nieruchomości — realne dane o rentowności na poziomie sąsiedztwa są dostępne
+                dosłownie ulica po ulicy w promieniu 1 km.
               </p>
               <p>
-                That is the rare combination: <strong>high tourist demand + legal foreign-friendly structures + low entry cost</strong>
-                ($120-200K for a starter unit). No other Southeast Asian market combines all three — Phuket and Ho Chi Minh
-                are pricier and harder on transactions, Samui and Langkawi have weaker demand.
+                To rzadka kombinacja: <strong>wysoki popyt turystyczny + legalne struktury przyjazne obcokrajowcom + niski próg wejścia</strong>
+                ($120-200K za jednostkę startową). Żaden inny rynek Azji Południowo-Wschodniej nie łączy wszystkich trzech — Phuket i Ho Chi Minh
+                są droższe i trudniejsze transakcyjnie, Samui i Langkawi mają słabszy popyt.
               </p>
             </div>
           </section>
 
           <section className="mb-12">
             <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
-              Yields by District — Real 2026 Numbers
+              Rentowność według dzielnic — realne liczby na 2026
             </h2>
             <p className="text-[16px] leading-[1.7] text-[#1f2937] mb-6">
-              These ranges average comparable Booking neighbours across the last 12 months, net of management fees,
-              depreciation and taxes. Spread shown as 5th and 95th percentile.
+              Te zakresy uśredniają porównywalne sąsiedztwa Booking z ostatnich 12 miesięcy, po odliczeniu opłat za zarządzanie,
+              amortyzacji i podatków. Rozrzut pokazany jako 5. i 95. percentyl.
             </p>
             <div className="overflow-x-auto">
               <table className="w-full text-[14px] border-collapse">
                 <thead>
                   <tr className="text-left text-[var(--color-text-muted)] uppercase tracking-wide text-[12px]">
-                    <th className="py-3 px-3 border-b border-[var(--color-border)]">District</th>
-                    <th className="py-3 px-3 border-b border-[var(--color-border)]">Yield</th>
-                    <th className="py-3 px-3 border-b border-[var(--color-border)]">From</th>
-                    <th className="py-3 px-3 border-b border-[var(--color-border)] hidden md:table-cell">Character</th>
+                    <th className="py-3 px-3 border-b border-[var(--color-border)]">Dzielnica</th>
+                    <th className="py-3 px-3 border-b border-[var(--color-border)]">Rentowność</th>
+                    <th className="py-3 px-3 border-b border-[var(--color-border)]">Od</th>
+                    <th className="py-3 px-3 border-b border-[var(--color-border)] hidden md:table-cell">Charakter</th>
                     <th className="py-3 px-3 border-b border-[var(--color-border)]"></th>
                   </tr>
                 </thead>
@@ -173,7 +173,7 @@ export default function Page() {
                       <td className="py-3 px-3 hidden md:table-cell text-[var(--color-text-muted)]">{r.niche}</td>
                       <td className="py-3 px-3 text-right">
                         <Link href={`/pl/wille`} className="text-[var(--color-primary)] text-[13px] inline-flex items-center gap-1 no-underline hover:underline">
-                          browse <ChevronRight size={14} />
+                          przeglądaj <ChevronRight size={14} />
                         </Link>
                       </td>
                     </tr>
@@ -185,57 +185,57 @@ export default function Page() {
 
           <section className="mb-12">
             <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
-              Legal Structures — Leasehold vs PT PMA
+              Struktury prawne — leasehold vs PT PMA
             </h2>
             <div className="grid md:grid-cols-2 gap-4">
               <div className="rounded-2xl border border-[var(--color-border)] p-5 bg-white">
                 <h3 className="text-[18px] font-semibold text-[#111827] mb-2">Leasehold</h3>
-                <p className="text-[14px] text-[var(--color-text-muted)] mb-3">Long-term land lease from a local owner — 25-80 years, often extendable.</p>
+                <p className="text-[14px] text-[var(--color-text-muted)] mb-3">Długoterminowa dzierżawa gruntu od lokalnego właściciela — 25-80 lat, często z możliwością przedłużenia.</p>
                 <ul className="space-y-2 text-[14px] text-[#1f2937] list-disc pl-5">
-                  <li>Minimum paperwork and formalities</li>
-                  <li>Closes in 1-2 months at a PPAT notary</li>
-                  <li>Fits 1-2 individual purchases</li>
-                  <li>Cheaper than PT PMA by $5-15K per deal</li>
-                  <li className="text-[var(--color-text-muted)]">You don&apos;t own the land — only the right to use</li>
+                  <li>Minimum dokumentów i formalności</li>
+                  <li>Domyka się w 1-2 miesiące u notariusza PPAT</li>
+                  <li>Pasuje do 1-2 zakupów indywidualnych</li>
+                  <li>Tańsze od PT PMA o $5-15K na transakcji</li>
+                  <li className="text-[var(--color-text-muted)]">Nie jesteś właścicielem gruntu — masz jedynie prawo użytkowania</li>
                 </ul>
               </div>
               <div className="rounded-2xl border border-[var(--color-border)] p-5 bg-white">
                 <h3 className="text-[18px] font-semibold text-[#111827] mb-2">PT PMA</h3>
-                <p className="text-[14px] text-[var(--color-text-muted)] mb-3">Indonesian company with foreign shareholders — can hold freehold land.</p>
+                <p className="text-[14px] text-[var(--color-text-muted)] mb-3">Indonezyjska spółka z udziałowcami zagranicznymi — może posiadać grunt freehold.</p>
                 <ul className="space-y-2 text-[14px] text-[#1f2937] list-disc pl-5">
-                  <li>Freehold ownership</li>
-                  <li>Fits a portfolio of 3+ units</li>
-                  <li>Enables legal rental operations</li>
-                  <li>$25K paid-up capital + annual reporting</li>
-                  <li className="text-[var(--color-text-muted)]">22% corporate income tax</li>
+                  <li>Własność freehold</li>
+                  <li>Pasuje do portfela 3+ jednostek</li>
+                  <li>Umożliwia legalną działalność wynajmu</li>
+                  <li>$25K kapitału wpłaconego + roczna sprawozdawczość</li>
+                  <li className="text-[var(--color-text-muted)]">22% podatku dochodowego od osób prawnych</li>
                 </ul>
               </div>
             </div>
             <p className="mt-4 text-[14px] text-[var(--color-text-muted)]">
-              Full transaction guide on the <Link href="/pl/jak-kupic" className="text-[var(--color-primary)] no-underline hover:underline">«How to buy property in Bali»</Link> page.
+              Pełny przewodnik po transakcji na stronie <Link href="/pl/jak-kupic" className="text-[var(--color-primary)] no-underline hover:underline">«Jak kupić nieruchomość na Bali»</Link>.
             </p>
           </section>
 
           <section className="mb-12">
             <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
-              ROI Calculation — Typical Case
+              Wyliczenie ROI — typowy przypadek
             </h2>
             <div className="rounded-2xl border border-[var(--color-border)] p-5 bg-white">
               <div className="flex items-center gap-2 mb-3">
                 <Calculator size={20} className="text-[var(--color-primary)]" />
-                <strong>2BR villa in Canggu, $250K, 30-year leasehold</strong>
+                <strong>Willa 2BR w Canggu, $250K, leasehold na 30 lat</strong>
               </div>
               <ul className="space-y-2 text-[14px] text-[#1f2937] list-disc pl-5">
-                <li>Purchase price: $250,000</li>
-                <li>Transaction costs (notary, BPHTB tax, due diligence): ~$15,000</li>
-                <li>Average rate: $200/night × 75% occupancy × 365 days = $54,750/year</li>
-                <li>Expenses (mgmt 18%, utilities, furniture depreciation, 20% tax): ~$23,500/year</li>
-                <li>Net cash flow: ~$31,250/year → 12.5% annual yield on the $250K outlay</li>
-                <li>Payback: ~8 years to break even, 22 useful rental years remain on the lease</li>
+                <li>Cena zakupu: $250,000</li>
+                <li>Koszty transakcyjne (notariusz, podatek BPHTB, due diligence): ~$15,000</li>
+                <li>Średnia stawka: $200/noc × 75% obłożenia × 365 dni = $54,750/rok</li>
+                <li>Wydatki (zarządzanie 18%, media, amortyzacja mebli, 20% podatku): ~$23,500/rok</li>
+                <li>Przepływ netto: ~$31,250/rok → 12.5% rocznego zysku od nakładu $250K</li>
+                <li>Zwrot: ~8 lat do progu rentowności, na dzierżawie pozostają 22 użyteczne lata najmu</li>
               </ul>
               <p className="mt-4 text-[14px] text-[var(--color-text-muted)]">
-                A similar calculator runs automatically on every villa page in our catalogue, populated with real
-                neighbour data from <a href="https://www.estatemarket.io" target="_blank" rel="nofollow noopener noreferrer" className="text-[var(--color-primary)]">estatemarket.io</a>.
+                Podobny kalkulator działa automatycznie na każdej stronie willi w naszym katalogu, zasilany realnymi
+                danymi sąsiedztwa z <a href="https://www.estatemarket.io" target="_blank" rel="nofollow noopener noreferrer" className="text-[var(--color-primary)]">estatemarket.io</a>.
               </p>
             </div>
           </section>
@@ -244,13 +244,13 @@ export default function Page() {
             <div className="flex items-start gap-3">
               <AlertTriangle size={22} className="text-amber-700 mt-0.5 shrink-0" />
               <div>
-                <h3 className="text-[16px] font-semibold text-[#111827] mb-2">Risks Sellers Don&apos;t Talk About</h3>
+                <h3 className="text-[16px] font-semibold text-[#111827] mb-2">Ryzyka, o których sprzedawcy nie mówią</h3>
                 <ul className="space-y-2 text-[14px] text-[#1f2937] list-disc pl-5">
-                  <li><strong>Leasehold under 30 years.</strong> You won&apos;t recoup the investment and still resell at a profit. Insist on 35+ years remaining at purchase.</li>
-                  <li><strong>Property without SLF.</strong> Legal rental is impossible — your yield model doesn&apos;t exist on paper.</li>
-                  <li><strong>Developer without PBG.</strong> Construction can be halted by authorities and your deposit won&apos;t be refunded.</li>
-                  <li><strong>Agricultural-zone land.</strong> Some Canggu/Pererenan plots are being reclassified — check the RDTR plan.</li>
-                  <li><strong>Real occupancy below promised.</strong> Developer-guaranteed yields are typically inflated by 30-50%. Cross-check with Booking neighbour data.</li>
+                  <li><strong>Leasehold poniżej 30 lat.</strong> Nie odzyskasz inwestycji i nie odsprzedasz jej z zyskiem. Wymagaj co najmniej 35 pozostałych lat w momencie zakupu.</li>
+                  <li><strong>Nieruchomość bez SLF.</strong> Legalny wynajem jest niemożliwy — Twój model rentowności nie istnieje na papierze.</li>
+                  <li><strong>Deweloper bez PBG.</strong> Budowa może zostać wstrzymana przez władze, a Twój depozyt nie zostanie zwrócony.</li>
+                  <li><strong>Grunt w strefie rolnej.</strong> Niektóre działki w Canggu/Pererenan są przeklasyfikowywane — sprawdź plan RDTR.</li>
+                  <li><strong>Realne obłożenie poniżej obiecanego.</strong> Rentowność gwarantowana przez dewelopera jest zwykle zawyżona o 30-50%. Zweryfikuj z danymi sąsiedztwa Booking.</li>
                 </ul>
               </div>
             </div>

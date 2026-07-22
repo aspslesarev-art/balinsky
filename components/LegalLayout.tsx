@@ -26,7 +26,7 @@ export function LegalLayout({
       <Header />
       <PageContainer>
         <Breadcrumbs items={[
-          { label: pickCopy({ ru: 'Главная', en: 'Home', id: 'Beranda', fr: 'Accueil', de: 'Startseite', zh: '首页', nl: 'Home', ban: 'Beranda' }, lang), href: home },
+          { label: pickCopy({ ru: 'Главная', en: 'Home', id: 'Beranda', fr: 'Accueil', de: 'Startseite', zh: '首页', nl: 'Home', ban: 'Beranda', pl: 'Strona główna', uk: 'Головна' }, lang), href: home },
           { label: breadcrumbLabel },
         ]} />
         <article className="mt-6 mb-16 max-w-3xl">

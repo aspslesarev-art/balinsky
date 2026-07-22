@@ -138,6 +138,34 @@ const MAP_COPY = {
     bookingTitle: (adr: number, beds: number | null) =>
       `Booking: $${adr}/wengi${beds != null ? ` · ${beds} BR` : ''}`,
   },
+  pl: {
+    unavailable: 'Mapa niedostępna',
+    villa: 'Willa', competitors: 'Konkurenci', anchors: 'Punkty odniesienia',
+    anchorsOnly: 'Tylko punkty odniesienia', allPois: 'Wszystkie POI',
+    heat: 'Mapa turystyki',
+    perNight: ' / noc',
+    openBooking: 'Otwórz w Booking →',
+    openMaps: 'Otwórz w Google Maps →',
+    reviewsSuffix: ' recenzji',
+    minByScooter: (min: number) => `${min} min skuterem`,
+    distLabel: 'Od willi',
+    bookingTitle: (adr: number, beds: number | null) =>
+      `Booking: $${adr}/noc${beds != null ? ` · ${beds} BR` : ''}`,
+  },
+  uk: {
+    unavailable: 'Карта недоступна',
+    villa: 'Вілла', competitors: 'Конкуренти', anchors: 'Орієнтири',
+    anchorsOnly: 'Лише орієнтири', allPois: 'Усі POI',
+    heat: 'Карта туризму',
+    perNight: ' / ніч',
+    openBooking: 'Відкрити на Booking →',
+    openMaps: 'Відкрити на Google Maps →',
+    reviewsSuffix: ' відгуків',
+    minByScooter: (min: number) => `${min} хв на скутері`,
+    distLabel: 'Від вілли',
+    bookingTitle: (adr: number, beds: number | null) =>
+      `Booking: $${adr}/ніч${beds != null ? ` · ${beds} BR` : ''}`,
+  },
 } as const
 
 // Haversine on a sphere — same formula used elsewhere in
@@ -196,10 +224,10 @@ function competitorPopupHtml(c: {
 }, lang: Lang): string {
   const t = pickCopy(MAP_COPY, lang)
   const sqmU = lang === 'ru' ? 'м²' : 'm²'
-  const kmLabel = pickCopy({ ru: 'км', en: 'km', id: 'km', fr: 'km', de: 'km', zh: '公里', nl: 'km', ban: 'km' }, lang)
+  const kmLabel = pickCopy({ ru: 'км', en: 'km', id: 'km', fr: 'km', de: 'km', zh: '公里', nl: 'km', ban: 'km', pl: 'km', uk: 'км' }, lang)
   const title = c.complex || c.name || 'Booking listing'
   const stars = c.rating != null ? `★ ${c.rating.toFixed(1)}` : ''
-  const reviews = c.reviews != null ? `${c.reviews} ${pickCopy({ ru: 'отзывов', en: 'reviews', id: 'ulasan', fr: 'avis', de: 'Bewertungen', zh: '条评价', nl: 'beoordelingen', ban: 'ulasan' }, lang)}` : ''
+  const reviews = c.reviews != null ? `${c.reviews} ${pickCopy({ ru: 'отзывов', en: 'reviews', id: 'ulasan', fr: 'avis', de: 'Bewertungen', zh: '条评价', nl: 'beoordelingen', ban: 'ulasan', pl: 'recenzji', uk: 'відгуків' }, lang)}` : ''
   const beds = c.bedrooms != null ? `${c.bedrooms} BR` : ''
   const area = c.area != null ? `${c.area} ${sqmU}` : ''
   const specs = [beds, area].filter(Boolean).join(' · ')
@@ -236,10 +264,10 @@ function anchorPopupHtml(a: {
   distanceKm?: number | null
 }, lang: Lang): string {
   const t = pickCopy(MAP_COPY, lang)
-  const kmLabel = pickCopy({ ru: 'км', en: 'km', id: 'km', fr: 'km', de: 'km', zh: '公里', nl: 'km', ban: 'km' }, lang)
+  const kmLabel = pickCopy({ ru: 'км', en: 'km', id: 'km', fr: 'km', de: 'km', zh: '公里', nl: 'km', ban: 'km', pl: 'km', uk: 'км' }, lang)
   const title = locTx(a.name, lang) || 'POI'
   const stars = a.rating != null ? `★ ${a.rating.toFixed(1)}` : ''
-  const reviewsTxt = a.reviews != null ? `${a.reviews} ${pickCopy({ ru: 'отзывов', en: 'reviews', id: 'ulasan', fr: 'avis', de: 'Bewertungen', zh: '条评价', nl: 'beoordelingen', ban: 'ulasan' }, lang)}` : ''
+  const reviewsTxt = a.reviews != null ? `${a.reviews} ${pickCopy({ ru: 'отзывов', en: 'reviews', id: 'ulasan', fr: 'avis', de: 'Bewertungen', zh: '条评价', nl: 'beoordelingen', ban: 'ulasan', pl: 'recenzji', uk: 'відгуків' }, lang)}` : ''
   const ratingLine = [stars, reviewsTxt].filter(Boolean).join(' · ')
   const cat = a.primaryType ? a.primaryType.replace(/_/g, ' ') : ''
   const link = a.mapsUrl
@@ -515,9 +543,9 @@ export function InvestmentMap({
         </button>
         {showHeat && (
           <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/95 backdrop-blur-sm shadow-sm text-[10px] text-[var(--color-text-muted)]">
-            <span>{pickCopy({ ru: 'мало', en: 'few', id: 'sedikit', fr: 'peu', de: 'wenig', zh: '少', nl: 'weinig', ban: 'akidik' }, lang)}</span>
+            <span>{pickCopy({ ru: 'мало', en: 'few', id: 'sedikit', fr: 'peu', de: 'wenig', zh: '少', nl: 'weinig', ban: 'akidik', pl: 'mało', uk: 'мало' }, lang)}</span>
             <span className="h-1.5 w-16 rounded-full" style={{ background: 'linear-gradient(90deg,#2b6cff,#00c2c7,#8ed11f,#ffd200,#ff2d00)' }} />
-            <span>{pickCopy({ ru: 'много', en: 'many', id: 'banyak', fr: 'beaucoup', de: 'viel', zh: '多', nl: 'veel', ban: 'akeh' }, lang)}</span>
+            <span>{pickCopy({ ru: 'много', en: 'many', id: 'banyak', fr: 'beaucoup', de: 'viel', zh: '多', nl: 'veel', ban: 'akeh', pl: 'dużo', uk: 'багато' }, lang)}</span>
           </div>
         )}
         <button

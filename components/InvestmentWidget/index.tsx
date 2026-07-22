@@ -446,6 +446,114 @@ const COPY = {
     catSchool: 'Sekolah', catPreschool: 'PAUD & TK', catSupermarket: 'Supermarket',
     catPharmacy: 'Apotek', catHospital: 'Klinik',
   },
+  pl: {
+    sectionH2: 'Potencjał inwestycyjny',
+    sectionSub: 'Scenariusze najmu oszacowane przez porównanie z konkurentami z Booking i analizę okolicy',
+    confHigh: 'wysoka pewność',
+    confMedium: 'średnia pewność',
+    confLow: 'niska pewność',
+    object: ['ogłoszenie', 'ogłoszenia'] as [string, string],
+    villa: ['willa', 'wille'] as [string, string],
+    similarVilla: ['podobna willa', 'podobne wille'] as [string, string],
+    restaurant: ['restauracja', 'restauracje'] as [string, string],
+    perNight: ' / noc',
+    perYear: '/rok',
+    perYearNoi: ' / rok NOI',
+    expandedZone: (raw: string, applied: string) =>
+      `Rozszerzona próba: brak dopasowań w pierwotnej strefie (${raw}), przełączono na ${applied}.`,
+    threeNumbers: 'Co oznaczają te trzy liczby',
+    threeNumbersBody: (count: number, similar: string, zoneLower: string) =>
+      <>Szacujemy, ile ta willa mogłaby zarobić na najmie krótkoterminowym. Podstawą jest {count > 0 ? <><span className="font-medium text-[var(--color-text)]">{count}</span> {similar}</> : 'podobne wille'} w tej samej strefie ({zoneLower}; na mapie powyżej — niebieskie punkty wewnątrz czerwonego okręgu).</>,
+    threeNumbersScenarios:
+      <>
+        {' '}<strong className="text-[#B91C1C]">Zły</strong> — scenariusz pesymistyczny, willa stoi w połowie pusta.{' '}
+        <strong className="text-[var(--color-primary-pressed)]">Normalny</strong> — to, co zdarza się najczęściej.{' '}
+        <strong className="text-[#15803D]">Dobry</strong> — górna granica, przy silnej firmie zarządzającej i wysokiej ocenie.
+        {' '}Pod scenariuszami znajdują się karty rzeczywistych konkurentów — otwórz je, aby porównać powierzchnię / ocenę / cenę z tą willą.
+      </>,
+    scenarioBad: 'Zły', scenarioMedian: 'Normalny', scenarioGood: 'Dobry',
+    resetTitle: 'Przywróć wartości domyślne oparte na konkurencji', reset: 'resetuj',
+    inputPrice: 'Cena', inputAdr: 'ADR', inputOccupancy: 'Obłożenie', inputMgmt: 'Opłata za zarządzanie',
+    calcTitle: 'Kalkulator rentowności',
+    calcSub: 'Przesuń suwaki. ADR i obłożenie domyślnie przyjmują medianę podobnych pobliskich ogłoszeń Booking; cenę można zmieniać o ±25%.',
+    payback: 'Zwrot', capRate: 'Cap rate',
+    howCalced: 'Jak to obliczono',
+    revenue: 'Przychód', platform: 'Platforma', mgmt: 'Zarządzanie', opex: 'OPEX', tax: 'Podatek', noi: 'NOI',
+    referencesTitle: 'Mała próba — pokazujemy ogłoszenia referencyjne',
+    referencesBody: (n: number, plural: string) =>
+      `Tylko ${n} ${plural} pasowało do profilu willi w promieniu 2 km. Nie agregujemy — zamiast tego oto konkretne przykłady.`,
+    restrictedTitle: 'Grunt mieszkaniowy — najem dobowy niedozwolony',
+    restrictedBody: 'Ta nieruchomość znajduje się na żółtym (mieszkaniowym) gruncie. Zgodnie z indonezyjskim zonowaniem najem krótkoterminowy / turystyczny jest tu nielegalny, więc nie obliczamy dla niej rentowności najmu dobowego. Grunt nadaje się do użytku własnego lub najmu długoterminowego.',
+    sqm: 'm²',
+    similarOnBooking: (n: number) => `Podobne ogłoszenia na Booking · ${n}`,
+    collapse: 'Zwiń',
+    showAll: (n: number) => `Pokaż wszystkie ${n}`,
+    newDistrictH3: 'Rozwijająca się dzielnica',
+    newDistrictBody:
+      'Dzielnica jest we wczesnej fazie wzrostu: mniej niż 30 ogłoszeń Booking w promieniu 1 km. Idąc śladem porównywalnych rynków (Berawa 2018→2022, Canggu 2014→2018), ADR może wzrosnąć o 30–80% w ciągu 4–5 lat. To analogia historyczna, nie prognoza.',
+    newDistrictFootnote: (n: number, plural: string) =>
+      `Łącznie w promieniu 1 km: ${n} ${plural}`,
+    nearbyTitle: 'Wokół willi',
+    catBeach: 'Plaże', catBeachclub: 'Kluby plażowe', catRestaurant: 'Restauracje',
+    catCafe: 'Kawiarnie', catWellness: 'Joga i fitness', catNightlife: 'Bary i kluby',
+    catAttraction: 'Atrakcje', catIntlSchool: 'Szkoły międzynarodowe',
+    catSchool: 'Szkoły', catPreschool: 'Żłobki i przedszkola', catSupermarket: 'Supermarkety',
+    catPharmacy: 'Apteki', catHospital: 'Kliniki',
+  },
+  uk: {
+    sectionH2: 'Інвестиційний потенціал',
+    sectionSub: 'Сценарії оренди, оцінені шляхом зіставлення з конкурентами Booking та аналізу району',
+    confHigh: 'висока впевненість',
+    confMedium: 'середня впевненість',
+    confLow: 'низька впевненість',
+    object: ['оголошення', 'оголошень'] as [string, string],
+    villa: ['вілла', 'вілли'] as [string, string],
+    similarVilla: ['схожа вілла', 'схожі вілли'] as [string, string],
+    restaurant: ['ресторан', 'ресторани'] as [string, string],
+    perNight: ' / ніч',
+    perYear: '/рік',
+    perYearNoi: ' / рік NOI',
+    expandedZone: (raw: string, applied: string) =>
+      `Розширена вибірка: у вихідній зоні (${raw}) немає збігів, перейшли на ${applied}.`,
+    threeNumbers: 'Що означають ці три цифри',
+    threeNumbersBody: (count: number, similar: string, zoneLower: string) =>
+      <>Ми оцінюємо, скільки ця вілла могла б заробляти на короткостроковій оренді. Основа — {count > 0 ? <><span className="font-medium text-[var(--color-text)]">{count}</span> {similar}</> : 'схожі вілли'} у тій самій зоні ({zoneLower}; на карті вгорі — сині точки всередині червоного кола).</>,
+    threeNumbersScenarios:
+      <>
+        {' '}<strong className="text-[#B91C1C]">Поганий</strong> — песимістичний сценарій, вілла стоїть напівпорожня.{' '}
+        <strong className="text-[var(--color-primary-pressed)]">Нормальний</strong> — те, що трапляється найчастіше.{' '}
+        <strong className="text-[#15803D]">Добрий</strong> — верхня межа, із сильною керуючою компанією та високим рейтингом.
+        {' '}Під сценаріями — картки реальних конкурентів, відкрийте їх, щоб порівняти площу / рейтинг / ціну з цією віллою.
+      </>,
+    scenarioBad: 'Поганий', scenarioMedian: 'Нормальний', scenarioGood: 'Добрий',
+    resetTitle: 'Скинути до значень на основі конкурентів', reset: 'скинути',
+    inputPrice: 'Ціна', inputAdr: 'ADR', inputOccupancy: 'Заповнюваність', inputMgmt: 'Плата за управління',
+    calcTitle: 'Калькулятор дохідності',
+    calcSub: 'Пересувайте повзунки. ADR і заповнюваність за замовчуванням беруть медіану схожих сусідніх оголошень Booking; ціну можна змінювати на ±25%.',
+    payback: 'Окупність', capRate: 'Cap rate',
+    howCalced: 'Як це розраховано',
+    revenue: 'Дохід', platform: 'Платформа', mgmt: 'Управління', opex: 'OPEX', tax: 'Податок', noi: 'NOI',
+    referencesTitle: 'Мала вибірка — показуємо референсні оголошення',
+    referencesBody: (n: number, plural: string) =>
+      `Лише ${n} ${plural} відповідають профілю вілли в радіусі 2 км. Ми не агрегуємо — натомість ось конкретні приклади.`,
+    restrictedTitle: 'Житлова земля — добова оренда не дозволена',
+    restrictedBody: 'Ця нерухомість розташована на жовтій (житловій) землі. За індонезійським зонуванням короткострокова / туристична оренда тут нелегальна, тому ми не розраховуємо дохідність від добової оренди для неї. Земля підходить для власного проживання або довгострокової оренди.',
+    sqm: 'm²',
+    similarOnBooking: (n: number) => `Схожі оголошення на Booking · ${n}`,
+    collapse: 'Згорнути',
+    showAll: (n: number) => `Показати всі ${n}`,
+    newDistrictH3: 'Район, що розвивається',
+    newDistrictBody:
+      'Район у ранній фазі зростання: менше 30 оголошень Booking у радіусі 1 км. За траєкторією співставних ринків (Berawa 2018→2022, Canggu 2014→2018) ADR може зрости на 30–80% за 4–5 років. Це історична аналогія, а не прогноз.',
+    newDistrictFootnote: (n: number, plural: string) =>
+      `Загалом у радіусі 1 км: ${n} ${plural}`,
+    nearbyTitle: 'Навколо вілли',
+    catBeach: 'Пляжі', catBeachclub: 'Пляжні клуби', catRestaurant: 'Ресторани',
+    catCafe: 'Кафе', catWellness: 'Йога та фітнес', catNightlife: 'Бари та клуби',
+    catAttraction: 'Визначні місця', catIntlSchool: 'Міжнародні школи',
+    catSchool: 'Школи', catPreschool: 'Ясла та дитсадки', catSupermarket: 'Супермаркети',
+    catPharmacy: 'Аптеки', catHospital: 'Клініки',
+  },
 } as const
 
 function pluralize(lang: Lang, n: number, ruForms: [string, string, string], enForms: [string, string]): string {

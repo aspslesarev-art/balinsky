@@ -558,6 +558,142 @@ const COPY = {
     ctaApartments: 'Ka apartemen',
     ctaGuide: 'Panduan lengkap „Sapunapi numbas ring Bali“',
   },
+  pl: {
+    home: 'Strona główna',
+    crumb: 'Rezerwacja',
+    h1: 'Jak działa rezerwacja nieruchomości na Bali',
+    intro: 'Gdy dotkniesz „Rezerwuj” przy ofercie, nieruchomość zostaje zablokowana na 14 dni wyłącznie dla ciebie. Ta strona wyjaśnia, co dzieje się dalej, kto przechowuje twój depozyt i jak działają zwroty, jeśli zmienisz zdanie.',
+
+    h2What: 'Czym jest rezerwacja na Bali',
+    pWhat: 'Rezerwacja to pierwszy prawnie odnotowany krok w transakcji. Podpisujesz krótki formularz rezerwacji (nie umowę sprzedaży), wpłacasz zadatek rezerwacyjny, a nieruchomość zostaje wycofana z rynku na 14 dni — żaden inny kupujący nie może w tym oknie sfinalizować zakupu. Ten czas wykorzystujesz na due diligence, uzgodnienie zmian w SPA z prawnikiem i przygotowanie kolejnego przelewu.',
+
+    h2Hold: '14 dni wyłączności — co ci dają',
+    pHold: 'Wstrzymanie działa w obie strony: cena jest zablokowana w formularzu rezerwacji, deweloper nie może jej podnieść; nieruchomość rzeczywiście na ciebie czeka. Jeśli w ciągu tych 14 dni pojawi się wyższa oferta, deweloper nie może jej przyjąć. Okno wystarcza, by prawnik zakończył DD (zwykle 7–10 dni) i byś wynegocjował zmiany w SPA.',
+
+    h2Sign: 'Co faktycznie podpisujesz',
+    pSign: 'Formularz rezerwacji to dokument na 1–3 strony: cena nieruchomości, kwota depozytu, czas trwania blokady (14 dni), warunki zwrotu i twoje dane bankowe do zwrotu, jeśli się wycofasz. To NIE jest umowa sprzedaży (SPA). SPA to osobny dokument podpisywany 1–2 tygodnie później przed notariuszem PPAT, po zakończeniu DD. Formularze rezerwacji mogą zawierać klauzulę „bezzwrotny bez podstawy prawnej”, ale częstszą praktyką jest pełny zwrot przy wycofaniu się po DD.',
+
+    h2Deposit: 'Gdzie trzymany jest depozyt',
+    pDeposit: 'Zadatek rezerwacyjny na Bali to zwykle 2 000–10 000 $ (wille premium do 25 000 $). Środki trafiają na jeden z trzech sposobów: na escrow notariusza PPAT (najbezpieczniej), na rachunek firmowy dewelopera (wymaga zaufania do dewelopera) lub na rachunek pośredniczącej kancelarii. Nigdy na prywatne konto sprzedającego, prywatne konto dyrektora ani konto agenta — to najczęstszy kanał oszustwa w indonezyjskiej nieruchomości. Zawsze weryfikuj instrukcje przelewu z samym formularzem rezerwacji, nigdy z czatu w komunikatorze.',
+
+    h2Refund: 'Jak wracają pieniądze',
+    pRefund: 'Standardowa praktyka: pełny zwrot, jeśli wycofasz się w oknie 14 dni na podstawie ustaleń DD. Podstawy prawne (obciążenia, niezgodność zonowania, problemy z PBG) zawsze uruchamiają 100% zwrot. Wycofanie „zmieniłem zdanie” bez podstawy — niektórzy deweloperzy zatrzymują depozyt jako karę, inni zwracają w całości. Warunki zwrotu są zawsze zapisane w formularzu rezerwacji — przeczytaj tę klauzulę przed podpisaniem. Po 14 dniach bez podpisanego SPA depozyt albo przechodzi na pierwszą transzę SPA, albo jest zwracany, zależnie od formularza.',
+
+    h2After: 'Co dzieje się po 14 dniach',
+    pAfter: 'Trzy ścieżki. Najlepszy przypadek: do końca okna prawnik zakończył DD, podpisujesz SPA u notariusza PPAT, a zadatek rezerwacyjny zalicza się na pierwszą transzę SPA. Przypadek pośredni: przedłużasz blokadę o 7–14 dni (DD się nie zakończyło), na piśmie. Najgorszy przypadek: wycofujesz się, depozyt jest zwracany, nieruchomość wraca na rynek. Milczenie po 14 dniach bez formalnej decyzji jest różnie interpretowane w zależności od formularza — zawsze wysyłaj decyzję na piśmie (przedłużenie lub rezygnacja).',
+
+    h2Risks: 'Na co uważać',
+    risks: [
+      'Instrukcje przelewu depozytu muszą być w formularzu rezerwacji — nigdy nie przyjmuj ich z czatu.',
+      'Przeczytaj klauzulę zwrotu przed podpisaniem. „Bezzwrotny w każdym przypadku” to czerwona flaga — nalegaj na zmianę.',
+      'Czas trwania blokady musi być wyraźnie określony (14 dni lub inny). Blokada bezterminowa wymaga pytania.',
+      'Formularz rezerwacji musi być podpisany przez osobę uprawnioną z PT dewelopera wskazaną w Akta Pendirian (dokumentach założycielskich). Podpis agenta bez pełnomocnictwa to słabe ogniwo.',
+      'Zachowaj kopię PDF podpisanego formularza, potwierdzenie przelewu bankowego i wątek z menedżerem w komunikatorze — pomogą, jeśli powstanie spór.',
+    ],
+
+    h2What2: 'Formularz rezerwacji a SPA',
+    table: {
+      headLeft: '',
+      headRsv: 'Formularz rezerwacji',
+      headSpa: 'SPA / umowa leasehold',
+      rows: [
+        { l: 'Kiedy podpisywany',      r: 'Pierwsze 1–3 dni',                            s: '1–4 tygodnie po rezerwacji' },
+        { l: 'Długość dokumentu',      r: '1–3 strony',                                  s: '15–40 stron' },
+        { l: 'Waga prawna',            r: 'Blokuje cenę i termin; nie przenosi praw',    s: 'Przenosi leasehold / HGB; rejestrowany w BPN' },
+        { l: 'Zaangażowane pieniądze', r: 'Zadatek rezerwacyjny (2–25 tys. $)',          s: 'Pełna cena w transzach' },
+        { l: 'Gdzie podpisywany',      r: 'Online lub u dewelopera',                     s: 'Wyłącznie u notariusza PPAT, osobiście' },
+        { l: 'Zwroty',                 r: 'Zwykle pełne (czytaj warunki)',               s: 'Tylko przez rozwiązanie SPA z karami' },
+      ],
+    },
+
+    faqHeading: 'Najczęściej zadawane pytania',
+    faq: [
+      { q: 'Wpłaciłem depozyt — czy to znaczy, że kupiłem?',
+        a: 'Nie. Depozyt rezerwacyjny blokuje cenę i 14-dniowy termin, ale nie przenosi żadnych praw. Własność (lub leasehold) przechodzi dopiero po podpisaniu SPA przed notariuszem PPAT i rejestracji w BPN.' },
+      { q: 'Czy mogę przedłużyć blokadę?',
+        a: 'Tak, zwykle bezpłatnie z uzasadnionym powodem (na przykład prawnik nie zakończył DD). Zgłaszane na piśmie do dewelopera; dokumentowane jako przedłużenie formularza rezerwacji. Standardem jest 7–14 dodatkowych dni.' },
+      { q: 'Czy mogę przenieść rezerwację na innego kupującego?',
+        a: 'Niektórzy deweloperzy dopuszczają cesję przed SPA za pisemną zgodą. Na rynku wtórnym prawie zawsze nie — musisz sfinalizować lub anulować.' },
+      { q: 'Co, jeśli deweloper zmieni zdanie po moim depozycie?',
+        a: 'Formularz rezerwacji zwykle zawiera symetryczną klauzulę: jeśli deweloper wycofa się bez podstawy prawnej, zwraca depozyt i płaci karę (często równą depozytowi). W praktyce duzi deweloperzy tego nie robią — zbyt szkodliwe dla reputacji.' },
+      { q: 'Czy mogę wpłacić depozyt w kryptowalucie?',
+        a: 'Nie. Wszystkie legalne transakcje przez notariusza PPAT są rejestrowane w IDR/USD przelewem bankowym. Przelew krypto nie zostawia śladu dla notariusza ani indonezyjskiego urzędu skarbowego — udowodnienie, że cokolwiek zapłaciłeś, staje się później niemożliwe.' },
+    ],
+
+    ctaHeading: 'Gotowy do rezerwacji',
+    ctaText: 'Otwórz dowolną ofertę i dotknij „Rezerwuj” — menedżer prześle ci formularz rezerwacji w ciągu godziny.',
+    ctaVillas: 'Otwórz wille',
+    ctaApartments: 'Otwórz apartamenty',
+    ctaGuide: 'Pełny przewodnik „Jak kupić na Bali”',
+  },
+  uk: {
+    home: 'Головна',
+    crumb: 'Бронювання',
+    h1: 'Як працює бронювання нерухомості на Балі',
+    intro: 'Коли ви натискаєте «Забронювати» на обʼєкті, нерухомість блокується на 14 днів виключно для вас. Ця сторінка пояснює, що відбувається далі, хто зберігає ваш депозит і як працюють повернення, якщо ви передумаєте.',
+
+    h2What: 'Що таке бронювання на Балі',
+    pWhat: 'Бронювання — це перший юридично зафіксований крок в угоді. Ви підписуєте коротку форму бронювання (не договір купівлі-продажу), вносите завдаток, і нерухомість знімають з ринку на 14 днів — жоден інший покупець не може завершити купівлю в цьому вікні. Цей час ви використовуєте для дью-ділідженс, узгодження правок SPA з юристом і підготовки наступного переказу.',
+
+    h2Hold: '14 днів ексклюзиву — що вони вам дають',
+    pHold: 'Призупинення діє в обидва боки: ціна зафіксована у формі бронювання, забудовник не може її підняти; нерухомість справді чекає на вас. Якщо за ці 14 днів надійде вища пропозиція, забудовник не може її прийняти. Вікна достатньо, щоб юрист завершив DD (зазвичай 7–10 днів) і щоб ви домовилися про правки SPA.',
+
+    h2Sign: 'Що ви насправді підписуєте',
+    pSign: 'Форма бронювання — це документ на 1–3 сторінки: ціна нерухомості, сума депозиту, тривалість блокування (14 днів), умови повернення та ваші банківські реквізити для повернення, якщо ви відмовитесь. Це НЕ договір купівлі-продажу (SPA). SPA — окремий документ, який підписують через 1–2 тижні перед нотаріусом PPAT, після завершення DD. Форми бронювання можуть містити пункт «безповоротний без правової підстави», але поширенішою практикою є повне повернення при відмові після DD.',
+
+    h2Deposit: 'Де зберігається депозит',
+    pDeposit: 'Завдаток на Балі зазвичай становить 2 000–10 000 $ (преміум-вілли до 25 000 $). Кошти йдуть одним із трьох способів: на ескроу нотаріуса PPAT (найбезпечніше), на корпоративний рахунок забудовника (потребує довіри до забудовника) або на рахунок юридичної фірми-посередника. Ніколи на особистий рахунок продавця, особистий рахунок директора чи рахунок агента — це найпоширеніший канал шахрайства в індонезійській нерухомості. Завжди звіряйте реквізити переказу із самою формою бронювання, ніколи з чату в месенджері.',
+
+    h2Refund: 'Як повертаються гроші',
+    pRefund: 'Стандартна практика: повне повернення, якщо ви відмовляєтесь у вікні 14 днів на основі висновків DD. Правові підстави (обтяження, невідповідність зонування, проблеми з PBG) завжди дають 100% повернення. Відмова «передумав» без підстави — деякі забудовники утримують депозит як штраф, інші повертають повністю. Умови повернення завжди прописані у формі бронювання — прочитайте цей пункт перед підписанням. Після 14 днів без підписаного SPA депозит або переходить у перший транш SPA, або повертається, залежно від форми.',
+
+    h2After: 'Що відбувається після 14 днів',
+    pAfter: 'Три шляхи. Найкращий випадок: до кінця вікна ваш юрист завершив DD, ви підписуєте SPA в нотаріуса PPAT, а завдаток зараховується в перший транш SPA. Проміжний випадок: ви продовжуєте блокування на 7–14 днів (DD не завершився), письмово. Найгірший випадок: ви відмовляєтесь, депозит повертається, нерухомість повертається на ринок. Мовчання після 14 днів без формального рішення трактується по-різному залежно від форми — завжди надсилайте письмове рішення (продовжити чи відмовитись).',
+
+    h2Risks: 'На що звертати увагу',
+    risks: [
+      'Реквізити переказу депозиту мають бути у формі бронювання — ніколи не приймайте їх із чату.',
+      'Прочитайте пункт про повернення перед підписанням. «Безповоротний у будь-якому разі» — червоний прапорець, наполягайте на правці.',
+      'Тривалість блокування має бути вказана явно (14 днів або інша). Безстрокове блокування потребує запитання.',
+      'Форму бронювання має підписати посадовець PT забудовника, названий в Akta Pendirian (установчих документах). Підпис агента без довіреності — слабка ланка.',
+      'Зберігайте PDF-копію підписаної форми, банківську квитанцію про переказ і листування з менеджером у месенджері — вони допоможуть, якщо виникне спір.',
+    ],
+
+    h2What2: 'Форма бронювання проти SPA',
+    table: {
+      headLeft: '',
+      headRsv: 'Форма бронювання',
+      headSpa: 'SPA / договір leasehold',
+      rows: [
+        { l: 'Коли підписується',      r: 'Перші 1–3 дні',                               s: '1–4 тижні після бронювання' },
+        { l: 'Обсяг документа',        r: '1–3 сторінки',                                s: '15–40 сторінок' },
+        { l: 'Юридична вага',          r: 'Фіксує ціну і термін; не передає прав',       s: 'Передає leasehold / HGB; реєструється в BPN' },
+        { l: 'Задіяні гроші',          r: 'Завдаток (2–25 тис. $)',                      s: 'Повна ціна траншами' },
+        { l: 'Де підписується',        r: 'Онлайн або в забудовника',                    s: 'Лише в нотаріуса PPAT, особисто' },
+        { l: 'Повернення',             r: 'Зазвичай повне (читайте умови)',              s: 'Лише через розірвання SPA зі штрафами' },
+      ],
+    },
+
+    faqHeading: 'Часті запитання',
+    faq: [
+      { q: 'Я вніс депозит — це означає, що я купив?',
+        a: 'Ні. Депозит бронювання фіксує ціну і 14-денний термін, але не передає жодних прав. Власність (або leasehold) переходить лише після підписання SPA перед нотаріусом PPAT і реєстрації в BPN.' },
+      { q: 'Чи можу я продовжити блокування?',
+        a: 'Так, зазвичай безкоштовно з обґрунтованою причиною (наприклад, юрист не завершив DD). Запитується письмово у забудовника; документується як продовження форми бронювання. Стандарт — 7–14 додаткових днів.' },
+      { q: 'Чи можу я передати бронювання іншому покупцю?',
+        a: 'Деякі забудовники дозволяють переуступку до SPA за письмовою згодою. На вторинному ринку майже завжди ні — треба закрити або скасувати.' },
+      { q: 'Що, якщо забудовник передумає після мого депозиту?',
+        a: 'Форма бронювання зазвичай містить симетричний пункт: якщо забудовник відмовляється без правової підстави, він повертає депозит і сплачує штраф (часто рівний депозиту). На практиці великі забудовники цього не роблять — надто шкідливо для репутації.' },
+      { q: 'Чи можу я внести депозит у криптовалюті?',
+        a: 'Ні. Усі легальні угоди через нотаріуса PPAT реєструються в IDR/USD банківським переказом. Крипто-переказ не залишає сліду для нотаріуса чи індонезійської податкової — довести, що ви щось заплатили, пізніше стає неможливо.' },
+    ],
+
+    ctaHeading: 'Готові забронювати',
+    ctaText: 'Відкрийте будь-який обʼєкт і натисніть «Забронювати» — менеджер надішле вам форму бронювання протягом години.',
+    ctaVillas: 'Відкрити вілли',
+    ctaApartments: 'Відкрити апартаменти',
+    ctaGuide: 'Повний посібник «Як купити на Балі»',
+  },
 } as const
 
 export function ReservationGuide({ lang }: { lang: Lang }) {

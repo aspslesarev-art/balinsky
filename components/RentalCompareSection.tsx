@@ -143,6 +143,38 @@ const COPY = {
     allBedrooms: ' · sami kamar',
     rentalRoot: '/ban/sewa',
   },
+  pl: {
+    heading: 'Co wynajmuje się w okolicy na miesiąc',
+    allInArea: 'Wszystkie oferty w tej dzielnicy',
+    perMonth: ' / mies.',
+    medianRent: 'Mediana czynszu',
+    range: 'Zakres',
+    grossYield: 'Rentowność brutto',
+    perYear: 'Rocznie',
+    yieldHint: (annual: React.ReactNode, price: React.ReactNode) => (
+      <>{annual} rocznie od ceny willi {price}</>
+    ),
+    subtitle: (n: number, district: string, brSuffix: string) =>
+      `${n} ${n === 1 ? 'oferta' : 'ofert'} w ${district}${brSuffix}`,
+    allBedrooms: ' · dowolne sypialnie',
+    rentalRoot: '/pl/wynajem',
+  },
+  uk: {
+    heading: 'Що здається поруч на місяць',
+    allInArea: 'Усі оголошення в цьому районі',
+    perMonth: ' / міс',
+    medianRent: 'Медіанна оренда',
+    range: 'Діапазон',
+    grossYield: 'Валова дохідність',
+    perYear: 'За рік',
+    yieldHint: (annual: React.ReactNode, price: React.ReactNode) => (
+      <>{annual} на рік від ціни вілли {price}</>
+    ),
+    subtitle: (n: number, district: string, brSuffix: string) =>
+      `${n} ${n === 1 ? 'оголошення' : 'оголошень'} у ${district}${brSuffix}`,
+    allBedrooms: ' · будь-які спальні',
+    rentalRoot: '/uk/orenda',
+  },
 } as const
 
 function pluralRu(n: number, forms: [string, string, string]): string {
@@ -213,7 +245,7 @@ export async function RentalCompareSection({ district, bedrooms, villaPriceUsd, 
         <Stat label={c.range} value={<><InlinePrice usd={min} lang={lang} /> – <InlinePrice usd={max} lang={lang} /></>} />
         <Stat
           label={annualYieldPct != null ? c.grossYield : c.perYear}
-          value={annualYieldPct != null ? `~${annualYieldPct.toFixed(1)}%` : <><InlinePrice usd={med * 12} lang={lang} /> / {pickCopy({ ru: 'год', en: 'yr', id: 'thn', fr: 'an', de: 'Jahr', zh: '年', nl: 'jr', ban: 'thn' }, lang)}</>}
+          value={annualYieldPct != null ? `~${annualYieldPct.toFixed(1)}%` : <><InlinePrice usd={med * 12} lang={lang} /> / {pickCopy({ ru: 'год', en: 'yr', id: 'thn', fr: 'an', de: 'Jahr', zh: '年', nl: 'jr', ban: 'thn', pl: 'rok', uk: 'рік' }, lang)}</>}
           hint={annualYieldPct != null ? c.yieldHint(<InlinePrice usd={med * 12} lang={lang} />, <InlinePrice usd={villaPriceUsd ?? 0} lang={lang} />) : undefined}
         />
       </div>
@@ -238,7 +270,7 @@ function Stat({ label, value, hint }: { label: string; value: React.ReactNode; h
 function CompareCard({ r, lang }: { r: RentalItem; lang: Lang }) {
   const cover = r.photos[0]
   const root = switchLangPath('/ru/arenda', lang)
-  const perMo = ' / ' + pickCopy({ ru: 'мес', en: 'mo', id: 'bln', fr: 'mois', de: 'Mon.', zh: '月', nl: 'mnd', ban: 'bln' }, lang)
+  const perMo = ' / ' + pickCopy({ ru: 'мес', en: 'mo', id: 'bln', fr: 'mois', de: 'Mon.', zh: '月', nl: 'mnd', ban: 'bln', pl: 'mies.', uk: 'міс' }, lang)
   return (
     <Link
       href={`${root}/o/${r.slug}`}

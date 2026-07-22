@@ -24,7 +24,7 @@ export async function generateMetadata({ searchParams }: { searchParams: SP }) {
   const sp = await searchParams
   const f = parseQueryFilters(sp)
   const meta = buildMetadataEn(f, { canonicalPath: '/pl/kompleksy', noIndex: true })
-  meta.title = `Map · ${buildHeadingLocalized(f, 'pl')} | Balinsky`
+  meta.title = `Mapa · ${buildHeadingLocalized(f, 'pl')} | Balinsky`
   return meta
 }
 
@@ -65,13 +65,13 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
       <Header active="zhilye-kompleksy" />
 
       <PageContainer>
-        <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[#111827]">{`Map · ${buildHeadingLocalized(filters, 'pl')}`}</h1>
-        <div className="text-[14px] text-[var(--color-text-muted)] mb-6">{totalPoints} complexes on the map{totalPoints !== groups.length && ` · ${groups.length} points`}</div>
+        <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[#111827]">{`Mapa · ${buildHeadingLocalized(filters, 'pl')}`}</h1>
+        <div className="text-[14px] text-[var(--color-text-muted)] mb-6">{totalPoints} kompleksów na mapie{totalPoints !== groups.length && ` · ${groups.length} punktów`}</div>
 
         <CatalogTabs active="map" listHref={buildListHref(filters, 'pl')} mapHref={buildMapHref(filters, 'pl')} lang="pl" />
 
         <div className="mt-6">
-          <ComplexCatalogSearchBar initial={filters.q} current={filters} view="map" placeholder="Search complexes, districts, developers…" />
+          <ComplexCatalogSearchBar initial={filters.q} current={filters} view="map" placeholder="Szukaj kompleksów, dzielnic, deweloperów…" />
         </div>
 
         <div className="mt-4">

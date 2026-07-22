@@ -16,6 +16,8 @@ const COPY = {
   zh: { open: '打开图库', photoN: (n: number) => `照片 ${n}`, more: (n: number) => `+${n} 张照片`, count: (n: number) => `${n} 张照片`, close: '关闭', prev: '上一张', next: '下一张', mainPhoto: '主图', photoLabel: '照片', thumb: '缩略图' },
   nl: { open: 'Galerij openen', photoN: (n: number) => `Foto ${n}`, more: (n: number) => `+${n} foto's`, count: (n: number) => `${n} foto's`, close: 'Sluiten', prev: 'Vorige', next: 'Volgende', mainPhoto: 'hoofdfoto', photoLabel: 'foto', thumb: 'miniatuur' },
   ban: { open: 'Ngwacén galeri', photoN: (n: number) => `Foto ${n}`, more: (n: number) => `+${n} foto`, count: (n: number) => `${n} foto`, close: 'Nutup', prev: 'Sadurungné', next: 'Salanturné', mainPhoto: 'foto utama', photoLabel: 'foto', thumb: 'gambar alit' },
+  pl: { open: 'Otwórz galerię', photoN: (n: number) => `Zdjęcie ${n}`, more: (n: number) => `+${n} zdjęć`, count: (n: number) => `${n} zdjęć`, close: 'Zamknij', prev: 'Poprzednie', next: 'Następne', mainPhoto: 'zdjęcie główne', photoLabel: 'zdjęcie', thumb: 'miniatura' },
+  uk: { open: 'Відкрити галерею', photoN: (n: number) => `Фото ${n}`, more: (n: number) => `+${n} фото`, count: (n: number) => `${n} фото`, close: 'Закрити', prev: 'Попереднє', next: 'Наступне', mainPhoto: 'головне фото', photoLabel: 'фото', thumb: 'мініатюра' },
 } as const
 
 export function PhotoGalleryHero({

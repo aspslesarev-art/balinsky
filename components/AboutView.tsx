@@ -334,6 +334,84 @@ const COPY = {
     contactBot: 'Kirim pesan ka bot',
     contactGuide: 'Wacen dumun tuntunan numbas',
   },
+  pl: {
+    home: 'Strona główna',
+    crumb: 'O Balinsky',
+    h1: 'Balinsky — czym jest i dlaczego można mu zaufać',
+    intro: 'Balinsky to katalog nieruchomości na Bali dla zagranicznych nabywców: wille, apartamenty, kompleksy mieszkaniowe i wynajem. Serwis prezentuje projekty deweloperów, których dokumenty osobiście zweryfikowaliśmy, których działki obeszliśmy i których obiekty sfilmowaliśmy. Ceny podawane są w bieżących USD. Menedżerowie sprzedaży to prawdziwi ludzie ze zdjęciami, ocenami i językami, którymi się posługują.',
+
+    h2Numbers: 'Liczby na dziś',
+    numbersLead: 'Te dane aktualizują się automatycznie — to, co widzisz na stronie, jest dokładnie tym, co jest teraz opublikowane w bazie danych.',
+    statVillas: 'wille i domy',
+    statApts: 'apartamenty',
+    statComplexes: 'kompleksy mieszkaniowe',
+    statDevs: 'deweloperzy',
+    statMgrs: 'menedżerowie na dyżurze',
+
+    h2How: 'Jak decydujemy, co publikujemy',
+    standards: [
+      { Icon: FileSearch, title: 'Sprawdzenie dokumentów', body: 'Każda nieruchomość w katalogu musi mieć ważne PBG, jasną strukturę gruntu (SHM / HGB / Hak Pakai) i prawdziwego dewelopera z rejestracją PT. Bez tego zestawu nieruchomość po prostu nie trafia na stronę.' },
+      { Icon: Video,      title: 'Wideo i zdjęcia z miejsca', body: 'Dla większości projektów nasza ekipa nakręciła własny materiał — dron, postęp budowy, otoczenie. Nie komunikat prasowy dewelopera, lecz rzeczywisty stan na znaną datę.' },
+      { Icon: UsersRound, title: 'Menedżer z twarzą', body: 'Każdy deweloper na stronie ma imiennego menedżera ze zdjęciem, znanymi językami, bezpośrednim Telegramem i WhatsAppem. Nie anonimowy „dział sprzedaży” — konkretna osoba, z którą można porozmawiać na wideo.' },
+      { Icon: BookOpen,   title: 'Selekcja redakcyjna', body: 'Nie publikujemy wszystkiego. Nieruchomości, projekty i deweloperzy, którzy nie przejdą powyższej kontroli jakości, nigdy nie trafiają do katalogu.' },
+    ],
+
+    h2Stack: 'Co otrzymujesz',
+    stackItems: [
+      { title: 'Ceny w USD na żywo', body: 'Ceny przeliczają się według bieżącego kursu; przełącznik waluty jest w nagłówku. Widok porównania przelicza się automatycznie przy zmianie.' },
+      { title: 'Przejrzysty proces', body: 'Od pierwszego dotknięcia „rezerwuj” do przekazania — każdy krok i kwota są udokumentowane na stronach Rezerwacji i Przewodnika zakupu.' },
+      { title: 'Menedżer na żywo', body: 'Odpowiedź na Telegramie / WhatsAppie zwykle w ciągu godziny w godzinach pracy na Bali. Przy większych transakcjach — rozmowa wideo przed wpłatą jakiegokolwiek depozytu.' },
+      { title: 'Porównaj i zapisz', body: 'Każda oferta zapisuje się na Twojej liście życzeń; wille i apartamenty porównują się według 14 parametrów klasy inwestorskiej w jednej tabeli.' },
+    ],
+
+    h2Cases: 'Historie zakupów klientów',
+    pCases: 'Zbieramy historie zamkniętych transakcji naszych klientów — czego szukali, jak szukali, na czym skończyła się negocjacja SPA, co z tego wyszło i jaka jest rzeczywista rentowność dziś. Każdy przypadek jest zanonimizowany — bez nazwisk i adresów, ale z prawdziwymi liczbami. Ta sekcja będzie rosnąć w miarę, jak klienci zgadzają się dzielić. Jeśli kupiłeś przez Balinsky i chcesz podzielić się swoją historią (anonimowo lub pod nazwiskiem — Twój wybór), napisz do bota — zwykle zajmuje to 20-minutową rozmowę.',
+    casesCta: 'Podziel się moją historią zakupu',
+
+    h2Contact: 'Skontaktuj się',
+    pContact: 'W każdej sprawie — katalog, konkretna nieruchomość, due diligence, nagrania wideo Twojej własnej willi — napisz do bota na Telegramie. Jeśli Telegram jest niewygodny, adres e-mail znajduje się w stopce strony.',
+    contactBot: 'Napisz do bota',
+    contactGuide: 'Najpierw przeczytaj przewodnik zakupu',
+  },
+  uk: {
+    home: 'Головна',
+    crumb: 'Про Balinsky',
+    h1: 'Balinsky — що це таке і чому йому можна довіряти',
+    intro: 'Balinsky — це каталог нерухомості Балі для іноземних покупців: вілли, апартаменти, житлові комплекси та оренда. На сайті представлені проєкти забудовників, чиї документи ми особисто перевірили, чиї ділянки обійшли та чиї обʼєкти зняли на відео. Ціни показані в актуальних USD. Менеджери з продажу — це реальні люди з фото, рейтингами й мовами, якими вони володіють.',
+
+    h2Numbers: 'Цифри на сьогодні',
+    numbersLead: 'Ці цифри оновлюються автоматично — те, що ви бачите на сайті, точно відповідає тому, що зараз опубліковано в базі даних.',
+    statVillas: 'вілли та будинки',
+    statApts: 'апартаменти',
+    statComplexes: 'житлові комплекси',
+    statDevs: 'забудовники',
+    statMgrs: 'менеджери на звʼязку',
+
+    h2How: 'Як ми вирішуємо, що публікувати',
+    standards: [
+      { Icon: FileSearch, title: 'Перевірка документів', body: 'Кожен обʼєкт у каталозі повинен мати чинний PBG, зрозумілу структуру землі (SHM / HGB / Hak Pakai) і реального забудовника з реєстрацією PT. Без цього набору обʼєкт просто не потрапляє на сайт.' },
+      { Icon: Video,      title: 'Відео та фото з місця', body: 'Для більшості проєктів наша команда відзняла власний матеріал — дрон, хід будівництва, околиці. Не пресреліз від забудовника, а реальний стан на відому дату.' },
+      { Icon: UsersRound, title: 'Менеджер з обличчям', body: 'У кожного забудовника на сайті є іменний менеджер з фото, мовами, якими володіє, прямими Telegram і WhatsApp. Не анонімний «відділ продажів» — конкретна людина, з якою можна поспілкуватися по відео.' },
+      { Icon: BookOpen,   title: 'Редакційний відбір', body: 'Ми публікуємо не все. Обʼєкти, проєкти та забудовники, які не проходять зазначену вище перевірку якості, ніколи не потрапляють до каталогу.' },
+    ],
+
+    h2Stack: 'Що ви отримуєте',
+    stackItems: [
+      { title: 'Ціни в USD у реальному часі', body: 'Ціни перераховуються за поточним курсом; перемикач валюти — у шапці. Порівняльний вигляд перераховується автоматично під час перемикання.' },
+      { title: 'Прозорий шлях', body: 'Від першого дотику «забронювати» до передачі — кожен крок і сума задокументовані на сторінках Бронювання та Посібника з покупки.' },
+      { title: 'Менеджер на звʼязку', body: 'Відповідь у Telegram / WhatsApp зазвичай протягом години в робочі години Балі. Для великих угод — відеодзвінок перед будь-яким внесенням депозиту.' },
+      { title: 'Порівняння та обране', body: 'Будь-який обʼєкт зберігається до вашого обраного; вілли та апартаменти порівнюються за 14 параметрами інвесторського рівня в одній таблиці.' },
+    ],
+
+    h2Cases: 'Історії покупців',
+    pCases: 'Ми збираємо історії закритих угод наших клієнтів — що вони шукали, як шукали, на чому завершилися переговори щодо SPA, що з цього вийшло і яка реальна дохідність сьогодні. Кожен випадок анонімізований — без імен та адрес, але з реальними цифрами. Цей розділ зростатиме в міру того, як клієнти погоджуються ділитися. Якщо ви купили через Balinsky і хочете поділитися своєю історією (анонімно або під імʼям — на ваш розсуд), напишіть боту — зазвичай це займає 20-хвилинну розмову.',
+    casesCta: 'Поділитися моєю історією покупки',
+
+    h2Contact: 'Звʼязатися',
+    pContact: 'З будь-якого питання — каталог, конкретний обʼєкт, дью-ділідженс, відеозйомка вашої власної вілли — напишіть боту в Telegram. Якщо Telegram незручний, email є у футері сайту.',
+    contactBot: 'Написати боту',
+    contactGuide: 'Спершу прочитайте посібник з покупки',
+  },
 } as const
 
 async function loadCounts() {

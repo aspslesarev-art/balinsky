@@ -73,6 +73,20 @@ const COPY = {
     emptyFilters: 'Nénten wénten sané cocok sareng saringan sané kapilih',
     searchPlaceholder: 'Rerehin apartemen, wewidangan, pangwangun…',
   },
+  pl: {
+    page: 'strona', of: 'z',
+    objects: (n: number) => `${n} ofert`,
+    emptySearch: (q: string) => `Nie znaleziono wyników dla „${q}”`,
+    emptyFilters: 'Brak wyników dla wybranych filtrów',
+    searchPlaceholder: 'Szukaj apartamentów, dzielnic, deweloperów…',
+  },
+  uk: {
+    page: 'сторінка', of: 'з',
+    objects: (n: number) => `${n} оголошень`,
+    emptySearch: (q: string) => `Нічого не знайдено за запитом «${q}»`,
+    emptyFilters: 'Немає результатів за вибраними фільтрами',
+    searchPlaceholder: 'Пошук апартаментів, районів, забудовників…',
+  },
 } as const
 
 function toQueryString(f: FilterState): string {

@@ -191,6 +191,52 @@ const COPY = {
     trustRefund: 'Yening Ragane mundur ring 14 dina manut temuan DD — pengembalian penuh.',
     trustMore: 'Wacen kebijakan reservasi jangkep',
   },
+  pl: {
+    cta: 'Zarezerwuj',
+    titleOpen: 'Zarezerwuj tę nieruchomość',
+    titleDone: 'Rezerwacja przyjęta',
+    close: 'Zamknij',
+    submitted: 'Wysłano do menedżera',
+    explainer: (email: string) => (
+      <>W ciągu godziny wyślemy na <strong className="text-[#111827] break-all">{email}</strong> fakturę na wpłatę depozytu rezerwacyjnego. Nieruchomość jest zarezerwowana dla Ciebie na 14 dni. Dane paszportowe prześlij w odpowiedzi na ten sam email.</>
+    ),
+    ok: 'Rozumiem',
+    intro: 'Nieruchomość zostaje zablokowana na 14 dni. Menedżer wyśle fakturę na depozyt na podany adres email.',
+    name: 'Imię i nazwisko', namePh: 'John Smith',
+    email: 'Email', emailPh: 'john@example.com',
+    phone: 'Telefon', phonePh: '+48 512 345 678',
+    consent: 'Zgadzam się na przetwarzanie danych osobowych i warunki depozytu rezerwacyjnego.',
+    failed: 'Nie udało się wysłać. Spróbuj ponownie.',
+    sending: 'Wysyłanie…',
+    trustHold: 'Ekskluzywna blokada na 14 dni — nikt inny nie sfinalizuje zakupu w tym oknie.',
+    trustForm: 'Reservation form to krótki dokument, nie SPA. SPA podpisuje się później u notariusza PPAT, po due diligence.',
+    trustDeposit: 'Depozyt ($2–10k) trafia na escrow notariusza — nigdy na konto osobiste.',
+    trustRefund: 'Jeśli wycofasz się w ciągu 14 dni na podstawie wyników DD — pełny zwrot.',
+    trustMore: 'Przeczytaj pełną politykę rezerwacji',
+  },
+  uk: {
+    cta: 'Забронювати',
+    titleOpen: 'Забронювати цей обʼєкт',
+    titleDone: 'Бронь прийнято',
+    close: 'Закрити',
+    submitted: 'Надіслано менеджеру',
+    explainer: (email: string) => (
+      <>Протягом години ми надішлемо на <strong className="text-[#111827] break-all">{email}</strong> рахунок для оплати резерваційного депозиту. Обʼєкт заброньовано за вами на 14 днів. Паспортні дані надішліть у відповідь на той самий email.</>
+    ),
+    ok: 'Зрозуміло',
+    intro: 'Обʼєкт стає на 14-денний hold. Менеджер надішле рахунок на депозит на вказаний email.',
+    name: 'Імʼя та прізвище', namePh: 'John Smith',
+    email: 'Email', emailPh: 'john@example.com',
+    phone: 'Телефон', phonePh: '+380 67 123 45 67',
+    consent: 'Погоджуюся з обробкою персональних даних та умовами резерваційного депозиту.',
+    failed: 'Не вдалося надіслати. Спробуйте ще раз.',
+    sending: 'Надсилаємо…',
+    trustHold: '14-денний ексклюзивний hold — ніхто інший не зможе купити в цьому вікні.',
+    trustForm: 'Reservation form — короткий документ, не SPA. SPA підписуємо пізніше у нотаріуса PPAT, після due diligence.',
+    trustDeposit: 'Депозит ($2–10k) лежить на ескроу нотаріуса — ніколи на особистому рахунку.',
+    trustRefund: 'Якщо ви відмовитесь протягом 14 днів за результатами DD — повне повернення.',
+    trustMore: 'Докладніше про бронювання',
+  },
 } as const
 
 // Stage-1 reservation flow: visitor leaves name + email + phone. Backend

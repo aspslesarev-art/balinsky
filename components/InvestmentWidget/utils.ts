@@ -15,19 +15,19 @@ export function fmtPct(n: number | null | undefined, digits = 1): string {
 }
 export function fmtYears(n: number | null | undefined, lang: Lang = 'ru'): string {
   if (n == null || !Number.isFinite(n)) return '—'
-  const unit = pickCopy({ ru: 'лет', en: 'yrs', id: 'thn', fr: 'ans', de: 'J.', zh: '年', nl: 'jr', ban: 'thn' }, lang)
+  const unit = pickCopy({ ru: 'лет', en: 'yrs', id: 'thn', fr: 'ans', de: 'J.', zh: '年', nl: 'jr', ban: 'thn', pl: 'lat', uk: 'р.' }, lang)
   if (n > 100) return `>100 ${unit}`
   return n < 10 ? `${n.toFixed(1)} ${unit}` : `${Math.round(n)} ${unit}`
 }
 export function fmtDistance(km: number, lang: Lang = 'ru'): string {
-  const mU = pickCopy({ ru: 'м', en: 'm', id: 'm', fr: 'm', de: 'm', zh: '米', nl: 'm', ban: 'm' }, lang)
-  const kmU = pickCopy({ ru: 'км', en: 'km', id: 'km', fr: 'km', de: 'km', zh: '公里', nl: 'km', ban: 'km' }, lang)
+  const mU = pickCopy({ ru: 'м', en: 'm', id: 'm', fr: 'm', de: 'm', zh: '米', nl: 'm', ban: 'm', pl: 'm', uk: 'м' }, lang)
+  const kmU = pickCopy({ ru: 'км', en: 'km', id: 'km', fr: 'km', de: 'km', zh: '公里', nl: 'km', ban: 'km', pl: 'km', uk: 'км' }, lang)
   if (km < 1) return `${Math.round(km * 1000)} ${mU}`
   return `${km.toFixed(1)} ${kmU}`
 }
 export function fmtMeters(m: number, lang: Lang = 'ru'): string {
-  const mU = pickCopy({ ru: 'м', en: 'm', id: 'm', fr: 'm', de: 'm', zh: '米', nl: 'm', ban: 'm' }, lang)
-  const kmU = pickCopy({ ru: 'км', en: 'km', id: 'km', fr: 'km', de: 'km', zh: '公里', nl: 'km', ban: 'km' }, lang)
+  const mU = pickCopy({ ru: 'м', en: 'm', id: 'm', fr: 'm', de: 'm', zh: '米', nl: 'm', ban: 'm', pl: 'm', uk: 'м' }, lang)
+  const kmU = pickCopy({ ru: 'км', en: 'km', id: 'km', fr: 'km', de: 'km', zh: '公里', nl: 'km', ban: 'km', pl: 'km', uk: 'км' }, lang)
   if (m < 1000) return `${Math.round(m)} ${mU}`
   return `${(m / 1000).toFixed(1)} ${kmU}`
 }

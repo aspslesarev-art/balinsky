@@ -66,7 +66,7 @@ export function useCurrency(): Ctx {
 export function CurrencyToggle({ className = '' }: { className?: string }) {
   const { currency, setCurrency } = useCurrency()
   const pathname = usePathname() ?? ''
-  const label = pickCopy({ ru: 'Валюта', en: 'Currency', id: 'Mata uang', fr: 'Devise', de: 'Währung', zh: '货币', nl: 'Valuta', ban: 'Mata uang' }, detectLang(pathname))
+  const label = pickCopy({ ru: 'Валюта', en: 'Currency', id: 'Mata uang', fr: 'Devise', de: 'Währung', zh: '货币', nl: 'Valuta', ban: 'Mata uang', pl: 'Waluta', uk: 'Валюта' }, detectLang(pathname))
   return (
     <label className={`relative inline-flex items-center ${className}`}>
       <span className="sr-only">{label}</span>

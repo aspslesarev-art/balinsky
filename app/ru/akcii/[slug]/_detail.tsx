@@ -56,6 +56,16 @@ const COPY = {
     until: 'Nganti', moreFrom: (n: string) => `Promosi lianan uli ${n}`,
     learnMore: 'Selengkapnya', locale: 'id-ID',
   },
+  pl: {
+    home: 'Strona główna', promoCrumb: 'Promocje',
+    until: 'Do', moreFrom: (n: string) => `Więcej promocji od ${n}`,
+    learnMore: 'Dowiedz się więcej', locale: 'pl-PL',
+  },
+  uk: {
+    home: 'Головна', promoCrumb: 'Акції',
+    until: 'До', moreFrom: (n: string) => `Більше акцій від ${n}`,
+    learnMore: 'Докладніше', locale: 'uk-UA',
+  },
 } as const
 
 function fmtDate(iso: string | null, locale: string): string | null {

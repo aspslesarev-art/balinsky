@@ -70,6 +70,18 @@ const COPY = {
     intro: 'Direktori pangwangun Bali sane madue proyek aktif — vila, apartemen, miwah kompleks. Suang-suang pausahaan kanilai ring petang dimensi: kualitas konstruksi lan properti, reputasi lan pengalaman, peralatan lan produksi, miwah pangelola sasampun serah terima.',
     sortHint: 'Pilih pengurutan sane cocok ring prioritas Ragane: skor seimbang nggabungang makasami, «Proyek puput» nyinahang sira sane sampun nyerahang, «Proyek aktif» nyinahang sira sane sedeng ngwangun, miwah «Pengalaman» nyinahang akeh data editorial sane iraga madue indik pausahaan punika.',
   },
+  pl: {
+    h1: 'Deweloperzy na Bali',
+    count: (n: number) => `${n} firm w katalogu`,
+    intro: 'Katalog deweloperów na Bali z aktywnymi projektami — wille, apartamenty i kompleksy mieszkaniowe. Każda firma jest oceniana w czterech wymiarach: jakość budowy i nieruchomości, reputacja i doświadczenie, sprzęt i produkcja oraz zarządzanie po przekazaniu.',
+    sortHint: 'Wybierz sortowanie odpowiadające Twojemu priorytetowi: zrównoważona ocena łączy wszystko, „Ukończone projekty” pokazują, kto rzeczywiście oddał inwestycje, „Aktywne budowy” ujawniają, kto buduje teraz, a „Doświadczenie” odzwierciedla, ile danych redakcyjnych mamy o firmie.',
+  },
+  uk: {
+    h1: 'Забудовники на Балі',
+    count: (n: number) => `${n} компаній у каталозі`,
+    intro: 'Каталог забудовників Балі з активними проєктами — вілли, апартаменти та житлові комплекси. Кожну компанію оцінено за чотирма напрямами: якість будівництва та нерухомості, репутація та досвід, техніка та виробництво, а також управління після здачі.',
+    sortHint: 'Оберіть сортування під свій пріоритет: збалансований рейтинг враховує все одразу, «Завершені проєкти» показують, хто справді здав об’єкти, «Активні будови» — хто будує зараз, а «Досвід» відображає, скільки редакційних даних ми маємо про компанію.',
+  },
 } as const
 
 function logoFromJson(data: Record<string, unknown>): string | null {

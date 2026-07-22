@@ -73,6 +73,20 @@ const COPY = {
     emptyFilters: 'Nenten wenten sane cocok sareng filter sane kapilih',
     searchPlaceholder: 'Rereh vila, wewengkon, pangwangun…',
   },
+  pl: {
+    page: 'strona', of: 'z',
+    objects: (n: number) => `${n} ofert`,
+    emptySearch: (q: string) => `Nie znaleziono wyników dla „${q}”`,
+    emptyFilters: 'Brak wyników dla wybranych filtrów',
+    searchPlaceholder: 'Szukaj willi, dzielnic, deweloperów…',
+  },
+  uk: {
+    page: 'сторінка', of: 'з',
+    objects: (n: number) => `${n} оголошень`,
+    emptySearch: (q: string) => `Нічого не знайдено за запитом «${q}»`,
+    emptyFilters: 'Немає результатів за вибраними фільтрами',
+    searchPlaceholder: 'Пошук вілл, районів, забудовників…',
+  },
 } as const
 
 function toQueryString(f: VillaFilterState): string {

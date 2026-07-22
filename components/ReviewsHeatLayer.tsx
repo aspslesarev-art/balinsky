@@ -59,16 +59,16 @@ export function ReviewsHeatToggle({
         }
       >
         <Flame size={15} className={on ? 'text-white' : 'text-[#FF5A36]'} />
-        {pickCopy({ ru: 'Карта туризма', en: 'Tourism map', id: 'Peta wisata', fr: 'Carte touristique', de: 'Tourismuskarte', zh: '旅游热力图', nl: 'Toeristische kaart', ban: 'Peta pariwisata' }, lang)}
+        {pickCopy({ ru: 'Карта туризма', en: 'Tourism map', id: 'Peta wisata', fr: 'Carte touristique', de: 'Tourismuskarte', zh: '旅游热力图', nl: 'Toeristische kaart', ban: 'Peta pariwisata', pl: 'Mapa turystyki', uk: 'Карта туризму' }, lang)}
       </button>
       {on && (
         <div className="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white/90 backdrop-blur shadow-sm text-[11px] text-[var(--color-text-muted)]">
-          <span>{pickCopy({ ru: 'мало', en: 'few', id: 'sedikit', fr: 'peu', de: 'wenig', zh: '少', nl: 'weinig', ban: 'akidik' }, lang)}</span>
+          <span>{pickCopy({ ru: 'мало', en: 'few', id: 'sedikit', fr: 'peu', de: 'wenig', zh: '少', nl: 'weinig', ban: 'akidik', pl: 'mało', uk: 'мало' }, lang)}</span>
           <span
             className="h-2 w-24 rounded-full"
             style={{ background: 'linear-gradient(90deg, #2b6cff, #00c2c7, #8ed11f, #ffd200, #ff2d00)' }}
           />
-          <span>{pickCopy({ ru: 'много', en: 'many', id: 'banyak', fr: 'beaucoup', de: 'viel', zh: '多', nl: 'veel', ban: 'akeh' }, lang)}</span>
+          <span>{pickCopy({ ru: 'много', en: 'many', id: 'banyak', fr: 'beaucoup', de: 'viel', zh: '多', nl: 'veel', ban: 'akeh', pl: 'dużo', uk: 'багато' }, lang)}</span>
         </div>
       )}
     </div>

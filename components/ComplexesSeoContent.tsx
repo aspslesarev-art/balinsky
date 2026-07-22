@@ -365,6 +365,94 @@ const T = {
       },
     ],
   },
+  pl: {
+    where: (one?: string, many?: string[]) =>
+      one ? `rejonie ${one}` : many && many.length ? `rejonach ${many.join(', ')}` : 'Bali',
+    leadList: (where: string) => `Ta strona zawiera listę kompleksów mieszkaniowych w ${where}.`,
+    leadMap: (where: string) => `Ta strona zawiera listę kompleksów mieszkaniowych w ${where} zaznaczonych na mapie.`,
+    tail: ' Każdy projekt pokazuje zdjęcia, rejon, typy jednostek, status budowy i termin oddania — dzięki temu możesz porównać dziesiątki inwestycji obok siebie i wybrać tę, która Ci odpowiada.',
+    titleBase: 'Kompleksy mieszkaniowe',
+    titleInDistrict: (d: string) => ` w ${d}`,
+    titleMapSuffix: ' na mapie Bali',
+    titleListSuffix: ' na Bali — katalog',
+    h3Districts: 'Kompleksy według rejonu',
+    h3Type: 'Według typu i statusu',
+    chipBuilding: 'W budowie',
+    chipBuilt: 'Gotowe',
+    chipDevelopers: 'Wszyscy deweloperzy',
+    faqTitle: 'Najczęściej zadawane pytania',
+    contextUbud: 'Ubud to niskie inwestycje otoczone dżunglą i tarasami ryżowymi — dla kupujących szukających spokojniejszej atmosfery z dala od plażowego tłumu.',
+    contextCanggu: (d: string) => `${d} to część Canggu, dzielnicy surferów i cyfrowych nomadów — najbardziej aktywny front budów na Bali, gęsty rynek najmu i tętniąca życiem infrastruktura codzienna.`,
+    contextBukit: (d: string) => `${d} to półwysep Bukit — projekty z widokiem na klify i kompleksy premium budowane pod rynek inwestycyjny i najmu krótkoterminowego.`,
+    contextSanur: 'Sanur to spokojniejsze wschodnie wybrzeże z laguną — popularne wśród rodzin i osób przeprowadzających się na dłużej.',
+    contextDefault: 'Na Bali jest kilkaset kompleksów mieszkaniowych. Najbardziej aktywne rejony to Canggu (Berawa, Batu Bolong, Pererenan), Bukit (Uluwatu, Pandawa, Melasti), Ubud, Sanur i Nusa Dua. Większość projektów to leasehold na 25–80 lat z oddaniem w ciągu 1–3 lat; typy jednostek obejmują apartamenty, wille i domy szeregowe.',
+    faq: [
+      {
+        q: 'Czym jest kompleks mieszkaniowy na Bali?',
+        a: 'To ogrodzony teren z grupą budynków — apartamentów, willi lub domów szeregowych — pod jednym zarządem, z ochroną i zwykle basenem, siłownią i recepcją. Kompleksy dzielą się tu na dwa obozy: inwestycyjne (budowane pod wynajem) i mieszkalne (budowane do życia).',
+      },
+      {
+        q: 'Czym różni się kompleks w budowie od gotowego?',
+        a: 'Jednostki w budowie sprzedają się nawet o 30% taniej, ale ryzyko jest wyższe: oddanie może się opóźnić, a jakość wykończenia jest nieznana. Gotowy kompleks można obejrzeć i od razu wynająć, ale cena jest wyższa.',
+      },
+      {
+        q: 'Jakie pozwolenia powinien mieć kompleks?',
+        a: 'Dwa kluczowe dokumenty to PBG (pozwolenie na budowę) i SLF (świadectwo zdatności do użytku). Bez PBG budowa nie jest legalna; bez SLF jednostki nie można oficjalnie wynajmować.',
+      },
+      {
+        q: 'Na ile lat zawiera się typowy leasehold?',
+        a: 'Standardowe umowy trwają 25–30 lat z opcją przedłużenia. Projekty premium oferują 50–80 lat w pierwszym okresie. Im dłuższy leasehold, tym wyższa płynność przy odsprzedaży.',
+      },
+      {
+        q: 'Czy mogę kupić jednostkę przed rozpoczęciem budowy?',
+        a: 'Tak — poprzez przedsprzedaż. Ceny są o 15–25% niższe niż po oddaniu, ale trzeba zweryfikować dewelopera i potwierdzić, że PBG jest wydane. Płatność następuje zgodnie z harmonogramem budowy.',
+      },
+    ],
+  },
+  uk: {
+    where: (one?: string, many?: string[]) =>
+      one ? `районі ${one}` : many && many.length ? `районах ${many.join(', ')}` : 'Балі',
+    leadList: (where: string) => `На цій сторінці — житлові комплекси в межах ${where}.`,
+    leadMap: (where: string) => `На цій сторінці — житлові комплекси в межах ${where} з позначками на карті.`,
+    tail: ' По кожному проєкту видно фото, район, типи юнітів, статус і терміни здачі — це зручно, щоб швидко порівняти десятки будов і обрати той, що вам підходить.',
+    titleBase: 'Житлові комплекси',
+    titleInDistrict: (d: string) => ` в районі ${d}`,
+    titleMapSuffix: ' на карті Балі',
+    titleListSuffix: ' на Балі — каталог',
+    h3Districts: 'Комплекси за районами',
+    h3Type: 'За типом і статусом',
+    chipBuilding: 'Що будуються',
+    chipBuilt: 'Готові',
+    chipDevelopers: 'Усі забудовники',
+    faqTitle: 'Часті запитання',
+    contextUbud: 'В Убуді — малоповерхові проєкти в оточенні джунглів і рисових терас. Підходить тим, хто шукає спокійнішу атмосферу подалі від пляжного натовпу.',
+    contextCanggu: (d: string) => `${d} — частина Чангу, району серферів і цифрових кочівників. Тут найактивніше йде будівництво, щільний ринок оренди та жвава інфраструктура.`,
+    contextBukit: (d: string) => `${d} — півострів Букіт. Видові проєкти на урвищах і преміальні комплекси, збудовані під ринок інвестицій і подобової оренди.`,
+    contextSanur: 'Санур — спокійніше східне узбережжя з лагуною. Популярне серед родин і довгострокових переїздів.',
+    contextDefault: 'На Балі — кілька сотень житлових комплексів. Найактивніші локації: Чангу (Berawa, Batu Bolong, Pererenan), Букіт (Uluwatu, Pandawa, Melasti), Убуд, Санур і Нуса-Дуа. Більшість проєктів — лізхолд на 25–80 років зі здачею за 1–3 роки; типи юнітів: апартаменти, вілли та таунхауси.',
+    faq: [
+      {
+        q: 'Що таке житловий комплекс на Балі?',
+        a: 'Це огороджена територія з групою будівель — апартаментів, вілл, таунхаусів — зі спільним управлінням, охороною, зазвичай із басейном, фітнесом і ресепшеном. На Балі комплекси поділяються на інвестиційні (під оренду) та резидентські (для життя).',
+      },
+      {
+        q: 'Чим комплекс, що будується, відрізняється від готового?',
+        a: 'Юніти в будові продаються дешевше (до 30%), але ризики вищі: терміни можуть зсуватися, якість оздоблення невідома. Готовий комплекс можна оглянути й одразу здавати в оренду, але ціна вища.',
+      },
+      {
+        q: 'Які дозволи має мати комплекс?',
+        a: 'Два ключові документи — PBG (дозвіл на будівництво) і SLF (сертифікат придатності до експлуатації). Без PBG будувати нелегально; без SLF юніт не можна офіційно здавати в оренду.',
+      },
+      {
+        q: 'На скільки років оформлюється лізхолд?',
+        a: 'Стандартно 25–30 років з можливістю продовження. Преміальні проєкти пропонують 50–80 років першого періоду. Що довший лізхолд — то вища ліквідність при перепродажі.',
+      },
+      {
+        q: 'Чи можна купити юніт до початку будівництва?',
+        a: 'Так — через передпродаж. Ціни на 15–25% нижчі, ніж після здачі, але потрібно перевірити надійність забудовника й наявність PBG. Оплата за графіком будівництва.',
+      },
+    ],
+  },
 } as const
 
 function intro(f: ComplexFilterState, variant: Variant, lang: Lang): string {

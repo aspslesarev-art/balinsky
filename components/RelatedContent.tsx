@@ -98,6 +98,26 @@ const COPY = {
     unitsHeading: 'Unit ring kompleks puniki',
     reliability: (n: number) => `keandalan Balinsky · ${n} puput`,
   },
+  pl: {
+    developerHeading: 'Deweloper',
+    builtBy: 'Deweloper',
+    viewDeveloper: 'Zobacz dewelopera',
+    allDevelopers: 'Wszyscy deweloperzy',
+    complexHeading: 'Kompleks mieszkaniowy',
+    viewComplex: 'Zobacz kompleks',
+    unitsHeading: 'Jednostki w tym kompleksie',
+    reliability: (n: number) => `wiarygodność Balinsky · ${n} ukończonych`,
+  },
+  uk: {
+    developerHeading: 'Забудовник',
+    builtBy: 'Забудовник',
+    viewDeveloper: 'Переглянути забудовника',
+    allDevelopers: 'Усі забудовники',
+    complexHeading: 'Житловий комплекс',
+    viewComplex: 'Переглянути комплекс',
+    unitsHeading: 'Об’єкти цього комплексу',
+    reliability: (n: number) => `надійність Balinsky · ${n} зданих`,
+  },
 } as const
 
 export async function RelatedContent({

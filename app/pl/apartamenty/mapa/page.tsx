@@ -25,7 +25,7 @@ export async function generateMetadata({ searchParams }: { searchParams: SP }) {
   const sp = await searchParams
   const f = parseQueryFilters(sp)
   const meta = buildMetadataLoc(f, 'pl', { canonicalPath: '/pl/apartamenty', noIndex: true })
-  meta.title = `Map · Apartments | Balinsky`
+  meta.title = `Mapa · Apartamenty | Balinsky`
   return meta
 }
 
@@ -72,14 +72,14 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
       <PageContainer>
         <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[#1A1A1A]">{buildHeadingLoc(filters, 'pl')}</h1>
         <div className="text-[14px] text-[var(--color-text-muted)] mb-6">
-          {pointCount} objects on the map
-          {pointCount !== groups.length && ` · ${groups.length} points`}
+          {pointCount} obiektów na mapie
+          {pointCount !== groups.length && ` · ${groups.length} punktów`}
         </div>
 
         <CatalogTabs active="map" listHref={buildListHref(filters, 'pl')} mapHref={buildMapHref(filters, 'pl')} lang="pl" />
 
         <div className="mt-6">
-          <CatalogSearchBar initial={filters.q} current={filters} view="map" placeholder="Search by name, district, developer…" />
+          <CatalogSearchBar initial={filters.q} current={filters} view="map" placeholder="Szukaj po nazwie, dzielnicy, deweloperze…" />
         </div>
 
         <div className="mt-4">

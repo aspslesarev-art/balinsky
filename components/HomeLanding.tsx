@@ -988,6 +988,240 @@ const COPY = {
       secondaryText: 'Tiang meled ngicalang permintaan — ledang nyambungang manajer: tiang merluang presentasi properti lan wantuan transaksi.',
     },
   },
+  pl: {
+    locale: 'pl-PL',
+    hero: {
+      eyebrow: 'NIEZALEŻNY MARKETPLACE · BALI',
+      h1: 'Kup willę lub apartament na Bali',
+      h1sub: 'Bezpiecznie, ze zweryfikowanymi dokumentami i przejrzystą rentownością.',
+      placeholder: 'Willa z 2 sypialniami blisko Canggu do $300k z potencjałem na wynajem…',
+      tryLabel: 'Spróbuj',
+      suggestions: [
+        { label: 'Wille w Ubud do $250k', href: '/en/villas' },
+        { label: 'Gotowe pod wynajem, rentowność 10%+', href: '/en/villas' },
+        { label: 'Kompleksy z oddaniem w 2026', href: '/en/complexes' },
+      ],
+      ctaPrimary: 'Znajdź willę',
+      ctaSecondary: 'Porozmawiaj z menedżerem',
+      voiceAria: 'Zapytaj głosem',
+      foot: 'Bez rejestracji.',
+    },
+    howItWorks: {
+      eyebrow: 'JAK TO DZIAŁA',
+      heading: 'Kupuj z pewnością — bez lotu na Bali.',
+      sub: 'Broker AI i zespół na miejscu prowadzą Cię od pytania po klucze.',
+      cta: 'Zapytaj brokera AI',
+      steps: [
+        { n: '01', Icon: Sparkles, title: 'Zapytaj brokera AI', body: 'Wybierze nieruchomości i odpowie na pytania. Za darmo, 24/7.' },
+        { n: '02', Icon: TrendingUp, title: 'Przeanalizuj nieruchomość', body: 'Rentowność sąsiadów, konkurencja, dokumenty, deweloper — bez renderów.' },
+        { n: '03', Icon: Phone, title: 'Zostaw zgłoszenie', body: 'Prezentacja na Zoomie, oglądanie, bezpieczna transakcja z gwarancjami.' },
+      ],
+    },
+    features: {
+      eyebrow: 'LICZBY, NIE OBIETNICE',
+      heading: 'Decyduj na podstawie realnych liczb, a nie sloganów dewelopera.',
+      sub: 'Wszystko widoczne, zanim porozmawiasz ze sprzedającym.',
+      items: [
+        { Icon: TrendingUp, title: 'Rentowność sąsiadów', body: 'Ile naprawdę zarabiają pobliskie nieruchomości — z Booking i Airbnb.' },
+        { Icon: BarChart3, title: 'Konkurencja', body: 'Z czym porównać i jak wypada na tym tle.' },
+        { Icon: MapPin, title: 'Co w pobliżu i jak daleko', body: 'Kawiarnie, plaże, szkoły, spoty surfingowe — z czasem dojazdu.' },
+        { Icon: FileCheck2, title: 'Dokumenty i strefowanie', body: 'PBG, SLF, leasehold — bez szarych stref gruntu.' },
+        { Icon: Building2, title: 'Profil dewelopera', body: 'Co zbudował, co w toku, jakie nowości.' },
+        { Icon: Video, title: 'Materiał z placu budowy', body: 'Prawdziwe wideo z miejsca — nie rendery.' },
+      ],
+    },
+    safety: {
+      eyebrow: 'BEZPIECZNIEJSZA TRANSAKCJA',
+      heading: 'Bez szarych schematów i ryzyka utraty pieniędzy.',
+      body: 'Wszystkie dane są nasze, plus wewnętrzne szczegóły, których nie znajdziesz na stronie. Pomożemy sfinalizować transakcję z gwarancjami.',
+      points: [
+        'Niezależny marketplace, a nie landing jednego dewelopera',
+        'Znamy wewnętrzne szczegóły nieruchomości i deweloperów',
+        'Bezpośrednie kontakty do menedżerów — pisz sam lub przez nas',
+        'Opieka, gwarancje i ubezpieczenie przy transakcji',
+      ],
+      cta: 'Zostaw zgłoszenie',
+      ctaText: 'Chcę zostawić zgłoszenie — proszę o kontakt z menedżerem: potrzebuję prezentacji nieruchomości i pomocy przy bezpiecznej transakcji.',
+    },
+    villasSection: {
+      eyebrow: '01 · WILLE',
+      heading: 'Tylko wille z gotowymi dokumentami.',
+      sub: 'Bez szarych stref gruntu. Najbardziej opłacalne na górze.',
+      linkAll: 'Wszystkie wille',
+    },
+    ai: {
+      eyebrow: '02 · BROKER AI',
+      heading: 'Zapytaj o cokolwiek — bez agenta, bez spamu, za darmo.',
+      body: 'Zna każdą nieruchomość na platformie. Zapytaj głosem lub tekstem — otrzymasz opcje z liczbami, dokumentami i rentownością.',
+      pointHeading1: 'Opis zamiast filtrów',
+      pointBody1: '„Dwie sypialnie w Canggu do $300k dla partnera i pracy zdalnej” — to wystarczy. AI rozpozna intencję i pokaże to, co pasuje.',
+      pointHeading2: 'Pytania o dowolną nieruchomość',
+      pointBody2: 'Jakie dokumenty? Roczny podatek od gruntu? Termin oddania? Pytaj — AI odpowiada natychmiast z najpełniejszej bazy na wyspie.',
+      pointHeading3: 'W Twoim języku, 24/7',
+      pointBody3: 'Nie musisz czekać na poranek na Bali — zapytaj o północy, odpowiedź dostaniesz o północy. W języku, który Ci odpowiada.',
+      cta: 'Otwórz konsjerża AI w Telegramie',
+      hint: 'Rozmowa jest zachowana — zapytaj wczoraj, kontynuuj dziś. Historia, dokumenty, wyliczenia w jednym wątku.',
+      anon: 'Pytaj anonimowo. Menedżer włączy się tylko wtedy, gdy zostawisz kontakt.',
+    },
+    complexesSection: {
+      eyebrow: '03 · KOMPLEKSY MIESZKANIOWE',
+      heading: 'Zamknięte kompleksy z infrastrukturą.',
+      sub: 'Basen, ochrona, zarządzanie nieruchomością. Lokale pod wynajem i na własne potrzeby.',
+      linkAll: 'Wszystkie kompleksy',
+    },
+    districts: {
+      eyebrow: '04 · REGIONY',
+      heading: 'Który region pasuje do Twojego celu.',
+      items: [
+        { name: 'Canggu', tagline: 'surfing, kawiarnie, wynajem dzienny', slug: 'Berawa' },
+        { name: 'Ubud', tagline: 'natura, tarasy ryżowe, spokój', slug: 'Ubud' },
+        { name: 'Bukit', tagline: 'widoki na ocean z górnej półki', slug: 'Uluwatu' },
+        { name: 'Sanur', tagline: 'przyjazny rodzinom, cicha plaża', slug: 'Sanur' },
+      ],
+    },
+    knowledge: {
+      eyebrow: '05 · WIEDZA',
+      heading: 'Zrozum transakcję, zanim zapłacisz.',
+      items: [
+        { title: 'Jak kupić nieruchomość na Bali', body: 'Leasehold vs freehold, podatki, notariusz, rejestracja — krok po kroku.', href: '/en/knowledge' },
+        { title: 'PBG i SLF — czym są', body: 'Bez nich nieruchomość to szara strefa. Co i gdzie sprawdzać.', href: '/en/knowledge' },
+        { title: 'Realna rentowność najmu na Bali', body: 'Które regiony dają 10%+, a które 4%. I dlaczego prezentacje sprzedażowe kłamią.', href: '/en/knowledge' },
+      ],
+      linkAll: 'Baza wiedzy',
+    },
+    proof: {
+      heading: 'Już kupili przez nas.',
+      items: [
+        { quote: 'Kupiłem willę w dwa tygodnie. Bez lotu na Bali. Wszystkie dokumenty i kontrole w ramach platformy.', author: 'Alexander K., Moscow', role: 'kupił Origins Villa 75 m² w grudniu 2025' },
+        { quote: 'Porównaliśmy siedem nieruchomości w jednym wątku na Telegramie. Broker AI odpowiadał mi w nocy, gdy nie mogłam spać od liczenia.', author: 'Anna L., Berlin', role: 'kupiła apartament w Canggu' },
+        { quote: 'Nieruchomość zgadzała się z nagraniami. To rzadkość na Bali — zwykle reklama i rzeczywistość wyglądają zupełnie inaczej.', author: 'Dmitri I., Dubai', role: 'kupił willę w Pererenan' },
+      ],
+    },
+    finalCta: {
+      h2: 'Znajdź nieruchomość, którą naprawdę kupisz.',
+      sub: 'Zapytaj brokera AI lub zostaw zgłoszenie — doprowadzimy transakcję bezpiecznie do końca.',
+      primary: 'Zapytaj brokera AI',
+      secondary: 'Zostaw zgłoszenie',
+      secondaryText: 'Chcę zostawić zgłoszenie — proszę o kontakt z menedżerem: potrzebuję prezentacji nieruchomości i pomocy przy transakcji.',
+    },
+  },
+  uk: {
+    locale: 'uk-UA',
+    hero: {
+      eyebrow: 'НЕЗАЛЕЖНИЙ МАРКЕТПЛЕЙС · БАЛІ',
+      h1: 'Купити вілу чи апартаменти на Балі',
+      h1sub: 'Безпечно, з перевіреними документами та зрозумілою дохідністю.',
+      placeholder: 'Віла з 2 спальнями біля Canggu до $300k під оренду…',
+      tryLabel: 'Спробуйте',
+      suggestions: [
+        { label: 'Вілли в Ubud до $250k', href: '/en/villas' },
+        { label: 'Готові під оренду з дохідністю 10%+', href: '/en/villas' },
+        { label: 'Комплекси зі здачею у 2026', href: '/en/complexes' },
+      ],
+      ctaPrimary: 'Знайти вілу',
+      ctaSecondary: 'Поговорити з менеджером',
+      voiceAria: 'Запитати голосом',
+      foot: 'Без реєстрації.',
+    },
+    howItWorks: {
+      eyebrow: 'ЯК ЦЕ ПРАЦЮЄ',
+      heading: 'Купуйте впевнено — навіть не прилітаючи на Балі.',
+      sub: 'AI-брокер і команда на місці проведуть від запитання до ключів.',
+      cta: 'Запитати AI-брокера',
+      steps: [
+        { n: '01', Icon: Sparkles, title: 'Запитайте AI-брокера', body: 'Підбере об’єкти й відповість на запитання. Безкоштовно, 24/7.' },
+        { n: '02', Icon: TrendingUp, title: 'Вивчіть об’єкт', body: 'Дохідність сусідів, конкуренти, документи, забудовник — без рендерів.' },
+        { n: '03', Icon: Phone, title: 'Залиште заявку', body: 'Zoom-презентація, показ, безпечна угода з гарантіями.' },
+      ],
+    },
+    features: {
+      eyebrow: 'ЦИФРИ, А НЕ ОБІЦЯНКИ',
+      heading: 'Вирішуйте за реальними цифрами, а не за словами забудовника.',
+      sub: 'Усе видно ще до розмови з продавцем.',
+      items: [
+        { Icon: TrendingUp, title: 'Дохідність сусідів', body: 'Скільки насправді заробляють поруч — за Booking та Airbnb.' },
+        { Icon: BarChart3, title: 'Конкуренти об’єкта', body: 'З чим порівняти та як об’єкт на їхньому тлі.' },
+        { Icon: MapPin, title: 'Що поруч і скільки їхати', body: 'Кафе, пляжі, школи, серф-споти — з часом у дорозі.' },
+        { Icon: FileCheck2, title: 'Документи та зональність', body: 'PBG, SLF, leasehold — без сірих зон із землею.' },
+        { Icon: Building2, title: 'Профіль забудовника', body: 'Що збудував, що будує, які новини.' },
+        { Icon: Video, title: 'Зйомка з місця', body: 'Реальне відео з будівництва, а не рендери.' },
+      ],
+    },
+    safety: {
+      eyebrow: 'БЕЗПЕКА УГОДИ',
+      heading: 'Без сірих схем і ризику втратити гроші.',
+      body: 'Уся інформація — наша, плюс внутрішні нюанси, яких немає на сайті. Допоможемо закрити угоду з гарантіями.',
+      points: [
+        'Незалежний маркетплейс, а не лендинг одного забудовника',
+        'Знаємо внутрішні нюанси щодо об’єктів і забудовників',
+        'Прямі контакти менеджерів — спілкуйтеся самі або через нас',
+        'Супровід, гарантії та страхування на угоді',
+      ],
+      cta: 'Залишити заявку',
+      ctaText: 'Хочу залишити заявку — підключіть менеджера: потрібна презентація об’єкта та допомога з безпечною угодою.',
+    },
+    villasSection: {
+      eyebrow: '01 · ВІЛЛИ',
+      heading: 'Лише вілли з готовими документами.',
+      sub: 'Без сірих зон із землею. Згори — найвигідніші.',
+      linkAll: 'Усі вілли каталогу',
+    },
+    ai: {
+      eyebrow: '02 · AI-БРОКЕР',
+      heading: 'Запитайте що завгодно — без агента, без спаму, безкоштовно.',
+      body: 'Знає кожен об’єкт на платформі. Запитайте голосом або текстом — отримайте варіанти з цифрами, документами й дохідністю.',
+      pointHeading1: 'Опис замість фільтрів',
+      pointBody1: '«Двокімнатна в Canggu до $300k для дружини та віддаленої роботи» — цього достатньо. AI розбере намір і підбере те, що підходить.',
+      pointHeading2: 'Запитання щодо будь-якого об’єкта',
+      pointBody2: 'Які документи? Скільки на земельний податок? Коли здають? Запитуйте — AI відповідає миттєво з найповнішої бази по острову.',
+      pointHeading3: 'Вашою мовою, 24/7',
+      pointBody3: 'Не треба чекати ранку на Балі — запитали вночі, отримали відповідь уночі. Тією мовою, якою зручно.',
+      cta: 'Відкрити AI-консьєрж у Telegram',
+      hint: 'Той самий діалог зберігається — запитали вчора, продовжуємо сьогодні. Історія, документи, розрахунки в одному чаті.',
+      anon: 'Запитуйте анонімно. Менеджер підключиться, лише якщо залишите контакти.',
+    },
+    complexesSection: {
+      eyebrow: '03 · ЖИТЛОВІ КОМПЛЕКСИ',
+      heading: 'Закриті комплекси з інфраструктурою.',
+      sub: 'Басейн, охорона, керуюча компанія. Юніти під оренду й для себе.',
+      linkAll: 'Усі комплекси',
+    },
+    districts: {
+      eyebrow: '04 · РАЙОНИ',
+      heading: 'У якому районі купити під вашу ціль.',
+      items: [
+        { name: 'Canggu', tagline: 'серфінг, кафе, подобова оренда', slug: 'Berawa' },
+        { name: 'Ubud', tagline: 'природа, рисові тераси, спокій', slug: 'Ubud' },
+        { name: 'Bukit', tagline: 'преміальні краєвиди на океан', slug: 'Uluwatu' },
+        { name: 'Sanur', tagline: 'сімейний формат, тихий пляж', slug: 'Sanur' },
+      ],
+    },
+    knowledge: {
+      eyebrow: '05 · ЗНАННЯ',
+      heading: 'Зрозумієте угоду ще до того, як платити.',
+      items: [
+        { title: 'Як купити нерухомість на Балі', body: 'Leasehold vs freehold, податки, нотаріус, реєстрація — покроково.', href: '/en/knowledge' },
+        { title: 'Документи PBG і SLF — навіщо', body: 'Без них об’єкт — сіра зона. Що перевіряти і де.', href: '/en/knowledge' },
+        { title: 'Реальна дохідність від оренди', body: 'Які райони дають 10%+, які — 4%. І чому прайс-листи брешуть.', href: '/en/knowledge' },
+      ],
+      linkAll: 'База знань',
+    },
+    proof: {
+      heading: 'Вже купили через нас.',
+      items: [
+        { quote: 'Купив вілу за два тижні. Без перельоту на Балі. Усі документи й перевірки — усередині платформи.', author: 'Alexander K., Moscow', role: 'купив Origins Villa 75 m² у грудні 2025' },
+        { quote: 'Порівняли сім об’єктів в одному Telegram-чаті. AI-брокер відповідав уночі, коли я не міг заснути від розрахунків.', author: 'Anna L., Berlin', role: 'купила апартаменти в Canggu' },
+        { quote: 'Об’єкт відповідав зйомці. Це рідкість на Балі — зазвичай фото в рекламі й реальність зовсім різні.', author: 'Dmitri I., Dubai', role: 'купив вілу в Pererenan' },
+      ],
+    },
+    finalCta: {
+      h2: 'Знайдіть нерухомість, яку справді купите.',
+      sub: 'Запитайте AI-брокера або залиште заявку — доведемо до безпечної угоди.',
+      primary: 'Запитати AI-брокера',
+      secondary: 'Залишити заявку',
+      secondaryText: 'Хочу залишити заявку — підключіть менеджера: потрібна презентація об’єкта та допомога з угодою.',
+    },
+  },
 } as const
 
 // === DATA ===========================================================
@@ -1161,11 +1395,11 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
       <section className="border-b border-[var(--color-border)] bg-[var(--color-bg)]">
         <PageContainer>
           <div className="py-7 md:py-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-x-6 gap-y-6">
-            <TrustCell value={fmtInt(stats.complexes, c.locale)} label={pickCopy({ ru: 'жилых комплексов', en: 'residential complexes', id: 'kompleks hunian', fr: 'complexes résidentiels', de: 'Wohnkomplexe', zh: '住宅社区', nl: 'wooncomplexen', ban: 'komplek hunian' }, lang)} />
-            <TrustCell value={fmtInt(stats.developers, c.locale)} label={pickCopy({ ru: 'застройщиков', en: 'developers', id: 'pengembang', fr: 'promoteurs', de: 'Bauträger', zh: '开发商', nl: 'ontwikkelaars', ban: 'pengembang' }, lang)} />
-            <TrustCell value={fmtInt(stats.villas, c.locale)} label={pickCopy({ ru: 'планировок вилл', en: 'villa layouts', id: 'denah vila', fr: 'plans de villas', de: 'Villa-Grundrisse', zh: '别墅户型', nl: 'villaplattegronden', ban: 'denah villa' }, lang)} />
-            <TrustCell value={fmtInt(stats.apartments, c.locale)} label={pickCopy({ ru: 'планировок апартаментов', en: 'apartment layouts', id: 'denah apartemen', fr: 'plans d’appartements', de: 'Apartment-Grundrisse', zh: '公寓户型', nl: 'appartementplattegronden', ban: 'denah apartemen' }, lang)} />
-            <TrustCell value={fmtInt(stats.units, c.locale)} label={pickCopy({ ru: 'юнитов на сайте', en: 'units on the site', id: 'unit di situs', fr: 'lots sur le site', de: 'Einheiten auf der Seite', zh: '在售单元', nl: 'units op de site', ban: 'unit ring situs' }, lang)} />
+            <TrustCell value={fmtInt(stats.complexes, c.locale)} label={pickCopy({ ru: 'жилых комплексов', en: 'residential complexes', id: 'kompleks hunian', fr: 'complexes résidentiels', de: 'Wohnkomplexe', zh: '住宅社区', nl: 'wooncomplexen', ban: 'komplek hunian', pl: 'kompleksów mieszkaniowych', uk: 'житлових комплексів' }, lang)} />
+            <TrustCell value={fmtInt(stats.developers, c.locale)} label={pickCopy({ ru: 'застройщиков', en: 'developers', id: 'pengembang', fr: 'promoteurs', de: 'Bauträger', zh: '开发商', nl: 'ontwikkelaars', ban: 'pengembang', pl: 'deweloperów', uk: 'забудовників' }, lang)} />
+            <TrustCell value={fmtInt(stats.villas, c.locale)} label={pickCopy({ ru: 'планировок вилл', en: 'villa layouts', id: 'denah vila', fr: 'plans de villas', de: 'Villa-Grundrisse', zh: '别墅户型', nl: 'villaplattegronden', ban: 'denah villa', pl: 'układów willi', uk: 'планувань віл' }, lang)} />
+            <TrustCell value={fmtInt(stats.apartments, c.locale)} label={pickCopy({ ru: 'планировок апартаментов', en: 'apartment layouts', id: 'denah apartemen', fr: 'plans d’appartements', de: 'Apartment-Grundrisse', zh: '公寓户型', nl: 'appartementplattegronden', ban: 'denah apartemen', pl: 'układów apartamentów', uk: 'планувань апартаментів' }, lang)} />
+            <TrustCell value={fmtInt(stats.units, c.locale)} label={pickCopy({ ru: 'юнитов на сайте', en: 'units on the site', id: 'unit di situs', fr: 'lots sur le site', de: 'Einheiten auf der Seite', zh: '在售单元', nl: 'units op de site', ban: 'unit ring situs', pl: 'lokali w serwisie', uk: 'юнітів на сайті' }, lang)} />
           </div>
         </PageContainer>
       </section>
@@ -1173,7 +1407,7 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
       {/* === Guided finder — easy mode: 3 taps → ranked shortlist == */}
       {finderItems.length > 0 && (
         <SectionWrap className="border-t border-[var(--color-border)]">
-          <SectionHead title={pickCopy({ ru: 'Подберём виллу за 3 ответа.', en: 'Find your villa in 3 taps.', id: 'Temukan vila Anda dalam 3 langkah.', fr: 'Trouvez votre villa en 3 réponses.', de: 'Finden Sie Ihre Villa in 3 Schritten.', zh: '三步找到你的别墅。', nl: 'Vind uw villa in 3 stappen.', ban: 'Alih villa Ragane ring 3 lengkah.' }, lang)} />
+          <SectionHead title={pickCopy({ ru: 'Подберём виллу за 3 ответа.', en: 'Find your villa in 3 taps.', id: 'Temukan vila Anda dalam 3 langkah.', fr: 'Trouvez votre villa en 3 réponses.', de: 'Finden Sie Ihre Villa in 3 Schritten.', zh: '三步找到你的别墅。', nl: 'Vind uw villa in 3 stappen.', ban: 'Alih villa Ragane ring 3 lengkah.', pl: 'Znajdź swoją willę w 3 odpowiedziach.', uk: 'Підберемо вілу за 3 відповіді.' }, lang)} />
           <div className="mt-8 md:mt-10">
             <HomeFinder items={finderItems} lang={lang} />
           </div>
@@ -1314,8 +1548,8 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
       {collections.length > 0 && (
         <SectionWrap className="border-t border-[var(--color-border)]">
           <SectionHead
-            eyebrow={pickCopy({ ru: 'Подборки', en: 'Collections', id: 'Koleksi', fr: 'Sélections', de: 'Kollektionen', zh: '精选', nl: 'Collecties', ban: 'Koleksi' }, lang)}
-            title={pickCopy({ ru: 'Лучшее в вашем бюджете', en: 'The best in your budget', id: 'Yang terbaik sesuai anggaran Anda', fr: 'Le meilleur dans votre budget', de: 'Das Beste in Ihrem Budget', zh: '预算之内的精选', nl: 'Het beste binnen uw budget', ban: 'Sane pinih becik ring anggaran Ragane' }, lang)}
+            eyebrow={pickCopy({ ru: 'Подборки', en: 'Collections', id: 'Koleksi', fr: 'Sélections', de: 'Kollektionen', zh: '精选', nl: 'Collecties', ban: 'Koleksi', pl: 'Kolekcje', uk: 'Добірки' }, lang)}
+            title={pickCopy({ ru: 'Лучшее в вашем бюджете', en: 'The best in your budget', id: 'Yang terbaik sesuai anggaran Anda', fr: 'Le meilleur dans votre budget', de: 'Das Beste in Ihrem Budget', zh: '预算之内的精选', nl: 'Het beste binnen uw budget', ban: 'Sane pinih becik ring anggaran Ragane', pl: 'Najlepsze w Twoim budżecie', uk: 'Найкраще у вашому бюджеті' }, lang)}
             sub={pickCopy({
               ru: 'Топ-объекты по доходности и популярности — выберите бюджет и район',
               en: 'Top listings by yield and popularity — pick a budget and a district',
@@ -1325,6 +1559,8 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
               zh: '按收益和热度排名的优质房源 — 选择预算和区域',
               nl: 'Topaanbod op rendement en populariteit — kies een budget en een gebied',
               ban: 'Properti utama manut hasil lan popularitas — pilih anggaran lan wewidangan',
+              pl: 'Najlepsze oferty według rentowności i popularności — wybierz budżet i region',
+              uk: 'Топ-об’єкти за дохідністю та популярністю — оберіть бюджет і район',
             }, lang)}
           />
           <div className="mt-8 md:mt-10">
@@ -1349,7 +1585,7 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
                   <div className="text-[15px] font-medium text-[#0E1A14] truncate">{lang !== 'ru' && k.title && hasCyrillic(k.title) ? translit(k.title) : k.title}</div>
                   <div className="mt-1 text-[12.5px] text-[#6B7570] flex items-center gap-1.5">
                     {k.district && <><MapPin size={11} /> {k.district}</>}
-                    {k.units != null && <span className="ml-auto tabular-nums">{k.units} {pickCopy({ ru: 'юнитов', en: 'units', id: 'unit', fr: 'lots', de: 'Einheiten', zh: '套', nl: 'units', ban: 'unit' }, lang)}</span>}
+                    {k.units != null && <span className="ml-auto tabular-nums">{k.units} {pickCopy({ ru: 'юнитов', en: 'units', id: 'unit', fr: 'lots', de: 'Einheiten', zh: '套', nl: 'units', ban: 'unit', pl: 'lokali', uk: 'юнітів' }, lang)}</span>}
                   </div>
                 </div>
               </Link>
@@ -1414,7 +1650,7 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
               <div className="text-[16px] font-medium text-[#0E1A14] leading-tight">{k.title}</div>
               <p className="mt-2 text-[13.5px] text-[#4B5563] leading-[1.55]">{k.body}</p>
               <div className="mt-4 inline-flex items-center gap-1 text-[12.5px] text-[var(--color-primary)]">
-                {pickCopy({ ru: 'Читать', en: 'Read', id: 'Baca', fr: 'Lire', de: 'Lesen', zh: '阅读', nl: 'Lezen', ban: 'Wacen' }, lang)} <ArrowRight size={12} />
+                {pickCopy({ ru: 'Читать', en: 'Read', id: 'Baca', fr: 'Lire', de: 'Lesen', zh: '阅读', nl: 'Lezen', ban: 'Wacen', pl: 'Czytaj', uk: 'Читати' }, lang)} <ArrowRight size={12} />
               </div>
             </Link>
           ))}

@@ -82,6 +82,24 @@ const COPY = {
     news: 'Orti wewidangan',
     pillar: 'Panduan investasi',
   },
+  pl: {
+    heading: (district: string) => `Więcej w ${district}`,
+    sub: 'Powiązane sekcje dla tego rejonu',
+    devs: 'Deweloperzy w okolicy',
+    complexes: 'Kompleksy mieszkaniowe',
+    promo: 'Aktualne promocje',
+    news: 'Wiadomości z rejonu',
+    pillar: 'Przewodnik inwestycyjny',
+  },
+  uk: {
+    heading: (district: string) => `Більше про ${district}`,
+    sub: 'Пов’язані розділи щодо цього району',
+    devs: 'Забудовники в районі',
+    complexes: 'Житлові комплекси',
+    promo: 'Чинні акції',
+    news: 'Новини району',
+    pillar: 'Гід з інвестицій',
+  },
 }
 
 export function DistrictRelatedLinks({

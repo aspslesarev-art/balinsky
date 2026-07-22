@@ -72,6 +72,20 @@ const COPY = {
     emptyFilters: 'Nenten wenten sane cocok ring filter sane kapilih',
     searchPlaceholder: 'Rerehin kompleks, wewidangan, pangwangun…',
   },
+  pl: {
+    page: 'strona', of: 'z',
+    complexes: (n: number) => `${n} kompleksów mieszkaniowych`,
+    emptySearch: (q: string) => `Nie znaleziono wyników dla „${q}”`,
+    emptyFilters: 'Brak wyników dla wybranych filtrów',
+    searchPlaceholder: 'Szukaj kompleksów, dzielnic, deweloperów…',
+  },
+  uk: {
+    page: 'сторінка', of: 'з',
+    complexes: (n: number) => `${n} житлових комплексів`,
+    emptySearch: (q: string) => `Нічого не знайдено за запитом «${q}»`,
+    emptyFilters: 'Немає результатів за вибраними фільтрами',
+    searchPlaceholder: 'Пошук комплексів, районів, забудовників…',
+  },
 } as const
 
 function toQueryString(f: ComplexFilterState): string {

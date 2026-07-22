@@ -69,6 +69,20 @@ const LABELS = {
       : kind === 'apartment' ? `Sami apartemen ring ${name}`
       : `Sami kompleks ring ${name}`,
   },
+  pl: {
+    eyebrow: 'O rejonie',
+    cta: (kind: Kind, name: string) =>
+      kind === 'villa' ? `Wszystkie wille w ${name}`
+      : kind === 'apartment' ? `Wszystkie apartamenty w ${name}`
+      : `Wszystkie kompleksy w ${name}`,
+  },
+  uk: {
+    eyebrow: 'Про район',
+    cta: (kind: Kind, name: string) =>
+      kind === 'villa' ? `Усі вілли в ${name}`
+      : kind === 'apartment' ? `Усі апартаменти в ${name}`
+      : `Усі комплекси в ${name}`,
+  },
 } as const
 
 export function DistrictAboutCard({
