@@ -1457,7 +1457,7 @@ async function searchSemantic(args: SemanticArgs, lang: Lang = 'ru', replyLang: 
 
   // Serve the knowledge summaries in the visitor's language when a translation
   // exists (feeds/_kb-summary-<lang>.json), else de-Cyrillic the RU source so
-  // Balisa never quotes Russian to a non-RU visitor.
+  // Andrei never quotes Russian to a non-RU visitor.
   const { loadKbSummaryCache } = await import('@/lib/kb-summary-i18n')
   const tr = replyLang === 'ru' ? {} : await loadKbSummaryCache(replyLang)
   const deCy = (s: string | null): string => (s && replyLang !== 'ru' && replyLang !== 'uk' && hasCyrillic(s) ? translitPreserveCase(s) : (s ?? ''))

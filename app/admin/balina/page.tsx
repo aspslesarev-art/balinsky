@@ -1,4 +1,4 @@
-// Editable knowledge base for the Балиса AI assistant.
+// Editable knowledge base for the Андрей AI assistant.
 //
 // Each row in `assistant_knowledge` is one named section of the
 // system prompt. The page renders a textarea per section and lets
@@ -18,7 +18,7 @@ import { AdminThemeShell } from '@/components/admin/AdminThemeShell'
 import { BalinaEditor } from './_editor'
 
 export const dynamic = 'force-dynamic'
-export const metadata = { robots: { index: false, follow: false }, title: 'Балиса · Balinsky Admin' }
+export const metadata = { robots: { index: false, follow: false }, title: 'Андрей · Balinsky Admin' }
 
 export default async function BalinaAdmin() {
   if (!(await requireAdmin())) redirect('/admin')

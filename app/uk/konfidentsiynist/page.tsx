@@ -64,7 +64,7 @@ export default function Page() {
         <li><strong>Google Analytics 4</strong> та <strong>Google Tag Manager</strong> — аналітика.</li>
         <li><strong>Yandex.Metrica</strong> — аналітика та поведінкові сигнали для пошуку Yandex.</li>
         <li><strong>Telegram</strong> — маршрутизація повідомлень через @BalinskyBot.</li>
-        <li><strong>OpenAI / Azure OpenAI</strong> — робота AI-асистента Balisa. Якщо ви пишете асистенту, ваше повідомлення й супутній контекст надсилаються до API постачальника.</li>
+        <li><strong>OpenAI / Azure OpenAI</strong> — робота AI-асистента Andrei. Якщо ви пишете асистенту, ваше повідомлення й супутній контекст надсилаються до API постачальника.</li>
       </ul>
 
       <h2>5. Строк зберігання</h2>

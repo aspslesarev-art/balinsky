@@ -57,63 +57,63 @@ const GREETING_BY_LANG: Record<Lang, Message> = {
     role: 'assistant',
     greeting: true,
     content:
-      'Я Балиса — AI-брокер по недвижимости на Бали. Помогу подобрать объект под ваш бюджет и цели. Что вы ищете?\n\n' +
+      'Я Андрей — AI-брокер по недвижимости на Бали. Помогу подобрать объект под ваш бюджет и цели. Что вы ищете?\n\n' +
       '[CHIPS] Подобрать виллу | Подобрать апартаменты | Помесячная аренда | Юридика покупки | Связаться с менеджером',
   },
   en: {
     role: 'assistant',
     greeting: true,
     content:
-      "I'm Balisa — AI broker for Bali real estate. I'll help match a property to your budget and goals. What are you looking for?\n\n" +
+      "I'm Andrei — AI broker for Bali real estate. I'll help match a property to your budget and goals. What are you looking for?\n\n" +
       '[CHIPS] Pick a villa | Pick an apartment | Monthly rental | Legal side of buying | Contact a manager',
   },
   id: {
     role: 'assistant',
     greeting: true,
     content:
-      'Saya Balisa — broker AI untuk properti Bali. Saya bantu mencocokkan properti dengan anggaran dan tujuan Anda. Apa yang Anda cari?\n\n' +
+      'Saya Andrei — broker AI untuk properti Bali. Saya bantu mencocokkan properti dengan anggaran dan tujuan Anda. Apa yang Anda cari?\n\n' +
       '[CHIPS] Pilih vila | Pilih apartemen | Sewa bulanan | Aspek hukum pembelian | Hubungi manager',
   },
   fr: {
     role: 'assistant',
     greeting: true,
     content:
-      'Je suis Balisa — courtière IA en immobilier à Bali. Je vous aide à trouver un bien adapté à votre budget et à vos objectifs. Que recherchez-vous ?\n\n' +
+      'Je suis Andrei — courtière IA en immobilier à Bali. Je vous aide à trouver un bien adapté à votre budget et à vos objectifs. Que recherchez-vous ?\n\n' +
       '[CHIPS] Choisir une villa | Choisir un appartement | Location mensuelle | Aspect juridique de l’achat | Contacter un manager',
   },
   de: {
     role: 'assistant',
     greeting: true,
     content:
-      'Ich bin Balisa — KI-Maklerin für Immobilien auf Bali. Ich helfe Ihnen, eine Immobilie passend zu Ihrem Budget und Ihren Zielen zu finden. Wonach suchen Sie?\n\n' +
+      'Ich bin Andrei — KI-Maklerin für Immobilien auf Bali. Ich helfe Ihnen, eine Immobilie passend zu Ihrem Budget und Ihren Zielen zu finden. Wonach suchen Sie?\n\n' +
       '[CHIPS] Villa auswählen | Apartment auswählen | Monatsmiete | Rechtliches zum Kauf | Manager kontaktieren',
   },
   zh: {
     role: 'assistant',
     greeting: true,
     content:
-      '我是 Balisa——巴厘岛房地产 AI 经纪人。我会帮您根据预算和目标匹配房产。您在找什么?\n\n' +
+      '我是 Andrei——巴厘岛房地产 AI 经纪人。我会帮您根据预算和目标匹配房产。您在找什么?\n\n' +
       '[CHIPS] 挑选别墅 | 挑选公寓 | 月租 | 购买法律事项 | 联系经理',
   },
   nl: {
     role: 'assistant',
     greeting: true,
     content:
-      'Ik ben Balisa — AI-makelaar voor vastgoed op Bali. Ik help u een woning te vinden die past bij uw budget en doelen. Waar bent u naar op zoek?\n\n' +
+      'Ik ben Andrei — AI-makelaar voor vastgoed op Bali. Ik help u een woning te vinden die past bij uw budget en doelen. Waar bent u naar op zoek?\n\n' +
       '[CHIPS] Kies een villa | Kies een appartement | Maandhuur | Juridische kant van kopen | Contact met een manager',
   },
   ban: {
     role: 'assistant',
     greeting: true,
     content:
-      'Tiang Balisa — broker AI properti Bali. Tiang jagi ngwantu ngrereh properti sane cocok sareng anggaran miwah tetujon Ida Dane. Napi sane karerehin?\n\n' +
+      'Tiang Andrei — broker AI properti Bali. Tiang jagi ngwantu ngrereh properti sane cocok sareng anggaran miwah tetujon Ida Dane. Napi sane karerehin?\n\n' +
       '[CHIPS] Milih vila | Milih apartemen | Sewa bulanan | Indik hukum numbas | Ngubungin manager',
   },
   pl: {
     role: 'assistant',
     greeting: true,
     content:
-      'Jestem Balisa — broker AI od nieruchomości na Bali. Pomogę dobrać obiekt do Twojego budżetu i celów. Czego szukasz?\n\n' +
+      'Jestem Andrei — broker AI od nieruchomości na Bali. Pomogę dobrać obiekt do Twojego budżetu i celów. Czego szukasz?\n\n' +
       '[CHIPS] Dobierz willę | Dobierz apartament | Wynajem miesięczny | Prawne aspekty zakupu | Kontakt z managerem',
   },
   uk: {
@@ -125,7 +125,7 @@ const GREETING_BY_LANG: Record<Lang, Message> = {
   },
 }
 
-// On a listing detail page Балиса greets ABOUT that listing and offers to dig
+// On a listing detail page Андрей greets ABOUT that listing and offers to dig
 // in — so the visitor lands straight into a conversation about what they're
 // looking at. Only villa / apartment / complex get this (the user's ask).
 type ListingKind = 'villa' | 'apartment' | 'complex'
@@ -171,8 +171,8 @@ function contextualGreeting(kind: ListingKind, title: string | null, lang: Lang)
 const COPY = {
   ru: {
     triggerAria: 'Открыть AI-брокера Балису',
-    triggerName: 'Балиса',
-    title: 'Балиса',
+    triggerName: 'Андрей',
+    title: 'Андрей',
     subtitle: 'AI-брокер · может ошибаться',
     closeAria: 'Закрыть',
     typing: 'печатает…',
@@ -206,9 +206,9 @@ const COPY = {
     },
   },
   en: {
-    triggerAria: 'Open AI broker Balisa',
-    triggerName: 'Balisa',
-    title: 'Balisa',
+    triggerAria: 'Open AI broker Andrei',
+    triggerName: 'Andrei',
+    title: 'Andrei',
     subtitle: 'AI broker · may be wrong',
     closeAria: 'Close',
     typing: 'typing…',
@@ -242,9 +242,9 @@ const COPY = {
     },
   },
   id: {
-    triggerAria: 'Buka broker AI Balisa',
-    triggerName: 'Balisa',
-    title: 'Balisa',
+    triggerAria: 'Buka broker AI Andrei',
+    triggerName: 'Andrei',
+    title: 'Andrei',
     subtitle: 'Broker AI · bisa keliru',
     closeAria: 'Tutup',
     typing: 'mengetik…',
@@ -278,9 +278,9 @@ const COPY = {
     },
   },
   fr: {
-    triggerAria: 'Ouvrir la courtière IA Balisa',
-    triggerName: 'Balisa',
-    title: 'Balisa',
+    triggerAria: 'Ouvrir la courtière IA Andrei',
+    triggerName: 'Andrei',
+    title: 'Andrei',
     subtitle: 'Courtière IA · peut se tromper',
     closeAria: 'Fermer',
     typing: 'écrit…',
@@ -314,9 +314,9 @@ const COPY = {
     },
   },
   de: {
-    triggerAria: 'KI-Maklerin Balisa öffnen',
-    triggerName: 'Balisa',
-    title: 'Balisa',
+    triggerAria: 'KI-Maklerin Andrei öffnen',
+    triggerName: 'Andrei',
+    title: 'Andrei',
     subtitle: 'KI-Maklerin · kann sich irren',
     closeAria: 'Schließen',
     typing: 'schreibt…',
@@ -350,9 +350,9 @@ const COPY = {
     },
   },
   zh: {
-    triggerAria: '打开 AI 经纪人 Balisa',
-    triggerName: 'Balisa',
-    title: 'Balisa',
+    triggerAria: '打开 AI 经纪人 Andrei',
+    triggerName: 'Andrei',
+    title: 'Andrei',
     subtitle: 'AI 经纪人 · 可能出错',
     closeAria: '关闭',
     typing: '正在输入…',
@@ -386,9 +386,9 @@ const COPY = {
     },
   },
   nl: {
-    triggerAria: 'AI-makelaar Balisa openen',
-    triggerName: 'Balisa',
-    title: 'Balisa',
+    triggerAria: 'AI-makelaar Andrei openen',
+    triggerName: 'Andrei',
+    title: 'Andrei',
     subtitle: 'AI-makelaar · kan fouten maken',
     closeAria: 'Sluiten',
     typing: 'typt…',
@@ -422,9 +422,9 @@ const COPY = {
     },
   },
   ban: {
-    triggerAria: 'Ngwacen broker AI Balisa',
-    triggerName: 'Balisa',
-    title: 'Balisa',
+    triggerAria: 'Ngwacen broker AI Andrei',
+    triggerName: 'Andrei',
+    title: 'Andrei',
     subtitle: 'Broker AI · prasida iwang',
     closeAria: 'Nutup',
     typing: 'nyurat…',
@@ -459,8 +459,8 @@ const COPY = {
   },
   pl: {
     triggerAria: 'Otwórz AI-brokera Balisę',
-    triggerName: 'Balisa',
-    title: 'Balisa',
+    triggerName: 'Andrei',
+    title: 'Andrei',
     subtitle: 'AI-broker · może się mylić',
     closeAria: 'Zamknij',
     typing: 'pisze…',
@@ -582,7 +582,7 @@ export function ConsultantWidget() {
   const [voiceSupported, setVoiceSupported] = useState(false)
   const scrollRef = useRef<HTMLDivElement | null>(null)
 
-  // ===== Voice output (Балиса speaks) — used by call mode ==============
+  // ===== Voice output (Андрей speaks) — used by call mode ==============
   // speak() plays a reply via /api/tts (ElevenLabs, key server-side) and
   // fires onDone when the audio ends — that callback drives the hands-free
   // call loop (reply spoken → reopen mic). isSpeaking powers the call UI.
@@ -612,7 +612,7 @@ export function ConsultantWidget() {
   }
 
   // ===== Call mode ("phone" UX) ========================================
-  // Tap the call icon → ringback tone (гудки) → Балиса "picks up" and
+  // Tap the call icon → ringback tone (гудки) → Андрей "picks up" and
   // greets by voice, then voice mode stays on for the conversation.
   type CallState = 'idle' | 'ringing' | 'connected'
   const [callState, setCallState] = useState<CallState>('idle')
@@ -772,7 +772,7 @@ export function ConsultantWidget() {
   // Hydrate conversation history from localStorage on first mount.
   // Without this every page navigation / refresh wipes the chat back
   // to the bare greeting — frustrating after the visitor has already
-  // gone several turns deep with Балиса. The key is per-language so
+  // gone several turns deep with Андрей. The key is per-language so
   // an /en visitor doesn't see RU history bleed in (or vice versa).
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -924,7 +924,7 @@ export function ConsultantWidget() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listingKey])
 
-  // Proactive nudge above the launcher on a listing page — Балиса offers to
+  // Proactive nudge above the launcher on a listing page — Андрей offers to
   // walk through the object. Appears after a short beat, dismissable per
   // listing for the session so it doesn't nag.
   const [teaserReady, setTeaserReady] = useState(false)
@@ -1313,7 +1313,7 @@ export function ConsultantWidget() {
   const callStatusText = callState === 'ringing'
     ? pickCopy({ ru: 'соединяем…', en: 'connecting…', id: 'menyambungkan…', fr: 'connexion…', de: 'verbinden…', zh: '正在接通…', nl: 'verbinden…', ban: 'nyambungang…', pl: 'łączymy…', uk: 'зʼєднуємо…' }, lang)
     : isSpeaking
-      ? pickCopy({ ru: 'Балиса говорит…', en: 'Balisa is speaking…', id: 'Balisa sedang berbicara…', fr: 'Balisa parle…', de: 'Balisa spricht…', zh: 'Balisa 正在说话…', nl: 'Balisa is aan het woord…', ban: 'Balisa sedeng mabaos…', pl: 'Balisa mówi…', uk: 'Баліса говорить…' }, lang)
+      ? pickCopy({ ru: 'Андрей говорит…', en: 'Andrei is speaking…', id: 'Andrei sedang berbicara…', fr: 'Andrei parle…', de: 'Andrei spricht…', zh: 'Andrei 正在说话…', nl: 'Andrei is aan het woord…', ban: 'Andrei sedeng mabaos…', pl: 'Andrei mówi…', uk: 'Баліса говорить…' }, lang)
       : pickCopy({ ru: 'Слушаю вас…', en: 'Listening…', id: 'Mendengarkan…', fr: 'À l\'écoute…', de: 'Ich höre zu…', zh: '正在聆听…', nl: 'Ik luister…', ban: 'Mirengang…', pl: 'Słucham…', uk: 'Слухаю вас…' }, lang)
 
   return (
@@ -1339,7 +1339,7 @@ export function ConsultantWidget() {
               <span className={`absolute -inset-1.5 rounded-full ring-4 ${callState === 'ringing' || isSpeaking ? 'ring-[#22C55E]/40 animate-ping' : 'ring-[#22C55E]/20'}`} />
             </div>
             <div>
-              <div className="text-[22px] font-semibold text-[#111827]">{pickCopy({ ru: 'Балиса', en: 'Balisa', id: 'Balisa', fr: 'Balisa', de: 'Balisa', zh: 'Balisa', nl: 'Balisa', ban: 'Balisa', pl: 'Balisa', uk: 'Баліса' }, lang)}</div>
+              <div className="text-[22px] font-semibold text-[#111827]">{pickCopy({ ru: 'Андрей', en: 'Andrei', id: 'Andrei', fr: 'Andrei', de: 'Andrei', zh: 'Andrei', nl: 'Andrei', ban: 'Andrei', pl: 'Andrei', uk: 'Баліса' }, lang)}</div>
               <div className="text-[14px] text-[var(--color-text-muted)] mt-1">{callStatusText}</div>
             </div>
             <button
@@ -1360,8 +1360,8 @@ export function ConsultantWidget() {
           <button
             type="button"
             onClick={startCall}
-            aria-label={pickCopy({ ru: 'Позвонить Балисе', en: 'Call Balisa', id: 'Telepon Balisa', fr: 'Appeler Balisa', de: 'Balisa anrufen', zh: '致电 Balisa', nl: 'Bel Balisa', ban: 'Nelepon Balisa', pl: 'Zadzwoń do Balisy', uk: 'Зателефонувати Балісі' }, lang)}
-            title={pickCopy({ ru: 'Позвонить Балисе', en: 'Call Balisa', id: 'Telepon Balisa', fr: 'Appeler Balisa', de: 'Balisa anrufen', zh: '致电 Balisa', nl: 'Bel Balisa', ban: 'Nelepon Balisa', pl: 'Zadzwoń do Balisy', uk: 'Зателефонувати Балісі' }, lang)}
+            aria-label={pickCopy({ ru: 'Позвонить Балисе', en: 'Call Andrei', id: 'Telepon Andrei', fr: 'Appeler Andrei', de: 'Andrei anrufen', zh: '致电 Andrei', nl: 'Bel Andrei', ban: 'Nelepon Andrei', pl: 'Zadzwoń do Balisy', uk: 'Зателефонувати Балісі' }, lang)}
+            title={pickCopy({ ru: 'Позвонить Балисе', en: 'Call Andrei', id: 'Telepon Andrei', fr: 'Appeler Andrei', de: 'Andrei anrufen', zh: '致电 Andrei', nl: 'Bel Andrei', ban: 'Nelepon Andrei', pl: 'Zadzwoń do Balisy', uk: 'Зателефонувати Балісі' }, lang)}
             className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#22C55E] hover:bg-[#16A34A] text-white shadow-lg transition-colors"
           >
             <Phone size={20} />
@@ -1385,7 +1385,7 @@ export function ConsultantWidget() {
         </div>
       )}
 
-      {/* Proactive nudge on a listing page — Балиса offers to walk the object. */}
+      {/* Proactive nudge on a listing page — Андрей offers to walk the object. */}
       {!open && listingPage && teaserReady && !teaserClosed && (
         <div className="fixed bottom-[78px] right-5 z-40 max-w-[240px] flex items-stretch rounded-2xl bg-white shadow-[0_10px_34px_rgba(0,0,0,0.18)] border border-[var(--color-border)] overflow-hidden" data-llm-skip="">
           <button

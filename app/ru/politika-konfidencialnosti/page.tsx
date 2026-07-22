@@ -64,7 +64,7 @@ export default function Page() {
         <li><strong>Google Analytics 4</strong> и <strong>Google Tag Manager</strong> (аналитика).</li>
         <li><strong>Яндекс.Метрика</strong> (аналитика, поведенческие сигналы для Яндекс-поиска).</li>
         <li><strong>Telegram</strong> (приём заявок и общение через @BalinskyBot).</li>
-        <li><strong>OpenAI / Azure OpenAI</strong> (работа AI-ассистента Балиса — если вы пишете ассистенту, текст вашего сообщения и контекст передаются в API провайдера).</li>
+        <li><strong>OpenAI / Azure OpenAI</strong> (работа AI-ассистента Андрей — если вы пишете ассистенту, текст вашего сообщения и контекст передаются в API провайдера).</li>
       </ul>
 
       <h2>5. Сроки хранения</h2>

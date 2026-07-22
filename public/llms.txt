@@ -11,7 +11,7 @@ Any page has a clean text and structured view — append `.md` or `.json` to its
 - Works for every page and every language, e.g. `/de/villen.md`, `/en/complexes/<slug>.json`.
 
 These views strip navigation, scripts and proprietary analytics (yield estimates,
-competitor comparisons, the Balisa AI consultant) — they carry the public listing
+competitor comparisons, the Andrei AI consultant) — they carry the public listing
 copy and facts only. Served to verified AI crawlers (reverse-DNS confirmed).
 
 **Semantic search** over the whole catalogue (villas, apartments, complexes,

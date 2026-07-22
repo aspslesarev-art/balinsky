@@ -12,7 +12,7 @@ export const maxDuration = 30
 // Балина's picked voice (same one the realtime call agent uses) so text and
 // call sound identical. Public Voice Library id, works for Russian via the
 // turbo model. Override with ELEVENLABS_VOICE_ID if we swap voices again.
-const VOICE_ID = process.env.ELEVENLABS_VOICE_ID ?? 'CyTGUdVCJxZchT29M6W1'
+const VOICE_ID = process.env.ELEVENLABS_VOICE_ID ?? 'S11sP4AlwO2syH23EFcx'
 // Turbo v2.5: ~half the character cost and lower latency than multilingual_v2,
 // still 32 languages incl. Russian — the right default for a live conversation
 // on grant credits.

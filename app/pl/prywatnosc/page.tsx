@@ -64,7 +64,7 @@ export default function Page() {
         <li><strong>Google Analytics 4</strong> oraz <strong>Google Tag Manager</strong> — analityka.</li>
         <li><strong>Yandex.Metrica</strong> — analityka i sygnały behawioralne dla wyszukiwarki Yandex.</li>
         <li><strong>Telegram</strong> — kierowanie wiadomości przez @BalinskyBot.</li>
-        <li><strong>OpenAI / Azure OpenAI</strong> — obsługa asystenta AI Balisa. Jeśli napiszesz do asystenta, Twoja wiadomość wraz z otaczającym kontekstem jest przesyłana do API dostawcy.</li>
+        <li><strong>OpenAI / Azure OpenAI</strong> — obsługa asystenta AI Andrei. Jeśli napiszesz do asystenta, Twoja wiadomość wraz z otaczającym kontekstem jest przesyłana do API dostawcy.</li>
       </ul>
 
       <h2>5. Okres przechowywania</h2>

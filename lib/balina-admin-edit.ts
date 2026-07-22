@@ -188,7 +188,7 @@ async function applyPending(chatId: number, token: string): Promise<void> {
     await sendText(token, chatId,
       `✅ Обновил <b>«${escapeHtml(p.entity_name)}»</b>:\n` +
       p.human.map(h => `• ${escapeHtml(h)}`).join('\n') +
-      '\n\n<i>Данные уже на сайте. Балиса подхватит их в семантическом поиске после ближайшего kb-прогона.</i>')
+      '\n\n<i>Данные уже на сайте. Андрей подхватит их в семантическом поиске после ближайшего kb-прогона.</i>')
   } catch (err) {
     console.error('[admin-edit] update failed:', err)
     await auditLog(chatId, p, false).catch(() => {})

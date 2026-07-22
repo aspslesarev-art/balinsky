@@ -1,4 +1,4 @@
-// Static, on-brand mockup of a Балиса chat — used on the landing to SHOW the
+// Static, on-brand mockup of a Андрей chat — used on the landing to SHOW the
 // AI-broker experience: ask by voice or text, get answered, stay anonymous.
 // Pure presentation (no state, no network), bilingual, crisp at any size —
 // preferable to a blurry screenshot. Mirrors ConsultantWidget's styling.
@@ -10,7 +10,7 @@ import { pickCopy, type Lang } from '@/lib/i18n'
 const COPY = {
   ru: {
     subtitle: 'AI-брокер · анонимно',
-    greeting: 'Я Балиса — AI-брокер. Опишите, что ищете, — подберу за минуту.',
+    greeting: 'Я Андрей — AI-брокер. Опишите, что ищете, — подберу за минуту.',
     voice: 'Голосовое',
     reply: 'Нашёл 5 вилл в Чангу под аренду, доходность 9–11%. Показать с документами и расчётом?',
     chips: ['Показать виллы', 'Какие документы?'],
@@ -19,7 +19,7 @@ const COPY = {
   },
   en: {
     subtitle: 'AI broker · anonymous',
-    greeting: "I'm Balisa — your AI broker. Describe what you want and I'll shortlist in a minute.",
+    greeting: "I'm Andrei — your AI broker. Describe what you want and I'll shortlist in a minute.",
     voice: 'Voice message',
     reply: 'Found 5 villas in Canggu for rental, 9–11% yield. Show them with documents and the math?',
     chips: ['Show villas', 'What documents?'],
@@ -28,7 +28,7 @@ const COPY = {
   },
   id: {
     subtitle: 'Broker AI · anonim',
-    greeting: 'Saya Balisa — broker AI. Jelaskan apa yang Anda cari, dan saya akan menyusun daftar pilihan dalam satu menit.',
+    greeting: 'Saya Andrei — broker AI. Jelaskan apa yang Anda cari, dan saya akan menyusun daftar pilihan dalam satu menit.',
     voice: 'Pesan suara',
     reply: 'Menemukan 5 vila di Canggu untuk disewakan, imbal hasil 9–11%. Tampilkan beserta dokumen dan perhitungannya?',
     chips: ['Tampilkan vila', 'Dokumen apa saja?'],
@@ -37,7 +37,7 @@ const COPY = {
   },
   fr: {
     subtitle: 'Courtier IA · anonyme',
-    greeting: 'Je suis Balisa — votre courtier IA. Décrivez ce que vous cherchez et je vous fais une présélection en une minute.',
+    greeting: 'Je suis Andrei — votre courtier IA. Décrivez ce que vous cherchez et je vous fais une présélection en une minute.',
     voice: 'Message vocal',
     reply: 'J’ai trouvé 5 villas à Canggu pour la location, rendement de 9 à 11 %. Les afficher avec les documents et les calculs ?',
     chips: ['Afficher les villas', 'Quels documents ?'],
@@ -46,7 +46,7 @@ const COPY = {
   },
   de: {
     subtitle: 'KI-Makler · anonym',
-    greeting: 'Ich bin Balisa — Ihr KI-Makler. Beschreiben Sie, was Sie suchen, und ich stelle in einer Minute eine Auswahl zusammen.',
+    greeting: 'Ich bin Andrei — Ihr KI-Makler. Beschreiben Sie, was Sie suchen, und ich stelle in einer Minute eine Auswahl zusammen.',
     voice: 'Sprachnachricht',
     reply: 'Ich habe 5 Villen in Canggu zur Vermietung gefunden, 9–11 % Rendite. Mit Unterlagen und Kalkulation anzeigen?',
     chips: ['Villen anzeigen', 'Welche Unterlagen?'],
@@ -55,7 +55,7 @@ const COPY = {
   },
   zh: {
     subtitle: 'AI 经纪人 · 匿名',
-    greeting: '我是 Balisa——您的 AI 经纪人。描述您想要的，我一分钟内为您筛选。',
+    greeting: '我是 Andrei——您的 AI 经纪人。描述您想要的，我一分钟内为您筛选。',
     voice: '语音消息',
     reply: '在 Canggu 找到 5 套可出租别墅，收益率 9–11%。要连同文件和测算一起展示吗？',
     chips: ['查看别墅', '需要哪些文件？'],
@@ -64,7 +64,7 @@ const COPY = {
   },
   nl: {
     subtitle: 'AI-makelaar · anoniem',
-    greeting: 'Ik ben Balisa — uw AI-makelaar. Beschrijf wat u zoekt en ik stel binnen een minuut een selectie samen.',
+    greeting: 'Ik ben Andrei — uw AI-makelaar. Beschrijf wat u zoekt en ik stel binnen een minuut een selectie samen.',
     voice: 'Spraakbericht',
     reply: '5 villa\'s in Canggu voor verhuur gevonden, rendement 9–11%. Tonen met documenten en berekening?',
     chips: ["Villa's tonen", 'Welke documenten?'],
@@ -73,7 +73,7 @@ const COPY = {
   },
   ban: {
     subtitle: 'Broker AI · anonim',
-    greeting: 'Tiang Balisa — broker AI. Jlentrehang napi sane karereh, tiang jagi nyiapang pilihan sajeroning awai.',
+    greeting: 'Tiang Andrei — broker AI. Jlentrehang napi sane karereh, tiang jagi nyiapang pilihan sajeroning awai.',
     voice: 'Pesan suara',
     reply: 'Manggihin 5 vila ring Canggu buat kasewaang, hasil 9–11%. Edengang sareng dokumen miwah itungan?',
     chips: ['Edengang vila', 'Dokumen napi?'],
@@ -82,7 +82,7 @@ const COPY = {
   },
   pl: {
     subtitle: 'Broker AI · anonimowo',
-    greeting: 'Jestem Balisa — Twój broker AI. Opisz, czego szukasz, a w minutę przygotuję listę.',
+    greeting: 'Jestem Andrei — Twój broker AI. Opisz, czego szukasz, a w minutę przygotuję listę.',
     voice: 'Wiadomość głosowa',
     reply: 'Znalazłam 5 willi w Canggu pod wynajem, rentowność 9–11%. Pokazać je z dokumentami i wyliczeniami?',
     chips: ['Pokaż wille', 'Jakie dokumenty?'],
@@ -112,7 +112,7 @@ export function BalinaChatMock({ lang }: { lang: Lang }) {
         <div className="flex items-center gap-2.5 px-4 py-3 bg-[var(--color-primary-soft)] border-b border-[var(--color-border)]">
           <Image src="/balina.jpg" alt="" width={36} height={36} className="w-9 h-9 rounded-full object-cover" />
           <div>
-            <div className="text-[14px] font-semibold text-[#111827] leading-tight">{pickCopy({ ru: 'Балиса', en: 'Balisa', id: 'Balisa', fr: 'Balisa', de: 'Balisa', zh: 'Balisa', nl: 'Balisa', ban: 'Balisa', pl: 'Balisa', uk: 'Balisa' }, lang)}</div>
+            <div className="text-[14px] font-semibold text-[#111827] leading-tight">{pickCopy({ ru: 'Андрей', en: 'Andrei', id: 'Andrei', fr: 'Andrei', de: 'Andrei', zh: 'Andrei', nl: 'Andrei', ban: 'Andrei', pl: 'Andrei', uk: 'Andrei' }, lang)}</div>
             <div className="text-[11px] text-[var(--color-text-muted)] leading-tight flex items-center gap-1">
               <ShieldCheck size={11} className="text-[var(--color-primary)]" /> {c.subtitle}
             </div>
@@ -121,7 +121,7 @@ export function BalinaChatMock({ lang }: { lang: Lang }) {
 
         {/* Messages */}
         <div className="px-4 py-4 bg-[var(--color-search-bg)] flex flex-col gap-3">
-          {/* Balisa greeting */}
+          {/* Andrei greeting */}
           <div className="self-start max-w-[88%] rounded-2xl rounded-bl-md bg-white border border-[var(--color-border)] px-3.5 py-2.5 text-[13.5px] leading-relaxed text-[#111827]">
             {c.greeting}
           </div>
@@ -139,7 +139,7 @@ export function BalinaChatMock({ lang }: { lang: Lang }) {
             <span className="text-[11px] tabular-nums text-white/85 shrink-0">0:14</span>
           </div>
 
-          {/* Balisa reply + chips */}
+          {/* Andrei reply + chips */}
           <div className="self-start max-w-[88%] rounded-2xl rounded-bl-md bg-white border border-[var(--color-border)] px-3.5 py-2.5 text-[13.5px] leading-relaxed text-[#111827]">
             {c.reply}
           </div>

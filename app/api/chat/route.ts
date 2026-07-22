@@ -205,7 +205,7 @@ function funnelStageDirective(stage: FunnelStage, lang: Lang): string {
 // SYSTEM_PROMPT is in Russian. When the visitor is on the English
 // site we tack on a short directive so the model replies in English.
 // Cheaper than maintaining a parallel translated prompt.
-// Reply-language names for the response directive. Balisa's system prompt /
+// Reply-language names for the response directive. Andrei's system prompt /
 // knowledge / stage directives stay RU+EN, but gpt-5.4 is fully multilingual,
 // so a strong "reply ONLY in <language>" directive makes her answer natively in
 // the visitor's language. Balinese has no reliable model support → English.

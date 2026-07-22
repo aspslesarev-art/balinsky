@@ -62,10 +62,10 @@ export default function Page() {
         Zdjęcia i filmy poszczególnych nieruchomości mogą należeć do deweloperów lub osób trzecich — do komercyjnego wykorzystania poproś o osobną licencję.
       </p>
 
-      <h2>5. Asystent AI Balisa</h2>
+      <h2>5. Asystent AI Andrei</h2>
       <p>
-        Balisa to eksperymentalny asystent AI w witrynie. Jej odpowiedzi mają charakter informacyjny i nie zastępują konsultacji z licencjonowanym agentem,
-        prawnikiem lub notariuszem. Balisa może popełniać błędy — wszystko, co wpływa na transakcję, potwierdź u odpowiedniego specjalisty, zanim podejmiesz działanie.
+        Andrei to eksperymentalny asystent AI w witrynie. Jej odpowiedzi mają charakter informacyjny i nie zastępują konsultacji z licencjonowanym agentem,
+        prawnikiem lub notariuszem. Andrei może popełniać błędy — wszystko, co wpływa na transakcję, potwierdź u odpowiedniego specjalisty, zanim podejmiesz działanie.
       </p>
 
       <h2>6. Linki zewnętrzne</h2>

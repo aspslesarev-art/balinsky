@@ -64,7 +64,7 @@ export default function Page() {
         <li><strong>Google Analytics 4</strong> and <strong>Google Tag Manager</strong> — analytics.</li>
         <li><strong>Yandex.Metrica</strong> — analytics and behavioural signals for Yandex Search.</li>
         <li><strong>Telegram</strong> — message routing through @BalinskyBot.</li>
-        <li><strong>OpenAI / Azure OpenAI</strong> — powering the Balisa AI assistant. If you message the assistant, your message and surrounding context are sent to the provider&apos;s API.</li>
+        <li><strong>OpenAI / Azure OpenAI</strong> — powering the Andrei AI assistant. If you message the assistant, your message and surrounding context are sent to the provider&apos;s API.</li>
       </ul>
 
       <h2>5. Retention</h2>

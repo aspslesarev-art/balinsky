@@ -3,7 +3,7 @@
 // One machine-readable text file listing EVERY villa / apartment / complex /
 // developer / district (and rental) with its investor summary and links to the
 // live page + its clean `.md` full-text view. Generated from assistant_kb (the
-// same embedded knowledge base that powers Balisa + /api/llm/search), so it
+// same embedded knowledge base that powers Andrei + /api/llm/search), so it
 // stays in sync as listings change. This is the "train on our whole catalogue"
 // surface: an AI can ingest this index, then fetch each `.md` for full text or
 // hit /api/llm/search for semantic lookup.
