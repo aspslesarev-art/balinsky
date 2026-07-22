@@ -29,8 +29,9 @@ export default async function CollectionPage({ params }: { params: Promise<{ col
   return (
     <AdminThemeShell
       title={cfg.label}
-      description={`${total} ${total === 1 ? 'запись' : 'записей'} · ${cfg.table ?? cfg.bucket ?? cfg.key}`}
+      description={`${total} ${total === 1 ? 'запись' : 'записей'}`}
       fullWidth
+      compact
       back={{ href: '/admin/data', label: 'Все базы' }}
     >
       {loadError ? (
