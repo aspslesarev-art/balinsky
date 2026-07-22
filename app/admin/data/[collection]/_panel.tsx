@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { X, Save, Trash2, Loader2, AlertTriangle, Plus, Link2, Search, Sparkles } from 'lucide-react'
 import type { CollectionConfig, FieldDef, FieldType, RecordRow } from '@/lib/admin/adapters/types'
-import { resolveRecordFields } from '@/lib/admin/fields'
+import { resolveRecordFields, percentToInput, inputToPercent } from '@/lib/admin/fields'
 import { hasAi } from '@/lib/admin/ai-fields'
 import { PhotoManager } from './_photos'
 
@@ -221,6 +221,23 @@ function FieldEditor({ f, value, onChange, collection, row }: { f: FieldDef; val
 
   if ((f.type === 'enum' || f.type === 'multienum') && !f.readOnly && collection) {
     return <ChoiceField f={f} collection={collection} value={value} onChange={onChange} />
+  }
+
+  if (f.type === 'percent' && !f.readOnly) {
+    return (
+      <div>
+        <Label f={f} />
+        <div className="relative">
+          <input
+            type="number" min={0} max={100} step={1}
+            value={percentToInput(value)}
+            onChange={e => onChange(e.target.value === '' ? null : inputToPercent(e.target.value))}
+            className={inputCls}
+          />
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] text-[var(--ax-fg-faint)]">%</span>
+        </div>
+      </div>
+    )
   }
 
   if (f.type === 'date' && !f.readOnly) {

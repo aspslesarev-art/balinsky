@@ -140,6 +140,30 @@ export function inferTypeFromRows(rows: RecordRow[], key: string): FieldType {
   return repeats ? 'enum' : base
 }
 
+
+// «Готовность» and friends are stored as a 0–1 fraction (Airtable's percent
+// columns did that, and readinessOf() in the complexes loader still reads it
+// that way). Humans think in whole percents, so the admin shows 0–100 and
+// converts on the way in — typing 55 into a raw number field would otherwise
+// be read as 5500 %.
+export function percentToInput(v: unknown): string {
+  if (typeof v !== 'number' || !Number.isFinite(v)) return ''
+  const pct = v <= 1 ? v * 100 : v
+  return String(Math.round(pct))
+}
+
+export function inputToPercent(text: string): number | null {
+  const n = Number(String(text).replace('%', '').trim())
+  if (!Number.isFinite(n)) return null
+  const clamped = Math.max(0, Math.min(100, n))
+  return Math.round(clamped) / 100
+}
+
+export function percentDisplay(v: unknown): string {
+  const s = percentToInput(v)
+  return s === '' ? '' : `${s} %`
+}
+
 // Ordered column/field list covering ALL keys present across `rows`, with
 // config-declared fields first (their labels/types win), then any remaining
 // data keys appended alphabetically with an inferred type.

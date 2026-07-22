@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Plus, ArrowUp, ArrowDown, Search, Loader2, Maximize2, Link2, Filter, X, Sparkles } from 'lucide-react'
 import type { CollectionConfig, FieldDef, RecordRow } from '@/lib/admin/adapters/types'
-import { resolveFields, displayValue, editableText, coerceValue, isImageUrl } from '@/lib/admin/fields'
+import { resolveFields, displayValue, editableText, coerceValue, isImageUrl, percentToInput, inputToPercent, percentDisplay } from '@/lib/admin/fields'
 import { hasAi } from '@/lib/admin/ai-fields'
 import { RecordPanel } from './_panel'
 
@@ -389,6 +389,19 @@ export function DataGridScreen({
                             onPick={v => { patchRow(r.id, { [c.key]: v }); if (c.type === 'enum') setEdit(null) }}
                             onClose={() => setEdit(null)}
                           />
+                        ) : c.type === 'percent' ? (
+                          <input autoFocus type="number" min={0} max={100} step={1}
+                            defaultValue={percentToInput(r.fields[c.key])}
+                            onBlur={e => {
+                              const next = e.target.value === '' ? null : inputToPercent(e.target.value)
+                              if (next !== r.fields[c.key]) patchRow(r.id, { [c.key]: next })
+                              setEdit(null)
+                            }}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+                              if (e.key === 'Escape') setEdit(null)
+                            }}
+                            className="w-full px-2 py-1.5 text-[13px] bg-[var(--ax-input-bg)] border-2 border-[var(--color-primary)] outline-none" />
                         ) : c.type === 'date' ? (
                           <DateCell
                             value={r.fields[c.key]}
@@ -416,9 +429,11 @@ export function DataGridScreen({
                     )
                   }
                   // display
-                  const display = (c.type === 'link' && c.link?.store === 'id-array' && c.link.nameField)
-                    ? displayValue(r.fields[c.link.nameField] ?? r.fields[c.key])
-                    : displayValue(r.fields[c.key])
+                  const display = c.type === 'percent'
+                    ? percentDisplay(r.fields[c.key])
+                    : (c.type === 'link' && c.link?.store === 'id-array' && c.link.nameField)
+                      ? displayValue(r.fields[c.link.nameField] ?? r.fields[c.key])
+                      : displayValue(r.fields[c.key])
                   return (
                     <td key={c.key} style={sticky ? { left: 36 } : undefined}
                       onClick={() => startEdit(r, c)}

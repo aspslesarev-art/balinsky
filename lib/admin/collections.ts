@@ -117,7 +117,7 @@ const complexes: CollectionConfig = {
     { key: 'slug', label: 'Slug (URL)', type: 'text', column: true, showInGrid: true, width: 200 },
     { key: 'Статус', label: 'Статус', type: 'enum', showInGrid: true, width: 130 },
     { key: 'Статус продаж', label: 'Продажи', type: 'enum', showInGrid: true, width: 130 },
-    { key: 'Готовность', label: 'Готовность', type: 'enum', showInGrid: true, width: 130 },
+    { key: 'Готовность', label: 'Готовность, %', type: 'percent', showInGrid: true, width: 130 },
     { key: 'price_usd', label: 'Цена $', type: 'number', showInGrid: true, width: 110 },
     { key: 'Year of completion', label: 'Год сдачи', type: 'enum' },
     { key: 'price', label: 'Цена', type: 'number' },

@@ -13,6 +13,7 @@ export type FieldType =
   | 'bool'
   | 'enum'
   | 'multienum' // several values from the same list; stored as a string[]
+  | 'percent'   // shown as 0–100 %, stored as the 0–1 fraction the site reads
   | 'date'
   | 'photos' // synthetic — backed by a per-record photo manifest (lib/admin/photos.ts)
   | 'geo'
