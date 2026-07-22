@@ -481,6 +481,68 @@ const COPY = {
         a: 'Jangka waktu hak sewa lan syarat perpanjangan, izin PBG lan SLF, peruntukan tanah, sambungan utilitas, lan wentennyane pausahaan pangelola. Puniki ngicen kapastian indik keabsahan hukum transaksi lan kabisan nyewayang properti sacara legal.' },
     ],
   },
+  pl: {
+    home: 'Strona główna',
+    devsCrumb: 'Deweloperzy',
+    devSubtitle: 'Deweloper nieruchomości na Bali',
+    projects: 'projekty',
+    districts: 'Rejony',
+    ratingHeading: 'Ocena według wymiarów',
+    aboutHeading: 'O deweloperze',
+    projectsHeading: 'Projekty tego dewelopera',
+    projectsSubLine: (n: number, apts: number) => `${n} kompleksów mieszkaniowych${apts > 0 ? ` · ${apts} apartamentów w sprzedaży` : ''}`,
+    extrasHeading: 'Dodatki',
+    relatedHeading: 'Powiązane',
+    videosTitle: (name: string) => `Filmy o ${name}`,
+    newsHeading: (name: string) => `Aktualności od ${name}`,
+    promoHeading: (name: string) => `Promocje od ${name}`,
+    eventsHeading: (name: string) => `Wydarzenia z ${name}`,
+    faqHeading: 'Najczęściej zadawane pytania',
+    dim: { construction: 'Budownictwo i nieruchomości', reputation: 'Reputacja i doświadczenie', equipment: 'Wyposażenie i produkcja', management: 'Firma zarządzająca' },
+    extras: { team: 'Zespół', business: 'Biznes i usługi' },
+    related: { allDevs: 'Wszyscy deweloperzy na Bali', complexes: 'Kompleksy mieszkaniowe na Bali', apartments: 'Apartamenty na Bali', villas: 'Wille i domy', aptsIn: (d: string) => `Apartamenty w ${d}` },
+    faq: (name: string) => [
+      { q: `Ile projektów ma ${name} na Bali?`,
+        a: `Aktywne projekty ${name} są wymienione powyżej na tej stronie. Każdy projekt to osobna karta ze zdjęciami, rejonem i terminem oddania.` },
+      { q: `Jak sprawdzić, czy ${name} jest wiarygodny?`,
+        a: 'Sprawdź cztery sygnały: liczbę ukończonych projektów, aktywne pozwolenie PBG/SLF dla obecnej budowy, formę własności (leasehold / freehold) oraz obecność prawdziwej firmy zarządzającej.' },
+      { q: `Czy mogę kupić lokal od ${name} bezpośrednio?`,
+        a: 'Tak — większość deweloperów na Bali sprzedaje bezpośrednio bez pośredników. Transakcja jest zawierana u notariusza PPAT, płatność przebiega według harmonogramu powiązanego z etapami budowy.' },
+      { q: 'Co należy sprawdzić przed zakupem?',
+        a: 'Okres leasehold i warunki przedłużenia, pozwolenia PBG i SLF, przeznaczenie gruntu, podłączenie mediów oraz obecność firmy zarządzającej. Daje to pewność co do czystości prawnej transakcji i możliwości legalnego wynajmu nieruchomości.' },
+    ],
+  },
+  uk: {
+    home: 'Головна',
+    devsCrumb: 'Забудовники',
+    devSubtitle: 'Забудовник нерухомості на Балі',
+    projects: 'проєкти',
+    districts: 'Райони',
+    ratingHeading: 'Оцінка за напрямами',
+    aboutHeading: 'Про забудовника',
+    projectsHeading: 'Проєкти цього забудовника',
+    projectsSubLine: (n: number, apts: number) => `${n} житлових комплексів${apts > 0 ? ` · ${apts} апартаментів у продажу` : ''}`,
+    extrasHeading: 'Додатково',
+    relatedHeading: 'Схоже',
+    videosTitle: (name: string) => `Відео про ${name}`,
+    newsHeading: (name: string) => `Новини від ${name}`,
+    promoHeading: (name: string) => `Акції від ${name}`,
+    eventsHeading: (name: string) => `Події з ${name}`,
+    faqHeading: 'Часті запитання',
+    dim: { construction: 'Будівництво та нерухомість', reputation: 'Репутація та досвід', equipment: 'Обладнання та виробництво', management: 'Керуюча компанія' },
+    extras: { team: 'Команда', business: 'Бізнес та послуги' },
+    related: { allDevs: 'Усі забудовники Балі', complexes: 'Житлові комплекси Балі', apartments: 'Апартаменти на Балі', villas: 'Вілли та будинки', aptsIn: (d: string) => `Апартаменти в ${d}` },
+    faq: (name: string) => [
+      { q: `Скільки проєктів має ${name} на Балі?`,
+        a: `Активні проєкти ${name} наведені вище на цій сторінці. Кожен проєкт — це окрема картка з фото, районом і датою здачі.` },
+      { q: `Як перевірити, чи ${name} надійний?`,
+        a: 'Перевірте чотири сигнали: кількість зданих проєктів, активний дозвіл PBG/SLF на поточному будівництві, форму власності (leasehold / freehold) та наявність реальної керуючої компанії.' },
+      { q: `Чи можу я купити юніт у ${name} безпосередньо?`,
+        a: 'Так — більшість забудовників Балі продають безпосередньо без посередників. Угода укладається у нотаріуса PPAT, оплата йде за графіком, прив’язаним до етапів будівництва.' },
+      { q: 'Що слід перевірити перед покупкою?',
+        a: 'Термін leasehold та умови продовження, дозволи PBG і SLF, призначення землі, підключення комунікацій і наявність керуючої компанії. Це дає впевненість у юридичній чистоті угоди та можливості легально здавати нерухомість в оренду.' },
+    ],
+  },
 } as const
 
 export async function generateDeveloperMetadata(slug: string, lang: Lang) {
@@ -719,7 +781,7 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
         {aiText && (
           <section className="mb-10">
             <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">{c.aboutHeading}</h2>
-            <ExpandableText className="max-w-3xl" more={pickCopy({ ru: 'Подробнее', en: 'Read more', id: 'Selengkapnya', fr: 'En savoir plus', de: 'Mehr anzeigen', zh: '展开', nl: 'Meer', ban: 'Selengkapnya' }, lang)} less={pickCopy({ ru: 'Свернуть', en: 'Show less', id: 'Tutup', fr: 'Réduire', de: 'Weniger', zh: '收起', nl: 'Minder', ban: 'Tutup' }, lang)}>
+            <ExpandableText className="max-w-3xl" more={pickCopy({ ru: 'Подробнее', en: 'Read more', id: 'Selengkapnya', fr: 'En savoir plus', de: 'Mehr anzeigen', zh: '展开', nl: 'Meer', ban: 'Selengkapnya', pl: 'Więcej', uk: 'Докладніше' }, lang)} less={pickCopy({ ru: 'Свернуть', en: 'Show less', id: 'Tutup', fr: 'Réduire', de: 'Weniger', zh: '收起', nl: 'Minder', ban: 'Tutup', pl: 'Zwiń', uk: 'Згорнути' }, lang)}>
               <div className="prose-balinsky text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
                 {aiText}
               </div>

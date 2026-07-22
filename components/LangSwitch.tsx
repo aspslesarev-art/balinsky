@@ -14,7 +14,7 @@ export function LangSwitch({ className = '' }: { className?: string }) {
   const pathname = usePathname() ?? '/'
   const router = useRouter()
   const current: Lang = detectLang(pathname)
-  const label = pickCopy({ ru: 'Язык', en: 'Language', id: 'Bahasa', fr: 'Langue', de: 'Sprache', zh: '语言', nl: 'Taal', ban: 'Basa' }, current)
+  const label = pickCopy({ ru: 'Язык', en: 'Language', id: 'Bahasa', fr: 'Langue', de: 'Sprache', zh: '语言', nl: 'Taal', ban: 'Basa', pl: 'Język', uk: 'Мова' }, current)
 
   return (
     <label className={`relative inline-flex items-center ${className}`}>

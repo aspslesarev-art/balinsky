@@ -76,6 +76,40 @@ const TITLE_FR: Record<string, string> = {
   international_school: 'Écoles internationales',
 }
 
+// PL titles per category key.
+const TITLE_PL: Record<string, string> = {
+  beach: 'Plaże',
+  restaurant: 'Restauracje',
+  cafe: 'Kawiarnie',
+  nightlife: 'Bary i kluby',
+  attraction: 'Atrakcje',
+  school: 'Szkoły',
+  preschool: 'Żłobki i przedszkola',
+  supermarket: 'Supermarkety',
+  pharmacy: 'Apteki',
+  hospital: 'Szpitale i kliniki',
+  wellness: 'Joga i fitness',
+  beachclub: 'Kluby plażowe',
+  international_school: 'Szkoły międzynarodowe',
+}
+
+// UK titles per category key.
+const TITLE_UK: Record<string, string> = {
+  beach: 'Пляжі',
+  restaurant: 'Ресторани',
+  cafe: 'Кафе',
+  nightlife: 'Бари та клуби',
+  attraction: 'Визначні місця',
+  school: 'Школи',
+  preschool: 'Ясла та дитячі садки',
+  supermarket: 'Супермаркети',
+  pharmacy: 'Аптеки',
+  hospital: 'Лікарні та клініки',
+  wellness: 'Йога та фітнес',
+  beachclub: 'Пляжні клуби',
+  international_school: 'Міжнародні школи',
+}
+
 const COPY = {
   ru: {
     h2: 'Что рядом',
@@ -125,11 +159,23 @@ const COPY = {
     onMap: 'Cingak ring peta',
     free: 'gratis',
   },
+  pl: {
+    h2: 'Co jest w pobliżu',
+    subtitle: 'Popularne miejsca w pobliżu — dane z Google Maps',
+    onMap: 'Zobacz na mapie',
+    free: 'bezpłatnie',
+  },
+  uk: {
+    h2: 'Що поруч',
+    subtitle: 'Популярні місця поблизу — дані з Google Maps',
+    onMap: 'Переглянути на карті',
+    free: 'безкоштовно',
+  },
 } as const
 
 function fmtDistance(km: number, lang: Lang): string {
-  const mUnit = pickCopy({ ru: 'м', en: 'm', id: 'm', fr: 'm', de: 'm', zh: '米', nl: 'm', ban: 'm' }, lang)
-  const kmUnit = pickCopy({ ru: 'км', en: 'km', id: 'km', fr: 'km', de: 'km', zh: '公里', nl: 'km', ban: 'km' }, lang)
+  const mUnit = pickCopy({ ru: 'м', en: 'm', id: 'm', fr: 'm', de: 'm', zh: '米', nl: 'm', ban: 'm', pl: 'm', uk: 'м' }, lang)
+  const kmUnit = pickCopy({ ru: 'км', en: 'km', id: 'km', fr: 'km', de: 'km', zh: '公里', nl: 'km', ban: 'km', pl: 'km', uk: 'км' }, lang)
   if (km < 1) return `${Math.round(km * 1000)} ${mUnit}`
   return `${km.toFixed(1)} ${kmUnit}`
 }
@@ -202,7 +248,11 @@ export function NearbyPlaces({
               ? (TITLE_ID[cat.key] ?? loc(cat.title, lang))
               : lang === 'fr'
                 ? (TITLE_FR[cat.key] ?? loc(cat.title, lang))
-                : (TITLE_EN[cat.key] ?? loc(cat.title, lang))
+                : lang === 'pl'
+                  ? (TITLE_PL[cat.key] ?? loc(cat.title, lang))
+                  : lang === 'uk'
+                    ? (TITLE_UK[cat.key] ?? cat.title)
+                    : (TITLE_EN[cat.key] ?? loc(cat.title, lang))
           return (
             <button
               key={cat.key}
@@ -229,8 +279,8 @@ export function NearbyPlaces({
           className="hidden md:inline-flex items-center gap-1 mt-2.5 text-[13px] font-medium text-[var(--color-primary)] hover:gap-1.5 transition-all cursor-pointer"
         >
           {expanded
-            ? pickCopy({ ru: 'Свернуть', en: 'Collapse', id: 'Ciutkan', fr: 'Réduire', de: 'Einklappen', zh: '收起', nl: 'Inklappen', ban: 'Ciutang' }, lang)
-            : pickCopy({ ru: 'Показать все', en: 'Show all', id: 'Tampilkan semua', fr: 'Tout afficher', de: 'Alle anzeigen', zh: '显示全部', nl: 'Alles tonen', ban: 'Cingakin makejang' }, lang)}
+            ? pickCopy({ ru: 'Свернуть', en: 'Collapse', id: 'Ciutkan', fr: 'Réduire', de: 'Einklappen', zh: '收起', nl: 'Inklappen', ban: 'Ciutang', pl: 'Zwiń', uk: 'Згорнути' }, lang)
+            : pickCopy({ ru: 'Показать все', en: 'Show all', id: 'Tampilkan semua', fr: 'Tout afficher', de: 'Alle anzeigen', zh: '显示全部', nl: 'Alles tonen', ban: 'Cingakin makejang', pl: 'Pokaż wszystkie', uk: 'Показати всі' }, lang)}
           <ChevronDown size={15} className={`transition-transform ${expanded ? 'rotate-180' : ''}`} />
         </button>
       )}
@@ -293,8 +343,8 @@ export function NearbyPlaces({
           className="hidden md:inline-flex items-center gap-1 mt-4 text-[13px] font-medium text-[var(--color-primary)] hover:gap-1.5 transition-all cursor-pointer"
         >
           {placesExpanded
-            ? pickCopy({ ru: 'Свернуть', en: 'Collapse', id: 'Ciutkan', fr: 'Réduire', de: 'Einklappen', zh: '收起', nl: 'Inklappen', ban: 'Ciutang' }, lang)
-            : `${pickCopy({ ru: 'Показать остальные', en: 'Show the rest', id: 'Tampilkan sisanya', fr: 'Afficher le reste', de: 'Rest anzeigen', zh: '显示其余', nl: 'Toon de rest', ban: 'Cingakin sané lianan' }, lang)} · ${places.length - 3}`}
+            ? pickCopy({ ru: 'Свернуть', en: 'Collapse', id: 'Ciutkan', fr: 'Réduire', de: 'Einklappen', zh: '收起', nl: 'Inklappen', ban: 'Ciutang', pl: 'Zwiń', uk: 'Згорнути' }, lang)
+            : `${pickCopy({ ru: 'Показать остальные', en: 'Show the rest', id: 'Tampilkan sisanya', fr: 'Afficher le reste', de: 'Rest anzeigen', zh: '显示其余', nl: 'Toon de rest', ban: 'Cingakin sané lianan', pl: 'Pokaż pozostałe', uk: 'Показати решту' }, lang)} · ${places.length - 3}`}
           <ChevronDown size={15} className={`transition-transform ${placesExpanded ? 'rotate-180' : ''}`} />
         </button>
       )}

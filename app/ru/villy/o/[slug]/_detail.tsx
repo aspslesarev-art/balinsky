@@ -445,6 +445,98 @@ const COPY = {
     metaFallback: (title: string, district: string | null, price: string | null) =>
       `${title}${district ? ` ring ${district}` : ''} ring Bali${price ? `. Aji ${price}.` : '.'} Foto, luas, tanah, dokumen.`,
   },
+  pl: {
+    home: 'Strona główna', villasCrumb: 'Wille',
+    sqm: 'm²', house: 'dom', land: 'działka', bali: 'Bali',
+    completed: 'Ukończony',
+    factsHeading: 'Parametry',
+    factBedrooms: 'Sypialnie', factHouse: 'Dom', factLand: 'Działka', factCompletion: 'Oddanie',
+    factPermits: 'Pozwolenia', factLeasehold: 'Leasehold', factDistrict: 'Rejon',
+    factAirport: 'Na lotnisko', factStyle: 'Styl wnętrza', factPriceM2: 'Cena za m²',
+    factLeaseValue: (l: string) => `${l} lat`,
+    descHeading: 'Opis',
+    complexLabel: 'Kompleks mieszkaniowy',
+    completedShort: 'Ukończony',
+    completion: (y: string) => `Oddanie ${y}`,
+    units: (n: number) => `${n} lokali`,
+    openComplex: 'Otwórz stronę kompleksu',
+    sellingSeparately: 'Sprzedawana oddzielnie (poza kompleksem)',
+    developerLabel: 'Deweloper',
+    openDeveloper: 'Otwórz stronę dewelopera',
+    videosTitleComplex: (n: string) => `Filmy: ${n}`,
+    videosTitleDev: (n: string) => `Filmy: ${n}`,
+    videosTitleDefault: 'Filmy',
+    otherVillas: (d: string) => `Inne wille w ${d}`,
+    relatedHeading: 'Powiązane',
+    related: {
+      allVillas: 'Wszystkie wille i domy na Bali',
+      apartments: 'Apartamenty na Bali',
+      complexes: 'Kompleksy mieszkaniowe',
+      developers: 'Deweloperzy na Bali',
+      villasIn: (d: string) => `Wille w ${d}`,
+    },
+    faqHeading: 'Najczęściej zadawane pytania',
+    faq: (title: string, district: string | null, price: string | null, lease: string | null, land: number | null) => [
+      { q: `Ile kosztuje ${title}?`,
+        a: price ? `Aktualna cena ofertowa to ${price}. Bieżąca cena jest zawsze pokazana w karcie powyżej.` : 'Cena na zapytanie. Skontaktuj się z nami, aby poznać aktualną cenę.' },
+      { q: `Gdzie znajduje się ${title}?`,
+        a: district ? `Nieruchomość znajduje się w ${district}, Bali. Dokładne współrzędne na mapie powyżej.` : 'Dokładna lokalizacja i współrzędne na mapie powyżej.' },
+      { q: 'Czy obcokrajowiec może kupić willę na Bali?',
+        a: 'Tak. Transakcja odbywa się w ramach leasehold (długoterminowa dzierżawa gruntu) u notariusza PPAT lub poprzez spółkę PT PMA.' },
+      { q: 'Jaki jest okres leasehold?',
+        a: lease ? `Podstawowy okres to ${lease} lat. Sprawdź warunki przedłużenia u dewelopera.` : 'Sprawdź okres leasehold u dewelopera — zazwyczaj 25–80 lat z opcją przedłużenia.' },
+      { q: 'Jaka działka należy do willi?',
+        a: land != null ? `${land} m² prywatnej działki przy willi.` : 'Powierzchnia działki na zapytanie — pokazana w karcie powyżej, gdy jest dostępna.' },
+    ],
+    metaFallback: (title: string, district: string | null, price: string | null) =>
+      `${title}${district ? ` w ${district}` : ''} na Bali${price ? `. Cena ${price}.` : '.'} Zdjęcia, układ, działka, dokumenty.`,
+  },
+  uk: {
+    home: 'Головна', villasCrumb: 'Вілли',
+    sqm: 'м²', house: 'будинок', land: 'ділянка', bali: 'Балі',
+    completed: 'Зданий',
+    factsHeading: 'Характеристики',
+    factBedrooms: 'Спальні', factHouse: 'Будинок', factLand: 'Ділянка', factCompletion: 'Здача',
+    factPermits: 'Дозволи', factLeasehold: 'Leasehold', factDistrict: 'Район',
+    factAirport: 'До аеропорту', factStyle: 'Стиль інтер’єру', factPriceM2: 'Ціна за м²',
+    factLeaseValue: (l: string) => `${l} років`,
+    descHeading: 'Опис',
+    complexLabel: 'Житловий комплекс',
+    completedShort: 'Зданий',
+    completion: (y: string) => `Здача ${y}`,
+    units: (n: number) => `${n} юнітів`,
+    openComplex: 'Відкрити сторінку комплексу',
+    sellingSeparately: 'Продається окремо (поза комплексом)',
+    developerLabel: 'Забудовник',
+    openDeveloper: 'Відкрити сторінку забудовника',
+    videosTitleComplex: (n: string) => `Відео: ${n}`,
+    videosTitleDev: (n: string) => `Відео: ${n}`,
+    videosTitleDefault: 'Відео',
+    otherVillas: (d: string) => `Інші вілли в ${d}`,
+    relatedHeading: 'Схоже',
+    related: {
+      allVillas: 'Усі вілли та будинки Балі',
+      apartments: 'Апартаменти на Балі',
+      complexes: 'Житлові комплекси',
+      developers: 'Забудовники Балі',
+      villasIn: (d: string) => `Вілли в ${d}`,
+    },
+    faqHeading: 'Часті запитання',
+    faq: (title: string, district: string | null, price: string | null, lease: string | null, land: number | null) => [
+      { q: `Скільки коштує ${title}?`,
+        a: price ? `Поточна ціна пропозиції — ${price}. Актуальна ціна завжди показана в картці вище.` : 'Ціна за запитом. Зв’яжіться з нами, щоб дізнатися актуальну ціну.' },
+      { q: `Де розташований ${title}?`,
+        a: district ? `Об’єкт розташований у ${district}, Балі. Точні координати на карті вище.` : 'Точне розташування та координати на карті вище.' },
+      { q: 'Чи може іноземець купити віллу на Балі?',
+        a: 'Так. Угода укладається за схемою leasehold (довгострокова оренда землі) у нотаріуса PPAT або через компанію PT PMA.' },
+      { q: 'Який термін leasehold?',
+        a: lease ? `Базовий термін — ${lease} років. Уточніть умови продовження у забудовника.` : 'Уточніть термін leasehold у забудовника — зазвичай 25–80 років з можливістю продовження.' },
+      { q: 'Яка ділянка йде разом з віллою?',
+        a: land != null ? `${land} м² приватної ділянки разом з віллою.` : 'Площа ділянки за запитом — показана в картці вище, якщо доступна.' },
+    ],
+    metaFallback: (title: string, district: string | null, price: string | null) =>
+      `${title}${district ? ` у ${district}` : ''} на Балі${price ? `. Ціна ${price}.` : '.'} Фото, планування, ділянка, документи.`,
+  },
 } as const
 
 // Localized "in <district>" connective for the fallback meta title (used
@@ -1029,7 +1121,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
             ? {
                 additionalProperty: [{
                   '@type': 'PropertyValue',
-                  name: pickCopy({ ru: 'Площадь участка', en: 'Land area', id: 'Luas tanah', fr: 'Surface du terrain', de: 'Grundstücksfläche', zh: '土地面积', nl: 'Perceeloppervlak', ban: 'Luas tanah' }, lang),
+                  name: pickCopy({ ru: 'Площадь участка', en: 'Land area', id: 'Luas tanah', fr: 'Surface du terrain', de: 'Grundstücksfläche', zh: '土地面积', nl: 'Perceeloppervlak', ban: 'Luas tanah', pl: 'Powierzchnia działki', uk: 'Площа ділянки' }, lang),
                   value: land,
                   unitCode: 'MTK',
                 }],
@@ -1189,7 +1281,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
             <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
               {c.descHeading}
             </h2>
-            <ExpandableText className="max-w-3xl" more={pickCopy({ ru: 'Подробнее', en: 'Read more', id: 'Selengkapnya', fr: 'En savoir plus', de: 'Mehr anzeigen', zh: '展开', nl: 'Meer', ban: 'Selengkapnya' }, lang)} less={pickCopy({ ru: 'Свернуть', en: 'Show less', id: 'Tutup', fr: 'Réduire', de: 'Weniger', zh: '收起', nl: 'Minder', ban: 'Tutup' }, lang)}>
+            <ExpandableText className="max-w-3xl" more={pickCopy({ ru: 'Подробнее', en: 'Read more', id: 'Selengkapnya', fr: 'En savoir plus', de: 'Mehr anzeigen', zh: '展开', nl: 'Meer', ban: 'Selengkapnya', pl: 'Więcej', uk: 'Докладніше' }, lang)} less={pickCopy({ ru: 'Свернуть', en: 'Show less', id: 'Tutup', fr: 'Réduire', de: 'Weniger', zh: '收起', nl: 'Minder', ban: 'Tutup', pl: 'Zwiń', uk: 'Згорнути' }, lang)}>
               <div className="prose-balinsky text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
                 {seoText}
               </div>

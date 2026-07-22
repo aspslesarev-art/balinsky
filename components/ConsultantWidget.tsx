@@ -145,11 +145,11 @@ function parseListingPath(pathname: string): { kind: ListingKind; slug: string }
 
 function contextualGreeting(kind: ListingKind, title: string | null, lang: Lang): Message {
   const obj = pickCopy({
-    villa: { ru: 'эту виллу', en: 'this villa', id: 'vila ini', fr: 'cette villa', de: 'diese Villa', zh: '这套别墅', nl: 'deze villa', ban: 'vila puniki' },
-    apartment: { ru: 'эти апартаменты', en: 'these apartments', id: 'apartemen ini', fr: 'ces appartements', de: 'dieses Apartment', zh: '这套公寓', nl: 'dit appartement', ban: 'apartemen puniki' },
-    complex: { ru: 'этот комплекс', en: 'this complex', id: 'kompleks ini', fr: 'cette résidence', de: 'diese Wohnanlage', zh: '这个住宅区', nl: 'dit wooncomplex', ban: 'kompleks puniki' },
+    villa: { ru: 'эту виллу', en: 'this villa', id: 'vila ini', fr: 'cette villa', de: 'diese Villa', zh: '这套别墅', nl: 'deze villa', ban: 'vila puniki', pl: 'tę willę', uk: 'цю віллу' },
+    apartment: { ru: 'эти апартаменты', en: 'these apartments', id: 'apartemen ini', fr: 'ces appartements', de: 'dieses Apartment', zh: '这套公寓', nl: 'dit appartement', ban: 'apartemen puniki', pl: 'ten apartament', uk: 'ці апартаменти' },
+    complex: { ru: 'этот комплекс', en: 'this complex', id: 'kompleks ini', fr: 'cette résidence', de: 'diese Wohnanlage', zh: '这个住宅区', nl: 'dit wooncomplex', ban: 'kompleks puniki', pl: 'ten kompleks', uk: 'цей комплекс' },
   }[kind], lang)
-  const name = title ? (lang === 'ru' ? `«${title}»` : `“${title}”`) : pickCopy({ ru: 'этот объект', en: 'this listing', id: 'properti ini', fr: 'ce bien', de: 'dieses Objekt', zh: '这处房产', nl: 'dit object', ban: 'properti puniki' }, lang)
+  const name = title ? (lang === 'ru' ? `«${title}»` : `“${title}”`) : pickCopy({ ru: 'этот объект', en: 'this listing', id: 'properti ini', fr: 'ce bien', de: 'dieses Objekt', zh: '这处房产', nl: 'dit object', ban: 'properti puniki', pl: 'ten obiekt', uk: 'цей обʼєкт' }, lang)
   const content = pickCopy({
     ru: `Вижу, вы смотрите ${name}. Рассказать про ${obj}? Сверюсь с базой и отвечу точно — документы, реальная доходность, сроки сдачи, что рядом, риски.\n\n[CHIPS] Рассказать про объект | Документы и риски | Реальная доходность | Когда сдают? | Что рядом`,
     en: `You're looking at ${name}. Want me to walk you through ${obj}? I'll check the base and answer precisely — documents, real yield, handover date, what's nearby, risks.\n\n[CHIPS] Tell me about it | Documents & risks | Real yield | Handover date | What's nearby`,
@@ -159,6 +159,8 @@ function contextualGreeting(kind: ListingKind, title: string | null, lang: Lang)
     zh: `您正在查看${name}。要我为您介绍${obj}吗？我会核对数据库并给出准确回答——文件、真实收益、交房时间、周边配套、风险。\n\n[CHIPS] 介绍一下这处房产 | 文件与风险 | 真实收益 | 何时交房？ | 周边有什么`,
     nl: `U bekijkt ${name}. Zal ik u ${obj} toelichten? Ik controleer de database en antwoord nauwkeurig — documenten, reëel rendement, opleverdatum, wat er in de buurt is, risico's.\n\n[CHIPS] Vertel me erover | Documenten & risico's | Reëel rendement | Opleverdatum | Wat is er in de buurt`,
     ban: `Ragane sedeng nyingakin ${name}. Dados tiang nyritayang indik ${obj}? Tiang jagi ngecek basis data tur nyawis sane patut — dokumen, hasil nyata, galah serah terima, napi sane wenten ring kiwangan, risiko.\n\n[CHIPS] Critayang indik properti puniki | Dokumen & risiko | Hasil nyata | Galah serah terima? | Napi sane wenten ring kiwangan`,
+    pl: `Oglądasz ${name}. Chcesz, żebym opowiedziała o ${obj}? Sprawdzę bazę i odpowiem precyzyjnie — dokumenty, realna rentowność, termin oddania, co jest w pobliżu, ryzyka.\n\n[CHIPS] Opowiedz o obiekcie | Dokumenty i ryzyka | Realna rentowność | Termin oddania | Co jest w pobliżu`,
+    uk: `Ви дивитеся ${name}. Розповісти про ${obj}? Звірюся з базою і відповім точно — документи, реальна дохідність, терміни здачі, що поруч, ризики.\n\n[CHIPS] Розповісти про обʼєкт | Документи та ризики | Реальна дохідність | Коли здають? | Що поруч`,
   }, lang)
   return { role: 'assistant', greeting: true, content }
 }
@@ -455,6 +457,78 @@ const COPY = {
       micError: 'Nenten prasida ngidupang mikrofon',
     },
   },
+  pl: {
+    triggerAria: 'Otwórz AI-brokera Balisę',
+    triggerName: 'Balisa',
+    title: 'Balisa',
+    subtitle: 'AI-broker · może się mylić',
+    closeAria: 'Zamknij',
+    typing: 'pisze…',
+    placeholder: 'Czego szukasz? Np. willi w Canggu z 3 sypialniami',
+    listening: 'Słucham…',
+    sendError: 'Nie udało się wysłać wiadomości. Spróbuj ponownie.',
+    micDenied: 'Brak dostępu do mikrofonu.',
+    micError: (e: string) => `Błąd rozpoznawania: ${e}`,
+    voiceStartAria: 'Nagraj głosem',
+    voiceStopAria: 'Zatrzymaj nagrywanie',
+    voiceStartTitle: 'Nagraj głosem',
+    voiceStopTitle: 'Zatrzymaj',
+    sendAria: 'Wyślij',
+    perMonth: ' / mies.',
+    perSqm: '/ m²',
+    voiceLang: 'pl-PL',
+    rec: {
+      recording: 'Nagrywanie',
+      transcribing: 'Transkrybuję…',
+      retrying: 'Zakłócenie sieci, ponawiam…',
+      failed: 'Nie udało się przepisać',
+      silentTitle: 'Milczysz',
+      silentHint: 'Zakończyć czy nagrywać dalej?',
+      finishBtn: 'Gotowe',
+      continueBtn: 'Nagrywaj dalej',
+      stopBtn: 'Zatrzymaj',
+      cancelBtn: 'Anuluj',
+      retryBtn: 'Ponów',
+      micDenied: 'Brak dostępu do mikrofonu',
+      micError: 'Nie udało się uruchomić mikrofonu',
+    },
+  },
+  uk: {
+    triggerAria: 'Відкрити AI-брокера Балісу',
+    triggerName: 'Баліса',
+    title: 'Баліса',
+    subtitle: 'AI-брокер · може помилятися',
+    closeAria: 'Закрити',
+    typing: 'друкує…',
+    placeholder: 'Що шукаєте? Наприклад, віллу в Чангу з 3 спальнями',
+    listening: 'Слухаю…',
+    sendError: 'Не вдалося надіслати повідомлення. Спробуйте ще раз.',
+    micDenied: 'Доступ до мікрофона заборонено.',
+    micError: (e: string) => `Помилка розпізнавання: ${e}`,
+    voiceStartAria: 'Записати голосом',
+    voiceStopAria: 'Зупинити запис',
+    voiceStartTitle: 'Записати голосом',
+    voiceStopTitle: 'Зупинити',
+    sendAria: 'Надіслати',
+    perMonth: ' / міс',
+    perSqm: '/ м²',
+    voiceLang: 'uk-UA',
+    rec: {
+      recording: 'Запис',
+      transcribing: 'Розпізнаю…',
+      retrying: 'Збій мережі, пробую ще раз…',
+      failed: 'Не вдалося розпізнати',
+      silentTitle: 'Ви мовчите',
+      silentHint: 'Завершити чи продовжити?',
+      finishBtn: 'Готово',
+      continueBtn: 'Продовжити',
+      stopBtn: 'Зупинити',
+      cancelBtn: 'Скасувати',
+      retryBtn: 'Повторити',
+      micDenied: 'Доступ до мікрофона заборонено',
+      micError: 'Не вдалося увімкнути мікрофон',
+    },
+  },
 } as const
 
 // Call session controls lifted out of the ConversationProvider subtree.
@@ -604,6 +678,8 @@ export function ConsultantWidget() {
       zh: `我们刚通过电话聊过——这是我在找的：${turns.join('. ')}。请现在为我挑选匹配的选项。`,
       nl: `We hebben net gebeld — dit is wat ik zoek: ${turns.join('. ')}. Kies nu alsjeblieft passende opties.`,
       ban: `Iwau tiang wau maderbe telepon — puniki sane rereh tiang: ${turns.join('. ')}. Ngiring pilihang opsi sane cocok mangkin.`,
+      pl: `Właśnie rozmawialiśmy przez telefon — oto czego szukam: ${turns.join('. ')}. Dobierz teraz pasujące opcje.`,
+      uk: `Ми щойно поговорили по дзвінку — ось що я шукаю: ${turns.join('. ')}. Підбери підхожі варіанти зараз.`,
     }, lang)
     setTimeout(() => { void sendText(brief) }, 80)
   }
@@ -623,7 +699,7 @@ export function ConsultantWidget() {
       stopRingback()
       callActiveRef.current = false
       setCallState('idle')
-      setError(pickCopy({ ru: 'Не удалось начать звонок.', en: "Couldn't start the call.", id: 'Gagal memulai panggilan.', fr: "Impossible de démarrer l'appel.", de: 'Anruf konnte nicht gestartet werden.', zh: '无法发起通话。', nl: 'Kan de oproep niet starten.', ban: 'Nenten prasida ngawitin telepon.' }, lang))
+      setError(pickCopy({ ru: 'Не удалось начать звонок.', en: "Couldn't start the call.", id: 'Gagal memulai panggilan.', fr: "Impossible de démarrer l'appel.", de: 'Anruf konnte nicht gestartet werden.', zh: '无法发起通话。', nl: 'Kan de oproep niet starten.', ban: 'Nenten prasida ngawitin telepon.', pl: 'Nie udało się rozpocząć połączenia.', uk: 'Не вдалося почати дзвінок.' }, lang))
     }
   }
   const endCall = () => { void finishCall(true) }
@@ -1227,16 +1303,18 @@ export function ConsultantWidget() {
       zh: '给我简要介绍一下这处房产——重点：它是什么、文件（PBG/SLF）、真实收益、交房时间、周边配套以及有无风险。',
       nl: 'Geef me een kort overzicht van dit object — het belangrijkste: wat het is, documenten (PBG/SLF), reëel rendement, opleverdatum, wat er in de buurt is en eventuele risico\'s.',
       ban: 'Icenin tiang ringkesan bawak indik properti puniki — sane pinih utama: napi puniki, dokumen (PBG/SLF), hasil nyata, galah serah terima, napi sane wenten ring kiwangan tur wenten risiko.',
+      pl: 'Opowiedz mi krótko o tym obiekcie — najważniejsze: co to jest, dokumenty (PBG/SLF), realna rentowność, termin oddania, co jest w pobliżu i czy są ryzyka.',
+      uk: 'Розкажи коротко про цей обʼєкт — найголовніше: що це, документи (PBG/SLF), реальна дохідність, терміни здачі, що поруч і чи є ризики.',
     }, lang)
     // Defer one tick so the panel paints before the request kicks off.
     setTimeout(() => { void sendText(prompt) }, 60)
   }
 
   const callStatusText = callState === 'ringing'
-    ? pickCopy({ ru: 'соединяем…', en: 'connecting…', id: 'menyambungkan…', fr: 'connexion…', de: 'verbinden…', zh: '正在接通…', nl: 'verbinden…', ban: 'nyambungang…' }, lang)
+    ? pickCopy({ ru: 'соединяем…', en: 'connecting…', id: 'menyambungkan…', fr: 'connexion…', de: 'verbinden…', zh: '正在接通…', nl: 'verbinden…', ban: 'nyambungang…', pl: 'łączymy…', uk: 'зʼєднуємо…' }, lang)
     : isSpeaking
-      ? pickCopy({ ru: 'Балиса говорит…', en: 'Balisa is speaking…', id: 'Balisa sedang berbicara…', fr: 'Balisa parle…', de: 'Balisa spricht…', zh: 'Balisa 正在说话…', nl: 'Balisa is aan het woord…', ban: 'Balisa sedeng mabaos…' }, lang)
-      : pickCopy({ ru: 'Слушаю вас…', en: 'Listening…', id: 'Mendengarkan…', fr: 'À l\'écoute…', de: 'Ich höre zu…', zh: '正在聆听…', nl: 'Ik luister…', ban: 'Mirengang…' }, lang)
+      ? pickCopy({ ru: 'Балиса говорит…', en: 'Balisa is speaking…', id: 'Balisa sedang berbicara…', fr: 'Balisa parle…', de: 'Balisa spricht…', zh: 'Balisa 正在说话…', nl: 'Balisa is aan het woord…', ban: 'Balisa sedeng mabaos…', pl: 'Balisa mówi…', uk: 'Баліса говорить…' }, lang)
+      : pickCopy({ ru: 'Слушаю вас…', en: 'Listening…', id: 'Mendengarkan…', fr: 'À l\'écoute…', de: 'Ich höre zu…', zh: '正在聆听…', nl: 'Ik luister…', ban: 'Mirengang…', pl: 'Słucham…', uk: 'Слухаю вас…' }, lang)
 
   return (
     <>
@@ -1261,13 +1339,13 @@ export function ConsultantWidget() {
               <span className={`absolute -inset-1.5 rounded-full ring-4 ${callState === 'ringing' || isSpeaking ? 'ring-[#22C55E]/40 animate-ping' : 'ring-[#22C55E]/20'}`} />
             </div>
             <div>
-              <div className="text-[22px] font-semibold text-[#111827]">{pickCopy({ ru: 'Балиса', en: 'Balisa', id: 'Balisa', fr: 'Balisa', de: 'Balisa', zh: 'Balisa', nl: 'Balisa', ban: 'Balisa' }, lang)}</div>
+              <div className="text-[22px] font-semibold text-[#111827]">{pickCopy({ ru: 'Балиса', en: 'Balisa', id: 'Balisa', fr: 'Balisa', de: 'Balisa', zh: 'Balisa', nl: 'Balisa', ban: 'Balisa', pl: 'Balisa', uk: 'Баліса' }, lang)}</div>
               <div className="text-[14px] text-[var(--color-text-muted)] mt-1">{callStatusText}</div>
             </div>
             <button
               type="button"
               onClick={endCall}
-              aria-label={pickCopy({ ru: 'Завершить звонок', en: 'End call', id: 'Akhiri panggilan', fr: 'Terminer l\'appel', de: 'Anruf beenden', zh: '结束通话', nl: 'Gesprek beëindigen', ban: 'Muputang telepon' }, lang)}
+              aria-label={pickCopy({ ru: 'Завершить звонок', en: 'End call', id: 'Akhiri panggilan', fr: 'Terminer l\'appel', de: 'Anruf beenden', zh: '结束通话', nl: 'Gesprek beëindigen', ban: 'Muputang telepon', pl: 'Zakończ połączenie', uk: 'Завершити дзвінок' }, lang)}
               className="mt-1 inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#EF4444] text-white hover:bg-[#DC2626] shadow-lg transition-colors"
             >
               <PhoneOff size={26} />
@@ -1282,8 +1360,8 @@ export function ConsultantWidget() {
           <button
             type="button"
             onClick={startCall}
-            aria-label={pickCopy({ ru: 'Позвонить Балисе', en: 'Call Balisa', id: 'Telepon Balisa', fr: 'Appeler Balisa', de: 'Balisa anrufen', zh: '致电 Balisa', nl: 'Bel Balisa', ban: 'Nelepon Balisa' }, lang)}
-            title={pickCopy({ ru: 'Позвонить Балисе', en: 'Call Balisa', id: 'Telepon Balisa', fr: 'Appeler Balisa', de: 'Balisa anrufen', zh: '致电 Balisa', nl: 'Bel Balisa', ban: 'Nelepon Balisa' }, lang)}
+            aria-label={pickCopy({ ru: 'Позвонить Балисе', en: 'Call Balisa', id: 'Telepon Balisa', fr: 'Appeler Balisa', de: 'Balisa anrufen', zh: '致电 Balisa', nl: 'Bel Balisa', ban: 'Nelepon Balisa', pl: 'Zadzwoń do Balisy', uk: 'Зателефонувати Балісі' }, lang)}
+            title={pickCopy({ ru: 'Позвонить Балисе', en: 'Call Balisa', id: 'Telepon Balisa', fr: 'Appeler Balisa', de: 'Balisa anrufen', zh: '致电 Balisa', nl: 'Bel Balisa', ban: 'Nelepon Balisa', pl: 'Zadzwoń do Balisy', uk: 'Зателефонувати Балісі' }, lang)}
             className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#22C55E] hover:bg-[#16A34A] text-white shadow-lg transition-colors"
           >
             <Phone size={20} />
@@ -1317,7 +1395,7 @@ export function ConsultantWidget() {
           >
             <Image src="/balina.jpg" alt="" width={28} height={28} className="w-7 h-7 rounded-full object-cover shrink-0" />
             <span className="text-[12.5px] leading-snug text-[#111827]">
-              {pickCopy({ ru: 'Рассказать про этот объект?', en: 'Want the rundown on this one?', id: 'Mau tahu soal properti ini?', fr: 'Un aperçu de ce bien ?', de: 'Überblick zu diesem Objekt?', zh: '想了解这处房产吗？', nl: 'Meer weten over dit object?', ban: 'Meled uning indik properti puniki?' }, lang)}
+              {pickCopy({ ru: 'Рассказать про этот объект?', en: 'Want the rundown on this one?', id: 'Mau tahu soal properti ini?', fr: 'Un aperçu de ce bien ?', de: 'Überblick zu diesem Objekt?', zh: '想了解这处房产吗？', nl: 'Meer weten over dit object?', ban: 'Meled uning indik properti puniki?', pl: 'Opowiedzieć o tym obiekcie?', uk: 'Розповісти про цей обʼєкт?' }, lang)}
             </span>
           </button>
           <button
@@ -1382,10 +1460,10 @@ export function ConsultantWidget() {
                   <button
                     type="button"
                     onClick={() => {
-                      if (window.confirm(pickCopy({ ru: 'Очистить переписку?', en: 'Clear the chat history?', id: 'Hapus riwayat obrolan?', fr: 'Effacer l\'historique de la conversation ?', de: 'Chatverlauf löschen?', zh: '清除聊天记录？', nl: 'Chatgeschiedenis wissen?', ban: 'Kaicalang riwayat obrolan?' }, lang))) clearHistory()
+                      if (window.confirm(pickCopy({ ru: 'Очистить переписку?', en: 'Clear the chat history?', id: 'Hapus riwayat obrolan?', fr: 'Effacer l\'historique de la conversation ?', de: 'Chatverlauf löschen?', zh: '清除聊天记录？', nl: 'Chatgeschiedenis wissen?', ban: 'Kaicalang riwayat obrolan?', pl: 'Wyczyścić historię czatu?', uk: 'Очистити історію чату?' }, lang))) clearHistory()
                     }}
-                    aria-label={pickCopy({ ru: 'Очистить чат', en: 'Clear chat', id: 'Hapus obrolan', fr: 'Effacer la conversation', de: 'Chat löschen', zh: '清除聊天', nl: 'Chat wissen', ban: 'Kaicalang obrolan' }, lang)}
-                    title={pickCopy({ ru: 'Очистить чат', en: 'Clear chat', id: 'Hapus obrolan', fr: 'Effacer la conversation', de: 'Chat löschen', zh: '清除聊天', nl: 'Chat wissen', ban: 'Kaicalang obrolan' }, lang)}
+                    aria-label={pickCopy({ ru: 'Очистить чат', en: 'Clear chat', id: 'Hapus obrolan', fr: 'Effacer la conversation', de: 'Chat löschen', zh: '清除聊天', nl: 'Chat wissen', ban: 'Kaicalang obrolan', pl: 'Wyczyść czat', uk: 'Очистити чат' }, lang)}
+                    title={pickCopy({ ru: 'Очистить чат', en: 'Clear chat', id: 'Hapus obrolan', fr: 'Effacer la conversation', de: 'Chat löschen', zh: '清除聊天', nl: 'Chat wissen', ban: 'Kaicalang obrolan', pl: 'Wyczyść czat', uk: 'Очистити чат' }, lang)}
                     className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/60 hover:bg-white text-[#111827]"
                   >
                     <Trash2 size={16} />
@@ -1416,7 +1494,7 @@ export function ConsultantWidget() {
                     {m.source === 'manager' && (
                       <span className="self-start inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary-pressed)] text-[10px] font-medium uppercase tracking-wide">
                         <UserRound size={10} strokeWidth={2.4} />
-                        {pickCopy({ ru: 'Менеджер', en: 'Manager', id: 'Manajer', fr: 'Conseiller', de: 'Manager', zh: '经理', nl: 'Manager', ban: 'Manajer' }, lang)}
+                        {pickCopy({ ru: 'Менеджер', en: 'Manager', id: 'Manajer', fr: 'Conseiller', de: 'Manager', zh: '经理', nl: 'Manager', ban: 'Manajer', pl: 'Menedżer', uk: 'Менеджер' }, lang)}
                       </span>
                     )}
                     {text && <Bubble role={m.role}>{text}</Bubble>}

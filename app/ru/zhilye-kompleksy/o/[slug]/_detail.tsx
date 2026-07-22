@@ -620,6 +620,140 @@ const COPY = {
       `Kompleks ${name}${district ? ` ring ${district}` : ''} ring Bali.${types ? ` Tipe unit: ${types.toLowerCase()}.` : ''}${yearRaw ? ` Serah terima: ${yearRaw}.` : ''} Foto, aji, izin.`,
     sold: 'Kaadol',
   },
+  pl: {
+    home: 'Strona główna',
+    crumbComplexes: 'Kompleksy mieszkaniowe',
+    backToComplexes: 'Kompleksy mieszkaniowe',
+    bali: 'Bali',
+    completed: 'ukończony',
+    completion: (y: string) => `oddanie ${y}`,
+    units: (n: number) => `${n} lokali`,
+    unitsFrom: 'Lokale od',
+    keyFacts: 'Najważniejsze informacje',
+    factType: 'Typ lokalu',
+    factCompletion: 'Oddanie',
+    factCompletionDone: 'Ukończony',
+    factPermits: 'Pozwolenia',
+    factLeasehold: 'Leasehold',
+    factLeaseValue: (l: string) => `${l} lat`,
+    factUnits: 'Lokale',
+    factDistrict: 'Rejon',
+    factAirport: 'Na lotnisko',
+    progress: 'Postęp budowy',
+    statusUnknown: 'status nieznany',
+    estimate: 'szacunkowo',
+    aboutPrefix: 'O',
+    availableUnits: 'Dostępne lokale',
+    publishedSuffix: (n: number, kind: 'mixed' | 'villa' | 'apartment') => {
+      const word = kind === 'mixed' ? 'lokali' : kind === 'villa' ? 'willi' : 'apartamentów'
+      return `${n} opublikowanych ${word} w`
+    },
+    developer: 'Deweloper',
+    builtBy: 'Zrealizowany przez',
+    allDevelopers: 'Wszyscy deweloperzy na Bali',
+    docsHeading: 'Dokumenty i materiały',
+    location: 'Lokalizacja',
+    locationLine: (d: string | null) => `${d ? `${d}, ` : ''}Bali, Indonezja`,
+    openInMaps: 'Otwórz w Mapach Google',
+    videosTitle: (n: string) => `Filmy o ${n}`,
+    otherProjectsIn: (d: string) => `Inne projekty w ${d}`,
+    relatedHeading: 'Powiązane',
+    related: {
+      allComplexes: 'Wszystkie kompleksy mieszkaniowe na Bali',
+      apartments: 'Apartamenty na Bali',
+      villas: 'Wille i domy',
+      developers: 'Deweloperzy na Bali',
+      complexesIn: (d: string) => `Kompleksy mieszkaniowe w ${d}`,
+      apartmentsIn: (d: string) => `Apartamenty w ${d}`,
+    },
+    faqHeading: 'Najczęściej zadawane pytania',
+    res: { presentation: 'Prezentacja projektu', renders: 'Rendery', masterplan: 'Plan zagospodarowania', tour3d: 'Wycieczka 3D', video: 'Wideoprezentacja', booking: 'Booking.com', airbnb: 'AirBnB' },
+    faq: (name: string, district: string | null, lease: string | null) => [
+      { q: `Gdzie znajduje się ${name}?`,
+        a: district ? `Kompleks mieszkaniowy ${name} znajduje się w ${district}, Bali, Indonezja.` : `${name} znajduje się na Bali, Indonezja. Dokładne współrzędne są na mapie powyżej.` },
+      { q: `Jaki jest okres leasehold w ${name}?`,
+        a: lease ? `Podstawowy leasehold to ${lease} lat. Zapytaj dewelopera o warunki przedłużenia.` : 'Zapytaj dewelopera o okres leasehold. Typowe projekty na Bali trwają 25–80 lat z opcją przedłużenia.' },
+      { q: `Czy obcokrajowiec może kupić lokal w ${name}?`,
+        a: 'Tak. Transakcja odbywa się w ramach leasehold (długoterminowa dzierżawa gruntu) u notariusza PPAT. Obcokrajowcy kupują na takich samych warunkach jak miejscowi.' },
+      { q: 'Jakie dokumenty powinien mieć kompleks?',
+        a: 'Najważniejsze to PBG (pozwolenie na budowę) i SLF (certyfikat przydatności). Bez SLF lokalu nie można legalnie wynajmować. Pozwolenia są wymienione powyżej w bloku „Najważniejsze informacje”.' },
+    ],
+    titlePart: (name: string, district: string | null, objects: string | null) => {
+      const where = district ? `w ${district}, Bali` : 'na Bali'
+      return objects ? `${name} — ${objects} ${where} | Balinsky` : `${name} — Kompleks mieszkaniowy ${where} | Balinsky`
+    },
+    ogTitle: (name: string) => `${name} na Bali`,
+    fallbackDesc: (name: string, district: string | null, types: string, yearRaw: string | null) =>
+      `Kompleks mieszkaniowy ${name}${district ? ` w ${district}` : ''} na Bali.${types ? ` Typy lokali: ${types.toLowerCase()}.` : ''}${yearRaw ? ` Oddanie: ${yearRaw}.` : ''} Zdjęcia, ceny, pozwolenia.`,
+    sold: 'Sprzedane',
+  },
+  uk: {
+    home: 'Головна',
+    crumbComplexes: 'Житлові комплекси',
+    backToComplexes: 'Житлові комплекси',
+    bali: 'Балі',
+    completed: 'зданий',
+    completion: (y: string) => `здача ${y}`,
+    units: (n: number) => `${n} юнітів`,
+    unitsFrom: 'Юніти від',
+    keyFacts: 'Ключові факти',
+    factType: 'Тип юніта',
+    factCompletion: 'Здача',
+    factCompletionDone: 'Зданий',
+    factPermits: 'Дозволи',
+    factLeasehold: 'Leasehold',
+    factLeaseValue: (l: string) => `${l} років`,
+    factUnits: 'Юніти',
+    factDistrict: 'Район',
+    factAirport: 'До аеропорту',
+    progress: 'Хід будівництва',
+    statusUnknown: 'статус невідомий',
+    estimate: 'орієнтовно',
+    aboutPrefix: 'Про',
+    availableUnits: 'Доступні юніти',
+    publishedSuffix: (n: number, kind: 'mixed' | 'villa' | 'apartment') => {
+      const word = kind === 'mixed' ? 'юнітів' : kind === 'villa' ? 'вілл' : 'апартаментів'
+      return `${n} опублікованих ${word} у`
+    },
+    developer: 'Забудовник',
+    builtBy: 'Збудовано',
+    allDevelopers: 'Усі забудовники Балі',
+    docsHeading: 'Документи та матеріали',
+    location: 'Розташування',
+    locationLine: (d: string | null) => `${d ? `${d}, ` : ''}Балі, Індонезія`,
+    openInMaps: 'Відкрити в Google Maps',
+    videosTitle: (n: string) => `Відео про ${n}`,
+    otherProjectsIn: (d: string) => `Інші проєкти в ${d}`,
+    relatedHeading: 'Схоже',
+    related: {
+      allComplexes: 'Усі житлові комплекси Балі',
+      apartments: 'Апартаменти на Балі',
+      villas: 'Вілли та будинки',
+      developers: 'Забудовники Балі',
+      complexesIn: (d: string) => `Житлові комплекси в ${d}`,
+      apartmentsIn: (d: string) => `Апартаменти в ${d}`,
+    },
+    faqHeading: 'Часті запитання',
+    res: { presentation: 'Презентація проєкту', renders: 'Рендери', masterplan: 'Генплан', tour3d: '3D-тур', video: 'Відеотур', booking: 'Booking.com', airbnb: 'AirBnB' },
+    faq: (name: string, district: string | null, lease: string | null) => [
+      { q: `Де розташований ${name}?`,
+        a: district ? `Житловий комплекс ${name} розташований у ${district}, Балі, Індонезія.` : `${name} розташований на Балі, Індонезія. Точні координати — на карті вище.` },
+      { q: `Який термін leasehold у ${name}?`,
+        a: lease ? `Базовий leasehold — ${lease} років. Уточніть у забудовника умови продовження.` : 'Уточніть термін leasehold у забудовника. Типові проєкти на Балі — 25–80 років з можливістю продовження.' },
+      { q: `Чи може іноземець купити юніт у ${name}?`,
+        a: 'Так. Угода укладається за схемою leasehold (довгострокова оренда землі) у нотаріуса PPAT. Іноземці купують на тих самих умовах, що й місцеві.' },
+      { q: 'Які документи має мати комплекс?',
+        a: 'Основні — це PBG (дозвіл на будівництво) та SLF (сертифікат придатності). Без SLF юніт не можна легально здавати в оренду. Дозволи наведені вище в блоці «Ключові факти».' },
+    ],
+    titlePart: (name: string, district: string | null, objects: string | null) => {
+      const where = district ? `у ${district}, Балі` : 'на Балі'
+      return objects ? `${name} — ${objects} ${where} | Balinsky` : `${name} — Житловий комплекс ${where} | Balinsky`
+    },
+    ogTitle: (name: string) => `${name} на Балі`,
+    fallbackDesc: (name: string, district: string | null, types: string, yearRaw: string | null) =>
+      `Житловий комплекс ${name}${district ? ` у ${district}` : ''} на Балі.${types ? ` Типи юнітів: ${types.toLowerCase()}.` : ''}${yearRaw ? ` Здача: ${yearRaw}.` : ''} Фото, ціни, дозволи.`,
+    sold: 'Продано',
+  },
 } as const
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -1520,7 +1654,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             <h2 className="text-[19px] sm:text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
               {copy.aboutPrefix} {name}
             </h2>
-            <ExpandableText className="max-w-3xl" more={pickCopy({ ru: 'Подробнее', en: 'Read more', id: 'Selengkapnya', fr: 'En savoir plus', de: 'Mehr anzeigen', zh: '展开', nl: 'Meer', ban: 'Selengkapnya' }, lang)} less={pickCopy({ ru: 'Свернуть', en: 'Show less', id: 'Tutup', fr: 'Réduire', de: 'Weniger', zh: '收起', nl: 'Minder', ban: 'Tutup' }, lang)}>
+            <ExpandableText className="max-w-3xl" more={pickCopy({ ru: 'Подробнее', en: 'Read more', id: 'Selengkapnya', fr: 'En savoir plus', de: 'Mehr anzeigen', zh: '展开', nl: 'Meer', ban: 'Selengkapnya', pl: 'Więcej', uk: 'Докладніше' }, lang)} less={pickCopy({ ru: 'Свернуть', en: 'Show less', id: 'Tutup', fr: 'Réduire', de: 'Weniger', zh: '收起', nl: 'Minder', ban: 'Tutup', pl: 'Zwiń', uk: 'Згорнути' }, lang)}>
               <div className="prose-balinsky text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
                 {pageBody}
               </div>
@@ -1598,7 +1732,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
                       <StarRating value={devReliability.score} size={14} />
                       <span className="text-[13px] font-semibold text-[#111827]">{devReliability.score.toFixed(1)}</span>
                       <span className="text-[12px] text-[var(--color-text-muted)]">
-                        {pickCopy({ ru: `надёжность Balinsky · ${devReliability.completed} сданных`, en: `Balinsky reliability · ${devReliability.completed} completed`, id: `Keandalan Balinsky · ${devReliability.completed} selesai`, fr: `Fiabilité Balinsky · ${devReliability.completed} livrés`, de: `Balinsky-Zuverlässigkeit · ${devReliability.completed} fertiggestellt`, zh: `Balinsky 可靠性 · ${devReliability.completed} 套已交付`, nl: `Balinsky-betrouwbaarheid · ${devReliability.completed} opgeleverd`, ban: `Kapercayan Balinsky · ${devReliability.completed} pragat` }, lang)}
+                        {pickCopy({ ru: `надёжность Balinsky · ${devReliability.completed} сданных`, en: `Balinsky reliability · ${devReliability.completed} completed`, id: `Keandalan Balinsky · ${devReliability.completed} selesai`, fr: `Fiabilité Balinsky · ${devReliability.completed} livrés`, de: `Balinsky-Zuverlässigkeit · ${devReliability.completed} fertiggestellt`, zh: `Balinsky 可靠性 · ${devReliability.completed} 套已交付`, nl: `Balinsky-betrouwbaarheid · ${devReliability.completed} opgeleverd`, ban: `Kapercayan Balinsky · ${devReliability.completed} pragat`, pl: `Wiarygodność Balinsky · ${devReliability.completed} ukończonych`, uk: `Надійність Balinsky · ${devReliability.completed} зданих` }, lang)}
                       </span>
                     </div>
                   )}

@@ -389,6 +389,86 @@ const COPY = {
     metaFallback: (title: string, district: string | null, price: string | null) =>
       `${title}${district ? ` ring ${district}` : ''} ring Bali${price ? `. Aji ${price}.` : '.'} Foto, denah, dokumen.`,
   },
+  pl: {
+    home: 'Strona główna', aptCrumb: 'Apartamenty',
+    sqm: 'm²', floor: 'Piętro', bali: 'Bali', completed: 'Ukończony',
+    factsHeading: 'Parametry',
+    factArea: 'Powierzchnia', factFloor: 'Piętro', factCompletion: 'Oddanie',
+    factPermits: 'Pozwolenia', factLeasehold: 'Leasehold', factDistrict: 'Rejon',
+    factAirport: 'Na lotnisko', factGround: 'Parter',
+    factLeaseValue: (l: string) => `${l} lat`,
+    descHeading: 'Opis',
+    complexLabel: 'Kompleks mieszkaniowy',
+    developerLabel: 'Deweloper',
+    openComplex: 'Otwórz stronę kompleksu',
+    openDeveloper: 'Otwórz stronę dewelopera',
+    completedShort: 'ukończony',
+    completion: (y: string) => `oddanie ${y}`,
+    units: (n: number) => `${n} lokali`,
+    sellingSeparately: 'Sprzedawany oddzielnie (poza kompleksem)',
+    locationLine: (d: string | null) => `${d ? `${d}, ` : ''}Bali, Indonezja`,
+    relatedHeading: 'Powiązane',
+    related: {
+      allApartments: 'Wszystkie apartamenty na Bali',
+      complexes: 'Kompleksy mieszkaniowe',
+      villas: 'Wille',
+      developers: 'Deweloperzy na Bali',
+      apartmentsIn: (d: string) => `Apartamenty w ${d}`,
+    },
+    faqHeading: 'Najczęściej zadawane pytania',
+    faq: (title: string, district: string | null, price: string | null, lease: string | null) => [
+      { q: `Ile kosztuje ${title}?`,
+        a: price ? `Aktualna cena ofertowa to ${price}. Bieżąca cena jest zawsze pokazana w karcie powyżej.` : 'Cena na zapytanie. Skontaktuj się z nami, aby poznać aktualną cenę.' },
+      { q: `Gdzie znajduje się ${title}?`,
+        a: district ? `Nieruchomość znajduje się w ${district}, Bali. Dokładne współrzędne na mapie powyżej.` : 'Dokładna lokalizacja i współrzędne na mapie powyżej.' },
+      { q: 'Czy obcokrajowiec może kupić apartament na Bali?',
+        a: 'Tak. Transakcja odbywa się w ramach leasehold (długoterminowa dzierżawa) u notariusza PPAT. Większość deweloperów współpracuje z nabywcami z zagranicy.' },
+      { q: 'Jaki jest okres leasehold?',
+        a: lease ? `Podstawowy okres to ${lease} lat. Sprawdź warunki przedłużenia u dewelopera.` : 'Sprawdź okres leasehold u dewelopera — zazwyczaj 25–80 lat z opcją przedłużenia.' },
+    ],
+    metaFallback: (title: string, district: string | null, price: string | null) =>
+      `${title}${district ? ` w ${district}` : ''} na Bali${price ? `. Cena ${price}.` : '.'} Zdjęcia, układ, dokumenty.`,
+  },
+  uk: {
+    home: 'Головна', aptCrumb: 'Апартаменти',
+    sqm: 'м²', floor: 'Поверх', bali: 'Балі', completed: 'Зданий',
+    factsHeading: 'Характеристики',
+    factArea: 'Площа', factFloor: 'Поверх', factCompletion: 'Здача',
+    factPermits: 'Дозволи', factLeasehold: 'Leasehold', factDistrict: 'Район',
+    factAirport: 'До аеропорту', factGround: 'Перший поверх',
+    factLeaseValue: (l: string) => `${l} років`,
+    descHeading: 'Опис',
+    complexLabel: 'Житловий комплекс',
+    developerLabel: 'Забудовник',
+    openComplex: 'Відкрити сторінку комплексу',
+    openDeveloper: 'Відкрити сторінку забудовника',
+    completedShort: 'зданий',
+    completion: (y: string) => `здача ${y}`,
+    units: (n: number) => `${n} юнітів`,
+    sellingSeparately: 'Продається окремо (поза комплексом)',
+    locationLine: (d: string | null) => `${d ? `${d}, ` : ''}Балі, Індонезія`,
+    relatedHeading: 'Схоже',
+    related: {
+      allApartments: 'Усі апартаменти Балі',
+      complexes: 'Житлові комплекси',
+      villas: 'Вілли',
+      developers: 'Забудовники Балі',
+      apartmentsIn: (d: string) => `Апартаменти в ${d}`,
+    },
+    faqHeading: 'Часті запитання',
+    faq: (title: string, district: string | null, price: string | null, lease: string | null) => [
+      { q: `Скільки коштує ${title}?`,
+        a: price ? `Поточна ціна пропозиції — ${price}. Актуальна ціна завжди показана в картці вище.` : 'Ціна за запитом. Зв’яжіться з нами, щоб дізнатися актуальну ціну.' },
+      { q: `Де розташований ${title}?`,
+        a: district ? `Об’єкт розташований у ${district}, Балі. Точні координати на карті вище.` : 'Точне розташування та координати на карті вище.' },
+      { q: 'Чи може іноземець купити апартаменти на Балі?',
+        a: 'Так. Угода укладається за схемою leasehold (довгострокова оренда) у нотаріуса PPAT. Більшість забудовників працюють з покупцями з-за кордону.' },
+      { q: 'Який термін leasehold?',
+        a: lease ? `Базовий термін — ${lease} років. Уточніть умови продовження у забудовника.` : 'Уточніть термін leasehold у забудовника — зазвичай 25–80 років з можливістю продовження.' },
+    ],
+    metaFallback: (title: string, district: string | null, price: string | null) =>
+      `${title}${district ? ` у ${district}` : ''} на Балі${price ? `. Ціна ${price}.` : '.'} Фото, планування, документи.`,
+  },
 } as const
 
 export const revalidate = 3600
@@ -873,7 +953,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
     : []
 
   const facts: { Icon: typeof BedDouble; label: string; value: ReactNode }[] = [
-    bedrooms != null && { Icon: BedDouble, label: pickCopy({ ru: 'Спальни', en: 'Bedrooms', id: 'Kamar tidur', fr: 'Chambres', de: 'Schlafzimmer', zh: '卧室', nl: 'Slaapkamers', ban: 'Kamar pules' }, lang), value: `${bedrooms} BR` },
+    bedrooms != null && { Icon: BedDouble, label: pickCopy({ ru: 'Спальни', en: 'Bedrooms', id: 'Kamar tidur', fr: 'Chambres', de: 'Schlafzimmer', zh: '卧室', nl: 'Slaapkamers', ban: 'Kamar pules', pl: 'Sypialnie', uk: 'Спальні' }, lang), value: `${bedrooms} BR` },
     area != null && { Icon: Square, label: c.factArea, value: `${area} ${c.sqm}` },
     floor && { Icon: Layers, label: c.factFloor, value: floor === 'GROUND FLOOR' ? c.factGround : floor },
     yearRaw && { Icon: Calendar, label: c.factCompletion, value: status?.toLowerCase().includes('построен') ? c.completed : yearRaw },
@@ -1087,7 +1167,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
             <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
               {c.descHeading}
             </h2>
-            <ExpandableText className="max-w-3xl" more={pickCopy({ ru: 'Подробнее', en: 'Read more', id: 'Selengkapnya', fr: 'En savoir plus', de: 'Mehr anzeigen', zh: '展开', nl: 'Meer', ban: 'Selengkapnya' }, lang)} less={pickCopy({ ru: 'Свернуть', en: 'Show less', id: 'Tutup', fr: 'Réduire', de: 'Weniger', zh: '收起', nl: 'Minder', ban: 'Tutup' }, lang)}>
+            <ExpandableText className="max-w-3xl" more={pickCopy({ ru: 'Подробнее', en: 'Read more', id: 'Selengkapnya', fr: 'En savoir plus', de: 'Mehr anzeigen', zh: '展开', nl: 'Meer', ban: 'Selengkapnya', pl: 'Więcej', uk: 'Докладніше' }, lang)} less={pickCopy({ ru: 'Свернуть', en: 'Show less', id: 'Tutup', fr: 'Réduire', de: 'Weniger', zh: '收起', nl: 'Minder', ban: 'Tutup', pl: 'Zwiń', uk: 'Згорнути' }, lang)}>
               <div className="prose-balinsky text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
                 {seoText}
               </div>
@@ -1238,13 +1318,13 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
         />
 
         {aptVideos.length > 0 && (
-          <VideoGrid videos={aptVideos} title={parentComplexName ? `${pickCopy({ ru: 'Видео', en: 'Videos', id: 'Video', fr: 'Vidéos', de: 'Videos', zh: '视频', nl: "Video's", ban: 'Video' }, lang)}: ${parentComplexName}` : pickCopy({ ru: 'Видео', en: 'Videos', id: 'Video', fr: 'Vidéos', de: 'Videos', zh: '视频', nl: "Video's", ban: 'Video' }, lang)} />
+          <VideoGrid videos={aptVideos} title={parentComplexName ? `${pickCopy({ ru: 'Видео', en: 'Videos', id: 'Video', fr: 'Vidéos', de: 'Videos', zh: '视频', nl: "Video's", ban: 'Video', pl: 'Filmy', uk: 'Відео' }, lang)}: ${parentComplexName}` : pickCopy({ ru: 'Видео', en: 'Videos', id: 'Video', fr: 'Vidéos', de: 'Videos', zh: '视频', nl: "Video's", ban: 'Video', pl: 'Filmy', uk: 'Відео' }, lang)} />
         )}
 
         {otherApts.length > 0 && district && (
           <section className="mb-10">
             <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
-              {pickCopy({ ru: `Другие апартаменты в районе ${district}`, en: `Other apartments in ${district}`, id: `Apartemen lain di ${district}`, fr: `Autres appartements à ${district}`, de: `Weitere Apartments in ${district}`, zh: `${district}的其他公寓`, nl: `Andere appartementen in ${district}`, ban: `Apartemen lianan ring ${district}` }, lang)}
+              {pickCopy({ ru: `Другие апартаменты в районе ${district}`, en: `Other apartments in ${district}`, id: `Apartemen lain di ${district}`, fr: `Autres appartements à ${district}`, de: `Weitere Apartments in ${district}`, zh: `${district}的其他公寓`, nl: `Andere appartementen in ${district}`, ban: `Apartemen lianan ring ${district}`, pl: `Inne apartamenty w ${district}`, uk: `Інші апартаменти в ${district}` }, lang)}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {otherApts.map(o => <ApartmentCard key={o.id} a={o} lang={lang} />)}
@@ -1264,7 +1344,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
                 { href: `${apartmentsRoot}/${districtRaw!.toLowerCase().replace(/\s+/g, '-')}`, label: c.related.apartmentsIn(district) },
               ] : []),
               ...(bedrooms ? [
-                { href: `${apartmentsRoot}/${bedrooms}-spaln${bedrooms === 1 ? 'ya' : 'i'}`, label: pickCopy({ ru: `${bedrooms}-комнатные апартаменты`, en: `${bedrooms}-bedroom apartments`, id: `Apartemen ${bedrooms} kamar`, fr: `Appartements ${bedrooms} chambres`, de: `${bedrooms}-Zimmer-Apartments`, zh: `${bedrooms}居室公寓`, nl: `${bedrooms}-slaapkamerappartementen`, ban: `Apartemen ${bedrooms} kamar` }, lang) },
+                { href: `${apartmentsRoot}/${bedrooms}-spaln${bedrooms === 1 ? 'ya' : 'i'}`, label: pickCopy({ ru: `${bedrooms}-комнатные апартаменты`, en: `${bedrooms}-bedroom apartments`, id: `Apartemen ${bedrooms} kamar`, fr: `Appartements ${bedrooms} chambres`, de: `${bedrooms}-Zimmer-Apartments`, zh: `${bedrooms}居室公寓`, nl: `${bedrooms}-slaapkamerappartementen`, ban: `Apartemen ${bedrooms} kamar`, pl: `Apartamenty ${bedrooms}-sypialniane`, uk: `${bedrooms}-кімнатні апартаменти` }, lang) },
               ] : []),
             ].map(l => (
               <li key={l.href + l.label}>
