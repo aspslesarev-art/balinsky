@@ -8,23 +8,22 @@ import { clientIp, rateLimit } from '@/lib/rate-limit'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+// One multilingual agent (id is public, not a secret). It used to be two —
+// Russian and English — which meant a Chinese or German visitor got greeted in
+// Russian. The agent runs on eleven_turbo_v2_5, which covers every language the
+// site speaks, so the caller's language is now a per-session override the
+// browser sends instead of a choice between two fixed agents.
+const AGENT_ID = 'agent_5001kwgqxtfaed9r9bf3jv11nhm5'
+
 export async function GET(req: Request) {
   const key = process.env.ELEVENLABS_API_KEY
-  // Two call agents (ids are public, not secrets): Балина speaks the site's
-  // language — Russian on /ru, English on /en. Picked by ?lang.
-  const RU_AGENT = 'agent_5001kwgqxtfaed9r9bf3jv11nhm5'
-  const EN_AGENT = 'agent_1201kwjv3mfqeyb9bzveh97vnzeb'
-  const lang = new URL(req.url).searchParams.get('lang')
-  // Only two voice agents exist (RU + EN). Non-RU visitors (en/id/fr) get the
-  // English-speaking agent; anything else falls back to the Russian one.
-  const agentId = lang === 'en' || lang === 'id' || lang === 'fr' ? EN_AGENT : RU_AGENT
   if (!key) return NextResponse.json({ error: 'convai_unconfigured' }, { status: 503 })
   if (!rateLimit(`convai:${clientIp(req)}`, 10, 60_000)) {
     return NextResponse.json({ error: 'rate_limited' }, { status: 429 })
   }
   try {
     const r = await fetch(
-      `https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=${encodeURIComponent(agentId)}`,
+      `https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=${encodeURIComponent(AGENT_ID)}`,
       { headers: { 'xi-api-key': key } },
     )
     if (!r.ok) return NextResponse.json({ error: 'signed_url_failed' }, { status: 502 })

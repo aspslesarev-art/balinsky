@@ -531,9 +531,38 @@ const COPY = {
   },
 } as const
 
+// ElevenLabs speaks every site language except Balinese, so a /ban visitor is
+// called in Indonesian — the national language they already read — rather than
+// dropped back to Russian. Everything else maps one-to-one.
+function callLang(lang: Lang): string {
+  return lang === 'ban' ? 'id' : lang
+}
+
+// How the call opens. Kept apart from the chat greeting: this one is spoken
+// aloud, so it stays one short line and asks for a name, and its Balinese slot
+// is written in Indonesian to match the voice actually used for /ban.
+function callGreeting(lang: Lang): string {
+  return pickCopy({
+    ru: 'Алло, это Андрей! Рад вас слышать. А как вас зовут?',
+    en: "Hi, this is Andrei! Great to hear from you. What's your name?",
+    id: 'Halo, ini Andrei! Senang mendengar Anda. Siapa nama Anda?',
+    fr: "Allô, c'est Andrei ! Ravi de vous entendre. Comment vous appelez-vous ?",
+    de: 'Hallo, hier ist Andrei! Schön, von Ihnen zu hören. Wie heißen Sie?',
+    zh: '你好，我是 Andrei！很高兴接到您的来电。请问您怎么称呼？',
+    nl: 'Hallo, met Andrei! Fijn dat u belt. Hoe heet u?',
+    ban: 'Halo, ini Andrei! Senang mendengar Anda. Siapa nama Anda?',
+    pl: 'Halo, tu Andrei! Miło Cię słyszeć. Jak masz na imię?',
+    uk: 'Алло, це Андрій! Радий вас чути. А як вас звати?',
+  }, lang)
+}
+
 // Call session controls lifted out of the ConversationProvider subtree.
 export type CallControls = {
-  startSession: (opts: { signedUrl: string; connectionType: 'websocket' }) => Promise<unknown> | void
+  startSession: (opts: {
+    signedUrl: string
+    connectionType: 'websocket'
+    overrides?: { agent?: { language?: string; firstMessage?: string } }
+  }) => Promise<unknown> | void
   endSession: () => Promise<unknown> | void
 }
 
@@ -693,7 +722,14 @@ export function ConsultantWidget() {
       const r = await fetch(`/api/convai/signed-url?lang=${lang}`)
       if (!r.ok) throw new Error('signed_url')
       const { signedUrl } = await r.json() as { signedUrl: string }
-      await callControlsRef.current?.startSession({ signedUrl, connectionType: 'websocket' })
+      // The agent is language-agnostic; the site tells it which language this
+      // caller speaks, and opens with a greeting already in that language so
+      // the first words aren't Russian to a visitor reading Chinese.
+      await callControlsRef.current?.startSession({
+        signedUrl,
+        connectionType: 'websocket',
+        overrides: { agent: { language: callLang(lang), firstMessage: callGreeting(lang) } },
+      })
       // onConnect (provider callback) flips to 'connected' + stops ringback.
     } catch {
       stopRingback()
