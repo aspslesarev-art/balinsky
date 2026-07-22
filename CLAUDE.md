@@ -31,17 +31,22 @@ Rules:
 
 ## Data flow (the core mental model)
 
-Airtable is the source of truth. Content reaches the site two ways, and **which one matters when you change a loader**:
+**Supabase is the source of truth. Airtable was retired on 2026-07-22** — its
+workflows, webhook and cron are deleted and its scripts sit disabled in
+`scripts/legacy-airtable/`. Editing happens in the admin CRUD at `/admin/data`.
+Content still reaches the site two ways, and **which one matters when you change a loader**:
 
-1. **SQL-backed** (villas, apartments, complexes, rentals, developers): rows live in Supabase `raw_<table>` with a JSONB `data` column holding *all* Airtable fields (no allowlist). Pages read these via `lib/*` loaders. Field access is `data['Airtable Field Name']` through helpers like `tField`/`firstString`/`numberOrNull` — fields are loosely typed.
-2. **Manifest-backed** (events, news, promo, knowledge, managers, and **all photos**): data is a JSON manifest in Supabase Storage, rebuilt by sync scripts.
+1. **SQL-backed** (villas, apartments, complexes, rentals, developers): rows live in Supabase `raw_<table>` with a JSONB `data` column holding *all* fields (no allowlist) under their original Airtable-era names. Pages read these via `lib/*` loaders. Field access is `data['Field Name']` through helpers like `tField`/`firstString`/`numberOrNull` — fields are loosely typed.
+2. **Manifest-backed** (events, news, promo, knowledge, managers, videos, and **all photos**): data is a JSON manifest in Supabase Storage, written by the admin adapters.
 
-Sync runs three ways:
-- **Per-record webhook** `app/api/webhook/airtable/` — an Airtable Automation pushes one changed record → upserts `raw_<table>` (or rebuilds a manifest) and calls `revalidateTag`/`revalidatePath`. ~1–3 s latency.
-- **GitHub Actions** `.github/workflows/`: `sync-fast.yml` (events/news/promo/knowledge/managers/developers/detail-indexes), `sync-heavy.yml` (rental + photo syncs, timeout-isolated from fast), `sync-once-maison.yml` (one-shot, push-triggered, handles Airtable delete propagation/prune). Scripts are in `scripts/sync-*.mjs`.
-- A `SYNC_DISABLED` rubicon exists because the long-term goal is to replace Airtable with the in-app admin CRUD at `/admin/data`.
+**An edit has to invalidate three layers** (`lib/admin/revalidate.ts` does all three; skipping one is why edits used to look like no-ops):
+- `content_version` (`lib/content-version.ts`) — the ONLY way to flush the module-level caches in `app/ru/*/_lib.ts` and the detail-page by-id caches. `revalidateTag` cannot reach process memory. Wrap such caches in `lib/revisioned-cache.ts`.
+- cache tags + ISR paths from `lib/content-revalidate-map.ts`, fanned out over all ten locales.
+- the slug index the detail pages resolve through (`lib/admin/detail-index.ts`).
 
-**Detail pages resolve by slug, load by id.** `scripts/sync-detail-indexes.mjs` builds a slug→airtable_id index; `_detail.tsx` files use it (`resolveVilla` etc.) then `_loadXById(airtable_id)`. The villa/apt/complex `_detail.tsx` files are large async Server Components that fan out data with one `Promise.all` and render the whole page.
+When you add an `unstable_cache` loader for editable content, give it a `content:*` tag — an untagged one goes stale for its full TTL and no invalidation can touch it.
+
+**Detail pages resolve by slug, load by id.** Admin mutations patch the slug→id index inline; `scripts/sync-detail-indexes.mjs` rebuilds it nightly as a safety net; `_detail.tsx` files use it (`resolveVilla` etc.) then `_loadXById(airtable_id)`. The villa/apt/complex `_detail.tsx` files are large async Server Components that fan out data with one `Promise.all` and render the whole page.
 
 ## Caching & egress (this codebase is egress-sensitive — don't regress it)
 

@@ -26,9 +26,6 @@ export default async function CollectionPage({ params }: { params: Promise<{ col
     loadError = e instanceof Error ? e.message : 'load_failed'
   }
 
-  // Source-of-truth warning while Airtable sync is still overwriting Supabase.
-  const syncOn = process.env.SYNC_DISABLED !== '1'
-
   return (
     <AdminThemeShell
       title={cfg.label}
@@ -36,13 +33,6 @@ export default async function CollectionPage({ params }: { params: Promise<{ col
       fullWidth
       back={{ href: '/admin/data', label: 'Все базы' }}
     >
-      {syncOn && (
-        <div className="mb-4 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-3 text-[12.5px] text-[var(--ax-fg)] leading-snug">
-          <span className="font-semibold">Airtable пока главный.</span>{' '}
-          Правки и созданные здесь строки могут быть перезаписаны/удалены следующим синком.
-          Полноценное редактирование — после установки <code className="font-mono">SYNC_DISABLED=1</code>.
-        </div>
-      )}
       {loadError ? (
         <div className="rounded-2xl border border-red-500/40 bg-red-500/10 p-4 text-[13px] text-[var(--ax-fg)]">
           Ошибка загрузки: <span className="font-mono">{loadError}</span>
