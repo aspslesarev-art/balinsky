@@ -426,6 +426,36 @@ const districts: CollectionConfig = {
   ],
 }
 
+// Видео — карточки YouTube, которые показываются на страницах застройщиков и
+// ЖК. Раньше их наливал sync-videos.mjs из Airtable; после его отключения это
+// единственный способ их редактировать.
+const videos: CollectionConfig = {
+  key: 'videos',
+  label: 'Видео',
+  store: 'storage_manifest',
+  bucket: 'feeds',
+  manifestKey: '_videos.json',
+  itemIdKey: 'id',
+  caps: { create: true, update: true, delete: true },
+  titleField: 'name',
+  defaultSort: { field: 'addedAt', dir: 'desc' },
+  revalidateKind: 'videos',
+  fields: [
+    { key: 'name', label: 'Название', type: 'text', showInGrid: true, width: 280 },
+    { key: 'url', label: 'Ссылка YouTube', type: 'text', showInGrid: true, width: 280 },
+    { key: 'addedAt', label: 'Добавлено', type: 'text', showInGrid: true, width: 120 },
+    // Пусто = видео показывается на всех языках. Иначе список кодов: ["ru"].
+    { key: 'languages', label: 'Языки ["ru","en"]', type: 'json' },
+    // [{ "name": "XOR", "slug": "xor" }] — slug должен совпадать со slug
+    // застройщика/комплекса, иначе видео просто нигде не появится.
+    { key: 'developers', label: 'Застройщики [{name, slug}]', type: 'json' },
+    { key: 'complexes', label: 'Комплексы [{name, slug}]', type: 'json' },
+    // Заполняется автоматически из ссылки (lib/videos.ts), нужен только для
+    // JSON-LD. Оставьте пустым, если не хотите переопределять.
+    { key: 'embedUrl', label: 'Embed URL (авто)', type: 'text' },
+  ],
+}
+
 export const COLLECTIONS: Record<string, CollectionConfig> = {
   villas,
   apartments,
@@ -440,6 +470,7 @@ export const COLLECTIONS: Record<string, CollectionConfig> = {
   rental,
   knowledge,
   managers,
+  videos,
   baliforum_places: baliforumPlaces,
 }
 

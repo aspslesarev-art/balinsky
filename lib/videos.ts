@@ -1,4 +1,5 @@
 import type { Lang } from './i18n'
+import { revisionedCache } from './revisioned-cache'
 
 export type VideoLink = { name: string; slug: string | null }
 export type VideoItem = {
@@ -20,35 +21,35 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/feeds/_videos.json`
 
 const TTL_MS = 30 * 60 * 1000
-let _cache: { ts: number; data: VideoItem[] } | null = null
-let _inflight: Promise<VideoItem[]> | null = null
+let _lastGood: VideoItem[] = []
 
-export async function loadAllVideos(): Promise<VideoItem[]> {
-  if (_cache && Date.now() - _cache.ts < TTL_MS) return _cache.data
-  if (_inflight) return _inflight
-  _inflight = (async () => {
-    try {
-      // Tagged cache so SSG pages (developer, complex, villa, apt
-      // detail) stay statically generated. We invalidate the tag on
-      // demand via /api/revalidate-content?kinds=videos after a sync
-      // run, so a fresh manifest is served without breaking SSG.
-      // (Plain cache: 'no-store' marks the fetch as revalidate: 0,
-      // which forces the whole page dynamic at runtime and crashes
-      // pages that have generateStaticParams.)
-      const r = await fetch(MANIFEST_URL, { next: { revalidate: 1800, tags: ['content:videos'] } })
-      if (!r.ok) return []
-      const j = (await r.json()) as Manifest
-      const items = Array.isArray(j.items) ? j.items : []
-      _cache = { ts: Date.now(), data: items }
-      return items
-    } catch {
-      return _cache?.data ?? []
-    } finally {
-      _inflight = null
-    }
-  })()
-  return _inflight
+// YouTube watch/short link → embed form. Editors paste the address straight
+// from the browser, so deriving this beats asking them for it; an explicit
+// embedUrl on the record still wins.
+function ytEmbed(url: string): string | null {
+  const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([a-zA-Z0-9_-]{6,})/)
+  return m ? `https://www.youtube.com/embed/${m[1]}` : null
 }
+
+// revisionedCache: editing a video in /admin/data bumps the `videos`
+// revision, which is the only thing that can clear this in-process cache.
+export const loadAllVideos = revisionedCache(['videos'], TTL_MS, async (): Promise<VideoItem[]> => {
+  try {
+    // Tagged fetch so SSG pages (developer, complex, villa, apt detail) stay
+    // statically generated — an admin edit invalidates the tag. Plain
+    // cache: 'no-store' would mark this revalidate: 0, forcing every page
+    // that uses it dynamic and breaking generateStaticParams.
+    const r = await fetch(MANIFEST_URL, { next: { revalidate: 1800, tags: ['content:videos'] } })
+    if (!r.ok) return _lastGood
+    const j = (await r.json()) as Manifest
+    const raw = Array.isArray(j.items) ? j.items : []
+    const items = raw.map(v => ({ ...v, embedUrl: v.embedUrl || ytEmbed(v.url) }))
+    if (items.length) _lastGood = items
+    return items
+  } catch {
+    return _lastGood
+  }
+})
 
 // A video is shown on a given site language if it's tagged for that
 // language, or if it has no language tag at all (treated as universal
