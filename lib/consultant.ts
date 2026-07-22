@@ -1460,7 +1460,7 @@ async function searchSemantic(args: SemanticArgs, lang: Lang = 'ru', replyLang: 
   // Balisa never quotes Russian to a non-RU visitor.
   const { loadKbSummaryCache } = await import('@/lib/kb-summary-i18n')
   const tr = replyLang === 'ru' ? {} : await loadKbSummaryCache(replyLang)
-  const deCy = (s: string | null): string => (s && replyLang !== 'ru' && hasCyrillic(s) ? translitPreserveCase(s) : (s ?? ''))
+  const deCy = (s: string | null): string => (s && replyLang !== 'ru' && replyLang !== 'uk' && hasCyrillic(s) ? translitPreserveCase(s) : (s ?? ''))
 
   // Non-catalog kinds (developer/rental/district/market) become quotable text
   // snippets — there is no listing card for them.

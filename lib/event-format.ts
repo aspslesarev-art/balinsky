@@ -21,5 +21,5 @@ const FORMAT_LABELS: Record<string, Record<Lang, string>> = {
 export function localizeEventFormat(value: string, lang: Lang): string {
   const label = FORMAT_LABELS[value.trim().toLowerCase()]
   if (label) return label[lang]
-  return lang !== 'ru' && hasCyrillic(value) ? translitPreserveCase(value) : value
+  return lang !== 'ru' && lang !== 'uk' && hasCyrillic(value) ? translitPreserveCase(value) : value
 }

@@ -21,7 +21,7 @@ import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
 // with no translation would otherwise show Cyrillic; transliterate as a last
 // resort so the popup stays in the Latin alphabet.
 function displayTitle(t: string, lang: Lang): string {
-  return lang !== 'ru' && hasCyrillic(t) ? translitPreserveCase(t) : t
+  return lang !== 'ru' && lang !== 'uk' && hasCyrillic(t) ? translitPreserveCase(t) : t
 }
 
 export type MapPoint = {

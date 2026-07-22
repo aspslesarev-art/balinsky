@@ -69,7 +69,7 @@ export function ComplexCard({ c, lang = 'ru' }: { c: ComplexCardData; lang?: Lan
   const aptRange   = fmtRange(c.aptPriceFrom,   c.aptPriceTo,   currency, lang)
   // District is usually a Latin place name, but de-Cyrillic it as a safety net
   // so a Russian value never leaks onto a non-RU card.
-  const location = c.location && lang !== 'ru' && hasCyrillic(c.location)
+  const location = c.location && lang !== 'ru' && lang !== 'uk' && hasCyrillic(c.location)
     ? translitPreserveCase(c.location)
     : c.location
 

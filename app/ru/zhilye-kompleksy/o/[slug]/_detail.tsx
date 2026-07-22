@@ -1049,7 +1049,7 @@ async function loadUnitsInComplex(complexName: string, lang: Lang = 'ru'): Promi
     // so unwrap through firstString before .replace — otherwise we'd
     // hit "replace is not a function" on the EN tree.
     const titleRawSrc = (lang !== 'ru' ? firstString(r.title_en) : null) ?? r.title
-    const titleSource = lang !== 'ru' && titleRawSrc && hasCyrillic(titleRawSrc) ? translitPreserveCase(titleRawSrc) : titleRawSrc
+    const titleSource = lang !== 'ru' && lang !== 'uk' && titleRawSrc && hasCyrillic(titleRawSrc) ? translitPreserveCase(titleRawSrc) : titleRawSrc
     const title = titleSource.replace(/\s*\|\s*Balinsky\s*$/i, '').trim()
     units.push({
       kind: 'apartment',
@@ -1073,7 +1073,7 @@ async function loadUnitsInComplex(complexName: string, lang: Lang = 'ru'): Promi
     if (seenVillaId.has(r.airtable_id)) continue
     seenVillaId.add(r.airtable_id)
     const titleRawSrc = (lang !== 'ru' ? firstString(r.title_en) : null) ?? r.title
-    const titleSource = lang !== 'ru' && titleRawSrc && hasCyrillic(titleRawSrc) ? translitPreserveCase(titleRawSrc) : titleRawSrc
+    const titleSource = lang !== 'ru' && lang !== 'uk' && titleRawSrc && hasCyrillic(titleRawSrc) ? translitPreserveCase(titleRawSrc) : titleRawSrc
     const title = titleSource.replace(/\s*\|\s*Balinsky\s*$/i, '').trim()
     units.push({
       kind: 'villa',

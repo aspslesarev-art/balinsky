@@ -48,5 +48,5 @@ export function isMetaBullet(bullet: string): boolean {
 export function cleanDeveloperBullets(bullets: string[], lang: Lang): string[] {
   return bullets
     .filter(b => !isMetaBullet(b))
-    .map(b => (lang !== 'ru' && hasCyrillic(b) ? translitPreserveCase(b) : b))
+    .map(b => (lang !== 'ru' && lang !== 'uk' && hasCyrillic(b) ? translitPreserveCase(b) : b))
 }

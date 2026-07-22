@@ -46,7 +46,7 @@ function CollCard({ it, href, lang }: { it: CollItem; href: string; lang: Lang }
         </div>
       </div>
       <div className="p-3">
-        <div className="text-[13.5px] font-medium leading-snug line-clamp-2 min-h-[2.6em]">{lang !== 'ru' && it.title && hasCyrillic(it.title) ? translit(it.title) : it.title}</div>
+        <div className="text-[13.5px] font-medium leading-snug line-clamp-2 min-h-[2.6em]">{lang !== 'ru' && lang !== 'uk' && it.title && hasCyrillic(it.title) ? translit(it.title) : it.title}</div>
         <div className="mt-1.5 flex items-center gap-3 text-[12px] text-[var(--color-text-muted)]">
           {it.bedrooms != null && <span className="inline-flex items-center gap-1"><BedDouble size={13} /> {it.bedrooms}</span>}
           {it.area != null && <span className="inline-flex items-center gap-1"><Square size={12} /> {it.area} {pickCopy({ ru: 'м²', en: 'm²', id: 'm²', fr: 'm²', de: 'm²', zh: 'm²', nl: 'm²', ban: 'm²', pl: 'm²', uk: 'м²' }, lang)}</span>}

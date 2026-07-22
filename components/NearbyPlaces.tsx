@@ -12,7 +12,7 @@ import { translit, hasCyrillic } from '@/lib/translit'
 // "Бадунг" → "Badung"). RU keeps the original.
 function loc(s: string | null | undefined, lang: Lang): string {
   if (!s) return ''
-  return lang !== 'ru' && hasCyrillic(s) ? translit(s) : s
+  return lang !== 'ru' && lang !== 'uk' && hasCyrillic(s) ? translit(s) : s
 }
 
 const ICONS: Record<string, string> = {

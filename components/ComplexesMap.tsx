@@ -17,7 +17,7 @@ import { BALINSKY_MAP_STYLE } from '@/lib/google-map-style'
 
 // De-Cyrillic a raw listing name on non-RU maps (last-resort, no translation).
 const displayName = (t: string, lang: Lang) =>
-  lang !== 'ru' && hasCyrillic(t) ? translitPreserveCase(t) : t
+  lang !== 'ru' && lang !== 'uk' && hasCyrillic(t) ? translitPreserveCase(t) : t
 
 export type ComplexPoint = {
   id: string

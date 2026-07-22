@@ -1582,7 +1582,7 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
                   </div>
                 )}
                 <div className="p-4">
-                  <div className="text-[15px] font-medium text-[#0E1A14] truncate">{lang !== 'ru' && k.title && hasCyrillic(k.title) ? translit(k.title) : k.title}</div>
+                  <div className="text-[15px] font-medium text-[#0E1A14] truncate">{lang !== 'ru' && lang !== 'uk' && k.title && hasCyrillic(k.title) ? translit(k.title) : k.title}</div>
                   <div className="mt-1 text-[12.5px] text-[#6B7570] flex items-center gap-1.5">
                     {k.district && <><MapPin size={11} /> {k.district}</>}
                     {k.units != null && <span className="ml-auto tabular-nums">{k.units} {pickCopy({ ru: 'юнитов', en: 'units', id: 'unit', fr: 'lots', de: 'Einheiten', zh: '套', nl: 'units', ban: 'unit', pl: 'lokali', uk: 'юнітів' }, lang)}</span>}

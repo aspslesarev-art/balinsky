@@ -759,7 +759,7 @@ export async function generateApartmentMetadata(slug: string, lang: Lang) {
   // A bad AI translation may have stored Russian into `SEO Text EN` (or the
   // suffix is missing and tField returns the raw RU). Never emit Cyrillic on a
   // non-RU page — transliterate to Latin as a last resort.
-  const seoText = lang !== 'ru' && seoTextRaw && hasCyrillic(seoTextRaw) ? translitPreserveCase(seoTextRaw) : seoTextRaw
+  const seoText = lang !== 'ru' && lang !== 'uk' && seoTextRaw && hasCyrillic(seoTextRaw) ? translitPreserveCase(seoTextRaw) : seoTextRaw
   const districtRaw = firstString(d['Location filter'])
   // Cyrillic district on /ru, raw Latin on /en. Raw is preserved for
   // Schema.org address fields where Latin is canonical.
@@ -829,11 +829,11 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
   const seoTextRaw = tField(d, 'SEO Text', lang) ?? tField(d, 'Notes', lang)
   // De-Cyrillic guard: a bad `SEO Text EN` (or missing suffix) can leak Russian
   // into the on-page description / Product schema on a non-RU page.
-  const seoText = lang !== 'ru' && seoTextRaw && hasCyrillic(seoTextRaw) ? translitPreserveCase(seoTextRaw) : seoTextRaw
+  const seoText = lang !== 'ru' && lang !== 'uk' && seoTextRaw && hasCyrillic(seoTextRaw) ? translitPreserveCase(seoTextRaw) : seoTextRaw
   const kb = await loadKbPageContent('apartment', a.airtable_id, lang)
   // Non-RU: prefer the native-language SEO Text over the RU/EN-only KB body.
   const pageBodyRaw = lang === 'ru' ? (kb?.body ?? seoText) : (seoText ?? kb?.body ?? null)
-  const pageBody = lang !== 'ru' && pageBodyRaw && hasCyrillic(pageBodyRaw) ? translitPreserveCase(pageBodyRaw) : pageBodyRaw
+  const pageBody = lang !== 'ru' && lang !== 'uk' && pageBodyRaw && hasCyrillic(pageBodyRaw) ? translitPreserveCase(pageBodyRaw) : pageBodyRaw
   const vision = await loadListingVision('apartment', a.airtable_id)
   const photoAlts = photos.map((_, i) => altFor(vision, i, lang, title))
   // Resale: drop the developer-manager CTA and route the visitor to
@@ -1207,7 +1207,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
                       {developer.highlights.map((h, i) => (
                         <li key={i} className="flex items-start gap-2">
                           <Star size={12} className="mt-1 shrink-0 text-[var(--color-primary)]" />
-                          <span>{lang !== 'ru' && hasCyrillic(h) ? translitPreserveCase(h) : h}</span>
+                          <span>{lang !== 'ru' && lang !== 'uk' && hasCyrillic(h) ? translitPreserveCase(h) : h}</span>
                         </li>
                       ))}
                     </ul>

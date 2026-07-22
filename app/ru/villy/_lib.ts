@@ -573,7 +573,7 @@ export function toCard(
   // the non-RU branch still falls back to the RU-composed SEO:Title
   // («Вилла … в … — 165 м², 2 спальни»). Transliterate leftover Cyrillic so
   // no card on /en, /zh, /de, … ever renders a Russian title.
-  const title = lang !== 'ru' && hasCyrillic(titleRaw) ? translitPreserveCase(titleRaw) : titleRaw
+  const title = lang !== 'ru' && lang !== 'uk' && hasCyrillic(titleRaw) ? translitPreserveCase(titleRaw) : titleRaw
   // Optional investor-relevant fields piped into the wishlist snapshot
   // at heart-tap. Read directly off the raw row — the catalog already
   // has them in scope, no extra fetch.

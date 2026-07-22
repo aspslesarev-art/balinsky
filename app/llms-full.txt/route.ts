@@ -62,7 +62,7 @@ export async function GET(req: Request) {
     loadAll(),
     lang === 'ru' ? Promise.resolve({} as Record<string, { title?: string; summary?: string }>) : loadKbSummaryCache(lang),
   ])
-  const deCyr = (s: string) => (lang !== 'ru' && hasCyrillic(s) ? translitPreserveCase(s) : s)
+  const deCyr = (s: string) => (lang !== 'ru' && lang !== 'uk' && hasCyrillic(s) ? translitPreserveCase(s) : s)
   const byKind = new Map<string, Row[]>()
   for (const r of rows) {
     if (!byKind.has(r.kind)) byKind.set(r.kind, [])

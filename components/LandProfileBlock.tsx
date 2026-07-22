@@ -717,7 +717,7 @@ export function LandProfileBlock({ data, lang = 'ru' }: { data: LandProfileProps
   // an id/fr visitor sees Latin (e.g. "Бадунг" → "Badung").
   const t = (key: keyof Tx, raw: string | null): string | null => {
     const v = tx[key] ?? raw
-    return lang !== 'ru' && v && hasCyrillic(v) ? translit(v) : v
+    return lang !== 'ru' && lang !== 'uk' && v && hasCyrillic(v) ? translit(v) : v
   }
 
   // One-line summary: subzone code + (translated) subzone name + STR verdict + facts.

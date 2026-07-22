@@ -110,7 +110,9 @@ export function tField(
   // Last resort: the raw RU value. On a non-RU page, de-Cyrillic it so no
   // Russian text leaks — transliterate Cyrillic to Latin, preserve the rest.
   const raw = unwrap(d[field])
-  if (raw && hasCyrillic(raw)) return translitPreserveCase(raw)
+  // Ukrainian is a Cyrillic-script language — keep Cyrillic (fall back to the
+  // RU source as-is). Only Latin-script langs get the de-Cyrillic transliteration.
+  if (raw && lang !== 'uk' && hasCyrillic(raw)) return translitPreserveCase(raw)
   return raw
 }
 

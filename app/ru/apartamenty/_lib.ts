@@ -543,7 +543,7 @@ export function toCard(
   // Last-resort de-Cyrillic: a row with no `<field> EN` still falls back to
   // the RU-composed SEO:Title, so transliterate leftover Cyrillic to keep
   // Russian off non-RU cards.
-  if (lang !== 'ru' && hasCyrillic(title)) title = translitPreserveCase(title)
+  if (lang !== 'ru' && lang !== 'uk' && hasCyrillic(title)) title = translitPreserveCase(title)
   // Investor-relevant snapshot fields (same as villas — read straight
   // off the row so heart-tap from the catalog carries them into the
   // wishlist without extra fetches).

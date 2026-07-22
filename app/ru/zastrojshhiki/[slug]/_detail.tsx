@@ -549,7 +549,7 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
   // Free-text body: no Russian may leak on a non-RU page. tField already
   // translits its RU last-resort, but the `AI Описание` raw fallback and the
   // kb body are not guaranteed de-Cyrillicized — guard here.
-  const aiText = aiTextResolved && lang !== 'ru' && hasCyrillic(aiTextResolved)
+  const aiText = aiTextResolved && lang !== 'ru' && lang !== 'uk' && hasCyrillic(aiTextResolved)
     ? translitPreserveCase(aiTextResolved)
     : aiTextResolved
 

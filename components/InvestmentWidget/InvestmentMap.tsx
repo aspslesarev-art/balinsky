@@ -13,7 +13,7 @@ import { translit, hasCyrillic } from '@/lib/translit'
 // to Latin on non-RU pages so infowindows don't show Cyrillic.
 function locTx(s: string | null | undefined, lang: Lang): string {
   if (!s) return ''
-  return lang !== 'ru' && hasCyrillic(s) ? translit(s) : s
+  return lang !== 'ru' && lang !== 'uk' && hasCyrillic(s) ? translit(s) : s
 }
 
 const COLORS = {
