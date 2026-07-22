@@ -13,7 +13,7 @@ const TTL_MS = 5 * 60 * 1000
 
 // Which langs have their own generated cache. RU is the source (assistant_kb).
 // ban has no listing-content translation (shell scope) → serve en.
-const SUPPORTED = new Set(['en', 'de', 'id', 'fr', 'zh', 'nl'])
+const SUPPORTED = new Set(['en', 'de', 'id', 'fr', 'zh', 'nl', 'pl', 'uk'])
 
 export function kbSummaryLang(lang: string): string | null {
   if (lang === 'ban') return 'en'

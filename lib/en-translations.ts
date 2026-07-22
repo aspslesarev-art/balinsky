@@ -171,21 +171,25 @@ export type AllTranslations = {
   de: SectionCache
   zh: SectionCache
   nl: SectionCache
+  pl: SectionCache
+  uk: SectionCache
 }
 
 export async function loadAllTranslations(section: Section): Promise<AllTranslations> {
-  const [en, id, fr, de, zh, nl] = await Promise.all([
+  const [en, id, fr, de, zh, nl, pl, uk] = await Promise.all([
     loadTranslations(section, 'en'),
     loadTranslations(section, 'id'),
     loadTranslations(section, 'fr'),
     loadTranslations(section, 'de'),
     loadTranslations(section, 'zh'),
     loadTranslations(section, 'nl'),
+    loadTranslations(section, 'pl'),
+    loadTranslations(section, 'uk'),
   ])
-  return { en, id, fr, de, zh, nl }
+  return { en, id, fr, de, zh, nl, pl, uk }
 }
 
-/** Merge EN+ID+FR+DE+ZH+NL translation slots into a row's data blob. */
+/** Merge EN+ID+FR+DE+ZH+NL+PL+UK translation slots into a row's data blob. */
 export function mergeAllTranslations(
   data: Record<string, unknown>,
   airtableId: string,
@@ -197,5 +201,7 @@ export function mergeAllTranslations(
   out = mergeTranslations(out, airtableId, all.de, 'de')
   out = mergeTranslations(out, airtableId, all.zh, 'zh')
   out = mergeTranslations(out, airtableId, all.nl, 'nl')
+  out = mergeTranslations(out, airtableId, all.pl, 'pl')
+  out = mergeTranslations(out, airtableId, all.uk, 'uk')
   return out
 }
