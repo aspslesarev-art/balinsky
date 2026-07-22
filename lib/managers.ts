@@ -1,3 +1,11 @@
+// Records written by hand in /admin/data only carry the fields the editor
+// actually filled in, so an optional list can simply be absent — the Airtable
+// sync used to guarantee every key existed. One manager saved without
+// developers took every /zastrojshhiki/<slug> page down with a 500.
+function asList<T>(v: T[] | undefined | null): T[] {
+  return Array.isArray(v) ? v : []
+}
+
 export type ManagerItem = {
   id: string
   name: string
@@ -42,7 +50,7 @@ export async function loadAllManagers(): Promise<ManagerItem[]> {
 export async function loadManagersByDeveloperSlug(devSlug: string | null | undefined): Promise<ManagerItem[]> {
   if (!devSlug) return []
   const all = await loadAllManagers()
-  return sortByRating(all.filter(m => m.developerSlugs.includes(devSlug)))
+  return sortByRating(all.filter(m => asList(m.developerSlugs).includes(devSlug)))
 }
 
 export async function loadManagersByDeveloperName(devName: string | null | undefined): Promise<ManagerItem[]> {
@@ -50,7 +58,7 @@ export async function loadManagersByDeveloperName(devName: string | null | undef
   const lc = devName.trim().toLowerCase()
   if (!lc) return []
   const all = await loadAllManagers()
-  return sortByRating(all.filter(m => m.developerNames.some(n => n.toLowerCase() === lc)))
+  return sortByRating(all.filter(m => asList(m.developerNames).some(n => n.toLowerCase() === lc)))
 }
 
 function sortByRating(matches: ManagerItem[]): ManagerItem[] {

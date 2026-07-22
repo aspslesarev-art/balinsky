@@ -1,6 +1,14 @@
 import type { Lang } from './i18n'
 import { revisionedCache } from './revisioned-cache'
 
+// Records written by hand in /admin/data only carry the fields the editor
+// actually filled in, so an optional list can simply be absent — the Airtable
+// sync used to guarantee every key existed. One manager saved without
+// developers took every /zastrojshhiki/<slug> page down with a 500.
+function asList<T>(v: T[] | undefined | null): T[] {
+  return Array.isArray(v) ? v : []
+}
+
 export type VideoLink = { name: string; slug: string | null }
 export type VideoItem = {
   id: string
@@ -57,16 +65,16 @@ export const loadAllVideos = revisionedCache(['videos'], TTL_MS, async (): Promi
 export function matchesLang(v: VideoItem, lang: Lang | undefined): boolean {
   if (!lang) return true
   if (!Array.isArray(v.languages) || v.languages.length === 0) return true
-  return v.languages.includes(lang)
+  return asList(v.languages).includes(lang)
 }
 
 export async function loadVideosByDeveloperSlug(slug: string, limit = 12, lang?: Lang): Promise<VideoItem[]> {
   const all = await loadAllVideos()
-  return all.filter(v => v.developers.some(d => d.slug === slug) && matchesLang(v, lang)).slice(0, limit)
+  return all.filter(v => asList(v.developers).some(d => d.slug === slug) && matchesLang(v, lang)).slice(0, limit)
 }
 export async function loadVideosByComplexSlug(slug: string, limit = 6, lang?: Lang): Promise<VideoItem[]> {
   const all = await loadAllVideos()
-  return all.filter(v => v.complexes.some(c => c.slug === slug) && matchesLang(v, lang)).slice(0, limit)
+  return all.filter(v => asList(v.complexes).some(c => c.slug === slug) && matchesLang(v, lang)).slice(0, limit)
 }
 // Inheritance: developer page also shows videos of all this developer's complexes.
 export async function loadVideosByDeveloperWithComplexes(
@@ -81,8 +89,8 @@ export async function loadVideosByDeveloperWithComplexes(
   const out: VideoItem[] = []
   for (const v of all) {
     if (!matchesLang(v, lang)) continue
-    const matchDev = v.developers.some(d => d.slug === developerSlug)
-    const matchComplex = v.complexes.some(c => c.slug && complexSet.has(c.slug))
+    const matchDev = asList(v.developers).some(d => d.slug === developerSlug)
+    const matchComplex = asList(v.complexes).some(c => c.slug && complexSet.has(c.slug))
     if (!matchDev && !matchComplex) continue
     if (seen.has(v.id)) continue
     seen.add(v.id)

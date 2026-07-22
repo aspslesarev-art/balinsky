@@ -53,6 +53,15 @@ function sortRows(cfg: CollectionConfig, rows: RecordRow[], sort?: { field: stri
   })
 }
 
+// Empty arrays for every field the config models as a list.
+function emptyLists(cfg: CollectionConfig): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
+  for (const f of cfg.fields) {
+    if (f.type === 'multienum' || f.type === 'json') out[f.key] = []
+  }
+  return out
+}
+
 function randomId(): string {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
   let s = ''
@@ -94,7 +103,11 @@ export const storageManifestAdapter: DataSourceAdapter = {
     const { idKey } = loc(cfg)
     const items = await loadItems(cfg)
     const id = `adm_${randomId()}`
-    const item: Record<string, unknown> = { ...fields, [idKey]: id }
+    // Seed the list-shaped fields the editor left blank. The site iterates
+    // these (`m.developerSlugs.includes(...)`), and a record missing one used
+    // to be impossible — the sync always wrote every key. One hand-created
+    // manager without `developerSlugs` 500'd every developer page.
+    const item: Record<string, unknown> = { ...emptyLists(cfg), ...fields, [idKey]: id }
     items.unshift(item)
     await saveItems(cfg, items)
     return { id, fields: item }
