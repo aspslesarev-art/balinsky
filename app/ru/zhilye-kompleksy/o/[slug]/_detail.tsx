@@ -1380,6 +1380,15 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
     c.airtable_id, lang, firstString(d[LEGAL_OK_FIELD]), null,
   )
   const legalQuestionsCount = parseAuditItems(firstString(d[LEGAL_QUESTIONS_FIELD])).length
+
+  // On-page admin editing: tag a field so components/InlineEditor turns it into
+  // a click-to-edit target for a logged-in admin. Only on RU — RU is the source
+  // of truth; other languages are derived translations, so editing there would
+  // write the wrong layer. Harmless no-op attrs for everyone else.
+  const edit = (field: string, kind: 'text' | 'longtext', label: string): Record<string, string> =>
+    lang === 'ru'
+      ? { 'data-edit-collection': 'complexes', 'data-edit-id': c.airtable_id, 'data-edit-field': field, 'data-edit-kind': kind, 'data-edit-label': label }
+      : {}
   const lat = parseGeo(d['Geo'])
   const lng = parseGeo(d['Geo 2'])
   const nativeBody = tField(d, 'SEO Text', lang)
@@ -1592,7 +1601,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             <Link href={complexesRoot} className="hover:text-[var(--color-text)]">{copy.backToComplexes}</Link>
             {district && <> · <span>{district}</span></>}
           </div>
-          <h1 className="text-[20px] sm:text-[28px] md:text-[44px] font-semibold tracking-tight text-[#111827] leading-[1.2] md:leading-[1.05] mb-2 sm:mb-3 [word-break:break-word] [overflow-wrap:anywhere]">
+          <h1 {...edit('Project', 'text', 'Название ЖК')} className="text-[20px] sm:text-[28px] md:text-[44px] font-semibold tracking-tight text-[#111827] leading-[1.2] md:leading-[1.05] mb-2 sm:mb-3 [word-break:break-word] [overflow-wrap:anywhere]">
             {name}
           </h1>
           {isSold && (
@@ -1667,7 +1676,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
               {copy.aboutPrefix} {name}
             </h2>
             <ExpandableText className="max-w-3xl" more={pickCopy({ ru: 'Подробнее', en: 'Read more', id: 'Selengkapnya', fr: 'En savoir plus', de: 'Mehr anzeigen', zh: '展开', nl: 'Meer', ban: 'Selengkapnya', pl: 'Więcej', uk: 'Докладніше' }, lang)} less={pickCopy({ ru: 'Свернуть', en: 'Show less', id: 'Tutup', fr: 'Réduire', de: 'Weniger', zh: '收起', nl: 'Minder', ban: 'Tutup', pl: 'Zwiń', uk: 'Згорнути' }, lang)}>
-              <div className="prose-balinsky text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
+              <div {...edit('ИИ Описание 2', 'longtext', 'Описание ЖК')} className="prose-balinsky text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
                 {pageBody}
               </div>
             </ExpandableText>
@@ -1852,6 +1861,8 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
           questionsCount={legalQuestionsCount}
           developerName={developerName}
           developerSlug={developerLink?.slug ?? null}
+          editId={c.airtable_id}
+          editable={lang === 'ru'}
         />
 
         {/* VIDEOS */}

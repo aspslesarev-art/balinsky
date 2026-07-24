@@ -3,7 +3,17 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ChevronDown, Check, TriangleAlert, Lock } from 'lucide-react'
 import { pickCopy, type Lang } from '@/lib/i18n'
-import type { AuditItem } from '@/lib/legal-audit'
+import { LEGAL_OK_FIELD, LEGAL_QUESTIONS_FIELD, type AuditItem } from '@/lib/legal-audit'
+
+// Admin on-page editing: data-edit-* attrs make the whole block a click-to-edit
+// target (components/InlineEditor). Editing the field as one textarea (one item
+// per line) rather than per-row keeps this simple and covers add/remove/reorder.
+type EditAttrs = Record<string, string>
+function editAttrs(id: string | undefined, editable: boolean | undefined, field: string, label: string): EditAttrs {
+  return editable && id
+    ? { 'data-edit-collection': 'complexes', 'data-edit-id': id, 'data-edit-field': field, 'data-edit-kind': 'longtext', 'data-edit-label': label }
+    : {}
+}
 
 // Legal due-diligence on the complex page. Two blocks: "что в порядке" (public,
 // server-rendered, indexable) and "вопросы / что запросить" (lead-gated — the
@@ -103,12 +113,12 @@ function Row({ item, tone }: { item: AuditItem; tone: 'ok' | 'warn' }) {
   )
 }
 
-function Group({ tone, title, items }: { tone: 'ok' | 'warn'; title: string; items: AuditItem[] }) {
+function Group({ tone, title, items, edit }: { tone: 'ok' | 'warn'; title: string; items: AuditItem[]; edit?: EditAttrs }) {
   const Icon = tone === 'ok' ? Check : TriangleAlert
   const wrap = tone === 'ok' ? 'border-emerald-200 bg-emerald-50/50' : 'border-amber-200 bg-amber-50/50'
   const iconCls = tone === 'ok' ? 'text-emerald-600' : 'text-amber-600'
   return (
-    <div className={`rounded-2xl border p-4 sm:p-5 ${wrap}`}>
+    <div {...edit} className={`rounded-2xl border p-4 sm:p-5 ${wrap}`}>
       <div className="flex items-center gap-2 mb-1">
         <Icon size={18} className={iconCls} />
         <h3 className="text-[15px] sm:text-[16px] font-semibold text-[#111827]">{title}</h3>
@@ -119,10 +129,10 @@ function Group({ tone, title, items }: { tone: 'ok' | 'warn'; title: string; ite
 }
 
 function GatedQuestions({
-  lang, slug, count, title, developerName, developerSlug,
+  lang, slug, count, title, developerName, developerSlug, edit,
 }: {
   lang: Lang; slug: string; count: number; title: string
-  developerName?: string | null; developerSlug?: string | null
+  developerName?: string | null; developerSlug?: string | null; edit?: EditAttrs
 }) {
   const c = pickCopy(COPY, lang)
   const [items, setItems] = useState<AuditItem[] | null>(null)
@@ -176,10 +186,10 @@ function GatedQuestions({
     }
   }, [name, phone, website, slug, developerName, developerSlug, fetchItems])
 
-  if (items) return <Group tone="warn" title={title} items={items} />
+  if (items) return <Group tone="warn" title={title} items={items} edit={edit} />
 
   return (
-    <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-4 sm:p-5">
+    <div {...edit} className="rounded-2xl border border-amber-200 bg-amber-50/50 p-4 sm:p-5">
       <div className="flex items-center gap-2 mb-1.5">
         <TriangleAlert size={18} className="text-amber-600" />
         <h3 className="text-[15px] sm:text-[16px] font-semibold text-[#111827]">{title}</h3>
@@ -204,7 +214,7 @@ function GatedQuestions({
 }
 
 export function LegalAudit({
-  lang, slug, okItems, questionsCount, developerName, developerSlug,
+  lang, slug, okItems, questionsCount, developerName, developerSlug, editId, editable,
 }: {
   lang: Lang
   slug: string
@@ -212,19 +222,27 @@ export function LegalAudit({
   questionsCount: number
   developerName?: string | null
   developerSlug?: string | null
+  // Admin on-page editing (RU only — RU is the source of truth).
+  editId?: string
+  editable?: boolean
 }) {
   const c = pickCopy(COPY, lang)
-  if (okItems.length === 0 && questionsCount === 0) return null
+  // When editing, always render both blocks so an admin can add the first item
+  // to an empty field; otherwise hide empty blocks from visitors.
+  if (!editable && okItems.length === 0 && questionsCount === 0) return null
+  const showOk = okItems.length > 0 || editable
+  const showQuestions = questionsCount > 0 || editable
   return (
     <section className="mb-10" id="legal">
       <h2 className="text-[19px] sm:text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-1">{c.title}</h2>
       <p className="text-[13.5px] sm:text-[14px] text-[var(--color-text-soft)] mb-4">{c.subtitle}</p>
       <div className="grid gap-4 lg:grid-cols-2 items-start">
-        {okItems.length > 0 && <Group tone="ok" title={c.okTitle} items={okItems} />}
-        {questionsCount > 0 && (
+        {showOk && <Group tone="ok" title={c.okTitle} items={okItems} edit={editAttrs(editId, editable, LEGAL_OK_FIELD, 'Юр-проверка: в порядке')} />}
+        {showQuestions && (
           <GatedQuestions
             lang={lang} slug={slug} count={questionsCount} title={c.qTitle}
             developerName={developerName} developerSlug={developerSlug}
+            edit={editAttrs(editId, editable, LEGAL_QUESTIONS_FIELD, 'Юр-проверка: вопросы (под лидом)')}
           />
         )}
       </div>

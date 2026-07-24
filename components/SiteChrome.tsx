@@ -14,6 +14,13 @@ const ConsultantWidget = dynamic(
   { ssr: false, loading: () => null },
 )
 
+// On-page editing overlay. Renders null for everyone except a logged-in admin,
+// so the only cost for a normal visitor is one tiny /api/admin/whoami check.
+const InlineEditor = dynamic(
+  () => import('./InlineEditor').then(m => ({ default: m.InlineEditor })),
+  { ssr: false, loading: () => null },
+)
+
 export function SiteChrome() {
   const pathname = usePathname() ?? ''
   // Admin is its own self-contained UI: no public footer, no AI consultant.
@@ -30,6 +37,7 @@ export function SiteChrome() {
     <>
       <Footer lang={lang} />
       <ConsultantWidget />
+      <InlineEditor />
     </>
   )
 }
