@@ -50,6 +50,7 @@ import { loadLandProfile, landAllowsBuilding } from '@/lib/land-profile'
 import { loadComplexMarketStats } from '@/lib/complex-market-stats'
 import { MarketStatsBlock } from '@/components/MarketStatsBlock'
 import { PageViewTracker } from '@/components/PageViewTracker'
+import { FullRecordEditor } from '@/components/FullRecordEditor'
 import { tField, pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { facetLabel } from '@/lib/filter-i18n'
 import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
@@ -1564,6 +1565,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
     <>
       <Header active="zhilye-kompleksy" />
       <PageViewTracker kind="complex" slug={slug} title={name} airtableId={c.airtable_id} lang={lang} />
+      <FullRecordEditor collection="complexes" recordId={c.airtable_id} title={name} lang={lang} />
       <PageContainer>
         <Breadcrumbs currentUrl={`${complexesRoot}/o/${slug}`} items={[
           { label: copy.home, href: home },

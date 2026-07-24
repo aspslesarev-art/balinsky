@@ -24,6 +24,7 @@ import { loadAllEvents } from '@/lib/events'
 import { loadVideosByDeveloperWithComplexes } from '@/lib/videos'
 import { VideoGrid } from '@/components/VideoGrid'
 import { PageViewTracker } from '@/components/PageViewTracker'
+import { FullRecordEditor } from '@/components/FullRecordEditor'
 import { tField, pickCopy, switchLangPath, langToSegment, type Lang } from '@/lib/i18n'
 import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
 import { cleanDeveloperBullets } from '@/lib/developer-highlights'
@@ -695,6 +696,7 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
     <>
       <Header active="zastrojshhiki" />
       <PageViewTracker kind="developer" slug={slug} title={name} airtableId={dev.airtable_id} lang={lang} />
+      <FullRecordEditor collection="developers" recordId={dev.airtable_id} title={name} lang={lang} />
       <PageContainer>
         <Breadcrumbs currentUrl={`${devsRoot}/${slug}`} items={[
           { label: c.home, href: home },

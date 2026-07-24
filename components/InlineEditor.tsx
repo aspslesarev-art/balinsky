@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Pencil, X, Check, Loader2 } from 'lucide-react'
+import { useIsAdmin } from '@/lib/use-is-admin'
 
 // On-page editing for admins. When the visitor is a logged-in admin (checked
 // via /api/admin/whoami — the admin_session cookie is httpOnly, so we can't read
@@ -38,21 +39,12 @@ function firstString(v: unknown): string {
 
 export function InlineEditor() {
   const router = useRouter()
-  const [admin, setAdmin] = useState(false)
+  const admin = useIsAdmin()
   const [target, setTarget] = useState<Target | null>(null)
   const [value, setValue] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'saving' | 'error'>('idle')
   const [err, setErr] = useState<string | null>(null)
   const hovered = useRef<Element | null>(null)
-
-  useEffect(() => {
-    let alive = true
-    fetch('/api/admin/whoami', { credentials: 'same-origin' })
-      .then(r => r.ok ? r.json() : { admin: false })
-      .then(j => { if (alive) setAdmin(!!j.admin) })
-      .catch(() => {})
-    return () => { alive = false }
-  }, [])
 
   const open = useCallback(async (el: HTMLElement) => {
     const t: Target = {
