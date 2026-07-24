@@ -34,10 +34,20 @@ const rows = Object.values(places).map(p => ({
 console.log(`loading ${rows.length} rows in batches...`)
 const BATCH = 300
 let done = 0
+const sleep = (ms) => new Promise(r => setTimeout(r, ms))
 for (let i = 0; i < rows.length; i += BATCH) {
   const slice = rows.slice(i, i + BATCH)
-  const { error } = await sb.from('bali_places').upsert(slice, { onConflict: 'id' })
-  if (error) { console.error(`batch ${i}: ${error.message}`); process.exit(1) }
+  let ok = false
+  for (let attempt = 1; attempt <= 5 && !ok; attempt++) {
+    try {
+      const { error } = await sb.from('bali_places').upsert(slice, { onConflict: 'id' })
+      if (error) throw new Error(error.message)
+      ok = true
+    } catch (e) {
+      if (attempt === 5) { console.error(`\nbatch ${i} failed after 5 tries: ${e.message}`); process.exit(1) }
+      await sleep(1000 * attempt)
+    }
+  }
   done += slice.length
   process.stdout.write(`\r  upserted ${done}/${rows.length}`)
 }
