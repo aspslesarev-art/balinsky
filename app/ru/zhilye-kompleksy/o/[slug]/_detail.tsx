@@ -1660,6 +1660,20 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
           </section>
         )}
 
+        {/* LEGAL AUDIT — what's in order (public) + questions (lead-gated).
+            Sits right under the land + neighbours-income row and above the
+            prose description: the visitor sees the due-diligence verdict while
+            still in the "is this safe / worth it" mindset, before the marketing
+            write-up. */}
+        <LegalAudit
+          lang={lang}
+          slug={slug}
+          okItems={legalOkItems}
+          questionsCount={legalQuestionsCount}
+          developerName={developerName}
+          developerSlug={developerLink?.slug ?? null}
+        />
+
         {/* ABOUT (unique AI write-up, falls back to SEO Text) */}
         {pageBody && (
           <section className="mb-10">
@@ -1843,16 +1857,6 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             </a>
           </section>
         )}
-
-        {/* LEGAL AUDIT — what's in order (public) + questions (lead-gated) */}
-        <LegalAudit
-          lang={lang}
-          slug={slug}
-          okItems={legalOkItems}
-          questionsCount={legalQuestionsCount}
-          developerName={developerName}
-          developerSlug={developerLink?.slug ?? null}
-        />
 
         {/* VIDEOS */}
         {complexVideos.length > 0 && (
