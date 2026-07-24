@@ -33,7 +33,7 @@ export default function PhuketPage() {
     // иначе она перекрывает последний абзац блока «Расписание и бронь».
     <div className="min-h-screen bg-white text-[#111827] pb-[72px] md:pb-0">
       {/* === 1. Hero ==================================================== */}
-      <section className="relative flex items-end min-h-[86vh] overflow-hidden bg-[#0E1A14]">
+      <section className="relative flex items-end min-h-[100svh] overflow-hidden bg-[#0E1A14]">
         <Image src={HERO.photo} alt="" fill priority sizes="100vw" className="object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#06100C]/96 via-[#06100C]/70 to-[#06100C]/30" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#06100C]/75 via-[#06100C]/15 to-transparent" />
