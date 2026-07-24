@@ -63,6 +63,9 @@ import { DistrictAboutCard } from '@/components/DistrictAboutCard'
 import { getDistrictCopy } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
+import { LegalAudit } from '@/components/LegalAudit'
+import { LEGAL_OK_FIELD, LEGAL_QUESTIONS_FIELD, parseAuditItems } from '@/lib/legal-audit'
+import { loadComplexAudit } from '@/lib/complex-legal-i18n'
 
 const AIRPORT_LAT = -8.7467
 const AIRPORT_LNG = 115.1667
@@ -1368,6 +1371,15 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   // uses; cached for an hour to avoid hammering raw_developers
   // on every complex render.
   const developerLink = await findDeveloperLink(developerName)
+
+  // Legal due-diligence. The "в порядке" items render publicly (translated for
+  // the current language); the "вопросы" items stay gated — only their count
+  // ships here, the items themselves come from /api/complex/[slug]/legal after
+  // the visitor leaves a lead.
+  const { ok: legalOkItems } = await loadComplexAudit(
+    c.airtable_id, lang, firstString(d[LEGAL_OK_FIELD]), null,
+  )
+  const legalQuestionsCount = parseAuditItems(firstString(d[LEGAL_QUESTIONS_FIELD])).length
   const lat = parseGeo(d['Geo'])
   const lng = parseGeo(d['Geo 2'])
   const nativeBody = tField(d, 'SEO Text', lang)
@@ -1831,6 +1843,16 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             </a>
           </section>
         )}
+
+        {/* LEGAL AUDIT — what's in order (public) + questions (lead-gated) */}
+        <LegalAudit
+          lang={lang}
+          slug={slug}
+          okItems={legalOkItems}
+          questionsCount={legalQuestionsCount}
+          developerName={developerName}
+          developerSlug={developerLink?.slug ?? null}
+        />
 
         {/* VIDEOS */}
         {complexVideos.length > 0 && (

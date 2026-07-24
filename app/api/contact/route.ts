@@ -181,7 +181,18 @@ export async function POST(req: Request) {
   await sendToTelegram(ADMIN_CHAT, text)
   if (devChat && devChat !== ADMIN_CHAT) await sendToTelegram(devChat, text)
 
-  return NextResponse.json({ ok: true, leadId })
+  // A successful lead unlocks lead-gated content (e.g. the complex legal-audit
+  // "вопросы" block). httpOnly so the gate can't be forged from the client;
+  // the UI mirrors it in localStorage only to decide whether to auto-reveal.
+  const res = NextResponse.json({ ok: true, leadId })
+  res.cookies.set('bx_lead', '1', {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 60 * 60 * 24 * 180, // 180 days
+  })
+  return res
 }
 
 function escapeHtml(s: string): string {

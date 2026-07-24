@@ -7,6 +7,7 @@
 // admin writes stay compatible with what the site renders.
 
 import type { CollectionConfig } from './adapters/types'
+import { LEGAL_OK_FIELD, LEGAL_QUESTIONS_FIELD } from '@/lib/legal-audit'
 
 // --- SQL JSONB catalogs (raw_* tables, PK airtable_id, JSONB `data`) -------
 
@@ -128,6 +129,11 @@ const complexes: CollectionConfig = {
     { key: 'Типы юнитов', label: 'Типы юнитов', type: 'multienum' },
     { key: 'TOP', label: 'TOP', type: 'bool' },
     { key: 'Разрешительные документы', label: 'Документы', type: 'enum' },
+    // Legal due-diligence shown on the complex page as two collapsible blocks.
+    // ONE ITEM PER LINE — the row headline is the lead of each line, the rest
+    // expands. "в порядке" is public; "вопросы" is lead-gated on the site.
+    { key: LEGAL_OK_FIELD, label: 'Юр-проверка: в порядке', type: 'longtext' },
+    { key: LEGAL_QUESTIONS_FIELD, label: 'Юр-проверка: вопросы (под лидом)', type: 'longtext' },
   ],
 }
 
