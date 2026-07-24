@@ -62,14 +62,6 @@ const ZONES = [
   ['Tanah Lot', -8.621, 115.088, 5000], ['Tabanan', -8.545, 115.125, 6000],
   ['Medewi', -8.420, 114.800, 6000], ['Pemuteran-Menjangan', -8.140, 114.660, 8000],
   ['Nusa Penida', -8.727, 115.545, 9000], ['Nusa Lembongan', -8.680, 115.450, 5000],
-  // --- pass 2: tighter sub-zone anchors to surface the long tail ---
-  ['Pererenan', -8.635, 115.113, 2500], ['Umalas-Kerobokan', -8.673, 115.160, 2500],
-  ['Sanggingan-Penestanan', -8.500, 115.252, 2500], ['Sayan-Kedewatan', -8.505, 115.244, 2500],
-  ['Benoa-Tanjung', -8.755, 115.215, 3000], ['Sanur North', -8.665, 115.256, 2500],
-  ['Sekumpul', -8.170, 115.180, 4000], ['Banjar-Sambangan', -8.180, 115.075, 4000],
-  ['Lempuyang-Bunutan', -8.390, 115.630, 4000], ['Padangbai', -8.530, 115.510, 3000],
-  ['Nungnung', -8.320, 115.168, 4000], ['Sukawati-Batubulan', -8.610, 115.270, 3500],
-  ['Uluwatu-Padang', -8.810, 115.103, 2500], ['Seseh-Cemagi', -8.628, 115.103, 3000],
 ]
 
 // ---- categories ----
@@ -92,15 +84,6 @@ const TEXT_ROOTS = [
   { cat: 'market', query: 'traditional art market' },
   { cat: 'museum', query: 'museum art gallery' },
   { cat: 'nightclub', query: 'night club live music bar' },
-  // --- pass 2: niche long-tail queries (run for every zone) ---
-  { cat: 'vegan', query: 'vegan healthy restaurant' },
-  { cat: 'finedining', query: 'fine dining restaurant' },
-  { cat: 'divespot', query: 'dive site scuba diving' },
-  { cat: 'surfspot', query: 'surf spot surfing beach' },
-  { cat: 'hiddenwaterfall', query: 'hidden waterfall' },
-  { cat: 'nature', query: 'national park nature reserve jungle' },
-  { cat: 'landmark', query: 'famous landmark monument' },
-  { cat: 'luxuryhotel', query: 'luxury resort hotel' },
 ]
 
 // ---- field mask: full atmosphere detail, no photo bytes ----
