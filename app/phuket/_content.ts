@@ -129,6 +129,42 @@ export const DEVELOPERS: readonly DeveloperCard[] = [
     ],
     badges: ['PBG ✓', 'Лизхолд ✓', 'Посуточная лицензия ✓'],
   },
+  {
+    name: 'IJI Group',
+    logo: `${LOGOS}/recl9Mp1JQclby1UE.png`,
+    meta: 'Резиденции · Букит',
+    href: 'https://balinsky.info/ru/zastrojshhiki/iji-group-bali-developer',
+    photos: [
+      { src: `${CDN}/recw5fC0zJ0QNKIxy/0.jpg?v=K1xgpId3xoqJRE`, alt: 'BODY SENSE, Букит — проект IJI Group' },
+      { src: `${CDN}/recw5fC0zJ0QNKIxy/1.jpg?v=kQg6RSHaxEAD1K`, alt: 'BODY SENSE, Букит — проект IJI Group' },
+      { src: `${CDN}/recgIqgmMkdCuH3j6/0.jpg?v=slLO2mnfa4lUIz`, alt: 'EIGHTH SENSE, Букит — проект IJI Group' },
+    ],
+    badges: ['PBG ✓', 'Лизхолд ✓', 'Посуточная лицензия ✓'],
+  },
+  {
+    name: 'Big Bali Group',
+    logo: `${LOGOS}/rec45XABp4aef39Ak.jpg`,
+    meta: 'Апарт-комплексы · Букит',
+    href: 'https://balinsky.info/ru/zastrojshhiki/big-bali-group-bali-developer',
+    photos: [
+      { src: `${CDN}/recTMa0rFk5VSarDc/0.jpg?v=MsEA8OfKm8NdZf`, alt: 'Manta Livin, Букит — проект Big Bali Group' },
+      { src: `${CDN}/recTMa0rFk5VSarDc/1.jpg?v=E1Tgwj4Li7SeBq`, alt: 'Manta Livin, Букит — проект Big Bali Group' },
+      { src: `${CDN}/recTMa0rFk5VSarDc/2.jpg?v=SC0dPlYxF88frG`, alt: 'Manta Livin, Букит — проект Big Bali Group' },
+    ],
+    badges: ['PBG ✓', 'Лизхолд ✓', 'Посуточная лицензия ✓'],
+  },
+  {
+    name: 'Urban Escape',
+    logo: `${LOGOS}/reccIgeMeuwhEiVsx.jpg`,
+    meta: 'Резиденции · Чангу, Букит',
+    href: 'https://balinsky.info/ru/zastrojshhiki/urban-escape-bali-developer',
+    photos: [
+      { src: `${CDN}/recauVEKAMqw3E9yy/0.jpg?v=o3KMgKURBdVwGG`, alt: 'PRIVÉ Pererenan, Чангу — проект Urban Escape' },
+      { src: `${CDN}/recauVEKAMqw3E9yy/1.jpg?v=nUxOD2dL980nIV`, alt: 'PRIVÉ Pererenan, Чангу — проект Urban Escape' },
+      { src: `${CDN}/rec5SHg9DPOxcKJMl/0.jpg?v=cVuHDd3VIDFOff`, alt: 'BINGIN ELEMENTS, Букит — проект Urban Escape' },
+    ],
+    badges: ['PBG ✓', 'Лизхолд ✓', 'Посуточная лицензия ✓'],
+  },
 ]
 
 export const ABOUT = {
