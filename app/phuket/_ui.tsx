@@ -42,10 +42,10 @@ export function SectionHead({ eyebrow, title, sub, isOnDark = false }: SectionHe
           {eyebrow}
         </div>
       )}
-      <h2 className={`text-[26px] md:text-[40px] leading-[1.12] font-light tracking-[-0.02em] ${titleColor}`}>
+      <h2 className={`text-[26px] md:text-[40px] leading-[1.12] font-light tracking-[-0.02em] text-balance ${titleColor}`}>
         {title}
       </h2>
-      {sub && <p className={`mt-4 text-[16px] md:text-[18px] leading-[1.55] ${subColor}`}>{sub}</p>}
+      {sub && <p className={`mt-4 text-[16px] md:text-[18px] leading-[1.55] text-pretty ${subColor}`}>{sub}</p>}
     </div>
   )
 }

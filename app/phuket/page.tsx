@@ -44,9 +44,13 @@ export default function PhuketPage() {
               {HERO.eyebrow}
             </div>
             <h1 className="text-[32px] md:text-[54px] leading-[1.07] font-extrabold tracking-[-0.015em] text-white [text-shadow:0_2px_22px_rgba(0,0,0,0.65),0_1px_3px_rgba(0,0,0,0.55)]">
-              {HERO.title}
+              {HERO.titleLines.map(line => (
+                <span key={line} className="block">
+                  {line}
+                </span>
+              ))}
             </h1>
-            <p className="mt-5 text-[16px] md:text-[19px] leading-[1.5] text-white/90 max-w-[640px] [text-shadow:0_1px_12px_rgba(0,0,0,0.6)]">
+            <p className="mt-5 text-[16px] md:text-[19px] leading-[1.5] text-white/90 max-w-[640px] text-pretty [text-shadow:0_1px_12px_rgba(0,0,0,0.6)]">
               {HERO.lead}
             </p>
 
@@ -176,7 +180,7 @@ export default function PhuketPage() {
       {/* === 6. Кто я =================================================== */}
       <Section className="bg-[var(--color-bg)] border-b border-[var(--color-border)]">
         <div className="grid md:grid-cols-[280px_1fr] gap-8 md:gap-12 md:items-center">
-          <div className="relative w-[200px] md:w-full aspect-square rounded-2xl overflow-hidden bg-[var(--color-search-bg)]">
+          <div className="relative w-[200px] md:w-[280px] aspect-square rounded-full overflow-hidden bg-[var(--color-search-bg)]">
             <Image
               src={ABOUT.photo}
               alt={`${ABOUT.name} — ${ABOUT.role}`}
