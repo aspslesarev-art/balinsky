@@ -25,6 +25,7 @@ import { isMetaBullet } from '@/lib/developer-highlights'
 import { loadAllVideos, matchesLang as videoMatchesLang } from '@/lib/videos'
 import { VideoGrid } from '@/components/VideoGrid'
 import { PageViewTracker } from '@/components/PageViewTracker'
+import { FullRecordEditor } from '@/components/FullRecordEditor'
 import dynamic from 'next/dynamic'
 // Heavy client widgets — pulled off the initial JS bundle. Both render
 // below the fold on detail pages, so late hydration is invisible.
@@ -1050,6 +1051,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
     <>
       <Header active="apartamenty" />
       <PageViewTracker kind="apartment" slug={slug} title={title} airtableId={a.airtable_id} lang={lang} />
+      <FullRecordEditor collection="apartments" recordId={a.airtable_id} title={title} lang={lang} />
       <PageContainer>
         <Breadcrumbs currentUrl={`${apartmentsRoot}/o/${slug}`} items={[
           { label: c.home, href: home },
