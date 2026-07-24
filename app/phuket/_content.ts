@@ -98,7 +98,6 @@ export interface DeveloperCard {
   meta: string
   href: string
   photos: readonly { src: string; alt: string }[]
-  badges: readonly string[]
 }
 
 const CDN = 'https://images.balinsky.info/storage/v1/object/public/complex-photos'
@@ -115,7 +114,6 @@ export const DEVELOPERS: readonly DeveloperCard[] = [
       { src: `${CDN}/recWmiC2vOh7qvgUh/0.jpg?v=1X4dzzNxAWcaUW`, alt: 'BALIWOOD II, Чангу — построен BREIG в 2024 году' },
       { src: `${CDN}/recdf0jTXs7NdByEm/0.jpg?v=okrgFID97Xu8py`, alt: 'Oasis III, Чангу — построен BREIG в 2025 году' },
     ],
-    badges: ['PBG ✓', 'Лизхолд ✓', 'Посуточная лицензия ✓'],
   },
   {
     name: 'HQC',
@@ -127,7 +125,6 @@ export const DEVELOPERS: readonly DeveloperCard[] = [
       { src: `${CDN}/rec8A9IzLGw1SqIOD/0.jpg?v=GGtfEt256nTH7E`, alt: 'Black Rock, Букит — построен HQC в 2024 году' },
       { src: `${CDN}/recqPBo3KvBTOEaKf/0.jpg?v=l9t2jK94zeyktJ`, alt: 'Dzen Greenfield Villas, Убуд — построен HQC в 2025 году' },
     ],
-    badges: ['PBG ✓', 'Лизхолд ✓', 'Посуточная лицензия ✓'],
   },
   {
     name: 'IJI Group',
@@ -139,7 +136,6 @@ export const DEVELOPERS: readonly DeveloperCard[] = [
       { src: `${CDN}/recw5fC0zJ0QNKIxy/1.jpg?v=kQg6RSHaxEAD1K`, alt: 'BODY SENSE, Букит — проект IJI Group' },
       { src: `${CDN}/recgIqgmMkdCuH3j6/0.jpg?v=slLO2mnfa4lUIz`, alt: 'EIGHTH SENSE, Букит — проект IJI Group' },
     ],
-    badges: ['PBG ✓', 'Лизхолд ✓', 'Посуточная лицензия ✓'],
   },
   {
     name: 'Big Bali Group',
@@ -151,7 +147,6 @@ export const DEVELOPERS: readonly DeveloperCard[] = [
       { src: `${CDN}/recTMa0rFk5VSarDc/1.jpg?v=E1Tgwj4Li7SeBq`, alt: 'Manta Livin, Букит — проект Big Bali Group' },
       { src: `${CDN}/recTMa0rFk5VSarDc/2.jpg?v=SC0dPlYxF88frG`, alt: 'Manta Livin, Букит — проект Big Bali Group' },
     ],
-    badges: ['PBG ✓', 'Лизхолд ✓', 'Посуточная лицензия ✓'],
   },
   {
     name: 'Urban Escape',
@@ -163,7 +158,6 @@ export const DEVELOPERS: readonly DeveloperCard[] = [
       { src: `${CDN}/recauVEKAMqw3E9yy/1.jpg?v=nUxOD2dL980nIV`, alt: 'PRIVÉ Pererenan, Чангу — проект Urban Escape' },
       { src: `${CDN}/rec5SHg9DPOxcKJMl/0.jpg?v=cVuHDd3VIDFOff`, alt: 'BINGIN ELEMENTS, Букит — проект Urban Escape' },
     ],
-    badges: ['PBG ✓', 'Лизхолд ✓', 'Посуточная лицензия ✓'],
   },
 ]
 

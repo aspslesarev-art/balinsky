@@ -155,21 +155,11 @@ export default function PhuketPage() {
               </div>
 
               <div className="p-6 md:p-7">
-                <div className="flex flex-wrap gap-2">
-                  {dev.badges.map(badge => (
-                    <span
-                      key={badge}
-                      className="inline-flex items-center px-3 py-1.5 rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary-pressed)] text-[12.5px] font-medium"
-                    >
-                      {badge}
-                    </span>
-                  ))}
-                </div>
                 <a
                   href={dev.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-5 inline-flex items-center gap-1.5 text-[14px] font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-pressed)] transition-colors"
+                  className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-pressed)] transition-colors"
                 >
                   Профиль застройщика на Balinsky
                   <ArrowUpRight size={15} strokeWidth={2} />
