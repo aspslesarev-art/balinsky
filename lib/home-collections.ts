@@ -106,3 +106,30 @@ export async function loadHomeCollections(lang: Lang): Promise<CollTier[]> {
     tags: ['content:villas', 'content:apartments'],
   })()
 }
+
+// Flat pool for the /podbor wizard: every listing from the budget-tier
+// collections, deduped, carrying its type + district. Reuses the cached
+// loadHomeCollections output, so no extra DB work. Order is the same
+// smart-rank the homepage uses (best first).
+export type PodborItem = CollItem & {
+  type: 'villa' | 'apartment'
+  districtSlug: string
+  districtName: string
+}
+
+export async function loadPodborPool(lang: Lang): Promise<PodborItem[]> {
+  const tiers = await loadHomeCollections(lang)
+  const seen = new Set<string>()
+  const out: PodborItem[] = []
+  for (const tier of tiers) {
+    for (const d of tier.districts) {
+      for (const it of d.items) {
+        const key = `${tier.type}:${it.slug}`
+        if (seen.has(key)) continue
+        seen.add(key)
+        out.push({ ...it, type: tier.type, districtSlug: d.slug, districtName: d.name })
+      }
+    }
+  }
+  return out
+}
