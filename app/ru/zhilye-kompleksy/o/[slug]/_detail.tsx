@@ -51,6 +51,8 @@ import { loadComplexMarketStats } from '@/lib/complex-market-stats'
 import { MarketStatsBlock } from '@/components/MarketStatsBlock'
 import { loadComplexAccess } from '@/lib/complex-access'
 import { ComplexAccessBlock } from '@/components/ComplexAccessBlock'
+import { ComplexSignalsBlock } from '@/components/ComplexSignalsBlock'
+import { computeComplexSignals, loadDistrictOccupancyMedians, hasAnySignal } from '@/lib/complex-signals'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { FullRecordEditor } from '@/components/FullRecordEditor'
 import { tField, pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
@@ -1438,6 +1440,24 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   ].filter(Boolean) as { Icon: typeof Building2; label: string; value: string }[]
 
   const ready = readiness(d)
+  // Инвест-сигналы 2–4 (сигнал 1 = надёжность застройщика, выше): доходность
+  // аренды, пляжная зона, загрузка vs район, срок сдачи. Синтез из уже
+  // загруженных units/marketStats/access + кэшированной медианы по району.
+  const districtMediansMap = await loadDistrictOccupancyMedians().catch(() => null)
+  const yearNum = yearRaw != null ? Number(yearRaw) : null
+  const signals = computeComplexSignals({
+    units: units.map((u) => ({
+      kind: u.kind,
+      priceUsd: u.priceUsd != null && Number.isFinite(Number(u.priceUsd)) ? Number(u.priceUsd) : null,
+    })),
+    marketStats,
+    access,
+    districtMedians: districtRaw ? districtMediansMap?.get(districtRaw) ?? null : null,
+    readinessPct: ready,
+    year: yearNum != null && Number.isFinite(yearNum) ? yearNum : null,
+    status: statusRaw,
+    currentYear: CURRENT_YEAR,
+  })
   const otherComplexes = await loadOtherComplexesInDistrict(district, c.airtable_id, lang)
   const complexVideos = await loadVideosByComplexSlug(slug, 6, lang).catch(() => [])
 
@@ -1650,6 +1670,15 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
                 </div>
               ))}
             </div>
+          </section>
+        )}
+
+        {/* ИНВЕСТ-СИГНАЛЫ — синтез инвест-показателей ЖК (доходность, пляжная
+            зона, загрузка vs район, срок сдачи). Стоит над детальным блоком
+            «Сколько зарабатывают соседи» как краткая сводка. */}
+        {hasAnySignal(signals) && (
+          <section className="mb-6">
+            <ComplexSignalsBlock signals={signals} lang={lang} />
           </section>
         )}
 
