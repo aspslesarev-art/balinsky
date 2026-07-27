@@ -1,6 +1,7 @@
 import { asList } from '@/lib/as-list'
 import { applyManifestTranslation, loadTranslations } from '@/lib/en-translations'
 import { cdnNormalize } from '@/lib/photo-cdn'
+import { normalizeSlug } from '@/lib/slug-normalize'
 import type { Lang } from '@/lib/i18n'
 
 export type NewsDeveloper = { name: string; slug: string | null }
@@ -40,9 +41,16 @@ async function loadRawNews(): Promise<NewsItem[]> {
     if (!r.ok) return []
     const j = (await r.json()) as Manifest
     if (!Array.isArray(j.items)) return []
-    // Repair legacy path-stripped CDN photo URLs (Bunny-era form) that the
-    // current Cloudflare Worker 401/404s — see lib/photo-cdn.ts:cdnNormalize.
-    return j.items.map(it => (it.photo ? { ...it, photo: cdnNormalize(it.photo) } : it))
+    return j.items.map(it => ({
+      ...it,
+      // Repair legacy path-stripped CDN photo URLs (Bunny-era form) that the
+      // current Cloudflare Worker 401/404s — see lib/photo-cdn.ts:cdnNormalize.
+      photo: it.photo ? cdnNormalize(it.photo) : it.photo,
+      // Admin-created items may lack a slug (the manifest adapter had no
+      // generator before this was fixed) — derive one from the title so the
+      // detail page, which resolves by slug, is reachable instead of 404ing.
+      slug: it.slug || normalizeSlug(it.title) || it.id,
+    }))
   } catch {
     return []
   }

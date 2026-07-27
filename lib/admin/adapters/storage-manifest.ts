@@ -5,6 +5,7 @@
 
 import type { CollectionConfig, DataSourceAdapter, ListQuery, ListResult, RecordRow } from './types'
 import { adminSb, supabaseUrl } from '../sb'
+import { normalizeSlug } from '../../slug-normalize'
 
 type Manifest = { generatedAt?: string; count?: number; items: Record<string, unknown>[] }
 
@@ -108,6 +109,15 @@ export const storageManifestAdapter: DataSourceAdapter = {
     // to be impossible — the sync always wrote every key. One hand-created
     // manager without `developerSlugs` 500'd every developer page.
     const item: Record<string, unknown> = { ...emptyLists(cfg), ...fields, [idKey]: id }
+    // Manifest collections have no slug generator of their own (SQL rows get
+    // one in sql-jsonb; the retired Airtable sync transliterated the title).
+    // A blank slug leaves the detail page unreachable — it resolves by slug —
+    // so derive one from the title, matching every existing slug's form.
+    if (cfg.fields.some(f => f.key === 'slug') && isEmpty(item.slug)) {
+      const title = cfg.titleField ? item[cfg.titleField] : null
+      const derived = normalizeSlug(typeof title === 'string' ? title : null)
+      if (derived) item.slug = derived
+    }
     items.unshift(item)
     await saveItems(cfg, items)
     return { id, fields: item }
