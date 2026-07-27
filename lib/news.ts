@@ -1,5 +1,6 @@
 import { asList } from '@/lib/as-list'
 import { applyManifestTranslation, loadTranslations } from '@/lib/en-translations'
+import { cdnNormalize } from '@/lib/photo-cdn'
 import type { Lang } from '@/lib/i18n'
 
 export type NewsDeveloper = { name: string; slug: string | null }
@@ -38,7 +39,10 @@ async function loadRawNews(): Promise<NewsItem[]> {
     const r = await fetch(MANIFEST_URL, { next: { revalidate: 600, tags: ['content:news'] } })
     if (!r.ok) return []
     const j = (await r.json()) as Manifest
-    return Array.isArray(j.items) ? j.items : []
+    if (!Array.isArray(j.items)) return []
+    // Repair legacy path-stripped CDN photo URLs (Bunny-era form) that the
+    // current Cloudflare Worker 401/404s — see lib/photo-cdn.ts:cdnNormalize.
+    return j.items.map(it => (it.photo ? { ...it, photo: cdnNormalize(it.photo) } : it))
   } catch {
     return []
   }
