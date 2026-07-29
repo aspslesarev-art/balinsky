@@ -5,6 +5,7 @@
 
 import type { CollectionConfig, DataSourceAdapter, ListQuery, ListResult, RecordRow } from './types'
 import { adminSb, supabaseUrl } from '../sb'
+import { slugifyTitle, uniqueSlug } from '../slugify'
 
 type Manifest = { generatedAt?: string; count?: number; items: Record<string, unknown>[] }
 
@@ -62,6 +63,43 @@ function emptyLists(cfg: CollectionConfig): Record<string, unknown> {
   return out
 }
 
+const SLUG_KEY = 'slug'
+
+const hasSlugField = (cfg: CollectionConfig) => cfg.fields.some(f => f.key === SLUG_KEY)
+
+const str = (v: unknown) => (typeof v === 'string' ? v.trim() : '')
+
+// Slugs already spoken for, so a derived one never shadows an existing URL.
+// Aliases count too — they are live 301 targets (lib/news.ts:85).
+function takenSlugs(items: Record<string, unknown>[], skipId?: string, idKey = 'id'): Set<string> {
+  const taken = new Set<string>()
+  for (const it of items) {
+    if (skipId && String(it[idKey] ?? '') === skipId) continue
+    const slug = str(it[SLUG_KEY])
+    if (slug) taken.add(slug)
+    const aliases = it.aliases
+    if (Array.isArray(aliases)) for (const a of aliases) if (str(a)) taken.add(str(a))
+  }
+  return taken
+}
+
+/**
+ * Derive `slug` from the title when the editor left it blank. Returns null
+ * when nothing is needed — an existing slug is never rewritten, because it is
+ * the record's indexed URL.
+ */
+function derivedSlug(
+  cfg: CollectionConfig,
+  fields: Record<string, unknown>,
+  items: Record<string, unknown>[],
+  skipId?: string,
+): string | null {
+  if (!hasSlugField(cfg) || str(fields[SLUG_KEY])) return null
+  const base = slugifyTitle(str(fields[cfg.titleField]))
+  if (!base) return null
+  return uniqueSlug(base, takenSlugs(items, skipId, cfg.itemIdKey ?? 'id')) || null
+}
+
 function randomId(): string {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
   let s = ''
@@ -108,6 +146,8 @@ export const storageManifestAdapter: DataSourceAdapter = {
     // to be impossible — the sync always wrote every key. One hand-created
     // manager without `developerSlugs` 500'd every developer page.
     const item: Record<string, unknown> = { ...emptyLists(cfg), ...fields, [idKey]: id }
+    const slug = derivedSlug(cfg, item, items)
+    if (slug) item[SLUG_KEY] = slug
     items.unshift(item)
     await saveItems(cfg, items)
     return { id, fields: item }
@@ -118,7 +158,12 @@ export const storageManifestAdapter: DataSourceAdapter = {
     const items = await loadItems(cfg)
     const idx = items.findIndex(it => String(it[idKey] ?? '') === id)
     if (idx < 0) throw new Error('not_found')
-    items[idx] = { ...items[idx], ...patch }
+    const next = { ...items[idx], ...patch }
+    // Backfills records saved before slugs were derived, and re-fills one an
+    // editor blanked out. A slug that is already set stays untouched.
+    const slug = derivedSlug(cfg, next, items, id)
+    if (slug) next[SLUG_KEY] = slug
+    items[idx] = next
     await saveItems(cfg, items)
   },
 

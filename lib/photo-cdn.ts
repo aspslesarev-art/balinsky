@@ -1,23 +1,29 @@
-// Optional Bunny CDN rewriter — twin of scripts/_cdn.mjs, for code paths
-// that build Supabase Storage URLs inside the Next.js app (not in sync
-// scripts). Set NEXT_PUBLIC_PHOTO_CDN_BASE to enable; everything stays
-// pointing at Supabase if the env var is absent.
+// Photo CDN rewriter — twin of scripts/_cdn.mjs, for code paths that build
+// Supabase Storage URLs inside the Next.js app (not in sync scripts). Set
+// NEXT_PUBLIC_PHOTO_CDN_BASE to enable; everything stays pointing at Supabase
+// if the env var is absent.
+//
+// The CDN moved from Bunny (a pull zone rooted at the public-object prefix, so
+// the path was stripped) to a Cloudflare Worker at images.balinsky.info that
+// mirrors the FULL Supabase path. Every rewrite here is therefore a host-only
+// swap; the old strip produced 404/401 for each URL it built. scripts/_cdn.mjs
+// was corrected when the CDN moved, this file was not — which is why
+// admin-uploaded photos came out broken.
 
 const CDN_BASE = (process.env.NEXT_PUBLIC_PHOTO_CDN_BASE || '').replace(/\/$/, '')
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace(/\/$/, '')
-const PREFIX = SUPABASE_URL ? `${SUPABASE_URL}/storage/v1/object/public/` : ''
 
 export function cdnRewrite(url: string | null | undefined): string | null {
   if (!url) return null
-  if (!CDN_BASE || !PREFIX) return url
-  return url.startsWith(PREFIX) ? CDN_BASE + '/' + url.slice(PREFIX.length) : url
+  if (!CDN_BASE || !SUPABASE_URL) return url
+  return url.startsWith(SUPABASE_URL + '/') ? CDN_BASE + url.slice(SUPABASE_URL.length) : url
 }
 
 // Replace the Supabase storage hostname for an entire bucket-prefix string —
 // used when code hardcodes `${SUPABASE_URL}/storage/v1/object/public/<bucket>`
 // as a base for further path concatenation.
 export function cdnBucketBase(bucket: string): string {
-  if (CDN_BASE) return `${CDN_BASE}/${bucket}`
+  if (CDN_BASE) return `${CDN_BASE}/storage/v1/object/public/${bucket}`
   return SUPABASE_URL ? `${SUPABASE_URL}/storage/v1/object/public/${bucket}` : `/${bucket}`
 }
 
@@ -46,11 +52,11 @@ export function cdnRewriteManifest(
   manifest: Record<string, string[]> | null | undefined,
 ): Record<string, string[]> {
   if (!manifest) return {}
-  if (!CDN_BASE || !PREFIX) return manifest
+  if (!CDN_BASE || !SUPABASE_URL) return manifest
   const out: Record<string, string[]> = {}
   for (const [id, urls] of Object.entries(manifest)) {
     if (!Array.isArray(urls)) continue
-    out[id] = urls.map(u => (typeof u === 'string' && u.startsWith(PREFIX) ? CDN_BASE + '/' + u.slice(PREFIX.length) : u))
+    out[id] = urls.map(u => (typeof u === 'string' ? cdnRewrite(u) ?? u : u))
   }
   return out
 }
