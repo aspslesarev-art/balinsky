@@ -3,6 +3,7 @@ import { requireAdmin } from '@/lib/admin-auth'
 import { getCollection } from '@/lib/admin/collections'
 import { adapterFor } from '@/lib/admin/adapters'
 import { revalidateCollection } from '@/lib/admin/revalidate'
+import { aiAutofillPatch } from '@/lib/admin/ai-autofill'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -36,7 +37,13 @@ export async function PATCH(req: Request, { params }: Ctx) {
   try { body = await req.json() } catch { return NextResponse.json({ error: 'invalid_json' }, { status: 400 }) }
   const patch = body.fields ?? {}
   try {
-    await adapterFor(cfg).update(cfg, id, patch)
+    // An edit is usually what completes a record — the body gets pasted in on
+    // the second save. Merge the patch over the stored row so the generators
+    // see the finished material, then fill whatever is still empty.
+    const adapter = adapterFor(cfg)
+    const current = await adapter.get(cfg, id)
+    const merged = { ...(current?.fields ?? {}), ...patch }
+    await adapter.update(cfg, id, { ...patch, ...(await aiAutofillPatch(cfg, merged)) })
     await revalidateCollection(cfg, id)
     return NextResponse.json({ ok: true })
   } catch (e) {

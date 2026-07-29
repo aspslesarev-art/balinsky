@@ -3,6 +3,7 @@ import { requireAdmin } from '@/lib/admin-auth'
 import { getCollection } from '@/lib/admin/collections'
 import { adapterFor } from '@/lib/admin/adapters'
 import { revalidateCollection } from '@/lib/admin/revalidate'
+import { aiAutofillPatch } from '@/lib/admin/ai-autofill'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -52,7 +53,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ collect
   try { body = await req.json() } catch { return NextResponse.json({ error: 'invalid_json' }, { status: 400 }) }
   const fields = body.fields ?? {}
   try {
-    const row = await adapterFor(cfg).create(cfg, fields)
+    // Generate the AI-backed fields the editor left empty before the write, so
+    // the record is complete from its first save (meta tags included) and we
+    // don't pay for a second manifest rewrite.
+    const withAi = { ...fields, ...(await aiAutofillPatch(cfg, fields)) }
+    const row = await adapterFor(cfg).create(cfg, withAi)
     await revalidateCollection(cfg, row.id)
     return NextResponse.json({ row })
   } catch (e) {
