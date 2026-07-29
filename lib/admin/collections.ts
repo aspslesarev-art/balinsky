@@ -278,6 +278,9 @@ const events: CollectionConfig = {
     { key: 'locationUrl', label: 'Локация (URL)', type: 'text' },
     { key: 'registerUrl', label: 'Регистрация (URL)', type: 'text' },
     { key: 'videoUrl', label: 'Видео (URL)', type: 'text' },
+    // Declared so a created record is seeded with [] — the events listing
+    // reads `e.developers[0]` directly and a missing key 500'd the page.
+    { key: 'developers', label: 'Застройщики', type: 'json', readOnly: true },
   ],
 }
 
@@ -305,6 +308,9 @@ const promo: CollectionConfig = {
     { key: 'photo', label: 'Фото', type: 'image', showInGrid: true, width: 80 },
     { key: 'externalUrl', label: 'Внешняя ссылка', type: 'text' },
     { key: 'complexNames', label: 'Комплексы', type: 'json', readOnly: true },
+    // Seeded as [] on create for the same reason as events — /akcii reads
+    // `p.developers[0]` directly.
+    { key: 'developers', label: 'Застройщики', type: 'json', readOnly: true },
   ],
 }
 

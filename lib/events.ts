@@ -25,12 +25,21 @@ const MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/events/_events.js
 
 const EN_FIELDS = ['title', 'seoDescription', 'body'] as const
 
+// The retired Airtable sync always emitted `developers`, so the listing
+// dereferences it directly (`e.developers[0]?.name`). A record created in
+// /admin/data has no such key — the admin form does not model it — and the
+// missing array 500'd the whole events page in every locale. Normalise on
+// read so no manifest shape can take the page down.
+function normalize(item: EventItem): EventItem {
+  return Array.isArray(item.developers) ? item : { ...item, developers: [] }
+}
+
 async function loadRawEvents(): Promise<EventItem[]> {
   try {
     const r = await fetch(MANIFEST_URL, { next: { revalidate: 600, tags: ['content:events'] } })
     if (!r.ok) return []
     const j = (await r.json()) as Manifest
-    return Array.isArray(j.items) ? j.items : []
+    return Array.isArray(j.items) ? j.items.map(normalize) : []
   } catch {
     return []
   }

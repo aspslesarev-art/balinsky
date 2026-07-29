@@ -64,8 +64,10 @@ function emptyLists(cfg: CollectionConfig): Record<string, unknown> {
 }
 
 const SLUG_KEY = 'slug'
+const CREATED_AT_KEY = 'createdAt'
 
-const hasSlugField = (cfg: CollectionConfig) => cfg.fields.some(f => f.key === SLUG_KEY)
+const hasField = (cfg: CollectionConfig, key: string) => cfg.fields.some(f => f.key === key)
+const hasSlugField = (cfg: CollectionConfig) => hasField(cfg, SLUG_KEY)
 
 const str = (v: unknown) => (typeof v === 'string' ? v.trim() : '')
 
@@ -148,6 +150,13 @@ export const storageManifestAdapter: DataSourceAdapter = {
     const item: Record<string, unknown> = { ...emptyLists(cfg), ...fields, [idKey]: id }
     const slug = derivedSlug(cfg, item, items)
     if (slug) item[SLUG_KEY] = slug
+    // Airtable supplied createdTime and the sync copied it across; nothing
+    // filled it after the migration. news sorts the grid by `createdAt desc`
+    // and sortRows puts blanks last, so every record created here sank to the
+    // bottom of the list instead of the top.
+    if (hasField(cfg, CREATED_AT_KEY) && !str(item[CREATED_AT_KEY])) {
+      item[CREATED_AT_KEY] = new Date().toISOString()
+    }
     items.unshift(item)
     await saveItems(cfg, items)
     return { id, fields: item }

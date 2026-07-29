@@ -23,12 +23,25 @@ const MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/promo/_promo.json
 
 const EN_FIELDS = ['title', 'seoDescription', 'body'] as const
 
+// Same guard as lib/events.ts: the listing and detail pages dereference
+// `p.developers[0]` / `p.complexNames[0]` directly, because the retired
+// Airtable sync always emitted both arrays. Records created in /admin/data
+// carry neither, which 500'd every /akcii page. Normalise on read.
+function normalize(item: PromoItem): PromoItem {
+  if (Array.isArray(item.developers) && Array.isArray(item.complexNames)) return item
+  return {
+    ...item,
+    developers: Array.isArray(item.developers) ? item.developers : [],
+    complexNames: Array.isArray(item.complexNames) ? item.complexNames : [],
+  }
+}
+
 async function loadRawPromo(): Promise<PromoItem[]> {
   try {
     const r = await fetch(MANIFEST_URL, { next: { revalidate: 600, tags: ['content:promo'] } })
     if (!r.ok) return []
     const j = (await r.json()) as Manifest
-    return Array.isArray(j.items) ? j.items : []
+    return Array.isArray(j.items) ? j.items.map(normalize) : []
   } catch {
     return []
   }
