@@ -8,6 +8,7 @@
 
 import type { CollectionConfig } from './adapters/types'
 import { LEGAL_OK_FIELD, LEGAL_QUESTIONS_FIELD } from '@/lib/legal-audit'
+import { VOICE_FIELD } from '@/lib/voice-intro'
 
 // --- SQL JSONB catalogs (raw_* tables, PK airtable_id, JSONB `data`) -------
 
@@ -132,6 +133,9 @@ const complexes: CollectionConfig = {
     // Legal due-diligence shown on the complex page as two collapsible blocks.
     // ONE ITEM PER LINE — the row headline is the lead of each line, the rest
     // expands. "в порядке" is public; "вопросы" is lead-gated on the site.
+    // Сценарий кнопки «Послушать» у названия ЖК. Пишется моделью при первом
+    // прослушивании; правка здесь автоматически пересинтезирует аудио.
+    { key: VOICE_FIELD, label: 'Озвучка: текст', type: 'longtext' },
     { key: LEGAL_OK_FIELD, label: 'Юр-проверка: в порядке', type: 'longtext' },
     { key: LEGAL_QUESTIONS_FIELD, label: 'Юр-проверка: вопросы (под лидом)', type: 'longtext' },
   ],

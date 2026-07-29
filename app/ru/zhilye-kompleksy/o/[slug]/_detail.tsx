@@ -18,6 +18,7 @@ import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { ExpandableText } from '@/components/ExpandableText'
 import { PhotoGalleryHero } from '@/components/PhotoGalleryHero'
+import { ListenIntro } from '@/components/ListenIntro'
 import { NeighborhoodHeatMap } from '@/components/NeighborhoodHeatMap'
 import { ProgressBar } from '@/components/ProgressBar'
 import { ApartmentCard, type ApartmentCardData } from '@/components/ApartmentCard'
@@ -1626,9 +1627,15 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             <Link href={complexesRoot} className="hover:text-[var(--color-text)]">{copy.backToComplexes}</Link>
             {district && <> · <span>{district}</span></>}
           </div>
-          <h1 {...edit('Project', 'text', 'Название ЖК')} className="text-[20px] sm:text-[28px] md:text-[44px] font-semibold tracking-tight text-[#111827] leading-[1.2] md:leading-[1.05] mb-2 sm:mb-3 [word-break:break-word] [overflow-wrap:anywhere]">
-            {name}
-          </h1>
+          {/* Название + «Послушать»: рассказ об объекте голосом, сразу со
+              страницы, без открытия чата. На узком экране кнопка переносится
+              под заголовок — иначе она отъедает у длинных названий ширину. */}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mb-2 sm:mb-3">
+            <h1 {...edit('Project', 'text', 'Название ЖК')} className="text-[20px] sm:text-[28px] md:text-[44px] font-semibold tracking-tight text-[#111827] leading-[1.2] md:leading-[1.05] [word-break:break-word] [overflow-wrap:anywhere] min-w-0">
+              {name}
+            </h1>
+            <ListenIntro id={c.airtable_id} lang={lang} />
+          </div>
           {isSold && (
             <div className="mb-3 sm:mb-4 inline-flex items-center px-3 py-1.5 rounded-full bg-[#DC2626] text-white text-[13px] sm:text-[14px] font-semibold tracking-wide shadow-sm">
               {copy.sold}
