@@ -11,6 +11,7 @@ import { cdnManifestUrl } from './photo-cdn'
 import { type Lang, switchLangPath, tField } from './i18n'
 import { hasCyrillic, translitPreserveCase } from './translit'
 import { loadTranslations, mergeTranslations, type Section } from './en-translations'
+import { normalizeSlug } from './slug-normalize'
 
 // Build a listing URL for the visitor's language: RU keeps the /ru/... path,
 // EN swaps the section segments to their English form (villy→villas, etc.).
@@ -364,6 +365,53 @@ function fs1(v: unknown): string | null {
   if (typeof v === 'object' && 'value' in (v as Record<string, unknown>)) return fs1((v as Record<string, unknown>).value)
   return null
 }
+// Per-table slug + publish rules. These MUST mirror lib/admin/detail-index.ts,
+// which is what actually decides a detail page's URL:
+//   • complexes  — the live slug is a real `slug` COLUMN. Their JSONB
+//     data['SEO:Slug'] still holds a legacy long form ("amani-melasti-
+//     melasti-bali") that 404s, and they carry NO publish flag at all:
+//     every non-hidden row is live on the site.
+//   • villas / apartments — data['SEO:Slug'] + 'Опубликовать'.
+//   • developers — data['SEO:Slug'] + 'Публикация'.
+// Reading the wrong one is why the assistant used to answer "по этой
+// странице данные не подтянулись" on every ЖК page.
+type RawTable = 'raw_villas' | 'raw_apartments' | 'raw_complexes' | 'raw_developers'
+type RawRow = {
+  airtable_id: string
+  data: Record<string, unknown>
+  slug?: string | null
+  logo_url?: string | null
+}
+
+function rawSelect(table: RawTable): string {
+  if (table === 'raw_developers') return 'airtable_id, data, logo_url'
+  if (table === 'raw_complexes') return 'airtable_id, slug, data'
+  return 'airtable_id, data'
+}
+
+function isPublishedRow(table: RawTable, d: Record<string, unknown>): boolean {
+  if (table === 'raw_complexes') return true
+  if (table === 'raw_developers') return d['Публикация'] === true
+  return d['Опубликовать'] === true
+}
+
+// The slug a visitor sees in the URL for this row, or null when the row
+// isn't addressable.
+function rowSlug(table: RawTable, row: RawRow): string | null {
+  const raw = table === 'raw_complexes'
+    ? (fs1(row.slug) ?? fs1(row.data['SEO:Slug']))
+    : fs1(row.data['SEO:Slug'])
+  if (!raw || raw.startsWith('-')) return null
+  return raw
+}
+
+// Slug equality that tolerates the canonicalisation the detail pages apply
+// (case, cyrillic look-alikes, stray punctuation) — the widget sends whatever
+// is in the address bar.
+function slugMatches(rowValue: string, wanted: string): boolean {
+  return rowValue === wanted || normalizeSlug(rowValue) === normalizeSlug(wanted)
+}
+
 // Airtable's "Geo" / "Geo 2" columns hold one number each as text
 // ("-8.681307" / "115.260389"). Sometimes editors paste both
 // coordinates into one cell — pull the first parseable float so
@@ -680,31 +728,30 @@ async function loadPhotoManifest(bucket: string): Promise<Record<string, string[
 }
 
 async function searchSupabaseTable(
-  table: 'raw_villas' | 'raw_apartments' | 'raw_complexes' | 'raw_developers',
+  table: RawTable,
   kind: ListingCard['kind'],
   args: SearchArgs,
   pathPrefix: string,
   photoBucket: string | null,
   lang: Lang = 'ru',
 ): Promise<ListingCard[]> {
-  const select = table === 'raw_developers' ? 'airtable_id, data, logo_url' : 'airtable_id, data'
-  const { data } = await sb.from(table).select(select).limit(2000)
-  const rows = (data ?? []) as unknown as { airtable_id: string; data: Record<string, unknown>; logo_url?: string | null }[]
+  const { data } = await sb.from(table).select(rawSelect(table)).limit(2000)
+  const rows = (data ?? []) as unknown as RawRow[]
   const limit = Math.min(args.limit ?? 5, 8)
 
   const filtered = rows.filter(r => {
     const d = r.data
-    if (d['Опубликовать'] !== true && d['Публикация'] !== true) return false
+    if (!isPublishedRow(table, d)) return false
     if (isHiddenDeveloper(fs1(d['Developer1']), fs1(d['Developer']))) return false
-    const slug = fs1(d['SEO:Slug'])
-    if (!slug || slug.startsWith('-')) return false
+    const slug = rowSlug(table, r)
+    if (!slug) return false
 
     // Exact-slug short-circuit: when the model passes `slug` it wants
     // ONE listing (the one the visitor is currently viewing). Skip
     // every other filter — a slug match is the strongest signal we
     // have and re-filtering by district / bedrooms could exclude a
     // legitimate hit if Airtable's metadata disagrees with the URL.
-    if (args.slug) return slug === args.slug
+    if (args.slug) return slugMatches(slug, args.slug)
 
     if (args.district && !matchDistrict(d, args.district)) return false
 
@@ -807,7 +854,7 @@ async function searchSupabaseTable(
     : {}
   const cards = sliced.map(r => {
     const d = lang !== 'ru' ? mergeTranslations(r.data, r.airtable_id, trCache, lang) : r.data
-    const slug = fs1(d['SEO:Slug'])!
+    const slug = rowSlug(table, r)!
     const title = pickTitle(d, lang)
     const districtRaw = fs1(d['Location filter']) ?? fs1(d['Location 2']) ?? fs1(d['Location'])
     // Some villa rows have airtable record IDs in 'Location' (linked record).
@@ -1484,7 +1531,7 @@ async function searchSemantic(args: SemanticArgs, lang: Lang = 'ru', replyLang: 
   const byKind: Record<'villa' | 'apartment' | 'complex', string[]> = { villa: [], apartment: [], complex: [] }
   for (const h of catalogHits) byKind[h.kind].push(h.airtable_id)
 
-  type AnyRow = { airtable_id: string; data: Record<string, unknown>; logo_url?: string | null }
+  type AnyRow = RawRow
   const rowsByKey = new Map<string, AnyRow>()
   const tasks: Promise<void>[] = []
   if (byKind.villa.length) {
@@ -1501,8 +1548,9 @@ async function searchSemantic(args: SemanticArgs, lang: Lang = 'ru', replyLang: 
   }
   if (byKind.complex.length) {
     tasks.push((async () => {
-      const r = await sb.from('raw_complexes').select('airtable_id, data').in('airtable_id', byKind.complex)
-      for (const row of (r.data ?? []) as AnyRow[]) rowsByKey.set(`complex:${row.airtable_id}`, row)
+      // `slug` column, not data['SEO:Slug'] — see rowSlug().
+      const r = await sb.from('raw_complexes').select(rawSelect('raw_complexes')).in('airtable_id', byKind.complex)
+      for (const row of (r.data ?? []) as unknown as AnyRow[]) rowsByKey.set(`complex:${row.airtable_id}`, row)
     })())
   }
   await Promise.all(tasks)
@@ -1515,6 +1563,9 @@ async function searchSemantic(args: SemanticArgs, lang: Lang = 'ru', replyLang: 
   const pathByKind: Record<'villa' | 'apartment' | 'complex', string> = {
     villa: '/ru/villy/o/', apartment: '/ru/apartamenty/o/', complex: '/ru/zhilye-kompleksy/o/',
   }
+  const TABLE_BY_KIND: Record<'villa' | 'apartment' | 'complex', RawTable> = {
+    villa: 'raw_villas', apartment: 'raw_apartments', complex: 'raw_complexes',
+  }
 
   const cards: ListingCard[] = []
   for (const h of catalogHits) {
@@ -1524,8 +1575,8 @@ async function searchSemantic(args: SemanticArgs, lang: Lang = 'ru', replyLang: 
     const d = lang !== 'ru' && sec
       ? mergeTranslations(row.data, row.airtable_id, await loadTranslations(sec, lang).catch(() => ({})), lang)
       : row.data
-    const slug = fs1(d['SEO:Slug']) ?? null
-    if (!slug || slug.startsWith('-')) continue
+    const slug = rowSlug(TABLE_BY_KIND[h.kind], row)
+    if (!slug) continue
     const title = pickTitle(d, lang)
     const districtRaw = fs1(d['Location filter']) ?? fs1(d['Location 2']) ?? fs1(d['Location'])
     const district = districtRaw && /^rec[A-Za-z0-9]{14,}$/.test(districtRaw) ? null : districtRaw
@@ -1619,12 +1670,16 @@ async function getListingFull(args: { kind?: string; slug?: string }): Promise<R
     const item = items.find(it => it.slug === args.slug)
     return item ?? { error: 'not_found' }
   }
-  const table = tableByKind[kind]
+  const table = tableByKind[kind] as RawTable | undefined
   if (!table) return { error: 'unknown_kind' }
-  const { data, error } = await sb.from(table).select('airtable_id, data').limit(2000)
+  const { data, error } = await sb.from(table).select(rawSelect(table)).limit(2000)
   if (error) return { error: error.message }
-  const rows = (data ?? []) as { airtable_id: string; data: Record<string, unknown> }[]
-  const row = rows.find(r => fs1(r.data['SEO:Slug']) === args.slug)
+  const rows = (data ?? []) as unknown as RawRow[]
+  const wanted = args.slug
+  const row = rows.find(r => {
+    const s = rowSlug(table, r)
+    return s != null && slugMatches(s, wanted)
+  })
   if (!row) return { error: 'not_found', slug: args.slug }
   return {
     airtable_id: row.airtable_id,
