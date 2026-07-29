@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
 import ReactMarkdown from 'react-markdown'
-import { MessageCircle, X, Send, Loader2, AlertTriangle, BedDouble, MapPin, ExternalLink, Mic, Square, UserRound, Trash2, Phone, PhoneOff } from 'lucide-react'
+import { MessageCircle, X, Send, Loader2, AlertTriangle, BedDouble, MapPin, ExternalLink, Mic, Square, UserRound, Trash2, Phone, PhoneOff, Play } from 'lucide-react'
 import { ConversationProvider, useConversation } from '@elevenlabs/react'
 import { useWishlist } from './WishlistContext'
 import { RECENT_KEY, type RecentlyViewedEntry } from './PageViewTracker'
@@ -42,6 +42,18 @@ type Message = {
 // returns it as a list of suggestion strings. Chips show only for the LAST
 // assistant message — old chips would offer answers that no longer make
 // sense for the current state of the conversation.
+// Голосовая версия ответа приходит служебным блоком [SPEECH]...[/SPEECH]
+// (см. VOICE_DIRECTIVE в app/api/chat/route.ts). На экран она НЕ идёт — её
+// читает только озвучка: экранный текст с разметкой и символами вслух звучит
+// плохо. Блока может не быть (приветствие, ответ менеджера) — тогда
+// озвучивается видимый текст.
+function extractSpeech(content: string): { text: string; speech: string | null } {
+  const m = content.match(/\n*\[SPEECH\]\s*([\s\S]*?)\s*(?:\[\/SPEECH\]|$)/)
+  if (!m) return { text: content, speech: null }
+  const rest = content.slice(0, m.index) + content.slice((m.index ?? 0) + m[0].length)
+  return { text: rest.trim(), speech: m[1].trim() || null }
+}
+
 function extractChips(content: string): { text: string; chips: string[] } {
   const m = content.match(/\n*\[CHIPS\]\s*(.+?)\s*$/)
   if (!m) return { text: content, chips: [] }
@@ -618,27 +630,54 @@ export function ConsultantWidget() {
   const [isSpeaking, setIsSpeaking] = useState(false)
   const callActiveRef = useRef(false) // true only during an active call
   const audioRef = useRef<HTMLAudioElement | null>(null)
-  const speak = async (text: string, onDone?: () => void) => {
-    const clean = extractChips(text).text.replace(/\s+/g, ' ').trim()
+  // Какое сообщение сейчас озвучивается по кнопке «play»: спиннер и иконка
+  // «стоп» должны гореть только у него. null — режим звонка или тишина.
+  const [voiceMsg, setVoiceMsg] = useState<{ index: number; phase: 'loading' | 'playing' } | null>(null)
+
+  /** Остановить текущее воспроизведение (новый запуск, закрытие чата, unmount). */
+  const stopSpeaking = () => {
+    const audio = audioRef.current
+    if (audio) {
+      // pause() не вызывает ни `ended`, ни `error`, поэтому обработчики,
+      // сбрасывающие состояние, не сработают — снимаем их и чистим руками.
+      audio.onended = null
+      audio.onerror = null
+      audio.pause()
+      audioRef.current = null
+    }
+    setIsSpeaking(false)
+    setVoiceMsg(null)
+  }
+
+  const speak = async (text: string, onDone?: () => void, index?: number) => {
+    // Озвучиваем голосовую версию, если модель её прислала; иначе — видимый
+    // текст без служебных блоков.
+    const { text: visible, speech } = extractSpeech(text)
+    const clean = (speech ?? extractChips(visible).text).replace(/\s+/g, ' ').trim()
     if (!clean) { onDone?.(); return }
     try {
-      audioRef.current?.pause()
+      stopSpeaking()
+      if (index != null) setVoiceMsg({ index, phase: 'loading' })
       const res = await fetch('/api/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: clean }),
       })
-      if (!res.ok) { onDone?.(); return }
+      if (!res.ok) { setVoiceMsg(null); onDone?.(); return }
       const url = URL.createObjectURL(await res.blob())
       const audio = new Audio(url)
       audioRef.current = audio
       setIsSpeaking(true)
-      const done = () => { setIsSpeaking(false); URL.revokeObjectURL(url); onDone?.() }
+      if (index != null) setVoiceMsg({ index, phase: 'playing' })
+      const done = () => { setIsSpeaking(false); setVoiceMsg(null); URL.revokeObjectURL(url); onDone?.() }
       audio.onended = done
       audio.onerror = done
       await audio.play()
-    } catch { setIsSpeaking(false); onDone?.() }
+    } catch { setIsSpeaking(false); setVoiceMsg(null); onDone?.() }
   }
+
+  // Ушли со страницы — голос не должен продолжать говорить в пустоту.
+  useEffect(() => () => { stopSpeaking() }, [])
 
   // ===== Call mode ("phone" UX) ========================================
   // Tap the call icon → ringback tone (гудки) → Андрей "picks up" and
@@ -1507,7 +1546,7 @@ export function ConsultantWidget() {
                 )}
                 <button
                   type="button"
-                  onClick={() => setOpen(false)}
+                  onClick={() => { stopSpeaking(); setOpen(false) }}
                   aria-label={c.closeAria}
                   className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/60 hover:bg-white text-[#111827]"
                 >
@@ -1520,7 +1559,9 @@ export function ConsultantWidget() {
             <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto px-4 py-4 bg-[var(--color-search-bg)] flex flex-col gap-3">
               {messages.map((m, i) => {
                 const isLastAssistant = m.role === 'assistant' && i === messages.length - 1
-                const { text, chips } = m.role === 'assistant' ? extractChips(m.content) : { text: m.content, chips: [] }
+                const { text, chips } = m.role === 'assistant'
+                  ? extractChips(extractSpeech(m.content).text)
+                  : { text: m.content, chips: [] }
                 return (
                   <div key={i} className="flex flex-col gap-2">
                     {/* Manager badge: assistant message but the source
@@ -1534,6 +1575,18 @@ export function ConsultantWidget() {
                       </span>
                     )}
                     {text && <Bubble role={m.role}>{text}</Bubble>}
+                    {/* «Play» — послушать этот ответ голосом Балины. Отдельно
+                        от режима звонка: тут озвучивается ровно одно сообщение,
+                        по явному нажатию, поэтому автозапуска нет. У приветствия
+                        (i === 0) кнопки нет — озвучивать нечего. */}
+                    {text && m.role === 'assistant' && i > 0 && (
+                      <PlayReplyButton
+                        phase={voiceMsg?.index === i ? voiceMsg.phase : 'idle'}
+                        lang={lang}
+                        onPlay={() => void speak(m.content, undefined, i)}
+                        onStop={stopSpeaking}
+                      />
+                    )}
                     {m.listings && m.listings.length > 0 && (
                       <div className="self-start max-w-[95%] flex flex-col gap-2">
                         {m.listings.map(card => <ListingChatCard key={card.url} card={card} lang={lang} />)}
@@ -1704,6 +1757,42 @@ function TypingDots() {
       <span className={dot} style={{ animationDelay: '-0.16s' }} />
       <span className={dot} />
     </span>
+  )
+}
+
+// Кнопка «послушать» под ответом ассистента. Три состояния: idle (play),
+// loading (ждём аудио от /api/tts) и playing (идёт озвучка, повторное
+// нажатие останавливает).
+const PLAY_LABEL = { ru: 'Послушать', en: 'Listen', id: 'Dengarkan', fr: 'Écouter', de: 'Anhören', zh: '收听', nl: 'Luisteren', ban: 'Dengarkan', pl: 'Posłuchaj', uk: 'Послухати' }
+const STOP_LABEL = { ru: 'Стоп', en: 'Stop', id: 'Berhenti', fr: 'Arrêter', de: 'Stopp', zh: '停止', nl: 'Stoppen', ban: 'Suudang', pl: 'Zatrzymaj', uk: 'Стоп' }
+
+function PlayReplyButton({ phase, lang, onPlay, onStop }: {
+  phase: 'idle' | 'loading' | 'playing'
+  lang: Lang
+  onPlay: () => void
+  onStop: () => void
+}) {
+  const isBusy = phase !== 'idle'
+  const label = pickCopy(isBusy ? STOP_LABEL : PLAY_LABEL, lang)
+  return (
+    <button
+      type="button"
+      onClick={isBusy ? onStop : onPlay}
+      aria-label={label}
+      title={label}
+      className={`self-start inline-flex items-center gap-1.5 pl-1.5 pr-2.5 py-1 rounded-full border text-[12px] transition-colors ${
+        isBusy
+          ? 'border-[var(--color-primary)] bg-[var(--color-primary-soft)] text-[var(--color-primary-pressed)]'
+          : 'border-[var(--color-border)] bg-white text-[#6B7280] hover:border-[var(--color-primary)] hover:text-[var(--color-primary-pressed)]'
+      }`}
+    >
+      {phase === 'loading'
+        ? <Loader2 size={13} className="animate-spin" />
+        : phase === 'playing'
+          ? <Square size={13} strokeWidth={2.4} fill="currentColor" />
+          : <Play size={13} strokeWidth={2.4} fill="currentColor" />}
+      {label}
+    </button>
   )
 }
 

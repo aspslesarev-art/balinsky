@@ -233,6 +233,29 @@ QUALITY CONTRACT (applies in every language):
 - SHOW THE MATH: For any yield / payback / ROI answer, first call calculate_investment, then show the one-line basis — gross = annual rent ÷ price, net ≈ gross × 0.75 (after ~25% costs), payback ≈ 100 ÷ net% — and state the assumptions (occupancy, that leasehold has no residual value after the term). Never give investment numbers without running the calculator.
 - DIRECT ANSWERS: If the visitor asks for a price range, median or "how much", give the concrete figure from data first; ask a clarifying question only after providing that.`
 
+// Голосовая версия ответа. Экранный текст оптимизирован под чтение глазами
+// (жирный, списки, символы), а вслух это звучит плохо: «$157,000» и «PBG»
+// синтезатор читает по буквам или ломает. Поэтому модель отдаёт вторым блоком
+// [SPEECH] — короткий разговорный пересказ, который виджет НЕ показывает, а
+// только озвучивает по кнопке «Послушать» и в режиме звонка.
+const VOICE_DIRECTIVE = `
+
+ГОЛОСОВАЯ ВЕРСИЯ (обязательна в каждом ответе):
+После основного текста добавь блок [SPEECH] ... [/SPEECH] — это то же самое, но так, как ты сказал бы это ВСЛУХ. Порядок блоков в ответе: текст, затем [SPEECH]…[/SPEECH], затем [CHIPS] (если он есть).
+Правила голосовой версии:
+- 2–5 коротких предложений: только САМОЕ главное, что должно запомниться на слух. Это не пересказ всего текста.
+- Живая речь: короткие фразы, естественные паузы точками и тире. Никакого markdown, звёздочек, списков, заголовков, ссылок, эмодзи и скобок.
+- Числа и суммы — словами так, как их произносят: «$157,000» → «сто пятьдесят семь тысяч долларов», «4%» → «около четырёх процентов», «121 м²» → «сто двадцать один квадратный метр».
+- Латинские аббревиатуры и термины — кириллицей по произношению: PBG → «пи-би-джи», SLF → «эс-эл-эф», ROI → «эр-о-ай», leasehold → «лизхолд», freehold → «фрихолд», SHM → «эс-ха-эм».
+- Названия проектов, застройщиков и районов оставляй узнаваемыми и произноси по-русски: Canggu → «Чангу», Melasti → «Меласти», Uluwatu → «Улувату».
+- Не зачитывай вопросы-подсказки из [CHIPS] и не проговаривай, что это озвучка.
+- Пиши на том же языке, что и основной ответ.`
+
+/** Текст для админ-инбокса: служебный голосовой блок туда не нужен. */
+function stripSpeechBlock(text: string): string {
+  return text.replace(/\n*\[SPEECH\][\s\S]*?(?:\[\/SPEECH\]|$)/g, '').trim()
+}
+
 export async function POST(req: Request) {
   const apiKey = process.env.AZURE_OPENAI_API_KEY
   const endpoint = process.env.AZURE_OPENAI_ENDPOINT
@@ -300,7 +323,7 @@ export async function POST(req: Request) {
 
   const client = new AzureOpenAI({ apiKey, endpoint, apiVersion })
   const basePrompt = await getSystemPrompt()
-  const systemPrompt = basePrompt + QUALITY_DIRECTIVE + replyLangDirective(replyLang)
+  const systemPrompt = basePrompt + QUALITY_DIRECTIVE + VOICE_DIRECTIVE + replyLangDirective(replyLang)
 
   // Per-turn dynamic context: visitor's wishlist + recently-viewed
   // pages + funnel stage. Both go in as separate system messages
@@ -363,7 +386,7 @@ export async function POST(req: Request) {
           chatId: session.chatId,
           isNew: session.isNew,
           userText: lastUserMessage,
-          assistantText,
+          assistantText: stripSpeechBlock(assistantText),
           lang,
         }).catch(err => console.error('[chat] log turn:', err))
       }
