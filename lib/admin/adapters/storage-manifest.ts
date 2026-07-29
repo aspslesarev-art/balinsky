@@ -5,7 +5,7 @@
 
 import type { CollectionConfig, DataSourceAdapter, ListQuery, ListResult, RecordRow } from './types'
 import { adminSb, supabaseUrl } from '../sb'
-import { slugifyTitle, uniqueSlug } from '../slugify'
+import { slugifyTitle, uniqueSlug } from '@/lib/slugify'
 
 type Manifest = { generatedAt?: string; count?: number; items: Record<string, unknown>[] }
 

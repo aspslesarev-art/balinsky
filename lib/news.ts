@@ -1,5 +1,6 @@
 import { asList } from '@/lib/as-list'
 import { applyManifestTranslation, loadTranslations } from '@/lib/en-translations'
+import { slugifyTitle, uniqueSlug } from '@/lib/slugify'
 import type { Lang } from '@/lib/i18n'
 
 export type NewsDeveloper = { name: string; slug: string | null }
@@ -44,6 +45,30 @@ async function loadRawNews(): Promise<NewsItem[]> {
   }
 }
 
+// Guarantee every item has a usable slug. The admin adapter stamps one on
+// save, but a record can still reach the manifest without it (hand-edited
+// JSON, a restored backup, an import). Without this the listing renders
+// `/ru/novosti/undefined` and the detail page 404s, so the URL is derived
+// here as well — same transliteration, so a record repaired at rest keeps
+// the URL it was already being served under.
+//
+// Items that already carry a slug keep it untouched: it is their indexed URL.
+function withDerivedSlugs(items: NewsItem[]): NewsItem[] {
+  if (items.every(n => n.slug)) return items
+  const taken = new Set<string>()
+  for (const n of items) {
+    if (n.slug) taken.add(n.slug)
+    for (const a of n.aliases ?? []) if (a) taken.add(a)
+  }
+  return items.map(n => {
+    if (n.slug) return n
+    const slug = uniqueSlug(slugifyTitle(n.title), taken)
+    if (!slug) return n
+    taken.add(slug)
+    return { ...n, slug }
+  })
+}
+
 // Slugify an English string: lowercase, ASCII alnum + hyphen, capped.
 function slugifyEn(s: string): string {
   return s.toLowerCase()
@@ -53,7 +78,7 @@ function slugifyEn(s: string): string {
 }
 
 export async function loadAllNews(lang: Lang = 'ru'): Promise<NewsItem[]> {
-  const items = await loadRawNews()
+  const items = withDerivedSlugs(await loadRawNews())
   if (items.length === 0) return items
   // RU also loads the EN translation cache — not to translate, but to know
   // the English-derived slug and stash it in aliases. Without this, the
