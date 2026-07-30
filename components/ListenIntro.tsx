@@ -44,7 +44,7 @@ export function ListenIntro({ id, lang }: { id: string; lang: Lang }) {
       const res = await fetch('/api/voice-intro', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id }),
+        body: JSON.stringify({ id, lang }),
       })
       if (!res.ok) { setPhase('idle'); return }
       const url = URL.createObjectURL(await res.blob())
