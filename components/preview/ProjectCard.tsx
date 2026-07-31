@@ -52,16 +52,10 @@ export function ProjectCard({ href, kicker, name, meta, progressPct, photos, not
         transition: 'border-color .25s ease',
       }}
     >
-      {/* At rest the photo sits inset with a margin; on hover it bleeds to the
-          card edges. That expansion is the whole tell that the card is live. */}
-      <div style={{
-        padding: hover ? 0 : 10,
-        transition: 'padding .28s cubic-bezier(.33,0,.25,1)',
-      }}>
+      {/* Photo runs edge to edge in both states — the card's own overflow gives
+          it the corner radius. */}
       <div style={{
         position: 'relative', height: 220, overflow: 'hidden', background: 'var(--color-divider)',
-        borderRadius: hover ? 0 : 8,
-        transition: 'border-radius .28s cubic-bezier(.33,0,.25,1)',
       }}>
         {photos.map((src, i) => (
           <div
@@ -87,9 +81,8 @@ export function ProjectCard({ href, kicker, name, meta, progressPct, photos, not
           </div>
         )}
       </div>
-      </div>
 
-      <div style={{ padding: '12px 24px 20px', display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
+      <div style={{ padding: '22px 24px 20px', display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
         <div className="kicker">{kicker}</div>
         <div style={{ fontSize: 22, fontWeight: 500 }}>{name}</div>
         {/* Grows so the progress bar below sits at the same height on every
