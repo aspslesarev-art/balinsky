@@ -80,7 +80,9 @@ async function processKind(kind) {
   if (!photos) { console.error('  no _manifest.json'); return }
   const out = (FORCE || SAMPLE) ? {} : (await downloadManifest(bucket, '_vision.json')) ?? {}
   const ids = Object.keys(photos).filter(id => (photos[id]?.length ?? 0) > 0)
-  const todo = ids.filter(id => FORCE || SAMPLE || !out[id])
+  // Key on `features`, not on the entry: kb-photo-audit.mjs also writes into
+  // _vision.json, so an entry can exist with only an `audit` key.
+  const todo = ids.filter(id => FORCE || SAMPLE || !out[id]?.features)
   skipped += ids.length - todo.length
   const work = SAMPLE ? todo.slice(0, SAMPLE) : todo
   console.log(`  ${ids.length} with photos, ${work.length} to analyze`)
@@ -94,7 +96,7 @@ async function processKind(kind) {
         const j = await analyze(urls)
         if (!j?.features) throw new Error('no features')
         if (DRY) { console.log(`\n[${id}] features:`, JSON.stringify(j.features), '\n  alt_ru[0]:', j.alt_ru?.[0]); made++; consec = 0; continue }
-        out[id] = { features: j.features, alt_ru: j.alt_ru ?? [], alt_en: j.alt_en ?? [] }
+        out[id] = { ...(out[id] ?? {}), features: j.features, alt_ru: j.alt_ru ?? [], alt_en: j.alt_en ?? [] }
         made++; consec = 0
         process.stdout.write(`\r  ${made} analyzed, ${failed} failed — est $${cost.toFixed(2)}   `)
       } catch (e) { failed++; console.error('\n  err', id, e.message); if (++consec > 8) { aborted = true; console.error('!! ABORT') } }
