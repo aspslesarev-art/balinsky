@@ -103,6 +103,9 @@
   opacity: 0; transition: opacity 1600ms cubic-bezier(.33, 0, .25, 1);
 }
 .uetpl .kb-layer[data-on='1'] { opacity: 1; }
+/* Frames stack; only the visible one animates, so the fade is a real
+   cross-fade between two images rather than a cut. */
+.uetpl .kb-layer[data-on='0'] { animation: none; }
 .uetpl .kb-layer[data-on='1'][data-move='0'] { animation: ue-kb-zoom-in 6200ms cubic-bezier(.25,.5,.3,1) forwards; }
 .uetpl .kb-layer[data-on='1'][data-move='1'] { animation: ue-kb-zoom-out 6200ms cubic-bezier(.25,.5,.3,1) forwards; }
 .uetpl .kb-layer[data-on='1'][data-move='2'] { animation: ue-kb-pan-left 6200ms cubic-bezier(.25,.5,.3,1) forwards; }
