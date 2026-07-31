@@ -267,6 +267,18 @@ function flattenPois(
  * Airtable-era links — not one of the 197 complexes matches). `Комплекс 1` is
  * the denormalised complex name and is the only join that actually resolves.
  */
+/**
+ * Developer names don't always match exactly between tables: the developer
+ * card says «LB Group (LOYO&BONDAR)» while its twelve complexes say just
+ * «LB Group». Comparing with the parenthetical suffix stripped links them
+ * without touching the data.
+ */
+function sameDeveloper(a: string, b: string): boolean {
+  const norm = (x: string) => x.trim().toLowerCase().replace(/\s+/g, ' ')
+  const bare = (x: string) => norm(x).replace(/\s*\([^)]*\)\s*/g, ' ').trim()
+  return norm(a) === norm(b) || bare(a) === bare(b)
+}
+
 /** `Developer1` / `Типы юнитов` arrive as either a bare string or an array. */
 function namesOf(v: unknown): string[] {
   if (typeof v === 'string') return v.trim() ? [v.trim()] : []
@@ -373,9 +385,8 @@ function resolveHero(
   const fromComplex = complexes.flatMap(c => c.photos)[0]
   if (fromComplex) return { url: fromComplex, kind: 'complex' }
 
-  const lc = devName.toLowerCase()
   for (const v of villas) {
-    if (!namesOf(v['Developer1']).some(d => d.toLowerCase() === lc)) continue
+    if (!namesOf(v['Developer1']).some(d => sameDeveloper(d, devName))) continue
     const photo = asList(villaPhotoManifest[v.airtable_id as string])[0]
     if (photo) return { url: photo, kind: 'villa' }
   }
@@ -445,7 +456,7 @@ export async function loadDeveloperTemplateData(slug: string): Promise<Developer
 
   const devName = firstString(devRow['Developer']) ?? slug
   const complexRows = cpxAll
-    .filter(c => namesOf(c['Developer1']).some(d => d.toLowerCase() === devName.toLowerCase()))
+    .filter(c => namesOf(c['Developer1']).some(d => sameDeveloper(d, devName)))
 
   const tplComplexes: TplComplex[] = await Promise.all(complexRows.map(async c => {
     const id = c.airtable_id as string
