@@ -52,6 +52,7 @@ export type TplUnit = {
 }
 
 export type TplPoi = {
+  id: string
   name: string
   category: string
   categoryTitle: string
@@ -61,6 +62,8 @@ export type TplPoi = {
   walkMin: number | null
   reviews: number | null
   rating: number | null
+  /** Google Places photo resource name, served through /api/place-photo. */
+  photoName: string | null
 }
 
 export type TplComplex = {
@@ -184,6 +187,7 @@ function flattenPois(
       if (!p?.name || !Number.isFinite(p.lat) || !Number.isFinite(p.lng)) continue
       const distanceM = Math.round((p.distanceKm ?? 0) * 1000)
       all.push({
+        id: p.id,
         name: p.name,
         category: key,
         categoryTitle: title(key),
@@ -195,6 +199,7 @@ function flattenPois(
           : null,
         reviews: p.reviews ?? null,
         rating: p.rating ?? null,
+        photoName: null,
       })
     }
   }
@@ -449,6 +454,8 @@ export async function loadDeveloperTemplateData(slug: string): Promise<Developer
     return { ...base, metaLine: metaLineFor(base) }
   }))
 
+  await attachPoiPhotos(tplComplexes)
+
   tplComplexes.sort((a, b) => {
     if (a.status !== b.status) return a.status === 'building' ? -1 : 1
     return (b.progressPct ?? 0) - (a.progressPct ?? 0)
@@ -505,6 +512,28 @@ export async function loadDeveloperTemplateData(slug: string): Promise<Developer
   collectGaps(gaps, dev, tplComplexes, { managers, videos, news, events, promos })
 
   return { dev, complexes: tplComplexes, managers, videos, news, events, promos, faq: buildFaq(dev, tplComplexes), gaps }
+}
+
+/**
+ * POIs come from the nearby files, which carry no imagery. `bali_places`
+ * already holds the Google Places payload for 13.6k spots, including photo
+ * resource names — one lookup for the whole page, keyed by place id.
+ */
+async function attachPoiPhotos(complexes: TplComplex[]): Promise<void> {
+  const ids = [...new Set(complexes.flatMap(c => c.pois.map(p => p.id)))].filter(Boolean)
+  if (!ids.length) return
+  const { data, error } = await sb.from('bali_places').select('id, data->photos').in('id', ids)
+  if (error || !data) return
+  const byId = new Map<string, string>()
+  for (const row of data as unknown as { id: string; photos: unknown }[]) {
+    const first = Array.isArray(row.photos) ? row.photos[0] : null
+    const name = first && typeof first === 'object' && 'name' in first
+      ? (first as { name: unknown }).name : null
+    if (typeof name === 'string') byId.set(row.id, name)
+  }
+  for (const c of complexes) {
+    for (const p of c.pois) p.photoName = byId.get(p.id) ?? null
+  }
 }
 
 // ---------------------------------------------------------------- gaps

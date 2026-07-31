@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { BALINSKY_MAP_STYLE } from '@/lib/google-map-style'
 import { loadGoogleMaps } from '@/lib/google-maps-loader'
 import { createHeatOverlay, fetchHeatCells } from '@/lib/heat-overlay'
-import { NearbyMap, type MapPoi } from '@/components/preview/NearbyMap'
+import { NearbyMap, PoiCard, type MapPoi } from '@/components/preview/NearbyMap'
 
 const HEIGHT = 300
 const ZOOM = 14
@@ -79,7 +79,9 @@ export function NearbyGoogleMap({ center, pois, title, photo }: {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? ''
   const [failed, setFailed] = useState(!apiKey)
   const [active, setActive] = useState(0)
-  const [heat, setHeat] = useState(false)
+  // On by default, like the listing pages: the whole point of the layer is
+  // to show at a glance where it is lively.
+  const [heat, setHeat] = useState(true)
   const boxRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<google.maps.Map | null>(null)
   const markersRef = useRef<google.maps.Marker[]>([])
@@ -88,8 +90,10 @@ export function NearbyGoogleMap({ center, pois, title, photo }: {
   useEffect(() => {
     if (!apiKey || !boxRef.current || mapRef.current) return
     let cancelled = false
-    // The loader never rejects on a referrer block — it just never draws — so
-    // give it a deadline and fall back rather than leaving a grey rectangle.
+    // A referrer block doesn't reject the loader and doesn't stop the map from
+    // being constructed — Google just paints its own error dialog over it. The
+    // documented signal is this global callback, so use it to fall back.
+    ;(window as unknown as { gm_authFailure?: () => void }).gm_authFailure = () => setFailed(true)
     const deadline = setTimeout(() => { if (!mapRef.current) setFailed(true) }, 6000)
     loadGoogleMaps(apiKey)
       .then(() => {
@@ -196,19 +200,7 @@ export function NearbyGoogleMap({ center, pois, title, photo }: {
         </button>
       </div>
 
-      {focus && (
-        <div style={{ marginTop: 16, padding: '18px 22px', border: '1px solid var(--color-divider)', borderRadius: 'var(--radius-md)' }}>
-          <div className="kicker">
-            {focus.distanceM >= 1000 ? `${(focus.distanceM / 1000).toFixed(1)} км` : `${focus.distanceM} м`}
-            {focus.walkMin ? ` · ${focus.walkMin} мин пешком` : ''}
-            {focus.reviews ? ` · ${focus.reviews.toLocaleString('ru-RU')} отзывов` : ''}
-          </div>
-          <p style={{ margin: '10px 0 0', fontSize: 16, lineHeight: 1.5 }}>
-            <strong style={{ fontWeight: 500 }}>{focus.name}</strong>
-            {focus.rating ? ` — рейтинг ${focus.rating}` : ''}. {focus.categoryTitle}.
-          </p>
-        </div>
-      )}
+      {focus && <PoiCard poi={focus} />}
     </div>
   )
 }

@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 
 export type MapPoi = {
+  id: string
   name: string
   category: string
   categoryTitle: string
@@ -12,6 +13,7 @@ export type MapPoi = {
   walkMin: number | null
   reviews: number | null
   rating: number | null
+  photoName: string | null
 }
 
 const ZOOM = 14
@@ -35,6 +37,37 @@ function project(lat: number, lng: number): { x: number; y: number } {
  * is referrer-locked to balinsky.info, so they render blank on localhost and
  * on Vercel preview URLs — useless for exactly the testing this page is for.
  */
+
+/** Preview thumbnail + facts for the selected place. */
+export function PoiCard({ poi }: { poi: MapPoi }) {
+  const src = poi.photoName ? `/api/place-photo?name=${encodeURIComponent(poi.photoName)}` : null
+  return (
+    <div style={{
+      marginTop: 16, display: 'flex', gap: 16, alignItems: 'stretch',
+      border: '1px solid var(--color-divider)', borderRadius: 'var(--radius-md)', overflow: 'hidden',
+    }}>
+      {src && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt={poi.name} loading="lazy" style={{
+          width: 120, minHeight: 110, objectFit: 'cover', flex: 'none', display: 'block',
+          background: 'var(--color-divider)',
+        }} />
+      )}
+      <div style={{ padding: '16px 20px 16px 4px', minWidth: 0 }}>
+        <div className="kicker">
+          {poi.distanceM >= 1000 ? `${(poi.distanceM / 1000).toFixed(1)} км` : `${poi.distanceM} м`}
+          {poi.walkMin ? ` · ${poi.walkMin} мин пешком` : ''}
+          {poi.reviews ? ` · ${poi.reviews.toLocaleString('ru-RU')} отзывов` : ''}
+        </div>
+        <p style={{ margin: '10px 0 0', fontSize: 16, lineHeight: 1.5 }}>
+          <strong style={{ fontWeight: 500 }}>{poi.name}</strong>
+          {poi.rating ? ` — рейтинг ${poi.rating}` : ''}. {poi.categoryTitle}.
+        </p>
+      </div>
+    </div>
+  )
+}
+
 export function NearbyMap({ center, pois, width = 520 }: { center: { lat: number; lng: number }; pois: MapPoi[]; width?: number }) {
   const [active, setActive] = useState(0)
   const [heat, setHeat] = useState(false)
@@ -161,19 +194,7 @@ export function NearbyMap({ center, pois, width = 520 }: { center: { lat: number
         </button>
       </div>
 
-      {focus && (
-        <div style={{ marginTop: 16, padding: '18px 22px', border: '1px solid var(--color-divider)', borderRadius: 'var(--radius-md)' }}>
-          <div className="kicker">
-            {focus.distanceM >= 1000 ? `${(focus.distanceM / 1000).toFixed(1)} км` : `${focus.distanceM} м`}
-            {focus.walkMin ? ` · ${focus.walkMin} мин пешком` : ''}
-            {focus.reviews ? ` · ${focus.reviews.toLocaleString('ru-RU')} отзывов` : ''}
-          </div>
-          <p style={{ margin: '10px 0 0', fontSize: 16, lineHeight: 1.5 }}>
-            <strong style={{ fontWeight: 500 }}>{focus.name}</strong>
-            {focus.rating ? ` — рейтинг ${focus.rating}` : ''}. {focus.categoryTitle}.
-          </p>
-        </div>
-      )}
+      {focus && <PoiCard poi={focus} />}
     </div>
   )
 }
