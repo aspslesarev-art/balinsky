@@ -55,6 +55,8 @@ import { districtRu } from '@/lib/district-ru'
 import { geoChainString } from '@/lib/regency'
 import { loadKbPageContent } from '@/lib/kb-page-content'
 import { loadListingVision, altFor } from '@/lib/listing-features'
+import { loadListingCopy } from '@/lib/listing-copy'
+import { curatePhotos } from '@/lib/listing-photos'
 import { DistrictAboutCard } from '@/components/DistrictAboutCard'
 import { getDistrictCopy } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
@@ -831,7 +833,9 @@ export async function generateApartmentMetadata(slug: string, lang: Lang) {
   if (!a) return { robots: { index: false } }
   const d = a.data
   const c = pickCopy(COPY, lang)
-  const titleRaw = tField(d, 'SEO:Title', lang) ?? tField(d, 'ИИ Имя', lang) ?? slug
+  // Сгенерированная копия — русская; на других локалях источник прежний.
+  const gen = lang === 'ru' ? await loadListingCopy('apartment', a.airtable_id) : null
+  const titleRaw = gen?.title ?? tField(d, 'SEO:Title', lang) ?? tField(d, 'ИИ Имя', lang) ?? slug
   let title = cleanTitle(titleRaw) ?? slug
   if (isMalformedAptTitle(title)) {
     title = fallbackAptTitle(firstString(d['Location filter']), numberOrNull(d['Площадь']), numberOrNull(d['Комнаты']), lang)
@@ -846,9 +850,11 @@ export async function generateApartmentMetadata(slug: string, lang: Lang) {
   // Schema.org address fields where Latin is canonical.
   const district = lang === 'ru' ? districtRu(districtRaw) : districtRaw
   const price = fmtUsd(numberOrNull(d['price_usd'] ?? d['Цена']))
-  const description = seoText
-    ? seoText.slice(0, 160).trim() + (seoText.length > 160 ? '…' : '')
-    : c.metaFallback(title, district, price)
+  const description = gen?.meta
+    ? gen.meta.slice(0, 160).trim()
+    : seoText
+      ? seoText.slice(0, 160).trim() + (seoText.length > 160 ? '…' : '')
+      : c.metaFallback(title, district, price)
   const ruPath = `/ru/apartamenty/o/${slug}`
   const enPath = `/en/apartments/o/${slug}`
   const path = switchLangPath(ruPath, lang)
@@ -885,7 +891,10 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
 
   const titleRaw = tField(d, 'ИИ Имя', lang) ?? tField(d, 'SEO:Title', lang) ?? slug
   let title = cleanTitle(titleRaw) ?? slug
-  const photos = (manifest[a.airtable_id] ?? []).slice(0, 12)
+  // Фото-аудит до нарезки: обложка обязана попасть в первые 12 кадров.
+  const visionRaw = await loadListingVision('apartment', a.airtable_id)
+  const curated = curatePhotos(manifest[a.airtable_id] ?? [], visionRaw)
+  const photos = curated.photos.slice(0, 12)
   const districtRaw = firstString(d['Location filter'])
   const district = lang === 'ru' ? districtRu(districtRaw) : districtRaw
   // District orientation card: only when the district maps to a real hub
@@ -915,7 +924,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
   // Non-RU: prefer the native-language SEO Text over the RU/EN-only KB body.
   const pageBodyRaw = lang === 'ru' ? (kb?.body ?? seoText) : (seoText ?? kb?.body ?? null)
   const pageBody = lang !== 'ru' && lang !== 'uk' && pageBodyRaw && hasCyrillic(pageBodyRaw) ? translitPreserveCase(pageBodyRaw) : pageBodyRaw
-  const vision = await loadListingVision('apartment', a.airtable_id)
+  const vision = curated.vision
   const photoAlts = photos.map((_, i) => altFor(vision, i, lang, title))
   // Resale: drop the developer-manager CTA and route the visitor to
   // the owner's direct link stored in «Контакт продавца».

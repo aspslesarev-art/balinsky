@@ -72,6 +72,8 @@ import { districtRu } from '@/lib/district-ru'
 import { geoChainString } from '@/lib/regency'
 import { loadKbPageContent } from '@/lib/kb-page-content'
 import { loadListingVision, altFor } from '@/lib/listing-features'
+import { loadListingCopy } from '@/lib/listing-copy'
+import { curatePhotos } from '@/lib/listing-photos'
 import { DistrictAboutCard } from '@/components/DistrictAboutCard'
 import { getDistrictCopy } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
@@ -875,7 +877,11 @@ export async function generateVillaMetadata(slug: string, lang: Lang) {
   if (!v) return { robots: { index: false } }
   const d = v.data
   const c = pickCopy(COPY, lang)
-  const titleRaw = tField(d, 'SEO:Title', lang) ?? tField(d, 'ИИ Имя', lang) ?? slug
+  // Сгенерированная копия (scripts/kb-text-regen.mjs) написана по-русски —
+  // на остальных локалях остаётся прежний источник, иначе в мету уедет
+  // кириллица.
+  const gen = lang === 'ru' ? await loadListingCopy('villa', v.airtable_id) : null
+  const titleRaw = gen?.title ?? tField(d, 'SEO:Title', lang) ?? tField(d, 'ИИ Имя', lang) ?? slug
   const title = cleanTitle(titleRaw) ?? slug
   const seoTextRaw = tField(d, 'SEO Text', lang) ?? tField(d, 'Notes', lang)
   // A bad AI translation may have stored Russian into `SEO Text EN` (or the
@@ -888,9 +894,11 @@ export async function generateVillaMetadata(slug: string, lang: Lang) {
   // canonical-path matching and Schema.org address fields.
   const district = lang === 'ru' ? districtRu(districtRaw) : districtRaw
   const price = fmtUsd(numberOrNull(d['price'] ?? d['Цена']))
-  const description = seoText
-    ? seoText.slice(0, 160).trim() + (seoText.length > 160 ? '…' : '')
-    : c.metaFallback(title, district, price)
+  const description = gen?.meta
+    ? gen.meta.slice(0, 160).trim()
+    : seoText
+      ? seoText.slice(0, 160).trim() + (seoText.length > 160 ? '…' : '')
+      : c.metaFallback(title, district, price)
   const bedrooms = numberOrNull(d['Комнаты'])
   const area = numberOrNull(d['Площадь'])
   // Compose the meta title from the AI title + a few facts. The AI
@@ -904,7 +912,11 @@ export async function generateVillaMetadata(slug: string, lang: Lang) {
   if (bedrooms != null && !titleLower.includes(`${bedrooms} br`) && !titleLower.includes(`${bedrooms} спальн`)) titleParts.push(`${bedrooms} BR`)
   if (area != null && !titleLower.includes(`${area} ${c.sqm}`) && !titleLower.includes(`${area}m²`)) titleParts.push(`${area} ${c.sqm}`)
   if (price && !titleLower.includes(price.toLowerCase())) titleParts.push(price)
-  const seoTitle = `${titleParts.slice(0, 4).join(' · ')} | Balinsky`
+  // Сгенерированный заголовок уже собран под SEO — с типом объекта, районом
+  // и в пределах 60 символов. Дописывать к нему факты нельзя: район в данных
+  // и в тексте пишется по-разному («Нянь» против «Ньяньи»), дедуп их не
+  // сопоставляет и получается дубль с обрезкой.
+  const seoTitle = gen?.title ? `${gen.title} | Balinsky` : `${titleParts.slice(0, 4).join(' · ')} | Balinsky`
   const ruPath = `/ru/villy/o/${slug}`
   const enPath = `/en/villas/o/${slug}`
   const path = switchLangPath(ruPath, lang)
@@ -913,7 +925,7 @@ export async function generateVillaMetadata(slug: string, lang: Lang) {
   // contains the district, so only append it when it's genuinely missing
   // (otherwise we get "… в Bukit … в Bukit"). Connective localized per lang
   // (VILLA_META_IN_DISTRICT) so /de, /zh, /nl, /ban never emit "in".
-  const fallbackDistrict = district && !titleLower.includes(district.toLowerCase()) ? VILLA_META_IN_DISTRICT[lang](district) : ''
+  const fallbackDistrict = !gen && district && !titleLower.includes(district.toLowerCase()) ? VILLA_META_IN_DISTRICT[lang](district) : ''
   return {
     title: seoTitle.length > 70 ? `${title}${fallbackDistrict}${dashPrice} | Balinsky` : seoTitle,
     description,
@@ -943,7 +955,12 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
 
   const titleRaw = tField(d, 'ИИ Имя', lang) ?? tField(d, 'SEO:Title', lang) ?? slug
   const title = cleanTitle(titleRaw) ?? slug
-  const photos = (manifest[v.airtable_id] ?? []).slice(0, 12)
+  // Фото-аудит применяется ДО нарезки: иначе выбранная обложка может
+  // не попасть в первые 12 кадров. alt-подписи переставляются вместе
+  // с фото — они позиционные.
+  const visionRaw = await loadListingVision('villa', v.airtable_id)
+  const curated = curatePhotos(manifest[v.airtable_id] ?? [], visionRaw)
+  const photos = curated.photos.slice(0, 12)
   const districtRaw = firstString(d['Location 2']) ?? firstString(d['Location'])
   // Show Cyrillic district on /ru, raw Latin on /en. Raw form is
   // kept around for the JSON-LD address + canonical-path matching.
@@ -975,7 +992,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   const pageBodyRaw = lang === 'ru' ? (kb?.body ?? seoText) : (seoText ?? kb?.body ?? null)
   const pageBody = lang !== 'ru' && lang !== 'uk' && pageBodyRaw && hasCyrillic(pageBodyRaw) ? translitPreserveCase(pageBodyRaw) : pageBodyRaw
   // Per-photo vision alt text (image SEO/accessibility).
-  const vision = await loadListingVision('villa', v.airtable_id)
+  const vision = curated.vision
   const photoAlts = photos.map((_, i) => altFor(vision, i, lang, title))
   const developerName = firstString(d['Developer1']) ?? firstString(d['Developer'])
   const devStats = await getDeveloperStats(developerName)
