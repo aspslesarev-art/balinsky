@@ -20,6 +20,11 @@ export type ManagerItem = {
   // Free-text credentials line ("Сертифицированный агент, 5 лет на
   // Бали") shown under the manager's name on the contact card.
   regalia?: string | null
+  // Whose manager this is — 'Balinsky' or 'Застройщик' — and which department
+  // they run. Set for developer-side contacts; the developer page labels the
+  // card with the department instead of a generic "Менеджер Balinsky".
+  org?: string | null
+  department?: string | null
 }
 type Manifest = { generatedAt: string; count: number; items: ManagerItem[] }
 

@@ -598,9 +598,14 @@ function collectGaps(
 
   push('managers', 'developer_managers[]', rel.managers.length ? 'partial' : 'missing',
     rel.managers.length
-      ? `${rel.managers.length} менеджера из managers/_managers.json — это менеджеры Balinsky, а не отделы застройщика`
+      ? `${rel.managers.length} в managers/_managers.json; со стороны застройщика (org = «Застройщик») — `
+        + `${rel.managers.filter(m => m.org === 'Застройщик').length}`
       : 'ни один менеджер в managers/_managers.json не привязан к этому застройщику')
-  push('managers', 'department', 'missing', 'нет поля «отдел» (партнёрский / клиентский) — в манифесте только regalia')
+  push('managers', 'department',
+    rel.managers.some(m => m.department) ? 'ok' : 'partial',
+    rel.managers.some(m => m.department)
+      ? 'поле «Отдел» в манифесте менеджеров'
+      : 'поля «Отдел» и «Чей менеджер» заведены в /admin/data → Менеджеры, но у этого застройщика ещё не заполнены')
   push('managers', 'lead_form_id', 'missing', 'нет привязки карточки к конкретной лид-форме')
 
   push('developer_stats', 'years_on_market · portfolio_volume_usd · units_under_construction · units_renting · team_size · builders_count',

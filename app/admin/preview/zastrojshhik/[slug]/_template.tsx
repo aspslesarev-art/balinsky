@@ -392,7 +392,10 @@ export function DeveloperTemplate({ data, allDevelopers, mapsKey }: {
                   backgroundSize: 'cover', backgroundPosition: 'center',
                 }}>{mg.photo ? '' : (mg.name ?? '?').slice(0, 2).toUpperCase()}</div>
                 <div style={{ flex: 1, minWidth: 200 }}>
-                  <div className="kicker">{mg.regalia || 'Менеджер Balinsky'}</div>
+                  {/* Developer-side contacts are labelled by department, which is
+                      what the handoff shows; Balinsky's own staff keep the
+                      generic line. */}
+                  <div className="kicker">{mg.department || mg.regalia || 'Менеджер Balinsky'}</div>
                   <div style={{ fontSize: 21, fontWeight: 500, marginTop: 6 }}>{mg.name}</div>
                 </div>
                 <a href={mg.whatsapp ?? '#contacts'} className="cta">Оставить заявку <span className="cta-arrow">→</span></a>

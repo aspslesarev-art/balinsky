@@ -412,6 +412,12 @@ const managers: CollectionConfig = {
     { key: 'botRequest', label: 'Bot request', type: 'text' },
     { key: 'photo', label: 'Фото', type: 'image', showInGrid: true, width: 80 },
     { key: 'regalia', label: 'Регалии', type: 'longtext' },
+    // Чей это менеджер и его отдел. Заполняется для контактов на стороне
+    // застройщика: на странице застройщика карточка подписывается отделом,
+    // а не общим «Менеджер Balinsky».
+    { key: 'org', label: 'Чей менеджер', type: 'enum', enumOptions: ['Balinsky', 'Застройщик'], showInGrid: true, width: 130 },
+    { key: 'department', label: 'Отдел', type: 'enum', showInGrid: true, width: 220,
+      enumOptions: ['Отдел продаж', 'Руководитель отдела продаж', 'Отдел по работе с партнёрами', 'Руководитель отдела партнёров'] },
     { key: 'languages', label: 'Языки', type: 'multienum' },
     { key: 'developerNames', label: 'Застройщики', type: 'json', readOnly: true },
     { key: 'developerSlugs', label: 'Slugs застройщиков', type: 'json', readOnly: true },
