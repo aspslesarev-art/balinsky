@@ -65,7 +65,7 @@ export function curatePhotos(
   return {
     photos: order.map(i => list[i]).filter((u): u is string => typeof u === 'string'),
     vision: vision
-      ? { ...vision, alt_ru: permute(vision.alt_ru, order), alt_en: permute(vision.alt_en, order) }
+      ? { ...vision, alt_ru: permute(vision.alt_ru, order) ?? vision.alt_ru, alt_en: permute(vision.alt_en, order) ?? vision.alt_en }
       : null,
   }
 }
