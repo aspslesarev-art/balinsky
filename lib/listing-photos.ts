@@ -70,6 +70,22 @@ export function curatePhotos(
   }
 }
 
+/**
+ * Curates a whole photo manifest at once. Catalog loaders build the manifest in
+ * a single place, so applying the audit here fixes every card and gallery
+ * downstream without touching each mapping site.
+ */
+export function curateManifest(
+  manifest: Record<string, string[]>,
+  vision: Record<string, VisionEntry>,
+): Record<string, string[]> {
+  const out: Record<string, string[]> = {}
+  for (const [id, photos] of Object.entries(manifest)) {
+    out[id] = curatePhotos(photos, vision[id]).photos
+  }
+  return out
+}
+
 /** Cover-only shortcut for catalog cards, which render a single image. */
 export function coverPhoto(
   photos: readonly string[] | null | undefined,
