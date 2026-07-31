@@ -58,32 +58,40 @@ function HeroBackdrop({ dev }: { dev: TplDeveloper }) {
     )
   }
 
-  if (dev.heroKind === 'logo' && dev.heroPhoto) {
+  // No photo: a plain tinted plate. The logo itself now sits in the badge next
+  // to the H1, so repeating it large in the middle only competed with it.
+  return <div style={plate} aria-label={dev.name} role="img" />
+}
+
+function initialsOf(name: string): string {
+  return name.split(/\s+/).slice(0, 2).map((w: string) => w[0]).join('').toUpperCase()
+}
+
+/** Logo chip to the left of the developer name, per the updated hero. */
+function LogoBadge({ dev }: { dev: TplDeveloper }) {
+  const box = {
+    width: 'clamp(56px, 7vw, 84px)', height: 'clamp(56px, 7vw, 84px)',
+    borderRadius: 18, flex: 'none',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    background: 'color-mix(in srgb, #fff 82%, transparent)',
+    boxShadow: '0 1px 0 color-mix(in srgb, #fff 70%, transparent) inset, 0 8px 22px rgba(0,0,0,.10)',
+    overflow: 'hidden',
+  } as const
+
+  if (dev.logo) {
     return (
-      <div style={plate}>
-        {/* A white card so light-on-light logos (most of them) still read. */}
-        <span style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          padding: '28px 40px', borderRadius: 18, background: 'rgba(255,255,255,.92)',
-          boxShadow: '0 18px 46px rgba(0,0,0,.16)', maxWidth: 'min(440px, 66vw)',
-        }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={dev.heroPhoto} alt={dev.name} style={{
-            maxWidth: '100%', maxHeight: 120, objectFit: 'contain', display: 'block',
-          }} />
-        </span>
-      </div>
+      <span style={box}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={dev.logo} alt={dev.name} style={{
+          maxWidth: '76%', maxHeight: '62%', objectFit: 'contain', display: 'block',
+        }} />
+      </span>
     )
   }
-
-  const initials = dev.name.split(/\s+/).slice(0, 2).map((w: string) => w[0]).join('').toUpperCase()
   return (
-    <div style={plate} aria-label={dev.name} role="img">
-      <span style={{
-        fontSize: 'clamp(96px, 16vw, 200px)', fontWeight: 500, letterSpacing: '-0.05em',
-        color: 'rgba(255,255,255,.5)', lineHeight: 1, userSelect: 'none',
-      }}>{initials}</span>
-    </div>
+    <span style={{ ...box, fontSize: 'clamp(20px, 2.4vw, 28px)', fontWeight: 600, color: 'var(--color-accent-800)' }}>
+      {initialsOf(dev.name)}
+    </span>
   )
 }
 
@@ -342,9 +350,12 @@ export function DeveloperTemplate({ data, allDevelopers, mapsKey }: {
           maxWidth: 1160, margin: '0 auto', boxSizing: 'border-box',
           display: 'flex', flexDirection: 'column', gap: 20,
         }}>
-          <h1 style={{ margin: 0, fontSize: 'clamp(40px, 7vw, 92px)', fontWeight: 500, letterSpacing: '-0.035em', lineHeight: 1.02 }}>
-            {dev.name}
-          </h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap' }}>
+            <LogoBadge dev={dev} />
+            <h1 style={{ margin: 0, fontSize: 'clamp(40px, 7vw, 92px)', fontWeight: 500, letterSpacing: '-0.035em', lineHeight: 1.02 }}>
+              {dev.name}
+            </h1>
+          </div>
           {dev.tagline && (
             <p style={{ margin: 0, fontSize: 22, color: 'color-mix(in srgb, var(--color-text) 80%, transparent)', maxWidth: '48ch' }}>
               {dev.tagline}
