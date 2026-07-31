@@ -88,19 +88,24 @@ export function ProjectCard({ href, kicker, name, meta, progressPct, photos, not
         <div style={{ marginTop: 10 }}>
           <div className="muted" style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
             <span>Готовность строительства</span>
-            <span>{progressPct == null ? 'нет данных' : `${progressPct}%`}</span>
+            {/* A finished complex shows a full bar and no number — the figure
+                would say nothing. Null stays visible: that is a real gap. */}
+            {progressPct == null && <span>нет данных</span>}
+            {progressPct != null && progressPct < 100 && <span>{progressPct}%</span>}
           </div>
           <div style={{ marginTop: 6, height: 3, background: 'var(--color-divider)' }}>
             <div style={{ width: `${progressPct ?? 0}%`, height: '100%', background: 'var(--color-accent)' }} />
           </div>
         </div>
 
+        {/* Always visible, per the reference — it tells the visitor the card is
+            a way in, not just a tile. Hover only warms the colour. */}
         <div style={{
-          marginTop: 14, fontSize: 15, color: 'var(--color-accent-700)',
-          opacity: hover ? 1 : 0, transform: hover ? 'translateY(0)' : 'translateY(3px)',
-          transition: 'opacity .25s ease, transform .25s ease',
+          marginTop: 14, fontSize: 15,
+          color: hover ? 'var(--color-accent-700)' : 'color-mix(in srgb, var(--color-text) 55%, transparent)',
+          transition: 'color .25s ease',
         }}>
-          Смотреть комплекс →
+          Подробнее о комплексе
         </div>
         {note && <div className="muted" style={{ fontSize: 13 }}>{note}</div>}
       </div>
