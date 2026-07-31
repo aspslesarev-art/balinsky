@@ -26,12 +26,18 @@ export type LinkConfig = {
   /** Target collection key to pick from (e.g. 'complexes'). */
   collection: string
   /** How the picked record is stored on THIS field:
-   *  - 'id-array'  → [airtable_id]   (villas/apartments Комплекс, Developer)
-   *  - 'name'      → "Project name"  (complexes Developer) */
-  store: 'id-array' | 'name'
+   *  - 'id-array'   → [airtable_id]     (villas/apartments Комплекс, Developer)
+   *  - 'name'       → "Project name"    (complexes Developer)
+   *  - 'name-slug'  → [{ name, slug }]  (news/promo/events `developers`) —
+   *    the shape the retired Airtable lookup wrote, and the shape the public
+   *    pages filter on: `n.developers.some(d => d.slug === devSlug)`. */
+  store: 'id-array' | 'name' | 'name-slug'
   /** Optional companion field to also set with the picked record's title
    *  (Airtable lookup column, e.g. 'Комплекс 1' / 'Developer1'). */
   nameField?: string
+  /** Same, but stored as a one-element array — for the manifest lookup
+   *  columns Airtable emitted as arrays (news/promo `complexNames`). */
+  nameArrayField?: string
 }
 
 export type StoreType = 'sql_jsonb' | 'storage_manifest' | 'sql_columns'
@@ -84,6 +90,9 @@ export type CollectionConfig = {
   caps: Caps
   /** Field used as the row's headline in the grid + panel title. */
   titleField: string
+  /** Field holding the public slug. Only needed when another collection
+   *  links here with `store: 'name-slug'` and has to store that slug. */
+  slugField?: string
   /** Boolean published flag, e.g. 'Опубликовать'. */
   publishedField?: string
   defaultSort?: { field: string; dir: 'asc' | 'desc' }

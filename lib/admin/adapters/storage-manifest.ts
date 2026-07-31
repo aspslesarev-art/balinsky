@@ -54,11 +54,17 @@ function sortRows(cfg: CollectionConfig, rows: RecordRow[], sort?: { field: stri
   })
 }
 
-// Empty arrays for every field the config models as a list.
+// Empty arrays for every field the config models as a list. Array-shaped
+// `link` fields count too: /akcii and the events listing read
+// `developers[0]` directly, and a missing key 500'd the page.
 function emptyLists(cfg: CollectionConfig): Record<string, unknown> {
   const out: Record<string, unknown> = {}
   for (const f of cfg.fields) {
     if (f.type === 'multienum' || f.type === 'json') out[f.key] = []
+    if (f.type === 'link' && f.link?.store === 'name-slug') {
+      out[f.key] = []
+      if (f.link.nameArrayField) out[f.link.nameArrayField] = []
+    }
   }
   return out
 }

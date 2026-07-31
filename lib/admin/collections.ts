@@ -203,6 +203,9 @@ const developers: CollectionConfig = {
   // 010) — expose edit, not insert/delete.
   caps: { create: false, update: true, delete: false },
   titleField: 'Developer',
+  // News/promo/events link here with `store: 'name-slug'` and need this slug —
+  // it is what the public pages filter those manifests by.
+  slugField: 'SEO:Slug',
   publishedField: 'Публикация',
   defaultSort: { field: 'Developer', dir: 'asc' },
   revalidateKind: 'developers',
@@ -251,8 +254,19 @@ const news: CollectionConfig = {
     { key: 'photo', label: 'Фото', type: 'image', showInGrid: true, width: 80 },
     { key: 'externalUrl', label: 'Внешняя ссылка', type: 'text' },
     { key: 'videoUrl', label: 'Видео (URL)', type: 'text' },
-    { key: 'complexNames', label: 'Комплексы', type: 'json', readOnly: true },
-    { key: 'developers', label: 'Застройщики', type: 'json', readOnly: true },
+    // Airtable used to fill this link (and mirror the name into
+    // `complexNames`). Since it was retired, a news item created here had no
+    // way to get a developer — and the developer page filters on exactly this
+    // (`n.developers.some(d => d.slug === slug)`), so such news never showed
+    // up there. The picker restores that, writing the same shape.
+    {
+      key: 'developers', label: 'Застройщик', type: 'link', showInGrid: true, width: 200,
+      link: { collection: 'developers', store: 'name-slug', nameArrayField: 'complexNames' },
+    },
+    // Despite the name, Airtable filled this with the developer's name, not a
+    // complex — kept as a read-only mirror so the detail page chip stays
+    // consistent with the 117 records imported before the cutover.
+    { key: 'complexNames', label: 'Застройщик (лейбл)', type: 'json', readOnly: true },
   ],
 }
 
@@ -284,7 +298,12 @@ const events: CollectionConfig = {
     { key: 'videoUrl', label: 'Видео (URL)', type: 'text' },
     // Declared so a created record is seeded with [] — the events listing
     // reads `e.developers[0]` directly and a missing key 500'd the page.
-    { key: 'developers', label: 'Застройщики', type: 'json', readOnly: true },
+    // Same picker as news/promo: without it an event never reaches the
+    // developer page, which filters on `e.developers[].slug`.
+    {
+      key: 'developers', label: 'Застройщик', type: 'link', showInGrid: true, width: 200,
+      link: { collection: 'developers', store: 'name-slug' },
+    },
   ],
 }
 
@@ -311,10 +330,14 @@ const promo: CollectionConfig = {
     { key: 'body', label: 'Текст', type: 'longtext' },
     { key: 'photo', label: 'Фото', type: 'image', showInGrid: true, width: 80 },
     { key: 'externalUrl', label: 'Внешняя ссылка', type: 'text' },
-    { key: 'complexNames', label: 'Комплексы', type: 'json', readOnly: true },
-    // Seeded as [] on create for the same reason as events — /akcii reads
-    // `p.developers[0]` directly.
-    { key: 'developers', label: 'Застройщики', type: 'json', readOnly: true },
+    // Same picker as news — /akcii reads `p.developers[0]` directly and the
+    // developer page filters on the slug, so an unlinked promo is invisible
+    // there. Seeded as [] on create, which /akcii also relies on.
+    {
+      key: 'developers', label: 'Застройщик', type: 'link', showInGrid: true, width: 200,
+      link: { collection: 'developers', store: 'name-slug', nameArrayField: 'complexNames' },
+    },
+    { key: 'complexNames', label: 'Застройщик (лейбл)', type: 'json', readOnly: true },
   ],
 }
 

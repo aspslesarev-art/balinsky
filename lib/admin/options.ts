@@ -5,30 +5,40 @@
 import { adminSb, supabaseUrl } from './sb'
 import type { CollectionConfig } from './adapters/types'
 
-export type Option = { id: string; title: string }
+// `slug` is only populated for collections that declare `slugField` — it is
+// what a `store: 'name-slug'` link (news/promo/events → developers) writes
+// alongside the name, since the public pages filter these by developer slug.
+export type Option = { id: string; title: string; slug?: string }
 
 const LIMIT = 50
 
 export async function getOptions(cfg: CollectionConfig, q: string): Promise<Option[]> {
   const needle = q.trim()
+  const slugKey = cfg.slugField
   if (cfg.store === 'sql_jsonb') {
+    const slugSel = slugKey ? `, s:data->>"${slugKey}"` : ''
     const pk = cfg.primaryKey ?? 'airtable_id'
-    let query = adminSb().from(cfg.table!).select(`${pk}, t:data->>"${cfg.titleField}"`)
+    let query = adminSb().from(cfg.table!).select(`${pk}, t:data->>"${cfg.titleField}"${slugSel}`)
     if (needle) query = query.ilike(`data->>"${cfg.titleField}"`, `%${needle}%`)
     const { data, error } = await query.limit(LIMIT)
     if (error) throw new Error(error.message)
     return ((data ?? []) as unknown as Record<string, unknown>[])
-      .map(r => ({ id: String(r[pk]), title: String(r.t ?? '') }))
+      .map(r => ({ id: String(r[pk]), title: String(r.t ?? '').trim(), slug: r.s ? String(r.s) : undefined }))
       .filter(o => o.title)
   }
   if (cfg.store === 'sql_columns') {
+    const slugSel = slugKey ? `, ${slugKey}` : ''
     const pk = cfg.primaryKey ?? 'id'
-    let query = adminSb().from(cfg.table!).select(`${pk}, ${cfg.titleField}`)
+    let query = adminSb().from(cfg.table!).select(`${pk}, ${cfg.titleField}${slugSel}`)
     if (needle) query = query.ilike(cfg.titleField, `%${needle}%`)
     const { data, error } = await query.limit(LIMIT)
     if (error) throw new Error(error.message)
     return ((data ?? []) as unknown as Record<string, unknown>[])
-      .map(r => ({ id: String(r[pk]), title: String(r[cfg.titleField] ?? '') }))
+      .map(r => ({
+        id: String(r[pk]),
+        title: String(r[cfg.titleField] ?? '').trim(),
+        slug: slugKey && r[slugKey] ? String(r[slugKey]) : undefined,
+      }))
       .filter(o => o.title)
   }
   // storage_manifest

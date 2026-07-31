@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { X, Save, Trash2, Loader2, AlertTriangle, Plus, Link2, Search, Sparkles } from 'lucide-react'
 import type { CollectionConfig, FieldDef, FieldType, RecordRow } from '@/lib/admin/adapters/types'
-import { resolveRecordFields, percentToInput, inputToPercent } from '@/lib/admin/fields'
+import { resolveRecordFields, percentToInput, inputToPercent, linkPatch, linkDisplayName, type LinkOption } from '@/lib/admin/fields'
 import { hasAi } from '@/lib/admin/ai-fields'
 import { PhotoManager } from './_photos'
 
@@ -118,9 +118,7 @@ export function RecordPanel({
                     value={fields[f.key]}
                     nameHint={f.link.nameField ? fields[f.link.nameField] : undefined}
                     onPick={opt => {
-                      const lk = f.link!
-                      setField(f.key, opt ? (lk.store === 'name' ? opt.title : [opt.id]) : (lk.store === 'name' ? '' : []))
-                      if (lk.nameField) setField(lk.nameField, opt ? opt.title : '')
+                      for (const [k, v] of Object.entries(linkPatch(f, opt))) setField(k, v)
                     }}
                   />
                 ) : f.type === 'image' ? (
@@ -529,10 +527,9 @@ function ImageField({ f, collection, value, onChange }: { f: FieldDef; collectio
   )
 }
 
-type LinkOption = { id: string; title: string }
-
 // Airtable-style link picker: search records in another collection and pick one.
-// Sets this field (id-array or name) + optional companion name field via onPick.
+// Sets this field (id-array, name or name-slug) + any companion lookup fields,
+// via linkPatch() in onPick.
 function LinkEditor({
   f, value, nameHint, onPick,
 }: {
@@ -542,9 +539,12 @@ function LinkEditor({
   onPick: (opt: LinkOption | null) => void
 }) {
   const target = f.link!.collection
-  const isName = f.link!.store === 'name'
-  const currentId = isName ? '' : (Array.isArray(value) ? String(value[0] ?? '') : '')
-  const hasValue = isName ? !!(value && String(value)) : !!currentId
+  // 'name' and 'name-slug' carry the name inline — only 'id-array' needs a
+  // lookup round-trip to show what is currently selected.
+  const byId = f.link!.store === 'id-array'
+  const inlineName = linkDisplayName(f, value)
+  const currentId = byId && Array.isArray(value) ? String(value[0] ?? '') : ''
+  const hasValue = byId ? !!currentId : !!inlineName
 
   const [display, setDisplay] = useState<string>('')
   const [query, setQuery] = useState('')
@@ -554,14 +554,14 @@ function LinkEditor({
 
   // Resolve current selection's name for display.
   useEffect(() => {
-    if (isName) { setDisplay(value ? String(value) : ''); return }
+    if (!byId) { setDisplay(inlineName); return }
     if (nameHint) { setDisplay(String(nameHint)); return }
     if (!currentId) { setDisplay(''); return }
     let alive = true
     fetch(`/api/admin/data/${target}/options?ids=${encodeURIComponent(currentId)}`)
       .then(r => r.json()).then(j => { if (alive) setDisplay(j.titles?.[currentId] ?? currentId) }).catch(() => {})
     return () => { alive = false }
-  }, [target, currentId, nameHint, isName, value])
+  }, [target, currentId, nameHint, byId, inlineName])
 
   // Debounced option search.
   useEffect(() => {

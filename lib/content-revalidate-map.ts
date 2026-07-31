@@ -24,17 +24,23 @@ type RevalidateRoute = { path: string; type?: 'page' | 'layout' }
 // used to mean an admin edit reached /ru and /en while the other eight
 // locales kept serving their previous ISR render until the TTL ran out.
 const RU_PATHS: Record<string, RevalidateRoute[]> = {
+  // The developer page carries "новости / акции / мероприятия застройщика"
+  // blocks filtered by `developers[].slug`, so it goes stale on any edit to
+  // these three manifests — including linking an item to a developer.
   events: [
     { path: '/ru/meropriyatiya' },
     { path: '/ru/meropriyatiya/[slug]', type: 'page' },
+    { path: '/ru/zastrojshhiki/[slug]', type: 'page' },
   ],
   news: [
     { path: '/ru/novosti' },
     { path: '/ru/novosti/[slug]', type: 'page' },
+    { path: '/ru/zastrojshhiki/[slug]', type: 'page' },
   ],
   promo: [
     { path: '/ru/akcii' },
     { path: '/ru/akcii/[slug]', type: 'page' },
+    { path: '/ru/zastrojshhiki/[slug]', type: 'page' },
   ],
   knowledge: [
     { path: '/ru/znaniya' },

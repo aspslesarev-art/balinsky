@@ -2,7 +2,7 @@
 // (Airtable-parity), not a curated subset. The collection config only layers
 // nice labels / types / enums / order on top of whatever keys actually exist.
 
-import type { CollectionConfig, FieldDef, FieldType, RecordRow } from './adapters/types'
+import type { CollectionConfig, FieldDef, FieldType, LinkConfig, RecordRow } from './adapters/types'
 
 // Render any stored value as plain, human-readable text — flattening Airtable
 // wrappers ({state,value}), record-id/lookup arrays, and objects into something
@@ -162,6 +162,37 @@ export function inputToPercent(text: string): number | null {
 export function percentDisplay(v: unknown): string {
   const s = percentToInput(v)
   return s === '' ? '' : `${s} %`
+}
+
+/** One choice offered by a `link` field picker (see lib/admin/options.ts). */
+export type LinkOption = { id: string; title: string; slug?: string }
+
+/** Value a `link` field takes when `opt` is picked (null = cleared). */
+export function linkValue(link: LinkConfig, opt: LinkOption | null): unknown {
+  if (link.store === 'name') return opt ? opt.title : ''
+  if (link.store === 'name-slug') return opt ? [{ name: opt.title, slug: opt.slug ?? '' }] : []
+  return opt ? [opt.id] : []
+}
+
+// Full patch for picking `opt` on a link field: the field itself plus the
+// companion lookup columns Airtable used to keep in sync. Shared by the side
+// panel and the inline grid picker so the two can't drift.
+export function linkPatch(field: FieldDef, opt: LinkOption | null): Record<string, unknown> {
+  const link = field.link!
+  const patch: Record<string, unknown> = { [field.key]: linkValue(link, opt) }
+  if (link.nameField) patch[link.nameField] = opt ? opt.title : ''
+  if (link.nameArrayField) patch[link.nameArrayField] = opt ? [opt.title] : []
+  return patch
+}
+
+/** Name to show for a link field's current value, before any id lookup. */
+export function linkDisplayName(field: FieldDef, value: unknown): string {
+  if (field.link?.store === 'name') return value ? String(value) : ''
+  if (field.link?.store === 'name-slug') {
+    const first = Array.isArray(value) ? value[0] : null
+    return first && typeof first === 'object' ? String((first as { name?: unknown }).name ?? '') : ''
+  }
+  return ''
 }
 
 // Ordered column/field list covering ALL keys present across `rows`, with

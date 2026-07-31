@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Plus, ArrowUp, ArrowDown, Search, Loader2, Maximize2, Link2, Filter, X, Sparkles } from 'lucide-react'
 import type { CollectionConfig, FieldDef, RecordRow } from '@/lib/admin/adapters/types'
-import { resolveFields, displayValue, editableText, coerceValue, isImageUrl, percentToInput, inputToPercent, percentDisplay } from '@/lib/admin/fields'
+import { resolveFields, displayValue, editableText, coerceValue, isImageUrl, percentToInput, inputToPercent, percentDisplay, linkPatch, linkDisplayName, type LinkOption } from '@/lib/admin/fields'
 import { hasAi } from '@/lib/admin/ai-fields'
 import { RecordPanel } from './_panel'
 
@@ -368,12 +368,7 @@ export function DataGridScreen({
                     return (
                       <td key={c.key} style={sticky ? { left: 36 } : undefined} className={`${base} min-w-[160px]`}>
                         <InlineLink cfg={cfg} field={c} row={r}
-                          onPick={opt => {
-                            const lk = c.link!
-                            const p: Record<string, unknown> = { [c.key]: opt ? (lk.store === 'name' ? opt.title : [opt.id]) : (lk.store === 'name' ? '' : []) }
-                            if (lk.nameField) p[lk.nameField] = opt ? opt.title : ''
-                            patchRow(r.id, p)
-                          }} />
+                          onPick={opt => patchRow(r.id, linkPatch(c, opt))} />
                       </td>
                     )
                   }
@@ -536,12 +531,15 @@ function FilterPanel({ cols, filters, setFilters }: {
 }
 
 // Compact inline link picker used directly inside a grid cell.
-type LinkOption = { id: string; title: string }
 function InlineLink({ field, row, onPick }: { cfg: CollectionConfig; field: FieldDef; row: RecordRow; onPick: (o: LinkOption | null) => void }) {
   const lk = field.link!
-  const isName = lk.store === 'name'
-  const cur = isName ? (row.fields[field.key] ? String(row.fields[field.key]) : '') : (lk.nameField ? displayValue(row.fields[lk.nameField]) : '')
-  const curId = !isName && Array.isArray(row.fields[field.key]) ? String((row.fields[field.key] as unknown[])[0] ?? '') : ''
+  // 'name' / 'name-slug' carry the name inline; 'id-array' shows the companion
+  // lookup column, falling back to an id → title round-trip below.
+  const byId = lk.store === 'id-array'
+  const cur = byId
+    ? (lk.nameField ? displayValue(row.fields[lk.nameField]) : '')
+    : linkDisplayName(field, row.fields[field.key])
+  const curId = byId && Array.isArray(row.fields[field.key]) ? String((row.fields[field.key] as unknown[])[0] ?? '') : ''
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [opts, setOpts] = useState<LinkOption[]>([])
@@ -551,12 +549,12 @@ function InlineLink({ field, row, onPick }: { cfg: CollectionConfig; field: Fiel
   useEffect(() => { setName(cur) }, [cur])
   // Resolve name from id when no companion name is present.
   useEffect(() => {
-    if (isName || cur || !curId) return
+    if (!byId || cur || !curId) return
     let alive = true
     fetch(`/api/admin/data/${lk.collection}/options?ids=${encodeURIComponent(curId)}`)
       .then(r => r.json()).then(j => { if (alive) setName(j.titles?.[curId] ?? curId) }).catch(() => {})
     return () => { alive = false }
-  }, [isName, cur, curId, lk.collection])
+  }, [byId, cur, curId, lk.collection])
 
   useEffect(() => {
     if (!open) return
