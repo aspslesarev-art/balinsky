@@ -304,9 +304,18 @@ export function DeveloperTemplate({ data, allDevelopers }: {
       {/* ---- hero */}
       <header style={{ position: 'relative', height: '82vh', minHeight: 560, overflow: 'hidden' }}>
         <HeroBackdrop dev={dev} />
+        {/* The handoff's overlay assumed a bright photo: it is only ~55% cream at
+            36% height, which is exactly where the H1 sits, so dark text over a
+            dark render became unreadable. Kept the same idea (photo dissolving
+            into the page) but made the base under the text block opaque. */}
         <div style={{
           position: 'absolute', inset: 0,
-          background: 'linear-gradient(to top, color-mix(in srgb, var(--color-bg) 96%, transparent), color-mix(in srgb, var(--color-bg) 55%, transparent) 36%, transparent 65%)',
+          background: 'linear-gradient(to top,'
+            + ' color-mix(in srgb, var(--color-bg) 99%, transparent) 0%,'
+            + ' color-mix(in srgb, var(--color-bg) 97%, transparent) 34%,'
+            + ' color-mix(in srgb, var(--color-bg) 88%, transparent) 56%,'
+            + ' color-mix(in srgb, var(--color-bg) 45%, transparent) 72%,'
+            + ' transparent 88%)',
         }} />
         <div className="glass" style={{
           position: 'absolute', top: 24, left: 48, display: 'flex', gap: 8, padding: '9px 16px',
