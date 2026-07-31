@@ -20,9 +20,8 @@ export type ManagerItem = {
   // Free-text credentials line ("Сертифицированный агент, 5 лет на
   // Бали") shown under the manager's name on the contact card.
   regalia?: string | null
-  // Whose manager this is — 'Balinsky' or 'Застройщик' — and which department
-  // they run. Set for developer-side contacts; the developer page labels the
-  // card with the department instead of a generic "Менеджер Balinsky".
+  // `org` is internal bookkeeping ('Balinsky' | 'Застройщик') and is never
+  // rendered. `department` is the job title shown on the contact card.
   org?: string | null
   department?: string | null
 }
