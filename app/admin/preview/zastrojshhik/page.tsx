@@ -1,13 +1,10 @@
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
-import { requireAdmin } from '@/lib/admin-auth'
 import { listPreviewDevelopers } from '@/lib/preview/developer-template'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { robots: { index: false, follow: false }, title: 'Прототип: шаблон застройщика' }
 
 export default async function PreviewIndex() {
-  if (!(await requireAdmin())) redirect('/admin')
   const devs = await listPreviewDevelopers()
   const withComplexes = devs.filter(d => d.complexes > 0)
 

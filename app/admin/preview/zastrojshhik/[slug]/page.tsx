@@ -1,6 +1,5 @@
-import { notFound, redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import { Golos_Text } from 'next/font/google'
-import { requireAdmin } from '@/lib/admin-auth'
 import { loadDeveloperTemplateData, listPreviewDevelopers } from '@/lib/preview/developer-template'
 import { DeveloperTemplate } from './_template'
 import '../preview.css'
@@ -12,7 +11,6 @@ export const dynamic = 'force-dynamic'
 export const metadata = { robots: { index: false, follow: false }, title: 'Прототип шаблона застройщика' }
 
 export default async function DeveloperTemplatePreview({ params }: { params: Promise<{ slug: string }> }) {
-  if (!(await requireAdmin())) redirect('/admin')
   const { slug } = await params
   const [data, all] = await Promise.all([loadDeveloperTemplateData(slug), listPreviewDevelopers()])
   if (!data) notFound()
