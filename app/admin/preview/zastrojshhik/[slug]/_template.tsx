@@ -129,7 +129,7 @@ function ComplexFacts({ c }: { c: TplComplex }) {
   )
 }
 
-function ComplexDetail({ c, devName }: { c: TplComplex; devName: string }) {
+function ComplexDetail({ c }: { c: TplComplex }) {
   return (
     <section id={c.slug} className="uesection" style={{ paddingTop: 112 }}>
       <h2 className="uehead">{c.name}</h2>
@@ -209,9 +209,6 @@ function ComplexDetail({ c, devName }: { c: TplComplex; devName: string }) {
             : <p style={{ marginTop: 20 }}><Missing what={c.geo ? 'POI рядом не собраны для этого комплекса' : 'координат комплекса нет'} /></p>}
         </div>
       </div>
-      <p className="muted" style={{ marginTop: 24, fontSize: 14 }}>
-        Застройщик: {devName}
-      </p>
     </section>
   )
 }
@@ -488,7 +485,7 @@ export function DeveloperTemplate({ data, allDevelopers }: {
         )}
       </section>
 
-      {building.map(c => <ComplexDetail key={c.id} c={c} devName={dev.name} />)}
+      {building.map(c => <ComplexDetail key={c.id} c={c} />)}
       {completed.map(c => <CompletedDetail key={c.id} c={c} />)}
 
       {/* ---- videos */}
