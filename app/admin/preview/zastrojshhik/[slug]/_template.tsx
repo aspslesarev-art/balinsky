@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { ScrollRow } from '@/components/preview/ScrollRow'
 import { ProjectCard } from '@/components/preview/ProjectCard'
 import { ComplexGallery } from '@/components/preview/ComplexGallery'
-import { NearbyMap } from '@/components/preview/NearbyMap'
+import { NearbyGoogleMap } from '@/components/preview/NearbyGoogleMap'
 import { FaqAccordion } from '@/components/preview/FaqAccordion'
 import { DataCoverageHud } from '@/components/preview/DataCoverageHud'
 import { compactUsd, fullUsd, plural } from '@/lib/preview/developer-metrics'
@@ -205,7 +205,7 @@ function ComplexDetail({ c, devName }: { c: TplComplex; devName: string }) {
         <div style={{ minWidth: 0 }}>
           <h3 style={{ margin: 0, fontSize: 24 }}>Что рядом</h3>
           {c.geo && c.pois.length
-            ? <NearbyMap center={c.geo} pois={c.pois} />
+            ? <NearbyGoogleMap center={c.geo} pois={c.pois} title={c.name} />
             : <p style={{ marginTop: 20 }}><Missing what={c.geo ? 'POI рядом не собраны для этого комплекса' : 'координат комплекса нет'} /></p>}
         </div>
       </div>
@@ -337,9 +337,12 @@ export function DeveloperTemplate({ data, allDevelopers }: {
               {dev.tagline}
             </p>
           )}
+          {/* One line, per the handoff: districts that don't fit are clipped and
+              scrollable here — the full list lives in "О застройщике" below. */}
           {(dev.projectsForSale + dev.completedCount + dev.unitsTotal > 0) && <div className="glass" style={{
-            display: 'flex', flexWrap: 'wrap', gap: '14px 26px', alignItems: 'baseline',
-            fontSize: 17, padding: '16px 24px', borderRadius: 999, width: 'fit-content', maxWidth: '100%',
+            display: 'flex', flexWrap: 'nowrap', gap: '0 26px', alignItems: 'baseline',
+            fontSize: 17, padding: '16px 24px', borderRadius: 999, width: 'fit-content',
+            maxWidth: '100%', overflow: 'hidden', whiteSpace: 'nowrap',
           }}>
             <span>{dev.projectsForSale} {plural(dev.projectsForSale, 'проект', 'проекта', 'проектов')} в продаже</span>
             <span style={{ color: 'var(--color-accent)' }}>·</span>
@@ -348,7 +351,7 @@ export function DeveloperTemplate({ data, allDevelopers }: {
             <span>{dev.unitsTotal} {plural(dev.unitsTotal, 'юнит', 'юнита', 'юнитов')}</span>
             {dev.districts.length > 0 && <>
               <span style={{ color: 'var(--color-accent)' }}>·</span>
-              <span style={{ overflowX: 'auto', whiteSpace: 'nowrap' }}>Районы: {dev.districts.join(' · ')}</span>
+              <span className="districts" title={dev.districts.join(', ')}>Районы: {dev.districts.join(' · ')}</span>
             </>}
           </div>}
           <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
@@ -443,7 +446,9 @@ export function DeveloperTemplate({ data, allDevelopers }: {
           <div>
             <h3 style={{ margin: 0, fontSize: 24 }}>Компания</h3>
             <ul style={{ margin: '20px 0 0', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 14, fontSize: 17, lineHeight: 1.5 }}>
-              {dev.districts.length > 0 && <li>Строит в районах: {dev.districts.join(', ')}</li>}
+              {dev.districts.length > 0 && (
+                <li>Строит в {dev.districts.length} {plural(dev.districts.length, 'районе', 'районах', 'районах')}: {dev.districts.join(', ')}</li>
+              )}
               {dev.website && <li>Сайт: <a href={dev.website} target="_blank" rel="noopener noreferrer">{dev.website.replace(/^https?:\/\//, '')}</a></li>}
               {dev.rating != null && <li>Рейтинг надёжности Balinsky: {dev.rating}</li>}
               <li><Missing what="юрлицо, NIB, основатель, адрес офиса — отдельных полей нет" /></li>
