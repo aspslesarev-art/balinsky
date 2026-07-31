@@ -26,6 +26,10 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const sb = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY!)
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/complex-photos/_manifest.json`
 const VILLA_PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/villa-photos/_manifest.json`
+// Google Places shots collected for complexes whose own galleries were too
+// thin for the design (scripts note: 23 of the 32 short ones matched a place
+// within 300m, or 800m on an exact name match).
+const PLACES_FALLBACK_URL = `${SUPABASE_URL}/storage/v1/object/public/complex-photos/_places_fallback.json`
 
 /** Walking speed used to derive `walk_min` — a design field no table stores. */
 const WALK_METRES_PER_MIN = 80
@@ -85,6 +89,8 @@ export type TplComplex = {
   lede: string | null
   geo: { lat: number; lng: number } | null
   photos: string[]
+  /** Set when the lead photo came from Google Places — attribution is required. */
+  photoCredit: string | null
   units: TplUnit[]
   pois: TplPoi[]
   url: string
@@ -159,6 +165,19 @@ const CPX_FIELDS = [
 const VILLA_FIELDS = [
   'Комплекс 1', 'Комнаты', 'Площадь', 'Земля', 'Цена', 'SEO:Slug', 'Тип', 'Name', 'Developer1',
 ] as const
+
+type PlacesFallback = Record<string, { photoName: string; attribution: string | null; placeName?: string }>
+
+async function loadPlacesFallback(): Promise<PlacesFallback> {
+  try {
+    const r = await fetch(PLACES_FALLBACK_URL, { next: { revalidate: 3600 } })
+    if (!r.ok) return {}
+    const j = (await r.json()) as { items?: PlacesFallback }
+    return j.items ?? {}
+  } catch {
+    return {}
+  }
+}
 
 async function loadManifest(url: string): Promise<Record<string, string[]>> {
   try {
@@ -396,9 +415,9 @@ const loadCpxTable = cachedTable('raw_complexes', CPX_FIELDS, 500, 'content:comp
 const loadVillaTable = cachedTable('raw_villas', VILLA_FIELDS, 3000, 'content:villas')
 
 export async function loadDeveloperTemplateData(slug: string): Promise<DeveloperTemplateData | null> {
-  const [devs, cpxAll, villas, photoManifest, villaPhotoManifest] = await Promise.all([
+  const [devs, cpxAll, villas, photoManifest, villaPhotoManifest, placesFallback] = await Promise.all([
     loadDevTable(), loadCpxTable(), loadVillaTable(),
-    loadManifest(PHOTO_MANIFEST_URL), loadManifest(VILLA_PHOTO_MANIFEST_URL),
+    loadManifest(PHOTO_MANIFEST_URL), loadManifest(VILLA_PHOTO_MANIFEST_URL), loadPlacesFallback(),
   ])
   const devRow = devs.find(d => firstString(d['SEO:Slug']) === slug)
   if (!devRow) return null
@@ -437,7 +456,11 @@ export async function loadDeveloperTemplateData(slug: string): Promise<Developer
     const ownPhotos = asList(photoManifest[id])
     const unitPhotos = villasOfComplex(villas, cname)
       .flatMap(v => asList(villaPhotoManifest[v.airtable_id as string]))
-    const photos = [...new Set([...ownPhotos, ...unitPhotos])].slice(0, MAX_GALLERY_PHOTOS)
+    // Where the gallery was too thin, a Google Places shot leads: it is the
+    // single best image we could find for the complex.
+    const place = placesFallback[id]
+    const lead = place ? [`/api/place-photo?name=${encodeURIComponent(place.photoName)}`] : []
+    const photos = [...new Set([...lead, ...ownPhotos, ...unitPhotos])].slice(0, MAX_GALLERY_PHOTOS)
 
     const base = {
       id,
@@ -456,6 +479,7 @@ export async function loadDeveloperTemplateData(slug: string): Promise<Developer
       lede: firstString(c['Описание']) ?? firstString(c['ИИ Описание']),
       geo: lat != null && lng != null ? { lat, lng } : null,
       photos,
+      photoCredit: place?.attribution ?? null,
       units,
       pois,
       url: `/ru/zhilye-kompleksy/${cslug}`,

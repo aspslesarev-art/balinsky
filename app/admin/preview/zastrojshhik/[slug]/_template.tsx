@@ -158,7 +158,7 @@ function ComplexDetail({ c, mapsKey }: { c: TplComplex; mapsKey: string }) {
         <Link href={c.url} style={{ fontSize: 15 }}>Страница комплекса →</Link>
       </div>
 
-      <ComplexGallery photos={c.photos} name={c.name} />
+      <ComplexGallery photos={c.photos} name={c.name} credit={c.photoCredit} />
 
       <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 56, marginTop: 56, position: 'relative' }}>
         <div className="vrule" style={{ position: 'absolute', left: 'calc(50% - 0.5px)', top: 0, bottom: 0, width: 1, background: 'var(--color-divider)' }} />
@@ -220,6 +220,21 @@ function CompletedDetail({ c }: { c: TplComplex }) {
     <section id={c.slug} className="uesection" style={{ paddingTop: 112 }}>
       <h2 className="uehead">{c.name}: уже сдан</h2>
       {c.lede && <p className="muted" style={{ margin: '16px 0 0', fontSize: 20, maxWidth: '62ch', lineHeight: 1.55 }}>{c.lede}</p>}
+      {/* The handoff gives the completed block no gallery, but most complexes
+          that reach it now have a photo — one wide shot keeps the section from
+          being a wall of numbers. */}
+      {c.photos[0] && (
+        <>
+          <div role="img" aria-label={c.name} style={{
+            marginTop: 32, height: 340, borderRadius: 'var(--radius-md)',
+            backgroundImage: `url(${JSON.stringify(c.photos[0]).slice(1, -1)})`,
+            backgroundSize: 'cover', backgroundPosition: 'center',
+          }} />
+          {c.photoCredit && (
+            <p className="muted" style={{ margin: '10px 0 0', fontSize: 13 }}>Фото: {c.photoCredit} (Google)</p>
+          )}
+        </>
+      )}
       <div className="grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', marginTop: 44 }}>
         <div>
           <div style={{ fontSize: 56, fontWeight: 500, letterSpacing: '-0.03em', color: 'var(--color-accent)' }}>

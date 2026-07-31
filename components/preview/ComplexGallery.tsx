@@ -3,7 +3,7 @@
 import { useState } from 'react'
 
 /** Main photo + 4 thumbnails; click a thumb to swap, click the main one for a lightbox. */
-export function ComplexGallery({ photos, name }: { photos: string[]; name: string }) {
+export function ComplexGallery({ photos, name, credit }: { photos: string[]; name: string; credit?: string | null }) {
   const [main, setMain] = useState(0)
   const [zoom, setZoom] = useState(false)
   if (!photos.length) {
@@ -48,6 +48,8 @@ export function ComplexGallery({ photos, name }: { photos: string[]; name: strin
         {photos.length < 5
           ? `В базе ${photos.length} фото — дизайн рассчитан на 5 и больше`
           : 'Нажмите на фото, чтобы рассмотреть во весь экран'}
+        {/* Google requires the photographer credit wherever a Places photo is shown. */}
+        {credit && <span> · главное фото: {credit} (Google)</span>}
       </p>
       {zoom && (
         <div onClick={() => setZoom(false)} style={{
