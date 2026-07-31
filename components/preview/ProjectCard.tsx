@@ -52,7 +52,17 @@ export function ProjectCard({ href, kicker, name, meta, progressPct, photos, not
         transition: 'border-color .25s ease',
       }}
     >
-      <div style={{ position: 'relative', height: 220, overflow: 'hidden', background: 'var(--color-divider)' }}>
+      {/* At rest the photo sits inset with a margin; on hover it bleeds to the
+          card edges. That expansion is the whole tell that the card is live. */}
+      <div style={{
+        padding: hover ? 0 : 10,
+        transition: 'padding .28s cubic-bezier(.33,0,.25,1)',
+      }}>
+      <div style={{
+        position: 'relative', height: 220, overflow: 'hidden', background: 'var(--color-divider)',
+        borderRadius: hover ? 0 : 8,
+        transition: 'border-radius .28s cubic-bezier(.33,0,.25,1)',
+      }}>
         {photos.map((src, i) => (
           <div
             key={src}
@@ -64,7 +74,7 @@ export function ProjectCard({ href, kicker, name, meta, progressPct, photos, not
             style={{ backgroundImage: `url(${JSON.stringify(src).slice(1, -1)})` }}
           />
         ))}
-        {photos.length > 1 && (
+        {photos.length > 1 && hover && (
           <div style={{
             position: 'absolute', left: 16, right: 16, bottom: 14, height: 3,
             background: 'color-mix(in srgb, #fff 35%, transparent)', borderRadius: 999, overflow: 'hidden',
@@ -77,8 +87,9 @@ export function ProjectCard({ href, kicker, name, meta, progressPct, photos, not
           </div>
         )}
       </div>
+      </div>
 
-      <div style={{ padding: '22px 24px 20px', display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
+      <div style={{ padding: '12px 24px 20px', display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
         <div className="kicker">{kicker}</div>
         <div style={{ fontSize: 22, fontWeight: 500 }}>{name}</div>
         {/* Grows so the progress bar below sits at the same height on every
@@ -98,14 +109,14 @@ export function ProjectCard({ href, kicker, name, meta, progressPct, photos, not
           </div>
         </div>
 
-        {/* Always visible, per the reference — it tells the visitor the card is
-            a way in, not just a tile. Hover only warms the colour. */}
+        {/* Wording changes with state: a quiet «Подробнее» at rest, an explicit
+            call once the card is under the cursor. */}
         <div style={{
           marginTop: 14, fontSize: 15,
           color: hover ? 'var(--color-accent-700)' : 'color-mix(in srgb, var(--color-text) 55%, transparent)',
           transition: 'color .25s ease',
         }}>
-          Подробнее о комплексе
+          {hover ? 'Смотреть комплекс →' : 'Подробнее о комплексе'}
         </div>
         {note && <div className="muted" style={{ fontSize: 13 }}>{note}</div>}
       </div>
