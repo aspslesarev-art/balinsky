@@ -25,6 +25,7 @@ import {
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const sb = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY!)
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/complex-photos/_manifest.json`
+const VILLA_PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/villa-photos/_manifest.json`
 
 /** Walking speed used to derive `walk_min` — a design field no table stores. */
 const WALK_METRES_PER_MIN = 80
@@ -94,6 +95,8 @@ export type TplDeveloper = {
   tagline: string | null
   description: string | null
   heroPhoto: string | null
+  /** Which fallback produced `heroPhoto` — the hero renders differently per kind. */
+  heroKind: 'complex' | 'villa' | 'logo' | 'placeholder'
   logo: string | null
   districts: string[]
   projectsForSale: number
@@ -123,12 +126,13 @@ export type DeveloperTemplateData = {
 
 type Row = Record<string, unknown>
 
-function projection(fields: readonly string[]): string {
-  return ['airtable_id', ...fields.map((k, i) => `f${i}:data->"${k}"`)].join(', ')
+function projection(fields: readonly string[], cols: readonly string[] = []): string {
+  return ['airtable_id', ...cols, ...fields.map((k, i) => `f${i}:data->"${k}"`)].join(', ')
 }
-function unproject(rows: Row[], fields: readonly string[]): Row[] {
+function unproject(rows: Row[], fields: readonly string[], cols: readonly string[] = []): Row[] {
   return rows.map(r => {
     const o: Row = { airtable_id: r.airtable_id }
+    for (const c of cols) o[c] = r[c]
     fields.forEach((k, i) => { o[k] = r[`f${i}`] })
     return o
   })
@@ -137,23 +141,23 @@ function unproject(rows: Row[], fields: readonly string[]): Row[] {
 const DEV_FIELDS = [
   'Developer', 'SEO:Slug', 'SEO:Description', 'AI Описание', 'Описание ИИ',
   'Команда', 'Бизнес и сервисы', 'Строительство и недвижимость', 'Репутация и опыт',
-  'Управляющая компания', 'Публикация', 'Logo', "Link on developer's website", 'Общий рейтинг',
+  'Управляющая компания', 'Публикация', "Link on developer's website", 'Общий рейтинг',
 ] as const
 
 const CPX_FIELDS = [
   'Project', 'Developer1', 'Location', 'Location 2', 'Статус', 'Статус продаж', 'Готовность',
   'Разрешительные документы', 'Year of completion ', 'Geo', 'Geo 2', 'Leasehold',
   'Payment plan,%', 'Типы юнитов', 'Total quantity of units', 'Описание', 'ИИ Описание',
-  'SEO:Slug', 'Главное фото', 'Фотографии',
+  'SEO:Slug',
 ] as const
 
 const VILLA_FIELDS = [
-  'Комплекс 1', 'Комнаты', 'Площадь', 'Земля', 'Цена', 'SEO:Slug', 'Тип', 'Name',
+  'Комплекс 1', 'Комнаты', 'Площадь', 'Земля', 'Цена', 'SEO:Slug', 'Тип', 'Name', 'Developer1',
 ] as const
 
-async function loadPhotoManifest(): Promise<Record<string, string[]>> {
+async function loadManifest(url: string): Promise<Record<string, string[]>> {
   try {
-    const r = await fetch(PHOTO_MANIFEST_URL, { next: { revalidate: 1800 } })
+    const r = await fetch(url, { next: { revalidate: 1800 } })
     if (!r.ok) return {}
     return (await r.json()) as Record<string, string[]>
   } catch {
@@ -161,12 +165,6 @@ async function loadPhotoManifest(): Promise<Record<string, string[]>> {
   }
 }
 
-function attachmentUrls(v: unknown): string[] {
-  if (!Array.isArray(v)) return []
-  return v
-    .map(a => (a && typeof a === 'object' && 'url' in a ? (a as { url: unknown }).url : null))
-    .filter((u): u is string => typeof u === 'string')
-}
 
 // ---------------------------------------------------------------- mapping
 
@@ -311,6 +309,34 @@ function buildFaq(dev: TplDeveloper, complexes: TplComplex[]): TplFaq[] {
   return out
 }
 
+/**
+ * Every developer gets a hero, and it always comes from Supabase Storage.
+ * Order: a complex photo, then any photo of a villa this developer sells,
+ * then the developer's logo on a tinted plate, and finally a generated
+ * placeholder. Airtable attachments are deliberately not in the chain —
+ * those URLs answer 410 Gone since the base was retired.
+ */
+function resolveHero(
+  devName: string,
+  complexes: TplComplex[],
+  villas: Row[],
+  villaPhotoManifest: Record<string, string[]>,
+  logo: string | null,
+): { url: string | null; kind: TplDeveloper['heroKind'] } {
+  const fromComplex = complexes.flatMap(c => c.photos)[0]
+  if (fromComplex) return { url: fromComplex, kind: 'complex' }
+
+  const lc = devName.toLowerCase()
+  for (const v of villas) {
+    if (!namesOf(v['Developer1']).some(d => d.toLowerCase() === lc)) continue
+    const photo = asList(villaPhotoManifest[v.airtable_id as string])[0]
+    if (photo) return { url: photo, kind: 'villa' }
+  }
+
+  if (logo) return { url: logo, kind: 'logo' }
+  return { url: null, kind: 'placeholder' }
+}
+
 // ---------------------------------------------------------------- entry
 
 export async function listPreviewDevelopers(): Promise<{ slug: string; name: string; complexes: number }[]> {
@@ -342,27 +368,30 @@ export async function listPreviewDevelopers(): Promise<{ slug: string; name: str
  * 2.26MB and silently blew past unstable_cache's 2MB ceiling, so nothing was
  * ever cached and every preview re-pulled 3000 villa rows (~60s a page).
  */
-function cachedTable(name: string, fields: readonly string[], limit: number, tag: string) {
+function cachedTable(name: string, fields: readonly string[], limit: number, tag: string, cols: readonly string[] = []) {
   return unstable_cache(
     async () => {
-      const { data, error } = await sb.from(name).select(projection(fields)).limit(limit)
+      const { data, error } = await sb.from(name).select(projection(fields, cols)).limit(limit)
       if (error) throw new Error(`${name}: ${error.message}`)
-      const rows = unproject((data ?? []) as unknown as Row[], fields)
+      const rows = unproject((data ?? []) as unknown as Row[], fields, cols)
       if (!rows.length) throw new Error(`${name} returned 0 rows — refusing to cache empty`)
       return rows
     },
-    [`preview-tpl-${name}-v2`],
+    [`preview-tpl-${name}-v3`],
     { revalidate: 1800, tags: [tag] },
   )
 }
 
-const loadDevTable = cachedTable('raw_developers', DEV_FIELDS, 400, 'content:developers')
+// `logo_url` is a real column pointing at Supabase Storage. The Airtable `Logo`
+// attachment inside `data` is dead — those URLs now answer 410 Gone.
+const loadDevTable = cachedTable('raw_developers', DEV_FIELDS, 400, 'content:developers', ['logo_url'])
 const loadCpxTable = cachedTable('raw_complexes', CPX_FIELDS, 500, 'content:complexes')
 const loadVillaTable = cachedTable('raw_villas', VILLA_FIELDS, 3000, 'content:villas')
 
 export async function loadDeveloperTemplateData(slug: string): Promise<DeveloperTemplateData | null> {
-  const [devs, cpxAll, villas, photoManifest] = await Promise.all([
-    loadDevTable(), loadCpxTable(), loadVillaTable(), loadPhotoManifest(),
+  const [devs, cpxAll, villas, photoManifest, villaPhotoManifest] = await Promise.all([
+    loadDevTable(), loadCpxTable(), loadVillaTable(),
+    loadManifest(PHOTO_MANIFEST_URL), loadManifest(VILLA_PHOTO_MANIFEST_URL),
   ])
   const devRow = devs.find(d => firstString(d['SEO:Slug']) === slug)
   if (!devRow) return null
@@ -391,10 +420,9 @@ export async function loadDeveloperTemplateData(slug: string): Promise<Developer
     const hit = probed.find(Boolean)
     const pois: TplPoi[] = hit ? flattenPois(hit) : []
 
-    const manifestPhotos = asList(photoManifest[id])
-    const photos = manifestPhotos.length
-      ? manifestPhotos
-      : [...attachmentUrls(c['Главное фото']), ...attachmentUrls(c['Фотографии'])]
+    // Storage manifest only. The Airtable attachment arrays still sitting in
+    // `data` ("Фотографии" / "Главное фото") are dead links — 410 Gone.
+    const photos = asList(photoManifest[id])
 
     const base = {
       id,
@@ -438,14 +466,17 @@ export async function loadDeveloperTemplateData(slug: string): Promise<Developer
   }))
 
   const districts = [...new Set(tplComplexes.map(c => c.district).filter((d): d is string => !!d))]
+  const logo = firstString(devRow['logo_url'])
+  const hero = resolveHero(devName, tplComplexes, villas, villaPhotoManifest, logo)
 
   const dev: TplDeveloper = {
     slug,
     name: devName,
     tagline: firstString(devRow['SEO:Description']),
     description: firstString(devRow['AI Описание']) ?? firstString(devRow['Описание ИИ']),
-    heroPhoto: tplComplexes.flatMap(c => c.photos)[0] ?? null,
-    logo: attachmentUrls(devRow['Logo'])[0] ?? null,
+    heroPhoto: hero.url,
+    heroKind: hero.kind,
+    logo,
     districts,
     projectsForSale: tplComplexes.filter(c => c.status === 'building').length,
     completedCount: tplComplexes.filter(c => c.status === 'completed').length,

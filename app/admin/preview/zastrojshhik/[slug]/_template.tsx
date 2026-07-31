@@ -9,7 +9,7 @@ import { NearbyMap } from '@/components/preview/NearbyMap'
 import { FaqAccordion } from '@/components/preview/FaqAccordion'
 import { DataCoverageHud } from '@/components/preview/DataCoverageHud'
 import { compactUsd, fullUsd, plural } from '@/lib/preview/developer-metrics'
-import type { DeveloperTemplateData, TplComplex } from '@/lib/preview/developer-template'
+import type { DeveloperTemplateData, TplComplex, TplDeveloper } from '@/lib/preview/developer-template'
 
 const MISSING = 'нет в базе'
 
@@ -19,6 +19,71 @@ function Missing({ what }: { what: string }) {
       display: 'inline-block', padding: '2px 8px', borderRadius: 999, fontSize: 12,
       background: 'rgba(168,51,31,.09)', color: '#a8331f', border: '1px dashed rgba(168,51,31,.4)',
     }}>{what || MISSING}</span>
+  )
+}
+
+
+/** Deterministic warm tint per developer, so a logo/placeholder hero still looks intentional. */
+function heroTint(seed: string): { from: string; to: string } {
+  let h = 0
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) % 360
+  // Stay inside the sand→gold band of the palette instead of the full wheel.
+  const base = 24 + (h % 26)
+  return { from: `hsl(${base} 38% 82%)`, to: `hsl(${base + 8} 30% 62%)` }
+}
+
+/**
+ * The hero image, whatever the developer has. Photo when there is one,
+ * otherwise the logo on a tinted plate, otherwise initials — never a broken
+ * image and never a flat grey box.
+ */
+function HeroBackdrop({ dev }: { dev: TplDeveloper }) {
+  const tint = heroTint(dev.slug)
+  // Sit in the upper third: the lower half of the hero is covered by the
+  // cream gradient and the H1, which swallowed a centred logo entirely.
+  const plate = {
+    position: 'absolute' as const, inset: 0,
+    background: `linear-gradient(135deg, ${tint.from} 0%, ${tint.to} 100%)`,
+    display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+    paddingTop: '9%',
+  }
+
+  if (dev.heroKind === 'complex' || dev.heroKind === 'villa') {
+    return (
+      <div role="img" aria-label={dev.name} style={{
+        position: 'absolute', inset: 0,
+        backgroundImage: `url(${JSON.stringify(dev.heroPhoto ?? '').slice(1, -1)})`,
+        backgroundSize: 'cover', backgroundPosition: 'center',
+      }} />
+    )
+  }
+
+  if (dev.heroKind === 'logo' && dev.heroPhoto) {
+    return (
+      <div style={plate}>
+        {/* A white card so light-on-light logos (most of them) still read. */}
+        <span style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '28px 40px', borderRadius: 18, background: 'rgba(255,255,255,.92)',
+          boxShadow: '0 18px 46px rgba(0,0,0,.16)', maxWidth: 'min(440px, 66vw)',
+        }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={dev.heroPhoto} alt={dev.name} style={{
+            maxWidth: '100%', maxHeight: 120, objectFit: 'contain', display: 'block',
+          }} />
+        </span>
+      </div>
+    )
+  }
+
+  const initials = dev.name.split(/\s+/).slice(0, 2).map((w: string) => w[0]).join('').toUpperCase()
+  return (
+    <div style={plate} aria-label={dev.name} role="img">
+      <span style={{
+        fontSize: 'clamp(96px, 16vw, 200px)', fontWeight: 500, letterSpacing: '-0.05em',
+        color: 'rgba(255,255,255,.5)', lineHeight: 1, userSelect: 'none',
+      }}>{initials}</span>
+    </div>
   )
 }
 
@@ -204,12 +269,7 @@ export function DeveloperTemplate({ data, allDevelopers }: {
 
       {/* ---- hero */}
       <header style={{ position: 'relative', height: '82vh', minHeight: 560, overflow: 'hidden' }}>
-        {dev.heroPhoto
-          ? <div role="img" aria-label={dev.name} style={{
-              position: 'absolute', inset: 0, backgroundImage: `url(${JSON.stringify(dev.heroPhoto).slice(1, -1)})`,
-              backgroundSize: 'cover', backgroundPosition: 'center',
-            }} />
-          : <div style={{ position: 'absolute', inset: 0, background: 'var(--color-divider)' }} />}
+        <HeroBackdrop dev={dev} />
         <div style={{
           position: 'absolute', inset: 0,
           background: 'linear-gradient(to top, color-mix(in srgb, var(--color-bg) 96%, transparent), color-mix(in srgb, var(--color-bg) 55%, transparent) 36%, transparent 65%)',
@@ -234,7 +294,7 @@ export function DeveloperTemplate({ data, allDevelopers }: {
               {dev.tagline}
             </p>
           )}
-          <div className="glass" style={{
+          {(dev.projectsForSale + dev.completedCount + dev.unitsTotal > 0) && <div className="glass" style={{
             display: 'flex', flexWrap: 'wrap', gap: '14px 26px', alignItems: 'baseline',
             fontSize: 17, padding: '16px 24px', borderRadius: 999, width: 'fit-content', maxWidth: '100%',
           }}>
@@ -247,7 +307,7 @@ export function DeveloperTemplate({ data, allDevelopers }: {
               <span style={{ color: 'var(--color-accent)' }}>·</span>
               <span style={{ overflowX: 'auto', whiteSpace: 'nowrap' }}>Районы: {dev.districts.join(' · ')}</span>
             </>}
-          </div>
+          </div>}
           <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
             <a href="#contacts" className="cta">Оставить заявку <span className="cta-arrow">→</span></a>
             <span className="muted" style={{ fontSize: 15 }}>Ответим в течение дня</span>
