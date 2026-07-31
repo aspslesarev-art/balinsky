@@ -287,8 +287,11 @@ const events: CollectionConfig = {
     { key: 'pinned', label: 'На главной', type: 'bool', showInGrid: true, width: 90 },
     { key: 'title', label: 'Заголовок', type: 'text', showInGrid: true, width: 280 },
     { key: 'slug', label: 'Slug', type: 'text', showInGrid: true, width: 200 },
-    { key: 'startsAt', label: 'Начало', type: 'date', showInGrid: true, width: 140 },
-    { key: 'endsAt', label: 'Окончание', type: 'date' },
+    // Time matters for an event, and it is Bali local time — the page already
+    // renders it that way (components/LocalDateTime.tsx), only the editor was
+    // date-only.
+    { key: 'startsAt', label: 'Начало (время Бали)', type: 'date', withTime: true, showInGrid: true, width: 170 },
+    { key: 'endsAt', label: 'Окончание (время Бали)', type: 'date', withTime: true },
     { key: 'format', label: 'Формат', type: 'enum', showInGrid: true, width: 120 },
     { key: 'seoDescription', label: 'SEO-описание', type: 'longtext' },
     { key: 'body', label: 'Текст', type: 'longtext' },

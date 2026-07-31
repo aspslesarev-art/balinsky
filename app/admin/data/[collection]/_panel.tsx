@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { X, Save, Trash2, Loader2, AlertTriangle, Plus, Link2, Search } from 'lucide-react'
 import type { CollectionConfig, FieldDef, FieldType, RecordRow } from '@/lib/admin/adapters/types'
 import { resolveRecordFields, percentToInput, inputToPercent, linkPatch, linkDisplayName, type LinkOption } from '@/lib/admin/fields'
+import { toBaliInput, fromBaliInput } from '@/lib/datetime'
 import { PhotoManager } from './_photos'
 
 // Slide-over record editor. Loads the full record (sql_jsonb stores only
@@ -424,6 +425,27 @@ function DateField({ f, value, onChange }: { f: FieldDef; value: unknown; onChan
   function edit(next: string) {
     if (!next) { onChange(null); return }
     onChange(hasTime ? next + raw.slice(10) : next)
+  }
+
+  // Fields flagged withTime (event start/end) take a time too, and it is Bali
+  // wall-clock: an event starts at 18:00 on Bali regardless of where the editor
+  // sits. Stored with the +08:00 offset so the site's LocalDateTime can show
+  // Bali time to everyone and the visitor's own time to those elsewhere.
+  if (f.withTime) {
+    return (
+      <div>
+        <Label f={f} />
+        <input
+          type="datetime-local"
+          value={toBaliInput(raw)}
+          onChange={e => onChange(fromBaliInput(e.target.value))}
+          className="w-full rounded-xl border border-[var(--ax-border)] bg-[var(--ax-panel)] text-[var(--ax-fg)] px-3 py-2 text-[13px]"
+        />
+        <div className="mt-1 text-[11px] text-[var(--ax-fg-faint)]">
+          Время балийское (WITA, UTC+8){raw ? ` · сохранено: ${raw}` : ''}
+        </div>
+      </div>
+    )
   }
 
   return (
