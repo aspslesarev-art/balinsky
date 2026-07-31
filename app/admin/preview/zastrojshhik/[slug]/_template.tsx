@@ -392,9 +392,10 @@ export function DeveloperTemplate({ data, allDevelopers, mapsKey }: {
                   backgroundSize: 'cover', backgroundPosition: 'center',
                 }}>{mg.photo ? '' : (mg.name ?? '?').slice(0, 2).toUpperCase()}</div>
                 <div style={{ flex: 1, minWidth: 200 }}>
-                  {/* Position only. Whether the person sits on Balinsky's side or
-                      the developer's is internal — the visitor never sees it. */}
-                  {mg.department && <div className="kicker">{mg.department}</div>}
+                  {/* Position plus the developer they handle, e.g. «Менеджер по
+                      работе с агентами Urban Escape». Whether the person sits on
+                      Balinsky's side is internal and never shown. */}
+                  {mg.department && <div className="kicker">{mg.department} {dev.name}</div>}
                   <div style={{ fontSize: 21, fontWeight: 500, marginTop: 6 }}>{mg.name}</div>
                 </div>
                 <a href={mg.whatsapp ?? '#contacts'} className="cta">Оставить заявку <span className="cta-arrow">→</span></a>
