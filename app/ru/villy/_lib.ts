@@ -3,7 +3,8 @@ import Fuse from 'fuse.js'
 import type { Option } from '@/components/filters/MultiSelectFilter'
 import { translit, hasCyrillic, translitPreserveCase } from '@/lib/translit'
 import { loadVillaStyles } from '@/lib/villa-styles'
-import { loadFeatureFlagsMap, FEATURE_FLAGS, FEATURE_LABELS } from '@/lib/listing-features'
+import { loadFeatureFlagsMap, FEATURE_FLAGS, FEATURE_LABELS, loadVisionManifest } from '@/lib/listing-features'
+import { curateManifest } from '@/lib/listing-photos'
 import { normalizeSlug } from '@/lib/slug-normalize'
 import { revisionedCache } from '@/lib/revisioned-cache'
 import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
@@ -687,17 +688,19 @@ function reassembleVilla(raw: Record<string, unknown>): Row {
 }
 
 async function _loadAllInternal(): Promise<CachedAll> {
-  const [rowsRes, manifestRaw, styles, enCache, viewCounts, featuresMap] = await Promise.all([
+  const [rowsRes, manifestRaw, styles, enCache, viewCounts, featuresMap, visionMap] = await Promise.all([
     sb.from('raw_villas').select(VILLA_SELECT).limit(1000),
     loadJson<Record<string, string[]>>(cdnManifestUrl(PHOTO_MANIFEST_URL, 600), {}),
     loadVillaStyles(),
     loadAllTranslations('villas'),
     loadViewCounts('villa'),
     loadFeatureFlagsMap('villa'),
+    loadVisionManifest('villa'),
   ])
   // Rewrite manifest URLs to the Bunny/Cloudflare CDN host at runtime so we
   // don't have to wait for the next sync-heavy to re-emit URLs.
-  const manifest = cdnRewriteManifest(manifestRaw)
+  // Фото-аудит: выбранная обложка встаёт первой, брак выкидывается.
+  const manifest = curateManifest(cdnRewriteManifest(manifestRaw), visionMap)
   const rows = ((rowsRes.data ?? []) as unknown as Record<string, unknown>[]).map(reassembleVilla)
   const enriched = rows
     .filter(r => r.data?.['Опубликовать'] === true)
