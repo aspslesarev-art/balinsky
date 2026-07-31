@@ -18,10 +18,63 @@ const ZOOM = 14
  * on preview URLs it never renders. Rather than showing an empty grey box we
  * fall back to the plain OSM map, which is why both components exist.
  */
-export function NearbyGoogleMap({ center, pois, title }: {
+
+/**
+ * The complex marker. A plain coloured dot disappears the moment the tourism
+ * heat layer is on — the ramp runs through the same warm hues — so the complex
+ * gets a photo badge in a red ring, drawn in floatPane above the overlay.
+ */
+function makeComplexMarker(position: { lat: number; lng: number }, title: string, photo: string | null) {
+  class ComplexMarker extends google.maps.OverlayView {
+    private box: HTMLDivElement | null = null
+
+    onAdd() {
+      const box = document.createElement('div')
+      box.style.cssText = 'position:absolute;transform:translate(-50%,-100%);pointer-events:none;'
+      box.title = title
+
+      const badge = document.createElement('div')
+      badge.style.cssText = [
+        'width:52px', 'height:52px', 'border-radius:50%',
+        'border:3px solid #E0383E', 'box-shadow:0 0 0 2px #fff, 0 6px 16px rgba(0,0,0,.35)',
+        'background:#E0383E center/cover no-repeat', 'box-sizing:border-box',
+      ].join(';')
+      if (photo) badge.style.backgroundImage = `url("${photo.replace(/"/g, '%22')}")`
+
+      // Little stem so the badge reads as "this exact spot", not "somewhere here".
+      const stem = document.createElement('div')
+      stem.style.cssText = [
+        'width:0', 'height:0', 'margin:1px auto 0',
+        'border-left:6px solid transparent', 'border-right:6px solid transparent',
+        'border-top:9px solid #E0383E', 'filter:drop-shadow(0 2px 2px rgba(0,0,0,.3))',
+      ].join(';')
+
+      box.append(badge, stem)
+      this.box = box
+      this.getPanes()?.floatPane.appendChild(box)
+    }
+
+    draw() {
+      const point = this.getProjection()?.fromLatLngToDivPixel(new google.maps.LatLng(position.lat, position.lng))
+      if (this.box && point) {
+        this.box.style.left = `${point.x}px`
+        this.box.style.top = `${point.y}px`
+      }
+    }
+
+    onRemove() {
+      this.box?.remove()
+      this.box = null
+    }
+  }
+  return new ComplexMarker()
+}
+
+export function NearbyGoogleMap({ center, pois, title, photo }: {
   center: { lat: number; lng: number }
   pois: MapPoi[]
   title: string
+  photo?: string | null
 }) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? ''
   const [failed, setFailed] = useState(!apiKey)
@@ -46,13 +99,7 @@ export function NearbyGoogleMap({ center, pois, title }: {
           streetViewControl: false, fullscreenControl: true, clickableIcons: false,
           styles: BALINSKY_MAP_STYLE, backgroundColor: '#F2EAD8',
         })
-        new google.maps.Marker({
-          position: center, map, title, zIndex: 20,
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE, scale: 9,
-            fillColor: '#b68235', fillOpacity: 1, strokeColor: '#FFFFFF', strokeWeight: 3,
-          },
-        })
+        makeComplexMarker(center, title, photo ?? null).setMap(map)
         markersRef.current = pois.map((p, i) => {
           const m = new google.maps.Marker({
             position: { lat: p.lat, lng: p.lng }, map, title: p.name, zIndex: 10,
@@ -69,7 +116,7 @@ export function NearbyGoogleMap({ center, pois, title }: {
       })
       .catch(() => setFailed(true))
     return () => { cancelled = true; clearTimeout(deadline) }
-  }, [apiKey, center, pois, title])
+  }, [apiKey, center, pois, title, photo])
 
   // Chip → map: recentre and lift the chosen pin.
   useEffect(() => {
@@ -80,7 +127,7 @@ export function NearbyGoogleMap({ center, pois, title }: {
     markersRef.current.forEach((m, i) => m.setIcon({
       path: google.maps.SymbolPath.CIRCLE,
       scale: i === active ? 8 : 6,
-      fillColor: i === active ? '#b68235' : '#201f1d',
+      fillColor: i === active ? '#b68235' : '#4a4844',
       fillOpacity: 1, strokeColor: '#FFFFFF', strokeWeight: i === active ? 3 : 2,
     }))
   }, [active, pois])

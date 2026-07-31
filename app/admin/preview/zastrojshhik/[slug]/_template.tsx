@@ -205,7 +205,7 @@ function ComplexDetail({ c, devName }: { c: TplComplex; devName: string }) {
         <div style={{ minWidth: 0 }}>
           <h3 style={{ margin: 0, fontSize: 24 }}>Что рядом</h3>
           {c.geo && c.pois.length
-            ? <NearbyGoogleMap center={c.geo} pois={c.pois} title={c.name} />
+            ? <NearbyGoogleMap center={c.geo} pois={c.pois} title={c.name} photo={c.photos[0] ?? null} />
             : <p style={{ marginTop: 20 }}><Missing what={c.geo ? 'POI рядом не собраны для этого комплекса' : 'координат комплекса нет'} /></p>}
         </div>
       </div>
