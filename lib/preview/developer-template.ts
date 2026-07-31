@@ -455,6 +455,10 @@ export async function loadDeveloperTemplateData(slug: string): Promise<Developer
   if (!devRow) return null
 
   const devName = firstString(devRow['Developer']) ?? slug
+  // The card name carries a legal/brand suffix in brackets («LB Group
+  // (LOYO&BONDAR)») that reads as noise in an H1. Only one developer of 114
+  // has one; the full string still drives every lookup.
+  const displayName = devName.replace(/\s*\([^)]*\)\s*/g, ' ').trim() || devName
   const complexRows = cpxAll
     .filter(c => namesOf(c['Developer1']).some(d => sameDeveloper(d, devName)))
 
@@ -544,7 +548,7 @@ export async function loadDeveloperTemplateData(slug: string): Promise<Developer
 
   const dev: TplDeveloper = {
     slug,
-    name: devName,
+    name: displayName,
     tagline: firstString(devRow['SEO:Description']),
     description: firstString(devRow['AI Описание']) ?? firstString(devRow['Описание ИИ']),
     heroPhoto: hero.url,
