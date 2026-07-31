@@ -16,7 +16,7 @@ import { loadVideosByDeveloperWithComplexes, type VideoItem } from '@/lib/videos
 import { loadAllNews, type NewsItem } from '@/lib/news'
 import { loadAllEvents, type EventItem } from '@/lib/events'
 import { loadAllPromo, type PromoItem } from '@/lib/promo'
-import { loadManagersByDeveloperName, type ManagerItem } from '@/lib/managers'
+import { type ManagerItem } from '@/lib/managers'
 import {
   parseBullets, firstString, numberOrNull, extractMetrics, fullUsd, plural,
   type DeveloperMetrics,
@@ -30,6 +30,7 @@ const VILLA_PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/villa
 // thin for the design (scripts note: 23 of the 32 short ones matched a place
 // within 300m, or 800m on an exact name match).
 const PLACES_FALLBACK_URL = `${SUPABASE_URL}/storage/v1/object/public/complex-photos/_places_fallback.json`
+const MANAGERS_URL = `${SUPABASE_URL}/storage/v1/object/public/managers/_managers.json`
 
 /** Walking speed used to derive `walk_min` — a design field no table stores. */
 const WALK_METRES_PER_MIN = 80
@@ -167,6 +168,26 @@ const VILLA_FIELDS = [
 ] as const
 
 type PlacesFallback = Record<string, { photoName: string; attribution: string | null; placeName?: string }>
+
+/**
+ * Managers are read straight from Storage with no cache. The shared loader
+ * caches the manifest for 10 minutes, which is right for the public site but
+ * wrong here: this page exists to check what the data looks like right now,
+ * and an editor who fills a field in /admin/data should see it immediately.
+ */
+async function loadManagersFresh(devName: string): Promise<ManagerItem[]> {
+  try {
+    const r = await fetch(MANAGERS_URL, { cache: 'no-store' })
+    if (!r.ok) return []
+    const j = (await r.json()) as { items?: ManagerItem[] }
+    const lc = devName.trim().toLowerCase()
+    return asList(j.items)
+      .filter(m => asList(m.developerNames).some(n => String(n).trim().toLowerCase() === lc))
+      .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
+  } catch {
+    return []
+  }
+}
 
 async function loadPlacesFallback(): Promise<PlacesFallback> {
   try {
@@ -529,7 +550,7 @@ export async function loadDeveloperTemplateData(slug: string): Promise<Developer
   }
 
   const [managers, videos, allNews, allEvents, allPromo] = await Promise.all([
-    loadManagersByDeveloperName(devName),
+    loadManagersFresh(devName),
     loadVideosByDeveloperWithComplexes(slug, tplComplexes.map(c => c.slug), 12, 'ru'),
     loadAllNews('ru'),
     loadAllEvents('ru'),
