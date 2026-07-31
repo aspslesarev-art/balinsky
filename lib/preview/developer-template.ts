@@ -35,6 +35,8 @@ const MAX_POIS_PER_COMPLEX = 6
 const MAX_UNITS_ROWS = 40
 /** How many of a complex's villa listings to probe for a nearby-POI file. */
 const POI_PROBE_LIMIT = 3
+/** Gallery cap — the design shows one main shot plus four thumbnails. */
+const MAX_GALLERY_PHOTOS = 12
 const PHOTOS_WANTED_PER_COMPLEX = 5
 
 export type GapStatus = 'ok' | 'derived' | 'partial' | 'missing'
@@ -425,9 +427,17 @@ export async function loadDeveloperTemplateData(slug: string): Promise<Developer
     const hit = probed.find(Boolean)
     const pois: TplPoi[] = hit ? flattenPois(hit) : []
 
-    // Storage manifest only. The Airtable attachment arrays still sitting in
+    // Storage manifests only. The Airtable attachment arrays still sitting in
     // `data` ("Фотографии" / "Главное фото") are dead links — 410 Gone.
-    const photos = asList(photoManifest[id])
+    //
+    // The complex's own shots come first (renders and the master view), then
+    // photos of the villas sold in it: the design wants five or more per
+    // complex and only 85 of 197 have that on their own — folding the villa
+    // galleries in takes it to 165.
+    const ownPhotos = asList(photoManifest[id])
+    const unitPhotos = villasOfComplex(villas, cname)
+      .flatMap(v => asList(villaPhotoManifest[v.airtable_id as string]))
+    const photos = [...new Set([...ownPhotos, ...unitPhotos])].slice(0, MAX_GALLERY_PHOTOS)
 
     const base = {
       id,
@@ -593,7 +603,8 @@ function collectGaps(
   push('projects_carousel', 'price_from_usd', allOr(complexes.filter(c => c.priceFromUsd).length, 'derived'),
     'min(Цена) по виллам комплекса — у комплексов без листингов цены нет')
   push('projects_carousel', 'photos[] для hover-слайдшоу', allOr(withPhotos),
-    `дизайну нужно ≥${PHOTOS_WANTED_PER_COMPLEX} фото на комплекс, столько есть у ${withPhotos}/${complexes.length}`)
+    `дизайну нужно ≥${PHOTOS_WANTED_PER_COMPLEX} фото на комплекс; собрано у ${withPhotos}/${complexes.length} `
+    + '(фото комплекса + фото его вилл из Storage)')
 
   push('complex_detail', 'units[] (type · bedrooms · house_m2 · land_m2 · price)', allOr(withUnits),
     `собирается из raw_villas по связи «Комплекс»; есть у ${withUnits}/${complexes.length} комплексов`)
