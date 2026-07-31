@@ -101,29 +101,57 @@ function StatCell({ value, label, first, missing }: { value: string | null; labe
   )
 }
 
+
+/**
+ * The complex fact line, under the heading rather than opposite it. Missing
+ * values are shown as explicit gaps instead of quietly shortening the line —
+ * the whole point of the preview is to see which data is absent.
+ */
+function ComplexFacts({ c }: { c: TplComplex }) {
+  const facts: { label: string; value: string | null }[] = [
+    { label: 'юнитов', value: c.unitsCount ? String(c.unitsCount) : null },
+    { label: 'цена от', value: c.priceFromUsd ? fullUsd(c.priceFromUsd) : null },
+    { label: c.status === 'completed' ? 'сдан' : 'сдача', value: c.handoverYear },
+    { label: 'разрешение', value: c.permit && c.permit !== 'нет' ? c.permit : null },
+    { label: 'построено', value: c.progressPct != null ? `${c.progressPct}%` : null },
+  ]
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px 22px', marginTop: 14, fontSize: 16 }}>
+      {facts.map(f => (
+        <span key={f.label} style={{ display: 'inline-flex', alignItems: 'baseline', gap: 7 }}>
+          <span className="muted" style={{ fontSize: 13, letterSpacing: '.04em', textTransform: 'uppercase' }}>{f.label}</span>
+          {f.value
+            ? <span>{f.value}</span>
+            : <span style={{ color: '#a8331f', opacity: .75, fontSize: 14 }}>нет данных</span>}
+        </span>
+      ))}
+    </div>
+  )
+}
+
 function ComplexDetail({ c, devName }: { c: TplComplex; devName: string }) {
   return (
     <section id={c.slug} className="uesection" style={{ paddingTop: 112 }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap' }}>
-        <h2 className="uehead">{c.name}</h2>
-        <div className="muted" style={{ fontSize: 16 }}>
-          {c.metaLine}{c.progressPct != null ? ` · построено ~${c.progressPct}%` : ''}
-        </div>
-      </div>
+      <h2 className="uehead">{c.name}</h2>
+      <ComplexFacts c={c} />
 
       {c.lede
         ? <p className="muted" style={{ margin: '16px 0 0', fontSize: 20, maxWidth: '62ch', lineHeight: 1.55 }}>{c.lede}</p>
         : <p style={{ margin: '16px 0 0' }}><Missing what="описания комплекса нет в базе" /></p>}
 
-      <div style={{ marginTop: 28, maxWidth: 520 }}>
-        <div className="muted" style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
-          <span>Готовность строительства{c.handoverYear ? ` · сдача ${c.handoverYear}` : ''}</span>
-          <span>{c.progressPct == null ? '—' : `${c.progressPct}%`}</span>
+      {/* The bar only says something when there is a percentage; the fact row
+          above already carries the "нет данных" case. */}
+      {c.progressPct != null && (
+        <div style={{ marginTop: 28, maxWidth: 520 }}>
+          <div className="muted" style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
+            <span>Готовность строительства{c.handoverYear ? ` · сдача ${c.handoverYear}` : ''}</span>
+            <span>{c.progressPct}%</span>
+          </div>
+          <div style={{ marginTop: 8, height: 4, background: 'var(--color-divider)' }}>
+            <div style={{ width: `${c.progressPct}%`, height: '100%', background: 'var(--color-accent)' }} />
+          </div>
         </div>
-        <div style={{ marginTop: 8, height: 4, background: 'var(--color-divider)' }}>
-          <div style={{ width: `${c.progressPct ?? 0}%`, height: '100%', background: 'var(--color-accent)' }} />
-        </div>
-      </div>
+      )}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap', marginTop: 24 }}>
         <a href="#contacts" className="cta cta-sm">Консультация по {c.name} <span className="cta-arrow">→</span></a>
@@ -264,7 +292,13 @@ export function DeveloperTemplate({ data, allDevelopers }: {
             <span style={{ color: 'var(--color-accent-700)', borderBottom: '1px solid var(--color-accent)', paddingBottom: 2 }}>Застройщики</span>
           </div>
         </div>
-        <a href="#contacts" className="cta cta-sm">Оставить заявку <span className="cta-arrow">→</span></a>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 14 }}>
+          {/* Inert in the prototype — the real header owns these controls. */}
+          <span style={{ position: 'relative', fontSize: 18, color: 'var(--color-accent-700)' }}>♡</span>
+          <span style={{ border: '1px solid var(--color-divider)', borderRadius: 999, padding: '6px 14px' }}>USD ▾</span>
+          <span style={{ border: '1px solid var(--color-divider)', borderRadius: 999, padding: '6px 14px' }}>RU ▾</span>
+          <a href="#contacts" className="cta cta-sm">Оставить заявку <span className="cta-arrow">→</span></a>
+        </div>
       </nav>
 
       {/* ---- hero */}
