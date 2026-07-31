@@ -13,6 +13,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import { unstable_cache, revalidateTag } from 'next/cache'
+import { cdnBucketBase } from '@/lib/photo-cdn'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const BANNERS_TAG = 'ad-banners'
@@ -208,10 +209,12 @@ export async function deleteBanner(id: string): Promise<void> {
 // public URL or an Error with the actual Storage message so the
 // admin sees what's wrong instead of a vague "upload failed".
 const BANNER_BUCKET = process.env.BANNERS_BUCKET ?? 'viz-photos'
-// Route through optional Bunny CDN when configured.
-const BANNER_PUBLIC = (process.env.NEXT_PUBLIC_PHOTO_CDN_BASE || '').replace(/\/$/, '')
-  ? `${(process.env.NEXT_PUBLIC_PHOTO_CDN_BASE || '').replace(/\/$/, '')}/${BANNER_BUCKET}`
-  : `${SUPABASE_URL}/storage/v1/object/public/${BANNER_BUCKET}`
+// Route through the photo CDN. This used to be an inline copy of the Bunny-era
+// rule (host + '/' + bucket, path stripped); the CDN is now a Cloudflare Worker
+// that mirrors the FULL Supabase path, so every banner uploaded since the move
+// got a URL the CDN answers with 404. Use the shared helper so there is one
+// place that knows the CDN's shape.
+const BANNER_PUBLIC = cdnBucketBase(BANNER_BUCKET)
 
 export async function uploadBannerPhoto(opts: {
   filename: string
