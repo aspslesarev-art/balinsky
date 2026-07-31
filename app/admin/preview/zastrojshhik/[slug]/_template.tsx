@@ -129,7 +129,7 @@ function ComplexFacts({ c }: { c: TplComplex }) {
   )
 }
 
-function ComplexDetail({ c }: { c: TplComplex }) {
+function ComplexDetail({ c, mapsKey }: { c: TplComplex; mapsKey: string }) {
   return (
     <section id={c.slug} className="uesection" style={{ paddingTop: 112 }}>
       <h2 className="uehead">{c.name}</h2>
@@ -205,7 +205,7 @@ function ComplexDetail({ c }: { c: TplComplex }) {
         <div style={{ minWidth: 0 }}>
           <h3 style={{ margin: 0, fontSize: 24 }}>Что рядом</h3>
           {c.geo && c.pois.length
-            ? <NearbyGoogleMap center={c.geo} pois={c.pois} title={c.name} photo={c.photos[0] ?? null} />
+            ? <NearbyGoogleMap center={c.geo} pois={c.pois} title={c.name} photo={c.photos[0] ?? null} apiKey={mapsKey} />
             : <p style={{ marginTop: 20 }}><Missing what={c.geo ? 'POI рядом не собраны для этого комплекса' : 'координат комплекса нет'} /></p>}
         </div>
       </div>
@@ -254,9 +254,10 @@ function CompletedDetail({ c }: { c: TplComplex }) {
   )
 }
 
-export function DeveloperTemplate({ data, allDevelopers }: {
+export function DeveloperTemplate({ data, allDevelopers, mapsKey }: {
   data: DeveloperTemplateData
   allDevelopers: { slug: string; name: string; complexes: number }[]
+  mapsKey: string
 }) {
   const { dev, complexes, managers, videos, news, events, promos, faq, gaps } = data
   const building = complexes.filter(c => c.status === 'building')
@@ -485,7 +486,7 @@ export function DeveloperTemplate({ data, allDevelopers }: {
         )}
       </section>
 
-      {building.map(c => <ComplexDetail key={c.id} c={c} />)}
+      {building.map(c => <ComplexDetail key={c.id} c={c} mapsKey={mapsKey} />)}
       {completed.map(c => <CompletedDetail key={c.id} c={c} />)}
 
       {/* ---- videos */}

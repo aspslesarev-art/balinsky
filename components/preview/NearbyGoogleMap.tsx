@@ -70,13 +70,13 @@ function makeComplexMarker(position: { lat: number; lng: number }, title: string
   return new ComplexMarker()
 }
 
-export function NearbyGoogleMap({ center, pois, title, photo }: {
+export function NearbyGoogleMap({ center, pois, title, photo, apiKey }: {
   center: { lat: number; lng: number }
   pois: MapPoi[]
   title: string
   photo?: string | null
+  apiKey: string
 }) {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? ''
   const [failed, setFailed] = useState(!apiKey)
   const [active, setActive] = useState(0)
   // On by default, like the listing pages: the whole point of the layer is
