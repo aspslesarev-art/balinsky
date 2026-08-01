@@ -31,6 +31,9 @@ const VILLA_PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/villa
 // within 300m, or 800m on an exact name match).
 const PLACES_FALLBACK_URL = `${SUPABASE_URL}/storage/v1/object/public/complex-photos/_places_fallback.json`
 const MANAGERS_URL = `${SUPABASE_URL}/storage/v1/object/public/managers/_managers.json`
+// Per-photo vision pass: alt text, the best cover index and a reject list.
+const VISION_COMPLEX_URL = `${SUPABASE_URL}/storage/v1/object/public/complex-photos/_vision.json`
+const VISION_VILLA_URL = `${SUPABASE_URL}/storage/v1/object/public/villa-photos/_vision.json`
 
 /** Walking speed used to derive `walk_min` — a design field no table stores. */
 const WALK_METRES_PER_MIN = 80
@@ -166,6 +169,49 @@ const CPX_FIELDS = [
 const VILLA_FIELDS = [
   'Комплекс 1', 'Комнаты', 'Площадь', 'Земля', 'Цена', 'SEO:Slug', 'Тип', 'Name', 'Developer1',
 ] as const
+
+type VisionEntry = {
+  alt_ru?: string[]
+  audit?: { cover?: number; reject?: { i: number }[] }
+}
+type VisionMap = Record<string, VisionEntry>
+
+/**
+ * Words that mean the shot is taken indoors. The gallery on a developer page
+ * shows how the place looks from outside — the complex, the block, the villa;
+ * bedrooms and bathrooms belong on the complex page itself.
+ */
+const INTERIOR_RE = /спальн|ванн|кухн|гостин|обеден|столов|интерьер|санузел|душев|гардероб|кабинет|прихож|коридор|диван|кроват|санузл|рабоч(ее|ая) (мест|зон)/i
+
+async function loadVision(url: string): Promise<VisionMap> {
+  try {
+    const r = await fetch(url, { next: { revalidate: 3600 } })
+    if (!r.ok) return {}
+    return (await r.json()) as VisionMap
+  } catch {
+    return {}
+  }
+}
+
+/**
+ * Drops rejected frames (watermarks and the like) and interiors, and floats the
+ * cover the vision pass picked to the front. Falls back to the untouched list
+ * when filtering would leave nothing — an empty gallery is worse than a mixed
+ * one.
+ */
+function exteriorsFirst(urls: string[], v: VisionEntry | undefined): string[] {
+  if (!v || !urls.length) return urls
+  const rejected = new Set((v.audit?.reject ?? []).map(r => r.i))
+  const alt = v.alt_ru ?? []
+  const kept = urls
+    .map((url, i) => ({ url, i }))
+    .filter(({ i }) => !rejected.has(i) && !INTERIOR_RE.test(alt[i] ?? ''))
+  if (!kept.length) return urls
+  const cover = v.audit?.cover
+  const lead = kept.filter(k => k.i === cover)
+  const rest = kept.filter(k => k.i !== cover)
+  return [...lead, ...rest].map(k => k.url)
+}
 
 type PlacesFallback = Record<string, { photoName: string; attribution: string | null; placeName?: string }>
 
@@ -447,10 +493,12 @@ const loadCpxTable = cachedTable('raw_complexes', CPX_FIELDS, 500, 'content:comp
 const loadVillaTable = cachedTable('raw_villas', VILLA_FIELDS, 3000, 'content:villas')
 
 export async function loadDeveloperTemplateData(slug: string): Promise<DeveloperTemplateData | null> {
-  const [devs, cpxAll, villas, photoManifest, villaPhotoManifest, placesFallback] = await Promise.all([
-    loadDevTable(), loadCpxTable(), loadVillaTable(),
-    loadManifest(PHOTO_MANIFEST_URL), loadManifest(VILLA_PHOTO_MANIFEST_URL), loadPlacesFallback(),
-  ])
+  const [devs, cpxAll, villas, photoManifest, villaPhotoManifest, placesFallback, cpxVision, villaVision] =
+    await Promise.all([
+      loadDevTable(), loadCpxTable(), loadVillaTable(),
+      loadManifest(PHOTO_MANIFEST_URL), loadManifest(VILLA_PHOTO_MANIFEST_URL), loadPlacesFallback(),
+      loadVision(VISION_COMPLEX_URL), loadVision(VISION_VILLA_URL),
+    ])
   const devRow = devs.find(d => firstString(d['SEO:Slug']) === slug)
   if (!devRow) return null
 
@@ -489,9 +537,12 @@ export async function loadDeveloperTemplateData(slug: string): Promise<Developer
     // photos of the villas sold in it: the design wants five or more per
     // complex and only 85 of 197 have that on their own — folding the villa
     // galleries in takes it to 165.
-    const ownPhotos = asList(photoManifest[id])
+    const ownPhotos = exteriorsFirst(asList(photoManifest[id]), cpxVision[id])
     const unitPhotos = villasOfComplex(villas, cname)
-      .flatMap(v => asList(villaPhotoManifest[v.airtable_id as string]))
+      .flatMap(v => exteriorsFirst(
+        asList(villaPhotoManifest[v.airtable_id as string]),
+        villaVision[v.airtable_id as string],
+      ))
     // Where the gallery was too thin, a Google Places shot leads: it is the
     // single best image we could find for the complex.
     const place = placesFallback[id]
