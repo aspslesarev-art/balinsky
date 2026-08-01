@@ -375,11 +375,10 @@ export function DeveloperTemplate({ data, allDevelopers, mapsKey }: {
               {dev.name}
             </h1>
           </div>
-          {dev.tagline && (
-            <p style={{ margin: 0, fontSize: 22, color: 'color-mix(in srgb, var(--color-text) 80%, transparent)', maxWidth: '48ch' }}>
-              {dev.tagline}
-            </p>
-          )}
+          {/* Kept in the markup for search engines, taken out of the layout:
+              it is the meta description, written for a snippet, and under the
+              H1 it read as boilerplate. */}
+          {dev.tagline && <p className="visually-hidden">{dev.tagline}</p>}
           {/* One line, per the handoff: districts that don't fit are clipped and
               scrollable here — the full list lives in "О застройщике" below. */}
           {(dev.projectsForSale + dev.completedCount + dev.unitsTotal > 0) && <div className="glass" style={{

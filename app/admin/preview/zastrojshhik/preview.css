@@ -71,6 +71,19 @@
 .uetpl .kicker {
   font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--color-accent);
 }
+/* Out of sight, still in the document: crawlers and screen readers get it,
+   the layout does not. `display:none` would remove it from both. */
+.uetpl .visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
 .uetpl .muted { color: color-mix(in srgb, var(--color-text) 65%, transparent); }
 
 .uetpl .districts {
