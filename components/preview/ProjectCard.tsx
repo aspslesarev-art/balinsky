@@ -103,13 +103,23 @@ export function ProjectCard({ href, kicker, name, meta, progressPct, photos, not
         </div>
 
         {/* Wording changes with state: a quiet «Подробнее» at rest, an explicit
-            call once the card is under the cursor. */}
-        <div style={{
-          marginTop: 14, fontSize: 15,
-          color: hover ? 'var(--color-accent-700)' : 'color-mix(in srgb, var(--color-text) 55%, transparent)',
-          transition: 'color .25s ease',
-        }}>
-          {hover ? 'Смотреть комплекс →' : 'Подробнее о комплексе'}
+            call once the card is under the cursor. Both lines are stacked and
+            cross-fade — swapping the text outright read as a jump. */}
+        <div style={{ position: 'relative', marginTop: 14, height: 22, fontSize: 15 }}>
+          <span style={{
+            position: 'absolute', inset: 0, whiteSpace: 'nowrap',
+            color: 'color-mix(in srgb, var(--color-text) 55%, transparent)',
+            opacity: hover ? 0 : 1,
+            transform: hover ? 'translateY(-4px)' : 'none',
+            transition: 'opacity .28s ease, transform .28s ease',
+          }}>Подробнее о комплексе</span>
+          <span style={{
+            position: 'absolute', inset: 0, whiteSpace: 'nowrap',
+            color: 'var(--color-accent-700)',
+            opacity: hover ? 1 : 0,
+            transform: hover ? 'none' : 'translateY(4px)',
+            transition: 'opacity .28s ease, transform .28s ease',
+          }}>Смотреть комплекс →</span>
         </div>
         {note && <div className="muted" style={{ fontSize: 13 }}>{note}</div>}
       </div>
