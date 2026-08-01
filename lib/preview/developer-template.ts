@@ -99,7 +99,7 @@ export type TplComplex = {
   metaLine: string
 }
 
-export type BulletCard = { key: string; icon: string; title: string; items: string[] }
+export type BulletCard = { key: string; title: string; items: string[] }
 
 export type TplDeveloper = {
   slug: string
@@ -532,14 +532,14 @@ export async function loadDeveloperTemplateData(slug: string): Promise<Developer
   })
 
   const bulletSpec = [
-    { key: 'team', icon: '👷', title: 'Команда', field: 'Команда' },
-    { key: 'business', icon: '🏗️', title: 'Бизнес и сервисы', field: 'Бизнес и сервисы' },
-    { key: 'construction', icon: '🏡', title: 'Строительство и недвижимость', field: 'Строительство и недвижимость' },
-    { key: 'reputation', icon: '🏅', title: 'Репутация и опыт', field: 'Репутация и опыт' },
-    { key: 'management', icon: '🔑', title: 'Управляющая компания', field: 'Управляющая компания' },
+    { key: 'team', title: 'Команда', field: 'Команда' },
+    { key: 'business', title: 'Бизнес и сервисы', field: 'Бизнес и сервисы' },
+    { key: 'construction', title: 'Строительство и недвижимость', field: 'Строительство и недвижимость' },
+    { key: 'reputation', title: 'Репутация и опыт', field: 'Репутация и опыт' },
+    { key: 'management', title: 'Управляющая компания', field: 'Управляющая компания' },
   ] as const
   const bulletCards: BulletCard[] = bulletSpec.map(s => ({
-    key: s.key, icon: s.icon, title: s.title, items: parseBullets(firstString(devRow[s.field])),
+    key: s.key, title: s.title, items: parseBullets(firstString(devRow[s.field])),
   }))
 
   const districts = [...new Set(tplComplexes.map(c => c.district).filter((d): d is string => !!d))]

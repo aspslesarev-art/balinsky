@@ -2,6 +2,7 @@
 // real Supabase data. Preview-only — see ./page.tsx for the admin gate.
 
 import Link from 'next/link'
+import { Users, Briefcase, HardHat, Award, KeyRound, Scale } from 'lucide-react'
 import { ScrollRow } from '@/components/preview/ScrollRow'
 import { ProjectCard } from '@/components/preview/ProjectCard'
 import { ComplexGallery } from '@/components/preview/ComplexGallery'
@@ -12,6 +13,24 @@ import { compactUsd, fullUsd, plural } from '@/lib/preview/developer-metrics'
 import type { DeveloperTemplateData, TplComplex, TplDeveloper } from '@/lib/preview/developer-template'
 
 const MISSING = 'нет в базе'
+
+/**
+ * Monotone line icons instead of emoji: emoji render in their own palette and
+ * at their own weight, which fought with the gold hairline headings.
+ */
+const CARD_ICON = {
+  team: Users,
+  business: Briefcase,
+  construction: HardHat,
+  reputation: Award,
+  management: KeyRound,
+  legal: Scale,
+} as const
+
+function CardIcon({ name }: { name: keyof typeof CARD_ICON }) {
+  const Icon = CARD_ICON[name]
+  return <Icon size={15} strokeWidth={1.75} style={{ flex: 'none' }} aria-hidden />
+}
 
 function Missing({ what }: { what: string }) {
   return (
@@ -441,8 +460,12 @@ export function DeveloperTemplate({ data, allDevelopers, mapsKey }: {
         <div className="grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '40px 48px', marginTop: 48 }}>
           {dev.bulletCards.map(card => (
             <div key={card.key}>
-              <div className="kicker" style={{ paddingBottom: 14, borderBottom: '1px solid var(--color-accent)' }}>
-                {card.icon} {card.title}
+              <div className="kicker" style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                paddingBottom: 14, borderBottom: '1px solid var(--color-accent)',
+              }}>
+                <CardIcon name={card.key as keyof typeof CARD_ICON} />
+                {card.title}
               </div>
               {card.items.length ? (
                 <ul style={{ margin: '16px 0 0', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10, fontSize: 16 }}>
@@ -452,8 +475,12 @@ export function DeveloperTemplate({ data, allDevelopers, mapsKey }: {
             </div>
           ))}
           <div>
-            <div className="kicker" style={{ paddingBottom: 14, borderBottom: '1px solid var(--color-accent)' }}>
-              📋 Юридика и финансы
+            <div className="kicker" style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              paddingBottom: 14, borderBottom: '1px solid var(--color-accent)',
+            }}>
+              <CardIcon name="legal" />
+              Юридика и финансы
             </div>
             <p style={{ marginTop: 16 }}>
               <Missing what="legal_entity, NIB, источник финансирования — таких полей в базе нет" />
