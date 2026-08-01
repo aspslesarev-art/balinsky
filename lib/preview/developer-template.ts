@@ -195,18 +195,27 @@ async function loadVision(url: string): Promise<VisionMap> {
 
 /**
  * Drops rejected frames (watermarks and the like) and interiors, and floats the
- * cover the vision pass picked to the front. Falls back to the untouched list
- * when filtering would leave nothing — an empty gallery is worse than a mixed
- * one.
+ * cover the vision pass picked to the front.
+ *
+ * `strict` decides what happens to frames the vision pass never described —
+ * alt lists are often shorter than the album. For a complex's own photos we
+ * keep them: those are renders, almost always exterior, and there are few.
+ * For villa photos we drop them, because a villa album is mostly rooms and a
+ * guess costs us a bathroom in the developer's gallery.
  */
-function exteriorsFirst(urls: string[], v: VisionEntry | undefined): string[] {
-  if (!v || !urls.length) return urls
+function exteriorsFirst(urls: string[], v: VisionEntry | undefined, strict: boolean): string[] {
+  if (!urls.length) return urls
+  if (!v) return strict ? [] : urls
   const rejected = new Set((v.audit?.reject ?? []).map(r => r.i))
   const alt = v.alt_ru ?? []
   const kept = urls
     .map((url, i) => ({ url, i }))
-    .filter(({ i }) => !rejected.has(i) && !INTERIOR_RE.test(alt[i] ?? ''))
-  if (!kept.length) return urls
+    .filter(({ i }) => {
+      if (rejected.has(i)) return false
+      const described = alt[i]
+      if (!described) return !strict
+      return !INTERIOR_RE.test(described)
+    })
   const cover = v.audit?.cover
   const lead = kept.filter(k => k.i === cover)
   const rest = kept.filter(k => k.i !== cover)
@@ -537,11 +546,12 @@ export async function loadDeveloperTemplateData(slug: string): Promise<Developer
     // photos of the villas sold in it: the design wants five or more per
     // complex and only 85 of 197 have that on their own — folding the villa
     // galleries in takes it to 165.
-    const ownPhotos = exteriorsFirst(asList(photoManifest[id]), cpxVision[id])
+    const ownPhotos = exteriorsFirst(asList(photoManifest[id]), cpxVision[id], false)
     const unitPhotos = villasOfComplex(villas, cname)
       .flatMap(v => exteriorsFirst(
         asList(villaPhotoManifest[v.airtable_id as string]),
         villaVision[v.airtable_id as string],
+        true,
       ))
     // Where the gallery was too thin, a Google Places shot leads: it is the
     // single best image we could find for the complex.
