@@ -25,6 +25,9 @@ import {
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const sb = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY!)
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/complex-photos/_manifest.json`
+// Still needed for the hero fallback: a developer with no complex photos can
+// still be represented by a photo of a villa it sells.
+const VILLA_PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/villa-photos/_manifest.json`
 // Google Places shots collected for complexes whose own galleries were too
 // thin for the design (scripts note: 23 of the 32 short ones matched a place
 // within 300m, or 800m on an exact name match).
@@ -500,10 +503,12 @@ const loadCpxTable = cachedTable('raw_complexes', CPX_FIELDS, 500, 'content:comp
 const loadVillaTable = cachedTable('raw_villas', VILLA_FIELDS, 3000, 'content:villas')
 
 export async function loadDeveloperTemplateData(slug: string): Promise<DeveloperTemplateData | null> {
-  const [devs, cpxAll, villas, photoManifest, placesFallback, cpxVision] = await Promise.all([
-    loadDevTable(), loadCpxTable(), loadVillaTable(),
-    loadManifest(PHOTO_MANIFEST_URL), loadPlacesFallback(), loadVision(VISION_COMPLEX_URL),
-  ])
+  const [devs, cpxAll, villas, photoManifest, villaPhotoManifest, placesFallback, cpxVision] =
+    await Promise.all([
+      loadDevTable(), loadCpxTable(), loadVillaTable(),
+      loadManifest(PHOTO_MANIFEST_URL), loadManifest(VILLA_PHOTO_MANIFEST_URL),
+      loadPlacesFallback(), loadVision(VISION_COMPLEX_URL),
+    ])
   const devRow = devs.find(d => firstString(d['SEO:Slug']) === slug)
   if (!devRow) return null
 
