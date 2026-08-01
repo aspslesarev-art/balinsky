@@ -97,26 +97,30 @@
 }
 .uetpl .arrow:hover { border-color: var(--color-accent); }
 
-/* Hover slide-show on project cards: cross-fade + Ken Burns, per the handoff. */
+/* Hover slide-show on project cards: cross-fade + a continuous Ken Burns move.
+   Each movement exists twice, `a` and `b`. A CSS animation only restarts when
+   its NAME changes, so consecutive frames alternate between the twins —
+   otherwise the second frame would sit still. */
 .uetpl .kb-layer {
   position: absolute; inset: 0; background-size: cover; background-position: center;
-  opacity: 0; transition: opacity 1600ms cubic-bezier(.33, 0, .25, 1);
+  opacity: 0; transition: opacity 1000ms cubic-bezier(.33, 0, .25, 1);
+  animation-duration: 4200ms;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
 }
 .uetpl .kb-layer[data-on='1'] { opacity: 1; }
-/* Frames stack; only the visible one animates, so the fade is a real
-   cross-fade between two images rather than a cut. */
-.uetpl .kb-layer[data-on='0'] { animation: none; }
-.uetpl .kb-layer[data-on='1'][data-move='0'] { animation: ue-kb-zoom-in 6200ms cubic-bezier(.25,.5,.3,1) forwards; }
-.uetpl .kb-layer[data-on='1'][data-move='1'] { animation: ue-kb-zoom-out 6200ms cubic-bezier(.25,.5,.3,1) forwards; }
-.uetpl .kb-layer[data-on='1'][data-move='2'] { animation: ue-kb-pan-left 6200ms cubic-bezier(.25,.5,.3,1) forwards; }
-.uetpl .kb-layer[data-on='1'][data-move='3'] { animation: ue-kb-pan-right 6200ms cubic-bezier(.25,.5,.3,1) forwards; }
-.uetpl .kb-layer[data-on='1'][data-move='4'] { animation: ue-kb-pan-up 6200ms cubic-bezier(.25,.5,.3,1) forwards; }
 
-@keyframes ue-kb-zoom-in  { from { transform: scale(1.02); }            to { transform: scale(1.3); } }
-@keyframes ue-kb-zoom-out { from { transform: scale(1.3); }             to { transform: scale(1.02); } }
-@keyframes ue-kb-pan-left { from { transform: scale(1.18) translateX(4%); }  to { transform: scale(1.18) translateX(-4%); } }
-@keyframes ue-kb-pan-right{ from { transform: scale(1.18) translateX(-4%); } to { transform: scale(1.18) translateX(4%); } }
-@keyframes ue-kb-pan-up   { from { transform: scale(1.18) translateY(4%); }  to { transform: scale(1.18) translateY(-4%); } }
+@keyframes ue-kb-0a { from { transform: scale(1.02); } to { transform: scale(1.32); } }
+@keyframes ue-kb-0b { from { transform: scale(1.02); } to { transform: scale(1.32); } }
+@keyframes ue-kb-1a { from { transform: scale(1.32); } to { transform: scale(1.02); } }
+@keyframes ue-kb-1b { from { transform: scale(1.32); } to { transform: scale(1.02); } }
+@keyframes ue-kb-2a { from { transform: scale(1.22) translateX(4%); } to { transform: scale(1.22) translateX(-4%); } }
+@keyframes ue-kb-2b { from { transform: scale(1.22) translateX(4%); } to { transform: scale(1.22) translateX(-4%); } }
+@keyframes ue-kb-3a { from { transform: scale(1.22) translateX(-4%); } to { transform: scale(1.22) translateX(4%); } }
+@keyframes ue-kb-3b { from { transform: scale(1.22) translateX(-4%); } to { transform: scale(1.22) translateX(4%); } }
+@keyframes ue-kb-4a { from { transform: scale(1.22) translateY(4%); } to { transform: scale(1.22) translateY(-4%); } }
+@keyframes ue-kb-4b { from { transform: scale(1.22) translateY(4%); } to { transform: scale(1.22) translateY(-4%); } }
+
 @keyframes ue-ticker-run  { from { width: 0%; } to { width: 100%; } }
 @keyframes ue-lb-in       { from { opacity: 0; } }
 

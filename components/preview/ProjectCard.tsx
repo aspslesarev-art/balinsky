@@ -62,10 +62,15 @@ export function ProjectCard({ href, kicker, name, meta, progressPct, photos, not
             key={src}
             className="kb-layer"
             data-on={i === active ? '1' : '0'}
-            // The move index changes every time a layer comes back round, which
-            // is what restarts the CSS animation.
-            data-move={String(frame % MOVES)}
-            style={{ backgroundImage: `url(${JSON.stringify(src).slice(1, -1)})` }}
+            style={{
+              backgroundImage: `url(${JSON.stringify(src).slice(1, -1)})`,
+              // Only the visible frame moves, and only while hovered. The name
+              // carries both the movement and an alternating twin so it differs
+              // from the previous frame — that is what makes it restart.
+              animationName: hover && i === active
+                ? `ue-kb-${frame % MOVES}${frame % 2 ? 'a' : 'b'}`
+                : undefined,
+            }}
           />
         ))}
         {photos.length > 1 && hover && (
