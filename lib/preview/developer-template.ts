@@ -28,6 +28,9 @@ const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/complex-pho
 // Still needed for the hero fallback: a developer with no complex photos can
 // still be represented by a photo of a villa it sells.
 const VILLA_PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/villa-photos/_manifest.json`
+// { url: 'ext' | 'int' } from scripts/vision-exterior.mjs — keyed by URL, so a
+// label can never drift onto the wrong frame the way the index-based alt lists did.
+const VILLA_EXTERIOR_URL = `${SUPABASE_URL}/storage/v1/object/public/villa-photos/_exterior.json`
 // Google Places shots collected for complexes whose own galleries were too
 // thin for the design (scripts note: 23 of the 32 short ones matched a place
 // within 300m, or 800m on an exact name match).
@@ -183,6 +186,16 @@ type VisionMap = Record<string, VisionEntry>
  * bedrooms and bathrooms belong on the complex page itself.
  */
 const INTERIOR_RE = /спальн|ванн|кухн|гостин|обеден|столов|интерьер|санузел|душев|гардероб|кабинет|прихож|коридор|диван|кроват|санузл|рабоч(ее|ая) (мест|зон)/i
+
+async function loadExteriorLabels(): Promise<Record<string, string>> {
+  try {
+    const r = await fetch(VILLA_EXTERIOR_URL, { next: { revalidate: 3600 } })
+    if (!r.ok) return {}
+    return (await r.json()) as Record<string, string>
+  } catch {
+    return {}
+  }
+}
 
 async function loadVision(url: string): Promise<VisionMap> {
   try {
@@ -503,11 +516,11 @@ const loadCpxTable = cachedTable('raw_complexes', CPX_FIELDS, 500, 'content:comp
 const loadVillaTable = cachedTable('raw_villas', VILLA_FIELDS, 3000, 'content:villas')
 
 export async function loadDeveloperTemplateData(slug: string): Promise<DeveloperTemplateData | null> {
-  const [devs, cpxAll, villas, photoManifest, villaPhotoManifest, placesFallback, cpxVision] =
+  const [devs, cpxAll, villas, photoManifest, villaPhotoManifest, placesFallback, cpxVision, extLabels] =
     await Promise.all([
       loadDevTable(), loadCpxTable(), loadVillaTable(),
       loadManifest(PHOTO_MANIFEST_URL), loadManifest(VILLA_PHOTO_MANIFEST_URL),
-      loadPlacesFallback(), loadVision(VISION_COMPLEX_URL),
+      loadPlacesFallback(), loadVision(VISION_COMPLEX_URL), loadExteriorLabels(),
     ])
   const devRow = devs.find(d => firstString(d['SEO:Slug']) === slug)
   if (!devRow) return null
@@ -547,13 +560,13 @@ export async function loadDeveloperTemplateData(slug: string): Promise<Developer
     // photos of the villas sold in it: the design wants five or more per
     // complex and only 85 of 197 have that on their own — folding the villa
     // galleries in takes it to 165.
-    // Only the complex's own album. Villa photos were folded in earlier to
-    // reach five frames, but a villa album is mostly rooms, and the vision
-    // alt lists are shorter than the albums — there is no way to prove which
-    // frame a description belongs to, so filtering them was a guess that put
-    // bathrooms in the developer's gallery. Interiors live on the complex page.
     const ownPhotos = exteriorsFirst(asList(photoManifest[id]), cpxVision[id], false)
-    const unitPhotos: string[] = []
+    // Villa frames come back in only where a per-URL label says the shot is
+    // taken outside. Unlabelled frames stay out: interiors belong on the
+    // complex page, not in the developer's gallery.
+    const unitPhotos = villasOfComplex(villas, cname)
+      .flatMap(v => asList(villaPhotoManifest[v.airtable_id as string]))
+      .filter(url => extLabels[url] === 'ext')
     // Where the gallery was too thin, a Google Places shot leads: it is the
     // single best image we could find for the complex.
     const place = placesFallback[id]
