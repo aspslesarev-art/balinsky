@@ -25,7 +25,6 @@ import {
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const sb = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY!)
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/complex-photos/_manifest.json`
-const VILLA_PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/villa-photos/_manifest.json`
 // Google Places shots collected for complexes whose own galleries were too
 // thin for the design (scripts note: 23 of the 32 short ones matched a place
 // within 300m, or 800m on an exact name match).
@@ -33,7 +32,6 @@ const PLACES_FALLBACK_URL = `${SUPABASE_URL}/storage/v1/object/public/complex-ph
 const MANAGERS_URL = `${SUPABASE_URL}/storage/v1/object/public/managers/_managers.json`
 // Per-photo vision pass: alt text, the best cover index and a reject list.
 const VISION_COMPLEX_URL = `${SUPABASE_URL}/storage/v1/object/public/complex-photos/_vision.json`
-const VISION_VILLA_URL = `${SUPABASE_URL}/storage/v1/object/public/villa-photos/_vision.json`
 
 /** Walking speed used to derive `walk_min` — a design field no table stores. */
 const WALK_METRES_PER_MIN = 80
@@ -502,12 +500,10 @@ const loadCpxTable = cachedTable('raw_complexes', CPX_FIELDS, 500, 'content:comp
 const loadVillaTable = cachedTable('raw_villas', VILLA_FIELDS, 3000, 'content:villas')
 
 export async function loadDeveloperTemplateData(slug: string): Promise<DeveloperTemplateData | null> {
-  const [devs, cpxAll, villas, photoManifest, villaPhotoManifest, placesFallback, cpxVision, villaVision] =
-    await Promise.all([
-      loadDevTable(), loadCpxTable(), loadVillaTable(),
-      loadManifest(PHOTO_MANIFEST_URL), loadManifest(VILLA_PHOTO_MANIFEST_URL), loadPlacesFallback(),
-      loadVision(VISION_COMPLEX_URL), loadVision(VISION_VILLA_URL),
-    ])
+  const [devs, cpxAll, villas, photoManifest, placesFallback, cpxVision] = await Promise.all([
+    loadDevTable(), loadCpxTable(), loadVillaTable(),
+    loadManifest(PHOTO_MANIFEST_URL), loadPlacesFallback(), loadVision(VISION_COMPLEX_URL),
+  ])
   const devRow = devs.find(d => firstString(d['SEO:Slug']) === slug)
   if (!devRow) return null
 
@@ -546,13 +542,13 @@ export async function loadDeveloperTemplateData(slug: string): Promise<Developer
     // photos of the villas sold in it: the design wants five or more per
     // complex and only 85 of 197 have that on their own — folding the villa
     // galleries in takes it to 165.
+    // Only the complex's own album. Villa photos were folded in earlier to
+    // reach five frames, but a villa album is mostly rooms, and the vision
+    // alt lists are shorter than the albums — there is no way to prove which
+    // frame a description belongs to, so filtering them was a guess that put
+    // bathrooms in the developer's gallery. Interiors live on the complex page.
     const ownPhotos = exteriorsFirst(asList(photoManifest[id]), cpxVision[id], false)
-    const unitPhotos = villasOfComplex(villas, cname)
-      .flatMap(v => exteriorsFirst(
-        asList(villaPhotoManifest[v.airtable_id as string]),
-        villaVision[v.airtable_id as string],
-        true,
-      ))
+    const unitPhotos: string[] = []
     // Where the gallery was too thin, a Google Places shot leads: it is the
     // single best image we could find for the complex.
     const place = placesFallback[id]
@@ -729,8 +725,8 @@ function collectGaps(
   push('projects_carousel', 'price_from_usd', allOr(complexes.filter(c => c.priceFromUsd).length, 'derived'),
     'min(Цена) по виллам комплекса — у комплексов без листингов цены нет')
   push('projects_carousel', 'photos[] для hover-слайдшоу', allOr(withPhotos),
-    `дизайну нужно ≥${PHOTOS_WANTED_PER_COMPLEX} фото на комплекс; собрано у ${withPhotos}/${complexes.length} `
-    + '(фото комплекса + фото его вилл из Storage)')
+    `дизайну нужно ≥${PHOTOS_WANTED_PER_COMPLEX} фото на комплекс; столько есть у ${withPhotos}/${complexes.length} `
+    + '(только собственный альбом комплекса, экстерьеры)')
 
   push('complex_detail', 'units[] (type · bedrooms · house_m2 · land_m2 · price)', allOr(withUnits),
     `собирается из raw_villas по связи «Комплекс»; есть у ${withUnits}/${complexes.length} комплексов`)
