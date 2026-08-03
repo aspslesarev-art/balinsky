@@ -36,3 +36,9 @@ create index if not exists login_tokens_expires_idx on public.login_tokens (expi
 -- anon/authenticated policy is granted, so RLS denies everything else.
 alter table public.site_users  enable row level security;
 alter table public.login_tokens enable row level security;
+
+-- Supabase does not hand new tables to service_role automatically, and every
+-- server path here uses the service key — without these grants the bot fails
+-- to mint a login link with "permission denied for table login_tokens".
+grant select, insert, update, delete on public.site_users   to service_role;
+grant select, insert, update, delete on public.login_tokens to service_role;
