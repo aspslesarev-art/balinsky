@@ -21,10 +21,15 @@ type IndexEntry = { id: string; slug: string; district: string | null; aliases?:
 type IndexFile = { generatedAt: string; count: number; items: IndexEntry[] }
 
 // Collections whose detail pages are slug-resolved through an index file.
-const INDEXED: Record<string, { key: string; table: string }> = {
-  villas: { key: '_villas-index.json', table: 'raw_villas' },
-  apartments: { key: '_apartments-index.json', table: 'raw_apartments' },
-  complexes: { key: '_complexes-index.json', table: 'raw_complexes' },
+// `slugColumn` marks the tables that really have one: complexes keep the slug
+// in a column, villas and apartments only in `data->'SEO:Slug'`. Selecting a
+// column that does not exist makes PostgREST fail the whole request, which is
+// how an ordinary villa save used to *delete* the row from its index and 404
+// the page.
+const INDEXED: Record<string, { key: string; table: string; slugColumn: boolean }> = {
+  villas: { key: '_villas-index.json', table: 'raw_villas', slugColumn: false },
+  apartments: { key: '_apartments-index.json', table: 'raw_apartments', slugColumn: false },
+  complexes: { key: '_complexes-index.json', table: 'raw_complexes', slugColumn: true },
 }
 
 function firstString(v: unknown): string | null {
@@ -97,11 +102,15 @@ export async function syncDetailIndexEntry(cfg: CollectionConfig, id: string): P
 
   try {
     const sb = adminSb()
-    const [{ data: row }, index] = await Promise.all([
-      sb.from(spec.table).select('airtable_id, slug, data').eq('airtable_id', id).maybeSingle(),
+    const columns = spec.slugColumn ? 'airtable_id, slug, data' : 'airtable_id, data'
+    const [{ data: row, error: rowErr }, index] = await Promise.all([
+      sb.from(spec.table).select(columns).eq('airtable_id', id).maybeSingle(),
       readIndex(spec.key),
     ])
     if (!index || !Array.isArray(index.items)) return
+    // A failed read says nothing about whether the record still exists —
+    // treating it as a deletion would drop a live page out of the index.
+    if (rowErr) return
 
     const entry = row ? entryFor(cfg.key, row as unknown as RawRow) : null
     const items = index.items.filter(it => it.id !== id)
