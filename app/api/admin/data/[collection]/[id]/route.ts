@@ -4,6 +4,7 @@ import { getCollection } from '@/lib/admin/collections'
 import { adapterFor } from '@/lib/admin/adapters'
 import { revalidateCollection } from '@/lib/admin/revalidate'
 import { aiAutofillPatch } from '@/lib/admin/ai-autofill'
+import { areaSyncPatch } from '@/lib/admin/area-sync'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -42,8 +43,11 @@ export async function PATCH(req: Request, { params }: Ctx) {
     // see the finished material, then fill whatever is still empty.
     const adapter = adapterFor(cfg)
     const current = await adapter.get(cfg, id)
-    const merged = { ...(current?.fields ?? {}), ...patch }
-    await adapter.update(cfg, id, { ...patch, ...(await aiAutofillPatch(cfg, merged)) })
+    // Changing `Площадь` has to carry the metreage quoted in the record's own
+    // copy with it, or the title keeps advertising the old area.
+    const areaPatch = areaSyncPatch(cfg, current?.fields ?? {}, patch)
+    const merged = { ...(current?.fields ?? {}), ...patch, ...areaPatch }
+    await adapter.update(cfg, id, { ...patch, ...areaPatch, ...(await aiAutofillPatch(cfg, merged)) })
     await revalidateCollection(cfg, id)
     return NextResponse.json({ ok: true })
   } catch (e) {
