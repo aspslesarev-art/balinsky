@@ -85,15 +85,30 @@ function rewriteValue(v, pattern, nextArea) {
     const next = rewriteValue(v.value, pattern, nextArea)
     return next === null ? null : { ...v, value: next }
   }
+  // Generated copy nests title/meta/lead/body/faq — walk plain objects too.
+  if (v && typeof v === 'object') {
+    const out = {}
+    let changed = false
+    for (const [k, item] of Object.entries(v)) {
+      const next = rewriteValue(item, pattern, nextArea)
+      if (next !== null) changed = true
+      out[k] = next ?? item
+    }
+    return changed ? out : null
+  }
   return null
 }
 
-/** Metreage quoted in the row's title, or null when it quotes none. */
-function titleArea(data) {
-  const title = plainString(data[TITLE_FIELD])
-  if (!title) return null
+/** Metreage a title spells out, or null when it spells out none. */
+function quotedArea(title) {
+  if (typeof title !== 'string' || !title) return null
   const m = title.match(/(?<![\d.,])(\d+(?:[.,]\d+)?)\s*(?:м²|m²|м2|m2)/i)
   return m ? Number(m[1].replace(',', '.')) : null
+}
+
+/** Metreage quoted in the row's own SEO title. */
+function titleArea(data) {
+  return quotedArea(plainString(data[TITLE_FIELD]))
 }
 
 function pricePerSqmPatch(data, prevArea, nextArea) {
@@ -107,6 +122,53 @@ function pricePerSqmPatch(data, prevArea, nextArea) {
 
 /** raw_* table → the revalidate kind whose caches hold its rows. */
 const TABLE_KIND = { raw_villas: 'villas', raw_apartments: 'apartments' }
+
+/**
+ * Generated listing copy (scripts/kb-text-regen.mjs → <bucket>/_texts.json)
+ * is a third place the metreage is spelled out: it supplies the page <title>
+ * and meta description, so a row fixed only in Postgres still advertises the
+ * old area there. Same bucket map as lib/listing-copy.ts.
+ */
+const COPY_BUCKET = { raw_villas: 'villa-photos', raw_apartments: 'apartment-photos' }
+
+/**
+ * Rewrite generated copy whose title quotes a different area than the row.
+ * Detected independently of the Postgres pass, so copy stays repairable even
+ * once the rows themselves are already correct.
+ */
+async function fixGeneratedCopy(sb, table, rows) {
+  const bucket = COPY_BUCKET[table]
+  const { data, error } = await sb.storage.from(bucket).download('_texts.json')
+  if (error || !data) {
+    console.log(`${bucket}/_texts.json: ${error?.message ?? 'нет файла'} — пропускаю`)
+    return
+  }
+  const manifest = JSON.parse(await data.text())
+  let touched = 0
+  for (const row of rows) {
+    const entry = manifest[row.airtable_id]
+    const actual = numberOrNull((row.data ?? {})[AREA_FIELD])
+    if (!entry || actual == null) continue
+    const variant = Array.isArray(entry.variants) ? entry.variants[entry.best ?? 0] : null
+    const quoted = quotedArea(variant?.title)
+    if (quoted == null || Math.abs(actual - quoted) <= AREA_EPSILON) continue
+    const next = rewriteValue(entry, areaPattern(quoted), actual)
+    if (next === null) continue
+    manifest[row.airtable_id] = next
+    touched++
+    console.log(`  copy ${row.airtable_id}: ${quoted} → ${actual} м²`)
+  }
+  if (touched === 0) {
+    console.log(`${bucket}/_texts.json: нечего править`)
+    return
+  }
+  const { error: upErr } = await sb.storage.from(bucket).upload('_texts.json', JSON.stringify(manifest), {
+    contentType: 'application/json',
+    upsert: true,
+  })
+  if (upErr) throw new Error(`${bucket}/_texts.json: ${upErr.message}`)
+  console.log(`${bucket}/_texts.json: обновлено записей — ${touched}`)
+}
 
 /**
  * A direct Supabase write bypasses lib/admin/revalidate.ts, so the module-level
@@ -172,6 +234,11 @@ for (const table of TABLES) {
       if (writeErr) throw new Error(`${table} ${row.airtable_id}: ${writeErr.message}`)
       touchedKinds.add(TABLE_KIND[table])
     }
+  }
+
+  if (APPLY) {
+    await fixGeneratedCopy(sb, table, rows ?? [])
+    touchedKinds.add(TABLE_KIND[table])
   }
 }
 
