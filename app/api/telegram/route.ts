@@ -174,7 +174,7 @@ export async function POST(req: Request) {
   //   4. Free-form text or voice → Balina (the AI consultant). She
   //      sends her own reply messages (text + photo cards) and we
   //      short-circuit out of the boilerplate path below.
-  const startResult = startMatch ? await handleStart(startPayload, msg.chat.id) : null
+  const startResult = startMatch ? await handleStart(startPayload, msg.chat.id, msg.from) : null
   let commandReply = null
   if (!startResult && text) {
     commandReply = (await handleSubscriptionCommand(text, msg.chat.id))

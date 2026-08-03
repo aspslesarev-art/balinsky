@@ -46,6 +46,7 @@ import { findActiveReservation } from '@/lib/reservations'
 import { loadLandProfile, landAllowsBuilding } from '@/lib/land-profile'
 import { loadMarketStats } from '@/lib/complex-market-stats'
 import { MarketStatsBlock } from '@/components/MarketStatsBlock'
+import { GatedBlock } from '@/components/GatedBlock'
 import { VillaPresentationButton } from '@/components/VillaPresentation'
 import { tField, pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { normalizeSlug } from '@/lib/slug-normalize'
@@ -1189,13 +1190,17 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
         {/* Investment potential + interactive map — right under the description,
             above the land profile and the neighbour-rental block. */}
         {lat != null && lng != null && (
-          <LazyMount fallback={<div className="mt-12 mb-10 min-h-[600px]" />}>
-            <InvestmentWidget villaId={a.airtable_id} apiKey={GMAPS_KEY} kind="apartment" lang={lang} />
-          </LazyMount>
+          <GatedBlock lang={lang}>
+            <LazyMount fallback={<div className="mt-12 mb-10 min-h-[600px]" />}>
+              <InvestmentWidget villaId={a.airtable_id} apiKey={GMAPS_KEY} kind="apartment" lang={lang} />
+            </LazyMount>
+          </GatedBlock>
         )}
 
         {nearby && (
-          <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />
+          <GatedBlock lang={lang}>
+            <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />
+          </GatedBlock>
         )}
 
         {districtCopy && districtSlug && (
@@ -1216,7 +1221,9 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
               </LazyMount>
             )}
             {marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0) && (
-              <MarketStatsBlock data={marketStats} lang={lang} />
+              <GatedBlock lang={lang}>
+                <MarketStatsBlock data={marketStats} lang={lang} />
+              </GatedBlock>
             )}
           </section>
         )}

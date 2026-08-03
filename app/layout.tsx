@@ -91,6 +91,17 @@ export default function RootLayout({
             for older browsers that ignore preconnect. */}
         <link rel="preconnect" href="https://ifdgiwxothmcalibmydv.supabase.co" crossOrigin="" />
         <link rel="dns-prefetch" href="https://ifdgiwxothmcalibmydv.supabase.co" />
+        {/* Lifts the blur on gated analytics blocks for signed-in visitors.
+            Runs before first paint, so there is no flash of blurred content.
+            It must stay inline and cookie-driven: doing this on the server
+            would make every page vary by visitor and break ISR + indexing.
+            The cookie grants nothing — see components/GatedBlock.tsx. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{if(document.cookie.indexOf('bx_auth=1')>-1)document.documentElement.setAttribute('data-auth','1')}catch(e){}",
+          }}
+        />
         {/* Analytics origins — preconnect so the deferred script isn't
             paying for handshake when it eventually fires. */}
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />

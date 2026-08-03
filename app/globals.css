@@ -259,3 +259,53 @@ html.no-pro [data-investment-block] {
 @keyframes balina-caret-blink {
   to { opacity: 0; }
 }
+
+/* Registration gate for the analytics blocks — see components/GatedBlock.tsx.
+   The server HTML is identical for everyone, so search engines index the full
+   content and ISR keeps one cached copy. Only this CSS hides it, and only
+   until the inline script in app/layout.tsx finds the `bx_auth` cookie and
+   stamps `data-auth="1"` on <html> — which happens before first paint, so a
+   logged-in visitor never sees a flash of blur. */
+.bx-gate {
+  position: relative;
+}
+
+.bx-gate-veil,
+.bx-gate-cta {
+  display: none;
+}
+
+html:not([data-auth='1']) .bx-gate > .bx-gate-content {
+  filter: blur(7px);
+  /* Keeps a blurred chart from being clicked, dragged or tabbed into. */
+  pointer-events: none;
+  user-select: none;
+}
+
+html:not([data-auth='1']) .bx-gate-veil {
+  display: block;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+html:not([data-auth='1']) .bx-gate-cta {
+  display: flex;
+  position: absolute;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+/* Printing and PDF export must never show the gate. */
+@media print {
+  .bx-gate > .bx-gate-content {
+    filter: none;
+  }
+  .bx-gate-veil,
+  .bx-gate-cta {
+    display: none;
+  }
+}

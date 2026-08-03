@@ -237,8 +237,44 @@ function handleError(devName: string): StartResult {
   }
 }
 
-export async function handleStart(payload: string | null, chatId?: number): Promise<StartResult> {
+/** Sender identity from the webhook, used to name the account on first login. */
+export type StartSender = { username?: string | null; first_name?: string | null; last_name?: string | null }
+
+// Site login. The visitor tapped "войти через Telegram" on a gated block, so
+// mint a one-time link and send it straight back — two taps end to end.
+async function handleLogin(chatId: number | undefined, from?: StartSender): Promise<StartResult> {
+  if (!chatId) return { reply: defaultGreeting() }
+  const { issueLoginToken } = await import('@/lib/site-auth')
+  const token = await issueLoginToken({
+    id: chatId,
+    username: from?.username ?? null,
+    firstName: from?.first_name ?? null,
+    lastName: from?.last_name ?? null,
+  })
+  if (!token) {
+    return {
+      reply: {
+        text: '<b>Не получилось создать ссылку для входа.</b>\n\nПопробуйте ещё раз через минуту.',
+        parseMode: 'HTML',
+      },
+    }
+  }
+  return {
+    reply: {
+      text:
+        '<b>Ваша ссылка для входа</b>\n\n' +
+        `<a href="https://balinsky.info/auth/${token}">Открыть balinsky.info и войти</a>\n\n` +
+        'Ссылка одноразовая и действует 15 минут. После входа откроются аналитика района, ' +
+        'тепловая карта, расчёты доходности и рейтинг застройщика.',
+      parseMode: 'HTML',
+    },
+    tags: ['login'],
+  }
+}
+
+export async function handleStart(payload: string | null, chatId?: number, from?: StartSender): Promise<StartResult> {
   if (!payload) return { reply: defaultGreeting() }
+  if (payload === 'login') return await handleLogin(chatId, from)
   const m = payload.match(/^(manager|rental|event|review|error|seller|sub)_(.+)$/)
   if (!m) return { reply: defaultGreeting() }
   const [, kind, raw] = m

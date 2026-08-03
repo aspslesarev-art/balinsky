@@ -50,6 +50,7 @@ import { LazyMount } from '@/components/LazyMount'
 import { loadLandProfile, landAllowsBuilding } from '@/lib/land-profile'
 import { loadComplexMarketStats } from '@/lib/complex-market-stats'
 import { MarketStatsBlock } from '@/components/MarketStatsBlock'
+import { GatedBlock } from '@/components/GatedBlock'
 import { loadComplexAccess } from '@/lib/complex-access'
 import { ComplexAccessBlock } from '@/components/ComplexAccessBlock'
 import { ComplexSignalsBlock } from '@/components/ComplexSignalsBlock'
@@ -1705,7 +1706,9 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
               </LazyMount>
             )}
             {marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0) && (
-              <MarketStatsBlock data={marketStats} lang={lang} />
+              <GatedBlock lang={lang}>
+                <MarketStatsBlock data={marketStats} lang={lang} />
+              </GatedBlock>
             )}
           </section>
         )}
@@ -1842,7 +1845,9 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             the complex page using the first villa unit's nearby
             data because units in the same complex share geo. */}
         {nearby && (
-          <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />
+          <GatedBlock lang={lang}>
+            <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />
+          </GatedBlock>
         )}
 
         {districtCopy && districtSlug && (
@@ -1889,15 +1894,17 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             </div>
             {access && <ComplexAccessBlock access={access} lang={lang} />}
             {process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY && (
-              <div className="mb-4">
-                <NeighborhoodHeatMap
-                  apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}
-                  lat={lat}
-                  lng={lng}
-                  title={name}
-                  lang={lang}
-                />
-              </div>
+              <GatedBlock lang={lang}>
+                <div className="mb-4">
+                  <NeighborhoodHeatMap
+                    apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}
+                    lat={lat}
+                    lng={lng}
+                    title={name}
+                    lang={lang}
+                  />
+                </div>
+              </GatedBlock>
             )}
             <a
               href={gmap ?? `https://www.google.com/maps?q=${lat},${lng}`}
