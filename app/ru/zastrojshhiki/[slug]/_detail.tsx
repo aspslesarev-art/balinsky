@@ -31,6 +31,8 @@ import { cleanDeveloperBullets } from '@/lib/developer-highlights'
 import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import { loadKbPageContent } from '@/lib/kb-page-content'
 import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
+import { loadVisionManifest } from '@/lib/listing-features'
+import { curateManifest } from '@/lib/listing-photos'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
@@ -155,9 +157,14 @@ const _loadAllComplexes = unstable_cache(
 const _loadComplexManifest = unstable_cache(
   async (): Promise<Record<string, string[]>> => {
     try {
-      const r = await fetch(COMPLEX_PHOTO_MANIFEST_URL)
+      const [r, vision] = await Promise.all([
+        fetch(COMPLEX_PHOTO_MANIFEST_URL),
+        loadVisionManifest('complex').catch(() => ({})),
+      ])
       if (!r.ok) return {}
-      return (await r.json()) as Record<string, string[]>
+      // Фото-аудит: на карточке проекта первой идёт выбранная обложка,
+      // а не первый попавшийся кадр манифеста.
+      return curateManifest((await r.json()) as Record<string, string[]>, vision)
     } catch { return {} }
   },
   // Tagged 'content:complexes' so the photo sync's revalidation busts the

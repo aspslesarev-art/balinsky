@@ -14,6 +14,8 @@ import { isTopBlacklisted } from '@/lib/top-blacklist'
 import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import { loadViewCounts, smartSort } from '@/lib/catalog-rank'
 import { cdnRewriteManifest, cdnManifestUrl } from '@/lib/photo-cdn'
+import { loadVisionManifest } from '@/lib/listing-features'
+import { curateManifest } from '@/lib/listing-photos'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/complex-photos/_manifest.json`
@@ -652,15 +654,18 @@ const _loadAptPriceRows = unstable_cache(
 )
 
 async function _loadAllInternal(): Promise<CachedAll> {
-  const [rows, manifestRaw, villas, apts, enCache, viewCounts] = await Promise.all([
+  const [rows, manifestRaw, villas, apts, enCache, viewCounts, visionMap] = await Promise.all([
     _loadComplexCardRows(),
     loadJson<Record<string, string[]>>(cdnManifestUrl(PHOTO_MANIFEST_URL, 600), {}),
     _loadVillaPriceRows(),
     _loadAptPriceRows(),
     loadAllTranslations('complexes'),
     loadViewCounts('complex'),
+    loadVisionManifest('complex').catch(() => ({})),
   ])
-  const manifest = cdnRewriteManifest(manifestRaw)
+  // Фото-аудит, как в каталогах вилл и апартаментов: выбранная обложка
+  // встаёт первой, брак выкидывается.
+  const manifest = curateManifest(cdnRewriteManifest(manifestRaw), visionMap)
   const enriched = rows
     .filter(r => !isHiddenDeveloper(firstString(r.data['Developer1']), firstString(r.data['Варианты поиска застройщика'])))
     .map(r => ({ ...r, data: mergeAllTranslations(r.data, r.airtable_id, enCache) }))

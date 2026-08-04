@@ -65,7 +65,8 @@ import { pluralRu } from '@/lib/plural-ru'
 import { districtRu } from '@/lib/district-ru'
 import { geoChainString } from '@/lib/regency'
 import { loadKbPageContent } from '@/lib/kb-page-content'
-import { loadListingVision, altFor } from '@/lib/listing-features'
+import { loadListingVision, loadVisionManifest, altFor } from '@/lib/listing-features'
+import { curateManifest } from '@/lib/listing-photos'
 import { DistrictAboutCard } from '@/components/DistrictAboutCard'
 import { getDistrictCopy } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
@@ -1064,7 +1065,14 @@ type AptRow = {
 const _aptManifestCache: { ts: number; manifest: Record<string, string[]> } = { ts: 0, manifest: {} }
 async function _loadAptManifest(): Promise<Record<string, string[]>> {
   if (Date.now() - _aptManifestCache.ts < 30 * 60 * 1000) return _aptManifestCache.manifest
-  const m = await fetch(cdnManifestUrl(APT_PHOTO_MANIFEST_URL, 600)).then(r => r.ok ? r.json() : {}).catch(() => ({})) as Record<string, string[]>
+  const [raw, vision] = await Promise.all([
+    fetch(cdnManifestUrl(APT_PHOTO_MANIFEST_URL, 600)).then(r => r.ok ? r.json() : {}).catch(() => ({})) as Promise<Record<string, string[]>>,
+    loadVisionManifest('apartment').catch(() => ({})),
+  ])
+  // Тот же фото-аудит, что в каталоге: выбранная обложка встаёт первой,
+  // брак выкидывается. Без него карточки юнитов и попап плана показывали
+  // просто первый кадр манифеста — нередко ванную.
+  const m = curateManifest(raw, vision)
   _aptManifestCache.ts = Date.now()
   _aptManifestCache.manifest = m
   return m
@@ -1146,7 +1154,11 @@ type VillaRow = {
 const _villaManifestCache: { ts: number; manifest: Record<string, string[]> } = { ts: 0, manifest: {} }
 async function _loadVillaManifest(): Promise<Record<string, string[]>> {
   if (Date.now() - _villaManifestCache.ts < 30 * 60 * 1000) return _villaManifestCache.manifest
-  const m = await fetch(cdnManifestUrl(VILLA_PHOTO_MANIFEST_URL, 600)).then(r => r.ok ? r.json() : {}).catch(() => ({})) as Record<string, string[]>
+  const [raw, vision] = await Promise.all([
+    fetch(cdnManifestUrl(VILLA_PHOTO_MANIFEST_URL, 600)).then(r => r.ok ? r.json() : {}).catch(() => ({})) as Promise<Record<string, string[]>>,
+    loadVisionManifest('villa').catch(() => ({})),
+  ])
+  const m = curateManifest(raw, vision)
   _villaManifestCache.ts = Date.now()
   _villaManifestCache.manifest = m
   return m
