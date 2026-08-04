@@ -170,18 +170,35 @@ def load_complexes_from_csv(path: str) -> list[dict]:
     return out
 
 
+_INDEX_CACHE: list[dict] = []
+
+
 def fetch_index() -> list[dict]:
+    # `--kind=all` runs three passes over the SAME island-wide index. Re-pulling
+    # a 3 MB payload for each one earned a 429 from estatemarket, so fetch once
+    # and reuse; retry with backoff if we're throttled anyway.
+    if _INDEX_CACHE:
+        print(f"reusing estatemarket index ({len(_INDEX_CACHE)} listings)", file=sys.stderr)
+        return _INDEX_CACHE
+
     print("fetching estatemarket index …", file=sys.stderr)
-    r = requests.post(
-        INDEX_URL,
-        json={"status": None, "country": None, "city": None, "type": None, "facilities": None, "price": None},
-        headers={
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-            "X-Requested-With": "XMLHttpRequest",
-        },
-        timeout=60,
-    )
+    r = None
+    for attempt in range(1, 6):
+        r = requests.post(
+            INDEX_URL,
+            json={"status": None, "country": None, "city": None, "type": None, "facilities": None, "price": None},
+            headers={
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "X-Requested-With": "XMLHttpRequest",
+            },
+            timeout=60,
+        )
+        if r.status_code != 429:
+            break
+        wait = 20 * attempt
+        print(f"  429 from estatemarket — waiting {wait}s (attempt {attempt}/5)", file=sys.stderr)
+        time.sleep(wait)
     r.raise_for_status()
     data = r.json()
     print(f"got {len(data)} listings", file=sys.stderr)
@@ -203,6 +220,7 @@ def fetch_index() -> list[dict]:
             "lat": lat,
             "lng": lng,
         })
+    _INDEX_CACHE.extend(out)
     return out
 
 
