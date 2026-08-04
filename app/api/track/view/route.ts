@@ -7,6 +7,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { LANGS, type Lang } from '@/lib/i18n'
+import { getSessionTelegramId } from '@/lib/site-auth'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -53,12 +54,18 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: 'missing slug' }, { status: 400 })
   }
 
+  // Signed-in visitors get their view attributed to them; guests stay
+  // anonymous exactly as before. Read straight off the signed cookie — a
+  // SELECT per pageview would be a poor trade for one integer.
+  const telegramId = await getSessionTelegramId()
+
   const row = {
     kind:        body.kind,
     slug:        body.slug.slice(0, 200),
     title:       typeof body.title === 'string' ? body.title.slice(0, 300) : null,
     airtable_id: typeof body.airtableId === 'string' ? body.airtableId : null,
     lang:        body.lang && (LANGS as readonly string[]).includes(body.lang) ? body.lang : 'ru',
+    telegram_id: telegramId,
   }
 
   const { error } = await sb.from('page_views').insert(row)

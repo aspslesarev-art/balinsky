@@ -127,6 +127,22 @@ type CookieSpec = {
   httpOnly: boolean
 }
 
+/**
+ * Just the id behind the signed cookie — no database round-trip.
+ *
+ * For hot paths that only need to attribute an action to someone, like the
+ * view tracker that fires on every page mount. `getSiteUser` costs a SELECT
+ * per call, which is the wrong price to pay per pageview.
+ */
+export async function getSessionTelegramId(): Promise<number | null> {
+  try {
+    const jar = await cookies()
+    return decodeSession(jar.get(SESSION_COOKIE)?.value)
+  } catch {
+    return null
+  }
+}
+
 /** Cookies to set on a successful login. Written by the route handler. */
 export function sessionCookies(telegramId: number): CookieSpec[] {
   const maxAge = SESSION_TTL_DAYS * 24 * 60 * 60
