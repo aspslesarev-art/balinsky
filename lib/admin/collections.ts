@@ -199,9 +199,11 @@ const developers: CollectionConfig = {
   store: 'sql_jsonb',
   table: 'raw_developers',
   primaryKey: 'airtable_id',
-  // raw_developers is historically UPDATE-only for service_role (migration
-  // 010) — expose edit, not insert/delete.
-  caps: { create: false, update: true, delete: false },
+  // Migration 010 granted service_role full privileges on raw_developers, so
+  // the old UPDATE-only restriction is gone and a new developer can be listed
+  // here. Delete stays off: complexes/villas/news link to a developer by name
+  // and slug, so removing a row would silently orphan those references.
+  caps: { create: true, update: true, delete: false },
   titleField: 'Developer',
   // News/promo/events link here with `store: 'name-slug'` and need this slug —
   // it is what the public pages filter those manifests by.
