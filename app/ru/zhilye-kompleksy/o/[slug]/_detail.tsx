@@ -1672,57 +1672,6 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
           </section>
         )}
 
-        {/* ИНВЕСТ-СИГНАЛЫ — синтез инвест-показателей ЖК (доходность, пляжная
-            зона, загрузка vs район, срок сдачи). Стоит над детальным блоком
-            «Сколько зарабатывают соседи» как краткая сводка. */}
-        {hasAnySignal(signals) && (
-          <section className="mb-6">
-            <ComplexSignalsBlock signals={signals} lang={lang} />
-          </section>
-        )}
-
-        {/* LAND + MARKET — two-column due-diligence row. Renders both
-            when available; collapses to one column when only one block
-            has data. Sits high on the page so the zoning verdict +
-            nearby occupancy are visible before the visitor scrolls past
-            the photo galleries. */}
-        {(
-          landAllowsBuilding(landProfile, 'complex')
-          || (marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0))
-        ) && (
-          <section className="mb-10 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-            {landAllowsBuilding(landProfile, 'complex') && (
-              <LazyMount fallback={<div className="min-h-[480px] rounded-2xl bg-[var(--color-search-bg)]" />}>
-                <LandProfileBlock data={landProfile!} lang={lang} />
-              </LazyMount>
-            )}
-            {marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0) && (
-              <GatedBlock lang={lang}>
-                <MarketStatsBlock data={marketStats} lang={lang} />
-              </GatedBlock>
-            )}
-          </section>
-        )}
-
-        {/* LEGAL AUDIT — what's in order (public) + questions (lead-gated).
-            Sits right under the land + neighbours-income row and above the
-            prose description: the visitor sees the due-diligence verdict while
-            still in the "is this safe / worth it" mindset, before the marketing
-            write-up. */}
-        <LegalAudit
-          lang={lang}
-          slug={slug}
-          okItems={legalOkItems}
-          questionsCount={legalQuestionsCount}
-          balanceBuyer={legalBalanceBuyer}
-          balanceSummary={legalBalanceItems[0] ?? null}
-          balanceNotesCount={legalBalanceItems.length}
-          developerName={developerName}
-          developerSlug={developerLink?.slug ?? null}
-          editId={c.airtable_id}
-          editable={lang === 'ru'}
-        />
-
         {/* ABOUT (unique AI write-up, falls back to SEO Text) */}
         {pageBody && (
           <section className="mb-10">
@@ -1777,6 +1726,56 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             </div>
           </section>
         )}
+
+        {/* ИНВЕСТ-СИГНАЛЫ — синтез инвест-показателей ЖК (доходность, пляжная
+            зона, загрузка vs район, срок сдачи). Стоит над детальным блоком
+            «Сколько зарабатывают соседи» как краткая сводка. */}
+        {hasAnySignal(signals) && (
+          <section className="mb-6">
+            <ComplexSignalsBlock signals={signals} lang={lang} />
+          </section>
+        )}
+
+        {/* LAND + MARKET — two-column due-diligence row. Renders both
+            when available; collapses to one column when only one block
+            has data. Стоит ниже описания и юнитов: сперва посетитель
+            смотрит, что это за объект и что в нём есть, и только потом
+            идёт в инвест-обвязку — зонирование и доход соседей. */}
+        {(
+          landAllowsBuilding(landProfile, 'complex')
+          || (marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0))
+        ) && (
+          <section className="mb-10 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+            {landAllowsBuilding(landProfile, 'complex') && (
+              <LazyMount fallback={<div className="min-h-[480px] rounded-2xl bg-[var(--color-search-bg)]" />}>
+                <LandProfileBlock data={landProfile!} lang={lang} />
+              </LazyMount>
+            )}
+            {marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0) && (
+              <GatedBlock lang={lang}>
+                <MarketStatsBlock data={marketStats} lang={lang} />
+              </GatedBlock>
+            )}
+          </section>
+        )}
+
+        {/* LEGAL AUDIT — what's in order (public) + questions (lead-gated).
+            Замыкает инвест-обвязку: посетитель уже посмотрел объект и юниты,
+            прикинул зонирование и доход соседей — и здесь получает вердикт
+            «безопасно ли», пока ещё в этом настроении. */}
+        <LegalAudit
+          lang={lang}
+          slug={slug}
+          okItems={legalOkItems}
+          questionsCount={legalQuestionsCount}
+          balanceBuyer={legalBalanceBuyer}
+          balanceSummary={legalBalanceItems[0] ?? null}
+          balanceNotesCount={legalBalanceItems.length}
+          developerName={developerName}
+          developerSlug={developerLink?.slug ?? null}
+          editId={c.airtable_id}
+          editable={lang === 'ru'}
+        />
 
         {/* DEVELOPER — links straight to /ru/zastrojshhiki/<slug>
             when we resolved one by name; falls back to the index
