@@ -12,7 +12,7 @@ import { revisionedCache } from '@/lib/revisioned-cache'
 import { contentRev } from '@/lib/content-version'
 import {
   Building2, MapPin, Calendar, FileCheck2, Lock, Home, Plane,
-  ChevronRight, ExternalLink, Box, Map as MapIcon, Film, FileText, BedDouble,
+  ChevronRight, Map as MapIcon, BedDouble,
 } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
@@ -1419,23 +1419,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   const vision = await loadListingVision('complex', c.airtable_id)
   const photoAlts = slidesPhotos.map((_, i) => altFor(vision, i, lang, name))
 
-  // External resources
-  const resources: { label: string; url: string; Icon: typeof Box }[] = []
-  const presentations = firstString(d['Презентации'])
-  const renders = firstString(d['Renders'])
-  const masterplan = firstString(d['Мастерплан'])
-  const tour3d = firstString(d['3D tours'])
-  const video = firstString(d['Video'])
-  const booking = firstString(d['Booking'])
-  const airbnb = firstString(d['AirBNB'])
   const gmap = firstString(d['Link from Google maps on location'] ?? d['Google maps'] ?? d['Google map'])
-  if (presentations) resources.push({ label: copy.res.presentation, url: presentations, Icon: FileText })
-  if (renders)       resources.push({ label: copy.res.renders,      url: renders,       Icon: Box })
-  if (masterplan)    resources.push({ label: copy.res.masterplan,   url: masterplan,    Icon: MapIcon })
-  if (tour3d)        resources.push({ label: copy.res.tour3d,       url: tour3d,        Icon: Box })
-  if (video)         resources.push({ label: copy.res.video,        url: video,         Icon: Film })
-  if (booking)       resources.push({ label: copy.res.booking,      url: booking,       Icon: ExternalLink })
-  if (airbnb)        resources.push({ label: copy.res.airbnb,       url: airbnb,        Icon: ExternalLink })
 
   // Key facts
   const facts: { Icon: typeof Building2; label: string; value: string }[] = [
@@ -1864,31 +1848,9 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
           <DistrictAboutCard copy={districtCopy} lang={lang} kind="complex" hubHref={`${complexesRoot}/${districtSlug}`} />
         )}
 
-        {/* RESOURCES */}
-        {resources.length > 0 && (
-          <section className="mb-10">
-            <h2 className="text-[18px] sm:text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
-              {copy.docsHeading}
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-3xl">
-              {resources.map(r => (
-                <a
-                  key={r.label}
-                  href={r.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-between gap-3 bg-white rounded-xl border border-[var(--color-border)] px-5 py-4 hover:border-[var(--color-primary)] transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <r.Icon size={18} className="text-[var(--color-primary)]" />
-                    <span className="text-[14px] font-medium text-[#111827]">{r.label}</span>
-                  </div>
-                  <ExternalLink size={14} className="text-[var(--color-text-muted)]" />
-                </a>
-              ))}
-            </div>
-          </section>
-        )}
+        {/* Блок «Документы и материалы» убран: ссылки вели во внутренние
+            папки застройщика (презентации, рендеры, мастерплан, 3D-туры),
+            публиковать их на странице не нужно. Поля в базе остались. */}
 
         {/* LOCATION */}
         {lat != null && lng != null && (
