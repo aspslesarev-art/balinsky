@@ -34,9 +34,37 @@ const rows = Object.values(places).map(p => ({
 }))
 
 console.log(`loading ${rows.length} rows in batches...`)
-const BATCH = 300
-let done = 0
+// Rows carry the full place object (reviews + photo refs), so a big batch is a
+// multi-megabyte request — the kind that dies on a flaky link. Smaller default,
+// overridable with --batch=N.
+const BATCH = Number((process.argv.slice(2).find(a => a.startsWith('--batch=')) || '--batch=100').split('=')[1])
+let done = 0, skipped = 0
 const sleep = (ms) => new Promise(r => setTimeout(r, ms))
+
+// Upsert with retries; on repeated failure split the batch and retry the halves,
+// so one flaky request or oversized row can't cost us the whole run.
+async function upsertSlice(slice, depth = 0) {
+  for (let attempt = 1; attempt <= 4; attempt++) {
+    try {
+      const { error } = await sb.from('bali_places').upsert(slice, { onConflict: 'id' })
+      if (error) throw new Error(error.message)
+      return true
+    } catch (e) {
+      if (attempt < 4) { await sleep(1000 * attempt); continue }
+      if (slice.length > 1 && depth < 4) {
+        const mid = Math.floor(slice.length / 2)
+        const a = await upsertSlice(slice.slice(0, mid), depth + 1)
+        const b = await upsertSlice(slice.slice(mid), depth + 1)
+        return a && b
+      }
+      console.error(`\n  skipped ${slice.length} row(s) (${slice[0]?.id}): ${e.message}`)
+      skipped += slice.length
+      return false
+    }
+  }
+  return false
+}
+
 for (let i = 0; i < rows.length; i += BATCH) {
   const slice = rows.slice(i, i + BATCH)
   // A place found again by a later sweep carries only THAT sweep's zones/cats.
@@ -55,19 +83,9 @@ for (let i = 0; i < rows.length; i += BATCH) {
       r.cats = [...new Set([...(e.cats ?? []), ...(r.cats ?? [])])]
     }
   }
-  let ok = false
-  for (let attempt = 1; attempt <= 5 && !ok; attempt++) {
-    try {
-      const { error } = await sb.from('bali_places').upsert(slice, { onConflict: 'id' })
-      if (error) throw new Error(error.message)
-      ok = true
-    } catch (e) {
-      if (attempt === 5) { console.error(`\nbatch ${i} failed after 5 tries: ${e.message}`); process.exit(1) }
-      await sleep(1000 * attempt)
-    }
-  }
+  await upsertSlice(slice)
   done += slice.length
   process.stdout.write(`\r  upserted ${done}/${rows.length}`)
 }
 const { count } = await sb.from('bali_places').select('*', { count: 'exact', head: true })
-console.log(`\n done. table row count: ${count}`)
+console.log(`\n done. table row count: ${count}${skipped ? `  (skipped ${skipped} rows — re-run to retry them)` : ''}`)
