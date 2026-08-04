@@ -22,6 +22,11 @@ const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABA
 })
 
 const IN_PATH = (process.argv.slice(2).find(a => a.startsWith('--in=')) || '--in=scripts/_bali-tourism-p4.json').split('=')[1]
+// Which sweep this file came from: `en` (English preference, default) or `id`
+// (Indonesian preference). They land in different columns — the comparison
+// between the two is what actually identifies a tourist spot.
+const COL = (process.argv.slice(2).find(a => a.startsWith('--col=')) || '--col=en').split('=')[1]
+if (!['en', 'id'].includes(COL)) { console.error('--col must be en or id'); process.exit(1) }
 const places = JSON.parse(fs.readFileSync(IN_PATH, 'utf8'))
 const now = new Date().toISOString()
 
@@ -36,7 +41,9 @@ for (const p of Object.values(places)) {
   }
   const sampled = Object.values(langs).reduce((a, b) => a + b, 0)
   if (!sampled) continue
-  rows.push({ id: p.id, rev_langs: langs, rev_sampled: sampled, rev_neutral_at: now })
+  rows.push(COL === 'id'
+    ? { id: p.id, rev_langs_id: langs, rev_sampled_id: sampled, rev_neutral_at: now }
+    : { id: p.id, rev_langs: langs, rev_sampled: sampled, rev_neutral_at: now })
 }
 
 console.log(`${rows.length} places with a neutral review sample (of ${Object.keys(places).length} in file)`)

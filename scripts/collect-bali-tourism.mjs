@@ -163,7 +163,7 @@ const PASS3_TEXT_ROOTS = [
 
 const ALL_ZONES = PASS > 2 ? [...ZONES, ...PASS3_ZONES] : ZONES
 const ALL_NEARBY_ROOTS = PASS > 2 ? [...NEARBY_ROOTS, ...PASS3_NEARBY_ROOTS] : NEARBY_ROOTS
-const ALL_TEXT_ROOTS = PASS === 4 ? [] : PASS > 2 ? [...TEXT_ROOTS, ...PASS3_TEXT_ROOTS] : TEXT_ROOTS
+const ALL_TEXT_ROOTS = PASS >= 4 ? [] : PASS > 2 ? [...TEXT_ROOTS, ...PASS3_TEXT_ROOTS] : TEXT_ROOTS
 
 // ---- field mask: full atmosphere detail, no photo bytes ----
 const FIELDS = ['id', 'displayName', 'formattedAddress', 'shortFormattedAddress', 'location', 'types', 'primaryType', 'primaryTypeDisplayName', 'rating', 'userRatingCount', 'priceLevel', 'businessStatus', 'googleMapsUri', 'websiteUri', 'internationalPhoneNumber', 'nationalPhoneNumber', 'regularOpeningHours', 'currentOpeningHours', 'editorialSummary', 'reviews', 'photos', 'plusCode', 'utcOffsetMinutes', 'goodForChildren', 'goodForGroups', 'liveMusic', 'outdoorSeating', 'reservable', 'servesBreakfast', 'servesBrunch', 'servesLunch', 'servesDinner', 'servesVegetarianFood', 'servesCocktails', 'servesCoffee', 'servesDessert', 'delivery', 'dineIn', 'takeout', 'allowsDogs', 'parkingOptions', 'paymentOptions', 'accessibilityOptions']
