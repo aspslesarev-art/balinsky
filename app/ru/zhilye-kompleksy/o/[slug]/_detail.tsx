@@ -76,6 +76,7 @@ import {
   parseAuditItems, parseBalance,
 } from '@/lib/legal-audit'
 import { loadComplexAudit } from '@/lib/complex-legal-i18n'
+import { isAirtableAttachment } from '@/lib/admin/fields'
 
 const AIRPORT_LAT = -8.7467
 const AIRPORT_LNG = 115.1667
@@ -1488,7 +1489,11 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
     if (!Array.isArray(v) || v.length === 0) return null
     const first = v[0]
     if (first && typeof first === 'object' && 'url' in first && typeof (first as { url: unknown }).url === 'string') {
-      return (first as { url: string }).url
+      const url = (first as { url: string }).url
+      // Ссылки на вложения Airtable подписаны и протухают, а сам Airtable
+      // отключён 22.07.2026 — такие URL отдают битую картинку. Считаем их
+      // отсутствующими, чтобы попап взял фото из манифеста в Storage.
+      return isAirtableAttachment(url) ? null : url
     }
     return null
   }
