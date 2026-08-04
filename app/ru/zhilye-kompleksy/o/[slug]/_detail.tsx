@@ -1765,6 +1765,20 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
           </section>
         )}
 
+        {/* Nearby places — beaches / cafes / nightlife / etc. The
+            data is keyed by villa airtable_id; we surface it on
+            the complex page using the first villa unit's nearby
+            data because units in the same complex share geo. */}
+        {nearby && (
+          <GatedBlock lang={lang}>
+            <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />
+          </GatedBlock>
+        )}
+
+        {districtCopy && districtSlug && (
+          <DistrictAboutCard copy={districtCopy} lang={lang} kind="complex" hubHref={`${complexesRoot}/${districtSlug}`} />
+        )}
+
         {/* ИНВЕСТ-СИГНАЛЫ — синтез инвест-показателей ЖК (доходность, пляжная
             зона, загрузка vs район, срок сдачи). Стоит над детальным блоком
             «Сколько зарабатывают соседи» как краткая сводка. */}
@@ -1870,20 +1884,6 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
 
         {managers.length > 0 && <ManagerCard managers={managers} developerName={developerName} />}
 
-
-        {/* Nearby places — beaches / cafes / nightlife / etc. The
-            data is keyed by villa airtable_id; we surface it on
-            the complex page using the first villa unit's nearby
-            data because units in the same complex share geo. */}
-        {nearby && (
-          <GatedBlock lang={lang}>
-            <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />
-          </GatedBlock>
-        )}
-
-        {districtCopy && districtSlug && (
-          <DistrictAboutCard copy={districtCopy} lang={lang} kind="complex" hubHref={`${complexesRoot}/${districtSlug}`} />
-        )}
 
         {/* Блок «Документы и материалы» убран: ссылки вели во внутренние
             папки застройщика (презентации, рендеры, мастерплан, 3D-туры),
