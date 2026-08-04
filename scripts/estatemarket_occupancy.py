@@ -19,6 +19,7 @@ Usage:
 import argparse
 import asyncio
 import json
+from datetime import datetime, timezone
 import math
 import os
 import re
@@ -443,10 +444,15 @@ def upsert_supabase(listings: list[dict], summary: dict[str, dict], kind: str = 
          "Prefer": "resolution=merge-duplicates,return=minimal"}
 
     dest_table = KIND_TO_DEST[kind]
+    # `synced_at` only had a column default, so a merge-duplicates upsert left
+    # refreshed rows stamped with the date they were FIRST inserted — the table
+    # looked three months stale right after a run. Stamp it explicitly.
+    now_iso = datetime.now(timezone.utc).isoformat()
     rows = []
     for cx in listings:
         s = summary.get(cx["airtable_id"]) or {}
         rows.append({
+            "synced_at": now_iso,
             "airtable_id": cx["airtable_id"],
             "lat": cx["lat"], "lon": cx["lng"],
             "total_listings_500m": s.get("total_listings", 0),
