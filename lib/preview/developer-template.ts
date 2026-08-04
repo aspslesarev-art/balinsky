@@ -35,6 +35,9 @@ const VILLA_EXTERIOR_URL = `${SUPABASE_URL}/storage/v1/object/public/villa-photo
 // thin for the design (scripts note: 23 of the 32 short ones matched a place
 // within 300m, or 800m on an exact name match).
 const PLACES_FALLBACK_URL = `${SUPABASE_URL}/storage/v1/object/public/complex-photos/_places_fallback.json`
+// Exterior shots pulled from each complex's Google Places listing by
+// scripts/places-photos.mjs — for galleries our own albums can't fill.
+const PLACES_PHOTOS_URL = `${SUPABASE_URL}/storage/v1/object/public/complex-photos/_places.json`
 const MANAGERS_URL = `${SUPABASE_URL}/storage/v1/object/public/managers/_managers.json`
 // Per-photo vision pass: alt text, the best cover index and a reject list.
 const VISION_COMPLEX_URL = `${SUPABASE_URL}/storage/v1/object/public/complex-photos/_vision.json`
@@ -186,6 +189,19 @@ type VisionMap = Record<string, VisionEntry>
  * bedrooms and bathrooms belong on the complex page itself.
  */
 const INTERIOR_RE = /спальн|ванн|кухн|гостин|обеден|столов|интерьер|санузел|душев|гардероб|кабинет|прихож|коридор|диван|кроват|санузл|рабоч(ее|ая) (мест|зон)/i
+
+type PlacesPhotos = Record<string, { photos?: { name: string; attribution: string | null }[]; placeName?: string }>
+
+async function loadPlacesPhotos(): Promise<PlacesPhotos> {
+  try {
+    const r = await fetch(PLACES_PHOTOS_URL, { next: { revalidate: 3600 } })
+    if (!r.ok) return {}
+    const j = (await r.json()) as { items?: PlacesPhotos }
+    return j.items ?? {}
+  } catch {
+    return {}
+  }
+}
 
 async function loadExteriorLabels(): Promise<Record<string, string>> {
   try {
@@ -516,11 +532,13 @@ const loadCpxTable = cachedTable('raw_complexes', CPX_FIELDS, 500, 'content:comp
 const loadVillaTable = cachedTable('raw_villas', VILLA_FIELDS, 3000, 'content:villas')
 
 export async function loadDeveloperTemplateData(slug: string): Promise<DeveloperTemplateData | null> {
-  const [devs, cpxAll, villas, photoManifest, villaPhotoManifest, placesFallback, cpxVision, extLabels] =
+  const [devs, cpxAll, villas, photoManifest, villaPhotoManifest, placesFallback, cpxVision, extLabels,
+    placesPhotos] =
     await Promise.all([
       loadDevTable(), loadCpxTable(), loadVillaTable(),
       loadManifest(PHOTO_MANIFEST_URL), loadManifest(VILLA_PHOTO_MANIFEST_URL),
       loadPlacesFallback(), loadVision(VISION_COMPLEX_URL), loadExteriorLabels(),
+      loadPlacesPhotos(),
     ])
   const devRow = devs.find(d => firstString(d['SEO:Slug']) === slug)
   if (!devRow) return null
@@ -571,7 +589,12 @@ export async function loadDeveloperTemplateData(slug: string): Promise<Developer
     // single best image we could find for the complex.
     const place = placesFallback[id]
     const lead = place ? [`/api/place-photo?name=${encodeURIComponent(place.photoName)}`] : []
-    const photos = [...new Set([...lead, ...ownPhotos, ...unitPhotos])].slice(0, MAX_GALLERY_PHOTOS)
+    // Google shots go last: they are real photos of the finished place, useful
+    // filler, but the developer's own renders should lead.
+    const fromPlaces = asList(placesPhotos[id]?.photos)
+      .map(p => `/api/place-photo?name=${encodeURIComponent(p.name)}`)
+    const photos = [...new Set([...lead, ...ownPhotos, ...unitPhotos, ...fromPlaces])]
+      .slice(0, MAX_GALLERY_PHOTOS)
 
     const base = {
       id,
@@ -590,7 +613,7 @@ export async function loadDeveloperTemplateData(slug: string): Promise<Developer
       lede: firstString(c['Описание']) ?? firstString(c['ИИ Описание']),
       geo: lat != null && lng != null ? { lat, lng } : null,
       photos,
-      photoCredit: place?.attribution ?? null,
+      photoCredit: place?.attribution ?? asList(placesPhotos[id]?.photos)[0]?.attribution ?? null,
       units,
       pois,
       url: `/ru/zhilye-kompleksy/${cslug}`,
