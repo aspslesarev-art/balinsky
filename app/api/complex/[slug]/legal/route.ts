@@ -4,7 +4,7 @@
 // this endpoint return the items, translated into the requested language.
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { LEGAL_QUESTIONS_FIELD, firstAuditString } from '@/lib/legal-audit'
+import { LEGAL_QUESTIONS_FIELD, LEGAL_BALANCE_NOTES_FIELD, firstAuditString } from '@/lib/legal-audit'
 import { loadComplexAudit } from '@/lib/complex-legal-i18n'
 import { clientIp, rateLimit } from '@/lib/rate-limit'
 
@@ -47,15 +47,16 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
 
   const row = data as { airtable_id: string; data: Record<string, unknown> }
   const ruQuestions = firstAuditString(row.data[LEGAL_QUESTIONS_FIELD])
-  if (!ruQuestions) {
-    return NextResponse.json({ items: [] }, { headers: { 'Cache-Control': 'no-store' } })
+  const ruBalance = firstAuditString(row.data[LEGAL_BALANCE_NOTES_FIELD])
+  if (!ruQuestions && !ruBalance) {
+    return NextResponse.json({ items: [], balance: [] }, { headers: { 'Cache-Control': 'no-store' } })
   }
 
-  const { questions } = await loadComplexAudit(row.airtable_id, lang, null, ruQuestions)
+  const { questions, balance } = await loadComplexAudit(row.airtable_id, lang, null, ruQuestions, ruBalance)
   // no-store + noindex: gated content must never be cached at the edge or
   // picked up by a crawler that stumbles onto the endpoint.
   return NextResponse.json(
-    { items: questions },
+    { items: questions, balance },
     { headers: { 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' } },
   )
 }

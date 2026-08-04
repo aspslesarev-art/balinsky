@@ -1,7 +1,7 @@
 // Per-language translations of the complex legal-audit fields. RU is the source
 // (raw_complexes.data); scripts/translate-complex-legal.mjs renders each item
 // into en/de/id/fr/zh/nl/pl/uk and stores them per language in Supabase Storage
-// as feeds/_complex-legal-<lang>.json = { [complexId]: { ok: [...], questions: [...] } },
+// as feeds/_complex-legal-<lang>.json = { [complexId]: { ok, questions, balance } },
 // one translated string per authored line. Read at runtime with an in-memory +
 // fetch cache (same shape as lib/kb-summary-i18n). When a translation isn't
 // generated yet we fall back to the RU source so the block still renders.
@@ -9,7 +9,7 @@ import { parseAuditItem, parseAuditItems, type AuditItem } from '@/lib/legal-aud
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 
-export type LegalEntry = { ok?: string[]; questions?: string[] }
+export type LegalEntry = { ok?: string[]; questions?: string[]; balance?: string[] }
 type Cache = Record<string, LegalEntry>
 
 const _cache = new Map<string, { ts: number; data: Cache }>()
@@ -62,14 +62,20 @@ export async function loadComplexAudit(
   lang: string,
   ruOkRaw: string | null,
   ruQuestionsRaw: string | null,
-): Promise<{ ok: AuditItem[]; questions: AuditItem[] }> {
+  ruBalanceRaw: string | null = null,
+): Promise<{ ok: AuditItem[]; questions: AuditItem[]; balance: AuditItem[] }> {
   if (lang === 'ru') {
-    return { ok: parseAuditItems(ruOkRaw), questions: parseAuditItems(ruQuestionsRaw) }
+    return {
+      ok: parseAuditItems(ruOkRaw),
+      questions: parseAuditItems(ruQuestionsRaw),
+      balance: parseAuditItems(ruBalanceRaw),
+    }
   }
   const cache = await loadComplexLegalCache(lang)
   const entry = cache[complexId]
   return {
     ok: resolveAuditItems(entry?.ok, ruOkRaw),
     questions: resolveAuditItems(entry?.questions, ruQuestionsRaw),
+    balance: resolveAuditItems(entry?.balance, ruBalanceRaw),
   }
 }

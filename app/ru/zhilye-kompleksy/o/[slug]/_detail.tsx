@@ -71,7 +71,10 @@ import { getDistrictCopy } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
 import { LegalAudit } from '@/components/LegalAudit'
-import { LEGAL_OK_FIELD, LEGAL_QUESTIONS_FIELD, parseAuditItems } from '@/lib/legal-audit'
+import {
+  LEGAL_OK_FIELD, LEGAL_QUESTIONS_FIELD, LEGAL_BALANCE_FIELD, LEGAL_BALANCE_NOTES_FIELD,
+  parseAuditItems, parseBalance,
+} from '@/lib/legal-audit'
 import { loadComplexAudit } from '@/lib/complex-legal-i18n'
 
 const AIRPORT_LAT = -8.7467
@@ -1384,10 +1387,14 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   // the current language); the "вопросы" items stay gated — only their count
   // ships here, the items themselves come from /api/complex/[slug]/legal after
   // the visitor leaves a lead.
-  const { ok: legalOkItems } = await loadComplexAudit(
-    c.airtable_id, lang, firstString(d[LEGAL_OK_FIELD]), null,
+  // Баланс договора: число публично, из обоснования публична только первая
+  // строка (итог), остальные строки уезжают под тот же лид, что и вопросы.
+  const ruBalanceNotes = firstString(d[LEGAL_BALANCE_NOTES_FIELD])
+  const { ok: legalOkItems, balance: legalBalanceItems } = await loadComplexAudit(
+    c.airtable_id, lang, firstString(d[LEGAL_OK_FIELD]), null, ruBalanceNotes,
   )
   const legalQuestionsCount = parseAuditItems(firstString(d[LEGAL_QUESTIONS_FIELD])).length
+  const legalBalanceBuyer = parseBalance(firstString(d[LEGAL_BALANCE_FIELD]))
 
   // On-page admin editing: tag a field so components/InlineEditor turns it into
   // a click-to-edit target for a logged-in admin. Only on RU — RU is the source
@@ -1723,6 +1730,9 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
           slug={slug}
           okItems={legalOkItems}
           questionsCount={legalQuestionsCount}
+          balanceBuyer={legalBalanceBuyer}
+          balanceSummary={legalBalanceItems[0] ?? null}
+          balanceNotesCount={legalBalanceItems.length}
           developerName={developerName}
           developerSlug={developerLink?.slug ?? null}
           editId={c.airtable_id}

@@ -11,6 +11,7 @@
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 
 const execFileP = promisify(execFile)
@@ -92,8 +93,39 @@ export async function listDriveFolder(id, apiKey) {
 }
 
 /**
+ * Перечислить публичную папку без Drive API.
+ * Легаси-вьюха `embeddedfolderview` отдаёт список одним HTML — этого хватает,
+ * когда Drive API в проекте не включён (ключ отвечает API_KEY_SERVICE_BLOCKED).
+ * @returns {Promise<Array<{ id: string, name: string, kind: 'folder'|'doc'|'sheet'|'file' }>>}
+ */
+export async function listPublicFolder(id) {
+  const res = await fetch(`https://drive.google.com/embeddedfolderview?id=${id}#list`, {
+    headers: { 'User-Agent': 'Mozilla/5.0' },
+  })
+  if (!res.ok) throw new Error(`папка не открылась: HTTP ${res.status}`)
+  const html = await res.text()
+  const re = /id="entry-([A-Za-z0-9_-]+)"[\s\S]*?<a href="([^"]+)"[\s\S]*?<div class="flip-entry-title">([\s\S]*?)<\/div>/g
+  const out = []
+  for (const m of html.matchAll(re)) {
+    const [, entryId, href, rawName] = m
+    const kind = href.includes('/folders/') ? 'folder'
+      : href.includes('/document/') ? 'doc'
+      : href.includes('/spreadsheets/') ? 'sheet'
+      : 'file'
+    out.push({ id: entryId, name: unescapeHtml(rawName.trim()), kind })
+  }
+  return out
+}
+
+function unescapeHtml(s) {
+  return s
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#(\d+);/g, (_, d) => String.fromCharCode(Number(d)))
+}
+
+/**
  * Извлечь текст из скачанных байтов.
- * @returns {Promise<{ text: string, method: 'pdf-text' | 'pdf-scan' | 'text' | 'unsupported' }>}
+ * @returns {Promise<{ text: string, method: 'pdf-text' | 'pdf-scan' | 'docx' | 'text' | 'unsupported' }>}
  */
 export async function extractText({ buffer, contentType = '', name = '' }) {
   const lower = name.toLowerCase()
@@ -104,10 +136,52 @@ export async function extractText({ buffer, contentType = '', name = '' }) {
     // Скан без текстового слоя: текст достанет только OCR у вызывающего.
     return { text, method: text.length >= MIN_TEXT_CHARS ? 'pdf-text' : 'pdf-scan' }
   }
+  const isDocx = buffer.subarray(0, 2).toString('latin1') === 'PK' &&
+    (lower.endsWith('.docx') || contentType.includes('wordprocessingml'))
+  if (isDocx) {
+    return { text: await parseDocx(buffer), method: 'docx' }
+  }
   if (contentType.startsWith('text/') || /\.(txt|md|csv)$/.test(lower)) {
     return { text: buffer.toString('utf8').trim(), method: 'text' }
   }
   return { text: '', method: 'unsupported' }
+}
+
+/**
+ * Текст из .docx. Он же zip: распаковываем `word/document.xml` системным unzip
+ * (без новой зависимости) и снимаем разметку, сохраняя границы абзацев и ячеек.
+ */
+let docxSeq = 0
+
+async function parseDocx(buffer) {
+  const tmp = path.join(os.tmpdir(), `docx-${process.pid}-${docxSeq++}.docx`)
+  fs.writeFileSync(tmp, buffer)
+  try {
+    const { stdout } = await execFileP('unzip', ['-p', tmp, 'word/document.xml'], {
+      maxBuffer: 64 * 1024 * 1024,
+      encoding: 'buffer',
+    })
+    return docxXmlToText(stdout.toString('utf8'))
+  } catch {
+    return ''
+  } finally {
+    fs.rmSync(tmp, { force: true })
+  }
+}
+
+function docxXmlToText(xml) {
+  return xml
+    .replace(/<w:tab\b[^>]*\/?>/g, '\t')
+    .replace(/<w:br\b[^>]*\/?>/g, '\n')
+    .replace(/<\/w:p>/g, '\n')
+    .replace(/<\/w:tc>/g, ' | ')
+    .replace(/<\/w:tr>/g, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&apos;/g, "'")
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
 }
 
 async function parsePdf(buffer) {

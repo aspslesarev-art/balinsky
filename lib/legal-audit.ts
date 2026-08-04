@@ -10,6 +10,12 @@
 // "SEO:Title"), and admin reads/writes them through the generic field engine.
 export const LEGAL_OK_FIELD = 'Юр-проверка: в порядке'
 export const LEGAL_QUESTIONS_FIELD = 'Юр-проверка: вопросы'
+// Насколько договор клиенто-ориентирован: одно число 0–100 — доля прав и
+// рисков, распределённая в пользу покупателя (50 = паритет), выводится как
+// «X / 100−X». Обоснование — тот же формат «один пункт на строку», первая
+// строка публична (итог одним предложением), остальные — под лидом.
+export const LEGAL_BALANCE_FIELD = 'Юр-проверка: баланс'
+export const LEGAL_BALANCE_NOTES_FIELD = 'Юр-проверка: баланс обоснование'
 
 export type AuditItem = { headline: string; body: string }
 
@@ -44,6 +50,19 @@ export function parseAuditItems(raw: string | null | undefined): AuditItem[] {
     .map(l => l.trim())
     .filter(Boolean)
     .map(parseAuditItem)
+}
+
+/**
+ * Доля в пользу покупателя, 0–100. Поле авторится как обычный текст, поэтому
+ * терпим «34», «34/66» и «34 %» — берём первое число и зажимаем в диапазон.
+ */
+export function parseBalance(raw: string | null | undefined): number | null {
+  if (!raw) return null
+  const m = raw.trim().match(/-?\d+(?:[.,]\d+)?/)
+  if (!m) return null
+  const n = Math.round(Number(m[0].replace(',', '.')))
+  if (!Number.isFinite(n)) return null
+  return Math.max(0, Math.min(100, n))
 }
 
 /** First string out of a JSONB value that may be a string, array, or {value}. */

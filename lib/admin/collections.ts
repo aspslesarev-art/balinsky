@@ -7,7 +7,9 @@
 // admin writes stay compatible with what the site renders.
 
 import type { CollectionConfig } from './adapters/types'
-import { LEGAL_OK_FIELD, LEGAL_QUESTIONS_FIELD } from '@/lib/legal-audit'
+import {
+  LEGAL_OK_FIELD, LEGAL_QUESTIONS_FIELD, LEGAL_BALANCE_FIELD, LEGAL_BALANCE_NOTES_FIELD,
+} from '@/lib/legal-audit'
 import { VOICE_FIELD } from '@/lib/voice-intro'
 
 // --- SQL JSONB catalogs (raw_* tables, PK airtable_id, JSONB `data`) -------
@@ -138,6 +140,8 @@ const complexes: CollectionConfig = {
     { key: VOICE_FIELD, label: 'Озвучка: текст', type: 'longtext' },
     { key: LEGAL_OK_FIELD, label: 'Юр-проверка: в порядке', type: 'longtext' },
     { key: LEGAL_QUESTIONS_FIELD, label: 'Юр-проверка: вопросы (под лидом)', type: 'longtext' },
+    { key: LEGAL_BALANCE_FIELD, label: 'Юр-проверка: баланс (0–100 в пользу покупателя)', type: 'text' },
+    { key: LEGAL_BALANCE_NOTES_FIELD, label: 'Юр-проверка: баланс обоснование (1-я строка публична)', type: 'longtext' },
   ],
 }
 
