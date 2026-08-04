@@ -168,6 +168,9 @@ function normalizeItems(value) {
   if (!Array.isArray(value)) return []
   return value
     .map(v => String(v ?? '').replace(/\s+/g, ' ').trim())
+    // Модель любит нумеровать оси («1. Форс-мажор. …»), а парсер режет
+    // заголовок по первому «. » — и заголовком становится цифра.
+    .map(s => s.replace(/^\d{1,2}[.)]\s+/, ''))
     .filter(Boolean)
 }
 

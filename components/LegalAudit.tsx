@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { ChevronDown, Check, TriangleAlert, Lock, Scale, Send } from 'lucide-react'
+import { ChevronDown, Check, TriangleAlert, Lock, Scale, Send, Minus } from 'lucide-react'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { LOGIN_URL } from '@/components/GatedBlock'
 import { LEGAL_OK_FIELD, LEGAL_QUESTIONS_FIELD, LEGAL_BALANCE_NOTES_FIELD, type AuditItem } from '@/lib/legal-audit'
@@ -92,51 +92,61 @@ const BAL_COPY = {
     balTitle: 'Баланс договора', balBuyer: 'покупатель', balDev: 'застройщик',
     balHint: 'Как договор распределяет права и риски между сторонами. 50 / 50 — паритет.',
     balMore: (n: number) => `Разбор по пунктам (${n}) — после заявки`,
+    balOpen: (n: number) => `В чём перекосы — ${n} пунктов`, balClose: 'Свернуть',
   },
   en: {
     balTitle: 'Contract balance', balBuyer: 'buyer', balDev: 'developer',
     balHint: 'How the contract splits rights and risks between the parties. 50 / 50 is parity.',
     balMore: (n: number) => `Clause-by-clause breakdown (${n}) — after your request`,
+    balOpen: (n: number) => `Where the imbalance sits — ${n} points`, balClose: 'Collapse',
   },
   id: {
     balTitle: 'Keseimbangan kontrak', balBuyer: 'pembeli', balDev: 'pengembang',
     balHint: 'Bagaimana kontrak membagi hak dan risiko antara para pihak. 50 / 50 berarti seimbang.',
     balMore: (n: number) => `Rincian per pasal (${n}) — setelah permintaan Anda`,
+    balOpen: (n: number) => `Di mana ketimpangannya — ${n} poin`, balClose: 'Tutup',
   },
   fr: {
     balTitle: 'Équilibre du contrat', balBuyer: 'acheteur', balDev: 'promoteur',
     balHint: 'Comment le contrat répartit droits et risques entre les parties. 50 / 50 = parité.',
     balMore: (n: number) => `Analyse clause par clause (${n}) — après votre demande`,
+    balOpen: (n: number) => `Où se situe le déséquilibre — ${n} points`, balClose: 'Réduire',
   },
   de: {
     balTitle: 'Vertragsbalance', balBuyer: 'Käufer', balDev: 'Bauträger',
     balHint: 'Wie der Vertrag Rechte und Risiken zwischen den Parteien verteilt. 50 / 50 = Gleichgewicht.',
     balMore: (n: number) => `Analyse nach Klauseln (${n}) — nach Ihrer Anfrage`,
+    balOpen: (n: number) => `Wo das Ungleichgewicht liegt — ${n} Punkte`, balClose: 'Einklappen',
   },
   zh: {
     balTitle: '合同平衡度', balBuyer: '买方', balDev: '开发商',
     balHint: '合同如何在双方之间分配权利与风险。50 / 50 为对等。',
     balMore: (n: number) => `逐条解析（${n}）— 提交咨询后可见`,
+    balOpen: (n: number) => `失衡出在哪里 — ${n} 项`, balClose: '收起',
   },
   nl: {
     balTitle: 'Contractbalans', balBuyer: 'koper', balDev: 'ontwikkelaar',
     balHint: 'Hoe het contract rechten en risico’s verdeelt tussen de partijen. 50 / 50 is pariteit.',
     balMore: (n: number) => `Analyse per clausule (${n}) — na uw aanvraag`,
+    balOpen: (n: number) => `Waar de scheefheid zit — ${n} punten`, balClose: 'Inklappen',
   },
   ban: {
     balTitle: 'Kasaimbangan kontrak', balBuyer: 'sane numbas', balDev: 'pangembang',
     balHint: 'Sapunapi kontrak ngedum hak lan resiko ring kalih pihak. 50 / 50 kasaimbangan.',
     balMore: (n: number) => `Rincian saking pasal (${n}) — sasampun permintaan Ida`,
+    balOpen: (n: number) => `Ring dija ketimpanganne — ${n} poin`, balClose: 'Tutup',
   },
   pl: {
     balTitle: 'Balans umowy', balBuyer: 'kupujący', balDev: 'deweloper',
     balHint: 'Jak umowa dzieli prawa i ryzyka między strony. 50 / 50 to parytet.',
     balMore: (n: number) => `Analiza punkt po punkcie (${n}) — po zgłoszeniu`,
+    balOpen: (n: number) => `Gdzie jest przechył — ${n} punktów`, balClose: 'Zwiń',
   },
   uk: {
     balTitle: 'Баланс договору', balBuyer: 'покупець', balDev: 'забудовник',
     balHint: 'Як договір розподіляє права та ризики між сторонами. 50 / 50 — паритет.',
     balMore: (n: number) => `Розбір за пунктами (${n}) — після заявки`,
+    balOpen: (n: number) => `У чому перекоси — ${n} пунктів`, balClose: 'Згорнути',
   },
 } as const
 
@@ -157,11 +167,12 @@ const TG_COPY = {
 const INPUT_CLS =
   'flex-1 min-w-0 rounded-xl border border-[var(--color-border)] bg-white px-3.5 py-2.5 text-[14px] text-[#111827] outline-none focus:border-[var(--color-primary)]'
 
-function Row({ item, tone }: { item: AuditItem; tone: 'ok' | 'warn' }) {
+// neutral — для осей баланса: это не «хорошо» и не «плохо», а разбор.
+function Row({ item, tone }: { item: AuditItem; tone: 'ok' | 'warn' | 'neutral' }) {
   const [open, setOpen] = useState(false)
   const hasBody = item.body.length > 0
-  const Icon = tone === 'ok' ? Check : TriangleAlert
-  const iconCls = tone === 'ok' ? 'text-emerald-600' : 'text-amber-600'
+  const Icon = tone === 'ok' ? Check : tone === 'warn' ? TriangleAlert : Minus
+  const iconCls = tone === 'ok' ? 'text-emerald-600' : tone === 'warn' ? 'text-amber-600' : 'text-[var(--color-text-soft)]'
   return (
     <div className="border-b border-black/5 last:border-0">
       <button
@@ -319,6 +330,7 @@ function ContractBalance({
   notes: AuditItem[] | null; notesCount: number; edit?: EditAttrs
 }) {
   const c = pickCopy(BAL_COPY, lang)
+  const [open, setOpen] = useState(false)
   const developer = 100 - buyer
   // 45+ — рыночный паритет, 30–45 — умеренный перекос, ниже 30 — сильный.
   const tone = buyer >= 45 ? 'emerald' : buyer >= 30 ? 'amber' : 'rose'
@@ -330,38 +342,51 @@ function ContractBalance({
   const hidden = notes ? notes.slice(1) : []
 
   return (
-    <div {...edit} className={`rounded-2xl border p-4 sm:p-5 mb-4 ${wrapCls}`}>
-      <div className="flex items-baseline justify-between gap-3 mb-2.5">
+    <div {...edit} className={`rounded-2xl border px-4 py-3 sm:px-5 sm:py-3.5 mb-4 ${wrapCls}`}>
+      <div className="flex items-baseline justify-between gap-3 mb-2">
         <div className="flex items-center gap-2">
-          <Scale size={18} className={numCls} />
-          <h3 className="text-[15px] sm:text-[16px] font-semibold text-[#111827]">{c.balTitle}</h3>
+          <Scale size={16} className={numCls} />
+          <h3 className="text-[14px] sm:text-[15px] font-semibold text-[#111827]">{c.balTitle}</h3>
         </div>
-        <div className={`text-[18px] sm:text-[22px] font-semibold tabular-nums ${numCls}`}>
+        <div className={`text-[17px] sm:text-[19px] font-semibold tabular-nums ${numCls}`}>
           {buyer} / {developer}
         </div>
       </div>
 
-      <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-black/10" aria-hidden>
+      <div className="flex h-2 w-full overflow-hidden rounded-full bg-black/10" aria-hidden>
         <div className={barCls} style={{ width: `${buyer}%` }} />
       </div>
-      <div className="mt-1.5 flex justify-between text-[12.5px] text-[var(--color-text-soft)]">
+      <div className="mt-1 flex justify-between text-[12px] text-[var(--color-text-soft)]">
         <span>{c.balBuyer} {buyer}</span>
         <span>{c.balDev} {developer}</span>
       </div>
 
-      <p className="mt-2.5 text-[12.5px] text-[var(--color-text-soft)] leading-relaxed">{c.balHint}</p>
       {summary && (
-        <p className="mt-2 text-[13.5px] sm:text-[14px] text-[#111827] leading-relaxed">
+        <p className="mt-2 text-[13.5px] sm:text-[14px] text-[#111827] leading-snug">
           {[summary.headline, summary.body].filter(Boolean).join('. ')}
         </p>
       )}
 
       {hidden.length > 0 ? (
-        <div className="mt-2.5 border-t border-black/5">
-          {hidden.map((it, i) => <Row key={i} item={it} tone="ok" />)}
-        </div>
+        <>
+          <button
+            type="button"
+            onClick={() => setOpen(o => !o)}
+            aria-expanded={open}
+            className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-medium text-[var(--color-text-soft)] hover:text-[#111827] cursor-pointer"
+          >
+            {open ? c.balClose : c.balOpen(hidden.length)}
+            <ChevronDown size={15} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
+          </button>
+          {open && (
+            <div className="mt-1 border-t border-black/5">
+              <p className="pt-2.5 text-[12.5px] text-[var(--color-text-soft)] leading-relaxed">{c.balHint}</p>
+              {hidden.map((it, i) => <Row key={i} item={it} tone="neutral" />)}
+            </div>
+          )}
+        </>
       ) : notesCount > 1 && (
-        <p className="mt-2.5 inline-flex items-center gap-1.5 text-[13px] font-medium text-[var(--color-text-soft)]">
+        <p className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-medium text-[var(--color-text-soft)]">
           <Lock size={14} /> {c.balMore(notesCount - 1)}
         </p>
       )}
