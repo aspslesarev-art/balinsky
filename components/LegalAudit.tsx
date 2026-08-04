@@ -1,8 +1,9 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { ChevronDown, Check, TriangleAlert, Lock, Scale } from 'lucide-react'
+import { ChevronDown, Check, TriangleAlert, Lock, Scale, Send } from 'lucide-react'
 import { pickCopy, type Lang } from '@/lib/i18n'
+import { LOGIN_URL } from '@/components/GatedBlock'
 import { LEGAL_OK_FIELD, LEGAL_QUESTIONS_FIELD, LEGAL_BALANCE_NOTES_FIELD, type AuditItem } from '@/lib/legal-audit'
 
 // Admin on-page editing: data-edit-* attrs make the whole block a click-to-edit
@@ -139,6 +140,20 @@ const BAL_COPY = {
   },
 } as const
 
+// Второй путь к тому же контенту — вход через бота, как в блоках аналитики.
+const TG_COPY = {
+  ru: { tgCta: 'Войти через Telegram', or: 'или оставьте контакт' },
+  en: { tgCta: 'Sign in with Telegram', or: 'or leave your contact' },
+  id: { tgCta: 'Masuk lewat Telegram', or: 'atau tinggalkan kontak' },
+  fr: { tgCta: 'Se connecter via Telegram', or: 'ou laissez vos coordonnées' },
+  de: { tgCta: 'Mit Telegram anmelden', or: 'oder Kontakt hinterlassen' },
+  zh: { tgCta: '通过 Telegram 登录', or: '或留下联系方式' },
+  nl: { tgCta: 'Inloggen met Telegram', or: 'of laat uw contact achter' },
+  ban: { tgCta: 'Ngranjing nganggen Telegram', or: 'utawi tinggalang kontak' },
+  pl: { tgCta: 'Zaloguj się przez Telegram', or: 'lub zostaw kontakt' },
+  uk: { tgCta: 'Увійти через Telegram', or: 'або залиште контакт' },
+} as const
+
 const INPUT_CLS =
   'flex-1 min-w-0 rounded-xl border border-[var(--color-border)] bg-white px-3.5 py-2.5 text-[14px] text-[#111827] outline-none focus:border-[var(--color-primary)]'
 
@@ -203,10 +218,14 @@ function useGatedLegal(slug: string, lang: Lang) {
     }
   }, [slug, lang])
 
-  // Returning visitor who already left a lead: reveal without the form.
+  // Уже открывший блок посетитель: оставил контакт раньше либо вошёл через
+  // Telegram. bx_auth — читаемый флаг сессии (см. lib/site-auth), прав он не
+  // даёт: подделка лишь заставит сходить в роут, который проверит подпись.
   useEffect(() => {
     try {
-      if (localStorage.getItem('bx_lead') === '1') void reveal()
+      const hasLead = localStorage.getItem('bx_lead') === '1'
+      const hasAuth = document.cookie.split(';').some(c => c.trim().startsWith('bx_auth='))
+      if (hasLead || hasAuth) void reveal()
     } catch {
       /* ignore */
     }
@@ -223,6 +242,7 @@ function GatedQuestions({
   developerName?: string | null; developerSlug?: string | null; edit?: EditAttrs
 }) {
   const c = pickCopy(COPY, lang)
+  const tg = pickCopy(TG_COPY, lang)
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [website, setWebsite] = useState('') // honeypot
@@ -262,6 +282,15 @@ function GatedQuestions({
         <h3 className="text-[15px] sm:text-[16px] font-semibold text-[#111827]">{title}</h3>
       </div>
       <p className="text-[13.5px] sm:text-[14px] text-[var(--color-text)] mb-3 leading-relaxed">{c.lockLead(count)}</p>
+      <a
+        href={LOGIN_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex w-full sm:w-auto items-center justify-center gap-1.5 rounded-xl bg-[#229ED9] px-4 py-2.5 text-[14px] font-semibold text-white hover:bg-[#1b8ec2] transition-colors"
+      >
+        <Send size={15} /> {tg.tgCta}
+      </a>
+      <p className="my-2.5 text-[12.5px] text-[var(--color-text-soft)]">{tg.or}</p>
       <div className="flex flex-col sm:flex-row gap-2">
         <input value={name} onChange={e => setName(e.target.value)} placeholder={c.namePh} className={INPUT_CLS} autoComplete="name" />
         <input value={phone} onChange={e => setPhone(e.target.value)} placeholder={c.phonePh} className={INPUT_CLS} inputMode="tel" autoComplete="tel" />

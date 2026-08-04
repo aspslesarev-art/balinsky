@@ -7,6 +7,7 @@ import { createClient } from '@supabase/supabase-js'
 import { LEGAL_QUESTIONS_FIELD, LEGAL_BALANCE_NOTES_FIELD, firstAuditString } from '@/lib/legal-audit'
 import { loadComplexAudit } from '@/lib/complex-legal-i18n'
 import { clientIp, rateLimit } from '@/lib/rate-limit'
+import { getSessionTelegramId } from '@/lib/site-auth'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -20,8 +21,12 @@ function hasLeadCookie(req: Request): boolean {
 }
 
 export async function GET(req: Request, { params }: { params: Promise<{ slug: string }> }) {
-  // The lead cookie is the gate: no lead, no red flags.
-  if (!hasLeadCookie(req)) {
+  // Два равноправных ключа от одного замка: оставленный контакт (кука
+  // bx_lead от /api/contact) либо вход через Telegram-бота. Сессия проверяется
+  // по подписи в site-auth, а не по косметическому флагу bx_auth, — иначе
+  // гейт снимался бы подделкой куки в браузере.
+  const unlocked = hasLeadCookie(req) || (await getSessionTelegramId()) !== null
+  if (!unlocked) {
     return NextResponse.json({ error: 'locked' }, { status: 401 })
   }
   if (!rateLimit(`legal:${clientIp(req)}`, 30, 60_000)) {
