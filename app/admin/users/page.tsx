@@ -8,10 +8,10 @@
 // Only signed-in visitors appear here — guest views stay anonymous in
 // page_views with a null telegram_id, exactly as before the accounts existed.
 
-import { redirect } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 import { requireAdmin } from '@/lib/admin-auth'
 import { AdminThemeShell } from '@/components/admin/AdminThemeShell'
+import { LoginForm } from '../_login'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { robots: { index: false, follow: false }, title: 'Люди · Balinsky Admin' }
@@ -44,6 +44,16 @@ type ViewRow = {
   telegram_id: number | null
 }
 
+/** One listing with the signed-in people who opened it. */
+type ListingViewers = {
+  kind: string
+  slug: string
+  title: string | null
+  total: number
+  lastAt: string
+  viewers: Map<number, { count: number; lastAt: string }>
+}
+
 const KIND_LABEL: Record<string, string> = {
   villa: 'Вилла', apartment: 'Апартаменты', complex: 'ЖК', developer: 'Застройщик',
   event: 'Событие', promo: 'Акция', news: 'Новость', knowledge: 'Статья', rental: 'Аренда',
@@ -70,7 +80,9 @@ function displayName(u: UserRow): string {
 }
 
 export default async function AdminUsersPage() {
-  if (!(await requireAdmin())) redirect('/admin/login')
+  // Show the form in place rather than bouncing — /admin/login does not
+  // exist, and a redirect there 404s (as this page did until now).
+  if (!(await requireAdmin())) return <LoginForm />
 
   const [{ data: users }, { data: views }] = await Promise.all([
     sb.from('site_users')
@@ -94,6 +106,33 @@ export default async function AdminUsersPage() {
     if (list) list.push(v)
     else byUser.set(v.telegram_id, [v])
   }
+
+  // The same rows read the other way round: per listing, who looked at it.
+  // Built from the already-loaded views — no second query.
+  const userById = new Map(userList.map(u => [u.telegram_id, u]))
+  const byListing = new Map<string, ListingViewers>()
+  for (const v of viewList) {
+    if (v.telegram_id == null) continue
+    const key = `${v.kind}:${v.slug}`
+    const entry = byListing.get(key) ?? {
+      kind: v.kind, slug: v.slug, title: v.title, total: 0, lastAt: v.created_at, viewers: new Map(),
+    }
+    entry.total++
+    if (v.created_at > entry.lastAt) entry.lastAt = v.created_at
+    if (v.title && !entry.title) entry.title = v.title
+    const seen = entry.viewers.get(v.telegram_id)
+    if (seen) {
+      seen.count++
+      // Don't lean on the query's ordering to decide which visit is latest.
+      if (v.created_at > seen.lastAt) seen.lastAt = v.created_at
+    } else {
+      entry.viewers.set(v.telegram_id, { count: 1, lastAt: v.created_at })
+    }
+    byListing.set(key, entry)
+  }
+  const listings = [...byListing.values()].sort(
+    (a, b) => b.viewers.size - a.viewers.size || b.total - a.total,
+  )
 
   return (
     <AdminThemeShell
@@ -171,6 +210,62 @@ export default async function AdminUsersPage() {
             )
           })}
         </div>
+
+        {listings.length > 0 && (
+          <>
+            <h2 className="mt-12 text-[20px] font-semibold tracking-tight">По объектам</h2>
+            <p className="mt-1 text-[14px] opacity-70">
+              Кто из зарегистрированных открывал конкретный объект. Сверху — то, что смотрело
+              больше разных людей.
+            </p>
+
+            <div className="mt-5 space-y-3">
+              {listings.map(l => (
+                <details key={`${l.kind}:${l.slug}`} className="rounded-2xl border border-black/10 bg-white/60 p-5">
+                  <summary className="cursor-pointer list-none">
+                    <span className="text-[13px] opacity-60">{KIND_LABEL[l.kind] ?? l.kind}</span>
+                    <span className="ml-2 text-[15px] font-semibold">{l.title ?? l.slug}</span>
+                    <span className="ml-3 text-[13px] opacity-60">
+                      {l.viewers.size} чел. · {l.total} просмотров · последний {fmt(l.lastAt)}
+                    </span>
+                  </summary>
+
+                  <table className="mt-4 w-full text-[13px]">
+                    <tbody>
+                      {[...l.viewers.entries()]
+                        .sort((a, b) => b[1].count - a[1].count)
+                        .map(([id, stat]) => {
+                          const u = userById.get(id)
+                          return (
+                            <tr key={id} className="border-t border-black/5">
+                              <td className="py-1.5">
+                                {u ? displayName(u) : `id ${id}`}
+                                {u?.is_agent && <span className="ml-2 text-[12px] opacity-60">агент</span>}
+                              </td>
+                              <td className="w-32 py-1.5 opacity-60">{stat.count} раз</td>
+                              <td className="w-36 py-1.5 opacity-60">{fmt(stat.lastAt)}</td>
+                              <td className="w-24 py-1.5">
+                                {u?.username && (
+                                  <a
+                                    href={`https://t.me/${u.username}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="underline opacity-70"
+                                  >
+                                    написать
+                                  </a>
+                                )}
+                              </td>
+                            </tr>
+                          )
+                        })}
+                    </tbody>
+                  </table>
+                </details>
+              ))}
+            </div>
+          </>
+        )}
       </main>
     </AdminThemeShell>
   )
