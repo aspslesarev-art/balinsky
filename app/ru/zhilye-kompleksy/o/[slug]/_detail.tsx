@@ -1727,6 +1727,44 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
           </section>
         )}
 
+        {/* LOCATION */}
+        {lat != null && lng != null && (
+          <section className="mb-10">
+            <h2 className="text-[18px] sm:text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
+              {copy.location}
+            </h2>
+            <div className="text-[14px] text-[var(--color-text)] mb-3">
+              {/* TASK-13d: full geo chain (area → kecamatan → regency → island)
+                  so "Badung Regency" is present on the page, fixing the
+                  "Missing: badung regency" flag in our snippets. */}
+              {districtRaw ? geoChainString(districtRaw) : copy.locationLine(district)}
+            </div>
+            {access && <ComplexAccessBlock access={access} lang={lang} />}
+            {process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY && (
+              <GatedBlock lang={lang}>
+                <div className="mb-4">
+                  <NeighborhoodHeatMap
+                    apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}
+                    lat={lat}
+                    lng={lng}
+                    title={name}
+                    lang={lang}
+                  />
+                </div>
+              </GatedBlock>
+            )}
+            <a
+              href={gmap ?? `https://www.google.com/maps?q=${lat},${lng}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border border-[var(--color-border)] text-[14px] font-medium text-[var(--color-text)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)]"
+            >
+              <MapIcon size={16} className="text-[var(--color-primary)]" />
+              {copy.openInMaps}
+            </a>
+          </section>
+        )}
+
         {/* ИНВЕСТ-СИГНАЛЫ — синтез инвест-показателей ЖК (доходность, пляжная
             зона, загрузка vs район, срок сдачи). Стоит над детальным блоком
             «Сколько зарабатывают соседи» как краткая сводка. */}
@@ -1850,44 +1888,6 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
         {/* Блок «Документы и материалы» убран: ссылки вели во внутренние
             папки застройщика (презентации, рендеры, мастерплан, 3D-туры),
             публиковать их на странице не нужно. Поля в базе остались. */}
-
-        {/* LOCATION */}
-        {lat != null && lng != null && (
-          <section className="mb-10">
-            <h2 className="text-[18px] sm:text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
-              {copy.location}
-            </h2>
-            <div className="text-[14px] text-[var(--color-text)] mb-3">
-              {/* TASK-13d: full geo chain (area → kecamatan → regency → island)
-                  so "Badung Regency" is present on the page, fixing the
-                  "Missing: badung regency" flag in our snippets. */}
-              {districtRaw ? geoChainString(districtRaw) : copy.locationLine(district)}
-            </div>
-            {access && <ComplexAccessBlock access={access} lang={lang} />}
-            {process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY && (
-              <GatedBlock lang={lang}>
-                <div className="mb-4">
-                  <NeighborhoodHeatMap
-                    apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}
-                    lat={lat}
-                    lng={lng}
-                    title={name}
-                    lang={lang}
-                  />
-                </div>
-              </GatedBlock>
-            )}
-            <a
-              href={gmap ?? `https://www.google.com/maps?q=${lat},${lng}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border border-[var(--color-border)] text-[14px] font-medium text-[var(--color-text)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)]"
-            >
-              <MapIcon size={16} className="text-[var(--color-primary)]" />
-              {copy.openInMaps}
-            </a>
-          </section>
-        )}
 
         {/* VIDEOS */}
         {complexVideos.length > 0 && (
