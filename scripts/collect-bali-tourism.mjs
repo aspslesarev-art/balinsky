@@ -42,6 +42,12 @@ const COST_PER_REQ = 0.040 // USD, Enterprise+Atmosphere search, conservative
 // foreign tourist actually spends money on — beach clubs, fine dining, spas,
 // gyms, kids' entertainment, marinas — plus the zones pass 1-2 never anchored.
 const PASS = Number((ARGS.find(a => a.startsWith('--pass=')) || '--pass=3').split('=')[1])
+// Google returns the 5 reviews most relevant to the REQUESTED language, so a
+// sweep run with languageCode:'ru' makes even a local warung look like it is
+// reviewed by foreigners. `--lang=none` omits the field entirely, which gives
+// an unbiased sample — that's how we tell tourist spots from local ones.
+const LANG = (ARGS.find(a => a.startsWith('--lang=')) || '--lang=ru').split('=')[1]
+const LANG_FIELD = LANG === 'none' ? {} : { languageCode: LANG }
 
 const SUFFIX = PASS > 2 ? `-p${PASS}` : ''
 const OUT_PATH = path.resolve(`scripts/_bali-tourism${SUFFIX}.json`)
@@ -157,7 +163,7 @@ const PASS3_TEXT_ROOTS = [
 
 const ALL_ZONES = PASS > 2 ? [...ZONES, ...PASS3_ZONES] : ZONES
 const ALL_NEARBY_ROOTS = PASS > 2 ? [...NEARBY_ROOTS, ...PASS3_NEARBY_ROOTS] : NEARBY_ROOTS
-const ALL_TEXT_ROOTS = PASS > 2 ? [...TEXT_ROOTS, ...PASS3_TEXT_ROOTS] : TEXT_ROOTS
+const ALL_TEXT_ROOTS = PASS === 4 ? [] : PASS > 2 ? [...TEXT_ROOTS, ...PASS3_TEXT_ROOTS] : TEXT_ROOTS
 
 // ---- field mask: full atmosphere detail, no photo bytes ----
 const FIELDS = ['id', 'displayName', 'formattedAddress', 'shortFormattedAddress', 'location', 'types', 'primaryType', 'primaryTypeDisplayName', 'rating', 'userRatingCount', 'priceLevel', 'businessStatus', 'googleMapsUri', 'websiteUri', 'internationalPhoneNumber', 'nationalPhoneNumber', 'regularOpeningHours', 'currentOpeningHours', 'editorialSummary', 'reviews', 'photos', 'plusCode', 'utcOffsetMinutes', 'goodForChildren', 'goodForGroups', 'liveMusic', 'outdoorSeating', 'reservable', 'servesBreakfast', 'servesBrunch', 'servesLunch', 'servesDinner', 'servesVegetarianFood', 'servesCocktails', 'servesCoffee', 'servesDessert', 'delivery', 'dineIn', 'takeout', 'allowsDogs', 'parkingOptions', 'paymentOptions', 'accessibilityOptions']
@@ -172,7 +178,7 @@ let ck = loadJSON(CK_PATH, null)
 // pairs — otherwise it would re-buy every combination pass 1-2 already covered
 // and only the new zones/categories would be new money well spent.
 if (!ck) {
-  const seed = PASS > 2 ? loadJSON(PREV_CK_PATH, { done: [] }).done ?? [] : []
+  const seed = PASS === 3 ? loadJSON(PREV_CK_PATH, { done: [] }).done ?? [] : []
   ck = { done: seed, requests: 0, spent: 0 }
   if (seed.length) console.log(`seeded ${seed.length} finished roots from pass 1-2 — those won't be charged again`)
 }
@@ -217,7 +223,7 @@ async function nearbyRoot(types, lat, lng, radius, zone, cat) {
   let added = 0, seen = 0, rev = 0
   for (const rank of ['POPULARITY', 'DISTANCE']) {
     if (!chargeable()) return { added, seen, rev, capped: true }
-    const body = { includedTypes: types, maxResultCount: 20, languageCode: 'ru', rankPreference: rank, locationRestriction: { circle: { center: { latitude: lat, longitude: lng }, radius } } }
+    const body = { includedTypes: types, maxResultCount: 20, ...LANG_FIELD, rankPreference: rank, locationRestriction: { circle: { center: { latitude: lat, longitude: lng }, radius } } }
     const res = await doSearch('searchNearby', body, NEARBY_MASK)
     const list = res.places || []
     seen += list.length
@@ -231,7 +237,7 @@ async function textRoot(query, lat, lng, radius, zone, cat) {
   let token = null, pages = 0, added = 0, seen = 0, rev = 0
   do {
     if (!chargeable()) return { added, seen, rev, capped: true }
-    const body = { textQuery: `${query} ${zone} Bali`, pageSize: 20, languageCode: 'ru', locationBias: { circle: { center: { latitude: lat, longitude: lng }, radius } } }
+    const body = { textQuery: `${query} ${zone} Bali`, pageSize: 20, ...LANG_FIELD, locationBias: { circle: { center: { latitude: lat, longitude: lng }, radius } } }
     if (token) body.pageToken = token
     const res = await doSearch('searchText', body, TEXT_MASK)
     const list = res.places || []
