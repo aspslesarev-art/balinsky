@@ -43,7 +43,31 @@ const BUCKETS: Record<string, Record<string, string>> = {
   coworking: { ru: 'коворкингов', en: 'coworkings', id: 'coworking', fr: 'espaces de coworking', de: 'Coworkings', zh: '个联合办公空间', nl: 'coworkings', ban: 'coworking', pl: 'coworkingów', uk: 'коворкінгів' },
 }
 
-function bucketLabel(bucket: string, lang: Lang): string {
+// Slavic languages decline the noun after a number: 161 ресторан, 162 ресторана,
+// 165 ресторанов. The single genitive-plural form in BUCKETS is only correct for
+// the last case, so spell all three out where it matters.
+const PLURALS: Record<string, Partial<Record<Lang, [string, string, string]>>> = {
+  restaurant: { ru: ['ресторан', 'ресторана', 'ресторанов'], uk: ['ресторан', 'ресторани', 'ресторанів'] },
+  bar: { ru: ['бар', 'бара', 'баров'], uk: ['бар', 'бари', 'барів'] },
+  beach_club: { ru: ['бич-клуб', 'бич-клуба', 'бич-клубов'], uk: ['біч-клуб', 'біч-клуби', 'біч-клубів'] },
+  beach: { ru: ['пляж', 'пляжа', 'пляжей'], uk: ['пляж', 'пляжі', 'пляжів'] },
+  spa: { ru: ['спа-салон', 'спа-салона', 'спа-салонов'], uk: ['спа-салон', 'спа-салони', 'спа-салонів'] },
+  fitness: { ru: ['спортзал', 'спортзала', 'спортзалов'], uk: ['спортзал', 'спортзали', 'спортзалів'] },
+  hotel: { ru: ['отель', 'отеля', 'отелей'], uk: ['готель', 'готелі', 'готелів'] },
+  attraction: { ru: ['достопримечательность', 'достопримечательности', 'достопримечательностей'], uk: ['визначне місце', 'визначні місця', 'визначних місць'] },
+  coworking: { ru: ['коворкинг', 'коворкинга', 'коворкингов'], uk: ['коворкінг', 'коворкінги', 'коворкінгів'] },
+}
+
+function bucketLabel(bucket: string, lang: Lang, n?: number): string {
+  const forms = n != null ? PLURALS[bucket]?.[lang] : undefined
+  if (forms) {
+    const mod100 = n! % 100
+    const mod10 = n! % 10
+    if (mod100 >= 11 && mod100 <= 14) return forms[2]
+    if (mod10 === 1) return forms[0]
+    if (mod10 >= 2 && mod10 <= 4) return forms[1]
+    return forms[2]
+  }
   return BUCKETS[bucket]?.[lang] ?? BUCKETS[bucket]?.en ?? bucket
 }
 
@@ -83,7 +107,7 @@ export function SurroundingsBlock({ data, lang }: { data: Surroundings | null; l
           {counts.map((c, i) => (
             <span key={c.bucket}>
               {i > 0 && <span className="text-[var(--color-text-muted)]"> · </span>}
-              <strong className="font-semibold">{c.n}</strong> {bucketLabel(c.bucket, lang)}
+              <strong className="font-semibold">{c.n}</strong> {bucketLabel(c.bucket, lang, c.n)}
             </span>
           ))}
           {data.touristShare != null && (
