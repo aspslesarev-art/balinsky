@@ -16,6 +16,10 @@ import { buildListHref, buildMapHref } from '@/lib/filter-href'
 import { loadCatalogPage, buildHeadingLoc } from './_lib'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
+// Absolute origin for JSON-LD `item`/`url` — schema.org consumers want fully
+// qualified URLs. Same source as lib/sitemap-data.ts.
+const SITE_ORIGIN = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
+
 const COPY = {
   ru: {
     page: 'страница', of: 'из',
@@ -134,8 +138,42 @@ export async function ApartamentyCatalog({
     ?? buildHeadingLoc(filters, lang)
   const sectionRoot = switchLangPath('/ru/apartamenty', lang)
 
+  // Structured data for the catalog itself — see the twin block in
+  // app/ru/villy/_catalog.tsx. Product markup lived only on detail pages, so
+  // the hub read as plain text to Google rather than a priced listing.
+  const catalogJsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Balinsky', item: `${SITE_ORIGIN}${switchLangPath('/ru', lang)}` },
+          { '@type': 'ListItem', position: 2, name: heading, item: `${SITE_ORIGIN}${sectionRoot}` },
+        ],
+      },
+      ...(actualPage === 1 && cards.length > 0 ? [{
+        '@type': 'ItemList',
+        name: heading,
+        numberOfItems: totalCount,
+        itemListElement: cards.map((c, i) => ({
+          '@type': 'ListItem',
+          position: i + 1,
+          item: {
+            '@type': 'Product',
+            name: c.title,
+            url: `${SITE_ORIGIN}${switchLangPath(`/ru/apartamenty/o/${c.slug}`, lang)}`,
+            ...(c.priceUsd != null && Number.isFinite(c.priceUsd)
+              ? { offers: { '@type': 'Offer', price: c.priceUsd, priceCurrency: 'USD', availability: 'https://schema.org/InStock' } }
+              : {}),
+          },
+        })),
+      }] : []),
+    ],
+  }
+
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(catalogJsonLd) }} />
       <Header active="apartamenty" />
 
       <PageContainer>
