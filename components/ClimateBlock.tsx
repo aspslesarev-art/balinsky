@@ -12,7 +12,7 @@ import type { Climate, GeoFacts } from '@/lib/complex-access'
 import { pickCopy, type Lang } from '@/lib/i18n'
 
 const COPY = {
-  ru: { title: 'Солнце и погода', sunny: 'солнечных дней в году', best: 'Лучшие месяцы', worst: 'Сезон дождей', air: 'Воздух', airGood: 'хороший', airOk: 'умеренный', perMonth: 'дней с солнцем в месяц' },
+  ru: { title: 'Солнце и погода', sunny: 'солнечных дней в году', best: 'Лучшие месяцы', worst: 'Сезон дождей', air: 'Воздух', airGood: 'хороший', airOk: 'умеренный', perMonth: 'солнечных дней в месяц' },
   en: { title: 'Sun and weather', sunny: 'bright sunny days a year', best: 'Best months', worst: 'Rainy season', air: 'Air', airGood: 'good', airOk: 'moderate', perMonth: 'sunny days a month' },
   id: { title: 'Matahari dan cuaca', sunny: 'hari cerah per tahun', best: 'Bulan terbaik', worst: 'Musim hujan', air: 'Udara', airGood: 'baik', airOk: 'sedang', perMonth: 'hari cerah per bulan' },
   fr: { title: 'Soleil et météo', sunny: 'journées ensoleillées par an', best: 'Meilleurs mois', worst: 'Saison des pluies', air: 'Air', airGood: 'bon', airOk: 'moyen', perMonth: 'jours de soleil par mois' },
@@ -54,6 +54,25 @@ function monthRun(climate: Climate, pick: (m: { sunny: number }) => boolean): nu
     } else run = []
   }
   return best
+}
+
+// Russian and Ukrainian decline both the adjective and the noun after a
+// number: 21 солнечный день, 22 солнечных дня, 25 солнечных дней. Spelling the
+// three forms out beats patching substrings.
+const PLURAL_FORMS: Partial<Record<Lang, [string, string, string]>> = {
+  ru: ['солнечный день в месяц', 'солнечных дня в месяц', 'солнечных дней в месяц'],
+  uk: ['сонячний день на місяць', 'сонячні дні на місяць', 'сонячних днів на місяць'],
+}
+
+function perMonthPhrase(n: number, lang: Lang, fallback: string): string {
+  const forms = PLURAL_FORMS[lang]
+  if (!forms) return fallback
+  const mod100 = n % 100
+  const mod10 = n % 10
+  if (mod100 >= 11 && mod100 <= 14) return forms[2]
+  if (mod10 === 1) return forms[0]
+  if (mod10 >= 2 && mod10 <= 4) return forms[1]
+  return forms[2]
 }
 
 function runLabel(run: number[], lang: Lang): string | null {
@@ -105,7 +124,7 @@ export function ClimateBlock({ climate, air, lang }: Props) {
             <span className="shrink-0 text-[13px] text-[var(--color-text-muted)]">{t.best}:</span>
             <span className="truncate text-[13px] font-medium text-[#111827]">
               {bestLabel}
-              {bestAvg ? ` · ${bestAvg} ${t.perMonth}` : ''}
+              {bestAvg ? ` · ${bestAvg} ${perMonthPhrase(bestAvg, lang, t.perMonth)}` : ''}
             </span>
           </div>
         )}
