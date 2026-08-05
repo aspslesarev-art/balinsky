@@ -144,22 +144,27 @@ async function climateFor(lat, lng) {
     if (rh != null && rh > -100) { m.rh += rh; m.rhN++ }
   }
 
+  // The archive starts on 1 January and ends a month back, so the observed
+  // years are incomplete — averaging raw counts would report "135 sunny days
+  // out of 335". Work in RATES per observed day and project each month onto its
+  // real length, so the year always adds up to 365.
+  const MONTH_DAYS = { '01': 31, '02': 28, '03': 31, '04': 30, '05': 31, '06': 30, '07': 31, '08': 31, '09': 30, '10': 31, '11': 30, '12': 31 }
   const yearCount = Math.max(1, years.size)
   const out = {}
   let sunnyYear = 0, wetYear = 0, daysYear = 0
   for (const [mm, m] of Object.entries(byMonth)) {
     if (!m.n) continue
-    const sunny = Math.round(m.sunny / yearCount)
-    const wet = Math.round(m.wet / yearCount)
-    const days = Math.round(m.n / yearCount)
-    sunnyYear += m.sunny / yearCount
-    wetYear += m.wet / yearCount
-    daysYear += m.n / yearCount
+    const len = MONTH_DAYS[mm] ?? 30
+    const sunny = Math.round((m.sunny / m.n) * len)
+    const wet = Math.round((m.wet / m.n) * len)
+    sunnyYear += sunny
+    wetYear += wet
+    daysYear += len
     out[mm] = {
-      days,
+      days: len,
       sunny,
       wet,
-      mixed: Math.max(0, days - sunny - wet),
+      mixed: Math.max(0, len - sunny - wet),
       rain_mm: +(m.rain / m.n).toFixed(1),
       t_max: m.tmaxN ? +(m.tmax / m.tmaxN).toFixed(1) : null,
       rh: m.rhN ? Math.round(m.rh / m.rhN) : null,
@@ -167,10 +172,10 @@ async function climateFor(lat, lng) {
   }
   if (!Object.keys(out).length) return null
   out.year = {
-    days: Math.round(daysYear),
-    sunny: Math.round(sunnyYear),
-    wet: Math.round(wetYear),
-    mixed: Math.max(0, Math.round(daysYear - sunnyYear - wetYear)),
+    days: daysYear,
+    sunny: sunnyYear,
+    wet: wetYear,
+    mixed: Math.max(0, daysYear - sunnyYear - wetYear),
     years: yearCount,
   }
   return out
