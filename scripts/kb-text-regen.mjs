@@ -30,7 +30,23 @@ const ONLY = val('only') ? val('only').split(',') : ['villa', 'apartment', 'comp
 const EFFORT = val('effort') ?? 'medium'
 // Separate output file lets a pro run sit alongside the standard one for
 // side-by-side comparison instead of overwriting it.
-const OUT_KEY = val('out') ?? '_texts.json'
+const LANG = val('lang') ?? 'ru'
+// Каждый язык пишется в свой файл, чтобы прогоны не затирали друг друга.
+const OUT_KEY = val('out') ?? (LANG === 'ru' ? '_texts.json' : `_texts-${LANG}.json`)
+
+// Пишем НА языке локали, а не переводим с русского: перевод тянет за собой
+// русский синтаксис и «переводной» тон, который читается как машинный.
+const LANGS = {
+  ru: { name: 'русском', site: 'русскоязычного', hint: 'Названия районов склоняй по-русски: «в Убуде», «в Чангу», «в Семиньяке», а не «в Ubud». Латиницу оставляй только для названий комплексов и застройщиков.' },
+  en: { name: 'English', site: 'English-language', hint: 'Use natural British-neutral English. Keep Balinese place names in Latin script (Ubud, Canggu, Seminyak). Never transliterate Russian.' },
+  de: { name: 'Deutsch', site: 'deutschsprachigen', hint: 'Natürliches Deutsch, keine Übersetzungssprache. Ortsnamen lateinisch (Ubud, Canggu, Seminyak).' },
+  fr: { name: 'français', site: 'francophone', hint: 'Français naturel, sans calque. Noms de lieux en alphabet latin (Ubud, Canggu, Seminyak).' },
+  id: { name: 'Bahasa Indonesia', site: 'berbahasa Indonesia', hint: 'Bahasa Indonesia yang wajar untuk pembeli properti. Nama tempat tetap: Ubud, Canggu, Seminyak.' },
+  zh: { name: '中文', site: '中文', hint: '使用自然的简体中文。地名保留拉丁字母：Ubud、Canggu、Seminyak。' },
+  nl: { name: 'Nederlands', site: 'Nederlandstalige', hint: 'Natuurlijk Nederlands, geen vertaalstijl. Plaatsnamen in Latijns schrift (Ubud, Canggu, Seminyak).' },
+}
+const L = LANGS[LANG]
+if (!L) { console.error(`неизвестный язык: ${LANG}. Доступны: ${Object.keys(LANGS).join(', ')}`); process.exit(1) }
 
 // Rates read off Cost Management 2026-07. pro output is 12× the standard model,
 // so the variant count is the main budget lever.
@@ -58,7 +74,7 @@ const SOURCES = {
 // виллу", "сколько стоит"); the existing copy is skewed into an investment
 // frame that the RU audience is not actually searching for. New copy sells the
 // property, not a yield story.
-const WRITER_SYSTEM = `Ты — редактор русскоязычного маркетплейса недвижимости Бали balinsky.info. Пишешь текст карточки объекта для покупателя, который выбирает, что купить.
+const WRITER_SYSTEM = `Ты — редактор ${L.site} маркетплейса недвижимости Бали balinsky.info. ВЕСЬ вывод пиши на языке: ${L.name}. ${L.hint}\n Пишешь текст карточки объекта для покупателя, который выбирает, что купить.
 
 Пиши строгий JSON без markdown:
 {
@@ -77,7 +93,7 @@ const WRITER_SYSTEM = `Ты — редактор русскоязычного м
 - faq: 3-5 пар. Вопросы — те, что реально задаёт покупатель (что входит в цену, какой срок аренды земли, когда сдача, что рядом, можно ли сдавать).
 - Каждый текст должен быть уникален для этого объекта: используй его цифры, район и то, что видно на фото. Никаких шаблонов, применимых к любому листингу.
 - НИКОГДА не ссылайся на источник данных. Запрещены обороты «в фактах указано», «по данным выше», «согласно описанию», «на фото видно», «в карточке сказано». Читатель не знает ни про какие факты и фото-анализ — пиши так, будто это твоё собственное знание об объекте.
-- Названия районов склоняй по-русски и естественно: «в Убуде», «в Чангу», «в Семиньяке», а не «в Ubud». Латиницу оставляй только для названий комплексов и застройщиков.`
+- Все поля JSON (title, meta, lead, body, faq) должны быть на языке ${L.name}. Ни одного слова на другом языке, кроме имён собственных.`
 
 const JUDGE_SYSTEM = `Ты — главный редактор. Тебе дают несколько вариантов текста для ОДНОЙ карточки недвижимости. Выбери лучший и верни строгий JSON: {"best": <индекс с 0>, "reason": "<до 15 слов>"}.
 Критерии по убыванию важности: фактическая точность (ничего не выдумано сверх FACTS), конкретность вместо общих слов, отсутствие обещаний доходности, читаемость, соответствие длин (title ≤60, meta 140-155).`
@@ -238,7 +254,7 @@ async function processKind(kind) {
       try {
         const { variants, best, judge_reason } = await generate(facts, vision[id])
         made++; consec = 0
-        const record = { lang: 'ru', model: MODEL, variants, best, judge_reason, at: new Date().toISOString().slice(0, 10) }
+        const record = { lang: LANG, model: MODEL, variants, best, judge_reason, at: new Date().toISOString().slice(0, 10) }
         if (DRY) { const v = variants[best]; console.log(`\n[${id}] ${facts.slug}\n  title: ${v.title}\n  meta:  ${v.meta}\n  lead:  ${v.lead}\n  body:  ${v.body?.length} абз., faq: ${v.faq?.length} — выбран ${best} (${judge_reason})`); continue }
         results.set(id, record)
         if (++sinceCheckpoint >= CHECKPOINT) { sinceCheckpoint = 0; await uploadManifest(bucket, OUT_KEY, merged()) }
@@ -257,7 +273,7 @@ async function processKind(kind) {
   }
 }
 
-console.log(`KB text regen — ${MODEL}${DRY ? ' [DRY]' : ''}${FORCE ? ' [FORCE]' : ''} variants=${VARIANTS} conc=${CONC}${LIMIT ? ` limit=${LIMIT}` : ''}`)
+console.log(`KB text regen [${LANG}] — ${MODEL}${DRY ? ' [DRY]' : ''}${FORCE ? ' [FORCE]' : ''} variants=${VARIANTS} conc=${CONC}${LIMIT ? ` limit=${LIMIT}` : ''}`)
 const start = Date.now()
 for (const k of ONLY) { if (SOURCES[k]) await processKind(k) }
 console.log(`\nDone in ${Math.round((Date.now() - start) / 1000)}s — written ${made}, failed ${failed}, skipped ${skipped} — spent $${cost.toFixed(2)}`)

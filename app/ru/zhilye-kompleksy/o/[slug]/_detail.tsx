@@ -66,6 +66,7 @@ import { districtRu } from '@/lib/district-ru'
 import { geoChainString } from '@/lib/regency'
 import { loadKbPageContent } from '@/lib/kb-page-content'
 import { loadListingVision, loadVisionManifest, altFor } from '@/lib/listing-features'
+import { loadListingCopy } from '@/lib/listing-copy'
 import { curateManifest } from '@/lib/listing-photos'
 import { DistrictAboutCard } from '@/components/DistrictAboutCard'
 import { getDistrictCopy } from '@/lib/districts'
@@ -1258,6 +1259,8 @@ export async function generateComplexMetadata(slug: string, lang: Lang) {
   const c = await loadComplexBySlug(slug)
   if (!c) return { robots: { index: false } }
   const copy = pickCopy(COPY, lang)
+  // Сгенерированная копия — русская; остальные локали идут прежним путём.
+  const gen = lang === 'ru' ? await loadListingCopy('complex', c.airtable_id) : null
   const name = firstString(c.data['Project']) ?? slug
   const districtRaw = firstString(c.data['Location 2']) ?? firstString(c.data['Location'])
   const district = lang === 'ru' ? districtRu(districtRaw) : districtRaw
@@ -1279,7 +1282,8 @@ export async function generateComplexMetadata(slug: string, lang: Lang) {
     areas: units.map(u => Number(u.area)).filter(n => Number.isFinite(n)),
     beds: units.map(u => Number(u.bedrooms)).filter(n => Number.isFinite(n)),
   }, lang)
-  const description = facts
+  const description = gen?.meta?.slice(0, 160).trim()
+    ?? facts
     ?? (seoText
       ? seoText.slice(0, 160).trim() + (seoText.length > 160 ? '…' : '')
       : copy.fallbackDesc(name, district, types, yearRaw))
@@ -1287,7 +1291,7 @@ export async function generateComplexMetadata(slug: string, lang: Lang) {
   const enPath = `/en/complexes/o/${slug}`
   const path = switchLangPath(ruPath, lang)
   return {
-    title: copy.titlePart(name, district, unitTypesPhrase(c.data['Типы юнитов'], lang)),
+    title: gen?.title ?? copy.titlePart(name, district, unitTypesPhrase(c.data['Типы юнитов'], lang)),
     description,
     alternates: {
       canonical: path,
