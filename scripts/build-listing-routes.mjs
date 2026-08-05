@@ -32,6 +32,13 @@ const ONLY_MISSING = ARGS.includes('--only-missing')
 // Elevation is nearly free while Routes is not, so allow topping up altitudes
 // alone — e.g. after the Elevation API is finally enabled on the project.
 const ELEVATION_ONLY = ARGS.includes('--elevation-only')
+// A route measured at 2am and one measured at 10am are different roads on Bali
+// (Bingin→airport: 46 min vs 75). With --departure the run computes the rush
+// hour figure and lands it in routes_peak, leaving the free-flow one intact.
+const DEPARTURE = (ARGS.find(a => a.startsWith('--departure=')) || '').split('=')[1] || null
+// Restrict to some listing kinds — the complex page is what renders these, and
+// villas/apartments can be topped up later without re-buying complexes.
+const KINDS = ((ARGS.find(a => a.startsWith('--kinds=')) || '').split('=')[1] || '').split(',').filter(Boolean)
 const CAP = Number((ARGS.find(a => a.startsWith('--cap=')) || '--cap=60').split('=')[1])
 
 // Traffic-aware routing bills at the Advanced tier, free-flow at Essentials.
@@ -61,7 +68,10 @@ async function loadListings() {
     rows.push(...(data ?? []))
     if (!data || data.length < 1000) break
   }
-  if (!ONLY_MISSING) return rows
+  const kindFiltered = KINDS.length ? rows.filter(r => KINDS.includes(r.kind)) : rows
+  if (!ONLY_MISSING) return kindFiltered
+  rows.length = 0
+  rows.push(...kindFiltered)
 
   const done = new Set()
   for (let from = 0; ; from += 1000) {
@@ -84,12 +94,17 @@ async function routeMatrix(origins) {
     travelMode: 'DRIVE',
     routingPreference: TRAFFIC ? 'TRAFFIC_AWARE' : 'TRAFFIC_UNAWARE',
   }
+  // Routes rejects a departureTime in the past, so the caller passes the next
+  // upcoming weekday morning rather than "last Friday at 10".
+  if (DEPARTURE) body.departureTime = DEPARTURE
   const r = await fetch('https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'X-Goog-Api-Key': KEY,
-      'X-Goog-FieldMask': 'originIndex,destinationIndex,duration,distanceMeters,condition',
+      // staticDuration is the same route with no traffic at all. It rides along
+      // free, so one request gives both "clear road" and "at this hour".
+      'X-Goog-FieldMask': 'originIndex,destinationIndex,duration,staticDuration,distanceMeters,condition',
     },
     body: JSON.stringify(body),
   })
@@ -144,7 +159,11 @@ for (let i = 0; !ELEVATION_ONLY && i < listings.length; i += ORIGINS_PER_REQ) {
     if (!origin || !dest) continue
     const rec = byId.get(`${origin.kind}|${origin.airtable_id}`)
     if (!rec) continue
-    rec.routes[dest[0]] = { s: Number(String(cell.duration).replace('s', '')), m: cell.distanceMeters ?? null }
+    rec.routes[dest[0]] = {
+      s: Number(String(cell.duration).replace('s', '')),
+      static_s: cell.staticDuration != null ? Number(String(cell.staticDuration).replace('s', '')) : null,
+      m: cell.distanceMeters ?? null,
+    }
   }
   process.stdout.write(`\r  routed ${Math.min(i + ORIGINS_PER_REQ, listings.length)}/${listings.length}  ≈$${spent.toFixed(2)}`)
 }
@@ -168,6 +187,12 @@ for (let i = 0; i < listings.length; i += 400) {
 // survive instead of being overwritten with null.
 const rows = [...byId.values()].map(r => (ELEVATION_ONLY
   ? { kind: r.kind, airtable_id: r.airtable_id, lat: r.lat, lng: r.lng, elevation_m: r.elevation_m, computed_at: now }
+  : DEPARTURE
+  ? {
+      kind: r.kind, airtable_id: r.airtable_id, lat: r.lat, lng: r.lng,
+      routes_peak: Object.keys(r.routes).length ? r.routes : null,
+      routes_peak_at: DEPARTURE,
+    }
   : {
       kind: r.kind, airtable_id: r.airtable_id, lat: r.lat, lng: r.lng,
       routes: Object.keys(r.routes).length ? r.routes : null,

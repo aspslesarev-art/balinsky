@@ -1762,7 +1762,14 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
                   "Missing: badung regency" flag in our snippets. */}
               {districtRaw ? geoChainString(districtRaw) : copy.locationLine(district)}
             </div>
-            {access && <ComplexAccessBlock access={access} lang={lang} elevationM={geoFacts?.elevation_m ?? null} />}
+            {access && (
+              <ComplexAccessBlock
+                access={access}
+                lang={lang}
+                elevationM={geoFacts?.elevation_m ?? null}
+                routes={geoFacts?.routes ?? null}
+              />
+            )}
             <ClimateBlock climate={geoFacts?.climate ?? null} air={geoFacts?.air ?? null} lang={lang} />
             {process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY && (
               <GatedBlock lang={lang}>
