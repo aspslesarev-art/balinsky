@@ -59,7 +59,7 @@ export function ReviewsHeatToggle({
         }
       >
         <Flame size={15} className={on ? 'text-white' : 'text-[#FF5A36]'} />
-        {pickCopy({ ru: 'Карта туризма', en: 'Tourism map', id: 'Peta wisata', fr: 'Carte touristique', de: 'Tourismuskarte', zh: '旅游热力图', nl: 'Toeristische kaart', ban: 'Peta pariwisata', pl: 'Mapa turystyki', uk: 'Карта туризму' }, lang)}
+        {pickCopy({ ru: 'Карта иностранцев', en: 'Where foreigners go', id: 'Peta orang asing', fr: 'Carte des étrangers', de: 'Wo Ausländer sind', zh: '外国人聚集地图', nl: 'Waar buitenlanders zijn', ban: 'Peta orang asing', pl: 'Mapa obcokrajowców', uk: 'Карта іноземців' }, lang)}
       </button>
       {on && (
         <div className="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white/90 backdrop-blur shadow-sm text-[11px] text-[var(--color-text-muted)]">

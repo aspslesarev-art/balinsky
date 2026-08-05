@@ -7,12 +7,12 @@ export type HeatCell = { lat: number; lng: number; weight: number }
 export type ReviewHeat = { cells: HeatCell[]; max: number }
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
-// Pre-aggregated by scripts/build-heat-pois.mjs from the Google Places POIs in
-// _nearby_places (restaurants / bars / attractions / wellness / beach clubs,
-// mid-price and up — local warungs filtered out). This is the "where it's
-// lively for tourists" signal, island-wide and far better covered than the
-// rental-competitor reviews (which are blank in Ubud/Sanur).
-const POIS_URL = `${SUPABASE_URL}/storage/v1/object/public/competitors/_heat_pois.json`
+// Pre-aggregated by scripts/build-tourist-heat.mjs from bali_places: every
+// graded venue weighted by WHO reviews it (foreign vs local audience, see
+// migrations 052-054), not by how many reviews it has. The previous source,
+// _heat_pois.json, was raw POI density — it drew "where Google knows a lot of
+// places", so Denpasar burned as hot as Canggu.
+const POIS_URL = `${SUPABASE_URL}/storage/v1/object/public/competitors/_heat_tourists.json`
 
 const CELL = 0.0045
 

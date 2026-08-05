@@ -657,19 +657,26 @@ function num(v: unknown): number | null {
   return null
 }
 
-// Sample the tourism heatmap at a listing's coordinates → 0–100: how much
-// reviewed-POI activity sits within ~1 km. Sum of nearby cell weights (so a
-// dense cluster beats a lone hot spot), normalised by the single hottest cell
-// ×2 with a sqrt curve. Calibrated against real villa coords — Berawa ~85,
-// Sanur ~52, Ubud ~36, Uluwatu ~26 — so the 30/55 thresholds discriminate.
+// Sample the foreign-audience heatmap at a listing's coordinates → 0–100: how
+// many foreigner-facing venues sit within ~2 km (sum of cell weights, so a
+// dense cluster beats a lone hot spot).
+//
+// Recalibrated Aug 2026 for the new layer (venues weighted by whether their
+// reviewers are foreign, not by review volume). The old normaliser — hottest
+// cell ×2 over a 1 km radius — saturated instantly on these weights: Canggu,
+// Bingin, Ubud and Nusa Dua all pinned at 100. A 2 km radius against the p95 of
+// the per-listing distribution (~60) restores the spread and cuts listings with
+// nothing graded nearby from 335 to 27. Reference points: Bingin 100, Batu
+// Bolong 97, Ubud 88, Berawa 85, Pererenan 83, Nusa Dua 70, Sanur 60,
+// Seminyak 57, Jimbaran 42, Denpasar 6.
+const TOURISM_RADIUS_KM = 2.0
+const TOURISM_P95 = 60
 function tourismDensityAt(lat: number | null, lng: number | null, heat: { cells: HeatCell[]; max: number }): number | null {
   if (lat == null || lng == null || !heat.cells.length) return null
-  let trueMax = 1
-  for (const c of heat.cells) if (c.weight > trueMax) trueMax = c.weight
   let sum = 0
-  for (const c of heat.cells) if (haversineKm(lat, lng, c.lat, c.lng) <= 1.0) sum += c.weight
+  for (const c of heat.cells) if (haversineKm(lat, lng, c.lat, c.lng) <= TOURISM_RADIUS_KM) sum += c.weight
   if (sum <= 0) return 0
-  return Math.round(Math.min(1, Math.sqrt(sum / (trueMax * 2))) * 100)
+  return Math.round(Math.min(1, Math.sqrt(sum / TOURISM_P95)) * 100)
 }
 
 // Map the freeform `Статус` / `Готовность` field to a stable bucket so the
@@ -842,8 +849,8 @@ async function searchSupabaseTable(
   })
 
   const photoManifest = photoBucket ? await loadPhotoManifest(photoBucket) : {}
-  // Tourism map (Google-reviewed POI density) — used to tell the model how
-  // lively the area around each result is. Cached loader; never blocks search.
+  // Foreign-audience map — used to tell the model whether the crowd around each
+  // result is expat/tourist or local. Cached loader; never blocks search.
   const heat = await loadReviewHeat().catch(() => ({ cells: [] as HeatCell[], max: 1 }))
 
   const sliced = filtered.slice(0, limit)

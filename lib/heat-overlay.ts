@@ -117,12 +117,16 @@ export function createHeatOverlay(cells: HeatCell[], max: number): google.maps.O
 }
 
 // Lazily fetch the island-wide heat cells (public Storage), cached per page.
+// Since Aug 2026 this is the FOREIGN-AUDIENCE layer (_heat_tourists.json, built
+// by scripts/build-tourist-heat.mjs): venues weighted by whether their reviews
+// come from foreigners or locals. The previous file, _heat_pois.json, was plain
+// POI density and lit up Denpasar as brightly as Canggu.
 let _cache: { cells: HeatCell[]; max: number } | null = null
 export async function fetchHeatCells(): Promise<{ cells: HeatCell[]; max: number }> {
   if (_cache) return _cache
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL
   try {
-    const r = await fetch(`${base}/storage/v1/object/public/competitors/_heat_pois.json`)
+    const r = await fetch(`${base}/storage/v1/object/public/competitors/_heat_tourists.json`)
     if (!r.ok) return { cells: [], max: 1 }
     const j = (await r.json()) as { cells?: HeatCell[]; max?: number }
     _cache = { cells: j.cells ?? [], max: Math.max(1, j.max ?? 1) }
