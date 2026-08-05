@@ -9,7 +9,7 @@ import { VillaInfiniteScrollClient } from '@/components/VillaInfiniteScrollClien
 import { VillaFiltersBar } from '@/components/villa-filters/VillaFiltersBar'
 import { DistrictIntroBlock } from '@/components/DistrictIntroBlock'
 import { DistrictRelatedLinks } from '@/components/DistrictRelatedLinks'
-import { getDistrictCopy, getDistrictCommercialMeta } from '@/lib/districts'
+import { getDistrictCopy, getBuyHeading } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { SubscribeCTA } from '@/components/SubscribeCTA'
 import { buildListHref, buildMapHref } from '@/lib/villa-filter-href'
@@ -137,11 +137,26 @@ export async function VillasCatalog({
     ? (DISTRICT_TO_SLUG[filters.district[0]] ?? filters.district[0].toLowerCase())
     : null
   const districtCopy = districtSlug ? getDistrictCopy(districtSlug, lang) : null
-  const districtMeta = districtSlug ? getDistrictCommercialMeta(districtSlug, lang, 'villa', totalCount) : null
-  // H1 uses the commercial heading for single-district hubs («Купить
-  // виллу в Нуса Дуа, Бали — 47 вилл 2026»). Other combos keep the
-  // descriptive buildHeading so each combo page has a unique H1.
-  const heading = (lang === 'ru' ? districtMeta?.heading : undefined)
+  // The unfiltered hub — the page that has to win «купить виллу на Бали».
+  const isMainHub = filters.district.length === 0
+    && filters.bedrooms.length === 0
+    && filters.status.length === 0
+    && filters.style.length === 0
+    && filters.priceMin == null && filters.priceMax == null
+    && filters.q.trim().length === 0
+    && actualPage === 1
+  // H1 states buy intent on the two hubs that target it — the main catalog
+  // («Купить виллу на Бали — 335 вилл 2026») and single-district hubs
+  // («Купить виллу в Нуса Дуа, Бали — 47 вилл 2026») — in every locale.
+  // This used to be Russian-only, because getDistrictCommercialMeta falls
+  // back to English for non-RU and a German visitor would have seen an
+  // English headline; getBuyHeading carries all ten locales instead.
+  // Filter combos keep the descriptive buildHeading so each combo page
+  // still has a unique H1.
+  const heading = (isSingleDistrictHub && districtCopy
+    ? getBuyHeading('villa', lang, totalCount, districtCopy.name)
+    : undefined)
+    ?? (isMainHub ? getBuyHeading('villa', lang, totalCount) : undefined)
     ?? buildHeadingLoc(filters, lang)
   const sectionRoot = switchLangPath('/ru/villy', lang)
 

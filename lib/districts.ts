@@ -518,6 +518,121 @@ function pluralRu(n: number, one: string, few: string, many: string): string {
 
 const YEAR = 2026
 
+// Commercial ("buy") headings for the catalog hubs, in every locale.
+//
+// NOUN above only has ru/en, and getDistrictCommercialMeta falls back to
+// English for every non-Russian locale — which is why the catalogs used to
+// gate the commercial H1 behind `lang === 'ru'` rather than show a German
+// visitor an English headline. That left the target intent unstated on the
+// main hubs and on all eight non-Russian locales: GSC has /ru/villy averaging
+// position 27.8 for «купить виллу на Бали» with an H1 that never says
+// «купить».
+//
+// Phrasing is keyed to the query we actually want, not to a literal
+// translation of the descriptive heading — RU apartments say «апартаменты»
+// (the searched word) rather than NOUN's «квартиру».
+type BuyCopy = {
+  buy: (subject: string) => string
+  noun: Record<Kind, (n: number) => string>
+  inBali: string
+  inArea: (area: string) => string
+  // Word order of "<subject> <place>". Default is subject-then-place with a
+  // space, which is wrong for Chinese: 购买别墅 巴厘岛 reads as broken machine
+  // output, while 购买巴厘岛别墅 ("buy Bali villa") is how the query is typed.
+  compose?: (subject: string, where: string) => string
+}
+
+const BUY_HEADING: Record<Lang, BuyCopy> = {
+  ru: {
+    buy: s => `Купить ${s}`,
+    noun: {
+      villa: n => pluralRu(n, 'вилла', 'виллы', 'вилл'),
+      apartment: n => pluralRu(n, 'апартамент', 'апартамента', 'апартаментов'),
+      complex: n => pluralRu(n, 'жилой комплекс', 'жилых комплекса', 'жилых комплексов'),
+    },
+    inBali: 'на Бали', inArea: a => `в ${a}, Бали`,
+  },
+  en: {
+    buy: s => `Buy ${s}`,
+    noun: { villa: n => n === 1 ? 'villa' : 'villas', apartment: n => n === 1 ? 'apartment' : 'apartments', complex: n => n === 1 ? 'residential complex' : 'residential complexes' },
+    inBali: 'in Bali', inArea: a => `in ${a}, Bali`,
+  },
+  id: {
+    buy: s => `Beli ${s}`,
+    noun: { villa: () => 'vila', apartment: () => 'apartemen', complex: () => 'kompleks hunian' },
+    inBali: 'di Bali', inArea: a => `di ${a}, Bali`,
+  },
+  fr: {
+    buy: s => `Acheter ${s}`,
+    noun: { villa: n => n === 1 ? 'villa' : 'villas', apartment: n => n === 1 ? 'appartement' : 'appartements', complex: n => n === 1 ? 'résidence' : 'résidences' },
+    inBali: 'à Bali', inArea: a => `à ${a}, Bali`,
+  },
+  de: {
+    buy: s => `${s} kaufen`,
+    noun: { villa: n => n === 1 ? 'Villa' : 'Villen', apartment: n => n === 1 ? 'Apartment' : 'Apartments', complex: n => n === 1 ? 'Wohnanlage' : 'Wohnanlagen' },
+    inBali: 'auf Bali', inArea: a => `in ${a}, Bali`,
+  },
+  zh: {
+    buy: s => `购买${s}`,
+    noun: { villa: () => '别墅', apartment: () => '公寓', complex: () => '住宅区' },
+    inBali: '巴厘岛', inArea: a => `巴厘岛${a}`,
+    compose: (subject, where) => `${where}${subject}`,
+  },
+  nl: {
+    buy: s => `${s} kopen`,
+    noun: { villa: n => n === 1 ? 'villa' : "villa's", apartment: n => n === 1 ? 'appartement' : 'appartementen', complex: n => n === 1 ? 'wooncomplex' : 'wooncomplexen' },
+    inBali: 'op Bali', inArea: a => `in ${a}, Bali`,
+  },
+  ban: {
+    buy: s => `Meli ${s}`,
+    noun: { villa: () => 'vila', apartment: () => 'apartemen', complex: () => 'kompleks' },
+    inBali: 'ring Bali', inArea: a => `ring ${a}, Bali`,
+  },
+  pl: {
+    buy: s => `Kupić ${s}`,
+    noun: { villa: n => n === 1 ? 'willa' : 'willi', apartment: n => n === 1 ? 'apartament' : 'apartamentów', complex: n => n === 1 ? 'osiedle' : 'osiedli' },
+    inBali: 'na Bali', inArea: a => `w ${a}, Bali`,
+  },
+  uk: {
+    buy: s => `Купити ${s}`,
+    noun: {
+      villa: n => pluralRu(n, 'віла', 'віли', 'віл'),
+      apartment: n => pluralRu(n, 'апартамент', 'апартаменти', 'апартаментів'),
+      complex: n => pluralRu(n, 'житловий комплекс', 'житлові комплекси', 'житлових комплексів'),
+    },
+    inBali: 'на Балі', inArea: a => `у ${a}, Балі`,
+  },
+}
+
+// Singular subject of the "buy" phrase, e.g. «виллу» / "a villa" / "Villa".
+const BUY_SUBJECT: Record<Lang, Record<Kind, string>> = {
+  ru: { villa: 'виллу', apartment: 'апартаменты', complex: 'жилой комплекс' },
+  en: { villa: 'a villa', apartment: 'an apartment', complex: 'a residential complex' },
+  id: { villa: 'vila', apartment: 'apartemen', complex: 'kompleks hunian' },
+  fr: { villa: 'une villa', apartment: 'un appartement', complex: 'une résidence' },
+  de: { villa: 'Villa', apartment: 'Apartment', complex: 'Wohnanlage' },
+  zh: { villa: '别墅', apartment: '公寓', complex: '住宅区' },
+  nl: { villa: 'Villa', apartment: 'Appartement', complex: 'Wooncomplex' },
+  ban: { villa: 'vila', apartment: 'apartemen', complex: 'kompleks' },
+  pl: { villa: 'willę', apartment: 'apartament', complex: 'osiedle' },
+  uk: { villa: 'віллу', apartment: 'апартаменти', complex: 'житловий комплекс' },
+}
+
+/**
+ * Commercial H1 for a catalog hub: «Купить виллу на Бали — 335 вилл 2026».
+ *
+ * @param districtName when set, scopes the heading to one area instead of Bali
+ *   as a whole. Pass the already-localised district name.
+ */
+export function getBuyHeading(kind: Kind, lang: Lang, totalCount?: number, districtName?: string): string {
+  const c = BUY_HEADING[lang] ?? BUY_HEADING.en
+  const subject = (BUY_SUBJECT[lang] ?? BUY_SUBJECT.en)[kind]
+  const where = districtName ? c.inArea(districtName) : c.inBali
+  const head = c.buy((c.compose ?? ((s, w) => `${s} ${w}`))(subject, where).trim())
+  if (!totalCount) return `${head} — ${YEAR}`
+  return `${head} — ${totalCount} ${c.noun[kind](totalCount)} ${YEAR}`
+}
+
 export function getDistrictCommercialMeta(
   slug: string,
   lang: Lang,

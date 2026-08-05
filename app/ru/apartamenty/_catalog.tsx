@@ -5,7 +5,7 @@ import { ApartmentCard } from '@/components/ApartmentCard'
 import { SeoContent } from '@/components/SeoContent'
 import { DistrictIntroBlock } from '@/components/DistrictIntroBlock'
 import { DistrictRelatedLinks } from '@/components/DistrictRelatedLinks'
-import { getDistrictCopy, getDistrictCommercialMeta } from '@/lib/districts'
+import { getDistrictCopy, getBuyHeading } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { CatalogSearchBar } from '@/components/CatalogSearchBar'
 import { InfiniteScrollClient } from '@/components/InfiniteScrollClient'
@@ -133,8 +133,19 @@ export async function ApartamentyCatalog({
     ? (DISTRICT_TO_SLUG[filters.district[0]] ?? filters.district[0].toLowerCase())
     : null
   const districtCopy = districtSlug ? getDistrictCopy(districtSlug, lang) : null
-  const districtMeta = districtSlug ? getDistrictCommercialMeta(districtSlug, lang, 'apartment', totalCount) : null
-  const heading = (lang === 'ru' ? districtMeta?.heading : undefined)
+  // The unfiltered hub — the page that has to win «купить апартаменты на Бали».
+  const isMainHub = filters.district.length === 0
+    && filters.bedrooms.length === 0
+    && filters.status.length === 0
+    && filters.priceMin == null && filters.priceMax == null
+    && filters.q.trim().length === 0
+    && actualPage === 1
+  // See the twin block in app/ru/villy/_catalog.tsx — buy intent in the H1 on
+  // the main and single-district hubs, in all ten locales rather than RU only.
+  const heading = (isSingleDistrictHub && districtCopy
+    ? getBuyHeading('apartment', lang, totalCount, districtCopy.name)
+    : undefined)
+    ?? (isMainHub ? getBuyHeading('apartment', lang, totalCount) : undefined)
     ?? buildHeadingLoc(filters, lang)
   const sectionRoot = switchLangPath('/ru/apartamenty', lang)
 
