@@ -33,15 +33,16 @@ export type ComplexAccess = {
 /** Per-month climate: how many days of each kind an average month has. */
 export type ClimateMonth = {
   days: number
+  /** Days without a real downpour — on Bali that means a sunny day. */
   sunny: number
+  /** Days with >= 5 mm of rain. */
   wet: number
-  mixed: number
   rain_mm: number | null
   t_max: number | null
   rh: number | null
 }
 export type Climate = Record<string, ClimateMonth> & {
-  year?: { days: number; sunny: number; wet: number; mixed: number; years: number }
+  year?: { days: number; sunny: number; wet: number; years: number }
 }
 /** Seconds with traffic, seconds on an empty road, metres. */
 export type RouteLeg = { s: number; static_s: number | null; m: number | null }

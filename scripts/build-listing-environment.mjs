@@ -99,23 +99,25 @@ async function solarFor(lat, lng) {
 }
 
 // ---- climate (NASA POWER) --------------------------------------------------
-// The output is deliberately in DAYS, not hours or kWh: "26 sunny days out of
+// The output is deliberately in DAYS, not hours or kWh: "31 sunny days out of
 // 31 in August" is something a buyer understands, "5.7 kWh/m²/day" is not.
 //
-// A day is classified by its clearness index — actual irradiance divided by
-// what a cloudless sky would deliver at that spot on that date (ALLSKY /
-// CLRSKY) — combined with rainfall:
-//   sunny  clearness >= 0.70 and < 1 mm of rain   (bright, blue-sky day)
-//   wet    >= 5 mm of rain                        (proper tropical downpour)
-//   mixed  everything in between                  (sun and cloud)
-// The 0.70 cut is not delicate: 0.75 moves Canggu's annual count from 144 to
-// 141. Verified against Bali's seasons — February 0 sunny days, August 26.
+// A day counts as RAINY when the grid cell got >= 5 mm — a real tropical
+// downpour, not the drizzle that a 1 mm cut would flag on 208 days a year.
+// Everything else counts as sunny, and on Bali that holds: checking six years
+// at Pandawa, days that were overcast AND dry happened once a year. So no rain
+// really does mean sun here, and 365 − rainy is an honest count.
+//
+// An earlier version scored days by clearness index (ALLSKY/CLRSKY >= 0.70)
+// and reported 150 sunny days at Pandawa — too strict for the tropics, where
+// an hour of afternoon rain does not make the day cloudy. Same place now reads
+// 267 sunny / 98 rainy, with August 31/0 and February 12/16.
 async function climateFor(lat, lng) {
   const end = new Date(); end.setDate(end.getDate() - 30)
   const endStr = `${end.getFullYear()}${String(end.getMonth() + 1).padStart(2, '0')}${String(end.getDate()).padStart(2, '0')}`
   const startStr = `${end.getFullYear() - 5}0101`
   const url = 'https://power.larc.nasa.gov/api/temporal/daily/point'
-    + '?parameters=ALLSKY_SFC_SW_DWN,CLRSKY_SFC_SW_DWN,PRECTOTCORR,T2M_MAX,RH2M&community=RE'
+    + '?parameters=PRECTOTCORR,T2M_MAX,RH2M&community=RE'
     + `&longitude=${lng}&latitude=${lat}&start=${startStr}&end=${endStr}&format=JSON`
   const r = await fetch(url)
   if (!r.ok) throw new Error(`nasa ${r.status}`)
@@ -127,18 +129,14 @@ async function climateFor(lat, lng) {
   for (const day of Object.keys(p.PRECTOTCORR)) {
     const mm = day.slice(4, 6)
     const rain = p.PRECTOTCORR[day]
-    const all = p.ALLSKY_SFC_SW_DWN?.[day]
-    const clr = p.CLRSKY_SFC_SW_DWN?.[day]
     const tmax = p.T2M_MAX?.[day]
     const rh = p.RH2M?.[day]
     // POWER marks missing values as -999.
     if (rain == null || rain < -100) continue
     years.add(day.slice(0, 4))
-    const m = (byMonth[mm] ??= { n: 0, sunny: 0, wet: 0, rain: 0, tmax: 0, tmaxN: 0, rh: 0, rhN: 0 })
+    const m = (byMonth[mm] ??= { n: 0, wet: 0, rain: 0, tmax: 0, tmaxN: 0, rh: 0, rhN: 0 })
     m.n++
-    const clearness = all > -100 && clr > 0 ? all / clr : null
-    if (clearness != null && clearness >= 0.70 && rain < 1) m.sunny++
-    else if (rain >= 5) m.wet++
+    if (rain >= 5) m.wet++
     m.rain += rain
     if (tmax != null && tmax > -100) { m.tmax += tmax; m.tmaxN++ }
     if (rh != null && rh > -100) { m.rh += rh; m.rhN++ }
@@ -155,8 +153,8 @@ async function climateFor(lat, lng) {
   for (const [mm, m] of Object.entries(byMonth)) {
     if (!m.n) continue
     const len = MONTH_DAYS[mm] ?? 30
-    const sunny = Math.round((m.sunny / m.n) * len)
     const wet = Math.round((m.wet / m.n) * len)
+    const sunny = len - wet
     sunnyYear += sunny
     wetYear += wet
     daysYear += len
@@ -164,7 +162,6 @@ async function climateFor(lat, lng) {
       days: len,
       sunny,
       wet,
-      mixed: Math.max(0, len - sunny - wet),
       rain_mm: +(m.rain / m.n).toFixed(1),
       t_max: m.tmaxN ? +(m.tmax / m.tmaxN).toFixed(1) : null,
       rh: m.rhN ? Math.round(m.rh / m.rhN) : null,
@@ -175,7 +172,6 @@ async function climateFor(lat, lng) {
     days: daysYear,
     sunny: sunnyYear,
     wet: wetYear,
-    mixed: Math.max(0, daysYear - sunnyYear - wetYear),
     years: yearCount,
   }
   return out

@@ -8,7 +8,7 @@
 // the sky delivered >= 70% of cloudless-sky sunlight and it did not rain.
 // Server Component. Renders nothing without data.
 import { Sun, CloudRain, Wind } from 'lucide-react'
-import type { Climate, GeoFacts } from '@/lib/complex-access'
+import type { Climate, ClimateMonth, GeoFacts } from '@/lib/complex-access'
 import { pickCopy, type Lang } from '@/lib/i18n'
 
 const COPY = {
@@ -38,7 +38,7 @@ const MONTHS = {
 } as const
 
 /** Longest run of consecutive months matching a test, wrapping across the new year. */
-function monthRun(climate: Climate, pick: (m: { sunny: number }) => boolean): number[] {
+function monthRun(climate: Climate, pick: (m: ClimateMonth) => boolean): number[] {
   const flags = Array.from({ length: 12 }, (_, i) => {
     const m = climate[String(i + 1).padStart(2, '0')]
     return m ? pick(m) : false
@@ -93,8 +93,11 @@ export function ClimateBlock({ climate, air, lang }: Props) {
   const year = climate?.year
   if (!climate || !year?.sunny) return null
 
-  const best = monthRun(climate, (m) => m.sunny >= 15)
-  const worst = monthRun(climate, (m) => m.sunny <= 5)
+  // A month earns "best" with at most ~4 rainy days and lands in the rainy
+  // season at ten or more. Tuned to Bali's actual split: August 31/0,
+  // February 12/16.
+  const best = monthRun(climate, (m) => m.wet <= 4)
+  const worst = monthRun(climate, (m) => m.wet >= 10)
   const bestLabel = runLabel(best, lang)
   const worstLabel = runLabel(worst, lang)
   const bestAvg = best.length
