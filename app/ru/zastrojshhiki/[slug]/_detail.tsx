@@ -29,6 +29,8 @@ import { tField, pickCopy, switchLangPath, langToSegment, type Lang } from '@/li
 import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
 import { cleanDeveloperBullets } from '@/lib/developer-highlights'
 import { isHiddenDeveloper } from '@/lib/hidden-developers'
+import { getDeveloperStats } from '@/lib/developer-stats'
+import { commercialDeveloperMeta } from '@/lib/listing-meta'
 import { loadKbPageContent } from '@/lib/kb-page-content'
 import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
 import { loadVisionManifest } from '@/lib/listing-features'
@@ -577,13 +579,24 @@ export async function generateDeveloperMetadata(slug: string, lang: Lang) {
     uk: { title: n => `${n} — забудовник на Балі | проєкти, рейтинг, відгуки | Balinsky`, desc: n => `${n} — забудовник на Балі. Оцінка за чотирма напрямами, проєкти, комісія, надійність.`, og: n => `${n} — забудовник на Балі` },
   }
   const meta = META[lang] ?? META.en
-  const description = aiDesc
-    ? aiDesc.slice(0, 160).trim() + (aiDesc.length > 160 ? '…' : '')
-    : meta.desc(name)
+  // CTR sprint: these pages rank (breig sat at position 7.8 on 434 impressions)
+  // but took 0 clicks — the title carried no numbers and the description was
+  // the first 160 characters of a generic marketing blurb, identical in tone
+  // for every developer. Lead with the track record instead; fall back to the
+  // old copy only when the developer has no projects on file.
+  const commercial = commercialDeveloperMeta({
+    name,
+    stats: await getDeveloperStats(name),
+    lang,
+  })
+  const description = commercial?.description
+    ?? (aiDesc
+      ? aiDesc.slice(0, 160).trim() + (aiDesc.length > 160 ? '…' : '')
+      : meta.desc(name))
   const ruPath = `/ru/zastrojshhiki/${slug}`
   const enPath = `/en/developers/${slug}`
   const path = switchLangPath(ruPath, lang)
-  const title = meta.title(name)
+  const title = commercial?.title ?? meta.title(name)
   return {
     title, description,
     alternates: {
