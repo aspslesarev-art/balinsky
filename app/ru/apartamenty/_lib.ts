@@ -12,7 +12,7 @@ import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations
 import { getDistrictCommercialMeta } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { facetLabel, type FilterDim } from '@/lib/filter-i18n'
-import { pluralRu } from '@/lib/plural-ru'
+import { resolveListingTitle } from '@/lib/listing-title'
 import { isTopBlacklisted } from '@/lib/top-blacklist'
 import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import { loadViewCounts, smartSort } from '@/lib/catalog-rank'
@@ -99,64 +99,6 @@ export function numberOrNull(v: unknown): number | null {
     return Number.isFinite(n) ? n : null
   }
   return null
-}
-function cleanTitle(s: string | null): string | null {
-  if (!s) return null
-  return s.replace(/\s*\|\s*Balinsky\s*$/i, '').trim() || null
-}
-
-// Detect titles where Airtable's formula stitched together an empty
-// slot: "Апартаменты  в  - 38 м², 1 спальни" (note double spaces and a
-// dangling "в -"). The same happens on resale rows whose complex link
-// lives in «Комплекс вторичка», not «Комплекс».
-function isMalformedTitle(s: string | null): boolean {
-  if (!s) return false
-  return /(?:\s{2}|в\s+-|in\s+-|—\s*-|\bв\s*$)/i.test(s)
-}
-
-// Localized parts for the composed fallback title. RU keeps its declined
-// plural via pluralRu; every other language gets a native noun, district
-// preposition and bedroom word so no card renders «Апартаменты в … спальни»
-// on /en, /zh, /de, …
-const APT_TITLE_TERMS: Record<Exclude<Lang, 'ru'>, {
-  noun: string; inDistrict: (d: string) => string; bedroomWord: string
-}> = {
-  en: { noun: 'Apartment', inDistrict: d => `in ${d}`, bedroomWord: 'BR' },
-  id: { noun: 'Apartemen', inDistrict: d => `di ${d}`, bedroomWord: 'kamar tidur' },
-  fr: { noun: 'Appartement', inDistrict: d => `à ${d}`, bedroomWord: 'chambres' },
-  de: { noun: 'Apartment', inDistrict: d => `in ${d}`, bedroomWord: 'Schlafzimmer' },
-  zh: { noun: '公寓', inDistrict: d => d, bedroomWord: '卧室' },
-  nl: { noun: 'Appartement', inDistrict: d => `in ${d}`, bedroomWord: 'slaapkamers' },
-  ban: { noun: 'Apartemen', inDistrict: d => `ring ${d}`, bedroomWord: 'kamar pules' },
-  pl: { noun: 'Apartament', inDistrict: d => `w ${d}`, bedroomWord: 'sypialnie' },
-  uk: { noun: 'Апартаменти', inDistrict: d => `в ${d}`, bedroomWord: 'спальні' },
-}
-function fallbackAptTitle(args: {
-  district: string | null
-  area: number | null
-  bedrooms: string | null
-  lang: Lang
-}): string {
-  const { district, area, bedrooms, lang } = args
-  const parts: string[] = []
-  const tail: string[] = []
-  if (lang === 'ru') {
-    parts.push('Апартаменты')
-    if (district) parts.push(`в ${district}`)
-    if (area != null) tail.push(`${area} м²`)
-    if (bedrooms) {
-      const n = Number(bedrooms)
-      const word = Number.isFinite(n) ? pluralRu(n, ['спальня', 'спальни', 'спален']) : 'спален'
-      tail.push(`${bedrooms} ${word}`)
-    }
-  } else {
-    const T = APT_TITLE_TERMS[lang]
-    parts.push(T.noun)
-    if (district) parts.push(T.inDistrict(district))
-    if (area != null) tail.push(`${area} m²`)
-    if (bedrooms) tail.push(`${bedrooms} ${T.bedroomWord}`)
-  }
-  return [parts.join(' '), tail.join(', ')].filter(Boolean).join(' — ')
 }
 function normFloor(v: unknown): string | null {
   const s = firstString(v)
@@ -521,26 +463,21 @@ export function toCard(
   // dirty cyrillic / paren slugs surfacing from internal navigation.
   const slug = normalizeSlug(firstString(d['SEO:Slug']))
   if (!slug || slug.startsWith('-')) return null
-  // Lang-aware title — see villy/_lib.ts toCard() for the same logic.
-  // Skip titles whose formula left an empty complex slot ("Апартаменты в  -…").
-  function pick(...candidates: (string | null | undefined)[]): string | null {
-    for (const c of candidates) {
-      const s = typeof c === 'string' ? cleanTitle(c) : null
-      if (s && !isMalformedTitle(s)) return s
-    }
-    return null
-  }
-  const titleArea = numberOrNull(d['Площадь'])
-  const titleBedrooms = e.bedrooms
-  let title: string | null = lang === 'ru'
-    ? pick(firstString(d['SEO:Title']), firstString(d['ИИ Имя']))
-    // Active-language title first (`SEO:Title ZH|DE|NL…` merged from the
-    // translation cache), then EN, then RU (tField translits RU leftover).
-    : pick(firstString(tField(d, 'SEO:Title', lang)), firstString(tField(d, 'ИИ Имя', lang)))
-  if (!title) {
-    title = fallbackAptTitle({ district: e.district, area: titleArea, bedrooms: titleBedrooms, lang })
-  }
-  if (!title) return null
+  // Lang-aware title — see lib/listing-title.ts. Titles whose formula left an
+  // empty slot ("Апартаменты в  -…") are skipped in favour of the next
+  // candidate, then of a title composed from the structured fields.
+  let title: string = resolveListingTitle({
+    kind: 'apartment',
+    candidates: lang === 'ru'
+      ? [firstString(d['SEO:Title']), firstString(d['ИИ Имя'])]
+      // Active-language title first (`SEO:Title ZH|DE|NL…` merged from the
+      // translation cache), then EN, then RU (tField translits RU leftover).
+      : [tField(d, 'SEO:Title', lang), tField(d, 'ИИ Имя', lang)],
+    district: e.district,
+    area: numberOrNull(d['Площадь']),
+    bedrooms: e.bedrooms,
+    lang,
+  })
   // Last-resort de-Cyrillic: a row with no `<field> EN` still falls back to
   // the RU-composed SEO:Title, so transliterate leftover Cyrillic to keep
   // Russian off non-RU cards.

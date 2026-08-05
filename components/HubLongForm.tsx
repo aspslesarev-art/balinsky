@@ -1,4 +1,6 @@
+import Link from 'next/link'
 import type { HubLongCopy, HubSection } from '@/lib/hub-seo'
+import type { ReadingLink } from '@/lib/hub-seo/related-reading'
 
 // Long-form hub copy: the ~900 words that only the unfiltered catalog hub
 // carries (see lib/hub-seo/types.ts for why it is gated).
@@ -73,7 +75,31 @@ function PriceTable({ table }: { table: HubLongCopy['priceTable'] }) {
   )
 }
 
-export function HubLongForm({ copy }: { copy: HubLongCopy }) {
+function RelatedReading({ heading, links }: { heading: string; links: ReadingLink[] }) {
+  return (
+    <section>
+      <h3 className="text-[18px] font-semibold text-[var(--color-text)] mb-3">{heading}</h3>
+      <ul className="space-y-2">
+        {links.map(l => (
+          <li key={l.href}>
+            <Link
+              href={l.href}
+              className="text-[var(--color-text)] underline decoration-[var(--color-border)] underline-offset-4 hover:decoration-[var(--color-primary)]"
+            >
+              {l.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+export function HubLongForm({ copy, reading }: {
+  copy: HubLongCopy
+  /** Knowledge-base links; null on locales without a knowledge section. */
+  reading?: { heading: string; links: ReadingLink[] } | null
+}) {
   const [lead, ...rest] = copy.sections
   return (
     <div className="mt-10 max-w-3xl space-y-9 text-[15px] leading-relaxed">
@@ -82,6 +108,7 @@ export function HubLongForm({ copy }: { copy: HubLongCopy }) {
       {rest.map((section, i) => (
         <Section key={i} section={section} />
       ))}
+      {reading && <RelatedReading heading={reading.heading} links={reading.links} />}
     </div>
   )
 }

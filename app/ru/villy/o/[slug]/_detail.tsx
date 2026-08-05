@@ -67,6 +67,7 @@ import { FullRecordEditor } from '@/components/FullRecordEditor'
 import { VillaPresentationButton } from '@/components/VillaPresentation'
 import { tField, pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { normalizeSlug } from '@/lib/slug-normalize'
+import { resolveListingTitle } from '@/lib/listing-title'
 import { loadAllTranslations, mergeAllTranslations, loadTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
 import { districtRu } from '@/lib/district-ru'
@@ -76,8 +77,8 @@ import { loadListingVision, altFor } from '@/lib/listing-features'
 import { loadListingCopy } from '@/lib/listing-copy'
 import { curatePhotos } from '@/lib/listing-photos'
 import { DistrictAboutCard } from '@/components/DistrictAboutCard'
-import { getDistrictCopy } from '@/lib/districts'
-import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
+import { getDistrictCopy, getBuyAnchor } from '@/lib/districts'
+import { DISTRICT_TO_SLUG, BEDROOM_TO_SLUG } from '@/lib/seo-routes'
 import { facetLabel } from '@/lib/filter-i18n'
 
 const COPY = {
@@ -606,10 +607,6 @@ function fmtUsd(n: number | null): string | null {
   if (n == null) return null
   return Math.round(n).toLocaleString('ru-RU').replace(/,/g, ' ') + ' $'
 }
-function cleanTitle(s: string | null): string | null {
-  if (!s) return null
-  return s.replace(/\s*\|\s*Balinsky\s*$/i, '').trim() || null
-}
 
 // Slug index loaded from Storage manifest (built by scripts/sync-detail-indexes.mjs).
 // Avoids the 21MB raw_villas query that hits Postgres statement timeout.
@@ -855,8 +852,14 @@ async function loadOtherVillasInDistrict(district: string | null, exceptId: stri
     // tField returns EN if available (or RU fallback after the i18n.ts fix).
     // Without this the EN villa detail page was rendering Russian card
     // titles in the "Other villas in <district>" rail.
-    const titleRaw = tField(r.data, 'SEO:Title', lang) ?? tField(r.data, 'ИИ Имя', lang) ?? slug
-    const title = titleRaw.replace(/\s*\|\s*Balinsky\s*$/i, '').trim()
+    const title = resolveListingTitle({
+      kind: 'villa',
+      candidates: [tField(r.data, 'SEO:Title', lang), tField(r.data, 'ИИ Имя', lang)],
+      district: firstString(r.data['Location 2']) ?? firstString(r.data['Location']),
+      area: numberOrNull(r.data['Площадь']),
+      bedrooms: firstString(r.data['Комнаты']),
+      lang,
+    })
     out.push({
       id: r.airtable_id,
       slug,
@@ -882,8 +885,17 @@ export async function generateVillaMetadata(slug: string, lang: Lang) {
   // на остальных локалях остаётся прежний источник, иначе в мету уедет
   // кириллица.
   const gen = lang === 'ru' ? await loadListingCopy('villa', v.airtable_id) : null
-  const titleRaw = gen?.title ?? tField(d, 'SEO:Title', lang) ?? tField(d, 'ИИ Имя', lang) ?? slug
-  const title = cleanTitle(titleRaw) ?? slug
+  // Never let a formula-broken «Вилла  в  -  м²,  спальни» reach the <title>
+  // tag or the OG card — resolveListingTitle skips those and composes from
+  // the structured fields instead (lib/listing-title.ts).
+  const title = resolveListingTitle({
+    kind: 'villa',
+    candidates: [gen?.title, tField(d, 'SEO:Title', lang), tField(d, 'ИИ Имя', lang)],
+    district: firstString(d['Location 2']) ?? firstString(d['Location']),
+    area: numberOrNull(d['Площадь']),
+    bedrooms: firstString(d['Комнаты']),
+    lang,
+  })
   const seoTextRaw = tField(d, 'SEO Text', lang) ?? tField(d, 'Notes', lang)
   // A bad AI translation may have stored Russian into `SEO Text EN` (or the
   // suffix is missing and tField returns the raw RU). Never emit Cyrillic on a
@@ -954,8 +966,14 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   const d = v.data
   const manifest = await _loadManifest()
 
-  const titleRaw = tField(d, 'ИИ Имя', lang) ?? tField(d, 'SEO:Title', lang) ?? slug
-  const title = cleanTitle(titleRaw) ?? slug
+  const title = resolveListingTitle({
+    kind: 'villa',
+    candidates: [tField(d, 'ИИ Имя', lang), tField(d, 'SEO:Title', lang)],
+    district: firstString(d['Location 2']) ?? firstString(d['Location']),
+    area: numberOrNull(d['Площадь']),
+    bedrooms: firstString(d['Комнаты']),
+    lang,
+  })
   // Фото-аудит применяется ДО нарезки: иначе выбранная обложка может
   // не попасть в первые 12 кадров. alt-подписи переставляются вместе
   // с фото — они позиционные.
@@ -1461,13 +1479,36 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
           <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[#111827] mb-4">{c.relatedHeading}</h2>
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2 max-w-3xl">
             {[
-              { href: villasRoot, label: c.related.allVillas },
-              { href: apartmentsRoot, label: c.related.apartments },
+              // Buy-intent anchors, not «Все виллы»: these 2300 listing pages
+              // are the site's main internal-link source, so the anchor text
+              // is what tells Google what the hub is for (lib/districts.ts).
+              { href: villasRoot, label: getBuyAnchor('villa', lang) },
+              ...(district ? [
+                { href: `${villasRoot}/${districtRaw!.toLowerCase().replace(/\s+/g, '-')}`, label: getBuyAnchor('villa', lang, district) },
+              ] : []),
+              // Bedroom facet — mirrors what the apartment detail page already
+              // does. Sends weight to /villy/2-spalni & co, which currently get
+              // almost no internal links.
+              ...(bedrooms && BEDROOM_TO_SLUG[String(bedrooms)] ? [
+                {
+                  href: `${villasRoot}/${BEDROOM_TO_SLUG[String(bedrooms)]}`,
+                  label: pickCopy({
+                    ru: `${bedrooms}-комнатные виллы на Бали`,
+                    en: `${bedrooms}-bedroom villas in Bali`,
+                    id: `Vila ${bedrooms} kamar di Bali`,
+                    fr: `Villas ${bedrooms} chambres à Bali`,
+                    de: `${bedrooms}-Zimmer-Villen auf Bali`,
+                    zh: `${bedrooms}居室别墅`,
+                    nl: `${bedrooms}-slaapkamervilla's op Bali`,
+                    ban: `Vila ${bedrooms} kamar ring Bali`,
+                    pl: `Wille ${bedrooms}-sypialniane na Bali`,
+                    uk: `${bedrooms}-кімнатні вілли на Балі`,
+                  }, lang),
+                },
+              ] : []),
+              { href: apartmentsRoot, label: getBuyAnchor('apartment', lang) },
               { href: complexesRoot, label: c.related.complexes },
               { href: developersRoot, label: c.related.developers },
-              ...(district ? [
-                { href: `${villasRoot}/${districtRaw!.toLowerCase().replace(/\s+/g, '-')}`, label: c.related.villasIn(district) },
-              ] : []),
             ].map(l => (
               <li key={l.href + l.label}>
                 <Link href={l.href} className="inline-flex items-center gap-1 text-[14px] text-[var(--color-text)] hover:text-[var(--color-primary-pressed)]">

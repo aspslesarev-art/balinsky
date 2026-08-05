@@ -13,6 +13,7 @@ import { loadAllKnowledge, loadKnowledgeBySlug } from '@/lib/knowledge'
 import { enKnowledgeSlug } from '@/lib/knowledge-en-slugs'
 import { ArticleCover } from '@/components/ArticleCover'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
+import { getBuyAnchor } from '@/lib/districts'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
@@ -214,6 +215,27 @@ export async function KnowledgeDetail({ slug, lang }: { slug: string; lang: Lang
             </div>
           )}
         </article>
+
+        {/* Way out of the knowledge silo: articles used to link only to other
+            articles, so their authority never reached the catalog hubs that
+            have to rank for the head terms. Buy-intent anchors, both hubs. */}
+        <section className="mt-12 max-w-3xl">
+          <ul className="flex flex-wrap gap-3">
+            {[
+              { href: switchLangPath('/ru/villy', lang), label: getBuyAnchor('villa', lang) },
+              { href: switchLangPath('/ru/apartamenty', lang), label: getBuyAnchor('apartment', lang) },
+            ].map(l => (
+              <li key={l.href}>
+                <Link
+                  href={l.href}
+                  className="inline-block px-4 py-2 rounded-full bg-[var(--color-card-bg)] border border-[var(--color-border)] text-[14px] text-[var(--color-text)] no-underline hover:border-[var(--color-primary)]"
+                >
+                  {l.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
 
         {related.length > 0 && (
           <section className="mt-14">

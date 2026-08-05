@@ -59,7 +59,7 @@ import { loadListingVision, altFor } from '@/lib/listing-features'
 import { loadListingCopy } from '@/lib/listing-copy'
 import { curatePhotos } from '@/lib/listing-photos'
 import { DistrictAboutCard } from '@/components/DistrictAboutCard'
-import { getDistrictCopy } from '@/lib/districts'
+import { getDistrictCopy, getBuyAnchor } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
 
@@ -1354,13 +1354,16 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
           <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[#111827] mb-4">{c.relatedHeading}</h2>
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2 max-w-3xl">
             {[
-              { href: apartmentsRoot, label: c.related.allApartments },
-              { href: complexesRoot, label: c.related.complexes },
-              { href: villasRoot, label: c.related.villas },
-              { href: developersRoot, label: c.related.developers },
+              // Buy-intent anchors, not «Все апартаменты»: these listing pages
+              // are the site's main internal-link source, so the anchor text is
+              // what tells Google what the hub is for (lib/districts.ts).
+              { href: apartmentsRoot, label: getBuyAnchor('apartment', lang) },
               ...(district ? [
-                { href: `${apartmentsRoot}/${districtRaw!.toLowerCase().replace(/\s+/g, '-')}`, label: c.related.apartmentsIn(district) },
+                { href: `${apartmentsRoot}/${districtRaw!.toLowerCase().replace(/\s+/g, '-')}`, label: getBuyAnchor('apartment', lang, district) },
               ] : []),
+              { href: villasRoot, label: getBuyAnchor('villa', lang) },
+              { href: complexesRoot, label: c.related.complexes },
+              { href: developersRoot, label: c.related.developers },
               ...(bedrooms ? [
                 { href: `${apartmentsRoot}/${bedrooms}-spaln${bedrooms === 1 ? 'ya' : 'i'}`, label: pickCopy({ ru: `${bedrooms}-комнатные апартаменты`, en: `${bedrooms}-bedroom apartments`, id: `Apartemen ${bedrooms} kamar`, fr: `Appartements ${bedrooms} chambres`, de: `${bedrooms}-Zimmer-Apartments`, zh: `${bedrooms}居室公寓`, nl: `${bedrooms}-slaapkamerappartementen`, ban: `Apartemen ${bedrooms} kamar`, pl: `Apartamenty ${bedrooms}-sypialniane`, uk: `${bedrooms}-кімнатні апартаменти` }, lang) },
               ] : []),

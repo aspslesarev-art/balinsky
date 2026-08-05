@@ -6,6 +6,7 @@ import { loadVillaStyles } from '@/lib/villa-styles'
 import { loadFeatureFlagsMap, FEATURE_FLAGS, FEATURE_LABELS, loadVisionManifest } from '@/lib/listing-features'
 import { curateManifest } from '@/lib/listing-photos'
 import { normalizeSlug } from '@/lib/slug-normalize'
+import { resolveListingTitle } from '@/lib/listing-title'
 import { revisionedCache } from '@/lib/revisioned-cache'
 import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
 import { getDistrictCommercialMeta } from '@/lib/districts'
@@ -170,10 +171,6 @@ export function numberOrNull(v: unknown): number | null {
     return Number.isFinite(n) ? n : null
   }
   return null
-}
-function cleanTitle(s: string | null): string | null {
-  if (!s) return null
-  return s.replace(/\s*\|\s*Balinsky\s*$/i, '').trim() || null
 }
 function parseGeo(v: unknown): number | null {
   if (typeof v === 'number') return Number.isFinite(v) ? v : null
@@ -558,18 +555,23 @@ export function toCard(
   // already merged into data via mergeEnTranslations). Without the EN
   // branch, /en/villas would surface «Вилла Origins в Nyanyi» on cards
   // while the RU detail page renders the same listing as English.
-  const titleRaw = lang === 'ru'
-    ? (cleanTitle(firstString(d['SEO:Title'])) ??
-       firstString(d['ИИ Имя']) ??
-       firstString(d['Имя ENG']) ??
-       firstString(d['Name']))
-    // Active-language title first (`SEO:Title ZH|DE|NL…` merged from the
-    // translation cache), then EN, then RU (tField translits any RU leftover).
-    : (cleanTitle(tField(d, 'SEO:Title', lang)) ??
-       firstString(tField(d, 'ИИ Имя', lang)) ??
-       firstString(d['Имя ENG']) ??
-       firstString(d['Name']))
-  if (!titleRaw) return null
+  // Candidates in priority order; resolveListingTitle skips the ones whose
+  // Airtable formula left an empty slot («Вилла  в  -  м²,  спальни») and
+  // composes from structured fields when nothing usable is left. `Name` is
+  // deliberately not a candidate — on broken rows it holds a bare code
+  // like "V00437", which is worse than a composed title.
+  const titleRaw = resolveListingTitle({
+    kind: 'villa',
+    candidates: lang === 'ru'
+      ? [firstString(d['SEO:Title']), firstString(d['ИИ Имя']), firstString(d['Имя ENG'])]
+      // Active-language title first (`SEO:Title ZH|DE|NL…` merged from the
+      // translation cache), then EN, then RU (tField translits any RU leftover).
+      : [tField(d, 'SEO:Title', lang), tField(d, 'ИИ Имя', lang), firstString(d['Имя ENG'])],
+    district: e.district,
+    area: e.area,
+    bedrooms: e.bedrooms,
+    lang,
+  })
   // Last-resort de-Cyrillic: some rows have no `<field> EN` translation, so
   // the non-RU branch still falls back to the RU-composed SEO:Title
   // («Вилла … в … — 165 м², 2 спальни»). Transliterate leftover Cyrillic so

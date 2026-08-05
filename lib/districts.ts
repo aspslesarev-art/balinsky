@@ -624,11 +624,22 @@ const BUY_SUBJECT: Record<Lang, Record<Kind, string>> = {
  * @param districtName when set, scopes the heading to one area instead of Bali
  *   as a whole. Pass the already-localised district name.
  */
-export function getBuyHeading(kind: Kind, lang: Lang, totalCount?: number, districtName?: string): string {
+/**
+ * The bare buy phrase — «Купить виллу на Бали», "Buy a villa in Bali" — with
+ * no count and no year. Used as anchor text on internal links pointing at a
+ * hub, so the ~2300 listing pages pass the head keyword instead of a generic
+ * «Все виллы».
+ */
+export function getBuyAnchor(kind: Kind, lang: Lang, districtName?: string): string {
   const c = BUY_HEADING[lang] ?? BUY_HEADING.en
   const subject = (BUY_SUBJECT[lang] ?? BUY_SUBJECT.en)[kind]
   const where = districtName ? c.inArea(districtName) : c.inBali
-  const head = c.buy((c.compose ?? ((s, w) => `${s} ${w}`))(subject, where).trim())
+  return c.buy((c.compose ?? ((s, w) => `${s} ${w}`))(subject, where).trim())
+}
+
+export function getBuyHeading(kind: Kind, lang: Lang, totalCount?: number, districtName?: string): string {
+  const c = BUY_HEADING[lang] ?? BUY_HEADING.en
+  const head = getBuyAnchor(kind, lang, districtName)
   if (!totalCount) return `${head} — ${YEAR}`
   return `${head} — ${totalCount} ${c.noun[kind](totalCount)} ${YEAR}`
 }

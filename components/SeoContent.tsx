@@ -9,6 +9,7 @@ import {
 } from '@/lib/seo-routes'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { getHubLongCopy, isUnfilteredHub } from '@/lib/hub-seo'
+import { getRelatedReading } from '@/lib/hub-seo/related-reading'
 import { HubLongForm } from '@/components/HubLongForm'
 
 const POPULAR_DISTRICTS = ['Berawa', 'Sanur', 'Ubud', 'Uluwatu', 'Pererenan', 'Pandawa', 'Batu Bolong', 'Cemagi']
@@ -483,7 +484,7 @@ export function SeoContent({
         <p className="text-[var(--color-text-muted)]">{context(filters, lang)}</p>
       </div>
 
-      {longCopy && <HubLongForm copy={longCopy} />}
+      {longCopy && <HubLongForm copy={longCopy} reading={getRelatedReading('apartments', lang)} />}
 
       <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
         <div>
