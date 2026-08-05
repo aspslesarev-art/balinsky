@@ -79,8 +79,10 @@ async function loadListings() {
   const done = new Set()
   for (let from = 0; ; from += 1000) {
     const { data, error } = await sb.from('listing_geo_facts')
-      .select('kind,airtable_id,routes')
-      .not('routes', 'is', null)
+      // A peak run fills routes_peak, a plain one fills routes — top up
+      // whichever column this invocation is actually writing.
+      .select(DEPARTURE ? 'kind,airtable_id,routes_peak' : 'kind,airtable_id,routes')
+      .not(DEPARTURE ? 'routes_peak' : 'routes', 'is', null)
       .order('airtable_id', { ascending: true })
       .range(from, from + 999)
     if (error) throw new Error(`listing_geo_facts read failed: ${error.message}`)
