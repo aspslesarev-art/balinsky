@@ -63,7 +63,6 @@ export const EN_KNOWLEDGE_SLUG_OVERRIDES: Record<string, string> = {
   "kak-proverit-brokera-na-bali-sprosite-arenduet-li-on-skuter-i-za-skolko-prostoy-": "how-check-broker-bali-ask-if-they",
   "luchshie-nastroyki-konditsionera-dlya-krepkogo-sna-na-bali-temperatura-rezhimy-i": "best-air-conditioner-settings-deep-sleep-bali",
   "luchshee-prilozhenie-dlya-3d-skanirovaniya-na-iphone-bystro-sohranyayte-planirov": "best-3d-scanning-app-iphone",
-  "luchshee-prilozhenie-dlya-3d-skanirovaniya-na-iphone-bystroe-sozdanie-planirovok": "best-3d-scanning-app-iphone-2",
   "strahovka-genki-s-franshizoy-ili-bez-kak-sekonomit-do-576-v-god": "genki-insurance-deductible-not-save-up-576",
   "5-vazhnyh-kart-pered-pokupkoy-zemli-na-bali-chto-proverit-krome-zonirovaniya": "5-important-maps-before-buying-land-bali",
   "kontent-plan-dlya-rieltora-na-30-dney-gotovye-idei-postov-dlya-privlecheniya-kli": "30-day-content-plan-realtors-ready-post-ideas",
