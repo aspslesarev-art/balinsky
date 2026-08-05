@@ -1768,6 +1768,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
                 lang={lang}
                 elevationM={geoFacts?.elevation_m ?? null}
                 routes={geoFacts?.routes ?? null}
+                streetView={geoFacts?.access?.sv ?? null}
               />
             )}
             <ClimateBlock climate={geoFacts?.climate ?? null} air={geoFacts?.air ?? null} lang={lang} />

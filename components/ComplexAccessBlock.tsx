@@ -6,16 +6,16 @@ import type { ComplexAccess, Routes } from '@/lib/complex-access'
 import { pickCopy, type Lang } from '@/lib/i18n'
 
 const COPY = {
-  ru: { title: 'Как добраться', airport: 'Аэропорт', canggu: 'Чангу', seminyak: 'Семиньяк', ubud: 'Убуд', uluwatu: 'Улувату', sanur: 'Санур', min: 'мин', km: 'км', beach: 'До пляжа', elevation: 'Высота над морем', m: 'м' },
-  en: { title: 'Getting there', airport: 'Airport', canggu: 'Canggu', seminyak: 'Seminyak', ubud: 'Ubud', uluwatu: 'Uluwatu', sanur: 'Sanur', min: 'min', km: 'km', beach: 'Nearest beach', elevation: 'Elevation', m: 'm' },
-  id: { title: 'Cara ke sini', airport: 'Bandara', canggu: 'Canggu', seminyak: 'Seminyak', ubud: 'Ubud', uluwatu: 'Uluwatu', sanur: 'Sanur', min: 'mnt', km: 'km', beach: 'Pantai terdekat', elevation: 'Ketinggian', m: 'm' },
-  fr: { title: 'Accès', airport: 'Aéroport', canggu: 'Canggu', seminyak: 'Seminyak', ubud: 'Ubud', uluwatu: 'Uluwatu', sanur: 'Sanur', min: 'min', km: 'km', beach: 'Plage la plus proche', elevation: 'Altitude', m: 'm' },
-  de: { title: 'Anfahrt', airport: 'Flughafen', canggu: 'Canggu', seminyak: 'Seminyak', ubud: 'Ubud', uluwatu: 'Uluwatu', sanur: 'Sanur', min: 'Min.', km: 'km', beach: 'Nächster Strand', elevation: 'Höhe ü. M.', m: 'm' },
-  zh: { title: '交通', airport: '机场', canggu: '张古', seminyak: '水明漾', ubud: '乌布', uluwatu: '乌鲁瓦图', sanur: '沙努尔', min: '分钟', km: '公里', beach: '最近海滩', elevation: '海拔', m: '米' },
-  nl: { title: 'Bereikbaarheid', airport: 'Luchthaven', canggu: 'Canggu', seminyak: 'Seminyak', ubud: 'Ubud', uluwatu: 'Uluwatu', sanur: 'Sanur', min: 'min', km: 'km', beach: 'Dichtstbijzijnde strand', elevation: 'Hoogte', m: 'm' },
-  ban: { title: 'Akses', airport: 'Bandara', canggu: 'Canggu', seminyak: 'Seminyak', ubud: 'Ubud', uluwatu: 'Uluwatu', sanur: 'Sanur', min: 'mnt', km: 'km', beach: 'Pasih paek', elevation: 'Tegeh', m: 'm' },
-  pl: { title: 'Dojazd', airport: 'Lotnisko', canggu: 'Canggu', seminyak: 'Seminyak', ubud: 'Ubud', uluwatu: 'Uluwatu', sanur: 'Sanur', min: 'min', km: 'km', beach: 'Najbliższa plaża', elevation: 'Wysokość n.p.m.', m: 'm' },
-  uk: { title: 'Як дістатися', airport: 'Аеропорт', canggu: 'Чангу', seminyak: 'Семіньяк', ubud: 'Убуд', uluwatu: 'Улувату', sanur: 'Санур', min: 'хв', km: 'км', beach: 'До пляжу', elevation: 'Висота над морем', m: 'м' },
+  ru: { title: 'Как добраться', airport: 'Аэропорт', canggu: 'Чангу', seminyak: 'Семиньяк', ubud: 'Убуд', uluwatu: 'Улувату', sanur: 'Санур', min: 'мин', km: 'км', beach: 'До пляжа', elevation: 'Высота над морем', m: 'м', approach: 'Подъезд', approachAlt: 'Подъездная дорога к комплексу' },
+  en: { title: 'Getting there', airport: 'Airport', canggu: 'Canggu', seminyak: 'Seminyak', ubud: 'Ubud', uluwatu: 'Uluwatu', sanur: 'Sanur', min: 'min', km: 'km', beach: 'Nearest beach', elevation: 'Elevation', m: 'm', approach: 'Approach road', approachAlt: 'Approach road to the complex' },
+  id: { title: 'Cara ke sini', airport: 'Bandara', canggu: 'Canggu', seminyak: 'Seminyak', ubud: 'Ubud', uluwatu: 'Uluwatu', sanur: 'Sanur', min: 'mnt', km: 'km', beach: 'Pantai terdekat', elevation: 'Ketinggian', m: 'm', approach: 'Jalan masuk', approachAlt: 'Jalan masuk menuju kompleks' },
+  fr: { title: 'Accès', airport: 'Aéroport', canggu: 'Canggu', seminyak: 'Seminyak', ubud: 'Ubud', uluwatu: 'Uluwatu', sanur: 'Sanur', min: 'min', km: 'km', beach: 'Plage la plus proche', elevation: 'Altitude', m: 'm', approach: 'Voie d’accès', approachAlt: 'Voie d’accès à la résidence' },
+  de: { title: 'Anfahrt', airport: 'Flughafen', canggu: 'Canggu', seminyak: 'Seminyak', ubud: 'Ubud', uluwatu: 'Uluwatu', sanur: 'Sanur', min: 'Min.', km: 'km', beach: 'Nächster Strand', elevation: 'Höhe ü. M.', m: 'm', approach: 'Zufahrt', approachAlt: 'Zufahrt zur Anlage' },
+  zh: { title: '交通', airport: '机场', canggu: '张古', seminyak: '水明漾', ubud: '乌布', uluwatu: '乌鲁瓦图', sanur: '沙努尔', min: '分钟', km: '公里', beach: '最近海滩', elevation: '海拔', m: '米', approach: '进出道路', approachAlt: '前往社区的道路' },
+  nl: { title: 'Bereikbaarheid', airport: 'Luchthaven', canggu: 'Canggu', seminyak: 'Seminyak', ubud: 'Ubud', uluwatu: 'Uluwatu', sanur: 'Sanur', min: 'min', km: 'km', beach: 'Dichtstbijzijnde strand', elevation: 'Hoogte', m: 'm', approach: 'Toegangsweg', approachAlt: 'Toegangsweg naar het complex' },
+  ban: { title: 'Akses', airport: 'Bandara', canggu: 'Canggu', seminyak: 'Seminyak', ubud: 'Ubud', uluwatu: 'Uluwatu', sanur: 'Sanur', min: 'mnt', km: 'km', beach: 'Pasih paek', elevation: 'Tegeh', m: 'm', approach: 'Margi ngranjing', approachAlt: 'Margi ngranjing ka kompleks' },
+  pl: { title: 'Dojazd', airport: 'Lotnisko', canggu: 'Canggu', seminyak: 'Seminyak', ubud: 'Ubud', uluwatu: 'Uluwatu', sanur: 'Sanur', min: 'min', km: 'km', beach: 'Najbliższa plaża', elevation: 'Wysokość n.p.m.', m: 'm', approach: 'Dojazd do osiedla', approachAlt: 'Droga dojazdowa do osiedla' },
+  uk: { title: 'Як дістатися', airport: 'Аеропорт', canggu: 'Чангу', seminyak: 'Семіньяк', ubud: 'Убуд', uluwatu: 'Улувату', sanur: 'Санур', min: 'хв', km: 'км', beach: 'До пляжу', elevation: 'Висота над морем', m: 'м', approach: 'Під’їзд', approachAlt: 'Під’їзна дорога до комплексу' },
 } as const
 
 type Props = {
@@ -29,11 +29,17 @@ type Props = {
    * unlabelled hour and read up to half an hour longer for the same trip.
    */
   routes?: Routes | null
+  /**
+   * Cached Street View frame looking from the road at the building. Shown
+   * instead of describing the approach in words — the photo is the honest
+   * version, and Google's watermark on it is the attribution their terms want.
+   */
+  streetView?: { url?: string; date: string | null } | null
 }
 
 const MINUTES = (sec: number) => Math.round(sec / 60)
 
-export function ComplexAccessBlock({ access, lang, elevationM, routes }: Props) {
+export function ComplexAccessBlock({ access, lang, elevationM, routes, streetView }: Props) {
   const t = pickCopy(COPY, lang)
   // Both numbers when the road makes a real difference, one when it doesn't:
   // "45–56" says something, "45–46" is noise.
@@ -63,7 +69,11 @@ export function ComplexAccessBlock({ access, lang, elevationM, routes }: Props) 
 
   const hasBeach = access.nearest_beach_name != null && access.nearest_beach_km != null
   const hasElevation = elevationM != null
-  if (rows.length === 0 && !hasBeach && !hasElevation) return null
+  const svUrl = streetView?.url ?? null
+  // "2025-06" → "06.2025"; anything unexpected is simply not shown.
+  const svDate = streetView?.date?.match(/^(\d{4})-(\d{2})$/)
+  const svCaption = svDate ? `${svDate[2]}.${svDate[1]}` : null
+  if (rows.length === 0 && !hasBeach && !hasElevation && !svUrl) return null
 
   return (
     <div className="mb-4 rounded-2xl border border-[var(--color-border)] bg-white p-5">
@@ -100,6 +110,27 @@ export function ComplexAccessBlock({ access, lang, elevationM, routes }: Props) 
           </div>
         )}
       </div>
+
+      {svUrl && (
+        <figure className="mt-4">
+          {/* Plain <img> on purpose: the frame is already a 640×360 WebP in our
+              own Storage, so next/image would add a transform hop and cost for
+              nothing. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={svUrl}
+            alt={t.approachAlt}
+            width={640}
+            height={360}
+            loading="lazy"
+            className="w-full rounded-xl border border-[var(--color-border)] object-cover"
+          />
+          <figcaption className="mt-1.5 text-[12px] text-[var(--color-text-muted)]">
+            {t.approach}
+            {svCaption ? ` · Google Street View, ${svCaption}` : ' · Google Street View'}
+          </figcaption>
+        </figure>
+      )}
     </div>
   )
 }
