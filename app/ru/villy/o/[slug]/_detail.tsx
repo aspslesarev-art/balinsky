@@ -52,8 +52,10 @@ import { ManagerCard } from '@/components/ManagerCard'
 import { loadNearbyPlaces } from '@/lib/nearby-places'
 import { NearbyPlaces } from '@/components/NearbyPlaces'
 import { loadGeoFacts } from '@/lib/complex-access'
+import { loadSurroundings } from '@/lib/surroundings'
 import { ComplexAccessBlock } from '@/components/ComplexAccessBlock'
 import { ClimateBlock } from '@/components/ClimateBlock'
+import { SurroundingsBlock } from '@/components/SurroundingsBlock'
 import { loadManagersByDeveloperName, loadManagersByDeveloperSlug } from '@/lib/managers'
 import { getDeveloperStats } from '@/lib/developer-stats'
 import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
@@ -1024,7 +1026,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   const isResale = /перепрод|resale|вторич|secondary/.test(dealTypeRaw)
   const sellerUrl = isResale ? firstString(d['Контакт продавца']) : null
 
-  const [otherVillas, complexes, developers, stylesMap, scoresMap, activeReservation, landProfile, marketStats, nearby, geoFacts] = await Promise.all([
+  const [otherVillas, complexes, developers, stylesMap, scoresMap, activeReservation, landProfile, marketStats, nearby, geoFacts, surroundings] = await Promise.all([
     loadOtherVillasInDistrict(district, v.airtable_id, lang),
     _loadComplexesIndex(),
     _loadDevelopersIndex(lang),
@@ -1035,6 +1037,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
     loadMarketStats('villa', v.airtable_id),
     loadNearbyPlaces(v.airtable_id).catch(() => null),
     loadGeoFacts('villa', v.airtable_id).catch(() => null),
+    loadSurroundings('villa', v.airtable_id).catch(() => null),
   ])
   const interiorStyle = stylesMap[v.airtable_id]?.style ?? null
   const villaScore = scoresMap.get(v.airtable_id) ?? null
@@ -1349,6 +1352,8 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
             <ClimateBlock climate={geoFacts.climate} air={geoFacts.air} lang={lang} />
           </>
         )}
+
+        <SurroundingsBlock data={surroundings} lang={lang} />
 
         {nearby && (
           <GatedBlock lang={lang}>

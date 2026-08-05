@@ -41,8 +41,10 @@ import { ManagerCard } from '@/components/ManagerCard'
 import { loadNearbyPlaces } from '@/lib/nearby-places'
 import { NearbyPlaces } from '@/components/NearbyPlaces'
 import { loadGeoFacts } from '@/lib/complex-access'
+import { loadSurroundings } from '@/lib/surroundings'
 import { ComplexAccessBlock } from '@/components/ComplexAccessBlock'
 import { ClimateBlock } from '@/components/ClimateBlock'
+import { SurroundingsBlock } from '@/components/SurroundingsBlock'
 import { loadManagersByDeveloperName } from '@/lib/managers'
 import { PriceCtaCard } from '@/components/PriceCtaCard'
 import { findActiveReservation } from '@/lib/reservations'
@@ -947,7 +949,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
   const parentComplex = findParentComplex(title, complexes)
   const parentComplexName = parentComplex?.name ?? null
 
-  const [otherApts, managers, activeReservation, landProfile, marketStats, developers, nearby, geoFacts] = await Promise.all([
+  const [otherApts, managers, activeReservation, landProfile, marketStats, developers, nearby, geoFacts, surroundings] = await Promise.all([
     loadOtherApartmentsInDistrict(district, a.airtable_id, lang),
     loadManagersByDeveloperName(devName),
     findActiveReservation('apartment', a.airtable_id),
@@ -956,6 +958,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
     _loadDevelopersIndex(),
     loadNearbyPlaces(a.airtable_id).catch(() => null),
     loadGeoFacts('apartment', a.airtable_id).catch(() => null),
+    loadSurroundings('apartment', a.airtable_id).catch(() => null),
   ])
   const developer = findDeveloperByName(devName, developers)
   const GMAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? ''
@@ -1211,6 +1214,8 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
             <ClimateBlock climate={geoFacts.climate} air={geoFacts.air} lang={lang} />
           </>
         )}
+
+        <SurroundingsBlock data={surroundings} lang={lang} />
 
         {nearby && (
           <GatedBlock lang={lang}>

@@ -52,7 +52,9 @@ import { loadComplexMarketStats } from '@/lib/complex-market-stats'
 import { MarketStatsBlock } from '@/components/MarketStatsBlock'
 import { GatedBlock } from '@/components/GatedBlock'
 import { loadComplexAccess, loadGeoFacts } from '@/lib/complex-access'
+import { loadSurroundings } from '@/lib/surroundings'
 import { ClimateBlock } from '@/components/ClimateBlock'
+import { SurroundingsBlock } from '@/components/SurroundingsBlock'
 import { ComplexAccessBlock } from '@/components/ComplexAccessBlock'
 import { ComplexSignalsBlock } from '@/components/ComplexSignalsBlock'
 import { computeComplexSignals, loadDistrictOccupancyMedians, hasAnySignal } from '@/lib/complex-signals'
@@ -69,6 +71,7 @@ import { loadKbPageContent } from '@/lib/kb-page-content'
 import { loadListingVision, loadVisionManifest, altFor } from '@/lib/listing-features'
 import { loadListingCopy } from '@/lib/listing-copy'
 import { curateManifest } from '@/lib/listing-photos'
+import { commercialComplexTitle } from '@/lib/listing-meta'
 import { DistrictAboutCard } from '@/components/DistrictAboutCard'
 import { getDistrictCopy } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
@@ -1291,8 +1294,24 @@ export async function generateComplexMetadata(slug: string, lang: Lang) {
   const ruPath = `/ru/zhilye-kompleksy/o/${slug}`
   const enPath = `/en/complexes/o/${slug}`
   const path = switchLangPath(ruPath, lang)
+  // CTR sprint: the old title spent its visible ~60 characters on unit types
+  // and never showed a price, so brand queries («surfside bali», 822
+  // impressions at position 7.9) converted at under 2%. Lead with price and
+  // readiness — the units are already loaded above for the description, so
+  // this costs nothing. Falls back when the complex has no priced units.
+  const unitPrices = units.map(u => Number(u.priceUsd)).filter(n => Number.isFinite(n) && n > 0)
+  const unitBeds = units.map(u => Number(u.bedrooms)).filter(n => Number.isFinite(n) && n > 0)
+  const commercialTitle = commercialComplexTitle({
+    name,
+    district,
+    priceFromUsd: unitPrices.length ? Math.min(...unitPrices) : null,
+    bedsMin: unitBeds.length ? Math.min(...unitBeds) : null,
+    bedsMax: unitBeds.length ? Math.max(...unitBeds) : null,
+    year: yearRaw,
+    lang,
+  })
   return {
-    title: gen?.title ?? copy.titlePart(name, district, unitTypesPhrase(c.data['Типы юнитов'], lang)),
+    title: commercialTitle ?? gen?.title ?? copy.titlePart(name, district, unitTypesPhrase(c.data['Типы юнитов'], lang)),
     description,
     alternates: {
       canonical: path,
@@ -1317,13 +1336,14 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   const name = firstString(d['Project'])
   if (!name) notFound()
 
-  const [photoManifest, units, landProfile, marketStats, access, geoFacts] = await Promise.all([
+  const [photoManifest, units, landProfile, marketStats, access, geoFacts, surroundings] = await Promise.all([
     _loadComplexPhotos(),
     loadUnitsInComplex(name, lang),
     loadLandProfile('complex', c.airtable_id),
     loadComplexMarketStats(c.airtable_id),
     loadComplexAccess(c.airtable_id),
     loadGeoFacts('complex', c.airtable_id),
+    loadSurroundings('complex', c.airtable_id).catch(() => null),
   ])
 
   const photos = (photoManifest[c.airtable_id] ?? []).slice(0, 12)
@@ -1800,6 +1820,8 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             data is keyed by villa airtable_id; we surface it on
             the complex page using the first villa unit's nearby
             data because units in the same complex share geo. */}
+        <SurroundingsBlock data={surroundings} lang={lang} />
+
         {nearby && (
           <GatedBlock lang={lang}>
             <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />
