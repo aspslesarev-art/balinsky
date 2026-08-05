@@ -8,6 +8,8 @@ import {
   priceSegmentLabel,
 } from '@/lib/seo-routes'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
+import { getHubLongCopy, isUnfilteredHub } from '@/lib/hub-seo'
+import { HubLongForm } from '@/components/HubLongForm'
 
 const POPULAR_DISTRICTS = ['Berawa', 'Sanur', 'Ubud', 'Uluwatu', 'Pererenan', 'Pandawa', 'Batu Bolong', 'Cemagi']
 
@@ -457,9 +459,16 @@ export function SeoContent({
     .filter(x => x.slug)
   const aptRoot = switchLangPath('/ru/apartamenty', lang)
 
+  // Ranking material for «купить апартаменты на Бали» / «апартаменты бали
+  // цены» — only on the bare list hub, see lib/hub-seo/types.ts.
+  const longCopy = variant === 'list' && isUnfilteredHub(filters)
+    ? getHubLongCopy('apartments', lang)
+    : null
+  const faq = longCopy ? [...C.faq, ...longCopy.faqExtra] : C.faq
+
   const faqJsonLd = {
     '@context': 'https://schema.org', '@type': 'FAQPage',
-    mainEntity: C.faq.map(item => ({
+    mainEntity: faq.map(item => ({
       '@type': 'Question', name: item.q,
       acceptedAnswer: { '@type': 'Answer', text: item.a },
     })),
@@ -473,6 +482,8 @@ export function SeoContent({
         <p>{intro(filters, variant, lang)}</p>
         <p className="text-[var(--color-text-muted)]">{context(filters, lang)}</p>
       </div>
+
+      {longCopy && <HubLongForm copy={longCopy} />}
 
       <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
         <div>
@@ -531,7 +542,7 @@ export function SeoContent({
       <div className="mt-12">
         <h3 className="text-[18px] font-semibold text-[var(--color-text)] mb-4">{C.faqHeading}</h3>
         <div className="max-w-3xl divide-y divide-[var(--color-border)] border-t border-b border-[var(--color-border)]">
-          {C.faq.map((item, i) => (
+          {faq.map((item, i) => (
             <details key={i} className="group py-4">
               <summary className="cursor-pointer list-none flex items-center justify-between gap-4 text-[15px] font-medium text-[var(--color-text)]">
                 {item.q}
