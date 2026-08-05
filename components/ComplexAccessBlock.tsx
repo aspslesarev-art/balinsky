@@ -19,7 +19,12 @@ const COPY = {
 } as const
 
 type Props = {
-  access: ComplexAccess
+  /**
+   * Complex-only logistics (nearest beach, the legacy drive times). Villas and
+   * apartments have no such row, so this is optional — they render from
+   * `routes` and `elevationM` alone.
+   */
+  access?: ComplexAccess | null
   lang: Lang
   /** Metres above sea level; the row hides itself when we have no measurement. */
   elevationM?: number | null
@@ -54,14 +59,14 @@ export function ComplexAccessBlock({ access, lang, elevationM, routes }: Props) 
         { key: 'sanur', label: t.sanur, text: range(routes.sanur), Icon: Car },
       ].filter((r) => r.text != null)
     : [
-        { key: 'airport', label: t.airport, text: access.drive_airport_min?.toString() ?? null, Icon: Plane },
-        { key: 'canggu', label: t.canggu, text: access.drive_canggu_min?.toString() ?? null, Icon: Car },
-        { key: 'seminyak', label: t.seminyak, text: access.drive_seminyak_min?.toString() ?? null, Icon: Car },
-        { key: 'ubud', label: t.ubud, text: access.drive_ubud_min?.toString() ?? null, Icon: Car },
-        { key: 'uluwatu', label: t.uluwatu, text: access.drive_uluwatu_min?.toString() ?? null, Icon: Car },
+        { key: 'airport', label: t.airport, text: access?.drive_airport_min?.toString() ?? null, Icon: Plane },
+        { key: 'canggu', label: t.canggu, text: access?.drive_canggu_min?.toString() ?? null, Icon: Car },
+        { key: 'seminyak', label: t.seminyak, text: access?.drive_seminyak_min?.toString() ?? null, Icon: Car },
+        { key: 'ubud', label: t.ubud, text: access?.drive_ubud_min?.toString() ?? null, Icon: Car },
+        { key: 'uluwatu', label: t.uluwatu, text: access?.drive_uluwatu_min?.toString() ?? null, Icon: Car },
       ].filter((r) => r.text != null)
 
-  const hasBeach = access.nearest_beach_name != null && access.nearest_beach_km != null
+  const hasBeach = access?.nearest_beach_name != null && access?.nearest_beach_km != null
   const hasElevation = elevationM != null
   if (rows.length === 0 && !hasBeach && !hasElevation) return null
 
@@ -92,10 +97,10 @@ export function ComplexAccessBlock({ access, lang, elevationM, routes }: Props) 
             <Waves size={16} className="shrink-0 text-[var(--color-primary)]" />
             <span className="shrink-0 text-[13px] text-[var(--color-text-muted)]">{t.beach}:</span>
             <span className="truncate text-[14px] font-medium text-[#111827]">
-              {access.nearest_beach_name}
+              {access?.nearest_beach_name}
             </span>
             <span className="shrink-0 text-[14px] font-semibold text-[#111827]">
-              · {access.nearest_beach_km} {t.km}
+              · {access?.nearest_beach_km} {t.km}
             </span>
           </div>
         )}

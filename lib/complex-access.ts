@@ -73,7 +73,7 @@ export async function loadGeoFacts(
 ): Promise<GeoFacts | null> {
   const { data, error } = await sb
     .from('listing_geo_facts')
-    .select('elevation_m,sunshine_hours_year,climate,air,routes_peak,routes_peak_at,access')
+    .select('elevation_m,sunshine_hours_year,climate,air,routes,routes_peak,routes_peak_at,access')
     .eq('kind', kind)
     .eq('airtable_id', airtableId)
     .maybeSingle()
@@ -83,9 +83,11 @@ export async function loadGeoFacts(
     sunshine_hours_year: data.sunshine_hours_year != null ? Number(data.sunshine_hours_year) : null,
     climate: (data.climate as Climate | null) ?? null,
     air: (data.air as GeoFacts['air']) ?? null,
-    // routes_peak carries both readings (with traffic and on a clear road);
-    // the plain `routes` column is the same trip measured at an arbitrary hour.
-    routes: (data.routes_peak as Routes | null) ?? null,
+    // routes_peak carries both readings (with traffic and on a clear road) but
+    // only complexes have it so far. Villas and apartments fall back to the
+    // plain `routes` column — same trip, measured once at an arbitrary hour, so
+    // those legs have no static_s and render as a single number.
+    routes: (data.routes_peak as Routes | null) ?? (data.routes as Routes | null) ?? null,
     routes_peak_at: (data.routes_peak_at as string | null) ?? null,
     access: (data.access as GeoFacts['access']) ?? null,
   }
