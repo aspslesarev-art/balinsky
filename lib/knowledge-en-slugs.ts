@@ -52,7 +52,6 @@ export const EN_KNOWLEDGE_SLUG_OVERRIDES: Record<string, string> = {
   "moshenniki-na-bali-ostorozhno-feykovye-pokupateli-nedvizhimosti-kradut-dannye-ch": "scammers-bali-beware-fake-property-buyers-stealing",
   "luchshaya-strahovka-dlya-zhizni-na-bali-i-po-vsemu-miru-lichnyy-opyt-bystrye-vyp": "best-insurance-living-bali-worldwide-personal-experience",
   "chto-realno-nuzhno-agentam-dlya-uspeshnyh-prodazh-novostroek-klyuchevye-fakty-ke": "what-agents-really-need-sell-new-developments",
-  "luchshiy-servis-dlya-skachivaniya-video-s-youtube-besplatno-yt5s-biz": "best-free-service-downloading-youtube-videos-yt5s",
   "traditsii-bali-den-tehniki-galungan-i-nepi-udivitelnye-prazdniki-baliyskoy-kultu": "bali-traditions-tumpek-landep-galungan-nyepi",
   "10-luchshih-autentichnyh-podarkov-s-bali-chto-privezti-klientu": "10-best-authentic-gifts-bali-clients",
   "kak-nachat-bolshe-dvigatsya-bez-sportzala-moy-opyt-s-nintendo-switch-dlya-utrenn": "how-i-started-moving-more-without-gym",
