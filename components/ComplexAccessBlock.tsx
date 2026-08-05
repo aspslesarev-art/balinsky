@@ -1,29 +1,31 @@
 // Presentational block: traffic-aware drive times from a complex to key Bali
 // hubs + nearest beach. Server Component (no 'use client'). Renders nothing
 // when there's no usable data. Data from lib/complex-access.ts.
-import { Plane, Car, Waves } from 'lucide-react'
+import { Plane, Car, Waves, Mountain } from 'lucide-react'
 import type { ComplexAccess } from '@/lib/complex-access'
 import { pickCopy, type Lang } from '@/lib/i18n'
 
 const COPY = {
-  ru: { title: 'Как добраться', airport: 'Аэропорт', canggu: 'Чангу', seminyak: 'Семиньяк', ubud: 'Убуд', uluwatu: 'Улувату', min: 'мин', km: 'км', beach: 'До пляжа' },
-  en: { title: 'Getting there', airport: 'Airport', canggu: 'Canggu', seminyak: 'Seminyak', ubud: 'Ubud', uluwatu: 'Uluwatu', min: 'min', km: 'km', beach: 'Nearest beach' },
-  id: { title: 'Cara ke sini', airport: 'Bandara', canggu: 'Canggu', seminyak: 'Seminyak', ubud: 'Ubud', uluwatu: 'Uluwatu', min: 'mnt', km: 'km', beach: 'Pantai terdekat' },
-  fr: { title: 'Accès', airport: 'Aéroport', canggu: 'Canggu', seminyak: 'Seminyak', ubud: 'Ubud', uluwatu: 'Uluwatu', min: 'min', km: 'km', beach: 'Plage la plus proche' },
-  de: { title: 'Anfahrt', airport: 'Flughafen', canggu: 'Canggu', seminyak: 'Seminyak', ubud: 'Ubud', uluwatu: 'Uluwatu', min: 'Min.', km: 'km', beach: 'Nächster Strand' },
-  zh: { title: '交通', airport: '机场', canggu: '张古', seminyak: '水明漾', ubud: '乌布', uluwatu: '乌鲁瓦图', min: '分钟', km: '公里', beach: '最近海滩' },
-  nl: { title: 'Bereikbaarheid', airport: 'Luchthaven', canggu: 'Canggu', seminyak: 'Seminyak', ubud: 'Ubud', uluwatu: 'Uluwatu', min: 'min', km: 'km', beach: 'Dichtstbijzijnde strand' },
-  ban: { title: 'Akses', airport: 'Bandara', canggu: 'Canggu', seminyak: 'Seminyak', ubud: 'Ubud', uluwatu: 'Uluwatu', min: 'mnt', km: 'km', beach: 'Pasih paek' },
-  pl: { title: 'Dojazd', airport: 'Lotnisko', canggu: 'Canggu', seminyak: 'Seminyak', ubud: 'Ubud', uluwatu: 'Uluwatu', min: 'min', km: 'km', beach: 'Najbliższa plaża' },
-  uk: { title: 'Як дістатися', airport: 'Аеропорт', canggu: 'Чангу', seminyak: 'Семіньяк', ubud: 'Убуд', uluwatu: 'Улувату', min: 'хв', km: 'км', beach: 'До пляжу' },
+  ru: { title: 'Как добраться', airport: 'Аэропорт', canggu: 'Чангу', seminyak: 'Семиньяк', ubud: 'Убуд', uluwatu: 'Улувату', min: 'мин', km: 'км', beach: 'До пляжа', elevation: 'Высота над морем', m: 'м' },
+  en: { title: 'Getting there', airport: 'Airport', canggu: 'Canggu', seminyak: 'Seminyak', ubud: 'Ubud', uluwatu: 'Uluwatu', min: 'min', km: 'km', beach: 'Nearest beach', elevation: 'Elevation', m: 'm' },
+  id: { title: 'Cara ke sini', airport: 'Bandara', canggu: 'Canggu', seminyak: 'Seminyak', ubud: 'Ubud', uluwatu: 'Uluwatu', min: 'mnt', km: 'km', beach: 'Pantai terdekat', elevation: 'Ketinggian', m: 'm' },
+  fr: { title: 'Accès', airport: 'Aéroport', canggu: 'Canggu', seminyak: 'Seminyak', ubud: 'Ubud', uluwatu: 'Uluwatu', min: 'min', km: 'km', beach: 'Plage la plus proche', elevation: 'Altitude', m: 'm' },
+  de: { title: 'Anfahrt', airport: 'Flughafen', canggu: 'Canggu', seminyak: 'Seminyak', ubud: 'Ubud', uluwatu: 'Uluwatu', min: 'Min.', km: 'km', beach: 'Nächster Strand', elevation: 'Höhe ü. M.', m: 'm' },
+  zh: { title: '交通', airport: '机场', canggu: '张古', seminyak: '水明漾', ubud: '乌布', uluwatu: '乌鲁瓦图', min: '分钟', km: '公里', beach: '最近海滩', elevation: '海拔', m: '米' },
+  nl: { title: 'Bereikbaarheid', airport: 'Luchthaven', canggu: 'Canggu', seminyak: 'Seminyak', ubud: 'Ubud', uluwatu: 'Uluwatu', min: 'min', km: 'km', beach: 'Dichtstbijzijnde strand', elevation: 'Hoogte', m: 'm' },
+  ban: { title: 'Akses', airport: 'Bandara', canggu: 'Canggu', seminyak: 'Seminyak', ubud: 'Ubud', uluwatu: 'Uluwatu', min: 'mnt', km: 'km', beach: 'Pasih paek', elevation: 'Tegeh', m: 'm' },
+  pl: { title: 'Dojazd', airport: 'Lotnisko', canggu: 'Canggu', seminyak: 'Seminyak', ubud: 'Ubud', uluwatu: 'Uluwatu', min: 'min', km: 'km', beach: 'Najbliższa plaża', elevation: 'Wysokość n.p.m.', m: 'm' },
+  uk: { title: 'Як дістатися', airport: 'Аеропорт', canggu: 'Чангу', seminyak: 'Семіньяк', ubud: 'Убуд', uluwatu: 'Улувату', min: 'хв', km: 'км', beach: 'До пляжу', elevation: 'Висота над морем', m: 'м' },
 } as const
 
 type Props = {
   access: ComplexAccess
   lang: Lang
+  /** Metres above sea level; the row hides itself when we have no measurement. */
+  elevationM?: number | null
 }
 
-export function ComplexAccessBlock({ access, lang }: Props) {
+export function ComplexAccessBlock({ access, lang, elevationM }: Props) {
   const t = pickCopy(COPY, lang)
   const rows = [
     { key: 'airport', label: t.airport, min: access.drive_airport_min, Icon: Plane },
@@ -34,7 +36,8 @@ export function ComplexAccessBlock({ access, lang }: Props) {
   ].filter((r) => r.min != null)
 
   const hasBeach = access.nearest_beach_name != null && access.nearest_beach_km != null
-  if (rows.length === 0 && !hasBeach) return null
+  const hasElevation = elevationM != null
+  if (rows.length === 0 && !hasBeach && !hasElevation) return null
 
   return (
     <div className="mb-4 rounded-2xl border border-[var(--color-border)] bg-white p-5">
@@ -49,6 +52,15 @@ export function ComplexAccessBlock({ access, lang }: Props) {
             </span>
           </div>
         ))}
+        {hasElevation && (
+          <div className="flex min-w-0 items-center gap-1.5">
+            <Mountain size={16} className="shrink-0 text-[var(--color-primary)]" />
+            <span className="truncate text-[13px] text-[var(--color-text-muted)]">{t.elevation}</span>
+            <span className="shrink-0 text-[14px] font-semibold text-[#111827]">
+              {Math.round(elevationM)} {t.m}
+            </span>
+          </div>
+        )}
         {hasBeach && (
           <div className="col-span-2 flex min-w-0 items-center gap-2 sm:col-span-3">
             <Waves size={16} className="shrink-0 text-[var(--color-primary)]" />

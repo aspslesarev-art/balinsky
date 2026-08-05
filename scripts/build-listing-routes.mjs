@@ -29,6 +29,9 @@ const TRAFFIC = !ARGS.includes('--no-traffic')
 // A whole 100-origin batch can die on one bad response; re-running everything
 // would re-buy 5k elements, so allow topping up just the gaps.
 const ONLY_MISSING = ARGS.includes('--only-missing')
+// Elevation is nearly free while Routes is not, so allow topping up altitudes
+// alone — e.g. after the Elevation API is finally enabled on the project.
+const ELEVATION_ONLY = ARGS.includes('--elevation-only')
 const CAP = Number((ARGS.find(a => a.startsWith('--cap=')) || '--cap=60').split('=')[1])
 
 // Traffic-aware routing bills at the Advanced tier, free-flow at Essentials.
@@ -111,7 +114,7 @@ const estimate = elements * COST_PER_ELEMENT
 
 console.log(`listings=${listings.length}  destinations=${DESTS.length}  elements=${elements}`)
 console.log(`  mode=${TRAFFIC ? 'traffic-aware' : 'free-flow'}  est. cost $${estimate.toFixed(2)}  (cap $${CAP})`)
-if (estimate > CAP) {
+if (!ELEVATION_ONLY && estimate > CAP) {
   console.error('!! estimate exceeds cap — raise --cap or drop destinations')
   process.exit(1)
 }
@@ -122,7 +125,7 @@ const byId = new Map()
 for (const l of listings) byId.set(`${l.kind}|${l.airtable_id}`, { ...l, routes: {}, elevation_m: null })
 
 let spent = 0
-for (let i = 0; i < listings.length; i += ORIGINS_PER_REQ) {
+for (let i = 0; !ELEVATION_ONLY && i < listings.length; i += ORIGINS_PER_REQ) {
   const batch = listings.slice(i, i + ORIGINS_PER_REQ)
   let res
   try {
@@ -160,12 +163,17 @@ for (let i = 0; i < listings.length; i += 400) {
   }
 }
 
-const rows = [...byId.values()].map(r => ({
-  kind: r.kind, airtable_id: r.airtable_id, lat: r.lat, lng: r.lng,
-  routes: Object.keys(r.routes).length ? r.routes : null,
-  elevation_m: r.elevation_m,
-  computed_at: now,
-}))
+// In elevation-only mode the payload deliberately omits `routes`: PostgREST
+// updates just the columns it receives, so the existing (paid for) drive times
+// survive instead of being overwritten with null.
+const rows = [...byId.values()].map(r => (ELEVATION_ONLY
+  ? { kind: r.kind, airtable_id: r.airtable_id, lat: r.lat, lng: r.lng, elevation_m: r.elevation_m, computed_at: now }
+  : {
+      kind: r.kind, airtable_id: r.airtable_id, lat: r.lat, lng: r.lng,
+      routes: Object.keys(r.routes).length ? r.routes : null,
+      elevation_m: r.elevation_m,
+      computed_at: now,
+    }))
 
 let written = 0
 for (let i = 0; i < rows.length; i += 200) {

@@ -51,7 +51,7 @@ import { loadLandProfile, landAllowsBuilding } from '@/lib/land-profile'
 import { loadComplexMarketStats } from '@/lib/complex-market-stats'
 import { MarketStatsBlock } from '@/components/MarketStatsBlock'
 import { GatedBlock } from '@/components/GatedBlock'
-import { loadComplexAccess } from '@/lib/complex-access'
+import { loadComplexAccess, loadElevation } from '@/lib/complex-access'
 import { ComplexAccessBlock } from '@/components/ComplexAccessBlock'
 import { ComplexSignalsBlock } from '@/components/ComplexSignalsBlock'
 import { computeComplexSignals, loadDistrictOccupancyMedians, hasAnySignal } from '@/lib/complex-signals'
@@ -1316,12 +1316,13 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   const name = firstString(d['Project'])
   if (!name) notFound()
 
-  const [photoManifest, units, landProfile, marketStats, access] = await Promise.all([
+  const [photoManifest, units, landProfile, marketStats, access, elevationM] = await Promise.all([
     _loadComplexPhotos(),
     loadUnitsInComplex(name, lang),
     loadLandProfile('complex', c.airtable_id),
     loadComplexMarketStats(c.airtable_id),
     loadComplexAccess(c.airtable_id),
+    loadElevation('complex', c.airtable_id),
   ])
 
   const photos = (photoManifest[c.airtable_id] ?? []).slice(0, 12)
@@ -1760,7 +1761,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
                   "Missing: badung regency" flag in our snippets. */}
               {districtRaw ? geoChainString(districtRaw) : copy.locationLine(district)}
             </div>
-            {access && <ComplexAccessBlock access={access} lang={lang} />}
+            {access && <ComplexAccessBlock access={access} lang={lang} elevationM={elevationM} />}
             {process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY && (
               <GatedBlock lang={lang}>
                 <div className="mb-4">

@@ -30,6 +30,24 @@ export type ComplexAccess = {
   data: Record<string, unknown> | null
 }
 
+// Altitude from listing_geo_facts (Google Elevation, migration 055 and
+// scripts/build-listing-routes.mjs). A separate table because it covers villas
+// and apartments too, not just complexes. Same read-by-id discipline as below:
+// null is a legitimate answer, so no cache wrapper.
+export async function loadElevation(
+  kind: 'complex' | 'villa' | 'apartment',
+  airtableId: string,
+): Promise<number | null> {
+  const { data, error } = await sb
+    .from('listing_geo_facts')
+    .select('elevation_m')
+    .eq('kind', kind)
+    .eq('airtable_id', airtableId)
+    .maybeSingle()
+  if (error || data?.elevation_m == null) return null
+  return Number(data.elevation_m)
+}
+
 export async function loadComplexAccess(complexId: string): Promise<ComplexAccess | null> {
   const { data, error } = await sb
     .from('complex_access')
