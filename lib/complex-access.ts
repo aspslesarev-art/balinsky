@@ -30,22 +30,48 @@ export type ComplexAccess = {
   data: Record<string, unknown> | null
 }
 
-// Altitude from listing_geo_facts (Google Elevation, migration 055 and
-// scripts/build-listing-routes.mjs). A separate table because it covers villas
-// and apartments too, not just complexes. Same read-by-id discipline as below:
+/** Per-month climate: how many days of each kind an average month has. */
+export type ClimateMonth = {
+  days: number
+  sunny: number
+  wet: number
+  mixed: number
+  rain_mm: number | null
+  t_max: number | null
+  rh: number | null
+}
+export type Climate = Record<string, ClimateMonth> & {
+  year?: { days: number; sunny: number; wet: number; mixed: number; years: number }
+}
+export type GeoFacts = {
+  elevation_m: number | null
+  sunshine_hours_year: number | null
+  climate: Climate | null
+  air: { uaqi_avg: number | null; ispu_avg: number | null; dominant: string | null; hours: number } | null
+}
+
+// Altitude, sunshine, climate and air from listing_geo_facts (migrations 055
+// and 056; filled by scripts/build-listing-routes.mjs and
+// build-listing-environment.mjs). A separate table from complex_access because
+// it covers villas and apartments too. Same read-by-id discipline as below:
 // null is a legitimate answer, so no cache wrapper.
-export async function loadElevation(
+export async function loadGeoFacts(
   kind: 'complex' | 'villa' | 'apartment',
   airtableId: string,
-): Promise<number | null> {
+): Promise<GeoFacts | null> {
   const { data, error } = await sb
     .from('listing_geo_facts')
-    .select('elevation_m')
+    .select('elevation_m,sunshine_hours_year,climate,air')
     .eq('kind', kind)
     .eq('airtable_id', airtableId)
     .maybeSingle()
-  if (error || data?.elevation_m == null) return null
-  return Number(data.elevation_m)
+  if (error || !data) return null
+  return {
+    elevation_m: data.elevation_m != null ? Number(data.elevation_m) : null,
+    sunshine_hours_year: data.sunshine_hours_year != null ? Number(data.sunshine_hours_year) : null,
+    climate: (data.climate as Climate | null) ?? null,
+    air: (data.air as GeoFacts['air']) ?? null,
+  }
 }
 
 export async function loadComplexAccess(complexId: string): Promise<ComplexAccess | null> {
