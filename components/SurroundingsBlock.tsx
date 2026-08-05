@@ -147,7 +147,8 @@ export function SurroundingsBlock({ data, lang }: { data: Surroundings | null; l
                     <span>{distance(v.dist_m, t)}</span>
                   </div>
                   <div className="mt-1 truncate text-[12px] text-[var(--color-text-muted)]">
-                    {bucketLabel(v.bucket, lang)}
+                    {/* One venue per card, so the singular form. */}
+                    {bucketLabel(v.bucket, lang, 1)}
                     {foreign ? ` · ${t.foreign}` : ''}
                   </div>
                 </figcaption>
