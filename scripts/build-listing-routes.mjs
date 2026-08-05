@@ -11,7 +11,6 @@
 //   node scripts/build-listing-routes.mjs --cap=60        # full run, hard stop at $60
 //   node scripts/build-listing-routes.mjs --no-traffic    # cheaper Essentials tier
 import fs from 'node:fs'
-import sharp from 'sharp'
 import { createClient } from '@supabase/supabase-js'
 
 const env = fs.readFileSync('.env.local', 'utf8')
@@ -43,9 +42,6 @@ const KINDS = ((ARGS.find(a => a.startsWith('--kinds=')) || '').split('=')[1] ||
 // Approach-road quality: Street View coverage (free) plus a motorbike routing
 // of the same trip, which exposes the detours a car is forced into.
 const ACCESS = ARGS.includes('--access')
-// One Street View frame per listing, looking from the road at the building.
-// A photo of the actual approach beats any adjective we could write about it.
-const SV_PHOTOS = ARGS.includes('--sv-photos')
 const CAP = Number((ARGS.find(a => a.startsWith('--cap=')) || '--cap=60').split('=')[1])
 
 // Traffic-aware routing bills at the Advanced tier, free-flow at Essentials.
@@ -134,15 +130,6 @@ async function streetView(lat, lng) {
   }
 }
 
-/** Compass bearing from the panorama to the building, so the camera looks at it. */
-function bearing(lat1, lng1, lat2, lng2) {
-  const rad = (x) => (x * Math.PI) / 180
-  const y = Math.sin(rad(lng2 - lng1)) * Math.cos(rad(lat2))
-  const x = Math.cos(rad(lat1)) * Math.sin(rad(lat2)) -
-    Math.sin(rad(lat1)) * Math.cos(rad(lat2)) * Math.cos(rad(lng2 - lng1))
-  return Math.round(((Math.atan2(y, x) * 180) / Math.PI + 360) % 360)
-}
-
 function haversineM(lat1, lng1, lat2, lng2) {
   const R = 6371000, rad = (x) => (x * Math.PI) / 180
   return Math.round(R * Math.acos(Math.min(1, Math.max(-1,
@@ -162,53 +149,6 @@ async function elevations(points) {
 
 // ---- main ----
 const listings = await loadListings()
-
-if (SV_PHOTOS) {
-  // Street View Static bills per image ($7/1000), so this is a one-off: fetch,
-  // re-encode to WebP and park it in our own Storage, exactly like the place
-  // photos. Google's watermark stays on the frame — that is the attribution
-  // their terms require.
-  const BUCKET = 'places'
-  console.log(`street view photos: ${listings.length} listings ≈ $${(listings.length * 0.007).toFixed(2)}`)
-  if (DRY) process.exit(0)
-
-  let ok = 0, none = 0
-  const rows = []
-  for (const [idx, l] of listings.entries()) {
-    const sv = await streetView(l.lat, l.lng).catch(() => null)
-    if (!sv || sv.status !== 'OK' || !sv.loc) { none++; continue }
-    // Look from the road towards the building, not along the street.
-    const heading = bearing(sv.loc.lat, sv.loc.lng, l.lat, l.lng)
-    const url = 'https://maps.googleapis.com/maps/api/streetview'
-      + `?size=640x360&location=${sv.loc.lat},${sv.loc.lng}&heading=${heading}&pitch=2&fov=80&key=${encodeURIComponent(KEY)}`
-    try {
-      const r = await fetch(url)
-      if (!r.ok) { none++; continue }
-      const buf = await sharp(Buffer.from(await r.arrayBuffer()), { failOn: 'none' }).webp({ quality: 74 }).toBuffer()
-      const key = `sv/${l.kind}-${l.airtable_id}.webp`
-      const { error } = await sb.storage.from(BUCKET).upload(key, buf, { contentType: 'image/webp', upsert: true })
-      if (error) { console.error(`\n  upload ${l.airtable_id}: ${error.message}`); continue }
-      const { data: cur } = await sb.from('listing_geo_facts')
-        .select('access').eq('kind', l.kind).eq('airtable_id', l.airtable_id).maybeSingle()
-      const access = { ...(cur?.access ?? {}) }
-      access.sv = { ...(access.sv ?? {}), date: sv.date, dist_m: sv.dist_m, status: 'OK',
-        url: `${SB_URL}/storage/v1/object/public/${BUCKET}/${key}` }
-      rows.push({ kind: l.kind, airtable_id: l.airtable_id, lat: l.lat, lng: l.lng, access })
-      ok++
-    } catch (e) {
-      if (none < 3) console.error(`\n  ${l.airtable_id}: ${e.message}`)
-      none++
-    }
-    if ((idx + 1) % 20 === 0) process.stdout.write(`\r  ${idx + 1}/${listings.length}  ok=${ok} skipped=${none}`)
-  }
-
-  for (let i = 0; i < rows.length; i += 100) {
-    const { error } = await sb.from('listing_geo_facts').upsert(rows.slice(i, i + 100), { onConflict: 'kind,airtable_id' })
-    if (error) console.error(`\n  upsert ${i}: ${error.message}`)
-  }
-  console.log(`\nstreet view photos: ${ok} saved, ${none} without coverage. est. spend $${(ok * 0.007).toFixed(2)}`)
-  process.exit(0)
-}
 
 if (ACCESS) {
   // Street View costs nothing; the motorbike comparison is one billed element

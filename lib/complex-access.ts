@@ -55,9 +55,9 @@ export type GeoFacts = {
   air: { uaqi_avg: number | null; ispu_avg: number | null; dominant: string | null; hours: number } | null
   routes: Routes | null
   routes_peak_at: string | null
-  /** Approach-road proxies; `sv` also carries our cached Street View frame. */
+  /** Approach-road proxies. Nothing renders them today — see migration 058. */
   access: {
-    sv?: { date: string | null; dist_m: number | null; status: string; url?: string } | null
+    sv?: { date: string | null; dist_m: number | null; status: string } | null
     detour?: number | null
   } | null
 }
