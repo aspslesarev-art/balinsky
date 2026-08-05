@@ -39,6 +39,9 @@ const DEPARTURE = (ARGS.find(a => a.startsWith('--departure=')) || '').split('='
 // Restrict to some listing kinds — the complex page is what renders these, and
 // villas/apartments can be topped up later without re-buying complexes.
 const KINDS = ((ARGS.find(a => a.startsWith('--kinds=')) || '').split('=')[1] || '').split(',').filter(Boolean)
+// Approach-road quality: Street View coverage (free) plus a motorbike routing
+// of the same trip, which exposes the detours a car is forced into.
+const ACCESS = ARGS.includes('--access')
 const CAP = Number((ARGS.find(a => a.startsWith('--cap=')) || '--cap=60').split('=')[1])
 
 // Traffic-aware routing bills at the Advanced tier, free-flow at Essentials.
@@ -87,11 +90,11 @@ async function loadListings() {
   return rows.filter(r => !done.has(`${r.kind}|${r.airtable_id}`))
 }
 
-async function routeMatrix(origins) {
+async function routeMatrix(origins, mode = 'DRIVE') {
   const body = {
     origins: origins.map(o => ({ waypoint: { location: { latLng: { latitude: o.lat, longitude: o.lng } } } })),
     destinations: DESTS.map(([, lat, lng]) => ({ waypoint: { location: { latLng: { latitude: lat, longitude: lng } } } })),
-    travelMode: 'DRIVE',
+    travelMode: mode,
     routingPreference: TRAFFIC ? 'TRAFFIC_AWARE' : 'TRAFFIC_UNAWARE',
   }
   // Routes rejects a departureTime in the past, so the caller passes the next
@@ -112,6 +115,23 @@ async function routeMatrix(origins) {
   return r.json()
 }
 
+// Street View metadata is free and tells us whether Google's car ever drove
+// past — the most honest available proxy for "a car can reach this address".
+async function streetView(lat, lng) {
+  const r = await fetch(`https://maps.googleapis.com/maps/api/streetview/metadata?location=${lat},${lng}&radius=150&key=${encodeURIComponent(KEY)}`)
+  if (!r.ok) return null
+  const j = await r.json()
+  if (j.status !== 'OK' || !j.location) return { date: null, dist_m: null, status: j.status }
+  return { date: j.date ?? null, dist_m: haversineM(lat, lng, j.location.lat, j.location.lng), status: 'OK' }
+}
+
+function haversineM(lat1, lng1, lat2, lng2) {
+  const R = 6371000, rad = (x) => (x * Math.PI) / 180
+  return Math.round(R * Math.acos(Math.min(1, Math.max(-1,
+    Math.sin(rad(lat1)) * Math.sin(rad(lat2)) +
+    Math.cos(rad(lat1)) * Math.cos(rad(lat2)) * Math.cos(rad(lng2) - rad(lng1))))))
+}
+
 // Elevation takes up to 512 points per request and costs a rounding error.
 async function elevations(points) {
   const locs = points.map(p => `${p.lat},${p.lng}`).join('|')
@@ -124,6 +144,64 @@ async function elevations(points) {
 
 // ---- main ----
 const listings = await loadListings()
+
+if (ACCESS) {
+  // Street View costs nothing; the motorbike comparison is one billed element
+  // per listing (the car figure comes from the routes we already bought).
+  const [, aLat, aLng] = DESTS[0]   // airport as the common anchor
+  console.log(`access: ${listings.length} listings — Street View free + 1 bike element each ≈ $${(listings.length * COST_PER_ELEMENT).toFixed(2)}`)
+  if (DRY) process.exit(0)
+
+  const existing = new Map()
+  for (let from = 0; ; from += 1000) {
+    const { data } = await sb.from('listing_geo_facts').select('kind,airtable_id,routes_peak,routes').range(from, from + 999)
+    for (const r of data ?? []) existing.set(`${r.kind}|${r.airtable_id}`, r.routes_peak ?? r.routes ?? null)
+    if (!data || data.length < 1000) break
+  }
+
+  const rows = []
+  for (let i = 0; i < listings.length; i += ORIGINS_PER_REQ) {
+    const batch = listings.slice(i, i + ORIGINS_PER_REQ)
+    let bike = []
+    try {
+      bike = await routeMatrix(batch.map(b => ({ ...b })), 'TWO_WHEELER')
+    } catch (e) {
+      console.error(`\n  bike batch ${i} failed: ${e.message}`)
+    }
+    const bikeTo = new Map()
+    for (const cell of bike) {
+      if (cell.duration == null || (cell.destinationIndex ?? 0) !== 0) continue
+      const o = batch[cell.originIndex ?? 0]
+      if (o) bikeTo.set(`${o.kind}|${o.airtable_id}`, { s: Number(String(cell.duration).replace('s', '')), m: cell.distanceMeters ?? null })
+    }
+
+    for (const l of batch) {
+      const key = `${l.kind}|${l.airtable_id}`
+      const sv = await streetView(l.lat, l.lng).catch(() => null)
+      const car = existing.get(key)?.airport ?? null
+      const straight = haversineM(l.lat, l.lng, aLat, aLng)
+      rows.push({
+        kind: l.kind, airtable_id: l.airtable_id, lat: l.lat, lng: l.lng,
+        access: {
+          sv,
+          car: car ? { s: car.s, m: car.m } : null,
+          bike: bikeTo.get(key) ?? null,
+          detour: car?.m && straight ? +(car.m / straight).toFixed(2) : null,
+        },
+      })
+    }
+    process.stdout.write(`\r  ${Math.min(i + ORIGINS_PER_REQ, listings.length)}/${listings.length}`)
+  }
+
+  for (let i = 0; i < rows.length; i += 200) {
+    const { error } = await sb.from('listing_geo_facts').upsert(rows.slice(i, i + 200), { onConflict: 'kind,airtable_id' })
+    if (error) console.error(`\n  upsert ${i} failed: ${error.message}`)
+  }
+  const withSv = rows.filter(r => r.access.sv?.status === 'OK').length
+  console.log(`\naccess written for ${rows.length}; Street View found for ${withSv}. est. spend $${(listings.length * COST_PER_ELEMENT).toFixed(2)}`)
+  process.exit(0)
+}
+
 const elements = listings.length * DESTS.length
 const estimate = elements * COST_PER_ELEMENT
 
