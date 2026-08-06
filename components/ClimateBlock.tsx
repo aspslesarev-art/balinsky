@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 // "What is the weather actually like here" in numbers a person can picture:
 // bright sunny days per year out of 365, the months worth coming for, and the
 // months it rains. Deliberately NOT sunshine hours or kWh/m² — half of any
@@ -86,9 +87,11 @@ type Props = {
   climate: Climate | null
   air: GeoFacts['air']
   lang: Lang
+  /** Необязательный подвал карточки — например, кнопка 3D-инсоляции. */
+  footer?: ReactNode
 }
 
-export function ClimateBlock({ climate, air, lang }: Props) {
+export function ClimateBlock({ climate, air, lang, footer }: Props) {
   const t = pickCopy(COPY, lang)
   const year = climate?.year
   if (!climate || !year?.sunny) return null
@@ -146,6 +149,8 @@ export function ClimateBlock({ climate, air, lang }: Props) {
           </div>
         )}
       </div>
+
+      {footer && <div className="mt-4 border-t border-[var(--color-border)] pt-4">{footer}</div>}
     </div>
   )
 }

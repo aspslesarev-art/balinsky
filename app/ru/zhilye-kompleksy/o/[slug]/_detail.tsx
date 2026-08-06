@@ -1768,54 +1768,6 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
           />
         )}
 
-        {/* Солнце и тень: заголовок и текст рендерятся на сервере и
-            индексируются, three.js и подложка грузятся только по клику. */}
-        {showSunBlock && (
-          <section className="mb-10">
-            <h2 className="text-[19px] sm:text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-3">
-              Солнце и тень
-            </h2>
-
-            <div className="rounded-2xl border border-[#e5e7eb] bg-gradient-to-br from-[#fffaf0] to-[#f7f9fb] p-5 sm:p-6">
-              <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-                <div className="max-w-2xl">
-                  <p className="text-[15px] leading-relaxed text-[#374151]">
-                    Мы обмерили генплан застройщика и собрали объёмную модель комплекса, затем
-                    поставили её на карту по реальной ориентации участка. Солнце в модели ходит
-                    по настоящей астрономии для широты Бали.
-                  </p>
-                  <p className="mt-2 text-[15px] leading-relaxed text-[#374151]">
-                    Выберите любой день года и час — и увидите, куда ляжет тень от корпусов,
-                    крыш и заборов и сколько солнца достанется двору с бассейном именно вашей
-                    виллы.
-                  </p>
-
-                  <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-1.5 text-[13px] text-[#6b7280]">
-                    <li>Любая дата и время суток</li>
-                    <li>Модель крутится и приближается</li>
-                    <li>Учтены крыши и заборы дворов</li>
-                  </ul>
-                </div>
-
-                <div className="shrink-0">
-                  <SunShadowBlock
-                    plan={sunPlan!}
-                    latitude={sunSettings!.latitude}
-                    longitude={sunSettings!.longitude}
-                    rowAzimuth={sunSettings!.rowAzimuth}
-                    heights={{
-                      eaveHeight: sunSettings!.eaveHeight,
-                      ridgeRise: sunSettings!.ridgeRise,
-                      yardWall: sunSettings!.yardWall,
-                    }}
-                    title={sunPlan!.title}
-                  />
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
-
         {/* UNITS in this complex */}
         {units.length > 0 && (
           <section className="mb-10">
@@ -1860,7 +1812,31 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
                 routes={geoFacts?.routes ?? null}
               />
             )}
-            <ClimateBlock climate={geoFacts?.climate ?? null} air={geoFacts?.air ?? null} lang={lang} />
+            <ClimateBlock
+              climate={geoFacts?.climate ?? null}
+              air={geoFacts?.air ?? null}
+              lang={lang}
+              footer={showSunBlock ? (
+                <div>
+                  <p className="mb-3 text-[13px] leading-relaxed text-[var(--color-text-muted)]">
+                    Объёмная модель комплекса на карте: видно, куда падает тень от корпусов
+                    и заборов и сколько солнца достаётся двору с бассейном в любой день года.
+                  </p>
+                  <SunShadowBlock
+                    plan={sunPlan!}
+                    latitude={sunSettings!.latitude}
+                    longitude={sunSettings!.longitude}
+                    rowAzimuth={sunSettings!.rowAzimuth}
+                    heights={{
+                      eaveHeight: sunSettings!.eaveHeight,
+                      ridgeRise: sunSettings!.ridgeRise,
+                      yardWall: sunSettings!.yardWall,
+                    }}
+                    title={sunPlan!.title}
+                  />
+                </div>
+              ) : null}
+            />
             {process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY && (
               <GatedBlock lang={lang}>
                 <div className="mb-4">
