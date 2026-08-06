@@ -12,6 +12,7 @@
  */
 const VILLA_3D_PLANS: Readonly<Record<string, string>> = {
   'ubud-dream-103m2-2-bedroom': '/models/ubud-dreams-3d.html',
+  'ubud-dream-91m2-1-bedroom': '/models/ubud-dreams-1br-3d.html',
 }
 
 /** Публичный URL 3D-планировки виллы либо null, если модели нет. */

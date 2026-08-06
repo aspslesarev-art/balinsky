@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ubud Dreams House 1 — 3D планировка односпальной виллы</title>
+<style>
+  /* Палитра и типографика — как на balinsky.info (app/globals.css). */
+  :root{
+    --bg:#F8FAF8; --panel:#FFFFFF; --line:#E5E7EB;
+    --ink:#111827; --muted:#4B5563;
+    --accent:#1F8B5F; --accent-hover:#197551; --accent-soft:#E2F0E8;
+    --font:system-ui,-apple-system,'Segoe UI',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden;background:var(--bg);font-family:var(--font);color:var(--ink)}
+  /* До первого клика жесты уходят странице: touch-action не блокируем,
+     колесо не перехватываем. После клика модель забирает управление. */
+  /* touch-action:pan-y держим всегда: вертикальный свайп остаётся за
+     страницей, иначе секция становится ловушкой для прокрутки на телефоне.
+     Горизонтальное вращение и пинч-зум модели это не мешает. */
+  #c{display:block;width:100%;height:100%;cursor:pointer;touch-action:pan-y}
+  #c.engaged{cursor:grab}
+  #c.engaged:active{cursor:grabbing}
+  .tapme{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:9px 18px;font-size:13px;font-weight:500;color:#fff;box-shadow:0 4px 16px rgba(31,139,95,.28);pointer-events:none;transition:opacity .2s}
+  .tapme.hide{opacity:0}
+  .hud{position:fixed;left:16px;top:16px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;max-width:270px;box-shadow:0 4px 16px rgba(17,24,39,.06)}
+  .hud h1{font-size:16px;font-weight:600;letter-spacing:-.01em}
+  .hud .sub{font-size:11px;color:var(--muted);margin-top:2px;letter-spacing:.06em;text-transform:uppercase}
+  .row{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+  button{font-family:inherit;font-size:12px;font-weight:500;padding:7px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer;transition:.15s}
+  button:hover{border-color:var(--accent);color:var(--accent)}
+  button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  button.on:hover{background:var(--accent-hover);border-color:var(--accent-hover);color:#fff}
+  button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .chk{margin-top:10px;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none}
+  .chk input{accent-color:var(--accent)}
+  .facts{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);line-height:1.7}
+  .facts b{color:var(--ink);font-weight:600}
+  .hint{margin-top:10px;font-size:11px;color:var(--muted);line-height:1.5}
+  /* На узком экране панель — компактная полоса сверху во всю ширину, а не
+     карточка поверх дома: иначе она съедала половину кадра. */
+  @media(max-width:640px){
+    .facts,.hint{display:none}
+    .hud{left:8px;right:8px;top:8px;max-width:none;padding:10px 12px;border-radius:10px}
+    .hud h1{font-size:14px}
+    .hud .sub{font-size:10px}
+    .row{gap:5px;margin-top:8px}
+    button{font-size:11px;padding:5px 9px;border-radius:7px}
+    .chk{margin-top:7px;font-size:11px}
+    .tapme{font-size:12px;padding:8px 14px}
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div class="hud">
+  <h1>Ubud Dreams House 1</h1>
+  <div class="sub">70 m² + бассейн 22 m²</div>
+  <div class="row">
+    <button id="b1">1 этаж</button>
+    <button id="b2">2 этаж</button>
+    <button id="bAll" class="on">Весь дом</button>
+  </div>
+  <div class="row" style="margin-top:8px">
+    <button id="wAuto" class="on">срез стен</button>
+    <button id="wUp">стены вверх</button>
+    <button id="wDown">стены вниз</button>
+  </div>
+  <label class="chk"><input type="checkbox" id="lbl" checked> подписи комнат</label>
+  <label class="chk"><input type="checkbox" id="spin" checked> автоповорот</label>
+
+  <!-- Состав и подсказка живут здесь же: справа от панели должна остаться
+       только модель, без плашек по углам. -->
+  <div class="facts">
+    <b>1 этаж</b> — кухня 15.9 · зал 14.8 · с/у 2.7 · лестница 2.7<br>
+    <b>2 этаж</b> — спальня 18.1 · с/у 5.9 · балкон 4.2
+  </div>
+  <div class="hint">крутить — мышью · зум — колесо · панорама — правая кнопка</div>
+</div>
+
+<div class="tapme" id="tapme">Нажмите, чтобы управлять моделью</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ============ размеры из чертежа (метры) ============
+const W = 4.688;           // ширина корпуса (4688 мм по чертежу)
+const HD = 9.4;            // глубина корпуса (без бассейна)
+const POOL_D = 4.68;       // терраса с бассейном за домом
+const H1 = 3.0, H2 = 2.9;  // высоты этажей
+const WALL = 0.16;
+
+// зоны по глубине z (0 = крыльцо/фасад)
+// Зоны по глубине z (0 = крыльцо/фасад). Площади сверены со
+// спецификацией чертежа: кухня 15.9, зал 14.8, с/у 2.7, лестница 2.7,
+// крыльцо 5.7 на первом; спальня 18.1, с/у 5.9, балкон 4.2 на втором.
+const Z = {
+  porch:[0,1.4], kitchen:[1.4,5.0], mid:[5.0,6.3], living:[6.3,9.4],
+  balcony:[0,0.9], bath2:[0.9,2.2], bed:[2.2,6.2]
+};
+// Второй этаж короче первого: он обрывается на 6.2 м, и зал у бассейна
+// остаётся двусветным. Иначе 28.2 м² спецификации второго этажа не
+// сходятся с 43 м² полного пятна застройки.
+const FLOOR2_D = 6.2;
+
+// ============ сцена ============
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const scene = new THREE.Scene();
+// Фон сцены — тот же --color-bg, что и у страниц сайта, чтобы фрейм
+// не выглядел чёрной дырой в светлой вёрстке.
+scene.background = new THREE.Color(0xf8faf8);
+scene.fog = new THREE.Fog(0xf8faf8, 34, 78);
+
+const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 200);
+
+// свет
+// Нижний цвет полусферы был почти чёрным — под светлым фоном он красил
+// низ модели в грязь. Теперь это отражение светлой земли.
+// Свет тёплый (солнце Бали), но мягкий: холодный белый выбеливал
+// кремовые стены и дерево в серость.
+scene.add(new THREE.HemisphereLight(0xfff4e2, 0xecdfc9, 0.9));
+const sun = new THREE.DirectionalLight(0xffeecd, 0.75);
+sun.position.set(12, 18, 8);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048,2048);
+sun.shadow.camera.left=-14; sun.shadow.camera.right=14;
+sun.shadow.camera.top=14; sun.shadow.camera.bottom=-14;
+scene.add(sun);
+
+// материалы (палитра из рендеров)
+const M = {
+  wall:  new THREE.MeshLambertMaterial({color:0xece4d6}),
+  wood:  new THREE.MeshLambertMaterial({color:0x6e4f38}),
+  woodL: new THREE.MeshLambertMaterial({color:0x9c7a5a}),
+  stone: new THREE.MeshLambertMaterial({color:0x9a938a}),
+  floor: new THREE.MeshLambertMaterial({color:0xcfc6b8}),
+  floor2:new THREE.MeshLambertMaterial({color:0xd8cfc0}),
+  sofa:  new THREE.MeshLambertMaterial({color:0xe8e2d5}),
+  olive: new THREE.MeshLambertMaterial({color:0x8a9a5b}),
+  water: new THREE.MeshLambertMaterial({color:0x5aa8b0, transparent:true, opacity:.85}),
+  deck:  new THREE.MeshLambertMaterial({color:0xb8a888}),
+  white: new THREE.MeshLambertMaterial({color:0xf5f2ec}),
+  glass: new THREE.MeshLambertMaterial({color:0xbcd0d4, transparent:true, opacity:.28, side:THREE.DoubleSide}),
+  green: new THREE.MeshLambertMaterial({color:0x4a6b3a}),
+  lawn:  new THREE.MeshLambertMaterial({color:0x829c62}),
+  dark:  new THREE.MeshLambertMaterial({color:0x3a2e24})
+};
+
+const floor1G = new THREE.Group();
+const floor2G = new THREE.Group();
+const siteG   = new THREE.Group();
+const labelsG = new THREE.Group();
+scene.add(floor1G, floor2G, siteG, labelsG);
+
+// центрируем дом: x∈[-W/2,W/2], z: фасад к камере
+const cx = W/2, cz = (HD+POOL_D)/2;
+function box(g, w,h,d, x,y,z, mat, shadow=true){
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat);
+  m.position.set(x-cx, y, z-cz);
+  m.castShadow = shadow; m.receiveShadow = true;
+  g.add(m); return m;
+}
+
+// Сплошного «пола» участка нет намеренно: белая плоскость 60×60 сливалась
+// со светлым фоном страницы и добавляла только серое пятно тени.
+// Двор — это газон в бассейновой зоне ниже.
+
+// стены, которые умеют "срезаться" как в Sims
+const cutWalls=[];
+function regWall(m,h){cutWalls.push({m,h,bottom:m.position.y-h/2});}
+
+// ============ 1 этаж ============
+{
+  const g = floor1G;
+  // плита пола дома
+  box(g, W, .12, HD, cx, -.06+.06, HD/2, M.floor).receiveShadow=true;
+  // крыльцо — деревянный настил
+  box(g, W-0.6, .1, Z.porch[1], cx, .05, Z.porch[1]/2, M.woodL);
+
+  const wallSeg = (x1,z1,x2,z2,h=H1,mat=M.wall)=>{
+    const dx=x2-x1, dz=z2-z1, len=Math.hypot(dx,dz);
+    const m = new THREE.Mesh(new THREE.BoxGeometry(len,h,WALL), mat);
+    m.position.set((x1+x2)/2-cx, h/2, (z1+z2)/2-cz);
+    m.rotation.y = -Math.atan2(dz,dx);
+    m.castShadow=m.receiveShadow=true; g.add(m); regWall(m,h); return m;
+  };
+
+  // наружные стены (фасад с проёмом входа, зад — стекло к бассейну)
+  wallSeg(0,Z.porch[1], 1.6,Z.porch[1]);           // фасад слева от двери
+  wallSeg(2.7,Z.porch[1], W,Z.porch[1]);           // фасад справа
+  wallSeg(0,Z.porch[1], 0,HD);                      // левая
+  wallSeg(W,Z.porch[1], W,HD);                      // правая
+  // задняя — стеклянная стена в зал
+  {
+    const gl = new THREE.Mesh(new THREE.BoxGeometry(W,H1,.05), M.glass);
+    gl.position.set(0, H1/2, HD-cz); g.add(gl); regWall(gl,H1);
+    box(g, W,.12,.1, cx, H1-.06, HD, M.wood);
+  }
+  // перегородка кухня/лестничный блок
+  wallSeg(0,Z.mid[0], 3.1,Z.mid[0]);
+  // перегородка лестничный блок/зал — каменная стена под лестницей (из рендера)
+  wallSeg(0,Z.mid[1], W,Z.mid[1], H1, M.stone);
+  // гостевой санузел (справа в средней зоне)
+  wallSeg(3.1,Z.mid[0], 3.1,Z.mid[1]);
+  wallSeg(3.1,Z.mid[0], W,Z.mid[0]);
+
+  // лестница вдоль левой стены (средняя зона)
+  {
+    const steps=13, run=(Z.mid[1]-Z.mid[0]+1.1), rise=H1/steps;
+    for(let i=0;i<steps;i++){
+      box(g, 1.0, rise, run/steps, 0.55, rise*i+rise/2, Z.mid[1]+0.4 - run/steps*(i+.5), M.woodL);
+    }
+    // стекло-ограждение
+    const gl = new THREE.Mesh(new THREE.BoxGeometry(.04, H1*.62, run), M.glass);
+    gl.position.set(1.1-cx, H1*.42, Z.mid[0]+run/2-0.6-cz); g.add(gl);
+  }
+
+  // кухня: гарнитур вдоль правой стены + обеденный стол
+  box(g, .62, .9, 3.0, W-.35, .45, 3.2, M.wood);            // нижние шкафы
+  box(g, .35, 1.1, 3.0, W-.2, H1-.75, 3.2, M.wood);          // верхние
+  box(g, 1.8, .06, .9, 1.9, .76, 3.1, M.woodL);              // столешница стола
+  box(g, .18, .73, .7, 1.9, .37, 3.1, M.wood);               // ножка
+  for(let i=0;i<2;i++){                                      // стулья по 2 с двух сторон
+    box(g, .42,.45,.42, 1.25, .22, 2.75+i*.75, M.olive);
+    box(g, .42,.45,.42, 2.55, .22, 2.75+i*.75, M.olive);
+  }
+  // люстра оливковая
+  box(g, .8,.5,.8, 1.9, H1-1.0, 3.1, M.olive);
+
+  // санузел гостевой
+  box(g, .38,.42,.55, W-.55, .21, Z.mid[0]+.5, M.white);      // унитаз
+  box(g, .5,.85,.4, 3.5, .42, Z.mid[1]-.35, M.wood);          // тумба с раковиной
+
+  // зал: угловой диван + круглый столик, развёрнут к бассейну
+  box(g, 2.9, .42, 1.0, 1.85, .21, 7.35, M.sofa);
+  box(g, 1.0, .42, 1.9, 0.7, .21, 8.1, M.sofa);
+  box(g, 2.9, .5, .22, 1.85, .55, 6.95, M.sofa);              // спинка
+  {
+    const t = new THREE.Mesh(new THREE.CylinderGeometry(.45,.3,.4,20), M.woodL);
+    t.position.set(2.6-cx,.2,8.4-cz); t.castShadow=true; g.add(t);
+  }
+  // растения вдоль каменной стены
+  for(let i=0;i<5;i++){
+    const p = new THREE.Mesh(new THREE.SphereGeometry(.22,6,5), M.green);
+    p.position.set(.6+i*.85-cx,.72,Z.mid[1]+.25-cz); g.add(p);
+    box(g,.24,.5,.24, .6+i*.85,.25, Z.mid[1]+.25, M.white);
+  }
+
+  // ============ бассейновая зона ============
+  // двор — газон, а не песчаный настил
+  box(g, W, .1, POOL_D, cx, .0, HD+POOL_D/2, M.lawn);
+  // чаша бассейна ~2.0×4.4
+  box(g, 2.1, .5, 4.3, W-1.25, .06, HD+POOL_D/2, new THREE.MeshLambertMaterial({color:0x3a6e74}));
+  box(g, 1.9, .1, 4.1, W-1.25, .3, HD+POOL_D/2, M.water, false);
+  // шезлонги
+  box(g, .65,.25,1.7, .55, .2, HD+1.6, M.woodL);
+  box(g, .65,.25,1.7, .55, .2, HD+3.4, M.woodL);
+}
+
+// ============ перекрытие + 2 этаж ============
+// Перекрытие только над передней частью: зал у бассейна двусветный.
+const slab = box(floor2G, W+.1, .18, FLOOR2_D+.1, cx, H1+.09, FLOOR2_D/2, M.wood);
+{
+  const g = floor2G;
+  const Y = H1+.18;
+  box(g, W, .06, FLOOR2_D, cx, Y+.03, FLOOR2_D/2, M.floor2);
+
+  const wallSeg = (x1,z1,x2,z2,h=H2,mat=M.wall)=>{
+    const dx=x2-x1,dz=z2-z1,len=Math.hypot(dx,dz);
+    const m=new THREE.Mesh(new THREE.BoxGeometry(len,h,WALL),mat);
+    m.position.set((x1+x2)/2-cx, Y+h/2, (z1+z2)/2-cz);
+    m.rotation.y=-Math.atan2(dz,dx);
+    m.castShadow=m.receiveShadow=true; g.add(m); regWall(m,h); return m;
+  };
+
+  // наружный контур (балкон открытый спереди)
+  wallSeg(0,Z.balcony[1], 0,FLOOR2_D);                 // левая
+  wallSeg(W,Z.balcony[1], W,FLOOR2_D);                 // правая
+  wallSeg(0,Z.balcony[1], W,Z.balcony[1]);             // стена балкон / санузел
+  // задняя стена спальни — панорамное остекление в сторону бассейна
+  {
+    const gl=new THREE.Mesh(new THREE.BoxGeometry(W-.9,H2,.05),M.glass);
+    gl.position.set(-0.45, Y+H2/2, FLOOR2_D-cz); g.add(gl); regWall(gl,H2);
+    wallSeg(W-.9,FLOOR2_D, W,FLOOR2_D);
+  }
+  // ограждение балкона
+  box(g, W,.9,.06, cx, Y+.45, 0.04, M.glass, false);
+  box(g, W,.06,.06, cx, Y+.92, 0.04, M.wood);
+
+  // санузел 5.9 м² — поперечная полоса между балконом и спальней
+  wallSeg(0,Z.bath2[1], 3.4,Z.bath2[1]);
+  // лестничный проём у правой стены, площадка приходит из средней зоны
+  box(g, 1.2, .02, 1.7, W-0.7, Y+.05, 5.3, M.dark, false);
+  wallSeg(W-1.35,Z.bed[1]-1.9, W-1.35,FLOOR2_D);
+
+  // спальня 18.1 м²: кровать 1.9×2.2 у окна к бассейну
+  box(g, 1.9,.35,2.1, 1.75, Y+.18, 4.3, M.sofa);
+  box(g, 2.1,.12,.3, 1.75, Y+.06, 3.15, M.woodL);       // подиум
+  box(g, 1.9,.55,.14, 1.75, Y+.45, 5.4, M.woodL);       // изголовье
+  box(g, .5,.4,.5, 0.5, Y+.2, 5.3, M.wood);             // тумба
+  box(g, 1.5,.45,.5, 1.6, Y+.22, 2.6, M.wood);          // комод напротив кровати
+
+  // санузел: унитаз, тумба с раковиной, душ за стеклом
+  box(g, .38,.42,.55, 0.5, Y+.21, 1.55, M.white);
+  box(g, .9,.5,.45, 1.7, Y+.5, 1.0, M.wood);
+  {const gl=new THREE.Mesh(new THREE.BoxGeometry(.04,2.0,1.1),M.glass);
+   gl.position.set(3.0-cx, Y+1.0, 1.6-cz); g.add(gl);}
+}
+
+// ============ люди ============
+const plumbobs=[];
+function makePerson(g, h, x, z, ry, yBase, shirtC, pantsC){
+  const p = new THREE.Group();
+  const skin = new THREE.MeshLambertMaterial({color:0xd9b08c});
+  const shirt = new THREE.MeshLambertMaterial({color:shirtC});
+  const pants = new THREE.MeshLambertMaterial({color:pantsC});
+  const legH=h*.45, torH=h*.34, headR=h*.075;
+  const mesh=(geo,mat,y)=>{const m=new THREE.Mesh(geo,mat);m.position.y=y;m.castShadow=true;p.add(m);return m;};
+  // ноги
+  const lg=new THREE.CylinderGeometry(h*.045,h*.04,legH,8);
+  mesh(lg,pants,legH/2).position.x=-h*.055;
+  mesh(lg,pants,legH/2).position.x= h*.055;
+  // корпус
+  mesh(new THREE.CylinderGeometry(h*.095,h*.075,torH,10), shirt, legH+torH/2);
+  // плечи
+  mesh(new THREE.SphereGeometry(h*.095,10,8), shirt, legH+torH);
+  // руки
+  const arm=new THREE.CylinderGeometry(h*.03,h*.028,torH*.9,8);
+  const aL=mesh(arm,shirt,legH+torH*.55); aL.position.x=-h*.13; aL.rotation.z=.12;
+  const aR=mesh(arm,shirt,legH+torH*.55); aR.position.x= h*.13; aR.rotation.z=-.12;
+  // голова
+  mesh(new THREE.SphereGeometry(headR,12,10), skin, legH+torH+headR*1.25);
+  // плюмбоб — зелёный ромб как в Sims
+  const pb = new THREE.Mesh(
+    new THREE.OctahedronGeometry(h*.075),
+    new THREE.MeshLambertMaterial({color:0x35d435, emissive:0x1f8f1f, transparent:true, opacity:.92})
+  );
+  pb.scale.y = 1.6;
+  pb.position.y = legH+torH+headR*2.5+h*.16;
+  pb.userData.baseY = pb.position.y;
+  p.add(pb); plumbobs.push(pb);
+  p.position.set(x-cx, yBase, z-cz);
+  p.rotation.y=ry;
+  g.add(p); return p;
+}
+// жена — у кухонного гарнитура
+makePerson(floor1G, 1.65, 3.55, 3.0, Math.PI/2, .06, 0x8a9a5b, 0xe8e2d5);
+// муж — в зале, на полу у панорамного остекления к бассейну
+makePerson(floor1G, 1.78, 3.95, 8.5, -Math.PI/2, .06, 0xe8e2d5, 0x6e4f38);
+// ребёнок — в спальне на 2 этаже
+makePerson(floor2G, 1.05, 3.6, 3.4, Math.PI, H1+.24, 0xc98a5a, 0xece4d6);
+
+// ============ подписи ============
+function makeLabel(text, x, y, z){
+  const cnv=document.createElement('canvas'); cnv.width=256; cnv.height=72;
+  const ctx=cnv.getContext('2d');
+  // Плашки подписей — белые карточки с рамкой, как в вёрстке сайта.
+  ctx.fillStyle='rgba(255,255,255,.94)';
+  ctx.strokeStyle='rgba(17,24,39,.14)'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.roundRect(4,8,248,56,14); ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#111827'; ctx.font='600 25px system-ui,-apple-system,sans-serif'; ctx.textAlign='center';
+  ctx.fillText(text,128,44);
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cnv),depthTest:false}));
+  sp.scale.set(1.9,.55,1);
+  sp.position.set(x-cx,y,z-cz);
+  labelsG.add(sp); return sp;
+}
+const L1=[
+  makeLabel('Кухня · 15.9 м²', 2.3, 1.9, 3.2),
+  makeLabel('Зал · 14.8 м²', 2.3, 1.9, 7.9),
+  makeLabel('С/у · 2.7 м²', 3.9, 1.7, 5.6),
+  makeLabel('Лестница · 2.7 м²', 0.8, 2.2, 5.6),
+  makeLabel('Бассейн · 22 м²', 2.3, 1.2, HD+2.4),
+  makeLabel('Крыльцо · 5.7 м²', 2.1, 1.0, 0.7)
+];
+const Y2=H1+.2;
+const L2=[
+  makeLabel('Спальня · 18.1 м²', 2.0, Y2+1.9, 4.3),
+  makeLabel('С/у · 5.9 м²', 1.9, Y2+1.7, 1.5),
+  makeLabel('Балкон · 4.2 м²', 2.3, Y2+1.4, 0.45)
+];
+
+// ============ управление камерой ============
+let theta=-.75, phi=1.05, dist=17, target=new THREE.Vector3(0,1.6,0);
+let auto=true;
+function updCam(){
+  phi=Math.max(.15,Math.min(1.45,phi));
+  dist=Math.max(5,Math.min(80,dist));   // верхний предел поднят: вписывание кадра может требовать больше 45
+  camera.position.set(
+    target.x+dist*Math.sin(phi)*Math.sin(theta),
+    target.y+dist*Math.cos(phi),
+    target.z+dist*Math.sin(phi)*Math.cos(theta));
+  camera.lookAt(target);
+}
+let drag=null;
+
+// Модель встроена фреймом в длинную страницу, поэтому она не забирает
+// жесты, пока по ней не кликнули: иначе колесо зумило бы модель вместо
+// прокрутки страницы, а свайп на телефоне не давал бы пролистать секцию.
+// Автоповорот при этом идёт всегда — модель «живая» и до клика.
+let engaged=false;
+const tapme=document.getElementById('tapme');
+function engage(){
+  if(engaged)return;
+  engaged=true; canvas.classList.add('engaged'); tapme.classList.add('hide');
+}
+function disengage(){
+  if(!engaged||drag)return;
+  engaged=false; canvas.classList.remove('engaged'); tapme.classList.remove('hide');
+}
+// Уводя курсор со сцены, пользователь возвращает прокрутку странице.
+// Только для мыши: на тач-устройстве pointerleave прилетает сразу после
+// отрыва пальца и сбрасывал бы активацию каждым касанием.
+canvas.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse')disengage();});
+addEventListener('blur',()=>{drag=null;disengage();});
+
+canvas.addEventListener('pointerdown',e=>{
+  // Первое касание только включает управление — оно не должно ни крутить
+  // модель, ни глотать свайп страницы.
+  if(!engaged){engage();return;}
+  drag={x:e.clientX,y:e.clientY,b:e.button};auto=false;spinChk.checked=false;canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener('pointermove',e=>{
+  if(!drag)return;
+  const dx=e.clientX-drag.x, dy=e.clientY-drag.y;
+  if(drag.b===2){
+    const s=dist*.0012;
+    const right=new THREE.Vector3().subVectors(camera.position,target).cross(camera.up).normalize();
+    target.addScaledVector(right,dx*s);
+    target.y+=dy*s;
+  }else{ theta-=dx*.006; phi-=dy*.006; }
+  drag.x=e.clientX; drag.y=e.clientY; updCam();
+});
+canvas.addEventListener('pointerup',()=>drag=null);
+canvas.addEventListener('contextmenu',e=>e.preventDefault());
+canvas.addEventListener('wheel',e=>{
+  if(!engaged)return;            // не перехватываем — страница скроллится
+  e.preventDefault();dist*=1+Math.sign(e.deltaY)*.08;updCam();
+},{passive:false});
+// pinch
+let pinch=null;
+canvas.addEventListener('touchmove',e=>{
+  if(!engaged)return;
+  if(e.touches.length===2){
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    if(pinch) {dist*=pinch/d; updCam();}
+    pinch=d; e.preventDefault();
+  }
+},{passive:false});
+canvas.addEventListener('touchend',()=>pinch=null);
+
+// ============ UI ============
+const b1=document.getElementById('b1'),b2=document.getElementById('b2'),bAll=document.getElementById('bAll');
+const lblChk=document.getElementById('lbl'), spinChk=document.getElementById('spin');
+function apply(){
+  // 1 этаж: снимаем 2-й этаж — видно первый сверху
+  // 2 этаж: первый стоит закрытой коробкой — видно второй сверху
+  // Крыши в модели нет: дом всегда открыт сверху.
+  if(curMode===1){floor1G.visible=true; floor2G.visible=false;
+    L1.forEach(s=>s.visible=lblChk.checked); L2.forEach(s=>s.visible=false);}
+  if(curMode===2){floor1G.visible=true; floor2G.visible=true;
+    L1.forEach(s=>s.visible=false); L2.forEach(s=>s.visible=lblChk.checked);}
+  if(curMode===0){floor1G.visible=true; floor2G.visible=true;
+    L1.forEach(s=>s.visible=lblChk.checked); L2.forEach(s=>s.visible=lblChk.checked);}
+  [b1,b2,bAll].forEach(b=>b.classList.remove('on'));
+  (curMode===1?b1:curMode===2?b2:bAll).classList.add('on');
+}
+let curMode=0;
+b1.onclick=()=>{curMode=1;apply();};
+b2.onclick=()=>{curMode=2;apply();};
+bAll.onclick=()=>{curMode=0;apply();};
+lblChk.onchange=apply;
+spinChk.onchange=()=>auto=spinChk.checked;
+apply();
+
+// ---- режимы стен (Sims-механика) ----
+const wAuto=document.getElementById('wAuto'),wUp=document.getElementById('wUp'),wDown=document.getElementById('wDown');
+let wallMode='auto'; // auto = стены со стороны камеры срезаются
+function setWalls(m,btn){wallMode=m;[wAuto,wUp,wDown].forEach(b=>b.classList.remove('on'));btn.classList.add('on');}
+wAuto.onclick=()=>setWalls('auto',wAuto);
+wUp.onclick=()=>setWalls('up',wUp);
+wDown.onclick=()=>setWalls('down',wDown);
+
+const STUB=.09; // высота "пенька" стены
+const houseCtr=new THREE.Vector3(0,0,HD/2-cz);
+const _cd=new THREE.Vector3(), _wo=new THREE.Vector3();
+function updateWalls(){
+  _cd.set(camera.position.x-houseCtr.x,0,camera.position.z-houseCtr.z).normalize();
+  for(const w of cutWalls){
+    let target=1;
+    if(wallMode==='down') target=STUB;
+    else if(wallMode==='auto'){
+      _wo.set(w.m.position.x-houseCtr.x,0,w.m.position.z-houseCtr.z);
+      if(_wo.lengthSq()>.01){
+        _wo.normalize();
+        if(_wo.dot(_cd)>.25) target=STUB; // стена между камерой и домом
+      }
+    }
+    w.m.scale.y += (target-w.m.scale.y)*.18;
+    w.m.position.y = w.bottom + w.h*w.m.scale.y/2;
+  }
+}
+
+// ============ кадрирование ============
+// Модель крутится вокруг вертикальной оси, поэтому «влезает при любом угле»
+// = влезает описанная вокруг неё сфера. Радиус берём по габаритам геометрии,
+// дистанцию — из угла обзора, причём по меньшей из двух сторон кадра:
+// в узком фрейме ограничение даёт горизонталь, в широком — вертикаль.
+scene.updateMatrixWorld(true);
+// В кадре гарантируется САМ ДОМ. Двор с бассейном тянется на 4.7 м назад, и
+// если требовать его целиком на любом угле, дом приходится отодвигать почти
+// вдвое — модель становится мелкой ради газона. Край газона на крайних
+// ракурсах может уйти за границу, дом — никогда.
+const fitBox = new THREE.Box3();
+[floor1G, floor2G].forEach(g=>fitBox.expandByObject(g));
+target.copy(fitBox.getCenter(new THREE.Vector3()));   // ось вращения через центр
+const FIT_MARGIN = 1.04;                              // запас на подписи комнат
+const fitCorners = [];
+for(const x of [fitBox.min.x,fitBox.max.x])
+  for(const y of [fitBox.min.y,fitBox.max.y])
+    for(const z of [fitBox.min.z,fitBox.max.z])
+      fitCorners.push(new THREE.Vector3(x,y,z).sub(target));
+
+/**
+ * Минимальная дистанция, при которой все восемь углов габарита остаются в
+ * кадре на полном обороте. Описанная сфера здесь врала бы в запас: дом
+ * вытянутый (≈15 м в глубину против 4.7 в ширину), и её радиус отодвигал
+ * камеру дальше, чем нужно. Считаем честно — по проекции углов.
+ */
+/**
+ * Свободная область просмотрщика в пикселях: холст минус панель управления
+ * слева и минус нижняя полоса с подсказкой и легендой.
+ *
+ * Модель центрируется по ней, а не по холсту: панель занимает левый край,
+ * и «по центру холста» читалось как «прижато влево, справа дыра».
+ * На узком экране панель лежит поверх сцены — вычитать нечего.
+ */
+function layoutBox(){
+  const W = innerWidth, H = innerHeight;
+  const wide = W >= 900;
+  const hud = document.querySelector('.hud');
+  // Всё служебное собрано в панели слева, поэтому справа от неё вся высота
+  // холста принадлежит модели. На узком экране панель лежит поверх сцены —
+  // вычитать нечего.
+  if(!hud) return { x: 0, y: 0, w: W, h: H, W, H };
+  const r = hud.getBoundingClientRect();
+  // Широкий кадр: панель слева, модель справа от неё.
+  // Узкий: панель полосой сверху, модель под ней.
+  if(wide){
+    const left = r.right + 16
+    return { x: left, y: 0, w: Math.max(180, W - left), h: H, W, H };
+  }
+  const top = r.bottom + 8
+  return { x: 0, y: top, w: W, h: Math.max(140, H - top), W, H };
+}
+
+function fitDistance(){
+  // Тангенсы ужимаем до доли свободной области: модель должна влезать
+  // в неё, а не в весь холст.
+  const b = layoutBox();
+  const t = Math.tan(camera.fov*Math.PI/360);
+  const vT = t * (b.h / b.H);
+  const hT = t * camera.aspect * (b.w / b.W);
+  const up = new THREE.Vector3(0,1,0);
+  const zc = new THREE.Vector3(), xc = new THREE.Vector3(), yc = new THREE.Vector3();
+  let need = 0;
+  for(let i=0;i<72;i++){
+    const th = i*Math.PI/36;
+    zc.set(Math.sin(phi)*Math.sin(th), Math.cos(phi), Math.sin(phi)*Math.cos(th)).normalize();
+    xc.crossVectors(up,zc).normalize();
+    yc.crossVectors(zc,xc);
+    for(const p of fitCorners){
+      // Точка видна, пока её смещение от оси взгляда укладывается в конус
+      // обзора на её же глубине: |px| <= (dist - along)*tg. Отсюда dist.
+      const along=p.dot(zc);
+      need = Math.max(need, Math.abs(p.dot(xc))/hT + along, Math.abs(p.dot(yc))/vT + along);
+    }
+  }
+  return need*FIT_MARGIN;
+}
+
+// ============ рендер ============
+function resize(){
+  const w=innerWidth,h=innerHeight;
+  renderer.setSize(w,h,false);
+  camera.aspect=w/h;
+  // Сдвигаем окно проекции так, чтобы центром кадра стал центр свободной
+  // области, а не центр холста: модель уезжает правее панели и выше
+  // подсказки, вместо того чтобы висеть в середине с пустотой справа.
+  const b = layoutBox();
+  const bx = b.x + b.w/2, by = b.y + b.h/2;
+  camera.setViewOffset(w, h, w/2 - bx, h/2 - by, w, h);
+  camera.updateProjectionMatrix();
+  // Подсказка — по центру модели, а не холста.
+  const tap = document.getElementById('tapme');
+  if(tap){ tap.style.left = bx + 'px'; tap.style.top = by + 'px'; }
+  // Пока управление не перехвачено, держим модель вписанной в кадр —
+  // в том числе после поворота телефона. После клика зум пользователя.
+  if(!engaged){dist=fitDistance();}
+  updCam();
+}
+addEventListener('resize',resize); resize();
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+if(reduced){auto=false;spinChk.checked=false;}
+updCam();
+(function loop(t){
+  requestAnimationFrame(loop);
+  if(auto){theta+=.0018;updCam();}
+  const s=(t||0)*.001;
+  for(const pb of plumbobs){
+    pb.rotation.y = s*1.6;
+    pb.position.y = pb.userData.baseY + Math.sin(s*2.2)*0.03;
+  }
+  updateWalls();
+  renderer.render(scene,camera);
+})();
+</script>
+</body>
+</html>
