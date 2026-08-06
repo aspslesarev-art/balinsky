@@ -66,6 +66,16 @@ export type SitePlan = {
   units: PlanUnit[]
   /** Несколько корпусов. Если не задано — план считается одним рядом. */
   blocks?: PlanBlock[]
+  /**
+   * Стартовые значения редактора, пока в базе нет сохранённых настроек.
+   * Без них подставлялись координаты 0,0 — солнце считалось для точки в
+   * Атлантике, и сцена открывалась ночной в полдень.
+   */
+  defaults?: {
+    rowAzimuth: number
+    latitude: number
+    longitude: number
+  }
   /** Контур участка [x, z] по часовой стрелке. */
   plot: [number, number][]
   pools: PlanPool[]
@@ -151,6 +161,9 @@ const UBUD_DREAM: SitePlan = {
   title: 'Ubud Dream',
   district: 'Убуд',
   utcOffsetHours: 8,
+  // Развороты заданы внутри блоков, поэтому общий азимут ряда нулевой:
+  // унаследованные от U Villas I 90° клали весь участок набок.
+  defaults: { rowAzimuth: 0, latitude: -8.504827, longitude: 115.253666 },
   // Legacy-поля описывают главный ряд: план с blocks их для геометрии не
   // использует, но они остаются осмысленным значением по умолчанию.
   buildingDepth: 10,
@@ -203,9 +216,12 @@ const UBUD_DREAM: SitePlan = {
   ],
   pools: [],
   basemap: {
-    // Тот же мастерплан, что уже привязан к спутнику в /admin/geo: 2125 px на
-    // 134.9 м по земле. Якорь — левый верхний угол чертежа, начало координат.
-    url: 'https://ifdgiwxothmcalibmydv.supabase.co/storage/v1/object/public/viz-photos/_geo/complexes/recOR5CZuEd8x1Ddv/1786005860055-ubud-dream-masterplan.png',
+    // Сцена кладёт подложку квадратом (PlaneGeometry(span, span)) и считает
+    // смещение через один sizePx по обеим осям, поэтому мастерплан 2125×1224
+    // дополнен прозрачным до 2125×2125. Иначе его растягивало по вертикали и
+    // уводило по Z почти на 30 м. Чертёж прижат к левому верхнему углу, он же
+    // якорь и начало координат модели.
+    url: 'https://ifdgiwxothmcalibmydv.supabase.co/storage/v1/object/public/viz-photos/_geo/complexes/recOR5CZuEd8x1Ddv/1786007259972-ubud-dream-basemap-square.png',
     sizePx: 2125,
     metersPerPixel: 0.0635,
     anchorPx: { x: 0, y: 0 },

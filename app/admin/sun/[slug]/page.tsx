@@ -33,9 +33,9 @@ export default async function Page({ params }: { params: Params }) {
       slug={slug}
       plan={plan}
       initial={{
-        rowAzimuth: settings?.rowAzimuth ?? 90,
-        latitude: settings?.latitude ?? 0,
-        longitude: settings?.longitude ?? 0,
+        rowAzimuth: settings?.rowAzimuth ?? plan.defaults?.rowAzimuth ?? 90,
+        latitude: settings?.latitude ?? plan.defaults?.latitude ?? 0,
+        longitude: settings?.longitude ?? plan.defaults?.longitude ?? 0,
         eaveHeight: settings?.eaveHeight ?? 6.8,
         ridgeRise: settings?.ridgeRise ?? 2,
         yardWall: settings?.yardWall ?? 2.4,
