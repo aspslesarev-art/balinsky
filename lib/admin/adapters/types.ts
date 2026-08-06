@@ -41,11 +41,15 @@ export type LinkConfig = {
   /** Same, but stored as a one-element array — for the manifest lookup
    *  columns Airtable emitted as arrays (news/promo `complexNames`). */
   nameArrayField?: string
-  /** Companion field holding the picked record's slug as a one-element array.
-   *  The managers manifest keeps `developerNames` / `developerSlugs` side by
-   *  side and lib/managers.ts filters by the slug half. Requires the target
-   *  collection to declare `slugField`. */
+  /** Companion field holding the picked records' slugs, index-aligned with the
+   *  names. The managers manifest keeps `developerNames` / `developerSlugs`
+   *  side by side and lib/managers.ts filters by the slug half. Requires the
+   *  target collection to declare `slugField`. */
   slugArrayField?: string
+  /** Allow several picks (a manager can work for more than one developer).
+   *  Only for array-shaped stores — 'name' holds a single string. Multi-value
+   *  links are edited in the side panel; the grid shows them read-only. */
+  multi?: boolean
 }
 
 export type StoreType = 'sql_jsonb' | 'storage_manifest' | 'sql_columns'

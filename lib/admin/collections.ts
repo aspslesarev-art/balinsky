@@ -446,13 +446,14 @@ const managers: CollectionConfig = {
       enumOptions: ['Руководитель отдела продаж', 'Менеджер отдела продаж', 'Менеджер по работе с агентами'] },
     { key: 'languages', label: 'Языки', type: 'multienum' },
     // Airtable filled this pair through a link column; with Airtable retired the
-    // admin owns it — pick the developer here and the slug half (what
-    // lib/managers.ts filters the developer's page by) is written alongside.
+    // admin owns it — pick застройщиков here and the slug half (what
+    // lib/managers.ts filters each developer's page by) is written alongside,
+    // index-aligned. Multi: один менеджер может вести несколько застройщиков.
     {
-      key: 'developerNames', label: 'Застройщик', type: 'link', showInGrid: true, width: 200,
-      link: { collection: 'developers', store: 'name-array', slugArrayField: 'developerSlugs' },
+      key: 'developerNames', label: 'Застройщики', type: 'link', showInGrid: true, width: 220,
+      link: { collection: 'developers', store: 'name-array', slugArrayField: 'developerSlugs', multi: true },
     },
-    { key: 'developerSlugs', label: 'Slug застройщика', type: 'json', readOnly: true },
+    { key: 'developerSlugs', label: 'Slugs застройщиков', type: 'json', readOnly: true },
   ],
 }
 

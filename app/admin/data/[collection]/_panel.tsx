@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { X, Save, Trash2, Loader2, AlertTriangle, Plus, Link2, Search } from 'lucide-react'
 import type { CollectionConfig, FieldDef, FieldType, RecordRow } from '@/lib/admin/adapters/types'
-import { resolveRecordFields, percentToInput, inputToPercent, linkPatch, linkDisplayName, type LinkOption } from '@/lib/admin/fields'
+import { resolveRecordFields, percentToInput, inputToPercent, linkPatch, linkSelection, type LinkOption } from '@/lib/admin/fields'
 import { toBaliInput, fromBaliInput } from '@/lib/datetime'
 import { PhotoManager } from './_photos'
 
@@ -115,10 +115,10 @@ export function RecordPanel({
                   <LinkEditor
                     key={f.key}
                     f={f}
-                    value={fields[f.key]}
+                    selection={linkSelection(f, fields)}
                     nameHint={f.link.nameField ? fields[f.link.nameField] : undefined}
-                    onPick={opt => {
-                      for (const [k, v] of Object.entries(linkPatch(f, opt))) setField(k, v)
+                    onChange={next => {
+                      for (const [k, v] of Object.entries(linkPatch(f, next))) setField(k, v)
                     }}
                   />
                 ) : f.type === 'image' ? (
@@ -519,41 +519,44 @@ function ImageField({ f, collection, value, onChange }: { f: FieldDef; collectio
   )
 }
 
-// Airtable-style link picker: search records in another collection and pick one.
-// Sets this field (id-array, name or name-slug) + any companion lookup fields,
-// via linkPatch() in onPick.
+// Airtable-style link picker: search records in another collection and pick
+// one — or several, when the link is `multi`. Reports the whole new selection,
+// which the caller turns into a patch via linkPatch().
 function LinkEditor({
-  f, value, nameHint, onPick,
+  f, selection, nameHint, onChange,
 }: {
   f: FieldDef
-  value: unknown
+  selection: LinkOption[]
   nameHint: unknown
-  onPick: (opt: LinkOption | null) => void
+  onChange: (opts: LinkOption[]) => void
 }) {
-  const target = f.link!.collection
-  // 'name' and 'name-slug' carry the name inline — only 'id-array' needs a
-  // lookup round-trip to show what is currently selected.
-  const byId = f.link!.store === 'id-array'
-  const inlineName = linkDisplayName(f, value)
-  const currentId = byId && Array.isArray(value) ? String(value[0] ?? '') : ''
-  const hasValue = byId ? !!currentId : !!inlineName
+  const link = f.link!
+  const target = link.collection
+  const multi = !!link.multi
+  // 'name', 'name-slug' and 'name-array' carry the name inline — only
+  // 'id-array' needs a lookup round-trip to show what is currently selected.
+  const byId = link.store === 'id-array'
+  const selectedIds = selection.map(o => o.id).join(',')
 
-  const [display, setDisplay] = useState<string>('')
+  const [titles, setTitles] = useState<Record<string, string>>({})
   const [query, setQuery] = useState('')
   const [opts, setOpts] = useState<LinkOption[]>([])
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  // Resolve current selection's name for display.
+  // Resolve ids → names for 'id-array' picks (one request for the whole set).
   useEffect(() => {
-    if (!byId) { setDisplay(inlineName); return }
-    if (nameHint) { setDisplay(String(nameHint)); return }
-    if (!currentId) { setDisplay(''); return }
+    if (!byId) return
+    const missing = selectedIds.split(',').filter(id => id && !titles[id])
+    if (missing.length === 0) return
+    if (!multi && nameHint) { setTitles(prev => ({ ...prev, [missing[0]]: String(nameHint) })); return }
     let alive = true
-    fetch(`/api/admin/data/${target}/options?ids=${encodeURIComponent(currentId)}`)
-      .then(r => r.json()).then(j => { if (alive) setDisplay(j.titles?.[currentId] ?? currentId) }).catch(() => {})
+    fetch(`/api/admin/data/${target}/options?ids=${encodeURIComponent(missing.join(','))}`)
+      .then(r => r.json())
+      .then(j => { if (alive) setTitles(prev => ({ ...prev, ...(j.titles ?? {}) })) })
+      .catch(() => {})
     return () => { alive = false }
-  }, [target, currentId, nameHint, byId, inlineName])
+  }, [byId, multi, nameHint, target, selectedIds, titles])
 
   // Debounced option search.
   useEffect(() => {
@@ -568,44 +571,71 @@ function LinkEditor({
     return () => { alive = false; clearTimeout(t) }
   }, [open, query, target])
 
+  const nameOf = (o: LinkOption) => o.title || titles[o.id] || o.id
+  const picked = new Set(selection.map(o => o.id))
+  const choices = multi ? opts.filter(o => !picked.has(o.id)) : opts
+  const add = (o: LinkOption) => {
+    onChange(multi ? [...selection, o] : [o])
+    // Multi stays open so several records can be added in a row; the picked
+    // one drops out of `choices` on the next render.
+    setOpen(multi); setQuery('')
+  }
+  // A multi link always shows its search box; a single one hides it behind the
+  // current value until "сменить" is pressed.
+  const showSearch = multi || open || selection.length === 0
+
   return (
     <div>
       <label className="block text-[12px] font-medium text-[var(--ax-fg-soft)] mb-1">
         <span className="inline-flex items-center gap-1"><Link2 size={12} /> {f.label}</span>
       </label>
 
-      {hasValue && !open ? (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--ax-input-bg)] border border-[var(--ax-input-border)]">
-          <span className="flex-1 text-[13px] text-[var(--ax-fg)] truncate">{display || currentId || '—'}</span>
-          <button type="button" onClick={() => setOpen(true)} className="text-[12px] text-[var(--color-primary)]">сменить</button>
-          <button type="button" onClick={() => onPick(null)} className="text-[var(--ax-fg-faint)] hover:text-red-500"><X size={14} /></button>
+      {multi && selection.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-1.5">
+          {selection.map(o => (
+            <span key={o.id}
+              className="inline-flex items-center gap-1 pl-2.5 pr-1.5 py-1 rounded-lg bg-[var(--ax-input-bg)] border border-[var(--ax-input-border)] text-[12px] text-[var(--ax-fg)]">
+              {nameOf(o)}
+              <button type="button" title="Убрать"
+                onClick={() => onChange(selection.filter(s => s.id !== o.id))}
+                className="text-[var(--ax-fg-faint)] hover:text-red-500"><X size={12} /></button>
+            </span>
+          ))}
         </div>
-      ) : (
+      )}
+
+      {!multi && selection.length > 0 && !open && (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--ax-input-bg)] border border-[var(--ax-input-border)]">
+          <span className="flex-1 text-[13px] text-[var(--ax-fg)] truncate">{nameOf(selection[0]) || '—'}</span>
+          <button type="button" onClick={() => setOpen(true)} className="text-[12px] text-[var(--color-primary)]">сменить</button>
+          <button type="button" onClick={() => onChange([])} className="text-[var(--ax-fg-faint)] hover:text-red-500"><X size={14} /></button>
+        </div>
+      )}
+
+      {showSearch && (
         <div className="relative">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--ax-fg-faint)]" />
           <input
-            autoFocus={open}
+            autoFocus={open && !multi}
             value={query}
             onChange={e => setQuery(e.target.value)}
             onFocus={() => setOpen(true)}
-            placeholder="Поиск записи…"
+            placeholder={multi ? 'Добавить запись…' : 'Поиск записи…'}
             className={`${inputCls} pl-9`}
           />
           {open && (
             <div className="absolute z-10 mt-1 w-full max-h-56 overflow-y-auto rounded-xl border border-[var(--ax-border)] bg-[var(--ax-panel)] shadow-lg">
               {loading && <div className="px-3 py-2 text-[12px] text-[var(--ax-fg-faint)]">Загрузка…</div>}
-              {!loading && opts.length === 0 && <div className="px-3 py-2 text-[12px] text-[var(--ax-fg-faint)]">Ничего не найдено</div>}
-              {opts.map(o => (
+              {!loading && choices.length === 0 && <div className="px-3 py-2 text-[12px] text-[var(--ax-fg-faint)]">Ничего не найдено</div>}
+              {choices.map(o => (
                 <button key={o.id} type="button"
-                  onClick={() => { onPick(o); setOpen(false); setQuery('') }}
+                  onClick={() => add(o)}
                   className="block w-full text-left px-3 py-2 text-[13px] text-[var(--ax-fg)] hover:bg-[var(--ax-hover)]">
                   {o.title}
                 </button>
               ))}
-              {hasValue && (
-                <button type="button" onClick={() => setOpen(false)}
-                  className="block w-full text-left px-3 py-2 text-[12px] text-[var(--ax-fg-faint)] border-t border-[var(--ax-border-soft)]">Отмена</button>
-              )}
+              <button type="button" onClick={() => { setOpen(false); setQuery('') }}
+                className="block w-full text-left px-3 py-2 text-[12px] text-[var(--ax-fg-faint)] border-t border-[var(--ax-border-soft)]">Отмена</button>
             </div>
           )}
         </div>

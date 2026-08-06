@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Plus, ArrowUp, ArrowDown, Search, Loader2, Maximize2, Link2, Filter, X, Sparkles } from 'lucide-react'
 import type { CollectionConfig, FieldDef, RecordRow } from '@/lib/admin/adapters/types'
-import { resolveFields, displayValue, editableText, coerceValue, isImageUrl, percentToInput, inputToPercent, percentDisplay, linkPatch, linkDisplayName, type LinkOption } from '@/lib/admin/fields'
+import { resolveFields, displayValue, editableText, coerceValue, isImageUrl, percentToInput, inputToPercent, percentDisplay, linkPatch, linkSelection, type LinkOption } from '@/lib/admin/fields'
 import { hasAi } from '@/lib/admin/ai-fields'
 import { RecordPanel } from './_panel'
 
@@ -363,12 +363,23 @@ export function DataGridScreen({
                       </td>
                     )
                   }
-                  // link — inline picker
-                  if (c.type === 'link' && c.link) {
+                  // link — inline picker. Multi-value links don't fit a cell:
+                  // show the picks and send the click to the side panel.
+                  if (c.type === 'link' && c.link && !c.link.multi) {
                     return (
                       <td key={c.key} style={sticky ? { left: 36 } : undefined} className={`${base} min-w-[160px]`}>
                         <InlineLink cfg={cfg} field={c} row={r}
-                          onPick={opt => patchRow(r.id, linkPatch(c, opt))} />
+                          onPick={opt => patchRow(r.id, linkPatch(c, opt ? [opt] : []))} />
+                      </td>
+                    )
+                  }
+                  if (c.type === 'link' && c.link?.multi) {
+                    const names = linkSelection(c, r.fields).map(o => o.title).filter(Boolean).join(', ')
+                    return (
+                      <td key={c.key} style={sticky ? { left: 36 } : undefined} title={names}
+                        onClick={() => setSelectedId(r.id)}
+                        className={`${base} max-w-[340px] truncate cursor-pointer hover:bg-[var(--ax-hover)]/60`}>
+                        {names || <span className="text-[var(--ax-fg-faint)] text-[11px]">—</span>}
                       </td>
                     )
                   }
@@ -538,7 +549,7 @@ function InlineLink({ field, row, onPick }: { cfg: CollectionConfig; field: Fiel
   const byId = lk.store === 'id-array'
   const cur = byId
     ? (lk.nameField ? displayValue(row.fields[lk.nameField]) : '')
-    : linkDisplayName(field, row.fields[field.key])
+    : (linkSelection(field, row.fields)[0]?.title ?? '')
   const curId = byId && Array.isArray(row.fields[field.key]) ? String((row.fields[field.key] as unknown[])[0] ?? '') : ''
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')

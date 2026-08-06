@@ -167,38 +167,61 @@ export function percentDisplay(v: unknown): string {
 /** One choice offered by a `link` field picker (see lib/admin/options.ts). */
 export type LinkOption = { id: string; title: string; slug?: string }
 
-/** Value a `link` field takes when `opt` is picked (null = cleared). */
-export function linkValue(link: LinkConfig, opt: LinkOption | null): unknown {
-  if (link.store === 'name') return opt ? opt.title : ''
-  if (link.store === 'name-slug') return opt ? [{ name: opt.title, slug: opt.slug ?? '' }] : []
-  if (link.store === 'name-array') return opt ? [opt.title] : []
-  return opt ? [opt.id] : []
+function asArray(v: unknown): unknown[] {
+  return Array.isArray(v) ? v : []
 }
 
-// Full patch for picking `opt` on a link field: the field itself plus the
+/** Value a `link` field takes for a picked set. Single-value links pass one
+ *  option (or none, to clear); `multi` links pass the whole selection. */
+export function linkValue(link: LinkConfig, opts: readonly LinkOption[]): unknown {
+  if (link.store === 'name') return opts[0]?.title ?? ''
+  if (link.store === 'name-slug') return opts.map(o => ({ name: o.title, slug: o.slug ?? '' }))
+  if (link.store === 'name-array') return opts.map(o => o.title)
+  return opts.map(o => o.id)
+}
+
+// Full patch for a link field's new selection: the field itself plus the
 // companion lookup columns Airtable used to keep in sync. Shared by the side
-// panel and the inline grid picker so the two can't drift.
-export function linkPatch(field: FieldDef, opt: LinkOption | null): Record<string, unknown> {
+// panel and the inline grid picker so the two can't drift. The companion
+// arrays stay index-aligned with the names — that is what lets `developerSlugs`
+// be read back as the slug of `developerNames[i]`.
+export function linkPatch(field: FieldDef, opts: readonly LinkOption[]): Record<string, unknown> {
   const link = field.link!
-  const patch: Record<string, unknown> = { [field.key]: linkValue(link, opt) }
-  if (link.nameField) patch[link.nameField] = opt ? opt.title : ''
-  if (link.nameArrayField) patch[link.nameArrayField] = opt ? [opt.title] : []
-  if (link.slugArrayField) patch[link.slugArrayField] = opt?.slug ? [opt.slug] : []
+  const patch: Record<string, unknown> = { [field.key]: linkValue(link, opts) }
+  if (link.nameField) patch[link.nameField] = opts[0]?.title ?? ''
+  if (link.nameArrayField) patch[link.nameArrayField] = opts.map(o => o.title)
+  if (link.slugArrayField) patch[link.slugArrayField] = opts.map(o => o.slug ?? '')
   return patch
 }
 
-/** Name to show for a link field's current value, before any id lookup. */
-export function linkDisplayName(field: FieldDef, value: unknown): string {
-  if (field.link?.store === 'name') return value ? String(value) : ''
-  if (field.link?.store === 'name-array') {
-    const first = Array.isArray(value) ? value[0] : null
-    return typeof first === 'string' ? first : ''
+/** A link field's current picks, read back out of the stored value. `title` is
+ *  empty for 'id-array' — those hold ids and need a lookup to name. */
+export function linkSelection(field: FieldDef, fields: Record<string, unknown>): LinkOption[] {
+  const link = field.link
+  if (!link) return []
+  const value = fields[field.key]
+
+  if (link.store === 'name') {
+    const title = typeof value === 'string' ? value : ''
+    return title ? [{ id: title, title }] : []
   }
-  if (field.link?.store === 'name-slug') {
-    const first = Array.isArray(value) ? value[0] : null
-    return first && typeof first === 'object' ? String((first as { name?: unknown }).name ?? '') : ''
+  if (link.store === 'name-slug') {
+    return asArray(value).flatMap(v => {
+      if (!v || typeof v !== 'object') return []
+      const { name, slug } = v as { name?: unknown; slug?: unknown }
+      if (typeof name !== 'string' || !name) return []
+      return [{ id: name, title: name, slug: typeof slug === 'string' ? slug : undefined }]
+    })
   }
-  return ''
+  if (link.store === 'name-array') {
+    const slugs = asArray(link.slugArrayField ? fields[link.slugArrayField] : null)
+    return asArray(value).flatMap((v, i) => {
+      if (typeof v !== 'string' || !v) return []
+      const slug = slugs[i]
+      return [{ id: v, title: v, slug: typeof slug === 'string' && slug ? slug : undefined }]
+    })
+  }
+  return asArray(value).flatMap(v => (typeof v === 'string' && v ? [{ id: v, title: '' }] : []))
 }
 
 // Ordered column/field list covering ALL keys present across `rows`, with
