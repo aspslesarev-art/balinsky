@@ -35,10 +35,21 @@
   button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   .chk{margin-top:10px;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none}
   .chk input{accent-color:var(--accent)}
-  .legend{position:fixed;right:16px;bottom:16px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:11.5px;color:var(--muted);line-height:1.8;box-shadow:0 4px 16px rgba(17,24,39,.06)}
-  .legend b{color:var(--ink);font-weight:600}
-  .hint{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;font-size:11.5px;color:var(--muted)}
-  @media(max-width:640px){.legend{display:none}.hud{max-width:220px}}
+  .facts{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);line-height:1.7}
+  .facts b{color:var(--ink);font-weight:600}
+  .hint{margin-top:10px;font-size:11px;color:var(--muted);line-height:1.5}
+  /* На узком экране панель — компактная полоса сверху во всю ширину, а не
+     карточка поверх дома: иначе она съедала половину кадра. */
+  @media(max-width:640px){
+    .facts,.hint{display:none}
+    .hud{left:8px;right:8px;top:8px;max-width:none;padding:10px 12px;border-radius:10px}
+    .hud h1{font-size:14px}
+    .hud .sub{font-size:10px}
+    .row{gap:5px;margin-top:8px}
+    button{font-size:11px;padding:5px 9px;border-radius:7px}
+    .chk{margin-top:7px;font-size:11px}
+    .tapme{font-size:12px;padding:8px 14px}
+  }
 </style>
 </head>
 <body>
@@ -59,14 +70,17 @@
   </div>
   <label class="chk"><input type="checkbox" id="lbl" checked> подписи комнат</label>
   <label class="chk"><input type="checkbox" id="spin" checked> автоповорот</label>
+
+  <!-- Состав и подсказка живут здесь же: справа от панели должна остаться
+       только модель, без плашек по углам. -->
+  <div class="facts">
+    <b>1 этаж</b> — кухня 16.4 · зал 14.8 · с/у 3.1<br>
+    <b>2 этаж</b> — 2 спальни по 10.7 · 2 с/у по 4.3 · балкон 4.5
+  </div>
+  <div class="hint">крутить — мышью · зум — колесо · панорама — правая кнопка</div>
 </div>
 
-<div class="legend">
-  <b>1 этаж</b> — кухня 16.4 · зал 14.8 · с/у 3.1<br>
-  <b>2 этаж</b> — 2 спальни по 10.7 · 2 с/у по 4.3 · балкон 4.5
-</div>
 <div class="tapme" id="tapme">Нажмите, чтобы управлять моделью</div>
-<div class="hint">крутить — мышью · зум — колесо · панорама — правая кнопка</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -510,8 +524,12 @@ function updateWalls(){
 // дистанцию — из угла обзора, причём по меньшей из двух сторон кадра:
 // в узком фрейме ограничение даёт горизонталь, в широком — вертикаль.
 scene.updateMatrixWorld(true);
+// В кадре гарантируется САМ ДОМ. Двор с бассейном тянется на 4.7 м назад, и
+// если требовать его целиком на любом угле, дом приходится отодвигать почти
+// вдвое — модель становится мелкой ради газона. Край газона на крайних
+// ракурсах может уйти за границу, дом — никогда.
 const fitBox = new THREE.Box3();
-[floor1G, floor2G, siteG].forEach(g=>fitBox.expandByObject(g));
+[floor1G, floor2G].forEach(g=>fitBox.expandByObject(g));
 target.copy(fitBox.getCenter(new THREE.Vector3()));   // ось вращения через центр
 const FIT_MARGIN = 1.04;                              // запас на подписи комнат
 const fitCorners = [];
@@ -538,18 +556,19 @@ function layoutBox(){
   const W = innerWidth, H = innerHeight;
   const wide = W >= 900;
   const hud = document.querySelector('.hud');
-  const hint = document.querySelector('.hint');
-  const legend = document.querySelector('.legend');
-
-  const left = wide && hud ? hud.getBoundingClientRect().right + 16 : 0;
-  let bottomEdge = H;
-  for(const el of [hint, legend]){
-    if(!el || getComputedStyle(el).display === 'none') continue;
-    bottomEdge = Math.min(bottomEdge, el.getBoundingClientRect().top - 8);
+  // Всё служебное собрано в панели слева, поэтому справа от неё вся высота
+  // холста принадлежит модели. На узком экране панель лежит поверх сцены —
+  // вычитать нечего.
+  if(!hud) return { x: 0, y: 0, w: W, h: H, W, H };
+  const r = hud.getBoundingClientRect();
+  // Широкий кадр: панель слева, модель справа от неё.
+  // Узкий: панель полосой сверху, модель под ней.
+  if(wide){
+    const left = r.right + 16
+    return { x: left, y: 0, w: Math.max(180, W - left), h: H, W, H };
   }
-  const w = Math.max(180, W - left);
-  const h = Math.max(180, bottomEdge);
-  return { x: left, y: 0, w, h, W, H };
+  const top = r.bottom + 8
+  return { x: 0, y: top, w: W, h: Math.max(140, H - top), W, H };
 }
 
 function fitDistance(){
@@ -586,8 +605,12 @@ function resize(){
   // области, а не центр холста: модель уезжает правее панели и выше
   // подсказки, вместо того чтобы висеть в середине с пустотой справа.
   const b = layoutBox();
-  camera.setViewOffset(w, h, w/2 - (b.x + b.w/2), h/2 - (b.y + b.h/2), w, h);
+  const bx = b.x + b.w/2, by = b.y + b.h/2;
+  camera.setViewOffset(w, h, w/2 - bx, h/2 - by, w, h);
   camera.updateProjectionMatrix();
+  // Подсказка — по центру модели, а не холста.
+  const tap = document.getElementById('tapme');
+  if(tap){ tap.style.left = bx + 'px'; tap.style.top = by + 'px'; }
   // Пока управление не перехвачено, держим модель вписанной в кадр —
   // в том числе после поворота телефона. После клика зум пользователя.
   if(!engaged){dist=fitDistance();}
