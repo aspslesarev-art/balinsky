@@ -5,6 +5,7 @@ import { adapterFor } from '@/lib/admin/adapters'
 import { revalidateCollection } from '@/lib/admin/revalidate'
 import { aiAutofillPatch } from '@/lib/admin/ai-autofill'
 import { areaSyncPatch } from '@/lib/admin/area-sync'
+import { withComplexDescription } from '@/lib/admin/complex-description'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -20,7 +21,10 @@ export async function GET(_req: Request, { params }: Ctx) {
   try {
     const row = await adapterFor(cfg).get(cfg, id)
     if (!row) return NextResponse.json({ error: 'not_found' }, { status: 404 })
-    return NextResponse.json({ row })
+    // Открываем «Описание комплекса» с текстом, который сейчас на сайте, —
+    // редактировать надо именно его. Только для чтения: PATCH шлёт лишь
+    // изменённые поля, так что нетронутый текст никуда не записывается.
+    return NextResponse.json({ row: await withComplexDescription(cfg, row) })
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'get_failed' }, { status: 500 })
   }

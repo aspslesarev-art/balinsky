@@ -70,6 +70,11 @@ export type FieldDef = {
   /** For sql_jsonb stores: this key is a real top-level COLUMN (e.g.
    *  developers.logo_url), not a key inside the `data` JSONB blob. */
   column?: boolean
+  /** Opt this field out of the automatic AI fill on save
+   *  (lib/admin/ai-autofill.ts) even though its name matches a generator.
+   *  For fields where EMPTY is a meaningful state — e.g. the complex
+   *  description override, where empty means "keep the generated text". */
+  noAi?: boolean
 }
 
 export type Caps = { create: boolean; update: boolean; delete: boolean }

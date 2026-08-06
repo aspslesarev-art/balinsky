@@ -11,6 +11,7 @@ import {
   LEGAL_OK_FIELD, LEGAL_QUESTIONS_FIELD, LEGAL_BALANCE_FIELD, LEGAL_BALANCE_NOTES_FIELD,
 } from '@/lib/legal-audit'
 import { VOICE_FIELD } from '@/lib/voice-intro'
+import { COMPLEX_DESCRIPTION_FIELD } from '@/lib/complex-description'
 
 // --- SQL JSONB catalogs (raw_* tables, PK airtable_id, JSONB `data`) -------
 
@@ -130,6 +131,15 @@ const complexes: CollectionConfig = {
     { key: 'Developer', label: 'Застройщик', type: 'link', link: { collection: 'developers', store: 'name', nameField: 'Developer1' } },
     { key: 'Developer1', label: 'Застройщик (имя)', type: 'text', readOnly: true },
     { key: 'Типы юнитов', label: 'Типы юнитов', type: 'multienum' },
+    // Текст блока «О комплексе» на странице ЖК. Панель подставляет сюда то,
+    // что сейчас показано на сайте, — правьте прямо в нём. Очистите поле,
+    // чтобы вернуться к автоматически сгенерированному тексту.
+    // `noAi`: пустое значение здесь осмысленно, автозаполнение его не трогает.
+    {
+      key: COMPLEX_DESCRIPTION_FIELD, label: 'Описание комплекса (текст на сайте)',
+      type: 'longtext', noAi: true,
+      help: 'Показывается в блоке «О комплексе». Пусто = автотекст.',
+    },
     { key: 'TOP', label: 'TOP', type: 'bool' },
     { key: 'Разрешительные документы', label: 'Документы', type: 'enum' },
     // Legal due-diligence shown on the complex page as two collapsible blocks.
@@ -225,7 +235,14 @@ const developers: CollectionConfig = {
     { key: 'telegram_chat_id', label: 'Telegram chat заявок', type: 'text', column: true, showInGrid: true, width: 170 },
     { key: 'Доходность', label: 'Доходность', type: 'longtext' },
     { key: 'Команда', label: 'Команда', type: 'longtext' },
-    { key: 'Репутация и опыт', label: 'Репутация и опыт', type: 'longtext' },
+    // Буллиты страницы застройщика: четыре «измерения» (app/ru/zastrojshhiki/
+    // [slug]/_detail.tsx) и блок «Бизнес и сервисы». ОДИН ПУНКТ НА СТРОКУ —
+    // строки парсятся в список (parseBullets), пустое поле прячет секцию.
+    { key: 'Репутация и опыт', label: 'Репутация и опыт', type: 'longtext', help: 'Один пункт на строку' },
+    { key: 'Строительство и недвижимость', label: 'Строительство и недвижимость', type: 'longtext', help: 'Один пункт на строку' },
+    { key: 'Техника и производство', label: 'Техника и производство', type: 'longtext', help: 'Один пункт на строку' },
+    { key: 'Управляющая компания', label: 'Управляющая компания', type: 'longtext', help: 'Один пункт на строку' },
+    { key: 'Бизнес и сервисы', label: 'Бизнес и сервисы', type: 'longtext', help: 'Один пункт на строку' },
     { key: 'AI Описание', label: 'AI-описание', type: 'longtext' },
     { key: 'Total quantity of units', label: 'Всего юнитов', type: 'number' },
     { key: 'Активные проекты', label: 'Активные проекты', type: 'text' },

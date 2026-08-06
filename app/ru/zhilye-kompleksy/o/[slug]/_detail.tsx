@@ -17,6 +17,7 @@ import {
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { ExpandableText } from '@/components/ExpandableText'
+import { COMPLEX_DESCRIPTION_FIELD } from '@/lib/complex-description'
 import { PhotoGalleryHero } from '@/components/PhotoGalleryHero'
 import { ListenIntro } from '@/components/ListenIntro'
 import { NeighborhoodHeatMap } from '@/components/NeighborhoodHeatMap'
@@ -1451,10 +1452,15 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
     ?? firstString(d['ИИ Описание'])
   const seoText = nativeBody ?? rawBody
   const kb = await loadKbPageContent('complex', c.airtable_id, lang)
+  // Правка редактора бьёт любой сгенерированный текст — иначе блок «О
+  // комплексе» нечем отредактировать (см. lib/complex-description.ts).
+  // Только RU: это язык-источник, у остальных свой перевод в KB, а
+  // транслитерация русского на них выглядела бы мусором.
+  const manualBody = lang === 'ru' ? firstString(d[COMPLEX_DESCRIPTION_FIELD]) : null
   // Non-RU: prefer the native-language field over the RU/EN-only KB body.
-  const pageBody = lang === 'ru'
+  const pageBody = manualBody ?? (lang === 'ru'
     ? (kb?.body ?? seoText)
-    : (nativeBody ?? kb?.body ?? rawBody)
+    : (nativeBody ?? kb?.body ?? rawBody))
   const vision = await loadListingVision('complex', c.airtable_id)
   const photoAlts = slidesPhotos.map((_, i) => altFor(vision, i, lang, name))
 
@@ -1722,7 +1728,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
               {copy.aboutPrefix} {name}
             </h2>
             <ExpandableText className="max-w-3xl" more={pickCopy({ ru: 'Подробнее', en: 'Read more', id: 'Selengkapnya', fr: 'En savoir plus', de: 'Mehr anzeigen', zh: '展开', nl: 'Meer', ban: 'Selengkapnya', pl: 'Więcej', uk: 'Докладніше' }, lang)} less={pickCopy({ ru: 'Свернуть', en: 'Show less', id: 'Tutup', fr: 'Réduire', de: 'Weniger', zh: '收起', nl: 'Minder', ban: 'Tutup', pl: 'Zwiń', uk: 'Згорнути' }, lang)}>
-              <div {...edit('ИИ Описание 2', 'longtext', 'Описание ЖК')} className="prose-balinsky text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
+              <div {...edit(COMPLEX_DESCRIPTION_FIELD, 'longtext', 'Описание ЖК')} className="prose-balinsky text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
                 {pageBody}
               </div>
             </ExpandableText>

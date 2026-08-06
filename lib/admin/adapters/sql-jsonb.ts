@@ -82,12 +82,20 @@ export const sqlJsonbAdapter: DataSourceAdapter = {
     const dataFields: Record<string, unknown> = {}
     const colFields: Record<string, unknown> = {}
     for (const [k, v] of Object.entries(fields)) (cols.has(k) ? colFields : dataFields)[k] = v
+    const title = typeof fields[cfg.titleField] === 'string' ? (fields[cfg.titleField] as string) : null
     // A row whose slug column is empty is unreachable — the detail page
     // resolves /o/<slug> through the slug index. Derive one from the title
     // rather than silently creating a 404.
     if (cols.has('slug') && !colFields.slug) {
-      const title = dataFields[cfg.titleField]
-      colFields.slug = normalizeSlug(typeof title === 'string' ? title : null) || id
+      colFields.slug = normalizeSlug(title) || id
+    }
+    // Same trap one level down: developers keep their public slug INSIDE the
+    // `data` blob (`SEO:Slug`), and the catalog drops every row without one
+    // (app/ru/zastrojshhiki/_catalog.tsx). A developer created here was
+    // therefore invisible on the site however complete and published it was.
+    const slugKey = cfg.slugField
+    if (slugKey && !cols.has(slugKey) && !asText(dataFields[slugKey])) {
+      dataFields[slugKey] = await freeSlug(cfg, slugKey, normalizeSlug(title) || id)
     }
     const insert: Record<string, unknown> = { [pk]: id, data: dataFields, ...colFields, synced_at: new Date().toISOString() }
     const { error } = await adminSb().from(cfg.table!).insert(insert)
@@ -120,6 +128,30 @@ export const sqlJsonbAdapter: DataSourceAdapter = {
     const { error } = await adminSb().from(cfg.table!).delete().eq(pk, id)
     if (error) throw new Error(error.message)
   },
+}
+
+function asText(v: unknown): string {
+  return typeof v === 'string' ? v.trim() : ''
+}
+
+// First slug in the `base`, `base-2`, `base-3`… series that no row of this
+// table holds yet. Two developers with the same slug would make one of them
+// unreachable, so the collision has to be resolved at write time.
+async function freeSlug(cfg: CollectionConfig, slugKey: string, base: string): Promise<string> {
+  const sb = adminSb()
+  for (let n = 1; n <= 50; n++) {
+    const candidate = n === 1 ? base : `${base}-${n}`
+    const { data, error } = await sb
+      .from(cfg.table!)
+      .select(cfg.primaryKey ?? 'airtable_id')
+      .eq(jsonPath(slugKey), candidate)
+      .limit(1)
+    // A failed lookup must not block the save — a duplicate slug is still
+    // better than a row with none at all.
+    if (error) return candidate
+    if (!data?.length) return candidate
+  }
+  return `${base}-${Date.now()}`
 }
 
 // adm_-prefixed ids mark admin-created rows so the sync prune skips them.

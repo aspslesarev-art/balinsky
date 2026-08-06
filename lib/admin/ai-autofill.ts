@@ -31,7 +31,7 @@ const str = (v: unknown): string => (typeof v === 'string' ? v.trim() : '')
 /** Fields the ✨ button would offer — identical predicate, see _panel.tsx. */
 function aiFields(cfg: CollectionConfig): string[] {
   return cfg.fields
-    .filter(f => !f.readOnly && !f.hidden && (f.type === 'text' || f.type === 'longtext') && hasAi(f.key))
+    .filter(f => !f.readOnly && !f.hidden && !f.noAi && (f.type === 'text' || f.type === 'longtext') && hasAi(f.key))
     .map(f => f.key)
 }
 
