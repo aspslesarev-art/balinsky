@@ -25,6 +25,12 @@ const LIMITS = {
   eaveHeight: [2, 40],
   ridgeRise: [0, 15],
   yardWall: [0, 6],
+  offsetX: [-60, 60],
+  offsetZ: [-60, 60],
+  modelScale: [0.5, 2],
+  basemapOffsetX: [-80, 80],
+  basemapOffsetZ: [-80, 80],
+  basemapScale: [0.5, 2],
 } as const
 
 /** Никаким входным числам с клиента не доверяем: диапазоны заданы физикой сцены. */
@@ -47,6 +53,12 @@ function parseInput(body: unknown): SunSettingsInput | string {
     eaveHeight: values.eaveHeight,
     ridgeRise: values.ridgeRise,
     yardWall: values.yardWall,
+    offsetX: values.offsetX,
+    offsetZ: values.offsetZ,
+    modelScale: values.modelScale,
+    basemapOffsetX: values.basemapOffsetX,
+    basemapOffsetZ: values.basemapOffsetZ,
+    basemapScale: values.basemapScale,
     enabled: Boolean(raw.enabled),
   }
 }

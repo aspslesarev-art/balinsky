@@ -12,6 +12,7 @@ import { useCallback, useEffect, useState } from 'react'
 
 import type { SitePlan } from '@/lib/complex-sun-plan'
 import type { ModelHeights } from './sun-model'
+import type { Placement } from './SunScene'
 
 const SunScene = dynamic(() => import('./SunScene').then((m) => m.SunScene), {
   ssr: false,
@@ -26,7 +27,7 @@ export type SunShadowBlockProps = {
   plan: SitePlan
   latitude: number
   longitude: number
-  rowAzimuth: number
+  placement: Placement
   heights: ModelHeights
   title: string
 }
@@ -35,7 +36,7 @@ export function SunShadowBlock({
   plan,
   latitude,
   longitude,
-  rowAzimuth,
+  placement,
   heights,
   title,
 }: SunShadowBlockProps) {
@@ -96,7 +97,7 @@ export function SunShadowBlock({
                 plan={plan}
                 latitude={latitude}
                 longitude={longitude}
-                rowAzimuth={rowAzimuth}
+                placement={placement}
                 heights={heights}
               />
             </div>

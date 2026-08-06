@@ -13,6 +13,15 @@ export type SunSettings = {
   eaveHeight: number
   ridgeRise: number
   yardWall: number
+  /** Сдвиг модели относительно привязки подложки: восток и юг, метры. */
+  offsetX: number
+  offsetZ: number
+  /** Масштаб модели, 1 = размер по обмеру генплана. */
+  modelScale: number
+  /** Подгонка самой подложки: сдвиг на восток и юг, метры, и масштаб. */
+  basemapOffsetX: number
+  basemapOffsetZ: number
+  basemapScale: number
   enabled: boolean
 }
 

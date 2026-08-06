@@ -39,6 +39,12 @@ export default async function Page({ params }: { params: Params }) {
         eaveHeight: settings?.eaveHeight ?? 6.8,
         ridgeRise: settings?.ridgeRise ?? 2,
         yardWall: settings?.yardWall ?? 2.4,
+        offsetX: settings?.offsetX ?? 0,
+        offsetZ: settings?.offsetZ ?? 0,
+        modelScale: settings?.modelScale ?? 1,
+        basemapOffsetX: settings?.basemapOffsetX ?? 0,
+        basemapOffsetZ: settings?.basemapOffsetZ ?? 0,
+        basemapScale: settings?.basemapScale ?? 1,
         enabled: settings?.enabled ?? false,
       }}
     />

@@ -49,6 +49,20 @@ export function SunSettingsEditor({
     setSaveState('idle')
   }
 
+  const placement = useMemo(
+    () => ({
+      rowAzimuth: form.rowAzimuth,
+      modelScale: form.modelScale,
+      offsetX: form.offsetX,
+      offsetZ: form.offsetZ,
+      basemapOffsetX: form.basemapOffsetX,
+      basemapOffsetZ: form.basemapOffsetZ,
+      basemapScale: form.basemapScale,
+    }),
+    [form.rowAzimuth, form.modelScale, form.offsetX, form.offsetZ,
+     form.basemapOffsetX, form.basemapOffsetZ, form.basemapScale],
+  )
+
   const heights = useMemo(
     () => ({
       eaveHeight: form.eaveHeight,
@@ -118,6 +132,68 @@ export function SunSettingsEditor({
             />
           </div>
         </Field>
+
+        <Nudge
+          label="Масштаб модели"
+          value={`${form.modelScale.toFixed(3)}×`}
+          steps={[-0.05, -0.01, 0.01, 0.05]}
+          format={(v) => `${v > 0 ? '+' : ''}${v}`}
+          onStep={(d) => update('modelScale', clamp(form.modelScale + d, 0.5, 2))}
+          onReset={() => update('modelScale', 1)}
+        />
+
+        <Nudge
+          label="Модель: запад ↔ восток"
+          value={`${form.offsetX >= 0 ? '+' : ''}${form.offsetX.toFixed(1)} м`}
+          steps={[-2, -0.5, 0.5, 2]}
+          format={(v) => `${v > 0 ? '+' : ''}${v}`}
+          onStep={(d) => update('offsetX', clamp(form.offsetX + d, -60, 60))}
+          onReset={() => update('offsetX', 0)}
+        />
+
+        <Nudge
+          label="Модель: север ↔ юг"
+          value={`${form.offsetZ >= 0 ? '+' : ''}${form.offsetZ.toFixed(1)} м`}
+          steps={[-2, -0.5, 0.5, 2]}
+          format={(v) => `${v > 0 ? '+' : ''}${v}`}
+          onStep={(d) => update('offsetZ', clamp(form.offsetZ + d, -60, 60))}
+          onReset={() => update('offsetZ', 0)}
+        />
+
+        <div className="mt-6 border-t border-neutral-200 pt-4 dark:border-neutral-800">
+          <p className="text-[11px] uppercase tracking-wide text-neutral-500">Подложка</p>
+        </div>
+
+        <Nudge
+          label="Снимок: запад ↔ восток"
+          value={`${form.basemapOffsetX >= 0 ? '+' : ''}${form.basemapOffsetX.toFixed(1)} м`}
+          steps={[-2, -0.5, 0.5, 2]}
+          format={(v) => `${v > 0 ? '+' : ''}${v}`}
+          onStep={(d) => update('basemapOffsetX', clamp(form.basemapOffsetX + d, -80, 80))}
+          onReset={() => update('basemapOffsetX', 0)}
+        />
+
+        <Nudge
+          label="Снимок: север ↔ юг"
+          value={`${form.basemapOffsetZ >= 0 ? '+' : ''}${form.basemapOffsetZ.toFixed(1)} м`}
+          steps={[-2, -0.5, 0.5, 2]}
+          format={(v) => `${v > 0 ? '+' : ''}${v}`}
+          onStep={(d) => update('basemapOffsetZ', clamp(form.basemapOffsetZ + d, -80, 80))}
+          onReset={() => update('basemapOffsetZ', 0)}
+        />
+
+        <Nudge
+          label="Масштаб снимка"
+          value={`${form.basemapScale.toFixed(3)}×`}
+          steps={[-0.05, -0.01, 0.01, 0.05]}
+          format={(v) => `${v > 0 ? '+' : ''}${v}`}
+          onStep={(d) => update('basemapScale', clamp(form.basemapScale + d, 0.5, 2))}
+          onReset={() => update('basemapScale', 1)}
+        />
+
+        <div className="mt-6 border-t border-neutral-200 pt-4 dark:border-neutral-800">
+          <p className="text-[11px] uppercase tracking-wide text-neutral-500">Высоты</p>
+        </div>
 
         <Field label="Карниз" value={`${form.eaveHeight.toFixed(1)} м`}>
           <input
@@ -208,11 +284,60 @@ export function SunSettingsEditor({
           plan={plan}
           latitude={form.latitude}
           longitude={form.longitude}
-          rowAzimuth={form.rowAzimuth}
+          placement={placement}
           heights={heights}
         />
       </section>
     </main>
+  )
+}
+
+const clamp = (v: number, min: number, max: number) =>
+  Math.round(Math.min(max, Math.max(min, v)) * 1000) / 1000
+
+/** Точная подводка кнопками: мышью по ползунку в метр не попасть. */
+function Nudge({
+  label,
+  value,
+  steps,
+  format,
+  onStep,
+  onReset,
+}: {
+  label: string
+  value: string
+  steps: number[]
+  format: (v: number) => string
+  onStep: (delta: number) => void
+  onReset: () => void
+}) {
+  return (
+    <div className="mt-4">
+      <div className="mb-1 flex items-baseline justify-between">
+        <span className="text-[11px] uppercase tracking-wide text-neutral-500">{label}</span>
+        <b className="text-sm tabular-nums">{value}</b>
+      </div>
+      <div className="flex items-center gap-1.5">
+        {steps.map((step) => (
+          <button
+            key={step}
+            type="button"
+            onClick={() => onStep(step)}
+            className="flex-1 rounded-md border border-neutral-300 px-1 py-1 text-xs tabular-nums hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800"
+          >
+            {format(step)}
+          </button>
+        ))}
+        <button
+          type="button"
+          onClick={onReset}
+          title="Сбросить"
+          className="rounded-md border border-neutral-300 px-2 py-1 text-xs text-neutral-500 hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800"
+        >
+          ↺
+        </button>
+      </div>
+    </div>
   )
 }
 

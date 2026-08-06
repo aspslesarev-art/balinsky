@@ -1826,7 +1826,15 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
                     plan={sunPlan!}
                     latitude={sunSettings!.latitude}
                     longitude={sunSettings!.longitude}
-                    rowAzimuth={sunSettings!.rowAzimuth}
+                    placement={{
+                      rowAzimuth: sunSettings!.rowAzimuth,
+                      modelScale: sunSettings!.modelScale,
+                      offsetX: sunSettings!.offsetX,
+                      offsetZ: sunSettings!.offsetZ,
+                      basemapOffsetX: sunSettings!.basemapOffsetX,
+                      basemapOffsetZ: sunSettings!.basemapOffsetZ,
+                      basemapScale: sunSettings!.basemapScale,
+                    }}
                     heights={{
                       eaveHeight: sunSettings!.eaveHeight,
                       ridgeRise: sunSettings!.ridgeRise,

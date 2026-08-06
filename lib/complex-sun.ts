@@ -25,6 +25,12 @@ type SunSettingsRow = {
   eave_height: number | string
   ridge_rise: number | string
   yard_wall: number | string
+  offset_x: number | string
+  offset_z: number | string
+  model_scale: number | string
+  basemap_offset_x: number | string
+  basemap_offset_z: number | string
+  basemap_scale: number | string
   enabled: boolean
 }
 
@@ -37,6 +43,12 @@ function toSettings(row: SunSettingsRow): SunSettings {
     eaveHeight: Number(row.eave_height),
     ridgeRise: Number(row.ridge_rise),
     yardWall: Number(row.yard_wall),
+    offsetX: Number(row.offset_x ?? 0),
+    offsetZ: Number(row.offset_z ?? 0),
+    modelScale: Number(row.model_scale ?? 1),
+    basemapOffsetX: Number(row.basemap_offset_x ?? 0),
+    basemapOffsetZ: Number(row.basemap_offset_z ?? 0),
+    basemapScale: Number(row.basemap_scale ?? 1),
     enabled: row.enabled,
   }
 }
@@ -65,6 +77,12 @@ export async function saveSunSettings(
         eave_height: input.eaveHeight,
         ridge_rise: input.ridgeRise,
         yard_wall: input.yardWall,
+        offset_x: input.offsetX,
+        offset_z: input.offsetZ,
+        model_scale: input.modelScale,
+        basemap_offset_x: input.basemapOffsetX,
+        basemap_offset_z: input.basemapOffsetZ,
+        basemap_scale: input.basemapScale,
         enabled: input.enabled,
         updated_at: new Date().toISOString(),
       },

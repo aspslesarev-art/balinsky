@@ -26,11 +26,22 @@ const SHADOW_EXTENT = 42
 const MIN_MINUTES = 300
 const MAX_MINUTES = 1140
 
+/** Ручная подгонка посадки: всё в метрах, восток и юг положительные. */
+export type Placement = {
+  rowAzimuth: number
+  modelScale: number
+  offsetX: number
+  offsetZ: number
+  basemapOffsetX: number
+  basemapOffsetZ: number
+  basemapScale: number
+}
+
 export type SunSceneProps = {
   plan: SitePlan
   latitude: number
   longitude: number
-  rowAzimuth: number
+  placement: Placement
   heights: ModelHeights
 }
 
@@ -42,10 +53,13 @@ type SceneContext = {
   sunLight: THREE.DirectionalLight
   skyLight: THREE.HemisphereLight
   sunMarker: THREE.Mesh
+  basemap: THREE.Mesh
+  basemapBase: { x: number; z: number }
   model: ComplexModel | null
 }
 
-export function SunScene({ plan, latitude, longitude, rowAzimuth, heights }: SunSceneProps) {
+export function SunScene({ plan, latitude, longitude, placement, heights }: SunSceneProps) {
+  const { rowAzimuth } = placement
   const mountRef = useRef<HTMLDivElement | null>(null)
   const sceneRef = useRef<SceneContext | null>(null)
 
@@ -114,11 +128,11 @@ export function SunScene({ plan, latitude, longitude, rowAzimuth, heights }: Sun
       new THREE.MeshStandardMaterial({ map: texture, roughness: 1 }),
     )
     basemap.rotation.x = -Math.PI / 2
-    basemap.position.set(
-      (plan.basemap.sizePx / 2 - plan.basemap.anchorPx.x) * plan.basemap.metersPerPixel,
-      -0.02,
-      (plan.basemap.sizePx / 2 - plan.basemap.anchorPx.y) * plan.basemap.metersPerPixel,
-    )
+    const basemapBase = {
+      x: (plan.basemap.sizePx / 2 - plan.basemap.anchorPx.x) * plan.basemap.metersPerPixel,
+      z: (plan.basemap.sizePx / 2 - plan.basemap.anchorPx.y) * plan.basemap.metersPerPixel,
+    }
+    basemap.position.set(basemapBase.x, -0.02, basemapBase.z)
     basemap.receiveShadow = true
     scene.add(basemap)
 
@@ -138,6 +152,8 @@ export function SunScene({ plan, latitude, longitude, rowAzimuth, heights }: Sun
       sunLight,
       skyLight,
       sunMarker,
+      basemap,
+      basemapBase,
       model: null,
     }
 
@@ -214,8 +230,21 @@ export function SunScene({ plan, latitude, longitude, rowAzimuth, heights }: Sun
     }
     ctx.model = buildComplexModel(plan, heights)
     ctx.scene.add(ctx.model.group)
-    placeModel(ctx.model, plan, rowAzimuth)
-  }, [plan, heights, rowAzimuth])
+    placeModel(ctx.model, plan, placement)
+  }, [plan, heights, placement])
+
+  // ── подложка: сдвиг и масштаб относительно начала координат ───────────────
+  useEffect(() => {
+    const ctx = sceneRef.current
+    if (!ctx) return
+    const { basemapScale, basemapOffsetX, basemapOffsetZ } = placement
+    ctx.basemap.scale.set(basemapScale, basemapScale, 1)
+    ctx.basemap.position.set(
+      ctx.basemapBase.x * basemapScale + basemapOffsetX,
+      -0.02,
+      ctx.basemapBase.z * basemapScale + basemapOffsetZ,
+    )
+  }, [placement])
 
   // ── камера: облёт со стороны дворов либо взгляд строго сверху ─────────────
   useEffect(() => {
@@ -293,17 +322,25 @@ export function SunScene({ plan, latitude, longitude, rowAzimuth, heights }: Sun
   )
 }
 
-/** Разворот модели: локальная ось +X должна смотреть по заданному азимуту. */
-function placeModel(model: ComplexModel, plan: SitePlan, rowAzimuth: number) {
-  const theta = (90 - rowAzimuth) * DEG
+/**
+ * Разворот модели: локальная ось +X смотрит по заданному азимуту, центр
+ * участка садится в начало координат, затем применяются масштаб и сдвиг.
+ */
+function placeModel(model: ComplexModel, plan: SitePlan, placement: Placement) {
+  const theta = (90 - placement.rowAzimuth) * DEG
   model.group.rotation.y = theta
+  model.group.scale.setScalar(placement.modelScale)
 
   const center = plotCenter(plan)
   const rotated = new THREE.Vector3(center.x, 0, center.z).applyAxisAngle(
     new THREE.Vector3(0, 1, 0),
     theta,
   )
-  model.group.position.set(-rotated.x, 0, -rotated.z)
+  model.group.position.set(
+    -rotated.x * placement.modelScale + placement.offsetX,
+    0,
+    -rotated.z * placement.modelScale + placement.offsetZ,
+  )
   model.group.updateMatrixWorld(true)
 }
 
