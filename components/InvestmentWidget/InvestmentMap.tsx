@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Flame } from 'lucide-react'
 import { BALINSKY_MAP_STYLE } from '@/lib/google-map-style'
 import { loadGoogleMaps } from '@/lib/google-maps-loader'
+import { gateMapGestures } from '@/lib/map-gesture-gate'
 import { createHeatOverlay, fetchHeatCells } from '@/lib/heat-overlay'
 import type { Snapshot } from './types'
 import { pickCopy, type Lang } from '@/lib/i18n'
@@ -30,7 +31,7 @@ const MAP_COPY = {
     unavailable: 'Карта недоступна',
     villa: 'Вилла', competitors: 'Конкуренты', anchors: 'Якоря',
     anchorsOnly: 'Только якоря', allPois: 'Все POI',
-    heat: 'Карта иностранцев',
+    heat: 'Карта иностранных туристов',
     perNight: ' / ночь',
     openBooking: 'Открыть на Booking →',
     openMaps: 'Открыть на Google Maps →',
@@ -44,7 +45,7 @@ const MAP_COPY = {
     unavailable: 'Map unavailable',
     villa: 'Villa', competitors: 'Competitors', anchors: 'Anchors',
     anchorsOnly: 'Anchors only', allPois: 'All POIs',
-    heat: 'Where foreigners go',
+    heat: 'Where foreign tourists go',
     perNight: ' / night',
     openBooking: 'Open on Booking →',
     openMaps: 'Open on Google Maps →',
@@ -58,7 +59,7 @@ const MAP_COPY = {
     unavailable: 'Peta tidak tersedia',
     villa: 'Vila', competitors: 'Pesaing', anchors: 'Jangkar',
     anchorsOnly: 'Hanya jangkar', allPois: 'Semua POI',
-    heat: 'Peta orang asing',
+    heat: 'Peta turis asing',
     perNight: ' / malam',
     openBooking: 'Buka di Booking →',
     openMaps: 'Buka di Google Maps →',
@@ -72,7 +73,7 @@ const MAP_COPY = {
     unavailable: 'Carte indisponible',
     villa: 'Villa', competitors: 'Concurrents', anchors: 'Points de repère',
     anchorsOnly: 'Repères seuls', allPois: 'Tous les POI',
-    heat: 'Carte des étrangers',
+    heat: 'Carte des touristes étrangers',
     perNight: ' / nuit',
     openBooking: 'Ouvrir sur Booking →',
     openMaps: 'Ouvrir sur Google Maps →',
@@ -86,7 +87,7 @@ const MAP_COPY = {
     unavailable: 'Karte nicht verfügbar',
     villa: 'Villa', competitors: 'Wettbewerber', anchors: 'Ankerpunkte',
     anchorsOnly: 'Nur Ankerpunkte', allPois: 'Alle POIs',
-    heat: 'Wo Ausländer sind',
+    heat: 'Wo ausländische Touristen sind',
     perNight: ' / Nacht',
     openBooking: 'Auf Booking öffnen →',
     openMaps: 'Auf Google Maps öffnen →',
@@ -100,7 +101,7 @@ const MAP_COPY = {
     unavailable: '地图不可用',
     villa: '别墅', competitors: '竞争对手', anchors: '地标',
     anchorsOnly: '仅地标', allPois: '全部POI',
-    heat: '外国人聚集地图',
+    heat: '外国游客聚集地图',
     perNight: ' / 晚',
     openBooking: '在Booking打开 →',
     openMaps: '在Google Maps打开 →',
@@ -114,7 +115,7 @@ const MAP_COPY = {
     unavailable: 'Kaart niet beschikbaar',
     villa: 'Villa', competitors: 'Concurrenten', anchors: 'Ankerpunten',
     anchorsOnly: 'Alleen ankerpunten', allPois: 'Alle POI\'s',
-    heat: 'Waar buitenlanders zijn',
+    heat: 'Waar buitenlandse toeristen zijn',
     perNight: ' / nacht',
     openBooking: 'Openen op Booking →',
     openMaps: 'Openen op Google Maps →',
@@ -128,7 +129,7 @@ const MAP_COPY = {
     unavailable: 'Peta nenten wenten',
     villa: 'Vila', competitors: 'Saingan', anchors: 'Jangkar',
     anchorsOnly: 'Wantah jangkar', allPois: 'Sami POI',
-    heat: 'Peta orang asing',
+    heat: 'Peta turis asing',
     perNight: ' / wengi',
     openBooking: 'Ngampakang ring Booking →',
     openMaps: 'Ngampakang ring Google Maps →',
@@ -142,7 +143,7 @@ const MAP_COPY = {
     unavailable: 'Mapa niedostępna',
     villa: 'Willa', competitors: 'Konkurenci', anchors: 'Punkty odniesienia',
     anchorsOnly: 'Tylko punkty odniesienia', allPois: 'Wszystkie POI',
-    heat: 'Mapa obcokrajowców',
+    heat: 'Mapa zagranicznych turystów',
     perNight: ' / noc',
     openBooking: 'Otwórz w Booking →',
     openMaps: 'Otwórz w Google Maps →',
@@ -156,7 +157,7 @@ const MAP_COPY = {
     unavailable: 'Карта недоступна',
     villa: 'Вілла', competitors: 'Конкуренти', anchors: 'Орієнтири',
     anchorsOnly: 'Лише орієнтири', allPois: 'Усі POI',
-    heat: 'Карта іноземців',
+    heat: 'Карта іноземних туристів',
     perNight: ' / ніч',
     openBooking: 'Відкрити на Booking →',
     openMaps: 'Відкрити на Google Maps →',
@@ -496,7 +497,6 @@ export function InvestmentMap({
       const instance = new google.maps.Map(containerRef.current, {
         center: { lat: snap.villa.lat, lng: snap.villa.lng },
         zoom: 14,
-        gestureHandling: 'greedy',
         streetViewControl: true,
         zoomControl: true,
         fullscreenControl: true,
@@ -507,6 +507,7 @@ export function InvestmentMap({
         styles: BALINSKY_MAP_STYLE,
         backgroundColor: '#F2EAD8',
       })
+      gateMapGestures(instance)
       setMap(instance)
     }).catch(() => { /* fall through to "unavailable" tile */ })
     return () => { cancelled = true }

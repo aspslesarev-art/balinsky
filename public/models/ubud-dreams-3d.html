@@ -388,7 +388,7 @@ let theta=-.75, phi=1.05, dist=17, target=new THREE.Vector3(0,1.6,0);
 let auto=true;
 function updCam(){
   phi=Math.max(.15,Math.min(1.45,phi));
-  dist=Math.max(5,Math.min(45,dist));
+  dist=Math.max(5,Math.min(80,dist));   // верхний предел поднят: вписывание кадра может требовать больше 45
   camera.position.set(
     target.x+dist*Math.sin(phi)*Math.sin(theta),
     target.y+dist*Math.cos(phi),
@@ -504,11 +504,57 @@ function updateWalls(){
   }
 }
 
+// ============ кадрирование ============
+// Модель крутится вокруг вертикальной оси, поэтому «влезает при любом угле»
+// = влезает описанная вокруг неё сфера. Радиус берём по габаритам геометрии,
+// дистанцию — из угла обзора, причём по меньшей из двух сторон кадра:
+// в узком фрейме ограничение даёт горизонталь, в широком — вертикаль.
+scene.updateMatrixWorld(true);
+const fitBox = new THREE.Box3();
+[floor1G, floor2G, siteG].forEach(g=>fitBox.expandByObject(g));
+target.copy(fitBox.getCenter(new THREE.Vector3()));   // ось вращения через центр
+const FIT_MARGIN = 1.04;                              // запас на подписи комнат
+const fitCorners = [];
+for(const x of [fitBox.min.x,fitBox.max.x])
+  for(const y of [fitBox.min.y,fitBox.max.y])
+    for(const z of [fitBox.min.z,fitBox.max.z])
+      fitCorners.push(new THREE.Vector3(x,y,z).sub(target));
+
+/**
+ * Минимальная дистанция, при которой все восемь углов габарита остаются в
+ * кадре на полном обороте. Описанная сфера здесь врала бы в запас: дом
+ * вытянутый (≈15 м в глубину против 4.7 в ширину), и её радиус отодвигал
+ * камеру дальше, чем нужно. Считаем честно — по проекции углов.
+ */
+function fitDistance(){
+  const vT = Math.tan(camera.fov*Math.PI/360), hT = vT*camera.aspect;
+  const up = new THREE.Vector3(0,1,0);
+  const zc = new THREE.Vector3(), xc = new THREE.Vector3(), yc = new THREE.Vector3();
+  let need = 0;
+  for(let i=0;i<72;i++){
+    const th = i*Math.PI/36;
+    zc.set(Math.sin(phi)*Math.sin(th), Math.cos(phi), Math.sin(phi)*Math.cos(th)).normalize();
+    xc.crossVectors(up,zc).normalize();
+    yc.crossVectors(zc,xc);
+    for(const p of fitCorners){
+      // Точка видна, пока её смещение от оси взгляда укладывается в конус
+      // обзора на её же глубине: |px| <= (dist - along)*tg. Отсюда dist.
+      const along=p.dot(zc);
+      need = Math.max(need, Math.abs(p.dot(xc))/hT + along, Math.abs(p.dot(yc))/vT + along);
+    }
+  }
+  return need*FIT_MARGIN;
+}
+
 // ============ рендер ============
 function resize(){
   const w=innerWidth,h=innerHeight;
   renderer.setSize(w,h,false);
   camera.aspect=w/h; camera.updateProjectionMatrix();
+  // Пока управление не перехвачено, держим модель вписанной в кадр —
+  // в том числе после поворота телефона. После клика зум пользователя.
+  if(!engaged){dist=fitDistance();}
+  updCam();
 }
 addEventListener('resize',resize); resize();
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;

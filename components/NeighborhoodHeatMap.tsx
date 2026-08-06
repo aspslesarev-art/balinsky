@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Flame } from 'lucide-react'
 import { BALINSKY_MAP_STYLE } from '@/lib/google-map-style'
 import { loadGoogleMaps } from '@/lib/google-maps-loader'
+import { gateMapGestures } from '@/lib/map-gesture-gate'
 import { createHeatOverlay, fetchHeatCells } from '@/lib/heat-overlay'
 import { createGeoImageOverlay, type GeoImageOverlay } from '@/lib/geo-overlay'
 import type { GeoOverlay } from '@/lib/geo-placement'
@@ -50,7 +51,6 @@ export function NeighborhoodHeatMap({
       const m = new google.maps.Map(containerRef.current, {
         center: { lat, lng },
         zoom: overlay ? 18 : 13,
-        gestureHandling: 'greedy',
         streetViewControl: true,
         zoomControl: true,
         fullscreenControl: true,
@@ -61,6 +61,7 @@ export function NeighborhoodHeatMap({
           ? { mapTypeId: 'hybrid' }
           : { styles: BALINSKY_MAP_STYLE, backgroundColor: '#F2EAD8' }),
       })
+      gateMapGestures(m)
       new google.maps.Marker({
         position: { lat, lng },
         map: m,
@@ -128,7 +129,7 @@ export function NeighborhoodHeatMap({
           }
         >
           <Flame size={13} className={showHeat ? 'text-white' : 'text-[#FF5A36]'} />
-          {pickCopy({ ru: 'Карта иностранцев', en: 'Where foreigners go', id: 'Peta orang asing', fr: 'Carte des étrangers', de: 'Wo Ausländer sind', zh: '外国人聚集地图', nl: 'Waar buitenlanders zijn', ban: 'Peta orang asing', pl: 'Mapa obcokrajowców', uk: 'Карта іноземців' }, lang)}
+          {pickCopy({ ru: 'Карта иностранных туристов', en: 'Where foreign tourists go', id: 'Peta turis asing', fr: 'Carte des touristes étrangers', de: 'Wo ausländische Touristen sind', zh: '外国游客聚集地图', nl: 'Waar buitenlandse toeristen zijn', ban: 'Peta turis asing', pl: 'Mapa zagranicznych turystów', uk: 'Карта іноземних туристів' }, lang)}
         </button>
         {showHeat && (
           <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/95 backdrop-blur-sm shadow-sm text-[10px] text-[var(--color-text-muted)]">

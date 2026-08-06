@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { BALINSKY_MAP_STYLE } from '@/lib/google-map-style'
 import { loadGoogleMaps } from '@/lib/google-maps-loader'
+import { gateMapGestures } from '@/lib/map-gesture-gate'
 import { createHeatOverlay, fetchHeatCells } from '@/lib/heat-overlay'
 import { NearbyMap, PoiCard, type MapPoi } from '@/components/preview/NearbyMap'
 
@@ -99,10 +100,11 @@ export function NearbyGoogleMap({ center, pois, title, photo, apiKey }: {
       .then(() => {
         if (cancelled || !boxRef.current) return
         const map = new google.maps.Map(boxRef.current, {
-          center, zoom: ZOOM, gestureHandling: 'greedy', mapTypeControl: false,
+          center, zoom: ZOOM, mapTypeControl: false,
           streetViewControl: false, fullscreenControl: true, clickableIcons: false,
           styles: BALINSKY_MAP_STYLE, backgroundColor: '#F2EAD8',
         })
+        gateMapGestures(map)
         makeComplexMarker(center, title, photo ?? null).setMap(map)
         markersRef.current = pois.map((p, i) => {
           const m = new google.maps.Marker({
