@@ -135,27 +135,42 @@ export function SunSettingsEditor({
 
         <Nudge
           label="Масштаб модели"
+          current={form.modelScale}
+          min={0.5}
+          max={2}
+          step={0.005}
           value={`${form.modelScale.toFixed(3)}×`}
           steps={[-0.05, -0.01, 0.01, 0.05]}
           format={(v) => `${v > 0 ? '+' : ''}${v}`}
+          onChange={(v) => update('modelScale', clamp(v, 0.5, 2))}
           onStep={(d) => update('modelScale', clamp(form.modelScale + d, 0.5, 2))}
           onReset={() => update('modelScale', 1)}
         />
 
         <Nudge
           label="Модель: запад ↔ восток"
+          current={form.offsetX}
+          min={-60}
+          max={60}
+          step={0.5}
           value={`${form.offsetX >= 0 ? '+' : ''}${form.offsetX.toFixed(1)} м`}
           steps={[-2, -0.5, 0.5, 2]}
           format={(v) => `${v > 0 ? '+' : ''}${v}`}
+          onChange={(v) => update('offsetX', clamp(v, -60, 60))}
           onStep={(d) => update('offsetX', clamp(form.offsetX + d, -60, 60))}
           onReset={() => update('offsetX', 0)}
         />
 
         <Nudge
           label="Модель: север ↔ юг"
+          current={form.offsetZ}
+          min={-60}
+          max={60}
+          step={0.5}
           value={`${form.offsetZ >= 0 ? '+' : ''}${form.offsetZ.toFixed(1)} м`}
           steps={[-2, -0.5, 0.5, 2]}
           format={(v) => `${v > 0 ? '+' : ''}${v}`}
+          onChange={(v) => update('offsetZ', clamp(v, -60, 60))}
           onStep={(d) => update('offsetZ', clamp(form.offsetZ + d, -60, 60))}
           onReset={() => update('offsetZ', 0)}
         />
@@ -166,27 +181,42 @@ export function SunSettingsEditor({
 
         <Nudge
           label="Снимок: запад ↔ восток"
+          current={form.basemapOffsetX}
+          min={-80}
+          max={80}
+          step={0.5}
           value={`${form.basemapOffsetX >= 0 ? '+' : ''}${form.basemapOffsetX.toFixed(1)} м`}
           steps={[-2, -0.5, 0.5, 2]}
           format={(v) => `${v > 0 ? '+' : ''}${v}`}
+          onChange={(v) => update('basemapOffsetX', clamp(v, -80, 80))}
           onStep={(d) => update('basemapOffsetX', clamp(form.basemapOffsetX + d, -80, 80))}
           onReset={() => update('basemapOffsetX', 0)}
         />
 
         <Nudge
           label="Снимок: север ↔ юг"
+          current={form.basemapOffsetZ}
+          min={-80}
+          max={80}
+          step={0.5}
           value={`${form.basemapOffsetZ >= 0 ? '+' : ''}${form.basemapOffsetZ.toFixed(1)} м`}
           steps={[-2, -0.5, 0.5, 2]}
           format={(v) => `${v > 0 ? '+' : ''}${v}`}
+          onChange={(v) => update('basemapOffsetZ', clamp(v, -80, 80))}
           onStep={(d) => update('basemapOffsetZ', clamp(form.basemapOffsetZ + d, -80, 80))}
           onReset={() => update('basemapOffsetZ', 0)}
         />
 
         <Nudge
           label="Масштаб снимка"
+          current={form.basemapScale}
+          min={0.5}
+          max={2}
+          step={0.005}
           value={`${form.basemapScale.toFixed(3)}×`}
           steps={[-0.05, -0.01, 0.01, 0.05]}
           format={(v) => `${v > 0 ? '+' : ''}${v}`}
+          onChange={(v) => update('basemapScale', clamp(v, 0.5, 2))}
           onStep={(d) => update('basemapScale', clamp(form.basemapScale + d, 0.5, 2))}
           onReset={() => update('basemapScale', 1)}
         />
@@ -295,19 +325,32 @@ export function SunSettingsEditor({
 const clamp = (v: number, min: number, max: number) =>
   Math.round(Math.min(max, Math.max(min, v)) * 1000) / 1000
 
-/** Точная подводка кнопками: мышью по ползунку в метр не попасть. */
+/**
+ * Ползунок для грубой наводки плюс кнопки для точной: мышью по ползунку
+ * в полметра не попасть, а кнопками долго ехать через весь диапазон.
+ */
 function Nudge({
   label,
   value,
+  current,
+  min,
+  max,
+  step,
   steps,
   format,
+  onChange,
   onStep,
   onReset,
 }: {
   label: string
   value: string
+  current: number
+  min: number
+  max: number
+  step: number
   steps: number[]
   format: (v: number) => string
+  onChange: (value: number) => void
   onStep: (delta: number) => void
   onReset: () => void
 }) {
@@ -317,6 +360,16 @@ function Nudge({
         <span className="text-[11px] uppercase tracking-wide text-neutral-500">{label}</span>
         <b className="text-sm tabular-nums">{value}</b>
       </div>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={current}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="mb-2 w-full accent-amber-500"
+        aria-label={label}
+      />
       <div className="flex items-center gap-1.5">
         {steps.map((step) => (
           <button
