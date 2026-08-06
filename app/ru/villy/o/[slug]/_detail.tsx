@@ -86,6 +86,8 @@ import { getDistrictCopy, getBuyAnchor } from '@/lib/districts'
 import { DISTRICT_TO_SLUG, BEDROOM_TO_SLUG } from '@/lib/seo-routes'
 import { facetLabel } from '@/lib/filter-i18n'
 import { hreflangMap } from '@/lib/hreflang'
+import { getVilla3DPlanUrl } from '@/lib/villa-3d-plans'
+import { Villa3DPlan } from '@/components/Villa3DPlan'
 
 const COPY = {
   ru: {
@@ -976,6 +978,8 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
     permanentRedirect(path)
   }
   const v = resolved.row
+  // Реестр по каноническому slug: у большинства вилл модели нет и секция не рендерится.
+  const plan3dUrl = getVilla3DPlanUrl(resolved.canonicalSlug)
 
   const d = v.data
   const manifest = await _loadManifest()
@@ -1242,6 +1246,8 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
             }}
           />
         </section>
+
+        {plan3dUrl && <Villa3DPlan src={plan3dUrl} lang={lang} />}
 
         <section className="mb-10">
           <div className="text-[13px] text-[var(--color-text-muted)] mb-2">
