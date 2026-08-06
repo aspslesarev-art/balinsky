@@ -1847,7 +1847,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
               ) : null}
             />
             {process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY && (
-              <GatedBlock lang={lang}>
+              <GatedBlock kind="heatmap" lang={lang}>
                 <div className="mb-4">
                   <NeighborhoodHeatMap
                     apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}
@@ -1879,7 +1879,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
         <SurroundingsBlock data={surroundings} lang={lang} />
 
         {nearby && (
-          <GatedBlock lang={lang}>
+          <GatedBlock kind="nearby" lang={lang}>
             <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />
           </GatedBlock>
         )}
@@ -1913,7 +1913,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
               </LazyMount>
             )}
             {marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0) && (
-              <GatedBlock lang={lang}>
+              <GatedBlock kind="market" lang={lang}>
                 <MarketStatsBlock data={marketStats} lang={lang} />
               </GatedBlock>
             )}

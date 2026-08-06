@@ -1203,7 +1203,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
         {/* Investment potential + interactive map — right under the description,
             above the land profile and the neighbour-rental block. */}
         {lat != null && lng != null && (
-          <GatedBlock lang={lang}>
+          <GatedBlock kind="investment" lang={lang}>
             <LazyMount fallback={<div className="mt-12 mb-10 min-h-[600px]" />}>
               <InvestmentWidget villaId={a.airtable_id} apiKey={GMAPS_KEY} kind="apartment" lang={lang} />
             </LazyMount>
@@ -1224,7 +1224,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
         <SurroundingsBlock data={surroundings} lang={lang} />
 
         {nearby && (
-          <GatedBlock lang={lang}>
+          <GatedBlock kind="nearby" lang={lang}>
             <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />
           </GatedBlock>
         )}
@@ -1247,7 +1247,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
               </LazyMount>
             )}
             {marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0) && (
-              <GatedBlock lang={lang}>
+              <GatedBlock kind="market" lang={lang}>
                 <MarketStatsBlock data={marketStats} lang={lang} />
               </GatedBlock>
             )}

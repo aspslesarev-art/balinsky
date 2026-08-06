@@ -1350,7 +1350,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
         )}
 
         {lat != null && lng != null && (
-          <GatedBlock lang={lang}>
+          <GatedBlock kind="investment" lang={lang}>
             <LazyMount fallback={<div className="mt-12 mb-10 min-h-[600px]" />}>
               <InvestmentWidget villaId={v.airtable_id} apiKey={GMAPS_KEY} lang={lang} />
             </LazyMount>
@@ -1371,7 +1371,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
         <SurroundingsBlock data={surroundings} lang={lang} />
 
         {nearby && (
-          <GatedBlock lang={lang}>
+          <GatedBlock kind="nearby" lang={lang}>
             <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />
           </GatedBlock>
         )}
@@ -1391,7 +1391,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
               </LazyMount>
             )}
             {marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0) && (
-              <GatedBlock lang={lang}>
+              <GatedBlock kind="market" lang={lang}>
                 <MarketStatsBlock data={marketStats} lang={lang} />
               </GatedBlock>
             )}

@@ -1,5 +1,5 @@
 import 'server-only'
-import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
+import { createHmac, randomBytes, randomInt, timingSafeEqual } from 'node:crypto'
 import { cookies } from 'next/headers'
 import { createClient } from '@supabase/supabase-js'
 
@@ -228,6 +228,148 @@ export async function consumeLoginToken(token: string): Promise<number | null> {
   } catch (e) {
     console.error('[site-auth] consumeLoginToken:', e instanceof Error ? e.message : e)
     return null
+  }
+}
+
+// ------------------------------------------------------------ login codes
+
+/**
+ * Вход по 4-значному коду.
+ *
+ * Код привязан к браузеру, который его запросил: сайт заводит `challenge`,
+ * кладёт его в httpOnly-куку и передаёт боту в deep-link, бот вписывает код
+ * в ту же строку. Проверка идёт по паре challenge+code — без этого четыре
+ * цифры подбирались бы к чужому аккаунту за считанные попытки.
+ */
+export const LOGIN_CHALLENGE_COOKIE = 'bx_login'
+
+const CODE_TTL_MS = 15 * 60 * 1000
+/** После стольких промахов строка сгорает и нужен новый код. */
+const MAX_CODE_ATTEMPTS = 5
+
+/** Кука с challenge: живёт столько же, сколько сам код. */
+export function challengeCookie(challenge: string): CookieSpec {
+  return {
+    name: LOGIN_CHALLENGE_COOKIE,
+    value: challenge,
+    path: '/',
+    maxAge: Math.floor(CODE_TTL_MS / 1000),
+    sameSite: 'lax',
+    secure: true,
+    httpOnly: true,
+  }
+}
+
+/** Заводит строку под будущий код и возвращает секрет браузера. */
+export async function startLoginChallenge(): Promise<string | null> {
+  try {
+    // 24 символа base64url — влезает в payload deep-link'а (лимит Telegram 64).
+    const challenge = randomBytes(18).toString('base64url')
+    const { error } = await sb.from('login_codes').insert({
+      challenge,
+      expires_at: new Date(Date.now() + CODE_TTL_MS).toISOString(),
+    })
+    if (error) throw new Error(error.message)
+    return challenge
+  } catch (e) {
+    console.error('[site-auth] startLoginChallenge:', e instanceof Error ? e.message : e)
+    return null
+  }
+}
+
+/**
+ * Бот выдаёт код на challenge. Личность здесь доверенная — она пришла из
+ * вебхука Telegram, поэтому дополнительных доказательств не требуется.
+ */
+export async function issueLoginCode(
+  challenge: string,
+  who: TelegramIdentity,
+): Promise<string | null> {
+  try {
+    if (!challenge || challenge.length > 64) return null
+
+    const { error: upErr } = await sb.from('site_users').upsert(
+      {
+        telegram_id: who.id,
+        username: who.username ?? null,
+        first_name: who.firstName ?? null,
+        last_name: who.lastName ?? null,
+      },
+      { onConflict: 'telegram_id', ignoreDuplicates: false },
+    )
+    if (upErr) throw new Error(upErr.message)
+
+    // randomInt — равномерно и без смещения по модулю, в отличие от %.
+    const code = String(randomInt(0, 10000)).padStart(4, '0')
+
+    // Только на живую строку: истёкший или уже погашенный challenge
+    // нового кода не получает.
+    const { data, error } = await sb
+      .from('login_codes')
+      .update({ code, telegram_id: who.id, attempts: 0 })
+      .eq('challenge', challenge)
+      .is('used_at', null)
+      .gt('expires_at', new Date().toISOString())
+      .select('challenge')
+      .maybeSingle()
+    if (error) throw new Error(error.message)
+    return data ? code : null
+  } catch (e) {
+    console.error('[site-auth] issueLoginCode:', e instanceof Error ? e.message : e)
+    return null
+  }
+}
+
+export type CodeResult =
+  | { ok: true; telegramId: number }
+  | { ok: false; reason: 'invalid' | 'expired' | 'blocked' | 'pending' }
+
+/**
+ * Проверяет введённый код. Успех — атомарный UPDATE: он же гасит строку,
+ * поэтому один код нельзя разменять дважды даже при гонке вкладок.
+ */
+export async function redeemLoginCode(challenge: string, code: string): Promise<CodeResult> {
+  try {
+    if (!/^\d{4}$/.test(code)) return { ok: false, reason: 'invalid' }
+    if (!challenge || challenge.length > 64) return { ok: false, reason: 'expired' }
+
+    const now = new Date().toISOString()
+    const { data: hit } = await sb
+      .from('login_codes')
+      .update({ used_at: now })
+      .eq('challenge', challenge)
+      .eq('code', code)
+      .is('used_at', null)
+      .gt('expires_at', now)
+      .lt('attempts', MAX_CODE_ATTEMPTS)
+      .select('telegram_id')
+      .maybeSingle()
+
+    if (hit) {
+      const telegramId = Number((hit as { telegram_id: number }).telegram_id)
+      await sb.from('site_users').update({ last_login_at: now }).eq('telegram_id', telegramId)
+      return { ok: true, telegramId }
+    }
+
+    // Промах: разбираемся, что именно не так, и считаем попытку.
+    const { data: row } = await sb
+      .from('login_codes')
+      .select('code, attempts, used_at, expires_at')
+      .eq('challenge', challenge)
+      .maybeSingle()
+    if (!row) return { ok: false, reason: 'expired' }
+
+    const r = row as { code: string | null; attempts: number; used_at: string | null; expires_at: string }
+    if (r.used_at || new Date(r.expires_at).getTime() <= Date.now()) return { ok: false, reason: 'expired' }
+    if (r.code == null) return { ok: false, reason: 'pending' }
+    if (r.attempts >= MAX_CODE_ATTEMPTS) return { ok: false, reason: 'blocked' }
+
+    const attempts = r.attempts + 1
+    await sb.from('login_codes').update({ attempts }).eq('challenge', challenge)
+    return { ok: false, reason: attempts >= MAX_CODE_ATTEMPTS ? 'blocked' : 'invalid' }
+  } catch (e) {
+    console.error('[site-auth] redeemLoginCode:', e instanceof Error ? e.message : e)
+    return { ok: false, reason: 'invalid' }
   }
 }
 

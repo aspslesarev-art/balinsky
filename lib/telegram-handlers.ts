@@ -272,9 +272,45 @@ async function handleLogin(chatId: number | undefined, from?: StartSender): Prom
   }
 }
 
+// Вход по коду: сайт передал в payload свой challenge, бот выдаёт на него
+// четыре цифры. Код без challenge бесполезен, поэтому его не страшно
+// показывать в переписке — он подойдёт только к тому браузеру, который его
+// запросил, и только 15 минут.
+async function handleLoginCode(challenge: string, chatId: number | undefined, from?: StartSender): Promise<StartResult> {
+  if (!chatId) return { reply: defaultGreeting() }
+  const { issueLoginCode } = await import('@/lib/site-auth')
+  const code = await issueLoginCode(challenge, {
+    id: chatId,
+    username: from?.username ?? null,
+    firstName: from?.first_name ?? null,
+    lastName: from?.last_name ?? null,
+  })
+  if (!code) {
+    return {
+      reply: {
+        text:
+          '<b>Срок этого запроса истёк.</b>\n\n' +
+          'Вернитесь на balinsky.info и нажмите «Войти» ещё раз — придёт новый код.',
+        parseMode: 'HTML',
+      },
+    }
+  }
+  return {
+    reply: {
+      text:
+        '<b>Код для входа: ' + code + '</b>\n\n' +
+        'Введите его на сайте в окне входа. Код одноразовый и действует 15 минут.\n\n' +
+        'После входа откроются аналитика района, тепловая карта, расчёты доходности и рейтинг застройщика.',
+      parseMode: 'HTML',
+    },
+    tags: ['login'],
+  }
+}
+
 export async function handleStart(payload: string | null, chatId?: number, from?: StartSender): Promise<StartResult> {
   if (!payload) return { reply: defaultGreeting() }
   if (payload === 'login') return await handleLogin(chatId, from)
+  if (payload.startsWith('code_')) return await handleLoginCode(payload.slice(5), chatId, from)
   const m = payload.match(/^(manager|rental|event|review|error|seller|sub)_(.+)$/)
   if (!m) return { reply: defaultGreeting() }
   const [, kind, raw] = m
