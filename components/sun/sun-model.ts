@@ -233,8 +233,27 @@ export function buildComplexModel(plan: SitePlan, heights: ModelHeights): Comple
 
   const group = new THREE.Group()
   const casters = new THREE.Group()
-  casters.add(buildingBlock(materials, plan, heights))
-  casters.add(yardWalls(materials, plan, heights))
+
+  if (plan.blocks?.length) {
+    // Многокорпусный участок: тот же построитель ряда вызывается на каждый
+    // корпус со своими секциями и глубиной, затем ряд ставится на место и
+    // разворачивается. Дворовые стены и бассейны — принадлежность одного
+    // прямого ряда, у таких планов их нет.
+    for (const block of plan.blocks) {
+      const row = buildingBlock(
+        materials,
+        { ...plan, units: block.units, buildingDepth: block.depth },
+        { ...heights, eaveHeight: block.eaveHeight ?? heights.eaveHeight },
+      )
+      row.rotation.y = -(block.azimuth * Math.PI) / 180
+      row.position.set(block.origin.x, 0, block.origin.z)
+      casters.add(row)
+    }
+  } else {
+    casters.add(buildingBlock(materials, plan, heights))
+    casters.add(yardWalls(materials, plan, heights))
+  }
+
   group.add(plotPad(materials, plan), poolMeshes(materials, plan), casters)
 
   const dispose = () => {

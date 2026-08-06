@@ -33,6 +33,29 @@ export type PlanUnit = { id: number; x0: number; x1: number }
 /** Бассейн: x — левая кромка, zNear ближе к фасаду дома. */
 export type PlanPool = { unit: number; x: number; width: number; zNear: number; zFar: number }
 
+/**
+ * Отдельный корпус: свой ряд секций, своя глубина, свой разворот.
+ *
+ * U Villas I — один прямой ряд, он описывается полями `units` / `buildingDepth`
+ * самого плана. Комплексы вроде Ubud Dream состоят из нескольких рядов под
+ * разными углами, и для них заполняется `blocks`. Рендер обрабатывает оба
+ * случая одинаково: план без `blocks` — это план из одного блока.
+ */
+export type PlanBlock = {
+  id: string
+  /** Начало локальной оси X корпуса в координатах участка, метры. */
+  origin: { x: number; z: number }
+  /** Разворот локальной оси X относительно оси X участка, градусы по часовой. */
+  azimuth: number
+  /** Глубина корпуса вдоль его локальной оси Z, метры. */
+  depth: number
+  units: PlanUnit[]
+  /** Высота карниза, если у корпуса она своя (коммерция выше жилья). */
+  eaveHeight?: number
+  /** Скатная кровля жилых секций либо плоская у общественных корпусов. */
+  roof: 'pitched' | 'flat'
+}
+
 export type SitePlan = {
   title: string
   district: string
@@ -41,6 +64,8 @@ export type SitePlan = {
   /** Глубина корпуса вдоль оси Z, метры. */
   buildingDepth: number
   units: PlanUnit[]
+  /** Несколько корпусов. Если не задано — план считается одним рядом. */
+  blocks?: PlanBlock[]
   /** Контур участка [x, z] по часовой стрелке. */
   plot: [number, number][]
   pools: PlanPool[]
@@ -97,8 +122,99 @@ const U_VILLAS_I: SitePlan = {
   },
 }
 
+/** Ряд одинаковых секций: шаг постоянный, между корпусами шов 0.15 м. */
+function evenUnits(count: number, width: number, firstId = 1, step = 2): PlanUnit[] {
+  const pitch = width + 0.15
+  return Array.from({ length: count }, (_, i) => ({
+    id: firstId + i * step,
+    x0: i * pitch,
+    x1: i * pitch + width,
+  }))
+}
+
+/**
+ * Ubud Dream (в штампе чертежа — LOYO UBUD).
+ *
+ * Источник: «211025_Loyo_Ubud_Dreams_Architectural_Numbering_Masterplan», лист
+ * A3, масштаб 1:500 — отсюда 1 pt = 0.176 м. Состав и площади взяты из таблицы
+ * чертежа: 20 квартир 1BR (45 м² первый этаж + 35 м² второй) и 21 квартира 2BR
+ * (45 + 45), коммерция 1536 м² на три этажа, йога 75.9, спа 110, персонал и
+ * техблок по 50.6. Участок 4630 м², застройка 5518.1 м².
+ *
+ * ТОЧНОСТЬ: габариты рядов сняты с растра чертежа профилем плотности —
+ * нижний ряд 125.9 × 10.0 м, полоса верхней застройки z 17.1…35.9 м, участок
+ * 134.9 × 77.7 м. Это порядка ±1 м на корпус, чего достаточно для теней и
+ * общего вида, но это НЕ векторный обмер: вектор в PDF выгружен штриховкой
+ * (274 тыс. путей) и контуры зданий из него автоматически не отделяются.
+ */
+const UBUD_DREAM: SitePlan = {
+  title: 'Ubud Dream',
+  district: 'Убуд',
+  utcOffsetHours: 8,
+  // Legacy-поля описывают главный ряд: план с blocks их для геометрии не
+  // использует, но они остаются осмысленным значением по умолчанию.
+  buildingDepth: 10,
+  units: evenUnits(20, 5.15, 1),
+  blocks: [
+    // Южный ряд вдоль улицы: 20 секций, нечётная нумерация 1…39.
+    {
+      id: 'row-south',
+      origin: { x: 6.3, z: 40.5 },
+      azimuth: 0,
+      depth: 10,
+      units: evenUnits(20, 5.15, 1),
+      roof: 'pitched',
+    },
+    // Северный ряд, 21 секция с чётной нумерацией 2…42, слегка развёрнут:
+    // на чертеже он идёт по изгибу участка.
+    {
+      id: 'row-north',
+      origin: { x: 14.0, z: 25.5 },
+      azimuth: 3.5,
+      depth: 10,
+      units: evenUnits(15, 5.15, 2),
+      roof: 'pitched',
+    },
+    // Западный кластер: пять секций поперёк, у въезда.
+    {
+      id: 'cluster-west',
+      origin: { x: 4.0, z: 14.0 },
+      azimuth: 90,
+      depth: 9,
+      units: evenUnits(5, 5.15, 34),
+      roof: 'pitched',
+    },
+    // Коммерция (A): три этажа плюс кровля, восточный торец участка.
+    {
+      id: 'commerce',
+      origin: { x: 113.0, z: 17.5 },
+      azimuth: 0,
+      depth: 21,
+      units: [{ id: 100, x0: 0, x1: 24 }],
+      eaveHeight: 10.5,
+      roof: 'flat',
+    },
+  ],
+  plot: [
+    [0, 0],
+    [134.9, 0],
+    [134.9, 77.7],
+    [0, 77.7],
+  ],
+  pools: [],
+  basemap: {
+    // Тот же мастерплан, что уже привязан к спутнику в /admin/geo: 2125 px на
+    // 134.9 м по земле. Якорь — левый верхний угол чертежа, начало координат.
+    url: 'https://ifdgiwxothmcalibmydv.supabase.co/storage/v1/object/public/viz-photos/_geo/complexes/recOR5CZuEd8x1Ddv/1786005860055-ubud-dream-masterplan.png',
+    sizePx: 2125,
+    metersPerPixel: 0.0635,
+    anchorPx: { x: 0, y: 0 },
+  },
+}
+
 const SITE_PLANS: Record<string, SitePlan> = {
   'u-villas-i': U_VILLAS_I,
+  'ubud-dream-ubud-bali': UBUD_DREAM,
 }
 
 export function getSitePlan(slug: string): SitePlan | null {
