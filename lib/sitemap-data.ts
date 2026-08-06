@@ -234,6 +234,34 @@ export async function listSitemapIds(): Promise<string[]> {
   return ids
 }
 
+// Same shards as listSitemapIds(), each with the newest lastModified inside
+// it — the input the <sitemapindex> needs.
+export async function listSitemapIndexEntries(): Promise<{ id: string; lastModified: Date | null }[]> {
+  const data = await buildCategorized()
+  const buildCutoff = Date.now() - 60_000
+  const out: { id: string; lastModified: Date | null }[] = []
+  for (const cat of CATEGORY_ORDER) {
+    const entries = data[cat]
+    const chunks = chunkCount(entries.length)
+    for (let i = 0; i < chunks; i++) {
+      const shard = entries.slice(i * MAX_URLS_PER_SITEMAP, (i + 1) * MAX_URLS_PER_SITEMAP)
+      // Rows without a real timestamp fall back to the build moment
+      // (lastmodOfObject). A single one of those would drag the shard's max up
+      // to "now" and make every child look freshly changed on every rebuild —
+      // a lastmod that always says "now" is worse than none, because it asks
+      // Google to refetch everything, every time. So only genuine content
+      // timestamps count; a shard with none simply gets no <lastmod>.
+      const newest = shard.reduce<Date | null>((acc, e) => {
+        const d = e.lastModified ? new Date(e.lastModified) : null
+        if (!d || Number.isNaN(d.getTime()) || d.getTime() > buildCutoff) return acc
+        return !acc || d > acc ? d : acc
+      }, null)
+      out.push({ id: i === 0 ? cat : `${cat}-${i + 1}`, lastModified: newest })
+    }
+  }
+  return out
+}
+
 // Entries for one child sitemap, or null for an unknown id.
 export async function getSitemapEntries(id: string): Promise<SitemapEntry[] | null> {
   const parsed = parseSitemapId(id)
@@ -284,9 +312,20 @@ export function serializeUrlset(entries: SitemapEntry[]): string {
 }
 
 // <sitemapindex> pointing at every child at /sitemap/<id>.xml.
-export function serializeIndex(ids: string[], siteUrl: string): string {
-  const items = ids
-    .map(id => `  <sitemap><loc>${xmlEscape(`${siteUrl}/sitemap/${id}.xml`)}</loc></sitemap>`)
+//
+// `lastmod` is what makes an index worth having: without it a crawler has to
+// re-read all fourteen children to learn that nothing changed. With it, Google
+// refetches only the shards that actually moved.
+export function serializeIndex(
+  children: readonly { id: string; lastModified: Date | null }[],
+  siteUrl: string,
+): string {
+  const items = children
+    .map(({ id, lastModified }) => {
+      const loc = `<loc>${xmlEscape(`${siteUrl}/sitemap/${id}.xml`)}</loc>`
+      const mod = lastModified ? `<lastmod>${lastModified.toISOString()}</lastmod>` : ''
+      return `  <sitemap>${loc}${mod}</sitemap>`
+    })
     .join('\n')
   return `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
