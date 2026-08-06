@@ -14,8 +14,16 @@
   }
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{height:100%;overflow:hidden;background:var(--bg);font-family:var(--font);color:var(--ink)}
-  #c{display:block;width:100%;height:100%;cursor:grab}
-  #c:active{cursor:grabbing}
+  /* До первого клика жесты уходят странице: touch-action не блокируем,
+     колесо не перехватываем. После клика модель забирает управление. */
+  /* touch-action:pan-y держим всегда: вертикальный свайп остаётся за
+     страницей, иначе секция становится ловушкой для прокрутки на телефоне.
+     Горизонтальное вращение и пинч-зум модели это не мешает. */
+  #c{display:block;width:100%;height:100%;cursor:pointer;touch-action:pan-y}
+  #c.engaged{cursor:grab}
+  #c.engaged:active{cursor:grabbing}
+  .tapme{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:9px 18px;font-size:13px;font-weight:500;color:var(--ink);box-shadow:0 4px 16px rgba(17,24,39,.10);pointer-events:none;transition:opacity .2s}
+  .tapme.hide{opacity:0}
   .hud{position:fixed;left:16px;top:16px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;max-width:270px;box-shadow:0 4px 16px rgba(17,24,39,.06)}
   .hud h1{font-size:16px;font-weight:600;letter-spacing:-.01em}
   .hud .sub{font-size:11px;color:var(--muted);margin-top:2px;letter-spacing:.06em;text-transform:uppercase}
@@ -57,6 +65,7 @@
   <b>1 этаж</b> — кухня 16.4 · зал 14.8 · с/у 3.1<br>
   <b>2 этаж</b> — 2 спальни по 10.7 · 2 с/у по 4.3 · балкон 4.5
 </div>
+<div class="tapme" id="tapme">Нажмите, чтобы управлять моделью</div>
 <div class="hint">крутить — мышью · зум — колесо · панорама — правая кнопка</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -93,8 +102,10 @@ const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 200);
 // свет
 // Нижний цвет полусферы был почти чёрным — под светлым фоном он красил
 // низ модели в грязь. Теперь это отражение светлой земли.
-scene.add(new THREE.HemisphereLight(0xffffff, 0xe6ebe6, 1.05));
-const sun = new THREE.DirectionalLight(0xfff3e2, 0.68);
+// Свет тёплый (солнце Бали), но мягкий: холодный белый выбеливал
+// кремовые стены и дерево в серость.
+scene.add(new THREE.HemisphereLight(0xfff4e2, 0xecdfc9, 0.9));
+const sun = new THREE.DirectionalLight(0xffeecd, 0.75);
 sun.position.set(12, 18, 8);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048,2048);
@@ -117,7 +128,7 @@ const M = {
   white: new THREE.MeshLambertMaterial({color:0xf5f2ec}),
   glass: new THREE.MeshLambertMaterial({color:0xbcd0d4, transparent:true, opacity:.28, side:THREE.DoubleSide}),
   green: new THREE.MeshLambertMaterial({color:0x4a6b3a}),
-  lawn:  new THREE.MeshLambertMaterial({color:0x7f9a62}),
+  lawn:  new THREE.MeshLambertMaterial({color:0x829c62}),
   dark:  new THREE.MeshLambertMaterial({color:0x3a2e24})
 };
 
@@ -333,8 +344,9 @@ function makePerson(g, h, x, z, ry, yBase, shirtC, pantsC){
 }
 // жена — у кухни
 makePerson(floor1G, 1.65, 3.55, 3.0, Math.PI/2, .06, 0x8a9a5b, 0xe8e2d5);
-// муж — в зале у дивана
-makePerson(floor1G, 1.78, 2.6, 9.4, -Math.PI*.85, .06, 0xe8e2d5, 0x6e4f38);
+// муж — в зале, на полу у правой стены. Прежние 2.6/9.4 совпадали с
+// журнальным столиком (он в 2.6/9.2), и фигура стояла прямо на нём.
+makePerson(floor1G, 1.78, 3.95, 9.3, -Math.PI/2, .06, 0xe8e2d5, 0x6e4f38);
 // ребёнок — в спальне на 2 этаже
 makePerson(floor2G, 1.05, 2.7, 2.7, Math.PI, H1+.24, 0xc98a5a, 0xece4d6);
 
@@ -384,7 +396,33 @@ function updCam(){
   camera.lookAt(target);
 }
 let drag=null;
-canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,b:e.button};auto=false;spinChk.checked=false;canvas.setPointerCapture(e.pointerId);});
+
+// Модель встроена фреймом в длинную страницу, поэтому она не забирает
+// жесты, пока по ней не кликнули: иначе колесо зумило бы модель вместо
+// прокрутки страницы, а свайп на телефоне не давал бы пролистать секцию.
+// Автоповорот при этом идёт всегда — модель «живая» и до клика.
+let engaged=false;
+const tapme=document.getElementById('tapme');
+function engage(){
+  if(engaged)return;
+  engaged=true; canvas.classList.add('engaged'); tapme.classList.add('hide');
+}
+function disengage(){
+  if(!engaged||drag)return;
+  engaged=false; canvas.classList.remove('engaged'); tapme.classList.remove('hide');
+}
+// Уводя курсор со сцены, пользователь возвращает прокрутку странице.
+// Только для мыши: на тач-устройстве pointerleave прилетает сразу после
+// отрыва пальца и сбрасывал бы активацию каждым касанием.
+canvas.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse')disengage();});
+addEventListener('blur',()=>{drag=null;disengage();});
+
+canvas.addEventListener('pointerdown',e=>{
+  // Первое касание только включает управление — оно не должно ни крутить
+  // модель, ни глотать свайп страницы.
+  if(!engaged){engage();return;}
+  drag={x:e.clientX,y:e.clientY,b:e.button};auto=false;spinChk.checked=false;canvas.setPointerCapture(e.pointerId);
+});
 canvas.addEventListener('pointermove',e=>{
   if(!drag)return;
   const dx=e.clientX-drag.x, dy=e.clientY-drag.y;
@@ -398,10 +436,14 @@ canvas.addEventListener('pointermove',e=>{
 });
 canvas.addEventListener('pointerup',()=>drag=null);
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
-canvas.addEventListener('wheel',e=>{e.preventDefault();dist*=1+Math.sign(e.deltaY)*.08;updCam();},{passive:false});
+canvas.addEventListener('wheel',e=>{
+  if(!engaged)return;            // не перехватываем — страница скроллится
+  e.preventDefault();dist*=1+Math.sign(e.deltaY)*.08;updCam();
+},{passive:false});
 // pinch
 let pinch=null;
 canvas.addEventListener('touchmove',e=>{
+  if(!engaged)return;
   if(e.touches.length===2){
     const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
     if(pinch) {dist*=pinch/d; updCam();}
