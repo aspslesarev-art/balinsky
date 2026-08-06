@@ -108,6 +108,26 @@ density of well-reviewed restaurants/bars/attractions/wellness/beach clubs
   district chips → top-10 per district. Catalog rows store the **raw Latin**
   district name (`Location 2`), so match against both languages' display names.
 
+## Rental market comps (booking data)
+
+Supabase holds the full Bali short-term-rental market scraped from
+estatemarket.io — **21 001 geocoded listings** in `booking_data_locations` /
+`booking_data_cards` / `booking_data_rooms`, with daily snapshots in
+`booking_data_history` (auto-refreshed by pg_cron + the `booking-data-sync`
+Edge Function). Cards are classified into `unit_kind` (villa / hotel /
+apartment / …) and `bedrooms`.
+
+**When you analyse a villa or apartment, never judge it in a vacuum — compare it
+to its neighbours** via the two ready-made SQL functions:
+`booking_data_area_stats(lat, lng, radius_m)` for the district picture, and
+`booking_data_comps(lat, lng, radius_m, unit_kind, bedrooms, limit)` for direct
+competitors. Radii: 1000–1500 m in dense areas (Canggu, Seminyak, Ubud centre),
+3000–5000 m in sparse ones. `area_sqm` is <1% filled — don't compare on it.
+
+Full spec, column list, segment counts and the scoring algorithm:
+**`docs/booking-data.md`**. Existing consumers: `components/MarketStatsBlock.tsx`,
+`scripts/estatemarket_occupancy.py`, migrations `030`/`032`.
+
 ## Migrations
 
 SQL migrations live in `migrations/` (numbered, e.g. `033_complex_parsers.sql`), applied against Supabase. RLS is enabled on public tables. A separate `presentation` schema is used for the presentation.estate features (kept out of `public.raw_*`).
