@@ -526,8 +526,39 @@ for(const x of [fitBox.min.x,fitBox.max.x])
  * вытянутый (≈15 м в глубину против 4.7 в ширину), и её радиус отодвигал
  * камеру дальше, чем нужно. Считаем честно — по проекции углов.
  */
+/**
+ * Свободная область просмотрщика в пикселях: холст минус панель управления
+ * слева и минус нижняя полоса с подсказкой и легендой.
+ *
+ * Модель центрируется по ней, а не по холсту: панель занимает левый край,
+ * и «по центру холста» читалось как «прижато влево, справа дыра».
+ * На узком экране панель лежит поверх сцены — вычитать нечего.
+ */
+function layoutBox(){
+  const W = innerWidth, H = innerHeight;
+  const wide = W >= 900;
+  const hud = document.querySelector('.hud');
+  const hint = document.querySelector('.hint');
+  const legend = document.querySelector('.legend');
+
+  const left = wide && hud ? hud.getBoundingClientRect().right + 16 : 0;
+  let bottomEdge = H;
+  for(const el of [hint, legend]){
+    if(!el || getComputedStyle(el).display === 'none') continue;
+    bottomEdge = Math.min(bottomEdge, el.getBoundingClientRect().top - 8);
+  }
+  const w = Math.max(180, W - left);
+  const h = Math.max(180, bottomEdge);
+  return { x: left, y: 0, w, h, W, H };
+}
+
 function fitDistance(){
-  const vT = Math.tan(camera.fov*Math.PI/360), hT = vT*camera.aspect;
+  // Тангенсы ужимаем до доли свободной области: модель должна влезать
+  // в неё, а не в весь холст.
+  const b = layoutBox();
+  const t = Math.tan(camera.fov*Math.PI/360);
+  const vT = t * (b.h / b.H);
+  const hT = t * camera.aspect * (b.w / b.W);
   const up = new THREE.Vector3(0,1,0);
   const zc = new THREE.Vector3(), xc = new THREE.Vector3(), yc = new THREE.Vector3();
   let need = 0;
@@ -550,7 +581,13 @@ function fitDistance(){
 function resize(){
   const w=innerWidth,h=innerHeight;
   renderer.setSize(w,h,false);
-  camera.aspect=w/h; camera.updateProjectionMatrix();
+  camera.aspect=w/h;
+  // Сдвигаем окно проекции так, чтобы центром кадра стал центр свободной
+  // области, а не центр холста: модель уезжает правее панели и выше
+  // подсказки, вместо того чтобы висеть в середине с пустотой справа.
+  const b = layoutBox();
+  camera.setViewOffset(w, h, w/2 - (b.x + b.w/2), h/2 - (b.y + b.h/2), w, h);
+  camera.updateProjectionMatrix();
   // Пока управление не перехвачено, держим модель вписанной в кадр —
   // в том числе после поворота телефона. После клика зум пользователя.
   if(!engaged){dist=fitDistance();}
