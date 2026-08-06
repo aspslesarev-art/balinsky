@@ -17,6 +17,12 @@ export type GeoOverlayPlacement = {
 export type GeoImageOverlay = google.maps.OverlayView & {
   /** Re-place without tearing the overlay down — the editor calls this on every nudge. */
   setPlacement(next: GeoOverlayPlacement): void
+  /**
+   * Container pixel → world coordinate. Direct manipulation needs it: a drag
+   * arrives in screen pixels and has to become a lat/lng shift. Null until the
+   * projection is ready.
+   */
+  containerPixelToLatLng(x: number, y: number): google.maps.LatLngLiteral | null
 }
 
 const M_PER_DEG_LAT = 111_320
@@ -55,6 +61,13 @@ export function createGeoImageOverlay(initial: GeoOverlayPlacement): GeoImageOve
     private image: HTMLImageElement | null = null
     private loadedUrl: string | null = null
     private placement: GeoOverlayPlacement = initial
+
+    containerPixelToLatLng(x: number, y: number): google.maps.LatLngLiteral | null {
+      const proj = this.getProjection()
+      if (!proj) return null
+      const ll = proj.fromContainerPixelToLatLng(new google.maps.Point(x, y))
+      return ll ? { lat: ll.lat(), lng: ll.lng() } : null
+    }
 
     setPlacement(next: GeoOverlayPlacement) {
       this.placement = next

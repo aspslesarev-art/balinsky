@@ -45,6 +45,9 @@ export function GeoPlacementEditor({
   const [saveState, setSaveState] = useState<SaveState>('idle')
   const [error, setError] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
+  // Grab-the-plan is the default once there is a plan: it is what alignment
+  // actually consists of. The toggle hands the map back for panning/zooming.
+  const [dragMode, setDragMode] = useState(true)
 
   const containerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<google.maps.Map | null>(null)
@@ -156,6 +159,111 @@ export function GeoPlacementEditor({
     } finally {
       setUploading(false)
     }
+  }
+
+  // --- direct manipulation ---------------------------------------------------
+  // One pointer drags the plan onto the building; two pinch to resize and twist
+  // to rotate. Every frame is computed against the gesture's own starting state
+  // rather than the previous frame, so a long drag accumulates no drift.
+
+  const pointersRef = useRef(new Map<number, { x: number; y: number }>())
+  const gestureRef = useRef<{
+    lat: number
+    lng: number
+    widthM: number
+    rotationDeg: number
+    px: number
+    py: number
+    dist: number
+    angle: number
+  } | null>(null)
+
+  const localPoint = (e: React.PointerEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top }
+  }
+
+  /** Midpoint, spread and twist of a two-finger gesture; null while one finger is down. */
+  const pinch = () => {
+    const pts = [...pointersRef.current.values()]
+    if (pts.length < 2) return null
+    const dx = pts[1].x - pts[0].x
+    const dy = pts[1].y - pts[0].y
+    return {
+      dist: Math.hypot(dx, dy),
+      angle: Math.atan2(dy, dx),
+      x: (pts[0].x + pts[1].x) / 2,
+      y: (pts[0].y + pts[1].y) / 2,
+    }
+  }
+
+  // Re-baselining on every finger down/up is what makes going from one finger
+  // to two (and back) feel continuous instead of snapping.
+  const baseline = () => {
+    if (!overlay) return
+    const two = pinch()
+    const origin = two ?? [...pointersRef.current.values()][0]
+    if (!origin) return
+    gestureRef.current = {
+      lat,
+      lng,
+      widthM: overlay.widthM,
+      rotationDeg: overlay.rotationDeg,
+      px: origin.x,
+      py: origin.y,
+      dist: two?.dist ?? 0,
+      angle: two?.angle ?? 0,
+    }
+  }
+
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.currentTarget.setPointerCapture(e.pointerId)
+    pointersRef.current.set(e.pointerId, localPoint(e))
+    baseline()
+  }
+
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const gesture = gestureRef.current
+    const ov = overlayRef.current
+    if (!gesture || !ov || !pointersRef.current.has(e.pointerId)) return
+    pointersRef.current.set(e.pointerId, localPoint(e))
+
+    const two = pinch()
+    const now = two ?? pointersRef.current.get(e.pointerId)
+    if (!now) return
+
+    // Translate through the projection so a drag moves the plan by exactly the
+    // ground distance under the cursor, at any zoom.
+    const from = ov.containerPixelToLatLng(gesture.px, gesture.py)
+    const to = ov.containerPixelToLatLng(now.x, now.y)
+    if (from && to) {
+      setLat(gesture.lat + (to.lat - from.lat))
+      setLng(gesture.lng + (to.lng - from.lng))
+    }
+
+    if (two && gesture.dist > 0) {
+      const scaled = gesture.widthM * (two.dist / gesture.dist)
+      const twisted = gesture.rotationDeg + ((two.angle - gesture.angle) * 180) / Math.PI
+      setOverlay((prev) => prev && {
+        ...prev,
+        widthM: clamp(scaled, 5, 3000),
+        rotationDeg: ((twisted % 360) + 360) % 360,
+      })
+    }
+    touched()
+  }
+
+  const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    pointersRef.current.delete(e.pointerId)
+    if (pointersRef.current.size === 0) gestureRef.current = null
+    else baseline()
+  }
+
+  /** Wheel resizes the plan — the map is not reachable while drag mode is on anyway. */
+  const onWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (!overlay) return
+    const factor = e.deltaY > 0 ? 0.96 : 1.04
+    updateOverlay({ widthM: clamp(overlay.widthM * factor, 5, 3000) })
   }
 
   const save = async () => {
@@ -287,8 +395,44 @@ export function GeoPlacementEditor({
         {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
       </section>
 
-      <section className="min-h-[420px] flex-1">
+      <section className="relative min-h-[420px] flex-1">
         <div ref={containerRef} className="h-full w-full" />
+
+        {overlay && dragMode && (
+          <div
+            // touch-none stops the browser from claiming the gesture as a scroll
+            // before the pointer handlers ever see the second finger.
+            className="absolute inset-0 cursor-grab touch-none active:cursor-grabbing"
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerCancel={onPointerUp}
+            onWheel={onWheel}
+          />
+        )}
+
+        {overlay && (
+          <div className="pointer-events-none absolute left-3 top-3 flex flex-col items-start gap-2">
+            <button
+              type="button"
+              onClick={() => setDragMode((v) => !v)}
+              aria-pressed={dragMode}
+              className={
+                'pointer-events-auto rounded-full border px-3 py-1.5 text-xs font-medium shadow-sm backdrop-blur-sm ' +
+                (dragMode
+                  ? 'border-amber-500 bg-amber-500 text-white'
+                  : 'border-neutral-300 bg-white/95 text-neutral-800 hover:border-amber-500')
+              }
+            >
+              {dragMode ? '✋ Двигаю план' : '🗺 Двигаю карту'}
+            </button>
+            <p className="pointer-events-auto max-w-[240px] rounded-lg bg-white/95 px-2 py-1.5 text-[11px] leading-snug text-neutral-600 shadow-sm backdrop-blur-sm">
+              {dragMode
+                ? 'Тяни план на нужное здание. Двумя пальцами — размер и поворот, колесом — размер. Чтобы подвинуть саму карту, переключи режим.'
+                : 'Карта двигается и зумится как обычно. Переключи обратно, чтобы тянуть план.'}
+            </p>
+          </div>
+        )}
       </section>
     </main>
   )
