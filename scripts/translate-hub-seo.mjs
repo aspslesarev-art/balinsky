@@ -36,6 +36,7 @@ const LANGS = {
 const KINDS = {
   villas: 'villas and houses for sale in Bali',
   apartments: 'apartments and condos for sale in Bali',
+  rental: 'villas and apartments for long-term (monthly) rent in Bali',
 }
 
 const args = process.argv.slice(2)

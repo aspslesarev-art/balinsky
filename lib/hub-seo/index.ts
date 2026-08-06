@@ -12,6 +12,17 @@ import villasBan from './villas/ban'
 import villasPl from './villas/pl'
 import villasUk from './villas/uk'
 
+import rentRu from './rental/ru'
+import rentEn from './rental/en'
+import rentId from './rental/id'
+import rentFr from './rental/fr'
+import rentDe from './rental/de'
+import rentZh from './rental/zh'
+import rentNl from './rental/nl'
+import rentBan from './rental/ban'
+import rentPl from './rental/pl'
+import rentUk from './rental/uk'
+
 import aptRu from './apartments/ru'
 import aptEn from './apartments/en'
 import aptId from './apartments/id'
@@ -25,7 +36,7 @@ import aptUk from './apartments/uk'
 
 export type { HubLongCopy, HubSection, HubPriceTable, HubFaqItem } from './types'
 
-export type HubKind = 'villas' | 'apartments'
+export type HubKind = 'villas' | 'apartments' | 'rental'
 
 const COPY: Record<HubKind, Record<Lang, HubLongCopy>> = {
   villas: {
@@ -35,6 +46,10 @@ const COPY: Record<HubKind, Record<Lang, HubLongCopy>> = {
   apartments: {
     ru: aptRu, en: aptEn, id: aptId, fr: aptFr, de: aptDe,
     zh: aptZh, nl: aptNl, ban: aptBan, pl: aptPl, uk: aptUk,
+  },
+  rental: {
+    ru: rentRu, en: rentEn, id: rentId, fr: rentFr, de: rentDe,
+    zh: rentZh, nl: rentNl, ban: rentBan, pl: rentPl, uk: rentUk,
   },
 }
 

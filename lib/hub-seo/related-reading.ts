@@ -11,7 +11,7 @@ import type { Lang } from '@/lib/i18n'
 // The knowledge section only exists on /ru and /en (app/ru/znaniya,
 // app/en/knowledge), so every other locale gets nothing rather than a 404.
 
-export type ReadingKind = 'villas' | 'apartments'
+export type ReadingKind = 'villas' | 'apartments' | 'rental'
 
 export type ReadingLink = {
   href: string
@@ -83,6 +83,28 @@ const ARTICLES: Record<ReadingKind, Article[]> = {
       slug: 'nalogi-na-nedvizhimost-na-bali-pokupka-vladenie-arenda-prodazha-2026',
       ru: 'Налоги: покупка, владение, аренда, продажа',
       en: 'Taxes: buying, owning, renting out, selling',
+    },
+  ],
+  rental: [
+    {
+      slug: 'sezonnost-arendy-na-bali-kogda-pik-a-kogda-prostoy-dannye-bps',
+      ru: 'Сезонность аренды: когда пик, а когда простой',
+      en: 'Rental seasonality: when it peaks and when it sits',
+    },
+    {
+      slug: 'apoa-novye-pravila-ucheta-arendatorov-na-bali-s-aprelya-2025-chto-eto-znachit-dl',
+      ru: 'APOA: учёт арендаторов с апреля 2025',
+      en: 'APOA: tenant registration rules since April 2025',
+    },
+    {
+      slug: 'kak-pereehat-na-bali-iz-rossii-v-2026-vizy-zhile-dengi-poshagovo',
+      ru: 'Как переехать на Бали: визы, жильё, деньги',
+      en: 'Moving to Bali: visas, housing, money',
+    },
+    {
+      slug: 'dohodnost-arendy-na-bali-chto-realno-pokazyvayut-dannye-2026',
+      ru: 'Доходность аренды: что показывают данные',
+      en: 'Rental yield: what the data actually shows',
     },
   ],
 }
