@@ -21,6 +21,7 @@ import { COMPLEX_DESCRIPTION_FIELD } from '@/lib/complex-description'
 import { PhotoGalleryHero } from '@/components/PhotoGalleryHero'
 import { ListenIntro } from '@/components/ListenIntro'
 import { NeighborhoodHeatMap } from '@/components/NeighborhoodHeatMap'
+import { parseGeoOverlay } from '@/lib/geo-placement'
 import { ProgressBar } from '@/components/ProgressBar'
 import { ApartmentCard, type ApartmentCardData } from '@/components/ApartmentCard'
 import { ManagerCard } from '@/components/ManagerCard'
@@ -1854,6 +1855,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
                     lng={lng}
                     title={name}
                     lang={lang}
+                    overlay={parseGeoOverlay(d['Geo Overlay'])}
                   />
                 </div>
               </GatedBlock>

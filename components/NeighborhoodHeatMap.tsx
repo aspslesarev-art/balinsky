@@ -5,6 +5,8 @@ import { Flame } from 'lucide-react'
 import { BALINSKY_MAP_STYLE } from '@/lib/google-map-style'
 import { loadGoogleMaps } from '@/lib/google-maps-loader'
 import { createHeatOverlay, fetchHeatCells } from '@/lib/heat-overlay'
+import { createGeoImageOverlay, type GeoImageOverlay } from '@/lib/geo-overlay'
+import type { GeoOverlay } from '@/lib/geo-placement'
 import { pickCopy, type Lang } from '@/lib/i18n'
 
 // Compact location map with a Google-places heat toggle, for pages that don't
@@ -17,6 +19,7 @@ export function NeighborhoodHeatMap({
   title,
   lang = 'ru',
   heightClass = 'h-[420px]',
+  overlay = null,
 }: {
   apiKey: string
   lat: number
@@ -24,6 +27,8 @@ export function NeighborhoodHeatMap({
   title: string
   lang?: Lang
   heightClass?: string
+  /** Masterplan pinned to the satellite view, set in /admin/geo. */
+  overlay?: GeoOverlay | null
 }) {
   const [map, setMap] = useState<google.maps.Map | null>(null)
   // Tourism heat overlay is on by default on listing pages; the toggle
@@ -31,6 +36,7 @@ export function NeighborhoodHeatMap({
   const [showHeat, setShowHeat] = useState(true)
   const containerRef = useRef<HTMLDivElement | null>(null)
   const heatRef = useRef<google.maps.OverlayView | null>(null)
+  const geoRef = useRef<GeoImageOverlay | null>(null)
   const heatDataRef = useRef<{ cells: { lat: number; lng: number; weight: number }[]; max: number } | null>(null)
 
   useEffect(() => {
@@ -38,17 +44,22 @@ export function NeighborhoodHeatMap({
     let cancelled = false
     loadGoogleMaps(apiKey).then(() => {
       if (cancelled || !containerRef.current) return
+      // With a masterplan pinned to the ground, the styled roadmap is the wrong
+      // basemap — the plan only reads against the imagery it was aligned to, and
+      // it only reads at all when zoomed into the site.
       const m = new google.maps.Map(containerRef.current, {
         center: { lat, lng },
-        zoom: 13,
+        zoom: overlay ? 18 : 13,
         gestureHandling: 'greedy',
         streetViewControl: true,
         zoomControl: true,
         fullscreenControl: true,
         mapTypeControl: false,
         clickableIcons: false,
-        styles: BALINSKY_MAP_STYLE,
-        backgroundColor: '#F2EAD8',
+        tilt: 0,
+        ...(overlay
+          ? { mapTypeId: 'hybrid' }
+          : { styles: BALINSKY_MAP_STYLE, backgroundColor: '#F2EAD8' }),
       })
       new google.maps.Marker({
         position: { lat, lng },
@@ -67,7 +78,18 @@ export function NeighborhoodHeatMap({
       setMap(m)
     }).catch(() => { /* unavailable */ })
     return () => { cancelled = true }
-  }, [apiKey, lat, lng, title, map])
+  }, [apiKey, lat, lng, title, map, overlay])
+
+  useEffect(() => {
+    if (!map || !overlay) return
+    const ov = createGeoImageOverlay({ lat, lng, overlay })
+    ov.setMap(map)
+    geoRef.current = ov
+    return () => {
+      ov.setMap(null)
+      geoRef.current = null
+    }
+  }, [map, lat, lng, overlay])
 
   useEffect(() => {
     if (!map) return
