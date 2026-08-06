@@ -171,6 +171,7 @@ export type LinkOption = { id: string; title: string; slug?: string }
 export function linkValue(link: LinkConfig, opt: LinkOption | null): unknown {
   if (link.store === 'name') return opt ? opt.title : ''
   if (link.store === 'name-slug') return opt ? [{ name: opt.title, slug: opt.slug ?? '' }] : []
+  if (link.store === 'name-array') return opt ? [opt.title] : []
   return opt ? [opt.id] : []
 }
 
@@ -182,12 +183,17 @@ export function linkPatch(field: FieldDef, opt: LinkOption | null): Record<strin
   const patch: Record<string, unknown> = { [field.key]: linkValue(link, opt) }
   if (link.nameField) patch[link.nameField] = opt ? opt.title : ''
   if (link.nameArrayField) patch[link.nameArrayField] = opt ? [opt.title] : []
+  if (link.slugArrayField) patch[link.slugArrayField] = opt?.slug ? [opt.slug] : []
   return patch
 }
 
 /** Name to show for a link field's current value, before any id lookup. */
 export function linkDisplayName(field: FieldDef, value: unknown): string {
   if (field.link?.store === 'name') return value ? String(value) : ''
+  if (field.link?.store === 'name-array') {
+    const first = Array.isArray(value) ? value[0] : null
+    return typeof first === 'string' ? first : ''
+  }
   if (field.link?.store === 'name-slug') {
     const first = Array.isArray(value) ? value[0] : null
     return first && typeof first === 'object' ? String((first as { name?: unknown }).name ?? '') : ''

@@ -30,14 +30,22 @@ export type LinkConfig = {
    *  - 'name'       → "Project name"    (complexes Developer)
    *  - 'name-slug'  → [{ name, slug }]  (news/promo/events `developers`) —
    *    the shape the retired Airtable lookup wrote, and the shape the public
-   *    pages filter on: `n.developers.some(d => d.slug === devSlug)`. */
-  store: 'id-array' | 'name' | 'name-slug'
+   *    pages filter on: `n.developers.some(d => d.slug === devSlug)`.
+   *  - 'name-array' → ["Project name"] (managers `developerNames`) — the same
+   *    Airtable-era link, but split across two parallel arrays; pair it with
+   *    `slugArrayField` so the slug half stays in sync. */
+  store: 'id-array' | 'name' | 'name-slug' | 'name-array'
   /** Optional companion field to also set with the picked record's title
    *  (Airtable lookup column, e.g. 'Комплекс 1' / 'Developer1'). */
   nameField?: string
   /** Same, but stored as a one-element array — for the manifest lookup
    *  columns Airtable emitted as arrays (news/promo `complexNames`). */
   nameArrayField?: string
+  /** Companion field holding the picked record's slug as a one-element array.
+   *  The managers manifest keeps `developerNames` / `developerSlugs` side by
+   *  side and lib/managers.ts filters by the slug half. Requires the target
+   *  collection to declare `slugField`. */
+  slugArrayField?: string
 }
 
 export type StoreType = 'sql_jsonb' | 'storage_manifest' | 'sql_columns'
