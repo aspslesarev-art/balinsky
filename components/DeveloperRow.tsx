@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { ChevronDown } from 'lucide-react'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { cleanDeveloperBullets } from '@/lib/developer-highlights'
+import type { SafetyTier } from '@/lib/developer-safety'
 
 const COPY = {
   ru: {
@@ -150,6 +151,55 @@ const COPY = {
   },
 } as const
 
+// Safety badge wording. Deliberately descriptive, never accusatory: the badge
+// states what we could verify, not a verdict on the company. The "why" behind
+// a low tier lives in lib/developer-risk.ts and stays internal.
+const SAFETY_COPY: Record<Lang, { title: string; tiers: Record<SafetyTier, string> }> = {
+  ru: { title: 'Индекс безопасности: документы, зона земли, сданные объекты, сроки', tiers: {
+    high: 'высокая', good: 'выше средней', moderate: 'средняя', low: 'требует проверки', flagged: 'требует проверки', unrated: 'нет данных' } },
+  en: { title: 'Safety index: permits, land zoning, delivered projects, deadlines', tiers: {
+    high: 'high', good: 'above average', moderate: 'average', low: 'check carefully', flagged: 'check carefully', unrated: 'no data' } },
+  id: { title: 'Indeks keamanan: izin, zonasi lahan, proyek diserahkan, tenggat', tiers: {
+    high: 'tinggi', good: 'di atas rata-rata', moderate: 'rata-rata', low: 'perlu diperiksa', flagged: 'perlu diperiksa', unrated: 'tanpa data' } },
+  fr: { title: 'Indice de sécurité : permis, zonage, projets livrés, délais', tiers: {
+    high: 'élevé', good: 'au-dessus de la moyenne', moderate: 'moyen', low: 'à vérifier', flagged: 'à vérifier', unrated: 'sans données' } },
+  de: { title: 'Sicherheitsindex: Genehmigungen, Widmung, übergebene Projekte, Termine', tiers: {
+    high: 'hoch', good: 'überdurchschnittlich', moderate: 'durchschnittlich', low: 'prüfen', flagged: 'prüfen', unrated: 'keine Daten' } },
+  zh: { title: '安全指数：许可、土地分区、已交付项目、工期', tiers: {
+    high: '高', good: '高于平均', moderate: '中等', low: '需核查', flagged: '需核查', unrated: '暂无数据' } },
+  nl: { title: 'Veiligheidsindex: vergunningen, bestemming, opgeleverde projecten, deadlines', tiers: {
+    high: 'hoog', good: 'bovengemiddeld', moderate: 'gemiddeld', low: 'controleren', flagged: 'controleren', unrated: 'geen gegevens' } },
+  ban: { title: 'Indeks kaamanan: izin, zonasi tanah, proyek kaserahang, tenggat', tiers: {
+    high: 'tegeh', good: 'ring baduur rata-rata', moderate: 'rata-rata', low: 'patut kapriksa', flagged: 'patut kapriksa', unrated: 'nenten wenten data' } },
+  pl: { title: 'Indeks bezpieczeństwa: pozwolenia, przeznaczenie gruntu, oddane inwestycje, terminy', tiers: {
+    high: 'wysoki', good: 'powyżej średniej', moderate: 'średni', low: 'do sprawdzenia', flagged: 'do sprawdzenia', unrated: 'brak danych' } },
+  uk: { title: 'Індекс безпеки: документи, зона землі, здані об’єкти, терміни', tiers: {
+    high: 'висока', good: 'вище середньої', moderate: 'середня', low: 'потребує перевірки', flagged: 'потребує перевірки', unrated: 'немає даних' } },
+}
+
+const SAFETY_STYLE: Record<SafetyTier, string> = {
+  high:     'bg-[#ECFDF5] text-[#047857] border-[#A7F3D0]',
+  good:     'bg-[#F0FDF4] text-[#15803D] border-[#BBF7D0]',
+  moderate: 'bg-[#FFFBEB] text-[#B45309] border-[#FDE68A]',
+  low:      'bg-[#FEF2F2] text-[#B91C1C] border-[#FECACA]',
+  flagged:  'bg-[#FEF2F2] text-[#B91C1C] border-[#FECACA]',
+  unrated:  'bg-[#F9FAFB] text-[#6B7280] border-[#E5E7EB]',
+}
+
+function SafetyBadge({ tier, score, lang }: { tier: SafetyTier; score: number | null; lang: Lang }) {
+  const copy = pickCopy(SAFETY_COPY, lang)
+  return (
+    <span
+      title={copy.title}
+      className={`inline-flex items-center gap-1 shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium leading-none ${SAFETY_STYLE[tier]}`}
+    >
+      <span aria-hidden>🛡</span>
+      {score != null && <span>{score}</span>}
+      <span>{copy.tiers[tier]}</span>
+    </span>
+  )
+}
+
 export type DeveloperRowData = {
   slug: string | null
   name: string
@@ -167,6 +217,11 @@ export type DeveloperRowData = {
   // numbers expose that asymmetry.
   unitsReady?: number
   unitsTotal?: number
+  // Safety index (lib/developer-safety.ts). `safetyScore` is null for the
+  // developers we have no portfolio data on — the badge then shows the tier
+  // alone rather than a made-up number.
+  safetyTier?: SafetyTier
+  safetyScore?: number | null
 }
 
 function parseBullets(s: string | null, lang: Lang): string[] | null {
@@ -238,8 +293,15 @@ export function DeveloperRow({ d, lang = 'ru' }: { d: DeveloperRowData; lang?: L
           </div>
 
           <div className="flex-1 min-w-0">
-            <div className="text-[15px] sm:text-[18px] md:text-[20px] font-medium text-[var(--color-text)] leading-tight line-clamp-2 sm:line-clamp-1">
-              {d.name}
+            {/* Name shrinks, badge never does — otherwise a long company name
+                pushes the badge past the card edge on narrow screens. */}
+            <div className="flex items-center gap-2 min-w-0 flex-wrap sm:flex-nowrap">
+              <div className="min-w-0 text-[15px] sm:text-[18px] md:text-[20px] font-medium text-[var(--color-text)] leading-tight line-clamp-2 sm:line-clamp-1">
+                {d.name}
+              </div>
+              {d.safetyTier && (
+                <SafetyBadge tier={d.safetyTier} score={d.safetyScore ?? null} lang={lang} />
+              )}
             </div>
             {(d.complexesReady != null || d.complexesTotal != null) && (d.complexesTotal ?? 0) > 0 && (
               <div className="mt-1 text-[11px] sm:text-[12px] text-[var(--color-text-muted)]">

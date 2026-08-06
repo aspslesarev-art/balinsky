@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { pickCopy, type Lang } from '@/lib/i18n'
 
 export type DevelopersSortKey =
+  | 'safety'
   | 'balanced'
   | 'ready'
   | 'inprogress'
@@ -15,6 +16,7 @@ export type DevelopersSortKey =
 type Option = { key: DevelopersSortKey; label: string; hint: string }
 const OPTIONS_BY_LANG: Record<Lang, Option[]> = {
   ru: [
+    { key: 'safety',           label: '🛡 Безопасность',       hint: 'Разрешительные документы, зона земли, сданные объекты, соблюдение сроков' },
     { key: 'balanced',         label: 'Сбалансированный',     hint: 'Сданные + в работе + редакторская оценка' },
     { key: 'ready',            label: 'Сданные ЖК',           hint: 'Кто реально построил больше всего' },
     { key: 'inprogress',       label: 'Активные стройки',     hint: 'У кого больше проектов сейчас в работе' },
@@ -24,6 +26,7 @@ const OPTIONS_BY_LANG: Record<Lang, Option[]> = {
     { key: 'international',    label: '🌍 Международный опыт', hint: 'Девелоперы с историей и проектами за пределами Бали' },
   ],
   en: [
+    { key: 'safety',           label: '🛡 Safety',          hint: 'Building permits, land zoning, delivered projects, deadlines met' },
     { key: 'balanced',         label: 'Balanced',           hint: 'Completed + active + editorial score' },
     { key: 'ready',            label: 'Completed projects', hint: 'Who has actually built the most' },
     { key: 'inprogress',       label: 'Active projects',    hint: 'Who has the most ongoing builds' },
@@ -33,6 +36,7 @@ const OPTIONS_BY_LANG: Record<Lang, Option[]> = {
     { key: 'international',    label: '🌍 International',   hint: 'Developers with projects outside Bali' },
   ],
   id: [
+    { key: 'safety',           label: '🛡 Keamanan',           hint: 'Izin bangunan, zonasi lahan, proyek yang diserahkan, ketepatan tenggat' },
     { key: 'balanced',         label: 'Seimbang',              hint: 'Selesai + aktif + skor editorial' },
     { key: 'ready',            label: 'Proyek selesai',        hint: 'Yang paling banyak membangun' },
     { key: 'inprogress',       label: 'Proyek aktif',          hint: 'Yang punya proyek berjalan terbanyak' },
@@ -42,6 +46,7 @@ const OPTIONS_BY_LANG: Record<Lang, Option[]> = {
     { key: 'international',    label: '🌍 Internasional',      hint: 'Pengembang dengan proyek di luar Bali' },
   ],
   fr: [
+    { key: 'safety',           label: '🛡 Sécurité',             hint: 'Permis de construire, zonage, projets livrés, délais respectés' },
     { key: 'balanced',         label: 'Équilibré',              hint: 'Livrés + actifs + score éditorial' },
     { key: 'ready',            label: 'Projets livrés',         hint: 'Qui a réellement le plus construit' },
     { key: 'inprogress',       label: 'Projets actifs',         hint: 'Qui a le plus de chantiers en cours' },
@@ -51,6 +56,7 @@ const OPTIONS_BY_LANG: Record<Lang, Option[]> = {
     { key: 'international',    label: '🌍 International',        hint: 'Promoteurs avec des projets hors de Bali' },
   ],
   de: [
+    { key: 'safety',           label: '🛡 Sicherheit',           hint: 'Baugenehmigungen, Flächenwidmung, übergebene Projekte, Termintreue' },
     { key: 'balanced',         label: 'Ausgewogen',              hint: 'Fertiggestellt + aktiv + redaktionelle Bewertung' },
     { key: 'ready',            label: 'Fertige Projekte',        hint: 'Wer tatsächlich am meisten gebaut hat' },
     { key: 'inprogress',       label: 'Aktive Projekte',         hint: 'Wer die meisten laufenden Bauten hat' },
@@ -60,6 +66,7 @@ const OPTIONS_BY_LANG: Record<Lang, Option[]> = {
     { key: 'international',    label: '🌍 International',         hint: 'Bauträger mit Projekten außerhalb Balis' },
   ],
   zh: [
+    { key: 'safety',           label: '🛡 安全性',   hint: '建筑许可、土地分区、已交付项目、工期履约' },
     { key: 'balanced',         label: '综合',        hint: '已交付 + 在建 + 编辑评分' },
     { key: 'ready',            label: '已完成项目',  hint: '实际建成最多的开发商' },
     { key: 'inprogress',       label: '在建项目',    hint: '当前在建项目最多的开发商' },
@@ -69,6 +76,7 @@ const OPTIONS_BY_LANG: Record<Lang, Option[]> = {
     { key: 'international',    label: '🌍 国际经验', hint: '在巴厘岛以外有项目的开发商' },
   ],
   nl: [
+    { key: 'safety',           label: '🛡 Veiligheid',          hint: 'Bouwvergunningen, bestemmingsplan, opgeleverde projecten, deadlines' },
     { key: 'balanced',         label: 'Gebalanceerd',           hint: 'Opgeleverd + actief + redactionele score' },
     { key: 'ready',            label: 'Opgeleverde projecten',  hint: 'Wie feitelijk het meest heeft gebouwd' },
     { key: 'inprogress',       label: 'Actieve projecten',      hint: 'Wie de meeste lopende bouwprojecten heeft' },
@@ -78,6 +86,7 @@ const OPTIONS_BY_LANG: Record<Lang, Option[]> = {
     { key: 'international',    label: '🌍 Internationaal',      hint: 'Ontwikkelaars met projecten buiten Bali' },
   ],
   ban: [
+    { key: 'safety',           label: '🛡 Kaamanan',            hint: 'Izin wewangunan, zonasi tanah, proyek kaserahang, katepatan tenggat' },
     { key: 'balanced',         label: 'Seimbang',               hint: 'Puput + aktif + skor editorial' },
     { key: 'ready',            label: 'Proyek puput',           hint: 'Sane pinih akeh ngwangun' },
     { key: 'inprogress',       label: 'Proyek aktif',           hint: 'Sane pinih akeh proyek mamargi' },
@@ -87,6 +96,7 @@ const OPTIONS_BY_LANG: Record<Lang, Option[]> = {
     { key: 'international',    label: '🌍 Internasional',       hint: 'Pangwangun sane madue proyek ring jaba Bali' },
   ],
   pl: [
+    { key: 'safety',           label: '🛡 Bezpieczeństwo',      hint: 'Pozwolenia na budowę, przeznaczenie gruntu, oddane inwestycje, terminy' },
     { key: 'balanced',         label: 'Zrównoważony',           hint: 'Ukończone + w trakcie + ocena redakcyjna' },
     { key: 'ready',            label: 'Ukończone projekty',     hint: 'Kto faktycznie zbudował najwięcej' },
     { key: 'inprogress',       label: 'Aktywne budowy',         hint: 'Kto ma najwięcej trwających budów' },
@@ -96,6 +106,7 @@ const OPTIONS_BY_LANG: Record<Lang, Option[]> = {
     { key: 'international',    label: '🌍 Międzynarodowy',      hint: 'Deweloperzy z projektami poza Bali' },
   ],
   uk: [
+    { key: 'safety',           label: '🛡 Безпека',             hint: 'Дозвільні документи, зона землі, здані об’єкти, дотримання термінів' },
     { key: 'balanced',         label: 'Збалансований',          hint: 'Здані + у роботі + редакційна оцінка' },
     { key: 'ready',            label: 'Здані проєкти',          hint: 'Хто реально збудував найбільше' },
     { key: 'inprogress',       label: 'Активні будови',         hint: 'У кого найбільше проєктів зараз у роботі' },
@@ -112,7 +123,8 @@ export function DevelopersSortToggle({ current, lang = 'ru' }: { current: Develo
 
   const apply = (key: DevelopersSortKey) => {
     const next = new URLSearchParams(searchParams.toString())
-    if (key === 'balanced') next.delete('sort')
+    // `safety` is the default order, so it stays out of the URL.
+    if (key === 'safety') next.delete('sort')
     else next.set('sort', key)
     const qs = next.toString()
     router.replace(qs ? `?${qs}` : '?', { scroll: false })
