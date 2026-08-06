@@ -1,12 +1,8 @@
 import { NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/admin-auth'
-import {
-  getSitePlan,
-  loadSunSettings,
-  saveSunSettings,
-  type SunSettingsInput,
-} from '@/lib/complex-sun'
+import { getSitePlan, type SunSettingsInput } from '@/lib/complex-sun-plan'
+import { loadSunSettings, saveSunSettings } from '@/lib/complex-sun'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'

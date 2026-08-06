@@ -10,7 +10,7 @@
 import dynamic from 'next/dynamic'
 import { useCallback, useEffect, useState } from 'react'
 
-import type { SitePlan } from '@/lib/complex-sun'
+import type { SitePlan } from '@/lib/complex-sun-plan'
 import type { ModelHeights } from './sun-model'
 
 const SunScene = dynamic(() => import('./SunScene').then((m) => m.SunScene), {

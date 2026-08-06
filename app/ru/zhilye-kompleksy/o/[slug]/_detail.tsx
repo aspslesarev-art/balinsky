@@ -37,7 +37,8 @@ import { VideoGrid } from '@/components/VideoGrid'
 import { loadNearbyPlaces } from '@/lib/nearby-places'
 import { NearbyPlaces } from '@/components/NearbyPlaces'
 import { listLayers, listHotspots } from '@/lib/complex-visualizations'
-import { getSitePlan, loadSunSettings } from '@/lib/complex-sun'
+import { getSitePlan } from '@/lib/complex-sun-plan'
+import { loadSunSettings } from '@/lib/complex-sun'
 import dynamic from 'next/dynamic'
 // Heavy client widgets — code-split off the initial JS bundle.
 // ComplexVisualizationViewer = layers/hotspots, LandProfileBlock = charts.
@@ -1300,7 +1301,6 @@ export async function generateComplexMetadata(slug: string, lang: Lang) {
       ? seoText.slice(0, 160).trim() + (seoText.length > 160 ? '…' : '')
       : copy.fallbackDesc(name, district, types, yearRaw))
   const ruPath = `/ru/zhilye-kompleksy/o/${slug}`
-  const enPath = `/en/complexes/o/${slug}`
   const path = switchLangPath(ruPath, lang)
   // CTR sprint: the old title spent its visible ~60 characters on unit types
   // and never showed a price, so brand queries («surfside bali», 822

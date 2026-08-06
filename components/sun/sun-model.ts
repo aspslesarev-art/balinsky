@@ -3,7 +3,7 @@
 // −Z = двор с бассейном, +Z = задний двор). Всё в метрах.
 
 import * as THREE from 'three'
-import { frontBoundaryZ, type SitePlan } from '@/lib/complex-sun'
+import { frontBoundaryZ, type SitePlan } from '@/lib/complex-sun-plan'
 
 export type ModelHeights = {
   eaveHeight: number

@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
-import { plotCenter, type SitePlan } from '@/lib/complex-sun'
+import { plotCenter, type SitePlan } from '@/lib/complex-sun-plan'
 import {
   formatDayOfYear,
   formatHours,

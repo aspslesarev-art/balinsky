@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { requireAdmin } from '@/lib/admin-auth'
-import { getSitePlan, loadSunSettings } from '@/lib/complex-sun'
+import { getSitePlan } from '@/lib/complex-sun-plan'
+import { loadSunSettings } from '@/lib/complex-sun'
 import { SunSettingsEditor } from './_editor'
 
 export const runtime = 'nodejs'

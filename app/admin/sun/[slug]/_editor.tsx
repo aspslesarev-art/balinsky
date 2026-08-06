@@ -7,7 +7,7 @@
 import dynamic from 'next/dynamic'
 import { useMemo, useState, type ReactNode } from 'react'
 
-import type { SitePlan, SunSettingsInput } from '@/lib/complex-sun'
+import type { SitePlan, SunSettingsInput } from '@/lib/complex-sun-plan'
 
 const SunScene = dynamic(() => import('@/components/sun/SunScene').then((m) => m.SunScene), {
   ssr: false,
