@@ -52,6 +52,7 @@ export function SunScene({ plan, latitude, longitude, rowAzimuth, heights }: Sun
   const [dayOfYear, setDayOfYear] = useState(172)
   const [minutes, setMinutes] = useState(720)
   const [playing, setPlaying] = useState(false)
+  const [topView, setTopView] = useState(false)
 
   const stateRef = useRef({ dayOfYear, minutes, playing, latitude, longitude })
   stateRef.current = { dayOfYear, minutes, playing, latitude, longitude }
@@ -216,12 +217,13 @@ export function SunScene({ plan, latitude, longitude, rowAzimuth, heights }: Sun
     placeModel(ctx.model, plan, rowAzimuth)
   }, [plan, heights, rowAzimuth])
 
-  // ── камера встаёт со стороны дворов при смене ориентации ──────────────────
+  // ── камера: облёт со стороны дворов либо взгляд строго сверху ─────────────
   useEffect(() => {
     const ctx = sceneRef.current
     if (!ctx) return
-    frameCourtyards(ctx.camera, ctx.controls, rowAzimuth)
-  }, [rowAzimuth])
+    if (topView) lookFromAbove(ctx.camera, ctx.controls)
+    else frameCourtyards(ctx.camera, ctx.controls, rowAzimuth)
+  }, [rowAzimuth, topView])
 
   return (
     <div className="flex h-full w-full flex-col bg-[#0e1116]">
@@ -265,13 +267,27 @@ export function SunScene({ plan, latitude, longitude, rowAzimuth, heights }: Sun
           />
         </label>
 
-        <button
-          type="button"
-          onClick={() => setPlaying((v) => !v)}
-          className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white hover:bg-white/10"
-        >
-          {playing ? '❚❚ Пауза' : '▶ Прогнать день'}
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setPlaying((v) => !v)}
+            className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white hover:bg-white/10"
+          >
+            {playing ? '❚❚ Пауза' : '▶ Прогнать день'}
+          </button>
+          <button
+            type="button"
+            onClick={() => setTopView((v) => !v)}
+            aria-pressed={topView}
+            className={`rounded-lg border px-3 py-1.5 text-xs ${
+              topView
+                ? 'border-transparent bg-amber-400 font-semibold text-[#191308]'
+                : 'border-white/15 text-white hover:bg-white/10'
+            }`}
+          >
+            Вид сверху
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -289,6 +305,13 @@ function placeModel(model: ComplexModel, plan: SitePlan, rowAzimuth: number) {
   )
   model.group.position.set(-rotated.x, 0, -rotated.z)
   model.group.updateMatrixWorld(true)
+}
+
+/** Взгляд строго сверху — в плане тень читается однозначнее всего. */
+function lookFromAbove(camera: THREE.PerspectiveCamera, controls: OrbitControls) {
+  camera.position.set(0, 86, 0.01)
+  controls.target.set(0, 0, 0)
+  controls.update()
 }
 
 /** Камера встаёт со стороны дворов с бассейнами, а не глухого тыла. */

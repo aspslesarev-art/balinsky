@@ -75,11 +75,14 @@ const U_VILLAS_I: SitePlan = {
     { unit: 5, x: 21.306, width: 2.5, zNear: -5.327, zFar: -11.322 },
     { unit: 6, x: 25.585, width: 2.5, zNear: -5.65, zFar: -11.645 },
   ],
+  // Google Static Maps, зум 20 при scale=2: снимок свежий (комплекс на нём
+  // уже построен) и вчетверо резче прежней мозаики Esri. Центр кадра совпадает
+  // с центром участка, поэтому якорь — ровно середина изображения.
   basemap: {
     url: '/sun/u-villas-i.jpg',
-    sizePx: 1024,
-    metersPerPixel: 0.295,
-    anchorPx: { x: 735.3, y: 731.3 },
+    sizePx: 1280,
+    metersPerPixel: 0.0738,
+    anchorPx: { x: 640, y: 640 },
   },
 }
 
