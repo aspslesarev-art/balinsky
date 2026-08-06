@@ -37,6 +37,7 @@ import { VideoGrid } from '@/components/VideoGrid'
 import { loadNearbyPlaces } from '@/lib/nearby-places'
 import { NearbyPlaces } from '@/components/NearbyPlaces'
 import { listLayers, listHotspots } from '@/lib/complex-visualizations'
+import { getSitePlan, loadSunSettings } from '@/lib/complex-sun'
 import dynamic from 'next/dynamic'
 // Heavy client widgets — code-split off the initial JS bundle.
 // ComplexVisualizationViewer = layers/hotspots, LandProfileBlock = charts.
@@ -46,6 +47,11 @@ const ComplexVisualizationViewer = dynamic(
 )
 const LandProfileBlock = dynamic(
   () => import('@/components/LandProfileBlock').then(m => ({ default: m.LandProfileBlock })),
+)
+// SunShadowBlock = кнопка + модалка с 3D-инсоляцией. Сам блок почти невесом;
+// three.js и спутниковая подложка грузятся отдельным чанком только по клику.
+const SunShadowBlock = dynamic(
+  () => import('@/components/sun/SunShadowBlock').then(m => ({ default: m.SunShadowBlock })),
 )
 import { LazyMount } from '@/components/LazyMount'
 import { loadLandProfile, landAllowsBuilding } from '@/lib/land-profile'
@@ -84,6 +90,7 @@ import {
 } from '@/lib/legal-audit'
 import { loadComplexAudit } from '@/lib/complex-legal-i18n'
 import { isAirtableAttachment } from '@/lib/admin/fields'
+import { hreflangMap } from '@/lib/hreflang'
 
 const AIRPORT_LAT = -8.7467
 const AIRPORT_LNG = 115.1667
@@ -1316,7 +1323,7 @@ export async function generateComplexMetadata(slug: string, lang: Lang) {
     description,
     alternates: {
       canonical: path,
-      languages: { ru: `${SITE_URL}${ruPath}`, en: `${SITE_URL}${enPath}` , 'x-default': `${SITE_URL}${ruPath}`},
+      languages: hreflangMap(ruPath),
     },
     openGraph: {
       title: copy.ogTitle(name),
@@ -1524,6 +1531,15 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   const vizHotspots = vizLayers.length > 0
     ? await listHotspots(vizLayers.map(l => l.id)).catch(() => [] as Awaited<ReturnType<typeof listHotspots>>)
     : []
+
+  // Солнечно-теневая модель. Обмер генплана лежит в коде, ориентация и
+  // высоты — в БД, их выставляет админ в /admin/sun/<slug>. Пока он не
+  // включил `enabled`, блока на странице нет вовсе.
+  const sunPlan = getSitePlan(slug)
+  const sunSettings = sunPlan
+    ? await loadSunSettings(slug).catch(() => null)
+    : null
+  const showSunBlock = Boolean(sunPlan && sunSettings?.enabled)
   // For the popup we prefer the optimised single-image attachment
   // (`Image Opt` in Airtable — a pre-compressed thumbnail) over the
   // full-quality first photo from the manifest. The interactive plan
@@ -1750,6 +1766,32 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             unitsBySlug={unitInfoBySlug}
             lang={lang}
           />
+        )}
+
+        {/* Солнце и тень: текст индексируется, 3D грузится по клику. */}
+        {showSunBlock && (
+          <section className="mb-10">
+            <h2 className="text-[19px] sm:text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-2">
+              Солнце и тень
+            </h2>
+            <p className="text-[15px] leading-relaxed text-[#4b5563] mb-4 max-w-3xl">
+              Комплекс построен по обмеру генплана и поставлен на карту с учётом реальной
+              ориентации по сторонам света. Выберите дату и время суток, чтобы увидеть, куда
+              падает тень от корпусов и заборов и сколько солнца достаётся дворам с бассейнами.
+            </p>
+            <SunShadowBlock
+              plan={sunPlan!}
+              latitude={sunSettings!.latitude}
+              longitude={sunSettings!.longitude}
+              rowAzimuth={sunSettings!.rowAzimuth}
+              heights={{
+                eaveHeight: sunSettings!.eaveHeight,
+                ridgeRise: sunSettings!.ridgeRise,
+                yardWall: sunSettings!.yardWall,
+              }}
+              title={sunPlan!.title}
+            />
+          </section>
         )}
 
         {/* UNITS in this complex */}
