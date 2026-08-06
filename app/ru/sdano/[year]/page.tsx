@@ -12,6 +12,7 @@ import { Footer } from '@/components/Footer'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { ComplexCard, type ComplexCardData } from '@/components/ComplexCard'
+import { hreflangMap } from '@/lib/hreflang'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 const VALID_YEARS = new Set(['2023', '2024', '2025', '2026', '2027', '2028'])
@@ -27,11 +28,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
     description: `Жилые комплексы на Бали со сроком сдачи в ${year} году. Готовые юниты, реальные сроки, документы PBG/SLF, цены и контакты застройщиков.`,
     alternates: {
       canonical: `/ru/sdano/${year}`,
-      languages: {
-        ru: `${SITE_URL}/ru/sdano/${year}`,
-        en: `${SITE_URL}/en/completed-in/${year}`,
-        'x-default': `${SITE_URL}/ru/sdano/${year}`,
-      },
+      languages: hreflangMap(`/ru/sdano/${year}`),
     },
     openGraph: { title: `Сданные ЖК Бали ${year}`, description: `Готовые комплексы со сроком сдачи в ${year}.`, type: 'website' },
     twitter: { card: 'summary_large_image' },

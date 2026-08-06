@@ -1,4 +1,5 @@
 import { HomeLanding } from '@/components/HomeLanding'
+import { hreflangMap } from '@/lib/hreflang'
 
 export const revalidate = 1800
 
@@ -8,7 +9,7 @@ export const metadata = {
     "Villa's, appartementen en complexen van tientallen ontwikkelaars in één catalogus. Geverifieerde documenten (PBG, SLF) en reëel huurrendement op basis van buurtdata. Foto's, actuele prijzen, contacten — de keuze is aan u.",
   alternates: {
     canonical: '/nl',
-    languages: { ru: '/ru', en: '/en', nl: '/nl', 'x-default': '/ru' },
+    languages: hreflangMap('/ru'),
   },
   openGraph: {
     title: 'Vastgoed kopen op Bali — onafhankelijke marktplaats met analyses',

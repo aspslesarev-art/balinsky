@@ -15,6 +15,7 @@ import { loadEventBySlug } from '@/lib/events'
 import { localizeEventFormat } from '@/lib/event-format'
 import { RelatedContent } from '@/components/RelatedContent'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
+import { hreflangMap } from '@/lib/hreflang'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
@@ -101,14 +102,13 @@ export async function generateEventDetailMetadata(slug: string, lang: Lang): Pro
   const e = await loadEventBySlug(slug, lang)
   if (!e) return { robots: { index: false, follow: false } }
   const ruPath = `/ru/meropriyatiya/${e.slug}`
-  const enPath = `/en/events/${e.slug}`
   const path = switchLangPath(ruPath, lang)
   return {
     title: `${e.title} | Balinsky`,
     description: e.seoDescription ?? (e.body?.slice(0, 160) ?? e.title),
     alternates: {
       canonical: path,
-      languages: { ru: `${SITE_URL}${ruPath}`, en: `${SITE_URL}${enPath}` , 'x-default': `${SITE_URL}${ruPath}`},
+      languages: hreflangMap(ruPath),
     },
     openGraph: {
       title: e.title,

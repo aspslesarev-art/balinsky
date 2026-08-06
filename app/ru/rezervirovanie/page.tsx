@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { ReservationGuide } from '@/components/ReservationGuide'
+import { hreflangMap } from '@/lib/hreflang'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
@@ -8,7 +9,7 @@ export const metadata: Metadata = {
   description: 'Что значит «зарезервировать» на Бали: 14-дневный hold, holding deposit $2-10k, где сидит депозит, как возвращаются деньги, отличие reservation form от SPA.',
   alternates: {
     canonical: '/ru/rezervirovanie',
-    languages: { ru: `${SITE_URL}/ru/rezervirovanie`, en: `${SITE_URL}/en/reservation` , 'x-default': `${SITE_URL}/ru/rezervirovanie`},
+    languages: hreflangMap('/ru/rezervirovanie'),
   },
   openGraph: {
     title: 'Бронирование объекта на Бали',

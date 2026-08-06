@@ -9,6 +9,7 @@ import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { hreflangMap } from '@/lib/hreflang'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 const UPDATED = '15 Mei 2026'
@@ -18,12 +19,7 @@ export const metadata: Metadata = {
   description: 'Panduan lengkap investasi properti Bali untuk warga asing: imbal hasil bersih nyata 8-15%, struktur leasehold vs PT PMA, pajak, perhitungan ROI, dan studi kasus di Canggu, Bukit, Ubud.',
   alternates: {
     canonical: '/id/investasi-properti-bali',
-    languages: {
-      ru: `${SITE_URL}/ru/investicii-v-nedvizhimost-bali`,
-      en: `${SITE_URL}/en/bali-property-investment`,
-      id: `${SITE_URL}/id/investasi-properti-bali`,
-      'x-default': `${SITE_URL}/ru/investicii-v-nedvizhimost-bali`,
-    },
+    languages: hreflangMap('/ru/investicii-v-nedvizhimost-bali'),
   },
   openGraph: {
     title: 'Investasi Properti Bali 2026 — Panduan Lengkap untuk Warga Asing',

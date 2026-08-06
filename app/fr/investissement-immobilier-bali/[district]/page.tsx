@@ -11,6 +11,7 @@ import { Footer } from '@/components/Footer'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { getDistrictCopy } from '@/lib/districts'
+import { hreflangMap } from '@/lib/hreflang'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 const UPDATED = 'May 15, 2026'
@@ -28,11 +29,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
     description: `Invest in property in ${copy.name}, Bali — real net yield ${yieldR ?? '8-15%'} per year, entry from ${priceFrom ?? '$130K'}. Leasehold, PT PMA, ROI calculation.`,
     alternates: {
       canonical: `/fr/investissement-immobilier-bali/${district}`,
-      languages: {
-        ru: `${SITE_URL}/ru/investicii/${district}`,
-        en: `${SITE_URL}/fr/investissement-immobilier-bali/${district}`,
-        'x-default': `${SITE_URL}/ru/investicii/${district}`,
-      },
+      languages: hreflangMap(`/ru/investicii/${district}`),
     },
     openGraph: {
       title: `${copy.name} Bali property investment — 2026 guide`,

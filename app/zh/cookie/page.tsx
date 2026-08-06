@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { LegalLayout } from '@/components/LegalLayout'
+import { hreflangMap } from '@/lib/hreflang'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 const UPDATED = '2026年5月15日'
 
 export const metadata: Metadata = {
@@ -9,12 +9,7 @@ export const metadata: Metadata = {
   description: 'Balinsky.info 使用哪些 Cookie：严格必要类、分析类、营销类 — 以及如何将其关闭。',
   alternates: {
     canonical: '/zh/cookie',
-    languages: {
-      ru: `${SITE_URL}/ru/cookie`,
-      en: `${SITE_URL}/en/cookie`,
-      zh: `${SITE_URL}/zh/cookie`,
-      'x-default': `${SITE_URL}/ru/cookie`,
-    },
+    languages: hreflangMap('/ru/cookie'),
   },
   robots: { index: true, follow: true },
 }

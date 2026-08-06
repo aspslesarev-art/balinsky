@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { LegalLayout } from '@/components/LegalLayout'
+import { hreflangMap } from '@/lib/hreflang'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 const UPDATED = 'May 15, 2026'
 
 export const metadata: Metadata = {
@@ -9,11 +9,7 @@ export const metadata: Metadata = {
   description: 'Terms of use for the Balinsky.info catalogue: what we are (and what we are not), content boundaries, responsibilities of buyer and operator.',
   alternates: {
     canonical: '/ban/ketentuan',
-    languages: {
-      ru: `${SITE_URL}/ru/usloviya`,
-      en: `${SITE_URL}/ban/ketentuan`,
-      'x-default': `${SITE_URL}/ru/usloviya`,
-    },
+    languages: hreflangMap('/ru/usloviya'),
   },
   robots: { index: true, follow: true },
 }

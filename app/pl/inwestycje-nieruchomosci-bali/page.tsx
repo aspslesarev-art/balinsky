@@ -9,6 +9,7 @@ import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { hreflangMap } from '@/lib/hreflang'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 const UPDATED = '15 maja 2026'
@@ -18,11 +19,7 @@ export const metadata: Metadata = {
   description: 'Kompletny przewodnik po inwestycjach w nieruchomości na Bali dla obcokrajowców: realne 8-15% zysku netto, struktury leasehold i PT PMA, podatki, wyliczenia ROI oraz analizy przypadków w Canggu, Bukit i Ubud.',
   alternates: {
     canonical: '/pl/inwestycje-nieruchomosci-bali',
-    languages: {
-      ru: `${SITE_URL}/ru/investicii-v-nedvizhimost-bali`,
-      pl: `${SITE_URL}/pl/inwestycje-nieruchomosci-bali`,
-      'x-default': `${SITE_URL}/ru/investicii-v-nedvizhimost-bali`,
-    },
+    languages: hreflangMap('/ru/investicii-v-nedvizhimost-bali'),
   },
   openGraph: {
     title: 'Inwestycje w nieruchomości na Bali 2026 — kompletny przewodnik dla obcokrajowców',

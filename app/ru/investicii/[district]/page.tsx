@@ -13,6 +13,7 @@ import { Footer } from '@/components/Footer'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { getDistrictCopy } from '@/lib/districts'
+import { hreflangMap } from '@/lib/hreflang'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 const UPDATED = '15 мая 2026 г.'
@@ -30,11 +31,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
     description: `Инвестировать в недвижимость в ${copy.name}, Бали — реальная доходность ${yieldR ?? '8-15%'} годовых, стартовая цена ${priceFrom ?? 'от $130K'}. Лизхолд, PT PMA, расчёт окупаемости.`,
     alternates: {
       canonical: `/ru/investicii/${district}`,
-      languages: {
-        ru: `${SITE_URL}/ru/investicii/${district}`,
-        en: `${SITE_URL}/en/bali-property-investment/${district}`,
-        'x-default': `${SITE_URL}/ru/investicii/${district}`,
-      },
+      languages: hreflangMap(`/ru/investicii/${district}`),
     },
     openGraph: {
       title: `Инвестиции в недвижимость ${copy.name}, Бали — гайд 2026`,

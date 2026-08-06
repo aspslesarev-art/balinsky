@@ -8,6 +8,7 @@ import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { hreflangMap } from '@/lib/hreflang'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 const UPDATED = '15 mai 2026'
@@ -17,12 +18,7 @@ export const metadata: Metadata = {
   description: "Guide d'installation à Bali : KITAS, Second Home Visa, Golden Visa, fiscalité des résidents étrangers, écoles internationales, hôpitaux BIMC et Siloam, budgets familiaux réels.",
   alternates: {
     canonical: '/fr/vivre-a-bali',
-    languages: {
-      ru: `${SITE_URL}/ru/zhizn-na-bali`,
-      en: `${SITE_URL}/en/living-in-bali`,
-      fr: `${SITE_URL}/fr/vivre-a-bali`,
-      'x-default': `${SITE_URL}/ru/zhizn-na-bali`,
-    },
+    languages: hreflangMap('/ru/zhizn-na-bali'),
   },
   openGraph: {
     title: "Vivre à Bali — Guide d'installation 2026",

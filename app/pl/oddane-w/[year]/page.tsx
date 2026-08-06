@@ -7,6 +7,7 @@ import { Footer } from '@/components/Footer'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { ComplexCard, type ComplexCardData } from '@/components/ComplexCard'
+import { hreflangMap } from '@/lib/hreflang'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 const VALID_YEARS = new Set(['2023', '2024', '2025', '2026', '2027', '2028'])
@@ -22,11 +23,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
     description: `Kompleksy mieszkaniowe na Bali z rokiem oddania ${year}. Gotowe jednostki, realny harmonogram, pozwolenia PBG/SLF, kontakty do deweloperów.`,
     alternates: {
       canonical: `/pl/oddane-w/${year}`,
-      languages: {
-        ru: `${SITE_URL}/ru/sdano/${year}`,
-        pl: `${SITE_URL}/pl/oddane-w/${year}`,
-        'x-default': `${SITE_URL}/ru/sdano/${year}`,
-      },
+      languages: hreflangMap(`/ru/sdano/${year}`),
     },
     openGraph: { title: `Kompleksy mieszkaniowe na Bali oddane w ${year}`, type: 'website' },
     twitter: { card: 'summary_large_image' },

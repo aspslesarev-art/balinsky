@@ -9,6 +9,7 @@ import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { hreflangMap } from '@/lib/hreflang'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 const UPDATED = '15 mei 2026'
@@ -18,12 +19,7 @@ export const metadata: Metadata = {
   description: 'Complete gids voor investeren in vastgoed op Bali voor buitenlanders: reële netto rendementen van 8-15%, leasehold- versus PT PMA-structuren, belastingen, ROI-berekeningen en praktijkcases in Canggu, Bukit en Ubud.',
   alternates: {
     canonical: '/nl/bali-vastgoed-investering',
-    languages: {
-      ru: `${SITE_URL}/ru/investicii-v-nedvizhimost-bali`,
-      en: `${SITE_URL}/en/bali-property-investment`,
-      nl: `${SITE_URL}/nl/bali-vastgoed-investering`,
-      'x-default': `${SITE_URL}/ru/investicii-v-nedvizhimost-bali`,
-    },
+    languages: hreflangMap('/ru/investicii-v-nedvizhimost-bali'),
   },
   openGraph: {
     title: 'Investeren in vastgoed op Bali 2026 — complete gids voor buitenlanders',

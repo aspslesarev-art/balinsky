@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { LegalLayout } from '@/components/LegalLayout'
+import { hreflangMap } from '@/lib/hreflang'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 const UPDATED = '15 maja 2026'
 
 export const metadata: Metadata = {
@@ -9,11 +9,7 @@ export const metadata: Metadata = {
   description: 'Jakie pliki cookie wykorzystuje Balinsky.info: ściśle niezbędne, analityczne, marketingowe — oraz jak je wyłączyć.',
   alternates: {
     canonical: '/pl/cookie',
-    languages: {
-      ru: `${SITE_URL}/ru/cookie`,
-      pl: `${SITE_URL}/pl/cookie`,
-      'x-default': `${SITE_URL}/ru/cookie`,
-    },
+    languages: hreflangMap('/ru/cookie'),
   },
   robots: { index: true, follow: true },
 }

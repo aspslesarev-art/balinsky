@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { ReservationGuide } from '@/components/ReservationGuide'
+import { hreflangMap } from '@/lib/hreflang'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
@@ -8,7 +9,7 @@ export const metadata: Metadata = {
   description: 'Co oznacza „rezerwacja” na Bali: 14-dniowa blokada, kaucja rezerwacyjna 2–10 tys. USD, gdzie trafia kaucja, jak działają zwroty, formularz rezerwacji a SPA.',
   alternates: {
     canonical: '/pl/rezerwacja',
-    languages: { ru: `${SITE_URL}/ru/rezervirovanie`, en: `${SITE_URL}/pl/rezerwacja` , 'x-default': `${SITE_URL}/ru/rezervirovanie`},
+    languages: hreflangMap('/ru/rezervirovanie'),
   },
   openGraph: {
     title: 'Jak działa rezerwacja nieruchomości na Bali',

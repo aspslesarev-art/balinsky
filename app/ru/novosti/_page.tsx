@@ -7,6 +7,7 @@ import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { loadAllNews } from '@/lib/news'
 import { pickCopy, tField, switchLangPath, type Lang } from '@/lib/i18n'
+import { hreflangMap } from '@/lib/hreflang'
 
 const COPY = {
   ru: {
@@ -100,14 +101,13 @@ function fmtDate(iso: string | null, locale: string): string | null {
 export function generateNewsListMetadata(lang: Lang): Metadata {
   const c = pickCopy(COPY, lang)
   const ruPath = '/ru/novosti'
-  const enPath = '/en/news'
   const path = switchLangPath(ruPath, lang)
   return {
     title: c.title,
     description: c.description,
     alternates: {
       canonical: path,
-      languages: { ru: `https://balinsky.info${ruPath}`, en: `https://balinsky.info${enPath}` , 'x-default': `https://balinsky.info${ruPath}`},
+      languages: hreflangMap(ruPath),
     },
   }
 }

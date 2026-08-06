@@ -14,6 +14,7 @@ import { Footer } from '@/components/Footer'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { botLink } from '@/lib/bot-link'
+import { hreflangMap } from '@/lib/hreflang'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
@@ -47,11 +48,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
     description: `Отзывы и оценка работы застройщика ${name} на Бали: рейтинг по 4 направлениям, сданные и активные проекты, реальный опыт покупателей, контакт менеджера.`,
     alternates: {
       canonical: `/ru/zastrojshhiki/${slug}/otzyvy`,
-      languages: {
-        ru: `${SITE_URL}/ru/zastrojshhiki/${slug}/otzyvy`,
-        en: `${SITE_URL}/en/developers/${slug}/reviews`,
-        'x-default': `${SITE_URL}/ru/zastrojshhiki/${slug}/otzyvy`,
-      },
+      languages: hreflangMap(`/ru/zastrojshhiki/${slug}/otzyvy`),
     },
     openGraph: { title: `Отзывы о застройщике ${name}`, type: 'article' },
     twitter: { card: 'summary_large_image' },

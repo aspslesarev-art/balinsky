@@ -1,4 +1,5 @@
 import { HomeLanding } from '@/components/HomeLanding'
+import { hreflangMap } from '@/lib/hreflang'
 
 export const revalidate = 1800
 
@@ -8,7 +9,7 @@ export const metadata = {
     'Вілли, апартаменти та комплекси від десятків забудовників в одному каталозі. Перевірені документи (PBG, SLF) і реальна дохідність від оренди на основі даних сусідніх обʼєктів. Фото, актуальні ціни, контакти — вибір за вами.',
   alternates: {
     canonical: '/ua',
-    languages: { ru: '/ru', uk: '/ua', 'x-default': '/ru' },
+    languages: hreflangMap('/ru'),
   },
   openGraph: {
     title: 'Купівля нерухомості на Балі — незалежний маркетплейс з аналітикою',

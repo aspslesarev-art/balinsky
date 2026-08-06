@@ -1,6 +1,7 @@
 import { DevelopersCatalog, parseSort } from './_catalog'
 import { generateCategoryMeta } from '@/lib/seo'
 import { publishedDeveloperCount } from '@/lib/category-stats'
+import { hreflangMap } from '@/lib/hreflang'
 
 export const revalidate = 3600
 
@@ -15,11 +16,7 @@ const metadata = {
     'Каталог застройщиков Бали с действующими проектами: виллы, апартаменты, жилые комплексы. Сравнение по рейтингу, надёжности, управляющей компании. 80+ компаний.',
   alternates: {
     canonical: '/ru/zastrojshhiki',
-    languages: {
-      ru: '/ru/zastrojshhiki',
-      en: '/en/developers',
-      'x-default': '/ru/zastrojshhiki',
-    },
+    languages: hreflangMap('/ru/zastrojshhiki'),
   },
   openGraph: {
     title: 'Застройщики на Бали — каталог девелоперов 2026 | Balinsky',

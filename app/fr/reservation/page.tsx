@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { ReservationGuide } from '@/components/ReservationGuide'
+import { hreflangMap } from '@/lib/hreflang'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
@@ -8,7 +9,7 @@ export const metadata: Metadata = {
   description: 'Ce que « réserver » signifie à Bali : blocage de 14 jours, dépôt de garantie de 2 à 10 k$, où est conservé le dépôt, comment fonctionnent les remboursements, formulaire de réservation vs SPA.',
   alternates: {
     canonical: '/fr/reservation',
-    languages: { ru: `${SITE_URL}/ru/rezervirovanie`, en: `${SITE_URL}/en/reservation`, fr: `${SITE_URL}/fr/reservation` , 'x-default': `${SITE_URL}/ru/rezervirovanie`},
+    languages: hreflangMap('/ru/rezervirovanie'),
   },
   openGraph: {
     title: 'Comment fonctionne la réservation d’un bien à Bali',

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { InvestTourView } from '@/components/InvestTourView'
+import { hreflangMap } from '@/lib/hreflang'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
   keywords: ['инвест-тур Бали', 'тур по недвижимости Бали', 'купить виллу на Бали', 'инвестиции в недвижимость Бали', 'leasehold Бали', 'недвижимость Бали для иностранцев'],
   alternates: {
     canonical: '/ru/invest-tour',
-    languages: { ru: `${SITE_URL}/ru/invest-tour`, en: `${SITE_URL}/en/invest-tour` },
+    languages: hreflangMap('/ru/invest-tour'),
   },
   openGraph: {
     title: 'Инвест-тур по недвижимости Бали',

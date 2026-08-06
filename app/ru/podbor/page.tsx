@@ -1,5 +1,6 @@
 import { loadPodborPool } from '@/lib/home-collections'
 import { PodborWizard } from '@/components/PodborWizard'
+import { hreflangMap } from '@/lib/hreflang'
 
 export const revalidate = 1800
 
@@ -9,7 +10,7 @@ export const metadata = {
     'Простой подбор: выберите цель (инвестиции или жильё для семьи) и бюджет — покажем лучшие виллы и апартаменты на Бали. Реальные цены, фото, доходность соседей на странице объекта.',
   alternates: {
     canonical: '/ru/podbor',
-    languages: { ru: '/ru/podbor', 'x-default': '/ru/podbor' },
+    languages: hreflangMap('/ru/podbor'),
   },
   openGraph: {
     title: 'Подбор недвижимости на Бали за 2 шага',

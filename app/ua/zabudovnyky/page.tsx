@@ -1,6 +1,7 @@
 import { DevelopersCatalog, parseSort } from '../../ru/zastrojshhiki/_catalog'
 import { generateCategoryMeta } from '@/lib/seo'
 import { publishedDeveloperCount } from '@/lib/category-stats'
+import { hreflangMap } from '@/lib/hreflang'
 
 export const revalidate = 3600
 
@@ -15,11 +16,7 @@ const metadata = {
     'Каталог забудовників Балі з активними проєктами: вілли, апартаменти, житлові комплекси. Порівнюйте за оцінкою, надійністю та управлінням після здачі. 80+ компаній.',
   alternates: {
     canonical: '/ua/zabudovnyky',
-    languages: {
-      ru: '/ru/zastrojshhiki',
-      uk: '/ua/zabudovnyky',
-      'x-default': '/ru/zastrojshhiki',
-    },
+    languages: hreflangMap('/ru/zastrojshhiki'),
   },
   openGraph: {
     title: 'Забудовники нерухомості на Балі — каталог 2026 | Balinsky',

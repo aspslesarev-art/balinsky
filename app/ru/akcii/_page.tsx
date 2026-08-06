@@ -7,6 +7,7 @@ import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { loadAllPromo } from '@/lib/promo'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
+import { hreflangMap } from '@/lib/hreflang'
 
 const COPY = {
   ru: {
@@ -154,14 +155,13 @@ function isExpired(iso: string | null): boolean {
 export function generatePromoListMetadata(lang: Lang): Metadata {
   const c = pickCopy(COPY, lang)
   const ruPath = '/ru/akcii'
-  const enPath = '/en/promo'
   const path = switchLangPath(ruPath, lang)
   return {
     title: c.title,
     description: c.description,
     alternates: {
       canonical: path,
-      languages: { ru: `https://balinsky.info${ruPath}`, en: `https://balinsky.info${enPath}` , 'x-default': `https://balinsky.info${ruPath}`},
+      languages: hreflangMap(ruPath),
     },
   }
 }

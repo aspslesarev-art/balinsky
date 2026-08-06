@@ -8,6 +8,7 @@ import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { hreflangMap } from '@/lib/hreflang'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 const UPDATED = '15. Mai 2026'
@@ -17,12 +18,7 @@ export const metadata: Metadata = {
   description: 'Umzugsratgeber für Bali: KITAS, Second Home Visa, Golden Visa, Steuern für ausländische Residenten, internationale Schulen, BIMC- und Siloam-Kliniken, reale Familienbudgets.',
   alternates: {
     canonical: '/de/leben-auf-bali',
-    languages: {
-      ru: `${SITE_URL}/ru/zhizn-na-bali`,
-      en: `${SITE_URL}/en/living-in-bali`,
-      de: `${SITE_URL}/de/leben-auf-bali`,
-      'x-default': `${SITE_URL}/ru/zhizn-na-bali`,
-    },
+    languages: hreflangMap('/ru/zhizn-na-bali'),
   },
   openGraph: {
     title: 'Leben auf Bali — Umzugsratgeber 2026',

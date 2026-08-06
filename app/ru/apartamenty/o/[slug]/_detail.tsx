@@ -67,6 +67,7 @@ import { DistrictAboutCard } from '@/components/DistrictAboutCard'
 import { getDistrictCopy, getBuyAnchor } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
+import { hreflangMap } from '@/lib/hreflang'
 
 const AIRPORT_LAT = -8.7467
 const AIRPORT_LNG = 115.1667
@@ -862,14 +863,19 @@ export async function generateApartmentMetadata(slug: string, lang: Lang) {
       ? seoText.slice(0, 160).trim() + (seoText.length > 160 ? '…' : '')
       : c.metaFallback(title, district, price)
   const ruPath = `/ru/apartamenty/o/${slug}`
-  const enPath = `/en/apartments/o/${slug}`
   const path = switchLangPath(ruPath, lang)
+  // Rows with no district, area or bedroom count say nothing in a search
+  // result — keep them live but out of the index. Same rule as villas.
+  const isDataless = !firstString(d['Location filter'])
+    && numberOrNull(d['Площадь']) == null
+    && firstString(d['Комнаты']) == null
   return {
     title: `${title} | Balinsky`,
     description,
+    ...(isDataless ? { robots: { index: false, follow: true } } : {}),
     alternates: {
       canonical: path,
-      languages: { ru: `${SITE_URL}${ruPath}`, en: `${SITE_URL}${enPath}` , 'x-default': `${SITE_URL}${ruPath}`},
+      languages: hreflangMap(ruPath),
     },
     openGraph: { title, description, type: 'website' as const, url: `${SITE_URL}${path}` },
   }

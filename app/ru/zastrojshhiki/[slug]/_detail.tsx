@@ -35,6 +35,7 @@ import { loadKbPageContent } from '@/lib/kb-page-content'
 import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
 import { loadVisionManifest } from '@/lib/listing-features'
 import { curateManifest } from '@/lib/listing-photos'
+import { hreflangMap } from '@/lib/hreflang'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
@@ -594,14 +595,13 @@ export async function generateDeveloperMetadata(slug: string, lang: Lang) {
       ? aiDesc.slice(0, 160).trim() + (aiDesc.length > 160 ? '…' : '')
       : meta.desc(name))
   const ruPath = `/ru/zastrojshhiki/${slug}`
-  const enPath = `/en/developers/${slug}`
   const path = switchLangPath(ruPath, lang)
   const title = commercial?.title ?? meta.title(name)
   return {
     title, description,
     alternates: {
       canonical: path,
-      languages: { ru: `${SITE_URL}${ruPath}`, en: `${SITE_URL}${enPath}` , 'x-default': `${SITE_URL}${ruPath}`},
+      languages: hreflangMap(ruPath),
     },
     openGraph: {
       title: meta.og(name),

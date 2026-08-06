@@ -1,4 +1,5 @@
 import { HomeLanding } from '@/components/HomeLanding'
+import { hreflangMap } from '@/lib/hreflang'
 
 export const revalidate = 1800
 
@@ -8,7 +9,7 @@ export const metadata = {
     'Villas, apartments and complexes from dozens of developers in one catalog. Verified documents (PBG, SLF) and real rental yield from neighbour data. Photos, current prices, contacts — your choice.',
   alternates: {
     canonical: '/ban',
-    languages: { ru: '/ru', en: '/ban', 'x-default': '/ru' },
+    languages: hreflangMap('/ru'),
   },
   openGraph: {
     title: 'Buy real estate in Bali — independent marketplace with analytics',

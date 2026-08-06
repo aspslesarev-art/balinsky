@@ -17,7 +17,8 @@ import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import { loadViewCounts, smartSort } from '@/lib/catalog-rank'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
 import { cdnRewriteManifest } from '@/lib/photo-cdn'
-import { pickCopy, tField, type Lang } from '@/lib/i18n'
+import { pickCopy, tField, switchLangPath, type Lang } from '@/lib/i18n'
+import { hreflangMap } from '@/lib/hreflang'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/villa-photos/_manifest.json`
@@ -1005,11 +1006,7 @@ export function buildMetadataEn(
     alternates: isSectionRoot
       ? {
         canonical: opts.canonicalPath,
-        languages: {
-          ru: '/ru/villy',
-          en: '/en/villas',
-          'x-default': '/ru/villy',
-        },
+        languages: hreflangMap('/ru/villy'),
       }
       : { canonical: opts.canonicalPath },
     robots: opts.noIndex ? { index: false, follow: true } : { index: true, follow: true },
@@ -1080,10 +1077,16 @@ export function buildMetadataLoc(
   if (lang === 'en') return buildMetadataEn(f, opts)
   const title = `${buildHeadingLoc(f, lang)} | Balinsky`
   const description = buildDescriptionLoc(f, lang, opts.totalCount)
+  // Section root advertises the full language cluster, same as the RU and EN
+  // builders do. Without this the de/fr/zh/nl/id/pl/uk hubs shipped no
+  // hreflang at all while the sitemap claimed nine alternates for them.
+  const isSectionRoot = opts.canonicalPath === switchLangPath('/ru/villy', lang)
   return {
     title,
     description,
-    alternates: { canonical: opts.canonicalPath },
+    alternates: isSectionRoot
+      ? { canonical: opts.canonicalPath, languages: hreflangMap('/ru/villy') }
+      : { canonical: opts.canonicalPath },
     robots: opts.noIndex ? { index: false, follow: true } : { index: true, follow: true },
     openGraph: { title, description, type: 'website' as const, url: opts.canonicalPath },
     twitter: { card: 'summary_large_image' as const, title, description },
@@ -1125,11 +1128,7 @@ export function buildMetadata(
     alternates: isSectionRoot
       ? {
         canonical: opts.canonicalPath,
-        languages: {
-          ru: '/ru/villy',
-          en: '/en/villas',
-          'x-default': '/ru/villy',
-        },
+        languages: hreflangMap('/ru/villy'),
       }
       : { canonical: opts.canonicalPath },
     robots: opts.noIndex

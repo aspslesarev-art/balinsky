@@ -8,6 +8,7 @@ import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { hreflangMap } from '@/lib/hreflang'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 const UPDATED = 'May 15, 2026'
@@ -17,11 +18,7 @@ export const metadata: Metadata = {
   description: 'Bali relocation guide: KITAS, Second Home Visa, Golden Visa, resident foreigner taxes, international schools, BIMC and Siloam hospitals, real family budgets.',
   alternates: {
     canonical: '/ban/urip-ring-bali',
-    languages: {
-      ru: `${SITE_URL}/ru/zhizn-na-bali`,
-      en: `${SITE_URL}/ban/urip-ring-bali`,
-      'x-default': `${SITE_URL}/ru/zhizn-na-bali`,
-    },
+    languages: hreflangMap('/ru/zhizn-na-bali'),
   },
   openGraph: {
     title: 'Living in Bali — 2026 Relocation Guide',

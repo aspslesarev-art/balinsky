@@ -1,4 +1,5 @@
 import { HomeLanding } from '@/components/HomeLanding'
+import { hreflangMap } from '@/lib/hreflang'
 
 export const revalidate = 1800
 
@@ -8,7 +9,7 @@ export const metadata = {
     '数十家开发商的别墅、公寓和住宅项目汇聚于一个目录。经核实的证件（PBG、SLF）以及来自周边邻里数据的真实租金收益。照片、实时价格、联系方式 — 由你选择。',
   alternates: {
     canonical: '/zh',
-    languages: { ru: '/ru', en: '/en', zh: '/zh', 'x-default': '/ru' },
+    languages: hreflangMap('/ru'),
   },
   openGraph: {
     title: '在巴厘岛购买房产 — 带分析数据的独立市场平台',

@@ -1,6 +1,7 @@
 import { DevelopersCatalog, parseSort } from '../../ru/zastrojshhiki/_catalog'
 import { generateCategoryMeta } from '@/lib/seo'
 import { publishedDeveloperCount } from '@/lib/category-stats'
+import { hreflangMap } from '@/lib/hreflang'
 
 export const revalidate = 3600
 
@@ -15,11 +16,7 @@ const metadata = {
     'Katalog deweloperów z Bali z aktywnymi projektami: wille, apartamenty, kompleksy mieszkaniowe. Porównuj według oceny, wiarygodności i zarządzania po oddaniu. 80+ firm.',
   alternates: {
     canonical: '/pl/deweloperzy',
-    languages: {
-      ru: '/ru/zastrojshhiki',
-      pl: '/pl/deweloperzy',
-      'x-default': '/ru/zastrojshhiki',
-    },
+    languages: hreflangMap('/ru/zastrojshhiki'),
   },
   openGraph: {
     title: 'Deweloperzy nieruchomości na Bali — katalog 2026 | Balinsky',

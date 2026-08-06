@@ -12,8 +12,8 @@ import { PageViewTracker } from '@/components/PageViewTracker'
 import { loadAllPromo, loadPromoBySlug } from '@/lib/promo'
 import { RelatedContent } from '@/components/RelatedContent'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
+import { hreflangMap } from '@/lib/hreflang'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
 const COPY = {
   ru: {
@@ -78,14 +78,13 @@ export async function generatePromoDetailMetadata(slug: string, lang: Lang): Pro
   const p = await loadPromoBySlug(slug, lang)
   if (!p) return { robots: { index: false, follow: false } }
   const ruPath = `/ru/akcii/${p.slug}`
-  const enPath = `/en/promo/${p.slug}`
   const path = switchLangPath(ruPath, lang)
   return {
     title: `${p.title} | Balinsky`,
     description: p.seoDescription ?? (p.body?.slice(0, 160) ?? p.title),
     alternates: {
       canonical: path,
-      languages: { ru: `${SITE_URL}${ruPath}`, en: `${SITE_URL}${enPath}` , 'x-default': `${SITE_URL}${ruPath}`},
+      languages: hreflangMap(ruPath),
     },
     openGraph: {
       title: p.title,

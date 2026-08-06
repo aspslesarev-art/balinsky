@@ -1,4 +1,5 @@
 import { HomeLanding } from '@/components/HomeLanding'
+import { hreflangMap } from '@/lib/hreflang'
 
 export const revalidate = 1800
 
@@ -8,7 +9,7 @@ export const metadata = {
     'Villen, Apartments und Anlagen von Dutzenden Bauträgern in einem Katalog. Geprüfte Dokumente (PBG, SLF) und reale Mietrendite aus Nachbarschaftsdaten. Fotos, aktuelle Preise, Kontakte — Ihre Wahl.',
   alternates: {
     canonical: '/de',
-    languages: { ru: '/ru', en: '/en', de: '/de', 'x-default': '/ru' },
+    languages: hreflangMap('/ru'),
   },
   openGraph: {
     title: 'Immobilien auf Bali kaufen — unabhängiger Marktplatz mit Analytik',

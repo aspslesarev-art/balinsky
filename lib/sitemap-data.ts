@@ -13,6 +13,7 @@ import { loadAllPromo } from '@/lib/promo'
 import { loadAllEvents } from '@/lib/events'
 import { loadAllKnowledge } from '@/lib/knowledge'
 import { enKnowledgeSlug } from '@/lib/knowledge-en-slugs'
+import { isNoindexKnowledge } from '@/lib/knowledge-noindex'
 import { normalizeSlug } from '@/lib/slug-normalize'
 import { switchLangPath } from '@/lib/i18n'
 
@@ -441,7 +442,10 @@ async function buildAll(): Promise<Categorized> {
     lastModified: x.startsAt ? new Date(x.startsAt) : now,
     changeFrequency: 'weekly', priority: 0.5,
   }))
-  const knowledge: SitemapEntry[] = knowledgeRows.flatMap(x => pairEntry({
+  // Articles carrying `noindex` are left out — a sitemap that asks Google to
+  // index a page the page itself refuses is the same contradiction the
+  // hreflang cluster used to have.
+  const knowledge: SitemapEntry[] = knowledgeRows.filter(x => !isNoindexKnowledge(x.slug)).flatMap(x => pairEntry({
     ruPath: `/ru/znaniya/${x.slug}`, enPath: `/en/knowledge/${enKnowledgeSlug(x.slug)}`,
     lastModified: x.createdTime ? new Date(x.createdTime) : now,
     changeFrequency: 'monthly', priority: 0.5,

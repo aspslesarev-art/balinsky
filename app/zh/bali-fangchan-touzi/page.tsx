@@ -9,6 +9,7 @@ import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { hreflangMap } from '@/lib/hreflang'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 const UPDATED = '2026年5月15日'
@@ -18,12 +19,7 @@ export const metadata: Metadata = {
   description: '面向外国人的完整巴厘岛房产投资指南：真实的8-15%净收益、leasehold与PT PMA架构对比、税费、投资回报测算，以及Canggu、Bukit、Ubud的案例分析。',
   alternates: {
     canonical: '/zh/bali-fangchan-touzi',
-    languages: {
-      ru: `${SITE_URL}/ru/investicii-v-nedvizhimost-bali`,
-      en: `${SITE_URL}/en/bali-property-investment`,
-      zh: `${SITE_URL}/zh/bali-fangchan-touzi`,
-      'x-default': `${SITE_URL}/ru/investicii-v-nedvizhimost-bali`,
-    },
+    languages: hreflangMap('/ru/investicii-v-nedvizhimost-bali'),
   },
   openGraph: {
     title: '2026年巴厘岛房产投资 — 面向外国人的完整指南',

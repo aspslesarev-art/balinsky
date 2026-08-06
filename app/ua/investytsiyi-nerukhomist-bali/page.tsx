@@ -9,6 +9,7 @@ import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { hreflangMap } from '@/lib/hreflang'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 const UPDATED = 'May 15, 2026'
@@ -18,11 +19,7 @@ export const metadata: Metadata = {
   description: 'Complete Bali property investment guide for foreigners: real 8-15% net yields, leasehold vs PT PMA structures, taxes, ROI calculations and case studies across Canggu, Bukit, Ubud.',
   alternates: {
     canonical: '/ua/investytsiyi-nerukhomist-bali',
-    languages: {
-      ru: `${SITE_URL}/ru/investicii-v-nedvizhimost-bali`,
-      uk: `${SITE_URL}/ua/investytsiyi-nerukhomist-bali`,
-      'x-default': `${SITE_URL}/ru/investicii-v-nedvizhimost-bali`,
-    },
+    languages: hreflangMap('/ru/investicii-v-nedvizhimost-bali'),
   },
   openGraph: {
     title: 'Bali Property Investment 2026 — Complete Guide for Foreigners',

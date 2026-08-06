@@ -17,7 +17,8 @@ import { isTopBlacklisted } from '@/lib/top-blacklist'
 import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import { loadViewCounts, smartSort } from '@/lib/catalog-rank'
 import { cdnRewriteManifest, cdnManifestUrl } from '@/lib/photo-cdn'
-import { pickCopy, tField, type Lang } from '@/lib/i18n'
+import { pickCopy, tField, switchLangPath, type Lang } from '@/lib/i18n'
+import { hreflangMap } from '@/lib/hreflang'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/apartment-photos/_manifest.json`
@@ -877,11 +878,7 @@ export function buildMetadataEn(f: FilterState, opts: { canonicalPath: string; n
     alternates: isSectionRoot
       ? {
         canonical: opts.canonicalPath,
-        languages: {
-          ru: '/ru/apartamenty',
-          en: '/en/apartments',
-          'x-default': '/ru/apartamenty',
-        },
+        languages: hreflangMap('/ru/apartamenty'),
       }
       : { canonical: opts.canonicalPath },
     robots: opts.noIndex ? { index: false, follow: true } : { index: true, follow: true },
@@ -941,10 +938,14 @@ export function buildMetadataLoc(
   if (lang === 'en') return buildMetadataEn(f, opts)
   const title = `${buildHeadingLoc(f, lang)} | Balinsky`
   const description = buildDescriptionLoc(f, lang, opts.totalCount)
+  // Section root advertises the full language cluster — see the villa builder.
+  const isSectionRoot = opts.canonicalPath === switchLangPath('/ru/apartamenty', lang)
   return {
     title,
     description,
-    alternates: { canonical: opts.canonicalPath },
+    alternates: isSectionRoot
+      ? { canonical: opts.canonicalPath, languages: hreflangMap('/ru/apartamenty') }
+      : { canonical: opts.canonicalPath },
     robots: opts.noIndex ? { index: false, follow: true } : { index: true, follow: true },
     openGraph: { title, description, type: 'website' as const, url: opts.canonicalPath },
     twitter: { card: 'summary_large_image' as const, title, description },
@@ -978,11 +979,7 @@ export function buildMetadata(f: FilterState, opts: { canonicalPath: string; noI
     alternates: isSectionRoot
       ? {
         canonical: opts.canonicalPath,
-        languages: {
-          ru: '/ru/apartamenty',
-          en: '/en/apartments',
-          'x-default': '/ru/apartamenty',
-        },
+        languages: hreflangMap('/ru/apartamenty'),
       }
       : { canonical: opts.canonicalPath },
     robots: opts.noIndex

@@ -10,6 +10,7 @@ import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { hreflangMap } from '@/lib/hreflang'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 const UPDATED = '15 мая 2026 г.'
@@ -19,11 +20,7 @@ export const metadata: Metadata = {
   description: 'Полный гайд по инвестициям в недвижимость Бали: реальная доходность 8-15% годовых, схемы лизхолд и PT PMA, налоги для иностранцев, расчёт окупаемости и кейсы по районам Чангу, Букит, Убуд.',
   alternates: {
     canonical: '/ru/investicii-v-nedvizhimost-bali',
-    languages: {
-      ru: `${SITE_URL}/ru/investicii-v-nedvizhimost-bali`,
-      en: `${SITE_URL}/en/bali-property-investment`,
-      'x-default': `${SITE_URL}/ru/investicii-v-nedvizhimost-bali`,
-    },
+    languages: hreflangMap('/ru/investicii-v-nedvizhimost-bali'),
   },
   openGraph: {
     title: 'Инвестиции в недвижимость на Бали 2026 — гайд для иностранцев',

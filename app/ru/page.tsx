@@ -1,4 +1,5 @@
 import { HomeLanding } from '@/components/HomeLanding'
+import { hreflangMap } from '@/lib/hreflang'
 
 export const revalidate = 1800
 
@@ -8,7 +9,7 @@ export const metadata = {
     'Виллы, апартаменты и ЖК от десятков застройщиков в одном каталоге. Проверенные документы (PBG, SLF) и реальная доходность по данным аренды соседей. Фото, актуальные цены, контакты — выбираете вы.',
   alternates: {
     canonical: '/ru',
-    languages: { ru: '/ru', en: '/en', 'x-default': '/ru' },
+    languages: hreflangMap('/ru'),
   },
   openGraph: {
     title: 'Купить недвижимость на Бали — независимый маркетплейс с аналитикой',

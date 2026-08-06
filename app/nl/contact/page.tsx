@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Mail, Send, Play, MessageCircle, MapPin, Briefcase } from 'lucide-react'
 import { LegalLayout } from '@/components/LegalLayout'
+import { hreflangMap } from '@/lib/hreflang'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 const UPDATED = '15 mei 2026'
 const CONTACT_EMAIL = 'asp.slesarev@gmail.com'
 
@@ -12,12 +12,7 @@ export const metadata: Metadata = {
   description: 'Hoe je Balinsky bereikt: Telegram-bot, Telegram-kanaal, e-mail, YouTube. Contactgegevens voor samenwerking met ontwikkelaars en agentschappen.',
   alternates: {
     canonical: '/nl/contact',
-    languages: {
-      ru: `${SITE_URL}/ru/kontakty`,
-      en: `${SITE_URL}/en/contact`,
-      nl: `${SITE_URL}/nl/contact`,
-      'x-default': `${SITE_URL}/ru/kontakty`,
-    },
+    languages: hreflangMap('/ru/kontakty'),
   },
   robots: { index: true, follow: true },
 }

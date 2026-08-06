@@ -8,6 +8,7 @@ import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { hreflangMap } from '@/lib/hreflang'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 const UPDATED = '15 mei 2026'
@@ -17,12 +18,7 @@ export const metadata: Metadata = {
   description: 'Verhuisgids voor Bali: KITAS, Second Home Visa, Golden Visa, belastingen voor buitenlandse ingezetenen, internationale scholen, BIMC- en Siloam-ziekenhuizen en reële gezinsbudgetten.',
   alternates: {
     canonical: '/nl/wonen-op-bali',
-    languages: {
-      ru: `${SITE_URL}/ru/zhizn-na-bali`,
-      en: `${SITE_URL}/en/living-in-bali`,
-      nl: `${SITE_URL}/nl/wonen-op-bali`,
-      'x-default': `${SITE_URL}/ru/zhizn-na-bali`,
-    },
+    languages: hreflangMap('/ru/zhizn-na-bali'),
   },
   openGraph: {
     title: 'Wonen op Bali — verhuisgids 2026',

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { ReservationGuide } from '@/components/ReservationGuide'
+import { hreflangMap } from '@/lib/hreflang'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
@@ -8,7 +9,7 @@ export const metadata: Metadata = {
   description: 'Wat "reserveren" op Bali betekent: reservering van 14 dagen, aanbetaling van $2–10k, waar de aanbetaling staat, hoe terugbetalingen werken, reserveringsformulier vs SPA.',
   alternates: {
     canonical: '/nl/reservering',
-    languages: { ru: `${SITE_URL}/ru/rezervirovanie`, en: `${SITE_URL}/en/reservation`, nl: `${SITE_URL}/nl/reservering` , 'x-default': `${SITE_URL}/ru/rezervirovanie`},
+    languages: hreflangMap('/ru/rezervirovanie'),
   },
   openGraph: {
     title: 'Hoe een vastgoedreservering op Bali werkt',

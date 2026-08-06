@@ -16,6 +16,7 @@ import { loadViewCounts, smartSort } from '@/lib/catalog-rank'
 import { cdnRewriteManifest, cdnManifestUrl } from '@/lib/photo-cdn'
 import { loadVisionManifest } from '@/lib/listing-features'
 import { curateManifest } from '@/lib/listing-photos'
+import { hreflangMap } from '@/lib/hreflang'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/complex-photos/_manifest.json`
@@ -1079,11 +1080,7 @@ export function buildMetadataEn(
     alternates: isSectionRoot
       ? {
         canonical: opts.canonicalPath,
-        languages: {
-          ru: '/ru/zhilye-kompleksy',
-          en: '/en/complexes',
-          'x-default': '/ru/zhilye-kompleksy',
-        },
+        languages: hreflangMap('/ru/zhilye-kompleksy'),
       }
       : { canonical: opts.canonicalPath },
     robots: opts.noIndex ? { index: false, follow: true } : { index: true, follow: true },
@@ -1137,11 +1134,7 @@ export function buildMetadata(
     alternates: isSectionRoot
       ? {
         canonical: opts.canonicalPath,
-        languages: {
-          ru: '/ru/zhilye-kompleksy',
-          en: '/en/complexes',
-          'x-default': '/ru/zhilye-kompleksy',
-        },
+        languages: hreflangMap('/ru/zhilye-kompleksy'),
       }
       : { canonical: opts.canonicalPath },
     robots: opts.noIndex

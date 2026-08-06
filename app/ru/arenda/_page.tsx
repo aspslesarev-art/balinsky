@@ -8,6 +8,7 @@ import { loadFreshRental } from '@/lib/rental'
 import { RentalCatalog } from './_catalog'
 import { RentalSeoContent } from '@/components/RentalSeoContent'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
+import { hreflangMap } from '@/lib/hreflang'
 
 const COPY = {
   ru: {
@@ -85,18 +86,13 @@ const COPY = {
 export function generateRentalListMetadata(lang: Lang): Metadata {
   const c = pickCopy(COPY, lang)
   const ruPath = '/ru/arenda'
-  const enPath = '/en/rental'
   const path = switchLangPath(ruPath, lang)
   return {
     title: c.title,
     description: c.description,
     alternates: {
       canonical: path,
-      languages: {
-        ru: `https://balinsky.info${ruPath}`,
-        en: `https://balinsky.info${enPath}`,
-        'x-default': `https://balinsky.info${ruPath}`,
-      },
+      languages: hreflangMap(ruPath),
     },
   }
 }

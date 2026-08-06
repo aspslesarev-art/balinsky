@@ -1,4 +1,5 @@
 import { HomeLanding } from '@/components/HomeLanding'
+import { hreflangMap } from '@/lib/hreflang'
 
 export const revalidate = 1800
 
@@ -8,7 +9,7 @@ export const metadata = {
     'Wille, apartamenty i kompleksy od dziesiątek deweloperów w jednym katalogu. Zweryfikowane dokumenty (PBG, SLF) i realna rentowność najmu na podstawie danych z sąsiednich obiektów. Zdjęcia, aktualne ceny, kontakty — wybór należy do Ciebie.',
   alternates: {
     canonical: '/pl',
-    languages: { ru: '/ru', pl: '/pl', 'x-default': '/ru' },
+    languages: hreflangMap('/ru'),
   },
   openGraph: {
     title: 'Kup nieruchomość na Bali — niezależny marketplace z analityką',

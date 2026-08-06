@@ -85,6 +85,7 @@ import { DistrictAboutCard } from '@/components/DistrictAboutCard'
 import { getDistrictCopy, getBuyAnchor } from '@/lib/districts'
 import { DISTRICT_TO_SLUG, BEDROOM_TO_SLUG } from '@/lib/seo-routes'
 import { facetLabel } from '@/lib/filter-i18n'
+import { hreflangMap } from '@/lib/hreflang'
 
 const COPY = {
   ru: {
@@ -936,7 +937,6 @@ export async function generateVillaMetadata(slug: string, lang: Lang) {
   // сопоставляет и получается дубль с обрезкой.
   const seoTitle = gen?.title ? `${gen.title} | Balinsky` : `${titleParts.slice(0, 4).join(' · ')} | Balinsky`
   const ruPath = `/ru/villy/o/${slug}`
-  const enPath = `/en/villas/o/${slug}`
   const path = switchLangPath(ruPath, lang)
   const dashPrice = price ? ` — ${price}` : ''
   // Same dedup as titleParts above — the AI base title usually already
@@ -944,12 +944,21 @@ export async function generateVillaMetadata(slug: string, lang: Lang) {
   // (otherwise we get "… в Bukit … в Bukit"). Connective localized per lang
   // (VILLA_META_IN_DISTRICT) so /de, /zh, /nl, /ban never emit "in".
   const fallbackDistrict = !gen && district && !titleLower.includes(district.toLowerCase()) ? VILLA_META_IN_DISTRICT[lang](district) : ''
+  // A handful of published rows carry no district, no area and no bedroom
+  // count — nothing a search result could usefully say. They stay live (that
+  // inventory call belongs to the editor, not to SEO) but drop out of the
+  // index instead of sitting there as dead ends.
+  const isDataless = !districtRaw
+    && numberOrNull(d['Площадь']) == null
+    && firstString(d['Комнаты']) == null
+
   return {
     title: seoTitle.length > 70 ? `${title}${fallbackDistrict}${dashPrice} | Balinsky` : seoTitle,
     description,
+    ...(isDataless ? { robots: { index: false, follow: true } } : {}),
     alternates: {
       canonical: path,
-      languages: { ru: `${SITE_URL}${ruPath}`, en: `${SITE_URL}${enPath}` , 'x-default': `${SITE_URL}${ruPath}`},
+      languages: hreflangMap(ruPath),
     },
     openGraph: { title, description, type: 'website' as const, url: `${SITE_URL}${path}` },
   }

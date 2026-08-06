@@ -9,6 +9,7 @@ import { loadAllKnowledge, filterByAudience, type KnowledgeAudience } from '@/li
 import { enKnowledgeSlug } from '@/lib/knowledge-en-slugs'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { ArticleCover } from '@/components/ArticleCover'
+import { hreflangMap } from '@/lib/hreflang'
 
 const COPY = {
   ru: {
@@ -207,7 +208,6 @@ function audienceMetaPath(audience: KnowledgeAudience, base: string): string {
 export function generateKnowledgeListMetadata(lang: Lang, audience: KnowledgeAudience = 'investor'): Metadata {
   const c = pickCopy(COPY, lang)
   const ruPath = audienceMetaPath(audience, '/ru/znaniya')
-  const enPath = audienceMetaPath(audience, '/en/knowledge')
   const path = audienceMetaPath(audience, switchLangPath('/ru/znaniya', lang))
   const title = audience === 'agent' ? c.titleAgent : audience === 'life' ? c.titleLife : c.titleInvestor
   const description = audience === 'agent' ? c.descAgent : audience === 'life' ? c.descLife : c.descInvestor
@@ -216,7 +216,7 @@ export function generateKnowledgeListMetadata(lang: Lang, audience: KnowledgeAud
     description,
     alternates: {
       canonical: path,
-      languages: { ru: `https://balinsky.info${ruPath}`, en: `https://balinsky.info${enPath}`, 'x-default': `https://balinsky.info${ruPath}` },
+      languages: hreflangMap(ruPath),
     },
   }
 }

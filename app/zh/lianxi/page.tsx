@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Mail, Send, Play, MessageCircle, MapPin, Briefcase } from 'lucide-react'
 import { LegalLayout } from '@/components/LegalLayout'
+import { hreflangMap } from '@/lib/hreflang'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 const UPDATED = '2026年5月15日'
 const CONTACT_EMAIL = 'asp.slesarev@gmail.com'
 
@@ -12,12 +12,7 @@ export const metadata: Metadata = {
   description: '如何联系 Balinsky：Telegram 机器人、Telegram 频道、电子邮件、YouTube。面向开发商与中介机构的合作联系方式。',
   alternates: {
     canonical: '/zh/lianxi',
-    languages: {
-      ru: `${SITE_URL}/ru/kontakty`,
-      en: `${SITE_URL}/en/contact`,
-      zh: `${SITE_URL}/zh/lianxi`,
-      'x-default': `${SITE_URL}/ru/kontakty`,
-    },
+    languages: hreflangMap('/ru/kontakty'),
   },
   robots: { index: true, follow: true },
 }

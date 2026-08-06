@@ -11,6 +11,7 @@ import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { loadAllKnowledge, loadKnowledgeBySlug } from '@/lib/knowledge'
 import { enKnowledgeSlug } from '@/lib/knowledge-en-slugs'
+import { isNoindexKnowledge } from '@/lib/knowledge-noindex'
 import { ArticleCover } from '@/components/ArticleCover'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { getBuyAnchor } from '@/lib/districts'
@@ -18,6 +19,7 @@ import { getBuyAnchor } from '@/lib/districts'
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
 import type { KnowledgeAuthor } from '@/lib/knowledge'
+import { hreflangMap } from '@/lib/hreflang'
 
 type LangCopy = {
   home: string; knowledgeCrumb: string; source: string; moreArticles: string
@@ -102,9 +104,12 @@ export async function generateKnowledgeDetailMetadata(slug: string, lang: Lang):
   return {
     title: `${k.title} | Balinsky`,
     description: k.body.slice(0, 160).replace(/\s+/g, ' ').trim(),
+    // Tourist trivia stays readable but out of the index — see
+    // lib/knowledge-noindex.ts for why, and for what stays indexed.
+    ...(isNoindexKnowledge(k.slug) ? { robots: { index: false, follow: true } } : {}),
     alternates: {
       canonical: path,
-      languages: { ru: `${SITE_URL}${ruPath}`, en: `${SITE_URL}${enPath}` , 'x-default': `${SITE_URL}${ruPath}`},
+      languages: hreflangMap(ruPath),
     },
     openGraph: {
       title: k.title,

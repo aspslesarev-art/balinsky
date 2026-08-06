@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { AboutView } from '@/components/AboutView'
+import { hreflangMap } from '@/lib/hreflang'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
@@ -8,7 +9,7 @@ export const metadata: Metadata = {
   description: 'Balinsky — каталог недвижимости Бали для иностранцев: проверенные документы, видео с земли, реальные менеджеры с фото и языками. Цифры в каталоге, оператор сайта, редакторские стандарты публикации.',
   alternates: {
     canonical: '/ru/o-balinsky',
-    languages: { ru: `${SITE_URL}/ru/o-balinsky`, en: `${SITE_URL}/en/about` },
+    languages: hreflangMap('/ru/o-balinsky'),
   },
   openGraph: {
     title: 'О Balinsky',

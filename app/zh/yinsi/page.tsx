@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { LegalLayout } from '@/components/LegalLayout'
+import { hreflangMap } from '@/lib/hreflang'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 const UPDATED = '2026年5月15日'
 const CONTACT_EMAIL = 'asp.slesarev@gmail.com'
 
@@ -10,12 +10,7 @@ export const metadata: Metadata = {
   description: 'Balinsky 如何处理个人数据：我们收集什么、为何收集、保存多久、第三方是谁，以及如何申请删除。',
   alternates: {
     canonical: '/zh/yinsi',
-    languages: {
-      ru: `${SITE_URL}/ru/politika-konfidencialnosti`,
-      en: `${SITE_URL}/en/privacy`,
-      zh: `${SITE_URL}/zh/yinsi`,
-      'x-default': `${SITE_URL}/ru/politika-konfidencialnosti`,
-    },
+    languages: hreflangMap('/ru/politika-konfidencialnosti'),
   },
   robots: { index: true, follow: true },
 }

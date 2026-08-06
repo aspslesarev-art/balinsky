@@ -1,6 +1,7 @@
 import { DevelopersCatalog, parseSort } from '../../ru/zastrojshhiki/_catalog'
 import { generateCategoryMeta } from '@/lib/seo'
 import { publishedDeveloperCount } from '@/lib/category-stats'
+import { hreflangMap } from '@/lib/hreflang'
 
 export const revalidate = 3600
 
@@ -15,11 +16,7 @@ const metadata = {
     'Directory of Bali developers with active projects: villas, apartments, residential complexes. Compare on score, reliability and post-handover management. 80+ companies.',
   alternates: {
     canonical: '/fr/promoteurs',
-    languages: {
-      ru: '/ru/zastrojshhiki',
-      en: '/fr/promoteurs',
-      'x-default': '/ru/zastrojshhiki',
-    },
+    languages: hreflangMap('/ru/zastrojshhiki'),
   },
   openGraph: {
     title: 'Bali property developers — 2026 directory | Balinsky',

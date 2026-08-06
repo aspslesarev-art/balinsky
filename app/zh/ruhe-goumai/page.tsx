@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { BuyingGuide } from '@/components/BuyingGuide'
+import { hreflangMap } from '@/lib/hreflang'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
@@ -8,7 +9,7 @@ export const metadata: Metadata = {
   description: '在巴厘岛购买别墅或公寓的分步指南：leasehold 与 PT PMA、尽职调查、PPAT 公证、税费、常见错误。真实的时间表和数字。',
   alternates: {
     canonical: '/zh/ruhe-goumai',
-    languages: { ru: `${SITE_URL}/ru/kak-kupit`, en: `${SITE_URL}/en/how-to-buy`, zh: `${SITE_URL}/zh/ruhe-goumai` , 'x-default': `${SITE_URL}/ru/kak-kupit`},
+    languages: hreflangMap('/ru/kak-kupit'),
   },
   openGraph: {
     title: '外国人在巴厘岛购房',

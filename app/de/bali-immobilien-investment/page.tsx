@@ -9,6 +9,7 @@ import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { hreflangMap } from '@/lib/hreflang'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 const UPDATED = '15. Mai 2026'
@@ -18,12 +19,7 @@ export const metadata: Metadata = {
   description: 'Vollständiger Ratgeber zum Immobilieninvestment auf Bali für Ausländer: reale Nettorenditen von 8-15 %, Leasehold- vs. PT-PMA-Strukturen, Steuern, ROI-Berechnungen und Fallstudien in Canggu, Bukit und Ubud.',
   alternates: {
     canonical: '/de/bali-immobilien-investment',
-    languages: {
-      ru: `${SITE_URL}/ru/investicii-v-nedvizhimost-bali`,
-      en: `${SITE_URL}/en/bali-property-investment`,
-      de: `${SITE_URL}/de/bali-immobilien-investment`,
-      'x-default': `${SITE_URL}/ru/investicii-v-nedvizhimost-bali`,
-    },
+    languages: hreflangMap('/ru/investicii-v-nedvizhimost-bali'),
   },
   openGraph: {
     title: 'Immobilieninvestment auf Bali 2026 — Vollständiger Ratgeber für Ausländer',

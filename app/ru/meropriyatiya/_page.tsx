@@ -9,6 +9,7 @@ import { LocalDateTime } from '@/components/LocalDateTime'
 import { loadAllEvents, type EventItem } from '@/lib/events'
 import { localizeEventFormat } from '@/lib/event-format'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
+import { hreflangMap } from '@/lib/hreflang'
 
 const COPY = {
   ru: {
@@ -117,14 +118,13 @@ function isPast(iso: string | null): boolean {
 export function generateEventsListMetadata(lang: Lang): Metadata {
   const c = pickCopy(COPY, lang)
   const ruPath = '/ru/meropriyatiya'
-  const enPath = '/en/events'
   const path = switchLangPath(ruPath, lang)
   return {
     title: c.title,
     description: c.description,
     alternates: {
       canonical: path,
-      languages: { ru: `https://balinsky.info${ruPath}`, en: `https://balinsky.info${enPath}` , 'x-default': `https://balinsky.info${ruPath}`},
+      languages: hreflangMap(ruPath),
     },
   }
 }

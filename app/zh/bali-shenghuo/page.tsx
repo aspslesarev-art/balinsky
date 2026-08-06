@@ -8,6 +8,7 @@ import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { hreflangMap } from '@/lib/hreflang'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 const UPDATED = '2026年5月15日'
@@ -17,12 +18,7 @@ export const metadata: Metadata = {
   description: '巴厘岛移居指南：KITAS、Second Home Visa、Golden Visa、外国居民税费、国际学校、BIMC和Siloam医院、真实的家庭预算。',
   alternates: {
     canonical: '/zh/bali-shenghuo',
-    languages: {
-      ru: `${SITE_URL}/ru/zhizn-na-bali`,
-      en: `${SITE_URL}/en/living-in-bali`,
-      zh: `${SITE_URL}/zh/bali-shenghuo`,
-      'x-default': `${SITE_URL}/ru/zhizn-na-bali`,
-    },
+    languages: hreflangMap('/ru/zhizn-na-bali'),
   },
   openGraph: {
     title: '在巴厘岛生活 — 2026年移居指南',

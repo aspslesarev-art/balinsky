@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { AboutView } from '@/components/AboutView'
+import { hreflangMap } from '@/lib/hreflang'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
@@ -8,7 +9,7 @@ export const metadata: Metadata = {
   description: 'Balinsky est un catalogue immobilier de Bali pour acheteurs étrangers : documents vérifiés, vidéos sur le terrain, vrais responsables avec photos et langues parlées. Chiffres en direct, qui gère le site, nos standards éditoriaux.',
   alternates: {
     canonical: '/fr/a-propos',
-    languages: { ru: `${SITE_URL}/ru/o-balinsky`, en: `${SITE_URL}/en/about`, fr: `${SITE_URL}/fr/a-propos` , 'x-default': `${SITE_URL}/ru/o-balinsky`},
+    languages: hreflangMap('/ru/o-balinsky'),
   },
   openGraph: {
     title: 'À propos de Balinsky',
