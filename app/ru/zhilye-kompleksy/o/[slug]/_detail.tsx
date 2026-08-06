@@ -71,6 +71,8 @@ import { geoChainString } from '@/lib/regency'
 import { loadKbPageContent } from '@/lib/kb-page-content'
 import { loadListingVision, loadVisionManifest, altFor } from '@/lib/listing-features'
 import { loadListingCopy } from '@/lib/listing-copy'
+import { loadComplexMassing, estimateSiteSize } from '@/lib/listing-massing'
+import { MassingScheme } from '@/components/MassingScheme'
 import { curateManifest } from '@/lib/listing-photos'
 import { commercialComplexTitle } from '@/lib/listing-meta'
 import { DistrictAboutCard } from '@/components/DistrictAboutCard'
@@ -1521,6 +1523,12 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   // here as belt-and-suspenders so a transient PG error never takes
   // out the public detail page.
   const vizLayers = await listLayers(c.airtable_id).catch(() => [] as Awaited<ReturnType<typeof listLayers>>)
+  // Схема застройки: показываем только когда есть и распознанный объём,
+  // и координаты — без точки солнце считать не от чего.
+  const massing = await loadComplexMassing(c.airtable_id)
+  const massLat = parseFloat(String(c.data['Geo'] ?? '').trim())
+  const massLng = parseFloat(String(c.data['Geo 2'] ?? '').trim())
+  const massOk = massing != null && Number.isFinite(massLat) && Number.isFinite(massLng)
   const vizHotspots = vizLayers.length > 0
     ? await listHotspots(vizLayers.map(l => l.id)).catch(() => [] as Awaited<ReturnType<typeof listHotspots>>)
     : []
@@ -1797,6 +1805,15 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
               />
             )}
             <ClimateBlock climate={geoFacts?.climate ?? null} air={geoFacts?.air ?? null} lang={lang} />
+            {massOk && massing && (
+              <MassingScheme
+                massing={massing}
+                lat={massLat}
+                lng={massLng}
+                siteSize={estimateSiteSize(Number(c.data['Total quantity of units']) || null, massing.buildings.length)}
+                lang={lang}
+              />
+            )}
             {process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY && (
               <GatedBlock lang={lang}>
                 <div className="mb-4">
