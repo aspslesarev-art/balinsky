@@ -238,7 +238,12 @@ const UBUD_DREAM: SitePlan = {
 
 const SITE_PLANS: Record<string, SitePlan> = {
   'u-villas-i': U_VILLAS_I,
+  // Два ключа на один план: в базе у комплекса SEO:Slug =
+  // 'ubud-dream-ubud-bali', а страница детали резолвится по короткому
+  // 'ubud-dream'. План регистрируется под обоими, иначе блок на странице ЖК
+  // молча не показывается при полностью заполненных настройках.
   'ubud-dream-ubud-bali': UBUD_DREAM,
+  'ubud-dream': UBUD_DREAM,
 }
 
 export function getSitePlan(slug: string): SitePlan | null {
