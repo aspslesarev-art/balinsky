@@ -24,6 +24,7 @@ import {
   STRIP,
   TOUR,
 } from './_content'
+import { typo } from './_typo'
 import { Card, Container, CtaButtons, Section, SectionHead } from './_ui'
 
 export const metadata: Metadata = {
@@ -46,8 +47,8 @@ export default function PhuketPartnersPage() {
       <div className="bg-[var(--color-primary-soft)] text-[var(--color-primary-pressed)]">
         <Container>
           <div className="py-2.5 text-[11px] md:text-[12px] uppercase tracking-[0.18em] font-semibold">
-            <span className="sm:hidden">{STRIP.short}</span>
-            <span className="hidden sm:inline">{STRIP.full}</span>
+            <span className="sm:hidden">{typo(STRIP.short)}</span>
+            <span className="hidden sm:inline">{typo(STRIP.full)}</span>
           </div>
         </Container>
       </div>
@@ -64,18 +65,18 @@ export default function PhuketPartnersPage() {
                 <span key={line} className="block">
                   {/* Стрелку в «Бали ⇄ Пхукет» красим отдельно — она несущий знак страницы. */}
                   {i === HERO.titleLines.length - 1
-                    ? line.split('⇄').flatMap((part, j, all) => [
+                    ? typo(line).split('⇄').flatMap((part, j, all) => [
                         <span key={`t${j}`}>{part}</span>,
                         j < all.length - 1 ? (
                           <Exchange key={`x${j}`} className="text-[var(--color-brand)]" />
                         ) : null,
                       ])
-                    : line}
+                    : typo(line)}
                 </span>
               ))}
             </h1>
             <p className="mt-6 text-[17px] md:text-[20px] leading-[1.55] text-[var(--color-text-muted)] max-w-[640px] text-pretty">
-              {HERO.lead}
+              {typo(HERO.lead)}
             </p>
             <div className="mt-9">
               <CtaButtons />
@@ -97,7 +98,7 @@ export default function PhuketPartnersPage() {
                   {side.title}
                 </h2>
                 <p className="text-[15px] md:text-[16px] leading-[1.6] text-[var(--color-text-muted)] text-pretty">
-                  {side.body}
+                  {typo(side.body)}
                 </p>
               </Card>
             ))}
@@ -106,7 +107,7 @@ export default function PhuketPartnersPage() {
             <div className="order-2 text-center py-2 md:px-4">
               <Exchange className="block text-[40px] md:text-[44px] text-[var(--color-brand)] rotate-90 md:rotate-0" />
               <span className="mt-2 block text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-                {BRIDGE.caption}
+                {typo(BRIDGE.caption)}
               </span>
             </div>
           </div>
@@ -122,7 +123,7 @@ export default function PhuketPartnersPage() {
                 {stat.value}
               </div>
               <p className="mt-2 text-[15px] leading-[1.5] text-[var(--color-text-muted)] text-pretty">
-                {stat.label}
+                {typo(stat.label)}
               </p>
             </div>
           ))}
@@ -140,7 +141,7 @@ export default function PhuketPartnersPage() {
               {PATHS.now.when}
             </span>
             <h3 className="mt-6 text-[22px] md:text-[26px] font-light tracking-[-0.02em] text-[var(--color-primary-pressed)]">
-              {PATHS.now.title}
+              {typo(PATHS.now.title)}
             </h3>
             <div className="mt-4 space-y-3">
               {PATHS.now.points.map(point => (
@@ -148,7 +149,7 @@ export default function PhuketPartnersPage() {
                   key={point}
                   className="text-[15px] md:text-[16px] leading-[1.6] text-[var(--color-text-muted)] text-pretty"
                 >
-                  {point}
+                  {typo(point)}
                 </p>
               ))}
             </div>
@@ -158,7 +159,7 @@ export default function PhuketPartnersPage() {
               {PATHS.later.when}
             </span>
             <h3 className="mt-6 text-[22px] md:text-[26px] font-light tracking-[-0.02em] text-[var(--color-primary-pressed)]">
-              {PATHS.later.title}
+              {typo(PATHS.later.title)}
             </h3>
             <div className="mt-4 space-y-3">
               {PATHS.later.points.map(point => (
@@ -166,7 +167,7 @@ export default function PhuketPartnersPage() {
                   key={point}
                   className="text-[15px] md:text-[16px] leading-[1.6] text-[var(--color-text-muted)] text-pretty"
                 >
-                  {point}
+                  {typo(point)}
                 </p>
               ))}
             </div>
@@ -186,9 +187,9 @@ export default function PhuketPartnersPage() {
                   <ArrowRight size={14} strokeWidth={1.8} className="hidden lg:block text-[var(--color-border)]" />
                 )}
               </div>
-              <h3 className="mt-4 text-[17px] font-medium text-[var(--color-primary-pressed)]">{step.title}</h3>
+              <h3 className="mt-4 text-[17px] font-medium text-[var(--color-primary-pressed)]">{typo(step.title)}</h3>
               <p className="mt-2 text-[15px] leading-[1.55] text-[var(--color-text-muted)] text-pretty">
-                {step.body}
+                {typo(step.body)}
               </p>
             </Card>
           ))}
@@ -212,10 +213,10 @@ export default function PhuketPartnersPage() {
                 </span>
                 <div className={isLast ? 'pt-2.5' : 'pt-2.5 pb-8'}>
                   <h3 className="text-[17px] md:text-[19px] font-medium text-[var(--color-primary-pressed)]">
-                    {item.title}
+                    {typo(item.title)}
                   </h3>
                   <p className="mt-2 text-[15px] md:text-[16px] leading-[1.6] text-[var(--color-text-muted)] text-pretty">
-                    {item.body}
+                    {typo(item.body)}
                   </p>
                 </div>
               </li>
@@ -228,7 +229,8 @@ export default function PhuketPartnersPage() {
         <div className="mt-12 rounded-2xl border border-[var(--color-primary)] bg-[var(--color-primary-soft)] p-7 md:p-10 grid gap-8 md:grid-cols-[1.2fr_1fr] md:gap-12">
           <div>
             <h3 className="text-[22px] md:text-[26px] font-light tracking-[-0.02em] text-[var(--color-primary-pressed)] text-balance">
-              {TOUR.title} <span className="text-[var(--color-brand)]">{TOUR.accent}</span>
+              <span className="block">{typo(TOUR.title)}</span>
+              <span className="block text-[var(--color-brand)]">{typo(TOUR.accent)}</span>
             </h3>
             <div className="mt-4 space-y-3">
               {TOUR.body.map(paragraph => (
@@ -236,7 +238,7 @@ export default function PhuketPartnersPage() {
                   key={paragraph}
                   className="text-[15px] md:text-[16px] leading-[1.6] text-[var(--color-text-muted)] text-pretty"
                 >
-                  {paragraph}
+                  {typo(paragraph)}
                 </p>
               ))}
             </div>
@@ -246,12 +248,12 @@ export default function PhuketPartnersPage() {
               {TOUR.perks.map(perk => (
                 <li key={perk} className="flex gap-3 text-[15px] leading-[1.5] text-[var(--color-text-muted)]">
                   <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-primary)]" />
-                  {perk}
+                  {typo(perk)}
                 </li>
               ))}
             </ul>
             <div className="mt-6 rounded-xl border border-[var(--color-brand)] bg-white p-4 md:p-5 text-[14.5px] leading-[1.55] text-[var(--color-text-muted)]">
-              <b className="font-medium text-[var(--color-brand)]">{TOUR.bonus.lead}</b> {TOUR.bonus.body}
+              <b className="font-medium text-[var(--color-brand)]">{typo(TOUR.bonus.lead)}</b> {typo(TOUR.bonus.body)}
             </div>
           </div>
         </div>
@@ -266,8 +268,8 @@ export default function PhuketPartnersPage() {
               <div key={item.title} className="flex gap-4">
                 <span className="mt-2.5 h-2 w-2 shrink-0 rounded-full bg-[var(--color-primary)]" />
                 <p className="text-[15px] md:text-[16px] leading-[1.6] text-[var(--color-text-muted)] text-pretty">
-                  <b className="block font-medium text-[var(--color-primary-pressed)]">{item.title}</b>
-                  {item.body}
+                  <b className="block font-medium text-[var(--color-primary-pressed)]">{typo(item.title)}</b>
+                  {typo(item.body)}
                 </p>
               </div>
             ))}
@@ -283,7 +285,11 @@ export default function PhuketPartnersPage() {
               {EARLY.badge}
             </span>
             <h2 className="mt-5 text-[22px] md:text-[28px] font-light tracking-[-0.02em] text-[var(--color-primary-pressed)] text-balance">
-              {EARLY.title}
+              {EARLY.title.map(line => (
+                <span key={line} className="block">
+                  {typo(line)}
+                </span>
+              ))}
             </h2>
             <div className="mt-4 space-y-3">
               {EARLY.body.map(paragraph => (
@@ -291,11 +297,11 @@ export default function PhuketPartnersPage() {
                   key={paragraph}
                   className="text-[15px] md:text-[16px] leading-[1.6] text-[var(--color-text-muted)] text-pretty"
                 >
-                  {paragraph}
+                  {typo(paragraph)}
                 </p>
               ))}
               <p className="text-[15px] md:text-[16px] leading-[1.6] font-medium text-[var(--color-primary-pressed)]">
-                {EARLY.highlight}
+                {typo(EARLY.highlight)}
               </p>
             </div>
           </div>
@@ -309,7 +315,7 @@ export default function PhuketPartnersPage() {
               {EARLY.deadline.date}
             </div>
             <p className="mt-3 text-[14px] leading-[1.55] text-[var(--color-text-muted)] text-pretty">
-              {EARLY.deadline.note}
+              {typo(EARLY.deadline.note)}
             </p>
             <a
               href="#contact"
@@ -328,7 +334,7 @@ export default function PhuketPartnersPage() {
             <h2 className="mx-auto max-w-[760px] text-[26px] md:text-[44px] leading-[1.12] font-light tracking-[-0.025em] text-[var(--color-primary-pressed)] text-balance">
               {FINAL.titleLines.map((line, i) => (
                 <span key={line} className="block">
-                  {line}
+                  {typo(line)}
                   {i === FINAL.titleLines.length - 1 && (
                     <>
                       {' '}
@@ -339,7 +345,7 @@ export default function PhuketPartnersPage() {
               ))}
             </h2>
             <p className="mx-auto mt-5 max-w-[560px] text-[16px] md:text-[18px] leading-[1.55] text-[var(--color-text-muted)] text-pretty">
-              {FINAL.body}
+              {typo(FINAL.body)}
             </p>
             <div className="mt-9 flex justify-center">
               <CtaButtons />

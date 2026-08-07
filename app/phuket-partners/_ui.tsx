@@ -14,6 +14,7 @@
 
 import { MessageCircle, Send } from 'lucide-react'
 import { telegramHref, whatsappHref } from './_content'
+import { typo } from './_typo'
 
 export function Container({ children }: { children: React.ReactNode }) {
   return <div className="mx-auto w-full max-w-[1280px] px-5 sm:px-6 lg:px-8">{children}</div>
@@ -35,11 +36,17 @@ export function Section({ children, className = '', id }: SectionProps) {
 
 type SectionHeadProps = {
   eyebrow?: string
-  title: string
+  /**
+   * Массив — заголовок с ручными переносами: каждое предложение начинает
+   * свою строку. Автоперенос по ширине рвал их посреди мысли
+   * («Начинаем с первого. На нём / быстрее всего заработать»).
+   */
+  title: string | readonly string[]
   sub?: string
 }
 
 export function SectionHead({ eyebrow, title, sub }: SectionHeadProps) {
+  const lines = typeof title === 'string' ? [title] : title
   return (
     <div className="max-w-[820px]">
       {eyebrow && (
@@ -48,11 +55,15 @@ export function SectionHead({ eyebrow, title, sub }: SectionHeadProps) {
         </div>
       )}
       <h2 className="text-[26px] md:text-[40px] leading-[1.12] font-light tracking-[-0.02em] text-balance text-[var(--color-primary-pressed)]">
-        {title}
+        {lines.map(line => (
+          <span key={line} className="block">
+            {typo(line)}
+          </span>
+        ))}
       </h2>
       {sub && (
         <p className="mt-4 text-[16px] md:text-[18px] leading-[1.55] text-pretty text-[var(--color-text-muted)]">
-          {sub}
+          {typo(sub)}
         </p>
       )}
     </div>
