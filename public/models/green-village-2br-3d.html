@@ -452,9 +452,10 @@ function makePerson(h, x, z, ry, yBase, shirtC, pantsC){
   p.rotation.y = ry;
   houseG.add(p); return p;
 }
-makePerson(1.66, 5.2, D-1.1, Math.PI, .1, 0x8a9a5b, 0xF2EEE6);   // у кухни
-makePerson(1.78, 3.0, 6.4, -Math.PI/2, .0, 0xF2EEE6, 0x8A6A4B);  // у бассейна
-makePerson(1.06, 1.9, 9.4, 0, .1, 0xc98a5a, 0xEDE6DA);           // ребёнок в спальне
+// Фигуры стоят только в комнатах: у патио любая точка либо в чаше бассейна,
+// либо на бортике, и человек читался как стоящий на воде.
+makePerson(1.66, 5.2, D-1.1, Math.PI, .1, 0x8a9a5b, 0xF2EEE6);   // взрослый у кухни
+makePerson(1.06, 1.9, 8.95, 0, .1, 0xc98a5a, 0xEDE6DA);          // ребёнок в спальне, перед подиумом кровати
 
 // ============ подписи ============
 function makeLabel(text, x, y, z){
