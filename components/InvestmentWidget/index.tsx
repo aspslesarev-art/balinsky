@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { RentalComps } from './RentalComps'
 import { usePathname } from 'next/navigation'
 import {
   Info, ChevronDown, ChevronUp, TrendingUp,
@@ -729,6 +730,10 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
         <Slider label={t.inputMgmt} value={mgmt} min={0} max={80} step={1}
           onChange={setMgmt} display={`${mgmt}%`} />
       </div>
+
+      {snap.villa.lat != null && snap.villa.lng != null && (
+        <RentalComps lat={snap.villa.lat} lng={snap.villa.lng} adr={adr} lang={lang} />
+      )}
 
       <div className="mt-6 pt-4 border-t border-[var(--color-border)] flex flex-wrap items-baseline gap-x-8 gap-y-2">
         <div className="text-[30px] font-semibold text-[#111827] leading-none">
