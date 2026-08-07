@@ -60,6 +60,20 @@ export type DeveloperStats = ComplexStats & {
   unitsInProgress: number
 }
 
+/**
+ * Loose key for matching the same company across the developer table and the
+ * complex rows: drop any parenthetical suffix, punctuation and a trailing
+ * plural «s». Deliberately conservative — no substring matching, so two
+ * genuinely different builders can't collapse into one.
+ */
+function normalizeDeveloperName(s: string): string {
+  return s
+    .replace(/\([^)]*\)/g, ' ')
+    .toLowerCase()
+    .replace(/[^a-z0-9а-яё]+/gi, '')
+    .replace(/s$/, '')
+}
+
 export async function getDeveloperStats(
   name: string | null | undefined,
 ): Promise<DeveloperStats | null> {
@@ -72,6 +86,18 @@ export async function getDeveloperStats(
     const lc = trimmed.toLowerCase()
     for (const [k, v] of all) {
       if (k.toLowerCase() === lc) { match = v; break }
+    }
+  }
+  // Last resort: the developer table and the complex rows spell the same
+  // company differently — «LB Group (LOYO&BONDAR)» vs «LB Group»,
+  // «BALI INVESTMENT» vs «Bali Investments». Without this those builders
+  // show no track record anywhere on the site, not just in the meta.
+  if (!match) {
+    const norm = normalizeDeveloperName(trimmed)
+    if (norm) {
+      for (const [k, v] of all) {
+        if (normalizeDeveloperName(k) === norm) { match = v; break }
+      }
     }
   }
   if (!match) return null
