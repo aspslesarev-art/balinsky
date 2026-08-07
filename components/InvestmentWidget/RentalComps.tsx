@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { pickCopy, type Lang } from '@/lib/i18n'
 
 // «Что рядом сдают за эти же деньги»: живая подборка объектов Booking в
@@ -41,6 +42,8 @@ const COPY = {
     m: 'м',
     km: 'км',
     source: 'Данные Booking, обновляются ежедневно. Загрузка — за последний доступный период.',
+    prev: 'Предыдущие объекты',
+    next: 'Следующие объекты',
   },
   en: {
     title: 'What the same money rents nearby',
@@ -54,6 +57,8 @@ const COPY = {
     m: 'm',
     km: 'km',
     source: 'Booking data, refreshed daily. Occupancy is for the latest available period.',
+    prev: 'Previous listings',
+    next: 'Next listings',
   },
 } as const
 
@@ -66,8 +71,16 @@ export function RentalComps({ lat, lng, adr, lang }: { lat: number; lng: number;
   const [items, setItems] = useState<Item[] | null>(null)
   const [band, setBand] = useState<{ min: number; max: number } | null>(null)
   const [loading, setLoading] = useState(true)
+  const trackRef = useRef<HTMLDivElement | null>(null)
 
   const c = pickCopy(COPY, lang)
+
+  /** Прокрутка на «экран» ленты: чуть меньше её ширины, чтобы край оставался виден. */
+  function scrollBy(dir: -1 | 1) {
+    const el = trackRef.current
+    if (!el) return
+    el.scrollBy({ left: dir * el.clientWidth * 0.85, behavior: 'smooth' })
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -119,9 +132,9 @@ export function RentalComps({ lat, lng, adr, lang }: { lat: number; lng: number;
       </div>
 
       {loading && items === null && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {Array.from({ length: 8 }, (_, i) => (
-            <div key={i} className="rounded-xl border border-[var(--color-border)] overflow-hidden">
+        <div className="flex gap-3 overflow-hidden">
+          {Array.from({ length: 6 }, (_, i) => (
+            <div key={i} className="shrink-0 w-[210px] rounded-xl border border-[var(--color-border)] overflow-hidden">
               <div className="aspect-[4/3] bg-[var(--color-search-bg)]" />
               <div className="p-2.5 space-y-2">
                 <div className="h-3 rounded bg-[var(--color-search-bg)]" />
@@ -137,14 +150,21 @@ export function RentalComps({ lat, lng, adr, lang }: { lat: number; lng: number;
       )}
 
       {items !== null && items.length > 0 && (
-        <div className={`grid grid-cols-2 md:grid-cols-4 gap-3 ${loading ? 'opacity-60' : ''}`}>
+        /* Одна строка с горизонтальной прокруткой: карточек столько же,
+           но блок не растёт вниз. Картинки остаются lazy — те, что справа
+           за краем, грузятся по мере прокрутки. */
+        <div className="relative">
+          <div
+            ref={trackRef}
+            className={`flex gap-3 overflow-x-auto snap-x scroll-smooth pb-1 [scrollbar-width:thin] ${loading ? 'opacity-60' : ''}`}
+          >
           {items.map(it => (
             <a
               key={it.id}
               href={it.url ?? undefined}
               target="_blank"
               rel="noopener noreferrer nofollow"
-              className="group rounded-xl border border-[var(--color-border)] overflow-hidden no-underline text-[#111827] hover:border-[var(--color-primary)] transition-colors"
+              className="group shrink-0 w-[210px] snap-start rounded-xl border border-[var(--color-border)] overflow-hidden no-underline text-[#111827] hover:border-[var(--color-primary)] transition-colors"
             >
               {/* Фото отдаёт CDN Booking — своего egress не тратим. next/image
                   здесь не нужен: чужие картинки не оптимизируем. */}
@@ -168,6 +188,26 @@ export function RentalComps({ lat, lng, adr, lang }: { lat: number; lng: number;
               </div>
             </a>
           ))}
+          </div>
+
+          {/* Стрелки — для мыши: колесом ленту горизонтально не прокрутить.
+              На тач-устройствах они не нужны, там работает свайп. */}
+          <button
+            type="button"
+            onClick={() => scrollBy(-1)}
+            aria-label={c.prev}
+            className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 h-9 w-9 items-center justify-center rounded-full bg-white shadow-md ring-1 ring-black/5 text-[#111827] hover:text-[var(--color-primary)]"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <button
+            type="button"
+            onClick={() => scrollBy(1)}
+            aria-label={c.next}
+            className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 h-9 w-9 items-center justify-center rounded-full bg-white shadow-md ring-1 ring-black/5 text-[#111827] hover:text-[var(--color-primary)]"
+          >
+            <ChevronRight size={18} />
+          </button>
         </div>
       )}
 
