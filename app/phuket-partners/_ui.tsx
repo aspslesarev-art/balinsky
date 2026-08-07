@@ -3,6 +3,11 @@
 // отрицательным трекингом, белые карточки со скруглением 2xl и границей
 // var(--color-border), зелёные CTA-пилюли.
 //
+// Тёмных поверхностей на странице нет: только белое, белое с окантовкой и
+// мягкие фирменные оттенки (зелёные --color-primary-*, оранжевый
+// --color-brand для акцентов срочности). Заголовки — глубокий зелёный
+// --color-primary-pressed вместо почти-чёрного.
+//
 // Намеренная копия примитивов соседнего /phuket, а не импорт из него: тот
 // лендинг временный (разовая серия встреч), и постоянная партнёрская
 // страница не должна падать вместе с ним.
@@ -32,24 +37,24 @@ type SectionHeadProps = {
   eyebrow?: string
   title: string
   sub?: string
-  isOnDark?: boolean
 }
 
-export function SectionHead({ eyebrow, title, sub, isOnDark = false }: SectionHeadProps) {
-  const titleColor = isOnDark ? 'text-white' : 'text-[#0E1A14]'
-  const eyebrowColor = isOnDark ? 'text-white/70' : 'text-[var(--color-primary)]'
-  const subColor = isOnDark ? 'text-white/80' : 'text-[#4B5563]'
+export function SectionHead({ eyebrow, title, sub }: SectionHeadProps) {
   return (
     <div className="max-w-[820px]">
       {eyebrow && (
-        <div className={`text-[11px] md:text-[12px] uppercase tracking-[0.2em] font-semibold mb-4 ${eyebrowColor}`}>
+        <div className="text-[11px] md:text-[12px] uppercase tracking-[0.2em] font-semibold mb-4 text-[var(--color-primary)]">
           {eyebrow}
         </div>
       )}
-      <h2 className={`text-[26px] md:text-[40px] leading-[1.12] font-light tracking-[-0.02em] text-balance ${titleColor}`}>
+      <h2 className="text-[26px] md:text-[40px] leading-[1.12] font-light tracking-[-0.02em] text-balance text-[var(--color-primary-pressed)]">
         {title}
       </h2>
-      {sub && <p className={`mt-4 text-[16px] md:text-[18px] leading-[1.55] text-pretty ${subColor}`}>{sub}</p>}
+      {sub && (
+        <p className="mt-4 text-[16px] md:text-[18px] leading-[1.55] text-pretty text-[var(--color-text-muted)]">
+          {sub}
+        </p>
+      )}
     </div>
   )
 }
@@ -58,10 +63,7 @@ export function SectionHead({ eyebrow, title, sub, isOnDark = false }: SectionHe
  * Пара кнопок связи. Оба канала ведут к Елене — она ведёт переписку с
  * партнёрами; агент пишет туда, где ему привычнее.
  */
-export function CtaButtons({ isOnDark = false }: { isOnDark?: boolean }) {
-  const secondary = isOnDark
-    ? 'border-white/40 text-white hover:bg-white/10'
-    : 'border-[var(--color-border)] text-[#0E1A14] hover:bg-[var(--color-search-bg)]'
+export function CtaButtons() {
   return (
     <div className="flex flex-col sm:flex-row gap-3">
       <a
@@ -77,7 +79,7 @@ export function CtaButtons({ isOnDark = false }: { isOnDark?: boolean }) {
         href={telegramHref()}
         target="_blank"
         rel="noopener noreferrer"
-        className={`inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full border bg-transparent text-[15px] font-medium transition-colors ${secondary}`}
+        className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full border border-[var(--color-primary)] bg-white text-[15px] font-medium text-[var(--color-primary-pressed)] hover:bg-[var(--color-primary-soft)] transition-colors"
       >
         <Send size={16} strokeWidth={1.8} />
         Написать в Telegram
