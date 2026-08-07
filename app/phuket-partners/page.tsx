@@ -9,10 +9,9 @@
 // акцентов срочности: бонус в туре и дата дедлайна.
 
 import type { Metadata } from 'next'
-import { ArrowRight, ArrowUpRight, Phone } from 'lucide-react'
+import { ArrowRight, ArrowUpRight } from 'lucide-react'
 import {
   BRIDGE,
-  CONTACTS,
   EARLY,
   FINAL,
   HERO,
@@ -350,13 +349,6 @@ export default function PhuketPartnersPage() {
             <div className="mt-9 flex justify-center">
               <CtaButtons />
             </div>
-            <a
-              href={`tel:${CONTACTS.phoneHref}`}
-              className="mt-6 inline-flex items-center gap-2 text-[15px] text-[var(--color-primary-pressed)] hover:text-[var(--color-primary)] transition-colors"
-            >
-              <Phone size={15} strokeWidth={1.8} />
-              {CONTACTS.phoneDisplay}
-            </a>
           </div>
         </Container>
       </section>
