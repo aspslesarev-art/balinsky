@@ -1,3 +1,6 @@
+'use client'
+
+import { useEffect, useRef, useState } from 'react'
 import { Maximize2 } from 'lucide-react'
 import { pickCopy, type Lang } from '@/lib/i18n'
 
@@ -16,6 +19,39 @@ type Props = {
  * страницы, а `loading="lazy"` откладывает загрузку до подхода к секции.
  */
 export function Villa3DPlan({ src, lang }: Props) {
+  const sectionRef = useRef<HTMLElement>(null)
+  const frameRef = useRef<HTMLIFrameElement>(null)
+  const [isNear, setIsNear] = useState(false)
+
+  /**
+   * Нативный `loading="lazy"` здесь ничего не откладывает: секция стоит
+   * высоко и попадает в первый экран, так что 134 КБ (Three.js + страница
+   * модели) грузились у всех, включая тех, кто до 3D не доскроллил.
+   * Поэтому `src` подставляем сами, когда секция подошла к экрану.
+   *
+   * Вторым сообщением гасим цикл рендера, когда модель ушла с экрана:
+   * иначе WebGL с тенями продолжает рисовать 60 fps всё время, пока
+   * открыта вкладка. Раз смонтированный фрейм не размонтируем — иначе
+   * возврат к секции заново тянул бы Three.js.
+   */
+  useEffect(() => {
+    const section = sectionRef.current
+    if (!section) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) setIsNear(true)
+        frameRef.current?.contentWindow?.postMessage(
+          { type: 'model:visible', visible: entry.isIntersecting },
+          window.location.origin,
+        )
+      },
+      { rootMargin: '400px' },
+    )
+    observer.observe(section)
+    return () => observer.disconnect()
+  }, [])
+
   const heading = pickCopy(
     {
       ru: '3D-планировка', en: '3D floor plan', id: 'Denah 3D', fr: 'Plan 3D',
@@ -44,7 +80,7 @@ export function Villa3DPlan({ src, lang }: Props) {
   )
 
   return (
-    <section className="mb-10">
+    <section className="mb-10" ref={sectionRef}>
       <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
         {heading}
       </h2>
@@ -53,7 +89,8 @@ export function Villa3DPlan({ src, lang }: Props) {
           завися от его текущей ширины. max-w-none обязателен: базовый слой
           globals.css иначе зажимает любого потомка <main> шириной родителя. */}
       <iframe
-        src={src}
+        ref={frameRef}
+        src={isNear ? src : undefined}
         title={frameTitle}
         loading="lazy"
         className="block w-screen max-w-none ml-[calc(50%-50vw)] h-[450px] md:h-[600px] border-0"

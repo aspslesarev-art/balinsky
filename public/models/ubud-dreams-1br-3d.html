@@ -612,8 +612,19 @@ addEventListener('resize',resize); resize();
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 if(reduced){auto=false;spinChk.checked=false;}
 updCam();
+// Родительская страница сообщает, видно ли секцию. Пока модель за экраном
+// или вкладка скрыта, кадры не рисуем: WebGL с тенями иначе молотит 60 fps
+// всё время, пока открыта страница.
+let offscreen = false;
+addEventListener('message', e=>{
+  if(e.origin!==location.origin) return;
+  const d=e.data;
+  if(d && d.type==='model:visible') offscreen = !d.visible;
+});
+
 (function loop(t){
   requestAnimationFrame(loop);
+  if(offscreen || document.hidden) return;
   if(auto){theta+=.0018;updCam();}
   const s=(t||0)*.001;
   for(const pb of plumbobs){
