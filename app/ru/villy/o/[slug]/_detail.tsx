@@ -1247,8 +1247,6 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
           />
         </section>
 
-        {plan3dUrl && <Villa3DPlan src={plan3dUrl} lang={lang} />}
-
         <section className="mb-10">
           <div className="text-[13px] text-[var(--color-text-muted)] mb-2">
             <Link href={villasRoot} className="hover:text-[var(--color-text)]">{c.villasCrumb}</Link>
@@ -1316,6 +1314,11 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
             />
           )}
         </section>
+
+        {/* 3D-планировка стоит под ценой, а не под галереей: в первом экране
+            секция сводила на нет ленивую загрузку — Three.js и страница
+            модели (~134 КБ) грузились даже у тех, кто до 3D не доскроллил. */}
+        {plan3dUrl && <Villa3DPlan src={plan3dUrl} lang={lang} />}
 
         {facts.length > 0 && (
           <section className="mb-10">
