@@ -120,7 +120,7 @@ export function RentalComps({ lat, lng, adr, lang }: { lat: number; lng: number;
 
       {loading && items === null && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {Array.from({ length: 4 }, (_, i) => (
+          {Array.from({ length: 8 }, (_, i) => (
             <div key={i} className="rounded-xl border border-[var(--color-border)] overflow-hidden">
               <div className="aspect-[4/3] bg-[var(--color-search-bg)]" />
               <div className="p-2.5 space-y-2">

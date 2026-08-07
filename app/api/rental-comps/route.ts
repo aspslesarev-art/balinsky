@@ -20,7 +20,7 @@ const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY
 const BAND_BELOW = 0.25
 const BAND_ABOVE = 0.10
 const ALLOWED_RADII: readonly number[] = [500, 1000]
-const LIMIT = 8
+const LIMIT = 16
 
 type Row = {
   id: number
