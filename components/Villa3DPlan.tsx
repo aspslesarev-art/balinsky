@@ -46,7 +46,11 @@ export function Villa3DPlan({ src, lang }: Props) {
           window.location.origin,
         )
       },
-      { rootMargin: '400px' },
+      // Запас намеренно небольшой: секция лежит примерно в 200 px под сгибом,
+      // и щедрый rootMargin снова грузил бы модель тем, кто вообще не
+      // прокрутил страницу. Дотянуться до секции — это ещё около 1000 px
+      // прокрутки, так что старта по первому же движению хватает с запасом.
+      { rootMargin: '150px' },
     )
     observer.observe(section)
     return () => observer.disconnect()
