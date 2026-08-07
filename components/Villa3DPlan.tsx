@@ -48,11 +48,15 @@ export function Villa3DPlan({ src, lang }: Props) {
       <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
         {heading}
       </h2>
+      {/* Фрейм во всю ширину окна, заголовок и ссылка остаются в колонке.
+          Отрицательные поля calc(50vw - 50%) выносят блок за контейнер, не
+          завися от его текущей ширины. max-w-none обязателен: базовый слой
+          globals.css иначе зажимает любого потомка <main> шириной родителя. */}
       <iframe
         src={src}
         title={frameTitle}
         loading="lazy"
-        className="block w-full h-[450px] md:h-[600px] rounded-xl border-0"
+        className="block w-screen max-w-none ml-[calc(50%-50vw)] h-[450px] md:h-[600px] border-0"
       />
       <a
         href={src}
