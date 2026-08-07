@@ -25,7 +25,7 @@
   /* Панель выровнена по левому краю контентной колонки сайта
      (PageContainer: max-w-[1280px] mx-auto px-6), чтобы стоять в один
      ряд с остальными блоками страницы, а не у края широкого фрейма. */
-  .hud{position:fixed;left:max(24px,calc((100vw - 1280px)/2 + 24px));top:16px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;max-width:280px;box-shadow:0 4px 16px rgba(17,24,39,.06)}
+  .hud{position:fixed;left:max(24px,calc((100vw - 1280px)/2 + 24px));top:16px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;max-width:320px;box-shadow:0 4px 16px rgba(17,24,39,.06)}
   .hud h1{font-size:16px;font-weight:600;letter-spacing:-.01em}
   .hud .sub{font-size:11px;color:var(--muted);margin-top:2px;letter-spacing:.06em;text-transform:uppercase}
   .row{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
@@ -57,33 +57,47 @@
 <canvas id="c"></canvas>
 
 <div class="hud">
-  <h1>Green Village · вилла 2 спальни</h1>
-  <div class="sub">100 м² · участок 7.3 × 13.7 м</div>
+  <h1 id="h1"></h1>
+  <div class="sub" id="sub"></div>
   <div class="row">
-    <button id="vIso" class="on">обзор</button>
-    <button id="vTop">сверху</button>
-    <button id="vFront">фасад</button>
+    <button id="vIso" class="on" data-i18n="viewIso"></button>
+    <button id="vTop" data-i18n="viewTop"></button>
+    <button id="vFront" data-i18n="viewFront"></button>
   </div>
   <div class="row" style="margin-top:8px">
-    <button id="wAuto" class="on">срез стен</button>
-    <button id="wUp">стены вверх</button>
-    <button id="wDown">стены вниз</button>
+    <button id="wAuto" class="on" data-i18n="wallsCut"></button>
+    <button id="wUp" data-i18n="wallsUp"></button>
+    <button id="wDown" data-i18n="wallsDown"></button>
   </div>
-  <label class="chk"><input type="checkbox" id="lbl" checked> подписи комнат</label>
-  <label class="chk"><input type="checkbox" id="roofChk"> крыша</label>
-  <label class="chk"><input type="checkbox" id="spin" checked> автоповорот</label>
+  <label class="chk"><input type="checkbox" id="lbl" checked> <span data-i18n="roomLabels"></span></label>
+  <label class="chk"><input type="checkbox" id="roofChk"> <span data-i18n="roof"></span></label>
+  <label class="chk"><input type="checkbox" id="spin" checked> <span data-i18n="autoRotate"></span></label>
 
   <!-- Состав и подсказка живут здесь же: справа от панели должна остаться
-       только модель, без плашек по углам. -->
-  <div class="facts">
-    <b>Жилой блок</b> — гостиная-кухня 23.4 · спальня 11.7 · с/у 4.3<br>
-    <b>Спальный блок</b> — спальня 12.6 · с/у 7.0 · паркинг 19.1<br>
-    <b>Между ними</b> — бассейн и патио 21.9
-  </div>
-  <div class="hint">крутить — мышью · зум — колесо · панорама — правая кнопка</div>
+       только модель, без плашек по углам. Текст проставляет _model-i18n.js
+       по языку из ?lang= — страница открывается во всех десяти локалях. -->
+  <div class="facts" id="facts"></div>
+  <div class="hint" data-i18n="hint"></div>
 </div>
 
-<div class="tapme" id="tapme">Нажмите, чтобы управлять моделью</div>
+<div class="tapme" id="tapme" data-i18n="tapToControl"></div>
+
+<script src="_model-i18n.js"></script>
+<script>
+var gvName = 'Green Village · ' + Model3D.roomWord('villa')
+  + ' · 2 ' + Model3D.roomWord('bedroomsPlural');
+Model3D.setDocumentMeta(gvName);
+Model3D.applyStatic();
+document.getElementById('h1').textContent = gvName;
+document.getElementById('sub').textContent =
+  '100 ' + Model3D.unit + ' · ' + Model3D.roomWord('plot') + ' 7.3 × 13.7 m';
+Model3D.renderFacts(document.getElementById('facts'), [
+  { group: 'livingBlock', rooms: [['livingKitchen', 23.4], ['bedroom', 11.7], ['bath', 4.3]] },
+  // «7.0» строкой: числовой литерал 7.0 печатается как «7» и расходится с чертежом.
+  { group: 'bedroomBlock', rooms: [['bedroom', 12.6], ['bath', '7.0'], ['parking', 19.1]] },
+  { group: 'between', rooms: [['poolPatio', 21.9]] },
+]);
+</script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -465,7 +479,12 @@ function makeLabel(text, x, y, z){
   ctx.fillStyle='rgba(255,255,255,.94)';
   ctx.strokeStyle='rgba(17,24,39,.14)'; ctx.lineWidth=2;
   ctx.beginPath(); ctx.roundRect(4,8,280,56,14); ctx.fill(); ctx.stroke();
-  ctx.fillStyle='#111827'; ctx.font='600 24px system-ui,-apple-system,sans-serif'; ctx.textAlign='center';
+  // Кегль подбираем под самую длинную строку: «Salon z kuchnią · 23.4 m²» и
+  // «Wohnküche · 23.4 m²» длиннее русских и иначе вылезали за плашку.
+  ctx.fillStyle='#111827'; ctx.textAlign='center';
+  let size=24;
+  do { ctx.font='600 '+size+'px system-ui,-apple-system,sans-serif'; size-=1; }
+  while (size>=14 && ctx.measureText(text).width>256);
   ctx.fillText(text,144,44);
   const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cnv),depthTest:false}));
   sp.scale.set(2.15,.54,1);
@@ -473,13 +492,13 @@ function makeLabel(text, x, y, z){
   labelsG.add(sp); return sp;
 }
 const LABELS=[
-  makeLabel('Паркинг · 19.1 м²',        (X2+W)/2, 2.0, 2.5),
-  makeLabel('Ванная · 7.0 м²',          1.8,      1.9, 1.0),
-  makeLabel('Спальня · 12.6 м²',        1.8,      2.1, 3.7),
-  makeLabel('Бассейн и патио · 21.9 м²',3.3,      1.3, (ZB+ZC)/2),
-  makeLabel('Спальня · 11.7 м²',        1.7,      2.1, 10.4),
-  makeLabel('Ванная · 4.3 м²',          1.15,     1.9, 12.9),
-  makeLabel('Гостиная-кухня · 23.4 м²', 5.4,      2.2, 11.4)
+  makeLabel(Model3D.room('parking', 19.1),   (X2+W)/2, 2.0, 2.5),
+  makeLabel(Model3D.room('bathroom', '7.0'), 1.8,      1.9, 1.0),
+  makeLabel(Model3D.room('bedroom', 12.6),   1.8,      2.1, 3.7),
+  makeLabel(Model3D.room('poolPatio', 21.9), 3.3,      1.3, (ZB+ZC)/2),
+  makeLabel(Model3D.room('bedroom', 11.7),   1.7,      2.1, 10.4),
+  makeLabel(Model3D.room('bathroom', 4.3),   1.15,     1.9, 12.9),
+  makeLabel(Model3D.room('livingKitchen', 23.4), 5.4,  2.2, 11.4)
 ];
 
 // ============ управление камерой ============

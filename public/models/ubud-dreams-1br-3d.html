@@ -27,7 +27,7 @@
   /* Панель выровнена по левому краю контентной колонки сайта
      (PageContainer: max-w-[1280px] mx-auto px-6), чтобы стоять в один
      ряд с остальными блоками страницы, а не у края широкого фрейма. */
-  .hud{position:fixed;left:max(24px,calc((100vw - 1280px)/2 + 24px));top:16px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;max-width:270px;box-shadow:0 4px 16px rgba(17,24,39,.06)}
+  .hud{position:fixed;left:max(24px,calc((100vw - 1280px)/2 + 24px));top:16px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;max-width:320px;box-shadow:0 4px 16px rgba(17,24,39,.06)}
   .hud h1{font-size:16px;font-weight:600;letter-spacing:-.01em}
   .hud .sub{font-size:11px;color:var(--muted);margin-top:2px;letter-spacing:.06em;text-transform:uppercase}
   .row{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
@@ -60,30 +60,40 @@
 
 <div class="hud">
   <h1>Ubud Dreams House 1</h1>
-  <div class="sub">70 m² + бассейн 22 m²</div>
+  <div class="sub" id="sub"></div>
   <div class="row">
-    <button id="b1">1 этаж</button>
-    <button id="b2">2 этаж</button>
-    <button id="bAll" class="on">Весь дом</button>
+    <button id="b1" data-i18n="floor1"></button>
+    <button id="b2" data-i18n="floor2"></button>
+    <button id="bAll" class="on" data-i18n="wholeHouse"></button>
   </div>
   <div class="row" style="margin-top:8px">
-    <button id="wAuto" class="on">срез стен</button>
-    <button id="wUp">стены вверх</button>
-    <button id="wDown">стены вниз</button>
+    <button id="wAuto" class="on" data-i18n="wallsCut"></button>
+    <button id="wUp" data-i18n="wallsUp"></button>
+    <button id="wDown" data-i18n="wallsDown"></button>
   </div>
-  <label class="chk"><input type="checkbox" id="lbl" checked> подписи комнат</label>
-  <label class="chk"><input type="checkbox" id="spin" checked> автоповорот</label>
+  <label class="chk"><input type="checkbox" id="lbl" checked> <span data-i18n="roomLabels"></span></label>
+  <label class="chk"><input type="checkbox" id="spin" checked> <span data-i18n="autoRotate"></span></label>
 
   <!-- Состав и подсказка живут здесь же: справа от панели должна остаться
-       только модель, без плашек по углам. -->
-  <div class="facts">
-    <b>1 этаж</b> — кухня 15.9 · зал 14.8 · с/у 2.7 · лестница 2.7<br>
-    <b>2 этаж</b> — спальня 18.1 · с/у 5.9 · балкон 4.2
-  </div>
-  <div class="hint">крутить — мышью · зум — колесо · панорама — правая кнопка</div>
+       только модель, без плашек по углам. Текст проставляет _model-i18n.js
+       по языку из ?lang= — страница открывается во всех десяти локалях. -->
+  <div class="facts" id="facts"></div>
+  <div class="hint" data-i18n="hint"></div>
 </div>
 
-<div class="tapme" id="tapme">Нажмите, чтобы управлять моделью</div>
+<div class="tapme" id="tapme" data-i18n="tapToControl"></div>
+
+<script src="_model-i18n.js"></script>
+<script>
+Model3D.setDocumentMeta('Ubud Dreams House 1');
+Model3D.applyStatic();
+document.getElementById('sub').textContent =
+  '70 m² + ' + Model3D.roomWord('pool') + ' 22 m²';
+Model3D.renderFacts(document.getElementById('facts'), [
+  { group: 'floor1', rooms: [['kitchen', 15.9], ['living', 14.8], ['bath', 2.7], ['stairs', 2.7]] },
+  { group: 'floor2', rooms: [['bedroom', 18.1], ['bath', 5.9], ['balcony', 4.2]] },
+]);
+</script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -367,26 +377,32 @@ function makeLabel(text, x, y, z){
   ctx.fillStyle='rgba(255,255,255,.94)';
   ctx.strokeStyle='rgba(17,24,39,.14)'; ctx.lineWidth=2;
   ctx.beginPath(); ctx.roundRect(4,8,248,56,14); ctx.fill(); ctx.stroke();
-  ctx.fillStyle='#111827'; ctx.font='600 25px system-ui,-apple-system,sans-serif'; ctx.textAlign='center';
+  // Кегль подбираем под самую длинную строку: «Salle de bains · 5.9 m²» и
+  // «Wohnzimmer · 14.8 m²» вдвое длиннее русских и иначе вылезали за плашку.
+  ctx.fillStyle='#111827'; ctx.textAlign='center';
+  let size=25;
+  do { ctx.font='600 '+size+'px system-ui,-apple-system,sans-serif'; size-=1; }
+  while (size>=15 && ctx.measureText(text).width>224);
   ctx.fillText(text,128,44);
   const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cnv),depthTest:false}));
   sp.scale.set(1.9,.55,1);
   sp.position.set(x-cx,y,z-cz);
   labelsG.add(sp); return sp;
 }
+const R=Model3D.room;
 const L1=[
-  makeLabel('Кухня · 15.9 м²', 2.3, 1.9, 3.2),
-  makeLabel('Зал · 14.8 м²', 2.3, 1.9, 7.9),
-  makeLabel('С/у · 2.7 м²', 3.9, 1.7, 5.6),
-  makeLabel('Лестница · 2.7 м²', 0.8, 2.2, 5.6),
-  makeLabel('Бассейн · 22 м²', 2.3, 1.2, HD+2.4),
-  makeLabel('Крыльцо · 5.7 м²', 2.1, 1.0, 0.7)
+  makeLabel(R('kitchen', 15.9), 2.3, 1.9, 3.2),
+  makeLabel(R('living', 14.8), 2.3, 1.9, 7.9),
+  makeLabel(R('bath', 2.7), 3.9, 1.7, 5.6),
+  makeLabel(R('stairs', 2.7), 0.8, 2.2, 5.6),
+  makeLabel(R('pool', 22), 2.3, 1.2, HD+2.4),
+  makeLabel(R('porch', 5.7), 2.1, 1.0, 0.7)
 ];
 const Y2=H1+.2;
 const L2=[
-  makeLabel('Спальня · 18.1 м²', 2.0, Y2+1.9, 4.3),
-  makeLabel('С/у · 5.9 м²', 1.9, Y2+1.7, 1.5),
-  makeLabel('Балкон · 4.2 м²', 2.3, Y2+1.4, 0.45)
+  makeLabel(R('bedroom', 18.1), 2.0, Y2+1.9, 4.3),
+  makeLabel(R('bath', 5.9), 1.9, Y2+1.7, 1.5),
+  makeLabel(R('balcony', 4.2), 2.3, Y2+1.4, 0.45)
 ];
 
 // ============ управление камерой ============

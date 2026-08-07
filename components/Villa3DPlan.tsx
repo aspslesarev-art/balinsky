@@ -83,6 +83,11 @@ export function Villa3DPlan({ src, lang }: Props) {
     lang,
   )
 
+  // Страница модели статическая и живёт вне бандла, до неё не дотягивается
+  // ни контекст локали, ни `lib/i18n.ts` — язык передаём в query, а
+  // `public/models/_model-i18n.js` переводит по нему панель и подписи комнат.
+  const localizedSrc = `${src}?lang=${lang}`
+
   return (
     <section className="mb-10" ref={sectionRef}>
       <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
@@ -94,13 +99,13 @@ export function Villa3DPlan({ src, lang }: Props) {
           globals.css иначе зажимает любого потомка <main> шириной родителя. */}
       <iframe
         ref={frameRef}
-        src={isNear ? src : undefined}
+        src={isNear ? localizedSrc : undefined}
         title={frameTitle}
         loading="lazy"
         className="block w-screen max-w-none ml-[calc(50%-50vw)] h-[450px] md:h-[600px] border-0"
       />
       <a
-        href={src}
+        href={localizedSrc}
         target="_blank"
         rel="noopener noreferrer"
         className="mt-3 inline-flex items-center gap-2 text-[14px] font-medium text-[var(--color-primary-pressed)] hover:gap-3 transition-all"
