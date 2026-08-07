@@ -20,7 +20,6 @@ import {
   SAFETY,
   STATS,
   STEPS,
-  STRIP,
   TOUR,
 } from './_content'
 import { typo } from './_typo'
@@ -42,17 +41,6 @@ function Exchange({ className = '' }: { className?: string }) {
 export default function PhuketPartnersPage() {
   return (
     <div className="min-h-screen bg-white text-[var(--color-text)]">
-      {/* === Полоса-маркер вместо бегущей строки исходника: сайт спокойный,
-              а бесконечная анимация конфликтует с prefers-reduced-motion. === */}
-      <div className="bg-[var(--color-primary-soft)] text-[var(--color-primary-pressed)]">
-        <Container>
-          <div className="py-2.5 text-[11px] md:text-[12px] uppercase tracking-[0.18em] font-semibold">
-            <span className="sm:hidden">{typo(STRIP.short)}</span>
-            <span className="hidden sm:inline">{typo(STRIP.full)}</span>
-          </div>
-        </Container>
-      </div>
-
       {/* === 1. Hero ==================================================== */}
       <header className="border-b border-[var(--color-border)] bg-white">
         <Container>

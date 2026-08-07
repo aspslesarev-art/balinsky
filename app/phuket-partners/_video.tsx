@@ -79,7 +79,7 @@ export function PitchVideo({ src, poster, caption }: Props) {
             type="button"
             onClick={start}
             aria-label="Смотреть ролик, 60 секунд, со звуком"
-            className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/25 transition-colors hover:bg-black/15 focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-white"
+            className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/55 transition-colors hover:bg-black/40 focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-white"
           >
             <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/95 shadow-lg md:h-20 md:w-20">
               <Play className="ml-1 h-6 w-6 text-[var(--color-primary-pressed)] md:h-7 md:w-7" fill="currentColor" />
