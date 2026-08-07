@@ -27,6 +27,7 @@ type Row = {
   title: string | null
   unit_kind: string | null
   bedrooms: number | null
+  area_sqm: number | null
   distance_m: number | null
   occupancy: number | null
   price: number | null
@@ -80,6 +81,7 @@ export async function GET(req: Request) {
       title: r.title,
       unitKind: r.unit_kind,
       bedrooms: r.bedrooms,
+      areaSqm: r.area_sqm == null ? null : Number(r.area_sqm),
       distanceM: r.distance_m == null ? null : Number(r.distance_m),
       occupancy: r.occupancy == null ? null : Number(r.occupancy),
       price: r.price == null ? null : Number(r.price),

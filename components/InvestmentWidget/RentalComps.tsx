@@ -17,6 +17,7 @@ type Item = {
   title: string | null
   unitKind: string | null
   bedrooms: number | null
+  areaSqm: number | null
   distanceM: number | null
   occupancy: number | null
   price: number | null
@@ -41,6 +42,10 @@ const COPY = {
     perNight: '/ночь',
     m: 'м',
     km: 'км',
+    beds: (n: number) => (n === 0 ? 'студия' : `${n} ${n === 1 ? 'спальня' : n < 5 ? 'спальни' : 'спален'}`),
+    sqm: 'м²',
+    kinds: { villa: 'вилла', apartment: 'апартаменты', hotel: 'отель', resort: 'резорт',
+             guesthouse: 'гестхаус', house: 'дом', hostel: 'хостел', aparthotel: 'апарт-отель' } as Record<string, string>,
     source: 'Данные Booking, обновляются ежедневно. Загрузка — за последний доступный период.',
     prev: 'Предыдущие объекты',
     next: 'Следующие объекты',
@@ -56,6 +61,10 @@ const COPY = {
     perNight: '/night',
     m: 'm',
     km: 'km',
+    beds: (n: number) => (n === 0 ? 'studio' : `${n} BR`),
+    sqm: 'm²',
+    kinds: { villa: 'villa', apartment: 'apartment', hotel: 'hotel', resort: 'resort',
+             guesthouse: 'guesthouse', house: 'house', hostel: 'hostel', aparthotel: 'aparthotel' } as Record<string, string>,
     source: 'Booking data, refreshed daily. Occupancy is for the latest available period.',
     prev: 'Previous listings',
     next: 'Next listings',
@@ -177,7 +186,17 @@ export function RentalComps({ lat, lng, adr, lang }: { lat: number; lng: number;
               />
               <div className="p-2.5">
                 <div className="text-[13px] font-medium leading-snug line-clamp-2">{it.title}</div>
-                <div className="mt-1 text-[11.5px] text-[var(--color-text-muted)]">
+                {/* Состав объекта — то, что делает сравнение честным.
+                    Площадь у Booking заполнена меньше чем у процента
+                    объектов, поэтому показываем её только когда есть. */}
+                <div className="mt-1 text-[11.5px] text-[#111827]">
+                  {[
+                    it.unitKind ? (c.kinds[it.unitKind] ?? it.unitKind) : null,
+                    it.bedrooms != null ? c.beds(it.bedrooms) : null,
+                    it.areaSqm != null ? `${Math.round(it.areaSqm)} ${c.sqm}` : null,
+                  ].filter(Boolean).join(' · ')}
+                </div>
+                <div className="mt-0.5 text-[11.5px] text-[var(--color-text-muted)]">
                   {it.distanceM != null && fmtDistance(it.distanceM, c)}
                   {it.occupancy != null && <> · {c.occ(Math.round(it.occupancy))}</>}
                 </div>
