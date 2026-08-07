@@ -25,6 +25,7 @@ import {
 } from './_content'
 import { typo } from './_typo'
 import { Card, Container, CtaButtons, Section, SectionHead } from './_ui'
+import { PitchVideo } from './_video'
 
 export const metadata: Metadata = {
   title: 'Balinsky × Phuket Partners — продавайте два рынка',
@@ -55,7 +56,11 @@ export default function PhuketPartnersPage() {
       {/* === 1. Hero ==================================================== */}
       <header className="border-b border-[var(--color-border)] bg-white">
         <Container>
-          <div className="py-16 md:py-24 max-w-[900px]">
+          {/* Две колонки, чтобы ролик попадал на первый экран и на десктопе.
+              На телефоне порядок другой — заголовок, ролик, затем лид и CTA:
+              так видео видно сразу, а не после прокрутки. */}
+          <div className="py-10 md:py-16 grid gap-8 lg:gap-14 lg:grid-cols-2 lg:items-center">
+            <div className="order-1 lg:col-start-1 lg:row-start-1 max-w-[640px]">
             <div className="text-[11px] md:text-[12px] uppercase tracking-[0.2em] font-semibold text-[var(--color-primary)] mb-5">
               {HERO.eyebrow}
             </div>
@@ -74,11 +79,23 @@ export default function PhuketPartnersPage() {
                 </span>
               ))}
             </h1>
-            <p className="mt-6 text-[17px] md:text-[20px] leading-[1.55] text-[var(--color-text-muted)] max-w-[640px] text-pretty">
-              {typo(HERO.lead)}
-            </p>
-            <div className="mt-9">
-              <CtaButtons />
+            </div>
+
+            <div className="order-2 lg:col-start-2 lg:row-start-1 lg:row-span-2">
+              <PitchVideo
+                src="/phuket-partners/pitch.mp4"
+                poster="/phuket-partners/pitch-poster.jpg"
+                caption="Как устроена партнёрка — за минуту, голосом."
+              />
+            </div>
+
+            <div className="order-3 lg:col-start-1 lg:row-start-2 max-w-[640px]">
+              <p className="text-[17px] md:text-[20px] leading-[1.55] text-[var(--color-text-muted)] text-pretty">
+                {typo(HERO.lead)}
+              </p>
+              <div className="mt-9">
+                <CtaButtons />
+              </div>
             </div>
           </div>
         </Container>
