@@ -4,16 +4,20 @@
 // наследует только дизайн-систему Balinsky. Весь текст живёт в _content.ts.
 
 import type { Metadata } from 'next'
-import { ArrowRight, ArrowUpRight } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, Phone } from 'lucide-react'
 import {
   BRIDGE,
+  CONTACTS,
+  EARLY,
   FINAL,
   HERO,
+  ONBOARDING,
   PATHS,
   SAFETY,
   STATS,
   STEPS,
   STRIP,
+  TOUR,
 } from './_content'
 import { Card, Container, CtaButtons, Section, SectionHead } from './_ui'
 
@@ -121,7 +125,7 @@ export default function PhuketPartnersPage() {
 
       {/* === 4. Два пути ================================================ */}
       <Section id="paths">
-        <SectionHead eyebrow={PATHS.eyebrow} title={PATHS.title} sub={PATHS.sub} />
+        <SectionHead eyebrow={PATHS.eyebrow} title={PATHS.title} />
         <div className="mt-10 grid gap-6 md:grid-cols-2">
           {/* Первый путь — тёмная карточка: он и есть предложение, с которого начинаем. */}
           <div className="rounded-2xl bg-[#0E1A14] p-7 md:p-9">
@@ -176,8 +180,67 @@ export default function PhuketPartnersPage() {
         </div>
       </Section>
 
-      {/* === 6. Гарантии ================================================ */}
-      <Section>
+      {/* === 6. Что будет после «да» ==================================== */}
+      <Section id="start">
+        <SectionHead eyebrow={ONBOARDING.eyebrow} title={ONBOARDING.title} />
+        <ol className="mt-10 max-w-[760px]">
+          {ONBOARDING.items.map((item, i) => {
+            const isLast = i === ONBOARDING.items.length - 1
+            return (
+              <li key={item.title} className="relative grid grid-cols-[48px_1fr] gap-5 md:gap-6">
+                {/* Соединительная линия идёт от кружка вниз и обрывается на последнем шаге. */}
+                {!isLast && (
+                  <span className="absolute left-[23px] top-12 bottom-0 w-px bg-[var(--color-border)]" aria-hidden />
+                )}
+                <span className="relative z-[1] flex h-12 w-12 items-center justify-center rounded-full bg-[#0E1A14] text-[16px] font-medium text-[var(--color-primary-soft)]">
+                  {i + 1}
+                </span>
+                <div className={isLast ? 'pt-2.5' : 'pt-2.5 pb-8'}>
+                  <h3 className="text-[17px] md:text-[19px] font-medium text-[#0E1A14]">{item.title}</h3>
+                  <p className="mt-2 text-[15px] md:text-[16px] leading-[1.6] text-[#4B5563] text-pretty">
+                    {item.body}
+                  </p>
+                </div>
+              </li>
+            )
+          })}
+        </ol>
+
+        {/* Инспекционный тур — тёмная карточка внутри той же секции: это
+            продолжение онбординга, а не отдельное предложение. */}
+        <div className="mt-12 rounded-2xl bg-[#0E1A14] p-7 md:p-10 grid gap-8 md:grid-cols-[1.2fr_1fr] md:gap-12">
+          <div>
+            <h3 className="text-[22px] md:text-[26px] font-light tracking-[-0.02em] text-white text-balance">
+              {TOUR.title}{' '}
+              <span className="text-[var(--color-primary-soft)]">{TOUR.accent}</span>
+            </h3>
+            <div className="mt-4 space-y-3">
+              {TOUR.body.map(paragraph => (
+                <p key={paragraph} className="text-[15px] md:text-[16px] leading-[1.6] text-white/80 text-pretty">
+                  {paragraph}
+                </p>
+              ))}
+            </div>
+          </div>
+          <div>
+            <ul className="space-y-3.5">
+              {TOUR.perks.map(perk => (
+                <li key={perk} className="flex gap-3 text-[15px] leading-[1.5] text-white/85">
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-primary-soft)]" />
+                  {perk}
+                </li>
+              ))}
+            </ul>
+            <div className="mt-6 rounded-xl border border-[var(--color-primary)] p-4 md:p-5 text-[14.5px] leading-[1.55] text-white/85">
+              <b className="font-medium text-[var(--color-primary-soft)]">{TOUR.bonus.lead}</b>{' '}
+              {TOUR.bonus.body}
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      {/* === 7. Гарантии ================================================ */}
+      <Section className="bg-[var(--color-bg)]">
         <div className="grid gap-10 md:grid-cols-2 md:gap-16 md:items-start">
           <SectionHead eyebrow={SAFETY.eyebrow} title={SAFETY.title} sub={SAFETY.sub} />
           <div className="space-y-6">
@@ -194,12 +257,61 @@ export default function PhuketPartnersPage() {
         </div>
       </Section>
 
-      {/* === 7. Финальный CTA =========================================== */}
-      <section className="bg-[#0E1A14]">
+      {/* === 8. Early Birds ============================================= */}
+      <Section id="early">
+        <div className="rounded-2xl border-2 border-[var(--color-primary)] bg-white p-7 md:p-10 grid gap-8 md:grid-cols-[1.3fr_1fr] md:gap-12 md:items-center">
+          <div>
+            <span className="inline-block rounded-full bg-[var(--color-primary)] px-4 py-1.5 text-[11px] uppercase tracking-[0.15em] font-semibold text-white">
+              {EARLY.badge}
+            </span>
+            <h2 className="mt-5 text-[22px] md:text-[28px] font-light tracking-[-0.02em] text-[#0E1A14] text-balance">
+              {EARLY.title}
+            </h2>
+            <div className="mt-4 space-y-3">
+              {EARLY.body.map(paragraph => (
+                <p key={paragraph} className="text-[15px] md:text-[16px] leading-[1.6] text-[#4B5563] text-pretty">
+                  {paragraph}
+                </p>
+              ))}
+              <p className="text-[15px] md:text-[16px] leading-[1.6] font-medium text-[#0E1A14]">
+                {EARLY.highlight}
+              </p>
+            </div>
+          </div>
+          <div className="rounded-xl bg-[#0E1A14] p-6 md:p-7 text-center">
+            <div className="text-[11px] uppercase tracking-[0.18em] font-semibold text-white/60">
+              {EARLY.deadline.label}
+            </div>
+            <div className="mt-3 text-[30px] md:text-[36px] font-light tracking-[-0.02em] text-[var(--color-primary-soft)]">
+              {EARLY.deadline.date}
+            </div>
+            <p className="mt-3 text-[14px] leading-[1.55] text-white/70 text-pretty">{EARLY.deadline.note}</p>
+            <a
+              href="#contact"
+              className="mt-6 inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-primary)] px-6 py-3 text-[15px] font-medium text-white hover:bg-[var(--color-primary-pressed)] transition-colors"
+            >
+              Зафиксировать условия
+            </a>
+          </div>
+        </div>
+      </Section>
+
+      {/* === 9. Финальный CTA =========================================== */}
+      <section id="contact" className="bg-[#0E1A14]">
         <Container>
           <div className="py-16 md:py-24 text-center">
             <h2 className="mx-auto max-w-[760px] text-[26px] md:text-[44px] leading-[1.12] font-light tracking-[-0.025em] text-white text-balance">
-              {FINAL.title} <Exchange className="text-[var(--color-primary-soft)]" />
+              {FINAL.titleLines.map((line, i) => (
+                <span key={line} className="block">
+                  {line}
+                  {i === FINAL.titleLines.length - 1 && (
+                    <>
+                      {' '}
+                      <Exchange className="text-[var(--color-primary-soft)]" />
+                    </>
+                  )}
+                </span>
+              ))}
             </h2>
             <p className="mx-auto mt-5 max-w-[560px] text-[16px] md:text-[18px] leading-[1.55] text-white/75 text-pretty">
               {FINAL.body}
@@ -207,6 +319,13 @@ export default function PhuketPartnersPage() {
             <div className="mt-9 flex justify-center">
               <CtaButtons isOnDark />
             </div>
+            <a
+              href={`tel:${CONTACTS.phoneHref}`}
+              className="mt-6 inline-flex items-center gap-2 text-[15px] text-white/70 hover:text-white transition-colors"
+            >
+              <Phone size={15} strokeWidth={1.8} />
+              {CONTACTS.phoneDisplay}
+            </a>
           </div>
         </Container>
       </section>

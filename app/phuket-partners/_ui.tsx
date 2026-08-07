@@ -55,8 +55,8 @@ export function SectionHead({ eyebrow, title, sub, isOnDark = false }: SectionHe
 }
 
 /**
- * Пара кнопок связи. WhatsApp ведёт к Елене, Telegram — к Андрею:
- * агент пишет туда, где ему привычнее, а не ищет единственный канал.
+ * Пара кнопок связи. Оба канала ведут к Елене — она ведёт переписку с
+ * партнёрами; агент пишет туда, где ему привычнее.
  */
 export function CtaButtons({ isOnDark = false }: { isOnDark?: boolean }) {
   const secondary = isOnDark
