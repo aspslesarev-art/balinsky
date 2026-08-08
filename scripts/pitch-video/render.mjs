@@ -20,20 +20,27 @@ import { fileURLToPath } from 'node:url'
 
 const REEL = process.argv.includes('--reel')
 
+// Формат и палитра независимы. Вертикаль по умолчанию светлая — так её
+// просили под Instagram, — но --dark собирает её в ночной палитре сайта.
+const DARK = process.argv.includes('--dark')
+const LIGHT = REEL && !DARK
+
 // Две озвучки — два сценария. v1: 60.26 с, «+0,5%». v2: 68.04 с, другая
 // модель («мы не агентство, а отдел у застройщиков») и «+$1000 за сделку».
 // У каждой своя раскадровка: тайминги сняты по границам фраз своей записи.
 const V2 = process.argv.includes('--v2')
 
 const here = (name) => fileURLToPath(new URL(`./${name}`, import.meta.url))
-const tag = `${V2 ? 'v2' : 'v1'}-${REEL ? 'reel' : 'web'}`
+const tag = `${V2 ? 'v2' : 'v1'}-${REEL ? (DARK ? 'reel-dark' : 'reel') : 'web'}`
 
 const PAGE_URL =
   new URL(V2 ? './scene-v2.html' : './scene.html', import.meta.url).href +
-  (REEL ? '?mode=reel' : '')
+  (REEL ? (DARK ? '?mode=reel-dark' : '?mode=reel') : '')
 const FRAMES = here(`.frames-${tag}/`)
 const AUDIO = here(V2 ? 'voice-v2.mp3' : 'voice.mp3')
-const OUTPUT = here(`${REEL ? 'reel' : 'pitch'}${V2 ? '-v2' : ''}.mp4`)
+const OUTPUT = here(
+  `${REEL ? 'reel' : 'pitch'}${V2 ? '-v2' : ''}${REEL && DARK ? '-dark' : ''}.mp4`,
+)
 
 const FPS = 30
 // Длительность озвучки + пауза, чтобы додержать финальный кадр.
@@ -49,7 +56,7 @@ const RENDER_CSS = `
   .cta, .cta-note { display: none !important; }
   .clock { visibility: hidden !important; }
   .stage { min-height: 100vh !important; }
-  html, body { background: ${REEL ? '#FBFDFB' : '#071A22'} !important; }
+  html, body { background: ${LIGHT ? '#FBFDFB' : '#071A22'} !important; }
 `
 
 await rm(FRAMES, { recursive: true, force: true })

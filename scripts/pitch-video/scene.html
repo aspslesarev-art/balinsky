@@ -510,7 +510,7 @@
      размеры кегля — чтобы веб-версия и рилс не разъехались при правках.
      Кегли в vw: на кадре 1080 px это даёт крупный, читаемый в ленте текст. */
 
-  :root.reel{
+  :root.light{
     --ink:#FBFDFB;
     --paper:#F2F7F4;
     --panel:#E7F0EB;
@@ -522,12 +522,12 @@
     --phuket:#CE741F;
   }
 
-  .reel .stage{background:radial-gradient(120% 55% at 50% 0%, #FFFFFF 0%, var(--ink) 70%)}
-  .reel .chart{opacity:.55}
-  .reel .isle{fill:#E4EEE9;stroke:#BFD4CA;stroke-width:2}
-  .reel .isle-bali{fill:#D8EEE2;stroke:var(--bali);stroke-width:1.4}
-  .reel .deadline{background:#FFFFFF}
-  .reel .stage[data-scene="s1"] .map{opacity:.85}
+  .light .stage{background:radial-gradient(120% 55% at 50% 0%, #FFFFFF 0%, var(--ink) 70%)}
+  .light .chart{opacity:.55}
+  .light .isle{fill:#E4EEE9;stroke:#BFD4CA;stroke-width:2}
+  .light .isle-bali{fill:#D8EEE2;stroke:var(--bali);stroke-width:1.4}
+  .light .deadline{background:#FFFFFF}
+  .light .stage[data-scene="s1"] .map{opacity:.85}
 
   /* Нижние ~18% кадра Reels перекрыты подписью и кнопками Instagram —
      поэтому контент прижимаем выше центра. */
@@ -746,9 +746,17 @@
 
 <script>
 (function(){
-  // ?mode=reel — вертикальный светлый кадр под Instagram.
-  if (new URLSearchParams(location.search).get('mode') === 'reel'){
+  // Формат и палитра независимы: reel — вертикальный кадр 9:16 под
+  // Instagram, light — светлая карта вместо ночной.
+  //   ?mode=reel       вертикальный светлый
+  //   ?mode=reel-dark  вертикальный тёмный
+  //   без параметра    горизонтальный тёмный (версия для сайта)
+  var mode = new URLSearchParams(location.search).get('mode');
+  if (mode === 'reel' || mode === 'reel-dark'){
     document.documentElement.classList.add('reel');
+  }
+  if (mode === 'reel'){
+    document.documentElement.classList.add('light');
   }
 
   var stage  = document.getElementById('stage');
