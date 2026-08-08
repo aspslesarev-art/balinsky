@@ -14,9 +14,21 @@
 ## Пересборка
 
 ```bash
-node scripts/pitch-video/render.mjs          # pitch.mp4  1920×1080, тёмный — в герой лендинга
-node scripts/pitch-video/render.mjs --reel   # reel.mp4   1080×1920, светлый — под Instagram Reels
+node scripts/pitch-video/render.mjs               # pitch.mp4     1920×1080, тёмный — в герой лендинга
+node scripts/pitch-video/render.mjs --reel        # reel.mp4      1080×1920, светлый — под Instagram Reels
+node scripts/pitch-video/render.mjs --reel --v2   # reel-v2.mp4   то же, но по второй озвучке
 ```
+
+**Две озвучки — два сценария, у каждого своя раскадровка** (тайминги сняты
+по границам фраз конкретной записи, общими их сделать нельзя):
+
+| Версия | Файлы | Длина | Чем отличается |
+|---|---|---|---|
+| v1 (по умолчанию) | `scene.html` + `voice.mp3` | 60.3 с | «+0,5% сверху»; мы — агентство застройщиков |
+| v2 (`--v2`) | `scene-v2.html` + `voice-v2.mp3` | 68.0 с | «+$1000 за сделку»; мы — отдел по работе с агентами у застройщиков; добавлен шаг «готовим тексты, фото, видео, документы»; в финале сначала CTA, потом тур |
+
+На сайте сейчас играет **v1**. Чтобы заменить на v2 — пересобрать без `--reel`
+и скопировать по инструкции ниже.
 
 Нужны `ffmpeg` в PATH и chromium для Playwright (`npx playwright install chromium`).
 Рендер — около минуты на ролик.

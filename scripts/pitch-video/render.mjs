@@ -20,15 +20,24 @@ import { fileURLToPath } from 'node:url'
 
 const REEL = process.argv.includes('--reel')
 
-const here = (name) => fileURLToPath(new URL(`./${name}`, import.meta.url))
+// Две озвучки — два сценария. v1: 60.26 с, «+0,5%». v2: 68.04 с, другая
+// модель («мы не агентство, а отдел у застройщиков») и «+$1000 за сделку».
+// У каждой своя раскадровка: тайминги сняты по границам фраз своей записи.
+const V2 = process.argv.includes('--v2')
 
-const PAGE_URL = new URL('./scene.html', import.meta.url).href + (REEL ? '?mode=reel' : '')
-const FRAMES = here(REEL ? '.frames-reel/' : '.frames-web/')
-const AUDIO = here('voice.mp3')
-const OUTPUT = here(REEL ? 'reel.mp4' : 'pitch.mp4')
+const here = (name) => fileURLToPath(new URL(`./${name}`, import.meta.url))
+const tag = `${V2 ? 'v2' : 'v1'}-${REEL ? 'reel' : 'web'}`
+
+const PAGE_URL =
+  new URL(V2 ? './scene-v2.html' : './scene.html', import.meta.url).href +
+  (REEL ? '?mode=reel' : '')
+const FRAMES = here(`.frames-${tag}/`)
+const AUDIO = here(V2 ? 'voice-v2.mp3' : 'voice.mp3')
+const OUTPUT = here(`${REEL ? 'reel' : 'pitch'}${V2 ? '-v2' : ''}.mp4`)
 
 const FPS = 30
-const DURATION = 62.0        // 60.26 с озвучки + пауза, чтобы додержать финал
+// Длительность озвучки + пауза, чтобы додержать финальный кадр.
+const DURATION = V2 ? 70.0 : 62.0
 const WIDTH = REEL ? 1080 : 1920
 const HEIGHT = REEL ? 1920 : 1080
 

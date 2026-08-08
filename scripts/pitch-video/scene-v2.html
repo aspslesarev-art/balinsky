@@ -1,0 +1,912 @@
+<meta charset="utf-8">
+<title>Два рынка — партнёрство для агентов Пхукета</title>
+
+<style>
+  :root{
+    --ink:#071A22;
+    --paper:#0E2A34;
+    --panel:#123642;
+    --line:#1C4C58;
+    --fog:#8FB3BC;
+    --bone:#EAF4F2;
+    --bali:#2ECC8F;
+    --bali-dim:#1F8B5F;
+    --phuket:#E78C3D;
+
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,"Cascadia Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+
+    --gut:clamp(18px,4.5vw,44px);
+  }
+
+  *{box-sizing:border-box}
+
+  body{
+    margin:0;
+    background:var(--ink);
+    color:var(--bone);
+    font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ------------------------------------------------------------ stage */
+
+  .stage{
+    position:relative;
+    width:100%;
+    min-height:100svh;
+    overflow:hidden;
+    display:grid;
+    grid-template-rows:auto 1fr auto;
+    background:radial-gradient(120% 80% at 50% 0%, #0B2530 0%, var(--ink) 62%);
+  }
+
+  /* chart graticule, sits under everything */
+  .chart{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    background-image:
+      linear-gradient(to right, var(--line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--line) 1px, transparent 1px);
+    background-size:clamp(46px,9vw,86px) clamp(46px,9vw,86px);
+    opacity:.16;
+  }
+
+  .map{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    transition:opacity .7s ease;
+    opacity:.2;
+  }
+  .stage[data-scene="s1"] .map{opacity:.6}
+  .stage[data-scene="cover"] .map{opacity:.7}
+
+  .course-layer{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+  /* Markers are laid out as blocks in the corners, clear of the type in the
+     middle; only the course line stretches across the stage. */
+  .pin{
+    position:absolute;
+    display:grid;
+    justify-items:center;
+    gap:6px;
+    text-align:center;
+  }
+  .pin-p{left:7%;top:9%}
+  .pin-b{right:7%;bottom:11%}
+
+  .glyph{display:block;height:clamp(58px,13vh,120px);width:auto}
+  .glyph.wide{height:auto;width:clamp(76px,17vw,190px)}
+
+  .isle{fill:var(--panel);stroke:var(--line);stroke-width:2.5}
+  .isle-bali{fill:#123F3A;stroke:var(--bali-dim);stroke-width:1.6}
+
+  .pin .lbl{
+    font-family:var(--mono);
+    font-size:clamp(9px,2.1vw,12px);
+    letter-spacing:.2em;
+    text-transform:uppercase;
+    color:var(--fog);
+  }
+  .pin .lbl.bali{color:var(--bali)}
+  .pin .lbl.phu{color:var(--phuket)}
+  .pin .crd{
+    font-family:var(--mono);
+    font-size:clamp(8px,1.8vw,10px);
+    letter-spacing:.08em;
+    color:var(--fog);
+    opacity:.6;
+  }
+
+  /* pathLength=100 normalises the dash units, so the draw-on progress is a
+     plain percentage regardless of how the viewport stretches the path. */
+  .course{
+    fill:none;
+    stroke:var(--bali);
+    stroke-width:1.4;
+    stroke-dasharray:1.5 1.2;
+    stroke-dashoffset:100;
+    opacity:0;
+  }
+
+  /* Sizes are in viewBox user units, not px — the viewBox transform scales
+     them, so a px value here would render many times larger than intended. */
+  .pin-label{
+    font-family:var(--mono);
+    font-size:2.8px;
+    letter-spacing:.14em;
+    fill:var(--fog);
+    text-transform:uppercase;
+  }
+  .pin-label.bali{fill:var(--bali)}
+  .pin-label.phu{fill:var(--phuket)}
+  .pin-coord{
+    font-family:var(--mono);
+    font-size:2px;
+    letter-spacing:.08em;
+    fill:var(--fog);
+    opacity:.65;
+  }
+
+  /* ------------------------------------------------------------ chrome */
+
+  .top,.bottom{
+    position:relative;
+    z-index:3;
+    padding:calc(var(--gut) * .7) var(--gut);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    font-family:var(--mono);
+    font-size:clamp(9px,2.2vw,11px);
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--fog);
+  }
+
+  .clock{font-variant-numeric:tabular-nums;letter-spacing:.1em}
+
+  .bottom{flex-direction:column;align-items:stretch;gap:12px}
+
+  .track{
+    position:relative;
+    height:3px;
+    border-radius:2px;
+    background:var(--line);
+    cursor:pointer;
+  }
+  .track:focus-visible{outline:2px solid var(--bali);outline-offset:6px}
+  .bar{
+    position:absolute;
+    inset:0 auto 0 0;
+    width:0%;
+    border-radius:2px;
+    background:var(--bali);
+  }
+  .ticks{
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    font-family:var(--mono);
+    font-size:clamp(8px,1.9vw,10px);
+    letter-spacing:.14em;
+    color:var(--fog);
+  }
+  .ticks b{color:var(--bone);font-weight:500}
+
+  /* ------------------------------------------------------------ scenes */
+
+  .frame{
+    position:relative;
+    z-index:2;
+    display:grid;
+    align-items:center;
+    padding:0 var(--gut);
+    min-height:0;
+  }
+
+  /* Opacity and transform are written by the projector on every frame, not
+     by CSS transitions — so a seek lands on the exact eased state the same
+     moment of playback would, and an offline frame render matches the page. */
+  .scene{
+    grid-area:1/1;
+    opacity:0;
+    visibility:hidden;
+    max-width:760px;
+    width:100%;
+    margin:0 auto;
+  }
+
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:clamp(9px,2.3vw,11px);
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:var(--bali);
+    margin:0 0 clamp(14px,3vw,22px);
+  }
+  .eyebrow.warm{color:var(--phuket)}
+
+  .scene h1,.scene h2{
+    font-weight:650;
+    letter-spacing:-.025em;
+    text-wrap:balance;
+    margin:0;
+    line-height:1.05;
+  }
+  .scene h1{font-size:clamp(30px,8.2vw,62px)}
+  .scene h2{font-size:clamp(24px,6.2vw,44px)}
+
+  .lede{
+    font-size:clamp(15px,3.7vw,21px);
+    line-height:1.45;
+    color:var(--fog);
+    max-width:34ch;
+    margin:clamp(14px,3vw,22px) 0 0;
+    text-wrap:pretty;
+  }
+
+  .accent{color:var(--bali)}
+  .warm{color:var(--phuket)}
+
+  /* reveal-on-cue — initial state only; the projector drives the rest */
+  .scene [data-at]{opacity:0;transform:translateY(10px)}
+
+  /* the scheme genuinely is a sequence, so numbering carries information */
+  .steps{
+    list-style:none;
+    margin:clamp(18px,4vw,28px) 0 0;
+    padding:0;
+    display:grid;
+    gap:clamp(10px,2.4vw,16px);
+  }
+  .steps li{
+    display:grid;
+    grid-template-columns:auto 1fr;
+    gap:clamp(12px,3vw,18px);
+    align-items:baseline;
+  }
+  .steps .n{
+    font-family:var(--mono);
+    font-size:clamp(10px,2.4vw,12px);
+    letter-spacing:.1em;
+    color:var(--bali);
+    font-variant-numeric:tabular-nums;
+  }
+  .steps p{
+    margin:0;
+    font-size:clamp(15px,3.8vw,20px);
+    line-height:1.35;
+  }
+  .steps .who{
+    display:block;
+    font-family:var(--mono);
+    font-size:clamp(9px,2.1vw,11px);
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--fog);
+    margin-top:5px;
+  }
+
+  .facts{
+    list-style:none;
+    margin:clamp(18px,4vw,28px) 0 0;
+    padding:0;
+    display:grid;
+    gap:clamp(10px,2.2vw,14px);
+  }
+  .facts li{
+    border-left:2px solid var(--bali-dim);
+    padding:2px 0 2px clamp(12px,3vw,18px);
+    font-size:clamp(14px,3.5vw,19px);
+    line-height:1.35;
+  }
+  .facts span{
+    display:block;
+    color:var(--fog);
+    font-size:clamp(12px,3vw,15px);
+    margin-top:4px;
+  }
+
+  .terms{
+    display:grid;
+    gap:clamp(12px,3vw,18px);
+    margin-top:clamp(18px,4vw,28px);
+  }
+  .rate{
+    display:flex;
+    align-items:baseline;
+    gap:clamp(10px,2.5vw,16px);
+    flex-wrap:wrap;
+  }
+  .rate .big{
+    font-family:var(--mono);
+    font-size:clamp(38px,11vw,76px);
+    font-weight:600;
+    letter-spacing:-.03em;
+    color:var(--bali);
+    font-variant-numeric:tabular-nums;
+    line-height:1;
+  }
+  .rate .cap{
+    font-size:clamp(14px,3.4vw,18px);
+    color:var(--fog);
+    max-width:22ch;
+    line-height:1.3;
+  }
+
+  .deadline{
+    border:1px solid var(--line);
+    border-radius:2px;
+    padding:clamp(12px,3vw,18px);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    background:rgba(18,54,66,.5);
+  }
+  .deadline .txt{
+    font-size:clamp(13px,3.2vw,17px);
+    line-height:1.35;
+  }
+  .deadline .txt strong{color:var(--bone);font-weight:650}
+  .deadline .cnt{
+    font-family:var(--mono);
+    text-align:right;
+    flex:none;
+  }
+  .deadline .cnt b{
+    display:block;
+    font-size:clamp(24px,6vw,38px);
+    font-weight:600;
+    color:var(--phuket);
+    font-variant-numeric:tabular-nums;
+    line-height:1;
+  }
+  .deadline .cnt span{
+    font-size:clamp(8px,2vw,10px);
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--fog);
+  }
+
+  .tour{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:clamp(10px,2.4vw,16px);
+    margin-top:clamp(18px,4vw,28px);
+  }
+  .tour div{
+    border-top:1px solid var(--line);
+    padding-top:clamp(10px,2.4vw,14px);
+  }
+  .tour b{
+    display:block;
+    font-family:var(--mono);
+    font-size:clamp(22px,5.6vw,36px);
+    font-weight:600;
+    color:var(--bali);
+    font-variant-numeric:tabular-nums;
+    line-height:1;
+  }
+  .tour span{
+    display:block;
+    margin-top:7px;
+    font-size:clamp(11px,2.8vw,14px);
+    color:var(--fog);
+    line-height:1.3;
+  }
+
+  .cta{
+    display:inline-flex;
+    align-items:center;
+    gap:12px;
+    margin-top:clamp(20px,4.5vw,30px);
+    padding:clamp(13px,3.2vw,17px) clamp(20px,5vw,30px);
+    background:var(--bali);
+    color:#04241A;
+    font-weight:650;
+    font-size:clamp(15px,3.7vw,19px);
+    letter-spacing:-.01em;
+    text-decoration:none;
+    border-radius:2px;
+  }
+  .cta:hover{background:#3EDBA0}
+  .cta:focus-visible{outline:2px solid var(--bone);outline-offset:4px}
+
+  .cta-note{
+    margin:12px 0 0;
+    font-family:var(--mono);
+    font-size:clamp(9px,2.2vw,11px);
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--fog);
+  }
+
+  /* ------------------------------------------------------------ cover */
+
+  .cover{
+    position:absolute;
+    inset:0;
+    z-index:5;
+    display:grid;
+    align-content:center;
+    gap:clamp(20px,4.5vw,30px);
+    padding:var(--gut);
+    background:linear-gradient(180deg, rgba(7,26,34,.72), rgba(7,26,34,.94));
+    transition:opacity .5s ease, visibility .5s;
+  }
+  .stage.started .cover{opacity:0;visibility:hidden;pointer-events:none}
+
+  .cover .kicker{
+    font-family:var(--mono);
+    font-size:clamp(9px,2.3vw,11px);
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:var(--fog);
+    margin:0;
+  }
+  .cover h1{
+    font-weight:650;
+    letter-spacing:-.025em;
+    text-wrap:balance;
+    margin:0;
+    line-height:1.05;
+    font-size:clamp(30px,8.2vw,62px);
+    max-width:14ch;
+  }
+
+  .play{
+    justify-self:start;
+    display:inline-flex;
+    align-items:center;
+    gap:14px;
+    padding:clamp(14px,3.4vw,18px) clamp(22px,5vw,32px);
+    background:var(--bali);
+    color:#04241A;
+    border:0;
+    border-radius:2px;
+    font-family:var(--sans);
+    font-size:clamp(15px,3.7vw,18px);
+    font-weight:650;
+    cursor:pointer;
+  }
+  .play:hover{background:#3EDBA0}
+  .play:focus-visible{outline:2px solid var(--bone);outline-offset:4px}
+  .play svg{flex:none}
+
+  .cover .meta{
+    font-family:var(--mono);
+    font-size:clamp(9px,2.2vw,11px);
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--fog);
+    margin:0;
+  }
+
+  /* ------------------------------------------------------------ text version */
+
+  .read{
+    position:relative;
+    z-index:1;
+    border-top:1px solid var(--line);
+    padding:clamp(36px,8vw,72px) var(--gut) clamp(48px,10vw,96px);
+    max-width:760px;
+    margin:0 auto;
+  }
+  .read h3{
+    font-size:clamp(19px,4.6vw,26px);
+    font-weight:650;
+    letter-spacing:-.02em;
+    margin:0 0 clamp(18px,4vw,26px);
+    color:var(--bone);
+  }
+  .read h4{
+    font-family:var(--mono);
+    font-size:clamp(9px,2.2vw,11px);
+    letter-spacing:.2em;
+    text-transform:uppercase;
+    color:var(--bali);
+    margin:clamp(24px,5vw,34px) 0 10px;
+    font-weight:500;
+  }
+  .read p,.read li{
+    font-size:clamp(14px,3.4vw,17px);
+    line-height:1.55;
+    color:var(--fog);
+    margin:0 0 10px;
+  }
+  .read strong{color:var(--bone);font-weight:600}
+  .read ul{margin:0;padding-left:1.15em}
+  .read li{margin-bottom:8px}
+
+  /* ---------------------------------------------- reel mode (?mode=reel)
+
+     Вертикальный кадр 9:16 под Instagram и светлая карта вместо ночной.
+     Это тот же макет, а не копия: меняются только токены палитры и
+     размеры кегля — чтобы веб-версия и рилс не разъехались при правках.
+     Кегли в vw: на кадре 1080 px это даёт крупный, читаемый в ленте текст. */
+
+  :root.reel{
+    --ink:#FBFDFB;
+    --paper:#F2F7F4;
+    --panel:#E7F0EB;
+    --line:#CBDDD4;
+    --fog:#5C7269;
+    --bone:#0E2A21;
+    --bali:#1F8B5F;
+    --bali-dim:#7FBFA2;
+    --phuket:#CE741F;
+  }
+
+  .reel .stage{background:radial-gradient(120% 55% at 50% 0%, #FFFFFF 0%, var(--ink) 70%)}
+  .reel .chart{opacity:.55}
+  .reel .isle{fill:#E4EEE9;stroke:#BFD4CA;stroke-width:2}
+  .reel .isle-bali{fill:#D8EEE2;stroke:var(--bali);stroke-width:1.4}
+  .reel .deadline{background:#FFFFFF}
+  .reel .stage[data-scene="s1"] .map{opacity:.85}
+
+  /* Нижние ~18% кадра Reels перекрыты подписью и кнопками Instagram —
+     поэтому контент прижимаем выше центра. */
+  .reel .frame{padding:0 7vw 14vh}
+  .reel .scene{max-width:none}
+  .reel .top{font-size:1.6vw;padding:5vw 7vw}
+
+  .reel .scene h1{font-size:7.4vw}
+  .reel .scene h2{font-size:5.6vw}
+  .reel .eyebrow{font-size:1.75vw;margin-bottom:3.4vw}
+  .reel .lede{font-size:2.9vw;max-width:24ch;margin-top:3.4vw}
+
+  .reel .steps{gap:2.6vw;margin-top:4.4vw}
+  .reel .steps .n{font-size:1.75vw}
+  .reel .steps p{font-size:2.9vw}
+  .reel .steps .who{font-size:1.6vw}
+
+  .reel .facts{gap:2.4vw;margin-top:4.4vw}
+  .reel .facts li{font-size:2.8vw;padding-left:2.6vw}
+  .reel .facts span{font-size:2.1vw}
+
+  .reel .rate .big{font-size:12vw}
+  .reel .rate .cap{font-size:2.5vw;max-width:18ch}
+  .reel .deadline{padding:2.6vw}
+  .reel .deadline .txt{font-size:2.4vw}
+  .reel .deadline .cnt b{font-size:6vw}
+  .reel .deadline .cnt span{font-size:1.4vw}
+
+  .reel .tour{gap:2.4vw;margin-top:4.4vw}
+  .reel .tour b{font-size:6vw}
+  .reel .tour span{font-size:1.95vw}
+
+  .reel .glyph{height:10vw}
+  .reel .glyph.wide{height:auto;width:17vw}
+  .reel .pin .lbl{font-size:1.6vw}
+  .reel .pin .crd{font-size:1.3vw}
+  /* Маркеры уводим в самые углы: в вертикальном кадре они иначе
+     наезжают на надстрочник сцены и на нижние строки списка. */
+  .reel .pin-p{left:6%;top:3.5%}
+  .reel .pin-b{right:6%;bottom:3%}
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.12s !important}
+    .course.on{stroke-dashoffset:0;opacity:.9}
+  }
+</style>
+
+<div class="stage" id="stage" data-scene="cover">
+
+  <div class="chart"></div>
+
+  <div class="map" aria-hidden="true">
+    <!-- Course line spans the whole stage, so it stretches with the viewport;
+         non-scaling-stroke keeps the weight and dashes even under that skew. -->
+    <svg class="course-layer" viewBox="0 0 100 100" preserveAspectRatio="none">
+      <path class="course" id="course" vector-effect="non-scaling-stroke" pathLength="100"
+            d="M17,26 C40,38 58,58 80,73"/>
+    </svg>
+
+    <div class="pin pin-p">
+      <svg class="glyph" viewBox="0 0 110 190">
+        <path class="isle" d="M55,4 L72,26 L79,58 L82,96 L74,134 L60,168 L46,180 L34,160 L27,120 L24,82 L32,42 Z"/>
+      </svg>
+      <span class="lbl phu">Пхукет</span>
+      <span class="crd">7.88°N 98.39°E</span>
+    </div>
+
+    <div class="pin pin-b">
+      <svg class="glyph wide" viewBox="0 0 108 64">
+        <path class="isle isle-bali" d="M8,34 L20,24 L38,19 L58,17 L78,22 L92,29 L100,38 L92,46 L76,48 L66,45 L58,53 L50,60 L42,54 L40,45 L28,45 L16,42 Z"/>
+      </svg>
+      <span class="lbl bali">Бали</span>
+      <span class="crd">8.34°S 115.09°E</span>
+    </div>
+  </div>
+
+  <div class="top">
+    <span>Балинский · партнёрство</span>
+    <span class="clock" id="clock">0:00 / 1:00</span>
+  </div>
+
+  <div class="frame">
+
+    <section class="scene" data-at="0" data-until="7.92">
+      <p class="eyebrow" data-at="0">Предложение для агентов Пхукета</p>
+      <h1 data-at="0">Вы продаёте <span class="warm">Пхукет</span>.<br>И не продаёте <span class="accent">Бали</span>.</h1>
+      <p class="lede" data-at="2.76">Можно зарабатывать больше — просто добавив второй рынок. Ничего не меняя в вашей работе.</p>
+    </section>
+
+    <section class="scene" data-at="7.92" data-until="18.76">
+      <p class="eyebrow" data-at="7.92">Модель простая</p>
+      <h2 data-at="7.92">Материалы — с нас.<br>База — ваша.</h2>
+      <ol class="steps">
+        <li data-at="8.92"><span class="n">01</span><p>Готовим тексты, фотографии, видео и документы<span class="who">Всё на нашей стороне</span></p></li>
+        <li data-at="13.04"><span class="n">02</span><p>Вы отправляете их по своей базе<span class="who">Клиенты остаются вашими</span></p></li>
+        <li data-at="14.60"><span class="n">03</span><p>Кто откликнулся на Бали — передаёте контакт<span class="who">Это всё, что от вас нужно</span></p></li>
+        <li data-at="17.28"><span class="n">04</span><p><span class="accent">Дальше всё делаем мы</span><span class="who">Подключаемся и ведём</span></p></li>
+      </ol>
+    </section>
+
+    <section class="scene" data-at="18.76" data-until="29.24">
+      <p class="eyebrow" data-at="18.76">Что берём на себя</p>
+      <ul class="facts">
+        <li data-at="18.76">Подбор, показы, застройщик, документы, сделка<span>Полный цикл — на нашей стороне</span></li>
+        <li data-at="21.96">Комиссия от застройщика — полностью ваша<span>Мы из неё не берём ничего</span></li>
+        <li data-at="24.28">Клиент закреплён за вами навсегда</li>
+        <li data-at="26.20">С каждой следующей его покупки платим снова</li>
+      </ul>
+    </section>
+
+    <section class="scene" data-at="29.24" data-until="36.60">
+      <p class="eyebrow" data-at="29.24">В чём подвох</p>
+      <h2 data-at="30.24">Мы не агентство.<br>Мы отдел по работе с агентами <span class="accent">у застройщиков</span>.</h2>
+      <p class="lede" data-at="33.96">Зарабатываем с них, а не с вашей комиссии.</p>
+    </section>
+
+    <section class="scene" data-at="36.60" data-until="45.80">
+      <p class="eyebrow" data-at="36.60">Поэтому это безопасно</p>
+      <ul class="facts">
+        <li data-at="36.60">Прямая связь с застройщиками<span>Захотите — сможете работать и без нас</span></li>
+        <li data-at="40.56">Выплата комиссии день в день<span>Без ожидания и напоминаний</span></li>
+        <li data-at="43.36">Застройщик задержал — платим из своих<span>Его срыв не становится вашей проблемой</span></li>
+      </ul>
+    </section>
+
+    <section class="scene" data-at="45.80" data-until="59.56">
+      <p class="eyebrow warm" data-at="45.80">Старт партнёрки — условия максимальные</p>
+      <div class="terms">
+        <div class="rate" data-at="45.80">
+          <span class="big">+$1000</span>
+          <span class="cap">сверху от нас за каждую сделку — первые полгода, поверх максимальной комиссии</span>
+        </div>
+        <div class="deadline" data-at="54.88">
+          <span class="txt">Зафиксируете до <strong>17 августа</strong> — условия ваши на год. Дальше урежем.</span>
+          <span class="cnt"><b id="days">—</b><span id="dayword">дней осталось</span></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="scene" data-at="59.56" data-until="62.28">
+      <p class="eyebrow" data-at="59.56">Один шаг</p>
+      <h1 data-at="59.56">Одно сообщение Елене —<br>и вы продаёте <span class="accent">два рынка</span>.</h1>
+      <a class="cta" id="cta" href="#" data-at="60.6">Написать Елене</a>
+      <p class="cta-note" data-at="60.6">← подставить ссылку на Telegram</p>
+    </section>
+
+    <section class="scene" data-at="62.28" data-until="999">
+      <p class="eyebrow" data-at="62.28">И прилетайте посмотреть</p>
+      <h2 data-at="62.28">Живите на виллах<br>наших застройщиков</h2>
+      <div class="tour">
+        <div data-at="62.28"><b>2</b><span>дня на виллах каждого застройщика</span></div>
+        <div data-at="66.40"><b>0 ₽</b><span>машины и все встречи с нас</span></div>
+      </div>
+    </section>
+
+  <div class="bottom">
+    <div class="track" id="track" role="slider" tabindex="0"
+         aria-label="Перемотка" aria-valuemin="0" aria-valuemax="60" aria-valuenow="0">
+      <div class="bar" id="bar"></div>
+    </div>
+    <div class="ticks">
+      <span id="hint">Нажмите «смотреть», чтобы начать</span>
+      <span><b>60</b> секунд</span>
+    </div>
+  </div>
+
+  <div class="cover" id="cover">
+    <p class="kicker">Балинский · Бали</p>
+    <h1>Добавьте второй рынок, ничего не меняя</h1>
+    <button class="play" id="play">
+      <svg width="14" height="16" viewBox="0 0 14 16" aria-hidden="true"><path d="M0 0l14 8-14 8z" fill="currentColor"/></svg>
+      Смотреть и слушать · 60 сек
+    </button>
+    <p class="meta">Со звуком · или прочитайте текстом ниже</p>
+  </div>
+
+  <audio id="au" preload="auto" src="voice-v2.mp3"></audio>
+</div>
+
+<section class="read">
+  <h3>То же самое текстом</h3>
+
+  <p>Вы продаёте Пхукет и не продаёте Бали. Можно зарабатывать больше, добавив второй рынок и ничего не меняя в своей работе.</p>
+
+  <h4>Модель</h4>
+  <ul>
+    <li>Мы готовим короткие тексты, фотографии, видео и документы.</li>
+    <li>Вы отправляете их по своей базе.</li>
+    <li>Кто откликнулся на Бали — передаёте контакт.</li>
+    <li>Дальше всё делаем мы: подбор, показы, застройщик, документы, сделка.</li>
+    <li><strong>Комиссия от застройщика полностью ваша.</strong> Клиент закреплён за вами навсегда — с каждой следующей покупки платим снова.</li>
+  </ul>
+
+  <h4>В чём подвох</h4>
+  <p>Мы не агентство. Мы отдел по работе с агентами у застройщиков — <strong>зарабатываем с них, а не с вашей комиссии</strong>.</p>
+  <ul>
+    <li>У вас прямая связь с застройщиками: захотите — сможете работать и без нас.</li>
+    <li>Выплата комиссии день в день.</li>
+    <li>Застройщик задержал — платим из своих.</li>
+  </ul>
+
+  <h4>Условия старта</h4>
+  <p>Максимальная комиссия <strong>плюс 1000 долларов сверху от нас за каждую сделку</strong> в первые полгода. Зафиксируете <strong>до 17 августа</strong> — условия ваши на год, дальше урежем.</p>
+
+  <h4>Дальше</h4>
+  <p>Одно сообщение Елене — и вы продаёте два рынка. А ещё прилетайте на Бали: живите на виллах наших застройщиков по два дня, машины и все встречи — с нас.</p>
+</section>
+
+<script>
+(function(){
+  // ?mode=reel — вертикальный светлый кадр под Instagram.
+  if (new URLSearchParams(location.search).get('mode') === 'reel'){
+    document.documentElement.classList.add('reel');
+  }
+
+  var stage  = document.getElementById('stage');
+  var au     = document.getElementById('au');
+  var play   = document.getElementById('play');
+  var track  = document.getElementById('track');
+  var bar    = document.getElementById('bar');
+  var clock  = document.getElementById('clock');
+  var hint   = document.getElementById('hint');
+  var course = document.getElementById('course');
+
+  var scenes  = Array.prototype.slice.call(document.querySelectorAll('.scene'));
+  var reveals = Array.prototype.slice.call(document.querySelectorAll('.scene [data-at]'));
+
+  var TOTAL = 68.04;     // voiceover length — used until metadata lands
+  var COURSE_AT = 2.76;   // the course draws on "добавить второй рынок"
+
+  // ---- deadline countdown, computed at view time so it stays honest ----
+  (function(){
+    var el = document.getElementById('days');
+    var word = document.getElementById('dayword');
+    if (!el) return;
+    var end = new Date('2026-08-17T23:59:59+07:00').getTime();
+    var left = Math.ceil((end - Date.now()) / 86400000);
+    if (left > 1){
+      el.textContent = left;
+      var t = left % 10, h = left % 100;
+      word.textContent = (t >= 2 && t <= 4 && (h < 12 || h > 14)) ? 'дня осталось' : 'дней осталось';
+    } else if (left === 1){
+      el.textContent = '1'; word.textContent = 'день остался';
+    } else if (left === 0){
+      el.textContent = '!'; word.textContent = 'последний день';
+    } else {
+      el.textContent = '—'; word.textContent = 'срок прошёл';
+    }
+  })();
+
+  // ---- the projector ---------------------------------------------------
+  function fmt(s){
+    s = Math.max(0, Math.floor(s || 0));
+    return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+  }
+
+  function duration(){
+    return (au.duration && isFinite(au.duration)) ? au.duration : TOTAL;
+  }
+
+  var SCENE_FADE = 0.5;
+  var REVEAL_FADE = 0.45;
+
+  function ease(x){
+    if (x <= 0) return 0;
+    if (x >= 1) return 1;
+    return 1 - Math.pow(1 - x, 3);
+  }
+
+  function paint(t){
+    var started = stage.classList.contains('started');
+
+    var live = null;
+    for (var i = 0; i < scenes.length; i++){
+      var s = scenes[i];
+      var on = started && t >= +s.dataset.at && t < +s.dataset.until;
+      if (on){
+        live = i;
+        s.style.opacity = ease((t - +s.dataset.at) / SCENE_FADE);
+        s.style.visibility = 'visible';
+      } else {
+        s.style.opacity = 0;
+        s.style.visibility = 'hidden';
+      }
+    }
+    if (live !== null) stage.dataset.scene = 's' + (live + 1);
+
+    for (var j = 0; j < reveals.length; j++){
+      var r = reveals[j];
+      var k = started ? ease((t - +r.dataset.at) / REVEAL_FADE) : 0;
+      r.style.opacity = k;
+      r.style.transform = k >= 1 ? 'none' : 'translateY(' + ((1 - k) * 10).toFixed(2) + 'px)';
+    }
+
+    // Course: draws on, then the dashes march along it.
+    var drawn = started ? ease((t - COURSE_AT) / 2.2) : 0;
+    course.style.opacity = drawn > 0 ? 0.9 : 0;
+    course.style.strokeDashoffset = drawn < 1
+      ? (100 * (1 - drawn)).toFixed(2)
+      : (-(((t - COURSE_AT - 2.2) * 5.4) % 2.7)).toFixed(2);
+
+    var dur = duration();
+    bar.style.width = (Math.max(0, Math.min(1, t / dur)) * 100) + '%';
+    track.setAttribute('aria-valuenow', Math.round(t));
+    clock.textContent = fmt(t) + ' / ' + fmt(dur);
+  }
+
+  var raf = null;
+  function loop(){ paint(clockNow()); raf = requestAnimationFrame(loop); }
+  function run(){ if (raf === null) loop(); }
+  function halt(){ if (raf !== null){ cancelAnimationFrame(raf); raf = null; } }
+
+  // Playback position comes from the audio element, unless sound was
+  // refused — then a wall-clock fallback drives the same timeline.
+  var silentStart = null;
+  function clockNow(){
+    if (silentStart !== null) return (Date.now() - silentStart) / 1000;
+    return au.currentTime;
+  }
+
+  function startSilent(){
+    hint.textContent = 'Звук недоступен — идёт без него';
+    silentStart = Date.now();
+    run();
+    setTimeout(finish, TOTAL * 1000);
+  }
+
+  function finish(){
+    halt();
+    paint(TOTAL);
+    hint.textContent = 'Нажмите, чтобы посмотреть заново';
+  }
+
+  function start(){
+    stage.classList.add('started');
+    var p = au.play();
+    if (p && p.catch) p.catch(startSilent);
+  }
+
+  play.addEventListener('click', start);
+
+  au.addEventListener('play',  function(){ run(); hint.textContent = 'Нажмите, чтобы поставить на паузу'; });
+  au.addEventListener('pause', function(){ if (!au.ended) hint.textContent = 'Пауза — нажмите, чтобы продолжить'; });
+  au.addEventListener('ended', finish);
+
+  stage.addEventListener('click', function(e){
+    if (!stage.classList.contains('started')) return;
+    if (silentStart !== null) return;
+    if (e.target.closest('a, button, .track')) return;
+    if (au.ended){ au.currentTime = 0; au.play(); run(); return; }
+    if (au.paused){ au.play(); } else { au.pause(); halt(); paint(au.currentTime); }
+  });
+
+  function seek(clientX){
+    if (silentStart !== null) return;
+    var r = track.getBoundingClientRect();
+    var t = Math.max(0, Math.min(1, (clientX - r.left) / r.width)) * duration();
+    stage.classList.add('started');
+    au.currentTime = t;
+    paint(t);
+  }
+  track.addEventListener('click', function(e){ seek(e.clientX); });
+  track.addEventListener('keydown', function(e){
+    if (silentStart !== null) return;
+    if (e.key === 'ArrowRight'){ au.currentTime = Math.min(duration(), au.currentTime + 5); paint(au.currentTime); e.preventDefault(); }
+    if (e.key === 'ArrowLeft'){  au.currentTime = Math.max(0, au.currentTime - 5); paint(au.currentTime); e.preventDefault(); }
+  });
+
+  // Frame-accurate hook for the offline video render: it drives the exact
+  // same timeline the audio drives, so the rendered mp4 and the live page
+  // cut on identical beats. Also handy for screenshotting a given second.
+  window.__seek = function(t){
+    stage.classList.add('started');
+    halt();
+    try { au.pause(); } catch (e) {}
+    silentStart = null;
+    paint(t);
+  };
+
+  paint(0);
+})();
+</script>
