@@ -15,6 +15,8 @@ const DISALLOW = [
   '/ru/izbrannoe',
   '/en/favourites',
   '/admin',
+  // Закрытые отчёты для застройщиков — доступ только по ссылке с ключом.
+  '/insights',
 ]
 
 // Modern AI-search crawlers we want to explicitly green-light. Without

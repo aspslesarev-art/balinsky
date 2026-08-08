@@ -162,7 +162,6 @@ function dropBrokenUrl(urls, message) {
 
 // Общий «стоп-кран»: на 429 весь пул воркеров ждёт, а не долбит квоту дальше.
 let pauseUntil = 0
-let rateLimited = 0
 async function waitIfPaused() {
   while (Date.now() < pauseUntil) await sleep(Math.min(2000, pauseUntil - Date.now()))
 }
@@ -182,7 +181,6 @@ async function analyzeWithRetry(urls) {
         continue
       }
       if (status === 429) {
-        rateLimited++
         const retryAfter = Number(e?.headers?.['retry-after'] ?? e?.response?.headers?.get?.('retry-after')) || 0
         const wait = Math.max(retryAfter * 1000, Math.min(45000, 4000 * 2 ** attempt)) + Math.random() * 1500
         pauseUntil = Math.max(pauseUntil, Date.now() + wait)

@@ -5,6 +5,8 @@ import { EN_KNOWLEDGE_SLUG_OVERRIDES } from '@/lib/knowledge-en-slugs'
 
 export const config = {
   matcher: [
+    // Закрытые отчёты для застройщиков — доступ по ссылке с ключом.
+    '/insights/:path*',
     '/presentation/:path*',
     '/--------copy/:path*',
     '/villa/:path*',
@@ -213,7 +215,42 @@ function handleLlmSuffix(req: NextRequest): NextResponse | null {
   return NextResponse.rewrite(target)
 }
 
+// /insights/* — закрытые отчёты, которые мы точечно раздаём застройщикам.
+// Ссылка вида /insights/<отчёт>?k=<ключ> обменивает ключ на httpOnly-куку и
+// сразу чистит адрес, чтобы ключ не утёк через referer, историю и скриншоты.
+// Без валидной куки страница отвечает голым 404: 403 подтвердил бы, что она
+// существует. Ключа нет в окружении — закрыто для всех (fail-closed).
+const INSIGHTS_COOKIE = 'ins_access'
+const INSIGHTS_MAX_AGE = 60 * 60 * 24 * 180
+
+function handleInsights(req: NextRequest): NextResponse | null {
+  if (!req.nextUrl.pathname.startsWith('/insights')) return null
+
+  const key = process.env.INSIGHTS_KEY
+  if (!key) return new NextResponse(null, { status: 404 })
+
+  if (req.nextUrl.searchParams.get('k') === key) {
+    const clean = new URL(req.nextUrl)
+    clean.searchParams.delete('k')
+    const res = NextResponse.redirect(clean)
+    res.cookies.set(INSIGHTS_COOKIE, key, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: INSIGHTS_MAX_AGE,
+      path: '/insights',
+    })
+    return res
+  }
+
+  if (req.cookies.get(INSIGHTS_COOKIE)?.value === key) return NextResponse.next()
+  return new NextResponse(null, { status: 404 })
+}
+
 export async function middleware(req: NextRequest) {
+  const insights = handleInsights(req)
+  if (insights) return insights
+
   // Fast path — runs on every matched URL, no I/O.
   const llm = handleLlmSuffix(req)
   if (llm) return llm

@@ -33,6 +33,9 @@ export function SiteChrome() {
   // единственным действием осталось написать нам (/phuket — бронь встречи,
   // /phuket-partners — вход в партнёрскую программу).
   if (pathname === '/phuket' || pathname === '/phuket-partners') return null
+  // Закрытые отчёты для застройщиков — самостоятельные страницы по ссылке,
+  // без навигации маркетплейса и без AI-консультанта.
+  if (pathname.startsWith('/insights')) return null
   const lang: Lang = detectLang(pathname)
   return (
     <>
