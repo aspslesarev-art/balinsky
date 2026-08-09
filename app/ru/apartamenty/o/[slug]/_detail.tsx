@@ -50,6 +50,8 @@ import { PriceCtaCard } from '@/components/PriceCtaCard'
 import { findActiveReservation } from '@/lib/reservations'
 import { loadLandProfile, landAllowsBuilding } from '@/lib/land-profile'
 import { loadMarketStats } from '@/lib/complex-market-stats'
+import { loadOneUnitDemand } from '@/lib/unit-demand'
+import { UnitDemandBlock } from '@/components/UnitDemandBlock'
 import { MarketStatsBlock } from '@/components/MarketStatsBlock'
 import { GatedBlock } from '@/components/GatedBlock'
 import { VillaPresentationButton } from '@/components/VillaPresentation'
@@ -955,7 +957,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
   const parentComplex = findParentComplex(title, complexes)
   const parentComplexName = parentComplex?.name ?? null
 
-  const [otherApts, managers, activeReservation, landProfile, marketStats, developers, nearby, geoFacts, surroundings] = await Promise.all([
+  const [otherApts, managers, activeReservation, landProfile, marketStats, developers, nearby, geoFacts, surroundings, demand] = await Promise.all([
     loadOtherApartmentsInDistrict(district, a.airtable_id, lang),
     loadManagersByDeveloperName(devName),
     findActiveReservation('apartment', a.airtable_id),
@@ -965,6 +967,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
     loadNearbyPlaces(a.airtable_id).catch(() => null),
     loadGeoFacts('apartment', a.airtable_id).catch(() => null),
     loadSurroundings('apartment', a.airtable_id).catch(() => null),
+    loadOneUnitDemand('apartment', a.airtable_id, lang).catch(() => null),
   ])
   const developer = findDeveloperByName(devName, developers)
   const GMAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? ''
@@ -1231,6 +1234,14 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
 
         {districtCopy && districtSlug && (
           <DistrictAboutCard copy={districtCopy} lang={lang} kind="apartment" hubHref={`${apartmentsRoot}/${districtSlug}`} />
+        )}
+
+        {/* Балл востребованности — над блоком рынка: сначала вывод про сам
+            объект, потом цифры района, на которых он построен. */}
+        {demand && (
+          <section className="mb-6">
+            <UnitDemandBlock demand={demand} lang={lang} />
+          </section>
         )}
 
         {/* LandProfile + MarketStats — sits right under the description

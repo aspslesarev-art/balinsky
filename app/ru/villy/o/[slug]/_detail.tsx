@@ -30,6 +30,8 @@ import { PageContainer } from '@/components/PageContainer'
 import { PhotoGalleryHero } from '@/components/PhotoGalleryHero'
 import { loadVillaLandProfile, landAllowsBuilding } from '@/lib/land-profile'
 import { loadMarketStats } from '@/lib/complex-market-stats'
+import { loadOneUnitDemand } from '@/lib/unit-demand'
+import { UnitDemandBlock } from '@/components/UnitDemandBlock'
 import { MarketStatsBlock } from '@/components/MarketStatsBlock'
 import { GatedBlock } from '@/components/GatedBlock'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
@@ -1039,7 +1041,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   const isResale = /перепрод|resale|вторич|secondary/.test(dealTypeRaw)
   const sellerUrl = isResale ? firstString(d['Контакт продавца']) : null
 
-  const [otherVillas, complexes, developers, stylesMap, scoresMap, activeReservation, landProfile, marketStats, nearby, geoFacts, surroundings] = await Promise.all([
+  const [otherVillas, complexes, developers, stylesMap, scoresMap, activeReservation, landProfile, marketStats, nearby, geoFacts, surroundings, demand] = await Promise.all([
     loadOtherVillasInDistrict(district, v.airtable_id, lang),
     _loadComplexesIndex(),
     _loadDevelopersIndex(lang),
@@ -1051,6 +1053,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
     loadNearbyPlaces(v.airtable_id).catch(() => null),
     loadGeoFacts('villa', v.airtable_id).catch(() => null),
     loadSurroundings('villa', v.airtable_id).catch(() => null),
+    loadOneUnitDemand('villa', v.airtable_id, lang).catch(() => null),
   ])
   const interiorStyle = stylesMap[v.airtable_id]?.style ?? null
   const villaScore = scoresMap.get(v.airtable_id) ?? null
@@ -1381,6 +1384,14 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
 
         {districtCopy && districtSlug && (
           <DistrictAboutCard copy={districtCopy} lang={lang} kind="villa" hubHref={`${villasRoot}/${districtSlug}`} />
+        )}
+
+        {/* Балл востребованности — над блоком рынка: сначала вывод про сам
+            объект, потом цифры района, на которых он построен. */}
+        {demand && (
+          <section className="mb-6">
+            <UnitDemandBlock demand={demand} lang={lang} />
+          </section>
         )}
 
         {(

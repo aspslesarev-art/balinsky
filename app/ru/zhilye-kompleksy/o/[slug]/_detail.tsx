@@ -58,6 +58,8 @@ const SunShadowBlock = dynamic(
 import { LazyMount } from '@/components/LazyMount'
 import { loadLandProfile, landAllowsBuilding } from '@/lib/land-profile'
 import { loadComplexMarketStats } from '@/lib/complex-market-stats'
+import { loadUnitDemand, type UnitDemand } from '@/lib/unit-demand'
+import { UnitDemandStrip } from '@/components/UnitDemandBlock'
 import { MarketStatsBlock } from '@/components/MarketStatsBlock'
 import { GatedBlock } from '@/components/GatedBlock'
 import { loadComplexAccess, loadGeoFacts } from '@/lib/complex-access'
@@ -1355,6 +1357,13 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
     loadSurroundings('complex', c.airtable_id).catch(() => null),
   ])
 
+  // Балл востребованности грузится после units, а не в общем Promise.all:
+  // ключом служат их airtable_id, которые до загрузки юнитов неизвестны.
+  const demandByUnit = await loadUnitDemand(
+    units.map(u => ({ kind: u.kind, airtableId: u.id })),
+    lang,
+  ).catch(() => ({}) as Record<string, UnitDemand>)
+
   const photos = (photoManifest[c.airtable_id] ?? []).slice(0, 12)
   const slidesPhotos = photos.length > 0 ? photos : c.cover_url ? [c.cover_url] : []
   const districtRaw = firstString(d['Location 2']) ?? firstString(d['Location'])
@@ -1784,11 +1793,17 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
               })()} {name}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {units.slice(0, 12).map(u =>
-                u.kind === 'villa'
-                  ? <VillaCard key={u.id} a={u} lang={lang} />
-                  : <ApartmentCard key={u.id} a={u} lang={lang} />,
-              )}
+              {units.slice(0, 12).map(u => {
+                const demand = demandByUnit[`${u.kind}|${u.id}`]
+                return (
+                  <div key={u.id}>
+                    {u.kind === 'villa'
+                      ? <VillaCard a={u} lang={lang} />
+                      : <ApartmentCard a={u} lang={lang} />}
+                    {demand && <UnitDemandStrip demand={demand} lang={lang} />}
+                  </div>
+                )
+              })}
             </div>
           </section>
         )}
