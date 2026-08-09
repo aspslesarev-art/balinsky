@@ -14,12 +14,29 @@ const sb = createClient(
   { auth: { persistSession: false } },
 )
 
-async function fetchReport(): Promise<PremiumReport> {
-  const { data, error } = await sb.rpc('product_premium_report')
-  if (error) throw new Error(`product_premium_report: ${error.message}`)
-  const report = data as PremiumReport | null
-  if (!report?.zones?.length) throw new Error('product_premium_report: пустой отчёт')
-  return report
+// Отчёт — десяток тяжёлых сканов по 14k строк, и под нагрузкой на базу он
+// упирается в statement timeout. Раньше это валило ВЕСЬ деплой: страница
+// пререндерится на сборке, исключение при пререндере обрывает экспорт, и сайт
+// не выкатывался целиком из-за одной аналитической страницы.
+const RETRIES = 3
+const RETRY_DELAY_MS = [0, 3000, 8000]
+
+async function fetchReport(): Promise<PremiumReport | null> {
+  let lastError = ''
+  for (let attempt = 0; attempt < RETRIES; attempt++) {
+    if (RETRY_DELAY_MS[attempt]) {
+      await new Promise(r => setTimeout(r, RETRY_DELAY_MS[attempt]))
+    }
+    const { data, error } = await sb.rpc('product_premium_report')
+    if (error) { lastError = error.message; continue }
+    const report = data as PremiumReport | null
+    if (!report?.zones?.length) { lastError = 'пустой отчёт'; continue }
+    return report
+  }
+  // Возвращаем null, а не бросаем: страница покажет заглушку и пересоберётся
+  // сама по ISR, а деплой останется зелёным.
+  console.error(`product_premium_report недоступен после ${RETRIES} попыток: ${lastError}`)
+  return null
 }
 
 // Сутки — данные меняются прогоном vision, а не по запросу пользователя.

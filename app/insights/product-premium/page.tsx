@@ -90,6 +90,21 @@ function Group({ title, note, items }: { title: string; note: string; items: Pre
 
 export default async function ProductPremiumPage() {
   const report = await loadPremiumReport()
+  // Отчёт мог не собраться из-за таймаута на нагруженной базе. Показываем
+  // заглушку вместо исключения: иначе падает пререндер и с ним весь деплой.
+  if (!report) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-16">
+        <h1 className="text-[24px] font-semibold text-[#111827] mb-3">
+          Отчёт пересчитывается
+        </h1>
+        <p className="text-[15px] text-[var(--color-text-muted)]">
+          Сводка по премиям за признаки продукта временно недоступна — данные
+          обновляются. Загляните через несколько минут.
+        </p>
+      </div>
+    )
+  }
   const { meta, features, finish, zones } = report
 
   const byPremium = [...features].sort((a, b) => (b.premium ?? 0) - (a.premium ?? 0))
