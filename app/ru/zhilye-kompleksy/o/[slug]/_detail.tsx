@@ -59,7 +59,6 @@ import { LazyMount } from '@/components/LazyMount'
 import { loadLandProfile, landAllowsBuilding } from '@/lib/land-profile'
 import { loadComplexMarketStats } from '@/lib/complex-market-stats'
 import { loadUnitDemand, type UnitDemand } from '@/lib/unit-demand'
-import { UnitDemandStrip } from '@/components/UnitDemandBlock'
 import { MarketStatsBlock } from '@/components/MarketStatsBlock'
 import { GatedBlock } from '@/components/GatedBlock'
 import { loadComplexAccess, loadGeoFacts } from '@/lib/complex-access'
@@ -1795,14 +1794,9 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {units.slice(0, 12).map(u => {
                 const demand = demandByUnit[`${u.kind}|${u.id}`]
-                return (
-                  <div key={u.id}>
-                    {u.kind === 'villa'
-                      ? <VillaCard a={u} lang={lang} />
-                      : <ApartmentCard a={u} lang={lang} />}
-                    {demand && <UnitDemandStrip demand={demand} lang={lang} />}
-                  </div>
-                )
+                return u.kind === 'villa'
+                  ? <VillaCard key={u.id} a={{ ...u, demand }} lang={lang} />
+                  : <ApartmentCard key={u.id} a={{ ...u, demand }} lang={lang} />
               })}
             </div>
           </section>

@@ -6,8 +6,13 @@ import { useCurrency } from './CurrencyContext'
 import { WishlistButton } from './WishlistButton'
 import { formatPriceExact } from '@/lib/currency'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
+import { UnitDemandBadge } from './UnitDemandBadge'
+import type { UnitDemandView } from '@/lib/unit-demand-view'
 
 export type ApartmentCardData = {
+  // Балл востребованности в районе. Необязателен: в общих каталогах карточка
+  // рендерится без него, чтобы не тянуть лишний запрос на каждый листинг.
+  demand?: UnitDemandView
   slug: string
   title: string
   priceUsd: number | null
@@ -111,10 +116,15 @@ export function ApartmentCard({ a, lang = 'ru' }: { a: ApartmentCardData; lang?:
           <div className="text-[18px] font-semibold text-[var(--color-text)] mb-3">{price}</div>
         )}
 
-        <div className="flex items-center flex-wrap gap-x-5 gap-y-1 text-[14px] text-[var(--color-text-muted)]">
-          {a.bedrooms != null && <span>{a.bedrooms} BR</span>}
-          {a.area != null && <span>{a.area} {c.sqm}</span>}
-          {a.floor && <span>{c.floor}: {a.floor}</span>}
+        {/* Балл востребованности прижат к правому краю нижней строки: это
+            последнее, что читает глаз, и он не конкурирует с ценой. */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center flex-wrap gap-x-5 gap-y-1 text-[14px] text-[var(--color-text-muted)]">
+            {a.bedrooms != null && <span>{a.bedrooms} BR</span>}
+            {a.area != null && <span>{a.area} {c.sqm}</span>}
+            {a.floor && <span>{c.floor}: {a.floor}</span>}
+          </div>
+          {a.demand && <UnitDemandBadge demand={a.demand} lang={lang} />}
         </div>
       </div>
     </Link>
