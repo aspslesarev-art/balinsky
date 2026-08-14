@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Plus, ArrowUp, ArrowDown, Search, Loader2, Maximize2, Link2, Filter, X, Sparkles } from 'lucide-react'
+import { Plus, ArrowUp, ArrowDown, Search, Loader2, Maximize2, Link2, Filter, X, Sparkles, Copy, Columns3 } from 'lucide-react'
 import type { CollectionConfig, FieldDef, RecordRow } from '@/lib/admin/adapters/types'
 import { resolveFields, displayValue, editableText, coerceValue, isImageUrl, percentToInput, inputToPercent, percentDisplay, linkPatch, linkSelection, type LinkOption } from '@/lib/admin/fields'
 import { hasAi } from '@/lib/admin/ai-fields'
@@ -152,9 +152,11 @@ export function DataGridScreen({
   const [editText, setEditText] = useState('')
 
   // Photo thumbnails come from the Supabase Storage manifest (id → URL[]),
-  // not the raw Airtable `photos` text field.
+  // not the raw Airtable `photos` text field. Re-read after every mutation:
+  // loading it once on mount is why photos added in a record card only showed
+  // up in the «Фото» column after a full page reload.
   const [photoMap, setPhotoMap] = useState<Record<string, string[]>>({})
-  useEffect(() => {
+  const reloadPhotoMap = useCallback(() => {
     if (!cfg.photo) return
     const base = process.env.NEXT_PUBLIC_SUPABASE_URL
     const key = cfg.photo.manifestKey ?? '_manifest.json'
@@ -163,6 +165,7 @@ export function DataGridScreen({
       .then((m: unknown) => setPhotoMap(m && typeof m === 'object' ? (m as Record<string, string[]>) : {}))
       .catch(() => {})
   }, [cfg.photo])
+  useEffect(() => { reloadPhotoMap() }, [reloadPhotoMap])
 
   const seenKeys = useRef<Set<string>>(new Set())
   const [cols, setCols] = useState<FieldDef[]>(() => resolveFields(cfg, initialRows))
@@ -173,7 +176,38 @@ export function DataGridScreen({
   }, [cfg])
   useEffect(() => { learnColumns(initialRows) }, [initialRows, learnColumns])
 
+  // Column visibility. These tables carry ~140 keys, most of them filled by a
+  // sync or never at all, and they bury the dozen an editor really works with.
+  // The choice is per collection and per browser (localStorage) — hiding a
+  // column changes nothing in the data.
+  const hiddenKey = `ax:hidden-cols:${cfg.key}`
+  const [hidden, setHidden] = useState<Set<string>>(() => new Set(cfg.defaultHiddenColumns ?? []))
+  const [showCols, setShowCols] = useState(false)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(hiddenKey)
+      if (raw) setHidden(new Set(JSON.parse(raw) as string[]))
+    } catch { /* first visit, or storage disabled — defaults stand */ }
+  }, [hiddenKey])
+  const toggleColumn = useCallback((key: string) => {
+    setHidden(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key); else next.add(key)
+      try { localStorage.setItem(hiddenKey, JSON.stringify([...next])) } catch { /* not fatal */ }
+      return next
+    })
+  }, [hiddenKey])
+  const setAllColumns = useCallback((keys: string[]) => {
+    setHidden(new Set(keys))
+    try { localStorage.setItem(hiddenKey, JSON.stringify(keys)) } catch { /* not fatal */ }
+  }, [hiddenKey])
+
   const titleKey = cfg.titleField
+  // The title column is the row's handle — never hideable.
+  const visibleCols = useMemo(
+    () => cols.filter(c => c.key === titleKey || !hidden.has(c.key)),
+    [cols, hidden, titleKey],
+  )
 
   const fetchPage = useCallback(async (opts: { page: number; sort: SortState; q: string; filters: { key: string; value: string }[] }) => {
     setLoading(true)
@@ -271,8 +305,33 @@ export function DataGridScreen({
     [cols],
   )
 
-  const onSaved = useCallback(() => { setSelectedId(null); refresh() }, [refresh])
-  const onDeleted = useCallback(() => { setSelectedId(null); refresh() }, [refresh])
+  // After a create the panel stays open on the freshly saved record: that is
+  // where photos and the fields left out of the create form get filled in.
+  const onSaved = useCallback((row: RecordRow, isNew: boolean) => {
+    setSelectedId(isNew && row.id ? row.id : null)
+    refresh()
+    reloadPhotoMap()
+  }, [refresh, reloadPhotoMap])
+  const onDeleted = useCallback(() => { setSelectedId(null); refresh(); reloadPhotoMap() }, [refresh, reloadPhotoMap])
+
+  // Row-level "Duplicate" — the Airtable move for adding a unit type that
+  // differs from the previous one only in price. Opens the copy right away.
+  const [duplicating, setDuplicating] = useState<string | null>(null)
+  const duplicateRow = useCallback(async (rowId: string) => {
+    setDuplicating(rowId)
+    try {
+      const res = await fetch(`/api/admin/data/${cfg.key}/${encodeURIComponent(rowId)}/duplicate`, { method: 'POST' })
+      const j = await res.json()
+      if (!res.ok) { alert(`Не удалось дублировать: ${j.error ?? 'ошибка'}`); return }
+      await refresh()
+      reloadPhotoMap()
+      if (j.row?.id) setSelectedId(j.row.id)
+    } catch {
+      alert('Не удалось дублировать: нет связи с сервером')
+    } finally {
+      setDuplicating(null)
+    }
+  }, [cfg.key, refresh, reloadPhotoMap])
 
   return (
     <div>
@@ -288,8 +347,25 @@ export function DataGridScreen({
           className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-[13px] border ${filters.length ? 'border-[var(--color-primary)] text-[var(--color-primary)]' : 'border-[var(--ax-border)] text-[var(--ax-fg-soft)]'} hover:bg-[var(--ax-hover)]`}>
           <Filter size={14} /> Фильтры{filters.length ? ` (${filters.length})` : ''}
         </button>
+        <div className="relative">
+          <button type="button" onClick={() => setShowCols(v => !v)}
+            className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-[13px] border ${hidden.size ? 'border-[var(--color-primary)] text-[var(--color-primary)]' : 'border-[var(--ax-border)] text-[var(--ax-fg-soft)]'} hover:bg-[var(--ax-hover)]`}>
+            <Columns3 size={14} /> Колонки{hidden.size ? ` (−${hidden.size})` : ''}
+          </button>
+          {showCols && (
+            <ColumnsMenu
+              cols={cols} hidden={hidden} titleKey={titleKey}
+              onToggle={toggleColumn}
+              onShowAll={() => setAllColumns([])}
+              onHideEmpty={() => setAllColumns(cols
+                .filter(c => c.key !== titleKey && rows.every(r => editableText(r.fields[c.key]).trim() === ''))
+                .map(c => c.key))}
+              onClose={() => setShowCols(false)}
+            />
+          )}
+        </div>
         {loading && <Loader2 size={15} className="animate-spin text-[var(--ax-fg-faint)]" />}
-        <div className="text-[12px] text-[var(--ax-fg-faint)]">{total} записей · {cols.length} полей</div>
+        <div className="text-[12px] text-[var(--ax-fg-faint)]">{total} записей · {visibleCols.length} из {cols.length} полей</div>
         <div className="flex-1" />
         {aiOn && (
           <button type="button" onClick={genEmpty} disabled={!!bulk}
@@ -315,16 +391,16 @@ export function DataGridScreen({
         <table className="border-collapse text-[13px] w-max min-w-full">
           <thead>
             <tr className="bg-[var(--ax-panel)]">
-              <th className="sticky top-0 left-0 z-30 w-9 bg-[var(--ax-panel)] border-b border-r border-[var(--ax-border)]" />
+              <th className="sticky top-0 left-0 z-30 w-[68px] bg-[var(--ax-panel)] border-b border-r border-[var(--ax-border)]" />
               {cfg.photo && (
                 <th className="sticky top-0 z-10 text-left font-semibold text-[var(--ax-fg-soft)] px-3 py-2.5 border-b border-r border-[var(--ax-border)] bg-[var(--ax-panel)] whitespace-nowrap" style={{ minWidth: 130 }}>Фото</th>
               )}
-              {cols.map(c => {
+              {visibleCols.map(c => {
                 const active = sort?.field === c.key
                 const sticky = c.key === titleKey
                 return (
                   <th key={c.key} onClick={() => toggleSort(c.key)}
-                    style={{ minWidth: c.width ?? 130, ...(sticky ? { left: 36 } : {}) }}
+                    style={{ minWidth: c.width ?? 130, ...(sticky ? { left: 68 } : {}) }}
                     className={`text-left font-semibold text-[var(--ax-fg-soft)] px-3 py-2.5 border-b border-[var(--ax-border)] cursor-pointer select-none whitespace-nowrap bg-[var(--ax-panel)] hover:text-[var(--ax-fg)] sticky top-0 z-10 ${sticky ? 'z-20 border-r border-[var(--ax-border)]' : ''}`}>
                     <span className="inline-flex items-center gap-1">
                       {c.type === 'link' && <Link2 size={11} className="text-[var(--ax-fg-faint)]" />}
@@ -339,24 +415,32 @@ export function DataGridScreen({
           <tbody>
             {rows.map(r => (
               <tr key={r.id} className="border-b border-[var(--ax-border-soft)] group">
-                {/* expand → full card (photos / everything) */}
-                <td className="sticky left-0 z-10 w-9 bg-[var(--ax-bg)] group-hover:bg-[var(--ax-hover)] border-r border-[var(--ax-border-soft)] text-center align-middle">
-                  <button type="button" onClick={() => setSelectedId(r.id)} title="Открыть карточку"
-                    className="p-1 text-[var(--ax-fg-faint)] hover:text-[var(--color-primary)]"><Maximize2 size={13} /></button>
+                {/* expand → full card (photos / everything), duplicate → copy */}
+                <td style={{ minWidth: 68 }} className="sticky left-0 z-10 bg-[var(--ax-bg)] group-hover:bg-[var(--ax-hover)] border-r border-[var(--ax-border-soft)] align-middle">
+                  <div className="flex items-center justify-center gap-0.5">
+                    <button type="button" onClick={() => setSelectedId(r.id)} title="Открыть карточку"
+                      className="p-1 text-[var(--ax-fg-faint)] hover:text-[var(--color-primary)]"><Maximize2 size={13} /></button>
+                    {cfg.caps.create && (
+                      <button type="button" onClick={() => duplicateRow(r.id)} disabled={duplicating === r.id}
+                        title="Дублировать строку" className="p-1 text-[var(--ax-fg-faint)] hover:text-[var(--color-primary)] disabled:opacity-40">
+                        {duplicating === r.id ? <Loader2 size={13} className="animate-spin" /> : <Copy size={13} />}
+                      </button>
+                    )}
+                  </div>
                 </td>
                 {cfg.photo && (
                   <td className="px-2 py-1.5 border-r border-[var(--ax-border-soft)]/50 align-middle" onClick={() => setSelectedId(r.id)}>
                     <PhotoThumbs urls={photoMap[r.id] ?? []} />
                   </td>
                 )}
-                {cols.map(c => {
+                {visibleCols.map(c => {
                   const sticky = c.key === titleKey
                   const isEditing = edit?.rowId === r.id && edit?.key === c.key
-                  const base = `px-2 py-1.5 align-top text-[var(--ax-fg)] border-r border-[var(--ax-border-soft)]/50 ${sticky ? 'sticky left-9 z-10 bg-[var(--ax-bg)] group-hover:bg-[var(--ax-hover)] border-r border-[var(--ax-border-soft)] font-medium' : ''}`
+                  const base = `px-2 py-1.5 align-top text-[var(--ax-fg)] border-r border-[var(--ax-border-soft)]/50 ${sticky ? 'sticky left-[68px] z-10 bg-[var(--ax-bg)] group-hover:bg-[var(--ax-hover)] border-r border-[var(--ax-border-soft)] font-medium' : ''}`
                   // bool — toggle in place
                   if (c.type === 'bool') {
                     return (
-                      <td key={c.key} style={sticky ? { left: 36 } : undefined} className={base}>
+                      <td key={c.key} style={sticky ? { left: 68 } : undefined} className={base}>
                         <input type="checkbox" disabled={c.readOnly} checked={r.fields[c.key] === true}
                           onChange={e => patchRow(r.id, { [c.key]: e.target.checked })}
                           className="w-4 h-4 accent-[var(--color-primary)] cursor-pointer" />
@@ -367,7 +451,7 @@ export function DataGridScreen({
                   // show the picks and send the click to the side panel.
                   if (c.type === 'link' && c.link && !c.link.multi) {
                     return (
-                      <td key={c.key} style={sticky ? { left: 36 } : undefined} className={`${base} min-w-[160px]`}>
+                      <td key={c.key} style={sticky ? { left: 68 } : undefined} className={`${base} min-w-[160px]`}>
                         <InlineLink cfg={cfg} field={c} row={r}
                           onPick={opt => patchRow(r.id, linkPatch(c, opt ? [opt] : []))} />
                       </td>
@@ -376,7 +460,7 @@ export function DataGridScreen({
                   if (c.type === 'link' && c.link?.multi) {
                     const names = linkSelection(c, r.fields).map(o => o.title).filter(Boolean).join(', ')
                     return (
-                      <td key={c.key} style={sticky ? { left: 36 } : undefined} title={names}
+                      <td key={c.key} style={sticky ? { left: 68 } : undefined} title={names}
                         onClick={() => setSelectedId(r.id)}
                         className={`${base} max-w-[340px] truncate cursor-pointer hover:bg-[var(--ax-hover)]/60`}>
                         {names || <span className="text-[var(--ax-fg-faint)] text-[11px]">—</span>}
@@ -386,7 +470,7 @@ export function DataGridScreen({
                   // editing this cell
                   if (isEditing) {
                     return (
-                      <td key={c.key} style={sticky ? { left: 36 } : undefined} className={`${base} p-0`}>
+                      <td key={c.key} style={sticky ? { left: 68 } : undefined} className={`${base} p-0`}>
                         {c.type === 'enum' || c.type === 'multienum' ? (
                           <ChoiceCell
                             collection={cfg.key}
@@ -426,7 +510,7 @@ export function DataGridScreen({
                   // image-URL value → thumbnail (click opens the card to manage the file)
                   if (c.type === 'image' || isImageUrl(r.fields[c.key])) {
                     return (
-                      <td key={c.key} style={sticky ? { left: 36 } : undefined} className={`${base} cursor-pointer`} onClick={() => setSelectedId(r.id)}>
+                      <td key={c.key} style={sticky ? { left: 68 } : undefined} className={`${base} cursor-pointer`} onClick={() => setSelectedId(r.id)}>
                         {isImageUrl(r.fields[c.key])
                           // eslint-disable-next-line @next/next/no-img-element
                           ? <img src={String(r.fields[c.key])} alt="" className="h-9 w-9 rounded object-cover border border-[var(--ax-border)]" />
@@ -441,7 +525,7 @@ export function DataGridScreen({
                       ? displayValue(r.fields[c.link.nameField] ?? r.fields[c.key])
                       : displayValue(r.fields[c.key])
                   return (
-                    <td key={c.key} style={sticky ? { left: 36 } : undefined}
+                    <td key={c.key} style={sticky ? { left: 68 } : undefined}
                       onClick={() => startEdit(r, c)}
                       className={`${base} max-w-[340px] truncate ${c.readOnly ? '' : 'cursor-text hover:bg-[var(--ax-hover)]/60'}`}
                       title={display}>
@@ -452,7 +536,7 @@ export function DataGridScreen({
               </tr>
             ))}
             {rows.length === 0 && !loading && (
-              <tr><td colSpan={cols.length + 1 + (cfg.photo ? 1 : 0)} className="px-3 py-8 text-center text-[var(--ax-fg-faint)]">Ничего не найдено</td></tr>
+              <tr><td colSpan={visibleCols.length + 1 + (cfg.photo ? 1 : 0)} className="px-3 py-8 text-center text-[var(--ax-fg-faint)]">Ничего не найдено</td></tr>
             )}
           </tbody>
         </table>
@@ -471,6 +555,58 @@ export function DataGridScreen({
           title={selectedId === 'new' ? 'Новая запись' : displayValue(rows.find(r => r.id === selectedId)?.fields[titleKey]) || String(selectedId)}
           onClose={() => setSelectedId(null)} onSaved={onSaved} onDeleted={onDeleted} />
       )}
+    </div>
+  )
+}
+
+// Column visibility menu. Hiding is a VIEW setting — it never touches the
+// data, and the record card still shows every field.
+function ColumnsMenu({ cols, hidden, titleKey, onToggle, onShowAll, onHideEmpty, onClose }: {
+  cols: FieldDef[]
+  hidden: Set<string>
+  titleKey: string
+  onToggle: (key: string) => void
+  onShowAll: () => void
+  onHideEmpty: () => void
+  onClose: () => void
+}) {
+  const box = useRef<HTMLDivElement>(null)
+  const [query, setQuery] = useState('')
+
+  useEffect(() => {
+    const onDown = (e: MouseEvent) => { if (box.current && !box.current.contains(e.target as Node)) onClose() }
+    document.addEventListener('mousedown', onDown)
+    return () => document.removeEventListener('mousedown', onDown)
+  }, [onClose])
+
+  const shown = query.trim()
+    ? cols.filter(c => c.label.toLowerCase().includes(query.trim().toLowerCase()) || c.key.toLowerCase().includes(query.trim().toLowerCase()))
+    : cols
+
+  // `max-w-none` on the popover: globals.css clamps every descendant of <main>
+  // to its parent's width, and this one's parent is the toolbar button.
+  return (
+    <div ref={box} className="absolute z-40 left-0 top-full mt-1 w-[300px] max-w-none rounded-xl border border-[var(--ax-border)] bg-[var(--ax-panel)] shadow-lg p-2">
+      <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Найти столбец…"
+        className="w-full px-2.5 py-1.5 mb-2 rounded-lg text-[12.5px] bg-[var(--ax-input-bg)] border border-[var(--ax-input-border)] text-[var(--ax-fg)] outline-none focus:border-[var(--color-primary)]" />
+      <div className="flex items-center gap-2 mb-2">
+        <button type="button" onClick={onShowAll} className="px-2 py-1 rounded-lg text-[11.5px] whitespace-nowrap border border-[var(--ax-border)] hover:bg-[var(--ax-hover)]">Показать все</button>
+        <button type="button" onClick={onHideEmpty} title="Скрыть столбцы, пустые на этой странице"
+          className="px-2 py-1 rounded-lg text-[11.5px] whitespace-nowrap border border-[var(--ax-border)] hover:bg-[var(--ax-hover)]">Скрыть пустые</button>
+      </div>
+      <div className="max-h-72 overflow-y-auto">
+        {shown.map(c => {
+          const locked = c.key === titleKey
+          return (
+            <label key={c.key} className={`flex items-center gap-2 px-1.5 py-1 rounded-lg text-[12.5px] ${locked ? 'opacity-50' : 'hover:bg-[var(--ax-hover)] cursor-pointer'}`}>
+              <input type="checkbox" disabled={locked} checked={locked || !hidden.has(c.key)}
+                onChange={() => onToggle(c.key)} className="w-3.5 h-3.5 accent-[var(--color-primary)]" />
+              <span className="truncate text-[var(--ax-fg)]">{c.label}</span>
+            </label>
+          )
+        })}
+        {shown.length === 0 && <div className="px-1.5 py-2 text-[12px] text-[var(--ax-fg-faint)]">Ничего не найдено</div>}
+      </div>
     </div>
   )
 }

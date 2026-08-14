@@ -121,6 +121,20 @@ export type CollectionConfig = {
   revalidateKind?: string
   /** Data keys to never surface (raw Airtable attachment / junk fields). */
   hideFields?: string[]
+  /** Columns hidden in the grid by default. Unlike `hideFields` these stay
+   *  available — the «Колонки» menu switches any of them back on and remembers
+   *  the choice per browser. For tables where ~140 mostly auto-filled keys
+   *  otherwise bury the dozen an editor actually fills in. */
+  defaultHiddenColumns?: string[]
+  /** Ordered field keys the «Создать» form shows. Everything else is left out
+   *  of that form (and stays editable in the record card afterwards), so adding
+   *  a repeating record is filling one short fixed form — the Airtable
+   *  behaviour editors are used to. Omit to show every field. */
+  createFields?: string[]
+  /** Keys never copied when a row is duplicated — anything that must stay
+   *  unique. The primary key and the slug are handled by the duplicate
+   *  endpoint itself. */
+  duplicateSkip?: string[]
   fields: FieldDef[]
 }
 

@@ -8,6 +8,7 @@
 import type { CollectionConfig, DataSourceAdapter, ListQuery, ListResult, RecordRow } from './types'
 import { adminSb } from '../sb'
 import { normalizeSlug } from '../../slug-normalize'
+import { unitKindOf, unitSlugBase } from '../unit-defaults'
 
 const DEFAULT_PAGE_SIZE = 50
 
@@ -83,19 +84,26 @@ export const sqlJsonbAdapter: DataSourceAdapter = {
     const colFields: Record<string, unknown> = {}
     for (const [k, v] of Object.entries(fields)) (cols.has(k) ? colFields : dataFields)[k] = v
     const title = typeof fields[cfg.titleField] === 'string' ? (fields[cfg.titleField] as string) : null
+    // Units get a catalogue-shaped slug (`swoi-berawa-197m2-3-bedroom`) built
+    // from the complex/district/area facts rather than a transliteration of
+    // the whole headline, which would read `villa-maison-verde-v-…-balinsky`.
+    const kind = unitKindOf(cfg)
+    const slugBase = (kind ? unitSlugBase(kind, fields) : '') || normalizeSlug(title)
     // A row whose slug column is empty is unreachable — the detail page
     // resolves /o/<slug> through the slug index. Derive one from the title
     // rather than silently creating a 404.
     if (cols.has('slug') && !colFields.slug) {
-      colFields.slug = normalizeSlug(title) || id
+      colFields.slug = slugBase || id
     }
-    // Same trap one level down: developers keep their public slug INSIDE the
-    // `data` blob (`SEO:Slug`), and the catalog drops every row without one
-    // (app/ru/zastrojshhiki/_catalog.tsx). A developer created here was
-    // therefore invisible on the site however complete and published it was.
+    // Same trap one level down: developers, villas and apartments keep their
+    // public slug INSIDE the `data` blob (`SEO:Slug`), and every consumer drops
+    // a row without one — the catalogue (app/ru/zastrojshhiki/_catalog.tsx),
+    // the slug index (lib/admin/detail-index.ts) and the complex page's unit
+    // list. Such a record was invisible on the site however complete and
+    // published it was.
     const slugKey = cfg.slugField
     if (slugKey && !cols.has(slugKey) && !asText(dataFields[slugKey])) {
-      dataFields[slugKey] = await freeSlug(cfg, slugKey, normalizeSlug(title) || id)
+      dataFields[slugKey] = await freeSlug(cfg, slugKey, slugBase || id)
     }
     const insert: Record<string, unknown> = { [pk]: id, data: dataFields, ...colFields, synced_at: new Date().toISOString() }
     const { error } = await adminSb().from(cfg.table!).insert(insert)

@@ -24,14 +24,31 @@ const villas: CollectionConfig = {
   photo: { bucket: 'villa-photos' },
   caps: { create: true, update: true, delete: true },
   titleField: 'SEO:Title',
+  // The public slug lives in the `data` blob. Declaring it here is what makes
+  // the adapter mint one on create — without it a unit added in the admin is
+  // dropped by the slug index and never shows up on its complex's page.
+  slugField: 'SEO:Slug',
   publishedField: 'Опубликовать',
   defaultSort: { field: 'price', dir: 'desc' },
   revalidateKind: 'villas',
   hideFields: ['photos', 'Renders', 'PDF code', 'Post ID'],
+  // Adding a unit = filling these nine and dropping in photos. Title, slug,
+  // district, status, handover and terms are derived / inherited from the
+  // linked complex (lib/admin/unit-defaults.ts), exactly as the Airtable
+  // formulas and lookups used to do.
+  createFields: [
+    'Опубликовать', 'SEO:Title', 'Developer', 'Комплекс',
+    'Заявленная доходность', 'price', 'Земля', 'Площадь', 'Комнаты', 'Type',
+  ],
+  duplicateSkip: ['SEO:Slug', '_slug_alias'],
   fields: [
     { key: 'Опубликовать', label: 'Опубл.', type: 'bool', showInGrid: true, width: 70 },
-    { key: 'SEO:Title', label: 'Заголовок', type: 'text', showInGrid: true, width: 260 },
+    {
+      key: 'SEO:Title', label: 'Название юнита', type: 'text', showInGrid: true, width: 260,
+      help: 'Пусто = соберётся само: «Вилла <Комплекс> в <Район> - <Площадь> м², N спальни | Balinsky».',
+    },
     { key: 'SEO:Slug', label: 'Slug', type: 'text', showInGrid: true, width: 200 },
+    { key: 'Type', label: 'Тип', type: 'enum', enumOptions: ['Villa', 'Townhouse', 'Smart villa'], showInGrid: true, width: 120 },
     { key: 'Статус', label: 'Статус', type: 'enum', enumOptions: ['Строится', 'Построен', 'Под заказ'], showInGrid: true, width: 130 },
     { key: 'Location 2', label: 'Под-район', type: 'enum', showInGrid: true, width: 150 },
     { key: 'Location filter', label: 'Район', type: 'link', link: { collection: 'districts', store: 'id-array', nameField: 'Location' } },
@@ -68,13 +85,24 @@ const apartments: CollectionConfig = {
   photo: { bucket: 'apartment-photos' },
   caps: { create: true, update: true, delete: true },
   titleField: 'SEO:Title',
+  // Same reason as villas: no slug → dropped by the slug index and by the
+  // complex page's unit list.
+  slugField: 'SEO:Slug',
   publishedField: 'Опубликовать',
   defaultSort: { field: 'price_usd', dir: 'desc' },
   revalidateKind: 'apartments',
   hideFields: ['photos', 'Renders', 'PDF code', 'Post ID'],
+  createFields: [
+    'Опубликовать', 'SEO:Title', 'Developer', 'Комплекс',
+    'Заявленная доходность', 'price_usd', 'Площадь', 'Комнаты', 'Этаж',
+  ],
+  duplicateSkip: ['SEO:Slug', '_slug_alias'],
   fields: [
     { key: 'Опубликовать', label: 'Опубл.', type: 'bool', showInGrid: true, width: 70 },
-    { key: 'SEO:Title', label: 'Заголовок', type: 'text', showInGrid: true, width: 260 },
+    {
+      key: 'SEO:Title', label: 'Название юнита', type: 'text', showInGrid: true, width: 260,
+      help: 'Пусто = соберётся само: «Апартаменты <Комплекс> в <Район> - <Площадь> м², N спальни | Balinsky».',
+    },
     { key: 'SEO:Slug', label: 'Slug', type: 'text', showInGrid: true, width: 200 },
     { key: 'Статус', label: 'Статус', type: 'enum', showInGrid: true, width: 130 },
     { key: 'Location', label: 'Район', type: 'link', link: { collection: 'districts', store: 'id-array', nameField: 'Location filter' } },
@@ -113,6 +141,16 @@ const complexes: CollectionConfig = {
   defaultSort: { field: 'Project', dir: 'asc' },
   revalidateKind: 'complexes',
   hideFields: ['photos', 'Renders', 'PDF code', 'Post ID', 'Opt photos'],
+  // Everything an editor types by hand for a new project, in the order they
+  // type it. The SEO/AI texts, legal-audit blocks and voice-over script stay
+  // out of the create form — they are written later, in the record card.
+  createFields: [
+    'Project', 'slug', 'Developer', 'Статус', 'Статус продаж', 'Готовность',
+    'Location', 'Location 2', 'Типы юнитов', 'Total quantity of units',
+    'price_usd', 'Payment plan,%', 'Leasehold', 'Leashold продление',
+    'Land color', 'Разрешительные документы', 'PBG', 'Year of completion',
+  ],
+  duplicateSkip: ['slug', 'SEO:Slug'],
   fields: [
     { key: 'Опубликовать', label: 'Опубл.', type: 'bool', showInGrid: true, width: 70 },
     { key: 'Project', label: 'Название', type: 'text', showInGrid: true, width: 240 },
@@ -131,6 +169,12 @@ const complexes: CollectionConfig = {
     { key: 'Developer', label: 'Застройщик', type: 'link', link: { collection: 'developers', store: 'name', nameField: 'Developer1' } },
     { key: 'Developer1', label: 'Застройщик (имя)', type: 'text', readOnly: true },
     { key: 'Типы юнитов', label: 'Типы юнитов', type: 'multienum' },
+    { key: 'Total quantity of units', label: 'Всего юнитов', type: 'number' },
+    // Условия сделки — то, что редактор дозаполнял вручную в каждом новом ЖК.
+    { key: 'Payment plan,%', label: 'Payment plan, %', type: 'text', help: 'Например: 25%+25%+25%+25%' },
+    { key: 'Leasehold', label: 'Leasehold, лет', type: 'number' },
+    { key: 'Leashold продление', label: 'Leasehold: продление, лет', type: 'text' },
+    { key: 'PBG', label: 'PBG (номер)', type: 'text' },
     // Текст блока «О комплексе» на странице ЖК. Панель подставляет сюда то,
     // что сейчас показано на сайте, — правьте прямо в нём. Очистите поле,
     // чтобы вернуться к автоматически сгенерированному тексту.

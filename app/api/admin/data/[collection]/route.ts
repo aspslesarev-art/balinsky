@@ -4,6 +4,7 @@ import { getCollection } from '@/lib/admin/collections'
 import { adapterFor } from '@/lib/admin/adapters'
 import { revalidateCollection } from '@/lib/admin/revalidate'
 import { aiAutofillPatch } from '@/lib/admin/ai-autofill'
+import { unitCreateDefaults } from '@/lib/admin/unit-defaults'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -53,10 +54,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ collect
   try { body = await req.json() } catch { return NextResponse.json({ error: 'invalid_json' }, { status: 400 }) }
   const fields = body.fields ?? {}
   try {
+    // Formula/lookup fields first (title, district, terms inherited from the
+    // linked complex) — deterministic, free and instant. They also give the AI
+    // pass below real source material to ground on, and stop it from inventing
+    // a headline the catalogue's own formula already defines.
+    const withDefaults = { ...fields, ...(await unitCreateDefaults(cfg, fields)) }
     // Generate the AI-backed fields the editor left empty before the write, so
     // the record is complete from its first save (meta tags included) and we
     // don't pay for a second manifest rewrite.
-    const withAi = { ...fields, ...(await aiAutofillPatch(cfg, fields)) }
+    const withAi = { ...withDefaults, ...(await aiAutofillPatch(cfg, withDefaults)) }
     const row = await adapterFor(cfg).create(cfg, withAi)
     await revalidateCollection(cfg, row.id)
     return NextResponse.json({ row })

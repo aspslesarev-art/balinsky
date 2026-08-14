@@ -76,10 +76,7 @@ async function loadManifest(url: string): Promise<Record<string, string[]>> {
   }
 }
 
-async function loadAptRows(complexName: string): Promise<AptRow[]> {
-  const { data, error } = await sb
-    .from('raw_apartments')
-    .select(`
+const APT_SELECT = `
       airtable_id,
       title:data->"SEO:Title",
       title_en:data->"SEO:Title EN",
@@ -90,17 +87,27 @@ async function loadAptRows(complexName: string): Promise<AptRow[]> {
       bedrooms:data->"Комнаты",
       area:data->"Площадь",
       floor:data->"Этаж"
-    `)
-    .ilike(`data->>"SEO:Title"`, `%${complexName.replace(/[%_]/g, '\\$&')}%`)
-    .limit(200)
-  if (error || !data) return []
-  return data as AptRow[]
+    `
+
+// Match on the headline AND on the «Комплекс 1» lookup: units created in the
+// admin pick their complex from a list instead of naming it in the title, and
+// a title-only match left them out of every unit strip. Merged by id.
+function mergeById<T extends { airtable_id: string }>(...batches: (T[] | null)[]): T[] {
+  const byId = new Map<string, T>()
+  for (const batch of batches) for (const row of batch ?? []) byId.set(row.airtable_id, row)
+  return [...byId.values()]
 }
 
-async function loadVillaRows(complexName: string): Promise<VillaRow[]> {
-  const { data, error } = await sb
-    .from('raw_villas')
-    .select(`
+async function loadAptRows(complexName: string): Promise<AptRow[]> {
+  const needle = `%${complexName.replace(/[%_]/g, '\\$&')}%`
+  const [byTitle, byLink] = await Promise.all([
+    sb.from('raw_apartments').select(APT_SELECT).ilike(`data->>"SEO:Title"`, needle).limit(200),
+    sb.from('raw_apartments').select(APT_SELECT).ilike(`data->>"Комплекс 1"`, needle).limit(200),
+  ])
+  return mergeById(byTitle.data as AptRow[] | null, byLink.data as AptRow[] | null)
+}
+
+const VILLA_SELECT = `
       airtable_id,
       title:data->"SEO:Title",
       title_en:data->"SEO:Title EN",
@@ -114,11 +121,15 @@ async function loadVillaRows(complexName: string): Promise<VillaRow[]> {
       district:data->"Location 2",
       district_alt:data->Location,
       status:data->"Статус"
-    `)
-    .ilike(`data->>"SEO:Title"`, `%${complexName.replace(/[%_]/g, '\\$&')}%`)
-    .limit(200)
-  if (error || !data) return []
-  return data as VillaRow[]
+    `
+
+async function loadVillaRows(complexName: string): Promise<VillaRow[]> {
+  const needle = `%${complexName.replace(/[%_]/g, '\\$&')}%`
+  const [byTitle, byLink] = await Promise.all([
+    sb.from('raw_villas').select(VILLA_SELECT).ilike(`data->>"SEO:Title"`, needle).limit(200),
+    sb.from('raw_villas').select(VILLA_SELECT).ilike(`data->>"Комплекс 1"`, needle).limit(200),
+  ])
+  return mergeById(byTitle.data as VillaRow[] | null, byLink.data as VillaRow[] | null)
 }
 
 // Cached per (complexName, lang): the DB reads + manifest fetches happen at most

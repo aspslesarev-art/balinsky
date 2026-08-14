@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState, useCallback, useRef } from 'react'
-import { X, Save, Trash2, Loader2, AlertTriangle, Plus, Link2, Search } from 'lucide-react'
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
+import { X, Save, Trash2, Loader2, AlertTriangle, Plus, Link2, Search, Copy } from 'lucide-react'
 import type { CollectionConfig, FieldDef, FieldType, RecordRow } from '@/lib/admin/adapters/types'
 import { resolveRecordFields, percentToInput, inputToPercent, linkPatch, linkSelection, type LinkOption } from '@/lib/admin/fields'
 import { toBaliInput, fromBaliInput } from '@/lib/datetime'
@@ -35,6 +35,8 @@ export function RecordPanel({
   const [loading, setLoading] = useState(!isNew)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Photos picked before the record exists — attached right after it gets an id.
+  const [pendingPhotos, setPendingPhotos] = useState<string[]>([])
 
   useEffect(() => {
     if (isNew) return
@@ -74,11 +76,47 @@ export function RecordPanel({
       const j = await res.json()
       if (!res.ok) { setError(j.error ?? 'save_failed'); setSaving(false); return }
       const rowId = isNew ? (j.row?.id ?? '') : id
+      // The photo manifest is keyed by record id, so photos chosen in the
+      // create form can only be written once the row exists.
+      if (isNew && rowId && cfg.photo && pendingPhotos.length) {
+        await fetch(`/api/admin/data/${cfg.key}/${encodeURIComponent(rowId)}/photos`, {
+          method: 'PUT', headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ photos: pendingPhotos }),
+        }).catch(() => {})
+      }
       onSaved({ id: rowId, fields: { ...fields, ...payload } }, isNew)
     } catch {
       setError('network_error'); setSaving(false)
     }
   }
+
+  // Airtable's "Duplicate record": server-side copy of everything but the
+  // unique keys, photos included.
+  const duplicate = async () => {
+    setSaving(true); setError(null)
+    try {
+      const res = await fetch(`/api/admin/data/${cfg.key}/${encodeURIComponent(id)}/duplicate`, { method: 'POST' })
+      const j = await res.json()
+      if (!res.ok) { setError(j.error ?? 'duplicate_failed'); setSaving(false); return }
+      onSaved({ id: j.row?.id ?? '', fields: {} }, true)
+    } catch {
+      setError('network_error'); setSaving(false)
+    }
+  }
+
+  // The create form is a fixed, short list when the collection declares one:
+  // an editor adding the tenth unit of a complex should fill nine known fields,
+  // not scroll ~140 mostly auto-filled keys looking for them. Everything left
+  // out stays editable in the record card after the first save.
+  const restrictToCreateFields = isNew && !!cfg.createFields?.length
+  const visibleFields = useMemo(() => {
+    const all = resolveRecordFields(cfg, fields, typeHints)
+    if (!restrictToCreateFields) return all
+    const order = new Map(cfg.createFields!.map((k, i) => [k, i]))
+    return all
+      .filter(f => order.has(f.key))
+      .sort((a, b) => (order.get(a.key) ?? 0) - (order.get(b.key) ?? 0))
+  }, [cfg, fields, typeHints, restrictToCreateFields])
 
   const del = async () => {
     if (!confirm('Удалить запись безвозвратно?')) return
@@ -110,7 +148,7 @@ export function RecordPanel({
             <div className="flex items-center gap-2 text-[13px] text-[var(--ax-fg-muted)]"><Loader2 size={15} className="animate-spin" /> Загрузка…</div>
           ) : (
             <>
-              {resolveRecordFields(cfg, fields, typeHints).map(f => (
+              {visibleFields.map(f => (
                 f.type === 'link' && f.link ? (
                   <LinkEditor
                     key={f.key}
@@ -127,17 +165,15 @@ export function RecordPanel({
                   <FieldEditor key={f.key} f={f} value={fields[f.key]} onChange={v => setField(f.key, v)} collection={cfg.key} />
                 )
               ))}
-              <AddField onAdd={(k, v) => setField(k, v)} existing={fields} />
+              {!restrictToCreateFields && <AddField onAdd={(k, v) => setField(k, v)} existing={fields} />}
               {cfg.photo && (
-                isNew ? (
-                  <div className="text-[12px] text-[var(--ax-fg-faint)] rounded-xl border border-dashed border-[var(--ax-border)] px-3 py-3">
-                    Сохраните запись, затем добавьте фото.
-                  </div>
-                ) : (
-                  <div className="pt-1.5 border-t border-[var(--ax-border-soft)]">
-                    <PhotoManager cfg={cfg} id={id} />
-                  </div>
-                )
+                <div className="pt-1.5 border-t border-[var(--ax-border-soft)]">
+                  <PhotoManager
+                    cfg={cfg} id={id}
+                    pendingPhotos={isNew ? pendingPhotos : undefined}
+                    onPendingChange={isNew ? setPendingPhotos : undefined}
+                  />
+                </div>
               )}
             </>
           )}
@@ -158,6 +194,13 @@ export function RecordPanel({
           >
             {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />} Сохранить
           </button>
+          {!isNew && cfg.caps.create && (
+            <button type="button" onClick={duplicate} disabled={saving}
+              title="Создать копию записи (без slug — он сгенерируется заново)"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-[13px] border border-[var(--ax-border)] text-[var(--ax-fg-soft)] hover:bg-[var(--ax-hover)] disabled:opacity-40">
+              <Copy size={15} /> Дублировать
+            </button>
+          )}
           {!isNew && cfg.caps.delete && (
             <button type="button" onClick={del} disabled={saving}
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-[13px] text-red-500 hover:bg-red-500/10 disabled:opacity-40 ml-auto">

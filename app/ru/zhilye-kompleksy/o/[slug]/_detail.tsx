@@ -1093,9 +1093,7 @@ async function _loadAptManifest(): Promise<Record<string, string[]>> {
   _aptManifestCache.manifest = m
   return m
 }
-async function _loadApartmentsForComplex(complexName: string): Promise<{ rows: AptRow[]; manifest: Record<string, string[]> }> {
-  const manifest = await _loadAptManifest()
-  const { data, error } = await sb.from('raw_apartments').select(`
+const APT_UNIT_SELECT = `
     airtable_id,
     title:data->"SEO:Title",
     title_en:data->"SEO:Title EN",
@@ -1108,9 +1106,29 @@ async function _loadApartmentsForComplex(complexName: string): Promise<{ rows: A
     floor:data->"Этаж",
     opt_photos:data->"Opt photos",
     image_opt:data->"Image Opt"
-  `).ilike(`data->>"SEO:Title"`, `%${complexName.replace(/[%_]/g, '\\$&')}%`).limit(200)
-  if (error || !data) return { rows: [], manifest }
-  return { rows: data as AptRow[], manifest }
+  `
+
+// Two DB-side ilike passes, merged by id. The title match is what has always
+// worked for the Airtable-era rows; the «Комплекс 1» match is what makes a
+// unit created in the admin — where the complex is picked from a list rather
+// than spelled out in the headline — actually appear on its complex's page.
+// PostgREST can't OR two quoted JSONB paths in one request, so this is two
+// slim queries instead of one; both sit behind the page's cache.
+function mergeUnitRows<T extends { airtable_id: string }>(...batches: (T[] | null)[]): T[] {
+  const byId = new Map<string, T>()
+  for (const batch of batches) for (const row of batch ?? []) byId.set(row.airtable_id, row)
+  return [...byId.values()]
+}
+
+async function _loadApartmentsForComplex(complexName: string): Promise<{ rows: AptRow[]; manifest: Record<string, string[]> }> {
+  const manifest = await _loadAptManifest()
+  const needle = `%${complexName.replace(/[%_]/g, '\\$&')}%`
+  const [byTitle, byLink] = await Promise.all([
+    sb.from('raw_apartments').select(APT_UNIT_SELECT).ilike(`data->>"SEO:Title"`, needle).limit(200),
+    sb.from('raw_apartments').select(APT_UNIT_SELECT).ilike(`data->>"Комплекс 1"`, needle).limit(200),
+  ])
+  const rows = mergeUnitRows(byTitle.data as AptRow[] | null, byLink.data as AptRow[] | null)
+  return { rows, manifest }
 }
 
 async function loadComplexBySlug(slug: string): Promise<ComplexRow | null> {
@@ -1179,9 +1197,7 @@ async function _loadVillaManifest(): Promise<Record<string, string[]>> {
   _villaManifestCache.manifest = m
   return m
 }
-async function _loadVillasForComplex(complexName: string): Promise<{ rows: VillaRow[]; manifest: Record<string, string[]> }> {
-  const manifest = await _loadVillaManifest()
-  const { data, error } = await sb.from('raw_villas').select(`
+const VILLA_UNIT_SELECT = `
     airtable_id,
     title:data->"SEO:Title",
     title_en:data->"SEO:Title EN",
@@ -1197,9 +1213,17 @@ async function _loadVillasForComplex(complexName: string): Promise<{ rows: Villa
     status:data->"Статус",
     opt_photos:data->"Opt photos",
     image_opt:data->"Image Opt"
-  `).ilike(`data->>"SEO:Title"`, `%${complexName.replace(/[%_]/g, '\\$&')}%`).limit(200)
-  if (error || !data) return { rows: [], manifest }
-  return { rows: data as VillaRow[], manifest }
+  `
+
+async function _loadVillasForComplex(complexName: string): Promise<{ rows: VillaRow[]; manifest: Record<string, string[]> }> {
+  const manifest = await _loadVillaManifest()
+  const needle = `%${complexName.replace(/[%_]/g, '\\$&')}%`
+  const [byTitle, byLink] = await Promise.all([
+    sb.from('raw_villas').select(VILLA_UNIT_SELECT).ilike(`data->>"SEO:Title"`, needle).limit(200),
+    sb.from('raw_villas').select(VILLA_UNIT_SELECT).ilike(`data->>"Комплекс 1"`, needle).limit(200),
+  ])
+  const rows = mergeUnitRows(byTitle.data as VillaRow[] | null, byLink.data as VillaRow[] | null)
+  return { rows, manifest }
 }
 
 type ApartmentUnit = ApartmentCardData & { id: string; kind: 'apartment' }
