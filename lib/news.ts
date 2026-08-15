@@ -5,9 +5,17 @@ import type { Lang } from '@/lib/i18n'
 
 export type NewsDeveloper = { name: string; slug: string | null }
 
+// Publication gate. Absent means published: the records imported before this
+// field existed carry no `status`, and they are live content — a missing value
+// must never hide them. Only an explicit 'draft' withholds an item, which is
+// what the news-monitor bot writes so nothing it collects reaches the site
+// before it is approved in /admin/data.
+export type NewsStatus = 'draft' | 'published'
+
 export type NewsItem = {
   id: string
   slug: string
+  status?: NewsStatus
   // Legacy / cross-lang slugs. On /ru this is empty (or holds the
   // editor's SEO:Slug if it differs). On /en this holds the RU
   // transliterated slug so old links still resolve via 301.
@@ -77,8 +85,16 @@ function slugifyEn(s: string): string {
     .slice(0, 80)
 }
 
+// Drafts are dropped here, before slugs are derived and translations applied —
+// this is the single choke point every public reader goes through (the listing,
+// the detail page, the homepage, the developer page, the sitemap and the
+// preview template all call loadAllNews), so one filter covers them all. The
+// admin panel reads the manifest straight from Storage
+// (lib/admin/adapters/storage-manifest.ts), so drafts stay visible there.
+const isPublished = (item: NewsItem): boolean => item.status !== 'draft'
+
 export async function loadAllNews(lang: Lang = 'ru'): Promise<NewsItem[]> {
-  const items = withDerivedSlugs(await loadRawNews())
+  const items = withDerivedSlugs((await loadRawNews()).filter(isPublished))
   if (items.length === 0) return items
   // RU also loads the EN translation cache — not to translate, but to know
   // the English-derived slug and stash it in aliases. Without this, the

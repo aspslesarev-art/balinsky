@@ -311,6 +311,16 @@ const news: CollectionConfig = {
   defaultSort: { field: 'createdAt', dir: 'desc' },
   revalidateKind: 'news',
   fields: [
+    // Publication gate for the news-monitor bot: it writes 'draft', and
+    // lib/news.ts hides those from every public reader (listing, detail,
+    // homepage, developer page, sitemap). Switching to 'published' here is
+    // what puts an item on the site. An EMPTY value means published — the
+    // records imported before this field existed have none, and they are live.
+    {
+      key: 'status', label: 'Статус', type: 'enum', enumOptions: ['draft', 'published'],
+      showInGrid: true, width: 110,
+      help: 'draft — виден только здесь, на сайте его нет. published или пусто — опубликован.',
+    },
     { key: 'pinned', label: 'На главной', type: 'bool', showInGrid: true, width: 90 },
     { key: 'title', label: 'Заголовок', type: 'text', showInGrid: true, width: 280 },
     { key: 'slug', label: 'Slug', type: 'text', showInGrid: true, width: 200 },
