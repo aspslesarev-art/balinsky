@@ -4,6 +4,7 @@
 // clicks. Pure function — the section root pages pass live stats (count, price
 // range in $K, developer count) computed from their loaders.
 import type { Lang } from './i18n'
+import { pluralRu } from './plural-ru'
 
 export type CategoryKind = 'villas' | 'apartments' | 'complexes' | 'developers' | 'rental'
 
@@ -25,18 +26,28 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
   const from = s.minPriceK && s.minPriceK > 0 ? `$${nf(s.minPriceK)}K` : ''
   const to = s.maxPriceK && s.maxPriceK > 0 ? `$${nf(s.maxPriceK)}K` : ''
 
+  // Русские счётные формы: `n` отформатирован через Intl и для склонения не
+  // годится, форму выбираем по сырому числу. Без этого в выдаче висело
+  // «344 вилл» и «250 жилых комплексов» вместо «344 виллы» / «250 комплексов».
+  const ruVilla = pluralRu(s.count, ['вилла', 'виллы', 'вилл'])
+  const ruComplex = pluralRu(s.count, ['жилой комплекс', 'жилых комплекса', 'жилых комплексов'])
+
+  // Спрос в RU транзакционный и villa-first: «купить виллу на Бали» и «цены на
+  // виллы на Бали» показываются, но стоят на 14–35 позиции при нулевом CTR,
+  // потому что заголовок вёл счётом и аудитом разрешений, а не действием и
+  // ценой. Транзакционный глагол идёт первым, число и цена — сразу за ним.
   const ru: Record<CategoryKind, CategoryMeta> = {
     villas: {
-      title: `${n} вилл на Бали${from ? ` от ${from}` : ''} с проверкой PBG/SLF | Balinsky`,
-      description: `${n} вилл на Бали${from && to ? ` от ${from} до ${to}` : from ? ` от ${from}` : ''}${dev ? ` от ${dev} застройщиков` : ''}. Pererenan, Uluwatu, Ubud, Sanur. Видео с земли, прямые контакты.`,
+      title: `Купить виллу на Бали${from ? ` от ${from}` : ''} — ${n} ${ruVilla} | Balinsky`,
+      description: `${n} ${ruVilla} на Бали${from && to ? ` от ${from} до ${to}` : from ? ` от ${from}` : ''}${dev ? ` от ${dev} застройщиков` : ''}. Проверка PBG/SLF, видео с земли, прямые контакты. Pererenan, Uluwatu, Ubud, Sanur.`,
     },
     apartments: {
-      title: `${n} апартаментов на Бали${from ? ` от ${from}` : ''} | Balinsky`,
-      description: `${n} апартаментов в проверенных ЖК. Berawa, Pererenan, Pandawa. Управляющие компании, доходность 8–15%, акции и рассрочки.`,
+      title: `Купить апартаменты на Бали${from ? ` от ${from}` : ''} — ${n} шт. | Balinsky`,
+      description: `${n} апартаментов в проверенных ЖК${from && to ? ` от ${from} до ${to}` : ''}. Berawa, Pererenan, Pandawa. Управляющие компании, доходность 8–15%, акции и рассрочки.`,
     },
     complexes: {
-      title: `${n} жилых комплексов на Бали с проверкой PBG/SLF | Balinsky`,
-      description: `${n} ЖК на Бали с инфраструктурой. Проверка PBG/SLF/RDTR, реальные сроки сдачи${dev ? `, акции от ${dev} застройщиков` : ''}.`,
+      title: `${n} ${ruComplex} на Бали с проверкой PBG/SLF | Balinsky`,
+      description: `${n} ${ruComplex} на Бали с инфраструктурой. Проверка PBG/SLF/RDTR, реальные сроки сдачи${dev ? `, акции от ${dev} застройщиков` : ''}.`,
     },
     developers: {
       title: `${n} застройщиков на Бали с рейтингом | Balinsky`,
