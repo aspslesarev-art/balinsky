@@ -24,6 +24,14 @@ import type { ChatCompletionMessageParam } from 'openai/resources/chat/completio
 import { getSystemPrompt, TOOLS, executeToolCall, type ListingCard } from '@/lib/consultant'
 import { appendLearnedRule } from '@/lib/assistant-knowledge'
 import { isOwnerChat } from '@/lib/balina-owners'
+import { withUtm } from '@/lib/utm'
+
+// Единственная ссылка на сайт, которую отдаёт Балина, — предложение уйти на
+// сайт при исчерпании дневного лимита. Без метки эти переходы неотличимы от
+// прямых заходов (см. lib/utm.ts).
+const LIMIT_LINK = withUtm('https://balinsky.info', {
+  source: 'telegram', medium: 'bot', campaign: 'balina_daily_limit',
+})
 import { tryHandleAdminEdit } from '@/lib/balina-admin-edit'
 import { listMessages, logMessage } from '@/lib/bot-storage'
 import { downloadTelegramFile } from '@/lib/chat-media'
@@ -112,8 +120,8 @@ async function runTurn(
   // transcriptions either.
   if (await isOverDailyLimit(chatId)) {
     await sendText(token, chatId, lang === 'ru'
-      ? `На сегодня лимит сообщений по этому чату исчерпан (${DAILY_LIMIT_PER_CHAT}/сутки). Попробуйте завтра или откройте <a href="https://balinsky.info">balinsky.info</a> — на сайте без лимита.`
-      : `Daily message limit reached for this chat (${DAILY_LIMIT_PER_CHAT}/day). Try again tomorrow, or open <a href="https://balinsky.info">balinsky.info</a> — there's no limit on the website.`)
+      ? `На сегодня лимит сообщений по этому чату исчерпан (${DAILY_LIMIT_PER_CHAT}/сутки). Попробуйте завтра или откройте <a href="${LIMIT_LINK}">balinsky.info</a> — на сайте без лимита.`
+      : `Daily message limit reached for this chat (${DAILY_LIMIT_PER_CHAT}/day). Try again tomorrow, or open <a href="${LIMIT_LINK}">balinsky.info</a> — there's no limit on the website.`)
     return { handled: true, reason: 'rate_limited' }
   }
 

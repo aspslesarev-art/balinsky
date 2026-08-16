@@ -23,6 +23,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { randomBytes } from 'crypto'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
+import { withUtm } from '@/lib/utm'
 
 const sb = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -378,7 +379,11 @@ export async function findMatches(
         area,
         priceUsd,
         pricePerSqm,
-        url: `${SITE_URL}${PATH_BY_KIND[filter.kind]}${slug}`,
+        // Подписка на фильтр каталога: ссылка уходит человеку в Telegram,
+        // без метки её переход осядет в Direct (см. lib/utm.ts).
+        url: withUtm(`${SITE_URL}${PATH_BY_KIND[filter.kind]}${slug}`, {
+          source: 'telegram', medium: 'push', campaign: `subscription_${filter.kind}`,
+        }),
         photo: photoManifest[r.airtable_id]?.[0] ?? null,
         syncedAt: r.synced_at ?? null,
       } as MatchedObject
@@ -420,7 +425,9 @@ async function findRentalMatches(
       area: null,
       priceUsd: null,
       pricePerSqm: null,
-      url: `${SITE_URL}${PATH_BY_KIND.rental}${it.slug}`,
+      url: withUtm(`${SITE_URL}${PATH_BY_KIND.rental}${it.slug}`, {
+        source: 'telegram', medium: 'push', campaign: 'subscription_rental',
+      }),
       photo: it.photos?.[0] ?? null,
       syncedAt: null,
     }))

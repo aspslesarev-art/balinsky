@@ -7,6 +7,7 @@
 // pause — safe and trivially debuggable.
 
 import { createClient } from '@supabase/supabase-js'
+import { withUtm } from '@/lib/utm'
 
 const sb = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -85,7 +86,11 @@ function buildMessage(item: AgentNotifyItem, source: AgentNotifySource): string 
   }
   const lines = [`<b>${TYPE_LABEL[source]}</b>`, `<b>${escapeHtml(item.title)}</b>`]
   if (item.body) lines.push(escapeHtml(item.body))
-  if (item.path) lines.push(`${SITE_URL}${item.path}`)
+  // campaign = тип рассылки, чтобы в GA4 было видно, какие пуши реально
+  // приводят агентов: новости, новые объекты или изменения цен.
+  if (item.path) lines.push(withUtm(`${SITE_URL}${item.path}`, {
+    source: 'telegram', medium: 'push', campaign: `agent_${source}`,
+  }))
   return lines.join('\n')
 }
 

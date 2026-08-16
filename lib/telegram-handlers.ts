@@ -9,6 +9,17 @@ import type { ManagerItem } from '@/lib/managers'
 import type { RentalItem } from '@/lib/rental'
 import { loadAllEvents, type EventItem } from '@/lib/events'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
+import { withUtm } from '@/lib/utm'
+
+/**
+ * Ссылка из диалога с ботом. Telegram не передаёт referrer, поэтому без
+ * метки каждый такой переход падает в GA4 в Direct — а Direct у нас 71%
+ * при 22% органики, то есть канал бота полностью невидим. `scenario`
+ * попадает в utm_campaign и показывает, какие ответы бота реально ведут
+ * людей на сайт.
+ */
+const botLink = (url: string, scenario: string) =>
+  withUtm(url, { source: 'telegram', medium: 'bot', campaign: scenario })
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const MANAGERS_URL = `${SUPABASE_URL}/storage/v1/object/public/managers/_managers.json`
@@ -110,7 +121,7 @@ async function handleRental(id: string): Promise<StartResult> {
   const r = all.find(x => x.id === id)
   if (!r) {
     return { reply: {
-      text: 'Этот объект помесячной аренды уже не активен. Свежая подборка — на <a href="https://balinsky.info/ru/arenda">balinsky.info/ru/arenda</a>.',
+      text: `Этот объект помесячной аренды уже не активен. Свежая подборка — на <a href="${botLink('https://balinsky.info/ru/arenda', 'rental_expired')}">balinsky.info/ru/arenda</a>.`,
       parseMode: 'HTML',
     } }
   }
@@ -125,7 +136,7 @@ async function handleRental(id: string): Promise<StartResult> {
   } else {
     lines.push('Контакт хозяина не указан в карточке. Напишите сюда — попробую найти его.')
   }
-  lines.push('', `Карточка на сайте: https://balinsky.info/ru/arenda/o/${r.slug}`)
+  lines.push('', `Карточка на сайте: ${botLink(`https://balinsky.info/ru/arenda/o/${r.slug}`, 'rental_card')}`)
   return { reply: { text: lines.join('\n'), parseMode: 'HTML' }, tags: ['rental:' + r.slug] }
 }
 
@@ -144,7 +155,7 @@ async function handleEvent(key: string): Promise<StartResult> {
   } catch { /* fall through */ }
   if (!ev) {
     return { reply: {
-      text: 'Не нашёл это мероприятие — возможно, ссылка устарела. Актуальная афиша: <a href="https://balinsky.info/ru/meropriyatiya">balinsky.info/ru/meropriyatiya</a>.',
+      text: `Не нашёл это мероприятие — возможно, ссылка устарела. Актуальная афиша: <a href="${botLink('https://balinsky.info/ru/meropriyatiya', 'event_expired')}">balinsky.info/ru/meropriyatiya</a>.`,
       parseMode: 'HTML',
     }, tags: ['event:' + key] }
   }
@@ -164,7 +175,7 @@ async function handleEvent(key: string): Promise<StartResult> {
   } else {
     lines.push('Чтобы записаться — оставьте ваше имя и телефон/Telegram прямо в этом чате, передам организаторам.')
   }
-  lines.push('', `Подробности: https://balinsky.info/ru/meropriyatiya/${ev.slug}`)
+  lines.push('', `Подробности: ${botLink(`https://balinsky.info/ru/meropriyatiya/${ev.slug}`, 'event_card')}`)
   return { reply: { text: lines.join('\n'), parseMode: 'HTML' }, tags: ['event:' + ev.slug] }
 }
 
@@ -403,7 +414,7 @@ export async function handleSubscriptionCommand(text: string, chatId: number): P
   const subs = await listForChat(chatId)
   if (subs.length === 0) {
     return {
-      text: 'У вас нет активных подписок.\n\nЗайдите на <a href="https://balinsky.info">balinsky.info</a>, задайте фильтры в каталоге и нажмите «🔔 Уведомлять в Telegram».',
+      text: `У вас нет активных подписок.\n\nЗайдите на <a href="${botLink('https://balinsky.info', 'no_subscriptions')}">balinsky.info</a>, задайте фильтры в каталоге и нажмите «🔔 Уведомлять в Telegram».`,
       parseMode: 'HTML',
     }
   }
@@ -435,7 +446,7 @@ function pluralize(n: number, one: string, few: string, many: string): string {
 
 export function fallbackReply(): Reply {
   return {
-    text: 'Я Balinsky Bot — соединяю с менеджерами застройщиков и владельцами вилл на сайте <a href="https://balinsky.info">balinsky.info</a>. Откройте карточку объекта и нажмите «Написать в Telegram» — я подключусь.',
+    text: `Я Balinsky Bot — соединяю с менеджерами застройщиков и владельцами вилл на сайте <a href="${botLink('https://balinsky.info', 'bot_intro')}">balinsky.info</a>. Откройте карточку объекта и нажмите «Написать в Telegram» — я подключусь.`,
     parseMode: 'HTML',
   }
 }
