@@ -11,10 +11,24 @@ const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPAB
 type VillaRow = { priceUsd?: number | null; developerName?: string | null }
 type AptRow = { priceUsd?: number | null; developerNames?: string[] | null }
 
-function priceRangeK(prices: number[]): { minPriceK: number | null; maxPriceK: number | null } {
-  const p = prices.filter(n => typeof n === 'number' && n > 0)
-  if (!p.length) return { minPriceK: null, maxPriceK: null }
-  return { minPriceK: Math.round(Math.min(...p) / 1000), maxPriceK: Math.round(Math.max(...p) / 1000) }
+// Медиана, а не среднее: в каталоге есть особняки за 6,5 млн $, и среднее они
+// утаскивают далеко вверх от того, что покупатель реально видит в каталоге.
+// «Сколько стоит вилла на Бали» — второй по величине кластер RU-спроса, и
+// отвечать на него надо честной серединой рынка.
+function priceRangeK(prices: number[]): {
+  minPriceK: number | null
+  maxPriceK: number | null
+  medPriceK: number | null
+} {
+  const p = prices.filter(n => typeof n === 'number' && n > 0).sort((a, b) => a - b)
+  if (!p.length) return { minPriceK: null, maxPriceK: null, medPriceK: null }
+  const mid = Math.floor(p.length / 2)
+  const median = p.length % 2 === 0 ? (p[mid - 1] + p[mid]) / 2 : p[mid]
+  return {
+    minPriceK: Math.round(p[0] / 1000),
+    maxPriceK: Math.round(p[p.length - 1] / 1000),
+    medPriceK: Math.round(median / 1000),
+  }
 }
 
 /** Villas: rows carry priceUsd + a single developerName. */

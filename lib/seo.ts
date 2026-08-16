@@ -12,6 +12,7 @@ export type CategoryStats = {
   count: number
   minPriceK?: number | null // min listing price, thousands USD
   maxPriceK?: number | null // max listing price, thousands USD
+  medPriceK?: number | null // median listing price, thousands USD
   devCount?: number | null
 }
 
@@ -19,31 +20,49 @@ export type CategoryMeta = { title: string; description: string }
 
 const nf = (n: number) => new Intl.NumberFormat('en-US').format(Math.round(n))
 
+// Цена в тысячах: до миллиона читается как $850K, дальше «$6,500K» перестаёт
+// читаться вообще — переключаемся на $6.5M. Формат общий для всех локалей.
+const usdK = (k: number) => (k >= 1000
+  ? `$${(k / 1000).toFixed(k % 1000 === 0 ? 0 : 1)}M`
+  : `$${nf(k)}K`)
+
 // Falls back gracefully when a stat is missing so we never render "$undefinedK".
 function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
   const n = s.count > 0 ? nf(s.count) : ''
   const dev = s.devCount && s.devCount > 0 ? nf(s.devCount) : ''
-  const from = s.minPriceK && s.minPriceK > 0 ? `$${nf(s.minPriceK)}K` : ''
-  const to = s.maxPriceK && s.maxPriceK > 0 ? `$${nf(s.maxPriceK)}K` : ''
+  const from = s.minPriceK && s.minPriceK > 0 ? usdK(s.minPriceK) : ''
+  const to = s.maxPriceK && s.maxPriceK > 0 ? usdK(s.maxPriceK) : ''
+  const med = s.medPriceK && s.medPriceK > 0 ? usdK(s.medPriceK) : ''
 
   // Русские счётные формы: `n` отформатирован через Intl и для склонения не
   // годится, форму выбираем по сырому числу. Без этого в выдаче висело
   // «344 вилл» и «250 жилых комплексов» вместо «344 виллы» / «250 комплексов».
   const ruVilla = pluralRu(s.count, ['вилла', 'виллы', 'вилл'])
   const ruComplex = pluralRu(s.count, ['жилой комплекс', 'жилых комплекса', 'жилых комплексов'])
+  const ruDev = pluralRu(s.devCount ?? 0, ['застройщика', 'застройщиков', 'застройщиков'])
+  // Каталог одного района может схлопнуться до одной цены — «диапазон
+  // $250K – $250K» в сниппете выглядит как баг. Показываем диапазон только
+  // когда он действительно диапазон.
+  const ruRange = from && to && from !== to
+    ? `, диапазон ${from} – ${to}`
+    : from ? `, от ${from}` : ''
 
-  // Спрос в RU транзакционный и villa-first: «купить виллу на Бали» и «цены на
-  // виллы на Бали» показываются, но стоят на 14–35 позиции при нулевом CTR,
-  // потому что заголовок вёл счётом и аудитом разрешений, а не действием и
-  // ценой. Транзакционный глагол идёт первым, число и цена — сразу за ним.
+  // Спрос в RU транзакционный и villa-first, и делится на два кластера:
+  // «купить виллу на Бали» (по Wordstat крупнее) и ценовой — «виллы на Бали
+  // цены» / «сколько стоит вилла на Бали». Оба стояли на 14–35 позиции при
+  // нулевом CTR, потому что заголовок вёл счётом и аудитом разрешений.
+  // Заголовок теперь несёт оба: транзакционный глагол первым, слово «цены» —
+  // сразу за ним. Описание отвечает на «сколько стоит» медианой: среднее
+  // задирают особняки за 6,5 млн $, медиана — та цифра, которую человек
+  // действительно увидит в каталоге.
   const ru: Record<CategoryKind, CategoryMeta> = {
     villas: {
-      title: `Купить виллу на Бали${from ? ` от ${from}` : ''} — ${n} ${ruVilla} | Balinsky`,
-      description: `${n} ${ruVilla} на Бали${from && to ? ` от ${from} до ${to}` : from ? ` от ${from}` : ''}${dev ? ` от ${dev} застройщиков` : ''}. Проверка PBG/SLF, видео с земли, прямые контакты. Pererenan, Uluwatu, Ubud, Sanur.`,
+      title: `Купить виллу на Бали — цены${from ? ` от ${from}` : ''}, ${n} ${ruVilla} | Balinsky`,
+      description: `Сколько стоит вилла на Бали${med ? `: медиана ${med}` : ''}${ruRange}. ${n} ${ruVilla}${dev ? ` от ${dev} ${ruDev}` : ''}, проверка PBG/SLF, видео с земли, прямые контакты.`,
     },
     apartments: {
-      title: `Купить апартаменты на Бали${from ? ` от ${from}` : ''} — ${n} шт. | Balinsky`,
-      description: `${n} апартаментов в проверенных ЖК${from && to ? ` от ${from} до ${to}` : ''}. Berawa, Pererenan, Pandawa. Управляющие компании, доходность 8–15%, акции и рассрочки.`,
+      title: `Купить апартаменты на Бали — цены${from ? ` от ${from}` : ''}, ${n} шт. | Balinsky`,
+      description: `Сколько стоят апартаменты на Бали${med ? `: медиана ${med}` : ''}${ruRange}. ${n} лотов в проверенных ЖК: Berawa, Pererenan, Pandawa. Доходность 8–15%, акции и рассрочки.`,
     },
     complexes: {
       title: `${n} ${ruComplex} на Бали с проверкой PBG/SLF | Balinsky`,
