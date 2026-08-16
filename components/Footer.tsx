@@ -1,7 +1,15 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { Send, Play } from 'lucide-react'
-import { pickCopy, switchLangPath, langToSegment, type Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, langToSegment, LANGS, type Lang } from '@/lib/i18n'
+
+// Самоназвания языков: это стандарт для переключателя (человек ищет свой язык
+// на своём языке, а не «French») и одновременно осмысленный текст ссылки —
+// «Français» описывает цель перехода, в отличие от кода «FR».
+const LANG_NATIVE_NAME: Record<Lang, string> = {
+  ru: 'Русский', en: 'English', id: 'Bahasa Indonesia', fr: 'Français', de: 'Deutsch',
+  zh: '中文', nl: 'Nederlands', ban: 'Basa Bali', pl: 'Polski', uk: 'Українська',
+}
 
 type Col = { title: string; links: { label: string; href: string }[] }
 
@@ -637,6 +645,45 @@ export function Footer({ lang = 'ru' }: { lang?: Lang }) {
               </li>
             ))}
           </ul>
+          {/*
+            Единственный краулимый путь между языковыми деревьями сайта.
+            Переключатель в шапке (components/LangSwitch.tsx) — это <select>
+            с router.push(), он не порождает <a href>, а краулеры не нажимают
+            интерактивные контролы. Из-за этого девять локалей (~9 000 URL)
+            были достижимы только через сайтмап и hreflang — ни то, ни другое
+            не обязывает Google обойти страницу, и URL Inspection показывал 45
+            из 78 проверенных в статусе «Discovered — currently not indexed»,
+            почти все fr/nl/zh/ua/pl.
+
+            Внутри локали перелинковка нормальная (полсотни ссылок на
+            странице), не хватало именно перехода между деревьями — поэтому
+            достаточно связать главные страницы локалей. Ссылки видимые:
+            прятать их нельзя, скрытая навигация это спам-паттерн.
+          */}
+          <nav
+            aria-label={pickCopy({
+              ru: 'Языки сайта', en: 'Site languages', id: 'Bahasa situs', fr: 'Langues du site',
+              de: 'Sprachen der Website', zh: '网站语言', nl: 'Talen van de site',
+              ban: 'Basa ring situs', pl: 'Języki serwisu', uk: 'Мови сайту',
+            }, lang)}
+            className="mt-6"
+          >
+            <ul className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[12px] text-[var(--color-text-muted)]">
+              {LANGS.map(l => (
+                <li key={l}>
+                  <Link
+                    href={l === 'ru' ? '/' : `/${langToSegment(l)}`}
+                    hrefLang={l}
+                    aria-current={l === lang ? 'true' : undefined}
+                    className={`no-underline hover:text-[var(--color-primary-pressed)] ${l === lang ? 'font-medium text-[var(--color-text)]' : ''}`}
+                  >
+                    {LANG_NATIVE_NAME[l]}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
           <div className="mt-5 text-center text-[12px] text-[var(--color-text-muted)]">
             Copyright © 2022–2026 Balinsky.info. All rights reserved.
           </div>
