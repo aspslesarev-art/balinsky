@@ -1,6 +1,7 @@
 // Admin-only: link (or unlink) a developer to a Telegram lead chat.
 // Writes raw_developers.telegram_chat_id. Consumed by /admin/dev-chats.
 import { NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { createClient } from '@supabase/supabase-js'
 import { requireAdmin } from '@/lib/admin-auth'
 
@@ -35,5 +36,11 @@ export async function POST(req: Request) {
     .eq('airtable_id', airtableId)
 
   if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 })
+
+  // /api/contact resolves the lead chat through a cached index tagged
+  // `content:developers` (TTL 5 min). Without this flush a freshly linked chat
+  // silently keeps missing leads until the TTL runs out.
+  revalidateTag('content:developers', 'max')
+
   return NextResponse.json({ ok: true, chatId })
 }

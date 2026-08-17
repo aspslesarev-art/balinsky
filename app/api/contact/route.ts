@@ -71,18 +71,38 @@ function isValidEmail(s: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)
 }
 
-async function sendToTelegram(chatId: string, text: string): Promise<void> {
-  if (!TG_TOKEN || !chatId) return
-  await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      chat_id: chatId,
-      text,
-      parse_mode: 'HTML',
-      disable_web_page_preview: true,
-    }),
-  }).catch(err => console.error('[contact] telegram send failed:', err))
+type SendResult = { ok: true } | { ok: false; error: string }
+
+// Telegram answers 200-with-`ok:false` for some failures and 4xx for others
+// (bot kicked, chat migrated to a supergroup, wrong id). Both used to be
+// swallowed here, so a lead could vanish without a trace — the caller now gets
+// the reason back and reports it into the admin chat.
+async function sendToTelegram(chatId: string, text: string): Promise<SendResult> {
+  if (!TG_TOKEN) return { ok: false, error: 'no_bot_token' }
+  if (!chatId) return { ok: false, error: 'no_chat_id' }
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text,
+        parse_mode: 'HTML',
+        disable_web_page_preview: true,
+      }),
+    })
+    const payload = await res.json().catch(() => null) as { ok?: boolean; description?: string } | null
+    if (!res.ok || payload?.ok !== true) {
+      const reason = payload?.description ?? `http_${res.status}`
+      console.error('[contact] telegram send failed:', chatId, reason)
+      return { ok: false, error: reason }
+    }
+    return { ok: true }
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : 'network_error'
+    console.error('[contact] telegram send failed:', chatId, reason)
+    return { ok: false, error: reason }
+  }
 }
 
 export async function POST(req: Request) {
@@ -176,10 +196,28 @@ export async function POST(req: Request) {
   lines.push(`<code>${leadId}</code>`)
 
   const text = lines.join('\n')
+
+  // The admin copy carries the routing verdict: a developer we identified but
+  // couldn't route to (no chat linked in /admin/dev-chats) is the single most
+  // common reason a lead never shows up on the developer's side.
+  const unrouted = !isResale && !devChat && (developerName || developerSlug)
+  const adminText = unrouted
+    ? `${text}\n\n⚠️ <b>Чат застройщика не привязан</b> — заявка только здесь.\n${SITE_URL}/admin/dev-chats`
+    : text
+
   // Always keep the admin copy; also deliver to the developer's chat when we
   // resolved one (and it isn't the admin chat itself).
-  await sendToTelegram(ADMIN_CHAT, text)
-  if (devChat && devChat !== ADMIN_CHAT) await sendToTelegram(devChat, text)
+  await sendToTelegram(ADMIN_CHAT, adminText)
+  if (devChat && devChat !== ADMIN_CHAT) {
+    const sent = await sendToTelegram(devChat, text)
+    if (!sent.ok) {
+      const who = developerName ?? developerSlug ?? devChat
+      await sendToTelegram(
+        ADMIN_CHAT,
+        `⚠️ Заявка <code>${leadId}</code> не доставлена в чат застройщика ${escapeHtml(who)} (<code>${escapeHtml(devChat)}</code>): ${escapeHtml(sent.error)}`,
+      )
+    }
+  }
 
   // A successful lead unlocks lead-gated content (e.g. the complex legal-audit
   // "вопросы" block). httpOnly so the gate can't be forged from the client;
