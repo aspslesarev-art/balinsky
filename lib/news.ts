@@ -103,11 +103,26 @@ export async function loadAllNews(lang: Lang = 'ru'): Promise<NewsItem[]> {
   // the Cyrillic-transliterated slug. With the alias in place, RU lookup
   // resolves the EN slug just like the EN tree resolves the RU one.
   const cache = await loadTranslations('news', lang)
+  // Слаг для КАЖДОГО нерусского дерева — английский, и берётся он всегда из
+  // английского кэша, а не из кэша текущего языка.
+  //
+  // Раньше здесь стоял `cache`, то есть кэш запрошенного языка. Для /en это
+  // случайно работало, для остальных семи локалей — нет: в кэше лежал,
+  // скажем, китайский заголовок, slugifyEn не собирал из него латиницу,
+  // enSlug оказывался пустым и страница оставалась на русском слаге. При
+  // этом sitemap-data.ts:468 раздаёт всем нерусским локалям именно
+  // английский слаг — из-за расхождения 91 из 111 китайских новостей в
+  // сайтмапе отдавали 404, ещё 12 — редирект, работали 8.
+  //
+  // Тот же пустой enSlug ломал и ветку `lang === 'ru'` ниже: для ru
+  // loadTranslations возвращает {}, поэтому английский слаг никогда не
+  // попадал в aliases и /ru/novosti/<английский-слаг> тоже отдавал 404.
+  const enCache = lang === 'en' ? cache : await loadTranslations('news', 'en')
   return items.map(item => {
     const translated = lang !== 'ru' ? applyManifestTranslation(item, cache, EN_FIELDS) : item
     // Compute the EN-derived slug from whatever EN title we have in cache —
     // even on the RU branch, where we'll only stash it into aliases.
-    const enTitle = cache[item.id]?.title
+    const enTitle = enCache[item.id]?.title
     const enSlug = enTitle ? slugifyEn(enTitle) : ''
     if (lang !== 'ru' && enSlug && enSlug !== translated.slug) {
       const aliases = Array.from(new Set([item.slug, ...(item.aliases ?? [])]))
