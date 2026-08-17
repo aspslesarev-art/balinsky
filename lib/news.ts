@@ -1,6 +1,7 @@
 import { asList } from '@/lib/as-list'
 import { applyManifestTranslation, loadTranslations } from '@/lib/en-translations'
 import { slugifyTitle, uniqueSlug } from '@/lib/slugify'
+import { contentRev } from '@/lib/content-version'
 import type { Lang } from '@/lib/i18n'
 
 export type NewsDeveloper = { name: string; slug: string | null }
@@ -42,9 +43,20 @@ const MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/news/_news.json`
 
 const EN_FIELDS = ['title', 'seoDescription', 'body'] as const
 
+// The manifest URL carries the content revision, so an admin save produces a
+// *different* URL and the next render misses the fetch cache instead of
+// serving the pre-edit manifest for the full TTL. Without this the page did
+// regenerate on save (revalidatePath fires) but rebuilt from the cached
+// manifest, so a published item stayed invisible for up to ten minutes.
+// The revision reading is batched and memoised for 30s in lib/content-version,
+// and the URL only changes when content actually changed — so this adds no
+// Storage egress in steady state, which matters on a ~400 KB manifest.
 async function loadRawNews(): Promise<NewsItem[]> {
   try {
-    const r = await fetch(MANIFEST_URL, { next: { revalidate: 600, tags: ['content:news'] } })
+    const rev = await contentRev('news')
+    const r = await fetch(`${MANIFEST_URL}?v=${rev}`, {
+      next: { revalidate: 600, tags: ['content:news'] },
+    })
     if (!r.ok) return []
     const j = (await r.json()) as Manifest
     return Array.isArray(j.items) ? j.items : []
