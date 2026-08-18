@@ -46,7 +46,7 @@ const DEFAULT_BUDGET_MS = 230_000
 
 // Виды источников, под которые есть разбор. Остальные лежат в реестре и
 // ждут своего адаптера, но в очередь обхода не попадают.
-const SCANNABLE_KINDS = ['google', 'unitbox', 'notion']
+const SCANNABLE_KINDS = ['google', 'unitbox', 'notion', 'site']
 
 export async function scanBatch(
   sb: SupabaseClient,

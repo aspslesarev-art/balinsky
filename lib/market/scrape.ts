@@ -9,6 +9,7 @@ import { extractUnits } from './extract'
 import { isLbGroupSource, scrapeLbGroup } from './adapters/lb-group'
 import { isUnitboxSource, scrapeUnitbox } from './adapters/unitbox'
 import { isNotionSource, scrapeNotion } from './adapters/notion'
+import { isVibeSource, scrapeVibe } from './adapters/vibe'
 import { isNotionCache, type MarketSource, type ScrapedUnit, type SourceLayout } from './types'
 
 export type ScrapeResult = {
@@ -22,6 +23,10 @@ export type ScrapeResult = {
 export async function scrapeSource(source: MarketSource): Promise<ScrapeResult> {
   if (isUnitboxSource(source.source_url)) {
     return scrapeUnitbox(source.source_url)
+  }
+
+  if (isVibeSource(source.source_url)) {
+    return scrapeVibe(source.source_url)
   }
 
   if (isNotionSource(source.source_url)) {
