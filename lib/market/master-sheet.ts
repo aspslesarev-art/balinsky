@@ -95,7 +95,7 @@ export function parseMaster(buf: Uint8Array): MasterReadResult {
       developer: developer || '(без застройщика)',
       complex: complex || '(без названия)',
       unitTypes: cellAt(grid, r, header.unitTypes ?? 0).text || null,
-      kind: ids ? 'google' : picked.kind,
+      kind: ids ? 'google' : kindForUrl(picked.url, picked.kind),
       url: picked.url,
       spreadsheetId: ids?.spreadsheetId ?? null,
       gid: ids?.gid ?? null,
@@ -157,6 +157,13 @@ function pickSource(
     if (url) return { kind: s.kind, url }
   }
   return null
+}
+
+// В колонке «Google» иногда лежит не таблица, а файл на Диске. Разбирать
+// его как лист нельзя — помечаем видом, который честно говорит, что это.
+function kindForUrl(url: string, fallback: SourceKind): SourceKind {
+  if (/drive\.google\.com/i.test(url)) return 'pdf'
+  return fallback === 'google' ? 'site' : fallback
 }
 
 function asUrl(text: string): string | null {

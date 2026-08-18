@@ -48,6 +48,9 @@ export async function scrapeSource(source: MarketSource): Promise<ScrapeResult> 
   }
 
   const built = await buildLayout(grid, meta)
+  if (built.layout.unsupported) {
+    throw new Error(`лист не разбирается по юнитам: ${built.layout.unsupported}`)
+  }
   const result = extractUnits(grid, built.layout)
   return {
     units: result.units,

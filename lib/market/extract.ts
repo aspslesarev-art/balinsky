@@ -121,7 +121,7 @@ function dedupeKey(key: string, seen: Map<string, number>, warnings: string[]): 
 function safeRegex(pattern: string, warnings: string[]): RegExp | null {
   // Модель охотно пишет inline-флаги в духе PCRE — «(?i).*floor.*».
   // JS их не понимает, а регистр мы и так игнорируем флагом 'i'.
-  const cleaned = pattern.replace(/^\(\?[a-z]+\)/, '')
+  const cleaned = pattern.replace(/\(\?[a-z]+\)/g, '')
   try {
     return new RegExp(cleaned, 'i')
   } catch {

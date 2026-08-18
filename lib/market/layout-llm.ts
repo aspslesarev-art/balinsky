@@ -39,7 +39,8 @@ const SYSTEM = `Ты разбираешь прайс-листы застройщ
   "statusColorCol": <номер колонки, чью заливку читать как статус, или null>,
   "defaultStatus": "available" | "unknown",
   "skipRowIf": "<regex по ячейке unitKey для строк-подзаголовков, или null>",
-  "notes": "<одна фраза: что за лист и как в нём закодирован статус>"
+  "notes": "<одна фраза: что за лист и как в нём закодирован статус>",
+  "unsupported": "<заполняй ТОЛЬКО если лист не является шахматкой юнитов: одна фраза почему. Иначе null>"
 }
 
 Правила:
@@ -50,6 +51,8 @@ const SYSTEM = `Ты разбираешь прайс-листы застройщ
 - statusColors заполняй, ТОЛЬКО если статус действительно кодируется заливкой и её значение понятно из легенды или из подписей. Если цвет — просто оформление (шапка, чередование строк), оставь пустой массив.
 - defaultStatus: "available", если в листе проданные юниты явно помечены, а значит непомеченное свободно. "unknown", если понять статус нельзя.
 - skipRowIf нужен для строк вроде "1 FLOOR", "Villas", "ИТОГО", которые стоят в колонке unitKey, но юнитами не являются.
+- defaultStatus ставь "available", если лист по смыслу перечисляет то, что продаётся (заголовок вроде "available units", "availability", "units", "resale"), и проданное в нём либо помечено, либо просто не перечислено.
+- unsupported заполняй, если строка листа описывает не отдельный юнит, а целый проект ("4 villas 1BR"), или это сводка/список документов/генплан без данных по юнитам. В таком случае остальные поля можно оставить как получится.
 - Никакого текста вне JSON.`
 
 export type BuildLayoutResult = { layout: MarketLayout; warnings: string[] }
@@ -156,12 +159,27 @@ export function normalizeLayout(rawText: string, grid: Grid): BuildLayoutResult 
   }
 
   const rawCols = (parsed.cols ?? {}) as Record<string, unknown>
+  const unsupported = typeof parsed.unsupported === 'string' && parsed.unsupported.trim() ? parsed.unsupported.trim() : null
   const unitKey = colIn(rawCols.unitKey, 'unitKey')
+  // У не-шахматки колонки юнита может не быть вовсе — это не сбой
+  // разбора, а свойство листа, и сказать об этом надо человеческой
+  // причиной, а не кодом ошибки.
+  if (!unitKey && unsupported) throw new Error(`лист не разбирается по юнитам: ${unsupported}`)
   if (!unitKey) throw new Error('layout_no_unit_key')
 
   const headerRow = numOr(parsed.headerRow, 0)
-  const firstDataRow = numOr(parsed.firstDataRow, headerRow + 1)
-  if (firstDataRow < 1 || firstDataRow > grid.rowCount) throw new Error('layout_bad_first_row')
+  const claimedFirstRow = numOr(parsed.firstDataRow, headerRow + 1)
+  const inSheet = (r: number) => r >= 1 && r <= grid.rowCount
+  // Модель иногда промахивается мимо листа. Строка сразу под шапкой —
+  // разумная замена: лишние строки всё равно отсеет extractUnits.
+  const firstDataRow = inSheet(claimedFirstRow)
+    ? claimedFirstRow
+    : inSheet(headerRow + 1)
+      ? headerRow + 1
+      : 1
+  if (firstDataRow !== claimedFirstRow) {
+    warnings.push(`первая строка данных ${claimedFirstRow} вне листа (${grid.rowCount} строк) — взяли ${firstDataRow}`)
+  }
 
   const layout: MarketLayout = {
     headerRow: headerRow >= 0 && headerRow <= grid.rowCount ? headerRow : 0,
@@ -183,6 +201,7 @@ export function normalizeLayout(rawText: string, grid: Grid): BuildLayoutResult 
     statusColorCol: colIn(parsed.statusColorCol, 'statusColorCol'),
     defaultStatus: parsed.defaultStatus === 'available' ? 'available' : 'unknown',
     skipRowIf: typeof parsed.skipRowIf === 'string' && parsed.skipRowIf ? parsed.skipRowIf : undefined,
+    unsupported: typeof parsed.unsupported === 'string' && parsed.unsupported.trim() ? parsed.unsupported.slice(0, 200) : undefined,
     notes: typeof parsed.notes === 'string' ? parsed.notes.slice(0, 400) : undefined,
   }
 

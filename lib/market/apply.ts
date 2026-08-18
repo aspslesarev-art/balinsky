@@ -52,9 +52,10 @@ export function today(): string {
 export async function applyScrape(
   sb: SupabaseClient,
   source: MarketSource,
-  scraped: ScrapedUnit[],
+  input: ScrapedUnit[],
   opts: { day?: string; prevScanDay?: string | null } = {},
 ): Promise<ApplyResult> {
+  let scraped = input
   const day = opts.day ?? today()
 
   // Пустой результат в базу не пускаем: это почти всегда сломанный
@@ -64,6 +65,7 @@ export async function applyScrape(
 
   const existing = await loadExisting(sb, source.id)
   const byKey = new Map(existing.map(u => [u.unit_key, u]))
+  scraped = dedupeKeys(scraped)
 
   const rows: Record<string, unknown>[] = []
   const events: Array<Omit<EventRow, 'unit_id'> & { unit_key: string }> = []
@@ -129,6 +131,19 @@ export async function applyScrape(
   const written = await writeEvents(sb, events, ids)
 
   return { units: scraped.length, created, events: written, gone }
+}
+
+// Один номер юнита на источник — на нём держится вся история. В
+// генпланах номер иногда повторяется (соседние очереди строительства),
+// а Postgres не даст двум одинаковым ключам приехать одним upsert-ом,
+// поэтому разводим суффиксом, а не теряем юнит.
+function dedupeKeys(units: ScrapedUnit[]): ScrapedUnit[] {
+  const seen = new Map<string, number>()
+  return units.map(u => {
+    const n = (seen.get(u.unitKey) ?? 0) + 1
+    seen.set(u.unitKey, n)
+    return n === 1 ? u : { ...u, unitKey: `${u.unitKey}~${n}` }
+  })
 }
 
 // Возврат в продажу: юнит уходил из свободных, а теперь снова свободен.
