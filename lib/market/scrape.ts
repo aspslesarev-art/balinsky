@@ -11,6 +11,7 @@ import { isUnitboxSource, scrapeUnitbox } from './adapters/unitbox'
 import { isNotionSource, scrapeNotion } from './adapters/notion'
 import { isVibeSource, scrapeVibe } from './adapters/vibe'
 import { scrapeWebpage } from './adapters/webpage'
+import { isDriveSource, scrapeDrivePdf } from './adapters/drive-pdf'
 import { isTextCache, type MarketSource, type ScrapedUnit, type SourceLayout } from './types'
 
 export type ScrapeResult = {
@@ -40,6 +41,14 @@ export async function scrapeSource(source: MarketSource): Promise<ScrapeResult> 
       layout: { kind: 'text', textHash, units },
       fingerprint: textHash,
     }
+  }
+
+  // Прайс, выложенный файлом на Диск.
+  if (isDriveSource(source.source_url)) {
+    const cache = isTextCache(source.layout) ? source.layout : null
+    const meta = { developer: source.developer, complex: source.complex }
+    const { units, warnings, textHash } = await scrapeDrivePdf(source.source_url, meta, cache)
+    return { units, warnings, layout: { kind: 'text', textHash, units }, fingerprint: textHash }
   }
 
   // Обычный сайт: ни таблицы, ни API — снимаем текст и читаем моделью.
