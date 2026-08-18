@@ -72,19 +72,22 @@ export type ExtractResult = {
   warnings: string[]
 }
 
-// У страницы Notion нет колонок, поэтому вместо конфига разбора храним
-// сам результат и хеш текста: страница не изменилась — модель не нужна.
-export type NotionCache = {
-  kind: 'notion'
+// У страницы Notion и у обычного лендинга нет колонок, поэтому вместо
+// конфига разбора храним сам результат и хеш текста: страница не
+// изменилась — модель не нужна, и номера юнитов не уплывают.
+export type TextCache = {
+  // 'notion' — как писали раньше, оставлено ради уже сохранённых строк.
+  kind: 'text' | 'notion'
   textHash: string
   units: ScrapedUnit[]
 }
 
-// Что лежит в market_sources.layout: конфиг таблицы или кеш Notion.
-export type SourceLayout = MarketLayout | NotionCache
+// Что лежит в market_sources.layout: конфиг таблицы или кеш текста.
+export type SourceLayout = MarketLayout | TextCache
 
-export function isNotionCache(v: SourceLayout | null | undefined): v is NotionCache {
-  return !!v && (v as NotionCache).kind === 'notion'
+export function isTextCache(v: SourceLayout | null | undefined): v is TextCache {
+  const kind = (v as TextCache | null)?.kind
+  return kind === 'text' || kind === 'notion'
 }
 
 // Строка реестра источников (public.market_sources).
