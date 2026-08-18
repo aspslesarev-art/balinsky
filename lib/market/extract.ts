@@ -4,7 +4,7 @@
 
 import { colorDistance } from '@/lib/parsers/_xlsx'
 import { cellAt, textAt, type Grid } from './grid'
-import { parseBedrooms, parseMoney, parseNum, looksNumeric } from './numbers'
+import { parseArea, parseBedrooms, parseMoney, parseNum, looksNumeric, priceLooksWrong } from './numbers'
 import type { ExtractResult, MarketLayout, ScrapedUnit, UnitStatus } from './types'
 
 // Порог совпадения заливки: Google округляет один и тот же цвет
@@ -44,6 +44,8 @@ export function extractUnits(grid: Grid, layout: MarketLayout): ExtractResult {
   const warnings: string[] = []
   const units: ScrapedUnit[] = []
   const seenKeys = new Map<string, number>()
+  // Числа, которые для цены слишком велики: обычно колонка в рупиях.
+  let oddPrices = 0
 
   const skipRe = layout.skipRowIf ? safeRegex(layout.skipRowIf, warnings) : null
   const headers = readHeaders(grid, layout)
@@ -67,7 +69,7 @@ export function extractUnits(grid: Grid, layout: MarketLayout): ExtractResult {
       statusFromColor(cellAt(grid, r, colorCol).color, layout) ??
       null
 
-    const areaM2 = parseNum(textAt(grid, r, layout.cols.area))
+    const areaM2 = parseArea(textAt(grid, r, layout.cols.area))
     const priceUsd = parseMoney(priceRaw)
 
     // Строка с номером, но без единого признака юнита — это почти всегда
@@ -75,6 +77,8 @@ export function extractUnits(grid: Grid, layout: MarketLayout): ExtractResult {
     if (status === null && areaM2 === null && priceUsd === null) continue
 
     if (status === null) status = layout.defaultStatus ?? 'unknown'
+
+    if (priceUsd === null && priceLooksWrong(priceRaw)) oddPrices++
 
     const unitKey = dedupeKey(normalizeKey(keyRaw), seenKeys, warnings)
     const pricePerM2 =
@@ -86,7 +90,7 @@ export function extractUnits(grid: Grid, layout: MarketLayout): ExtractResult {
       unitType: textAt(grid, r, layout.cols.unitType) || null,
       bedrooms: parseBedrooms(textAt(grid, r, layout.cols.bedrooms)),
       areaM2,
-      landM2: parseNum(textAt(grid, r, layout.cols.landArea)),
+      landM2: parseArea(textAt(grid, r, layout.cols.landArea)),
       floor: textAt(grid, r, layout.cols.floor) || null,
       status,
       priceUsd,
@@ -96,6 +100,10 @@ export function extractUnits(grid: Grid, layout: MarketLayout): ExtractResult {
   }
 
   if (!units.length) warnings.push('лист разобран, но ни одного юнита не найдено — layout скорее всего устарел')
+
+  if (oddPrices) {
+    warnings.push(`у ${oddPrices} юнитов значение в колонке цены не похоже на цену в долларах (возможно, рупии) — цена не записана`)
+  }
 
   const unknown = units.filter(u => u.status === 'unknown').length
   if (unknown && unknown === units.length) warnings.push(`статус не определился ни у одного из ${unknown} юнитов`)

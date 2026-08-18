@@ -22,7 +22,7 @@ async function main() {
     .filter(r => !filter || r.developer.toLowerCase().includes(filter) || r.complex.toLowerCase().includes(filter))
     .slice(0, limit)
 
-  let totals = { units: 0, available: 0, reserved: 0, sold: 0, unknown: 0 }
+  const totals = { units: 0, available: 0, reserved: 0, sold: 0, unknown: 0 }
   for (const t of targets) {
     process.stdout.write(`\n■ ${t.developer} / ${t.complex}\n`)
     try {
