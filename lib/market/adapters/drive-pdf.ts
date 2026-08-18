@@ -10,6 +10,7 @@
 import { createHash } from 'crypto'
 import type { ExtractResult, ScrapedUnit } from '../types'
 import { extractUnitsFromText } from '../text-units'
+import { extractPdfText, looksLikeText } from '../pdf-text'
 
 // Прайс редко бывает толще нескольких мегабайт, а презентации на Диске
 // бывают под сотню — качать их ради текста незачем.
@@ -69,17 +70,11 @@ async function fetchPdfText(fileId: string): Promise<string> {
   // скачивания вместо самого файла.
   if (!isPdf(buf)) throw new Error('по ссылке пришёл не PDF — вероятно, Диск запросил подтверждение скачивания')
 
-  // Грузим pdf-parse только когда дошло до реального PDF: статический
-  // импорт тянет за собой pdfjs и роняет весь cron-роут в serverless-среде,
-  // где нет браузерных API, — падал даже разбор Google Sheets.
-  const { PDFParse } = await import('pdf-parse')
-  const parser = new PDFParse({ data: buf })
-  try {
-    const res = await parser.getText()
-    return (res.text ?? '').replace(/[ \t]+/g, ' ').trim()
-  } finally {
-    await parser.destroy()
+  const text = extractPdfText(buf)
+  if (text && !looksLikeText(text)) {
+    throw new Error('текст в PDF нечитаем — шрифт без таблицы соответствия символов')
   }
+  return text
 }
 
 function isPdf(buf: Uint8Array): boolean {
