@@ -6,7 +6,7 @@
 // Экспорт `format=xlsx&gid=N` отдаёт ровно один лист, так что лишнего не
 // качаем.
 
-import { fetchXlsxFromGoogleSheet, numToCol, type XlsxSheet } from '@/lib/parsers/_xlsx'
+import { fetchXlsxFromGoogleSheet, numToCol, type XlsxSheet } from './xlsx'
 
 export type GridCell = { text: string; color: string | null }
 

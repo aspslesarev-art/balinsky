@@ -7,8 +7,8 @@
 // проекте уже есть разобранный под неё extractLbUnits — переиспользуем
 // его, приведя результат к общему виду трекера.
 
-import { extractLbUnits, LB_SPREADSHEET_ID } from '@/lib/parsers/lb-group'
-import { fetchXlsxFromGoogleSheet } from '@/lib/parsers/_xlsx'
+import { extractLbUnits, LB_SPREADSHEET_ID } from './lb-group-plan'
+import { fetchXlsxFromGoogleSheet } from '../xlsx'
 import type { ExtractResult, ScrapedUnit, UnitStatus } from '../types'
 
 // Block — юнит снят с продажи застройщиком, Resale — перепродажа от

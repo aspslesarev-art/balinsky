@@ -1,5 +1,5 @@
 
-import { parseXlsxBuffer, parseXlsxHyperlinks, colToNum } from '@/lib/parsers/_xlsx'
+import { parseXlsxBuffer, parseXlsxHyperlinks, colToNum } from './xlsx'
 import { toGrid, cellAt, type Grid } from './grid'
 
 // Чтение мастер-таблицы «прайсы застройщиков»: одна её строка = один

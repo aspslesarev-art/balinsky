@@ -2,7 +2,7 @@
 // Здесь нет ни сети, ни модели — чистая функция, так что разбор
 // воспроизводим и его можно прогнать на сохранённом листе.
 
-import { colorDistance } from '@/lib/parsers/_xlsx'
+import { colorDistance } from './xlsx'
 import { cellAt, textAt, type Grid } from './grid'
 import { parseArea, parseBedrooms, parseMoney, parseNum, looksNumeric, priceLooksWrong } from './numbers'
 import type { ExtractResult, MarketLayout, ScrapedUnit, UnitStatus } from './types'

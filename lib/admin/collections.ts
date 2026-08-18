@@ -223,8 +223,10 @@ const villaUnits: CollectionConfig = {
   ],
 }
 
-// Юниты от парсера цен/наличия (lib/parsers/*) — пишутся прямо в Supabase
-// (parser_units), без Airtable. PK = unit_key (`complexId#gid#номер`).
+// Юниты от прежней системы парсеров (удалена 2026-08-18 вместе с её
+// админкой и кронами). Таблица parser_units осталась с накопленными
+// данными и доступна на чтение и ручную правку; рынок теперь ведёт
+// трекер — market_units и /admin/market.
 const parserUnits: CollectionConfig = {
   key: 'parser_units',
   label: 'Юниты (парсер)',
