@@ -44,6 +44,10 @@ const DEFAULT_STALE_HOURS = 20
 // заметно ниже maxDuration, чтобы успеть закрыть журнал прогона.
 const DEFAULT_BUDGET_MS = 230_000
 
+// Виды источников, под которые есть разбор. Остальные лежат в реестре и
+// ждут своего адаптера, но в очередь обхода не попадают.
+const SCANNABLE_KINDS = ['google', 'unitbox']
+
 export async function scanBatch(
   sb: SupabaseClient,
   opts: { limit?: number; staleHours?: number; sourceKey?: string; budgetMs?: number } = {},
@@ -127,7 +131,7 @@ async function pickSources(
     .from('market_sources')
     .select(select)
     .eq('active', true)
-    .eq('source_kind', 'google')
+    .in('source_kind', SCANNABLE_KINDS)
     .or(`last_scan_at.is.null,last_scan_at.lt.${cutoff}`)
     .order('last_scan_at', { ascending: true, nullsFirst: true })
     .limit(limit)

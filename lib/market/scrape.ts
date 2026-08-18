@@ -7,6 +7,7 @@ import { layoutFingerprint } from './fingerprint'
 import { buildLayout } from './layout-llm'
 import { extractUnits } from './extract'
 import { isLbGroupSource, scrapeLbGroup } from './adapters/lb-group'
+import { isUnitboxSource, scrapeUnitbox } from './adapters/unitbox'
 import type { MarketLayout, MarketSource, ScrapedUnit } from './types'
 
 export type ScrapeResult = {
@@ -18,6 +19,10 @@ export type ScrapeResult = {
 }
 
 export async function scrapeSource(source: MarketSource): Promise<ScrapeResult> {
+  if (isUnitboxSource(source.source_url)) {
+    return scrapeUnitbox(source.source_url)
+  }
+
   if (source.source_kind !== 'google') {
     throw new Error(`источник вида «${source.source_kind}» пока не поддерживается`)
   }
