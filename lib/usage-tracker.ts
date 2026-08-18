@@ -47,6 +47,7 @@ export type Feature =
   | 'embed-search' | 'embed-backfill'
   | 'transcribe'
   | 'admin-ai'
+  | 'market-layout'
   | 'other'
 
 export type UsageInput = {

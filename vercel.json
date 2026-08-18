@@ -1,5 +1,7 @@
 {
-  "regions": ["hnd1"],
+  "regions": [
+    "hnd1"
+  ],
   "crons": [
     {
       "path": "/api/cron/assistant-alerts",
@@ -16,6 +18,14 @@
     {
       "path": "/api/cron/units-snapshot",
       "schedule": "30 1 * * *"
+    },
+    {
+      "path": "/api/cron/market-scan?sync=1",
+      "schedule": "5 1 * * *"
+    },
+    {
+      "path": "/api/cron/market-scan",
+      "schedule": "*/10 1-4 * * *"
     }
   ]
 }

@@ -149,3 +149,60 @@ export function hexToRgb(hex: string): [number, number, number] {
 function unescapeXml(s: string): string {
   return s.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'")
 }
+
+// === гиперссылки =======================================================
+// В мастер-таблице прайсов ссылка на прайс живёт не текстом ячейки, а
+// гиперссылкой на ней («Price list - Google Таблицы» вместо URL). csv
+// такую ячейку отдаёт подписью, и источник теряется. В xlsx ссылка
+// лежит в <hyperlink ref="E5" r:id="rId4"/> + _rels, откуда мы её и
+// достаём. Отдельный проход по архиву: так не трогаем parseXlsxBuffer,
+// которым уже пользуются парсеры каталога.
+
+// Ключ — "row:col", как в XlsxSheet. Значение — абсолютный URL.
+export type XlsxHyperlinks = Map<string, string>
+
+export function parseXlsxHyperlinks(buf: Uint8Array): XlsxHyperlinks {
+  const files = unzipSync(buf)
+  const links: XlsxHyperlinks = new Map()
+
+  const sheetEntry = files['xl/worksheets/sheet1.xml']
+    ?? Object.entries(files).find(([k]) => k.startsWith('xl/worksheets/sheet'))?.[1]
+  if (!sheetEntry) return links
+  const sheetXml = strFromU8(sheetEntry)
+
+  const relsEntry = files['xl/worksheets/_rels/sheet1.xml.rels']
+    ?? Object.entries(files).find(([k]) => k.startsWith('xl/worksheets/_rels/'))?.[1]
+  const targets = new Map<string, string>()
+  if (relsEntry) {
+    const re = /<Relationship\b([^>]*)\/>/g
+    let m: RegExpExecArray | null
+    while ((m = re.exec(strFromU8(relsEntry)))) {
+      const id = m[1].match(/Id="([^"]+)"/)?.[1]
+      const target = m[1].match(/Target="([^"]+)"/)?.[1]
+      if (id && target) targets.set(id, decodeXmlEntities(target))
+    }
+  }
+
+  const hlRe = /<hyperlink\b([^>]*?)\/>/g
+  let hm: RegExpExecArray | null
+  while ((hm = hlRe.exec(sheetXml))) {
+    const attrs = hm[1]
+    const ref = attrs.match(/ref="([A-Z]+)(\d+)"/)
+    if (!ref) continue
+    const rid = attrs.match(/r:id="([^"]+)"/)?.[1]
+    const location = attrs.match(/location="([^"]*)"/)?.[1]
+    let url = rid ? targets.get(rid) ?? '' : ''
+    // Ссылка на конкретную вкладку хранится раздельно: адрес документа в
+    // Target, gid — в location. Склеиваем, если Target вкладку не назвал.
+    if (location && url && !/[?&#]gid=/.test(url)) {
+      url += (url.includes('#') ? '&' : '#') + decodeXmlEntities(location)
+    }
+    if (url) links.set(`${Number(ref[2])}:${colToNum(ref[1])}`, url)
+  }
+
+  return links
+}
+
+function decodeXmlEntities(s: string): string {
+  return s.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'")
+}
