@@ -8,7 +8,6 @@
 // сказать об этом, чем додумывать содержимое.
 
 import { createHash } from 'crypto'
-import { PDFParse } from 'pdf-parse'
 import type { ExtractResult, ScrapedUnit } from '../types'
 import { extractUnitsFromText } from '../text-units'
 
@@ -70,6 +69,10 @@ async function fetchPdfText(fileId: string): Promise<string> {
   // скачивания вместо самого файла.
   if (!isPdf(buf)) throw new Error('по ссылке пришёл не PDF — вероятно, Диск запросил подтверждение скачивания')
 
+  // Грузим pdf-parse только когда дошло до реального PDF: статический
+  // импорт тянет за собой pdfjs и роняет весь cron-роут в serverless-среде,
+  // где нет браузерных API, — падал даже разбор Google Sheets.
+  const { PDFParse } = await import('pdf-parse')
   const parser = new PDFParse({ data: buf })
   try {
     const res = await parser.getText()
