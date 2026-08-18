@@ -8,19 +8,32 @@ import { buildLayout } from './layout-llm'
 import { extractUnits } from './extract'
 import { isLbGroupSource, scrapeLbGroup } from './adapters/lb-group'
 import { isUnitboxSource, scrapeUnitbox } from './adapters/unitbox'
-import type { MarketLayout, MarketSource, ScrapedUnit } from './types'
+import { isNotionSource, scrapeNotion } from './adapters/notion'
+import { isNotionCache, type MarketSource, type ScrapedUnit, type SourceLayout } from './types'
 
 export type ScrapeResult = {
   units: ScrapedUnit[]
   warnings: string[]
   // Заполнены, только если конфиг перестраивался — вызывающий их сохранит.
-  layout?: MarketLayout
+  layout?: SourceLayout
   fingerprint?: string
 }
 
 export async function scrapeSource(source: MarketSource): Promise<ScrapeResult> {
   if (isUnitboxSource(source.source_url)) {
     return scrapeUnitbox(source.source_url)
+  }
+
+  if (isNotionSource(source.source_url)) {
+    const cache = isNotionCache(source.layout) ? source.layout : null
+    const meta = { developer: source.developer, complex: source.complex }
+    const { units, warnings, textHash } = await scrapeNotion(source.source_url, meta, cache)
+    return {
+      units,
+      warnings,
+      layout: { kind: 'notion', textHash, units },
+      fingerprint: textHash,
+    }
   }
 
   if (source.source_kind !== 'google') {
@@ -36,7 +49,7 @@ export async function scrapeSource(source: MarketSource): Promise<ScrapeResult> 
   const meta = { developer: source.developer, complex: source.complex, unitTypes: source.unit_types }
 
   // Структура листа не менялась — идём по сохранённому конфигу, без модели.
-  if (source.layout && source.layout_fingerprint === fingerprint) {
+  if (source.layout && !isNotionCache(source.layout) && source.layout_fingerprint === fingerprint) {
     const result = extractUnits(grid, source.layout)
     if (result.units.length) return { units: result.units, warnings: result.warnings }
     // Отпечаток совпал, а юнитов нет: либо прайс опустел, либо изменение

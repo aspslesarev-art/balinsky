@@ -1,6 +1,5 @@
 
-import OpenAI, { AzureOpenAI } from 'openai'
-import { logUsage } from '@/lib/usage-tracker'
+import { chatJson } from './llm'
 import { colorSummary, previewForPrompt, type Grid } from './grid'
 import { UNIT_STATUSES, type MarketLayout, type UnitStatus } from './types'
 
@@ -57,36 +56,6 @@ const SYSTEM = `Ты разбираешь прайс-листы застройщ
 
 export type BuildLayoutResult = { layout: MarketLayout; warnings: string[] }
 
-// Layout строится редко (раз на структуру листа), но если провайдер
-// недоступен — встаёт весь обход. Поэтому держим два: Azure как основной
-// и OpenAI как запасной, и переключаемся на лету.
-type Provider = { client: OpenAI; deployment: string; name: 'azure' | 'openai' }
-
-function providers(): Provider[] {
-  const out: Provider[] = []
-  const { AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_API_VERSION } = process.env
-  if (AZURE_OPENAI_API_KEY && AZURE_OPENAI_ENDPOINT && AZURE_OPENAI_API_VERSION) {
-    out.push({
-      client: new AzureOpenAI({
-        apiKey: AZURE_OPENAI_API_KEY,
-        endpoint: AZURE_OPENAI_ENDPOINT,
-        apiVersion: AZURE_OPENAI_API_VERSION,
-      }),
-      deployment: process.env.AZURE_OPENAI_CHAT_DEPLOYMENT || 'gpt-5.4',
-      name: 'azure',
-    })
-  }
-  if (process.env.OPENAI_API_KEY) {
-    out.push({
-      client: new OpenAI({ apiKey: process.env.OPENAI_API_KEY }),
-      deployment: process.env.MARKET_LAYOUT_MODEL || 'gpt-5',
-      name: 'openai',
-    })
-  }
-  if (!out.length) throw new Error('llm_not_configured')
-  return out
-}
-
 export async function buildLayout(grid: Grid, meta: { developer: string; complex: string; unitTypes: string | null }): Promise<BuildLayoutResult> {
   const colors = colorSummary(grid)
   const user = [
@@ -101,52 +70,24 @@ export async function buildLayout(grid: Grid, meta: { developer: string; complex
     colors ? `Заливки, встречающиеся в листе:\n${colors}` : 'Заливок в листе нет.',
   ].filter(Boolean).join('\n')
 
-  const errors: string[] = []
-  for (const p of providers()) {
-    try {
-      const completion = await p.client.chat.completions.create({
-        model: p.deployment,
-        messages: [
-          { role: 'system', content: SYSTEM },
-          { role: 'user', content: user },
-        ],
-        response_format: { type: 'json_object' },
-        // Задача разметочная: найти в дампе шапку и нужные колонки.
-        // Долгое рассуждение её не улучшает, а обход 76 листов затягивает
-        // с минут до часа.
-        reasoning_effort: 'low',
-      })
-
-      logUsage({
-        feature: 'market-layout',
-        deployment: p.deployment,
-        promptTokens: completion.usage?.prompt_tokens ?? 0,
-        completionTokens: completion.usage?.completion_tokens ?? 0,
-        meta: { developer: meta.developer, complex: meta.complex, provider: p.name },
-      })
-
-      // Про фолбэк намеренно молчим в warnings: они уходят в карточку
-      // источника, и «Azure не ответил» на каждой строке заслоняет
-      // настоящие претензии к разбору. Провайдер и так виден в usage.
-      return normalizeLayout(completion.choices[0]?.message?.content ?? '', grid)
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e)
-      // Кривой ответ модели повторять на другом провайдере осмысленно,
-      // а вот отсутствие номера юнита — это уже про сам лист.
-      if (msg === 'layout_no_unit_key' || msg === 'layout_bad_first_row') throw e
-      errors.push(`${p.name}: ${msg.slice(0, 120)}`)
-    }
-  }
-  throw new Error(`layout_llm_failed — ${errors.join('; ')}`)
+  const parsed = await chatJson(SYSTEM, user, {
+    feature: 'market-layout',
+    meta: { developer: meta.developer, complex: meta.complex },
+    // Эти ошибки — про сам лист, а не про доступность провайдера, так что
+    // повторять их на запасном бессмысленно.
+    isFatal: m => m === 'layout_no_unit_key' || m === 'layout_bad_first_row' || m.startsWith('лист не разбирается'),
+  })
+  return normalizeLayout(parsed, grid)
 }
+
 
 // Модель иногда возвращает номер колонки строкой, статус в неожиданном
 // регистре или колонку за границей листа. Чиним что чинится, остальное
 // отбрасываем с предупреждением — лучше потерять поле, чем разобрать
 // лист неправильно и записать это в историю.
-export function normalizeLayout(rawText: string, grid: Grid): BuildLayoutResult {
+export function normalizeLayout(raw: unknown, grid: Grid): BuildLayoutResult {
   const warnings: string[] = []
-  const parsed = JSON.parse(stripFences(rawText)) as Record<string, unknown>
+  const parsed = (raw ?? {}) as Record<string, unknown>
 
   const colIn = (v: unknown, label: string): number | undefined => {
     const n = typeof v === 'string' ? Number(v) : v
@@ -241,8 +182,4 @@ function normalizeColors(v: unknown, warnings: string[]): Array<{ hex: string; s
     out.push({ hex: hex.length === 6 ? `FF${hex}` : hex, status: e.status })
   }
   return out.length ? out : undefined
-}
-
-function stripFences(s: string): string {
-  return s.replace(/^```[a-zA-Z]*\n?/, '').replace(/\n?```\s*$/, '').trim()
 }
