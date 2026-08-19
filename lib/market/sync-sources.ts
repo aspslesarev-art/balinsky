@@ -6,12 +6,17 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { fetchMaster, type MasterRow } from './master-sheet'
+import { linkCatalog } from './catalog'
 
 export type SyncResult = {
   total: number
   added: number
   deactivated: number
   skipped: number
+  // Комплексы, сопоставленные с каталогом сайта этим прогоном, и те,
+  // которым пары не нашлось — без связи юнит не виден аналитике.
+  linked: number
+  unlinked: string[]
 }
 
 export async function syncSources(sb: SupabaseClient): Promise<SyncResult> {
@@ -37,11 +42,15 @@ export async function syncSources(sb: SupabaseClient): Promise<SyncResult> {
     if (error) throw new Error(`деактивация market_sources: ${error.message}`)
   }
 
+  const links = await linkCatalog(sb)
+
   return {
     total: rows.length,
     added: rows.filter(r => !known.has(r.sourceKey)).length,
     deactivated: stale.length,
     skipped: skipped.length,
+    linked: links.linked,
+    unlinked: links.unmatched,
   }
 }
 
