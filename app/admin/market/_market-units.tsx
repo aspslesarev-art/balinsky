@@ -10,7 +10,7 @@ import { KIND_LABEL, type UnitKind } from '@/lib/market/classify'
 // комплексу, статусу, спальням, цене и площади плюс движение цены.
 // Всё считается на клиенте — данные приходят разом.
 
-type SortKey = 'developer' | 'complex' | 'unit_key' | 'bedrooms' | 'area_m2' | 'status' | 'price_usd' | 'price_per_m2' | 'priceChangePct'
+type SortKey = 'developer' | 'complex' | 'district' | 'unit_key' | 'bedrooms' | 'area_m2' | 'status' | 'price_usd' | 'price_per_m2' | 'priceChangePct'
 type SortDir = 'asc' | 'desc'
 
 const PAGE = 300
@@ -41,6 +41,7 @@ const MOVES = [
 const COLUMNS: Array<{ key: SortKey; label: string; numeric?: boolean }> = [
   { key: 'developer', label: 'Застройщик' },
   { key: 'complex', label: 'Комплекс' },
+  { key: 'district', label: 'Район' },
   { key: 'unit_key', label: 'Юнит' },
   { key: 'bedrooms', label: 'Сп.', numeric: true },
   { key: 'area_m2', label: 'Площадь', numeric: true },
@@ -56,6 +57,7 @@ export function MarketUnits({ units }: { units: MarketUnitRow[] }) {
   const [statuses, setStatuses] = useState<Set<string>>(new Set(['available']))
   const [beds, setBeds] = useState<Set<string>>(new Set())
   const [kinds, setKinds] = useState<Set<string>>(new Set())
+  const [districts, setDistricts] = useState<Set<string>>(new Set())
   const [move, setMove] = useState<string | null>(null)
   const [priceFrom, setPriceFrom] = useState('')
   const [priceTo, setPriceTo] = useState('')
@@ -65,6 +67,11 @@ export function MarketUnits({ units }: { units: MarketUnitRow[] }) {
 
   const allDevs = useMemo(
     () => [...new Set(units.map(u => u.developer))].sort((a, b) => a.localeCompare(b, 'ru')),
+    [units],
+  )
+
+  const allDistricts = useMemo(
+    () => [...new Set(units.map(u => u.district).filter((d): d is string => !!d))].sort((a, b) => a.localeCompare(b, 'ru')),
     [units],
   )
 
@@ -84,6 +91,7 @@ export function MarketUnits({ units }: { units: MarketUnitRow[] }) {
       if (statuses.size && !statuses.has(u.status)) return false
       if (beds.size && !beds.has(bedKey(u.bedrooms))) return false
       if (kinds.size && !kinds.has(u.kind ?? 'unknown')) return false
+      if (districts.size && !(u.district && districts.has(u.district))) return false
       if (move === 'any' && u.priceChangePct === null) return false
       if (move === 'down' && !(u.priceChangePct !== null && u.priceChangePct < 0)) return false
       if (move === 'up' && !(u.priceChangePct !== null && u.priceChangePct > 0)) return false
@@ -94,7 +102,7 @@ export function MarketUnits({ units }: { units: MarketUnitRow[] }) {
     })
 
     return [...filtered].sort((a, b) => compare(a, b, sort.key) * (sort.dir === 'asc' ? 1 : -1))
-  }, [units, devs, complexes, statuses, beds, kinds, move, priceFrom, priceTo, query, sort])
+  }, [units, devs, complexes, statuses, beds, kinds, districts, move, priceFrom, priceTo, query, sort])
 
   const totals = useMemo(
     () => ({
@@ -106,7 +114,8 @@ export function MarketUnits({ units }: { units: MarketUnitRow[] }) {
   )
 
   const reset = () => {
-    setDevs(new Set()); setComplexes(new Set()); setStatuses(new Set()); setBeds(new Set()); setKinds(new Set())
+    setDevs(new Set()); setComplexes(new Set()); setStatuses(new Set()); setBeds(new Set())
+    setKinds(new Set()); setDistricts(new Set())
     setMove(null); setPriceFrom(''); setPriceTo(''); setQuery('')
   }
 
@@ -126,6 +135,9 @@ export function MarketUnits({ units }: { units: MarketUnitRow[] }) {
           }}
         />
         <Picker label="Комплекс" options={allComplexes} selected={complexes} onChange={setComplexes} />
+        {allDistricts.length > 0 && (
+          <Picker label="Район" options={allDistricts} selected={districts} onChange={setDistricts} width={220} />
+        )}
 
         <Chips
           options={STATUSES.map(s => ({ key: s, label: STATUS_LABEL[s] }))}
@@ -206,6 +218,7 @@ export function MarketUnits({ units }: { units: MarketUnitRow[] }) {
                     {u.complex}
                   </Link>
                 </td>
+                <td className="py-1.5 text-[var(--ax-fg-muted)]">{u.district ?? '—'}</td>
                 <td className="py-1.5">
                   {u.unit_key}
                   <span className="text-[11px] text-[var(--ax-fg-faint)]">
@@ -284,6 +297,7 @@ function compare(a: MarketUnitRow, b: MarketUnitRow, key: SortKey): number {
   switch (key) {
     case 'developer': return a.developer.localeCompare(b.developer, 'ru')
     case 'complex': return a.complex.localeCompare(b.complex, 'ru')
+    case 'district': return (a.district ?? 'яя').localeCompare(b.district ?? 'яя', 'ru')
     case 'unit_key': return a.unit_key.localeCompare(b.unit_key, 'ru', { numeric: true })
     case 'status': return a.status.localeCompare(b.status)
     // Юниты без значения всегда внизу, куда бы ни сортировали: иначе

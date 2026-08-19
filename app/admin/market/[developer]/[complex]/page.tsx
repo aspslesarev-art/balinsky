@@ -39,6 +39,41 @@ export default async function ComplexPage({
           <h1 className="text-[24px] font-semibold tracking-tight">{report.complex}</h1>
         </header>
 
+        {report.catalog && (
+          <section className="flex flex-wrap items-center gap-2 text-[12px]">
+            {report.catalog.district && (
+              <span className="px-2.5 py-1.5 rounded-lg border border-[var(--ax-border)]">
+                Район: <span className="text-[var(--ax-fg)]">{report.catalog.district}</span>
+              </span>
+            )}
+            {report.catalog.buildStatus && (
+              <span className="px-2.5 py-1.5 rounded-lg border border-[var(--ax-border)]">
+                {report.catalog.buildStatus}
+              </span>
+            )}
+            {report.catalog.landUse && (
+              <span className="px-2.5 py-1.5 rounded-lg border border-[var(--ax-border)] text-[var(--ax-fg-muted)]">
+                {report.catalog.landUse}
+              </span>
+            )}
+            {report.catalog.slug && (
+              <a
+                href={`https://balinsky.info/ru/zhilye-kompleksy/${report.catalog.slug}`}
+                target="_blank"
+                rel="noreferrer"
+                className="px-2.5 py-1.5 rounded-lg border border-[var(--ax-border)] underline"
+              >
+                Карточка на сайте ↗
+              </a>
+            )}
+            {report.catalog.confidence === 'name_only' && (
+              <span className="text-[11px] text-amber-500">
+                связь с каталогом только по названию — стоит проверить
+              </span>
+            )}
+          </section>
+        )}
+
         <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Kpi label="В продаже" value={`${report.totals.available} шт`} sub={usd(report.totals.availableValueUsd)} />
           <Kpi label="Бронь" value={`${report.totals.reserved} шт`} />

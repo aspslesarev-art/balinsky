@@ -8,6 +8,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { sbAdmin } from './apply'
 import type { UnitStatus } from './types'
 import type { UnitKind } from './classify'
+import { catalogKey, loadCatalogMap } from './catalog'
 
 export type MarketUnitRow = {
   id: number
@@ -24,6 +25,8 @@ export type MarketUnitRow = {
   price_per_m2: number | null
   sold_at: string | null
   returned_count: number
+  district: string | null
+  buildStatus: string | null
   // Насколько цена сдвинулась за период наблюдения, в процентах.
   // null — цена не менялась.
   priceChangePct: number | null
@@ -41,10 +44,11 @@ export async function loadMarketUnits(
   const days = opts.days ?? 90
   const since = new Date(Date.now() - days * 86400_000).toISOString().slice(0, 10)
 
-  const [rows, moves, trackingSince] = await Promise.all([
+  const [rows, moves, trackingSince, catalog] = await Promise.all([
     loadUnits(sb),
     loadPriceMoves(sb, since),
     loadTrackingSince(sb),
+    loadCatalogMap(sb),
   ])
 
   const units: MarketUnitRow[] = rows.map(u => ({
@@ -53,6 +57,8 @@ export async function loadMarketUnits(
     price_per_m2: u.price_per_m2 === null ? null : Number(u.price_per_m2),
     area_m2: u.area_m2 === null ? null : Number(u.area_m2),
     priceChangePct: moves.get(u.id) ?? null,
+    district: catalog.get(catalogKey(u.developer, u.complex))?.district ?? null,
+    buildStatus: catalog.get(catalogKey(u.developer, u.complex))?.buildStatus ?? null,
   }))
 
   return {
@@ -72,7 +78,7 @@ async function loadTrackingSince(sb: SupabaseClient): Promise<string | null> {
   return (data?.[0] as { first_seen?: string } | undefined)?.first_seen ?? null
 }
 
-type RawUnit = Omit<MarketUnitRow, 'priceChangePct'>
+type RawUnit = Omit<MarketUnitRow, 'priceChangePct' | 'district' | 'buildStatus'>
 
 async function loadUnits(sb: SupabaseClient): Promise<RawUnit[]> {
   const out: RawUnit[] = []

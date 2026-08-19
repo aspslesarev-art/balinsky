@@ -9,6 +9,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { sbAdmin } from './apply'
 import type { UnitStatus } from './types'
 import { KIND_LABEL, type UnitKind } from './classify'
+import { catalogKey, loadCatalogMap, type CatalogInfo } from './catalog'
 
 export type ComplexUnit = {
   id: number
@@ -73,6 +74,8 @@ export type ComplexGroup = {
 export type ComplexReport = {
   developer: string
   complex: string
+  // Что о комплексе знает каталог сайта: район, стадия, ссылка на карточку.
+  catalog: CatalogInfo | null
   // Дата, с которой трекер видит этот комплекс. Всё, что было продано
   // раньше, попало к нам уже со статусом «продан» и в графике продаж не
   // отражается — там только переходы, случившиеся при нас.
@@ -136,9 +139,12 @@ export async function loadComplexReport(
 
   const soldEvents = decorated.filter(e => e.kind === 'sold')
 
+  const catalog = (await loadCatalogMap(sb)).get(catalogKey(developer, complex)) ?? null
+
   return {
     developer,
     complex,
+    catalog,
     trackingSince: units.reduce((min, u) => (u.first_seen < min ? u.first_seen : min), units[0].first_seen),
     units,
     groups: groupsOf(units),
