@@ -50,6 +50,13 @@ export function today(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
+// Насколько срез может усохнуть за сутки, прежде чем мы сочтём его
+// сломанным. Застройщик убирает из прайса проданное, так что убыль
+// нормальна — но не в разы: такое падение всегда оказывалось сбоем
+// разбора (модель зацепила не тот блок, страница отдалась наполовину).
+const MIN_SLICE_RATIO = 0.6
+const SLICE_GUARD_FROM = 10
+
 export async function applyScrape(
   sb: SupabaseClient,
   source: MarketSource,
@@ -65,6 +72,8 @@ export async function applyScrape(
   if (!scraped.length) throw new Error('пустой результат разбора — в базу не пишем')
 
   const existing = await loadExisting(sb, source.id)
+  const prevDay = opts.prevScanDay ?? null
+  guardSliceSize(scraped.length, existing, prevDay, day)
   const byKey = new Map(existing.map(u => [u.unit_key, u]))
   scraped = dedupeKeys(scraped)
 
@@ -109,7 +118,6 @@ export async function applyScrape(
   // день, когда юнит пропал впервые.
   let gone = 0
   const seenKeys = new Set(scraped.map(u => u.unitKey))
-  const prevDay = opts.prevScanDay ?? null
   for (const prev of existing) {
     if (seenKeys.has(prev.unit_key)) continue
     if (!prevDay || prev.last_seen !== prevDay || prevDay === day) continue
@@ -137,6 +145,25 @@ export async function applyScrape(
   const written = await writeEvents(sb, events, ids)
 
   return { units: scraped.length, created, events: written, gone }
+}
+
+// Срез, который вдруг стал в разы короче вчерашнего, в историю не
+// пускаем: юниты, которых в нём нет, получили бы событие «пропал», а
+// половина прайса, «исчезнувшая» за ночь, — это всегда сбой разбора, а
+// не продажи. Лучше день без данных, чем день с выдуманными.
+function guardSliceSize(
+  fresh: number,
+  existing: ExistingUnit[],
+  prevDay: string | null,
+  day: string,
+): void {
+  if (!prevDay || prevDay === day) return
+  const seenYesterday = existing.filter(u => u.last_seen === prevDay).length
+  if (seenYesterday < SLICE_GUARD_FROM) return
+  if (fresh >= seenYesterday * MIN_SLICE_RATIO) return
+  throw new Error(
+    `срез усох с ${seenYesterday} юнитов до ${fresh} — похоже на сбой разбора, в базу не пишем`,
+  )
 }
 
 // Один номер юнита на источник — на нём держится вся история. В

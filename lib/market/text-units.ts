@@ -8,7 +8,9 @@
 import type { ExtractResult, ScrapedUnit, UnitStatus } from './types'
 import { chatJson } from './llm'
 
-const SYSTEM = `Ты читаешь страницу застройщика недвижимости на Бали и достаёшь из неё объекты, которые продаются.
+// Тот же список полей нужен и когда прайс приходит картинкой (см.
+// file-vision.ts), поэтому промпт и разбор ответа общие.
+export const UNITS_SYSTEM = `Ты читаешь страницу застройщика недвижимости на Бали и достаёшь из неё объекты, которые продаются.
 
 Верни ТОЛЬКО JSON:
 {
@@ -35,6 +37,7 @@ const SYSTEM = `Ты читаешь страницу застройщика не
 - Цена бывает закодирована в имени файла: «280000-studioSerg.jpg» или «plan-390000.png» означают $280,000 и $390,000. Если других цен на странице нет, бери их оттуда, а unitKey собирай из типа планировки или порядкового номера.
 - Диапазон цен («от $250,000 до $400,000») — это не объект: такой странице нужен unsupported, если отдельных объектов не перечислено.
 - unsupported заполняй, когда страница — оглавление, контакты, описание района без цен, или список документов.
+- Юниты без цен возвращай, ЕСЛИ у каждого есть свой номер и виден статус продажи (SOLD/AVAILABLE/продан/свободен): историю статусов мы ведём и без цен. Цену тогда ставь null.
 - Никакого текста вне JSON.`
 
 export async function extractUnitsFromText(
@@ -49,7 +52,14 @@ export async function extractUnitsFromText(
     text.slice(0, 12_000),
   ].join('\n')
 
-  const parsed = await chatJson(SYSTEM, user, { feature: 'market-layout', meta })
+  const parsed = await chatJson(UNITS_SYSTEM, user, { feature: 'market-layout', meta })
+  return unitsFromPayload(parsed, 'notion')
+}
+
+// Ответ модели → юниты. Общий для текста страницы и для файла-картинки:
+// формат ответа один и тот же, а проверок в нём достаточно, чтобы не
+// пускать в историю пустой или бессмысленный разбор.
+export function unitsFromPayload(parsed: unknown, sourceTag: string): ExtractResult {
   const data = parsed as { units?: unknown[]; unsupported?: unknown }
 
   if (typeof data.unsupported === 'string' && data.unsupported.trim()) {
@@ -79,11 +89,11 @@ export async function extractUnitsFromText(
       status: asStatus(u.status),
       priceUsd,
       pricePerM2: priceUsd && areaM2 ? Math.round(priceUsd / areaM2) : null,
-      raw: { source: 'notion' },
+      raw: { source: sourceTag },
     })
   }
 
-  if (!units.length) throw new Error('на странице Notion не нашлось ни одного объекта')
+  if (!units.length) throw new Error('в источнике не нашлось ни одного объекта')
   return { units, warnings }
 }
 

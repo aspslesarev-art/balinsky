@@ -2,9 +2,9 @@
 // Решает, чем разбирать (нативный адаптер или конфиг от модели) и когда
 // пересобирать конфиг.
 
-import { fetchGrid } from './grid'
+import { fetchGrid, transposeGrid, type Grid } from './grid'
 import { layoutFingerprint } from './fingerprint'
-import { buildLayout } from './layout-llm'
+import { buildLayout, type BuildLayoutResult } from './layout-llm'
 import { extractUnits } from './extract'
 import { isLbGroupSource, scrapeLbGroup } from './adapters/lb-group'
 import { isUnitboxSource, scrapeUnitbox } from './adapters/unitbox'
@@ -73,13 +73,14 @@ export async function scrapeSource(source: MarketSource): Promise<ScrapeResult> 
 
   // Структура листа не менялась — идём по сохранённому конфигу, без модели.
   if (source.layout && !isTextCache(source.layout) && source.layout_fingerprint === fingerprint) {
-    const result = extractUnits(grid, source.layout)
+    const saved = source.layout
+    const result = extractUnits(orient(grid, saved.transposed), saved)
     if (result.units.length) return { units: result.units, warnings: result.warnings }
     // Отпечаток совпал, а юнитов нет: либо прайс опустел, либо изменение
     // не поймалось отпечатком. Дешевле пересобрать конфиг, чем молча
     // записать в историю «продано всё».
-    const rebuilt = await buildLayout(grid, meta)
-    const retry = extractUnits(grid, rebuilt.layout)
+    const rebuilt = await buildAnyOrientation(grid, meta)
+    const retry = extractUnits(orient(grid, rebuilt.layout.transposed), rebuilt.layout)
     return {
       units: retry.units,
       warnings: [...result.warnings, ...rebuilt.warnings, ...retry.warnings, 'конфиг пересобран: по прежнему юнитов не нашлось'],
@@ -88,15 +89,59 @@ export async function scrapeSource(source: MarketSource): Promise<ScrapeResult> 
     }
   }
 
-  const built = await buildLayout(grid, meta)
-  if (built.layout.unsupported) {
-    throw new Error(`лист не разбирается по юнитам: ${built.layout.unsupported}`)
-  }
-  const result = extractUnits(grid, built.layout)
+  const built = await buildAnyOrientation(grid, meta)
+  const result = extractUnits(orient(grid, built.layout.transposed), built.layout)
   return {
     units: result.units,
     warnings: [...built.warnings, ...result.warnings],
     layout: built.layout,
     fingerprint,
+  }
+}
+
+type LayoutMeta = { developer: string; complex: string; unitTypes: string | null }
+
+function orient(grid: Grid, transposed: boolean | undefined): Grid {
+  return transposed ? transposeGrid(grid) : grid
+}
+
+// Часть прайсов нарисована боком: юниты идут по колонкам, а номер,
+// площадь и цена — по строкам. Для модели это выглядит как «не шахматка»,
+// хотя данные в листе есть. Поэтому на такой отказ пробуем разобрать лист
+// ещё раз, повернув его, и метим конфиг: дальше поворот применяется сам,
+// без повторного обращения к модели.
+async function buildAnyOrientation(grid: Grid, meta: LayoutMeta): Promise<BuildLayoutResult> {
+  const straight = await attemptLayout(grid, meta)
+  if ('layout' in straight) return straight
+
+  const turned = transposeGrid(grid)
+  const rotated = await attemptLayout(turned, meta)
+  // Поворот засчитываем, только если из него реально вынулись юниты:
+  // иначе это тот же отказ, просто сформулированный по-другому.
+  if ('layout' in rotated && extractUnits(turned, rotated.layout).units.length) {
+    return {
+      layout: { ...rotated.layout, transposed: true },
+      warnings: [...rotated.warnings, 'лист разобран в повороте: юниты идут по колонкам'],
+    }
+  }
+  throw straight.error
+}
+
+// Отдельная попытка разбора: отказ модели («это не шахматка») возвращаем
+// как значение, а сбой провайдера пробрасываем — второй заход на
+// повёрнутом листе его не вылечит, только потратит вызов.
+async function attemptLayout(grid: Grid, meta: LayoutMeta): Promise<BuildLayoutResult | { error: Error }> {
+  try {
+    const built = await buildLayout(grid, meta)
+    if (built.layout.unsupported) {
+      return { error: new Error(`лист не разбирается по юнитам: ${built.layout.unsupported}`) }
+    }
+    return built
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e)
+    if (message.startsWith('лист не разбирается') || message === 'layout_no_unit_key') {
+      return { error: e instanceof Error ? e : new Error(message) }
+    }
+    throw e
   }
 }

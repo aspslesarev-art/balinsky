@@ -32,6 +32,7 @@ const SYSTEM = `Ты разбираешь прайс-листы застройщ
     "pricePerM2": <цена за м2 или null>,
     "status": <колонка со статусом продажи или null>
   },
+  "extraCols": [ { "unitKey": ..., "unitType": ..., "area": ..., "price": ..., "status": ... } ],
   "statusText": { "<текст ячейки в нижнем регистре>": "available|reserved|sold" },
   "statusInPriceCell": <true, если вместо суммы в колонке цены пишут слово вроде SOLD>,
   "statusColors": [ { "hex": "FFRRGGBB", "status": "available|reserved|sold" } ],
@@ -51,7 +52,9 @@ const SYSTEM = `Ты разбираешь прайс-листы застройщ
 - defaultStatus: "available", если в листе проданные юниты явно помечены, а значит непомеченное свободно. "unknown", если понять статус нельзя.
 - skipRowIf нужен для строк вроде "1 FLOOR", "Villas", "ИТОГО", которые стоят в колонке unitKey, но юнитами не являются.
 - defaultStatus ставь "available", если лист по смыслу перечисляет то, что продаётся (заголовок вроде "available units", "availability", "units", "resale"), и проданное в нём либо помечено, либо просто не перечислено.
+- extraCols нужен, когда одна строка описывает НЕСКОЛЬКО юнитов: тот же набор колонок повторён правее (корпус слева, корпус справа). Перечисли остальные блоки в том же формате, что cols; общие правила статусов и заголовок у них те же. Если блок один — верни пустой массив.
 - unsupported заполняй, если строка листа описывает не отдельный юнит, а целый проект ("4 villas 1BR"), или это сводка/список документов/генплан без данных по юнитам. В таком случае остальные поля можно оставить как получится.
+- Если юниты идут по столбцам, а не по строкам, ты увидишь лист уже развёрнутым: разбирай его как есть, по строкам.
 - Никакого текста вне JSON.`
 
 export type BuildLayoutResult = { layout: MarketLayout; warnings: string[] }
@@ -136,6 +139,7 @@ export function normalizeLayout(raw: unknown, grid: Grid): BuildLayoutResult {
       pricePerM2: colIn(rawCols.pricePerM2, 'pricePerM2'),
       status: colIn(rawCols.status, 'status'),
     },
+    extraCols: normalizeExtraCols(parsed.extraCols, colIn),
     statusText: normalizeStatusText(parsed.statusText, warnings),
     statusInPriceCell: parsed.statusInPriceCell === true,
     statusColors: normalizeColors(parsed.statusColors, warnings),
@@ -148,6 +152,34 @@ export function normalizeLayout(raw: unknown, grid: Grid): BuildLayoutResult {
 
   if (!layout.cols.price) warnings.push('модель не нашла колонку цены — история цен по этому листу собираться не будет')
   return { layout, warnings }
+}
+
+// Дополнительные блоки колонок. Блок без номера юнита бессмыслен —
+// такой отбрасываем молча: это чаще всего пустой элемент из шаблона
+// ответа, а не потерянные данные.
+function normalizeExtraCols(
+  v: unknown,
+  colIn: (v: unknown, label: string) => number | undefined,
+): Array<MarketLayout['cols']> | undefined {
+  if (!Array.isArray(v)) return undefined
+  const out: Array<MarketLayout['cols']> = []
+  for (const entry of v) {
+    const e = (entry ?? {}) as Record<string, unknown>
+    const unitKey = colIn(e.unitKey, 'extraCols.unitKey')
+    if (!unitKey) continue
+    out.push({
+      unitKey,
+      unitType: colIn(e.unitType, 'extraCols.unitType'),
+      area: colIn(e.area, 'extraCols.area'),
+      landArea: colIn(e.landArea, 'extraCols.landArea'),
+      bedrooms: colIn(e.bedrooms, 'extraCols.bedrooms'),
+      floor: colIn(e.floor, 'extraCols.floor'),
+      price: colIn(e.price, 'extraCols.price'),
+      pricePerM2: colIn(e.pricePerM2, 'extraCols.pricePerM2'),
+      status: colIn(e.status, 'extraCols.status'),
+    })
+  }
+  return out.length ? out : undefined
 }
 
 function numOr(v: unknown, fallback: number): number {

@@ -112,3 +112,17 @@ export function colorSummary(grid: Grid, limit = 12): string {
     .map(([hex, e]) => `${hex}: ${e.count} ячеек${e.samples.length ? `, например ${e.samples.join(', ')}` : ''}`)
     .join('\n')
 }
+
+// Часть застройщиков рисует шахматку боком: юниты идут по колонкам, а
+// характеристики (номер, площадь, цена, статус) — по строкам. Разбор
+// такого листа ничем не отличается от обычного, если перед разбором
+// поменять строки и колонки местами.
+export function transposeGrid(grid: Grid): Grid {
+  const rows: GridCell[][] = []
+  for (let r = 0; r <= grid.colCount; r++) {
+    const line = new Array<GridCell>(grid.rowCount + 1).fill(EMPTY)
+    for (let c = 0; c <= grid.rowCount; c++) line[c] = cellAt(grid, c, r)
+    rows.push(line)
+  }
+  return { rows, rowCount: grid.colCount, colCount: grid.rowCount }
+}

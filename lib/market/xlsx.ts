@@ -27,8 +27,13 @@ export async function fetchXlsxFromGoogleSheet(sourceUrl: string, opts: { gidFal
   if (!idMatch) throw new Error('source_url не похож на Google Sheets URL — нужна ссылка вида /spreadsheets/d/<id>/edit?gid=NNN')
   const sheetId = idMatch[1]
   const gid = gidMatch ? gidMatch[1] : (opts.gidFallback ?? '0')
-  const xlsxUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx&gid=${gid}`
-  const r = await fetch(xlsxUrl, { redirect: 'follow' })
+  const base = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`
+  let r = await fetch(`${base}&gid=${gid}`, { redirect: 'follow' })
+  // Экспорт отдаёт 400 и на закрытую таблицу, и на несуществующую
+  // вкладку: gid=0 не работает, если первую вкладку когда-то удалили, а
+  // ссылка из мастер-таблицы номера вкладки не несла. Тогда качаем книгу
+  // целиком — разбор всё равно берёт первый лист.
+  if (!r.ok) r = await fetch(base, { redirect: 'follow' })
   if (!r.ok) throw new Error(`Google Sheets вернул ${r.status} — таблица должна быть доступна по ссылке (share: View)`)
   const buf = new Uint8Array(await r.arrayBuffer())
   return parseXlsxBuffer(buf, gid)
