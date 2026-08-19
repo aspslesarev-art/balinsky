@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation'
 import { requireAdmin } from '@/lib/admin-auth'
 import { loadComplexReport, type SalesDay } from '@/lib/market/complex-report'
 import { LoginForm } from '../../../_login'
+import { MarketShell } from '../../_shell'
+import { UnitsTable } from '../../_units-table'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -28,8 +30,7 @@ export default async function ComplexPage({
   const sold7 = countSold(report.salesByDay, 7)
 
   return (
-    <div className="min-h-screen bg-[var(--ax-bg)] text-[var(--ax-fg)] p-6 sm:p-10">
-      <main className="max-w-[1200px] mx-auto space-y-8">
+    <MarketShell>
         <header>
           <Link href="/admin/market" className="text-[12px] text-[var(--ax-fg-muted)] hover:text-[var(--ax-fg)]">
             ← Рынок
@@ -119,32 +120,8 @@ export default async function ComplexPage({
           )}
         </Panel>
 
-        <Panel title="Все юниты" hint={`${report.units.length} шт по последнему срезу`}>
-          <div className="overflow-x-auto">
-            <table className="w-full text-[13px]">
-              <thead className="text-[var(--ax-fg-muted)] text-left">
-                <tr><Th>Юнит</Th><Th>Тип</Th><Th right>Спален</Th><Th right>Площадь</Th><Th>Статус</Th><Th right>Цена</Th><Th right>$/м²</Th></tr>
-              </thead>
-              <tbody>
-                {report.units.map(u => (
-                  <tr key={u.id} className="border-t border-[var(--ax-border)]">
-                    <Td>{u.unit_key}</Td>
-                    <Td className="text-[var(--ax-fg-muted)]">{u.unit_type ?? '—'}</Td>
-                    <Td right>{u.bedrooms ?? '—'}</Td>
-                    <Td right>{u.area_m2 ? `${u.area_m2} м²` : '—'}</Td>
-                    <Td>
-                      <span className={STATUS_COLOR[u.status] ?? ''}>{STATUS_LABEL[u.status] ?? u.status}</span>
-                      {u.returned_count > 0 && (
-                        <span className="text-[11px] text-amber-500"> · возвращался {u.returned_count}×</span>
-                      )}
-                    </Td>
-                    <Td right>{money(u.price_usd)}</Td>
-                    <Td right className="text-[var(--ax-fg-muted)]">{u.price_per_m2 ? `$${Math.round(Number(u.price_per_m2)).toLocaleString('ru-RU')}` : '—'}</Td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <Panel title="Все юниты" hint={`${report.units.length} шт · фильтры по статусу, сортировка по колонкам, клик по строке разворачивает историю юнита`}>
+          <UnitsTable units={report.units} history={report.history} />
         </Panel>
 
         <Panel title="Источники">
@@ -158,8 +135,7 @@ export default async function ComplexPage({
             ))}
           </div>
         </Panel>
-      </main>
-    </div>
+    </MarketShell>
   )
 }
 
@@ -212,12 +188,6 @@ const STATUS_LABEL: Record<string, string> = {
   reserved: 'бронь',
   sold: 'продан',
   unknown: 'статус неясен',
-}
-
-const STATUS_COLOR: Record<string, string> = {
-  available: 'text-emerald-500',
-  reserved: 'text-amber-500',
-  sold: 'text-[var(--ax-fg-muted)]',
 }
 
 const KIND_LABEL: Record<string, string> = {

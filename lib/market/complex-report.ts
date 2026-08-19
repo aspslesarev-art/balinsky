@@ -38,6 +38,11 @@ export type ComplexEvent = {
 
 export type SalesDay = { d: string; sold: number; valueUsd: number }
 
+// Точка истории юнита. Хранятся только моменты, когда что-то изменилось,
+// плюс первый и последний день наблюдения: иначе на странице оказались бы
+// десятки тысяч одинаковых строк «то же самое, что вчера».
+export type UnitPoint = { d: string; status: UnitStatus; price: number | null }
+
 export type PriceTrack = {
   unit_key: string
   currentPrice: number | null
@@ -64,6 +69,8 @@ export type ComplexReport = {
   salesByDay: SalesDay[]
   soldEvents: ComplexEvent[]
   priceTracks: PriceTrack[]
+  // unit.id → сжатая история наблюдений
+  history: Record<number, UnitPoint[]>
   otherEvents: ComplexEvent[]
   sources: Array<{ source_url: string; source_kind: string; last_scan_at: string | null; last_status: string | null; last_error: string | null }>
 }
@@ -117,6 +124,7 @@ export async function loadComplexReport(
     salesByDay: salesByDay(soldEvents, days),
     soldEvents,
     priceTracks: priceTracks(units, decorated),
+    history: await loadHistory(sb, ids, since),
     otherEvents: decorated.filter(e => e.kind === 'returned' || e.kind === 'reserved' || e.kind === 'gone'),
     sources: await loadSources(sb, developer, complex),
   }
@@ -175,6 +183,49 @@ function priceTracks(units: ComplexUnit[], events: ComplexEvent[]): PriceTrack[]
       status: u.status,
       changes: (moves.get(u.unit_key) ?? []).sort((a, b) => a.d.localeCompare(b.d)),
     }))
+}
+
+// Дневные срезы, сжатые до точек изменения. День, в который у юнита ни
+// цена, ни статус не отличаются от предыдущего, ничего не рассказывает.
+async function loadHistory(
+  sb: SupabaseClient,
+  unitIds: number[],
+  since: string,
+): Promise<Record<number, UnitPoint[]>> {
+  const raw = new Map<number, UnitPoint[]>()
+
+  for (let i = 0; i < unitIds.length; i += 300) {
+    for (let from = 0; ; from += 1000) {
+      const { data } = await sb
+        .from('market_unit_daily')
+        .select('unit_id, d, status, price_usd')
+        .in('unit_id', unitIds.slice(i, i + 300))
+        .gte('d', since)
+        .order('d', { ascending: true })
+        .range(from, from + 999)
+      if (!data?.length) break
+      for (const row of data as Array<{ unit_id: number; d: string; status: UnitStatus; price_usd: number | null }>) {
+        const list = raw.get(row.unit_id) ?? []
+        list.push({ d: row.d, status: row.status, price: row.price_usd === null ? null : Number(row.price_usd) })
+        raw.set(row.unit_id, list)
+      }
+      if (data.length < 1000) break
+    }
+  }
+
+  const out: Record<number, UnitPoint[]> = {}
+  for (const [unitId, points] of raw) {
+    const sorted = points.sort((a, b) => a.d.localeCompare(b.d))
+    const kept: UnitPoint[] = []
+    for (const [idx, p] of sorted.entries()) {
+      const prev = sorted[idx - 1]
+      const changed = !prev || prev.status !== p.status || prev.price !== p.price
+      const isEdge = idx === 0 || idx === sorted.length - 1
+      if (changed || isEdge) kept.push(p)
+    }
+    out[unitId] = kept
+  }
+  return out
 }
 
 type RawEvent = {

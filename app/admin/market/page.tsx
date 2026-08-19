@@ -4,6 +4,7 @@
 import { requireAdmin } from '@/lib/admin-auth'
 import { loadMarketReport, type EventRow } from '@/lib/market/report'
 import { LoginForm } from '../_login'
+import { MarketShell } from './_shell'
 import { StockTable } from './_stock-table'
 
 export const runtime = 'nodejs'
@@ -16,8 +17,7 @@ export default async function MarketPage() {
   const r = await loadMarketReport()
 
   return (
-    <div className="min-h-screen bg-[var(--ax-bg)] text-[var(--ax-fg)] p-6 sm:p-10">
-      <main className="max-w-[1200px] mx-auto space-y-8">
+    <MarketShell>
         <header>
           <div className="text-[12px] uppercase tracking-wide text-[var(--ax-fg-muted)] mb-1">Прайсы застройщиков</div>
           <h1 className="text-[24px] font-semibold tracking-tight">Трекер рынка</h1>
@@ -72,8 +72,7 @@ export default async function MarketPage() {
             <Empty>все источники разбираются без замечаний</Empty>
           )}
         </Panel>
-      </main>
-    </div>
+    </MarketShell>
   )
 }
 
