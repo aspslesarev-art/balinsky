@@ -4,6 +4,7 @@
 import { requireAdmin } from '@/lib/admin-auth'
 import { loadMarketReport, type EventRow } from '@/lib/market/report'
 import { LoginForm } from '../_login'
+import { StockTable } from './_stock-table'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -41,30 +42,8 @@ export default async function MarketPage() {
           {r.recentSold.length ? <EventTable rows={r.recentSold} /> : <Empty>продаж пока не зафиксировано</Empty>}
         </Panel>
 
-        <Panel title="Объём по комплексам">
-          <div className="overflow-x-auto">
-            <table className="w-full text-[13px]">
-              <thead className="text-[var(--ax-fg-muted)] text-left">
-                <tr>
-                  <Th>Застройщик</Th><Th>Комплекс</Th><Th right>В продаже</Th><Th right>Бронь</Th>
-                  <Th right>Продано</Th><Th right>Объём, $</Th><Th right>Обновлён</Th>
-                </tr>
-              </thead>
-              <tbody>
-                {r.stock.map((s, i) => (
-                  <tr key={i} className="border-t border-[var(--ax-border)]">
-                    <Td>{s.developer}</Td>
-                    <Td>{s.complex}</Td>
-                    <Td right>{s.available}</Td>
-                    <Td right>{s.reserved}</Td>
-                    <Td right>{s.sold}</Td>
-                    <Td right>{s.available_value_usd ? usd(Number(s.available_value_usd)) : '—'}</Td>
-                    <Td right>{s.last_seen ?? '—'}</Td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <Panel title="Объём по комплексам" hint="фильтры по застройщику и комплексу, сортировка — клик по заголовку; название комплекса ведёт в подробный отчёт">
+          <StockTable rows={r.stock} />
         </Panel>
 
         <Panel title="Источники" hint={`${r.health.ok} собираются, ${r.health.error} с ошибкой, ${r.health.pending} ещё не опрошены`}>
