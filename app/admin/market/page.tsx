@@ -1,6 +1,7 @@
 // Трекер рынка застройщиков: сколько объёма в продаже, что ушло, что
 // вернулось и как двигались цены. Данные собирает /api/cron/market-scan.
 
+import Link from 'next/link'
 import { requireAdmin } from '@/lib/admin-auth'
 import { loadMarketReport, type EventRow } from '@/lib/market/report'
 import { LoginForm } from '../_login'
@@ -18,9 +19,17 @@ export default async function MarketPage() {
 
   return (
     <MarketShell>
-        <header>
-          <div className="text-[12px] uppercase tracking-wide text-[var(--ax-fg-muted)] mb-1">Прайсы застройщиков</div>
-          <h1 className="text-[24px] font-semibold tracking-tight">Трекер рынка</h1>
+        <header className="flex items-end justify-between gap-4">
+          <div>
+            <div className="text-[12px] uppercase tracking-wide text-[var(--ax-fg-muted)] mb-1">Прайсы застройщиков</div>
+            <h1 className="text-[24px] font-semibold tracking-tight">Трекер рынка</h1>
+          </div>
+          <Link
+            href="/admin/market/units"
+            className="text-[12px] px-3 py-1.5 rounded-lg border border-[var(--ax-border)] text-[var(--ax-fg-muted)] hover:text-[var(--ax-fg)]"
+          >
+            Все юниты рынка →
+          </Link>
         </header>
 
         <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
