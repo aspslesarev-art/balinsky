@@ -6,7 +6,7 @@
 // двигалась цена конкретного юнита».
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-import { buildingOf, classifyKind } from './classify'
+import { buildingOf, classifyKind, isResale } from './classify'
 import type { MarketSource, ScrapedUnit, UnitStatus } from './types'
 
 const BATCH = 500
@@ -90,6 +90,7 @@ export async function applyScrape(
       // называет корпус — ещё и он.
       kind: classifyKind(u, source.unit_types),
       building: buildingOf(u.raw),
+      is_resale: isResale(u.raw),
       price_usd: u.priceUsd,
       price_per_m2: u.pricePerM2,
       first_seen: prev?.first_seen ?? day,

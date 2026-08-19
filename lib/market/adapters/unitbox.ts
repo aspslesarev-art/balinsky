@@ -39,6 +39,7 @@ type UnitboxUnit = {
   projectCode?: string | null
   projectName?: string | null
   soldAt?: string | null
+  resale?: boolean | null
 }
 
 export type UnitboxRef = { developer: string; projectCode: string }
@@ -89,6 +90,9 @@ export async function scrapeUnitbox(sourceUrl: string): Promise<ExtractResult> {
       priceUsd,
       pricePerM2: positive(numOrNull(u.pricePerSizeInUSD)) ?? (priceUsd && areaM2 ? Math.round(priceUsd / areaM2) : null),
       raw: {
+        // Портал отмечает перепродажу отдельно: такой юнит продаёт не
+        // застройщик, а инвестор, вышедший из проекта.
+        resale: u.resale === true ? 'true' : '',
         status: String(u.status ?? ''),
         projectName: String(u.projectName ?? ''),
         blockName: String(u.blockName ?? ''),

@@ -51,6 +51,17 @@ export function buildingOf(raw: Record<string, string> | null | undefined): stri
   return null
 }
 
+// Перепродажа: юнит выставлен не застройщиком, а инвестором, который
+// купил его раньше и теперь выходит. Для оценки спроса это
+// противоположность нераспроданному остатку — такой юнит когда-то
+// успешно продали.
+export function isResale(raw: Record<string, string> | null | undefined): boolean {
+  if (!raw) return false
+  if (raw.legendStatus === 'Resale') return true
+  if (raw.resale === 'true') return true
+  return false
+}
+
 export const KIND_LABEL: Record<UnitKind, string> = {
   villa: 'Виллы',
   apartment: 'Апартаменты',
