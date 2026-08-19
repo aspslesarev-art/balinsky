@@ -48,6 +48,10 @@ export type PriceTrack = {
 export type ComplexReport = {
   developer: string
   complex: string
+  // Дата, с которой трекер видит этот комплекс. Всё, что было продано
+  // раньше, попало к нам уже со статусом «продан» и в графике продаж не
+  // отражается — там только переходы, случившиеся при нас.
+  trackingSince: string
   units: ComplexUnit[]
   totals: {
     available: number
@@ -107,6 +111,7 @@ export async function loadComplexReport(
   return {
     developer,
     complex,
+    trackingSince: units.reduce((min, u) => (u.first_seen < min ? u.first_seen : min), units[0].first_seen),
     units,
     totals: totals(units),
     salesByDay: salesByDay(soldEvents, days),

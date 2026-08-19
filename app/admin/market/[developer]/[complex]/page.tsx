@@ -45,8 +45,11 @@ export default async function ComplexPage({
           <Kpi label="Продано за 30 дней" value={`${sold30} шт`} sub={`за 7 дней: ${sold7}`} />
         </section>
 
-        <Panel title="Продажи по дням" hint={`последние ${DAYS} дней; столбик — сколько юнитов ушло в этот день`}>
-          <SalesChart days={report.salesByDay} />
+        <Panel
+          title="Продажи по дням"
+          hint={`столбик — сколько юнитов ушло в этот день. Считаются только продажи, случившиеся при наблюдении: трекер видит комплекс с ${report.trackingSince}, всё проданное до этой даты пришло уже со статусом «продан»`}
+        >
+          <SalesChart days={report.salesByDay} since={report.trackingSince} />
         </Panel>
 
         <Panel title="Что продано" hint="переходы в «продано» с ценой, по которой юнит стоял последним">
@@ -70,7 +73,7 @@ export default async function ComplexPage({
               </table>
             </div>
           ) : (
-            <Empty>за последние {DAYS} дней продаж не зафиксировано</Empty>
+            <Empty>с начала наблюдения ({report.trackingSince}) продаж не зафиксировано</Empty>
           )}
         </Panel>
 
@@ -162,11 +165,18 @@ export default async function ComplexPage({
 
 // Столбики: день без продаж остаётся пустым местом, чтобы паузы читались
 // так же ясно, как всплески.
-function SalesChart({ days }: { days: SalesDay[] }) {
+function SalesChart({ days, since }: { days: SalesDay[]; since: string }) {
   const max = Math.max(...days.map(d => d.sold), 1)
   const total = days.reduce((s, d) => s + d.sold, 0)
 
-  if (!total) return <Empty>за период продаж не было</Empty>
+  if (!total) {
+    return (
+      <Empty>
+        с начала наблюдения ({since}) ни один юнит не переходил в «продано». Столбики появятся,
+        как только это случится
+      </Empty>
+    )
+  }
 
   return (
     <div>
