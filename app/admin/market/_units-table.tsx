@@ -1,7 +1,8 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import type { ComplexUnit, UnitPoint } from '@/lib/market/complex-report'
+import { groupKeyOf, type ComplexUnit, type UnitPoint } from '@/lib/market/complex-report'
+import { KIND_LABEL } from '@/lib/market/classify'
 
 // Полный список юнитов комплекса с историей по каждому: клик по строке
 // разворачивает, что с юнитом происходило — как менялась цена и когда он
@@ -49,20 +50,32 @@ export function UnitsTable({
   history: Record<number, UnitPoint[]>
 }) {
   const [filter, setFilter] = useState('all')
+  const [groups, setGroups] = useState<Set<string>>(new Set())
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState<{ key: SortKey; dir: SortDir }>({ key: 'unit_key', dir: 'asc' })
   const [open, setOpen] = useState<Set<number>>(new Set())
 
+  // Группы комплекса: корпус, если он назван, иначе тип продукта.
+  const groupOptions = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const u of units) {
+      const key = groupKeyOf(u)
+      if (!map.has(key)) map.set(key, u.building?.trim() || KIND_LABEL[u.kind ?? 'unknown'])
+    }
+    return [...map.entries()].map(([key, label]) => ({ key, label }))
+  }, [units])
+
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase()
     const filtered = units.filter(u => {
+      if (groups.size && !groups.has(groupKeyOf(u))) return false
       if (filter === 'moved' && !hasPriceMove(history[u.id])) return false
       if (filter !== 'all' && filter !== 'moved' && u.status !== filter) return false
       if (q && !`${u.unit_key} ${u.unit_type ?? ''}`.toLowerCase().includes(q)) return false
       return true
     })
     return [...filtered].sort((a, b) => compare(a, b, sort.key) * (sort.dir === 'asc' ? 1 : -1))
-  }, [units, history, filter, query, sort])
+  }, [units, history, filter, query, sort, groups])
 
   return (
     <div className="space-y-3">
@@ -81,6 +94,27 @@ export function UnitsTable({
             <span className="ml-1 opacity-60">{countFor(units, history, f.key)}</span>
           </button>
         ))}
+        {groupOptions.length > 1 &&
+          groupOptions.map(g => (
+            <button
+              key={g.key}
+              onClick={() =>
+                setGroups(prev => {
+                  const next = new Set(prev)
+                  if (next.has(g.key)) next.delete(g.key)
+                  else next.add(g.key)
+                  return next
+                })
+              }
+              className={`text-[12px] px-2.5 py-1.5 rounded-lg border ${
+                groups.has(g.key)
+                  ? 'border-[var(--ax-fg)] text-[var(--ax-fg)]'
+                  : 'border-[var(--ax-border)] text-[var(--ax-fg-muted)] hover:text-[var(--ax-fg)]'
+              }`}
+            >
+              {g.label}
+            </button>
+          ))}
         <input
           value={query}
           onChange={e => setQuery(e.target.value)}
@@ -136,7 +170,11 @@ export function UnitsTable({
                         <span>
                           <span className="opacity-50 mr-1">{isOpen ? '▾' : '▸'}</span>
                           {u.unit_key}
-                          {u.unit_type ? <span className="text-[var(--ax-fg-muted)]"> · {u.unit_type}</span> : null}
+                          <span className="text-[var(--ax-fg-muted)]">
+                            {' · '}
+                            {u.building?.trim() || KIND_LABEL[u.kind ?? 'unknown']}
+                          </span>
+                          {u.unit_type ? <span className="text-[var(--ax-fg-faint)]"> · {u.unit_type}</span> : null}
                           {u.returned_count > 0 && (
                             <span className="text-[11px] text-amber-500"> · возвращался {u.returned_count}×</span>
                           )}

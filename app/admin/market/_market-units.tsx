@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Picker } from './_picker'
 import type { MarketUnitRow } from '@/lib/market/units-report'
+import { KIND_LABEL, type UnitKind } from '@/lib/market/classify'
 
 // Сквозная таблица по всем юнитам рынка: фильтры по застройщику,
 // комплексу, статусу, спальням, цене и площади плюс движение цены.
@@ -29,6 +30,7 @@ const STATUS_COLOR: Record<string, string> = {
 }
 
 const STATUSES = ['available', 'reserved', 'sold', 'unknown'] as const
+const KINDS: UnitKind[] = ['villa', 'apartment', 'commercial', 'unknown']
 const BEDROOMS = ['1', '2', '3', '4+'] as const
 const MOVES = [
   { key: 'any', label: 'Любое движение цены' },
@@ -53,6 +55,7 @@ export function MarketUnits({ units }: { units: MarketUnitRow[] }) {
   const [complexes, setComplexes] = useState<Set<string>>(new Set())
   const [statuses, setStatuses] = useState<Set<string>>(new Set(['available']))
   const [beds, setBeds] = useState<Set<string>>(new Set())
+  const [kinds, setKinds] = useState<Set<string>>(new Set())
   const [move, setMove] = useState<string | null>(null)
   const [priceFrom, setPriceFrom] = useState('')
   const [priceTo, setPriceTo] = useState('')
@@ -80,6 +83,7 @@ export function MarketUnits({ units }: { units: MarketUnitRow[] }) {
       if (complexes.size && !complexes.has(u.complex)) return false
       if (statuses.size && !statuses.has(u.status)) return false
       if (beds.size && !beds.has(bedKey(u.bedrooms))) return false
+      if (kinds.size && !kinds.has(u.kind ?? 'unknown')) return false
       if (move === 'any' && u.priceChangePct === null) return false
       if (move === 'down' && !(u.priceChangePct !== null && u.priceChangePct < 0)) return false
       if (move === 'up' && !(u.priceChangePct !== null && u.priceChangePct > 0)) return false
@@ -90,7 +94,7 @@ export function MarketUnits({ units }: { units: MarketUnitRow[] }) {
     })
 
     return [...filtered].sort((a, b) => compare(a, b, sort.key) * (sort.dir === 'asc' ? 1 : -1))
-  }, [units, devs, complexes, statuses, beds, move, priceFrom, priceTo, query, sort])
+  }, [units, devs, complexes, statuses, beds, kinds, move, priceFrom, priceTo, query, sort])
 
   const totals = useMemo(
     () => ({
@@ -102,7 +106,7 @@ export function MarketUnits({ units }: { units: MarketUnitRow[] }) {
   )
 
   const reset = () => {
-    setDevs(new Set()); setComplexes(new Set()); setStatuses(new Set()); setBeds(new Set())
+    setDevs(new Set()); setComplexes(new Set()); setStatuses(new Set()); setBeds(new Set()); setKinds(new Set())
     setMove(null); setPriceFrom(''); setPriceTo(''); setQuery('')
   }
 
@@ -127,6 +131,11 @@ export function MarketUnits({ units }: { units: MarketUnitRow[] }) {
           options={STATUSES.map(s => ({ key: s, label: STATUS_LABEL[s] }))}
           selected={statuses}
           onToggle={k => setStatuses(toggle(statuses, k))}
+        />
+        <Chips
+          options={KINDS.map(k => ({ key: k, label: KIND_LABEL[k] }))}
+          selected={kinds}
+          onToggle={k => setKinds(toggle(kinds, k))}
         />
         <Chips
           options={BEDROOMS.map(b => ({ key: b, label: `${b} сп.` }))}
@@ -199,6 +208,10 @@ export function MarketUnits({ units }: { units: MarketUnitRow[] }) {
                 </td>
                 <td className="py-1.5">
                   {u.unit_key}
+                  <span className="text-[11px] text-[var(--ax-fg-faint)]">
+                    {' · '}
+                    {u.building?.trim() || KIND_LABEL[u.kind ?? 'unknown']}
+                  </span>
                   {u.returned_count > 0 && <span className="text-[11px] text-amber-500"> ↩{u.returned_count}</span>}
                 </td>
                 <td className="py-1.5 text-right tabular-nums">{u.bedrooms ?? '—'}</td>

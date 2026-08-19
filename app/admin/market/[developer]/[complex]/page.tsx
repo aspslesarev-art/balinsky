@@ -46,6 +46,37 @@ export default async function ComplexPage({
           <Kpi label="Продано за 30 дней" value={`${sold30} шт`} sub={`за 7 дней: ${sold7}`} />
         </section>
 
+        <Panel title="Состав комплекса" hint="корпус, если застройщик его называет, иначе — тип продукта">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {report.groups.map(g => (
+              <div key={g.key} className="border border-[var(--ax-border)] rounded-xl p-4 flex flex-col gap-2">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="font-medium">{g.label}</span>
+                  <span className="text-[12px] text-[var(--ax-fg-muted)]">{g.units} шт</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-[6px] rounded-full bg-[var(--ax-border)] overflow-hidden">
+                    <div className="h-full bg-emerald-500/80" style={{ width: `${g.soldPct ?? 0}%` }} />
+                  </div>
+                  <span className="text-[12px] tabular-nums text-[var(--ax-fg-muted)]">
+                    {g.soldPct === null ? '—' : `${g.soldPct}%`}
+                  </span>
+                </div>
+                <div className="text-[12px] text-[var(--ax-fg-muted)]">
+                  в продаже {g.available} · бронь {g.reserved} · продано {g.sold}
+                </div>
+                <div className="text-[12px] text-[var(--ax-fg-muted)]">
+                  {g.avgAreaM2 ? `${g.avgAreaM2} м² в среднем` : 'площадь неизвестна'}
+                  {g.avgPriceUsd ? ` · ${money(g.avgPriceUsd)}` : ''}
+                </div>
+                {g.availableValueUsd > 0 && (
+                  <div className="text-[12px]">Остаток: {usd(g.availableValueUsd)}</div>
+                )}
+              </div>
+            ))}
+          </div>
+        </Panel>
+
         <Panel
           title="Продажи по дням"
           hint={`столбик — сколько юнитов ушло в этот день. Считаются только продажи, случившиеся при наблюдении: трекер видит комплекс с ${report.trackingSince}, всё проданное до этой даты пришло уже со статусом «продан»`}

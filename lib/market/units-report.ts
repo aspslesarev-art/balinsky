@@ -7,12 +7,15 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { sbAdmin } from './apply'
 import type { UnitStatus } from './types'
+import type { UnitKind } from './classify'
 
 export type MarketUnitRow = {
   id: number
   developer: string
   complex: string
   unit_key: string
+  kind: UnitKind | null
+  building: string | null
   unit_type: string | null
   bedrooms: number | null
   area_m2: number | null
@@ -79,7 +82,7 @@ async function loadUnits(sb: SupabaseClient): Promise<RawUnit[]> {
       // Даты первого и последнего среза на этой странице не показываются,
       // а на трёх с половиной тысячах строк они заметно утяжеляют ответ —
       // они есть в карточке комплекса.
-      .select('id, developer, complex, unit_key, unit_type, bedrooms, area_m2, status, price_usd, price_per_m2, sold_at, returned_count')
+      .select('id, developer, complex, unit_key, kind, building, unit_type, bedrooms, area_m2, status, price_usd, price_per_m2, sold_at, returned_count')
       .order('developer', { ascending: true })
       .range(from, from + 999)
     if (error) throw new Error(`чтение market_units: ${error.message}`)

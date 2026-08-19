@@ -8,10 +8,13 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { sbAdmin } from './apply'
 import type { UnitStatus } from './types'
+import { KIND_LABEL, type UnitKind } from './classify'
 
 export type ComplexUnit = {
   id: number
   unit_key: string
+  kind: UnitKind | null
+  building: string | null
   unit_type: string | null
   bedrooms: number | null
   area_m2: number | null
@@ -50,6 +53,23 @@ export type PriceTrack = {
   changes: Array<{ d: string; from: number | null; to: number | null }>
 }
 
+// Группа внутри комплекса: корпус, если застройщик его назвал, иначе
+// тип продукта. Это тот самый уровень между комплексом и юнитом.
+export type ComplexGroup = {
+  key: string
+  label: string
+  kind: UnitKind | null
+  building: string | null
+  units: number
+  available: number
+  reserved: number
+  sold: number
+  soldPct: number | null
+  availableValueUsd: number
+  avgAreaM2: number | null
+  avgPriceUsd: number | null
+}
+
 export type ComplexReport = {
   developer: string
   complex: string
@@ -58,6 +78,7 @@ export type ComplexReport = {
   // отражается — там только переходы, случившиеся при нас.
   trackingSince: string
   units: ComplexUnit[]
+  groups: ComplexGroup[]
   totals: {
     available: number
     reserved: number
@@ -85,7 +106,7 @@ export async function loadComplexReport(
 
   const { data: unitRows } = await sb
     .from('market_units')
-    .select('id, unit_key, unit_type, bedrooms, area_m2, status, price_usd, price_per_m2, first_seen, last_seen, sold_at, returned_count')
+    .select('id, unit_key, kind, building, unit_type, bedrooms, area_m2, status, price_usd, price_per_m2, first_seen, last_seen, sold_at, returned_count')
     .eq('developer', developer)
     .eq('complex', complex)
     .order('unit_key', { ascending: true })
@@ -120,6 +141,7 @@ export async function loadComplexReport(
     complex,
     trackingSince: units.reduce((min, u) => (u.first_seen < min ? u.first_seen : min), units[0].first_seen),
     units,
+    groups: groupsOf(units),
     totals: totals(units),
     salesByDay: salesByDay(soldEvents, days),
     soldEvents,
@@ -128,6 +150,45 @@ export async function loadComplexReport(
     otherEvents: decorated.filter(e => e.kind === 'returned' || e.kind === 'reserved' || e.kind === 'gone'),
     sources: await loadSources(sb, developer, complex),
   }
+}
+
+export function groupKeyOf(u: Pick<ComplexUnit, 'kind' | 'building'>): string {
+  return (u.building?.trim() || u.kind || 'unknown')
+}
+
+function groupsOf(units: ComplexUnit[]): ComplexGroup[] {
+  const map = new Map<string, ComplexUnit[]>()
+  for (const u of units) {
+    const key = groupKeyOf(u)
+    map.set(key, [...(map.get(key) ?? []), u])
+  }
+
+  const out: ComplexGroup[] = [...map.entries()].map(([key, list]) => {
+    const known = list.filter(u => u.status !== 'unknown').length
+    const sold = list.filter(u => u.status === 'sold').length
+    const areas = list.map(u => u.area_m2).filter((v): v is number => v !== null)
+    const prices = list.map(u => u.price_usd).filter((v): v is number => v !== null)
+    const kind = list[0].kind ?? null
+    return {
+      key,
+      // Корпус называем как назвал застройщик, иначе — типом продукта.
+      label: list[0].building?.trim() || KIND_LABEL[kind ?? 'unknown'],
+      kind,
+      building: list[0].building ?? null,
+      units: list.length,
+      available: list.filter(u => u.status === 'available').length,
+      reserved: list.filter(u => u.status === 'reserved').length,
+      sold,
+      soldPct: known ? Math.round((sold / known) * 1000) / 10 : null,
+      availableValueUsd: list
+        .filter(u => u.status === 'available')
+        .reduce((s, u) => s + Number(u.price_usd ?? 0), 0),
+      avgAreaM2: areas.length ? Math.round(areas.reduce((s, v) => s + Number(v), 0) / areas.length) : null,
+      avgPriceUsd: prices.length ? Math.round(prices.reduce((s, v) => s + Number(v), 0) / prices.length) : null,
+    }
+  })
+
+  return out.sort((a, b) => b.units - a.units)
 }
 
 function totals(units: ComplexUnit[]): ComplexReport['totals'] {
