@@ -1182,6 +1182,15 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
 // выше — красный (единичные случаи).
 const DENSITY_BINS = 28
 
+// Цвет столбика — про то, СКОЛЬКО соседей сдают по этой ставке, а не про
+// то, высокая она или низкая. Красный там, где их гуще всего, жёлтый —
+// где единичные, серый — где нет никого. Смысл шкалы простой: двигая
+// ползунок, видно, куда встать, чтобы конкуренты вообще нашлись.
+function heatColor(n: number, max: number): string {
+  if (n <= 0) return 'var(--color-border)'
+  return (max > 0 ? n / max : 0) >= 0.5 ? 'var(--color-progress-low)' : 'var(--color-progress-mid)'
+}
+
 function AdrDensity({
   adrs, value, lo, hi, p50, p75, t,
 }: {
@@ -1214,21 +1223,17 @@ function AdrDensity({
   return (
     <div className="mt-2">
       <div className="relative flex items-end gap-px h-7" role="img" aria-label={t.densityScale}>
-        {bins.map((n, i) => {
-          const mid = lo + ((i + 0.5) / DENSITY_BINS) * (hi - lo)
-          const c = mid <= p50 ? 'hi' : mid <= p75 ? 'mid' : 'low'
-          return (
-            <div
-              key={i}
-              className="flex-1 rounded-t-[2px]"
-              style={{
-                height: max > 0 ? `${Math.max(n > 0 ? 12 : 2, (n / max) * 100)}%` : '2px',
-                background: n > 0 ? `var(--color-progress-${c})` : 'var(--color-border)',
-                opacity: n > 0 ? 0.85 : 1,
-              }}
-            />
-          )
-        })}
+        {bins.map((n, i) => (
+          <div
+            key={i}
+            className="flex-1 rounded-t-[2px]"
+            style={{
+              height: max > 0 ? `${Math.max(n > 0 ? 12 : 2, (n / max) * 100)}%` : '2px',
+              background: heatColor(n, max),
+              opacity: n > 0 ? 0.85 : 1,
+            }}
+          />
+        ))}
         <div
           className="absolute top-0 bottom-0 w-[2px] bg-[#111827]"
           style={{ left: `${pos}%` }}
