@@ -58,6 +58,8 @@ export default function robots(): MetadataRoute.Robots {
       { userAgent: '*',          allow: ['/', '/api/llm/'], disallow: DISALLOW },
       { userAgent: AI_USER_AGENTS, allow: ['/', '/api/llm/'], disallow: DISALLOW },
     ],
-    sitemap: `${SITE_URL}/sitemap.xml`,
+    // Points at the /sitemap/ twin, not /sitemap.xml: Google left the
+    // root index unread in GSC while fetching everything under /sitemap/.
+    sitemap: `${SITE_URL}/sitemap/index.xml`,
   }
 }
