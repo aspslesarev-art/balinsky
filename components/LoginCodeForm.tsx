@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 // Вход по коду из Telegram.
 //
@@ -11,16 +11,114 @@ import { useState } from 'react'
 //
 // Challenge выпускается по клику, а не при рендере: гейт живёт внутри
 // ISR-страниц, и выпущенный на рендере challenge был бы общим для всех.
+//
+// Почему бот открывается по-разному на мобильном и на десктопе. На телефоне
+// `window.open` заводит ВТОРУЮ вкладку, её тут же перехватывает приложение
+// Telegram — и поле для кода остаётся в первой, до которой пользователь уже
+// не догадывается добраться: экран после возврата показывает t.me. Поэтому
+// на touch-устройствах уходим в бота той же вкладкой: универсальная ссылка
+// t.me отдаёт управление приложению, а «назад» возвращает ровно на страницу
+// с формой. На десктопе новая вкладка удобнее и ничего не теряет.
+//
+// И в том, и в другом случае «ждём код» переживает уход со страницы: флаг
+// лежит в sessionStorage, поэтому после возврата (в том числе с перезагрузкой)
+// открыт сразу ввод кода, а не кнопка «Получить код». Флаг общий для всех
+// гейтов страницы — вводить код можно в том блоке, который перед глазами.
 
 type Step = 'idle' | 'code'
 
 const CODE_LENGTH = 4
+
+/** Ждём код: время старта, чтобы флаг не пережил сам код. */
+const PENDING_KEY = 'bx_login_pending'
+const PENDING_TTL_MS = 15 * 60 * 1000
+/** Синхронизация всех форм на странице между собой. */
+const PENDING_EVENT = 'bx-login-pending'
+
+function readPending(): boolean {
+  try {
+    const raw = window.sessionStorage.getItem(PENDING_KEY)
+    if (!raw) return false
+    const startedAt = Number(raw)
+    if (!Number.isFinite(startedAt) || Date.now() - startedAt > PENDING_TTL_MS) {
+      window.sessionStorage.removeItem(PENDING_KEY)
+      return false
+    }
+    return true
+  } catch {
+    return false
+  }
+}
+
+function writePending(on: boolean) {
+  try {
+    if (on) window.sessionStorage.setItem(PENDING_KEY, String(Date.now()))
+    else window.sessionStorage.removeItem(PENDING_KEY)
+  } catch {
+    // Приватный режим Safari — обойдёмся состоянием в памяти.
+  }
+  window.dispatchEvent(new Event(PENDING_EVENT))
+}
+
+/**
+ * Телефон/планшет: там новая вкладка и есть источник проблемы.
+ *
+ * Две проверки, потому что каждой поодиночке мало: iPadOS в Safari
+ * представляется десктопом и медиазапрос не спасает, а `maxTouchPoints`
+ * бывает ненулевым у ноутбуков с сенсорным экраном — там новая вкладка
+ * как раз уместна, но и медиазапрос на них `fine`.
+ */
+function isTouchDevice(): boolean {
+  try {
+    if (window.matchMedia('(pointer: coarse)').matches) return true
+    return navigator.maxTouchPoints > 0 && !window.matchMedia('(hover: hover)').matches
+  } catch {
+    return false
+  }
+}
 
 export function LoginCodeForm({ ctaLabel }: { ctaLabel: string }) {
   const [step, setStep] = useState<Step>('idle')
   const [code, setCode] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const inputRef = useRef<HTMLInputElement | null>(null)
+
+  // Возврат из Telegram: показать ввод кода и, если карточка на экране,
+  // поставить курсор в поле. Фокус только у видимой формы — иначе три гейта
+  // страницы начали бы перетягивать скролл друг у друга.
+  const focusIfVisible = useCallback(() => {
+    const el = inputRef.current
+    if (!el) return
+    const r = el.getBoundingClientRect()
+    if (r.bottom > 0 && r.top < window.innerHeight) el.focus()
+  }, [])
+
+  useEffect(() => {
+    const sync = () => setStep(readPending() ? 'code' : 'idle')
+    const onReturn = () => {
+      if (!readPending()) return
+      setStep('code')
+      // Ввод появляется в этом же кадре — фокус после отрисовки.
+      requestAnimationFrame(focusIfVisible)
+    }
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') onReturn()
+    }
+
+    // На монтировании — сразу onReturn: возврат из Telegram часто приходит
+    // с восстановлением страницы, и pageshow успевает отработать до того,
+    // как этот эффект повесит слушателя.
+    onReturn()
+    window.addEventListener(PENDING_EVENT, sync)
+    window.addEventListener('pageshow', onReturn)
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      window.removeEventListener(PENDING_EVENT, sync)
+      window.removeEventListener('pageshow', onReturn)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [focusIfVisible])
 
   async function start() {
     setBusy(true)
@@ -29,9 +127,32 @@ export function LoginCodeForm({ ctaLabel }: { ctaLabel: string }) {
       const r = await fetch('/api/auth/start', { method: 'POST' })
       const data = await r.json()
       if (!r.ok || !data?.url) throw new Error('start')
-      window.open(data.url, '_blank', 'noopener,noreferrer')
+
+      // Флаг ставим ДО ухода со страницы: на мобильном возврата в этот
+      // обработчик уже не будет.
+      writePending(true)
       setStep('code')
+
+      if (isTouchDevice()) {
+        window.location.href = data.url
+        return
+      }
+      // Десктоп: новая вкладка. Если её съел блокировщик всплывающих окон
+      // (жест уже «потрачен» ожиданием fetch), уходим той же вкладкой —
+      // молча ничего не делать здесь нельзя.
+      //
+      // `opener` обнуляем вручную, а не флагом `noopener` в features: с ним
+      // window.open по спецификации возвращает null всегда, и блокировку
+      // всплывающих окон стало бы не отличить от нормально открытой вкладки.
+      const opened = window.open(data.url, '_blank')
+      if (!opened) {
+        window.location.href = data.url
+        return
+      }
+      opened.opener = null
+      requestAnimationFrame(focusIfVisible)
     } catch {
+      writePending(false)
       setError('Не получилось начать вход. Попробуйте ещё раз.')
     } finally {
       setBusy(false)
@@ -49,6 +170,7 @@ export function LoginCodeForm({ ctaLabel }: { ctaLabel: string }) {
       })
       const data = await r.json()
       if (r.ok && data?.ok) {
+        writePending(false)
         // Перезагрузка — самый честный способ показать открытый контент:
         // блюр снимает инлайн-скрипт в layout по куке bx_auth.
         window.location.reload()
@@ -89,7 +211,7 @@ export function LoginCodeForm({ ctaLabel }: { ctaLabel: string }) {
     <div className="mt-4">
       <p className="text-sm text-gray-600">Бот прислал четыре цифры — введите их здесь.</p>
       <input
-        autoFocus
+        ref={inputRef}
         inputMode="numeric"
         pattern="[0-9]*"
         autoComplete="one-time-code"
