@@ -81,6 +81,7 @@ export function LinkedTable({ rows }: { rows: LinkedRow[] }) {
             <th className="py-2 pr-3 text-right">на сайте</th>
             <th className="py-2 pr-3 text-right">в прайсе</th>
             <th className="py-2 pr-3">статус</th>
+            <th className="py-2 pr-3">надбавка</th>
             <th className="py-2 pr-3">авто</th>
             <th className="py-2"></th>
           </tr>
@@ -94,12 +95,27 @@ export function LinkedTable({ rows }: { rows: LinkedRow[] }) {
             const diff = r.listingPrice !== null && r.unitPrice !== null && Math.abs(r.listingPrice - r.unitPrice) >= 1
             return (
               <tr key={key} className="border-b border-[var(--ax-border)]">
-                <td className="py-2 pr-3 font-medium">{r.listingName ?? r.listingId}</td>
+                <td className="py-2 pr-3 font-medium">
+                  {r.listingName ?? r.listingId}
+                  {r.sharedUnit && (
+                    <span className="ml-1 text-[11px] text-[var(--ax-fg-muted)]" title="у этого юнита в каталоге несколько объявлений — разная комплектация или перепродажа, у каждого своя цена и своя надбавка">
+                      ×2
+                    </span>
+                  )}
+                  {r.unitResale && (
+                    <span className="ml-1 text-[11px] text-amber-500" title="в прайсе юнит помечен как перепродажа: цену ставит инвестор, а не застройщик — возможно, автообновление тут лишнее">
+                      перепродажа
+                    </span>
+                  )}
+                </td>
                 <td className="py-2 pr-3 text-[var(--ax-fg-muted)]">{r.complex}</td>
                 <td className="py-2 pr-3">{r.unitKey} <span className="text-[var(--ax-fg-muted)]">· {r.unitArea ?? '?'} м²</span></td>
                 <td className="py-2 pr-3 text-right">{usd(r.listingPrice)}</td>
                 <td className={`py-2 pr-3 text-right ${diff ? 'text-amber-500' : ''}`}>{usd(r.unitPrice)}</td>
                 <td className="py-2 pr-3 text-[var(--ax-fg-muted)]">{r.unitStatus}</td>
+                <td className="py-2 pr-3">
+                  <MarkupInput row={r} />
+                </td>
                 <td className="py-2 pr-3">
                   <button
                     onClick={async () => {
@@ -129,5 +145,39 @@ export function LinkedTable({ rows }: { rows: LinkedRow[] }) {
         </tbody>
       </table>
     </div>
+  )
+}
+
+// Надбавка каталога к прайсу в процентах. Объекты продаются
+// меблированными, а прайс застройщика бывает и без мебели, и в
+// рассрочку — процент фиксируется один раз, и дальше цена едет от прайса
+// вместе с ним.
+function MarkupInput({ row }: { row: LinkedRow }) {
+  const initial = row.ratio === null ? '' : ((row.ratio - 1) * 100).toFixed(1)
+  const [value, setValue] = useState(initial)
+  const [state, setState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+
+  const commit = async () => {
+    const pct = Number(value.replace(',', '.'))
+    if (!Number.isFinite(pct)) { setState('error'); return }
+    setState('saving')
+    const ok = await save({ listingKind: row.kind, listingId: row.listingId, ratio: 1 + pct / 100 })
+    setState(ok ? 'saved' : 'error')
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1">
+      <input
+        value={value}
+        onChange={e => { setValue(e.target.value); setState('idle') }}
+        onBlur={() => { if (value !== initial) void commit() }}
+        onKeyDown={e => { if (e.key === 'Enter') void commit() }}
+        className={`w-[58px] bg-[var(--ax-bg)] border rounded-md px-1.5 py-0.5 text-right ${
+          state === 'error' ? 'border-red-500' : state === 'saved' ? 'border-emerald-600' : 'border-[var(--ax-border)]'
+        }`}
+        placeholder="0"
+      />
+      <span className="text-[var(--ax-fg-muted)]">%</span>
+    </span>
   )
 }

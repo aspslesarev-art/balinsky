@@ -16,7 +16,7 @@ async function main() {
 
   const plan = await planSiteSync(sb)
   const apply = plan.changes.filter(c => c.outcome === 'applied')
-  const hold = plan.changes.filter(c => c.outcome === 'skipped_big_change')
+  const hold = plan.changes.filter(c => c.outcome !== 'applied')
 
   console.log(`\nсверено пар: ${plan.checked}`)
   console.log(`к обновлению: ${apply.length}, отложено на человека: ${hold.length}, юнитов продано/бронь: ${plan.soldUnits.length}`)
@@ -24,7 +24,8 @@ async function main() {
   for (const c of [...apply, ...hold]) {
     const pct = c.oldPrice ? Math.round((c.newPrice - c.oldPrice) / c.oldPrice * 100) : null
     const mark = c.outcome === 'applied' ? '→' : '‼'
-    console.log(`  ${mark} ${c.listingName ?? c.listingId} (${c.complex}, юнит ${c.unitKey}): $${(c.oldPrice ?? 0).toLocaleString()} → $${c.newPrice.toLocaleString()}${pct === null ? '' : ` (${pct > 0 ? '+' : ''}${pct}%)`}`)
+    const markup = Math.abs(c.ratio - 1) < 0.005 ? '' : `, надбавка ${((c.ratio - 1) * 100).toFixed(1)}%`
+    console.log(`  ${mark} ${c.listingName ?? c.listingId} (${c.complex}, юнит ${c.unitKey}${markup}): $${(c.oldPrice ?? 0).toLocaleString()} → $${c.newPrice.toLocaleString()}${pct === null ? '' : ` (${pct > 0 ? '+' : ''}${pct}%)`}${c.note ? ' — ' + c.note : ''}`)
   }
   for (const s of plan.soldUnits) {
     console.log(`  • ${s.listingName ?? s.listingId}: юнит ${s.unitKey} — ${s.status === 'sold' ? 'продан' : 'бронь'}`)
