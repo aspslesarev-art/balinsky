@@ -24,12 +24,20 @@ export default async function MarketPage() {
             <div className="text-[12px] uppercase tracking-wide text-[var(--ax-fg-muted)] mb-1">Прайсы застройщиков</div>
             <h1 className="text-[24px] font-semibold tracking-tight">Трекер рынка</h1>
           </div>
-          <Link
-            href="/admin/market/units"
-            className="text-[12px] px-3 py-1.5 rounded-lg border border-[var(--ax-border)] text-[var(--ax-fg-muted)] hover:text-[var(--ax-fg)]"
-          >
-            Все юниты рынка →
-          </Link>
+          <div className="flex gap-2">
+            <Link
+              href="/admin/market/site"
+              className="text-[12px] px-3 py-1.5 rounded-lg border border-[var(--ax-border)] text-[var(--ax-fg-muted)] hover:text-[var(--ax-fg)]"
+            >
+              Цены на сайте →
+            </Link>
+            <Link
+              href="/admin/market/units"
+              className="text-[12px] px-3 py-1.5 rounded-lg border border-[var(--ax-border)] text-[var(--ax-fg-muted)] hover:text-[var(--ax-fg)]"
+            >
+              Все юниты рынка →
+            </Link>
+          </div>
         </header>
 
         <section className="grid grid-cols-2 md:grid-cols-4 gap-3">

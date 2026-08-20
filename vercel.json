@@ -18,6 +18,10 @@
     {
       "path": "/api/cron/market-scan",
       "schedule": "*/10 1-4 * * *"
+    },
+    {
+      "path": "/api/cron/market-site-sync",
+      "schedule": "30 5 * * *"
     }
   ]
 }
