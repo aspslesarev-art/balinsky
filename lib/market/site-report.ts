@@ -52,7 +52,7 @@ export type SiteReport = {
   linked: LinkedRow[]
   pending: PendingRow[]
   log: LogRow[]
-  totals: { listings: number; inTrackedComplexes: number; linked: number; autoOff: number }
+  totals: { listings: number; inTrackedComplexes: number; linked: number; autoOff: number; checkedToday: number }
 }
 
 const norm = (v: string | null | undefined) => String(v ?? '').toLowerCase().replace(/[^a-zа-я0-9]/gi, '')
@@ -70,7 +70,7 @@ export async function loadSiteReport(): Promise<SiteReport> {
     for (let from = 0; ; from += 1000) {
       const { data } = await sb
         .from(table)
-        .select('airtable_id, name:data->>Name, complex:data->>"Комплекс 1", price:data->>"Цена", area:data->>"Площадь", bedrooms:data->>"Комнаты", published:data->>"Опубликовать"')
+        .select('airtable_id, name:data->>Name, complex:data->>"Комплекс 1", price:data->>"Цена", area:data->>"Площадь", bedrooms:data->>"Комнаты", published:data->>"Опубликовать", updated:data->>"Обновление цены"')
         .range(from, from + 999)
       if (!data?.length) break
       for (const r of data) listings.push({ ...r, kind })
@@ -183,6 +183,9 @@ export async function loadSiteReport(): Promise<SiteReport> {
       note: (r.note as string) ?? null,
     })),
     totals: {
+      // «Проверено сегодня» — то, что видит посетитель на карточке: цена
+      // сверена с прайсом застройщика, даже если она не поменялась.
+      checkedToday: listings.filter(l => String(l.updated ?? '').slice(0, 10) === new Date().toISOString().slice(0, 10)).length,
       listings: listings.length,
       inTrackedComplexes: inTracked,
       linked: linked.length,

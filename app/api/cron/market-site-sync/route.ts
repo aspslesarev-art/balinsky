@@ -31,14 +31,18 @@ export async function GET(req: Request) {
     const held = plan.changes.filter(c => c.outcome === 'skipped_big_change')
 
     if (dry) {
-      return NextResponse.json({ ok: true, dry: true, links, checked: plan.checked, changes: plan.changes, sold: plan.soldUnits })
+      return NextResponse.json({ ok: true, dry: true, links, checked: plan.checked, changes: plan.changes, confirmed: plan.confirmed.length, sold: plan.soldUnits })
     }
 
-    const applied = await applySiteSync(sb, plan)
+    const result = await applySiteSync(sb, plan)
 
     // content_version уже поднят внутри applySiteSync; теги и ISR-пути
     // сбрасываем здесь — это работает только в рантайме Next.
-    for (const kind of new Set(plan.changes.filter(c => c.outcome === 'applied').map(c => (c.kind === 'villa' ? 'villas' : 'apartments')))) {
+    const touchedKinds = new Set([
+      ...plan.changes.filter(c => c.outcome === 'applied').map(c => c.kind),
+      ...plan.confirmed.map(c => c.kind),
+    ].map(k => (k === 'villa' ? 'villas' : 'apartments')))
+    for (const kind of touchedKinds) {
       const tag = KIND_TO_TAGS[kind]
       if (tag) revalidateTag(tag, 'max')
       for (const route of KIND_TO_PATHS[kind] ?? []) revalidatePath(route.path, route.type)
@@ -48,7 +52,8 @@ export async function GET(req: Request) {
       ok: true,
       links,
       checked: plan.checked,
-      applied,
+      applied: result.applied,
+      confirmed: result.confirmed,
       held: held.length,
       sold: plan.soldUnits.length,
     })

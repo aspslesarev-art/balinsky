@@ -19,7 +19,7 @@ async function main() {
   const hold = plan.changes.filter(c => c.outcome !== 'applied')
 
   console.log(`\nсверено пар: ${plan.checked}`)
-  console.log(`к обновлению: ${apply.length}, отложено на человека: ${hold.length}, юнитов продано/бронь: ${plan.soldUnits.length}`)
+  console.log(`к обновлению: ${apply.length}, подтверждено без изменений: ${plan.confirmed.length}, отложено на человека: ${hold.length}, юнитов продано/бронь: ${plan.soldUnits.length}`)
 
   for (const c of [...apply, ...hold]) {
     const pct = c.oldPrice ? Math.round((c.newPrice - c.oldPrice) / c.oldPrice * 100) : null
@@ -36,8 +36,8 @@ async function main() {
     return
   }
 
-  const written = await applySiteSync(sb, plan)
-  console.log(`\nобновлено объявлений: ${written}`)
+  const r = await applySiteSync(sb, plan)
+  console.log(`\nобновлено цен: ${r.applied}, отмечено проверенными: ${r.confirmed}`)
 }
 
 main().catch(e => { console.error(e); process.exit(1) })

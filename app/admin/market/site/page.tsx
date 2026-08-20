@@ -40,7 +40,7 @@ export default async function MarketSitePage() {
 
       <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Kpi label="Связано с прайсом" value={`${r.totals.linked}`} sub={`объявлений в комплексах трекера: ${r.totals.inTrackedComplexes}`} />
-        <Kpi label="Обновлено ценой" value={`${applied.length}`} sub="за последние прогоны" />
+        <Kpi label="Проверено сегодня" value={`${r.totals.checkedToday}`} sub="на карточке стоит сегодняшняя дата сверки" />
         <Kpi label="Ждёт человека" value={`${held.length}`} sub="цена уехала больше чем на четверть" />
         <Kpi label="Цена ровно по прайсу" value={`${noMarkup}`} sub="надбавка 0% — проверьте, есть ли в прайсе мебель" />
       </section>

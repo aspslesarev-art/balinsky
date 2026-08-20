@@ -86,6 +86,10 @@ export type SyncChange = {
 export type SyncPlan = {
   changes: SyncChange[]
   soldUnits: Array<{ kind: ListingKind; listingId: string; listingName: string | null; unitKey: string; status: string }>
+  // Объявления, чья цена сверена с прайсом и совпала. Менять нечего, но
+  // дату «цена обновлена» на карточке двигать надо: посетитель читает её
+  // как свежесть, а «13 июля» у проверенного сегодня объекта — неправда.
+  confirmed: Array<{ kind: ListingKind; listingId: string }>
   checked: number
 }
 
@@ -205,7 +209,7 @@ export async function planSiteSync(sb: SupabaseClient): Promise<SyncPlan> {
     .select('listing_kind, listing_id, unit_id, auto_sync, price_ratio, base_unit_price, base_listing_price')
     .eq('auto_sync', true)
   if (error) throw new Error(`чтение market_listing_links: ${error.message}`)
-  if (!links?.length) return { changes: [], soldUnits: [], checked: 0 }
+  if (!links?.length) return { changes: [], soldUnits: [], confirmed: [], checked: 0 }
 
   const [listings, units] = await Promise.all([loadListings(sb), loadUnits(sb)])
   const listingById = new Map(listings.map(l => [`${l.kind}:${l.id}`, l]))
@@ -213,6 +217,7 @@ export async function planSiteSync(sb: SupabaseClient): Promise<SyncPlan> {
 
   const changes: SyncChange[] = []
   const soldUnits: SyncPlan['soldUnits'] = []
+  const confirmed: SyncPlan['confirmed'] = []
 
   for (const link of links) {
     const kind = link.listing_kind as ListingKind
@@ -248,7 +253,12 @@ export async function planSiteSync(sb: SupabaseClient): Promise<SyncPlan> {
     // превратило бы точные $607 530 в $607 500. Округляем только
     // вычисленную цену, иначе на карточке появлялись бы копейки.
     const next = Math.abs(ratio - 1) < 0.0005 ? unitPrice : round100(unitPrice * ratio)
-    if (prev !== null && Math.abs(next - prev) < Math.max(MIN_CHANGE_ABS, prev * MIN_CHANGE_PCT)) continue
+    if (prev !== null && Math.abs(next - prev) < Math.max(MIN_CHANGE_ABS, prev * MIN_CHANGE_PCT)) {
+      // Проданный юнит ценой не подтверждает: объявление ещё висит, но
+      // купить по этой цене уже нельзя, и датировать это «сегодня» нечестно.
+      if (unit.status === 'available') confirmed.push({ kind, listingId: listing.id })
+      continue
+    }
 
     const jump = prev ? Math.abs(next - prev) / prev : 0
     const badRatio = ratio < RATIO_MIN || ratio > RATIO_MAX
@@ -271,16 +281,20 @@ export async function planSiteSync(sb: SupabaseClient): Promise<SyncPlan> {
     })
   }
 
-  return { changes, soldUnits, checked: links.length }
+  return { changes, soldUnits, confirmed, checked: links.length }
 }
 
 // Применить план. Возвращает, сколько объявлений реально переписано.
-export async function applySiteSync(sb: SupabaseClient, plan: SyncPlan): Promise<number> {
+export type ApplyResult = { applied: number; confirmed: number }
+
+export async function applySiteSync(sb: SupabaseClient, plan: SyncPlan): Promise<ApplyResult> {
   const applied = plan.changes.filter(c => c.outcome === 'applied')
 
   for (const c of applied) {
     await writePrice(sb, c)
   }
+
+  const confirmed = await touchCheckedDates(sb, plan.confirmed)
 
   const log = [
     ...plan.changes.map(c => ({
@@ -310,10 +324,29 @@ export async function applySiteSync(sb: SupabaseClient, plan: SyncPlan): Promise
   // Каталог и карточки объектов держат данные в памяти процесса, и
   // тегами Next до них не достать — только через content_version. Роут
   // крона поверх этого ещё сбрасывает теги и ISR-пути.
-  const kinds = new Set(applied.map(c => (c.kind === 'villa' ? 'villas' : 'apartments')))
+  const kinds = new Set([
+    ...applied.map(c => c.kind),
+    ...(confirmed ? plan.confirmed.map(c => c.kind) : []),
+  ].map(k => (k === 'villa' ? 'villas' : 'apartments')))
   for (const kind of kinds) await bumpContentRev(kind)
 
-  return applied.length
+  return { applied: applied.length, confirmed }
+}
+
+// Дата «цена обновлена» у подтверждённых объявлений. Одним запросом на
+// тип: их сотни, и отдельный апдейт на каждое растянул бы ночной прогон.
+async function touchCheckedDates(sb: SupabaseClient, rows: SyncPlan['confirmed']): Promise<number> {
+  if (!rows.length) return 0
+  const now = new Date().toISOString()
+  let touched = 0
+  for (const kind of ['villa', 'apartment'] as const) {
+    const ids = rows.filter(r => r.kind === kind).map(r => r.listingId)
+    if (!ids.length) continue
+    const { data, error } = await sb.rpc('market_touch_price_date', { p_kind: kind, p_ids: ids, p_when: now })
+    if (error) throw new Error(`отметка даты проверки (${kind}): ${error.message}`)
+    touched += Number(data ?? 0)
+  }
+  return touched
 }
 
 // Цена лежит в JSONB под несколькими именами сразу: страницы читают то
