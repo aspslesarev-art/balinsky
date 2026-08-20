@@ -326,30 +326,28 @@ html:not([data-auth='1']) .bx-gate-cta {
    на самом бегунке. */
 .range-bare:focus,
 .range-clean:focus { outline: none; }
-.range-bare:focus-visible::-webkit-slider-thumb,
-.range-clean:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rgba(51, 164, 116, 0.35); }
-.range-bare:focus-visible::-moz-range-thumb,
-.range-clean:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 3px rgba(51, 164, 116, 0.35); }
 .range-bare::-webkit-slider-runnable-track { background: transparent; height: 6px; }
 .range-bare::-moz-range-track { background: transparent; height: 6px; }
+/* Бегунок — плоский кружок без обводки и тени: любая окантовка на
+   шестипиксельной дорожке выглядит грязью и спорит с зонами. */
 .range-bare::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 16px;
-  height: 16px;
-  margin-top: -5px;
+  width: 14px;
+  height: 14px;
+  margin-top: -4px;
   border-radius: 9999px;
   background: var(--color-primary);
-  border: 2px solid #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  border: none;
+  box-shadow: none;
   cursor: pointer;
 }
 .range-bare::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 9999px;
   background: var(--color-primary);
-  border: 2px solid #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  border: none;
+  box-shadow: none;
   cursor: pointer;
 }

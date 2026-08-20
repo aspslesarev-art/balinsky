@@ -1232,7 +1232,7 @@ function Slider({
     <div>
       <SliderHead label={label} display={display} />
       <div className="relative h-4 flex items-center" role="img" aria-label={zonesLabel}>
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-1.5 rounded-full overflow-hidden flex bg-[var(--color-border)]">
+        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-1.5 rounded-full overflow-hidden flex bg-[#F3F4F6]">
           {zones.map((share, i) => (
             <div
               key={i}
