@@ -1,9 +1,26 @@
-// Plain node tests for investment lib. Run: `node scripts/test-investment.mjs`
+// Тесты инвестиционной модели.
+// Запуск: `node --experimental-strip-types --test scripts/test-investment.mjs`
+//
+// Экономика импортируется из ПРОДОВОГО модуля, а не копируется сюда.
+// Раньше формула была продублирована в этом файле со своими константами —
+// тест проверял сам себя и остался бы зелёным при любой правке модели.
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { computeEconomics, leaseholdIrr } from '../lib/investment/economics.ts'
+import { BALI_DEFAULTS as BALI } from '../lib/investment/regions.ts'
 
-// Manually port the core pure functions for testing without TS compile.
-// The actual prod code lives in lib/investment/* — this is mirrored logic.
+// Хелпер: сценарные параметры подставляются из региона, чтобы тесты
+// не расходились с дефолтами при их изменении.
+function econ(over = {}) {
+  return computeEconomics({
+    adr: 200, occupancy: BALI.occupancyByScenario.median,
+    adrRealization: BALI.adrRealizationByScenario.median,
+    phrOwnerShare: BALI.phrOwnerShareByScenario.median,
+    area: 200, bedrooms: 3, askingPrice: null, leaseholdYearsLeft: null,
+    taxStatus: 'nonResident', region: BALI,
+    ...over,
+  })
+}
 
 function classifyZone(beaches) {
   if (beaches.length === 0) return { zone: 'inland', nearestBeach: null, walkingMeters: null }
@@ -19,25 +36,6 @@ function quantile(s, q) {
   const lo = Math.floor(pos), hi = Math.ceil(pos)
   if (lo === hi) return s[lo]
   return s[lo] + (s[hi] - s[lo]) * (pos - lo)
-}
-
-function computeEconomics({ adr, occupancy, area, askingPrice, leaseholdYearsLeft, region }) {
-  const revenue = adr * 365 * occupancy
-  const platformFee = revenue * region.platformFeePct
-  const mgmtFee = revenue * region.mgmtFeePct
-  const opex = (area ?? 0) * region.opexPerSqmMonth * 12
-  const taxableBase = Math.max(0, revenue - platformFee - mgmtFee - opex)
-  const tax = taxableBase * region.taxRate
-  const noi = revenue - platformFee - mgmtFee - opex - tax
-  const payback = askingPrice != null && noi > 0 ? askingPrice / noi : null
-  const capRate = askingPrice != null && askingPrice > 0 ? noi / askingPrice : null
-  const leaseholdRisk = !!(leaseholdYearsLeft != null && payback != null && payback > leaseholdYearsLeft)
-  return { revenue, noi, payback, capRate, leaseholdRisk, opex, tax }
-}
-
-const BALI = {
-  occupancyByScenario: { bad: 0.50, median: 0.65, good: 0.85 },
-  platformFeePct: 0.15, mgmtFeePct: 0.22, opexPerSqmMonth: 4, taxRate: 0.10, capRateThresholdWeak: 0.06,
 }
 
 // Mock fixtures
@@ -98,52 +96,108 @@ test('EMERGING_MARKET: <30 listings within 1km', () => {
 })
 
 test('Leasehold WARNING: payback > years_left triggers risk', () => {
-  const e = computeEconomics({
-    adr: 150, occupancy: 0.4, area: 150,
-    askingPrice: 500_000, leaseholdYearsLeft: 10, region: BALI,
-  })
-  // small area + low occupancy → modest NOI vs $500k → payback > 10y → risk
+  const e = econ({ adr: 150, occupancy: 0.4, area: 150, askingPrice: 500_000, leaseholdYearsLeft: 10 })
+  // небольшая площадь + низкая загрузка → скромный NOI против $500k → окупаемость > 10 лет
   assert.ok(e.noi > 0, `expected positive NOI, got ${e.noi}`)
   assert.ok(e.payback > 10, `expected payback > 10y, got ${e.payback}`)
   assert.equal(e.leaseholdRisk, true, 'leasehold risk should be true')
 })
 
 test('Leasehold OK: long lease + strong NOI', () => {
-  const e = computeEconomics({
-    adr: 300, occupancy: 0.7, area: 200,
-    askingPrice: 500_000, leaseholdYearsLeft: 30, region: BALI,
-  })
+  const e = econ({ adr: 300, occupancy: 0.7, area: 200, askingPrice: 500_000, leaseholdYearsLeft: 30 })
   assert.equal(e.leaseholdRisk, false)
-  assert.ok(e.capRate > 0.06, `cap rate should be above weak threshold, got ${e.capRate}`)
+  assert.ok(e.capRate > BALI.capRateThresholdWeak, `cap rate should be above weak threshold, got ${e.capRate}`)
 })
 
 test('Cap rate WEAK threshold detection', () => {
-  const e = computeEconomics({
-    adr: 80, occupancy: 0.4, area: 200,
-    askingPrice: 500_000, leaseholdYearsLeft: 30, region: BALI,
-  })
-  assert.ok(e.capRate < 0.06, `expected weak cap rate, got ${e.capRate}`)
+  const e = econ({ adr: 80, occupancy: 0.4, askingPrice: 500_000, leaseholdYearsLeft: 30 })
+  assert.ok(e.capRate < BALI.capRateThresholdWeak, `expected weak cap rate, got ${e.capRate}`)
 })
 
-test('Economics: NOI = revenue − fees − opex − tax', () => {
-  const e = computeEconomics({
-    adr: 200, occupancy: 0.55, area: 200,
-    askingPrice: null, leaseholdYearsLeft: null, region: BALI,
-  })
-  const expectedRevenue = 200 * 365 * 0.55
-  const expectedPlatform = expectedRevenue * 0.15
-  const expectedMgmt = expectedRevenue * 0.22
-  const expectedOpex = 200 * 4 * 12
-  const taxable = expectedRevenue - expectedPlatform - expectedMgmt - expectedOpex
-  const expectedTax = taxable * 0.10
-  const expectedNoi = expectedRevenue - expectedPlatform - expectedMgmt - expectedOpex - expectedTax
-  assert.ok(Math.abs(e.noi - expectedNoi) < 1, `NOI mismatch: ${e.noi} vs ${expectedNoi}`)
-  assert.equal(e.payback, null)
-  assert.equal(e.capRate, null)
+test('Водопад сходится: выручка − все расходы = прибыль до налога', () => {
+  const e = econ()
+  const costs = e.platformFee + e.phrTax + e.mgmtFee + e.opex + e.ffeReserve
+  assert.ok(Math.abs((e.revenue - costs) - e.preTaxProfit) <= 2,
+    `водопад не сходится: ${e.revenue} − ${costs} ≠ ${e.preTaxProfit}`)
+  assert.ok(Math.abs((e.preTaxProfit - e.tax) - e.noi) <= 2, 'прибыль − налог ≠ чистыми')
+})
+
+test('Ставка идёт в выручку с коэффициентом реализации, а не как в выдаче', () => {
+  const e = econ({ adr: 200 })
+  assert.equal(e.adrAsking, 200)
+  assert.equal(e.adr, Math.round(200 * BALI.adrRealizationByScenario.median))
+  assert.ok(Math.abs(e.revenue - e.adr * 365 * e.occupancy) < 2)
+})
+
+test('Доходность считается от цены входа, а не от прайса', () => {
+  const price = 400_000
+  const e = econ({ askingPrice: price, area: 150 })
+  assert.ok(e.entryPrice > price, 'цена входа должна быть выше прайса')
+  assert.equal(e.entryPrice, price + e.closingCost + e.furnishing)
+  assert.ok(Math.abs(e.capRate - e.noi / e.entryPrice) < 1e-9)
+  assert.ok(e.capRate < e.noi / price, 'доходность от входа обязана быть ниже, чем от прайса')
+})
+
+test('Меблированный застройщиком объект не платит за мебель дважды', () => {
+  const base = econ({ askingPrice: 400_000, area: 150 })
+  const furnished = econ({ askingPrice: 400_000, area: 150, furnished: true })
+  assert.ok(base.furnishing > 0)
+  assert.equal(furnished.furnishing, 0)
+  assert.ok(furnished.capRate > base.capRate)
+})
+
+test('Расходы не опускаются ниже базового минимума на компактных объектах', () => {
+  const tiny = econ({ area: 30, bedrooms: 1, askingPrice: 150_000 })
+  assert.equal(tiny.opexAtFloor, true)
+  assert.equal(tiny.opex, BALI.opexFloorBase + BALI.opexFloorPerBedroom * 1)
+  const big = econ({ area: 300, bedrooms: 3 })
+  assert.equal(big.opexAtFloor, false, 'на большой площади должна работать оценка по метражу')
+})
+
+test('Налог резидента ниже налога нерезидента', () => {
+  const nr = econ({ askingPrice: 400_000 })
+  const r = econ({ askingPrice: 400_000, taxStatus: 'resident' })
+  assert.ok(r.tax < nr.tax)
+  assert.ok(r.capRate > nr.capRate)
+})
+
+test('С убытка налог не берётся', () => {
+  const e = econ({ adr: 10, occupancy: 0.3, area: 250, bedrooms: 4, askingPrice: 500_000 })
+  assert.ok(e.preTaxProfit < 0, 'кейс должен быть убыточным')
+  assert.equal(e.tax, 0)
+  assert.equal(e.noi, e.preTaxProfit)
+})
+
+test('Лизхолд: капитал не возвращается, когда поток за срок меньше входа', () => {
+  const weak = econ({ adr: 90, askingPrice: 500_000, area: 150, leaseholdYearsLeft: 25 })
+  assert.equal(weak.capitalReturned, false)
+  assert.equal(weak.leaseholdIrr, null, 'IRR не существует, когда поток не покрывает вложенное')
+})
+
+test('Лизхолд: сильный объект возвращает капитал и имеет IRR', () => {
+  const strong = econ({ adr: 400, occupancy: 0.7, askingPrice: 250_000, area: 120, leaseholdYearsLeft: 30 })
+  assert.equal(strong.capitalReturned, true)
+  assert.ok(strong.leaseholdIrr > 0)
+})
+
+test('IRR обнуляет дисконтированный поток', () => {
+  const irr = leaseholdIrr(100_000, 12_000, 25)
+  assert.ok(irr != null)
+  let npv = -100_000
+  for (let t = 1; t <= 25; t++) npv += 12_000 / (1 + irr) ** t
+  assert.ok(Math.abs(npv) < 1, `NPV при IRR должен быть нулём, получено ${npv}`)
+})
+
+test('Freehold: без срока лиза нет ни IRR, ни вердикта о возврате', () => {
+  const e = econ({ askingPrice: 400_000, leaseholdYearsLeft: null })
+  assert.equal(e.leaseholdIrr, null)
+  assert.equal(e.capitalReturned, null)
+  assert.equal(e.leaseholdRisk, false)
 })
 
 test('No asking price: payback/capRate are null', () => {
-  const e = computeEconomics({ adr: 200, occupancy: 0.55, area: 200, askingPrice: null, leaseholdYearsLeft: null, region: BALI })
+  const e = econ({ askingPrice: null })
   assert.equal(e.payback, null)
   assert.equal(e.capRate, null)
+  assert.equal(e.entryPrice, null)
 })

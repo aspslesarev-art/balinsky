@@ -5,7 +5,7 @@ import { loadCompetitors } from '@/lib/competitors'
 import type { NearbyPlace } from '@/lib/nearby-places'
 import { regionFor } from './regions'
 import { matchCompetitors, type MatchResult } from './matching'
-import { adrPercentiles, computeEconomics } from './economics'
+import { adrPercentiles, buildScenarios } from './economics'
 import { scoreInfra } from './infra-score'
 import { isDailyRentalRestricted } from '@/lib/land-use'
 
@@ -132,22 +132,20 @@ function buildOneScore(
   let hasScenarios = false
   if (!rentalRestricted && matchResult.mode !== 'references') {
     const pcts = adrPercentiles(matchResult.matches)
-    const median = computeEconomics({
-      adr: pcts.p50, occupancy: region.occupancyByScenario.median,
-      area, askingPrice, leaseholdYearsLeft, region,
-    })
-    const bad = computeEconomics({
-      adr: pcts.p25, occupancy: region.occupancyByScenario.bad,
-      area, askingPrice, leaseholdYearsLeft, region,
-    })
-    const good = computeEconomics({
-      adr: pcts.p75, occupancy: region.occupancyByScenario.good,
-      area, askingPrice, leaseholdYearsLeft, region,
-    })
+    // Ранжирование каталога считается для нерезидента: это консервативная
+    // сторона и статус большинства покупателей. Виджет на странице объекта
+    // умеет переключать статус, порядок в каталоге от этого не зависит —
+    // налог меняет все capRate примерно одинаково.
+    const scenarios = buildScenarios(
+      pcts,
+      { area, bedrooms, askingPrice, leaseholdYearsLeft, taxStatus: 'nonResident', region },
+      region.occupancyByScenario,
+    )
+    const { median, bad, good } = scenarios
     capRate = median.capRate
     goodCapRate = good.capRate
     noi = median.noi
-    leaseholdRisk = bad.leaseholdRisk || median.leaseholdRisk
+    leaseholdRisk = median.capitalReturned === false || bad.leaseholdRisk || median.leaseholdRisk
     hasScenarios = true
   }
 
@@ -155,7 +153,14 @@ function buildOneScore(
   const infra = infraResult?.composite ?? 0
 
   // Composite: 60% economics, 40% infra, multiplied by confidence and leasehold penalty.
-  const capRateScore = capRate != null ? clamp01(capRate / 0.08) * 100 : 0
+  // Шкала привязана к 4,5%, а не к прежним 8%: после перехода на полный
+  // водопад расходов (площадка, PHR, управление, opex с базовым минимумом,
+  // износ, налог) и цену входа с оформлением и меблировкой медианная чистая
+  // доходность новостроя Бали — около 2%, а 4,5% — верх реального диапазона.
+  // На прежней шкале почти все объекты сжались бы к нулю и порядок в каталоге
+  // стал бы определяться одной инфраструктурой.
+  const CAP_RATE_SCALE = 0.045
+  const capRateScore = capRate != null ? clamp01(capRate / CAP_RATE_SCALE) * 100 : 0
   const confidence = matchResult.mode === 'standard' ? 'high' : matchResult.mode === 'reduced' ? 'medium' : 'low'
   const confMult = confidence === 'high' ? 1 : confidence === 'medium' ? 0.85 : 0.65
   const leaseholdMult = leaseholdRisk ? 0.75 : 1
