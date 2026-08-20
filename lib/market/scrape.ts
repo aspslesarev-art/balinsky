@@ -10,7 +10,9 @@ import { isLbGroupSource, scrapeLbGroup } from './adapters/lb-group'
 import { isUnitboxSource, scrapeUnitbox } from './adapters/unitbox'
 import { isNotionSource, scrapeNotion } from './adapters/notion'
 import { isVibeSource, scrapeVibe } from './adapters/vibe'
-import { scrapeWebpage } from './adapters/webpage'
+import { fetchHtml, scrapeWebpage } from './adapters/webpage'
+import { scrapeSplan, splanConfig } from './adapters/splan'
+import { mapsvgTables, scrapeMapsvg, usesMapsvg } from './adapters/mapsvg'
 import { isDriveSource, scrapeDrivePdf } from './adapters/drive-pdf'
 import { isTextCache, type MarketSource, type ScrapedUnit, type SourceLayout } from './types'
 
@@ -51,11 +53,25 @@ export async function scrapeSource(source: MarketSource): Promise<ScrapeResult> 
     return { units, warnings, layout: { kind: 'text', textHash, units }, fingerprint: textHash }
   }
 
-  // Обычный сайт: ни таблицы, ни API — снимаем текст и читаем моделью.
   if (source.source_kind === 'site') {
+    const html = await fetchHtml(source.source_url)
+
+    // Генплан на движке splan.ru: в HTML пусто, юниты лежат за его API.
+    // Ответ оттуда уже структурный, поэтому ни модель, ни кеш не нужны.
+    const splan = splanConfig(html)
+    if (splan) return scrapeSplan(splan)
+
+    // Генплан на плагине MapSVG: юниты отдаёт REST плагина.
+    const origin = new URL(source.source_url).origin
+    if (await usesMapsvg(origin)) {
+      const tables = await mapsvgTables(html, origin)
+      if (tables.length) return scrapeMapsvg(origin, tables)
+    }
+
+    // Обычный сайт: ни таблицы, ни API — снимаем текст и читаем моделью.
     const cache = isTextCache(source.layout) ? source.layout : null
     const meta = { developer: source.developer, complex: source.complex }
-    const { units, warnings, textHash } = await scrapeWebpage(source.source_url, meta, cache)
+    const { units, warnings, textHash } = await scrapeWebpage(html, meta, cache)
     return { units, warnings, layout: { kind: 'text', textHash, units }, fingerprint: textHash }
   }
 

@@ -15,11 +15,10 @@ import { extractUnitsFromText } from '../text-units'
 export type WebpageScrape = ExtractResult & { textHash: string }
 
 export async function scrapeWebpage(
-  sourceUrl: string,
+  html: string,
   meta: { developer: string; complex: string },
   cache: { textHash: string; units: ScrapedUnit[] } | null,
 ): Promise<WebpageScrape> {
-  const html = await fetchHtml(sourceUrl)
   const text = htmlToText(html)
   if (text.length < 200) {
     throw new Error('страница почти без текста — скорее всего содержимое подгружается скриптами')
@@ -34,7 +33,7 @@ export async function scrapeWebpage(
   return { units, warnings, textHash }
 }
 
-async function fetchHtml(url: string): Promise<string> {
+export async function fetchHtml(url: string): Promise<string> {
   const r = await fetch(url, {
     redirect: 'follow',
     headers: {
