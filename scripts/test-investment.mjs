@@ -115,11 +115,29 @@ test('Cap rate WEAK threshold detection', () => {
 })
 
 test('Водопад сходится: выручка − все расходы = прибыль до налога', () => {
-  const e = econ()
-  const costs = e.platformFee + e.phrTax + e.mgmtFee + e.opex + e.ffeReserve
+  // С ценой объекта — иначе PBB равен нулю и выпадает из проверки.
+  const e = econ({ askingPrice: 400_000 })
+  const costs = e.platformFee + e.phrTax + e.mgmtFee + e.opex + e.ffeReserve + e.pbbTax
+  assert.ok(e.pbbTax > 0, 'PBB должен считаться, когда цена известна')
   assert.ok(Math.abs((e.revenue - costs) - e.preTaxProfit) <= 2,
     `водопад не сходится: ${e.revenue} − ${costs} ≠ ${e.preTaxProfit}`)
   assert.ok(Math.abs((e.preTaxProfit - e.tax) - e.noi) <= 2, 'прибыль − налог ≠ чистыми')
+})
+
+test('Разбивка расходов складывается ровно в общую сумму', () => {
+  for (const over of [{}, { area: 30, bedrooms: 1 }, { area: 400, bedrooms: 5 }]) {
+    const e = econ(over)
+    const p = e.opexParts
+    const sum = p.utilities + p.staff + p.supplies + p.poolGarden + p.other
+    assert.equal(sum, e.opex, `разбивка ${sum} ≠ расходам ${e.opex} при ${JSON.stringify(over)}`)
+    assert.ok(p.other >= 0, 'остаточная статья не должна уходить в минус')
+  }
+})
+
+test('PBB считается от цены и отсутствует без неё', () => {
+  assert.equal(econ({ askingPrice: null }).pbbTax, 0)
+  const e = econ({ askingPrice: 300_000 })
+  assert.equal(e.pbbTax, Math.round(300_000 * BALI.pbbAnnualPctOfPrice))
 })
 
 test('Ставка идёт в выручку с коэффициентом реализации, а не как в выдаче', () => {

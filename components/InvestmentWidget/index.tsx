@@ -56,6 +56,23 @@ const COPY = {
     irrLabel: 'Доходность за срок аренды',
     noCapitalReturn: 'За оставшийся срок лизхолда объект не возвращает вложенное',
     noCapitalReturnHint: 'Сумма всех арендных поступлений до конца права аренды меньше цены входа.',
+    utilities: 'Электричество и вода',
+    staff: 'Уборка и персонал',
+    supplies: 'Расходники для гостей',
+    poolGarden: 'Бассейн и сад',
+    otherOpex: 'Интернет, газ, мелкий ремонт',
+    pbb: 'Налог на землю и здание (PBB)',
+    assumptions: 'Допущения расчёта',
+    occupancyNote: 'Загрузка',
+    occupancyHint: 'отраслевой ориентир по Бали 55–65% годовых',
+    platformHint: 'рынок 15–17%',
+    mgmtHint: 'рынок 13–20%',
+    phrHint: 'платит гость, если ставка объявлена без налога',
+    ffeHint: 'мебель и техника изнашиваются за 5–7 лет',
+    pbbHint: '0,2% от кадастровой оценки',
+    taxHintRes: 'резидент с NPWP',
+    taxHintNonRes: 'нерезидент, PPh 26',
+    opexTitle: 'Операционные расходы',
     referencesTitle: 'Малая выборка — показываем референсы',
     referencesBody: (n: number, plural: string) =>
       `В радиусе 2км нашлось всего ${n} ${plural}, подходящих под характеристики виллы. Агрегаты не считаем — даём конкретные примеры.`,
@@ -118,6 +135,23 @@ const COPY = {
     irrLabel: 'Return over lease term',
     noCapitalReturn: 'Over the remaining lease the property does not return what you put in',
     noCapitalReturnHint: 'Total rental income until the lease expires is less than the entry cost.',
+    utilities: 'Electricity and water',
+    staff: 'Cleaning and staff',
+    supplies: 'Guest supplies',
+    poolGarden: 'Pool and garden',
+    otherOpex: 'Internet, gas, small repairs',
+    pbb: 'Land and building tax (PBB)',
+    assumptions: 'Assumptions',
+    occupancyNote: 'Occupancy',
+    occupancyHint: 'industry benchmark for Bali is 55–65% a year',
+    platformHint: 'market 15–17%',
+    mgmtHint: 'market 13–20%',
+    phrHint: 'paid by the guest when the rate excludes tax',
+    ffeHint: 'furniture and appliances wear out in 5–7 years',
+    pbbHint: '0.2% of the assessed value',
+    taxHintRes: 'resident with NPWP',
+    taxHintNonRes: 'non-resident, PPh 26',
+    opexTitle: 'Operating costs',
     referencesTitle: 'Small sample — showing reference listings',
     referencesBody: (n: number, plural: string) =>
       `Only ${n} ${plural} matched the villa's profile within a 2 km radius. We're not aggregating — here are concrete examples instead.`,
@@ -180,6 +214,23 @@ const COPY = {
     irrLabel: 'Imbal hasil selama masa sewa',
     noCapitalReturn: 'Sampai masa sewa berakhir, properti tidak mengembalikan modal',
     noCapitalReturnHint: 'Total pendapatan sewa hingga hak sewa berakhir lebih kecil dari biaya masuk.',
+    utilities: 'Listrik dan air',
+    staff: 'Kebersihan dan staf',
+    supplies: 'Perlengkapan tamu',
+    poolGarden: 'Kolam dan taman',
+    otherOpex: 'Internet, gas, perbaikan kecil',
+    pbb: 'Pajak bumi dan bangunan (PBB)',
+    assumptions: 'Asumsi perhitungan',
+    occupancyNote: 'Tingkat hunian',
+    occupancyHint: 'acuan industri Bali 55–65% per tahun',
+    platformHint: 'pasar 15–17%',
+    mgmtHint: 'pasar 13–20%',
+    phrHint: 'dibayar tamu bila tarif belum termasuk pajak',
+    ffeHint: 'perabot dan peralatan aus dalam 5–7 tahun',
+    pbbHint: '0,2% dari NJOP',
+    taxHintRes: 'residen dengan NPWP',
+    taxHintNonRes: 'non-residen, PPh 26',
+    opexTitle: 'Biaya operasional',
     referencesTitle: 'Sampel kecil — menampilkan listing referensi',
     referencesBody: (n: number, plural: string) =>
       `Hanya ${n} ${plural} yang cocok dengan profil vila dalam radius 2 km. Kami tidak mengagregasi — berikut contoh konkretnya.`,
@@ -242,6 +293,23 @@ const COPY = {
     irrLabel: 'Rendement sur la durée du bail',
     noCapitalReturn: 'Sur la durée restante du bail, le bien ne rembourse pas la mise',
     noCapitalReturnHint: 'Le total des loyers jusqu\'à l\'expiration du bail est inférieur au coût d\'entrée.',
+    utilities: 'Électricité et eau',
+    staff: 'Ménage et personnel',
+    supplies: 'Fournitures pour les hôtes',
+    poolGarden: 'Piscine et jardin',
+    otherOpex: 'Internet, gaz, petites réparations',
+    pbb: 'Taxe foncière (PBB)',
+    assumptions: 'Hypothèses de calcul',
+    occupancyNote: 'Taux d’occupation',
+    occupancyHint: 'référence du marché balinais : 55–65% par an',
+    platformHint: 'marché 15–17%',
+    mgmtHint: 'marché 13–20%',
+    phrHint: 'payée par le client si le tarif est hors taxe',
+    ffeHint: 'mobilier et équipements s’usent en 5–7 ans',
+    pbbHint: '0,2% de la valeur cadastrale',
+    taxHintRes: 'résident avec NPWP',
+    taxHintNonRes: 'non-résident, PPh 26',
+    opexTitle: 'Charges d’exploitation',
     referencesTitle: 'Échantillon réduit — annonces de référence affichées',
     referencesBody: (n: number, plural: string) =>
       `Seulement ${n} ${plural} correspondent au profil de la villa dans un rayon de 2 km. Nous n'agrégeons pas — voici plutôt des exemples concrets.`,
@@ -304,6 +372,23 @@ const COPY = {
     irrLabel: 'Rendite über die Pachtdauer',
     noCapitalReturn: 'Über die Restlaufzeit der Pacht kommt das eingesetzte Kapital nicht zurück',
     noCapitalReturnHint: 'Die gesamten Mieteinnahmen bis zum Pachtende liegen unter den Einstiegskosten.',
+    utilities: 'Strom und Wasser',
+    staff: 'Reinigung und Personal',
+    supplies: 'Gästebedarf',
+    poolGarden: 'Pool und Garten',
+    otherOpex: 'Internet, Gas, kleine Reparaturen',
+    pbb: 'Grundsteuer (PBB)',
+    assumptions: 'Annahmen der Rechnung',
+    occupancyNote: 'Auslastung',
+    occupancyHint: 'Branchenwert für Bali: 55–65% pro Jahr',
+    platformHint: 'Markt 15–17%',
+    mgmtHint: 'Markt 13–20%',
+    phrHint: 'zahlt der Gast, wenn die Rate ohne Steuer ausgewiesen ist',
+    ffeHint: 'Möbel und Technik verschleißen in 5–7 Jahren',
+    pbbHint: '0,2% des Katasterwerts',
+    taxHintRes: 'ansässig mit NPWP',
+    taxHintNonRes: 'nicht ansässig, PPh 26',
+    opexTitle: 'Betriebskosten',
     referencesTitle: 'Kleine Stichprobe — Referenzangebote werden gezeigt',
     referencesBody: (n: number, plural: string) =>
       `Nur ${n} ${plural} entsprachen dem Profil der Villa im Umkreis von 2 km. Wir aggregieren nicht — hier stattdessen konkrete Beispiele.`,
@@ -366,6 +451,23 @@ const COPY = {
     irrLabel: '租期内回报率',
     noCapitalReturn: '在剩余租期内，该物业无法收回投入',
     noCapitalReturnHint: '到租约期满为止的租金总额低于入手成本。',
+    utilities: '水电费',
+    staff: '保洁与人员',
+    supplies: '客用消耗品',
+    poolGarden: '泳池与花园',
+    otherOpex: '网络、燃气、小修',
+    pbb: '土地与房产税（PBB）',
+    assumptions: '计算假设',
+    occupancyNote: '入住率',
+    occupancyHint: '巴厘岛行业基准为每年55–65%',
+    platformHint: '市场15–17%',
+    mgmtHint: '市场13–20%',
+    phrHint: '若标价不含税则由房客支付',
+    ffeHint: '家具与电器5–7年折旧',
+    pbbHint: '核定价值的0.2%',
+    taxHintRes: '持NPWP的居民',
+    taxHintNonRes: '非居民，PPh 26',
+    opexTitle: '运营支出',
     referencesTitle: '样本较小——展示参考房源',
     referencesBody: (n: number, plural: string) =>
       `在2公里半径内只有 ${n} ${plural} 符合别墅的特征。我们不做汇总——而是给出具体示例。`,
@@ -428,6 +530,23 @@ const COPY = {
     irrLabel: 'Rendement over de pachttermijn',
     noCapitalReturn: 'Binnen de resterende pachttermijn verdient het object de inleg niet terug',
     noCapitalReturnHint: 'De totale huurinkomsten tot het einde van de pacht zijn lager dan de instapkosten.',
+    utilities: 'Elektriciteit en water',
+    staff: 'Schoonmaak en personeel',
+    supplies: 'Gastbenodigdheden',
+    poolGarden: 'Zwembad en tuin',
+    otherOpex: 'Internet, gas, klein onderhoud',
+    pbb: 'Grond- en gebouwbelasting (PBB)',
+    assumptions: 'Aannames',
+    occupancyNote: 'Bezetting',
+    occupancyHint: 'branchemaatstaf voor Bali: 55–65% per jaar',
+    platformHint: 'markt 15–17%',
+    mgmtHint: 'markt 13–20%',
+    phrHint: 'betaald door de gast als het tarief exclusief belasting is',
+    ffeHint: 'meubels en apparatuur slijten in 5–7 jaar',
+    pbbHint: '0,2% van de kadastrale waarde',
+    taxHintRes: 'ingezetene met NPWP',
+    taxHintNonRes: 'niet-ingezetene, PPh 26',
+    opexTitle: 'Exploitatiekosten',
     referencesTitle: 'Kleine steekproef — referentieadvertenties getoond',
     referencesBody: (n: number, plural: string) =>
       `Slechts ${n} ${plural} kwamen overeen met het profiel van de villa binnen een straal van 2 km. We aggregeren niet — hier in plaats daarvan concrete voorbeelden.`,
@@ -490,6 +609,23 @@ const COPY = {
     irrLabel: 'Asil salami masa sewa',
     noCapitalReturn: 'Kantos masa sewa puput, properti nenten mawali modal',
     noCapitalReturnHint: 'Total pikolih sewa kantos hak sewa puput kirang saking prabea ngranjing.',
+    utilities: 'Listrik lan toya',
+    staff: 'Kebersihan lan staf',
+    supplies: 'Kaperluan tamiu',
+    poolGarden: 'Kolam lan taman',
+    otherOpex: 'Internet, gas, perbaikan alit',
+    pbb: 'Pajak bumi lan wangunan (PBB)',
+    assumptions: 'Asumsi pitungan',
+    occupancyNote: 'Tingkat hunian',
+    occupancyHint: 'acuan industri Bali 55–65% saben warsa',
+    platformHint: 'pasar 15–17%',
+    mgmtHint: 'pasar 13–20%',
+    phrHint: 'kabayah tamiu yening tarif durung kalebet pajak',
+    ffeHint: 'prabot lan piranti aus ring 5–7 warsa',
+    pbbHint: '0,2% saking NJOP',
+    taxHintRes: 'residen madue NPWP',
+    taxHintNonRes: 'non-residen, PPh 26',
+    opexTitle: 'Prabea operasional',
     referencesTitle: 'Sampel cenik — nyinahang listing referensi',
     referencesBody: (n: number, plural: string) =>
       `Wantah ${n} ${plural} sane cocok sareng profil vila ring radius 2 km. Tiang nenten ngagregasi — puniki conto konkret.`,
@@ -552,6 +688,23 @@ const COPY = {
     irrLabel: 'Zwrot w okresie dzierżawy',
     noCapitalReturn: 'W pozostałym okresie dzierżawy obiekt nie zwraca włożonego kapitału',
     noCapitalReturnHint: 'Suma przychodów z najmu do końca dzierżawy jest niższa niż koszt wejścia.',
+    utilities: 'Prąd i woda',
+    staff: 'Sprzątanie i personel',
+    supplies: 'Artykuły dla gości',
+    poolGarden: 'Basen i ogród',
+    otherOpex: 'Internet, gaz, drobne naprawy',
+    pbb: 'Podatek od gruntu i budynku (PBB)',
+    assumptions: 'Założenia obliczeń',
+    occupancyNote: 'Obłożenie',
+    occupancyHint: 'benchmark rynku Bali: 55–65% rocznie',
+    platformHint: 'rynek 15–17%',
+    mgmtHint: 'rynek 13–20%',
+    phrHint: 'płaci gość, gdy stawka jest bez podatku',
+    ffeHint: 'meble i sprzęt zużywają się w 5–7 lat',
+    pbbHint: '0,2% wartości katastralnej',
+    taxHintRes: 'rezydent z NPWP',
+    taxHintNonRes: 'nierezydent, PPh 26',
+    opexTitle: 'Koszty operacyjne',
     referencesTitle: 'Mała próba — pokazujemy ogłoszenia referencyjne',
     referencesBody: (n: number, plural: string) =>
       `Tylko ${n} ${plural} pasowało do profilu willi w promieniu 2 km. Nie agregujemy — zamiast tego oto konkretne przykłady.`,
@@ -614,6 +767,23 @@ const COPY = {
     irrLabel: 'Дохідність за строк оренди',
     noCapitalReturn: 'За решту строку лізхолду обʼєкт не повертає вкладене',
     noCapitalReturnHint: 'Сума всіх орендних надходжень до кінця права оренди менша за ціну входу.',
+    utilities: 'Електрика та вода',
+    staff: 'Прибирання і персонал',
+    supplies: 'Витратні матеріали для гостей',
+    poolGarden: 'Басейн і сад',
+    otherOpex: 'Інтернет, газ, дрібний ремонт',
+    pbb: 'Податок на землю і будівлю (PBB)',
+    assumptions: 'Припущення розрахунку',
+    occupancyNote: 'Завантаження',
+    occupancyHint: 'галузевий орієнтир Балі 55–65% на рік',
+    platformHint: 'ринок 15–17%',
+    mgmtHint: 'ринок 13–20%',
+    phrHint: 'платить гість, якщо ставка без податку',
+    ffeHint: 'меблі й техніка зношуються за 5–7 років',
+    pbbHint: '0,2% від кадастрової оцінки',
+    taxHintRes: 'резидент з NPWP',
+    taxHintNonRes: 'нерезидент, PPh 26',
+    opexTitle: 'Операційні витрати',
     referencesTitle: 'Мала вибірка — показуємо референсні оголошення',
     referencesBody: (n: number, plural: string) =>
       `Лише ${n} ${plural} відповідають профілю вілли в радіусі 2 км. Ми не агрегуємо — натомість ось конкретні приклади.`,
@@ -882,13 +1052,41 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
           <li className="text-[var(--color-text-muted)]">
             {t.adrRealization}: {Math.round(snap.region.adrRealizationByScenario.median * 100)}% · {fmtUsd(Math.round(e.adrAsking * fxRate))} → {fmtUsd(Math.round(e.adr * fxRate))}
           </li>
-          <li>− {t.platform} ({Math.round(snap.region.platformFeePct * 100)}%): {fmtUsd(e.platformFee)}</li>
-          <li>− {t.phr} ({Math.round(snap.region.phrRatePct * 100)}% × {Math.round(snap.region.phrOwnerShareByScenario.median * 100)}%): {fmtUsd(e.phrTax)}</li>
-          <li>− {t.mgmt} ({mgmt}%): {fmtUsd(e.mgmtFee)}</li>
-          <li>− {t.opex} ({e.opexAtFloor ? t.opexFloorNote : `${snap.region.opexPerSqmMonth} ${opexUnit}`}): {fmtUsd(e.opex)}</li>
-          <li>− {t.ffe} ({Math.round(snap.region.ffeReservePct * 100)}%): {fmtUsd(e.ffeReserve)}</li>
+          <li>
+            − {t.platform} ({Math.round(snap.region.platformFeePct * 100)}%): {fmtUsd(e.platformFee)}
+            <span className="text-[var(--color-text-muted)]"> · {t.platformHint}</span>
+          </li>
+          <li>
+            − {t.phr} ({Math.round(snap.region.phrRatePct * 100)}% × {Math.round(snap.region.phrOwnerShareByScenario.median * 100)}%): {fmtUsd(e.phrTax)}
+            <span className="text-[var(--color-text-muted)]"> · {t.phrHint}</span>
+          </li>
+          <li>
+            − {t.mgmt} ({mgmt}%): {fmtUsd(e.mgmtFee)}
+            <span className="text-[var(--color-text-muted)]"> · {t.mgmtHint}</span>
+          </li>
+          <li>
+            − {t.opex} ({e.opexAtFloor ? t.opexFloorNote : `${snap.region.opexPerSqmMonth} ${opexUnit}`}): {fmtUsd(e.opex)}
+          </li>
+          <li className="pl-4 text-[var(--color-text-muted)]">· {t.utilities}: {fmtUsd(Math.round(e.opexParts.utilities * fxRate))}</li>
+          <li className="pl-4 text-[var(--color-text-muted)]">· {t.staff}: {fmtUsd(Math.round(e.opexParts.staff * fxRate))}</li>
+          <li className="pl-4 text-[var(--color-text-muted)]">· {t.supplies}: {fmtUsd(Math.round(e.opexParts.supplies * fxRate))}</li>
+          <li className="pl-4 text-[var(--color-text-muted)]">· {t.poolGarden}: {fmtUsd(Math.round(e.opexParts.poolGarden * fxRate))}</li>
+          <li className="pl-4 text-[var(--color-text-muted)]">· {t.otherOpex}: {fmtUsd(Math.round(e.opexParts.other * fxRate))}</li>
+          <li>
+            − {t.ffe} ({Math.round(snap.region.ffeReservePct * 100)}%): {fmtUsd(e.ffeReserve)}
+            <span className="text-[var(--color-text-muted)]"> · {t.ffeHint}</span>
+          </li>
+          {e.pbbTax > 0 && (
+            <li>
+              − {t.pbb}: {fmtUsd(Math.round(e.pbbTax * fxRate))}
+              <span className="text-[var(--color-text-muted)]"> · {t.pbbHint}</span>
+            </li>
+          )}
           <li className="pt-1 border-t border-[var(--color-border)] mt-1">= {t.preTax}: {fmtUsd(e.preTaxProfit)}</li>
-          <li>− {t.tax} ({Math.round((taxStatus === 'resident' ? snap.region.taxRateResident : snap.region.taxRateNonResident) * 100)}%): {fmtUsd(e.tax)}</li>
+          <li>
+            − {t.tax} ({Math.round((taxStatus === 'resident' ? snap.region.taxRateResident : snap.region.taxRateNonResident) * 100)}%): {fmtUsd(e.tax)}
+            <span className="text-[var(--color-text-muted)]"> · {taxStatus === 'resident' ? t.taxHintRes : t.taxHintNonRes}</span>
+          </li>
           <li className="pt-1 border-t border-[var(--color-border)] mt-1 font-medium">= {t.noi}: {fmtUsd(e.noi)}</li>
           {e.entryPrice != null && (
             <li className="pt-2 mt-1 border-t border-[var(--color-border)] text-[var(--color-text-muted)]">
@@ -896,6 +1094,9 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
               {e.furnishing > 0 ? ` + ${t.furnishing} ${fmtUsd(Math.round(e.furnishing * fxRate))}` : ''}
             </li>
           )}
+          <li className="pt-2 mt-1 border-t border-[var(--color-border)] text-[var(--color-text-muted)]">
+            {t.assumptions}: {t.occupancyNote} {Math.round(e.occupancy * 100)}% — {t.occupancyHint}
+          </li>
         </ul>
       )}
     </div>
