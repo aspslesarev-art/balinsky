@@ -1017,7 +1017,12 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
   useEffect(() => {
     if (villaLat == null || villaLng == null) return
     let cancelled = false
-    fetch(`/api/rental-density?lat=${villaLat}&lng=${villaLng}&radius=1000`)
+    // Радиус тот же, до которого карточки ниже готовы расширить поиск,
+    // когда рядом пусто. Иначе выходит вранье: в Убуде зоны считались по
+    // километру и были только слева, а карточки нашли соседей за $298–379
+    // в двух километрах — ползунок стоял там, где «никого нет», и они всё
+    // равно показывались.
+    fetch(`/api/rental-density?lat=${villaLat}&lng=${villaLng}&radius=3000`)
       .then(r => r.json())
       .then(d => { if (!cancelled && d?.ok) setNearbyAdrs(d.prices as number[]) })
       .catch(() => { /* без зон ползунок остаётся обычным */ })
