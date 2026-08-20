@@ -9,6 +9,13 @@
 // Часть порталов закрыта авторизацией. Они отвечают 200 и пустым списком —
 // не ошибкой, — поэтому пустой ответ трактуем как «нужен доступ», иначе
 // комплекс молча выглядел бы распроданным.
+//
+// Если заведён агентский аккаунт (UNITBOX_EMAIL / UNITBOX_PASSWORD),
+// сначала логинимся: портал кладёт сессию в httpOnly-куки, и дальше тот
+// же публичный эндпоинт отдаёт юниты. Аккаунт на Unitbox один на все
+// порталы, но доступ к данным каждый застройщик открывает у себя
+// отдельно — до его подтверждения права пустые, а список юнитов приходит
+// пустым, как и без входа.
 
 import type { ExtractResult, ScrapedUnit, UnitStatus } from '../types'
 
@@ -58,15 +65,19 @@ export async function scrapeUnitbox(sourceUrl: string): Promise<ExtractResult> {
   const ref = parseUnitboxUrl(sourceUrl)
   if (!ref) throw new Error('ссылка не похожа на проект Unitbox — ожидается https://<девелопер>.unitbox.ai/project/<код>')
 
+
   const warnings: string[] = []
-  const all: UnitboxUnit[] = []
-  for (const status of STATUSES) {
-    all.push(...(await fetchAll(ref.developer, status)))
+  // Сначала спрашиваем как аноним: часть порталов открыта, и вход под
+  // агентом там наоборот сужает выдачу до «своих» проектов — портал
+  // Embrace так терял все 166 юнитов.
+  let all = await fetchStatuses(ref.developer, null)
+  let cookie: string | null = null
+  if (!all.length) {
+    cookie = await sessionFor(ref.developer)
+    if (cookie) all = await fetchStatuses(ref.developer, cookie)
   }
 
-  if (!all.length) {
-    throw new Error('портал Unitbox не отдал ни одного юнита — почти всегда это закрытый партнёрский портал, нужен доступ')
-  }
+  if (!all.length) throw new Error(await emptyReason(ref.developer, cookie))
 
   // Портал отдаёт весь каталог застройщика разом, а строка мастер-таблицы
   // описывает один комплекс, поэтому фильтруем по коду проекта из ссылки.
@@ -107,7 +118,74 @@ export async function scrapeUnitbox(sourceUrl: string): Promise<ExtractResult> {
   return { units, warnings }
 }
 
-async function fetchAll(developer: string, status: string): Promise<UnitboxUnit[]> {
+async function fetchStatuses(developer: string, cookie: string | null): Promise<UnitboxUnit[]> {
+  const out: UnitboxUnit[] = []
+  for (const status of STATUSES) out.push(...(await fetchAll(developer, status, cookie)))
+  return out
+}
+
+// Одна сессия на портал за прогон: у NEXA восемь комплексов, и логиниться
+// под каждый незачем. Значение — строка Cookie или null, если аккаунт не
+// заведён; промис держим в кеше, чтобы параллельные вызовы не плодили
+// входы.
+const sessions = new Map<string, Promise<string | null>>()
+
+async function sessionFor(developer: string): Promise<string | null> {
+  const email = process.env.UNITBOX_EMAIL
+  const password = process.env.UNITBOX_PASSWORD
+  if (!email || !password) return null
+
+  const cached = sessions.get(developer)
+  if (cached) return cached
+
+  const pending = login(developer, email, password).catch(() => null)
+  sessions.set(developer, pending)
+  return pending
+}
+
+async function login(developer: string, email: string, password: string): Promise<string | null> {
+  const r = await fetch(`https://${developer}.unitbox.ai/api/auth/catalog-login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Referer: `https://${developer}.unitbox.ai/auth/sing-in`,
+      'User-Agent': 'Mozilla/5.0',
+    },
+    body: JSON.stringify({ email, password }),
+  })
+  if (!r.ok) return null
+
+  // Сессия приезжает в httpOnly-куках, поэтому собираем их сами: fetch
+  // никаких кук между запросами не носит.
+  const jar = r.headers.getSetCookie()
+    .map(c => c.split(';')[0])
+    .filter(c => /^(accessToken|refreshToken)=/.test(c))
+  return jar.length ? jar.join('; ') : null
+}
+
+// Пустой ответ у Unitbox значит либо «портал закрыт», либо «аккаунт есть,
+// но застройщик ещё не открыл доступ». Разница важная: во втором случае
+// делать ничего не надо, кроме как дождаться подтверждения.
+async function emptyReason(developer: string, cookie: string | null): Promise<string> {
+  if (!cookie) {
+    return 'портал Unitbox не отдал ни одного юнита — закрытый партнёрский портал, нужен агентский аккаунт (UNITBOX_EMAIL / UNITBOX_PASSWORD)'
+  }
+  try {
+    const r = await fetch(`https://${developer}.unitbox.ai/api/auth/profile/${developer}`, {
+      headers: { Cookie: cookie, 'User-Agent': 'Mozilla/5.0' },
+    })
+    const body = await r.json() as { permissions?: Record<string, boolean> }
+    const granted = Object.entries(body.permissions ?? {}).filter(([, v]) => v).map(([k]) => k)
+    if (!granted.length) {
+      return `вход на портал Unitbox выполнен, но застройщик ещё не подтвердил аккаунт — прав нет ни на что`
+    }
+    return `вход выполнен (права: ${granted.join(', ')}), но портал не отдал ни одного юнита`
+  } catch {
+    return 'вход на портал Unitbox выполнен, но список юнитов пуст'
+  }
+}
+
+async function fetchAll(developer: string, status: string, cookie: string | null): Promise<UnitboxUnit[]> {
   const out: UnitboxUnit[] = []
   for (let page = 1; page <= 20; page++) {
     const url = `https://${developer}.unitbox.ai/api/units/developer/${developer}?page=${page}&per_page=${PER_PAGE}&status=${status}`
@@ -117,6 +195,7 @@ async function fetchAll(developer: string, status: string): Promise<UnitboxUnit[
         // Портал отвечает пустым списком, если запрос выглядит чужим.
         Referer: `https://${developer}.unitbox.ai/units`,
         'User-Agent': 'Mozilla/5.0',
+        ...(cookie ? { Cookie: cookie } : {}),
       },
     })
     if (!r.ok) throw new Error(`Unitbox вернул ${r.status} на ${status}`)
