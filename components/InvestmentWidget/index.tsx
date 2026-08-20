@@ -1215,34 +1215,28 @@ function Slider({
   zonesLabel?: string
 }) {
   const clamped = Math.min(max, Math.max(min, value))
-  if (!zones?.length) {
-    return (
-      <div>
-        <SliderHead label={label} display={display} />
-        <input
-          type="range"
-          min={min} max={max} step={step} value={clamped}
-          onChange={ev => onChange(Number(ev.target.value))}
-          className="range-clean w-full h-1.5 cursor-pointer accent-[var(--color-primary)]"
-        />
-      </div>
-    )
-  }
+  const filled = max > min ? ((clamped - min) / (max - min)) * 100 : 0
+
+  // Дорожка своя у всех ползунков: родная у input range приходит с
+  // собственной рамкой и тенью, а на полоске в шесть пикселей любая
+  // окантовка выглядит грязью.
   return (
     <div>
       <SliderHead label={label} display={display} />
-      <div className="relative h-4 flex items-center" role="img" aria-label={zonesLabel}>
+      <div className="relative h-4 flex items-center" role={zones?.length ? 'img' : undefined} aria-label={zones?.length ? zonesLabel : undefined}>
         <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-1.5 rounded-full overflow-hidden flex bg-[#F3F4F6]">
-          {zones.map((share, i) => (
-            <div
-              key={i}
-              className="flex-1"
-              style={{
-                background: share > 0 ? 'var(--color-progress-low)' : 'transparent',
-                opacity: share > 0 ? Math.max(0.45, Math.min(1, share)) : 1,
-              }}
-            />
-          ))}
+          {zones?.length
+            ? zones.map((share, i) => (
+                <div
+                  key={i}
+                  className="flex-1"
+                  style={{
+                    background: share > 0 ? 'var(--color-progress-low)' : 'transparent',
+                    opacity: share > 0 ? Math.max(0.45, Math.min(1, share)) : 1,
+                  }}
+                />
+              ))
+            : <div className="h-full bg-[var(--color-primary)]" style={{ width: `${filled}%` }} />}
         </div>
         <input
           type="range"

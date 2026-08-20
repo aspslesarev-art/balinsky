@@ -324,8 +324,7 @@ html:not([data-auth='1']) .bx-gate-cta {
    фокуса — на тонкой полоске она читается как рамка и мешает видеть
    зоны. Убираем её, но не доступность: с клавиатуры фокус виден кольцом
    на самом бегунке. */
-.range-bare:focus,
-.range-clean:focus { outline: none; }
+.range-bare:focus { outline: none; }
 .range-bare::-webkit-slider-runnable-track { background: transparent; height: 6px; }
 .range-bare::-moz-range-track { background: transparent; height: 6px; }
 /* Бегунок — плоский кружок без обводки и тени: любая окантовка на
