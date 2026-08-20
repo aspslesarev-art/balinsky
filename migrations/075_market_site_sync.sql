@@ -48,3 +48,16 @@ alter table public.market_listing_sync_log enable row level security;
 grant all on public.market_listing_links    to service_role;
 grant all on public.market_listing_sync_log to service_role;
 grant usage, select on sequence public.market_listing_sync_log_id_seq to service_role;
+
+-- Дополнение 20.08: синхронизируем изменение цены, а не абсолютную.
+--
+-- Объекты каталога продаются полностью меблированными, а прайс
+-- застройщика бывает и без мебели, и в рассрочку: у Minori сайт показывал
+-- цену в рассрочку, у PRIVÉ — ровно на 5.8% выше прайса. Перенос
+-- абсолютной цены такую надбавку молча стирал. Поэтому в момент
+-- связывания запоминаем, во сколько раз цена объявления отличалась от
+-- прайса, и дальше двигаем её на столько же, на сколько двинулся прайс.
+alter table public.market_listing_links
+  add column if not exists base_unit_price    numeric,
+  add column if not exists base_listing_price numeric,
+  add column if not exists price_ratio        numeric;

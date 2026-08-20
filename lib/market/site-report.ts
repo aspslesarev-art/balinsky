@@ -17,6 +17,14 @@ export type LinkedRow = {
   unitStatus: string
   confidence: string
   autoSync: boolean
+  // Во сколько раз цена каталога отличается от прайса: мебель, рассрочка
+  // или наценка. Синхронизация двигает цену вместе с этой надбавкой.
+  ratio: number | null
+  // Тот же юнит прайса продаётся в каталоге не одним объявлением: это не
+  // ошибка связывания, а разные предложения — другая комплектация или
+  // перепродажа от инвестора со своей ценой.
+  sharedUnit: boolean
+  unitResale: boolean
 }
 
 export type PendingRow = {
@@ -74,14 +82,18 @@ export async function loadSiteReport(): Promise<SiteReport> {
   for (let from = 0; ; from += 1000) {
     const { data } = await sb
       .from('market_units')
-      .select('id, complex, developer, unit_key, area_m2, bedrooms, status, price_usd')
+      .select('id, complex, developer, unit_key, area_m2, bedrooms, status, price_usd, is_resale')
       .range(from, from + 999)
     if (!data?.length) break
     units.push(...data)
     if (data.length < 1000) break
   }
 
-  const { data: links } = await sb.from('market_listing_links').select('listing_kind, listing_id, unit_id, confidence, auto_sync')
+  const { data: links } = await sb.from('market_listing_links').select('listing_kind, listing_id, unit_id, confidence, auto_sync, price_ratio')
+  // Один юнит на два объявления — обычно «с мебелью» и «без»: помечаем,
+  // чтобы это было видно, а не выглядело ошибкой связывания.
+  const unitUse = new Map<number, number>()
+  for (const l of links ?? []) unitUse.set(Number(l.unit_id), (unitUse.get(Number(l.unit_id)) ?? 0) + 1)
   const { data: log } = await sb
     .from('market_listing_sync_log')
     .select('applied_at, listing_kind, listing_id, old_price, new_price, outcome, note')
@@ -127,6 +139,9 @@ export async function loadSiteReport(): Promise<SiteReport> {
         unitStatus: String(u.status),
         confidence: String(link.confidence),
         autoSync: Boolean(link.auto_sync),
+        ratio: num(link.price_ratio),
+        sharedUnit: (unitUse.get(Number(link.unit_id)) ?? 0) > 1,
+        unitResale: Boolean(u.is_resale),
       })
       continue
     }

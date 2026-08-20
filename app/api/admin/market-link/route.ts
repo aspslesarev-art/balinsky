@@ -11,7 +11,7 @@ export async function POST(req: Request) {
   if (!(await requireAdmin())) return NextResponse.json({ ok: false }, { status: 401 })
 
   const body = await req.json().catch(() => null) as
-    | { listingKind?: string; listingId?: string; unitId?: number | null; autoSync?: boolean }
+    | { listingKind?: string; listingId?: string; unitId?: number | null; autoSync?: boolean; ratio?: number }
     | null
 
   const kind = body?.listingKind
@@ -30,6 +30,22 @@ export async function POST(req: Request) {
       .eq('listing_id', listingId)
     if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 })
     return NextResponse.json({ ok: true, unlinked: true })
+  }
+
+  // Надбавка каталога к прайсу: объекты продаются меблированными, а
+  // прайс застройщика бывает без мебели — тогда процент проставляют
+  // руками, и дальше цена едет от прайса уже с ним.
+  if (typeof body?.ratio === 'number' && body.unitId === undefined) {
+    if (!Number.isFinite(body.ratio) || body.ratio < 0.5 || body.ratio > 2) {
+      return NextResponse.json({ ok: false, error: 'надбавка вне разумных границ' }, { status: 400 })
+    }
+    const { error } = await sb
+      .from('market_listing_links')
+      .update({ price_ratio: body.ratio })
+      .eq('listing_kind', kind)
+      .eq('listing_id', listingId)
+    if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 })
+    return NextResponse.json({ ok: true, ratio: body.ratio })
   }
 
   if (typeof body?.autoSync === 'boolean' && body.unitId === undefined) {

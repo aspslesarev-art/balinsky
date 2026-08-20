@@ -15,6 +15,11 @@ import { bumpContentRev } from '@/lib/content-version'
 // либо пара составлена неверно. И то и другое стоит увидеть глазами.
 const MAX_AUTO_CHANGE = 0.25
 
+// Разумные границы надбавки сайта к прайсу. Всё, что вне, — не мебель и
+// не рассрочка, а несовпадающая пара, и переносить по ней цену нельзя.
+const RATIO_MIN = 0.7
+const RATIO_MAX = 1.6
+
 // Совпадение по площади с допуском: сайт округляет, прайс — нет.
 const AREA_TOLERANCE = 2
 
@@ -61,7 +66,8 @@ export type SyncChange = {
   unitKey: string
   oldPrice: number | null
   newPrice: number
-  outcome: 'applied' | 'skipped_big_change'
+  ratio: number
+  outcome: 'applied' | 'skipped_big_change' | 'skipped_bad_ratio'
   note?: string
 }
 
@@ -97,7 +103,18 @@ export async function linkListings(sb: SupabaseClient): Promise<LinkResult> {
       : near
 
     if (narrowed.length === 1) {
-      rows.push({ listing_kind: l.kind, listing_id: l.id, unit_id: narrowed[0].id, confidence: 'area' })
+      const unit = narrowed[0]
+      rows.push({
+        listing_kind: l.kind,
+        listing_id: l.id,
+        unit_id: unit.id,
+        confidence: 'area',
+        // Надбавку каталога к прайсу фиксируем в момент связывания: наши
+        // объекты меблированы, а прайс бывает и без мебели, и в рассрочку.
+        base_listing_price: l.price,
+        base_unit_price: unit.price_usd,
+        price_ratio: l.price && unit.price_usd ? l.price / unit.price_usd : null,
+      })
     } else if (narrowed.length > 1) {
       ambiguous++
     } else {
@@ -119,7 +136,7 @@ export async function linkListings(sb: SupabaseClient): Promise<LinkResult> {
 export async function planSiteSync(sb: SupabaseClient): Promise<SyncPlan> {
   const { data: links, error } = await sb
     .from('market_listing_links')
-    .select('listing_kind, listing_id, unit_id, auto_sync')
+    .select('listing_kind, listing_id, unit_id, auto_sync, price_ratio, base_unit_price, base_listing_price')
     .eq('auto_sync', true)
   if (error) throw new Error(`чтение market_listing_links: ${error.message}`)
   if (!links?.length) return { changes: [], soldUnits: [], checked: 0 }
@@ -144,12 +161,28 @@ export async function planSiteSync(sb: SupabaseClient): Promise<SyncPlan> {
       soldUnits.push({ kind, listingId: listing.id, listingName: listing.name, unitKey: unit.unit_key, status: unit.status })
     }
 
-    const next = unit.price_usd
-    if (next === null || next < PRICE_MIN || next > PRICE_MAX) continue
+    const unitPrice = unit.price_usd
+    if (unitPrice === null || unitPrice < PRICE_MIN || unitPrice > PRICE_MAX) continue
     const prev = listing.price
+
+    // Пара, заведённая до перехода на надбавку, калибруется на первом же
+    // прогоне: запоминаем нынешнее соотношение и цену не трогаем.
+    let ratio = link.price_ratio === null || link.price_ratio === undefined ? null : Number(link.price_ratio)
+    if (ratio === null) {
+      if (prev === null) continue
+      ratio = prev / unitPrice
+      await sb.from('market_listing_links')
+        .update({ price_ratio: ratio, base_listing_price: prev, base_unit_price: unitPrice })
+        .eq('listing_kind', kind)
+        .eq('listing_id', listing.id)
+      continue
+    }
+
+    const next = round100(unitPrice * ratio)
     if (prev !== null && Math.abs(next - prev) < 1) continue
 
     const jump = prev ? Math.abs(next - prev) / prev : 0
+    const badRatio = ratio < RATIO_MIN || ratio > RATIO_MAX
     changes.push({
       kind,
       listingId: listing.id,
@@ -159,8 +192,13 @@ export async function planSiteSync(sb: SupabaseClient): Promise<SyncPlan> {
       unitKey: unit.unit_key,
       oldPrice: prev,
       newPrice: next,
-      outcome: jump > MAX_AUTO_CHANGE ? 'skipped_big_change' : 'applied',
-      note: jump > MAX_AUTO_CHANGE ? `цена меняется на ${Math.round(jump * 100)}% — нужен человек` : undefined,
+      ratio,
+      outcome: badRatio ? 'skipped_bad_ratio' : jump > MAX_AUTO_CHANGE ? 'skipped_big_change' : 'applied',
+      note: badRatio
+        ? `цена объявления отличается от прайса в ${ratio.toFixed(2)} раза — похоже, пара неверная`
+        : jump > MAX_AUTO_CHANGE
+          ? `цена меняется на ${Math.round(jump * 100)}% — нужен человек`
+          : undefined,
     })
   }
 
@@ -300,6 +338,12 @@ function groupByComplex(units: Unit[]): Map<string, Unit[]> {
     else out.set(key, [u])
   }
   return out
+}
+
+// Цену округляем до сотни: надбавка за мебель — доля, и без округления
+// на карточке появлялись бы суммы вида $293 550,25.
+function round100(v: number): number {
+  return Math.round(v / 100) * 100
 }
 
 // Названия комплекса в двух системах пишут по-разному: регистр, точки,

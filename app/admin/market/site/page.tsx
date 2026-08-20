@@ -19,7 +19,11 @@ export default async function MarketSitePage() {
 
   const r = await loadSiteReport()
   const applied = r.log.filter(l => l.outcome === 'applied')
-  const held = r.log.filter(l => l.outcome === 'skipped_big_change')
+  // Надбавка в ноль означает, что цена каталога равна прайсу. Если прайс
+  // застройщика без мебели, такая цена на сайте занижена — сам этого
+  // отличить трекер не может, поэтому просто показываем счётчик.
+  const noMarkup = r.linked.filter(l => l.ratio !== null && Math.abs(l.ratio - 1) < 0.005).length
+  const held = r.log.filter(l => l.outcome.startsWith('skipped'))
   const sold = r.log.filter(l => l.outcome === 'unit_sold')
 
   return (
@@ -38,14 +42,17 @@ export default async function MarketSitePage() {
         <Kpi label="Связано с прайсом" value={`${r.totals.linked}`} sub={`объявлений в комплексах трекера: ${r.totals.inTrackedComplexes}`} />
         <Kpi label="Обновлено ценой" value={`${applied.length}`} sub="за последние прогоны" />
         <Kpi label="Ждёт человека" value={`${held.length}`} sub="цена уехала больше чем на четверть" />
-        <Kpi label="Автообновление выключено" value={`${r.totals.autoOff}`} sub="цена ведётся руками" />
+        <Kpi label="Цена ровно по прайсу" value={`${noMarkup}`} sub="надбавка 0% — проверьте, есть ли в прайсе мебель" />
       </section>
 
       <Panel title="Ждут пары" hint="объявления в комплексах, которые трекер видит, но конкретный юнит не определился сам: в комплексе несколько одинаковых по площади. Выбор сохраняется сразу.">
         <PendingTable rows={r.pending} />
       </Panel>
 
-      <Panel title="Связанные объявления" hint="цена приезжает из прайса каждую ночь; «выкл» оставляет объявление на ручной цене">
+      <Panel
+        title="Связанные объявления"
+        hint="Синхронизируется не цена прайса, а её изменение: объекты каталога продаются меблированными, а прайс застройщика бывает и без мебели, и в рассрочку. Надбавка запоминается при связывании и её можно поправить — прайс подорожал на 3%, объявление подорожает на те же 3% вместе с надбавкой. Один юнит может стоять в каталоге несколькими объявлениями (другая комплектация, перепродажа от инвестора) — это нормально, у каждого своя цена. «выкл» оставляет объявление на ручной цене — например, когда цену ставит не застройщик."
+      >
         <LinkedTable rows={r.linked} />
       </Panel>
 
@@ -96,6 +103,7 @@ export default async function MarketSitePage() {
 function outcomeLabel(v: string): string {
   if (v === 'applied') return 'цена обновлена'
   if (v === 'skipped_big_change') return 'отложено'
+  if (v === 'skipped_bad_ratio') return 'надбавка вне границ — пара под вопросом'
   if (v === 'unit_sold') return 'юнит ушёл из продажи'
   return v
 }
