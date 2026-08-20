@@ -15,8 +15,12 @@ export type Economics = {
   phrTax: number
   mgmtFee: number
   opex: number
+  /** Из чего складывается opex. Сумма компонентов равна opex ровно. */
+  opexParts: { utilities: number; staff: number; supplies: number; poolGarden: number; other: number }
   /** true, если расходы упёрлись в базовый минимум, а не в оценку по площади. */
   opexAtFloor: boolean
+  /** Ежегодный налог на землю и здание. */
+  pbbTax: number
   ffeReserve: number
   preTaxProfit: number
   tax: number
@@ -116,9 +120,22 @@ export function computeEconomics(input: EconomicsInput): Economics {
   const opex = Math.max(opexByArea, opexFloor)
   const opexAtFloor = opexFloor > opexByArea
 
-  const ffeReserve = revenue * region.ffeReservePct
+  // Разбивка расходов по статьям. Последняя строка добирает остаток
+  // округления, чтобы сумма компонентов совпадала с общей суммой до цента.
+  const bd = region.opexBreakdown
+  const utilities = Math.round(opex * bd.utilities)
+  const staff = Math.round(opex * bd.staff)
+  const supplies = Math.round(opex * bd.supplies)
+  const poolGarden = Math.round(opex * bd.poolGarden)
+  const opexParts = {
+    utilities, staff, supplies, poolGarden,
+    other: Math.round(opex) - utilities - staff - supplies - poolGarden,
+  }
 
-  const preTaxProfit = revenue - platformFee - phrTax - mgmtFee - opex - ffeReserve
+  const ffeReserve = revenue * region.ffeReservePct
+  const pbbTax = askingPrice != null ? askingPrice * region.pbbAnnualPctOfPrice : 0
+
+  const preTaxProfit = revenue - platformFee - phrTax - mgmtFee - opex - ffeReserve - pbbTax
   const taxRate = taxStatus === 'resident' ? region.taxRateResident : region.taxRateNonResident
   const tax = Math.max(0, preTaxProfit) * taxRate
   const noi = preTaxProfit - tax
@@ -151,7 +168,9 @@ export function computeEconomics(input: EconomicsInput): Economics {
     phrTax: Math.round(phrTax),
     mgmtFee: Math.round(mgmtFee),
     opex: Math.round(opex),
+    opexParts,
     opexAtFloor,
+    pbbTax: Math.round(pbbTax),
     ffeReserve: Math.round(ffeReserve),
     preTaxProfit: Math.round(preTaxProfit),
     tax: Math.round(tax),

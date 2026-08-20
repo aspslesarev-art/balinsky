@@ -14,6 +14,18 @@ export type RegionDefaults = {
   phrRatePct: number
   phrOwnerShareByScenario: { bad: number; median: number; good: number }
   opexPerSqmMonth: number
+  // Из чего складываются операционные расходы. Доли применяются к
+  // итоговой сумме расходов, чтобы разбивка в виджете сходилась с
+  // общей строкой. Пропорции — по замеру Bukit Vista для виллы в
+  // Улувату: уборка и персонал, расходники гостям, электричество и
+  // вода примерно равны по весу, бассейн с садом и связь — остаток.
+  opexBreakdown: {
+    utilities: number
+    staff: number
+    supplies: number
+    poolGarden: number
+    other: number
+  }
   // Базовые расходы виллы почти не зависят от её размера: охрана, садовник,
   // бассейн, интернет, минимальный штат. По замеру Bukit Vista для
   // трёхспальной виллы core-расходы — IDR 6,3–9,5 млн/мес (~$390–590).
@@ -31,6 +43,11 @@ export type RegionDefaults = {
   furnishingPerSqm: number
   taxRateResident: number
   taxRateNonResident: number
+  // PBB — ежегодный налог на землю и здание: 0,1–0,5% от кадастровой
+  // оценки NJOP, которая обычно заметно ниже рыночной цены. Здесь
+  // задан сразу как доля от цены объекта: 0,2% от NJOP при NJOP около
+  // половины рынка.
+  pbbAnnualPctOfPrice: number
   capRateThresholdWeak: number
 }
 
@@ -48,6 +65,7 @@ export const BALI_DEFAULTS: RegionDefaults = {
   phrRatePct: 0.10,
   phrOwnerShareByScenario: { bad: 1.0, median: 0.5, good: 0.0 },
   opexPerSqmMonth: 4,
+  opexBreakdown: { utilities: 0.30, staff: 0.30, supplies: 0.25, poolGarden: 0.08, other: 0.07 },
   opexFloorBase: 1500,
   opexFloorPerBedroom: 1400,
   ffeReservePct: 0.04,
@@ -55,6 +73,7 @@ export const BALI_DEFAULTS: RegionDefaults = {
   furnishingPerSqm: 80,
   taxRateResident: 0.10,
   taxRateNonResident: 0.20,
+  pbbAnnualPctOfPrice: 0.001,
   // Порог «слабо» — относительный, а не абсолютный: медианная чистая
   // доходность новостроя Бали при этих допущениях около 2%, поэтому
   // прежние 6% помечали бы весь рынок без разбора.
