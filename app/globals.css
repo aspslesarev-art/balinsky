@@ -309,3 +309,37 @@ html:not([data-auth='1']) .bx-gate-cta {
     display: none;
   }
 }
+
+/* Ползунок, у которого дорожка своя.
+   Под ADR нужно показать, в каких промежутках рядом вообще кто-то сдаёт,
+   прямо в самой полоске — поэтому родную дорожку прячем, а под input
+   кладём слой с зонами. Стили живут здесь, а не в <style jsx>: его
+   ломает Turbopack. */
+.range-bare {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+.range-bare::-webkit-slider-runnable-track { background: transparent; height: 6px; }
+.range-bare::-moz-range-track { background: transparent; height: 6px; }
+.range-bare::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -5px;
+  border-radius: 9999px;
+  background: var(--color-primary);
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
+.range-bare::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: var(--color-primary);
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}

@@ -14,6 +14,9 @@ import { computeEconomics, type Economics, type TaxStatus } from '@/lib/investme
 import { CURRENCY_RATES } from '@/lib/currency'
 import { pickCopy, type Lang, detectLang } from '@/lib/i18n'
 
+// Сколько промежутков рисуем прямо в дорожке ползунка ADR.
+const ADR_ZONES = 40
+
 const COPY = {
   ru: {
     sectionH2: 'Инвестиционный потенциал',
@@ -1004,11 +1007,22 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
   const adrLo = Math.max(1, Math.floor(sc.bad.adrAsking * 0.6))
   const adrHi = Math.max(adrLo + 1, Math.ceil(sc.good.adrAsking * 1.5))
 
-  // Ставки сопоставимых соседей — основа шкалы плотности под ползунком.
-  const compAdrs = useMemo(
-    () => (snap.competitors ?? []).map(c => c.adr).filter(a => Number.isFinite(a) && a > 0),
-    [snap.competitors],
-  )
+  // Ставки соседей для зон в дорожке ползунка. Берём их у того же
+  // источника, что и карточки «что рядом сдают» ниже: раньше шкала
+  // считалась по своей выборке сопоставимых и писала «рядом никто так не
+  // сдаёт» ровно тогда, когда под ней показывались два объекта.
+  const [nearbyAdrs, setNearbyAdrs] = useState<number[]>([])
+  const villaLat = snap.villa.lat
+  const villaLng = snap.villa.lng
+  useEffect(() => {
+    if (villaLat == null || villaLng == null) return
+    let cancelled = false
+    fetch(`/api/rental-density?lat=${villaLat}&lng=${villaLng}&radius=1000`)
+      .then(r => r.json())
+      .then(d => { if (!cancelled && d?.ok) setNearbyAdrs(d.prices as number[]) })
+      .catch(() => { /* без зон ползунок остаётся обычным */ })
+    return () => { cancelled = true }
+  }, [villaLat, villaLng])
 
   const [price, setPrice] = useState<number>(basePrice ?? 0)
   // Ползунок ходит по ставке из выдачи соседей; коэффициент реализации
@@ -1033,6 +1047,20 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
     region: { ...snap.region, mgmtFeePct: mgmt / 100 },
   }), [adr, occ, mgmt, price, basePrice, taxStatus, snap])
 
+  // Доля соседей в каждом промежутке дорожки: 0 — там пусто, 1 — самый
+  // населённый промежуток.
+  const adrZones = useMemo(() => {
+    const bins = new Array<number>(ADR_ZONES).fill(0)
+    const span = adrHi - adrLo
+    if (span <= 0 || !nearbyAdrs.length) return []
+    for (const a of nearbyAdrs) {
+      if (a < adrLo || a > adrHi) continue
+      bins[Math.min(ADR_ZONES - 1, Math.floor(((a - adrLo) / span) * ADR_ZONES))] += 1
+    }
+    const max = Math.max(...bins)
+    return max > 0 ? bins.map(n => n / max) : []
+  }, [nearbyAdrs, adrLo, adrHi])
+
   const priceLo = basePrice != null ? Math.round(basePrice * 0.75) : 0
   const priceHi = basePrice != null ? Math.round(basePrice * 1.25) : 0
   const opexUnit = lang === 'ru' ? '$/м²/мес' : '$/m²/mo'
@@ -1047,14 +1075,9 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
           <Slider label={t.inputPrice} value={price} min={priceLo} max={priceHi} step={500}
             onChange={setPrice} display={fmtUsd(Math.round(price * fxRate))} />
         )}
-        <div>
-          <Slider label={t.inputAdr} value={adr} min={adrLo} max={adrHi} step={1}
-            onChange={setAdr} display={fmtUsd(Math.round(adr * fxRate))} />
-          {compAdrs.length > 0 && (
-            <AdrDensity adrs={compAdrs} value={adr} lo={adrLo} hi={adrHi}
-              p50={sc.median.adrAsking} p75={sc.good.adrAsking} t={t} />
-          )}
-        </div>
+        <Slider label={t.inputAdr} value={adr} min={adrLo} max={adrHi} step={1}
+          onChange={setAdr} display={fmtUsd(Math.round(adr * fxRate))}
+          zones={adrZones} zonesLabel={t.densityScale} />
         <Slider label={t.inputOccupancy} value={occ} min={0} max={100} step={1}
           onChange={setOcc} display={`${occ}%`} />
         <Slider label={t.inputMgmt} value={mgmt} min={0} max={80} step={1}
@@ -1180,100 +1203,63 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
 // не видно, подтверждено ли оно рынком. Цвет — светофорные токены
 // проекта: до медианы зелёный (так сдают многие), до p75 жёлтый,
 // выше — красный (единичные случаи).
-const DENSITY_BINS = 28
 
-// Цвет столбика — про то, СКОЛЬКО соседей сдают по этой ставке, а не про
-// то, высокая она или низкая. Красный там, где их гуще всего, жёлтый —
-// где единичные, серый — где нет никого. Смысл шкалы простой: двигая
-// ползунок, видно, куда встать, чтобы конкуренты вообще нашлись.
-function heatColor(n: number, max: number): string {
-  if (n <= 0) return 'var(--color-border)'
-  return (max > 0 ? n / max : 0) >= 0.5 ? 'var(--color-progress-low)' : 'var(--color-progress-mid)'
-}
-
-function AdrDensity({
-  adrs, value, lo, hi, p50, p75, t,
+function Slider({
+  label, value, min, max, step, onChange, display, zones, zonesLabel,
 }: {
-  adrs: number[]; value: number; lo: number; hi: number; p50: number; p75: number
-  t: { densityCommon: string; densityAbove: string; densityRare: string; densityNearby: string; densityNone: string; densityScale: string }
+  label: string; value: number; min: number; max: number; step: number; onChange: (v: number) => void; display: string
+  // Плотность соседей по ставке: доля от самого населённого промежутка,
+  // 0 — рядом никто так не сдаёт. Рисуется прямо в дорожке, чтобы было
+  // видно, куда тянуть ползунок, и не появлялось отдельного блока.
+  zones?: number[]
+  zonesLabel?: string
 }) {
-  const { bins, max } = useMemo(() => {
-    const b = new Array<number>(DENSITY_BINS).fill(0)
-    const span = hi - lo
-    if (span <= 0) return { bins: b, max: 0 }
-    for (const a of adrs) {
-      if (a < lo || a > hi) continue
-      const idx = Math.min(DENSITY_BINS - 1, Math.floor(((a - lo) / span) * DENSITY_BINS))
-      b[idx] += 1
-    }
-    return { bins: b, max: Math.max(...b) }
-  }, [adrs, lo, hi])
-
-  // Сколько соседей сдают примерно по этой же ставке. Коридор ±15%:
-  // при типичной выборке в пару десятков объектов более узкий диапазон
-  // проваливается в разрывы распределения и показывает ноль там, где
-  // рынок на самом деле есть.
-  const NEAR_BAND = 0.15
-  const near = adrs.filter(a => a >= value * (1 - NEAR_BAND) && a <= value * (1 + NEAR_BAND)).length
-  const tone = value <= p50 ? 'hi' : value <= p75 ? 'mid' : 'low'
-  const toneColor = `var(--color-progress-${tone})`
-  const label = near === 0 ? t.densityNone : tone === 'hi' ? t.densityCommon : tone === 'mid' ? t.densityAbove : t.densityRare
-  const pos = hi > lo ? Math.min(100, Math.max(0, ((value - lo) / (hi - lo)) * 100)) : 0
-
-  return (
-    <div className="mt-2">
-      <div className="relative flex items-end gap-px h-7" role="img" aria-label={t.densityScale}>
-        {bins.map((n, i) => (
-          <div
-            key={i}
-            className="flex-1 rounded-t-[2px]"
-            style={{
-              height: max > 0 ? `${Math.max(n > 0 ? 12 : 2, (n / max) * 100)}%` : '2px',
-              background: heatColor(n, max),
-              opacity: n > 0 ? 0.85 : 1,
-            }}
-          />
-        ))}
-        <div
-          className="absolute top-0 bottom-0 w-[2px] bg-[#111827]"
-          style={{ left: `${pos}%` }}
+  const clamped = Math.min(max, Math.max(min, value))
+  if (!zones?.length) {
+    return (
+      <div>
+        <SliderHead label={label} display={display} />
+        <input
+          type="range"
+          min={min} max={max} step={step} value={clamped}
+          onChange={ev => onChange(Number(ev.target.value))}
+          className="w-full h-1.5 cursor-pointer accent-[var(--color-primary)]"
         />
       </div>
-      <div className="mt-1.5 text-[12px] leading-snug">
-        {near > 0 && (
-          <>
-            <span className="text-[var(--color-text-muted)]">{t.densityNearby}: </span>
-            <span className="font-medium text-[#111827] tabular-nums">{near}</span>
-            <span className="text-[var(--color-text-muted)]"> · </span>
-          </>
-        )}
-        <span className="font-medium" style={{ color: toneColor }}>{label}</span>
+    )
+  }
+  return (
+    <div>
+      <SliderHead label={label} display={display} />
+      <div className="relative h-4 flex items-center" role="img" aria-label={zonesLabel}>
+        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-1.5 rounded-full overflow-hidden flex bg-[var(--color-border)]">
+          {zones.map((share, i) => (
+            <div
+              key={i}
+              className="flex-1"
+              style={{
+                background: share > 0 ? 'var(--color-progress-low)' : 'transparent',
+                opacity: share > 0 ? Math.max(0.45, Math.min(1, share)) : 1,
+              }}
+            />
+          ))}
+        </div>
+        <input
+          type="range"
+          min={min} max={max} step={step} value={clamped}
+          onChange={ev => onChange(Number(ev.target.value))}
+          className="range-bare relative w-full h-4 cursor-pointer"
+        />
       </div>
     </div>
   )
 }
 
-function Slider({
-  label, value, min, max, step, onChange, display,
-}: {
-  label: string; value: number; min: number; max: number; step: number; onChange: (v: number) => void; display: string
-}) {
-  const clamped = Math.min(max, Math.max(min, value))
+function SliderHead({ label, display }: { label: string; display: string }) {
   return (
-    <div>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[13px] text-[var(--color-text-muted)]">{label}</span>
-        <span className="text-[15px] font-semibold text-[#111827] tabular-nums">{display}</span>
-      </div>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={clamped}
-        onChange={ev => onChange(Number(ev.target.value))}
-        className="w-full h-1.5 cursor-pointer accent-[var(--color-primary)]"
-      />
+    <div className="flex items-center justify-between mb-2">
+      <span className="text-[13px] text-[var(--color-text-muted)]">{label}</span>
+      <span className="text-[15px] font-semibold text-[#111827] tabular-nums">{display}</span>
     </div>
   )
 }
