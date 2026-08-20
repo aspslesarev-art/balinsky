@@ -73,6 +73,12 @@ const COPY = {
     taxHintRes: 'резидент с NPWP',
     taxHintNonRes: 'нерезидент, PPh 26',
     opexTitle: 'Операционные расходы',
+    densityCommon: 'подтверждено рынком',
+    densityAbove: 'выше большинства соседей',
+    densityRare: 'единичные случаи рядом',
+    densityNearby: 'Рядом в этом коридоре',
+    densityNone: 'рядом никто так не сдаёт',
+    densityScale: 'Сколько соседей сдают по этой ставке',
     referencesTitle: 'Малая выборка — показываем референсы',
     referencesBody: (n: number, plural: string) =>
       `В радиусе 2км нашлось всего ${n} ${plural}, подходящих под характеристики виллы. Агрегаты не считаем — даём конкретные примеры.`,
@@ -152,6 +158,12 @@ const COPY = {
     taxHintRes: 'resident with NPWP',
     taxHintNonRes: 'non-resident, PPh 26',
     opexTitle: 'Operating costs',
+    densityCommon: 'confirmed by the market',
+    densityAbove: 'above most neighbours',
+    densityRare: 'few comparable cases',
+    densityNearby: 'Nearby in this range',
+    densityNone: 'no neighbours charge this',
+    densityScale: 'How many neighbours charge this rate',
     referencesTitle: 'Small sample — showing reference listings',
     referencesBody: (n: number, plural: string) =>
       `Only ${n} ${plural} matched the villa's profile within a 2 km radius. We're not aggregating — here are concrete examples instead.`,
@@ -231,6 +243,12 @@ const COPY = {
     taxHintRes: 'residen dengan NPWP',
     taxHintNonRes: 'non-residen, PPh 26',
     opexTitle: 'Biaya operasional',
+    densityCommon: 'terkonfirmasi pasar',
+    densityAbove: 'di atas kebanyakan tetangga',
+    densityRare: 'kasus serupa sedikit',
+    densityNearby: 'Di sekitar pada kisaran ini',
+    densityNone: 'tidak ada tetangga pada tarif ini',
+    densityScale: 'Berapa tetangga memasang tarif ini',
     referencesTitle: 'Sampel kecil — menampilkan listing referensi',
     referencesBody: (n: number, plural: string) =>
       `Hanya ${n} ${plural} yang cocok dengan profil vila dalam radius 2 km. Kami tidak mengagregasi — berikut contoh konkretnya.`,
@@ -310,6 +328,12 @@ const COPY = {
     taxHintRes: 'résident avec NPWP',
     taxHintNonRes: 'non-résident, PPh 26',
     opexTitle: 'Charges d’exploitation',
+    densityCommon: 'confirmé par le marché',
+    densityAbove: 'au-dessus de la plupart des voisins',
+    densityRare: 'cas comparables rares',
+    densityNearby: 'À proximité dans cette fourchette',
+    densityNone: 'aucun voisin à ce tarif',
+    densityScale: 'Combien de voisins pratiquent ce tarif',
     referencesTitle: 'Échantillon réduit — annonces de référence affichées',
     referencesBody: (n: number, plural: string) =>
       `Seulement ${n} ${plural} correspondent au profil de la villa dans un rayon de 2 km. Nous n'agrégeons pas — voici plutôt des exemples concrets.`,
@@ -389,6 +413,12 @@ const COPY = {
     taxHintRes: 'ansässig mit NPWP',
     taxHintNonRes: 'nicht ansässig, PPh 26',
     opexTitle: 'Betriebskosten',
+    densityCommon: 'vom Markt bestätigt',
+    densityAbove: 'über den meisten Nachbarn',
+    densityRare: 'kaum vergleichbare Fälle',
+    densityNearby: 'In der Nähe in dieser Spanne',
+    densityNone: 'kein Nachbar verlangt das',
+    densityScale: 'Wie viele Nachbarn diesen Preis nehmen',
     referencesTitle: 'Kleine Stichprobe — Referenzangebote werden gezeigt',
     referencesBody: (n: number, plural: string) =>
       `Nur ${n} ${plural} entsprachen dem Profil der Villa im Umkreis von 2 km. Wir aggregieren nicht — hier stattdessen konkrete Beispiele.`,
@@ -468,6 +498,12 @@ const COPY = {
     taxHintRes: '持NPWP的居民',
     taxHintNonRes: '非居民，PPh 26',
     opexTitle: '运营支出',
+    densityCommon: '已被市场验证',
+    densityAbove: '高于多数邻近房源',
+    densityRare: '可比案例很少',
+    densityNearby: '该价格区间的周边房源',
+    densityNone: '周边无人以此价出租',
+    densityScale: '多少邻近房源采用该价格',
     referencesTitle: '样本较小——展示参考房源',
     referencesBody: (n: number, plural: string) =>
       `在2公里半径内只有 ${n} ${plural} 符合别墅的特征。我们不做汇总——而是给出具体示例。`,
@@ -547,6 +583,12 @@ const COPY = {
     taxHintRes: 'ingezetene met NPWP',
     taxHintNonRes: 'niet-ingezetene, PPh 26',
     opexTitle: 'Exploitatiekosten',
+    densityCommon: 'door de markt bevestigd',
+    densityAbove: 'boven de meeste buren',
+    densityRare: 'weinig vergelijkbare gevallen',
+    densityNearby: 'In de buurt in deze range',
+    densityNone: 'geen buur vraagt dit',
+    densityScale: 'Hoeveel buren vragen dit tarief',
     referencesTitle: 'Kleine steekproef — referentieadvertenties getoond',
     referencesBody: (n: number, plural: string) =>
       `Slechts ${n} ${plural} kwamen overeen met het profiel van de villa binnen een straal van 2 km. We aggregeren niet — hier in plaats daarvan concrete voorbeelden.`,
@@ -626,6 +668,12 @@ const COPY = {
     taxHintRes: 'residen madue NPWP',
     taxHintNonRes: 'non-residen, PPh 26',
     opexTitle: 'Prabea operasional',
+    densityCommon: 'kakonfirmasi pasar',
+    densityAbove: 'langkung saking tetangga akehan',
+    densityRare: 'conto sane pateh akidik',
+    densityNearby: 'Ring sekitar kisaran puniki',
+    densityNone: 'nenten wenten tetangga ring tarif puniki',
+    densityScale: 'Akuda tetangga sane nganggen tarif puniki',
     referencesTitle: 'Sampel cenik — nyinahang listing referensi',
     referencesBody: (n: number, plural: string) =>
       `Wantah ${n} ${plural} sane cocok sareng profil vila ring radius 2 km. Tiang nenten ngagregasi — puniki conto konkret.`,
@@ -705,6 +753,12 @@ const COPY = {
     taxHintRes: 'rezydent z NPWP',
     taxHintNonRes: 'nierezydent, PPh 26',
     opexTitle: 'Koszty operacyjne',
+    densityCommon: 'potwierdzone przez rynek',
+    densityAbove: 'powyżej większości sąsiadów',
+    densityRare: 'niewiele podobnych przypadków',
+    densityNearby: 'W okolicy w tym przedziale',
+    densityNone: 'nikt w okolicy tyle nie bierze',
+    densityScale: 'Ilu sąsiadów ma taką stawkę',
     referencesTitle: 'Mała próba — pokazujemy ogłoszenia referencyjne',
     referencesBody: (n: number, plural: string) =>
       `Tylko ${n} ${plural} pasowało do profilu willi w promieniu 2 km. Nie agregujemy — zamiast tego oto konkretne przykłady.`,
@@ -784,6 +838,12 @@ const COPY = {
     taxHintRes: 'резидент з NPWP',
     taxHintNonRes: 'нерезидент, PPh 26',
     opexTitle: 'Операційні витрати',
+    densityCommon: 'підтверджено ринком',
+    densityAbove: 'вище за більшість сусідів',
+    densityRare: 'поодинокі випадки поруч',
+    densityNearby: 'Поруч у цьому коридорі',
+    densityNone: 'поруч ніхто так не здає',
+    densityScale: 'Скільки сусідів здають за цією ставкою',
     referencesTitle: 'Мала вибірка — показуємо референсні оголошення',
     referencesBody: (n: number, plural: string) =>
       `Лише ${n} ${plural} відповідають профілю вілли в радіусі 2 км. Ми не агрегуємо — натомість ось конкретні приклади.`,
@@ -944,6 +1004,12 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
   const adrLo = Math.max(1, Math.floor(sc.bad.adrAsking * 0.6))
   const adrHi = Math.max(adrLo + 1, Math.ceil(sc.good.adrAsking * 1.5))
 
+  // Ставки сопоставимых соседей — основа шкалы плотности под ползунком.
+  const compAdrs = useMemo(
+    () => (snap.competitors ?? []).map(c => c.adr).filter(a => Number.isFinite(a) && a > 0),
+    [snap.competitors],
+  )
+
   const [price, setPrice] = useState<number>(basePrice ?? 0)
   // Ползунок ходит по ставке из выдачи соседей; коэффициент реализации
   // применяется внутри расчёта, поэтому пользователь двигает ровно то число,
@@ -981,8 +1047,14 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
           <Slider label={t.inputPrice} value={price} min={priceLo} max={priceHi} step={500}
             onChange={setPrice} display={fmtUsd(Math.round(price * fxRate))} />
         )}
-        <Slider label={t.inputAdr} value={adr} min={adrLo} max={adrHi} step={1}
-          onChange={setAdr} display={fmtUsd(Math.round(adr * fxRate))} />
+        <div>
+          <Slider label={t.inputAdr} value={adr} min={adrLo} max={adrHi} step={1}
+            onChange={setAdr} display={fmtUsd(Math.round(adr * fxRate))} />
+          {compAdrs.length > 0 && (
+            <AdrDensity adrs={compAdrs} value={adr} lo={adrLo} hi={adrHi}
+              p50={sc.median.adrAsking} p75={sc.good.adrAsking} t={t} />
+          )}
+        </div>
         <Slider label={t.inputOccupancy} value={occ} min={0} max={100} step={1}
           onChange={setOcc} display={`${occ}%`} />
         <Slider label={t.inputMgmt} value={mgmt} min={0} max={80} step={1}
@@ -1099,6 +1171,79 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
           </li>
         </ul>
       )}
+    </div>
+  )
+}
+
+// Плотность рынка под ползунком ADR: сколько соседей реально сдают по
+// каждой ставке. Без неё ползунок двигается вслепую — видно число, но
+// не видно, подтверждено ли оно рынком. Цвет — светофорные токены
+// проекта: до медианы зелёный (так сдают многие), до p75 жёлтый,
+// выше — красный (единичные случаи).
+const DENSITY_BINS = 28
+
+function AdrDensity({
+  adrs, value, lo, hi, p50, p75, t,
+}: {
+  adrs: number[]; value: number; lo: number; hi: number; p50: number; p75: number
+  t: { densityCommon: string; densityAbove: string; densityRare: string; densityNearby: string; densityNone: string; densityScale: string }
+}) {
+  const { bins, max } = useMemo(() => {
+    const b = new Array<number>(DENSITY_BINS).fill(0)
+    const span = hi - lo
+    if (span <= 0) return { bins: b, max: 0 }
+    for (const a of adrs) {
+      if (a < lo || a > hi) continue
+      const idx = Math.min(DENSITY_BINS - 1, Math.floor(((a - lo) / span) * DENSITY_BINS))
+      b[idx] += 1
+    }
+    return { bins: b, max: Math.max(...b) }
+  }, [adrs, lo, hi])
+
+  // Сколько соседей сдают примерно по этой же ставке. Коридор ±15%:
+  // при типичной выборке в пару десятков объектов более узкий диапазон
+  // проваливается в разрывы распределения и показывает ноль там, где
+  // рынок на самом деле есть.
+  const NEAR_BAND = 0.15
+  const near = adrs.filter(a => a >= value * (1 - NEAR_BAND) && a <= value * (1 + NEAR_BAND)).length
+  const tone = value <= p50 ? 'hi' : value <= p75 ? 'mid' : 'low'
+  const toneColor = `var(--color-progress-${tone})`
+  const label = near === 0 ? t.densityNone : tone === 'hi' ? t.densityCommon : tone === 'mid' ? t.densityAbove : t.densityRare
+  const pos = hi > lo ? Math.min(100, Math.max(0, ((value - lo) / (hi - lo)) * 100)) : 0
+
+  return (
+    <div className="mt-2">
+      <div className="relative flex items-end gap-px h-7" role="img" aria-label={t.densityScale}>
+        {bins.map((n, i) => {
+          const mid = lo + ((i + 0.5) / DENSITY_BINS) * (hi - lo)
+          const c = mid <= p50 ? 'hi' : mid <= p75 ? 'mid' : 'low'
+          return (
+            <div
+              key={i}
+              className="flex-1 rounded-t-[2px]"
+              style={{
+                height: max > 0 ? `${Math.max(n > 0 ? 12 : 2, (n / max) * 100)}%` : '2px',
+                background: n > 0 ? `var(--color-progress-${c})` : 'var(--color-border)',
+                opacity: n > 0 ? 0.85 : 1,
+              }}
+            />
+          )
+        })}
+        <div
+          className="absolute top-0 bottom-0 w-[2px] bg-[#111827]"
+          style={{ left: `${pos}%` }}
+        />
+      </div>
+      <div className="mt-1.5 text-[12px] leading-snug">
+        {near > 0 && (
+          <>
+            <span className="text-[var(--color-text-muted)]">{t.densityNearby}: </span>
+            <span className="font-medium text-[#111827] tabular-nums">{near}</span>
+            <span className="text-[var(--color-text-muted)]"> · </span>
+          </>
+        )}
+        <span className="font-medium" style={{ color: toneColor }}>{label}</span>
+      </div>
     </div>
   )
 }
