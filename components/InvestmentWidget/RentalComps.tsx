@@ -34,6 +34,7 @@ const COPY = {
   ru: {
     title: 'Что рядом сдают за эти же деньги',
     sub: (a: number, b: number) => `Объекты Booking со ставкой $${a}–${b} за ночь — коридор вокруг вашего ADR.`,
+    widened: (r: number) => `Рядом в этой ставке никого, поэтому показываем в радиусе ${r < 1000 ? `${r} м` : `${r / 1000} км`}.`,
     subLoading: 'Подбираем объекты по вашей ставке…',
     empty: 'В этом радиусе и в этой цене на Booking пока никого — попробуйте больший радиус или другую ставку.',
     r500: '500 м',
@@ -53,6 +54,7 @@ const COPY = {
   en: {
     title: 'What the same money rents nearby',
     sub: (a: number, b: number) => `Booking listings at $${a}–${b} per night — the band around your ADR.`,
+    widened: (r: number) => `Nothing at this rate right nearby, so we widened the search to ${r < 1000 ? `${r} m` : `${r / 1000} km`}.`,
     subLoading: 'Finding listings at your rate…',
     empty: 'Nothing on Booking in this radius at this price — try a wider radius or another rate.',
     r500: '500 m',
@@ -78,6 +80,10 @@ function fmtDistance(m: number, c: { m: string; km: string }): string {
 export function RentalComps({ lat, lng, adr, lang }: { lat: number; lng: number; adr: number; lang: Lang }) {
   const [radius, setRadius] = useState<number>(500)
   const [items, setItems] = useState<Item[] | null>(null)
+  // В каком радиусе объекты в итоге нашлись: в разреженных районах API
+  // расширяет поиск сам, и промолчать об этом нельзя — на переключателе
+  // будет «500 м», а объекты окажутся из другого места.
+  const [usedRadius, setUsedRadius] = useState<number | null>(null)
   const [band, setBand] = useState<{ min: number; max: number } | null>(null)
   const [loading, setLoading] = useState(true)
   const trackRef = useRef<HTMLDivElement | null>(null)
@@ -104,8 +110,10 @@ export function RentalComps({ lat, lng, adr, lang }: { lat: number; lng: number;
           if (d?.ok) {
             setItems(d.items as Item[])
             setBand({ min: d.priceMin, max: d.priceMax })
+            setUsedRadius(typeof d.usedRadius === 'number' ? d.usedRadius : null)
           } else {
             setItems([])
+            setUsedRadius(null)
           }
         })
         .catch(() => { if (!cancelled) setItems([]) })
@@ -138,6 +146,7 @@ export function RentalComps({ lat, lng, adr, lang }: { lat: number; lng: number;
 
       <div className="text-[13px] text-[var(--color-text-muted)] mb-4">
         {band ? c.sub(band.min, band.max) : c.subLoading}
+        {usedRadius !== null && usedRadius > radius && items?.length ? ` ${c.widened(usedRadius)}` : ''}
       </div>
 
       {loading && items === null && (

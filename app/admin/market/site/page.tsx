@@ -7,6 +7,7 @@ import { loadSiteReport } from '@/lib/market/site-report'
 import { LoginForm } from '../../_login'
 import { MarketShell } from '../_shell'
 import { LinkedTable, PendingTable } from './_link-table'
+import { SyncButton } from './_sync-button'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -33,9 +34,12 @@ export default async function MarketSitePage() {
           <div className="text-[12px] uppercase tracking-wide text-[var(--ax-fg-muted)] mb-1">Трекер рынка</div>
           <h1 className="text-[24px] font-semibold tracking-tight">Цены на сайте</h1>
         </div>
-        <Link href="/admin/market" className="text-[12px] px-3 py-1.5 rounded-lg border border-[var(--ax-border)] text-[var(--ax-fg-muted)] hover:text-[var(--ax-fg)]">
-          ← к трекеру
-        </Link>
+        <div className="flex items-center gap-3">
+          <SyncButton />
+          <Link href="/admin/market" className="text-[12px] px-3 py-1.5 rounded-lg border border-[var(--ax-border)] text-[var(--ax-fg-muted)] hover:text-[var(--ax-fg)]">
+            ← к трекеру
+          </Link>
+        </div>
       </header>
 
       <section className="grid grid-cols-2 md:grid-cols-4 gap-3">

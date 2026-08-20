@@ -22,6 +22,13 @@ const BAND_ABOVE = 0.10
 const ALLOWED_RADII: readonly number[] = [500, 1000]
 const LIMIT = 16
 
+// Куда расширять поиск, если в запрошенном радиусе никого. Плотность
+// аренды на Бали разная: в Чангу в 500 м сотни объектов, а в Сануре
+// вокруг того же дома всего 20 объектов с ценой, и в коридор ставки не
+// попадает ни один. Пустой блок в такой ситуации — не ответ: покупателю
+// нужно знать, за сколько сдают рядом, пусть и в паре километров.
+const FALLBACK_RADII: readonly number[] = [1000, 2000, 3000]
+
 type Row = {
   id: number
   title: string | null
@@ -66,17 +73,30 @@ export async function GET(req: Request) {
 
   try {
     const sb = createClient(SUPABASE_URL, SERVICE_KEY)
-    const { data, error } = await sb.rpc('booking_data_price_comps', {
-      p_lat: lat,
-      p_lng: lng,
-      p_radius_m: radius,
-      p_price_min: priceMin,
-      p_price_max: priceMax,
-      p_limit: LIMIT,
-    })
-    if (error) throw new Error(error.message)
 
-    const items = ((data ?? []) as Row[]).map(r => ({
+    const ask = async (r: number) => {
+      const { data, error } = await sb.rpc('booking_data_price_comps', {
+        p_lat: lat,
+        p_lng: lng,
+        p_radius_m: r,
+        p_price_min: priceMin,
+        p_price_max: priceMax,
+        p_limit: LIMIT,
+      })
+      if (error) throw new Error(error.message)
+      return (data ?? []) as Row[]
+    }
+
+    let usedRadius = radius
+    let data = await ask(radius)
+    for (const wider of FALLBACK_RADII) {
+      if (data.length || wider <= radius) continue
+      data = await ask(wider)
+      usedRadius = wider
+      if (data.length) break
+    }
+
+    const items = (data as Row[]).map(r => ({
       id: r.id,
       title: r.title,
       unitKind: r.unit_kind,
@@ -95,7 +115,8 @@ export async function GET(req: Request) {
         : null,
     }))
 
-    const res = NextResponse.json({ ok: true, priceMin, priceMax, radius, items })
+    // radius — что спросили, usedRadius — где на самом деле нашлось.
+    const res = NextResponse.json({ ok: true, priceMin, priceMax, radius, usedRadius, items })
     // Данные обновляются раз в сутки — держим на краю час.
     res.headers.set('cache-control', 'public, s-maxage=3600, stale-while-revalidate=86400')
     return res
