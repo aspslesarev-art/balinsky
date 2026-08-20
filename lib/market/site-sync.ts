@@ -20,8 +20,17 @@ const MAX_AUTO_CHANGE = 0.25
 const RATIO_MIN = 0.7
 const RATIO_MAX = 1.6
 
-// Совпадение по площади с допуском: сайт округляет, прайс — нет.
+// Мелкая разница — это чужое округление, а не движение рынка: кто-то
+// записал на сайте $216 000 вместо $215 976. Гонять из-за таких копеек
+// инвалидацию кэша и засорять журнал незачем.
+const MIN_CHANGE_ABS = 1_000
+const MIN_CHANGE_PCT = 0.003
+
+// Допуск по площади. Одной абсолютной величины мало: сайт и прайс меряют
+// по-разному (терраса, крыльцо, обмер после стройки), и у большой виллы
+// расхождение в метрах больше, чем у студии.
 const AREA_TOLERANCE = 2
+const AREA_TOLERANCE_PCT = 0.03
 
 // Границы правдоподобия цены в долларах — та же защита, что и в разборе
 // прайсов: рупии, приехавшие как доллары, на сайт попасть не должны.
@@ -40,6 +49,8 @@ type Listing = {
   id: string
   name: string | null
   complex: string | null
+  title: string | null
+  developer: string | null
   price: number | null
   area: number | null
   bedrooms: number | null
@@ -47,6 +58,7 @@ type Listing = {
 
 type Unit = {
   id: number
+  developer: string
   complex: string
   unit_key: string
   area_m2: number | null
@@ -88,38 +100,31 @@ export async function linkListings(sb: SupabaseClient): Promise<LinkResult> {
   ])
 
   const byComplex = groupByComplex(units)
+  const names = [...byComplex.keys()]
   const rows: Array<Record<string, unknown>> = []
   let ambiguous = 0
   let unmatched = 0
 
   for (const l of listings) {
     if (linked.has(`${l.kind}:${l.id}`)) continue
-    const pool = byComplex.get(normalize(l.complex))
-    if (!pool?.length || l.area === null) continue
+    const pool = poolFor(l, byComplex, names)
+    if (!pool?.length) continue
 
-    const near = pool.filter(u => u.area_m2 !== null && Math.abs(u.area_m2 - l.area!) <= AREA_TOLERANCE)
-    const narrowed = l.bedrooms !== null && near.length > 1
-      ? near.filter(u => u.bedrooms === l.bedrooms)
-      : near
+    const found = matchUnit(l, pool)
+    if (!found) { unmatched++; continue }
+    if (found.ratio < RATIO_MIN || found.ratio > RATIO_MAX) { ambiguous++; continue }
 
-    if (narrowed.length === 1) {
-      const unit = narrowed[0]
-      rows.push({
-        listing_kind: l.kind,
-        listing_id: l.id,
-        unit_id: unit.id,
-        confidence: 'area',
-        // Надбавку каталога к прайсу фиксируем в момент связывания: наши
-        // объекты меблированы, а прайс бывает и без мебели, и в рассрочку.
-        base_listing_price: l.price,
-        base_unit_price: unit.price_usd,
-        price_ratio: l.price && unit.price_usd ? l.price / unit.price_usd : null,
-      })
-    } else if (narrowed.length > 1) {
-      ambiguous++
-    } else {
-      unmatched++
-    }
+    rows.push({
+      listing_kind: l.kind,
+      listing_id: l.id,
+      unit_id: found.unit.id,
+      confidence: found.how,
+      // Надбавку каталога к прайсу фиксируем в момент связывания: наши
+      // объекты меблированы, а прайс бывает и без мебели, и в рассрочку.
+      base_listing_price: l.price,
+      base_unit_price: found.unit.price_usd,
+      price_ratio: found.ratio,
+    })
   }
 
   if (rows.length) {
@@ -129,6 +134,67 @@ export async function linkListings(sb: SupabaseClient): Promise<LinkResult> {
     if (error) throw new Error(`запись market_listing_links: ${error.message}`)
   }
   return { linked: rows.length, ambiguous, unmatched }
+}
+
+// Пул юнитов комплекса, к которому относится объявление.
+//
+// У вилл комплекс лежит в поле «Комплекс 1», а у апартаментов такого поля
+// нет вовсе — там название комплекса зашито в SEO-заголовок («Апартаменты
+// OCEANIQ 2 в Nusa Dua»). Поэтому если поля нет, ищем в заголовке самое
+// длинное совпадение с известным комплексом: длинное — значит самое
+// конкретное, иначе «Bloom» перебьёт «Bloom Residence».
+function poolFor(l: Listing, byComplex: Map<string, Unit[]>, names: string[]): Unit[] | null {
+  const direct = byComplex.get(normalize(l.complex))
+  if (direct?.length) return direct
+  if (!l.title) return null
+
+  const title = normalize(l.title)
+  let best: string | null = null
+  for (const key of names) {
+    if (key.length < 4 || !title.includes(key)) continue
+    if (!best || key.length > best.length) best = key
+  }
+  return best ? byComplex.get(best) ?? null : null
+}
+
+// Какой юнит прайса стоит за объявлением.
+//
+// Площадь — плохой ключ сама по себе: на сайте её меряют с террасой, в
+// прайсе без, и у 88 объявлений ближайший по площади юнит оказывался
+// чужим. Зато цена — почти отпечаток: сумма вроде $304 920 совпадает не
+// случайно. Поэтому сначала ищем точное совпадение цены внутри комплекса
+// и только потом идём по площади, а среди одинаковых по площади юнитов
+// выбираем того, чья цена ближе к нынешней цене объявления — это и есть
+// тот юнит, с которого объявление когда-то завели.
+function matchUnit(l: Listing, pool: Unit[]): { unit: Unit; how: 'price' | 'area'; ratio: number } | null {
+  if (l.price !== null) {
+    const same = pool.filter(u => u.price_usd !== null && Math.abs(u.price_usd - l.price!) < 1)
+    if (same.length) {
+      const unit = l.area === null ? same[0] : closestBy(same, u => Math.abs((u.area_m2 ?? 1e9) - l.area!))
+      return { unit, how: 'price', ratio: 1 }
+    }
+  }
+
+  if (l.area === null || l.price === null) return null
+  const tolerance = Math.max(AREA_TOLERANCE, l.area * AREA_TOLERANCE_PCT)
+  let cand = pool.filter(u => u.area_m2 !== null && Math.abs(u.area_m2 - l.area!) <= tolerance)
+  // Спальни и застройщика используем как фильтр, только если после него
+  // хоть кто-то остаётся: у части прайсов этих полей просто нет.
+  if (l.bedrooms !== null && cand.some(u => u.bedrooms === l.bedrooms)) {
+    cand = cand.filter(u => u.bedrooms === l.bedrooms)
+  }
+  if (l.developer && cand.some(u => normalize(u.developer) === normalize(l.developer))) {
+    cand = cand.filter(u => normalize(u.developer) === normalize(l.developer))
+  }
+  const priced = cand.filter(u => u.price_usd !== null)
+  if (!priced.length) return null
+
+  const unit = closestBy(priced, u => Math.abs(u.price_usd! - l.price!))
+  return { unit, how: 'area', ratio: l.price / unit.price_usd! }
+}
+
+function closestBy(units: Unit[], distance: (u: Unit) => number): Unit {
+  return units.reduce((best, u) => (distance(u) < distance(best) ? u : best), units[0])
 }
 
 // Что изменится, если применить прайсы. Ничего не пишет — этим же планом
@@ -178,8 +244,11 @@ export async function planSiteSync(sb: SupabaseClient): Promise<SyncPlan> {
       continue
     }
 
-    const next = round100(unitPrice * ratio)
-    if (prev !== null && Math.abs(next - prev) < 1) continue
+    // Без надбавки цена берётся из прайса как есть: округление
+    // превратило бы точные $607 530 в $607 500. Округляем только
+    // вычисленную цену, иначе на карточке появлялись бы копейки.
+    const next = Math.abs(ratio - 1) < 0.0005 ? unitPrice : round100(unitPrice * ratio)
+    if (prev !== null && Math.abs(next - prev) < Math.max(MIN_CHANGE_ABS, prev * MIN_CHANGE_PCT)) continue
 
     const jump = prev ? Math.abs(next - prev) / prev : 0
     const badRatio = ratio < RATIO_MIN || ratio > RATIO_MAX
@@ -276,7 +345,7 @@ async function loadListings(sb: SupabaseClient): Promise<Listing[]> {
     for (let from = 0; ; from += 1000) {
       const { data, error } = await sb
         .from(TABLE[kind])
-        .select('airtable_id, name:data->>Name, complex:data->>"Комплекс 1", price:data->>"Цена", area:data->>"Площадь", bedrooms:data->>"Комнаты"')
+        .select('airtable_id, name:data->>Name, complex:data->>"Комплекс 1", title:data->>"SEO:Title", developer:data->>Developer1, price:data->>"Цена", area:data->>"Площадь", bedrooms:data->>"Комнаты"')
         .range(from, from + 999)
       if (error) throw new Error(`чтение ${TABLE[kind]}: ${error.message}`)
       if (!data?.length) break
@@ -286,6 +355,8 @@ async function loadListings(sb: SupabaseClient): Promise<Listing[]> {
           id: String(r.airtable_id),
           name: str(r.name),
           complex: str(r.complex),
+          title: str(r.title),
+          developer: str(r.developer),
           price: numberOrNull(r.price),
           area: numberOrNull(r.area),
           bedrooms: numberOrNull(r.bedrooms),
@@ -302,13 +373,14 @@ async function loadUnits(sb: SupabaseClient): Promise<Unit[]> {
   for (let from = 0; ; from += 1000) {
     const { data, error } = await sb
       .from('market_units')
-      .select('id, complex, unit_key, area_m2, bedrooms, status, price_usd')
+      .select('id, developer, complex, unit_key, area_m2, bedrooms, status, price_usd')
       .range(from, from + 999)
     if (error) throw new Error(`чтение market_units: ${error.message}`)
     if (!data?.length) break
     for (const r of data as Array<Record<string, unknown>>) {
       out.push({
         id: Number(r.id),
+        developer: String(r.developer ?? ''),
         complex: String(r.complex ?? ''),
         unit_key: String(r.unit_key ?? ''),
         area_m2: numberOrNull(r.area_m2),
@@ -348,7 +420,7 @@ function round100(v: number): number {
 
 // Названия комплекса в двух системах пишут по-разному: регистр, точки,
 // скобки, лишние пробелы. Сравниваем только буквы и цифры.
-function normalize(v: string | null): string {
+function normalize(v: string | null | undefined): string {
   return String(v ?? '').toLowerCase().replace(/[^a-zа-я0-9]/gi, '')
 }
 
