@@ -10,7 +10,7 @@ import { InvestmentMap } from './InvestmentMap'
 import { fmtMoney, fmtPct, fmtYears, fmtDistance, pluralRu, pluralEn } from './utils'
 import type { Snapshot } from './types'
 import { useCurrency } from '../CurrencyContext'
-import { computeEconomics, type Economics } from '@/lib/investment/economics'
+import { computeEconomics, type Economics, type TaxStatus } from '@/lib/investment/economics'
 import { CURRENCY_RATES } from '@/lib/currency'
 import { pickCopy, type Lang, detectLang } from '@/lib/i18n'
 
@@ -47,7 +47,15 @@ const COPY = {
     calcSub: 'Подвигайте ползунки. ADR и загрузка по умолчанию — медиана по похожим объектам на Booking поблизости; цену можно менять ±25%.',
     payback: 'Окупаемость', capRate: 'Cap rate',
     howCalced: 'Как считалось',
-    revenue: 'Revenue', platform: 'Platform', mgmt: 'Mgmt', opex: 'OPEX', tax: 'Tax', noi: 'NOI',
+    revenue: 'Выручка', platform: 'Площадка', mgmt: 'Управление', opex: 'Расходы', tax: 'Налог', noi: 'Чистыми',
+    phr: 'Налог на проживание', ffe: 'Резерв на износ', preTax: 'Прибыль до налога',
+    entryPrice: 'Цена входа', closing: 'оформление', furnishing: 'меблировка',
+    adrRealization: 'реализация ставки', opexFloorNote: 'базовый минимум',
+    taxStatusLabel: 'Налоговый статус', taxResident: 'Резидент', taxNonResident: 'Нерезидент',
+    taxStatusHint: 'Резидент с индонезийским NPWP платит 10%, нерезидент — 20%.',
+    irrLabel: 'Доходность за срок аренды',
+    noCapitalReturn: 'За оставшийся срок лизхолда объект не возвращает вложенное',
+    noCapitalReturnHint: 'Сумма всех арендных поступлений до конца права аренды меньше цены входа.',
     referencesTitle: 'Малая выборка — показываем референсы',
     referencesBody: (n: number, plural: string) =>
       `В радиусе 2км нашлось всего ${n} ${plural}, подходящих под характеристики виллы. Агрегаты не считаем — даём конкретные примеры.`,
@@ -101,7 +109,15 @@ const COPY = {
     calcSub: 'Drag the sliders. ADR and occupancy default to the median of similar nearby Booking listings; the price can be adjusted ±25%.',
     payback: 'Payback', capRate: 'Cap rate',
     howCalced: 'How it was calculated',
-    revenue: 'Revenue', platform: 'Platform', mgmt: 'Mgmt', opex: 'OPEX', tax: 'Tax', noi: 'NOI',
+    revenue: 'Revenue', platform: 'Platform', mgmt: 'Management', opex: 'Operating costs', tax: 'Tax', noi: 'Net to owner',
+    phr: 'Accommodation tax', ffe: 'Wear-and-tear reserve', preTax: 'Profit before tax',
+    entryPrice: 'Total entry cost', closing: 'closing', furnishing: 'furnishing',
+    adrRealization: 'rate realization', opexFloorNote: 'baseline minimum',
+    taxStatusLabel: 'Tax status', taxResident: 'Resident', taxNonResident: 'Non-resident',
+    taxStatusHint: 'A resident with an Indonesian NPWP pays 10%, a non-resident 20%.',
+    irrLabel: 'Return over lease term',
+    noCapitalReturn: 'Over the remaining lease the property does not return what you put in',
+    noCapitalReturnHint: 'Total rental income until the lease expires is less than the entry cost.',
     referencesTitle: 'Small sample — showing reference listings',
     referencesBody: (n: number, plural: string) =>
       `Only ${n} ${plural} matched the villa's profile within a 2 km radius. We're not aggregating — here are concrete examples instead.`,
@@ -155,7 +171,15 @@ const COPY = {
     calcSub: 'Geser slider. ADR dan okupansi secara default memakai median listing Booking serupa di sekitar; harga bisa disesuaikan ±25%.',
     payback: 'Balik modal', capRate: 'Cap rate',
     howCalced: 'Cara perhitungannya',
-    revenue: 'Pendapatan', platform: 'Platform', mgmt: 'Pengelolaan', opex: 'OPEX', tax: 'Pajak', noi: 'NOI',
+    revenue: 'Pendapatan', platform: 'Platform', mgmt: 'Pengelolaan', opex: 'Biaya operasional', tax: 'Pajak', noi: 'Bersih untuk pemilik',
+    phr: 'Pajak hotel (PHR)', ffe: 'Cadangan penyusutan', preTax: 'Laba sebelum pajak',
+    entryPrice: 'Total biaya masuk', closing: 'balik nama', furnishing: 'perabotan',
+    adrRealization: 'realisasi tarif', opexFloorNote: 'minimum dasar',
+    taxStatusLabel: 'Status pajak', taxResident: 'Residen', taxNonResident: 'Non-residen',
+    taxStatusHint: 'Residen dengan NPWP membayar 10%, non-residen 20%.',
+    irrLabel: 'Imbal hasil selama masa sewa',
+    noCapitalReturn: 'Sampai masa sewa berakhir, properti tidak mengembalikan modal',
+    noCapitalReturnHint: 'Total pendapatan sewa hingga hak sewa berakhir lebih kecil dari biaya masuk.',
     referencesTitle: 'Sampel kecil — menampilkan listing referensi',
     referencesBody: (n: number, plural: string) =>
       `Hanya ${n} ${plural} yang cocok dengan profil vila dalam radius 2 km. Kami tidak mengagregasi — berikut contoh konkretnya.`,
@@ -209,7 +233,15 @@ const COPY = {
     calcSub: 'Déplacez les curseurs. L\'ADR et l\'occupation prennent par défaut la médiane des annonces Booking similaires à proximité ; le prix est ajustable de ±25 %.',
     payback: 'Amortissement', capRate: 'Cap rate',
     howCalced: 'Méthode de calcul',
-    revenue: 'Revenus', platform: 'Plateforme', mgmt: 'Gestion', opex: 'OPEX', tax: 'Taxe', noi: 'NOI',
+    revenue: 'Revenus', platform: 'Plateforme', mgmt: 'Gestion', opex: 'Charges d\'exploitation', tax: 'Impôt', noi: 'Net propriétaire',
+    phr: 'Taxe de séjour', ffe: 'Réserve d\'usure', preTax: 'Bénéfice avant impôt',
+    entryPrice: 'Coût d\'entrée total', closing: 'frais de notaire', furnishing: 'ameublement',
+    adrRealization: 'réalisation du tarif', opexFloorNote: 'minimum de base',
+    taxStatusLabel: 'Statut fiscal', taxResident: 'Résident', taxNonResident: 'Non-résident',
+    taxStatusHint: 'Un résident avec un NPWP indonésien paie 10%, un non-résident 20%.',
+    irrLabel: 'Rendement sur la durée du bail',
+    noCapitalReturn: 'Sur la durée restante du bail, le bien ne rembourse pas la mise',
+    noCapitalReturnHint: 'Le total des loyers jusqu\'à l\'expiration du bail est inférieur au coût d\'entrée.',
     referencesTitle: 'Échantillon réduit — annonces de référence affichées',
     referencesBody: (n: number, plural: string) =>
       `Seulement ${n} ${plural} correspondent au profil de la villa dans un rayon de 2 km. Nous n'agrégeons pas — voici plutôt des exemples concrets.`,
@@ -263,7 +295,15 @@ const COPY = {
     calcSub: 'Bewegen Sie die Regler. ADR und Auslastung entsprechen standardmäßig dem Median ähnlicher Booking-Angebote in der Nähe; der Preis ist um ±25% anpassbar.',
     payback: 'Amortisation', capRate: 'Cap Rate',
     howCalced: 'Wie es berechnet wurde',
-    revenue: 'Umsatz', platform: 'Plattform', mgmt: 'Verwaltung', opex: 'OPEX', tax: 'Steuer', noi: 'NOI',
+    revenue: 'Umsatz', platform: 'Plattform', mgmt: 'Verwaltung', opex: 'Betriebskosten', tax: 'Steuer', noi: 'Netto für Eigentümer',
+    phr: 'Beherbergungssteuer', ffe: 'Abnutzungsrücklage', preTax: 'Gewinn vor Steuern',
+    entryPrice: 'Gesamte Einstiegskosten', closing: 'Abwicklung', furnishing: 'Möblierung',
+    adrRealization: 'Ratenrealisierung', opexFloorNote: 'Grundminimum',
+    taxStatusLabel: 'Steuerstatus', taxResident: 'Ansässig', taxNonResident: 'Nicht ansässig',
+    taxStatusHint: 'Ansässige mit indonesischer NPWP zahlen 10%, Nichtansässige 20%.',
+    irrLabel: 'Rendite über die Pachtdauer',
+    noCapitalReturn: 'Über die Restlaufzeit der Pacht kommt das eingesetzte Kapital nicht zurück',
+    noCapitalReturnHint: 'Die gesamten Mieteinnahmen bis zum Pachtende liegen unter den Einstiegskosten.',
     referencesTitle: 'Kleine Stichprobe — Referenzangebote werden gezeigt',
     referencesBody: (n: number, plural: string) =>
       `Nur ${n} ${plural} entsprachen dem Profil der Villa im Umkreis von 2 km. Wir aggregieren nicht — hier stattdessen konkrete Beispiele.`,
@@ -317,7 +357,15 @@ const COPY = {
     calcSub: '拖动滑块。ADR和入住率默认取附近类似Booking房源的中位数；价格可调整±25%。',
     payback: '回本周期', capRate: '资本化率',
     howCalced: '如何计算',
-    revenue: '收入', platform: '平台', mgmt: '管理', opex: 'OPEX', tax: '税费', noi: 'NOI',
+    revenue: '收入', platform: '平台', mgmt: '管理', opex: '运营支出', tax: '税费', noi: '业主净收入',
+    phr: '住宿税', ffe: '折旧准备金', preTax: '税前利润',
+    entryPrice: '总入手成本', closing: '过户', furnishing: '家具',
+    adrRealization: '房价实现率', opexFloorNote: '基础最低值',
+    taxStatusLabel: '税务身份', taxResident: '居民', taxNonResident: '非居民',
+    taxStatusHint: '持印尼税号的居民缴纳10%，非居民缴纳20%。',
+    irrLabel: '租期内回报率',
+    noCapitalReturn: '在剩余租期内，该物业无法收回投入',
+    noCapitalReturnHint: '到租约期满为止的租金总额低于入手成本。',
     referencesTitle: '样本较小——展示参考房源',
     referencesBody: (n: number, plural: string) =>
       `在2公里半径内只有 ${n} ${plural} 符合别墅的特征。我们不做汇总——而是给出具体示例。`,
@@ -371,7 +419,15 @@ const COPY = {
     calcSub: 'Sleep de schuifregelaars. ADR en bezetting nemen standaard de mediaan van vergelijkbare Booking-advertenties in de buurt; de prijs is met ±25% aanpasbaar.',
     payback: 'Terugverdientijd', capRate: 'Cap rate',
     howCalced: 'Hoe het is berekend',
-    revenue: 'Omzet', platform: 'Platform', mgmt: 'Beheer', opex: 'OPEX', tax: 'Belasting', noi: 'NOI',
+    revenue: 'Omzet', platform: 'Platform', mgmt: 'Beheer', opex: 'Exploitatiekosten', tax: 'Belasting', noi: 'Netto voor eigenaar',
+    phr: 'Verblijfsbelasting', ffe: 'Slijtagereserve', preTax: 'Winst voor belasting',
+    entryPrice: 'Totale instapkosten', closing: 'overdracht', furnishing: 'inrichting',
+    adrRealization: 'tariefrealisatie', opexFloorNote: 'basisminimum',
+    taxStatusLabel: 'Fiscale status', taxResident: 'Ingezetene', taxNonResident: 'Niet-ingezetene',
+    taxStatusHint: 'Een ingezetene met Indonesische NPWP betaalt 10%, een niet-ingezetene 20%.',
+    irrLabel: 'Rendement over de pachttermijn',
+    noCapitalReturn: 'Binnen de resterende pachttermijn verdient het object de inleg niet terug',
+    noCapitalReturnHint: 'De totale huurinkomsten tot het einde van de pacht zijn lager dan de instapkosten.',
     referencesTitle: 'Kleine steekproef — referentieadvertenties getoond',
     referencesBody: (n: number, plural: string) =>
       `Slechts ${n} ${plural} kwamen overeen met het profiel van de villa binnen een straal van 2 km. We aggregeren niet — hier in plaats daarvan concrete voorbeelden.`,
@@ -425,7 +481,15 @@ const COPY = {
     calcSub: 'Sred slider. ADR lan okupansi default nganggen median listing Booking pateh ring sisi; aji dados kasesuaiang ±25%.',
     payback: 'Balik modal', capRate: 'Cap rate',
     howCalced: 'Sapunapi itunganne',
-    revenue: 'Pikolih', platform: 'Platform', mgmt: 'Pangelola', opex: 'OPEX', tax: 'Pajak', noi: 'NOI',
+    revenue: 'Pikolih', platform: 'Platform', mgmt: 'Pangelola', opex: 'Prabea operasional', tax: 'Pajak', noi: 'Bersih ring sang nuwenang',
+    phr: 'Pajak hotel (PHR)', ffe: 'Cadangan panyusutan', preTax: 'Bati sadurung pajak',
+    entryPrice: 'Total prabea ngranjing', closing: 'balik nama', furnishing: 'prabot',
+    adrRealization: 'realisasi tarif', opexFloorNote: 'minimum dasar',
+    taxStatusLabel: 'Status pajak', taxResident: 'Residen', taxNonResident: 'Non-residen',
+    taxStatusHint: 'Residen sane madue NPWP naur 10%, non-residen 20%.',
+    irrLabel: 'Asil salami masa sewa',
+    noCapitalReturn: 'Kantos masa sewa puput, properti nenten mawali modal',
+    noCapitalReturnHint: 'Total pikolih sewa kantos hak sewa puput kirang saking prabea ngranjing.',
     referencesTitle: 'Sampel cenik — nyinahang listing referensi',
     referencesBody: (n: number, plural: string) =>
       `Wantah ${n} ${plural} sane cocok sareng profil vila ring radius 2 km. Tiang nenten ngagregasi — puniki conto konkret.`,
@@ -479,7 +543,15 @@ const COPY = {
     calcSub: 'Przesuń suwaki. ADR i obłożenie domyślnie przyjmują medianę podobnych pobliskich ogłoszeń Booking; cenę można zmieniać o ±25%.',
     payback: 'Zwrot', capRate: 'Cap rate',
     howCalced: 'Jak to obliczono',
-    revenue: 'Przychód', platform: 'Platforma', mgmt: 'Zarządzanie', opex: 'OPEX', tax: 'Podatek', noi: 'NOI',
+    revenue: 'Przychód', platform: 'Platforma', mgmt: 'Zarządzanie', opex: 'Koszty operacyjne', tax: 'Podatek', noi: 'Netto dla właściciela',
+    phr: 'Podatek od zakwaterowania', ffe: 'Rezerwa na zużycie', preTax: 'Zysk przed opodatkowaniem',
+    entryPrice: 'Całkowity koszt wejścia', closing: 'formalności', furnishing: 'umeblowanie',
+    adrRealization: 'realizacja stawki', opexFloorNote: 'minimum bazowe',
+    taxStatusLabel: 'Status podatkowy', taxResident: 'Rezydent', taxNonResident: 'Nierezydent',
+    taxStatusHint: 'Rezydent z indonezyjskim NPWP płaci 10%, nierezydent 20%.',
+    irrLabel: 'Zwrot w okresie dzierżawy',
+    noCapitalReturn: 'W pozostałym okresie dzierżawy obiekt nie zwraca włożonego kapitału',
+    noCapitalReturnHint: 'Suma przychodów z najmu do końca dzierżawy jest niższa niż koszt wejścia.',
     referencesTitle: 'Mała próba — pokazujemy ogłoszenia referencyjne',
     referencesBody: (n: number, plural: string) =>
       `Tylko ${n} ${plural} pasowało do profilu willi w promieniu 2 km. Nie agregujemy — zamiast tego oto konkretne przykłady.`,
@@ -533,7 +605,15 @@ const COPY = {
     calcSub: 'Пересувайте повзунки. ADR і заповнюваність за замовчуванням беруть медіану схожих сусідніх оголошень Booking; ціну можна змінювати на ±25%.',
     payback: 'Окупність', capRate: 'Cap rate',
     howCalced: 'Як це розраховано',
-    revenue: 'Дохід', platform: 'Платформа', mgmt: 'Управління', opex: 'OPEX', tax: 'Податок', noi: 'NOI',
+    revenue: 'Дохід', platform: 'Платформа', mgmt: 'Управління', opex: 'Операційні витрати', tax: 'Податок', noi: 'Чистими власнику',
+    phr: 'Податок на проживання', ffe: 'Резерв на знос', preTax: 'Прибуток до податку',
+    entryPrice: 'Ціна входу', closing: 'оформлення', furnishing: 'умеблювання',
+    adrRealization: 'реалізація ставки', opexFloorNote: 'базовий мінімум',
+    taxStatusLabel: 'Податковий статус', taxResident: 'Резидент', taxNonResident: 'Нерезидент',
+    taxStatusHint: 'Резидент з індонезійським NPWP сплачує 10%, нерезидент — 20%.',
+    irrLabel: 'Дохідність за строк оренди',
+    noCapitalReturn: 'За решту строку лізхолду обʼєкт не повертає вкладене',
+    noCapitalReturnHint: 'Сума всіх орендних надходжень до кінця права оренди менша за ціну входу.',
     referencesTitle: 'Мала вибірка — показуємо референсні оголошення',
     referencesBody: (n: number, plural: string) =>
       `Лише ${n} ${plural} відповідають профілю вілли в радіусі 2 км. Ми не агрегуємо — натомість ось конкретні приклади.`,
@@ -691,23 +771,31 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
 
   // ADR slider band derived from the competitor percentiles (p25…p75),
   // widened so the user can explore a bit beyond the observed range.
-  const adrLo = Math.max(1, Math.floor(sc.bad.adr * 0.6))
-  const adrHi = Math.max(adrLo + 1, Math.ceil(sc.good.adr * 1.5))
+  const adrLo = Math.max(1, Math.floor(sc.bad.adrAsking * 0.6))
+  const adrHi = Math.max(adrLo + 1, Math.ceil(sc.good.adrAsking * 1.5))
 
   const [price, setPrice] = useState<number>(basePrice ?? 0)
-  const [adr, setAdr] = useState<number>(sc.median.adr)
+  // Ползунок ходит по ставке из выдачи соседей; коэффициент реализации
+  // применяется внутри расчёта, поэтому пользователь двигает ровно то число,
+  // которое видит в карточках конкурентов ниже.
+  const [adr, setAdr] = useState<number>(sc.median.adrAsking)
   const [occ, setOcc] = useState<number>(Math.round(snap.region.occupancyByScenario.median * 100))
   const [mgmt, setMgmt] = useState<number>(Math.round(snap.region.mgmtFeePct * 100))
+  const [taxStatus, setTaxStatus] = useState<TaxStatus>('nonResident')
   const [open, setOpen] = useState(false)
 
   const e: Economics = useMemo(() => computeEconomics({
     adr,
     occupancy: occ / 100,
+    adrRealization: snap.region.adrRealizationByScenario.median,
+    phrOwnerShare: snap.region.phrOwnerShareByScenario.median,
     area: snap.villa.area,
+    bedrooms: snap.villa.bedrooms,
     askingPrice: basePrice != null ? price : null,
     leaseholdYearsLeft: snap.villa.leaseholdYearsLeft,
+    taxStatus,
     region: { ...snap.region, mgmtFeePct: mgmt / 100 },
-  }), [adr, occ, mgmt, price, basePrice, snap])
+  }), [adr, occ, mgmt, price, basePrice, taxStatus, snap])
 
   const priceLo = basePrice != null ? Math.round(basePrice * 0.75) : 0
   const priceHi = basePrice != null ? Math.round(basePrice * 1.25) : 0
@@ -735,13 +823,48 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
         <RentalComps lat={snap.villa.lat} lng={snap.villa.lng} adr={adr} lang={lang} />
       )}
 
-      <div className="mt-6 pt-4 border-t border-[var(--color-border)] flex flex-wrap items-baseline gap-x-8 gap-y-2">
+      <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2">
+        <span className="text-[13px] text-[var(--color-text-muted)]">{t.taxStatusLabel}</span>
+        <div className="inline-flex rounded-lg border border-[var(--color-border)] p-0.5">
+          {(['nonResident', 'resident'] as const).map(key => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setTaxStatus(key)}
+              aria-pressed={taxStatus === key}
+              className={`px-3 py-1 text-[12px] rounded-md cursor-pointer transition-colors ${
+                taxStatus === key
+                  ? 'bg-[var(--color-primary)] text-white'
+                  : 'text-[var(--color-text-muted)] hover:text-[#111827]'
+              }`}
+            >
+              {key === 'resident' ? t.taxResident : t.taxNonResident}
+            </button>
+          ))}
+        </div>
+        <span className="text-[12px] text-[var(--color-text-muted)]">{t.taxStatusHint}</span>
+      </div>
+
+      <div className="mt-5 pt-4 border-t border-[var(--color-border)] flex flex-wrap items-baseline gap-x-8 gap-y-2">
         <div className="text-[30px] font-semibold text-[#111827] leading-none">
           {fmtUsd(e.noi)}<span className="text-[14px] font-normal text-[var(--color-text-muted)]">{t.perYearNoi}</span>
         </div>
         <div className="text-[13px] text-[var(--color-text-muted)]">{t.payback}: <span className="text-[#111827] font-medium">{fmtYears(e.payback, lang)}</span></div>
         <div className="text-[13px] text-[var(--color-text-muted)]">{t.capRate}: <span className="text-[#111827] font-medium">{fmtPct(e.capRate)}</span></div>
+        {e.leaseholdIrr != null && (
+          <div className="text-[13px] text-[var(--color-text-muted)]">{t.irrLabel}: <span className="text-[#111827] font-medium">{fmtPct(e.leaseholdIrr)}</span></div>
+        )}
       </div>
+
+      {e.capitalReturned === false && (
+        <div className="mt-3 rounded-xl border border-[#FCA5A5] bg-[#FEF2F2] px-4 py-3">
+          <div className="text-[13px] font-medium text-[#991B1B]">
+            {t.noCapitalReturn}
+            {snap.villa.leaseholdYearsLeft != null ? ` — ${fmtYears(snap.villa.leaseholdYearsLeft, lang)}` : ''}
+          </div>
+          <div className="text-[12px] text-[#B91C1C] mt-0.5">{t.noCapitalReturnHint}</div>
+        </div>
+      )}
 
       <button
         type="button"
@@ -752,12 +875,27 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
       </button>
       {open && (
         <ul className="mt-2 text-[12px] text-[var(--color-text)] space-y-0.5 border-t border-[var(--color-border)] pt-2">
-          <li>{t.revenue}: {fmtUsd(e.revenue)}</li>
+          <li>
+            {t.revenue}: {fmtUsd(e.revenue)}
+            <span className="text-[var(--color-text-muted)]"> · {fmtUsd(Math.round(e.adr * fxRate))} × 365 × {Math.round(e.occupancy * 100)}%</span>
+          </li>
+          <li className="text-[var(--color-text-muted)]">
+            {t.adrRealization}: {Math.round(snap.region.adrRealizationByScenario.median * 100)}% · {fmtUsd(Math.round(e.adrAsking * fxRate))} → {fmtUsd(Math.round(e.adr * fxRate))}
+          </li>
           <li>− {t.platform} ({Math.round(snap.region.platformFeePct * 100)}%): {fmtUsd(e.platformFee)}</li>
+          <li>− {t.phr} ({Math.round(snap.region.phrRatePct * 100)}% × {Math.round(snap.region.phrOwnerShareByScenario.median * 100)}%): {fmtUsd(e.phrTax)}</li>
           <li>− {t.mgmt} ({mgmt}%): {fmtUsd(e.mgmtFee)}</li>
-          <li>− {t.opex} ({snap.region.opexPerSqmMonth} {opexUnit}): {fmtUsd(e.opex)}</li>
-          <li>− {t.tax} ({Math.round(snap.region.taxRate * 100)}%): {fmtUsd(e.tax)}</li>
+          <li>− {t.opex} ({e.opexAtFloor ? t.opexFloorNote : `${snap.region.opexPerSqmMonth} ${opexUnit}`}): {fmtUsd(e.opex)}</li>
+          <li>− {t.ffe} ({Math.round(snap.region.ffeReservePct * 100)}%): {fmtUsd(e.ffeReserve)}</li>
+          <li className="pt-1 border-t border-[var(--color-border)] mt-1">= {t.preTax}: {fmtUsd(e.preTaxProfit)}</li>
+          <li>− {t.tax} ({Math.round((taxStatus === 'resident' ? snap.region.taxRateResident : snap.region.taxRateNonResident) * 100)}%): {fmtUsd(e.tax)}</li>
           <li className="pt-1 border-t border-[var(--color-border)] mt-1 font-medium">= {t.noi}: {fmtUsd(e.noi)}</li>
+          {e.entryPrice != null && (
+            <li className="pt-2 mt-1 border-t border-[var(--color-border)] text-[var(--color-text-muted)]">
+              {t.entryPrice}: {fmtUsd(Math.round(e.entryPrice * fxRate))} · {fmtUsd(Math.round(price * fxRate))} + {t.closing} {fmtUsd(Math.round(e.closingCost * fxRate))}
+              {e.furnishing > 0 ? ` + ${t.furnishing} ${fmtUsd(Math.round(e.furnishing * fxRate))}` : ''}
+            </li>
+          )}
         </ul>
       )}
     </div>

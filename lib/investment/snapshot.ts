@@ -148,7 +148,10 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
     const pcts = adrPercentiles(matchResult.matches)
     scenarios = buildScenarios(
       pcts,
-      { area, askingPrice, leaseholdYearsLeft, region },
+      // Налоговый статус по умолчанию — нерезидент: большинство покупателей
+      // не имеют индонезийского NPWP, и это консервативная сторона.
+      // В виджете статус переключается.
+      { area, bedrooms, askingPrice, leaseholdYearsLeft, taxStatus: 'nonResident', region },
       region.occupancyByScenario,
     )
   }
