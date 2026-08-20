@@ -1223,7 +1223,7 @@ function Slider({
           type="range"
           min={min} max={max} step={step} value={clamped}
           onChange={ev => onChange(Number(ev.target.value))}
-          className="w-full h-1.5 cursor-pointer accent-[var(--color-primary)]"
+          className="range-clean w-full h-1.5 cursor-pointer accent-[var(--color-primary)]"
         />
       </div>
     )

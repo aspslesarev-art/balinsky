@@ -320,6 +320,16 @@ html:not([data-auth='1']) .bx-gate-cta {
   appearance: none;
   background: transparent;
 }
+/* Клик по ползунку оставлял вокруг всей дорожки прямоугольную обводку
+   фокуса — на тонкой полоске она читается как рамка и мешает видеть
+   зоны. Убираем её, но не доступность: с клавиатуры фокус виден кольцом
+   на самом бегунке. */
+.range-bare:focus,
+.range-clean:focus { outline: none; }
+.range-bare:focus-visible::-webkit-slider-thumb,
+.range-clean:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rgba(51, 164, 116, 0.35); }
+.range-bare:focus-visible::-moz-range-thumb,
+.range-clean:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 3px rgba(51, 164, 116, 0.35); }
 .range-bare::-webkit-slider-runnable-track { background: transparent; height: 6px; }
 .range-bare::-moz-range-track { background: transparent; height: 6px; }
 .range-bare::-webkit-slider-thumb {
