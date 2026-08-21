@@ -1,0 +1,669 @@
+<title>Вилла Sunyi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Karla:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#E6E7DE; --surface:#F2F2EC; --sunk:#DDDFD2;
+  --ink:#14170F; --ink-2:#434A3B; --muted:#767D6B; --line:#CBCEBE; --line-soft:#DCDECF;
+  --pays:#0A7D5E; --costs:#B4401A; --brass:#8A6B2C;
+  --pays-soft:#0A7D5E22; --costs-soft:#B4401A22;
+  --checker:#14170F;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0E110D; --surface:#171B15; --sunk:#12160F;
+    --ink:#E6E8DD; --ink-2:#B4BAA7; --muted:#868C79; --line:#2C3327; --line-soft:#222720;
+    --pays:#28A183; --costs:#D9713F; --brass:#C2A15C;
+    --pays-soft:#28A18326; --costs-soft:#D9713F26;
+    --checker:#E6E8DD;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0E110D; --surface:#171B15; --sunk:#12160F;
+  --ink:#E6E8DD; --ink-2:#B4BAA7; --muted:#868C79; --line:#2C3327; --line-soft:#222720;
+  --pays:#28A183; --costs:#D9713F; --brass:#C2A15C;
+  --pays-soft:#28A18326; --costs-soft:#D9713F26;
+  --checker:#E6E8DD;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:Karla,"Helvetica Neue",Arial,sans-serif; font-size:17px; line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1080px; margin:0 auto; padding:0 24px 96px}
+.col{max-width:660px}
+h1,h2,h3{font-family:Newsreader,Georgia,"Times New Roman",serif; font-weight:500; text-wrap:balance; margin:0}
+h1{font-size:clamp(38px,7vw,68px); line-height:1.04; letter-spacing:-.015em}
+h2{font-size:clamp(26px,3.6vw,36px); line-height:1.14; margin-bottom:14px}
+h3{font-size:21px; line-height:1.25; margin:34px 0 8px; font-weight:600}
+p{margin:0 0 16px}
+a{color:var(--pays)}
+strong{font-weight:700}
+em{font-style:italic}
+.eyebrow{
+  font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11.5px; font-weight:500;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--brass); margin:0 0 10px;
+}
+.lede{font-size:20px; line-height:1.55; color:var(--ink-2)}
+.muted{color:var(--muted)}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums}
+
+/* poleng — балийская чёрно-белая клетка как разделитель разделов */
+.poleng{height:16px; margin:64px 0 38px; border-block:1px solid var(--line);
+  background-image:conic-gradient(var(--checker) 25%, transparent 0 50%, var(--checker) 0 75%, transparent 0);
+  background-size:16px 16px; opacity:.42}
+
+header.hero{padding:72px 0 0}
+.hero .kicker{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:26px}
+.tag{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11.5px; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--ink-2); border:1px solid var(--line); border-radius:2px; padding:4px 9px}
+.hero h1 em{font-family:Newsreader; font-style:italic; color:var(--brass)}
+.hero .lede{margin-top:22px; max-width:620px}
+
+.stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(168px,1fr)); gap:12px; margin:44px 0 0}
+.stat{background:var(--surface); border:1px solid var(--line-soft); padding:18px 20px}
+.stat .v{font-family:Newsreader,Georgia,serif; font-size:34px; line-height:1; font-variant-numeric:tabular-nums}
+.stat .v.pays{color:var(--pays)} .stat .v.costs{color:var(--costs)}
+.stat .k{font-size:13.5px; color:var(--muted); margin-top:8px; line-height:1.35}
+
+section{margin-top:0}
+.note{font-size:14px; color:var(--muted); line-height:1.5}
+
+/* ——— диаграмма премий ——— */
+.chart{border:1px solid var(--line); background:var(--surface); padding:22px 20px 16px; margin:26px 0 10px}
+.legend{display:flex; gap:18px; flex-wrap:wrap; align-items:center; margin-bottom:18px;
+  font-size:13.5px; color:var(--ink-2)}
+.legend span{display:inline-flex; align-items:center; gap:7px}
+.swatch{width:16px; height:9px; border-radius:2px; display:inline-block}
+.sw-pays{background:var(--pays)} .sw-costs{background:var(--costs)}
+.rows{display:grid; gap:5px}
+.row{display:grid; grid-template-columns:minmax(122px,190px) 1fr 52px 60px; gap:10px; align-items:center;
+  font-size:13.5px; position:relative}
+.row .lab{color:var(--ink-2); line-height:1.25}
+.row.hi .lab{color:var(--ink); font-weight:700}
+.track{position:relative; height:16px; background:var(--sunk); border-radius:2px; overflow:hidden}
+.track::before{content:""; position:absolute; left:31.58%; top:0; bottom:0; width:1px; background:var(--line); z-index:2}
+.fill{position:absolute; top:2px; bottom:2px; left:var(--l); width:var(--w);
+  background:var(--pays); border-radius:0 4px 4px 0}
+.fill.neg{background:var(--costs); border-radius:4px 0 0 4px}
+.row .val{font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums;
+  text-align:right; font-size:13px}
+.row .n{font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums;
+  text-align:right; font-size:12px; color:var(--muted)}
+.row:hover .track{outline:1px solid var(--line); outline-offset:1px}
+.row .tip{position:absolute; left:0; bottom:calc(100% + 6px); z-index:5; display:none;
+  background:var(--ink); color:var(--ground); font-size:12.5px; line-height:1.4; padding:6px 9px;
+  border-radius:3px; max-width:320px; pointer-events:none}
+.row:hover .tip, .row:focus-within .tip{display:block}
+.axis{display:grid; grid-template-columns:minmax(122px,190px) 1fr 52px 60px; gap:10px;
+  margin-top:10px; font-size:11.5px; color:var(--muted)}
+.axis .ticks{position:relative; height:14px}
+.axis .ticks span{position:absolute; transform:translateX(-50%);
+  font-family:"IBM Plex Mono",ui-monospace,monospace}
+
+/* ——— таблицы ——— */
+.tablewrap{overflow-x:auto; border:1px solid var(--line); background:var(--surface); margin:22px 0}
+table{border-collapse:collapse; width:100%; min-width:520px; font-size:14.5px}
+th,td{text-align:left; padding:10px 14px; border-bottom:1px solid var(--line-soft)}
+thead th{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11px; letter-spacing:.09em;
+  text-transform:uppercase; color:var(--muted); font-weight:500; border-bottom:1px solid var(--line)}
+tbody tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right; font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums}
+tr.accent td{background:var(--pays-soft)}
+tr.accent td:first-child{font-weight:700}
+td .sub{color:var(--muted); font-size:12.5px}
+
+/* ——— карточки правил / сцен ——— */
+.cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(248px,1fr)); gap:14px; margin:24px 0}
+.card{background:var(--surface); border:1px solid var(--line-soft); padding:18px 20px 20px}
+.card .idx{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11.5px; color:var(--brass);
+  letter-spacing:.1em; margin-bottom:9px}
+.card h4{margin:0 0 6px; font-size:16.5px; font-family:Karla,sans-serif; font-weight:700; line-height:1.3}
+.card p{margin:0; font-size:14.5px; color:var(--ink-2); line-height:1.5}
+
+figure{margin:26px 0}
+figure svg{width:100%; height:auto; display:block; border:1px solid var(--line); background:var(--surface)}
+figcaption{font-size:13.5px; color:var(--muted); margin-top:10px; line-height:1.5}
+
+.callouts{display:grid; grid-template-columns:repeat(auto-fit,minmax(232px,1fr)); gap:10px 26px; margin:18px 0 0;
+  font-size:14px; list-style:none; padding:0}
+.callouts li{display:grid; grid-template-columns:22px 1fr; gap:9px; color:var(--ink-2); line-height:1.4}
+.callouts b{font-family:"IBM Plex Mono",ui-monospace,monospace; color:var(--pays); font-weight:500}
+
+blockquote{margin:30px 0; padding:0 0 0 20px; border-left:2px solid var(--brass);
+  font-family:Newsreader,Georgia,serif; font-size:22px; line-height:1.4; font-style:italic; color:var(--ink)}
+ol.plain,ul.plain{padding-left:20px; margin:0 0 18px}
+ol.plain li,ul.plain li{margin-bottom:9px}
+
+footer{margin-top:12px; padding-top:22px; border-top:1px solid var(--line); font-size:13.5px; color:var(--muted)}
+@media (max-width:640px){
+  body{font-size:16px}
+  .row{grid-template-columns:minmax(96px,1fr) 1fr 46px; }
+  .row .n{display:none}
+  .axis{grid-template-columns:minmax(96px,1fr) 1fr 46px}
+  .wrap{padding:0 18px 72px}
+  .axis .ticks span.t-opt{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="kicker">
+    <span class="tag">Продуктовая концепция</span>
+    <span class="tag">21 001 объект аренды</span>
+    <span class="tag">4 101 прайс застройщиков</span>
+    <span class="tag">август 2026</span>
+  </div>
+  <h1>Вилла, <em>которая молчит</em></h1>
+  <p class="lede">Дешёвая балийская вилла с видом на овраг и умным домом, который не видно ни на одной фотографии. Ниже — что из этого брифа подтверждается рыночными данными Баринского, что данные поправляют, и во что это складывается по деньгам.</p>
+
+  <div class="stats">
+    <div class="stat"><div class="v pays">×1.34</div><div class="k">балийский стиль <b>при отделке уровня 4+</b> — против ×1.24 у modern tropical <span class="mono muted">n=342</span></div></div>
+    <div class="stat"><div class="v costs">×0.58</div><div class="k">«компактная» вилла к соседям по страте. Экономить на площади нельзя <span class="mono muted">n=107</span></div></div>
+    <div class="stat"><div class="v">×1.04</div><div class="k">вид на рисовые поля. Практически ноль — платит овраг, а не сава <span class="mono muted">n=518</span></div></div>
+    <div class="stat"><div class="v mono">0</div><div class="k">упоминаний умного дома в 10 861 описании вилл на рынке аренды</div></div>
+  </div>
+</header>
+
+<div class="poleng"></div>
+
+<section class="col">
+  <p class="eyebrow">01 — что оплачивает рынок</p>
+  <h2>Разброс по качеству в разы больше разброса по стилю</h2>
+  <p>Каждый признак посчитан как доля от медианы своей страты «зона × тип × число спален» — иначе «инфинити-бассейн» окажется премией за Улувату, а не за бассейн. В выборке 8 082 виллы, у которых страта содержит не меньше восьми объектов.</p>
+</section>
+
+<div class="chart">
+  <div class="legend">
+    <span><i class="swatch sw-pays"></i> рынок доплачивает</span>
+    <span><i class="swatch sw-costs"></i> рынок штрафует</span>
+    <span class="muted">медиана RevPAR к соседям по страте · наведите на строку</span>
+  </div>
+  <div class="rows">
+    <div class="row" tabindex="0">
+      <div class="lab">Отделка уровня 5</div>
+      <div class="track"><div class="fill" style="--l:31.58%;--w:65.26%"></div></div>
+      <div class="val">×2.24</div>
+      <div class="n">n=130</div>
+      <div class="tip">Дизайнерская отделка с камнем и столяркой на заказ. Редкость: 130 вилл из 8 082.</div>
+    </div>
+    <div class="row" tabindex="0">
+      <div class="lab">Дизайн-цельность 5</div>
+      <div class="track"><div class="fill" style="--l:31.58%;--w:43.16%"></div></div>
+      <div class="val">×1.82</div>
+      <div class="n">n=212</div>
+      <div class="tip">Единый замысел во всех помещениях — не отдельные дорогие детали, а цельность.</div>
+    </div>
+    <div class="row hi" tabindex="0">
+      <div class="lab">Инфинити-бассейн</div>
+      <div class="track"><div class="fill" style="--l:31.58%;--w:36.32%"></div></div>
+      <div class="val">×1.69</div>
+      <div class="n">n=73</div>
+      <div class="tip">Есть у 1 % рынка. На террасированном склоне переливной край почти не удорожает бассейн.</div>
+    </div>
+    <div class="row" tabindex="0">
+      <div class="lab">Полный вид на океан</div>
+      <div class="track"><div class="fill" style="--l:31.58%;--w:28.42%"></div></div>
+      <div class="val">×1.54</div>
+      <div class="n">n=154</div>
+      <div class="tip">Самая дорогая премия по виду — и самая дорогая земля.</div>
+    </div>
+    <div class="row hi" tabindex="0">
+      <div class="lab">Вид в ущелье / на реку</div>
+      <div class="track"><div class="fill" style="--l:31.58%;--w:18.42%"></div></div>
+      <div class="val">×1.35</div>
+      <div class="n">n=37</div>
+      <div class="tip">n=37 — это наблюдение, а не вывод: сегмент слишком мал для тенденции.</div>
+    </div>
+    <div class="row hi" tabindex="0">
+      <div class="lab">Отделка уровня 4</div>
+      <div class="track"><div class="fill" style="--l:31.58%;--w:13.68%"></div></div>
+      <div class="val">×1.26</div>
+      <div class="n">n=3 109</div>
+      <div class="tip">Опорный уровень концепции: чистый современный mid-market, достижимый в бюджете.</div>
+    </div>
+    <div class="row hi" tabindex="0">
+      <div class="lab">Вид на джунгли</div>
+      <div class="track"><div class="fill" style="--l:31.58%;--w:11.05%"></div></div>
+      <div class="val">×1.21</div>
+      <div class="n">n=601</div>
+      <div class="tip">Самая надёжная зелёная премия: большая выборка, устойчивый эффект.</div>
+    </div>
+    <div class="row" tabindex="0">
+      <div class="lab">Микроцемент</div>
+      <div class="track"><div class="fill" style="--l:31.58%;--w:9.47%"></div></div>
+      <div class="val">×1.18</div>
+      <div class="n">n=256</div>
+      <div class="tip">Дешевле камня, читается как дорогая отделка. Рабочая замена плитке в санузлах.</div>
+    </div>
+    <div class="row hi" tabindex="0">
+      <div class="lab">Панорамное остекление</div>
+      <div class="track"><div class="fill" style="--l:31.58%;--w:7.37%"></div></div>
+      <div class="val">×1.14</div>
+      <div class="n">n=2 797</div>
+      <div class="tip">Даёт ощущение объёма без лишних квадратных метров.</div>
+    </div>
+    <div class="row hi" tabindex="0">
+      <div class="lab">Крыша аланг-аланг</div>
+      <div class="track"><div class="fill" style="--l:31.58%;--w:5.79%"></div></div>
+      <div class="val">×1.11</div>
+      <div class="n">n=1 022</div>
+      <div class="tip">Работает только вместе с открытой гостиной: без неё ×1.26 против ×1.31 у закрытой коробки.</div>
+    </div>
+    <div class="row hi" tabindex="0">
+      <div class="lab">Дизайн-цельность 4</div>
+      <div class="track"><div class="fill" style="--l:31.58%;--w:5.26%"></div></div>
+      <div class="val">×1.10</div>
+      <div class="n">n=5 207</div>
+      <div class="tip">Второй опорный уровень концепции.</div>
+    </div>
+    <div class="row hi" tabindex="0">
+      <div class="lab">Сала / газебо</div>
+      <div class="track"><div class="fill" style="--l:31.58%;--w:3.16%"></div></div>
+      <div class="val">×1.06</div>
+      <div class="n">n=782</div>
+      <div class="tip">Дешёвая постройка, вечерняя точка и кадр для соцсетей.</div>
+    </div>
+    <div class="row hi" tabindex="0">
+      <div class="lab">Вид на рисовые поля</div>
+      <div class="track"><div class="fill" style="--l:31.58%;--w:2.11%"></div></div>
+      <div class="val">×1.04</div>
+      <div class="n">n=518</div>
+      <div class="tip">Вопреки ожиданиям — почти ноль. За участок с видом на сава переплачивать не за что.</div>
+    </div>
+    <div class="row" tabindex="0">
+      <div class="lab">Тик</div>
+      <div class="track"><div class="fill" style="--l:31.58%;--w:0.60%"></div></div>
+      <div class="val">×1.00</div>
+      <div class="n">n=6 211</div>
+      <div class="tip">Есть у всех. Ожидания создаёт, премии не даёт.</div>
+    </div>
+    <div class="row" tabindex="0">
+      <div class="lab">Бамбук</div>
+      <div class="track"><div class="fill neg" style="--l:29.47%;--w:2.11%"></div></div>
+      <div class="val">×0.96</div>
+      <div class="n">n=222</div>
+      <div class="tip">Как основной материал уходит в минус: читается как бюджетное решение. Только декор.</div>
+    </div>
+    <div class="row" tabindex="0">
+      <div class="lab">Плунж-бассейн</div>
+      <div class="track"><div class="fill neg" style="--l:27.37%;--w:4.21%"></div></div>
+      <div class="val">×0.92</div>
+      <div class="n">n=564</div>
+      <div class="tip">Маленький бассейн хуже, чем обычный частный (×1.05).</div>
+    </div>
+    <div class="row" tabindex="0">
+      <div class="lab">Отделка уровня 3</div>
+      <div class="track"><div class="fill neg" style="--l:24.74%;--w:6.84%"></div></div>
+      <div class="val">×0.87</div>
+      <div class="n">n=4 358</div>
+      <div class="tip">Средний по рынку уровень — и есть та яма, из которой концепция выходит.</div>
+    </div>
+    <div class="row" tabindex="0">
+      <div class="lab">Без бассейна</div>
+      <div class="track"><div class="fill neg" style="--l:16.84%;--w:14.74%"></div></div>
+      <div class="val">×0.72</div>
+      <div class="n">n=463</div>
+      <div class="tip">Приговор для виллы на 1–2 спальни.</div>
+    </div>
+    <div class="row hi" tabindex="0">
+      <div class="lab">«Компактная» вилла</div>
+      <div class="track"><div class="fill neg" style="--l:9.47%;--w:22.11%"></div></div>
+      <div class="val">×0.58</div>
+      <div class="n">n=107</div>
+      <div class="tip">Ощущение тесноты обрушивает ставку сильнее, чем любой другой признак кроме отделки уровня 2.</div>
+    </div>
+    <div class="row" tabindex="0">
+      <div class="lab">Отделка уровня 2</div>
+      <div class="track"><div class="fill neg" style="--l:3.68%;--w:27.89%"></div></div>
+      <div class="val">×0.47</div>
+      <div class="n">n=479</div>
+      <div class="tip">Голая плитка и гипсокартон.</div>
+    </div>
+  </div>
+  <div class="axis"><div></div><div class="ticks"><span class="t-opt" style="left:5.26%">×0.50</span><span class="t-opt" style="left:18.42%">×0.75</span><span style="left:31.58%">×1.00</span><span style="left:57.89%">×1.50</span><span style="left:84.21%">×2.00</span></div><div></div><div></div></div>
+</div>
+
+<p class="note col">Загрузка в этом разрезе почти всегда ×1.00: рынок реагирует на продукт ставкой, а не заполняемостью. Отдельно об этом — в разделе «чем это можно опровергнуть».</p>
+
+<div class="poleng"></div>
+
+<section class="col">
+  <p class="eyebrow">02 — поправки к брифу</p>
+  <h2>Три вещи, которые данные меняют в задании</h2>
+</section>
+
+<section class="col">
+  <h3>Аутентичность не дешевит объект — дешевит плохое исполнение</h3>
+  <p>Сырая цифра пугает: <span class="mono">balinese_traditional = ×0.88</span> на 1 156 виллах. Но если разрезать по качеству, знак меняется на противоположный.</p>
+</section>
+
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Стиль</th><th>Отделка ≥4 и цельность ≥4</th><th class="num">× к ADR</th><th class="num">n</th></tr></thead>
+  <tbody>
+    <tr class="accent"><td>Балийский традиционный</td><td>да</td><td class="num">1.34</td><td class="num">342</td></tr>
+    <tr><td>Балийский традиционный</td><td>нет</td><td class="num">0.78</td><td class="num">814</td></tr>
+    <tr><td>Modern tropical</td><td>да</td><td class="num">1.24</td><td class="num">2 184</td></tr>
+    <tr><td>Modern tropical</td><td>нет</td><td class="num">0.90</td><td class="num">3 068</td></tr>
+    <tr><td>Rustic wood</td><td>да</td><td class="num">1.54</td><td class="num">51</td></tr>
+    <tr><td>Minimalist</td><td>да</td><td class="num">1.20</td><td class="num">68</td></tr>
+  </tbody>
+</table>
+</div>
+
+<section class="col">
+  <p>Балийский стиль, сделанный хорошо, обгоняет modern tropical, сделанный хорошо. Скидка ×0.88 — это 814 старых объектов, а не эстетика. <strong>Бриф верен: аутентичность продаётся. Но продаёт её качество, а не орнамент.</strong></p>
+  <p>Внутри хорошо отделанных вилл на 1–2 спальни балийские элементы добавляют ещё до 26 %:</p>
+</section>
+
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Комбинация</th><th class="num">× RevPAR</th><th class="num">n</th></tr></thead>
+  <tbody>
+    <tr class="accent"><td>Аланг-аланг + открытая гостиная + сала</td><td class="num">1.65</td><td class="num">28</td></tr>
+    <tr><td>Аланг-аланг + открытая гостиная</td><td class="num">1.57</td><td class="num">95</td></tr>
+    <tr><td>Открытая гостиная + сала</td><td class="num">1.48</td><td class="num">31</td></tr>
+    <tr><td>Только открытая гостиная</td><td class="num">1.34</td><td class="num">446</td></tr>
+    <tr><td>Ни того, ни другого (закрытая коробка)</td><td class="num">1.31</td><td class="num">506</td></tr>
+    <tr><td>Аланг-аланг без открытой гостиной</td><td class="num">1.26</td><td class="num">32</td></tr>
+  </tbody>
+</table>
+</div>
+
+<section class="col">
+  <p class="note">Несущий элемент — открытая гостиная. Крыша из аланг-аланга без неё не окупается: ×1.26 против ×1.31 у обычной закрытой виллы того же уровня отделки.</p>
+
+  <h3>«Дешёвая» не должна означать «маленькая»</h3>
+  <p>Ощущение тесноты — второй по силе разрушитель ставки после плохой отделки.</p>
+</section>
+
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Ощущение объёма</th><th>Отделка ≥4 и цельность ≥4</th><th class="num">× RevPAR</th><th class="num">ADR медиана</th><th class="num">n</th></tr></thead>
+  <tbody>
+    <tr><td>Просторная</td><td>да</td><td class="num">1.48</td><td class="num">$174</td><td class="num">716</td></tr>
+    <tr class="accent"><td>Комфортная</td><td>да</td><td class="num">1.19</td><td class="num">$136</td><td class="num">421</td></tr>
+    <tr><td>Просторная</td><td>нет</td><td class="num">1.02</td><td class="num">$120</td><td class="num">472</td></tr>
+    <tr><td>Комфортная</td><td>нет</td><td class="num">0.86</td><td class="num">$92</td><td class="num">1 943</td></tr>
+    <tr><td>Компактная</td><td>—</td><td class="num">0.58</td><td class="num">$65</td><td class="num">107</td></tr>
+  </tbody>
+</table>
+</div>
+
+<section class="col">
+  <p>Экономить надо на конструкции, а не на объёме: двусветный потолок (×1.08), панорамное остекление (×1.14) и открытая гостиная дают «просторно» дешевле, чем лишние квадратные метры. И ещё одна цифра, очищенная от размера: <strong>внутри одного класса объёма качество даёт +38 %</strong> (1.19 против 0.86) — именно её, а не ×2, следует ставить в консервативную модель.</p>
+
+  <h3>Вид на рисовые поля не платит</h3>
+  <p>Сава — открытка Бали, но рынок за неё не доплачивает: ×1.04 на 518 виллах. Платят джунгли (×1.21, n=601), ущелье и река (×1.35, n=37 — наблюдение), океан (×1.26…1.54). <strong>Участок нужно искать не с видом на поля, а на склоне над оврагом</strong> — он же дешевле, потому что застройщики его избегают.</p>
+</section>
+
+<div class="poleng"></div>
+
+<section class="col">
+  <p class="eyebrow">03 — где строить</p>
+  <h2>Искать надо дефицит качества, а не дефицит объектов</h2>
+  <p>Зоны с ресурсом вида, где рынок до сих пор застроен плохо. Правый столбец — сколько там прямых конкурентов: 1–2 спальни, отделка ≥4, цельность ≥4, зелёный вид, частный бассейн.</p>
+</section>
+
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Зона</th><th class="num">Вилл 1–2 сп.</th><th class="num">Отделка ≥4</th><th class="num">ADR медиана</th><th class="num">Группа «качество + вид»</th><th class="num">Прямых конкурентов</th></tr></thead>
+  <tbody>
+    <tr class="accent"><td>Убуд</td><td class="num">807</td><td class="num">30 %</td><td class="num">$97</td><td class="num">$217 <span class="sub">n=68</span></td><td class="num">67</td></tr>
+    <tr class="accent"><td>Тегаллаланг — Паянган</td><td class="num">105</td><td class="num">40 %</td><td class="num">$87</td><td class="num">$189 <span class="sub">n=18</span></td><td class="num">13</td></tr>
+    <tr><td>Сидемен</td><td class="num">36</td><td class="num">47 %</td><td class="num">$86</td><td class="num">$166 <span class="sub">n=12</span></td><td class="num">7</td></tr>
+    <tr><td>Унгасан — Меласти</td><td class="num">206</td><td class="num">27 %</td><td class="num">$95</td><td class="num">$198 <span class="sub">n=10</span></td><td class="num">—</td></tr>
+    <tr><td>Улувату — Пекату</td><td class="num">117</td><td class="num">56 %</td><td class="num">$138</td><td class="num">$216 <span class="sub">n=9</span></td><td class="num">—</td></tr>
+    <tr><td>Бингин — Паданг-Паданг</td><td class="num">256</td><td class="num">65 %</td><td class="num">$169</td><td class="num">рынок занят</td><td class="num">—</td></tr>
+    <tr><td>Баланган</td><td class="num">63</td><td class="num">13 %</td><td class="num">$86</td><td class="num">нет вида</td><td class="num">—</td></tr>
+    <tr><td>Ловина — север</td><td class="num">85</td><td class="num">7 %</td><td class="num">$71</td><td class="num">спрос тонкий</td><td class="num">—</td></tr>
+  </tbody>
+</table>
+</div>
+
+<section class="col">
+  <p>Бингин — противоположный случай: 65 % объектов уже отделаны на 4+, ADR $169, и премия за качество там уже в цене земли. В Убуде наоборот — 70 % рынка сидит на отделке уровня 3 и ниже при 1 554 виллах предложения. Чистая матрица по Убуду, медиана ADR:</p>
+</section>
+
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Убуд, виллы</th><th class="num">без вида</th><th class="num">вид на джунгли / ущелье</th></tr></thead>
+  <tbody>
+    <tr><td>1 спальня, обычная</td><td class="num">$66 <span class="sub">n=205</span></td><td class="num">$72 <span class="sub">n=26</span></td></tr>
+    <tr class="accent"><td>1 спальня, отделка ≥4</td><td class="num">$128 <span class="sub">n=56</span></td><td class="num">$152 <span class="sub">n=24</span></td></tr>
+    <tr><td>2 спальни, обычная</td><td class="num">$90 <span class="sub">n=242</span></td><td class="num">$109 <span class="sub">n=36</span></td></tr>
+    <tr class="accent"><td>2 спальни, отделка ≥4</td><td class="num">$202 <span class="sub">n=87</span></td><td class="num">$242 <span class="sub">n=44</span></td></tr>
+  </tbody>
+</table>
+</div>
+
+<section class="col">
+  <p>Качество даёт ×1.9–2.2, вид добавляет сверху ×1.19–1.20. И земля здесь самая дешёвая из отслеживаемых: в трекере прайсов медиана виллы в Убуде — $255 тыс. за 237 м² на участке 486 м², то есть <span class="mono">$1 232/м²</span> против <span class="mono">$2 900–3 500/м²</span> на Буките.</p>
+  <p class="note">Оговорка, которую нельзя терять: «хорошие» виллы смещены в класс «просторные», часть эффекта — размер, а не отделка. Тегаллаланг (n=18) и Сидемен (n=12) — наблюдения, а не выводы. Единственная зона, где вывод устойчив, — Убуд.</p>
+</section>
+
+<div class="poleng"></div>
+
+<section class="col">
+  <p class="eyebrow">04 — продукт</p>
+  <h2>95 м² под крышей, 45 м² под небом, склон и переливной край</h2>
+  <p>Одна закрытая спальня, всё остальное — открытое или полуоткрытое. Дом развёрнут в овраг; техника спрятана в девяти точках плана.</p>
+</section>
+
+<figure>
+<svg viewBox="0 0 860 520" role="img" aria-label="План виллы: спальня, санузел, открытая гостиная под крышей из аланг-аланга, бассейн с переливным краем в сторону оврага, сала, и девять точек, где спрятаны устройства умного дома">
+  <defs>
+    <pattern id="slope" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="10" stroke="currentColor" stroke-width="1" opacity="0.28"/>
+    </pattern>
+  </defs>
+  <g fill="none" stroke="currentColor">
+    <rect x="40" y="40" width="700" height="440" stroke-dasharray="5 5" opacity="0.45"/>
+    <rect x="744" y="40" width="102" height="440" fill="url(#slope)" stroke="none"/>
+    <line x1="744" y1="40" x2="744" y2="480" stroke-width="2" opacity="0.55"/>
+
+    <rect x="80" y="80" width="220" height="180" fill="currentColor" fill-opacity="0.06" opacity="0.75"/>
+    <rect x="80" y="275" width="140" height="110" fill="currentColor" fill-opacity="0.06" opacity="0.75"/>
+    <rect x="230" y="275" width="70" height="110" stroke-dasharray="4 4" opacity="0.6"/>
+    <rect x="80" y="400" width="150" height="60" fill="currentColor" fill-opacity="0.03" opacity="0.6"/>
+
+    <rect x="315" y="62" width="270" height="336" stroke-dasharray="7 4" opacity="0.5"/>
+    <rect x="330" y="80" width="240" height="300" fill="currentColor" fill-opacity="0.03" opacity="0.7"/>
+    <line x1="330" y1="135" x2="570" y2="135" opacity="0.5"/>
+
+    <rect x="615" y="110" width="100" height="230" fill="var(--pays)" fill-opacity="0.12" stroke="var(--pays)" opacity="0.9"/>
+    <line x1="715" y1="110" x2="715" y2="340" stroke="var(--pays)" stroke-width="4"/>
+    <rect x="615" y="355" width="100" height="40" stroke-dasharray="4 4" opacity="0.6"/>
+    <rect x="480" y="415" width="140" height="50" stroke-dasharray="7 4" opacity="0.6"/>
+
+    <line x1="300" y1="80" x2="300" y2="260" stroke="var(--pays)" stroke-width="3"/>
+    <rect x="34" y="410" width="12" height="54" fill="var(--pays)" stroke="none"/>
+
+    <polyline points="46,437 460,437" stroke-dasharray="3 5" opacity="0.55"/>
+    <polyline points="420,437 420,380" stroke-dasharray="3 5" opacity="0.55"/>
+  </g>
+
+  <g fill="currentColor" font-family="Karla, sans-serif" font-size="13">
+    <text x="190" y="166" text-anchor="middle">спальня</text>
+    <text x="190" y="184" text-anchor="middle" font-size="11" opacity="0.6">закрытая, кондиционируемая</text>
+    <text x="150" y="335" text-anchor="middle">санузел</text>
+    <text x="265" y="325" text-anchor="middle" font-size="11" opacity="0.75">душ под</text>
+    <text x="265" y="340" text-anchor="middle" font-size="11" opacity="0.75">открытым небом</text>
+    <text x="155" y="435" text-anchor="middle" font-size="11" opacity="0.75">техблок</text>
+    <text x="450" y="112" text-anchor="middle" font-size="11" opacity="0.75">кухня-остров</text>
+    <text x="450" y="292" text-anchor="middle">открытая гостиная</text>
+    <text x="450" y="310" text-anchor="middle" font-size="11" opacity="0.6">под крышей аланг-аланг</text>
+    <text x="665" y="218" text-anchor="middle" font-size="11" opacity="0.75">бассейн 3×8</text>
+    <text x="665" y="234" text-anchor="middle" font-size="11" opacity="0.75">с переливом</text>
+    <text x="550" y="445" text-anchor="middle" font-size="11" opacity="0.75">сала</text>
+    <text x="74" y="400" font-size="11" opacity="0.75">калитка</text>
+    <text x="795" y="270" text-anchor="middle" font-size="11" opacity="0.7" transform="rotate(-90 795 270)">склон в овраг</text>
+    <text x="308" y="172" font-size="10.5" fill="var(--pays)" transform="rotate(-90 308 172)">панорамное остекление</text>
+  </g>
+
+  <g font-family="IBM Plex Mono, monospace" font-size="12" text-anchor="middle">
+    <g fill="var(--pays)">
+      <circle cx="118" cy="430" r="11"/><circle cx="200" cy="430" r="11"/>
+      <circle cx="170" cy="120" r="11"/><circle cx="268" cy="110" r="11"/>
+      <circle cx="420" cy="240" r="11"/><circle cx="520" cy="160" r="11"/>
+      <circle cx="556" cy="345" r="11"/><circle cx="58" cy="392" r="11"/>
+      <circle cx="665" cy="375" r="11"/>
+    </g>
+    <g fill="var(--surface)">
+      <text x="118" y="434">1</text><text x="200" y="434">6</text>
+      <text x="170" y="124">2</text><text x="268" y="114">4</text>
+      <text x="420" y="244">3</text><text x="520" y="164">8</text>
+      <text x="556" y="349">9</text><text x="58" y="396">5</text>
+      <text x="665" y="379">7</text>
+    </g>
+  </g>
+</svg>
+<figcaption>План участка 300–400 м² на склоне. Единственный закрытый объём — спальня; гостиная, кухня и душ живут под открытым небом или под кровлей из аланг-аланга. Переливной край бассейна (зелёная линия) обращён в овраг — на террасированном участке он почти ничего не добавляет к смете, а рынок оценивает его в ×1.69.</figcaption>
+</figure>
+
+<ul class="callouts">
+  <li><b>1</b> Хаб Home Assistant, Zigbee-стик и UPS — в электрощите техблока</li>
+  <li><b>2</b> Реле в подрозетниках — за тиковыми тумблерами</li>
+  <li><b>3</b> mmWave-датчик присутствия — за плетёной бамбуковой панелью</li>
+  <li><b>4</b> ИК-бластер для сплит-системы — в нише за резной решёткой</li>
+  <li><b>5</b> Замок с кодом — под накладкой из тика на калитке</li>
+  <li><b>6</b> Датчик уровня воды в баке и реле насоса</li>
+  <li><b>7</b> Реле насоса бассейна, подсветка, датчик температуры воды</li>
+  <li><b>8</b> Потолочный динамик — в подшивке кровли под алангом</li>
+  <li><b>9</b> Моторизованные жалюзи — внутри деревянного карниза</li>
+</ul>
+
+<section class="col">
+  <h3>Спецификация, собранная из премий</h3>
+  <ul class="plain">
+    <li>Открытая гостиная-веранда под аланг-алангом — ядро дома и несущий признак всей экономики (×1.57 в паре с крышей).</li>
+    <li>Спальня — единственный застеклённый и кондиционируемый объём, панорама в сторону оврага (×1.14), двусветный потолок (×1.08).</li>
+    <li>Бассейн 3×8 с переливным краем вниз по склону (×1.69). Плунж — нельзя: ×0.92.</li>
+    <li>Сала на краю участка (×1.06): дешёвая постройка, вечерняя точка и главный кадр объявления.</li>
+    <li>Материалы: аланг-аланг, местный вулканический камень (×1.06), тик, микроцемент в санузлах (×1.18). Бамбук — только декор: как основной материал он ×0.96.</li>
+    <li>Цель отделки — уровень 4 и цельность 4–5. Не орнамент, а один замысел во всех помещениях: это ×1.26 и ×1.10…1.82.</li>
+  </ul>
+</section>
+
+<div class="poleng"></div>
+
+<section class="col">
+  <p class="eyebrow">05 — умный дом</p>
+  <h2>Про надбавку к ставке данные молчат — и это самое важное, что о ней известно</h2>
+  <p>Из 11 726 карточек вилл описание есть у 10 861, в среднем 700 знаков, и удобства в них перечисляются: Wi-Fi упомянут 10 035 раз, кондиционер — 8 594, рабочее место — 2 854. А теперь то, чего там нет.</p>
+</section>
+
+<div class="stats">
+  <div class="stat"><div class="v mono">0</div><div class="k">упоминаний «smart home» или «home automation»</div></div>
+  <div class="stat"><div class="v mono">0</div><div class="k">упоминаний умного замка или самостоятельного заселения</div></div>
+  <div class="stat"><div class="v mono">4</div><div class="k">упоминания голосовых ассистентов</div></div>
+  <div class="stat"><div class="v mono">16</div><div class="k">упоминаний смарт-ТВ</div></div>
+</div>
+
+<section class="col">
+  <p>Отсюда два честных утверждения. Первое: <strong>надбавку к ставке за умный дом эти данные подтвердить не могут</strong> — ставить её в модель доходности нельзя. Второе: <strong>никто на рынке это не продаёт</strong>. Ниша пуста — но пуста и непроверена, а это разные вещи.</p>
+  <p>Значит, умный дом окупается не ставкой, а тремя другими путями: операционными расходами (самостоятельное заселение вместо круглосуточного персонала, автоотключение кондиционеров), сохранностью отделки — влажность и плесень главный убийца уровня 4 в Убуде, — и аргументом при продаже виллы инвестору, где покупатель русскоязычный и техника работает как отличие, а не как ставка.</p>
+  <blockquote>Проверка гипотезы стоит 90 дней: два одинаковых юнита, один продаётся с умным домом в объявлении, сравнение ADR при равной загрузке.</blockquote>
+
+  <h3>Шесть правил, из которых следует вся спецификация</h3>
+</section>
+
+<div class="cards">
+  <div class="card"><div class="idx">ПРАВИЛО 1</div><h4>На стене нет пластика</h4><p>Управление — физические тумблеры из тика. Реле живут в подрозетниках, за ними. Панелей, экранов и брендированных рамок в интерьере нет вообще.</p></div>
+  <div class="card"><div class="idx">ПРАВИЛО 2</div><h4>Отказ не запирает гостя</h4><p>Любое реле обходится ручным выключателем, замок открывается ключом. На острове с регулярными отключениями света это не обсуждается.</p></div>
+  <div class="card"><div class="idx">ПРАВИЛО 3</div><h4>Радиопрозрачность решает, где прятать</h4><p>Ротанг, бамбуковое плетение, аланг, керамика, тик — датчик видит сквозь них. Металлическая сетка, бетон, бак с водой — нет. План разводки следует из этого, а не из удобства монтажа.</p></div>
+  <div class="card"><div class="idx">ПРАВИЛО 4</div><h4>Ночью ничего не мигает</h4><p>Светодиоды заклеены или выключены прошивкой. Гость спит в тёмной комнате, а не в серверной.</p></div>
+  <div class="card"><div class="idx">ПРАВИЛО 5</div><h4>Гость не получает приложение</h4><p>Сценарии срабатывают сами. Интерфейс — одна резная панель у кровати и код на калитке. Инструкции на стене нет.</p></div>
+  <div class="card"><div class="idx">ПРАВИЛО 6</div><h4>Локально, не в облаке</h4><p>Home Assistant на мини-ПК в щите, Zigbee и Matter, UPS и резервный 4G. Интернет — удобство, а не условие работы дома.</p></div>
+</div>
+
+<section class="col">
+  <h3>Комплект: около 2 % бюджета стройки</h3>
+</section>
+
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Узел</th><th>Где спрятан</th><th class="num">~$</th></tr></thead>
+  <tbody>
+    <tr><td>Хаб Home Assistant + Zigbee-стик, UPS, резервный 4G</td><td>электрощит техблока</td><td class="num">380</td></tr>
+    <tr><td>Реле в подрозетниках ×14</td><td>за тиковыми тумблерами</td><td class="num">290</td></tr>
+    <tr><td>ИК-бластеры ×2 для сплит-систем</td><td>ниша за резной решёткой</td><td class="num">60</td></tr>
+    <tr><td>mmWave-датчики присутствия ×4</td><td>за плетёной панелью, в керамической вазе</td><td class="num">120</td></tr>
+    <tr><td>Датчики открытия ×6</td><td>в притворе дверей и окон</td><td class="num">70</td></tr>
+    <tr><td>Замки на калитке и входной двери</td><td>под накладкой из тика</td><td class="num">420</td></tr>
+    <tr><td>Датчики протечки ×3 и клапан на вводе</td><td>под мойкой, в санузле</td><td class="num">180</td></tr>
+    <tr><td>Уровень воды в баке и реле насоса</td><td>техблок</td><td class="num">110</td></tr>
+    <tr><td>Датчики влажности ×3 и управление осушителем</td><td>в корзинах-кашпо</td><td class="num">130</td></tr>
+    <tr><td>Потолочные динамики, 2 зоны</td><td>подшивка кровли под алангом</td><td class="num">340</td></tr>
+    <tr><td>Моторизованные жалюзи ×2</td><td>внутри деревянного карниза</td><td class="num">260</td></tr>
+    <tr><td>Реле насоса бассейна, подсветка, датчик t° воды</td><td>техбокс у бассейна</td><td class="num">150</td></tr>
+    <tr><td>Датчик газа</td><td>кухонный шкаф под баллоном</td><td class="num">40</td></tr>
+    <tr><td>Камера на въезде (только периметр)</td><td>под козырьком калитки</td><td class="num">90</td></tr>
+    <tr><td>Монтаж, прокладка, настройка сценариев</td><td>—</td><td class="num">250</td></tr>
+    <tr class="accent"><td>Итого</td><td>≈ 2 % бюджета стройки</td><td class="num">2 890</td></tr>
+  </tbody>
+</table>
+</div>
+
+<section class="col">
+  <h3>Сценарии: каждый закрывает реальное трение</h3>
+</section>
+
+<div class="cards">
+  <div class="card"><div class="idx">ПРИЛЁТ</div><h4>Дом готов до заезда</h4><p>Код на калитке, дорожка подсвечивается, кондиционер в спальне включается за 20 минут до прибытия. Ночного менеджера с ключами нет.</p></div>
+  <div class="card"><div class="idx">УЕХАЛИ</div><h4>Всё выключается само</h4><p>Нет присутствия 30 минут и дверь закрыта — свет, кондиционеры, розетки вниз. При двух сплит-системах это крупнейшая управляемая строка расходов.</p></div>
+  <div class="card"><div class="idx">НОЧЬ</div><h4>Дом гасит себя</h4><p>Присутствие в спальне после 22:00 — подсветка бассейна выключается, дорожка уходит на 5 %, кондиционер на 25°.</p></div>
+  <div class="card"><div class="idx">ДОЖДЬ</div><h4>Защита отделки, а не комфорт</h4><p>Влажность и датчик дождя закрывают жалюзи над открытой гостиной и включают осушитель. Плесень — то, что превращает отделку уровня 4 в уровень 3 за два сезона.</p></div>
+  <div class="card"><div class="idx">ВОДА</div><h4>Бали-специфика</h4><p>Бак ниже 20 % — насос и уведомление управляющему. Протечка — перекрытие ввода до приезда человека.</p></div>
+  <div class="card"><div class="idx">ВЫЕЗД</div><h4>Операционка без переписки</h4><p>Чек-аут ставит задачу горничной и меняет код на калитке. Управляющая компания не звонит гостю ни разу.</p></div>
+</div>
+
+<div class="poleng"></div>
+
+<section class="col">
+  <p class="eyebrow">06 — экономика</p>
+  <h2>Одиннадцать процентов чистыми в базовом сценарии</h2>
+  <p class="note">Внимание: строительные и земельные цифры ниже — экспертная оценка, их в базе нет. Из данных взята только выручка.</p>
+  <p>Смета, ≈ $168 тыс.: аренда участка 350 м² на 25 лет — $30 тыс.; коробка и отделка уровня 4, 95 м² × $700 — $66,5 тыс.; крытое открытое пространство 45 м² × $350 — $15,8 тыс.; бассейн с переливом — $16 тыс.; мебель и дизайн — $22 тыс.; умный дом — $2,9 тыс.; проект, разрешения и резерв 10 % — $15 тыс.</p>
+  <p>Ставка $140 взята между медианой класса «комфортная + отделка ≥4» ($136, n=421) и убудской ячейкой «1 спальня, качество и вид» ($152, n=24). <strong>Загрузку из источника брать нельзя</strong>: 3 949 вилл из 9 094 стоят ровно на 100 % — показатель обрезан сверху. Поэтому модель считается на диапазоне 55–75 %.</p>
+</section>
+
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Чистая доходность на $168 тыс.</th><th class="num">загрузка 55 %</th><th class="num">65 %</th><th class="num">75 %</th></tr></thead>
+  <tbody>
+    <tr><td>ADR $110</td><td class="num">6,5 %</td><td class="num">8,2 %</td><td class="num">9,9 %</td></tr>
+    <tr class="accent"><td>ADR $140</td><td class="num">9,0 %</td><td class="num">11,2 %</td><td class="num">13,3 %</td></tr>
+    <tr><td>ADR $170</td><td class="num">11,5 %</td><td class="num">14,1 %</td><td class="num">16,7 %</td></tr>
+  </tbody>
+</table>
+</div>
+
+<section class="col">
+  <p class="note">После 30 % на OTA и управление и $4,5 тыс. эксплуатации в год. Базовый сценарий — 11 % чистыми, окупаемость около девяти лет внутри 25-летней аренды.</p>
+  <p>Второй выход из проекта — продажа. Медиана предложения виллы в Убуде в каталоге Баринского — $259 тыс. (n=41, нижний квартиль $190 тыс.) при себестоимости $168 тыс. Это и есть аргумент для серии, а не для одного дома.</p>
+</section>
+
+<div class="poleng"></div>
+
+<section class="col">
+  <p class="eyebrow">07 — проверка</p>
+  <h2>Чем этот вывод можно опровергнуть</h2>
+  <ol class="plain">
+    <li><strong>Эффект размера.</strong> «Хорошие» виллы смещены в класс «просторных». Если объект выйдет «комфортным», ставка — $136, а не $217. Очищенная от размера цифра качества — +38 % внутри одного класса объёма; опираться следует на неё.</li>
+    <li><strong>Обрезанная загрузка.</strong> Ровно 100 % у 43 % вилл — артефакт источника. В модели она не используется нигде.</li>
+    <li><strong>Малые выборки.</strong> Тегаллаланг (n=18), Сидемен (n=12), вид в ущелье (n=37) — наблюдения, а не тенденции. Устойчив только Убуд: n=68 в целевой группе.</li>
+    <li><strong>Умный дом.</strong> Премия не измерена — ноль упоминаний из 10 861. В модели доходности её нет и не должно быть до эксперимента с двумя юнитами.</li>
+    <li><strong>Vision по рендерам.</strong> Каталог модель видит по рендерам, а рынок — по реальным фото, поэтому оценки качества картинки у каталога завышены системно. Сравнивать можно только структурные признаки.</li>
+  </ol>
+  <footer>
+    Источники: <span class="mono">booking_market_relative</span> (премии, страта ≥8), <span class="mono">booking_market_product</span> и <span class="mono">booking_zone</span> (зоны), <span class="mono">raw_villas</span> и <span class="mono">market_core</span> (продажа), regexp по <span class="mono">booking_data_cards.description</span> (упоминания удобств). Разбор фотографий рынка — словарь из 31 признака, общий для рынка аренды и каталога. Данные на 21 августа 2026.
+  </footer>
+</section>
+
+</div>
