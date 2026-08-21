@@ -13,12 +13,21 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 // ISR-страниц, и выпущенный на рендере challenge был бы общим для всех.
 //
 // Почему бот открывается по-разному на мобильном и на десктопе. На телефоне
-// `window.open` заводит ВТОРУЮ вкладку, её тут же перехватывает приложение
-// Telegram — и поле для кода остаётся в первой, до которой пользователь уже
-// не догадывается добраться: экран после возврата показывает t.me. Поэтому
-// на touch-устройствах уходим в бота той же вкладкой: универсальная ссылка
-// t.me отдаёт управление приложению, а «назад» возвращает ровно на страницу
-// с формой. На десктопе новая вкладка удобнее и ничего не теряет.
+// `window.open` заводил ВТОРУЮ вкладку, её тут же перехватывало приложение
+// Telegram — и поле для кода оставалось в первой, до которой пользователь уже
+// не добирался: после возврата в браузер на экране t.me.
+//
+// Ссылка `https://t.me/...` эту вкладку не спасает: universal link отдаёт
+// управление приложению только при настоящем тапе по <a>, а переход из
+// JavaScript iOS таким тапом не считает и грузит промежуточную веб-страницу
+// «START BOT». Поэтому на touch-устройствах уходим в бота по схеме
+// `tg://resolve`: браузер вообще никуда не переходит, приложение открывается
+// поверх, и «◀ Safari» возвращает ровно к полю ввода. Если приложения нет,
+// переключения не происходит — на этот случай под полем ввода лежит обычная
+// ссылка на t.me (почему не таймаут — см. ниже).
+//
+// На десктопе схемы tg:// у большинства нет, зато новая вкладка ничего не
+// теряет — там всё по-прежнему через window.open.
 //
 // И в том, и в другом случае «ждём код» переживает уход со страницы: флаг
 // лежит в sessionStorage, поэтому после возврата (в том числе с перезагрузкой)
@@ -29,31 +38,37 @@ type Step = 'idle' | 'code'
 
 const CODE_LENGTH = 4
 
-/** Ждём код: время старта, чтобы флаг не пережил сам код. */
+/**
+ * Ждём код. Время старта — чтобы флаг не пережил сам код; ссылка на бота —
+ * чтобы запасной переход на t.me был на месте и после перезагрузки.
+ */
 const PENDING_KEY = 'bx_login_pending'
 const PENDING_TTL_MS = 15 * 60 * 1000
 /** Синхронизация всех форм на странице между собой. */
 const PENDING_EVENT = 'bx-login-pending'
 
-function readPending(): boolean {
+type Pending = { at: number; url: string }
+
+function readPending(): Pending | null {
   try {
     const raw = window.sessionStorage.getItem(PENDING_KEY)
-    if (!raw) return false
-    const startedAt = Number(raw)
-    if (!Number.isFinite(startedAt) || Date.now() - startedAt > PENDING_TTL_MS) {
+    if (!raw) return null
+    const p = JSON.parse(raw) as Partial<Pending>
+    const at = Number(p?.at)
+    if (!Number.isFinite(at) || Date.now() - at > PENDING_TTL_MS) {
       window.sessionStorage.removeItem(PENDING_KEY)
-      return false
+      return null
     }
-    return true
+    return { at, url: typeof p?.url === 'string' ? p.url : '' }
   } catch {
-    return false
+    return null
   }
 }
 
-function writePending(on: boolean) {
+function writePending(url: string | null) {
   try {
-    if (on) window.sessionStorage.setItem(PENDING_KEY, String(Date.now()))
-    else window.sessionStorage.removeItem(PENDING_KEY)
+    if (url === null) window.sessionStorage.removeItem(PENDING_KEY)
+    else window.sessionStorage.setItem(PENDING_KEY, JSON.stringify({ at: Date.now(), url }))
   } catch {
     // Приватный режим Safari — обойдёмся состоянием в памяти.
   }
@@ -77,11 +92,42 @@ function isTouchDevice(): boolean {
   }
 }
 
+/**
+ * `https://t.me/Bot?start=payload` → `tg://resolve?domain=Bot&start=payload`.
+ * null, если ссылка не того вида, — тогда идём обычным путём, без схемы.
+ */
+function tgAppUrl(webUrl: string): string | null {
+  try {
+    const u = new URL(webUrl)
+    if (u.hostname !== 't.me') return null
+    const domain = u.pathname.replace(/^\/+/, '')
+    if (!domain || domain.includes('/')) return null
+    const q = new URLSearchParams({ domain })
+    const start = u.searchParams.get('start')
+    if (start) q.set('start', start)
+    return `tg://resolve?${q.toString()}`
+  } catch {
+    return null
+  }
+}
+
+// Откат на t.me — не по таймеру, а ссылкой под полем ввода.
+//
+// Таймер здесь выглядит очевидным решением и он же ломает главный случай:
+// на переход по схеме iOS показывает диалог «Открыть в программе
+// «Telegram»?», документ при этом остаётся видимым, и таймер увёл бы
+// страницу на t.me прямо под диалогом — ровно к той промежуточной странице,
+// ради ухода от которой всё и делается. Отличить этот диалог от «схему никто
+// не обработал» из страницы нельзя, поэтому решает посетитель: если Telegram
+// не открылся, он видит поле ввода и под ним ссылку на t.me.
+
 export function LoginCodeForm({ ctaLabel }: { ctaLabel: string }) {
   const [step, setStep] = useState<Step>('idle')
   const [code, setCode] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  /** Ссылка на бота из последнего запроса — для запасного перехода на t.me. */
+  const [botUrl, setBotUrl] = useState('')
   const inputRef = useRef<HTMLInputElement | null>(null)
 
   // Возврат из Telegram: показать ввод кода и, если карточка на экране,
@@ -95,10 +141,16 @@ export function LoginCodeForm({ ctaLabel }: { ctaLabel: string }) {
   }, [])
 
   useEffect(() => {
-    const sync = () => setStep(readPending() ? 'code' : 'idle')
+    const sync = () => {
+      const p = readPending()
+      setStep(p ? 'code' : 'idle')
+      if (p) setBotUrl(p.url)
+    }
     const onReturn = () => {
-      if (!readPending()) return
+      const p = readPending()
+      if (!p) return
       setStep('code')
+      setBotUrl(p.url)
       // Ввод появляется в этом же кадре — фокус после отрисовки.
       requestAnimationFrame(focusIfVisible)
     }
@@ -128,13 +180,17 @@ export function LoginCodeForm({ ctaLabel }: { ctaLabel: string }) {
       const data = await r.json()
       if (!r.ok || !data?.url) throw new Error('start')
 
-      // Флаг ставим ДО ухода со страницы: на мобильном возврата в этот
-      // обработчик уже не будет.
-      writePending(true)
+      // Флаг ставим ДО перехода: на десктопе и в запасном сценарии страница
+      // может смениться, и возврата в этот обработчик уже не будет.
+      writePending(data.url)
+      setBotUrl(data.url)
       setStep('code')
 
       if (isTouchDevice()) {
-        window.location.href = data.url
+        // Схема открывает приложение поверх браузера — страница остаётся на
+        // месте, и возвращаться к полю ввода не приходится вовсе.
+        const app = tgAppUrl(data.url)
+        window.location.href = app ?? data.url
         return
       }
       // Десктоп: новая вкладка. Если её съел блокировщик всплывающих окон
@@ -152,7 +208,7 @@ export function LoginCodeForm({ ctaLabel }: { ctaLabel: string }) {
       opened.opener = null
       requestAnimationFrame(focusIfVisible)
     } catch {
-      writePending(false)
+      writePending(null)
       setError('Не получилось начать вход. Попробуйте ещё раз.')
     } finally {
       setBusy(false)
@@ -170,7 +226,7 @@ export function LoginCodeForm({ ctaLabel }: { ctaLabel: string }) {
       })
       const data = await r.json()
       if (r.ok && data?.ok) {
-        writePending(false)
+        writePending(null)
         // Перезагрузка — самый честный способ показать открытый контент:
         // блюр снимает инлайн-скрипт в layout по куке bx_auth.
         window.location.reload()
@@ -230,6 +286,18 @@ export function LoginCodeForm({ ctaLabel }: { ctaLabel: string }) {
           Прислать новый
         </button>
       </p>
+      {botUrl && (
+        // Запасной путь, если приложение не открылось. Настоящая ссылка, а не
+        // переход из JS: только по такому тапу iOS отдаёт управление
+        // приложению напрямую, минуя страницу t.me. Без target="_blank" —
+        // новая вкладка и была исходной поломкой.
+        <p className="mt-1 text-xs text-gray-500">
+          Telegram не открылся?{' '}
+          <a href={botUrl} rel="noreferrer" className="underline hover:no-underline">
+            Открыть бота
+          </a>
+        </p>
+      )}
     </div>
   )
 }
