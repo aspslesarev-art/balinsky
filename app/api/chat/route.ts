@@ -5,6 +5,7 @@ import { ensureAssistantSession, logAssistantTurn } from '@/lib/assistant-sessio
 import { logUsage, overDailySpendCap } from '@/lib/usage-tracker'
 import { clientIp, rateLimit } from '@/lib/rate-limit'
 import type { Lang } from '@/lib/i18n'
+import { CONSULTANT_ENABLED, consultantDisabledResponse } from '@/lib/consultant-flag'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -257,6 +258,9 @@ function stripSpeechBlock(text: string): string {
 }
 
 export async function POST(req: Request) {
+  // Консультант выключен глобально (lib/consultant-flag.ts): отвечаем сразу,
+  // не трогая Azure OpenAI / ElevenLabs — платные вызовы не уходят.
+  if (!CONSULTANT_ENABLED) return consultantDisabledResponse()
   const apiKey = process.env.AZURE_OPENAI_API_KEY
   const endpoint = process.env.AZURE_OPENAI_ENDPOINT
   const apiVersion = process.env.AZURE_OPENAI_API_VERSION ?? '2024-12-01-preview'

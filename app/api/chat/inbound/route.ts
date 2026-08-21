@@ -12,6 +12,7 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createClient } from '@supabase/supabase-js'
 import { ASSISTANT_COOKIE, uuidToChatId } from '@/lib/assistant-session'
+import { CONSULTANT_ENABLED, consultantDisabledResponse } from '@/lib/consultant-flag'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -22,6 +23,9 @@ const sb = createClient(
 )
 
 export async function GET(req: Request) {
+  // Консультант выключен глобально (lib/consultant-flag.ts): отвечаем сразу,
+  // не трогая Azure OpenAI / ElevenLabs — платные вызовы не уходят.
+  if (!CONSULTANT_ENABLED) return consultantDisabledResponse()
   const store = await cookies()
   const uuid = store.get(ASSISTANT_COOKIE)?.value
   if (!uuid || !/^[0-9a-f-]{32,36}$/i.test(uuid)) {

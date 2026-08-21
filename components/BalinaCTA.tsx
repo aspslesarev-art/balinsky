@@ -7,6 +7,7 @@
 // signal a manager can pick up from /admin/chats), or straight into voice.
 
 import type { ReactNode } from 'react'
+import { CONSULTANT_ENABLED } from '@/lib/consultant-flag'
 
 export function BalinaCTA({
   children,
@@ -21,6 +22,10 @@ export function BalinaCTA({
   listen?: boolean
   className?: string
 }) {
+  // Консультант выключен — открывать нечего, кнопка не нужна нигде,
+  // где она разбросана по лендингу и подборщику.
+  if (!CONSULTANT_ENABLED) return null
+
   const onClick = () => {
     if (typeof window === 'undefined') return
     const detail = listen ? { listen: true } : text ? { text, autoSend: true } : {}

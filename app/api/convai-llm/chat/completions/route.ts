@@ -11,6 +11,7 @@ import { AzureOpenAI } from 'openai'
 import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions'
 import { getSystemPrompt, TOOLS, executeToolCall } from '@/lib/consultant'
 import { logUsage, overDailySpendCap } from '@/lib/usage-tracker'
+import { CONSULTANT_ENABLED, consultantDisabledResponse } from '@/lib/consultant-flag'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -27,6 +28,9 @@ function sseChunk(obj: unknown): string {
 }
 
 export async function POST(req: Request) {
+  // Консультант выключен глобально (lib/consultant-flag.ts): отвечаем сразу,
+  // не трогая Azure OpenAI / ElevenLabs — платные вызовы не уходят.
+  if (!CONSULTANT_ENABLED) return consultantDisabledResponse()
   // Shared-secret auth — ElevenLabs sends the key we configure on the agent
   // as `Authorization: Bearer <key>`. Fail closed: an unset secret means the
   // paid Azure endpoint would be open, so refuse.

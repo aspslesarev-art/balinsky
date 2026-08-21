@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import { detectLang } from '@/lib/i18n'
+import { CONSULTANT_ENABLED } from '@/lib/consultant-flag'
 import { usePathname } from 'next/navigation'
 import { Footer } from './Footer'
 import type { Lang } from '@/lib/i18n'
@@ -40,7 +41,7 @@ export function SiteChrome() {
   return (
     <>
       <Footer lang={lang} />
-      <ConsultantWidget />
+      {CONSULTANT_ENABLED && <ConsultantWidget />}
       <InlineEditor />
     </>
   )

@@ -4,6 +4,7 @@
 // fast; the actual search runs afterwards in the text chat.
 import { NextResponse } from 'next/server'
 import { clientIp, rateLimit } from '@/lib/rate-limit'
+import { CONSULTANT_ENABLED, consultantDisabledResponse } from '@/lib/consultant-flag'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -16,6 +17,9 @@ export const dynamic = 'force-dynamic'
 const AGENT_ID = 'agent_5001kwgqxtfaed9r9bf3jv11nhm5'
 
 export async function GET(req: Request) {
+  // Консультант выключен глобально (lib/consultant-flag.ts): отвечаем сразу,
+  // не трогая Azure OpenAI / ElevenLabs — платные вызовы не уходят.
+  if (!CONSULTANT_ENABLED) return consultantDisabledResponse()
   const key = process.env.ELEVENLABS_API_KEY
   if (!key) return NextResponse.json({ error: 'convai_unconfigured' }, { status: 503 })
   if (!rateLimit(`convai:${clientIp(req)}`, 10, 60_000)) {

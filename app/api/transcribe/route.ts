@@ -14,6 +14,7 @@ import { NextResponse } from 'next/server'
 import { AzureOpenAI } from 'openai'
 import { logUsage, overDailySpendCap } from '@/lib/usage-tracker'
 import { clientIp, rateLimit } from '@/lib/rate-limit'
+import { CONSULTANT_ENABLED, consultantDisabledResponse } from '@/lib/consultant-flag'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -29,6 +30,9 @@ function buildClient(): { client: AzureOpenAI; deployment: string } | null {
 }
 
 export async function POST(req: Request) {
+  // Консультант выключен глобально (lib/consultant-flag.ts): отвечаем сразу,
+  // не трогая Azure OpenAI / ElevenLabs — платные вызовы не уходят.
+  if (!CONSULTANT_ENABLED) return consultantDisabledResponse()
   // Abuse guards — unauthenticated paid (Azure transcribe) endpoint.
   if (!rateLimit(`transcribe:${clientIp(req)}`, 12, 60_000)) {
     return NextResponse.json({ error: 'rate_limited' }, { status: 429 })

@@ -21,7 +21,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@supabase/supabase-js'
 import { unstable_cache } from 'next/cache'
-import { ArrowRight, Send, FileCheck2, TrendingUp, Video, Phone, Sparkles, MapPin, Building2, BarChart3, ShieldCheck } from 'lucide-react'
+import { ArrowRight, Send, Search, FileCheck2, TrendingUp, Video, Phone, Sparkles, MapPin, Building2, BarChart3, ShieldCheck } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { VillaCard, type VillaCardData } from '@/components/VillaCard'
@@ -29,7 +29,7 @@ import { loadAll as loadAllVillas, buildAllCards as buildAllVillaCards, type Vil
 import { loadAllVillaScores } from '@/lib/investment/batch-scores'
 import { loadHomeCollections } from '@/lib/home-collections'
 import { HomeCollections } from '@/components/HomeCollections'
-import { HeroBalinaSearch } from '@/components/HeroBalinaSearch'
+import { HeroCatalogSearch } from '@/components/HeroCatalogSearch'
 import { BalinaCTA } from '@/components/BalinaCTA'
 import { LeadButton } from '@/components/LeadButton'
 import { BalinaChatMock } from '@/components/BalinaChatMock'
@@ -42,7 +42,8 @@ import {
   VizYield, VizCompetitors, VizNearby, VizDocs, VizDeveloper, VizFootage,
   SafetyFlow,
 } from '@/components/LandingVisuals'
-import { pickCopy, type Lang } from '@/lib/i18n'
+import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
+import { CONSULTANT_ENABLED } from '@/lib/consultant-flag'
 import { translit, hasCyrillic } from '@/lib/translit'
 import { cdnBucketBase, cdnManifestUrl } from '@/lib/photo-cdn'
 
@@ -73,10 +74,10 @@ const COPY = {
     howItWorks: {
       eyebrow: 'КАК ЭТО РАБОТАЕТ',
       heading: 'Купите спокойно — даже не приезжая на Бали.',
-      sub: 'AI-брокер и команда на земле проведут от вопроса до ключей.',
-      cta: 'Спросить AI-брокера',
+      sub: 'Каталог с реальными цифрами и команда на земле проведут от поиска до ключей.',
+      cta: 'Смотреть виллы',
       steps: [
-        { n: '01', Icon: Sparkles, title: 'Спросите AI-брокера', body: 'Подберёт объекты и ответит на вопросы. Бесплатно, 24/7.' },
+        { n: '01', Icon: Search, title: 'Найдите объект', body: 'Фильтры по цене, району и доходности. Бесплатно, без регистрации.' },
         { n: '02', Icon: TrendingUp, title: 'Изучите объект', body: 'Доходность соседей, конкуренты, документы, застройщик — без рендеров.' },
         { n: '03', Icon: Phone, title: 'Оставьте заявку', body: 'Zoom-презентация, показ, безопасная сделка с гарантиями.' },
       ],
@@ -157,14 +158,14 @@ const COPY = {
       heading: 'Уже купили через нас.',
       items: [
         { quote: 'Купил виллу за две недели. Без перелёта на Бали. Все документы и проверки — внутри платформы.', author: 'Alexander K., Moscow', role: 'купил Origins Villa 75 м² в декабре 2025' },
-        { quote: 'Сравнили семь объектов в одном Telegram-чате. AI-брокер отвечал ночью, когда я не мог уснуть от расчётов.', author: 'Anna L., Berlin', role: 'купила апартаменты в Canggu' },
+        { quote: 'Сравнили семь объектов по реальной доходности соседей — выбор занял вечер, а не месяц переписки с агентами.', author: 'Anna L., Berlin', role: 'купила апартаменты в Canggu' },
         { quote: 'Объект соответствовал съёмке. Это редкость на Бали — обычно фото в рекламе и реальность совсем разные.', author: 'Dmitri I., Dubai', role: 'купил виллу в Pererenan' },
       ],
     },
     finalCta: {
       h2: 'Найдите недвижимость, которую реально купите.',
-      sub: 'Спросите AI-брокера или оставьте заявку — доведём до безопасной сделки.',
-      primary: 'Спросить AI-брокера',
+      sub: 'Выберите объект по реальным цифрам или оставьте заявку — доведём до безопасной сделки.',
+      primary: 'Смотреть виллы',
       secondary: 'Оставить заявку',
       secondaryText: 'Хочу оставить заявку — подключите менеджера: нужна презентация объекта и помощь со сделкой.',
     },
@@ -190,10 +191,10 @@ const COPY = {
     howItWorks: {
       eyebrow: 'HOW IT WORKS',
       heading: 'Buy with confidence — without flying to Bali.',
-      sub: 'An AI broker and a team on the ground take you from question to keys.',
-      cta: 'Ask the AI broker',
+      sub: 'A catalogue with real numbers and a team on the ground take you from search to keys.',
+      cta: 'Browse villas',
       steps: [
-        { n: '01', Icon: Sparkles, title: 'Ask the AI broker', body: 'It shortlists properties and answers your questions. Free, 24/7.' },
+        { n: '01', Icon: Search, title: 'Find a property', body: 'Filter by price, district and yield. Free, no signup.' },
         { n: '02', Icon: TrendingUp, title: 'Study the property', body: 'Neighbour yield, competitors, documents, developer — no renders.' },
         { n: '03', Icon: Phone, title: 'Leave a request', body: 'A Zoom presentation, a viewing, a safe deal with guarantees.' },
       ],
@@ -274,14 +275,14 @@ const COPY = {
       heading: 'Already bought through us.',
       items: [
         { quote: 'Bought a villa in two weeks. Without flying to Bali. All paperwork and checks inside the platform.', author: 'Alexander K., Moscow', role: 'bought Origins Villa 75 m² in December 2025' },
-        { quote: 'We compared seven properties in one Telegram thread. The AI broker answered me at night when I couldn\'t sleep from the math.', author: 'Anna L., Berlin', role: 'bought an apartment in Canggu' },
+        { quote: 'We compared seven properties on the real yield of their neighbours — the choice took an evening, not a month of agent emails.', author: 'Anna L., Berlin', role: 'bought an apartment in Canggu' },
         { quote: 'The property matched the footage. That\'s rare on Bali — usually the ads and the reality look completely different.', author: 'Dmitri I., Dubai', role: 'bought a villa in Pererenan' },
       ],
     },
     finalCta: {
       h2: 'Find the property you\'ll actually buy.',
-      sub: 'Ask the AI broker or leave a request — we\'ll see the deal through safely.',
-      primary: 'Ask the AI broker',
+      sub: 'Pick a property on real numbers or leave a request — we take the deal through safely.',
+      primary: 'Browse villas',
       secondary: 'Leave a request',
       secondaryText: 'I\'d like to leave a request — please connect a manager: I need a property presentation and help with the deal.',
     },
@@ -307,10 +308,10 @@ const COPY = {
     howItWorks: {
       eyebrow: 'CARA KERJANYA',
       heading: 'Beli dengan percaya diri — tanpa terbang ke Bali.',
-      sub: 'Broker AI dan tim di lokasi mengantar Anda dari pertanyaan hingga kunci.',
-      cta: 'Tanya broker AI',
+      sub: 'Katalog dengan angka nyata dan tim di lokasi mengantar Anda dari pencarian hingga kunci.',
+      cta: 'Lihat vila',
       steps: [
-        { n: '01', Icon: Sparkles, title: 'Tanya broker AI', body: 'Ia menyaring properti dan menjawab pertanyaan Anda. Gratis, 24/7.' },
+        { n: '01', Icon: Search, title: 'Temukan properti', body: 'Saring berdasarkan harga, area, dan imbal hasil. Gratis, tanpa pendaftaran.' },
         { n: '02', Icon: TrendingUp, title: 'Pelajari properti', body: 'Imbal hasil tetangga, pesaing, dokumen, pengembang — tanpa render.' },
         { n: '03', Icon: Phone, title: 'Ajukan permintaan', body: 'Presentasi Zoom, kunjungan, transaksi aman dengan jaminan.' },
       ],
@@ -391,14 +392,14 @@ const COPY = {
       heading: 'Sudah membeli lewat kami.',
       items: [
         { quote: 'Beli vila dalam dua minggu. Tanpa terbang ke Bali. Semua dokumen dan pemeriksaan ada di dalam platform.', author: 'Alexander K., Moscow', role: 'membeli Origins Villa 75 m² pada Desember 2025' },
-        { quote: 'Kami membandingkan tujuh properti dalam satu utas Telegram. Broker AI menjawab saya malam hari saat saya tak bisa tidur karena hitung-hitungan.', author: 'Anna L., Berlin', role: 'membeli apartemen di Canggu' },
+        { quote: 'Kami membandingkan tujuh properti dari imbal hasil nyata tetangganya — memilih hanya butuh satu malam, bukan sebulan berbalas pesan dengan agen.', author: 'Anna L., Berlin', role: 'membeli apartemen di Canggu' },
         { quote: 'Propertinya sesuai dengan rekamannya. Itu langka di Bali — biasanya iklan dan kenyataan sangat berbeda.', author: 'Dmitri I., Dubai', role: 'membeli vila di Pererenan' },
       ],
     },
     finalCta: {
       h2: 'Temukan properti yang benar-benar akan Anda beli.',
-      sub: 'Tanya broker AI atau ajukan permintaan — kami mengawal transaksi hingga aman.',
-      primary: 'Tanya broker AI',
+      sub: 'Pilih properti berdasarkan angka nyata atau ajukan permintaan — kami mengawal transaksi hingga aman.',
+      primary: 'Lihat vila',
       secondary: 'Ajukan permintaan',
       secondaryText: 'Saya ingin mengajukan permintaan — tolong hubungkan dengan manajer: saya perlu presentasi properti dan bantuan transaksi.',
     },
@@ -424,10 +425,10 @@ const COPY = {
     howItWorks: {
       eyebrow: 'COMMENT ÇA MARCHE',
       heading: 'Achetez en confiance — sans prendre l\'avion pour Bali.',
-      sub: 'Un courtier IA et une équipe sur place vous mènent de la question aux clés.',
-      cta: 'Demander au courtier IA',
+      sub: 'Un catalogue avec des chiffres réels et une équipe sur place vous mènent de la recherche aux clés.',
+      cta: 'Voir les villas',
       steps: [
-        { n: '01', Icon: Sparkles, title: 'Demandez au courtier IA', body: 'Il présélectionne des biens et répond à vos questions. Gratuit, 24/7.' },
+        { n: '01', Icon: Search, title: 'Trouvez le bien', body: 'Filtrez par prix, quartier et rendement. Gratuit, sans inscription.' },
         { n: '02', Icon: TrendingUp, title: 'Étudiez le bien', body: 'Rendement du voisinage, concurrents, documents, promoteur — sans rendus.' },
         { n: '03', Icon: Phone, title: 'Laissez une demande', body: 'Une présentation Zoom, une visite, une transaction sûre avec garanties.' },
       ],
@@ -508,14 +509,14 @@ const COPY = {
       heading: 'Ont déjà acheté grâce à nous.',
       items: [
         { quote: 'Villa achetée en deux semaines. Sans prendre l\'avion pour Bali. Tous les documents et vérifications dans la plateforme.', author: 'Alexander K., Moscow', role: 'a acheté Origins Villa 75 m² en décembre 2025' },
-        { quote: 'Nous avons comparé sept biens dans un seul fil Telegram. Le courtier IA me répondait la nuit quand les calculs m\'empêchaient de dormir.', author: 'Anna L., Berlin', role: 'a acheté un appartement à Canggu' },
+        { quote: 'Nous avons comparé sept biens sur le rendement réel du voisinage — le choix a pris une soirée, pas un mois d\'échanges avec des agents.', author: 'Anna L., Berlin', role: 'a acheté un appartement à Canggu' },
         { quote: 'Le bien correspondait aux images. C\'est rare à Bali — d\'habitude, les annonces et la réalité n\'ont rien à voir.', author: 'Dmitri I., Dubai', role: 'a acheté une villa à Pererenan' },
       ],
     },
     finalCta: {
       h2: 'Trouvez le bien que vous allez vraiment acheter.',
-      sub: 'Demandez au courtier IA ou laissez une demande — nous menons la transaction à bien en toute sécurité.',
-      primary: 'Demander au courtier IA',
+      sub: 'Choisissez un bien sur des chiffres réels ou laissez une demande — nous menons la transaction à bien en toute sécurité.',
+      primary: 'Voir les villas',
       secondary: 'Laisser une demande',
       secondaryText: 'Je souhaite laisser une demande — merci de me mettre en relation avec un conseiller : j\'ai besoin d\'une présentation du bien et d\'aide pour la transaction.',
     },
@@ -541,10 +542,10 @@ const COPY = {
     howItWorks: {
       eyebrow: 'SO FUNKTIONIERT ES',
       heading: 'Kaufen Sie mit Zuversicht — ohne nach Bali zu fliegen.',
-      sub: 'Ein KI-Makler und ein Team vor Ort begleiten Sie von der Frage bis zum Schlüssel.',
-      cta: 'Den KI-Makler fragen',
+      sub: 'Ein Katalog mit echten Zahlen und ein Team vor Ort begleiten Sie von der Suche bis zum Schlüssel.',
+      cta: 'Villen ansehen',
       steps: [
-        { n: '01', Icon: Sparkles, title: 'Den KI-Makler fragen', body: 'Er wählt Objekte aus und beantwortet Ihre Fragen. Kostenlos, rund um die Uhr.' },
+        { n: '01', Icon: Search, title: 'Objekt finden', body: 'Nach Preis, Region und Rendite filtern. Kostenlos, ohne Anmeldung.' },
         { n: '02', Icon: TrendingUp, title: 'Das Objekt prüfen', body: 'Nachbarrendite, Wettbewerber, Dokumente, Bauträger — ohne Renderings.' },
         { n: '03', Icon: Phone, title: 'Anfrage hinterlassen', body: 'Eine Zoom-Präsentation, eine Besichtigung, ein sicherer Deal mit Garantien.' },
       ],
@@ -625,14 +626,14 @@ const COPY = {
       heading: 'Haben bereits über uns gekauft.',
       items: [
         { quote: 'Villa in zwei Wochen gekauft. Ohne nach Bali zu fliegen. Alle Papiere und Prüfungen innerhalb der Plattform.', author: 'Alexander K., Moscow', role: 'kaufte Origins Villa 75 m² im Dezember 2025' },
-        { quote: 'Wir haben sieben Objekte in einem Telegram-Thread verglichen. Der KI-Makler antwortete mir nachts, als ich vor lauter Rechnen nicht schlafen konnte.', author: 'Anna L., Berlin', role: 'kaufte ein Apartment in Canggu' },
+        { quote: 'Wir haben sieben Objekte anhand der echten Rendite der Nachbarschaft verglichen — die Wahl dauerte einen Abend, nicht einen Monat Maklerkorrespondenz.', author: 'Anna L., Berlin', role: 'kaufte ein Apartment in Canggu' },
         { quote: 'Das Objekt entsprach den Aufnahmen. Das ist selten auf Bali — normalerweise sehen Anzeige und Realität völlig anders aus.', author: 'Dmitri I., Dubai', role: 'kaufte eine Villa in Pererenan' },
       ],
     },
     finalCta: {
       h2: 'Finden Sie das Objekt, das Sie wirklich kaufen werden.',
-      sub: 'Fragen Sie den KI-Makler oder hinterlassen Sie eine Anfrage — wir bringen den Deal sicher zum Abschluss.',
-      primary: 'Den KI-Makler fragen',
+      sub: 'Wählen Sie ein Objekt nach echten Zahlen oder hinterlassen Sie eine Anfrage — wir bringen den Deal sicher zum Abschluss.',
+      primary: 'Villen ansehen',
       secondary: 'Anfrage hinterlassen',
       secondaryText: 'Ich möchte eine Anfrage hinterlassen — bitte verbinden Sie mich mit einem Manager: Ich brauche eine Objektpräsentation und Hilfe beim Deal.',
     },
@@ -658,10 +659,10 @@ const COPY = {
     howItWorks: {
       eyebrow: '运作方式',
       heading: '安心购买——无需飞往巴厘岛。',
-      sub: 'AI经纪人与当地团队，带您从提问一路到交钥匙。',
-      cta: '咨询AI经纪人',
+      sub: '真实数据的房源库与当地团队，带您从搜索一路到交钥匙。',
+      cta: '浏览别墅',
       steps: [
-        { n: '01', Icon: Sparkles, title: '咨询AI经纪人', body: '为您筛选房源并解答疑问。免费，全天候。' },
+        { n: '01', Icon: Search, title: '找到房源', body: '按价格、地区和收益筛选。免费，无需注册。' },
         { n: '02', Icon: TrendingUp, title: '研究房产', body: '邻近收益、竞品、文件、开发商——不看效果图。' },
         { n: '03', Icon: Phone, title: '提交申请', body: 'Zoom演示、看房、有保障的安全交易。' },
       ],
@@ -742,14 +743,14 @@ const COPY = {
       heading: '已经通过我们购买。',
       items: [
         { quote: '两周内买下一套别墅。无需飞往巴厘岛。所有文件和核查都在平台内完成。', author: 'Alexander K., Moscow', role: '于2025年12月购入Origins Villa 75 m²' },
-        { quote: '我们在一个Telegram会话里比较了七处房产。当我为算账睡不着时，AI经纪人半夜也在回复我。', author: 'Anna L., Berlin', role: '在Canggu购入一套公寓' },
+        { quote: '我们按邻近房源的真实收益比较了七处房产——一个晚上就选定了，而不是和中介来回沟通一个月。', author: 'Anna L., Berlin', role: '在Canggu购入一套公寓' },
         { quote: '房产与拍摄的一致。这在巴厘岛很难得——通常广告和现实截然不同。', author: 'Dmitri I., Dubai', role: '在Pererenan购入一套别墅' },
       ],
     },
     finalCta: {
       h2: '找到您真正会买下的房产。',
-      sub: '咨询AI经纪人或提交申请——我们会安全地促成交易。',
-      primary: '咨询AI经纪人',
+      sub: '用真实数据挑选房源或提交申请——我们会安全地促成交易。',
+      primary: '浏览别墅',
       secondary: '提交申请',
       secondaryText: '我想提交申请——请安排一位经理：我需要房产演示以及交易方面的帮助。',
     },
@@ -775,10 +776,10 @@ const COPY = {
     howItWorks: {
       eyebrow: 'HOE HET WERKT',
       heading: 'Koop met vertrouwen — zonder naar Bali te vliegen.',
-      sub: 'Een AI-makelaar en een team ter plaatse begeleiden je van vraag tot sleutel.',
-      cta: 'Vraag de AI-makelaar',
+      sub: 'Een catalogus met echte cijfers en een team ter plaatse begeleiden je van zoektocht tot sleutel.',
+      cta: "Bekijk villa's",
       steps: [
-        { n: '01', Icon: Sparkles, title: 'Vraag de AI-makelaar', body: 'Hij maakt een selectie en beantwoordt je vragen. Gratis, 24/7.' },
+        { n: '01', Icon: Search, title: 'Vind een object', body: 'Filter op prijs, wijk en rendement. Gratis, zonder registratie.' },
         { n: '02', Icon: TrendingUp, title: 'Bestudeer het object', body: 'Rendement van buren, concurrenten, documenten, ontwikkelaar — zonder renders.' },
         { n: '03', Icon: Phone, title: 'Laat een aanvraag achter', body: 'Een Zoom-presentatie, een bezichtiging, een veilige deal met garanties.' },
       ],
@@ -859,14 +860,14 @@ const COPY = {
       heading: 'Kochten al via ons.',
       items: [
         { quote: 'In twee weken een villa gekocht. Zonder naar Bali te vliegen. Alle papieren en controles binnen het platform.', author: 'Alexander K., Moscow', role: 'kocht Origins Villa 75 m² in december 2025' },
-        { quote: "We vergeleken zeven objecten in één Telegram-thread. De AI-makelaar antwoordde me 's nachts toen ik niet kon slapen van het rekenen.", author: 'Anna L., Berlin', role: 'kocht een appartement in Canggu' },
+        { quote: "We vergeleken zeven objecten op het echte rendement van de buren — de keuze kostte één avond, geen maand mailen met makelaars.", author: 'Anna L., Berlin', role: 'kocht een appartement in Canggu' },
         { quote: 'Het object kwam overeen met de opnames. Dat is zeldzaam op Bali — meestal zien de advertentie en de werkelijkheid er totaal anders uit.', author: 'Dmitri I., Dubai', role: 'kocht een villa in Pererenan' },
       ],
     },
     finalCta: {
       h2: 'Vind het object dat je echt gaat kopen.',
-      sub: 'Vraag de AI-makelaar of laat een aanvraag achter — we brengen de deal veilig tot een goed einde.',
-      primary: 'Vraag de AI-makelaar',
+      sub: 'Kies een object op echte cijfers of laat een aanvraag achter — we brengen de deal veilig tot een goed einde.',
+      primary: "Bekijk villa's",
       secondary: 'Laat een aanvraag achter',
       secondaryText: 'Ik wil een aanvraag achterlaten — verbind me met een manager: ik heb een objectpresentatie nodig en hulp bij de deal.',
     },
@@ -892,10 +893,10 @@ const COPY = {
     howItWorks: {
       eyebrow: 'SAPUNAPI CARANE',
       heading: 'Numbas anteng — tanpa makeber ka Bali.',
-      sub: 'Broker AI lan tim ring genah nuntun Ragane saking patakon kantos konci.',
-      cta: 'Mataken broker AI',
+      sub: 'Katalog madaging angka nyata lan tim ring genah nuntun Ragane saking ngrereh kantos konci.',
+      cta: 'Cingak vila',
       steps: [
-        { n: '01', Icon: Sparkles, title: 'Mataken broker AI', body: 'Ngerincikang properti lan nyawis patakon Ragane. Gratis, 24/7.' },
+        { n: '01', Icon: Search, title: 'Rereh properti', body: 'Saring manut aji, wewengkon, lan hasil. Gratis, tanpa pendaftaran.' },
         { n: '02', Icon: TrendingUp, title: 'Nyelajahin properti', body: 'Hasil pisaga, saingan, dokumen, pangwangun — tanpa render.' },
         { n: '03', Icon: Phone, title: 'Ngicalang permintaan', body: 'Presentasi Zoom, ningalin, transaksi aman sareng jaminan.' },
       ],
@@ -976,14 +977,14 @@ const COPY = {
       heading: 'Sampun numbas lewat tiang.',
       items: [
         { quote: 'Numbas vila ring kalih minggu. Tanpa makeber ka Bali. Sami dokumen lan pamariksan wenten ring platform.', author: 'Alexander K., Moscow', role: 'numbas Origins Villa 75 m² ring Desember 2025' },
-        { quote: 'Tiang ngbandingang pitu properti ring asiki utas Telegram. Broker AI nyawis tiang wengi rikala tiang nenten prasida sirep krana ngitung.', author: 'Anna L., Berlin', role: 'numbas apartemen ring Canggu' },
+        { quote: 'Tiang ngbandingang pitu properti manut hasil nyata pisaga — milih wantah aptiang awengi, boya awulan mabalesan sareng agen.', author: 'Anna L., Berlin', role: 'numbas apartemen ring Canggu' },
         { quote: 'Propertine cocok sareng rekamanne. Punika arang ring Bali — biasane iklan lan kanyatan matiosan pisan.', author: 'Dmitri I., Dubai', role: 'numbas vila ring Pererenan' },
       ],
     },
     finalCta: {
       h2: 'Rereh properti sane pacang katumbas Ragane.',
-      sub: 'Mataken broker AI utawi ngicalang permintaan — tiang jagi muputang transaksi sane aman.',
-      primary: 'Mataken broker AI',
+      sub: 'Pilih properti manut angka nyata utawi ngicalang permintaan — tiang jagi muputang transaksi sane aman.',
+      primary: 'Cingak vila',
       secondary: 'Ngicalang permintaan',
       secondaryText: 'Tiang meled ngicalang permintaan — ledang nyambungang manajer: tiang merluang presentasi properti lan wantuan transaksi.',
     },
@@ -1009,10 +1010,10 @@ const COPY = {
     howItWorks: {
       eyebrow: 'JAK TO DZIAŁA',
       heading: 'Kupuj z pewnością — bez lotu na Bali.',
-      sub: 'Broker AI i zespół na miejscu prowadzą Cię od pytania po klucze.',
-      cta: 'Zapytaj brokera AI',
+      sub: 'Katalog z realnymi liczbami i zespół na miejscu prowadzą Cię od wyszukiwania po klucze.',
+      cta: 'Zobacz wille',
       steps: [
-        { n: '01', Icon: Sparkles, title: 'Zapytaj brokera AI', body: 'Wybierze nieruchomości i odpowie na pytania. Za darmo, 24/7.' },
+        { n: '01', Icon: Search, title: 'Znajdź nieruchomość', body: 'Filtruj po cenie, dzielnicy i rentowności. Za darmo, bez rejestracji.' },
         { n: '02', Icon: TrendingUp, title: 'Przeanalizuj nieruchomość', body: 'Rentowność sąsiadów, konkurencja, dokumenty, deweloper — bez renderów.' },
         { n: '03', Icon: Phone, title: 'Zostaw zgłoszenie', body: 'Prezentacja na Zoomie, oglądanie, bezpieczna transakcja z gwarancjami.' },
       ],
@@ -1093,14 +1094,14 @@ const COPY = {
       heading: 'Już kupili przez nas.',
       items: [
         { quote: 'Kupiłem willę w dwa tygodnie. Bez lotu na Bali. Wszystkie dokumenty i kontrole w ramach platformy.', author: 'Alexander K., Moscow', role: 'kupił Origins Villa 75 m² w grudniu 2025' },
-        { quote: 'Porównaliśmy siedem nieruchomości w jednym wątku na Telegramie. Broker AI odpowiadał mi w nocy, gdy nie mogłam spać od liczenia.', author: 'Anna L., Berlin', role: 'kupiła apartament w Canggu' },
+        { quote: 'Porównaliśmy siedem nieruchomości po realnej rentowności sąsiadów — wybór zajął wieczór, a nie miesiąc korespondencji z agentami.', author: 'Anna L., Berlin', role: 'kupiła apartament w Canggu' },
         { quote: 'Nieruchomość zgadzała się z nagraniami. To rzadkość na Bali — zwykle reklama i rzeczywistość wyglądają zupełnie inaczej.', author: 'Dmitri I., Dubai', role: 'kupił willę w Pererenan' },
       ],
     },
     finalCta: {
       h2: 'Znajdź nieruchomość, którą naprawdę kupisz.',
-      sub: 'Zapytaj brokera AI lub zostaw zgłoszenie — doprowadzimy transakcję bezpiecznie do końca.',
-      primary: 'Zapytaj brokera AI',
+      sub: 'Wybierz nieruchomość na podstawie realnych liczb lub zostaw zgłoszenie — doprowadzimy transakcję bezpiecznie do końca.',
+      primary: 'Zobacz wille',
       secondary: 'Zostaw zgłoszenie',
       secondaryText: 'Chcę zostawić zgłoszenie — proszę o kontakt z menedżerem: potrzebuję prezentacji nieruchomości i pomocy przy transakcji.',
     },
@@ -1126,10 +1127,10 @@ const COPY = {
     howItWorks: {
       eyebrow: 'ЯК ЦЕ ПРАЦЮЄ',
       heading: 'Купуйте впевнено — навіть не прилітаючи на Балі.',
-      sub: 'AI-брокер і команда на місці проведуть від запитання до ключів.',
-      cta: 'Запитати AI-брокера',
+      sub: 'Каталог із реальними цифрами і команда на місці проведуть від пошуку до ключів.',
+      cta: 'Дивитися вілли',
       steps: [
-        { n: '01', Icon: Sparkles, title: 'Запитайте AI-брокера', body: 'Підбере об’єкти й відповість на запитання. Безкоштовно, 24/7.' },
+        { n: '01', Icon: Search, title: 'Знайдіть об’єкт', body: 'Фільтри за ціною, районом і дохідністю. Безкоштовно, без реєстрації.' },
         { n: '02', Icon: TrendingUp, title: 'Вивчіть об’єкт', body: 'Дохідність сусідів, конкуренти, документи, забудовник — без рендерів.' },
         { n: '03', Icon: Phone, title: 'Залиште заявку', body: 'Zoom-презентація, показ, безпечна угода з гарантіями.' },
       ],
@@ -1210,14 +1211,14 @@ const COPY = {
       heading: 'Вже купили через нас.',
       items: [
         { quote: 'Купив вілу за два тижні. Без перельоту на Балі. Усі документи й перевірки — усередині платформи.', author: 'Alexander K., Moscow', role: 'купив Origins Villa 75 m² у грудні 2025' },
-        { quote: 'Порівняли сім об’єктів в одному Telegram-чаті. AI-брокер відповідав уночі, коли я не міг заснути від розрахунків.', author: 'Anna L., Berlin', role: 'купила апартаменти в Canggu' },
+        { quote: 'Порівняли сім об’єктів за реальною дохідністю сусідів — вибір зайняв вечір, а не місяць листування з агентами.', author: 'Anna L., Berlin', role: 'купила апартаменти в Canggu' },
         { quote: 'Об’єкт відповідав зйомці. Це рідкість на Балі — зазвичай фото в рекламі й реальність зовсім різні.', author: 'Dmitri I., Dubai', role: 'купив вілу в Pererenan' },
       ],
     },
     finalCta: {
       h2: 'Знайдіть нерухомість, яку справді купите.',
-      sub: 'Запитайте AI-брокера або залиште заявку — доведемо до безпечної угоди.',
-      primary: 'Запитати AI-брокера',
+      sub: 'Оберіть об’єкт за реальними цифрами або залиште заявку — доведемо до безпечної угоди.',
+      primary: 'Дивитися вілли',
       secondary: 'Залишити заявку',
       secondaryText: 'Хочу залишити заявку — підключіть менеджера: потрібна презентація об’єкта та допомога з угодою.',
     },
@@ -1378,13 +1379,11 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
             </p>
 
             <div className="mt-8 md:mt-10">
-              <HeroBalinaSearch
+              <HeroCatalogSearch
                 lang={lang}
-                placeholder={c.hero.placeholder}
                 tryLabel={c.hero.tryLabel}
                 suggestions={c.hero.suggestions}
                 sendAria={c.hero.ctaPrimary}
-                voiceAria={c.hero.voiceAria}
               />
             </div>
           </div>
@@ -1441,9 +1440,12 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
           })}
         </div>
         <div className="mt-9">
-          <BalinaCTA className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[var(--color-primary)] text-white text-[14.5px] font-medium hover:bg-[var(--color-primary-pressed)] transition-colors cursor-pointer">
-            <Sparkles size={15} /> {c.howItWorks.cta}
-          </BalinaCTA>
+          <Link
+            href={switchLangPath('/ru/villy', lang)}
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[var(--color-primary)] text-white text-[14.5px] font-medium hover:bg-[var(--color-primary-pressed)] transition-colors no-underline"
+          >
+            <Search size={15} /> {c.howItWorks.cta}
+          </Link>
         </div>
       </SectionWrap>
 
@@ -1471,33 +1473,37 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
       </SectionWrap>
 
       {/* === AI broker — copy + live chat mockup ================ */}
-      <SectionWrap className="border-t border-[var(--color-border)]">
-        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 lg:items-center">
-          <div>
-            <h2 className="text-[28px] md:text-[40px] leading-[1.1] font-light tracking-[-0.02em] text-[#0E1A14]">
-              {c.ai.heading}
-            </h2>
-            <p className="mt-4 text-[14.5px] leading-[1.6] text-[#1A2620] font-medium border-l-2 border-[var(--color-primary)] pl-4">
-              {c.ai.anon}
-            </p>
-            <div className="mt-8 flex items-center gap-3 flex-wrap">
-              <BalinaCTA className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[var(--color-primary)] text-white text-[14.5px] font-medium hover:bg-[var(--color-primary-pressed)] transition-colors cursor-pointer">
-                <Sparkles size={15} /> {c.howItWorks.cta}
-              </BalinaCTA>
-              <LeadButton
-                label={c.ai.cta}
-                lang={lang}
-                context={{ source: 'home' }}
-                icon={<Send size={15} />}
-                className="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-[#D5DDD8] text-[14.5px] font-medium text-[#1A2620] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors"
-              />
+      {/* Секция живёт только при включённом консультанте (lib/consultant-flag.ts):
+          продавать чат, которого нет, нельзя. */}
+      {CONSULTANT_ENABLED && (
+        <SectionWrap className="border-t border-[var(--color-border)]">
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 lg:items-center">
+            <div>
+              <h2 className="text-[28px] md:text-[40px] leading-[1.1] font-light tracking-[-0.02em] text-[#0E1A14]">
+                {c.ai.heading}
+              </h2>
+              <p className="mt-4 text-[14.5px] leading-[1.6] text-[#1A2620] font-medium border-l-2 border-[var(--color-primary)] pl-4">
+                {c.ai.anon}
+              </p>
+              <div className="mt-8 flex items-center gap-3 flex-wrap">
+                <BalinaCTA className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[var(--color-primary)] text-white text-[14.5px] font-medium hover:bg-[var(--color-primary-pressed)] transition-colors cursor-pointer">
+                  <Sparkles size={15} /> {pickCopy({ ru: 'Спросить AI-брокера', en: 'Ask the AI broker', id: 'Tanya broker AI', fr: 'Demander au courtier IA', de: 'Den KI-Makler fragen', zh: '咨询AI经纪人', nl: 'Vraag de AI-makelaar', ban: 'Mataken broker AI', pl: 'Zapytaj brokera AI', uk: 'Запитати AI-брокера' }, lang)}
+                </BalinaCTA>
+                <LeadButton
+                  label={c.ai.cta}
+                  lang={lang}
+                  context={{ source: 'home' }}
+                  icon={<Send size={15} />}
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-[#D5DDD8] text-[14.5px] font-medium text-[#1A2620] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors"
+                />
+              </div>
+            </div>
+            <div className="lg:pl-4">
+              <BalinaChatMock lang={lang} />
             </div>
           </div>
-          <div className="lg:pl-4">
-            <BalinaChatMock lang={lang} />
-          </div>
-        </div>
-      </SectionWrap>
+        </SectionWrap>
+      )}
 
       {/* === On your own or through us = safer =================== */}
       <SectionWrap className="border-t border-[var(--color-border)]">
@@ -1512,9 +1518,13 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
               </h2>
               <p className="mt-5 text-[15px] leading-[1.65] text-[#3D4D44]">{c.safety.body}</p>
               <div className="mt-7">
-                <BalinaCTA text={c.safety.ctaText} className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[var(--color-primary)] text-white text-[14.5px] font-medium hover:bg-[var(--color-primary-pressed)] transition-colors cursor-pointer">
-                  <Send size={15} /> {c.safety.cta}
-                </BalinaCTA>
+                <LeadButton
+                  label={c.safety.cta}
+                  lang={lang}
+                  context={{ source: 'home' }}
+                  icon={<Send size={15} />}
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[var(--color-primary)] text-white text-[14.5px] font-medium hover:bg-[var(--color-primary-pressed)] transition-colors"
+                />
               </div>
             </div>
             <ul className="lg:col-span-5 grid gap-3">
@@ -1691,12 +1701,19 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
               {c.finalCta.sub}
             </p>
             <div className="mt-9 flex items-center gap-3 flex-wrap justify-center">
-              <BalinaCTA className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-[var(--color-primary)] text-white text-[15px] font-medium hover:bg-[var(--color-primary-pressed)] transition-colors cursor-pointer">
-                <Sparkles size={16} /> {c.finalCta.primary}
-              </BalinaCTA>
-              <BalinaCTA text={c.finalCta.secondaryText} className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-[15px] font-medium text-[#1A2620] hover:text-[var(--color-primary)] transition-colors cursor-pointer">
-                <Send size={15} /> {c.finalCta.secondary} <ArrowRight size={14} />
-              </BalinaCTA>
+              <Link
+                href={switchLangPath('/ru/villy', lang)}
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-[var(--color-primary)] text-white text-[15px] font-medium hover:bg-[var(--color-primary-pressed)] transition-colors no-underline"
+              >
+                <Search size={16} /> {c.finalCta.primary}
+              </Link>
+              <LeadButton
+                label={c.finalCta.secondary}
+                lang={lang}
+                context={{ source: 'home' }}
+                icon={<Send size={15} />}
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-[15px] font-medium text-[#1A2620] hover:text-[var(--color-primary)] transition-colors"
+              />
             </div>
           </div>
         </PageContainer>

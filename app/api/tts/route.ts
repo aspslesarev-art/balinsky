@@ -4,6 +4,7 @@
 // voice can be swapped from the ElevenLabs dashboard without a deploy.
 import { NextResponse } from 'next/server'
 import { clientIp, rateLimit } from '@/lib/rate-limit'
+import { CONSULTANT_ENABLED, consultantDisabledResponse } from '@/lib/consultant-flag'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -20,6 +21,9 @@ const MODEL_ID = process.env.ELEVENLABS_MODEL_ID ?? 'eleven_turbo_v2_5'
 const MAX_CHARS = 900
 
 export async function POST(req: Request) {
+  // Консультант выключен глобально (lib/consultant-flag.ts): отвечаем сразу,
+  // не трогая Azure OpenAI / ElevenLabs — платные вызовы не уходят.
+  if (!CONSULTANT_ENABLED) return consultantDisabledResponse()
   const apiKey = process.env.ELEVENLABS_API_KEY
   if (!apiKey) return NextResponse.json({ error: 'tts_unconfigured' }, { status: 503 })
 
