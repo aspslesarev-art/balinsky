@@ -253,6 +253,22 @@ export type StartSender = { username?: string | null; first_name?: string | null
 
 // Site login. The visitor tapped "войти через Telegram" on a gated block, so
 // mint a one-time link and send it straight back — two taps end to end.
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
+
+/** Экранирование под parseMode: 'HTML' — иначе `&` в next ломает разметку. */
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+}
+
+/**
+ * Ссылка входа. `next` — путь, куда вернуть человека после входа; маршрут
+ * `/auth/[token]` всё равно перепроверит его и чужой origin не пустит.
+ */
+function loginUrl(token: string, nextPath?: string | null): string {
+  const base = `${SITE_URL}/auth/${encodeURIComponent(token)}`
+  return nextPath ? `${base}?next=${encodeURIComponent(nextPath)}` : base
+}
+
 async function handleLogin(chatId: number | undefined, from?: StartSender): Promise<StartResult> {
   if (!chatId) return { reply: defaultGreeting() }
   const { issueLoginToken } = await import('@/lib/site-auth')
@@ -274,7 +290,7 @@ async function handleLogin(chatId: number | undefined, from?: StartSender): Prom
     reply: {
       text:
         '<b>Ваша ссылка для входа</b>\n\n' +
-        `<a href="https://balinsky.info/auth/${token}">Открыть balinsky.info и войти</a>\n\n` +
+        `<a href="${escapeHtml(loginUrl(token))}">Открыть balinsky.info и войти</a>\n\n` +
         'Ссылка одноразовая и действует 15 минут. После входа откроются аналитика района, ' +
         'тепловая карта, расчёты доходности и рейтинг застройщика.',
       parseMode: 'HTML',
@@ -283,35 +299,47 @@ async function handleLogin(chatId: number | undefined, from?: StartSender): Prom
   }
 }
 
-// Вход по коду: сайт передал в payload свой challenge, бот выдаёт на него
-// четыре цифры. Код без challenge бесполезен, поэтому его не страшно
-// показывать в переписке — он подойдёт только к тому браузеру, который его
-// запросил, и только 15 минут.
+// Вход с той страницы, где человек упёрся в закрытый блок.
+//
+// Главное здесь — ссылка. Четыре цифры сами по себе означают, что человеку
+// надо вернуться в браузер и найти форму, а на телефоне обратной дороги
+// фактически нет: браузер остаётся где-то за приложением. Ссылка
+// `/auth/<token>?next=<страница>` решает это одним тапом — она же и логинит,
+// и открывает ровно ту страницу, с которой уходили.
+//
+// Код остаётся ниже как запасной путь: ссылка откроется в браузере по
+// умолчанию, и если сайт был открыт в другом, вход достанется не той
+// вкладке. Код привязан к запросившему браузеру, поэтому там он и сработает.
 async function handleLoginCode(challenge: string, chatId: number | undefined, from?: StartSender): Promise<StartResult> {
   if (!chatId) return { reply: defaultGreeting() }
-  const { issueLoginCode } = await import('@/lib/site-auth')
-  const code = await issueLoginCode(challenge, {
+  const { issueLogin } = await import('@/lib/site-auth')
+  const login = await issueLogin(challenge, {
     id: chatId,
     username: from?.username ?? null,
     firstName: from?.first_name ?? null,
     lastName: from?.last_name ?? null,
   })
-  if (!code) {
+  if (!login) {
     return {
       reply: {
         text:
           '<b>Срок этого запроса истёк.</b>\n\n' +
-          'Вернитесь на balinsky.info и нажмите «Войти» ещё раз — придёт новый код.',
+          'Вернитесь на balinsky.info и нажмите «Войти» ещё раз — придёт новая ссылка.',
         parseMode: 'HTML',
       },
     }
   }
+
+  const url = loginUrl(login.token, login.nextPath)
+  const back = login.nextPath ? 'Открыть страницу и войти' : 'Открыть balinsky.info и войти'
   return {
     reply: {
       text:
-        '<b>Код для входа: ' + code + '</b>\n\n' +
-        'Введите его на сайте в окне входа. Код одноразовый и действует 15 минут.\n\n' +
-        'После входа откроются аналитика района, тепловая карта, расчёты доходности и рейтинг застройщика.',
+        '<b>Вход на balinsky.info</b>\n\n' +
+        `<a href="${escapeHtml(url)}">${back}</a>\n\n` +
+        'Ссылка одноразовая и действует 15 минут. После входа откроются аналитика района, ' +
+        'тепловая карта, расчёты доходности и рейтинг застройщика.\n\n' +
+        `Если сайт открыт в другом браузере, введите там код: <b>${login.code}</b>`,
       parseMode: 'HTML',
     },
     tags: ['login'],

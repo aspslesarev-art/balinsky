@@ -1,37 +1,189 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
-// Вход по коду из Telegram.
+// Вход через Telegram.
 //
-// Шаг 1 — сайт заводит challenge (POST /api/auth/start) и открывает бота с
-// ним в deep-link. Шаг 2 — посетитель вводит четыре цифры, которые прислал
-// бот. Код действителен только вместе с challenge из httpOnly-куки этого
-// браузера, поэтому перебор чужого аккаунта невозможен.
+// Сайт заводит challenge (POST /api/auth/start), передавая ему текущую
+// страницу, и открывает бота с challenge в deep-link. Бот отвечает ссылкой
+// `/auth/<token>?next=<эта страница>` — один тап, и человек снова здесь же,
+// уже авторизованным. Возвращаться в браузер и что-то искать не нужно: это и
+// была та поломка, из-за которой на телефоне вход не доходил до конца.
+//
+// Четыре цифры бот присылает следом, и они остаются осмысленными: ссылку
+// откроет браузер по умолчанию, а если сайт был открыт в другом, вход
+// достанется не той вкладке. Код привязан к challenge из httpOnly-куки
+// именно этого браузера — поэтому здесь он и сработает, и перебор чужого
+// аккаунта им невозможен.
 //
 // Challenge выпускается по клику, а не при рендере: гейт живёт внутри
 // ISR-страниц, и выпущенный на рендере challenge был бы общим для всех.
+//
+// В бота уходим той же вкладкой, а не через `window.open`: вторая вкладка
+// тут же перехватывалась приложением Telegram, и страница с формой
+// оставалась в первой, до которой уже никто не добирался. На десктопе новая
+// вкладка ничего не теряет — там по-прежнему window.open.
+//
+// «Ждём код» переживает уход со страницы: флаг лежит в sessionStorage,
+// поэтому после возврата (в том числе с перезагрузкой) открыт сразу ввод
+// кода, а не кнопка «Получить код». Флаг общий для всех гейтов страницы —
+// вводить код можно в том блоке, который перед глазами.
 
 type Step = 'idle' | 'code'
 
 const CODE_LENGTH = 4
+
+/**
+ * Ждём код. Время старта — чтобы флаг не пережил сам код; ссылка на бота —
+ * чтобы запасной переход на t.me был на месте и после перезагрузки.
+ */
+const PENDING_KEY = 'bx_login_pending'
+const PENDING_TTL_MS = 15 * 60 * 1000
+/** Синхронизация всех форм на странице между собой. */
+const PENDING_EVENT = 'bx-login-pending'
+
+type Pending = { at: number; url: string }
+
+function readPending(): Pending | null {
+  try {
+    const raw = window.sessionStorage.getItem(PENDING_KEY)
+    if (!raw) return null
+    const p = JSON.parse(raw) as Partial<Pending>
+    const at = Number(p?.at)
+    if (!Number.isFinite(at) || Date.now() - at > PENDING_TTL_MS) {
+      window.sessionStorage.removeItem(PENDING_KEY)
+      return null
+    }
+    return { at, url: typeof p?.url === 'string' ? p.url : '' }
+  } catch {
+    return null
+  }
+}
+
+function writePending(url: string | null) {
+  try {
+    if (url === null) window.sessionStorage.removeItem(PENDING_KEY)
+    else window.sessionStorage.setItem(PENDING_KEY, JSON.stringify({ at: Date.now(), url }))
+  } catch {
+    // Приватный режим Safari — обойдёмся состоянием в памяти.
+  }
+  window.dispatchEvent(new Event(PENDING_EVENT))
+}
+
+/**
+ * Телефон/планшет: там новая вкладка и есть источник проблемы.
+ *
+ * Две проверки, потому что каждой поодиночке мало: iPadOS в Safari
+ * представляется десктопом и медиазапрос не спасает, а `maxTouchPoints`
+ * бывает ненулевым у ноутбуков с сенсорным экраном — там новая вкладка
+ * как раз уместна, но и медиазапрос на них `fine`.
+ */
+function isTouchDevice(): boolean {
+  try {
+    if (window.matchMedia('(pointer: coarse)').matches) return true
+    return navigator.maxTouchPoints > 0 && !window.matchMedia('(hover: hover)').matches
+  } catch {
+    return false
+  }
+}
+
+/** Страница, на которую бот вернёт человека после входа. */
+function currentPath(): string {
+  return window.location.pathname + window.location.search
+}
 
 export function LoginCodeForm({ ctaLabel }: { ctaLabel: string }) {
   const [step, setStep] = useState<Step>('idle')
   const [code, setCode] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  /** Ссылка на бота из последнего запроса — для запасного перехода на t.me. */
+  const [botUrl, setBotUrl] = useState('')
+  const inputRef = useRef<HTMLInputElement | null>(null)
+
+  // Возврат из Telegram: показать ввод кода и, если карточка на экране,
+  // поставить курсор в поле. Фокус только у видимой формы — иначе три гейта
+  // страницы начали бы перетягивать скролл друг у друга.
+  const focusIfVisible = useCallback(() => {
+    const el = inputRef.current
+    if (!el) return
+    const r = el.getBoundingClientRect()
+    if (r.bottom > 0 && r.top < window.innerHeight) el.focus()
+  }, [])
+
+  useEffect(() => {
+    const sync = () => {
+      const p = readPending()
+      setStep(p ? 'code' : 'idle')
+      if (p) setBotUrl(p.url)
+    }
+    const onReturn = () => {
+      const p = readPending()
+      if (!p) return
+      setStep('code')
+      setBotUrl(p.url)
+      // Ввод появляется в этом же кадре — фокус после отрисовки.
+      requestAnimationFrame(focusIfVisible)
+    }
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') onReturn()
+    }
+
+    // На монтировании — сразу onReturn: возврат из Telegram часто приходит
+    // с восстановлением страницы, и pageshow успевает отработать до того,
+    // как этот эффект повесит слушателя.
+    onReturn()
+    window.addEventListener(PENDING_EVENT, sync)
+    window.addEventListener('pageshow', onReturn)
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      window.removeEventListener(PENDING_EVENT, sync)
+      window.removeEventListener('pageshow', onReturn)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [focusIfVisible])
 
   async function start() {
     setBusy(true)
     setError(null)
     try {
-      const r = await fetch('/api/auth/start', { method: 'POST' })
+      const r = await fetch('/api/auth/start', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        // Страница уезжает в ссылку, которую бот пришлёт в ответ.
+        body: JSON.stringify({ path: currentPath() }),
+      })
       const data = await r.json()
       if (!r.ok || !data?.url) throw new Error('start')
-      window.open(data.url, '_blank', 'noopener,noreferrer')
+
+      // Флаг ставим ДО перехода: страница сейчас сменится, и возврата в этот
+      // обработчик уже не будет.
+      writePending(data.url)
+      setBotUrl(data.url)
       setStep('code')
+
+      if (isTouchDevice()) {
+        // Той же вкладкой: вторую тут же перехватывало приложение Telegram,
+        // и страница с формой оставалась недосягаемой в первой.
+        window.location.href = data.url
+        return
+      }
+      // Десктоп: новая вкладка. Если её съел блокировщик всплывающих окон
+      // (жест уже «потрачен» ожиданием fetch), уходим той же вкладкой —
+      // молча ничего не делать здесь нельзя.
+      //
+      // `opener` обнуляем вручную, а не флагом `noopener` в features: с ним
+      // window.open по спецификации возвращает null всегда, и блокировку
+      // всплывающих окон стало бы не отличить от нормально открытой вкладки.
+      const opened = window.open(data.url, '_blank')
+      if (!opened) {
+        window.location.href = data.url
+        return
+      }
+      opened.opener = null
+      requestAnimationFrame(focusIfVisible)
     } catch {
+      writePending(null)
       setError('Не получилось начать вход. Попробуйте ещё раз.')
     } finally {
       setBusy(false)
@@ -49,6 +201,7 @@ export function LoginCodeForm({ ctaLabel }: { ctaLabel: string }) {
       })
       const data = await r.json()
       if (r.ok && data?.ok) {
+        writePending(null)
         // Перезагрузка — самый честный способ показать открытый контент:
         // блюр снимает инлайн-скрипт в layout по куке bx_auth.
         window.location.reload()
@@ -87,9 +240,12 @@ export function LoginCodeForm({ ctaLabel }: { ctaLabel: string }) {
 
   return (
     <div className="mt-4">
-      <p className="text-sm text-gray-600">Бот прислал четыре цифры — введите их здесь.</p>
+      <p className="text-sm text-gray-600">
+        Бот прислал ссылку — откройте её, и вы вернётесь сюда уже со входом. Если сайт открыт
+        в другом браузере, введите здесь четыре цифры из того же сообщения.
+      </p>
       <input
-        autoFocus
+        ref={inputRef}
         inputMode="numeric"
         pattern="[0-9]*"
         autoComplete="one-time-code"
@@ -108,6 +264,16 @@ export function LoginCodeForm({ ctaLabel }: { ctaLabel: string }) {
           Прислать новый
         </button>
       </p>
+      {botUrl && (
+        // Если Telegram так и не открылся. Без target="_blank": вторая
+        // вкладка и была исходной поломкой.
+        <p className="mt-1 text-xs text-gray-500">
+          Telegram не открылся?{' '}
+          <a href={botUrl} rel="noreferrer" className="underline hover:no-underline">
+            Открыть бота
+          </a>
+        </p>
+      )}
     </div>
   )
 }
