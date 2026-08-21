@@ -13,8 +13,17 @@ export const dynamic = 'force-dynamic'
 
 const BOT = 'BalinskyBot'
 
-export async function POST() {
-  const challenge = await startLoginChallenge()
+export async function POST(req: Request) {
+  // Страница, с которой начали вход: бот вернёт человека ровно на неё.
+  // Тело может быть пустым — тогда просто не будет ссылки «вернуться сюда».
+  let path: unknown = null
+  try {
+    path = (await req.json())?.path
+  } catch {
+    // Пустое или битое тело — не повод не пускать в бота.
+  }
+
+  const challenge = await startLoginChallenge(path)
   if (!challenge) {
     return NextResponse.json({ ok: false, error: 'start_failed' }, { status: 503 })
   }

@@ -170,6 +170,32 @@ export type TelegramIdentity = {
   lastName?: string | null
 }
 
+/** Заводит аккаунт, если его ещё нет. Личность приходит из вебхука Telegram. */
+async function upsertUser(who: TelegramIdentity): Promise<void> {
+  const { error } = await sb.from('site_users').upsert(
+    {
+      telegram_id: who.id,
+      username: who.username ?? null,
+      first_name: who.firstName ?? null,
+      last_name: who.lastName ?? null,
+    },
+    { onConflict: 'telegram_id', ignoreDuplicates: false },
+  )
+  if (error) throw new Error(error.message)
+}
+
+/** Одноразовый токен входа. Живёт столько же, сколько ссылка в переписке. */
+async function mintLoginToken(telegramId: number): Promise<string> {
+  const token = randomBytes(24).toString('base64url')
+  const { error } = await sb.from('login_tokens').insert({
+    token,
+    telegram_id: telegramId,
+    expires_at: new Date(Date.now() + TOKEN_TTL_MS).toISOString(),
+  })
+  if (error) throw new Error(error.message)
+  return token
+}
+
 /**
  * Upsert the account and mint a one-time login link for it. Called from the
  * bot, which already knows who it is talking to — so the identity here is
@@ -177,25 +203,8 @@ export type TelegramIdentity = {
  */
 export async function issueLoginToken(who: TelegramIdentity): Promise<string | null> {
   try {
-    const { error: upErr } = await sb.from('site_users').upsert(
-      {
-        telegram_id: who.id,
-        username: who.username ?? null,
-        first_name: who.firstName ?? null,
-        last_name: who.lastName ?? null,
-      },
-      { onConflict: 'telegram_id', ignoreDuplicates: false },
-    )
-    if (upErr) throw new Error(upErr.message)
-
-    const token = randomBytes(24).toString('base64url')
-    const { error } = await sb.from('login_tokens').insert({
-      token,
-      telegram_id: who.id,
-      expires_at: new Date(Date.now() + TOKEN_TTL_MS).toISOString(),
-    })
-    if (error) throw new Error(error.message)
-    return token
+    await upsertUser(who)
+    return await mintLoginToken(who.id)
   } catch (e) {
     console.error('[site-auth] issueLoginToken:', e instanceof Error ? e.message : e)
     return null
@@ -260,13 +269,36 @@ export function challengeCookie(challenge: string): CookieSpec {
   }
 }
 
-/** Заводит строку под будущий код и возвращает секрет браузера. */
-export async function startLoginChallenge(): Promise<string | null> {
+/**
+ * Только относительный путь того же сайта.
+ *
+ * Он приезжает из браузера и уедет в ссылку, которую человек откроет одним
+ * тапом, — то есть это готовый open redirect, если пустить туда чужой origin.
+ * `//evil.com` браузер трактует как схему-относительный URL, поэтому одной
+ * проверки на ведущий слэш мало.
+ */
+export function safeNextPath(raw: unknown): string | null {
+  if (typeof raw !== 'string') return null
+  const p = raw.trim()
+  if (!p.startsWith('/') || p.startsWith('//') || p.startsWith('/\\')) return null
+  if (p.length > 512) return null
+  // Перевод строки в пути ломает и заголовок Location, и HTML-ссылку.
+  if (/[\s<>"']/.test(p)) return null
+  return p
+}
+
+/**
+ * Заводит строку под будущий вход и возвращает секрет браузера.
+ *
+ * `nextPath` — страница, с которой человек начал: бот вернёт его ровно туда.
+ */
+export async function startLoginChallenge(nextPath?: unknown): Promise<string | null> {
   try {
     // 24 символа base64url — влезает в payload deep-link'а (лимит Telegram 64).
     const challenge = randomBytes(18).toString('base64url')
     const { error } = await sb.from('login_codes').insert({
       challenge,
+      next_path: safeNextPath(nextPath),
       expires_at: new Date(Date.now() + CODE_TTL_MS).toISOString(),
     })
     if (error) throw new Error(error.message)
@@ -277,45 +309,56 @@ export async function startLoginChallenge(): Promise<string | null> {
   }
 }
 
+export type LoginOffer = {
+  /** Одноразовая ссылка: один тап возвращает на ту же страницу уже с входом. */
+  token: string
+  /** Страница, с которой начали, если сайт её передал. */
+  nextPath: string | null
+  /** Четыре цифры — на случай, когда сайт открыт в другом браузере. */
+  code: string
+}
+
 /**
- * Бот выдаёт код на challenge. Личность здесь доверенная — она пришла из
+ * Бот выдаёт вход на challenge. Личность здесь доверенная — она пришла из
  * вебхука Telegram, поэтому дополнительных доказательств не требуется.
+ *
+ * Даём и ссылку, и код, потому что они закрывают разные случаи. Ссылка —
+ * основной путь: на телефоне человек уходит в приложение и обратно к форме
+ * уже не возвращается, а тап по ссылке сам открывает нужную страницу. Но
+ * ссылка откроется в браузере по умолчанию, и если сайт был открыт в другом,
+ * вход достанется не той вкладке — там выручают четыре цифры, привязанные
+ * именно к тому браузеру, который их запросил.
  */
-export async function issueLoginCode(
+export async function issueLogin(
   challenge: string,
   who: TelegramIdentity,
-): Promise<string | null> {
+): Promise<LoginOffer | null> {
   try {
     if (!challenge || challenge.length > 64) return null
 
-    const { error: upErr } = await sb.from('site_users').upsert(
-      {
-        telegram_id: who.id,
-        username: who.username ?? null,
-        first_name: who.firstName ?? null,
-        last_name: who.lastName ?? null,
-      },
-      { onConflict: 'telegram_id', ignoreDuplicates: false },
-    )
-    if (upErr) throw new Error(upErr.message)
+    await upsertUser(who)
 
     // randomInt — равномерно и без смещения по модулю, в отличие от %.
     const code = String(randomInt(0, 10000)).padStart(4, '0')
 
     // Только на живую строку: истёкший или уже погашенный challenge
-    // нового кода не получает.
+    // нового входа не получает.
     const { data, error } = await sb
       .from('login_codes')
       .update({ code, telegram_id: who.id, attempts: 0 })
       .eq('challenge', challenge)
       .is('used_at', null)
       .gt('expires_at', new Date().toISOString())
-      .select('challenge')
+      .select('next_path')
       .maybeSingle()
     if (error) throw new Error(error.message)
-    return data ? code : null
+    if (!data) return null
+
+    const token = await mintLoginToken(who.id)
+    const nextPath = safeNextPath((data as { next_path: string | null }).next_path)
+    return { token, nextPath, code }
   } catch (e) {
-    console.error('[site-auth] issueLoginCode:', e instanceof Error ? e.message : e)
+    console.error('[site-auth] issueLogin:', e instanceof Error ? e.message : e)
     return null
   }
 }

@@ -106,16 +106,16 @@ const COPY = {
     forInvestor: 'Инвестору',
     forLiving: 'Для жизни',
     forAgent: 'Агенту',
-    cta: 'Получить код в Telegram',
-    note: 'Без пароля: бот пришлёт четыре цифры, введёте их здесь.',
+    cta: 'Войти через Telegram',
+    note: 'Без пароля: бот пришлёт ссылку — она вернёт вас на эту же страницу уже со входом.',
   },
   en: {
     hidden: 'The figures in this block open after sign-in',
     forInvestor: 'Investor',
     forLiving: 'To live in',
     forAgent: 'Agent',
-    cta: 'Get a code in Telegram',
-    note: 'No password: the bot sends four digits, you type them here.',
+    cta: 'Sign in with Telegram',
+    note: 'No password: the bot sends a link that brings you back to this page, signed in.',
   },
 } as const
 

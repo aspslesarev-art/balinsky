@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { consumeLoginToken, sessionCookies } from '@/lib/site-auth'
+import { consumeLoginToken, safeNextPath, sessionCookies } from '@/lib/site-auth'
 
 // Redeem the one-time link the Telegram bot sent.
 //
@@ -10,10 +10,17 @@ import { consumeLoginToken, sessionCookies } from '@/lib/site-auth'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-/** Only same-site paths — never bounce a login to another origin. */
+/**
+ * Only same-site paths — never bounce a login to another origin.
+ *
+ * Проверка одна на весь вход (`safeNextPath`), и она смотрит не только на
+ * `//`: для URL со «специальной» схемой обратный слэш равнозначен прямому,
+ * поэтому `new URL('/\\evil.com', origin)` даёт `https://evil.com/`. Здесь
+ * это не просто редирект — куки сессии ставятся до перехода, так что открытый
+ * редирект уносил бы на чужой домен уже авторизованного человека.
+ */
 function safeNext(raw: string | null): string {
-  if (!raw || !raw.startsWith('/') || raw.startsWith('//')) return '/'
-  return raw
+  return safeNextPath(raw) ?? '/'
 }
 
 export async function GET(req: Request, { params }: { params: Promise<{ token: string }> }) {
