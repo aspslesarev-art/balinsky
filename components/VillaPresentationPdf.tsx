@@ -2,7 +2,7 @@ import { Document, Page, Text, View, Image, Link, StyleSheet, Font, pdf } from '
 import type { Snapshot } from '@/components/InvestmentWidget/types'
 import type { VillaPresentationData } from '@/components/VillaPresentation'
 import { telegramUrl, whatsappUrl } from '@/lib/agent-links'
-import { formatPrice, formatPriceExact, type Currency } from '@/lib/currency'
+import { formatPriceExact, type Currency } from '@/lib/currency'
 
 Font.register({
   family: 'Inter',
@@ -29,12 +29,6 @@ const COLORS = {
   primarySoft: '#E5F2EC',
   bgSoft: '#F9FAFB',
   white: '#FFFFFF',
-  scenarioBadBg: '#FEF2F2',
-  scenarioBadBorder: '#FECACA',
-  scenarioBadText: '#B91C1C',
-  scenarioGoodBg: '#F0FDF4',
-  scenarioGoodBorder: '#BBF7D0',
-  scenarioGoodText: '#15803D',
 }
 
 const styles = StyleSheet.create({
@@ -100,24 +94,6 @@ const styles = StyleSheet.create({
   nearbyItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 3 },
   nearbyName: { fontSize: 9, color: COLORS.text, flex: 1, marginRight: 6 },
   nearbyMeta: { fontSize: 8, color: COLORS.muted },
-  // Scenarios
-  scenariosRow: { flexDirection: 'row', gap: 10 },
-  scenarioCard: {
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 14,
-  },
-  scenarioCardBad: { borderColor: COLORS.scenarioBadBorder, backgroundColor: COLORS.scenarioBadBg },
-  scenarioCardMedian: { borderColor: COLORS.primary, backgroundColor: COLORS.primarySoft },
-  scenarioCardGood: { borderColor: COLORS.scenarioGoodBorder, backgroundColor: COLORS.scenarioGoodBg },
-  scenarioLabel: { fontSize: 9, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 },
-  scenarioMeta: { fontSize: 8, color: COLORS.muted, marginBottom: 8 },
-  scenarioNoi: { fontSize: 22, fontWeight: 'bold', color: COLORS.text },
-  scenarioNoiSuffix: { fontSize: 9, color: COLORS.muted, marginBottom: 8 },
-  scenarioRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 },
-  scenarioRowKey: { fontSize: 9, color: COLORS.muted },
-  scenarioRowVal: { fontSize: 9, fontWeight: 'bold', color: COLORS.text },
   // Agent
   agentWrap: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   agentInner: { width: '70%', maxWidth: 480, alignItems: 'center' },
@@ -137,23 +113,11 @@ const styles = StyleSheet.create({
 })
 
 // Currency formatters honour whichever currency the visitor picked
-// on the site. Stored amounts are in USD; both helpers convert via
-// the shared rate table from lib/currency. fmtMoney = exact ("$220,000"),
-// fmtMoneyShort = compact ("$35K") used for the cramped scenario tiles.
+// on the site. Stored amounts are in USD; the helper converts via
+// the shared rate table from lib/currency — fmtMoney = exact ("$220,000").
 function fmtMoney(n: number | null | undefined, currency: Currency): string {
   if (n == null || !Number.isFinite(n)) return '—'
   return formatPriceExact(n, currency)
-}
-function fmtMoneyShort(n: number, currency: Currency): string {
-  return formatPrice(n, currency)
-}
-function fmtPct(n: number | null | undefined, digits = 1): string {
-  if (n == null || !Number.isFinite(n)) return '—'
-  return (n * 100).toFixed(digits) + '%'
-}
-function fmtYears(n: number | null | undefined): string {
-  if (n == null || !Number.isFinite(n)) return '—'
-  return n.toFixed(n < 10 ? 1 : 0) + ' лет'
 }
 function fmtDistance(km: number): string {
   if (km < 1) return Math.round(km * 1000) + ' м'
@@ -316,9 +280,8 @@ export function VillaPdfDocument({ data, snap, agent, orientation = 'landscape',
 }) {
   const isPortrait = orientation === 'portrait'
   const fmtUsd = (n: number | null | undefined) => fmtMoney(n, currency)
-  const fmtUsdShort = (n: number) => fmtMoneyShort(n, currency)
   // Each Page picks up the chosen orientation; layouts that depended on the
-  // wide aspect (cover, scenarios row, photoset mosaic) flip to a vertical
+  // wide aspect (cover, photoset mosaic) flip to a vertical
   // arrangement when isPortrait is true.
   const pageProps = { size: 'A4' as const, orientation }
   const sectionPath = data.kind === 'apartment' ? '/ru/apartamenty/o/' : '/ru/villy/o/'
@@ -336,7 +299,6 @@ export function VillaPdfDocument({ data, snap, agent, orientation = 'landscape',
   }
   const hasMap = data.lat != null && data.lng != null
   const hasNearby = !!snap && Object.values(snap.nearbyByCategory ?? {}).some(arr => arr.length > 0)
-  const hasScenarios = !!snap?.scenarios
 
   const factsItems = [
     data.bedrooms != null && { label: 'Спальни', value: `${data.bedrooms} BR` },
@@ -483,48 +445,6 @@ export function VillaPdfDocument({ data, snap, agent, orientation = 'landscape',
               )
             })}
           </View>
-        </Page>
-      )}
-
-      {/* Investment scenarios */}
-      {hasScenarios && snap?.scenarios && (
-        <Page {...pageProps} style={[styles.page, styles.pagePadded]}>
-          <Text style={styles.h2}>Инвестиционный потенциал</Text>
-          <Text style={styles.subtitle}>
-            Три сценария аренды на основе матчинга с конкурентами на Booking ({snap.competitors.length} объектов)
-          </Text>
-          <View style={isPortrait ? { flexDirection: 'column', gap: 12 } : styles.scenariosRow}>
-            {(['bad', 'median', 'good'] as const).map(key => {
-              const e = snap.scenarios![key]
-              const cardStyle = key === 'bad' ? styles.scenarioCardBad : key === 'good' ? styles.scenarioCardGood : styles.scenarioCardMedian
-              const titleColor = key === 'bad' ? COLORS.scenarioBadText : key === 'good' ? COLORS.scenarioGoodText : COLORS.primaryDark
-              const title = key === 'bad' ? 'Плохой' : key === 'good' ? 'Хороший' : 'Нормальный'
-              const baseCard = isPortrait
-                ? { borderWidth: 1, borderRadius: 12, padding: 18, width: '100%' as const }
-                : styles.scenarioCard
-              return (
-                <View key={key} style={[baseCard, cardStyle]}>
-                  <Text style={[styles.scenarioLabel, isPortrait ? { fontSize: 11, color: titleColor } : { color: titleColor }]}>{title}</Text>
-                  <Text style={isPortrait ? [styles.scenarioMeta, { fontSize: 10 }] : styles.scenarioMeta}>ADR {fmtUsd(e.adr)} · {Math.round(e.occupancy * 100)}%</Text>
-                  <Text style={isPortrait ? [styles.scenarioNoi, { fontSize: 26 }] : styles.scenarioNoi}>{fmtUsdShort(e.noi)}</Text>
-                  <Text style={isPortrait ? [styles.scenarioNoiSuffix, { fontSize: 11, marginBottom: 12 }] : styles.scenarioNoiSuffix}>/ год NOI</Text>
-                  <View style={isPortrait ? [styles.scenarioRow, { marginBottom: 4 }] : styles.scenarioRow}>
-                    <Text style={isPortrait ? [styles.scenarioRowKey, { fontSize: 11 }] : styles.scenarioRowKey}>Окупаемость</Text>
-                    <Text style={isPortrait ? [styles.scenarioRowVal, { fontSize: 11 }] : styles.scenarioRowVal}>{fmtYears(e.payback)}</Text>
-                  </View>
-                  <View style={isPortrait ? [styles.scenarioRow, { marginBottom: 0 }] : styles.scenarioRow}>
-                    <Text style={isPortrait ? [styles.scenarioRowKey, { fontSize: 11 }] : styles.scenarioRowKey}>Cap rate</Text>
-                    <Text style={isPortrait ? [styles.scenarioRowVal, { fontSize: 11 }] : styles.scenarioRowVal}>{fmtPct(e.capRate)}</Text>
-                  </View>
-                </View>
-              )
-            })}
-          </View>
-          {data.priceUsd != null && (
-            <Text style={[styles.subtitle, { marginTop: 16 }]}>
-              Расчёт от цены {fmtUsd(data.priceUsd)} с учётом комиссий, OPEX и налога 10%.
-            </Text>
-          )}
         </Page>
       )}
 

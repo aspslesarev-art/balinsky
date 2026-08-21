@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import NextImage from 'next/image'
 import { X, ChevronLeft, ChevronRight, Play, Star, MapPin, BedDouble, Square, Trees, Calendar, FileCheck2, Lock, ArrowUpRight, Download, Loader2, UserRound, FileText } from 'lucide-react'
 import type { Snapshot } from '@/components/InvestmentWidget/types'
-import { fmtMoney, fmtMoneyShort, fmtPct, fmtYears, fmtDistance, pluralRu } from '@/components/InvestmentWidget/utils'
+import { fmtMoney, fmtDistance } from '@/components/InvestmentWidget/utils'
 import { useCurrency } from '@/components/CurrencyContext'
 import type { Lang } from '@/lib/i18n'
 
@@ -57,7 +57,6 @@ type Slide =
   | { kind: 'description'; text: string }
   | { kind: 'map' }
   | { kind: 'nearby' }
-  | { kind: 'invest' }
 
 export function VillaPresentationButton({
   variant = 'primary',
@@ -99,7 +98,7 @@ function VillaPresentation({ data, onClose }: { data: VillaPresentationData; onC
   const [downloadOpen, setDownloadOpen] = useState(false)
   const touchX = useRef<number | null>(null)
 
-  // Fetch investment snapshot once
+  // Fetch the snapshot once — used for the "what's nearby" slide
   useEffect(() => {
     let cancelled = false
     const apiBase = data.kind === 'apartment' ? '/api/apartament' : '/api/villa'
@@ -130,7 +129,6 @@ function VillaPresentation({ data, onClose }: { data: VillaPresentationData; onC
     ...(data.seoText ? [{ kind: 'description' as const, text: data.seoText }] : []),
     ...(data.lat != null && data.lng != null ? [{ kind: 'map' as const }] : []),
     ...(snap && Object.keys(snap.nearbyByCategory ?? {}).length > 0 ? [{ kind: 'nearby' as const }] : []),
-    ...(snap?.scenarios ? [{ kind: 'invest' as const }] : []),
   ]
   const total = slides.length
   const safeI = Math.min(i, total - 1)
@@ -295,7 +293,6 @@ function SlideBody({ slide, data, snap, snapTried }: { slide: Slide; data: Villa
     case 'description': return <DescriptionSlide text={slide.text} title={data.title} />
     case 'map':         return <MapSlide data={data} />
     case 'nearby':      return <NearbySlide snap={snap} snapTried={snapTried} />
-    case 'invest':      return <InvestSlide snap={snap} priceUsd={data.priceUsd} />
   }
 }
 
@@ -528,57 +525,9 @@ function NearbySlide({ snap, snapTried }: { snap: Snapshot | null; snapTried: bo
   )
 }
 
-function InvestSlide({ snap, priceUsd }: { snap: Snapshot | null; priceUsd: number | null }) {
-  const { currency } = useCurrency()
-  const fmtUsd = (n: number | null | undefined) => fmtMoney(n, currency)
-  const fmtUsdShort = (n: number | null | undefined) => fmtMoneyShort(n, currency)
-  if (!snap?.scenarios) return null
-  const sc = snap.scenarios
-  const cards: { key: 'bad' | 'median' | 'good'; title: string; tone: string; tint: string }[] = [
-    { key: 'bad',    title: 'Плохой',     tone: 'border-[#FECACA] bg-[#FEF2F2]', tint: 'text-[#B91C1C]' },
-    { key: 'median', title: 'Нормальный', tone: 'border-[var(--color-primary)] bg-[var(--color-primary-soft)]', tint: 'text-[var(--color-primary-pressed)]' },
-    { key: 'good',   title: 'Хороший',    tone: 'border-[#BBF7D0] bg-[#F0FDF4]', tint: 'text-[#15803D]' },
-  ]
-  return (
-    <div className="absolute inset-0 overflow-auto px-6 md:px-16 py-10 md:py-14">
-      <div className="max-w-5xl mx-auto">
-        <h2 className="text-[28px] md:text-[40px] font-semibold tracking-tight text-[#111827] mb-2">Инвестиционный потенциал</h2>
-        <p className="text-[15px] text-[var(--color-text-muted)] mb-8">
-          Три сценария аренды по матчингу с {snap.competitors.length} {pluralRu(snap.competitors.length, ['конкурентом', 'конкурентами', 'конкурентами'])} в зоне
-          {snap.zone.title ? ` ${snap.zone.title}` : ''}
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {cards.map(card => {
-            const e = sc[card.key]
-            return (
-              <div key={card.key} className={`rounded-2xl border p-5 ${card.tone}`}>
-                <div className={`flex items-baseline justify-between mb-3 text-[13px] uppercase tracking-wide font-semibold ${card.tint}`}>
-                  <span>{card.title}</span>
-                  <span className="text-[12px] font-normal opacity-80">ADR {fmtUsd(e.adr)} · {Math.round(e.occupancy * 100)}%</span>
-                </div>
-                <div className="text-[26px] md:text-[32px] font-semibold text-[#111827]">{fmtUsdShort(e.noi)}</div>
-                <div className="text-[13px] text-[var(--color-text-muted)] mb-4">/ год NOI</div>
-                <dl className="space-y-1.5 text-[13px]">
-                  <div className="flex justify-between"><dt className="text-[var(--color-text-muted)]">Окупаемость</dt><dd className="font-medium text-[#111827]">{fmtYears(e.payback)}</dd></div>
-                  <div className="flex justify-between"><dt className="text-[var(--color-text-muted)]">Cap rate</dt><dd className="font-medium text-[#111827]">{fmtPct(e.capRate)}</dd></div>
-                </dl>
-              </div>
-            )
-          })}
-        </div>
-        {priceUsd != null && (
-          <div className="mt-6 text-[13px] text-[var(--color-text-muted)]">
-            Расчёт от цены {fmtUsd(priceUsd)} с учётом комиссий, OPEX и налога 10%.
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
 function DownloadModal({ data, snap, onClose }: { data: VillaPresentationData; snap: Snapshot | null; onClose: () => void }) {
   // Currency at download time. Threaded through to the PDF builder
-  // so price/scenarios print in whichever currency the visitor was
+  // so prices print in whichever currency the visitor was
   // browsing in (USD/EUR/RUB/UAH/IDR via lib/currency).
   const { currency } = useCurrency()
   const [mode, setMode] = useState<'choose' | 'agent'>('choose')
