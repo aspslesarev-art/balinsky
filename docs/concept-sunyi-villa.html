@@ -123,6 +123,24 @@ td .sub{color:var(--muted); font-size:12.5px}
 .card h4{margin:0 0 6px; font-size:16.5px; font-family:Karla,sans-serif; font-weight:700; line-height:1.3}
 .card p{margin:0; font-size:14.5px; color:var(--ink-2); line-height:1.5}
 
+/* ——— объяснялка и лестница уровней ——— */
+.defs{display:grid; grid-template-columns:repeat(auto-fit,minmax(228px,1fr)); gap:14px; margin:24px 0}
+.def{background:var(--surface); border:1px solid var(--line-soft); padding:14px 16px}
+.def .t{font-weight:700; font-size:15px; margin-bottom:5px}
+.def .d{font-size:14px; color:var(--ink-2); line-height:1.45}
+.ladder{display:grid; gap:10px; margin:24px 0}
+.rung{display:grid; grid-template-columns:46px 1fr auto; gap:18px; align-items:start;
+  background:var(--surface); border:1px solid var(--line-soft); padding:16px 18px}
+.rung .lvl{font-family:Newsreader,Georgia,serif; font-size:32px; line-height:1; color:var(--muted); text-align:center}
+.rung.target{border-color:var(--pays); box-shadow:inset 3px 0 0 var(--pays)}
+.rung.target .lvl{color:var(--pays)}
+.rung h4{margin:0 0 5px; font-size:16.5px; font-family:Karla,sans-serif; font-weight:700; line-height:1.3}
+.rung p{margin:0; font-size:14.5px; color:var(--ink-2); line-height:1.5}
+.rung .nums{text-align:right; font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-variant-numeric:tabular-nums; white-space:nowrap}
+.rung .nums b{display:block; font-size:18px; font-weight:500}
+.rung .nums i{display:block; font-style:normal; color:var(--muted); font-size:12px; margin-top:3px}
+
 figure{margin:26px 0}
 figure svg{width:100%; height:auto; display:block; border:1px solid var(--line); background:var(--surface)}
 figcaption{font-size:13.5px; color:var(--muted); margin-top:10px; line-height:1.5}
@@ -144,6 +162,10 @@ footer{margin-top:12px; padding-top:22px; border-top:1px solid var(--line); font
   .row .n{display:none}
   .axis{grid-template-columns:minmax(96px,1fr) 1fr 46px}
   .wrap{padding:0 18px 72px}
+  .rung{grid-template-columns:38px 1fr; gap:14px}
+  .rung .nums{grid-column:1/-1; text-align:left; margin-top:6px}
+  .rung .nums b{display:inline; font-size:15px}
+  .rung .nums i{display:inline; margin-left:10px}
   .axis .ticks span.t-opt{display:none}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -174,25 +196,75 @@ footer{margin-top:12px; padding-top:22px; border-top:1px solid var(--line); font
 <section class="col">
   <p class="eyebrow">01 — что оплачивает рынок</p>
   <h2>Разброс по качеству в разы больше разброса по стилю</h2>
-  <p>Каждый признак посчитан как доля от медианы своей страты «зона × тип × число спален» — иначе «инфинити-бассейн» окажется премией за Улувату, а не за бассейн. В выборке 8 082 виллы, у которых страта содержит не меньше восьми объектов.</p>
+  <p>Каждый признак сравнивается не с рынком вообще, а с ближайшими соседями: тот же район, тот же тип жилья, столько же спален. Иначе «инфинити-бассейн» окажется наценкой за Улувату, а не за бассейн. В выборке 8 082 виллы, у каждой из которых есть минимум восемь таких соседей.</p>
+</section>
+
+<section class="col">
+  <h3>Как читать цифры на этой странице</h3>
+</section>
+
+<div class="defs">
+  <div class="def"><div class="t">Цена за ночь</div><div class="d">Сколько вилла реально стоит в сутки. В таблицах — середина группы: половина объектов дороже, половина дешевле.</div></div>
+  <div class="def"><div class="t">Выручка с простоем</div><div class="d">Та же цена, но помноженная на заполняемость: сколько объект приносит в среднем за каждую ночь года, включая пустые.</div></div>
+  <div class="def"><div class="t">×1.26</div><div class="d">Сравнение с соседями: такая же вилла, тот же район, столько же спален — но с этим признаком зарабатывает на 26 % больше. Не «дороже вообще», а «дороже соседа».</div></div>
+  <div class="def"><div class="t">n = 601</div><div class="d">На скольких объектах посчитано. Меньше тридцати — я такое выводом не называю, только наблюдением.</div></div>
+</div>
+
+<section class="col">
+  <h3>Что такое «отделка уровня 4»</h3>
+  <p>Это оценка по фотографиям каждого объекта по шкале от 1 до 5 — одной и той же для всего рынка. Чтобы шкала не была абстракцией, вот как каждый уровень выглядит физически и сколько на нём зарабатывают. Главное правило простое: <strong>чем выше уровень, тем меньше в доме плитки и крашеного гипсокартона и тем больше камня и дерева.</strong></p>
+</section>
+
+<div class="ladder">
+  <div class="rung">
+    <div class="lvl">1</div>
+    <div><h4>Голые стены</h4><p>Кафель и крашеный гипсокартон, санузел из прошлого десятилетия. На рынке этого уровня фактически нет — девять объектов на всю Бали.</p></div>
+    <div class="nums"><b>$11</b><i>9 вилл · 0 %</i></div>
+  </div>
+  <div class="rung">
+    <div class="lvl">2</div>
+    <div><h4>Дёшево и сердито</h4><p>Плитка на всех поверхностях (97 %), крашеный гипсокартон (96 %), у каждой четвёртой — устаревший санузел. По ощущению это гостевой дом, а не вилла.</p></div>
+    <div class="nums"><b>$50</b><i>597 вилл · 6 %</i></div>
+  </div>
+  <div class="rung">
+    <div class="lvl">3</div>
+    <div><h4>Нормально, как у всех</h4><p>Чисто, аккуратно, современно — и совершенно неотличимо от соседей. Плитка у 98 %, гипсокартон у 95 %, санузел приличного уровня всего у 3 %. Здесь сидит больше половины рынка, и это та яма, из которой концепция выходит.</p></div>
+    <div class="nums"><b>$115</b><i>5 442 виллы · 54 %</i></div>
+  </div>
+  <div class="rung target">
+    <div class="lvl">4</div>
+    <div><h4>Видно, что работал дизайнер — целевой уровень</h4><p>Камень появляется у 71 % против 51 % на третьем уровне, плитка отступает до 85 %, гипсокартон до 77 %. Приличный санузел у 42 %, приличная кухня у 15 %. Столярка сделана на заказ, а не куплена в магазине. Это не роскошь — это дом, у которого есть автор.</p></div>
+    <div class="nums"><b>$222</b><i>3 910 вилл · 39 %</i></div>
+  </div>
+  <div class="rung">
+    <div class="lvl">5</div>
+    <div><h4>Вилла из журнала</h4><p>Камень у 93 %, плитка почти исчезает (42 %), гипсокартон — 38 %, тик у 88 %. Индивидуальный проект, авторский свет, ванна из цельного куска камня. С бюджетом дешёвой виллы это несовместимо, и в концепцию я этот уровень не закладывал.</p></div>
+    <div class="nums"><b>$559</b><i>166 вилл · 2 %</i></div>
+  </div>
+</div>
+
+<section class="col">
+  <p>Разница между третьим и четвёртым уровнем — <strong>$107 за ночь</strong>, и она не про дорогие материалы как таковые, а про то, что кто-то принял решения: где камень, где дерево, какой свет, какая столярка.</p>
+  <h3>И что такое «цельность»</h3>
+  <p>Вторая оценка по той же шкале от 1 до 5 — про то, выглядит ли дом как один замысел или как склад разных ремонтов: в спальне одно, в гостиной другое, мебель докупалась по мере поломок. У 64 % вилл это четвёрка ($168 за ночь), у 30 % — тройка ($107). <strong>Цельность не стоит денег — это дисциплина, а не бюджет</strong>, и она же разница в $61 за ночь.</p>
 </section>
 
 <div class="chart">
   <div class="legend">
     <span><i class="swatch sw-pays"></i> рынок доплачивает</span>
     <span><i class="swatch sw-costs"></i> рынок штрафует</span>
-    <span class="muted">медиана RevPAR к соседям по страте · наведите на строку</span>
+    <span class="muted">во сколько раз дороже соседей — того же района и числа спален · наведите на строку</span>
   </div>
   <div class="rows">
     <div class="row" tabindex="0">
-      <div class="lab">Отделка уровня 5</div>
+      <div class="lab">Отделка 5 — «из журнала»</div>
       <div class="track"><div class="fill" style="--l:31.58%;--w:65.26%"></div></div>
       <div class="val">×2.24</div>
       <div class="n">n=130</div>
       <div class="tip">Дизайнерская отделка с камнем и столяркой на заказ. Редкость: 130 вилл из 8 082.</div>
     </div>
     <div class="row" tabindex="0">
-      <div class="lab">Дизайн-цельность 5</div>
+      <div class="lab">Цельность 5 — один замысел</div>
       <div class="track"><div class="fill" style="--l:31.58%;--w:43.16%"></div></div>
       <div class="val">×1.82</div>
       <div class="n">n=212</div>
@@ -220,7 +292,7 @@ footer{margin-top:12px; padding-top:22px; border-top:1px solid var(--line); font
       <div class="tip">n=37 — это наблюдение, а не вывод: сегмент слишком мал для тенденции.</div>
     </div>
     <div class="row hi" tabindex="0">
-      <div class="lab">Отделка уровня 4</div>
+      <div class="lab">Отделка 4 — «есть автор»</div>
       <div class="track"><div class="fill" style="--l:31.58%;--w:13.68%"></div></div>
       <div class="val">×1.26</div>
       <div class="n">n=3 109</div>
@@ -255,7 +327,7 @@ footer{margin-top:12px; padding-top:22px; border-top:1px solid var(--line); font
       <div class="tip">Работает только вместе с открытой гостиной: без неё ×1.26 против ×1.31 у закрытой коробки.</div>
     </div>
     <div class="row hi" tabindex="0">
-      <div class="lab">Дизайн-цельность 4</div>
+      <div class="lab">Цельность 4</div>
       <div class="track"><div class="fill" style="--l:31.58%;--w:5.26%"></div></div>
       <div class="val">×1.10</div>
       <div class="n">n=5 207</div>
@@ -297,7 +369,7 @@ footer{margin-top:12px; padding-top:22px; border-top:1px solid var(--line); font
       <div class="tip">Маленький бассейн хуже, чем обычный частный (×1.05).</div>
     </div>
     <div class="row" tabindex="0">
-      <div class="lab">Отделка уровня 3</div>
+      <div class="lab">Отделка 3 — «как у всех»</div>
       <div class="track"><div class="fill neg" style="--l:24.74%;--w:6.84%"></div></div>
       <div class="val">×0.87</div>
       <div class="n">n=4 358</div>
@@ -315,10 +387,10 @@ footer{margin-top:12px; padding-top:22px; border-top:1px solid var(--line); font
       <div class="track"><div class="fill neg" style="--l:9.47%;--w:22.11%"></div></div>
       <div class="val">×0.58</div>
       <div class="n">n=107</div>
-      <div class="tip">Ощущение тесноты обрушивает ставку сильнее, чем любой другой признак кроме отделки уровня 2.</div>
+      <div class="tip">Ощущение тесноты обрушивает цену сильнее, чем любой другой признак кроме отделки уровня 2.</div>
     </div>
     <div class="row" tabindex="0">
-      <div class="lab">Отделка уровня 2</div>
+      <div class="lab">Отделка 2 — «дёшево»</div>
       <div class="track"><div class="fill neg" style="--l:3.68%;--w:27.89%"></div></div>
       <div class="val">×0.47</div>
       <div class="n">n=479</div>
@@ -328,7 +400,7 @@ footer{margin-top:12px; padding-top:22px; border-top:1px solid var(--line); font
   <div class="axis"><div></div><div class="ticks"><span class="t-opt" style="left:5.26%">×0.50</span><span class="t-opt" style="left:18.42%">×0.75</span><span style="left:31.58%">×1.00</span><span style="left:57.89%">×1.50</span><span style="left:84.21%">×2.00</span></div><div></div><div></div></div>
 </div>
 
-<p class="note col">Загрузка в этом разрезе почти всегда ×1.00: рынок реагирует на продукт ставкой, а не заполняемостью. Отдельно об этом — в разделе «чем это можно опровергнуть».</p>
+<p class="note col">Заполняемость в этом сравнении почти всегда одинаковая: рынок реагирует на качество дома ценой, а не числом занятых ночей. Отдельно об этом — в разделе «чем это можно опровергнуть».</p>
 
 <div class="poleng"></div>
 
@@ -344,7 +416,7 @@ footer{margin-top:12px; padding-top:22px; border-top:1px solid var(--line); font
 
 <div class="tablewrap">
 <table>
-  <thead><tr><th>Стиль</th><th>Отделка ≥4 и цельность ≥4</th><th class="num">× к ADR</th><th class="num">n</th></tr></thead>
+  <thead><tr><th>Стиль</th><th>Отделка ≥4 и цельность ≥4</th><th class="num">× к цене</th><th class="num">n</th></tr></thead>
   <tbody>
     <tr class="accent"><td>Балийский традиционный</td><td>да</td><td class="num">1.34</td><td class="num">342</td></tr>
     <tr><td>Балийский традиционный</td><td>нет</td><td class="num">0.78</td><td class="num">814</td></tr>
@@ -363,7 +435,7 @@ footer{margin-top:12px; padding-top:22px; border-top:1px solid var(--line); font
 
 <div class="tablewrap">
 <table>
-  <thead><tr><th>Комбинация</th><th class="num">× RevPAR</th><th class="num">n</th></tr></thead>
+  <thead><tr><th>Комбинация</th><th class="num">× к выручке</th><th class="num">n</th></tr></thead>
   <tbody>
     <tr class="accent"><td>Аланг-аланг + открытая гостиная + сала</td><td class="num">1.65</td><td class="num">28</td></tr>
     <tr><td>Аланг-аланг + открытая гостиная</td><td class="num">1.57</td><td class="num">95</td></tr>
@@ -379,12 +451,12 @@ footer{margin-top:12px; padding-top:22px; border-top:1px solid var(--line); font
   <p class="note">Несущий элемент — открытая гостиная. Крыша из аланг-аланга без неё не окупается: ×1.26 против ×1.31 у обычной закрытой виллы того же уровня отделки.</p>
 
   <h3>«Дешёвая» не должна означать «маленькая»</h3>
-  <p>Ощущение тесноты — второй по силе разрушитель ставки после плохой отделки.</p>
+  <p>Ощущение тесноты — второй по силе разрушитель цены после плохой отделки.</p>
 </section>
 
 <div class="tablewrap">
 <table>
-  <thead><tr><th>Ощущение объёма</th><th>Отделка ≥4 и цельность ≥4</th><th class="num">× RevPAR</th><th class="num">ADR медиана</th><th class="num">n</th></tr></thead>
+  <thead><tr><th>Ощущение объёма</th><th>Отделка ≥4 и цельность ≥4</th><th class="num">× к выручке</th><th class="num">цена за ночь</th><th class="num">n</th></tr></thead>
   <tbody>
     <tr><td>Просторная</td><td>да</td><td class="num">1.48</td><td class="num">$174</td><td class="num">716</td></tr>
     <tr class="accent"><td>Комфортная</td><td>да</td><td class="num">1.19</td><td class="num">$136</td><td class="num">421</td></tr>
@@ -412,7 +484,7 @@ footer{margin-top:12px; padding-top:22px; border-top:1px solid var(--line); font
 
 <div class="tablewrap">
 <table>
-  <thead><tr><th>Зона</th><th class="num">Вилл 1–2 сп.</th><th class="num">Отделка ≥4</th><th class="num">ADR медиана</th><th class="num">Группа «качество + вид»</th><th class="num">Прямых конкурентов</th></tr></thead>
+  <thead><tr><th>Зона</th><th class="num">Вилл 1–2 сп.</th><th class="num">Отделка ≥4</th><th class="num">цена за ночь</th><th class="num">Группа «качество + вид»</th><th class="num">Прямых конкурентов</th></tr></thead>
   <tbody>
     <tr class="accent"><td>Убуд</td><td class="num">807</td><td class="num">30 %</td><td class="num">$97</td><td class="num">$217 <span class="sub">n=68</span></td><td class="num">67</td></tr>
     <tr class="accent"><td>Тегаллаланг — Паянган</td><td class="num">105</td><td class="num">40 %</td><td class="num">$87</td><td class="num">$189 <span class="sub">n=18</span></td><td class="num">13</td></tr>
@@ -427,7 +499,7 @@ footer{margin-top:12px; padding-top:22px; border-top:1px solid var(--line); font
 </div>
 
 <section class="col">
-  <p>Бингин — противоположный случай: 65 % объектов уже отделаны на 4+, ADR $169, и премия за качество там уже в цене земли. В Убуде наоборот — 70 % рынка сидит на отделке уровня 3 и ниже при 1 554 виллах предложения. Чистая матрица по Убуду, медиана ADR:</p>
+  <p>Бингин — противоположный случай: 65 % объектов уже отделаны на четвёрку, середина рынка $169 за ночь, и премия за качество там давно сидит в цене земли. В Убуде наоборот — 70 % рынка застряло на третьем уровне и ниже, при 1 554 виллах предложения. Чистая матрица по Убуду, цена за ночь:</p>
 </section>
 
 <div class="tablewrap">
@@ -443,7 +515,7 @@ footer{margin-top:12px; padding-top:22px; border-top:1px solid var(--line); font
 </div>
 
 <section class="col">
-  <p>Качество даёт ×1.9–2.2, вид добавляет сверху ×1.19–1.20. И земля здесь самая дешёвая из отслеживаемых: в трекере прайсов медиана виллы в Убуде — $255 тыс. за 237 м² на участке 486 м², то есть <span class="mono">$1 232/м²</span> против <span class="mono">$2 900–3 500/м²</span> на Буките.</p>
+  <p>Качество отделки удваивает цену, вид добавляет сверху ещё около 20 %. И земля здесь самая дешёвая из отслеживаемых: в трекере прайсов медиана виллы в Убуде — $255 тыс. за 237 м² на участке 486 м², то есть <span class="mono">$1 232/м²</span> против <span class="mono">$2 900–3 500/м²</span> на Буките.</p>
   <p class="note">Оговорка, которую нельзя терять: «хорошие» виллы смещены в класс «просторные», часть эффекта — размер, а не отделка. Тегаллаланг (n=18) и Сидемен (n=12) — наблюдения, а не выводы. Единственная зона, где вывод устойчив, — Убуд.</p>
 </section>
 
@@ -546,7 +618,7 @@ footer{margin-top:12px; padding-top:22px; border-top:1px solid var(--line); font
     <li>Бассейн 3×8 с переливным краем вниз по склону (×1.69). Плунж — нельзя: ×0.92.</li>
     <li>Сала на краю участка (×1.06): дешёвая постройка, вечерняя точка и главный кадр объявления.</li>
     <li>Материалы: аланг-аланг, местный вулканический камень (×1.06), тик, микроцемент в санузлах (×1.18). Бамбук — только декор: как основной материал он ×0.96.</li>
-    <li>Цель отделки — уровень 4 и цельность 4–5. Не орнамент, а один замысел во всех помещениях: это ×1.26 и ×1.10…1.82.</li>
+    <li>Цель — отделка на четвёрку и цельность 4–5. Не орнамент, а один замысел во всех помещениях: это ×1.26 и ×1.10…1.82.</li>
   </ul>
 </section>
 
@@ -554,7 +626,7 @@ footer{margin-top:12px; padding-top:22px; border-top:1px solid var(--line); font
 
 <section class="col">
   <p class="eyebrow">05 — умный дом</p>
-  <h2>Про надбавку к ставке данные молчат — и это самое важное, что о ней известно</h2>
+  <h2>Про надбавку к цене данные молчат — и это самое важное, что о ней известно</h2>
   <p>Из 11 726 карточек вилл описание есть у 10 861, в среднем 700 знаков, и удобства в них перечисляются: Wi-Fi упомянут 10 035 раз, кондиционер — 8 594, рабочее место — 2 854. А теперь то, чего там нет.</p>
 </section>
 
@@ -566,9 +638,9 @@ footer{margin-top:12px; padding-top:22px; border-top:1px solid var(--line); font
 </div>
 
 <section class="col">
-  <p>Отсюда два честных утверждения. Первое: <strong>надбавку к ставке за умный дом эти данные подтвердить не могут</strong> — ставить её в модель доходности нельзя. Второе: <strong>никто на рынке это не продаёт</strong>. Ниша пуста — но пуста и непроверена, а это разные вещи.</p>
-  <p>Значит, умный дом окупается не ставкой, а тремя другими путями: операционными расходами (самостоятельное заселение вместо круглосуточного персонала, автоотключение кондиционеров), сохранностью отделки — влажность и плесень главный убийца уровня 4 в Убуде, — и аргументом при продаже виллы инвестору, где покупатель русскоязычный и техника работает как отличие, а не как ставка.</p>
-  <blockquote>Проверка гипотезы стоит 90 дней: два одинаковых юнита, один продаётся с умным домом в объявлении, сравнение ADR при равной загрузке.</blockquote>
+  <p>Отсюда два честных утверждения. Первое: <strong>надбавку к цене за умный дом эти данные подтвердить не могут</strong> — ставить её в модель доходности нельзя. Второе: <strong>никто на рынке это не продаёт</strong>. Ниша пуста — но пуста и непроверена, а это разные вещи.</p>
+  <p>Значит, умный дом окупается не ценой за ночь, а тремя другими путями: операционными расходами (самостоятельное заселение вместо круглосуточного персонала, автоотключение кондиционеров), сохранностью отделки — влажность и плесень главный убийца уровня 4 в Убуде, — и аргументом при продаже виллы инвестору, где покупатель русскоязычный и техника работает как отличие, а не как прибавка к суточной цене.</p>
+  <blockquote>Проверка гипотезы стоит 90 дней: два одинаковых юнита, один продаётся с умным домом в объявлении, сравнение цены за ночь при равной заполняемости.</blockquote>
 
   <h3>Шесть правил, из которых следует вся спецификация</h3>
 </section>
@@ -629,17 +701,17 @@ footer{margin-top:12px; padding-top:22px; border-top:1px solid var(--line); font
   <p class="eyebrow">06 — экономика</p>
   <h2>Одиннадцать процентов чистыми в базовом сценарии</h2>
   <p class="note">Внимание: строительные и земельные цифры ниже — экспертная оценка, их в базе нет. Из данных взята только выручка.</p>
-  <p>Смета, ≈ $168 тыс.: аренда участка 350 м² на 25 лет — $30 тыс.; коробка и отделка уровня 4, 95 м² × $700 — $66,5 тыс.; крытое открытое пространство 45 м² × $350 — $15,8 тыс.; бассейн с переливом — $16 тыс.; мебель и дизайн — $22 тыс.; умный дом — $2,9 тыс.; проект, разрешения и резерв 10 % — $15 тыс.</p>
-  <p>Ставка $140 взята между медианой класса «комфортная + отделка ≥4» ($136, n=421) и убудской ячейкой «1 спальня, качество и вид» ($152, n=24). <strong>Загрузку из источника брать нельзя</strong>: 3 949 вилл из 9 094 стоят ровно на 100 % — показатель обрезан сверху. Поэтому модель считается на диапазоне 55–75 %.</p>
+  <p>Смета, ≈ $168 тыс.: аренда участка 350 м² на 25 лет — $30 тыс.; коробка и отделка на четвёрку, 95 м² × $700 — $66,5 тыс.; крытое открытое пространство 45 м² × $350 — $15,8 тыс.; бассейн с переливом — $16 тыс.; мебель и дизайн — $22 тыс.; умный дом — $2,9 тыс.; проект, разрешения и резерв 10 % — $15 тыс.</p>
+  <p>Цена $140 за ночь взята между серединой класса «комфортная + отделка 4» ($136, n=421) и убудской ячейкой «одна спальня, качество и вид» ($152, n=24). <strong>Заполняемость из источника брать нельзя</strong>: 3 949 вилл из 9 094 стоят ровно на 100 % — показатель обрезан сверху. Поэтому модель считается на диапазоне 55–75 %.</p>
 </section>
 
 <div class="tablewrap">
 <table>
-  <thead><tr><th>Чистая доходность на $168 тыс.</th><th class="num">загрузка 55 %</th><th class="num">65 %</th><th class="num">75 %</th></tr></thead>
+  <thead><tr><th>Чистая доходность на вложенные $168 тыс.</th><th class="num">заполняемость 55 %</th><th class="num">65 %</th><th class="num">75 %</th></tr></thead>
   <tbody>
-    <tr><td>ADR $110</td><td class="num">6,5 %</td><td class="num">8,2 %</td><td class="num">9,9 %</td></tr>
-    <tr class="accent"><td>ADR $140</td><td class="num">9,0 %</td><td class="num">11,2 %</td><td class="num">13,3 %</td></tr>
-    <tr><td>ADR $170</td><td class="num">11,5 %</td><td class="num">14,1 %</td><td class="num">16,7 %</td></tr>
+    <tr><td>$110 за ночь</td><td class="num">6,5 %</td><td class="num">8,2 %</td><td class="num">9,9 %</td></tr>
+    <tr class="accent"><td>$140 за ночь</td><td class="num">9,0 %</td><td class="num">11,2 %</td><td class="num">13,3 %</td></tr>
+    <tr><td>$170 за ночь</td><td class="num">11,5 %</td><td class="num">14,1 %</td><td class="num">16,7 %</td></tr>
   </tbody>
 </table>
 </div>
@@ -655,8 +727,8 @@ footer{margin-top:12px; padding-top:22px; border-top:1px solid var(--line); font
   <p class="eyebrow">07 — проверка</p>
   <h2>Чем этот вывод можно опровергнуть</h2>
   <ol class="plain">
-    <li><strong>Эффект размера.</strong> «Хорошие» виллы смещены в класс «просторных». Если объект выйдет «комфортным», ставка — $136, а не $217. Очищенная от размера цифра качества — +38 % внутри одного класса объёма; опираться следует на неё.</li>
-    <li><strong>Обрезанная загрузка.</strong> Ровно 100 % у 43 % вилл — артефакт источника. В модели она не используется нигде.</li>
+    <li><strong>Эффект размера.</strong> «Хорошие» виллы смещены в класс «просторных». Если объект выйдет «комфортным», цена за ночь — $136, а не $217. Очищенная от размера цифра качества — +38 % внутри одного класса объёма; опираться следует на неё.</li>
+    <li><strong>Заполняемость обрезана сверху.</strong> Ровно 100 % у 43 % вилл — это дефект источника, а не реальность. В модели она не используется нигде.</li>
     <li><strong>Малые выборки.</strong> Тегаллаланг (n=18), Сидемен (n=12), вид в ущелье (n=37) — наблюдения, а не тенденции. Устойчив только Убуд: n=68 в целевой группе.</li>
     <li><strong>Умный дом.</strong> Премия не измерена — ноль упоминаний из 10 861. В модели доходности её нет и не должно быть до эксперимента с двумя юнитами.</li>
     <li><strong>Vision по рендерам.</strong> Каталог модель видит по рендерам, а рынок — по реальным фото, поэтому оценки качества картинки у каталога завышены системно. Сравнивать можно только структурные признаки.</li>
