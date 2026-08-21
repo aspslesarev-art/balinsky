@@ -619,6 +619,7 @@ export function buildAllCards(
   filters: FilterState,
   devStats?: Map<string, { ready: number; total: number }>,
   lang: Lang = 'ru',
+  scores?: Map<string, { capRate: number | null; rentalRestricted?: boolean }>,
 ): Card[] {
   let filtered = enriched.filter(e => passes(e, filters))
   const isSearch = filters.q.trim().length > 0
@@ -636,6 +637,19 @@ export function buildAllCards(
       updatedMs: priceUpdatedMs(e.data) || null,
       hasPhoto: (manifest[e.id]?.length ?? 0) > 0,
     }))
+    // Порядок каталога — по чистой доходности, от максимальной к
+    // минимальной, как и у вилл. Внутри одинаковой доходности остаётся
+    // прежний умный порядок; округление до десятой доли процента гасит
+    // шум расчёта, иначе список скакал бы от 4,31 против 4,29.
+    if (scores) {
+      const rank = new Map(filtered.map((e, i) => [e.id, i]))
+      const yieldOf = (id: string) => {
+        const s = scores.get(id)
+        const cap = s && !s.rentalRestricted ? s.capRate : null
+        return cap == null ? -1 : Math.round(cap * 1000) / 10
+      }
+      filtered = [...filtered].sort((a, b) => (yieldOf(b.id) - yieldOf(a.id)) || ((rank.get(a.id) ?? 0) - (rank.get(b.id) ?? 0)))
+    }
     filtered = [...filtered].sort((a, b) => (b.isTop ? 1 : 0) - (a.isTop ? 1 : 0))
   }
 
@@ -662,8 +676,11 @@ export async function loadCatalogPage(
   const safePage = Math.max(1, Math.floor(page))
   const { enriched, manifest } = await loadAll()
   const options = buildOptions(enriched, filters, lang)
-  const devStats = await (await import('@/lib/developer-stats')).loadAllDeveloperStats().catch(() => undefined)
-  const all = buildAllCards(enriched, manifest, filters, devStats, lang)
+  const [devStats, scores] = await Promise.all([
+    (await import('@/lib/developer-stats')).loadAllDeveloperStats().catch(() => undefined),
+    (await import('@/lib/investment/batch-scores')).loadAllApartmentScores().catch(() => undefined),
+  ])
+  const all = buildAllCards(enriched, manifest, filters, devStats, lang, scores)
   const totalCount = all.length
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
   const start = (safePage - 1) * PAGE_SIZE

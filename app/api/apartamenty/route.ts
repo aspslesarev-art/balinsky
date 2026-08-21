@@ -6,7 +6,10 @@ export async function GET(request: Request) {
   const sp = Object.fromEntries(url.searchParams.entries())
   const filters = parseQueryFilters(sp)
   const { enriched, manifest } = await loadAll()
-  const all = buildAllCards(enriched, manifest, filters)
+  // Порядок должен совпадать с серверным рендером: без скоров подгрузка
+  // отдавала бы вторую страницу в другом порядке, чем первая.
+  const scores = await (await import('@/lib/investment/batch-scores')).loadAllApartmentScores().catch(() => undefined)
+  const all = buildAllCards(enriched, manifest, filters, undefined, 'ru', scores)
 
   if (sp.offset != null) {
     const offset = Math.max(0, Math.floor(Number(sp.offset) || 0))

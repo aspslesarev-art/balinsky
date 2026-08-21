@@ -721,7 +721,7 @@ export function buildAllCards(
   enriched: EnrichedRow[],
   manifest: Record<string, string[]>,
   filters: VillaFilterState,
-  scores?: Map<string, { composite: number; goodCapRate: number | null; rentalRestricted?: boolean }>,
+  scores?: Map<string, { composite: number; capRate: number | null; goodCapRate: number | null; rentalRestricted?: boolean }>,
   sort: SortOrder = 'investment-desc',
   devStats?: Map<string, { ready: number; total: number }>,
   lang: Lang = 'ru',
@@ -730,6 +730,14 @@ export function buildAllCards(
   const isSearch = filters.q.trim().length > 0
   if (isSearch) filtered = applySearch(filtered, filters.q)
   const mapped = filtered.map(e => toCard(e, manifest, devStats, lang)).filter((c): c is VillaCard => c !== null)
+  // Доходность для порядка берём медианную (p50 ADR × базовая загрузка):
+  // оптимистичный сценарий переставил бы наверх объекты, у которых просто
+  // шире разброс ставок у соседей.
+  const capRateOf = new Map<string, number | null>()
+  if (scores) for (const c of mapped) {
+    const s = scores.get(c.id)
+    capRateOf.set(c.id, s && !s.rentalRestricted ? s.capRate : null)
+  }
   if (scores) for (const c of mapped) {
     const s = scores.get(c.id)
     // Yellow (residential) land can't be daily-rented, so it gets no
@@ -741,7 +749,22 @@ export function buildAllCards(
   }
   let sorted: VillaCard[]
   if (isSearch) sorted = mapped
-  else if (sort === 'investment-desc') sorted = smartSort(mapped, c => ({ id: c.id, investmentScore: c.investmentScore, views: c.views, hasPhoto: c.photos.length > 0 }))
+  else if (sort === 'investment-desc') {
+    // Порядок каталога — по чистой доходности, от максимальной к
+    // минимальной: это то, ради чего покупатель сюда и пришёл. Внутри
+    // одинаковой доходности остаётся прежний умный порядок (просмотры,
+    // свежесть, наличие фото) — иначе объекты с равным cap rate
+    // выстраивались бы по случайности выборки. Доходность округляем до
+    // десятой доли процента: 4,31% и 4,29% — это одно и то же, и без
+    // округления порядок скакал бы от шума в расчёте.
+    const smart = smartSort(mapped, c => ({ id: c.id, investmentScore: c.investmentScore, views: c.views, hasPhoto: c.photos.length > 0 }))
+    const rank = new Map(smart.map((c, i) => [c.id, i]))
+    const yieldOf = (c: VillaCard) => {
+      const cap = capRateOf.get(c.id)
+      return cap == null ? -1 : Math.round(cap * 1000) / 10
+    }
+    sorted = [...smart].sort((a, b) => (yieldOf(b) - yieldOf(a)) || ((rank.get(a.id) ?? 0) - (rank.get(b.id) ?? 0)))
+  }
   else sorted = [...mapped].sort((a, b) => (b.priceUsd ?? 0) - (a.priceUsd ?? 0))
   // Yellow-land demotion: in the default investment-ranked order, residential
   // (yellow) land can't be daily-rented, so it's not an investment object —

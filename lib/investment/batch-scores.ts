@@ -26,12 +26,37 @@ const VILLA_SCORE_SELECT =
   'pool:data->Pool,pool_ru:data->"Бассейн",' +
   'land_color:data->"Land color"'
 
+// У апартаментов свой набор полей: бассейна и цвета земли у них нет
+// (они в комплексе на коммерческой земле), цена лежит в price_usd.
+const APT_SCORE_SELECT =
+  'airtable_id,' +
+  'pub:data->"Опубликовать",geo:data->Geo,geo2:data->"Geo 2",' +
+  'rooms:data->"Комнаты",area:data->"Площадь",' +
+  'price:data->price_usd,price_ru:data->"Цена",' +
+  'lh:data->Leasehold,lh2:data->Leashold'
+
 type VillaScoreRow = {
   airtable_id: string
   pub: unknown; geo: unknown; geo2: unknown; rooms: unknown; area: unknown
   price: unknown; price_ru: unknown; lh: unknown; lh2: unknown; pool: unknown; pool_ru: unknown
   land_color: unknown
 }
+
+const _loadApartmentScoreRows = unstable_cache(
+  async (): Promise<Row[]> => {
+    const { data } = await sb.from('raw_apartments').select(APT_SCORE_SELECT).limit(2000)
+    return ((data ?? []) as unknown as VillaScoreRow[]).map(r => ({
+      airtable_id: r.airtable_id,
+      data: {
+        'Опубликовать': r.pub, 'Geo': r.geo, 'Geo 2': r.geo2,
+        'Комнаты': r.rooms, 'Площадь': r.area, 'price': r.price, 'Цена': r.price_ru,
+        'Leasehold': r.lh, 'Leashold': r.lh2,
+      },
+    }))
+  },
+  ['apartment-score-rows-v1'],
+  { revalidate: 3600, tags: ['content:apartments'] },
+)
 
 // Cross-instance cache of the slim rows (the module-level _cache below is only
 // per-warm-instance). Collapses the raw_villas scan to ~hourly.
@@ -184,9 +209,9 @@ function buildOneScore(
   }
 }
 
-async function loadAllScoresInternal(): Promise<Map<string, VillaScore>> {
+async function loadAllScoresInternal(kind: 'villa' | 'apartment' = 'villa'): Promise<Map<string, VillaScore>> {
   const [rows, allComps, placesManifest] = await Promise.all([
-    _loadVillaScoreRows(),
+    kind === 'villa' ? _loadVillaScoreRows() : _loadApartmentScoreRows(),
     loadCompetitors(),
     fetchPlacesManifest(),
   ])
@@ -224,8 +249,9 @@ async function loadAllScoresInternal(): Promise<Map<string, VillaScore>> {
   }
 
   const map = new Map<string, VillaScore>()
+  const placesFor = kind === 'villa' ? placesManifest?.villas : placesManifest?.apartments
   for (const row of (rows ?? []) as Row[]) {
-    const places = placesManifest?.villas?.[row.airtable_id] ?? null
+    const places = placesFor?.[row.airtable_id] ?? null
     const score = buildOneScore(row, loadCompForVilla, places)
     if (score) map.set(row.airtable_id, score)
   }
@@ -235,16 +261,36 @@ async function loadAllScoresInternal(): Promise<Map<string, VillaScore>> {
 export async function loadAllVillaScores(): Promise<Map<string, VillaScore>> {
   if (_cache && Date.now() - _cache.ts < TTL_MS) return _cache.data
   if (_inflight) return _inflight
-  _inflight = loadAllScoresInternal()
+  _inflight = loadAllScoresInternal('villa')
     .then(data => { _cache = { ts: Date.now(), data }; return data })
     .catch(err => { console.error('[batch-scores] failed:', err); return new Map() })
     .finally(() => { _inflight = null })
   return _inflight
 }
 
+// Апартаменты считаются тем же кодом: экономика у них та же, отличаются
+// только поля прайса и отсутствие бассейна с цветом земли.
+let _aptCache: { ts: number; data: Map<string, VillaScore> } | null = null
+let _aptInflight: Promise<Map<string, VillaScore>> | null = null
+
+export async function loadAllApartmentScores(): Promise<Map<string, VillaScore>> {
+  if (_aptCache && Date.now() - _aptCache.ts < TTL_MS) return _aptCache.data
+  if (_aptInflight) return _aptInflight
+  _aptInflight = loadAllScoresInternal('apartment')
+    .then(data => { _aptCache = { ts: Date.now(), data }; return data })
+    .catch(err => { console.error('[batch-scores] apartments failed:', err); return new Map() })
+    .finally(() => { _aptInflight = null })
+  return _aptInflight
+}
+
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PLACES_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/competitors/_nearby_places.json`
-async function fetchPlacesManifest(): Promise<{ villas: Record<string, Record<string, NearbyPlace[]>> } | null> {
+type PlacesManifest = {
+  villas?: Record<string, Record<string, NearbyPlace[]>>
+  apartments?: Record<string, Record<string, NearbyPlace[]>>
+}
+
+async function fetchPlacesManifest(): Promise<PlacesManifest | null> {
   try {
     const r = await fetch(PLACES_MANIFEST_URL, { next: { revalidate: 1800 } })
     if (!r.ok) return null
