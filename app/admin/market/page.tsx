@@ -4,7 +4,9 @@
 import Link from 'next/link'
 import { requireAdmin } from '@/lib/admin-auth'
 import { loadMarketReport, type EventRow } from '@/lib/market/report'
+import { loadScanLog } from '@/lib/market/scan-log'
 import { LoginForm } from '../_login'
+import { AnomalyList, RunsTable, ScanStatusLine } from './_scan-log'
 import { MarketShell } from './_shell'
 import { StockTable } from './_stock-table'
 
@@ -15,7 +17,7 @@ export default async function MarketPage() {
   const ok = await requireAdmin()
   if (!ok) return <LoginForm />
 
-  const r = await loadMarketReport()
+  const [r, log] = await Promise.all([loadMarketReport(), loadScanLog()])
 
   return (
     <MarketShell>
@@ -23,6 +25,7 @@ export default async function MarketPage() {
           <div>
             <div className="text-[12px] uppercase tracking-wide text-[var(--ax-fg-muted)] mb-1">Прайсы застройщиков</div>
             <h1 className="text-[24px] font-semibold tracking-tight">Трекер рынка</h1>
+            <div className="mt-1"><ScanStatusLine log={log} /></div>
           </div>
           <div className="flex gap-2">
             <Link
@@ -47,6 +50,13 @@ export default async function MarketPage() {
           <Kpi label="Под наблюдением" value={`${r.totals.tracked} юнитов`} sub={`бронь: ${r.totals.reserved}, статус неясен: ${r.totals.unknown}`} />
         </section>
 
+        <Panel
+          title="Непонятные ситуации"
+          hint="что в работе парсеров не похоже на рынок: оборвавшиеся тики, прайсы, переставшие читаться, массовые движения юнитов"
+        >
+          <AnomalyList items={log.anomalies} />
+        </Panel>
+
         <Panel title="Вернулось в продажу" hint="юнит был продан или забронирован, а потом снова появился свободным">
           {r.returned.length ? <EventTable rows={r.returned} /> : <Empty>за последний месяц таких не было</Empty>}
         </Panel>
@@ -61,6 +71,10 @@ export default async function MarketPage() {
 
         <Panel title="Объём по комплексам" hint="фильтры по застройщику и комплексу, сортировка — клик по заголовку; название комплекса ведёт в подробный отчёт">
           <StockTable rows={r.stock} />
+        </Panel>
+
+        <Panel title="Журнал обновлений" hint={`последние ${log.runs.length} обходов, время бальское`}>
+          <RunsTable runs={log.runs} />
         </Panel>
 
         <Panel title="Источники" hint={`${r.health.ok} собираются, ${r.health.error} с ошибкой, ${r.health.pending} ещё не опрошены`}>

@@ -42,6 +42,7 @@ export async function GET(req: Request) {
       sourceKey,
       // Точечный прогон запрашивают вручную — расписание тут только мешает.
       staleHours: sourceKey ? 0 : undefined,
+      note: sourceKey ? `точечно: ${sourceKey}` : sync ? 'по расписанию, с обновлением реестра' : 'по расписанию',
     })
     // У ScanResult своё поле ok (сколько источников прошло) — разводим
     // его с флагом успеха самого запроса.
