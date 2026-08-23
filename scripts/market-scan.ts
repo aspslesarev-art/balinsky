@@ -18,7 +18,7 @@ async function main() {
   if (syncOnly) return
 
   // Ручной прогон не ограничен временем serverless-функции.
-  const result = await scanBatch(sb, { limit, sourceKey, staleHours: 0, budgetMs: 6 * 3600_000 })
+  const result = await scanBatch(sb, { limit, sourceKey, staleHours: 0, budgetMs: 6 * 3600_000, note: 'вручную из консоли' })
   console.log(`\nобход: ${result.ok} ок, ${result.failed} с ошибкой, юнитов ${result.units}, событий ${result.events}`)
   for (const o of result.outcomes) {
     if (o.status === 'ok') {

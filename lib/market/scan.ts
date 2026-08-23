@@ -52,7 +52,7 @@ const SCANNABLE_KINDS = ['google', 'unitbox', 'notion', 'site', 'pdf']
 
 export async function scanBatch(
   sb: SupabaseClient,
-  opts: { limit?: number; staleHours?: number; sourceKey?: string; budgetMs?: number } = {},
+  opts: { limit?: number; staleHours?: number; sourceKey?: string; budgetMs?: number; note?: string } = {},
 ): Promise<ScanResult> {
   const limit = opts.limit ?? 10
   const staleHours = opts.staleHours ?? DEFAULT_STALE_HOURS
@@ -63,7 +63,9 @@ export async function scanBatch(
     return { runId: null, processed: 0, ok: 0, failed: 0, skipped: 0, units: 0, events: 0, outcomes: [] }
   }
 
-  const { data: run } = await sb.from('market_scan_runs').insert({}).select('id').single()
+  // Пометка запуска попадает в журнал: по ней видно, ночной это тик
+  // или кто-то прогнал трекер руками.
+  const { data: run } = await sb.from('market_scan_runs').insert({ note: opts.note ?? null }).select('id').single()
   const runId = run ? Number(run.id) : null
 
   const outcomes: SourceOutcome[] = []
@@ -104,6 +106,7 @@ export async function scanBatch(
       finished_at: new Date().toISOString(),
       sources_ok: ok,
       sources_failed: outcomes.length - ok,
+      sources_skipped: skipped,
       units_seen: units,
       events_written: events,
     }).eq('id', runId)
@@ -146,13 +149,17 @@ async function markScanned(
   source: MarketSource,
   r: { status: 'ok' | 'error'; units: number | null; error: string | null; layout?: unknown; fingerprint?: string },
 ): Promise<void> {
+  const now = new Date().toISOString()
   const patch: Record<string, unknown> = {
-    last_scan_at: new Date().toISOString(),
+    last_scan_at: now,
     last_status: r.status,
     last_units: r.units,
     last_error: r.error,
-    updated_at: new Date().toISOString(),
+    updated_at: now,
   }
+  // Дата последнего удачного разбора остаётся нетронутой на ошибках —
+  // по ней потом видно, когда именно прайс перестал читаться.
+  if (r.status === 'ok') patch.last_ok_at = now
   // Конфиг сохраняем только когда он реально пересобирался — иначе
   // затрём рабочий пустыми значениями.
   if (r.layout && r.fingerprint) {
