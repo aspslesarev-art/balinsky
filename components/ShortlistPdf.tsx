@@ -5,6 +5,7 @@ import { classifyLandUse } from '@/lib/land-use'
 import { telegramUrl, whatsappUrl } from '@/lib/agent-links'
 import { formatPriceExact, type Currency } from '@/lib/currency'
 import type { AgentContact, PdfOrientation } from './VillaPresentationPdf'
+import { trackEvent } from '@/lib/analytics'
 
 Font.register({
   family: 'Inter',
@@ -1178,6 +1179,7 @@ export async function downloadShortlistPdf(
   // the actual content of each shortlist, not just record IDs.
   // Agent contact is sent verbatim only when the user explicitly
   // generated the "for-agent" PDF.
+  trackEvent('presentation_open', { page_path: typeof window !== 'undefined' ? window.location.pathname : undefined })
   fetch('/api/track/presentation', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },

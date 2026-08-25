@@ -2,10 +2,7 @@
 
 import Script from "next/script";
 import { useEffect, useState } from "react";
-
-const GTM_ID = "GTM-TM6D54Z3";
-const YM_ID = 104881153;
-const GA4_ID = "G-YPJC0S54ME";
+import { GA4_ID, GTM_ID, YM_ID, trackEvent } from "@/lib/analytics";
 
 // localStorage flag that keeps this browser out of the analytics numbers.
 // Set automatically the first time the browser opens /admin/*, and manually
@@ -56,6 +53,28 @@ export function Analytics() {
   useEffect(() => {
     setEnabled(shouldTrack());
   }, []);
+
+  // Уход в Telegram — второй канал заявок мимо формы, и он размазан по
+  // пяти компонентам (карточка застройщика, отзывы, мероприятия, тур,
+  // «о нас»). Один делегированный слушатель ловит их все разом и не
+  // требует трогать каждую кнопку — включая те, что появятся позже.
+  useEffect(() => {
+    if (!enabled) return;
+    const onClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      const link = target?.closest?.("a[href]") as HTMLAnchorElement | null;
+      if (!link) return;
+      const href = link.getAttribute("href") ?? "";
+      if (!/^https?:\/\/(t\.me|telegram\.me)\//i.test(href)) return;
+      trackEvent("telegram_contact", {
+        link_url: href,
+        page_path: window.location.pathname,
+      });
+    };
+    // capture: попадаем раньше, чем обработчик ссылки уведёт страницу.
+    document.addEventListener("click", onClick, { capture: true });
+    return () => document.removeEventListener("click", onClick, { capture: true });
+  }, [enabled]);
 
   if (!enabled) return null;
 

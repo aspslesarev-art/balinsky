@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useMemo, useSyncExternalStore, type ReactNode } from 'react'
 import { WISHLIST_LS_KEY, WISHLIST_MAX, CAPPED_KINDS, type WishlistItem, type WishlistKind } from '@/lib/wishlist'
 import type { Lang } from '@/lib/i18n'
+import { trackEvent } from '@/lib/analytics'
 
 type Ctx = {
   items: WishlistItem[]
@@ -109,6 +110,15 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   // swallowed; analytics never blocks the heart-tap.
   const trackAdd = (item: WishlistItem) => {
     const lang: Lang = typeof window !== 'undefined' && /^\/en(\/|$)/.test(window.location.pathname) ? 'en' : 'ru'
+    // Тот же сигнал в GA4/Метрику: «сердечко» — самый массовый признак
+    // интереса на сайте, и без него воронка обрывается на просмотрах.
+    trackEvent('wishlist_add', {
+      listing_kind: item.kind,
+      listing_slug: item.slug,
+      district: item.district,
+      price_usd: item.priceUsd,
+      lang,
+    })
     fetch('/api/track/wishlist', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },

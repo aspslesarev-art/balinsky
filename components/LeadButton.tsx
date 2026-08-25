@@ -8,6 +8,7 @@
 import { useState, useCallback } from 'react'
 import { X, Phone, Check } from 'lucide-react'
 import { pickCopy, type Lang } from '@/lib/i18n'
+import { trackEvent } from '@/lib/analytics'
 
 const COPY = {
   ru: {
@@ -215,14 +216,35 @@ export function LeadButton({
       })
       if (!res.ok) throw new Error(String(res.status))
       setStatus('done')
+      trackEvent('generate_lead', {
+        listing_kind: context?.listingKind,
+        listing_slug: context?.listingSlug,
+        developer_slug: context?.developerSlug,
+        source: context?.source,
+        page_path: typeof window !== 'undefined' ? window.location.pathname : undefined,
+        lang,
+      })
     } catch {
       setStatus('error'); setErr(c.errSend)
     }
-  }, [name, phone, website, context, c])
+  }, [name, phone, website, context, c, lang])
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className={className}>
+      <button
+        type="button"
+        onClick={() => {
+          setOpen(true)
+          trackEvent('lead_form_open', {
+            listing_kind: context?.listingKind,
+            listing_slug: context?.listingSlug,
+            source: context?.source,
+            page_path: typeof window !== 'undefined' ? window.location.pathname : undefined,
+            lang,
+          })
+        }}
+        className={className}
+      >
         {icon}{label}
       </button>
 

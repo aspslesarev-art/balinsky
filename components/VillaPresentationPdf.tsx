@@ -3,6 +3,7 @@ import type { Snapshot } from '@/components/InvestmentWidget/types'
 import type { VillaPresentationData } from '@/components/VillaPresentation'
 import { telegramUrl, whatsappUrl } from '@/lib/agent-links'
 import { formatPrice, formatPriceExact, type Currency } from '@/lib/currency'
+import { trackEvent } from '@/lib/analytics'
 
 Font.register({
   family: 'Inter',
@@ -596,6 +597,7 @@ export async function downloadVillaPdf(
   // Fire-and-forget analytics ping. Body is JSON; failure logs but
   // never blocks the user's download. Agent contact is sent verbatim
   // when the visitor explicitly generated the "for-agent" PDF.
+  trackEvent('presentation_open', { page_path: typeof window !== 'undefined' ? window.location.pathname : undefined })
   fetch('/api/track/presentation', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },

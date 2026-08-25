@@ -7,10 +7,8 @@ import { SiteChrome } from "@/components/SiteChrome";
 import { TmaModeMarker } from "@/components/TmaModeMarker";
 import { JsonLd } from "@/components/JsonLd";
 import { Analytics } from "@/components/Analytics";
+import { GTM_ID, YM_ID } from "@/lib/analytics";
 import { organizationLd, websiteLd } from "@/lib/json-ld";
-
-const GTM_ID = "GTM-TM6D54Z3";
-const YM_ID = 104881153;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
