@@ -24,6 +24,28 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 // as "soft 404 / thin content" — drags down the rest of the cluster.
 const MIN_OBJECTS_PER_FILTER_PAGE = 3
 
+type SitemapLang = 'ru' | 'en' | 'id' | 'fr' | 'de' | 'zh' | 'nl' | 'pl' | 'uk'
+
+// Языки, которым отдаём каталог целиком — вместе с карточками отдельных
+// вилл и апартаментов.
+//
+// Почему не все девять: на 25.08.2026 карта сайта подавала 13 219 URL
+// (каждый объект × 9 локалей), из них Google проиндексировал 9,19 тыс. и
+// оставил 7 522 в статусе «обнаружена, не проиндексирована» — все примеры
+// в GSC были /de/. Рост этого статуса начался 10.07, ровно с мультиязычной
+// раскаткой. Технических дефектов нет (canonical самоссылающийся, hreflang
+// полный), Google просто не считает девять переводов карточки юнита
+// достойными краулингового бюджета — и заодно реже переобходит страницы,
+// которые действительно ранжируются.
+//
+// ru/en/id выбраны по живой аудитории GA4 (7 дней): Индонезия 55 активных
+// пользователей, США 20, Россия 13. Остальные локали остаются в карте сайта
+// хабами — категории, районы, ЖК, застройщики, статьи; выпадают только
+// карточки вилл и апартаментов. Сами страницы живы, доступны по ссылкам,
+// языковому переключателю и AI-краулерам — мы лишь перестаём подавать их
+// пачкой. Та же логика, что уже применена к /ban/ (см. pairEntry ниже).
+const FULL_CATALOG_LANGS: readonly SitemapLang[] = ['ru', 'en', 'id']
+
 type Passes<T> = (e: T, f: any) => boolean // eslint-disable-line @typescript-eslint/no-explicit-any
 type Parse = (segments: string[]) => any | null // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -39,8 +61,10 @@ function pairEntry(args: {
   lastModified?: Date
   changeFrequency?: SitemapEntry['changeFrequency']
   priority?: number
+  /** Оставить в карте сайта только эти локали. По умолчанию — все девять. */
+  langs?: readonly SitemapLang[]
 }): SitemapEntry[] {
-  const { ruPath, enPath, lastModified, changeFrequency, priority } = args
+  const { ruPath, enPath, lastModified, changeFrequency, priority, langs } = args
   const ruUrl = `${SITE_URL}${ruPath}`
   const enUrl = `${SITE_URL}${enPath}`
   // id/fr paths are derived from the EN path — its segments are the
@@ -71,17 +95,17 @@ function pairEntry(args: {
       de: deUrl, 'zh-Hans': zhUrl, nl: nlUrl, pl: plUrl, uk: ukUrl, 'x-default': ruUrl,
     },
   }
-  return [
-    { url: ruUrl, lastModified, changeFrequency, priority, alternates },
-    { url: enUrl, lastModified, changeFrequency, priority, alternates },
-    { url: idUrl, lastModified, changeFrequency, priority, alternates },
-    { url: frUrl, lastModified, changeFrequency, priority, alternates },
-    { url: deUrl, lastModified, changeFrequency, priority, alternates },
-    { url: zhUrl, lastModified, changeFrequency, priority, alternates },
-    { url: nlUrl, lastModified, changeFrequency, priority, alternates },
-    { url: plUrl, lastModified, changeFrequency, priority, alternates },
-    { url: ukUrl, lastModified, changeFrequency, priority, alternates },
+  // Порядок сохраняем прежний — от него зависит шардирование по 1200 URL.
+  const byLang: [SitemapLang, string][] = [
+    ['ru', ruUrl], ['en', enUrl], ['id', idUrl], ['fr', frUrl], ['de', deUrl],
+    ['zh', zhUrl], ['nl', nlUrl], ['pl', plUrl], ['uk', ukUrl],
   ]
+  // `alternates` остаётся полным на всех девяти языках даже когда сам URL в
+  // карту сайта не попадает: страница жива, и hreflang в её <head> говорит
+  // ровно то же самое — противоречия между разметкой и sitemap не возникает.
+  return byLang
+    .filter(([lang]) => !langs || langs.includes(lang))
+    .map(([, url]) => ({ url, lastModified, changeFrequency, priority, alternates }))
 }
 
 // Pull developer slugs straight from Supabase. Lightweight one-shot read at
@@ -437,7 +461,13 @@ async function buildAll(): Promise<Categorized> {
   const villaObjects: SitemapEntry[] = []
   const apartmentObjects: SitemapEntry[] = []
   const complexObjects: SitemapEntry[] = []
-  const emitObjectPair = (target: SitemapEntry[], enriched: EnrichedLike[] | undefined, ruSection: string, enSection: string) => {
+  const emitObjectPair = (
+    target: SitemapEntry[],
+    enriched: EnrichedLike[] | undefined,
+    ruSection: string,
+    enSection: string,
+    langs?: readonly SitemapLang[],
+  ) => {
     const seenSlug = new Set<string>()
     for (const e of enriched ?? []) {
       const s = slugOf(e); if (!s) continue
@@ -447,12 +477,15 @@ async function buildAll(): Promise<Categorized> {
       target.push(...pairEntry({
         ruPath: `/ru/${ruSection}/o/${s}`,
         enPath: `/en/${enSection}/o/${s}`,
-        lastModified: lm, changeFrequency: 'weekly', priority: 0.7,
+        lastModified: lm, changeFrequency: 'weekly', priority: 0.7, langs,
       }))
     }
   }
-  emitObjectPair(villaObjects, vData?.enriched as EnrichedLike[] | undefined, 'villy', 'villas')
-  emitObjectPair(apartmentObjects, aData?.enriched as EnrichedLike[] | undefined, 'apartamenty', 'apartments')
+  // Карточки юнитов — только ru/en/id. ЖК остаются на всех девяти: их
+  // заметно меньше, они собирают брендовые запросы («surfside uluwatu»,
+  // «pandawa residence») и индексируются нормально.
+  emitObjectPair(villaObjects, vData?.enriched as EnrichedLike[] | undefined, 'villy', 'villas', FULL_CATALOG_LANGS)
+  emitObjectPair(apartmentObjects, aData?.enriched as EnrichedLike[] | undefined, 'apartamenty', 'apartments', FULL_CATALOG_LANGS)
   emitObjectPair(complexObjects, cData?.enriched as EnrichedLike[] | undefined, 'zhilye-kompleksy', 'complexes')
 
   // News / promo / events / knowledge / rental — RU + EN pairs.
@@ -471,7 +504,13 @@ async function buildAll(): Promise<Categorized> {
     lastModified: x.date ? new Date(x.date) : now,
     changeFrequency: 'monthly', priority: 0.6,
   }))
-  const promo: SitemapEntry[] = promoRows.flatMap(x => pairEntry({
+  // Истёкшие акции из карты сайта убираем: в примерах GSC висело
+  // /de/angebote/…-black-friday-…-do-28-noyabrya-2025 — предложение,
+  // закончившееся девять месяцев назад. Просить Google индексировать
+  // протухшую страницу — прямой путь в «обнаружена, не проиндексирована».
+  const isLivePromo = (expiresAt?: string | null) =>
+    !expiresAt || new Date(expiresAt).getTime() >= now.getTime()
+  const promo: SitemapEntry[] = promoRows.filter(x => isLivePromo(x.expiresAt)).flatMap(x => pairEntry({
     ruPath: `/ru/akcii/${x.slug}`, enPath: `/en/promo/${x.slug}`,
     lastModified: x.expiresAt ? new Date(x.expiresAt) : now,
     changeFrequency: 'weekly', priority: 0.5,
