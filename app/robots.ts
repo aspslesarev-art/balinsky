@@ -17,6 +17,8 @@ const DISALLOW = [
   '/admin',
   // Закрытые отчёты для застройщиков — доступ только по ссылке с ключом.
   '/insights',
+  // Закрытый отчёт о движении рынка — только для приглашённых аккаунтов.
+  '/rynok',
 ]
 
 // Modern AI-search crawlers we want to explicitly green-light. Without

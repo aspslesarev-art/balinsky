@@ -40,6 +40,12 @@ export default async function MarketPage() {
             >
               Все юниты рынка →
             </Link>
+            <Link
+              href="/admin/market/access"
+              className="text-[12px] px-3 py-1.5 rounded-lg border border-[var(--ax-border)] text-[var(--ax-fg-muted)] hover:text-[var(--ax-fg)]"
+            >
+              Доступ к отчёту →
+            </Link>
           </div>
         </header>
 
