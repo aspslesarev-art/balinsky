@@ -133,10 +133,13 @@ export function DataGridScreen({
   cfg,
   initialRows,
   total: initialTotal,
+  openId = null,
 }: {
   cfg: CollectionConfig
   initialRows: RecordRow[]
   total: number
+  /** Запись, карточку которой надо открыть сразу — переход из «Проблем». */
+  openId?: string | null
 }) {
   const [rows, setRows] = useState<RecordRow[]>(initialRows)
   const [total, setTotal] = useState(initialTotal)
@@ -146,7 +149,7 @@ export function DataGridScreen({
   const [filters, setFilters] = useState<{ key: string; value: string }[]>([])
   const [showFilters, setShowFilters] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [selectedId, setSelectedId] = useState<string | 'new' | null>(null)
+  const [selectedId, setSelectedId] = useState<string | 'new' | null>(openId)
 
   const [edit, setEdit] = useState<EditCell>(null)
   const [editText, setEditText] = useState('')
@@ -553,7 +556,14 @@ export function DataGridScreen({
       {selectedId && (
         <RecordPanel cfg={cfg} id={selectedId} typeHints={typeHints}
           title={selectedId === 'new' ? 'Новая запись' : displayValue(rows.find(r => r.id === selectedId)?.fields[titleKey]) || String(selectedId)}
-          onClose={() => setSelectedId(null)} onSaved={onSaved} onDeleted={onDeleted} />
+          onClose={() => {
+            setSelectedId(null)
+            // Убираем ?open= из адреса, иначе обновление страницы снова
+            // распахивает карточку, которую только что закрыли.
+            if (typeof window !== 'undefined' && window.location.search.includes('open=')) {
+              window.history.replaceState(null, '', window.location.pathname)
+            }
+          }} onSaved={onSaved} onDeleted={onDeleted} />
       )}
     </div>
   )

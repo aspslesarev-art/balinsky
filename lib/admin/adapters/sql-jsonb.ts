@@ -93,7 +93,10 @@ export const sqlJsonbAdapter: DataSourceAdapter = {
     // resolves /o/<slug> through the slug index. Derive one from the title
     // rather than silently creating a 404.
     if (cols.has('slug') && !colFields.slug) {
-      colFields.slug = slugBase || id
+      // Через freeSlug, а не «как получилось»: два ЖК с одинаковым названием
+      // получали один и тот же слаг, и второй становился недостижим — индекс
+      // slug→id держит только одну запись на слаг.
+      colFields.slug = await freeSlug(cfg, 'slug', slugBase || id, true)
     }
     // Same trap one level down: developers, villas and apartments keep their
     // public slug INSIDE the `data` blob (`SEO:Slug`), and every consumer drops
@@ -104,6 +107,13 @@ export const sqlJsonbAdapter: DataSourceAdapter = {
     const slugKey = cfg.slugField
     if (slugKey && !cols.has(slugKey) && !asText(dataFields[slugKey])) {
       dataFields[slugKey] = await freeSlug(cfg, slugKey, slugBase || id)
+    }
+    // Слаг внутри `data` (у комплексов — `SEO:Slug`) обязан повторять колонку:
+    // по нему запись находят база знаний ассистента и трекер рынка. Раньше это
+    // делали руками и забывали.
+    const mirror = cfg.mirrorSlugField
+    if (mirror && !asText(dataFields[mirror]) && asText(colFields.slug)) {
+      dataFields[mirror] = colFields.slug
     }
     const insert: Record<string, unknown> = { [pk]: id, data: dataFields, ...colFields, synced_at: new Date().toISOString() }
     const { error } = await adminSb().from(cfg.table!).insert(insert)
@@ -120,12 +130,40 @@ export const sqlJsonbAdapter: DataSourceAdapter = {
     for (const [k, v] of Object.entries(patch)) (cols.has(k) ? colPatch : dataPatch)[k] = v
 
     const update: Record<string, unknown> = { synced_at: new Date().toISOString(), ...colPatch }
-    if (Object.keys(dataPatch).length) {
-      // Read-modify-write the `data` blob so un-edited keys survive.
+    const mirror = cfg.mirrorSlugField
+    const hasSlugColumn = cols.has('slug')
+    if (Object.keys(dataPatch).length || mirror || hasSlugColumn || cfg.slugField) {
+      // Read-modify-write the `data` blob so un-edited keys survive — и заодно
+      // единственное место, где видно ОБА слага записи разом, поэтому здесь же
+      // чинится запись без адреса.
       const { data: existing, error: readErr } = await sb
-        .from(cfg.table!).select('data').eq(pk, id).maybeSingle()
+        .from(cfg.table!).select(hasSlugColumn ? 'data, slug' : 'data').eq(pk, id).maybeSingle()
       if (readErr) throw new Error(readErr.message)
-      update.data = { ...((existing as { data?: Record<string, unknown> } | null)?.data ?? {}), ...dataPatch }
+      const row = existing as { data?: Record<string, unknown>; slug?: string | null } | null
+      const merged = { ...(row?.data ?? {}), ...dataPatch }
+
+      // Запись без слага недостижима: детальная страница резолвится по нему.
+      // Раньше это чинилось только при создании — строка, потерявшая слаг,
+      // так и оставалась без страницы, сколько её ни сохраняй.
+      const kind = unitKindOf(cfg)
+      const slugBase = (kind ? unitSlugBase(kind, merged) : '')
+        || normalizeSlug(asText(merged[cfg.titleField]))
+      if (hasSlugColumn && !asText(colPatch.slug) && !asText(row?.slug) && slugBase) {
+        update.slug = await freeSlug(cfg, 'slug', slugBase, true)
+      }
+      const slugKey = cfg.slugField
+      if (slugKey && !cols.has(slugKey) && !asText(merged[slugKey]) && slugBase) {
+        merged[slugKey] = await freeSlug(cfg, slugKey, slugBase)
+      }
+      if (mirror) {
+        // Переименовали страницу — копия едет следом; копии не было (старая
+        // запись или созданная до этого правила) — проставляем её сейчас.
+        const slugNow = asText(colPatch.slug) || asText(update.slug) || asText(row?.slug)
+        if (slugNow && (asText(colPatch.slug) || asText(update.slug) || !asText(merged[mirror]))) {
+          merged[mirror] = slugNow
+        }
+      }
+      update.data = merged
     }
     const { error } = await sb.from(cfg.table!).update(update).eq(pk, id)
     if (error) throw new Error(error.message)
@@ -145,14 +183,14 @@ function asText(v: unknown): string {
 // First slug in the `base`, `base-2`, `base-3`… series that no row of this
 // table holds yet. Two developers with the same slug would make one of them
 // unreachable, so the collision has to be resolved at write time.
-async function freeSlug(cfg: CollectionConfig, slugKey: string, base: string): Promise<string> {
+async function freeSlug(cfg: CollectionConfig, slugKey: string, base: string, isColumn = false): Promise<string> {
   const sb = adminSb()
   for (let n = 1; n <= 50; n++) {
     const candidate = n === 1 ? base : `${base}-${n}`
     const { data, error } = await sb
       .from(cfg.table!)
       .select(cfg.primaryKey ?? 'airtable_id')
-      .eq(jsonPath(slugKey), candidate)
+      .eq(isColumn ? slugKey : jsonPath(slugKey), candidate)
       .limit(1)
     // A failed lookup must not block the save — a duplicate slug is still
     // better than a row with none at all.

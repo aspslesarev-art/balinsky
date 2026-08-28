@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { X, Save, Trash2, Loader2, AlertTriangle, Plus, Link2, Search, Copy } from 'lucide-react'
 import type { CollectionConfig, FieldDef, FieldType, RecordRow } from '@/lib/admin/adapters/types'
-import { resolveRecordFields, mergeDuplicateFields, percentToInput, inputToPercent, linkPatch, linkSelection, type LinkOption } from '@/lib/admin/fields'
+import { resolveRecordFields, mergeDuplicateFields, displayValue, percentToInput, inputToPercent, linkPatch, linkSelection, type LinkOption } from '@/lib/admin/fields'
 import { toBaliInput, fromBaliInput } from '@/lib/datetime'
 import { PhotoManager } from './_photos'
 
@@ -147,7 +147,12 @@ export function RecordPanel({
       <div className="relative w-full sm:w-[480px] h-full bg-[var(--ax-bg)] border-l border-[var(--ax-border)] shadow-[0_0_40px_rgba(0,0,0,0.3)] flex flex-col">
         <header className="flex items-center gap-2 px-4 py-3 border-b border-[var(--ax-border)] bg-[var(--ax-panel)]">
           <div className="flex-1 min-w-0">
-            <div className="text-[14px] font-semibold text-[var(--ax-fg)] truncate">{title}</div>
+            {/* Пришли по ссылке из «Проблем» — строки нет на текущей странице
+                сетки, и заголовок приехал бы идентификатором. Как только
+                запись загрузилась, показываем её собственное название. */}
+            <div className="text-[14px] font-semibold text-[var(--ax-fg)] truncate">
+              {(isNew ? '' : displayValue(fields[cfg.titleField])) || title}
+            </div>
             <div className="text-[11px] text-[var(--ax-fg-faint)] font-mono truncate">{isNew ? 'new' : id}</div>
           </div>
           <button type="button" onClick={onClose} className="p-1.5 rounded-lg hover:bg-[var(--ax-hover)] text-[var(--ax-fg-soft)]"><X size={18} /></button>

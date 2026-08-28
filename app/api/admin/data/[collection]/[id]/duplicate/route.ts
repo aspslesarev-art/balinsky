@@ -33,6 +33,9 @@ export async function POST(_req: Request, { params }: Ctx) {
     const skip = new Set<string>([
       ...(cfg.duplicateSkip ?? []),
       ...(cfg.slugField ? [cfg.slugField] : []),
+      // Копия слага внутри `data` тоже уникальна — её проставит adapter.create
+      // от нового слага, а унаследованная указывала бы на оригинал.
+      ...(cfg.mirrorSlugField ? [cfg.mirrorSlugField] : []),
       cfg.primaryKey ?? 'airtable_id',
       'slug',
     ])
