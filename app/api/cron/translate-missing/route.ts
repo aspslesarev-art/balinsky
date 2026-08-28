@@ -132,6 +132,13 @@ async function callModel(payload: Record<string, string>, lang: Lang, env: Model
         }),
       })
       if (r.status === 429) {
+        // 429 бывает двух сортов: настоящий rate limit пройдёт сам, а
+        // кончившийся баланс не пройдёт никогда. Различаем, чтобы в логах
+        // крона была причина, а не безымянная ошибка после трёх ретраев.
+        const body = await r.text().catch(() => '')
+        if (/insufficient_quota|credit_balance_exhausted|no credits remaining/i.test(body)) {
+          throw new Error('openai_credits_exhausted')
+        }
         await new Promise(res => setTimeout(res, 5000 * (attempt + 1)))
         continue
       }
