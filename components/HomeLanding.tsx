@@ -20,7 +20,11 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@supabase/supabase-js'
-import { ArrowRight, Send, Search, Home, Building2, Building, Phone, MapPin, ShieldCheck } from 'lucide-react'
+import {
+  ArrowRight, Send, Search, Home, Building2, Building, MapPin, ShieldCheck,
+  TrendingUp, BarChart3, Flame, Gauge, FileCheck,
+  Sparkles, Heart, KeyRound, Sun, ListChecks, BookOpen,
+} from 'lucide-react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { VillaCard, type VillaCardData } from '@/components/VillaCard'
@@ -31,8 +35,27 @@ import { LeadButton } from '@/components/LeadButton'
 import { loadHomeFinder } from '@/lib/home-finder'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { HomeFinder } from '@/components/HomeFinder'
-import { StepChat, StepStudy, StepRequest } from '@/components/LandingVisuals'
+import {
+  VizYield, VizCompetitors, VizHeat, VizNearby, VizDemand, VizDocs,
+} from '@/components/LandingVisuals'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
+
+// Порядок здесь = порядок COPY.powers.items во всех локалях: доход,
+// цены соседей, тепловая карта туристов, что рядом, балл востребованности,
+// документы. Меняешь порядок — меняй в обоих местах.
+const POWER_ICONS = [TrendingUp, BarChart3, Flame, MapPin, Gauge, FileCheck]
+const POWER_VISUALS = [VizYield, VizCompetitors, VizHeat, VizNearby, VizDemand, VizDocs]
+
+// Второй слой главной: разделы, которые помогают выбрать, но не являются
+// аналитикой объекта. Иконки в порядке COPY.tools.items.
+const TOOL_ROUTES: { path: string; Icon: typeof Sparkles }[] = [
+  { path: '/ru/poisk', Icon: Sparkles },
+  { path: '/ru/izbrannoe', Icon: Heart },
+  { path: '/ru/arenda', Icon: KeyRound },
+  { path: '/ru/zhizn-na-bali', Icon: Sun },
+  { path: '/ru/kak-kupit', Icon: ListChecks },
+  { path: '/ru/znaniya', Icon: BookOpen },
+]
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const sb = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY!)
@@ -63,13 +86,28 @@ const COPY = {
       complexesNote: 'Дома и квартиры с бассейном и охраной',
     },
     finder: { heading: 'Ответьте на три вопроса' },
-    steps: {
-      heading: 'Как купить',
-      cta: 'Смотреть виллы',
+    powers: {
+      heading: 'Что умеет Balinsky',
+      sub: 'Ни один сайт недвижимости в Юго-Восточной Азии не показывает столько данных о доме. Всё открыто и бесплатно, регистрация не нужна.',
+      cta: 'Посмотреть на примере виллы',
       items: [
-        { title: 'Выберите', body: 'Смотрите фото, цены и карту. Регистрация не нужна.' },
-        { title: 'Проверьте', body: 'Мы показываем документы и сколько дом может заработать.' },
-        { title: 'Напишите нам', body: 'Покажем дом по видео и поможем купить.' },
+        { title: 'Сколько заработает дом', body: 'Три сценария дохода: плохой, обычный, хороший. Считаем по домам, которые уже сдаются рядом.' },
+        { title: 'Цены соседей', body: 'Видно, дороже этот дом или дешевле, чем такие же рядом. Цена за метр — на одной шкале.' },
+        { title: 'Где ходят туристы', body: 'Тепловая карта по 13 600 местам Бали. Сразу видно живые районы и пустые.' },
+        { title: 'Что рядом с домом', body: 'Пляж, кафе, школа, серф, больница — со временем в пути.' },
+        { title: 'Балл востребованности', body: 'Одно число от 1 до 100: насколько дом сильнее тех, что сдаются вокруг.' },
+        { title: 'Документы и проверка', body: 'PBG, SLF, срок аренды земли. Красные флаги видно сразу.' },
+      ],
+    },
+    tools: {
+      heading: 'Ещё на сайте',
+      items: [
+        'Спросите словами — найдём',
+        'Избранное и презентация в PDF',
+        'Сколько сдают в аренду рядом',
+        'Жизнь на Бали: визы, школы, врачи',
+        'Как купить — по шагам',
+        'Статьи и разборы',
       ],
     },
     villas: { heading: 'Посмотрите виллы', linkAll: 'Все виллы' },
@@ -113,13 +151,28 @@ const COPY = {
       complexesNote: 'Homes and apartments with a pool and security',
     },
     finder: { heading: 'Answer three questions' },
-    steps: {
-      heading: 'How to buy',
-      cta: 'See villas',
+    powers: {
+      heading: 'What Balinsky can do',
+      sub: 'No property site in South-East Asia shows this much about a home. All of it is open and free, no sign-up.',
+      cta: 'See it on a real villa',
       items: [
-        { title: 'Choose', body: 'Look at photos, prices and the map. No sign-up.' },
-        { title: 'Check', body: 'We show the papers and what the home can earn.' },
-        { title: 'Write to us', body: 'We show the home on video and help you buy.' },
+        { title: 'What the home will earn', body: 'Three income scenarios: poor, normal, good. Counted from homes already rented out nearby.' },
+        { title: 'Neighbour prices', body: 'See whether this home is dearer or cheaper than the same ones around. Price per m² on one scale.' },
+        { title: 'Where tourists go', body: 'A heat map of 13,600 places in Bali. Busy areas and empty ones at a glance.' },
+        { title: 'What is near the home', body: 'Beach, café, school, surf, hospital — with travel time.' },
+        { title: 'Demand score', body: 'One number from 1 to 100: how much stronger the home is than those rented around it.' },
+        { title: 'Papers and checks', body: 'PBG, SLF, land lease term. Red flags show up straight away.' },
+      ],
+    },
+    tools: {
+      heading: 'Also on the site',
+      items: [
+        'Ask in your own words',
+        'Favourites and a PDF presentation',
+        'What homes rent for nearby',
+        'Living in Bali: visas, schools, doctors',
+        'How to buy — step by step',
+        'Articles and breakdowns',
       ],
     },
     villas: { heading: 'Take a look at villas', linkAll: 'All villas' },
@@ -163,13 +216,28 @@ const COPY = {
       complexesNote: 'Rumah dan apartemen dengan kolam dan keamanan',
     },
     finder: { heading: 'Jawab tiga pertanyaan' },
-    steps: {
-      heading: 'Cara membeli',
-      cta: 'Lihat vila',
+    powers: {
+      heading: 'Yang bisa dilakukan Balinsky',
+      sub: 'Tidak ada situs properti di Asia Tenggara yang menampilkan sebanyak ini tentang satu rumah. Semuanya terbuka dan gratis, tanpa daftar.',
+      cta: 'Lihat contohnya pada satu vila',
       items: [
-        { title: 'Pilih', body: 'Lihat foto, harga, dan peta. Tanpa pendaftaran.' },
-        { title: 'Periksa', body: 'Kami tunjukkan dokumen dan berapa hasilnya nanti.' },
-        { title: 'Hubungi kami', body: 'Kami tunjukkan rumahnya lewat video dan bantu membeli.' },
+        { title: 'Berapa hasil rumah ini', body: 'Tiga skenario pendapatan: buruk, biasa, bagus. Dihitung dari rumah yang sudah disewakan di sekitar.' },
+        { title: 'Harga tetangga', body: 'Terlihat rumah ini lebih mahal atau lebih murah dari yang serupa di sekitar. Harga per m² dalam satu skala.' },
+        { title: 'Ke mana turis pergi', body: 'Peta panas 13.600 tempat di Bali. Area ramai dan sepi langsung terlihat.' },
+        { title: 'Apa saja di dekat rumah', body: 'Pantai, kafe, sekolah, surf, rumah sakit — dengan waktu tempuh.' },
+        { title: 'Skor permintaan', body: 'Satu angka 1 sampai 100: seberapa kuat rumah ini dibanding yang disewakan di sekitar.' },
+        { title: 'Dokumen dan pemeriksaan', body: 'PBG, SLF, masa sewa tanah. Tanda bahaya langsung terlihat.' },
+      ],
+    },
+    tools: {
+      heading: 'Ada juga di situs',
+      items: [
+        'Tanya dengan kata-kata Anda',
+        'Favorit dan presentasi PDF',
+        'Berapa harga sewa di sekitar',
+        'Hidup di Bali: visa, sekolah, dokter',
+        'Cara membeli — langkah demi langkah',
+        'Artikel dan ulasan',
       ],
     },
     villas: { heading: 'Lihat vila', linkAll: 'Semua vila' },
@@ -213,13 +281,28 @@ const COPY = {
       complexesNote: 'Maisons et appartements avec piscine et gardien',
     },
     finder: { heading: 'Répondez à trois questions' },
-    steps: {
-      heading: 'Comment acheter',
-      cta: 'Voir les villas',
+    powers: {
+      heading: 'Ce que fait Balinsky',
+      sub: 'Aucun site immobilier d’Asie du Sud-Est n’en montre autant sur un bien. Tout est ouvert et gratuit, sans inscription.',
+      cta: 'Voir sur une vraie villa',
       items: [
-        { title: 'Choisissez', body: 'Photos, prix et carte. Sans inscription.' },
-        { title: 'Vérifiez', body: 'On montre les papiers et ce que le bien peut rapporter.' },
-        { title: 'Écrivez-nous', body: 'On vous montre le bien en vidéo et on vous aide à acheter.' },
+        { title: 'Ce que la maison rapporte', body: 'Trois scénarios de revenu : bas, normal, bon. Calculés sur les maisons déjà louées à côté.' },
+        { title: 'Les prix des voisins', body: 'On voit si ce bien est plus cher ou moins cher que les mêmes autour. Prix au m² sur une seule échelle.' },
+        { title: 'Où vont les touristes', body: 'Carte de chaleur de 13 600 lieux à Bali. Les zones vivantes et les zones vides, d’un coup d’œil.' },
+        { title: 'Ce qu’il y a autour', body: 'Plage, café, école, surf, hôpital — avec le temps de trajet.' },
+        { title: 'Note de demande', body: 'Un chiffre de 1 à 100 : la force du bien face à ceux loués autour.' },
+        { title: 'Documents et vérification', body: 'PBG, SLF, durée du bail. Les drapeaux rouges se voient tout de suite.' },
+      ],
+    },
+    tools: {
+      heading: 'Aussi sur le site',
+      items: [
+        'Demandez avec vos mots',
+        'Favoris et présentation PDF',
+        'Les loyers autour',
+        'Vivre à Bali : visas, écoles, médecins',
+        'Comment acheter — étape par étape',
+        'Articles et analyses',
       ],
     },
     villas: { heading: 'Regardez les villas', linkAll: 'Toutes les villas' },
@@ -263,13 +346,28 @@ const COPY = {
       complexesNote: 'Häuser und Wohnungen mit Pool und Wachdienst',
     },
     finder: { heading: 'Beantworten Sie drei Fragen' },
-    steps: {
-      heading: 'So kaufen Sie',
-      cta: 'Villen ansehen',
+    powers: {
+      heading: 'Was Balinsky kann',
+      sub: 'Keine Immobilienseite in Südostasien zeigt so viel über ein Haus. Alles offen und kostenlos, ohne Anmeldung.',
+      cta: 'An einer echten Villa ansehen',
       items: [
-        { title: 'Aussuchen', body: 'Fotos, Preise und Karte ansehen. Ohne Anmeldung.' },
-        { title: 'Prüfen', body: 'Wir zeigen die Papiere und was das Haus verdienen kann.' },
-        { title: 'Schreiben Sie uns', body: 'Wir zeigen das Haus per Video und helfen beim Kauf.' },
+        { title: 'Was das Haus einbringt', body: 'Drei Ertragsszenarien: schlecht, normal, gut. Gerechnet nach Häusern, die nebenan schon vermietet werden.' },
+        { title: 'Preise der Nachbarn', body: 'Sie sehen, ob dieses Haus teurer oder günstiger ist als gleiche in der Nähe. Preis pro m² auf einer Skala.' },
+        { title: 'Wohin Touristen gehen', body: 'Wärmekarte mit 13.600 Orten auf Bali. Belebte und leere Gegenden auf einen Blick.' },
+        { title: 'Was in der Nähe ist', body: 'Strand, Café, Schule, Surfen, Krankenhaus — mit Wegzeit.' },
+        { title: 'Nachfrage-Punktzahl', body: 'Eine Zahl von 1 bis 100: wie viel stärker das Haus ist als die Vermietungen ringsum.' },
+        { title: 'Papiere und Prüfung', body: 'PBG, SLF, Laufzeit des Landpachtvertrags. Rote Flaggen sieht man sofort.' },
+      ],
+    },
+    tools: {
+      heading: 'Außerdem auf der Seite',
+      items: [
+        'Fragen Sie in eigenen Worten',
+        'Favoriten und PDF-Präsentation',
+        'Was die Mieten nebenan bringen',
+        'Leben auf Bali: Visa, Schulen, Ärzte',
+        'Wie man kauft — Schritt für Schritt',
+        'Artikel und Analysen',
       ],
     },
     villas: { heading: 'Sehen Sie sich Villen an', linkAll: 'Alle Villen' },
@@ -313,13 +411,28 @@ const COPY = {
       complexesNote: '带泳池和保安的房子和公寓',
     },
     finder: { heading: '回答三个问题' },
-    steps: {
-      heading: '怎么买',
-      cta: '看别墅',
+    powers: {
+      heading: 'Balinsky 能做什么',
+      sub: '东南亚没有哪个房产网站能展示这么多关于一套房的细节。全部公开免费，无需注册。',
+      cta: '在一套真实别墅上查看',
       items: [
-        { title: '挑选', body: '看照片、价格和地图。不用注册。' },
-        { title: '核对', body: '我们给你看证件，也告诉你能赚多少。' },
-        { title: '联系我们', body: '我们用视频带你看房，并帮你买下。' },
+        { title: '这套房能赚多少', body: '三种收益情景：差、一般、好。按附近已出租的房子计算。' },
+        { title: '邻居的价格', body: '看清这套比周围同类更贵还是更便宜。每平方米价格在同一标尺上。' },
+        { title: '游客都去哪里', body: '13 600 个巴厘岛地点的热力图。热闹与冷清一目了然。' },
+        { title: '房子周边有什么', body: '海滩、咖啡馆、学校、冲浪点、医院——含路程时间。' },
+        { title: '需求评分', body: '1 到 100 的一个数字：这套房比周围出租的强多少。' },
+        { title: '证件与核查', body: 'PBG、SLF、土地租期。红旗一眼就能看到。' },
+      ],
+    },
+    tools: {
+      heading: '网站还有',
+      items: [
+        '用自己的话提问',
+        '收藏与 PDF 演示文稿',
+        '周边的租金水平',
+        '巴厘岛生活：签证、学校、医生',
+        '如何购买——分步指南',
+        '文章与解读',
       ],
     },
     villas: { heading: '看看别墅', linkAll: '全部别墅' },
@@ -363,13 +476,28 @@ const COPY = {
       complexesNote: 'Huizen en appartementen met zwembad en bewaking',
     },
     finder: { heading: 'Beantwoord drie vragen' },
-    steps: {
-      heading: 'Zo koop je',
-      cta: 'Villa’s bekijken',
+    powers: {
+      heading: 'Wat Balinsky kan',
+      sub: 'Geen enkele vastgoedsite in Zuidoost-Azië laat zoveel over een huis zien. Alles open en gratis, zonder account.',
+      cta: 'Bekijk het op een echte villa',
       items: [
-        { title: 'Kiezen', body: 'Bekijk foto’s, prijzen en de kaart. Zonder aanmelden.' },
-        { title: 'Controleren', body: 'Wij tonen de papieren en wat het huis kan opleveren.' },
-        { title: 'Schrijf ons', body: 'Wij tonen het huis op video en helpen je kopen.' },
+        { title: 'Wat het huis opbrengt', body: 'Drie scenario’s: slecht, normaal, goed. Berekend op huizen die er al verhuurd worden.' },
+        { title: 'Prijzen van de buren', body: 'Je ziet of dit huis duurder of goedkoper is dan gelijke huizen in de buurt. Prijs per m² op één schaal.' },
+        { title: 'Waar toeristen komen', body: 'Warmtekaart van 13.600 plekken op Bali. Drukke en lege buurten in één blik.' },
+        { title: 'Wat er in de buurt is', body: 'Strand, café, school, surf, ziekenhuis — met reistijd.' },
+        { title: 'Vraagscore', body: 'Eén getal van 1 tot 100: hoeveel sterker het huis is dan de verhuur eromheen.' },
+        { title: 'Papieren en controle', body: 'PBG, SLF, looptijd van de grondpacht. Rode vlaggen zie je meteen.' },
+      ],
+    },
+    tools: {
+      heading: 'Ook op de site',
+      items: [
+        'Vraag het in je eigen woorden',
+        'Favorieten en PDF-presentatie',
+        'Wat de huren in de buurt opleveren',
+        'Wonen op Bali: visa, scholen, artsen',
+        'Hoe je koopt — stap voor stap',
+        'Artikelen en analyses',
       ],
     },
     villas: { heading: 'Bekijk villa’s', linkAll: 'Alle villa’s' },
@@ -413,13 +541,28 @@ const COPY = {
       complexesNote: 'Umah lan apartemen sareng kolam lan penjaga',
     },
     finder: { heading: 'Saurin tigang patakon' },
-    steps: {
-      heading: 'Carane numbas',
-      cta: 'Cingakin vila',
+    powers: {
+      heading: 'Napi sane prasida antuk Balinsky',
+      sub: 'Nenten wenten situs properti ring Asia Tenggara sane nyinahang akeh kadi puniki indik umah. Sami terbuka lan gratis, nenten perlu ndaftar.',
+      cta: 'Cingakin conto ring silih tunggil vila',
       items: [
-        { title: 'Pilih', body: 'Cingakin foto, aji, lan peta. Nenten perlu ndaftar.' },
-        { title: 'Periksa', body: 'Titiang nyinahang dokumen lan sapunapi hasilnyane.' },
-        { title: 'Kontak titiang', body: 'Titiang nyinahang umahe lewat video lan nulungin numbas.' },
+        { title: 'Sapunapi hasil umahe', body: 'Tigang skenario hasil: kaon, biasa, becik. Kaitung saking umah sane sampun kasewaang ring kiwa tengen.' },
+        { title: 'Aji pisagane', body: 'Kacingak umah puniki maelan napi mudahan saking sane pateh ring kiwa tengen. Aji sabilang m² ring asiki skala.' },
+        { title: 'Ring dija turise malelancaran', body: 'Peta panes 13.600 genah ring Bali. Genah rame lan genah sepi prasida kacingak.' },
+        { title: 'Napi sane nampek ring umah', body: 'Pasih, kafe, sekolah, selancar, rumah sakit — sareng suenipun ring margi.' },
+        { title: 'Skor permintaan', body: 'Asiki angka 1 nyantos 100: sapunapi kuat umahe bandingang sareng sane kasewaang ring kiwa tengen.' },
+        { title: 'Dokumen lan pameriksaan', body: 'PBG, SLF, masa sewa tanah. Tanda bahaya prasida kacingak digelis.' },
+      ],
+    },
+    tools: {
+      heading: 'Wenten taler ring situs',
+      items: [
+        'Metaken nganggen basan Ragane',
+        'Kaplihan lan presentasi PDF',
+        'Sapunapi aji sewa ring kiwa tengen',
+        'Urip ring Bali: visa, sekolah, dokter',
+        'Carane numbas — sabilang langkah',
+        'Artikel lan ulasan',
       ],
     },
     villas: { heading: 'Cingakin vila', linkAll: 'Sami vila' },
@@ -463,13 +606,28 @@ const COPY = {
       complexesNote: 'Domy i mieszkania z basenem i ochroną',
     },
     finder: { heading: 'Odpowiedz na trzy pytania' },
-    steps: {
-      heading: 'Jak kupić',
-      cta: 'Zobacz wille',
+    powers: {
+      heading: 'Co potrafi Balinsky',
+      sub: 'Żaden serwis nieruchomości w Azji Południowo-Wschodniej nie pokazuje tylu danych o domu. Wszystko otwarte i za darmo, bez rejestracji.',
+      cta: 'Zobacz na prawdziwej willi',
       items: [
-        { title: 'Wybierz', body: 'Oglądaj zdjęcia, ceny i mapę. Bez rejestracji.' },
-        { title: 'Sprawdź', body: 'Pokazujemy papiery i ile dom może zarobić.' },
-        { title: 'Napisz do nas', body: 'Pokażemy dom na wideo i pomożemy kupić.' },
+        { title: 'Ile zarobi dom', body: 'Trzy scenariusze dochodu: słaby, normalny, dobry. Liczone po domach już wynajmowanych obok.' },
+        { title: 'Ceny sąsiadów', body: 'Widać, czy ten dom jest droższy czy tańszy od podobnych obok. Cena za m² na jednej skali.' },
+        { title: 'Gdzie chodzą turyści', body: 'Mapa ciepła 13 600 miejsc na Bali. Od razu widać żywe i puste okolice.' },
+        { title: 'Co jest w pobliżu domu', body: 'Plaża, kawiarnia, szkoła, surf, szpital — z czasem dojazdu.' },
+        { title: 'Ocena popytu', body: 'Jedna liczba od 1 do 100: o ile dom jest mocniejszy od wynajmowanych obok.' },
+        { title: 'Dokumenty i weryfikacja', body: 'PBG, SLF, okres dzierżawy ziemi. Czerwone flagi widać od razu.' },
+      ],
+    },
+    tools: {
+      heading: 'Jeszcze na stronie',
+      items: [
+        'Zapytaj własnymi słowami',
+        'Ulubione i prezentacja PDF',
+        'Ile wynoszą czynsze obok',
+        'Życie na Bali: wizy, szkoły, lekarze',
+        'Jak kupić — krok po kroku',
+        'Artykuły i analizy',
       ],
     },
     villas: { heading: 'Zobacz wille', linkAll: 'Wszystkie wille' },
@@ -513,13 +671,28 @@ const COPY = {
       complexesNote: 'Будинки й квартири з басейном і охороною',
     },
     finder: { heading: 'Дайте відповідь на три питання' },
-    steps: {
-      heading: 'Як купити',
-      cta: 'Дивитися вілли',
+    powers: {
+      heading: 'Що вміє Balinsky',
+      sub: 'Жоден сайт нерухомості в Південно-Східній Азії не показує стільки про будинок. Усе відкрито й безкоштовно, без реєстрації.',
+      cta: 'Подивитися на прикладі вілли',
       items: [
-        { title: 'Оберіть', body: 'Дивіться фото, ціни й карту. Реєстрація не потрібна.' },
-        { title: 'Перевірте', body: 'Ми показуємо документи й скільки дім може заробити.' },
-        { title: 'Напишіть нам', body: 'Покажемо дім по відео й допоможемо купити.' },
+        { title: 'Скільки заробить будинок', body: 'Три сценарії доходу: поганий, звичайний, добрий. Рахуємо за будинками, які вже здаються поруч.' },
+        { title: 'Ціни сусідів', body: 'Видно, дорожчий цей будинок чи дешевший за такі самі поруч. Ціна за м² на одній шкалі.' },
+        { title: 'Куди ходять туристи', body: 'Теплова карта 13 600 місць Балі. Одразу видно живі райони й порожні.' },
+        { title: 'Що поруч із будинком', body: 'Пляж, кафе, школа, серф, лікарня — з часом у дорозі.' },
+        { title: 'Бал затребуваності', body: 'Одне число від 1 до 100: наскільки будинок сильніший за ті, що здаються навколо.' },
+        { title: 'Документи та перевірка', body: 'PBG, SLF, строк оренди землі. Червоні прапорці видно одразу.' },
+      ],
+    },
+    tools: {
+      heading: 'Ще на сайті',
+      items: [
+        'Запитайте своїми словами',
+        'Обране та презентація в PDF',
+        'Скільки здають в оренду поруч',
+        'Життя на Балі: візи, школи, лікарі',
+        'Як купити — покроково',
+        'Статті та розбори',
       ],
     },
     villas: { heading: 'Подивіться вілли', linkAll: 'Усі вілли' },
@@ -624,6 +797,17 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
   // hero shot. (Complex covers can 404, villa manifest photos are reliable.)
   const heroPhoto = topVillas.find(v => v.photos[0])?.photos[0] ?? null
 
+  // «Посмотреть на примере виллы» ведёт на реальную карточку из каталога —
+  // хардкод слага протух бы при первой же продаже объекта.
+  const demoVilla = topVillas[0]
+  const demoVillaHref = demoVilla ? switchLangPath(`/ru/villy/o/${demoVilla.slug}`, lang) : null
+
+  const toolLinks = TOOL_ROUTES.map((t, i) => ({
+    href: switchLangPath(t.path, lang),
+    Icon: t.Icon,
+    label: c.tools.items[i],
+  })).filter(t => Boolean(t.label))
+
   const browseCards = [
     { label: c.browse.villas, note: c.browse.villasNote, href: villasHref, Icon: Home },
     { label: c.browse.apartments, note: c.browse.apartmentsNote, href: apartmentsHref, Icon: Building2 },
@@ -705,7 +889,65 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
         </div>
       </SectionWrap>
 
-      {/* === 4. Подбор за три вопроса =========================== */}
+      {/* === 4. Что умеет Balinsky — витрина возможностей ======== */}
+      <SectionWrap className="border-t border-[var(--color-border)]">
+        <SectionHead title={c.powers.heading} />
+        <p className="mt-4 max-w-[680px] text-[16px] md:text-[17px] leading-[1.6] text-[#4B5563]">
+          {c.powers.sub}
+        </p>
+        <div className="mt-8 md:mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-7">
+          {c.powers.items.map((p, i) => {
+            const Icon = POWER_ICONS[i]
+            const Visual = POWER_VISUALS[i]
+            return (
+              <div key={p.title} className="rounded-2xl border border-[var(--color-border)] bg-white overflow-hidden">
+                <div className="relative h-[150px] bg-[var(--color-search-bg)] border-b border-[var(--color-border)]">
+                  {Visual && <Visual lang={lang} />}
+                </div>
+                <div className="p-6 md:p-7">
+                  <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary-pressed)]">
+                    {Icon && <Icon size={19} strokeWidth={1.7} />}
+                  </span>
+                  <h3 className="mt-5 text-[19px] font-medium text-[#0E1A14] leading-tight">{p.title}</h3>
+                  <p className="mt-2.5 text-[15px] leading-[1.6] text-[#4B5563]">{p.body}</p>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+        {demoVillaHref && (
+          <div className="mt-9">
+            <Link
+              href={demoVillaHref}
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[var(--color-primary)] text-white text-[15px] font-medium hover:bg-[var(--color-primary-pressed)] transition-colors no-underline"
+            >
+              <ArrowRight size={15} /> {c.powers.cta}
+            </Link>
+          </div>
+        )}
+
+        {/* Инструменты — вторым слоем, одной строкой каждый. */}
+        <div className="mt-14 md:mt-16 pt-10 border-t border-[var(--color-border)]">
+          <h3 className="text-[17px] md:text-[19px] font-medium text-[#0E1A14]">{c.tools.heading}</h3>
+          <div className="mt-5 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {toolLinks.map(t => (
+              <Link
+                key={t.href}
+                href={t.href}
+                className="group flex items-center gap-3 rounded-xl border border-[var(--color-border)] bg-white px-4 py-3.5 no-underline hover:border-[var(--color-primary)] transition-colors"
+              >
+                <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[var(--color-search-bg)] text-[var(--color-primary-pressed)] shrink-0">
+                  <t.Icon size={16} strokeWidth={1.8} />
+                </span>
+                <span className="text-[14.5px] leading-snug text-[#1A2620]">{t.label}</span>
+                <ArrowRight size={15} className="ml-auto shrink-0 text-[var(--color-primary)] opacity-0 group-hover:opacity-100 transition-opacity" />
+              </Link>
+            ))}
+          </div>
+        </div>
+      </SectionWrap>
+
+      {/* === 5. Подбор за три вопроса =========================== */}
       {finderItems.length > 0 && (
         <SectionWrap className="border-t border-[var(--color-border)] bg-[#FAFCFB]">
           <SectionHead title={c.finder.heading} />
@@ -714,42 +956,6 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
           </div>
         </SectionWrap>
       )}
-
-      {/* === 5. Как купить — три шага =========================== */}
-      <SectionWrap className="border-t border-[var(--color-border)]">
-        <SectionHead title={c.steps.heading} />
-        <div className="mt-8 md:mt-12 grid md:grid-cols-3 gap-6 md:gap-7">
-          {c.steps.items.map((s, i) => {
-            const Icon = [Search, ShieldCheck, Phone][i]
-            const Visual = [StepChat, StepStudy, StepRequest][i]
-            return (
-              <div key={s.title} className="rounded-2xl border border-[var(--color-border)] bg-white overflow-hidden">
-                <div className="relative h-[150px] bg-[var(--color-search-bg)] border-b border-[var(--color-border)]">
-                  {Visual && <Visual lang={lang} />}
-                </div>
-                <div className="p-6 md:p-7">
-                  <div className="flex items-center gap-3">
-                    <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary-pressed)]">
-                      {Icon && <Icon size={19} strokeWidth={1.7} />}
-                    </span>
-                    <span className="text-[15px] font-medium text-[#9CA59F] tabular-nums">{i + 1}</span>
-                  </div>
-                  <h3 className="mt-5 text-[19px] font-medium text-[#0E1A14] leading-tight">{s.title}</h3>
-                  <p className="mt-2.5 text-[15px] leading-[1.6] text-[#4B5563]">{s.body}</p>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-        <div className="mt-9">
-          <Link
-            href={villasHref}
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[var(--color-primary)] text-white text-[15px] font-medium hover:bg-[var(--color-primary-pressed)] transition-colors no-underline"
-          >
-            <Search size={15} /> {c.steps.cta}
-          </Link>
-        </div>
-      </SectionWrap>
 
       {/* === 6. Виллы =========================================== */}
       {topVillas.length > 0 && (

@@ -436,9 +436,6 @@ export function VizNearby({ lang }: { lang: Lang }) {
       <span className="absolute left-[20%] top-[58%] -translate-x-1/2 -translate-y-1/2 text-[var(--color-primary)]"><MapPin size={20} fill="currentColor" strokeWidth={0} /></span>
       <span className="absolute left-[64%] top-[34%] -translate-x-1/2 -translate-y-1/2 text-[#0E1A14]/70"><MapPin size={15} fill="currentColor" strokeWidth={0} /></span>
       <span className="absolute left-[78%] top-[68%] -translate-x-1/2 -translate-y-1/2 text-[#0E1A14]/70"><MapPin size={15} fill="currentColor" strokeWidth={0} /></span>
-      <span className="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/90 text-[9.5px] font-medium text-[#0E1A14] shadow-sm">
-        <span className="w-1.5 h-1.5 rounded-full bg-[#FF5A5A]" /> {t.heat}
-      </span>
       <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/90 text-[10px] font-medium text-[#0E1A14] shadow-sm">
         <Footprints size={11} className="text-[var(--color-primary)]" /> {t.walk} → {t.beach}
       </span>
@@ -520,6 +517,96 @@ export function SafetyFlow({ lang }: { lang: Lang }) {
       <FlowNode icon={<ShieldCheck size={16} />} title={t.market} sub={t.marketSub} accent />
       <ArrowRight size={16} className="shrink-0 text-[var(--color-primary)]" />
       <FlowNode icon={<Building2 size={16} className="text-[var(--color-primary-pressed)]" />} title={t.developer} />
+    </div>
+  )
+}
+
+// ===== Home «what the site can do» visuals ==========================
+// Two extra mini-screenshots for the homepage capability grid: the
+// tourist heat map (built on the Google Places dataset) and the unit
+// demand score. Copy lives in its own dictionary so the shared `L`
+// above stays exactly as the older sections left it.
+
+const L2 = {
+  ru: { heatChip: 'Где ходят туристы', heatPlaces: '13 600 мест', demandLabel: 'Востребованность', demandNote: 'сильнее 82% домов рядом' },
+  en: { heatChip: 'Where tourists go', heatPlaces: '13,600 places', demandLabel: 'Demand score', demandNote: 'stronger than 82% nearby' },
+  id: { heatChip: 'Ke mana turis pergi', heatPlaces: '13.600 tempat', demandLabel: 'Skor permintaan', demandNote: 'lebih kuat dari 82% di sekitar' },
+  fr: { heatChip: 'Où vont les touristes', heatPlaces: '13 600 lieux', demandLabel: 'Note de demande', demandNote: 'meilleur que 82 % autour' },
+  de: { heatChip: 'Wohin Touristen gehen', heatPlaces: '13.600 Orte', demandLabel: 'Nachfrage', demandNote: 'stärker als 82 % ringsum' },
+  zh: { heatChip: '游客都去哪里', heatPlaces: '13 600 个地点', demandLabel: '需求评分', demandNote: '强于周边 82%' },
+  nl: { heatChip: 'Waar toeristen komen', heatPlaces: '13.600 plekken', demandLabel: 'Vraagscore', demandNote: 'sterker dan 82% in de buurt' },
+  pl: { heatChip: 'Gdzie chodzą turyści', heatPlaces: '13 600 miejsc', demandLabel: 'Ocena popytu', demandNote: 'mocniejszy niż 82% obok' },
+  uk: { heatChip: 'Куди ходять туристи', heatPlaces: '13 600 місць', demandLabel: 'Затребуваність', demandNote: 'сильніший за 82% поруч' },
+} as const
+
+// Density blobs are hand-placed so the shape reads like the real Canggu
+// coastline strip: hot along the beach road, cooling inland.
+const HEAT_BLOBS = [
+  { left: '18%', top: '30%', size: 58, color: '#FF4D4D', opacity: 0.32 },
+  { left: '38%', top: '22%', size: 74, color: '#FF7A2F', opacity: 0.30 },
+  { left: '56%', top: '40%', size: 52, color: '#FFB020', opacity: 0.34 },
+  { left: '74%', top: '26%', size: 44, color: '#FF4D4D', opacity: 0.26 },
+  { left: '30%', top: '64%', size: 40, color: '#FFC53D', opacity: 0.30 },
+  { left: '64%', top: '70%', size: 34, color: '#FFB020', opacity: 0.24 },
+]
+
+export function VizHeat({ lang }: { lang: Lang }) {
+  const t = pickCopy(L2, lang)
+  return (
+    <div className="absolute inset-0 bg-[#E8F0EA] overflow-hidden">
+      <div
+        className="absolute inset-0 opacity-50"
+        style={{
+          backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)',
+          backgroundSize: '20px 20px',
+        }}
+      />
+      {/* coastline */}
+      <div className="absolute left-0 right-0 top-[14%] h-[26%] bg-[#BFD9E8]/45 -rotate-[6deg] scale-110" />
+      {HEAT_BLOBS.map((b, i) => (
+        <span
+          key={i}
+          className="absolute rounded-full blur-md"
+          style={{ left: b.left, top: b.top, width: b.size, height: b.size, background: b.color, opacity: b.opacity }}
+        />
+      ))}
+      <span className="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/90 text-[9.5px] font-medium text-[#0E1A14] shadow-sm">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#FF4D4D]" /> {t.heatChip}
+      </span>
+      <span className="absolute bottom-2 right-2 px-2 py-0.5 rounded-full bg-white/90 text-[9.5px] font-medium text-[#0E1A14] shadow-sm tabular-nums">
+        {t.heatPlaces}
+      </span>
+    </div>
+  )
+}
+
+export function VizDemand({ lang }: { lang: Lang }) {
+  const t = pickCopy(L2, lang)
+  // 82 of 100 — the arc below is drawn to match, so the number and the
+  // sweep never drift apart.
+  const score = 82
+  const r = 34
+  const circumference = Math.PI * r
+  return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
+      <div className="relative w-[92px] h-[48px]">
+        <svg viewBox="0 0 80 44" className="w-full h-full">
+          <path d="M6 40 A34 34 0 0 1 74 40" fill="none" stroke="var(--color-border)" strokeWidth="7" strokeLinecap="round" />
+          <path
+            d="M6 40 A34 34 0 0 1 74 40"
+            fill="none"
+            stroke="var(--color-primary)"
+            strokeWidth="7"
+            strokeLinecap="round"
+            strokeDasharray={`${(circumference * score) / 100} ${circumference}`}
+          />
+        </svg>
+        <span className="absolute inset-x-0 bottom-0 text-center text-[22px] font-semibold text-[#0E1A14] tabular-nums leading-none">
+          {score}
+        </span>
+      </div>
+      <div className="text-[10.5px] font-medium text-[#0E1A14]">{t.demandLabel}</div>
+      <div className="text-[10px] text-[var(--color-text-muted)]">{t.demandNote}</div>
     </div>
   )
 }
