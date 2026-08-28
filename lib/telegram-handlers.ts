@@ -98,7 +98,7 @@ async function handleManager(id: string): Promise<StartResult> {
   const m = all.find(x => x.id === id)
   if (!m) {
     return { reply: {
-      text: 'Не получилось найти менеджера 🤷‍♂️ Возможно, карточка обновилась. Откройте <a href="https://balinsky.info">сайт</a> ещё раз и нажмите кнопку контакта.',
+      text: `Не получилось найти менеджера 🤷‍♂️ Возможно, карточка обновилась. Откройте <a href="${botLink('https://balinsky.info', 'manager_not_found')}">сайт</a> ещё раз и нажмите кнопку контакта.`,
       parseMode: 'HTML',
     } }
   }
@@ -266,7 +266,10 @@ function escapeHtml(s: string): string {
  */
 function loginUrl(token: string, nextPath?: string | null): string {
   const base = `${SITE_URL}/auth/${encodeURIComponent(token)}`
-  return nextPath ? `${base}?next=${encodeURIComponent(nextPath)}` : base
+  const url = nextPath ? `${base}?next=${encodeURIComponent(nextPath)}` : base
+  // Вход по ссылке из бота — тоже переход живого человека на сайт. Без метки
+  // он приходил как Direct и раздувал канал, в котором ничего не разобрать.
+  return botLink(url, 'login')
 }
 
 async function handleLogin(chatId: number | undefined, from?: StartSender): Promise<StartResult> {
@@ -380,7 +383,7 @@ async function handleSubscribe(token: string, chatId: number | undefined): Promi
   if (!result) {
     return {
       reply: {
-        text: '<b>Ссылка недействительна или уже использована.</b>\n\nВернитесь на сайт <a href="https://balinsky.info">balinsky.info</a>, задайте фильтры и нажмите «🔔 Уведомлять в Telegram» ещё раз.',
+        text: `<b>Ссылка недействительна или уже использована.</b>\n\nВернитесь на сайт <a href="${botLink('https://balinsky.info', 'sub_link_expired')}">balinsky.info</a>, задайте фильтры и нажмите «🔔 Уведомлять в Telegram» ещё раз.`,
         parseMode: 'HTML',
       },
     }
