@@ -1,4 +1,4 @@
-// Cron / on-demand fallback for the Azure-OpenAI translation pipeline.
+// Cron / on-demand fallback for the OpenAI translation pipeline.
 //
 // Runs the same logic as scripts/translate-missing.mjs but on Vercel:
 // when an Airtable webhook misses a row (rate limit, transient error,
@@ -18,12 +18,20 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
 
-type Lang = 'en' | 'zh' | 'fr' | 'de'
+// Все языки, на которых сайт реально отдаёт страницы. id/nl/pl/uk тут не было:
+// крон догонял переводы только для четырёх локалей, а остальные четыре ждали
+// ручного прогона scripts/translate-missing.mjs — и без него уходили на сайт
+// транслитом. Список обязан совпадать с LANGS в скрипте.
+type Lang = 'en' | 'zh' | 'fr' | 'de' | 'id' | 'nl' | 'pl' | 'uk'
 const LANGS: Record<Lang, { name: string; suffix: string }> = {
   en: { name: 'English',            suffix: '' },
   zh: { name: 'Simplified Chinese', suffix: '-zh' },
   fr: { name: 'French',             suffix: '-fr' },
   de: { name: 'German',             suffix: '-de' },
+  id: { name: 'Indonesian',         suffix: '-id' },
+  nl: { name: 'Dutch',              suffix: '-nl' },
+  pl: { name: 'Polish',             suffix: '-pl' },
+  uk: { name: 'Ukrainian',          suffix: '-uk' },
 }
 
 type Section = {
@@ -77,6 +85,10 @@ Buyers search with patterns like "bali villas for sale", "buy villa in canggu", 
   zh: `SEO INTENT (Simplified Chinese / google.com.hk + baidu): buyers search "巴厘岛别墅出售", "巴厘岛房产投资", "巴厘岛公寓". Keep Latin Bali district + project names.`,
   fr: `SEO INTENT (French / google.fr): buyers search "villa à vendre bali", "investissement immobilier bali", "appartement bali". Keep Latin Bali district + project names.`,
   de: `SEO INTENT (German / google.de): buyers search "villa kaufen bali", "immobilien investition bali", "wohnung bali". Keep Latin Bali district + project names.`,
+  id: `SEO INTENT (Indonesian / google.co.id): buyers search "villa dijual bali", "investasi properti bali", "apartemen dijual bali", "rumah dijual bali". Keep Latin Bali district + project names.`,
+  nl: `SEO INTENT (Dutch / google.nl): buyers search "villa te koop bali", "vastgoed bali investeren", "appartement bali kopen". Keep Latin Bali district + project names.`,
+  pl: `SEO INTENT (Polish / google.pl): buyers search "willa na sprzedaż bali", "nieruchomości bali", "apartament bali", "inwestycja w nieruchomości bali". Keep Latin Bali district + project names.`,
+  uk: `SEO INTENT (Ukrainian / google.com.ua): buyers search "вілла на балі купити", "нерухомість балі", "апартаменти балі", "інвестиції в нерухомість балі". Keep Latin Bali district + project names.`,
 }
 
 function systemPromptFor(lang: Lang): string {
@@ -99,21 +111,23 @@ Universal rules:
 - Empty / trivial source → return empty string for that field.`
 }
 
-type AzureEnv = { key: string; endpoint: string; version: string; model: string }
-async function callAzure(payload: Record<string, string>, lang: Lang, env: AzureEnv): Promise<Record<string, string>> {
-  const url = `${env.endpoint.replace(/\/$/, '')}/openai/deployments/${env.model}/chat/completions?api-version=${env.version}`
+type ModelEnv = { key: string; model: string }
+async function callModel(payload: Record<string, string>, lang: Lang, env: ModelEnv): Promise<Record<string, string>> {
+  const url = 'https://api.openai.com/v1/chat/completions'
   let lastErr: unknown = null
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const r = await fetch(url, {
         method: 'POST',
-        headers: { 'api-key': env.key, 'Content-Type': 'application/json' },
+        headers: { Authorization: `Bearer ${env.key}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          model: env.model,
           messages: [
             { role: 'system', content: systemPromptFor(lang) },
             { role: 'user', content: JSON.stringify(payload) },
           ],
-          temperature: 0.3,
+          // gpt-5 принимает только temperature по умолчанию — прежняя 0.3 убрана.
+          reasoning_effort: 'low',
           response_format: { type: 'json_object' },
         }),
       })
@@ -121,17 +135,17 @@ async function callAzure(payload: Record<string, string>, lang: Lang, env: Azure
         await new Promise(res => setTimeout(res, 5000 * (attempt + 1)))
         continue
       }
-      if (!r.ok) throw new Error(`azure ${r.status}: ${(await r.text()).slice(0, 200)}`)
+      if (!r.ok) throw new Error(`openai ${r.status}: ${(await r.text()).slice(0, 200)}`)
       const j = await r.json() as { choices?: Array<{ message?: { content?: string } }> }
       const msg = j?.choices?.[0]?.message?.content
-      if (!msg) throw new Error('azure: empty response')
+      if (!msg) throw new Error('openai: empty response')
       return JSON.parse(msg)
     } catch (e) {
       lastErr = e
       if (attempt < 2) await new Promise(res => setTimeout(res, 1500 * (attempt + 1)))
     }
   }
-  throw lastErr ?? new Error('azure: unknown error')
+  throw lastErr ?? new Error('openai: unknown error')
 }
 
 type CacheEntry = Record<string, unknown> & { _hash?: string }
@@ -185,7 +199,7 @@ async function loadFromManifest(url: string, idField: string) {
   return items.map((it: Record<string, unknown>) => ({ id: it[idField] as string, data: it }))
 }
 
-async function runSection(sb: Sb, name: string, cfg: Section, lang: Lang, env: AzureEnv, force = false): Promise<{ translated: number; skipped: number }> {
+async function runSection(sb: Sb, name: string, cfg: Section, lang: Lang, env: ModelEnv, force = false): Promise<{ translated: number; skipped: number }> {
   const cache = await loadCache(sb, name, lang)
   const rows = cfg.source === 'manifest'
     ? await loadFromManifest(cfg.url!, cfg.idField!)
@@ -236,7 +250,7 @@ async function runSection(sb: Sb, name: string, cfg: Section, lang: Lang, env: A
   let translated = 0
   for (const [i, p] of plan.entries()) {
     try {
-      const out = await callAzure(p.missing, lang, env)
+      const out = await callModel(p.missing, lang, env)
       const existing = cache[p.id] || {}
       const merged: CacheEntry = p.action === 're-translate'
         ? { _hash: p.hash }
@@ -267,16 +281,13 @@ export async function GET(req: Request) {
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const serviceKey = process.env.SUPABASE_SERVICE_KEY
-  const azureKey = process.env.AZURE_OPENAI_API_KEY
-  const azureEndpoint = process.env.AZURE_OPENAI_ENDPOINT
-  if (!supabaseUrl || !serviceKey || !azureKey || !azureEndpoint) {
+  const openaiKey = process.env.OPENAI_API_KEY
+  if (!supabaseUrl || !serviceKey || !openaiKey) {
     return NextResponse.json({ ok: false, error: 'env_missing' }, { status: 500 })
   }
-  const env: AzureEnv = {
-    key: azureKey,
-    endpoint: azureEndpoint,
-    version: process.env.AZURE_OPENAI_API_VERSION || '2024-12-01-preview',
-    model: process.env.AZURE_OPENAI_TRANSLATE_DEPLOYMENT || process.env.AZURE_OPENAI_CHAT_DEPLOYMENT || 'gpt-5.4',
+  const env: ModelEnv = {
+    key: openaiKey,
+    model: process.env.OPENAI_TRANSLATE_MODEL || 'gpt-5',
   }
   const sb = createClient(supabaseUrl, serviceKey)
 
