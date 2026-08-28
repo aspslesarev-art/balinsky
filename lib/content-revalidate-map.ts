@@ -63,15 +63,23 @@ const RU_PATHS: Record<string, RevalidateRoute[]> = {
     { path: '/ru/zastrojshhiki' },
     { path: '/ru/zastrojshhiki/[slug]', type: 'page' },
   ],
+  // Юнит живёт не только на своей странице: страница ЖК показывает список
+  // юнитов, а карточка ЖК в каталоге — цену «от». Без этих двух путей
+  // добавленная вилла появлялась на своей странице сразу, а на странице
+  // комплекса — только когда у той истечёт собственный ISR.
   villas: [
     { path: '/ru' },
     { path: '/ru/villy' },
     { path: '/ru/villy/o/[slug]', type: 'page' },
+    { path: '/ru/zhilye-kompleksy' },
+    { path: '/ru/zhilye-kompleksy/o/[slug]', type: 'page' },
   ],
   apartments: [
     { path: '/ru' },
     { path: '/ru/apartamenty' },
     { path: '/ru/apartamenty/o/[slug]', type: 'page' },
+    { path: '/ru/zhilye-kompleksy' },
+    { path: '/ru/zhilye-kompleksy/o/[slug]', type: 'page' },
   ],
   complexes: [
     { path: '/ru' },

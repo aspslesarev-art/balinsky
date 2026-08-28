@@ -160,8 +160,9 @@ export function PhotoManager({ cfg, id, pendingPhotos, onPendingChange }: {
 
       <div className="mt-2.5 flex items-center gap-2">
         <button type="button" onClick={() => fileRef.current?.click()} disabled={busy}
+          title="Можно выделить сразу всю галерею — файлы загрузятся пачкой"
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] border border-[var(--ax-border)] hover:bg-[var(--ax-hover)] disabled:opacity-40">
-          <Upload size={13} /> Загрузить
+          <Upload size={13} /> Загрузить фото
         </button>
         <input ref={fileRef} type="file" accept="image/*" multiple className="hidden"
           onChange={e => { const fs = [...(e.target.files ?? [])]; if (fs.length) onUploadMany(fs); e.target.value = '' }} />

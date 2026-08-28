@@ -43,7 +43,10 @@ const villas: CollectionConfig = {
   ],
   duplicateSkip: ['SEO:Slug', '_slug_alias'],
   fields: [
-    { key: 'Опубликовать', label: 'Опубл.', type: 'bool', showInGrid: true, width: 70 },
+    {
+      key: 'Опубликовать', label: 'Опубл.', type: 'bool', showInGrid: true, width: 70,
+      help: 'Без галочки юнита нет нигде: ни в каталоге, ни в списке на странице комплекса.',
+    },
     {
       key: 'SEO:Title', label: 'Название юнита', type: 'text', showInGrid: true, width: 260,
       help: 'Пусто = соберётся само: «Вилла <Комплекс> в <Район> - <Площадь> м², N спальни | Balinsky».',
@@ -63,7 +66,11 @@ const villas: CollectionConfig = {
     { key: 'Тип сделки', label: 'Тип сделки', type: 'enum' },
     { key: 'Developer', label: 'Застройщик', type: 'link', link: { collection: 'developers', store: 'id-array', nameField: 'Developer1' } },
     { key: 'Developer1', label: 'Застройщик (имя)', type: 'text', readOnly: true },
-    { key: 'Комплекс', label: 'Комплекс', type: 'link', link: { collection: 'complexes', store: 'id-array', nameField: 'Комплекс 1' } },
+    {
+      key: 'Комплекс', label: 'Комплекс', type: 'link',
+      link: { collection: 'complexes', store: 'id-array', nameField: 'Комплекс 1' },
+      help: 'Выбор из списка — именно он ставит юнит в список на странице комплекса.',
+    },
     { key: 'Комплекс 1', label: 'Комплекс (имя)', type: 'text', readOnly: true },
     { key: 'Geo', label: 'Geo (lat,lng)', type: 'geo' },
     { key: 'Geo 2', label: 'Geo 2', type: 'geo' },
@@ -99,7 +106,10 @@ const apartments: CollectionConfig = {
   ],
   duplicateSkip: ['SEO:Slug', '_slug_alias'],
   fields: [
-    { key: 'Опубликовать', label: 'Опубл.', type: 'bool', showInGrid: true, width: 70 },
+    {
+      key: 'Опубликовать', label: 'Опубл.', type: 'bool', showInGrid: true, width: 70,
+      help: 'Без галочки юнита нет нигде: ни в каталоге, ни в списке на странице комплекса.',
+    },
     {
       key: 'SEO:Title', label: 'Название юнита', type: 'text', showInGrid: true, width: 260,
       help: 'Пусто = соберётся само: «Апартаменты <Комплекс> в <Район> - <Площадь> м², N спальни | Balinsky».',

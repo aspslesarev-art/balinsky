@@ -1079,9 +1079,13 @@ type AptRow = {
   opt_photos: unknown
   image_opt: unknown
 }
+// TTL совпадает с временным бакетом CDN-ссылки (600 с) — держать копию
+// дольше бакета значит ждать фото у только что заведённого юнита до получаса,
+// ничего за это не экономя: за бакетом всё равно один и тот же ответ edge.
+const UNIT_MANIFEST_TTL_MS = 600_000
 const _aptManifestCache: { ts: number; manifest: Record<string, string[]> } = { ts: 0, manifest: {} }
 async function _loadAptManifest(): Promise<Record<string, string[]>> {
-  if (Date.now() - _aptManifestCache.ts < 30 * 60 * 1000) return _aptManifestCache.manifest
+  if (Date.now() - _aptManifestCache.ts < UNIT_MANIFEST_TTL_MS) return _aptManifestCache.manifest
   const [raw, vision] = await Promise.all([
     fetch(cdnManifestUrl(APT_PHOTO_MANIFEST_URL, 600)).then(r => r.ok ? r.json() : {}).catch(() => ({})) as Promise<Record<string, string[]>>,
     loadVisionManifest('apartment').catch(() => ({})),
@@ -1109,26 +1113,34 @@ const APT_UNIT_SELECT = `
     image_opt:data->"Image Opt"
   `
 
-// Two DB-side ilike passes, merged by id. The title match is what has always
-// worked for the Airtable-era rows; the «Комплекс 1» match is what makes a
-// unit created in the admin — where the complex is picked from a list rather
-// than spelled out in the headline — actually appear on its complex's page.
-// PostgREST can't OR two quoted JSONB paths in one request, so this is two
-// slim queries instead of one; both sit behind the page's cache.
+// Три прохода по базе, склеенные по id. Совпадение по заголовку работало для
+// строк Airtable-времён; «Комплекс 1» ловит юнит, у которого комплекс выбран
+// из списка, а не выписан в заголовке. Третий проход — по САМОЙ связи
+// (`Комплекс` хранит id комплекса) — единственный, который не зависит от
+// текста: он и показывает юнит, у которого заголовок написан иначе, чем
+// называется ЖК, или у которого ЖК потом переименовали.
+// PostgREST не умеет OR по нескольким закавыченным JSONB-путям в одном
+// запросе, поэтому это три узких запроса вместо одного; все за кэшем страницы.
+
+/** `%…%` для ilike: `_` и `%` внутри id (adm_xxx) — это подстановочные знаки. */
+function likeNeedle(raw: string): string {
+  return `%${raw.replace(/[%_]/g, '\\$&')}%`
+}
 function mergeUnitRows<T extends { airtable_id: string }>(...batches: (T[] | null)[]): T[] {
   const byId = new Map<string, T>()
   for (const batch of batches) for (const row of batch ?? []) byId.set(row.airtable_id, row)
   return [...byId.values()]
 }
 
-async function _loadApartmentsForComplex(complexName: string): Promise<{ rows: AptRow[]; manifest: Record<string, string[]> }> {
+async function _loadApartmentsForComplex(complexName: string, complexId: string): Promise<{ rows: AptRow[]; manifest: Record<string, string[]> }> {
   const manifest = await _loadAptManifest()
-  const needle = `%${complexName.replace(/[%_]/g, '\\$&')}%`
-  const [byTitle, byLink] = await Promise.all([
+  const needle = likeNeedle(complexName)
+  const [byTitle, byLink, byId] = await Promise.all([
     sb.from('raw_apartments').select(APT_UNIT_SELECT).ilike(`data->>"SEO:Title"`, needle).limit(200),
     sb.from('raw_apartments').select(APT_UNIT_SELECT).ilike(`data->>"Комплекс 1"`, needle).limit(200),
+    sb.from('raw_apartments').select(APT_UNIT_SELECT).ilike(`data->>"Комплекс"`, likeNeedle(complexId)).limit(200),
   ])
-  const rows = mergeUnitRows(byTitle.data as AptRow[] | null, byLink.data as AptRow[] | null)
+  const rows = mergeUnitRows(byTitle.data as AptRow[] | null, byLink.data as AptRow[] | null, byId.data as AptRow[] | null)
   return { rows, manifest }
 }
 
@@ -1188,7 +1200,7 @@ type VillaRow = {
 }
 const _villaManifestCache: { ts: number; manifest: Record<string, string[]> } = { ts: 0, manifest: {} }
 async function _loadVillaManifest(): Promise<Record<string, string[]>> {
-  if (Date.now() - _villaManifestCache.ts < 30 * 60 * 1000) return _villaManifestCache.manifest
+  if (Date.now() - _villaManifestCache.ts < UNIT_MANIFEST_TTL_MS) return _villaManifestCache.manifest
   const [raw, vision] = await Promise.all([
     fetch(cdnManifestUrl(VILLA_PHOTO_MANIFEST_URL, 600)).then(r => r.ok ? r.json() : {}).catch(() => ({})) as Promise<Record<string, string[]>>,
     loadVisionManifest('villa').catch(() => ({})),
@@ -1216,14 +1228,15 @@ const VILLA_UNIT_SELECT = `
     image_opt:data->"Image Opt"
   `
 
-async function _loadVillasForComplex(complexName: string): Promise<{ rows: VillaRow[]; manifest: Record<string, string[]> }> {
+async function _loadVillasForComplex(complexName: string, complexId: string): Promise<{ rows: VillaRow[]; manifest: Record<string, string[]> }> {
   const manifest = await _loadVillaManifest()
-  const needle = `%${complexName.replace(/[%_]/g, '\\$&')}%`
-  const [byTitle, byLink] = await Promise.all([
+  const needle = likeNeedle(complexName)
+  const [byTitle, byLink, byId] = await Promise.all([
     sb.from('raw_villas').select(VILLA_UNIT_SELECT).ilike(`data->>"SEO:Title"`, needle).limit(200),
     sb.from('raw_villas').select(VILLA_UNIT_SELECT).ilike(`data->>"Комплекс 1"`, needle).limit(200),
+    sb.from('raw_villas').select(VILLA_UNIT_SELECT).ilike(`data->>"Комплекс"`, likeNeedle(complexId)).limit(200),
   ])
-  const rows = mergeUnitRows(byTitle.data as VillaRow[] | null, byLink.data as VillaRow[] | null)
+  const rows = mergeUnitRows(byTitle.data as VillaRow[] | null, byLink.data as VillaRow[] | null, byId.data as VillaRow[] | null)
   return { rows, manifest }
 }
 
@@ -1231,11 +1244,11 @@ type ApartmentUnit = ApartmentCardData & { id: string; kind: 'apartment' }
 type VillaUnit = VillaCardData & { id: string; kind: 'villa' }
 type Unit = ApartmentUnit | VillaUnit
 
-async function loadUnitsInComplex(complexName: string, lang: Lang = 'ru'): Promise<Unit[]> {
+async function loadUnitsInComplex(complexName: string, complexId: string, lang: Lang = 'ru'): Promise<Unit[]> {
   if (complexName.length < 3) return []
   const [apt, vil] = await Promise.all([
-    _loadApartmentsForComplex(complexName),
-    _loadVillasForComplex(complexName),
+    _loadApartmentsForComplex(complexName, complexId),
+    _loadVillasForComplex(complexName, complexId),
   ])
 
   const units: Unit[] = []
@@ -1315,7 +1328,7 @@ export async function generateComplexMetadata(slug: string, lang: Lang) {
   // Facts-first snippet — types + area/bedroom/price ranges from the real
   // units (like competitors). Falls back to editorial text, then the generic
   // line, when the complex has no priced/measured units.
-  const units = await loadUnitsInComplex(name, lang).catch(() => [] as Awaited<ReturnType<typeof loadUnitsInComplex>>)
+  const units = await loadUnitsInComplex(name, c.airtable_id, lang).catch(() => [] as Awaited<ReturnType<typeof loadUnitsInComplex>>)
   const facts = factsDescription({
     name, district, phrase: unitTypesPhrase(c.data['Типы юнитов'], lang), year: yearRaw,
     prices: units.map(u => Number(u.priceUsd)).filter(n => Number.isFinite(n)),
@@ -1373,7 +1386,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
 
   const [photoManifest, units, landProfile, marketStats, access, geoFacts, surroundings] = await Promise.all([
     _loadComplexPhotos(),
-    loadUnitsInComplex(name, lang),
+    loadUnitsInComplex(name, c.airtable_id, lang),
     loadLandProfile('complex', c.airtable_id),
     loadComplexMarketStats(c.airtable_id),
     loadComplexAccess(c.airtable_id),
@@ -1600,8 +1613,8 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   // loadUnitsInComplex). Нужно для попап-фото на карте: Opt photos /
   // Image Opt не пробрасываются через units[].
   const [aptForOpt, vilForOpt] = await Promise.all([
-    _loadApartmentsForComplex(name),
-    _loadVillasForComplex(name),
+    _loadApartmentsForComplex(name, c.airtable_id),
+    _loadVillasForComplex(name, c.airtable_id),
   ])
   const aptRowsById = new Map(aptForOpt.rows.map(r => [r.airtable_id, r]))
   const vilRowsById = new Map(vilForOpt.rows.map(r => [r.airtable_id, r]))

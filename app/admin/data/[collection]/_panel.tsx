@@ -163,6 +163,16 @@ export function RecordPanel({
             <div className="flex items-center gap-2 text-[13px] text-[var(--ax-fg-muted)]"><Loader2 size={15} className="animate-spin" /> Загрузка…</div>
           ) : (
             <>
+              {restrictToCreateFields && (
+                // Форма создания короткая намеренно — иначе редактор ищет
+                // нужное поле среди ~140 ключей и на всякий случай заводит
+                // своё. Строчка снимает вопрос «а где остальное?».
+                <p className="text-[12px] leading-snug text-[var(--ax-fg-muted)] rounded-xl bg-[var(--ax-panel)] border border-[var(--ax-border)] px-3 py-2">
+                  Заполните эти поля и фото — остальное соберётся само: название,
+                  адрес страницы, район, статус и условия приедут из комплекса.
+                  Дополнить запись можно после сохранения.
+                </p>
+              )}
               {visibleFields.map(f => (
                 f.type === 'link' && f.link ? (
                   <LinkEditor
