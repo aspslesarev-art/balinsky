@@ -22,6 +22,7 @@ import { PhotoGalleryHero } from '@/components/PhotoGalleryHero'
 import { ListenIntro } from '@/components/ListenIntro'
 import { NeighborhoodHeatMap } from '@/components/NeighborhoodHeatMap'
 import { parseGeoOverlay } from '@/lib/geo-placement'
+import { pickMapLink, mapLinkCoords } from '@/lib/map-link'
 import { ProgressBar } from '@/components/ProgressBar'
 import { ApartmentCard, type ApartmentCardData } from '@/components/ApartmentCard'
 import { ManagerCard } from '@/components/ManagerCard'
@@ -1484,8 +1485,15 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
     lang === 'ru'
       ? { 'data-edit-collection': 'complexes', 'data-edit-id': c.airtable_id, 'data-edit-field': field, 'data-edit-kind': kind, 'data-edit-label': label }
       : {}
-  const lat = parseGeo(d['Geo'])
-  const lng = parseGeo(d['Geo 2'])
+  // Ссылка на локацию: канонический ключ, но подхватываем и ключи-дубли,
+  // заведённые руками в /admin/data (lib/map-link.ts).
+  const gmap = pickMapLink(d)
+  // Карта рисуется по Geo/Geo 2. Если координат ещё нет, а ссылка уже есть —
+  // достаём их из самой ссылки, чтобы блок «Локация» не пропадал у записей,
+  // сохранённых до того, как это стало делаться при сохранении.
+  const linkCoords = mapLinkCoords(gmap)
+  const lat = parseGeo(d['Geo']) ?? linkCoords?.lat ?? null
+  const lng = parseGeo(d['Geo 2']) ?? linkCoords?.lng ?? null
   const nativeBody = tField(d, 'SEO Text', lang)
     ?? tField(d, 'Описание', lang)
   const rawBody = firstString(d['ИИ Описание 2'])
@@ -1503,8 +1511,6 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
     : (nativeBody ?? kb?.body ?? rawBody))
   const vision = await loadListingVision('complex', c.airtable_id)
   const photoAlts = slidesPhotos.map((_, i) => altFor(vision, i, lang, name))
-
-  const gmap = firstString(d['Link from Google maps on location'] ?? d['Google maps'] ?? d['Google map'])
 
   // Key facts
   const facts: { Icon: typeof Building2; label: string; value: string }[] = [

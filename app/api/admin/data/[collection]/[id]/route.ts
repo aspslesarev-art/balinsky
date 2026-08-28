@@ -6,6 +6,7 @@ import { revalidateCollection } from '@/lib/admin/revalidate'
 import { aiAutofillPatch } from '@/lib/admin/ai-autofill'
 import { areaSyncPatch } from '@/lib/admin/area-sync'
 import { withComplexDescription } from '@/lib/admin/complex-description'
+import { mapLinkGeoPatch } from '@/lib/admin/map-link-geo'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -51,7 +52,13 @@ export async function PATCH(req: Request, { params }: Ctx) {
     // copy with it, or the title keeps advertising the old area.
     const areaPatch = areaSyncPatch(cfg, current?.fields ?? {}, patch)
     const merged = { ...(current?.fields ?? {}), ...patch, ...areaPatch }
-    await adapter.update(cfg, id, { ...patch, ...areaPatch, ...(await aiAutofillPatch(cfg, merged)) })
+    // Ссылку на локацию редактор вставляет уже в карточке — координаты для
+    // карты достаём из неё тут же (lib/admin/map-link-geo.ts).
+    const geoPatch = await mapLinkGeoPatch(cfg, merged)
+    await adapter.update(cfg, id, {
+      ...patch, ...areaPatch, ...geoPatch,
+      ...(await aiAutofillPatch(cfg, { ...merged, ...geoPatch })),
+    })
     await revalidateCollection(cfg, id)
     return NextResponse.json({ ok: true })
   } catch (e) {

@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { X, Save, Trash2, Loader2, AlertTriangle, Plus, Link2, Search, Copy } from 'lucide-react'
 import type { CollectionConfig, FieldDef, FieldType, RecordRow } from '@/lib/admin/adapters/types'
-import { resolveRecordFields, percentToInput, inputToPercent, linkPatch, linkSelection, type LinkOption } from '@/lib/admin/fields'
+import { resolveRecordFields, mergeDuplicateFields, percentToInput, inputToPercent, linkPatch, linkSelection, type LinkOption } from '@/lib/admin/fields'
 import { toBaliInput, fromBaliInput } from '@/lib/datetime'
 import { PhotoManager } from './_photos'
 
@@ -44,11 +44,21 @@ export function RecordPanel({
     setLoading(true)
     fetch(`/api/admin/data/${cfg.key}/${encodeURIComponent(id)}`)
       .then(r => r.json())
-      .then(j => { if (alive) { if (j.row) setFields(j.row.fields ?? {}); else setError(j.error ?? 'load_failed') } })
+      .then(j => {
+        if (!alive) return
+        if (!j.row) { setError(j.error ?? 'load_failed'); return }
+        // Столбцы-дубли (см. CollectionConfig.dedupe) в карточке не
+        // показываются, поэтому их значение переносим на канонический ключ и
+        // помечаем изменённым: следующее «Сохранить» закрепляет перенос.
+        const loaded: Record<string, unknown> = j.row.fields ?? {}
+        const merge = mergeDuplicateFields(cfg, loaded)
+        setFields(merge ? merge.fields : loaded)
+        if (merge?.merged.length) setDirty(new Set(merge.merged))
+      })
       .catch(() => { if (alive) setError('load_failed') })
       .finally(() => { if (alive) setLoading(false) })
     return () => { alive = false }
-  }, [cfg.key, id, isNew])
+  }, [cfg, id, isNew])
 
   const setField = useCallback((key: string, value: unknown) => {
     setFields(prev => ({ ...prev, [key]: value }))

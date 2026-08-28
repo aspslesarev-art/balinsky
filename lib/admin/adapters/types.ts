@@ -135,7 +135,23 @@ export type CollectionConfig = {
    *  unique. The primary key and the slug are handled by the duplicate
    *  endpoint itself. */
   duplicateSkip?: string[]
+  /** Столбцы-дубли: один смысл — один столбец. Сетка динамическая (показывает
+   *  ВСЕ ключи, которые есть в data), поэтому кнопка «Добавить поле» легко
+   *  рождает второй столбец под то же самое. Правило прячет такие ключи и
+   *  оставляет канонический. */
+  dedupe?: DedupeRule[]
   fields: FieldDef[]
+}
+
+/** Как узнать дубль. Конфиг уезжает в клиентский компонент (сетка), поэтому
+ *  функции в нём хранить нельзя — распознаватель назван здесь, а разрешается
+ *  в lib/admin/fields.ts. */
+export type DedupeMatcher = 'google-map-link'
+
+export type DedupeRule = {
+  /** Ключ, который остаётся видимым и в который сливаются значения дублей. */
+  canonical: string
+  matcher: DedupeMatcher
 }
 
 /** A record as the UI sees it: an id plus a flat key→value map. */

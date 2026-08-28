@@ -12,6 +12,7 @@ import {
 } from '@/lib/legal-audit'
 import { VOICE_FIELD } from '@/lib/voice-intro'
 import { COMPLEX_DESCRIPTION_FIELD } from '@/lib/complex-description'
+import { MAP_LINK_FIELD } from '@/lib/map-link'
 
 // --- SQL JSONB catalogs (raw_* tables, PK airtable_id, JSONB `data`) -------
 
@@ -146,10 +147,14 @@ const complexes: CollectionConfig = {
   // out of the create form — they are written later, in the record card.
   createFields: [
     'Project', 'slug', 'Developer', 'Статус', 'Статус продаж', 'Готовность',
-    'Location', 'Location 2', 'Типы юнитов', 'Total quantity of units',
+    'Location', 'Location 2', MAP_LINK_FIELD, 'Типы юнитов', 'Total quantity of units',
     'price_usd', 'Payment plan,%', 'Leasehold', 'Leashold продление',
     'Land color', 'Разрешительные документы', 'PBG', 'Year of completion',
   ],
+  // Ссылка на локацию имеет ровно один столбец: любой другой ключ, который
+  // тоже читается как «ссылка на Google Maps», — заведённый руками дубль.
+  // Он прячется из таблицы, а его значение подхватывает канонический ключ.
+  dedupe: [{ canonical: MAP_LINK_FIELD, matcher: 'google-map-link' }],
   duplicateSkip: ['slug', 'SEO:Slug'],
   fields: [
     { key: 'Опубликовать', label: 'Опубл.', type: 'bool', showInGrid: true, width: 70 },
@@ -166,6 +171,16 @@ const complexes: CollectionConfig = {
     { key: 'price', label: 'Цена', type: 'number' },
     { key: 'Location', label: 'Локация', type: 'enum' },
     { key: 'Location 2', label: 'Район', type: 'enum' },
+    // Карта на странице ЖК рисуется по Geo/Geo 2, а не по этой ссылке, —
+    // поэтому при сохранении из неё достаются координаты
+    // (lib/admin/map-link-geo.ts). Без ссылки и без Geo блок «Локация» на
+    // странице комплекса просто не выводится.
+    {
+      key: MAP_LINK_FIELD, label: 'Ссылка на локацию (Google Maps)', type: 'text',
+      help: 'Вставьте ссылку из Google Maps (в т.ч. короткую maps.app.goo.gl) — координаты для карты подставятся сами.',
+    },
+    { key: 'Geo', label: 'Geo (широта)', type: 'geo' },
+    { key: 'Geo 2', label: 'Geo 2 (долгота)', type: 'geo' },
     { key: 'Developer', label: 'Застройщик', type: 'link', link: { collection: 'developers', store: 'name', nameField: 'Developer1' } },
     { key: 'Developer1', label: 'Застройщик (имя)', type: 'text', readOnly: true },
     { key: 'Типы юнитов', label: 'Типы юнитов', type: 'multienum' },

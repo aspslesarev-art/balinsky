@@ -5,6 +5,7 @@ import { adapterFor } from '@/lib/admin/adapters'
 import { revalidateCollection } from '@/lib/admin/revalidate'
 import { aiAutofillPatch } from '@/lib/admin/ai-autofill'
 import { unitCreateDefaults } from '@/lib/admin/unit-defaults'
+import { mapLinkGeoPatch } from '@/lib/admin/map-link-geo'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -59,10 +60,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ collect
     // pass below real source material to ground on, and stop it from inventing
     // a headline the catalogue's own formula already defines.
     const withDefaults = { ...fields, ...(await unitCreateDefaults(cfg, fields)) }
+    // Вставленная ссылка на Google Maps → Geo/Geo 2: без координат блок
+    // «Локация» с картой на странице объекта не выводится вовсе.
+    const withGeo = { ...withDefaults, ...(await mapLinkGeoPatch(cfg, withDefaults)) }
     // Generate the AI-backed fields the editor left empty before the write, so
     // the record is complete from its first save (meta tags included) and we
     // don't pay for a second manifest rewrite.
-    const withAi = { ...withDefaults, ...(await aiAutofillPatch(cfg, withDefaults)) }
+    const withAi = { ...withGeo, ...(await aiAutofillPatch(cfg, withGeo)) }
     const row = await adapterFor(cfg).create(cfg, withAi)
     await revalidateCollection(cfg, row.id)
     return NextResponse.json({ row })

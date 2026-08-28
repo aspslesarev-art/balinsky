@@ -2,7 +2,8 @@
 // (Airtable-parity), not a curated subset. The collection config only layers
 // nice labels / types / enums / order on top of whatever keys actually exist.
 
-import type { CollectionConfig, FieldDef, FieldType, LinkConfig, RecordRow } from './adapters/types'
+import type { CollectionConfig, DedupeRule, FieldDef, FieldType, LinkConfig, RecordRow } from './adapters/types'
+import { isMapLinkKey } from '../map-link'
 
 // Render any stored value as plain, human-readable text — flattening Airtable
 // wrappers ({state,value}), record-id/lookup arrays, and objects into something
@@ -224,6 +225,56 @@ export function linkSelection(field: FieldDef, fields: Record<string, unknown>):
   return asArray(value).flatMap(v => (typeof v === 'string' && v ? [{ id: v, title: '' }] : []))
 }
 
+// Распознаватели дублей (см. CollectionConfig.dedupe). Живут здесь, а не в
+// конфиге: конфиг сериализуется в клиентский компонент и функций нести не
+// может.
+const DEDUPE_MATCHERS: Record<DedupeRule['matcher'], {
+  /** Ключ того же смысла, что и канонический. */
+  key: (key: string) => boolean
+  /** Значение, которое можно перенести на канонический ключ. Ключ-дубль
+   *  прячется всегда, а вот переносить в поле «ссылка» имеет смысл только
+   *  ссылку. */
+  value: (v: unknown) => boolean
+}> = {
+  'google-map-link': {
+    key: isMapLinkKey,
+    value: v => typeof v === 'string' && /^https?:\/\//i.test(v.trim()),
+  },
+}
+
+/** Ключ — дубль канонического поля, а не самостоятельный столбец. */
+export function isDuplicateKey(cfg: CollectionConfig, key: string): boolean {
+  return (cfg.dedupe ?? []).some(r => key !== r.canonical && DEDUPE_MATCHERS[r.matcher].key(key))
+}
+
+/**
+ * Значения дублей, перенесённые на канонические ключи: сам дубль исчезает, а
+ * то, что редактор в него вписал, не теряется. Канонический ключ с непустым
+ * значением всегда сильнее. Возвращает `null`, если сливать нечего.
+ */
+export function mergeDuplicateFields(
+  cfg: CollectionConfig, fields: Record<string, unknown>,
+): { fields: Record<string, unknown>; merged: string[] } | null {
+  const rules = cfg.dedupe ?? []
+  if (rules.length === 0) return null
+  const out = { ...fields }
+  const merged: string[] = []
+  for (const rule of rules) {
+    const matcher = DEDUPE_MATCHERS[rule.matcher]
+    const dups = Object.keys(fields).filter(k => k !== rule.canonical && matcher.key(k))
+    if (dups.length === 0) continue
+    const isEmpty = (v: unknown) => v == null || v === '' || (Array.isArray(v) && v.length === 0)
+    if (isEmpty(out[rule.canonical])) {
+      const donor = dups.find(k => !isEmpty(fields[k]) && matcher.value(fields[k]))
+      if (donor) { out[rule.canonical] = fields[donor]; merged.push(rule.canonical) }
+    }
+    for (const k of dups) delete out[k]
+  }
+  return merged.length > 0 || Object.keys(out).length !== Object.keys(fields).length
+    ? { fields: out, merged }
+    : null
+}
+
 // Ordered column/field list covering ALL keys present across `rows`, with
 // config-declared fields first (their labels/types win), then any remaining
 // data keys appended alphabetically with an inferred type.
@@ -234,7 +285,7 @@ export function resolveFields(cfg: CollectionConfig, rows: RecordRow[]): FieldDe
   const seen = new Set(known.keys())
   const extra = new Set<string>()
   for (const r of rows) for (const k of Object.keys(r.fields)) {
-    if (!seen.has(k) && !extra.has(k) && !hide.has(k)) extra.add(k)
+    if (!seen.has(k) && !extra.has(k) && !hide.has(k) && !isDuplicateKey(cfg, k)) extra.add(k)
   }
   for (const k of [...extra].sort((a, b) => a.localeCompare(b, 'ru'))) {
     if (dynamicIsAirtable(rows, k)) continue // hide raw Airtable attachment fields
@@ -257,7 +308,7 @@ export function resolveRecordFields(
   const out: FieldDef[] = cfg.fields.filter(f => f.type !== 'photos' && !f.hidden && !hide.has(f.key)).map(f => ({ ...f }))
   const seen = new Set(cfg.fields.map(f => f.key))
   for (const k of Object.keys(fields).sort((a, b) => a.localeCompare(b, 'ru'))) {
-    if (seen.has(k) || hide.has(k)) continue
+    if (seen.has(k) || hide.has(k) || isDuplicateKey(cfg, k)) continue
     if (isAirtableAttachment(fields[k])) continue // hide raw Airtable attachment fields
     out.push({ key: k, label: k, type: hints?.[k] ?? inferType(fields[k]) })
   }
