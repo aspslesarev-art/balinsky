@@ -1,5 +1,6 @@
 import 'server-only'
-import { AzureOpenAI } from 'openai'
+import type OpenAI from 'openai'
+import { openaiClient, CHAT_MODEL } from '@/lib/openai'
 import { logUsage } from '@/lib/usage-tracker'
 import { resolvePrompt } from '@/lib/admin/ai-prompts'
 
@@ -7,12 +8,10 @@ import { resolvePrompt } from '@/lib/admin/ai-prompts'
 // client setup; every call is metered via logUsage (feature: admin-ai) so its
 // spend shows up in /admin/usage.
 
-function client(): AzureOpenAI {
-  const apiKey = process.env.AZURE_OPENAI_API_KEY
-  const endpoint = process.env.AZURE_OPENAI_ENDPOINT
-  const apiVersion = process.env.AZURE_OPENAI_API_VERSION
-  if (!apiKey || !endpoint || !apiVersion) throw new Error('azure_not_configured')
-  return new AzureOpenAI({ apiKey, endpoint, apiVersion })
+function client(): OpenAI {
+  const apiKey = process.env.OPENAI_API_KEY
+  if (!apiKey) throw new Error('openai_not_configured')
+  return openaiClient()!
 }
 
 // Trim wrapping quotes / markdown fences the model occasionally adds despite
@@ -31,7 +30,7 @@ export async function generateField(field: string, row: Record<string, unknown>)
   const prompt = resolvePrompt(field, row)
   if (!prompt) throw new Error('no_prompt')
 
-  const deployment = process.env.AZURE_OPENAI_CHAT_DEPLOYMENT || 'gpt-5.4'
+  const deployment = CHAT_MODEL
   const completion = await client().chat.completions.create({
     model: deployment,
     messages: [

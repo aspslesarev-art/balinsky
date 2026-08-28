@@ -1,4 +1,4 @@
-import { AzureOpenAI } from 'openai'
+import { openaiClient, CHAT_MODEL } from '@/lib/openai'
 import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions'
 import { getSystemPrompt, TOOLS, executeToolCall, ensureFeedbackBucket, type ListingCard } from '@/lib/consultant'
 import { ensureAssistantSession, logAssistantTurn } from '@/lib/assistant-session'
@@ -259,14 +259,12 @@ function stripSpeechBlock(text: string): string {
 
 export async function POST(req: Request) {
   // Консультант выключен глобально (lib/consultant-flag.ts): отвечаем сразу,
-  // не трогая Azure OpenAI / ElevenLabs — платные вызовы не уходят.
+  // не трогая OpenAI / ElevenLabs — платные вызовы не уходят.
   if (!CONSULTANT_ENABLED) return consultantDisabledResponse()
-  const apiKey = process.env.AZURE_OPENAI_API_KEY
-  const endpoint = process.env.AZURE_OPENAI_ENDPOINT
-  const apiVersion = process.env.AZURE_OPENAI_API_VERSION ?? '2024-12-01-preview'
-  const chatDeployment = process.env.AZURE_OPENAI_CHAT_DEPLOYMENT ?? 'gpt-5.4'
-  if (!apiKey || !endpoint) {
-    return Response.json({ error: 'Azure OpenAI is not configured on the server' }, { status: 500 })
+  const apiKey = process.env.OPENAI_API_KEY
+  const chatDeployment = CHAT_MODEL
+  if (!apiKey) {
+    return Response.json({ error: 'OpenAI is not configured on the server' }, { status: 500 })
   }
 
   // Rate limit per IP — blunts scripted cost-amplification abuse.
@@ -325,7 +323,7 @@ export async function POST(req: Request) {
   const session = await ensureAssistantSession().catch(() => null)
   const lastUserMessage = [...trimmed].reverse().find(m => m.role === 'user')?.content ?? ''
 
-  const client = new AzureOpenAI({ apiKey, endpoint, apiVersion })
+  const client = openaiClient()!
   const basePrompt = await getSystemPrompt()
   const systemPrompt = basePrompt + QUALITY_DIRECTIVE + VOICE_DIRECTIVE + replyLangDirective(replyLang)
 

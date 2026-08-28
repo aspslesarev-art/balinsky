@@ -15,7 +15,7 @@
 //   3. Confirmation before every write.
 //   4. Every applied change is logged to bot_edit_log.
 
-import { AzureOpenAI } from 'openai'
+import { openaiClient, CHAT_MODEL } from '@/lib/openai'
 import type { ChatCompletionTool } from 'openai/resources/chat/completions'
 import { adminSb } from '@/lib/admin/sb'
 import { getCollection } from '@/lib/admin/collections'
@@ -229,11 +229,10 @@ const PARSE_TOOL: ChatCompletionTool = {
 }
 
 async function parseChange(text: string): Promise<ParsedChange | null> {
-  const apiKey = process.env.AZURE_OPENAI_API_KEY
-  const endpoint = process.env.AZURE_OPENAI_ENDPOINT
-  if (!apiKey || !endpoint) return null
-  const client = new AzureOpenAI({ apiKey, endpoint, apiVersion: process.env.AZURE_OPENAI_API_VERSION ?? '2024-12-01-preview' })
-  const deployment = process.env.AZURE_OPENAI_CHAT_DEPLOYMENT ?? 'gpt-5.4'
+  const apiKey = process.env.OPENAI_API_KEY
+  if (!apiKey) return null
+  const client = openaiClient()!
+  const deployment = CHAT_MODEL
 
   const completion = await client.chat.completions.create({
     model: deployment,

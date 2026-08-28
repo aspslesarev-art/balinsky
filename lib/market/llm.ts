@@ -1,28 +1,17 @@
-// Общий доступ к модели для трекера: провайдеры и разбор JSON-ответа.
+// Общий доступ к модели для трекера: провайдер и разбор JSON-ответа.
 //
-// Провайдеров два — Azure как основной и OpenAI как запасной. Layout
-// строится редко, но если провайдер недоступен, встаёт весь обход,
-// поэтому переключаемся на лету.
+// Провайдеров было два — Azure основным и OpenAI запасным. Подписку Azure
+// закрыли 28.08.2026, ключи отозваны, поэтому первый провайдер в списке
+// гарантированно отвечал 401 и каждый вызов тратил лишний круг ретраев.
+// Остался один; цикл ниже сохранён — вернуть второго провайдера сюда дёшево.
 
-import OpenAI, { AzureOpenAI } from 'openai'
+import OpenAI from 'openai'
 import { logUsage, type Feature } from '@/lib/usage-tracker'
 
 type Provider = { client: OpenAI; deployment: string; name: 'azure' | 'openai' }
 
 function providers(): Provider[] {
   const out: Provider[] = []
-  const { AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_API_VERSION } = process.env
-  if (AZURE_OPENAI_API_KEY && AZURE_OPENAI_ENDPOINT && AZURE_OPENAI_API_VERSION) {
-    out.push({
-      client: new AzureOpenAI({
-        apiKey: AZURE_OPENAI_API_KEY,
-        endpoint: AZURE_OPENAI_ENDPOINT,
-        apiVersion: AZURE_OPENAI_API_VERSION,
-      }),
-      deployment: process.env.AZURE_OPENAI_CHAT_DEPLOYMENT || 'gpt-5.4',
-      name: 'azure',
-    })
-  }
   if (process.env.OPENAI_API_KEY) {
     out.push({
       client: new OpenAI({ apiKey: process.env.OPENAI_API_KEY }),

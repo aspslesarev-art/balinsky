@@ -5,9 +5,9 @@
 //
 // Contract: ElevenLabs POSTs an OpenAI /chat/completions request (messages,
 // stream). We replace whatever system prompt it sent with Балина's real one +
-// a voice directive, run the Azure tool loop (same as /api/chat), and stream
+// a voice directive, run the tool loop (same as /api/chat), and stream
 // the final answer back as OpenAI SSE chunks.
-import { AzureOpenAI } from 'openai'
+import { openaiClient, CHAT_MODEL } from '@/lib/openai'
 import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions'
 import { getSystemPrompt, TOOLS, executeToolCall } from '@/lib/consultant'
 import { logUsage, overDailySpendCap } from '@/lib/usage-tracker'
@@ -40,11 +40,9 @@ export async function POST(req: Request) {
     return Response.json({ error: 'unauthorized' }, { status: 401 })
   }
 
-  const apiKey = process.env.AZURE_OPENAI_API_KEY
-  const endpoint = process.env.AZURE_OPENAI_ENDPOINT
-  const apiVersion = process.env.AZURE_OPENAI_API_VERSION ?? '2024-12-01-preview'
-  const chatDeployment = process.env.AZURE_OPENAI_CHAT_DEPLOYMENT ?? 'gpt-5.4'
-  if (!apiKey || !endpoint) return Response.json({ error: 'azure_unconfigured' }, { status: 500 })
+  const apiKey = process.env.OPENAI_API_KEY
+  const chatDeployment = CHAT_MODEL
+  if (!apiKey) return Response.json({ error: 'openai_unconfigured' }, { status: 500 })
 
   let body: { messages?: { role: string; content?: string }[]; stream?: boolean; model?: string }
   try { body = await req.json() } catch { return Response.json({ error: 'invalid_json' }, { status: 400 }) }
@@ -62,7 +60,7 @@ export async function POST(req: Request) {
     return streamText(text)
   }
 
-  const client = new AzureOpenAI({ apiKey, endpoint, apiVersion })
+  const client = openaiClient()!
   const systemPrompt = (await getSystemPrompt()) + VOICE_DIRECTIVE
   const messages: ChatCompletionMessageParam[] = [{ role: 'system', content: systemPrompt }, ...turns]
 

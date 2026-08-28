@@ -8,6 +8,7 @@
 // Ключ аудио завязан на хэш текста: поправили сценарий — озвучка
 // пересинтезируется сама, старый файл просто перестаёт использоваться.
 import { NextResponse } from 'next/server'
+import { CHAT_MODEL } from '@/lib/openai'
 import { createClient } from '@supabase/supabase-js'
 import crypto from 'node:crypto'
 import { clientIp, rateLimit } from '@/lib/rate-limit'
@@ -50,18 +51,16 @@ async function ensureBucket() {
 
 const sha = (s: string) => crypto.createHash('sha1').update(s).digest('hex').slice(0, 12)
 
-async function askAzure(messages: Array<{ role: string; content: string }>): Promise<string | null> {
-  const apiKey = process.env.AZURE_OPENAI_API_KEY
-  const endpoint = process.env.AZURE_OPENAI_ENDPOINT
-  const model = process.env.AZURE_OPENAI_CHAT_DEPLOYMENT ?? 'gpt-5.4'
-  const version = process.env.AZURE_OPENAI_API_VERSION ?? '2024-12-01-preview'
-  if (!apiKey || !endpoint) return null
+async function askModel(messages: Array<{ role: string; content: string }>): Promise<string | null> {
+  const apiKey = process.env.OPENAI_API_KEY
+  const model = CHAT_MODEL
+  if (!apiKey) return null
 
-  const url = `${endpoint.replace(/\/$/, '')}/openai/deployments/${model}/chat/completions?api-version=${version}`
-  const res = await fetch(url, {
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
-    headers: { 'api-key': apiKey, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model, temperature: 0.6, max_completion_tokens: 700, messages }),
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    // temperature убрана: семейство gpt-5 принимает только значение по умолчанию.
+    body: JSON.stringify({ model, max_completion_tokens: 700, messages }),
   })
   if (!res.ok) return null
   const json = await res.json()
@@ -76,7 +75,7 @@ async function loadRuScript(
   const existing = firstString(row.data[VOICE_FIELD])
   if (existing) return existing
 
-  const text = await askAzure(buildVoicePrompt(listing))
+  const text = await askModel(buildVoicePrompt(listing))
   if (!text) return null
 
   // Кладём обратно в запись — второй раз генерировать не нужно, и текст
@@ -110,7 +109,7 @@ async function loadLangScript(
     } catch { /* битый кэш — просто перегенерируем */ }
   }
 
-  const text = await askAzure(buildVoiceTranslatePrompt(ruScript, lang, names))
+  const text = await askModel(buildVoiceTranslatePrompt(ruScript, lang, names))
   if (!text) return null
   await sb.storage.from(BUCKET)
     .upload(key, JSON.stringify({ hash, text }), { contentType: 'application/json', upsert: true })
