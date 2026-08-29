@@ -8,7 +8,7 @@
       "schedule": "0 2 * * *"
     },
     {
-      "path": "/api/cron/translate-missing?lang=en,de,fr,id,nl,pl,uk,zh&section=news,promo,events,knowledge,villas,apartments,complexes,developers,rental",
+      "path": "/api/cron/translate-missing?section=news,promo,events,knowledge,villas,apartments,complexes,developers,rental",
       "schedule": "27 * * * *"
     },
     {
