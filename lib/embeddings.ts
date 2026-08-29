@@ -1,17 +1,19 @@
-// OpenAI embeddings — `text-embedding-3-large`, усечённая до 1536 измерений.
+// Azure OpenAI embeddings — `text-embedding-3-large` (1536 dims).
 // Used by:
 //   - scripts/embed-catalog.mjs to backfill the catalog
 //   - lib/semantic-search.ts for the query-time vector lookup
-//
-// Модель осталась ровно та же, что крутилась на Azure: смена модели дала бы
-// векторы из другого пространства, и весь уже посчитанный индекс в Supabase
-// пришлось бы пересчитывать, а до пересчёта поиск молча возвращал бы мусор.
 
-import { openaiClient, EMBEDDINGS_MODEL } from '@/lib/openai'
+import { AzureOpenAI } from 'openai'
 
-const _client = openaiClient()
+const _client = (() => {
+  const apiKey = process.env.AZURE_OPENAI_API_KEY
+  const endpoint = process.env.AZURE_OPENAI_ENDPOINT
+  const apiVersion = process.env.AZURE_OPENAI_API_VERSION ?? '2024-12-01-preview'
+  if (!apiKey || !endpoint) return null
+  return new AzureOpenAI({ apiKey, endpoint, apiVersion })
+})()
 
-const DEPLOYMENT = EMBEDDINGS_MODEL
+const DEPLOYMENT = process.env.AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT ?? 'text-embedding-3-large'
 
 export const EMBEDDING_DIMS = 1536
 
@@ -37,7 +39,7 @@ export async function embedText(text: string): Promise<number[] | null> {
   return vec ?? null
 }
 
-// Batch helper — the API accepts an array of strings per call. We chunk
+// Batch helper — Azure accepts an array of strings per call. We chunk
 // at 16 to stay well under any token-count limits (~50k tokens per
 // batch is the practical ceiling for this model).
 export async function embedBatch(texts: string[]): Promise<Array<number[] | null>> {

@@ -60,13 +60,9 @@ When you add an `unstable_cache` loader for editable content, give it a `content
 
 ## AI / bot
 
-**Azure OpenAI выведен из проекта 28.08.2026** — подписку закрыли, ключи отозвали. Всё, что на неё опиралось, отвечало 401 и молча ломалось по отдельности: Балина в Telegram, голосовой виджет, эмбеддинги, расшифровка голосовых, генерация в админке. Фолбэков не было ни у одного из них.
-
-- **Единая точка доступа — `lib/openai.ts`**: клиент и выбор моделей (`CHAT_MODEL`, `EMBEDDINGS_MODEL`, `TRANSCRIBE_MODEL`). Новый вызов модели идёт через него, а не через собственный `new OpenAI(...)`.
-- `EMBEDDINGS_MODEL` — `text-embedding-3-large`, усечённая до 1536 измерений. **Менять её нельзя**, не пересчитав весь индекс: векторы из другой модели лежат в другом пространстве, и поиск начнёт молча возвращать мусор.
-- Работает от `OPENAI_API_KEY` (есть в Vercel Production).
-- **Стоимость каждого вызова логируется** в Supabase `balina_usage` через `lib/usage-tracker.ts` (fire-and-forget); `/admin/usage` агрегирует. Эта таблица — крючок для лимита расходов.
-- **Долг:** ~26 скриптов в `scripts/` всё ещё читают `AZURE_OPENAI_*` и работать не будут. Переводить по мере надобности — на `OPENAI_API_KEY` и модели из `lib/openai.ts`. Уже переведён `scripts/translate-missing.mjs`.
+- Azure OpenAI powers the web consultant and the **Balina** Telegram bot (`lib/balina-telegram.ts`, `lib/consultant.ts`), embeddings/semantic search (`lib/embeddings.ts`, `lib/semantic-search.ts`), and transcription.
+- **Every Azure call's USD cost is logged** to the Supabase `balina_usage` table via `lib/usage-tracker.ts` (fire-and-forget); `/admin/usage` aggregates it. This table is the hook for any spend-cap guard.
+- Text generation for content uses Azure tokens (per user preference), with an OpenAI fallback (`scripts/_ai-fallback.mjs`).
 
 ## Maps
 

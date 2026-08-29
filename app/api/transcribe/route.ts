@@ -11,8 +11,7 @@
 // Azure regardless.
 
 import { NextResponse } from 'next/server'
-import type OpenAI from 'openai'
-import { openaiClient, TRANSCRIBE_MODEL } from '@/lib/openai'
+import { AzureOpenAI } from 'openai'
 import { logUsage, overDailySpendCap } from '@/lib/usage-tracker'
 import { clientIp, rateLimit } from '@/lib/rate-limit'
 import { CONSULTANT_ENABLED, consultantDisabledResponse } from '@/lib/consultant-flag'
@@ -21,16 +20,18 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
-function buildClient(): { client: OpenAI; deployment: string } | null {
-  const apiKey = process.env.OPENAI_API_KEY
-  const deployment = TRANSCRIBE_MODEL
-  if (!apiKey) return null
-  return { client: openaiClient()!, deployment }
+function buildClient(): { client: AzureOpenAI; deployment: string } | null {
+  const apiKey = process.env.AZURE_OPENAI_TRANSCRIBE_API_KEY
+  const endpoint = process.env.AZURE_OPENAI_TRANSCRIBE_ENDPOINT
+  const apiVersion = process.env.AZURE_OPENAI_TRANSCRIBE_API_VERSION ?? '2024-12-01-preview'
+  const deployment = process.env.AZURE_OPENAI_TRANSCRIBE_DEPLOYMENT ?? 'gpt-4o-transcribe'
+  if (!apiKey || !endpoint) return null
+  return { client: new AzureOpenAI({ apiKey, endpoint, apiVersion }), deployment }
 }
 
 export async function POST(req: Request) {
   // Консультант выключен глобально (lib/consultant-flag.ts): отвечаем сразу,
-  // не трогая OpenAI / ElevenLabs — платные вызовы не уходят.
+  // не трогая Azure OpenAI / ElevenLabs — платные вызовы не уходят.
   if (!CONSULTANT_ENABLED) return consultantDisabledResponse()
   // Abuse guards — unauthenticated paid (Azure transcribe) endpoint.
   if (!rateLimit(`transcribe:${clientIp(req)}`, 12, 60_000)) {
