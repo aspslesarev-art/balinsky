@@ -27,9 +27,12 @@ const sb = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY!)
 export const PAGE_SIZE = 12
 export const LAZY_CHUNK = 4
 
-async function loadJson<T>(url: string, fallback: T): Promise<T> {
+async function loadJson<T>(url: string, fallback: T, tags?: string[]): Promise<T> {
   try {
-    const r = await fetch(url, { next: { revalidate: 60 } })
+    // `tags` обязателен для фото-манифестов: правка в админке ревалидирует тег,
+    // иначе перегенерация страницы читает копию манифеста из Data Cache —
+    // ту, что была ДО записи фото, и запекает плейсхолдер в свежий ISR.
+    const r = await fetch(url, { next: { revalidate: 60, tags } })
     if (!r.ok) return fallback
     return (await r.json()) as T
   } catch {
@@ -693,7 +696,7 @@ function reassembleVilla(raw: Record<string, unknown>): Row {
 async function _loadAllInternal(): Promise<CachedAll> {
   const [rowsRes, manifestRaw, styles, enCache, viewCounts, featuresMap, visionMap] = await Promise.all([
     sb.from('raw_villas').select(VILLA_SELECT).limit(1000),
-    loadJson<Record<string, string[]>>(cdnManifestUrl(PHOTO_MANIFEST_URL, 600), {}),
+    loadJson<Record<string, string[]>>(cdnManifestUrl(PHOTO_MANIFEST_URL, 600), {}, ['content:villas']),
     loadVillaStyles(),
     loadAllTranslations('villas'),
     loadViewCounts('villa'),

@@ -757,7 +757,7 @@ async function _loadAllComplexes(): Promise<ComplexRow[]> {
       // Подменяем первым фото из синк-манифеста complex-photos (как ComplexCard),
       // исходный cover_url остаётся fallback'ом.
       try {
-        const r = await fetch(cdnManifestUrl(COMPLEX_PHOTO_MANIFEST_URL, 600), { next: { revalidate: 600 } })
+        const r = await fetch(cdnManifestUrl(COMPLEX_PHOTO_MANIFEST_URL, 600), { next: { revalidate: 600, tags: ['content:complexes'] } })
         if (r.ok) {
           const manifest = (await r.json()) as Record<string, string[]>
           for (const c of out) c.cover_url = manifest[c.airtable_id]?.[0] ?? c.cover_url

@@ -194,7 +194,9 @@ const loadUnitsCached = unstable_cache(
     return units
   },
   ['content-complex-units-v1'],
-  { revalidate: 600 },
+  // Теги обязательны: без них правка юнита не доезжала до strip'а на контентных
+  // страницах весь TTL — новый юнит появлялся, а обложка оставалась пустой.
+  { revalidate: 600, tags: ['content:apartments', 'content:villas'] },
 )
 
 /**

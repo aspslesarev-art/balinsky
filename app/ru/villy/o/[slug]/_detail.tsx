@@ -663,15 +663,18 @@ async function _loadVillaById(id: string): Promise<Row | null> {
   return row
 }
 
-let _manifestCache: { ts: number; data: Record<string, string[]> } | null = null
+// revisionedCache: правка фото в админке бампает ревизию `villas`, иначе
+// манифест жил в памяти инстанса до получаса и свежая вилла рисовалась
+// с плейсхолдером вместо обложки.
+const _loadManifestCached = revisionedCache(['villas'], 30 * 60 * 1000, async (): Promise<Record<string, string[]>> => {
+  const r = await fetch(cdnManifestUrl(PHOTO_MANIFEST_URL, 600), { next: { revalidate: 600, tags: ['content:villas'] } })
+  if (!r.ok) throw new Error(`villa manifest: ${r.status}`)
+  return (await r.json()) as Record<string, string[]>
+})
+// Бросаем внутри и ловим здесь: иначе сетевой сбой кэшировался бы пустым
+// манифестом на весь TTL и страница на полчаса осталась бы без фото.
 async function _loadManifest(): Promise<Record<string, string[]>> {
-  if (_manifestCache && Date.now() - _manifestCache.ts < 30 * 60 * 1000) return _manifestCache.data
-  try {
-    const r = await fetch(cdnManifestUrl(PHOTO_MANIFEST_URL, 600), { next: { revalidate: 600 } })
-    const j = r.ok ? await r.json() : {}
-    _manifestCache = { ts: Date.now(), data: j }
-    return j
-  } catch { return _manifestCache?.data ?? {} }
+  try { return await _loadManifestCached() } catch { return {} }
 }
 
 async function resolveVilla(urlSlug: string): Promise<{ row: Row; canonicalSlug: string } | null> {
@@ -746,7 +749,7 @@ const _loadComplexesIndex = unstable_cache(
     // cover_url оставляем fallback'ом.
     let complexPhotos: Record<string, string[]> = {}
     try {
-      const r = await fetch(cdnManifestUrl(COMPLEX_PHOTO_MANIFEST_URL, 600), { next: { revalidate: 600 } })
+      const r = await fetch(cdnManifestUrl(COMPLEX_PHOTO_MANIFEST_URL, 600), { next: { revalidate: 600, tags: ['content:complexes'] } })
       if (r.ok) complexPhotos = await r.json()
     } catch { /* fallback to cover_url below */ }
     const out: ComplexLite[] = []

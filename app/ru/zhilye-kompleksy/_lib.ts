@@ -22,9 +22,12 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/complex-photos/_manifest.json`
 const sb = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY!)
 
-async function loadJson<T>(url: string, fallback: T): Promise<T> {
+async function loadJson<T>(url: string, fallback: T, tags?: string[]): Promise<T> {
   try {
-    const r = await fetch(url, { next: { revalidate: 60 } })
+    // `tags` обязателен для фото-манифестов: правка в админке ревалидирует тег,
+    // иначе перегенерация страницы читает копию манифеста из Data Cache —
+    // ту, что была ДО записи фото, и запекает плейсхолдер в свежий ISR.
+    const r = await fetch(url, { next: { revalidate: 60, tags } })
     if (!r.ok) return fallback
     return (await r.json()) as T
   } catch {
@@ -657,7 +660,7 @@ const _loadAptPriceRows = unstable_cache(
 async function _loadAllInternal(): Promise<CachedAll> {
   const [rows, manifestRaw, villas, apts, enCache, viewCounts, visionMap] = await Promise.all([
     _loadComplexCardRows(),
-    loadJson<Record<string, string[]>>(cdnManifestUrl(PHOTO_MANIFEST_URL, 600), {}),
+    loadJson<Record<string, string[]>>(cdnManifestUrl(PHOTO_MANIFEST_URL, 600), {}, ['content:complexes']),
     _loadVillaPriceRows(),
     _loadAptPriceRows(),
     loadAllTranslations('complexes'),
