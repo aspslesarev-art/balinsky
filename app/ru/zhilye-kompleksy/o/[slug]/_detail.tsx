@@ -92,6 +92,8 @@ import {
   parseAuditItems, parseBalance,
 } from '@/lib/legal-audit'
 import { loadComplexAudit } from '@/lib/complex-legal-i18n'
+import { hasProjectPermits } from '@/lib/project-permits'
+import { loadProjectPermits } from '@/lib/project-permits-i18n'
 import { isAirtableAttachment } from '@/lib/admin/fields'
 import { hreflangMap } from '@/lib/hreflang'
 
@@ -1474,6 +1476,9 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
     c.airtable_id, lang, firstString(d[LEGAL_OK_FIELD]), null, ruBalanceNotes,
   )
   const legalQuestionsCount = parseAuditItems(firstString(d[LEGAL_QUESTIONS_FIELD])).length
+  // Разрешения самого проекта (KKKPR / PBG / KBLI) — второй уровень блока
+  // зонирования. Пусто у большинства объектов: тогда блок как раньше.
+  const projectPermits = await loadProjectPermits(c.airtable_id, lang, d)
   const legalBalanceBuyer = parseBalance(firstString(d[LEGAL_BALANCE_FIELD]))
 
   // On-page admin editing: tag a field so components/InlineEditor turns it into
@@ -1936,13 +1941,13 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             смотрит, что это за объект и что в нём есть, и только потом
             идёт в инвест-обвязку — зонирование и доход соседей. */}
         {(
-          landAllowsBuilding(landProfile, 'complex')
+          (landProfile && (landAllowsBuilding(landProfile, 'complex') || hasProjectPermits(projectPermits)))
           || (marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0))
         ) && (
           <section className="mb-10 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-            {landAllowsBuilding(landProfile, 'complex') && (
+            {landProfile && (landAllowsBuilding(landProfile, 'complex') || hasProjectPermits(projectPermits)) && (
               <LazyMount fallback={<div className="min-h-[480px] rounded-2xl bg-[var(--color-search-bg)]" />}>
-                <LandProfileBlock data={landProfile!} lang={lang} />
+                <LandProfileBlock data={landProfile} permits={projectPermits} lang={lang} />
               </LazyMount>
             )}
             {marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0) && (

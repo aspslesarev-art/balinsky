@@ -49,6 +49,7 @@ import { loadManagersByDeveloperName } from '@/lib/managers'
 import { PriceCtaCard } from '@/components/PriceCtaCard'
 import { findActiveReservation } from '@/lib/reservations'
 import { loadLandProfile, landAllowsBuilding } from '@/lib/land-profile'
+import { parseProjectPermits, hasProjectPermits } from '@/lib/project-permits'
 import { loadMarketStats } from '@/lib/complex-market-stats'
 import { loadOneUnitDemand } from '@/lib/unit-demand'
 import { UnitDemandBlock } from '@/components/UnitDemandBlock'
@@ -969,6 +970,11 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
     loadSurroundings('apartment', a.airtable_id).catch(() => null),
     loadOneUnitDemand('apartment', a.airtable_id, lang).catch(() => null),
   ])
+  // Разрешения самого проекта (KKKPR / PBG / KBLI) — второй уровень блока
+  // зонирования. Переводы пока генерятся только для ЖК, поэтому на
+  // неруских страницах юнит показывает русский исходник — как и юр-проверка
+  // до прогона переводчика.
+  const projectPermits = parseProjectPermits(d)
   const developer = findDeveloperByName(devName, developers)
   const GMAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? ''
 
@@ -1248,13 +1254,13 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
             on villa pages too, so the buyer sees the zoning + neighbour
             rental data before getting to the developer / manager. */}
         {(
-          landAllowsBuilding(landProfile, 'apartment')
+          (landProfile && (landAllowsBuilding(landProfile, 'apartment') || hasProjectPermits(projectPermits)))
           || (marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0))
         ) && (
           <section className="mb-10 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-            {landAllowsBuilding(landProfile, 'apartment') && (
+            {landProfile && (landAllowsBuilding(landProfile, 'apartment') || hasProjectPermits(projectPermits)) && (
               <LazyMount fallback={<div className="min-h-[480px] rounded-2xl bg-[var(--color-search-bg)]" />}>
-                <LandProfileBlock data={landProfile!} lang={lang} />
+                <LandProfileBlock data={landProfile} permits={projectPermits} lang={lang} />
               </LazyMount>
             )}
             {marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0) && (

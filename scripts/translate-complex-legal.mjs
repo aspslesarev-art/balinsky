@@ -26,6 +26,17 @@ const OK_FIELD = 'Юр-проверка: в порядке'
 const Q_FIELD = 'Юр-проверка: вопросы'
 // Обоснование оценки баланса договора — тот же формат «один пункт на строку».
 const BALANCE_NOTES_FIELD = 'Юр-проверка: баланс обоснование'
+// Основания разрешений проекта (lib/project-permits.ts) — тот же формат «один
+// пункт на строку», едут в тот же кэш, чтобы переводить всё за один проход.
+const PERMIT_USES = ['hotel', 'villa', 'kos', 'restaurant', 'str']
+const PERMIT_BASIS_FIELD = {
+  hotel: 'Разрешения: отель — основание',
+  villa: 'Разрешения: вилла — основание',
+  kos: 'Разрешения: гестхаус — основание',
+  restaurant: 'Разрешения: ресторан — основание',
+  str: 'Разрешения: посуточная сдача — основание',
+}
+const PERMIT_KEY = u => `permit_${u}`
 
 const LANGS = { en: 'English', de: 'German', id: 'Indonesian', fr: 'French', zh: 'Simplified Chinese', nl: 'Dutch', pl: 'Polish', uk: 'Ukrainian' }
 const args = process.argv.slice(2)
@@ -47,7 +58,7 @@ const firstString = v => {
 }
 const toLines = raw => (raw ? raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean) : [])
 
-const SYS = `You translate Bali real-estate legal due-diligence notes from Russian into ${LANGS[lang]} for balinsky.info. Input is a JSON object {"ok": ["item", ...], "questions": ["item", ...], "balance": ["item", ...]} — each item is one short due-diligence point. Return ONE JSON object with the SAME keys and the SAME number of items in each array, each item translated into natural, professional ${LANGS[lang]} in a real-estate lawyer/broker tone. Rules: faithful — do NOT add, drop, merge or reorder items; keep every number, date, price, %, m², area and year exactly; keep in Latin all Bali place names (Ubud, Sayan, Canggu…), person/company proper names (Ida Bagus…, Oleg Mikhailov, Filipp Orlov, LB Group, PT PMA…) and Indonesian legal/permit terms (BPN, SHM, PBG, SLF, NIB, KBLI, PKKPR, PKPLH, UKL-UPL, Amdalnet, SIMBG, PBB, PPh, bukti potong, Pasal, leasehold, freehold, KDB, KLB, addendum); preserve each item's structure — a short lead phrase, then a sentence break, then the detail. ${lang === 'zh' ? 'Simplified Chinese, no plurals.' : 'Native register.'} Return JSON only, no markdown fences.`
+const SYS = `You translate Bali real-estate legal due-diligence notes from Russian into ${LANGS[lang]} for balinsky.info. Input is a JSON object whose keys are among "ok", "questions", "balance", "permit_hotel", "permit_villa", "permit_kos", "permit_restaurant", "permit_str", each mapping to an array of strings — each item is one short due-diligence or permit point. Return ONE JSON object with the SAME keys and the SAME number of items in each array, each item translated into natural, professional ${LANGS[lang]} in a real-estate lawyer/broker tone. Rules: faithful — do NOT add, drop, merge or reorder items; keep every number, date, price, %, m², area and year exactly; keep in Latin all Bali place names (Ubud, Sayan, Canggu…), person/company proper names (Ida Bagus…, Oleg Mikhailov, Filipp Orlov, LB Group, PT PMA…) and Indonesian legal/permit terms (BPN, SHM, PBG, SLF, NIB, KBLI, PKKPR, PKPLH, UKL-UPL, Amdalnet, SIMBG, PBB, PPh, bukti potong, Pasal, leasehold, freehold, KDB, KLB, addendum); preserve each item's structure — a short lead phrase, then a sentence break, then the detail. ${lang === 'zh' ? 'Simplified Chinese, no plurals.' : 'Native register.'} Return JSON only, no markdown fences.`
 
 async function callAzure(obj) {
   const url = `${AZURE_ENDPOINT.replace(/\/$/, '')}/openai/deployments/${AZURE_MODEL}/chat/completions?api-version=${AZURE_VERSION}`
@@ -59,10 +70,10 @@ async function callAzure(obj) {
       const j = await r.json(); const c = j.choices?.[0]?.message?.content
       if (!c) return null
       const parsed = JSON.parse(c)
-      const ok = Array.isArray(parsed.ok) ? parsed.ok.map(String) : []
-      const questions = Array.isArray(parsed.questions) ? parsed.questions.map(String) : []
-      const balance = Array.isArray(parsed.balance) ? parsed.balance.map(String) : []
-      return { ok, questions, balance }
+      const arr = k => (Array.isArray(parsed[k]) ? parsed[k].map(String) : [])
+      const permits = {}
+      for (const u of PERMIT_USES) { const v = arr(PERMIT_KEY(u)); if (v.length) permits[u] = v }
+      return { ok: arr('ok'), questions: arr('questions'), balance: arr('balance'), permits }
     } catch (e) { if (a === 2) throw e; await new Promise(s => setTimeout(s, 1500 * (a + 1))) }
   }
   return null
@@ -73,18 +84,26 @@ async function loadRows() {
   if (error) throw new Error(error.message)
   return (data ?? [])
     .filter(r => only ? r.slug === only : true)
-    .map(r => ({ id: r.airtable_id, slug: r.slug, ok: toLines(firstString(r.data?.[OK_FIELD])), questions: toLines(firstString(r.data?.[Q_FIELD])), balance: toLines(firstString(r.data?.[BALANCE_NOTES_FIELD])) }))
-    .filter(r => r.ok.length || r.questions.length || r.balance.length)
+    .map(r => {
+      const permits = {}
+      for (const u of PERMIT_USES) {
+        const lines = toLines(firstString(r.data?.[PERMIT_BASIS_FIELD[u]]))
+        if (lines.length) permits[u] = lines
+      }
+      return { id: r.airtable_id, slug: r.slug, ok: toLines(firstString(r.data?.[OK_FIELD])), questions: toLines(firstString(r.data?.[Q_FIELD])), balance: toLines(firstString(r.data?.[BALANCE_NOTES_FIELD])), permits }
+    })
+    .filter(r => r.ok.length || r.questions.length || r.balance.length || Object.keys(r.permits).length)
 }
 
 const rows = await loadRows()
 const cache = await loadCache()
 const todo = []
 for (const r of rows) {
-  const src = JSON.stringify({ ok: r.ok, questions: r.questions, balance: r.balance })
-  const h = hashOf(src)
+  const obj = { ok: r.ok, questions: r.questions, balance: r.balance }
+  for (const [u, lines] of Object.entries(r.permits)) obj[PERMIT_KEY(u)] = lines
+  const h = hashOf(JSON.stringify(obj))
   if (!FORCE && cache[r.id]?._hash === h) continue
-  todo.push({ id: r.id, slug: r.slug, obj: { ok: r.ok, questions: r.questions, balance: r.balance }, h })
+  todo.push({ id: r.id, slug: r.slug, obj, h })
 }
 console.log(`${lang}: ${rows.length} complexes with legal notes, ${todo.length} to translate${DRY ? ' (dry)' : ''}`)
 if (DRY || todo.length === 0) process.exit(0)
@@ -93,7 +112,7 @@ let done = 0, failed = 0
 for (const it of todo) {
   try {
     const out = await callAzure(it.obj)
-    if (out) { cache[it.id] = { _hash: it.h, ok: out.ok, questions: out.questions, balance: out.balance }; done++ }
+    if (out) { cache[it.id] = { _hash: it.h, ok: out.ok, questions: out.questions, balance: out.balance, permits: out.permits }; done++ }
     else failed++
   } catch (e) { failed++; console.error('  fail', it.slug, e.message) }
   await saveCache(cache)

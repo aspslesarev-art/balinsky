@@ -1,0 +1,639 @@
+{
+  "takenAt": "2026-09-02T04:22:05.315Z",
+  "airtable_id": "recX6E81t29CAzRk0",
+  "slug": "aura-wellness-resort",
+  "data": {
+    "1": 1,
+    "Q": "4",
+    "Geo": "-8.525807",
+    "PBG": "SK-PBG-510405-07042026-004",
+    "ROI": "https://drive.google.com/drive/folders/1ulVDxQWdJl0ppRp_PsgpVb1n7EGLy75O?usp=drive_link",
+    "Logo": [
+      {
+        "id": "attgmCCadUu7JofMX",
+        "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/9eNonhoXuz7bSB4IaK7hXA/snfIDysjS9zRvibDMv4o_LHzwaRGH0NE-aehJ3TjxC3vV2U8ld8xthEA63_9znH6jwm7AXlZzfnG3bIvecMmsgyxXDP15HzYFW5ud_FiHDWG2Mcp7rIr3J2c84S9HvbsgosKPWz_5x21kQWyLtGT5sD0O5sCBqTTBw0XaQj4xj6u6f-8RwaHeks2PGmM7178/BtANqQGtb2Ri5TyGUSfKF66MZAFN9Z2D-A_rtgwlkHc",
+        "size": 13497,
+        "type": "image/png",
+        "width": 2160,
+        "height": 2160,
+        "filename": "SPG Logo Black Transparent.png",
+        "thumbnails": {
+          "full": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/WDKeuC5uYHhiM0f9EpTgnQ/gdUgViMiOlE-CljkoxfQ0QhhXCblusaXOa4jaIiWgXAVhdpyIsQRK_vgXbRUQlStCXG7sZu9gJhRZnnYmdokuQdiBn76s1nhPg3g7GLat-_K86Nzxk-ulbATTkxvBPMFhv6o7sZpjzgFImqi6rxssQ/Psef-zwnGT05zvqMZHXg36X7gQV4dC8myHmJ3oeiosU",
+            "width": 2160,
+            "height": 2160
+          },
+          "large": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/ySNV2gkJVKlwsr_ln0UtOw/Cj8M2lwuW34Cex2FuhScgdKxMT0YfKpR0QEXFQHXf49VFObjhyPXFfvifrz2SRQvusYaoPylzk_WGQpReUqWBeGdXBACpDrTuzw245cvnzx6bZljQ2dg9NXcmdpUuQDz0Z98WhLPfYi66b6VvEh9ug/bIe8WUnp52YubTC0q_Z-xizo50ePAVPq8IHklkPar58",
+            "width": 512,
+            "height": 512
+          },
+          "small": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/zhIfgP6NCqC3X5zWpg7YwQ/8gr6Cfal7fzxK_naVHu7gP-Plq92B6E8UYduYOERqM3Zq5-3ZNIVOf0JWRpdLz3fZpLZShHzIXwJ7FRy-TTW7Fhr_myhrqKPbQNTh97nXN4GDdN2xE0Av2QKRGCX4yzAiVYTOMOBpvS_CclxDd5u4w/a0Vo4_4M1yYLUOMyDqgxkevKJXgMfMIvkCQWq9GF040",
+            "width": 36,
+            "height": 36
+          }
+        }
+      }
+    ],
+    "Sync": "SPG AURA Wellness Resort ",
+    "Class": "Premium",
+    "Geo 2": "115.267041",
+    "Video": "https://drive.google.com/drive/folders/12bEdtDfAMTcN7XgA4AehD-Qu4qp4uBPq?usp=drive_link",
+    "Project": "AURA Wellness Resort ",
+    "Renders": "https://drive.google.com/drive/folders/1aGZNc_ToMcV7WiiOTlb3oT-BHUMfs14G?usp=drive_link",
+    "Location": "Ubud",
+    "PBG Link": "https://simbg.pu.go.id/lacak?nomor=510405-07042026-004",
+    "SEO:Slug": "aura-wellness-resort-ubud-bali",
+    "Developer": "SPG",
+    "Leasehold": 33,
+    "Opt image": [
+      {
+        "id": "attSf4xVH8vZBcRRI",
+        "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/Kk5SlnlqfDu9fchUEvgt6Q/NlDJrGscoMUaow_cWFYUQplkJw3-ertbXaX8EKdyXMjIJo3b5LWy6AI4tyzk4xadeZMV5Y_OQ1hsRhYdFhlSfzleaOkLK-wvyNcn5IGTpfpUL19Rx_w4DcPfzpLweHGtCvTk2waYjhSRFH_HlFLJJfmz1TwklLyVLwQJuATNRn4/4JxtIdQiMOJbXPSXYtbLBjVnrKT53aU6bx8gLlu6lkc",
+        "size": 2806528,
+        "type": "image/jpeg",
+        "width": 5000,
+        "height": 2812,
+        "filename": "AU_07.jpeg",
+        "thumbnails": {
+          "full": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/uJmXi7bhXYRTohgfg1TlXA/ypt1i4nuAS2gqFARkli6XN3_HxWV2gueiFO9t_gFaTtPDOflDEi4x5HOCasNW8xMJoow4xJSbSLI6C0LnrHX2iI2fQ3c_WHSK6kX5TtODGU9elDrIBD2LOhlaBCN86JJMYSK7iBjk3XyAiH3BLlXQw/0P2QocXeDSAFI4lXMxmSYeJsD_ntwUqYnk_c_jjh7wk",
+            "width": 3000,
+            "height": 1687
+          },
+          "large": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/pAcFbETY8Eh0JxN-juskAQ/_oChLpZX53QNICYigOKil-K5BI1J6g-nYLt-fIipsgST8nIV7NrAGArFz8QDb54CDozhOEIygCXso9eC-4Te2uWZ2fZ405ebNoHNQA5laFLpRkj5FB3rAdhKzWZldFc8U12dpYyUauEI2cndY0oVwg/CHTR_TqygLZvAUR9Ixhr5oEcXH-KGuvIMs2MAWOb4uI",
+            "width": 910,
+            "height": 512
+          },
+          "small": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/2RxJdVV7vSrKWpn3tQbikg/Ki9fvtQ_xD63H3UE-tuNoontEJzLu9uoF6fYfpmvdsEfqyqr7HcILFW1XxMNktPuFGjxBO8-w8tU8rjjFuCQZC4NxlfNrF3haA4NT4EgPytMsnKsOMyAaC1-uS2r9qC2LQduNaDg8EZ11Ey7ivRA2g/L1jY37k6gcLCfHab9e__f60y4o-VFQfLaMtEkivRk4A",
+            "width": 64,
+            "height": 36
+          }
+        }
+      }
+    ],
+    "SEO:Index": "1",
+    "SEO:Title": "AURA Wellness Resort  в Ubud, Бали - виллы, апартаменты, цены, сроки сдачи | Balinsky",
+    "Developer1": "SPG",
+    "Land color": "Yellow",
+    "Location 2": "Ubud",
+    "Opt photos": [
+      {
+        "id": "attcGCqcV5X0B7ZDE",
+        "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/y_riCAIbO68oqo9iScHnrA/8zaqV_O3wSrAtmtbW4LeCdtsekcrZJy7PVMhwJhSbh53ThbUliDqsQ0ypVdaWaYnA_5WA31_53W7QAWfktIhad8YjgzdQwanYo5QzCQoLny7VAZJTHpHdBWfXHwwz6CwhHu5CB6SLqHlANmTXeG-W3JHO1Seqhc6Vu1HXRU8g74/JT682G2kysx3e7REq1qpvvvFPc7KAO_CXmyShplveYs",
+        "size": 2690047,
+        "type": "image/jpeg",
+        "width": 5000,
+        "height": 2812,
+        "filename": "AU_16-cgi-5000w.jpeg",
+        "thumbnails": {
+          "full": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/iZAo2LrvBmkCz9Q-MuFLOw/yRDWiQ36QF97pHt7V5d5JiAsfD030vd7pUo4vG3rbHDF84rQKm6-IN3imH1suPcKSbZ9ljf-L99yRmcNR4TphJoaczMst1_J8YZvDEdB0pvdF29OZw5wi8-L6l73r7zCEvjifPlz_p2nTHWcTatU_w/Gj-Jtj6Q_ICKvgw7RV2u7Zvd8JkJsPIW2A5S6d-Cats",
+            "width": 3000,
+            "height": 1687
+          },
+          "large": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/_wZSjmWkdIf-krV1lgqT9Q/ws6tiiFPrWwiYXjHUdCeJntpthXu1FH-teBXOrkeuNV_XIvj7BRdcm22TgbRdPaslY5Dq218ZvXhdEKeAwVu-r0r1F_wfqY67nEkx3ztHreLgUg0BM4RH0WWRyAPmiKjOpshsSl9EpJt7tHkZrcd0g/1vuE4a7Yd7MTL8eYA_PgmZbqmO631-Tv6SvhH9HnTME",
+            "width": 910,
+            "height": 512
+          },
+          "small": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/l84wmZeNaZxrtI8vqht6kw/kisoVid768ZBXOS9IVPuGUhoPxSynKiKbRd3zQUyJyX1TKDhwtNDuC527qVhI9xZtAEuTQCyTnLAKHAbb7Jh5PE_n4n7-P0ctOCDC-mdibTWusHddGctcDPLaVkWcKkD5uny7_oIZgU5m91PVK7MzQ/dkPuoeWQpj7YGZ4c7MY-ZAvn-vXHz9v-asEJJWDD7JM",
+            "width": 64,
+            "height": 36
+          }
+        }
+      },
+      {
+        "id": "att5JPEwo0SVYHjpr",
+        "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/_IAFVPTfVWzBHPT7aYjy0Q/moucDo5Io20fyi0iOXzgQ44EYCBNCE12AGDky0vpw9p_tRjnkwVxDTjuEAR6G16JvoNfR_ammzNocnNdwgguhsWLo36q-jWJMA-0F45OzYLiNN6qrzu9bCVYDh-02M7_X6tILJz88LVyyI8Pl4rGQ-j2JPIl3mXFNh0vXXrZSOA/MA33baLvowWrZUeEn1dD_3wBe5sgJSUL-BiQuw4ogEc",
+        "size": 1530635,
+        "type": "image/jpeg",
+        "width": 5000,
+        "height": 2812,
+        "filename": "AU_01.jpeg",
+        "thumbnails": {
+          "full": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/hjQxaZRRpsn6v6DUPXF3KA/tBtTsVP9RI6elXZOTpR4pi965iAFT66miRS-4VB3ZfzunmhYXe3IRckdP8tDR6bMTGRNWRZvzPOYv4Jsgsn9bbdmMhoy0r-LCX-L5BhHzLH2msqQM-74fY2I6h3l45TFx0JIcXSCocWf4-QqYdLzhQ/-rbF8MZLE1oTjLwfUE0Ir8CNPcUwHljOHos6Z8qVYJM",
+            "width": 3000,
+            "height": 1687
+          },
+          "large": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/Ei9nwElChM6xLHBdZRoFhA/_ooEQuKoJiqfcOuMmF8sxCz61-Q95fYkpwiSW-XHqyCKd0T2XTOo0DaVvHXhN-Thi6ddhKnbWllHv2oSKrSVU-7P02Z4neKFJ6MRNRS6egjl38FpAzgBTRMyyDP2niDq0HwPTD7Dyc5YH431-WRdpw/tPsz4j6teqnIbZDBbvzBe5WGZrf27tyUPVsNTDFbKsM",
+            "width": 910,
+            "height": 512
+          },
+          "small": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/xJ_ngA5R2H7ATYoAwkk4VA/8CVVOSHZg_HCfZLC9MBx_aL7YwDE6NWcWlTc7soGIwqloROm1Bhx7tSgLL-pTeSkbXxey0z6-HGoWXD8UrGTIesCL9T3j80uqp3gvQyLHknetl89OncXgvvrhKBz2exTGTQQeOAmB0GNXo7M5cK4TA/NfEApFt1uXdZcci_ddEnWJBV9SzCr7Rse6auL7lZ4T0",
+            "width": 64,
+            "height": 36
+          }
+        }
+      },
+      {
+        "id": "attlTIvnDvRJt5p2v",
+        "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/RFeSTNJT6AaJLTOBZifoRA/UFp5hMlhG11qmh5kCVOHYslHlwIM_z6Slww1pa_pJB3cXeVuEumFPBQ2begqOa2ofMvYp3uDS8GRDomiOGE9ORvyue4In0xQSX9TV4gPkVqPUgE8rKXjNuaQnsk6OYMcEpuQvFMliYjq_dinprzT5BcRl1Zje0odrge9_qe3XK0/R1M6sBcVu_ykHW4WLPLymgRcqB119FDryIpk8POemj8",
+        "size": 1953303,
+        "type": "image/jpeg",
+        "width": 5000,
+        "height": 2812,
+        "filename": "AU_02.jpeg",
+        "thumbnails": {
+          "full": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/QnwEiXoVCZE-RKbs3XylEw/thtYYfWgl31LJ0woPMqYdL4Sqj8qE6-9t3YL-MBdZDzYXODJW_lGobEkXfCOF82ivR7nnjQ5AzQJCDw52PueQL3WRFN4_swA0n6cLJ8jVQn48b11XsgMtLhqpGXd25fwkRvlSKJ9Zw0PDLzRp9fxuw/bEJ16KvovGJib9RthKiXYXqj11AnN4-lOzCEfJRk5C0",
+            "width": 3000,
+            "height": 1687
+          },
+          "large": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/x_j2WSng15Dx76yrFaxzmw/KWgp-WITMWTAR4KOcGlZJwSHrQA96p_nqUzVCvep4onsmP9plAueNr1s3TOyd1EhlXpwvyA53iN55veVpEnSquFz8dDVmEF1kk2sczxEhDMDgLcxyPaKJVFbrhLJCrjCaYLvroTyo5NNw6dmWozPwQ/Nmq466j_fcavbZkCVu1Bzv03yPtL2HYJ8JVNgbNxQVo",
+            "width": 910,
+            "height": 512
+          },
+          "small": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/74POC0QfE1u-ZPgeTB-b9Q/HjTeBOWARh5VDJa7wvZqcl58UJVE60C_A5OkYrBw7vy93K_JRge0fjUXk6mnwv0MfZHJh98EbR_K9gDN40hbB-rSzW4yVQXjNToS2XpNxQJQAFTFiHusYu4zGmdXvHLkxaSZ8en-z7kpIgnPSWEHAg/yNTvstMuwhVLDCVkPnL0PzFNdrvQUzTkaBbt4N80TLs",
+            "width": 64,
+            "height": 36
+          }
+        }
+      },
+      {
+        "id": "attTbt47jbdNQrl4d",
+        "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/GVeBf_AsAYhRszPKGmMcaw/lpOGwdh4BW0FuHle0cwUF4fr5bGIhn4i6dv8sB0ZpU1OM2_9MFMS_Rj-8oWb6VFthMo5ZqPBDPggiVDP0yUAhrbtgKVS8U2RI1D9xlea8cSYA-RpeO-UJxZq1cAhoyrxqNKUczBLyTS_c1wJLD1-PtTMgxVy859UzKYhxdd92bE/cuu2e5GJtXNf_Y-8PSMNC3yFW7V85Qm4QX0lGlaQG4k",
+        "size": 2625320,
+        "type": "image/jpeg",
+        "width": 5000,
+        "height": 2812,
+        "filename": "AU_10.jpeg",
+        "thumbnails": {
+          "full": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/LyxxtTckEs9LGm-S0tgrfA/k59qAtSUmggdkwyfiyi-90_AatFUxPm5rFlp8_4Ib2_77poCvuOwc2a8DvInh8OmxCrArKJYSso3EdaVaVSD7u8dipiwhquWSkEzkSsn9oFC22nEQ0B9vGNUw-3MkPq5KLUYylA670mctJK-XvTPaw/YtqfdUysIDHOChJzZHsC8vVMTMZS6OYWeWRcw7X-HMg",
+            "width": 3000,
+            "height": 1687
+          },
+          "large": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/RTFS6_dS0cz-cTDarvEVwA/Hh2JIuatc6WIvlDft3j2DQJLtMf3IIetSpB6liCNtV41Yyl6CrfCzbWYmDh9xwKTZ_95n6zpiq9kVDopJW5mV7xSSfy2soLEJg4LCmfroXr5bDPze5hs70kVKwfxfLHFrOdH1NuEUra7yOBGH3kQLQ/GIZbUMXEYF-OmjEvxpoOGJpopkK6qqi3mMAfQLk8FVg",
+            "width": 910,
+            "height": 512
+          },
+          "small": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/1NuZFuWXofhRbIgL6tFwXg/9fpKT5cGSEFtqLlXLlhomT5lGrlIToZnpt9BFzr5Nw26fEYbRCIcj7X5De13bGtj59SHfVcj2zDfS6UNC3sOxXteNnyo-Yk8mdmrP5sXgTL798uhtnH0dagPTvzbDpnZeRUCnFlzJOGfTiNEtoZdcg/_K3f6nuZ1s-gV5flr3voEToY7-P5X5HWwPYFCW3O8mk",
+            "width": 64,
+            "height": 36
+          }
+        }
+      },
+      {
+        "id": "attDQVAkJQeu3C7Sw",
+        "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/WnxeVzX4vQaqZHYwvNCkmw/a9-lBEe3PpwoUAqhfEzoyoBD2XYS-tUJBIX3mtvhTNKMELpuE_6j7azEWzi-MK1MzARUZccM5tzKzV4cGirA8Xo2oYLiAWBDBz4Eo-CGMT_5EPAfJgtrF3GoNvYxaqQiYBIfdutzRkVx-Bjw_gqx9gxFKuSzI2RI5AyuESUVW7A/KMzdl-mNjDTOFk2rjYikBrodg_91lPazEH17iMh2g0A",
+        "size": 2249865,
+        "type": "image/jpeg",
+        "width": 5000,
+        "height": 2812,
+        "filename": "AU_13.jpeg",
+        "thumbnails": {
+          "full": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/auogE03jLk8E1uzq5r6nsw/8-qg8Lcpgv11GtvxGVcZ70eqN_DZVPRG7-sw9ggFPgoHbD5LjaIZhaeNz3C8hBuicmQuczebZ9e6WKw-ICDLJ2jWBZN9dcR-wula3oMBoZkNvOi8jXySm3a2c4c40LCkcqPIoIHqm_0fqwNsX2Mbpg/vUQ4XwHpzaEHsAvzDAL1qbzTnDNA1t4pKFfMTKnO630",
+            "width": 3000,
+            "height": 1687
+          },
+          "large": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/CQIyfvEushwfc6FVGX96MA/N4n4UcrgRmkRA95nvPF_GPD2B5OTCgS526jC7aiZx8MKqm_Ypcq2GFcmN_8EIFDuB1lwtTVVSXXvU1tSmrod7P81CiyfCk-cNGUSQ7pEBJ8towESRjjq33BEniMG-qb3hMiszXxlsUsJMaJEEZg4Iw/Tp1e9FUo2qi4fV0sHd3RQpfvsztZP1kvqT_P64nqfXI",
+            "width": 910,
+            "height": 512
+          },
+          "small": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/-4ZvinZHuYt1jL4Hix_1jQ/6KU4GZ4vl8_hv2ST7qr8iv7sIt4Foniz3XEt5K0i-P9yrWPwODw3WLhWtufLVvgycfdFN0Fl37ejrPaPPdHilW3OtYQWTztj2UZ0ADoATujIKztmQHPUMr8UdSsPlC0LwxmEG4x_3bHUfdjIsqGDgg/q4bJui4IYR46DWQJl7GsUgq4g7OQxqUBX7Dv5chqATU",
+            "width": 64,
+            "height": 36
+          }
+        }
+      },
+      {
+        "id": "att3QhCjDGqIgrQ6S",
+        "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/qvr0PpbJ3MYwTwRWm2Q1sw/HAhsjLetvzJM99d1AVsrWOAFZHkgO7xpCSDNhRmoI2azpY1dHPWqKPXAVczIOwOnwdVZZgBpOAzO6v6b7Ssl5gvNVBr7-ffEiHZWuAZlMG2x1RzkMKHJNJ9mVVTgNxguNGO6_BGtyJb_keRwsZi0k_DBLFoN4KGzOkZFfhtPvWs/uexJgD64J31dMLUa0fLXw6e8Zh9RKAmwj2l_cJ87HRA",
+        "size": 2490229,
+        "type": "image/jpeg",
+        "width": 5000,
+        "height": 2812,
+        "filename": "AU_14.jpeg",
+        "thumbnails": {
+          "full": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/eIVuewSt4jFBspZhj9-3Uw/Z243bmPJRhVvfaSRwJJC2NAzJ76ss5F1jRjoSnz8iqGcr5QMUYl4qO2JKF-cWJlriCg9Qh46u7uk_qYT-yJSigGhHfDAA-nJ1rhIhHItMeN3nhyuxyIDnCLz8CXqvTZ54oD7Sye8tWeuyyrwnVd2Mg/YeEncJriRAYmF5pVY0mtYAiHhfSTekTORkuJWMxc1OY",
+            "width": 3000,
+            "height": 1687
+          },
+          "large": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/P_jArgiLO2BRiZvyCrSb_w/_u6ytDy9_e37j3i-bS4LWsrlCL8n4f7hL1Zc2X_-gKPnX7V883WqS-Bibaoh9JrwMTjWnRghmyQT_sn-mZvWnkeUWvNrUXAutvdkDUC5Ujly3AYes_IiVMBfzTy2j73TAKEJ4QDA8pDds5cnCoRVCA/TrMmQfvOJuzpdgkC9gXZYb33hw_dhUAdtkoyoDlXsIs",
+            "width": 910,
+            "height": 512
+          },
+          "small": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/SGY6teV42446AqLNSkEa1Q/gbVX4G4ZMjYH0OSiv74Oe4YXbn6dqL8wwoOhtvHBaWUnsF9YZZ1BOhmHZFsZNj3vfG0SgiMB1NDzK3DHotT57Mj4YUu83f0qrRJPH17yJSR1GkCafObKUEFQ22ba0ee3HeCJNLazhw9mjfcmnG092A/XDVwGkQ75THGwv6Ft5Mm0Wq5lsfERFq1hY7mUI0xO4A",
+            "width": 64,
+            "height": 36
+          }
+        }
+      },
+      {
+        "id": "attinSVmI80x7pgTE",
+        "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/Bodn9Sxrb6RZHrqPp12adQ/UjtRNEH9oRmSACg7luiKVx6qDldIYsVecwFMlZdk8oA31BQ8xeK_4rKchgpxzms4m5TYvu4RSJRXYUPcQ3UpeDIFv4oud0hokMME7A5qXg_vrrP8MIdrP-KWOVl93G2GzKdgE_km5yYvtSth0D61KXOlPdYhMrS6h1Md-zhZ3F0/Nhx805neFMKj1ARgjTxYyjs3W0swgJrk3ugkCAc7MaY",
+        "size": 1870953,
+        "type": "image/jpeg",
+        "width": 5000,
+        "height": 2812,
+        "filename": "AU_25.jpeg",
+        "thumbnails": {
+          "full": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/znZxiVNcuCo_6kaa8xpdjQ/AC3PtiipEBFHNO-wc91WExW6hoF-hildUaZzdq9VkzwFtfK5HJ1JdSWPSXX9ygnbnwEYUUzTALQyjVVT76zselyN4Z_Q5XMCBqcmieZP8mmjtuje4NOw-X57jSMIc8iHrOBNzUvZgu-8fjzWIkNiJg/dqHuJMVSqCx7lmPc3jvj7_eMSr2Q1gIY0NGu6rljlIg",
+            "width": 3000,
+            "height": 1687
+          },
+          "large": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/mykUhRE2FYIxrL5jp4Vliw/1jrrawR94QnhmFtyldysTQrUFWTd94u-YtQmA82pPkDzKkqKUQ2nnqczhRaJkAb-L1EbgkhQ28hF5tcG4LIy-n9o1kxyPn3Bcmii6NH-pWHXZzZZtSCRkPSEjq_UsNX63U8xaVLYOTMydJ4RfYb4nQ/a1_9HU8yot7JmNRCYxELUyQ9PZhHf0RannT5BY5rXWo",
+            "width": 910,
+            "height": 512
+          },
+          "small": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/PkKbxypg0JjtkpLy5gJuEw/-Sekkzxm1CUm8x0qRKeQbyhsYBLM3jmcVfGiSiypzL7hB42KKA0yNvSt7m2Arq1gulMD73CsaUOUNrbV2JJMvWKEYNAngh05nMScU9u5yYkHocowJ4cJ7vbr7XHeajmVoRFuhRr10bsrT8nGSx8yZQ/374edCZzzCd8snMiJPpydfo6EhnYRPTlvHlct_V4nHw",
+            "width": 64,
+            "height": 36
+          }
+        }
+      },
+      {
+        "id": "attoURpW24emjlOl8",
+        "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/3pLWxohmMx1x8p5Fb2JrcA/D5unGI-k-AU6H8huEG5AzZHaZy0QsZHXQKOOMBNU5RH3OPiRbhbVMSnIfU682wXqxFnwiQCe4dJuWqD_xk3xuDCBrEJIOquXLUGH4xGJ9HR_KoIax8lUwzUn-yjEu3FBrscxgD5_jf27z7SdqsuXSOZfehyKd5xLOFBKpmoN6ms/F9EA2ZaRKSK8vZsbPquIqduNy6T3edKRu6Qkb3oKBww",
+        "size": 2512932,
+        "type": "image/jpeg",
+        "width": 5000,
+        "height": 2812,
+        "filename": "AU_35.jpeg",
+        "thumbnails": {
+          "full": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/YOGW1h45mGtRRddUF1fQFA/he33qG2diAeQDwO5VBkRfyX5cL0jUoJ0eha7zAMOZWr_aE42u8VRKfbBbweu8Z88wXrh-P1h6JZWklfF2UIFBh6upz-oVVGbqFxZ3acHbaOYBuJQ5xnNNva6PvjkNTbBYVmI-LY0xbpPj8I83nIsYQ/SV0Ys4YQKrsOZ4fioPtd9QYysOH4IdUTIqs30KZFQ10",
+            "width": 3000,
+            "height": 1687
+          },
+          "large": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/VV6F_JoiMB9zE5fBhX8Z_Q/7SeT34B4hBDly0VWbhwLzrab_tj1QA9K6wNuCM6pijbxhvyyHUqnH-L-QG_fc15NLxukW1R2BDpETHn3gqOQUEW0C7twbXZ3fQjdaqTiG9fa2Ab0c2p9Fq7E4x8GztyM-QUQY_vn9DKPVtypydAy5Q/5f_KLP9F2pTw3UZqE4qwZarUlPlBiLdut-H9m6RH3pE",
+            "width": 910,
+            "height": 512
+          },
+          "small": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/tDXcd8SD_k5nuLz9XzeHEw/07nLPK9Aieg8LGu2Cx8OzL5P8363j_zwDfxMt19lbX8szZX3bP8yWRTRloEmPCmN6ovMYcNUbgDQDM3lOtK0ConwEUv0TJL5PFOo3JvTgtjBv993Zh5d1IlNXCsWhdstGyIU6dH88vQyz2pDB20v1w/JxdUw3sYoFUVZ1mxsGVOfmffgL4ijGSxYEALFwi4dFQ",
+            "width": 64,
+            "height": 36
+          }
+        }
+      }
+    ],
+    "SEO Text EN": {
+      "state": "error",
+      "value": null,
+      "isStale": false,
+      "errorType": "emptyDependency"
+    },
+    "SEO:Title EN": {
+      "state": "empty",
+      "value": null,
+      "isStale": true
+    },
+    "Social:Title": "AURA Wellness Resort  в Ubud, Бали - виллы, апартаменты, цены, сроки сдачи | Balinsky",
+    "Платят": "0 checked out of 1",
+    "Статус": "Строится",
+    "Payment plan,%": "15%+10%+75%/6",
+    "SEO:Description": "AURA Wellness Resort  в Ubud, Бали. Виллы, Апартаменты. 157 юнитов. Сдача 2027. Leasehold 33. Цены, фото, планировки и консультация.",
+    "Social:Title EN": {
+      "state": "empty",
+      "value": null,
+      "isStale": true
+    },
+    "Статус EN": {
+      "state": "empty",
+      "value": null,
+      "isStale": true
+    },
+    "Обновлен": "2026-05-26T12:25:45.000Z",
+    "Presentation link": "https://presentation.estate/presentation/aura-wellness-resort-ubud-bali/r/recuzjFhYJypZ0H2K",
+    "SEO:Description EN": {
+      "state": "empty",
+      "value": null,
+      "isStale": true
+    },
+    "Обновлено": "2026-05-26T12:25:45.000Z",
+    "Year of completion ": 2027,
+    "Описание EN": {
+      "state": "error",
+      "value": null,
+      "isStale": false,
+      "errorType": "emptyDependency"
+    },
+    "Готовность": 0.3,
+    "Мастерплан": "https://drive.google.com/drive/folders/1xrRISX1aC4HkuDTXsmkObXvuG8nlWWxF?usp=drive_link",
+    "Фотографии": [
+      {
+        "id": "attXAN9Iv3ygiyeYz",
+        "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/odZ22oqL7BCg0v09ViZChw/otzUfCrsthHmppb-PLwIG6sovO7omop9YtePuM2iq3udQkYIF-YiteCeiszLCpklbllSXM9RkQx1pgEFzUP96HPHS4Wrl5FKv8F5xX7BN2aadErZbbWJ3Hy4gC7Bq4cqlGeukyVklo_t8tm9HvixwGlAL9rSv9idX7dwIEz8Vu0/GfOV6FQ8gme19__LMZ2M9SwceLO4_SXcFGxavlIkQw4",
+        "size": 12973698,
+        "type": "image/jpeg",
+        "width": 5000,
+        "height": 2812,
+        "filename": "AU_35.jpeg",
+        "thumbnails": {
+          "full": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/1ec9VlNKCc4506ZpxzMVmg/HnfciiKIJt8pEL7C7h_zxF07hWqXCTAbN7YudPWQQWiOyTIh5Dvo6EPCLMJoKfNAG4XWImlmkLbp9BgGHwoztqtJTAv5Ujvei8Q6j4uiikBptj80lROw3UXMXqoixrPlqWJQVAwV-we2jLVEfsjBmw/MOUnGnQRtqgTDz59JjPyfFmgN6fDkoKS7j-8RiMbrM4",
+            "width": 3000,
+            "height": 1687
+          },
+          "large": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/SQZf6GbI2MEaWrMCZKDbcQ/UTTSbz18IQJb9UYgVdv5cZUogDCnrp_n7mKBUyZE91SnQSyYcygZkjhOYwuBIIq2KJjXHmN1576BA94WI3SKzEWqz4Ld9SZlzh70jEdjiul4tyYGNUCatD14hOwPLbCEx2gQzzBufHek3-dnzksXIg/1qLIG0NTZF3P28No57v8_QxmjANKrJ-9fDY7tT15Bv8",
+            "width": 910,
+            "height": 512
+          },
+          "small": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/QTXOmfT7VLSD7kALBED_EA/atL7LtalJTFFw9liNPv0b8aH_wePHYwWjgprOMXS1AiEAnS9aQjrZGWfJipDtDlEpfZV2BcpykF3krzOyYGdWXgFKxQ5P9kfzyTTjcxwgK-QXPx2bw2KbYn1nS_YQehTa6Vs9CY6bwOaBBTRFvHkfA/XuvZyI2-xuNHPE8m1d76IBVTgMRl9_jNeaI5k1ZNjA8",
+            "width": 64,
+            "height": 36
+          }
+        }
+      },
+      {
+        "id": "att8wf5gEt54CjMFK",
+        "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/jCpgm-Ux86VwJb6foXwJ2g/YS2FAa8xx7XGF3rDK1ayBLlKPx61HtRtp46TY3kfj_GBRDtLboIMKZh0w6rmcQ9ndK9OoKDlhbfLaIOIjV2vz8p1CR2DVMONVfTpSP6sx1XQg2eAkl1DRm57GMzmXuL3DjTNYnrvgXRFx8cpVg3T_5VPCO52zcCh6hYjsvINUhU/IAEim1FtK4ufGwKna2z9NPk4wm9MK0VNyOr8h3QFcdY",
+        "size": 10412446,
+        "type": "image/jpeg",
+        "width": 5000,
+        "height": 2812,
+        "filename": "AU_25.jpeg",
+        "thumbnails": {
+          "full": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/J-Dg2rITfl8amITQyoSKuA/FykCeQkKYxMHi_TkF-dP04ICwDVVk60lE51HMeVGYKNALS4B5mcElmMHXg48H_Fl0A7_xBwgkVKg0c_oRv1G4Jsfr1htvziZWLD3Ocd2hP1P88E4mkihT1x6uNWJ189Zia9Yi50RupHlycMs2WV4Qg/ERz9ozikzwLkn6ptEg5sVY6OY2M-K5ZhCAbqMop2nWg",
+            "width": 3000,
+            "height": 1687
+          },
+          "large": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/HZQvaZDjUHdLQ8fmkj0woA/p2byVndazMH1v-nDuhVyf1weUrNyq9h3h9-RCJloAwEZHD1yh0sbsYTPigIMJ4yLT25M9iKZmWf3wqY4nIUoICrMWtPYTzhDONy7rFnqYEgQ4k0QUQ9OWyNpVSvxtHtPsOj4KAW9_u1riD6ZDrFfOg/cKaPOPZm3eiMAJxJ5J-JNrnAUEd2s3lKzaUGnmRAgxM",
+            "width": 910,
+            "height": 512
+          },
+          "small": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/-d4dlVTB3D3UdCnGu0s8Tw/c1f6w9boIY4Rit7G0xJNdU4IKIt3Yym3JlFh9bE5OqgD4Qk5VVNF6PxcL2l7cbD0N4kKOVz6k7F1L7VWlzrnt38P9D4pNXsQ52-6-lgulbYhI3lyCMQ2AmGRXd8XN0_sl59ORh5YAoJ5YIbHpWrDNw/aVXtB86vQHSCw7ETL8dG8U6BgaVLzfKql-5cseSDB6k",
+            "width": 64,
+            "height": 36
+          }
+        }
+      },
+      {
+        "id": "attObxTn9waTFjjlj",
+        "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/YEDWn1aA-givN2f12BexTw/9jGNH4Svgh1X0SAfBM_BjzOKoQVxbXfoHICp0KPsu9HEia14Zf2_2CIP1rI9p-0OOPyKC069_NVrb7158ymGjDhaSlRply7iNoiD1v5ie8kAq19IJHsUlobIkQHgI4l0msEWD2myVvuo-Bgc4L3LxLBovFfWPdVLiTSCCYyqrH4/RYX9uAK33IHs4nDHHnwHbrpiONX_1aQCfn5B5g5qKBQ",
+        "size": 13393122,
+        "type": "image/jpeg",
+        "width": 5000,
+        "height": 2812,
+        "filename": "AU_16-cgi-5000w.jpeg",
+        "thumbnails": {
+          "full": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/4fg3ruZxQ4JbogO2hFg1eg/eU-m8sSwWnxcCQSrEpdkuIdwaSCp7hP5RfpsraNzdSxn4KFzCMM0AAC7L0OLKbeBVL3fgqdId_xwKblVC1ZrYrLT_7Bb_CXZHDKZDifm2J4cJO8nco8xXA3RHi2wOZ6uT_slMiqzs21zL07zCaRWBw/pOs4n9EvtDGyp-Q2DNZ4BFSBIRPHyp1wD1hM-iJ0B3I",
+            "width": 3000,
+            "height": 1687
+          },
+          "large": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/XNB6EZD5FLRP3Y3ikx63ww/aGoJZxDK8g6MYoTwWZeYg6efInb2ks9DqHKUx8ygxz0LkPr22CoyoRGTCYt_LMwWc3xJMWYc9e-xgqK7TeaDxR6Fl_Vdu6g1gEsorclrHhUSPCLb8ZTYYSWzbyKM9_x6SaSc9Vq7PC4GgL6bZ49teg/LlzFaQb32II0K05XjjlmhBAPVNV5myv5ICuLmjDsUTo",
+            "width": 910,
+            "height": 512
+          },
+          "small": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/HkxgiNktU_5bEDtCEOL5ng/5mPBN0KyJxUlRlQfFPlEKMsXk1WqScWACv4RXMElfU4hGv5QqrOTN6RB2QhRVplveIbqWpB-gckQT-cotKs5Pl61PNHhnzBQvyp9DBfh1Tc6N1SL5uH-_S1uHeuDzEdWfyn1KUI-dAgy4wvCDtPxqg/RKuiWIk56QEu0LqG5crZMh40wunD3Fui7T30dXomJRg",
+            "width": 64,
+            "height": 36
+          }
+        }
+      },
+      {
+        "id": "attoCNcmQH3IEsiKg",
+        "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/LlHOoiN3gU8607nrS2tyDA/Rg6LZAa9nc0g_GKGEKE7u9loAhKWSWejK4d4r4F02UasCMuLNGR62VkYL4rFaqmOh2vTkZ7EbPFBgnDSDkKh20x8oCqXxckakAZgrRff8QXO-_EkQcCuqpP6-9ygsUz82nkWtCyfDYJ9EW71IqjQfIbo3qttpCVoTJJnMVenutw/BMBn4oAzian7Lz1R4YfctocNuHk4enqMPCK2umcGeOk",
+        "size": 12625853,
+        "type": "image/jpeg",
+        "width": 5000,
+        "height": 2812,
+        "filename": "AU_14.jpeg",
+        "thumbnails": {
+          "full": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/kK9Cz1AQhp1EE6di2nU6zw/s8bV5SkSHUuzKIXYs9XctYY29eBsPkUKhaiRw8FhoMNHnMyuwS8EqCF2IPz6V707LJnr2gyzzp05ZiJiwIZFPdhe3ctsRdgveu6dfSg9dyQuFXzbtCCZD5VhqghBtniO5kdK3qULb-a7iZKDQy-bHA/kX1IWkerEdrYVAPzGU5ytGEL9hKZWxHKDx8Iu_ESQ3Q",
+            "width": 3000,
+            "height": 1687
+          },
+          "large": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/93gooatJ7xuqJzt5hhSaSQ/yIlXBwYrlcYGreBqy1Bk2PvINN2v6153AfGOu3uwgxjDgKzd9z7C8PCf2F716ed-TUajYSvwwIBc4UGR2qON1vP1_Uc57K8rvrXFtqN6X_7mjO8wJ7KxL5xFzsszMfxJoBuiYioqu0NPS-gmnCR64g/Tn7rE7wbZ8M2tnuJOASgertcSJlYJ8OTOEALi59w7Zs",
+            "width": 910,
+            "height": 512
+          },
+          "small": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/c6FkIsvSx-QssDwRP5FTkg/3CwVbDPQGF5RPW1Y8CfVOujCU6xNQ956iv56DE8wVlN8hPaIjwdIm2X5vK1GDSrbb-MfZykXR_aYmg_EWVaiyrUrNdj3vjpdlX9jQuJhTFSGoqdHfT28JB6MjQ_IfYlyolErvqLzDAkMSoHyPEkinw/CHHiULA8Gj9Xt-xBOOtZ0W5bVqV18g86I30-D2ddG3Q",
+            "width": 64,
+            "height": 36
+          }
+        }
+      },
+      {
+        "id": "attzk4fpALRc7CL10",
+        "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/NrMWDxVG_bPet5QglZ1Xtg/AVIhI2ijw_sTYcBpder2T4I2L02wvdw9MBBBakbQfazMdVeXO5Q8IJXGHE83C9Sp_SqK9dcNd4luzewqQuejNmRZAW1TgJO7_IhWpaJUgBgGzI8mSWeG1-LIhLJevhh42uMZxY6BsaKEwTvLRgnTGyyV7bEoU1RN7K4rgf95NCM/eZguEBadz_ivoclKCY-y9--qYszbemsskM0kW28HPuc",
+        "size": 10852561,
+        "type": "image/jpeg",
+        "width": 5000,
+        "height": 2812,
+        "filename": "AU_13.jpeg",
+        "thumbnails": {
+          "full": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/Q3LjOU2lNB-IUo4LT6Urqw/-SaqhjVfbrKSvTgj24EethzbryupOFdVk4bKU0pU9sarKiUnkkKs6bicECJCETqYkG1Es87bFh3Mm_Y8cjuzESmt20w8rmVNVFOm9ltYy2gafGU2A-MOGX0s-_4qDmjMfJnXcTQe_0Wvn-v9kYrxZw/k9ycP00s_NauGamYFwE2DfttasnugLAPlBAjByTeR-0",
+            "width": 3000,
+            "height": 1687
+          },
+          "large": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/3qWx4GZVikArldqY0ZglVA/x8uAzSdtFOA5CMZ5LR8IP5A0f-1d_lkK_ux0Dq16zQPrPZGDu6zG0pmKDzpvqGSb_XpWzzuHHyl02qkPXSB1P9TBbunH6UBYgahQqOdh-SukMMFgdE4HymhFi5KseSvmDTtxbO8_PUbYDglse5PTiQ/kK6XQxAVetBS_RxL35sq3fNqaNfHnGiYq_eQS61fA74",
+            "width": 910,
+            "height": 512
+          },
+          "small": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/irR9Zxhoert8z76lcxdmTg/WYnpgRF9OWrC0iL7S8jAPsi6IUDy_MM0X76Nmzv0pfUMMpGpHrYDRAfk_Lfl-C2D0pDOV6OaTIWTCjAHPKd9lTbqjJmQyGDzcpfc8lo01GaCs0-uVquW3kzBMs_QLwLyvWrSdJ4WGQJagj-2eVWIxg/yBlSg4nyIW-SKYj-o0Naudm7TK6_i9qiE1ok7-tmuA8",
+            "width": 64,
+            "height": 36
+          }
+        }
+      },
+      {
+        "id": "attW2EhysPlvgz3Vk",
+        "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/oBCiC2bLvZlM4oKbpnSoZQ/NVw4uH9S7BlFfHWxWFgUBxAz10Uci4uQf83TiVObdeZlj_dV7BYSkHLlnRFQ3xxtT7YVAQ-_8mSn6aotD7WfkfwHuJUXI3lBLD-XFjiAi3qbbG8C8zT4kENuD4RyT4sCJp9T7eb6n93UC7xiPisWK7sj3_i8NG0Fa-NjFZ9QhJk/ZUytTYCBxqY5dTN4fT1KxF8V6l1W-Pzq7Wnrizs99y8",
+        "size": 12465786,
+        "type": "image/jpeg",
+        "width": 5000,
+        "height": 2812,
+        "filename": "AU_10.jpeg",
+        "thumbnails": {
+          "full": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/5qYbPOo6jkct2_YvEJZRZg/hV6idF7n67A5Pa7kvPpi7Luow1ynQ4KjF6GMiu9cpRuIwY5m_qo8EBnpwRhZAbDfCPETPL9BKNpjU_VysK6cNYK_8u3_txKMKISvd51V9hXVRuGj6RDngwf1hyWmsWkFNjaCr-WyTIAK5_Mk1NC8RA/kCxMtufGm1mynumX6FpzqWg9nOog5kHLyKABsA-vefA",
+            "width": 3000,
+            "height": 1687
+          },
+          "large": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/1D6HbXhhtN3nCP5tnQG2zA/vx36hsgHUXnmL-y6yrumQQZEQxSWwmxukZzohVY77SrIcrULy6RPZXefcJrWGbazNUxcigwi9phYUi5u-VBp1YlpBjPQYH-MQx73aZoswfeSgs91i6gG_wYY3Xv1D_BPeKWlRCQBHfDRouQZYBr_Vw/SxPVixqv-rU8rfxoB6KF86MeKS-v4Mgbq949hnx5iIk",
+            "width": 910,
+            "height": 512
+          },
+          "small": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/SN36xw3fHTfuvoBEH1l5sg/1s4gvEmXIuKwpW_BHkDNBR-cNHp1K0Izd-LHYnAXVx-g2mHr9F6wEQyn3_le6YhL2COoe0meOSB2FmHrgj0bG4gOaZ_mzOiBtvt_2XC6HVcnDDtvqnsBhpa72IT3x4FCXxHqgXnvV86EPOaUJVNk4w/VD8pJU4TanmbCpZBwOfGzCcMcP48U58Na82BYnKS1DQ",
+            "width": 64,
+            "height": 36
+          }
+        }
+      },
+      {
+        "id": "attUoxh13RwsjqPN8",
+        "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/GdLWIGj1nnfna5akfgjrzA/0EZlr-IQgbkN5G3mbusCip-MCqQjH7pHiKm44_2N5ai0pPsFD-_q3bVkhz22R6rEuJTAxUdEDLJS7uE6g-FHy9OLJV1YRHJxDxOsrjXp3_JajeQt3fci654b9K0rgDTusFgMuQg3nqOjuAU4sPY91O5M4NjOWvcsTvUwZ6Ru6co/yS0De4enMJ1ND54qK-FJIREvr-G_6ydRvLEfjSFT9ug",
+        "size": 10488710,
+        "type": "image/jpeg",
+        "width": 5000,
+        "height": 2812,
+        "filename": "AU_02.jpeg",
+        "thumbnails": {
+          "full": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/qB3fR_aoNKReSpn9Qo_3wg/4r7Fy5MvlBK3tyfLCs2PLwGgu17ke3p9uEgp1HJ8Pk4eeU9xS5_sm6mlsC5wSuv89f7NhScK0IsQMBiY6WLbWjWH6WaBzCGevCcbZrBFtuSgwkDLLblY3JEad8eggwpI1K3WNiLIdrOf0oIqtorfVQ/GX6WHWp3P5QeGzXM31N3qlOhzuuP6aOOK-0eY0wr-10",
+            "width": 3000,
+            "height": 1687
+          },
+          "large": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/f5kt63dkuVOCvmAuyEJ4-g/Hm1GmU5sH9xReJZ322y4UzdciropmTOR_Gq6_7bbz2I0z31CblZkNVlc1B-Kb4IIlzX8nJLz-PSTN5ZynjtOwwzNE5vF3mkE-GC7gXVMXbfINLFvVh_HYM86Wwrn_asAfjZ3yQA5LVBxnE3l59IB5Q/_s9QC6mpjxyGPe4dH1Mn9TbvHxA7wzgwxC5HdeOZd8U",
+            "width": 910,
+            "height": 512
+          },
+          "small": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/iUGoWVHZOYR9UH6tePcFSQ/bFIfRiEemLLG1dnF4S8RSm4Ko2kvOVs2A8ITBy2_EgL0ClbMPDpXYn81VR4Dk196KNbAXXMuDhyfJ85bOQKbP-GVR5_2wc2NtJafJ69h5KDhoyeiTbSuBxU79hM8DlaRNwR36MPNWpnOrwXZe-uKCw/xqmGU4ByiHj0RFeo-oxPamoDp7P0WWjnx-VfMbT6nfU",
+            "width": 64,
+            "height": 36
+          }
+        }
+      },
+      {
+        "id": "att0MGL8TONg9e0Qb",
+        "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/R6nKG9QcxhfKzJh3rrK6ww/-4uSO2B9hcYvD1TzaQAGzmDuY7sdVFShWte540KBJDG2KFQrbTMDghaNyLZu8dcsqy0iB6z8yjq6c5YFokgv0n2gilqbH1lECCCVTip4TSguDYb8kOj80O7Kpszn7kbpEriqnzFADmtdwM-sogkve4xK-z-HtdiIKr9U6iYikbE/zKwYwGuSW6C90w0AoNDK2s-_dd6YIpCs2Nrynbjl9X4",
+        "size": 9215107,
+        "type": "image/jpeg",
+        "width": 5000,
+        "height": 2812,
+        "filename": "AU_01.jpeg",
+        "thumbnails": {
+          "full": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/MRGeneDzt_7_bh5P6rR0xw/oq0VYt-8dN_y8M0JUOOdsxHrhu1ToeB8sF6ec9jGc2rrpxN5rr36D8iA-XnRPJg-LgIlcMQ482kZaQMRJM2QSUbc09DF0TgLYJNKUjEmM0FaWWQC2qLApTBenUxel7zxrnxTK0Y-JQhzXtSf80WUdQ/qXHfhdjsyvluVUGj02sr4BPJrFOm8XLEidMwwhjqG1w",
+            "width": 3000,
+            "height": 1687
+          },
+          "large": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/T1f8khy6EgmmD1ai9xQZBw/BebBm7rMC1dkrGBsc0FacpzRxD7Vx8gyXCG7jDy8R2jUKgMbMGz5d8A2NOvX_imtymja0Y-5C7vLyimXqGj1z8A5q2z-yiSXtL_g3yuuO2Zx8589frbjBL1S75Vc1kuY3PzN2Qbmm49zhXEF_CMSdQ/mGppBThQMXdYWuRFBNuODLX4w-37_1KVd4IYHuSbcCk",
+            "width": 910,
+            "height": 512
+          },
+          "small": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/Ebk36piFs5iyg63A-uip4g/xdaDuaXWHLdbWinIAQOtsot7huIDPJTCDzkARYwBPPdH7BTcm0T55JDpd3ZPQptc4F4r3QVmYRtWxOTYz96Huz5GgLGv3F466qIQMIJ2xQ-40S4z_80ZKcF5-pbzT7C9xQmJehg5BLWk0sO3uo3eCQ/40w5E2JUvsTpeIzzuGsq88kWnW2hDIN2RB6SiOirgWQ",
+            "width": 64,
+            "height": 36
+          }
+        }
+      }
+    ],
+    "Social:description EN": {
+      "state": "error",
+      "value": null,
+      "isStale": false,
+      "errorType": "emptyDependency"
+    },
+    "Типы юнитов": [
+      "Виллы",
+      "Апартаменты"
+    ],
+    "Презентации": "https://drive.google.com/drive/folders/1uh0TIYKPZgnK-ZidwTe-57rz_1PV8yTR?usp=drive_link",
+    "Total quantity of units": 157,
+    "Главное фото": [
+      {
+        "id": "attt7KqnRPMn7sFUA",
+        "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/jWy8i--ekHhss3CXrJE7lw/xeWEWHHrRwTGfhsOHwRg1_7sqK_dntn6mKvIzBDT3gSji3PA8JKi2SidtGc3YdztVcKk0jeC8QhvJnQDCDfb_lV42ZoLlFzn7Z6lp4JlSkoTSW0jGp6fM-miGLZnHwIxP5GvMCr3Yn6kD3yiDy4HvSXf8wlaQSWxKLuNMjOv2kM/6yx-nS0LR_qpKLwG0P7F82DAseigdYI8DCzfDftysDM",
+        "size": 14494916,
+        "type": "image/jpeg",
+        "width": 5000,
+        "height": 2812,
+        "filename": "AU_07.jpeg",
+        "thumbnails": {
+          "full": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/xE9yDnxjji2SgS5ptXWfjA/VhoPTjhu7F75pd4nG48vfcZet6JV7QYki4HmAp_jOBAgyavYl5WP0WNVpj_Da7qK76lLHiCPwjmzBHjpZxbmz761l86L4LqiHJ6BzZy7Z51zOxeqfappZJssc-Tr0KvI9SjcNvXzBlwXtITQbyFHng/hsg_zhqifqHDUxjKQcyqvGL5n0MAVVv_hgIyXuRBoGU",
+            "width": 3000,
+            "height": 1687
+          },
+          "large": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/hfydV9W8JxZ7ZGlwoBMR4A/rKo3k4HwagJPas9EJiG3WeYfBD2vCZeFPXtQrgYL0C9nx_k_bLPh7Ur-Xx2N7t1Li6gannIM4TN_S1yS0iRv47ZSP25bLBNgYC30wDFFpiylBGj3ewI1n3Tonu2whveqTK3gK07rwc1D_2YObICAPA/FIKuoPxER6aKGyN44tAD-bNQDhpR-pqQKZGnRdGEbxA",
+            "width": 910,
+            "height": 512
+          },
+          "small": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/JaSqoli-1twTy9y2wu6rkg/DPGHH4COZi3t7tJrQqZrVSrlQj0z-din5GwXdyGcxXjAwz0OdolrG0QSnI2kZxcje37sf46AjVYxJWMYbo3x3II_a6qGO3TNHcA31FTJPPdGWZUNh_xYt_QClDk4NZ7tUNhZ3JT_wOQy2HAZqBgAoQ/7i-ZvLFlHR6owGbvxUJ0fPIZGPkIWFAqKO_3hC3IHpU",
+            "width": 64,
+            "height": 36
+          }
+        }
+      }
+    ],
+    "ИИ Описание EN": {
+      "state": "error",
+      "value": null,
+      "isStale": false,
+      "errorType": "emptyDependency"
+    },
+    "Leashold продление": "30",
+    "Оставить отзыв": "https://t.me/BalinskyBot?start=review_AURA_Wellness_Resort",
+    "Статус продаж EN": {
+      "state": "error",
+      "value": null,
+      "isStale": false,
+      "errorType": "emptyDependency"
+    },
+    "Назначение земли": "Подходит для проживания и долгосрочной аренды",
+    "Саммари саммари EN": {
+      "state": "empty",
+      "value": null,
+      "isStale": true
+    },
+    "Link from Google maps on location ": "https://maps.app.goo.gl/ePpQvgJ2zxpq4vZu6",
+    "Назначение земли EN": {
+      "state": "empty",
+      "value": null,
+      "isStale": true
+    },
+    "Сообщить об ошибке": "https://t.me/BalinskyBot?start=error_AURA_Wellness_Resort",
+    "Материалы для заполнения": "http://drive.google.com/drive/folders/10WoeBa4lco2ScAGiioJqSqymCLHSVQ-L",
+    "Описание района (from Location 2)": "Центр Бали (предгорья, Гианьяр); культурный хаб с развитой инфраструктурой; популярен у туристов и экспатов. Инвестиции: идут новые проекты (Anantara Ubud Residences); в 2024–2025 цены на виллы росли; транспорт: аэропорт DPS ~38 км, пляж Санур ~23 км.",
+    "Разрешительные документы": "PBG",
+    "Презентация застройщика pdf": [
+      {
+        "id": "attcFrDYNdjSboSx0",
+        "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/nw1RumooYqBEU-4wPlFm9w/IKlTFu1c0i8zZSW-wBQTklbBKiAUiKLnows2XDvROa9rD0IVy3ofHQXoOHoZJ-BzWIobzjsP3f_-bQoEevvrFqGSWREF1b5ivywN4DtWG8iH-FiAZpry223YMwSHQRnRJy6j08KnvLbLoNMxYBaOY-30Em3wHmZPWPGqT_6WJ6PJ4vBw76n5MWxVU1-dN06I/dXUa4seR8BZHGArB5o406KsljTyGNeNZfqofIdd2BRE",
+        "size": 9657008,
+        "type": "application/pdf",
+        "filename": "AURA Wellness Resort RU 17.04.26.pdf",
+        "thumbnails": {
+          "large": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/gZZhs5Yl-eDPxcQS18cFAA/dG8g5b80RzD073UU0POgYA57PqQ-dHhT-3NIhhhXp5K87cgfBIGGnmG96IsIGQMIoKsmK5w4qvpdDELAiHnuGRxMi3JrE4hifwuPEGp5qZ9N7TFwuHX2p6992XFlN6onx652toOZi4E0E0HNASdZsw/fCShPiv2w4XKTOr0Erjjmbxk81ZWGrav9Lqn79ka-RQ",
+            "width": 910,
+            "height": 512
+          },
+          "small": {
+            "url": "https://v5.airtableusercontent.com/v3/u/55/55/1784692800000/5WAtdFS58sYwNYvraEVEyQ/bEXTuxLqEdt9U1gFYc_uYYesjOp_TYMX-ALLqzva2bwP_4GP-kJIHSLsdq38Vx6QlqCbVr3A4V-rxLTKZ3PrpSq4ehEguVCs3y-UKV7JgxMPihcsbf-9e5wbIK7bIYvF4ATSf7dV5K3HAB0NM-pFUQ/iCGreftRL-zrYgZGU99jhDoWvklHVPDcovrjxqRdWvo",
+            "width": 64,
+            "height": 36
+          }
+        }
+      }
+    ],
+    "Варианты поиска застройщика": "SPG, СПГ, ЭсПиДжи, Эс Пи Джи, SP Group, SPG Group, SPG Групп, SPG Груп, SPG Груп, SPG Групп, SPGroup, SPGroupp, SPGрупп, SPGруп, SPGрупп, SPGруп, ЭсПиГрупп, ЭсПиГруп, ЭсПиДжиГрупп, ЭсПиДжиГруп, Эс Пи Джи Групп, Эс Пи Джи Груп"
+  }
+}

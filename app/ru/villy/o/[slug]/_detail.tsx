@@ -29,6 +29,7 @@ import { ExpandableText } from '@/components/ExpandableText'
 import { PageContainer } from '@/components/PageContainer'
 import { PhotoGalleryHero } from '@/components/PhotoGalleryHero'
 import { loadVillaLandProfile, landAllowsBuilding } from '@/lib/land-profile'
+import { parseProjectPermits, hasProjectPermits } from '@/lib/project-permits'
 import { loadMarketStats } from '@/lib/complex-market-stats'
 import { loadOneUnitDemand } from '@/lib/unit-demand'
 import { UnitDemandBlock } from '@/components/UnitDemandBlock'
@@ -1055,6 +1056,11 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
     loadSurroundings('villa', v.airtable_id).catch(() => null),
     loadOneUnitDemand('villa', v.airtable_id, lang).catch(() => null),
   ])
+  // Разрешения самого проекта (KKKPR / PBG / KBLI) — второй уровень блока
+  // зонирования. Переводы пока генерятся только для ЖК, поэтому на
+  // неруских страницах юнит показывает русский исходник — как и юр-проверка
+  // до прогона переводчика.
+  const projectPermits = parseProjectPermits(d)
   const interiorStyle = stylesMap[v.airtable_id]?.style ?? null
   const villaScore = scoresMap.get(v.airtable_id) ?? null
   const bestCapRate = villaScore?.goodCapRate ?? null
@@ -1395,13 +1401,13 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
         )}
 
         {(
-          landAllowsBuilding(landProfile, 'villa')
+          (landProfile && (landAllowsBuilding(landProfile, 'villa') || hasProjectPermits(projectPermits)))
           || (marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0))
         ) && (
           <section className="mb-10 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-            {landAllowsBuilding(landProfile, 'villa') && (
+            {landProfile && (landAllowsBuilding(landProfile, 'villa') || hasProjectPermits(projectPermits)) && (
               <LazyMount fallback={<div className="min-h-[480px] rounded-2xl bg-[var(--color-search-bg)]" />}>
-                <LandProfileBlock data={landProfile!} lang={lang} />
+                <LandProfileBlock data={landProfile} permits={projectPermits} lang={lang} />
               </LazyMount>
             )}
             {marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0) && (

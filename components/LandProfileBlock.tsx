@@ -8,9 +8,11 @@ import { useState } from 'react'
 import {
   Landmark, ChevronDown, ChevronUp, ExternalLink, CircleCheck, CircleX, CircleAlert,
   FileText, AlertTriangle, ShieldCheck, Hotel, Bed, Utensils, Home as HomeIcon,
-  MapPin,
+  MapPin, CalendarClock, Ban,
 } from 'lucide-react'
 import type { UseCaseStatus } from '@/lib/land-profile'
+import type { AuditItem } from '@/lib/legal-audit'
+import type { PermitStatus, PermitUse, ProjectPermits } from '@/lib/project-permits'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { translit, hasCyrillic } from '@/lib/translit'
 
@@ -635,6 +637,122 @@ const COPY = {
 // Widen the literal-string properties of COPY['ru'] so EN can also fit.
 type CopyShape = { [K in keyof (typeof COPY)['ru']]: (typeof COPY)['ru'][K] extends (...args: infer A) => infer R ? (...args: A) => R : string }
 
+// Копия для второго уровня («разрешения проекта») живёт отдельно от COPY: так
+// добавление уровня не переписывает десять существующих языковых секций.
+// ban отсутствует намеренно — pickCopy отдаст ему английский.
+const L2_COPY = {
+  ru: {
+    zoneLevel: (z: string) => `По зоне ${z}`,
+    zoneLevelPlain: 'По зоне участка',
+    projectLevel: 'У этого проекта по документам',
+    projectHint: 'Разрешительные документы самого проекта — они могут отличаться от общего правила зоны.',
+    pApproved: 'согласован', pLimited: 'с ограничениями', pNotCovered: 'нет в документах', pForbidden: 'нельзя',
+    strTitle: 'Посуточная сдача', strConfirmed: 'подтверждена документально', strNotConfirmed: 'не подтверждена', strForbidden: 'нельзя',
+    notesToggle: 'Что это значит',
+  },
+  en: {
+    zoneLevel: (z: string) => `Under zone ${z}`,
+    zoneLevelPlain: 'Under the plot zoning',
+    projectLevel: "Under this project's own documents",
+    projectHint: "The project's own permits — they can differ from the general zoning rule.",
+    pApproved: 'approved', pLimited: 'limited', pNotCovered: 'not in the documents', pForbidden: 'not allowed',
+    strTitle: 'Short-term rental', strConfirmed: 'documented', strNotConfirmed: 'not documented', strForbidden: 'not allowed',
+    notesToggle: 'What this means',
+  },
+  id: {
+    zoneLevel: (z: string) => `Menurut zona ${z}`,
+    zoneLevelPlain: 'Menurut zonasi lahan',
+    projectLevel: 'Menurut dokumen proyek ini',
+    projectHint: 'Izin milik proyek sendiri — bisa berbeda dari aturan zona umum.',
+    pApproved: 'disetujui', pLimited: 'terbatas', pNotCovered: 'tidak ada di dokumen', pForbidden: 'tidak boleh',
+    strTitle: 'Sewa jangka pendek', strConfirmed: 'terdokumentasi', strNotConfirmed: 'tidak terdokumentasi', strForbidden: 'tidak boleh',
+    notesToggle: 'Apa artinya',
+  },
+  fr: {
+    zoneLevel: (z: string) => `Selon la zone ${z}`,
+    zoneLevelPlain: 'Selon le zonage du terrain',
+    projectLevel: 'Selon les documents de ce projet',
+    projectHint: 'Les permis propres au projet — ils peuvent différer de la règle générale de zonage.',
+    pApproved: 'approuvé', pLimited: 'limité', pNotCovered: 'absent des documents', pForbidden: 'interdit',
+    strTitle: 'Location courte durée', strConfirmed: 'documentée', strNotConfirmed: 'non documentée', strForbidden: 'interdite',
+    notesToggle: 'Ce que cela signifie',
+  },
+  de: {
+    zoneLevel: (z: string) => `Nach Zone ${z}`,
+    zoneLevelPlain: 'Nach der Zonierung des Grundstücks',
+    projectLevel: 'Nach den Unterlagen dieses Projekts',
+    projectHint: 'Die Genehmigungen des Projekts selbst — sie können von der allgemeinen Zonenregel abweichen.',
+    pApproved: 'genehmigt', pLimited: 'eingeschränkt', pNotCovered: 'nicht in den Unterlagen', pForbidden: 'nicht zulässig',
+    strTitle: 'Kurzzeitvermietung', strConfirmed: 'urkundlich belegt', strNotConfirmed: 'nicht belegt', strForbidden: 'nicht zulässig',
+    notesToggle: 'Was das bedeutet',
+  },
+  zh: {
+    zoneLevel: (z: string) => `按 ${z} 分区`,
+    zoneLevelPlain: '按地块分区',
+    projectLevel: '按本项目文件',
+    projectHint: '项目自身的许可证——可能与分区通则不同。',
+    pApproved: '已批准', pLimited: '有限制', pNotCovered: '文件中未涵盖', pForbidden: '不允许',
+    strTitle: '短期出租', strConfirmed: '已有文件证明', strNotConfirmed: '无文件证明', strForbidden: '不允许',
+    notesToggle: '这意味着什么',
+  },
+  nl: {
+    zoneLevel: (z: string) => `Volgens zone ${z}`,
+    zoneLevelPlain: 'Volgens de bestemming van het perceel',
+    projectLevel: 'Volgens de documenten van dit project',
+    projectHint: 'De vergunningen van het project zelf — die kunnen afwijken van de algemene zoneringsregel.',
+    pApproved: 'goedgekeurd', pLimited: 'beperkt', pNotCovered: 'niet in de documenten', pForbidden: 'niet toegestaan',
+    strTitle: 'Kortverhuur', strConfirmed: 'gedocumenteerd', strNotConfirmed: 'niet gedocumenteerd', strForbidden: 'niet toegestaan',
+    notesToggle: 'Wat dit betekent',
+  },
+  pl: {
+    zoneLevel: (z: string) => `Według strefy ${z}`,
+    zoneLevelPlain: 'Według przeznaczenia działki',
+    projectLevel: 'Według dokumentów tego projektu',
+    projectHint: 'Pozwolenia samego projektu — mogą różnić się od ogólnej zasady strefy.',
+    pApproved: 'zatwierdzone', pLimited: 'z ograniczeniami', pNotCovered: 'brak w dokumentach', pForbidden: 'niedozwolone',
+    strTitle: 'Najem krótkoterminowy', strConfirmed: 'potwierdzony dokumentami', strNotConfirmed: 'niepotwierdzony', strForbidden: 'niedozwolony',
+    notesToggle: 'Co to oznacza',
+  },
+  uk: {
+    zoneLevel: (z: string) => `За зоною ${z}`,
+    zoneLevelPlain: 'За зонуванням ділянки',
+    projectLevel: 'За документами цього проєкту',
+    projectHint: 'Дозволи самого проєкту — вони можуть відрізнятися від загального правила зони.',
+    pApproved: 'погоджено', pLimited: 'з обмеженнями', pNotCovered: 'немає в документах', pForbidden: 'не можна',
+    strTitle: 'Здавати подобово', strConfirmed: 'підтверджено документально', strNotConfirmed: 'не підтверджено', strForbidden: 'не можна',
+    notesToggle: 'Що це означає',
+  },
+} as const
+
+type L2Shape = { [K in keyof (typeof L2_COPY)['ru']]: (typeof L2_COPY)['ru'][K] extends (...args: infer A) => infer R ? (...args: A) => R : string }
+
+const PERMIT_TONE: Record<PermitStatus, 'green' | 'amber' | 'red' | 'gray'> = {
+  approved: 'green',
+  limited: 'amber',
+  not_covered: 'gray',
+  forbidden: 'red',
+}
+
+// Посуточная сдача формулируется иначе, чем «можно построить»: «подтверждена
+// документально» вместо «согласован». Тон тот же.
+function permitChipMeta(c2: L2Shape, use: PermitUse, status: PermitStatus): { tone: 'green' | 'amber' | 'red' | 'gray'; label: string } {
+  const tone = PERMIT_TONE[status]
+  if (use === 'str') {
+    const label =
+      status === 'approved' ? c2.strConfirmed :
+      status === 'forbidden' ? c2.strForbidden :
+      status === 'limited' ? c2.pLimited :
+      c2.strNotConfirmed
+    return { tone, label }
+  }
+  const label =
+    status === 'approved' ? c2.pApproved :
+    status === 'limited' ? c2.pLimited :
+    status === 'forbidden' ? c2.pForbidden :
+    c2.pNotCovered
+  return { tone, label }
+}
+
 function strBadge(raw: string | null): { tone: 'green' | 'red' | 'amber' | 'gray'; short: string; full: string } | null {
   if (!raw) return null
   const lower = raw.toLowerCase()
@@ -682,16 +800,21 @@ function toneClasses(tone: 'green' | 'amber' | 'orange' | 'red' | 'gray'): strin
   }
 }
 
-function UseCaseRow({ icon: Icon, label, status, c }: {
+// Одна строка «вид использования → статус». Когда к статусу приложены
+// авторские пункты (ограничения, основание по документам), строка становится
+// раскрываемой по клику — на мобильных hover'а нет, поэтому именно клик.
+function UseCaseRow({ icon: Icon, label, chip, notes, notesToggle }: {
   icon: typeof Hotel
   label: string
-  status: UseCaseStatus
-  c: CopyShape
+  chip: { tone: 'green' | 'amber' | 'orange' | 'red' | 'gray'; label: string }
+  notes?: AuditItem[]
+  notesToggle?: string
 }) {
-  if (!status) return null
-  const chip = caseChipMeta(c, status)
-  return (
-    <div className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-[var(--color-search-bg)]">
+  const [open, setOpen] = useState(false)
+  const hasNotes = !!(notes && notes.length > 0)
+
+  const inner = (
+    <>
       <span className="inline-flex items-center gap-1.5 text-[13px] text-[#111827]">
         <Icon size={14} className="text-[var(--color-text-muted)]" />
         {label}
@@ -701,15 +824,65 @@ function UseCaseRow({ icon: Icon, label, status, c }: {
         {chip.tone === 'red'   && <CircleX size={11} />}
         {(chip.tone === 'amber' || chip.tone === 'orange') && <CircleAlert size={11} />}
         {chip.label}
+        {hasNotes && (open ? <ChevronUp size={11} className="opacity-60" /> : <ChevronDown size={11} className="opacity-60" />)}
       </span>
+    </>
+  )
+
+  if (!hasNotes) {
+    return (
+      <div className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-[var(--color-search-bg)]">
+        {inner}
+      </div>
+    )
+  }
+
+  return (
+    <div className="rounded-lg bg-[var(--color-search-bg)]">
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        aria-expanded={open}
+        aria-label={notesToggle}
+        className="w-full flex items-center justify-between gap-2 px-2.5 py-1.5 text-left cursor-pointer"
+      >
+        {inner}
+      </button>
+      {open && (
+        <ul className="list-none m-0 px-2.5 pb-2 pt-0.5 space-y-1.5">
+          {notes!.map((n, i) => (
+            <li key={i} className="text-[12px] leading-snug text-[var(--color-text-muted)]">
+              <span className="text-[#111827] font-medium">{n.headline}</span>
+              {n.body ? `. ${n.body}` : ''}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }
 
+/** Строки уровня «по зоне» — статус приходит из RDTR, авторских пунктов нет. */
+function ZoneUseCaseRow({ icon, label, status, c }: {
+  icon: typeof Hotel
+  label: string
+  status: UseCaseStatus
+  c: CopyShape
+}) {
+  if (!status) return null
+  return <UseCaseRow icon={icon} label={label} chip={caseChipMeta(c, status)} />
+}
 
-export function LandProfileBlock({ data, lang = 'ru' }: { data: LandProfileProps; lang?: Lang }) {
+
+export function LandProfileBlock({ data, permits = null, lang = 'ru' }: {
+  data: LandProfileProps
+  /** Разрешения самого проекта — второй уровень блока (lib/project-permits.ts). */
+  permits?: ProjectPermits | null
+  lang?: Lang
+}) {
   const [open, setOpen] = useState(false)
   const c = pickCopy(COPY, lang)
+  const c2 = pickCopy(L2_COPY, lang) as L2Shape
 
   const tx = (lang === 'ru' ? data.translations?.ru : data.translations?.en) ?? {}
   // Fall back to the raw value; but on non-RU pages, transliterate any
@@ -723,6 +896,21 @@ export function LandProfileBlock({ data, lang = 'ru' }: { data: LandProfileProps
   // One-line summary: subzone code + (translated) subzone name + STR verdict + facts.
   const subZoneShort = [data.subzona_code, t('subzona_name', data.subzona_name)].filter(Boolean).join(' · ')
   const str = strBadge(data.str_likely_allowed)
+
+  // Разрешения проекта. Посуточная сдача у проекта, когда она заполнена,
+  // ЗАМЕЩАЕТ зонный вердикт в шапке: зонный слой — общее правило по точке
+  // карты, проектный — документы конкретного объекта.
+  const permitUses = permits?.uses ?? {}
+  const permitStr = permitUses.str ?? null
+  const permitBuildUses = (['hotel', 'villa', 'kos', 'restaurant'] as const)
+    .map(k => ({ key: k, entry: permitUses[k] }))
+    .filter((x): x is { key: 'hotel' | 'villa' | 'kos' | 'restaurant'; entry: NonNullable<typeof x.entry> } => !!x.entry)
+  const hasPermitRows = permitBuildUses.length > 0 || !!permitStr
+  // Заголовок первого уровня: зоны участка по документам, если их авторски
+  // перекрыли (синк видит только точку lat/lon и не знает про стык зон).
+  const zoneLabel = permits?.zones ?? data.subzona_code ?? data.zona_code
+  const permitIcon = { hotel: Hotel, villa: HomeIcon, kos: Bed, restaurant: Utensils } as const
+  const permitLabel = { hotel: c.hotel, villa: c.villa, kos: c.kos, restaurant: c.restaurant }
 
   const kecShort = (() => {
     const raw = t('kecamatan', data.kecamatan)
@@ -801,7 +989,20 @@ export function LandProfileBlock({ data, lang = 'ru' }: { data: LandProfileProps
           </div>
           {(facts.length > 0 || str || mixed) && (
             <div className="text-[12.5px] text-[var(--color-text-muted)] mt-1 flex flex-wrap gap-x-3 gap-y-1 items-center">
-              {str && (
+              {permitStr ? (
+                (() => {
+                  const chip = permitChipMeta(c2, 'str', permitStr.status)
+                  return (
+                    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium ${toneClasses(chip.tone)}`}>
+                      {chip.tone === 'green' && <CircleCheck size={11} />}
+                      {chip.tone === 'red'   && <CircleX size={11} />}
+                      {chip.tone === 'amber' && <CircleAlert size={11} />}
+                      {chip.tone === 'gray'  && <Ban size={11} />}
+                      {c2.strTitle}: {chip.label}
+                    </span>
+                  )
+                })()
+              ) : str && (
                 <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium ${toneClasses(
                   str.tone === 'green' ? 'green' : str.tone === 'red' ? 'red' : str.tone === 'amber' ? 'amber' : 'gray'
                 )}`}>
@@ -811,7 +1012,8 @@ export function LandProfileBlock({ data, lang = 'ru' }: { data: LandProfileProps
                   {c.str}: {
                     str.tone === 'green' ? c.strYes :
                     str.tone === 'red'   ? c.strNo :
-                    str.tone === 'amber' ? c.strNo :
+                    /* «probably no» — это «нужна проверка», а не приговор */
+                    str.tone === 'amber' ? c.strMaybe :
                                            c.strMaybe
                   }
                 </span>
@@ -831,15 +1033,55 @@ export function LandProfileBlock({ data, lang = 'ru' }: { data: LandProfileProps
         </span>
       </button>
 
-      {hasUseCases && (
-        <div className="px-5 pb-4">
-          <div className="text-[11.5px] uppercase tracking-wide text-[var(--color-text-muted)] mb-2">{c.useCases}</div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-            <UseCaseRow icon={Hotel} label={c.hotel} status={data.uses_hotel} c={c} />
-            <UseCaseRow icon={HomeIcon} label={c.villa} status={data.uses_villa} c={c} />
-            <UseCaseRow icon={Bed} label={c.kos} status={data.uses_kos} c={c} />
-            <UseCaseRow icon={Utensils} label={c.restaurant} status={data.uses_restaurant} c={c} />
-          </div>
+      {/* Два уровня, намеренно раздельно. Первый — общее правило зоны из RDTR;
+          второй — разрешения самого проекта. Смешивать их в один список
+          нельзя: именно из-за этого объект с согласованным отелем в жилой зоне
+          читался как «отель нельзя». */}
+      {(hasUseCases || hasPermitRows) && (
+        <div className="px-5 pb-4 space-y-3.5">
+          <div className="text-[11.5px] uppercase tracking-wide text-[var(--color-text-muted)]">{c.useCases}</div>
+
+          {hasUseCases && (
+            <div>
+              <div className="text-[12px] font-medium text-[#111827] mb-1.5">
+                {zoneLabel ? c2.zoneLevel(zoneLabel) : c2.zoneLevelPlain}
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                <ZoneUseCaseRow icon={Hotel} label={c.hotel} status={data.uses_hotel} c={c} />
+                <ZoneUseCaseRow icon={HomeIcon} label={c.villa} status={data.uses_villa} c={c} />
+                <ZoneUseCaseRow icon={Bed} label={c.kos} status={data.uses_kos} c={c} />
+                <ZoneUseCaseRow icon={Utensils} label={c.restaurant} status={data.uses_restaurant} c={c} />
+              </div>
+            </div>
+          )}
+
+          {hasPermitRows && (
+            <div>
+              <div className="text-[12px] font-medium text-[#111827] mb-1.5">{c2.projectLevel}</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                {permitBuildUses.map(({ key, entry }) => (
+                  <UseCaseRow
+                    key={key}
+                    icon={permitIcon[key]}
+                    label={permitLabel[key]}
+                    chip={permitChipMeta(c2, key, entry.status)}
+                    notes={entry.notes}
+                    notesToggle={c2.notesToggle}
+                  />
+                ))}
+                {permitStr && (
+                  <UseCaseRow
+                    icon={CalendarClock}
+                    label={c2.strTitle}
+                    chip={permitChipMeta(c2, 'str', permitStr.status)}
+                    notes={permitStr.notes}
+                    notesToggle={c2.notesToggle}
+                  />
+                )}
+              </div>
+              <div className="text-[11px] text-[var(--color-text-muted)] mt-1.5">{c2.projectHint}</div>
+            </div>
+          )}
         </div>
       )}
 

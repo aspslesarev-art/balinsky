@@ -9,7 +9,15 @@ import { parseAuditItem, parseAuditItems, type AuditItem } from '@/lib/legal-aud
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 
-export type LegalEntry = { ok?: string[]; questions?: string[]; balance?: string[] }
+// `permits` — строки «основания» разрешений проекта (lib/project-permits.ts),
+// по ключу вида использования. Живут в том же кэше: перевод их и юр-проверки
+// делает один и тот же скрипт за один проход.
+export type LegalEntry = {
+  ok?: string[]
+  questions?: string[]
+  balance?: string[]
+  permits?: Record<string, string[]>
+}
 type Cache = Record<string, LegalEntry>
 
 const _cache = new Map<string, { ts: number; data: Cache }>()

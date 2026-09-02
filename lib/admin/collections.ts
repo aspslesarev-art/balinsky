@@ -10,6 +10,12 @@ import type { CollectionConfig } from './adapters/types'
 import {
   LEGAL_OK_FIELD, LEGAL_QUESTIONS_FIELD, LEGAL_BALANCE_FIELD, LEGAL_BALANCE_NOTES_FIELD,
 } from '@/lib/legal-audit'
+import { PERMIT_FIELDS, PERMIT_ZONES_FIELD } from '@/lib/project-permits'
+
+// Подсказки в форме /admin/data — общие для всех видов использования, чтобы
+// одна и та же строка не была продублирована десять раз.
+const PERMIT_STATUS_HELP = 'согласован / с ограничениями / нет в документах / нельзя. Пусто = уровень «по документам проекта» для этого вида не показываем.'
+const PERMIT_BASIS_HELP = 'Один пункт на строку. Лид строки — заголовок, остальное раскрывается по клику. Номера KKKPR / PBG, статус, режим, ограничения.'
 import { VOICE_FIELD } from '@/lib/voice-intro'
 import { COMPLEX_DESCRIPTION_FIELD } from '@/lib/complex-description'
 
@@ -196,6 +202,21 @@ const complexes: CollectionConfig = {
     { key: LEGAL_QUESTIONS_FIELD, label: 'Юр-проверка: вопросы (под лидом)', type: 'longtext' },
     { key: LEGAL_BALANCE_FIELD, label: 'Юр-проверка: баланс (0–100 в пользу покупателя)', type: 'text' },
     { key: LEGAL_BALANCE_NOTES_FIELD, label: 'Юр-проверка: баланс обоснование (1-я строка публична)', type: 'longtext' },
+    // Разрешения самого проекта — второй уровень блока «Что можно делать с
+    // участком». Первый уровень (правила зоны) приходит машинно из RDTR и
+    // правке не подлежит: его перезаписывает синк. Статус — из списка ниже,
+    // основание — ОДИН ПУНКТ НА СТРОКУ, как в юр-проверке.
+    { key: PERMIT_ZONES_FIELD, label: 'Разрешения: зоны участка', type: 'text', help: 'Зоны по документам, напр. «P-3, R-3». Пусто = как определил синк по точке карты.' },
+    { key: PERMIT_FIELDS.hotel.status, label: 'Разрешения: отель', type: 'enum', help: PERMIT_STATUS_HELP },
+    { key: PERMIT_FIELDS.hotel.basis, label: 'Разрешения: отель — основание', type: 'longtext', help: PERMIT_BASIS_HELP },
+    { key: PERMIT_FIELDS.villa.status, label: 'Разрешения: вилла', type: 'enum', help: PERMIT_STATUS_HELP },
+    { key: PERMIT_FIELDS.villa.basis, label: 'Разрешения: вилла — основание', type: 'longtext', help: PERMIT_BASIS_HELP },
+    { key: PERMIT_FIELDS.kos.status, label: 'Разрешения: гестхаус', type: 'enum', help: PERMIT_STATUS_HELP },
+    { key: PERMIT_FIELDS.kos.basis, label: 'Разрешения: гестхаус — основание', type: 'longtext', help: PERMIT_BASIS_HELP },
+    { key: PERMIT_FIELDS.restaurant.status, label: 'Разрешения: ресторан', type: 'enum', help: PERMIT_STATUS_HELP },
+    { key: PERMIT_FIELDS.restaurant.basis, label: 'Разрешения: ресторан — основание', type: 'longtext', help: PERMIT_BASIS_HELP },
+    { key: PERMIT_FIELDS.str.status, label: 'Разрешения: посуточная сдача', type: 'enum', help: 'подтверждена / не подтверждена / нельзя. Пусто = показываем вердикт по зоне.' },
+    { key: PERMIT_FIELDS.str.basis, label: 'Разрешения: посуточная сдача — основание', type: 'longtext', help: PERMIT_BASIS_HELP },
   ],
 }
 
