@@ -12,11 +12,19 @@ export type Option = { id: string; title: string; slug?: string }
 
 const LIMIT = 50
 
+// A slug can live in the `data` blob (developers' 'SEO:Slug') or in a real
+// column (complexes' `slug`). The field declaration already says which, so the
+// projection follows it instead of always digging into `data` and coming back
+// null.
+function slugIsColumn(cfg: CollectionConfig): boolean {
+  return !!cfg.fields.find(f => f.key === cfg.slugField)?.column
+}
+
 export async function getOptions(cfg: CollectionConfig, q: string): Promise<Option[]> {
   const needle = q.trim()
   const slugKey = cfg.slugField
   if (cfg.store === 'sql_jsonb') {
-    const slugSel = slugKey ? `, s:data->>"${slugKey}"` : ''
+    const slugSel = slugKey ? (slugIsColumn(cfg) ? `, s:${slugKey}` : `, s:data->>"${slugKey}"`) : ''
     const pk = cfg.primaryKey ?? 'airtable_id'
     let query = adminSb().from(cfg.table!).select(`${pk}, t:data->>"${cfg.titleField}"${slugSel}`)
     if (needle) query = query.ilike(`data->>"${cfg.titleField}"`, `%${needle}%`)

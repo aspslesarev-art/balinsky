@@ -143,6 +143,10 @@ const complexes: CollectionConfig = {
   photo: { bucket: 'complex-photos' },
   caps: { create: true, update: true, delete: true },
   titleField: 'Project',
+  // Videos link here with `store: 'name-slug'`; loadVideosByComplexSlug filters
+  // on exactly this slug. It is a real column on raw_complexes, not a `data`
+  // key — getOptions() reads it as one because the field declares `column`.
+  slugField: 'slug',
   publishedField: 'Опубликовать',
   defaultSort: { field: 'Project', dir: 'asc' },
   revalidateKind: 'complexes',
@@ -601,10 +605,19 @@ const videos: CollectionConfig = {
     { key: 'addedAt', label: 'Добавлено', type: 'date', showInGrid: true, width: 120 },
     // Пусто = видео показывается на всех языках. Иначе список кодов: ["ru"].
     { key: 'languages', label: 'Языки', type: 'multienum' },
-    // [{ "name": "XOR", "slug": "xor" }] — slug должен совпадать со slug
-    // застройщика/комплекса, иначе видео просто нигде не появится.
-    { key: 'developers', label: 'Застройщики [{name, slug}]', type: 'json' },
-    { key: 'complexes', label: 'Комплексы [{name, slug}]', type: 'json' },
+    // Хранятся как [{ name, slug }] — slug обязан совпадать со slug
+    // застройщика/комплекса, иначе видео просто нигде не появится. Раньше это
+    // была текстовая JSON-форма, где опечатка в slug тихо прятала видео (а
+    // недописанный JSON вообще блокировал сохранение) — теперь выбор из
+    // списка, как в Airtable: slug подставляется из самой записи.
+    {
+      key: 'developers', label: 'Застройщики', type: 'link', showInGrid: true, width: 200,
+      link: { collection: 'developers', store: 'name-slug', multi: true },
+    },
+    {
+      key: 'complexes', label: 'Комплексы', type: 'link', showInGrid: true, width: 200,
+      link: { collection: 'complexes', store: 'name-slug', multi: true },
+    },
     // Заполняется автоматически из ссылки (lib/videos.ts), нужен только для
     // JSON-LD. Оставьте пустым, если не хотите переопределять.
     { key: 'embedUrl', label: 'Embed URL (авто)', type: 'text' },
