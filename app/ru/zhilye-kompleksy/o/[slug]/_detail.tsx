@@ -914,16 +914,58 @@ function minMax(nums: number[]): [number, number] | null {
   const v = nums.filter(n => typeof n === 'number' && Number.isFinite(n) && n > 0)
   return v.length ? [Math.min(...v), Math.max(...v)] : null
 }
+// What the description adds ON TOP of the title, per language. Since the CTR
+// sprint the title already carries name, district, bedrooms, price and
+// handover year, so a description repeating all of it spent its ~155 visible
+// characters saying nothing new — «Surfside Bali — Apartments, Villas &
+// Penthouses in Uluwatu, Bali. 50–240 m², 1–4 bedrooms, from $205,000 to
+// $799,000. Completion 2026.» against a title that already said Uluwatu,
+// 1–4 BR, from $205,000, ready 2026. The space now goes to the two things a
+// developer's own site never carries: who built it, and that someone checked.
+const CHECK_TAIL: Record<Lang, string> = {
+  ru: 'Проверка PBG/SLF, планировки, видео с площадки и прямые контакты.',
+  en: 'PBG/SLF permits checked, floor plans, on-site video and direct contacts.',
+  id: 'Izin PBG/SLF dicek, denah, video dari lokasi, dan kontak langsung.',
+  fr: 'Permis PBG/SLF vérifiés, plans, vidéo sur place et contacts directs.',
+  de: 'PBG/SLF-Genehmigungen geprüft, Grundrisse, Video vor Ort, Direktkontakte.',
+  zh: '已核查 PBG/SLF 许可，户型图、现场视频与直接联系方式。',
+  nl: 'PBG/SLF-vergunningen gecontroleerd, plattegronden, video ter plaatse en direct contact.',
+  ban: 'Izin PBG/SLF kacek, denah, video saking genah, miwah kontak langsung.',
+  pl: 'Sprawdzone pozwolenia PBG/SLF, rzuty, wideo z miejsca i bezpośredni kontakt.',
+  uk: 'Перевірка PBG/SLF, планування, відео з майданчика та прямі контакти.',
+}
+
+/** «от VIBE Development» — застройщик, которого в заголовке нет. */
+const BY_DEVELOPER: Record<Lang, (d: string) => string> = {
+  ru: d => ` от ${d}`,
+  en: d => ` by ${d}`,
+  id: d => ` oleh ${d}`,
+  fr: d => ` par ${d}`,
+  de: d => ` von ${d}`,
+  zh: d => `（${d} 开发）`,
+  nl: d => ` van ${d}`,
+  ban: d => ` saking ${d}`,
+  pl: d => ` od ${d}`,
+  uk: d => ` від ${d}`,
+}
+
 // Competitor-style factual meta description: types + area/bedroom/price ranges
 // from the actual units, like "…Apartments & Villas in Bukit, Bali. 45–210 m²,
 // 1–3 bedrooms, from $180,000 to $650,000." Returns null when there's no price
 // AND no area to state (then we fall back to editorial text).
+//
+// `priceInTitle` says the commercial title already leads with the price, so the
+// range drops out of the description and the freed characters go to CHECK_TAIL.
+// When it doesn't (no priced units → fallback title), the price stays here.
 function factsDescription(opts: {
   name: string; district: string | null; phrase: string | null; year: string | null
+  developer: string | null; priceInTitle: boolean
   prices: number[]; areas: number[]; beds: number[]
 }, lang: Lang): string | null {
   const ar = minMax(opts.areas), pr = minMax(opts.prices), br = minMax(opts.beds)
   if (!ar && !pr) return null
+  const by = opts.developer ? (BY_DEVELOPER[lang] ?? BY_DEVELOPER.en)(opts.developer) : ''
+  const tail = ' ' + (CHECK_TAIL[lang] ?? CHECK_TAIL.en)
   const usd = (n: number) => '$' + Math.round(n).toLocaleString('en-US')
   const parts: string[] = []
   if (lang !== 'ru') {
@@ -965,17 +1007,28 @@ function factsDescription(opts: {
         price: (lo, hi) => `від ${lo} до ${hi}`, completion: y => ` Здача ${y}.` },
     }
     const L = FACTS[lang] ?? FACTS.en
-    const head = `${opts.name} — ${opts.phrase ?? L.complex}${opts.district ? ` ${L.in} ${opts.district}` : ''}, ${L.bali}.`
+    // When the title already carries the unit mix («1–4 BR from $205,000»),
+    // repeating «Apartments, Villas & Penthouses» costs ~33 of the ~155
+    // visible characters and pushes the check line out of the snippet.
+    const head = opts.priceInTitle
+      ? `${opts.name}${by}${opts.district ? ` — ${opts.district}` : ''}, ${L.bali}.`
+      : `${opts.name}${by} — ${opts.phrase ?? L.complex}${opts.district ? ` ${L.in} ${opts.district}` : ''}, ${L.bali}.`
     if (ar) parts.push(ar[0] === ar[1] ? `${ar[0]} m²` : `${ar[0]}–${ar[1]} m²`)
-    if (br) parts.push(L.bed(br[0], br[1]))
-    if (pr) parts.push(pr[0] === pr[1] ? usd(pr[0]) : L.price(usd(pr[0]), usd(pr[1])))
-    return `${head} ${parts.join(', ')}.${opts.year ? L.completion(opts.year) : ''}`.slice(0, 200)
+    if (br && !opts.priceInTitle) parts.push(L.bed(br[0], br[1]))
+    if (pr && !opts.priceInTitle) parts.push(pr[0] === pr[1] ? usd(pr[0]) : L.price(usd(pr[0]), usd(pr[1])))
+    const facts = parts.length ? ` ${parts.join(', ')}.` : ''
+    const year = opts.priceInTitle ? '' : (opts.year ? L.completion(opts.year) : '')
+    return `${head}${facts}${year}${tail}`.slice(0, 220)
   }
-  const head = `${opts.name} — ${opts.phrase ?? 'жилой комплекс'}${opts.district ? ` в ${opts.district}` : ''}, Бали.`
+  const head = opts.priceInTitle
+    ? `${opts.name}${by}${opts.district ? ` — ${opts.district}` : ''}, Бали.`
+    : `${opts.name}${by} — ${opts.phrase ?? 'жилой комплекс'}${opts.district ? ` в ${opts.district}` : ''}, Бали.`
   if (ar) parts.push(ar[0] === ar[1] ? `${ar[0]} м²` : `${ar[0]}–${ar[1]} м²`)
-  if (br) parts.push(br[0] === br[1] ? `${br[0]} спальни` : `${br[0]}–${br[1]} спальни`)
-  if (pr) parts.push(pr[0] === pr[1] ? usd(pr[0]) : `от ${usd(pr[0])} до ${usd(pr[1])}`)
-  return `${head} ${parts.join(', ')}.${opts.year ? ` Сдача ${opts.year}.` : ''}`.slice(0, 200)
+  if (br && !opts.priceInTitle) parts.push(br[0] === br[1] ? `${br[0]} спальни` : `${br[0]}–${br[1]} спальни`)
+  if (pr && !opts.priceInTitle) parts.push(pr[0] === pr[1] ? usd(pr[0]) : `от ${usd(pr[0])} до ${usd(pr[1])}`)
+  const facts = parts.length ? ` ${parts.join(', ')}.` : ''
+  const year = opts.priceInTitle ? '' : (opts.year ? ` Сдача ${opts.year}.` : '')
+  return `${head}${facts}${year}${tail}`.slice(0, 220)
 }
 function parseGeo(v: unknown): number | null {
   if (typeof v === 'number') return Number.isFinite(v) ? v : null
@@ -1313,24 +1366,11 @@ export async function generateComplexMetadata(slug: string, lang: Lang) {
   // units (like competitors). Falls back to editorial text, then the generic
   // line, when the complex has no priced/measured units.
   const units = await loadUnitsInComplex(name, lang).catch(() => [] as Awaited<ReturnType<typeof loadUnitsInComplex>>)
-  const facts = factsDescription({
-    name, district, phrase: unitTypesPhrase(c.data['Типы юнитов'], lang), year: yearRaw,
-    prices: units.map(u => Number(u.priceUsd)).filter(n => Number.isFinite(n)),
-    areas: units.map(u => Number(u.area)).filter(n => Number.isFinite(n)),
-    beds: units.map(u => Number(u.bedrooms)).filter(n => Number.isFinite(n)),
-  }, lang)
-  const description = gen?.meta?.slice(0, 160).trim()
-    ?? facts
-    ?? (seoText
-      ? seoText.slice(0, 160).trim() + (seoText.length > 160 ? '…' : '')
-      : copy.fallbackDesc(name, district, types, yearRaw))
-  const ruPath = `/ru/zhilye-kompleksy/o/${slug}`
-  const path = switchLangPath(ruPath, lang)
   // CTR sprint: the old title spent its visible ~60 characters on unit types
   // and never showed a price, so brand queries («surfside bali», 822
   // impressions at position 7.9) converted at under 2%. Lead with price and
-  // readiness — the units are already loaded above for the description, so
-  // this costs nothing. Falls back when the complex has no priced units.
+  // readiness — the units are already loaded above, so this costs nothing.
+  // Falls back when the complex has no priced units.
   const unitPrices = units.map(u => Number(u.priceUsd)).filter(n => Number.isFinite(n) && n > 0)
   const unitBeds = units.map(u => Number(u.bedrooms)).filter(n => Number.isFinite(n) && n > 0)
   const commercialTitle = commercialComplexTitle({
@@ -1342,6 +1382,23 @@ export async function generateComplexMetadata(slug: string, lang: Lang) {
     year: yearRaw,
     lang,
   })
+  // Built AFTER the title so the description knows what the title already
+  // said and can spend its characters on something else.
+  const facts = factsDescription({
+    name, district, phrase: unitTypesPhrase(c.data['Типы юнитов'], lang), year: yearRaw,
+    developer: firstString(c.data['Developer1']) ?? firstString(c.data['Developer']),
+    priceInTitle: commercialTitle !== null,
+    prices: units.map(u => Number(u.priceUsd)).filter(n => Number.isFinite(n)),
+    areas: units.map(u => Number(u.area)).filter(n => Number.isFinite(n)),
+    beds: units.map(u => Number(u.bedrooms)).filter(n => Number.isFinite(n)),
+  }, lang)
+  const description = gen?.meta?.slice(0, 160).trim()
+    ?? facts
+    ?? (seoText
+      ? seoText.slice(0, 160).trim() + (seoText.length > 160 ? '…' : '')
+      : copy.fallbackDesc(name, district, types, yearRaw))
+  const ruPath = `/ru/zhilye-kompleksy/o/${slug}`
+  const path = switchLangPath(ruPath, lang)
   return {
     title: commercialTitle ?? gen?.title ?? copy.titlePart(name, district, unitTypesPhrase(c.data['Типы юнитов'], lang)),
     description,
@@ -1675,6 +1732,38 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   if (totalUnits != null) placeJsonLd.numberOfAccommodationUnits = totalUnits
 
   const minPrice = units.length > 0 ? units.find(u => u.priceUsd != null)?.priceUsd ?? null : null
+
+  // Price markup for the complex. Villa and apartment detail pages have shipped
+  // Product + Offer for a while; complexes carried only ApartmentComplex, which
+  // has no `offers` property at all — so the page that actually ranks for brand
+  // queries («surfside bali», «amani melasti», «swoi loft umalas» — all on page
+  // one, all at zero clicks) stated a price in its title and nothing machine-
+  // readable anywhere. AggregateOffer is the honest shape here: one complex,
+  // many priced units, a low/high band rather than a single price.
+  const complexPrices = units
+    .map(u => Number(u.priceUsd))
+    .filter(n => Number.isFinite(n) && n > 0)
+  const productJsonLd: Record<string, unknown> | null = complexPrices.length > 0
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name,
+        url: detailUrl,
+        category: 'Residential complex',
+        brand: { '@type': 'Brand', name: developerName ?? 'Balinsky' },
+        description: (seoText ?? name).slice(0, 500),
+        ...(slidesPhotos.length > 0 ? { image: slidesPhotos.slice(0, 5) } : {}),
+        offers: {
+          '@type': 'AggregateOffer',
+          priceCurrency: 'USD',
+          lowPrice: Math.round(Math.min(...complexPrices)),
+          highPrice: Math.round(Math.max(...complexPrices)),
+          offerCount: complexPrices.length,
+          availability: 'https://schema.org/InStock',
+          url: detailUrl,
+        },
+      }
+    : null
 
   return (
     <>
@@ -2116,6 +2205,9 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
         </section>
 
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(placeJsonLd) }} />
+        {productJsonLd && (
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }} />
+        )}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
 
         <div className="h-16" />

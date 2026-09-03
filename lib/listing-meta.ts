@@ -52,6 +52,10 @@ type Terms = {
   /** «589 юнитов» */
   units: (n: number) => string
   devDesc: (a: { name: string; total: number; ready: number; inProgress: number; units: number }) => string
+  /** Заголовок застройщика, у которого в базе нет ни одного проекта. */
+  devTitleBare: (name: string) => string
+  /** Описание для того же случая — обещает только то, что на странице есть. */
+  devDescBare: (name: string) => string
 }
 
 const TERMS: Record<Lang, Terms> = {
@@ -63,7 +67,9 @@ const TERMS: Record<Lang, Terms> = {
     delivered: n => `${n} сдано`,
     building: n => `${n} строится`,
     units: n => `${n} ${pluralRu(n, ['юнит', 'юнита', 'юнитов'])}`,
-    devDesc: a => `Независимый разбор застройщика ${a.name}: ${a.total} ${pluralRu(a.total, ['проект', 'проекта', 'проектов'])} на Бали — ${a.ready} сдано, ${a.inProgress} строится${a.units ? `, ${a.units} ${pluralRu(a.units, ['юнит', 'юнита', 'юнитов'])}` : ''}. Оценка по стройке, репутации, оснащению и управлению, текущие объекты и цены.`,
+    devDesc: a => `Независимая проверка ${a.name}: разрешения PBG/SLF, реальные сроки сдачи, цены и отзывы. ${a.total} ${pluralRu(a.total, ['проект', 'проекта', 'проектов'])} на Бали — ${a.ready} сдано, ${a.inProgress} строится.`,
+    devTitleBare: n => `${n} — застройщик на Бали: отзывы и проверка`,
+    devDescBare: n => `${n} на Бали — независимый разбор: как проверить репутацию и разрешения PBG/SLF, условия работы и комиссия, отзывы. Без рекламы застройщика.`,
   },
   en: {
     from: 'from',
@@ -73,7 +79,9 @@ const TERMS: Record<Lang, Terms> = {
     delivered: n => `${n} delivered`,
     building: n => `${n} under construction`,
     units: n => `${n} ${two(n, 'unit', 'units')}`,
-    devDesc: a => `Independent profile of ${a.name}: ${a.total} ${two(a.total, 'project', 'projects')} in Bali — ${a.ready} delivered, ${a.inProgress} under construction${a.units ? `, ${a.units} ${two(a.units, 'unit', 'units')}` : ''}. Scored on construction, reputation, fit-out and management, with current listings and prices.`,
+    devDesc: a => `Independent check on ${a.name}: PBG/SLF permits, real handover dates, prices and reviews. ${a.total} Bali ${two(a.total, 'project', 'projects')} — ${a.ready} delivered, ${a.inProgress} under construction.`,
+    devTitleBare: n => `${n} — Bali developer: reviews and independent check`,
+    devDescBare: n => `${n} in Bali — an independent read: how to verify the track record and PBG/SLF permits, terms and commission, reviews. Not the developer's own pitch.`,
   },
   id: {
     from: 'dari',
@@ -83,7 +91,9 @@ const TERMS: Record<Lang, Terms> = {
     delivered: n => `${n} selesai`,
     building: n => `${n} dalam pembangunan`,
     units: n => `${n} unit`,
-    devDesc: a => `Profil independen ${a.name}: ${a.total} proyek di Bali — ${a.ready} selesai, ${a.inProgress} dalam pembangunan${a.units ? `, ${a.units} unit` : ''}. Dinilai dari konstruksi, reputasi, kelengkapan, dan manajemen, plus unit dan harga terkini.`,
+    devDesc: a => `Cek independen ${a.name}: izin PBG/SLF, tanggal serah terima nyata, harga dan ulasan. ${a.total} proyek di Bali — ${a.ready} selesai, ${a.inProgress} dalam pembangunan.`,
+    devTitleBare: n => `${n} — pengembang Bali: ulasan dan cek independen`,
+    devDescBare: n => `${n} di Bali — ulasan independen: cara memeriksa rekam jejak dan izin PBG/SLF, syarat kerja sama dan komisi, ulasan. Bukan promosi pengembang.`,
   },
   fr: {
     from: 'à partir de',
@@ -93,7 +103,9 @@ const TERMS: Record<Lang, Terms> = {
     delivered: n => `${n} ${two(n, 'livré', 'livrés')}`,
     building: n => `${n} en construction`,
     units: n => `${n} ${two(n, 'lot', 'lots')}`,
-    devDesc: a => `Profil indépendant de ${a.name} : ${a.total} ${two(a.total, 'projet', 'projets')} à Bali — ${a.ready} ${two(a.ready, 'livré', 'livrés')}, ${a.inProgress} en construction${a.units ? `, ${a.units} ${two(a.units, 'lot', 'lots')}` : ''}. Note sur la construction, la réputation, les équipements et la gestion, avec les biens et prix actuels.`,
+    devDesc: a => `Vérification indépendante de ${a.name} : permis PBG/SLF, dates de livraison réelles, prix et avis. ${a.total} ${two(a.total, 'projet', 'projets')} à Bali — ${a.ready} ${two(a.ready, 'livré', 'livrés')}, ${a.inProgress} en construction.`,
+    devTitleBare: n => `${n} — promoteur à Bali : avis et vérification`,
+    devDescBare: n => `${n} à Bali — analyse indépendante : comment vérifier la réputation et les permis PBG/SLF, conditions et commission, avis. Pas la communication du promoteur.`,
   },
   de: {
     from: 'ab',
@@ -103,7 +115,9 @@ const TERMS: Record<Lang, Terms> = {
     delivered: n => `${n} fertiggestellt`,
     building: n => `${n} im Bau`,
     units: n => `${n} ${two(n, 'Einheit', 'Einheiten')}`,
-    devDesc: a => `Unabhängiges Profil von ${a.name}: ${a.total} ${two(a.total, 'Projekt', 'Projekte')} auf Bali — ${a.ready} fertiggestellt, ${a.inProgress} im Bau${a.units ? `, ${a.units} ${two(a.units, 'Einheit', 'Einheiten')}` : ''}. Bewertet nach Bauqualität, Reputation, Ausstattung und Verwaltung, mit aktuellen Objekten und Preisen.`,
+    devDesc: a => `Unabhängige Prüfung von ${a.name}: PBG/SLF-Genehmigungen, echte Übergabetermine, Preise und Bewertungen. ${a.total} ${two(a.total, 'Projekt', 'Projekte')} auf Bali — ${a.ready} fertig, ${a.inProgress} im Bau.`,
+    devTitleBare: n => `${n} — Bali-Bauträger: Bewertungen und Prüfung`,
+    devDescBare: n => `${n} auf Bali — unabhängige Einschätzung: Reputation und PBG/SLF-Genehmigungen prüfen, Konditionen und Provision, Bewertungen. Keine Werbung des Bauträgers.`,
   },
   zh: {
     sep: '，',
@@ -114,7 +128,9 @@ const TERMS: Record<Lang, Terms> = {
     delivered: n => `已交付${n}个`,
     building: n => `在建${n}个`,
     units: n => `${n}套`,
-    devDesc: a => `${a.name} 独立评估：巴厘岛${a.total}个项目，已交付${a.ready}个，在建${a.inProgress}个${a.units ? `，共${a.units}套` : ''}。从施工、口碑、配置与管理四个维度评分，并提供在售房源与价格。`,
+    devDesc: a => `${a.name} 独立核查：PBG/SLF 许可、真实交付日期、价格与评价。巴厘岛${a.total}个项目，已交付${a.ready}个，在建${a.inProgress}个。`,
+    devTitleBare: n => `${n} — 巴厘岛开发商：评价与独立核查`,
+    devDescBare: n => `${n} 巴厘岛开发商独立解读：如何核实业绩与 PBG/SLF 许可、合作条件与佣金、真实评价。非开发商官方宣传。`,
   },
   nl: {
     from: 'vanaf',
@@ -124,7 +140,9 @@ const TERMS: Record<Lang, Terms> = {
     delivered: n => `${n} opgeleverd`,
     building: n => `${n} in aanbouw`,
     units: n => `${n} units`,
-    devDesc: a => `Onafhankelijk profiel van ${a.name}: ${a.total} ${two(a.total, 'project', 'projecten')} op Bali — ${a.ready} opgeleverd, ${a.inProgress} in aanbouw${a.units ? `, ${a.units} units` : ''}. Beoordeeld op bouw, reputatie, afwerking en beheer, met actueel aanbod en prijzen.`,
+    devDesc: a => `Onafhankelijke check van ${a.name}: PBG/SLF-vergunningen, echte opleverdata, prijzen en reviews. ${a.total} ${two(a.total, 'project', 'projecten')} op Bali — ${a.ready} opgeleverd, ${a.inProgress} in aanbouw.`,
+    devTitleBare: n => `${n} — Bali-ontwikkelaar: reviews en check`,
+    devDescBare: n => `${n} op Bali — onafhankelijk beeld: reputatie en PBG/SLF-vergunningen controleren, voorwaarden en commissie, reviews. Geen verhaal van de ontwikkelaar zelf.`,
   },
   ban: {
     from: 'saking',
@@ -134,7 +152,9 @@ const TERMS: Record<Lang, Terms> = {
     delivered: n => `${n} puput`,
     building: n => `${n} kantun kawangun`,
     units: n => `${n} unit`,
-    devDesc: a => `Tinjauan independen ${a.name}: ${a.total} proyek ring Bali — ${a.ready} puput, ${a.inProgress} kantun kawangun${a.units ? `, ${a.units} unit` : ''}. Kaicen manut wangunan, reputasi, kelengkapan, lan manajemen, sareng unit lan aji sane wenten.`,
+    devDesc: a => `Cek independen ${a.name}: izin PBG/SLF, tanggal puput sujati, aji miwah ulasan. ${a.total} proyek ring Bali — ${a.ready} puput, ${a.inProgress} kantun kawangun.`,
+    devTitleBare: n => `${n} — pangwangun Bali: ulasan miwah cek independen`,
+    devDescBare: n => `${n} ring Bali — tinjauan independen: sapunapi ngecek rekam jejak miwah izin PBG/SLF, syarat miwah komisi, ulasan. Boya promosi pangwangun.`,
   },
   pl: {
     from: 'od',
@@ -144,7 +164,9 @@ const TERMS: Record<Lang, Terms> = {
     delivered: n => `${n} ${pluralPl(n, ['oddana', 'oddane', 'oddanych'])}`,
     building: n => `${n} w budowie`,
     units: n => `${n} ${pluralPl(n, ['lokal', 'lokale', 'lokali'])}`,
-    devDesc: a => `Niezależny profil ${a.name}: ${a.total} ${pluralPl(a.total, ['inwestycja', 'inwestycje', 'inwestycji'])} na Bali — ${a.ready} ${pluralPl(a.ready, ['oddana', 'oddane', 'oddanych'])}, ${a.inProgress} w budowie${a.units ? `, ${a.units} ${pluralPl(a.units, ['lokal', 'lokale', 'lokali'])}` : ''}. Ocena budowy, reputacji, wyposażenia i zarządzania, wraz z aktualną ofertą i cenami.`,
+    devDesc: a => `Niezależna weryfikacja ${a.name}: pozwolenia PBG/SLF, realne terminy oddania, ceny i opinie. ${a.total} ${pluralPl(a.total, ['inwestycja', 'inwestycje', 'inwestycji'])} na Bali — ${a.ready} ${pluralPl(a.ready, ['oddana', 'oddane', 'oddanych'])}, ${a.inProgress} w budowie.`,
+    devTitleBare: n => `${n} — deweloper na Bali: opinie i weryfikacja`,
+    devDescBare: n => `${n} na Bali — niezależna analiza: jak sprawdzić historię i pozwolenia PBG/SLF, warunki współpracy i prowizja, opinie. To nie materiał dewelopera.`,
   },
   uk: {
     from: 'від',
@@ -154,7 +176,9 @@ const TERMS: Record<Lang, Terms> = {
     delivered: n => `${n} здано`,
     building: n => `${n} будується`,
     units: n => `${n} ${pluralRu(n, ['юніт', 'юніти', 'юнітів'])}`,
-    devDesc: a => `Незалежний розбір забудовника ${a.name}: ${a.total} ${pluralRu(a.total, ['проєкт', 'проєкти', 'проєктів'])} на Балі — ${a.ready} здано, ${a.inProgress} будується${a.units ? `, ${a.units} ${pluralRu(a.units, ['юніт', 'юніти', 'юнітів'])}` : ''}. Оцінка за будівництвом, репутацією, оснащенням і управлінням, актуальні об'єкти та ціни.`,
+    devDesc: a => `Незалежна перевірка ${a.name}: дозволи PBG/SLF, реальні терміни здачі, ціни та відгуки. ${a.total} ${pluralRu(a.total, ['проєкт', 'проєкти', 'проєктів'])} на Балі — ${a.ready} здано, ${a.inProgress} будується.`,
+    devTitleBare: n => `${n} — забудовник на Балі: відгуки та перевірка`,
+    devDescBare: n => `${n} на Балі — незалежний розбір: як перевірити репутацію та дозволи PBG/SLF, умови роботи й комісія, відгуки. Не реклама забудовника.`,
   },
 }
 
@@ -206,9 +230,27 @@ export function commercialComplexTitle(args: {
 }
 
 /**
+ * Snippet for a developer with NO projects on file — 44 of 91 published
+ * developer pages, as of 03.09.2026. They used to fall back to a template
+ * title («X — Bali property developer | projects, score, reviews») plus the
+ * first 160 characters of a marketing blurb, cut mid-word: GSC shows «mits»
+ * at position 8.4 on 75 impressions and «greywoods» at 8.5 on 30, both with
+ * zero clicks. There is no track record to lead with, so the snippet promises
+ * the one thing the developer's own site never will — an outside check — and
+ * nothing that isn't on the page.
+ */
+export function bareDeveloperMeta(args: { name: string; lang: Lang }): { title: string; description: string } {
+  const c = t(args.lang)
+  return {
+    title: c.devTitleBare(args.name) + BRAND,
+    description: c.devDescBare(args.name),
+  }
+}
+
+/**
  * Developer title + description built from the real track record instead of a
- * template. Returns null when the developer has no projects on file — those
- * pages keep the generic copy rather than claiming «0 projects».
+ * template. Returns null when the developer has no projects on file — the
+ * caller falls back to `bareDeveloperMeta` rather than claiming «0 projects».
  */
 export function commercialDeveloperMeta(args: {
   name: string

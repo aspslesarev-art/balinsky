@@ -30,7 +30,7 @@ import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
 import { cleanDeveloperBullets } from '@/lib/developer-highlights'
 import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import { getDeveloperStats } from '@/lib/developer-stats'
-import { commercialDeveloperMeta } from '@/lib/listing-meta'
+import { bareDeveloperMeta, commercialDeveloperMeta } from '@/lib/listing-meta'
 import { loadKbPageContent } from '@/lib/kb-page-content'
 import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
 import { loadVisionManifest } from '@/lib/listing-features'
@@ -561,9 +561,6 @@ export async function generateDeveloperMetadata(slug: string, lang: Lang) {
   const dev = await loadDeveloper(slug)
   if (!dev) return { robots: { index: false } }
   const name = firstString(dev.data['Developer']) ?? slug
-  const aiDesc = tField(dev.data, 'SEO Text', lang)
-    ?? tField(dev.data, 'Описание ИИ', lang)
-    ?? firstString(dev.data['AI Описание'])
   // Localized meta templates (title / description / OG) per language — the
   // metadata was previously RU-or-English only, so de/zh/nl/id/fr/ban tabs
   // and SERP snippets showed English.
@@ -583,20 +580,20 @@ export async function generateDeveloperMetadata(slug: string, lang: Lang) {
   // CTR sprint: these pages rank (breig sat at position 7.8 on 434 impressions)
   // but took 0 clicks — the title carried no numbers and the description was
   // the first 160 characters of a generic marketing blurb, identical in tone
-  // for every developer. Lead with the track record instead; fall back to the
-  // old copy only when the developer has no projects on file.
+  // for every developer. Lead with the track record instead.
   const commercial = commercialDeveloperMeta({
     name,
     stats: await getDeveloperStats(name),
     lang,
   })
-  const description = commercial?.description
-    ?? (aiDesc
-      ? aiDesc.slice(0, 160).trim() + (aiDesc.length > 160 ? '…' : '')
-      : meta.desc(name))
+  // No track record on file (44 of 91 published developers) → a purpose-built
+  // snippet instead of the marketing blurb cut mid-word that used to ship here.
+  // META below now only survives as the OG title source.
+  const bare = commercial ? null : bareDeveloperMeta({ name, lang })
+  const description = commercial?.description ?? bare?.description ?? meta.desc(name)
   const ruPath = `/ru/zastrojshhiki/${slug}`
   const path = switchLangPath(ruPath, lang)
-  const title = commercial?.title ?? meta.title(name)
+  const title = commercial?.title ?? bare?.title ?? meta.title(name)
   return {
     title, description,
     alternates: {
