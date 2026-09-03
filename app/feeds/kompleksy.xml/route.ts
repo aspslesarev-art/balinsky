@@ -1,4 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
+import { FEED_SELLER } from '@/lib/feeds/seller'
+import { cdnManifestUrl, cdnRewriteManifest } from '@/lib/photo-cdn'
 
 // Realting.com partner XML feed for residential developments (complexes).
 // Schema reference: docs accompanying sample_import_complex_ru.xml.
@@ -68,10 +70,10 @@ function strList(v: unknown): string[] {
 
 async function loadManifest(): Promise<Record<string, string[]>> {
   try {
-    const r = await fetch(PHOTO_MANIFEST_URL, { next: { revalidate: 300 } })
+    const r = await fetch(cdnManifestUrl(PHOTO_MANIFEST_URL), { next: { revalidate: 300 } })
     if (!r.ok) return {}
     const j = await r.json()
-    return j && typeof j === 'object' ? j : {}
+    return cdnRewriteManifest(j && typeof j === 'object' ? j : {})
   } catch { return {} }
 }
 
@@ -313,8 +315,8 @@ function buildComplexXml(
   lines.push('        <en>Team</en>')
   lines.push('        <ru>Команда</ru>')
   lines.push('      </user_surname>')
-  lines.push('      <user_email>asp.slesarev@gmail.com</user_email>')
-  lines.push('      <user_phone>+62 887 3173613</user_phone>')
+  lines.push(`      <user_email>${escapeXml(FEED_SELLER.email)}</user_email>`)
+  lines.push(`      <user_phone>${escapeXml(FEED_SELLER.phone)}</user_phone>`)
   lines.push('    </seller_info>')
   lines.push(`    <external_id>${escapeXml(c.airtable_id)}</external_id>`)
   lines.push(`    <type>${type}</type>`)

@@ -4,21 +4,26 @@ import { buildVillaDescription } from '@/lib/feeds/villa-description'
 import { FEED_SELLER } from '@/lib/feeds/seller'
 import { cdnManifestUrl, cdnRewriteManifest } from '@/lib/photo-cdn'
 
-// Partner XML feed for realting.com (and any sites consuming the same schema).
-// Schema reference: docs accompanying sample_import_complex_ru.xml.
+// Партнёрский XML-фид вилл для realting.com — шаблон «Недвижимость Realting»
+// (<objects> v2.0, сделки купли-продажи). Живая замена статичному файлу
+// scripts/out/villas-aggregator.xml, который был залит в Storage 28.04.2026 и
+// с тех пор не обновлялся (портал показывал статус «Данные не обновляются»,
+// а цены на площадке отставали на месяцы).
 //
-// All villas published in `raw_villas` with valid coords + price + photos
-// are exported. Each villa is emitted as <complex type="13"> (= Вилла).
+// Три отличия от того файла, каждое было потерей:
+//   1. <external_url> — обратная ссылка на карточку balinsky.info. В статичном
+//      файле её не было вовсе: контент отдавали, ссылку не получали.
+//   2. Фото идут через CDN (images.balinsky.info), а не прямыми ссылками на
+//      Supabase Storage — иначе показы на портале оплачиваются нашим egress.
+//   3. Описание собирается по шаблону (lib/feeds/villa-description.ts), а НЕ
+//      копируется из `SEO Text` карточки — см. пояснение про SEO в том модуле.
 
-
-// ISR-кэш самого route output: 10 минут. Без этого каждый GET от агрегатора
-// генерил XML заново, дёргая raw_villas (~36МБ). Теперь Next отдаёт
-// закэшированный результат, fetch до Supabase идёт максимум раз в 10 мин.
 export const revalidate = 600
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/villa-photos/_manifest.json`
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
+const MAX_PHOTOS = 10
 
 const sb = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY!)
 
@@ -32,7 +37,6 @@ function escapeXml(s: string): string {
 }
 
 function cdata(s: string): string {
-  // CDATA sections cannot contain `]]>` — split if it appears (extremely rare).
   return `<![CDATA[${s.replace(/\]\]>/g, ']]]]><![CDATA[>')}]]>`
 }
 
@@ -59,61 +63,36 @@ async function loadManifest(): Promise<Record<string, string[]>> {
 
 type Row = { airtable_id: string; data: Record<string, unknown> }
 
-function buildComplex(r: Row, manifest: Record<string, string[]>): string | null {
+function buildObject(r: Row, manifest: Record<string, string[]>): string | null {
   const d = r.data
   if (d['Опубликовать'] !== true) return null
 
   const lat = parseGeo(d['Geo'])
   const lng = parseGeo(d['Geo 2'])
   const price = numberOrNull(d['price']) ?? numberOrNull(d['Цена'])
-  const photos = manifest[r.airtable_id] ?? []
-  if (lat == null || lng == null) return null
-  if (price == null) return null
-  if (photos.length === 0) return null
-
+  const photos = (manifest[r.airtable_id] ?? []).slice(0, MAX_PHOTOS)
   const slug = firstString(d['SEO:Slug'])
+  if (lat == null || lng == null) return null
+  if (price == null || price <= 0) return null
+  if (photos.length === 0) return null
   if (!slug || slug.startsWith('-')) return null
 
-  const ruTitleRaw = firstString(d['SEO:Title']) ?? firstString(d['ИИ Имя'])
-  const ruTitle = ruTitleRaw ? ruTitleRaw.replace(/\s*\|\s*Balinsky\s*$/i, '').trim() : null
-  const enTitle = firstString(d['Имя ENG']) ?? firstString(d['SEO_Title_EN'])
-  if (!ruTitle && !enTitle) return null
+  const description = buildVillaDescription(d)
+  if (!description) return null
 
-  // Country: explicit override (Bali = Indonesia). The data field
-  // currency==='3166-1' is a placeholder — we hardcode to ID.
-  const countryCode = 'ID'
+  const district = firstString(d['Location 2']) ?? firstString(d['Location'])
+  const address = district ? `${district}, Bali, Indonesia` : 'Bali, Indonesia'
+  const rooms = numberOrNull(d['Комнаты'])
+  const area = numberOrNull(d['Площадь'])
+  const land = numberOrNull(d['Земля'])
   const currency = (firstString(d['currency']) ?? 'USD').toUpperCase()
 
-  // Address fallback: if data.address is empty, build from district + Бали.
-  const district = firstString(d['Location 2']) ?? firstString(d['Location'])
-  const rawAddress = firstString(d['address'])
-  const address = rawAddress && rawAddress.trim() ? rawAddress.trim() : district ? `${district}, Bali, Indonesia` : 'Bali, Indonesia'
-
-  // Building year: 0 if status === Built, else Year of completion if numeric.
   const status = firstString(d['Статус'])
   const yearRaw = firstString(d['Year of completion'])
-  let buildingYear: number | null = null
-  if (status && status.toLowerCase().includes('построен')) buildingYear = 0
-  else if (yearRaw && /^\d{4}$/.test(yearRaw)) buildingYear = Number(yearRaw)
-
-  // Описание собирается по шаблону, а НЕ копируется из `SEO Text` карточки:
-  // одинаковый текст на более сильном домене вытесняет наш оригинал из выдачи.
-  // Подробности — в шапке lib/feeds/villa-description.ts.
-  const description = buildVillaDescription(d)
-
-  // Tags: detect presence of swimming pool from text; mark Built status.
-  const tags: number[] = []
-  const allText = [ruTitle, enTitle, firstString(d['Notes']), firstString(d['ИИ Имя'])]
-    .filter(Boolean)
-    .join(' ')
-    .toLowerCase()
-  if (/бассейн|pool/.test(allText)) tags.push(495)
-  if (status && status.toLowerCase().includes('построен')) tags.push(5294)
-
-  const externalUrl = `${SITE_URL}/ru/villy/o/${slug}`
+  const buildingYear = status && /постро/i.test(status) ? 0 : yearRaw && /^\d{4}$/.test(yearRaw) ? Number(yearRaw) : null
 
   const lines: string[] = []
-  lines.push('  <complex>')
+  lines.push('  <object>')
   lines.push('    <seller_info>')
   lines.push('      <user_name>')
   lines.push(`        <ru>${escapeXml(FEED_SELLER.nameRu)}</ru>`)
@@ -127,62 +106,54 @@ function buildComplex(r: Row, manifest: Record<string, string[]>): string | null
   lines.push(`      <user_phone>${escapeXml(FEED_SELLER.phone)}</user_phone>`)
   lines.push('    </seller_info>')
   lines.push(`    <external_id>${escapeXml(r.airtable_id)}</external_id>`)
-  lines.push('    <type>13</type>')
-  lines.push(`    <country_code>${escapeXml(countryCode)}</country_code>`)
+  lines.push('    <deal_type>sale</deal_type>')
+  lines.push('    <type>3</type>')
+  lines.push('    <country_code>ID</country_code>')
   lines.push(`    <lat>${lat}</lat>`)
   lines.push(`    <lng>${lng}</lng>`)
   lines.push(`    <address>${escapeXml(address)}</address>`)
-  lines.push('    <title>')
-  if (ruTitle) lines.push(`      <ru>${escapeXml(ruTitle)}</ru>`)
-  if (enTitle) lines.push(`      <en>${escapeXml(enTitle)}</en>`)
-  lines.push('    </title>')
-  lines.push(`    <external_url>${escapeXml(externalUrl)}</external_url>`)
+  lines.push(`    <external_url>${escapeXml(`${SITE_URL}/ru/villy/o/${slug}`)}</external_url>`)
   lines.push(`    <currency>${escapeXml(currency)}</currency>`)
   lines.push(`    <price>${Math.round(price)}</price>`)
   if (buildingYear != null) lines.push(`    <building_year>${buildingYear}</building_year>`)
+  if (rooms != null) {
+    lines.push(`    <rooms>${rooms}</rooms>`)
+    lines.push(`    <bedrooms>${rooms}</bedrooms>`)
+  }
+  if (area != null) lines.push(`    <area>${area}</area>`)
+  if (land != null) lines.push(`    <area_ground>${land}</area_ground>`)
   lines.push('    <photos>')
   for (const u of photos) lines.push(`      <url>${escapeXml(u)}</url>`)
   lines.push('    </photos>')
-  if (tags.length > 0) {
-    lines.push('    <tags>')
-    for (const t of tags) lines.push(`      <tag>${t}</tag>`)
-    lines.push('    </tags>')
-  }
-  if (description) {
-    lines.push('    <description>')
-    lines.push(`      <ru>${cdata(description.ru)}</ru>`)
-    lines.push(`      <en>${cdata(description.en)}</en>`)
-    lines.push('    </description>')
-  }
-  lines.push('  </complex>')
+  lines.push('    <description>')
+  lines.push(`      <ru>${cdata(description.ru)}</ru>`)
+  lines.push(`      <en>${cdata(description.en)}</en>`)
+  lines.push('    </description>')
+  lines.push('    <vat_type>3</vat_type>')
+  lines.push('  </object>')
   return lines.join('\n')
 }
 
-// Slim JSONB projection — feed touches ~22 named keys, not the whole blob.
+// Узкая JSONB-проекция: фиду нужно ~18 полей, а не весь blob (полные сканы
+// raw_villas — известная дыра по egress).
 const SLIM_FIELDS = [
   ['Опубликовать', 'pub'],
-  ['SEO:Title', 'seo_title'],
-  ['SEO_Title_EN', 'seo_title_en'],
   ['SEO:Slug', 'seo_slug'],
-  ['ИИ Имя', 'ai_name'],
-  ['Имя ENG', 'imya_eng'],
-  ['Notes', 'notes'],
-  ['Year of completion', 'year'],
-  ['Location', 'loc'],
-  ['Location 2', 'loc2'],
-  ['Статус', 'status'],
-  ['price', 'price'],
-  ['Цена', 'price_rub'],
-  ['currency', 'currency'],
   ['Geo', 'geo'],
   ['Geo 2', 'geo2'],
-  ['address', 'address'],
+  ['price', 'price'],
+  ['Цена', 'price_alt'],
+  ['currency', 'currency'],
+  ['Location', 'loc'],
+  ['Location 2', 'loc2'],
   ['Комнаты', 'rooms'],
   ['Площадь', 'area'],
   ['Земля', 'land'],
   ['Leasehold', 'leasehold'],
   ['Leashold', 'leasehold_alt'],
   ['Разрешение', 'permit'],
+  ['Year of completion', 'year'],
+  ['Статус', 'status'],
   ['Заявленная доходность', 'yield'],
 ] as const
 
@@ -203,16 +174,16 @@ export async function GET() {
 
   const items: string[] = []
   for (const r of rows) {
-    const xml = buildComplex(r, manifest)
+    const xml = buildObject(r, manifest)
     if (xml) items.push(xml)
   }
 
   const xml =
     `<?xml version="1.0" encoding="UTF-8"?>\n` +
-    `<complexes>\n` +
-    `  <version>1.0</version>\n` +
+    `<objects>\n` +
+    `  <version>2.0</version>\n` +
     items.join('\n') +
-    `\n</complexes>\n`
+    `\n</objects>\n`
 
   return new Response(xml, {
     headers: {

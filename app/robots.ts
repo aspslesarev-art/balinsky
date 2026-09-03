@@ -11,6 +11,9 @@ const DISALLOW = [
   // canonical filters to clean URLs, but bots love to find leftover
   // ?_rsc tokens, so block the whole query-param surface.
   '/*?',
+  // Партнёрские XML-фиды: контент для площадок, не для индекса. Сами по себе
+  // это тонкие дубли карточек — Google их индексировать незачем.
+  '/feeds/',
   // Private surfaces — wishlist + admin.
   '/ru/izbrannoe',
   '/en/favourites',
