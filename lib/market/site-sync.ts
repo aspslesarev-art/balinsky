@@ -57,7 +57,7 @@ const PRICE_FIELD: Record<ListingKind, 'price' | 'priceUsd'> = {
   apartment: 'priceUsd',
 }
 
-type Listing = {
+export type Listing = {
   kind: ListingKind
   id: string
   name: string | null
@@ -67,9 +67,10 @@ type Listing = {
   price: number | null
   area: number | null
   bedrooms: number | null
+  published: boolean
 }
 
-type Unit = {
+export type Unit = {
   id: number
   developer: string
   complex: string
@@ -78,6 +79,11 @@ type Unit = {
   bedrooms: number | null
   status: string
   price_usd: number | null
+  // Ниже — то, что нужно только сверке состава каталога (catalog-gaps.ts):
+  // из чего собрать новую карточку и в какую коллекцию её класть.
+  floor: string | null
+  unit_type: string | null
+  kind: string | null
 }
 
 export type LinkResult = { linked: number; ambiguous: number; unmatched: number }
@@ -161,8 +167,14 @@ export async function linkListings(sb: SupabaseClient): Promise<LinkResult> {
 // длинное совпадение с известным комплексом: длинное — значит самое
 // конкретное, иначе «Bloom» перебьёт «Bloom Residence».
 function poolFor(l: Listing, byComplex: Map<string, Unit[]>, names: string[]): Unit[] | null {
-  const direct = byComplex.get(normalize(l.complex))
-  if (direct?.length) return direct
+  const key = complexKeyOf(l, byComplex, names)
+  return key ? byComplex.get(key) ?? null : null
+}
+
+/** Нормализованное имя комплекса, к которому относится объявление, или null. */
+export function complexKeyOf(l: Listing, byComplex: Map<string, Unit[]>, names: string[]): string | null {
+  const direct = normalize(l.complex)
+  if (byComplex.get(direct)?.length) return direct
   if (!l.title) return null
 
   const title = normalize(l.title)
@@ -171,7 +183,7 @@ function poolFor(l: Listing, byComplex: Map<string, Unit[]>, names: string[]): U
     if (key.length < 4 || !title.includes(key)) continue
     if (!best || key.length > best.length) best = key
   }
-  return best ? byComplex.get(best) ?? null : null
+  return best
 }
 
 // Какой юнит прайса стоит за объявлением.
@@ -385,7 +397,7 @@ async function writePrice(sb: SupabaseClient, c: SyncChange): Promise<void> {
   if (writeErr) throw new Error(`запись ${table}: ${writeErr.message}`)
 }
 
-async function loadListings(sb: SupabaseClient): Promise<Listing[]> {
+export async function loadListings(sb: SupabaseClient): Promise<Listing[]> {
   const out: Listing[] = []
   for (const kind of ['villa', 'apartment'] as const) {
     for (let from = 0; ; from += 1000) {
@@ -394,7 +406,7 @@ async function loadListings(sb: SupabaseClient): Promise<Listing[]> {
       // из которого supabase-js выводит тип ответа.
       const { data, error } = await sb
         .from(TABLE[kind])
-        .select('airtable_id, name:data->>Name, complex:data->>"Комплекс 1", title:data->>"SEO:Title", developer:data->>Developer1, price:data->>price, priceUsd:data->>price_usd, legacyPrice:data->>"Цена", area:data->>"Площадь", bedrooms:data->>"Комнаты"')
+        .select('airtable_id, name:data->>Name, complex:data->>"Комплекс 1", title:data->>"SEO:Title", developer:data->>Developer1, price:data->>price, priceUsd:data->>price_usd, legacyPrice:data->>"Цена", area:data->>"Площадь", bedrooms:data->>"Комнаты", published:data->>"Опубликовать"')
         .range(from, from + 999)
       if (error) throw new Error(`чтение ${TABLE[kind]}: ${error.message}`)
       if (!data?.length) break
@@ -409,6 +421,7 @@ async function loadListings(sb: SupabaseClient): Promise<Listing[]> {
           price: numberOrNull(r[PRICE_FIELD[kind]]) ?? numberOrNull(r.legacyPrice),
           area: numberOrNull(r.area),
           bedrooms: numberOrNull(r.bedrooms),
+          published: String(r.published ?? '') !== 'false',
         })
       }
       if (data.length < 1000) break
@@ -417,12 +430,12 @@ async function loadListings(sb: SupabaseClient): Promise<Listing[]> {
   return out
 }
 
-async function loadUnits(sb: SupabaseClient): Promise<Unit[]> {
+export async function loadUnits(sb: SupabaseClient): Promise<Unit[]> {
   const out: Unit[] = []
   for (let from = 0; ; from += 1000) {
     const { data, error } = await sb
       .from('market_units')
-      .select('id, developer, complex, unit_key, area_m2, bedrooms, status, price_usd')
+      .select('id, developer, complex, unit_key, area_m2, bedrooms, status, price_usd, floor, unit_type, kind')
       .range(from, from + 999)
     if (error) throw new Error(`чтение market_units: ${error.message}`)
     if (!data?.length) break
@@ -436,6 +449,9 @@ async function loadUnits(sb: SupabaseClient): Promise<Unit[]> {
         bedrooms: numberOrNull(r.bedrooms),
         status: String(r.status ?? ''),
         price_usd: numberOrNull(r.price_usd),
+        floor: str(r.floor),
+        unit_type: str(r.unit_type),
+        kind: str(r.kind),
       })
     }
     if (data.length < 1000) break
@@ -449,7 +465,7 @@ async function loadLinkedIds(sb: SupabaseClient): Promise<Set<string>> {
   return new Set((data ?? []).map(r => `${r.listing_kind}:${r.listing_id}`))
 }
 
-function groupByComplex(units: Unit[]): Map<string, Unit[]> {
+export function groupByComplex(units: Unit[]): Map<string, Unit[]> {
   const out = new Map<string, Unit[]>()
   for (const u of units) {
     const key = normalize(u.complex)
@@ -469,7 +485,7 @@ function round100(v: number): number {
 
 // Названия комплекса в двух системах пишут по-разному: регистр, точки,
 // скобки, лишние пробелы. Сравниваем только буквы и цифры.
-function normalize(v: string | null | undefined): string {
+export function normalize(v: string | null | undefined): string {
   return String(v ?? '').toLowerCase().replace(/[^a-zа-я0-9]/gi, '')
 }
 
