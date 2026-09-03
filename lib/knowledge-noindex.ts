@@ -10,9 +10,16 @@
 // is the editor's call, not SEO's) — they just stop competing for the site's
 // topical profile.
 //
+// The tourist levy piece used to be exempt here on the grounds that it was
+// written for investors and was the site's single biggest impression source.
+// GSC 03.08–01.09 killed that premise: 511 impressions across fifteen query
+// variants, every one of them the tourist's own phrasing («official bali
+// tourist levy 150000 idr 2026»), average position 9.0 — and 0 clicks. The
+// searcher wants the government payment page and will never want ours, so
+// those impressions buy nothing and tilt the domain's topical profile toward
+// tourism. It joins the list; the article itself stays live and linked.
+//
 // Deliberately NOT here:
-//   • the tourist levy piece — written for investors, and the single biggest
-//     impression source on the site;
 //   • insurance, sun/shade and noise-measuring tools, earthquake risk by
 //     district — all of them feed a buying decision.
 
@@ -26,6 +33,7 @@ const NOINDEX_SLUGS = new Set([
   'chto-delat-esli-v-tebya-vrezalis-na-bali',
   'akuly-na-bali-naskolko-eto-opasno-i-stoit-li-boyatsya-realnye-fakty-i-sovety-dly',
   'opasny-li-ukusy-zmey-na-bali-realnye-riski-i-statistika-smertelnyh-sluchaev',
+  'turisticheskiy-sbor-na-bali-idr-150-000-kto-platit-i-zachem-investoru-eto-znat',
 ])
 
 /** @param ruSlug the Russian slug — the key both locales are indexed by. */

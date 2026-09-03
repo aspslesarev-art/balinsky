@@ -73,8 +73,8 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
       description: `${n} застройщиков Бали с рейтингом по 4 критериям: качество, опыт, техника, УК. Сданные проекты, активные стройки, акции.`,
     },
     rental: {
-      title: `Аренда на Бали: ${n} объектов помесячно и посуточно | Balinsky`,
-      description: `${n} вариантов аренды на Бали. Виллы, апартаменты, дома. Помесячно и посуточно. Прямые контакты собственников.`,
+      title: `Аренда на Бали${n ? `: ${n} объектов` : ''} помесячно и посуточно | Balinsky`,
+      description: `${n ? `${n} вариантов аренды` : 'Аренда'} на Бали. Виллы, апартаменты, дома. Помесячно и посуточно. Прямые контакты собственников.`,
     },
   }
 
@@ -92,12 +92,12 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
       description: `${n} Bali complexes with infrastructure. PBG/SLF/RDTR checks, real handover dates${dev ? `, deals from ${dev} developers` : ''}.`,
     },
     developers: {
-      title: `${n} Bali developers with ratings | Balinsky`,
-      description: `${n} Bali developers rated on 4 criteria: quality, experience, engineering, management. Completed projects, active builds, deals.`,
+      title: `${n} Bali property developers with ratings | Balinsky`,
+      description: `${n} property developers in Bali rated on 4 criteria: quality, experience, engineering, management. Completed projects, active builds, deals.`,
     },
     rental: {
-      title: `Rental in Bali: ${n} monthly & daily listings | Balinsky`,
-      description: `${n} rental options in Bali. Villas, apartments, houses. Monthly and daily. Direct owner contacts.`,
+      title: `Rental in Bali${n ? `: ${n} monthly & daily listings` : ': monthly & daily listings'} | Balinsky`,
+      description: `${n ? `${n} rental options` : 'Rental options'} in Bali. Villas, apartments, houses. Monthly and daily. Direct owner contacts.`,
     },
   }
 
@@ -115,12 +115,12 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
       description: `${n} kompleks di Bali dengan infrastruktur. Cek PBG/SLF/RDTR, tanggal serah terima nyata${dev ? `, promo dari ${dev} pengembang` : ''}.`,
     },
     developers: {
-      title: `${n} pengembang di Bali dengan peringkat | Balinsky`,
-      description: `${n} pengembang Bali dengan peringkat 4 kriteria: kualitas, pengalaman, teknik, pengelolaan. Proyek selesai, pembangunan aktif, promo.`,
+      title: `${n} pengembang properti di Bali dengan peringkat | Balinsky`,
+      description: `${n} pengembang properti Bali dengan peringkat 4 kriteria: kualitas, pengalaman, teknik, pengelolaan. Proyek selesai, pembangunan aktif, promo.`,
     },
     rental: {
-      title: `Sewa di Bali: ${n} properti bulanan & harian | Balinsky`,
-      description: `${n} pilihan sewa di Bali. Vila, apartemen, rumah. Bulanan dan harian. Kontak langsung pemilik.`,
+      title: `Sewa di Bali: ${n ? `${n} properti` : 'properti'} bulanan & harian | Balinsky`,
+      description: `${n ? `${n} pilihan sewa` : 'Pilihan sewa'} di Bali. Vila, apartemen, rumah. Bulanan dan harian. Kontak langsung pemilik.`,
     },
   }
 
@@ -138,12 +138,12 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
       description: `${n} résidences à Bali avec infrastructures. Vérification PBG/SLF/RDTR, dates de livraison réelles${dev ? `, offres de ${dev} promoteurs` : ''}.`,
     },
     developers: {
-      title: `${n} promoteurs à Bali avec notation | Balinsky`,
-      description: `${n} promoteurs de Bali notés sur 4 critères : qualité, expérience, ingénierie, gestion. Projets livrés, chantiers actifs, offres.`,
+      title: `Promoteur immobilier à Bali : ${n} promoteurs notés | Balinsky`,
+      description: `${n} promoteurs immobiliers à Bali notés sur 4 critères : qualité, expérience, ingénierie, gestion. Projets livrés, chantiers actifs, offres.`,
     },
     rental: {
-      title: `Location à Bali : ${n} biens au mois et à la journée | Balinsky`,
-      description: `${n} options de location à Bali. Villas, appartements, maisons. Au mois et à la journée. Contacts directs des propriétaires.`,
+      title: `Location à Bali : ${n ? `${n} biens` : 'biens'} au mois et à la journée | Balinsky`,
+      description: `${n ? `${n} options de location` : 'Options de location'} à Bali. Villas, appartements, maisons. Au mois et à la journée. Contacts directs des propriétaires.`,
     },
   }
 
@@ -165,8 +165,8 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
       description: `${n} Bali-Bauträger bewertet nach 4 Kriterien: Qualität, Erfahrung, Technik, Verwaltung. Fertige Projekte, aktive Bauten, Angebote.`,
     },
     rental: {
-      title: `Miete auf Bali: ${n} Monats- & Tagesangebote | Balinsky`,
-      description: `${n} Mietoptionen auf Bali. Villen, Apartments, Häuser. Monatlich und täglich. Direkte Eigentümerkontakte.`,
+      title: `Miete auf Bali: ${n ? `${n} ` : ''}Monats- & Tagesangebote | Balinsky`,
+      description: `${n ? `${n} Mietoptionen` : 'Mietoptionen'} auf Bali. Villen, Apartments, Häuser. Monatlich und täglich. Direkte Eigentümerkontakte.`,
     },
   }
 
@@ -188,8 +188,8 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
       description: `${n} 家巴厘岛开发商，按 4 项标准评级：质量、经验、工程、管理。已完工项目、在建工程、优惠。`,
     },
     rental: {
-      title: `巴厘岛租赁：${n} 套月租与日租房源 | Balinsky`,
-      description: `${n} 套巴厘岛租赁选择。别墅、公寓、住宅。月租与日租。业主直接联系。`,
+      title: `巴厘岛租赁：${n ? `${n} 套` : ''}月租与日租房源 | Balinsky`,
+      description: `${n ? `${n} 套巴厘岛租赁选择` : '巴厘岛租赁选择'}。别墅、公寓、住宅。月租与日租。业主直接联系。`,
     },
   }
 
@@ -207,12 +207,12 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
       description: `${n} Bali-complexen met voorzieningen. PBG/SLF/RDTR-controle, echte opleverdata${dev ? `, aanbiedingen van ${dev} ontwikkelaars` : ''}.`,
     },
     developers: {
-      title: `${n} Bali-ontwikkelaars met beoordeling | Balinsky`,
-      description: `${n} Bali-ontwikkelaars beoordeeld op 4 criteria: kwaliteit, ervaring, techniek, beheer. Voltooide projecten, actieve bouw, aanbiedingen.`,
+      title: `${n} vastgoedontwikkelaars op Bali met beoordeling | Balinsky`,
+      description: `${n} vastgoedontwikkelaars op Bali beoordeeld op 4 criteria: kwaliteit, ervaring, techniek, beheer. Voltooide projecten, actieve bouw, aanbiedingen.`,
     },
     rental: {
-      title: `Huur op Bali: ${n} maand- & dagverhuur | Balinsky`,
-      description: `${n} huuropties op Bali. Villa's, appartementen, huizen. Per maand en per dag. Directe contacten met eigenaren.`,
+      title: `Huur op Bali: ${n ? `${n} ` : ''}maand- & dagverhuur | Balinsky`,
+      description: `${n ? `${n} huuropties` : 'Huuropties'} op Bali. Villa's, appartementen, huizen. Per maand en per dag. Directe contacten met eigenaren.`,
     },
   }
 
@@ -235,8 +235,8 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
       description: `${n} pangwangun Bali sareng peringkat 4 kriteria: kualitas, pengalaman, teknik, pangelolaan. Proyék sané puput, wangunan sané kantun mamargi, promo.`,
     },
     rental: {
-      title: `Sewa ring Bali: ${n} umah sewa bulanan miwah harian | Balinsky`,
-      description: `${n} pilihan sewa ring Bali. Vila, apartemen, umah. Bulanan miwah harian. Kontak langsung sang nuénang.`,
+      title: `Sewa ring Bali: ${n ? `${n} ` : ''}umah sewa bulanan miwah harian | Balinsky`,
+      description: `${n ? `${n} pilihan sewa` : 'Pilihan sewa'} ring Bali. Vila, apartemen, umah. Bulanan miwah harian. Kontak langsung sang nuénang.`,
     },
   }
 
@@ -258,8 +258,8 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
       description: `${n} deweloperów na Bali ocenianych według 4 kryteriów: jakość, doświadczenie, inżynieria, zarządzanie. Ukończone projekty, aktywne budowy, promocje.`,
     },
     rental: {
-      title: `Wynajem na Bali: ${n} ofert miesięcznych i dobowych | Balinsky`,
-      description: `${n} opcji wynajmu na Bali. Wille, apartamenty, domy. Miesięcznie i na doby. Bezpośredni kontakt z właścicielami.`,
+      title: `Wynajem na Bali: ${n ? `${n} ofert` : 'oferty'} miesięcznych i dobowych | Balinsky`,
+      description: `${n ? `${n} opcji wynajmu` : 'Opcje wynajmu'} na Bali. Wille, apartamenty, domy. Miesięcznie i na doby. Bezpośredni kontakt z właścicielami.`,
     },
   }
 
@@ -281,8 +281,8 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
       description: `${n} забудовників Балі з рейтингом за 4 критеріями: якість, досвід, техніка, управління. Здані проєкти, активні будівництва, акції.`,
     },
     rental: {
-      title: `Оренда на Балі: ${n} об'єктів помісячно та подобово | Balinsky`,
-      description: `${n} варіантів оренди на Балі. Вілли, апартаменти, будинки. Помісячно та подобово. Прямі контакти власників.`,
+      title: `Оренда на Балі${n ? `: ${n} об'єктів` : ''} помісячно та подобово | Balinsky`,
+      description: `${n ? `${n} варіантів оренди` : 'Оренда'} на Балі. Вілли, апартаменти, будинки. Помісячно та подобово. Прямі контакти власників.`,
     },
   }
 

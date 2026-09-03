@@ -25,11 +25,18 @@ const MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/rental/_rental.js
 
 const EN_FIELDS = ['title', 'notes'] as const
 
-// Listings older than FRESH_WINDOW drop out of the /arenda catalog so the
+// Listings older than the first window drop out of the /arenda catalog so the
 // page doesn't fill up with stale offers nobody can rent any more.
 // Detail pages (/arenda/o/<slug>) and the villa-page comparison block use
 // wider windows so links stay alive and old prices keep doing SEO duty.
-const FRESH_WINDOW_DAYS = 30
+//
+// It is a ladder, not a single window, because a paused sync must never blank
+// the section: on 03.09.2026 the newest listing in the manifest was 51 days
+// old, so every /arenda in all ten locales rendered «0 объектов» — and the
+// meta title collapsed to «Аренда на Бали: объектов помесячно и посуточно» —
+// while 1485 listings sat unused. Widening beats shipping an empty catalog,
+// and the ladder collapses back to 30 days on its own once the sync resumes.
+const FRESH_WINDOW_LADDER_DAYS = [30, 90, 180] as const
 // Comparison block on villa/apartment detail uses anything from the last
 // half year — recent enough to be a useful benchmark, not so old the price
 // has shifted by 30%+.
@@ -40,10 +47,6 @@ function withinDays(item: RentalItem, days: number, now: number): boolean {
   const t = Date.parse(item.createdTime)
   if (!Number.isFinite(t)) return false
   return now - t <= days * 24 * 60 * 60 * 1000
-}
-
-function isFresh(item: RentalItem, now: number): boolean {
-  return withinDays(item, FRESH_WINDOW_DAYS, now)
 }
 
 async function loadRawRental(): Promise<RentalItem[]> {
@@ -74,11 +77,17 @@ export async function loadAllRental(lang: Lang = 'ru'): Promise<RentalItem[]> {
   return items.map(item => applyManifestTranslation(item, cache, EN_FIELDS))
 }
 
-// Listings created within FRESH_WINDOW_DAYS — for the /arenda catalog only.
+// The freshest non-empty slice of the manifest — for the /arenda catalog only.
+// Walks FRESH_WINDOW_LADDER_DAYS from tightest to widest and returns the first
+// window that actually holds listings, falling back to everything we have.
 export async function loadFreshRental(lang: Lang = 'ru'): Promise<RentalItem[]> {
   const all = await loadAllRental(lang)
   const now = Date.now()
-  return all.filter(it => isFresh(it, now))
+  for (const days of FRESH_WINDOW_LADDER_DAYS) {
+    const within = all.filter(it => withinDays(it, days, now))
+    if (within.length > 0) return within
+  }
+  return all
 }
 
 // Recent enough to be a meaningful benchmark on a villa/apartment page.
