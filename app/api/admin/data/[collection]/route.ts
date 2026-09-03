@@ -4,6 +4,7 @@ import { getCollection } from '@/lib/admin/collections'
 import { adapterFor } from '@/lib/admin/adapters'
 import { revalidateCollection } from '@/lib/admin/revalidate'
 import { aiAutofillPatch } from '@/lib/admin/ai-autofill'
+import { priceSyncPatch } from '@/lib/admin/price-sync'
 import { unitCreateDefaults } from '@/lib/admin/unit-defaults'
 
 export const runtime = 'nodejs'
@@ -58,7 +59,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ collect
     // linked complex) — deterministic, free and instant. They also give the AI
     // pass below real source material to ground on, and stop it from inventing
     // a headline the catalogue's own formula already defines.
-    const withDefaults = { ...fields, ...(await unitCreateDefaults(cfg, fields)) }
+    const seeded = { ...fields, ...(await unitCreateDefaults(cfg, fields)) }
+    // Новая запись обязана прийти с одной ценой во всех трёх полях: у
+    // созданной вручную карточки `Цена` иначе остаётся пустой (или, после
+    // «Дублировать», ценой донора), и трекер прайсов её не свяжет.
+    const withDefaults = { ...seeded, ...priceSyncPatch(cfg, {}, seeded) }
     // Generate the AI-backed fields the editor left empty before the write, so
     // the record is complete from its first save (meta tags included) and we
     // don't pay for a second manifest rewrite.

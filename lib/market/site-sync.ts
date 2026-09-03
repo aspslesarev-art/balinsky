@@ -44,6 +44,19 @@ const TABLE: Record<ListingKind, string> = {
   apartment: 'raw_apartments',
 }
 
+// Цена объявления лежит в JSONB под тремя именами. Каноничное — то, что
+// читает сам сайт (`price` у вилл, `price_usd` у апартаментов); `Цена` —
+// наследие Airtable, и в админке такого поля нет вовсе. Пока трекер читал
+// только `Цена`, карточка, заведённая или продублированная в /admin/data,
+// приходила сюда с ценой донора: у четырёх апартаментов Amani Melasti на
+// сайте стояли $157 900…$199 900, а трекер видел $157 000 у всех четырёх —
+// и либо не находил пару, либо находил чужую. Читаем каноничное, `Цена`
+// оставляем запасным вариантом для старых записей.
+const PRICE_FIELD: Record<ListingKind, 'price' | 'priceUsd'> = {
+  villa: 'price',
+  apartment: 'priceUsd',
+}
+
 type Listing = {
   kind: ListingKind
   id: string
@@ -376,9 +389,12 @@ async function loadListings(sb: SupabaseClient): Promise<Listing[]> {
   const out: Listing[] = []
   for (const kind of ['villa', 'apartment'] as const) {
     for (let from = 0; ; from += 1000) {
+      // Обе каноничные цены разом: `data` — JSONB, и лишний ключ на чужой
+      // таблице просто приходит null. Так строка select остаётся литералом,
+      // из которого supabase-js выводит тип ответа.
       const { data, error } = await sb
         .from(TABLE[kind])
-        .select('airtable_id, name:data->>Name, complex:data->>"Комплекс 1", title:data->>"SEO:Title", developer:data->>Developer1, price:data->>"Цена", area:data->>"Площадь", bedrooms:data->>"Комнаты"')
+        .select('airtable_id, name:data->>Name, complex:data->>"Комплекс 1", title:data->>"SEO:Title", developer:data->>Developer1, price:data->>price, priceUsd:data->>price_usd, legacyPrice:data->>"Цена", area:data->>"Площадь", bedrooms:data->>"Комнаты"')
         .range(from, from + 999)
       if (error) throw new Error(`чтение ${TABLE[kind]}: ${error.message}`)
       if (!data?.length) break
@@ -390,7 +406,7 @@ async function loadListings(sb: SupabaseClient): Promise<Listing[]> {
           complex: str(r.complex),
           title: str(r.title),
           developer: str(r.developer),
-          price: numberOrNull(r.price),
+          price: numberOrNull(r[PRICE_FIELD[kind]]) ?? numberOrNull(r.legacyPrice),
           area: numberOrNull(r.area),
           bedrooms: numberOrNull(r.bedrooms),
         })

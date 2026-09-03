@@ -66,14 +66,20 @@ export async function loadSiteReport(): Promise<SiteReport> {
   const sb = sbAdmin()
 
   const listings: Array<Record<string, unknown> & { kind: 'villa' | 'apartment' }> = []
-  for (const [kind, table] of [['villa', 'raw_villas'], ['apartment', 'raw_apartments']] as const) {
+  // Цена — та же, что читает сайт (`price` / `price_usd`), с откатом на
+  // наследственную `Цена`. См. PRICE_FIELD в site-sync.ts: отчёт обязан
+  // показывать ровно ту цену, по которой связывает и сверяет синхронизация.
+  for (const [kind, table, priceKey] of [
+    ['villa', 'raw_villas', 'price'],
+    ['apartment', 'raw_apartments', 'priceUsd'],
+  ] as const) {
     for (let from = 0; ; from += 1000) {
       const { data } = await sb
         .from(table)
-        .select('airtable_id, name:data->>Name, complex:data->>"Комплекс 1", price:data->>"Цена", area:data->>"Площадь", bedrooms:data->>"Комнаты", published:data->>"Опубликовать", updated:data->>"Обновление цены"')
+        .select('airtable_id, name:data->>Name, complex:data->>"Комплекс 1", price:data->>price, priceUsd:data->>price_usd, legacyPrice:data->>"Цена", area:data->>"Площадь", bedrooms:data->>"Комнаты", published:data->>"Опубликовать", updated:data->>"Обновление цены"')
         .range(from, from + 999)
       if (!data?.length) break
-      for (const r of data) listings.push({ ...r, kind })
+      for (const r of data) listings.push({ ...r, price: r[priceKey] ?? r.legacyPrice, kind })
       if (data.length < 1000) break
     }
   }
