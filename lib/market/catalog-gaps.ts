@@ -52,23 +52,22 @@ export type ComplexGap = {
   /** Надбавка каталога к прайсу в этом комплексе (медиана по связкам). */
   ratio: number
   missing: Offer[]
+  /** Карточки сайта, чьей цены в прайсе больше нет: связки у них не будет, и
+   *  автообновление их не касается — пока человек не свяжет вручную. */
+  orphans: Orphan[]
   covered: number
 }
 
-// Насколько площадь сайта может расходиться с прайсом и всё ещё считаться тем
-// же предложением: те же допуски, что и при связывании (site-sync.ts) — на
-// сайте метры меряют с террасой.
-const AREA_TOLERANCE = 2
-const AREA_TOLERANCE_PCT = 0.03
+export type Orphan = { id: string; name: string | null; price: number; area: number | null }
 
-// Насколько цена карточки может отличаться от «цена прайса × надбавка», чтобы
-// считать предложение уже представленным. Шире, чем допуск синхронизации:
-// здесь достаточно понять «такое предложение на сайте есть», а не «цена верна».
-const COVER_PRICE_TOLERANCE = 0.12
+// «Та же цена»: расхождение меньше этого — чужое округление, а не другое
+// предложение. Сверяемся именно ценой, а не площадью: на сайте метры меряют с
+// террасой (Ramada Nusa Dua — 72 м² в каталоге против 69 в прайсе), и сравнение
+// площадей объявляло девять уже показанных вилл «непредставленными».
+const PRICE_MATCH = 0.005
 
-function areaMatches(a: number | null, b: number | null): boolean {
-  if (a === null || b === null) return a === b
-  return Math.abs(a - b) <= Math.max(AREA_TOLERANCE, b * AREA_TOLERANCE_PCT)
+function samePrice(a: number, b: number): boolean {
+  return Math.abs(a - b) / Math.max(a, b) <= PRICE_MATCH
 }
 
 function median(values: number[]): number | null {
@@ -118,6 +117,68 @@ function pickDonor(listings: Listing[]): Listing | null {
   ), pool[0])
 }
 
+/**
+ * Раскладка «предложения прайса ↔ карточки сайта» по ценовым корзинам.
+ *
+ * В корзине одной цены карточек должно быть не меньше, чем различимых
+ * предложений: две виллы по $179 900 на сайте закрывают одно предложение
+ * «69 м², $179 900», сколько бы одинаковых юнитов ни стояло за ним в прайсе.
+ * Предложения, которым карточки не хватило, — пробел. Карточка, не попавшая
+ * НИ В ОДНУ корзину, — цена, которой в прайсе больше нет: пары у неё не будет
+ * и автообновление её не тронет (Ramada Nusa Dua, вилла за $174 900 — такой
+ * цены в прайсе нет с июля). Лишняя карточка ВНУТРИ существующей корзины —
+ * это норма: один юнит стоит в каталоге и с мебелью, и без.
+ *
+ * Внутри корзины карточка отдаётся предложению с ближайшей площадью — так в
+ * Amani Melasti карточка 65 м² закрыла своё предложение, а 68 м² за ту же
+ * цену осталось видно как недостающее.
+ */
+function matchByPrice(
+  offers: Offer[],
+  cards: Listing[],
+  ratio: number,
+  // Карточки, уже связанные с юнитом этого комплекса: их цена живёт вместе с
+  // прайсом, и в «цену потеряли» они попасть не могут, даже если их юнит
+  // забронирован и в свободных предложениях его нет.
+  paired: Set<string>,
+): { missing: Offer[]; orphans: Orphan[] } {
+  const buckets = new Map<number, { offers: Offer[]; cards: Listing[] }>()
+  for (const o of offers) {
+    const price = o.price * ratio
+    const key = [...buckets.keys()].find(k => samePrice(k, price)) ?? price
+    const bucket = buckets.get(key) ?? { offers: [], cards: [] }
+    bucket.offers.push(o)
+    buckets.set(key, bucket)
+  }
+
+  const orphans: Orphan[] = []
+  for (const c of cards) {
+    const key = [...buckets.keys()].find(k => samePrice(k, c.price!))
+    if (key === undefined) {
+      if (!paired.has(c.id)) orphans.push({ id: c.id, name: c.name, price: c.price!, area: c.area })
+      continue
+    }
+    buckets.get(key)!.cards.push(c)
+  }
+
+  const missing: Offer[] = []
+  for (const { offers: os, cards: cs } of buckets.values()) {
+    const free = [...os]
+    for (const card of cs) {
+      if (!free.length) break // лишняя карточка в корзине — другая комплектация
+      const near = free.reduce((best, o) => (
+        Math.abs((o.area ?? Infinity) - (card.area ?? 0)) < Math.abs((best.area ?? Infinity) - (card.area ?? 0)) ? o : best
+      ), free[0])
+      free.splice(free.indexOf(near), 1)
+    }
+    missing.push(...free)
+  }
+  return {
+    missing: missing.sort((a, b) => a.price - b.price),
+    orphans: orphans.sort((a, b) => a.price - b.price),
+  }
+}
+
 /** Вид, в котором комплекс уже представлен в каталоге (кого больше). */
 function majorityKind(listings: Listing[]): ListingKind | null {
   if (!listings.length) return null
@@ -132,7 +193,7 @@ export async function loadCatalogGaps(sb: SupabaseClient): Promise<ComplexGap[]>
     sb.from('market_listing_links').select('listing_kind, listing_id, unit_id, price_ratio'),
   ])
   const links = linkRows.data ?? []
-  const linkedUnitIds = new Set(links.map(l => Number(l.unit_id)))
+  const linkOfListing = new Map(links.map(l => [`${l.listing_kind}:${l.listing_id}`, l]))
   const ratioOfListing = new Map(links.map(l => [`${l.listing_kind}:${l.listing_id}`, Number(l.price_ratio)]))
 
   const byComplex = groupByComplex(units)
@@ -181,18 +242,24 @@ export async function loadCatalogGaps(sb: SupabaseClient): Promise<ComplexGap[]>
       // закрывает 44-метровый апартамент.
       const sameKind = site.filter(l => l.kind === kind)
 
-      const missing = offers.filter(o => {
-        // Связка — самый надёжный признак: карточка уже привязана к юниту
-        // этого предложения, спрашивать больше не о чем.
-        if (o.unitIds.some(id => linkedUnitIds.has(id))) return false
-        const expected = o.price * ratio
-        return !sameKind.some(l =>
-          areaMatches(l.area, o.area)
-          && l.price !== null
-          && Math.abs(l.price - expected) / expected <= COVER_PRICE_TOLERANCE,
-        )
-      })
-      if (!missing.length) continue
+      // Связка — самый надёжный признак. Карточка, закрывшая предложение,
+      // из дальнейшего зачёта выбывает: иначе одна карточка «покрыла» бы и
+      // своё предложение, и соседнее с той же ценой.
+      const consumed = new Set<string>()
+      const rest: Offer[] = []
+      for (const o of offers) {
+        const card = sameKind.find(l => {
+          const link = linkOfListing.get(`${l.kind}:${l.id}`)
+          return link !== undefined && o.unitIds.includes(Number(link.unit_id))
+        })
+        if (card) consumed.add(card.id)
+        else rest.push(o)
+      }
+
+      const freeCards = sameKind.filter(l => !consumed.has(l.id) && l.price !== null)
+      const paired = new Set(sameKind.filter(l => linkOfListing.has(`${l.kind}:${l.id}`)).map(l => l.id))
+      const { missing, orphans } = matchByPrice(rest, freeCards, ratio, paired)
+      if (!missing.length && !orphans.length) continue
 
       // Образец — только своего вида: из полей виллы апартамент не соберёшь.
       const donor = pickDonor(sameKind)
@@ -205,6 +272,7 @@ export async function loadCatalogGaps(sb: SupabaseClient): Promise<ComplexGap[]>
         donorName: donor?.name ?? null,
         ratio,
         missing,
+        orphans,
         covered: offers.length - missing.length,
       })
     }

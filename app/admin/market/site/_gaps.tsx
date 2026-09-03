@@ -12,6 +12,8 @@ type Offer = {
   unitType: string | null
 }
 
+type Orphan = { id: string; name: string | null; price: number; area: number | null }
+
 type Gap = {
   complexKey: string
   complex: string
@@ -21,6 +23,7 @@ type Gap = {
   donorName: string | null
   ratio: number
   missing: Offer[]
+  orphans: Orphan[]
   covered: number
 }
 
@@ -90,12 +93,13 @@ export function CatalogGaps() {
   }
 
   const total = gaps.reduce((s, g) => s + g.missing.length, 0)
+  const lost = gaps.reduce((s, g) => s + g.orphans.length, 0)
 
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-3">
         <span className="text-[13px]">
-          Не представлено на сайте: <b>{total}</b> предложений в {gaps.length} комплексах
+          Не представлено на сайте: <b>{total}</b> предложений; с ценой, которой нет в прайсе: <b>{lost}</b> — в {gaps.length} строках
         </span>
         <button onClick={load} disabled={state === 'load'} className="text-[12px] text-[var(--ax-fg-muted)] hover:text-[var(--ax-fg)] disabled:opacity-50">
           пересчитать
@@ -113,6 +117,9 @@ export function CatalogGaps() {
                 <span className="font-medium">{g.complex}</span>
                 <span className="text-[var(--ax-fg-muted)]"> · {g.developer} · {g.kind === 'villa' ? 'виллы' : 'апартаменты'}</span>
                 <span className="text-[var(--ax-fg-muted)]"> — нет {g.missing.length}, есть {g.covered}</span>
+                {g.orphans.length > 0 && (
+                  <span className="text-amber-600"> · цены нет в прайсе: {g.orphans.length}</span>
+                )}
               </button>
               {g.donorId ? (
                 <button
@@ -172,6 +179,25 @@ export function CatalogGaps() {
                     ))}
                   </tbody>
                 </table>
+
+                {g.orphans.length > 0 && (
+                  <div className="px-3 py-2 border-t border-[var(--ax-border-soft)]">
+                    <div className="text-[12px] text-amber-600 mb-1">
+                      Цены нет в прайсе — пары не будет, автообновление их не касается. Свяжите вручную в «Ждут пары» ниже.
+                    </div>
+                    {g.orphans.map(o => (
+                      <div key={o.id} className="text-[12px] text-[var(--ax-fg-muted)]">
+                        <a
+                          href={`/admin/data/${g.kind === 'villa' ? 'villas' : 'apartments'}?id=${o.id}`}
+                          className="text-[var(--color-primary)] hover:underline"
+                        >
+                          {o.name ?? o.id}
+                        </a>
+                        {' '}· {o.area ?? '—'} м² · {usd(o.price)}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>

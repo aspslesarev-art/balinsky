@@ -18,16 +18,20 @@ async function main() {
       console.log(`\n${g.complex} · ${g.developer} · ${g.kind === 'villa' ? 'виллы' : 'апартаменты'} · надбавка ${g.ratio.toFixed(3)}`)
       console.log(`образец: ${g.donorName ?? 'НЕТ — первую карточку заведите руками'}`)
       for (const o of g.missing) {
-        console.log(`  ${o.unitKeys.join(', ')} | ${o.area ?? '—'} м² | этаж ${o.floor ?? '—'} | ${usd(o.price)} → карточка ${usd(o.price * g.ratio)} | ${o.unitType ?? ''}`)
+        console.log(`  нет: ${o.unitKeys.join(', ')} | ${o.area ?? '—'} м² | этаж ${o.floor ?? '—'} | ${usd(o.price)} → карточка ${usd(o.price * g.ratio)} | ${o.unitType ?? ''}`)
+      }
+      for (const o of g.orphans) {
+        console.log(`  цены нет в прайсе: ${o.name ?? o.id} | ${o.area ?? '—'} м² | ${usd(o.price)}`)
       }
     }
     return
   }
 
   const total = gaps.reduce((s, g) => s + g.missing.length, 0)
-  console.log(`не представлено на сайте: ${total} предложений в ${gaps.length} строках комплекс×вид\n`)
+  const orphans = gaps.reduce((s, g) => s + g.orphans.length, 0)
+  console.log(`не представлено на сайте: ${total} предложений; карточек с ценой, которой нет в прайсе: ${orphans} — в ${gaps.length} строках комплекс×вид\n`)
   for (const g of gaps) {
-    console.log(`${String(g.missing.length).padStart(4)} нет / ${String(g.covered).padStart(3)} есть | ${g.kind === 'villa' ? 'виллы ' : 'апарт.'} | ${g.complex} | образец: ${g.donorName ?? 'НЕТ'}`)
+    console.log(`${String(g.missing.length).padStart(4)} нет / ${String(g.orphans.length).padStart(3)} без прайса / ${String(g.covered).padStart(3)} есть | ${g.kind === 'villa' ? 'виллы ' : 'апарт.'} | ${g.complex} | образец: ${g.donorName ?? 'НЕТ'}`)
   }
 }
 
