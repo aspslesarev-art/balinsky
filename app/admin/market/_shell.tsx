@@ -1,6 +1,6 @@
 'use client'
 
-import { useAdminTheme, themeClass, ThemeToggle } from '../_theme'
+import { AdminChrome } from '@/components/admin/AdminChrome'
 
 // Обёртка страниц трекера в тему админки.
 //
@@ -9,15 +9,5 @@ import { useAdminTheme, themeClass, ThemeToggle } from '../_theme'
 // фона и границ — на прозрачном фоне не видно, что вообще выбрано.
 
 export function MarketShell({ children }: { children: React.ReactNode }) {
-  const { theme, toggle } = useAdminTheme()
-  return (
-    <div className={themeClass(theme)}>
-      <div className="min-h-screen bg-[var(--ax-bg)] text-[var(--ax-fg)] p-6 sm:p-10">
-        <div className="max-w-[1200px] mx-auto flex justify-end">
-          <ThemeToggle theme={theme} toggle={toggle} />
-        </div>
-        <main className="max-w-[1200px] mx-auto space-y-8">{children}</main>
-      </div>
-    </div>
-  )
+  return <AdminChrome>{children}</AdminChrome>
 }

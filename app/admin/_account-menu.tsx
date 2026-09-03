@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   MessageCircle, Lock, Megaphone, Image as ImageIcon, FileText, Heart, Eye, Brain, Layers, BarChart3, Table, Link2,
+  Users, Wallet, ListTree, Tags, KeyRound, LayoutTemplate,
   Sun, Moon, LogOut, ChevronUp, UserRound,
 } from 'lucide-react'
 import { useAdminTheme } from './_theme'
@@ -24,21 +25,66 @@ type Variant = 'sidebar' | 'floating'
 // need each page to pass it down.
 
 type Item = { href: string; label: string; Icon: typeof MessageCircle }
+type Group = { title: string; items: Item[] }
 
-const ITEMS: Item[] = [
-  { href: '/admin/chats',         label: 'Чаты',         Icon: MessageCircle },
-  { href: '/admin/reservations',  label: 'Брони',        Icon: Lock },
-  { href: '/admin/broadcast',     label: 'Рассылка',     Icon: Megaphone },
-  { href: '/admin/ads',           label: 'Реклама',      Icon: ImageIcon },
-  { href: '/admin/presentations', label: 'Презентации',  Icon: FileText },
-  { href: '/admin/wishlist',      label: 'Лайки',        Icon: Heart },
-  { href: '/admin/views',         label: 'Просмотры',    Icon: Eye },
-  { href: '/admin/balina',        label: 'Андрей',       Icon: Brain },
-  { href: '/admin/visualizations', label: 'Визуализации', Icon: Layers },
-  { href: '/admin/data',          label: 'Базы',         Icon: Table },
-  { href: '/admin/market',        label: 'Рынок',        Icon: BarChart3 },
-  { href: '/admin/dev-chats',     label: 'Чаты застройщиков', Icon: Link2 },
+// Все разделы админки, сгруппированные по смыслу. Если появилась новая
+// страница под /admin — её место здесь, иначе попасть в неё можно только
+// по прямой ссылке.
+const GROUPS: Group[] = [
+  {
+    title: 'Общение',
+    items: [
+      { href: '/admin/chats',         label: 'Чаты',              Icon: MessageCircle },
+      { href: '/admin/dev-chats',     label: 'Чаты застройщиков', Icon: Link2 },
+      { href: '/admin/broadcast',     label: 'Рассылка',          Icon: Megaphone },
+    ],
+  },
+  {
+    title: 'Клиенты',
+    items: [
+      { href: '/admin/reservations',  label: 'Брони',        Icon: Lock },
+      { href: '/admin/users',         label: 'Пользователи', Icon: Users },
+      { href: '/admin/wishlist',      label: 'Лайки',        Icon: Heart },
+      { href: '/admin/views',         label: 'Просмотры',    Icon: Eye },
+    ],
+  },
+  {
+    title: 'Рынок',
+    items: [
+      { href: '/admin/market',        label: 'Трекер рынка',      Icon: BarChart3 },
+      { href: '/admin/market/units',  label: 'Юниты рынка',       Icon: ListTree },
+      { href: '/admin/market/site',   label: 'Цены на сайте',     Icon: Tags },
+      { href: '/admin/market/access', label: 'Доступ к отчёту',   Icon: KeyRound },
+    ],
+  },
+  {
+    title: 'Контент',
+    items: [
+      { href: '/admin/data',           label: 'Базы',         Icon: Table },
+      { href: '/admin/visualizations', label: 'Визуализации', Icon: Layers },
+      { href: '/admin/ads',            label: 'Реклама',      Icon: ImageIcon },
+      { href: '/admin/presentations',  label: 'Презентации',  Icon: FileText },
+    ],
+  },
+  {
+    title: 'Система',
+    items: [
+      { href: '/admin/balina',                label: 'Андрей',              Icon: Brain },
+      { href: '/admin/usage',                 label: 'Расходы на ИИ',       Icon: Wallet },
+      { href: '/admin/preview/zastrojshhik',  label: 'Прототип застройщика', Icon: LayoutTemplate },
+    ],
+  },
 ]
+
+const ALL_ITEMS: Item[] = GROUPS.flatMap(g => g.items)
+
+// Подсветка активного раздела: берём самое длинное совпадение по префиксу,
+// иначе на /admin/market/units загорались бы сразу два пункта.
+function activeHrefFor(pathname: string): string {
+  return ALL_ITEMS
+    .filter(i => pathname === i.href || pathname.startsWith(`${i.href}/`))
+    .reduce((best, i) => (i.href.length > best.length ? i.href : best), '')
+}
 
 export function AdminAccountMenu({ variant = 'sidebar' }: { variant?: Variant }) {
   const [open, setOpen] = useState(false)
@@ -47,6 +93,8 @@ export function AdminAccountMenu({ variant = 'sidebar' }: { variant?: Variant })
   const [pathname, setPathname] = useState<string>('')
 
   useEffect(() => { setPathname(window.location.pathname) }, [])
+
+  const activeHref = useMemo(() => activeHrefFor(pathname), [pathname])
 
   useEffect(() => {
     if (!open) return
@@ -116,20 +164,27 @@ export function AdminAccountMenu({ variant = 'sidebar' }: { variant?: Variant })
 
       {open && (
         <div className={skin.popup} role="menu">
-          {ITEMS.map(({ href, label, Icon }) => {
-            const active = pathname.startsWith(href)
-            return (
-              <a
-                key={href}
-                href={href}
-                role="menuitem"
-                className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] no-underline ${active ? skin.itemActive : skin.item}`}
-              >
-                <Icon size={15} strokeWidth={1.7} />
-                {label}
-              </a>
-            )
-          })}
+          <div className="max-h-[calc(100vh-140px)] overflow-y-auto overscroll-contain">
+            {GROUPS.map((group, gi) => (
+              <div key={group.title}>
+                {gi > 0 && <div className={`my-1 ${skin.sep}`} />}
+                <div className="px-3 pt-2 pb-0.5 text-[10.5px] uppercase tracking-wide text-[var(--ax-fg-faint)]">
+                  {group.title}
+                </div>
+                {group.items.map(({ href, label, Icon }) => (
+                  <a
+                    key={href}
+                    href={href}
+                    role="menuitem"
+                    className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-[13px] no-underline ${href === activeHref ? skin.itemActive : skin.item}`}
+                  >
+                    <Icon size={15} strokeWidth={1.7} />
+                    {label}
+                  </a>
+                ))}
+              </div>
+            ))}
+          </div>
 
           <div className={`my-1 ${skin.sep}`} />
 

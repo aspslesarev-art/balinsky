@@ -9,6 +9,7 @@ import Link from 'next/link'
 import { createClient } from '@supabase/supabase-js'
 import { requireAdmin } from '@/lib/admin-auth'
 import { LoginForm } from '../_login'
+import { AdminChrome } from '@/components/admin/AdminChrome'
 import { DevAssignTable } from './_assign'
 
 export const runtime = 'nodejs'
@@ -76,8 +77,7 @@ export default async function DevChatsPage() {
   const devOrder = [...unlinked, ...linked]
 
   return (
-    <div className="min-h-screen bg-[var(--ax-bg)] text-[var(--ax-fg)] p-6 sm:p-10">
-      <main className="max-w-[1100px] mx-auto space-y-8">
+    <AdminChrome width="max-w-[1100px]">
         <header>
           <div className="text-[12px] uppercase tracking-wide text-[var(--ax-fg-muted)] mb-1">Заявки → Telegram</div>
           <h1 className="text-[24px] font-semibold tracking-tight">Чаты застройщиков</h1>
@@ -137,8 +137,7 @@ export default async function DevChatsPage() {
             </table>
           </div>
         </section>
-      </main>
-    </div>
+    </AdminChrome>
   )
 }
 

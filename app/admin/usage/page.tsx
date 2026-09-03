@@ -7,6 +7,7 @@
 import { requireAdmin } from '@/lib/admin-auth'
 import { loadUsageSummary } from '@/lib/usage-tracker'
 import { LoginForm } from '../_login'
+import { AdminChrome } from '@/components/admin/AdminChrome'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -26,8 +27,7 @@ export default async function UsagePage() {
   const maxDayCost = Math.max(...u.byDay.map(d => d.cost), 0.0001)
 
   return (
-    <div className="min-h-screen bg-[var(--ax-bg)] text-[var(--ax-fg)] p-6 sm:p-10">
-      <main className="max-w-[1100px] mx-auto space-y-8">
+    <AdminChrome width="max-w-[1100px]">
         <header>
           <div className="text-[12px] uppercase tracking-wide text-[var(--ax-fg-muted)] mb-1">Расходы на Azure OpenAI</div>
           <h1 className="text-[24px] font-semibold tracking-tight">Burn rate</h1>
@@ -119,8 +119,7 @@ export default async function UsagePage() {
           Цены захардкожены в lib/usage-tracker.ts. Если Azure поменяет тарифы — обнови таблицу.
           Запись в balina_usage идёт fire-and-forget после каждого вызова Azure.
         </div>
-      </main>
-    </div>
+    </AdminChrome>
   )
 }
 
