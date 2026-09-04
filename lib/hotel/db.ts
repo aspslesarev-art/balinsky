@@ -5,8 +5,8 @@
 // компонентов нельзя — только из route handlers и серверных страниц.
 
 import { adminSb, isMissingTableError } from '@/lib/admin/sb'
+import type { PortalLang } from './i18n'
 
-export type HotelLang = 'en' | 'ru'
 export type RequestStatus = 'new' | 'in_progress' | 'done' | 'declined'
 export type MessageAuthor = 'guest' | 'staff'
 
@@ -15,7 +15,15 @@ export type Hotel = {
   slug: string
   name: string
   address: string | null
-  lang: HotelLang
+  /** Язык, на котором портал открывается, пока гость не выбрал свой. */
+  lang: PortalLang
+  /** Языки, включённые у этого отеля (подмножество портальных). */
+  langs: PortalLang[]
+  /** Кнопки «продолжить в мессенджере» под лентой чата. */
+  whatsapp: string | null
+  telegram_username: string | null
+  /** Нет ресторана — раздел «В отеле» не показываем (ТЗ 14.5). */
+  has_restaurant: boolean
   active: boolean
 }
 
@@ -27,17 +35,41 @@ export type Room = {
   active: boolean
 }
 
-export type HotelService = {
+/** Раздел главного экрана. Порядок — по марже, а не по алфавиту (ТЗ 14.1). */
+export type CatalogSection = 'hotel' | 'bali' | 'room' | 'every'
+export const SECTION_ORDER: CatalogSection[] = ['hotel', 'bali', 'room', 'every']
+
+/** Переводы каталога: {"en": "...", "ru": "..."} — читать через pick() из i18n. */
+export type I18nField = Record<string, string>
+
+export type Category = {
   id: number
   hotel_id: number
   code: string
-  title: string
-  title_en: string | null
-  note: string | null
-  price_usd: number | null
+  section: CatalogSection
+  title: I18nField
+  caption: I18nField | null
+  icon: string | null
+  photo_url: string | null
   sort: number
   active: boolean
 }
+
+export type Item = {
+  id: number
+  hotel_id: number
+  category_id: number
+  code: string
+  title: I18nField
+  descr: I18nField | null
+  price_usd: number | null
+  unit: 'once' | 'day' | 'hour' | 'kg' | null
+  photo_url: string | null
+  sort: number
+  active: boolean
+}
+
+export type CatalogCategory = Category & { items: Item[] }
 
 export type Stay = {
   id: number
@@ -53,9 +85,14 @@ export type HotelRequest = {
   hotel_id: number
   room_id: number
   stay_id: number
+  item_id: number | null
   service_code: string | null
   title: string
   note: string | null
+  contact_whatsapp: string | null
+  preferred_time: string | null
+  price_usd: number | null
+  lang: string | null
   status: RequestStatus
   created_at: string
   updated_at: string
@@ -69,19 +106,35 @@ export type HotelMessage = {
   author: MessageAuthor
   staff_name: string | null
   body: string
+  lang: string | null
   created_at: string
   read_by_staff_at: string | null
   read_by_guest_at: string | null
 }
 
-const HOTEL_COLS = 'id, slug, name, address, lang, active'
+export type HotelEvent = {
+  id: number
+  hotel_id: number
+  room_id: number | null
+  stay_id: number | null
+  lang: string | null
+  type: string
+  ctx: Record<string, unknown>
+  created_at: string
+}
+
+const HOTEL_COLS =
+  'id, slug, name, address, lang, langs, whatsapp, telegram_username, has_restaurant, active'
 const ROOM_COLS = 'id, hotel_id, label, token, active'
-const SERVICE_COLS = 'id, hotel_id, code, title, title_en, note, price_usd, sort, active'
+const CATEGORY_COLS = 'id, hotel_id, code, section, title, caption, icon, photo_url, sort, active'
+const ITEM_COLS =
+  'id, hotel_id, category_id, code, title, descr, price_usd, unit, photo_url, sort, active'
 const STAY_COLS = 'id, hotel_id, room_id, guest_name, opened_at, closed_at'
-const REQUEST_COLS =
-  'id, hotel_id, room_id, stay_id, service_code, title, note, status, created_at, updated_at, closed_at'
+// Одной строкой: supabase-js разбирает литерал select и по нему выводит типы —
+// склейка через `+` превращает результат в GenericStringError.
+const REQUEST_COLS = 'id, hotel_id, room_id, stay_id, item_id, service_code, title, note, contact_whatsapp, preferred_time, price_usd, lang, status, created_at, updated_at, closed_at'
 const MESSAGE_COLS =
-  'id, stay_id, room_id, author, staff_name, body, created_at, read_by_staff_at, read_by_guest_at'
+  'id, stay_id, room_id, author, staff_name, body, lang, created_at, read_by_staff_at, read_by_guest_at'
 
 // Пока миграция 079 не применена, сервис должен вести себя как «отелей нет»,
 // а не падать пятисоткой на каждой странице админки.
@@ -149,12 +202,49 @@ export async function ensureOpenStay(room: Room): Promise<Stay> {
   throw new Error(`ensureOpenStay: ${error?.message ?? 'insert returned no row'}`)
 }
 
-export async function listServices(hotelId: number, onlyActive = true): Promise<HotelService[]> {
-  let q = adminSb().from('hotel_services').select(SERVICE_COLS).eq('hotel_id', hotelId)
-  if (onlyActive) q = q.eq('active', true)
-  const { data, error } = await q.order('sort').order('id')
-  if (error) return emptyIfMissing(error, [], 'listServices')
-  return (data ?? []) as HotelService[]
+/**
+ * Каталог отеля: категории с позициями внутри, уже в порядке показа.
+ *
+ * Два запроса на весь портал, а не запрос на категорию: главный экран
+ * открывается на мобильном интернете, и каждый лишний round-trip виден
+ * гостю секундой ожидания (ТЗ 7 — первый экран ≤3 с).
+ */
+export async function loadCatalog(hotelId: number, onlyActive = true): Promise<CatalogCategory[]> {
+  const sb = adminSb()
+
+  let catQ = sb.from('hotel_categories').select(CATEGORY_COLS).eq('hotel_id', hotelId)
+  if (onlyActive) catQ = catQ.eq('active', true)
+  const { data: catRows, error: catErr } = await catQ.order('sort').order('id')
+  if (catErr) return emptyIfMissing(catErr, [], 'loadCatalog')
+  const categories = (catRows ?? []) as Category[]
+  if (categories.length === 0) return []
+
+  let itemQ = sb.from('hotel_items').select(ITEM_COLS).eq('hotel_id', hotelId)
+  if (onlyActive) itemQ = itemQ.eq('active', true)
+  const { data: itemRows } = await itemQ.order('sort').order('id')
+
+  const byCategory = new Map<number, Item[]>()
+  for (const item of ((itemRows ?? []) as Item[])) {
+    const list = byCategory.get(item.category_id)
+    if (list) list.push(item)
+    else byCategory.set(item.category_id, [item])
+  }
+
+  // Категория без позиций на главном не показывается (ТЗ 4.5).
+  return categories
+    .map(c => ({ ...c, items: byCategory.get(c.id) ?? [] }))
+    .filter(c => !onlyActive || c.items.length > 0)
+}
+
+export async function itemById(hotelId: number, itemId: number): Promise<Item | null> {
+  const { data, error } = await adminSb()
+    .from('hotel_items')
+    .select(ITEM_COLS)
+    .eq('id', itemId)
+    .eq('hotel_id', hotelId)
+    .maybeSingle()
+  if (error) return emptyIfMissing(error, null, 'itemById')
+  return (data as Item) ?? null
 }
 
 export async function listMessages(stayId: number): Promise<HotelMessage[]> {
@@ -182,6 +272,7 @@ export async function addMessage(input: {
   author: MessageAuthor
   body: string
   staffName?: string | null
+  lang?: string | null
 }): Promise<HotelMessage> {
   const now = new Date().toISOString()
   const { data, error } = await adminSb()
@@ -193,6 +284,7 @@ export async function addMessage(input: {
       author: input.author,
       staff_name: input.author === 'staff' ? (input.staffName ?? null) : null,
       body: input.body,
+      lang: input.lang ?? null,
       // Своё сообщение автор, очевидно, уже прочитал — иначе оно висело бы
       // непрочитанным у него же самого.
       read_by_guest_at: input.author === 'guest' ? now : null,
@@ -208,7 +300,11 @@ export async function addRequest(input: {
   stay: Stay
   title: string
   note?: string | null
-  serviceCode?: string | null
+  itemId?: number | null
+  whatsapp?: string | null
+  preferredTime?: string | null
+  priceUsd?: number | null
+  lang?: string | null
 }): Promise<HotelRequest> {
   const { data, error } = await adminSb()
     .from('hotel_requests')
@@ -216,9 +312,13 @@ export async function addRequest(input: {
       hotel_id: input.stay.hotel_id,
       room_id: input.stay.room_id,
       stay_id: input.stay.id,
-      service_code: input.serviceCode ?? null,
+      item_id: input.itemId ?? null,
       title: input.title,
       note: input.note ?? null,
+      contact_whatsapp: input.whatsapp ?? null,
+      preferred_time: input.preferredTime ?? null,
+      price_usd: input.priceUsd ?? null,
+      lang: input.lang ?? null,
     })
     .select(REQUEST_COLS)
     .single()
@@ -248,6 +348,42 @@ export async function markRead(stayId: number, side: MessageAuthor): Promise<voi
     .eq('author', otherSide)
     .is(column, null)
   if (error) emptyIfMissing(error, null, 'markRead')
+}
+
+/**
+ * Действие гостя в журнал (ТЗ 4.10). Пишем «в фоне»: аналитика не должна
+ * ронять ответ гостю, поэтому ошибки только логируем.
+ */
+export async function logEvent(input: {
+  hotelId: number
+  roomId?: number | null
+  stayId?: number | null
+  lang?: string | null
+  type: string
+  ctx?: Record<string, unknown>
+}): Promise<void> {
+  const { error } = await adminSb().from('hotel_events').insert({
+    hotel_id: input.hotelId,
+    room_id: input.roomId ?? null,
+    stay_id: input.stayId ?? null,
+    lang: input.lang ?? null,
+    type: input.type,
+    ctx: input.ctx ?? {},
+  })
+  if (error && !isMissingTableError(error)) console.error('[hotel] logEvent:', error.message)
+}
+
+/** Журнал за период — для выгрузки CSV в админке. */
+export async function listEvents(hotelId: number, sinceIso: string, limit = 5000): Promise<HotelEvent[]> {
+  const { data, error } = await adminSb()
+    .from('hotel_events')
+    .select('id, hotel_id, room_id, stay_id, lang, type, ctx, created_at')
+    .eq('hotel_id', hotelId)
+    .gte('created_at', sinceIso)
+    .order('created_at', { ascending: false })
+    .limit(limit)
+  if (error) return emptyIfMissing(error, [], 'listEvents')
+  return (data ?? []) as HotelEvent[]
 }
 
 // ─────────────────────────── стойка ───────────────────────────
@@ -447,7 +583,7 @@ export async function hotelStaffCode(hotelId: number): Promise<string | null> {
 }
 
 export async function createHotel(input: {
-  slug: string; name: string; address?: string | null; lang?: HotelLang; staffCode: string
+  slug: string; name: string; address?: string | null; lang?: PortalLang; staffCode: string
 }): Promise<Hotel> {
   const { data, error } = await adminSb()
     .from('hotel_properties')
@@ -465,7 +601,9 @@ export async function createHotel(input: {
 }
 
 export async function updateHotel(id: number, patch: Partial<{
-  name: string; address: string | null; lang: HotelLang; staff_code: string; active: boolean
+  name: string; address: string | null; lang: PortalLang; langs: PortalLang[]
+  whatsapp: string | null; telegram_username: string | null; telegram_chat_id: string | null
+  has_restaurant: boolean; staff_code: string; active: boolean
 }>): Promise<void> {
   const { error } = await adminSb().from('hotel_properties').update(patch).eq('id', id)
   if (error) throw new Error(`updateHotel: ${error.message}`)
@@ -515,30 +653,70 @@ export async function rotateRoomToken(hotelId: number, roomId: number, token: st
   if (error) throw new Error(`rotateRoomToken: ${error.message}`)
 }
 
-export async function upsertService(hotelId: number, input: {
-  code: string; title: string; title_en?: string | null; note?: string | null
-  price_usd?: number | null; sort?: number; active?: boolean
+export async function upsertCategory(hotelId: number, input: {
+  code: string; section: CatalogSection; title: I18nField; caption?: I18nField | null
+  icon?: string | null; photo_url?: string | null; sort?: number; active?: boolean
 }): Promise<void> {
   const { error } = await adminSb()
-    .from('hotel_services')
+    .from('hotel_categories')
     .upsert({
       hotel_id: hotelId,
       code: input.code,
+      section: input.section,
       title: input.title,
-      title_en: input.title_en ?? null,
-      note: input.note ?? null,
-      price_usd: input.price_usd ?? null,
+      caption: input.caption ?? null,
+      icon: input.icon ?? null,
+      photo_url: input.photo_url ?? null,
       sort: input.sort ?? 100,
       active: input.active ?? true,
     }, { onConflict: 'hotel_id,code' })
-  if (error) throw new Error(`upsertService: ${error.message}`)
+  if (error) throw new Error(`upsertCategory: ${error.message}`)
 }
 
-export async function setServiceActive(hotelId: number, serviceId: number, active: boolean): Promise<void> {
+export async function upsertItem(hotelId: number, categoryId: number, input: {
+  code: string; title: I18nField; descr?: I18nField | null
+  price_usd?: number | null; unit?: Item['unit']; photo_url?: string | null
+  sort?: number; active?: boolean
+}): Promise<void> {
   const { error } = await adminSb()
-    .from('hotel_services')
-    .update({ active })
-    .eq('id', serviceId)
-    .eq('hotel_id', hotelId)
-  if (error) throw new Error(`setServiceActive: ${error.message}`)
+    .from('hotel_items')
+    .upsert({
+      hotel_id: hotelId,
+      category_id: categoryId,
+      code: input.code,
+      title: input.title,
+      descr: input.descr ?? null,
+      price_usd: input.price_usd ?? null,
+      unit: input.unit ?? null,
+      photo_url: input.photo_url ?? null,
+      sort: input.sort ?? 100,
+      active: input.active ?? true,
+    }, { onConflict: 'category_id,code' })
+  if (error) throw new Error(`upsertItem: ${error.message}`)
+}
+
+export async function setCategoryActive(hotelId: number, id: number, active: boolean): Promise<void> {
+  const { error } = await adminSb()
+    .from('hotel_categories').update({ active }).eq('id', id).eq('hotel_id', hotelId)
+  if (error) throw new Error(`setCategoryActive: ${error.message}`)
+}
+
+export async function setItemActive(hotelId: number, id: number, active: boolean): Promise<void> {
+  const { error } = await adminSb()
+    .from('hotel_items').update({ active }).eq('id', id).eq('hotel_id', hotelId)
+  if (error) throw new Error(`setItemActive: ${error.message}`)
+}
+
+export async function deleteItem(hotelId: number, id: number): Promise<void> {
+  const { error } = await adminSb()
+    .from('hotel_items').delete().eq('id', id).eq('hotel_id', hotelId)
+  if (error) throw new Error(`deleteItem: ${error.message}`)
+}
+
+/** Chat id ресепшн — server-only, наружу не отдаём. */
+export async function hotelTelegramChat(hotelId: number): Promise<string | null> {
+  const { data, error } = await adminSb()
+    .from('hotel_properties').select('telegram_chat_id').eq('id', hotelId).maybeSingle()
+  if (error) return emptyIfMissing(error, null, 'hotelTelegramChat')
+  return (data as { telegram_chat_id: string | null } | null)?.telegram_chat_id ?? null
 }

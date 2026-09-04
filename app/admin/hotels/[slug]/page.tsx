@@ -1,6 +1,6 @@
 import { notFound, redirect } from 'next/navigation'
 import { requireAdmin } from '@/lib/admin-auth'
-import { hotelBySlug, hotelStaffCode, listRooms, listServices } from '@/lib/hotel/db'
+import { hotelBySlug, hotelStaffCode, listRooms, loadCatalog } from '@/lib/hotel/db'
 import { AdminThemeShell } from '@/components/admin/AdminThemeShell'
 import { HotelEditor } from './_hotel'
 
@@ -14,9 +14,10 @@ export default async function HotelAdmin({ params }: { params: Promise<{ slug: s
   const hotel = await hotelBySlug(slug)
   if (!hotel) notFound()
 
-  const [rooms, services, staffCode] = await Promise.all([
+  // В админке показываем и выключенные позиции — иначе скрытое не вернуть.
+  const [rooms, catalog, staffCode] = await Promise.all([
     listRooms(hotel.id),
-    listServices(hotel.id, false),
+    loadCatalog(hotel.id, false),
     hotelStaffCode(hotel.id),
   ])
 
@@ -29,8 +30,14 @@ export default async function HotelAdmin({ params }: { params: Promise<{ slug: s
       <HotelEditor
         hotelId={hotel.id}
         slug={hotel.slug}
+        hotel={{
+          whatsapp: hotel.whatsapp ?? '',
+          telegram_username: hotel.telegram_username ?? '',
+          has_restaurant: hotel.has_restaurant,
+          langs: hotel.langs ?? [],
+        }}
         rooms={rooms}
-        services={services}
+        catalog={catalog}
         staffCode={staffCode ?? ''}
       />
     </AdminThemeShell>

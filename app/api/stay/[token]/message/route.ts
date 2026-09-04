@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server'
-import { addMessage, ensureOpenStay, resolveRoomByToken, setGuestName } from '@/lib/hotel/db'
+import {
+  addMessage, ensureOpenStay, hotelTelegramChat, logEvent, resolveRoomByToken, setGuestName,
+} from '@/lib/hotel/db'
+import { notifyReception, unitTag } from '@/lib/hotel/notify'
+import { isPortalLang } from '@/lib/hotel/i18n'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -14,17 +18,27 @@ export async function POST(req: Request, { params }: { params: Promise<{ token: 
   const found = await resolveRoomByToken(token)
   if (!found) return NextResponse.json({ error: 'unknown_room' }, { status: 404 })
 
-  let body: { text?: string; name?: string }
+  let body: { text?: string; name?: string; lang?: string }
   try { body = await req.json() } catch { return NextResponse.json({ error: 'bad_json' }, { status: 400 }) }
 
   const text = (body.text ?? '').trim()
   if (!text) return NextResponse.json({ error: 'empty' }, { status: 400 })
   if (text.length > MAX_BODY) return NextResponse.json({ error: 'too_long' }, { status: 413 })
 
+  const lang = isPortalLang(body.lang) ? body.lang : found.hotel.lang
   const stay = await ensureOpenStay(found.room)
   const name = (body.name ?? '').trim().slice(0, MAX_NAME)
   if (name && name !== stay.guest_name) await setGuestName(found.hotel.id, stay.id, name)
 
-  const message = await addMessage({ stay, author: 'guest', body: text })
+  const message = await addMessage({ stay, author: 'guest', body: text, lang })
+  await logEvent({
+    hotelId: found.hotel.id, roomId: found.room.id, stayId: stay.id, lang,
+    type: 'chat_message', ctx: { len: text.length },
+  })
+  await notifyReception(
+    await hotelTelegramChat(found.hotel.id),
+    `${unitTag(found.room.label, lang)} ${text}`,
+  )
+
   return NextResponse.json({ ok: true, message })
 }

@@ -223,7 +223,16 @@ export function Desk({ slug, hotelName }: { slug: string; hotelName: string }) {
                       <span className={`rounded-full px-2 py-0.5 text-[11px] ${STATUS_TONE[r.status]}`}>
                         {STATUS_LABEL[r.status]}
                       </span>
-                      <span className="min-w-0 flex-1 truncate text-[14px]">{r.title}</span>
+                      <span className="min-w-0 flex-1 text-[14px]">
+                        {r.title}
+                        {/* Телефон и время гость оставил в форме — стойке не надо
+                            их выпрашивать в переписке. */}
+                        {(r.contact_whatsapp || r.preferred_time) && (
+                          <span className="ml-2 text-[12px] text-neutral-500">
+                            {[r.preferred_time, r.contact_whatsapp].filter(Boolean).join(' · ')}
+                          </span>
+                        )}
+                      </span>
                       {r.status === 'new' && (
                         <button
                           onClick={() => setStatus(r.id, 'in_progress')}

@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { resolveRoomByToken } from '@/lib/hotel/db'
+import { isPortalLang } from '@/lib/hotel/i18n'
 import { GuestRoom } from './_room'
 
 export const dynamic = 'force-dynamic'
@@ -18,7 +19,7 @@ export default async function StayPage({ params }: { params: Promise<{ token: st
       token={token}
       hotelName={found.hotel.name}
       roomLabel={found.room.label}
-      defaultLang={found.hotel.lang}
+      defaultLang={isPortalLang(found.hotel.lang) ? found.hotel.lang : 'en'}
     />
   )
 }
