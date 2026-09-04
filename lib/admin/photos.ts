@@ -65,13 +65,18 @@ export async function uploadPhoto(cfg: CollectionConfig, opts: {
 }
 
 // Upload one file to an arbitrary Storage bucket, return its public/CDN URL.
+// `prefix` separates who wrote the file: admin uploads stay under `admin/`,
+// agent-submitted photos land under their own listing folder, so a listing can
+// be cleaned up without touching curated media.
 export async function uploadToBucket(bucket: string, opts: {
   filename: string
   buf: Buffer
   contentType: string
+  prefix?: string
 }): Promise<string> {
   const safe = opts.filename.replace(/[^A-Za-z0-9._-]+/g, '_').slice(0, 80) || 'file'
-  const key = `admin/${Date.now()}-${safe}`
+  const folder = (opts.prefix ?? 'admin').replace(/[^A-Za-z0-9/_-]+/g, '').replace(/^\/+|\/+$/g, '') || 'admin'
+  const key = `${folder}/${Date.now()}-${safe}`
   const { error } = await adminSb().storage.from(bucket).upload(key, opts.buf, {
     contentType: opts.contentType,
     upsert: false,

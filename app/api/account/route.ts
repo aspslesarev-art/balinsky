@@ -26,6 +26,9 @@ export async function POST(req: Request) {
     firstName: str(form.get('firstName')),
     lastName: str(form.get('lastName')),
     isAgent: form.get('isAgent') === 'on',
+    phone: str(form.get('phone')),
+    agency: str(form.get('agency')),
+    contactNote: str(form.get('contactNote')),
   })
 
   return NextResponse.redirect(new URL(ok ? '/kabinet?saved=1' : '/kabinet?error=1', origin), { status: 303 })

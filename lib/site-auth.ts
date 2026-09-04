@@ -419,7 +419,16 @@ export async function redeemLoginCode(challenge: string, code: string): Promise<
 /** Profile fields the account page may change. */
 export async function updateSiteUser(
   telegramId: number,
-  patch: { firstName?: string | null; lastName?: string | null; isAgent?: boolean },
+  patch: {
+    firstName?: string | null
+    lastName?: string | null
+    isAgent?: boolean
+    // Контакты, которые показываются на карточках объектов, добавленных
+    // агентом, вместо контактов Balinsky.
+    phone?: string | null
+    agency?: string | null
+    contactNote?: string | null
+  },
 ): Promise<boolean> {
   const clean = (v: string | null | undefined) =>
     typeof v === 'string' ? v.trim().slice(0, 80) || null : null
@@ -430,6 +439,9 @@ export async function updateSiteUser(
         ...(patch.firstName !== undefined ? { first_name: clean(patch.firstName) } : {}),
         ...(patch.lastName !== undefined ? { last_name: clean(patch.lastName) } : {}),
         ...(patch.isAgent !== undefined ? { is_agent: patch.isAgent === true } : {}),
+        ...(patch.phone !== undefined ? { phone: clean(patch.phone) } : {}),
+        ...(patch.agency !== undefined ? { agency: clean(patch.agency) } : {}),
+        ...(patch.contactNote !== undefined ? { contact_note: clean(patch.contactNote) } : {}),
       })
       .eq('telegram_id', telegramId)
     return !error

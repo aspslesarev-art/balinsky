@@ -4,6 +4,7 @@ import { handleStart, fallbackReply, handleSubscriptionCommand, handleDeleteComm
 import { replyAsBalina } from '@/lib/balina-telegram'
 import { logMessage, upsertChat, getChat, shouldBotAutoReply, addChatTags } from '@/lib/bot-storage'
 import { handleReservationCallback } from '@/lib/telegram-reservation'
+import { handleListingCallback } from '@/lib/agent-listings/moderation'
 import { handleAdminCallback } from '@/lib/balina-admin-edit'
 import { refreshChatAvatar } from '@/lib/chat-avatars'
 import { uploadChatMedia, downloadTelegramFile, type ChatMediaKind } from '@/lib/chat-media'
@@ -68,6 +69,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, callback: true })
   }
   // Admin data-edit confirm/cancel taps (owner-gated inside the handler).
+  // Модерация объектов агентов — ✅/❌ под карточкой в админском чате.
+  if (update.callback_query?.data?.startsWith('agl:')) {
+    await handleListingCallback(token, update.callback_query)
+    return NextResponse.json({ ok: true })
+  }
+
   if (update.callback_query?.data?.startsWith('admin:')) {
     await handleAdminCallback(token, update.callback_query)
     return NextResponse.json({ ok: true, callback: true })

@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { getSiteUser } from '@/lib/site-auth'
+import { getAgentContact } from '@/lib/agent-listings/store'
 import { LOGIN_URL } from '@/components/GatedBlock'
 
 // Account page: sign in, and once signed in, the name that goes on PDF
@@ -23,6 +25,8 @@ export default async function KabinetPage({
   searchParams: Promise<{ saved?: string; error?: string; login?: string }>
 }) {
   const [user, sp] = await Promise.all([getSiteUser(), searchParams])
+  // Контакты агента — то, что увидит клиент на карточке добавленного объекта.
+  const contact = user ? await getAgentContact(user.telegramId) : null
 
   if (!user) {
     return (
@@ -74,12 +78,26 @@ export default async function KabinetPage({
           <label htmlFor="lastName" className="text-[14px] font-medium text-[#111827]">Фамилия</label>
           <input id="lastName" name="lastName" defaultValue={user.lastName ?? ''} className={INPUT} />
         </div>
+        <div>
+          <label htmlFor="phone" className="text-[14px] font-medium text-[#111827]">Телефон</label>
+          <input id="phone" name="phone" defaultValue={contact?.phone ?? ''} placeholder="+62 …" className={INPUT} />
+        </div>
+        <div>
+          <label htmlFor="agency" className="text-[14px] font-medium text-[#111827]">Агентство</label>
+          <input id="agency" name="agency" defaultValue={contact?.agency ?? ''} className={INPUT} />
+        </div>
+        <div>
+          <label htmlFor="contactNote" className="text-[14px] font-medium text-[#111827]">Как с вами связаться</label>
+          <input id="contactNote" name="contactNote" defaultValue={contact?.note ?? ''}
+            placeholder="Например: пишите в Telegram, отвечаю до 22:00 по Бали" className={INPUT} />
+        </div>
         <label className="flex items-start gap-3 text-[14px] text-[#111827]">
           <input type="checkbox" name="isAgent" defaultChecked={user.isAgent} className="mt-1" />
           <span>
             Я агент
             <span className="block text-[13px] text-[var(--color-text-muted)]">
-              Имя и фамилия подставятся в PDF-презентации для ваших клиентов.
+              Имя, фамилия и контакты подставятся в PDF-презентации и на карточки объектов,
+              которые вы добавите сами.
             </span>
           </span>
         </label>
@@ -90,6 +108,17 @@ export default async function KabinetPage({
           Сохранить
         </button>
       </form>
+
+      <div className="mt-10 rounded-2xl border border-[var(--color-border)] bg-white p-5">
+        <p className="text-[15px] font-medium text-[#111827]">Свои объекты</p>
+        <p className="mt-1 text-[14px] text-[var(--color-text-muted)]">
+          Добавьте виллу или апартаменты: характеристики подтянутся из каталога, на карточке будут ваши контакты.
+        </p>
+        <Link href="/kabinet/objekty"
+          className="mt-4 inline-flex rounded-xl bg-[var(--color-primary)] px-5 py-2.5 text-[15px] font-semibold text-white">
+          Мои объекты
+        </Link>
+      </div>
 
       <form method="POST" action="/api/account" className="mt-10">
         <input type="hidden" name="action" value="logout" />
