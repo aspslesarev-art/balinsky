@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Стойка</title>
+<style>
+:root{--bg:#F2F5F3;--surface:#fff;--ink:#173430;--ink-2:#3F5954;--line:#C4D0CC;--accent:#F2C14E;--amber:#B4711A;--amber-bg:#F6E9D3;--blue:#2A5F8F;--blue-bg:#DFE9F3;--ok:#2E7D5B;--ok-bg:#D8EBE2}
+@media(prefers-color-scheme:dark){:root{--bg:#121A18;--surface:#1B2523;--ink:#EEF3F1;--ink-2:#A9BBB6;--line:#33423E;--amber:#E0A65A;--amber-bg:#3A2E1B;--blue:#8FB6D9;--blue-bg:#1D2C3A;--ok:#5DBB8A;--ok-bg:#1C3229}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+button,input{font:inherit;color:inherit}
+.wrap{display:flex;min-height:100vh}
+@media(max-width:760px){.wrap{flex-direction:column}.list.hide,.detail.hide{display:none}.list{width:100%!important;border-right:0!important;border-bottom:1px solid var(--line)}}
+.list{width:300px;flex:none;border-right:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column}
+.head{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line)}
+.head b{font-size:17px}
+.head .sub{font-size:13px;color:var(--ink-2)}
+.room{display:flex;gap:10px;align-items:center;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:transparent;padding:12px 16px;cursor:pointer}
+.room:hover{background:var(--bg)}
+.room.on{background:var(--bg);box-shadow:inset 3px 0 0 var(--ok)}
+.room .label{font-weight:650}
+.room .last{color:var(--ink-2);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.badge{margin-left:auto;flex:none;border-radius:999px;padding:1px 8px;font-size:12px;font-weight:650;background:var(--ink);color:var(--surface)}
+.badge.amber{background:var(--amber-bg);color:var(--amber)}
+.detail{flex:1;display:flex;flex-direction:column;background:var(--surface);min-width:0}
+.tasks{border-bottom:1px solid var(--line);max-height:40vh;overflow:auto}
+.task{display:flex;gap:9px;align-items:center;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--line)}
+.task .name{flex:1;min-width:140px}
+.task .meta{color:var(--ink-2);font-size:13px}
+.pill{font-size:12px;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.pill.new{background:var(--amber-bg);color:var(--amber)}
+.pill.work{background:var(--blue-bg);color:var(--blue)}
+.pill.done{background:var(--ok-bg);color:var(--ok)}
+.thread{flex:1;display:flex;flex-direction:column;gap:10px;padding:16px;overflow-y:auto;min-height:200px}
+.bub{max-width:80%;padding:10px 14px;border-radius:14px;background:var(--bg);white-space:pre-wrap;word-break:break-word}
+.bub.me{align-self:flex-end;background:var(--ink);color:var(--surface)}
+.bub .who{font-size:12px;opacity:.65;margin-bottom:2px}
+.composer{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--line)}
+.composer input{flex:1;min-height:46px;border:1px solid var(--line);border-radius:11px;padding:0 14px;background:var(--bg)}
+.btn{min-height:46px;border-radius:11px;border:1px solid var(--line);background:var(--surface);padding:0 16px;cursor:pointer}
+.btn.dark{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.mini{border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:4px 10px;font-size:13px;cursor:pointer}
+.mini.solid{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.center{margin:auto;padding:24px;color:var(--ink-2);text-align:center}
+form.login{max-width:340px;margin:12vh auto;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px}
+form.login input{width:100%;min-height:48px;border:1px solid var(--line);border-radius:11px;padding:0 14px;margin-bottom:10px;background:var(--bg)}
+form.login .btn{width:100%}
+.err{color:#B23A3A;font-size:14px;margin-bottom:8px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const app = document.getElementById('app');
+// Отель берём из localStorage, а если панель открыли на другом устройстве —
+// из куки, которую поставил сервер при входе.
+const cookieSlug = (document.cookie.match(/(?:^|; )sr_slug=([^;]+)/) || [])[1] || '';
+let slug = localStorage.getItem('sr_desk_slug') || cookieSlug;
+let state = null, roomId = null, who = localStorage.getItem('sr_desk_who') || '', mobileDetail = false;
+
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const hhmm = ms => new Date(ms).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+const post = (path, body) => fetch(`/api/desk/${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+
+function loginScreen(err) {
+  app.innerHTML = `<form class="login">
+    <b style="font-size:20px">Стойка</b>
+    <p style="color:var(--ink-2);font-size:14px;margin:4px 0 16px">Заявки и переписка с гостями.</p>
+    ${err ? `<div class="err">${esc(err)}</div>` : ''}
+    <input id="l-slug" placeholder="Код отеля (demo)" value="${esc(slug)}" autocapitalize="none">
+    <input id="l-code" type="password" placeholder="Код смены">
+    <button class="btn dark" type="submit">Войти</button>
+  </form>`;
+  app.querySelector('form').onsubmit = async e => {
+    e.preventDefault();
+    const s = document.getElementById('l-slug').value.trim().toLowerCase();
+    const r = await post('login', { slug: s, code: document.getElementById('l-code').value.trim() });
+    if (!r.ok) return loginScreen('Отель или код не подошли');
+    slug = s; localStorage.setItem('sr_desk_slug', slug);
+    load();
+  };
+}
+
+async function load() {
+  if (!slug) return loginScreen();
+  const r = await fetch(`/api/desk/${slug}/state${roomId ? `?room=${roomId}` : ''}`, { cache: 'no-store' });
+  if (r.status === 401) return loginScreen();
+  if (!r.ok) return;
+  state = await r.json();
+  render();
+}
+
+function render() {
+  const rooms = state.rooms;
+  const cur = rooms.find(r => r.id === roomId) || null;
+  const open = rooms.reduce((n, r) => n + r.openOrders, 0);
+  const d = state.detail;
+
+  app.innerHTML = `<div class="wrap">
+    <aside class="list ${mobileDetail ? 'hide' : ''}">
+      <div class="head">
+        <div style="min-width:0">
+          <b>${esc(state.hotel.name)}</b>
+          <div class="sub">${open ? open + ' открытых заявок' : 'Открытых заявок нет'}</div>
+        </div>
+        <button class="mini" style="margin-left:auto" data-logout="1">Выйти</button>
+      </div>
+      <input id="who" placeholder="Кто на смене" value="${esc(who)}" style="border:0;border-bottom:1px solid var(--line);padding:10px 16px;background:transparent">
+      <div style="overflow:auto">
+        ${rooms.map(r => `<button class="room ${r.id === roomId ? 'on' : ''}" data-room="${r.id}">
+          <span style="min-width:0">
+            <span class="label">${esc(r.label)}</span> ${r.guestName ? `<span class="last">${esc(r.guestName)}</span>` : ''}
+            <span class="last" style="display:block">${esc(r.lastText || (r.occupied ? 'Заехали' : 'Свободен'))}</span>
+          </span>
+          ${r.unread ? `<span class="badge">${r.unread}</span>` : ''}
+          ${r.openOrders ? `<span class="badge amber">${r.openOrders}</span>` : ''}
+        </button>`).join('')}
+      </div>
+    </aside>
+
+    <section class="detail ${mobileDetail ? '' : 'hide'}">
+      ${!cur ? '<div class="center">Выберите номер.</div>' : `
+        <div class="head">
+          <button class="mini" data-back="1" style="display:none">←</button>
+          <div style="min-width:0"><b>Номер ${esc(cur.label)}</b>
+            <div class="sub">${esc(d?.guestName || (cur.occupied ? 'Гость без имени' : 'Смена не открыта'))}</div></div>
+          <button class="mini" style="margin-left:auto" data-checkout="1">Выезд</button>
+        </div>
+        <div class="tasks">${(d?.orders || []).map(o => {
+          const cls = o.status === 'done' ? 'done' : o.status === 'in_progress' ? 'work' : 'new';
+          const label = { new: 'Новый', in_progress: 'В работе', done: 'Готово', declined: 'Отклонён' }[o.status];
+          return `<div class="task"><span class="pill ${cls}">${label}</span>
+            <span class="name">${esc(o.title)}${o.note ? ` <span class="meta">— ${esc(o.note)}</span>` : ''}
+              <span class="meta" style="display:block">${[o.time, o.whatsapp, o.price ? '$' + o.price : ''].filter(Boolean).map(esc).join(' · ')}</span></span>
+            ${o.status === 'new' ? `<button class="mini" data-order="${o.id}" data-status="in_progress">Взял</button>` : ''}
+            ${o.status !== 'done' ? `<button class="mini solid" data-order="${o.id}" data-status="done">Готово</button>` : ''}</div>`;
+        }).join('')}</div>
+        <div class="thread">${(d?.messages || []).length
+          ? d.messages.map(m => `<div class="bub${m.from === 'staff' ? ' me' : ''}">
+              <div class="who">${esc(m.from === 'staff' ? (m.who || 'Стойка') : cur.label)} · ${hhmm(m.at)}</div>${esc(m.text)}</div>`).join('')
+          : '<div class="center">Сообщений пока нет.</div>'}</div>
+        <div class="composer"><input id="r-in" placeholder="Ответить гостю…"><button class="btn dark" data-reply="1">Отправить</button></div>`}
+    </section>
+  </div>`;
+
+  const back = app.querySelector('[data-back]');
+  if (back && innerWidth <= 760) back.style.display = '';
+  const thread = app.querySelector('.thread');
+  if (thread) thread.scrollTop = thread.scrollHeight;
+  const whoInput = document.getElementById('who');
+  if (whoInput) whoInput.oninput = e => { who = e.target.value; localStorage.setItem('sr_desk_who', who); };
+}
+
+document.addEventListener('click', async e => {
+  const el = e.target.closest('[data-room],[data-reply],[data-order],[data-checkout],[data-logout],[data-back]');
+  if (!el) return;
+  const d = el.dataset;
+  if (d.room) { roomId = d.room; mobileDetail = true; return load(); }
+  if (d.back) { mobileDetail = false; return render(); }
+  if (d.logout) { await post('logout', {}); slug = ''; localStorage.removeItem('sr_desk_slug'); return loginScreen(); }
+  if (d.checkout) {
+    if (!confirm('Закрыть смену? Переписка и заявки этого номера очистятся для следующего гостя.')) return;
+    await post(`${slug}/checkout`, { roomId }); return load();
+  }
+  if (d.order) { await post(`${slug}/order`, { roomId, orderId: d.order, status: d.status }); return load(); }
+  if (d.reply) {
+    const input = document.getElementById('r-in');
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    await post(`${slug}/reply`, { roomId, text, who });
+    return load();
+  }
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.id === 'r-in') { e.preventDefault(); document.querySelector('[data-reply]')?.click(); }
+});
+
+load();
+setInterval(() => { if (document.visibilityState === 'visible' && slug) load(); }, 5000);
+</script>
+</body>
+</html>

@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Guest portal</title>
+<style>
+:root{--bg:#F2F5F3;--surface:#FFFFFF;--ink:#173430;--ink-2:#3F5954;--line:#C4D0CC;--accent:#F2C14E;--accent-ink:#2C2100;--sea:#1F6F6B;--ok:#2E7D5B;--bad:#B23A3A;--placeholder:#E1E8E5;--outer:#DCE4E1;--r:12px;--space:22px}
+@media(prefers-color-scheme:dark){:root{--bg:#121A18;--surface:#1B2523;--ink:#EEF3F1;--ink-2:#A9BBB6;--line:#33423E;--sea:#7FC7C1;--ok:#5DBB8A;--bad:#E07A7A;--placeholder:#243230;--outer:#0B100F}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--outer);color:var(--ink);font:400 17px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans","Noto Sans CJK SC",Arial,sans-serif;-webkit-font-smoothing:antialiased}
+button,input,textarea{font:inherit;color:inherit}
+.phone{max-width:460px;margin:0 auto;min-height:100vh;background:var(--bg);display:flex;flex-direction:column;padding-bottom:28px}
+@media(min-width:720px){body{padding:24px 0}.phone{min-height:calc(100vh - 48px);border-radius:24px;border:1px solid var(--line);overflow:hidden}}
+header{display:flex;align-items:flex-start;justify-content:space-between;padding:20px var(--space) 6px;gap:12px}
+.h-name{font-weight:700;font-size:1.15rem}
+.h-unit{color:var(--ink-2);font-size:.95rem;margin-top:4px}
+.langs{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.langs button{min-height:44px;min-width:44px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:.95rem;font-weight:600;cursor:pointer}
+.langs button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+main{flex:1;padding:8px var(--space) 28px}
+h1{font-size:1.6rem;line-height:1.2;font-weight:700;margin:8px 0 6px}
+.sub{color:var(--ink-2);font-size:1rem;margin-bottom:18px}
+.back{background:none;border:0;color:var(--sea);font-size:1rem;font-weight:600;padding:10px 0;cursor:pointer;min-height:44px}
+.concierge{display:block;width:100%;text-align:left;border:0;background:var(--accent);color:var(--accent-ink);border-radius:var(--r);padding:20px 18px;margin:12px 0 6px;cursor:pointer}
+.concierge .ct{font-size:1.3rem;font-weight:700;line-height:1.2}
+.concierge .cs{font-size:.98rem;margin-top:6px;opacity:.85}
+.sec{font-size:.92rem;color:var(--ink-2);margin:24px 0 10px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid .wide{grid-column:span 2}
+.ptile,.ctile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);text-align:left;color:var(--ink);cursor:pointer;padding:0;overflow:hidden}
+.ctile{padding:14px;min-height:64px;display:flex;gap:10px;align-items:center}
+.ph{aspect-ratio:16/9;background:var(--placeholder);display:flex;align-items:center;justify-content:center;color:var(--ink-2);position:relative;overflow:hidden}
+.ph img,.thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ptile .tx{padding:12px 12px 14px}
+/* Внутри плиток это span-ы (кнопка не может содержать div) — без display:block
+   название, подпись и цена слипаются в одну строку. */
+.tt,.cap,.pr{display:block}
+.tt{font-size:1.05rem;font-weight:650;line-height:1.25}
+.cap{font-size:.95rem;color:var(--ink-2);margin-top:3px;line-height:1.35}
+.pr{font-size:1rem;font-weight:600;margin-top:8px}
+.divider{border:0;border-top:1px solid var(--line);margin:26px 0 6px}
+.linkrow{display:block;width:100%;background:none;border:0;text-align:left;color:var(--sea);font-weight:600;font-size:1.05rem;padding:14px 0;min-height:48px;cursor:pointer}
+.item{display:flex;gap:12px;padding:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);margin-bottom:12px}
+.thumb{width:84px;height:84px;border-radius:10px;flex:none;background:var(--placeholder);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--ink-2);font-size:26px}
+.item .body{flex:1;min-width:0}
+.item .foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
+.item .pr{margin-top:0}
+.btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:52px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:1.05rem;font-weight:650;cursor:pointer;margin-bottom:12px;text-decoration:none;padding:8px 16px}
+.btn.accent{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.dark{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.btn.inline{width:auto;min-height:44px;margin:0;padding:0 16px;flex:none;font-size:1rem}
+.field{margin-bottom:16px}
+label{display:block;font-size:.95rem;color:var(--ink-2);margin-bottom:6px}
+input,textarea{width:100%;min-height:52px;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;background:var(--surface)}
+textarea{min-height:88px;resize:vertical}
+input.bad{border-color:var(--bad);border-width:2px}
+.err{color:var(--bad);font-size:.95rem;margin-top:6px;min-height:1.2em}
+.thread{display:flex;flex-direction:column;gap:10px;margin:6px 0 16px}
+.bub{max-width:86%;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:var(--surface);white-space:pre-wrap;word-break:break-word}
+.bub.me{align-self:flex-end;background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.bub .who{font-size:.85rem;opacity:.7;margin-bottom:3px}
+.composer{display:flex;gap:8px;margin-bottom:22px}
+.composer input{flex:1}
+.composer .btn{width:60px;flex:none;margin:0;padding:0}
+.note{background:var(--placeholder);border-radius:var(--r);padding:14px 16px;font-size:.98rem;color:var(--ink-2);margin:16px 0}
+.ok-mark{width:72px;height:72px;border-radius:50%;background:var(--ok);color:#fff;display:flex;align-items:center;justify-content:center;font-size:36px;margin:24px 0 18px}
+.pill{font-size:.8rem;padding:3px 9px;border-radius:999px;background:var(--placeholder);color:var(--ink-2);white-space:nowrap}
+.row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.row .name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--sea);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="phone"><header id="top"></header><main id="screen"></main></div>
+<script>
+const TOKEN = location.pathname.split('/').filter(Boolean)[1] || '';
+const LS = 'smartroom_lang';
+
+const T = {
+en:{ask_title:'Ask us anything',ask_sub:'Any language, 24/7. We reply in minutes.',sec_hotel:'At the hotel',sec_bali:'Popular in Bali',sec_room:'To your room',sec_every:'Everyday',from:'from {p}',included:'Included',day:'/day',hour:'/h',kg:'/kg',need_else:'Need something else? → Message us',back:'Back',order:'Order',order_title:'Order: {item}',f_what:'What do you need? (optional)',f_time:'Convenient time (optional)',f_wa:'Your WhatsApp number',f_wa_err:'Enter a WhatsApp number, at least 6 digits',send_req:'Send request',sent_title:'Request sent',sent_sub:"We'll confirm on WhatsApp within minutes.",back_cat:'Back to catalog',chat_ph:'Write to reception…',send:'Send',chat_empty:'Write here. Reception sees your room number and language automatically.',or_messenger:'Or continue in your messenger',open_in:'Open {app}',reception:'Reception',you:'You',hello:'Hello!',price_tip:'Prices in USD',your_orders:'Your orders',st_new:'Received',st_work:'In progress',st_done:'Done',st_declined:'Declined',empty:'The catalog is being filled in. Message us — we will arrange anything.',failed:'Not sent. Check your connection and try again.'},
+ru:{ask_title:'Спросите нас о чём угодно',ask_sub:'На любом языке, круглосуточно. Отвечаем за минуты.',sec_hotel:'В отеле',sec_bali:'Популярное на Бали',sec_room:'В номер',sec_every:'Каждый день',from:'от {p}',included:'Включено',day:'/день',hour:'/час',kg:'/кг',need_else:'Нужно что-то ещё? → Напишите нам',back:'Назад',order:'Заказать',order_title:'Заказ: {item}',f_what:'Что нужно? (необязательно)',f_time:'Удобное время (необязательно)',f_wa:'Ваш номер WhatsApp',f_wa_err:'Введите номер WhatsApp, минимум 6 цифр',send_req:'Отправить заявку',sent_title:'Заявка отправлена',sent_sub:'Подтвердим в WhatsApp в течение нескольких минут.',back_cat:'Вернуться в каталог',chat_ph:'Написать на ресепшн…',send:'Отправить',chat_empty:'Пишите здесь. Ресепшн сразу видит номер и ваш язык.',or_messenger:'Или продолжить в мессенджере',open_in:'Открыть {app}',reception:'Ресепшн',you:'Вы',hello:'Здравствуйте!',price_tip:'Цены в долларах США',your_orders:'Ваши заказы',st_new:'Принят',st_work:'Готовим',st_done:'Готово',st_declined:'Отклонён',empty:'Каталог ещё наполняется. Напишите нам — организуем что угодно.',failed:'Не отправилось. Проверьте связь и попробуйте ещё раз.'},
+zh:{ask_title:'有问题随时问我们',ask_sub:'任何语言，全天候。几分钟内回复。',sec_hotel:'酒店内',sec_bali:'巴厘岛热门',sec_room:'送到房间',sec_every:'日常',from:'{p}起',included:'已包含',day:'/天',hour:'/小时',kg:'/公斤',need_else:'还需要其他服务？→ 联系我们',back:'返回',order:'预订',order_title:'预订：{item}',f_what:'需要什么？（选填）',f_time:'方便的时间（选填）',f_wa:'您的WhatsApp号码',f_wa_err:'请输入WhatsApp号码，至少6位数字',send_req:'发送请求',sent_title:'请求已发送',sent_sub:'我们将在几分钟内通过WhatsApp确认。',back_cat:'返回目录',chat_ph:'给前台留言…',send:'发送',chat_empty:'在这里留言。前台会自动看到您的房号和语言。',or_messenger:'或在您的聊天软件中继续',open_in:'打开{app}',reception:'前台',you:'您',hello:'您好！',price_tip:'价格以美元计',your_orders:'您的订单',st_new:'已接收',st_work:'处理中',st_done:'已完成',st_declined:'已拒绝',empty:'目录正在完善中。给我们留言。',failed:'发送失败。请检查网络后重试。'}
+};
+const SECTIONS=[['hotel','sec_hotel'],['bali','sec_bali'],['room','sec_room'],['every','sec_every']];
+const ICON={kitchen:'🍽',clock:'🕗',map:'🗺',car:'🚕',flower:'💆',ripple:'🌊',gamepad:'🎮',cake:'🎂',baby:'🧸',camera:'📷',moto:'🛵'};
+
+// Стартовый язык: выбор гостя → язык телефона → английский.
+let lang = (() => {
+  try { const s = localStorage.getItem(LS); if (T[s]) return s; } catch {}
+  const n = (navigator.language || '').toLowerCase();
+  return n.startsWith('ru') ? 'ru' : n.startsWith('zh') ? 'zh' : 'en';
+})();
+let S = null, screen = { name: 'home' }, draft = { note: '', time: '', wa: '', err: '' };
+
+const t = (k, v) => { let s = (T[lang] && T[lang][k]) || T.en[k] || k; if (v) for (const x in v) s = s.split('{' + x + '}').join(v[x]); return s; };
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const L = o => (o && (o[lang] || o.en || Object.values(o).find(Boolean))) || '';
+const hhmm = ms => new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+const price = it => !it.price ? t('included') : '$' + it.price + (it.unit && it.unit !== 'once' ? t(it.unit) : '');
+const track = (type, ctx) => fetch(`/api/stay/${TOKEN}/event`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type, ctx, lang }), keepalive: true }).catch(() => {});
+
+async function load() {
+  try {
+    const r = await fetch(`/api/stay/${TOKEN}`, { cache: 'no-store' });
+    if (!r.ok) { document.getElementById('screen').innerHTML = '<h1>404</h1><p class="sub">Room not found</p>'; return; }
+    S = await r.json(); render();
+  } catch {}
+}
+
+/** У отеля без ресторана раздел «В отеле» скрыт, доставка еды поднимается выше. */
+function catalog() {
+  const list = (S?.hotel.catalog || []).filter(c => c.items.length);
+  if (S?.hotel.hasRestaurant) return list;
+  return list.filter(c => c.section !== 'hotel').map(c => c.code === 'food' ? { ...c, section: 'bali' } : c);
+}
+const fromPrice = c => {
+  const cheap = c.items.reduce((a, b) => (a.price || 0) <= (b.price || 0) ? a : b);
+  return !cheap.price ? t('included') : t('from', { p: price(cheap) });
+};
+
+function go(next, ev) { screen = next; if (ev) track(ev[0], ev[1]); render(); scrollTo(0, 0); }
+
+function render() {
+  if (!S) return;
+  document.documentElement.lang = lang;
+  document.getElementById('top').innerHTML =
+    `<div><div class="h-name">${esc(S.hotel.name)}</div><div class="h-unit">📍 ${esc(S.room.label)}</div></div>
+     <div class="langs">${(S.hotel.langs || ['en']).map(l => `<button data-lang="${l}" class="${l === lang ? 'on' : ''}">${l === 'zh' ? '中文' : l.toUpperCase()}</button>`).join('')}</div>`;
+  document.getElementById('screen').innerHTML = SCREENS[screen.name]();
+  const thread = document.querySelector('.thread');
+  if (thread) thread.scrollTop = thread.scrollHeight;
+}
+
+const SCREENS = {
+  home() {
+    let h = `<button class="concierge" data-go="chat"><div class="ct">${esc(t('ask_title'))}</div><div class="cs">${esc(t('ask_sub'))}</div></button>`;
+    const open = (S.orders || []).filter(o => o.status !== 'done' && o.status !== 'declined');
+    if (open.length) {
+      h += `<div class="sec">${esc(t('your_orders'))}</div>` + open.map(o => {
+        const st = o.status === 'in_progress' ? 'st_work' : o.status === 'done' ? 'st_done' : o.status === 'declined' ? 'st_declined' : 'st_new';
+        return `<div class="row"><span class="name">${esc(o.title)}</span><span class="pill">${esc(t(st))}</span></div>`;
+      }).join('');
+    }
+    const cats = catalog();
+    if (!cats.length) h += `<p class="note">${esc(t('empty'))}</p>`;
+    for (const [id, key] of SECTIONS) {
+      const list = cats.filter(c => c.section === id);
+      if (!list.length) continue;
+      h += `<div class="sec">${esc(t(key))}</div><div class="grid">`;
+      for (const c of list) {
+        const wide = list.length === 1 ? ' wide' : '';
+        h += id === 'hotel'
+          ? `<button class="ctile${wide}" data-cat="${c.id}"><span style="font-size:20px">${ICON[c.icon] || '•'}</span><span><span class="tt">${esc(L(c.title))}</span><span class="cap">${esc(L(c.caption))}</span></span></button>`
+          : `<button class="ptile${wide}" data-cat="${c.id}"><span class="ph" style="font-size:28px">${ICON[c.icon] || '•'}${c.photo ? `<img src="${esc(c.photo)}" alt="" loading="lazy">` : ''}</span><span class="tx"><span class="tt">${esc(L(c.title))}</span><span class="cap">${esc(L(c.caption))}</span><span class="pr">${esc(fromPrice(c))}</span></span></button>`;
+      }
+      h += `</div>`;
+    }
+    return h + `<hr class="divider"><button class="linkrow" data-go="chat">${esc(t('need_else'))}</button><div class="cap">${esc(t('price_tip'))}</div>`;
+  },
+
+  cat() {
+    const c = catalog().find(x => x.id === screen.id);
+    if (!c) return '';
+    return `<button class="back" data-go="home">‹ ${esc(t('back'))}</button><h1>${esc(L(c.title))}</h1><p class="sub">${esc(L(c.caption))}</p>` +
+      c.items.map(it => `<div class="item"><div class="thumb">${ICON[c.icon] || '•'}${it.photo ? `<img src="${esc(it.photo)}" alt="" loading="lazy">` : ''}</div>
+        <div class="body"><div class="tt">${esc(L(it.title))}</div><div class="cap">${esc(L(it.descr))}</div>
+        <div class="foot"><span class="pr">${esc(price(it))}</span>
+        <button class="btn accent inline" data-item="${it.id}">${esc(t('order'))}</button></div></div></div>`).join('');
+  },
+
+  order() {
+    const it = screen.item;
+    return `<button class="back" data-go="home">‹ ${esc(t('back'))}</button>
+      <h1>${esc(t('order_title', { item: L(it.title) }))}</h1>
+      <p class="sub">${esc(L(it.descr))} — ${esc(price(it))}</p>
+      <div class="field"><label for="f-what">${esc(t('f_what'))}</label><textarea id="f-what">${esc(draft.note)}</textarea></div>
+      <div class="field"><label for="f-time">${esc(t('f_time'))}</label><input id="f-time" value="${esc(draft.time)}"></div>
+      <div class="field"><label for="f-wa">${esc(t('f_wa'))}</label>
+        <input id="f-wa" inputmode="tel" autocomplete="tel" placeholder="+62 …" value="${esc(draft.wa)}" class="${draft.err ? 'bad' : ''}">
+        <div class="err">${esc(draft.err)}</div></div>
+      <button class="btn accent" data-submit="1">${esc(t('send_req'))}</button>`;
+  },
+
+  sent() {
+    return `<div class="ok-mark">✓</div><h1>${esc(t('sent_title'))}</h1><p class="sub">${esc(t('sent_sub'))}</p>
+      <button class="btn dark" data-go="home">${esc(t('back_cat'))}</button>`;
+  },
+
+  chat() {
+    const msgs = S.messages || [];
+    let h = `<button class="back" data-go="home">‹ ${esc(t('back'))}</button><h1>${esc(t('ask_title'))}</h1><p class="sub">${esc(t('ask_sub'))}</p>`;
+    h += `<div class="thread" style="max-height:52vh;overflow-y:auto">` + (msgs.length
+      ? msgs.map(m => `<div class="bub${m.from === 'guest' ? ' me' : ''}"><div class="who">${esc(m.from === 'guest' ? t('you') : (m.who || t('reception')))}</div>${esc(m.text)}<div class="who" style="margin:3px 0 0">${hhmm(m.at)}</div></div>`).join('')
+      : `<div class="note">${esc(t('chat_empty'))}</div>`) + `</div>`;
+    h += `<div class="composer"><input id="c-in" placeholder="${esc(t('chat_ph'))}" aria-label="${esc(t('chat_ph'))}"><button class="btn dark" data-send="1" aria-label="${esc(t('send'))}">➤</button></div>`;
+    const tag = `[${S.room.label} · ${lang.toUpperCase()}]`;
+    const hello = encodeURIComponent(lang === 'en' ? `${tag} Hello!` : `${tag} Hello! / ${t('hello')}`);
+    if (S.hotel.whatsapp || S.hotel.telegram) {
+      h += `<div class="sec">${esc(t('or_messenger'))}</div>`;
+      if (S.hotel.whatsapp) h += `<a class="btn" target="_blank" rel="noopener" data-msgr="whatsapp" href="https://wa.me/${esc(S.hotel.whatsapp)}?text=${hello}">${esc(t('open_in', { app: 'WhatsApp' }))}</a>`;
+      if (S.hotel.telegram) h += `<a class="btn" target="_blank" rel="noopener" data-msgr="telegram" href="https://t.me/${esc(S.hotel.telegram)}?text=${hello}">${esc(t('open_in', { app: 'Telegram' }))}</a>`;
+    }
+    return h;
+  },
+};
+
+async function post(path, body) {
+  const r = await fetch(`/api/stay/${TOKEN}/${path}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...body, lang }),
+  });
+  return r.ok;
+}
+
+document.addEventListener('click', async e => {
+  const el = e.target.closest('[data-lang],[data-go],[data-cat],[data-item],[data-submit],[data-send],[data-msgr]');
+  if (!el) return;
+  const d = el.dataset;
+
+  if (d.lang) { lang = d.lang; try { localStorage.setItem(LS, lang); } catch {} track('lang_change', { lang }); render(); return; }
+  if (d.go) return go({ name: d.go }, d.go === 'chat' ? ['chat_open'] : null);
+  if (d.cat) return go({ name: 'cat', id: d.cat }, ['category_tap', { category: d.cat }]);
+
+  if (d.item) {
+    const it = catalog().flatMap(c => c.items).find(x => x.id === d.item);
+    draft = { note: '', time: '', wa: draft.wa, err: '' };
+    return go({ name: 'order', item: it }, ['item_tap', { item: it.code }]);
+  }
+
+  if (d.submit) {
+    draft.note = document.getElementById('f-what').value.trim();
+    draft.time = document.getElementById('f-time').value.trim();
+    draft.wa = document.getElementById('f-wa').value.trim();
+    // Ошибку показываем под полем сразу, а не после круга по сети.
+    if (draft.wa.replace(/\D/g, '').length < 6) { draft.err = t('f_wa_err'); return render(); }
+    draft.err = '';
+    const ok = await post('order', { itemId: screen.item.id, note: draft.note, time: draft.time, whatsapp: draft.wa });
+    if (!ok) { draft.err = t('failed'); return render(); }
+    await load();
+    return go({ name: 'sent' });
+  }
+
+  if (d.send) {
+    const input = document.getElementById('c-in');
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    if (await post('message', { text })) await load();
+    return;
+  }
+
+  if (d.msgr) track('messenger_open', { messenger: d.msgr });
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.id === 'c-in') { e.preventDefault(); document.querySelector('[data-send]')?.click(); }
+});
+
+load();
+track('screen_open', { screen: 'home' });
+// Ответ стойки должен доехать сам, без перезагрузки страницы.
+setInterval(() => { if (document.visibilityState === 'visible') load(); }, 6000);
+</script>
+</body>
+</html>

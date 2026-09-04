@@ -1,0 +1,15 @@
+services:
+  smartroom:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Пароль админки. Смените перед тем, как открывать наружу.
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:-admin123}"
+      # Адрес, который попадёт в QR-коды. За доменом — https://hotel.example.com
+      PUBLIC_URL: "${PUBLIC_URL:-http://localhost:3000}"
+      # Секрет подписи кук: не задан — сессии слетают при перезапуске.
+      SESSION_SECRET: "${SESSION_SECRET:-}"
+    volumes:
+      - ./data:/app/data

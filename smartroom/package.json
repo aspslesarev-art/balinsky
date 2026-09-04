@@ -1,0 +1,12 @@
+{
+  "name": "smartroom",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Гостевой портал отеля по QR: чат со стойкой, заказ услуг, свой сервер",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "engines": { "node": ">=20" },
+  "dependencies": { "qrcode": "^1.5.4" }
+}

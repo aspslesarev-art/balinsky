@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Smart Room — админка</title>
+<style>
+:root{--bg:#F2F5F3;--surface:#fff;--ink:#173430;--ink-2:#3F5954;--line:#C4D0CC;--ok:#2E7D5B}
+@media(prefers-color-scheme:dark){:root{--bg:#121A18;--surface:#1B2523;--ink:#EEF3F1;--ink-2:#A9BBB6;--line:#33423E;--ok:#5DBB8A}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+.wrap{max-width:900px;margin:0 auto;padding:24px 18px 64px}
+h1{font-size:24px;margin-bottom:4px}
+h2{font-size:17px;margin-bottom:10px}
+.sub{color:var(--ink-2);font-size:14px;margin-bottom:20px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:14px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.grid{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+input,select,textarea{width:100%;min-height:44px;border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:var(--bg)}
+textarea{min-height:80px;resize:vertical}
+.btn{min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);padding:0 16px;cursor:pointer;white-space:nowrap}
+.btn.dark{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.mini{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:3px 9px;font-size:13px;cursor:pointer}
+.item{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:0}
+code{background:var(--bg);padding:2px 6px;border-radius:6px;font-size:13px;word-break:break-all}
+.muted{color:var(--ink-2);font-size:13px}
+.off{text-decoration:line-through;color:var(--ink-2)}
+a{color:var(--ok)}
+form.login{max-width:340px;margin:12vh auto;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px}
+.err{color:#B23A3A;font-size:14px;margin-bottom:8px}
+.tag{font-size:12px;padding:2px 8px;border-radius:999px;background:var(--bg);color:var(--ink-2)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const app = document.getElementById('app');
+const SECTIONS = [['hotel', 'В отеле'], ['bali', 'Популярное на Бали'], ['room', 'В номер'], ['every', 'Каждый день']];
+const ICONS = ['kitchen', 'clock', 'map', 'car', 'flower', 'ripple', 'gamepad', 'cake', 'baby', 'camera', 'moto'];
+const LANGS = [['en', 'English'], ['ru', 'Русский'], ['zh', '中文']];
+
+let hotels = [], publicUrl = '', current = null, stats = null;
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const val = id => document.getElementById(id)?.value.trim() ?? '';
+const post = (path, body) => fetch(`/api/admin/${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+
+function loginScreen(err) {
+  app.innerHTML = `<form class="login">
+    <b style="font-size:20px">Smart Room</b>
+    <p class="sub" style="margin:4px 0 16px">Админка: отели, номера, каталог, QR.</p>
+    ${err ? `<div class="err">${esc(err)}</div>` : ''}
+    <input id="pass" type="password" placeholder="Пароль администратора" style="margin-bottom:10px">
+    <button class="btn dark" type="submit" style="width:100%">Войти</button>
+  </form>`;
+  app.querySelector('form').onsubmit = async e => {
+    e.preventDefault();
+    const r = await post('login', { password: val('pass') });
+    if (!r.ok) return loginScreen('Пароль не подошёл');
+    load();
+  };
+}
+
+async function load() {
+  const r = await fetch('/api/admin/hotels', { cache: 'no-store' });
+  if (r.status === 401) return loginScreen();
+  const data = await r.json();
+  hotels = data.hotels; publicUrl = data.publicUrl;
+  current = hotels.find(h => h.id === current?.id) || hotels[0] || null;
+  if (current) stats = await (await fetch(`/api/admin/stats?hotel=${current.id}`)).json();
+  render();
+}
+
+function render() {
+  const h = current;
+  app.innerHTML = `<div class="wrap">
+    <h1>Smart Room</h1>
+    <p class="sub">Гость сканирует QR в номере, пишет на стойку и заказывает услуги. Сервер: <code>${esc(publicUrl)}</code></p>
+
+    <div class="card">
+      <div class="row">
+        <select id="hotel-pick" style="max-width:280px">${hotels.map(x => `<option value="${x.id}" ${x.id === h?.id ? 'selected' : ''}>${esc(x.name || x.slug)}</option>`).join('')}</select>
+        <button class="btn" data-new-hotel="1">+ Отель</button>
+        <a class="btn" href="/desk" target="_blank">Открыть стойку</a>
+        ${h ? `<a class="btn" href="/admin/qr/${esc(h.slug)}" target="_blank">QR на печать</a>
+               <a class="btn" href="/api/admin/events.csv?hotel=${esc(h.id)}&days=30">CSV за 30 дней</a>` : ''}
+      </div>
+    </div>
+
+    ${!h ? '' : `
+    <div class="card">
+      <h2>Отель</h2>
+      <div class="grid">
+        <input id="h-name" value="${esc(h.name)}" placeholder="Название">
+        <input id="h-slug" value="${esc(h.slug)}" placeholder="код отеля (для входа стойки)">
+        <input id="h-wa" value="${esc(h.whatsapp)}" placeholder="WhatsApp ресепшн, 6281…">
+        <input id="h-tg" value="${esc(h.telegram)}" placeholder="Telegram ресепшн, username">
+      </div>
+      <div class="row" style="margin-top:10px">
+        <label class="row" style="gap:6px"><input type="checkbox" id="h-rest" ${h.hasRestaurant ? 'checked' : ''} style="width:18px;min-height:18px"> есть ресторан</label>
+        ${LANGS.map(([c, n]) => `<label class="row" style="gap:6px"><input type="checkbox" class="h-lang" value="${c}" ${h.langs.includes(c) ? 'checked' : ''} style="width:18px;min-height:18px"> ${n}</label>`).join('')}
+        <button class="btn dark" data-save-hotel="1" style="margin-left:auto">Сохранить</button>
+      </div>
+      <p class="muted" style="margin-top:10px">Вход стойки: код отеля <b>${esc(h.slug)}</b>, код смены <code>${esc(h.staffCode)}</code>
+        <button class="mini" data-new-code="1">новый код</button></p>
+    </div>
+
+    <div class="card">
+      <h2>Номера · ${h.rooms.length}</h2>
+      <div class="row" style="align-items:flex-start">
+        <textarea id="rooms-add" placeholder="Номера пачкой, по одному на строку:&#10;101&#10;102&#10;Villa 05" style="flex:1;min-width:220px"></textarea>
+        <button class="btn dark" data-add-rooms="1">Добавить</button>
+      </div>
+      <div style="margin-top:10px">${h.rooms.map(r => `<div class="item">
+        <b>${esc(r.label)}</b>
+        <code>${esc(publicUrl)}/stay/${esc(r.token)}</code>
+        <span class="row" style="margin-left:auto;gap:6px">
+          <button class="mini" data-copy="${esc(publicUrl)}/stay/${esc(r.token)}">копировать</button>
+          <button class="mini" data-rotate="${r.id}">новый код</button>
+          <button class="mini" data-remove-room="${r.id}">удалить</button>
+        </span></div>`).join('') || '<p class="muted">Номеров пока нет.</p>'}</div>
+    </div>
+
+    <div class="card">
+      <h2>Каталог</h2>
+      <p class="muted" style="margin-bottom:12px">Разделы идут по марже: сначала услуги отеля, потом Бали, потом в номер, потом бытовое. Категория без позиций гостю не показывается.</p>
+      <div class="grid" style="margin-bottom:8px">
+        <input id="c-code" placeholder="код категории (tours)">
+        <select id="c-section">${SECTIONS.map(([id, l]) => `<option value="${id}">${l}</option>`).join('')}</select>
+        <select id="c-icon">${ICONS.map(i => `<option value="${i}">${i}</option>`).join('')}</select>
+        <input id="c-en" placeholder="Название EN (обязательно)">
+        <input id="c-ru" placeholder="Название RU">
+        <input id="c-zh" placeholder="Название 中文">
+      </div>
+      <button class="btn dark" data-add-cat="1">Добавить категорию</button>
+
+      ${SECTIONS.map(([sid, label]) => {
+        const cats = h.catalog.filter(c => c.section === sid);
+        if (!cats.length) return '';
+        return `<h2 style="margin:18px 0 8px;font-size:14px;color:var(--ink-2)">${label}</h2>` + cats.map(c => `
+          <div class="card" style="margin-bottom:10px">
+            <div class="row">
+              <b class="${c.active ? '' : 'off'}">${esc(c.title.ru || c.title.en)}</b>
+              <span class="tag">${esc(c.code)}</span>
+              <span class="muted">${c.items.length} позиций</span>
+              <span class="row" style="margin-left:auto;gap:6px">
+                <button class="mini" data-toggle-cat="${c.id}" data-active="${c.active ? '0' : '1'}">${c.active ? 'скрыть' : 'показать'}</button>
+                <button class="mini" data-remove-cat="${c.id}">удалить</button>
+              </span>
+            </div>
+            ${c.items.map(i => `<div class="item">
+              <span class="${i.active ? '' : 'off'}">${esc(i.title.ru || i.title.en)}</span>
+              <span class="muted">${i.price ? '$' + i.price + (i.unit !== 'once' ? '/' + i.unit : '') : 'включено'}</span>
+              <span class="row" style="margin-left:auto;gap:6px">
+                <button class="mini" data-toggle-item="${i.id}" data-cat="${c.id}" data-active="${i.active ? '0' : '1'}">${i.active ? 'скрыть' : 'показать'}</button>
+                <button class="mini" data-remove-item="${i.id}" data-cat="${c.id}">удалить</button>
+              </span></div>`).join('')}
+            <div class="grid" style="margin-top:10px">
+              <input class="i-code" placeholder="код позиции">
+              <input class="i-en" placeholder="Название EN">
+              <input class="i-ru" placeholder="Название RU">
+              <input class="i-zh" placeholder="Название 中文">
+              <input class="i-price" inputmode="decimal" placeholder="цена $">
+              <select class="i-unit"><option value="once">разово</option><option value="day">за день</option><option value="hour">за час</option><option value="kg">за кг</option></select>
+              <input class="i-descr-en" placeholder="Что входит, EN">
+              <input class="i-descr-ru" placeholder="Что входит, RU">
+              <input class="i-photo" placeholder="ссылка на фото">
+              <button class="btn" data-add-item="${c.id}">+ позиция</button>
+            </div>
+          </div>`).join('');
+      }).join('')}
+    </div>
+
+    ${stats ? `<div class="card">
+      <h2>Счётчики</h2>
+      <div class="grid">
+        <div>Заявок: <b>${stats.orders}</b></div>
+        <div>GMV: <b>$${stats.gmv}</b></div>
+        <div>Открытий экранов: <b>${stats.screens}</b></div>
+        <div>Тапов по категориям: <b>${stats.categories}</b></div>
+        <div>Тапов по позициям: <b>${stats.items}</b></div>
+        <div>Сообщений в чат: <b>${stats.chats}</b></div>
+      </div>
+      <p class="muted" style="margin-top:10px">Главная метрика пилота — доля заездов с заказом — считается по заявкам и числу заездов от отеля.</p>
+    </div>` : ''}`}
+  </div>`;
+
+  const pick = document.getElementById('hotel-pick');
+  if (pick) pick.onchange = e => { current = hotels.find(x => x.id === e.target.value); load(); };
+}
+
+document.addEventListener('click', async e => {
+  const el = e.target.closest('button[data-new-hotel],button[data-save-hotel],button[data-new-code],button[data-add-rooms],button[data-rotate],button[data-remove-room],button[data-add-cat],button[data-add-item],button[data-toggle-cat],button[data-remove-cat],button[data-toggle-item],button[data-remove-item],button[data-copy]');
+  if (!el) return;
+  const d = el.dataset;
+  const hid = current?.id;
+
+  if (d.copy) { try { await navigator.clipboard.writeText(d.copy); el.textContent = 'скопировано'; } catch { prompt('Ссылка:', d.copy); } return; }
+
+  if (d.newHotel) {
+    const slug = prompt('Код отеля латиницей (например kuta-beach):');
+    if (!slug) return;
+    const r = await post('hotel', { slug, name: prompt('Название отеля:') || slug });
+    if (!r.ok) alert('Не сохранилось: код занят или неверный');
+    else { const { hotel } = await r.json(); current = hotel; }
+    return load();
+  }
+
+  if (d.saveHotel) {
+    await post('hotel', {
+      id: hid, slug: val('h-slug'), name: val('h-name'), whatsapp: val('h-wa'), telegram: val('h-tg'),
+      hasRestaurant: document.getElementById('h-rest').checked,
+      langs: [...document.querySelectorAll('.h-lang:checked')].map(i => i.value),
+    });
+    return load();
+  }
+
+  if (d.newCode) { await post('hotel', { id: hid, slug: current.slug, newStaffCode: true }); return load(); }
+  if (d.addRooms) { await post('rooms', { hotelId: hid, labels: val('rooms-add') }); return load(); }
+  if (d.rotate) { if (confirm('Новый код номера? Старая наклейка перестанет работать.')) { await post('rooms', { hotelId: hid, rotate: d.rotate }); load(); } return; }
+  if (d.removeRoom) { if (confirm('Удалить номер?')) { await post('rooms', { hotelId: hid, remove: d.removeRoom }); load(); } return; }
+
+  if (d.addCat) {
+    if (!val('c-code') || !val('c-en')) return alert('Нужны код и название EN');
+    await post('catalog', { hotelId: hid, kind: 'category', code: val('c-code'), section: val('c-section'), icon: val('c-icon'),
+      title: { en: val('c-en'), ru: val('c-ru'), zh: val('c-zh') }, caption: {} });
+    return load();
+  }
+
+  if (d.addItem) {
+    const box = el.closest('.grid');
+    const g = cls => box.querySelector('.' + cls).value.trim();
+    if (!g('i-code') || !g('i-en')) return alert('Нужны код и название EN');
+    await post('catalog', { hotelId: hid, kind: 'item', categoryId: d.addItem, code: g('i-code'),
+      title: { en: g('i-en'), ru: g('i-ru'), zh: g('i-zh') },
+      descr: { en: g('i-descr-en'), ru: g('i-descr-ru') },
+      price: Number(g('i-price')) || 0, unit: box.querySelector('.i-unit').value, photo: g('i-photo') });
+    return load();
+  }
+
+  if (d.toggleCat) { await post('catalog', { hotelId: hid, kind: 'category', id: d.toggleCat, active: d.active === '1' }); return load(); }
+  if (d.removeCat) { if (confirm('Удалить категорию со всеми позициями?')) { await post('catalog', { hotelId: hid, kind: 'remove-category', id: d.removeCat }); load(); } return; }
+  if (d.toggleItem) { await post('catalog', { hotelId: hid, kind: 'item', categoryId: d.cat, id: d.toggleItem, active: d.active === '1' }); return load(); }
+  if (d.removeItem) { if (confirm('Удалить позицию?')) { await post('catalog', { hotelId: hid, kind: 'remove-item', categoryId: d.cat, id: d.removeItem }); load(); } return; }
+});
+
+load();
+</script>
+</body>
+</html>
