@@ -33,9 +33,12 @@ node server.mjs
 ### Docker
 
 ```bash
-PUBLIC_URL='https://hotel.example.com' ADMIN_PASSWORD='свой-пароль' \
+cp .env.example .env    # поправить HOST_PORT, PUBLIC_URL, пароль
 docker compose up -d --build
 ```
+
+`HOST_PORT` — порт на хосте. На сервере, где уже живёт Home Assistant, 3000
+нередко занят (Grafana, Node-RED), а 8123 — сам HA, поэтому в примере 3080.
 
 Данные лежат в `./data` рядом с проектом — том примонтирован, переживает
 пересборку. Бэкап = скопировать эту папку.

@@ -3,7 +3,9 @@ services:
     build: .
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      # Порт на хосте задаётся HOST_PORT: на сервере с Home Assistant 3000
+      # часто уже занят (Grafana, Node-RED), 8123 — сам HA.
+      - "${HOST_PORT:-3000}:3000"
     environment:
       # Пароль админки. Смените перед тем, как открывать наружу.
       ADMIN_PASSWORD: "${ADMIN_PASSWORD:-admin123}"
