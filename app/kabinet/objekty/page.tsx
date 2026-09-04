@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { getSiteUser } from '@/lib/site-auth'
 import { listByAuthor } from '@/lib/agent-listings/store'
 import { LOGIN_URL } from '@/components/GatedBlock'
+import { DeleteListingButton } from './_actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -83,6 +84,9 @@ export default async function MyListingsPage() {
               {l.status === 'rejected' && l.rejectReason && (
                 <p className="mt-2 text-[14px] text-red-900">Причина: {l.rejectReason}</p>
               )}
+              <div className="mt-3">
+                <DeleteListingButton id={l.id} title={l.title} />
+              </div>
             </li>
           ))}
         </ul>

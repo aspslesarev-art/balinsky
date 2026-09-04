@@ -350,3 +350,20 @@ html:not([data-auth='1']) .bx-gate-cta {
   box-shadow: none;
   cursor: pointer;
 }
+
+/* Кнопки «для вошедших» и «для гостей» (раздел перепродажи).
+   Разметка одинакова для всех — страница остаётся одной ISR-копией и
+   индексируется целиком, — а показ переключает та же метка data-auth,
+   что и гейт аналитики выше: её ставит инлайн-скрипт в app/layout.tsx
+   из куки bx_auth до первой отрисовки, поэтому мигания нет. */
+.bx-auth-only {
+  display: none;
+}
+
+html[data-auth='1'] .bx-auth-only {
+  display: flex;
+}
+
+html[data-auth='1'] .bx-anon-only {
+  display: none;
+}

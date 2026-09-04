@@ -4,6 +4,7 @@ import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { VillaCard } from '@/components/VillaCard'
 import { ApartmentCard } from '@/components/ApartmentCard'
+import { LoginCodeForm } from '@/components/LoginCodeForm'
 import { loadResaleUnits, type ResaleUnit } from '@/lib/resale'
 
 // Каталог вторичного рынка: юниты каталога с «Тип сделки» = Перепродажа /
@@ -81,12 +82,28 @@ export default async function ResalePage({ searchParams }: { searchParams: SP })
               По каждому объекту — прямой контакт продавца.
             </p>
           </div>
-          <Link
-            href="/kabinet/objekty/novyj"
-            className="rounded-xl bg-[var(--color-primary)] px-5 py-3 text-[15px] font-semibold text-white no-underline"
-          >
-            Добавить мой объект
-          </Link>
+          {/* Разметка одна для всех — переключает CSS по метке data-auth
+              (см. .bx-auth-only в globals.css), поэтому страница остаётся
+              одной кэшируемой копией. */}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="bx-auth-only flex-wrap items-center gap-3">
+              <Link
+                href="/kabinet/objekty/novyj"
+                className="rounded-xl bg-[var(--color-primary)] px-5 py-3 text-[15px] font-semibold text-white no-underline"
+              >
+                Добавить мой объект
+              </Link>
+              <Link
+                href="/kabinet/objekty"
+                className="rounded-xl border border-[var(--color-primary)] px-5 py-3 text-[15px] font-semibold text-[var(--color-primary)] no-underline"
+              >
+                Мои объекты
+              </Link>
+            </div>
+            <div className="bx-anon-only">
+              <LoginCodeForm ctaLabel="Добавить свой объект" />
+            </div>
+          </div>
         </div>
 
         <div className="mt-6 text-[14px] text-[var(--color-text-muted)]">
@@ -152,15 +169,29 @@ export default async function ResalePage({ searchParams }: { searchParams: SP })
         <section className="mt-14 rounded-2xl border border-[var(--color-border)] bg-white p-6">
           <h2 className="text-[18px] font-semibold text-[#111827]">У вас есть объект на продажу?</h2>
           <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-[var(--color-text-muted)]">
-            Вход через Telegram, без пароля. Выбираете комплекс и юнит — характеристики подтянутся
-            из каталога, вам останется указать цену. На карточке будут ваши контакты.
+            Вход через Telegram, без пароля: бот пришлёт ссылку и код, и вы вернётесь сюда же уже
+            авторизованным. Дальше выбираете комплекс и юнит — характеристики подтянутся из
+            каталога, вам останется указать цену. На карточке будут ваши контакты.
           </p>
-          <Link
-            href="/kabinet/objekty/novyj"
-            className="mt-4 inline-flex rounded-xl border border-[var(--color-primary)] px-5 py-2.5 text-[15px] font-semibold text-[var(--color-primary)] no-underline"
-          >
-            Добавить объект
-          </Link>
+          <div className="mt-4">
+            <div className="bx-auth-only flex-wrap items-center gap-3">
+              <Link
+                href="/kabinet/objekty/novyj"
+                className="rounded-xl bg-[var(--color-primary)] px-5 py-2.5 text-[15px] font-semibold text-white no-underline"
+              >
+                Добавить объект
+              </Link>
+              <Link
+                href="/kabinet/objekty"
+                className="rounded-xl border border-[var(--color-primary)] px-5 py-2.5 text-[15px] font-semibold text-[var(--color-primary)] no-underline"
+              >
+                Мои объекты
+              </Link>
+            </div>
+            <div className="bx-anon-only">
+              <LoginCodeForm ctaLabel="Войти и добавить объект" />
+            </div>
+          </div>
         </section>
 
         <div className="h-16" />
