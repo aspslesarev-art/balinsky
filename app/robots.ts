@@ -22,6 +22,10 @@ const DISALLOW = [
   '/insights',
   // Закрытый отчёт о движении рынка — только для приглашённых аккаунтов.
   '/rynok',
+  // Сервис отелей: страница гостя открывается по токену из QR, панель
+  // стойки — по коду. Ни то, ни другое в индексе делать нечего.
+  '/stay/',
+  '/hotel-desk',
 ]
 
 // Modern AI-search crawlers we want to explicitly green-light. Without

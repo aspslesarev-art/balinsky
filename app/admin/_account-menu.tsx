@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   MessageCircle, Lock, Megaphone, Image as ImageIcon, FileText, Heart, Eye, Brain, Layers, BarChart3, Table, Link2,
-  Users, Wallet, ListTree, Tags, KeyRound, LayoutTemplate,
+  Users, Wallet, ListTree, Tags, KeyRound, LayoutTemplate, QrCode,
   Sun, Moon, LogOut, ChevronUp, UserRound,
 } from 'lucide-react'
 import { useAdminTheme } from './_theme'
@@ -46,6 +46,7 @@ const GROUPS: Group[] = [
       { href: '/admin/users',         label: 'Пользователи', Icon: Users },
       { href: '/admin/wishlist',      label: 'Лайки',        Icon: Heart },
       { href: '/admin/views',         label: 'Просмотры',    Icon: Eye },
+      { href: '/admin/hotels',        label: 'Отели (QR)',   Icon: QrCode },
     ],
   },
   {

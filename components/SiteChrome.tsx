@@ -37,6 +37,10 @@ export function SiteChrome() {
   // Закрытые отчёты для застройщиков — самостоятельные страницы по ссылке,
   // без навигации маркетплейса и без AI-консультанта.
   if (pathname.startsWith('/insights')) return null
+  // Сервис отелей: страница номера за QR-кодом и панель стойки — отдельный
+  // продукт со своим интерфейсом. Футер маркетплейса и AI-консультант по
+  // недвижимости гостю, который просит полотенце, только мешают.
+  if (pathname.startsWith('/stay/') || pathname === '/hotel-desk' || pathname.startsWith('/hotel-desk/')) return null
   const lang: Lang = detectLang(pathname)
   return (
     <>
