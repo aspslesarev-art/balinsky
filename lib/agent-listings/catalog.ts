@@ -1,6 +1,7 @@
 import 'server-only'
 import { createClient } from '@supabase/supabase-js'
 import { cdnManifestUrl, cdnRewrite } from '@/lib/photo-cdn'
+import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import type { ListingKind } from './types'
 
 // Мост между формой агента и каталогом: поиск ЖК, юниты выбранного ЖК и
@@ -57,22 +58,34 @@ async function photosOf(kind: ListingKind, unitId: string): Promise<string[]> {
 
 export type ComplexOption = { id: string; name: string; district: string | null }
 
-export async function searchComplexes(q: string, limit = 20): Promise<ComplexOption[]> {
+/**
+ * Список ЖК для выбора в форме.
+ *
+ * Без `q` возвращает весь каталог: комплексов две сотни, агенту удобнее
+ * открыть список и выбрать, чем угадывать первые буквы названия.
+ *
+ * Фильтра по «Опубликовать» здесь нет намеренно: у ЖК этот флаг проставлен
+ * ровно у одного из 200, и сам каталог /ru/zhilye-kompleksy его не смотрит —
+ * видимость там определяется наличием названия и застройщиком не из
+ * скрытых. С фильтром по флагу выбор в форме схлопывался до одного пункта.
+ */
+export async function searchComplexes(q: string, limit = 300): Promise<ComplexOption[]> {
   const term = q.trim()
-  if (term.length < 2) return []
-  const needle = `%${term.replace(/[%_]/g, '\\$&')}%`
-  const { data } = await sb.from('raw_complexes')
-    .select('airtable_id, name:data->"Project", district:data->"Location 2", district_alt:data->Location, published:data->"Опубликовать"')
-    .ilike('data->>Project', needle)
-    .limit(limit)
+  let query = sb.from('raw_complexes')
+    .select('airtable_id, name:data->"Project", district:data->"Location 2", district_alt:data->Location, developer:data->"Developer1", search_alias:data->"Варианты поиска застройщика"')
+  if (term.length >= 2) {
+    query = query.ilike('data->>Project', `%${term.replace(/[%_]/g, '\\$&')}%`)
+  }
+  const { data } = await query.limit(limit)
   return ((data ?? []) as Record<string, unknown>[])
-    .filter(r => r.published === true)
+    .filter(r => !isHiddenDeveloper(str(r.developer), str(r.search_alias)))
     .map(r => ({
       id: String(r.airtable_id),
       name: str(r.name) ?? '',
       district: str(r.district) ?? str(r.district_alt),
     }))
     .filter(c => c.name)
+    .sort((a, b) => a.name.localeCompare(b.name, 'ru'))
 }
 
 export async function complexNameById(id: string): Promise<string | null> {

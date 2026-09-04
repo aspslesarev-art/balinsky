@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 // Форма добавления объекта. Логика шагов простая: тип → ЖК → юнит → цена.
@@ -25,7 +25,8 @@ export default function NewListingForm() {
 
   const [kind, setKind] = useState<Kind>('villa')
   const [query, setQuery] = useState('')
-  const [complexes, setComplexes] = useState<ComplexOption[]>([])
+  const [allComplexes, setAllComplexes] = useState<ComplexOption[]>([])
+  const [listOpen, setListOpen] = useState(false)
   const [complex, setComplex] = useState<ComplexOption | null>(null)
   const [noComplex, setNoComplex] = useState(false)
 
@@ -44,21 +45,28 @@ export default function NewListingForm() {
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
-  // --- поиск ЖК (с небольшой задержкой, чтобы не бить по базе на каждую букву)
+  // Весь список ЖК тянем один раз и фильтруем на месте: их две сотни, это
+  // пара десятков килобайт, зато список открывается мгновенно и работает как
+  // выбор из готового перечня, а не только как поиск по угаданным буквам.
   useEffect(() => {
-    if (complex || noComplex || query.trim().length < 2) { setComplexes([]); return }
-    const t = setTimeout(async () => {
-      try {
-        const r = await fetch(`/api/kabinet/catalog?what=complexes&q=${encodeURIComponent(query)}`)
-        const j = await r.json()
-        setComplexes(Array.isArray(j.complexes) ? j.complexes : [])
-      } catch { setComplexes([]) }
-    }, 300)
-    return () => clearTimeout(t)
-  }, [query, complex, noComplex])
+    let alive = true
+    fetch('/api/kabinet/catalog?what=complexes')
+      .then(r => r.json())
+      .then(j => { if (alive && Array.isArray(j.complexes)) setAllComplexes(j.complexes) })
+      .catch(() => {})
+    return () => { alive = false }
+  }, [])
+
+  const complexes = useMemo(() => {
+    const term = query.trim().toLowerCase()
+    const base = term && complex?.name.toLowerCase() !== term
+      ? allComplexes.filter(c => c.name.toLowerCase().includes(term))
+      : allComplexes
+    return base.slice(0, 60)
+  }, [allComplexes, query, complex])
 
   const pickComplex = useCallback(async (c: ComplexOption) => {
-    setComplex(c); setComplexes([]); setQuery(c.name)
+    setComplex(c); setListOpen(false); setQuery(c.name)
     setUnits([]); setBaseUnitId(null); setFacts(null); setUnitsLoading(true)
     try {
       const r = await fetch(`/api/kabinet/catalog?what=units&kind=${kind}&complexId=${encodeURIComponent(c.id)}`)
@@ -178,13 +186,14 @@ export default function NewListingForm() {
             <input
               id="complex"
               className={INPUT}
-              placeholder="Начните вводить название"
+              placeholder={allComplexes.length ? `Выберите из списка (${allComplexes.length}) или начните вводить` : 'Загружаю список комплексов…'}
               value={query}
-              onChange={e => { setQuery(e.target.value); setComplex(null); setUnits([]); resetUnit() }}
+              onFocus={() => setListOpen(true)}
+              onChange={e => { setQuery(e.target.value); setListOpen(true); setComplex(null); setUnits([]); resetUnit() }}
               autoComplete="off"
             />
-            {complexes.length > 0 && (
-              <ul className="mt-2 divide-y divide-[var(--color-border)] overflow-hidden rounded-xl border border-[var(--color-border)]">
+            {listOpen && complexes.length > 0 && (
+              <ul className="mt-2 max-h-72 divide-y divide-[var(--color-border)] overflow-y-auto rounded-xl border border-[var(--color-border)]">
                 {complexes.map(c => (
                   <li key={c.id}>
                     <button
@@ -277,11 +286,22 @@ export default function NewListingForm() {
 
       {/* 5. поля объекта */}
       <section className={CARD}>
-        <div>
-          <label className={LABEL} htmlFor="title">Название объекта</label>
-          <input id="title" className={INPUT} value={title} onChange={e => setTitle(e.target.value)}
-            placeholder="Например: Вилла Amara, 3 спальни, Чангу" />
-        </div>
+        {baseUnitId ? (
+          // Юнит выбран из каталога: название и характеристики уже известны,
+          // агенту остаётся цена и комментарий. Показывать ему поле названия
+          // здесь — предлагать переписать то, что и так верно.
+          <p className="text-[15px] text-[#111827]">
+            <span className="text-[13px] text-[var(--color-text-muted)]">Объект</span>
+            <br />
+            {title}
+          </p>
+        ) : (
+          <div>
+            <label className={LABEL} htmlFor="title">Название объекта</label>
+            <input id="title" className={INPUT} value={title} onChange={e => setTitle(e.target.value)}
+              placeholder="Например: Вилла Amara, 3 спальни, Чангу" />
+          </div>
+        )}
 
         {showManualFields && (
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -342,9 +362,11 @@ export default function NewListingForm() {
 
       {/* 6. фото */}
       <section className={CARD}>
-        <p className={LABEL}>Фотографии</p>
+        <p className={LABEL}>Фотографии — необязательно</p>
         <p className="mt-1 text-[13px] text-[var(--color-text-muted)]">
-          JPG, PNG или WebP, до 8 МБ каждая. {facts ? 'Не обязательно — есть фото из каталога.' : 'Без фото карточка выглядит пустой.'}
+          {facts
+            ? 'Фото объекта уже есть в каталоге и подставятся сами. Свои можно добавить, если они лучше.'
+            : 'JPG, PNG или WebP, до 8 МБ каждая. Без фото карточка тоже опубликуется, просто будет выглядеть скромнее.'}
         </p>
         <input
           type="file"
