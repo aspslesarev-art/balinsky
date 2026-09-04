@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Header } from '@/components/Header'
 import Link from 'next/link'
 import { getSiteUser } from '@/lib/site-auth'
 import { listByAuthor } from '@/lib/agent-listings/store'
@@ -28,7 +29,9 @@ export default async function MyListingsPage() {
 
   if (!user) {
     return (
-      <main className="mx-auto w-full max-w-xl px-6 py-16">
+      <>
+        <Header />
+        <main className="mx-auto w-full max-w-xl px-6 py-16">
         <h1 className="text-[26px] font-semibold tracking-tight text-[#111827]">Вход</h1>
         <p className="mt-3 text-[15px] text-[var(--color-text-muted)]">
           Свои объекты видно после входа через Telegram.
@@ -37,14 +40,17 @@ export default async function MyListingsPage() {
           className="mt-6 inline-flex rounded-xl bg-[#229ED9] px-6 py-3 text-[15px] font-semibold text-white">
           Войти через Telegram
         </a>
-      </main>
+        </main>
+      </>
     )
   }
 
   const listings = await listByAuthor(user.telegramId)
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-5 py-10 sm:px-6 sm:py-14">
+    <>
+      <Header />
+      <main className="mx-auto w-full max-w-3xl px-5 py-10 sm:px-6 sm:py-14">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-[26px] font-semibold tracking-tight text-[#111827] sm:text-[32px]">Мои объекты</h1>
         <Link href="/kabinet/objekty/novyj"
@@ -86,6 +92,7 @@ export default async function MyListingsPage() {
         Контакты, которые видят клиенты на ваших карточках, задаются в{' '}
         <Link href="/kabinet" className="underline">личном кабинете</Link>.
       </p>
-    </main>
+      </main>
+    </>
   )
 }

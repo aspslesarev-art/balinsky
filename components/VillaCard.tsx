@@ -27,6 +27,9 @@ export type VillaCardData = {
   // developer. Drives the "Перепродажа" badge and the contact routing
   // on the detail page (direct seller contact instead of dev manager).
   dealType?: 'resale' | 'secondary' | null
+  // Ссылка на карточку, если объект живёт не в основном каталоге: объекты
+  // перепродажи, добавленные агентами, лежат в /ru/pereprodazha/o/<slug>.
+  detailHref?: string
   // Optional fields piped into the wishlist snapshot at heart-tap so
   // saved listings carry investor-relevant context out of the catalog
   // without needing to open the detail page first.
@@ -69,7 +72,7 @@ export function VillaCard({ a, lang = 'ru' }: { a: VillaCardData; lang?: Lang })
   const dealLabel = a.dealType === 'resale' ? copy.resale
     : a.dealType === 'secondary' ? copy.secondary
     : null
-  const detailHref = switchLangPath(`/ru/villy/o/${a.slug}`, lang)
+  const detailHref = a.detailHref ?? switchLangPath(`/ru/villy/o/${a.slug}`, lang)
   return (
     <Link
       href={detailHref}

@@ -25,6 +25,9 @@ export type ApartmentCardData = {
   // developer. Drives the "Перепродажа" badge and the contact routing
   // on the detail page (direct seller link instead of dev manager).
   dealType?: 'resale' | 'secondary' | null
+  // Ссылка на карточку, если объект живёт не в основном каталоге: объекты
+  // перепродажи, добавленные агентами, лежат в /ru/pereprodazha/o/<slug>.
+  detailHref?: string
   // Optional fields piped into the wishlist snapshot at heart-tap so
   // saved apartments carry investor-relevant context.
   developerName?: string | null
@@ -64,7 +67,7 @@ export function ApartmentCard({ a, lang = 'ru' }: { a: ApartmentCardData; lang?:
   const dealLabel = a.dealType === 'resale' ? c.resale
     : a.dealType === 'secondary' ? c.secondary
     : null
-  const detailHref = switchLangPath(`/ru/apartamenty/o/${a.slug}`, lang)
+  const detailHref = a.detailHref ?? switchLangPath(`/ru/apartamenty/o/${a.slug}`, lang)
 
   return (
     <Link

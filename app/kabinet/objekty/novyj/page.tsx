@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Header } from '@/components/Header'
 import Link from 'next/link'
 import { getSiteUser } from '@/lib/site-auth'
 import { LOGIN_URL } from '@/components/GatedBlock'
@@ -16,7 +17,9 @@ export default async function NewListingPage() {
 
   if (!user) {
     return (
-      <main className="mx-auto w-full max-w-xl px-6 py-16">
+      <>
+        <Header />
+        <main className="mx-auto w-full max-w-xl px-6 py-16">
         <h1 className="text-[26px] font-semibold tracking-tight text-[#111827]">Вход</h1>
         <p className="mt-3 text-[15px] leading-relaxed text-[var(--color-text-muted)]">
           Чтобы добавить объект, войдите через Telegram — бот пришлёт одноразовую ссылку.
@@ -29,12 +32,15 @@ export default async function NewListingPage() {
         >
           Войти через Telegram
         </a>
-      </main>
+        </main>
+      </>
     )
   }
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-5 py-10 sm:px-6 sm:py-14">
+    <>
+      <Header />
+      <main className="mx-auto w-full max-w-3xl px-5 py-10 sm:px-6 sm:py-14">
       <Link href="/kabinet/objekty" className="text-[14px] text-[var(--color-text-muted)] underline">
         ← Мои объекты
       </Link>
@@ -48,6 +54,7 @@ export default async function NewListingPage() {
       <div className="mt-8">
         <NewListingForm />
       </div>
-    </main>
+      </main>
+    </>
   )
 }

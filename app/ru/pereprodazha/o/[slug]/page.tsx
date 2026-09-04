@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { Header } from '@/components/Header'
+import { PageContainer } from '@/components/PageContainer'
 import { getListingBySlug, getAgentContact } from '@/lib/agent-listings/store'
 import { unitSlug } from '@/lib/agent-listings/catalog'
 import { listingFacts } from '@/lib/agent-listings/facts'
@@ -56,7 +58,10 @@ export default async function AgentListingPage({ params }: { params: Promise<{ s
   const facts = listingFacts(listing)
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-5 py-10 sm:px-6 sm:py-14">
+    <>
+      <Header />
+      <PageContainer>
+      <div className="py-8">
       {listing.status !== 'approved' && (
         <p className="mb-6 rounded-xl bg-amber-50 px-4 py-3 text-[14px] text-amber-900">
           {listing.status === 'rejected'
@@ -139,6 +144,8 @@ export default async function AgentListingPage({ params }: { params: Promise<{ s
           .
         </p>
       )}
-    </main>
+      </div>
+      </PageContainer>
+    </>
   )
 }
