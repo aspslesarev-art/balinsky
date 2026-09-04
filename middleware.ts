@@ -54,6 +54,9 @@ export const config = {
     '/en/promo/:path*',
     '/en/events/:path*',
     '/en/knowledge/:path*',
+    // Перепродажа существует только на русском — все остальные языковые
+    // префиксы уводим на /ru, чтобы переключатель языка не приводил в 404.
+    '/:lang/pereprodazha/:path*',
     // LLM text layer — any page URL + `.md` or `.json` is rewritten to the
     // /api/llm handler (verified-crawler-gated). Infra paths excluded.
     '/((?!api/|_next/|feeds/|admin/|sitemap).*)\\.md',
@@ -213,10 +216,23 @@ function handleLlmSuffix(req: NextRequest): NextResponse | null {
   return NextResponse.rewrite(target)
 }
 
+// Раздел перепродажи русскоязычный: объекты в него заводят агенты и
+// описывают по-русски. Переключатель языка механически подставляет любой
+// префикс (/en/pereprodazha и т.д.) — такие адреса ведём на русскую версию
+// вместо 404.
+function handleResaleLang(req: NextRequest): NextResponse | null {
+  const m = req.nextUrl.pathname.match(/^\/([a-z]{2})\/pereprodazha(\/.*)?$/)
+  if (!m || m[1] === 'ru') return null
+  return NextResponse.redirect(new URL(`/ru/pereprodazha${m[2] ?? ''}`, req.url), 301)
+}
+
 export async function middleware(req: NextRequest) {
   // Fast path — runs on every matched URL, no I/O.
   const llm = handleLlmSuffix(req)
   if (llm) return llm
+
+  const resale = handleResaleLang(req)
+  if (resale) return resale
 
   const enSlug = handleEnKnowledgeSlug(req)
   if (enSlug) return enSlug

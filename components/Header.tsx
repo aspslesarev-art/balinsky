@@ -4,19 +4,32 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { Home, Building, Building2, HardHat, Menu, X } from 'lucide-react'
+import { Home, Building, Building2, HardHat, Repeat, Menu, X } from 'lucide-react'
 import { LangSwitch } from './LangSwitch'
 import { CurrencyToggle } from './CurrencyContext'
 import { WishlistHeaderLink } from './WishlistHeaderLink'
 import { t, detectLang, localizeSegment, langToSegment, pickCopy, type Lang } from '@/lib/i18n'
 
-type NavKey = 'villy' | 'apartamenty' | 'zhilye-kompleksy' | 'zastrojshhiki' | 'arenda'
+type NavKey = 'villy' | 'apartamenty' | 'zhilye-kompleksy' | 'zastrojshhiki' | 'arenda' | 'pereprodazha'
 
-const NAV: { key: NavKey; ru: { href: string }; en: { href: string }; labelKey: 'nav.villas' | 'nav.apartments' | 'nav.complexes' | 'nav.developers' | 'nav.rental'; Icon: typeof Home }[] = [
-  { key: 'villy',            ru: { href: '/ru/villy' },             en: { href: '/en/villas' },     labelKey: 'nav.villas',     Icon: Home },
-  { key: 'apartamenty',      ru: { href: '/ru/apartamenty' },       en: { href: '/en/apartments' }, labelKey: 'nav.apartments', Icon: Building },
-  { key: 'zhilye-kompleksy', ru: { href: '/ru/zhilye-kompleksy' },  en: { href: '/en/complexes' },  labelKey: 'nav.complexes',  Icon: Building2 },
-  { key: 'zastrojshhiki',    ru: { href: '/ru/zastrojshhiki' },     en: { href: '/en/developers' }, labelKey: 'nav.developers', Icon: HardHat },
+type NavItem = {
+  key: NavKey
+  labelKey?: 'nav.villas' | 'nav.apartments' | 'nav.complexes' | 'nav.developers' | 'nav.rental'
+  /** Пункт только для русской версии — со своей подписью, вне словаря UI. */
+  ruOnly?: { label: string; href: string }
+  Icon: typeof Home
+}
+
+const NAV: NavItem[] = [
+  { key: 'villy',            labelKey: 'nav.villas',     Icon: Home },
+  { key: 'apartamenty',      labelKey: 'nav.apartments', Icon: Building },
+  { key: 'zhilye-kompleksy', labelKey: 'nav.complexes',  Icon: Building2 },
+  { key: 'zastrojshhiki',    labelKey: 'nav.developers', Icon: HardHat },
+  // Перепродажа — вторичный рынок, который агенты ведут сами. Раздел
+  // русскоязычный (объекты заводят и описывают по-русски), поэтому в меню
+  // он показывается только на /ru; на других языках его нет, и ссылки,
+  // ведущей в 404, не возникает.
+  { key: 'pereprodazha', ruOnly: { label: 'Перепродажа', href: '/ru/pereprodazha' }, Icon: Repeat },
   // Аренда убрана из верхнего меню (страницы /ru/arenda и /en/rental
   // остаются доступны по прямым ссылкам и в sitemap).
 ]
@@ -85,10 +98,10 @@ export function Header({ active }: { active?: NavKey }) {
         </Link>
 
         <nav className="hidden md:flex items-center gap-8 h-full">
-          {NAV.map(({ key, labelKey, Icon }) => {
+          {NAV.filter(item => !item.ruOnly || lang === 'ru').map(({ key, labelKey, ruOnly, Icon }) => {
             const isActive = key === active
-            const href = `/${langToSegment(lang)}/${localizeSegment(key, lang)}`
-            const label = t(labelKey, lang)
+            const href = ruOnly ? ruOnly.href : `/${langToSegment(lang)}/${localizeSegment(key, lang)}`
+            const label = ruOnly ? ruOnly.label : t(labelKey!, lang)
             return (
               <Link
                 key={key}
@@ -132,10 +145,10 @@ export function Header({ active }: { active?: NavKey }) {
               <Image src="/logo.svg" alt="Balinsky" width={40} height={40} className="h-10 w-10" priority />
               <span className="text-[18px] font-semibold tracking-tight text-[#1A1A1A]">Balinsky</span>
             </Link>
-            {NAV.map(({ key, labelKey, Icon }) => {
+            {NAV.filter(item => !item.ruOnly || lang === 'ru').map(({ key, labelKey, ruOnly, Icon }) => {
               const isActive = key === active
-              const href = `/${langToSegment(lang)}/${localizeSegment(key, lang)}`
-              const label = t(labelKey, lang)
+              const href = ruOnly ? ruOnly.href : `/${langToSegment(lang)}/${localizeSegment(key, lang)}`
+              const label = ruOnly ? ruOnly.label : t(labelKey!, lang)
               return (
                 <Link
                   key={key}

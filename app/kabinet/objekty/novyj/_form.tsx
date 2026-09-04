@@ -134,7 +134,7 @@ export default function NewListingForm() {
       })
       const j = await r.json()
       if (!r.ok) { setError(j.error ?? 'Не удалось сохранить объект'); return }
-      router.push(`/ru/predlozheniya/o/${j.slug}`)
+      router.push(`/ru/pereprodazha/o/${j.slug}`)
     } catch {
       setError('Сеть недоступна. Попробуйте ещё раз.')
     } finally { setSaving(false) }

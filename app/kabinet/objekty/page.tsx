@@ -63,7 +63,7 @@ export default async function MyListingsPage() {
             <li key={l.id} className="rounded-2xl border border-[var(--color-border)] bg-white p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <Link href={`/ru/predlozheniya/o/${l.slug}`} className="text-[15px] font-medium text-[#111827] underline">
+                  <Link href={`/ru/pereprodazha/o/${l.slug}`} className="text-[15px] font-medium text-[#111827] underline">
                     {l.title}
                   </Link>
                   <p className="mt-1 text-[15px] font-semibold text-[var(--color-primary)]">

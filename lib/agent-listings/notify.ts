@@ -30,7 +30,7 @@ async function send(chatId: string | number, text: string, keyboard?: unknown): 
 }
 
 export function listingUrl(slug: string): string {
-  return `${SITE_URL}/ru/predlozheniya/o/${slug}`
+  return `${SITE_URL}/ru/pereprodazha/o/${slug}`
 }
 
 export async function notifyNewListing(listing: AgentListing, contact: AgentContact | null): Promise<void> {

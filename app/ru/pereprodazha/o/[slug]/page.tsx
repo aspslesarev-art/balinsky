@@ -40,7 +40,7 @@ export async function generateMetadata(
     title: `${listing.title} — $${listing.priceUsd.toLocaleString('en-US')} | Balinsky`,
     description: listing.comment?.slice(0, 300) ?? `Предложение агента: ${listing.title}.`,
     robots: indexable ? undefined : { index: false, follow: true },
-    alternates: { canonical: canonical ?? `${SITE_URL}/ru/predlozheniya/o/${listing.slug}` },
+    alternates: { canonical: canonical ?? `${SITE_URL}/ru/pereprodazha/o/${listing.slug}` },
   }
 }
 
