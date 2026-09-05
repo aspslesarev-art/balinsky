@@ -2,7 +2,7 @@ import { RentalListShell, generateRentalListMetadata, parseRentalSP } from '../.
 import { loadFreshRental } from '@/lib/rental'
 import { generateCategoryMeta } from '@/lib/seo'
 
-export const revalidate = 600
+export const revalidate = 3600
 
 export async function generateMetadata() {
   const base = generateRentalListMetadata('uk')

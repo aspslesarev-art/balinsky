@@ -2,7 +2,7 @@ import { loadPodborPool } from '@/lib/home-collections'
 import { PodborWizard } from '@/components/PodborWizard'
 import { hreflangMap } from '@/lib/hreflang'
 
-export const revalidate = 1800
+export const revalidate = 3600
 
 export const metadata = {
   title: 'Подбор недвижимости на Бали за 2 шага — инвестиции или жильё для семьи | Balinsky',

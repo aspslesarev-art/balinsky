@@ -14,7 +14,7 @@ import { cdnManifestUrl, cdnRewriteManifest } from '@/lib/photo-cdn'
 // ISR-кэш самого route output: 10 минут. Без этого каждый GET от агрегатора
 // генерил XML заново, дёргая raw_villas (~36МБ). Теперь Next отдаёт
 // закэшированный результат, fetch до Supabase идёт максимум раз в 10 мин.
-export const revalidate = 600
+export const revalidate = 3600
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/villa-photos/_manifest.json`

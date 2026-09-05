@@ -9,7 +9,7 @@
     },
     {
       "path": "/api/cron/translate-missing?section=news,promo,events,knowledge,villas,apartments,complexes,developers,rental",
-      "schedule": "27 * * * *"
+      "schedule": "27 3 * * *"
     },
     {
       "path": "/api/cron/market-scan?sync=1",

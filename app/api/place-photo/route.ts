@@ -1,14 +1,19 @@
 import { NextResponse } from 'next/server'
 
-// Streams a Google Places photo by its resource name so the browser never
-// sees a key. `GOOGLE_PLACES_KEY` is the dedicated server key — the public
-// maps key is referrer-locked and 403s on server-side Places calls.
+// Resolves a Google Places photo to its CDN URL and redirects the browser
+// there, so the image bytes never pass through our origin. `GOOGLE_PLACES_KEY`
+// is the dedicated server key — the public maps key is referrer-locked and
+// 403s on server-side Places calls.
 //
-// Every response is cached hard at the edge: a photo for a given resource
-// name never changes, and Places photo media is billed per request.
+// Do NOT stream the image through this route and do NOT put `next: { revalidate }`
+// on the upstream fetch: that buffers whole JPEGs into the Next.js Data Cache,
+// which on Vercel is billed as ISR Writes and OOMs the function under load.
+// The redirect is cached at the edge instead, so repeat views cost nothing.
 const NAME_RE = /^places\/[A-Za-z0-9_-]+\/photos\/[A-Za-z0-9_-]+$/
 const MAX_PX = 800
-const CACHE = 'public, max-age=86400, s-maxage=2592000, stale-while-revalidate=86400'
+const CACHE = 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=86400'
+/** Google serves photo media from these hosts; anything else is an open redirect. */
+const ALLOWED_HOST = /(^|\.)(googleusercontent\.com|ggpht\.com|google\.com)$/
 
 export async function GET(req: Request) {
   const name = new URL(req.url).searchParams.get('name') ?? ''
@@ -20,18 +25,28 @@ export async function GET(req: Request) {
   const key = process.env.GOOGLE_PLACES_KEY
   if (!key) return NextResponse.json({ error: 'not configured' }, { status: 503 })
 
+  // `skipHttpRedirect` returns the media URL as JSON instead of the image body.
   const upstream = `https://places.googleapis.com/v1/${name}/media`
-    + `?maxHeightPx=${MAX_PX}&maxWidthPx=${MAX_PX}&key=${encodeURIComponent(key)}`
+    + `?maxHeightPx=${MAX_PX}&maxWidthPx=${MAX_PX}&skipHttpRedirect=true`
+    + `&key=${encodeURIComponent(key)}`
 
   try {
-    const r = await fetch(upstream, { redirect: 'follow', next: { revalidate: 2592000 } })
-    if (!r.ok || !r.body) return NextResponse.json({ error: 'upstream' }, { status: 502 })
-    return new NextResponse(r.body, {
-      status: 200,
-      headers: {
-        'content-type': r.headers.get('content-type') ?? 'image/jpeg',
-        'cache-control': CACHE,
-      },
+    const r = await fetch(upstream, { cache: 'no-store' })
+    if (!r.ok) return NextResponse.json({ error: 'upstream' }, { status: 502 })
+
+    const photoUri: unknown = (await r.json())?.photoUri
+    if (typeof photoUri !== 'string') {
+      return NextResponse.json({ error: 'upstream' }, { status: 502 })
+    }
+    // Never redirect somewhere Google did not name.
+    const target = new URL(photoUri)
+    if (target.protocol !== 'https:' || !ALLOWED_HOST.test(target.hostname)) {
+      return NextResponse.json({ error: 'upstream' }, { status: 502 })
+    }
+
+    return NextResponse.redirect(target, {
+      status: 302,
+      headers: { 'cache-control': CACHE },
     })
   } catch {
     return NextResponse.json({ error: 'fetch failed' }, { status: 502 })

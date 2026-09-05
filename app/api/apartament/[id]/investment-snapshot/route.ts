@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { buildSnapshot } from '@/lib/investment/snapshot'
 
-export const revalidate = 600
+export const revalidate = 3600
 
 export async function GET(
   _req: Request,

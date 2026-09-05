@@ -1,7 +1,7 @@
 import { HomeLanding } from '@/components/HomeLanding'
 import { hreflangMap } from '@/lib/hreflang'
 
-export const revalidate = 1800
+export const revalidate = 3600
 
 export const metadata = {
   title: 'Vastgoed kopen op Bali — onafhankelijke marktplaats met analyses | Balinsky',

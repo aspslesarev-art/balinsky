@@ -1,6 +1,6 @@
 import { KnowledgeDetail, generateKnowledgeDetailMetadata } from './_detail'
 
-export const revalidate = 600
+export const revalidate = 3600
 export function generateStaticParams() { return [] }
 
 type Params = Promise<{ slug: string }>

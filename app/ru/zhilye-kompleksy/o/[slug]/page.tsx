@@ -4,7 +4,7 @@ import { ComplexDetail, generateComplexMetadata } from './_detail'
 // (status colours, polygon shapes, target swaps) propagate within a
 // minute rather than an hour. Targeted revalidatePath in the
 // hotspot API endpoints pushes the same change instantly.
-export const revalidate = 60
+export const revalidate = 3600
 export function generateStaticParams() { return [] }
 
 type Params = Promise<{ slug: string }>

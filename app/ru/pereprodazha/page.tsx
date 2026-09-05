@@ -14,7 +14,7 @@ import { loadResaleUnits, type ResaleUnit } from '@/lib/resale'
 // Фильтры сделаны ссылками с query-параметрами, как в каталоге вилл: раздел
 // должен оставаться работоспособным и индексируемым без клиентского JS.
 
-export const revalidate = 300
+export const revalidate = 3600
 
 const SITE_URL = 'https://balinsky.info'
 

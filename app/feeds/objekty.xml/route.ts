@@ -18,7 +18,7 @@ import { cdnManifestUrl, cdnRewriteManifest } from '@/lib/photo-cdn'
 //   3. Описание собирается по шаблону (lib/feeds/villa-description.ts), а НЕ
 //      копируется из `SEO Text` карточки — см. пояснение про SEO в том модуле.
 
-export const revalidate = 600
+export const revalidate = 3600
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/villa-photos/_manifest.json`

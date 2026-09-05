@@ -2,7 +2,7 @@ import { KnowledgeList, generateKnowledgeListMetadata, pickAudience } from '../.
 
 type SP = Promise<Record<string, string | string[] | undefined>>
 
-export const revalidate = 600
+export const revalidate = 3600
 
 export async function generateMetadata({ searchParams }: { searchParams: SP }) {
   const sp = await searchParams

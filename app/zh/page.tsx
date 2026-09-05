@@ -1,7 +1,7 @@
 import { HomeLanding } from '@/components/HomeLanding'
 import { hreflangMap } from '@/lib/hreflang'
 
-export const revalidate = 1800
+export const revalidate = 3600
 
 export const metadata = {
   title: '在巴厘岛购买房产 — 带分析数据的独立市场平台 | Balinsky',
