@@ -1,0 +1,12 @@
+# Автообновление Smart Room. Ставится один раз:
+#   cp smartroom-update.{service,timer} ~/.config/systemd/user/
+#   systemctl --user daemon-reload && systemctl --user enable --now smartroom-update.timer
+# После этого свежие правки приезжают на сервер сами, без ручного запуска.
+[Unit]
+Description=Smart Room — подтянуть свежую версию и перезапустить
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/apps/smartroom
+ExecStart=/usr/bin/env bash %h/apps/smartroom/update.sh

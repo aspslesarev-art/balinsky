@@ -43,6 +43,17 @@ docker compose up -d --build
 Данные лежат в `./data` рядом с проектом — том примонтирован, переживает
 пересборку. Бэкап = скопировать эту папку.
 
+### Автообновление (ставится один раз)
+
+```bash
+cp smartroom-update.service smartroom-update.timer ~/.config/systemd/user/
+systemctl --user daemon-reload && systemctl --user enable --now smartroom-update.timer
+```
+
+Раз в 10 минут таймер запускает `update.sh`: если в ветке ничего не менялось,
+он молча выходит и сервис не трогает; если приехали правки — подменяет код и
+перезапускает. После этого выкатывать вручную больше не нужно.
+
 ### Автозапуск через systemd
 
 ```ini

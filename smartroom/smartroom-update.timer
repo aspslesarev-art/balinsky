@@ -1,0 +1,12 @@
+[Unit]
+Description=Проверять обновления Smart Room каждые 10 минут
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=10min
+# Не бить в одну и ту же секунду на всех машинах.
+RandomizedDelaySec=60
+Persistent=true
+
+[Install]
+WantedBy=timers.target

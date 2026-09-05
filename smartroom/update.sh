@@ -11,6 +11,14 @@ trap 'rm -rf "$SRC"' EXIT
 echo "→ качаю $BRANCH"
 git clone -q --depth 1 -b "$BRANCH" https://github.com/aspslesarev-art/balinsky "$SRC"
 
+# Ничего не изменилось — не трогаем работающий сервис (важно для таймера,
+# который дёргает скрипт каждые 10 минут).
+if [ -f server.mjs ] && diff -rq server.mjs "$SRC/smartroom/server.mjs" >/dev/null 2>&1 \
+   && diff -rq public "$SRC/smartroom/public" >/dev/null 2>&1; then
+  echo "→ версия уже свежая, перезапуск не нужен"
+  exit 0
+fi
+
 echo "→ обновляю код"
 cp -a "$SRC/smartroom/server.mjs" ./
 rm -rf public && cp -a "$SRC/smartroom/public" ./
