@@ -221,6 +221,9 @@ async function serveStatic(res, name) {
   if (!file.startsWith(PUBLIC)) return send(res, 403, 'forbidden', 'text/plain')
   try {
     const body = await fsp.readFile(file)
+    // Страницы отдаём без кэша: после обновления сервиса гость и стойка должны
+    // увидеть новую вёрстку сразу, а не после ручного сброса кэша браузера.
+    if (file.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache, must-revalidate')
     send(res, 200, body, MIME[path.extname(file)] || 'application/octet-stream')
   } catch {
     send(res, 404, 'not found', 'text/plain')
