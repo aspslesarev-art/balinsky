@@ -24,9 +24,14 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123'
 // Секрет подписи кук. Не задан — генерируем при старте: сессии живут до
 // перезапуска, что для одного отеля нормально, а секрет не утекает в git.
 const SECRET = process.env.SESSION_SECRET || crypto.randomBytes(16).toString('hex')
-// Публичный адрес сервера — он попадает в QR-коды. За реверс-прокси задать
-// PUBLIC_URL=https://hotel.example.com, иначе QR укажет на localhost.
-const PUBLIC_URL = (process.env.PUBLIC_URL || `http://localhost:${PORT}`).replace(/\/$/, '')
+// Публичный адрес сервера — он попадает в QR-коды. На Railway домен известен
+// самой платформе, поэтому подставляем его сам: иначе первый же напечатанный
+// QR уводил бы гостя на localhost. Свой домен — через PUBLIC_URL.
+const RAILWAY_DOMAIN = process.env.RAILWAY_PUBLIC_DOMAIN || ''
+const PUBLIC_URL = (
+  process.env.PUBLIC_URL ||
+  (RAILWAY_DOMAIN ? `https://${RAILWAY_DOMAIN}` : `http://localhost:${PORT}`)
+).replace(/\/$/, '')
 
 /* ─────────────────────────── хранилище ─────────────────────────── */
 
@@ -576,6 +581,11 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 /* ─────────────────────────── старт ─────────────────────────── */
 
 await load()
+// На Railway контейнер пересоздаётся при каждом деплое: без примонтированного
+// тома ./data заявки и каталог пропадут. Предупреждаем громко, в логах видно.
+if (RAILWAY_DOMAIN && !process.env.DATA_DIR?.startsWith('/data')) {
+  console.warn('[smartroom] ВНИМАНИЕ: том не примонтирован. В Railway добавьте Volume на /data и переменную DATA_DIR=/data, иначе данные пропадут при следующем деплое.')
+}
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`[smartroom] сервер: ${PUBLIC_URL}`)
   console.log(`[smartroom] админка: ${PUBLIC_URL}/admin  (пароль: ${ADMIN_PASSWORD === 'admin123' ? 'admin123 — смените ADMIN_PASSWORD' : 'из ADMIN_PASSWORD'})`)
