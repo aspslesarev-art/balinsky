@@ -29,20 +29,33 @@ h1{font-size:1.6rem;line-height:1.2;font-weight:700;margin:8px 0 6px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .grid .wide{grid-column:span 2}
 .ptile,.ctile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);text-align:left;color:var(--ink);cursor:pointer;padding:0;overflow:hidden}
+/* Плитка — колонка: картинка сверху, текст под ней. Без явного flex внутри
+   кнопки живут inline-span-ы, и padding текстового блока не применяется —
+   именно из-за этого подписи вылезали за рамку карточки. */
+.ptile{display:flex;flex-direction:column}
 .ctile{padding:14px;min-height:64px;display:flex;gap:10px;align-items:center}
-.ph{aspect-ratio:16/9;background:var(--placeholder);display:flex;align-items:center;justify-content:center;color:var(--ink-2);position:relative;overflow:hidden}
+.ctile>.ic{font-size:22px;flex:none}
+.ctile>.tx{display:flex;flex-direction:column;min-width:0}
+.ph{aspect-ratio:16/9;background:var(--placeholder);display:flex;align-items:center;justify-content:center;color:var(--ink-2);position:relative;overflow:hidden;font-size:30px;flex:none}
 .ph img,.thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.ptile .tx{padding:12px 12px 14px}
-/* Внутри плиток это span-ы (кнопка не может содержать div) — без display:block
-   название, подпись и цена слипаются в одну строку. */
+.ptile>.tx{display:flex;flex-direction:column;flex:1;padding:12px 12px 14px}
+/* Цена прижата к низу — тогда в ряду из двух карточек цены стоят на одной
+   линии, даже если у соседа название заняло две строки. */
+.ptile .pr{margin-top:auto;padding-top:8px}
+/* Одиночная категория в разделе разворачивается в строку: карточка во всю
+   ширину с картинкой 16:9 — это 220 px пустоты на телефоне. */
+.grid .wide.ptile{flex-direction:row;align-items:stretch}
+.grid .wide .ph{width:132px;aspect-ratio:4/3}
+.grid .wide .tx{justify-content:center}
 .tt,.cap,.pr{display:block}
 .tt{font-size:1.05rem;font-weight:650;line-height:1.25}
 .cap{font-size:.95rem;color:var(--ink-2);margin-top:3px;line-height:1.35}
-.pr{font-size:1rem;font-weight:600;margin-top:8px}
+.pr{font-size:1rem;font-weight:600}
 .divider{border:0;border-top:1px solid var(--line);margin:26px 0 6px}
 .linkrow{display:block;width:100%;background:none;border:0;text-align:left;color:var(--sea);font-weight:600;font-size:1.05rem;padding:14px 0;min-height:48px;cursor:pointer}
 .item{display:flex;gap:12px;padding:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);margin-bottom:12px}
-.thumb{width:84px;height:84px;border-radius:10px;flex:none;background:var(--placeholder);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--ink-2);font-size:26px}
+.thumb{width:84px;height:84px;border-radius:10px;flex:none;background:var(--placeholder);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--ink-2);font-size:30px}
+.item .cap{margin-bottom:2px}
 .item .body{flex:1;min-width:0}
 .item .foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
 .item .pr{margin-top:0}
@@ -151,8 +164,8 @@ const SCREENS = {
       for (const c of list) {
         const wide = list.length === 1 ? ' wide' : '';
         h += id === 'hotel'
-          ? `<button class="ctile${wide}" data-cat="${c.id}"><span style="font-size:20px">${ICON[c.icon] || '•'}</span><span><span class="tt">${esc(L(c.title))}</span><span class="cap">${esc(L(c.caption))}</span></span></button>`
-          : `<button class="ptile${wide}" data-cat="${c.id}"><span class="ph" style="font-size:28px">${ICON[c.icon] || '•'}${c.photo ? `<img src="${esc(c.photo)}" alt="" loading="lazy">` : ''}</span><span class="tx"><span class="tt">${esc(L(c.title))}</span><span class="cap">${esc(L(c.caption))}</span><span class="pr">${esc(fromPrice(c))}</span></span></button>`;
+          ? `<button class="ctile${wide}" data-cat="${c.id}"><span class="ic">${ICON[c.icon] || '•'}</span><span class="tx"><span class="tt">${esc(L(c.title))}</span><span class="cap">${esc(L(c.caption))}</span></span></button>`
+          : `<button class="ptile${wide}" data-cat="${c.id}"><span class="ph">${ICON[c.icon] || '•'}${c.photo ? `<img src="${esc(c.photo)}" alt="" loading="lazy">` : ''}</span><span class="tx"><span class="tt">${esc(L(c.title))}</span><span class="cap">${esc(L(c.caption))}</span><span class="pr">${esc(fromPrice(c))}</span></span></button>`;
       }
       h += `</div>`;
     }
