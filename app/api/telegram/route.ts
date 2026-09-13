@@ -6,6 +6,7 @@ import { logMessage, upsertChat, getChat, shouldBotAutoReply, addChatTags } from
 import { handleReservationCallback } from '@/lib/telegram-reservation'
 import { handleListingCallback } from '@/lib/agent-listings/moderation'
 import { handleAdminCallback } from '@/lib/balina-admin-edit'
+import { handleMeetingCallback } from '@/lib/meetings/booking'
 import { refreshChatAvatar } from '@/lib/chat-avatars'
 import { uploadChatMedia, downloadTelegramFile, type ChatMediaKind } from '@/lib/chat-media'
 import type { Lang } from '@/lib/i18n'
@@ -73,6 +74,12 @@ export async function POST(req: Request) {
   if (update.callback_query?.data?.startsWith('agl:')) {
     await handleListingCallback(token, update.callback_query)
     return NextResponse.json({ ok: true })
+  }
+
+  // Отмена записи на встречу — кнопка под уведомлением о новой встрече.
+  if (update.callback_query?.data?.startsWith('mtg:')) {
+    await handleMeetingCallback(token, update.callback_query)
+    return NextResponse.json({ ok: true, callback: true })
   }
 
   if (update.callback_query?.data?.startsWith('admin:')) {
