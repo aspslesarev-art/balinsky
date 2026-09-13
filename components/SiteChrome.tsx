@@ -37,6 +37,8 @@ export function SiteChrome() {
   // Закрытые отчёты для застройщиков — самостоятельные страницы по ссылке,
   // без навигации маркетплейса и без AI-консультанта.
   if (pathname.startsWith('/insights')) return null
+  // Запись на встречу — отдельная страница по ссылке, только выбор дня и времени.
+  if (pathname === '/vstrecha' || pathname === '/en/meeting') return null
   const lang: Lang = detectLang(pathname)
   return (
     <>

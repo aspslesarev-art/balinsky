@@ -6,7 +6,7 @@ import type { DayRow } from '@/lib/meetings/store'
 import type { District, MeetingBooking, MeetingSettings } from '@/lib/meetings/types'
 
 const PUBLIC_LINKS = [
-  { label: 'RU', url: 'https://balinsky.info/ru/vstrecha' },
+  { label: 'RU', url: 'https://balinsky.info/vstrecha' },
   { label: 'EN', url: 'https://balinsky.info/en/meeting' },
 ]
 const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
