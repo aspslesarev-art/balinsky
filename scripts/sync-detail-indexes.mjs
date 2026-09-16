@@ -8,6 +8,10 @@ for (const l of env.split('\n')) { const m = l.match(/^([A-Z_]+)=(.*)$/); if (m)
 
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
 const BUCKET = 'feeds'
+// --dry: собрать индексы и показать сводку, ничего не заливая. Нужно,
+// когда меняется правило слагов: сначала смотрим, не уедут ли уже
+// проиндексированные адреса, и только потом пишем в storage.
+const DRY = process.argv.includes('--dry')
 
 // Slug normalisation, mirrored from lib/slug-normalize.ts. Editors paste
 // look-alike characters (cyrillic 'с' for latin 'c', parens, mixed case)
@@ -75,21 +79,69 @@ function buildEntry(rawSlug, id, district) {
   return { id, slug: canonical, district, ...(aliases.length ? { aliases } : {}) }
 }
 
+// Зеркало lib/villa-slug.ts assignVillaSlugs — держать в синхроне.
+// Слаг виллы («проект + площадь + спальни») не уникален: шесть одинаковых
+// по планировке юнитов одного проекта делят один адрес, и пять из шести
+// остаются без страницы. Первый в группе (по Name) оставляет голый слаг —
+// он уже проиндексирован, — остальные получают -2, -3.
+function assignVillaSlugs(rows) {
+  const groups = new Map()
+  for (const r of rows) {
+    const base = normalizeSlug(r.slug ?? '')
+    if (!base || base.startsWith('-')) continue
+    const g = groups.get(base)
+    if (g) g.push(r); else groups.set(base, [r])
+  }
+  const taken = new Set(groups.keys())
+  const out = new Map()
+  for (const [base, group] of [...groups].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
+    if (group.length === 1) { out.set(group[0].id, base); continue }
+    const ordered = [...group].sort((a, b) =>
+      String(a.name ?? '').localeCompare(String(b.name ?? ''), 'ru') || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
+    out.set(ordered[0].id, base)
+    let n = 2
+    for (const r of ordered.slice(1)) {
+      let candidate = `${base}-${n}`
+      while (taken.has(candidate)) candidate = `${base}-${++n}`
+      taken.add(candidate)
+      out.set(r.id, candidate)
+      n++
+    }
+  }
+  return out
+}
+
 async function buildVillaIndex() {
   console.log('▶ villas')
   const rows = await paginated('raw_villas')
+  const published = rows.filter(r => r.data?.['Опубликовать'] === true)
+  const slugById = assignVillaSlugs(published.map(r => ({
+    id: r.airtable_id, slug: fs1(r.data['SEO:Slug']), name: fs1(r.data['Name']),
+  })))
   const out = []
   let dirtied = 0
-  for (const r of rows) {
-    if (r.data?.['Опубликовать'] !== true) continue
-    const slug = fs1(r.data['SEO:Slug'])
+  let suffixed = 0
+  for (const r of published) {
+    const slug = slugById.get(r.airtable_id)
     if (!slug) continue
-    const e = buildEntry(slug, r.airtable_id, fs1(r.data['Location 2']) ?? fs1(r.data['Location']))
+    const raw = fs1(r.data['SEO:Slug'])
+    const e = buildEntry(raw, r.airtable_id, fs1(r.data['Location 2']) ?? fs1(r.data['Location']))
     if (!e) continue
-    if (e.aliases) dirtied++
+    if (e.slug === slug) {
+      // Голый слаг остался за этим юнитом: «грязный» оригинал из Airtable
+      // по-прежнему ведёт сюда 301-м.
+      if (e.aliases) dirtied++
+    } else {
+      // Юнит разведён суффиксом. Алиас на сырой слаг отдавать нельзя —
+      // он принадлежит первому юниту группы, и один адрес резолвился бы
+      // в два разных объекта в зависимости от порядка поиска.
+      e.slug = slug
+      delete e.aliases
+      suffixed++
+    }
     out.push(e)
   }
-  console.log(`  published with slug: ${out.length} (normalised ${dirtied})`)
+  console.log(`  published with slug: ${out.length} (normalised ${dirtied}, разведено суффиксом ${suffixed})`)
   return out
 }
 
@@ -145,6 +197,12 @@ const complexes = await buildComplexIndex()
 for (const [name, items] of [['villas', villas], ['apartments', apartments], ['complexes', complexes]]) {
   const body = JSON.stringify({ generatedAt: new Date().toISOString(), count: items.length, items })
   const key = `_${name}-index.json`
+  if (DRY) {
+    const slugs = items.map(i => i.slug)
+    const uniq = new Set(slugs)
+    console.log(`· ${key}: ${items.length} записей, ${uniq.size} уникальных адресов${slugs.length === uniq.size ? '' : ' ← ДУБЛИ'} (${(body.length / 1024).toFixed(1)} KB, не залито)`)
+    continue
+  }
   const { error } = await sb.storage.from(BUCKET).upload(key, body, { contentType: 'application/json', upsert: true })
   if (error) throw error
   console.log(`✓ uploaded ${BUCKET}/${key} (${(body.length / 1024).toFixed(1)} KB)`)

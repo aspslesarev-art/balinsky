@@ -115,6 +115,22 @@ export async function syncDetailIndexEntry(cfg: CollectionConfig, id: string): P
     const entry = row ? entryFor(cfg.key, row as unknown as RawRow) : null
     const items = index.items.filter(it => it.id !== id)
     if (!entry && items.length === index.items.length) return // nothing to change
+    // Виллы делят слаг: «проект + площадь + спальни» одинаков у всех юнитов
+    // одной планировки, и голый слаг принадлежит одному из них (см.
+    // lib/villa-slug.ts). Здесь виден только один ряд, так что группу целиком
+    // не пересчитать — просто не отнимаем чужой адрес и берём следующий
+    // свободный суффикс. Правильную раскладку по Name восстановит ночной
+    // scripts/sync-detail-indexes.mjs.
+    if (entry && cfg.key === 'villas') {
+      const taken = new Set(items.map(it => it.slug))
+      if (taken.has(entry.slug)) {
+        const base = entry.slug
+        let n = 2
+        while (taken.has(`${base}-${n}`)) n++
+        entry.slug = `${base}-${n}`
+        delete entry.aliases
+      }
+    }
 
     const next = entry ? [...items, entry] : items
     const payload = JSON.stringify({ generatedAt: new Date().toISOString(), count: next.length, items: next })

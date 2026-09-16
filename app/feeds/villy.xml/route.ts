@@ -3,6 +3,7 @@ import { firstString, numberOrNull } from '@/app/ru/villy/_lib'
 import { buildVillaDescription } from '@/lib/feeds/villa-description'
 import { FEED_SELLER } from '@/lib/feeds/seller'
 import { cdnManifestUrl, cdnRewriteManifest } from '@/lib/photo-cdn'
+import { assignVillaSlugs } from '@/lib/villa-slug'
 
 // Partner XML feed for realting.com (and any sites consuming the same schema).
 // Schema reference: docs accompanying sample_import_complex_ru.xml.
@@ -59,7 +60,7 @@ async function loadManifest(): Promise<Record<string, string[]>> {
 
 type Row = { airtable_id: string; data: Record<string, unknown> }
 
-function buildComplex(r: Row, manifest: Record<string, string[]>): string | null {
+function buildComplex(r: Row, manifest: Record<string, string[]>, uniqueSlug: string | null): string | null {
   const d = r.data
   if (d['Опубликовать'] !== true) return null
 
@@ -71,7 +72,9 @@ function buildComplex(r: Row, manifest: Record<string, string[]>): string | null
   if (price == null) return null
   if (photos.length === 0) return null
 
-  const slug = firstString(d['SEO:Slug'])
+  // Юниты одной планировки делят SEO:Slug — без разведения (lib/villa-slug.ts)
+  // фид отдавал партнёру шесть объектов с одним и тем же external_url.
+  const slug = uniqueSlug ?? firstString(d['SEO:Slug'])
   if (!slug || slug.startsWith('-')) return null
 
   const ruTitleRaw = firstString(d['SEO:Title']) ?? firstString(d['ИИ Имя'])
@@ -164,6 +167,7 @@ const SLIM_FIELDS = [
   ['SEO:Title', 'seo_title'],
   ['SEO_Title_EN', 'seo_title_en'],
   ['SEO:Slug', 'seo_slug'],
+  ['Name', 'name'],
   ['ИИ Имя', 'ai_name'],
   ['Имя ENG', 'imya_eng'],
   ['Notes', 'notes'],
@@ -200,10 +204,13 @@ export async function GET() {
     loadManifest(),
   ])
   const rows = ((rowsRes.data ?? []) as unknown as Record<string, unknown>[]).map(reassemble)
+  const slugById = assignVillaSlugs(rows
+    .filter(r => r.data['Опубликовать'] === true)
+    .map(r => ({ id: r.airtable_id, slug: firstString(r.data['SEO:Slug']), name: firstString(r.data['Name']) })))
 
   const items: string[] = []
   for (const r of rows) {
-    const xml = buildComplex(r, manifest)
+    const xml = buildComplex(r, manifest, slugById.get(r.airtable_id) ?? null)
     if (xml) items.push(xml)
   }
 

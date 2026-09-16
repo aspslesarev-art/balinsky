@@ -3,6 +3,7 @@ import { firstString, numberOrNull } from '@/app/ru/villy/_lib'
 import { buildVillaDescription } from '@/lib/feeds/villa-description'
 import { FEED_SELLER } from '@/lib/feeds/seller'
 import { cdnManifestUrl, cdnRewriteManifest } from '@/lib/photo-cdn'
+import { assignVillaSlugs } from '@/lib/villa-slug'
 
 // Партнёрский XML-фид вилл для realting.com — шаблон «Недвижимость Realting»
 // (<objects> v2.0, сделки купли-продажи). Живая замена статичному файлу
@@ -63,7 +64,7 @@ async function loadManifest(): Promise<Record<string, string[]>> {
 
 type Row = { airtable_id: string; data: Record<string, unknown> }
 
-function buildObject(r: Row, manifest: Record<string, string[]>): string | null {
+function buildObject(r: Row, manifest: Record<string, string[]>, uniqueSlug: string | null): string | null {
   const d = r.data
   if (d['Опубликовать'] !== true) return null
 
@@ -71,7 +72,9 @@ function buildObject(r: Row, manifest: Record<string, string[]>): string | null 
   const lng = parseGeo(d['Geo 2'])
   const price = numberOrNull(d['price']) ?? numberOrNull(d['Цена'])
   const photos = (manifest[r.airtable_id] ?? []).slice(0, MAX_PHOTOS)
-  const slug = firstString(d['SEO:Slug'])
+  // Юниты одной планировки делят SEO:Slug — без разведения (lib/villa-slug.ts)
+  // фид отдавал партнёру шесть объектов с одним и тем же external_url.
+  const slug = uniqueSlug ?? firstString(d['SEO:Slug'])
   if (lat == null || lng == null) return null
   if (price == null || price <= 0) return null
   if (photos.length === 0) return null
@@ -139,6 +142,7 @@ function buildObject(r: Row, manifest: Record<string, string[]>): string | null 
 const SLIM_FIELDS = [
   ['Опубликовать', 'pub'],
   ['SEO:Slug', 'seo_slug'],
+  ['Name', 'name'],
   ['Geo', 'geo'],
   ['Geo 2', 'geo2'],
   ['price', 'price'],
@@ -171,10 +175,13 @@ export async function GET() {
     loadManifest(),
   ])
   const rows = ((rowsRes.data ?? []) as unknown as Record<string, unknown>[]).map(reassemble)
+  const slugById = assignVillaSlugs(rows
+    .filter(r => r.data['Опубликовать'] === true)
+    .map(r => ({ id: r.airtable_id, slug: firstString(r.data['SEO:Slug']), name: firstString(r.data['Name']) })))
 
   const items: string[] = []
   for (const r of rows) {
-    const xml = buildObject(r, manifest)
+    const xml = buildObject(r, manifest, slugById.get(r.airtable_id) ?? null)
     if (xml) items.push(xml)
   }
 
