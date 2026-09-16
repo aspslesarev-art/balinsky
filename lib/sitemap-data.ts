@@ -24,7 +24,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 // as "soft 404 / thin content" — drags down the rest of the cluster.
 const MIN_OBJECTS_PER_FILTER_PAGE = 3
 
-type SitemapLang = 'ru' | 'en' | 'id' | 'fr' | 'de' | 'zh' | 'nl' | 'pl' | 'uk'
+type SitemapLang = 'ru' | 'en' | 'id' | 'fr' | 'de' | 'zh' | 'nl' | 'pl' | 'uk' | 'ban'
 
 // Языки, которым отдаём каталог целиком — вместе с карточками отдельных
 // вилл и апартаментов.
@@ -77,18 +77,23 @@ function pairEntry(args: {
   const nlUrl = `${SITE_URL}${switchLangPath(enPath, 'nl')}`
   const plUrl = `${SITE_URL}${switchLangPath(enPath, 'pl')}`
   const ukUrl = `${SITE_URL}${switchLangPath(enPath, 'uk')}`
+  const banUrl = `${SITE_URL}${switchLangPath(enPath, 'ban')}`
   // hreflang cluster — self-referential + reciprocal, per Google's spec.
   // Codes must be ISO 639-1 (+ optional ISO 3166-1 region). Simplified
   // Chinese uses `zh-Hans` (script) rather than the ambiguous bare `zh`.
   // x-default = RU (the site's origin language).
   //
-  // Balinese (`ban`) is DELIBERATELY NOT in the sitemap: it's a UI scaffold,
-  // not a search-content language — it has no valid hreflang code and
-  // effectively zero search demand, so every /ban/ URL only ever landed in
-  // GSC as "URL unknown to Google" / "Discovered — currently not indexed",
-  // flooding the Page-Indexing report and diluting crawl budget with pages
-  // that can never rank. The /ban/ pages stay live and reachable via the
-  // language switcher; we just stop advertising them to crawlers.
+  // Балийский (`ban`) остаётся ВНЕ hreflang-кластера: ban — это ISO 639-3,
+  // а hreflang принимает только 639-1, поэтому объявить его нечем. Но в
+  // сам sitemap он с 16.09.2026 возвращён — прежнее основание («нулевой
+  // спрос, страницы, которые никогда не ранжируются») цифры опровергли.
+  // Из карты его убрали 20.07.2026 как раз потому, что /ban/ копил в GSC
+  // «URL unknown to Google». За 17.08–14.09, уже без всякого sitemap, эти
+  // страницы взяли 25 переходов на средней позиции ~9: /ban/kompleks — 10,
+  // /ban/vila — 8, /ban/pangwangun — 7. Google нашёл их по внутренним
+  // ссылкам из подвала и ранжирует. Раз они ранжируются, прятать их от
+  // краулера незачем — но карточки юнитов по-прежнему только ru/en/id
+  // (FULL_CATALOG_LANGS), краул-бюджет тратится на хабы и ЖК.
   const alternates = {
     languages: {
       ru: ruUrl, en: enUrl, id: idUrl, fr: frUrl,
@@ -98,11 +103,13 @@ function pairEntry(args: {
   // Порядок сохраняем прежний — от него зависит шардирование по 1200 URL.
   const byLang: [SitemapLang, string][] = [
     ['ru', ruUrl], ['en', enUrl], ['id', idUrl], ['fr', frUrl], ['de', deUrl],
-    ['zh', zhUrl], ['nl', nlUrl], ['pl', plUrl], ['uk', ukUrl],
+    ['zh', zhUrl], ['nl', nlUrl], ['pl', plUrl], ['uk', ukUrl], ['ban', banUrl],
   ]
-  // `alternates` остаётся полным на всех девяти языках даже когда сам URL в
-  // карту сайта не попадает: страница жива, и hreflang в её <head> говорит
-  // ровно то же самое — противоречия между разметкой и sitemap не возникает.
+  // `alternates` остаётся полным на всех девяти hreflang-языках даже когда
+  // сам URL в карту сайта не попадает: страница жива, и hreflang в её
+  // <head> говорит ровно то же самое — противоречия между разметкой и
+  // sitemap не возникает. У /ban/ alternates нет по той же причине, по
+  // которой его нет в кластере: кода для него в hreflang не существует.
   return byLang
     .filter(([lang]) => !langs || langs.includes(lang))
     .map(([, url]) => ({ url, lastModified, changeFrequency, priority, alternates }))
