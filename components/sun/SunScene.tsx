@@ -88,23 +88,27 @@ export function SunScene({ plan, latitude, longitude, placement, heights }: SunS
 
     const scene = new THREE.Scene()
     const camera = new THREE.PerspectiveCamera(42, mount.clientWidth / mount.clientHeight, 0.5, 3000)
+    const reach = viewReach(plan)
 
     const controls = new OrbitControls(camera, renderer.domElement)
     controls.enableDamping = true
     controls.maxPolarAngle = Math.PI / 2 - 0.02
     controls.minDistance = 12
-    controls.maxDistance = 320
+    controls.maxDistance = 320 * reach
     controls.target.set(0, 3, 0)
 
     const sunLight = new THREE.DirectionalLight(0xfff2dd, 3)
     sunLight.castShadow = true
-    sunLight.shadow.mapSize.set(2048, 2048)
-    sunLight.shadow.camera.left = -SHADOW_EXTENT
-    sunLight.shadow.camera.right = SHADOW_EXTENT
-    sunLight.shadow.camera.top = SHADOW_EXTENT
-    sunLight.shadow.camera.bottom = -SHADOW_EXTENT
+    // Большой участок растягивает теневую камеру и отодвигает солнце, чтобы
+    // ближние к нему дома не выпадали за near-плоскость. Карта теней растёт
+    // вместе с охватом, иначе тень на посёлке расплывается в пятна.
+    sunLight.shadow.mapSize.setScalar(reach > 1 ? 4096 : 2048)
+    sunLight.shadow.camera.left = -SHADOW_EXTENT * reach
+    sunLight.shadow.camera.right = SHADOW_EXTENT * reach
+    sunLight.shadow.camera.top = SHADOW_EXTENT * reach
+    sunLight.shadow.camera.bottom = -SHADOW_EXTENT * reach
     sunLight.shadow.camera.near = 40
-    sunLight.shadow.camera.far = 320
+    sunLight.shadow.camera.far = 320 * reach
     sunLight.shadow.bias = -0.0004
     sunLight.shadow.normalBias = 0.04
     scene.add(sunLight, sunLight.target)
@@ -136,7 +140,7 @@ export function SunScene({ plan, latitude, longitude, placement, heights }: SunS
     basemap.receiveShadow = true
     scene.add(basemap)
 
-    addCompass(scene)
+    addCompass(scene, reach)
 
     const sunMarker = new THREE.Mesh(
       new THREE.SphereGeometry(2.2, 20, 14),
@@ -186,9 +190,9 @@ export function SunScene({ plan, latitude, longitude, placement, heights }: SunS
       const v = sunVector(position)
       const direction = new THREE.Vector3(v.x, v.y, v.z)
 
-      sunLight.position.copy(direction).multiplyScalar(SUN_DISTANCE)
+      sunLight.position.copy(direction).multiplyScalar(SUN_DISTANCE * reach)
       sunLight.target.position.set(0, 0, 0)
-      sunMarker.position.copy(direction).multiplyScalar(SUN_DISTANCE * 0.8)
+      sunMarker.position.copy(direction).multiplyScalar(SUN_DISTANCE * 0.8 * reach)
       sunMarker.visible = position.altitude > -2
 
       const day = Math.max(0, Math.sin(position.altitude * DEG))
@@ -250,9 +254,10 @@ export function SunScene({ plan, latitude, longitude, placement, heights }: SunS
   useEffect(() => {
     const ctx = sceneRef.current
     if (!ctx) return
-    if (topView) lookFromAbove(ctx.camera, ctx.controls)
-    else frameCourtyards(ctx.camera, ctx.controls, rowAzimuth)
-  }, [rowAzimuth, topView])
+    const reach = viewReach(plan)
+    if (topView) lookFromAbove(ctx.camera, ctx.controls, reach)
+    else frameCourtyards(ctx.camera, ctx.controls, rowAzimuth, reach)
+  }, [plan, rowAzimuth, topView])
 
   return (
     <div className="flex h-full w-full flex-col bg-[#0e1116]">
@@ -344,9 +349,17 @@ function placeModel(model: ComplexModel, plan: SitePlan, placement: Placement) {
   model.group.updateMatrixWorld(true)
 }
 
+/**
+ * Во сколько раз сцена больше стандартной: охват теней, отлёт камеры, компас.
+ * Без `viewRadius` в плане — ровно 1, то есть прежнее поведение.
+ */
+function viewReach(plan: SitePlan): number {
+  return plan.viewRadius ? Math.max(1, plan.viewRadius / SHADOW_EXTENT) : 1
+}
+
 /** Взгляд строго сверху — в плане тень читается однозначнее всего. */
-function lookFromAbove(camera: THREE.PerspectiveCamera, controls: OrbitControls) {
-  camera.position.set(0, 86, 0.01)
+function lookFromAbove(camera: THREE.PerspectiveCamera, controls: OrbitControls, reach = 1) {
+  camera.position.set(0, 86 * reach, 0.01)
   controls.target.set(0, 0, 0)
   controls.update()
 }
@@ -356,16 +369,17 @@ function frameCourtyards(
   camera: THREE.PerspectiveCamera,
   controls: OrbitControls,
   rowAzimuth: number,
+  reach = 1,
 ) {
   const theta = (90 - rowAzimuth) * DEG
   const outward = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), theta)
-  camera.position.copy(outward).multiplyScalar(52).add(new THREE.Vector3(0, 38, 0))
+  camera.position.copy(outward).multiplyScalar(52 * reach).add(new THREE.Vector3(0, 38 * reach, 0))
   controls.target.set(0, 3, 0)
   controls.update()
 }
 
-function addCompass(scene: THREE.Scene) {
-  const radius = 46
+function addCompass(scene: THREE.Scene, reach = 1) {
+  const radius = 46 * reach
   const marks: [string, number, number, string][] = [
     ['С', 0, -radius, '#ff9a3c'],
     ['Ю', 0, radius, '#ffffff'],
@@ -392,7 +406,7 @@ function addCompass(scene: THREE.Scene) {
         transparent: true,
       }),
     )
-    sprite.scale.set(6, 6, 1)
+    sprite.scale.set(6 * reach, 6 * reach, 1)
     sprite.position.set(x, 2.5, z)
     sprite.renderOrder = 10
     scene.add(sprite)

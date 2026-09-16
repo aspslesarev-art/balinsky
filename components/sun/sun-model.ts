@@ -104,6 +104,7 @@ function buildingBlock(
   materials: Record<string, THREE.Material>,
   plan: SitePlan,
   heights: ModelHeights,
+  roof: 'pitched' | 'flat' = 'pitched',
 ) {
   const group = new THREE.Group()
   const eave = heights.eaveHeight
@@ -135,7 +136,8 @@ function buildingBlock(
       }),
     )
 
-    group.add(gableRoof(materials.roof, unit, plan, heights))
+    // Плоская кровля — это просто верх стенового объёма, скаты не нужны.
+    if (roof === 'pitched') group.add(gableRoof(materials.roof, unit, plan, heights))
   })
 
   return group
@@ -244,6 +246,7 @@ export function buildComplexModel(plan: SitePlan, heights: ModelHeights): Comple
         materials,
         { ...plan, units: block.units, buildingDepth: block.depth },
         { ...heights, eaveHeight: block.eaveHeight ?? heights.eaveHeight },
+        block.roof,
       )
       row.rotation.y = -(block.azimuth * Math.PI) / 180
       row.position.set(block.origin.x, 0, block.origin.z)

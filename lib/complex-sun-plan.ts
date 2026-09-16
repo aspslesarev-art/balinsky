@@ -4,6 +4,8 @@
 // здесь не должно быть ни клиента Supabase, ни серверных ключей.
 // Всё, что ходит в базу, живёт в lib/complex-sun.ts.
 
+import { EDEM_II_BLOCKS, EDEM_II_PLOT } from './complex-sun-plan-edem-ii'
+
 export type SunSettings = {
   complexSlug: string
   /** Азимут направления «первая секция → последняя», градусы от севера по часовой. */
@@ -76,6 +78,13 @@ export type SitePlan = {
     latitude: number
     longitude: number
   }
+  /**
+   * Радиус обзора сцены, метры: охват теней, отлёт камеры и компас. Нужен
+   * участкам крупнее ~80 м — у сцены по умолчанию тени считаются в круге
+   * 42 м, и на большом посёлке дальние дома остаются без тени. Не задан —
+   * сцена ведёт себя как раньше.
+   */
+  viewRadius?: number
   /** Контур участка [x, z] по часовой стрелке. */
   plot: [number, number][]
   pools: PlanPool[]
@@ -236,6 +245,38 @@ const UBUD_DREAM: SitePlan = {
   },
 }
 
+/**
+ * EDEM II (Santorini Residences, BREIG), Букит. Обмер — векторный мастерплан
+ * от 10.08.2026, подробности в lib/complex-sun-plan-edem-ii.ts: 60 вилл S/M/L,
+ * 40 таунхаусов AP 5–6, 35 юнитов AP 1–4 и корпус апартаментов, всего 136
+ * отдельных объёмов. Кровли плоские, как на рендере.
+ */
+const EDEM_II: SitePlan = {
+  title: 'EDEM II',
+  district: 'Букит',
+  utcOffsetHours: 8,
+  // Оси обмера совпадают с чертежом (X на восток), а чертёж повёрнут к
+  // спутниковому снимку на 0.95° по часовой — отсюда 90.95.
+  defaults: { rowAzimuth: 90.95, latitude: -8.829243, longitude: 115.203068 },
+  buildingDepth: EDEM_II_BLOCKS[0].depth,
+  units: EDEM_II_BLOCKS[0].units,
+  blocks: EDEM_II_BLOCKS,
+  viewRadius: 150,
+  plot: EDEM_II_PLOT,
+  pools: [],
+  basemap: {
+    // Google Static Maps для этого ключа закрыт, поэтому снимок собран из
+    // тайлов Esri World Imagery, зум 19: 1280 px ≈ 378 м вокруг точки ЖК.
+    // Посадка чертежа снята через рендер «edem2-3d-masterplan»: на нём и на
+    // снимке совпадают соседние дома и дороги. Якорь — пиксель центра
+    // участка; точная доводка — ползунками в /admin/sun/edem-ii.
+    url: '/sun/edem-ii.jpg',
+    sizePx: 1280,
+    metersPerPixel: 0.295,
+    anchorPx: { x: 813.1, y: 779.5 },
+  },
+}
+
 const SITE_PLANS: Record<string, SitePlan> = {
   'u-villas-i': U_VILLAS_I,
   // Два ключа на один план: в базе у комплекса SEO:Slug =
@@ -244,6 +285,7 @@ const SITE_PLANS: Record<string, SitePlan> = {
   // молча не показывается при полностью заполненных настройках.
   'ubud-dream-ubud-bali': UBUD_DREAM,
   'ubud-dream': UBUD_DREAM,
+  'edem-ii': EDEM_II,
 }
 
 export function getSitePlan(slug: string): SitePlan | null {
