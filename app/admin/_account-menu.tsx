@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   MessageCircle, Lock, Megaphone, Image as ImageIcon, FileText, Heart, Eye, Brain, Layers, BarChart3, Table, Link2,
   Users, Wallet, ListTree, Tags, KeyRound, LayoutTemplate, CalendarDays,
-  Sun, Moon, LogOut, ChevronUp, UserRound,
+  Sun, Moon, LogOut, ChevronUp, UserRound, MessagesSquare,
 } from 'lucide-react'
 import { useAdminTheme } from './_theme'
 
@@ -36,6 +36,7 @@ const GROUPS: Group[] = [
     items: [
       { href: '/admin/chats',         label: 'Чаты',              Icon: MessageCircle },
       { href: '/admin/dev-chats',     label: 'Чаты застройщиков', Icon: Link2 },
+      { href: '/admin/perepiska',     label: 'Переписка Андрея',  Icon: MessagesSquare },
       { href: '/admin/broadcast',     label: 'Рассылка',          Icon: Megaphone },
     ],
   },

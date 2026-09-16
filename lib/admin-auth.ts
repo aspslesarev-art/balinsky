@@ -53,3 +53,11 @@ export async function requireAdmin(): Promise<boolean> {
   const v = c.get(ADMIN_COOKIE)?.value
   return v != null && valid.has(v)
 }
+
+// Логин вошедшего админа (для подписи «кто отправил»), null — не вошёл.
+export async function currentAdminUsername(): Promise<string | null> {
+  const c = await cookies()
+  const v = c.get(ADMIN_COOKIE)?.value
+  if (!v) return null
+  return listAdminAccounts().find(acc => sessionToken(acc.username) === v)?.username ?? null
+}
