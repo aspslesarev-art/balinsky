@@ -18,6 +18,19 @@ export function isCurrency(v: unknown): v is Currency {
   return typeof v === 'string' && v in CURRENCY_RATES
 }
 
+// Валюта по стране посетителя: в Индонезии цены привычнее в рупиях, в России —
+// в рублях. Для всех остальных стран остаётся доллар — общая валюта сделок по
+// недвижимости на Бали.
+const COUNTRY_CURRENCY: Record<string, Currency> = {
+  ID: 'IDR',
+  RU: 'RUB',
+}
+
+export function currencyForCountry(country: string | null): Currency | null {
+  if (!country) return null
+  return COUNTRY_CURRENCY[country] ?? null
+}
+
 // Numbers hit millions/billions easily — IDR even on entry-level properties,
 // RUB on anything above $10k. Compact form keeps cards readable.
 type Suffixes = { thou: string; mln: string; mlrd: string; decimal: string }

@@ -3,8 +3,8 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { detectLang, pickCopy } from '@/lib/i18n'
 import { usePathname } from 'next/navigation'
-import { ALL_CURRENCIES, isCurrency, type Currency } from '@/lib/currency'
-import { looksIndonesianByTimezone, resolveCountry } from '@/lib/geo'
+import { ALL_CURRENCIES, currencyForCountry, isCurrency, type Currency } from '@/lib/currency'
+import { countryByTimezone, resolveCountry } from '@/lib/geo'
 
 const LS_KEY = 'balinsky.currency'
 
@@ -32,9 +32,9 @@ const CurrencyContext = createContext<Ctx | null>(null)
 export function CurrencyProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const [explicit, setExplicit] = useState<Currency | null>(null)
-  // Country default: rupiah when the visitor is inside Indonesia, whatever
-  // language version they opened. Resolved in the browser because the pages
-  // themselves are static and shared by every region.
+  // Country default: rupiah inside Indonesia, roubles inside Russia — whatever
+  // language version the visitor opened. Resolved in the browser because the
+  // pages themselves are static and shared by every region.
   const [geo, setGeo] = useState<Currency | null>(null)
 
   useEffect(() => {
@@ -50,13 +50,13 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     }
 
     // Instant hint from the device clock, then the IP answer confirms or
-    // corrects it (traveller whose laptop still runs on home time, or an
-    // Indonesian timezone set on a machine sitting abroad).
-    if (looksIndonesianByTimezone()) setGeo('IDR')
+    // corrects it (traveller whose laptop still runs on home time, or a Moscow
+    // timezone set on a machine sitting abroad).
+    setGeo(currencyForCountry(countryByTimezone()))
     let alive = true
     resolveCountry().then(country => {
       if (!alive || !country) return
-      setGeo(country === 'ID' ? 'IDR' : null)
+      setGeo(currencyForCountry(country))
     })
     return () => { alive = false }
   }, [])
