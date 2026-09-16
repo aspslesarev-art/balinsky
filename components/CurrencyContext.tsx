@@ -4,18 +4,23 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import { detectLang, pickCopy } from '@/lib/i18n'
 import { usePathname } from 'next/navigation'
 import { ALL_CURRENCIES, isCurrency, type Currency } from '@/lib/currency'
+import { looksIndonesianByTimezone, resolveCountry } from '@/lib/geo'
 
 const LS_KEY = 'balinsky.currency'
 
 // Pages where USD-as-default doesn't fit; long-term rentals are quoted locally
-// in IDR, so a first-time visitor on /ru/arenda sees prices in rupiah.
+// in IDR, so a first-time visitor on /ru/arenda sees prices in rupiah. The
+// Indonesian and Balinese versions of the site are read from inside the
+// country — rupiah is the natural unit there too.
 function pageDefaultFor(pathname: string | null): Currency {
   if (pathname?.startsWith('/ru/arenda')) return 'IDR'
+  if (/^\/(id|ban)(\/|$)/.test(pathname ?? '')) return 'IDR'
   return 'USD'
 }
 
 type Ctx = {
-  // Currency to render with — explicit user pick, or page default if no pick yet.
+  // Currency to render with — explicit user pick, else the country default
+  // (rupiah inside Indonesia), else the page default.
   currency: Currency
   // True when the value comes from a user pick (vs the page default).
   hasExplicit: boolean
@@ -27,12 +32,33 @@ const CurrencyContext = createContext<Ctx | null>(null)
 export function CurrencyProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const [explicit, setExplicit] = useState<Currency | null>(null)
+  // Country default: rupiah when the visitor is inside Indonesia, whatever
+  // language version they opened. Resolved in the browser because the pages
+  // themselves are static and shared by every region.
+  const [geo, setGeo] = useState<Currency | null>(null)
 
   useEffect(() => {
+    let stored: Currency | null = null
     try {
       const v = localStorage.getItem(LS_KEY)
-      if (isCurrency(v)) setExplicit(v)
+      if (isCurrency(v)) stored = v
     } catch { /* SSR / private mode */ }
+    if (stored) {
+      // An explicit pick outranks geo — don't even ask where we are.
+      setExplicit(stored)
+      return
+    }
+
+    // Instant hint from the device clock, then the IP answer confirms or
+    // corrects it (traveller whose laptop still runs on home time, or an
+    // Indonesian timezone set on a machine sitting abroad).
+    if (looksIndonesianByTimezone()) setGeo('IDR')
+    let alive = true
+    resolveCountry().then(country => {
+      if (!alive || !country) return
+      setGeo(country === 'ID' ? 'IDR' : null)
+    })
+    return () => { alive = false }
   }, [])
 
   const setCurrency = (c: Currency) => {
@@ -41,7 +67,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   }
 
   const value: Ctx = {
-    currency: explicit ?? pageDefaultFor(pathname),
+    currency: explicit ?? geo ?? pageDefaultFor(pathname),
     hasExplicit: explicit != null,
     setCurrency,
   }
