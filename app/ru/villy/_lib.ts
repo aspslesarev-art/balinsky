@@ -14,6 +14,7 @@ import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { facetLabel, type FilterDim } from '@/lib/filter-i18n'
 import { isTopBlacklisted } from '@/lib/top-blacklist'
 import { isHiddenDeveloper } from '@/lib/hidden-developers'
+import { assignVillaSlugs } from '@/lib/villa-slug'
 import { loadViewCounts, smartSort } from '@/lib/catalog-rank'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
 import { cdnRewriteManifest } from '@/lib/photo-cdn'
@@ -276,6 +277,12 @@ export type EnrichedRow = {
   // so promoted developers / hand-picked listings appear first.
   isTop: boolean
   views?: number
+  // Финальный адрес юнита. Голый SEO:Slug у вилл не уникален — шесть
+  // одинаковых по планировке юнитов одного проекта делят один слаг, —
+  // поэтому «лишним» дописывается -2, -3 (см. lib/villa-slug.ts).
+  // Проставляется в loadAll; enrich() его не знает, потому что суффикс
+  // считается только по всему списку сразу.
+  slug?: string | null
 }
 
 export type StylesMap = Record<string, { style: string | null }>
@@ -552,7 +559,10 @@ export function toCard(
   const d = e.data
   // Canonicalise the Airtable slug at the catalog level so internal
   // links emit the clean URL (no GSC churn from dirty slugs).
-  const slug = normalizeSlug(firstString(d['SEO:Slug']))
+  // loadAll кладёт сюда уже разведённый адрес (…-2, …-3 для юнитов с
+  // одинаковой планировкой); откат на сырой слаг — только для вызовов
+  // toCard в обход loadAll, где карта суффиксов недоступна.
+  const slug = e.slug ?? normalizeSlug(firstString(d['SEO:Slug']))
   if (!slug || slug.startsWith('-')) return null
   // Title lookup is lang-aware. For EN we prefer the `<field> EN` slots
   // (either Airtable's own EN column or the Azure translation cache
@@ -708,12 +718,20 @@ async function _loadAllInternal(): Promise<CachedAll> {
   // Фото-аудит: выбранная обложка встаёт первой, брак выкидывается.
   const manifest = curateManifest(cdnRewriteManifest(manifestRaw), visionMap)
   const rows = ((rowsRes.data ?? []) as unknown as Record<string, unknown>[]).map(reassembleVilla)
-  const enriched = rows
-    .filter(r => r.data?.['Опубликовать'] === true)
+  const published = rows.filter(r => r.data?.['Опубликовать'] === true)
+  // Суффиксы считаем по ВСЕМ опубликованным виллам, до отсева скрытых
+  // застройщиков: индекс детальных страниц их не отсеивает, и на другом
+  // наборе один и тот же юнит получил бы здесь -2, а там -3.
+  const slugById = assignVillaSlugs(published.map(r => ({
+    id: r.airtable_id,
+    slug: firstString(r.data['SEO:Slug']),
+    name: firstString(r.data['Name']),
+  })))
+  const enriched = published
     .filter(r => !isHiddenDeveloper(firstString(r.data['Developer1']), firstString(r.data['Developer'])))
     .map(r => ({ ...r, data: mergeAllTranslations(r.data, r.airtable_id, enCache) }))
     .map(r => enrich(r, styles, featuresMap))
-    .map(e => ({ ...e, views: viewCounts[e.id] ?? 0 }))
+    .map(e => ({ ...e, views: viewCounts[e.id] ?? 0, slug: slugById.get(e.id) ?? null }))
   return { enriched, manifest }
 }
 
