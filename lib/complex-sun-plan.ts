@@ -93,6 +93,18 @@ export type SitePlan = {
     sizePx: number
     metersPerPixel: number
     anchorPx: { x: number; y: number }
+    /**
+     * Обзорный снимок пошире, под основным: основной держит резкость у
+     * комплекса, обзорный показывает округу (у EDEM II — до океана). Якорь —
+     * тот же смысл, что у основного: пиксель центра участка. Ползунки
+     * «Снимок» двигают оба слоя вместе.
+     */
+    wide?: {
+      url: string
+      sizePx: number
+      metersPerPixel: number
+      anchorPx: { x: number; y: number }
+    }
   }
 }
 
@@ -274,6 +286,15 @@ const EDEM_II: SitePlan = {
     sizePx: 1280,
     metersPerPixel: 0.295,
     anchorPx: { x: 813.1, y: 779.5 },
+    // 5 × 5 основных снимков (≈ 1.89 × 1.89 км) с тем же центром: те же тайлы
+    // Esri зума 19, сшитые в 6400 px и ужатые до 4096 — больше мобильные
+    // видеокарты не берут. В юго-восточный угол попадает океан.
+    wide: {
+      url: '/sun/edem-ii-wide.jpg',
+      sizePx: 4096,
+      metersPerPixel: 0.461,
+      anchorPx: { x: 2158.8, y: 2137.3 },
+    },
   },
 }
 

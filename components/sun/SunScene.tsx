@@ -55,6 +55,8 @@ type SceneContext = {
   sunMarker: THREE.Mesh
   basemap: THREE.Mesh
   basemapBase: { x: number; z: number }
+  wideMap: THREE.Mesh | null
+  wideBase: { x: number; z: number }
   model: ComplexModel | null
 }
 
@@ -118,7 +120,15 @@ export function SunScene({ plan, latitude, longitude, placement, heights }: SunS
 
     const backdrop = new THREE.Mesh(
       new THREE.CircleGeometry(900, 48),
-      new THREE.MeshStandardMaterial({ color: 0x54604a, roughness: 1 }),
+      // Смещение полигонов держит фон под обзорным снимком: тот сам отодвинут
+      // смещением, и без этого круг фона перекрывал бы его целиком.
+      new THREE.MeshStandardMaterial({
+        color: 0x54604a,
+        roughness: 1,
+        polygonOffset: true,
+        polygonOffsetFactor: 8,
+        polygonOffsetUnits: 8,
+      }),
     )
     backdrop.rotation.x = -Math.PI / 2
     backdrop.position.y = -0.06
@@ -140,6 +150,34 @@ export function SunScene({ plan, latitude, longitude, placement, heights }: SunS
     basemap.receiveShadow = true
     scene.add(basemap)
 
+    // Обзорный слой лежит под основным. Зазор по высоте на дальнем плане
+    // тоньше точности буфера глубины, поэтому слой отодвигается смещением
+    // полигонов — иначе снимки мерцают, перекрывая друг друга.
+    const wide = plan.basemap.wide
+    const wideTexture = wide ? new THREE.TextureLoader().load(wide.url) : null
+    let wideMap: THREE.Mesh | null = null
+    const wideBase = { x: 0, z: 0 }
+    if (wide && wideTexture) {
+      wideTexture.colorSpace = THREE.SRGBColorSpace
+      const wideSpan = wide.sizePx * wide.metersPerPixel
+      wideMap = new THREE.Mesh(
+        new THREE.PlaneGeometry(wideSpan, wideSpan),
+        new THREE.MeshStandardMaterial({
+          map: wideTexture,
+          roughness: 1,
+          polygonOffset: true,
+          polygonOffsetFactor: 4,
+          polygonOffsetUnits: 4,
+        }),
+      )
+      wideMap.rotation.x = -Math.PI / 2
+      wideBase.x = (wide.sizePx / 2 - wide.anchorPx.x) * wide.metersPerPixel
+      wideBase.z = (wide.sizePx / 2 - wide.anchorPx.y) * wide.metersPerPixel
+      wideMap.position.set(wideBase.x, -0.04, wideBase.z)
+      wideMap.receiveShadow = true
+      scene.add(wideMap)
+    }
+
     addCompass(scene, reach)
 
     const sunMarker = new THREE.Mesh(
@@ -158,6 +196,8 @@ export function SunScene({ plan, latitude, longitude, placement, heights }: SunS
       sunMarker,
       basemap,
       basemapBase,
+      wideMap,
+      wideBase,
       model: null,
     }
 
@@ -215,6 +255,7 @@ export function SunScene({ plan, latitude, longitude, placement, heights }: SunS
       controls.dispose()
       sceneRef.current?.model?.dispose()
       texture.dispose()
+      wideTexture?.dispose()
       renderer.dispose()
       mount.removeChild(renderer.domElement)
       sceneRef.current = null
@@ -247,6 +288,12 @@ export function SunScene({ plan, latitude, longitude, placement, heights }: SunS
       ctx.basemapBase.x * basemapScale + basemapOffsetX,
       -0.02,
       ctx.basemapBase.z * basemapScale + basemapOffsetZ,
+    )
+    ctx.wideMap?.scale.set(basemapScale, basemapScale, 1)
+    ctx.wideMap?.position.set(
+      ctx.wideBase.x * basemapScale + basemapOffsetX,
+      -0.04,
+      ctx.wideBase.z * basemapScale + basemapOffsetZ,
     )
   }, [placement])
 
