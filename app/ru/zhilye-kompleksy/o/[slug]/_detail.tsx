@@ -55,6 +55,11 @@ const LandProfileBlock = dynamic(
 const SunShadowBlock = dynamic(
   () => import('@/components/sun/SunShadowBlock').then(m => ({ default: m.SunShadowBlock })),
 )
+// Google3DMapBlock = кнопка + модалка с 3D-картой Google; SDK карты грузится
+// только по клику и после проверки суточного лимита.
+const Google3DMapBlock = dynamic(
+  () => import('@/components/sun/Google3DMapBlock').then(m => ({ default: m.Google3DMapBlock })),
+)
 import { LazyMount } from '@/components/LazyMount'
 import { loadLandProfile, landAllowsBuilding } from '@/lib/land-profile'
 import { loadComplexMarketStats } from '@/lib/complex-market-stats'
@@ -1966,6 +1971,15 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
                     }}
                     title={sunPlan!.title}
                   />
+                  {sunPlan!.google3d && process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY && (
+                    <div className="mt-3">
+                      <Google3DMapBlock
+                        apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}
+                        view={sunPlan!.google3d}
+                        title={sunPlan!.title}
+                      />
+                    </div>
+                  )}
                 </div>
               ) : null}
             />

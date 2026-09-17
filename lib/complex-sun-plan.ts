@@ -58,6 +58,18 @@ export type PlanBlock = {
   roof: 'pitched' | 'flat'
 }
 
+/**
+ * Модель комплекса на фотореалистичной 3D-карте Google. `modelUrl` — glb в
+ * осях «восток / север / вверх» с началом в центре участка; координаты — тот
+ * же центр на местности; `heading` — поправка разворота к северу, градусы.
+ */
+export type Google3DView = {
+  modelUrl: string
+  latitude: number
+  longitude: number
+  heading: number
+}
+
 export type SitePlan = {
   title: string
   district: string
@@ -85,6 +97,8 @@ export type SitePlan = {
    * сцена ведёт себя как раньше.
    */
   viewRadius?: number
+  /** Показ на 3D-карте Google. Не задан — кнопки на странице нет. */
+  google3d?: Google3DView
   /** Контур участка [x, z] по часовой стрелке. */
   plot: [number, number][]
   pools: PlanPool[]
@@ -274,6 +288,14 @@ const EDEM_II: SitePlan = {
   units: EDEM_II_BLOCKS[0].units,
   blocks: EDEM_II_BLOCKS,
   viewRadius: 150,
+  // glb собран из тех же блоков (scripts не нужен: разовая выгрузка через
+  // GLTFExporter). Центр участка сверен с фундаментами на снимке Google.
+  google3d: {
+    modelUrl: '/sun/edem-ii.glb',
+    latitude: -8.8296152,
+    longitude: 115.2035323,
+    heading: 0,
+  },
   plot: EDEM_II_PLOT,
   pools: [],
   basemap: {
