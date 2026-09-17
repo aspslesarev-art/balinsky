@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Шаблон эксплорера отделки читается с диска в рантайме — без этого
+  // Vercel не положит его в бандл функции.
+  outputFileTracingIncludes: {
+    '/api/admin/otdelka': ['./lib/finish-explorer/template.html'],
+  },
   images: {
     // Vercel image optimization runs through these hosts: AVIF / WebP
     // conversion, on-the-fly resize, srcset, year-long edge cache.

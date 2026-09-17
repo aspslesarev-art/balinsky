@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   MessageCircle, Lock, Megaphone, Image as ImageIcon, FileText, Heart, Eye, Brain, Layers, BarChart3, Table, Link2,
-  Users, Wallet, ListTree, Tags, KeyRound, LayoutTemplate, CalendarDays,
+  Users, Wallet, ListTree, Tags, Gem, KeyRound, LayoutTemplate, CalendarDays,
   Sun, Moon, LogOut, ChevronUp, UserRound, MessagesSquare,
 } from 'lucide-react'
 import { useAdminTheme } from './_theme'
@@ -57,6 +57,7 @@ const GROUPS: Group[] = [
       { href: '/admin/market/units',  label: 'Юниты рынка',       Icon: ListTree },
       { href: '/admin/market/site',   label: 'Цены на сайте',     Icon: Tags },
       { href: '/admin/market/access', label: 'Доступ к отчёту',   Icon: KeyRound },
+      { href: '/admin/otdelka',       label: 'Отделка и спрос',   Icon: Gem },
     ],
   },
   {

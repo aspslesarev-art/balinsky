@@ -1,0 +1,788 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Отделка и спрос на Бали</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@400;600&display=swap">
+<style>
+:root{
+  --ground:#F1F3F0; --panel:#FFFFFF; --panel-2:#F8F9F7;
+  --ink:#141A18; --ink-2:#4B5653; --ink-3:#6E7A76;
+  --line:#E1E4E0; --line-strong:#C8CFCA;
+  --accent:#0F766B; --accent-ink:#FFFFFF; --accent-soft:#DCEDE9;
+  --t1:#A2968A; --t2:#8DA096; --t3:#5F9A85; --t4:#2E8F76; --t5:#0B6157;
+  --good:#2F7D57; --warn:#A9741C; --bad:#A9463C;
+  --shadow:0 1px 2px rgb(16 26 24 / .04), 0 4px 12px rgb(16 26 24 / .06);
+  --r:10px; --r-sm:6px;
+  --ease-in:cubic-bezier(.2,.8,.2,1);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0F1413; --panel:#171D1C; --panel-2:#1D2423;
+    --ink:#E7EDEA; --ink-2:#A7B3AF; --ink-3:#8B9793;
+    --line:#252E2C; --line-strong:#3A4542;
+    --accent:#3FB9A6; --accent-ink:#08201D; --accent-soft:#12322E;
+    --t1:#8C8377; --t2:#7E8F85; --t3:#559780; --t4:#35A386; --t5:#63C9B2;
+    --good:#5CB183; --warn:#D2A055; --bad:#D07E73;
+    --shadow:0 1px 2px rgb(0 0 0 / .3), 0 4px 14px rgb(0 0 0 / .35);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0F1413; --panel:#171D1C; --panel-2:#1D2423;
+  --ink:#E7EDEA; --ink-2:#A7B3AF; --ink-3:#8B9793;
+  --line:#252E2C; --line-strong:#3A4542;
+  --accent:#3FB9A6; --accent-ink:#08201D; --accent-soft:#12322E;
+  --t1:#8C8377; --t2:#7E8F85; --t3:#559780; --t4:#35A386; --t5:#63C9B2;
+  --good:#5CB183; --warn:#D2A055; --bad:#D07E73;
+  --shadow:0 1px 2px rgb(0 0 0 / .3), 0 4px 14px rgb(0 0 0 / .35);
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:15px; line-height:1.55;
+}
+h1,h2{margin:0; font-family:"IBM Plex Serif",Georgia,serif; font-weight:600; line-height:1.2; text-wrap:balance}
+button,input,select{font:inherit; color:inherit}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:var(--r-sm)}
+.num{font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums}
+.cap{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:.6875rem; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3)}
+
+.top{background:var(--panel); border-bottom:1px solid var(--line)}
+@media (min-width:1024px){ .top{position:sticky; top:0; z-index:30} }
+.top-in{padding:16px 24px; display:flex; gap:24px; align-items:flex-start; flex-wrap:wrap}
+.brand h1{font-size:1.5rem; letter-spacing:-.01em}
+.brand p{margin:6px 0 0; color:var(--ink-2); font-size:.875rem; max-width:64ch}
+.brand b{font-weight:600; color:var(--ink)}
+.top-actions{margin-left:auto; display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+
+.seg{display:flex; border:1px solid var(--line-strong); border-radius:var(--r-sm); overflow:hidden}
+.seg button{background:transparent; border:0; padding:7px 14px; cursor:pointer; color:var(--ink-2);
+  font-size:.8125rem; transition:background .12s var(--ease-in), color .12s var(--ease-in)}
+.seg button+button{border-left:1px solid var(--line-strong)}
+.seg button[aria-pressed="true"]{background:var(--accent); color:var(--accent-ink)}
+.seg button:hover:not([aria-pressed="true"]){background:var(--panel-2)}
+
+.btn{background:var(--panel); border:1px solid var(--line-strong); border-radius:var(--r-sm);
+  padding:7px 12px; cursor:pointer; font-size:.8125rem; color:var(--ink-2);
+  transition:border-color .12s var(--ease-in), color .12s var(--ease-in)}
+.btn:hover{border-color:var(--accent); color:var(--ink)}
+
+.summary{display:flex; gap:28px; align-items:center; flex-wrap:wrap;
+  padding:12px 24px; background:var(--panel-2); border-bottom:1px solid var(--line)}
+@media (min-width:1024px){ .summary{position:sticky; top:var(--top-h,0px); z-index:29} }
+.stat{display:flex; flex-direction:column; gap:1px; min-width:78px}
+.stat .v{font-family:"IBM Plex Mono",monospace; font-size:1.25rem; font-variant-numeric:tabular-nums; line-height:1.2}
+.stat .l{font-size:.6875rem; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-3); font-family:"IBM Plex Mono",monospace}
+.tiergroup{display:flex; flex-direction:column; gap:4px; margin-left:auto}
+.tiergroup .l{font-size:.6875rem; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-3); font-family:"IBM Plex Mono",monospace}
+.tierbar{display:flex; gap:3px; align-items:flex-end; height:36px; padding-top:14px}
+.tierbar div{width:26px; border-radius:3px 3px 0 0; position:relative; min-height:2px}
+.tierbar span{position:absolute; top:-14px; left:0; right:0; text-align:center; font-size:.625rem; color:var(--ink-3); font-family:"IBM Plex Mono",monospace}
+
+.wrap{display:grid; grid-template-columns:292px minmax(0,1fr); align-items:start}
+.side{position:sticky; top:calc(var(--top-h,0px) + var(--sum-h,0px)); align-self:start;
+  max-height:calc(100vh - var(--top-h,0px) - var(--sum-h,0px));
+  overflow-y:auto; padding:20px 20px 64px; border-right:1px solid var(--line); background:var(--panel)}
+.main{padding:20px 24px 96px; min-width:0}
+
+#filters > summary{
+  list-style:none; cursor:pointer; padding:10px 14px; margin:0 0 4px; font-size:.875rem;
+  border:1px solid var(--line-strong); border-radius:var(--r-sm); color:var(--ink-2);
+  display:flex; align-items:center; justify-content:space-between;
+}
+#filters > summary::-webkit-details-marker{display:none}
+#filters > summary::after{content:"▾"; color:var(--ink-3)}
+#filters[open] > summary::after{content:"▴"}
+@media (min-width:1024px){ #filters > summary{display:none} }
+.fgroup{padding-block:16px; border-top:1px solid var(--line)}
+.fgroup:first-of-type{border-top:0; padding-top:0}
+.fgroup > .cap{display:block; margin-bottom:10px}
+.chips{display:flex; flex-wrap:wrap; gap:6px}
+.chip{border:1px solid var(--line-strong); background:var(--panel); color:var(--ink-2);
+  border-radius:999px; padding:4px 11px; font-size:.8125rem; cursor:pointer; line-height:1.4;
+  transition:border-color .12s var(--ease-in), background .12s var(--ease-in), color .12s var(--ease-in)}
+.chip:hover{border-color:var(--accent)}
+.chip[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:var(--accent-ink)}
+.chip .n{opacity:.6; font-size:.75rem; margin-left:5px; font-family:"IBM Plex Mono",monospace}
+.chip.t1[aria-pressed="true"]{background:var(--t1); border-color:var(--t1); color:#fff}
+.chip.t2[aria-pressed="true"]{background:var(--t2); border-color:var(--t2); color:#fff}
+.chip.t3[aria-pressed="true"]{background:var(--t3); border-color:var(--t3); color:#fff}
+.chip.t4[aria-pressed="true"]{background:var(--t4); border-color:var(--t4); color:#fff}
+.chip.t5[aria-pressed="true"]{background:var(--t5); border-color:var(--t5); color:#fff}
+
+.row{display:flex; align-items:center; gap:8px; margin-top:10px}
+.row label{font-size:.8125rem; color:var(--ink-2); flex:1}
+.row output{font-family:"IBM Plex Mono",monospace; font-size:.8125rem; color:var(--ink); min-width:44px; text-align:right}
+input[type=range]{width:100%; accent-color:var(--accent); margin:2px 0 0}
+input[type=search], select{width:100%; padding:7px 10px; border:1px solid var(--line-strong);
+  border-radius:var(--r-sm); background:var(--panel); font-size:.875rem}
+.check{display:flex; align-items:flex-start; gap:8px; font-size:.8125rem; color:var(--ink-2); cursor:pointer; margin-top:12px}
+.check input{accent-color:var(--accent); margin-top:3px; flex:none}
+
+.viewport{position:relative}
+.card{position:absolute; top:0; left:0; background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--r); overflow:hidden; cursor:pointer; display:flex; flex-direction:column;
+  transition:border-color .12s var(--ease-in), box-shadow .12s var(--ease-in)}
+.card:hover{border-color:var(--line-strong); box-shadow:var(--shadow)}
+.card:hover .ph img{transform:scale(1.03)}
+.ph{position:relative; aspect-ratio:4/3; background:var(--panel-2); overflow:hidden; flex:none}
+.ph img{width:100%; height:100%; object-fit:cover; display:block; transition:transform .32s var(--ease-in)}
+.tier{position:absolute; left:8px; top:8px; min-width:26px; height:26px; padding:0 6px; border-radius:var(--r-sm);
+  display:grid; place-items:center; color:#fff; font-family:"IBM Plex Mono",monospace;
+  font-size:.8125rem; box-shadow:0 1px 3px rgb(0 0 0 /.35)}
+.tier.v1{background:var(--t1)} .tier.v2{background:var(--t2)} .tier.v3{background:var(--t3)}
+.tier.v4{background:var(--t4)} .tier.v5{background:var(--t5)}
+.viewtag{position:absolute; right:8px; top:8px; background:rgb(8 18 16 / .74); color:#fff;
+  border-radius:999px; padding:2px 9px; font-size:.6875rem}
+.cbody{padding:10px 12px 12px; display:flex; flex-direction:column; gap:5px; flex:1}
+.cname{font-size:.875rem; line-height:1.35; font-weight:500; overflow:hidden;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical}
+.cmeta{font-size:.75rem; color:var(--ink-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.cnums{display:flex; gap:14px; margin-top:auto; padding-top:8px; border-top:1px solid var(--line);
+  font-family:"IBM Plex Mono",monospace; font-size:.75rem; font-variant-numeric:tabular-nums}
+.cnums i{font-style:normal; color:var(--ink-3); display:block; font-size:.625rem; letter-spacing:.03em}
+.up{color:var(--good)} .down{color:var(--bad)}
+
+.tblwrap{overflow-x:auto; border:1px solid var(--line); border-radius:var(--r); background:var(--panel)}
+table{border-collapse:collapse; width:100%; font-size:.8125rem}
+th,td{padding:8px 10px; text-align:left; white-space:nowrap; border-bottom:1px solid var(--line)}
+th{position:sticky; top:0; background:var(--panel-2); font-weight:500; font-size:.6875rem;
+  letter-spacing:.05em; text-transform:uppercase; color:var(--ink-3); z-index:1}
+td.n{text-align:right; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums}
+tbody tr:hover{background:var(--panel-2)}
+td.name{white-space:normal; min-width:200px; max-width:300px}
+.tdot{display:inline-grid; place-items:center; width:20px; height:20px; border-radius:5px;
+  color:#fff; font-family:"IBM Plex Mono",monospace; font-size:.6875rem}
+
+dialog{border:0; padding:0; background:transparent; max-width:none; max-height:none; width:100%; height:100%; margin:0}
+dialog::backdrop{background:rgb(8 14 13 / .8)}
+.sheet{background:var(--panel); color:var(--ink); border-radius:12px; overflow:hidden;
+  width:min(1100px, calc(100vw - 32px)); max-height:calc(100vh - 32px); margin:16px auto;
+  display:grid; grid-template-columns:minmax(0,1.3fr) minmax(300px,1fr); box-shadow:0 24px 60px rgb(0 0 0 /.4)}
+.gal{background:#0B0F0E; display:flex; flex-direction:column; min-width:0}
+.gal .big{aspect-ratio:4/3; background:#0B0F0E; min-height:0}
+.gal .big img{width:100%; height:100%; object-fit:contain; display:block}
+.thumbs{display:flex; gap:6px; padding:8px; overflow-x:auto}
+.thumbs img{width:72px; height:54px; object-fit:cover; border-radius:4px; cursor:pointer;
+  opacity:.5; flex:none; transition:opacity .12s var(--ease-in)}
+.thumbs img[aria-current="true"], .thumbs img:hover{opacity:1}
+.info{padding:20px; overflow-y:auto; display:flex; flex-direction:column; gap:16px}
+.info h2{font-size:1.25rem; margin-top:4px}
+.kv{display:grid; grid-template-columns:auto 1fr; gap:6px 14px; font-size:.8125rem; margin:0}
+.kv dt{color:var(--ink-3)}
+.kv dd{margin:0; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums}
+.tags{display:flex; flex-wrap:wrap; gap:5px}
+.tag{background:var(--panel-2); border:1px solid var(--line); border-radius:999px;
+  padding:2px 9px; font-size:.75rem; color:var(--ink-2)}
+.tag.bad{border-color:color-mix(in srgb, var(--bad) 45%, var(--line)); color:var(--bad)}
+.gobtn{display:inline-block; background:var(--accent); color:var(--accent-ink); text-decoration:none;
+  padding:9px 16px; border-radius:var(--r-sm); font-size:.875rem; text-align:center}
+
+.empty{padding:64px 24px; text-align:center; color:var(--ink-3)}
+.note{font-size:.75rem; color:var(--ink-3); line-height:1.55; margin:8px 0 0}
+
+@media (max-width:1023px){
+  .wrap{grid-template-columns:1fr}
+  .side{position:static; max-height:none; border-right:0; border-bottom:1px solid var(--line); padding:16px 20px}
+  .sheet{grid-template-columns:1fr; max-height:calc(100vh - 24px)}
+  .gal .big{aspect-ratio:16/10}
+}
+@media (max-width:560px){
+  .top-in{padding:14px 16px}
+  .summary{padding:10px 16px; gap:18px}
+  .main{padding:16px 16px 80px}
+  .side{padding:16px 16px 20px}
+  .stat{min-width:64px}
+  .stat .v{font-size:1rem}
+  .tierbar{margin-left:0; padding-top:12px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition-duration:.01ms !important; animation-duration:.01ms !important; scroll-behavior:auto !important}
+}
+</style>
+</head>
+<body>
+
+<header class="top" id="top">
+  <div class="top-in">
+    <div class="brand">
+      <h1>Отделка и спрос на Бали</h1>
+      <p id="hero-text">Загружаю срез…</p>
+    </div>
+    <div class="top-actions">
+      <div class="seg" role="group" aria-label="Вид данных">
+        <button id="v-grid" aria-pressed="true">Галерея</button>
+        <button id="v-table" aria-pressed="false">Таблица</button>
+      </div>
+      <button class="btn" id="csv">Скачать CSV</button>
+      <button class="btn" id="theme" aria-label="Переключить тему">◐</button>
+    </div>
+  </div>
+</header>
+
+<div class="summary" id="summary">
+  <div class="stat"><span class="v" id="s-n">—</span><span class="l">объектов</span></div>
+  <div class="stat"><span class="v" id="s-adr">—</span><span class="l">медиана ADR</span></div>
+  <div class="stat"><span class="v" id="s-occ">—</span><span class="l">загрузка</span></div>
+  <div class="stat"><span class="v" id="s-ar">—</span><span class="l">цена к соседям</span></div>
+  <div class="stat"><span class="v" id="s-rr">—</span><span class="l">revpar к соседям</span></div>
+  <div class="stat"><span class="v" id="s-idle">—</span><span class="l">простой &lt;70%</span></div>
+  <div class="tiergroup"><div class="tierbar" id="tierbar" title="Распределение по отделке в текущей выборке"></div><span class="l">отделка в выборке</span></div>
+</div>
+
+<div class="wrap">
+  <aside class="side" id="side">
+    <details id="filters" open><summary>Фильтры и сортировка</summary>
+    <div class="fgroup">
+      <span class="cap">Эталоны</span>
+      <div class="chips" id="presets"></div>
+      <p class="note">Один клик — все объекты этого уровня, самые дорогие относительно соседей сверху. Так видно, что рынок считает тройкой, а что пятёркой.</p>
+    </div>
+
+    <div class="fgroup">
+      <span class="cap">Отделка</span>
+      <div class="chips" id="f-tier"></div>
+    </div>
+
+    <div class="fgroup">
+      <span class="cap">Вид из объекта</span>
+      <div class="chips" id="f-view"></div>
+    </div>
+
+    <div class="fgroup">
+      <span class="cap">Тип</span>
+      <div class="chips" id="f-kind"></div>
+    </div>
+
+    <div class="fgroup">
+      <span class="cap">Бассейн</span>
+      <div class="chips" id="f-pool"></div>
+    </div>
+
+    <div class="fgroup">
+      <span class="cap">Район и размер</span>
+      <select id="f-zone" aria-label="Район"><option value="">Все районы</option></select>
+      <div class="row"><label for="f-beds">Спальни</label>
+        <select id="f-beds" style="width:auto"><option value="">любые</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option value="6+">6+</option></select>
+      </div>
+    </div>
+
+    <div class="fgroup">
+      <span class="cap">Пороги</span>
+      <div class="row"><label for="f-occ">Загрузка не ниже</label><output id="o-occ">0%</output></div>
+      <input type="range" id="f-occ" min="0" max="100" step="5" value="0">
+      <div class="row"><label for="f-adr">Ставка от, $/ночь</label><output id="o-adr">$0</output></div>
+      <input type="range" id="f-adr" min="0" max="500" step="10" value="0">
+      <div class="row"><label for="f-ar">Дороже соседей в</label><output id="o-ar">×0.0</output></div>
+      <input type="range" id="f-ar" min="0" max="3" step="0.1" value="0">
+      <div class="row"><label for="f-ig">Инстаграмность от</label><output id="o-ig">1</output></div>
+      <input type="range" id="f-ig" min="1" max="5" step="1" value="1">
+      <div class="row"><label for="f-pp">Качество съёмки от</label><output id="o-pp">1</output></div>
+      <input type="range" id="f-pp" min="1" max="5" step="1" value="1">
+      <label class="check"><input type="checkbox" id="f-noflag"> Без красных флагов на фото</label>
+      <label class="check"><input type="checkbox" id="f-idle"> Только простаивающие, ниже 70%</label>
+      <label class="check"><input type="checkbox" id="f-strat"> Только надёжные сравнения, от 8 соседей в страте</label>
+    </div>
+
+    <div class="fgroup">
+      <span class="cap">Микс-рейтинг</span>
+      <p class="note" style="margin-top:0">Четыре оси складываются в один балл. Выберите сортировку «Микс-рейтинг» — наверх выйдут объекты, сильные сразу по нескольким.</p>
+      <div class="row"><label for="w-f">Отделка</label><output id="o-wf">3</output></div>
+      <input type="range" id="w-f" min="0" max="5" step="1" value="3">
+      <div class="row"><label for="w-v">Вид</label><output id="o-wv">3</output></div>
+      <input type="range" id="w-v" min="0" max="5" step="1" value="3">
+      <div class="row"><label for="w-o">Заполняемость</label><output id="o-wo">2</output></div>
+      <input type="range" id="w-o" min="0" max="5" step="1" value="2">
+      <div class="row"><label for="w-p">Цена к соседям</label><output id="o-wp">3</output></div>
+      <input type="range" id="w-p" min="0" max="5" step="1" value="3">
+    </div>
+
+    <div class="fgroup">
+      <span class="cap">Поиск и порядок</span>
+      <input type="search" id="f-q" placeholder="Название объекта" autocomplete="off">
+      <div class="row"><label for="sort">Сортировка</label></div>
+      <select id="sort">
+        <option value="mix">Микс-рейтинг</option>
+        <option value="rr">RevPAR к соседям</option>
+        <option value="ar">Цена к соседям</option>
+        <option value="adr">Ставка $/ночь</option>
+        <option value="occ">Загрузка</option>
+        <option value="tier">Отделка</option>
+        <option value="ig">Инстаграмность</option>
+      </select>
+      <button class="btn" id="reset" style="width:100%; margin-top:12px">Сбросить фильтры</button>
+    </div>
+
+    <div class="fgroup">
+      <p class="note"><b>Что здесь значит «загрузка».</b> Это доля закрытых дат в календаре Booking за ближайший месяц,
+      а не проданные ночи: бронь на другой площадке и приезд хозяина тоже попадают в «занято».
+      Медиана по Бали 95%, у трети объектов ровно 100% — сверху шкала упирается в потолок,
+      поэтому разницу между уровнями честнее читать по левому хвосту, доле простаивающих ниже 70%.</p>
+      <p class="note">Карточки Booking через estatemarket.io, отделка размечена vision-моделью по шести фото каждого объекта. Срез <span id="hdr-date">—</span>. Обновляется каждую неделю. Цена карты estatemarket, которая в четыре раза ниже цены карточки, считается заглушкой и заменяется ценой карточки; цена ниже пятой части медианы соседей показана «—» и в индексы не входит.</p>
+    </div>
+    </details>
+  </aside>
+
+  <main class="main" id="main">
+    <div class="viewport" id="viewport"></div>
+    <div class="tblwrap" id="tblwrap" hidden><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+    <div class="empty" id="empty" hidden>Под эти условия не попал ни один объект. Ослабьте фильтры.</div>
+  </main>
+</div>
+
+<dialog id="lb"><div class="sheet">
+  <div class="gal">
+    <div class="big"><img id="lb-img" alt=""></div>
+    <div class="thumbs" id="lb-thumbs"></div>
+  </div>
+  <div class="info">
+    <div>
+      <span class="cap" id="lb-zone"></span>
+      <h2 id="lb-name"></h2>
+    </div>
+    <dl class="kv" id="lb-kv"></dl>
+    <div>
+      <span class="cap" style="display:block; margin-bottom:6px">Что видно на фото</span>
+      <div class="tags" id="lb-tags"></div>
+    </div>
+    <div style="display:flex; gap:8px; margin-top:auto; padding-top:8px">
+      <a class="gobtn" id="lb-link" href="#" target="_blank" rel="noopener">Открыть на Booking</a>
+      <button class="btn" id="lb-close">Закрыть</button>
+    </div>
+  </div>
+</div></dialog>
+
+<script>
+(async () => {
+'use strict'
+const heroText = document.getElementById('hero-text')
+let PAY
+try {
+  const res = await fetch(__DATA_URL__)
+  if (!res.ok) throw new Error(res.status)
+  PAY = await res.json()
+} catch (e) {
+  heroText.textContent = 'Не получилось загрузить срез. Обновите страницу; если не поможет — срез ещё не собран.'
+  return
+}
+const EXTRA = PAY.photos
+const M = PAY.meta, ROWS = PAY.rows
+ROWS.forEach((r, i) => { r._i = i })
+
+const C = { slug:0, title:1, kind:2, beds:3, zone:4, adr:5, occ:6, revpar:7, ar:8, or:9, rr:10, sn:11,
+  tier:12, coh:13, views:14, pool:15, ig:16, pp:17, cond:18, style:19, kt:20, bt:21, conf:22, flags:23,
+  wow:24, star:25, area:26, deck:27, light:28, outdoor:29, cover:30 }
+
+const RU = {
+  views:{ocean_full:'океан целиком',ocean_partial:'океан частично',rice_field:'рисовые поля',jungle:'джунгли',river_valley:'река и долина',mountain:'горы',garden:'сад',pool:'бассейн',urban:'городская застройка',none:'без вида'},
+  pools:{infinity:'инфинити',private_standard:'свой бассейн',plunge:'плунж',lap:'дорожка',shared:'общий',none:'нет бассейна'},
+  kinds:{villa:'вилла',apartment:'апартаменты',hotel:'отель',guesthouse:'гестхаус',hostel:'хостел',house:'дом',resort:'резорт',aparthotel:'апарт-отель',other:'прочее'},
+  cond:{new:'новый',well_kept:'ухоженный',aging:'стареет',worn:'изношен'},
+  style:{modern_tropical:'современный тропик',balinese_traditional:'традиционный балийский',minimalist:'минимализм',luxury_contemporary:'современный люкс',boho_mediterranean:'бохо-средиземноморье',scandinavian:'скандинавский',industrial_loft:'лофт',colonial:'колониальный',rustic_wood:'рустик',generic_budget:'типовой бюджет',none:'без стиля'},
+  flags:{worn_furniture:'потёртая мебель',stains_or_mold:'пятна или плесень',cramped_rooms:'тесно',clutter:'захламлено',poor_lighting:'плохой свет',dated_bathroom:'устаревшая ванная',no_outdoor_space:'нет улицы',construction_nearby:'стройка рядом',road_or_noise:'дорога и шум',low_quality_photos:'слабые фото'},
+}
+const TIER_NAME = {1:'бюджет, плитка и гипрок',2:'просто и опрятно',3:'крепкий середняк',4:'дизайнерский уровень',5:'премиум'}
+const VIEW_SCORE = {ocean_full:1,ocean_partial:.8,rice_field:.65,jungle:.6,river_valley:.6,mountain:.55,garden:.2,pool:.2,urban:0,none:0}
+
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]))
+const titleOf = r => r[C.title] || r[C.slug].replace(/-/g, ' ').replace(/(^|\s)\S/g, c => c.toUpperCase())
+const photoUrl = p => {
+  if (!p) return ''
+  if (p[0] === '@') return p.slice(1)
+  const [t, id, k] = p.split('|')
+  return `https://cf.bstatic.com/xdata/images/${M.imgp[+t]}/${id}.jpg?k=${k}&o=`
+}
+const bookingUrl = r => `https://www.booking.com/hotel/id/${r[C.slug]}.html`
+const viewsOf = r => M.views.filter((_, i) => r[C.views] & (1 << i))
+const flagsOf = r => M.flags.filter((_, i) => r[C.flags] & (1 << i))
+const fmt = (x, d = 0) => x == null ? '—' : (+x).toFixed(d)
+const ratio = x => x == null ? '—' : '×' + (+x).toFixed(2)
+const viewScore = ROWS.map(r => { const v = viewsOf(r); return v.length ? Math.max(...v.map(x => VIEW_SCORE[x] ?? 0)) : 0 })
+
+const S = {
+  tier:new Set(), view:new Set(), kind:new Set(), pool:new Set(),
+  zone:'', beds:'', occ:0, adr:0, ar:0, ig:1, pp:1, noflag:false, idle:false, strat:false,
+  q:'', sort:'mix', mode:'grid', w:{ f:3, v:3, o:2, p:3 },
+}
+let filtered = []
+
+const mixScore = r => {
+  const w = S.w, tot = w.f + w.v + w.o + w.p || 1
+  const f = (r[C.tier] - 1) / 4
+  const v = viewScore[r._i]
+  const o = r[C.occ] == null ? .5 : Math.min(1, r[C.occ] / 100)
+  const p = r[C.ar] == null ? .5 : Math.min(1, Math.max(0, Math.log(Math.max(.2, r[C.ar])) / Math.log(3) * .5 + .5))
+  return (w.f * f + w.v * v + w.o * o + w.p * p) / tot
+}
+
+function apply() {
+  const q = S.q.trim().toLowerCase()
+  filtered = ROWS.filter(r => {
+    if (S.tier.size && !S.tier.has(r[C.tier])) return false
+    if (S.kind.size && !S.kind.has(r[C.kind])) return false
+    if (S.pool.size && !S.pool.has(r[C.pool])) return false
+    if (S.view.size) { let ok = false; for (const i of S.view) if (r[C.views] >> i & 1) { ok = true; break } if (!ok) return false }
+    if (S.zone !== '' && r[C.zone] !== +S.zone) return false
+    if (S.beds) { const b = r[C.beds]; if (S.beds === '6+' ? !(b >= 6) : b !== +S.beds) return false }
+    if (S.occ && !(r[C.occ] >= S.occ)) return false
+    if (S.adr && !(r[C.adr] >= S.adr)) return false
+    if (S.ar && !(r[C.ar] >= S.ar)) return false
+    if (S.ig > 1 && !(r[C.ig] >= S.ig)) return false
+    if (S.pp > 1 && !(r[C.pp] >= S.pp)) return false
+    if (S.noflag && r[C.flags]) return false
+    if (S.idle && !(r[C.occ] != null && r[C.occ] < 70)) return false
+    if (S.strat && !(r[C.sn] >= 8)) return false
+    if (q && !titleOf(r).toLowerCase().includes(q) && !r[C.slug].includes(q)) return false
+    return true
+  })
+  if (S.sort === 'mix') {
+    const cache = new Map()
+    for (const r of filtered) cache.set(r, mixScore(r))
+    filtered.sort((a, b) => cache.get(b) - cache.get(a))
+  } else {
+    const k = { rr:C.rr, ar:C.ar, adr:C.adr, occ:C.occ, tier:C.tier, ig:C.ig }[S.sort]
+    const dir = S.sort === 'occ' && S.idle ? 1 : -1
+    filtered.sort((a, b) => dir * (((b[k] ?? -1) - (a[k] ?? -1)) || (b[C.tier] - a[C.tier])))
+  }
+  renderSummary()
+  render()
+}
+
+const median = a => { a = a.filter(x => x != null).sort((x, y) => x - y); return a.length ? a[a.length >> 1] : null }
+function renderSummary() {
+  const f = filtered, has = f.length > 0
+  document.getElementById('s-n').textContent = f.length.toLocaleString('ru-RU')
+  document.getElementById('s-adr').textContent = has ? '$' + fmt(median(f.map(r => r[C.adr]))) : '—'
+  document.getElementById('s-occ').textContent = has ? fmt(median(f.map(r => r[C.occ]))) + '%' : '—'
+  document.getElementById('s-ar').textContent = has ? ratio(median(f.map(r => r[C.ar]))) : '—'
+  document.getElementById('s-rr').textContent = has ? ratio(median(f.map(r => r[C.rr]))) : '—'
+  const idle = f.filter(r => r[C.occ] != null && r[C.occ] < 70).length
+  document.getElementById('s-idle').textContent = has ? Math.round(100 * idle / f.length) + '%' : '—'
+  const counts = [1, 2, 3, 4, 5].map(t => f.filter(r => r[C.tier] === t).length)
+  const max = Math.max(1, ...counts)
+  document.getElementById('tierbar').innerHTML = counts.map((n, i) =>
+    `<div style="height:${Math.max(2, Math.round(32 * n / max))}px;background:var(--t${i + 1})" title="Отделка ${i + 1}: ${n} объектов"><span>${i + 1}</span></div>`).join('')
+}
+
+const viewport = document.getElementById('viewport')
+const main = document.getElementById('main')
+const GAP = 16, CARD_MIN = 248, CARD_EXTRA = 128
+let cols = 1, cw = 0, rowH = 0, cards = [], lastWin = ''
+
+function metrics() {
+  const w = main.clientWidth - 48
+  cols = Math.max(1, Math.floor((w + GAP) / (CARD_MIN + GAP)))
+  cw = Math.floor((w - GAP * (cols - 1)) / cols)
+  rowH = Math.round(cw * 3 / 4) + CARD_EXTRA + GAP
+}
+function render() {
+  const grid = S.mode === 'grid'
+  viewport.hidden = !grid
+  document.getElementById('tblwrap').hidden = grid
+  document.getElementById('empty').hidden = filtered.length > 0
+  if (!filtered.length) { viewport.style.height = '0px'; document.getElementById('tbody').innerHTML = ''; return }
+  if (grid) {
+    metrics()
+    viewport.style.height = Math.ceil(filtered.length / cols) * rowH - GAP + 'px'
+    lastWin = ''
+    paint()
+  } else renderTable()
+}
+function paint() {
+  if (S.mode !== 'grid' || !filtered.length || !rowH) return
+  const top = viewport.getBoundingClientRect().top
+  const rowsTotal = Math.ceil(filtered.length / cols)
+  const first = Math.max(0, Math.floor((-top - rowH) / rowH))
+  const last = Math.min(rowsTotal - 1, Math.floor((-top + innerHeight + rowH) / rowH))
+  if (last < first) return
+  const win = `${first}:${last}:${cols}:${filtered.length}`
+  if (win === lastWin) return
+  lastWin = win
+  const from = first * cols, to = Math.min(filtered.length, (last + 1) * cols), need = to - from
+  while (cards.length < need) {
+    const el = document.createElement('article')
+    el.className = 'card'; el.tabIndex = 0
+    viewport.appendChild(el); cards.push(el)
+  }
+  for (let k = 0; k < cards.length; k++) {
+    const el = cards[k]
+    if (k >= need) { el.hidden = true; continue }
+    const idx = from + k, r = filtered[idx]
+    el.hidden = false
+    el.style.width = cw + 'px'
+    el.style.height = (rowH - GAP) + 'px'
+    el.style.transform = `translate(${(idx % cols) * (cw + GAP)}px, ${Math.floor(idx / cols) * rowH}px)`
+    el.dataset.i = r._i
+    const strong = viewsOf(r).filter(v => VIEW_SCORE[v] > .3)
+    el.innerHTML =
+      `<div class="ph"><img loading="lazy" decoding="async" src="${photoUrl(r[C.cover])}" alt="${esc(titleOf(r))}">` +
+      `<span class="tier v${r[C.tier]}">${r[C.tier]}</span>` +
+      (strong.length ? `<span class="viewtag">${RU.views[strong[0]]}</span>` : '') + '</div>' +
+      `<div class="cbody"><div class="cname">${esc(titleOf(r))}</div>` +
+      `<div class="cmeta">${esc(M.zones[r[C.zone]])} · ${RU.kinds[M.kinds[r[C.kind]]]}${r[C.beds] ? ' · ' + r[C.beds] + ' сп.' : ''}</div>` +
+      `<div class="cnums"><span><i>ставка</i>${r[C.adr] == null ? '—' : '$' + fmt(r[C.adr])}</span><span><i>загрузка</i>${fmt(r[C.occ])}%</span>` +
+      `<span class="${r[C.rr] >= 1.15 ? 'up' : r[C.rr] != null && r[C.rr] < .85 ? 'down' : ''}"><i>revpar/сосед</i>${ratio(r[C.rr])}</span></div></div>`
+  }
+}
+addEventListener('scroll', paint, { passive:true })
+
+const COLS = [
+  ['Отд.', r => `<span class="tdot" style="background:var(--t${r[C.tier]})">${r[C.tier]}</span>`, ''],
+  ['Объект', r => `<a href="${bookingUrl(r)}" target="_blank" rel="noopener">${esc(titleOf(r))}</a>`, 'name'],
+  ['Район', r => esc(M.zones[r[C.zone]]), ''],
+  ['Тип', r => RU.kinds[M.kinds[r[C.kind]]], ''],
+  ['Сп.', r => r[C.beds] ?? '—', 'n'],
+  ['Вид', r => viewsOf(r).map(v => RU.views[v]).join(', ') || '—', ''],
+  ['Бассейн', r => RU.pools[M.pools[r[C.pool]]], ''],
+  ['$/ночь', r => fmt(r[C.adr]), 'n'],
+  ['Загрузка', r => fmt(r[C.occ]) + '%', 'n'],
+  ['RevPAR', r => fmt(r[C.revpar]), 'n'],
+  ['Цена/сосед', r => ratio(r[C.ar]), 'n'],
+  ['RevPAR/сосед', r => ratio(r[C.rr]), 'n'],
+  ['Инст.', r => r[C.ig] ?? '—', 'n'],
+  ['Съёмка', r => r[C.pp] ?? '—', 'n'],
+  ['Флаги на фото', r => flagsOf(r).map(f => RU.flags[f]).join(', ') || '—', ''],
+]
+const TABLE_LIMIT = 400
+function renderTable() {
+  document.getElementById('thead').innerHTML = '<tr>' + COLS.map(c => `<th>${c[0]}</th>`).join('') + '</tr>'
+  const shown = filtered.slice(0, TABLE_LIMIT)
+  document.getElementById('tbody').innerHTML = shown.map(r =>
+    '<tr>' + COLS.map(c => `<td class="${c[2]}">${c[1](r)}</td>`).join('') + '</tr>').join('') +
+    (filtered.length > TABLE_LIMIT
+      ? `<tr><td colspan="${COLS.length}" style="color:var(--ink-3); text-align:center; white-space:normal">Показаны первые ${TABLE_LIMIT} из ${filtered.length.toLocaleString('ru-RU')}. Сузьте фильтры или выгрузите CSV — в нём вся выборка.</td></tr>`
+      : '')
+}
+
+const lb = document.getElementById('lb')
+let lbPhotos = [], lbIdx = 0
+function openCard(i) {
+  const r = ROWS[i]
+  lbPhotos = [r[C.cover], ...(EXTRA[i] || [])].filter(Boolean)
+  lbIdx = 0
+  document.getElementById('lb-zone').textContent = `${M.zones[r[C.zone]]} · отделка ${r[C.tier]} — ${TIER_NAME[r[C.tier]]}`
+  document.getElementById('lb-name').textContent = titleOf(r)
+  document.getElementById('lb-link').href = bookingUrl(r)
+  const kv = [
+    ['Тип', RU.kinds[M.kinds[r[C.kind]]] + (r[C.beds] ? `, ${r[C.beds]} сп.` : '')],
+    ['Ставка', r[C.adr] == null ? '—' : '$' + r[C.adr] + ' / ночь'],
+    ['Загрузка', fmt(r[C.occ]) + '%'],
+    ['RevPAR', r[C.revpar] == null ? '—' : '$' + r[C.revpar]],
+    ['Цена к соседям', ratio(r[C.ar]) + (r[C.sn] ? ` (страта ${r[C.sn]})` : '')],
+    ['RevPAR к соседям', ratio(r[C.rr])],
+    ['Отделка / цельность', `${r[C.tier]} / ${r[C.coh] ?? '—'}`],
+    ['Кухня / ванная', `${r[C.kt] || '—'} / ${r[C.bt] || '—'}`],
+    ['Инстаграмность', r[C.ig] ?? '—'],
+    ['Качество съёмки', r[C.pp] ?? '—'],
+    ['Уверенность модели', (r[C.conf] ?? '—') + ' из 5'],
+  ]
+  if (r[C.area]) kv.splice(1, 0, ['Площадь', r[C.area] + ' м²'])
+  document.getElementById('lb-kv').innerHTML = kv.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')
+  document.getElementById('lb-tags').innerHTML = [
+    ...viewsOf(r).map(v => `<span class="tag">вид: ${RU.views[v]}</span>`),
+    `<span class="tag">${RU.pools[M.pools[r[C.pool]]]}</span>`,
+    `<span class="tag">${RU.style[M.style[r[C.style]]]}</span>`,
+    `<span class="tag">состояние: ${RU.cond[M.cond[r[C.cond]]]}</span>`,
+    ...(r[C.wow] ? [`<span class="tag">${esc(r[C.wow])}</span>`] : []),
+    ...flagsOf(r).map(f => `<span class="tag bad">${RU.flags[f]}</span>`),
+  ].join('')
+  paintPhoto()
+  if (!lb.open) lb.showModal()
+}
+function paintPhoto() {
+  document.getElementById('lb-img').src = photoUrl(lbPhotos[lbIdx])
+  document.getElementById('lb-thumbs').innerHTML = lbPhotos.map((p, i) =>
+    `<img src="${photoUrl(p)}" data-i="${i}" alt="Фото ${i + 1}" aria-current="${i === lbIdx}">`).join('')
+}
+document.getElementById('lb-thumbs').addEventListener('click', e => {
+  const i = e.target.dataset && e.target.dataset.i
+  if (i != null) { lbIdx = +i; paintPhoto() }
+})
+document.getElementById('lb-close').addEventListener('click', () => lb.close())
+lb.addEventListener('click', e => { if (e.target === lb) lb.close() })
+addEventListener('keydown', e => {
+  if (!lb.open) return
+  if (e.key === 'ArrowRight' && lbIdx < lbPhotos.length - 1) { lbIdx++; paintPhoto() }
+  if (e.key === 'ArrowLeft' && lbIdx > 0) { lbIdx--; paintPhoto() }
+})
+viewport.addEventListener('click', e => { const c = e.target.closest('.card'); if (c) openCard(+c.dataset.i) })
+viewport.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' && e.key !== ' ') return
+  const c = e.target.closest('.card')
+  if (c) { e.preventDefault(); openCard(+c.dataset.i) }
+})
+
+const countBy = (col, val) => ROWS.reduce((n, r) => n + (r[col] === val ? 1 : 0), 0)
+function chips(host, items, set, tierClass) {
+  host.innerHTML = items.map(it =>
+    `<button class="chip${tierClass ? ' t' + it.v : ''}" data-v="${it.v}" aria-pressed="false">${it.label}<span class="n">${it.n}</span></button>`).join('')
+  host.addEventListener('click', e => {
+    const b = e.target.closest('.chip')
+    if (!b) return
+    const v = +b.dataset.v
+    if (set.has(v)) { set.delete(v); b.setAttribute('aria-pressed', 'false') }
+    else { set.add(v); b.setAttribute('aria-pressed', 'true') }
+    apply()
+  })
+}
+chips(document.getElementById('f-tier'), [1, 2, 3, 4, 5].map(t => ({ v:t, label:t, n:countBy(C.tier, t) })), S.tier, true)
+chips(document.getElementById('f-view'),
+  M.views.map((v, i) => ({ v:i, label:RU.views[v], n:ROWS.reduce((n, r) => n + (r[C.views] >> i & 1), 0) }))
+    .filter(x => x.n).sort((a, b) => b.n - a.n), S.view)
+chips(document.getElementById('f-kind'),
+  M.kinds.map((k, i) => ({ v:i, label:RU.kinds[k], n:countBy(C.kind, i) })).filter(x => x.n).sort((a, b) => b.n - a.n), S.kind)
+chips(document.getElementById('f-pool'),
+  M.pools.map((p, i) => ({ v:i, label:RU.pools[p], n:countBy(C.pool, i) })).filter(x => x.n).sort((a, b) => b.n - a.n), S.pool)
+
+const zsel = document.getElementById('f-zone')
+M.zones.map((z, i) => ({ z, i, n:countBy(C.zone, i) })).sort((a, b) => b.n - a.n)
+  .forEach(({ z, i, n }) => zsel.insertAdjacentHTML('beforeend', `<option value="${i}">${esc(z)} (${n})</option>`))
+
+const OUT = {
+  'f-occ':['o-occ', v => v + '%'], 'f-adr':['o-adr', v => '$' + v], 'f-ar':['o-ar', v => '×' + (+v).toFixed(1)],
+  'f-ig':['o-ig', v => v], 'f-pp':['o-pp', v => v],
+  'w-f':['o-wf', v => v], 'w-v':['o-wv', v => v], 'w-o':['o-wo', v => v], 'w-p':['o-wp', v => v],
+}
+const bind = (id, key) => {
+  const el = document.getElementById(id)
+  el.addEventListener('input', () => {
+    const v = el.type === 'checkbox' ? el.checked : el.type === 'range' ? +el.value : el.value
+    if (key[0] === 'w') S.w[key[1]] = v
+    else S[key] = v
+    const o = OUT[id]
+    if (o) document.getElementById(o[0]).textContent = o[1](v)
+    apply()
+  })
+}
+;[['f-occ','occ'],['f-adr','adr'],['f-ar','ar'],['f-ig','ig'],['f-pp','pp'],['f-noflag','noflag'],
+  ['f-idle','idle'],['f-strat','strat'],['f-zone','zone'],['f-beds','beds'],['sort','sort'],
+  ['w-f','wf'],['w-v','wv'],['w-o','wo'],['w-p','wp']].forEach(([id, key]) => bind(id, key))
+let qt
+document.getElementById('f-q').addEventListener('input', e => {
+  clearTimeout(qt)
+  qt = setTimeout(() => { S.q = e.target.value; apply() }, 180)
+})
+
+const PRESETS = [
+  { label:'Эталон 5', run:() => { S.tier = new Set([5]); S.sort = 'ar' } },
+  { label:'Эталон 4', run:() => { S.tier = new Set([4]); S.sort = 'ar' } },
+  { label:'Эталон 3', run:() => { S.tier = new Set([3]); S.sort = 'ar' } },
+  { label:'Эталон 2', run:() => { S.tier = new Set([2]); S.sort = 'ar' } },
+  { label:'Эталон 1', run:() => { S.tier = new Set([1]); S.sort = 'ar' } },
+  { label:'4–5 с океаном', run:() => { S.tier = new Set([4, 5]); S.view = new Set([M.views.indexOf('ocean_full'), M.views.indexOf('ocean_partial')]); S.sort = 'rr' } },
+  { label:'Кто простаивает', run:() => { S.idle = true; S.sort = 'occ' } },
+]
+document.getElementById('presets').innerHTML =
+  PRESETS.map((p, i) => `<button class="chip" data-p="${i}">${p.label}</button>`).join('')
+document.getElementById('presets').addEventListener('click', e => {
+  const b = e.target.closest('.chip')
+  if (!b) return
+  resetState(); PRESETS[+b.dataset.p].run(); syncUI(); apply()
+  main.scrollIntoView({ behavior:'smooth', block:'start' })
+})
+
+function resetState() {
+  S.tier = new Set(); S.view = new Set(); S.kind = new Set(); S.pool = new Set()
+  S.zone = ''; S.beds = ''; S.occ = 0; S.adr = 0; S.ar = 0; S.ig = 1; S.pp = 1
+  S.noflag = false; S.idle = false; S.strat = false; S.q = ''; S.sort = 'mix'
+}
+function syncUI() {
+  const press = (sel, set) => document.querySelectorAll(sel).forEach(b => b.setAttribute('aria-pressed', set.has(+b.dataset.v)))
+  press('#f-tier .chip', S.tier); press('#f-view .chip', S.view)
+  press('#f-kind .chip', S.kind); press('#f-pool .chip', S.pool)
+  const put = (id, v) => {
+    const el = document.getElementById(id)
+    if (el.type === 'checkbox') el.checked = v; else el.value = v
+    const o = OUT[id]
+    if (o) document.getElementById(o[0]).textContent = o[1](v)
+  }
+  put('f-occ', S.occ); put('f-adr', S.adr); put('f-ar', S.ar); put('f-ig', S.ig); put('f-pp', S.pp)
+  put('f-noflag', S.noflag); put('f-idle', S.idle); put('f-strat', S.strat)
+  put('f-zone', S.zone); put('f-beds', S.beds); put('f-q', S.q); put('sort', S.sort)
+  put('w-f', S.w.f); put('w-v', S.w.v); put('w-o', S.w.o); put('w-p', S.w.p)
+}
+document.getElementById('reset').addEventListener('click', () => { resetState(); syncUI(); apply() })
+
+document.getElementById('v-grid').addEventListener('click', () => setMode('grid'))
+document.getElementById('v-table').addEventListener('click', () => setMode('table'))
+function setMode(v) {
+  S.mode = v
+  document.getElementById('v-grid').setAttribute('aria-pressed', v === 'grid')
+  document.getElementById('v-table').setAttribute('aria-pressed', v === 'table')
+  render()
+}
+
+const themeBtn = document.getElementById('theme')
+themeBtn.addEventListener('click', () => {
+  const cur = document.documentElement.getAttribute('data-theme')
+  const next = cur === 'dark' ? 'light' : cur === 'light' ? '' : 'dark'
+  if (next) document.documentElement.setAttribute('data-theme', next)
+  else document.documentElement.removeAttribute('data-theme')
+  try { localStorage.setItem('theme', next) } catch (e) {}
+})
+try {
+  const t = localStorage.getItem('theme')
+  if (t) document.documentElement.setAttribute('data-theme', t)
+} catch (e) {}
+
+document.getElementById('csv').addEventListener('click', () => {
+  const head = ['Название','Отделка','Цельность','Район','Тип','Спальни','Вид','Бассейн','Стиль','Состояние',
+    'ADR $','Загрузка %','RevPAR $','Цена к соседям','Загрузка к соседям','RevPAR к соседям','Соседей в страте',
+    'Инстаграмность','Съёмка','Кухня','Ванная','Уверенность','Флаги на фото','Особенность','Booking','Фото']
+  const q = s => '"' + String(s ?? '').replace(/"/g, '""') + '"'
+  const lines = filtered.map(r => [titleOf(r), r[C.tier], r[C.coh], M.zones[r[C.zone]], RU.kinds[M.kinds[r[C.kind]]],
+    r[C.beds] ?? '', viewsOf(r).map(v => RU.views[v]).join('; '), RU.pools[M.pools[r[C.pool]]],
+    RU.style[M.style[r[C.style]]], RU.cond[M.cond[r[C.cond]]],
+    r[C.adr] ?? '', r[C.occ] ?? '', r[C.revpar] ?? '', r[C.ar] ?? '', r[C.or] ?? '', r[C.rr] ?? '', r[C.sn] ?? '',
+    r[C.ig] ?? '', r[C.pp] ?? '', r[C.kt] ?? '', r[C.bt] ?? '', r[C.conf] ?? '',
+    flagsOf(r).map(f => RU.flags[f]).join('; '), r[C.wow] ?? '', bookingUrl(r), photoUrl(r[C.cover])].map(q).join(','))
+  const blob = new Blob(['﻿' + [head.map(q).join(','), ...lines].join('\r\n')], { type:'text/csv;charset=utf-8' })
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = `bali-otdelka-${filtered.length}.csv`
+  document.body.appendChild(a); a.click(); a.remove()
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000)
+})
+
+const setOffsets = () => {
+  const root = document.documentElement.style
+  root.setProperty('--top-h', document.getElementById('top').offsetHeight + 'px')
+  root.setProperty('--sum-h', document.getElementById('summary').offsetHeight + 'px')
+}
+let rt
+addEventListener('resize', () => {
+  clearTimeout(rt)
+  rt = setTimeout(() => { setOffsets(); render() }, 120)
+})
+
+const filters = document.getElementById('filters')
+const syncFilters = () => { if (innerWidth < 1024 && !filters.dataset.touched) filters.open = false; else if (innerWidth >= 1024) filters.open = true }
+filters.addEventListener('toggle', () => { if (innerWidth < 1024) filters.dataset.touched = '1' })
+filters.addEventListener('toggle', () => { setOffsets(); render() })
+addEventListener('resize', syncFilters)
+syncFilters()
+
+{
+  const byTier = t => ROWS.filter(r => r[C.tier] === t)
+  const occs = [1, 2, 3, 4, 5].map(t => median(byTier(t).map(r => r[C.occ]))).filter(x => x != null)
+  const adr2 = median(byTier(2).map(r => r[C.adr])), adr5 = median(byTier(5).map(r => r[C.adr]))
+  heroText.innerHTML = `${ROWS.length.toLocaleString('ru-RU')}&nbsp;объектов посуточной аренды, отделка размечена по фотографиям в шкале 1–5. ` +
+    `Уровни сильнее всего расходятся <b>в ставке за ночь</b>: от $${fmt(adr2)} у двойки до $${fmt(adr5)} у пятёрки. ` +
+    `Медиана загрузки по уровням — от ${fmt(Math.min(...occs))} до ${fmt(Math.max(...occs))}%.`
+  document.getElementById('hdr-date').textContent = new Date(M.generatedAt).toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' })
+}
+
+setOffsets()
+syncUI()
+apply()
+})()
+</script>
+</body>
+</html>
