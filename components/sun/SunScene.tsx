@@ -55,8 +55,7 @@ type SceneContext = {
   sunMarker: THREE.Mesh
   basemap: THREE.Mesh
   basemapBase: { x: number; z: number }
-  wideMap: THREE.Mesh | null
-  wideBase: { x: number; z: number }
+  wideMaps: { mesh: THREE.Mesh; base: { x: number; z: number } }[]
   model: ComplexModel | null
 }
 
@@ -89,14 +88,25 @@ export function SunScene({ plan, latitude, longitude, placement, heights }: SunS
     mount.appendChild(renderer.domElement)
 
     const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(42, mount.clientWidth / mount.clientHeight, 0.5, 3000)
+    // Обзорные снимки EDEM II тянутся на километры — камера должна и
+    // отлетать, и видеть так далеко. Без них — прежние 3000 м и 320 м.
+    const wideSpan = Math.max(
+      0,
+      ...(plan.basemap.wide ?? []).map((layer) => layer.sizePx * layer.metersPerPixel),
+    )
+    const camera = new THREE.PerspectiveCamera(
+      42,
+      mount.clientWidth / mount.clientHeight,
+      0.5,
+      Math.max(3000, wideSpan * 2),
+    )
     const reach = viewReach(plan)
 
     const controls = new OrbitControls(camera, renderer.domElement)
     controls.enableDamping = true
     controls.maxPolarAngle = Math.PI / 2 - 0.02
     controls.minDistance = 12
-    controls.maxDistance = 320 * reach
+    controls.maxDistance = Math.max(320 * reach, wideSpan * 0.9)
     controls.target.set(0, 3, 0)
 
     const sunLight = new THREE.DirectionalLight(0xfff2dd, 3)
@@ -150,33 +160,39 @@ export function SunScene({ plan, latitude, longitude, placement, heights }: SunS
     basemap.receiveShadow = true
     scene.add(basemap)
 
-    // Обзорный слой лежит под основным. Зазор по высоте на дальнем плане
-    // тоньше точности буфера глубины, поэтому слой отодвигается смещением
-    // полигонов — иначе снимки мерцают, перекрывая друг друга.
-    const wide = plan.basemap.wide
-    const wideTexture = wide ? new THREE.TextureLoader().load(wide.url) : null
-    let wideMap: THREE.Mesh | null = null
-    const wideBase = { x: 0, z: 0 }
-    if (wide && wideTexture) {
-      wideTexture.colorSpace = THREE.SRGBColorSpace
-      const wideSpan = wide.sizePx * wide.metersPerPixel
-      wideMap = new THREE.Mesh(
-        new THREE.PlaneGeometry(wideSpan, wideSpan),
+    // Обзорные слои лежат под основным, каждый следующий глубже. Зазор по
+    // высоте на дальнем плане тоньше точности буфера глубины, поэтому слои
+    // разводятся смещением полигонов — иначе снимки мерцают, перекрывая друг
+    // друга. Фон (backdrop) отодвинут ещё дальше всех.
+    const wideTextures: THREE.Texture[] = []
+    const wideMaps = (plan.basemap.wide ?? []).map((layer, i) => {
+      const layerTexture = new THREE.TextureLoader().load(layer.url)
+      layerTexture.colorSpace = THREE.SRGBColorSpace
+      wideTextures.push(layerTexture)
+      const span = layer.sizePx * layer.metersPerPixel
+      const mesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(span, span),
         new THREE.MeshStandardMaterial({
-          map: wideTexture,
+          map: layerTexture,
           roughness: 1,
           polygonOffset: true,
-          polygonOffsetFactor: 4,
-          polygonOffsetUnits: 4,
+          polygonOffsetFactor: 4 * (i + 1),
+          polygonOffsetUnits: 4 * (i + 1),
         }),
       )
-      wideMap.rotation.x = -Math.PI / 2
-      wideBase.x = (wide.sizePx / 2 - wide.anchorPx.x) * wide.metersPerPixel
-      wideBase.z = (wide.sizePx / 2 - wide.anchorPx.y) * wide.metersPerPixel
-      wideMap.position.set(wideBase.x, -0.04, wideBase.z)
-      wideMap.receiveShadow = true
-      scene.add(wideMap)
-    }
+      mesh.rotation.x = -Math.PI / 2
+      const base = {
+        x: (layer.sizePx / 2 - layer.anchorPx.x) * layer.metersPerPixel,
+        z: (layer.sizePx / 2 - layer.anchorPx.y) * layer.metersPerPixel,
+      }
+      mesh.position.set(base.x, -0.04, base.z)
+      mesh.receiveShadow = true
+      scene.add(mesh)
+      return { mesh, base }
+    })
+    const backdropMaterial = backdrop.material as THREE.MeshStandardMaterial
+    backdropMaterial.polygonOffsetFactor = 4 * (wideMaps.length + 1)
+    backdropMaterial.polygonOffsetUnits = 4 * (wideMaps.length + 1)
 
     addCompass(scene, reach)
 
@@ -196,8 +212,7 @@ export function SunScene({ plan, latitude, longitude, placement, heights }: SunS
       sunMarker,
       basemap,
       basemapBase,
-      wideMap,
-      wideBase,
+      wideMaps,
       model: null,
     }
 
@@ -255,7 +270,7 @@ export function SunScene({ plan, latitude, longitude, placement, heights }: SunS
       controls.dispose()
       sceneRef.current?.model?.dispose()
       texture.dispose()
-      wideTexture?.dispose()
+      wideTextures.forEach((t) => t.dispose())
       renderer.dispose()
       mount.removeChild(renderer.domElement)
       sceneRef.current = null
@@ -289,12 +304,14 @@ export function SunScene({ plan, latitude, longitude, placement, heights }: SunS
       -0.02,
       ctx.basemapBase.z * basemapScale + basemapOffsetZ,
     )
-    ctx.wideMap?.scale.set(basemapScale, basemapScale, 1)
-    ctx.wideMap?.position.set(
-      ctx.wideBase.x * basemapScale + basemapOffsetX,
-      -0.04,
-      ctx.wideBase.z * basemapScale + basemapOffsetZ,
-    )
+    for (const { mesh, base } of ctx.wideMaps) {
+      mesh.scale.set(basemapScale, basemapScale, 1)
+      mesh.position.set(
+        base.x * basemapScale + basemapOffsetX,
+        -0.04,
+        base.z * basemapScale + basemapOffsetZ,
+      )
+    }
   }, [placement])
 
   // ── камера: облёт со стороны дворов либо взгляд строго сверху ─────────────
