@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Mail, Send, Play, MessageCircle, MapPin, Briefcase } from 'lucide-react'
+import { Mail, Send, Play, MessageCircle, Briefcase } from 'lucide-react'
 import { LegalLayout } from '@/components/LegalLayout'
 import { hreflangMap } from '@/lib/hreflang'
 
 const UPDATED = '15 mai 2026'
-const CONTACT_EMAIL = 'asp.slesarev@gmail.com'
+const CONTACT_EMAIL = 'i@balinsky.info'
 
 export const metadata: Metadata = {
   title: 'Contact | Balinsky',
@@ -65,34 +65,23 @@ export default function Page() {
         <li className="flex items-start gap-3">
           <Briefcase size={20} className="text-[var(--color-primary)] mt-0.5 shrink-0" />
           <div>
-            <strong>Promoteurs</strong> — ajoutez votre projet au catalogue, lancez un placement payant ou commandez une vidéo de présentation :
+            <strong>Promoteurs</strong> — ajoutez votre projet au catalogue, envoyez documents, plans ou images du chantier :
             écrivez à <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Partenariat (promoteur)')}`}>{CONTACT_EMAIL}</a>.
           </div>
         </li>
         <li className="flex items-start gap-3">
           <Briefcase size={20} className="text-[var(--color-primary)] mt-0.5 shrink-0" />
           <div>
-            <strong>Agences immobilières</strong> — publication d’informations sur les projets que vous représentez et publicité sur le site :
+            <strong>Agences immobilières</strong> — publication d’informations sur les projets que vous représentez :
             écrivez à <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Partenariat (agence)')}`}>{CONTACT_EMAIL}</a>.
           </div>
         </li>
       </ul>
 
-      <h2>Exploitant du site</h2>
-      <ul className="!pl-0 !list-none space-y-3 !my-5">
-        <li className="flex items-start gap-3">
-          <MapPin size={20} className="text-[var(--color-text-muted)] mt-0.5 shrink-0" />
-          <div>
-            <strong>Andrei Slesarau</strong>, entrepreneur individuel, Géorgie.<br />
-            Numéro d’immatriculation 316362404, immatriculé le 06.01.2022.<br />
-            Adresse : 19 Shartava St., Rustavi, Géorgie.<br />
-            <span className="text-[13px] text-[var(--color-text-muted)]">
-              Tous les contrats publicitaires et factures sont émis par cette entité, selon le droit géorgien.
-              L’éditeur du site ne fournit aucune prestation sur le territoire indonésien.
-            </span>
-          </div>
-        </li>
-      </ul>
+      <h2>Le rôle du site</h2>
+      <p>
+        Balinsky.info publie des informations sur les biens et n’est partie à aucune transaction. Nous ne sommes pas une agence immobilière : nous ne vendons pas de biens, ne négocions pas, ne percevons aucune commission et n’encaissons aucun paiement. Pour toute demande officielle, utilisez l’e-mail ci-dessus.
+      </p>
 
       <h2>Délai de réponse</h2>
       <p>

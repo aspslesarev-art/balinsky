@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Mail, Send, Play, MessageCircle, MapPin, Briefcase } from 'lucide-react'
+import { Mail, Send, Play, MessageCircle, Briefcase } from 'lucide-react'
 import { LegalLayout } from '@/components/LegalLayout'
 import { hreflangMap } from '@/lib/hreflang'
 
 const UPDATED = '15 Mei 2026'
-const CONTACT_EMAIL = 'asp.slesarev@gmail.com'
+const CONTACT_EMAIL = 'i@balinsky.info'
 
 export const metadata: Metadata = {
   title: 'Kontak | Balinsky',
@@ -21,16 +21,16 @@ export default function Page() {
   return (
     <LegalLayout lang="id" title="Kontak" updated={`Informasi terkini per: ${UPDATED}`} breadcrumbLabel="Kontak">
       <p>
-        Cara tercepat adalah bot Telegram. Bot ini meneruskan pertanyaan Anda ke manajer unit tertentu dan membalas dalam satu jam pada jam kerja.
+        Balinsky.info adalah katalog informasi. Kontak di bawah untuk pertanyaan tentang situs itu sendiri: data pada halaman objek, kekeliruan yang Anda temukan, pemuatan proyek. Untuk properti tertentu, hubungi pengembang secara langsung — Telegram dan WhatsApp mereka ada di halaman objek tersebut.
       </p>
 
-      <h2>Untuk pembeli properti</h2>
+      <h2>Pertanyaan tentang situs dan datanya</h2>
       <ul className="!pl-0 !list-none space-y-3 !my-5">
         <li className="flex items-start gap-3">
           <Send size={20} className="text-[#229ED9] mt-0.5 shrink-0" />
           <div>
             <strong>Bot Telegram</strong> — <a href="https://t.me/BalinskyBot" target="_blank" rel="noopener">@BalinskyBot</a>
-            <div className="text-[13px] text-[var(--color-text-muted)] mt-0.5">Pertanyaan tentang vila, apartemen, dan kompleks tertentu. Diteruskan ke manajer operator.</div>
+            <div className="text-[13px] text-[var(--color-text-muted)] mt-0.5">Pertanyaan tentang katalog dan data objek. Bila pertanyaannya soal harga, jadwal, atau reservasi, itu untuk pengembang, bukan untuk kami.</div>
           </div>
         </li>
         <li className="flex items-start gap-3">
@@ -65,34 +65,28 @@ export default function Page() {
         <li className="flex items-start gap-3">
           <Briefcase size={20} className="text-[var(--color-primary)] mt-0.5 shrink-0" />
           <div>
-            <strong>Pengembang</strong> — tambahkan proyek Anda ke katalog, jalankan penempatan berbayar, atau luncurkan saluran lead bersama:
+            <strong>Pengembang</strong> — tambahkan proyek Anda ke katalog, kirim dokumen, denah, atau rekaman dari lokasi:
             email <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Kemitraan (pengembang)')}`}>{CONTACT_EMAIL}</a>.
           </div>
         </li>
         <li className="flex items-start gap-3">
           <Briefcase size={20} className="text-[var(--color-primary)] mt-0.5 shrink-0" />
           <div>
-            <strong>Agensi real estat</strong> — pertukaran lead, program referral, katalog white-label:
+            <strong>Agensi real estat</strong> — penerbitan informasi tentang proyek yang Anda wakili:
             email <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Kemitraan (agensi)')}`}>{CONTACT_EMAIL}</a>.
           </div>
         </li>
       </ul>
 
-      <h2>Operator situs</h2>
-      <ul className="!pl-0 !list-none space-y-3 !my-5">
-        <li className="flex items-start gap-3">
-          <MapPin size={20} className="text-[var(--color-text-muted)] mt-0.5 shrink-0" />
-          <div>
-            Andrei Slesarev, pengusaha perorangan (Georgia).
-            {/* TODO: add registration number / legal address for formal requests. */}
-          </div>
-        </li>
-      </ul>
+      <h2>Peran situs</h2>
+      <p>
+        Balinsky.info menerbitkan informasi tentang properti dan bukan pihak dalam transaksi apa pun. Kami bukan agen properti: kami tidak menjual objek, tidak bernegosiasi, tidak memungut komisi, dan tidak menerima pembayaran. Untuk permintaan resmi, gunakan email di atas.
+      </p>
 
       <h2>Waktu respons</h2>
       <p>
-        Standar layanan — balasan dalam satu jam pada jam kerja (10:00–20:00 WITA, UTC+8).
-        Pertanyaan yang diterima pada malam hari diproses keesokan paginya.
+        Pertanyaan tentang situs kami jawab pada jam kerja (10:00–20:00 WITA, UTC+8), biasanya dalam sehari.
+        Seberapa cepat pengembang membalas bukan urusan kami — angka pada halaman objek hanya sebagai rujukan.
       </p>
 
       <h2>Dokumen terkait</h2>

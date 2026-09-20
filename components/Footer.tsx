@@ -53,11 +53,11 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
     {
       title: 'Сотрудничество',
       links: [
-        // Раздел найма убран: площадка никого не нанимает.
-        // Осталась точка входа для застройщиков, которые хотят
-        // разместить проект или рекламу — это и есть модель сайта.
+        // Раздел найма убран: площадка никого не нанимает. Осталась
+        // точка входа для застройщика, который хочет добавить проект
+        // в каталог, и для читателя, нашедшего ошибку в данных.
         { label: 'Разместить проект', href: '/ru/kontakty' },
-        { label: 'Реклама на сайте', href: '/ru/kontakty' },
+        { label: 'Сообщить об ошибке в данных', href: '/ru/kontakty' },
       ],
     },
   ],
@@ -100,11 +100,11 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
     {
       title: 'Partnership',
       links: [
-        // Раздел найма убран: площадка никого не нанимает.
-        // Осталась точка входа для застройщиков, которые хотят
-        // разместить проект или рекламу — это и есть модель сайта.
+        // Раздел найма убран: площадка никого не нанимает. Осталась
+        // точка входа для застройщика, который хочет добавить проект
+        // в каталог, и для читателя, нашедшего ошибку в данных.
         { label: 'List your project', href: '/en/contact' },
-        { label: 'Advertise on the site', href: '/en/contact' },
+        { label: 'Report a data error', href: '/en/contact' },
       ],
     },
   ],
@@ -147,11 +147,11 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
     {
       title: 'Kerja sama',
       links: [
-        // Раздел найма убран: площадка никого не нанимает.
-        // Осталась точка входа для застройщиков, которые хотят
-        // разместить проект или рекламу — это и есть модель сайта.
+        // Раздел найма убран: площадка никого не нанимает. Осталась
+        // точка входа для застройщика, который хочет добавить проект
+        // в каталог, и для читателя, нашедшего ошибку в данных.
         { label: 'Pasang proyek Anda', href: '/en/contact' },
-        { label: 'Beriklan di situs', href: '/en/contact' },
+        { label: 'Laporkan kekeliruan data', href: '/en/contact' },
       ],
     },
   ],
@@ -194,11 +194,11 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
     {
       title: 'Partenariat',
       links: [
-        // Раздел найма убран: площадка никого не нанимает.
-        // Осталась точка входа для застройщиков, которые хотят
-        // разместить проект или рекламу — это и есть модель сайта.
+        // Раздел найма убран: площадка никого не нанимает. Осталась
+        // точка входа для застройщика, который хочет добавить проект
+        // в каталог, и для читателя, нашедшего ошибку в данных.
         { label: 'Référencer votre projet', href: '/en/contact' },
-        { label: 'Publicité sur le site', href: '/en/contact' },
+        { label: 'Signaler une erreur de données', href: '/en/contact' },
       ],
     },
   ],
@@ -241,11 +241,11 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
     {
       title: 'Zusammenarbeit',
       links: [
-        // Раздел найма убран: площадка никого не нанимает.
-        // Осталась точка входа для застройщиков, которые хотят
-        // разместить проект или рекламу — это и есть модель сайта.
+        // Раздел найма убран: площадка никого не нанимает. Осталась
+        // точка входа для застройщика, который хочет добавить проект
+        // в каталог, и для читателя, нашедшего ошибку в данных.
         { label: 'Projekt eintragen', href: '/en/contact' },
-        { label: 'Werbung auf der Website', href: '/en/contact' },
+        { label: 'Datenfehler melden', href: '/en/contact' },
       ],
     },
   ],
@@ -288,11 +288,11 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
     {
       title: '合作',
       links: [
-        // Раздел найма убран: площадка никого не нанимает.
-        // Осталась точка входа для застройщиков, которые хотят
-        // разместить проект или рекламу — это и есть модель сайта.
+        // Раздел найма убран: площадка никого не нанимает. Осталась
+        // точка входа для застройщика, который хочет добавить проект
+        // в каталог, и для читателя, нашедшего ошибку в данных.
         { label: '刊登您的项目', href: '/en/contact' },
-        { label: '在网站投放广告', href: '/en/contact' },
+        { label: '报告数据错误', href: '/en/contact' },
       ],
     },
   ],
@@ -335,11 +335,11 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
     {
       title: 'Samenwerking',
       links: [
-        // Раздел найма убран: площадка никого не нанимает.
-        // Осталась точка входа для застройщиков, которые хотят
-        // разместить проект или рекламу — это и есть модель сайта.
+        // Раздел найма убран: площадка никого не нанимает. Осталась
+        // точка входа для застройщика, который хочет добавить проект
+        // в каталог, и для читателя, нашедшего ошибку в данных.
         { label: 'Uw project plaatsen', href: '/en/contact' },
-        { label: 'Adverteren op de site', href: '/en/contact' },
+        { label: 'Een fout in de gegevens melden', href: '/en/contact' },
       ],
     },
   ],
@@ -382,11 +382,11 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
     {
       title: 'Kerja sama',
       links: [
-        // Раздел найма убран: площадка никого не нанимает.
-        // Осталась точка входа для застройщиков, которые хотят
-        // разместить проект или рекламу — это и есть модель сайта.
+        // Раздел найма убран: площадка никого не нанимает. Осталась
+        // точка входа для застройщика, который хочет добавить проект
+        // в каталог, и для читателя, нашедшего ошибку в данных.
         { label: 'Ngedaftarang proyek Ragane', href: '/en/contact' },
-        { label: 'Iklan ring situs', href: '/en/contact' },
+        { label: 'Nguningayang iwang data', href: '/en/contact' },
       ],
     },
   ],
@@ -429,11 +429,11 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
     {
       title: 'Współpraca',
       links: [
-        // Раздел найма убран: площадка никого не нанимает.
-        // Осталась точка входа для застройщиков, которые хотят
-        // разместить проект или рекламу — это и есть модель сайта.
+        // Раздел найма убран: площадка никого не нанимает. Осталась
+        // точка входа для застройщика, который хочет добавить проект
+        // в каталог, и для читателя, нашедшего ошибку в данных.
         { label: 'Dodaj swój projekt', href: '/en/contact' },
-        { label: 'Reklama w serwisie', href: '/en/contact' },
+        { label: 'Zgłoś błąd w danych', href: '/en/contact' },
       ],
     },
   ],
@@ -476,11 +476,11 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
     {
       title: 'Співпраця',
       links: [
-        // Раздел найма убран: площадка никого не нанимает.
-        // Осталась точка входа для застройщиков, которые хотят
-        // разместить проект или рекламу — это и есть модель сайта.
+        // Раздел найма убран: площадка никого не нанимает. Осталась
+        // точка входа для застройщика, который хочет добавить проект
+        // в каталог, и для читателя, нашедшего ошибку в данных.
         { label: 'Розмістити проєкт', href: '/en/contact' },
-        { label: 'Реклама на сайті', href: '/en/contact' },
+        { label: 'Повідомити про помилку в даних', href: '/en/contact' },
       ],
     },
   ],
@@ -489,7 +489,6 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
 const BOTTOM_BY_LANG: Record<Lang, { label: string; href: string }[]> = {
   ru: [
     { label: 'О нас', href: '/ru/o-balinsky' },
-    { label: 'Реклама', href: '/ru/kontakty' },
     { label: 'Сотрудничество с застройщиками', href: '/ru/kontakty' },
     { label: 'Сотрудничество с агентствами', href: '/ru/kontakty' },
     { label: 'Политика конфиденциальности', href: '/ru/politika-konfidencialnosti' },
@@ -499,7 +498,6 @@ const BOTTOM_BY_LANG: Record<Lang, { label: string; href: string }[]> = {
   ],
   en: [
     { label: 'About', href: '/en/about' },
-    { label: 'Advertising', href: '/en/contact' },
     { label: 'Developer partnerships', href: '/en/contact' },
     { label: 'Agency partnerships', href: '/en/contact' },
     { label: 'Privacy policy', href: '/en/privacy' },
@@ -519,7 +517,6 @@ const BOTTOM_BY_LANG: Record<Lang, { label: string; href: string }[]> = {
   ],
   fr: [
     { label: 'À propos', href: '/en/about' },
-    { label: 'Publicité', href: '/en/contact' },
     { label: 'Partenariats avec les promoteurs', href: '/en/contact' },
     { label: 'Partenariats avec les agences', href: '/en/contact' },
     { label: 'Politique de confidentialité', href: '/en/privacy' },
@@ -529,7 +526,6 @@ const BOTTOM_BY_LANG: Record<Lang, { label: string; href: string }[]> = {
   ],
   de: [
     { label: 'Über uns', href: '/en/about' },
-    { label: 'Werbung', href: '/en/contact' },
     { label: 'Partnerschaft mit Bauträgern', href: '/en/contact' },
     { label: 'Partnerschaft mit Agenturen', href: '/en/contact' },
     { label: 'Datenschutzerklärung', href: '/en/privacy' },
@@ -549,7 +545,6 @@ const BOTTOM_BY_LANG: Record<Lang, { label: string; href: string }[]> = {
   ],
   nl: [
     { label: 'Over ons', href: '/en/about' },
-    { label: 'Adverteren', href: '/en/contact' },
     { label: 'Samenwerking met ontwikkelaars', href: '/en/contact' },
     { label: 'Samenwerking met bureaus', href: '/en/contact' },
     { label: 'Privacybeleid', href: '/en/privacy' },
@@ -569,7 +564,6 @@ const BOTTOM_BY_LANG: Record<Lang, { label: string; href: string }[]> = {
   ],
   pl: [
     { label: 'O nas', href: '/en/about' },
-    { label: 'Reklama', href: '/en/contact' },
     { label: 'Współpraca z deweloperami', href: '/en/contact' },
     { label: 'Współpraca z agencjami', href: '/en/contact' },
     { label: 'Polityka prywatności', href: '/en/privacy' },
@@ -579,7 +573,6 @@ const BOTTOM_BY_LANG: Record<Lang, { label: string; href: string }[]> = {
   ],
   uk: [
     { label: 'Про нас', href: '/en/about' },
-    { label: 'Реклама', href: '/en/contact' },
     { label: 'Співпраця із забудовниками', href: '/en/contact' },
     { label: 'Співпраця з агентствами', href: '/en/contact' },
     { label: 'Політика конфіденційності', href: '/en/privacy' },
@@ -711,22 +704,23 @@ export function Footer({ lang = 'ru' }: { lang?: Lang }) {
             </ul>
           </nav>
 
-          {/* Раскрытие оператора. Сайт — информационная площадка, которую
-              ведёт грузинское ИП; в подвале это указано на всех локалях,
-              чтобы юрлицо и роль площадки были видны с любой страницы. */}
+          {/* Роль площадки. Персональные данные оператора здесь не
+              публикуются по требованию владельца сайта; для связи есть
+              страница контактов. Утверждений о доходе сайта тоже нет —
+              только то, чем площадка не является. */}
           <div className="mt-6 mx-auto max-w-[68ch] text-center text-[12px] leading-[1.7] text-[var(--color-text-muted)]">
             <p>
               {pickCopy({
-                ru: 'Balinsky.info — информационный каталог. Оператор сайта: ИП Andrei Slesarau, Грузия, рег. № 316362404, 19 Shartava St., Rustavi. Мы не являемся агентством недвижимости, не участвуем в сделках и не берём комиссию с покупателей.',
-                en: 'Balinsky.info is an information catalogue. Site operator: Andrei Slesarau, sole proprietor, Georgia, reg. no. 316362404, 19 Shartava St., Rustavi. We are not a real-estate agency, take no part in transactions and charge buyers no commission.',
-                id: 'Balinsky.info adalah katalog informasi. Operator situs: Andrei Slesarau, pengusaha perseorangan, Georgia, reg. no. 316362404, 19 Shartava St., Rustavi. Kami bukan agen properti, tidak ikut dalam transaksi, dan tidak memungut komisi dari pembeli.',
-                fr: 'Balinsky.info est un catalogue d’information. Éditeur du site : Andrei Slesarau, entrepreneur individuel, Géorgie, n° 316362404, 19 Shartava St., Rustavi. Nous ne sommes pas une agence immobilière, ne participons pas aux transactions et ne prenons aucune commission aux acheteurs.',
-                de: 'Balinsky.info ist ein Informationskatalog. Betreiber: Andrei Slesarau, Einzelunternehmer, Georgien, Reg.-Nr. 316362404, 19 Shartava St., Rustavi. Wir sind keine Immobilienagentur, sind an Transaktionen nicht beteiligt und nehmen von Käufern keine Provision.',
-                zh: 'Balinsky.info 是信息目录。网站运营方：个体经营者 Andrei Slesarau，格鲁吉亚，注册号 316362404，19 Shartava St., Rustavi。我们不是房地产中介，不参与交易，也不向买家收取佣金。',
-                nl: 'Balinsky.info is een informatiecatalogus. Exploitant: Andrei Slesarau, eenmanszaak, Georgië, reg.nr. 316362404, 19 Shartava St., Rustavi. Wij zijn geen makelaar, nemen geen deel aan transacties en rekenen kopers geen commissie.',
-                ban: 'Balinsky.info inggih punika katalog informasi. Operator situs: Andrei Slesarau, pengusaha perseorangan, Georgia, reg. no. 316362404, 19 Shartava St., Rustavi. Tiang nénten agen properti, nénten milu ring transaksi, tur nénten nerima komisi saking sang numbas.',
-                pl: 'Balinsky.info to katalog informacyjny. Operator serwisu: Andrei Slesarau, działalność jednoosobowa, Gruzja, nr rej. 316362404, 19 Shartava St., Rustavi. Nie jesteśmy agencją nieruchomości, nie uczestniczymy w transakcjach i nie pobieramy prowizji od kupujących.',
-                uk: 'Balinsky.info — інформаційний каталог. Оператор сайту: ФОП Andrei Slesarau, Грузія, реєстр. № 316362404, 19 Shartava St., Rustavi. Ми не є агентством нерухомості, не беремо участі в угодах і не беремо комісію з покупців.',
+                ru: 'Balinsky.info — информационный каталог. Сайт не является агентством недвижимости: мы не продаём объекты, не участвуем в сделках и не берём комиссию.',
+                en: 'Balinsky.info is an information catalogue. The site is not a real-estate agency: we do not sell properties, take no part in transactions and charge no commission.',
+                id: 'Balinsky.info adalah katalog informasi. Situs ini bukan agen properti: kami tidak menjual objek, tidak ikut dalam transaksi, dan tidak memungut komisi.',
+                fr: 'Balinsky.info est un catalogue d’information. Le site n’est pas une agence immobilière : nous ne vendons pas de biens, ne participons pas aux transactions et ne percevons aucune commission.',
+                de: 'Balinsky.info ist ein Informationskatalog. Die Website ist keine Immobilienagentur: Wir verkaufen keine Objekte, sind an Transaktionen nicht beteiligt und nehmen keine Provision.',
+                zh: 'Balinsky.info 是信息目录。本站不是房地产中介：我们不销售房产、不参与交易，也不收取佣金。',
+                nl: 'Balinsky.info is een informatiecatalogus. De site is geen makelaar: wij verkopen geen objecten, nemen geen deel aan transacties en rekenen geen commissie.',
+                ban: 'Balinsky.info inggih punika katalog informasi. Situs puniki nénten agen properti: tiang nénten ngadol objek, nénten milu ring transaksi, tur nénten nerima komisi.',
+                pl: 'Balinsky.info to katalog informacyjny. Serwis nie jest agencją nieruchomości: nie sprzedajemy obiektów, nie uczestniczymy w transakcjach i nie pobieramy prowizji.',
+                uk: 'Balinsky.info — інформаційний каталог. Сайт не є агентством нерухомості: ми не продаємо обʼєкти, не беремо участі в угодах і не беремо комісію.',
               }, lang)}
             </p>
             <p className="mt-3">Copyright © 2022–2026 Balinsky.info. All rights reserved.</p>

@@ -31,24 +31,7 @@ export default function Page() {
         en relation avec l&apos;exploitant de chaque bien (promoteur, agence ou propriétaire). La transaction se conclut directement entre l&apos;acheteur et l&apos;exploitant.
       </p>
 
-      <h2>2. Qui exploite le site</h2>
-      <p>
-        Le site est exploité par Andrei Slesarau, entrepreneur individuel immatriculé en Géorgie : numéro
-        d’immatriculation 316362404 du 06.01.2022, adresse 19 Shartava St., Rustavi, Géorgie. Tous les contrats et
-        factures sont émis par cette entité, selon le droit géorgien.
-      </p>
-      <p>
-        La seule source de revenus de la plateforme est la rémunération versée par les promoteurs et autres titulaires
-        de droits pour la publication d’informations et de publicités : bannières et fiches sur le site, publications
-        sur la chaîne Telegram, production de vidéos sur les projets. Cette rémunération ne dépend pas de la
-        conclusion d’une vente. Les visiteurs ne paient rien : ni abonnement, ni commission, ni honoraires de recherche.
-      </p>
-      <p>
-        L’éditeur du site ne fournit aucune prestation sur le territoire indonésien. La publication du catalogue, le
-        travail éditorial et l’administration sont assurés par une entité immatriculée en Géorgie.
-      </p>
-
-      <h2>3. Ce que Balinsky.info n’est pas</h2>
+      <h2>2. Ce que Balinsky.info n’est pas</h2>
       <p>
         Nous ne sommes ni une agence immobilière, ni un courtier, ni un agent. En particulier : nous ne vendons pas de
         biens et n’agissons pas en qualité de vendeur ; nous ne représentons ni l’acheteur ni le vendeur dans les
@@ -63,7 +46,7 @@ export default function Page() {
         sur la fiche de ce bien ; les échanges et négociations se font directement avec lui, sans passer par Balinsky.
       </p>
 
-      <h2>4. Exactitude</h2>
+      <h2>3. Exactitude</h2>
       <p>
         Nous nous efforçons de tenir le catalogue à jour, mais les prix, la disponibilité, les permis (PBG, SLF) et les conditions peuvent changer.
         Avant de conclure une transaction, vérifiez les informations directement auprès de l&apos;exploitant et via les registres officiels d&apos;Indonésie.
@@ -72,7 +55,7 @@ export default function Page() {
         Chaque vidéo et photo a été prise à une date précise — nous ne sommes pas responsables des changements survenus après cette prise de vue.
       </p>
 
-      <h2>5. Contenu des utilisateurs</h2>
+      <h2>4. Contenu des utilisateurs</h2>
       <p>
         Lorsque vous nous contactez via Telegram, notre bot, un formulaire ou par e-mail, vous transmettez du texte et des coordonnées et confirmez que vous avez le
         droit de les partager. Utilisation de ces données : voir notre <a href="/fr/confidentialite">politique de confidentialité</a>.
@@ -81,7 +64,7 @@ export default function Page() {
         Il est interdit d&apos;utiliser le site pour du spam, de l&apos;extraction automatisée de données, des tentatives de contournement des protections, des attaques par surcharge ou de la rétro-ingénierie des API internes.
       </p>
 
-      <h2>6. Propriété intellectuelle</h2>
+      <h2>5. Propriété intellectuelle</h2>
       <p>
         Les textes, schémas et contenus éditoriaux du site (sauf mention contraire) sont publiés sous licence
         Creative Commons Attribution 4.0 International — créditez l&apos;auteur et renvoyez vers l&apos;original lors de leur réutilisation.
@@ -90,36 +73,36 @@ export default function Page() {
         Les photos et vidéos de biens individuels peuvent appartenir à des promoteurs ou à des tiers — demandez une licence distincte pour toute réutilisation commerciale.
       </p>
 
-      <h2>7. Assistant IA Andrei</h2>
+      <h2>6. Assistant IA Andrei</h2>
       <p>
         Andrei est un assistant IA expérimental présent sur le site. Ses réponses sont informatives et ne remplacent pas la consultation d&apos;un agent, avocat ou notaire agréé.
         Andrei peut se tromper — confirmez auprès du spécialiste compétent tout élément qui touche à une transaction avant d&apos;agir.
       </p>
 
-      <h2>8. Liens externes</h2>
+      <h2>7. Liens externes</h2>
       <p>
         Le site renvoie vers des ressources tierces (YouTube, Telegram, estatemarket.io, sites de promoteurs). Nous ne contrôlons pas leur contenu
         et ne sommes pas responsables de leur disponibilité ni de leurs politiques.
       </p>
 
-      <h2>9. Responsabilité</h2>
+      <h2>8. Responsabilité</h2>
       <p>
         Le site est fourni &ldquo;en l&apos;état&rdquo;. Nous ne garantissons ni une disponibilité ininterrompue, ni l&apos;absence de problèmes techniques, ni que les annonces
         correspondent à vos objectifs d&apos;investissement particuliers. Les décisions relèvent du risque de l&apos;acheteur.
       </p>
 
-      <h2>10. Modifications</h2>
+      <h2>9. Modifications</h2>
       <p>
         Ces conditions peuvent changer. La version en vigueur figure toujours sur cette page. Les mises à jour importantes sont annoncées sur le
         <a href="https://t.me/itrealtor" target="_blank" rel="noopener"> canal Telegram @itrealtor</a>.
       </p>
 
-      <h2>11. Droit applicable et juridiction</h2>
+      <h2>10. Droit applicable et juridiction</h2>
       <p>
-        Les litiges sont régis par le droit de la Géorgie (pays d&apos;immatriculation de l&apos;exploitant), sauf disposition impérative contraire du droit de votre pays de résidence.
+        Les litiges sont régis par le droit de la Géorgie, sauf disposition impérative contraire du droit de votre pays de résidence.
       </p>
 
-      {/* TODO: confirm jurisdiction / arbitration wording with counsel. Default is Georgia (sole-proprietor country). */}
+      {/* TODO: confirm jurisdiction / arbitration wording with counsel. Default is Georgia. */}
     </LegalLayout>
   )
 }

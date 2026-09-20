@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Mail, Send, Play, MessageCircle, MapPin, Briefcase } from 'lucide-react'
+import { Mail, Send, Play, MessageCircle, Briefcase } from 'lucide-react'
 import { LegalLayout } from '@/components/LegalLayout'
 import { hreflangMap } from '@/lib/hreflang'
 
 const UPDATED = 'May 15, 2026'
-const CONTACT_EMAIL = 'asp.slesarev@gmail.com'
+const CONTACT_EMAIL = 'i@balinsky.info'
 
 export const metadata: Metadata = {
   title: 'Contact | Balinsky',
@@ -65,34 +65,23 @@ export default function Page() {
         <li className="flex items-start gap-3">
           <Briefcase size={20} className="text-[var(--color-primary)] mt-0.5 shrink-0" />
           <div>
-            <strong>Developers</strong> — add your project to the catalogue, run paid placement, or commission a video review:
+            <strong>Developers</strong> — add your project to the catalogue, send documents, floor plans or site footage:
             email <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Partnership (developer)')}`}>{CONTACT_EMAIL}</a>.
           </div>
         </li>
         <li className="flex items-start gap-3">
           <Briefcase size={20} className="text-[var(--color-primary)] mt-0.5 shrink-0" />
           <div>
-            <strong>Real-estate agencies</strong> — publish information about the projects you represent, and advertising on the site:
+            <strong>Real-estate agencies</strong> — publish information about the projects you represent:
             email <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Partnership (agency)')}`}>{CONTACT_EMAIL}</a>.
           </div>
         </li>
       </ul>
 
-      <h2>Site operator</h2>
-      <ul className="!pl-0 !list-none space-y-3 !my-5">
-        <li className="flex items-start gap-3">
-          <MapPin size={20} className="text-[var(--color-text-muted)] mt-0.5 shrink-0" />
-          <div>
-            <strong>Andrei Slesarau</strong>, sole proprietor, Georgia.<br />
-            Registration number 316362404, registered 06.01.2022.<br />
-            Registered address: 19 Shartava St., Rustavi, Georgia.<br />
-            <span className="text-[13px] text-[var(--color-text-muted)]">
-              All advertising contracts and invoices are issued by this entity under Georgian law.
-              The site operator provides no services within Indonesia.
-            </span>
-          </div>
-        </li>
-      </ul>
+      <h2>The role of the site</h2>
+      <p>
+        Balinsky.info publishes information about properties and is not a party to any transaction. We are not a real-estate agency: we do not sell properties, do not negotiate, take no commission and accept no payments. For formal enquiries, use the email above.
+      </p>
 
       <h2>Response time</h2>
       <p>

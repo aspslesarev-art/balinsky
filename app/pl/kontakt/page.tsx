@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Mail, Send, Play, MessageCircle, MapPin, Briefcase } from 'lucide-react'
+import { Mail, Send, Play, MessageCircle, Briefcase } from 'lucide-react'
 import { LegalLayout } from '@/components/LegalLayout'
 import { hreflangMap } from '@/lib/hreflang'
 
 const UPDATED = '15 maja 2026'
-const CONTACT_EMAIL = 'asp.slesarev@gmail.com'
+const CONTACT_EMAIL = 'i@balinsky.info'
 
 export const metadata: Metadata = {
   title: 'Kontakt | Balinsky',
@@ -65,34 +65,23 @@ export default function Page() {
         <li className="flex items-start gap-3">
           <Briefcase size={20} className="text-[var(--color-primary)] mt-0.5 shrink-0" />
           <div>
-            <strong>Deweloperzy</strong> — dodaj swój projekt do katalogu, uruchom płatne umieszczenie lub zamów recenzję wideo:
+            <strong>Deweloperzy</strong> — dodaj swój projekt do katalogu, przyślij dokumenty, rzuty albo nagrania z budowy:
             e-mail <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Współpraca (deweloper)')}`}>{CONTACT_EMAIL}</a>.
           </div>
         </li>
         <li className="flex items-start gap-3">
           <Briefcase size={20} className="text-[var(--color-primary)] mt-0.5 shrink-0" />
           <div>
-            <strong>Agencje nieruchomości</strong> — publikacja informacji o projektach, które reprezentujesz, i reklama w serwisie:
+            <strong>Agencje nieruchomości</strong> — publikacja informacji o projektach, które reprezentujesz:
             e-mail <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Współpraca (agencja)')}`}>{CONTACT_EMAIL}</a>.
           </div>
         </li>
       </ul>
 
-      <h2>Operator serwisu</h2>
-      <ul className="!pl-0 !list-none space-y-3 !my-5">
-        <li className="flex items-start gap-3">
-          <MapPin size={20} className="text-[var(--color-text-muted)] mt-0.5 shrink-0" />
-          <div>
-            <strong>Andrei Slesarau</strong>, jednoosobowa działalność gospodarcza, Gruzja.<br />
-            Numer rejestrowy 316362404, zarejestrowana 06.01.2022.<br />
-            Adres: 19 Shartava St., Rustavi, Gruzja.<br />
-            <span className="text-[13px] text-[var(--color-text-muted)]">
-              Wszystkie umowy reklamowe i faktury wystawia ten podmiot, zgodnie z prawem gruzińskim.
-              Operator serwisu nie świadczy usług na terytorium Indonezji.
-            </span>
-          </div>
-        </li>
-      </ul>
+      <h2>Rola serwisu</h2>
+      <p>
+        Balinsky.info publikuje informacje o nieruchomościach i nie jest stroną transakcji. Nie jesteśmy agencją nieruchomości: nie sprzedajemy obiektów, nie prowadzimy negocjacji, nie pobieramy prowizji i nie przyjmujemy płatności. W sprawach formalnych korzystaj z adresu e-mail powyżej.
+      </p>
 
       <h2>Czas odpowiedzi</h2>
       <p>

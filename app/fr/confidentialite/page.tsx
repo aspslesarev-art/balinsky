@@ -3,7 +3,7 @@ import { LegalLayout } from '@/components/LegalLayout'
 import { hreflangMap } from '@/lib/hreflang'
 
 const UPDATED = '15 mai 2026'
-const CONTACT_EMAIL = 'asp.slesarev@gmail.com'
+const CONTACT_EMAIL = 'i@balinsky.info'
 
 export const metadata: Metadata = {
   title: 'Politique de confidentialité | Balinsky',
@@ -25,8 +25,7 @@ export default function Page() {
 
       <h2>1. Exploitant du site</h2>
       <p>
-        Balinsky.info est exploité par Andrei Slesarev (entrepreneur individuel, Géorgie). Pour toute demande
-        relative à la protection des données : <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>,
+        Balinsky.info est un projet d’information à titre privé. Pour toute demande relative à la protection des données : <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>,
         Telegram <a href="https://t.me/itrealtor" target="_blank" rel="noopener">@itrealtor</a>.
       </p>
 

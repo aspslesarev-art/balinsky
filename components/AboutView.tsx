@@ -52,11 +52,10 @@ const COPY = {
       { title: 'Сравнение и шортлист', body: 'Любой объект сохраняется в избранное, виллы и апартаменты сравниваются по 14 ключевым параметрам инвестора в одной таблице.' },
     ],
 
-    h2Model: 'Кто ведёт сайт и на чём он зарабатывает',
+    h2Model: 'Какую роль играет Balinsky',
     model: [
-      { title: 'Оператор сайта', body: 'Balinsky.info ведёт ИП Andrei Slesarau, зарегистрированное в Грузии: рег. № 316362404 от 06.01.2022, адрес 19 Shartava St., Rustavi. Договоры и счета выставляются от этого лица и по законодательству Грузии.' },
-      { title: 'На чём зарабатывает площадка', body: 'Единственный источник дохода — реклама застройщиков: баннеры и информационные материалы на сайте, публикации в Telegram-канале, съёмка видео о проектах. Плата берётся с застройщика по рекламному договору. С покупателей мы не берём ничего.' },
-      { title: 'Чем Balinsky не является', body: 'Мы не агентство недвижимости и не брокер. Мы не продаём объекты, не ведём переговоры, не берём комиссию с покупателей, не принимаем депозиты и не сопровождаем сделки. Договор заключается напрямую между покупателем и застройщиком или собственником.' },
+      { title: 'Площадка только публикует', body: 'Мы собираем объекты, проверяем документы, снимаем видео и считаем показатели по аренде. На публикации роль сайта заканчивается: дальше вы разговариваете с застройщиком или собственником напрямую, без нас в середине.' },
+      { title: 'Чем Balinsky не является', body: 'Мы не агентство недвижимости и не брокер. Мы не продаём объекты, не ведём переговоры, не берём комиссию, не принимаем депозиты, не готовим и не удостоверяем договоры, не организуем показы и поездки, не оказываем юридических, нотариальных, налоговых и визовых услуг. Всё это делают сами стороны сделки и привлечённые ими специалисты — застройщик или собственник, нотариус PPAT, юрист.' },
     ],
 
     h2Cases: 'Истории покупателей',
@@ -98,11 +97,10 @@ const COPY = {
       { title: 'Compare and shortlist', body: 'Any listing saves to your shortlist; villas and apartments compare on 14 investor-grade parameters in one table.' },
     ],
 
-    h2Model: 'Who runs the site and how it earns',
+    h2Model: 'What role Balinsky plays',
     model: [
-      { title: 'Site operator', body: 'Balinsky.info is run by Andrei Slesarau, a sole proprietor registered in Georgia: reg. no. 316362404 of 06.01.2022, 19 Shartava St., Rustavi. Contracts and invoices are issued by that entity under Georgian law.' },
-      { title: 'How the platform earns', body: 'The only source of revenue is developer advertising: banners and informational material on the site, posts in the Telegram channel, and video production about projects. Developers pay under an advertising contract. Buyers are charged nothing.' },
-      { title: 'What Balinsky is not', body: 'We are not a real-estate agency or a broker. We do not sell properties, do not conduct negotiations, take no commission from buyers, accept no deposits and do not accompany transactions. The contract is signed directly between the buyer and the developer or owner.' },
+      { title: 'The platform only publishes', body: 'We gather listings, check documents, film the sites and work out rental figures. Publishing is where our role ends: from there you talk to the developer or owner directly, with no one in between.' },
+      { title: 'What Balinsky is not', body: 'We are not a real-estate agency or a broker. We do not sell properties, do not negotiate, take no commission, accept no deposits, neither draft nor certify contracts, arrange no viewings or trips, and provide no legal, notarial, tax or visa services. All of that is done by the parties themselves and the professionals they engage — the developer or owner, a PPAT notary, a lawyer.' },
     ],
 
     h2Cases: 'Buyer stories',
@@ -144,11 +142,10 @@ const COPY = {
       { title: 'Bandingkan dan daftar pendek', body: 'Setiap listing tersimpan ke daftar pendek Anda; vila dan apartemen dibandingkan berdasarkan 14 parameter kelas investor dalam satu tabel.' },
     ],
 
-    h2Model: 'Siapa yang menjalankan situs ini dan dari mana penghasilannya',
+    h2Model: 'Peran apa yang dijalankan Balinsky',
     model: [
-      { title: 'Operator situs', body: 'Balinsky.info dijalankan oleh Andrei Slesarau, pengusaha perseorangan terdaftar di Georgia: reg. no. 316362404 tanggal 06.01.2022, 19 Shartava St., Rustavi. Kontrak dan faktur diterbitkan oleh badan tersebut menurut hukum Georgia.' },
-      { title: 'Dari mana platform ini memperoleh penghasilan', body: 'Satu-satunya sumber pendapatan adalah iklan pengembang: banner dan materi informasi di situs, publikasi di kanal Telegram, serta produksi video tentang proyek. Pengembang membayar berdasarkan kontrak periklanan. Pembeli tidak dikenakan biaya apa pun.' },
-      { title: 'Balinsky bukan apa', body: 'Kami bukan agen properti dan bukan broker. Kami tidak menjual objek, tidak melakukan negosiasi, tidak mengambil komisi dari pembeli, tidak menerima deposit, dan tidak mendampingi transaksi. Kontrak ditandatangani langsung antara pembeli dan pengembang atau pemilik.' },
+      { title: 'Platform hanya menerbitkan', body: 'Kami mengumpulkan objek, memeriksa dokumen, merekam lokasi, dan menghitung angka sewa. Peran kami berakhir pada penerbitan: selanjutnya Anda berbicara langsung dengan pengembang atau pemilik, tanpa perantara.' },
+      { title: 'Balinsky bukan apa', body: 'Kami bukan agen properti dan bukan broker. Kami tidak menjual objek, tidak bernegosiasi, tidak memungut komisi, tidak menerima deposit, tidak menyusun maupun mengesahkan kontrak, tidak mengatur kunjungan atau perjalanan, dan tidak menyediakan jasa hukum, notaris, pajak, atau visa. Semua itu dilakukan oleh para pihak sendiri dan profesional yang mereka tunjuk — pengembang atau pemilik, notaris PPAT, pengacara.' },
     ],
 
     h2Cases: 'Kisah pembeli',
@@ -190,11 +187,10 @@ const COPY = {
       { title: 'Comparer et présélectionner', body: 'Chaque annonce s’enregistre dans votre sélection ; villas et appartements se comparent sur 14 paramètres de niveau investisseur dans un seul tableau.' },
     ],
 
-    h2Model: 'Qui édite le site et comment il gagne sa vie',
+    h2Model: 'Le rôle de Balinsky',
     model: [
-      { title: 'Éditeur du site', body: 'Balinsky.info est édité par Andrei Slesarau, entrepreneur individuel immatriculé en Géorgie : n° 316362404 du 06.01.2022, 19 Shartava St., Rustavi. Les contrats et factures sont émis par cette entité, sous le droit géorgien.' },
-      { title: 'Comment la plateforme gagne sa vie', body: 'La seule source de revenus est la publicité des promoteurs : bannières et contenus informatifs sur le site, publications sur la chaîne Telegram, production de vidéos sur les projets. Les promoteurs paient au titre d’un contrat publicitaire. Les acheteurs ne paient rien.' },
-      { title: 'Ce que Balinsky n’est pas', body: 'Nous ne sommes ni une agence immobilière ni un courtier. Nous ne vendons pas de biens, ne menons pas de négociations, ne prenons aucune commission aux acheteurs, n’encaissons aucun acompte et n’accompagnons aucune transaction. Le contrat est signé directement entre l’acheteur et le promoteur ou le propriétaire.' },
+      { title: 'La plateforme se limite à publier', body: 'Nous rassemblons les biens, vérifions les documents, filmons les sites et calculons les indicateurs locatifs. Notre rôle s’arrête à la publication : ensuite, vous parlez directement au promoteur ou au propriétaire, sans intermédiaire.' },
+      { title: 'Ce que Balinsky n’est pas', body: 'Nous ne sommes ni une agence immobilière ni un courtier. Nous ne vendons pas de biens, ne négocions pas, ne percevons aucune commission, n’encaissons aucun acompte, ne rédigeons ni ne certifions de contrats, n’organisons ni visites ni voyages et ne fournissons aucune prestation juridique, notariale, fiscale ou en matière de visa. Tout cela relève des parties elles-mêmes et des professionnels qu’elles mandatent — promoteur ou propriétaire, notaire PPAT, avocat.' },
     ],
 
     h2Cases: 'Histoires d’acheteurs',
@@ -236,11 +232,10 @@ const COPY = {
       { title: 'Vergleichen und Merkliste', body: 'Jedes Inserat wird in Ihrer Merkliste gespeichert; Villen und Apartments werden anhand von 14 investorenrelevanten Parametern in einer Tabelle verglichen.' },
     ],
 
-    h2Model: 'Wer die Website betreibt und womit sie Geld verdient',
+    h2Model: 'Welche Rolle Balinsky hat',
     model: [
-      { title: 'Betreiber der Website', body: 'Balinsky.info wird von Andrei Slesarau betrieben, einem in Georgien eingetragenen Einzelunternehmer: Reg.-Nr. 316362404 vom 06.01.2022, 19 Shartava St., Rustavi. Verträge und Rechnungen stellt dieses Unternehmen nach georgischem Recht aus.' },
-      { title: 'Womit die Plattform Geld verdient', body: 'Einzige Einnahmequelle ist Bauträgerwerbung: Banner und Informationsmaterial auf der Website, Beiträge im Telegram-Kanal und Videoproduktion zu Projekten. Bauträger zahlen auf Basis eines Werbevertrags. Käufern stellen wir nichts in Rechnung.' },
-      { title: 'Was Balinsky nicht ist', body: 'Wir sind weder Immobilienagentur noch Makler. Wir verkaufen keine Objekte, führen keine Verhandlungen, nehmen keine Provision von Käufern, keine Anzahlungen entgegen und begleiten keine Transaktionen. Der Vertrag wird unmittelbar zwischen Käufer und Bauträger oder Eigentümer geschlossen.' },
+      { title: 'Die Plattform veröffentlicht nur', body: 'Wir sammeln Objekte, prüfen Unterlagen, filmen vor Ort und berechnen Mietkennzahlen. Mit der Veröffentlichung endet unsere Rolle: danach sprechen Sie direkt mit dem Bauträger oder Eigentümer, ohne jemanden dazwischen.' },
+      { title: 'Was Balinsky nicht ist', body: 'Wir sind weder Immobilienagentur noch Makler. Wir verkaufen keine Objekte, verhandeln nicht, nehmen keine Provision, keine Anzahlungen entgegen, erstellen und beurkunden keine Verträge, organisieren keine Besichtigungen oder Reisen und erbringen keine rechtlichen, notariellen, steuerlichen oder visabezogenen Leistungen. All das übernehmen die Parteien selbst und die von ihnen beauftragten Fachleute — Bauträger oder Eigentümer, PPAT-Notar, Anwalt.' },
     ],
 
     h2Cases: 'Käufergeschichten',
@@ -282,11 +277,10 @@ const COPY = {
       { title: '对比与候选清单', body: '任何房源都可保存到您的候选清单；别墅和公寓在一张表中按 14 项投资级参数进行对比。' },
     ],
 
-    h2Model: '网站由谁运营，靠什么盈利',
+    h2Model: 'Balinsky 扮演什么角色',
     model: [
-      { title: '网站运营方', body: 'Balinsky.info 由在格鲁吉亚注册的个体经营者 Andrei Slesarau 运营：注册号 316362404，注册日期 2022 年 1 月 6 日，地址 19 Shartava St., Rustavi。合同与发票由该主体依据格鲁吉亚法律开具。' },
-      { title: '平台如何盈利', body: '唯一收入来源是开发商广告：站内横幅与资讯内容、Telegram 频道发布，以及项目视频制作。开发商依据广告合同付费。我们不向买家收取任何费用。' },
-      { title: 'Balinsky 不是什么', body: '我们不是房地产中介，也不是经纪人。我们不销售房产、不参与谈判、不向买家收取佣金、不接收定金、也不陪同交易。合同由买方与开发商或业主直接签署。' },
+      { title: '平台只负责发布', body: '我们收集房源、核验文件、实地拍摄并计算租赁指标。我们的角色止于发布：之后您直接与开发商或业主对话，中间没有任何人。' },
+      { title: 'Balinsky 不是什么', body: '我们不是房地产中介，也不是经纪人。我们不销售房产、不参与谈判、不收取佣金、不接收定金、不起草也不公证合同、不安排看房或行程，也不提供法律、公证、税务或签证服务。这些均由交易双方及其自行聘请的专业人士完成——开发商或业主、PPAT 公证人、律师。' },
     ],
 
     h2Cases: '买家故事',
@@ -328,11 +322,10 @@ const COPY = {
       { title: 'Vergelijken en shortlist', body: "Elk aanbod wordt in uw shortlist bewaard; villa's en appartementen worden op 14 investeringsparameters in één tabel vergeleken." },
     ],
 
-    h2Model: 'Wie de site beheert en waar het geld vandaan komt',
+    h2Model: 'Welke rol Balinsky speelt',
     model: [
-      { title: 'Exploitant van de site', body: 'Balinsky.info wordt beheerd door Andrei Slesarau, eenmanszaak geregistreerd in Georgië: reg.nr. 316362404 van 06.01.2022, 19 Shartava St., Rustavi. Contracten en facturen worden door die entiteit uitgegeven, naar Georgisch recht.' },
-      { title: 'Waar het platform zijn geld verdient', body: 'De enige inkomstenbron is advertenties van ontwikkelaars: banners en informatief materiaal op de site, publicaties in het Telegram-kanaal en videoproductie over projecten. Ontwikkelaars betalen op basis van een advertentiecontract. Kopers betalen niets.' },
-      { title: 'Wat Balinsky niet is', body: 'Wij zijn geen makelaar en geen tussenpersoon. Wij verkopen geen objecten, voeren geen onderhandelingen, nemen geen commissie van kopers, ontvangen geen aanbetalingen en begeleiden geen transacties. Het contract wordt rechtstreeks gesloten tussen koper en ontwikkelaar of eigenaar.' },
+      { title: 'Het platform publiceert alleen', body: 'Wij verzamelen objecten, controleren documenten, filmen ter plaatse en rekenen verhuurcijfers door. Bij publicatie stopt onze rol: daarna praat u rechtstreeks met de ontwikkelaar of eigenaar, zonder tussenpersoon.' },
+      { title: 'Wat Balinsky niet is', body: 'Wij zijn geen makelaar en geen tussenpersoon. Wij verkopen geen objecten, onderhandelen niet, rekenen geen commissie, nemen geen aanbetalingen aan, stellen noch bekrachtigen contracten, organiseren geen bezichtigingen of reizen en verlenen geen juridische, notariële, fiscale of visumdiensten. Dat alles doen de partijen zelf en de professionals die zij inschakelen — de ontwikkelaar of eigenaar, een PPAT-notaris, een jurist.' },
     ],
 
     h2Cases: 'Verhalen van kopers',
@@ -374,11 +367,10 @@ const COPY = {
       { title: 'Pabandingan miwah daftar cutet', body: 'Sabilang listing kasimpen ring daftar cutet Ragane; vila miwah apartemen kabandingang manut 14 parameter kelas investor ring satu tabel.' },
     ],
 
-    h2Model: 'Sira sane ngamargiang situs puniki tur saking napi pikolihnyane',
+    h2Model: 'Peran napi sane kalaksanayang Balinsky',
     model: [
-      { title: 'Operator situs', body: 'Balinsky.info kamargiang olih Andrei Slesarau, pengusaha perseorangan sane kadaftar ring Georgia: reg. no. 316362404 tanggal 06.01.2022, 19 Shartava St., Rustavi. Kontrak miwah faktur kamedalang olih badan punika manut hukum Georgia.' },
-      { title: 'Saking napi platform puniki polih pikolih', body: 'Wantah asiki sumber pikolih: iklan pangwangun — banner miwah materi informasi ring situs, publikasi ring kanal Telegram, taler produksi video indik proyek. Pangwangun naur manut kontrak periklanan. Sang numbas nénten kapatut naur napi-napi.' },
-      { title: 'Balinsky nénten napi', body: 'Tiang nénten agen properti tur nénten broker. Tiang nénten ngadol objek, nénten ngamargiang negosiasi, nénten nerima komisi saking sang numbas, nénten nerima deposit, tur nénten nyarengin transaksi. Kontrak katandatanganin langsung pantaraning sang numbas miwah pangwangun wiadin sang druwe.' },
+      { title: 'Platform wantah ngamedalang', body: 'Tiang ngapupulang objek, mriksa dokumen, ngarekam genah, tur ngitung angka sewa. Peran tiang puput ring pamedalan: salanturnyane Ragane mabaos langsung sareng pangwangun utawi sang druwe, tanpa perantara.' },
+      { title: 'Balinsky nénten napi', body: 'Tiang nénten agen properti tur nénten broker. Tiang nénten ngadol objek, nénten negosiasi, nénten nerima komisi, nénten nerima deposit, nénten nyusun tur nénten ngesahang kontrak, nénten ngatur kunjungan wiadin pamargi, tur nénten ngicén jasa hukum, notaris, pajak, utawi visa. Sami punika kalaksanayang olih para pihak padidi miwah profesional sane kaundang — pangwangun utawi sang druwe, notaris PPAT, advokat.' },
     ],
 
     h2Cases: 'Satua sang numbas',
@@ -420,11 +412,10 @@ const COPY = {
       { title: 'Porównaj i zapisz', body: 'Każda oferta zapisuje się na Twojej liście życzeń; wille i apartamenty porównują się według 14 parametrów klasy inwestorskiej w jednej tabeli.' },
     ],
 
-    h2Model: 'Kto prowadzi serwis i na czym zarabia',
+    h2Model: 'Jaką rolę pełni Balinsky',
     model: [
-      { title: 'Operator serwisu', body: 'Balinsky.info prowadzi Andrei Slesarau, jednoosobowa działalność zarejestrowana w Gruzji: nr rej. 316362404 z 06.01.2022, 19 Shartava St., Rustavi. Umowy i faktury wystawia ten podmiot, zgodnie z prawem gruzińskim.' },
-      { title: 'Na czym zarabia platforma', body: 'Jedynym źródłem przychodu jest reklama deweloperów: banery i materiały informacyjne w serwisie, publikacje na kanale Telegram oraz produkcja wideo o projektach. Deweloperzy płacą na podstawie umowy reklamowej. Kupujących nie obciążamy niczym.' },
-      { title: 'Czym Balinsky nie jest', body: 'Nie jesteśmy agencją nieruchomości ani pośrednikiem. Nie sprzedajemy obiektów, nie prowadzimy negocjacji, nie pobieramy prowizji od kupujących, nie przyjmujemy depozytów i nie obsługujemy transakcji. Umowa zawierana jest bezpośrednio między kupującym a deweloperem lub właścicielem.' },
+      { title: 'Platforma wyłącznie publikuje', body: 'Zbieramy obiekty, sprawdzamy dokumenty, nagrywamy je na miejscu i liczymy wskaźniki najmu. Na publikacji nasza rola się kończy: dalej rozmawiasz bezpośrednio z deweloperem albo właścicielem, bez nikogo pośrodku.' },
+      { title: 'Czym Balinsky nie jest', body: 'Nie jesteśmy agencją nieruchomości ani pośrednikiem. Nie sprzedajemy obiektów, nie prowadzimy negocjacji, nie pobieramy prowizji, nie przyjmujemy depozytów, nie sporządzamy ani nie poświadczamy umów, nie organizujemy oglądania ani wyjazdów i nie świadczymy usług prawnych, notarialnych, podatkowych czy wizowych. Wszystko to robią same strony i zaangażowani przez nie specjaliści — deweloper lub właściciel, notariusz PPAT, prawnik.' },
     ],
 
     h2Cases: 'Historie kupujących',
@@ -466,11 +457,10 @@ const COPY = {
       { title: 'Порівняння та обране', body: 'Будь-який обʼєкт зберігається до вашого обраного; вілли та апартаменти порівнюються за 14 параметрами інвесторського рівня в одній таблиці.' },
     ],
 
-    h2Model: 'Хто веде сайт і на чому він заробляє',
+    h2Model: 'Яку роль відіграє Balinsky',
     model: [
-      { title: 'Оператор сайту', body: 'Balinsky.info веде ФОП Andrei Slesarau, зареєстрований у Грузії: реєстр. № 316362404 від 06.01.2022, адреса 19 Shartava St., Rustavi. Договори й рахунки виставляються від цієї особи та за законодавством Грузії.' },
-      { title: 'На чому заробляє майданчик', body: 'Єдине джерело доходу — реклама забудовників: банери та інформаційні матеріали на сайті, публікації в Telegram-каналі, зйомка відео про проєкти. Плата береться із забудовника за рекламним договором. З покупців ми не беремо нічого.' },
-      { title: 'Чим Balinsky не є', body: 'Ми не агентство нерухомості й не брокер. Ми не продаємо обʼєкти, не ведемо переговори, не беремо комісію з покупців, не приймаємо депозити й не супроводжуємо угоди. Договір укладається напряму між покупцем і забудовником або власником.' },
+      { title: 'Майданчик лише публікує', body: 'Ми збираємо обʼєкти, перевіряємо документи, знімаємо відео і рахуємо показники з оренди. На публікації роль сайту закінчується: далі ви розмовляєте із забудовником або власником напряму, без нас посередині.' },
+      { title: 'Чим Balinsky не є', body: 'Ми не агентство нерухомості й не брокер. Ми не продаємо обʼєкти, не ведемо переговори, не беремо комісію, не приймаємо депозити, не готуємо й не посвідчуємо договори, не організовуємо покази й поїздки, не надаємо юридичних, нотаріальних, податкових і візових послуг. Усе це роблять самі сторони угоди та залучені ними фахівці — забудовник або власник, нотаріус PPAT, юрист.' },
     ],
 
     h2Cases: 'Історії покупців',
@@ -583,13 +573,14 @@ export async function AboutView({ lang }: { lang: Lang }) {
             </ul>
           </section>
 
-          {/* Кто оператор и на чём он зарабатывает. Раздел прямого
-              раскрытия: юрлицо, источник дохода и перечень того, чем
-              площадка не является. Стоит перед «историями покупателей»,
-              чтобы роль сайта читалась до любых упоминаний сделок. */}
+          {/* Роль площадки и перечень того, чем она не является.
+              Персональные данные оператора и любые утверждения о доходе
+              здесь не публикуются по требованию владельца сайта. Блок
+              стоит перед «историями покупателей», чтобы роль сайта
+              читалась до любых упоминаний сделок. */}
           <section className="mb-14">
             <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-5">{c.h2Model}</h2>
-            <ul className="space-y-3">
+            <ul className="grid gap-3 md:grid-cols-2">
               {c.model.map(m => (
                 <li key={m.title} className="rounded-2xl border border-[var(--color-border)] bg-white p-5">
                   <div className="text-[15px] font-semibold text-[#111827] mb-1.5">{m.title}</div>

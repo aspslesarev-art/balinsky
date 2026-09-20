@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Mail, Send, Play, MessageCircle, MapPin, Briefcase } from 'lucide-react'
+import { Mail, Send, Play, MessageCircle, Briefcase } from 'lucide-react'
 import { LegalLayout } from '@/components/LegalLayout'
 import { hreflangMap } from '@/lib/hreflang'
 
 const UPDATED = '2026年5月15日'
-const CONTACT_EMAIL = 'asp.slesarev@gmail.com'
+const CONTACT_EMAIL = 'i@balinsky.info'
 
 export const metadata: Metadata = {
   title: '联系方式 | Balinsky',
@@ -65,33 +65,23 @@ export default function Page() {
         <li className="flex items-start gap-3">
           <Briefcase size={20} className="text-[var(--color-primary)] mt-0.5 shrink-0" />
           <div>
-            <strong>开发商</strong> — 将您的项目加入目录、投放付费展示，或委托制作项目视频：
+            <strong>开发商</strong> — 将您的项目加入目录，提供文件、户型图或现场影像：
             请发送邮件至 <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Partnership (developer)')}`}>{CONTACT_EMAIL}</a>。
           </div>
         </li>
         <li className="flex items-start gap-3">
           <Briefcase size={20} className="text-[var(--color-primary)] mt-0.5 shrink-0" />
           <div>
-            <strong>房地产中介机构</strong> — 发布您所代理项目的信息，以及在网站投放广告：
+            <strong>房地产中介机构</strong> — 发布您所代理项目的信息：
             请发送邮件至 <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Partnership (agency)')}`}>{CONTACT_EMAIL}</a>。
           </div>
         </li>
       </ul>
 
-      <h2>网站运营方</h2>
-      <ul className="!pl-0 !list-none space-y-3 !my-5">
-        <li className="flex items-start gap-3">
-          <MapPin size={20} className="text-[var(--color-text-muted)] mt-0.5 shrink-0" />
-          <div>
-            <strong>Andrei Slesarau</strong>，个体经营者，格鲁吉亚。<br />
-            注册号 316362404，注册日期 2022 年 1 月 6 日。<br />
-            注册地址：19 Shartava St., Rustavi, Georgia。<br />
-            <span className="text-[13px] text-[var(--color-text-muted)]">
-              所有广告合同与发票均由该主体依据格鲁吉亚法律开具。网站运营方不在印度尼西亚境内提供任何服务。
-            </span>
-          </div>
-        </li>
-      </ul>
+      <h2>本站的角色</h2>
+      <p>
+        Balinsky.info 发布房产信息，并非任何交易的当事方。我们不是房地产中介：不销售房产、不参与谈判、不收取佣金，也不接收款项。正式咨询请使用上方邮箱。
+      </p>
 
       <h2>响应时间</h2>
       <p>

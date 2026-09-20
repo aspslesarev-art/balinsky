@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Mail, Send, Play, MessageCircle, MapPin, Briefcase } from 'lucide-react'
+import { Mail, Send, Play, MessageCircle, Briefcase } from 'lucide-react'
 import { LegalLayout } from '@/components/LegalLayout'
 import { hreflangMap } from '@/lib/hreflang'
 
 const UPDATED = 'May 15, 2026'
-const CONTACT_EMAIL = 'asp.slesarev@gmail.com'
+const CONTACT_EMAIL = 'i@balinsky.info'
 
 export const metadata: Metadata = {
   title: 'Contact | Balinsky',
@@ -21,16 +21,16 @@ export default function Page() {
   return (
     <LegalLayout lang="ban" title="Contact" updated={`Information current as of: ${UPDATED}`} breadcrumbLabel="Contact">
       <p>
-        Fastest path is the Telegram bot. It routes your enquiry to the manager of the specific unit and responds within an hour during business hours.
+        Balinsky.info is an information catalogue. The contacts below are for questions about the site itself: the data on a listing, an error you spotted, publishing a project. About a specific property, write to the developer directly — their Telegram and WhatsApp are on that property&apos;s page.
       </p>
 
-      <h2>For property buyers</h2>
+      <h2>Questions about the site and its data</h2>
       <ul className="!pl-0 !list-none space-y-3 !my-5">
         <li className="flex items-start gap-3">
           <Send size={20} className="text-[#229ED9] mt-0.5 shrink-0" />
           <div>
             <strong>Telegram bot</strong> — <a href="https://t.me/BalinskyBot" target="_blank" rel="noopener">@BalinskyBot</a>
-            <div className="text-[13px] text-[var(--color-text-muted)] mt-0.5">Enquiries about specific villas, apartments and complexes. Routed to the operator&apos;s manager.</div>
+            <div className="text-[13px] text-[var(--color-text-muted)] mt-0.5">Questions about the catalogue and the data on a listing. If the question is about price, timing or a hold, it belongs with the developer, not with us.</div>
           </div>
         </li>
         <li className="flex items-start gap-3">
@@ -65,34 +65,28 @@ export default function Page() {
         <li className="flex items-start gap-3">
           <Briefcase size={20} className="text-[var(--color-primary)] mt-0.5 shrink-0" />
           <div>
-            <strong>Developers</strong> — add your project to the catalogue, run paid placement, or launch a joint lead channel:
+            <strong>Developers</strong> — add your project to the catalogue, send documents, floor plans or site footage:
             email <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Partnership (developer)')}`}>{CONTACT_EMAIL}</a>.
           </div>
         </li>
         <li className="flex items-start gap-3">
           <Briefcase size={20} className="text-[var(--color-primary)] mt-0.5 shrink-0" />
           <div>
-            <strong>Real-estate agencies</strong> — lead exchange, referral programme, white-label catalogue:
+            <strong>Real-estate agencies</strong> — publish information about the projects you represent:
             email <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Partnership (agency)')}`}>{CONTACT_EMAIL}</a>.
           </div>
         </li>
       </ul>
 
-      <h2>Site operator</h2>
-      <ul className="!pl-0 !list-none space-y-3 !my-5">
-        <li className="flex items-start gap-3">
-          <MapPin size={20} className="text-[var(--color-text-muted)] mt-0.5 shrink-0" />
-          <div>
-            Andrei Slesarev, sole proprietor (Georgia).
-            {/* TODO: add registration number / legal address for formal requests. */}
-          </div>
-        </li>
-      </ul>
+      <h2>The role of the site</h2>
+      <p>
+        Balinsky.info publishes information about properties and is not a party to any transaction. We are not a real-estate agency: we do not sell properties, do not negotiate, take no commission and accept no payments. For formal enquiries, use the email above.
+      </p>
 
       <h2>Response time</h2>
       <p>
-        Service standard — reply within one hour during business hours (10:00–20:00 WITA, UTC+8).
-        Enquiries received at night are processed the next morning.
+        We answer questions about the site during business hours (10:00–20:00 WITA, UTC+8), usually within a day.
+        How fast a developer replies is not up to us — the figure on a listing page is there for reference only.
       </p>
 
       <h2>Related documents</h2>

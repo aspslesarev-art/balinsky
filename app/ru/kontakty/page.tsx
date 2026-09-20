@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Mail, Send, Play, MessageCircle, MapPin, Briefcase } from 'lucide-react'
+import { Mail, Send, Play, MessageCircle, Briefcase } from 'lucide-react'
 import { LegalLayout } from '@/components/LegalLayout'
 import { hreflangMap } from '@/lib/hreflang'
 
 const UPDATED = '20 сентября 2026 г.'
-const CONTACT_EMAIL = 'asp.slesarev@gmail.com'
+const CONTACT_EMAIL = 'i@balinsky.info'
 
 export const metadata: Metadata = {
   title: 'Контакты | Balinsky',
@@ -67,35 +67,23 @@ export default function Page() {
         <li className="flex items-start gap-3">
           <Briefcase size={20} className="text-[var(--color-primary)] mt-0.5 shrink-0" />
           <div>
-            <strong>Застройщики</strong> — добавить проект в каталог, разместить рекламу, заказать видеообзор:
+            <strong>Застройщики</strong> — добавить проект в каталог, прислать документы, планировки или видео с площадки:
             пишите на <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Размещение (застройщик)')}`}>{CONTACT_EMAIL}</a>.
-            Договор и счёт оформляются от ИП в Грузии (реквизиты ниже).
           </div>
         </li>
         <li className="flex items-start gap-3">
           <Briefcase size={20} className="text-[var(--color-primary)] mt-0.5 shrink-0" />
           <div>
-            <strong>Агентства недвижимости</strong> — размещение информации о проектах, которые вы представляете,
-            и реклама на сайте: пишите на <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Размещение (агентство)')}`}>{CONTACT_EMAIL}</a>.
+            <strong>Агентства недвижимости</strong> — размещение информации о проектах, которые вы представляете:
+            пишите на <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Размещение (агентство)')}`}>{CONTACT_EMAIL}</a>.
           </div>
         </li>
       </ul>
 
-      <h2>Оператор сайта</h2>
-      <ul className="!pl-0 !list-none space-y-3 !my-5">
-        <li className="flex items-start gap-3">
-          <MapPin size={20} className="text-[var(--color-text-muted)] mt-0.5 shrink-0" />
-          <div>
-            <strong>ИП Andrei Slesarau</strong>, Грузия.<br />
-            Регистрационный номер 316362404, зарегистрирован 06.01.2022.<br />
-            Юридический адрес: 19 Shartava St., Rustavi, Georgia.<br />
-            <span className="text-[13px] text-[var(--color-text-muted)]">
-              Все договоры на размещение рекламы и счета выставляются от этого лица, по законодательству Грузии.
-              Услуг на территории Индонезии оператор сайта не оказывает.
-            </span>
-          </div>
-        </li>
-      </ul>
+      <h2>Роль сайта</h2>
+      <p>
+        Balinsky.info публикует информацию об объектах и не является стороной сделок. Мы не агентство недвижимости: не продаём объекты, не ведём переговоры, не берём комиссию и не принимаем платежи. Для официальных запросов используйте email выше.
+      </p>
 
       <h2>Время ответа</h2>
       <p>
