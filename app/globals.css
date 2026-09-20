@@ -231,14 +231,6 @@ html.no-pro [data-investment-block] {
   --ax-error-border:    #FECACA;
 }
 
-/* Bottom-sheet entry for the Reserve modal — used by ReserveButton.tsx
-   on every viewport size. Inline <style jsx> doesn't survive Turbopack
-   in this project, so the keyframe lives here. */
-@keyframes reserveSlide {
-  from { transform: translateY(40px); opacity: 0; }
-  to   { transform: translateY(0);    opacity: 1; }
-}
-
 /* Telegram-style typing indicator — three dots that scale + fade in
    sequence. ConsultantWidget's <TypingDots> applies this with
    staggered animation-delay (-320ms / -160ms / 0) so the wave reads

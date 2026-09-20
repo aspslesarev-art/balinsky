@@ -21,16 +21,16 @@ export default function Page() {
   return (
     <LegalLayout lang="de" title="Kontakt" updated={`Stand: ${UPDATED}`} breadcrumbLabel="Kontakt">
       <p>
-        Der schnellste Weg ist der Telegram-Bot. Er leitet Ihre Anfrage an den zuständigen Manager des jeweiligen Objekts weiter und antwortet während der Geschäftszeiten innerhalb einer Stunde.
+        Balinsky.info ist ein Informationskatalog. Die Kontakte unten sind für Fragen zur Website selbst gedacht: zu den Daten eines Inserats, zu einem gefundenen Fehler, zur Veröffentlichung eines Projekts. Zu einem konkreten Objekt schreiben Sie direkt dem Bauträger — sein Telegram und WhatsApp stehen auf der Objektseite.
       </p>
 
-      <h2>Für Immobilienkäufer</h2>
+      <h2>Fragen zur Website und zu den Daten</h2>
       <ul className="!pl-0 !list-none space-y-3 !my-5">
         <li className="flex items-start gap-3">
           <Send size={20} className="text-[#229ED9] mt-0.5 shrink-0" />
           <div>
             <strong>Telegram-Bot</strong> — <a href="https://t.me/BalinskyBot" target="_blank" rel="noopener">@BalinskyBot</a>
-            <div className="text-[13px] text-[var(--color-text-muted)] mt-0.5">Anfragen zu bestimmten Villen, Apartments und Komplexen. Werden an den Manager des Anbieters weitergeleitet.</div>
+            <div className="text-[13px] text-[var(--color-text-muted)] mt-0.5">Fragen zum Katalog und zu den Daten eines Inserats. Geht es um Preis, Termine oder eine Reservierung, gehört die Frage zum Bauträger, nicht zu uns.</div>
           </div>
         </li>
         <li className="flex items-start gap-3">
@@ -65,14 +65,14 @@ export default function Page() {
         <li className="flex items-start gap-3">
           <Briefcase size={20} className="text-[var(--color-primary)] mt-0.5 shrink-0" />
           <div>
-            <strong>Bauträger</strong> — nehmen Sie Ihr Projekt in den Katalog auf, schalten Sie eine bezahlte Platzierung oder starten Sie einen gemeinsamen Lead-Kanal:
+            <strong>Bauträger</strong> — nehmen Sie Ihr Projekt in den Katalog auf, schalten Sie eine bezahlte Platzierung oder beauftragen Sie ein Videoporträt:
             E-Mail an <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Partnerschaft (Bauträger)')}`}>{CONTACT_EMAIL}</a>.
           </div>
         </li>
         <li className="flex items-start gap-3">
           <Briefcase size={20} className="text-[var(--color-primary)] mt-0.5 shrink-0" />
           <div>
-            <strong>Immobilienagenturen</strong> — Lead-Austausch, Empfehlungsprogramm, White-Label-Katalog:
+            <strong>Immobilienagenturen</strong> — Veröffentlichung von Informationen zu den von Ihnen vertretenen Projekten und Werbung auf der Website:
             E-Mail an <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Partnerschaft (Agentur)')}`}>{CONTACT_EMAIL}</a>.
           </div>
         </li>
@@ -83,16 +83,21 @@ export default function Page() {
         <li className="flex items-start gap-3">
           <MapPin size={20} className="text-[var(--color-text-muted)] mt-0.5 shrink-0" />
           <div>
-            Andrei Slesarev, Einzelunternehmer (Georgien).
-            {/* TODO: add registration number / legal address for formal requests. */}
+            <strong>Andrei Slesarau</strong>, Einzelunternehmer, Georgien.<br />
+            Registrierungsnummer 316362404, eingetragen am 06.01.2022.<br />
+            Anschrift: 19 Shartava St., Rustavi, Georgien.<br />
+            <span className="text-[13px] text-[var(--color-text-muted)]">
+              Sämtliche Werbeverträge und Rechnungen stellt dieses Unternehmen nach georgischem Recht aus.
+              Der Betreiber der Website erbringt keine Leistungen auf indonesischem Staatsgebiet.
+            </span>
           </div>
         </li>
       </ul>
 
       <h2>Reaktionszeit</h2>
       <p>
-        Service-Standard — Antwort innerhalb einer Stunde während der Geschäftszeiten (10:00–20:00 WITA, UTC+8).
-        Nachts eingehende Anfragen werden am nächsten Morgen bearbeitet.
+        Fragen zur Website beantworten wir während der Geschäftszeiten (10:00–20:00 WITA, UTC+8), meist innerhalb eines Tages.
+        Wie schnell ein Bauträger antwortet, liegt nicht bei uns — die Angabe auf der Objektseite dient nur zur Orientierung.
       </p>
 
       <h2>Verwandte Dokumente</h2>

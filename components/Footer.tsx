@@ -38,26 +38,26 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
         { label: 'Инвестиции в недвижимость Бали', href: '/ru/investicii-v-nedvizhimost-bali' },
         { label: 'Жизнь на Бали — ВНЖ и налоги', href: '/ru/zhizn-na-bali' },
         { label: 'Как купить на Бали', href: '/ru/kak-kupit' },
-        { label: 'Инвест-тур', href: '/ru/invest-tour' },
+        { label: 'Поездка на осмотр', href: '/ru/invest-tour' },
         { label: 'Бронирование', href: '/ru/rezervirovanie' },
         { label: 'Новости', href: '/ru/novosti' },
         { label: 'Знания', href: '/ru/znaniya' },
       ],
     },
     {
-      title: 'Услуги',
+      title: 'Каталог',
       links: [
         { label: 'Агенты', href: '/ru/zastrojshhiki' },
       ],
     },
     {
-      title: 'Работа',
+      title: 'Сотрудничество',
       links: [
-        // Vacancy boards aren't built yet — route to the contact page so
-        // the link is at least a working «interested in working with us»
-        // entry point instead of a dead `#`.
-        { label: 'Вакансии агентств', href: '/ru/kontakty' },
-        { label: 'Вакансии застройщиков', href: '/ru/kontakty' },
+        // Раздел найма убран: площадка никого не нанимает.
+        // Осталась точка входа для застройщиков, которые хотят
+        // разместить проект или рекламу — это и есть модель сайта.
+        { label: 'Разместить проект', href: '/ru/kontakty' },
+        { label: 'Реклама на сайте', href: '/ru/kontakty' },
       ],
     },
   ],
@@ -85,23 +85,26 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
         { label: 'Bali property investment', href: '/en/bali-property-investment' },
         { label: 'Living in Bali — visas & taxes', href: '/en/living-in-bali' },
         { label: 'How to buy in Bali', href: '/en/how-to-buy' },
-        { label: 'Invest tour', href: '/en/invest-tour' },
+        { label: 'Viewing trip', href: '/en/invest-tour' },
         { label: 'Reservation', href: '/en/reservation' },
         { label: 'News', href: '/en/news' },
         { label: 'Knowledge', href: '/en/knowledge' },
       ],
     },
     {
-      title: 'Services',
+      title: 'Catalogue',
       links: [
         { label: 'Agents', href: '/en/developers' },
       ],
     },
     {
-      title: 'Jobs',
+      title: 'Partnership',
       links: [
-        { label: 'Agency vacancies', href: '/en/contact' },
-        { label: 'Developer vacancies', href: '/en/contact' },
+        // Раздел найма убран: площадка никого не нанимает.
+        // Осталась точка входа для застройщиков, которые хотят
+        // разместить проект или рекламу — это и есть модель сайта.
+        { label: 'List your project', href: '/en/contact' },
+        { label: 'Advertise on the site', href: '/en/contact' },
       ],
     },
   ],
@@ -129,23 +132,26 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
         { label: 'Investasi properti Bali', href: '/en/bali-property-investment' },
         { label: 'Tinggal di Bali — visa & pajak', href: '/en/living-in-bali' },
         { label: 'Cara membeli di Bali', href: '/en/how-to-buy' },
-        { label: 'Tur investasi', href: '/en/invest-tour' },
+        { label: 'Perjalanan peninjauan', href: '/en/invest-tour' },
         { label: 'Reservasi', href: '/en/reservation' },
         { label: 'Berita', href: '/en/news' },
         { label: 'Pengetahuan', href: '/en/knowledge' },
       ],
     },
     {
-      title: 'Layanan',
+      title: 'Katalog',
       links: [
         { label: 'Agen', href: '/en/developers' },
       ],
     },
     {
-      title: 'Lowongan',
+      title: 'Kerja sama',
       links: [
-        { label: 'Lowongan agensi', href: '/en/contact' },
-        { label: 'Lowongan pengembang', href: '/en/contact' },
+        // Раздел найма убран: площадка никого не нанимает.
+        // Осталась точка входа для застройщиков, которые хотят
+        // разместить проект или рекламу — это и есть модель сайта.
+        { label: 'Pasang proyek Anda', href: '/en/contact' },
+        { label: 'Beriklan di situs', href: '/en/contact' },
       ],
     },
   ],
@@ -173,23 +179,26 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
         { label: 'Investissement immobilier à Bali', href: '/en/bali-property-investment' },
         { label: 'Vivre à Bali — visas & impôts', href: '/en/living-in-bali' },
         { label: 'Comment acheter à Bali', href: '/en/how-to-buy' },
-        { label: "Tour d'investissement", href: '/en/invest-tour' },
+        { label: 'Voyage de visite', href: '/en/invest-tour' },
         { label: 'Réservation', href: '/en/reservation' },
         { label: 'Actualités', href: '/en/news' },
         { label: 'Savoir', href: '/en/knowledge' },
       ],
     },
     {
-      title: 'Services',
+      title: 'Catalogue',
       links: [
         { label: 'Agents', href: '/en/developers' },
       ],
     },
     {
-      title: 'Emplois',
+      title: 'Partenariat',
       links: [
-        { label: 'Offres en agences', href: '/en/contact' },
-        { label: 'Offres chez les promoteurs', href: '/en/contact' },
+        // Раздел найма убран: площадка никого не нанимает.
+        // Осталась точка входа для застройщиков, которые хотят
+        // разместить проект или рекламу — это и есть модель сайта.
+        { label: 'Référencer votre projet', href: '/en/contact' },
+        { label: 'Publicité sur le site', href: '/en/contact' },
       ],
     },
   ],
@@ -217,23 +226,26 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
         { label: 'Immobilieninvestment auf Bali', href: '/en/bali-property-investment' },
         { label: 'Leben auf Bali — Visa & Steuern', href: '/en/living-in-bali' },
         { label: 'Kaufen auf Bali', href: '/en/how-to-buy' },
-        { label: 'Investment-Tour', href: '/en/invest-tour' },
+        { label: 'Besichtigungsreise', href: '/en/invest-tour' },
         { label: 'Reservierung', href: '/en/reservation' },
         { label: 'Neuigkeiten', href: '/en/news' },
         { label: 'Wissen', href: '/en/knowledge' },
       ],
     },
     {
-      title: 'Dienstleistungen',
+      title: 'Katalog',
       links: [
         { label: 'Makler', href: '/en/developers' },
       ],
     },
     {
-      title: 'Stellenangebote',
+      title: 'Zusammenarbeit',
       links: [
-        { label: 'Stellen bei Agenturen', href: '/en/contact' },
-        { label: 'Stellen bei Bauträgern', href: '/en/contact' },
+        // Раздел найма убран: площадка никого не нанимает.
+        // Осталась точка входа для застройщиков, которые хотят
+        // разместить проект или рекламу — это и есть модель сайта.
+        { label: 'Projekt eintragen', href: '/en/contact' },
+        { label: 'Werbung auf der Website', href: '/en/contact' },
       ],
     },
   ],
@@ -261,23 +273,26 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
         { label: '巴厘岛房产投资', href: '/en/bali-property-investment' },
         { label: '在巴厘岛生活 — 签证与税务', href: '/en/living-in-bali' },
         { label: '如何在巴厘岛购房', href: '/en/how-to-buy' },
-        { label: '投资考察团', href: '/en/invest-tour' },
+        { label: '看房之行', href: '/en/invest-tour' },
         { label: '预订', href: '/en/reservation' },
         { label: '新闻', href: '/en/news' },
         { label: '知识库', href: '/en/knowledge' },
       ],
     },
     {
-      title: '服务',
+      title: '目录',
       links: [
         { label: '经纪人', href: '/en/developers' },
       ],
     },
     {
-      title: '招聘',
+      title: '合作',
       links: [
-        { label: '代理机构职位', href: '/en/contact' },
-        { label: '开发商职位', href: '/en/contact' },
+        // Раздел найма убран: площадка никого не нанимает.
+        // Осталась точка входа для застройщиков, которые хотят
+        // разместить проект или рекламу — это и есть модель сайта.
+        { label: '刊登您的项目', href: '/en/contact' },
+        { label: '在网站投放广告', href: '/en/contact' },
       ],
     },
   ],
@@ -305,23 +320,26 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
         { label: 'Investeren in vastgoed op Bali', href: '/en/bali-property-investment' },
         { label: 'Wonen op Bali — visa & belastingen', href: '/en/living-in-bali' },
         { label: 'Kopen op Bali', href: '/en/how-to-buy' },
-        { label: 'Investeringstour', href: '/en/invest-tour' },
+        { label: 'Bezichtigingsreis', href: '/en/invest-tour' },
         { label: 'Reservering', href: '/en/reservation' },
         { label: 'Nieuws', href: '/en/news' },
         { label: 'Kennisbank', href: '/en/knowledge' },
       ],
     },
     {
-      title: 'Diensten',
+      title: 'Catalogus',
       links: [
         { label: 'Makelaars', href: '/en/developers' },
       ],
     },
     {
-      title: 'Vacatures',
+      title: 'Samenwerking',
       links: [
-        { label: 'Vacatures bij bureaus', href: '/en/contact' },
-        { label: 'Vacatures bij ontwikkelaars', href: '/en/contact' },
+        // Раздел найма убран: площадка никого не нанимает.
+        // Осталась точка входа для застройщиков, которые хотят
+        // разместить проект или рекламу — это и есть модель сайта.
+        { label: 'Uw project plaatsen', href: '/en/contact' },
+        { label: 'Adverteren op de site', href: '/en/contact' },
       ],
     },
   ],
@@ -349,23 +367,26 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
         { label: 'Investasi properti Bali', href: '/en/bali-property-investment' },
         { label: 'Tinggal di Bali — visa & pajak', href: '/en/living-in-bali' },
         { label: 'Cara meli di Bali', href: '/en/how-to-buy' },
-        { label: 'Tur investasi', href: '/en/invest-tour' },
+        { label: 'Palancaran nyingakin', href: '/en/invest-tour' },
         { label: 'Reservasi', href: '/en/reservation' },
         { label: 'Berita', href: '/en/news' },
         { label: 'Kaweruh', href: '/en/knowledge' },
       ],
     },
     {
-      title: 'Layanan',
+      title: 'Katalog',
       links: [
         { label: 'Agen', href: '/en/developers' },
       ],
     },
     {
-      title: 'Lowongan',
+      title: 'Kerja sama',
       links: [
-        { label: 'Lowongan agensi', href: '/en/contact' },
-        { label: 'Lowongan pengembang', href: '/en/contact' },
+        // Раздел найма убран: площадка никого не нанимает.
+        // Осталась точка входа для застройщиков, которые хотят
+        // разместить проект или рекламу — это и есть модель сайта.
+        { label: 'Ngedaftarang proyek Ragane', href: '/en/contact' },
+        { label: 'Iklan ring situs', href: '/en/contact' },
       ],
     },
   ],
@@ -393,23 +414,26 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
         { label: 'Inwestycje w nieruchomości na Bali', href: '/en/bali-property-investment' },
         { label: 'Życie na Bali — wizy i podatki', href: '/en/living-in-bali' },
         { label: 'Jak kupić na Bali', href: '/en/how-to-buy' },
-        { label: 'Wyjazd inwestycyjny', href: '/en/invest-tour' },
+        { label: 'Wyjazd na oglądanie', href: '/en/invest-tour' },
         { label: 'Rezerwacja', href: '/en/reservation' },
         { label: 'Aktualności', href: '/en/news' },
         { label: 'Wiedza', href: '/en/knowledge' },
       ],
     },
     {
-      title: 'Usługi',
+      title: 'Katalog',
       links: [
         { label: 'Agenci', href: '/en/developers' },
       ],
     },
     {
-      title: 'Praca',
+      title: 'Współpraca',
       links: [
-        { label: 'Oferty pracy w agencjach', href: '/en/contact' },
-        { label: 'Oferty pracy u deweloperów', href: '/en/contact' },
+        // Раздел найма убран: площадка никого не нанимает.
+        // Осталась точка входа для застройщиков, которые хотят
+        // разместить проект или рекламу — это и есть модель сайта.
+        { label: 'Dodaj swój projekt', href: '/en/contact' },
+        { label: 'Reklama w serwisie', href: '/en/contact' },
       ],
     },
   ],
@@ -437,23 +461,26 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
         { label: 'Інвестиції в нерухомість Балі', href: '/en/bali-property-investment' },
         { label: 'Життя на Балі — візи та податки', href: '/en/living-in-bali' },
         { label: 'Як купити на Балі', href: '/en/how-to-buy' },
-        { label: 'Інвестиційний тур', href: '/en/invest-tour' },
+        { label: 'Поїздка на огляд', href: '/en/invest-tour' },
         { label: 'Бронювання', href: '/en/reservation' },
         { label: 'Новини', href: '/en/news' },
         { label: 'Знання', href: '/en/knowledge' },
       ],
     },
     {
-      title: 'Послуги',
+      title: 'Каталог',
       links: [
         { label: 'Агенти', href: '/en/developers' },
       ],
     },
     {
-      title: 'Робота',
+      title: 'Співпраця',
       links: [
-        { label: 'Вакансії агентств', href: '/en/contact' },
-        { label: 'Вакансії забудовників', href: '/en/contact' },
+        // Раздел найма убран: площадка никого не нанимает.
+        // Осталась точка входа для застройщиков, которые хотят
+        // разместить проект или рекламу — это и есть модель сайта.
+        { label: 'Розмістити проєкт', href: '/en/contact' },
+        { label: 'Реклама на сайті', href: '/en/contact' },
       ],
     },
   ],
@@ -684,8 +711,25 @@ export function Footer({ lang = 'ru' }: { lang?: Lang }) {
             </ul>
           </nav>
 
-          <div className="mt-5 text-center text-[12px] text-[var(--color-text-muted)]">
-            Copyright © 2022–2026 Balinsky.info. All rights reserved.
+          {/* Раскрытие оператора. Сайт — информационная площадка, которую
+              ведёт грузинское ИП; в подвале это указано на всех локалях,
+              чтобы юрлицо и роль площадки были видны с любой страницы. */}
+          <div className="mt-6 mx-auto max-w-[68ch] text-center text-[12px] leading-[1.7] text-[var(--color-text-muted)]">
+            <p>
+              {pickCopy({
+                ru: 'Balinsky.info — информационный каталог. Оператор сайта: ИП Andrei Slesarau, Грузия, рег. № 316362404, 19 Shartava St., Rustavi. Мы не являемся агентством недвижимости, не участвуем в сделках и не берём комиссию с покупателей.',
+                en: 'Balinsky.info is an information catalogue. Site operator: Andrei Slesarau, sole proprietor, Georgia, reg. no. 316362404, 19 Shartava St., Rustavi. We are not a real-estate agency, take no part in transactions and charge buyers no commission.',
+                id: 'Balinsky.info adalah katalog informasi. Operator situs: Andrei Slesarau, pengusaha perseorangan, Georgia, reg. no. 316362404, 19 Shartava St., Rustavi. Kami bukan agen properti, tidak ikut dalam transaksi, dan tidak memungut komisi dari pembeli.',
+                fr: 'Balinsky.info est un catalogue d’information. Éditeur du site : Andrei Slesarau, entrepreneur individuel, Géorgie, n° 316362404, 19 Shartava St., Rustavi. Nous ne sommes pas une agence immobilière, ne participons pas aux transactions et ne prenons aucune commission aux acheteurs.',
+                de: 'Balinsky.info ist ein Informationskatalog. Betreiber: Andrei Slesarau, Einzelunternehmer, Georgien, Reg.-Nr. 316362404, 19 Shartava St., Rustavi. Wir sind keine Immobilienagentur, sind an Transaktionen nicht beteiligt und nehmen von Käufern keine Provision.',
+                zh: 'Balinsky.info 是信息目录。网站运营方：个体经营者 Andrei Slesarau，格鲁吉亚，注册号 316362404，19 Shartava St., Rustavi。我们不是房地产中介，不参与交易，也不向买家收取佣金。',
+                nl: 'Balinsky.info is een informatiecatalogus. Exploitant: Andrei Slesarau, eenmanszaak, Georgië, reg.nr. 316362404, 19 Shartava St., Rustavi. Wij zijn geen makelaar, nemen geen deel aan transacties en rekenen kopers geen commissie.',
+                ban: 'Balinsky.info inggih punika katalog informasi. Operator situs: Andrei Slesarau, pengusaha perseorangan, Georgia, reg. no. 316362404, 19 Shartava St., Rustavi. Tiang nénten agen properti, nénten milu ring transaksi, tur nénten nerima komisi saking sang numbas.',
+                pl: 'Balinsky.info to katalog informacyjny. Operator serwisu: Andrei Slesarau, działalność jednoosobowa, Gruzja, nr rej. 316362404, 19 Shartava St., Rustavi. Nie jesteśmy agencją nieruchomości, nie uczestniczymy w transakcjach i nie pobieramy prowizji od kupujących.',
+                uk: 'Balinsky.info — інформаційний каталог. Оператор сайту: ФОП Andrei Slesarau, Грузія, реєстр. № 316362404, 19 Shartava St., Rustavi. Ми не є агентством нерухомості, не беремо участі в угодах і не беремо комісію з покупців.',
+              }, lang)}
+            </p>
+            <p className="mt-3">Copyright © 2022–2026 Balinsky.info. All rights reserved.</p>
           </div>
         </div>
       </div>

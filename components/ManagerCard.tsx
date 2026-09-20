@@ -3,97 +3,109 @@
 import { usePathname } from 'next/navigation'
 import { detectLang, pickCopy } from '@/lib/i18n'
 import Image from 'next/image'
-import { Star, Languages, Video, Clock } from 'lucide-react'
+import { Star, Languages, Video, Clock, Send, MessageCircle } from 'lucide-react'
 import type { ManagerItem } from '@/lib/managers'
-import { LeadButton } from '@/components/LeadButton'
 import type { Lang } from '@/lib/i18n'
 
 const COPY = {
   ru: {
-    heading: 'Связаться с менеджером',
-    headingMany: 'Связаться с менеджерами',
+    heading: 'Контакты застройщика',
+    headingMany: 'Контакты застройщика',
     role: (dev?: string | null) => `Менеджер ${dev ? dev : 'застройщика'}`,
-    sla: 'Обычно отвечает в течение часа в рабочее время Бали (UTC+8)',
+    sla: 'Рабочее время Бали, UTC+8',
     videoCall: 'Видеозвонок',
-    lead: 'Оставить заявку',
+    note: 'Писать вы будете напрямую застройщику. Balinsky в переговорах и сделке не участвует.',
   },
   en: {
-    heading: 'Contact the manager',
-    headingMany: 'Contact the managers',
+    heading: 'Developer contacts',
+    headingMany: 'Developer contacts',
     role: (dev?: string | null) => `${dev ? dev : 'Developer'} manager`,
-    sla: 'Usually replies within an hour during Bali working hours (UTC+8)',
+    sla: 'Bali working hours, UTC+8',
     videoCall: 'Video call',
-    lead: 'Leave a request',
+    note: 'These are the developer’s own contacts. Balinsky takes no part in the talks or the transaction.',
   },
   id: {
-    heading: 'Hubungi manajer',
-    headingMany: 'Hubungi para manajer',
+    heading: 'Kontak pengembang',
+    headingMany: 'Kontak pengembang',
     role: (dev?: string | null) => `Manajer ${dev ? dev : 'pengembang'}`,
-    sla: 'Biasanya membalas dalam satu jam pada jam kerja Bali (UTC+8)',
+    sla: 'Jam kerja Bali, UTC+8',
     videoCall: 'Panggilan video',
-    lead: 'Kirim permintaan',
+    note: 'Ini kontak milik pengembang. Balinsky tidak ikut serta dalam negosiasi maupun transaksi.',
   },
   fr: {
-    heading: 'Contacter le conseiller',
-    headingMany: 'Contacter les conseillers',
+    heading: 'Contacts du promoteur',
+    headingMany: 'Contacts du promoteur',
     role: (dev?: string | null) => `Conseiller ${dev ? dev : 'du promoteur'}`,
-    sla: 'Répond généralement dans l’heure pendant les horaires de travail de Bali (UTC+8)',
+    sla: 'Heures de bureau de Bali, UTC+8',
     videoCall: 'Appel vidéo',
-    lead: 'Envoyer une demande',
+    note: 'Ce sont les contacts du promoteur. Balinsky ne participe ni aux négociations ni à la transaction.',
   },
   de: {
-    heading: 'Manager kontaktieren',
-    headingMany: 'Manager kontaktieren',
+    heading: 'Kontakte des Bauträgers',
+    headingMany: 'Kontakte des Bauträgers',
     role: (dev?: string | null) => `Manager ${dev ? dev : 'des Bauträgers'}`,
-    sla: 'Antwortet in der Regel innerhalb einer Stunde während der Geschäftszeiten auf Bali (UTC+8)',
+    sla: 'Geschäftszeiten auf Bali, UTC+8',
     videoCall: 'Videoanruf',
-    lead: 'Anfrage senden',
+    note: 'Das sind die Kontakte des Bauträgers. Balinsky ist weder an den Verhandlungen noch an der Transaktion beteiligt.',
   },
   zh: {
-    heading: '联系经理',
-    headingMany: '联系经理',
+    heading: '开发商联系方式',
+    headingMany: '开发商联系方式',
     role: (dev?: string | null) => `${dev ? dev : '开发商'}经理`,
-    sla: '通常在巴厘岛工作时间内一小时内回复 (UTC+8)',
+    sla: '巴厘岛工作时间，UTC+8',
     videoCall: '视频通话',
-    lead: '提交请求',
+    note: '这是开发商本人的联系方式。Balinsky 不参与洽谈或交易。',
   },
   nl: {
-    heading: 'Neem contact op met de manager',
-    headingMany: 'Neem contact op met de managers',
+    heading: 'Contactgegevens van de ontwikkelaar',
+    headingMany: 'Contactgegevens van de ontwikkelaar',
     role: (dev?: string | null) => `Manager ${dev ? dev : 'van de ontwikkelaar'}`,
-    sla: 'Reageert doorgaans binnen een uur tijdens de werkuren op Bali (UTC+8)',
+    sla: 'Werktijden op Bali, UTC+8',
     videoCall: 'Videogesprek',
-    lead: 'Aanvraag versturen',
+    note: 'Dit zijn de contactgegevens van de ontwikkelaar zelf. Balinsky neemt geen deel aan de onderhandelingen of de transactie.',
   },
   ban: {
-    heading: 'Nghubungin manajer',
-    headingMany: 'Nghubungin para manajer',
+    heading: 'Kontak pangwangun',
+    headingMany: 'Kontak pangwangun',
     role: (dev?: string | null) => `Manajer ${dev ? dev : 'pangwangun'}`,
-    sla: 'Biasané malas ring jero abesik jam ring jam kerja Bali (UTC+8)',
+    sla: 'Galah makarya ring Bali, UTC+8',
     videoCall: 'Panggilan video',
-    lead: 'Ngirim panagih',
+    note: 'Puniki kontak pangwangun. Balinsky nénten milu ring negosiasi wiadin transaksi.',
   },
   pl: {
-    heading: 'Skontaktuj się z menedżerem',
-    headingMany: 'Skontaktuj się z menedżerami',
+    heading: 'Kontakty dewelopera',
+    headingMany: 'Kontakty dewelopera',
     role: (dev?: string | null) => `Menedżer ${dev ? dev : 'dewelopera'}`,
-    sla: 'Zwykle odpowiada w ciągu godziny w godzinach pracy na Bali (UTC+8)',
+    sla: 'Godziny pracy na Bali, UTC+8',
     videoCall: 'Rozmowa wideo',
-    lead: 'Zostaw zapytanie',
+    note: 'To są kontakty samego dewelopera. Balinsky nie bierze udziału w negocjacjach ani w transakcji.',
   },
   uk: {
-    heading: 'Зв’язатися з менеджером',
-    headingMany: 'Зв’язатися з менеджерами',
+    heading: 'Контакти забудовника',
+    headingMany: 'Контакти забудовника',
     role: (dev?: string | null) => `Менеджер ${dev ? dev : 'забудовника'}`,
-    sla: 'Зазвичай відповідає протягом години в робочі години Балі (UTC+8)',
+    sla: 'Робочий час Балі, UTC+8',
     videoCall: 'Відеодзвінок',
-    lead: 'Залишити заявку',
+    note: 'Це контакти самого забудовника. Balinsky у переговорах і угоді участі не бере.',
   },
 } as const
 
 // Accept either a single manager (legacy callsites) or an array of
 // them — many developers have 2–3 people on rotation and visitors
 // should see all of them on the page.
+// Прямые каналы оператора объекта. `telegram` в базе может лежать как
+// полной ссылкой, так и одним хэндлом — нормализуем оба варианта.
+function contactUrls(m: ManagerItem): { tgUrl: string | null; waUrl: string | null } {
+  const handle = (m.telegramHandle ?? '').replace(/^@/, '').trim()
+  const raw = m.telegram?.trim() ?? ''
+  const tgUrl = raw
+    ? (raw.startsWith('http') ? raw : `https://t.me/${raw.replace(/^@/, '')}`)
+    : handle ? `https://t.me/${handle}` : null
+  const waDigits = (m.whatsapp ?? '').replace(/[^\d]/g, '')
+  const waUrl = waDigits.length >= 8 ? `https://wa.me/${waDigits}` : null
+  return { tgUrl, waUrl }
+}
+
 export function ManagerCard({
   manager,
   managers,
@@ -116,18 +128,27 @@ export function ManagerCard({
   // Vercel to enable. Hidden when missing — better than a dead button.
   const videoUrl = process.env.NEXT_PUBLIC_VIDEO_CALL_URL?.trim() || null
 
-  // Drop entries that have no actionable contact channel — render
-  // Every manager is contactable via the on-site lead form, so render
-  // them all (no longer dependent on having a TG/WA channel).
-  const renderable = list
+  // Заявок на сайте больше нет — карточка менеджера имеет смысл только
+  // если у него есть живой канал связи (Telegram или WhatsApp).
+  const renderable = list.filter(m => {
+    const { tgUrl, waUrl } = contactUrls(m)
+    return !!(tgUrl || waUrl)
+  })
+  if (renderable.length === 0) return null
 
   const heading = renderable.length > 1 ? c.headingMany : c.heading
 
   return (
-    <section className="mb-10">
-      <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
+    <section id="kontakty-operatora" className="mb-10 scroll-mt-24">
+      <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-2">
         {heading}
       </h2>
+      {/* Прямо под заголовком — кто именно на том конце. Balinsky не
+          собирает заявки и не ведёт переговоры: посетитель пишет
+          оператору объекта напрямую. */}
+      <p className="mb-4 max-w-[68ch] text-[13px] leading-[1.6] text-[var(--color-text-muted)]">
+        {c.note}
+      </p>
       <div className="space-y-3">
         {renderable.map(m => (
           <ManagerRow key={m.id} m={m} lang={lang} c={c} developerName={developerName ?? null} videoUrl={videoUrl} />
@@ -141,7 +162,7 @@ type ManagerCopy = {
   role: (dev?: string | null) => string
   sla: string
   videoCall: string
-  lead: string
+  note: string
 }
 function ManagerRow({
   m,
@@ -163,6 +184,8 @@ function ManagerRow({
   const displayLanguages = lang !== 'ru' && m.languagesEn && m.languagesEn.length > 0
     ? m.languagesEn
     : m.languages
+
+  const { tgUrl, waUrl } = contactUrls(m)
 
   return (
     <div className="rounded-2xl border border-[var(--color-border)] bg-white p-4 md:p-6 flex flex-col sm:flex-row sm:items-center gap-4 md:gap-6">
@@ -218,12 +241,26 @@ function ManagerRow({
             <Video size={16} /> {c.videoCall}
           </a>
         )}
-        <LeadButton
-          label={c.lead}
-          lang={lang}
-          context={{ developerName: developerName ?? undefined, source: developerName ? `manager:${developerName}` : 'manager' }}
-          className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[14px] font-medium transition-colors"
-        />
+        {tgUrl && (
+          <a
+            href={tgUrl}
+            target="_blank"
+            rel="noopener nofollow"
+            className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[14px] font-medium no-underline transition-colors"
+          >
+            <Send size={16} strokeWidth={1.6} /> Telegram
+          </a>
+        )}
+        {waUrl && (
+          <a
+            href={waUrl}
+            target="_blank"
+            rel="noopener nofollow"
+            className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full border border-[var(--color-border)] bg-white hover:bg-[var(--color-search-bg)] text-[#111827] text-[14px] font-medium no-underline transition-colors"
+          >
+            <MessageCircle size={16} strokeWidth={1.6} /> WhatsApp
+          </a>
+        )}
       </div>
     </div>
   )

@@ -29,11 +29,6 @@ export function SiteChrome() {
   // Telegram Mini App pages are rendered inside the Telegram WebView — they
   // don't want a site footer or AI chat bubble.
   if (pathname === '/bot' || pathname.startsWith('/bot/')) return null
-  // Лендинги для агентств Пхукета — самостоятельные посадочные страницы со
-  // своим футером: без футера маркетплейса и без AI-консультанта, чтобы
-  // единственным действием осталось написать нам (/phuket — бронь встречи,
-  // /phuket-partners — вход в партнёрскую программу).
-  if (pathname === '/phuket' || pathname === '/phuket-partners') return null
   // Закрытые отчёты для застройщиков — самостоятельные страницы по ссылке,
   // без навигации маркетплейса и без AI-консультанта.
   if (pathname.startsWith('/insights')) return null

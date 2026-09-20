@@ -21,16 +21,16 @@ export default function Page() {
   return (
     <LegalLayout lang="fr" title="Contact" updated={`Informations à jour au : ${UPDATED}`} breadcrumbLabel="Contact">
       <p>
-        Le moyen le plus rapide est le bot Telegram. Il transmet votre demande au responsable du bien concerné et répond en moins d&apos;une heure pendant les heures ouvrées.
+        Balinsky.info est un catalogue d’information. Les coordonnées ci-dessous servent aux questions sur le site lui-même : les données d’une annonce, une erreur repérée, la publication d’un projet. Pour un bien précis, écrivez directement au promoteur — son Telegram et son WhatsApp figurent sur la fiche du bien.
       </p>
 
-      <h2>Pour les acquéreurs</h2>
+      <h2>Questions sur le site et les données</h2>
       <ul className="!pl-0 !list-none space-y-3 !my-5">
         <li className="flex items-start gap-3">
           <Send size={20} className="text-[#229ED9] mt-0.5 shrink-0" />
           <div>
             <strong>Bot Telegram</strong> — <a href="https://t.me/BalinskyBot" target="_blank" rel="noopener">@BalinskyBot</a>
-            <div className="text-[13px] text-[var(--color-text-muted)] mt-0.5">Demandes concernant des villas, appartements et complexes précis. Transmises au responsable de l&apos;exploitant.</div>
+            <div className="text-[13px] text-[var(--color-text-muted)] mt-0.5">Questions sur le catalogue et les données d’une annonce. Si la question porte sur le prix, les délais ou une réservation, elle est pour le promoteur, pas pour nous.</div>
           </div>
         </li>
         <li className="flex items-start gap-3">
@@ -65,14 +65,14 @@ export default function Page() {
         <li className="flex items-start gap-3">
           <Briefcase size={20} className="text-[var(--color-primary)] mt-0.5 shrink-0" />
           <div>
-            <strong>Promoteurs</strong> — ajoutez votre projet au catalogue, lancez un placement payant ou ouvrez un canal de leads commun :
+            <strong>Promoteurs</strong> — ajoutez votre projet au catalogue, lancez un placement payant ou commandez une vidéo de présentation :
             écrivez à <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Partenariat (promoteur)')}`}>{CONTACT_EMAIL}</a>.
           </div>
         </li>
         <li className="flex items-start gap-3">
           <Briefcase size={20} className="text-[var(--color-primary)] mt-0.5 shrink-0" />
           <div>
-            <strong>Agences immobilières</strong> — échange de leads, programme de parrainage, catalogue en marque blanche :
+            <strong>Agences immobilières</strong> — publication d’informations sur les projets que vous représentez et publicité sur le site :
             écrivez à <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Partenariat (agence)')}`}>{CONTACT_EMAIL}</a>.
           </div>
         </li>
@@ -83,16 +83,21 @@ export default function Page() {
         <li className="flex items-start gap-3">
           <MapPin size={20} className="text-[var(--color-text-muted)] mt-0.5 shrink-0" />
           <div>
-            Andrei Slesarev, entrepreneur individuel (Géorgie).
-            {/* TODO: add registration number / legal address for formal requests. */}
+            <strong>Andrei Slesarau</strong>, entrepreneur individuel, Géorgie.<br />
+            Numéro d’immatriculation 316362404, immatriculé le 06.01.2022.<br />
+            Adresse : 19 Shartava St., Rustavi, Géorgie.<br />
+            <span className="text-[13px] text-[var(--color-text-muted)]">
+              Tous les contrats publicitaires et factures sont émis par cette entité, selon le droit géorgien.
+              L’éditeur du site ne fournit aucune prestation sur le territoire indonésien.
+            </span>
           </div>
         </li>
       </ul>
 
       <h2>Délai de réponse</h2>
       <p>
-        Notre standard de service : réponse en moins d&apos;une heure pendant les heures ouvrées (10h00–20h00 WITA, UTC+8).
-        Les demandes reçues la nuit sont traitées le lendemain matin.
+        Nous répondons aux questions sur le site pendant les heures ouvrées (10h00–20h00 WITA, UTC+8), généralement sous 24 heures.
+        La rapidité de réponse d&apos;un promoteur ne dépend pas de nous : le délai indiqué sur une fiche est donné à titre indicatif.
       </p>
 
       <h2>Documents associés</h2>

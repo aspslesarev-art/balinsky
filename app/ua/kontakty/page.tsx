@@ -21,16 +21,16 @@ export default function Page() {
   return (
     <LegalLayout lang="uk" title="Контакти" updated={`Інформація актуальна станом на: ${UPDATED}`} breadcrumbLabel="Контакти">
       <p>
-        Найшвидший шлях — Telegram-бот. Він спрямовує ваш запит до менеджера конкретного обʼєкта й відповідає протягом години в робочий час.
+        Balinsky.info — інформаційний каталог. Контакти нижче потрібні для питань про сам сайт: про дані в картці, про неточність, про розміщення проєкту. Щодо конкретного обʼєкта пишіть напряму забудовнику — його Telegram і WhatsApp вказані в картці цього обʼєкта.
       </p>
 
-      <h2>Для покупців нерухомості</h2>
+      <h2>Питання щодо сайту та даних</h2>
       <ul className="!pl-0 !list-none space-y-3 !my-5">
         <li className="flex items-start gap-3">
           <Send size={20} className="text-[#229ED9] mt-0.5 shrink-0" />
           <div>
             <strong>Telegram-бот</strong> — <a href="https://t.me/BalinskyBot" target="_blank" rel="noopener">@BalinskyBot</a>
-            <div className="text-[13px] text-[var(--color-text-muted)] mt-0.5">Запити щодо конкретних вілл, апартаментів і комплексів. Спрямовуються до менеджера оператора.</div>
+            <div className="text-[13px] text-[var(--color-text-muted)] mt-0.5">Питання щодо каталогу та даних обʼєкта. Якщо питання про ціну, строки або бронь — ставити його треба забудовнику, а не нам.</div>
           </div>
         </li>
         <li className="flex items-start gap-3">
@@ -65,14 +65,14 @@ export default function Page() {
         <li className="flex items-start gap-3">
           <Briefcase size={20} className="text-[var(--color-primary)] mt-0.5 shrink-0" />
           <div>
-            <strong>Забудовники</strong> — додайте свій проєкт до каталогу, запустіть платне розміщення або спільний канал залучення клієнтів:
+            <strong>Забудовники</strong> — додайте свій проєкт до каталогу, запустіть платне розміщення або замовте відеоогляд:
             пишіть на <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Партнерство (забудовник)')}`}>{CONTACT_EMAIL}</a>.
           </div>
         </li>
         <li className="flex items-start gap-3">
           <Briefcase size={20} className="text-[var(--color-primary)] mt-0.5 shrink-0" />
           <div>
-            <strong>Агенції нерухомості</strong> — обмін клієнтами, реферальна програма, каталог white-label:
+            <strong>Агенції нерухомості</strong> — розміщення інформації про проєкти, які ви представляєте, і реклама на сайті:
             пишіть на <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Партнерство (агенція)')}`}>{CONTACT_EMAIL}</a>.
           </div>
         </li>
@@ -83,16 +83,21 @@ export default function Page() {
         <li className="flex items-start gap-3">
           <MapPin size={20} className="text-[var(--color-text-muted)] mt-0.5 shrink-0" />
           <div>
-            Андрій Слєсарєв, фізична особа-підприємець (Грузія).
-            {/* TODO: add registration number / legal address for formal requests. */}
+            <strong>ФОП Andrei Slesarau</strong>, Грузія.<br />
+            Реєстраційний номер 316362404, зареєстровано 06.01.2022.<br />
+            Юридична адреса: 19 Shartava St., Rustavi, Georgia.<br />
+            <span className="text-[13px] text-[var(--color-text-muted)]">
+              Усі договори на розміщення реклами та рахунки виставляються від цієї особи, за законодавством Грузії.
+              Послуг на території Індонезії оператор сайту не надає.
+            </span>
           </div>
         </li>
       </ul>
 
       <h2>Час відповіді</h2>
       <p>
-        Стандарт обслуговування — відповідь протягом однієї години в робочий час (10:00–20:00 WITA, UTC+8).
-        Запити, отримані вночі, опрацьовуються наступного ранку.
+        На питання щодо сайту відповідаємо в робочий час (10:00–20:00 WITA, UTC+8), зазвичай протягом доби.
+        Швидкість відповіді забудовника від нас не залежить — значення в картці обʼєкта наведене довідково.
       </p>
 
       <h2>Повʼязані документи</h2>

@@ -8,7 +8,6 @@ import { MessageCircle, X, Send, Loader2, AlertTriangle, BedDouble, MapPin, Exte
 import { ConversationProvider, useConversation } from '@elevenlabs/react'
 import { useWishlist } from './WishlistContext'
 import { RECENT_KEY, type RecentlyViewedEntry } from './PageViewTracker'
-import { LeadButton } from './LeadButton'
 import { pickCopy, type Lang, detectLang } from '@/lib/i18n'
 
 type ListingCard = {
@@ -1596,11 +1595,10 @@ export function ConsultantWidget() {
                       <div className="self-start flex flex-wrap gap-1.5 mt-0.5 max-w-[95%]">
                         {chips.map(c => {
                           const chipCls = 'text-[12px] px-3 py-1.5 rounded-full bg-white border border-[var(--color-border)] text-[#111827] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] transition-colors'
-                          // «Связаться с менеджером» chip → on-site lead form
-                          // (name + phone) instead of pushing the visitor to TG.
-                          return /менеджер|manager/i.test(c) ? (
-                            <LeadButton key={c} label={c} lang={lang} context={{ source: 'chat' }} className={chipCls} />
-                          ) : (
+                          // Заявок на сайте нет: любая подсказка — обычный
+                          // вопрос ассистенту, контакты оператора объекта
+                          // посетитель берёт на странице самого объекта.
+                          return (
                             <button key={c} type="button" onClick={() => sendText(c)} className={chipCls}>
                               {c}
                             </button>

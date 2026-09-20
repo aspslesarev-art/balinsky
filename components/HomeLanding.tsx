@@ -21,7 +21,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@supabase/supabase-js'
 import {
-  ArrowRight, Send, Search, Home, Building2, Building, MapPin, ShieldCheck,
+  ArrowRight, Search, Home, Building2, Building, MapPin, ShieldCheck,
   TrendingUp, BarChart3, Flame, Gauge, FileCheck,
   Sparkles, Heart, KeyRound, Sun, ListChecks, BookOpen,
 } from 'lucide-react'
@@ -31,7 +31,6 @@ import { VillaCard, type VillaCardData } from '@/components/VillaCard'
 import { loadAll as loadAllVillas, buildAllCards as buildAllVillaCards, type VillaFilterState } from '@/app/ru/villy/_lib'
 import { loadAllVillaScores } from '@/lib/investment/batch-scores'
 import { HeroCatalogSearch } from '@/components/HeroCatalogSearch'
-import { LeadButton } from '@/components/LeadButton'
 import { loadHomeFinder } from '@/lib/home-finder'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { HomeFinder } from '@/components/HomeFinder'
@@ -121,14 +120,14 @@ const COPY = {
       ],
     },
     help: {
-      heading: 'Поможем купить',
+      heading: 'Что вы найдёте в каталоге',
       points: [
-        'Проверим документы на дом и землю',
-        'Покажем дом по видео — приезжать не нужно',
-        'Будем рядом до самого конца',
+        'Документы по каждому объекту: PBG, статус земли, застройщик',
+        'Видео и фото с места — объект видно, не приезжая на Бали',
+        'Прямые контакты застройщика — писать ему, а не посреднику',
       ],
       primary: 'Смотреть виллы',
-      secondary: 'Написать нам',
+      secondary: 'Смотреть застройщиков',
     },
   },
   en: {
@@ -186,14 +185,14 @@ const COPY = {
       ],
     },
     help: {
-      heading: 'We help you buy',
+      heading: 'What the catalogue gives you',
       points: [
-        'We check the papers for the house and the land',
-        'We show the home on video — no need to fly over',
-        'We stay with you to the very end',
+        'Documents for every listing: PBG, land status, the developer',
+        'Video and photos from the site — see the property without flying in',
+        'The developer’s direct contacts — you write to them, not to a middleman',
       ],
       primary: 'See villas',
-      secondary: 'Write to us',
+      secondary: 'Browse developers',
     },
   },
   id: {
@@ -251,14 +250,14 @@ const COPY = {
       ],
     },
     help: {
-      heading: 'Kami bantu membeli',
+      heading: 'Apa yang Anda temukan di katalog',
       points: [
-        'Kami periksa dokumen rumah dan tanahnya',
-        'Kami tunjukkan rumahnya lewat video — tak perlu datang',
-        'Kami dampingi sampai selesai',
+        'Dokumen untuk setiap objek: PBG, status tanah, pengembang',
+        'Video dan foto dari lokasi — objek terlihat tanpa harus datang',
+        'Kontak langsung pengembang — Anda menulis ke mereka, bukan ke perantara',
       ],
       primary: 'Lihat vila',
-      secondary: 'Hubungi kami',
+      secondary: 'Lihat pengembang',
     },
   },
   fr: {
@@ -316,14 +315,14 @@ const COPY = {
       ],
     },
     help: {
-      heading: 'On vous aide à acheter',
+      heading: 'Ce que vous trouverez dans le catalogue',
       points: [
-        'On vérifie les papiers de la maison et du terrain',
-        'On montre le bien en vidéo — pas besoin de venir',
-        'On reste avec vous jusqu’au bout',
+        'Les documents de chaque bien : PBG, statut du terrain, promoteur',
+        'Vidéo et photos sur place — voir le bien sans faire le déplacement',
+        'Les contacts directs du promoteur — vous lui écrivez, pas à un intermédiaire',
       ],
       primary: 'Voir les villas',
-      secondary: 'Écrivez-nous',
+      secondary: 'Voir les promoteurs',
     },
   },
   de: {
@@ -381,14 +380,14 @@ const COPY = {
       ],
     },
     help: {
-      heading: 'Wir helfen beim Kauf',
+      heading: 'Was Sie im Katalog finden',
       points: [
-        'Wir prüfen die Papiere für Haus und Grundstück',
-        'Wir zeigen das Haus per Video — Sie müssen nicht herkommen',
-        'Wir bleiben bis zum Schluss dabei',
+        'Unterlagen zu jedem Objekt: PBG, Landstatus, Bauträger',
+        'Video und Fotos vor Ort — das Objekt sehen, ohne anzureisen',
+        'Direkte Kontakte des Bauträgers — Sie schreiben ihm, nicht einem Vermittler',
       ],
       primary: 'Villen ansehen',
-      secondary: 'Schreiben Sie uns',
+      secondary: 'Bauträger ansehen',
     },
   },
   zh: {
@@ -446,14 +445,14 @@ const COPY = {
       ],
     },
     help: {
-      heading: '我们帮你买',
+      heading: '目录里有什么',
       points: [
-        '我们检查房子和土地的证件',
-        '我们用视频带你看房——不用飞过来',
-        '我们全程陪着你',
+        '每套房产的文件：PBG、土地状态、开发商',
+        '实地视频和照片——无需亲临即可看房',
+        '开发商的直接联系方式——直接联系他们，而非中间人',
       ],
       primary: '看别墅',
-      secondary: '联系我们',
+      secondary: '查看开发商',
     },
   },
   nl: {
@@ -511,14 +510,14 @@ const COPY = {
       ],
     },
     help: {
-      heading: 'Wij helpen je kopen',
+      heading: 'Wat u in de catalogus vindt',
       points: [
-        'Wij controleren de papieren van het huis en de grond',
-        'Wij tonen het huis op video — je hoeft niet te komen',
-        'Wij blijven tot het einde bij je',
+        'Documenten bij elk object: PBG, landstatus, ontwikkelaar',
+        'Video en foto’s ter plaatse — het object zien zonder te reizen',
+        'Directe contacten van de ontwikkelaar — u schrijft hem, geen tussenpersoon',
       ],
       primary: 'Villa’s bekijken',
-      secondary: 'Schrijf ons',
+      secondary: 'Ontwikkelaars bekijken',
     },
   },
   ban: {
@@ -576,14 +575,14 @@ const COPY = {
       ],
     },
     help: {
-      heading: 'Titiang nulungin numbas',
+      heading: 'Napi sané kapanggih ring katalog',
       points: [
-        'Titiang mriksa dokumen umah lan tanahnyane',
-        'Titiang nyinahang umahe lewat video — nenten perlu rauh',
-        'Titiang nyarengin nyantos puput',
+        'Dokumen sabilang objek: PBG, status tanah, pangwangun',
+        'Video miwah foto saking genah — objek kacingak tanpa rauh',
+        'Kontak langsung pangwangun — nyurat ka dané, nénten ka perantara',
       ],
       primary: 'Cingakin vila',
-      secondary: 'Kontak titiang',
+      secondary: 'Cingakin pangwangun',
     },
   },
   pl: {
@@ -641,14 +640,14 @@ const COPY = {
       ],
     },
     help: {
-      heading: 'Pomożemy kupić',
+      heading: 'Co znajdziesz w katalogu',
       points: [
-        'Sprawdzimy papiery domu i ziemi',
-        'Pokażemy dom na wideo — nie musisz przylatywać',
-        'Będziemy z Tobą do samego końca',
+        'Dokumenty do każdej nieruchomości: PBG, status gruntu, deweloper',
+        'Wideo i zdjęcia z miejsca — obiekt widać bez przyjazdu',
+        'Bezpośrednie kontakty dewelopera — piszesz do niego, nie do pośrednika',
       ],
       primary: 'Zobacz wille',
-      secondary: 'Napisz do nas',
+      secondary: 'Zobacz deweloperów',
     },
   },
   uk: {
@@ -706,14 +705,14 @@ const COPY = {
       ],
     },
     help: {
-      heading: 'Допоможемо купити',
+      heading: 'Що ви знайдете в каталозі',
       points: [
-        'Перевіримо документи на дім і землю',
-        'Покажемо дім по відео — приїжджати не треба',
-        'Будемо поруч до самого кінця',
+        'Документи по кожному обʼєкту: PBG, статус землі, забудовник',
+        'Відео та фото з місця — обʼєкт видно, не приїжджаючи',
+        'Прямі контакти забудовника — писати йому, а не посереднику',
       ],
       primary: 'Дивитися вілли',
-      secondary: 'Написати нам',
+      secondary: 'Дивитися забудовників',
     },
   },
 } as const
@@ -791,6 +790,7 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
   const villasHref = switchLangPath('/ru/villy', lang)
   const apartmentsHref = switchLangPath('/ru/apartamenty', lang)
   const complexesHref = switchLangPath('/ru/zhilye-kompleksy', lang)
+  const developersHref = switchLangPath('/ru/zastrojshhiki', lang)
 
   // Immersive hero: a real catalog photo behind the headline. Top villas are
   // ranked by investment score with a clean-document filter, so [0] is a strong
@@ -1038,13 +1038,12 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
               >
                 <Search size={16} /> {c.help.primary}
               </Link>
-              <LeadButton
-                label={c.help.secondary}
-                lang={lang}
-                context={{ source: 'home' }}
-                icon={<Send size={15} />}
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full border border-[#D5DDD8] text-[15px] font-medium text-[#1A2620] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors"
-              />
+              <Link
+                href={developersHref}
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full border border-[#D5DDD8] text-[15px] font-medium text-[#1A2620] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors no-underline"
+              >
+                <Building2 size={15} /> {c.help.secondary}
+              </Link>
             </div>
           </div>
         </PageContainer>

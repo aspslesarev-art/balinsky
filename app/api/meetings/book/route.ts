@@ -28,8 +28,9 @@ export async function POST(req: Request) {
 
   const date = str(body.date, 10)
   const time = str(body.time, 5)
-  const format = body.format === 'online' || body.format === 'offline' ? body.format : null
-  const district = format === 'offline' ? str(body.district, 40) : null
+  // Только онлайн: личные встречи на Бали через сайт не назначаются.
+  const format = body.format === 'online' ? body.format : null
+  const district = null
   const name = str(body.name, 120)
   const email = str(body.email, 200)
   const contact = typeof body.contact === 'string' ? str(body.contact, 120) : null
@@ -39,7 +40,6 @@ export async function POST(req: Request) {
   if (!date || !DATE_RE.test(date) || !time || !TIME_RE.test(time) || !format || !name || !email) {
     return NextResponse.json({ ok: false, error: 'missing_fields' }, { status: 400 })
   }
-  if (format === 'offline' && !district) return NextResponse.json({ ok: false, error: 'missing_fields' }, { status: 400 })
   if (!EMAIL_RE.test(email)) return NextResponse.json({ ok: false, error: 'bad_email' }, { status: 400 })
 
   try {

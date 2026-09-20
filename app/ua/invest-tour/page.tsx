@@ -5,16 +5,16 @@ import { hreflangMap } from '@/lib/hreflang'
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
 export const metadata: Metadata = {
-  title: 'Інвестиційний тур нерухомістю Балі — перегляди на місці та due diligence | Balinsky',
-  description: 'Програма на місці для іноземних покупців: огляд 5–10 обʼєктів, зустрічі із засновниками забудовників, година з юристом у справах іноземців, поїздка через Canggu / Bukit / Ubud / Sanur. Формати Express, Standard і Premium.',
+  title: 'Інвест-тур на Балі — як організувати поїздку самому | Balinsky',
+  description: 'Як самостійно спланувати поїздку на Балі для огляду нерухомості: віза і терміни, скільки днів закладати, що перевіряти на майданчику, про що питати забудовника, де шукати незалежного юриста. Balinsky поїздок не організовує.',
   keywords: ['Bali property tour', 'Bali real estate investment tour', 'buy villa Bali', 'Bali property foreigner', 'leasehold Bali', 'PT PMA Bali property'],
   alternates: {
     canonical: '/ua/invest-tour',
     languages: hreflangMap('/ru/invest-tour'),
   },
   openGraph: {
-    title: 'Інвестиційний тур нерухомістю Балі',
-    description: 'Перегляд 5–10 обʼєктів на місці, зустрічі із забудовниками, юрист для іноземних покупців, огляд інвестиційних районів. Консьєрж-сервіс від Balinsky.',
+    title: 'Інвест-тур на Балі: як організувати поїздку самому',
+    description: 'Віза, терміни, що перевіряти на майданчику, зустрічі із забудовником і незалежний юрист — інструкція для самостійного покупця.',
     url: `${SITE_URL}/ua/invest-tour`,
     type: 'article',
   },

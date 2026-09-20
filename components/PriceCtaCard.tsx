@@ -6,18 +6,16 @@ import { usePathname } from 'next/navigation'
 import { Send, FileText, MapPinned, UserRound, Lock } from 'lucide-react'
 import { useCurrency } from './CurrencyContext'
 import { formatPriceExact } from '@/lib/currency'
-import { LeadButton } from './LeadButton'
-import { ReserveButton } from './ReserveButton'
 import type { Lang } from '@/lib/i18n'
 
 const COPY = {
   ru: {
-    buyChat: 'Купить',
-    buySeller: 'Купить',
+    buyChat: 'Контакты застройщика',
+    buySeller: 'Контакты продавца',
     perSqm: '/ м²',
     priceUpdated: (d: string) => `Цена обновлена ${d}`,
     reservedTitle: 'Объект сейчас забронирован',
-    reservedUntil: (d: string) => `Hold действует до ${d}. Если бронь снимется — напишем менеджеру.`,
+    reservedUntil: (d: string) => `Резерв действует до ${d}.`,
     chipsResale: [
       { icon: 'user', label: 'Прямой контакт продавца' },
       { icon: 'file', label: 'Документы по объекту' },
@@ -30,12 +28,12 @@ const COPY = {
     locale: 'ru-RU',
   },
   en: {
-    buyChat: 'Buy',
-    buySeller: 'Buy',
+    buyChat: 'Developer contacts',
+    buySeller: 'Seller contacts',
     perSqm: '/ m²',
     priceUpdated: (d: string) => `Price updated ${d}`,
     reservedTitle: 'Currently reserved',
-    reservedUntil: (d: string) => `Hold expires on ${d}. If the hold is released we will message the manager.`,
+    reservedUntil: (d: string) => `Hold expires on ${d}.`,
     chipsResale: [
       { icon: 'user', label: 'Direct seller contact' },
       { icon: 'file', label: 'Property documents' },
@@ -48,12 +46,12 @@ const COPY = {
     locale: 'en-GB',
   },
   id: {
-    buyChat: 'Beli',
-    buySeller: 'Beli',
+    buyChat: 'Kontak pengembang',
+    buySeller: 'Kontak penjual',
     perSqm: '/ m²',
     priceUpdated: (d: string) => `Harga diperbarui ${d}`,
     reservedTitle: 'Saat ini dipesan',
-    reservedUntil: (d: string) => `Hold berlaku hingga ${d}. Jika hold dilepas, kami akan menghubungi manajer.`,
+    reservedUntil: (d: string) => `Hold berlaku hingga ${d}.`,
     chipsResale: [
       { icon: 'user', label: 'Kontak langsung penjual' },
       { icon: 'file', label: 'Dokumen properti' },
@@ -66,12 +64,12 @@ const COPY = {
     locale: 'id-ID',
   },
   fr: {
-    buyChat: 'Acheter',
-    buySeller: 'Acheter',
+    buyChat: 'Contacts du promoteur',
+    buySeller: 'Contacts du vendeur',
     perSqm: '/ m²',
     priceUpdated: (d: string) => `Prix mis à jour ${d}`,
     reservedTitle: 'Actuellement réservé',
-    reservedUntil: (d: string) => `Le blocage expire le ${d}. Si le blocage est levé, nous contacterons le conseiller.`,
+    reservedUntil: (d: string) => `Le blocage expire le ${d}.`,
     chipsResale: [
       { icon: 'user', label: 'Contact direct du vendeur' },
       { icon: 'file', label: 'Documents du bien' },
@@ -84,12 +82,12 @@ const COPY = {
     locale: 'fr-FR',
   },
   de: {
-    buyChat: 'Kaufen',
-    buySeller: 'Kaufen',
+    buyChat: 'Kontakt zum Bauträger',
+    buySeller: 'Kontakt zum Verkäufer',
     perSqm: '/ m²',
     priceUpdated: (d: string) => `Preis aktualisiert ${d}`,
     reservedTitle: 'Derzeit reserviert',
-    reservedUntil: (d: string) => `Reservierung gilt bis ${d}. Wird die Reservierung aufgehoben, benachrichtigen wir den Manager.`,
+    reservedUntil: (d: string) => `Reservierung gilt bis ${d}.`,
     chipsResale: [
       { icon: 'user', label: 'Direkter Verkäuferkontakt' },
       { icon: 'file', label: 'Objektunterlagen' },
@@ -102,12 +100,12 @@ const COPY = {
     locale: 'de-DE',
   },
   zh: {
-    buyChat: '购买',
-    buySeller: '购买',
+    buyChat: '开发商联系方式',
+    buySeller: '卖家联系方式',
     perSqm: '/ m²',
     priceUpdated: (d: string) => `价格更新于 ${d}`,
     reservedTitle: '目前已预订',
-    reservedUntil: (d: string) => `保留有效期至 ${d}。若保留取消，我们会通知经理。`,
+    reservedUntil: (d: string) => `保留有效期至 ${d}。`,
     chipsResale: [
       { icon: 'user', label: '卖家直接联系' },
       { icon: 'file', label: '房产文件' },
@@ -120,12 +118,12 @@ const COPY = {
     locale: 'zh-CN',
   },
   nl: {
-    buyChat: 'Kopen',
-    buySeller: 'Kopen',
+    buyChat: 'Contact ontwikkelaar',
+    buySeller: 'Contact verkoper',
     perSqm: '/ m²',
     priceUpdated: (d: string) => `Prijs bijgewerkt ${d}`,
     reservedTitle: 'Momenteel gereserveerd',
-    reservedUntil: (d: string) => `Reservering geldt tot ${d}. Als de reservering vervalt, nemen we contact op met de manager.`,
+    reservedUntil: (d: string) => `Reservering geldt tot ${d}.`,
     chipsResale: [
       { icon: 'user', label: 'Direct contact met verkoper' },
       { icon: 'file', label: 'Objectdocumenten' },
@@ -138,12 +136,12 @@ const COPY = {
     locale: 'nl-NL',
   },
   ban: {
-    buyChat: 'Numbas',
-    buySeller: 'Numbas',
+    buyChat: 'Kontak pangwangun',
+    buySeller: 'Kontak sang adol',
     perSqm: '/ m²',
     priceUpdated: (d: string) => `Aji kaanyarin ${d}`,
     reservedTitle: 'Sané mangkin kareservasi',
-    reservedUntil: (d: string) => `Hold mamargi kantos ${d}. Yén hold kaicalin, tiang jaga ngabarin manajer.`,
+    reservedUntil: (d: string) => `Hold mamargi kantos ${d}.`,
     chipsResale: [
       { icon: 'user', label: 'Kontak langsung sang adol' },
       { icon: 'file', label: 'Dokumen properti' },
@@ -156,12 +154,12 @@ const COPY = {
     locale: 'id-ID',
   },
   pl: {
-    buyChat: 'Kup',
-    buySeller: 'Kup',
+    buyChat: 'Kontakt do dewelopera',
+    buySeller: 'Kontakt do sprzedającego',
     perSqm: '/ m²',
     priceUpdated: (d: string) => `Cena zaktualizowana ${d}`,
     reservedTitle: 'Obecnie zarezerwowane',
-    reservedUntil: (d: string) => `Rezerwacja wygasa ${d}. Jeśli rezerwacja zostanie zwolniona, napiszemy do menedżera.`,
+    reservedUntil: (d: string) => `Rezerwacja wygasa ${d}.`,
     chipsResale: [
       { icon: 'user', label: 'Bezpośredni kontakt ze sprzedającym' },
       { icon: 'file', label: 'Dokumenty nieruchomości' },
@@ -174,12 +172,12 @@ const COPY = {
     locale: 'pl-PL',
   },
   uk: {
-    buyChat: 'Купити',
-    buySeller: 'Купити',
+    buyChat: 'Контакти забудовника',
+    buySeller: 'Контакти продавця',
     perSqm: '/ m²',
     priceUpdated: (d: string) => `Ціну оновлено ${d}`,
     reservedTitle: 'Зараз заброньовано',
-    reservedUntil: (d: string) => `Бронь діє до ${d}. Якщо бронь знімуть — напишемо менеджеру.`,
+    reservedUntil: (d: string) => `Бронь діє до ${d}.`,
     chipsResale: [
       { icon: 'user', label: 'Прямий контакт продавця' },
       { icon: 'file', label: 'Документи обʼєкта' },
@@ -207,9 +205,9 @@ export function PriceCtaCard({
   managerId = null,
   sellerUrl = null,
   presentationButton,
-  // Reservation context — when these are set, render the "Зарезервировать"
-  // button. When `reservedUntil` is set, swap CTAs for an "уже забронирован"
-  // banner so two visitors don't both think they're holding the unit.
+  // Контекст объекта. Бронирование через сайт больше не предлагается —
+  // эти поля остались для совместимости с вызывающими страницами, а
+  // `reservedUntil` показывает статус «занято у застройщика», если он есть.
   listingKind = null,
   listingId = null,
   listingSlug = null,
@@ -240,7 +238,13 @@ export function PriceCtaCard({
 
   const isResale = !!sellerUrl
   const buyLabel = isResale ? c.buySeller : c.buyChat
-  void managerId // lead capture is now on-site; managerId no longer routes a TG link
+  // Контакты оператора объекта живут в блоке менеджеров ниже по странице;
+  // сам Balinsky контактных действий не выполняет.
+  void managerId
+  void listingId
+  void listingTitle
+  void listingKind
+  void listingSlug
 
   return (
     <div className="rounded-2xl bg-white border border-[var(--color-border)] px-5 py-5 md:px-6 md:py-[22px] grid grid-cols-1 md:grid-cols-[1fr_auto] gap-5 md:gap-6 md:items-center">
@@ -278,26 +282,19 @@ export function PriceCtaCard({
           </div>
         ) : (
           <div className="flex flex-col-reverse md:flex-row gap-2 w-full md:w-auto">
-            {/* Reserve flow — only shown when the listing context is
-                provided. Outside the resale path (resale already routes
-                to the seller, doesn't need a hold from us). */}
-            {!isResale && listingKind && listingId && listingSlug && (
-              <ReserveButton
-                listingKind={listingKind}
-                listingId={listingId}
-                listingSlug={listingSlug}
-                listingTitle={listingTitle}
-                listingPriceUsd={priceUsd}
-              />
-            )}
             {presentationButton}
-            <LeadButton
-              label={buyLabel}
-              lang={lang}
-              context={{ listingKind, listingSlug, listingTitle, source: isResale ? 'resale' : 'buy' }}
-              icon={<Send size={18} strokeWidth={1.6} />}
-              className="inline-flex w-full md:w-auto items-center justify-center gap-2 min-h-[54px] py-2 px-6 rounded-[10px] bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[15px] md:text-[16px] font-semibold text-center leading-tight transition-colors shadow-[0_1px_0_rgba(255,255,255,0.15)_inset,0_6px_16px_-8px_rgba(31,90,52,0.6)]"
-            />
+            {/* Balinsky не принимает заявки и не бронирует объекты: единственный
+                CTA ведёт к прямым контактам оператора объекта — блок менеджеров
+                застройщика на этой же странице, а для вторички сразу на
+                страницу продавца. */}
+            <a
+              href={isResale ? sellerUrl! : '#kontakty-operatora'}
+              {...(isResale ? { target: '_blank', rel: 'noopener nofollow' } : {})}
+              className="inline-flex w-full md:w-auto items-center justify-center gap-2 min-h-[54px] py-2 px-6 rounded-[10px] bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[15px] md:text-[16px] font-semibold text-center leading-tight no-underline transition-colors shadow-[0_1px_0_rgba(255,255,255,0.15)_inset,0_6px_16px_-8px_rgba(31,90,52,0.6)]"
+            >
+              <Send size={18} strokeWidth={1.6} />
+              {buyLabel}
+            </a>
           </div>
         )}
 

@@ -5,16 +5,16 @@ import { hreflangMap } from '@/lib/hreflang'
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
 export const metadata: Metadata = {
-  title: 'Bali property investment tour — on-site viewings and due diligence | Balinsky',
-  description: 'On-the-ground programme for foreign buyers: inspect 5–10 listings, sit with developer founders, an hour with a foreigner-deal lawyer, drive through Canggu / Bukit / Ubud / Sanur. Express, Standard and Premium formats.',
+  title: 'Palancaran nyingakin properti Bali — atur padidi | Balinsky',
+  description: 'Sapunapi carane ngrencanayang padidi pamargi nyingakin properti ring Bali: visa miwah galah, akuda dina, napi sane katureksain ring genah, napi sane katakenang ring pangwangun, ring dija ngrereh advokat independen. Balinsky nénten ngatur pamargi.',
   keywords: ['Bali property tour', 'Bali real estate investment tour', 'buy villa Bali', 'Bali property foreigner', 'leasehold Bali', 'PT PMA Bali property'],
   alternates: {
     canonical: '/ban/invest-tour',
     languages: hreflangMap('/ru/invest-tour'),
   },
   openGraph: {
-    title: 'Bali property investment tour',
-    description: 'On-site viewings of 5–10 listings, developer meetings, lawyer for foreign buyers, investment districts overview. Concierge service by Balinsky.',
+    title: 'Palancaran nyingakin ring Bali: atur padidi',
+    description: 'Visa, galah, sane katureksain ring genah, pasamuhan sareng pangwangun, miwah advokat independen — tuntunan buat sang numbas sane mamargi padidi.',
     url: `${SITE_URL}/ban/invest-tour`,
     type: 'article',
   },

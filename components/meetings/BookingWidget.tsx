@@ -46,7 +46,10 @@ function groupByWeek(days: AvailabilityDay[]): AvailabilityDay[][] {
 export function BookingWidget({ lang }: { lang: MeetingLang }) {
   const c = MEETING_COPY[lang]
   const [load, setLoad] = useState<LoadState>({ kind: 'loading' })
-  const [format, setFormat] = useState<MeetingFormat>('offline')
+  // Встречи только онлайн: Balinsky — информационная площадка, личных
+  // встреч с посетителями на Бали не проводит. Ветки offline ниже
+  // остаются в коде, но публично недостижимы.
+  const [format] = useState<MeetingFormat>('online')
   const [date, setDate] = useState<string | null>(null)
   const [district, setDistrict] = useState<string | null>(null)
   const [time, setTime] = useState<string | null>(null)
@@ -77,16 +80,6 @@ export function BookingWidget({ lang }: { lang: MeetingLang }) {
   const offlineChoices = selectedDay ? Object.keys(selectedDay.offline) : []
   const activeDistrict = format === 'offline' ? (selectedDay?.district ?? district) : null
   const times = !selectedDay ? [] : format === 'online' ? selectedDay.online : activeDistrict ? selectedDay.offline[activeDistrict] ?? [] : []
-
-  function pickFormat(f: MeetingFormat) {
-    setFormat(f)
-    setTime(null)
-    setDistrict(null)
-    if (date && data) {
-      const d = data.days.find(x => x.date === date)
-      if (!d || slotsFor(d, f) === 0) setDate(null)
-    }
-  }
 
   function pickDay(d: AvailabilityDay) {
     setDate(d.date)
@@ -153,22 +146,21 @@ export function BookingWidget({ lang }: { lang: MeetingLang }) {
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
       <div className="min-w-0">
-        <fieldset>
-          <legend className="text-[0.8125rem] font-medium uppercase tracking-wide text-[var(--color-text-muted)]">{c.step1}</legend>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <FormatCard active={format === 'offline'} onClick={() => pickFormat('offline')} icon={<MapPin size={20} strokeWidth={1.75} aria-hidden />}
-              title={c.offline} meta={data ? `${data.offlineMin} ${c.min} · ${c.offlineMeta}` : c.offlineMeta} />
-            <FormatCard active={format === 'online'} onClick={() => pickFormat('online')} icon={<Video size={20} strokeWidth={1.75} aria-hidden />}
-              title={c.online} meta={data ? `${data.onlineMin} ${c.min} · Google Meet` : 'Google Meet'} />
+        <div className="flex items-center gap-3 rounded-xl border border-[var(--color-border)] bg-white px-4 py-3">
+          <Video size={20} strokeWidth={1.75} aria-hidden className="shrink-0 text-[var(--color-primary)]" />
+          <div className="min-w-0">
+            <div className="text-[0.9375rem] font-medium text-[var(--color-text)]">{c.online}</div>
+            <div className="text-[0.8125rem] text-[var(--color-text-muted)]">
+              {data ? `${data.onlineMin} ${c.min} · Google Meet` : 'Google Meet'}
+            </div>
           </div>
-        </fieldset>
+        </div>
 
         <section className="mt-12" aria-labelledby="meet-days">
           <div className="flex items-baseline justify-between gap-4">
             <h2 id="meet-days" className="text-[0.8125rem] font-medium uppercase tracking-wide text-[var(--color-text-muted)]">{c.step2}</h2>
             <span className="text-[0.8125rem] text-[var(--color-text-muted)]">{c.tz}</span>
           </div>
-          {format === 'offline' && <p className="mt-2 max-w-[68ch] text-[0.875rem] leading-relaxed text-[var(--color-text-muted)]">{c.daysHint}</p>}
 
           {load.kind === 'loading' && <DaysSkeleton />}
           {load.kind === 'error' && (
@@ -254,20 +246,6 @@ export function BookingWidget({ lang }: { lang: MeetingLang }) {
         </section>
       </div>
     </div>
-  )
-}
-
-function FormatCard({ active, onClick, icon, title, meta }: { active: boolean; onClick: () => void; icon: React.ReactNode; title: string; meta: string }) {
-  return (
-    <button type="button" onClick={onClick} aria-pressed={active}
-      className={`flex items-start gap-3 rounded-xl border p-4 text-left transition-colors duration-[120ms] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] ${
-        active ? 'border-[var(--color-primary)] bg-[var(--color-primary-soft)]' : 'border-[var(--color-border)] bg-white hover:border-[#C9D6CF]'}`}>
-      <span className={`mt-0.5 ${active ? 'text-[var(--color-primary)]' : 'text-[var(--color-text-muted)]'}`}>{icon}</span>
-      <span>
-        <span className="block font-semibold">{title}</span>
-        <span className="mt-1 block text-[0.875rem] text-[var(--color-text-muted)]">{meta}</span>
-      </span>
-    </button>
   )
 }
 

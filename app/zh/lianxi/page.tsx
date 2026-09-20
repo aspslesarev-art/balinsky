@@ -21,16 +21,16 @@ export default function Page() {
   return (
     <LegalLayout lang="zh" title="联系方式" updated={`信息更新于：${UPDATED}`} breadcrumbLabel="联系方式">
       <p>
-        最快的方式是使用 Telegram 机器人。它会将您的咨询转交给对应房源的负责经理，并在工作时间内一小时内回复。
+        Balinsky.info 是信息目录。以下联系方式用于与网站本身相关的问题：房源数据、发现的错误、项目刊登。关于具体房产，请直接联系开发商——其 Telegram 和 WhatsApp 就在该房源页面上。
       </p>
 
-      <h2>面向购房者</h2>
+      <h2>关于网站与数据的问题</h2>
       <ul className="!pl-0 !list-none space-y-3 !my-5">
         <li className="flex items-start gap-3">
           <Send size={20} className="text-[#229ED9] mt-0.5 shrink-0" />
           <div>
             <strong>Telegram 机器人</strong> — <a href="https://t.me/BalinskyBot" target="_blank" rel="noopener">@BalinskyBot</a>
-            <div className="text-[13px] text-[var(--color-text-muted)] mt-0.5">针对具体别墅、公寓和综合体的咨询。会转交给运营方的经理。</div>
+            <div className="text-[13px] text-[var(--color-text-muted)] mt-0.5">关于目录和房源数据的问题。若问题涉及价格、工期或预订，请直接询问开发商，而非我们。</div>
           </div>
         </li>
         <li className="flex items-start gap-3">
@@ -65,14 +65,14 @@ export default function Page() {
         <li className="flex items-start gap-3">
           <Briefcase size={20} className="text-[var(--color-primary)] mt-0.5 shrink-0" />
           <div>
-            <strong>开发商</strong> — 将您的项目加入目录、投放付费展示，或开设联合获客渠道：
+            <strong>开发商</strong> — 将您的项目加入目录、投放付费展示，或委托制作项目视频：
             请发送邮件至 <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Partnership (developer)')}`}>{CONTACT_EMAIL}</a>。
           </div>
         </li>
         <li className="flex items-start gap-3">
           <Briefcase size={20} className="text-[var(--color-primary)] mt-0.5 shrink-0" />
           <div>
-            <strong>房地产中介机构</strong> — 客源互换、推荐计划、白标目录：
+            <strong>房地产中介机构</strong> — 发布您所代理项目的信息，以及在网站投放广告：
             请发送邮件至 <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Partnership (agency)')}`}>{CONTACT_EMAIL}</a>。
           </div>
         </li>
@@ -83,16 +83,20 @@ export default function Page() {
         <li className="flex items-start gap-3">
           <MapPin size={20} className="text-[var(--color-text-muted)] mt-0.5 shrink-0" />
           <div>
-            Andrei Slesarev，个体经营者（格鲁吉亚）。
-            {/* TODO: add registration number / legal address for formal requests. */}
+            <strong>Andrei Slesarau</strong>，个体经营者，格鲁吉亚。<br />
+            注册号 316362404，注册日期 2022 年 1 月 6 日。<br />
+            注册地址：19 Shartava St., Rustavi, Georgia。<br />
+            <span className="text-[13px] text-[var(--color-text-muted)]">
+              所有广告合同与发票均由该主体依据格鲁吉亚法律开具。网站运营方不在印度尼西亚境内提供任何服务。
+            </span>
           </div>
         </li>
       </ul>
 
       <h2>响应时间</h2>
       <p>
-        服务标准 — 工作时间内一小时内回复（10:00–20:00 WITA，UTC+8）。
-        夜间收到的咨询将于次日上午处理。
+        关于网站的问题，我们在工作时间（10:00–20:00 WITA，UTC+8）内答复，通常一天之内。
+        开发商回复的快慢不由我们决定——房源页面上的时间仅供参考。
       </p>
 
       <h2>相关文件</h2>

@@ -21,16 +21,16 @@ export default function Page() {
   return (
     <LegalLayout lang="nl" title="Contact" updated={`Informatie actueel op: ${UPDATED}`} breadcrumbLabel="Contact">
       <p>
-        De snelste weg is de Telegram-bot. Deze stuurt je aanvraag door naar de manager van het specifieke object en reageert binnen een uur tijdens kantooruren.
+        Balinsky.info is een informatiecatalogus. De contactgegevens hieronder zijn voor vragen over de site zelf: de gegevens bij een advertentie, een fout die u opmerkte, het plaatsen van een project. Over een specifiek object schrijft u rechtstreeks de ontwikkelaar — zijn Telegram en WhatsApp staan op de objectpagina.
       </p>
 
-      <h2>Voor kopers van vastgoed</h2>
+      <h2>Vragen over de site en de gegevens</h2>
       <ul className="!pl-0 !list-none space-y-3 !my-5">
         <li className="flex items-start gap-3">
           <Send size={20} className="text-[#229ED9] mt-0.5 shrink-0" />
           <div>
             <strong>Telegram-bot</strong> — <a href="https://t.me/BalinskyBot" target="_blank" rel="noopener">@BalinskyBot</a>
-            <div className="text-[13px] text-[var(--color-text-muted)] mt-0.5">Aanvragen over specifieke villa&apos;s, appartementen en complexen. Doorgestuurd naar de manager van de aanbieder.</div>
+            <div className="text-[13px] text-[var(--color-text-muted)] mt-0.5">Vragen over de catalogus en de gegevens bij een object. Gaat het om prijs, termijnen of een reservering, dan hoort die vraag bij de ontwikkelaar, niet bij ons.</div>
           </div>
         </li>
         <li className="flex items-start gap-3">
@@ -65,14 +65,14 @@ export default function Page() {
         <li className="flex items-start gap-3">
           <Briefcase size={20} className="text-[var(--color-primary)] mt-0.5 shrink-0" />
           <div>
-            <strong>Ontwikkelaars</strong> — voeg je project toe aan de catalogus, plaats betaalde advertenties of start een gezamenlijk leadkanaal:
+            <strong>Ontwikkelaars</strong> — voeg je project toe aan de catalogus, plaats betaalde advertenties of laat een videoreview maken:
             e-mail <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Samenwerking (ontwikkelaar)')}`}>{CONTACT_EMAIL}</a>.
           </div>
         </li>
         <li className="flex items-start gap-3">
           <Briefcase size={20} className="text-[var(--color-primary)] mt-0.5 shrink-0" />
           <div>
-            <strong>Vastgoedagentschappen</strong> — leaduitwisseling, verwijzingsprogramma, white-label catalogus:
+            <strong>Vastgoedagentschappen</strong> — publicatie van informatie over de projecten die u vertegenwoordigt, en advertenties op de site:
             e-mail <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Samenwerking (agentschap)')}`}>{CONTACT_EMAIL}</a>.
           </div>
         </li>
@@ -83,16 +83,21 @@ export default function Page() {
         <li className="flex items-start gap-3">
           <MapPin size={20} className="text-[var(--color-text-muted)] mt-0.5 shrink-0" />
           <div>
-            Andrei Slesarev, eenmanszaak (Georgië).
-            {/* TODO: add registration number / legal address for formal requests. */}
+            <strong>Andrei Slesarau</strong>, eenmanszaak, Georgië.<br />
+            Registratienummer 316362404, geregistreerd op 06.01.2022.<br />
+            Adres: 19 Shartava St., Rustavi, Georgië.<br />
+            <span className="text-[13px] text-[var(--color-text-muted)]">
+              Alle advertentiecontracten en facturen worden door deze entiteit uitgegeven, naar Georgisch recht.
+              De exploitant van de site verleent geen diensten op Indonesisch grondgebied.
+            </span>
           </div>
         </li>
       </ul>
 
       <h2>Reactietijd</h2>
       <p>
-        Servicestandaard — antwoord binnen een uur tijdens kantooruren (10:00–20:00 WITA, UTC+8).
-        Aanvragen die &apos;s nachts binnenkomen, worden de volgende ochtend verwerkt.
+        Vragen over de site beantwoorden we tijdens kantooruren (10:00–20:00 WITA, UTC+8), meestal binnen een dag.
+        Hoe snel een ontwikkelaar reageert, ligt niet aan ons — het getal op een objectpagina staat er alleen ter oriëntatie.
       </p>
 
       <h2>Gerelateerde documenten</h2>

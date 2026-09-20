@@ -26,7 +26,7 @@ const COPY = {
     home: 'Главная',
     crumb: 'О Balinsky',
     h1: 'Balinsky — что это и почему ему можно доверять',
-    intro: 'Balinsky — каталог недвижимости Бали для иностранцев: виллы, апартаменты, жилые комплексы и аренда. На сайте собраны проекты от застройщиков, у которых мы лично проверили документы, посмотрели объекты на земле и сняли видео. Цены — в актуальных USD. Менеджеры по сделкам — реальные люди с фото, рейтингом и языками, на которых они говорят.',
+    intro: 'Balinsky — независимый каталог недвижимости Бали для иностранцев: виллы, апартаменты, жилые комплексы и аренда. На сайте собраны проекты застройщиков, у которых мы проверили документы, посмотрели объекты на земле и сняли видео. Цены — в актуальных USD. Контакты менеджера застройщика указаны прямо в карточке объекта: писать вы будете ему, а не нам.',
 
     h2Numbers: 'Цифры на сегодня',
     numbersLead: 'Эти числа обновляются автоматически — на сайте показано столько объектов, сколько реально опубликовано в базе.',
@@ -34,7 +34,7 @@ const COPY = {
     statApts: 'апартаментов',
     statComplexes: 'жилых комплексов',
     statDevs: 'застройщиков',
-    statMgrs: 'менеджеров на связи',
+    statMgrs: 'менеджеров застройщиков',
 
     h2How: 'Как мы выбираем что публиковать',
     standards: [
@@ -47,17 +47,24 @@ const COPY = {
     h2Stack: 'Что вы получаете',
     stackItems: [
       { title: 'Каталог в актуальных USD', body: 'Цены пересчитываются на текущий курс, валюту переключаете в шапке. Сравнение объектов учитывает курс автоматически.' },
-      { title: 'Прозрачная воронка', body: 'От первого нажатия «зарезервировать» до сдачи — каждый шаг и сумма зафиксированы на странице «Бронирование» и «Как купить».' },
-      { title: 'Менеджер на связи', body: 'Ответ в Telegram / WhatsApp обычно в течение часа в рабочее время Бали. По крупным сделкам — видеозвонок до перевода депозита.' },
+      { title: 'Как устроена покупка', body: 'Этапы сделки, структуры владения, реальные расходы и подводные камни разобраны на страницах «Как купить» и «Бронирование». Это справочный материал, а не наша услуга: сама сделка проходит между вами и застройщиком.' },
+      { title: 'Прямые контакты застройщика', body: 'У каждого проекта на сайте указан назначенный менеджер застройщика с фото, языками, Telegram и WhatsApp. Переписка идёт напрямую с ним — Balinsky в ней не участвует и её не модерирует.' },
       { title: 'Сравнение и шортлист', body: 'Любой объект сохраняется в избранное, виллы и апартаменты сравниваются по 14 ключевым параметрам инвестора в одной таблице.' },
     ],
 
-    h2Cases: 'Кейсы покупателей',
-    pCases: 'Мы собираем истории закрытых сделок наших клиентов — что искали, как искали, на чём согласовывали SPA, что вышло в итоге, какая реальная доходность на сегодня. Каждый кейс — анонимизированный, без имён и адресов, но с реальными цифрами. Раздел будет наполняться по мере того как клиенты соглашаются поделиться. Если вы покупали через Balinsky и хотите рассказать свою историю (анонимно или с именем — на ваш выбор), напишите боту — это обычно занимает 20 минут разговора.',
+    h2Model: 'Кто ведёт сайт и на чём он зарабатывает',
+    model: [
+      { title: 'Оператор сайта', body: 'Balinsky.info ведёт ИП Andrei Slesarau, зарегистрированное в Грузии: рег. № 316362404 от 06.01.2022, адрес 19 Shartava St., Rustavi. Договоры и счета выставляются от этого лица и по законодательству Грузии.' },
+      { title: 'На чём зарабатывает площадка', body: 'Единственный источник дохода — реклама застройщиков: баннеры и информационные материалы на сайте, публикации в Telegram-канале, съёмка видео о проектах. Плата берётся с застройщика по рекламному договору. С покупателей мы не берём ничего.' },
+      { title: 'Чем Balinsky не является', body: 'Мы не агентство недвижимости и не брокер. Мы не продаём объекты, не ведём переговоры, не берём комиссию с покупателей, не принимаем депозиты и не сопровождаем сделки. Договор заключается напрямую между покупателем и застройщиком или собственником.' },
+    ],
+
+    h2Cases: 'Истории покупателей',
+    pCases: 'Мы собираем истории состоявшихся покупок — что искали, как искали, на чём сошлись по SPA, что вышло в итоге и какая реальная доходность сегодня. Каждая история анонимизирована: без имён и адресов, но с реальными цифрами. Раздел будет наполняться по мере того, как читатели соглашаются поделиться. Если вы покупали недвижимость на Бали и готовы рассказать свою историю, напишите боту — это обычно 20 минут разговора.',
     casesCta: 'Поделиться историей покупки',
 
     h2Contact: 'Связаться',
-    pContact: 'По любому вопросу — каталог, конкретный объект, due diligence, видеосъёмка для вашей виллы — пишите боту в Telegram. Если Telegram неудобен — почта в подвале сайта.',
+    pContact: 'По любому вопросу о самом сайте — каталог, конкретная карточка, неточность в данных — пишите боту в Telegram. Если Telegram неудобен, почта в подвале сайта. По конкретному объекту пишите напрямую застройщику: его контакты есть в карточке.',
     contactBot: 'Написать боту',
     contactGuide: 'Сначала прочитать «Как купить»',
   },
@@ -65,7 +72,7 @@ const COPY = {
     home: 'Home',
     crumb: 'About Balinsky',
     h1: 'Balinsky — what it is and why you can trust it',
-    intro: 'Balinsky is a Bali property catalogue for foreign buyers: villas, apartments, residential complexes and rentals. The site lists projects from developers whose documents we personally verified, whose sites we walked, and whose objects we filmed. Prices are shown in current USD. Sales managers are real people with photos, ratings, and the languages they speak.',
+    intro: 'Balinsky is an independent Bali property catalogue for foreign buyers: villas, apartments, residential complexes and rentals. It lists projects from developers whose documents we checked, whose sites we walked and whose properties we filmed. Prices are shown in current USD. The developer’s manager is listed on the listing page itself — you write to them, not to us.',
 
     h2Numbers: 'The numbers today',
     numbersLead: 'These figures update automatically — what you see on the site is exactly what is published in the database right now.',
@@ -73,7 +80,7 @@ const COPY = {
     statApts: 'apartments',
     statComplexes: 'residential complexes',
     statDevs: 'developers',
-    statMgrs: 'managers on call',
+    statMgrs: 'developer managers',
 
     h2How: 'How we decide what to publish',
     standards: [
@@ -86,17 +93,24 @@ const COPY = {
     h2Stack: 'What you get',
     stackItems: [
       { title: 'Live USD pricing', body: 'Prices recompute against the current rate; the currency switcher is in the header. The comparison view recalculates automatically as you switch.' },
-      { title: 'Transparent funnel', body: 'From the first "reserve" tap to handover — every step and amount is documented on the Reservation and Buying-Guide pages.' },
-      { title: 'Live manager', body: 'Telegram / WhatsApp reply usually within an hour during Bali working hours. For larger deals — a video call before any deposit moves.' },
+      { title: 'How a purchase works', body: 'Deal stages, ownership structures, real costs and the traps are laid out on the “How to buy” and “Reservation” pages. That is reference material, not a service we sell: the transaction happens between you and the developer.' },
+      { title: 'The developer’s direct contacts', body: 'Every project on the site names the developer’s own manager, with photo, spoken languages, Telegram and WhatsApp. The conversation runs straight to them — Balinsky is not part of it and does not moderate it.' },
       { title: 'Compare and shortlist', body: 'Any listing saves to your shortlist; villas and apartments compare on 14 investor-grade parameters in one table.' },
     ],
 
-    h2Cases: 'Buyer case studies',
-    pCases: 'We are collecting closed-deal stories from our clients — what they were looking for, how they searched, where the SPA negotiation landed, what came of it, and the actual yield today. Every case is anonymised — no names or addresses, but with real numbers. This section will grow as clients agree to share. If you bought through Balinsky and want to share your story (anonymous or with name — your call), message the bot — it usually takes a 20-minute call.',
-    casesCta: 'Share my purchase story',
+    h2Model: 'Who runs the site and how it earns',
+    model: [
+      { title: 'Site operator', body: 'Balinsky.info is run by Andrei Slesarau, a sole proprietor registered in Georgia: reg. no. 316362404 of 06.01.2022, 19 Shartava St., Rustavi. Contracts and invoices are issued by that entity under Georgian law.' },
+      { title: 'How the platform earns', body: 'The only source of revenue is developer advertising: banners and informational material on the site, posts in the Telegram channel, and video production about projects. Developers pay under an advertising contract. Buyers are charged nothing.' },
+      { title: 'What Balinsky is not', body: 'We are not a real-estate agency or a broker. We do not sell properties, do not conduct negotiations, take no commission from buyers, accept no deposits and do not accompany transactions. The contract is signed directly between the buyer and the developer or owner.' },
+    ],
+
+    h2Cases: 'Buyer stories',
+    pCases: 'We collect stories of completed purchases — what people were looking for, how they searched, where the SPA landed, what came of it and the actual yield today. Every story is anonymised: no names or addresses, but with real numbers. The section grows as readers agree to share. If you have bought property in Bali and are willing to tell your story, message the bot — it usually takes a 20-minute call.',
+    casesCta: 'Share a purchase story',
 
     h2Contact: 'Get in touch',
-    pContact: 'For anything — the catalogue, a specific property, due diligence, video shoots for your own villa — message the bot on Telegram. If Telegram is inconvenient, the email is in the site footer.',
+    pContact: 'For anything about the site itself — the catalogue, a particular listing, an error in the data — message the bot on Telegram. If Telegram is inconvenient, the email is in the footer. About a specific property, write to the developer directly: their contacts are on the listing.',
     contactBot: 'Message the bot',
     contactGuide: 'Read the buying guide first',
   },
@@ -104,7 +118,7 @@ const COPY = {
     home: 'Beranda',
     crumb: 'Tentang Balinsky',
     h1: 'Balinsky — apa itu dan mengapa Anda bisa mempercayainya',
-    intro: 'Balinsky adalah katalog properti Bali untuk pembeli asing: vila, apartemen, kompleks hunian, dan sewa. Situs ini menampilkan proyek dari pengembang yang dokumennya kami periksa sendiri, lokasinya kami datangi, dan objeknya kami rekam. Harga ditampilkan dalam USD terkini. Manajer penjualan adalah orang sungguhan dengan foto, peringkat, dan bahasa yang mereka gunakan.',
+    intro: 'Balinsky adalah katalog properti Bali yang independen untuk pembeli asing: vila, apartemen, kompleks hunian, dan sewa. Situs ini memuat proyek dari pengembang yang dokumennya kami periksa, lokasinya kami datangi, dan objeknya kami rekam. Harga ditampilkan dalam USD terkini. Manajer pengembang tercantum langsung di halaman objek — Anda menghubungi mereka, bukan kami.',
 
     h2Numbers: 'Angka hari ini',
     numbersLead: 'Angka-angka ini diperbarui otomatis — yang Anda lihat di situs persis dengan yang dipublikasikan di basis data saat ini.',
@@ -112,7 +126,7 @@ const COPY = {
     statApts: 'apartemen',
     statComplexes: 'kompleks hunian',
     statDevs: 'pengembang',
-    statMgrs: 'manajer siap dihubungi',
+    statMgrs: 'manajer pengembang',
 
     h2How: 'Bagaimana kami memutuskan apa yang dipublikasikan',
     standards: [
@@ -125,17 +139,24 @@ const COPY = {
     h2Stack: 'Apa yang Anda dapatkan',
     stackItems: [
       { title: 'Harga USD terkini', body: 'Harga dihitung ulang terhadap kurs saat ini; pengalih mata uang ada di header. Tampilan perbandingan menghitung ulang otomatis saat Anda beralih.' },
-      { title: 'Corong yang transparan', body: 'Dari ketukan "reservasi" pertama hingga serah terima — setiap langkah dan jumlah didokumentasikan di halaman Reservasi dan Panduan Membeli.' },
-      { title: 'Manajer siap dihubungi', body: 'Balasan Telegram / WhatsApp biasanya dalam satu jam selama jam kerja Bali. Untuk transaksi besar — panggilan video sebelum deposit dipindahkan.' },
+      { title: 'Bagaimana proses pembelian berjalan', body: 'Tahapan transaksi, struktur kepemilikan, biaya nyata, dan jebakannya dijelaskan di halaman «Cara membeli» dan «Reservasi». Itu bahan rujukan, bukan jasa yang kami jual: transaksinya terjadi antara Anda dan pengembang.' },
+      { title: 'Kontak langsung pengembang', body: 'Setiap proyek di situs mencantumkan manajer milik pengembang sendiri, lengkap dengan foto, bahasa, Telegram, dan WhatsApp. Percakapan berlangsung langsung dengan mereka — Balinsky tidak ikut dan tidak memoderasinya.' },
       { title: 'Bandingkan dan daftar pendek', body: 'Setiap listing tersimpan ke daftar pendek Anda; vila dan apartemen dibandingkan berdasarkan 14 parameter kelas investor dalam satu tabel.' },
     ],
 
-    h2Cases: 'Studi kasus pembeli',
-    pCases: 'Kami mengumpulkan kisah transaksi yang telah selesai dari klien kami — apa yang mereka cari, bagaimana mereka mencari, di mana negosiasi SPA berakhir, apa hasilnya, dan imbal hasil aktual hari ini. Setiap kasus dianonimkan — tanpa nama atau alamat, tetapi dengan angka nyata. Bagian ini akan bertambah seiring klien setuju untuk berbagi. Jika Anda membeli melalui Balinsky dan ingin berbagi kisah Anda (anonim atau dengan nama — terserah Anda), kirim pesan ke bot — biasanya butuh panggilan 20 menit.',
-    casesCta: 'Bagikan kisah pembelian saya',
+    h2Model: 'Siapa yang menjalankan situs ini dan dari mana penghasilannya',
+    model: [
+      { title: 'Operator situs', body: 'Balinsky.info dijalankan oleh Andrei Slesarau, pengusaha perseorangan terdaftar di Georgia: reg. no. 316362404 tanggal 06.01.2022, 19 Shartava St., Rustavi. Kontrak dan faktur diterbitkan oleh badan tersebut menurut hukum Georgia.' },
+      { title: 'Dari mana platform ini memperoleh penghasilan', body: 'Satu-satunya sumber pendapatan adalah iklan pengembang: banner dan materi informasi di situs, publikasi di kanal Telegram, serta produksi video tentang proyek. Pengembang membayar berdasarkan kontrak periklanan. Pembeli tidak dikenakan biaya apa pun.' },
+      { title: 'Balinsky bukan apa', body: 'Kami bukan agen properti dan bukan broker. Kami tidak menjual objek, tidak melakukan negosiasi, tidak mengambil komisi dari pembeli, tidak menerima deposit, dan tidak mendampingi transaksi. Kontrak ditandatangani langsung antara pembeli dan pengembang atau pemilik.' },
+    ],
+
+    h2Cases: 'Kisah pembeli',
+    pCases: 'Kami mengumpulkan kisah pembelian yang sudah selesai — apa yang dicari, bagaimana mencarinya, di mana negosiasi SPA berakhir, apa hasilnya, dan berapa imbal hasil nyatanya hari ini. Setiap kisah dianonimkan: tanpa nama atau alamat, tetapi dengan angka nyata. Bagian ini bertambah seiring pembaca bersedia berbagi. Bila Anda pernah membeli properti di Bali dan bersedia bercerita, kirim pesan ke bot — biasanya butuh panggilan 20 menit.',
+    casesCta: 'Bagikan kisah pembelian',
 
     h2Contact: 'Hubungi kami',
-    pContact: 'Untuk apa pun — katalog, properti tertentu, uji tuntas, pengambilan video untuk vila Anda sendiri — kirim pesan ke bot di Telegram. Jika Telegram tidak nyaman, email ada di footer situs.',
+    pContact: 'Untuk hal apa pun tentang situs ini — katalog, listing tertentu, kekeliruan data — kirim pesan ke bot di Telegram. Bila Telegram tidak nyaman, email ada di footer. Untuk properti tertentu, hubungi pengembang langsung: kontaknya ada di halaman objek.',
     contactBot: 'Kirim pesan ke bot',
     contactGuide: 'Baca panduan membeli dulu',
   },
@@ -143,7 +164,7 @@ const COPY = {
     home: 'Accueil',
     crumb: 'À propos de Balinsky',
     h1: 'Balinsky — ce que c’est et pourquoi vous pouvez lui faire confiance',
-    intro: 'Balinsky est un catalogue immobilier de Bali pour les acheteurs étrangers : villas, appartements, résidences et locations. Le site répertorie des projets de promoteurs dont nous avons personnellement vérifié les documents, dont nous avons visité les sites et filmé les biens. Les prix sont affichés en USD actuels. Les commerciaux sont de vraies personnes, avec photo, note et langues parlées.',
+    intro: 'Balinsky est un catalogue immobilier indépendant de Bali pour les acheteurs étrangers : villas, appartements, résidences et locations. Le site répertorie des projets de promoteurs dont nous avons vérifié les documents, visité les sites et filmé les biens. Les prix sont affichés en USD actuels. Le contact du commercial du promoteur figure sur la page du bien — c’est à lui que vous écrivez, pas à nous.',
 
     h2Numbers: 'Les chiffres aujourd’hui',
     numbersLead: 'Ces chiffres se mettent à jour automatiquement — ce que vous voyez sur le site correspond exactement à ce qui est publié dans la base de données en ce moment.',
@@ -151,7 +172,7 @@ const COPY = {
     statApts: 'appartements',
     statComplexes: 'résidences',
     statDevs: 'promoteurs',
-    statMgrs: 'gestionnaires disponibles',
+    statMgrs: 'conseillers de promoteurs',
 
     h2How: 'Comment nous décidons ce que nous publions',
     standards: [
@@ -164,17 +185,24 @@ const COPY = {
     h2Stack: 'Ce que vous obtenez',
     stackItems: [
       { title: 'Prix en USD en temps réel', body: 'Les prix sont recalculés selon le taux actuel ; le sélecteur de devise est dans l’en-tête. La vue comparative se recalcule automatiquement lorsque vous changez.' },
-      { title: 'Un parcours transparent', body: 'Du premier clic sur « réserver » jusqu’à la livraison — chaque étape et chaque montant sont documentés sur les pages Réservation et Guide d’achat.' },
-      { title: 'Gestionnaire disponible', body: 'Réponse sur Telegram / WhatsApp généralement en moins d’une heure pendant les heures de bureau de Bali. Pour les transactions importantes — un appel visio avant tout versement d’acompte.' },
+      { title: 'Comment se déroule un achat', body: 'Les étapes, les structures de propriété, les coûts réels et les pièges sont détaillés sur les pages « Comment acheter » et « Réservation ». C’est de la documentation, pas une prestation que nous vendons : la transaction se fait entre vous et le promoteur.' },
+      { title: 'Les contacts directs du promoteur', body: 'Chaque projet du site indique le commercial du promoteur lui-même, avec photo, langues parlées, Telegram et WhatsApp. L’échange se fait directement avec lui — Balinsky n’y participe pas et ne le modère pas.' },
       { title: 'Comparer et présélectionner', body: 'Chaque annonce s’enregistre dans votre sélection ; villas et appartements se comparent sur 14 paramètres de niveau investisseur dans un seul tableau.' },
     ],
 
-    h2Cases: 'Études de cas d’acheteurs',
-    pCases: 'Nous rassemblons les histoires de transactions conclues de nos clients — ce qu’ils cherchaient, comment ils ont cherché, où la négociation du SPA a abouti, ce qui en est ressorti et le rendement réel aujourd’hui. Chaque cas est anonymisé — sans noms ni adresses, mais avec de vrais chiffres. Cette section s’étoffera à mesure que les clients acceptent de partager. Si vous avez acheté via Balinsky et souhaitez partager votre histoire (anonymement ou avec votre nom — à votre choix), écrivez au bot — cela prend en général un appel de 20 minutes.',
-    casesCta: 'Partager mon histoire d’achat',
+    h2Model: 'Qui édite le site et comment il gagne sa vie',
+    model: [
+      { title: 'Éditeur du site', body: 'Balinsky.info est édité par Andrei Slesarau, entrepreneur individuel immatriculé en Géorgie : n° 316362404 du 06.01.2022, 19 Shartava St., Rustavi. Les contrats et factures sont émis par cette entité, sous le droit géorgien.' },
+      { title: 'Comment la plateforme gagne sa vie', body: 'La seule source de revenus est la publicité des promoteurs : bannières et contenus informatifs sur le site, publications sur la chaîne Telegram, production de vidéos sur les projets. Les promoteurs paient au titre d’un contrat publicitaire. Les acheteurs ne paient rien.' },
+      { title: 'Ce que Balinsky n’est pas', body: 'Nous ne sommes ni une agence immobilière ni un courtier. Nous ne vendons pas de biens, ne menons pas de négociations, ne prenons aucune commission aux acheteurs, n’encaissons aucun acompte et n’accompagnons aucune transaction. Le contrat est signé directement entre l’acheteur et le promoteur ou le propriétaire.' },
+    ],
+
+    h2Cases: 'Histoires d’acheteurs',
+    pCases: 'Nous rassemblons des récits d’achats aboutis — ce que la personne cherchait, comment elle a cherché, où la négociation du SPA a abouti, ce qui en est ressorti et le rendement réel aujourd’hui. Chaque récit est anonymisé : sans nom ni adresse, mais avec de vrais chiffres. La section s’étoffe à mesure que les lecteurs acceptent de partager. Si vous avez acheté un bien à Bali et souhaitez raconter votre histoire, écrivez au bot — cela prend en général vingt minutes.',
+    casesCta: 'Partager une histoire d’achat',
 
     h2Contact: 'Nous contacter',
-    pContact: 'Pour tout — le catalogue, un bien précis, la due diligence, un tournage vidéo pour votre propre villa — écrivez au bot sur Telegram. Si Telegram ne vous convient pas, l’e-mail est dans le pied de page du site.',
+    pContact: 'Pour tout ce qui concerne le site lui-même — le catalogue, une annonce précise, une donnée erronée — écrivez au bot sur Telegram. Si Telegram ne vous convient pas, l’e-mail est en pied de page. Pour un bien précis, écrivez directement au promoteur : ses coordonnées sont sur l’annonce.',
     contactBot: 'Écrire au bot',
     contactGuide: 'Lire d’abord le guide d’achat',
   },
@@ -182,7 +210,7 @@ const COPY = {
     home: 'Startseite',
     crumb: 'Über Balinsky',
     h1: 'Balinsky — was es ist und warum Sie ihm vertrauen können',
-    intro: 'Balinsky ist ein Bali-Immobilienkatalog für ausländische Käufer: Villen, Apartments, Wohnanlagen und Vermietungen. Die Website listet Projekte von Bauträgern, deren Unterlagen wir persönlich geprüft, deren Standorte wir begangen und deren Objekte wir gefilmt haben. Preise werden in aktuellen USD angezeigt. Vertriebsmanager sind echte Menschen mit Foto, Bewertung und den Sprachen, die sie sprechen.',
+    intro: 'Balinsky ist ein unabhängiger Bali-Immobilienkatalog für ausländische Käufer: Villen, Apartments, Wohnanlagen und Vermietungen. Gelistet sind Projekte von Bauträgern, deren Unterlagen wir geprüft, deren Standorte wir begangen und deren Objekte wir gefilmt haben. Preise erscheinen in aktuellen USD. Der Ansprechpartner des Bauträgers steht direkt auf der Objektseite — Sie schreiben ihm, nicht uns.',
 
     h2Numbers: 'Die Zahlen heute',
     numbersLead: 'Diese Zahlen aktualisieren sich automatisch — was Sie auf der Website sehen, ist genau das, was gerade in der Datenbank veröffentlicht ist.',
@@ -190,7 +218,7 @@ const COPY = {
     statApts: 'Apartments',
     statComplexes: 'Wohnanlagen',
     statDevs: 'Bauträger',
-    statMgrs: 'Manager erreichbar',
+    statMgrs: 'Bauträger-Manager',
 
     h2How: 'Wie wir entscheiden, was wir veröffentlichen',
     standards: [
@@ -203,17 +231,24 @@ const COPY = {
     h2Stack: 'Was Sie bekommen',
     stackItems: [
       { title: 'Preise in Echtzeit-USD', body: 'Preise werden zum aktuellen Kurs neu berechnet; der Währungsumschalter ist im Header. Die Vergleichsansicht berechnet automatisch neu, wenn Sie umschalten.' },
-      { title: 'Transparenter Ablauf', body: 'Vom ersten „Reservieren“-Tippen bis zur Übergabe — jeder Schritt und Betrag ist auf den Seiten Reservierung und Kaufratgeber dokumentiert.' },
-      { title: 'Erreichbarer Manager', body: 'Antwort auf Telegram / WhatsApp meist innerhalb einer Stunde während der Bali-Geschäftszeiten. Bei größeren Deals — ein Videoanruf, bevor eine Anzahlung fließt.' },
+      { title: 'Wie ein Kauf abläuft', body: 'Ablauf, Eigentumsstrukturen, echte Kosten und Fallstricke stehen auf den Seiten „Wie man kauft“ und „Reservierung“. Das ist Nachschlagematerial, keine Leistung, die wir verkaufen: Das Geschäft läuft zwischen Ihnen und dem Bauträger.' },
+      { title: 'Direkte Kontakte des Bauträgers', body: 'Zu jedem Projekt ist der Manager des Bauträgers genannt, mit Foto, Sprachen, Telegram und WhatsApp. Die Korrespondenz läuft direkt mit ihm — Balinsky ist daran nicht beteiligt und moderiert sie nicht.' },
       { title: 'Vergleichen und Merkliste', body: 'Jedes Inserat wird in Ihrer Merkliste gespeichert; Villen und Apartments werden anhand von 14 investorenrelevanten Parametern in einer Tabelle verglichen.' },
     ],
 
-    h2Cases: 'Käufer-Fallstudien',
-    pCases: 'Wir sammeln Geschichten abgeschlossener Deals unserer Kunden — was sie suchten, wie sie suchten, wo die SPA-Verhandlung landete, was daraus wurde und welche Rendite heute tatsächlich erzielt wird. Jeder Fall ist anonymisiert — ohne Namen oder Adressen, aber mit echten Zahlen. Dieser Bereich wächst, sobald Kunden zustimmen zu teilen. Wenn Sie über Balinsky gekauft haben und Ihre Geschichte teilen möchten (anonym oder mit Namen — Ihre Wahl), schreiben Sie dem Bot — das dauert meist ein 20-minütiges Gespräch.',
-    casesCta: 'Meine Kaufgeschichte teilen',
+    h2Model: 'Wer die Website betreibt und womit sie Geld verdient',
+    model: [
+      { title: 'Betreiber der Website', body: 'Balinsky.info wird von Andrei Slesarau betrieben, einem in Georgien eingetragenen Einzelunternehmer: Reg.-Nr. 316362404 vom 06.01.2022, 19 Shartava St., Rustavi. Verträge und Rechnungen stellt dieses Unternehmen nach georgischem Recht aus.' },
+      { title: 'Womit die Plattform Geld verdient', body: 'Einzige Einnahmequelle ist Bauträgerwerbung: Banner und Informationsmaterial auf der Website, Beiträge im Telegram-Kanal und Videoproduktion zu Projekten. Bauträger zahlen auf Basis eines Werbevertrags. Käufern stellen wir nichts in Rechnung.' },
+      { title: 'Was Balinsky nicht ist', body: 'Wir sind weder Immobilienagentur noch Makler. Wir verkaufen keine Objekte, führen keine Verhandlungen, nehmen keine Provision von Käufern, keine Anzahlungen entgegen und begleiten keine Transaktionen. Der Vertrag wird unmittelbar zwischen Käufer und Bauträger oder Eigentümer geschlossen.' },
+    ],
+
+    h2Cases: 'Käufergeschichten',
+    pCases: 'Wir sammeln Berichte über abgeschlossene Käufe — was gesucht wurde, wie gesucht wurde, wo die SPA-Verhandlung endete, was dabei herauskam und wie die reale Rendite heute aussieht. Jeder Bericht ist anonymisiert: ohne Namen und Adressen, aber mit echten Zahlen. Der Bereich wächst, sobald Leserinnen und Leser zustimmen. Wenn Sie auf Bali gekauft haben und Ihre Geschichte erzählen möchten, schreiben Sie dem Bot — das dauert meist zwanzig Minuten.',
+    casesCta: 'Eine Kaufgeschichte teilen',
 
     h2Contact: 'Kontakt aufnehmen',
-    pContact: 'Für alles — den Katalog, eine bestimmte Immobilie, Due Diligence, Videoaufnahmen für Ihre eigene Villa — schreiben Sie dem Bot auf Telegram. Wenn Telegram unpraktisch ist, steht die E-Mail im Footer der Website.',
+    pContact: 'Zu allem, was die Website selbst betrifft — Katalog, ein bestimmtes Inserat, ein Datenfehler — schreiben Sie dem Bot auf Telegram. Wenn Telegram unpraktisch ist, steht die E-Mail im Fußbereich. Zu einem konkreten Objekt schreiben Sie direkt dem Bauträger: Seine Kontakte stehen im Inserat.',
     contactBot: 'Dem Bot schreiben',
     contactGuide: 'Zuerst den Kaufratgeber lesen',
   },
@@ -221,7 +256,7 @@ const COPY = {
     home: '首页',
     crumb: '关于 Balinsky',
     h1: 'Balinsky——它是什么，以及为什么您可以信任它',
-    intro: 'Balinsky 是面向外国买家的巴厘岛房产目录：别墅、公寓、住宅区和租赁。本站列出的项目来自我们亲自核验过文件、实地走访过地块并拍摄过实景的开发商。价格以当前美元显示。销售经理是真实的人，配有照片、评分及所讲语言。',
+    intro: 'Balinsky 是一个面向外国买家的独立巴厘岛房产目录：别墅、公寓、住宅区和租赁。站内收录的是我们核验过文件、实地走访过、并亲自拍摄过的开发商项目。价格以当前美元显示。开发商的对接经理直接列在房源页面上——您联系的是他们，而不是我们。',
 
     h2Numbers: '今日数据',
     numbersLead: '这些数字自动更新——您在网站上看到的，正是数据库当前发布的内容。',
@@ -229,7 +264,7 @@ const COPY = {
     statApts: '公寓',
     statComplexes: '住宅区',
     statDevs: '开发商',
-    statMgrs: '在线经理',
+    statMgrs: '开发商经理',
 
     h2How: '我们如何决定发布什么',
     standards: [
@@ -242,17 +277,24 @@ const COPY = {
     h2Stack: '您将获得什么',
     stackItems: [
       { title: '实时美元定价', body: '价格按当前汇率重新计算；货币切换器在页眉。切换时对比视图会自动重新计算。' },
-      { title: '透明的流程', body: '从第一次点击"预订"到交付——每一步和每一笔金额都记录在预订页和购买指南页上。' },
-      { title: '在线经理', body: '在巴厘岛工作时间内，Telegram / WhatsApp 通常一小时内回复。大额交易——在任何定金转出前先视频通话。' },
+      { title: '购买流程是怎样的', body: '交易步骤、持有结构、真实成本和其中的陷阱，都写在《如何购买》和《预订》页面里。那是参考资料，不是我们出售的服务：交易发生在您与开发商之间。' },
+      { title: '开发商的直接联系方式', body: '站内每个项目都标明开发商自己的经理，附照片、所用语言、Telegram 和 WhatsApp。沟通直接进行——Balinsky 不参与，也不做审核。' },
       { title: '对比与候选清单', body: '任何房源都可保存到您的候选清单；别墅和公寓在一张表中按 14 项投资级参数进行对比。' },
     ],
 
-    h2Cases: '买家案例',
-    pCases: '我们正在收集客户的成交案例——他们在找什么、如何寻找、SPA 谈判落在何处、最终结果如何，以及如今的实际收益。每个案例均已匿名——没有姓名或地址，但有真实数字。随着客户同意分享，本栏目会不断充实。如果您通过 Balinsky 购买并愿意分享您的故事（匿名或署名——由您决定），请给机器人留言——通常需要 20 分钟的通话。',
-    casesCta: '分享我的购买故事',
+    h2Model: '网站由谁运营，靠什么盈利',
+    model: [
+      { title: '网站运营方', body: 'Balinsky.info 由在格鲁吉亚注册的个体经营者 Andrei Slesarau 运营：注册号 316362404，注册日期 2022 年 1 月 6 日，地址 19 Shartava St., Rustavi。合同与发票由该主体依据格鲁吉亚法律开具。' },
+      { title: '平台如何盈利', body: '唯一收入来源是开发商广告：站内横幅与资讯内容、Telegram 频道发布，以及项目视频制作。开发商依据广告合同付费。我们不向买家收取任何费用。' },
+      { title: 'Balinsky 不是什么', body: '我们不是房地产中介，也不是经纪人。我们不销售房产、不参与谈判、不向买家收取佣金、不接收定金、也不陪同交易。合同由买方与开发商或业主直接签署。' },
+    ],
+
+    h2Cases: '买家故事',
+    pCases: '我们收集已完成交易的经历——当初在找什么、怎么找的、SPA 谈判最终落在哪里、结果如何、今天的真实收益率是多少。每则故事都做匿名处理：不含姓名和地址，但数字是真实的。随着读者愿意分享，这一栏目会不断充实。如果您在巴厘岛买过房产并愿意讲述，请给机器人留言——通常只需二十分钟。',
+    casesCta: '分享一段购房经历',
 
     h2Contact: '联系我们',
-    pContact: '任何事宜——目录、某处具体房产、尽职调查、为您自己的别墅拍摄视频——都请在 Telegram 上给机器人留言。如果 Telegram 不方便，邮箱在网站页脚。',
+    pContact: '关于网站本身的任何问题——目录、某个具体房源、数据有误——请在 Telegram 上联系机器人。若不方便使用 Telegram，邮箱在页脚。关于具体房产，请直接联系开发商：联系方式就在房源页面上。',
     contactBot: '给机器人留言',
     contactGuide: '先阅读购买指南',
   },
@@ -268,7 +310,7 @@ const COPY = {
     statApts: 'appartementen',
     statComplexes: 'wooncomplexen',
     statDevs: 'ontwikkelaars',
-    statMgrs: 'managers bereikbaar',
+    statMgrs: 'managers van ontwikkelaars',
 
     h2How: 'Hoe wij beslissen wat we publiceren',
     standards: [
@@ -281,17 +323,24 @@ const COPY = {
     h2Stack: 'Wat u krijgt',
     stackItems: [
       { title: 'Live USD-prijzen', body: 'Prijzen worden herberekend tegen de huidige koers; de valutaschakelaar staat in de header. De vergelijkingsweergave herberekent automatisch wanneer u wisselt.' },
-      { title: 'Transparant traject', body: 'Van de eerste "reserveren"-tik tot de oplevering — elke stap en elk bedrag is gedocumenteerd op de pagina\'s Reservering en Koopgids.' },
-      { title: 'Bereikbare manager', body: 'Antwoord op Telegram / WhatsApp meestal binnen een uur tijdens Bali-kantooruren. Voor grotere deals — een videogesprek voordat er een aanbetaling gaat.' },
+      { title: 'Hoe een aankoop verloopt', body: 'De stappen, eigendomsstructuren, echte kosten en valkuilen staan op de pagina’s „Hoe koopt u” en „Reservering”. Dat is naslagmateriaal, geen dienst die wij verkopen: de transactie loopt tussen u en de ontwikkelaar.' },
+      { title: 'Directe contacten van de ontwikkelaar', body: 'Bij elk project op de site staat de eigen manager van de ontwikkelaar, met foto, talen, Telegram en WhatsApp. Het contact loopt rechtstreeks — Balinsky zit er niet tussen en modereert het niet.' },
       { title: 'Vergelijken en shortlist', body: "Elk aanbod wordt in uw shortlist bewaard; villa's en appartementen worden op 14 investeringsparameters in één tabel vergeleken." },
     ],
 
-    h2Cases: 'Klantcasussen',
-    pCases: 'We verzamelen verhalen van afgesloten deals van onze klanten — wat ze zochten, hoe ze zochten, waar de SPA-onderhandeling uitkwam, wat eruit voortkwam en het werkelijke rendement vandaag. Elke casus is geanonimiseerd — zonder namen of adressen, maar met echte cijfers. Deze sectie groeit naarmate klanten instemmen om te delen. Als u via Balinsky heeft gekocht en uw verhaal wilt delen (anoniem of met naam — uw keuze), stuur de bot een bericht — het kost meestal een gesprek van 20 minuten.',
-    casesCta: 'Mijn koopverhaal delen',
+    h2Model: 'Wie de site beheert en waar het geld vandaan komt',
+    model: [
+      { title: 'Exploitant van de site', body: 'Balinsky.info wordt beheerd door Andrei Slesarau, eenmanszaak geregistreerd in Georgië: reg.nr. 316362404 van 06.01.2022, 19 Shartava St., Rustavi. Contracten en facturen worden door die entiteit uitgegeven, naar Georgisch recht.' },
+      { title: 'Waar het platform zijn geld verdient', body: 'De enige inkomstenbron is advertenties van ontwikkelaars: banners en informatief materiaal op de site, publicaties in het Telegram-kanaal en videoproductie over projecten. Ontwikkelaars betalen op basis van een advertentiecontract. Kopers betalen niets.' },
+      { title: 'Wat Balinsky niet is', body: 'Wij zijn geen makelaar en geen tussenpersoon. Wij verkopen geen objecten, voeren geen onderhandelingen, nemen geen commissie van kopers, ontvangen geen aanbetalingen en begeleiden geen transacties. Het contract wordt rechtstreeks gesloten tussen koper en ontwikkelaar of eigenaar.' },
+    ],
+
+    h2Cases: 'Verhalen van kopers',
+    pCases: 'We verzamelen verhalen van afgeronde aankopen — wat iemand zocht, hoe er gezocht werd, waar de SPA-onderhandeling uitkwam, wat het opleverde en wat het rendement vandaag werkelijk is. Elk verhaal is geanonimiseerd: geen namen of adressen, wel echte cijfers. De rubriek groeit naarmate lezers willen delen. Heeft u op Bali gekocht en wilt u uw verhaal vertellen, stuur dan een bericht naar de bot — meestal is twintig minuten genoeg.',
+    casesCta: 'Deel een aankoopverhaal',
 
     h2Contact: 'Neem contact op',
-    pContact: 'Voor alles — de catalogus, een specifiek object, due diligence, video-opnames voor uw eigen villa — stuur de bot een bericht op Telegram. Als Telegram onhandig is, staat het e-mailadres in de footer van de site.',
+    pContact: 'Voor alles over de site zelf — de catalogus, een specifieke advertentie, een fout in de gegevens — stuur een bericht naar de bot op Telegram. Is Telegram onhandig, dan staat het e-mailadres in de voettekst. Over een specifiek object schrijft u rechtstreeks de ontwikkelaar: zijn contacten staan bij de advertentie.',
     contactBot: 'Bericht de bot',
     contactGuide: 'Lees eerst de koopgids',
   },
@@ -299,7 +348,7 @@ const COPY = {
     home: 'Beranda',
     crumb: 'Indik Balinsky',
     h1: 'Balinsky — napi puniki tur ngudiang dados kapracaya',
-    intro: 'Balinsky inggih punika katalog properti Bali buat pameli saking dura negara: vila, apartemen, kompleks hunian, miwah sewa. Situs puniki nyantenang proyek saking pangwangun sane dokumenipun sampun periksa titiang padidi, genahipun sampun rauhin titiang, tur objekipun sampun rekam titiang. Aji kasantenang ring USD kekinian. Manajer penjualan inggih punika jadma sujati sareng foto, peringkat, miwah basa sane kaanggen.',
+    intro: 'Balinsky inggih punika katalog properti Bali sane mandiri buat sang numbas saking dura negara: vila, apartemen, kompleks hunian, miwah sewa. Situs puniki muat proyek pangwangun sane dokumennyane sampun katureksain, genahnyane sampun karauhin, tur objeknyane sampun karekam. Aji kasurat ring USD sane anyar. Manajer pangwangun kasurat langsung ring kaca objek — Ragane mabaos sareng dané, nénten sareng tiang.',
 
     h2Numbers: 'Angka rahinane mangkin',
     numbersLead: 'Angka-angka puniki kaperbarui otomatis — sane cingak Ragane ring situs pateh sareng sane kapublikasi ring basis data mangkin.',
@@ -307,7 +356,7 @@ const COPY = {
     statApts: 'apartemen',
     statComplexes: 'kompleks hunian',
     statDevs: 'pangwangun',
-    statMgrs: 'manajer siap kahubungin',
+    statMgrs: 'manajer pangwangun',
 
     h2How: 'Sapunapi titiang mutusang napi sane kapublikasi',
     standards: [
@@ -320,17 +369,24 @@ const COPY = {
     h2Stack: 'Napi sane kapolihang Ragane',
     stackItems: [
       { title: 'Aji USD kekinian', body: 'Aji kaitung malih manut kurs mangkin; pangalih mata uang wenten ring header. Tampilan pabandingan ngitung malih otomatis rikala Ragane ngalih.' },
-      { title: 'Alur sane transparan', body: 'Saking ketukan "reservasi" kaping pertama kantos serah terima — sabilang langkah miwah jumlah kadokumentasi ring lembar Reservasi miwah Tuntunan Numbas.' },
-      { title: 'Manajer siap kahubungin', body: 'Waled Telegram / WhatsApp biasane sajeroning ajam sajeroning jam kerja Bali. Buat transaksi ageng — telpon video sadurung deposit kakirim.' },
+      { title: 'Sapunapi proses numbas mamargi', body: 'Tahapan transaksi, struktur kapemilikan, prabéa sujati, miwah pakéwehnyane katlatarang ring kaca «Sapunapi numbas» miwah «Reservasi». Punika bahan rujukan, nénten jasa sane kaadol: transaksinyane mamargi pantaraning Ragane miwah pangwangun.' },
+      { title: 'Kontak langsung pangwangun', body: 'Sabilang proyek ring situs nyuratang manajer druwén pangwangun, jangkep antuk foto, basa, Telegram, miwah WhatsApp. Pabaosan mamargi langsung — Balinsky nénten milu tur nénten ngamoderasi.' },
       { title: 'Pabandingan miwah daftar cutet', body: 'Sabilang listing kasimpen ring daftar cutet Ragane; vila miwah apartemen kabandingang manut 14 parameter kelas investor ring satu tabel.' },
     ],
 
-    h2Cases: 'Studi kasus pameli',
-    pCases: 'Titiang ngumpulang carita transaksi sane sampun puput saking klien titiang — napi sane karereh, sapunapi ngrereh, ring dija negosiasi SPA rauh, napi asilipun, miwah imbal hasil sujati rahinane mangkin. Sabilang kasus kaanonimang — nenten wenten wasta utawi alamat, sakewanten sareng angka sujati. Bagian puniki jagi nincap manut klien sane cumpu maang. Yening Ragane numbas lewat Balinsky tur meled maang carita (anonim utawi sareng wasta — manut pikayun Ragane), kirim pesan ka bot — biasane ngamerluang telpon 20 menit.',
-    casesCta: 'Maang carita numbas titiang',
+    h2Model: 'Sira sane ngamargiang situs puniki tur saking napi pikolihnyane',
+    model: [
+      { title: 'Operator situs', body: 'Balinsky.info kamargiang olih Andrei Slesarau, pengusaha perseorangan sane kadaftar ring Georgia: reg. no. 316362404 tanggal 06.01.2022, 19 Shartava St., Rustavi. Kontrak miwah faktur kamedalang olih badan punika manut hukum Georgia.' },
+      { title: 'Saking napi platform puniki polih pikolih', body: 'Wantah asiki sumber pikolih: iklan pangwangun — banner miwah materi informasi ring situs, publikasi ring kanal Telegram, taler produksi video indik proyek. Pangwangun naur manut kontrak periklanan. Sang numbas nénten kapatut naur napi-napi.' },
+      { title: 'Balinsky nénten napi', body: 'Tiang nénten agen properti tur nénten broker. Tiang nénten ngadol objek, nénten ngamargiang negosiasi, nénten nerima komisi saking sang numbas, nénten nerima deposit, tur nénten nyarengin transaksi. Kontrak katandatanganin langsung pantaraning sang numbas miwah pangwangun wiadin sang druwe.' },
+    ],
+
+    h2Cases: 'Satua sang numbas',
+    pCases: 'Tiang ngapupulang satua indik numbas sane sampun puput — napi sane karerehin, sapunapi ngrereh, ring dija negosiasi SPA puput, napi pikolihnyane, miwah akuda imbal hasil sujatinnyane mangkin. Sabilang satua kaanonimang: nénten wénten wasta wiadin alamat, sakéwanten angkannyane sujati. Bagian puniki pacang nglimbak sasampun sang ngwacén sairing mabaosang. Yening Ragane naenin numbas properti ring Bali tur sairing masatua, kirim pesan ring bot — biasannyane wantah kalih dasa menit.',
+    casesCta: 'Baosang satua numbas',
 
     h2Contact: 'Ngwentenang kontak',
-    pContact: 'Buat sakancan — katalog, properti tinutu, due diligence, ngrekam video buat vila Ragane padidi — kirim pesan ka bot ring Telegram. Yening Telegram nenten nyaman, email wenten ring footer situs.',
+    pContact: 'Buat napi ja indik situs puniki — katalog, listing sane kapastikayang, iwang ring data — kirim pesan ring bot ring Telegram. Yening Telegram nénten nyaman, email wénten ring sor kaca. Buat objek sane kapastikayang, mabaos langsung ring pangwangun: kontaknyane wénten ring kaca objek.',
     contactBot: 'Kirim pesan ka bot',
     contactGuide: 'Wacen dumun tuntunan numbas',
   },
@@ -338,7 +394,7 @@ const COPY = {
     home: 'Strona główna',
     crumb: 'O Balinsky',
     h1: 'Balinsky — czym jest i dlaczego można mu zaufać',
-    intro: 'Balinsky to katalog nieruchomości na Bali dla zagranicznych nabywców: wille, apartamenty, kompleksy mieszkaniowe i wynajem. Serwis prezentuje projekty deweloperów, których dokumenty osobiście zweryfikowaliśmy, których działki obeszliśmy i których obiekty sfilmowaliśmy. Ceny podawane są w bieżących USD. Menedżerowie sprzedaży to prawdziwi ludzie ze zdjęciami, ocenami i językami, którymi się posługują.',
+    intro: 'Balinsky to niezależny katalog nieruchomości na Bali dla zagranicznych kupujących: wille, apartamenty, osiedla i najem. Zebraliśmy projekty deweloperów, których dokumenty sprawdziliśmy, których działki obeszliśmy i których obiekty nagraliśmy. Ceny podane są w aktualnych USD. Kontakt do menedżera dewelopera znajduje się wprost na stronie obiektu — piszesz do niego, nie do nas.',
 
     h2Numbers: 'Liczby na dziś',
     numbersLead: 'Te dane aktualizują się automatycznie — to, co widzisz na stronie, jest dokładnie tym, co jest teraz opublikowane w bazie danych.',
@@ -346,7 +402,7 @@ const COPY = {
     statApts: 'apartamenty',
     statComplexes: 'kompleksy mieszkaniowe',
     statDevs: 'deweloperzy',
-    statMgrs: 'menedżerowie na dyżurze',
+    statMgrs: 'menedżerów deweloperów',
 
     h2How: 'Jak decydujemy, co publikujemy',
     standards: [
@@ -359,17 +415,24 @@ const COPY = {
     h2Stack: 'Co otrzymujesz',
     stackItems: [
       { title: 'Ceny w USD na żywo', body: 'Ceny przeliczają się według bieżącego kursu; przełącznik waluty jest w nagłówku. Widok porównania przelicza się automatycznie przy zmianie.' },
-      { title: 'Przejrzysty proces', body: 'Od pierwszego dotknięcia „rezerwuj” do przekazania — każdy krok i kwota są udokumentowane na stronach Rezerwacji i Przewodnika zakupu.' },
-      { title: 'Menedżer na żywo', body: 'Odpowiedź na Telegramie / WhatsAppie zwykle w ciągu godziny w godzinach pracy na Bali. Przy większych transakcjach — rozmowa wideo przed wpłatą jakiegokolwiek depozytu.' },
+      { title: 'Jak przebiega zakup', body: 'Etapy transakcji, struktury własności, realne koszty i pułapki opisane są na stronach „Jak kupić” i „Rezerwacja”. To materiał informacyjny, a nie usługa, którą sprzedajemy: transakcja odbywa się między tobą a deweloperem.' },
+      { title: 'Bezpośrednie kontakty dewelopera', body: 'Przy każdym projekcie podany jest własny menedżer dewelopera — ze zdjęciem, językami, Telegramem i WhatsAppem. Rozmowa toczy się bezpośrednio z nim; Balinsky nie bierze w niej udziału i jej nie moderuje.' },
       { title: 'Porównaj i zapisz', body: 'Każda oferta zapisuje się na Twojej liście życzeń; wille i apartamenty porównują się według 14 parametrów klasy inwestorskiej w jednej tabeli.' },
     ],
 
-    h2Cases: 'Historie zakupów klientów',
-    pCases: 'Zbieramy historie zamkniętych transakcji naszych klientów — czego szukali, jak szukali, na czym skończyła się negocjacja SPA, co z tego wyszło i jaka jest rzeczywista rentowność dziś. Każdy przypadek jest zanonimizowany — bez nazwisk i adresów, ale z prawdziwymi liczbami. Ta sekcja będzie rosnąć w miarę, jak klienci zgadzają się dzielić. Jeśli kupiłeś przez Balinsky i chcesz podzielić się swoją historią (anonimowo lub pod nazwiskiem — Twój wybór), napisz do bota — zwykle zajmuje to 20-minutową rozmowę.',
-    casesCta: 'Podziel się moją historią zakupu',
+    h2Model: 'Kto prowadzi serwis i na czym zarabia',
+    model: [
+      { title: 'Operator serwisu', body: 'Balinsky.info prowadzi Andrei Slesarau, jednoosobowa działalność zarejestrowana w Gruzji: nr rej. 316362404 z 06.01.2022, 19 Shartava St., Rustavi. Umowy i faktury wystawia ten podmiot, zgodnie z prawem gruzińskim.' },
+      { title: 'Na czym zarabia platforma', body: 'Jedynym źródłem przychodu jest reklama deweloperów: banery i materiały informacyjne w serwisie, publikacje na kanale Telegram oraz produkcja wideo o projektach. Deweloperzy płacą na podstawie umowy reklamowej. Kupujących nie obciążamy niczym.' },
+      { title: 'Czym Balinsky nie jest', body: 'Nie jesteśmy agencją nieruchomości ani pośrednikiem. Nie sprzedajemy obiektów, nie prowadzimy negocjacji, nie pobieramy prowizji od kupujących, nie przyjmujemy depozytów i nie obsługujemy transakcji. Umowa zawierana jest bezpośrednio między kupującym a deweloperem lub właścicielem.' },
+    ],
+
+    h2Cases: 'Historie kupujących',
+    pCases: 'Zbieramy historie zakończonych zakupów — czego ktoś szukał, jak szukał, na czym stanęły negocjacje SPA, co z tego wyszło i jaka jest dziś realna rentowność. Każda historia jest zanonimizowana: bez nazwisk i adresów, ale z prawdziwymi liczbami. Dział rośnie w miarę jak czytelnicy zgadzają się podzielić. Jeśli kupiłeś nieruchomość na Bali i chcesz opowiedzieć swoją historię, napisz do bota — zwykle wystarczy dwadzieścia minut.',
+    casesCta: 'Podziel się historią zakupu',
 
     h2Contact: 'Skontaktuj się',
-    pContact: 'W każdej sprawie — katalog, konkretna nieruchomość, due diligence, nagrania wideo Twojej własnej willi — napisz do bota na Telegramie. Jeśli Telegram jest niewygodny, adres e-mail znajduje się w stopce strony.',
+    pContact: 'We wszystkim, co dotyczy samego serwisu — katalog, konkretna oferta, błąd w danych — napisz do bota na Telegramie. Jeśli Telegram jest niewygodny, adres e-mail jest w stopce. W sprawie konkretnego obiektu pisz bezpośrednio do dewelopera: jego kontakty są przy ofercie.',
     contactBot: 'Napisz do bota',
     contactGuide: 'Najpierw przeczytaj przewodnik zakupu',
   },
@@ -377,7 +440,7 @@ const COPY = {
     home: 'Головна',
     crumb: 'Про Balinsky',
     h1: 'Balinsky — що це таке і чому йому можна довіряти',
-    intro: 'Balinsky — це каталог нерухомості Балі для іноземних покупців: вілли, апартаменти, житлові комплекси та оренда. На сайті представлені проєкти забудовників, чиї документи ми особисто перевірили, чиї ділянки обійшли та чиї обʼєкти зняли на відео. Ціни показані в актуальних USD. Менеджери з продажу — це реальні люди з фото, рейтингами й мовами, якими вони володіють.',
+    intro: 'Balinsky — незалежний каталог нерухомості Балі для іноземців: вілли, апартаменти, житлові комплекси та оренда. На сайті зібрані проєкти забудовників, чиї документи ми перевірили, чиї ділянки обійшли і чиї обʼєкти зняли на відео. Ціни — в актуальних USD. Контакти менеджера забудовника вказані прямо в картці обʼєкта: писати ви будете йому, а не нам.',
 
     h2Numbers: 'Цифри на сьогодні',
     numbersLead: 'Ці цифри оновлюються автоматично — те, що ви бачите на сайті, точно відповідає тому, що зараз опубліковано в базі даних.',
@@ -385,7 +448,7 @@ const COPY = {
     statApts: 'апартаменти',
     statComplexes: 'житлові комплекси',
     statDevs: 'забудовники',
-    statMgrs: 'менеджери на звʼязку',
+    statMgrs: 'менеджерів забудовників',
 
     h2How: 'Як ми вирішуємо, що публікувати',
     standards: [
@@ -398,17 +461,24 @@ const COPY = {
     h2Stack: 'Що ви отримуєте',
     stackItems: [
       { title: 'Ціни в USD у реальному часі', body: 'Ціни перераховуються за поточним курсом; перемикач валюти — у шапці. Порівняльний вигляд перераховується автоматично під час перемикання.' },
-      { title: 'Прозорий шлях', body: 'Від першого дотику «забронювати» до передачі — кожен крок і сума задокументовані на сторінках Бронювання та Посібника з покупки.' },
-      { title: 'Менеджер на звʼязку', body: 'Відповідь у Telegram / WhatsApp зазвичай протягом години в робочі години Балі. Для великих угод — відеодзвінок перед будь-яким внесенням депозиту.' },
+      { title: 'Як влаштована покупка', body: 'Етапи угоди, структури володіння, реальні витрати й підводні камені розібрані на сторінках «Як купити» та «Бронювання». Це довідковий матеріал, а не наша послуга: сама угода відбувається між вами і забудовником.' },
+      { title: 'Прямі контакти забудовника', body: 'У кожного проєкту на сайті вказаний призначений менеджер забудовника з фото, мовами, Telegram і WhatsApp. Листування йде напряму з ним — Balinsky у ньому не бере участі й не модерує його.' },
       { title: 'Порівняння та обране', body: 'Будь-який обʼєкт зберігається до вашого обраного; вілли та апартаменти порівнюються за 14 параметрами інвесторського рівня в одній таблиці.' },
     ],
 
+    h2Model: 'Хто веде сайт і на чому він заробляє',
+    model: [
+      { title: 'Оператор сайту', body: 'Balinsky.info веде ФОП Andrei Slesarau, зареєстрований у Грузії: реєстр. № 316362404 від 06.01.2022, адреса 19 Shartava St., Rustavi. Договори й рахунки виставляються від цієї особи та за законодавством Грузії.' },
+      { title: 'На чому заробляє майданчик', body: 'Єдине джерело доходу — реклама забудовників: банери та інформаційні матеріали на сайті, публікації в Telegram-каналі, зйомка відео про проєкти. Плата береться із забудовника за рекламним договором. З покупців ми не беремо нічого.' },
+      { title: 'Чим Balinsky не є', body: 'Ми не агентство нерухомості й не брокер. Ми не продаємо обʼєкти, не ведемо переговори, не беремо комісію з покупців, не приймаємо депозити й не супроводжуємо угоди. Договір укладається напряму між покупцем і забудовником або власником.' },
+    ],
+
     h2Cases: 'Історії покупців',
-    pCases: 'Ми збираємо історії закритих угод наших клієнтів — що вони шукали, як шукали, на чому завершилися переговори щодо SPA, що з цього вийшло і яка реальна дохідність сьогодні. Кожен випадок анонімізований — без імен та адрес, але з реальними цифрами. Цей розділ зростатиме в міру того, як клієнти погоджуються ділитися. Якщо ви купили через Balinsky і хочете поділитися своєю історією (анонімно або під імʼям — на ваш розсуд), напишіть боту — зазвичай це займає 20-хвилинну розмову.',
-    casesCta: 'Поділитися моєю історією покупки',
+    pCases: 'Ми збираємо історії завершених покупок — що шукали, як шукали, на чому зійшлися щодо SPA, що вийшло в підсумку і яка реальна дохідність сьогодні. Кожна історія анонімізована: без імен та адрес, але з реальними цифрами. Розділ наповнюватиметься в міру того, як читачі погоджуються поділитися. Якщо ви купували нерухомість на Балі й готові розповісти свою історію, напишіть боту — це зазвичай двадцять хвилин розмови.',
+    casesCta: 'Поділитися історією покупки',
 
     h2Contact: 'Звʼязатися',
-    pContact: 'З будь-якого питання — каталог, конкретний обʼєкт, дью-ділідженс, відеозйомка вашої власної вілли — напишіть боту в Telegram. Якщо Telegram незручний, email є у футері сайту.',
+    pContact: 'З будь-якого питання про сам сайт — каталог, конкретна картка, неточність у даних — пишіть боту в Telegram. Якщо Telegram незручний, пошта в підвалі сайту. Щодо конкретного обʼєкта пишіть напряму забудовнику: його контакти є в картці.',
     contactBot: 'Написати боту',
     contactGuide: 'Спершу прочитайте посібник з покупки',
   },
@@ -508,6 +578,22 @@ export async function AboutView({ lang }: { lang: Lang }) {
                     <div className="text-[15px] font-semibold text-[#111827]">{s.title}</div>
                     <p className="text-[14px] leading-[1.6] text-[var(--color-text-muted)] mt-0.5">{s.body}</p>
                   </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          {/* Кто оператор и на чём он зарабатывает. Раздел прямого
+              раскрытия: юрлицо, источник дохода и перечень того, чем
+              площадка не является. Стоит перед «историями покупателей»,
+              чтобы роль сайта читалась до любых упоминаний сделок. */}
+          <section className="mb-14">
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-5">{c.h2Model}</h2>
+            <ul className="space-y-3">
+              {c.model.map(m => (
+                <li key={m.title} className="rounded-2xl border border-[var(--color-border)] bg-white p-5">
+                  <div className="text-[15px] font-semibold text-[#111827] mb-1.5">{m.title}</div>
+                  <p className="max-w-[68ch] text-[14px] leading-[1.65] text-[var(--color-text-muted)]">{m.body}</p>
                 </li>
               ))}
             </ul>

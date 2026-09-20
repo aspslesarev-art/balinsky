@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { LegalLayout } from '@/components/LegalLayout'
 import { hreflangMap } from '@/lib/hreflang'
 
-const UPDATED = 'May 15, 2026'
+const UPDATED = 'September 20, 2026'
 
 export const metadata: Metadata = {
   title: 'Terms of Use | Balinsky',
@@ -31,7 +31,38 @@ export default function Page() {
         with the operator of each unit (developer, agency or owner). The deal is closed directly between buyer and operator.
       </p>
 
-      <h2>2. Accuracy</h2>
+      <h2>2. Who operates the site</h2>
+      <p>
+        The site is run by Andrei Slesarau, a sole proprietor registered in Georgia: registration number 316362404
+        of 06.01.2022, registered address 19 Shartava St., Rustavi, Georgia. All contracts and invoices are issued
+        by that entity, under Georgian law.
+      </p>
+      <p>
+        The platform’s only source of revenue is fees paid by developers and other rights holders for publishing
+        information and advertising: banners and listings on the site, posts in the Telegram channel, and video
+        production about projects. That fee does not depend on whether any reader goes on to buy. We charge visitors
+        nothing — no subscription, no commission, no finder’s fee.
+      </p>
+      <p>
+        The site operator provides no services within Indonesia. Publishing the catalogue, editorial work and
+        administration are carried out by an entity registered in Georgia.
+      </p>
+
+      <h2>3. What Balinsky.info is not</h2>
+      <p>
+        We are not a real-estate agency, a broker or a realtor. Specifically, we do not sell properties and do not act
+        as seller; we do not represent either buyer or seller in negotiations; we do not draft, sign or certify
+        contracts; we do not receive or hold earnest money, deposits or any payments related to a transaction; we take
+        no commission from buyers; we do not arrange viewings, trips or site visits; and we provide no legal, notarial,
+        tax or visa services.
+      </p>
+      <p>
+        All of the above is done by the parties themselves and the licensed professionals they engage — the developer
+        or owner, a PPAT notary, a lawyer, a tax adviser. The contacts of each property’s operator are shown on that
+        property’s page; correspondence and negotiation run straight to them, bypassing Balinsky.
+      </p>
+
+      <h2>4. Accuracy</h2>
       <p>
         We work to keep the catalogue current, but prices, availability, permits (PBG, SLF) and terms can change.
         Before closing a deal, verify the data with the operator directly and through Indonesia&apos;s official registers.
@@ -40,7 +71,7 @@ export default function Page() {
         Each video and photo was captured on a specific date — we are not responsible for changes after that capture.
       </p>
 
-      <h2>3. User content</h2>
+      <h2>5. User content</h2>
       <p>
         When you contact us through Telegram, our bot, a form, or email, you submit text and contact data and confirm you have the
         right to share them. How that data is used: see our <a href="/en/privacy">Privacy Policy</a>.
@@ -49,7 +80,7 @@ export default function Page() {
         It is forbidden to use the site for spam, automated scraping, attempts to bypass protections, load attacks, or reverse-engineering of internal APIs.
       </p>
 
-      <h2>4. Intellectual property</h2>
+      <h2>6. Intellectual property</h2>
       <p>
         Texts, schemes and editorial materials on the site (unless otherwise marked) are licensed under
         Creative Commons Attribution 4.0 International — credit the author and link to the original when reusing them.
@@ -58,31 +89,31 @@ export default function Page() {
         Photos and videos of individual properties may belong to developers or third parties — request a separate licence for commercial reuse.
       </p>
 
-      <h2>5. Andrei AI assistant</h2>
+      <h2>7. Andrei AI assistant</h2>
       <p>
         Andrei is an experimental AI assistant on the site. Its answers are informational and do not replace consultation with a licensed agent,
         lawyer or notary. Andrei can make mistakes — confirm anything that affects a deal with the appropriate specialist before acting on it.
       </p>
 
-      <h2>6. External links</h2>
+      <h2>8. External links</h2>
       <p>
         The site links to third-party resources (YouTube, Telegram, estatemarket.io, developer sites). We do not control their content
         and are not responsible for their availability or policies.
       </p>
 
-      <h2>7. Liability</h2>
+      <h2>9. Liability</h2>
       <p>
         The site is provided &ldquo;as is&rdquo;. We do not guarantee uninterrupted availability, absence of technical issues, or that the listings
         fit your specific investment goals. Decisions are at the buyer&apos;s risk.
       </p>
 
-      <h2>8. Changes</h2>
+      <h2>10. Changes</h2>
       <p>
         These terms can change. The current version always lives on this page. Significant updates are announced in the
         <a href="https://t.me/itrealtor" target="_blank" rel="noopener"> @itrealtor Telegram channel</a>.
       </p>
 
-      <h2>9. Governing law and jurisdiction</h2>
+      <h2>11. Governing law and jurisdiction</h2>
       <p>
         Disputes are governed by the laws of Georgia (the operator&apos;s country of registration), unless mandatory rules of your country of residence
         provide otherwise.

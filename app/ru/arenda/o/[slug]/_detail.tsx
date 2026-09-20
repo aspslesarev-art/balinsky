@@ -9,7 +9,6 @@ import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { PhotoGalleryHero } from '@/components/PhotoGalleryHero'
 import { PriceDisplay } from '@/components/PriceDisplay'
 import { loadRentalBySlug } from '@/lib/rental'
-import { LeadButton } from '@/components/LeadButton'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { hreflangMap } from '@/lib/hreflang'
@@ -222,13 +221,23 @@ export async function RentalDetail({ slug, lang }: { slug: string; lang: Lang })
           </section>
         )}
 
+        {/* Заявок Balinsky не принимает: объявление об аренде — это
+            информация, связь с собственником идёт мимо сайта. */}
         <section className="mb-10">
-          <LeadButton
-            label={pickCopy({ ru: 'Оставить заявку', en: 'Leave a request', id: 'Kirim permintaan', fr: 'Envoyer une demande', de: 'Anfrage senden', zh: '提交请求', nl: 'Aanvraag versturen', ban: 'Kirim panuunan', pl: 'Zostaw zgłoszenie', uk: 'Залишити заявку' }, lang)}
-            lang={lang}
-            context={{ listingKind: 'rental', listingSlug: r.slug, source: 'rental' }}
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[15px] font-medium transition-colors"
-          />
+          <p className="max-w-[68ch] text-[14px] leading-[1.6] text-[var(--color-text-muted)]">
+            {pickCopy({
+              ru: 'Balinsky публикует это объявление как информацию и не является стороной договора аренды. Условия, оплату и осмотр согласуйте напрямую с собственником или его управляющей компанией.',
+              en: 'Balinsky publishes this listing as information and is not a party to the rental agreement. Agree terms, payment and viewings directly with the owner or their management company.',
+              id: 'Balinsky menerbitkan iklan ini sebagai informasi dan bukan pihak dalam perjanjian sewa. Sepakati syarat, pembayaran, dan kunjungan langsung dengan pemilik atau perusahaan pengelolanya.',
+              fr: 'Balinsky publie cette annonce à titre informatif et n’est pas partie au contrat de location. Convenez des conditions, du paiement et des visites directement avec le propriétaire ou sa société de gestion.',
+              de: 'Balinsky veröffentlicht dieses Inserat als Information und ist nicht Partei des Mietvertrags. Konditionen, Zahlung und Besichtigung vereinbaren Sie direkt mit dem Eigentümer oder seiner Hausverwaltung.',
+              zh: 'Balinsky 仅将此房源作为信息发布，并非租赁合同的当事方。条款、付款和看房请直接与业主或其管理公司商定。',
+              nl: 'Balinsky publiceert deze advertentie als informatie en is geen partij bij de huurovereenkomst. Regel voorwaarden, betaling en bezichtiging rechtstreeks met de eigenaar of diens beheerder.',
+              ban: 'Balinsky ngamedalang iklan puniki pinaka informasi tur nénten dados pihak ring perjanjian sewa. Syarat, pembayaran, miwah kunjungan kasepakatin langsung sareng sang druwe utawi perusahaan pangelolanipun.',
+              pl: 'Balinsky publikuje to ogłoszenie jako informację i nie jest stroną umowy najmu. Warunki, płatność i oglądanie ustal bezpośrednio z właścicielem lub jego zarządcą.',
+              uk: 'Balinsky публікує це оголошення як інформацію і не є стороною договору оренди. Умови, оплату та огляд узгоджуйте напряму з власником або його керуючою компанією.',
+            }, lang)}
+          </p>
         </section>
 
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }} />

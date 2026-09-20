@@ -18,7 +18,7 @@ const COPY = {
     home: 'Главная',
     crumb: 'Бронирование',
     h1: 'Бронирование объекта на Бали — как это устроено',
-    intro: 'Когда вы нажимаете «Зарезервировать», объект уходит на 14-дневный hold лично за вами. Эта страница объясняет, что именно происходит дальше, кто держит ваш депозит и как вернуть деньги если вы передумаете.',
+    intro: 'Резервация — это соглашение между вами и застройщиком: объект снимается с продажи на 14 дней, пока вы проверяете документы. Balinsky стороной этого соглашения не является — страница объясняет, как устроен механизм, кто держит ваш депозит и как вернуть деньги, если вы передумаете.',
 
     h2What: 'Что такое reservation на Бали',
     pWhat: 'Reservation — это первый юридически фиксируемый шаг сделки. Вы подписываете короткий reservation form (не договор купли-продажи), вносите holding deposit, и объект на 14 дней снимается с продажи: ни один другой покупатель в этот период купить его не может. За это время вы делаете due diligence, обсуждаете правки в SPA с юристом, готовите перевод средств на следующий транш.',
@@ -76,8 +76,8 @@ const COPY = {
         a: 'Нет. Все легальные сделки через PPAT нотариуса фиксируются в IDR/USD на банковский счёт. Криптовалютный перевод не оставляет следа для нотариуса и для налоговой Индонезии — потом доказать что вы что-то платили будет невозможно.' },
     ],
 
-    ctaHeading: 'Готовы зарезервировать',
-    ctaText: 'Откройте карточку объекта и нажмите «Зарезервировать» — менеджер пришлёт reservation form в течение часа.',
+    ctaHeading: 'Как запросить резервацию',
+    ctaText: 'Откройте карточку объекта и напишите застройщику напрямую — его Telegram и WhatsApp указаны в блоке контактов. Reservation form выставляет и подписывает сам застройщик; Balinsky в этом не участвует и денег от вас не принимает.',
     ctaVillas: 'К виллам',
     ctaApartments: 'К апартаментам',
     ctaGuide: 'Полный гид «Как купить на Бали»',
@@ -86,7 +86,7 @@ const COPY = {
     home: 'Home',
     crumb: 'Reservation',
     h1: 'How a Bali property reservation works',
-    intro: 'When you tap "Reserve" on a listing, the property goes on a 14-day hold for you exclusively. This page explains what happens next, who holds your deposit, and how refunds work if you change your mind.',
+    intro: 'A reservation is an agreement between you and the developer: the property comes off the market for 14 days while you check the documents. Balinsky is not a party to that agreement — this page explains how the mechanism works, who holds your deposit, and how refunds work if you change your mind.',
 
     h2What: 'What a Bali reservation is',
     pWhat: 'A reservation is the first legally recorded step in the deal. You sign a short reservation form (not a sale & purchase agreement), pay a holding deposit, and the property is taken off market for 14 days — no other buyer can complete a purchase during that window. You use this time to do due diligence, agree SPA edits with your lawyer, and prepare the next wire.',
@@ -144,8 +144,8 @@ const COPY = {
         a: 'No. All legal deals through a PPAT notary are recorded in IDR/USD via bank wire. A crypto wire leaves no trail for the notary or the Indonesian tax office — proving you paid anything later becomes impossible.' },
     ],
 
-    ctaHeading: 'Ready to reserve',
-    ctaText: 'Open any listing and tap "Reserve" — the manager will send you a reservation form within an hour.',
+    ctaHeading: 'How to request a reservation',
+    ctaText: 'Open the listing and write to the developer directly — their Telegram and WhatsApp are in the contacts block. The reservation form is issued and signed by the developer; Balinsky takes no part in it and accepts no money from you.',
     ctaVillas: 'Open villas',
     ctaApartments: 'Open apartments',
     ctaGuide: 'Full "How to buy in Bali" guide',
@@ -154,7 +154,7 @@ const COPY = {
     home: 'Beranda',
     crumb: 'Reservasi',
     h1: 'Cara kerja reservasi properti di Bali',
-    intro: 'Ketika Anda menekan «Reservasi» pada sebuah objek, properti tersebut ditahan (hold) khusus untuk Anda selama 14 hari. Halaman ini menjelaskan apa yang terjadi selanjutnya, siapa yang memegang deposit Anda, dan bagaimana pengembalian dana bila Anda berubah pikiran.',
+    intro: 'Reservasi adalah kesepakatan antara Anda dan pengembang: properti ditarik dari pasar selama 14 hari sementara Anda memeriksa dokumen. Balinsky bukan pihak dalam kesepakatan itu — halaman ini menjelaskan cara kerja mekanismenya, siapa yang memegang deposit Anda, dan bagaimana pengembalian dana bila Anda berubah pikiran.',
 
     h2What: 'Apa itu reservasi di Bali',
     pWhat: 'Reservasi adalah langkah pertama transaksi yang tercatat secara hukum. Anda menandatangani reservation form singkat (bukan perjanjian jual beli), membayar holding deposit, dan properti ditarik dari pasar selama 14 hari — tidak ada pembeli lain yang bisa menyelesaikan pembelian pada periode itu. Waktu ini Anda gunakan untuk due diligence, menyepakati revisi SPA bersama pengacara, dan menyiapkan transfer dana berikutnya.',
@@ -212,8 +212,8 @@ const COPY = {
         a: 'Tidak. Semua transaksi legal melalui notaris PPAT dicatat dalam IDR/USD via transfer bank. Transfer kripto tidak meninggalkan jejak bagi notaris maupun kantor pajak Indonesia — membuktikan bahwa Anda pernah membayar kelak menjadi mustahil.' },
     ],
 
-    ctaHeading: 'Siap memesan',
-    ctaText: 'Buka objek mana pun dan tekan «Reservasi» — manajer akan mengirimkan reservation form dalam waktu satu jam.',
+    ctaHeading: 'Cara meminta reservasi',
+    ctaText: 'Buka halaman objek dan hubungi pengembang secara langsung — Telegram dan WhatsApp mereka ada di blok kontak. Reservation form diterbitkan dan ditandatangani oleh pengembang; Balinsky tidak ikut serta dan tidak menerima uang dari Anda.',
     ctaVillas: 'Ke vila',
     ctaApartments: 'Ke apartemen',
     ctaGuide: 'Panduan lengkap «Cara membeli di Bali»',
@@ -222,7 +222,7 @@ const COPY = {
     home: 'Accueil',
     crumb: 'Réservation',
     h1: 'Comment fonctionne la réservation d’un bien à Bali',
-    intro: 'Lorsque vous appuyez sur « Réserver » sur une annonce, le bien est bloqué pendant 14 jours exclusivement pour vous. Cette page explique ce qui se passe ensuite, qui détient votre acompte et comment se déroule le remboursement si vous changez d’avis.',
+    intro: 'Une réservation est un accord entre vous et le promoteur : le bien est retiré du marché pendant 14 jours le temps que vous vérifiiez les documents. Balinsky n’est pas partie à cet accord — cette page explique le mécanisme, qui détient votre acompte et comment se déroule le remboursement si vous changez d’avis.',
 
     h2What: 'Ce qu’est une réservation à Bali',
     pWhat: 'La réservation est la première étape juridiquement enregistrée de la transaction. Vous signez un court reservation form (et non un contrat de vente), versez un holding deposit, et le bien est retiré du marché pendant 14 jours — aucun autre acheteur ne peut finaliser un achat durant cette fenêtre. Vous utilisez ce temps pour la due diligence, négocier les modifications du SPA avec votre avocat et préparer le virement suivant.',
@@ -280,8 +280,8 @@ const COPY = {
         a: 'Non. Toutes les transactions légales passant par un notaire PPAT sont enregistrées en IDR/USD par virement bancaire. Un virement crypto ne laisse aucune trace pour le notaire ni pour le fisc indonésien — prouver que vous avez payé quoi que ce soit deviendrait impossible.' },
     ],
 
-    ctaHeading: 'Prêt à réserver',
-    ctaText: 'Ouvrez n’importe quelle annonce et appuyez sur « Réserver » — le manager vous enverra un reservation form sous une heure.',
+    ctaHeading: 'Comment demander une réservation',
+    ctaText: 'Ouvrez l’annonce et écrivez directement au promoteur — son Telegram et son WhatsApp figurent dans le bloc contacts. Le reservation form est émis et signé par le promoteur ; Balinsky n’y participe pas et n’encaisse aucun paiement de votre part.',
     ctaVillas: 'Voir les villas',
     ctaApartments: 'Voir les appartements',
     ctaGuide: 'Guide complet « Comment acheter à Bali »',
@@ -290,7 +290,7 @@ const COPY = {
     home: 'Startseite',
     crumb: 'Reservierung',
     h1: 'Wie eine Immobilienreservierung auf Bali funktioniert',
-    intro: 'Wenn Sie bei einem Angebot auf „Reservieren“ tippen, wird die Immobilie exklusiv für Sie 14 Tage lang blockiert. Diese Seite erklärt, was danach passiert, wer Ihre Anzahlung hält und wie die Rückerstattung funktioniert, falls Sie es sich anders überlegen.',
+    intro: 'Eine Reservierung ist eine Vereinbarung zwischen Ihnen und dem Bauträger: Das Objekt wird für 14 Tage vom Markt genommen, während Sie die Unterlagen prüfen. Balinsky ist nicht Partei dieser Vereinbarung — diese Seite erklärt den Mechanismus, wer Ihre Anzahlung hält und wie die Rückerstattung funktioniert, falls Sie es sich anders überlegen.',
 
     h2What: 'Was eine Reservierung auf Bali ist',
     pWhat: 'Eine Reservierung ist der erste rechtlich erfasste Schritt im Geschäft. Sie unterschreiben ein kurzes reservation form (keinen Kaufvertrag), zahlen ein holding deposit, und die Immobilie wird für 14 Tage vom Markt genommen — kein anderer Käufer kann in diesem Zeitfenster einen Kauf abschließen. Diese Zeit nutzen Sie für die Due Diligence, stimmen SPA-Änderungen mit Ihrem Anwalt ab und bereiten die nächste Überweisung vor.',
@@ -348,8 +348,8 @@ const COPY = {
         a: 'Nein. Alle legalen Geschäfte über einen PPAT-Notar werden in IDR/USD per Banküberweisung erfasst. Eine Krypto-Überweisung hinterlässt keine Spur für den Notar oder das indonesische Finanzamt — später zu beweisen, dass Sie etwas gezahlt haben, wird unmöglich.' },
     ],
 
-    ctaHeading: 'Bereit zu reservieren',
-    ctaText: 'Öffnen Sie ein beliebiges Angebot und tippen Sie auf „Reservieren“ — der Manager sendet Ihnen innerhalb einer Stunde ein reservation form.',
+    ctaHeading: 'So fordern Sie eine Reservierung an',
+    ctaText: 'Öffnen Sie das Angebot und schreiben Sie direkt an den Bauträger — Telegram und WhatsApp stehen im Kontaktblock. Das reservation form stellt und unterzeichnet der Bauträger; Balinsky ist daran nicht beteiligt und nimmt von Ihnen kein Geld entgegen.',
     ctaVillas: 'Villen ansehen',
     ctaApartments: 'Apartments ansehen',
     ctaGuide: 'Vollständiger Leitfaden „Auf Bali kaufen“',
@@ -358,7 +358,7 @@ const COPY = {
     home: '首页',
     crumb: '预订',
     h1: '巴厘岛房产预订如何运作',
-    intro: '当您在房源上点击“预订”时，该房产将为您专属保留 14 天。本页说明接下来会发生什么、谁保管您的定金，以及如果您改变主意如何退款。',
+    intro: '预订是您与开发商之间的协议：在您核查文件期间，该房产将撤出市场 14 天。Balinsky 并非该协议的当事方——本页说明这一机制如何运作、谁保管您的定金，以及如果您改变主意如何退款。',
 
     h2What: '什么是巴厘岛的预订',
     pWhat: '预订是交易中第一个有法律记录的步骤。您签署一份简短的 reservation form（并非买卖合同），支付 holding deposit，房产将下架 14 天——在此期间没有其他买家能够完成购买。您可利用这段时间进行尽职调查（due diligence），与律师商定 SPA 的修改，并准备下一笔汇款。',
@@ -416,8 +416,8 @@ const COPY = {
         a: '不。所有通过 PPAT 公证人的合法交易均以 IDR/USD 通过银行汇款记录。加密货币汇款不会为公证人或印度尼西亚税务机关留下痕迹——日后要证明您支付过任何款项将变得不可能。' },
     ],
 
-    ctaHeading: '准备好预订了',
-    ctaText: '打开任意房源并点击“预订”——经理将在一小时内向您发送 reservation form。',
+    ctaHeading: '如何申请预订',
+    ctaText: '打开房源页面直接联系开发商——其 Telegram 和 WhatsApp 位于联系方式区块。Reservation form 由开发商出具并签署；Balinsky 不参与其中，也不向您收取任何款项。',
     ctaVillas: '查看别墅',
     ctaApartments: '查看公寓',
     ctaGuide: '完整的“如何在巴厘岛购房”指南',
@@ -426,7 +426,7 @@ const COPY = {
     home: 'Home',
     crumb: 'Reservering',
     h1: 'Hoe een vastgoedreservering op Bali werkt',
-    intro: 'Wanneer u bij een aanbod op „Reserveren“ tikt, wordt het object 14 dagen exclusief voor u vastgehouden. Deze pagina legt uit wat er daarna gebeurt, wie uw aanbetaling beheert en hoe restitutie werkt als u van gedachten verandert.',
+    intro: 'Een reservering is een afspraak tussen u en de ontwikkelaar: het object gaat 14 dagen uit de verkoop terwijl u de documenten controleert. Balinsky is geen partij bij die afspraak — deze pagina legt uit hoe het mechanisme werkt, wie uw aanbetaling beheert en hoe restitutie werkt als u van gedachten verandert.',
 
     h2What: 'Wat een reservering op Bali is',
     pWhat: 'Een reservering is de eerste juridisch vastgelegde stap in de transactie. U ondertekent een kort reservation form (geen koopovereenkomst), betaalt een holding deposit, en het object wordt 14 dagen uit de markt gehaald — geen andere koper kan in dat venster een aankoop afronden. Deze tijd gebruikt u voor due diligence, om SPA-aanpassingen met uw advocaat af te stemmen en de volgende overboeking voor te bereiden.',
@@ -484,8 +484,8 @@ const COPY = {
         a: 'Nee. Alle legale transacties via een PPAT-notaris worden in IDR/USD via bankoverschrijving vastgelegd. Een crypto-overboeking laat geen spoor na voor de notaris of de Indonesische Belastingdienst — later bewijzen dat u iets betaald hebt, wordt onmogelijk.' },
     ],
 
-    ctaHeading: 'Klaar om te reserveren',
-    ctaText: 'Open een willekeurig aanbod en tik op „Reserveren“ — de manager stuurt u binnen een uur een reservation form.',
+    ctaHeading: 'Hoe vraagt u een reservering aan',
+    ctaText: 'Open het aanbod en schrijf de ontwikkelaar rechtstreeks — Telegram en WhatsApp staan in het contactblok. Het reservation form wordt door de ontwikkelaar opgesteld en ondertekend; Balinsky speelt daarin geen rol en ontvangt geen geld van u.',
     ctaVillas: 'Villa’s bekijken',
     ctaApartments: 'Appartementen bekijken',
     ctaGuide: 'Volledige gids „Kopen op Bali“',
@@ -494,7 +494,7 @@ const COPY = {
     home: 'Beranda',
     crumb: 'Reservasi',
     h1: 'Sapunapi carane reservasi properti ring Bali',
-    intro: 'Rikala Ragane nyentuh „Reservasi“ ring listing, properti punika katahan khusus antuk Ragane salami 14 dina. Kaca puniki nlatarang napi sane wenten salanturnyane, sira sane ngamong deposit Ragane, miwah sapunapi carane ngwaliang jinah yening Ragane magentos pikayun.',
+    intro: 'Reservasi punika pasubayan pantaraning Ragane miwah pangwangun: properti kaangkat saking pasar salami 14 dina rikala Ragane mriksa dokumen. Balinsky nénten dados pihak ring pasubayan punika — kaca puniki nlatarang sapunapi mekanismenyane, sira sane ngamong deposit Ragane, miwah sapunapi carane ngwaliang jinah yening Ragane magentos pikayun.',
 
     h2What: 'Napi reservasi ring Bali punika',
     pWhat: 'Reservasi inggih punika langkah kapertama sane kacatet secara hukum ring transaksi. Ragane nandatangani reservation form sane bawak (boya perjanjian adol-tumbas), mayah holding deposit, tur properti kaangkat saking pasar salami 14 dina — nenten wenten pembeli lianan sane prasida muputang tumbasan ring periode punika. Galah puniki kanggen due diligence, ngraosang revisi SPA sareng pengacara, tur nyiagayang transfer jinah salanturnyane.',
@@ -552,8 +552,8 @@ const COPY = {
         a: 'Nenten. Sami transaksi legal malarapan notaris PPAT kacatet ring IDR/USD via transfer bank. Transfer kripto nenten ninggalang jejak antuk notaris utawi kantor pajak Indonesia — ngwuktiang Ragane naenin mayah punapa-punapi salanturnyane dados nenten mresidayang.' },
     ],
 
-    ctaHeading: 'Sampun sayaga reservasi',
-    ctaText: 'Bukak listing sane encen ja tur cotot „Reservasi“ — manajer jagi ngirim reservation form ring galah asiki jam.',
+    ctaHeading: 'Sapunapi ngedeng reservasi',
+    ctaText: 'Bukak kaca objek tur nyurat langsung ka pangwangun — Telegram miwah WhatsApp dané wénten ring blok kontak. Reservation form kamedalang tur katandatanganin olih pangwangun; Balinsky nénten milu tur nénten nerima jinah saking Ragane.',
     ctaVillas: 'Ka vila',
     ctaApartments: 'Ka apartemen',
     ctaGuide: 'Panduan lengkap „Sapunapi numbas ring Bali“',
@@ -562,7 +562,7 @@ const COPY = {
     home: 'Strona główna',
     crumb: 'Rezerwacja',
     h1: 'Jak działa rezerwacja nieruchomości na Bali',
-    intro: 'Gdy dotkniesz „Rezerwuj” przy ofercie, nieruchomość zostaje zablokowana na 14 dni wyłącznie dla ciebie. Ta strona wyjaśnia, co dzieje się dalej, kto przechowuje twój depozyt i jak działają zwroty, jeśli zmienisz zdanie.',
+    intro: 'Rezerwacja to umowa między tobą a deweloperem: nieruchomość schodzi z rynku na 14 dni, gdy sprawdzasz dokumenty. Balinsky nie jest stroną tej umowy — ta strona wyjaśnia, jak działa mechanizm, kto przechowuje twój depozyt i jak działają zwroty, jeśli zmienisz zdanie.',
 
     h2What: 'Czym jest rezerwacja na Bali',
     pWhat: 'Rezerwacja to pierwszy prawnie odnotowany krok w transakcji. Podpisujesz krótki formularz rezerwacji (nie umowę sprzedaży), wpłacasz zadatek rezerwacyjny, a nieruchomość zostaje wycofana z rynku na 14 dni — żaden inny kupujący nie może w tym oknie sfinalizować zakupu. Ten czas wykorzystujesz na due diligence, uzgodnienie zmian w SPA z prawnikiem i przygotowanie kolejnego przelewu.',
@@ -620,8 +620,8 @@ const COPY = {
         a: 'Nie. Wszystkie legalne transakcje przez notariusza PPAT są rejestrowane w IDR/USD przelewem bankowym. Przelew krypto nie zostawia śladu dla notariusza ani indonezyjskiego urzędu skarbowego — udowodnienie, że cokolwiek zapłaciłeś, staje się później niemożliwe.' },
     ],
 
-    ctaHeading: 'Gotowy do rezerwacji',
-    ctaText: 'Otwórz dowolną ofertę i dotknij „Rezerwuj” — menedżer prześle ci formularz rezerwacji w ciągu godziny.',
+    ctaHeading: 'Jak poprosić o rezerwację',
+    ctaText: 'Otwórz ofertę i napisz bezpośrednio do dewelopera — jego Telegram i WhatsApp są w bloku kontaktów. Formularz rezerwacji wystawia i podpisuje sam deweloper; Balinsky nie bierze w tym udziału i nie przyjmuje od ciebie pieniędzy.',
     ctaVillas: 'Otwórz wille',
     ctaApartments: 'Otwórz apartamenty',
     ctaGuide: 'Pełny przewodnik „Jak kupić na Bali”',
@@ -630,7 +630,7 @@ const COPY = {
     home: 'Головна',
     crumb: 'Бронювання',
     h1: 'Як працює бронювання нерухомості на Балі',
-    intro: 'Коли ви натискаєте «Забронювати» на обʼєкті, нерухомість блокується на 14 днів виключно для вас. Ця сторінка пояснює, що відбувається далі, хто зберігає ваш депозит і як працюють повернення, якщо ви передумаєте.',
+    intro: 'Резервація — це угода між вами та забудовником: обʼєкт знімається з продажу на 14 днів, поки ви перевіряєте документи. Balinsky стороною цієї угоди не є — сторінка пояснює, як влаштований механізм, хто зберігає ваш депозит і як повернути гроші, якщо ви передумаєте.',
 
     h2What: 'Що таке бронювання на Балі',
     pWhat: 'Бронювання — це перший юридично зафіксований крок в угоді. Ви підписуєте коротку форму бронювання (не договір купівлі-продажу), вносите завдаток, і нерухомість знімають з ринку на 14 днів — жоден інший покупець не може завершити купівлю в цьому вікні. Цей час ви використовуєте для дью-ділідженс, узгодження правок SPA з юристом і підготовки наступного переказу.',
@@ -688,8 +688,8 @@ const COPY = {
         a: 'Ні. Усі легальні угоди через нотаріуса PPAT реєструються в IDR/USD банківським переказом. Крипто-переказ не залишає сліду для нотаріуса чи індонезійської податкової — довести, що ви щось заплатили, пізніше стає неможливо.' },
     ],
 
-    ctaHeading: 'Готові забронювати',
-    ctaText: 'Відкрийте будь-який обʼєкт і натисніть «Забронювати» — менеджер надішле вам форму бронювання протягом години.',
+    ctaHeading: 'Як запросити резервацію',
+    ctaText: 'Відкрийте сторінку обʼєкта і напишіть забудовнику напряму — його Telegram і WhatsApp є в блоці контактів. Reservation form виставляє і підписує сам забудовник; Balinsky у цьому участі не бере і грошей від вас не приймає.',
     ctaVillas: 'Відкрити вілли',
     ctaApartments: 'Відкрити апартаменти',
     ctaGuide: 'Повний посібник «Як купити на Балі»',
