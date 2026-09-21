@@ -1,6 +1,13 @@
 // Crawl a sitemap sample and bucket URLs by the GSC "not indexed" reasons:
 //   404, redirect (3xx), 5xx, and canonical mismatch (declared canonical ≠ URL).
 // Usage: node scripts/check-index-health.mjs [--per 12]
+// Firewall: the site challenges non-browser traffic — this UA is allow-listed
+// in the Vercel firewall ("Owner and service bypass" rule), so tooling gets through.
+const TOOL_UA = 'balinsky-tools/1.0'
+const rawFetch = globalThis.fetch
+globalThis.fetch = (url, init = {}) =>
+  rawFetch(url, { ...init, headers: { 'user-agent': TOOL_UA, ...(init.headers || {}) } })
+
 const args = process.argv.slice(2)
 const arg = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : d }
 const HOST = 'https://balinsky.info'

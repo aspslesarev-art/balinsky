@@ -3,6 +3,13 @@
 // gpt-5.4 judge score each reply on relevance / grounding / language /
 // helpfulness / safety (1-5). Prints a scorecard + saves reports/balisa-eval.json.
 // Repeatable → catches regressions. Usage: node scripts/balisa-eval.mjs [--base https://balinsky.info]
+// Firewall: the site challenges non-browser traffic — this UA is allow-listed
+// in the Vercel firewall ("Owner and service bypass" rule), so tooling gets through.
+const TOOL_UA = 'balinsky-tools/1.0'
+const rawFetch = globalThis.fetch
+globalThis.fetch = (url, init = {}) =>
+  rawFetch(url, { ...init, headers: { 'user-agent': TOOL_UA, ...(init.headers || {}) } })
+
 import fs from 'node:fs'
 
 const envFile = fs.readFileSync('.env.local', 'utf8')

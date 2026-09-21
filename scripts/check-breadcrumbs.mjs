@@ -6,6 +6,13 @@
 //   node scripts/check-breadcrumbs.mjs --base http://localhost:3000
 //   node scripts/check-breadcrumbs.mjs --sitemap           # crawl full sitemap
 //   node scripts/check-breadcrumbs.mjs --per 40            # cap URLs per sitemap
+// Firewall: the site challenges non-browser traffic — this UA is allow-listed
+// in the Vercel firewall ("Owner and service bypass" rule), so tooling gets through.
+const TOOL_UA = 'balinsky-tools/1.0'
+const rawFetch = globalThis.fetch
+globalThis.fetch = (url, init = {}) =>
+  rawFetch(url, { ...init, headers: { 'user-agent': TOOL_UA, ...(init.headers || {}) } })
+
 const args = process.argv.slice(2)
 const arg = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : d }
 const BASE = (arg('--base', 'https://balinsky.info')).replace(/\/$/, '')
