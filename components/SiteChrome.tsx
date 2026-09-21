@@ -34,6 +34,9 @@ export function SiteChrome() {
   if (pathname.startsWith('/insights')) return null
   // Запись на встречу — отдельная страница по ссылке, только выбор дня и времени.
   if (pathname === '/vstrecha' || pathname === '/en/meeting') return null
+  // Личный трекер плана — не витрина: ни футера маркетплейса, ни консультанта,
+  // ни оверлея правки контента.
+  if (pathname === '/plan') return null
   const lang: Lang = detectLang(pathname)
   return (
     <>

@@ -24,6 +24,8 @@ const DISALLOW = [
   '/insights',
   // Закрытый отчёт о движении рынка — только для приглашённых аккаунтов.
   '/rynok',
+  // Личный трекер квартального плана — видит только владелец.
+  '/plan',
 ]
 
 // Modern AI-search crawlers we want to explicitly green-light. Without
