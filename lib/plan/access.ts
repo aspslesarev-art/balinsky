@@ -11,7 +11,19 @@ import { currentAdminUsername } from '@/lib/admin-auth'
 
 const OWNER = (process.env.PLAN_OWNER ?? 'andrei').trim().toLowerCase()
 
-export async function hasPlanAccess(): Promise<boolean> {
+export type PlanAccess =
+  | { kind: 'owner' }
+  /** Вошёл админ, но не владелец плана — показываем отказ, а не редирект в никуда. */
+  | { kind: 'other'; username: string; owner: string }
+  | { kind: 'anon' }
+
+export async function planAccess(): Promise<PlanAccess> {
   const username = await currentAdminUsername()
-  return username !== null && username === OWNER
+  if (username === null) return { kind: 'anon' }
+  if (username === OWNER) return { kind: 'owner' }
+  return { kind: 'other', username, owner: OWNER }
+}
+
+export async function hasPlanAccess(): Promise<boolean> {
+  return (await planAccess()).kind === 'owner'
 }

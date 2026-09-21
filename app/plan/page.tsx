@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { Bricolage_Grotesque, Inter } from 'next/font/google'
-import { hasPlanAccess } from '@/lib/plan/access'
+import { planAccess } from '@/lib/plan/access'
 import { PLAN_DEADLINE } from '@/lib/plan/data'
 import { PlanClient } from './_client'
+import { LogoutButton } from './_logout'
 import styles from './plan.module.css'
 
 // Личный трекер квартального плана. Виден только владельцу (lib/plan/access.ts),
@@ -29,11 +30,32 @@ function daysUntil(deadline: string): number {
 }
 
 export default async function PlanPage() {
-  if (!(await hasPlanAccess())) redirect('/admin')
+  const access = await planAccess()
+  // Не вошёл — на форму входа, но с возвратом сюда: иначе после логина
+  // человек оказывается в чатах админки и думает, что план не работает.
+  if (access.kind === 'anon') redirect('/admin?next=/plan')
 
   return (
     <main className={`${styles.page} ${fontHead.variable} ${fontBody.variable}`}>
-      <PlanClient daysLeft={daysUntil(PLAN_DEADLINE)} />
+      {access.kind === 'owner'
+        ? <PlanClient daysLeft={daysUntil(PLAN_DEADLINE)} />
+        : <NotOwner username={access.username} owner={access.owner} />}
     </main>
+  )
+}
+
+/** Вошёл, но не тот: молчаливый редирект здесь читался бы как поломка. */
+function NotOwner({ username, owner }: { username: string; owner: string }) {
+  return (
+    <div className={styles.wrap}>
+      <div className={styles.denied}>
+        <h1>План закрыт</h1>
+        <p>
+          Вы вошли как <b>{username}</b>, а страница открыта для <b>{owner}</b>.
+          Выйдите и войдите своим логином — или поменяйте настройку PLAN_OWNER.
+        </p>
+        <LogoutButton />
+      </div>
+    </div>
   )
 }

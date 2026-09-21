@@ -142,3 +142,10 @@
 @media (prefers-reduced-motion: reduce) {
   .page * { transition: none !important; }
 }
+
+/* Отказ: вошёл не владелец плана. */
+.denied { padding: 80px 0; max-width: 34em; }
+.denied h1 { font-family: var(--plan-font-h), Georgia, serif; font-weight: 800; font-size: 32px; margin: 0 0 12px; }
+.denied p { color: var(--dim); font-size: 15px; line-height: 1.55; margin: 0 0 24px; }
+.denied b { color: var(--ink); font-weight: 600; }
+.denied .reset { margin-left: 0; }

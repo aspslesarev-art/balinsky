@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useAdminTheme, themeClass, ThemeToggle } from './_theme'
 
-export function LoginForm() {
+export function LoginForm({ next }: { next?: string | null }) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
@@ -19,7 +19,7 @@ export function LoginForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       })
-      if (r.ok) { window.location.href = '/admin/chats'; return }
+      if (r.ok) { window.location.href = next ?? '/admin/chats'; return }
       setError(r.status === 401 ? 'Неверные данные' : 'Ошибка входа')
     } catch {
       setError('Сеть недоступна')
