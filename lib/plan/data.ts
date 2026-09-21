@@ -28,15 +28,85 @@ export const PLAN_DEALS_TOTAL = 12
  */
 export type Skill = 'comms' | 'deal' | 'stage' | 'expert' | 'system'
 
-export const SKILLS: Record<Skill, { name: string; hint: string }> = {
-  comms:  { name: 'Общение',    hint: 'Живые встречи, звонки, зумы, личные сообщения' },
-  deal:   { name: 'Сделки',     hint: 'Переговоры, дожим, подписание, деньги на счёт' },
-  stage:  { name: 'Сцена',      hint: 'Вебинары, разборы, живые мероприятия' },
-  expert: { name: 'Экспертиза', hint: 'Разбор объектов, подборки, цифры, материалы' },
-  system: { name: 'Система',    hint: 'Списки, отчёты, счета, контроль, порядок' },
+export const SKILLS: Record<Skill, { name: string; hint: string; icon: string; color: string }> = {
+  comms:  { name: 'Общение',    hint: 'Живые встречи, звонки, зумы, личные сообщения', icon: '💬', color: '#4fd1a5' },
+  deal:   { name: 'Сделки',     hint: 'Переговоры, дожим, подписание, деньги на счёт', icon: '🤝', color: '#f0a93c' },
+  stage:  { name: 'Сцена',      hint: 'Вебинары, разборы, живые мероприятия',          icon: '🎤', color: '#ff5fa2' },
+  expert: { name: 'Экспертиза', hint: 'Разбор объектов, подборки, цифры, материалы',   icon: '🧠', color: '#4cc2ff' },
+  system: { name: 'Система',    hint: 'Списки, отчёты, счета, контроль, порядок',      icon: '⚙️', color: '#b18cff' },
 }
 
 export const SKILL_ORDER: Skill[] = ['comms', 'deal', 'stage', 'expert', 'system']
+
+/** Опыта на один уровень игрока — общий счёт по всем навыкам. */
+export const PLAYER_XP_PER_LEVEL = 300
+
+/** Ранг зависит от уровня игрока: первый порог, с которого он действует. */
+export const RANKS: ReadonlyArray<{ from: number; name: string }> = [
+  { from: 1,  name: 'Новичок' },
+  { from: 3,  name: 'Связной' },
+  { from: 5,  name: 'Переговорщик' },
+  { from: 7,  name: 'Закрывающий' },
+  { from: 9,  name: 'Магнат Бали' },
+]
+
+export function rankOf(level: number): string {
+  let name = RANKS[0].name
+  for (const r of RANKS) if (level >= r.from) name = r.name
+  return name
+}
+
+export function playerLevel(xp: number): { level: number; into: number; need: number; rank: string } {
+  const level = Math.floor(xp / PLAYER_XP_PER_LEVEL) + 1
+  return { level, into: xp % PLAYER_XP_PER_LEVEL, need: PLAYER_XP_PER_LEVEL, rank: rankOf(level) }
+}
+
+/** Что считается добычей. Условие проверяется по текущему счёту. */
+export type AchievementState = {
+  money: number
+  deals: number
+  doneCount: number
+  done: ReadonlySet<string>
+}
+
+export type Achievement = {
+  id: string
+  icon: string
+  name: string
+  hint: string
+  test: (s: AchievementState) => boolean
+}
+
+const SIGNED = ['w2d0t0', 'w3d0t0', 'w4d2t0']
+
+export const ACHIEVEMENTS: Achievement[] = [
+  { id: 'first_call', icon: '📞', name: 'Первый контакт', hint: 'Закрыть 5 задач',
+    test: s => s.doneCount >= 5 },
+  { id: 'dev_first',  icon: '📝', name: 'Первый на фиксе', hint: 'Застройщик подписал договор',
+    test: s => SIGNED.some(id => s.done.has(id)) },
+  { id: 'coffee',     icon: '☕', name: 'Дюжина встреч', hint: 'Провести 12 живых встреч',
+    test: s => COFFEE_IDS.filter(id => s.done.has(id)).length >= 12 },
+  { id: 'webinar',    icon: '🎤', name: 'Первый эфир', hint: 'Провести вебинар',
+    test: s => s.done.has('w2d3t3') },
+  { id: 'deal_first', icon: '🤝', name: 'Первая сделка', hint: 'Получить первую комиссию',
+    test: s => s.deals >= 1 },
+  { id: 'easy',       icon: '💵', name: 'Изи', hint: 'Заработать $25 000',
+    test: s => s.money >= 25_000 },
+  { id: 'event',      icon: '🔥', name: 'Зал на 30', hint: 'Провести мероприятие 2 октября',
+    test: s => s.done.has('w3d4t2') },
+  { id: 'dev_all',    icon: '🏗', name: 'Четыре на фиксе', hint: 'Все застройщики подписаны',
+    test: s => SIGNED.every(id => s.done.has(id)) },
+  { id: 'norm',       icon: '💰', name: 'Норм', hint: 'Заработать $50 000',
+    test: s => s.money >= 50_000 },
+  { id: 'half',       icon: '🏆', name: 'Полпути', hint: 'Закрыть 6 сделок',
+    test: s => s.deals >= 6 },
+  { id: 'hard',       icon: '🪙', name: 'Хард', hint: 'Заработать $100 000',
+    test: s => s.money >= 100_000 },
+  { id: 'all_deals',  icon: '👑', name: 'Все двенадцать', hint: 'Закрыть 12 сделок',
+    test: s => s.deals >= 12 },
+  { id: 'flight',     icon: '✈️', name: 'Вылет', hint: 'Квест пройден',
+    test: s => s.done.has('w13d1t0') },
+]
 
 /** Опыта на один уровень. Уровень 1 — старт, дальше каждые 200 XP. */
 export const XP_PER_LEVEL = 200
@@ -330,6 +400,9 @@ export const SKILL_TOTALS: Record<Skill, number> = SKILL_ORDER.reduce((acc, sk) 
   acc[sk] = ALL_TASKS.filter(t => t.skill === sk).reduce((sum, t) => sum + t.xp, 0)
   return acc
 }, {} as Record<Skill, number>)
+
+/** Все живые встречи — из них собирается ачивка «Дюжина встреч». */
+const COFFEE_IDS: string[] = ALL_TASKS.filter(t => t.text.startsWith('Встреча за кофе')).map(t => t.id)
 
 /** Твои действия — то, что стоит в днях. */
 export const ACTION_TASKS: PlanTask[] = ALL_TASKS.filter(t => !t.waiting)

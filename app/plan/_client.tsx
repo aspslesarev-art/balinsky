@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
-  ALL_TASKS, PLAN, PLAN_DEALS_TOTAL, PLAN_LEVELS, PLAN_TARGET_USD,
-  SKILLS, SKILL_ORDER, SKILL_TOTALS, levelOf, WAITING_TASKS,
+  ACHIEVEMENTS, ALL_TASKS, PLAN, PLAN_DEALS_TOTAL, PLAN_LEVELS, PLAN_TARGET_USD,
+  SKILLS, SKILL_ORDER, SKILL_TOTALS, levelOf, playerLevel, WAITING_TASKS,
   type PlanTask, type PlanWeek, type Skill,
 } from '@/lib/plan/data'
 import styles from './plan.module.css'
@@ -54,6 +54,9 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
   const [openWeeks, setOpenWeeks] = useState<Set<number>>(new Set())
   const [armed, setArmed] = useState(false)
   const [allWaiting, setAllWaiting] = useState(false)
+  const [days, setDays] = useState<string[]>([])
+  // Всплывашки «+25 XP»: живут пару секунд и исчезают.
+  const [pops, setPops] = useState<Array<{ key: number; text: string; color: string }>>([])
   // Неделю открываем автоматически один раз — дальше это выбор человека.
   const autoOpened = useRef(false)
 
@@ -64,11 +67,12 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
     let alive = true
     fetch('/api/plan/state')
       .then(r => (r.ok ? r.json() : Promise.reject(new Error('http'))))
-      .then((j: { done?: unknown }) => {
+      .then((j: { done?: unknown; days?: unknown }) => {
         if (!alive) return
         const ids = Array.isArray(j.done) ? j.done.filter((v): v is string => typeof v === 'string') : []
         const next = new Set(ids)
         setDone(next)
+        setDays(Array.isArray(j.days) ? j.days.filter((v): v is string => typeof v === 'string') : [])
         writeCache(next)
         setFailed(false)
       })
@@ -87,6 +91,12 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
 
   const toggle = useCallback((taskId: string) => {
     const wasDone = done.has(taskId)
+    const task = ALL_TASKS.find(t => t.id === taskId)
+    if (task && !wasDone) {
+      const key = Date.now() + Math.random()
+      setPops(cur => [...cur, { key, text: `+${task.xp} XP`, color: SKILLS[task.skill].color }])
+      window.setTimeout(() => setPops(cur => cur.filter(p => p.key !== key)), 1400)
+    }
     const next = new Set(done)
     if (wasDone) next.delete(taskId); else next.add(taskId)
 
@@ -145,6 +155,25 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
   }, [done])
 
   const pct = Math.min(100, (stats.money / PLAN_TARGET_USD) * 100)
+  const player = playerLevel(stats.xp)
+  const nextLevel = PLAN_LEVELS.find(lv => stats.money < lv.amount) ?? null
+
+  const earned = useMemo(() => {
+    const state = { money: stats.money, deals: stats.deals, doneCount: stats.doneCount, done }
+    return new Set(ACHIEVEMENTS.filter(a => a.test(state)).map(a => a.id))
+  }, [stats, done])
+
+  // Серия: сколько дней подряд, считая от сегодня (или вчера), что-то закрывалось.
+  const streak = useMemo(() => {
+    const set = new Set(days)
+    const day = (shift: number) =>
+      new Date(Date.parse(`${today}T00:00:00Z`) + shift * 86_400_000).toISOString().slice(0, 10)
+    const start = set.has(day(0)) ? 0 : set.has(day(-1)) ? -1 : null
+    if (start === null) return 0
+    let n = 0
+    while (set.has(day(start - n))) n++
+    return n
+  }, [days, today])
 
   // Хвосты: твои действия из прошедших дней, которые так и не отмечены.
   const overdue = useMemo(
@@ -156,11 +185,33 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
 
   return (
     <div className={styles.wrap}>
+      <div className={styles.pops} aria-hidden="true">
+        {pops.map(p => (
+          <span key={p.key} className={styles.pop} style={{ color: p.color }}>{p.text}</span>
+        ))}
+      </div>
       <header className={styles.header}>
-        <h1 className={styles.goal}>
-          Гоа
-          <small>Старт 15 сентября. Вылет 14 декабря. 12 сделок, 4 застройщика на фиксе.</small>
-        </h1>
+        <div className={styles.hero}>
+          <div className={styles.medal} aria-hidden="true">
+            <span className={styles.medalLv}>{player.level}</span>
+            <span className={styles.medalWord}>ур.</span>
+          </div>
+          <div className={styles.heroText}>
+            <h1 className={styles.goal}>Гоа</h1>
+            <div className={styles.rank}>{player.rank}</div>
+            <div className={styles.heroBar} title={`${stats.xp} XP всего`}>
+              <i style={{ width: `${(player.into / player.need) * 100}%` }} />
+            </div>
+            <div className={styles.heroMeta}>
+              <span>{stats.xp.toLocaleString('ru-RU')} XP</span>
+              <span>до {player.level + 1} ур. — {player.need - player.into}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className={styles.quest}>
+          Старт 15 сентября. Вылет 14 декабря. 12 сделок, 4 застройщика на фиксе.
+        </div>
 
         <div className={styles.meter}>
           <div className={styles.mrow}>
@@ -171,11 +222,9 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
             <i style={{ width: `${pct}%` }} />
           </div>
           <div className={styles.levels}>
-            {PLAN_LEVELS.map(lv => (
-              <span key={lv.name} className={`${styles.lv} ${stats.money >= lv.amount ? styles.lvHit : ''}`}>
-                <b>{lv.name}</b> {fmt(lv.amount)}
-              </span>
-            ))}
+            {nextLevel
+              ? <span>До планки «{nextLevel.name}» — {fmt(nextLevel.amount - stats.money)}</span>
+              : <span>Все планки взяты</span>}
           </div>
         </div>
 
@@ -183,6 +232,10 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
           <div><span>{stats.doneCount}</span>задач закрыто</div>
           <div><span>{stats.deals}</span>{plural(stats.deals, 'сделка', 'сделки', 'сделок')} из {PLAN_DEALS_TOTAL}</div>
           <div><span>{daysLeft}</span>{plural(daysLeft, 'день', 'дня', 'дней')} до вылета</div>
+          <div className={streak > 0 ? styles.statHot : undefined}>
+            <span>{streak > 0 ? `🔥${streak}` : '—'}</span>
+            {streak > 0 ? `${plural(streak, 'день', 'дня', 'дней')} подряд` : 'серии нет'}
+          </div>
         </div>
 
         <section className={styles.skills} aria-label="Прокачка навыков">
@@ -193,19 +246,46 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
           {SKILL_ORDER.map(sk => {
             const xp = stats.bySkill[sk]
             const { level, into, need } = levelOf(xp)
+            const { icon, name, hint, color } = SKILLS[sk]
             return (
-              <div key={sk} className={styles.skill} title={`${SKILLS[sk].hint}. Всего в плане ${SKILL_TOTALS[sk]} XP, набрано ${xp}`}>
-                <div className={styles.skillTop}>
-                  <b>{SKILLS[sk].name}</b>
-                  <span className={styles.skillLv}>ур. {level}</span>
-                  <span className={styles.skillXp}>{into} / {need} → ур. {level + 1}</span>
-                </div>
-                <div className={styles.skillBar}>
-                  <i style={{ width: `${(into / need) * 100}%` }} />
+              <div
+                key={sk}
+                className={styles.skill}
+                style={{ '--sk': color } as React.CSSProperties}
+                title={`${hint}. Всего в плане ${SKILL_TOTALS[sk]} XP, набрано ${xp}`}
+              >
+                <span className={styles.skillIcon} aria-hidden="true">{icon}</span>
+                <div className={styles.skillBody}>
+                  <div className={styles.skillTop}>
+                    <b>{name}</b>
+                    <span className={styles.skillLv}>ур. {level}</span>
+                    <span className={styles.skillXp}>{into} / {need}</span>
+                  </div>
+                  <div className={styles.skillBar}>
+                    <i style={{ width: `${(into / need) * 100}%` }} />
+                  </div>
                 </div>
               </div>
             )
           })}
+        </section>
+
+        <section className={styles.awards} aria-label="Достижения">
+          <div className={styles.skillsHead}>
+            <b>Добыча</b>
+            <span>{earned.size} из {ACHIEVEMENTS.length}</span>
+          </div>
+          <div className={styles.awardGrid}>
+            {ACHIEVEMENTS.map(a => {
+              const got = earned.has(a.id)
+              return (
+                <div key={a.id} className={`${styles.award} ${got ? styles.awardGot : ''}`} title={a.hint}>
+                  <span className={styles.awardIcon} aria-hidden="true">{a.icon}</span>
+                  <span className={styles.awardName}>{a.name}</span>
+                </div>
+              )
+            })}
+          </div>
         </section>
 
         {overdue.length > 0 && (

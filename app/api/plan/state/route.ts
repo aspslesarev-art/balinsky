@@ -12,7 +12,8 @@ export const dynamic = 'force-dynamic'
 export async function GET() {
   if (!(await hasPlanAccess())) return NextResponse.json({ ok: false }, { status: 401 })
   try {
-    return NextResponse.json({ ok: true, done: await loadDoneTasks() })
+    const { done, days } = await loadDoneTasks()
+    return NextResponse.json({ ok: true, done, days })
   } catch {
     return NextResponse.json({ ok: false, error: 'read_failed' }, { status: 500 })
   }
