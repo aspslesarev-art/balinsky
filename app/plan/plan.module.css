@@ -69,7 +69,9 @@
   box-shadow: 0 0 14px rgba(240, 169, 60, .5);
   transition: width .35s ease;
 }
-.heroMeta { display: flex; justify-content: space-between; gap: 10px; margin-top: 6px; font-size: 12px; color: var(--dim); font-variant-numeric: tabular-nums; }
+.heroMeta { display: flex; align-items: baseline; gap: 10px; margin-top: 6px; font-size: 12px; color: var(--dim); font-variant-numeric: tabular-nums; }
+.heroMeta > :last-child { margin-left: auto; }
+.heroMoney { color: var(--gold); font-weight: 600; }
 
 .quest { color: var(--dim); font-size: 14px; line-height: 1.5; margin: 14px 0 18px; }
 
@@ -372,3 +374,30 @@
 .undoBtn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 @keyframes undoIn { from { transform: translate(-50%, 14px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .undo { animation: none; } }
+
+/* Переключатель «Задачи / Профиль». */
+.tabs {
+  display: flex; gap: 6px; margin: 16px 0 14px;
+  padding: 4px; border-radius: 12px;
+  background: rgba(0, 0, 0, .3); border: 1px solid var(--line);
+}
+.tab {
+  position: relative; flex: 1;
+  background: none; border: 0; border-radius: 9px;
+  color: var(--dim); font: inherit; font-size: 14px; font-weight: 500;
+  padding: 9px 10px; cursor: pointer;
+  transition: background .12s, color .12s;
+}
+.tab:hover { color: var(--ink); }
+.tab:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.tabOn {
+  background: linear-gradient(180deg, rgba(79, 209, 165, .22), rgba(79, 209, 165, .08));
+  color: var(--ink); font-weight: 600;
+  box-shadow: inset 0 0 0 1px rgba(79, 209, 165, .35);
+}
+/* Точка у «Задач» — есть просроченные хвосты. */
+.tabDot {
+  position: absolute; top: 7px; right: 10px;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--gold); box-shadow: 0 0 8px var(--gold);
+}

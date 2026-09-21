@@ -57,6 +57,9 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
   const [allWaiting, setAllWaiting] = useState(false)
   const [days, setDays] = useState<string[]>([])
   const [muted, setMuted] = useState(false)
+  // Дашборд и задачи разведены: каждый день нужны задачи, профиль — когда
+  // хочется посмотреть, на что это всё копится.
+  const [tab, setTab] = useState<'tasks' | 'profile'>('tasks')
   // Баннер награды и конфетти живут пару секунд после события.
   const [banner, setBanner] = useState<{ icon: string; title: string; sub: string } | null>(null)
   const [confetti, setConfetti] = useState(0)
@@ -74,6 +77,7 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
   useEffect(() => {
     try {
       if (localStorage.getItem('plan_muted') === '1') { setMuted(true); mutedRef.current = true }
+      if (localStorage.getItem('plan_tab') === 'profile') setTab('profile')
     } catch { /* приватный режим */ }
   }, [])
 
@@ -338,128 +342,156 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
             </div>
             <div className={styles.heroMeta}>
               <span>{stats.xp.toLocaleString('ru-RU')} XP</span>
+              {/* Деньги видны на обеих вкладках: ради них всё и затевалось. */}
+              <span className={styles.heroMoney}>{fmt(stats.money)}</span>
               <span>до {player.level + 1} ур. — {player.need - player.into}</span>
             </div>
           </div>
         </div>
 
+        <div className={styles.tabs} role="tablist">
+          {([['tasks', 'Задачи'], ['profile', 'Профиль']] as const).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              role="tab"
+              aria-selected={tab === key}
+              className={`${styles.tab} ${tab === key ? styles.tabOn : ''}`}
+              onClick={() => {
+                setTab(key)
+                try { localStorage.setItem('plan_tab', key) } catch { /* приватный режим */ }
+              }}
+            >
+              {label}
+              {key === 'tasks' && overdue.length > 0 && <i className={styles.tabDot} />}
+            </button>
+          ))}
+        </div>
+
+        {tab === 'profile' ? (
+          <>
         <div className={styles.quest}>
-          Старт 15 сентября. Вылет 14 декабря. 12 сделок, 4 застройщика на фиксе.
-        </div>
+            Старт 15 сентября. Вылет 14 декабря. 12 сделок, 4 застройщика на фиксе.
+          </div>
 
-        <div className={styles.meter}>
-          <div className={styles.mrow}>
-            <div className={styles.msum}>{fmt(stats.money)}</div>
-            <div className={styles.mtarget}>из {fmt(PLAN_TARGET_USD)}</div>
+          <div className={styles.meter}>
+            <div className={styles.mrow}>
+              <div className={styles.msum}>{fmt(stats.money)}</div>
+              <div className={styles.mtarget}>из {fmt(PLAN_TARGET_USD)}</div>
+            </div>
+            <div className={styles.bar} role="progressbar" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100} aria-label="Прогресс по деньгам">
+              <i style={{ width: `${pct}%` }} />
+            </div>
+            <div className={styles.levels}>
+              {nextLevel
+                ? <span>До планки «{nextLevel.name}» — {fmt(nextLevel.amount - stats.money)}</span>
+                : <span>Все планки взяты</span>}
+            </div>
           </div>
-          <div className={styles.bar} role="progressbar" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100} aria-label="Прогресс по деньгам">
-            <i style={{ width: `${pct}%` }} />
-          </div>
-          <div className={styles.levels}>
-            {nextLevel
-              ? <span>До планки «{nextLevel.name}» — {fmt(nextLevel.amount - stats.money)}</span>
-              : <span>Все планки взяты</span>}
-          </div>
-        </div>
 
-        <div className={styles.stats}>
-          <div><span>{stats.doneCount}</span>задач закрыто</div>
-          <div><span>{stats.deals}</span>{plural(stats.deals, 'сделка', 'сделки', 'сделок')} из {PLAN_DEALS_TOTAL}</div>
-          <div><span>{daysLeft}</span>{plural(daysLeft, 'день', 'дня', 'дней')} до вылета</div>
-          <div className={streak > 0 ? styles.statHot : undefined}>
-            <span>{streak > 0 ? `🔥${streak}` : '—'}</span>
-            {streak > 0 ? `${plural(streak, 'день', 'дня', 'дней')} подряд` : 'серии нет'}
+          <div className={styles.stats}>
+            <div><span>{stats.doneCount}</span>задач закрыто</div>
+            <div><span>{stats.deals}</span>{plural(stats.deals, 'сделка', 'сделки', 'сделок')} из {PLAN_DEALS_TOTAL}</div>
+            <div><span>{daysLeft}</span>{plural(daysLeft, 'день', 'дня', 'дней')} до вылета</div>
+            <div className={streak > 0 ? styles.statHot : undefined}>
+              <span>{streak > 0 ? `🔥${streak}` : '—'}</span>
+              {streak > 0 ? `${plural(streak, 'день', 'дня', 'дней')} подряд` : 'серии нет'}
+            </div>
           </div>
-        </div>
 
-        <section className={styles.skills} aria-label="Прокачка навыков">
-          <div className={styles.skillsHead}>
-            <b>Прокачка</b>
-            <span>{stats.xp.toLocaleString('ru-RU')} XP всего</span>
-          </div>
-          {SKILL_ORDER.map(sk => {
-            const xp = stats.bySkill[sk]
-            const { level, into, need } = levelOf(xp)
-            const { icon, name, hint, color } = SKILLS[sk]
-            return (
-              <div
-                key={sk}
-                className={styles.skill}
-                style={{ '--sk': color } as React.CSSProperties}
-                title={`${hint}. Всего в плане ${SKILL_TOTALS[sk]} XP, набрано ${xp}`}
-              >
-                <span className={styles.skillIcon} aria-hidden="true">{icon}</span>
-                <div className={styles.skillBody}>
-                  <div className={styles.skillTop}>
-                    <b>{name}</b>
-                    <span className={styles.skillLv}>ур. {level}</span>
-                    <span className={styles.skillXp}>{into} / {need}</span>
-                  </div>
-                  <div className={styles.skillBar}>
-                    <i style={{ width: `${(into / need) * 100}%` }} />
-                  </div>
-                </div>
-              </div>
-            )
-          })}
-        </section>
-
-        <section className={styles.awards} aria-label="Достижения">
-          <div className={styles.skillsHead}>
-            <b>Добыча</b>
-            <span>{earned.size} из {ACHIEVEMENTS.length}</span>
-          </div>
-          <div className={styles.awardGrid}>
-            {ACHIEVEMENTS.map(a => {
-              const got = earned.has(a.id)
+          <section className={styles.skills} aria-label="Прокачка навыков">
+            <div className={styles.skillsHead}>
+              <b>Прокачка</b>
+              <span>{stats.xp.toLocaleString('ru-RU')} XP всего</span>
+            </div>
+            {SKILL_ORDER.map(sk => {
+              const xp = stats.bySkill[sk]
+              const { level, into, need } = levelOf(xp)
+              const { icon, name, hint, color } = SKILLS[sk]
               return (
-                <div key={a.id} className={`${styles.award} ${got ? styles.awardGot : ''}`} title={a.hint}>
-                  <span className={styles.awardIcon} aria-hidden="true">{a.icon}</span>
-                  <span className={styles.awardName}>{a.name}</span>
+                <div
+                  key={sk}
+                  className={styles.skill}
+                  style={{ '--sk': color } as React.CSSProperties}
+                  title={`${hint}. Всего в плане ${SKILL_TOTALS[sk]} XP, набрано ${xp}`}
+                >
+                  <span className={styles.skillIcon} aria-hidden="true">{icon}</span>
+                  <div className={styles.skillBody}>
+                    <div className={styles.skillTop}>
+                      <b>{name}</b>
+                      <span className={styles.skillLv}>ур. {level}</span>
+                      <span className={styles.skillXp}>{into} / {need}</span>
+                    </div>
+                    <div className={styles.skillBar}>
+                      <i style={{ width: `${(into / need) * 100}%` }} />
+                    </div>
+                  </div>
                 </div>
               )
             })}
-          </div>
-        </section>
-
-        {overdue.length > 0 && (
-          <section className={styles.tails} aria-label="Хвосты">
-            <div className={styles.tailsHead}>
-              <b>Хвосты</b>
-              <span>{overdue.length} {plural(overdue.length, 'задача', 'задачи', 'задач')} из прошедших дней</span>
-            </div>
-            {overdue.map(task => (
-              <Row key={task.id} task={task} done={done} onToggle={toggle} note={ageNote(task.expected, today)} />
-            ))}
           </section>
-        )}
 
-        {waiting.all.length > 0 && (
-          <section className={styles.waiting} aria-label="В работе">
-            <div className={styles.tailsHead}>
-              <b>Ждут чужого решения</b>
-              <span>
-                {waiting.open.length} {plural(waiting.open.length, 'ждёт', 'ждут', 'ждут')}
-                {waiting.closed.length > 0 && ` · ${waiting.closed.length} ${plural(waiting.closed.length, 'случилось', 'случилось', 'случилось')}`}
-              </span>
+          <section className={styles.awards} aria-label="Достижения">
+            <div className={styles.skillsHead}>
+              <b>Добыча</b>
+              <span>{earned.size} из {ACHIEVEMENTS.length}</span>
             </div>
-            {(allWaiting
-              ? waiting.all
-              // Случившиеся показываем всегда: иначе ошибочную галочку
-              // придётся искать за кнопкой «показать все».
-              : [...waiting.open.slice(0, 5), ...waiting.closed]
-            ).map(task => (
-              <Row key={task.id} task={task} done={done} onToggle={toggle} note={ageNote(task.expected, today)} />
-            ))}
-            {waiting.open.length > 5 && (
-              <button type="button" className={styles.waitingMore} onClick={() => setAllWaiting(v => !v)}>
-                {allWaiting ? 'Свернуть' : `Показать все — ещё ${waiting.open.length - 5}`}
-              </button>
-            )}
+            <div className={styles.awardGrid}>
+              {ACHIEVEMENTS.map(a => {
+                const got = earned.has(a.id)
+                return (
+                  <div key={a.id} className={`${styles.award} ${got ? styles.awardGot : ''}`} title={a.hint}>
+                    <span className={styles.awardIcon} aria-hidden="true">{a.icon}</span>
+                    <span className={styles.awardName}>{a.name}</span>
+                  </div>
+                )
+              })}
+            </div>
           </section>
+          </>
+        ) : (
+          <>
+          {overdue.length > 0 && (
+            <section className={styles.tails} aria-label="Хвосты">
+              <div className={styles.tailsHead}>
+                <b>Хвосты</b>
+                <span>{overdue.length} {plural(overdue.length, 'задача', 'задачи', 'задач')} из прошедших дней</span>
+              </div>
+              {overdue.map(task => (
+                <Row key={task.id} task={task} done={done} onToggle={toggle} note={ageNote(task.expected, today)} />
+              ))}
+            </section>
+          )}
+
+          {waiting.all.length > 0 && (
+            <section className={styles.waiting} aria-label="В работе">
+              <div className={styles.tailsHead}>
+                <b>Ждут чужого решения</b>
+                <span>
+                  {waiting.open.length} {plural(waiting.open.length, 'ждёт', 'ждут', 'ждут')}
+                  {waiting.closed.length > 0 && ` · ${waiting.closed.length} ${plural(waiting.closed.length, 'случилось', 'случилось', 'случилось')}`}
+                </span>
+              </div>
+              {(allWaiting
+                ? waiting.all
+                // Случившиеся показываем всегда: иначе ошибочную галочку
+                // придётся искать за кнопкой «показать все».
+                : [...waiting.open.slice(0, 5), ...waiting.closed]
+              ).map(task => (
+                <Row key={task.id} task={task} done={done} onToggle={toggle} note={ageNote(task.expected, today)} />
+              ))}
+              {waiting.open.length > 5 && (
+                <button type="button" className={styles.waitingMore} onClick={() => setAllWaiting(v => !v)}>
+                  {allWaiting ? 'Свернуть' : `Показать все — ещё ${waiting.open.length - 5}`}
+                </button>
+              )}
+            </section>
+          )}
+          </>
         )}
       </header>
 
+      {tab === 'tasks' && (
       <div>
         {PLAN.map(week => (
           <Week
@@ -476,6 +508,7 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
           />
         ))}
       </div>
+      )}
 
       <button
         type="button"
