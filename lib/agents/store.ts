@@ -131,7 +131,32 @@ export async function updateAgent(id: string, patch: Record<string, unknown>, au
 
   const { data, error } = await sb.from('agents').update(clean).eq('id', id).select('*').single()
   if (error) throw new Error(error.message)
-  return data as Agent
+  const saved = data as Agent
+
+  // Вписали ник — сами находим по нему переписку. Иначе владельцу
+  // пришлось бы после каждой правки ника лезть в список чатов и искать
+  // руками то, что однозначно определяется ником.
+  if (typeof clean.telegram === 'string' && clean.telegram && saved.tg_chat_id == null) {
+    const chatId = await findChatByNick(clean.telegram)
+    if (chatId != null) {
+      const { data: taken } = await sb.from('agents').select('id').eq('tg_chat_id', chatId).maybeSingle()
+      // Чат занят другой карточкой (обычно это дубль того же человека) —
+      // молча перевешивать его нельзя, пусть владелец решает сам.
+      if (!taken) return await linkChat(id, chatId, author)
+    }
+  }
+  return saved
+}
+
+// Чат бота по нику собеседника. Ник в `tg_messages.contact` записан как
+// «Имя (@nick)», поэтому сравниваем нормализованные значения.
+async function findChatByNick(nick: string): Promise<number | null> {
+  const chats = await chatIndex()
+  for (const c of chats.values()) {
+    const { username } = splitContact(c.contact)
+    if (username && normalizeTelegram(username) === nick) return c.chat_id
+  }
+  return null
 }
 
 export async function createAgent(input: {

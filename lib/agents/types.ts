@@ -149,10 +149,35 @@ export function splitContact(contact: string | null): { name: string; username: 
   return { name, username }
 }
 
+// Обломки разбора ссылок, которые внешне выглядят как нормальный ник и
+// потому проходят проверку формата. Держим списком, чтобы «https» из
+// «https://t.me/user» не уехал в базу как имя пользователя.
+const NOT_A_NICK = new Set(['http', 'https', 'www', 'telegram', 'tme', 'joinchat', 'share', 'proxy'])
+
 // Ник приводим к одному виду и в импорте, и в карточке: без «@», без
 // ссылки, в нижнем регистре — иначе автопривязка чата не находит пару.
+//
+// Контакты в базе записаны как попало: «@nick», «nick», «t.me/nick»,
+// «https://t.me/nick», иногда телефон или ссылка-приглашение в чат.
+// Возвращаем ник, только если это действительно ник, иначе null —
+// мусор в этом поле молча ломает поиск переписки.
 export function normalizeTelegram(v: string | null | undefined): string | null {
   if (!v) return null
-  const m = String(v).trim().match(/(?:t\.me\/|@)?([A-Za-z0-9_]{3,})/)
-  return m ? m[1].toLowerCase() : null
+  // Невидимые метки направления текста приезжают из Notion вместе с контактами.
+  let s = String(v).trim().replace(/[‎‏‪-‮]/g, '')
+  if (!s) return null
+
+  const link = s.match(/(?:t\.me|telegram\.me|telegram\.dog)\/([^/?#\s]+)/i)
+  if (link) s = link[1]
+  else if (/^https?:/i.test(s)) return null // ссылка куда-то ещё — не ник
+  else s = s.replace(/^@+/, '')
+
+  // t.me/+AbCd и t.me/joinchat/... — приглашения в чат, а не имя пользователя.
+  if (/^\+/.test(s) || /^joinchat$/i.test(s)) return null
+
+  s = s.replace(/[^A-Za-z0-9_]/g, '')
+  // Ник Telegram начинается с буквы: «79032312423» в этом поле — телефон.
+  if (!/^[A-Za-z][A-Za-z0-9_]{3,31}$/.test(s)) return null
+  if (NOT_A_NICK.has(s.toLowerCase())) return null
+  return s.toLowerCase()
 }
