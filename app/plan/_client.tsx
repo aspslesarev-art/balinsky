@@ -6,6 +6,7 @@ import {
   SKILLS, SKILL_ORDER, SKILL_TOTALS, levelOf, playerLevel, WAITING_TASKS,
   type PlanTask, type PlanWeek, type Skill,
 } from '@/lib/plan/data'
+import { playAward, playCoins, playFail, playLevelUp, playTick, playUndo } from './_sound'
 import styles from './plan.module.css'
 
 // Источник правды — база. localStorage только для первой отрисовки:
@@ -55,10 +56,34 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
   const [armed, setArmed] = useState(false)
   const [allWaiting, setAllWaiting] = useState(false)
   const [days, setDays] = useState<string[]>([])
+  const [muted, setMuted] = useState(false)
+  // Баннер награды и конфетти живут пару секунд после события.
+  const [banner, setBanner] = useState<{ icon: string; title: string; sub: string } | null>(null)
+  const [confetti, setConfetti] = useState(0)
+  const mutedRef = useRef(false)
+  // Чтобы не салютовать при первой загрузке уже полученным наградам.
+  const seenAwards = useRef<Set<string> | null>(null)
+  const seenLevel = useRef<number | null>(null)
   // Всплывашки «+25 XP»: живут пару секунд и исчезают.
   const [pops, setPops] = useState<Array<{ key: number; text: string; color: string }>>([])
   // Неделю открываем автоматически один раз — дальше это выбор человека.
   const autoOpened = useRef(false)
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem('plan_muted') === '1') { setMuted(true); mutedRef.current = true }
+    } catch { /* приватный режим */ }
+  }, [])
+
+  const toggleMute = useCallback(() => {
+    setMuted(v => {
+      const next = !v
+      mutedRef.current = next
+      try { localStorage.setItem('plan_muted', next ? '1' : '0') } catch { /* приватный режим */ }
+      if (!next) playTick()
+      return next
+    })
+  }, [])
 
   useEffect(() => {
     const cached = readCache()
@@ -96,6 +121,14 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
       const key = Date.now() + Math.random()
       setPops(cur => [...cur, { key, text: `+${task.xp} XP`, color: SKILLS[task.skill].color }])
       window.setTimeout(() => setPops(cur => cur.filter(p => p.key !== key)), 1400)
+      if (task.amount) {
+        const mk = key + 1
+        setPops(cur => [...cur, { key: mk, text: `+${fmt(task.amount!)}`, color: '#f0a93c' }])
+        window.setTimeout(() => setPops(cur => cur.filter(p => p.key !== mk)), 1600)
+      }
+      if (!mutedRef.current) (task.amount ? playCoins : playTick)()
+    } else if (task && wasDone && !mutedRef.current) {
+      playUndo()
     }
     const next = new Set(done)
     if (wasDone) next.delete(taskId); else next.add(taskId)
@@ -116,6 +149,7 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
         return rolled
       })
       setFailed(true)
+      if (!mutedRef.current) playFail()
     })
   }, [done])
 
@@ -163,6 +197,41 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
     return new Set(ACHIEVEMENTS.filter(a => a.test(state)).map(a => a.id))
   }, [stats, done])
 
+  // Награда или новый уровень — фанфара, баннер и конфетти. Первая
+  // загрузка не салютует: она лишь запоминает, что уже взято.
+  useEffect(() => {
+    if (!loaded) return
+
+    if (seenAwards.current === null) {
+      seenAwards.current = new Set(earned)
+      seenLevel.current = player.level
+      return
+    }
+
+    const fresh = ACHIEVEMENTS.filter(a => earned.has(a.id) && !seenAwards.current!.has(a.id))
+    seenAwards.current = new Set(earned)
+
+    const leveledUp = seenLevel.current !== null && player.level > seenLevel.current
+    seenLevel.current = player.level
+
+    if (leveledUp) {
+      setBanner({ icon: '⭐️', title: `Уровень ${player.level}`, sub: player.rank })
+      setConfetti(c => c + 1)
+      if (!mutedRef.current) playLevelUp()
+    } else if (fresh.length > 0) {
+      const a = fresh[0]
+      setBanner({ icon: a.icon, title: a.name, sub: a.hint })
+      setConfetti(c => c + 1)
+      if (!mutedRef.current) playAward()
+    }
+  }, [earned, loaded, player.level, player.rank])
+
+  useEffect(() => {
+    if (!banner) return
+    const t = window.setTimeout(() => setBanner(null), 2600)
+    return () => window.clearTimeout(t)
+  }, [banner])
+
   // Серия: сколько дней подряд, считая от сегодня (или вчера), что-то закрывалось.
   const streak = useMemo(() => {
     const set = new Set(days)
@@ -190,6 +259,18 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
           <span key={p.key} className={styles.pop} style={{ color: p.color }}>{p.text}</span>
         ))}
       </div>
+
+      {confetti > 0 && <Confetti key={confetti} />}
+
+      {banner && (
+        <div className={styles.banner} role="status">
+          <span className={styles.bannerIcon} aria-hidden="true">{banner.icon}</span>
+          <span>
+            <b>{banner.title}</b>
+            <em>{banner.sub}</em>
+          </span>
+        </div>
+      )}
       <header className={styles.header}>
         <div className={styles.hero}>
           <div className={styles.medal} aria-hidden="true">
@@ -198,7 +279,18 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
           </div>
           <div className={styles.heroText}>
             <h1 className={styles.goal}>Гоа</h1>
-            <div className={styles.rank}>{player.rank}</div>
+            <div className={styles.rankRow}>
+              <span className={styles.rank}>{player.rank}</span>
+              <button
+                type="button"
+                className={styles.sound}
+                onClick={toggleMute}
+                aria-pressed={!muted}
+                title={muted ? 'Включить звук' : 'Выключить звук'}
+              >
+                {muted ? '🔇' : '🔊'}
+              </button>
+            </div>
             <div className={styles.heroBar} title={`${stats.xp} XP всего`}>
               <i style={{ width: `${(player.into / player.need) * 100}%` }} />
             </div>
@@ -353,6 +445,41 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
             ? 'Загружаю отметки…'
             : 'Галочки сохраняются в базе — они одинаковые на всех устройствах.'}
       </p>
+    </div>
+  )
+}
+
+const CONFETTI_COLORS = ['#4fd1a5', '#f0a93c', '#ff5fa2', '#4cc2ff', '#b18cff']
+
+/** Салют: 28 бумажек разлетаются и гаснут. Чистый CSS, без библиотек. */
+function Confetti() {
+  const bits = useMemo(
+    () => Array.from({ length: 28 }, (_, i) => ({
+      left: Math.round(Math.random() * 100),
+      delay: Math.round(Math.random() * 220),
+      drift: Math.round((Math.random() - 0.5) * 220),
+      spin: Math.round(Math.random() * 540 - 270),
+      color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+      size: 6 + Math.round(Math.random() * 6),
+    })),
+    [],
+  )
+  return (
+    <div className={styles.confetti} aria-hidden="true">
+      {bits.map((b, i) => (
+        <span
+          key={i}
+          style={{
+            left: `${b.left}%`,
+            background: b.color,
+            width: b.size,
+            height: b.size * 1.6,
+            animationDelay: `${b.delay}ms`,
+            '--drift': `${b.drift}px`,
+            '--spin': `${b.spin}deg`,
+          } as React.CSSProperties}
+        />
+      ))}
     </div>
   )
 }
