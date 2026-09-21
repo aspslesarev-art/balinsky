@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ALL_TASKS, PLAN, PLAN_DEALS_TOTAL, PLAN_LEVELS, PLAN_TARGET_USD,
-  SKILLS, SKILL_ORDER, SKILL_TOTALS, levelOf, type PlanWeek, type Skill,
+  SKILLS, SKILL_ORDER, SKILL_TOTALS, levelOf, WAITING_TASKS,
+  type PlanTask, type PlanWeek, type Skill,
 } from '@/lib/plan/data'
 import styles from './plan.module.css'
 
@@ -45,13 +46,14 @@ async function postTask(taskId: string, done: boolean): Promise<boolean> {
   } catch { return false }
 }
 
-export function PlanClient({ daysLeft }: { daysLeft: number }) {
+export function PlanClient({ daysLeft, today }: { daysLeft: number; today: string }) {
   const [done, setDone] = useState<Set<string>>(new Set())
   const [loaded, setLoaded] = useState(false)
   const [failed, setFailed] = useState(false)
   // Недель можно держать открытыми сколько угодно — как в исходнике.
   const [openWeeks, setOpenWeeks] = useState<Set<number>>(new Set())
   const [armed, setArmed] = useState(false)
+  const [allWaiting, setAllWaiting] = useState(false)
   // Неделю открываем автоматически один раз — дальше это выбор человека.
   const autoOpened = useRef(false)
 
@@ -144,6 +146,14 @@ export function PlanClient({ daysLeft }: { daysLeft: number }) {
 
   const pct = Math.min(100, (stats.money / PLAN_TARGET_USD) * 100)
 
+  // Хвосты: твои действия из прошедших дней, которые так и не отмечены.
+  const overdue = useMemo(
+    () => PLAN.flatMap(w => w.days.flatMap(d => d.tasks))
+      .filter(t => !t.waiting && t.expected < today && !done.has(t.id)),
+    [done, today],
+  )
+  const waiting = useMemo(() => WAITING_TASKS.filter(t => !done.has(t.id)), [done])
+
   return (
     <div className={styles.wrap}>
       <header className={styles.header}>
@@ -171,7 +181,7 @@ export function PlanClient({ daysLeft }: { daysLeft: number }) {
 
         <div className={styles.stats}>
           <div><span>{stats.doneCount}</span>задач закрыто</div>
-          <div><span>{stats.deals}</span>сделок из {PLAN_DEALS_TOTAL}</div>
+          <div><span>{stats.deals}</span>{plural(stats.deals, 'сделка', 'сделки', 'сделок')} из {PLAN_DEALS_TOTAL}</div>
           <div><span>{daysLeft}</span>{plural(daysLeft, 'день', 'дня', 'дней')} до вылета</div>
         </div>
 
@@ -197,6 +207,37 @@ export function PlanClient({ daysLeft }: { daysLeft: number }) {
             )
           })}
         </section>
+
+        {overdue.length > 0 && (
+          <section className={styles.tails} aria-label="Хвосты">
+            <div className={styles.tailsHead}>
+              <b>Хвосты</b>
+              <span>{overdue.length} {plural(overdue.length, 'задача', 'задачи', 'задач')} из прошедших дней</span>
+            </div>
+            {overdue.map(task => (
+              <Row key={task.id} task={task} done={done} onToggle={toggle} note={ageNote(task.expected, today)} />
+            ))}
+          </section>
+        )}
+
+        {waiting.length > 0 && (
+          <section className={styles.waiting} aria-label="В работе">
+            <div className={styles.tailsHead}>
+              <b>Ждут чужого решения</b>
+              <span>{waiting.length} {plural(waiting.length, 'штука', 'штуки', 'штук')}</span>
+            </div>
+            {(allWaiting ? waiting : waiting.slice(0, 5)).map(task => (
+              <Row key={task.id} task={task} done={done} onToggle={toggle} note={ageNote(task.expected, today)} />
+            ))}
+            {waiting.length > 5 && (
+              <button type="button" className={styles.waitingMore} onClick={() => setAllWaiting(v => !v)}>
+                {allWaiting
+                  ? 'Свернуть'
+                  : `Показать все — ещё ${waiting.length - 5} впереди`}
+              </button>
+            )}
+          </section>
+        )}
       </header>
 
       <div>
@@ -236,6 +277,34 @@ export function PlanClient({ daysLeft }: { daysLeft: number }) {
   )
 }
 
+const dayMonth = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'short', timeZone: 'UTC' })
+
+/** Насколько событие разошлось с плановой датой. */
+function ageNote(expected: string, today: string): string {
+  const days = Math.round((Date.parse(today) - Date.parse(expected)) / 86_400_000)
+  if (days > 0) return `${days} ${plural(days, 'день', 'дня', 'дней')} как ждёт`
+  if (days === 0) return 'по плану сегодня'
+  return `по плану ${dayMonth.format(new Date(`${expected}T00:00:00Z`))}`
+}
+
+function Row({ task, done, onToggle, note }: {
+  task: PlanTask
+  done: Set<string>
+  onToggle: (taskId: string) => void
+  note: string
+}) {
+  return (
+    <label className={styles.task}>
+      <input type="checkbox" checked={done.has(task.id)} onChange={() => onToggle(task.id)} />
+      <span className={styles.txt}>
+        {task.text}
+        {task.amount != null && <span className={styles.pay}>+{fmt(task.amount)}</span>}
+        <span className={styles.age}>{note}</span>
+      </span>
+    </label>
+  )
+}
+
 function Week({ week, done, open, onToggleWeek, onToggleTask }: {
   week: PlanWeek
   done: Set<string>
@@ -243,7 +312,8 @@ function Week({ week, done, open, onToggleWeek, onToggleTask }: {
   onToggleWeek: () => void
   onToggleTask: (taskId: string) => void
 }) {
-  const tasks = week.days.flatMap(d => d.tasks)
+  // Ожидания в счёт недели не идут: их нельзя закрыть усилием воли.
+  const tasks = week.days.flatMap(d => d.tasks).filter(t => !t.waiting)
   const count = tasks.filter(t => done.has(t.id)).length
   const complete = tasks.length > 0 && count === tasks.length
   const bodyId = `week-body-${week.n}`
@@ -262,7 +332,7 @@ function Week({ week, done, open, onToggleWeek, onToggleTask }: {
 
       {open && (
         <div className={styles.wbody} id={bodyId}>
-          {week.days.map(day => (
+          {week.days.filter(d => d.tasks.some(t => !t.waiting)).map(day => (
             <Day key={day.id} day={day} done={done} onToggleTask={onToggleTask} />
           ))}
         </div>
@@ -284,7 +354,7 @@ function Day({ day, done, onToggleTask }: {
   return (
     <div className={`${styles.day} ${today ? styles.dayToday : ''}`}>
       <div className={styles.dname}>{day.label}</div>
-      {day.tasks.map(task => (
+      {day.tasks.filter(t => !t.waiting).map(task => (
         <label key={task.id} className={styles.task}>
           <input type="checkbox" checked={done.has(task.id)} onChange={() => onToggleTask(task.id)} />
           <span className={styles.txt}>

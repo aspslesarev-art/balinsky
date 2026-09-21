@@ -173,3 +173,21 @@
   white-space: nowrap; text-decoration: none;
 }
 .task input:checked ~ .txt .tag { color: var(--jade); }
+
+/* Хвосты и ожидания — над планом, чтобы не искать их по неделям. */
+.tails, .waiting { border: 1px solid var(--line); border-radius: 14px; padding: 12px 16px 8px; margin-bottom: 10px; }
+.tails { background: rgba(240, 169, 60, .07); border-color: rgba(240, 169, 60, .28); }
+.waiting { background: var(--panel); }
+.tailsHead { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
+.tailsHead b { font-family: var(--plan-font-h), Georgia, serif; font-weight: 600; font-size: 15px; }
+.tails .tailsHead b { color: var(--gold); }
+.tailsHead span { color: var(--dim); font-size: 12.5px; }
+.age { display: block; color: var(--dim); font-size: 12px; margin-top: 2px; }
+.waitingMore {
+  display: block; margin: 6px 0 8px; padding: 0;
+  background: none; border: 0; color: var(--dim);
+  font: inherit; font-size: 12.5px; cursor: pointer; text-decoration: underline;
+  text-underline-offset: 3px; text-decoration-color: var(--line);
+}
+.waitingMore:hover { color: var(--ink); }
+.waitingMore:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 4px; }

@@ -23,6 +23,11 @@ export const metadata: Metadata = {
 const fontHead = Bricolage_Grotesque({ subsets: ['latin'], weight: ['400', '600', '800'], variable: '--plan-font-h' })
 const fontBody = Inter({ subsets: ['latin', 'cyrillic'], weight: ['400', '500', '600'], variable: '--plan-font-b' })
 
+/** Сегодняшняя дата по Бали, 'YYYY-MM-DD'. */
+function baliToday(): string {
+  return new Date(Date.now() + 8 * 3600_000).toISOString().slice(0, 10)
+}
+
 /** Дней до вылета, как в исходнике: округление вверх, не меньше нуля. */
 function daysUntil(deadline: string): number {
   const left = Math.ceil((Date.parse(`${deadline}T00:00:00Z`) - Date.now()) / 86_400_000)
@@ -38,7 +43,7 @@ export default async function PlanPage() {
   return (
     <main className={`${styles.page} ${fontHead.variable} ${fontBody.variable}`}>
       {access.kind === 'owner'
-        ? <PlanClient daysLeft={daysUntil(PLAN_DEADLINE)} />
+        ? <PlanClient daysLeft={daysUntil(PLAN_DEADLINE)} today={baliToday()} />
         : <NotOwner username={access.username} owner={access.owner} />}
     </main>
   )
