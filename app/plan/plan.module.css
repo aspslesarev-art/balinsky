@@ -1,0 +1,144 @@
+/* Стили квеста «Гоа» — перенесены из goa-quest.html как есть.
+   Модуль, а не globals.css: тёмная палитра страницы не должна
+   протекать в остальной сайт. */
+
+.page {
+  --bg: #0d2422;
+  --panel: #12302d;
+  --panel2: #173935;
+  --ink: #f2ece0;
+  --dim: #8fae9f;
+  --gold: #f0a93c;
+  --jade: #4fd1a5;
+  --line: rgba(242, 236, 224, .12);
+
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--plan-font-b), system-ui, -apple-system, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.wrap { max-width: 720px; margin: 0 auto; padding: 0 18px 80px; }
+
+/* hero */
+.header { padding: 38px 0 22px; }
+.goal {
+  font-family: var(--plan-font-h), Georgia, serif;
+  font-weight: 800;
+  font-size: clamp(34px, 9vw, 58px);
+  line-height: .95;
+  letter-spacing: -.02em;
+  margin: 0 0 14px;
+}
+.goal small {
+  display: block;
+  font-size: clamp(13px, 3.4vw, 16px);
+  font-weight: 400;
+  font-family: var(--plan-font-b), system-ui, sans-serif;
+  color: var(--dim);
+  letter-spacing: 0;
+  margin-top: 10px;
+  line-height: 1.45;
+}
+
+/* money meter */
+.meter { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px 16px 14px; margin-bottom: 10px; }
+.mrow { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.msum {
+  font-family: var(--plan-font-h), Georgia, serif;
+  font-weight: 800;
+  font-size: clamp(28px, 8vw, 42px);
+  color: var(--gold);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.mtarget { color: var(--dim); font-size: 14px; }
+.bar { height: 9px; background: rgba(0, 0, 0, .28); border-radius: 99px; margin-top: 12px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--jade), var(--gold)); border-radius: 99px; transition: width .35s ease; }
+.levels { display: flex; gap: 6px; margin-top: 10px; font-size: 12.5px; color: var(--dim); flex-wrap: wrap; }
+.levels b { color: var(--ink); font-weight: 600; }
+.lv { background: var(--panel2); border-radius: 8px; padding: 5px 9px; }
+.lvHit { background: rgba(79, 209, 165, .16); color: var(--jade); }
+.lvHit b { color: var(--jade); }
+
+.stats { display: flex; gap: 10px; margin-bottom: 26px; font-size: 13.5px; color: var(--dim); }
+.stats div { flex: 1; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 11px 12px; }
+.stats span {
+  display: block;
+  font-family: var(--plan-font-h), Georgia, serif;
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* weeks */
+.week { margin-bottom: 14px; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--panel); }
+.whead {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; text-align: left;
+  background: none; border: 0; color: inherit; font: inherit;
+  padding: 15px 16px; cursor: pointer;
+}
+.whead:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; }
+.wnum {
+  flex: 0 0 34px; height: 34px; border-radius: 9px;
+  background: var(--panel2); display: grid; place-items: center;
+  font-family: var(--plan-font-h), Georgia, serif;
+  font-weight: 700; font-size: 15px; color: var(--dim);
+}
+.weekDone .wnum { background: rgba(79, 209, 165, .18); color: var(--jade); }
+.wtitle { flex: 1; min-width: 0; }
+.wtitle b { display: block; font-family: var(--plan-font-h), Georgia, serif; font-weight: 600; font-size: 16.5px; letter-spacing: -.01em; }
+.wtitle em { font-style: normal; color: var(--dim); font-size: 13px; }
+.wcount { color: var(--dim); font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.chev { flex: 0 0 auto; color: var(--dim); transition: transform .2s; }
+.weekOpen .chev { transform: rotate(90deg); }
+.wbody { padding: 0 16px 8px; border-top: 1px solid var(--line); }
+
+.day { padding: 14px 0; border-bottom: 1px solid var(--line); }
+.day:last-child { border-bottom: 0; }
+.dname { font-family: var(--plan-font-h), Georgia, serif; font-weight: 600; font-size: 14px; color: var(--gold); margin-bottom: 9px; }
+.dayToday .dname::after { content: ' • сегодня'; color: var(--jade); }
+
+.task { display: flex; gap: 11px; align-items: flex-start; padding: 7px 0; cursor: pointer; }
+.task input {
+  appearance: none; flex: 0 0 21px; height: 21px; margin: 1px 0 0;
+  border: 1.5px solid var(--dim); border-radius: 6px;
+  background: transparent; cursor: pointer; position: relative; transition: .15s;
+}
+.task input:checked { background: var(--jade); border-color: var(--jade); }
+.task input:checked::after {
+  content: ''; position: absolute; left: 6.5px; top: 2.5px;
+  width: 5px; height: 10px;
+  border: solid #0d2422; border-width: 0 2.5px 2.5px 0;
+  transform: rotate(43deg);
+}
+.task input:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.txt { flex: 1; font-size: 15px; line-height: 1.42; }
+.task input:checked ~ .txt { color: var(--dim); text-decoration: line-through; text-decoration-color: rgba(143, 174, 159, .5); }
+.pay {
+  display: inline-block; margin-left: 6px;
+  background: rgba(240, 169, 60, .15); color: var(--gold);
+  font-size: 12.5px; font-weight: 600; border-radius: 6px;
+  padding: 1px 7px; white-space: nowrap; text-decoration: none;
+}
+
+.reset {
+  display: block; margin: 30px auto 0;
+  background: none; border: 1px solid var(--line); color: var(--dim);
+  font: inherit; font-size: 13.5px; padding: 9px 16px; border-radius: 10px; cursor: pointer;
+}
+.reset:hover { color: var(--ink); }
+.reset:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.resetArmed { color: var(--gold); border-color: rgba(240, 169, 60, .5); }
+.note { color: var(--dim); font-size: 13px; text-align: center; margin-top: 14px; min-height: 19px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .page * { transition: none !important; }
+}
