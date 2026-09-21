@@ -14,7 +14,7 @@ import {
   X, Sparkles, CalendarDays, MessageSquareText, Link2, Unlink, Trash2, Loader2, ExternalLink, Send,
 } from 'lucide-react'
 import {
-  PROFILE_GROUPS, STATUSES, extraProfileFields,
+  PROFILE_GROUPS, STATUSES, extraProfileFields, lastContactAt,
   type AgentCard, type AgentNote, type AgentStatus,
 } from '@/lib/agents/types'
 
@@ -34,11 +34,6 @@ function when(iso: string | null): string {
   if (!iso) return '—'
   return new Date(iso).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 }
-function day(iso: string | null): string {
-  if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
-}
-
 const MEETING_LABEL: Record<ChatMeeting['status'], string> = {
   agreed: 'Договорились', scheduled: 'Назначена', cancelled: 'Отменена',
 }
@@ -207,8 +202,8 @@ export function AgentPanel({
                 </Field>
                 <Field label="Последний контакт">
                   <div className="h-9 flex items-center text-[13px] text-[var(--ax-fg-soft)]">
-                    {/* Живая дата из переписки важнее той, что вбили руками */}
-                    {a.chat_last_ts ? when(a.chat_last_ts) : day(a.last_contact)}
+                    {/* Позднее из двух: живая переписка и отметка руками */}
+                    {lastContactAt(a) ? when(lastContactAt(a)) : 'не связывались'}
                   </div>
                 </Field>
               </section>

@@ -8,8 +8,8 @@
 // листаются горизонтально.
 
 import { useCallback, useMemo, useState } from 'react'
-import { Search, Plus, Inbox, LayoutGrid, Rows3, CalendarDays, MessageSquareText, Sparkles, X } from 'lucide-react'
-import { STATUSES, type AgentCard, type AgentStatus, type UnlinkedChat } from '@/lib/agents/types'
+import { Search, Plus, Inbox, LayoutGrid, Rows3, CalendarDays, MessageSquareText, Sparkles, X, Clock } from 'lucide-react'
+import { STATUSES, lastContactAt, staleFirst, type AgentCard, type AgentStatus, type UnlinkedChat } from '@/lib/agents/types'
 import { AgentPanel } from './_panel'
 
 // Оттенок колонки: воронка идёт от нейтрального к зелёному, «Не
@@ -34,6 +34,25 @@ function relDay(iso: string | null): string | null {
   if (days < 31) return `${Math.floor(days / 7)} нед. назад`
   if (days < 365) return `${Math.floor(days / 30)} мес. назад`
   return `${Math.floor(days / 365)} г. назад`
+}
+
+// Подпись на карточке: когда общались в последний раз. Пусто не бывает —
+// «не связывались» это тоже факт, и по доске видно, где он. Слово
+// «контакт» не пишем: оно повторялось бы на каждой карточке, а значок
+// часов и так говорит, что речь о времени.
+function contactLabel(a: AgentCard): string {
+  const at = lastContactAt(a)
+  return at ? relDay(at)! : 'не связывались'
+}
+
+// Разговор, заброшенный на три месяца, подсвечиваем: позиция в колонке
+// про это уже говорит, но при беглом взгляде «сегодня» и «год назад»
+// выглядят одинаково. Никогда не контактировавшие остаются приглушёнными —
+// это не остывший разговор, а нетронутый контакт.
+const STALE_DAYS = 90
+function isStale(a: AgentCard): boolean {
+  const at = lastContactAt(a)
+  return !!at && Date.now() - new Date(at).getTime() > STALE_DAYS * 86400_000
 }
 
 function meetingWhen(iso: string): string {
@@ -77,6 +96,7 @@ export function AgentsBoard({ initialAgents, initialChats }: { initialAgents: Ag
   const byStatus = useMemo(() => {
     const map = new Map<AgentStatus, AgentCard[]>(STATUSES.map(s => [s.id, []]))
     for (const a of visible) map.get(a.status)?.push(a)
+    for (const list of map.values()) list.sort(staleFirst)
     return map
   }, [visible])
 
@@ -263,13 +283,11 @@ export function AgentsBoard({ initialAgents, initialChats }: { initialAgents: Ag
                         </div>
                       ) : null}
 
-                      {(a.chat_last_ts || a.chat_message_count > 0) && (
-                        <div className="mt-2 flex items-center gap-1.5 text-[11.5px] text-[var(--ax-fg-faint)]">
-                          <MessageSquareText size={11} />
-                          <span>{relDay(a.chat_last_ts)}</span>
-                          {a.ai_summary && <Sparkles size={11} className="ml-auto text-[#4FC08D]" />}
-                        </div>
-                      )}
+                      <div className={`mt-2 flex items-center gap-1.5 text-[11.5px] ${isStale(a) ? 'text-[#E0A93B]' : 'text-[var(--ax-fg-faint)]'}`}>
+                        {a.chat_message_count > 0 ? <MessageSquareText size={11} /> : <Clock size={11} />}
+                        <span>{contactLabel(a)}</span>
+                        {a.ai_summary && <Sparkles size={11} className="ml-auto text-[#4FC08D]" />}
+                      </div>
                     </article>
                   ))}
 
@@ -285,7 +303,7 @@ export function AgentsBoard({ initialAgents, initialChats }: { initialAgents: Ag
         </div>
       )}
 
-      {view === 'list' && <AgentsList agents={visible} onOpen={setOpenId} />}
+      {view === 'list' && <AgentsList agents={[...visible].sort(staleFirst)} onOpen={setOpenId} />}
 
       {view === 'inbox' && (
         <InboxList chats={chats} busy={busy} onCreate={c => addAgent(c.name, c)} />
@@ -318,7 +336,7 @@ function AgentsList({ agents, onOpen }: { agents: AgentCard[]; onOpen: (id: stri
             <th className="font-medium px-3 py-2">Агентство</th>
             <th className="font-medium px-3 py-2">Статус</th>
             <th className="font-medium px-3 py-2">Менеджер</th>
-            <th className="font-medium px-3 py-2">Переписка</th>
+            <th className="font-medium px-3 py-2">Последний контакт</th>
             <th className="font-medium px-3 py-2 text-right">Сделок</th>
             <th className="font-medium px-3 py-2 text-right">Объём</th>
           </tr>
@@ -339,7 +357,7 @@ function AgentsList({ agents, onOpen }: { agents: AgentCard[]; onOpen: (id: stri
                 </span>
               </td>
               <td className="px-3 py-2 text-[var(--ax-fg-soft)]">{a.manager ?? '—'}</td>
-              <td className="px-3 py-2 text-[var(--ax-fg-muted)]">{relDay(a.chat_last_ts) ?? '—'}</td>
+              <td className="px-3 py-2 text-[var(--ax-fg-muted)]">{relDay(lastContactAt(a)) ?? 'не связывались'}</td>
               <td className="px-3 py-2 text-right tabular-nums text-[var(--ax-fg-soft)]">{a.deals_count ?? '—'}</td>
               <td className="px-3 py-2 text-right tabular-nums text-[var(--ax-fg-soft)]">{money(a.deals_volume_usd)}</td>
             </tr>

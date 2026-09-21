@@ -64,6 +64,28 @@ export type AgentCard = Agent & {
   next_meeting_place: string | null
 }
 
+// Когда с агентом общались в последний раз. Два источника: живая
+// переписка бота и дата, проставленная руками (из Notion или в карточке).
+// Берём позднюю — иначе привязанный вчера чат не перебьёт прошлогоднюю
+// отметку, и карточка навсегда зависнет вверху «давно не общались».
+export function lastContactAt(a: AgentCard): string | null {
+  const manual = a.last_contact ? new Date(`${a.last_contact}T00:00:00Z`).toISOString() : null
+  if (!a.chat_last_ts) return manual
+  if (!manual) return a.chat_last_ts
+  return a.chat_last_ts > manual ? a.chat_last_ts : manual
+}
+
+// Порядок карточек в колонке: наверх — те, с кем дольше всего не
+// общались. Никогда не контактировавшие уходят вниз: их полторы сотни,
+// и наверху они закрыли бы собой тех, с кем разговор реально подвис.
+export function staleFirst(a: AgentCard, b: AgentCard): number {
+  const x = lastContactAt(a), y = lastContactAt(b)
+  if (x && y) return x.localeCompare(y)
+  if (x) return -1
+  if (y) return 1
+  return a.name.localeCompare(b.name, 'ru')
+}
+
 export type AgentNote = {
   id: string
   body: string
