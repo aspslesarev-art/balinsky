@@ -26,6 +26,10 @@
     {
       "path": "/api/cron/finish-explorer",
       "schedule": "0 22 * * 0"
+    },
+    {
+      "path": "/api/cron/agents-summary",
+      "schedule": "15 21 * * *"
     }
   ]
 }

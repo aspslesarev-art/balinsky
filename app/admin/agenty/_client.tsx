@@ -1,0 +1,417 @@
+'use client'
+
+// CRM по агентам: доска воронки, список и «входящие» из переписок бота.
+//
+// Доска — главный вид, как было в Notion: колонка = статус, карточку
+// перетаскиваем мышью. На телефоне перетаскивание не работает нигде
+// нормально, поэтому статус там меняется выбором в карточке, а колонки
+// листаются горизонтально.
+
+import { useCallback, useMemo, useState } from 'react'
+import { Search, Plus, Inbox, LayoutGrid, Rows3, CalendarDays, MessageSquareText, Sparkles, X } from 'lucide-react'
+import { STATUSES, type AgentCard, type AgentStatus, type UnlinkedChat } from '@/lib/agents/types'
+import { AgentPanel } from './_panel'
+
+// Оттенок колонки: воронка идёт от нейтрального к зелёному, «Не
+// сложилось» — единственный красный. Цвет живёт только в тонкой полоске
+// над колонкой и в точке у статуса, тексты остаются на токенах темы.
+const STATUS_TINT: Record<AgentStatus, string> = {
+  new:         'rgba(148,163,184,0.55)',
+  contact:     'rgba(224,169,59,0.75)',
+  to_schedule: 'rgba(224,169,59,0.95)',
+  scheduled:   'rgba(79,192,141,0.65)',
+  met:         'rgba(79,192,141,0.9)',
+  working:     '#1F8B5F',
+  lost:        'rgba(248,113,113,0.7)',
+}
+
+function relDay(iso: string | null): string | null {
+  if (!iso) return null
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400_000)
+  if (days <= 0) return 'сегодня'
+  if (days === 1) return 'вчера'
+  if (days < 7) return `${days} дн. назад`
+  if (days < 31) return `${Math.floor(days / 7)} нед. назад`
+  if (days < 365) return `${Math.floor(days / 30)} мес. назад`
+  return `${Math.floor(days / 365)} г. назад`
+}
+
+function meetingWhen(iso: string): string {
+  return new Date(iso).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+}
+
+export function AgentsBoard({ initialAgents, initialChats }: { initialAgents: AgentCard[]; initialChats: UnlinkedChat[] }) {
+  const [agents, setAgents] = useState<AgentCard[]>(initialAgents)
+  const [chats, setChats] = useState<UnlinkedChat[]>(initialChats)
+  const [view, setView] = useState<'board' | 'list' | 'inbox'>('board')
+  const [query, setQuery] = useState('')
+  const [manager, setManager] = useState('')
+  const [openId, setOpenId] = useState<string | null>(null)
+  const [dragId, setDragId] = useState<string | null>(null)
+  const [dropStatus, setDropStatus] = useState<AgentStatus | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const reload = useCallback(async () => {
+    const r = await fetch('/api/admin/agents', { cache: 'no-store' })
+    if (r.status === 401) { window.location.href = '/admin'; return }
+    const j = await r.json() as { ok: boolean; agents?: AgentCard[]; chats?: UnlinkedChat[] }
+    if (j.ok) { setAgents(j.agents ?? []); setChats(j.chats ?? []) }
+  }, [])
+
+  const managers = useMemo(
+    () => [...new Set(agents.map(a => a.manager).filter((v): v is string => !!v))].sort((a, b) => a.localeCompare(b, 'ru')),
+    [agents],
+  )
+
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    return agents.filter(a => {
+      if (manager && a.manager !== manager) return false
+      if (!q) return true
+      return [a.name, a.agency, a.telegram, a.phone, a.email, a.next_step, a.ai_summary]
+        .some(v => v?.toLowerCase().includes(q))
+    })
+  }, [agents, query, manager])
+
+  const byStatus = useMemo(() => {
+    const map = new Map<AgentStatus, AgentCard[]>(STATUSES.map(s => [s.id, []]))
+    for (const a of visible) map.get(a.status)?.push(a)
+    return map
+  }, [visible])
+
+  // Оптимистично двигаем карточку и только потом пишем на сервер:
+  // перетаскивание, которое «думает» полсекунды, ощущается сломанным.
+  const move = async (id: string, status: AgentStatus) => {
+    const before = agents
+    setAgents(prev => prev.map(a => (a.id === id ? { ...a, status } : a)))
+    try {
+      const r = await fetch(`/api/admin/agents/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status, sort: -Date.now() }),
+      })
+      if (!r.ok) throw new Error()
+    } catch {
+      setAgents(before)
+      setError('Не удалось сменить статус — попробуйте ещё раз')
+    }
+  }
+
+  const patch = useCallback((updated: AgentCard) => {
+    setAgents(prev => prev.map(a => (a.id === updated.id ? { ...a, ...updated } : a)))
+  }, [])
+
+  const addAgent = async (name: string, from?: UnlinkedChat) => {
+    setBusy(true); setError(null)
+    try {
+      const r = await fetch('/api/admin/agents', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          telegram: from?.username ?? null,
+          tg_chat_id: from?.chat_id ?? null,
+          source: from ? 'chat' : 'manual',
+        }),
+      })
+      const j = await r.json() as { ok: boolean; agent?: AgentCard; error?: string }
+      if (!j.ok || !j.agent) throw new Error(j.error)
+      await reload()
+      setOpenId(j.agent.id)
+      if (from) setChats(prev => prev.filter(c => c.chat_id !== from.chat_id))
+    } catch {
+      setError('Не удалось создать карточку')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const removeAgent = async (id: string) => {
+    setAgents(prev => prev.filter(a => a.id !== id))
+    setOpenId(null)
+    await fetch(`/api/admin/agents/${id}`, { method: 'DELETE' })
+    await reload()
+  }
+
+  const open = agents.find(a => a.id === openId) ?? null
+
+  return (
+    <div className="flex flex-col gap-4 pb-20 md:pb-16">
+      {/* Панель управления: вид, поиск, менеджер, «новый агент» */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="inline-flex rounded-lg border border-[var(--ax-border)] p-0.5">
+          {([
+            { id: 'board', label: 'Доска', Icon: LayoutGrid },
+            { id: 'list', label: 'Список', Icon: Rows3 },
+            { id: 'inbox', label: `Входящие${chats.length ? ` · ${chats.length}` : ''}`, Icon: Inbox },
+          ] as const).map(({ id, label, Icon }) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setView(id)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] transition-colors duration-[120ms] ${
+                view === id
+                  ? 'bg-[var(--ax-panel)] text-[var(--ax-fg)]'
+                  : 'text-[var(--ax-fg-muted)] hover:text-[var(--ax-fg)]'
+              }`}
+            >
+              <Icon size={14} />
+              {label}
+            </button>
+          ))}
+        </div>
+
+        <div className="relative flex-1 min-w-[180px] max-w-[320px]">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--ax-fg-faint)]" />
+          <input
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Имя, агентство, ник…"
+            className="w-full h-9 pl-9 pr-3 rounded-lg text-[13px] bg-[var(--ax-input-bg)] border border-[var(--ax-input-border)] text-[var(--ax-fg)] placeholder:text-[var(--ax-fg-faint)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4FC08D]"
+          />
+        </div>
+
+        {managers.length > 0 && (
+          <select
+            value={manager}
+            onChange={e => setManager(e.target.value)}
+            className="h-9 px-3 rounded-lg text-[13px] bg-[var(--ax-input-bg)] border border-[var(--ax-input-border)] text-[var(--ax-fg)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4FC08D]"
+          >
+            <option value="">Все менеджеры</option>
+            {managers.map(m => <option key={m} value={m}>{m}</option>)}
+          </select>
+        )}
+
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => { const n = prompt('Имя агента'); if (n?.trim()) addAgent(n.trim()) }}
+          className="ml-auto inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-[13px] font-medium bg-[#1F8B5F] hover:bg-[#197551] text-white disabled:opacity-50 transition-colors duration-[120ms] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4FC08D]"
+        >
+          <Plus size={15} />
+          Новый агент
+        </button>
+      </div>
+
+      {error && (
+        <div className="px-3 py-2 rounded-lg text-[13px] bg-[var(--ax-error-bg)] border border-[var(--ax-error-border)] text-[var(--ax-error-fg)]">
+          {error}
+        </div>
+      )}
+
+      {view === 'board' && (
+        <div className="flex gap-3 overflow-x-auto pb-4 -mx-3 px-3 md:-mx-4 md:px-4">
+          {STATUSES.map(s => {
+            const items = byStatus.get(s.id) ?? []
+            return (
+              <section
+                key={s.id}
+                onDragOver={e => { if (dragId) { e.preventDefault(); setDropStatus(s.id) } }}
+                onDragLeave={() => setDropStatus(prev => (prev === s.id ? null : prev))}
+                onDrop={e => {
+                  e.preventDefault()
+                  if (dragId) move(dragId, s.id)
+                  setDragId(null); setDropStatus(null)
+                }}
+                className={`shrink-0 w-[272px] rounded-xl border transition-colors duration-[120ms] ${
+                  dropStatus === s.id
+                    ? 'border-[#4FC08D] bg-[var(--ax-hover)]'
+                    : 'border-[var(--ax-border-soft)] bg-[var(--ax-chat-bg)]'
+                }`}
+              >
+                <header className="px-3 pt-3 pb-2">
+                  <div className="h-[3px] w-8 rounded-full mb-2" style={{ background: STATUS_TINT[s.id] }} />
+                  <div className="flex items-baseline gap-2">
+                    <h2 className="text-[13px] font-semibold text-[var(--ax-fg)]">{s.label}</h2>
+                    <span className="text-[12px] text-[var(--ax-fg-faint)] tabular-nums">{items.length}</span>
+                  </div>
+                </header>
+
+                <div className="px-2 pb-2 flex flex-col gap-3 max-h-[calc(100vh-360px)] md:max-h-[calc(100vh-300px)] overflow-y-auto">
+                  {items.map(a => (
+                    <article
+                      key={a.id}
+                      draggable
+                      onDragStart={() => setDragId(a.id)}
+                      onDragEnd={() => { setDragId(null); setDropStatus(null) }}
+                      onClick={() => setOpenId(a.id)}
+                      tabIndex={0}
+                      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpenId(a.id) } }}
+                      className={`cursor-pointer rounded-lg border border-[var(--ax-border-soft)] bg-[var(--ax-panel)] px-3 py-2.5 hover:border-[var(--ax-border)] transition-colors duration-[120ms] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4FC08D] ${
+                        dragId === a.id ? 'opacity-40' : ''
+                      }`}
+                    >
+                      <div className="text-[13.5px] font-medium text-[var(--ax-fg)] leading-snug break-words">{a.name}</div>
+
+                      {a.agency && (
+                        <div className="mt-1.5">
+                          <span className="inline-block px-1.5 py-0.5 rounded text-[11.5px] text-[var(--ax-fg-soft)] bg-[var(--ax-hover)]">
+                            {a.agency}
+                          </span>
+                        </div>
+                      )}
+
+                      {a.next_meeting_at ? (
+                        <div className="mt-2 flex items-start gap-1.5 text-[12px] text-[#4FC08D] leading-snug">
+                          <CalendarDays size={12} className="mt-0.5 shrink-0" />
+                          <span>{meetingWhen(a.next_meeting_at)}{a.next_meeting_place ? `, ${a.next_meeting_place}` : ''}</span>
+                        </div>
+                      ) : (a.next_step || a.ai_next_step) ? (
+                        <div className="mt-2 text-[12px] text-[var(--ax-fg-soft)] leading-snug line-clamp-2">
+                          {a.next_step || a.ai_next_step}
+                        </div>
+                      ) : null}
+
+                      {(a.chat_last_ts || a.chat_message_count > 0) && (
+                        <div className="mt-2 flex items-center gap-1.5 text-[11.5px] text-[var(--ax-fg-faint)]">
+                          <MessageSquareText size={11} />
+                          <span>{relDay(a.chat_last_ts)}</span>
+                          {a.ai_summary && <Sparkles size={11} className="ml-auto text-[#4FC08D]" />}
+                        </div>
+                      )}
+                    </article>
+                  ))}
+
+                  {items.length === 0 && (
+                    <p className="px-2 py-6 text-[12px] text-[var(--ax-fg-faint)] leading-snug text-center">
+                      {query || manager ? 'Никто не подходит под фильтр' : s.hint}
+                    </p>
+                  )}
+                </div>
+              </section>
+            )
+          })}
+        </div>
+      )}
+
+      {view === 'list' && <AgentsList agents={visible} onOpen={setOpenId} />}
+
+      {view === 'inbox' && (
+        <InboxList chats={chats} busy={busy} onCreate={c => addAgent(c.name, c)} />
+      )}
+
+      {open && (
+        <AgentPanel
+          agentId={open.id}
+          onClose={() => setOpenId(null)}
+          onPatched={patch}
+          onDeleted={removeAgent}
+          onReload={reload}
+        />
+      )}
+    </div>
+  )
+}
+
+function AgentsList({ agents, onOpen }: { agents: AgentCard[]; onOpen: (id: string) => void }) {
+  if (!agents.length) {
+    return <p className="py-16 text-center text-[13px] text-[var(--ax-fg-muted)]">Никого не нашлось</p>
+  }
+  const money = (v: number | null) => (v == null ? '—' : `$${Math.round(v).toLocaleString('ru-RU')}`)
+  return (
+    <div className="overflow-x-auto rounded-xl border border-[var(--ax-border-soft)]">
+      <table className="w-full min-w-[840px] text-[13px] border-collapse">
+        <thead>
+          <tr className="text-left text-[12px] text-[var(--ax-fg-muted)] bg-[var(--ax-chat-bg)]">
+            <th className="font-medium px-3 py-2">Агент</th>
+            <th className="font-medium px-3 py-2">Агентство</th>
+            <th className="font-medium px-3 py-2">Статус</th>
+            <th className="font-medium px-3 py-2">Менеджер</th>
+            <th className="font-medium px-3 py-2">Переписка</th>
+            <th className="font-medium px-3 py-2 text-right">Сделок</th>
+            <th className="font-medium px-3 py-2 text-right">Объём</th>
+          </tr>
+        </thead>
+        <tbody>
+          {agents.map(a => (
+            <tr
+              key={a.id}
+              onClick={() => onOpen(a.id)}
+              className="border-t border-[var(--ax-border-soft)] cursor-pointer hover:bg-[var(--ax-hover)]"
+            >
+              <td className="px-3 py-2 text-[var(--ax-fg)]">{a.name}</td>
+              <td className="px-3 py-2 text-[var(--ax-fg-soft)]">{a.agency ?? '—'}</td>
+              <td className="px-3 py-2">
+                <span className="inline-flex items-center gap-1.5 text-[var(--ax-fg-soft)]">
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: STATUS_TINT[a.status] }} />
+                  {STATUSES.find(s => s.id === a.status)?.label}
+                </span>
+              </td>
+              <td className="px-3 py-2 text-[var(--ax-fg-soft)]">{a.manager ?? '—'}</td>
+              <td className="px-3 py-2 text-[var(--ax-fg-muted)]">{relDay(a.chat_last_ts) ?? '—'}</td>
+              <td className="px-3 py-2 text-right tabular-nums text-[var(--ax-fg-soft)]">{a.deals_count ?? '—'}</td>
+              <td className="px-3 py-2 text-right tabular-nums text-[var(--ax-fg-soft)]">{money(a.deals_volume_usd)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function InboxList({ chats, busy, onCreate }: { chats: UnlinkedChat[]; busy: boolean; onCreate: (c: UnlinkedChat) => void }) {
+  const [hidden, setHidden] = useState<Set<number>>(new Set())
+  const rest = chats.filter(c => !hidden.has(c.chat_id))
+
+  if (!chats.length) {
+    return (
+      <p className="py-16 text-center text-[13px] text-[var(--ax-fg-muted)] max-w-[52ch] mx-auto leading-relaxed">
+        Все переписки бота уже разобраны — у каждой есть карточка агента.
+      </p>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-[12.5px] text-[var(--ax-fg-muted)] max-w-[68ch] leading-relaxed">
+        Диалоги, которые бот видит в вашем Telegram, но карточки агента для них ещё нет.
+        Заведите карточку, если это агент, или скройте — это решение только для вас, чат никуда не денется.
+      </p>
+      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+        {rest.map(c => (
+          // flex-col + mt-auto у кнопки: в ряду карточки разной высоты
+          // (у кого-то нет последнего сообщения), и без этого «Завести
+          // карточку» прыгает по вертикали от карточки к карточке.
+          <article key={c.chat_id} className="flex flex-col rounded-xl border border-[var(--ax-border-soft)] bg-[var(--ax-panel)] p-3">
+            <div className="flex items-start gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="text-[13.5px] font-medium text-[var(--ax-fg)] truncate">{c.name}</div>
+                {c.username && <div className="text-[12px] text-[var(--ax-fg-faint)]">@{c.username}</div>}
+              </div>
+              <button
+                type="button"
+                onClick={() => setHidden(prev => new Set(prev).add(c.chat_id))}
+                aria-label="Скрыть из входящих"
+                className="shrink-0 w-7 h-7 inline-flex items-center justify-center rounded-md text-[var(--ax-fg-faint)] hover:text-[var(--ax-fg)] hover:bg-[var(--ax-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4FC08D]"
+              >
+                <X size={14} />
+              </button>
+            </div>
+            {c.last_text && (
+              <p className="mt-2 text-[12px] text-[var(--ax-fg-muted)] leading-snug line-clamp-2">{c.last_text}</p>
+            )}
+            <div className="mt-2 flex items-center gap-3 text-[11.5px] text-[var(--ax-fg-faint)]">
+              <span>{relDay(c.last_ts)}</span>
+              <span>{c.message_count} сообщ.</span>
+              {c.meeting_count > 0 && <span className="text-[#4FC08D]">{c.meeting_count} встр.</span>}
+            </div>
+            <div className="mt-auto pt-3">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => onCreate(c)}
+                className="w-full h-8 rounded-lg text-[12.5px] font-medium border border-[var(--ax-border)] text-[var(--ax-fg)] hover:bg-[var(--ax-hover)] disabled:opacity-50 transition-colors duration-[120ms] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4FC08D]"
+              >
+                Завести карточку
+              </button>
+            </div>
+          </article>
+        ))}
+      </div>
+      {rest.length === 0 && (
+        <p className="py-10 text-center text-[13px] text-[var(--ax-fg-muted)]">Все скрыты. Обновите страницу, чтобы вернуть список.</p>
+      )}
+    </div>
+  )
+}
