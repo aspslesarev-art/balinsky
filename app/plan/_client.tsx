@@ -46,7 +46,8 @@ export function PlanClient({ daysLeft }: { daysLeft: number }) {
   const [done, setDone] = useState<Set<string>>(new Set())
   const [loaded, setLoaded] = useState(false)
   const [failed, setFailed] = useState(false)
-  const [openWeek, setOpenWeek] = useState<number | null>(null)
+  // Недель можно держать открытыми сколько угодно — как в исходнике.
+  const [openWeeks, setOpenWeeks] = useState<Set<number>>(new Set())
   const [armed, setArmed] = useState(false)
   // Неделю открываем автоматически один раз — дальше это выбор человека.
   const autoOpened = useRef(false)
@@ -76,7 +77,7 @@ export function PlanClient({ daysLeft }: { daysLeft: number }) {
     if (!loaded || autoOpened.current) return
     autoOpened.current = true
     const first = PLAN.find(w => w.days.some(d => d.tasks.some(t => !done.has(t.id))))
-    setOpenWeek(first ? first.n : null)
+    setOpenWeeks(first ? new Set([first.n]) : new Set())
   }, [loaded, done])
 
   const toggle = useCallback((taskId: string) => {
@@ -175,8 +176,12 @@ export function PlanClient({ daysLeft }: { daysLeft: number }) {
             key={week.n}
             week={week}
             done={done}
-            open={openWeek === week.n}
-            onToggleWeek={() => setOpenWeek(cur => (cur === week.n ? null : week.n))}
+            open={openWeeks.has(week.n)}
+            onToggleWeek={() => setOpenWeeks(cur => {
+              const next = new Set(cur)
+              if (next.has(week.n)) next.delete(week.n); else next.add(week.n)
+              return next
+            })}
             onToggleTask={toggle}
           />
         ))}
