@@ -22,7 +22,14 @@ function writeCache(done: Set<string>): void {
   try { localStorage.setItem(CACHE_KEY, JSON.stringify([...done])) } catch { /* приватный режим — переживём */ }
 }
 
-const fmt = (n: number) => '$' + n.toLocaleString('ru-RU').replace(/ /g, ' ')
+const fmt = (n: number) => '$' + n.toLocaleString('ru-RU').replace(/\u00a0/g, ' ')
+
+function plural(n: number, one: string, few: string, many: string): string {
+  const mod10 = n % 10, mod100 = n % 100
+  if (mod10 === 1 && mod100 !== 11) return one
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few
+  return many
+}
 
 async function postTask(taskId: string, done: boolean): Promise<boolean> {
   try {
@@ -158,7 +165,7 @@ export function PlanClient({ daysLeft }: { daysLeft: number }) {
         <div className={styles.stats}>
           <div><span>{stats.doneCount}</span>задач закрыто</div>
           <div><span>{stats.deals}</span>сделок из {PLAN_DEALS_TOTAL}</div>
-          <div><span>{daysLeft}</span>дней до вылета</div>
+          <div><span>{daysLeft}</span>{plural(daysLeft, 'день', 'дня', 'дней')} до вылета</div>
         </div>
       </header>
 
