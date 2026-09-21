@@ -210,6 +210,53 @@ export async function linkChat(agentId: string, chatId: number | null, author?: 
   return data as Agent
 }
 
+// Привязать к карточкам чаты, которые бот завёл уже после их создания.
+//
+// Зачем отдельный проход: ник в карточке есть, чат у бота есть, а связи
+// нет — потому что в момент переноса разговора ещё не существовало.
+// Владельцу это выглядит как «почему-то не подтянулся», и справедливо:
+// всё нужное для связи известно. Проход дешёвый (два запроса, которые
+// страница и так делает) и идемпотентный, поэтому его гоняем при каждом
+// открытии раздела и ночью перед ИИ-разбором.
+//
+// Осторожность: трогаем только карточки БЕЗ чата и только свободные
+// чаты. Занятый чужой карточкой диалог не перевешиваем — это почти
+// всегда дубль того же человека, и выбирать должен владелец.
+export async function autoLinkChatsByNick(): Promise<number> {
+  const [chats, { data: agents, error }] = await Promise.all([
+    chatIndex(),
+    sb.from('agents').select('id,name,telegram,tg_chat_id').eq('archived', false).order('created_at', { ascending: true }),
+  ])
+  if (error) { console.error('[agents] autolink:', error.message); return 0 }
+
+  const nickToChat = new Map<string, number>()
+  for (const c of chats.values()) {
+    const nick = normalizeTelegram(splitContact(c.contact).username)
+    if (nick && !nickToChat.has(nick)) nickToChat.set(nick, c.chat_id)
+  }
+  const taken = new Set((agents ?? []).map(a => a.tg_chat_id).filter((v): v is number => v != null))
+
+  let linked = 0
+  for (const a of agents ?? []) {
+    if (a.tg_chat_id != null || !a.telegram) continue
+    const chatId = nickToChat.get(a.telegram)
+    if (chatId == null || taken.has(chatId)) continue
+    const { error: upErr } = await sb
+      .from('agents')
+      .update({ tg_chat_id: chatId, updated_at: new Date().toISOString() })
+      .eq('id', a.id)
+      // Гонка двух одновременных проходов: вторая запись не должна
+      // перетереть первую, поэтому обновляем только пока чата нет.
+      .is('tg_chat_id', null)
+    if (upErr) { console.error('[agents] autolink update:', a.name, upErr.message); continue }
+    taken.add(chatId)
+    linked++
+    await addNote(a.id, `Переписка привязана автоматически по нику @${a.telegram}`, null, 'system')
+  }
+  if (linked) console.log(`[agents] автопривязка по нику: ${linked}`)
+  return linked
+}
+
 // Чаты бота, для которых карточки ещё нет. Это и есть «входящие»: бот
 // видит 154 диалога, в базе агентов их заметно меньше.
 export async function listUnlinkedChats(): Promise<UnlinkedChat[]> {

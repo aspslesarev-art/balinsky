@@ -12,6 +12,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { AiCapReached, AiDisabled, aiEnabled, summarizeAgentChat, todayAgentsSpendUsd } from '@/lib/agents/ai'
+import { autoLinkChatsByNick } from '@/lib/agents/store'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -29,7 +30,10 @@ function authOk(req: Request): boolean {
 
 export async function GET(req: Request) {
   if (!authOk(req)) return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 })
-  if (!aiEnabled()) return NextResponse.json({ ok: true, skipped: 'ai_disabled' })
+  // Привязка по нику идёт до проверки ИИ: она бесплатная и нужна, даже
+  // когда разбор выключен.
+  const autoLinked = await autoLinkChatsByNick()
+  if (!aiEnabled()) return NextResponse.json({ ok: true, autoLinked, skipped: 'ai_disabled' })
 
   const { data, error } = await sb
     .from('agents')
@@ -60,6 +64,6 @@ export async function GET(req: Request) {
   }
 
   const spent = await todayAgentsSpendUsd()
-  console.log(`[agents-cron] обновлено ${updated}, без изменений ${skipped}, ошибок ${failed}, потрачено сегодня $${spent.toFixed(4)}${stoppedByCap ? ' (остановлено потолком)' : ''}`)
-  return NextResponse.json({ ok: true, updated, skipped, failed, stoppedByCap, spentTodayUsd: Number(spent.toFixed(4)) })
+  console.log(`[agents-cron] привязано по нику ${autoLinked}, обновлено ${updated}, без изменений ${skipped}, ошибок ${failed}, потрачено сегодня $${spent.toFixed(4)}${stoppedByCap ? ' (остановлено потолком)' : ''}`)
+  return NextResponse.json({ ok: true, autoLinked, updated, skipped, failed, stoppedByCap, spentTodayUsd: Number(spent.toFixed(4)) })
 }

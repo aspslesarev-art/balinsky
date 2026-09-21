@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-auth'
-import { createAgent, listAgents, listUnlinkedChats } from '@/lib/agents/store'
+import { autoLinkChatsByNick, createAgent, listAgents, listUnlinkedChats } from '@/lib/agents/store'
 import { isStatus } from '@/lib/agents/types'
 
 export const runtime = 'nodejs'
@@ -13,6 +13,7 @@ export async function GET(req: Request) {
   if (!(await requireAdmin())) return NextResponse.json({ ok: false }, { status: 401 })
   const archived = new URL(req.url).searchParams.get('archived') === '1'
   try {
+    await autoLinkChatsByNick()
     const [agents, chats] = await Promise.all([listAgents(archived), listUnlinkedChats()])
     return NextResponse.json({ ok: true, agents, chats })
   } catch (e) {
