@@ -60,6 +60,8 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
   // Баннер награды и конфетти живут пару секунд после события.
   const [banner, setBanner] = useState<{ icon: string; title: string; sub: string } | null>(null)
   const [confetti, setConfetti] = useState(0)
+  // Последнее действие — чтобы его можно было откатить одной кнопкой.
+  const [undo, setUndo] = useState<{ taskId: string; text: string; nowDone: boolean } | null>(null)
   const mutedRef = useRef(false)
   // Чтобы не салютовать при первой загрузке уже полученным наградам.
   const seenAwards = useRef<Set<string> | null>(null)
@@ -130,6 +132,7 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
     } else if (task && wasDone && !mutedRef.current) {
       playUndo()
     }
+    if (task) setUndo({ taskId, text: task.text, nowDone: !wasDone })
     const next = new Set(done)
     if (wasDone) next.delete(taskId); else next.add(taskId)
 
@@ -152,6 +155,24 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
       if (!mutedRef.current) playFail()
     })
   }, [done])
+
+  const undoLast = useCallback(() => {
+    if (!undo) return
+    toggle(undo.taskId)
+    setUndo(null)
+  }, [undo, toggle])
+
+  // Ctrl+Z / ⌘Z — привычный способ передумать.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault()
+        undoLast()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [undoLast])
 
   // Сброс — в две ступени вместо системного confirm: тот блокирует
   // страницу и на телефоне выглядит чужеродно.
@@ -227,6 +248,12 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
   }, [earned, loaded, player.level, player.rank])
 
   useEffect(() => {
+    if (!undo) return
+    const t = window.setTimeout(() => setUndo(null), 8000)
+    return () => window.clearTimeout(t)
+  }, [undo])
+
+  useEffect(() => {
     if (!banner) return
     const t = window.setTimeout(() => setBanner(null), 2600)
     return () => window.clearTimeout(t)
@@ -250,7 +277,13 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
       .filter(t => !t.waiting && t.expected < today && !done.has(t.id)),
     [done, today],
   )
-  const waiting = useMemo(() => WAITING_TASKS.filter(t => !done.has(t.id)), [done])
+  // Случившиеся не исчезают из списка: иначе снять ошибочную галочку
+  // будет негде — в днях этих задач нет.
+  const waiting = useMemo(() => {
+    const open = WAITING_TASKS.filter(t => !done.has(t.id))
+    const closed = WAITING_TASKS.filter(t => done.has(t.id))
+    return { open, closed, all: [...open, ...closed] }
+  }, [done])
 
   return (
     <div className={styles.wrap}>
@@ -261,6 +294,15 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
       </div>
 
       {confetti > 0 && <Confetti key={confetti} />}
+
+      {undo && (
+        <div className={styles.undo} role="status">
+          <span className={styles.undoText}>
+            {undo.nowDone ? 'Отмечено' : 'Снято'}: {undo.text}
+          </span>
+          <button type="button" className={styles.undoBtn} onClick={undoLast}>Отменить</button>
+        </div>
+      )}
 
       {banner && (
         <div className={styles.banner} role="status">
@@ -392,20 +434,26 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
           </section>
         )}
 
-        {waiting.length > 0 && (
+        {waiting.all.length > 0 && (
           <section className={styles.waiting} aria-label="В работе">
             <div className={styles.tailsHead}>
               <b>Ждут чужого решения</b>
-              <span>{waiting.length} {plural(waiting.length, 'штука', 'штуки', 'штук')}</span>
+              <span>
+                {waiting.open.length} {plural(waiting.open.length, 'ждёт', 'ждут', 'ждут')}
+                {waiting.closed.length > 0 && ` · ${waiting.closed.length} ${plural(waiting.closed.length, 'случилось', 'случилось', 'случилось')}`}
+              </span>
             </div>
-            {(allWaiting ? waiting : waiting.slice(0, 5)).map(task => (
+            {(allWaiting
+              ? waiting.all
+              // Случившиеся показываем всегда: иначе ошибочную галочку
+              // придётся искать за кнопкой «показать все».
+              : [...waiting.open.slice(0, 5), ...waiting.closed]
+            ).map(task => (
               <Row key={task.id} task={task} done={done} onToggle={toggle} note={ageNote(task.expected, today)} />
             ))}
-            {waiting.length > 5 && (
+            {waiting.open.length > 5 && (
               <button type="button" className={styles.waitingMore} onClick={() => setAllWaiting(v => !v)}>
-                {allWaiting
-                  ? 'Свернуть'
-                  : `Показать все — ещё ${waiting.length - 5} впереди`}
+                {allWaiting ? 'Свернуть' : `Показать все — ещё ${waiting.open.length - 5}`}
               </button>
             )}
           </section>
