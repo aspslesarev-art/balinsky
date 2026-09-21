@@ -149,3 +149,27 @@
 .denied p { color: var(--dim); font-size: 15px; line-height: 1.55; margin: 0 0 24px; }
 .denied b { color: var(--ink); font-weight: 600; }
 .denied .reset { margin-left: 0; }
+
+/* Прокачка: сколько опыта накоплено по каждому навыку. */
+.skills { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px 16px; margin-bottom: 26px; }
+.skillsHead { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.skillsHead b { font-family: var(--plan-font-h), Georgia, serif; font-weight: 600; font-size: 15px; }
+.skillsHead span { color: var(--dim); font-size: 13px; font-variant-numeric: tabular-nums; }
+
+.skill { margin-top: 10px; }
+.skill:first-of-type { margin-top: 0; }
+.skillTop { display: flex; align-items: baseline; gap: 8px; font-size: 13px; }
+.skillTop b { font-weight: 600; font-size: 13.5px; }
+.skillLv { color: var(--gold); font-size: 12.5px; white-space: nowrap; }
+.skillXp { margin-left: auto; color: var(--dim); font-size: 12.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.skillBar { height: 5px; background: rgba(0, 0, 0, .28); border-radius: 99px; margin-top: 5px; overflow: hidden; }
+.skillBar i { display: block; height: 100%; background: var(--jade); border-radius: 99px; transition: width .35s ease; }
+
+/* Бейдж навыка на задаче — нейтральный, чтобы не спорить с денежным. */
+.tag {
+  display: inline-block; margin-left: 6px;
+  background: var(--panel2); color: var(--dim);
+  font-size: 12px; border-radius: 6px; padding: 1px 7px;
+  white-space: nowrap; text-decoration: none;
+}
+.task input:checked ~ .txt .tag { color: var(--jade); }

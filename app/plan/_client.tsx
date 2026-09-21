@@ -1,7 +1,10 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ALL_TASKS, PLAN, PLAN_DEALS_TOTAL, PLAN_LEVELS, PLAN_TARGET_USD, type PlanWeek } from '@/lib/plan/data'
+import {
+  ALL_TASKS, PLAN, PLAN_DEALS_TOTAL, PLAN_LEVELS, PLAN_TARGET_USD,
+  SKILLS, SKILL_ORDER, SKILL_TOTALS, levelOf, type PlanWeek, type Skill,
+} from '@/lib/plan/data'
 import styles from './plan.module.css'
 
 // Источник правды — база. localStorage только для первой отрисовки:
@@ -126,14 +129,17 @@ export function PlanClient({ daysLeft }: { daysLeft: number }) {
   }, [armed, done])
 
   const stats = useMemo(() => {
-    let money = 0, doneCount = 0, deals = 0
+    let money = 0, doneCount = 0, deals = 0, xp = 0
+    const bySkill = Object.fromEntries(SKILL_ORDER.map(sk => [sk, 0])) as Record<Skill, number>
     for (const t of ALL_TASKS) {
       if (!done.has(t.id)) continue
       doneCount++
+      xp += t.xp
+      bySkill[t.skill] += t.xp
       if (t.amount) money += t.amount
       if (t.deal) deals++
     }
-    return { money, doneCount, deals }
+    return { money, doneCount, deals, xp, bySkill }
   }, [done])
 
   const pct = Math.min(100, (stats.money / PLAN_TARGET_USD) * 100)
@@ -168,6 +174,29 @@ export function PlanClient({ daysLeft }: { daysLeft: number }) {
           <div><span>{stats.deals}</span>сделок из {PLAN_DEALS_TOTAL}</div>
           <div><span>{daysLeft}</span>{plural(daysLeft, 'день', 'дня', 'дней')} до вылета</div>
         </div>
+
+        <section className={styles.skills} aria-label="Прокачка навыков">
+          <div className={styles.skillsHead}>
+            <b>Прокачка</b>
+            <span>{stats.xp.toLocaleString('ru-RU')} XP всего</span>
+          </div>
+          {SKILL_ORDER.map(sk => {
+            const xp = stats.bySkill[sk]
+            const { level, into, need } = levelOf(xp)
+            return (
+              <div key={sk} className={styles.skill} title={`${SKILLS[sk].hint}. Всего в плане ${SKILL_TOTALS[sk]} XP, набрано ${xp}`}>
+                <div className={styles.skillTop}>
+                  <b>{SKILLS[sk].name}</b>
+                  <span className={styles.skillLv}>ур. {level}</span>
+                  <span className={styles.skillXp}>{into} / {need} → ур. {level + 1}</span>
+                </div>
+                <div className={styles.skillBar}>
+                  <i style={{ width: `${(into / need) * 100}%` }} />
+                </div>
+              </div>
+            )
+          })}
+        </section>
       </header>
 
       <div>
@@ -261,6 +290,7 @@ function Day({ day, done, onToggleTask }: {
           <span className={styles.txt}>
             {task.text}
             {task.amount != null && <span className={styles.pay}>+{fmt(task.amount)}</span>}
+            <span className={styles.tag}>{SKILLS[task.skill].name} +{task.xp}</span>
           </span>
         </label>
       ))}
