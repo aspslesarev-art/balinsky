@@ -1,10 +1,10 @@
 import { ComplexDetail, generateComplexMetadata } from './_detail'
 
-// 60 s instead of 3600 so hotspot edits in /admin/visualizations
-// (status colours, polygon shapes, target swaps) propagate within a
-// minute rather than an hour. Targeted revalidatePath in the
-// hotspot API endpoints pushes the same change instantly.
-export const revalidate = 3600
+// Daily backstop only. Hotspot edits in /admin/visualizations (status
+// colours, polygon shapes, target swaps) already propagate instantly via
+// the targeted revalidatePath in the hotspot API endpoints, so a short TTL
+// bought nothing and cost ISR writes on every crawler hit.
+export const revalidate = 86400
 export function generateStaticParams() { return [] }
 
 type Params = Promise<{ slug: string }>

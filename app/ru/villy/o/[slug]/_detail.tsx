@@ -582,7 +582,7 @@ const VILLA_PRODUCT_DESC: Record<Lang, (bedrooms: number | null, district: strin
   uk: (b, d) => `Вілла${b ? ` з ${b} спальнями` : ''}${d ? ` у ${d}` : ''}, Балі, Індонезія`,
 }
 
-export const revalidate = 3600
+export const revalidate = 86400
 export function generateStaticParams() { return [] }
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!

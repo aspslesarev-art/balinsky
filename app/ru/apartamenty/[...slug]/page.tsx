@@ -12,7 +12,7 @@ type Params = Promise<{ slug: string[] }>
 // ISR: revalidate static HTML every hour. Canonical SEO landing pages (e.g.
 // /ru/apartamenty/pandawa/2-spalni) are now served from Vercel CDN for any
 // cold visitor — TTFB ~50ms instead of 5–10s.
-export const revalidate = 3600
+export const revalidate = 86400
 export function generateStaticParams() { return [] }
 
 export async function generateMetadata({ params }: { params: Params }) {

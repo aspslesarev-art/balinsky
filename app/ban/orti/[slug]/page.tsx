@@ -1,6 +1,6 @@
 import { NewsDetail, generateNewsDetailMetadata } from '../../../ru/novosti/[slug]/_detail'
 
-export const revalidate = 3600
+export const revalidate = 86400
 export function generateStaticParams() { return [] }
 
 type Params = Promise<{ slug: string }>
