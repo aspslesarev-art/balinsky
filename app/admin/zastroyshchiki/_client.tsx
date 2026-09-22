@@ -56,6 +56,23 @@ const PROSPECT_FG: Record<Prospect, string> = {
 // Порядок «сначала перспективные» для отбора и сортировки списка.
 const PROSPECT_RANK: Record<Prospect, number> = { yes: 0, maybe: 1, unknown: 2, no: 3 }
 
+// Состояние связи с компанией. Три состояния, а не два: «есть ник» и
+// «уже переписываемся» — разные вещи, и работа с ними разная. Первому
+// надо написать, второму — ответить или напомнить о себе.
+type Reach = 'chat' | 'nick' | 'none'
+
+function reachOf(p: DevPartnerCard): Reach {
+  if (p.linked_count > 0) return 'chat'
+  if (p.people.some(x => x.telegram)) return 'nick'
+  return 'none'
+}
+
+const REACH_FILTERS: Array<{ id: Reach; label: string }> = [
+  { id: 'chat', label: 'Уже переписываемся' },
+  { id: 'nick', label: 'Есть Telegram, не писали' },
+  { id: 'none', label: 'Контактов нет' },
+]
+
 function relDay(iso: string | null): string | null {
   if (!iso) return null
   const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400_000)
@@ -97,6 +114,7 @@ export function DevelopersBoard({
   const [view, setView] = useState<'board' | 'list' | 'pool' | 'merge'>('board')
   const [query, setQuery] = useState('')
   const [prospect, setProspect] = useState<'' | Prospect>('')
+  const [reach, setReach] = useState<'' | Reach>('')
   const [openId, setOpenId] = useState<string | null>(null)
   const [dragId, setDragId] = useState<string | null>(null)
   const [dropStatus, setDropStatus] = useState<DevStatus | null>(null)
@@ -118,12 +136,13 @@ export function DevelopersBoard({
     const q = query.trim().toLowerCase()
     return partners.filter(p => {
       if (prospect && p.prospect !== prospect) return false
+      if (reach && reachOf(p) !== reach) return false
       if (!q) return true
       return [p.name, p.projects, p.next_step, p.telegram, p.email, p.website, p.location]
         .some(v => v?.toLowerCase().includes(q))
         || p.people.some(x => [x.name, x.telegram, x.position].some(v => v?.toLowerCase().includes(q)))
     })
-  }, [partners, query, prospect])
+  }, [partners, query, prospect, reach])
 
   const inWork = useMemo(() => matched.filter(p => p.in_work), [matched])
   const pool = useMemo(() => matched.filter(p => !p.in_work), [matched])
@@ -288,6 +307,19 @@ export function DevelopersBoard({
           {PROSPECTS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
         </select>
 
+        <select
+          value={reach}
+          onChange={e => setReach(e.target.value as '' | Reach)}
+          aria-label="Связь"
+          className="h-9 px-3 rounded-lg text-[13px] bg-[var(--ax-input-bg)] border border-[var(--ax-input-border)] text-[var(--ax-fg)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4FC08D]"
+        >
+          <option value="">Любая связь</option>
+          {REACH_FILTERS.map(r => {
+            const n = partners.filter(p => reachOf(p) === r.id).length
+            return <option key={r.id} value={r.id}>{r.label} · {n}</option>
+          })}
+        </select>
+
         <button
           type="button"
           disabled={busy}
@@ -382,7 +414,7 @@ export function DevelopersBoard({
 
                   {items.length === 0 && (
                     <p className="px-2 py-6 text-[12px] text-[var(--ax-fg-faint)] leading-snug text-center">
-                      {query || prospect ? 'Никто не подходит под фильтр' : s.hint}
+                      {query || prospect || reach ? 'Никто не подходит под фильтр' : s.hint}
                     </p>
                   )}
                 </div>
@@ -440,7 +472,7 @@ function PartnersList({ partners, onOpen }: { partners: DevPartnerCard[]; onOpen
             <th className="font-medium px-3 py-2">Застройщик</th>
             <th className="font-medium px-3 py-2">Статус</th>
             <th className="font-medium px-3 py-2">Отклик</th>
-            <th className="font-medium px-3 py-2">Люди</th>
+            <th className="font-medium px-3 py-2">Связь</th>
             <th className="font-medium px-3 py-2">Последний контакт</th>
             <th className="font-medium px-3 py-2">Следующий шаг</th>
           </tr>
@@ -460,8 +492,26 @@ function PartnersList({ partners, onOpen }: { partners: DevPartnerCard[]; onOpen
                 </span>
               </td>
               <td className="px-3 py-2">{p.prospect ? <ProspectBadge value={p.prospect} /> : <span className="text-[var(--ax-fg-faint)]">—</span>}</td>
-              <td className="px-3 py-2 text-[var(--ax-fg-soft)] tabular-nums">
-                {p.people_count === 0 ? '—' : `${p.people_count}${p.linked_count ? ` · ${p.linked_count} с чатом` : ''}`}
+              {/* Отметка «уже переписываемся» — акцентом: по этой колонке
+                  выбирают, кому писать с нуля, а кому отвечать. */}
+              <td className="px-3 py-2 text-[var(--ax-fg-soft)]">
+                {p.people_count === 0 ? (
+                  <span className="text-[var(--ax-fg-faint)]">никого не знаем</span>
+                ) : p.linked_count > 0 ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <MessageSquareText size={12} className="text-[var(--ax-prospect-yes-fg)]" />
+                    <span className="text-[var(--ax-prospect-yes-fg)]">
+                      переписка{p.linked_count > 1 ? ` · ${p.linked_count}` : ''}
+                    </span>
+                    {/* «из N» только когда есть с кем ещё не переписываемся:
+                        «переписка из 1» про единственного человека — шум. */}
+                    {p.people_count > p.linked_count && (
+                      <span className="text-[var(--ax-fg-faint)] tabular-nums">из {p.people_count}</span>
+                    )}
+                  </span>
+                ) : (
+                  <span className="tabular-nums">{p.people_count} чел.</span>
+                )}
               </td>
               <td className="px-3 py-2 text-[var(--ax-fg-muted)]">{relDay(lastContactAt(p)) ?? 'не связывались'}</td>
               <td className="px-3 py-2 text-[var(--ax-fg-soft)] max-w-[28ch] truncate">{p.next_step ?? '—'}</td>
@@ -482,11 +532,8 @@ function Pool({
   onOpen: (id: string) => void
   onTake: (id: string) => void
 }) {
-  const [onlyWithPeople, setOnlyWithPeople] = useState(false)
-
   const list = useMemo(() => {
-    const src = onlyWithPeople ? partners.filter(p => p.people.some(x => x.telegram)) : partners
-    return [...src].sort((a, b) => {
+    return [...partners].sort((a, b) => {
       const ra = a.prospect ? PROSPECT_RANK[a.prospect] : 9
       const rb = b.prospect ? PROSPECT_RANK[b.prospect] : 9
       if (ra !== rb) return ra - rb
@@ -495,29 +542,21 @@ function Pool({
       if (na !== nb) return nb - na
       return a.name.localeCompare(b.name, 'ru')
     })
-  }, [partners, onlyWithPeople])
+  }, [partners])
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-3">
-        <p className="text-[12.5px] text-[var(--ax-fg-muted)] max-w-[68ch] leading-relaxed">
-          Вся база застройщиков, которых в работу пока не брали. Сверху — те, по кому отклик лучше
-          и есть кому написать. «Взять в работу» переносит карточку на доску в колонку «Связаться».
-        </p>
-        <label className="ml-auto inline-flex items-center gap-2 text-[12.5px] text-[var(--ax-fg-soft)] cursor-pointer">
-          <input
-            type="checkbox"
-            checked={onlyWithPeople}
-            onChange={e => setOnlyWithPeople(e.target.checked)}
-            className="w-4 h-4 accent-[#1F8B5F] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4FC08D]"
-          />
-          Только с Telegram
-        </label>
-      </div>
+      {/* Отдельного чекбокса «только с Telegram» здесь нет: его заменил
+          фильтр «Связь» наверху — он общий для доски, списка и отбора,
+          и различает «есть ник» и «уже переписываемся». */}
+      <p className="text-[12.5px] text-[var(--ax-fg-muted)] max-w-[68ch] leading-relaxed">
+        Вся база застройщиков, которых в работу пока не брали. Сверху — те, по кому отклик лучше
+        и есть кому написать. «Взять в работу» переносит карточку на доску в колонку «Связаться».
+      </p>
 
       {list.length === 0 ? (
         <p className="py-16 text-center text-[13px] text-[var(--ax-fg-muted)]">
-          {onlyWithPeople ? 'С Telegram в резерве никого не осталось' : 'Резерв пуст — все взяты в работу'}
+          Под фильтр в резерве никто не подходит
         </p>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-[var(--ax-border-soft)]">
@@ -557,10 +596,23 @@ function Pool({
                   </td>
                   <td className="px-3 py-2">{p.prospect ? <ProspectBadge value={p.prospect} /> : <span className="text-[var(--ax-fg-faint)]">—</span>}</td>
                   <td className="px-3 py-2 text-[var(--ax-fg-soft)]">
-                    {p.people.length === 0
-                      ? <span className="text-[var(--ax-fg-faint)]">никого не знаем</span>
-                      : p.people.slice(0, 2).map(x => x.telegram ? `@${x.telegram}` : x.name).join(', ')
-                        + (p.people.length > 2 ? ` +${p.people.length - 2}` : '')}
+                    {p.people.length === 0 ? (
+                      <span className="text-[var(--ax-fg-faint)]">никого не знаем</span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5">
+                        {p.linked_count > 0 && (
+                          <MessageSquareText
+                            size={12}
+                            className="shrink-0 text-[var(--ax-prospect-yes-fg)]"
+                            aria-label="уже переписываемся"
+                          />
+                        )}
+                        <span>
+                          {p.people.slice(0, 2).map(x => x.telegram ? `@${x.telegram}` : x.name).join(', ')}
+                          {p.people.length > 2 ? ` +${p.people.length - 2}` : ''}
+                        </span>
+                      </span>
+                    )}
                   </td>
                   <td className="px-3 py-2 text-[var(--ax-fg-muted)] max-w-[30ch] truncate">{p.projects ?? '—'}</td>
                   <td className="px-3 py-2 text-[var(--ax-fg-muted)] whitespace-nowrap">{p.commission ?? '—'}</td>
