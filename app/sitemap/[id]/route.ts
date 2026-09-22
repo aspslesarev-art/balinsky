@@ -13,7 +13,11 @@ import {
 // every child here got crawled on schedule — so the index is also served
 // from this handler, on the path shape Googlebot demonstrably picks up.
 // See lib/sitemap-data.ts.
-export const revalidate = 3600
+// Суточный TTL: карты сайта пересобирались ежечасно, и каждая пересборка
+// это полный обход списков в Supabase. Свежесть теперь держит точечная
+// инвалидация — KIND_TO_PATHS добавляет /sitemap/[id] в каждый вид
+// контента, так что новая вилла попадает в карту сразу после правки.
+export const revalidate = 86400
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 

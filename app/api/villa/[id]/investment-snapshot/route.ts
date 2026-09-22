@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { buildSnapshot } from '@/lib/investment/snapshot'
 
+// isr-ttl-ok: вызывается только при сборке презентации по юниту, не
+// краулится — путей мало, а редакторские параметры модели (полосы
+// загрузки, порог cap-rate) должны доезжать за минуты, не за сутки.
 export const revalidate = 3600
 
 export async function GET(

@@ -95,6 +95,14 @@ function localizeRoutes(routes: RevalidateRoute[]): RevalidateRoute[] {
   )
 }
 
+// Карты сайта общие для всех языков и живут на суточном TTL, поэтому их
+// инвалидируем на любой правке контента — иначе новая вилла ждала бы места
+// в /sitemap/villy.xml до суток. Путь не локализуется: маршрут один.
+const SITEMAP_ROUTE: RevalidateRoute = { path: '/sitemap/[id]', type: 'page' }
+
 export const KIND_TO_PATHS: Record<string, RevalidateRoute[]> = Object.fromEntries(
-  Object.entries(RU_PATHS).map(([kind, routes]) => [kind, localizeRoutes(routes)]),
+  Object.entries(RU_PATHS).map(([kind, routes]) => [
+    kind,
+    [...localizeRoutes(routes), SITEMAP_ROUTE],
+  ]),
 )
