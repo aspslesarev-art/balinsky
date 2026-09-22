@@ -14,6 +14,14 @@ import styles from './plan.module.css'
 // сразу, а через секунду его заменяет ответ API.
 const CACHE_KEY = 'plan_done_v1'
 
+type Tab = 'tasks' | 'plan' | 'profile'
+
+const TABS: ReadonlyArray<readonly [Tab, string]> = [
+  ['tasks', 'Задачи'],
+  ['plan', 'План'],
+  ['profile', 'Профиль'],
+]
+
 function readCache(): string[] | null {
   try {
     const raw = localStorage.getItem(CACHE_KEY)
@@ -57,9 +65,9 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
   const [allWaiting, setAllWaiting] = useState(false)
   const [days, setDays] = useState<string[]>([])
   const [muted, setMuted] = useState(false)
-  // Дашборд и задачи разведены: каждый день нужны задачи, профиль — когда
-  // хочется посмотреть, на что это всё копится.
-  const [tab, setTab] = useState<'tasks' | 'profile'>('tasks')
+  // Три экрана: «Задачи» — что делать сегодня, «План» — вся раскладка до
+  // вылета, «Профиль» — на что это всё копится.
+  const [tab, setTab] = useState<Tab>('tasks')
   // Баннер награды и конфетти живут пару секунд после события.
   const [banner, setBanner] = useState<{ icon: string; title: string; sub: string } | null>(null)
   const [confetti, setConfetti] = useState(0)
@@ -77,7 +85,8 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
   useEffect(() => {
     try {
       if (localStorage.getItem('plan_muted') === '1') { setMuted(true); mutedRef.current = true }
-      if (localStorage.getItem('plan_tab') === 'profile') setTab('profile')
+      const saved = localStorage.getItem('plan_tab')
+      if (saved === 'plan' || saved === 'profile' || saved === 'tasks') setTab(saved)
     } catch { /* приватный режим */ }
   }, [])
 
@@ -289,6 +298,25 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
     return { open, closed, all: [...open, ...closed] }
   }, [done])
 
+  // Сегодняшний день плана. В выходные и после 14 декабря его просто нет.
+  const todayBlock = useMemo(() => {
+    const day = PLAN.flatMap(w => w.days).find(d => d.iso === today)
+    return { label: day?.label ?? null, tasks: day ? day.tasks.filter(t => !t.waiting) : [] }
+  }, [today])
+
+  // Если на сегодня ничего не стоит, показываем следующий день с делами:
+  // пустой экран читался бы как поломка.
+  const nextBlock = useMemo(() => {
+    if (todayBlock.tasks.length > 0) return null
+    const day = PLAN.flatMap(w => w.days).find(d => d.iso > today && d.tasks.some(t => !t.waiting))
+    return day ? { label: day.label, tasks: day.tasks.filter(t => !t.waiting) } : null
+  }, [today, todayBlock.tasks.length])
+
+  const todayDone = todayBlock.tasks.filter(t => done.has(t.id)).length
+  const todayClear = todayBlock.tasks.length > 0 && todayDone === todayBlock.tasks.length
+  // Акцентная рамка достаётся одному блоку — тому, где есть незакрытые дела.
+  const todayHero = todayBlock.tasks.length > 0 && !todayClear
+
   return (
     <div className={styles.wrap}>
       <div className={styles.pops} aria-hidden="true">
@@ -350,7 +378,7 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
         </div>
 
         <div className={styles.tabs} role="tablist">
-          {([['tasks', 'Задачи'], ['profile', 'Профиль']] as const).map(([key, label]) => (
+          {TABS.map(([key, label]) => (
             <button
               key={key}
               type="button"
@@ -368,12 +396,14 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
           ))}
         </div>
 
-        {tab === 'profile' ? (
-          <>
-        <div className={styles.quest}>
+        {tab === 'plan' && (
+          <div className={styles.quest}>
             Старт 15 сентября. Вылет 14 декабря. 12 сделок, 4 застройщика на фиксе.
           </div>
+        )}
 
+        {tab === 'profile' && (
+          <>
           <div className={styles.meter}>
             <div className={styles.mrow}>
               <div className={styles.msum}>{fmt(stats.money)}</div>
@@ -449,8 +479,43 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
             </div>
           </section>
           </>
-        ) : (
+        )}
+
+        {tab === 'tasks' && (
           <>
+          <section className={`${styles.today} ${todayHero ? styles.accent : ''}`} aria-label="Сегодня">
+            <div className={styles.tailsHead}>
+              <b>Сегодня</b>
+              <span>
+                {todayBlock.tasks.length > 0
+                  ? `${todayBlock.label} · ${todayDone}/${todayBlock.tasks.length}`
+                  : todayBlock.label ?? 'нет в плане'}
+              </span>
+            </div>
+            {todayBlock.tasks.length > 0
+              ? todayBlock.tasks.map(task => (
+                <Row key={task.id} task={task} done={done} onToggle={toggle} tag />
+              ))
+              : <p className={styles.empty}>На сегодня дел в плане нет.</p>}
+            {todayClear && (
+              <p className={styles.empty}>
+                {overdue.length > 0 ? 'День закрыт — остались хвосты ниже.' : 'День закрыт полностью.'}
+              </p>
+            )}
+          </section>
+
+          {nextBlock && (
+            <section className={`${styles.ahead} ${todayHero ? '' : styles.accent}`} aria-label="Ближайший день">
+              <div className={styles.tailsHead}>
+                <b>Ближайший день</b>
+                <span>{nextBlock.label}</span>
+              </div>
+              {nextBlock.tasks.map(task => (
+                <Row key={task.id} task={task} done={done} onToggle={toggle} tag />
+              ))}
+            </section>
+          )}
+
           {overdue.length > 0 && (
             <section className={styles.tails} aria-label="Хвосты">
               <div className={styles.tailsHead}>
@@ -491,7 +556,7 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
         )}
       </header>
 
-      {tab === 'tasks' && (
+      {tab === 'plan' && (
       <div>
         {PLAN.map(week => (
           <Week
@@ -575,11 +640,13 @@ function ageNote(expected: string, today: string): string {
   return `по плану ${dayMonth.format(new Date(`${expected}T00:00:00Z`))}`
 }
 
-function Row({ task, done, onToggle, note }: {
+/** Строка задачи вне недели: с возрастом («3 дня как ждёт») или с бейджем навыка. */
+function Row({ task, done, onToggle, note, tag }: {
   task: PlanTask
   done: Set<string>
   onToggle: (taskId: string) => void
-  note: string
+  note?: string
+  tag?: boolean
 }) {
   return (
     <label className={styles.task}>
@@ -587,7 +654,8 @@ function Row({ task, done, onToggle, note }: {
       <span className={styles.txt}>
         {task.text}
         {task.amount != null && <span className={styles.pay}>+{fmt(task.amount)}</span>}
-        <span className={styles.age}>{note}</span>
+        {tag && <span className={styles.tag}>{SKILLS[task.skill].name} +{task.xp}</span>}
+        {note != null && <span className={styles.age}>{note}</span>}
       </span>
     </label>
   )

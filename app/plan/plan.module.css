@@ -228,8 +228,13 @@
 }
 .task input:checked ~ .txt .tag { color: var(--jade); }
 
-/* Хвосты и ожидания — над планом, чтобы не искать их по неделям. */
-.tails, .waiting { border: 1px solid var(--line); border-radius: 14px; padding: 12px 16px 8px; margin-bottom: 10px; }
+/* Сегодня, ближайший день, хвосты и ожидания — блоки вкладки «Задачи». */
+.tails, .waiting, .today, .ahead { border: 1px solid var(--line); border-radius: 14px; padding: 12px 16px 8px; margin-bottom: 10px; }
+.waiting, .today, .ahead { background: var(--panel); }
+/* Акцент достаётся ровно одному блоку: тому, где сейчас есть что делать. */
+.accent { background: rgba(79, 209, 165, .07); border-color: rgba(79, 209, 165, .32); }
+.accent .tailsHead b { color: var(--jade); }
+.empty { color: var(--dim); font-size: 13px; margin: 4px 0 8px; }
 .tails { background: rgba(240, 169, 60, .07); border-color: rgba(240, 169, 60, .28); }
 .waiting { background: var(--panel); }
 .tailsHead { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
@@ -375,7 +380,7 @@
 @keyframes undoIn { from { transform: translate(-50%, 14px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .undo { animation: none; } }
 
-/* Переключатель «Задачи / Профиль». */
+/* Переключатель «Задачи / План / Профиль». */
 .tabs {
   display: flex; gap: 6px; margin: 16px 0 14px;
   padding: 4px; border-radius: 12px;
