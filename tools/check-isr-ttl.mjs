@@ -8,6 +8,9 @@
 // точечная инвалидация (lib/admin/revalidate.ts), так что короткий TTL был
 // чистым убытком. Подробности — в памяти, reference-balinsky-vercel-cost-guard.
 //
+// Живёт в tools/, а не в scripts/: .vercelignore исключает scripts/ из
+// деплоя, и prebuild на Vercel падал с 'Cannot find module'.
+//
 // Правило: у маршрута с динамическим сегментом TTL не меньше MIN_TTL.
 // Осознанное исключение помечается в файле комментарием
 // `// isr-ttl-ok: <причина>` на строке над `export const revalidate`.
