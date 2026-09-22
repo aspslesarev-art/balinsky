@@ -206,6 +206,15 @@ html.no-pro [data-investment-block] {
   --ax-error-fg:        #F87171;
   --ax-error-bg:        rgba(127,29,29,0.30);
   --ax-error-border:    rgba(248,113,113,0.20);
+
+  /* Бейдж «Отклик» в CRM по застройщикам. Отдельные токены, а не цвета
+     в коде: раздел живёт в обеих темах, и янтарный для тёмной темы
+     светлее, чем для светлой, иначе он проваливается в фон. Значения
+     проверены на контраст 4.5:1 поверх своей же подложки. */
+  --ax-prospect-yes-fg:   #4FC08D;
+  --ax-prospect-yes-bg:   rgba(79,192,141,0.16);
+  --ax-prospect-maybe-fg: #E0A93B;
+  --ax-prospect-maybe-bg: rgba(224,169,59,0.16);
 }
 .theme-admin.theme-light {
   --ax-bg:              #F9FAFB;
@@ -229,6 +238,11 @@ html.no-pro [data-investment-block] {
   --ax-error-fg:        #B91C1C;
   --ax-error-bg:        #FEF2F2;
   --ax-error-border:    #FECACA;
+
+  --ax-prospect-yes-fg:   #14663F;
+  --ax-prospect-yes-bg:   rgba(31,139,95,0.12);
+  --ax-prospect-maybe-fg: #8A5B00;
+  --ax-prospect-maybe-bg: rgba(224,169,59,0.18);
 }
 
 /* Telegram-style typing indicator — three dots that scale + fade in
