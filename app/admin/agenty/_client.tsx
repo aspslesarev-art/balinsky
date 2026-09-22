@@ -8,8 +8,8 @@
 // листаются горизонтально.
 
 import { useCallback, useMemo, useState } from 'react'
-import { Search, Plus, Inbox, LayoutGrid, Rows3, BarChart3, CalendarDays, MessageSquareText, Sparkles, X, Clock } from 'lucide-react'
-import { STATUSES, lastContactAt, staleFirst, type AgentCard, type AgentStatus, type UnlinkedChat } from '@/lib/agents/types'
+import { Search, Plus, Inbox, LayoutGrid, Rows3, BarChart3, CalendarDays, MessageSquareText, Sparkles, X, Clock, Handshake } from 'lucide-react'
+import { STATUSES, dealsLabel, hasDeals, lastContactAt, staleFirst, type AgentCard, type AgentStatus, type UnlinkedChat } from '@/lib/agents/types'
 import { AgentPanel } from './_panel'
 import { AgentsDashboard } from './_dash'
 
@@ -66,6 +66,7 @@ export function AgentsBoard({ initialAgents, initialChats }: { initialAgents: Ag
   const [view, setView] = useState<'board' | 'list' | 'inbox' | 'dash'>('board')
   const [query, setQuery] = useState('')
   const [manager, setManager] = useState('')
+  const [dealsOnly, setDealsOnly] = useState(false)
   const [openId, setOpenId] = useState<string | null>(null)
   const [dragId, setDragId] = useState<string | null>(null)
   const [dropStatus, setDropStatus] = useState<AgentStatus | null>(null)
@@ -87,12 +88,15 @@ export function AgentsBoard({ initialAgents, initialChats }: { initialAgents: Ag
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase()
     return agents.filter(a => {
+      if (dealsOnly && !hasDeals(a)) return false
       if (manager && a.manager !== manager) return false
       if (!q) return true
       return [a.name, a.agency, a.telegram, a.phone, a.email, a.next_step, a.ai_summary]
         .some(v => v?.toLowerCase().includes(q))
     })
-  }, [agents, query, manager])
+  }, [agents, query, manager, dealsOnly])
+
+  const dealsCount = useMemo(() => agents.filter(hasDeals).length, [agents])
 
   const byStatus = useMemo(() => {
     const map = new Map<AgentStatus, AgentCard[]>(STATUSES.map(s => [s.id, []]))
@@ -197,6 +201,26 @@ export function AgentsBoard({ initialAgents, initialChats }: { initialAgents: Ag
         </div>
         )}
 
+        {/* Фильтр правит только доску и список: во «Входящих» карточек ещё нет */}
+        {(view === 'board' || view === 'list') && dealsCount > 0 && (
+          // Из 187 карточек продавали меньше половины — включённый фильтр
+          // оставляет на доске только тех, кто уже приводил клиентов.
+          <button
+            type="button"
+            onClick={() => setDealsOnly(v => !v)}
+            aria-pressed={dealsOnly}
+            className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-[13px] border transition-colors duration-[120ms] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4FC08D] ${
+              dealsOnly
+                ? 'border-[#1F8B5F] bg-[rgba(31,139,95,0.14)] text-[#4FC08D]'
+                : 'border-[var(--ax-border)] text-[var(--ax-fg-muted)] hover:text-[var(--ax-fg)] hover:bg-[var(--ax-hover)]'
+            }`}
+          >
+            <Handshake size={14} />
+            Со сделками
+            <span className="tabular-nums opacity-70">{dealsCount}</span>
+          </button>
+        )}
+
         {view !== 'dash' && managers.length > 0 && (
           <select
             value={manager}
@@ -269,11 +293,22 @@ export function AgentsBoard({ initialAgents, initialChats }: { initialAgents: Ag
                     >
                       <div className="text-[13.5px] font-medium text-[var(--ax-fg)] leading-snug break-words">{a.name}</div>
 
-                      {a.agency && (
-                        <div className="mt-1.5">
-                          <span className="inline-block px-1.5 py-0.5 rounded text-[11.5px] text-[var(--ax-fg-soft)] bg-[var(--ax-hover)]">
-                            {a.agency}
-                          </span>
+                      {(a.agency || hasDeals(a)) && (
+                        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                          {a.agency && (
+                            <span className="inline-block px-1.5 py-0.5 rounded text-[11.5px] text-[var(--ax-fg-soft)] bg-[var(--ax-hover)]">
+                              {a.agency}
+                            </span>
+                          )}
+                          {/* Уже продавал — единственная плашка на карточке,
+                              которая красится акцентом: по ней доска и
+                              читается «кто из этих людей реально работает». */}
+                          {hasDeals(a) && (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11.5px] text-[#4FC08D] bg-[rgba(31,139,95,0.14)]">
+                              <Handshake size={11} />
+                              {dealsLabel(a)}
+                            </span>
+                          )}
                         </div>
                       )}
 
@@ -298,7 +333,7 @@ export function AgentsBoard({ initialAgents, initialChats }: { initialAgents: Ag
 
                   {items.length === 0 && (
                     <p className="px-2 py-6 text-[12px] text-[var(--ax-fg-faint)] leading-snug text-center">
-                      {query || manager ? 'Никто не подходит под фильтр' : s.hint}
+                      {query || manager || dealsOnly ? 'Никто не подходит под фильтр' : s.hint}
                     </p>
                   )}
                 </div>
@@ -308,7 +343,15 @@ export function AgentsBoard({ initialAgents, initialChats }: { initialAgents: Ag
         </div>
       )}
 
-      {view === 'list' && <AgentsList agents={[...visible].sort(staleFirst)} onOpen={setOpenId} />}
+      {view === 'list' && (
+        // Фильтр «со сделками» включён → вопрос сменился с «кому давно не
+        // писали» на «кто больше продал», поэтому меняется и порядок.
+        <AgentsList
+          agents={[...visible].sort(dealsOnly ? byVolume : staleFirst)}
+          byVolume={dealsOnly}
+          onOpen={setOpenId}
+        />
+      )}
 
       {view === 'inbox' && (
         <InboxList chats={chats} busy={busy} onCreate={c => addAgent(c.name, c)} />
@@ -329,7 +372,14 @@ export function AgentsBoard({ initialAgents, initialChats }: { initialAgents: Ag
   )
 }
 
-function AgentsList({ agents, onOpen }: { agents: AgentCard[]; onOpen: (id: string) => void }) {
+// Крупные сделки сверху; у кого суммы нет — в конец по алфавиту.
+function byVolume(a: AgentCard, b: AgentCard): number {
+  const x = a.deals_volume_usd ?? 0, y = b.deals_volume_usd ?? 0
+  if (x !== y) return y - x
+  return a.name.localeCompare(b.name, 'ru')
+}
+
+function AgentsList({ agents, byVolume: sortedByVolume = false, onOpen }: { agents: AgentCard[]; byVolume?: boolean; onOpen: (id: string) => void }) {
   if (!agents.length) {
     return <p className="py-16 text-center text-[13px] text-[var(--ax-fg-muted)]">Никого не нашлось</p>
   }
@@ -345,7 +395,9 @@ function AgentsList({ agents, onOpen }: { agents: AgentCard[]; onOpen: (id: stri
             <th className="font-medium px-3 py-2">Менеджер</th>
             <th className="font-medium px-3 py-2">Последний контакт</th>
             <th className="font-medium px-3 py-2 text-right">Сделок</th>
-            <th className="font-medium px-3 py-2 text-right">Объём</th>
+            <th className="font-medium px-3 py-2 text-right">
+              {sortedByVolume ? <span className="text-[#4FC08D]">Объём ↓</span> : 'Объём'}
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -355,7 +407,12 @@ function AgentsList({ agents, onOpen }: { agents: AgentCard[]; onOpen: (id: stri
               onClick={() => onOpen(a.id)}
               className="border-t border-[var(--ax-border-soft)] cursor-pointer hover:bg-[var(--ax-hover)]"
             >
-              <td className="px-3 py-2 text-[var(--ax-fg)]">{a.name}</td>
+              <td className="px-3 py-2 text-[var(--ax-fg)]">
+                <span className="inline-flex items-center gap-1.5">
+                  {hasDeals(a) && <Handshake size={12} className="shrink-0 text-[#4FC08D]" aria-label="есть сделки" />}
+                  {a.name}
+                </span>
+              </td>
               <td className="px-3 py-2 text-[var(--ax-fg-soft)]">{a.agency ?? '—'}</td>
               <td className="px-3 py-2">
                 <span className="inline-flex items-center gap-1.5 text-[var(--ax-fg-soft)]">
@@ -365,8 +422,8 @@ function AgentsList({ agents, onOpen }: { agents: AgentCard[]; onOpen: (id: stri
               </td>
               <td className="px-3 py-2 text-[var(--ax-fg-soft)]">{a.manager ?? '—'}</td>
               <td className="px-3 py-2 text-[var(--ax-fg-muted)]">{relDay(lastContactAt(a)) ?? 'не связывались'}</td>
-              <td className="px-3 py-2 text-right tabular-nums text-[var(--ax-fg-soft)]">{a.deals_count ?? '—'}</td>
-              <td className="px-3 py-2 text-right tabular-nums text-[var(--ax-fg-soft)]">{money(a.deals_volume_usd)}</td>
+              <td className={`px-3 py-2 text-right tabular-nums ${hasDeals(a) ? 'text-[#4FC08D]' : 'text-[var(--ax-fg-faint)]'}`}>{a.deals_count ?? '—'}</td>
+              <td className={`px-3 py-2 text-right tabular-nums ${hasDeals(a) ? 'text-[#4FC08D] font-medium' : 'text-[var(--ax-fg-faint)]'}`}>{money(a.deals_volume_usd)}</td>
             </tr>
           ))}
         </tbody>

@@ -83,6 +83,8 @@ export async function touchStats(days: number): Promise<TouchStats> {
       outgoing: acc.outgoing,
       total: acc.incoming + acc.outgoing,
       last_ts: acc.last_ts,
+      deals_count: a.deals_count,
+      deals_volume_usd: a.deals_volume_usd,
     })
   }
   rows.sort((x, y) => y.total - x.total || y.last_ts.localeCompare(x.last_ts))

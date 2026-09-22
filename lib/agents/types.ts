@@ -86,6 +86,40 @@ export function staleFirst(a: AgentCard, b: AgentCard): number {
   return a.name.localeCompare(b.name, 'ru')
 }
 
+// «1 сделка / 2 сделки / 5 сделок» — число тут на виду, и неверное
+// окончание читается как опечатка.
+export function plural(n: number, forms: [string, string, string]): string {
+  const mod100 = n % 100
+  const mod10 = n % 10
+  if (mod100 >= 11 && mod100 <= 14) return forms[2]
+  if (mod10 === 1) return forms[0]
+  if (mod10 >= 2 && mod10 <= 4) return forms[1]
+  return forms[2]
+}
+
+// Сумма на карточке доски: «$1,99 млн», «$705 тыс.». Полные $1 990 000 в
+// колонку шириной 272 px не влезают, а точность до доллара тут и не нужна.
+export function usdShort(v: number): string {
+  if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(v < 10_000_000 ? 2 : 1).replace('.', ',')} млн`
+  if (v >= 1_000) return `$${Math.round(v / 1_000)} тыс.`
+  return `$${Math.round(v)}`
+}
+
+// Агент, который уже что-то продал. Таких 81 из 187, и в Notion это был
+// единственный способ отличить рабочий контакт от «когда-нибудь дойдут руки».
+export function hasDeals(a: { deals_count: number | null; deals_volume_usd: number | null }): boolean {
+  return (a.deals_count ?? 0) > 0 || (a.deals_volume_usd ?? 0) > 0
+}
+
+// Подпись на плашке: «4 сделки · $705 тыс.». Если заполнено только одно
+// из двух — показываем то, что есть, а не «0 сделок».
+export function dealsLabel(a: { deals_count: number | null; deals_volume_usd: number | null }): string {
+  const parts: string[] = []
+  if ((a.deals_count ?? 0) > 0) parts.push(`${a.deals_count} ${plural(a.deals_count!, ['сделка', 'сделки', 'сделок'])}`)
+  if ((a.deals_volume_usd ?? 0) > 0) parts.push(usdShort(a.deals_volume_usd!))
+  return parts.join(' · ')
+}
+
 export type AgentNote = {
   id: string
   body: string
@@ -105,6 +139,10 @@ export type TouchRow = {
   outgoing: number
   total: number
   last_ts: string
+  // Сделки едут вместе со строкой: продающий агент должен быть виден и
+  // в сводке за день, а не только на доске.
+  deals_count: number | null
+  deals_volume_usd: number | null
 }
 
 export type TouchStats = {

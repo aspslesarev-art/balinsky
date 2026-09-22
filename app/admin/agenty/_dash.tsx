@@ -13,7 +13,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { Loader2, RefreshCw, Inbox } from 'lucide-react'
-import { STATUSES, TOUCH_PERIODS, type AgentStatus, type TouchStats } from '@/lib/agents/types'
+import { STATUSES, TOUCH_PERIODS, hasDeals, plural, usdShort, type AgentStatus, type TouchStats } from '@/lib/agents/types'
 
 // Тот же набор оттенков, что у колонок доски: точка у имени должна
 // значить то же самое в обоих видах.
@@ -25,17 +25,6 @@ const STATUS_TINT: Record<AgentStatus, string> = {
   met:         'rgba(79,192,141,0.9)',
   working:     '#1F8B5F',
   lost:        'rgba(248,113,113,0.7)',
-}
-
-// «1 касание / 2 касания / 5 касаний» — числа тут на виду, и неверное
-// окончание читается как опечатка.
-function plural(n: number, forms: [string, string, string]): string {
-  const mod100 = n % 100
-  const mod10 = n % 10
-  if (mod100 >= 11 && mod100 <= 14) return forms[2]
-  if (mod10 === 1) return forms[0]
-  if (mod10 >= 2 && mod10 <= 4) return forms[1]
-  return forms[2]
 }
 
 function timeOrDay(iso: string, days: number): string {
@@ -156,8 +145,14 @@ export function AgentsDashboard({ onOpen, onInbox }: { onOpen: (id: string) => v
 
                         <span className="min-w-0 flex-1">
                           <span className="block text-[13.5px] text-[var(--ax-fg)] truncate">{r.name}</span>
-                          <span className="block text-[11.5px] text-[var(--ax-fg-faint)] truncate">
-                            {[r.agency, timeOrDay(r.last_ts, days)].filter(Boolean).join(' · ')}
+                          <span className="block text-[11.5px] truncate">
+                            <span className="text-[var(--ax-fg-faint)]">
+                              {[r.agency, timeOrDay(r.last_ts, days)].filter(Boolean).join(' · ')}
+                            </span>
+                            {/* Агент со сделками — тот, чьё молчание дороже */}
+                            {hasDeals(r) && r.deals_volume_usd != null && (
+                              <span className="text-[#4FC08D]"> · {usdShort(r.deals_volume_usd)}</span>
+                            )}
                           </span>
                         </span>
 
