@@ -8,9 +8,10 @@
 // листаются горизонтально.
 
 import { useCallback, useMemo, useState } from 'react'
-import { Search, Plus, Inbox, LayoutGrid, Rows3, CalendarDays, MessageSquareText, Sparkles, X, Clock } from 'lucide-react'
+import { Search, Plus, Inbox, LayoutGrid, Rows3, BarChart3, CalendarDays, MessageSquareText, Sparkles, X, Clock } from 'lucide-react'
 import { STATUSES, lastContactAt, staleFirst, type AgentCard, type AgentStatus, type UnlinkedChat } from '@/lib/agents/types'
 import { AgentPanel } from './_panel'
+import { AgentsDashboard } from './_dash'
 
 // Оттенок колонки: воронка идёт от нейтрального к зелёному, «Не
 // сложилось» — единственный красный. Цвет живёт только в тонкой полоске
@@ -62,7 +63,7 @@ function meetingWhen(iso: string): string {
 export function AgentsBoard({ initialAgents, initialChats }: { initialAgents: AgentCard[]; initialChats: UnlinkedChat[] }) {
   const [agents, setAgents] = useState<AgentCard[]>(initialAgents)
   const [chats, setChats] = useState<UnlinkedChat[]>(initialChats)
-  const [view, setView] = useState<'board' | 'list' | 'inbox'>('board')
+  const [view, setView] = useState<'board' | 'list' | 'inbox' | 'dash'>('board')
   const [query, setQuery] = useState('')
   const [manager, setManager] = useState('')
   const [openId, setOpenId] = useState<string | null>(null)
@@ -160,28 +161,31 @@ export function AgentsBoard({ initialAgents, initialChats }: { initialAgents: Ag
     <div className="flex flex-col gap-4 pb-20 md:pb-16">
       {/* Панель управления: вид, поиск, менеджер, «новый агент» */}
       <div className="flex flex-wrap items-center gap-2">
-        <div className="inline-flex rounded-lg border border-[var(--ax-border)] p-0.5">
+        <div className="inline-flex max-w-full overflow-x-auto rounded-lg border border-[var(--ax-border)] p-0.5">
           {([
             { id: 'board', label: 'Доска', Icon: LayoutGrid },
             { id: 'list', label: 'Список', Icon: Rows3 },
             { id: 'inbox', label: `Входящие${chats.length ? ` · ${chats.length}` : ''}`, Icon: Inbox },
+            { id: 'dash', label: 'Дашборд', Icon: BarChart3 },
           ] as const).map(({ id, label, Icon }) => (
             <button
               key={id}
               type="button"
               onClick={() => setView(id)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] transition-colors duration-[120ms] ${
+              className={`shrink-0 inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md text-[13px] whitespace-nowrap transition-colors duration-[120ms] ${
                 view === id
                   ? 'bg-[var(--ax-panel)] text-[var(--ax-fg)]'
                   : 'text-[var(--ax-fg-muted)] hover:text-[var(--ax-fg)]'
               }`}
             >
-              <Icon size={14} />
+              {/* Значок — украшение: на узком экране место нужнее подписям */}
+              <Icon size={14} className="hidden sm:block" />
               {label}
             </button>
           ))}
         </div>
 
+        {view !== 'dash' && (
         <div className="relative flex-1 min-w-[180px] max-w-[320px]">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--ax-fg-faint)]" />
           <input
@@ -191,8 +195,9 @@ export function AgentsBoard({ initialAgents, initialChats }: { initialAgents: Ag
             className="w-full h-9 pl-9 pr-3 rounded-lg text-[13px] bg-[var(--ax-input-bg)] border border-[var(--ax-input-border)] text-[var(--ax-fg)] placeholder:text-[var(--ax-fg-faint)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4FC08D]"
           />
         </div>
+        )}
 
-        {managers.length > 0 && (
+        {view !== 'dash' && managers.length > 0 && (
           <select
             value={manager}
             onChange={e => setManager(e.target.value)}
@@ -308,6 +313,8 @@ export function AgentsBoard({ initialAgents, initialChats }: { initialAgents: Ag
       {view === 'inbox' && (
         <InboxList chats={chats} busy={busy} onCreate={c => addAgent(c.name, c)} />
       )}
+
+      {view === 'dash' && <AgentsDashboard onOpen={setOpenId} onInbox={() => setView('inbox')} />}
 
       {open && (
         <AgentPanel

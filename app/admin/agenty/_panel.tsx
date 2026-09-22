@@ -8,10 +8,14 @@
 // Блок «Переписка» ничего не хранит: сообщения, встречи и ИИ-выжимка
 // подтягиваются по привязанному чату бота. Пока чат не привязан, на его
 // месте поиск по диалогам.
+//
+// Из этого же блока можно ответить агенту — сообщение уходит через того
+// же бота и от имени владельца, как в /admin/perepiska. Файлы остались
+// там: в карточке нужен быстрый ответ, а не полноценный мессенджер.
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  X, Sparkles, CalendarDays, MessageSquareText, Link2, Unlink, Trash2, Loader2, ExternalLink, Send,
+  X, Sparkles, CalendarDays, MessageSquareText, Link2, Unlink, Trash2, Loader2, ExternalLink, Send, SendHorizontal,
 } from 'lucide-react'
 import {
   PROFILE_GROUPS, STATUSES, extraProfileFields, lastContactAt,
@@ -52,6 +56,7 @@ export function AgentPanel({
   const [aiBusy, setAiBusy] = useState(false)
   const [noteDraft, setNoteDraft] = useState('')
   const [chatQuery, setChatQuery] = useState('')
+  const tailRef = useRef<HTMLDivElement | null>(null)
 
   const load = useCallback(async () => {
     const r = await fetch(`/api/admin/agents/${agentId}`, { cache: 'no-store' })
@@ -77,6 +82,14 @@ export function AgentPanel({
       document.body.style.overflow = prevOverflow
     }
   }, [onClose])
+
+  // Хвост диалога идёт снизу вверх по времени, поэтому сразу после
+  // загрузки (и после отправки) прокручиваем его к последнему сообщению:
+  // отвечать, глядя на разговор месячной давности, невозможно.
+  useEffect(() => {
+    const el = tailRef.current
+    if (el) el.scrollTop = el.scrollHeight
+  }, [data?.messages])
 
   const save = async (patch: Record<string, unknown>) => {
     setError(null)
@@ -113,6 +126,31 @@ export function AgentPanel({
     } finally {
       setAiBusy(false)
     }
+  }
+
+  // Ответ агенту уходит через бота-наблюдателя от имени владельца.
+  // Возвращаем текст ошибки (или null): черновик стирается только после
+  // успеха, а сама ошибка показывается прямо под полем ввода. Общая
+  // плашка вверху панели для этого не годится — кнопка «отправить» внизу
+  // длинной карточки, и сообщение об отказе Telegram оставалось за
+  // пределами экрана.
+  const sendMessage = async (text: string): Promise<string | null> => {
+    try {
+      const r = await fetch(`/api/admin/agents/${agentId}/message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      })
+      const j = await r.json() as { ok: boolean; error?: string }
+      if (!j.ok) return j.error ?? 'Не удалось отправить'
+    } catch {
+      return 'Не удалось отправить — проверьте связь'
+    }
+    await load()
+    // «Последний контакт» на доске считается по переписке, так что доску
+    // после отправки надо перечитать.
+    await onReload()
+    return null
   }
 
   const addNote = async () => {
@@ -332,7 +370,7 @@ export function AgentPanel({
                     )}
 
                     {/* Хвост диалога */}
-                    <div className="rounded-xl border border-[var(--ax-border-soft)] max-h-[280px] overflow-y-auto p-3 flex flex-col gap-2">
+                    <div ref={tailRef} className="rounded-xl border border-[var(--ax-border-soft)] max-h-[280px] overflow-y-auto p-3 flex flex-col gap-2">
                       {data.messages.length === 0 && (
                         <p className="text-[12.5px] text-[var(--ax-fg-muted)]">Сообщений пока нет</p>
                       )}
@@ -350,6 +388,8 @@ export function AgentPanel({
                         </div>
                       ))}
                     </div>
+
+                    <Composer onSend={sendMessage} />
                   </div>
                 )}
               </section>
@@ -452,6 +492,65 @@ export function AgentPanel({
         )}
       </aside>
     </>
+  )
+}
+
+// Ответ агенту. Enter отправляет, Shift+Enter переносит строку — как в
+// самом Telegram; в блоке заметок ниже намеренно наоборот (там Cmd+Enter),
+// потому что заметка обычно длиннее и переносами живёт.
+//
+// Пока сообщение уходит, поле не блокируем целиком — только кнопку:
+// Telegram отвечает за секунду-две, и отключённый textarea успевает
+// «мигнуть» и потерять курсор.
+function Composer({ onSend }: { onSend: (text: string) => Promise<string | null> }) {
+  const [draft, setDraft] = useState('')
+  const [sending, setSending] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+
+  const submit = async () => {
+    const text = draft.trim()
+    if (!text || sending) return
+    setSending(true)
+    setErr(null)
+    const problem = await onSend(text)
+    setSending(false)
+    if (problem) setErr(problem)
+    else setDraft('')
+  }
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-end gap-2">
+        <textarea
+          value={draft}
+          onChange={e => setDraft(e.target.value)}
+          onKeyDown={e => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit() }
+          }}
+          rows={2}
+          placeholder="Написать агенту в Telegram"
+          className="flex-1 px-3 py-2 rounded-lg text-[13px] leading-snug resize-y bg-[var(--ax-input-bg)] border border-[var(--ax-input-border)] text-[var(--ax-fg)] placeholder:text-[var(--ax-fg-faint)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4FC08D]"
+        />
+        <button
+          type="button"
+          onClick={submit}
+          disabled={!draft.trim() || sending}
+          aria-label="Отправить сообщение"
+          className="shrink-0 w-9 h-9 inline-flex items-center justify-center rounded-lg bg-[#1F8B5F] hover:bg-[#197551] text-white disabled:opacity-40 transition-colors duration-[120ms] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4FC08D]"
+        >
+          {sending ? <Loader2 size={14} className="animate-spin" /> : <SendHorizontal size={14} />}
+        </button>
+      </div>
+      {err ? (
+        <p className="px-3 py-2 rounded-lg text-[12.5px] leading-snug bg-[var(--ax-error-bg)] border border-[var(--ax-error-border)] text-[var(--ax-error-fg)]">
+          {err}
+        </p>
+      ) : (
+        <p className="text-[11.5px] text-[var(--ax-fg-faint)]">
+          Уйдёт от вашего имени. Enter — отправить, Shift+Enter — новая строка.
+        </p>
+      )}
+    </div>
   )
 }
 

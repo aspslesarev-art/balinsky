@@ -94,6 +94,36 @@ export type AgentNote = {
   created_at: string
 }
 
+// Строка дашборда: сколько сообщений было с агентом за период.
+export type TouchRow = {
+  agent_id: string
+  name: string
+  agency: string | null
+  status: AgentStatus
+  // incoming — написал агент, outgoing — написали мы.
+  incoming: number
+  outgoing: number
+  total: number
+  last_ts: string
+}
+
+export type TouchStats = {
+  days: number
+  since: string
+  rows: TouchRow[]
+  totals: { touches: number; agents: number; incoming: number; outgoing: number }
+  // Переписки без карточки агента: в воронке их нет, но время они забрали.
+  unlinked: { chats: number; touches: number; names: string[] }
+  truncated: boolean
+}
+
+// Периоды дашборда. День считается по Бали (UTC+8).
+export const TOUCH_PERIODS: Array<{ days: number; label: string; note: string }> = [
+  { days: 1,  label: 'Сегодня',  note: 'с начала дня по Бали' },
+  { days: 7,  label: '7 дней',   note: 'включая сегодня' },
+  { days: 30, label: '30 дней',  note: 'включая сегодня' },
+]
+
 // Чат бота, у которого ещё нет карточки.
 export type UnlinkedChat = {
   chat_id: number
