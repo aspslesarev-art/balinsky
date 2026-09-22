@@ -120,6 +120,27 @@ export function dealsLabel(a: { deals_count: number | null; deals_volume_usd: nu
   return parts.join(' · ')
 }
 
+// Насколько до агента можно дотянуться в Telegram:
+//   chat — переписка бота привязана, из карточки уходит сообщение;
+//   nick — ник известен, но разговора с ботом ещё не было, и написать
+//          первым можно только руками через t.me (Telegram не даёт боту
+//          начать диалог сам);
+//   none — ни чата, ни ника.
+// Разница между первыми двумя принципиальна: одинаковая пометка на них
+// обещала бы кнопку «отправить» там, где её нет.
+export type TelegramReach = 'chat' | 'nick' | 'none'
+
+export function telegramReach(a: { tg_chat_id: number | null; telegram: string | null }): TelegramReach {
+  if (a.tg_chat_id != null) return 'chat'
+  return a.telegram ? 'nick' : 'none'
+}
+
+export const REACH_HINT: Record<TelegramReach, string> = {
+  chat: 'Переписка подключена — можно написать прямо из карточки',
+  nick: 'Ник есть, но переписки с ботом ещё не было — написать можно только из Telegram',
+  none: 'Телеграма нет',
+}
+
 export type AgentNote = {
   id: string
   body: string

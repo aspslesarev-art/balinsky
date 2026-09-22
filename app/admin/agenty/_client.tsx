@@ -8,8 +8,8 @@
 // листаются горизонтально.
 
 import { useCallback, useMemo, useState } from 'react'
-import { Search, Plus, Inbox, LayoutGrid, Rows3, BarChart3, CalendarDays, MessageSquareText, Sparkles, X, Clock, Handshake } from 'lucide-react'
-import { STATUSES, dealsLabel, hasDeals, lastContactAt, staleFirst, type AgentCard, type AgentStatus, type UnlinkedChat } from '@/lib/agents/types'
+import { Search, Plus, Inbox, LayoutGrid, Rows3, BarChart3, CalendarDays, MessageSquareText, Sparkles, X, Clock, Handshake, Send } from 'lucide-react'
+import { REACH_HINT, STATUSES, dealsLabel, hasDeals, lastContactAt, staleFirst, telegramReach, type AgentCard, type AgentStatus, type UnlinkedChat } from '@/lib/agents/types'
 import { AgentPanel } from './_panel'
 import { AgentsDashboard } from './_dash'
 
@@ -67,6 +67,7 @@ export function AgentsBoard({ initialAgents, initialChats }: { initialAgents: Ag
   const [query, setQuery] = useState('')
   const [manager, setManager] = useState('')
   const [dealsOnly, setDealsOnly] = useState(false)
+  const [reachOnly, setReachOnly] = useState(false)
   const [openId, setOpenId] = useState<string | null>(null)
   const [dragId, setDragId] = useState<string | null>(null)
   const [dropStatus, setDropStatus] = useState<AgentStatus | null>(null)
@@ -89,14 +90,16 @@ export function AgentsBoard({ initialAgents, initialChats }: { initialAgents: Ag
     const q = query.trim().toLowerCase()
     return agents.filter(a => {
       if (dealsOnly && !hasDeals(a)) return false
+      if (reachOnly && a.tg_chat_id == null) return false
       if (manager && a.manager !== manager) return false
       if (!q) return true
       return [a.name, a.agency, a.telegram, a.phone, a.email, a.next_step, a.ai_summary]
         .some(v => v?.toLowerCase().includes(q))
     })
-  }, [agents, query, manager, dealsOnly])
+  }, [agents, query, manager, dealsOnly, reachOnly])
 
   const dealsCount = useMemo(() => agents.filter(hasDeals).length, [agents])
+  const reachCount = useMemo(() => agents.filter(a => a.tg_chat_id != null).length, [agents])
 
   const byStatus = useMemo(() => {
     const map = new Map<AgentStatus, AgentCard[]>(STATUSES.map(s => [s.id, []]))
@@ -221,6 +224,24 @@ export function AgentsBoard({ initialAgents, initialChats }: { initialAgents: Ag
           </button>
         )}
 
+        {(view === 'board' || view === 'list') && reachCount > 0 && (
+          <button
+            type="button"
+            onClick={() => setReachOnly(v => !v)}
+            aria-pressed={reachOnly}
+            title="Оставить только тех, кому можно написать из карточки"
+            className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-[13px] border transition-colors duration-[120ms] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4FC08D] ${
+              reachOnly
+                ? 'border-[#1F8B5F] bg-[rgba(31,139,95,0.14)] text-[#4FC08D]'
+                : 'border-[var(--ax-border)] text-[var(--ax-fg-muted)] hover:text-[var(--ax-fg)] hover:bg-[var(--ax-hover)]'
+            }`}
+          >
+            <Send size={14} />
+            Можно написать
+            <span className="tabular-nums opacity-70">{reachCount}</span>
+          </button>
+        )}
+
         {view !== 'dash' && managers.length > 0 && (
           <select
             value={manager}
@@ -291,7 +312,10 @@ export function AgentsBoard({ initialAgents, initialChats }: { initialAgents: Ag
                         dragId === a.id ? 'opacity-40' : ''
                       }`}
                     >
-                      <div className="text-[13.5px] font-medium text-[var(--ax-fg)] leading-snug break-words">{a.name}</div>
+                      <div className="flex items-start gap-1.5">
+                        <span className="min-w-0 flex-1 text-[13.5px] font-medium text-[var(--ax-fg)] leading-snug break-words">{a.name}</span>
+                        <ReachMark agent={a} />
+                      </div>
 
                       {(a.agency || hasDeals(a)) && (
                         <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
@@ -333,7 +357,7 @@ export function AgentsBoard({ initialAgents, initialChats }: { initialAgents: Ag
 
                   {items.length === 0 && (
                     <p className="px-2 py-6 text-[12px] text-[var(--ax-fg-faint)] leading-snug text-center">
-                      {query || manager || dealsOnly ? 'Никто не подходит под фильтр' : s.hint}
+                      {query || manager || dealsOnly || reachOnly ? 'Никто не подходит под фильтр' : s.hint}
                     </p>
                   )}
                 </div>
@@ -372,6 +396,24 @@ export function AgentsBoard({ initialAgents, initialChats }: { initialAgents: Ag
   )
 }
 
+// Значок «до человека можно дотянуться». Залитый зелёный самолётик —
+// переписка привязана, из карточки уходит сообщение. Бледный контур —
+// есть только ник: такому агенту бот написать первым не может, и обещать
+// тут кнопку «отправить» нельзя. Пусто — телеграма нет вовсе.
+function ReachMark({ agent, className = '' }: { agent: AgentCard; className?: string }) {
+  const reach = telegramReach(agent)
+  if (reach === 'none') return null
+  return (
+    <Send
+      size={12}
+      aria-label={REACH_HINT[reach]}
+      className={`shrink-0 mt-[3px] ${reach === 'chat' ? 'text-[#4FC08D]' : 'text-[var(--ax-fg-faint)] opacity-60'} ${className}`}
+    >
+      <title>{REACH_HINT[reach]}</title>
+    </Send>
+  )
+}
+
 // Крупные сделки сверху; у кого суммы нет — в конец по алфавиту.
 function byVolume(a: AgentCard, b: AgentCard): number {
   const x = a.deals_volume_usd ?? 0, y = b.deals_volume_usd ?? 0
@@ -389,7 +431,8 @@ function AgentsList({ agents, byVolume: sortedByVolume = false, onOpen }: { agen
       <table className="w-full min-w-[840px] text-[13px] border-collapse">
         <thead>
           <tr className="text-left text-[12px] text-[var(--ax-fg-muted)] bg-[var(--ax-chat-bg)]">
-            <th className="font-medium px-3 py-2">Агент</th>
+            {/* Отступ под два слота значков — иначе заголовок стоит левее имён */}
+            <th className="font-medium py-2 pl-12 pr-3">Агент</th>
             <th className="font-medium px-3 py-2">Агентство</th>
             <th className="font-medium px-3 py-2">Статус</th>
             <th className="font-medium px-3 py-2">Менеджер</th>
@@ -408,8 +451,13 @@ function AgentsList({ agents, byVolume: sortedByVolume = false, onOpen }: { agen
               className="border-t border-[var(--ax-border-soft)] cursor-pointer hover:bg-[var(--ax-hover)]"
             >
               <td className="px-3 py-2 text-[var(--ax-fg)]">
+                {/* Два узких слота под значки: с ними имена в столбце
+                    остаются на одной вертикали, без них — прыгают. */}
                 <span className="inline-flex items-center gap-1.5">
-                  {hasDeals(a) && <Handshake size={12} className="shrink-0 text-[#4FC08D]" aria-label="есть сделки" />}
+                  <span className="inline-flex w-3 justify-center"><ReachMark agent={a} className="mt-0" /></span>
+                  <span className="inline-flex w-3 justify-center">
+                    {hasDeals(a) && <Handshake size={12} className="shrink-0 text-[#4FC08D]" aria-label="есть сделки" />}
+                  </span>
                   {a.name}
                 </span>
               </td>
