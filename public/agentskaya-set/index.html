@@ -77,7 +77,7 @@
   .cols-2{display:grid;grid-template-columns:1fr 1fr;gap:clamp(18px,2.5vw,32px)}
   .cols-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
   .cols-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-  .hero-grid>*,.cols-2>*,.cols-3>*,.cols-4>*,.lite-in>*{min-width:0}
+  .hero-grid>*,.cols-2>*,.cols-3>*,.cols-4>*{min-width:0}
 
   /* hero */
   .hero{padding-block:clamp(32px,4.5vw,56px)}
@@ -163,8 +163,6 @@
   .pack{display:flex;flex-direction:column}
   .pack .for{margin-top:14px;padding-top:12px;border-top:1px solid var(--border);font-size:14px;color:var(--muted)}
   .pack .for b{color:var(--text);font-weight:600}
-  .pack-lite{grid-column:1/-1;background:var(--soft);box-shadow:none}
-  .lite-in{display:grid;grid-template-columns:200px 1fr;gap:20px;align-items:start}
 
   /* steps */
   .step{padding-top:14px;border-top:3px solid var(--border)}
@@ -178,7 +176,7 @@
   footer{border-top:1px solid var(--border);background:var(--band);padding-block:22px;color:var(--faint);font-size:13.5px}
 
   @media (max-width:880px){
-    .hero-grid,.cols-2,.cols-3,.lite-in{grid-template-columns:1fr}
+    .hero-grid,.cols-2,.cols-3{grid-template-columns:1fr}
     .cols-4{grid-template-columns:1fr 1fr}
   }
   @media (max-width:520px){ .cols-4{grid-template-columns:1fr} }
@@ -317,6 +315,7 @@
           <li>Сколько касаний и с каким количеством агентов</li>
           <li>Сколько встреч провёл полевой и что обсуждали</li>
           <li>Сколько зумов и встреч провёл клоузер</li>
+          <li>Сколько новых агентов и броней пришло</li>
           <li>Сводка от администратора</li>
         </ul>
         <p class="sub">Формат: дашборд или еженедельное сообщение в Telegram-чате.</p>
@@ -345,7 +344,7 @@
       </div>
       <div class="card pick">
         <div class="ctitle">Наша команда</div>
-        <div class="price num">от $1500 <small>/ мес + 2%</small></div>
+        <div class="price num">от $1500 <small>/ мес + 3%</small></div>
         <ul class="pts">
           <li>Три человека, включая клоузера</li>
           <li>Готовая сеть агентов с первого месяца</li>
@@ -511,22 +510,9 @@
         </ul>
         <p class="for"><b>Для кого:</b> не верит, пока не увидит.</p>
       </div>
-      <div class="card pack pack-lite">
-        <div class="lite-in">
-          <div>
-            <div class="role">Лайт</div>
-            <div class="price num" style="margin-top:12px">$0 <small>+ 0,5%</small></div>
-          </div>
-          <div>
-            <ul class="dots">
-              <li>0,5% с новых агентов, пришедших через сайт</li>
-              <li>Без встреч и отчётов, чистый поток</li>
-            </ul>
-            <p class="for"><b>Для кого:</b> хочет начать с минимума.</p>
-          </div>
-        </div>
-      </div>
     </div>
+    <div class="callout" style="margin-top:18px">Прогноз на первые 3 месяца: от <b>15 новых агентов</b> и <b>3 броней</b>. Итоговые цифры фиксируем под ваш проект.</div>
+    <p class="fine" style="margin-top:12px">Другие форматы - по запросу.</p>
     <ul class="pts" style="margin-top:18px">
       <li>Процент - поверх комиссии агента, а не вместо неё</li>
       <li>Комиссию агентам ставите любую, хоть максимальную - это ваш инструмент продаж</li>
