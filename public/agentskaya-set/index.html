@@ -1,0 +1,595 @@
+<meta charset="utf-8">
+<title>Агентская сеть на Бали</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Golos+Text:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    color-scheme: light;
+    --primary:#1f8b5f;
+    --primary-hover:#197551;
+    --primary-soft:#e2f0e8;
+    --brand:#e78c3d;
+    --bg:#f8faf8;
+    --band:#eef5f1;
+    --card:#ffffff;
+    --soft:#f1f5f1;
+    --text:#111827;
+    --muted:#4b5563;
+    --faint:#8b9490;
+    --border:#e5e7eb;
+    --shadow:0 1px 2px #0000000a;
+    --radius:12px;
+    --maxw:1060px;
+    --gut:clamp(16px,4vw,40px);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--bg);color:var(--text);
+    font-family:"Geist","Golos Text",system-ui,-apple-system,sans-serif;
+    font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:var(--maxw);margin:0 auto;padding-inline:var(--gut)}
+  section{padding-block:clamp(36px,5vw,60px)}
+  .band{background:var(--band)}
+  h1,h2,h3{margin:0;text-wrap:balance;letter-spacing:-0.02em;font-weight:700}
+  h1{font-size:clamp(25px,3.2vw,36px);line-height:1.15}
+  h2{font-size:clamp(20px,2.3vw,26px);line-height:1.2;margin-bottom:18px}
+  h3{font-size:17px;line-height:1.3;font-weight:600;letter-spacing:-0.01em}
+  p{margin:0}
+  a{color:inherit}
+  .sub{color:var(--muted);font-size:16px}
+  .fine{font-size:13px;color:var(--faint)}
+  .num{font-variant-numeric:tabular-nums}
+  .stack{display:flex;flex-direction:column;gap:16px}
+
+  /* bullet points */
+  ul.pts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
+  ul.pts li{position:relative;padding-left:26px;font-size:16px;color:var(--text)}
+  ul.pts li::before{
+    content:"";position:absolute;left:0;top:7px;width:14px;height:8px;
+    border-left:2px solid var(--primary);border-bottom:2px solid var(--primary);
+    transform:rotate(-45deg);
+  }
+  ul.pts.dim li{color:var(--muted)}
+  ul.pts li b{font-weight:600;color:var(--text)}
+  ul.dots{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+  ul.dots li{position:relative;padding-left:18px;color:var(--muted);font-size:15px}
+  ul.dots li::before{content:"";position:absolute;left:2px;top:9px;width:5px;height:5px;border-radius:50%;background:var(--primary)}
+
+  /* topbar */
+  .topbar{border-bottom:1px solid var(--border);background:var(--band)}
+  .topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:12px}
+  .logo{display:flex;align-items:center;gap:9px;font-weight:600;letter-spacing:-0.01em}
+  .logo i{width:26px;height:26px;border-radius:7px;background:var(--brand);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-style:normal;font-weight:700;font-size:13px}
+  .topbar .tag{font-size:14px;color:var(--muted)}
+
+  /* buttons */
+  .btn{display:inline-flex;align-items:center;gap:9px;background:var(--primary);color:#fff;font-weight:600;font-size:15px;padding:12px 22px;border-radius:10px;text-decoration:none;box-shadow:var(--shadow);transition:background .18s ease}
+  .btn:hover{background:var(--primary-hover)}
+  .btn:focus-visible{outline:2px solid var(--primary);outline-offset:3px}
+  .btn-note{font-size:13px;color:var(--faint);margin-top:10px}
+
+  /* cards & grids */
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px}
+  .cols-2{display:grid;grid-template-columns:1fr 1fr;gap:clamp(18px,2.5vw,32px)}
+  .cols-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .cols-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .hero-grid>*,.cols-2>*,.cols-3>*,.cols-4>*,.lite-in>*{min-width:0}
+
+  /* hero */
+  .hero{padding-block:clamp(32px,4.5vw,56px)}
+  .hero-grid{display:block}
+  .hero h1{margin-bottom:18px}
+  .hero ul.pts{margin-bottom:24px}
+  .hero ul.pts li{font-size:17px}
+
+  /* images */
+  figure{margin:0;display:flex;flex-direction:column;gap:7px}
+  .shot{display:block;width:100%;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);box-shadow:var(--shadow);object-fit:cover;object-position:top center}
+  .shot.r16{aspect-ratio:16/9}
+  .shot.r43{aspect-ratio:4/3}
+  .shot.r11{aspect-ratio:1/1}
+  figcaption{font-size:12.5px;color:var(--faint);line-height:1.4}
+  /* carousel */
+  .car-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:16px}
+  .car-nav{display:flex;gap:8px}
+  .car-nav button{
+    width:38px;height:38px;border-radius:10px;border:1px solid var(--border);background:var(--card);
+    color:var(--text);font-size:16px;line-height:1;cursor:pointer;box-shadow:var(--shadow);
+    display:flex;align-items:center;justify-content:center;transition:background .15s ease,opacity .15s ease;
+  }
+  .car-nav button:hover{background:var(--soft)}
+  .car-nav button[disabled]{opacity:.35;cursor:default}
+  .car-nav button:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+  .carousel.narrow .bonus{flex:0 0 clamp(190px,56vw,220px)}
+  .carousel.narrow .bonus img{aspect-ratio:3/4;object-position:top center}
+  .carousel{
+    display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;
+    scroll-padding-left:0;padding-bottom:8px;-webkit-overflow-scrolling:touch;
+    scrollbar-width:thin;scrollbar-color:#cfdbd4 transparent;
+  }
+  .carousel::-webkit-scrollbar{height:6px}
+  .carousel::-webkit-scrollbar-thumb{background:#cfdbd4;border-radius:3px}
+  .bonus{
+    flex:0 0 clamp(236px,70vw,286px);scroll-snap-align:start;
+    background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+    box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;
+  }
+  .bonus img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;object-position:top center;border-bottom:1px solid var(--border)}
+  .bonus .b-body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:8px;flex:1}
+  .bonus .b-name{font-size:15.5px;font-weight:600;line-height:1.3}
+  .bonus .b-price{margin-top:auto;font-size:14px;color:var(--primary);font-weight:600;font-variant-numeric:tabular-nums}
+  .bonus .b-price s{color:var(--faint);font-weight:400;text-decoration:line-through;margin-right:6px}
+  .hint{font-size:13px;color:var(--faint);margin-top:8px}
+
+  .mhead{display:flex;align-items:center;gap:12px}
+  .mimg{display:block;width:64px;height:64px;flex:none;border-radius:50%;object-fit:cover;object-position:center 25%;border:1px solid var(--border)}
+  .mph{display:flex;align-items:center;justify-content:center;width:100%;aspect-ratio:4/3;border-radius:10px;background:var(--soft);border:1px dashed #cfdbd4;color:var(--faint);font-size:13px}
+  .ph{display:flex;align-items:center;justify-content:center;text-align:center;padding:18px;min-height:96px;background:var(--soft);border:1px dashed #cfdbd4;border-radius:var(--radius);color:var(--faint);font-size:13px}
+
+  /* stat */
+  .statrow{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+  .stat{font-size:clamp(38px,6vw,58px);line-height:1;font-weight:700;letter-spacing:-0.03em;color:var(--primary)}
+  .stat-sub{font-size:15px;color:var(--muted)}
+
+  /* labels */
+  .role{align-self:flex-start;background:var(--primary-soft);color:var(--primary);font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;border-radius:999px}
+  .ctitle{font-size:11.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
+  .price{font-size:clamp(24px,3vw,32px);line-height:1.1;font-weight:700;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;margin-bottom:10px}
+  .price small{font-size:14px;color:var(--faint);font-weight:500;letter-spacing:0}
+  .pick{border-color:#bfdccd;background:#fbfefc}
+  .pick .ctitle{color:var(--primary)}
+
+  /* table */
+  .tbl{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .tbl-scroll{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;min-width:460px;font-size:15px}
+  th,td{text-align:left;padding:12px 18px;border-bottom:1px solid var(--border)}
+  th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);font-weight:600;background:var(--soft)}
+  td:last-child,th:last-child{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:600}
+  tbody tr:last-child td{border-bottom:0}
+  .callout{background:var(--primary-soft);border:1px solid #cfe5da;border-radius:var(--radius);padding:16px 20px;font-size:16px;color:#14523a}
+  .callout b{color:var(--primary);font-weight:600}
+
+  /* cases */
+  .case .who{font-size:11.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:6px}
+  .case .amount{font-size:clamp(26px,3.4vw,34px);line-height:1.05;font-weight:700;letter-spacing:-0.02em;color:var(--primary);font-variant-numeric:tabular-nums}
+  .case .period{font-size:14px;color:var(--muted);margin-top:4px}
+
+  /* packages */
+  .pack{display:flex;flex-direction:column}
+  .pack .for{margin-top:14px;padding-top:12px;border-top:1px solid var(--border);font-size:14px;color:var(--muted)}
+  .pack .for b{color:var(--text);font-weight:600}
+  .pack-lite{grid-column:1/-1;background:var(--soft);box-shadow:none}
+  .lite-in{display:grid;grid-template-columns:200px 1fr;gap:20px;align-items:start}
+
+  /* steps */
+  .step{padding-top:14px;border-top:3px solid var(--border)}
+  .step.on{border-top-color:var(--primary)}
+  .step .n{font-size:11.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--primary);margin-bottom:6px}
+  .step .t{font-size:16px;font-weight:600}
+  .step .d{font-size:14px;color:var(--faint);margin-top:3px}
+
+  .final{display:flex;flex-direction:column;gap:14px;align-items:flex-start;padding:clamp(20px,3vw,32px);margin-top:22px}
+
+  footer{border-top:1px solid var(--border);background:var(--band);padding-block:22px;color:var(--faint);font-size:13.5px}
+
+  @media (max-width:880px){
+    .hero-grid,.cols-2,.cols-3,.lite-in{grid-template-columns:1fr}
+    .cols-4{grid-template-columns:1fr 1fr}
+  }
+  @media (max-width:520px){ .cols-4{grid-template-columns:1fr} }
+  @media (prefers-reduced-motion:reduce){ *{transition:none!important} }
+</style>
+
+<header class="topbar">
+  <div class="wrap">
+    <div class="logo"><i>B</i> Balinsky</div>
+    <div class="tag">Отдел по работе с агентами</div>
+  </div>
+</header>
+
+<main>
+
+<!-- 1 -->
+<section class="hero">
+  <div class="wrap">
+    <div class="hero-grid">
+      <div style="max-width:760px">
+        <h1>Отдел по работе с агентами на Бали - по цене одного менеджера</h1>
+        <ul class="pts">
+          <li><b>Клоузер</b> - закрывает сделки</li>
+          <li><b>Полевой</b> - лично встречается с агентами</li>
+          <li><b>Администратор</b> - держит встречи и отчётность</li>
+        </ul>
+        <a class="btn" href="https://t.me/andrey_slr">Написать в Telegram <span aria-hidden="true">→</span></a>
+        <p class="btn-note">@andrey_slr · ответим в течение дня</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 2 -->
+<section class="band">
+  <div class="wrap">
+    <h2>Рынок не умер</h2>
+    <div class="cols-2">
+      <div class="stack">
+        <div>
+          <div class="statrow">
+            <span class="stat num">30+</span>
+            <span class="stat-sub">сделок в месяц через нашу сеть</span>
+          </div>
+          <ul class="pts">
+            <li>Примерно одна сделка в день</li>
+            <li>Данные из двух источников: свои продажи и опросы агентов</li>
+            <li>Агенты на острове есть и продают</li>
+          </ul>
+        </div>
+        <p class="sub">Вопрос один: какую часть заберёте вы.</p>
+      </div>
+      <div>
+        <div class="car-head" style="margin-bottom:12px">
+          <p class="fine">Опросы в нашем канале, листайте</p>
+          <div class="car-nav">
+            <button type="button" class="c-prev" aria-label="Назад">←</button>
+            <button type="button" class="c-next" aria-label="Вперёд">→</button>
+          </div>
+        </div>
+        <div class="carousel narrow" data-carousel tabindex="0" aria-label="Опросы агентов">
+          <article class="bonus">
+            <img src="/agentskaya-set/img/poll1.jpg" alt="Опрос: сколько сделок закрыли за 30 дней" loading="lazy">
+            <div class="b-body"><div class="b-name" style="font-size:14px">Сколько сделок закрыли за 30 дней</div><p class="fine">61 голос</p></div>
+          </article>
+          <article class="bonus">
+            <img src="/agentskaya-set/img/poll2.jpg" alt="Опрос застройщиков: откуда больше сделок" loading="lazy">
+            <div class="b-body"><div class="b-name" style="font-size:14px">Застройщики: откуда больше сделок</div><p class="fine">46 голосов</p></div>
+          </article>
+          <article class="bonus">
+            <img src="/agentskaya-set/img/poll3.jpg" alt="Опрос: что покупают" loading="lazy">
+            <div class="b-body"><div class="b-name" style="font-size:14px">Что у агентов купили за 3 месяца</div><p class="fine">56 голосов</p></div>
+          </article>
+          <article class="bonus">
+            <img src="/agentskaya-set/img/poll4.jpg" alt="Опрос: на какие чеки закрыли сделки" loading="lazy">
+            <div class="b-body"><div class="b-name" style="font-size:14px">На какие чеки закрывают сделки</div><p class="fine">51 голос</p></div>
+          </article>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 -->
+<section>
+  <div class="wrap">
+    <h2>Три человека вместо одного менеджера</h2>
+    <div class="cols-3">
+      <div class="card stack" style="gap:12px">
+        <div class="mhead">
+  <img class="mimg" src="/agentskaya-set/img/vitaliy.jpg" alt="Виталий, клоузер" loading="lazy">
+  <div class="role">Клоузер · Виталий</div>
+        </div>
+        <ul class="pts">
+          <li>Лучший клоузер по продажам на Бали среди застройщиков</li>
+          <li>Бывший РОП, топ-продажник в LOYO</li>
+          <li>Конверсия из зума в бронь - 60%</li>
+          <li>Обучение, встречи на объекте, закрытие сделки</li>
+        </ul>
+      </div>
+      <div class="card stack" style="gap:12px">
+        <div class="mhead">
+  <img class="mimg" src="/agentskaya-set/img/field.jpg" alt="Полевой менеджер" loading="lazy" style="object-position:center 30%">
+  <div class="role">Полевой · Андрей</div>
+        </div>
+        <ul class="pts">
+          <li>Почти каждый день встречи с агентами вживую</li>
+          <li>Агентства Бали и Пхукета</li>
+          <li>Канал на 700 агентов, чат на 300</li>
+          <li>Сайт с 2600 объектами</li>
+        </ul>
+      </div>
+      <div class="card stack" style="gap:12px">
+        <div class="mhead">
+  <img class="mimg" src="/agentskaya-set/img/admin.jpg" alt="Администратор" loading="lazy" style="object-position:center 25%">
+  <div class="role">Администратор · Елена</div>
+        </div>
+        <ul class="pts">
+          <li>26 лет в Минобороны</li>
+          <li>Порядок и отчётность железные</li>
+          <li>Назначает встречи, ведёт учёт</li>
+        </ul>
+      </div>
+    </div>
+    <p class="fine" style="margin-top:16px">Юрист и оформление сделки - на стороне застройщика, это не наша зона.</p>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="band">
+  <div class="wrap">
+    <h2>Живая картина по дням, а не отчёт на словах в конце месяца</h2>
+    <div class="cols-2">
+      <div class="stack">
+        <ul class="pts">
+          <li>Сколько касаний и с каким количеством агентов</li>
+          <li>Сколько встреч провёл полевой и что обсуждали</li>
+          <li>Сколько зумов и встреч провёл клоузер</li>
+          <li>Сводка от администратора</li>
+        </ul>
+        <p class="sub">Формат: дашборд или еженедельное сообщение в Telegram-чате.</p>
+      </div>
+      <figure>
+        <img class="shot r43" src="/agentskaya-set/img/dash.jpg" alt="Дашборд по работе с агентами" loading="lazy">
+        <figcaption>Дашборд: касания, агенты, кто и сколько написал</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- 5 -->
+<section>
+  <div class="wrap">
+    <h2>Почему выгоднее своего найма</h2>
+    <div class="cols-2">
+      <div class="card">
+        <div class="ctitle">Свой продажник</div>
+        <div class="price num">~$1000 <small>/ мес + 1%</small></div>
+        <ul class="dots">
+          <li>Один человек</li>
+          <li>Без сети агентов</li>
+          <li>Всё держится на нём</li>
+        </ul>
+      </div>
+      <div class="card pick">
+        <div class="ctitle">Наша команда</div>
+        <div class="price num">от $1500 <small>/ мес + 2%</small></div>
+        <ul class="pts">
+          <li>Три человека, включая клоузера</li>
+          <li>Готовая сеть агентов с первого месяца</li>
+          <li>Отчётность и медиа входят в цену</li>
+        </ul>
+      </div>
+    </div>
+    <p class="sub" style="margin-top:16px">Свой BizDev-менеджер стоит $4-6К/мес плюс год на выстраивание отношений.</p>
+  </div>
+</section>
+
+<!-- 6 -->
+<section class="band">
+  <div class="wrap">
+    <div class="car-head">
+      <div>
+        <h2 style="margin-bottom:6px">Что застройщик получает в пакете</h2>
+        <p class="sub">Листайте вправо. В скобках - сколько это стоит на рынке отдельно.</p>
+      </div>
+      <div class="car-nav">
+        <button type="button" class="c-prev" aria-label="Назад">←</button>
+        <button type="button" class="c-next" aria-label="Вперёд">→</button>
+      </div>
+    </div>
+
+    <div class="carousel" data-carousel tabindex="0" aria-label="Что входит в пакет">
+      <article class="bonus">
+        <img src="/agentskaya-set/img/webinar.jpg" alt="Вебинар для агентов" loading="lazy">
+        <div class="b-body">
+          <div class="b-name">Слот в вебинаре для агентов</div>
+          <p class="fine">25-40 брокеров на эфире, ваш проект в центре</p>
+          <div class="b-price"><s>от $700</s> входит</div>
+        </div>
+      </article>
+      <article class="bonus">
+        <img src="/agentskaya-set/img/post.jpg" alt="Пост в Telegram-канале" loading="lazy">
+        <div class="b-body">
+          <div class="b-name">Пакет постов в канале и чате</div>
+          <p class="fine">Канал на 731 подписчика и чат брокеров</p>
+          <div class="b-price"><s>$1200/мес</s> входит</div>
+        </div>
+      </article>
+      <article class="bonus">
+        <img src="/agentskaya-set/img/podcast.jpg" alt="Подкаст-интервью" loading="lazy">
+        <div class="b-body">
+          <div class="b-name">Подкаст-интервью с основателем</div>
+          <p class="fine">Съёмка в студии, монтаж, публикация</p>
+          <div class="b-price"><s>$400</s> входит</div>
+        </div>
+      </article>
+      <article class="bonus">
+        <img src="/agentskaya-set/img/youtube.jpg" alt="Видеообзор объекта" loading="lazy">
+        <div class="b-body">
+          <div class="b-name">Видеообзор готового объекта</div>
+          <p class="fine">Ролик на YouTube и в Reels</p>
+          <div class="b-price"><s>$600</s> входит</div>
+        </div>
+      </article>
+      <article class="bonus">
+        <img src="/agentskaya-set/img/sold.jpg" alt="Отчёт по ценам конкурентов" loading="lazy">
+        <div class="b-body">
+          <div class="b-name">Еженедельный отчёт по ценам конкурентов</div>
+          <p class="fine">Что продалось рядом и по какой цене</p>
+          <div class="b-price"><s>$300/мес</s> входит</div>
+        </div>
+      </article>
+      <article class="bonus">
+        <img src="/agentskaya-set/img/calc.jpg" alt="Аналитика по юниту" loading="lazy">
+        <div class="b-body">
+          <div class="b-name">Аналитический отчёт по юниту</div>
+          <p class="fine">Доходность, окупаемость, сравнение с соседями</p>
+          <div class="b-price"><s>$400/мес</s> входит</div>
+        </div>
+      </article>
+      <article class="bonus">
+        <img src="/agentskaya-set/img/map.jpg" alt="Интерактивные материалы" loading="lazy">
+        <div class="b-body">
+          <div class="b-name">Интерактивные материалы для агентов</div>
+          <p class="fine">Карты, калькуляторы, страница проекта</p>
+          <div class="b-price"><s>$300 + $150/мес</s> входит</div>
+        </div>
+      </article>
+      <article class="bonus">
+        <img src="/agentskaya-set/img/chat.jpg" alt="Сообщества Пхукета" loading="lazy">
+        <div class="b-body">
+          <div class="b-name">Доступ к сообществам Пхукета</div>
+          <p class="fine">Агентства и чаты через Альянс брокеров</p>
+          <div class="b-price"><s>$250/мес</s> входит</div>
+        </div>
+      </article>
+      <article class="bonus">
+        <img src="/agentskaya-set/img/report.jpg" alt="Отчёт по обратной связи агентов" loading="lazy">
+        <div class="b-body">
+          <div class="b-name">Отчёт по обратной связи агентов</div>
+          <p class="fine">Что агенты считают сильным и слабым в проекте</p>
+          <div class="b-price">входит</div>
+        </div>
+      </article>
+      <article class="bonus">
+        <img src="/agentskaya-set/img/around.jpg" alt="Данные по району" loading="lazy">
+        <div class="b-body">
+          <div class="b-name">Данные по району объекта</div>
+          <p class="fine">Что вокруг, трафик туристов, инфраструктура</p>
+          <div class="b-price">входит</div>
+        </div>
+      </article>
+    </div>
+
+    <div class="callout" style="margin-top:18px">По рынку это <b>~$3700</b> в первый месяц и <b>$3000+</b> дальше. Пакет начинается от <b>$1500</b>.</div>
+    <ul class="pts" style="margin-top:16px">
+      <li>Всё из карусели входит в пакет</li>
+      <li>Отдельно - только живая встреча с агентами на объекте, по смете заранее</li>
+      <li>Онлайн-встречи и обучения - бесплатно</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 7 -->
+<section>
+  <div class="wrap">
+    <h2>Кейсы</h2>
+    <div class="cols-3">
+      <div class="card case"><div class="who">Vertikal</div><div class="amount num">$3 млн</div><div class="period">за 6 месяцев</div></div>
+      <div class="card case"><div class="who">LB Group</div><div class="amount num">$40 млн</div><div class="period">за 2025 год</div></div>
+      <div class="card case"><div class="who">KAVIAN</div><div class="amount num">11 юнитов</div><div class="period">за 6 месяцев</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 8 -->
+<section class="band">
+  <div class="wrap">
+    <h2>Пакеты</h2>
+    <div class="cols-3">
+      <div class="card pack">
+        <div class="role">А · Фикс</div>
+        <div class="price num" style="margin-top:12px">$3000 <small>/ мес + 2%</small></div>
+        <ul class="dots">
+          <li>10-20 личных встреч в месяц</li>
+          <li>Обратная связь после каждой</li>
+          <li>Зумы, медиа, ежемесячный отчёт</li>
+          <li>С клоузером</li>
+        </ul>
+        <p class="for"><b>Для кого:</b> нужна системная работа на дистанции.</p>
+      </div>
+      <div class="card pack">
+        <div class="role">Б · Баланс</div>
+        <div class="price num" style="margin-top:12px">$1500 <small>/ мес + 3%</small></div>
+        <ul class="dots">
+          <li>Тот же объём работы</li>
+          <li>Риск пополам</li>
+          <li>С клоузером</li>
+        </ul>
+        <p class="for"><b>Для кого:</b> хочет проверить формат, не переплачивая на старте.</p>
+      </div>
+      <div class="card pack">
+        <div class="role">В · Результат</div>
+        <div class="price num" style="margin-top:12px">$0 <small>+ 6%</small></div>
+        <ul class="dots">
+          <li>Тот же объём работы</li>
+          <li>Проект берём не любой</li>
+          <li>С клоузером</li>
+        </ul>
+        <p class="for"><b>Для кого:</b> не верит, пока не увидит.</p>
+      </div>
+      <div class="card pack pack-lite">
+        <div class="lite-in">
+          <div>
+            <div class="role">Лайт</div>
+            <div class="price num" style="margin-top:12px">$0 <small>+ 0,5%</small></div>
+          </div>
+          <div>
+            <ul class="dots">
+              <li>0,5% с новых агентов, пришедших через сайт</li>
+              <li>Без встреч и отчётов, чистый поток</li>
+            </ul>
+            <p class="for"><b>Для кого:</b> хочет начать с минимума.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ul class="pts" style="margin-top:18px">
+      <li>Процент - поверх комиссии агента, а не вместо неё</li>
+      <li>Комиссию агентам ставите любую, хоть максимальную - это ваш инструмент продаж</li>
+      <li>Мы не трогаем вашу сетку комиссий и не торгуемся с агентами за неё</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 10 -->
+<section class="band">
+  <div class="wrap">
+    <h2>Условия</h2>
+    <ul class="pts">
+      <li>Минимум 3 месяца</li>
+      <li>Максимум 3 застройщика одновременно, из разных ниш</li>
+      <li>Атрибуция: 12 месяцев для новых агентов, 6 для существующих</li>
+      <li>Процент - поверх комиссии агента</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 11 -->
+<section>
+  <div class="wrap">
+    <h2>Как начинаем</h2>
+    <div class="cols-4">
+      <div class="step on"><div class="n">Шаг 1</div><div class="t">Проверка документов</div><div class="d">Земля, стройка, IMB</div></div>
+      <div class="step on"><div class="n">Шаг 2</div><div class="t">Берём в работу</div><div class="d">Готовим материалы</div></div>
+      <div class="step"><div class="n">Шаг 3</div><div class="t">Запуск</div><div class="d">2-4 недели</div></div>
+      <div class="step"><div class="n">Шаг 4</div><div class="t">Полная работа</div><div class="d">С 2-3 месяца</div></div>
+    </div>
+    <p class="fine" style="margin-top:14px">Наш интерес - начать быстрее, но нормальный старт занимает около месяца.</p>
+    <div class="card final">
+      <h3 style="font-size:20px">Обсудим ваш проект</h3>
+      <p class="sub">Напишите - посмотрим документы и скажем, берём или нет.</p>
+      <a class="btn" href="https://t.me/andrey_slr">Написать в Telegram <span aria-hidden="true">→</span></a>
+      <p class="btn-note" style="margin-top:0">@andrey_slr</p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">Balinsky.info · Отдел по работе с агентами · Бали, Индонезия</div>
+</footer>
+
+
+<script>
+document.querySelectorAll('[data-carousel]').forEach(function(car){
+  var head = car.previousElementSibling;
+  var prev = head && head.querySelector('.c-prev');
+  var next = head && head.querySelector('.c-next');
+  if(!prev||!next) return;
+  function step(){var c=car.querySelector('.bonus');return c?c.getBoundingClientRect().width+14:280;}
+  function upd(){
+    prev.disabled = car.scrollLeft <= 4;
+    next.disabled = car.scrollLeft >= car.scrollWidth - car.clientWidth - 4;
+  }
+  prev.addEventListener('click',function(){car.scrollBy({left:-step(),behavior:'smooth'});});
+  next.addEventListener('click',function(){car.scrollBy({left:step(),behavior:'smooth'});});
+  car.addEventListener('scroll',upd,{passive:true});
+  window.addEventListener('resize',upd);
+  upd();
+});
+</script>
