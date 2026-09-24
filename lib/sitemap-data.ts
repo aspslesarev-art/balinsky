@@ -15,6 +15,7 @@ import { loadAllEvents } from '@/lib/events'
 import { loadAllKnowledge } from '@/lib/knowledge'
 import { enKnowledgeSlug } from '@/lib/knowledge-en-slugs'
 import { isNoindexKnowledge } from '@/lib/knowledge-noindex'
+import { isRuEnOnlyKnowledge } from '@/lib/knowledge-locales'
 import { normalizeSlug } from '@/lib/slug-normalize'
 import { switchLangPath, type Lang } from '@/lib/i18n'
 
@@ -548,11 +549,18 @@ async function buildAll(): Promise<Categorized> {
   // Articles carrying `noindex` are left out — a sitemap that asks Google to
   // index a page the page itself refuses is the same contradiction the
   // hreflang cluster used to have.
-  const knowledge: SitemapEntry[] = knowledgeRows.filter(x => !isNoindexKnowledge(x.slug)).flatMap(x => pairEntry({
-    ruPath: `/ru/znaniya/${x.slug}`, enPath: `/en/knowledge/${enKnowledgeSlug(x.slug)}`,
-    lastModified: x.createdTime ? new Date(x.createdTime) : now,
-    changeFrequency: 'monthly', priority: 0.5,
-  }))
+  const knowledge: SitemapEntry[] = knowledgeRows.filter(x => !isNoindexKnowledge(x.slug)).flatMap(x => {
+    const ruPath = `/ru/znaniya/${x.slug}`
+    const enPath = `/en/knowledge/${enKnowledgeSlug(x.slug)}`
+    const lastModified = x.createdTime ? new Date(x.createdTime) : now
+    // RU/EN-only guides (lib/knowledge-locales.ts): the other locales 404, so
+    // the cluster is just the pair — pairEntry would advertise all nine.
+    if (isRuEnOnlyKnowledge(x.slug)) {
+      const alternates = { languages: { ru: `${SITE_URL}${ruPath}`, en: `${SITE_URL}${enPath}`, 'x-default': `${SITE_URL}${ruPath}` } }
+      return [ruPath, enPath].map(p => ({ url: `${SITE_URL}${p}`, lastModified, changeFrequency: 'monthly' as const, priority: 0.5, alternates }))
+    }
+    return pairEntry({ ruPath, enPath, lastModified, changeFrequency: 'monthly', priority: 0.5 })
+  })
 
   // Developer landings — RU + EN pair, plus per-developer reviews (RU-only).
   const developers: SitemapEntry[] = []

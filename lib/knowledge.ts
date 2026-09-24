@@ -1,6 +1,7 @@
 import { applyManifestTranslation, loadTranslations } from '@/lib/en-translations'
 import type { Lang } from '@/lib/i18n'
 import { enKnowledgeSlug } from '@/lib/knowledge-en-slugs'
+import { knowledgeAvailableIn } from '@/lib/knowledge-locales'
 import { normalizeSlug } from '@/lib/slug-normalize'
 
 export type KnowledgeAudience = 'investor' | 'agent' | 'life'
@@ -67,7 +68,9 @@ export async function loadAllKnowledge(lang: Lang = 'ru'): Promise<KnowledgeItem
   const items = await loadRawKnowledge()
   if (lang === 'ru' || items.length === 0) return items
   const cache = await loadTranslations('knowledge', lang)
-  return items.map(item => applyManifestTranslation(item, cache, EN_FIELDS))
+  return items
+    .filter(item => knowledgeAvailableIn(item.slug, lang))
+    .map(item => applyManifestTranslation(item, cache, EN_FIELDS))
 }
 
 export async function loadKnowledgeBySlug(slug: string, lang: Lang = 'ru'): Promise<KnowledgeItem | null> {

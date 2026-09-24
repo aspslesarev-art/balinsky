@@ -78,6 +78,22 @@ export const EN_KNOWLEDGE_SLUG_OVERRIDES: Record<string, string> = {
   "akuly-na-bali-naskolko-eto-opasno-i-stoit-li-boyatsya-realnye-fakty-i-sovety-dly": "sharks-bali-dangerous-they-worried-real-facts",
   "opasny-li-ukusy-zmey-na-bali-realnye-riski-i-statistika-smertelnyh-sluchaev": "are-snake-bites-dangerous-bali-real-risks",
   "gde-na-bali-bezopasnee-vsego-zhit-reyting-rayonov-po-risku-zemletryaseniy-i-tsun": "safest-places-live-bali-earthquake-tsunami-risk",
+  // English buyer guides written EN-first (2026-09-24).
+  "stoit-li-investirovat-v-nedvizhimost-na-bali-v-2026-plyusy-minusy-riski": "is-bali-property-good-investment-2026",
+  "gde-kupit-villu-na-bali-changu-uluvatu-ubud-sanur-tseny-2026": "where-to-buy-villa-bali-areas-compared-2026",
+  "prodlenie-lizholda-na-bali-kak-eto-rabotaet-i-chto-propisat-v-dogovore": "bali-leasehold-extension-how-it-works",
+  "upravlyayushchie-kompanii-dlya-vill-na-bali-komissii-i-kak-vybrat": "bali-villa-management-fees-how-to-choose",
+  "rassrochka-na-off-plan-na-bali-kak-rabotaet-i-kak-zashchitit-dengi": "bali-off-plan-payment-plans-protect-money",
+  "skolko-stoit-kupit-villu-na-bali-nalogi-sbory-i-rashody-2026": "cost-of-buying-villa-bali-taxes-fees-2026",
+}
+
+// A few keys above were copied from raw slugs that ended in «-» (titles cut
+// at 80 characters). Article slugs are normalised on load — trailing dashes
+// trimmed — so those keys never matched and the articles kept their
+// transliterated-Russian URL on /en. Register the trimmed form as well.
+for (const [key, en] of Object.entries(EN_KNOWLEDGE_SLUG_OVERRIDES)) {
+  const trimmed = key.replace(/-+$/, '')
+  if (trimmed !== key && !(trimmed in EN_KNOWLEDGE_SLUG_OVERRIDES)) EN_KNOWLEDGE_SLUG_OVERRIDES[trimmed] = en
 }
 
 // The English-facing slug for an article, keyed by its shared (Russian) slug:

@@ -13,13 +13,15 @@ import { loadAllKnowledge, loadKnowledgeBySlug } from '@/lib/knowledge'
 import { enKnowledgeSlug } from '@/lib/knowledge-en-slugs'
 import { isNoindexKnowledge } from '@/lib/knowledge-noindex'
 import { ArticleCover } from '@/components/ArticleCover'
+import { ArticleBody, plainArticleText } from '@/components/ArticleBody'
+import { isRuEnOnlyKnowledge } from '@/lib/knowledge-locales'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { getBuyAnchor } from '@/lib/districts'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
 import type { KnowledgeAuthor } from '@/lib/knowledge'
-import { hreflangMap } from '@/lib/hreflang'
+import { hreflangMap, SITE_ORIGIN } from '@/lib/hreflang'
 
 type LangCopy = {
   home: string; knowledgeCrumb: string; source: string; moreArticles: string
@@ -103,13 +105,16 @@ export async function generateKnowledgeDetailMetadata(slug: string, lang: Lang):
   const path = lang === 'ru' ? ruPath : switchLangPath(enPath, lang)
   return {
     title: `${k.title} | Balinsky`,
-    description: k.body.slice(0, 160).replace(/\s+/g, ' ').trim(),
+    description: plainArticleText(k.body).slice(0, 160).trim(),
     // Tourist trivia stays readable but out of the index — see
     // lib/knowledge-noindex.ts for why, and for what stays indexed.
     ...(isNoindexKnowledge(k.slug) ? { robots: { index: false, follow: true } } : {}),
     alternates: {
       canonical: path,
-      languages: hreflangMap(ruPath),
+      // RU/EN-only guides have no page in the other locales.
+      languages: isRuEnOnlyKnowledge(k.slug)
+        ? { ru: `${SITE_ORIGIN}${ruPath}`, en: `${SITE_ORIGIN}${enPath}`, 'x-default': `${SITE_ORIGIN}${ruPath}` }
+        : hreflangMap(ruPath),
     },
     openGraph: {
       title: k.title,
@@ -208,9 +213,7 @@ export async function KnowledgeDetail({ slug, lang }: { slug: string; lang: Lang
             </div>
           )}
 
-          <div className="text-[16px] leading-[1.7] text-[var(--color-text)] whitespace-pre-wrap">
-            {k.body}
-          </div>
+          <ArticleBody body={k.body} />
 
           {k.externalUrl && (
             <div className="mt-6">
