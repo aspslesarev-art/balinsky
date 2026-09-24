@@ -63,6 +63,24 @@ type UnitInfo = {
 const POPUP_W = 280
 const POPUP_H_GUESS = 220   // upper bound used for flip placement; actual measured after mount.
 
+// Hover label for a hotspot's status — was hardcoded Russian on every locale.
+const STATUS_WORDS: Record<Lang, { free: string; reserved: string; sold: string }> = {
+  ru: { free: 'свободно', reserved: 'забронировано', sold: 'продано' },
+  en: { free: 'available', reserved: 'reserved', sold: 'sold' },
+  id: { free: 'tersedia', reserved: 'dipesan', sold: 'terjual' },
+  fr: { free: 'disponible', reserved: 'réservé', sold: 'vendu' },
+  de: { free: 'frei', reserved: 'reserviert', sold: 'verkauft' },
+  zh: { free: '可售', reserved: '已预订', sold: '已售' },
+  nl: { free: 'beschikbaar', reserved: 'gereserveerd', sold: 'verkocht' },
+  ban: { free: 'wenten', reserved: 'sampun kapesen', sold: 'sampun kaadol' },
+  pl: { free: 'dostępne', reserved: 'zarezerwowane', sold: 'sprzedane' },
+  uk: { free: 'вільно', reserved: 'заброньовано', sold: 'продано' },
+}
+function statusWord(a: string, lang: Lang): string {
+  const w = STATUS_WORDS[lang] ?? STATUS_WORDS.en
+  return a === 'free' ? w.free : a === 'reserved' ? w.reserved : w.sold
+}
+
 export function ComplexVisualizationViewer({
   layers, hotspots, unitsBySlug, lang = 'ru',
 }: {
@@ -210,7 +228,7 @@ export function ComplexVisualizationViewer({
               const titleText = (h.label || h.availability) ? (
                 (h.label ?? '') +
                 (h.availability ? ((h.label ? ' · ' : '') +
-                  (h.availability === 'free' ? 'свободно' : h.availability === 'reserved' ? 'забронировано' : 'продано')) : '')
+                  statusWord(h.availability, lang)) : '')
               ) : null
               const points = h.polygon.map(([x, y]) => `${x},${y}`).join(' ')
               return (
@@ -242,7 +260,7 @@ export function ComplexVisualizationViewer({
             const titleText = (h.label || h.availability) ? (
               (h.label ?? '') +
               (h.availability ? ((h.label ? ' · ' : '') +
-                (h.availability === 'free' ? 'свободно' : h.availability === 'reserved' ? 'забронировано' : 'продано')) : '')
+                statusWord(h.availability, lang)) : '')
             ) : null
             return (
               <button
