@@ -41,7 +41,9 @@ function withLinks(text: string) {
 }
 
 export function ArticleBody({ body }: { body: string }) {
-  const base = 'text-[16px] leading-[1.7] text-[var(--color-text)]'
+  // ~70 characters per line: the article column used to span the full
+  // container, 180+ characters on desktop.
+  const base = 'max-w-[70ch] text-[16px] leading-[1.7] text-[var(--color-text)]'
   if (!hasArticleMarkup(body)) {
     return <div className={`${base} whitespace-pre-wrap`}>{body}</div>
   }
