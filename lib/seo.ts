@@ -58,15 +58,15 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
   const ru: Record<CategoryKind, CategoryMeta> = {
     villas: {
       title: `Купить виллу на Бали — цены${from ? ` от ${from}` : ''}, ${n} ${ruVilla} | Balinsky`,
-      description: `Сколько стоит вилла на Бали${med ? `: медиана ${med}` : ''}${ruRange}. ${n} ${ruVilla}${dev ? ` от ${dev} ${ruDev}` : ''}, проверка PBG/SLF, видео с земли, прямые контакты.`,
+      description: `Сколько стоит вилла на Бали${med ? `: медиана ${med}` : ''}${ruRange}. ${n} ${ruVilla}${dev ? ` от ${dev} ${ruDev}` : ''}, статус PBG/SLF, видео с земли, прямые контакты.`,
     },
     apartments: {
       title: `Купить апартаменты на Бали — цены${from ? ` от ${from}` : ''}, ${n} шт. | Balinsky`,
-      description: `Сколько стоят апартаменты на Бали${med ? `: медиана ${med}` : ''}${ruRange}. ${n} лотов в проверенных ЖК: Berawa, Pererenan, Pandawa. Акции и рассрочки.`,
+      description: `Сколько стоят апартаменты на Бали${med ? `: медиана ${med}` : ''}${ruRange}. ${n} лотов в ЖК: Berawa, Pererenan, Pandawa. Акции и рассрочки.`,
     },
     complexes: {
-      title: `${n} ${ruComplex} на Бали с проверкой PBG/SLF | Balinsky`,
-      description: `${n} ${ruComplex} на Бали с инфраструктурой. Проверка PBG/SLF/RDTR, реальные сроки сдачи${dev ? `, акции от ${dev} застройщиков` : ''}.`,
+      title: `${n} ${ruComplex} на Бали со статусом PBG/SLF | Balinsky`,
+      description: `${n} ${ruComplex} на Бали с инфраструктурой. Статус PBG/SLF и зона земли, сроки сдачи${dev ? `, акции от ${dev} застройщиков` : ''}.`,
     },
     developers: {
       title: `${n} застройщиков на Бали с рейтингом | Balinsky`,
@@ -83,15 +83,15 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
       // Leads with «bali villas for sale» — the phrase English buyers type;
       // the old «341 villas in Bali from …» never said «for sale».
       title: `Bali Villas for Sale — ${n} Listings${from ? ` from ${from}` : ''} | Balinsky`,
-      description: `${n} villas for sale in Bali${from && to ? ` from ${from} to ${to}` : from ? ` from ${from}` : ''}${dev ? ` from ${dev} verified developers` : ''}. Pererenan, Uluwatu, Ubud, Sanur. Rental yields, PBG/SLF permit checks, on-site video.`,
+      description: `${n} villas for sale in Bali${from && to ? ` from ${from} to ${to}` : from ? ` from ${from}` : ''}${dev ? ` from ${dev} developers` : ''}. Pererenan, Uluwatu, Ubud, Sanur. Rental data, PBG/SLF permit status, on-site video.`,
     },
     apartments: {
       title: `Bali Apartments for Sale — ${n} Listings${from ? ` from ${from}` : ''} | Balinsky`,
-      description: `${n} apartments for sale in verified Bali complexes. Berawa, Pererenan, Pandawa. Management companies, deals and instalments.`,
+      description: `${n} apartments for sale in Bali complexes. Berawa, Pererenan, Pandawa. Management companies, deals and instalments.`,
     },
     complexes: {
-      title: `${n} residential complexes in Bali with PBG/SLF checks | Balinsky`,
-      description: `${n} Bali complexes with infrastructure. PBG/SLF/RDTR checks, real handover dates${dev ? `, deals from ${dev} developers` : ''}.`,
+      title: `${n} residential complexes in Bali with PBG/SLF status | Balinsky`,
+      description: `${n} Bali complexes with infrastructure. PBG/SLF status and land zone, handover dates${dev ? `, deals from ${dev} developers` : ''}.`,
     },
     developers: {
       // «bali property developer(s)» landed on a random developer's page —
@@ -108,16 +108,16 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
 
   const id: Record<CategoryKind, CategoryMeta> = {
     villas: {
-      title: `${n} vila di Bali${from ? ` mulai ${from}` : ''} dengan cek PBG/SLF | Balinsky`,
-      description: `${n} vila di Bali${from && to ? ` dari ${from} hingga ${to}` : from ? ` mulai ${from}` : ''}${dev ? ` dari ${dev} pengembang tepercaya` : ''}. Pererenan, Uluwatu, Ubud, Sanur. Video langsung dari lokasi, kontak langsung.`,
+      title: `${n} vila di Bali${from ? ` mulai ${from}` : ''} dengan status PBG/SLF | Balinsky`,
+      description: `${n} vila di Bali${from && to ? ` dari ${from} hingga ${to}` : from ? ` mulai ${from}` : ''}${dev ? ` dari ${dev} pengembang` : ''}. Pererenan, Uluwatu, Ubud, Sanur. Video langsung dari lokasi, kontak langsung.`,
     },
     apartments: {
       title: `${n} apartemen di Bali${from ? ` mulai ${from}` : ''} | Balinsky`,
-      description: `${n} apartemen di kompleks tepercaya. Berawa, Pererenan, Pandawa. Perusahaan pengelola, promo dan cicilan.`,
+      description: `${n} apartemen di kompleks. Berawa, Pererenan, Pandawa. Perusahaan pengelola, promo dan cicilan.`,
     },
     complexes: {
-      title: `${n} kompleks hunian di Bali dengan cek PBG/SLF | Balinsky`,
-      description: `${n} kompleks di Bali dengan infrastruktur. Cek PBG/SLF/RDTR, tanggal serah terima nyata${dev ? `, promo dari ${dev} pengembang` : ''}.`,
+      title: `${n} kompleks hunian di Bali dengan status PBG/SLF | Balinsky`,
+      description: `${n} kompleks di Bali dengan infrastruktur. Status PBG/SLF dan zona tanah, tanggal serah terima${dev ? `, promo dari ${dev} pengembang` : ''}.`,
     },
     developers: {
       title: `${n} pengembang properti di Bali dengan peringkat | Balinsky`,
@@ -131,16 +131,16 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
 
   const fr: Record<CategoryKind, CategoryMeta> = {
     villas: {
-      title: `${n} villas à Bali${from ? ` à partir de ${from}` : ''} avec vérification PBG/SLF | Balinsky`,
-      description: `${n} villas à Bali${from && to ? ` de ${from} à ${to}` : from ? ` à partir de ${from}` : ''}${dev ? ` de ${dev} promoteurs vérifiés` : ''}. Pererenan, Uluwatu, Ubud, Sanur. Vidéo sur place, contacts directs.`,
+      title: `${n} villas à Bali${from ? ` à partir de ${from}` : ''} avec statut PBG/SLF | Balinsky`,
+      description: `${n} villas à Bali${from && to ? ` de ${from} à ${to}` : from ? ` à partir de ${from}` : ''}${dev ? ` de ${dev} promoteurs` : ''}. Pererenan, Uluwatu, Ubud, Sanur. Vidéo sur place, contacts directs.`,
     },
     apartments: {
       title: `${n} appartements à Bali${from ? ` à partir de ${from}` : ''} | Balinsky`,
-      description: `${n} appartements dans des résidences vérifiées. Berawa, Pererenan, Pandawa. Sociétés de gestion, offres et paiements échelonnés.`,
+      description: `${n} appartements dans des résidences. Berawa, Pererenan, Pandawa. Sociétés de gestion, offres et paiements échelonnés.`,
     },
     complexes: {
-      title: `${n} résidences à Bali avec vérification PBG/SLF | Balinsky`,
-      description: `${n} résidences à Bali avec infrastructures. Vérification PBG/SLF/RDTR, dates de livraison réelles${dev ? `, offres de ${dev} promoteurs` : ''}.`,
+      title: `${n} résidences à Bali avec statut PBG/SLF | Balinsky`,
+      description: `${n} résidences à Bali avec infrastructures. Statut PBG/SLF et zone du terrain, dates de livraison${dev ? `, offres de ${dev} promoteurs` : ''}.`,
     },
     developers: {
       title: `Promoteur immobilier à Bali : ${n} promoteurs notés | Balinsky`,
@@ -154,16 +154,16 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
 
   const de: Record<CategoryKind, CategoryMeta> = {
     villas: {
-      title: `${n} Villen auf Bali${from ? ` ab ${from}` : ''} mit PBG/SLF-Prüfung | Balinsky`,
-      description: `${n} Villen auf Bali${from && to ? ` von ${from} bis ${to}` : from ? ` ab ${from}` : ''}${dev ? ` von ${dev} geprüften Bauträgern` : ''}. Pererenan, Uluwatu, Ubud, Sanur. Video vor Ort, direkte Kontakte.`,
+      title: `${n} Villen auf Bali${from ? ` ab ${from}` : ''} mit PBG/SLF-Status | Balinsky`,
+      description: `${n} Villen auf Bali${from && to ? ` von ${from} bis ${to}` : from ? ` ab ${from}` : ''}${dev ? ` von ${dev} Bauträgern` : ''}. Pererenan, Uluwatu, Ubud, Sanur. Video vor Ort, direkte Kontakte.`,
     },
     apartments: {
       title: `${n} Apartments auf Bali${from ? ` ab ${from}` : ''} | Balinsky`,
-      description: `${n} Apartments in geprüften Anlagen. Berawa, Pererenan, Pandawa. Hausverwaltungen, Angebote und Ratenzahlung.`,
+      description: `${n} Apartments in Wohnanlagen. Berawa, Pererenan, Pandawa. Hausverwaltungen, Angebote und Ratenzahlung.`,
     },
     complexes: {
-      title: `${n} Wohnanlagen auf Bali mit PBG/SLF-Prüfung | Balinsky`,
-      description: `${n} Bali-Anlagen mit Infrastruktur. PBG/SLF/RDTR-Prüfung, echte Übergabetermine${dev ? `, Angebote von ${dev} Bauträgern` : ''}.`,
+      title: `${n} Wohnanlagen auf Bali mit PBG/SLF-Status | Balinsky`,
+      description: `${n} Bali-Anlagen mit Infrastruktur. PBG/SLF-Status und Grundstückszone, Übergabetermine${dev ? `, Angebote von ${dev} Bauträgern` : ''}.`,
     },
     developers: {
       title: `${n} Bali-Bauträger mit Bewertung | Balinsky`,
@@ -177,16 +177,16 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
 
   const zh: Record<CategoryKind, CategoryMeta> = {
     villas: {
-      title: `${n} 套巴厘岛别墅${from ? `，${from} 起` : ''}，含 PBG/SLF 核验 | Balinsky`,
-      description: `${n} 套巴厘岛别墅${from && to ? `，${from} 至 ${to}` : from ? `，${from} 起` : ''}${dev ? `，来自 ${dev} 家已核验开发商` : ''}。Pererenan、Uluwatu、Ubud、Sanur。实地视频，直接联系。`,
+      title: `${n} 套巴厘岛别墅${from ? `，${from} 起` : ''}，附 PBG/SLF 状态 | Balinsky`,
+      description: `${n} 套巴厘岛别墅${from && to ? `，${from} 至 ${to}` : from ? `，${from} 起` : ''}${dev ? `，来自 ${dev} 家开发商` : ''}。Pererenan、Uluwatu、Ubud、Sanur。实地视频，直接联系。`,
     },
     apartments: {
       title: `${n} 套巴厘岛公寓${from ? `，${from} 起` : ''} | Balinsky`,
-      description: `${n} 套已核验社区公寓。Berawa、Pererenan、Pandawa。物业管理公司，优惠与分期。`,
+      description: `${n} 套社区公寓。Berawa、Pererenan、Pandawa。物业管理公司，优惠与分期。`,
     },
     complexes: {
-      title: `${n} 个巴厘岛住宅区，含 PBG/SLF 核验 | Balinsky`,
-      description: `${n} 个配套齐全的巴厘岛住宅区。PBG/SLF/RDTR 核验，真实交房日期${dev ? `，${dev} 家开发商优惠` : ''}。`,
+      title: `${n} 个巴厘岛住宅区，附 PBG/SLF 状态 | Balinsky`,
+      description: `${n} 个配套齐全的巴厘岛住宅区。PBG/SLF 状态与土地分区，交房日期${dev ? `，${dev} 家开发商优惠` : ''}。`,
     },
     developers: {
       title: `${n} 家巴厘岛开发商及评级 | Balinsky`,
@@ -200,16 +200,16 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
 
   const nl: Record<CategoryKind, CategoryMeta> = {
     villas: {
-      title: `${n} villa's op Bali${from ? ` vanaf ${from}` : ''} met PBG/SLF-controle | Balinsky`,
-      description: `${n} villa's op Bali${from && to ? ` van ${from} tot ${to}` : from ? ` vanaf ${from}` : ''}${dev ? ` van ${dev} geverifieerde ontwikkelaars` : ''}. Pererenan, Uluwatu, Ubud, Sanur. Video ter plaatse, directe contacten.`,
+      title: `${n} villa's op Bali${from ? ` vanaf ${from}` : ''} met PBG/SLF-status | Balinsky`,
+      description: `${n} villa's op Bali${from && to ? ` van ${from} tot ${to}` : from ? ` vanaf ${from}` : ''}${dev ? ` van ${dev} ontwikkelaars` : ''}. Pererenan, Uluwatu, Ubud, Sanur. Video ter plaatse, directe contacten.`,
     },
     apartments: {
       title: `${n} appartementen op Bali${from ? ` vanaf ${from}` : ''} | Balinsky`,
-      description: `${n} appartementen in geverifieerde complexen. Berawa, Pererenan, Pandawa. Beheermaatschappijen, aanbiedingen en termijnbetaling.`,
+      description: `${n} appartementen in complexen. Berawa, Pererenan, Pandawa. Beheermaatschappijen, aanbiedingen en termijnbetaling.`,
     },
     complexes: {
-      title: `${n} wooncomplexen op Bali met PBG/SLF-controle | Balinsky`,
-      description: `${n} Bali-complexen met voorzieningen. PBG/SLF/RDTR-controle, echte opleverdata${dev ? `, aanbiedingen van ${dev} ontwikkelaars` : ''}.`,
+      title: `${n} wooncomplexen op Bali met PBG/SLF-status | Balinsky`,
+      description: `${n} Bali-complexen met voorzieningen. PBG/SLF-status en grondzone, opleverdata${dev ? `, aanbiedingen van ${dev} ontwikkelaars` : ''}.`,
     },
     developers: {
       title: `${n} vastgoedontwikkelaars op Bali met beoordeling | Balinsky`,
@@ -224,16 +224,16 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
   // Balinese — best-effort; content otherwise falls back to en/ru.
   const ban: Record<CategoryKind, CategoryMeta> = {
     villas: {
-      title: `${n} vila ring Bali${from ? ` saking ${from}` : ''} sareng cek PBG/SLF | Balinsky`,
-      description: `${n} vila ring Bali${from && to ? ` saking ${from} kantos ${to}` : from ? ` saking ${from}` : ''}${dev ? ` saking ${dev} pangwangun sané kacihnayang` : ''}. Pererenan, Uluwatu, Ubud, Sanur. Video ring genah, kontak langsung.`,
+      title: `${n} vila ring Bali${from ? ` saking ${from}` : ''} sareng status PBG/SLF | Balinsky`,
+      description: `${n} vila ring Bali${from && to ? ` saking ${from} kantos ${to}` : from ? ` saking ${from}` : ''}${dev ? ` saking ${dev} pangwangun` : ''}. Pererenan, Uluwatu, Ubud, Sanur. Video ring genah, kontak langsung.`,
     },
     apartments: {
       title: `${n} apartemen ring Bali${from ? ` saking ${from}` : ''} | Balinsky`,
-      description: `${n} apartemen ring kompleks sané kacihnayang. Berawa, Pererenan, Pandawa. Perusahaan pangelola, promo miwah cicilan.`,
+      description: `${n} apartemen ring kompleks. Berawa, Pererenan, Pandawa. Perusahaan pangelola, promo miwah cicilan.`,
     },
     complexes: {
-      title: `${n} kompleks umah ring Bali sareng cek PBG/SLF | Balinsky`,
-      description: `${n} kompleks ring Bali sareng infrastruktur. Cek PBG/SLF/RDTR, tanggal serah terima sujati${dev ? `, promo saking ${dev} pangwangun` : ''}.`,
+      title: `${n} kompleks umah ring Bali sareng status PBG/SLF | Balinsky`,
+      description: `${n} kompleks ring Bali sareng infrastruktur. Status PBG/SLF lan zona tanah, tanggal serah terima${dev ? `, promo saking ${dev} pangwangun` : ''}.`,
     },
     developers: {
       title: `${n} pangwangun ring Bali sareng peringkat | Balinsky`,
@@ -247,16 +247,16 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
 
   const pl: Record<CategoryKind, CategoryMeta> = {
     villas: {
-      title: `${n} willi na Bali${from ? ` od ${from}` : ''} ze sprawdzeniem PBG/SLF | Balinsky`,
-      description: `${n} willi na Bali${from && to ? ` od ${from} do ${to}` : from ? ` od ${from}` : ''}${dev ? ` od ${dev} zweryfikowanych deweloperów` : ''}. Pererenan, Uluwatu, Ubud, Sanur. Wideo z miejsca, bezpośredni kontakt.`,
+      title: `${n} willi na Bali${from ? ` od ${from}` : ''} ze statusem PBG/SLF | Balinsky`,
+      description: `${n} willi na Bali${from && to ? ` od ${from} do ${to}` : from ? ` od ${from}` : ''}${dev ? ` od ${dev} deweloperów` : ''}. Pererenan, Uluwatu, Ubud, Sanur. Wideo z miejsca, bezpośredni kontakt.`,
     },
     apartments: {
       title: `${n} apartamentów na Bali${from ? ` od ${from}` : ''} | Balinsky`,
-      description: `${n} apartamentów w zweryfikowanych kompleksach. Berawa, Pererenan, Pandawa. Firmy zarządzające, promocje i raty.`,
+      description: `${n} apartamentów w kompleksach. Berawa, Pererenan, Pandawa. Firmy zarządzające, promocje i raty.`,
     },
     complexes: {
-      title: `${n} kompleksów mieszkaniowych na Bali ze sprawdzeniem PBG/SLF | Balinsky`,
-      description: `${n} kompleksów na Bali z infrastrukturą. Sprawdzenie PBG/SLF/RDTR, realne terminy oddania${dev ? `, promocje od ${dev} deweloperów` : ''}.`,
+      title: `${n} kompleksów mieszkaniowych na Bali ze statusem PBG/SLF | Balinsky`,
+      description: `${n} kompleksów na Bali z infrastrukturą. Status PBG/SLF i strefa gruntu, terminy oddania${dev ? `, promocje od ${dev} deweloperów` : ''}.`,
     },
     developers: {
       title: `${n} deweloperów na Bali z oceną | Balinsky`,
@@ -270,16 +270,16 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
 
   const uk: Record<CategoryKind, CategoryMeta> = {
     villas: {
-      title: `${n} вілл на Балі${from ? ` від ${from}` : ''} з перевіркою PBG/SLF | Balinsky`,
-      description: `${n} вілл на Балі${from && to ? ` від ${from} до ${to}` : from ? ` від ${from}` : ''}${dev ? ` від ${dev} перевірених забудовників` : ''}. Pererenan, Uluwatu, Ubud, Sanur. Відео з місця, прямі контакти.`,
+      title: `${n} вілл на Балі${from ? ` від ${from}` : ''} зі статусом PBG/SLF | Balinsky`,
+      description: `${n} вілл на Балі${from && to ? ` від ${from} до ${to}` : from ? ` від ${from}` : ''}${dev ? ` від ${dev} забудовників` : ''}. Pererenan, Uluwatu, Ubud, Sanur. Відео з місця, прямі контакти.`,
     },
     apartments: {
       title: `${n} апартаментів на Балі${from ? ` від ${from}` : ''} | Balinsky`,
-      description: `${n} апартаментів у перевірених комплексах. Berawa, Pererenan, Pandawa. Керуючі компанії, акції та розстрочки.`,
+      description: `${n} апартаментів у комплексах. Berawa, Pererenan, Pandawa. Керуючі компанії, акції та розстрочки.`,
     },
     complexes: {
-      title: `${n} житлових комплексів на Балі з перевіркою PBG/SLF | Balinsky`,
-      description: `${n} комплексів на Балі з інфраструктурою. Перевірка PBG/SLF/RDTR, реальні терміни здачі${dev ? `, акції від ${dev} забудовників` : ''}.`,
+      title: `${n} житлових комплексів на Балі зі статусом PBG/SLF | Balinsky`,
+      description: `${n} комплексів на Балі з інфраструктурою. Статус PBG/SLF і зона землі, терміни здачі${dev ? `, акції від ${dev} забудовників` : ''}.`,
     },
     developers: {
       title: `${n} забудовників на Балі з рейтингом | Balinsky`,
