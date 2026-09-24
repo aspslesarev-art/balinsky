@@ -677,13 +677,19 @@ export function getDistrictCommercialMeta(
   const heading = countWord
     ? `Buy ${n.sing} in ${copy.name}, Bali — ${countWord} ${YEAR}`
     : `Buy ${n.sing} in ${copy.name}, Bali — ${YEAR} catalogue`
-  const title = `Buy ${n.sing.replace(/^(a |an )/, '')} in ${copy.name}, Bali — ${YEAR} prices | Balinsky`
-  const descParts: string[] = [`Buy ${n.sing} in ${copy.name}, Bali`]
-  if (countWord) descParts.push(`— ${countWord} from developers`)
+  // English searchers type «villas for sale in canggu», not «buy villa in
+  // canggu» — the title leads with that phrase (it also reads as English,
+  // which «Buy villa in …» did not).
+  const forSale = n.plural(2).charAt(0).toUpperCase() + n.plural(2).slice(1)
+  const title = `${forSale} for Sale in ${copy.name}, Bali — ${YEAR} Prices | Balinsky`
+  const descParts: string[] = countWord
+    ? [`${countWord} for sale in ${copy.name}, Bali, listed by developers`]
+    : [`${forSale} for sale in ${copy.name}, Bali, listed by developers`]
   const tail: string[] = []
   if (priceFrom) tail.push(`prices ${priceFrom.toLowerCase()}`)
   if (yieldRange) tail.push(`yield ${yieldRange}`)
   tail.push('leasehold and freehold')
-  const description = `${descParts.join(' ')}. ${tail.join(', ')}. Permits verified, on-the-ground video.`
+  const tailText = tail.join(', ')
+  const description = `${descParts.join(' ')}. ${tailText.charAt(0).toUpperCase()}${tailText.slice(1)}. Permits verified, on-the-ground video.`
   return { title, heading, description }
 }

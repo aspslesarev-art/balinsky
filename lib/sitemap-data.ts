@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { listAllCanonicalPaths as listApartmentPaths, parseCleanPath as parseAptPath } from '@/lib/seo-routes'
 import { listAllCanonicalPaths as listComplexPaths, parseCleanPath as parseComplexPath } from '@/lib/complex-seo-routes'
 import { listAllCanonicalPaths as listVillaPaths, parseCleanPath as parseVillaPath } from '@/lib/villa-seo-routes'
+import { hubLanguages } from '@/lib/en-hub-routes'
 import { loadAll as loadAllVillas, passes as villaPasses } from '@/app/ru/villy/_lib'
 import { loadAll as loadAllApartments, passes as apartmentPasses } from '@/app/ru/apartamenty/_lib'
 import { loadAll as loadAllComplexes, passes as complexPasses } from '@/app/ru/zhilye-kompleksy/_lib'
@@ -113,6 +114,22 @@ function pairEntry(args: {
   return byLang
     .filter(([lang]) => !langs || langs.includes(lang))
     .map(([, url]) => ({ url, lastModified, changeFrequency, priority, alternates }))
+}
+
+// Programmatic catalog hub (district / bedrooms / status / …) — exists in
+// RU and, since the EN hub routes, in EN (lib/en-hub-routes.ts). The other
+// locales have no hub routes, so the cluster is just the RU↔EN pair.
+function hubEntries(ruPath: string, lastModified: Date): SitemapEntry[] {
+  const common = { lastModified, changeFrequency: 'weekly' as const, priority: 0.7 }
+  // The bare section root (/ru/villy) is already emitted by TOP_PAIRS with
+  // the full ten-locale cluster — keep this entry as it was.
+  if (ruPath.split('/').length <= 3) return [{ url: `${SITE_URL}${ruPath}`, ...common }]
+  const languages = hubLanguages(ruPath)
+  const withAlt = { ...common, alternates: { languages } }
+  return [
+    { url: `${SITE_URL}${ruPath}`, ...withAlt },
+    ...(languages.en ? [{ url: languages.en, ...withAlt }] : []),
+  ]
 }
 
 // Pull developer slugs straight from Supabase. Lightweight one-shot read at
@@ -429,18 +446,18 @@ async function buildAll(): Promise<Categorized> {
     // Best-effort — partial sitemap still ships.
   }
 
-  // Filter-canonical pages — RU-only (no /en mirror for canonical sub-routes).
+  // Filter-canonical pages — RU + the EN mirror (/en/villas/canggu/2-bedroom).
   // Drop combos with < MIN_OBJECTS_PER_FILTER_PAGE matches.
   let apartments: SitemapEntry[] = []
   let complexes: SitemapEntry[] = []
   let villas: SitemapEntry[] = []
   if (vData && aData && cData) {
     apartments = filterIndexablePaths(listApartmentPaths(), '/ru/apartamenty', aData.enriched, parseAptPath, apartmentPasses)
-      .map(path => ({ url: `${SITE_URL}${path}`, lastModified: now, changeFrequency: 'weekly' as const, priority: 0.7 }))
+      .flatMap(path => hubEntries(path, now))
     complexes = filterIndexablePaths(listComplexPaths(), '/ru/zhilye-kompleksy', cData.enriched, parseComplexPath, complexPasses)
       .map(path => ({ url: `${SITE_URL}${path}`, lastModified: now, changeFrequency: 'weekly' as const, priority: 0.7 }))
     villas = filterIndexablePaths(listVillaPaths(), '/ru/villy', vData.enriched, parseVillaPath, villaPasses)
-      .map(path => ({ url: `${SITE_URL}${path}`, lastModified: now, changeFrequency: 'weekly' as const, priority: 0.7 }))
+      .flatMap(path => hubEntries(path, now))
   } else {
     apartments = listApartmentPaths().map(path => ({ url: `${SITE_URL}${path}`, lastModified: now, changeFrequency: 'weekly' as const, priority: 0.7 }))
     complexes = listComplexPaths().map(path => ({ url: `${SITE_URL}${path}`, lastModified: now, changeFrequency: 'weekly' as const, priority: 0.7 }))

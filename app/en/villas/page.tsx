@@ -1,7 +1,9 @@
+import { permanentRedirect } from 'next/navigation'
 import { VillasCatalog } from '../../ru/villy/_catalog'
 import { parseQueryFilters, buildMetadataEn, hasAnyFilter, loadAll } from '../../ru/villy/_lib'
 import { buildCanonicalPath } from '@/lib/villa-seo-routes'
 import { generateCategoryMeta } from '@/lib/seo'
+import { ruHubToEn } from '@/lib/en-hub-routes'
 import { villaCategoryStats } from '@/lib/category-stats'
 
 type SP = Promise<Record<string, string | undefined>>
@@ -27,5 +29,12 @@ export async function generateMetadata({ searchParams }: { searchParams: SP }) {
 export default async function Page({ searchParams }: { searchParams: SP }) {
   const sp = await searchParams
   const filters = parseQueryFilters(sp)
+  // Same as RU: a filter combo that has a clean hub URL 308s onto it, so
+  // ?district=… links consolidate on the indexable /en/… path.
+  const canonical = buildCanonicalPath(filters)
+  const enCanonical = canonical ? ruHubToEn(canonical) : null
+  if (enCanonical && canonical !== '/ru/villy' && hasAnyFilter(filters)) {
+    permanentRedirect(enCanonical)
+  }
   return <VillasCatalog filters={filters} page={1} basePath="/en/villas" lang="en" />
 }

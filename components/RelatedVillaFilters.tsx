@@ -2,7 +2,8 @@ import Link from 'next/link'
 import type { VillaFilterState, VillaFilterOptions } from '@/app/ru/villy/_lib'
 import { buildCanonicalPath, STYLE_TO_SLUG } from '@/lib/villa-seo-routes'
 import { DISTRICT_TO_SLUG, BEDROOM_TO_SLUG } from '@/lib/seo-routes'
-import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
+import { localizeHubPath } from '@/lib/en-hub-routes'
 
 const COPY = {
   ru: {
@@ -98,7 +99,7 @@ export function RelatedVillaFilters({ filters, options, lang = 'ru' }: {
 }) {
   const c = pickCopy(COPY, lang)
   function rewrite(p: string): string {
-    return switchLangPath(p, lang)
+    return localizeHubPath(p, lang)
   }
   // Build a candidate filter, ask buildCanonicalPath for the canonical URL.
   // If it's not buildable (out of slug map etc.), the link is dropped.

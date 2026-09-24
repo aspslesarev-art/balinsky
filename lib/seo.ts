@@ -80,19 +80,24 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
 
   const en: Record<CategoryKind, CategoryMeta> = {
     villas: {
-      title: `${n} villas in Bali${from ? ` from ${from}` : ''} with PBG/SLF checks | Balinsky`,
-      description: `${n} villas in Bali${from && to ? ` from ${from} to ${to}` : from ? ` from ${from}` : ''}${dev ? ` from ${dev} verified developers` : ''}. Pererenan, Uluwatu, Ubud, Sanur. On-site video, direct contacts.`,
+      // Leads with «bali villas for sale» — the phrase English buyers type;
+      // the old «341 villas in Bali from …» never said «for sale».
+      title: `Bali Villas for Sale — ${n} Listings${from ? ` from ${from}` : ''} | Balinsky`,
+      description: `${n} villas for sale in Bali${from && to ? ` from ${from} to ${to}` : from ? ` from ${from}` : ''}${dev ? ` from ${dev} verified developers` : ''}. Pererenan, Uluwatu, Ubud, Sanur. Rental yields, PBG/SLF permit checks, on-site video.`,
     },
     apartments: {
-      title: `${n} apartments in Bali${from ? ` from ${from}` : ''} | Balinsky`,
-      description: `${n} apartments in verified complexes. Berawa, Pererenan, Pandawa. Management companies, rental yield 8–15%, deals and instalments.`,
+      title: `Bali Apartments for Sale — ${n} Listings${from ? ` from ${from}` : ''} | Balinsky`,
+      description: `${n} apartments for sale in verified Bali complexes. Berawa, Pererenan, Pandawa. Management companies, rental yield 8–15%, deals and instalments.`,
     },
     complexes: {
       title: `${n} residential complexes in Bali with PBG/SLF checks | Balinsky`,
       description: `${n} Bali complexes with infrastructure. PBG/SLF/RDTR checks, real handover dates${dev ? `, deals from ${dev} developers` : ''}.`,
     },
     developers: {
-      title: `${n} Bali property developers with ratings | Balinsky`,
+      // «bali property developer(s)» landed on a random developer's page —
+      // the index should own that phrase. Ratings are hidden on the page, so
+      // the title no longer promises them.
+      title: `Bali Property Developers — ${n} Verified Developers & Projects | Balinsky`,
       description: `${n} property developers in Bali rated on 4 criteria: quality, experience, engineering, management. Completed projects, active builds, deals.`,
     },
     rental: {

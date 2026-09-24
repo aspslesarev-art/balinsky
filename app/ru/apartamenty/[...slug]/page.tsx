@@ -6,6 +6,7 @@ import {
   stripPagination,
   buildCanonicalPath,
 } from '@/lib/seo-routes'
+import { hubLanguages } from '@/lib/en-hub-routes'
 
 type Params = Promise<{ slug: string[] }>
 
@@ -31,6 +32,8 @@ export async function generateMetadata({ params }: { params: Params }) {
     totalCount = probe.totalCount
   } catch {}
   const meta = buildMetadata(filters, { canonicalPath: canonical, noIndex: false, totalCount })
+  // Reciprocal RU↔EN hreflang — the EN mirror lives at /en/…/<english slugs>.
+  if (page === 1) meta.alternates = { canonical, languages: hubLanguages(baseCanonical) }
   if (page > 1) {
     const baseTitle =
       typeof meta.title === 'string' ? meta.title : 'Апартаменты | Balinsky'

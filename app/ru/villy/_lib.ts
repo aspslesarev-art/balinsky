@@ -918,8 +918,11 @@ export function buildHeadingEn(f: VillaFilterState): string {
   else s += ' in Bali'
 
   if (f.developer.length === 1) s += ` by ${f.developer[0]}`
-  if (f.style.length === 1) s += ` in ${f.style[0]} style`
-  else if (f.style.length > 1) s += ` in ${f.style.join(', ')} style`
+  // Style values are the Russian labels from the classifier — translate,
+  // or the EN H1/title read «in Современный минимализм style».
+  const styles = f.style.map(st => facetLabel('style', st, 'en'))
+  if (styles.length === 1) s += ` in ${styles[0]} style`
+  else if (styles.length > 1) s += ` in ${styles.join(', ')} style`
   if (f.priceMin != null && f.priceMax != null) s += `, $${Math.round(f.priceMin).toLocaleString('en-US')} – $${Math.round(f.priceMax).toLocaleString('en-US')}`
   else if (f.priceMax != null) s += `, up to $${Math.round(f.priceMax).toLocaleString('en-US')}`
   else if (f.priceMin != null) s += `, from $${Math.round(f.priceMin).toLocaleString('en-US')}`
@@ -928,7 +931,26 @@ export function buildHeadingEn(f: VillaFilterState): string {
 
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
-export function buildTitleEn(f: VillaFilterState): string { return buildHeadingEn(f) + ' | Balinsky' }
+// Titles for the EN hubs lead with the phrase people search
+// («2-bedroom villas for sale in canggu»); the H1 keeps the descriptive form.
+// Combos outside the hub dimensions fall back to the heading.
+export function buildTitleEn(f: VillaFilterState): string {
+  const hubOnly = f.developer.length === 0 && f.permit.length === 0 && f.year.length === 0
+    && f.priceMin == null && f.priceMax == null && f.q.trim().length === 0
+    && f.status.length <= 1 && f.bedrooms.length <= 1 && f.style.length <= 1 && f.district.length <= 1
+  if (!hubOnly) return buildHeadingEn(f) + ' | Balinsky'
+  const words: string[] = []
+  if (f.status.length === 1) {
+    const st = f.status[0]
+    words.push(st === 'building' ? 'Under-Construction' : st === 'built' ? 'Completed' : 'Off-Plan')
+  }
+  if (f.bedrooms.length === 1) words.push(`${f.bedrooms[0]}-Bedroom`)
+  if (f.style.length === 1) {
+    words.push(facetLabel('style', f.style[0], 'en').replace(/\b\w/g, ch => ch.toUpperCase()))
+  }
+  const where = f.district.length === 1 ? `${f.district[0]}, Bali` : 'Bali'
+  return `${[...words, 'Villas'].join(' ')} for Sale in ${where} | Balinsky`
+}
 
 // Native-language H1 for id/fr/de/zh/nl/ban. Qualifiers hang off a
 // "·"-separated tail so we sidestep per-language adjective agreement while
@@ -990,7 +1012,7 @@ export function buildHeadingLoc(f: VillaFilterState, lang: Lang): string {
   }
   if (f.bedrooms.length > 0) clauses.push(`${[...f.bedrooms].sort().join(', ')} ${T.bedroomWord}`)
   if (f.developer.length === 1) clauses.push(`${T.by} ${f.developer[0]}`)
-  if (f.style.length >= 1) clauses.push(`${T.styleWord} ${f.style.join(', ')}`)
+  if (f.style.length >= 1) clauses.push(`${T.styleWord} ${f.style.map(st => facetLabel('style', st, lang)).join(', ')}`)
   if (f.priceMin != null && f.priceMax != null) clauses.push(`${fmtUsdEn(f.priceMin)}–${fmtUsdEn(f.priceMax)}`)
   else if (f.priceMax != null) clauses.push(`${T.upTo} ${fmtUsdEn(f.priceMax)}`)
   else if (f.priceMin != null) clauses.push(`${T.from} ${fmtUsdEn(f.priceMin)}`)
@@ -1005,10 +1027,8 @@ export function buildDescriptionEn(f: VillaFilterState, totalCount?: number): st
     f.district.length === 1 ? `in ${f.district[0]}`
     : f.district.length > 1 ? `in ${f.district.join(', ')}`
     : 'in Bali'
-  const countPart = typeof totalCount === 'number' && totalCount > 0
-    ? `${totalCount} ${noun}` : noun.charAt(0).toUpperCase() + noun.slice(1)
-  let s = `${countPart} ${where}`
-  if (f.style.length === 1) s += `, ${f.style[0]} style`
+  let s = `${noun.charAt(0).toUpperCase()}${noun.slice(1)} for sale ${where}`
+  if (f.style.length === 1) s += `, ${facetLabel('style', f.style[0], 'en')} style`
   if (f.status.length === 1) {
     const lbl = f.status[0] === 'building' ? 'under construction'
       : f.status[0] === 'built' ? 'completed' : 'planned'
@@ -1017,7 +1037,11 @@ export function buildDescriptionEn(f: VillaFilterState, totalCount?: number): st
   if (f.priceMin != null && f.priceMax != null) s += `, prices $${Math.round(f.priceMin).toLocaleString('en-US')}–$${Math.round(f.priceMax).toLocaleString('en-US')}`
   else if (f.priceMax != null) s += `, up to $${Math.round(f.priceMax).toLocaleString('en-US')}`
   else if (f.priceMin != null) s += `, from $${Math.round(f.priceMin).toLocaleString('en-US')}`
-  return `${s}. Photos, current prices, permits, developer contacts.`
+  // «6 2-bedroom villas» read badly — the count moves after the colon.
+  const count = typeof totalCount === 'number' && totalCount > 0
+    ? `${totalCount} ${totalCount === 1 ? 'listing' : 'listings'} with photos`
+    : 'Photos'
+  return `${s}: ${count}, current prices, permits, developer contacts.`
 }
 export function buildMetadataEn(
   f: VillaFilterState,

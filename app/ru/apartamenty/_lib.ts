@@ -782,7 +782,25 @@ export function buildHeadingEn(f: FilterState): string {
   }
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
-export function buildTitleEn(f: FilterState): string { return buildHeadingEn(f) + ' | Balinsky' }
+// Titles for the EN hubs lead with the phrase people search
+// («2-bedroom apartments for sale in uluwatu»); the H1 keeps the descriptive
+// form. Combos outside the hub dimensions fall back to the heading.
+export function buildTitleEn(f: FilterState): string {
+  const hubOnly = f.developer.length === 0 && f.permit.length === 0 && f.floor.length === 0
+    && f.features.length === 0 && !f.goal && f.q.trim().length === 0
+    && f.status.length <= 1 && f.bedrooms.length <= 1 && f.district.length <= 1
+  if (!hubOnly) return buildHeadingEn(f) + ' | Balinsky'
+  const words: string[] = []
+  if (f.status.length === 1) words.push(f.status[0] === 'building' ? 'Under-Construction' : 'Completed')
+  if (f.bedrooms.length === 1) words.push(`${f.bedrooms[0]}-Bedroom`)
+  const k = (n: number) => `$${Math.round(n / 1000)}K`
+  const price = f.priceMin != null && f.priceMax != null ? ` ${k(f.priceMin)}–${k(f.priceMax)}`
+    : f.priceMax != null ? ` Under ${k(f.priceMax)}`
+    : f.priceMin != null ? ` Over ${k(f.priceMin)}`
+    : ''
+  const where = f.district.length === 1 ? `${f.district[0]}, Bali` : 'Bali'
+  return `${[...words, 'Apartments'].join(' ')} for Sale in ${where}${price} | Balinsky`
+}
 
 // Native-language H1 for id/fr/de/zh/nl/ban. Qualifiers hang off a
 // "·"-separated tail to avoid per-language adjective agreement while keeping
@@ -855,9 +873,7 @@ export function buildDescriptionEn(f: FilterState, totalCount?: number): string 
     f.district.length === 1 ? `in ${f.district[0]}`
     : f.district.length > 1 ? `in ${f.district.join(', ')}`
     : 'in Bali'
-  const countPart = typeof totalCount === 'number' && totalCount > 0
-    ? `${totalCount} ${noun}` : noun.charAt(0).toUpperCase() + noun.slice(1)
-  let s = `${countPart} ${where}`
+  let s = `${noun.charAt(0).toUpperCase()}${noun.slice(1)} for sale ${where}`
   if (f.status.length === 1) {
     const lbl = f.status[0] === 'building' ? 'under construction'
       : f.status[0] === 'built' ? 'completed' : 'planned'
@@ -866,7 +882,11 @@ export function buildDescriptionEn(f: FilterState, totalCount?: number): string 
   if (f.priceMin != null && f.priceMax != null) s += `, $${Math.round(f.priceMin).toLocaleString('en-US')}–$${Math.round(f.priceMax).toLocaleString('en-US')}`
   else if (f.priceMax != null) s += `, up to $${Math.round(f.priceMax).toLocaleString('en-US')}`
   else if (f.priceMin != null) s += `, from $${Math.round(f.priceMin).toLocaleString('en-US')}`
-  return `${s}. Photos, current prices, permits, developer contacts.`
+  // «6 2-bedroom apartments» read badly — the count moves after the colon.
+  const count = typeof totalCount === 'number' && totalCount > 0
+    ? `${totalCount} ${totalCount === 1 ? 'listing' : 'listings'} with photos`
+    : 'Photos'
+  return `${s}: ${count}, current prices, permits, developer contacts.`
 }
 export function buildMetadataEn(f: FilterState, opts: { canonicalPath: string; noIndex: boolean; totalCount?: number }) {
   // Section-root canonical (`/en/apartments`) has a RU twin we can point

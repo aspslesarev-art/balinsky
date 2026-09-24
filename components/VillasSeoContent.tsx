@@ -3,6 +3,7 @@ import type { VillaFilterState } from '@/app/ru/villy/_lib'
 import { STATUS_TO_SLUG } from '@/lib/villa-seo-routes'
 import { DISTRICT_TO_SLUG, BEDROOM_TO_SLUG } from '@/lib/seo-routes'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
+import { localizeHubPath } from '@/lib/en-hub-routes'
 import { getHubLongCopy, isUnfilteredHub } from '@/lib/hub-seo'
 import { getRelatedReading } from '@/lib/hub-seo/related-reading'
 import { HubLongForm } from '@/components/HubLongForm'
@@ -414,7 +415,6 @@ export function VillasSeoContent({
   const currentDistrict = filters.district[0]
   const districts = POPULAR_DISTRICTS.filter(d => d !== currentDistrict).slice(0, 6)
     .map(d => ({ name: d, slug: DISTRICT_TO_SLUG[d] })).filter(x => x.slug)
-  const villasRoot = switchLangPath('/ru/villy', lang)
   const complexesVillasRoot = switchLangPath('/ru/zhilye-kompleksy/villy', lang)
 
   // The long-form block is the hub's ranking material for «купить виллу на
@@ -450,7 +450,7 @@ export function VillasSeoContent({
             {districts.map(d => (
               <li key={d.slug}>
                 <Link
-                  href={`${villasRoot}/${d.slug}`}
+                  href={localizeHubPath(`/ru/villy/${d.slug}`, lang)}
                   className="inline-block px-3 py-1.5 rounded-full bg-[var(--color-card-bg)] border border-[var(--color-border)] text-[13px] text-[var(--color-text)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] transition-colors"
                 >
                   {d.name}
@@ -466,7 +466,7 @@ export function VillasSeoContent({
             {Object.entries(BEDROOM_TO_SLUG).map(([n, slug]) => (
               <li key={slug}>
                 <Link
-                  href={`${villasRoot}/${slug}`}
+                  href={localizeHubPath(`/ru/villy/${slug}`, lang)}
                   className="inline-block px-3 py-1.5 rounded-full bg-[var(--color-card-bg)] border border-[var(--color-border)] text-[13px] text-[var(--color-text)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] transition-colors"
                 >
                   {C.bedroomsLabel(n)}
@@ -475,7 +475,7 @@ export function VillasSeoContent({
             ))}
             <li>
               <Link
-                href={`${villasRoot}/${STATUS_TO_SLUG.building}`}
+                href={localizeHubPath(`/ru/villy/${STATUS_TO_SLUG.building}`, lang)}
                 className="inline-block px-3 py-1.5 rounded-full bg-[var(--color-card-bg)] border border-[var(--color-border)] text-[13px] text-[var(--color-text)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] transition-colors"
               >
                 {C.statusBuilding}
@@ -483,7 +483,7 @@ export function VillasSeoContent({
             </li>
             <li>
               <Link
-                href={`${villasRoot}/${STATUS_TO_SLUG.built}`}
+                href={localizeHubPath(`/ru/villy/${STATUS_TO_SLUG.built}`, lang)}
                 className="inline-block px-3 py-1.5 rounded-full bg-[var(--color-card-bg)] border border-[var(--color-border)] text-[13px] text-[var(--color-text)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] transition-colors"
               >
                 {C.statusBuilt}

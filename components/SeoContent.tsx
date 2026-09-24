@@ -7,7 +7,8 @@ import {
   PRICE_SEGMENTS,
   priceSegmentLabel,
 } from '@/lib/seo-routes'
-import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
+import { localizeHubPath } from '@/lib/en-hub-routes'
 import { getHubLongCopy, isUnfilteredHub } from '@/lib/hub-seo'
 import { getRelatedReading } from '@/lib/hub-seo/related-reading'
 import { HubLongForm } from '@/components/HubLongForm'
@@ -458,7 +459,6 @@ export function SeoContent({
     .slice(0, 6)
     .map(d => ({ name: d, slug: DISTRICT_TO_SLUG[d] }))
     .filter(x => x.slug)
-  const aptRoot = switchLangPath('/ru/apartamenty', lang)
 
   // Ranking material for «купить апартаменты на Бали» / «апартаменты бали
   // цены» — only on the bare list hub, see lib/hub-seo/types.ts.
@@ -493,7 +493,7 @@ export function SeoContent({
             {districts.map(d => (
               <li key={d.slug}>
                 <Link
-                  href={`${aptRoot}/${d.slug}`}
+                  href={localizeHubPath(`/ru/apartamenty/${d.slug}`, lang)}
                   className="inline-block px-3 py-1.5 rounded-full bg-[var(--color-card-bg)] border border-[var(--color-border)] text-[13px] text-[var(--color-text)] hover:border-[var(--color-primary)] transition-colors"
                 >
                   {d.name}
@@ -509,7 +509,7 @@ export function SeoContent({
             {Object.entries(BEDROOM_TO_SLUG).map(([n, slug]) => (
               <li key={slug}>
                 <Link
-                  href={`${aptRoot}/${slug}`}
+                  href={localizeHubPath(`/ru/apartamenty/${slug}`, lang)}
                   className="inline-block px-3 py-1.5 rounded-full bg-[var(--color-card-bg)] border border-[var(--color-border)] text-[13px] text-[var(--color-text)] hover:border-[var(--color-primary)] transition-colors"
                 >
                   {C.bedroomsLabel(n)}
@@ -519,7 +519,7 @@ export function SeoContent({
             {Object.entries(STATUS_TO_SLUG).map(([key, slug]) => (
               <li key={slug}>
                 <Link
-                  href={`${aptRoot}/${slug}`}
+                  href={localizeHubPath(`/ru/apartamenty/${slug}`, lang)}
                   className="inline-block px-3 py-1.5 rounded-full bg-[var(--color-card-bg)] border border-[var(--color-border)] text-[13px] text-[var(--color-text)] hover:border-[var(--color-primary)] transition-colors"
                 >
                   {C.statusLabel(key)}
@@ -529,7 +529,7 @@ export function SeoContent({
             {PRICE_SEGMENTS.slice(0, 3).map(seg => (
               <li key={seg.slug}>
                 <Link
-                  href={`${aptRoot}/${seg.slug}`}
+                  href={localizeHubPath(`/ru/apartamenty/${seg.slug}`, lang)}
                   className="inline-block px-3 py-1.5 rounded-full bg-[var(--color-card-bg)] border border-[var(--color-border)] text-[13px] text-[var(--color-text)] hover:border-[var(--color-primary)] transition-colors"
                 >
                   {priceSegmentLabel(seg, lang)}
