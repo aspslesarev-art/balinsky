@@ -1,0 +1,153 @@
+{
+ "asOf": "2026-09",
+ "source": "Balinsky catalogue (villas for sale) and Balinsky short-term rental database (villas listed for rent, sourced from estatemarket.io); rentals matched to areas by the nearest catalogue properties within 1.5 km.",
+ "districts": {
+  "batu-bolong": {
+   "villasForSale": 10,
+   "medianVillaPrice": 404950,
+   "villaRentals": 362,
+   "nightly2br": 147,
+   "nightly2brN": 93
+  },
+  "pandawa": {
+   "villasForSale": 26,
+   "medianVillaPrice": 269500,
+   "villaRentals": 89,
+   "nightly2br": 93,
+   "nightly2brN": 33
+  },
+  "ubud": {
+   "villasForSale": 30,
+   "medianVillaPrice": 290000,
+   "villaRentals": 1042,
+   "nightly2br": 121,
+   "nightly2brN": 323
+  },
+  "pererenan": {
+   "villasForSale": 28,
+   "medianVillaPrice": 639000,
+   "villaRentals": 363,
+   "nightly2br": 150,
+   "nightly2brN": 118
+  },
+  "seseh": {
+   "villasForSale": 4,
+   "medianVillaPrice": null,
+   "villaRentals": 32,
+   "nightly2br": null,
+   "nightly2brN": 9
+  },
+  "uluwatu": {
+   "villasForSale": 27,
+   "medianVillaPrice": 379000,
+   "villaRentals": 350,
+   "nightly2br": 148,
+   "nightly2brN": 127
+  },
+  "nusa-dua": {
+   "villasForSale": 34,
+   "medianVillaPrice": 265500,
+   "villaRentals": 74,
+   "nightly2br": 108,
+   "nightly2brN": 34
+  },
+  "cemagi": {
+   "villasForSale": 2,
+   "medianVillaPrice": null,
+   "villaRentals": 0,
+   "nightly2br": null,
+   "nightly2brN": 0
+  },
+  "melasti": {
+   "villasForSale": 16,
+   "medianVillaPrice": 322500,
+   "villaRentals": 47,
+   "nightly2br": 129,
+   "nightly2brN": 14
+  },
+  "berawa": {
+   "villasForSale": 15,
+   "medianVillaPrice": 520000,
+   "villaRentals": 685,
+   "nightly2br": 157,
+   "nightly2brN": 151
+  },
+  "sanur": {
+   "villasForSale": 4,
+   "medianVillaPrice": null,
+   "villaRentals": 315,
+   "nightly2br": 133,
+   "nightly2brN": 91
+  },
+  "umalas": {
+   "villasForSale": 9,
+   "medianVillaPrice": 245000,
+   "villaRentals": 855,
+   "nightly2br": 126,
+   "nightly2brN": 297
+  },
+  "gwk": {
+   "villasForSale": 9,
+   "medianVillaPrice": 320000,
+   "villaRentals": 88,
+   "nightly2br": 97,
+   "nightly2brN": 26
+  },
+  "nusa-penida": {
+   "villasForSale": 6,
+   "medianVillaPrice": 447000,
+   "villaRentals": 14,
+   "nightly2br": null,
+   "nightly2brN": 3
+  },
+  "kedungu": {
+   "villasForSale": 0,
+   "medianVillaPrice": null,
+   "villaRentals": 0,
+   "nightly2br": null,
+   "nightly2brN": 0
+  },
+  "ungasan": {
+   "villasForSale": 4,
+   "medianVillaPrice": null,
+   "villaRentals": 29,
+   "nightly2br": 81,
+   "nightly2brN": 16
+  },
+  "karanggasem": {
+   "villasForSale": 0,
+   "medianVillaPrice": null,
+   "villaRentals": 0,
+   "nightly2br": null,
+   "nightly2brN": 0
+  },
+  "batu-belig": {
+   "villasForSale": 0,
+   "medianVillaPrice": null,
+   "villaRentals": 0,
+   "nightly2br": null,
+   "nightly2brN": 0
+  },
+  "nyanyi": {
+   "villasForSale": 44,
+   "medianVillaPrice": 276500,
+   "villaRentals": 30,
+   "nightly2br": null,
+   "nightly2brN": 8
+  },
+  "kerobokan": {
+   "villasForSale": 0,
+   "medianVillaPrice": null,
+   "villaRentals": 0,
+   "nightly2br": null,
+   "nightly2brN": 0
+  },
+  "canggu": {
+   "villasForSale": 9,
+   "medianVillaPrice": 325000,
+   "villaRentals": 497,
+   "nightly2br": 120,
+   "nightly2brN": 179
+  }
+ }
+}

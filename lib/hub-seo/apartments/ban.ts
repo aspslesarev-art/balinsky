@@ -59,7 +59,7 @@ const copy: HubLongCopy = {
       "heading": "Sewa, hasil investasi, lan biaya pangreksan",
       "paragraphs": [
         "Patokan sewa bulanan: median $2,585 ring Berawa, $2,113 ring Canggu, $1,608 ring Bukit, $1,300 ring Ubud. Ring rerata, apartemen kasewa langkung murah ketimbang villa, nanging okupansiné langkung ajeg — unit kompak antuk kolam renang kompleks langkung gampang kaséwa ring luar musim rame.",
-        "Hasil bersih sane realistis — 8–12% saben warsa antuk okupansi 70–80%. Sadurung ngandelang angka ring presentasi, kurangi komisi perusahaan pengelola 15–25%, service charge kompleks, biaya pangreksan lan pajak sewa, miwah amortisasi leasehold. Tur cek taler kanthi misah, napi ring wilayah panjenengan sampun rauh malih sapuluh kompleks sane sami: ring Canggu, kaluwihan studio sane mirib sampun ngamargiang tarif sewa mudun."
+        "Manut itungan Balinsky padidi (345 apartemen 1 kamar kaadol miwah 300 apartemen kasewaang, September 2026), apartemen 1 kamar median ngasilang sawatara 9% setahun kotor lan sawatara 4,4% bersih ring okupansi 65%; okupansi hotel bintang ring Bali sawatara 57–65% (BPS Bali). Sadurung ngandelang angka ring presentasi, kurangi komisi perusahaan pengelola 15–25%, service charge kompleks, biaya pangreksan lan pajak sewa, miwah amortisasi leasehold. Tur cek taler kanthi misah, napi ring wilayah panjenengan sampun rauh malih sapuluh kompleks sane sami: ring Canggu, kaluwihan studio sane mirib sampun ngamargiang tarif sewa mudun."
       ]
     }
   ],

@@ -59,7 +59,7 @@ const copy: HubLongCopy = {
       "heading": "Location, rentabilité et charges",
       "paragraphs": [
         "Repères pour la location mensuelle : médiane de $2 585 à Berawa, $2 113 à Canggu, $1 608 dans le Bukit, $1 300 à Ubud. Les appartements se louent en moyenne moins cher que les villas, mais avec un taux d’occupation plus régulier — une unité compacte avec piscine de résidence se loue plus facilement hors saison.",
-        "Une rentabilité nette réaliste se situe entre 8–12% par an avec un taux d’occupation de 70–80%. Avant de croire aux chiffres d’une présentation, déduisez la commission de la société de gestion de 15–25%, le service charge de la résidence, l’entretien et la taxe sur les loyers, ainsi que l’amortissement du leasehold. Vérifiez aussi séparément qu’une dizaine de résidences similaires n’arrivent pas en même temps sur le marché dans votre zone : à Canggu, la surabondance de studios identiques pèse déjà sur les loyers."
+        "Selon le calcul de Balinsky (345 appartements d’une chambre à vendre et 300 appartements en location, septembre 2026), un appartement médian d’une chambre rapporte environ 9 % brut par an et environ 4,4 % net à 65 % d’occupation ; les hôtels étoilés de Bali affichent environ 57–65 % d’occupation (BPS Bali). Avant de croire aux chiffres d’une présentation, déduisez la commission de la société de gestion de 15–25%, le service charge de la résidence, l’entretien et la taxe sur les loyers, ainsi que l’amortissement du leasehold. Vérifiez aussi séparément qu’une dizaine de résidences similaires n’arrivent pas en même temps sur le marché dans votre zone : à Canggu, la surabondance de studios identiques pèse déjà sur les loyers."
       ]
     }
   ],

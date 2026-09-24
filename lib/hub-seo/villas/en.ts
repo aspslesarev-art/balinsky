@@ -59,7 +59,7 @@ const copy: HubLongCopy = {
       "heading": "Rental, yield, and running costs",
       "paragraphs": [
         "Monthly rent gives a clear basis for calculation: the catalogue median is $2,585 in Berawa, $2,113 in Canggu, $1,608 in Bukit, and $1,300 in Ubud. Daily rental in high season is higher, but occupancy also fluctuates: December–March and July–August are peak periods, while April and October are weaker.",
-        "A realistic net yield for a managed villa is 8–12% per year at 70–80% occupancy. The 10–15% claimed by developers is almost always calculated from gross revenue in a peak month. Before estimating payback, deduct the management company fee of 15–25%, running costs (pool, garden, electricity, cleaning) — 5–8% of revenue, rental tax, and leasehold amortisation: the closer the end of the term, the cheaper the property becomes on resale."
+        "By Balinsky's own calculation (359 villas for sale and 6,305 villas listed for rent, September 2026), a median two-bedroom villa earns about 10% a year gross and about 5% net at 65% occupancy, a one-bedroom villa about 14% gross and 7% net; star hotels on Bali run at roughly 57–65% occupancy (BPS Bali). Developer projections of 10–15% usually assume peak-season rates and occupancy. Before estimating payback, deduct the management company fee of 15–25%, running costs (pool, garden, electricity, cleaning) — 5–8% of revenue, rental tax, and leasehold amortisation: the closer the end of the term, the cheaper the property becomes on resale."
       ]
     }
   ],

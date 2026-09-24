@@ -59,7 +59,7 @@ const copy: HubLongCopy = {
       "heading": "Rental income, yield, and running costs",
       "paragraphs": [
         "A guide to monthly rent: median $2,585 in Berawa, $2,113 in Canggu, $1,608 in Bukit, and $1,300 in Ubud. Apartments generally rent for less than villas, but occupancy is more stable — a compact unit with a shared complex pool is easier to let outside the high season.",
-        "A realistic net yield is 8–12% per year at 70–80% occupancy. Before relying on a number from a presentation, deduct the management company fee of 15–25%, the complex service charge, maintenance and rental tax, as well as leasehold amortisation. Also check separately whether another ten similar complexes are about to enter the market in your area: in Canggu, an oversupply of identical studios is already putting pressure on rates."
+        "By Balinsky's own calculation (345 one-bedroom apartments for sale and 300 apartments listed for rent, September 2026), a median one-bedroom apartment earns about 9% a year gross and about 4.4% net at 65% occupancy; star hotels on Bali run at roughly 57–65% occupancy (BPS Bali). Before relying on a number from a presentation, deduct the management company fee of 15–25%, the complex service charge, maintenance and rental tax, as well as leasehold amortisation. Also check separately whether another ten similar complexes are about to enter the market in your area: in Canggu, an oversupply of identical studios is already putting pressure on rates."
       ]
     }
   ],

@@ -59,7 +59,7 @@ const copy: HubLongCopy = {
       "heading": "Najem, rentowność i koszty utrzymania",
       "paragraphs": [
         "Punkt odniesienia dla najmu miesięcznego: mediana to $2,585 w Berawa, $2,113 w Canggu, $1,608 na Bukit, $1,300 w Ubud. Apartamenty średnio wynajmują się taniej niż wille, ale mają bardziej stabilne obłożenie — kompaktowy lokal z basenem w kompleksie łatwiej wynająć poza sezonem.",
-        "Realistyczna rentowność netto to 8–12% rocznie przy obłożeniu 70–80%. Zanim uwierzysz w liczbę z prezentacji, odejmij prowizję firmy zarządzającej 15–25%, service charge kompleksu, utrzymanie i podatek od najmu, a także amortyzację leasehold. Osobno sprawdź też, czy w twojej lokalizacji nie wchodzi na rynek kolejnych kilkanaście podobnych kompleksów: w Canggu nadpodaż identycznych studiów już obniża stawki."
+        "Według własnych wyliczeń Balinsky (345 apartamentów z jedną sypialnią na sprzedaż i 300 apartamentów na wynajem, wrzesień 2026) mediana apartamentu z jedną sypialnią przy obłożeniu 65% daje około 9% rocznie brutto i około 4,4% netto; obłożenie hoteli z gwiazdkami na Bali to około 57–65% (BPS Bali). Zanim uwierzysz w liczbę z prezentacji, odejmij prowizję firmy zarządzającej 15–25%, service charge kompleksu, utrzymanie i podatek od najmu, a także amortyzację leasehold. Osobno sprawdź też, czy w twojej lokalizacji nie wchodzi na rynek kolejnych kilkanaście podobnych kompleksów: w Canggu nadpodaż identycznych studiów już obniża stawki."
       ]
     }
   ],

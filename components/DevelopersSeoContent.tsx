@@ -144,7 +144,7 @@ const FAQ_ITEMS: Record<Lang, FaqItem[]> = {
 const COPY = {
   ru: {
     chooseHeading: 'Как выбрать застройщика на Бали',
-    chooseP1: 'Главные критерии — сданные проекты, прозрачная юридическая схема и управляющая компания после ввода. Сданные проекты показывают, что застройщик умеет довести стройку до конца и соблюдает обещанное качество. Юридическая схема (лизхолд или freehold, действующее разрешение PBG / SLF) гарантирует, что вы получите оформленную собственность. Управляющая компания — критично, если апартамент покупается под аренду: без неё доходность 8–12% годовых превращается в полноценную самозанятость владельца.',
+    chooseP1: 'Главные критерии — сданные проекты, прозрачная юридическая схема и управляющая компания после ввода. Сданные проекты показывают, что застройщик умеет довести стройку до конца и соблюдает обещанное качество. Юридическая схема (лизхолд или freehold, действующее разрешение PBG / SLF) гарантирует, что вы получите оформленную собственность. Управляющая компания — критично, если апартамент покупается под аренду: без неё доход от аренды превращается в полноценную самозанятость владельца.',
     chooseP2: 'В каждой карточке мы агрегируем рейтинги по 4 направлениям: строительство и недвижимость, репутация и опыт, техника и производство, управляющая компания. Это помогает быстро сравнить десятки игроков и не зависеть от одного отзыва.',
     districtsHeading: 'Застройщики по районам Бали',
     districtsLead: 'Большинство новых проектов сосредоточено в районах Чангу (Berawa, Batu Bolong, Pererenan), на Буките (Uluwatu, Pandawa) и в Убуде. Здесь работают самые активные застройщики с апартаментами, виллами и инвестиционными комплексами.',
@@ -166,7 +166,7 @@ const COPY = {
   },
   en: {
     chooseHeading: 'How to choose a Bali developer',
-    chooseP1: 'The main criteria are completed projects, a transparent legal structure, and a management company after handover. Completed projects show the developer can finish a build and meet the promised quality. The legal structure (leasehold or freehold, an active PBG / SLF permit) guarantees you receive properly registered ownership. The management company is critical if you buy an apartment to rent — without one, the 8–12% annual yield turns into a full-time self-employment job for the owner.',
+    chooseP1: 'The main criteria are completed projects, a transparent legal structure, and a management company after handover. Completed projects show the developer can finish a build and meet the promised quality. The legal structure (leasehold or freehold, an active PBG / SLF permit) guarantees you receive properly registered ownership. The management company is critical if you buy an apartment to rent — without one, rental income turns into a full-time self-employment job for the owner.',
     chooseP2: 'On every card we aggregate scores across four dimensions: construction & real estate, reputation & experience, equipment & production, and management company. This lets you quickly compare dozens of players without relying on a single review.',
     districtsHeading: 'Developers by Bali district',
     districtsLead: 'Most new projects are clustered in Canggu (Berawa, Batu Bolong, Pererenan), on Bukit (Uluwatu, Pandawa) and in Ubud. These districts host the most active developers with apartments, villas and investment complexes.',
@@ -188,7 +188,7 @@ const COPY = {
   },
   id: {
     chooseHeading: 'Cara memilih pengembang di Bali',
-    chooseP1: 'Kriteria utamanya adalah proyek yang telah selesai, struktur hukum yang transparan, dan perusahaan pengelola setelah serah terima. Proyek yang selesai menunjukkan bahwa pengembang mampu menuntaskan pembangunan dan memenuhi kualitas yang dijanjikan. Struktur hukum (leasehold atau freehold, izin PBG / SLF yang aktif) menjamin Anda menerima kepemilikan yang terdaftar dengan benar. Perusahaan pengelola sangat penting jika Anda membeli apartemen untuk disewakan — tanpanya, imbal hasil 8–12% per tahun berubah menjadi pekerjaan penuh waktu bagi pemilik.',
+    chooseP1: 'Kriteria utamanya adalah proyek yang telah selesai, struktur hukum yang transparan, dan perusahaan pengelola setelah serah terima. Proyek yang selesai menunjukkan bahwa pengembang mampu menuntaskan pembangunan dan memenuhi kualitas yang dijanjikan. Struktur hukum (leasehold atau freehold, izin PBG / SLF yang aktif) menjamin Anda menerima kepemilikan yang terdaftar dengan benar. Perusahaan pengelola sangat penting jika Anda membeli apartemen untuk disewakan — tanpanya, pendapatan sewa berubah menjadi pekerjaan penuh waktu bagi pemilik.',
     chooseP2: 'Pada setiap kartu kami mengagregasi skor di empat dimensi: konstruksi & properti, reputasi & pengalaman, peralatan & produksi, dan perusahaan pengelola. Ini memungkinkan Anda membandingkan puluhan pemain dengan cepat tanpa bergantung pada satu ulasan saja.',
     districtsHeading: 'Pengembang berdasarkan wilayah Bali',
     districtsLead: 'Sebagian besar proyek baru terkonsentrasi di Canggu (Berawa, Batu Bolong, Pererenan), di Bukit (Uluwatu, Pandawa), dan di Ubud. Wilayah-wilayah ini menampung pengembang paling aktif dengan apartemen, vila, dan kompleks investasi.',
@@ -210,7 +210,7 @@ const COPY = {
   },
   fr: {
     chooseHeading: 'Comment choisir un promoteur à Bali',
-    chooseP1: 'Les critères principaux sont les projets livrés, une structure juridique transparente et une société de gestion après la livraison. Les projets livrés montrent que le promoteur sait mener un chantier à terme et tenir la qualité promise. La structure juridique (leasehold ou freehold, un permis PBG / SLF actif) garantit que vous recevez une propriété correctement enregistrée. La société de gestion est cruciale si vous achetez un appartement pour le louer — sans elle, le rendement annuel de 8 à 12 % se transforme en emploi à plein temps pour le propriétaire.',
+    chooseP1: 'Les critères principaux sont les projets livrés, une structure juridique transparente et une société de gestion après la livraison. Les projets livrés montrent que le promoteur sait mener un chantier à terme et tenir la qualité promise. La structure juridique (leasehold ou freehold, un permis PBG / SLF actif) garantit que vous recevez une propriété correctement enregistrée. La société de gestion est cruciale si vous achetez un appartement pour le louer — sans elle, le revenu locatif se transforme en emploi à plein temps pour le propriétaire.',
     chooseP2: 'Sur chaque fiche, nous agrégeons des scores selon quatre dimensions : construction & immobilier, réputation & expérience, équipement & production, et société de gestion. Cela permet de comparer rapidement des dizaines d’acteurs sans dépendre d’un seul avis.',
     districtsHeading: 'Promoteurs par quartier de Bali',
     districtsLead: 'La plupart des nouveaux projets se concentrent à Canggu (Berawa, Batu Bolong, Pererenan), sur Bukit (Uluwatu, Pandawa) et à Ubud. Ces quartiers accueillent les promoteurs les plus actifs avec appartements, villas et résidences d’investissement.',
@@ -232,7 +232,7 @@ const COPY = {
   },
   de: {
     chooseHeading: 'So wählen Sie einen Bauträger auf Bali',
-    chooseP1: 'Die wichtigsten Kriterien sind fertiggestellte Projekte, eine transparente Rechtsstruktur und eine Verwaltungsgesellschaft nach der Übergabe. Fertiggestellte Projekte zeigen, dass der Bauträger einen Bau zu Ende führen und die versprochene Qualität einhalten kann. Die Rechtsstruktur (Leasehold oder Freehold, eine gültige PBG-/SLF-Genehmigung) garantiert, dass Sie ordnungsgemäß registriertes Eigentum erhalten. Die Verwaltungsgesellschaft ist entscheidend, wenn Sie ein Apartment zur Vermietung kaufen — ohne sie wird aus der Jahresrendite von 8–12 % ein Vollzeitjob für den Eigentümer.',
+    chooseP1: 'Die wichtigsten Kriterien sind fertiggestellte Projekte, eine transparente Rechtsstruktur und eine Verwaltungsgesellschaft nach der Übergabe. Fertiggestellte Projekte zeigen, dass der Bauträger einen Bau zu Ende führen und die versprochene Qualität einhalten kann. Die Rechtsstruktur (Leasehold oder Freehold, eine gültige PBG-/SLF-Genehmigung) garantiert, dass Sie ordnungsgemäß registriertes Eigentum erhalten. Die Verwaltungsgesellschaft ist entscheidend, wenn Sie ein Apartment zur Vermietung kaufen — ohne sie werden die Mieteinnahmen zu einem Vollzeitjob für den Eigentümer.',
     chooseP2: 'Auf jeder Karte bündeln wir Bewertungen in vier Dimensionen: Bau & Immobilien, Reputation & Erfahrung, Technik & Produktion und Verwaltungsgesellschaft. So vergleichen Sie schnell Dutzende Anbieter, ohne sich auf eine einzelne Bewertung zu verlassen.',
     districtsHeading: 'Bauträger nach Lage auf Bali',
     districtsLead: 'Die meisten neuen Projekte konzentrieren sich auf Canggu (Berawa, Batu Bolong, Pererenan), auf Bukit (Uluwatu, Pandawa) und in Ubud. In diesen Lagen sind die aktivsten Bauträger mit Apartments, Villen und Investitionsanlagen tätig.',
@@ -254,7 +254,7 @@ const COPY = {
   },
   zh: {
     chooseHeading: '如何选择巴厘岛开发商',
-    chooseP1: '主要标准是已完工的项目、透明的法律结构以及交付后的管理公司。已完工的项目表明开发商能够完成工程并达到承诺的质量。法律结构(租赁产权或永久产权、有效的 PBG / SLF 许可)保证您获得正式登记的产权。如果您购买公寓用于出租,管理公司至关重要——没有它,8–12% 的年收益就会变成业主的全职工作。',
+    chooseP1: '主要标准是已完工的项目、透明的法律结构以及交付后的管理公司。已完工的项目表明开发商能够完成工程并达到承诺的质量。法律结构(租赁产权或永久产权、有效的 PBG / SLF 许可)保证您获得正式登记的产权。如果您购买公寓用于出租,管理公司至关重要——没有它,租金收入就会变成业主的全职工作。',
     chooseP2: '在每张卡片上,我们从四个维度汇总评分:建设与房产、信誉与经验、设备与生产,以及管理公司。这让您能够快速比较数十家开发商,而无需依赖单一评价。',
     districtsHeading: '按巴厘岛区域划分的开发商',
     districtsLead: '大多数新项目集中在 Canggu(Berawa、Batu Bolong、Pererenan)、Bukit(Uluwatu、Pandawa)和 Ubud。这些区域聚集了最活跃的开发商,提供公寓、别墅和投资住宅区。',
@@ -276,7 +276,7 @@ const COPY = {
   },
   nl: {
     chooseHeading: 'Hoe kies je een ontwikkelaar op Bali',
-    chooseP1: 'De belangrijkste criteria zijn opgeleverde projecten, een transparante juridische structuur en een beheermaatschappij na oplevering. Opgeleverde projecten laten zien dat de ontwikkelaar een bouw kan afronden en de beloofde kwaliteit haalt. De juridische structuur (leasehold of freehold, een geldige PBG-/SLF-vergunning) garandeert dat u correct geregistreerd eigendom ontvangt. De beheermaatschappij is cruciaal als u een appartement koopt om te verhuren — zonder deze verandert het jaarrendement van 8–12% in een fulltimebaan voor de eigenaar.',
+    chooseP1: 'De belangrijkste criteria zijn opgeleverde projecten, een transparante juridische structuur en een beheermaatschappij na oplevering. Opgeleverde projecten laten zien dat de ontwikkelaar een bouw kan afronden en de beloofde kwaliteit haalt. De juridische structuur (leasehold of freehold, een geldige PBG-/SLF-vergunning) garandeert dat u correct geregistreerd eigendom ontvangt. De beheermaatschappij is cruciaal als u een appartement koopt om te verhuren — zonder deze verandert de huuropbrengst in een fulltimebaan voor de eigenaar.',
     chooseP2: 'Op elke kaart bundelen we scores op vier dimensies: bouw & vastgoed, reputatie & ervaring, materieel & productie, en beheermaatschappij. Zo vergelijkt u snel tientallen partijen zonder af te gaan op één beoordeling.',
     districtsHeading: 'Ontwikkelaars per wijk op Bali',
     districtsLead: 'De meeste nieuwe projecten zijn geconcentreerd in Canggu (Berawa, Batu Bolong, Pererenan), op Bukit (Uluwatu, Pandawa) en in Ubud. In deze wijken zijn de meest actieve ontwikkelaars gevestigd met appartementen, villa\'s en investeringscomplexen.',
@@ -298,7 +298,7 @@ const COPY = {
   },
   ban: {
     chooseHeading: 'Sapunapi milih pangwangun ring Bali',
-    chooseP1: 'Kriteria utama inggih punika proyek sane sampun puput, struktur hukum sane terang, miwah perusahaan pangelola sasampun serah terima. Proyek sane sampun puput nyihnayang pangwangun mrasidayang muputang wewangunan miwah nyaga kualitas sane kajanjiang. Struktur hukum (leasehold utawi freehold, izin PBG / SLF sane kantun aktif) ngajamin Ida Dane polih kepemilikan sane katunas becik. Perusahaan pangelola pinih mabuat yening Ida Dane numbas apartemen anggen kasewaang — yening nenten wenten, hasil 8–12% sabilang warsa dados pakaryan penuh anggen sang madue.',
+    chooseP1: 'Kriteria utama inggih punika proyek sane sampun puput, struktur hukum sane terang, miwah perusahaan pangelola sasampun serah terima. Proyek sane sampun puput nyihnayang pangwangun mrasidayang muputang wewangunan miwah nyaga kualitas sane kajanjiang. Struktur hukum (leasehold utawi freehold, izin PBG / SLF sane kantun aktif) ngajamin Ida Dane polih kepemilikan sane katunas becik. Perusahaan pangelola pinih mabuat yening Ida Dane numbas apartemen anggen kasewaang — yening nenten wenten, pikolih sewa dados pakaryan penuh anggen sang madue.',
     chooseP2: 'Ring soang-soang kartu tiang ngagregasi skor ring petang dimensi: wewangunan & properti, reputasi & pangalaman, piranti & produksi, miwah perusahaan pangelola. Puniki ngwantu Ida Dane digelis mabanding puluhan pamain tanpa ngandelang asiki ulasan.',
     districtsHeading: 'Pangwangun manut wewidangan Bali',
     districtsLead: 'Akehan proyek anyar mapunduh ring Canggu (Berawa, Batu Bolong, Pererenan), ring Bukit (Uluwatu, Pandawa), miwah ring Ubud. Wewidangan puniki dados genah pangwangun sane pinih aktif sareng apartemen, vila, miwah kompleks investasi.',
@@ -320,7 +320,7 @@ const COPY = {
   },
   pl: {
     chooseHeading: 'Jak wybrać dewelopera na Bali',
-    chooseP1: 'Główne kryteria to ukończone projekty, przejrzysta struktura prawna oraz firma zarządzająca po oddaniu. Ukończone projekty pokazują, że deweloper potrafi doprowadzić budowę do końca i utrzymać obiecaną jakość. Struktura prawna (leasehold lub freehold, ważne pozwolenie PBG / SLF) gwarantuje, że otrzymasz prawidłowo zarejestrowaną własność. Firma zarządzająca jest kluczowa, jeśli kupujesz apartament pod wynajem — bez niej roczna rentowność 8–12% zamienia się w pełnoetatowe zajęcie dla właściciela.',
+    chooseP1: 'Główne kryteria to ukończone projekty, przejrzysta struktura prawna oraz firma zarządzająca po oddaniu. Ukończone projekty pokazują, że deweloper potrafi doprowadzić budowę do końca i utrzymać obiecaną jakość. Struktura prawna (leasehold lub freehold, ważne pozwolenie PBG / SLF) gwarantuje, że otrzymasz prawidłowo zarejestrowaną własność. Firma zarządzająca jest kluczowa, jeśli kupujesz apartament pod wynajem — bez niej dochód z najmu zamienia się w pełnoetatowe zajęcie dla właściciela.',
     chooseP2: 'Na każdej karcie agregujemy oceny w czterech wymiarach: budowa i nieruchomości, reputacja i doświadczenie, sprzęt i produkcja oraz firma zarządzająca. Pozwala to szybko porównać dziesiątki graczy bez polegania na pojedynczej opinii.',
     districtsHeading: 'Deweloperzy według dzielnic Bali',
     districtsLead: 'Większość nowych projektów skupia się w Canggu (Berawa, Batu Bolong, Pererenan), na Bukit (Uluwatu, Pandawa) i w Ubud. W tych dzielnicach działają najbardziej aktywni deweloperzy z apartamentami, willami i kompleksami inwestycyjnymi.',
@@ -342,7 +342,7 @@ const COPY = {
   },
   uk: {
     chooseHeading: 'Як обрати забудовника на Балі',
-    chooseP1: 'Головні критерії — здані проєкти, прозора юридична схема та керуюча компанія після введення в експлуатацію. Здані проєкти показують, що забудовник вміє довести будівництво до кінця й дотримується обіцяної якості. Юридична схема (лізхолд або freehold, чинний дозвіл PBG / SLF) гарантує, що ви отримаєте оформлену власність. Керуюча компанія критично важлива, якщо апартамент купується під оренду: без неї дохідність 8–12% річних перетворюється на повноцінну самозайнятість власника.',
+    chooseP1: 'Головні критерії — здані проєкти, прозора юридична схема та керуюча компанія після введення в експлуатацію. Здані проєкти показують, що забудовник вміє довести будівництво до кінця й дотримується обіцяної якості. Юридична схема (лізхолд або freehold, чинний дозвіл PBG / SLF) гарантує, що ви отримаєте оформлену власність. Керуюча компанія критично важлива, якщо апартамент купується під оренду: без неї дохід від оренди перетворюється на повноцінну самозайнятість власника.',
     chooseP2: 'На кожній картці ми агрегуємо рейтинги за 4 напрямками: будівництво та нерухомість, репутація та досвід, техніка та виробництво, керуюча компанія. Це допомагає швидко порівняти десятки гравців і не залежати від одного відгуку.',
     districtsHeading: 'Забудовники за районами Балі',
     districtsLead: 'Більшість нових проєктів зосереджена в районах Чангу (Berawa, Batu Bolong, Pererenan), на Букіті (Uluwatu, Pandawa) та в Убуді. Тут працюють найактивніші забудовники з апартаментами, віллами та інвестиційними комплексами.',

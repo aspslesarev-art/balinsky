@@ -59,7 +59,7 @@ const copy: HubLongCopy = {
       "heading": "Wynajem, rentowność i koszty utrzymania",
       "paragraphs": [
         "Wynajem miesięczny daje jasny punkt odniesienia do kalkulacji: mediana w katalogu to $2,585 w Berawa, $2,113 w Canggu, $1,608 na Bukit i $1,300 w Ubud. Wynajem krótkoterminowy w wysokim sezonie jest wyższy, ale obłożenie też się waha: grudzień–marzec i lipiec–sierpień dają szczyt, kwiecień i październik — spadek.",
-        "Realistyczna rentowność netto willi w zarządzaniu to 8–12% rocznie przy obłożeniu 70–80%. Deklarowane przez deweloperów 10–15% prawie zawsze liczy się od przychodu brutto w szczytowym miesiącu. Zanim zaczniesz liczyć zwrot, odejmij prowizję firmy zarządzającej 15–25%, utrzymanie (basen, ogród, prąd, sprzątanie) — 5–8% przychodu, podatek od najmu i amortyzację leaseholdu: im bliżej końca okresu, tym tańsza nieruchomość przy odsprzedaży."
+        "Według własnych wyliczeń Balinsky (359 willi na sprzedaż i 6305 willi na wynajem, wrzesień 2026) mediana willi z dwiema sypialniami przy obłożeniu 65% daje około 10% rocznie brutto i około 5% netto, willa z jedną sypialnią — około 14% brutto i 7% netto; obłożenie hoteli z gwiazdkami na Bali to około 57–65% (BPS Bali). Prognozy deweloperów na poziomie 10–15% zwykle zakładają stawki i obłożenie z wysokiego sezonu. Zanim zaczniesz liczyć zwrot, odejmij prowizję firmy zarządzającej 15–25%, utrzymanie (basen, ogród, prąd, sprzątanie) — 5–8% przychodu, podatek od najmu i amortyzację leaseholdu: im bliżej końca okresu, tym tańsza nieruchomość przy odsprzedaży."
       ]
     }
   ],

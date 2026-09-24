@@ -59,7 +59,7 @@ const copy: HubLongCopy = {
       "heading": "Sewa, imbal hasil, miwah biaya pangupajiwa",
       "paragraphs": [
         "Sewa bulanan ngicen dasar itungan sane cetha: median manut katalog — $2,585 ring Berawa, $2,113 ring Canggu, $1,608 ring Bukit miwah $1,300 ring Ubud. Sewa harian ring high season langkung duwur, nanging okupansi taler naik-turun: Desember–Maret miwah Juli–Agustus ngicen puncak, April miwah Oktober ngicen penurunan.",
-        "Imbal hasil bersih vila sane kaurus manajemen kanthi realistis — 8–12% setahun yening okupansi 70–80%. Angka 10–15% sane kasurat antuk pangembang meh salantur kaetang saking omzet kotor ring sasih puncak. Sadurung ngitung balik modal, kurangi komisi perusahaan manajemen 15–25%, biaya operasional (kolam, taman, listrik, beberesih) — 5–8% saking omzet, pajak sewa, miwah amortisasi leasehold: makin nyedek ka pungkasan masa, makin murah properti punika yening kaadol malih."
+        "Manut itungan Balinsky padidi (359 vila kaadol miwah 6.305 vila kasewaang, September 2026), vila 2 kamar median ngasilang sawatara 10% setahun kotor lan sawatara 5% bersih ring okupansi 65%, vila 1 kamar sawatara 14% kotor lan 7% bersih; okupansi hotel bintang ring Bali sawatara 57–65% (BPS Bali). Proyeksi pangembang 10–15% biasane nganggen tarif lan okupansi musim rame. Sadurung ngitung balik modal, kurangi komisi perusahaan manajemen 15–25%, biaya operasional (kolam, taman, listrik, beberesih) — 5–8% saking omzet, pajak sewa, miwah amortisasi leasehold: makin nyedek ka pungkasan masa, makin murah properti punika yening kaadol malih."
       ]
     }
   ],

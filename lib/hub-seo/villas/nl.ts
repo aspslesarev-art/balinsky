@@ -59,7 +59,7 @@ const copy: HubLongCopy = {
       "heading": "Verhuur, rendement en onderhoud",
       "paragraphs": [
         "Maandverhuur geeft een duidelijke basis voor de berekening: de mediaan in de catalogus is $2.585 in Berawa, $2.113 in Canggu, $1.608 op Bukit en $1.300 in Ubud. Dagverhuur ligt in het hoogseizoen hoger, maar de bezetting schommelt ook sterker: december–maart en juli–augustus geven de piek, april en oktober de terugval.",
-        "Een realistisch netto rendement van een villa onder beheer is 8–12% per jaar bij een bezetting van 70–80%. De 10–15% die projectontwikkelaars noemen, wordt bijna altijd berekend op basis van de brutoumszet in de piekmaand. Voordat u de terugverdientijd berekent, trekt u de commissie van de beheermaatschappij 15–25% af, het onderhoud (zwembad, tuin, elektriciteit, schoonmaak) — 5–8% van de omzet, de huurbelasting en de afschrijving van de leasehold: hoe dichter het einde van de looptijd, hoe goedkoper het object bij doorverkoop."
+        "Volgens de eigen berekening van Balinsky (359 villa's te koop en 6.305 villa's te huur, september 2026) levert een mediane villa met twee slaapkamers bij 65% bezetting ongeveer 10% bruto en ongeveer 5% netto per jaar op, een villa met één slaapkamer ongeveer 14% bruto en 7% netto; sterrenhotels op Bali draaien op ongeveer 57–65% bezetting (BPS Bali). Prognoses van 10–15% van ontwikkelaars gaan meestal uit van tarieven en bezetting in het hoogseizoen. Voordat u de terugverdientijd berekent, trekt u de commissie van de beheermaatschappij 15–25% af, het onderhoud (zwembad, tuin, elektriciteit, schoonmaak) — 5–8% van de omzet, de huurbelasting en de afschrijving van de leasehold: hoe dichter het einde van de looptijd, hoe goedkoper het object bij doorverkoop."
       ]
     }
   ],

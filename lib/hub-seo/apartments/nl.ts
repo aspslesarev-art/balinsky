@@ -59,7 +59,7 @@ const copy: HubLongCopy = {
       "heading": "Verhuur, rendement en kosten van eigendom",
       "paragraphs": [
         "Richtlijn voor maandelijkse huur: de mediaan is $2.585 in Berawa, $2.113 in Canggu, $1.608 in Bukit, $1.300 in Ubud. Appartementen worden gemiddeld goedkoper verhuurd dan villa's, maar kennen een stabielere bezetting — een compacte unit met zwembad in het complex is buiten het seizoen makkelijker te verhuren.",
-        "Een realistisch netto rendement ligt op 8–12% per jaar bij een bezetting van 70–80%. Voordat u een cijfer uit een presentatie gelooft, trek eerst de commissie van de beheermaatschappij van 15–25%, de service charge van het complex, onderhoud en huurbelasting af, plus de afschrijving van de leasehold. Controleer daarnaast apart of er in uw gebied niet nog een tiental vergelijkbare complexen op de markt komt: in Canggu drukt een overaanbod van identieke studio's de huurprijs al naar beneden."
+        "Volgens de eigen berekening van Balinsky (345 appartementen met één slaapkamer te koop en 300 appartementen te huur, september 2026) levert een mediaan appartement met één slaapkamer bij 65% bezetting ongeveer 9% bruto en ongeveer 4,4% netto per jaar op; sterrenhotels op Bali draaien op ongeveer 57–65% bezetting (BPS Bali). Voordat u een cijfer uit een presentatie gelooft, trek eerst de commissie van de beheermaatschappij van 15–25%, de service charge van het complex, onderhoud en huurbelasting af, plus de afschrijving van de leasehold. Controleer daarnaast apart of er in uw gebied niet nog een tiental vergelijkbare complexen op de markt komt: in Canggu drukt een overaanbod van identieke studio's de huurprijs al naar beneden."
       ]
     }
   ],

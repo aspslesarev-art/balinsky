@@ -12,52 +12,82 @@ const COPY = {
   ru: {
     guide: (name: string) => `О районе ${name} — гид инвестора`,
     fullGuide: 'Полный гайд по инвестициям на Бали',
-    count: (n: number, name: string) => `Сейчас в каталоге ${n} объектов в районе ${name}. Каждый прошёл редакторский QA — PBG, SLF, регистрация застройщика и проверка на месте.`,
+    count: (n: number, name: string) => `Сейчас в каталоге ${n} объектов в районе ${name}. Статус разрешений (PBG, SLF) и зона земли указаны в карточке каждого объекта — проверяйте документы до оплаты.`,
+    source: 'Цифры: каталог Balinsky и база посуточной аренды, сентябрь 2026. Методика —',
+    sourceLink: 'ставки аренды вилл по районам',
+    sourceHref: '/ru/znaniya/stavki-arendy-vill-na-bali-po-rayonam-2026',
   },
   en: {
     guide: (name: string) => `About ${name} — district guide`,
     fullGuide: 'Full Bali investment guide',
-    count: (n: number, name: string) => `Currently ${n} properties available in ${name}. Each listing passed our editorial QA — PBG, SLF, developer registration and on-the-ground verification.`,
+    count: (n: number, name: string) => `Currently ${n} properties available in ${name}. Each listing shows its permit status (PBG, SLF) and land zone — check the documents before you pay.`,
+    source: 'Figures: Balinsky catalogue and short-term rental database, September 2026. Method —',
+    sourceLink: 'villa rental rates by area',
+    sourceHref: '/en/knowledge/bali-villa-rental-rates-by-area-2026',
   },
   id: {
     guide: (name: string) => `Tentang ${name} — panduan investor`,
     fullGuide: 'Panduan lengkap investasi di Bali',
-    count: (n: number, name: string) => `Saat ini ${n} properti tersedia di ${name}. Setiap listing lolos QA editorial kami — PBG, SLF, registrasi pengembang, dan verifikasi di lokasi.`,
+    count: (n: number, name: string) => `Saat ini ${n} properti tersedia di ${name}. Setiap listing menampilkan status izin (PBG, SLF) dan zona tanah — periksa dokumennya sebelum membayar.`,
+    source: 'Angka: katalog Balinsky dan basis data sewa jangka pendek, September 2026. Metode (dalam bahasa Inggris) —',
+    sourceLink: 'tarif sewa vila per area',
+    sourceHref: '/en/knowledge/bali-villa-rental-rates-by-area-2026',
   },
   fr: {
     guide: (name: string) => `À propos de ${name} — guide du quartier`,
     fullGuide: "Guide complet de l'investissement à Bali",
-    count: (n: number, name: string) => `Actuellement ${n} biens disponibles à ${name}. Chaque annonce a passé notre contrôle qualité éditorial — PBG, SLF, enregistrement du promoteur et vérification sur place.`,
+    count: (n: number, name: string) => `Actuellement ${n} biens disponibles à ${name}. Chaque annonce indique le statut des permis (PBG, SLF) et la zone du terrain — vérifiez les documents avant de payer.`,
+    source: 'Chiffres : catalogue Balinsky et base de location courte durée, septembre 2026. Méthode (en anglais) —',
+    sourceLink: 'tarifs de location de villas par secteur',
+    sourceHref: '/en/knowledge/bali-villa-rental-rates-by-area-2026',
   },
   de: {
     guide: (name: string) => `Über ${name} — Gebietsführer`,
     fullGuide: 'Vollständiger Bali-Investmentguide',
-    count: (n: number, name: string) => `Derzeit ${n} Objekte in ${name} verfügbar. Jedes Inserat hat unsere redaktionelle QA bestanden — PBG, SLF, Bauträger-Registrierung und Prüfung vor Ort.`,
+    count: (n: number, name: string) => `Derzeit ${n} Objekte in ${name} verfügbar. Jedes Inserat zeigt den Genehmigungsstatus (PBG, SLF) und die Grundstückszone — prüfen Sie die Dokumente vor der Zahlung.`,
+    source: 'Zahlen: Balinsky-Katalog und Kurzzeitmiet-Datenbank, September 2026. Methode (auf Englisch) —',
+    sourceLink: 'Villen-Mietpreise nach Gebiet',
+    sourceHref: '/en/knowledge/bali-villa-rental-rates-by-area-2026',
   },
   zh: {
     guide: (name: string) => `关于 ${name} — 区域指南`,
     fullGuide: '巴厘岛投资完整指南',
-    count: (n: number, name: string) => `目前 ${name} 有 ${n} 套房源在售。每套房源均通过我们的编辑质检——PBG、SLF、开发商注册及实地核验。`,
+    count: (n: number, name: string) => `目前 ${name} 有 ${n} 套房源在售。每套房源都标明许可状态（PBG、SLF）和土地分区——付款前请核实文件。`,
+    source: '数据：Balinsky 目录与短租数据库，2026 年 9 月。方法（英文）——',
+    sourceLink: '各区域别墅租金',
+    sourceHref: '/en/knowledge/bali-villa-rental-rates-by-area-2026',
   },
   nl: {
     guide: (name: string) => `Over ${name} — wijkgids`,
     fullGuide: 'Volledige Bali-investeringsgids',
-    count: (n: number, name: string) => `Momenteel ${n} objecten beschikbaar in ${name}. Elke aanbieding doorstond onze redactionele QA — PBG, SLF, ontwikkelaarsregistratie en verificatie ter plaatse.`,
+    count: (n: number, name: string) => `Momenteel ${n} objecten beschikbaar in ${name}. Elke aanbieding toont de vergunningstatus (PBG, SLF) en de grondzone — controleer de documenten voordat u betaalt.`,
+    source: 'Cijfers: Balinsky-catalogus en database voor kortetermijnverhuur, september 2026. Methode (in het Engels) —',
+    sourceLink: "huurprijzen van villa's per gebied",
+    sourceHref: '/en/knowledge/bali-villa-rental-rates-by-area-2026',
   },
   ban: {
     guide: (name: string) => `Indik ${name} — panduan wewidangan`,
     fullGuide: 'Panduan jangkep investasi ring Bali',
-    count: (n: number, name: string) => `Mangkin wenten ${n} properti ring ${name}. Suang-suang listing sampun lulus QA editorial — PBG, SLF, registrasi pangwangun, lan verifikasi ring genah.`,
+    count: (n: number, name: string) => `Mangkin wenten ${n} properti ring ${name}. Suang-suang listing nyihnayang status izin (PBG, SLF) lan zona tanah — cek dokumen sadurung mayah.`,
+    source: 'Angka: katalog Balinsky lan basis data sewa jangka bawak, September 2026. Metode (basa Inggris) —',
+    sourceLink: 'tarif sewa vila manut wewidangan',
+    sourceHref: '/en/knowledge/bali-villa-rental-rates-by-area-2026',
   },
   pl: {
     guide: (name: string) => `O rejonie ${name} — przewodnik po dzielnicy`,
     fullGuide: 'Pełny przewodnik inwestycyjny po Bali',
-    count: (n: number, name: string) => `Obecnie ${n} nieruchomości dostępnych w ${name}. Każda oferta przeszła naszą redakcyjną kontrolę jakości — PBG, SLF, rejestrację dewelopera i weryfikację na miejscu.`,
+    count: (n: number, name: string) => `Obecnie ${n} nieruchomości dostępnych w ${name}. Każda oferta pokazuje status pozwoleń (PBG, SLF) i strefę gruntu — sprawdź dokumenty przed zapłatą.`,
+    source: 'Dane: katalog Balinsky i baza najmu krótkoterminowego, wrzesień 2026. Metoda (po angielsku) —',
+    sourceLink: 'stawki najmu willi według okolic',
+    sourceHref: '/en/knowledge/bali-villa-rental-rates-by-area-2026',
   },
   uk: {
     guide: (name: string) => `Про район ${name} — гід інвестора`,
     fullGuide: 'Повний гід з інвестицій на Балі',
-    count: (n: number, name: string) => `Наразі в каталозі ${n} об’єктів у районі ${name}. Кожен пройшов редакторський QA — PBG, SLF, реєстрація забудовника та перевірка на місці.`,
+    count: (n: number, name: string) => `Наразі в каталозі ${n} об’єктів у районі ${name}. У картці кожного об’єкта вказано статус дозволів (PBG, SLF) і зону землі — перевіряйте документи до оплати.`,
+    source: 'Цифри: каталог Balinsky і база подобової оренди, вересень 2026. Методика (англійською) —',
+    sourceLink: 'ставки оренди віл за районами',
+    sourceHref: '/en/knowledge/bali-villa-rental-rates-by-area-2026',
   },
 } as const
 
@@ -87,6 +117,10 @@ export function DistrictIntroBlock({
           </div>
         ))}
       </div>
+      <p className="-mt-3 mb-6 text-[12px] leading-relaxed text-[var(--color-text-muted)]">
+        {t.source}{' '}
+        <Link href={t.sourceHref} className="underline underline-offset-2 hover:no-underline">{t.sourceLink}</Link>
+      </p>
 
       <details className="rounded-2xl border border-[var(--color-border)] p-4 bg-white mb-6 [&[open]>summary]:mb-3">
         <summary className="cursor-pointer list-none flex items-center justify-between gap-3 text-[15px] font-semibold text-[#111827]">

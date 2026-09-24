@@ -16,6 +16,7 @@ import districtsZh from './district-copy/zh.json'
 import districtsNl from './district-copy/nl.json'
 import districtsPl from './district-copy/pl.json'
 import districtsUk from './district-copy/uk.json'
+import districtMarketJson from './district-market.json'
 
 export type DistrictCopy = {
   slug: string
@@ -516,20 +517,124 @@ export function getDistrictCopy(slug: string, lang: Lang): DistrictCopy | null {
   const bundle = DISTRICTS[slug] ?? GENERATED_DISTRICTS[slug]
   if (!bundle) return null
   const copy = pickCopy(bundle, lang)
-  if (lang === 'ru') return copy
-  const loc = LOCALIZED[lang]
-  const tr = loc?.districts[slug]
-  if (!loc || !tr) return deCyrillicCopy(copy)
-  // No de-Cyrillic pass here: the translation is native (Ukrainian is Cyrillic).
+  let out: DistrictCopy
+  if (lang === 'ru') out = copy
+  else {
+    const loc = LOCALIZED[lang]
+    const tr = loc?.districts[slug]
+    out = !loc || !tr
+      ? deCyrillicCopy(copy)
+      // No de-Cyrillic pass here: the translation is native (Ukrainian is Cyrillic).
+      : {
+        ...copy,
+        hero: tr.hero,
+        paragraphs: tr.paragraphs,
+        bestFor: tr.bestFor,
+        highlights: copy.highlights.map(h => ({
+          label: loc.labels[h.label] ?? h.label,
+          value: localizeValue(h.value, loc),
+        })),
+      }
+  }
+  return DISTRICTS[slug] ? objectiveCurated(slug, lang, out) : out
+}
+
+// ---- Objective layer for the hand-written district guides ----------------
+//
+// The twelve curated guides were written with editorial estimates — «yield
+// 10-13%», «occupancy 75-85%», «ADR $180-230», «record rates» — that the
+// site's own data does not support (September 2026: a median two-bedroom
+// villa earns ~10% gross / ~5% net at 65% occupancy; Canggu's median nightly
+// rate is below the island median). Per the editorial rule «numbers only from
+// data, with a source», those sentences are dropped and the highlight cards
+// come from the market snapshot in district-market.json instead. The
+// long-tail guides (districts-generated.json) are already data-derived.
+
+type MarketRow = { villasForSale: number; medianVillaPrice: number | null; villaRentals: number; nightly2br: number | null; nightly2brN: number }
+const MARKET = (districtMarketJson as { districts: Record<string, MarketRow> }).districts
+export const DISTRICT_MARKET_AS_OF = (districtMarketJson as { asOf: string }).asOf
+
+// A sentence is dropped when it carries a number-type claim: a percentage, a
+// dollar amount, a nightly rate, occupancy or yield wording — in any locale.
+const CLAIM = /%|\$\s?\d|\d\s?\$|\bADR\b|occupanc|загрузк|заполняем|okupansi|occupation|Auslastung|bezetting|obłożen|заповнюван|入住率|yield|доходн|дохідн|imbal hasil|rendement|Rendite|rentown|收益|payback|окупа|night|ноч|malam|nuit|Nächt|nacht|noc[yi]\b|晚|stay-length|stay length|\b18\b|PT PMA|unaffected|выпал из|tidak terdampak|pas été touché|nicht betroffen|未受|niet geraakt|nie został objęty|не зачепили/i
+function splitSentences(p: string): string[] {
+  if (/。/.test(p)) return p.split(/(?<=。)/).filter(Boolean)
+  return p.split(/(?<=[.!?…])\s+(?=[«"“(A-ZА-ЯЁІЇЄ0-9—–])/)
+}
+function dropClaims(paragraphs: string[]): string[] {
+  return paragraphs
+    .map(p => splitSentences(p).filter(s => !CLAIM.test(s)).join(' ').trim())
+    .filter(Boolean)
+}
+
+// Hero lines that made a data claim, rewritten to what the data shows.
+const HERO: Record<string, Partial<Record<Lang, string>>> = {
+  canggu: {
+    ru: 'Самый насыщенный район Бали для посуточной аренды: серф, кафе, ивенты и самое плотное предложение вилл.',
+    en: "Bali's busiest area for short-term rentals: surf, cafés, events and the densest supply of villas.",
+    id: 'Kawasan paling ramai di Bali untuk sewa jangka pendek: selancar, kafe, acara, dan pasokan vila terpadat.',
+    fr: 'Le secteur le plus animé de Bali pour la location courte durée : surf, cafés, événements et la plus forte densité de villas.',
+    de: 'Balis belebtestes Gebiet für Kurzzeitvermietung: Surfen, Cafés, Events und das dichteste Villenangebot.',
+    zh: '巴厘岛短租最活跃的区域：冲浪、咖啡馆、活动，别墅供应最密集。',
+    nl: "Bali's drukste gebied voor kortetermijnverhuur: surf, cafés, evenementen en het dichtste aanbod aan villa's.",
+    pl: 'Najbardziej ruchliwa okolica Bali dla najmu krótkoterminowego: surfing, kawiarnie, wydarzenia i największe nasycenie willami.',
+    uk: 'Найжвавіший район Балі для подобової оренди: серф, кав’ярні, події та найщільніша пропозиція віл.',
+  },
+  uluwatu: {
+    ru: 'Полуостров Букит — скалы, виды на океан и одни из самых высоких ставок аренды вилл за ночь на Бали.',
+    en: "The Bukit peninsula — cliffs, ocean views and some of Bali's highest nightly villa rates.",
+    id: 'Semenanjung Bukit — tebing, pemandangan laut, dan salah satu tarif sewa vila per malam tertinggi di Bali.',
+    fr: 'La péninsule du Bukit — falaises, vues sur l’océan et parmi les tarifs de villa à la nuit les plus élevés de Bali.',
+    de: 'Die Bukit-Halbinsel — Klippen, Meerblick und einige der höchsten Villen-Übernachtungspreise auf Bali.',
+    zh: 'Bukit 半岛 —— 悬崖、海景，别墅每晚租价位居巴厘岛前列。',
+    nl: "Het schiereiland Bukit — kliffen, zeezicht en enkele van de hoogste villaprijzen per nacht op Bali.",
+    pl: 'Półwysep Bukit — klify, widoki na ocean i jedne z najwyższych stawek za noc w willach na Bali.',
+    uk: 'Півострів Букіт — скелі, види на океан і одні з найвищих ставок оренди віл за ніч на Балі.',
+  },
+  pererenan: {
+    ru: 'Тихий сосед Чангу: те же волны и бич-клубы, много новой застройки.',
+    en: "Canggu's quieter neighbour: the same surf and beach clubs, and a lot of new development.",
+    id: 'Tetangga Canggu yang lebih tenang: ombak dan beach club yang sama, serta banyak pembangunan baru.',
+    fr: 'Le voisin plus calme de Canggu : le même surf, les mêmes beach clubs et beaucoup de constructions neuves.',
+    de: 'Canggus ruhigerer Nachbar: dieselben Wellen und Beach Clubs und viele Neubauten.',
+    zh: 'Canggu 更安静的邻居：同样的冲浪和海滩俱乐部，新开发项目众多。',
+    nl: 'De rustigere buur van Canggu: dezelfde surf en beachclubs, en veel nieuwbouw.',
+    pl: 'Spokojniejszy sąsiad Canggu: te same fale i beach cluby oraz dużo nowej zabudowy.',
+    uk: 'Тихіший сусід Чангу: ті самі хвилі й біч-клуби та багато нової забудови.',
+  },
+}
+
+const MARKET_LABELS: Record<Lang, { nightly: string; rentals: string; forSale: string; price: string }> = {
+  ru: { nightly: 'Вилла 2 спальни за ночь, медиана', rentals: 'Вилл в аренде в выборке', forSale: 'Вилл на продаже', price: 'Медианная цена виллы' },
+  en: { nightly: '2-bed villa per night, median', rentals: 'Villa rentals analysed', forSale: 'Villas for sale', price: 'Median villa price' },
+  id: { nightly: 'Vila 2 kamar per malam, median', rentals: 'Vila sewa dianalisis', forSale: 'Vila dijual', price: 'Harga median vila' },
+  fr: { nightly: 'Villa 2 ch. par nuit, médiane', rentals: 'Villas en location analysées', forSale: 'Villas à vendre', price: 'Prix médian villa' },
+  de: { nightly: 'Villa 2 SZ pro Nacht, Median', rentals: 'Analysierte Mietvillen', forSale: 'Villen zum Verkauf', price: 'Medianpreis Villa' },
+  zh: { nightly: '两居室别墅每晚（中位数）', rentals: '分析的出租别墅', forSale: '在售别墅', price: '别墅中位价' },
+  nl: { nightly: 'Villa 2 slk per nacht, mediaan', rentals: "Geanalyseerde huurvilla's", forSale: "Villa's te koop", price: 'Mediaanprijs villa' },
+  ban: { nightly: 'Vila 2 kamar sawengi, median', rentals: 'Vila sewa kaanalisis', forSale: 'Vila kaadol', price: 'Aji median vila' },
+  pl: { nightly: 'Willa 2 syp. za noc, mediana', rentals: 'Analizowane wille na wynajem', forSale: 'Wille na sprzedaż', price: 'Mediana ceny willi' },
+  uk: { nightly: 'Віла 2 спальні за ніч, медіана', rentals: 'Віл в оренді у вибірці', forSale: 'Віл на продажу', price: 'Медіанна ціна віли' },
+}
+const usd = (n: number) => '$' + n.toLocaleString('en-US')
+
+export function districtMarket(slug: string): MarketRow | null {
+  return MARKET[slug] ?? null
+}
+
+function objectiveCurated(slug: string, lang: Lang, copy: DistrictCopy): DistrictCopy {
+  const m = MARKET[slug]
+  const L = MARKET_LABELS[lang] ?? MARKET_LABELS.en
+  const highlights: DistrictCopy['highlights'] = []
+  if (m?.nightly2br) highlights.push({ label: L.nightly, value: usd(m.nightly2br) })
+  if (m && m.villaRentals >= 10) highlights.push({ label: L.rentals, value: m.villaRentals.toLocaleString('en-US') })
+  if (m && m.villasForSale > 0) highlights.push({ label: L.forSale, value: String(m.villasForSale) })
+  if (m?.medianVillaPrice && m.villasForSale >= 10) highlights.push({ label: L.price, value: usd(m.medianVillaPrice) })
   return {
     ...copy,
-    hero: tr.hero,
-    paragraphs: tr.paragraphs,
-    bestFor: tr.bestFor,
-    highlights: copy.highlights.map(h => ({
-      label: loc.labels[h.label] ?? h.label,
-      value: localizeValue(h.value, loc),
-    })),
+    hero: HERO[slug]?.[lang] ?? copy.hero,
+    paragraphs: dropClaims(copy.paragraphs),
+    highlights,
   }
 }
 
@@ -699,8 +804,12 @@ export function getDistrictCommercialMeta(
   const copy = getDistrictCopy(slug, lang)
   if (!copy) return null
   const n = pickCopy(NOUN, lang)[kind]
-  const priceFrom = copy.highlights.find(h => /entry|стартовая|from/i.test(h.label))?.value
-  const yieldRange = copy.highlights.find(h => /yield|доходность/i.test(h.label))?.value
+  // Median asking price from the market snapshot (only with 10+ listings);
+  // no yield figure — area-level samples are too small to state one.
+  const m = districtMarket(slug)
+  const median = m?.medianVillaPrice && m.villasForSale >= 10 ? usd(m.medianVillaPrice) : null
+  const priceFrom = median ? (lang === 'ru' ? `медианная цена ${median}` : `median asking price ${median}`) : undefined
+  const yieldRange: string | undefined = undefined
 
   if (lang === 'ru') {
     const countWord = totalCount ? `${totalCount} ${n.plural(totalCount)}` : null
@@ -711,10 +820,11 @@ export function getDistrictCommercialMeta(
     const descParts: string[] = [`Купить ${n.sing} в ${copy.name}, Бали`]
     if (countWord) descParts.push(`— ${countWord} от застройщиков`)
     const tail: string[] = []
-    if (priceFrom) tail.push(`Цены ${priceFrom.toLowerCase()}`)
+    if (priceFrom) tail.push(priceFrom)
     if (yieldRange) tail.push(`доходность ${yieldRange}`)
     tail.push('лизхолд и фрихолд')
-    const description = `${descParts.join(' ')}. ${tail.join(', ')}. Документы проверены, видео с земли.`
+    const tailRu = tail.join(', ')
+    const description = `${descParts.join(' ')}. ${tailRu.charAt(0).toUpperCase()}${tailRu.slice(1)}. Статус разрешений и зона земли — на каждом объекте.`
     return { title, heading, description }
   }
 
@@ -737,10 +847,10 @@ export function getDistrictCommercialMeta(
       ? [`${countWord} for sale in ${copy.name}, Bali, listed by developers`]
       : [`${forSale} for sale in ${copy.name}, Bali, listed by developers`]
   const tail: string[] = []
-  if (priceFrom) tail.push(`prices ${priceFrom.toLowerCase()}`)
+  if (priceFrom) tail.push(priceFrom)
   if (yieldRange) tail.push(`yield ${yieldRange}`)
   tail.push('leasehold and freehold')
   const tailText = tail.join(', ')
-  const description = `${descParts.join(' ')}. ${tailText.charAt(0).toUpperCase()}${tailText.slice(1)}. Permits verified, on-the-ground video.`
+  const description = `${descParts.join(' ')}. ${tailText.charAt(0).toUpperCase()}${tailText.slice(1)}. Permit status and land zone shown on every listing.`
   return { title, heading, description }
 }

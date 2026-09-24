@@ -62,7 +62,7 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
     },
     apartments: {
       title: `Купить апартаменты на Бали — цены${from ? ` от ${from}` : ''}, ${n} шт. | Balinsky`,
-      description: `Сколько стоят апартаменты на Бали${med ? `: медиана ${med}` : ''}${ruRange}. ${n} лотов в проверенных ЖК: Berawa, Pererenan, Pandawa. Доходность 8–15%, акции и рассрочки.`,
+      description: `Сколько стоят апартаменты на Бали${med ? `: медиана ${med}` : ''}${ruRange}. ${n} лотов в проверенных ЖК: Berawa, Pererenan, Pandawa. Акции и рассрочки.`,
     },
     complexes: {
       title: `${n} ${ruComplex} на Бали с проверкой PBG/SLF | Balinsky`,
@@ -87,7 +87,7 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
     },
     apartments: {
       title: `Bali Apartments for Sale — ${n} Listings${from ? ` from ${from}` : ''} | Balinsky`,
-      description: `${n} apartments for sale in verified Bali complexes. Berawa, Pererenan, Pandawa. Management companies, rental yield 8–15%, deals and instalments.`,
+      description: `${n} apartments for sale in verified Bali complexes. Berawa, Pererenan, Pandawa. Management companies, deals and instalments.`,
     },
     complexes: {
       title: `${n} residential complexes in Bali with PBG/SLF checks | Balinsky`,
@@ -113,7 +113,7 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
     },
     apartments: {
       title: `${n} apartemen di Bali${from ? ` mulai ${from}` : ''} | Balinsky`,
-      description: `${n} apartemen di kompleks tepercaya. Berawa, Pererenan, Pandawa. Perusahaan pengelola, imbal hasil sewa 8–15%, promo dan cicilan.`,
+      description: `${n} apartemen di kompleks tepercaya. Berawa, Pererenan, Pandawa. Perusahaan pengelola, promo dan cicilan.`,
     },
     complexes: {
       title: `${n} kompleks hunian di Bali dengan cek PBG/SLF | Balinsky`,
@@ -136,7 +136,7 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
     },
     apartments: {
       title: `${n} appartements à Bali${from ? ` à partir de ${from}` : ''} | Balinsky`,
-      description: `${n} appartements dans des résidences vérifiées. Berawa, Pererenan, Pandawa. Sociétés de gestion, rendement locatif 8–15%, offres et paiements échelonnés.`,
+      description: `${n} appartements dans des résidences vérifiées. Berawa, Pererenan, Pandawa. Sociétés de gestion, offres et paiements échelonnés.`,
     },
     complexes: {
       title: `${n} résidences à Bali avec vérification PBG/SLF | Balinsky`,
@@ -159,7 +159,7 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
     },
     apartments: {
       title: `${n} Apartments auf Bali${from ? ` ab ${from}` : ''} | Balinsky`,
-      description: `${n} Apartments in geprüften Anlagen. Berawa, Pererenan, Pandawa. Hausverwaltungen, Mietrendite 8–15%, Angebote und Ratenzahlung.`,
+      description: `${n} Apartments in geprüften Anlagen. Berawa, Pererenan, Pandawa. Hausverwaltungen, Angebote und Ratenzahlung.`,
     },
     complexes: {
       title: `${n} Wohnanlagen auf Bali mit PBG/SLF-Prüfung | Balinsky`,
@@ -182,7 +182,7 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
     },
     apartments: {
       title: `${n} 套巴厘岛公寓${from ? `，${from} 起` : ''} | Balinsky`,
-      description: `${n} 套已核验社区公寓。Berawa、Pererenan、Pandawa。物业管理公司，租金收益 8–15%，优惠与分期。`,
+      description: `${n} 套已核验社区公寓。Berawa、Pererenan、Pandawa。物业管理公司，优惠与分期。`,
     },
     complexes: {
       title: `${n} 个巴厘岛住宅区，含 PBG/SLF 核验 | Balinsky`,
@@ -205,7 +205,7 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
     },
     apartments: {
       title: `${n} appartementen op Bali${from ? ` vanaf ${from}` : ''} | Balinsky`,
-      description: `${n} appartementen in geverifieerde complexen. Berawa, Pererenan, Pandawa. Beheermaatschappijen, huurrendement 8–15%, aanbiedingen en termijnbetaling.`,
+      description: `${n} appartementen in geverifieerde complexen. Berawa, Pererenan, Pandawa. Beheermaatschappijen, aanbiedingen en termijnbetaling.`,
     },
     complexes: {
       title: `${n} wooncomplexen op Bali met PBG/SLF-controle | Balinsky`,
@@ -229,7 +229,7 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
     },
     apartments: {
       title: `${n} apartemen ring Bali${from ? ` saking ${from}` : ''} | Balinsky`,
-      description: `${n} apartemen ring kompleks sané kacihnayang. Berawa, Pererenan, Pandawa. Perusahaan pangelola, asil sewa 8–15%, promo miwah cicilan.`,
+      description: `${n} apartemen ring kompleks sané kacihnayang. Berawa, Pererenan, Pandawa. Perusahaan pangelola, promo miwah cicilan.`,
     },
     complexes: {
       title: `${n} kompleks umah ring Bali sareng cek PBG/SLF | Balinsky`,
@@ -252,7 +252,7 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
     },
     apartments: {
       title: `${n} apartamentów na Bali${from ? ` od ${from}` : ''} | Balinsky`,
-      description: `${n} apartamentów w zweryfikowanych kompleksach. Berawa, Pererenan, Pandawa. Firmy zarządzające, rentowność najmu 8–15%, promocje i raty.`,
+      description: `${n} apartamentów w zweryfikowanych kompleksach. Berawa, Pererenan, Pandawa. Firmy zarządzające, promocje i raty.`,
     },
     complexes: {
       title: `${n} kompleksów mieszkaniowych na Bali ze sprawdzeniem PBG/SLF | Balinsky`,
@@ -275,7 +275,7 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
     },
     apartments: {
       title: `${n} апартаментів на Балі${from ? ` від ${from}` : ''} | Balinsky`,
-      description: `${n} апартаментів у перевірених комплексах. Berawa, Pererenan, Pandawa. Керуючі компанії, дохідність оренди 8–15%, акції та розстрочки.`,
+      description: `${n} апартаментів у перевірених комплексах. Berawa, Pererenan, Pandawa. Керуючі компанії, акції та розстрочки.`,
     },
     complexes: {
       title: `${n} житлових комплексів на Балі з перевіркою PBG/SLF | Balinsky`,

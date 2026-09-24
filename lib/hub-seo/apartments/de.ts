@@ -59,7 +59,7 @@ const copy: HubLongCopy = {
       "heading": "Miete, Rendite und laufende Kosten",
       "paragraphs": [
         "Orientierungswerte für die Monatsmiete: Median $2.585 in Berawa, $2.113 in Canggu, $1.608 in Bukit, $1.300 in Ubud. Apartments werden im Durchschnitt günstiger vermietet als Villen, sind aber gleichmäßiger ausgelastet — eine kompakte Einheit mit Gemeinschaftspool lässt sich außerhalb der Saison leichter vermieten.",
-        "Eine realistische Nettorendite liegt bei 8–12% p.a. bei einer Auslastung von 70–80%. Bevor Sie einer Zahl aus der Präsentation glauben, ziehen Sie die Provision der Verwaltungsgesellschaft von 15–25%, den service charge der Anlage, Instandhaltung und Mietsteuer sowie die Abschreibung des leasehold ab. Prüfen Sie außerdem gesondert, ob in Ihrer Lage nicht noch ein weiteres Dutzend ähnlicher Anlagen auf den Markt kommt: In Canggu drückt ein Überangebot identischer Studios die Miete bereits nach unten."
+        "Nach eigener Berechnung von Balinsky (345 Apartments mit einem Schlafzimmer im Verkauf und 300 Apartments in der Vermietung, September 2026) erzielt ein mittleres Apartment mit einem Schlafzimmer bei 65 % Auslastung etwa 9 % brutto und etwa 4,4 % netto pro Jahr; Sternehotels auf Bali sind zu etwa 57–65 % ausgelastet (BPS Bali). Bevor Sie einer Zahl aus der Präsentation glauben, ziehen Sie die Provision der Verwaltungsgesellschaft von 15–25%, den service charge der Anlage, Instandhaltung und Mietsteuer sowie die Abschreibung des leasehold ab. Prüfen Sie außerdem gesondert, ob in Ihrer Lage nicht noch ein weiteres Dutzend ähnlicher Anlagen auf den Markt kommt: In Canggu drückt ein Überangebot identischer Studios die Miete bereits nach unten."
       ]
     }
   ],
