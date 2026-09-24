@@ -85,6 +85,12 @@ export const EN_KNOWLEDGE_SLUG_OVERRIDES: Record<string, string> = {
   "upravlyayushchie-kompanii-dlya-vill-na-bali-komissii-i-kak-vybrat": "bali-villa-management-fees-how-to-choose",
   "rassrochka-na-off-plan-na-bali-kak-rabotaet-i-kak-zashchitit-dengi": "bali-off-plan-payment-plans-protect-money",
   "skolko-stoit-kupit-villu-na-bali-nalogi-sbory-i-rashody-2026": "cost-of-buying-villa-bali-taxes-fees-2026",
+  // Data studies from the Balinsky catalogue + rental database (2026-09-24).
+  "stavki-arendy-vill-na-bali-po-rayonam-2026": "bali-villa-rental-rates-by-area-2026",
+  "dohodnost-vill-na-bali-po-rayonam-dannye": "bali-villa-rental-yield-by-area-data",
+  "deshevle-li-off-plan-na-bali-dannye-350-vill": "is-off-plan-cheaper-bali-villa-price-data",
+  "zonirovanie-i-razresheniya-vill-na-bali-v-tsifrah": "bali-zoning-permits-villas-for-sale-data",
+  "sroki-lizholda-na-bali-v-tsifrah-tsena-za-god": "bali-leasehold-terms-price-per-year-data",
 }
 
 // A few keys above were copied from raw slugs that ended in «-» (titles cut

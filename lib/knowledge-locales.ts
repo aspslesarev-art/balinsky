@@ -17,6 +17,11 @@ const RU_EN_ONLY = new Set([
   'upravlyayushchie-kompanii-dlya-vill-na-bali-komissii-i-kak-vybrat',
   'rassrochka-na-off-plan-na-bali-kak-rabotaet-i-kak-zashchitit-dengi',
   'skolko-stoit-kupit-villu-na-bali-nalogi-sbory-i-rashody-2026',
+  'stavki-arendy-vill-na-bali-po-rayonam-2026',
+  'dohodnost-vill-na-bali-po-rayonam-dannye',
+  'deshevle-li-off-plan-na-bali-dannye-350-vill',
+  'zonirovanie-i-razresheniya-vill-na-bali-v-tsifrah',
+  'sroki-lizholda-na-bali-v-tsifrah-tsena-za-god',
 ])
 
 /** @param ruSlug the Russian slug — the key every locale is indexed by. */
