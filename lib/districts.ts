@@ -681,10 +681,15 @@ export function getDistrictCommercialMeta(
   // canggu» — the title leads with that phrase (it also reads as English,
   // which «Buy villa in …» did not).
   const forSale = n.plural(2).charAt(0).toUpperCase() + n.plural(2).slice(1)
-  const title = `${forSale} for Sale in ${copy.name}, Bali — ${YEAR} Prices | Balinsky`
-  const descParts: string[] = countWord
-    ? [`${countWord} for sale in ${copy.name}, Bali, listed by developers`]
-    : [`${forSale} for sale in ${copy.name}, Bali, listed by developers`]
+  // Complexes aren't «for sale» — people search «new developments in <area>».
+  const title = kind === 'complex'
+    ? `New Developments in ${copy.name}, Bali — ${YEAR} Prices | Balinsky`
+    : `${forSale} for Sale in ${copy.name}, Bali — ${YEAR} Prices | Balinsky`
+  const descParts: string[] = kind === 'complex'
+    ? [`${countWord ?? forSale} in ${copy.name}, Bali — new developments with units for sale`]
+    : countWord
+      ? [`${countWord} for sale in ${copy.name}, Bali, listed by developers`]
+      : [`${forSale} for sale in ${copy.name}, Bali, listed by developers`]
   const tail: string[] = []
   if (priceFrom) tail.push(`prices ${priceFrom.toLowerCase()}`)
   if (yieldRange) tail.push(`yield ${yieldRange}`)

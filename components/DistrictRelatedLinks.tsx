@@ -8,7 +8,7 @@
 import Link from 'next/link'
 import { ArrowRight, HardHat, Building2, Tag, Newspaper, TrendingUp } from 'lucide-react'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
-import { localizeHubPath } from '@/lib/en-hub-routes'
+import { localizeHubPath } from '@/lib/hub-routes'
 
 const COPY = {
   ru: {
@@ -117,7 +117,7 @@ export function DistrictRelatedLinks({
 }) {
   const c = pickCopy(COPY, lang)
   const devsHref     = switchLangPath('/ru/zastrojshhiki', lang)
-  const complexesUrl = switchLangPath('/ru/zhilye-kompleksy', lang) + `/${districtSlug}`
+  const complexesUrl = localizeHubPath(`/ru/zhilye-kompleksy/${districtSlug}`, lang)
   const villasUrl    = localizeHubPath(`/ru/villy/${districtSlug}`, lang)
   const aptsUrl      = localizeHubPath(`/ru/apartamenty/${districtSlug}`, lang)
   const promoHref    = switchLangPath('/ru/akcii', lang)

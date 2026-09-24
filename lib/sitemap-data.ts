@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { listAllCanonicalPaths as listApartmentPaths, parseCleanPath as parseAptPath } from '@/lib/seo-routes'
 import { listAllCanonicalPaths as listComplexPaths, parseCleanPath as parseComplexPath } from '@/lib/complex-seo-routes'
 import { listAllCanonicalPaths as listVillaPaths, parseCleanPath as parseVillaPath } from '@/lib/villa-seo-routes'
-import { hubLanguages } from '@/lib/en-hub-routes'
+import { hubLanguages, hubPath } from '@/lib/hub-routes'
 import { loadAll as loadAllVillas, passes as villaPasses } from '@/app/ru/villy/_lib'
 import { loadAll as loadAllApartments, passes as apartmentPasses } from '@/app/ru/apartamenty/_lib'
 import { loadAll as loadAllComplexes, passes as complexPasses } from '@/app/ru/zhilye-kompleksy/_lib'
@@ -16,7 +16,7 @@ import { loadAllKnowledge } from '@/lib/knowledge'
 import { enKnowledgeSlug } from '@/lib/knowledge-en-slugs'
 import { isNoindexKnowledge } from '@/lib/knowledge-noindex'
 import { normalizeSlug } from '@/lib/slug-normalize'
-import { switchLangPath } from '@/lib/i18n'
+import { switchLangPath, type Lang } from '@/lib/i18n'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
@@ -116,20 +116,21 @@ function pairEntry(args: {
     .map(([, url]) => ({ url, lastModified, changeFrequency, priority, alternates }))
 }
 
-// Programmatic catalog hub (district / bedrooms / status / …) — exists in
-// RU and, since the EN hub routes, in EN (lib/en-hub-routes.ts). The other
-// locales have no hub routes, so the cluster is just the RU↔EN pair.
+// Programmatic catalog hub (district / bedrooms / status / …). Exists in
+// every locale (lib/hub-routes.ts): one entry per locale, each carrying the
+// full hreflang cluster. Balinese gets its URL but no hreflang (no ISO 639-1
+// code), exactly as pairEntry does.
+const HUB_LANGS: readonly Lang[] = ['ru', 'en', 'id', 'fr', 'de', 'zh', 'nl', 'pl', 'uk', 'ban']
 function hubEntries(ruPath: string, lastModified: Date): SitemapEntry[] {
   const common = { lastModified, changeFrequency: 'weekly' as const, priority: 0.7 }
   // The bare section root (/ru/villy) is already emitted by TOP_PAIRS with
-  // the full ten-locale cluster — keep this entry as it was.
+  // the full cluster — keep this entry as it was.
   if (ruPath.split('/').length <= 3) return [{ url: `${SITE_URL}${ruPath}`, ...common }]
-  const languages = hubLanguages(ruPath)
-  const withAlt = { ...common, alternates: { languages } }
-  return [
-    { url: `${SITE_URL}${ruPath}`, ...withAlt },
-    ...(languages.en ? [{ url: languages.en, ...withAlt }] : []),
-  ]
+  const alternates = { languages: hubLanguages(ruPath) }
+  return HUB_LANGS.flatMap(lang => {
+    const p = hubPath(ruPath, lang)
+    return p ? [{ url: `${SITE_URL}${p}`, ...common, alternates }] : []
+  })
 }
 
 // Pull developer slugs straight from Supabase. Lightweight one-shot read at
@@ -446,7 +447,7 @@ async function buildAll(): Promise<Categorized> {
     // Best-effort — partial sitemap still ships.
   }
 
-  // Filter-canonical pages — RU + the EN mirror (/en/villas/canggu/2-bedroom).
+  // Filter-canonical hubs — every locale (/ru/villy/canggu, /en/villas/canggu, /id/vila/canggu …).
   // Drop combos with < MIN_OBJECTS_PER_FILTER_PAGE matches.
   let apartments: SitemapEntry[] = []
   let complexes: SitemapEntry[] = []
@@ -455,7 +456,7 @@ async function buildAll(): Promise<Categorized> {
     apartments = filterIndexablePaths(listApartmentPaths(), '/ru/apartamenty', aData.enriched, parseAptPath, apartmentPasses)
       .flatMap(path => hubEntries(path, now))
     complexes = filterIndexablePaths(listComplexPaths(), '/ru/zhilye-kompleksy', cData.enriched, parseComplexPath, complexPasses)
-      .map(path => ({ url: `${SITE_URL}${path}`, lastModified: now, changeFrequency: 'weekly' as const, priority: 0.7 }))
+      .flatMap(path => hubEntries(path, now))
     villas = filterIndexablePaths(listVillaPaths(), '/ru/villy', vData.enriched, parseVillaPath, villaPasses)
       .flatMap(path => hubEntries(path, now))
   } else {

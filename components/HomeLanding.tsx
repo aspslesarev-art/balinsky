@@ -38,7 +38,7 @@ import {
   VizYield, VizCompetitors, VizHeat, VizNearby, VizDemand, VizDocs,
 } from '@/components/LandingVisuals'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
-import { localizeHubPath } from '@/lib/en-hub-routes'
+import { localizeHubPath } from '@/lib/hub-routes'
 
 // Порядок здесь = порядок COPY.powers.items во всех локалях: доход,
 // цены соседей, тепловая карта туристов, что рядом, балл востребованности,
@@ -979,12 +979,11 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
         <div className="mt-8 md:mt-12 grid grid-cols-2 lg:grid-cols-4 gap-4">
           {c.districts.items.map(d => {
             const cover = districtCovers[d.slug.toLowerCase()]
-            // Link to the crawlable canonical filter path (/ru/villy/<slug>,
-            // /en/villas/<slug> — both in the sitemap) instead of ?district=,
-            // which robots.txt blocks via `Disallow: /*?`. The other locales
-            // have no clean filter routes, so they keep the query form.
+            // Link to the crawlable canonical hub (/ru/villy/<slug>,
+            // /en/villas/<slug>, /id/vila/<slug> … — all in the sitemap)
+            // instead of ?district=, which robots.txt blocks via `Disallow: /*?`.
             const districtSlug = DISTRICT_TO_SLUG[d.slug]
-            const districtHref = (lang === 'ru' || lang === 'en') && districtSlug
+            const districtHref = districtSlug
               ? localizeHubPath(`/ru/villy/${districtSlug}`, lang)
               : `${villasHref}?district=${d.slug}`
             return (

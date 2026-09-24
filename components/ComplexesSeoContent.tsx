@@ -6,6 +6,7 @@ import {
 } from '@/lib/complex-seo-routes'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
+import { localizeHubPath } from '@/lib/hub-routes'
 import { facetLabel } from '@/lib/filter-i18n'
 
 const POPULAR_DISTRICTS = ['Berawa', 'Sanur', 'Ubud', 'Uluwatu', 'Pererenan', 'Pandawa', 'Batu Bolong', 'Cemagi']
@@ -499,7 +500,6 @@ export function ComplexesSeoContent({
     .map(d => ({ name: d, slug: DISTRICT_TO_SLUG[d] }))
     .filter(x => x.slug)
 
-  const sectionRoot = switchLangPath('/ru/zhilye-kompleksy', lang)
   const developersRoot = switchLangPath('/ru/zastrojshhiki', lang)
 
   const faqJsonLd = {
@@ -530,7 +530,7 @@ export function ComplexesSeoContent({
             {districts.map(d => (
               <li key={d.slug}>
                 <Link
-                  href={`${sectionRoot}/${d.slug}`}
+                  href={localizeHubPath(`/ru/zhilye-kompleksy/${d.slug}`, lang)}
                   className="inline-block px-3 py-1.5 rounded-full bg-[var(--color-card-bg)] border border-[var(--color-border)] text-[13px] text-[var(--color-text)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] transition-colors"
                 >
                   {d.name}
@@ -546,7 +546,7 @@ export function ComplexesSeoContent({
             {Object.entries(TYPE_TO_SLUG).slice(0, 5).map(([name, slug]) => (
               <li key={slug}>
                 <Link
-                  href={`${sectionRoot}/${slug}`}
+                  href={localizeHubPath(`/ru/zhilye-kompleksy/${slug}`, lang)}
                   className="inline-block px-3 py-1.5 rounded-full bg-[var(--color-card-bg)] border border-[var(--color-border)] text-[13px] text-[var(--color-text)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] transition-colors"
                 >
                   {facetLabel('type', name, lang)}
@@ -555,7 +555,7 @@ export function ComplexesSeoContent({
             ))}
             <li>
               <Link
-                href={`${sectionRoot}/${STATUS_TO_SLUG.building}`}
+                href={localizeHubPath(`/ru/zhilye-kompleksy/${STATUS_TO_SLUG.building}`, lang)}
                 className="inline-block px-3 py-1.5 rounded-full bg-[var(--color-card-bg)] border border-[var(--color-border)] text-[13px] text-[var(--color-text)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] transition-colors"
               >
                 {t.chipBuilding}
@@ -563,7 +563,7 @@ export function ComplexesSeoContent({
             </li>
             <li>
               <Link
-                href={`${sectionRoot}/${STATUS_TO_SLUG.built}`}
+                href={localizeHubPath(`/ru/zhilye-kompleksy/${STATUS_TO_SLUG.built}`, lang)}
                 className="inline-block px-3 py-1.5 rounded-full bg-[var(--color-card-bg)] border border-[var(--color-border)] text-[13px] text-[var(--color-text)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] transition-colors"
               >
                 {t.chipBuilt}

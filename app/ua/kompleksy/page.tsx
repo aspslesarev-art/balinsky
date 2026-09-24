@@ -2,11 +2,13 @@
 // — so layout, filters, sort, infinite scroll all stay identical and
 // future RU updates land in EN automatically.
 
+import { permanentRedirect } from 'next/navigation'
 import { ComplexesCatalog } from '../../ru/zhilye-kompleksy/_catalog'
 import { parseQueryFilters, buildMetadataEn, hasAnyFilter, loadAll } from '../../ru/zhilye-kompleksy/_lib'
 import { buildCanonicalPath } from '@/lib/complex-seo-routes'
 import { generateCategoryMeta } from '@/lib/seo'
 import { villaCategoryStats } from '@/lib/category-stats'
+import { hubPath } from '@/lib/hub-routes'
 
 type SP = Promise<Record<string, string | undefined>>
 
@@ -27,6 +29,13 @@ export async function generateMetadata({ searchParams }: { searchParams: SP }) {
 export default async function Page({ searchParams }: { searchParams: SP }) {
   const sp = await searchParams
   const filters = parseQueryFilters(sp)
+  // A filter combo that has a clean hub URL 308s onto it, so ?district=…
+  // links consolidate on the indexable hub path (lib/hub-routes.ts).
+  const canonical = buildCanonicalPath(filters)
+  const localCanonical = canonical ? hubPath(canonical, 'uk') : null
+  if (localCanonical && canonical !== '/ru/zhilye-kompleksy' && hasAnyFilter(filters)) {
+    permanentRedirect(localCanonical)
+  }
   return (
     <ComplexesCatalog
       filters={filters}

@@ -3,7 +3,7 @@ import type { VillaFilterState, VillaFilterOptions } from '@/app/ru/villy/_lib'
 import { buildCanonicalPath, STYLE_TO_SLUG } from '@/lib/villa-seo-routes'
 import { DISTRICT_TO_SLUG, BEDROOM_TO_SLUG } from '@/lib/seo-routes'
 import { pickCopy, type Lang } from '@/lib/i18n'
-import { localizeHubPath } from '@/lib/en-hub-routes'
+import { localizeHubPath } from '@/lib/hub-routes'
 
 const COPY = {
   ru: {

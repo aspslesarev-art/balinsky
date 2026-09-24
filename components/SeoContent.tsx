@@ -8,7 +8,7 @@ import {
   priceSegmentLabel,
 } from '@/lib/seo-routes'
 import { pickCopy, type Lang } from '@/lib/i18n'
-import { localizeHubPath } from '@/lib/en-hub-routes'
+import { localizeHubPath } from '@/lib/hub-routes'
 import { getHubLongCopy, isUnfilteredHub } from '@/lib/hub-seo'
 import { getRelatedReading } from '@/lib/hub-seo/related-reading'
 import { HubLongForm } from '@/components/HubLongForm'
