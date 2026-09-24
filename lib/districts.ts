@@ -9,6 +9,13 @@ import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
 // Long-tail districts (beyond the ~12 curated below) generated from
 // assistant_kb guides + real stats by scripts/kb-district-pages.mjs.
 import generatedDistricts from './districts-generated.json'
+import districtsId from './district-copy/id.json'
+import districtsFr from './district-copy/fr.json'
+import districtsDe from './district-copy/de.json'
+import districtsZh from './district-copy/zh.json'
+import districtsNl from './district-copy/nl.json'
+import districtsPl from './district-copy/pl.json'
+import districtsUk from './district-copy/uk.json'
 
 export type DistrictCopy = {
   slug: string
@@ -479,12 +486,51 @@ function deCyrillicCopy(copy: DistrictCopy): DistrictCopy {
   }
 }
 
+// Native translations of the EN district copy for the other locales, so the
+// localized hubs (/id/vila/canggu, /de/villen/uluwatu …) don't show an English
+// intro. Balinese reads Indonesian. Keyed by slug; a district missing from a
+// language file keeps the English text.
+type LocalizedDistricts = {
+  labels: Record<string, string>
+  from: string
+  /** «$180K 起» — the «from» word goes after the amount (Chinese). */
+  fromSuffix?: boolean
+  nights: string
+  days: string
+  districts: Record<string, { hero: string; paragraphs: string[]; bestFor: string[] }>
+}
+const LOCALIZED: Partial<Record<Lang, LocalizedDistricts>> = {
+  id: districtsId, ban: districtsId,
+  fr: districtsFr, de: districtsDe, zh: districtsZh, nl: districtsNl, pl: districtsPl, uk: districtsUk,
+}
+
+function localizeValue(v: string, loc: LocalizedDistricts): string {
+  return v
+    .replace(/^from (.+)$/, (_, amount) => loc.fromSuffix ? `${amount} ${loc.from}` : `${loc.from} ${amount}`)
+    .replace(/ nights$/, ` ${loc.nights}`)
+    .replace(/ days$/, ` ${loc.days}`)
+}
+
 export function getDistrictCopy(slug: string, lang: Lang): DistrictCopy | null {
   // Curated entries win; generated long-tail fills the rest.
   const bundle = DISTRICTS[slug] ?? GENERATED_DISTRICTS[slug]
   if (!bundle) return null
   const copy = pickCopy(bundle, lang)
-  return lang === 'ru' ? copy : deCyrillicCopy(copy)
+  if (lang === 'ru') return copy
+  const loc = LOCALIZED[lang]
+  const tr = loc?.districts[slug]
+  if (!loc || !tr) return deCyrillicCopy(copy)
+  // No de-Cyrillic pass here: the translation is native (Ukrainian is Cyrillic).
+  return {
+    ...copy,
+    hero: tr.hero,
+    paragraphs: tr.paragraphs,
+    bestFor: tr.bestFor,
+    highlights: copy.highlights.map(h => ({
+      label: loc.labels[h.label] ?? h.label,
+      value: localizeValue(h.value, loc),
+    })),
+  }
 }
 
 // Commercial title / heading / description for single-district hub pages.

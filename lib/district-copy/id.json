@@ -1,0 +1,221 @@
+{
+  "labels": {
+    "Villas for sale": "Vila dijual",
+    "Median villa price": "Harga median vila",
+    "Apartments": "Apartemen",
+    "Median apt price": "Harga median apartemen",
+    "Complexes": "Kompleks",
+    "1BR entry": "Harga masuk 1BR",
+    "2BR entry": "Harga masuk 2BR",
+    "Yield": "Imbal hasil",
+    "2BR ADR": "ADR 2BR",
+    "2-3BR ADR": "ADR 2-3BR",
+    "Avg stay": "Rata-rata menginap",
+    "Occupancy": "Okupansi",
+    "Peak occupancy": "Okupansi puncak",
+    "Year-round occupancy": "Okupansi sepanjang tahun",
+    "Annual appreciation": "Kenaikan nilai per tahun",
+    "ADR growth 2y": "Kenaikan ADR 2 th",
+    "Price growth 2y": "Kenaikan harga 2 th",
+    "Land price": "Harga tanah",
+    "Rentals listed": "Listing sewa",
+    "Discount to Pererenan": "Lebih murah dari Pererenan"
+  },
+  "from": "mulai",
+  "nights": "malam",
+  "days": "hari",
+  "districts": {
+    "batu-bolong": {
+      "hero": "Batu Bolong adalah kawasan di Canggu dengan pasokan apartemen yang luas dan titik masuk yang lebih terjangkau dibanding vila.",
+      "paragraphs": [
+        "Di Batu Bolong ada 60 properti yang dijual: 50 apartemen dan 10 vila, ditambah 16 kompleks hunian. Pasokan jelas didominasi apartemen, sehingga pembeli dengan anggaran menengah lebih mudah masuk.",
+        "Apartemen mulai dari $120,000, dengan harga median $220,400 dan median $3,891 per m². Vila berkisar $250,000 hingga $1,439,900, dengan harga median $404,950 dan median $3,063 per m². Format masuk yang paling umum adalah apartemen di bawah $250,000, sedangkan vila menjadi pilihan untuk anggaran mulai $250,000.",
+        "Format yang paling umum di sini adalah 2 kamar tidur, cocok untuk disewakan maupun dipakai sendiri. Pasar sewa mencakup 22 listing bulanan seharga $1,270 hingga $5,450 per bulan, dengan median $3,045: aktivitas sewa ada, tetapi volume penjualan jauh lebih kuat, jadi strategi beli dan exit sebaiknya dinilai terlebih dahulu dari pasar jual-beli."
+      ],
+      "bestFor": ["Masuk dengan anggaran terjangkau", "Apartemen di bawah $250k", "Untuk disewakan", "Tinggal di Canggu"]
+    },
+    "pandawa": {
+      "hero": "Pandawa adalah kawasan dengan pasokan seimbang dan harga masuk terjangkau untuk apartemen, menawarkan format investasi ringkas sekaligus vila kelas menengah.",
+      "paragraphs": [
+        "Di Pandawa dijual 26 vila, 42 apartemen, dan 21 kompleks hunian. Pasokannya cukup luas untuk memberi pilihan, namun pasar tidak terlihat terlalu panas. Kawasan ini menonjol terutama untuk apartemen di bawah $150k, dengan harga median $137,000 dan median $3,536 per m².",
+        "Harga median vila di Pandawa adalah $269,500 dengan $3,241 per m², sehingga kawasan ini lebih terjangkau dibanding lokasi premium di Bali. Rentang harga vila sangat lebar — dari $80,000 hingga $6,500,000 — tetapi inti pasarnya ada di segmen menengah. Untuk apartemen, rentang $90,000–$480,000 lebih terkonsentrasi pada permintaan massal.",
+        "Pasar sewa terbatas: 12 listing, median sewa bulanan $1,875, dan rentang $525–$2,133.33. Format paling umum adalah 1 kamar tidur, jadi kawasan ini paling cocok bagi pembeli yang mencari apartemen ringkas atau vila kecil untuk disewakan atau ditinggali."
+      ],
+      "bestFor": ["Apartemen di bawah $150k", "Format investasi ringkas", "Vila kecil untuk disewakan", "Anggaran menengah"]
+    },
+    "ubud": {
+      "hero": "Pusat budaya dan spiritual Bali: wellness, yoga, masa menginap yang lebih panjang.",
+      "paragraphs": [
+        "Ubud adalah satu-satunya kawasan pedalaman yang serius diminati investor. Ekonomi sewanya berbeda: bukan per malam, melainkan mingguan/bulanan untuk wisatawan wellness, penyelenggara retret, dan pelancong slow travel. Rata-rata menginap 7-14 malam, ADR 2BR $90-150.",
+        "Imbal hasilnya lebih moderat dibanding pesisir — 6-9% bersih per tahun, tetapi lebih stabil: penurunan musiman lebih kecil, lebih banyak pemesanan ulang, biaya perawatan lebih rendah (tanpa garam laut di udara, peralatan jauh lebih awet). Harga masuk mulai $120K untuk vila 1BR di Penestanan atau Tegallalang.",
+        "Investor khas Ubud adalah orang yang berencana menggabungkan penyewaan dengan tinggal sendiri 2-4 bulan per tahun. Permintaan puncak Mei-September dan Desember-Januari; di bulan lain Anda bisa tinggal sendiri tanpa mengorbankan imbal hasil.",
+        "Secara hukum Ubud lebih sederhana daripada pesisir: lebih sedikit pemilik tanah spekulatif, leasehold biasanya dari keluarga dengan riwayat tanah yang bersih, freehold melalui PT PMA tersedia untuk lahan dengan status terverifikasi."
+      ],
+      "bestFor": ["Wellness & yoga", "Sewa jangka panjang", "Slow travel", "Dipakai sendiri"]
+    },
+    "pererenan": {
+      "hero": "Alternatif Canggu yang lebih tenang, tren naik, imbal hasil 9-12%.",
+      "paragraphs": [
+        "Pererenan adalah kawasan tren berikutnya setelah Canggu, 15 menit dari Berawa. Lebih sepi, lebih sedikit macet, dengan ombak dan beach club yang sama. Dalam dua tahun terakhir ADR naik 35%, sementara harga tanah hanya naik 15-20% — salah satu rasio biaya terhadap imbal hasil terbaik di pulau ini.",
+        "Imbal hasil 9-12% bersih per tahun, mendekati Canggu dengan harga masuk 20-30% lebih rendah. Vila 2BR mulai $160K (setara di Canggu mulai $220K).",
+        "Risiko utama — «utang infrastruktur» yang kronis: jalan sempit ke pantai, macet di jam sibuk, sedikit supermarket. Seiring kawasan terbangun, masalah ini akan memburuk sebelum membaik. Masuk akal membeli jika Anda bisa menahan 5+ tahun — saat itu infrastruktur sudah menyusul.",
+        "Pererenan masih kawasan «liar» dalam arti buruk: banyak pemilik tanah perorangan dengan riwayat tanah yang tidak jelas. Uji tuntas status lahan di sini lebih penting daripada di Canggu atau Bukit."
+      ],
+      "bestFor": ["Investor rasio biaya-imbal hasil", "Horizon 5+ tahun", "Ombak + ketenangan"]
+    },
+    "seseh": {
+      "hero": "Seseh adalah kawasan niche dengan pasokan terbatas, di mana vila menawarkan anggaran masuk yang lebih jelas sementara apartemen berada di segmen harga lebih tinggi.",
+      "paragraphs": [
+        "Seseh adalah kawasan dengan pasokan kecil: 5 vila, 32 apartemen, dan 3 kompleks hunian dijual. Pasar jelas condong ke apartemen, sementara stok vila tetap sangat terbatas.",
+        "Dari sisi harga masuk, vila di sini lebih terjangkau: $222,000–$435,000 dengan median $278,000 dan median $2,254 per m². Apartemen berkisar $150,000 hingga $1,280,000, tetapi mediannya jauh lebih tinggi, $534,500 dan $6,800 per m², sehingga segmen apartemen berada di atas vila meski sebaran listingnya lebar.",
+        "Kawasan ini cocok bagi pembeli yang mencari vila untuk disewakan atau ditinggali dengan anggaran masuk yang lebih dapat diprediksi, terutama format umum 2 kamar tidur. Ada 26 listing sewa seharga $355 hingga $8,130 per bulan dengan median $1,746: pasar sewa ada, tetapi tidak massal, jadi pembeli perlu memperhatikan kualitas aset dan likuiditas."
+      ],
+      "bestFor": ["Vila untuk disewakan", "Hunian pribadi", "Pasokan terbatas", "Vila dengan harga masuk terjangkau"]
+    },
+    "uluwatu": {
+      "hero": "Semenanjung Bukit — pemandangan laut premium dan imbal hasil tertinggi di Bali.",
+      "paragraphs": [
+        "Uluwatu dan Bukit secara luas (termasuk Pandawa, Ungasan, Bingin) adalah tujuan premium bagi pembeli investor. Vila dengan pemandangan laut langsung di dekat tebing memiliki ADR tertinggi di pulau ini: $250-450/malam untuk unit 2-3BR. Okupansi sewa terkelola melalui Airbnb Luxe dan Plum Guide mencapai 70-85%.",
+        "Imbal hasil bersih 10-15% per tahun — di atas Canggu berkat tarif premium dan masa menginap lebih panjang (rata-rata 4-7 malam). Harga masuk mulai $130K untuk vila 1BR ringkas di Pecatu atau Bingin, hingga $1.5M+ untuk vila di tepi tebing dengan infinity pool di Uluwatu dan Padang-Padang.",
+        "Kekuatan Bukit: lebih sedikit macet dibanding Canggu, wisatawan yang lebih «matang» (luxury dan semi-luxury), permintaan stabil sepanjang tahun berkat musim ombak di kedua sisi tahun. Kekurangan: 45-60 menit dari bandara, infrastruktur harian terbatas (toko, apotek), sepenuhnya bergantung pada mobil.",
+        "Lanskap hukumnya standar untuk Bali: leasehold 25-80 tahun dari pemilik perorangan; freehold melalui PT PMA tersedia di proyek pengembang besar. Zonasi stabil — Bukit tidak terdampak revisi RDTR terbaru."
+      ],
+      "bestFor": ["Sewa premium", "Wisatawan menginap lama", "Komunitas selancar", "Pemandangan laut"]
+    },
+    "nusa-dua": {
+      "hero": "Resor keluarga dan korporat dengan hotel premium dan lingkungan tertutup yang tenang.",
+      "paragraphs": [
+        "Nusa Dua adalah kawasan resor tertutup di pesisir selatan Bali tempat berkumpulnya jaringan hotel bintang 5 internasional (St Regis, Mulia, Ritz-Carlton, Sofitel). Ini memberi profil investasi yang unik: arus stabil tamu korporat, delegasi konferensi, serta keluarga segmen semi-luxury dan luxury.",
+        "Imbal hasil vila 7-10% bersih per tahun — di antara Canggu dan Sanur. ADR rata-rata 2BR $180-260, okupansi 70-78% sepanjang tahun, tanpa penurunan musim sepi berkat grup korporat. Harga masuk mulai $200K untuk vila 1BR di sekitar kawasan, hingga $1M+ untuk properti di dalam Nusa Dua Resort.",
+        "Kekuatan — infrastruktur kelas internasional: rumah sakit, sekolah, pusat perbelanjaan, bandara 15 menit. Kelemahan — kawasan relatif terisolasi, tanpa «kehidupan lokal» yang membuat Canggu dan Ubud dicintai. Cocok untuk investor yang mengutamakan stabilitas daripada pertumbuhan.",
+        "Secara hukum standar untuk Bali: leasehold dari pemilik perorangan di sekitar kawasan, freehold melalui PT PMA di proyek pengembang besar. Nilai kadaster termasuk yang tertinggi di pulau ini."
+      ],
+      "bestFor": ["Tamu korporat", "Segmen keluarga", "Portofolio berisiko rendah", "Jangka panjang"]
+    },
+    "cemagi": {
+      "hero": "Kawasan pantai barat yang tenang — tahap berikutnya dari pergeseran tren.",
+      "paragraphs": [
+        "Cemagi adalah kawasan pantai di barat Pererenan, di tengah jalan menuju Tanah Lot. Beberapa tahun lalu masih lahan pertanian; kini pembangunan proyek vila aktif berlangsung di segmen menengah dan premium. Laju pembangunannya mirip Pererenan tahun 2022.",
+        "Imbal hasil 8-11% bersih per tahun. Vila 2-3BR mulai $200K, beachfront premium hingga $700K. ADR 2BR $140-200, okupansi sewa terkelola 65-75%. Pasar: digital nomad yang mencari ketenangan, wisatawan keluarga dari Australia dan Singapura.",
+        "Kekuatan — pantai pasir vulkanik hitam yang luas, komunitas selancar, kepadatan bangunan relatif rendah. Kelemahan — infrastruktur terbatas (jalan sempit, sedikit supermarket), 25-35 menit ke Canggu.",
+        "Risiko utama — revisi zonasi. Sebagian proyek di Cemagi berdiri di lahan berstatus pertanian — pengecekan RDTR wajib sebelum transaksi."
+      ],
+      "bestFor": ["Masuk lebih awal", "Selancar dan pantai", "Horizon 4-5 tahun"]
+    },
+    "melasti": {
+      "hero": "Zona tebing premium di Bukit dengan matahari terbenam terbaik dan tarif sewa tinggi.",
+      "paragraphs": [
+        "Melasti adalah salah satu bentang paling spektakuler di Bukit: tebing vertikal, pasir putih, air jernih, dan vila padat di tepi tebing dengan infinity pool. Kawasan ini berbatasan dengan Pandawa dan Ungasan serta termasuk klaster premium semenanjung selatan.",
+        "Imbal hasil 11-15% bersih per tahun — di atas Canggu berkat tarif premium dan masa menginap panjang. Vila 2-3BR dengan pemandangan laut berkisar $350K hingga $1.5M. ADR $300-500 di musim ramai, 1,5-2x rata-rata Bali. Pasar: wisatawan HNW, retret, kru video.",
+        "Melasti berbeda dari bagian Bukit lainnya karena reliefnya lebih curam — banyak vila berdiri tepat di tepi tebing, memberi pemandangan unik tetapi menyulitkan lanskap dan evakuasi. Survei geologi sebelum transaksi wajib dilakukan (risiko erosi dan longsor).",
+        "Secara hukum standar: leasehold 50-80 tahun dari pemilik perorangan, freehold melalui PT PMA di proyek pengembang besar. Harga tanah per meter persegi termasuk yang tertinggi di pulau ini ($800-1500/m²)."
+      ],
+      "bestFor": ["Segmen premium", "Pemandangan laut", "Wisatawan HNW", "Menginap lama"]
+    },
+    "berawa": {
+      "hero": "Kantong premium Canggu: vila kelas atas, beach club, pasar korporat.",
+      "paragraphs": [
+        "Berawa adalah sub-kawasan Canggu yang paling mahal dan paling berkembang: Finns Beach Club, Atlas Beach Fest, La Brisa, dan restoran premium terkonsentrasi di sini. Harga properti 30-50% di atas bagian Canggu lainnya, begitu pula tarif sewanya: vila 2BR menghasilkan $250-320/malam di musim ramai.",
+        "Imbal hasil 9-12% bersih per tahun. Segmen premium dengan pemandangan laut langsung atau ke Finns bisa mencapai 14%. Harga masuk mulai $250K untuk vila 1BR ringkas di bagian dalam kawasan, hingga $1.2M+ untuk beachfront.",
+        "Pasar penyewa: digital nomad berpenghasilan tinggi, wisatawan keluarga dari Singapura, Hong Kong, dan Australia, retret korporat. Lama menginap 5-10 malam, di atas rata-rata Canggu.",
+        "Kekurangan utama: kepadatan turis tinggi dan kebisingan beach club di malam hari. Tidak cocok untuk ditinggali pemilik — murni investasi sewa."
+      ],
+      "bestFor": ["Sewa premium", "Wisatawan HNW", "Beachfront", "Investasi murni"]
+    },
+    "sanur": {
+      "hero": "Resor keluarga yang tenang di pesisir timur dengan risiko investasi rendah.",
+      "paragraphs": [
+        "Sanur adalah kawasan wisata tertua di Bali, dikenal dengan pengunjung keluarga yang tenang, lingkungan aman, dan imbal hasil yang dapat diprediksi. Tidak ada hype ala Canggu, tetapi juga tidak ada penurunan tajam: okupansi sewa bertahan 65-75% sepanjang tahun tanpa puncak atau lembah musiman.",
+        "Imbal hasil lebih moderat — 5-8% bersih per tahun, tetapi risiko investasinya minimal: infrastruktur matang, rumah sakit BIMC, sekolah internasional, promenade tepi pantai. Harga masuk mulai $150K untuk vila 1BR di Renon atau Sindhu.",
+        "Basis penyewa — pensiunan Eropa selama 1-3 bulan, keluarga ekspat, karyawan perusahaan besar yang punya proyek di Bali. Properti di Sanur sulit dijual secara spekulatif (kenaikan harga tanah 4-6% per tahun vs 10-15% di Canggu), tetapi juga sulit merugi — pasarnya stabil.",
+        "Sanur cocok untuk investor dengan horizon 10+ tahun dan profil risiko rendah: arus kas yang dapat diprediksi lebih penting daripada kenaikan nilai yang agresif."
+      ],
+      "bestFor": ["Pengunjung keluarga", "Arus kas stabil", "Risiko rendah", "Menginap lama"]
+    },
+    "umalas": {
+      "hero": "Kawasan hunian antara Seminyak dan Canggu — sekolah, golf, sewa jangka panjang.",
+      "paragraphs": [
+        "Umalas adalah kawasan hunian yang tenang bagi orang yang tinggal di Bali sepanjang tahun. Konsentrasi sekolah internasional (Australian Independent School, Sunrise School, Cita Hati), lapangan golf, dan infrastruktur ramah keluarga menciptakan permintaan stabil untuk sewa jangka panjang — terutama dari keluarga ekspat dengan anak dan pekerja jarak jauh yang memilih pulau ini sebagai tempat tinggal tetap.",
+        "Imbal hasil 6-9% bersih per tahun dari sewa jangka panjang, tanpa puncak musiman. ADR 2BR $80-120, rata-rata menginap 60-180 hari. Harga masuk mulai $180K untuk vila 2BR, $350-500K untuk rumah keluarga 3-4BR dengan taman dan kolam.",
+        "Kekuatan — biaya operasional rendah (pergantian penyewa jarang), arus kas stabil, pengelolaan mudah. Kelemahan — likuiditas rendah (properti hunian lebih sulit dijual daripada vila sewa), kenaikan modal rendah (3-5% per tahun).",
+        "Secara hukum Umalas adalah kawasan stabil dengan riwayat pemilik tanah yang transparan. Sebagian besar transaksi berupa leasehold 25-50 tahun, freehold melalui PT PMA untuk rumah keluarga yang lebih besar."
+      ],
+      "bestFor": ["Keluarga ekspat", "Sewa jangka panjang", "Keluarga dengan anak sekolah", "Stabilitas"]
+    },
+    "gwk": {
+      "hero": "GWK adalah pasar kecil untuk masuk secara selektif, dengan stok terbatas dan peluang paling jelas pada apartemen harga rendah dan vila anggaran menengah.",
+      "paragraphs": [
+        "GWK adalah kawasan dengan pasokan terbatas, hanya 20 listing yang dijual: 9 vila dan 11 apartemen, ditambah 1 kompleks hunian. Ini pasar kecil dengan pilihan selektif dan persaingan terbatas di sisi penjualan.",
+        "Dari sisi harga, apartemen di GWK berada di segmen masuk hingga menengah, $94,000 hingga $262,000 dengan median $105,000. Vila memerlukan anggaran masuk lebih tinggi, $205,000 hingga $510,000, dengan harga median $320,000 dan median $3,158 per m². Apartemen lebih murah secara total, tetapi lebih mahal per meter persegi: median $4,000 per m² dibanding $3,158 untuk vila.",
+        "Format listing yang umum adalah 1 kamar tidur, jadi kawasan ini lebih cocok untuk lot investasi ringkas dan hunian pribadi format kecil daripada properti keluarga yang besar. Data sewa saat ini lemah: tidak ada listing sewa bulanan dalam sampel, sehingga pasar sewa belum terkonfirmasi oleh data saat ini."
+      ],
+      "bestFor": ["Masuk dengan anggaran terjangkau", "Apartemen ringkas", "Vila anggaran menengah", "Hunian pribadi format kecil"]
+    },
+    "nusa-penida": {
+      "hero": "Nusa Penida adalah pasar ringkas dengan pasokan terbatas, di mana membeli jelas lebih dominan daripada menyewa.",
+      "paragraphs": [
+        "Nusa Penida adalah pasar properti yang sangat kecil: hanya 6 vila dijual, 3 apartemen, dan 1 kompleks hunian. Pilihannya terbatas, sehingga kawasan ini lebih cocok untuk pembelian yang terarah di pasar dengan pasokan terbatas.",
+        "Vila berada di segmen harga menengah pulau ini dengan harga median $437,000, rentang $399,000–$489,000, dan median $2,819 per m². Apartemen menawarkan anggaran masuk lebih rendah, dengan harga median $180,000, rentang $105,000–$250,000, dan median $4,000 per m².",
+        "Format yang umum adalah properti 2 kamar tidur, cocok untuk dipakai sendiri, liburan, atau membeli vila siap huni. Pada saat yang sama, tidak ada listing sewa dalam statistik, jadi pasar sewa jangka panjang di sini praktis tidak ada atau sangat terbatas."
+      ],
+      "bestFor": ["Pasar dengan pasokan terbatas", "Membeli vila", "Apartemen dengan anggaran lebih rendah", "Hunian pribadi"]
+    },
+    "kedungu": {
+      "hero": "Kedungu adalah kawasan niche dengan pasokan sangat terbatas, di mana format pembelian utama saat ini adalah apartemen 1 kamar tidur dengan harga median $121,450.",
+      "paragraphs": [
+        "Pasar jual di Kedungu saat ini sangat sempit: tidak ada vila yang dijual, dan hanya 6 apartemen tersedia dengan harga $92,500 hingga $349,500 dan median $121,450. Karena itu kawasan ini terutama relevan bagi pembeli yang mencari apartemen hingga $125k, bukan vila.",
+        "Dari struktur pasokannya, Kedungu adalah pasar ringkas: format umum apartemen 1 kamar tidur, harga median $3,028 per m², dan hanya ada 1 kompleks hunian. Pilihan terbatas, jadi kawasan ini lebih cocok untuk masuk secara terarah daripada perbandingan pasar yang luas.",
+        "Pasokan sewa minimal: hanya ada 1 listing sewa bulanan di pasar terbuka seharga $1,077 per bulan. Ini menunjukkan pasar sewa yang lemah dan likuiditas niche, jadi pembeli perlu memperhitungkan kedalaman pasar yang terbatas."
+      ],
+      "bestFor": ["Masuk dengan anggaran terjangkau", "Apartemen 1 kamar tidur", "Pembelian percobaan", "Membeli alih-alih menyewa"]
+    },
+    "ungasan": {
+      "hero": "Ungasan adalah pasar niche untuk masuk lewat apartemen mulai $160,000 atau vila mulai $300,000, dengan pasokan sewa yang jauh lebih aktif.",
+      "paragraphs": [
+        "Di Ungasan ada 10 properti yang dijual: 4 vila dan 6 apartemen. Pasokan terbatas, jadi kawasan ini lebih cocok untuk pemilihan terarah daripada pencarian pasar yang luas. Ada juga 6 kompleks hunian di kawasan ini.",
+        "Titik masuk di sini dimulai dari apartemen: harga median apartemen $160,000. Vila mulai $300,000, dengan harga median vila $377,500. Berdasarkan harga per meter persegi, vila tampak lebih terjangkau daripada apartemen: median $2,493/m² dibanding $4,777/m².",
+        "Pasar sewa jauh lebih luas daripada pasar jual, dengan 93 listing sewa bulanan. Sewa bulanan berkisar $262 hingga $12,600, dengan median $2,462. Untuk anggaran ringkas, kawasan ini cocok untuk strategi apartemen 1 kamar tidur, sementara pembeli vila untuk disewakan atau ditinggali perlu bersiap dengan pilihan yang terbatas."
+      ],
+      "bestFor": ["Apartemen mulai $160,000", "Format 1 kamar tidur", "Strategi sewa", "Vila mulai $300,000"]
+    },
+    "karanggasem": {
+      "hero": "Karanggasem adalah pasar yang sangat terbatas, di mana pilihan pembelian saat ini terutama berupa apartemen ringkas.",
+      "paragraphs": [
+        "Karanggasem adalah pasar yang sangat sempit bagi pembeli: statistik saat ini tidak menunjukkan vila yang dijual dan hanya 5 apartemen tersedia. Hanya ada 1 kompleks hunian di pasar, jadi pilihan format dan proyek sangat minim.",
+        "Produk utama di sini adalah apartemen dengan harga masuk $243,100 hingga $527,300. Harga median apartemen $262,850, median harga per meter persegi $5,022, dan format umumnya unit 1 kamar tidur.",
+        "Kawasan ini paling cocok bagi pembeli yang mencari properti ringkas untuk dipakai sendiri atau masuk secara terarah ke aset format kecil. Saat ini tidak cocok untuk strategi sewa vila: tidak ada vila yang dijual dan tidak ada listing sewa dalam statistik saat ini, sehingga segmen sewa sulit dinilai dari data yang tersedia."
+      ],
+      "bestFor": ["Apartemen ringkas", "Dipakai sendiri", "Masuk secara terarah", "Anggaran hingga $300,000"]
+    },
+    "nyanyi": {
+      "hero": "Kawasan tren berikutnya setelah Pererenan — pantai yang masih alami, titik masuk awal.",
+      "paragraphs": [
+        "Nyanyi adalah jalur pesisir sempit di utara Tanah Lot dan Pererenan. Beberapa tahun lalu masih murni lahan pertanian; kini beach club, hotel butik, dan vila sewa pertama mulai bermunculan. Inilah «Pererenan berikutnya» dalam lintasan pembangunan.",
+        "Harga 25-35% di bawah Pererenan dengan imbal hasil serupa 8-11%: $130-180K untuk vila 1BR, $200-280K untuk 2BR. ADR 2BR $130-180, okupansi sewa terkelola 65-75%. Daya tarik «alami» menarik wisatawan yang mencari alternatif Canggu.",
+        "Risiko utama — kekosongan infrastruktur. Jalan yang layak, supermarket, apotek, dan layanan medis berjarak 20-30 menit ke arah Canggu. Horizon 3-5 tahun seharusnya menyelesaikan ini, tetapi pemilik harus menerimanya atau memperlakukan properti murni sebagai sewa dengan pengelola.",
+        "Secara hukum, Nyanyi memiliki porsi tinggi lahan berzonasi pertanian. Uji tuntas status lahan dan revisi RDTR sangat penting. Banyak leasehold di sini berasal dari keluarga dengan riwayat kepemilikan panjang — lebih mudah diverifikasi."
+      ],
+      "bestFor": ["Masuk lebih awal", "Horizon 3-5 tahun", "Murni untuk disewakan", "Pantai yang tenang"]
+    },
+    "kerobokan": {
+      "hero": "Kawasan bernuansa kota di utara Seminyak: restoran, bisnis, komunitas ekspat.",
+      "paragraphs": [
+        "Kerobokan adalah kawasan yang tidak terlalu turistik antara Seminyak dan Canggu, berorientasi pada pasar penghuni: sewa jangka panjang, keluarga ekspat, profesional kelas menengah. Tidak ada beachfront, tetapi jaringan padat kafe, restoran, sekolah, dan pusat kebugaran menciptakan permintaan stabil untuk sewa 1-12 bulan.",
+        "Imbal hasil 7-10% bersih per tahun dengan okupansi stabil 75-90% — mendekati ekonomi sewa jangka panjang di Canberra atau Bangkok. ADR 2BR $80-130, rata-rata menginap 30-90 hari. Harga masuk mulai $170K untuk vila 2BR, $300-450K untuk rumah keluarga 3-4BR yang bagus.",
+        "Kekuatan — pendapatan stabil, musiman minimal, pengelolaan mudah (masa sewa panjang = pergantian penyewa jarang). Kelemahan — potensi kenaikan harga rendah (4-6% per tahun vs 10-15% di Canggu). Cocok untuk investor yang ingin meminimalkan repot operasional.",
+        "Secara hukum Kerobokan umumnya leasehold 25-50 tahun. Freehold melalui PT PMA ada pada pengembang proyek wisata di perbatasan Seminyak."
+      ],
+      "bestFor": ["Sewa jangka panjang", "Keluarga ekspat", "Arus kas stabil", "Pasar penghuni"]
+    },
+    "canggu": {
+      "hero": "Kawasan tren utama Bali: selancar, acara, networking, tarif sewa jangka pendek tertinggi.",
+      "paragraphs": [
+        "Canggu adalah pasar sewa terpadat dan tercepat tumbuh di pulau ini. Konsentrasi restoran, coworking, spot selancar, dan acara menjadikannya magnet bagi digital nomad dan wisatawan jangka pendek. Tarif harian rata-rata (ADR) vila 2 kamar tidur $180-230 di musim ramai; okupansi sewa terkelola 75-85%.",
+        "Imbal hasil bersih investor, berdasarkan analitik Booking langsung melalui estatemarket.io, adalah 10-13% per tahun untuk vila seharga $200-350K. Segmen premium (vila baru di Echo Beach dan Berawa) dengan pemandangan laut bisa mencapai 15%. Harga masuk mulai $180K untuk vila 1BR ringkas di Padang-Linjong atau Babakan.",
+        "Sub-lokasi utama: Berawa (premium, dekat Finns Beach Club), Batu Bolong (pusat, loyalitas turis tertinggi), Pererenan (lebih tenang, tren naik), Echo Beach (selancar, Canggu utara). Secara hukum, leasehold 25-30 tahun dari pemilik perorangan mendominasi; freehold melalui PT PMA muncul di proyek pengembang yang lebih baru.",
+        "Risiko: harga tanah tumbuh lebih cepat daripada tarif sewa selama 18 bulan terakhir — jendela masuk murah mulai tertutup. Sebagian lahan sedang ditinjau zonasinya (RDTR), jadi status tanah perlu diverifikasi sebelum transaksi."
+      ],
+      "bestFor": ["Sewa jangka pendek", "Komunitas selancar", "Digital nomad", "Gaya hidup aktif"]
+    }
+  }
+}

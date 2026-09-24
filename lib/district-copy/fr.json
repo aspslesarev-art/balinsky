@@ -1,0 +1,221 @@
+{
+  "labels": {
+    "Villas for sale": "Villas à vendre",
+    "Median villa price": "Prix médian villa",
+    "Apartments": "Appartements",
+    "Median apt price": "Prix médian appart.",
+    "Complexes": "Résidences",
+    "1BR entry": "Entrée 1 ch.",
+    "2BR entry": "Entrée 2 ch.",
+    "Yield": "Rendement",
+    "2BR ADR": "ADR 2 ch.",
+    "2-3BR ADR": "ADR 2-3 ch.",
+    "Avg stay": "Séjour moyen",
+    "Occupancy": "Occupation",
+    "Peak occupancy": "Occupation en haute saison",
+    "Year-round occupancy": "Occupation à l'année",
+    "Annual appreciation": "Valorisation annuelle",
+    "ADR growth 2y": "Hausse de l'ADR sur 2 ans",
+    "Price growth 2y": "Hausse des prix sur 2 ans",
+    "Land price": "Prix du terrain",
+    "Rentals listed": "Annonces de location",
+    "Discount to Pererenan": "Décote vs Pererenan"
+  },
+  "from": "dès",
+  "nights": "nuits",
+  "days": "jours",
+  "districts": {
+    "batu-bolong": {
+      "hero": "Batu Bolong est un secteur de Canggu avec une large offre d'appartements et un point d'entrée plus accessible que les villas.",
+      "paragraphs": [
+        "Batu Bolong compte 60 biens à vendre : 50 appartements et 10 villas, plus 16 résidences. L'offre penche nettement vers les appartements, ce qui facilite l'entrée pour les acheteurs au budget plus modéré.",
+        "Les appartements démarrent à $120,000, avec un prix médian de $220,400 et une médiane de $3,891 le m². Les villas vont de $250,000 à $1,439,900, avec un prix médian de $404,950 et une médiane de $3,063 le m². Le format d'entrée le plus courant est l'appartement sous $250,000 ; les villas visent les budgets à partir de $250,000.",
+        "Le format typique est le 2 chambres, adapté aussi bien à la location qu'à l'usage personnel. Le marché locatif compte 22 annonces mensuelles de $1,270 à $5,450 par mois, pour une médiane de $3,045 : la location existe, mais le volume de ventes est nettement plus fort, il faut donc d'abord évaluer la stratégie d'achat et de sortie à partir du marché de la vente."
+      ],
+      "bestFor": ["Petit budget", "Appartements sous $250k", "Usage locatif", "Vivre à Canggu"]
+    },
+    "pandawa": {
+      "hero": "Pandawa offre une offre équilibrée et une entrée accessible en appartement, avec à la fois des formats d'investissement compacts et des villas de milieu de gamme.",
+      "paragraphs": [
+        "Pandawa compte 26 villas, 42 appartements et 21 résidences à vendre. L'offre est assez large pour laisser le choix, sans que le marché paraisse surchauffé. Le secteur se distingue surtout pour les appartements sous $150k, avec un prix médian de $137,000 et une médiane de $3,536 le m².",
+        "Le prix médian d'une villa à Pandawa est de $269,500, soit $3,241 le m², ce qui rend le secteur plus accessible que les adresses premium de Bali. L'écart de prix des villas est large — de $80,000 à $6,500,000 — mais le cœur du marché se situe dans le milieu de gamme. Pour les appartements, la fourchette $90,000–$480,000 concentre la demande de masse.",
+        "Le marché locatif est limité : 12 annonces, un loyer mensuel médian de $1,875 et une fourchette de $525–$2,133.33. Le format typique est le 1 chambre : le secteur convient surtout aux acheteurs d'un appartement compact ou d'une petite villa pour la location ou l'usage personnel."
+      ],
+      "bestFor": ["Appartements sous $150k", "Investissement compact", "Petite villa à louer", "Budget moyen"]
+    },
+    "ubud": {
+      "hero": "Le centre culturel et spirituel de Bali : bien-être, yoga, séjours longs.",
+      "paragraphs": [
+        "Ubud est le seul secteur de l'intérieur des terres qui attire sérieusement les investisseurs. L'économie locative y est différente : pas de nuitées, mais des séjours à la semaine ou au mois pour les voyageurs bien-être, les organisateurs de retraites et les adeptes du slow travel. Séjour moyen de 7 à 14 nuits, ADR 2 chambres de $90-150.",
+        "Le rendement est plus modeste que sur la côte — 6-9 % net par an, mais plus régulier : moins de creux saisonniers, plus de réservations récurrentes, coûts d'entretien plus bas (l'absence de sel marin dans l'air use beaucoup moins les équipements). Entrée dès $120K pour une villa 1 chambre à Penestanan ou Tegallalang.",
+        "L'investisseur type à Ubud combine location et 2 à 4 mois d'usage personnel par an. La demande culmine de mai à septembre et de décembre à janvier ; le reste du temps, vous pouvez y vivre sans sacrifier le rendement.",
+        "Juridiquement, Ubud est plus simple que la côte : moins de propriétaires spéculatifs, des baux (leasehold) généralement consentis par des familles à l'historique foncier clair, et du freehold via PT PMA sur les terrains au statut vérifié."
+      ],
+      "bestFor": ["Bien-être et yoga", "Location longue durée", "Slow travel", "Usage personnel"]
+    },
+    "pererenan": {
+      "hero": "L'alternative plus calme à Canggu, en pleine ascension, avec des rendements de 9-12 %.",
+      "paragraphs": [
+        "Pererenan est le prochain secteur tendance après Canggu, à 15 minutes de Berawa. Moins de bruit, moins de trafic, les mêmes vagues et beach clubs. En deux ans, l'ADR a progressé de 35 % quand le prix du foncier n'a pris que 15-20 % — l'un des meilleurs rapports coût/rendement de l'île.",
+        "Le rendement net est de 9-12 % par an, proche de Canggu pour un ticket d'entrée 20-30 % plus bas. Les villas 2 chambres démarrent à $160K (l'équivalent à Canggu démarre à $220K).",
+        "Risque principal — une « dette d'infrastructure » chronique : route étroite vers la plage, embouteillages aux heures de pointe, peu de supermarchés. À mesure que le secteur se construit, ces problèmes vont empirer avant de se résorber. Acheter a du sens si vous pouvez garder le bien 5 ans ou plus — l'infrastructure aura alors rattrapé son retard.",
+        "Pererenan reste une zone « sauvage » au mauvais sens du terme : beaucoup de propriétaires privés à l'historique foncier flou. La vérification du statut du terrain compte ici davantage qu'à Canggu ou sur le Bukit."
+      ],
+      "bestFor": ["Investisseurs coût/rendement", "Horizon de 5 ans et plus", "Surf et calme"]
+    },
+    "seseh": {
+      "hero": "Seseh est un secteur de niche à l'offre limitée, où les villas offrent un budget d'entrée plus lisible tandis que les appartements se situent sur un segment plus cher.",
+      "paragraphs": [
+        "Seseh est un secteur à faible offre : 5 villas, 32 appartements et 3 résidences à vendre. Le marché penche nettement vers les appartements, le stock de villas restant très limité.",
+        "Côté prix d'entrée, les villas sont ici plus accessibles : $222,000–$435,000, médiane de $278,000 et de $2,254 le m². Les appartements vont de $150,000 à $1,280,000, mais leur médiane est bien plus élevée, à $534,500 et $6,800 le m² : le segment appartement se situe au-dessus des villas malgré la dispersion des annonces.",
+        "Le secteur convient aux acheteurs d'une villa pour la location ou l'usage personnel avec un budget d'entrée plus prévisible, en particulier au format typique de 2 chambres. On compte 26 annonces de location de $355 à $8,130 par mois, pour une médiane de $1,746 : le marché locatif existe mais n'est pas de masse, il faut donc être attentif à la qualité et à la liquidité du bien."
+      ],
+      "bestFor": ["Villa à louer", "Résidence personnelle", "Offre limitée", "Villa à prix d'entrée abordable"]
+    },
+    "uluwatu": {
+      "hero": "La péninsule du Bukit — vues océan premium et les meilleurs rendements de Bali.",
+      "paragraphs": [
+        "Uluwatu et l'ensemble du Bukit (dont Pandawa, Ungasan, Bingin) sont la destination premium des acheteurs investisseurs. Les villas avec vue directe sur l'océan, au bord des falaises, affichent l'ADR le plus élevé de l'île : $250-450 la nuit pour des 2-3 chambres. L'occupation en location gérée via Airbnb Luxe et Plum Guide atteint 70-85 %.",
+        "Le rendement net est de 10-15 % par an — au-dessus de Canggu grâce aux tarifs premium et aux séjours plus longs (4 à 7 nuits en moyenne). L'entrée démarre à $130K pour une villa 1 chambre compacte à Pecatu ou Bingin et dépasse $1.5M pour une villa en bord de falaise avec piscine à débordement à Uluwatu et Padang-Padang.",
+        "Atouts du Bukit : moins de trafic qu'à Canggu, une clientèle plus « mature » (luxe et semi-luxe), une demande stable toute l'année grâce aux saisons de surf des deux côtés de l'année. Inconvénients : 45 à 60 minutes de l'aéroport, peu d'infrastructures du quotidien (courses, pharmacies), dépendance totale à la voiture.",
+        "Le cadre juridique est standard pour Bali : leasehold de 25 à 80 ans auprès de propriétaires privés ; freehold via PT PMA dans les grands projets de promoteurs. Le zonage est stable — le Bukit n'a pas été touché par les récentes révisions du RDTR."
+      ],
+      "bestFor": ["Location premium", "Touristes long séjour", "Communauté surf", "Vue océan"]
+    },
+    "nusa-dua": {
+      "hero": "Une station familiale et d'affaires, avec des hôtels haut de gamme dans un environnement fermé et calme.",
+      "paragraphs": [
+        "Nusa Dua est une station balnéaire fermée sur la côte sud de Bali, où se concentrent les grandes chaînes internationales 5 étoiles (St Regis, Mulia, Ritz-Carlton, Sofitel). Cela donne un profil d'investissement unique sur l'île : un flux régulier et élevé de voyageurs d'affaires, de délégations de congrès et de familles semi-luxe et luxe.",
+        "Le rendement des villas est de 7-10 % net par an — entre Canggu et Sanur. ADR moyen 2 chambres de $180-260, occupation de 70-78 % toute l'année, sans creux de basse saison grâce aux groupes d'entreprises. Entrée dès $200K pour une villa 1 chambre en périphérie, plus de $1M pour les biens situés dans le Nusa Dua Resort.",
+        "Atout — une infrastructure de niveau international : hôpital, écoles, centres commerciaux, aéroport à 15 minutes. Faiblesse — un relatif isolement, sans la « vie locale » qui fait aimer Canggu et Ubud. Convient aux investisseurs qui privilégient la stabilité à la croissance.",
+        "Juridiquement standard pour Bali : leasehold auprès de propriétaires privés en périphérie, freehold via PT PMA dans les grands projets de promoteurs. La valeur cadastrale est parmi les plus élevées de l'île."
+      ],
+      "bestFor": ["Clientèle d'affaires", "Segment familial", "Portefeuille à faible risque", "Long terme"]
+    },
+    "cemagi": {
+      "hero": "Un secteur balnéaire calme à l'ouest — la prochaine étape de la migration des tendances.",
+      "paragraphs": [
+        "Cemagi est un secteur balnéaire à l'ouest de Pererenan, à mi-chemin de Tanah Lot. Il y a quelques années, c'étaient des terres agricoles ; aujourd'hui, les projets de villas se multiplient en milieu de gamme comme en premium. Le rythme de développement rappelle Pererenan en 2022.",
+        "Rendement net de 8-11 % par an. Les villas 2-3 chambres démarrent à $200K, le premium en bord de plage atteint $700K. ADR 2 chambres de $140-200, occupation en location gérée de 65-75 %. Clientèle : digital nomads en quête de calme, familles venues d'Australie et de Singapour.",
+        "Atout — une large plage de sable volcanique noir, une communauté surf, une densité de construction encore faible. Faiblesse — infrastructure limitée (routes étroites, peu de supermarchés), 25 à 35 minutes de Canggu.",
+        "Risque principal — les révisions de zonage. Certains projets de Cemagi sont sur des terrains à statut agricole — vérification RDTR obligatoire avant toute transaction."
+      ],
+      "bestFor": ["Entrée précoce", "Surf et plage", "Horizon de 4-5 ans"]
+    },
+    "melasti": {
+      "hero": "Une zone de falaises premium sur le Bukit, avec les plus beaux couchers de soleil et des loyers élevés.",
+      "paragraphs": [
+        "Melasti est l'un des tronçons les plus spectaculaires du Bukit : falaises verticales, sable blanc, eau claire et villas en bord de falaise avec piscines à débordement. Le secteur jouxte Pandawa et Ungasan et fait partie du pôle premium de la péninsule sud.",
+        "Rendement net de 11-15 % par an — au-dessus de Canggu grâce aux tarifs premium et aux séjours longs. Les villas 2-3 chambres vue océan vont de $350K à $1.5M. ADR de $300-500 en haute saison, soit 1,5 à 2 fois la moyenne de Bali. Clientèle : voyageurs fortunés, retraites, équipes de tournage.",
+        "Melasti se distingue des autres secteurs du Bukit par un relief plus abrupt — beaucoup de villas sont littéralement au bord de la falaise, ce qui offre une vue unique mais complique l'aménagement et l'évacuation. Une étude géologique avant la transaction est indispensable (risque d'érosion et de glissement de terrain).",
+        "Juridiquement standard : leasehold de 50 à 80 ans auprès de propriétaires privés, freehold via PT PMA dans les grands projets. Le prix du terrain au m² est parmi les plus élevés de l'île ($800-1500/m²)."
+      ],
+      "bestFor": ["Segment premium", "Vue océan", "Clientèle fortunée", "Séjours longs"]
+    },
+    "berawa": {
+      "hero": "Le quartier premium de Canggu : villas haut de gamme, beach clubs, clientèle d'affaires.",
+      "paragraphs": [
+        "Berawa est le sous-secteur le plus cher et le plus développé de Canggu : Finns Beach Club, Atlas Beach Fest, La Brisa et les restaurants haut de gamme s'y concentrent. Les prix sont 30-50 % au-dessus du reste de Canggu, tout comme les loyers : une villa 2 chambres rapporte $250-320 la nuit en haute saison.",
+        "Rendement net de 9-12 % par an. Le segment premium avec vue directe sur l'océan ou sur Finns peut atteindre 14 %. Entrée dès $250K pour une villa 1 chambre compacte à l'intérieur du quartier, plus de $1.2M en bord de plage.",
+        "Clientèle locative : digital nomads aisés, familles de Singapour, Hong Kong et Australie, séminaires d'entreprise. Séjours de 5 à 10 nuits, au-dessus de la moyenne de Canggu.",
+        "Principal inconvénient : forte densité touristique et bruit nocturne des beach clubs. Ne convient pas à l'habitation personnelle — c'est un pur investissement locatif."
+      ],
+      "bestFor": ["Location premium", "Clientèle fortunée", "Bord de plage", "Investissement pur"]
+    },
+    "sanur": {
+      "hero": "Une station calme et familiale sur la côte est, avec un faible risque d'investissement.",
+      "paragraphs": [
+        "Sanur est le plus ancien secteur touristique de Bali, connu pour sa clientèle familiale tranquille, son environnement sûr et ses rendements prévisibles. Pas d'effervescence à la Canggu, mais pas de chute brutale non plus : l'occupation locative se maintient à 65-75 % toute l'année, sans pics ni creux saisonniers.",
+        "Le rendement est plus modeste — 5-8 % net par an, mais le risque est minimal : infrastructure mature, hôpital BIMC, écoles internationales, promenade en bord de mer. Entrée dès $150K pour une villa 1 chambre à Renon ou Sindhu.",
+        "Locataires — retraités européens pour 1 à 3 mois, familles d'expatriés, salariés de grandes entreprises ayant des projets à Bali. Les biens de Sanur se revendent difficilement de façon spéculative (valorisation du foncier de 4-6 % par an contre 10-15 % à Canggu), mais on y perd aussi difficilement de l'argent — le marché est stable.",
+        "Sanur convient aux investisseurs à horizon de 10 ans et plus, au profil prudent : un cash-flow prévisible compte davantage qu'une valorisation agressive."
+      ],
+      "bestFor": ["Clientèle familiale", "Cash-flow stable", "Faible risque", "Séjours longs"]
+    },
+    "umalas": {
+      "hero": "Un quartier résidentiel entre Seminyak et Canggu — écoles, golf, location longue durée.",
+      "paragraphs": [
+        "Umalas est un quartier résidentiel calme pour ceux qui vivent à Bali à l'année. La concentration d'écoles internationales (Australian Independent School, Sunrise School, Cita Hati), de golfs et d'infrastructures familiales alimente une demande stable en location longue durée — surtout des familles d'expatriés avec enfants et des télétravailleurs installés durablement sur l'île.",
+        "Rendement net de 6-9 % par an en location longue durée, sans pics saisonniers. ADR 2 chambres de $80-120, séjour moyen de 60 à 180 jours. Entrée dès $180K pour une villa 2 chambres, $350-500K pour une maison familiale 3-4 chambres avec jardin et piscine.",
+        "Atout — faibles coûts d'exploitation (peu de rotation), cash-flow stable, gestion simple. Faiblesse — faible liquidité (une résidence se revend plus difficilement qu'une villa locative), faible plus-value (3-5 % par an).",
+        "Juridiquement, Umalas est un quartier stable à l'historique foncier transparent. La plupart des transactions sont des leaseholds de 25 à 50 ans, avec du freehold via PT PMA pour les grandes maisons familiales."
+      ],
+      "bestFor": ["Familles d'expatriés", "Location longue durée", "Familles avec enfants scolarisés", "Stabilité"]
+    },
+    "gwk": {
+      "hero": "GWK est un petit marché pour une entrée sélective, avec un stock limité et des opportunités surtout sur les appartements à petit ticket et les villas de budget moyen.",
+      "paragraphs": [
+        "GWK est un secteur à l'offre contrainte, avec seulement 20 annonces à vendre : 9 villas et 11 appartements, plus 1 résidence. C'est un petit marché au choix sélectif et à la concurrence limitée côté vente.",
+        "Côté prix, les appartements de GWK se situent sur le segment d'entrée à moyen, de $94,000 à $262,000 avec une médiane de $105,000. Les villas demandent un budget plus élevé, de $205,000 à $510,000, avec un prix médian de $320,000 et une médiane de $3,158 le m². Les appartements sont moins chers en ticket total mais plus chers au m² : $4,000 le m² en médiane contre $3,158 pour les villas.",
+        "Le format typique est le 1 chambre : le secteur convient mieux aux investissements compacts et à l'habitation personnelle de petit format qu'aux grandes propriétés familiales. Les données locatives sont faibles pour l'instant : aucune annonce de location mensuelle dans l'échantillon, le marché locatif n'est donc pas confirmé par les données actuelles."
+      ],
+      "bestFor": ["Petit budget", "Appartements compacts", "Villas de budget moyen", "Habitation de petit format"]
+    },
+    "nusa-penida": {
+      "hero": "Nusa Penida est un marché compact à l'offre contrainte, où l'achat l'emporte nettement sur la location.",
+      "paragraphs": [
+        "Nusa Penida est un tout petit marché immobilier : seulement 6 villas à vendre, 3 appartements et 1 résidence. Le choix est limité, le secteur se prête donc à des achats ciblés dans un marché à offre restreinte.",
+        "Les villas se situent dans le milieu de gamme de l'île, avec un prix médian de $437,000, une fourchette de $399,000–$489,000 et une médiane de $2,819 le m². Les appartements offrent un budget d'entrée plus bas : prix médian de $180,000, fourchette de $105,000–$250,000 et médiane de $4,000 le m².",
+        "Le format typique est le 2 chambres, adapté à l'usage personnel, aux séjours de vacances ou à l'achat d'une villa clés en main. En revanche, les statistiques ne comptent aucune annonce de location : le marché de la location longue durée y est quasi inexistant ou très limité."
+      ],
+      "bestFor": ["Marché à offre limitée", "Achat de villa", "Appartement à budget réduit", "Résidence personnelle"]
+    },
+    "kedungu": {
+      "hero": "Kedungu est un secteur de niche à l'offre très limitée, où le format d'achat principal est aujourd'hui l'appartement 1 chambre, au prix médian de $121,450.",
+      "paragraphs": [
+        "Le marché de la vente à Kedungu est aujourd'hui très étroit : aucune villa à vendre, et seulement 6 appartements disponibles, de $92,500 à $349,500 pour une médiane de $121,450. Le secteur intéresse donc surtout les acheteurs d'appartements jusqu'à $125k plutôt que de villas.",
+        "Par la structure de son offre, Kedungu est un marché compact : format typique en 1 chambre, prix médian de $3,028 le m² et une seule résidence. Le choix est limité : le secteur se prête mieux à une entrée ciblée qu'à une large comparaison.",
+        "L'offre locative est minime : une seule annonce de location mensuelle sur le marché ouvert, à $1,077 par mois. Cela traduit un marché locatif peu représenté et une liquidité de niche : il faut tenir compte de la faible profondeur du marché."
+      ],
+      "bestFor": ["Petit budget", "Appartements 1 chambre", "Achat test", "Acheter plutôt que louer"]
+    },
+    "ungasan": {
+      "hero": "Ungasan est un marché de niche pour entrer via un appartement dès $160,000 ou une villa dès $300,000, avec une offre locative bien plus active.",
+      "paragraphs": [
+        "Ungasan compte 10 biens à vendre : 4 villas et 6 appartements. L'offre est limitée, le secteur se prête donc à une sélection ciblée plutôt qu'à une recherche large. On y compte aussi 6 résidences.",
+        "Le point d'entrée passe par les appartements : prix médian de $160,000. Les villas démarrent à $300,000, pour un prix médian de $377,500. Au m², les villas paraissent plus abordables que les appartements : médiane de $2,493/m² contre $4,777/m².",
+        "Le marché locatif est bien plus large que celui de la vente, avec 93 annonces mensuelles. Les loyers vont de $262 à $12,600 par mois, pour une médiane de $2,462. Avec un budget compact, le secteur se prête à une stratégie d'appartement 1 chambre ; les acheteurs de villa pour la location ou l'usage personnel doivent s'attendre à un choix restreint."
+      ],
+      "bestFor": ["Appartements dès $160,000", "Format 1 chambre", "Stratégie locative", "Villas dès $300,000"]
+    },
+    "karanggasem": {
+      "hero": "Karanggasem est un marché très limité, où l'offre actuelle se concentre surtout sur des appartements compacts.",
+      "paragraphs": [
+        "Karanggasem est un marché très étroit : les statistiques actuelles ne montrent aucune villa à vendre et seulement 5 appartements disponibles. Une seule résidence est sur le marché, le choix de formats et de projets est donc minimal.",
+        "Le produit principal est l'appartement, avec des prix d'entrée de $243,100 à $527,300. Le prix médian d'un appartement est de $262,850, la médiane au m² de $5,022, et le format typique est le 1 chambre.",
+        "Le secteur convient surtout aux acheteurs d'un bien compact pour un usage personnel ou d'une entrée ciblée sur un actif de petit format. Il ne se prête pas pour l'instant à une stratégie de villa locative : aucune villa à vendre et aucune annonce de location dans les statistiques actuelles, ce qui rend le segment locatif difficile à évaluer."
+      ],
+      "bestFor": ["Appartements compacts", "Usage personnel", "Entrée ciblée", "Budget jusqu'à $300,000"]
+    },
+    "nyanyi": {
+      "hero": "Le prochain secteur tendance après Pererenan — plages préservées, point d'entrée précoce.",
+      "paragraphs": [
+        "Nyanyi est une étroite bande côtière au nord de Tanah Lot et de Pererenan. Il y a quelques années, ce n'étaient que des terres agricoles ; aujourd'hui apparaissent les premiers beach clubs, hôtels de charme et villas locatives. C'est le « prochain Pererenan » sur la trajectoire de développement.",
+        "Les prix sont 25-35 % sous Pererenan pour des rendements comparables de 8-11 % : $130-180K pour une villa 1 chambre, $200-280K pour une 2 chambres. ADR 2 chambres de $130-180, occupation en location gérée de 65-75 %. Le côté « préservé » attire les touristes en quête d'une alternative à Canggu.",
+        "Risque principal — le vide d'infrastructure. Routes correctes, supermarchés, pharmacies et soins médicaux sont à 20-30 minutes en direction de Canggu. Un horizon de 3 à 5 ans devrait régler la question, mais le propriétaire doit l'accepter ou traiter le bien comme un pur investissement locatif confié à un gestionnaire.",
+        "Juridiquement, Nyanyi compte une forte part de terrains à zonage agricole. La vérification du statut du terrain et des révisions du RDTR est cruciale. Beaucoup de baux proviennent de familles à long historique de propriété — plus faciles à vérifier."
+      ],
+      "bestFor": ["Entrée précoce", "Horizon de 3-5 ans", "Pur investissement locatif", "Plage tranquille"]
+    },
+    "kerobokan": {
+      "hero": "Un quartier urbain au nord de Seminyak : restaurants, affaires, communauté d'expatriés.",
+      "paragraphs": [
+        "Kerobokan est un quartier moins touristique entre Seminyak et Canggu, tourné vers les résidents : location longue durée, familles d'expatriés, cadres. Pas d'accès direct à la plage, mais un réseau dense de cafés, restaurants, écoles et salles de sport qui alimente une demande stable pour des séjours de 1 à 12 mois.",
+        "Rendement net de 7-10 % par an avec une occupation stable de 75-90 % — proche de l'économie de la location longue durée à Canberra ou Bangkok. ADR 2 chambres de $80-130, séjour moyen de 30 à 90 jours. Entrée dès $170K pour une villa 2 chambres, $300-450K pour une bonne maison familiale 3-4 chambres.",
+        "Atout — revenus stables, saisonnalité minimale, gestion simple (séjours longs = moins de rotation). Faiblesse — faible potentiel de plus-value (4-6 % par an contre 10-15 % à Canggu). Convient aux investisseurs qui veulent limiter les tracas de gestion.",
+        "Juridiquement, Kerobokan fonctionne surtout en leasehold de 25 à 50 ans. Le freehold via PT PMA se trouve chez les promoteurs de projets touristiques à la limite de Seminyak."
+      ],
+      "bestFor": ["Location longue durée", "Familles d'expatriés", "Cash-flow stable", "Marché résidentiel"]
+    },
+    "canggu": {
+      "hero": "Le secteur tendance de Bali : surf, événements, networking, loyers courte durée records.",
+      "paragraphs": [
+        "Canggu est le marché locatif le plus dense et celui qui croît le plus vite sur l'île. La concentration de restaurants, coworkings, spots de surf et événements en fait un aimant pour les digital nomads et les touristes de courte durée. Le tarif journalier moyen (ADR) d'une villa 2 chambres est de $180-230 en haute saison ; l'occupation en location gérée atteint 75-85 %.",
+        "Le rendement net investisseur, calculé à partir des données Booking en direct via estatemarket.io, est de 10-13 % par an pour une villa de $200-350K. Le segment premium (villas neuves à Echo Beach et Berawa) avec vue océan peut atteindre 15 %. Entrée dès $180K pour une villa 1 chambre compacte à Padang-Linjong ou Babakan.",
+        "Principaux sous-secteurs : Berawa (premium, près de Finns Beach Club), Batu Bolong (centre, fidélité touristique maximale), Pererenan (plus calme, en ascension), Echo Beach (surf, nord de Canggu). Juridiquement, le leasehold de 25 à 30 ans auprès de propriétaires privés domine ; le freehold via PT PMA apparaît dans les projets de promoteurs plus récents.",
+        "Risques : depuis 18 mois, le prix du foncier progresse plus vite que les loyers — la fenêtre d'entrée bon marché se referme. Certains terrains font l'objet d'une révision de zonage (RDTR) : mieux vaut vérifier le statut du terrain avant toute transaction."
+      ],
+      "bestFor": ["Location courte durée", "Communauté surf", "Digital nomads", "Vie active"]
+    }
+  }
+}

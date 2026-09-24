@@ -1,0 +1,221 @@
+{
+  "labels": {
+    "Villas for sale": "Villa's te koop",
+    "Median villa price": "Mediaanprijs villa",
+    "Apartments": "Appartementen",
+    "Median apt price": "Mediaanprijs appartement",
+    "Complexes": "Wooncomplexen",
+    "1BR entry": "Instap 1 slk",
+    "2BR entry": "Instap 2 slk",
+    "Yield": "Rendement",
+    "2BR ADR": "ADR 2 slk",
+    "2-3BR ADR": "ADR 2-3 slk",
+    "Avg stay": "Gem. verblijf",
+    "Occupancy": "Bezetting",
+    "Peak occupancy": "Bezetting hoogseizoen",
+    "Year-round occupancy": "Bezetting hele jaar",
+    "Annual appreciation": "Waardestijging per jaar",
+    "ADR growth 2y": "ADR-groei 2 jr",
+    "Price growth 2y": "Prijsstijging 2 jr",
+    "Land price": "Grondprijs",
+    "Rentals listed": "Huuraanbod",
+    "Discount to Pererenan": "Korting t.o.v. Pererenan"
+  },
+  "from": "vanaf",
+  "nights": "nachten",
+  "days": "dagen",
+  "districts": {
+    "batu-bolong": {
+      "hero": "Batu Bolong is een deel van Canggu met een ruim aanbod appartementen en een toegankelijker instappunt dan villa's.",
+      "paragraphs": [
+        "In Batu Bolong staan 60 objecten te koop: 50 appartementen en 10 villa's, plus 16 wooncomplexen. Het aanbod ligt duidelijk bij appartementen, wat de instap makkelijker maakt voor kopers met een gematigder budget.",
+        "Appartementen beginnen bij $120,000, met een mediaanprijs van $220,400 en een mediaan van $3,891 per m². Villa's kosten $250,000 tot $1,439,900, mediaan $404,950 en $3,063 per m². De meest voorkomende instap is een appartement onder $250,000; villa's zijn voor budgetten vanaf $250,000.",
+        "Het typische formaat is 2 slaapkamers, geschikt voor verhuur én eigen gebruik. De huurmarkt telt 22 maandaanbiedingen van $1,270 tot $5,450 per maand, mediaan $3,045: er wordt verhuurd, maar het verkoopvolume is duidelijk sterker, dus beoordeel koop- en exitstrategie eerst via de verkoopmarkt."
+      ],
+      "bestFor": ["Instap met klein budget", "Appartementen onder $250k", "Verhuur", "Wonen in Canggu"]
+    },
+    "pandawa": {
+      "hero": "Pandawa heeft een evenwichtig aanbod en een toegankelijke instap bij appartementen, met zowel compacte beleggingsformaten als villa's in het middensegment.",
+      "paragraphs": [
+        "In Pandawa staan 26 villa's, 42 appartementen en 21 wooncomplexen te koop. Het aanbod is ruim genoeg voor keuze, zonder dat de markt oververhit lijkt. Vooral appartementen onder $150k springen eruit, met een mediaanprijs van $137,000 en een mediaan van $3,536 per m².",
+        "De mediaanprijs van een villa in Pandawa is $269,500, ofwel $3,241 per m² – toegankelijker dan Bali's toplocaties. De prijsspreiding is groot, van $80,000 tot $6,500,000, maar de kern van de markt zit in het middensegment. Bij appartementen concentreert de brede vraag zich op $90,000–$480,000.",
+        "De huurmarkt is beperkt: 12 aanbiedingen, mediane maandhuur $1,875, bandbreedte $525–$2,133.33. Het typische formaat is 1 slaapkamer, dus het gebied past vooral bij kopers van een compact appartement of een kleine villa voor verhuur of eigen gebruik."
+      ],
+      "bestFor": ["Appartementen onder $150k", "Compacte belegging", "Kleine villa voor verhuur", "Middenbudget"]
+    },
+    "ubud": {
+      "hero": "Het culturele en spirituele hart van Bali: wellness, yoga, langere verblijven.",
+      "paragraphs": [
+        "Ubud is het enige binnenlandse gebied met serieuze interesse van beleggers. De verhuur werkt hier anders: niet per nacht, maar per week of maand, voor wellnessreizigers, retreatorganisatoren en slow travelers. Het gemiddelde verblijf is 7–14 nachten, de ADR voor 2 slaapkamers $90-150.",
+        "Het rendement is bescheidener dan aan de kust – 6–9% netto per jaar, maar stabieler: minder seizoensdips, meer terugkerende boekingen, lagere onderhoudskosten (zonder zoute zeelucht slijt apparatuur veel minder). Instap vanaf $120K voor een villa met 1 slaapkamer in Penestanan of Tegallalang.",
+        "De typische belegger in Ubud combineert verhuur met 2–4 maanden eigen gebruik per jaar. De vraag piekt van mei tot september en van december tot januari; in de overige maanden kunt u er zelf wonen zonder rendement in te leveren.",
+        "Juridisch is Ubud eenvoudiger dan de kust: minder speculatieve eigenaren, leasehold meestal van families met een schone grondhistorie, freehold via een PT PMA op kavels met geverifieerde status."
+      ],
+      "bestFor": ["Wellness & yoga", "Langetermijnverhuur", "Slow travel", "Eigen gebruik"]
+    },
+    "pererenan": {
+      "hero": "Een rustiger alternatief voor Canggu, in opkomst, met 9–12% rendement.",
+      "paragraphs": [
+        "Pererenan is na Canggu het volgende trendgebied, op 15 minuten van Berawa. Minder lawaai, minder verkeer, dezelfde surf en beachclubs. De afgelopen twee jaar steeg de ADR met 35%, terwijl de grondprijzen maar 15–20% stegen – een van de beste kosten-rendementverhoudingen op het eiland.",
+        "Het nettorendement is 9–12% per jaar, dicht bij Canggu, bij een 20–30% lagere instapprijs. Villa's met 2 slaapkamers beginnen bij $160K (in Canggu vanaf $220K).",
+        "Grootste risico: een chronische »infrastructuurschuld« – smalle weg naar het strand, files in de spits, weinig supermarkten. Naarmate het gebied volgebouwd wordt, verergert dit eerst voordat het beter wordt. Kopen is zinvol als u 5 jaar of langer kunt aanhouden – dan heeft de infrastructuur de achterstand ingehaald.",
+        "Pererenan is nog een »wilde« zone in de slechte zin: veel particuliere eigenaren met een onduidelijke grondhistorie. Due diligence op de kavelstatus weegt hier zwaarder dan in Canggu of op de Bukit."
+      ],
+      "bestFor": ["Kosten-rendementbeleggers", "Horizon van 5+ jaar", "Surf + rust"]
+    },
+    "seseh": {
+      "hero": "Seseh is een nichegebied met beperkt aanbod, waar villa's een duidelijker instapbudget bieden en appartementen in een hoger prijssegment zitten.",
+      "paragraphs": [
+        "Seseh heeft een klein aanbod: 5 villa's, 32 appartementen en 3 wooncomplexen te koop. De markt leunt duidelijk naar appartementen; de voorraad villa's blijft zeer beperkt.",
+        "Qua instapprijs zijn villa's hier toegankelijker: $222,000–$435,000, mediaan $278,000 en $2,254 per m². Appartementen kosten $150,000 tot $1,280,000, maar de mediaan ligt veel hoger op $534,500 en $6,800 per m², dus het appartementensegment zit ondanks de brede spreiding boven de villa's.",
+        "Het gebied past bij kopers die een villa voor verhuur of eigen gebruik zoeken met een voorspelbaarder instapbudget, vooral in het gangbare formaat met 2 slaapkamers. Er zijn 26 huuraanbiedingen van $355 tot $8,130 per maand, mediaan $1,746: de huurmarkt bestaat, maar is niet massaal, dus let goed op kwaliteit en liquiditeit van het object."
+      ],
+      "bestFor": ["Villa voor verhuur", "Eigen woning", "Beperkt aanbod", "Betaalbare villa-instap"]
+    },
+    "uluwatu": {
+      "hero": "Het schiereiland Bukit – premium zeezicht en de hoogste rendementen van Bali.",
+      "paragraphs": [
+        "Uluwatu en de hele Bukit (inclusief Pandawa, Ungasan, Bingin) zijn de premiumbestemming voor beleggende kopers. Villa's met direct zeezicht vlak bij de kliffen halen de hoogste ADR van het eiland: $250-450 per nacht voor 2–3 slaapkamers. De bezetting bij beheerde verhuur via Airbnb Luxe en Plum Guide ligt op 70–85%.",
+        "Het nettorendement is 10–15% per jaar – hoger dan Canggu dankzij premiumtarieven en langere verblijven (gemiddeld 4–7 nachten). De instap begint bij $130K voor een compacte villa met 1 slaapkamer in Pecatu of Bingin en loopt op tot $1.5M+ voor een klifvilla met infinity pool in Uluwatu en Padang-Padang.",
+        "Sterke punten van de Bukit: minder verkeer dan Canggu, een »volwassener« publiek (luxe en semi-luxe), stabiele vraag het hele jaar dankzij surfseizoenen aan beide kanten van het jaar. Nadelen: 45–60 minuten naar het vliegveld, beperkte dagelijkse voorzieningen (boodschappen, apotheken), volledige afhankelijkheid van de auto.",
+        "Het juridische kader is standaard voor Bali: leasehold van 25–80 jaar bij particuliere eigenaren; freehold via een PT PMA bij grotere ontwikkelaarsprojecten. De bestemming is stabiel – de Bukit werd niet geraakt door recente RDTR-herzieningen."
+      ],
+      "bestFor": ["Premiumverhuur", "Toeristen met lang verblijf", "Surfgemeenschap", "Zeezicht"]
+    },
+    "nusa-dua": {
+      "hero": "Een resort voor gezinnen en zakelijke gasten, met premiumhotels in een rustige, afgesloten omgeving.",
+      "paragraphs": [
+        "Nusa Dua is een afgesloten resortgebied aan de zuidkust van Bali, waar grote internationale 5-sterrenketens samenkomen (St Regis, Mulia, Ritz-Carlton, Sofitel). Dat geeft een uniek beleggingsprofiel: een constante stroom zakelijke gasten, congresdelegaties en gezinnen in het semi-luxe- en luxesegment.",
+        "Het rendement op villa's is 7–10% netto per jaar – tussen Canggu en Sanur in. De gemiddelde ADR voor 2 slaapkamers is $180-260, de bezetting 70–78% het hele jaar, zonder dip in het laagseizoen dankzij zakelijke groepen. Instap vanaf $200K voor een villa met 1 slaapkamer aan de rand, $1M+ binnen het Nusa Dua Resort.",
+        "Sterk punt: infrastructuur van internationaal niveau – ziekenhuis, scholen, winkelcentra, vliegveld op 15 minuten. Zwak punt: relatief geïsoleerd, zonder het »lokale leven« waarom Canggu en Ubud geliefd zijn. Past bij beleggers die stabiliteit boven groei stellen.",
+        "Juridisch standaard voor Bali: leasehold bij particuliere eigenaren aan de rand, freehold via een PT PMA bij grotere projecten. De kadastrale waarde behoort tot de hoogste van het eiland."
+      ],
+      "bestFor": ["Zakelijke gasten", "Gezinssegment", "Laag-risicoportefeuille", "Lange termijn"]
+    },
+    "cemagi": {
+      "hero": "Een rustig strandgebied in het westen – de volgende fase van de trendverschuiving.",
+      "paragraphs": [
+        "Cemagi is een strandgebied ten westen van Pererenan, halverwege Tanah Lot. Een paar jaar geleden was het landbouwgrond; nu verrijzen actief villaprojecten in het midden- en premiumsegment. Het ontwikkeltempo doet denken aan Pererenan in 2022.",
+        "Het nettorendement is 8–11% per jaar. Villa's met 2–3 slaapkamers beginnen bij $200K, premium aan het strand loopt op tot $700K. ADR voor 2 slaapkamers $140-200, bezetting bij beheerde verhuur 65–75%. Publiek: digital nomads op zoek naar rust, gezinnen uit Australië en Singapore.",
+        "Sterk punt: een breed zwart vulkanisch strand, een surfgemeenschap, nog lage bebouwingsdichtheid. Zwak punt: beperkte infrastructuur (smalle wegen, weinig supermarkten), 25–35 minuten naar Canggu.",
+        "Grootste risico: bestemmingsherzieningen. Sommige projecten in Cemagi staan op grond met landbouwstatus – een RDTR-controle vóór de transactie is verplicht."
+      ],
+      "bestFor": ["Vroege instap", "Surf en strand", "Horizon van 4–5 jaar"]
+    },
+    "melasti": {
+      "hero": "Een premium klifzone op de Bukit met de mooiste zonsondergangen en hoge huurprijzen.",
+      "paragraphs": [
+        "Melasti is een van de spectaculairste stukken van de Bukit: loodrechte kliffen, wit zand, helder water en dichte bebouwing met klifvilla's en infinity pools. Het grenst aan Pandawa en Ungasan en hoort bij het premiumcluster van het zuidelijke schiereiland.",
+        "Het nettorendement is 11–15% per jaar – hoger dan Canggu dankzij premiumtarieven en lange verblijven. Villa's met 2–3 slaapkamers en zeezicht kosten $350K tot $1.5M. De ADR is $300-500 in het hoogseizoen, 1,5 tot 2 keer het Bali-gemiddelde. Publiek: vermogende reizigers, retreats, filmploegen.",
+        "Melasti verschilt van andere delen van de Bukit door het steilere reliëf – veel villa's staan letterlijk op de klifrand. Dat geeft een uniek uitzicht, maar bemoeilijkt tuinaanleg en evacuatie. Een geologisch onderzoek vóór de aankoop is verplicht (risico op erosie en aardverschuivingen).",
+        "Juridisch standaard: leasehold van 50–80 jaar bij particuliere eigenaren, freehold via een PT PMA bij grotere projecten. De grondprijs per vierkante meter behoort tot de hoogste van het eiland ($800-1500/m²)."
+      ],
+      "bestFor": ["Premiumsegment", "Zeezicht", "Vermogende gasten", "Lange verblijven"]
+    },
+    "berawa": {
+      "hero": "Het premiumdeel van Canggu: topvilla's, beachclubs, zakelijk publiek.",
+      "paragraphs": [
+        "Berawa is het duurste en meest ontwikkelde deel van Canggu: Finns Beach Club, Atlas Beach Fest, La Brisa en premiumrestaurants zitten hier bij elkaar. De vastgoedprijzen liggen 30–50% boven de rest van Canggu, maar de huurprijzen ook: een villa met 2 slaapkamers levert in het hoogseizoen $250-320 per nacht op.",
+        "Het nettorendement is 9–12% per jaar. Het premiumsegment met direct zicht op zee of op Finns haalt tot 14%. Instap vanaf $250K voor een compacte villa met 1 slaapkamer dieper in de wijk, $1.2M+ aan het strand.",
+        "Huurders: vermogende digital nomads, gezinnen uit Singapore, Hongkong en Australië, bedrijfsretreats. Verblijven van 5–10 nachten, boven het gemiddelde van Canggu.",
+        "Grootste nadeel: hoge toeristendichtheid en nachtelijk lawaai van beachclubs. Niet geschikt om zelf te wonen – puur een verhuurbelegging."
+      ],
+      "bestFor": ["Premiumverhuur", "Vermogende gasten", "Aan het strand", "Pure belegging"]
+    },
+    "sanur": {
+      "hero": "Een rustig, gezinsvriendelijk resort aan de oostkust met een laag beleggingsrisico.",
+      "paragraphs": [
+        "Sanur is het oudste toeristengebied van Bali, bekend om een rustig gezinspubliek, een veilige omgeving en voorspelbare rendementen. Geen hype zoals in Canggu, maar ook geen scherpe dalingen: de bezetting blijft het hele jaar 65–75%, zonder seizoenspieken of -dalen.",
+        "Het rendement is bescheidener – 5–8% netto per jaar, maar het risico is minimaal: volwassen infrastructuur, BIMC-ziekenhuis, internationale scholen, boulevard langs het strand. Instap vanaf $150K voor een villa met 1 slaapkamer in Renon of Sindhu.",
+        "Huurders: Europese gepensioneerden voor 1–3 maanden, expatgezinnen, werknemers van grote bedrijven met projecten op Bali. Objecten in Sanur zijn lastig speculatief te verkopen (grondwaardestijging 4–6% per jaar tegenover 10–15% in Canggu), maar je verliest er ook moeilijk geld op – de markt is stabiel.",
+        "Sanur past bij beleggers met een horizon van 10+ jaar en een laag risicoprofiel: voorspelbare cashflow is belangrijker dan agressieve waardestijging."
+      ],
+      "bestFor": ["Gezinspubliek", "Stabiele cashflow", "Laag risico", "Lange verblijven"]
+    },
+    "umalas": {
+      "hero": "Een woonwijk tussen Seminyak en Canggu – scholen, golf, langetermijnverhuur.",
+      "paragraphs": [
+        "Umalas is een rustige woonwijk voor mensen die het hele jaar op Bali wonen. De concentratie internationale scholen (Australian Independent School, Sunrise School, Cita Hati), golfbanen en gezinsvriendelijke voorzieningen zorgt voor stabiele vraag naar langetermijnhuur – vooral van expatgezinnen met kinderen en remote workers die het eiland als vaste woonplaats kozen.",
+        "Het nettorendement uit langetermijnverhuur is 6–9% per jaar, zonder seizoenspieken. ADR voor 2 slaapkamers $80-120, gemiddeld verblijf 60–180 dagen. Instap vanaf $180K voor een villa met 2 slaapkamers, $350-500K voor een gezinswoning met 3–4 slaapkamers, tuin en zwembad.",
+        "Sterk punt: lage beheerlasten (weinig wisselingen), stabiele cashflow, eenvoudig beheer. Zwak punt: lage liquiditeit (een woonhuis verkoopt lastiger dan een verhuurvilla) en lage waardestijging (3–5% per jaar).",
+        "Juridisch is Umalas een stabiele wijk met een transparante eigendomshistorie. De meeste transacties zijn leasehold van 25–50 jaar, freehold via een PT PMA bij grotere gezinswoningen."
+      ],
+      "bestFor": ["Expatgezinnen", "Langetermijnverhuur", "Gezinnen met schoolgaande kinderen", "Stabiliteit"]
+    },
+    "gwk": {
+      "hero": "GWK is een kleine markt voor een selectieve instap, met beperkte voorraad en de duidelijkste kansen bij goedkopere appartementen en villa's met een middenbudget.",
+      "paragraphs": [
+        "GWK heeft een krap aanbod van slechts 20 objecten te koop: 9 villa's en 11 appartementen, plus 1 wooncomplex. Een kleine markt met selectieve keuze en weinig concurrentie aan de verkoopkant.",
+        "Qua prijs zitten appartementen in GWK in het instap- tot middensegment, van $94,000 tot $262,000, mediaan $105,000. Villa's vragen een hoger budget, van $205,000 tot $510,000, mediaan $320,000 en $3,158 per m². Appartementen zijn goedkoper in totaalbedrag, maar duurder per vierkante meter: mediaan $4,000 per m² tegenover $3,158 voor villa's.",
+        "Het typische formaat is 1 slaapkamer, dus het gebied past beter bij compacte beleggingen en kleinschalig eigen gebruik dan bij grote gezinswoningen. De huurgegevens zijn momenteel zwak: er staan geen maandhuuraanbiedingen in de steekproef, dus de huurmarkt wordt door de huidige data niet bevestigd."
+      ],
+      "bestFor": ["Instap met klein budget", "Compacte appartementen", "Villa's met middenbudget", "Kleinschalig eigen gebruik"]
+    },
+    "nusa-penida": {
+      "hero": "Nusa Penida is een compacte markt met krap aanbod, waar kopen duidelijk zwaarder weegt dan huren.",
+      "paragraphs": [
+        "Nusa Penida is een zeer kleine vastgoedmarkt: slechts 6 villa's, 3 appartementen en 1 wooncomplex te koop. De keuze is beperkt, dus het gebied leent zich vooral voor gerichte aankopen.",
+        "Villa's zitten in het middensegment van het eiland, met een mediaanprijs van $437,000, een bandbreedte van $399,000–$489,000 en een mediaan van $2,819 per m². Appartementen hebben een lager instapbudget: mediaanprijs $180,000, bandbreedte $105,000–$250,000, mediaan $4,000 per m².",
+        "Het typische formaat is 2 slaapkamers, geschikt voor eigen gebruik, vakanties of de aankoop van een kant-en-klare villa. Tegelijk staan er geen huuraanbiedingen in de statistieken, dus een langetermijnhuurmarkt is hier vrijwel afwezig of zeer beperkt."
+      ],
+      "bestFor": ["Markt met krap aanbod", "Villa kopen", "Appartement met lager budget", "Eigen woning"]
+    },
+    "kedungu": {
+      "hero": "Kedungu is een nichegebied met zeer beperkt aanbod; het belangrijkste koopformaat is nu een appartement met 1 slaapkamer, mediaanprijs $121,450.",
+      "paragraphs": [
+        "De verkoopmarkt in Kedungu is momenteel erg smal: er staan geen villa's te koop en slechts 6 appartementen, van $92,500 tot $349,500 met een mediaan van $121,450. Het gebied is dus vooral interessant voor kopers van appartementen tot $125k, niet van villa's.",
+        "Qua aanbodstructuur is Kedungu een compacte markt: het typische formaat is een appartement met 1 slaapkamer, de mediaan is $3,028 per m² en er is maar 1 wooncomplex. De keuze is beperkt, dus het gebied past beter bij een gerichte instap dan bij een brede marktvergelijking.",
+        "Het huuraanbod is minimaal: er is slechts 1 maandhuuraanbieding op de open markt, voor $1,077 per maand. Dat wijst op een zwak vertegenwoordigde huurmarkt en nicheliquiditeit – houd rekening met de beperkte diepte van de markt."
+      ],
+      "bestFor": ["Instap met klein budget", "Appartementen met 1 slaapkamer", "Proefaankoop", "Kopen in plaats van huren"]
+    },
+    "ungasan": {
+      "hero": "Ungasan is een nichemarkt om in te stappen via appartementen vanaf $160,000 of villa's vanaf $300,000, met een veel actiever huuraanbod.",
+      "paragraphs": [
+        "In Ungasan staan 10 objecten te koop: 4 villa's en 6 appartementen. Het aanbod is beperkt, dus het gebied leent zich eerder voor gerichte selectie dan voor breed zoeken. Daarnaast zijn er 6 wooncomplexen.",
+        "De instap begint hier bij appartementen: de mediaanprijs is $160,000. Villa's beginnen bij $300,000, met een mediaanprijs van $377,500. Per vierkante meter lijken villa's betaalbaarder dan appartementen: mediaan $2,493/m² tegenover $4,777/m².",
+        "De huurmarkt is veel breder dan de verkoopmarkt, met 93 maandhuuraanbiedingen. Maandhuren lopen van $262 tot $12,600, mediaan $2,462. Met een compact budget past een strategie met een appartement met 1 slaapkamer; wie een villa voor verhuur of eigen gebruik zoekt, moet rekening houden met weinig keuze."
+      ],
+      "bestFor": ["Appartementen vanaf $160,000", "1 slaapkamer", "Verhuurstrategie", "Villa's vanaf $300,000"]
+    },
+    "karanggasem": {
+      "hero": "Karanggasem is een zeer beperkte markt, waar het huidige aanbod vooral uit compacte appartementen bestaat.",
+      "paragraphs": [
+        "Karanggasem is een zeer smalle markt voor kopers: de huidige statistieken tonen geen villa's te koop en slechts 5 appartementen. Er is maar 1 wooncomplex op de markt, dus de keuze in formaten en projecten is minimaal.",
+        "Het kernproduct zijn appartementen met instapprijzen van $243,100 tot $527,300. De mediaanprijs is $262,850, de mediaan per vierkante meter $5,022, en het typische formaat is 1 slaapkamer.",
+        "Het gebied past het best bij kopers die een compact object voor eigen gebruik of een gerichte instap in een klein formaat zoeken. Voor een villaverhuurstrategie is het momenteel niet geschikt: geen villa's te koop en geen huuraanbiedingen in de huidige statistieken, waardoor het huursegment met de beschikbare data moeilijk te beoordelen is."
+      ],
+      "bestFor": ["Compacte appartementen", "Eigen gebruik", "Gerichte instap", "Budget tot $300,000"]
+    },
+    "nyanyi": {
+      "hero": "Het volgende trendgebied na Pererenan – ongerepte stranden, vroeg instappunt.",
+      "paragraphs": [
+        "Nyanyi is een smalle kuststrook ten noorden van Tanah Lot en Pererenan. Een paar jaar geleden was het nog puur landbouwgrond; nu verschijnen de eerste beachclubs, boetiekhotels en verhuurvilla's. Op het ontwikkeltraject is dit »het volgende Pererenan«.",
+        "De prijzen liggen 25–35% onder Pererenan bij een vergelijkbaar rendement van 8–11%: $130-180K voor een villa met 1 slaapkamer, $200-280K voor 2 slaapkamers. ADR voor 2 slaapkamers $130-180, bezetting bij beheerde verhuur 65–75%. Het »ongerepte« karakter trekt toeristen die een alternatief voor Canggu zoeken.",
+        "Grootste risico: het infrastructuurvacuüm. Fatsoenlijke wegen, supermarkten, apotheken en medische zorg liggen 20–30 minuten richting Canggu. Een horizon van 3–5 jaar zou dit moeten oplossen, maar tot die tijd moet de eigenaar het accepteren of het object puur als verhuur met een beheerder behandelen.",
+        "Juridisch heeft Nyanyi een groot aandeel grond met een landbouwbestemming. Due diligence op kavelstatus en RDTR-herzieningen is cruciaal. Veel leaseholds komen van families met een lange eigendomshistorie – makkelijker te verifiëren."
+      ],
+      "bestFor": ["Vroege instap", "Horizon van 3–5 jaar", "Pure verhuur", "Rustig strand"]
+    },
+    "kerobokan": {
+      "hero": "Een stedelijke wijk ten noorden van Seminyak: restaurants, zakenleven, expatpubliek.",
+      "paragraphs": [
+        "Kerobokan is een minder toeristische wijk tussen Seminyak en Canggu, gericht op bewoners: langetermijnhuur, expatgezinnen, professionals. Geen strandligging, maar een dicht netwerk van cafés, restaurants, scholen en sportscholen zorgt voor stabiele vraag naar verblijven van 1–12 maanden.",
+        "Het nettorendement is 7–10% per jaar bij een stabiele bezetting van 75–90% – vergelijkbaar met langetermijnverhuur in Canberra of Bangkok. ADR voor 2 slaapkamers $80-130, gemiddeld verblijf 30–90 dagen. Instap vanaf $170K voor een villa met 2 slaapkamers, $300-450K voor een goede gezinswoning met 3–4 slaapkamers.",
+        "Sterk punt: stabiele inkomsten, minimale seizoensinvloed, eenvoudig beheer (langere verblijven = minder wisselingen). Zwak punt: weinig ruimte voor waardestijging (4–6% per jaar tegenover 10–15% in Canggu). Past bij beleggers die operationele rompslomp willen beperken.",
+        "Juridisch is Kerobokan overwegend leasehold van 25–50 jaar. Freehold via een PT PMA komt voor bij ontwikkelaars van toeristische projecten op de grens met Seminyak."
+      ],
+      "bestFor": ["Langetermijnverhuur", "Expatgezinnen", "Stabiele cashflow", "Woonmarkt"]
+    },
+    "canggu": {
+      "hero": "Bali's belangrijkste trendgebied: surf, evenementen, networking, recordtarieven voor kortetermijnverhuur.",
+      "paragraphs": [
+        "Canggu is de dichtste en snelst groeiende huurmarkt van het eiland. De concentratie van restaurants, coworkings, surfspots en evenementen maakt het een magneet voor digital nomads en kortverblijvende toeristen. Het gemiddelde dagtarief (ADR) voor een villa met 2 slaapkamers is $180-230 in het hoogseizoen; de bezetting bij beheerde verhuur is 75–85%.",
+        "Het nettorendement voor beleggers, op basis van live Booking-analyses via estatemarket.io, is 10–13% per jaar voor een villa van $200-350K. Het premiumsegment (nieuwe villa's in Echo Beach en Berawa) met zeezicht haalt tot 15%. Instap vanaf $180K voor een compacte villa met 1 slaapkamer in Padang-Linjong of Babakan.",
+        "Belangrijkste deelgebieden: Berawa (premium, naast Finns Beach Club), Batu Bolong (centrum, hoogste toeristenloyaliteit), Pererenan (rustiger, in opkomst), Echo Beach (surf, noord-Canggu). Juridisch domineert leasehold van 25–30 jaar bij particuliere eigenaren; freehold via een PT PMA komt voor bij nieuwere ontwikkelaarsprojecten.",
+        "Risico's: de grondprijzen stegen de afgelopen 18 maanden sneller dan de huurprijzen – het venster voor een goedkope instap sluit. Voor een deel van de kavels loopt een bestemmingsherziening (RDTR), controleer de grondstatus vóór de transactie."
+      ],
+      "bestFor": ["Kortetermijnverhuur", "Surfgemeenschap", "Digital nomads", "Actieve levensstijl"]
+    }
+  }
+}

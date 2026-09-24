@@ -1,0 +1,221 @@
+{
+  "labels": {
+    "Villas for sale": "Wille na sprzedaż",
+    "Median villa price": "Mediana ceny willi",
+    "Apartments": "Apartamenty",
+    "Median apt price": "Mediana ceny apartamentu",
+    "Complexes": "Osiedla",
+    "1BR entry": "Wejście 1 syp.",
+    "2BR entry": "Wejście 2 syp.",
+    "Yield": "Rentowność",
+    "2BR ADR": "ADR 2 syp.",
+    "2-3BR ADR": "ADR 2-3 syp.",
+    "Avg stay": "Śr. pobyt",
+    "Occupancy": "Obłożenie",
+    "Peak occupancy": "Obłożenie w szczycie",
+    "Year-round occupancy": "Obłożenie całoroczne",
+    "Annual appreciation": "Wzrost wartości rocznie",
+    "ADR growth 2y": "Wzrost ADR 2 lata",
+    "Price growth 2y": "Wzrost cen 2 lata",
+    "Land price": "Cena gruntu",
+    "Rentals listed": "Oferty najmu",
+    "Discount to Pererenan": "Taniej niż Pererenan"
+  },
+  "from": "od",
+  "nights": "nocy",
+  "days": "dni",
+  "districts": {
+    "batu-bolong": {
+      "hero": "Batu Bolong to część Canggu z szeroką ofertą apartamentów i tańszym wejściem niż w przypadku willi.",
+      "paragraphs": [
+        "W Batu Bolong na sprzedaż jest 60 nieruchomości: 50 apartamentów i 10 willi, a także 16 osiedli. Oferta wyraźnie przechyla się w stronę apartamentów, co ułatwia wejście kupującym z umiarkowanym budżetem.",
+        "Apartamenty zaczynają się od $120,000, mediana ceny to $220,400, a mediana za m² – $3,891. Wille kosztują od $250,000 do $1,439,900, mediana $404,950 i $3,063 za m². Najczęstszym formatem wejścia są apartamenty poniżej $250,000; wille to wybór przy budżecie od $250,000.",
+        "Typowy format to 2 sypialnie – sprawdza się zarówno pod wynajem, jak i do własnego użytku. Rynek najmu obejmuje 22 oferty miesięczne od $1,270 do $5,450 miesięcznie, mediana $3,045: najem istnieje, ale wolumen sprzedaży jest wyraźnie większy, więc strategię zakupu i wyjścia warto najpierw ocenić przez pryzmat rynku sprzedaży."
+      ],
+      "bestFor": ["Wejście z mniejszym budżetem", "Apartamenty poniżej $250k", "Pod wynajem", "Życie w Canggu"]
+    },
+    "pandawa": {
+      "hero": "Pandawa to okolica ze zrównoważoną ofertą i przystępnym wejściem w apartamenty – z kompaktowymi formatami inwestycyjnymi i willami ze średniej półki.",
+      "paragraphs": [
+        "W Pandawie na sprzedaż jest 26 willi, 42 apartamenty i 21 osiedli. Oferta jest na tyle szeroka, by był wybór, a rynek nie wygląda na przegrzany. Okolica wyróżnia się zwłaszcza apartamentami poniżej $150k, z medianą ceny $137,000 i $3,536 za m².",
+        "Mediana ceny willi w Pandawie to $269,500, czyli $3,241 za m² – taniej niż w prestiżowych lokalizacjach Bali. Rozrzut cen willi jest duży, od $80,000 do $6,500,000, ale trzon rynku to średni segment. W apartamentach masowy popyt koncentruje się w przedziale $90,000–$480,000.",
+        "Rynek najmu jest ograniczony: 12 ofert, mediana czynszu $1,875 miesięcznie, zakres $525–$2,133.33. Typowy format to 1 sypialnia, więc okolica najlepiej pasuje do kupujących kompaktowy apartament lub małą willę pod wynajem albo do zamieszkania."
+      ],
+      "bestFor": ["Apartamenty poniżej $150k", "Kompaktowa inwestycja", "Mała willa pod wynajem", "Średni budżet"]
+    },
+    "ubud": {
+      "hero": "Kulturalne i duchowe centrum Bali: wellness, joga, dłuższe pobyty.",
+      "paragraphs": [
+        "Ubud to jedyny region w głębi wyspy, który poważnie interesuje inwestorów. Najem działa tu inaczej: nie na noce, lecz na tygodnie i miesiące – dla turystów wellness, organizatorów retreatów i miłośników slow travel. Średni pobyt to 7–14 nocy, ADR dla 2 sypialni $90-150.",
+        "Rentowność jest skromniejsza niż na wybrzeżu – 6–9% netto rocznie, ale stabilniejsza: mniej sezonowych spadków, więcej powracających gości, niższe koszty utrzymania (brak słonego powietrza znacznie ogranicza zużycie sprzętu). Wejście od $120K za willę z 1 sypialnią w Penestanan lub Tegallalang.",
+        "Typowy inwestor w Ubud łączy wynajem z 2–4 miesiącami własnego pobytu w roku. Szczyt popytu przypada na maj–wrzesień i grudzień–styczeń; w pozostałych miesiącach można tam mieszkać samemu bez utraty rentowności.",
+        "Prawnie Ubud jest prostszy niż wybrzeże: mniej spekulacyjnych właścicieli, leasehold zwykle od rodzin z czystą historią gruntu, freehold przez PT PMA na działkach o zweryfikowanym statusie."
+      ],
+      "bestFor": ["Wellness i joga", "Najem długoterminowy", "Slow travel", "Użytek własny"]
+    },
+    "pererenan": {
+      "hero": "Spokojniejsza alternatywa dla Canggu – rosnący trend i rentowność 9–12%.",
+      "paragraphs": [
+        "Pererenan to kolejna modna okolica po Canggu, 15 minut od Berawy. Mniej hałasu, mniej korków, te same fale i beach cluby. W ciągu dwóch lat ADR wzrosło o 35%, a ceny gruntów tylko o 15–20% – jeden z najlepszych stosunków kosztu do rentowności na wyspie.",
+        "Rentowność netto to 9–12% rocznie, blisko Canggu, przy cenie wejścia niższej o 20–30%. Wille z 2 sypialniami zaczynają się od $160K (odpowiednik w Canggu – od $220K).",
+        "Główne ryzyko to chroniczny »dług infrastrukturalny«: wąska droga na plażę, korki w godzinach szczytu, mało supermarketów. W miarę zabudowy te problemy najpierw się pogłębią, a dopiero potem znikną. Zakup ma sens, jeśli możesz trzymać nieruchomość 5+ lat – do tego czasu infrastruktura nadrobi zaległości.",
+        "Pererenan to wciąż »dzika« strefa w złym sensie: wielu prywatnych właścicieli z niejasną historią gruntu. Weryfikacja statusu działki jest tu ważniejsza niż w Canggu czy na Bukit."
+      ],
+      "bestFor": ["Inwestorzy koszt/rentowność", "Horyzont 5+ lat", "Fale + spokój"]
+    },
+    "seseh": {
+      "hero": "Seseh to niszowa okolica z ograniczoną ofertą: wille dają czytelniejszy budżet wejścia, a apartamenty są w wyższym segmencie cenowym.",
+      "paragraphs": [
+        "Seseh ma niewielką ofertę: na sprzedaż jest 5 willi, 32 apartamenty i 3 osiedla. Rynek wyraźnie przechyla się w stronę apartamentów, a podaż willi pozostaje bardzo ograniczona.",
+        "Pod względem ceny wejścia wille są tu bardziej przystępne: $222,000–$435,000, mediana $278,000 i $2,254 za m². Apartamenty kosztują od $150,000 do $1,280,000, ale mediana jest znacznie wyższa – $534,500 i $6,800 za m² – więc segment apartamentów plasuje się powyżej willi mimo dużego rozrzutu ofert.",
+        "Okolica pasuje do kupujących willę pod wynajem lub do zamieszkania z bardziej przewidywalnym budżetem, zwłaszcza w typowym formacie 2 sypialni. Jest 26 ofert najmu od $355 do $8,130 miesięcznie, mediana $1,746: rynek najmu istnieje, ale nie jest masowy, więc trzeba uważnie ocenić jakość i płynność nieruchomości."
+      ],
+      "bestFor": ["Willa pod wynajem", "Własna rezydencja", "Ograniczona podaż", "Przystępne wejście w willę"]
+    },
+    "uluwatu": {
+      "hero": "Półwysep Bukit – widoki na ocean klasy premium i najwyższa rentowność na Bali.",
+      "paragraphs": [
+        "Uluwatu i cały Bukit (w tym Pandawa, Ungasan, Bingin) to kierunek premium dla kupujących inwestycyjnie. Wille z bezpośrednim widokiem na ocean przy klifach mają najwyższe ADR na wyspie: $250-450 za noc za 2–3 sypialnie. Obłożenie przy zarządzanym najmie przez Airbnb Luxe i Plum Guide wynosi 70–85%.",
+        "Rentowność netto to 10–15% rocznie – więcej niż w Canggu dzięki stawkom premium i dłuższym pobytom (średnio 4–7 nocy). Wejście zaczyna się od $130K za kompaktową willę z 1 sypialnią w Pecatu lub Bingin, a sięga $1.5M+ za willę na krawędzi klifu z basenem infinity w Uluwatu i Padang-Padang.",
+        "Mocne strony Bukitu: mniej korków niż w Canggu, bardziej »dojrzała« publiczność (luksus i semi-luksus), stabilny całoroczny popyt dzięki sezonom surfingowym po obu stronach roku. Słabe strony: 45–60 minut do lotniska, ograniczona infrastruktura codzienna (sklepy, apteki), pełna zależność od samochodu.",
+        "Otoczenie prawne jest standardowe dla Bali: leasehold na 25–80 lat od prywatnych właścicieli; freehold przez PT PMA w większych projektach deweloperskich. Strefowanie jest stabilne – Bukit nie został objęty ostatnimi rewizjami RDTR."
+      ],
+      "bestFor": ["Najem premium", "Turyści na dłuższe pobyty", "Społeczność surferów", "Widok na ocean"]
+    },
+    "nusa-dua": {
+      "hero": "Kurort rodzinny i biznesowy z hotelami premium w spokojnym, zamkniętym otoczeniu.",
+      "paragraphs": [
+        "Nusa Dua to zamknięta strefa kurortowa na południowym wybrzeżu Bali, gdzie skupiają się duże międzynarodowe sieci 5-gwiazdkowe (St Regis, Mulia, Ritz-Carlton, Sofitel). Daje to unikalny profil inwestycyjny: stały, duży napływ gości biznesowych, delegacji konferencyjnych i rodzin z segmentu semi-luksusowego i luksusowego.",
+        "Rentowność willi to 7–10% netto rocznie – między Canggu a Sanur. Średnie ADR dla 2 sypialni to $180-260, obłożenie 70–78% przez cały rok, bez spadków poza sezonem dzięki grupom firmowym. Wejście od $200K za willę z 1 sypialnią na obrzeżach, powyżej $1M wewnątrz Nusa Dua Resort.",
+        "Mocna strona – infrastruktura na poziomie międzynarodowym: szpital, szkoły, centra handlowe, lotnisko w 15 minut. Słaba – względna izolacja, bez »lokalnego życia«, za które kocha się Canggu i Ubud. Pasuje inwestorom, dla których stabilność jest ważniejsza niż wzrost.",
+        "Prawnie standard dla Bali: leasehold od prywatnych właścicieli na obrzeżach, freehold przez PT PMA w większych projektach. Wartość katastralna należy do najwyższych na wyspie."
+      ],
+      "bestFor": ["Goście biznesowi", "Segment rodzinny", "Portfel niskiego ryzyka", "Długi termin"]
+    },
+    "cemagi": {
+      "hero": "Spokojna plażowa okolica na zachodzie – kolejny etap wędrówki trendu.",
+      "paragraphs": [
+        "Cemagi to plażowa okolica na zachód od Pererenan, w połowie drogi do Tanah Lot. Jeszcze kilka lat temu były tu pola uprawne; teraz aktywnie powstają projekty willowe w średnim i wyższym segmencie. Tempo zabudowy przypomina Pererenan z 2022 roku.",
+        "Rentowność netto to 8–11% rocznie. Wille z 2–3 sypialniami zaczynają się od $200K, premium przy plaży sięga $700K. ADR dla 2 sypialni $140-200, obłożenie przy zarządzanym najmie 65–75%. Odbiorcy: cyfrowi nomadzi szukający spokoju, rodziny z Australii i Singapuru.",
+        "Mocna strona – szeroka plaża z czarnego piasku wulkanicznego, społeczność surferów, stosunkowo niska gęstość zabudowy. Słaba – ograniczona infrastruktura (wąskie drogi, mało supermarketów), 25–35 minut do Canggu.",
+        "Główne ryzyko – rewizje strefowania. Część projektów w Cemagi stoi na gruntach o statusie rolnym – przed transakcją obowiązkowa jest weryfikacja RDTR."
+      ],
+      "bestFor": ["Wczesne wejście", "Surfing i plaża", "Horyzont 4–5 lat"]
+    },
+    "melasti": {
+      "hero": "Strefa klifów premium na Bukit z najpiękniejszymi zachodami słońca i wysokimi stawkami najmu.",
+      "paragraphs": [
+        "Melasti to jeden z najbardziej spektakularnych odcinków Bukitu: pionowe klify, biały piasek, czysta woda i gęsta zabudowa willami na krawędzi klifu z basenami infinity. Graniczy z Pandawą i Ungasan i należy do klastra premium południowego półwyspu.",
+        "Rentowność netto to 11–15% rocznie – więcej niż w Canggu dzięki stawkom premium i długim pobytom. Wille z 2–3 sypialniami i widokiem na ocean kosztują od $350K do $1.5M. ADR w sezonie to $300-500, 1,5–2 razy więcej niż średnia na Bali. Odbiorcy: zamożni podróżni, retreaty, ekipy filmowe.",
+        "Melasti różni się od innych części Bukitu bardziej stromą rzeźbą terenu – wiele willi stoi dosłownie na krawędzi klifu, co daje wyjątkowy widok, ale utrudnia zagospodarowanie i ewakuację. Badanie geologiczne przed transakcją jest obowiązkowe (ryzyko erozji i osuwisk).",
+        "Prawnie standard: leasehold na 50–80 lat od prywatnych właścicieli, freehold przez PT PMA w większych projektach. Ceny gruntu za metr kwadratowy należą do najwyższych na wyspie ($800-1500/m²)."
+      ],
+      "bestFor": ["Segment premium", "Widok na ocean", "Zamożni turyści", "Długie pobyty"]
+    },
+    "berawa": {
+      "hero": "Prestiżowa część Canggu: luksusowe wille, beach cluby, publiczność biznesowa.",
+      "paragraphs": [
+        "Berawa to najdroższa i najlepiej rozwinięta część Canggu: skupiają się tu Finns Beach Club, Atlas Beach Fest, La Brisa i restauracje premium. Ceny nieruchomości są o 30–50% wyższe niż w reszcie Canggu, ale stawki najmu także: willa z 2 sypialniami zarabia w sezonie $250-320 za noc.",
+        "Rentowność netto to 9–12% rocznie. Segment premium z bezpośrednim widokiem na ocean lub na Finns sięga 14%. Wejście od $250K za kompaktową willę z 1 sypialnią w głębi dzielnicy, powyżej $1.2M przy plaży.",
+        "Najemcy: zamożni cyfrowi nomadzi, rodziny z Singapuru, Hongkongu i Australii, retreaty firmowe. Pobyty 5–10 nocy, powyżej średniej dla Canggu.",
+        "Główny minus: duże zagęszczenie turystów i nocny hałas beach clubów. Nie nadaje się do zamieszkania przez właściciela – to czysto inwestycja pod wynajem."
+      ],
+      "bestFor": ["Najem premium", "Zamożni turyści", "Przy plaży", "Czysta inwestycja"]
+    },
+    "sanur": {
+      "hero": "Spokojny, rodzinny kurort na wschodnim wybrzeżu z niskim ryzykiem inwestycyjnym.",
+      "paragraphs": [
+        "Sanur to najstarsza turystyczna okolica Bali, znana ze spokojnej rodzinnej publiczności, bezpiecznego otoczenia i przewidywalnej rentowności. Nie ma tu hype'u jak w Canggu, ale nie ma też gwałtownych spadków: obłożenie utrzymuje się na poziomie 65–75% przez cały rok, bez sezonowych szczytów i dołków.",
+        "Rentowność jest skromniejsza – 5–8% netto rocznie, ale ryzyko inwestycyjne minimalne: dojrzała infrastruktura, szpital BIMC, szkoły międzynarodowe, promenada nad morzem. Wejście od $150K za willę z 1 sypialnią w Renon lub Sindhu.",
+        "Najemcy – europejscy emeryci na 1–3 miesiące, rodziny ekspatów, pracownicy dużych firm realizujących projekty na Bali. Nieruchomości w Sanur trudno sprzedać spekulacyjnie (wzrost wartości gruntu 4–6% rocznie wobec 10–15% w Canggu), ale trudno też na nich stracić – rynek jest stabilny.",
+        "Sanur pasuje inwestorom z horyzontem 10+ lat i niskim profilem ryzyka: przewidywalny przepływ gotówki jest ważniejszy niż agresywny wzrost wartości."
+      ],
+      "bestFor": ["Publiczność rodzinna", "Stabilny przepływ gotówki", "Niskie ryzyko", "Długie pobyty"]
+    },
+    "umalas": {
+      "hero": "Dzielnica mieszkaniowa między Seminyakiem a Canggu – szkoły, golf, najem długoterminowy.",
+      "paragraphs": [
+        "Umalas to spokojna dzielnica mieszkaniowa dla osób, które mieszkają na Bali na stałe. Skupisko szkół międzynarodowych (Australian Independent School, Sunrise School, Cita Hati), pól golfowych i infrastruktury przyjaznej rodzinom tworzy stabilny popyt na najem długoterminowy – głównie ze strony rodzin ekspatów z dziećmi i pracowników zdalnych, którzy wybrali wyspę na stałe miejsce zamieszkania.",
+        "Rentowność netto z najmu długoterminowego to 6–9% rocznie, bez sezonowych szczytów. ADR dla 2 sypialni $80-120, średni pobyt 60–180 dni. Wejście od $180K za willę z 2 sypialniami, $350-500K za dom rodzinny z 3–4 sypialniami, ogrodem i basenem.",
+        "Mocna strona – niskie koszty operacyjne (mała rotacja), stabilny przepływ gotówki, łatwe zarządzanie. Słaba – niska płynność (dom mieszkalny sprzedaje się trudniej niż willa pod wynajem) i niski wzrost wartości (3–5% rocznie).",
+        "Prawnie Umalas to stabilna dzielnica z przejrzystą historią właścicieli. Większość transakcji to leasehold na 25–50 lat, freehold przez PT PMA w przypadku większych domów rodzinnych."
+      ],
+      "bestFor": ["Rodziny ekspatów", "Najem długoterminowy", "Rodziny z dziećmi w wieku szkolnym", "Stabilność"]
+    },
+    "gwk": {
+      "hero": "GWK to mały rynek na selektywne wejście, z ograniczoną podażą i najwyraźniejszymi okazjami w tańszych apartamentach i willach ze średnim budżetem.",
+      "paragraphs": [
+        "GWK to okolica z ograniczoną podażą – tylko 20 ofert sprzedaży: 9 willi i 11 apartamentów, a także 1 osiedle. To mały rynek z selektywnym wyborem i niewielką konkurencją po stronie sprzedaży.",
+        "Cenowo apartamenty w GWK mieszczą się w segmencie wejściowym i średnim, od $94,000 do $262,000, mediana $105,000. Wille wymagają wyższego budżetu, od $205,000 do $510,000, mediana $320,000 i $3,158 za m². Apartamenty są tańsze w kwocie całkowitej, ale droższe za metr kwadratowy: mediana $4,000 za m² wobec $3,158 dla willi.",
+        "Typowy format to 1 sypialnia, więc okolica lepiej pasuje do kompaktowych inwestycji i małego lokum na własny użytek niż do dużych domów rodzinnych. Dane o najmie są obecnie słabe: w próbie nie ma żadnej miesięcznej oferty najmu, więc rynek najmu nie jest potwierdzony obecnymi danymi."
+      ],
+      "bestFor": ["Wejście z mniejszym budżetem", "Kompaktowe apartamenty", "Wille ze średnim budżetem", "Małe lokum na własny użytek"]
+    },
+    "nusa-penida": {
+      "hero": "Nusa Penida to kompaktowy rynek z ograniczoną podażą, na którym zakup wyraźnie przeważa nad najmem.",
+      "paragraphs": [
+        "Nusa Penida to bardzo mały rynek nieruchomości: tylko 6 willi na sprzedaż, 3 apartamenty i 1 osiedle. Wybór jest ograniczony, więc wyspa lepiej nadaje się do zakupów celowanych.",
+        "Wille plasują się w średnim segmencie cenowym wyspy: mediana ceny $437,000, zakres $399,000–$489,000 i mediana $2,819 za m². Apartamenty oferują niższy budżet wejścia: mediana ceny $180,000, zakres $105,000–$250,000 i mediana $4,000 za m².",
+        "Typowy format to 2 sypialnie – do własnego użytku, na wakacje lub jako zakup gotowej willi. Jednocześnie w statystykach nie ma żadnych ofert najmu, więc rynek najmu długoterminowego praktycznie tu nie istnieje albo jest bardzo ograniczony."
+      ],
+      "bestFor": ["Rynek z ograniczoną podażą", "Zakup willi", "Apartament z niższym budżetem", "Własna rezydencja"]
+    },
+    "kedungu": {
+      "hero": "Kedungu to niszowa okolica z bardzo ograniczoną podażą; głównym formatem zakupu są dziś apartamenty z 1 sypialnią o medianie ceny $121,450.",
+      "paragraphs": [
+        "Rynek sprzedaży w Kedungu jest obecnie bardzo wąski: nie ma willi na sprzedaż, a dostępnych jest tylko 6 apartamentów w cenie od $92,500 do $349,500, mediana $121,450. Okolica jest więc interesująca głównie dla kupujących apartamenty do $125k, a nie wille.",
+        "Pod względem struktury podaży Kedungu to kompaktowy rynek: typowy format to apartament z 1 sypialnią, mediana to $3,028 za m², a osiedle jest tylko 1. Wybór jest ograniczony, więc okolica lepiej nadaje się do celowanego wejścia niż do szerokiego porównania rynku.",
+        "Podaż najmu jest minimalna: na otwartym rynku jest tylko 1 oferta najmu miesięcznego za $1,077. To wskazuje na słabo reprezentowany rynek najmu i niszową płynność, więc kupujący powinni uwzględnić ograniczoną głębokość rynku."
+      ],
+      "bestFor": ["Wejście z mniejszym budżetem", "Apartamenty z 1 sypialnią", "Zakup testowy", "Kupno zamiast najmu"]
+    },
+    "ungasan": {
+      "hero": "Ungasan to niszowy rynek z wejściem przez apartamenty od $160,000 lub wille od $300,000 i znacznie aktywniejszą ofertą najmu.",
+      "paragraphs": [
+        "W Ungasan na sprzedaż jest 10 nieruchomości: 4 wille i 6 apartamentów. Podaż jest ograniczona, więc okolica lepiej nadaje się do celowanego wyboru niż do szerokich poszukiwań. W okolicy jest też 6 osiedli.",
+        "Punkt wejścia zaczyna się od apartamentów: mediana ceny apartamentu to $160,000. Wille zaczynają się od $300,000, mediana ceny willi to $377,500. W przeliczeniu na metr kwadratowy wille wyglądają korzystniej niż apartamenty: mediana $2,493/m² wobec $4,777/m².",
+        "Rynek najmu jest znacznie szerszy niż rynek sprzedaży – 93 miesięczne oferty najmu. Czynsze wahają się od $262 do $12,600, mediana $2,462. Przy kompaktowym budżecie okolica pasuje do strategii apartamentu z 1 sypialnią, a kupujący willę pod wynajem lub do zamieszkania muszą liczyć się z ograniczonym wyborem."
+      ],
+      "bestFor": ["Apartamenty od $160,000", "Format 1 sypialni", "Strategia najmu", "Wille od $300,000"]
+    },
+    "karanggasem": {
+      "hero": "Karanggasem to bardzo ograniczony rynek, na którym obecna oferta koncentruje się głównie na kompaktowych apartamentach.",
+      "paragraphs": [
+        "Karanggasem to bardzo wąski rynek dla kupujących: aktualne statystyki nie pokazują willi na sprzedaż, a dostępnych jest tylko 5 apartamentów. Na rynku jest tylko 1 osiedle, więc wybór formatów i projektów jest minimalny.",
+        "Podstawowym produktem są apartamenty z cenami wejścia od $243,100 do $527,300. Mediana ceny apartamentu to $262,850, mediana za metr kwadratowy – $5,022, a typowy format to 1 sypialnia.",
+        "Okolica najlepiej pasuje do kupujących kompaktową nieruchomość na własny użytek lub celowane wejście w mały format. Obecnie nie nadaje się do strategii wynajmu willi: nie ma willi na sprzedaż ani ofert najmu w aktualnych statystykach, więc segment najmu trudno ocenić na podstawie dostępnych danych."
+      ],
+      "bestFor": ["Kompaktowe apartamenty", "Użytek własny", "Celowane wejście", "Budżet do $300,000"]
+    },
+    "nyanyi": {
+      "hero": "Kolejna modna okolica po Pererenan – dzikie plaże, wczesny punkt wejścia.",
+      "paragraphs": [
+        "Nyanyi to wąski pas wybrzeża na północ od Tanah Lot i Pererenan. Jeszcze kilka lat temu były to wyłącznie grunty rolne; teraz pojawiają się pierwsze beach cluby, butikowe hotele i wille na wynajem. To »następne Pererenan« na ścieżce rozwoju.",
+        "Ceny są o 25–35% niższe niż w Pererenan przy podobnej rentowności 8–11%: $130-180K za willę z 1 sypialnią, $200-280K za 2 sypialnie. ADR dla 2 sypialni $130-180, obłożenie przy zarządzanym najmie 65–75%. »Dziki« charakter przyciąga turystów szukających alternatywy dla Canggu.",
+        "Główne ryzyko – próżnia infrastrukturalna. Porządne drogi, supermarkety, apteki i opieka medyczna są 20–30 minut w stronę Canggu. Horyzont 3–5 lat powinien to rozwiązać, ale do tego czasu właściciel musi to zaakceptować albo traktować nieruchomość czysto jako wynajem z zarządcą.",
+        "Prawnie Nyanyi ma duży udział gruntów o przeznaczeniu rolnym. Weryfikacja statusu działki i rewizji RDTR jest kluczowa. Wiele leaseholdów pochodzi od rodzin z długą historią własności – łatwiej je zweryfikować."
+      ],
+      "bestFor": ["Wczesne wejście", "Horyzont 3–5 lat", "Czysty wynajem", "Spokojna plaża"]
+    },
+    "kerobokan": {
+      "hero": "Miejska dzielnica na północ od Seminyaku: restauracje, biznes, ekspaci.",
+      "paragraphs": [
+        "Kerobokan to mniej turystyczna dzielnica między Seminyakiem a Canggu, nastawiona na rynek mieszkańców: najem długoterminowy, rodziny ekspatów, specjaliści. Brak dostępu do plaży, ale gęsta sieć kawiarni, restauracji, szkół i siłowni zapewnia stabilny popyt na pobyty od 1 do 12 miesięcy.",
+        "Rentowność netto to 7–10% rocznie przy stabilnym obłożeniu 75–90% – podobnie jak w najmie długoterminowym w Canberze czy Bangkoku. ADR dla 2 sypialni $80-130, średni pobyt 30–90 dni. Wejście od $170K za willę z 2 sypialniami, $300-450K za dobry dom rodzinny z 3–4 sypialniami.",
+        "Mocna strona – stabilne dochody, minimalna sezonowość, łatwe zarządzanie (dłuższe pobyty = mniejsza rotacja). Słaba – niewielki potencjał wzrostu cen (4–6% rocznie wobec 10–15% w Canggu). Pasuje inwestorom, którzy chcą ograniczyć operacyjne kłopoty.",
+        "Prawnie w Kerobokan dominuje leasehold na 25–50 lat. Freehold przez PT PMA pojawia się u deweloperów projektów turystycznych na granicy z Seminyakiem."
+      ],
+      "bestFor": ["Najem długoterminowy", "Rodziny ekspatów", "Stabilny przepływ gotówki", "Rynek mieszkańców"]
+    },
+    "canggu": {
+      "hero": "Najmodniejsza okolica Bali: surfing, wydarzenia, networking, rekordowe stawki najmu krótkoterminowego.",
+      "paragraphs": [
+        "Canggu to najgęstszy i najszybciej rosnący rynek najmu na wyspie. Skupisko restauracji, coworkingów, spotów surfingowych i wydarzeń przyciąga cyfrowych nomadów i turystów na krótkie pobyty. Średnia stawka dzienna (ADR) za willę z 2 sypialniami to $180-230 w sezonie; obłożenie przy zarządzanym najmie wynosi 75–85%.",
+        "Rentowność netto dla inwestora, na podstawie bieżącej analityki Booking przez estatemarket.io, to 10–13% rocznie dla willi za $200-350K. Segment premium (nowe wille w Echo Beach i Berawie) z widokiem na ocean osiąga do 15%. Wejście od $180K za kompaktową willę z 1 sypialnią w Padang-Linjong lub Babakan.",
+        "Główne części: Berawa (premium, obok Finns Beach Club), Batu Bolong (centrum, największa lojalność turystów), Pererenan (spokojniej, rosnący trend), Echo Beach (surfing, północne Canggu). Prawnie dominuje leasehold na 25–30 lat od prywatnych właścicieli; freehold przez PT PMA pojawia się w nowszych projektach deweloperskich.",
+        "Ryzyka: przez ostatnie 18 miesięcy ceny gruntów rosły szybciej niż stawki najmu – okno taniego wejścia się zamyka. Część działek przechodzi rewizję strefowania (RDTR), dlatego przed transakcją warto zweryfikować status gruntu."
+      ],
+      "bestFor": ["Najem krótkoterminowy", "Społeczność surferów", "Cyfrowi nomadzi", "Aktywny styl życia"]
+    }
+  }
+}
