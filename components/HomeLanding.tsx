@@ -39,6 +39,7 @@ import {
 } from '@/components/LandingVisuals'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { localizeHubPath } from '@/lib/hub-routes'
+import { MarketNumbers } from '@/components/market/MarketNumbers'
 
 // Порядок здесь = порядок COPY.powers.items во всех локалях: доход,
 // цены соседей, тепловая карта туристов, что рядом, балл востребованности,
@@ -69,8 +70,8 @@ const COPY = {
   ru: {
     locale: 'ru-RU',
     hero: {
-      h1: 'Дом или квартира на Бали',
-      sub: 'Смотрите фото и цены. Поможем купить безопасно.',
+      h1: 'Недвижимость Бали в цифрах',
+      sub: 'Сравните цены и аренду по районам, прежде чем выбрать.',
       tryLabel: 'Например',
       suggestions: ['Виллы до $250 000', 'Квартиры у моря', 'Дома в Убуде'],
       search: 'Найти',
@@ -88,7 +89,7 @@ const COPY = {
     finder: { heading: 'Ответьте на три вопроса' },
     powers: {
       heading: 'Что умеет Balinsky',
-      sub: 'Ни один сайт недвижимости в Юго-Восточной Азии не показывает столько данных о доме. Всё открыто и бесплатно, регистрация не нужна.',
+      sub: 'Каждый дом сравнивается с рынком вокруг него. Всё открыто и бесплатно, регистрация не нужна.',
       cta: 'Посмотреть на примере виллы',
       items: [
         { title: 'Сколько заработает дом', body: 'Три сценария дохода: плохой, обычный, хороший. Считаем по домам, которые уже сдаются рядом.' },
@@ -123,7 +124,7 @@ const COPY = {
     help: {
       heading: 'Что вы найдёте в каталоге',
       points: [
-        'Документы по каждому объекту: PBG, статус земли, застройщик',
+        'Статус разрешений, земли и срок лизхолда — со слов застройщика, с пометкой, чего нет',
         'Видео и фото с места — объект видно, не приезжая на Бали',
         'Прямые контакты застройщика — писать ему, а не посреднику',
       ],
@@ -134,8 +135,8 @@ const COPY = {
   en: {
     locale: 'en-US',
     hero: {
-      h1: 'A home or apartment in Bali',
-      sub: 'See photos and prices. We help you buy safely.',
+      h1: 'Bali property, in numbers',
+      sub: 'Compare prices and rents by area before you choose.',
       tryLabel: 'For example',
       suggestions: ['Villas under $250,000', 'Apartments near the sea', 'Homes in Ubud'],
       search: 'Search',
@@ -153,7 +154,7 @@ const COPY = {
     finder: { heading: 'Answer three questions' },
     powers: {
       heading: 'What Balinsky can do',
-      sub: 'No property site in South-East Asia shows this much about a home. All of it is open and free, no sign-up.',
+      sub: 'Every home is compared with the market around it. All of it is open and free, no sign-up.',
       cta: 'See it on a real villa',
       items: [
         { title: 'What the home will earn', body: 'Three income scenarios: poor, normal, good. Counted from homes already rented out nearby.' },
@@ -188,7 +189,7 @@ const COPY = {
     help: {
       heading: 'What the catalogue gives you',
       points: [
-        'Documents for every listing: PBG, land status, the developer',
+        'Permit status, land title and lease term as the developer reports them — and a flag where data is missing',
         'Video and photos from the site — see the property without flying in',
         'The developer’s direct contacts — you write to them, not to a middleman',
       ],
@@ -199,8 +200,8 @@ const COPY = {
   id: {
     locale: 'id-ID',
     hero: {
-      h1: 'Rumah atau apartemen di Bali',
-      sub: 'Lihat foto dan harga. Kami bantu membeli dengan aman.',
+      h1: 'Properti Bali dalam angka',
+      sub: 'Bandingkan harga dan sewa per kawasan sebelum memilih.',
       tryLabel: 'Contohnya',
       suggestions: ['Vila di bawah $250.000', 'Apartemen dekat laut', 'Rumah di Ubud'],
       search: 'Cari',
@@ -218,7 +219,7 @@ const COPY = {
     finder: { heading: 'Jawab tiga pertanyaan' },
     powers: {
       heading: 'Yang bisa dilakukan Balinsky',
-      sub: 'Tidak ada situs properti di Asia Tenggara yang menampilkan sebanyak ini tentang satu rumah. Semuanya terbuka dan gratis, tanpa daftar.',
+      sub: 'Setiap rumah dibandingkan dengan pasar di sekitarnya. Semuanya terbuka dan gratis, tanpa daftar.',
       cta: 'Lihat contohnya pada satu vila',
       items: [
         { title: 'Berapa hasil rumah ini', body: 'Tiga skenario pendapatan: buruk, biasa, bagus. Dihitung dari rumah yang sudah disewakan di sekitar.' },
@@ -253,7 +254,7 @@ const COPY = {
     help: {
       heading: 'Apa yang Anda temukan di katalog',
       points: [
-        'Dokumen untuk setiap objek: PBG, status tanah, pengembang',
+        'Status izin, sertifikat tanah, dan masa leasehold sesuai laporan pengembang — dengan tanda bila data tidak ada',
         'Video dan foto dari lokasi — objek terlihat tanpa harus datang',
         'Kontak langsung pengembang — Anda menulis ke mereka, bukan ke perantara',
       ],
@@ -264,8 +265,8 @@ const COPY = {
   fr: {
     locale: 'fr-FR',
     hero: {
-      h1: 'Une maison ou un appartement à Bali',
-      sub: 'Regardez les photos et les prix. On vous aide à acheter en sécurité.',
+      h1: 'L’immobilier à Bali en chiffres',
+      sub: 'Comparez prix et loyers par quartier avant de choisir.',
       tryLabel: 'Par exemple',
       suggestions: ['Villas à moins de 250 000 $', 'Appartements près de la mer', 'Maisons à Ubud'],
       search: 'Chercher',
@@ -283,7 +284,7 @@ const COPY = {
     finder: { heading: 'Répondez à trois questions' },
     powers: {
       heading: 'Ce que fait Balinsky',
-      sub: 'Aucun site immobilier d’Asie du Sud-Est n’en montre autant sur un bien. Tout est ouvert et gratuit, sans inscription.',
+      sub: 'Chaque bien est comparé au marché qui l’entoure. Tout est ouvert et gratuit, sans inscription.',
       cta: 'Voir sur une vraie villa',
       items: [
         { title: 'Ce que la maison rapporte', body: 'Trois scénarios de revenu : bas, normal, bon. Calculés sur les maisons déjà louées à côté.' },
@@ -318,7 +319,7 @@ const COPY = {
     help: {
       heading: 'Ce que vous trouverez dans le catalogue',
       points: [
-        'Les documents de chaque bien : PBG, statut du terrain, promoteur',
+        'Statut des permis, titre foncier et durée du bail tels que déclarés par le promoteur — signalés quand ils manquent',
         'Vidéo et photos sur place — voir le bien sans faire le déplacement',
         'Les contacts directs du promoteur — vous lui écrivez, pas à un intermédiaire',
       ],
@@ -329,8 +330,8 @@ const COPY = {
   de: {
     locale: 'de-DE',
     hero: {
-      h1: 'Ein Haus oder eine Wohnung auf Bali',
-      sub: 'Fotos und Preise ansehen. Wir helfen beim sicheren Kauf.',
+      h1: 'Bali-Immobilien in Zahlen',
+      sub: 'Preise und Mieten nach Gegend vergleichen, bevor Sie wählen.',
       tryLabel: 'Zum Beispiel',
       suggestions: ['Villen unter 250.000 $', 'Wohnungen am Meer', 'Häuser in Ubud'],
       search: 'Suchen',
@@ -348,7 +349,7 @@ const COPY = {
     finder: { heading: 'Beantworten Sie drei Fragen' },
     powers: {
       heading: 'Was Balinsky kann',
-      sub: 'Keine Immobilienseite in Südostasien zeigt so viel über ein Haus. Alles offen und kostenlos, ohne Anmeldung.',
+      sub: 'Jedes Haus wird mit dem Markt ringsum verglichen. Alles offen und kostenlos, ohne Anmeldung.',
       cta: 'An einer echten Villa ansehen',
       items: [
         { title: 'Was das Haus einbringt', body: 'Drei Ertragsszenarien: schlecht, normal, gut. Gerechnet nach Häusern, die nebenan schon vermietet werden.' },
@@ -383,7 +384,7 @@ const COPY = {
     help: {
       heading: 'Was Sie im Katalog finden',
       points: [
-        'Unterlagen zu jedem Objekt: PBG, Landstatus, Bauträger',
+        'Genehmigungsstatus, Landtitel und Pachtdauer laut Bauträger — mit Hinweis, wo Angaben fehlen',
         'Video und Fotos vor Ort — das Objekt sehen, ohne anzureisen',
         'Direkte Kontakte des Bauträgers — Sie schreiben ihm, nicht einem Vermittler',
       ],
@@ -394,8 +395,8 @@ const COPY = {
   zh: {
     locale: 'zh-CN',
     hero: {
-      h1: '在巴厘岛买房子或公寓',
-      sub: '看照片和价格。我们帮你安全买下。',
+      h1: '用数据看巴厘岛房产',
+      sub: '按区域比较房价和租金，再做选择。',
       tryLabel: '例如',
       suggestions: ['25 万美元以内的别墅', '海边的公寓', '乌布的房子'],
       search: '搜索',
@@ -413,7 +414,7 @@ const COPY = {
     finder: { heading: '回答三个问题' },
     powers: {
       heading: 'Balinsky 能做什么',
-      sub: '东南亚没有哪个房产网站能展示这么多关于一套房的细节。全部公开免费，无需注册。',
+      sub: '每套房都与周边市场进行对比。全部公开免费，无需注册。',
       cta: '在一套真实别墅上查看',
       items: [
         { title: '这套房能赚多少', body: '三种收益情景：差、一般、好。按附近已出租的房子计算。' },
@@ -448,7 +449,7 @@ const COPY = {
     help: {
       heading: '目录里有什么',
       points: [
-        '每套房产的文件：PBG、土地状态、开发商',
+        '开发商申报的许可状态、土地证与租赁年限——缺失时会标注',
         '实地视频和照片——无需亲临即可看房',
         '开发商的直接联系方式——直接联系他们，而非中间人',
       ],
@@ -459,8 +460,8 @@ const COPY = {
   nl: {
     locale: 'nl-NL',
     hero: {
-      h1: 'Een huis of appartement op Bali',
-      sub: 'Bekijk foto’s en prijzen. Wij helpen je veilig kopen.',
+      h1: 'Vastgoed op Bali in cijfers',
+      sub: 'Vergelijk prijzen en huren per gebied voordat je kiest.',
       tryLabel: 'Bijvoorbeeld',
       suggestions: ['Villa’s onder $250.000', 'Appartementen bij zee', 'Huizen in Ubud'],
       search: 'Zoeken',
@@ -478,7 +479,7 @@ const COPY = {
     finder: { heading: 'Beantwoord drie vragen' },
     powers: {
       heading: 'Wat Balinsky kan',
-      sub: 'Geen enkele vastgoedsite in Zuidoost-Azië laat zoveel over een huis zien. Alles open en gratis, zonder account.',
+      sub: 'Elk huis wordt vergeleken met de markt eromheen. Alles open en gratis, zonder account.',
       cta: 'Bekijk het op een echte villa',
       items: [
         { title: 'Wat het huis opbrengt', body: 'Drie scenario’s: slecht, normaal, goed. Berekend op huizen die er al verhuurd worden.' },
@@ -513,7 +514,7 @@ const COPY = {
     help: {
       heading: 'Wat u in de catalogus vindt',
       points: [
-        'Documenten bij elk object: PBG, landstatus, ontwikkelaar',
+        'Vergunningsstatus, grondtitel en leasetermijn zoals de ontwikkelaar opgeeft — met een markering waar gegevens ontbreken',
         'Video en foto’s ter plaatse — het object zien zonder te reizen',
         'Directe contacten van de ontwikkelaar — u schrijft hem, geen tussenpersoon',
       ],
@@ -524,8 +525,8 @@ const COPY = {
   ban: {
     locale: 'id-ID',
     hero: {
-      h1: 'Umah utawi apartemen ring Bali',
-      sub: 'Cingakin foto lan aji. Titiang nulungin numbas sane aman.',
+      h1: 'Properti Bali ring angka',
+      sub: 'Bandingang aji lan sewa manut wewidangan sadurung milih.',
       tryLabel: 'Upami',
       suggestions: ['Vila sane kirang saking $250.000', 'Apartemen nampek pasih', 'Umah ring Ubud'],
       search: 'Rereh',
@@ -543,7 +544,7 @@ const COPY = {
     finder: { heading: 'Saurin tigang patakon' },
     powers: {
       heading: 'Napi sane prasida antuk Balinsky',
-      sub: 'Nenten wenten situs properti ring Asia Tenggara sane nyinahang akeh kadi puniki indik umah. Sami terbuka lan gratis, nenten perlu ndaftar.',
+      sub: 'Sabilang umah kabandingang ring pasar ring sekitarnyane. Sami terbuka lan gratis, nenten perlu ndaftar.',
       cta: 'Cingakin conto ring silih tunggil vila',
       items: [
         { title: 'Sapunapi hasil umahe', body: 'Tigang skenario hasil: kaon, biasa, becik. Kaitung saking umah sane sampun kasewaang ring kiwa tengen.' },
@@ -578,7 +579,7 @@ const COPY = {
     help: {
       heading: 'Napi sané kapanggih ring katalog',
       points: [
-        'Dokumen sabilang objek: PBG, status tanah, pangwangun',
+        'Status izin, sertifikat tanah, lan masa leasehold manut pangwangun — kacihnayang yening data nenten wenten',
         'Video miwah foto saking genah — objek kacingak tanpa rauh',
         'Kontak langsung pangwangun — nyurat ka dané, nénten ka perantara',
       ],
@@ -589,8 +590,8 @@ const COPY = {
   pl: {
     locale: 'pl-PL',
     hero: {
-      h1: 'Dom albo mieszkanie na Bali',
-      sub: 'Zobacz zdjęcia i ceny. Pomożemy kupić bezpiecznie.',
+      h1: 'Nieruchomości na Bali w liczbach',
+      sub: 'Porównaj ceny i najem według okolic, zanim wybierzesz.',
       tryLabel: 'Na przykład',
       suggestions: ['Wille do 250 000 $', 'Mieszkania przy morzu', 'Domy w Ubud'],
       search: 'Szukaj',
@@ -608,7 +609,7 @@ const COPY = {
     finder: { heading: 'Odpowiedz na trzy pytania' },
     powers: {
       heading: 'Co potrafi Balinsky',
-      sub: 'Żaden serwis nieruchomości w Azji Południowo-Wschodniej nie pokazuje tylu danych o domu. Wszystko otwarte i za darmo, bez rejestracji.',
+      sub: 'Każdy dom porównujemy z rynkiem wokół niego. Wszystko otwarte i za darmo, bez rejestracji.',
       cta: 'Zobacz na prawdziwej willi',
       items: [
         { title: 'Ile zarobi dom', body: 'Trzy scenariusze dochodu: słaby, normalny, dobry. Liczone po domach już wynajmowanych obok.' },
@@ -643,7 +644,7 @@ const COPY = {
     help: {
       heading: 'Co znajdziesz w katalogu',
       points: [
-        'Dokumenty do każdej nieruchomości: PBG, status gruntu, deweloper',
+        'Status pozwoleń, tytuł do ziemi i okres dzierżawy według dewelopera — z oznaczeniem, gdy danych brak',
         'Wideo i zdjęcia z miejsca — obiekt widać bez przyjazdu',
         'Bezpośrednie kontakty dewelopera — piszesz do niego, nie do pośrednika',
       ],
@@ -654,8 +655,8 @@ const COPY = {
   uk: {
     locale: 'uk-UA',
     hero: {
-      h1: 'Дім або квартира на Балі',
-      sub: 'Дивіться фото й ціни. Допоможемо купити безпечно.',
+      h1: 'Нерухомість Балі в цифрах',
+      sub: 'Порівняйте ціни й оренду за районами, перш ніж обрати.',
       tryLabel: 'Наприклад',
       suggestions: ['Вілли до $250 000', 'Квартири біля моря', 'Будинки в Убуді'],
       search: 'Знайти',
@@ -673,7 +674,7 @@ const COPY = {
     finder: { heading: 'Дайте відповідь на три питання' },
     powers: {
       heading: 'Що вміє Balinsky',
-      sub: 'Жоден сайт нерухомості в Південно-Східній Азії не показує стільки про будинок. Усе відкрито й безкоштовно, без реєстрації.',
+      sub: 'Кожен будинок порівнюється з ринком довкола. Усе відкрито й безкоштовно, без реєстрації.',
       cta: 'Подивитися на прикладі вілли',
       items: [
         { title: 'Скільки заробить будинок', body: 'Три сценарії доходу: поганий, звичайний, добрий. Рахуємо за будинками, які вже здаються поруч.' },
@@ -708,7 +709,7 @@ const COPY = {
     help: {
       heading: 'Що ви знайдете в каталозі',
       points: [
-        'Документи по кожному обʼєкту: PBG, статус землі, забудовник',
+        'Статус дозволів, землі й строк лізхолду — зі слів забудовника, з позначкою, чого бракує',
         'Відео та фото з місця — обʼєкт видно, не приїжджаючи',
         'Прямі контакти забудовника — писати йому, а не посереднику',
       ],
@@ -765,10 +766,12 @@ async function loadDistrictCovers(): Promise<Record<string, string>> {
 
 async function loadStats() {
   const [v, a, k, d] = await Promise.all([
-    sb.from('raw_villas').select('airtable_id', { count: 'exact', head: true }),
-    sb.from('raw_apartments').select('airtable_id', { count: 'exact', head: true }),
+    // Published only — the same flags AboutView counts, so the homepage never
+    // claims drafts and withdrawn listings as catalogue.
+    sb.from('raw_villas').select('airtable_id', { count: 'exact', head: true }).eq('data->>Опубликовать', 'true' as unknown as string),
+    sb.from('raw_apartments').select('airtable_id', { count: 'exact', head: true }).eq('data->>Опубликовать', 'true' as unknown as string),
     sb.from('raw_complexes').select('airtable_id', { count: 'exact', head: true }),
-    sb.from('raw_developers').select('airtable_id', { count: 'exact', head: true }),
+    sb.from('raw_developers').select('airtable_id', { count: 'exact', head: true }).eq('data->>Публикация', 'true' as unknown as string),
   ])
   return {
     objects: (v.count ?? 0) + (a.count ?? 0),
@@ -866,6 +869,13 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
           </div>
         </PageContainer>
       </section>
+
+      {/* === 2b. Рынок в цифрах — RU/EN, где есть страницы с данными === */}
+      {(lang === 'ru' || lang === 'en') && (
+        <SectionWrap>
+          <MarketNumbers lang={lang} />
+        </SectionWrap>
+      )}
 
       {/* === 3. Что вы ищете? — три больших выбора =============== */}
       <SectionWrap className="border-t border-[var(--color-border)]">

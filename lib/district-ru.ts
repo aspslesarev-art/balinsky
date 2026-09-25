@@ -36,6 +36,15 @@ const MAP: Record<string, string> = {
   'Tibubeneng': 'Тибубененг',
   'Tabanan':    'Табанан',
   'Tegallalang':'Тегаллаланг',
+  'Bukit':      'Букит',
+  'Seminyak':   'Семиньяк',
+  'Babakan':    'Бабакан',
+  'Jimbaran':   'Джимбаран',
+  'Nunggalan':  'Нунггалан',
+  'Padonan':    'Падонан',
+  'Penestanan': 'Пенестанан',
+  'Mengwi':     'Менгви',
+  'Tumbak Bayuh': 'Тумбак-Баю',
 }
 
 export function districtRu(latin: string | null | undefined): string | null {

@@ -36,6 +36,9 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
       title: 'Информация',
       links: [
         { label: 'Инвестиции в недвижимость Бали', href: '/ru/investicii-v-nedvizhimost-bali' },
+        { label: 'Цены на недвижимость по районам', href: '/ru/tseny-na-nedvizhimost-bali' },
+        { label: 'Цены аренды на Бали', href: '/ru/tseny-arendy-na-bali' },
+        { label: 'Как мы считаем', href: '/ru/metodologiya' },
         { label: 'Жизнь на Бали — ВНЖ и налоги', href: '/ru/zhizn-na-bali' },
         { label: 'Как купить на Бали', href: '/ru/kak-kupit' },
         { label: 'Поездка на осмотр', href: '/ru/invest-tour' },
@@ -83,6 +86,9 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
       title: 'Information',
       links: [
         { label: 'Bali property investment', href: '/en/bali-property-investment' },
+        { label: 'Property prices by area', href: '/en/bali-property-prices' },
+        { label: 'Rent prices in Bali', href: '/en/bali-rent-prices' },
+        { label: 'How we calculate', href: '/en/methodology' },
         { label: 'Living in Bali — visas & taxes', href: '/en/living-in-bali' },
         { label: 'How to buy in Bali', href: '/en/how-to-buy' },
         { label: 'Viewing trip', href: '/en/invest-tour' },

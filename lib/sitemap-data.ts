@@ -16,6 +16,7 @@ import { loadAllKnowledge } from '@/lib/knowledge'
 import { enKnowledgeSlug } from '@/lib/knowledge-en-slugs'
 import { isNoindexKnowledge } from '@/lib/knowledge-noindex'
 import { isRuEnOnlyKnowledge } from '@/lib/knowledge-locales'
+import { MARKET, RU_EN_MARKET_PAGES } from '@/lib/market-index'
 import { normalizeSlug } from '@/lib/slug-normalize'
 import { switchLangPath, type Lang } from '@/lib/i18n'
 
@@ -412,6 +413,12 @@ async function buildAll(): Promise<Categorized> {
   const top: SitemapEntry[] = TOP_PAIRS.flatMap(({ ru, en, cf, p }) =>
     pairEntry({ ruPath: ru, enPath: en, lastModified: now, changeFrequency: cf, priority: p }),
   )
+  // Market-data pages — RU and EN only (lib/market-index.ts), so the
+  // cluster is just the pair; pairEntry would advertise all nine.
+  for (const { ru, en } of Object.values(RU_EN_MARKET_PAGES)) {
+    const alternates = { languages: { ru: `${SITE_URL}${ru}`, en: `${SITE_URL}${en}`, 'x-default': `${SITE_URL}${ru}` } }
+    for (const p of [ru, en]) top.push({ url: `${SITE_URL}${p}`, lastModified: new Date(MARKET.generatedAt), changeFrequency: 'monthly', priority: 0.9, alternates })
+  }
   // Programmatic landing — district investment + completed/scheduled years.
   for (const d of ['canggu','uluwatu','ubud','sanur','pererenan','berawa','nusa-dua','nyanyi','melasti','kerobokan','cemagi','umalas']) {
     top.push(...pairEntry({

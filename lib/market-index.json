@@ -1,0 +1,1658 @@
+{
+ "asOf": "2026-09",
+ "generatedAt": "2026-09-25T05:56:10.177Z",
+ "source": "Balinsky catalogue (asking prices of published listings) and Balinsky short-term rental database (nightly rates, sourced from estatemarket.io). Rentals placed in a district by the nearest catalogue listing within 1.5 km.",
+ "totals": {
+  "villas": 363,
+  "apartments": 431,
+  "rentals": 10170,
+  "villaRentals": 6482
+ },
+ "island": {
+  "villas": {
+   "n": 363,
+   "median": 350000,
+   "p25": 227500,
+   "p75": 542500,
+   "perM2": 2830,
+   "perM2N": 359,
+   "offPlanShare": 71,
+   "permitShare": 26,
+   "leaseYears": 29
+  },
+  "apartments": {
+   "n": 431,
+   "median": 160000,
+   "p25": 125000,
+   "p75": 262000,
+   "perM2": 3720,
+   "perM2N": 415
+  },
+  "villaByBeds": {
+   "1": {
+    "n": 77,
+    "median": 189500,
+    "p25": 147000,
+    "p75": 222000,
+    "perM2": 2760,
+    "perM2N": 74
+   },
+   "2": {
+    "n": 151,
+    "median": 320000,
+    "p25": 250000,
+    "p75": 395000,
+    "perM2": 2900,
+    "perM2N": 150
+   },
+   "3": {
+    "n": 80,
+    "median": 471500,
+    "p25": 367000,
+    "p75": 659000,
+    "perM2": 2580,
+    "perM2N": 80
+   },
+   "4+": {
+    "n": 55,
+    "median": 870000,
+    "p25": 682000,
+    "p75": 1395000,
+    "perM2": 3120,
+    "perM2N": 55
+   }
+  },
+  "villaRent": {
+   "1br": {
+    "n": 978,
+    "median": 100,
+    "p25": 69,
+    "p75": 148
+   },
+   "2br": {
+    "n": 2019,
+    "median": 119,
+    "p25": 85,
+    "p75": 171
+   },
+   "3br": {
+    "n": 1765,
+    "median": 171,
+    "p25": 122,
+    "p75": 240
+   },
+   "4br": {
+    "n": 1021,
+    "median": 317,
+    "p25": 214,
+    "p75": 470
+   }
+  },
+  "apartmentRent": {
+   "n": 529,
+   "median": 59,
+   "p25": 35,
+   "p75": 98
+  }
+ },
+ "villaDistricts": {
+  "Uluwatu": {
+   "n": 30,
+   "median": 364000,
+   "p25": 171500,
+   "p75": 483500,
+   "perM2": 2670,
+   "perM2N": 30,
+   "median2br": 452000,
+   "n2br": 8,
+   "leaseYears": 28,
+   "leaseN": 20,
+   "offPlanShare": 97,
+   "permitShare": 0
+  },
+  "Berawa": {
+   "n": 15,
+   "median": 520000,
+   "p25": 327500,
+   "p75": 952500,
+   "perM2": 3060,
+   "perM2N": 15,
+   "median2br": 327500,
+   "n2br": 8,
+   "leaseYears": 29,
+   "leaseN": 15,
+   "offPlanShare": 33,
+   "permitShare": 13
+  },
+  "Pandawa": {
+   "n": 26,
+   "median": 269500,
+   "p25": 215000,
+   "p75": 490000,
+   "perM2": 3250,
+   "perM2N": 25,
+   "median2br": 225000,
+   "n2br": 6,
+   "leaseYears": 30,
+   "leaseN": 24,
+   "offPlanShare": 100,
+   "permitShare": 19
+  },
+  "Ubud": {
+   "n": 30,
+   "median": 290000,
+   "p25": 230500,
+   "p75": 390000,
+   "perM2": 2600,
+   "perM2N": 27,
+   "median2br": 280000,
+   "n2br": 13,
+   "leaseYears": 30,
+   "leaseN": 28,
+   "offPlanShare": 53,
+   "permitShare": 27
+  },
+  "Bukit": {
+   "n": 32,
+   "median": 560000,
+   "p25": 374000,
+   "p75": 664500,
+   "perM2": 3300,
+   "perM2N": 32,
+   "median2br": 371500,
+   "n2br": 15,
+   "leaseYears": 29,
+   "leaseN": 32,
+   "offPlanShare": 94,
+   "permitShare": 0
+  },
+  "Nusa Dua": {
+   "n": 34,
+   "median": 265500,
+   "p25": 199000,
+   "p75": 421500,
+   "perM2": 2830,
+   "perM2N": 34,
+   "median2br": 335000,
+   "n2br": 9,
+   "leaseYears": 30,
+   "leaseN": 34,
+   "offPlanShare": 100,
+   "permitShare": 44
+  },
+  "Babakan": {
+   "n": 8,
+   "median": 382500,
+   "p25": 377500,
+   "p75": 387500,
+   "perM2": 1930,
+   "perM2N": 8,
+   "median2br": null,
+   "n2br": 0,
+   "leaseYears": 22,
+   "leaseN": 1,
+   "offPlanShare": 0,
+   "permitShare": 13
+  },
+  "Batu Bolong": {
+   "n": 10,
+   "median": 405000,
+   "p25": 381500,
+   "p75": 622500,
+   "perM2": 3060,
+   "perM2N": 10,
+   "median2br": 385000,
+   "n2br": 6,
+   "leaseYears": 26,
+   "leaseN": 10,
+   "offPlanShare": 80,
+   "permitShare": 20
+  },
+  "GWK": {
+   "n": 9,
+   "median": 320000,
+   "p25": 230000,
+   "p75": 400000,
+   "perM2": 3160,
+   "perM2N": 9,
+   "median2br": 335000,
+   "n2br": 3,
+   "leaseYears": 30,
+   "leaseN": 9,
+   "offPlanShare": 0,
+   "permitShare": 0
+  },
+  "Canggu": {
+   "n": 9,
+   "median": 325000,
+   "p25": 285000,
+   "p75": 456000,
+   "perM2": 2060,
+   "perM2N": 9,
+   "median2br": 315000,
+   "n2br": 6,
+   "leaseYears": 30,
+   "leaseN": 5,
+   "offPlanShare": 67,
+   "permitShare": 33
+  },
+  "Melasti": {
+   "n": 16,
+   "median": 322500,
+   "p25": 297000,
+   "p75": 425000,
+   "perM2": 3440,
+   "perM2N": 16,
+   "median2br": 320000,
+   "n2br": 11,
+   "leaseYears": 27,
+   "leaseN": 16,
+   "offPlanShare": 56,
+   "permitShare": 0
+  },
+  "Umalas": {
+   "n": 10,
+   "median": 255000,
+   "p25": 220000,
+   "p75": 297500,
+   "perM2": 2650,
+   "perM2N": 10,
+   "median2br": 245000,
+   "n2br": 9,
+   "leaseYears": 28,
+   "leaseN": 10,
+   "offPlanShare": 20,
+   "permitShare": 60
+  },
+  "Pererenan": {
+   "n": 28,
+   "median": 649000,
+   "p25": 372000,
+   "p75": 850500,
+   "perM2": 3000,
+   "perM2N": 28,
+   "median2br": 359500,
+   "n2br": 8,
+   "leaseYears": 30,
+   "leaseN": 27,
+   "offPlanShare": 86,
+   "permitShare": 68
+  },
+  "Nyanyi": {
+   "n": 44,
+   "median": 276500,
+   "p25": 167000,
+   "p75": 547500,
+   "perM2": 2630,
+   "perM2N": 44,
+   "median2br": 253000,
+   "n2br": 15,
+   "leaseYears": 25,
+   "leaseN": 37,
+   "offPlanShare": 64,
+   "permitShare": 16
+  },
+  "Seminyak": {
+   "n": 9,
+   "median": 320000,
+   "p25": 299000,
+   "p75": 527000,
+   "perM2": 2430,
+   "perM2N": 9,
+   "median2br": 299000,
+   "n2br": 5,
+   "leaseYears": 25,
+   "leaseN": 9,
+   "offPlanShare": 78,
+   "permitShare": 78
+  },
+  "Bingin": {
+   "n": 6,
+   "median": 732000,
+   "p25": 690000,
+   "p75": 769000,
+   "perM2": 2420,
+   "perM2N": 6,
+   "median2br": null,
+   "n2br": 0,
+   "leaseYears": 28,
+   "leaseN": 3,
+   "offPlanShare": 50,
+   "permitShare": 100
+  },
+  "Nusa Penida": {
+   "n": 6,
+   "median": 447000,
+   "p25": 433000,
+   "p75": 468500,
+   "perM2": 5480,
+   "perM2N": 6,
+   "median2br": 447000,
+   "n2br": 6,
+   "leaseYears": 25,
+   "leaseN": 6,
+   "offPlanShare": 100,
+   "permitShare": 100
+  }
+ },
+ "aptDistricts": {
+  "Melasti": {
+   "n": 23,
+   "median": 176000,
+   "p25": 156500,
+   "p75": 209000,
+   "perM2": 4760,
+   "perM2N": 23
+  },
+  "Nusa Penida": {
+   "n": 5,
+   "median": 132000,
+   "p25": 115500,
+   "p75": 198000,
+   "perM2": 4250,
+   "perM2N": 4
+  },
+  "Ubud": {
+   "n": 48,
+   "median": 122500,
+   "p25": 100000,
+   "p75": 156000,
+   "perM2": 3220,
+   "perM2N": 39
+  },
+  "Nusa Dua": {
+   "n": 27,
+   "median": 179000,
+   "p25": 127000,
+   "p75": 390500,
+   "perM2": 3850,
+   "perM2N": 25
+  },
+  "Pandawa": {
+   "n": 42,
+   "median": 137000,
+   "p25": 120500,
+   "p75": 162500,
+   "perM2": 3540,
+   "perM2N": 42
+  },
+  "Seseh": {
+   "n": 32,
+   "median": 534500,
+   "p25": 414000,
+   "p75": 688500,
+   "perM2": 6800,
+   "perM2N": 32
+  },
+  "Pererenan": {
+   "n": 29,
+   "median": 152500,
+   "p25": 125000,
+   "p75": 195000,
+   "perM2": 3970,
+   "perM2N": 27
+  },
+  "Umalas": {
+   "n": 12,
+   "median": 204500,
+   "p25": 150000,
+   "p75": 276000,
+   "perM2": 3300,
+   "perM2N": 12
+  },
+  "Batu Bolong": {
+   "n": 51,
+   "median": 215000,
+   "p25": 167500,
+   "p75": 303500,
+   "perM2": 3910,
+   "perM2N": 51
+  },
+  "Karanggasem": {
+   "n": 5,
+   "median": 263000,
+   "p25": 261000,
+   "p75": 390000,
+   "perM2": 5020,
+   "perM2N": 5
+  },
+  "Berawa": {
+   "n": 16,
+   "median": 297500,
+   "p25": 161500,
+   "p75": 436500,
+   "perM2": 3690,
+   "perM2N": 16
+  },
+  "Cemagi": {
+   "n": 22,
+   "median": 147000,
+   "p25": 110000,
+   "p75": 159000,
+   "perM2": 2980,
+   "perM2N": 22
+  },
+  "GWK": {
+   "n": 11,
+   "median": 105000,
+   "p25": 98000,
+   "p75": 122500,
+   "perM2": 4000,
+   "perM2N": 11
+  },
+  "Uluwatu": {
+   "n": 27,
+   "median": 256000,
+   "p25": 241000,
+   "p75": 396000,
+   "perM2": 3940,
+   "perM2N": 27
+  },
+  "Sanur": {
+   "n": 14,
+   "median": 541500,
+   "p25": 241000,
+   "p75": 1041500,
+   "perM2": 5120,
+   "perM2N": 14
+  },
+  "Kedungu": {
+   "n": 6,
+   "median": 121500,
+   "p25": 113500,
+   "p75": 189000,
+   "perM2": 3030,
+   "perM2N": 6
+  },
+  "Ungasan": {
+   "n": 6,
+   "median": 160000,
+   "p25": 160000,
+   "p75": 194000,
+   "perM2": 4780,
+   "perM2N": 6
+  }
+ },
+ "rentDistricts": {
+  "Ubud": {
+   "villas": 1092,
+   "apartments": 80,
+   "villa1br": {
+    "n": 259,
+    "median": 90,
+    "p25": 59,
+    "p75": 134
+   },
+   "villa2br": {
+    "n": 327,
+    "median": 107,
+    "p25": 70,
+    "p75": 181
+   },
+   "villa3br": {
+    "n": 188,
+    "median": 179,
+    "p25": 108,
+    "p75": 263
+   },
+   "villa4br": {
+    "n": 146,
+    "median": 348,
+    "p25": 260,
+    "p75": 462
+   },
+   "apartment": {
+    "n": 80,
+    "median": 44,
+    "p25": 26,
+    "p75": 85
+   }
+  },
+  "Penestanan": {
+   "villas": 79,
+   "apartments": 8,
+   "villa1br": {
+    "n": 22,
+    "median": 69,
+    "p25": 56,
+    "p75": 92
+   },
+   "villa2br": {
+    "n": 31,
+    "median": 110,
+    "p25": 80,
+    "p75": 134
+   },
+   "villa3br": {
+    "n": 12,
+    "median": 189,
+    "p25": 163,
+    "p75": 245
+   },
+   "apartment": {
+    "n": 8,
+    "median": 40,
+    "p25": 34,
+    "p75": 73
+   }
+  },
+  "Seminyak": {
+   "villas": 768,
+   "apartments": 79,
+   "villa1br": {
+    "n": 74,
+    "median": 103,
+    "p25": 81,
+    "p75": 159
+   },
+   "villa2br": {
+    "n": 204,
+    "median": 123,
+    "p25": 87,
+    "p75": 169
+   },
+   "villa3br": {
+    "n": 283,
+    "median": 171,
+    "p25": 127,
+    "p75": 228
+   },
+   "villa4br": {
+    "n": 161,
+    "median": 285,
+    "p25": 194,
+    "p75": 407
+   },
+   "apartment": {
+    "n": 79,
+    "median": 46,
+    "p25": 36,
+    "p75": 62
+   }
+  },
+  "Canggu": {
+   "villas": 300,
+   "apartments": 32,
+   "villa1br": {
+    "n": 49,
+    "median": 87,
+    "p25": 62,
+    "p75": 102
+   },
+   "villa2br": {
+    "n": 85,
+    "median": 100,
+    "p25": 75,
+    "p75": 140
+   },
+   "villa3br": {
+    "n": 99,
+    "median": 144,
+    "p25": 113,
+    "p75": 191
+   },
+   "villa4br": {
+    "n": 45,
+    "median": 304,
+    "p25": 195,
+    "p75": 441
+   },
+   "apartment": {
+    "n": 32,
+    "median": 61,
+    "p25": 35,
+    "p75": 86
+   }
+  },
+  "Batu Bolong": {
+   "villas": 453,
+   "apartments": 42,
+   "villa1br": {
+    "n": 60,
+    "median": 83,
+    "p25": 62,
+    "p75": 122
+   },
+   "villa2br": {
+    "n": 104,
+    "median": 124,
+    "p25": 100,
+    "p75": 178
+   },
+   "villa3br": {
+    "n": 174,
+    "median": 172,
+    "p25": 135,
+    "p75": 261
+   },
+   "villa4br": {
+    "n": 77,
+    "median": 342,
+    "p25": 230,
+    "p75": 475
+   },
+   "apartment": {
+    "n": 42,
+    "median": 81,
+    "p25": 52,
+    "p75": 135
+   }
+  },
+  "Uluwatu": {
+   "villas": 530,
+   "apartments": 70,
+   "villa1br": {
+    "n": 128,
+    "median": 134,
+    "p25": 106,
+    "p75": 164
+   },
+   "villa2br": {
+    "n": 204,
+    "median": 160,
+    "p25": 116,
+    "p75": 205
+   },
+   "villa3br": {
+    "n": 96,
+    "median": 210,
+    "p25": 168,
+    "p75": 277
+   },
+   "villa4br": {
+    "n": 28,
+    "median": 273,
+    "p25": 222,
+    "p75": 392
+   },
+   "apartment": {
+    "n": 70,
+    "median": 78,
+    "p25": 59,
+    "p75": 101
+   }
+  },
+  "Kerobokan": {
+   "villas": 121,
+   "apartments": 10,
+   "villa1br": {
+    "n": 22,
+    "median": 102,
+    "p25": 82,
+    "p75": 132
+   },
+   "villa2br": {
+    "n": 54,
+    "median": 92,
+    "p25": 75,
+    "p75": 134
+   },
+   "villa3br": {
+    "n": 22,
+    "median": 133,
+    "p25": 100,
+    "p75": 166
+   },
+   "villa4br": {
+    "n": 13,
+    "median": 307,
+    "p25": 212,
+    "p75": 473
+   },
+   "apartment": {
+    "n": 10,
+    "median": 61,
+    "p25": 26,
+    "p75": 96
+   }
+  },
+  "Berawa": {
+   "villas": 587,
+   "apartments": 53,
+   "villa1br": {
+    "n": 48,
+    "median": 138,
+    "p25": 87,
+    "p75": 195
+   },
+   "villa2br": {
+    "n": 134,
+    "median": 138,
+    "p25": 99,
+    "p75": 198
+   },
+   "villa3br": {
+    "n": 205,
+    "median": 191,
+    "p25": 142,
+    "p75": 270
+   },
+   "villa4br": {
+    "n": 150,
+    "median": 337,
+    "p25": 224,
+    "p75": 478
+   },
+   "apartment": {
+    "n": 53,
+    "median": 64,
+    "p25": 44,
+    "p75": 92
+   }
+  },
+  "Umalas": {
+   "villas": 803,
+   "apartments": 29,
+   "villa1br": {
+    "n": 87,
+    "median": 96,
+    "p25": 76,
+    "p75": 167
+   },
+   "villa2br": {
+    "n": 277,
+    "median": 120,
+    "p25": 90,
+    "p75": 160
+   },
+   "villa3br": {
+    "n": 231,
+    "median": 152,
+    "p25": 114,
+    "p75": 213
+   },
+   "villa4br": {
+    "n": 147,
+    "median": 324,
+    "p25": 193,
+    "p75": 485
+   },
+   "apartment": {
+    "n": 29,
+    "median": 45,
+    "p25": 35,
+    "p75": 103
+   }
+  },
+  "Babakan": {
+   "villas": 48,
+   "apartments": 0,
+   "villa1br": {
+    "n": 6,
+    "median": 77,
+    "p25": 51,
+    "p75": 126
+   },
+   "villa2br": {
+    "n": 23,
+    "median": 122,
+    "p25": 78,
+    "p75": 170
+   },
+   "villa3br": {
+    "n": 8,
+    "median": 96,
+    "p25": 83,
+    "p75": 124
+   },
+   "villa4br": {
+    "n": 8,
+    "median": 289,
+    "p25": 247,
+    "p75": 488
+   }
+  },
+  "Pererenan": {
+   "villas": 313,
+   "apartments": 28,
+   "villa1br": {
+    "n": 42,
+    "median": 123,
+    "p25": 83,
+    "p75": 148
+   },
+   "villa2br": {
+    "n": 110,
+    "median": 126,
+    "p25": 93,
+    "p75": 171
+   },
+   "villa3br": {
+    "n": 91,
+    "median": 155,
+    "p25": 116,
+    "p75": 215
+   },
+   "villa4br": {
+    "n": 48,
+    "median": 345,
+    "p25": 238,
+    "p75": 621
+   },
+   "apartment": {
+    "n": 28,
+    "median": 85,
+    "p25": 59,
+    "p75": 124
+   }
+  },
+  "Tumbak Bayuh": {
+   "villas": 84,
+   "apartments": 3,
+   "villa1br": {
+    "n": 11,
+    "median": 66,
+    "p25": 62,
+    "p75": 88
+   },
+   "villa2br": {
+    "n": 35,
+    "median": 97,
+    "p25": 87,
+    "p75": 135
+   },
+   "villa3br": {
+    "n": 23,
+    "median": 122,
+    "p25": 92,
+    "p75": 189
+   },
+   "villa4br": {
+    "n": 12,
+    "median": 238,
+    "p25": 224,
+    "p75": 284
+   }
+  },
+  "Nyanyi": {
+   "villas": 28,
+   "apartments": 2,
+   "villa1br": {
+    "n": 8,
+    "median": 95,
+    "p25": 76,
+    "p75": 104
+   },
+   "villa2br": {
+    "n": 7,
+    "median": 74,
+    "p25": 53,
+    "p75": 131
+   },
+   "villa3br": {
+    "n": 6,
+    "median": 106,
+    "p25": 98,
+    "p75": 137
+   }
+  },
+  "Mengwi": {
+   "villas": 17,
+   "apartments": 3,
+   "villa2br": {
+    "n": 10,
+    "median": 116,
+    "p25": 68,
+    "p75": 126
+   }
+  },
+  "Bukit": {
+   "villas": 70,
+   "apartments": 2,
+   "villa1br": {
+    "n": 6,
+    "median": 81,
+    "p25": 50,
+    "p75": 279
+   },
+   "villa2br": {
+    "n": 20,
+    "median": 93,
+    "p25": 76,
+    "p75": 123
+   },
+   "villa3br": {
+    "n": 14,
+    "median": 129,
+    "p25": 118,
+    "p75": 176
+   },
+   "villa4br": {
+    "n": 15,
+    "median": 300,
+    "p25": 193,
+    "p75": 500
+   }
+  },
+  "Cemagi": {
+   "villas": 12,
+   "apartments": 1
+  },
+  "Seseh": {
+   "villas": 23,
+   "apartments": 1,
+   "villa1br": {
+    "n": 8,
+    "median": 110,
+    "p25": 85,
+    "p75": 129
+   },
+   "villa2br": {
+    "n": 6,
+    "median": 125,
+    "p25": 86,
+    "p75": 159
+   }
+  },
+  "Padonan": {
+   "villas": 48,
+   "apartments": 3,
+   "villa1br": {
+    "n": 6,
+    "median": 73,
+    "p25": 53,
+    "p75": 84
+   },
+   "villa2br": {
+    "n": 26,
+    "median": 90,
+    "p25": 77,
+    "p75": 121
+   },
+   "villa3br": {
+    "n": 7,
+    "median": 138,
+    "p25": 111,
+    "p75": 161
+   },
+   "villa4br": {
+    "n": 6,
+    "median": 211,
+    "p25": 177,
+    "p75": 523
+   }
+  },
+  "Melasti": {
+   "villas": 68,
+   "apartments": 3,
+   "villa1br": {
+    "n": 8,
+    "median": 135,
+    "p25": 72,
+    "p75": 253
+   },
+   "villa2br": {
+    "n": 21,
+    "median": 126,
+    "p25": 94,
+    "p75": 176
+   },
+   "villa3br": {
+    "n": 13,
+    "median": 220,
+    "p25": 137,
+    "p75": 256
+   },
+   "villa4br": {
+    "n": 15,
+    "median": 292,
+    "p25": 220,
+    "p75": 553
+   }
+  },
+  "Sanur": {
+   "villas": 315,
+   "apartments": 30,
+   "villa1br": {
+    "n": 27,
+    "median": 108,
+    "p25": 70,
+    "p75": 134
+   },
+   "villa2br": {
+    "n": 91,
+    "median": 130,
+    "p25": 92,
+    "p75": 171
+   },
+   "villa3br": {
+    "n": 109,
+    "median": 201,
+    "p25": 152,
+    "p75": 256
+   },
+   "villa4br": {
+    "n": 50,
+    "median": 315,
+    "p25": 247,
+    "p75": 413
+   },
+   "apartment": {
+    "n": 30,
+    "median": 45,
+    "p25": 34,
+    "p75": 97
+   }
+  },
+  "Bingin": {
+   "villas": 185,
+   "apartments": 12,
+   "villa1br": {
+    "n": 32,
+    "median": 139,
+    "p25": 93,
+    "p75": 170
+   },
+   "villa2br": {
+    "n": 62,
+    "median": 161,
+    "p25": 136,
+    "p75": 204
+   },
+   "villa3br": {
+    "n": 44,
+    "median": 204,
+    "p25": 174,
+    "p75": 279
+   },
+   "villa4br": {
+    "n": 18,
+    "median": 427,
+    "p25": 269,
+    "p75": 643
+   },
+   "apartment": {
+    "n": 12,
+    "median": 124,
+    "p25": 77,
+    "p75": 160
+   }
+  },
+  "GWK": {
+   "villas": 75,
+   "apartments": 8,
+   "villa1br": {
+    "n": 12,
+    "median": 73,
+    "p25": 49,
+    "p75": 81
+   },
+   "villa2br": {
+    "n": 18,
+    "median": 79,
+    "p25": 59,
+    "p75": 138
+   },
+   "villa3br": {
+    "n": 21,
+    "median": 149,
+    "p25": 99,
+    "p75": 253
+   },
+   "villa4br": {
+    "n": 14,
+    "median": 324,
+    "p25": 186,
+    "p75": 511
+   },
+   "apartment": {
+    "n": 8,
+    "median": 42,
+    "p25": 35,
+    "p75": 74
+   }
+  },
+  "Ungasan": {
+   "villas": 128,
+   "apartments": 17,
+   "villa1br": {
+    "n": 12,
+    "median": 78,
+    "p25": 53,
+    "p75": 106
+   },
+   "villa2br": {
+    "n": 62,
+    "median": 92,
+    "p25": 68,
+    "p75": 109
+   },
+   "villa3br": {
+    "n": 28,
+    "median": 152,
+    "p25": 96,
+    "p75": 296
+   },
+   "villa4br": {
+    "n": 13,
+    "median": 172,
+    "p25": 136,
+    "p75": 397
+   },
+   "apartment": {
+    "n": 17,
+    "median": 47,
+    "p25": 34,
+    "p75": 84
+   }
+  },
+  "Pandawa": {
+   "villas": 108,
+   "apartments": 3,
+   "villa1br": {
+    "n": 12,
+    "median": 90,
+    "p25": 67,
+    "p75": 135
+   },
+   "villa2br": {
+    "n": 42,
+    "median": 68,
+    "p25": 49,
+    "p75": 104
+   },
+   "villa3br": {
+    "n": 26,
+    "median": 110,
+    "p25": 89,
+    "p75": 142
+   },
+   "villa4br": {
+    "n": 9,
+    "median": 464,
+    "p25": 347,
+    "p75": 808
+   }
+  },
+  "Nunggalan": {
+   "villas": 23,
+   "apartments": 2
+  },
+  "Nusa Penida": {
+   "villas": 14,
+   "apartments": 1,
+   "villa1br": {
+    "n": 5,
+    "median": 49,
+    "p25": 48,
+    "p75": 53
+   }
+  },
+  "Jimbaran": {
+   "villas": 86,
+   "apartments": 1,
+   "villa1br": {
+    "n": 11,
+    "median": 63,
+    "p25": 37,
+    "p75": 156
+   },
+   "villa2br": {
+    "n": 14,
+    "median": 137,
+    "p25": 86,
+    "p75": 195
+   },
+   "villa3br": {
+    "n": 25,
+    "median": 138,
+    "p25": 89,
+    "p75": 229
+   },
+   "villa4br": {
+    "n": 21,
+    "median": 381,
+    "p25": 205,
+    "p75": 625
+   }
+  },
+  "Nusa Dua": {
+   "villas": 97,
+   "apartments": 5,
+   "villa1br": {
+    "n": 16,
+    "median": 83,
+    "p25": 70,
+    "p75": 152
+   },
+   "villa2br": {
+    "n": 42,
+    "median": 97,
+    "p25": 76,
+    "p75": 133
+   },
+   "villa3br": {
+    "n": 25,
+    "median": 166,
+    "p25": 110,
+    "p75": 242
+   },
+   "villa4br": {
+    "n": 6,
+    "median": 382,
+    "p25": 260,
+    "p75": 430
+   },
+   "apartment": {
+    "n": 5,
+    "median": 169,
+    "p25": 23,
+    "p75": 220
+   }
+  }
+ },
+ "monthly": {
+  "n": 735,
+  "from": "2026-03-30",
+  "to": "2026-07-14",
+  "island": {
+   "apartment": {
+    "n": 59,
+    "median": 1350,
+    "p25": 500,
+    "p75": 1700
+   },
+   "villa1br": {
+    "n": 67,
+    "median": 1000,
+    "p25": 650,
+    "p75": 1750
+   },
+   "villa2br": {
+    "n": 330,
+    "median": 2150,
+    "p25": 1350,
+    "p75": 2800
+   },
+   "villa3br": {
+    "n": 188,
+    "median": 3000,
+    "p25": 2300,
+    "p75": 3950
+   },
+   "villa4br": {
+    "n": 89,
+    "median": 6900,
+    "p25": 3650,
+    "p75": 11100
+   }
+  },
+  "districts": {
+   "Kerobokan": {
+    "n": 14,
+    "all": {
+     "n": 14,
+     "median": 1200,
+     "p25": 950,
+     "p75": 1600
+    },
+    "villa2br": {
+     "n": 8,
+     "median": 1150,
+     "p25": 950,
+     "p75": 1300
+    }
+   },
+   "Pererenan": {
+    "n": 56,
+    "all": {
+     "n": 56,
+     "median": 3150,
+     "p25": 2400,
+     "p75": 4450
+    },
+    "villa2br": {
+     "n": 15,
+     "median": 2550,
+     "p25": 2450,
+     "p75": 3100
+    },
+    "villa3br": {
+     "n": 18,
+     "median": 2950,
+     "p25": 2400,
+     "p75": 3450
+    }
+   },
+   "Batu Bolong": {
+    "n": 12,
+    "all": {
+     "n": 12,
+     "median": 3100,
+     "p25": 2850,
+     "p75": 3300
+    },
+    "villa2br": {
+     "n": 6,
+     "median": 2850,
+     "p25": 2800,
+     "p75": 3000
+    }
+   },
+   "Uluwatu": {
+    "n": 27,
+    "all": {
+     "n": 27,
+     "median": 2750,
+     "p25": 2000,
+     "p75": 3300
+    },
+    "villa1br": {
+     "n": 5,
+     "median": 1550,
+     "p25": 1250,
+     "p75": 1550
+    },
+    "villa2br": {
+     "n": 16,
+     "median": 2800,
+     "p25": 2350,
+     "p75": 3150
+    }
+   },
+   "Umalas": {
+    "n": 61,
+    "all": {
+     "n": 61,
+     "median": 2700,
+     "p25": 2200,
+     "p75": 3350
+    },
+    "villa2br": {
+     "n": 18,
+     "median": 2200,
+     "p25": 2200,
+     "p75": 2650
+    },
+    "villa3br": {
+     "n": 27,
+     "median": 2750,
+     "p25": 2450,
+     "p75": 3500
+    }
+   },
+   "Canggu": {
+    "n": 119,
+    "all": {
+     "n": 119,
+     "median": 2650,
+     "p25": 1600,
+     "p75": 3700
+    },
+    "villa1br": {
+     "n": 9,
+     "median": 1450,
+     "p25": 1000,
+     "p75": 2150
+    },
+    "villa2br": {
+     "n": 28,
+     "median": 2250,
+     "p25": 1650,
+     "p75": 2900
+    },
+    "villa3br": {
+     "n": 39,
+     "median": 3150,
+     "p25": 2300,
+     "p75": 3850
+    }
+   },
+   "Berawa": {
+    "n": 61,
+    "all": {
+     "n": 61,
+     "median": 3050,
+     "p25": 1950,
+     "p75": 4650
+    },
+    "villa1br": {
+     "n": 12,
+     "median": 1850,
+     "p25": 900,
+     "p75": 2500
+    },
+    "villa2br": {
+     "n": 15,
+     "median": 2700,
+     "p25": 2100,
+     "p75": 4250
+    },
+    "villa3br": {
+     "n": 14,
+     "median": 3800,
+     "p25": 2950,
+     "p75": 4600
+    }
+   },
+   "Ubud": {
+    "n": 77,
+    "all": {
+     "n": 77,
+     "median": 1250,
+     "p25": 750,
+     "p75": 2250
+    },
+    "villa1br": {
+     "n": 15,
+     "median": 600,
+     "p25": 500,
+     "p75": 850
+    },
+    "villa2br": {
+     "n": 37,
+     "median": 1300,
+     "p25": 1150,
+     "p75": 2200
+    },
+    "villa3br": {
+     "n": 8,
+     "median": 2200,
+     "p25": 1000,
+     "p75": 3500
+    }
+   },
+   "Seminyak": {
+    "n": 29,
+    "all": {
+     "n": 29,
+     "median": 2400,
+     "p25": 1950,
+     "p75": 2800
+    },
+    "villa2br": {
+     "n": 13,
+     "median": 2200,
+     "p25": 1550,
+     "p75": 2700
+    },
+    "villa3br": {
+     "n": 12,
+     "median": 2450,
+     "p25": 2400,
+     "p75": 2800
+    }
+   },
+   "Cemagi": {
+    "n": 16,
+    "all": {
+     "n": 16,
+     "median": 2800,
+     "p25": 1750,
+     "p75": 3750
+    },
+    "villa2br": {
+     "n": 7,
+     "median": 1750,
+     "p25": 1750,
+     "p75": 2650
+    }
+   },
+   "Pandawa": {
+    "n": 10,
+    "all": {
+     "n": 10,
+     "median": 2100,
+     "p25": 1800,
+     "p75": 3300
+    },
+    "villa2br": {
+     "n": 8,
+     "median": 2150,
+     "p25": 2100,
+     "p75": 3650
+    }
+   },
+   "Bukit": {
+    "n": 32,
+    "all": {
+     "n": 32,
+     "median": 1450,
+     "p25": 750,
+     "p75": 2400
+    },
+    "villa2br": {
+     "n": 22,
+     "median": 1050,
+     "p25": 700,
+     "p75": 1550
+    },
+    "villa3br": {
+     "n": 7,
+     "median": 3750,
+     "p25": 3050,
+     "p75": 5000
+    }
+   },
+   "Padonan": {
+    "n": 13,
+    "all": {
+     "n": 13,
+     "median": 2000,
+     "p25": 1100,
+     "p75": 2600
+    },
+    "villa2br": {
+     "n": 11,
+     "median": 1300,
+     "p25": 1100,
+     "p75": 2350
+    }
+   },
+   "Jimbaran": {
+    "n": 31,
+    "all": {
+     "n": 31,
+     "median": 2600,
+     "p25": 950,
+     "p75": 4000
+    },
+    "villa2br": {
+     "n": 13,
+     "median": 2550,
+     "p25": 950,
+     "p75": 4900
+    },
+    "villa3br": {
+     "n": 14,
+     "median": 4000,
+     "p25": 2850,
+     "p75": 4000
+    }
+   },
+   "Ungasan": {
+    "n": 46,
+    "all": {
+     "n": 46,
+     "median": 2400,
+     "p25": 1950,
+     "p75": 3150
+    },
+    "villa2br": {
+     "n": 32,
+     "median": 2400,
+     "p25": 1950,
+     "p75": 2850
+    },
+    "villa3br": {
+     "n": 8,
+     "median": 2250,
+     "p25": 850,
+     "p75": 2800
+    }
+   },
+   "Nusa Dua": {
+    "n": 41,
+    "all": {
+     "n": 41,
+     "median": 1450,
+     "p25": 850,
+     "p75": 2000
+    },
+    "villa1br": {
+     "n": 5,
+     "median": 700,
+     "p25": 450,
+     "p75": 750
+    },
+    "villa2br": {
+     "n": 24,
+     "median": 1500,
+     "p25": 1400,
+     "p75": 2100
+    },
+    "villa3br": {
+     "n": 9,
+     "median": 1550,
+     "p25": 1200,
+     "p75": 1900
+    }
+   },
+   "Seseh": {
+    "n": 13,
+    "all": {
+     "n": 13,
+     "median": 2150,
+     "p25": 800,
+     "p75": 2550
+    },
+    "villa2br": {
+     "n": 10,
+     "median": 2150,
+     "p25": 1100,
+     "p75": 4250
+    }
+   },
+   "Sanur": {
+    "n": 10,
+    "all": {
+     "n": 10,
+     "median": 2050,
+     "p25": 750,
+     "p75": 2750
+    },
+    "villa2br": {
+     "n": 5,
+     "median": 2000,
+     "p25": 750,
+     "p75": 2100
+    }
+   },
+   "Babakan": {
+    "n": 15,
+    "all": {
+     "n": 15,
+     "median": 1800,
+     "p25": 1750,
+     "p75": 1900
+    },
+    "villa2br": {
+     "n": 12,
+     "median": 1800,
+     "p25": 1750,
+     "p75": 1850
+    }
+   }
+  }
+ }
+}
