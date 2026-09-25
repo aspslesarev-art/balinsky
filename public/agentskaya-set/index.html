@@ -167,6 +167,10 @@
   ul.dim li{padding-left:20px;position:relative}
   ul.dim li::before{content:"";position:absolute;left:2px;top:12px;width:8px;height:1.5px;background:var(--faint)}
 
+  .both{margin-top:40px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:24px 48px;align-items:start;border-left:2px solid var(--accent)}
+  .both h3{font-family:var(--serif);font-weight:400;font-size:clamp(22px,2.2vw,28px);line-height:1.2}
+  @media (max-width:900px){ .both{grid-template-columns:minmax(0,1fr)} }
+
   /* formats */
   .plan{display:flex;flex-direction:column;position:relative}
   .plan .pts{margin-bottom:32px}
@@ -413,6 +417,16 @@
     </div>
   </div>
   <p class="lead" style="margin-top:32px">Своя команда из трёх человек&nbsp;- от $3000/мес. У нас вдвое дешевле, и агенты уже есть.</p>
+  <div class="card both">
+    <div>
+      <h3>Уже есть свой менеджер?</h3>
+      <p class="muted" style="margin-top:8px">Не мешаем - работаем параллельно.</p>
+    </div>
+    <ul class="pts">
+      <li>Два отдела соревнуются - ваш менеджер начинает работать лучше</li>
+      <li>Максимум результата - когда работа с агентами полностью на нас</li>
+    </ul>
+  </div>
 </section>
 
 <section class="sec" id="s8">
