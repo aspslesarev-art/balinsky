@@ -156,7 +156,7 @@ function computeZone(access: AccessLike): ZoneSignal | null {
   return { zone, walkingMinutes, beachName: access.nearest_beach_name, km: Math.round(km * 10) / 10 }
 }
 
-function computeOccupancy(input: ComputeInput): OccupancySignal | null {
+function _computeOccupancy(input: ComputeInput): OccupancySignal | null {
   const ms = input.marketStats
   const dm = input.districtMedians
   if (!ms || !dm) return null
@@ -191,7 +191,10 @@ export function computeComplexSignals(input: ComputeInput): ComplexSignals {
   return {
     yield: computeYield(input),
     zone: computeZone(input.access),
-    occupancy: computeOccupancy(input),
+    // Off: complex_market_stats «occupancy» is the share of blocked calendar
+    // dates (median ~95%), not nights sold, so a gap to the district median
+    // measures calendar habits, not demand. See /methodology.
+    occupancy: null,
     timing: computeTiming(input),
   }
 }

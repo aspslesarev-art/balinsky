@@ -59,16 +59,8 @@ export function UnitDemandBlock({ demand, lang = 'ru' }: { demand: UnitDemand; l
       value: `×${demand.adrVsNeighbours.toFixed(2)}`,
       hint: demand.expectedAdrUsd ? `~${demand.expectedAdrUsd} ${c.perNight}` : null,
     },
-    demand.segmentOccupancyPct != null && {
-      label: c.occupancy,
-      value: `${Math.round(demand.segmentOccupancyPct)}%`,
-      hint: null,
-    },
-    demand.segmentIdlePct != null && {
-      label: c.idle,
-      value: `${Math.round(demand.segmentIdlePct)}%`,
-      hint: null,
-    },
+    // Segment occupancy and idle share are not shown: the source «occupancy»
+    // counts blocked calendar dates, not nights sold (see /methodology).
   ].filter(Boolean) as Array<{ label: string; value: string; hint: string | null }>
 
   return (

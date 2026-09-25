@@ -69,14 +69,14 @@ const KINDS: Record<GateKind, { ru: Pitch; en: Pitch }> = {
   market: {
     ru: {
       title: 'Рынок аренды в этом районе',
-      what: 'Ставки за ночь, загрузка и сезонность по реальным объявлениям Бали, а не по обещаниям застройщика.',
+      what: 'Ставки за ночь у соседей и годовая выручка по сценариям загрузки — по реальным объявлениям Бали, а не по обещаниям застройщика.',
       investor: 'проверка заявленной доходности по фактическим ставкам соседей',
       living: 'понятно, во сколько обойдётся аренда рядом, пока идёт стройка',
       agent: 'независимая база для разговора о цене',
     },
     en: {
       title: 'Rental market in this area',
-      what: 'Nightly rates, occupancy and seasonality from real Bali listings — not developer promises.',
+      what: 'Neighbours’ nightly rates and annual revenue under occupancy scenarios — from real Bali listings, not developer promises.',
       investor: 'check the promised yield against what neighbours actually charge',
       living: 'see what renting nearby costs while construction finishes',
       agent: 'an independent basis for the price conversation',

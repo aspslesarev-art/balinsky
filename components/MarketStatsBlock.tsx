@@ -10,20 +10,16 @@ import { pickCopy, type Lang } from '@/lib/i18n'
 
 const COPY = {
   ru: {
-    title: 'Сколько зарабатывают соседи',
+    title: 'Почём сдают соседи',
     subtitle: 'По данным estatemarket.io — все объекты на Booking в радиусе 1 км',
     villas: 'Виллы',
     apartments: 'Апартаменты',
     listings: 'на Booking',
-    occupancy: 'Заполняемость',
-    occupancyHint: 'Сколько процентов ночей в году объект реально сдан.',
     adr: 'Средняя цена за ночь',
     adrHint: 'Сколько в среднем платит гость за ночь (ADR — Average Daily Rate).',
-    revpar: 'Доход с номера за ночь',
-    revparHint: 'Средний заработок объекта с одной календарной ночи (RevPAR = заполняемость × цена).',
-    annual: 'Прогноз дохода в год',
-    annualHint: 'Доход с ночи × 365. Сколько примерно вилла этого района приносит за полный год при текущей заполняемости.',
-    daysBooked: 'нед. забронированных в год',
+    annual: 'Сценарий: выручка за год при 65%',
+    annualHint: 'Цена за ночь × 365 × 65%. Это сценарий, а не факт: надёжных данных о загрузке на Бали нет. До расходов на площадки, управление и налоги.',
+    range: 'при 55–75%: ',
     sourceTitle: 'Источник',
     estateMarket: 'estatemarket.io',
     none: 'нет данных в радиусе',
@@ -31,20 +27,16 @@ const COPY = {
     total: (n: number) => `${n} ${n === 1 ? 'объект' : n < 5 ? 'объекта' : 'объектов'} в радиусе 1 км`,
   },
   en: {
-    title: 'What neighbours earn',
+    title: 'What neighbours charge',
     subtitle: 'From estatemarket.io — every Booking listing within 1 km',
     villas: 'Villas',
     apartments: 'Apartments',
     listings: 'on Booking',
-    occupancy: 'Occupancy',
-    occupancyHint: 'Share of nights per year the property is actually rented.',
     adr: 'Average price per night',
     adrHint: 'What a guest typically pays for one night (ADR — Average Daily Rate).',
-    revpar: 'Revenue per available night',
-    revparHint: 'Average earnings per calendar night (RevPAR = occupancy × ADR).',
-    annual: 'Estimated annual revenue',
-    annualHint: 'RevPAR × 365. Roughly what a villa of this segment earns over a full year at the current occupancy and rate.',
-    daysBooked: 'nights booked per year',
+    annual: 'Scenario: gross a year at 65%',
+    annualHint: 'Nightly price × 365 × 65%. A scenario, not a fact: reliable occupancy data for Bali does not exist. Before platform fees, management and tax.',
+    range: 'at 55–75%: ',
     sourceTitle: 'Source',
     estateMarket: 'estatemarket.io',
     none: 'no listings in radius',
@@ -57,15 +49,11 @@ const COPY = {
     villas: 'Vila',
     apartments: 'Apartemen',
     listings: 'di Booking',
-    occupancy: 'Tingkat hunian',
-    occupancyHint: 'Persentase malam per tahun properti benar-benar disewakan.',
     adr: 'Harga rata-rata per malam',
     adrHint: 'Berapa yang biasanya dibayar tamu untuk satu malam (ADR — Average Daily Rate).',
-    revpar: 'Pendapatan per malam tersedia',
-    revparHint: 'Rata-rata pendapatan per malam kalender (RevPAR = tingkat hunian × ADR).',
-    annual: 'Perkiraan pendapatan per tahun',
-    annualHint: 'RevPAR × 365. Kira-kira berapa yang dihasilkan vila di segmen ini selama setahun penuh pada tingkat hunian dan harga saat ini.',
-    daysBooked: 'malam terpesan per tahun',
+    annual: 'Skenario: setahun dengan okupansi 65%',
+    annualHint: 'Harga per malam × 365 × 65%. Ini skenario, bukan fakta: data okupansi Bali yang andal tidak tersedia. Sebelum biaya platform, pengelolaan, dan pajak.',
+    range: 'pada 55–75%: ',
     sourceTitle: 'Sumber',
     estateMarket: 'estatemarket.io',
     none: 'tidak ada data dalam radius',
@@ -78,15 +66,11 @@ const COPY = {
     villas: 'Villas',
     apartments: 'Appartements',
     listings: 'sur Booking',
-    occupancy: 'Taux d’occupation',
-    occupancyHint: 'Part des nuits par an où le bien est réellement loué.',
     adr: 'Prix moyen par nuit',
     adrHint: 'Ce qu’un client paie habituellement pour une nuit (ADR — Average Daily Rate).',
-    revpar: 'Revenu par nuit disponible',
-    revparHint: 'Revenu moyen par nuit calendaire (RevPAR = taux d’occupation × ADR).',
-    annual: 'Revenu annuel estimé',
-    annualHint: 'RevPAR × 365. Approximativement ce qu’une villa de ce segment rapporte sur une année complète au taux d’occupation et au prix actuels.',
-    daysBooked: 'nuits réservées par an',
+    annual: 'Scénario : une année à 65 % d’occupation',
+    annualHint: 'Prix par nuit × 365 × 65 %. Un scénario, pas un fait : il n’existe pas de données fiables d’occupation à Bali. Avant commissions, gestion et impôts.',
+    range: 'à 55–75 % : ',
     sourceTitle: 'Source',
     estateMarket: 'estatemarket.io',
     none: 'aucune annonce dans le rayon',
@@ -99,15 +83,11 @@ const COPY = {
     villas: 'Villen',
     apartments: 'Apartments',
     listings: 'auf Booking',
-    occupancy: 'Auslastung',
-    occupancyHint: 'Anteil der Nächte pro Jahr, in denen die Immobilie tatsächlich vermietet ist.',
     adr: 'Durchschnittspreis pro Nacht',
     adrHint: 'Was ein Gast typischerweise für eine Nacht zahlt (ADR — Average Daily Rate).',
-    revpar: 'Ertrag pro verfügbarer Nacht',
-    revparHint: 'Durchschnittlicher Ertrag pro Kalendernacht (RevPAR = Auslastung × ADR).',
-    annual: 'Geschätzter Jahresertrag',
-    annualHint: 'RevPAR × 365. Ungefähr, was eine Villa dieses Segments über ein ganzes Jahr bei aktueller Auslastung und Rate einbringt.',
-    daysBooked: 'Nächte pro Jahr gebucht',
+    annual: 'Szenario: ein Jahr bei 65 % Auslastung',
+    annualHint: 'Preis pro Nacht × 365 × 65 %. Ein Szenario, keine Tatsache: verlässliche Auslastungsdaten für Bali gibt es nicht. Vor Plattformgebühren, Verwaltung und Steuern.',
+    range: 'bei 55–75 %: ',
     sourceTitle: 'Quelle',
     estateMarket: 'estatemarket.io',
     none: 'keine Angebote im Umkreis',
@@ -120,15 +100,11 @@ const COPY = {
     villas: '别墅',
     apartments: '公寓',
     listings: '在 Booking 上',
-    occupancy: '入住率',
-    occupancyHint: '房产每年实际出租的夜晚占比。',
     adr: '每晚平均价格',
     adrHint: '客人通常一晚支付的金额 (ADR — Average Daily Rate)。',
-    revpar: '每可用夜收入',
-    revparHint: '每个日历夜的平均收入 (RevPAR = 入住率 × ADR)。',
-    annual: '预计年收入',
-    annualHint: 'RevPAR × 365。按当前入住率和价格，该细分市场的别墅全年大约收入。',
-    daysBooked: '每年预订夜数',
+    annual: '情景：入住率 65% 时的一年',
+    annualHint: '每晚价格 × 365 × 65%。这是情景而非事实：巴厘岛没有可靠的入住率数据。未扣除平台佣金、管理费和税费。',
+    range: '55–75% 时：',
     sourceTitle: '来源',
     estateMarket: 'estatemarket.io',
     none: '范围内无房源',
@@ -141,15 +117,11 @@ const COPY = {
     villas: "Villa's",
     apartments: 'Appartementen',
     listings: 'op Booking',
-    occupancy: 'Bezetting',
-    occupancyHint: 'Aandeel van de nachten per jaar dat het object daadwerkelijk verhuurd is.',
     adr: 'Gemiddelde prijs per nacht',
     adrHint: 'Wat een gast doorgaans betaalt voor één nacht (ADR — Average Daily Rate).',
-    revpar: 'Opbrengst per beschikbare nacht',
-    revparHint: 'Gemiddelde opbrengst per kalendernacht (RevPAR = bezetting × ADR).',
-    annual: 'Geschatte jaaropbrengst',
-    annualHint: 'RevPAR × 365. Ongeveer wat een villa in dit segment over een heel jaar opbrengt bij de huidige bezetting en prijs.',
-    daysBooked: 'nachten geboekt per jaar',
+    annual: 'Scenario: een jaar bij 65% bezetting',
+    annualHint: 'Prijs per nacht × 365 × 65%. Een scenario, geen feit: betrouwbare bezettingsdata voor Bali bestaan niet. Vóór platformkosten, beheer en belasting.',
+    range: 'bij 55–75%: ',
     sourceTitle: 'Bron',
     estateMarket: 'estatemarket.io',
     none: 'geen advertenties in straal',
@@ -162,15 +134,11 @@ const COPY = {
     villas: 'Vila',
     apartments: 'Apartemen',
     listings: 'ring Booking',
-    occupancy: 'Tingkat hunian',
-    occupancyHint: 'Persentase wengi sabilang warsa properti kasewaang.',
     adr: 'Aji rata-rata sabilang wengi',
     adrHint: 'Sapunapi akéhné tamiu mayah sabilang awengi (ADR — Average Daily Rate).',
-    revpar: 'Pikolih sabilang wengi sadia',
-    revparHint: 'Pikolih rata-rata sabilang wengi kalénder (RevPAR = tingkat hunian × ADR).',
-    annual: 'Perkiraan pikolih sabilang warsa',
-    annualHint: 'RevPAR × 365. Kira-kira akéhné pikolih vila ring segmen puniki sajeroning awarsa manut tingkat hunian lan aji mangkin.',
-    daysBooked: 'wengi kabooking sabilang warsa',
+    annual: 'Skenario: awarsa ring okupansi 65%',
+    annualHint: 'Aji awengi × 365 × 65%. Puniki skenario, boya fakta: data okupansi Bali sane kapercaya nenten wenten. Sadurung biaya platform, pangelolaan, miwah pajak.',
+    range: 'ring 55–75%: ',
     sourceTitle: 'Sumber',
     estateMarket: 'estatemarket.io',
     none: 'nénten wénten data ring radius',
@@ -183,15 +151,11 @@ const COPY = {
     villas: 'Wille',
     apartments: 'Apartamenty',
     listings: 'na Booking',
-    occupancy: 'Obłożenie',
-    occupancyHint: 'Odsetek nocy w roku, w które nieruchomość jest faktycznie wynajęta.',
     adr: 'Średnia cena za noc',
     adrHint: 'Ile gość zwykle płaci za jedną noc (ADR — Average Daily Rate).',
-    revpar: 'Przychód na dostępną noc',
-    revparHint: 'Średni przychód na noc kalendarzową (RevPAR = obłożenie × ADR).',
-    annual: 'Szacowany przychód roczny',
-    annualHint: 'RevPAR × 365. Mniej więcej tyle willa z tego segmentu zarabia przez cały rok przy obecnym obłożeniu i stawce.',
-    daysBooked: 'nocy zarezerwowanych w roku',
+    annual: 'Scenariusz: rok przy obłożeniu 65%',
+    annualHint: 'Cena za noc × 365 × 65%. To scenariusz, nie fakt: wiarygodnych danych o obłożeniu na Bali nie ma. Przed prowizjami platform, zarządzaniem i podatkiem.',
+    range: 'przy 55–75%: ',
     sourceTitle: 'Źródło',
     estateMarket: 'estatemarket.io',
     none: 'brak ofert w promieniu',
@@ -204,15 +168,11 @@ const COPY = {
     villas: 'Вілли',
     apartments: 'Апартаменти',
     listings: 'на Booking',
-    occupancy: 'Заповнюваність',
-    occupancyHint: 'Скільки відсотків ночей на рік об’єкт реально зданий.',
     adr: 'Середня ціна за ніч',
     adrHint: 'Скільки в середньому платить гість за ніч (ADR — Average Daily Rate).',
-    revpar: 'Дохід з номера за ніч',
-    revparHint: 'Середній заробіток об’єкта з однієї календарної ночі (RevPAR = заповнюваність × ADR).',
-    annual: 'Прогноз доходу за рік',
-    annualHint: 'RevPAR × 365. Скільки приблизно вілла цього сегмента приносить за повний рік за поточної заповнюваності та ціни.',
-    daysBooked: 'ночей заброньованих на рік',
+    annual: 'Сценарій: рік за завантаження 65%',
+    annualHint: 'Ціна за ніч × 365 × 65%. Це сценарій, а не факт: надійних даних про завантаження на Балі немає. До витрат на платформи, управління й податки.',
+    range: 'за 55–75%: ',
     sourceTitle: 'Джерело',
     estateMarket: 'estatemarket.io',
     none: 'немає даних у радіусі',
@@ -223,10 +183,9 @@ const COPY = {
 
 type Copy = { [K in keyof (typeof COPY)['ru']]: (typeof COPY)['ru'][K] extends (...args: infer A) => infer R ? (...args: A) => R : string }
 
-function fmtPct(v: number | null): string {
-  if (v == null) return '—'
-  return `${v.toFixed(1)}%`
-}
+// Scenario figures to the nearest $100 — more digits would be false precision.
+const round100 = (v: number) => Math.round(v / 100) * 100
+
 function fmtUsd(v: number | null): string {
   if (v == null) return '—'
   if (v >= 1000) return `$${Math.round(v).toLocaleString('en-US')}`
@@ -258,9 +217,7 @@ export function MarketStatsBlock({ data, lang = 'ru' }: { data: ComplexMarketSta
               icon={HomeIcon}
               label={c.villas}
               count={data.villa_count}
-              occ={data.villa_occupancy_pct}
               adr={data.villa_adr_usd}
-              revpar={data.villa_revpar_usd}
               c={c}
             />
           )}
@@ -269,9 +226,7 @@ export function MarketStatsBlock({ data, lang = 'ru' }: { data: ComplexMarketSta
               icon={Hotel}
               label={c.apartments}
               count={data.apartment_count}
-              occ={data.apartment_occupancy_pct}
               adr={data.apartment_adr_usd}
-              revpar={data.apartment_revpar_usd}
               c={c}
             />
           )}
@@ -294,21 +249,19 @@ export function MarketStatsBlock({ data, lang = 'ru' }: { data: ComplexMarketSta
 }
 
 function SegmentCard({
-  icon: Icon, label, count, occ, adr, revpar, c,
+  icon: Icon, label, count, adr, c,
 }: {
   icon: typeof HomeIcon
   label: string
   count: number
-  occ: number | null
   adr: number | null
-  revpar: number | null
   c: Copy
 }) {
-  // Derived: annual gross revenue per unit at current occupancy + ADR.
-  // The single most actionable number for an investor evaluating a buy
-  // (alongside the unit price they'll see elsewhere on the page).
-  const annual = revpar != null ? revpar * 365 : null
-  const daysBooked = occ != null ? Math.round((occ / 100) * 365) : null
+  // Annual gross revenue as a scenario at 65% (55–75% alongside), the same
+  // assumption as /methodology. The estatemarket «occupancy» is the share of
+  // blocked calendar dates (median ~95%), not nights sold, so it is neither
+  // shown nor used: RevPAR × 365 on it roughly doubled the real figure.
+  const annual = adr != null ? adr * 365 * 0.65 : null
   return (
     <div className="py-1">
       <div className="flex items-center gap-2 text-[14px] font-semibold text-[#111827] mb-3 pb-2 border-b border-[var(--color-border)]">
@@ -319,10 +272,9 @@ function SegmentCard({
         </span>
       </div>
       <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-        <Metric label={c.occupancy} value={fmtPct(occ)} hint={c.occupancyHint} sub={daysBooked != null ? `≈ ${daysBooked} ${c.daysBooked}` : null} />
-        <Metric label={c.adr}       value={adr != null ? fmtUsd(adr) : c.fewData} hint={c.adrHint} />
-        <Metric label={c.revpar}    value={revpar != null ? fmtUsd(revpar) : '—'} tone="primary" hint={c.revparHint} />
-        <Metric label={c.annual}    value={annual != null ? fmtUsd(annual) : '—'} tone="primary" hint={c.annualHint} />
+        <Metric label={c.adr}    value={adr != null ? fmtUsd(adr) : c.fewData} hint={c.adrHint} />
+        <Metric label={c.annual} value={annual != null ? fmtUsd(round100(annual)) : '—'} tone="primary" hint={c.annualHint}
+          sub={adr != null ? `${c.range}${fmtUsd(round100(adr * 365 * 0.55))}–${fmtUsd(round100(adr * 365 * 0.75))}` : null} />
       </div>
     </div>
   )

@@ -47,7 +47,7 @@ const COPY = {
     sqm: 'м²',
     kinds: { villa: 'вилла', apartment: 'апартаменты', hotel: 'отель', resort: 'резорт',
              guesthouse: 'гестхаус', house: 'дом', hostel: 'хостел', aparthotel: 'апарт-отель' } as Record<string, string>,
-    source: 'Данные Booking, обновляются ежедневно. Загрузка — за последний доступный период.',
+    source: 'Данные Booking, обновляются ежедневно. Цена — ставка за ночь, которую выставляет объект.',
     prev: 'Предыдущие объекты',
     next: 'Следующие объекты',
   },
@@ -67,7 +67,7 @@ const COPY = {
     sqm: 'm²',
     kinds: { villa: 'villa', apartment: 'apartment', hotel: 'hotel', resort: 'resort',
              guesthouse: 'guesthouse', house: 'house', hostel: 'hostel', aparthotel: 'aparthotel' } as Record<string, string>,
-    source: 'Booking data, refreshed daily. Occupancy is for the latest available period.',
+    source: 'Booking data, refreshed daily. Price is the nightly rate each property lists.',
     prev: 'Previous listings',
     next: 'Next listings',
   },
@@ -207,7 +207,6 @@ export function RentalComps({ lat, lng, adr, lang }: { lat: number; lng: number;
                 </div>
                 <div className="mt-0.5 text-[11.5px] text-[var(--color-text-muted)]">
                   {it.distanceM != null && fmtDistance(it.distanceM, c)}
-                  {it.occupancy != null && <> · {c.occ(Math.round(it.occupancy))}</>}
                 </div>
                 <div className="mt-1.5 text-[14px] font-semibold text-[var(--color-primary-pressed)]">
                   ${it.price}
