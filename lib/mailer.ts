@@ -7,6 +7,9 @@ import nodemailer from 'nodemailer'
 // env, so switching provider is a Vercel env change, not a deploy of code.
 //
 //   SMTP_HOST, SMTP_PORT (465 → TLS), SMTP_USER, SMTP_PASS, MAIL_FROM
+//
+// With SMTP_HOST=smtp.resend.com and a Resend key in SMTP_PASS the message
+// goes through Resend's HTTPS API instead (see sendViaResendApi).
 
 let _transport: nodemailer.Transporter | null = null
 
@@ -25,7 +28,30 @@ export function mailConfigured(): boolean {
   return transport() !== null
 }
 
+/**
+ * Resend over HTTPS instead of SMTP: outbound SMTP ports are blocked on some
+ * networks (the local test hung on 465 while the HTTPS API went through), and
+ * one fetch is faster than an SMTP handshake inside a serverless function.
+ */
+async function sendViaResendApi(msg: { to: string; subject: string; text: string; html: string }): Promise<boolean> {
+  try {
+    const r = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${process.env.SMTP_PASS}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: process.env.MAIL_FROM ?? 'Balinsky <noreply@balinsky.info>', to: [msg.to], subject: msg.subject, text: msg.text, html: msg.html }),
+      cache: 'no-store',
+      signal: AbortSignal.timeout(10_000),
+    })
+    if (!r.ok) console.error('[mailer] resend api', r.status, (await r.text()).slice(0, 300))
+    return r.ok
+  } catch (e) {
+    console.error('[mailer] resend api failed:', e instanceof Error ? e.message : e)
+    return false
+  }
+}
+
 export async function sendMail(msg: { to: string; subject: string; text: string; html: string }): Promise<boolean> {
+  if (process.env.SMTP_HOST === 'smtp.resend.com' && process.env.SMTP_PASS?.startsWith('re_')) return sendViaResendApi(msg)
   const t = transport()
   if (!t) {
     // Local development without a mailbox: print the message instead, so the
