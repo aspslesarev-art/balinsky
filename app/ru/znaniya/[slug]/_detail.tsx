@@ -149,7 +149,9 @@ export async function KnowledgeDetail({ slug, lang }: { slug: string; lang: Lang
       name: authorData.name,
       ...(authorData.role ? { jobTitle: authorData.role } : {}),
       ...(authorData.photo ? { image: authorData.photo } : {}),
-      ...((k.author && k.author.slug) ? { url: `${SITE_URL}${lang === 'ru' ? '/ru/avtory/' : '/en/authors/'}${k.author.slug}` } : {}),
+      url: (k.author && k.author.slug)
+        ? `${SITE_URL}${lang === 'ru' ? '/ru/avtory/' : '/en/authors/'}${k.author.slug}`
+        : `${SITE_URL}${switchLangPath('/ru/o-balinsky', lang)}`,
     },
     publisher: {
       '@type': 'Organization',
@@ -190,7 +192,11 @@ export async function KnowledgeDetail({ slug, lang }: { slug: string; lang: Lang
                     {authorData.name}
                   </Link>
                 ) : (
-                  <span className="text-[14px] font-medium text-[#111827]">{authorData.name}</span>
+                  // No author page: the byline leads to «About», which explains
+                  // what the site checks and how its numbers are calculated.
+                  <Link href={switchLangPath('/ru/o-balinsky', lang)} className="text-[14px] font-medium text-[#111827] hover:text-[var(--color-primary-pressed)] no-underline">
+                    {authorData.name}
+                  </Link>
                 )}
                 {authorData.role && <div className="text-[12px]">{authorData.role}</div>}
               </div>
