@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+// Self-hosted (app/fonts): Google-hosted fonts are downloaded during every
+// build, and a flaky fetch failed a production deploy on 2026-09-25.
+import localFont from "next/font/local";
 import "./globals.css";
 import { CurrencyProvider } from "@/components/CurrencyContext";
 import { WishlistProvider } from "@/components/WishlistContext";
@@ -10,9 +12,10 @@ import { Analytics } from "@/components/Analytics";
 import { GTM_ID, YM_ID } from "@/lib/analytics";
 import { organizationLd, websiteLd } from "@/lib/json-ld";
 
-const geistSans = Geist({
+const geistSans = localFont({
+  src: "./fonts/geist-latin.woff2",
+  weight: "100 900",
   variable: "--font-geist-sans",
-  subsets: ["latin"],
   display: "swap",
 });
 
@@ -21,9 +24,10 @@ const geistSans = Geist({
 // `preload: false` so its woff2 isn't preloaded at high priority on every
 // public page, where it just competes with the LCP hero image for the
 // early mobile bandwidth.
-const geistMono = Geist_Mono({
+const geistMono = localFont({
+  src: "./fonts/geist-mono-latin.woff2",
+  weight: "100 900",
   variable: "--font-geist-mono",
-  subsets: ["latin"],
   display: "swap",
   preload: false,
 });

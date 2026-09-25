@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import { Bricolage_Grotesque, Inter } from 'next/font/google'
+import localFont from 'next/font/local'
 import { planAccess } from '@/lib/plan/access'
 import { PLAN_DEADLINE } from '@/lib/plan/data'
 import { PlanClient } from './_client'
@@ -20,8 +20,15 @@ export const metadata: Metadata = {
 
 // Кириллицы у Bricolage Grotesque нет — русские заголовки падают на Georgia,
 // ровно как в исходной вёрстке.
-const fontHead = Bricolage_Grotesque({ subsets: ['latin'], weight: ['400', '600', '800'], variable: '--plan-font-h' })
-const fontBody = Inter({ subsets: ['latin', 'cyrillic'], weight: ['400', '500', '600'], variable: '--plan-font-b' })
+const fontHead = localFont({ src: '../fonts/bricolage-grotesque-latin.woff2', weight: '400 800', variable: '--plan-font-h' })
+const fontBody = localFont({
+  src: [
+    { path: '../fonts/inter-400.ttf', weight: '400' },
+    { path: '../fonts/inter-500.ttf', weight: '500' },
+    { path: '../fonts/inter-600.ttf', weight: '600' },
+  ],
+  variable: '--plan-font-b',
+})
 
 /** Сегодняшняя дата по Бали, 'YYYY-MM-DD'. */
 function baliToday(): string {
