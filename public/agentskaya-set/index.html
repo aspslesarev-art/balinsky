@@ -44,7 +44,6 @@
   .fine{font-size:13px;color:var(--faint)}
   .num{font-variant-numeric:tabular-nums}
   .stack{display:flex;flex-direction:column;gap:16px}
-  .stack>.statrow+.statrow{margin-top:16px}
 
   /* bullet points */
   ul.pts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
@@ -82,7 +81,7 @@
 
   /* hero */
   .hero{padding-block:clamp(48px,7vw,96px)}
-  .hero-grid{display:block}
+  .hero-grid{display:grid;grid-template-columns:1.25fr 1fr;gap:clamp(32px,5vw,64px);align-items:center}
   .hero h1{margin-bottom:24px}
   .hero ul.pts{margin-bottom:32px}
   .hero ul.pts li{font-size:17px}
@@ -134,6 +133,7 @@
   /* stat */
   .statrow{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:16px}
   .stat{font-size:clamp(38px,6vw,58px);line-height:1;font-weight:700;letter-spacing:-0.03em;color:var(--primary)}
+  .stat.sm{font-size:clamp(30px,3.2vw,40px);white-space:nowrap}
   .stat-sub{font-size:15px;color:var(--muted)}
 
   /* labels */
@@ -189,6 +189,15 @@
   .afoot{margin-top:24px;padding-top:16px;border-top:1px solid var(--border);font-size:13px;color:var(--muted);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
   @media (max-width:880px){ .acard{justify-self:start} }
 
+  /* illustrations & icons */
+  .ico{width:48px;height:48px;flex:none;border-radius:12px;background:var(--primary-soft);color:var(--primary);display:inline-flex;align-items:center;justify-content:center}
+  .ico svg{width:24px;height:24px}
+  .ico-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+  .art{display:block;width:100%;height:auto}
+  .art text{font-family:inherit}
+  .art-wrap{max-width:440px;width:100%;justify-self:end}
+  @media (max-width:880px){ .art-wrap{justify-self:start;max-width:380px} }
+
   footer{border-top:1px solid var(--border);background:var(--band);padding-block:32px;color:var(--faint);font-size:13.5px}
 
   @media (max-width:880px){
@@ -231,6 +240,24 @@
         <a class="btn" href="https://t.me/andrey_slr">Написать в Telegram <span aria-hidden="true">→</span></a>
         <p class="btn-note">@andrey_slr · ответим в течение дня</p>
       </div>
+      <div class="art-wrap">
+        <svg class="art" viewBox="0 0 440 360" role="img" aria-label="Агенты вокруг вашего проекта">
+          <rect x="8" y="8" width="424" height="344" rx="32" fill="var(--band)"/>
+          <g stroke="var(--primary)" stroke-width="2" stroke-dasharray="4 7" stroke-linecap="round" fill="none" opacity=".5"><path d="M220 185L92 86"/><path d="M220 185L348 78"/><path d="M220 185L64 236"/><path d="M220 185L386 196"/><path d="M220 185L222 46"/></g>
+          <rect x="140" y="118" width="160" height="134" rx="16" fill="#fff" stroke="var(--border)"/>
+          <rect x="152" y="130" width="136" height="74" rx="10" fill="var(--primary-soft)"/>
+          <rect x="170" y="150" width="100" height="10" rx="3" fill="var(--primary)"/>
+          <rect x="178" y="160" width="84" height="36" fill="#fff"/>
+          <rect x="186" y="168" width="22" height="28" fill="#cfe5da"/>
+          <rect x="216" y="168" width="38" height="14" rx="2" fill="#cfe5da"/>
+          <rect x="152" y="196" width="136" height="8" fill="#a9d3bd"/>
+          <rect x="152" y="216" width="92" height="8" rx="4" fill="var(--text)" opacity=".75"/>
+          <rect x="152" y="232" width="60" height="6" rx="3" fill="var(--faint)" opacity=".6"/>
+          <g transform="translate(92 86)"><circle r="28" fill="#fff" stroke="var(--border)"/><circle cy="-7" r="8" fill="var(--primary)"/><path d="M-14 16a14 12 0 0 1 28 0" fill="var(--primary)"/></g><g transform="translate(348 78)"><circle r="28" fill="#fff" stroke="var(--border)"/><circle cy="-7" r="8" fill="var(--primary)"/><path d="M-14 16a14 12 0 0 1 28 0" fill="var(--primary)"/></g><g transform="translate(64 236)"><circle r="28" fill="#fff" stroke="var(--border)"/><circle cy="-7" r="8" fill="var(--primary)"/><path d="M-14 16a14 12 0 0 1 28 0" fill="var(--primary)"/></g><g transform="translate(386 196)"><circle r="28" fill="#fff" stroke="var(--border)"/><circle cy="-7" r="8" fill="var(--primary)"/><path d="M-14 16a14 12 0 0 1 28 0" fill="var(--primary)"/></g><g transform="translate(222 46)"><circle r="28" fill="#fff" stroke="var(--border)"/><circle cy="-7" r="8" fill="var(--primary)"/><path d="M-14 16a14 12 0 0 1 28 0" fill="var(--primary)"/></g>
+          <g transform="translate(236 266)"><rect width="128" height="38" rx="19" fill="var(--brand)"/><path d="M18 19l6 6 11-12" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><text x="44" y="25" fill="#fff" font-size="15" font-weight="600">Бронь</text></g>
+          <g transform="translate(44 290)"><rect width="150" height="38" rx="19" fill="#fff" stroke="var(--border)"/><text x="18" y="25" fill="var(--primary)" font-size="15" font-weight="600">+15 агентов</text></g>
+        </svg>
+      </div>
     </div>
   </div>
 </section>
@@ -243,16 +270,23 @@
       <div class="stack">
         <p class="sub">Раньше с агентами справлялся почти любой: поставил комиссию повыше - и проект продавался. Не у всех и не всегда, но работало.</p>
         <p class="sub">Сейчас так не работает. Агентов нужно находить, учить продавать ваш проект и доводить их клиентов до брони - системно, каждую неделю.</p>
-      </div>
-      <div class="stack">
-        <div class="statrow" style="flex-direction:column;align-items:flex-start;gap:8px;margin-bottom:0">
-          <span class="stat num">$100 млн+</span>
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(16px,4vw,32px);margin-top:16px">
+          <div class="statrow" style="flex-direction:column;align-items:flex-start;gap:8px;margin-bottom:0">
+          <span class="stat sm num">$100 млн+</span>
           <span class="stat-sub">продаж прошло через нашу сеть агентов</span>
         </div>
-        <div class="statrow" style="flex-direction:column;align-items:flex-start;gap:8px;margin-bottom:0">
-          <span class="stat num">20+ лет</span>
+          <div class="statrow" style="flex-direction:column;align-items:flex-start;gap:8px;margin-bottom:0">
+          <span class="stat sm num">20+ лет</span>
           <span class="stat-sub">опыт основателя в B2B-продажах</span>
         </div>
+        </div>
+      </div>
+      <div class="art-wrap">
+        <svg class="art" viewBox="0 0 400 300" role="img" aria-label="Воронка: агенты, встречи, показы, брони">
+          <rect x="8" y="8" width="384" height="284" rx="28" fill="#fff" stroke="var(--border)"/>
+          <rect x="40" y="40" width="320" height="42" rx="12" fill="var(--primary)" fill-opacity=".14"/><text x="58" y="67" font-size="15" font-weight="600" fill="var(--text)">Агенты</text><rect x="40" y="100" width="250" height="42" rx="12" fill="var(--primary)" fill-opacity=".28"/><text x="58" y="127" font-size="15" font-weight="600" fill="var(--text)">Встречи</text><rect x="40" y="160" width="180" height="42" rx="12" fill="var(--primary)" fill-opacity=".5"/><text x="58" y="187" font-size="15" font-weight="600" fill="var(--text)">Показы</text><rect x="40" y="220" width="118" height="42" rx="12" fill="var(--primary)" fill-opacity="1"/><text x="58" y="247" font-size="15" font-weight="600" fill="#fff">Брони</text>
+          <circle cx="186" cy="241" r="17" fill="var(--brand)"/><path d="M178 241l6 6 10-11" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
       </div>
     </div>
     <div class="callout" style="margin-top:32px">Мы сами скептически смотрим на то, как сейчас работают партнёрские сети. Поэтому предлагаем проверку на <b>3&nbsp;месяца</b>: работаем в полную силу, отчёт каждую неделю - и вы точно знаете, продают ли агенты ваш проект. Мы - одна из сильнейших команд на Бали: если не сработает у нас, скорее всего, не сработает ни у кого. И вы не потратите на это год.</div>
@@ -410,6 +444,7 @@
     <h2>Выгоднее, чем нанимать самому</h2>
     <div class="cols-2">
       <div class="card">
+        <div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg></span></div>
         <div class="ctitle">Свой менеджер</div>
         <div class="price num">~$1000 <small>/ мес + 1%</small></div>
         <ul class="dots">
@@ -419,6 +454,7 @@
         </ul>
       </div>
       <div class="card pick">
+        <div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><path d="M16 3.128a4 4 0 0 1 0 7.744" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><circle cx="9" cy="7" r="4" /></svg></span></div>
         <div class="ctitle">Наша команда</div>
         <div class="price num">от $1500 <small>/ мес + 4%</small></div>
         <ul class="pts">
@@ -542,9 +578,9 @@
   <div class="wrap">
     <h2>Результаты застройщиков</h2>
     <div class="cols-3">
-      <div class="card case"><div class="who">Vertikal</div><div class="amount num">$3 млн</div><div class="period">за 6 месяцев</div></div>
-      <div class="card case"><div class="who">LB Group</div><div class="amount num">$40 млн</div><div class="period">за 2025 год, через нашу сеть агентов</div></div>
-      <div class="card case"><div class="who">KAVIAN</div><div class="amount num">11 юнитов</div><div class="period">за 6 месяцев</div></div>
+      <div class="card case"><div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16" /><path d="m19 9-5 5-4-4-3 3" /></svg></span></div><div class="who">Vertikal</div><div class="amount num">$3 млн</div><div class="period">за 6 месяцев</div></div>
+      <div class="card case"><div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 7h6v6" /><path d="m22 7-8.5 8.5-5-5L2 17" /></svg></span></div><div class="who">LB Group</div><div class="amount num">$40 млн</div><div class="period">за 2025 год, через нашу сеть агентов</div></div>
+      <div class="card case"><div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17 2 2a1 1 0 1 0 3-3" /><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4" /><path d="m21 3 1 11h-2" /><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3" /><path d="M3 4h8" /></svg></span></div><div class="who">KAVIAN</div><div class="amount num">11 юнитов</div><div class="period">за 6 месяцев</div></div>
     </div>
   </div>
 </section>
@@ -555,8 +591,8 @@
     <h2>Форматы сотрудничества</h2>
     <div class="cols-3">
       <div class="card pack">
-        <div class="role">А · Эксклюзив</div>
-        <div class="price num" style="margin-top:12px">$5000 <small>/ мес + 2%</small></div>
+        <div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z" /><path d="M5 21h14" /></svg></span><div class="role">А · Эксклюзив</div></div>
+        <div class="price num" style="margin-top:4px">$5000 <small>/ мес + 2%</small></div>
         <ul class="dots">
           <li>Вся команда работает только на ваш проект</li>
           <li>Других застройщиков в это время не берём</li>
@@ -566,8 +602,8 @@
         <p class="for"><b>Для кого:</b> хочет, чтобы агенты Бали продавали в первую очередь его проект.</p>
       </div>
       <div class="card pack">
-        <div class="role">Б · Фикс</div>
-        <div class="price num" style="margin-top:12px">$3000 <small>/ мес + 2%</small></div>
+        <div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v3" /><path d="M16 2v3" /><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18" /><path d="m9 15 2 2 4-4" /></svg></span><div class="role">Б · Фикс</div></div>
+        <div class="price num" style="margin-top:4px">$3000 <small>/ мес + 2%</small></div>
         <ul class="dots">
           <li>10-20 личных встреч в месяц</li>
           <li>Обратная связь после каждой</li>
@@ -577,8 +613,8 @@
         <p class="for"><b>Для кого:</b> нужна системная работа на дистанции.</p>
       </div>
       <div class="card pack">
-        <div class="role">В · Баланс</div>
-        <div class="price num" style="margin-top:12px">$1500 <small>/ мес + 4%</small></div>
+        <div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18" /><path d="m19 8 3 8a5 5 0 0 1-6 0zV7" /><path d="M3 7h1a17 17 0 0 0 8-2 17 17 0 0 0 8 2h1" /><path d="m5 8 3 8a5 5 0 0 1-6 0zV7" /><path d="M7 21h10" /></svg></span><div class="role">В · Баланс</div></div>
+        <div class="price num" style="margin-top:4px">$1500 <small>/ мес + 4%</small></div>
         <ul class="dots">
           <li>Тот же объём работы</li>
           <li>На старте платите вдвое меньше</li>
@@ -602,14 +638,17 @@
     <h2>Почему вы не потеряете деньги</h2>
     <div class="cols-3">
       <div class="card">
+        <div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 15h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 17" /><path d="m7 21 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9" /><path d="m2 16 6 6" /><circle cx="16" cy="9" r="2.9" /><circle cx="6" cy="5" r="3" /></svg></span></div>
         <h3>Платите за результат</h3>
         <p class="sub" style="margin-top:12px">Процент - только после первого взноса покупателя, когда деньги уже у вас. Ежемесячная оплата - от $1500, вдвое меньше своей команды.</p>
       </div>
       <div class="card">
+        <div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /><path d="m9 12 2 2 4-4" /></svg></span></div>
         <h3>Не платите за своё</h3>
         <p class="sub" style="margin-top:12px">Агенты, с которыми у вас были сделки за последние полгода, остаются вашими. Пришлите список - за их сделки процент не берём.</p>
       </div>
       <div class="card">
+        <div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10 21H2" /><path d="M10 3H7a2 2 0 00-2 2v16" /><path d="M14 12h.01" /><path d="M19 21V5a2 2 0 00-1.675-1.974l-6.163-1.013A1 1 0 0010 3v18a1 1 0 001.124.992z" /><path d="M22 21h-3" /></svg></span></div>
         <h3>Можно выйти</h3>
         <p class="sub" style="margin-top:12px">Не пошло за 3 месяца - расходимся без штрафов. Мы заинтересованы в продажах не меньше вас: $1500 - это на трёх человек, зарабатываем мы на сделках.</p>
       </div>
@@ -621,10 +660,18 @@
 <section class="band">
   <div class="wrap">
     <h2>Условия</h2>
-    <ul class="pts">
-      <li>Минимум 3 месяца - столько нужно, чтобы агенты начали продавать проект</li>
-      <li>Новый агент закреплён за нами 12 месяцев</li>
-    </ul>
+    <div class="cols-2" style="align-items:center">
+      <ul class="pts">
+        <li>Минимум 3 месяца - столько нужно, чтобы агенты начали продавать проект</li>
+        <li>Новый агент закреплён за нами 12 месяцев</li>
+      </ul>
+      <div class="art-wrap">
+        <svg class="art" viewBox="0 0 400 212" role="img" aria-label="Три месяца работы">
+          <rect x="4" y="4" width="392" height="204" rx="28" fill="var(--band)"/>
+          <g transform="translate(24 40)"><rect width="104" height="132" rx="14" fill="#fff" stroke="var(--border)"/><path d="M0 14a14 14 0 0 1 14-14h76a14 14 0 0 1 14 14v18H0z" fill="var(--primary)"/><text x="52" y="22" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">Месяц 1</text><rect x="16" y="44" width="20" height="8" rx="4" fill="var(--primary-soft)"/><rect x="42" y="44" width="20" height="8" rx="4" fill="var(--primary-soft)"/><rect x="68" y="44" width="20" height="8" rx="4" fill="var(--primary-soft)"/><rect x="16" y="60" width="20" height="8" rx="4" fill="var(--primary-soft)"/><rect x="42" y="60" width="20" height="8" rx="4" fill="var(--primary-soft)"/><rect x="68" y="60" width="20" height="8" rx="4" fill="var(--primary-soft)"/><circle cx="52" cy="104" r="16" fill="var(--primary)"/><path d="M44 104l6 6 10-11" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g><g transform="translate(148 40)"><rect width="104" height="132" rx="14" fill="#fff" stroke="var(--border)"/><path d="M0 14a14 14 0 0 1 14-14h76a14 14 0 0 1 14 14v18H0z" fill="var(--primary)"/><text x="52" y="22" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">Месяц 2</text><rect x="16" y="44" width="20" height="8" rx="4" fill="var(--primary-soft)"/><rect x="42" y="44" width="20" height="8" rx="4" fill="var(--primary-soft)"/><rect x="68" y="44" width="20" height="8" rx="4" fill="var(--primary-soft)"/><rect x="16" y="60" width="20" height="8" rx="4" fill="var(--primary-soft)"/><rect x="42" y="60" width="20" height="8" rx="4" fill="var(--primary-soft)"/><rect x="68" y="60" width="20" height="8" rx="4" fill="var(--primary-soft)"/><circle cx="52" cy="104" r="16" fill="var(--primary)"/><path d="M44 104l6 6 10-11" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g><g transform="translate(272 40)"><rect width="104" height="132" rx="14" fill="#fff" stroke="var(--border)"/><path d="M0 14a14 14 0 0 1 14-14h76a14 14 0 0 1 14 14v18H0z" fill="var(--primary)"/><text x="52" y="22" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">Месяц 3</text><rect x="16" y="44" width="20" height="8" rx="4" fill="var(--primary-soft)"/><rect x="42" y="44" width="20" height="8" rx="4" fill="var(--primary-soft)"/><rect x="68" y="44" width="20" height="8" rx="4" fill="var(--primary-soft)"/><rect x="16" y="60" width="20" height="8" rx="4" fill="var(--primary-soft)"/><rect x="42" y="60" width="20" height="8" rx="4" fill="var(--primary-soft)"/><rect x="68" y="60" width="20" height="8" rx="4" fill="var(--primary-soft)"/><circle cx="52" cy="104" r="16" fill="var(--brand)"/><path d="M44 104l6 6 10-11" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+        </svg>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -633,10 +680,10 @@
   <div class="wrap">
     <h2>Как начинаем</h2>
     <div class="cols-4">
-      <div class="step on"><div class="n">Шаг 1</div><div class="t">Проверка документов</div><div class="d">Земля, стройка, IMB</div></div>
-      <div class="step on"><div class="n">Шаг 2</div><div class="t">Берём в работу</div><div class="d">Готовим материалы для агентов</div></div>
-      <div class="step"><div class="n">Шаг 3</div><div class="t">Запуск</div><div class="d">2-4 недели</div></div>
-      <div class="step"><div class="n">Шаг 4</div><div class="t">Полная работа</div><div class="d">С 2-3 месяца</div></div>
+      <div class="step on"><div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /><path d="M14 2v5a1 1 0 0 0 1 1h5" /><path d="m9 15 2 2 4-4" /></svg></span></div><div class="n">Шаг 1</div><div class="t">Проверка документов</div><div class="d">Земля, стройка, IMB</div></div>
+      <div class="step on"><div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2" /></svg></span></div><div class="n">Шаг 2</div><div class="t">Берём в работу</div><div class="d">Готовим материалы для агентов</div></div>
+      <div class="step"><div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" /><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09" /><path d="M9 12a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.4 22.4 0 0 1-4 2z" /><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 .05 5 .05" /></svg></span></div><div class="n">Шаг 3</div><div class="t">Запуск</div><div class="d">2-4 недели</div></div>
+      <div class="step"><div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16" /><path d="m19 9-5 5-4-4-3 3" /></svg></span></div><div class="n">Шаг 4</div><div class="t">Полная работа</div><div class="d">С 2-3 месяца</div></div>
     </div>
     <p class="fine" style="margin-top:16px">Первые агенты - через 2-4 недели, полный темп - со 2-3 месяца.</p>
     <div class="card final">
