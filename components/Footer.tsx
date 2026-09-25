@@ -137,6 +137,9 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
       title: 'Informasi',
       links: [
         { label: 'Investasi properti Bali', href: '/en/bali-property-investment' },
+        { label: 'Harga properti per kawasan', href: '/en/bali-property-prices' },
+        { label: 'Harga sewa di Bali', href: '/en/bali-rent-prices' },
+        { label: 'Cara kami menghitung', href: '/en/methodology' },
         { label: 'Tinggal di Bali — visa & pajak', href: '/en/living-in-bali' },
         { label: 'Cara membeli di Bali', href: '/en/how-to-buy' },
         { label: 'Perjalanan peninjauan', href: '/en/invest-tour' },
@@ -184,6 +187,9 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
       title: 'Informations',
       links: [
         { label: 'Investissement immobilier à Bali', href: '/en/bali-property-investment' },
+        { label: 'Prix de l’immobilier par quartier', href: '/en/bali-property-prices' },
+        { label: 'Prix des locations à Bali', href: '/en/bali-rent-prices' },
+        { label: 'Notre méthode', href: '/en/methodology' },
         { label: 'Vivre à Bali — visas & impôts', href: '/en/living-in-bali' },
         { label: 'Comment acheter à Bali', href: '/en/how-to-buy' },
         { label: 'Voyage de visite', href: '/en/invest-tour' },
@@ -231,6 +237,9 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
       title: 'Informationen',
       links: [
         { label: 'Immobilieninvestment auf Bali', href: '/en/bali-property-investment' },
+        { label: 'Immobilienpreise nach Gegend', href: '/en/bali-property-prices' },
+        { label: 'Mietpreise auf Bali', href: '/en/bali-rent-prices' },
+        { label: 'So rechnen wir', href: '/en/methodology' },
         { label: 'Leben auf Bali — Visa & Steuern', href: '/en/living-in-bali' },
         { label: 'Kaufen auf Bali', href: '/en/how-to-buy' },
         { label: 'Besichtigungsreise', href: '/en/invest-tour' },
@@ -278,6 +287,9 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
       title: '信息',
       links: [
         { label: '巴厘岛房产投资', href: '/en/bali-property-investment' },
+        { label: '各区域房产价格', href: '/en/bali-property-prices' },
+        { label: '巴厘岛租金价格', href: '/en/bali-rent-prices' },
+        { label: '我们如何计算', href: '/en/methodology' },
         { label: '在巴厘岛生活 — 签证与税务', href: '/en/living-in-bali' },
         { label: '如何在巴厘岛购房', href: '/en/how-to-buy' },
         { label: '看房之行', href: '/en/invest-tour' },
@@ -325,6 +337,9 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
       title: 'Informatie',
       links: [
         { label: 'Investeren in vastgoed op Bali', href: '/en/bali-property-investment' },
+        { label: 'Vastgoedprijzen per gebied', href: '/en/bali-property-prices' },
+        { label: 'Huurprijzen op Bali', href: '/en/bali-rent-prices' },
+        { label: 'Hoe we rekenen', href: '/en/methodology' },
         { label: 'Wonen op Bali — visa & belastingen', href: '/en/living-in-bali' },
         { label: 'Kopen op Bali', href: '/en/how-to-buy' },
         { label: 'Bezichtigingsreis', href: '/en/invest-tour' },
@@ -372,6 +387,9 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
       title: 'Informasi',
       links: [
         { label: 'Investasi properti Bali', href: '/en/bali-property-investment' },
+        { label: 'Harga properti per kawasan', href: '/en/bali-property-prices' },
+        { label: 'Harga sewa di Bali', href: '/en/bali-rent-prices' },
+        { label: 'Cara kami menghitung', href: '/en/methodology' },
         { label: 'Tinggal di Bali — visa & pajak', href: '/en/living-in-bali' },
         { label: 'Cara meli di Bali', href: '/en/how-to-buy' },
         { label: 'Palancaran nyingakin', href: '/en/invest-tour' },
@@ -419,6 +437,9 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
       title: 'Informacje',
       links: [
         { label: 'Inwestycje w nieruchomości na Bali', href: '/en/bali-property-investment' },
+        { label: 'Ceny nieruchomości według rejonów', href: '/en/bali-property-prices' },
+        { label: 'Ceny najmu na Bali', href: '/en/bali-rent-prices' },
+        { label: 'Jak liczymy', href: '/en/methodology' },
         { label: 'Życie na Bali — wizy i podatki', href: '/en/living-in-bali' },
         { label: 'Jak kupić na Bali', href: '/en/how-to-buy' },
         { label: 'Wyjazd na oglądanie', href: '/en/invest-tour' },
@@ -466,6 +487,9 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
       title: 'Інформація',
       links: [
         { label: 'Інвестиції в нерухомість Балі', href: '/en/bali-property-investment' },
+        { label: 'Ціни на нерухомість за районами', href: '/en/bali-property-prices' },
+        { label: 'Ціни оренди на Балі', href: '/en/bali-rent-prices' },
+        { label: 'Як ми рахуємо', href: '/en/methodology' },
         { label: 'Життя на Балі — візи та податки', href: '/en/living-in-bali' },
         { label: 'Як купити на Балі', href: '/en/how-to-buy' },
         { label: 'Поїздка на огляд', href: '/en/invest-tour' },

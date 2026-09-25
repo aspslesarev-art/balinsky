@@ -1,6 +1,6 @@
 // Shared frame for the market-data pages (prices, rents, methodology):
 // breadcrumbs, a dated header, the body, a numbered source list and the
-// page's structured data. RU and EN only — see lib/market-index.ts.
+// page's structured data. Every locale; copy lives in each view.
 
 import Link from 'next/link'
 import type { ReactNode } from 'react'
@@ -8,8 +8,9 @@ import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { switchLangPath, type Lang } from '@/lib/i18n'
-import { SITE_ORIGIN } from '@/lib/hreflang'
-import { MARKET, RU_EN_MARKET_PAGES, marketPath, type MarketPageKey } from '@/lib/market-index'
+import { SITE_ORIGIN, hreflangMap } from '@/lib/hreflang'
+import { MARKET, MARKET_PAGES_RU, marketPath, type MarketPageKey } from '@/lib/market-index'
+import { t } from '@/lib/i18n'
 
 export const H2 = 'text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4 leading-tight'
 export const P = 'text-[16px] leading-[1.7] text-[#1f2937] max-w-[68ch]'
@@ -21,13 +22,12 @@ export type Faq = { q: string; a: string }
 
 export function marketMetadata(key: MarketPageKey, lang: Lang, title: string, description: string) {
   const path = marketPath(key, lang)
-  const { ru, en } = RU_EN_MARKET_PAGES[key]
   return {
     title: `${title} | Balinsky`,
     description,
     alternates: {
       canonical: path,
-      languages: { ru: `${SITE_ORIGIN}${ru}`, en: `${SITE_ORIGIN}${en}`, 'x-default': `${SITE_ORIGIN}${ru}` },
+      languages: hreflangMap(MARKET_PAGES_RU[key]),
     },
     openGraph: { title, description, type: 'article' as const, url: `${SITE_ORIGIN}${path}` },
     twitter: { card: 'summary_large_image' as const, title, description },
@@ -89,7 +89,7 @@ export function MarketShell({ pageKey, lang, crumb, h1, lead, updated, children,
       <Header />
       <PageContainer>
         <Breadcrumbs
-          items={[{ label: lang === 'ru' ? 'Главная' : 'Home', href: switchLangPath('/ru', lang) }, { label: crumb }]}
+          items={[{ label: t('breadcrumbs.home', lang), href: switchLangPath('/ru', lang) }, { label: crumb }]}
           currentUrl={path}
         />
         <article className="mt-6 mb-16 max-w-[960px]">

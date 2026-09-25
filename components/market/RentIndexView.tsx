@@ -6,11 +6,14 @@ import type { Lang } from '@/lib/i18n'
 import { switchLangPath } from '@/lib/i18n'
 import { SRC } from '@/lib/investment-guide/data'
 import {
-  MARKET, INDICATIVE_N, marketPath, districtName, usd, range, asOfLabel, dayLabel,
+  MARKET, INDICATIVE_N, marketPath, knowledgePath, districtName, usd, num, ratio, range, asOfLabel, dayLabel,
   type RentStats,
 } from '@/lib/market-index'
+import { isRuEnOnlyKnowledge } from '@/lib/knowledge-locales'
 import { DataTable, type DataRow } from './DataTable'
 import { MarketShell, marketMetadata, H2, P, NOTE, A, type Faq } from './MarketShell'
+import { RENT_INTL } from './copy/rent-intl'
+import { intlLang } from './copy/types'
 
 const M = MARKET.monthly
 const R = MARKET.island.villaRent
@@ -18,25 +21,50 @@ const monthlyBig = Object.entries(M.districts).filter(([, d]) => d.n >= INDICATI
 const cheapM = monthlyBig[0]
 const dearM = monthlyBig[monthlyBig.length - 1]
 
-function copy(lang: Lang) {
-  const $ = (n: number | null | undefined) => usd(n, lang)
-  const nm = (d: string) => districtName(d, lang)
-  const when = asOfLabel(lang)
-  const from = dayLabel(M.from, lang), to = dayLabel(M.to, lang)
+const YIELD = 'dohodnost-vill-na-bali-po-rayonam-dannye'
+
+export type RentCtx = ReturnType<typeof ctxFor>
+
+function ctxFor(lang: Lang) {
   const two = M.island.villa2br
   const monthEq = R['2br'].median ? R['2br'].median * 30 : null
-  if (lang === 'ru') return {
+  return {
+    lang,
+    $: (n: number | null | undefined) => usd(n, lang),
+    n: (v: number) => num(v, lang),
+    nm: (d: string) => districtName(d, lang),
+    when: asOfLabel(lang),
+    from: dayLabel(M.from, lang),
+    to: dayLabel(M.to, lang),
+    M, R, T: MARKET.totals, two, monthEq, cheapM, dearM, N: INDICATIVE_N,
+    /** How many times 30 nights at the nightly median exceed the monthly rent. */
+    ratio: monthEq ? ratio(monthEq / (two.median ?? monthEq), lang) : '',
+    guidesInEnglish: lang !== 'ru' && lang !== 'en' && isRuEnOnlyKnowledge(YIELD),
+    href: {
+      prices: marketPath('prices', lang),
+      method: marketPath('method', lang),
+      catalog: switchLangPath('/ru/arenda', lang),
+      yield: knowledgePath(YIELD, lang),
+      rates: knowledgePath('stavki-arendy-vill-na-bali-po-rayonam-2026', lang),
+      estatemarket: SRC.estatemarket,
+      bps: SRC.bpsOccupancy,
+    },
+  }
+}
+
+function ruCopy(c: RentCtx) {
+  return {
     metaTitle: 'Сколько стоит аренда на Бали: цены в месяц и за ночь по районам',
-    description: `Аренда виллы с 2 спальнями на Бали — медиана ${$(two.median)} в месяц (${two.n} объявлений), за ночь — ${$(R['2br'].median)}. Цены по районам и числу спален, данные ${when}.`,
+    description: `Аренда виллы с 2 спальнями на Бали — медиана ${c.$(c.two.median)} в месяц (${c.two.n} объявлений), за ночь — ${c.$(c.R['2br'].median)}. Цены по районам и числу спален, данные ${c.when}.`,
     crumb: 'Цены аренды',
     h1: 'Сколько стоит аренда на Бали',
-    lead: <>Вилла с 2 спальнями в долгосрочную аренду — медиана <strong>{$(two.median)} в месяц</strong>, половина объявлений от {$(two.p25)} до {$(two.p75)}. Посуточно такая вилла стоит около <strong>{$(R['2br'].median)} за ночь</strong>. Ниже — цены по районам и числу спален.</>,
-    updated: `Помесячная аренда — ${M.n} объявлений с ${from} по ${to}; посуточная — ${MARKET.totals.villaRentals.toLocaleString('ru-RU')} вилл, данные за ${when}`,
+    lead: <>Вилла с 2 спальнями в долгосрочную аренду — медиана <strong>{c.$(c.two.median)} в месяц</strong>, половина объявлений от {c.$(c.two.p25)} до {c.$(c.two.p75)}. Посуточно такая вилла стоит около <strong>{c.$(c.R['2br'].median)} за ночь</strong>. Ниже — цены по районам и числу спален.</>,
+    updated: `Помесячная аренда — ${c.M.n} объявлений с ${c.from} по ${c.to}; посуточная — ${c.n(c.T.villaRentals)} вилл, данные за ${c.when}`,
     takeawaysH2: 'Главное в цифрах',
     takeaways: [
-      `Вилла с 1 спальней — около ${$(M.island.villa1br.median)} в месяц, с 3 спальнями — ${$(M.island.villa3br.median)}. Апартаменты — ${$(M.island.apartment.median)}.`,
-      cheapM && dearM ? `Из районов, где объявлений больше ${INDICATIVE_N}, дешевле всего ${nm(cheapM[0])} (медиана ${$(cheapM[1].all.median)} в месяц), дороже всего ${nm(dearM[0])} (${$(dearM[1].all.median)}).` : '',
-      monthEq ? `30 ночей посуточно по медианной ставке — ${$(monthEq)}, это в ${(monthEq / (two.median ?? monthEq)).toFixed(1).replace('.', ',')} раза больше месячной цены. Но посуточная вилла не занята каждый день, а владелец платит комиссии и управление.` : '',
+      `Вилла с 1 спальней — около ${c.$(c.M.island.villa1br.median)} в месяц, с 3 спальнями — ${c.$(c.M.island.villa3br.median)}. Апартаменты — ${c.$(c.M.island.apartment.median)}.`,
+      c.cheapM && c.dearM ? `Из районов, где объявлений больше ${c.N}, дешевле всего ${c.nm(c.cheapM[0])} (медиана ${c.$(c.cheapM[1].all.median)} в месяц), дороже всего ${c.nm(c.dearM[0])} (${c.$(c.dearM[1].all.median)}).` : '',
+      c.monthEq ? `30 ночей посуточно по медианной ставке — ${c.$(c.monthEq)}, это в ${c.ratio} раза больше месячной цены. Но посуточная вилла не занята каждый день, а владелец платит комиссии и управление.` : '',
     ].filter(Boolean),
     monthlyH2: 'Помесячная аренда по числу спален',
     monthlyCols: ['Тип', 'Объявлений', 'Медиана в месяц', 'Половина объявлений'],
@@ -46,40 +74,43 @@ function copy(lang: Lang) {
     nightlyH2: 'Посуточная аренда по районам',
     nightlyCols: ['Район', 'Вилл в аренде', 'Вилла 1 сп.', 'Вилла 2 сп.', 'Вилла 3 сп.', 'Вилла 4+ сп.', 'Апартаменты'],
     nightlyNote: 'Цены за ночь — медианы ставок, которые объекты выставляют на площадках бронирования. Это цена предложения: реальная выручка зависит от загрузки, а надёжных данных о загрузке нет, поэтому мы её не показываем.',
-    indicative: `* Меньше ${INDICATIVE_N} объявлений — цифра ориентировочная. Прочерк — меньше 5 объявлений.`,
-    monthlyNote: `Помесячные цены — это цены из объявлений о долгосрочной аренде, опубликованных с ${from} по ${to}; старше 180 дней в расчёт не попадают. Коммунальные платежи и уборка обычно оплачиваются отдельно — уточняйте у арендодателя.`,
+    indicative: `* Меньше ${c.N} объявлений — цифра ориентировочная. Прочерк — меньше 5 объявлений.`,
+    monthlyNote: `Помесячные цены — это цены из объявлений о долгосрочной аренде, опубликованных с ${c.from} по ${c.to}; старше 180 дней в расчёт не попадают. Коммунальные платежи и уборка обычно оплачиваются отдельно — уточняйте у арендодателя.`,
     moreH2: 'Если вы покупаете под аренду',
-    more: <>Ставки выше — это то, с чем будет конкурировать ваша вилла. Как из них получается доходность и сколько съедают расходы, разобрано в статье <Link href={SRC.yieldRu} className={A}>доходность вилл на Бали по районам</Link>. Цены покупки по тем же районам — на странице <Link href={marketPath('prices', lang)} className={A}>цены на недвижимость Бали</Link>.</>,
-    catalogue: <>Свежие объявления о помесячной аренде — в <Link href={switchLangPath('/ru/arenda', lang)} className={A}>каталоге аренды</Link>.</>,
+    more: <>Ставки выше — это то, с чем будет конкурировать ваша вилла. Как из них получается доходность и сколько съедают расходы, разобрано в статье <Link href={c.href.yield} className={A}>доходность вилл на Бали по районам</Link>. Цены покупки по тем же районам — на странице <Link href={c.href.prices} className={A}>цены на недвижимость Бали</Link>.</>,
+    catalogue: <>Свежие объявления о помесячной аренде — в <Link href={c.href.catalog} className={A}>каталоге аренды</Link>.</>,
     faqH2: 'Частые вопросы',
     faq: [
-      { q: 'Сколько стоит аренда на Бали в месяц?', a: `Вилла с 2 спальнями — медиана ${$(two.median)} в месяц, с 1 спальней — ${$(M.island.villa1br.median)}, с 3 спальнями — ${$(M.island.villa3br.median)}. Апартаменты — около ${$(M.island.apartment.median)}. Это цены из ${M.n} объявлений с ${from} по ${to}.` },
-      { q: 'Сколько стоит вилла на Бали за ночь?', a: `Медианная ставка виллы с 2 спальнями — ${$(R['2br'].median)} за ночь, с 1 спальней — ${$(R['1br'].median)}, с 3 спальнями — ${$(R['3br'].median)}. Данные по ${MARKET.totals.villaRentals.toLocaleString('ru-RU')} виллам на площадках бронирования.` },
-      cheapM ? { q: 'Где на Бали аренда дешевле?', a: `Из районов с достаточным числом объявлений дешевле всего ${nm(cheapM[0])}: медиана ${$(cheapM[1].all.median)} в месяц. В районах у океана на юго-западе (Чангу, Берава, Переренан) аренда заметно дороже.` } : null,
-      { q: 'Выгоднее снимать помесячно или посуточно?', a: `Помесячно. 30 ночей по медианной посуточной ставке виллы с 2 спальнями — около ${monthEq ? $(monthEq) : '—'}, а месячная аренда такой виллы — ${$(two.median)}.` },
+      { q: 'Сколько стоит аренда на Бали в месяц?', a: `Вилла с 2 спальнями — медиана ${c.$(c.two.median)} в месяц, с 1 спальней — ${c.$(c.M.island.villa1br.median)}, с 3 спальнями — ${c.$(c.M.island.villa3br.median)}. Апартаменты — около ${c.$(c.M.island.apartment.median)}. Это цены из ${c.M.n} объявлений с ${c.from} по ${c.to}.` },
+      { q: 'Сколько стоит вилла на Бали за ночь?', a: `Медианная ставка виллы с 2 спальнями — ${c.$(c.R['2br'].median)} за ночь, с 1 спальней — ${c.$(c.R['1br'].median)}, с 3 спальнями — ${c.$(c.R['3br'].median)}. Данные по ${c.n(c.T.villaRentals)} виллам на площадках бронирования.` },
+      c.cheapM ? { q: 'Где на Бали аренда дешевле?', a: `Из районов с достаточным числом объявлений дешевле всего ${c.nm(c.cheapM[0])}: медиана ${c.$(c.cheapM[1].all.median)} в месяц. В районах у океана на юго-западе (Чангу, Берава, Переренан) аренда заметно дороже.` } : null,
+      { q: 'Выгоднее снимать помесячно или посуточно?', a: `Помесячно. 30 ночей по медианной посуточной ставке виллы с 2 спальнями — около ${c.monthEq ? c.$(c.monthEq) : '—'}, а месячная аренда такой виллы — ${c.$(c.two.median)}.` },
     ].filter(Boolean) as Faq[],
     sourcesH2: 'Источники и метод',
     sources: [
-      { label: `Каталог аренды Balinsky: ${M.n} объявлений о помесячной аренде, ${from} — ${to}`, href: switchLangPath('/ru/arenda', lang) },
-      { label: `База посуточной аренды Balinsky: ${MARKET.totals.rentals.toLocaleString('ru-RU')} объектов, источник — estatemarket.io`, href: SRC.estatemarket },
-      { label: 'Как мы считаем: источники, определения, ограничения', href: marketPath('method', lang) },
-      { label: 'Ставки аренды вилл на Бали по районам', href: '/ru/znaniya/stavki-arendy-vill-na-bali-po-rayonam-2026' },
-      { label: 'Статистика туризма Бали (BPS)', href: SRC.bpsOccupancy },
+      { label: `Каталог аренды Balinsky: ${c.M.n} объявлений о помесячной аренде, ${c.from} — ${c.to}`, href: c.href.catalog },
+      { label: `База посуточной аренды Balinsky: ${c.n(c.T.rentals)} объектов, источник — estatemarket.io`, href: c.href.estatemarket },
+      { label: 'Как мы считаем: источники, определения, ограничения', href: c.href.method },
+      { label: 'Ставки аренды вилл на Бали по районам', href: c.href.rates },
+      { label: 'Статистика туризма Бали (BPS)', href: c.href.bps },
     ],
     datasetName: 'Цены аренды на Бали: помесячно и посуточно по районам',
   }
+}
+
+function enCopy(c: RentCtx) {
   return {
     metaTitle: 'How Much Is Rent in Bali? Monthly & Nightly Prices by Area',
-    description: `Renting a 2-bedroom villa in Bali: median ${$(two.median)} a month (${two.n} listings) or ${$(R['2br'].median)} a night. Prices by area and bedrooms, data for ${when}.`,
+    description: `Renting a 2-bedroom villa in Bali: median ${c.$(c.two.median)} a month (${c.two.n} listings) or ${c.$(c.R['2br'].median)} a night. Prices by area and bedrooms, data for ${c.when}.`,
     crumb: 'Rent prices',
     h1: 'How much is rent in Bali?',
-    lead: <>A 2-bedroom villa on a long-term lease has a median rent of <strong>{$(two.median)} a month</strong>; half of all listings sit between {$(two.p25)} and {$(two.p75)}. As a holiday rental, the same villa goes for about <strong>{$(R['2br'].median)} a night</strong>. Prices by area and bedroom count are below.</>,
-    updated: `Monthly: ${M.n} listings from ${from} to ${to}. Nightly: ${MARKET.totals.villaRentals.toLocaleString('en-US')} villas, ${when}.`,
+    lead: <>A 2-bedroom villa on a long-term lease has a median rent of <strong>{c.$(c.two.median)} a month</strong>; half of all listings sit between {c.$(c.two.p25)} and {c.$(c.two.p75)}. As a holiday rental, the same villa goes for about <strong>{c.$(c.R['2br'].median)} a night</strong>. Prices by area and bedroom count are below.</>,
+    updated: `Monthly: ${c.M.n} listings from ${c.from} to ${c.to}. Nightly: ${c.n(c.T.villaRentals)} villas, ${c.when}.`,
     takeawaysH2: 'Key numbers',
     takeaways: [
-      `A 1-bedroom villa rents for about ${$(M.island.villa1br.median)} a month, a 3-bedroom for ${$(M.island.villa3br.median)}. Apartments: ${$(M.island.apartment.median)}.`,
-      cheapM && dearM ? `Among areas with more than ${INDICATIVE_N} listings, ${nm(cheapM[0])} is the cheapest (median ${$(cheapM[1].all.median)} a month) and ${nm(dearM[0])} the most expensive (${$(dearM[1].all.median)}).` : '',
-      monthEq ? `Thirty nights at the median nightly rate come to ${$(monthEq)}, ${(monthEq / (two.median ?? monthEq)).toFixed(1)} times the monthly rent. But a holiday villa is not booked every night, and the owner pays platform fees and management.` : '',
+      `A 1-bedroom villa rents for about ${c.$(c.M.island.villa1br.median)} a month, a 3-bedroom for ${c.$(c.M.island.villa3br.median)}. Apartments: ${c.$(c.M.island.apartment.median)}.`,
+      c.cheapM && c.dearM ? `Among areas with more than ${c.N} listings, ${c.nm(c.cheapM[0])} is the cheapest (median ${c.$(c.cheapM[1].all.median)} a month) and ${c.nm(c.dearM[0])} the most expensive (${c.$(c.dearM[1].all.median)}).` : '',
+      c.monthEq ? `Thirty nights at the median nightly rate come to ${c.$(c.monthEq)}, ${c.ratio} times the monthly rent. But a holiday villa is not booked every night, and the owner pays platform fees and management.` : '',
     ].filter(Boolean),
     monthlyH2: 'Monthly rent by bedrooms',
     monthlyCols: ['Type', 'Listings', 'Median per month', 'Middle half'],
@@ -89,28 +120,37 @@ function copy(lang: Lang) {
     nightlyH2: 'Nightly rates by area',
     nightlyCols: ['Area', 'Villas for rent', '1-bed villa', '2-bed villa', '3-bed villa', '4+ bed villa', 'Apartment'],
     nightlyNote: 'Nightly figures are median listed rates on booking platforms. They are asking rates: actual revenue depends on occupancy, and reliable occupancy data does not exist, so we do not show it.',
-    indicative: `* Fewer than ${INDICATIVE_N} listings — indicative. A dash means fewer than 5 listings.`,
-    monthlyNote: `Monthly figures are asking rents from long-term rental listings posted between ${from} and ${to}. Anything older than 180 days is excluded. Utilities and cleaning are usually extra — check with the landlord.`,
+    indicative: `* Fewer than ${c.N} listings — indicative. A dash means fewer than 5 listings.`,
+    monthlyNote: `Monthly figures are asking rents from long-term rental listings posted between ${c.from} and ${c.to}. Anything older than 180 days is excluded. Utilities and cleaning are usually extra — check with the landlord.`,
     moreH2: 'If you are buying to rent out',
-    more: <>The rates above are what your villa will compete with. How they turn into yield, and how much costs take, is in <Link href={SRC.yieldEn} className={A}>Bali villa rental yield by area</Link>. Purchase prices for the same areas are on <Link href={marketPath('prices', lang)} className={A}>Bali property prices</Link>.</>,
-    catalogue: <>Current monthly rental listings are in the <Link href={switchLangPath('/ru/arenda', lang)} className={A}>rental catalogue</Link>.</>,
+    more: <>The rates above are what your villa will compete with. How they turn into yield, and how much costs take, is in <Link href={c.href.yield} className={A}>Bali villa rental yield by area</Link>. Purchase prices for the same areas are on <Link href={c.href.prices} className={A}>Bali property prices</Link>.</>,
+    catalogue: <>Current monthly rental listings are in the <Link href={c.href.catalog} className={A}>rental catalogue</Link>.</>,
     faqH2: 'Frequently asked questions',
     faq: [
-      { q: 'How much is rent in Bali per month?', a: `A 2-bedroom villa has a median rent of ${$(two.median)} a month; a 1-bedroom ${$(M.island.villa1br.median)}; a 3-bedroom ${$(M.island.villa3br.median)}. Apartments are around ${$(M.island.apartment.median)}. Based on ${M.n} listings from ${from} to ${to}.` },
-      { q: 'How much is a villa in Bali per night?', a: `The median nightly rate is ${$(R['2br'].median)} for a 2-bedroom villa, ${$(R['1br'].median)} for a 1-bedroom and ${$(R['3br'].median)} for a 3-bedroom, across ${MARKET.totals.villaRentals.toLocaleString('en-US')} villas on booking platforms.` },
-      cheapM ? { q: 'Where is rent cheapest in Bali?', a: `Among areas with enough listings, ${nm(cheapM[0])} is the cheapest at a median of ${$(cheapM[1].all.median)} a month. The south-west coast (Canggu, Berawa, Pererenan) is noticeably more expensive.` } : null,
-      { q: 'Is it cheaper to rent monthly or nightly?', a: `Monthly. Thirty nights at the median nightly rate for a 2-bedroom villa come to about ${monthEq ? $(monthEq) : '—'}, while the same villa rents for ${$(two.median)} a month.` },
+      { q: 'How much is rent in Bali per month?', a: `A 2-bedroom villa has a median rent of ${c.$(c.two.median)} a month; a 1-bedroom ${c.$(c.M.island.villa1br.median)}; a 3-bedroom ${c.$(c.M.island.villa3br.median)}. Apartments are around ${c.$(c.M.island.apartment.median)}. Based on ${c.M.n} listings from ${c.from} to ${c.to}.` },
+      { q: 'How much is a villa in Bali per night?', a: `The median nightly rate is ${c.$(c.R['2br'].median)} for a 2-bedroom villa, ${c.$(c.R['1br'].median)} for a 1-bedroom and ${c.$(c.R['3br'].median)} for a 3-bedroom, across ${c.n(c.T.villaRentals)} villas on booking platforms.` },
+      c.cheapM ? { q: 'Where is rent cheapest in Bali?', a: `Among areas with enough listings, ${c.nm(c.cheapM[0])} is the cheapest at a median of ${c.$(c.cheapM[1].all.median)} a month. The south-west coast (Canggu, Berawa, Pererenan) is noticeably more expensive.` } : null,
+      { q: 'Is it cheaper to rent monthly or nightly?', a: `Monthly. Thirty nights at the median nightly rate for a 2-bedroom villa come to about ${c.monthEq ? c.$(c.monthEq) : '—'}, while the same villa rents for ${c.$(c.two.median)} a month.` },
     ].filter(Boolean) as Faq[],
     sourcesH2: 'Sources and method',
     sources: [
-      { label: `Balinsky rental catalogue: ${M.n} long-term rental listings, ${from} — ${to}`, href: switchLangPath('/ru/arenda', lang) },
-      { label: `Balinsky holiday-rental database: ${MARKET.totals.rentals.toLocaleString('en-US')} properties, sourced from estatemarket.io`, href: SRC.estatemarket },
-      { label: 'How we calculate: sources, definitions, limitations', href: marketPath('method', lang) },
-      { label: 'Bali villa rental rates by area', href: '/en/knowledge/bali-villa-rental-rates-by-area-2026' },
-      { label: 'Bali tourism statistics (BPS)', href: SRC.bpsOccupancy },
+      { label: `Balinsky rental catalogue: ${c.M.n} long-term rental listings, ${c.from} — ${c.to}`, href: c.href.catalog },
+      { label: `Balinsky holiday-rental database: ${c.n(c.T.rentals)} properties, sourced from estatemarket.io`, href: c.href.estatemarket },
+      { label: 'How we calculate: sources, definitions, limitations', href: c.href.method },
+      { label: 'Bali villa rental rates by area', href: c.href.rates },
+      { label: 'Bali tourism statistics (BPS)', href: c.href.bps },
     ],
     datasetName: 'Bali rent prices: monthly and nightly, by area',
   }
+}
+
+export type RentCopy = ReturnType<typeof enCopy>
+
+function copy(lang: Lang): RentCopy {
+  const c = ctxFor(lang)
+  if (lang === 'ru') return ruCopy(c)
+  if (lang === 'en') return enCopy(c)
+  return RENT_INTL[intlLang(lang)](c)
 }
 
 export function rentIndexMetadata(lang: Lang) {
@@ -137,7 +177,7 @@ export function RentIndexView({ lang }: { lang: Lang }) {
     .sort((a, b) => b[1].villas - a[1].villas)
     .map(([d, s]) => ({
       key: d, label: districtName(d, lang), indicative: s.villas < INDICATIVE_N,
-      cells: [s.villas.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US'), cell(s.villa1br, lang), cell(s.villa2br, lang), cell(s.villa3br, lang), cell(s.villa4br, lang), cell(s.apartment, lang)],
+      cells: [num(s.villas, lang), cell(s.villa1br, lang), cell(s.villa2br, lang), cell(s.villa3br, lang), cell(s.villa4br, lang), cell(s.apartment, lang)],
     }))
 
   return (

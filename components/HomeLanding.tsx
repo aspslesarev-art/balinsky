@@ -870,12 +870,10 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
         </PageContainer>
       </section>
 
-      {/* === 2b. Рынок в цифрах — RU/EN, где есть страницы с данными === */}
-      {(lang === 'ru' || lang === 'en') && (
-        <SectionWrap>
-          <MarketNumbers lang={lang} />
-        </SectionWrap>
-      )}
+      {/* === 2b. Рынок в цифрах — ссылки на страницы с данными ====== */}
+      <SectionWrap>
+        <MarketNumbers lang={lang} />
+      </SectionWrap>
 
       {/* === 3. Что вы ищете? — три больших выбора =============== */}
       <SectionWrap className="border-t border-[var(--color-border)]">

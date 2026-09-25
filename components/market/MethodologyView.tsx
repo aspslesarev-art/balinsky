@@ -5,29 +5,55 @@ import Link from 'next/link'
 import type { Lang } from '@/lib/i18n'
 import { switchLangPath } from '@/lib/i18n'
 import { SRC } from '@/lib/investment-guide/data'
-import { MARKET, INDICATIVE_N, marketPath, asOfLabel, dayLabel } from '@/lib/market-index'
+import { MARKET, INDICATIVE_N, marketPath, knowledgePath, num, asOfLabel, dayLabel } from '@/lib/market-index'
+import { isRuEnOnlyKnowledge } from '@/lib/knowledge-locales'
 import type { DataRow } from './DataTable'
 import { MarketShell, marketMetadata, H2, P, A } from './MarketShell'
+import { METHOD_INTL } from './copy/method-intl'
+import { intlLang } from './copy/types'
 
-function copy(lang: Lang) {
-  const when = asOfLabel(lang)
-  const loc = lang === 'ru' ? 'ru-RU' : 'en-US'
-  const n = (v: number) => v.toLocaleString(loc)
-  const T = MARKET.totals
-  const from = dayLabel(MARKET.monthly.from, lang), to = dayLabel(MARKET.monthly.to, lang)
-  if (lang === 'ru') return {
+const YIELD = 'dohodnost-vill-na-bali-po-rayonam-dannye'
+
+export type MethodCtx = ReturnType<typeof ctxFor>
+
+function ctxFor(lang: Lang) {
+  return {
+    lang,
+    n: (v: number) => num(v, lang),
+    when: asOfLabel(lang),
+    from: dayLabel(MARKET.monthly.from, lang),
+    to: dayLabel(MARKET.monthly.to, lang),
+    T: MARKET.totals, M: MARKET.monthly, N: INDICATIVE_N,
+    guidesInEnglish: lang !== 'ru' && lang !== 'en' && isRuEnOnlyKnowledge(YIELD),
+    href: {
+      prices: marketPath('prices', lang),
+      rent: marketPath('rent', lang),
+      yield: knowledgePath(YIELD, lang),
+      invest: switchLangPath('/ru/investicii-v-nedvizhimost-bali', lang),
+      about: switchLangPath('/ru/o-balinsky', lang),
+      estatemarket: SRC.estatemarket,
+      bps: SRC.bpsOccupancy,
+      bpsArrivals: SRC.bpsArrivals,
+      pp18: SRC.pp18,
+      pwcTax: SRC.pwcTax,
+    },
+  }
+}
+
+function ruCopy(c: MethodCtx) {
+  return {
     metaTitle: 'Как мы считаем: источники и метод данных о недвижимости Бали',
     description: 'Откуда Balinsky берёт цены, ставки аренды и доходность по Бали: источники, определения, модель доходности, ограничения и порядок исправления ошибок.',
     crumb: 'Как мы считаем',
     h1: 'Как мы считаем',
     lead: <>Каждая цифра на сайте — цена за м² против района, ставки аренды соседей, доходность — считается по открытому методу. Здесь описано, откуда данные, что означает каждый показатель и где у данных пределы.</>,
-    updated: `Данные обновлены: ${when}`,
+    updated: `Данные обновлены: ${c.when}`,
     sourcesH2: 'Откуда данные',
     sourceCols: ['Источник', 'Что берём', 'Объём'],
     sourceRows: [
-      ['Каталог Balinsky', 'Цены предложения, площадь, спальни, срок лизхолда, статус строительства и разрешений — со слов застройщика', `${n(T.villas)} вилл, ${n(T.apartments)} апартаментов`],
-      ['База посуточной аренды (estatemarket.io)', 'Ставки за ночь, тип объекта, число спален, координаты', `${n(T.rentals)} объектов у районов каталога`],
-      ['Объявления о помесячной аренде', 'Цена в месяц, тип, спальни, район', `${n(MARKET.monthly.n)} объявлений, ${from} — ${to}`],
+      ['Каталог Balinsky', 'Цены предложения, площадь, спальни, срок лизхолда, статус строительства и разрешений — со слов застройщика', `${c.n(c.T.villas)} вилл, ${c.n(c.T.apartments)} апартаментов`],
+      ['База посуточной аренды (estatemarket.io)', 'Ставки за ночь, тип объекта, число спален, координаты', `${c.n(c.T.rentals)} объектов у районов каталога`],
+      ['Объявления о помесячной аренде', 'Цена в месяц, тип, спальни, район', `${c.n(c.M.n)} объявлений, ${c.from} — ${c.to}`],
       ['Официальная статистика и законы', 'Турпоток и загрузка отелей (BPS Бали), права на землю (PP 18/2021), налоги', 'Ссылки — в каждом материале'],
     ],
     defsH2: 'Что означают показатели',
@@ -35,7 +61,7 @@ function copy(lang: Lang) {
       ['Медиана', 'Середина ряда: у половины объектов цена ниже, у половины выше. Одна вилла за несколько миллионов её не сдвигает, поэтому мы используем медиану, а не среднее.'],
       ['Половина объектов (25–75%)', 'Диапазон, в который попадает средняя половина цен. Показывает, насколько цены в районе разные.'],
       ['Цена за м²', 'Цена предложения, делённая на жилую площадь из карточки. Земля, терраса и бассейн не входят.'],
-      ['Ориентировочно (*)', `Меньше ${INDICATIVE_N} наблюдений. Такая цифра — наблюдение, а не вывод о районе.`],
+      ['Ориентировочно (*)', `Меньше ${c.N} наблюдений. Такая цифра — наблюдение, а не вывод о районе.`],
       ['Район объекта аренды', 'Объект посуточной аренды относим к району ближайшего объекта каталога в радиусе 1,5 км. Дальше — не учитываем.'],
       ['Статус PBG/SLF', 'То, что указал застройщик: разрешение на строительство (PBG), на эксплуатацию (SLF), подана заявка или данных нет. Мы не сверяем номера с реестром.'],
     ],
@@ -46,7 +72,7 @@ function copy(lang: Lang) {
       'Вычитаем расходы: комиссии площадок 15%, управление 20%, эксплуатация 6%, местный налог на размещение (PBJT) 10% — всего 51% валовой выручки. Налог на доход (10% для резидента, до 20% для нерезидента) идёт сверху — он зависит от вашего статуса.',
       'Делим на цену покупки. Результат — до амортизации лизхолда: земля в аренде, и через 25–30 лет право заканчивается.',
     ],
-    yieldMore: <>Расчёт по районам — в статье <Link href={SRC.yieldRu} className={A}>доходность вилл на Бали по районам</Link>.</>,
+    yieldMore: <>Расчёт по районам — в статье <Link href={c.href.yield} className={A}>доходность вилл на Бали по районам</Link>.</>,
     limitsH2: 'Чего эти данные не показывают',
     limits: [
       'Цены сделок. На Бали их не публикуют; мы показываем цены предложения.',
@@ -62,33 +88,36 @@ function copy(lang: Lang) {
     ],
     pagesH2: 'Где эти данные на сайте',
     pages: [
-      { t: 'Цены на недвижимость Бали по районам', href: marketPath('prices', lang) },
-      { t: 'Сколько стоит аренда на Бали', href: marketPath('rent', lang) },
-      { t: 'Инвестиции в недвижимость Бали: доходность по районам', href: switchLangPath('/ru/investicii-v-nedvizhimost-bali', lang) },
-      { t: 'О Balinsky: что мы проверяем и чего нет', href: switchLangPath('/ru/o-balinsky', lang) },
+      { t: 'Цены на недвижимость Бали по районам', href: c.href.prices },
+      { t: 'Сколько стоит аренда на Бали', href: c.href.rent },
+      { t: 'Инвестиции в недвижимость Бали: доходность по районам', href: c.href.invest },
+      { t: 'О Balinsky: что мы проверяем и чего нет', href: c.href.about },
     ],
     srcH2: 'Внешние источники',
     sources: [
-      { label: 'estatemarket.io — данные посуточной аренды на Бали', href: SRC.estatemarket },
-      { label: 'BPS Бали: турпоток и загрузка отелей', href: SRC.bpsOccupancy },
-      { label: 'BPS: число иностранных туристов на Бали по годам', href: SRC.bpsArrivals },
-      { label: 'Постановление правительства Индонезии № 18/2021 (права на землю)', href: SRC.pp18 },
-      { label: 'PwC Worldwide Tax Summaries: Индонезия', href: SRC.pwcTax },
+      { label: 'estatemarket.io — данные посуточной аренды на Бали', href: c.href.estatemarket },
+      { label: 'BPS Бали: турпоток и загрузка отелей', href: c.href.bps },
+      { label: 'BPS: число иностранных туристов на Бали по годам', href: c.href.bpsArrivals },
+      { label: 'Постановление правительства Индонезии № 18/2021 (права на землю)', href: c.href.pp18 },
+      { label: 'PwC Worldwide Tax Summaries: Индонезия', href: c.href.pwcTax },
     ],
   }
+}
+
+function enCopy(c: MethodCtx) {
   return {
     metaTitle: 'How We Calculate: Sources & Method Behind Our Bali Property Data',
     description: 'Where Balinsky’s Bali prices, rental rates and yields come from: sources, definitions, the yield model, limitations and how we correct errors.',
     crumb: 'How we calculate',
     h1: 'How we calculate',
     lead: <>Every number on the site — price per m² against the district, nearby rental rates, yield — is calculated by an open method. This page explains where the data comes from, what each figure means and where the data has limits.</>,
-    updated: `Data updated: ${when}.`,
+    updated: `Data updated: ${c.when}.`,
     sourcesH2: 'Where the data comes from',
     sourceCols: ['Source', 'What we use', 'Size'],
     sourceRows: [
-      ['Balinsky catalogue', 'Asking prices, living area, bedrooms, lease term, construction and permit status — as reported by the developer', `${n(T.villas)} villas, ${n(T.apartments)} apartments`],
-      ['Holiday-rental database (estatemarket.io)', 'Nightly rates, property type, bedrooms, coordinates', `${n(T.rentals)} properties near catalogue areas`],
-      ['Long-term rental listings', 'Monthly rent, type, bedrooms, area', `${n(MARKET.monthly.n)} listings, ${from} — ${to}`],
+      ['Balinsky catalogue', 'Asking prices, living area, bedrooms, lease term, construction and permit status — as reported by the developer', `${c.n(c.T.villas)} villas, ${c.n(c.T.apartments)} apartments`],
+      ['Holiday-rental database (estatemarket.io)', 'Nightly rates, property type, bedrooms, coordinates', `${c.n(c.T.rentals)} properties near catalogue areas`],
+      ['Long-term rental listings', 'Monthly rent, type, bedrooms, area', `${c.n(c.M.n)} listings, ${c.from} — ${c.to}`],
       ['Official statistics and law', 'Arrivals and hotel occupancy (BPS Bali), land rights (PP 18/2021), taxes', 'Linked in each article'],
     ],
     defsH2: 'What the figures mean',
@@ -96,7 +125,7 @@ function copy(lang: Lang) {
       ['Median', 'The middle of the range: half the properties are cheaper, half dearer. One multi-million villa does not move it, which is why we use medians rather than averages.'],
       ['Middle half (25th–75th percentile)', 'The range holding the middle half of prices. It shows how varied prices are in an area.'],
       ['Price per m²', 'Asking price divided by the living area on the listing. Land, terraces and pool are not included.'],
-      ['Indicative (*)', `Fewer than ${INDICATIVE_N} observations. Such a figure is an observation, not a finding about the area.`],
+      ['Indicative (*)', `Fewer than ${c.N} observations. Such a figure is an observation, not a finding about the area.`],
       ['Area of a rental', 'A holiday rental is assigned to the area of the nearest catalogue listing within 1.5 km. Anything further away is left out.'],
       ['PBG/SLF status', 'What the developer reports: building permit (PBG), certificate of occupancy (SLF), application filed, or no data. We do not check the numbers against the registry.'],
     ],
@@ -107,7 +136,7 @@ function copy(lang: Lang) {
       'Subtract costs: platform fees 15%, management 20%, running costs 6%, local accommodation tax (PBJT) 10% — 51% of gross revenue in total. Income tax (10% for a resident, up to 20% for a non-resident) comes on top, as it depends on your status.',
       'Divide by the purchase price. The result is before leasehold amortisation: the land is leased, and the right ends after 25–30 years.',
     ],
-    yieldMore: <>Area-by-area results: <Link href={SRC.yieldEn} className={A}>Bali villa rental yield by area</Link>.</>,
+    yieldMore: <>Area-by-area results: <Link href={c.href.yield} className={A}>Bali villa rental yield by area</Link>.</>,
     limitsH2: 'What this data does not show',
     limits: [
       'Transaction prices. They are not published in Bali; we show asking prices.',
@@ -123,20 +152,29 @@ function copy(lang: Lang) {
     ],
     pagesH2: 'Where this data appears',
     pages: [
-      { t: 'Bali property prices by area', href: marketPath('prices', lang) },
-      { t: 'How much is rent in Bali', href: marketPath('rent', lang) },
-      { t: 'Bali property investment: yield by area', href: switchLangPath('/ru/investicii-v-nedvizhimost-bali', lang) },
-      { t: 'About Balinsky: what we check and what we don’t', href: switchLangPath('/ru/o-balinsky', lang) },
+      { t: 'Bali property prices by area', href: c.href.prices },
+      { t: 'How much is rent in Bali', href: c.href.rent },
+      { t: 'Bali property investment: yield by area', href: c.href.invest },
+      { t: 'About Balinsky: what we check and what we don’t', href: c.href.about },
     ],
     srcH2: 'External sources',
     sources: [
-      { label: 'estatemarket.io — Bali holiday-rental data', href: SRC.estatemarket },
-      { label: 'BPS Bali: arrivals and hotel occupancy', href: SRC.bpsOccupancy },
-      { label: 'BPS: foreign arrivals to Bali by year', href: SRC.bpsArrivals },
-      { label: 'Indonesian Government Regulation No. 18/2021 (land rights)', href: SRC.pp18 },
-      { label: 'PwC Worldwide Tax Summaries: Indonesia', href: SRC.pwcTax },
+      { label: 'estatemarket.io — Bali holiday-rental data', href: c.href.estatemarket },
+      { label: 'BPS Bali: arrivals and hotel occupancy', href: c.href.bps },
+      { label: 'BPS: foreign arrivals to Bali by year', href: c.href.bpsArrivals },
+      { label: 'Indonesian Government Regulation No. 18/2021 (land rights)', href: c.href.pp18 },
+      { label: 'PwC Worldwide Tax Summaries: Indonesia', href: c.href.pwcTax },
     ],
   }
+}
+
+export type MethodCopy = ReturnType<typeof enCopy>
+
+function copy(lang: Lang): MethodCopy {
+  const c = ctxFor(lang)
+  if (lang === 'ru') return ruCopy(c)
+  if (lang === 'en') return enCopy(c)
+  return METHOD_INTL[intlLang(lang)](c)
 }
 
 export function methodologyMetadata(lang: Lang) {

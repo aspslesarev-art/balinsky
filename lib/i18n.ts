@@ -17,7 +17,9 @@ import { hasCyrillic, translitPreserveCase } from './translit'
 export type Lang = 'ru' | 'en' | 'id' | 'fr' | 'de' | 'zh' | 'nl' | 'ban' | 'pl' | 'uk'
 
 /** All supported languages, RU first (source/x-default). */
-export const LANGS: readonly Lang[] = ['ru', 'en', 'id', 'fr', 'de', 'zh', 'nl', 'ban', 'pl', 'uk'] as const
+// Display order of the language switcher and the footer list: English first
+// (the priority audience), Russian last. Membership checks don't depend on it.
+export const LANGS: readonly Lang[] = ['en', 'id', 'fr', 'de', 'zh', 'nl', 'ban', 'pl', 'uk', 'ru'] as const
 
 /** Non-RU languages that have a fallback chain toward RU. */
 type NonRuLang = Exclude<Lang, 'ru'>
@@ -33,7 +35,9 @@ const FALLBACK: Record<NonRuLang, NonRuLang[]> = {
   de: ['en'],
   zh: ['en'],
   nl: ['en'],
-  ban: ['en'],
+  // Balinese has almost no translations of its own; every Balinese reader
+  // reads Indonesian, so Indonesian comes before English.
+  ban: ['id', 'en'],
   pl: ['en'],
   uk: ['en'],
 }

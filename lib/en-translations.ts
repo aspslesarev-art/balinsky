@@ -105,6 +105,20 @@ async function fetchOnce(section: Section, lang: Exclude<Lang, 'ru'>, key: strin
 /** Load the translation cache for a section in the given language. */
 export async function loadTranslations(section: Section, lang: Lang): Promise<SectionCache> {
   if (lang === 'ru') return {}
+  // Balinese caches are nearly empty; without this every manifest item
+  // (news, knowledge, events…) renders as transliterated Russian. Fill the
+  // gaps from Indonesian, which every Balinese reader reads — Balinese
+  // entries still win per item.
+  if (lang === 'ban') {
+    const [id, ban] = await Promise.all([loadOne(section, 'id'), loadOne(section, 'ban')])
+    const out: SectionCache = { ...id }
+    for (const [k, v] of Object.entries(ban)) out[k] = { ...(id[k] ?? {}), ...v }
+    return out
+  }
+  return loadOne(section, lang)
+}
+
+async function loadOne(section: Section, lang: Exclude<Lang, 'ru'>): Promise<SectionCache> {
   const key = `${section}:${lang}`
   const hit = _cache.get(key)
   if (hit && Date.now() - hit.ts < TTL_MS) return hit.data

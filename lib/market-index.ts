@@ -2,7 +2,9 @@
 // plus the small formatting helpers the market-data pages share.
 
 import raw from './market-index.json'
-import type { Lang } from './i18n'
+import { switchLangPath, langToSegment, localizeSegment, type Lang } from './i18n'
+import { enKnowledgeSlug } from './knowledge-en-slugs'
+import { knowledgeAvailableIn } from './knowledge-locales'
 import { districtRu } from './district-ru'
 import { DISTRICT_TO_SLUG } from './seo-routes'
 import { localizeHubPath } from './hub-routes'
@@ -48,16 +50,44 @@ export const MARKET = raw as unknown as MarketIndex
 /** Below this many observations a figure is shown as indicative, not a finding. */
 export const INDICATIVE_N = 30
 
-export const RU_EN_MARKET_PAGES = {
-  prices: { ru: '/ru/tseny-na-nedvizhimost-bali', en: '/en/bali-property-prices' },
-  rent: { ru: '/ru/tseny-arendy-na-bali', en: '/en/bali-rent-prices' },
-  method: { ru: '/ru/metodologiya', en: '/en/methodology' },
+/** Russian path of each market page — the key the other locales are mapped from. */
+export const MARKET_PAGES_RU = {
+  prices: '/ru/tseny-na-nedvizhimost-bali',
+  rent: '/ru/tseny-arendy-na-bali',
+  method: '/ru/metodologiya',
 } as const
-export type MarketPageKey = keyof typeof RU_EN_MARKET_PAGES
+export type MarketPageKey = keyof typeof MARKET_PAGES_RU
 
-/** RU and EN only; every other locale is sent to the English page. */
+/** e.g. prices → /ru/tseny-na-nedvizhimost-bali, /en/bali-property-prices, /ua/bali-property-prices. */
 export function marketPath(key: MarketPageKey, lang: Lang): string {
-  return lang === 'ru' ? RU_EN_MARKET_PAGES[key].ru : RU_EN_MARKET_PAGES[key].en
+  return switchLangPath(MARKET_PAGES_RU[key], lang)
+}
+
+/**
+ * A knowledge article in `lang`, keyed by its Russian slug. Articles that
+ * exist only in RU/EN (lib/knowledge-locales.ts) link to the English copy.
+ */
+export function knowledgePath(ruSlug: string, lang: Lang): string {
+  if (lang === 'ru') return `/ru/znaniya/${ruSlug}`
+  const l = knowledgeAvailableIn(ruSlug, lang) ? lang : 'en'
+  return `/${langToSegment(l)}/${localizeSegment('znaniya', l)}/${enKnowledgeSlug(ruSlug)}`
+}
+
+// Intl locale per site language. Balinese has no Intl data of its own and
+// its readers use Indonesian number and date conventions.
+const LOCALE: Record<Lang, string> = {
+  ru: 'ru-RU', en: 'en-US', id: 'id-ID', ban: 'id-ID', fr: 'fr-FR', de: 'de-DE', zh: 'zh-CN', nl: 'nl-NL', pl: 'pl-PL', uk: 'uk-UA',
+}
+export const marketLocale = (lang: Lang) => LOCALE[lang]
+
+/** Localised integer; space group separators become non-breaking. */
+export function num(n: number, lang: Lang): string {
+  return Math.round(n).toLocaleString(LOCALE[lang]).replace(/\s/g, '\u00a0')
+}
+
+/** One-decimal ratio in the language's decimal style (2,4 / 2.4). */
+export function ratio(n: number, lang: Lang): string {
+  return n.toLocaleString(LOCALE[lang], { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 }
 
 export function districtName(latin: string, lang: Lang): string {
@@ -72,9 +102,8 @@ export function districtHub(latin: string, kind: 'villy' | 'apartamenty', lang: 
 
 export function usd(n: number | null | undefined, lang: Lang): string {
   if (n == null) return '—'
-  const v = Math.round(n)
   // Non-breaking group separator: «$320 000» must never wrap between groups.
-  return lang === 'ru' ? '$' + v.toLocaleString('ru-RU').replace(/[\s,]/g, '\u00a0') : '$' + v.toLocaleString('en-US')
+  return '$' + num(n, lang)
 }
 
 export function range(s: { p25: number | null; p75: number | null }, lang: Lang): string {
@@ -84,11 +113,11 @@ export function range(s: { p25: number | null; p75: number | null }, lang: Lang)
 
 export function asOfLabel(lang: Lang): string {
   const [y, m] = MARKET.asOf.split('-').map(Number)
-  return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+  return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString(LOCALE[lang], { month: 'long', year: 'numeric', timeZone: 'UTC' })
 }
 
 export function dayLabel(iso: string | null, lang: Lang): string {
   if (!iso) return '—'
-  return new Date(iso + 'T00:00:00Z').toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
+  return new Date(iso + 'T00:00:00Z').toLocaleDateString(LOCALE[lang], { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
 }
 
