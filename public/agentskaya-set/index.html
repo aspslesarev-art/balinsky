@@ -216,7 +216,7 @@
   @media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto} *{transition:none!important;animation:none!important} .js-rv .rv{opacity:1;transform:none} }
 </style>
 
-<header class="hero">
+<header class="hero" id="s0">
   <img class="hero-img" src="/agentskaya-set/img/hall.jpg" alt="Агенты Бали на нашем мероприятии" fetchpriority="high">
   <div class="top">
     <a class="brand" href="https://balinsky.info"><img src="/logo.svg" alt="" width="36" height="36"><span>Balinsky<small>Отдел по работе с агентами</small></span></a>
@@ -670,5 +670,40 @@ document.querySelectorAll('[data-carousel]').forEach(function(car){
     e.target.querySelectorAll('[data-to]').forEach(tick);
   });},{rootMargin:'0px 0px -8% 0px'});
   items.forEach(function(el){io.observe(el);});
+})();
+(function(){
+  // Аналитика: кто открыл (метка ?from=), сколько секунд вкладка на экране,
+  // сколько секунд на каждом разделе, до куда долистал, жал ли «Написать».
+  // Итоги уходят в /api/track/landing раз в 15 секунд и при уходе со страницы.
+  var ls={get:function(k){try{return localStorage.getItem(k)}catch(e){return null}},set:function(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+  var qs=new URLSearchParams(location.search);
+  if(qs.get('notrack')==='1') ls.set('bl_notrack','1');
+  if(ls.get('bl_notrack')==='1') return;
+  function uuid(){if(window.crypto&&crypto.randomUUID)return crypto.randomUUID();return 'xxxxxxxx-xxxx-4xxx-8xxx-xxxxxxxxxxxx'.replace(/x/g,function(){return (Math.random()*16|0).toString(16)});}
+  var vid=ls.get('bl_vid'); if(!vid){vid=uuid();ls.set('bl_vid',vid);}
+  var who=qs.get('from'); if(who) ls.set('bl_who',who); else who=ls.get('bl_who');
+  var st={id:uuid(),page:'agentskaya-set',who:who,vid:vid,first:true,active:0,scroll:0,sections:{},cta:0,ref:document.referrer||''};
+  var ids=[]; for(var i=0;i<=13;i++) ids.push('s'+i);
+  function current(){var mid=innerHeight*0.45;for(var i=0;i<ids.length;i++){var el=document.getElementById(ids[i]);if(!el)continue;var r=el.getBoundingClientRect();if(r.top<=mid&&r.bottom>mid)return ids[i];}return null;}
+  var dirty=true;
+  setInterval(function(){
+    if(document.visibilityState!=='visible') return;
+    st.active++; var c=current(); if(c) st.sections[c]=(st.sections[c]||0)+1;
+    var h=document.documentElement; var sc=Math.round((h.scrollTop+innerHeight)/h.scrollHeight*100);
+    if(sc>st.scroll) st.scroll=Math.min(100,sc);
+    dirty=true;
+  },1000);
+  function send(beacon){
+    var body=JSON.stringify(st); st.first=false; dirty=false;
+    try{
+      if(beacon&&navigator.sendBeacon){navigator.sendBeacon('/api/track/landing',new Blob([body],{type:'text/plain'}));return;}
+      fetch('/api/track/landing',{method:'POST',body:body,keepalive:true,headers:{'Content-Type':'text/plain'}}).catch(function(){});
+    }catch(e){}
+  }
+  send(false);
+  setInterval(function(){if(dirty&&document.visibilityState==='visible')send(false);},15000);
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')send(true);});
+  addEventListener('pagehide',function(){send(true);});
+  document.querySelectorAll('a[href^="https://t.me/andrey_slr"]').forEach(function(a){a.addEventListener('click',function(){st.cta++;send(true);});});
 })();
 </script>
