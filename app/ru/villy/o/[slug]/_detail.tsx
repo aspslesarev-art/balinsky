@@ -2,6 +2,7 @@
 // /en/villas/o/[slug]. Layout, data fetching and section order live
 // here; locale-specific copy is in the COPY table below.
 
+import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import type { ReactNode } from 'react'
 import { notFound, permanentRedirect } from 'next/navigation'
 import Link from 'next/link'
@@ -1040,6 +1041,8 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   const vision = curated.vision
   const photoAlts = photos.map((_, i) => altFor(vision, i, lang, title))
   const developerName = firstString(d['Developer1']) ?? firstString(d['Developer'])
+  // Hidden developers must not appear anywhere (lib/hidden-developers.ts).
+  if (isHiddenDeveloper(firstString(d['Developer1']), firstString(d['Developer']))) notFound()
   const devStats = await getDeveloperStats(developerName)
   // Resale / secondary listings carry a direct seller URL — bypass the
   // developer's manager for those.

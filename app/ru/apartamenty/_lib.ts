@@ -604,7 +604,14 @@ async function _loadAllInternal(): Promise<CachedAll> {
   const rows = ((rowsRes.data ?? []) as unknown as Record<string, unknown>[]).map(reassembleApt)
   const enriched = rows
     .filter(r => r.data?.['Опубликовать'] === true)
-    .filter(r => !isHiddenDeveloper(firstString(r.data['Developer1']), firstString(r.data['Developer'])))
+    // `Developer` is usually a linked-record id, not a name — resolve it
+    // through devMap, or a hidden developer's units slip through (UNIT's
+    // Black Sands Oasis units were live and in the sitemap).
+    .filter(r => {
+      const links = Array.isArray(r.data['Developer']) ? r.data['Developer'] : [r.data['Developer']]
+      const names = links.map(id => (typeof id === 'string' ? devMap[id] ?? id : null))
+      return !isHiddenDeveloper(firstString(r.data['Developer1']), ...names)
+    })
     .map(r => ({ ...r, data: mergeAllTranslations(r.data, r.airtable_id, enCache) }))
     .map(r => enrich(r, devMap, featuresMap))
     .map(e => ({ ...e, views: viewCounts[e.id] ?? 0 }))

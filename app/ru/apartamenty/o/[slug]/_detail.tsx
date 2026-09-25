@@ -20,6 +20,7 @@ import { ApartmentCard, type ApartmentCardData } from '@/components/ApartmentCar
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { distanceKm as haversineKm } from '@/lib/competitor-utils'
 import { getDeveloperStats } from '@/lib/developer-stats'
+import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
 import { isMetaBullet } from '@/lib/developer-highlights'
 import { loadAllVideos, matchesLang as videoMatchesLang } from '@/lib/videos'
@@ -905,6 +906,12 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
     _loadDevLookup(),
     _loadAllComplexes(),
   ])
+  // Hidden developers (lib/hidden-developers.ts) must not appear anywhere —
+  // the catalog already drops them; the detail URL has to 404 as well.
+  {
+    const links = Array.isArray(d['Developer']) ? d['Developer'] : [d['Developer']]
+    if (isHiddenDeveloper(firstString(d['Developer1']), ...links.map(id => (typeof id === 'string' ? devMap[id] ?? id : null)))) notFound()
+  }
 
   const titleRaw = tField(d, 'ИИ Имя', lang) ?? tField(d, 'SEO:Title', lang) ?? slug
   let title = cleanTitle(titleRaw) ?? slug

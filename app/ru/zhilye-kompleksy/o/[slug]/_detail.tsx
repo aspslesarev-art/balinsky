@@ -61,6 +61,7 @@ const Google3DMapBlock = dynamic(
   () => import('@/components/sun/Google3DMapBlock').then(m => ({ default: m.Google3DMapBlock })),
 )
 import { LazyMount } from '@/components/LazyMount'
+import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import { loadLandProfile, landAllowsBuilding } from '@/lib/land-profile'
 import { loadComplexMarketStats } from '@/lib/complex-market-stats'
 import { loadUnitDemand, type UnitDemand } from '@/lib/unit-demand'
@@ -1429,6 +1430,8 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   const d = c.data
   const name = firstString(d['Project'])
   if (!name) notFound()
+  // Hidden developers must not appear anywhere (lib/hidden-developers.ts).
+  if (isHiddenDeveloper(firstString(d['Developer1']), firstString(d['Варианты поиска застройщика']))) notFound()
 
   const [photoManifest, units, landProfile, marketStats, access, geoFacts, surroundings] = await Promise.all([
     _loadComplexPhotos(),
