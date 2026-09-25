@@ -198,6 +198,9 @@
   .art-wrap{max-width:440px;width:100%;justify-self:end}
   @media (max-width:880px){ .art-wrap{justify-self:start;max-width:380px} }
 
+  .tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(16px,2vw,24px);margin-top:32px}
+  .tiles .stat{margin-bottom:8px;font-size:clamp(24px,2.4vw,32px)}
+  @media (max-width:880px){ .tiles{grid-template-columns:repeat(2,minmax(0,1fr))} }
   footer{border-top:1px solid var(--border);background:var(--band);padding-block:32px;color:var(--faint);font-size:13.5px}
 
   @media (max-width:880px){
@@ -232,10 +235,11 @@
     <div class="hero-grid">
       <div style="max-width:760px">
         <h1>Агенты Бали продают ваш проект&nbsp;- по цене одного менеджера</h1>
+        <p class="sub" style="margin-bottom:24px">Сильнейшая команда по работе с агентами на Бали. Проверьте нас за 3 месяца - без штрафов на выход.</p>
         <ul class="pts">
-          <li><b>Агенты узнают ваш проект</b> - полевой лично встречается с ними</li>
-          <li><b>Лиды доходят до брони</b> - клоузер закрывает сделки</li>
-          <li><b>Вы видите каждый шаг</b> - администратор ведёт учёт и отчёты</li>
+          <li><b>Приводим агентов</b> к вашему проекту</li>
+          <li><b>Доводим их клиентов</b> до брони</li>
+          <li><b>Отчитываемся</b> каждую неделю</li>
         </ul>
         <a class="btn" href="https://t.me/andrey_slr">Написать в Telegram <span aria-hidden="true">→</span></a>
         <p class="btn-note">@andrey_slr · ответим в течение дня</p>
@@ -265,21 +269,11 @@
 <!-- 1b -->
 <section class="band">
   <div class="wrap">
-    <h2>Высокой комиссии больше недостаточно</h2>
+    <h2>Раньше хватало комиссии. Теперь - нет</h2>
     <div class="cols-2">
       <div class="stack">
-        <p class="sub">Раньше с агентами справлялся почти любой: поставил комиссию повыше - и проект продавался. Не у всех и не всегда, но работало.</p>
-        <p class="sub">Сейчас так не работает. Агентов нужно находить, учить продавать ваш проект и доводить их клиентов до брони - системно, каждую неделю.</p>
-        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(16px,4vw,32px);margin-top:16px">
-          <div class="statrow" style="flex-direction:column;align-items:flex-start;gap:8px;margin-bottom:0">
-          <span class="stat sm num">$100 млн+</span>
-          <span class="stat-sub">продаж прошло через нашу сеть агентов</span>
-        </div>
-          <div class="statrow" style="flex-direction:column;align-items:flex-start;gap:8px;margin-bottom:0">
-          <span class="stat sm num">20+ лет</span>
-          <span class="stat-sub">опыт основателя в B2B-продажах</span>
-        </div>
-        </div>
+        <p class="sub">Два года назад с агентами справлялся любой: поднял комиссию - и проект продаётся.</p>
+        <p class="sub">Сейчас так не работает. Нужен личный подход к каждому агенту и система.</p>
       </div>
       <div class="art-wrap">
         <svg class="art" viewBox="0 0 400 300" role="img" aria-label="Воронка: агенты, встречи, показы, брони">
@@ -289,24 +283,37 @@
         </svg>
       </div>
     </div>
-    <div class="callout" style="margin-top:32px">Мы сами скептически смотрим на то, как сейчас работают партнёрские сети. Поэтому предлагаем проверку на <b>3&nbsp;месяца</b>: работаем в полную силу, отчёт каждую неделю - и вы точно знаете, продают ли агенты ваш проект. Мы - одна из сильнейших команд на Бали: если не сработает у нас, скорее всего, не сработает ни у кого. И вы не потратите на это год.</div>
+    <div class="callout" style="margin-top:32px">Понимаем: продажи просели, рисковать деньгами не хочется. Поэтому у нас небольшой фикс, максимум работы и бонусы сверху.</div>
+  </div>
+</section>
+
+<!-- 1c -->
+<section>
+  <div class="wrap">
+    <h2 style="margin-bottom:8px">Не заработаем мы - не заработает никто</h2>
+    <p class="sub">Таких ресурсов нет ни у одного менеджера на острове.</p>
+    <div class="tiles">
+      <div class="card"><div class="stat sm num">$100 млн+</div><p class="stat-sub">продаж через нашу сеть агентов</p></div>
+      <div class="card"><div class="stat sm num">700</div><p class="stat-sub">агентов в нашем канале, ещё 300 в чате</p></div>
+      <div class="card"><div class="stat sm num">187</div><p class="stat-sub">агентов в нашей CRM, 81 уже продавали</p></div>
+      <div class="card"><div class="stat sm num">20+ лет</div><p class="stat-sub">опыт основателя в B2B-продажах</p></div>
+    </div>
   </div>
 </section>
 
 <!-- 2 -->
-<section>
+<section class="band">
   <div class="wrap">
-    <h2>Рынок не умер - и продаёт через агентов</h2>
+    <h2>Агенты продают. Вопрос - чей проект</h2>
     <div class="cols-2">
       <div class="stack">
         <div>
           <div class="statrow">
             <span class="stat num">30+</span>
-            <span class="stat-sub">сделок в месяц</span>
+            <span class="stat-sub">сделок в месяц у застройщиков, за которыми следим</span>
           </div>
-          <p class="sub">Насчитали по шахматкам застройщиков, за которыми следим. В опросе сами застройщики говорят: половина продаж и больше идёт через агентов.</p>
+          <p class="sub">Половина продаж и больше идёт через агентов. Так говорят сами застройщики.</p>
         </div>
-        <p class="sub">Вопрос один: какую часть заберёте вы.</p>
       </div>
       <div>
         <div class="car-head" style="margin-bottom:12px">
@@ -340,9 +347,9 @@
 </section>
 
 <!-- 3 -->
-<section class="band">
+<section>
   <div class="wrap">
-    <h2>Три человека работают на ваши продажи</h2>
+    <h2>Три человека на ваши продажи</h2>
     <div class="cols-3">
       <div class="card stack" style="gap:20px">
         <div class="mhead">
@@ -350,9 +357,8 @@
   <div class="role">Клоузер · Виталий</div>
         </div>
         <ul class="pts">
-          <li>Ваши лиды не сливаются: конверсия из зума в бронь - 60%</li>
-          <li>Бывший РОП, топ-продажник в LOYO</li>
-          <li>Учит агентов продавать ваш проект, проводит встречи на объекте, закрывает сделку</li>
+          <li>Закрывает в бронь 60% зумов</li>
+          <li>Бывший РОП, топ-продажник LOYO</li>
         </ul>
       </div>
       <div class="card stack" style="gap:20px">
@@ -361,35 +367,32 @@
   <div class="role">Полевой · Андрей</div>
         </div>
         <ul class="pts">
-          <li>Агенты узнают ваш проект вживую - встречи почти каждый день</li>
-          <li>Выход на агентства Бали и Пхукета</li>
-          <li>Ваш проект увидят 700 агентов в канале и 300 в чате</li>
-          <li>Ваши объекты - на сайте рядом с 2600 другими</li>
+          <li>Встречается с агентами почти каждый день</li>
+          <li>Знает агентства Бали и Пхукета</li>
         </ul>
       </div>
       <div class="card stack" style="gap:20px">
         <div class="mhead">
   <img class="mimg" src="/agentskaya-set/img/admin.jpg" alt="Администратор" loading="lazy" style="object-position:center 25%">
-  <div class="role">Администратор · Елена</div>
+  <div class="role">Админ · Елена</div>
         </div>
         <ul class="pts">
-          <li>Ни одна встреча и ни один агент не теряются</li>
-          <li>Назначает встречи, ведёт учёт - вы всегда знаете, что происходит</li>
-          <li>26 лет военной службы - порядок в процессах</li>
+          <li>Ведёт учёт - ни один агент не теряется</li>
+          <li>26 лет военной службы - порядок во всём</li>
         </ul>
       </div>
     </div>
-    <p class="fine" style="margin-top:24px">Юрист и оформление сделки - на стороне застройщика, это не наша зона.</p>
+    <p class="fine" style="margin-top:24px">Юрист и оформление сделки - на вашей стороне.</p>
   </div>
 </section>
 
 <!-- 4 -->
-<section>
+<section class="band">
   <div class="wrap">
-    <h2>Вы видите работу каждую неделю</h2>
+    <h2>Отчёт каждую неделю</h2>
     <div class="cols-2">
       <div class="stack">
-        <p class="sub">Раз в неделю - отчёт в общий Telegram-канал: сколько встреч, сколько новых агентов, сколько броней. Не нужно ничего спрашивать и контролировать - всё приходит само.</p>
+        <p class="sub">Встречи, новые агенты, брони - всё приходит в общий Telegram-канал. Спрашивать ничего не нужно.</p>
       </div>
       <figure>
         <img class="shot r43" src="/agentskaya-set/img/dash.jpg" alt="Дашборд по работе с агентами" loading="lazy">
@@ -400,19 +403,15 @@
 </section>
 
 <!-- 4b -->
-<section class="band">
+<section>
   <div class="wrap">
-    <h2>Агенты под учётом - как лиды с таргета</h2>
+    <h2>Каждый агент - на учёте</h2>
     <div class="cols-2">
       <div class="stack" style="gap:32px">
-        <p class="sub">Каждый агент - карточка в CRM: статус, переписка, сделки. Вы следите за работой с агентами так же, как за своим отделом продаж.</p>
-        <div class="statrow" style="flex-direction:column;align-items:flex-start;gap:8px;margin-bottom:0">
-          <span class="stat num">187</span>
-          <span class="stat-sub">агентов в базе, 81 из них уже продавали</span>
-        </div>
+        <p class="sub">Как лиды с таргета в вашем отделе продаж: статус, переписка, сделки.</p>
         <ul class="pts">
-          <li>Знаем, что агент пьёт, чем увлекается и какой подарок ему приятен - встреча заходит, а не проходит для галочки</li>
-          <li>Видно, кому давно не писали - ни один агент не остывает</li>
+          <li>Знаем, что агент пьёт и что ему подарить - встреча заходит</li>
+          <li>Видно, кому давно не писали - никто не остывает</li>
         </ul>
       </div>
       <figure class="acard">
@@ -439,18 +438,18 @@
 </section>
 
 <!-- 5 -->
-<section>
+<section class="band">
   <div class="wrap">
-    <h2>Выгоднее, чем нанимать самому</h2>
+    <h2>Выгоднее своего отдела</h2>
     <div class="cols-2">
       <div class="card">
         <div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg></span></div>
         <div class="ctitle">Свой менеджер</div>
         <div class="price num">~$1000 <small>/ мес + 1%</small></div>
         <ul class="dots">
-          <li>Сидит и обрабатывает входящие заявки</li>
-          <li>Заявки сами не появятся - к агентам надо ходить</li>
-          <li>Некому вести CRM и следить за работой</li>
+          <li>Сидит на входящих заявках</li>
+          <li>Агентов сам не найдёт</li>
+          <li>Проверять его некому</li>
         </ul>
       </div>
       <div class="card pick">
@@ -458,23 +457,23 @@
         <div class="ctitle">Наша команда</div>
         <div class="price num">от $1500 <small>/ мес + 4%</small></div>
         <ul class="pts">
-          <li>Поток агентов к вам - полевой ходит к ним сам</li>
-          <li>Лиды доходят до брони - их закрывает клоузер</li>
-          <li>CRM ведётся, вы видите всё - за этим следит админ</li>
+          <li>Сами ходим к агентам</li>
+          <li>Сами закрываем в бронь</li>
+          <li>Вы видите всё</li>
         </ul>
       </div>
     </div>
-    <p class="sub" style="margin-top:24px">Собрать такую команду самому - от $3000/мес + 3%. У нас фикс вдвое ниже, и сеть агентов уже готова.</p>
+    <p class="sub" style="margin-top:24px">Своя команда из трёх человек - от $3000/мес. У нас вдвое дешевле, и агенты уже есть.</p>
   </div>
 </section>
 
 <!-- 6 -->
-<section class="band">
+<section>
   <div class="wrap">
     <div class="car-head">
       <div>
-        <h2 style="margin-bottom:8px">Что застройщик получает</h2>
-        <p class="sub">Листайте вправо. Зачёркнута цена на рынке - у нас это входит в работу.</p>
+        <h2 style="margin-bottom:8px">Бонусы - за наш счёт</h2>
+        <p class="sub">Зачёркнуто - цена на рынке. Вам - бесплатно.</p>
       </div>
       <div class="car-nav">
         <button type="button" class="c-prev" aria-label="Назад">←</button>
@@ -487,7 +486,7 @@
         <img src="/agentskaya-set/img/webinar.jpg" alt="Вебинар для агентов" loading="lazy">
         <div class="b-body">
           <div class="b-name">Слот в вебинаре для агентов</div>
-          <p class="fine">25-40 брокеров на эфире узнают ваш проект</p>
+          <p class="fine">25-40 брокеров узнают ваш проект</p>
           <div class="b-price"><s>от $700</s> входит</div>
         </div>
       </article>
@@ -495,7 +494,7 @@
         <img src="/agentskaya-set/img/post.jpg" alt="Пост в Telegram-канале" loading="lazy">
         <div class="b-body">
           <div class="b-name">Пакет постов в канале и чате</div>
-          <p class="fine">Ваш проект видят 731 подписчик канала и чат брокеров</p>
+          <p class="fine">731 подписчик канала и чат брокеров</p>
           <div class="b-price"><s>$1200/мес</s> входит</div>
         </div>
       </article>
@@ -503,7 +502,7 @@
         <img src="/agentskaya-set/img/podcast.jpg" alt="Подкаст-интервью" loading="lazy">
         <div class="b-body">
           <div class="b-name">Подкаст-интервью с основателем</div>
-          <p class="fine">Агенты и покупатели узнают вас лично. Съёмка, монтаж, публикация - на нас</p>
+          <p class="fine">Агенты узнают вас лично</p>
           <div class="b-price"><s>$400</s> входит</div>
         </div>
       </article>
@@ -511,7 +510,7 @@
         <img src="/agentskaya-set/img/youtube.jpg" alt="Видеообзор объекта" loading="lazy">
         <div class="b-body">
           <div class="b-name">Видеообзор готового объекта</div>
-          <p class="fine">Агентам есть что отправить клиенту: ролик на YouTube и в Reels</p>
+          <p class="fine">Ролик, который агент отправит клиенту</p>
           <div class="b-price"><s>$600</s> входит</div>
         </div>
       </article>
@@ -519,7 +518,7 @@
         <img src="/agentskaya-set/img/sold.jpg" alt="Отчёт по ценам конкурентов" loading="lazy">
         <div class="b-body">
           <div class="b-name">Еженедельный отчёт по ценам конкурентов</div>
-          <p class="fine">Знаете, что продалось рядом и почём - держите цену в рынке</p>
+          <p class="fine">Что продалось рядом и почём</p>
           <div class="b-price"><s>$300/мес</s> входит</div>
         </div>
       </article>
@@ -527,7 +526,7 @@
         <img src="/agentskaya-set/img/calc.jpg" alt="Аналитика по юниту" loading="lazy">
         <div class="b-body">
           <div class="b-name">Аналитический отчёт по юниту</div>
-          <p class="fine">Агентам проще продать: доходность, окупаемость, сравнение с соседями</p>
+          <p class="fine">Доходность и окупаемость - агенту проще продать</p>
           <div class="b-price"><s>$400/мес</s> входит</div>
         </div>
       </article>
@@ -535,7 +534,7 @@
         <img src="/agentskaya-set/img/map.jpg" alt="Интерактивные материалы" loading="lazy">
         <div class="b-body">
           <div class="b-name">Интерактивные материалы для агентов</div>
-          <p class="fine">Агенты показывают проект клиенту сами: карты, калькуляторы, страница проекта</p>
+          <p class="fine">Карты, калькуляторы, страница проекта</p>
           <div class="b-price"><s>$300 + $150/мес</s> входит</div>
         </div>
       </article>
@@ -543,7 +542,7 @@
         <img src="/agentskaya-set/img/chat.jpg" alt="Реклама в сообществе балийских агентов" loading="lazy">
         <div class="b-body">
           <div class="b-name">Реклама в сообществе балийских агентов</div>
-          <p class="fine">Ваш проект - в чатах агентов Бали</p>
+          <p class="fine">Ваш проект - в чатах агентов</p>
           <div class="b-price"><s>$250/мес</s> входит</div>
         </div>
       </article>
@@ -551,7 +550,7 @@
         <img src="/agentskaya-set/img/report.jpg" alt="Отчёт по обратной связи агентов" loading="lazy">
         <div class="b-body">
           <div class="b-name">Отчёт по обратной связи агентов</div>
-          <p class="fine">Узнаёте, что мешает продажам: сильные и слабые стороны глазами агентов</p>
+          <p class="fine">Что мешает продажам - глазами агентов</p>
           <div class="b-price">входит</div>
         </div>
       </article>
@@ -559,24 +558,24 @@
         <img src="/agentskaya-set/img/around.jpg" alt="Данные по району" loading="lazy">
         <div class="b-body">
           <div class="b-name">Данные по району объекта</div>
-          <p class="fine">Аргументы для покупателя: что вокруг, поток туристов, инфраструктура</p>
+          <p class="fine">Что вокруг, туристы, инфраструктура</p>
           <div class="b-price">входит</div>
         </div>
       </article>
     </div>
 
-    <div class="callout" style="margin-top:32px">Отдельно это стоит <b>~$3700</b> в первый месяц и <b>$3000+</b> дальше. У нас всё входит в работу - от <b>$1500</b>.</div>
+    <div class="callout" style="margin-top:32px">Отдельно это <b>$3000+</b> в месяц. У нас входит в работу.</div>
     <ul class="pts" style="margin-top:24px">
-      <li>Отдельно - только живая встреча с агентами на объекте, по смете заранее</li>
-      <li>Онлайн-встречи и обучения - бесплатно</li>
+      <li>Онлайн-встречи и обучения агентов - бесплатно</li>
+      <li>Встреча агентов на объекте - по смете</li>
     </ul>
   </div>
 </section>
 
 <!-- 7 -->
-<section>
+<section class="band">
   <div class="wrap">
-    <h2>Результаты застройщиков</h2>
+    <h2>Уже продали</h2>
     <div class="cols-3">
       <div class="card case"><div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16" /><path d="m19 9-5 5-4-4-3 3" /></svg></span></div><div class="who">Vertikal</div><div class="amount num">$3 млн</div><div class="period">за 6 месяцев</div></div>
       <div class="card case"><div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 7h6v6" /><path d="m22 7-8.5 8.5-5-5L2 17" /></svg></span></div><div class="who">LB Group</div><div class="amount num">$40 млн</div><div class="period">за 2025 год, через нашу сеть агентов</div></div>
@@ -586,84 +585,79 @@
 </section>
 
 <!-- 8 -->
-<section class="band">
+<section>
   <div class="wrap">
-    <h2>Форматы сотрудничества</h2>
+    <h2>Три формата</h2>
     <div class="cols-3">
       <div class="card pack">
         <div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z" /><path d="M5 21h14" /></svg></span><div class="role">А · Эксклюзив</div></div>
         <div class="price num" style="margin-top:4px">$5000 <small>/ мес + 2%</small></div>
         <ul class="dots">
-          <li>Вся команда работает только на ваш проект</li>
-          <li>Других застройщиков в это время не берём</li>
-          <li>Всё из «Фикса» - с полным фокусом на вас</li>
-          <li>С клоузером</li>
+          <li>Работаем только на вас</li>
+          <li>Других застройщиков не берём</li>
         </ul>
-        <p class="for"><b>Для кого:</b> хочет, чтобы агенты Бали продавали в первую очередь его проект.</p>
+        <p class="for"><b>Для кого:</b> агенты должны продавать прежде всего вас.</p>
       </div>
       <div class="card pack">
         <div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v3" /><path d="M16 2v3" /><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18" /><path d="m9 15 2 2 4-4" /></svg></span><div class="role">Б · Фикс</div></div>
         <div class="price num" style="margin-top:4px">$3000 <small>/ мес + 2%</small></div>
         <ul class="dots">
-          <li>10-20 личных встреч в месяц</li>
-          <li>Обратная связь после каждой</li>
-          <li>Зумы, медиа, еженедельный отчёт</li>
-          <li>С клоузером</li>
+          <li>10-20 встреч с агентами в месяц</li>
+          <li>Отчёт после каждой встречи</li>
         </ul>
-        <p class="for"><b>Для кого:</b> нужна системная работа на дистанции.</p>
+        <p class="for"><b>Для кого:</b> нужна система, а вы - на дистанции.</p>
       </div>
       <div class="card pack">
         <div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18" /><path d="m19 8 3 8a5 5 0 0 1-6 0zV7" /><path d="M3 7h1a17 17 0 0 0 8-2 17 17 0 0 0 8 2h1" /><path d="m5 8 3 8a5 5 0 0 1-6 0zV7" /><path d="M7 21h10" /></svg></span><div class="role">В · Баланс</div></div>
         <div class="price num" style="margin-top:4px">$1500 <small>/ мес + 4%</small></div>
         <ul class="dots">
           <li>Тот же объём работы</li>
-          <li>На старте платите вдвое меньше</li>
-          <li>С клоузером</li>
+          <li>Фикс вдвое ниже</li>
         </ul>
-        <p class="for"><b>Для кого:</b> хочет проверить формат, не переплачивая на старте.</p>
+        <p class="for"><b>Для кого:</b> хотите проверить с минимальным риском.</p>
       </div>
     </div>
-    <div class="callout" style="margin-top:32px">Что вы получите за первые 3 месяца (прогноз): от <b>15 новых агентов</b>, которые продают ваш проект, и <b>3 брони</b>. Дальше - рабочий темп. Итоговые цифры фиксируем под ваш проект.</div>
-    <p class="fine" style="margin-top:16px">Другие форматы - по запросу.</p>
+    <div class="callout" style="margin-top:32px">Прогноз на первые 3 месяца: от&nbsp;<b>15&nbsp;новых агентов</b> и <b>3&nbsp;брони</b>. Точные цифры - под ваш проект.</div>
+    <p class="fine" style="margin-top:16px">Во всех форматах - клоузер и отчёт каждую неделю. Другие форматы - по запросу.</p>
     <ul class="pts" style="margin-top:32px">
-      <li>Агенты получают свою комиссию полностью - наш процент идёт сверху. Поэтому им выгодно продавать именно ваш проект</li>
-      <li>Сетку комиссий согласуем заранее - без сюрпризов. Сильному агентству предложим KPI или комиссию на уровне других застройщиков, чтобы оно продавало вас</li>
+      <li>Агенты получают свою комиссию полностью - наш процент сверху</li>
+      <li>Сетку комиссий согласуем заранее - без сюрпризов</li>
     </ul>
   </div>
 </section>
 
 <!-- safety -->
-<section>
+<section class="band">
   <div class="wrap">
-    <h2>Почему вы не потеряете деньги</h2>
+    <h2>Почему это безопасно</h2>
     <div class="cols-3">
       <div class="card">
         <div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 15h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 17" /><path d="m7 21 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9" /><path d="m2 16 6 6" /><circle cx="16" cy="9" r="2.9" /><circle cx="6" cy="5" r="3" /></svg></span></div>
         <h3>Платите за результат</h3>
-        <p class="sub" style="margin-top:12px">Процент - только после первого взноса покупателя, когда деньги уже у вас. Ежемесячная оплата - от $1500, вдвое меньше своей команды.</p>
+        <p class="sub" style="margin-top:12px">Процент - только когда покупатель уже заплатил вам.</p>
       </div>
       <div class="card">
         <div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /><path d="m9 12 2 2 4-4" /></svg></span></div>
         <h3>Не платите за своё</h3>
-        <p class="sub" style="margin-top:12px">Агенты, с которыми у вас были сделки за последние полгода, остаются вашими. Пришлите список - за их сделки процент не берём.</p>
+        <p class="sub" style="margin-top:12px">Ваши агенты за последние полгода - ваши. С их сделок процент не берём.</p>
       </div>
       <div class="card">
         <div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10 21H2" /><path d="M10 3H7a2 2 0 00-2 2v16" /><path d="M14 12h.01" /><path d="M19 21V5a2 2 0 00-1.675-1.974l-6.163-1.013A1 1 0 0010 3v18a1 1 0 001.124.992z" /><path d="M22 21h-3" /></svg></span></div>
         <h3>Можно выйти</h3>
-        <p class="sub" style="margin-top:12px">Не пошло за 3 месяца - расходимся без штрафов. Мы заинтересованы в продажах не меньше вас: $1500 - это на трёх человек, зарабатываем мы на сделках.</p>
+        <p class="sub" style="margin-top:12px">Не пошло за 3 месяца - расходимся без штрафов.</p>
       </div>
     </div>
   </div>
 </section>
 
 <!-- 10 -->
-<section class="band">
+<section>
   <div class="wrap">
     <h2>Условия</h2>
     <div class="cols-2" style="align-items:center">
       <ul class="pts">
-        <li>Минимум 3 месяца - столько нужно, чтобы агенты начали продавать проект</li>
-        <li>Новый агент закреплён за нами 12 месяцев</li>
+        <li>Минимум 3 месяца - за это время агенты начинают продавать</li>
+        <li>Новый агент - за нами 12 месяцев</li>
       </ul>
       <div class="art-wrap">
         <svg class="art" viewBox="0 0 400 212" role="img" aria-label="Три месяца работы">
@@ -676,7 +670,7 @@
 </section>
 
 <!-- 11 -->
-<section>
+<section class="band">
   <div class="wrap">
     <h2>Как начинаем</h2>
     <div class="cols-4">
@@ -685,10 +679,9 @@
       <div class="step"><div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" /><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09" /><path d="M9 12a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.4 22.4 0 0 1-4 2z" /><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 .05 5 .05" /></svg></span></div><div class="n">Шаг 3</div><div class="t">Запуск</div><div class="d">2-4 недели</div></div>
       <div class="step"><div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16" /><path d="m19 9-5 5-4-4-3 3" /></svg></span></div><div class="n">Шаг 4</div><div class="t">Полная работа</div><div class="d">С 2-3 месяца</div></div>
     </div>
-    <p class="fine" style="margin-top:16px">Первые агенты - через 2-4 недели, полный темп - со 2-3 месяца.</p>
-    <div class="card final">
-      <h3 style="font-size:20px">Обсудим ваш проект</h3>
-      <p class="sub">Напишите - посмотрим документы и скажем, берём ли проект и чего ждать по продажам.</p>
+        <div class="card final">
+      <h3 style="font-size:20px">Проверьте нас за 3 месяца</h3>
+      <p class="sub">Напишите - скажем, берём ли проект и чего ждать.</p>
       <a class="btn" href="https://t.me/andrey_slr">Написать в Telegram <span aria-hidden="true">→</span></a>
       <p class="btn-note" style="margin-top:0">@andrey_slr</p>
     </div>
