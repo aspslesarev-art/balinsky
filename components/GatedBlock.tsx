@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import type { Lang } from '@/lib/i18n'
+import { EmailLoginForm } from './EmailLoginForm'
 import { LoginCodeForm } from './LoginCodeForm'
 
 // Registration gate for the analytics blocks (heat map, district stats,
@@ -106,16 +107,12 @@ const COPY = {
     forInvestor: 'Инвестору',
     forLiving: 'Для жизни',
     forAgent: 'Агенту',
-    cta: 'Войти через Telegram',
-    note: 'Без пароля: бот пришлёт ссылку — она вернёт вас на эту же страницу уже со входом.',
   },
   en: {
     hidden: 'The figures in this block open after sign-in',
     forInvestor: 'Investor',
     forLiving: 'To live in',
     forAgent: 'Agent',
-    cta: 'Sign in with Telegram',
-    note: 'No password: the bot sends a link that brings you back to this page, signed in.',
   },
 } as const
 
@@ -160,8 +157,15 @@ export function GatedBlock({
           </dl>
 
           <p className="mt-3 text-xs text-gray-500">{c.hidden}</p>
-          <LoginCodeForm ctaLabel={c.cta} />
-          <p className="mt-2 text-xs text-gray-500">{c.note}</p>
+          {/* Email sign-in once a mailbox is configured (lib/mailer.ts) and
+              NEXT_PUBLIC_EMAIL_LOGIN=1 is set; until then the Telegram flow,
+              so the gate never shows a form that cannot deliver its code.
+              A NEXT_PUBLIC flag, not SMTP_* directly: GatedBlock also renders
+              inside a client component (LegalAudit), where server env is
+              invisible — server and client must pick the same form. */}
+          {process.env.NEXT_PUBLIC_EMAIL_LOGIN === '1'
+            ? <EmailLoginForm lang={lang} />
+            : <LoginCodeForm ctaLabel={ru ? 'Войти через Telegram' : 'Sign in with Telegram'} />}
         </div>
       </div>
     </div>

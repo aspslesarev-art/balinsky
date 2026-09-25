@@ -1,7 +1,8 @@
 import 'server-only'
-import { createHmac, randomBytes, randomInt, timingSafeEqual } from 'node:crypto'
+import { createHash, createHmac, randomBytes, randomInt, timingSafeEqual } from 'node:crypto'
 import { cookies } from 'next/headers'
 import { createClient } from '@supabase/supabase-js'
+import { sendMail } from './mailer'
 
 // Visitor accounts, authenticated through the Telegram bot.
 //
@@ -363,6 +364,105 @@ export async function issueLogin(
   }
 }
 
+// ── Вход по почте ──────────────────────────────────────────────────────────
+//
+// Вся инфраструктура аккаунта держится на числовом id (сессия, избранное,
+// site_users.telegram_id). Пользователю с почтой выдаём отрицательный id —
+// сам адрес нигде не хранится;
+// детерминированный от адреса: Telegram-id всегда положительные, так что
+// пересечься они не могут, а тот же адрес всегда попадает в тот же аккаунт.
+// Код — шесть цифр (не четыре, как в боте): адрес виден атакующему, а
+// перебор ограничен только числом попыток на заявку и заявок в час.
+
+const EMAIL_CODE_LENGTH = 6
+/** Не больше стольких писем на один адрес за час. */
+const EMAIL_CODES_PER_HOUR = 5
+
+export function normalizeEmail(raw: unknown): string | null {
+  if (typeof raw !== 'string') return null
+  const e = raw.trim().toLowerCase()
+  if (e.length > 254 || !/^[^\s@<>()"',;:]+@[^\s@<>()"',;:]+\.[a-z]{2,}$/.test(e)) return null
+  return e
+}
+
+export function emailUserId(email: string): number {
+  // 48 бит хеша — в пределах Number.MAX_SAFE_INTEGER, коллизии пренебрежимы.
+  const h = createHash('sha256').update(`balinsky-email:${email}`).digest()
+  return -(h.readUIntBE(0, 6) || 1)
+}
+
+const MAIL_COPY = {
+  ru: {
+    subject: (code: string) => `Код для входа на Balinsky: ${code}`,
+    text: (code: string) => `Ваш код для входа на balinsky.info: ${code}\n\nКод действует 15 минут. Если вы не запрашивали вход, просто удалите это письмо.`,
+    lead: 'Ваш код для входа на balinsky.info:',
+    note: 'Код действует 15 минут. Если вы не запрашивали вход, просто удалите это письмо.',
+  },
+  en: {
+    subject: (code: string) => `Your Balinsky sign-in code: ${code}`,
+    text: (code: string) => `Your sign-in code for balinsky.info: ${code}\n\nThe code is valid for 15 minutes. If you did not request it, just delete this email.`,
+    lead: 'Your sign-in code for balinsky.info:',
+    note: 'The code is valid for 15 minutes. If you did not request it, just delete this email.',
+  },
+}
+
+export type EmailStartResult = { ok: true; challenge: string } | { ok: false; reason: 'invalid_email' | 'rate_limited' | 'send_failed' }
+
+/**
+ * Заводит вход по почте: пользователь (если новый), заявка с кодом, письмо.
+ * Возвращает challenge для httpOnly-куки — дальше код проверяет тот же
+ * redeemLoginCode, что и для Telegram.
+ */
+export async function startEmailLogin(rawEmail: unknown, nextPath: unknown, lang: 'ru' | 'en'): Promise<EmailStartResult> {
+  const email = normalizeEmail(rawEmail)
+  if (!email) return { ok: false, reason: 'invalid_email' }
+  const id = emailUserId(email)
+  try {
+    const hourAgo = new Date(Date.now() - 3600_000).toISOString()
+    const { count } = await sb
+      .from('login_codes')
+      .select('challenge', { count: 'exact', head: true })
+      .eq('telegram_id', id)
+      .gt('created_at', hourAgo)
+    if ((count ?? 0) >= EMAIL_CODES_PER_HOUR) return { ok: false, reason: 'rate_limited' }
+
+    // The address itself is not stored: the account id is derived from it,
+    // so the same email always lands in the same account.
+    const { error: userErr } = await sb.from('site_users').upsert(
+      { telegram_id: id },
+      { onConflict: 'telegram_id', ignoreDuplicates: true },
+    )
+    if (userErr) throw new Error(userErr.message)
+
+    const challenge = randomBytes(18).toString('base64url')
+    const code = String(randomInt(0, 10 ** EMAIL_CODE_LENGTH)).padStart(EMAIL_CODE_LENGTH, '0')
+    const { error } = await sb.from('login_codes').insert({
+      challenge,
+      code,
+      telegram_id: id,
+      next_path: safeNextPath(nextPath),
+      expires_at: new Date(Date.now() + CODE_TTL_MS).toISOString(),
+    })
+    if (error) throw new Error(error.message)
+
+    const c = MAIL_COPY[lang]
+    const sent = await sendMail({
+      to: email,
+      subject: c.subject(code),
+      text: c.text(code),
+      html: `<div style="font-family:system-ui,-apple-system,sans-serif;font-size:15px;color:#111827;line-height:1.6">
+<p>${c.lead}</p>
+<p style="font-size:30px;font-weight:700;letter-spacing:6px;margin:16px 0">${code}</p>
+<p style="color:#6b7280;font-size:13px">${c.note}</p></div>`,
+    })
+    if (!sent) return { ok: false, reason: 'send_failed' }
+    return { ok: true, challenge }
+  } catch (e) {
+    console.error('[site-auth] startEmailLogin:', e instanceof Error ? e.message : e)
+    return { ok: false, reason: 'send_failed' }
+  }
+}
+
 export type CodeResult =
   | { ok: true; telegramId: number }
   | { ok: false; reason: 'invalid' | 'expired' | 'blocked' | 'pending' }
@@ -373,7 +473,8 @@ export type CodeResult =
  */
 export async function redeemLoginCode(challenge: string, code: string): Promise<CodeResult> {
   try {
-    if (!/^\d{4}$/.test(code)) return { ok: false, reason: 'invalid' }
+    // Четыре цифры — код бота, шесть — код из письма.
+    if (!/^(\d{4}|\d{6})$/.test(code)) return { ok: false, reason: 'invalid' }
     if (!challenge || challenge.length > 64) return { ok: false, reason: 'expired' }
 
     const now = new Date().toISOString()

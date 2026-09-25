@@ -10,8 +10,15 @@ import { LOGIN_CHALLENGE_COOKIE, redeemLoginCode, sessionCookies } from '@/lib/s
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+const REASON_TEXT_EN: Record<string, string> = {
+  invalid: 'Wrong code. Please check the digits in the email.',
+  expired: 'The code has expired. Request a new one — it is valid for 15 minutes.',
+  blocked: 'Too many attempts. Request a new code.',
+  pending: 'The code has not been sent yet.',
+}
+
 const REASON_TEXT: Record<string, string> = {
-  invalid: 'Неверный код. Проверьте цифры из сообщения бота.',
+  invalid: 'Неверный код. Проверьте цифры из письма или сообщения.',
   expired: 'Код истёк. Запросите новый — он действует 15 минут.',
   blocked: 'Слишком много попыток. Запросите новый код.',
   pending: 'Бот ещё не прислал код. Откройте Telegram и нажмите «Запустить».',
@@ -19,9 +26,11 @@ const REASON_TEXT: Record<string, string> = {
 
 export async function POST(req: Request) {
   let code = ''
+  let en = false
   try {
     const body = await req.json()
     code = typeof body?.code === 'string' ? body.code.trim() : ''
+    en = body?.lang !== undefined && body?.lang !== 'ru'
   } catch {
     return NextResponse.json({ ok: false, error: 'Некорректный запрос.' }, { status: 400 })
   }
@@ -38,7 +47,7 @@ export async function POST(req: Request) {
   const result = await redeemLoginCode(challenge, code)
   if (!result.ok) {
     return NextResponse.json(
-      { ok: false, reason: result.reason, error: REASON_TEXT[result.reason] },
+      { ok: false, reason: result.reason, error: (en ? REASON_TEXT_EN : REASON_TEXT)[result.reason] },
       { status: 401 },
     )
   }
