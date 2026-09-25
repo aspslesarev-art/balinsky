@@ -25,8 +25,8 @@ const COPY = {
   ru: {
     home: 'Главная',
     crumb: 'О Balinsky',
-    h1: 'Balinsky — что это и почему ему можно доверять',
-    intro: 'Balinsky — независимый каталог недвижимости Бали для иностранцев: виллы, апартаменты, жилые комплексы и аренда. На сайте собраны проекты застройщиков, у которых мы проверили документы, посмотрели объекты на земле и сняли видео. Цены — в актуальных USD. Контакты менеджера застройщика указаны прямо в карточке объекта: писать вы будете ему, а не нам.',
+    h1: 'Balinsky — что это и как мы работаем',
+    intro: 'Balinsky — независимый сайт с данными о недвижимости Бали для иностранных покупателей. Мы собираем объекты десятков застройщиков и ставим рядом с каждым цифры, по которым его можно оценить: цена за м² против района, сколько приносят похожие дома рядом в аренде, сколько лет осталось по лизхолду и какой статус разрешений заявляет застройщик. Застройщик указан на каждой странице — общаетесь вы с ним напрямую, не с нами.',
 
     h2Numbers: 'Цифры на сегодня',
     numbersLead: 'Эти числа обновляются автоматически — на сайте показано столько объектов, сколько реально опубликовано в базе.',
@@ -36,12 +36,12 @@ const COPY = {
     statDevs: 'застройщиков',
     statMgrs: 'менеджеров застройщиков',
 
-    h2How: 'Как мы выбираем что публиковать',
+    h2How: 'Что мы проверяем — и чего не проверяем',
     standards: [
-      { Icon: FileSearch, title: 'Проверка документов', body: 'У каждого объекта в базе должен быть валидный PBG, понятная структура земли (SHM/HGB/Hak Pakai) и реальный застройщик с PT-регистрацией. Без этого набора объект просто не попадает на сайт.' },
-      { Icon: Video,      title: 'Видео и фото с земли', body: 'На большую часть проектов наша команда снимала своё видео — дрон, ход стройки, окрестности. Не пресс-релиз застройщика, а реальное состояние на дату съёмки.' },
-      { Icon: UsersRound, title: 'Менеджер с лицом', body: 'У каждого застройщика на сайте есть назначенный менеджер с фото, языками, прямым Telegram и WhatsApp. Не «обезличенный sales department», а конкретный человек, с которым можно созвониться.' },
-      { Icon: BookOpen,   title: 'Редакторский шорт-лист', body: 'Мы не публикуем «всё подряд». Объекты, проекты и застройщики, которые не прошли наш внутренний QA по перечисленным выше пунктам, в каталог не попадают.' },
+      { Icon: FileSearch, title: 'Документы: статус, а не гарантия', body: 'Если застройщик сообщил номера PBG/SLF, тип земли (SHM/HGB/Hak Pakai) и условия лизхолда, мы показываем их в карточке. Юридически мы их не удостоверяем: до оплаты попросите нотариуса PPAT или юриста проверить сертификат и разрешения по официальным реестрам.' },
+      { Icon: BookOpen, title: 'Цифры — из данных, метод открыт', body: 'Сравнение цен считаем по нашему каталогу, ставки аренды — по тысячам объектов посуточной аренды на Бали (источник — estatemarket.io). У каждого расчёта указан размер выборки; если объектов меньше 30, цифра помечена как ориентировочная. Весь метод описан на странице «Как мы считаем».' },
+      { Icon: Video, title: 'Видео с площадки', body: 'Многие проекты мы снимаем сами — дрон, ход стройки, окрестности. Вы видите состояние на известную дату, а не рендер.' },
+      { Icon: UsersRound, title: 'Исправления', body: 'Нашли ошибку в цене, сроке или статусе разрешения? Напишите боту: подтверждённые ошибки исправляем и указываем дату обновления.' },
     ],
 
     h2Stack: 'Что вы получаете',
@@ -54,7 +54,7 @@ const COPY = {
 
     h2Model: 'Какую роль играет Balinsky',
     model: [
-      { title: 'Площадка только публикует', body: 'Мы собираем объекты, проверяем документы, снимаем видео и считаем показатели по аренде. На публикации роль сайта заканчивается: дальше вы разговариваете с застройщиком или собственником напрямую, без нас в середине.' },
+      { title: 'Площадка только публикует', body: 'Мы собираем объекты, снимаем площадки и считаем рыночные показатели. На публикации роль сайта заканчивается: дальше вы разговариваете с застройщиком или собственником напрямую, без нас в середине.' },
       { title: 'Чем Balinsky не является', body: 'Мы не агентство недвижимости и не брокер. Мы не продаём объекты, не ведём переговоры, не берём комиссию, не принимаем депозиты, не готовим и не удостоверяем договоры, не организуем показы и поездки, не оказываем юридических, нотариальных, налоговых и визовых услуг. Всё это делают сами стороны сделки и привлечённые ими специалисты — застройщик или собственник, нотариус PPAT, юрист.' },
     ],
 
@@ -70,8 +70,8 @@ const COPY = {
   en: {
     home: 'Home',
     crumb: 'About Balinsky',
-    h1: 'Balinsky — what it is and why you can trust it',
-    intro: 'Balinsky is an independent Bali property catalogue for foreign buyers: villas, apartments, residential complexes and rentals. It lists projects from developers whose documents we checked, whose sites we walked and whose properties we filmed. Prices are shown in current USD. The developer’s manager is listed on the listing page itself — you write to them, not to us.',
+    h1: 'Balinsky — what it is and how we work',
+    intro: 'Balinsky is an independent Bali property data site for foreign buyers. We collect listings from dozens of developers and put each one next to the numbers you need to judge it: price per m² against the district, what similar homes nearby earn as rentals, how many years are left on the lease and what permit status the developer reports. The developer is named on every page — you deal with them directly, not with us.',
 
     h2Numbers: 'The numbers today',
     numbersLead: 'These figures update automatically — what you see on the site is exactly what is published in the database right now.',
@@ -81,12 +81,12 @@ const COPY = {
     statDevs: 'developers',
     statMgrs: 'developer managers',
 
-    h2How: 'How we decide what to publish',
+    h2How: 'What we check — and what we don’t',
     standards: [
-      { Icon: FileSearch, title: 'Document check', body: 'Every property in the catalogue must have a valid PBG, a clear land structure (SHM / HGB / Hak Pakai), and a real developer with a PT registration. Without that set, the property simply doesn’t make it onto the site.' },
-      { Icon: Video,      title: 'Video and photos from the site', body: 'For most projects, our crew has shot original footage — drone, construction progress, the surroundings. Not a press release from the developer, but the real state on a known date.' },
-      { Icon: UsersRound, title: 'A manager with a face', body: 'Every developer on the site has a named manager with photo, spoken languages, direct Telegram and WhatsApp. Not an anonymous "sales department" — an actual person you can video-call.' },
-      { Icon: BookOpen,   title: 'Editorial shortlist', body: 'We don’t publish everything. Properties, projects and developers that don’t pass the QA above never make it into the catalogue.' },
+      { Icon: FileSearch, title: 'Documents: a status, not a guarantee', body: 'Where a developer gives us PBG/SLF numbers, the land title type (SHM/HGB/Hak Pakai) and lease terms, we show them on the listing. We do not certify them legally: before you pay, have a PPAT notary or a lawyer check the certificate and permits against the official registers.' },
+      { Icon: BookOpen, title: 'Numbers from data, method in the open', body: 'Price comparisons use our catalogue; rental rates come from thousands of Bali holiday rentals we track (source: estatemarket.io). Every figure shows its sample size, and anything based on fewer than 30 listings is marked as indicative. The full method is on the “How we calculate” page.' },
+      { Icon: Video, title: 'Video from the site', body: 'For many projects we film the site ourselves — drone, construction progress, surroundings — so you see its state on a known date, not a render.' },
+      { Icon: UsersRound, title: 'Corrections', body: 'Found an error in a price, a date or a permit status? Message the bot: we fix confirmed errors and show the date of the update.' },
     ],
 
     h2Stack: 'What you get',
@@ -99,7 +99,7 @@ const COPY = {
 
     h2Model: 'What role Balinsky plays',
     model: [
-      { title: 'The platform only publishes', body: 'We gather listings, check documents, film the sites and work out rental figures. Publishing is where our role ends: from there you talk to the developer or owner directly, with no one in between.' },
+      { title: 'The platform only publishes', body: 'We gather listings, film sites and calculate market figures. Publishing is where our role ends: from there you talk to the developer or owner directly, with no one in between.' },
       { title: 'What Balinsky is not', body: 'We are not a real-estate agency or a broker. We do not sell properties, do not negotiate, take no commission, accept no deposits, neither draft nor certify contracts, arrange no viewings or trips, and provide no legal, notarial, tax or visa services. All of that is done by the parties themselves and the professionals they engage — the developer or owner, a PPAT notary, a lawyer.' },
     ],
 
@@ -115,8 +115,8 @@ const COPY = {
   id: {
     home: 'Beranda',
     crumb: 'Tentang Balinsky',
-    h1: 'Balinsky — apa itu dan mengapa Anda bisa mempercayainya',
-    intro: 'Balinsky adalah katalog properti Bali yang independen untuk pembeli asing: vila, apartemen, kompleks hunian, dan sewa. Situs ini memuat proyek dari pengembang yang dokumennya kami periksa, lokasinya kami datangi, dan objeknya kami rekam. Harga ditampilkan dalam USD terkini. Manajer pengembang tercantum langsung di halaman objek — Anda menghubungi mereka, bukan kami.',
+    h1: 'Balinsky — apa itu dan bagaimana kami bekerja',
+    intro: 'Balinsky adalah situs data properti Bali yang independen untuk pembeli asing. Kami mengumpulkan listing dari puluhan pengembang dan menaruh angka penting di samping masing-masing: harga per m² dibanding kawasan, pendapatan sewa rumah serupa di sekitar, sisa masa leasehold, dan status izin yang dilaporkan pengembang. Pengembang disebutkan di setiap halaman — Anda berurusan langsung dengan mereka, bukan dengan kami.',
 
     h2Numbers: 'Angka hari ini',
     numbersLead: 'Angka-angka ini diperbarui otomatis — yang Anda lihat di situs persis dengan yang dipublikasikan di basis data saat ini.',
@@ -126,12 +126,12 @@ const COPY = {
     statDevs: 'pengembang',
     statMgrs: 'manajer pengembang',
 
-    h2How: 'Bagaimana kami memutuskan apa yang dipublikasikan',
+    h2How: 'Apa yang kami periksa — dan apa yang tidak',
     standards: [
-      { Icon: FileSearch, title: 'Pemeriksaan dokumen', body: 'Setiap properti dalam katalog harus memiliki PBG yang sah, struktur tanah yang jelas (SHM / HGB / Hak Pakai), dan pengembang nyata dengan registrasi PT. Tanpa rangkaian itu, properti tidak akan masuk ke situs.' },
-      { Icon: Video,      title: 'Video dan foto dari lokasi', body: 'Untuk sebagian besar proyek, tim kami merekam rekaman asli — drone, kemajuan konstruksi, lingkungan sekitar. Bukan siaran pers dari pengembang, melainkan kondisi nyata pada tanggal yang diketahui.' },
-      { Icon: UsersRound, title: 'Manajer dengan wajah', body: 'Setiap pengembang di situs memiliki manajer yang ditunjuk dengan foto, bahasa yang dikuasai, Telegram dan WhatsApp langsung. Bukan "departemen penjualan" anonim — melainkan orang nyata yang bisa Anda ajak panggilan video.' },
-      { Icon: BookOpen,   title: 'Daftar pendek editorial', body: 'Kami tidak mempublikasikan semuanya. Properti, proyek, dan pengembang yang tidak lolos QA di atas tidak akan pernah masuk ke katalog.' },
+      { Icon: FileSearch, title: 'Dokumen: status, bukan jaminan', body: 'Jika pengembang memberi nomor PBG/SLF, jenis sertifikat tanah (SHM/HGB/Hak Pakai) dan syarat leasehold, kami menampilkannya di listing. Kami tidak mengesahkannya secara hukum: sebelum membayar, minta notaris PPAT atau pengacara memeriksa sertifikat dan izin di register resmi.' },
+      { Icon: BookOpen, title: 'Angka dari data, metode terbuka', body: 'Perbandingan harga memakai katalog kami; tarif sewa dari ribuan sewa liburan di Bali yang kami pantau (sumber: estatemarket.io). Setiap angka menunjukkan ukuran sampel; jika kurang dari 30 listing, angka ditandai sebagai perkiraan. Metode lengkap ada di halaman «Cara kami menghitung».' },
+      { Icon: Video, title: 'Video dari lokasi', body: 'Banyak proyek kami rekam sendiri — drone, progres konstruksi, sekitar — sehingga Anda melihat kondisi pada tanggal tertentu, bukan render.' },
+      { Icon: UsersRound, title: 'Koreksi', body: 'Menemukan kesalahan harga, tanggal, atau status izin? Kirim pesan ke bot: kesalahan yang terkonfirmasi kami perbaiki dan tanggal pembaruannya dicantumkan.' },
     ],
 
     h2Stack: 'Apa yang Anda dapatkan',
@@ -144,7 +144,7 @@ const COPY = {
 
     h2Model: 'Peran apa yang dijalankan Balinsky',
     model: [
-      { title: 'Platform hanya menerbitkan', body: 'Kami mengumpulkan objek, memeriksa dokumen, merekam lokasi, dan menghitung angka sewa. Peran kami berakhir pada penerbitan: selanjutnya Anda berbicara langsung dengan pengembang atau pemilik, tanpa perantara.' },
+      { title: 'Platform hanya menerbitkan', body: 'Kami mengumpulkan listing, merekam lokasi, dan menghitung angka pasar. Peran kami berakhir saat publikasi: selanjutnya Anda berbicara langsung dengan pengembang atau pemilik, tanpa perantara.' },
       { title: 'Balinsky bukan apa', body: 'Kami bukan agen properti dan bukan broker. Kami tidak menjual objek, tidak bernegosiasi, tidak memungut komisi, tidak menerima deposit, tidak menyusun maupun mengesahkan kontrak, tidak mengatur kunjungan atau perjalanan, dan tidak menyediakan jasa hukum, notaris, pajak, atau visa. Semua itu dilakukan oleh para pihak sendiri dan profesional yang mereka tunjuk — pengembang atau pemilik, notaris PPAT, pengacara.' },
     ],
 
@@ -160,8 +160,8 @@ const COPY = {
   fr: {
     home: 'Accueil',
     crumb: 'À propos de Balinsky',
-    h1: 'Balinsky — ce que c’est et pourquoi vous pouvez lui faire confiance',
-    intro: 'Balinsky est un catalogue immobilier indépendant de Bali pour les acheteurs étrangers : villas, appartements, résidences et locations. Le site répertorie des projets de promoteurs dont nous avons vérifié les documents, visité les sites et filmé les biens. Les prix sont affichés en USD actuels. Le contact du commercial du promoteur figure sur la page du bien — c’est à lui que vous écrivez, pas à nous.',
+    h1: 'Balinsky — ce que c’est et comment nous travaillons',
+    intro: 'Balinsky est un site indépendant de données immobilières sur Bali pour les acheteurs étrangers. Nous rassemblons les biens de dizaines de promoteurs et plaçons à côté de chacun les chiffres utiles pour le juger : prix au m² face au quartier, revenus locatifs de biens similaires à proximité, années restantes du bail et statut des permis déclaré par le promoteur. Le promoteur est nommé sur chaque page — vous traitez directement avec lui, pas avec nous.',
 
     h2Numbers: 'Les chiffres aujourd’hui',
     numbersLead: 'Ces chiffres se mettent à jour automatiquement — ce que vous voyez sur le site correspond exactement à ce qui est publié dans la base de données en ce moment.',
@@ -171,12 +171,12 @@ const COPY = {
     statDevs: 'promoteurs',
     statMgrs: 'conseillers de promoteurs',
 
-    h2How: 'Comment nous décidons ce que nous publions',
+    h2How: 'Ce que nous vérifions — et ce que nous ne vérifions pas',
     standards: [
-      { Icon: FileSearch, title: 'Vérification des documents', body: 'Chaque bien du catalogue doit disposer d’un PBG valide, d’une structure foncière claire (SHM / HGB / Hak Pakai) et d’un vrai promoteur enregistré en PT. Sans cet ensemble, le bien n’apparaît tout simplement pas sur le site.' },
-      { Icon: Video,      title: 'Vidéo et photos sur place', body: 'Pour la plupart des projets, notre équipe a tourné ses propres images — drone, avancement du chantier, environs. Pas un communiqué du promoteur, mais l’état réel à une date connue.' },
-      { Icon: UsersRound, title: 'Un gestionnaire avec un visage', body: 'Chaque promoteur sur le site a un gestionnaire attitré avec photo, langues parlées, Telegram et WhatsApp directs. Pas un « service commercial » anonyme — une personne réelle que vous pouvez appeler en visio.' },
-      { Icon: BookOpen,   title: 'Sélection éditoriale', body: 'Nous ne publions pas tout. Les biens, projets et promoteurs qui ne passent pas le contrôle qualité ci-dessus n’entrent jamais dans le catalogue.' },
+      { Icon: FileSearch, title: 'Documents : un statut, pas une garantie', body: 'Lorsqu’un promoteur nous communique les numéros PBG/SLF, le type de titre foncier (SHM/HGB/Hak Pakai) et les conditions du bail, nous les affichons. Nous ne les certifions pas juridiquement : avant de payer, faites vérifier le certificat et les permis dans les registres officiels par un notaire PPAT ou un avocat.' },
+      { Icon: BookOpen, title: 'Des chiffres issus des données, méthode publique', body: 'Les comparaisons de prix reposent sur notre catalogue ; les loyers sur des milliers de locations saisonnières suivies à Bali (source : estatemarket.io). Chaque chiffre indique la taille de l’échantillon ; en dessous de 30 biens, il est signalé comme indicatif. La méthode complète figure sur la page « Comment nous calculons ».' },
+      { Icon: Video, title: 'Vidéo sur place', body: 'Nous filmons nous-mêmes de nombreux projets — drone, avancement du chantier, environs — pour montrer leur état à une date connue, pas un rendu.' },
+      { Icon: UsersRound, title: 'Corrections', body: 'Une erreur de prix, de date ou de statut de permis ? Écrivez au bot : nous corrigeons les erreurs confirmées et indiquons la date de mise à jour.' },
     ],
 
     h2Stack: 'Ce que vous obtenez',
@@ -189,7 +189,7 @@ const COPY = {
 
     h2Model: 'Le rôle de Balinsky',
     model: [
-      { title: 'La plateforme se limite à publier', body: 'Nous rassemblons les biens, vérifions les documents, filmons les sites et calculons les indicateurs locatifs. Notre rôle s’arrête à la publication : ensuite, vous parlez directement au promoteur ou au propriétaire, sans intermédiaire.' },
+      { title: 'La plateforme se limite à publier', body: 'Nous rassemblons les biens, filmons les sites et calculons les indicateurs de marché. Notre rôle s’arrête à la publication : ensuite, vous échangez directement avec le promoteur ou le propriétaire, sans intermédiaire.' },
       { title: 'Ce que Balinsky n’est pas', body: 'Nous ne sommes ni une agence immobilière ni un courtier. Nous ne vendons pas de biens, ne négocions pas, ne percevons aucune commission, n’encaissons aucun acompte, ne rédigeons ni ne certifions de contrats, n’organisons ni visites ni voyages et ne fournissons aucune prestation juridique, notariale, fiscale ou en matière de visa. Tout cela relève des parties elles-mêmes et des professionnels qu’elles mandatent — promoteur ou propriétaire, notaire PPAT, avocat.' },
     ],
 
@@ -205,8 +205,8 @@ const COPY = {
   de: {
     home: 'Startseite',
     crumb: 'Über Balinsky',
-    h1: 'Balinsky — was es ist und warum Sie ihm vertrauen können',
-    intro: 'Balinsky ist ein unabhängiger Bali-Immobilienkatalog für ausländische Käufer: Villen, Apartments, Wohnanlagen und Vermietungen. Gelistet sind Projekte von Bauträgern, deren Unterlagen wir geprüft, deren Standorte wir begangen und deren Objekte wir gefilmt haben. Preise erscheinen in aktuellen USD. Der Ansprechpartner des Bauträgers steht direkt auf der Objektseite — Sie schreiben ihm, nicht uns.',
+    h1: 'Balinsky — was es ist und wie wir arbeiten',
+    intro: 'Balinsky ist eine unabhängige Datenseite zu Bali-Immobilien für ausländische Käufer. Wir sammeln Angebote von Dutzenden Bauträgern und stellen jedem die Zahlen zur Seite, mit denen man es beurteilen kann: Preis pro m² im Vergleich zum Viertel, Mieteinnahmen ähnlicher Häuser in der Nähe, verbleibende Pachtjahre und der vom Bauträger gemeldete Genehmigungsstatus. Der Bauträger steht auf jeder Seite — Sie verhandeln direkt mit ihm, nicht mit uns.',
 
     h2Numbers: 'Die Zahlen heute',
     numbersLead: 'Diese Zahlen aktualisieren sich automatisch — was Sie auf der Website sehen, ist genau das, was gerade in der Datenbank veröffentlicht ist.',
@@ -216,12 +216,12 @@ const COPY = {
     statDevs: 'Bauträger',
     statMgrs: 'Bauträger-Manager',
 
-    h2How: 'Wie wir entscheiden, was wir veröffentlichen',
+    h2How: 'Was wir prüfen — und was nicht',
     standards: [
-      { Icon: FileSearch, title: 'Dokumentenprüfung', body: 'Jede Immobilie im Katalog muss ein gültiges PBG, eine klare Landstruktur (SHM / HGB / Hak Pakai) und einen echten Bauträger mit PT-Registrierung haben. Ohne dieses Set schafft es die Immobilie schlicht nicht auf die Website.' },
-      { Icon: Video,      title: 'Video und Fotos vor Ort', body: 'Für die meisten Projekte hat unser Team eigenes Material gedreht — Drohne, Baufortschritt, Umgebung. Keine Pressemitteilung des Bauträgers, sondern der reale Zustand zu einem bekannten Datum.' },
-      { Icon: UsersRound, title: 'Ein Manager mit Gesicht', body: 'Jeder Bauträger auf der Website hat einen benannten Manager mit Foto, gesprochenen Sprachen, direktem Telegram und WhatsApp. Keine anonyme „Vertriebsabteilung“ — eine echte Person, die Sie per Videoanruf erreichen können.' },
-      { Icon: BookOpen,   title: 'Redaktionelle Auswahl', body: 'Wir veröffentlichen nicht alles. Objekte, Projekte und Bauträger, die unsere oben genannte QA nicht bestehen, kommen nie in den Katalog.' },
+      { Icon: FileSearch, title: 'Dokumente: ein Status, keine Garantie', body: 'Wenn ein Bauträger uns PBG/SLF-Nummern, die Art des Landtitels (SHM/HGB/Hak Pakai) und Pachtbedingungen nennt, zeigen wir sie im Angebot. Rechtlich bestätigen wir sie nicht: Lassen Sie vor der Zahlung Zertifikat und Genehmigungen von einem PPAT-Notar oder Anwalt in den amtlichen Registern prüfen.' },
+      { Icon: BookOpen, title: 'Zahlen aus Daten, Methode offen', body: 'Preisvergleiche basieren auf unserem Katalog, Mietpreise auf Tausenden Ferienvermietungen auf Bali, die wir verfolgen (Quelle: estatemarket.io). Jede Zahl nennt ihre Stichprobe; unter 30 Objekten gilt sie als Richtwert. Die ganze Methode steht auf der Seite „So rechnen wir“.' },
+      { Icon: Video, title: 'Video vor Ort', body: 'Viele Projekte filmen wir selbst — Drohne, Baufortschritt, Umgebung —, damit Sie den Zustand zu einem bekannten Datum sehen, kein Rendering.' },
+      { Icon: UsersRound, title: 'Korrekturen', body: 'Fehler bei Preis, Termin oder Genehmigungsstatus gefunden? Schreiben Sie dem Bot: Bestätigte Fehler korrigieren wir und nennen das Datum der Aktualisierung.' },
     ],
 
     h2Stack: 'Was Sie bekommen',
@@ -234,7 +234,7 @@ const COPY = {
 
     h2Model: 'Welche Rolle Balinsky hat',
     model: [
-      { title: 'Die Plattform veröffentlicht nur', body: 'Wir sammeln Objekte, prüfen Unterlagen, filmen vor Ort und berechnen Mietkennzahlen. Mit der Veröffentlichung endet unsere Rolle: danach sprechen Sie direkt mit dem Bauträger oder Eigentümer, ohne jemanden dazwischen.' },
+      { title: 'Die Plattform veröffentlicht nur', body: 'Wir sammeln Angebote, filmen Baustellen und berechnen Marktkennzahlen. Mit der Veröffentlichung endet unsere Rolle: Danach sprechen Sie direkt mit dem Bauträger oder Eigentümer, ohne Vermittler.' },
       { title: 'Was Balinsky nicht ist', body: 'Wir sind weder Immobilienagentur noch Makler. Wir verkaufen keine Objekte, verhandeln nicht, nehmen keine Provision, keine Anzahlungen entgegen, erstellen und beurkunden keine Verträge, organisieren keine Besichtigungen oder Reisen und erbringen keine rechtlichen, notariellen, steuerlichen oder visabezogenen Leistungen. All das übernehmen die Parteien selbst und die von ihnen beauftragten Fachleute — Bauträger oder Eigentümer, PPAT-Notar, Anwalt.' },
     ],
 
@@ -250,8 +250,8 @@ const COPY = {
   zh: {
     home: '首页',
     crumb: '关于 Balinsky',
-    h1: 'Balinsky——它是什么，以及为什么您可以信任它',
-    intro: 'Balinsky 是一个面向外国买家的独立巴厘岛房产目录：别墅、公寓、住宅区和租赁。站内收录的是我们核验过文件、实地走访过、并亲自拍摄过的开发商项目。价格以当前美元显示。开发商的对接经理直接列在房源页面上——您联系的是他们，而不是我们。',
+    h1: 'Balinsky — 我们是谁，如何工作',
+    intro: 'Balinsky 是面向境外买家的独立巴厘岛房产数据网站。我们收录数十家开发商的房源，并在每套房源旁列出判断所需的数据：每平方米价格与所在区域对比、周边类似房屋的租金收入、租赁剩余年限，以及开发商申报的许可状态。每页都注明开发商——您直接与开发商沟通，而不是与我们。',
 
     h2Numbers: '今日数据',
     numbersLead: '这些数字自动更新——您在网站上看到的，正是数据库当前发布的内容。',
@@ -261,12 +261,12 @@ const COPY = {
     statDevs: '开发商',
     statMgrs: '开发商经理',
 
-    h2How: '我们如何决定发布什么',
+    h2How: '我们核查什么，不核查什么',
     standards: [
-      { Icon: FileSearch, title: '文件核查', body: '目录中的每处房产都必须具备有效的 PBG、清晰的土地结构（SHM / HGB / Hak Pakai）以及拥有 PT 注册的真实开发商。缺少这一套，房产根本无法登上网站。' },
-      { Icon: Video,      title: '实地视频与照片', body: '对于大多数项目，我们的团队拍摄了原创素材——无人机、施工进度、周边环境。不是开发商的新闻稿，而是某一确定日期的真实状态。' },
-      { Icon: UsersRound, title: '有面孔的经理', body: '网站上每家开发商都有一位指定经理，配有照片、所讲语言、直接的 Telegram 和 WhatsApp。不是匿名的"销售部门"——而是您可以视频通话的真实的人。' },
-      { Icon: BookOpen,   title: '编辑精选', body: '我们不会什么都发布。未通过上述质检的房产、项目和开发商，绝不会进入目录。' },
+      { Icon: FileSearch, title: '文件：状态而非担保', body: '如果开发商提供了 PBG/SLF 编号、土地证类型（SHM/HGB/Hak Pakai）和租赁条款，我们会在房源页展示。我们不对其作法律认证：付款前，请 PPAT 公证人或律师在官方登记中核实证书和许可。' },
+      { Icon: BookOpen, title: '数据来源公开，方法透明', body: '价格对比基于我们的目录；租金来自我们追踪的巴厘岛数千套度假租赁（来源：estatemarket.io）。每个数字都注明样本量；少于 30 套房源的数据标注为参考值。完整方法见“我们如何计算”页面。' },
+      { Icon: Video, title: '现场视频', body: '许多项目由我们亲自拍摄——航拍、施工进度、周边环境——让您看到某一确定日期的真实状态，而非效果图。' },
+      { Icon: UsersRound, title: '更正', body: '发现价格、日期或许可状态有误？请联系机器人：经确认的错误我们会更正并注明更新日期。' },
     ],
 
     h2Stack: '您将获得什么',
@@ -279,7 +279,7 @@ const COPY = {
 
     h2Model: 'Balinsky 扮演什么角色',
     model: [
-      { title: '平台只负责发布', body: '我们收集房源、核验文件、实地拍摄并计算租赁指标。我们的角色止于发布：之后您直接与开发商或业主对话，中间没有任何人。' },
+      { title: '平台只负责发布', body: '我们收集房源、拍摄现场并计算市场指标。发布即是我们角色的终点：之后您直接与开发商或业主沟通，没有中间人。' },
       { title: 'Balinsky 不是什么', body: '我们不是房地产中介，也不是经纪人。我们不销售房产、不参与谈判、不收取佣金、不接收定金、不起草也不公证合同、不安排看房或行程，也不提供法律、公证、税务或签证服务。这些均由交易双方及其自行聘请的专业人士完成——开发商或业主、PPAT 公证人、律师。' },
     ],
 
@@ -295,8 +295,8 @@ const COPY = {
   nl: {
     home: 'Home',
     crumb: 'Over Balinsky',
-    h1: 'Balinsky — wat het is en waarom u het kunt vertrouwen',
-    intro: "Balinsky is een Bali-vastgoedcatalogus voor buitenlandse kopers: villa's, appartementen, wooncomplexen en verhuur. De site toont projecten van ontwikkelaars van wie wij persoonlijk de documenten hebben geverifieerd, de locaties hebben bezocht en de objecten hebben gefilmd. Prijzen worden in actuele USD getoond. Verkoopmanagers zijn echte mensen met foto, beoordeling en de talen die zij spreken.",
+    h1: 'Balinsky — wat het is en hoe we werken',
+    intro: 'Balinsky is een onafhankelijke site met vastgoeddata over Bali voor buitenlandse kopers. We verzamelen aanbod van tientallen ontwikkelaars en zetten bij elk object de cijfers om het te beoordelen: prijs per m² tegenover de wijk, huuropbrengst van vergelijkbare woningen in de buurt, resterende leasejaren en de vergunningsstatus die de ontwikkelaar opgeeft. De ontwikkelaar staat op elke pagina — u handelt rechtstreeks met hem, niet met ons.',
 
     h2Numbers: 'De cijfers vandaag',
     numbersLead: 'Deze cijfers werken automatisch bij — wat u op de site ziet is precies wat er op dit moment in de database is gepubliceerd.',
@@ -306,12 +306,12 @@ const COPY = {
     statDevs: 'ontwikkelaars',
     statMgrs: 'managers van ontwikkelaars',
 
-    h2How: 'Hoe wij beslissen wat we publiceren',
+    h2How: 'Wat we controleren — en wat niet',
     standards: [
-      { Icon: FileSearch, title: 'Documentcontrole', body: 'Elk object in de catalogus moet een geldig PBG, een heldere grondstructuur (SHM / HGB / Hak Pakai) en een echte ontwikkelaar met PT-registratie hebben. Zonder die set haalt het object simpelweg de site niet.' },
-      { Icon: Video,      title: 'Video en foto\'s ter plaatse', body: 'Voor de meeste projecten heeft ons team eigen beelden gemaakt — drone, bouwvoortgang, de omgeving. Geen persbericht van de ontwikkelaar, maar de echte staat op een bekende datum.' },
-      { Icon: UsersRound, title: 'Een manager met een gezicht', body: 'Elke ontwikkelaar op de site heeft een aangewezen manager met foto, gesproken talen, directe Telegram en WhatsApp. Geen anonieme "verkoopafdeling" — een echt persoon die u kunt videobellen.' },
-      { Icon: BookOpen,   title: 'Redactionele selectie', body: 'Wij publiceren niet alles. Objecten, projecten en ontwikkelaars die onze bovenstaande QA niet doorstaan, komen nooit in de catalogus.' },
+      { Icon: FileSearch, title: 'Documenten: een status, geen garantie', body: 'Als een ontwikkelaar ons PBG/SLF-nummers, het type grondtitel (SHM/HGB/Hak Pakai) en de leasevoorwaarden geeft, tonen we die bij het object. Juridisch bevestigen we ze niet: laat vóór betaling een PPAT-notaris of advocaat het certificaat en de vergunningen in de officiële registers controleren.' },
+      { Icon: BookOpen, title: 'Cijfers uit data, methode openbaar', body: 'Prijsvergelijkingen gebruiken onze catalogus; huurprijzen komen uit duizenden vakantieverhuurobjecten op Bali die we volgen (bron: estatemarket.io). Elk cijfer vermeldt de steekproef; onder 30 objecten geldt het als indicatief. De volledige methode staat op de pagina „Hoe we rekenen”.' },
+      { Icon: Video, title: 'Video ter plaatse', body: 'Veel projecten filmen we zelf — drone, bouwvoortgang, omgeving — zodat u de staat op een bekende datum ziet, geen render.' },
+      { Icon: UsersRound, title: 'Correcties', body: 'Een fout in een prijs, datum of vergunningsstatus gevonden? Stuur de bot een bericht: bevestigde fouten herstellen we met vermelding van de datum.' },
     ],
 
     h2Stack: 'Wat u krijgt',
@@ -324,7 +324,7 @@ const COPY = {
 
     h2Model: 'Welke rol Balinsky speelt',
     model: [
-      { title: 'Het platform publiceert alleen', body: 'Wij verzamelen objecten, controleren documenten, filmen ter plaatse en rekenen verhuurcijfers door. Bij publicatie stopt onze rol: daarna praat u rechtstreeks met de ontwikkelaar of eigenaar, zonder tussenpersoon.' },
+      { title: 'Het platform publiceert alleen', body: 'We verzamelen aanbod, filmen locaties en berekenen marktcijfers. Bij publicatie eindigt onze rol: daarna praat u rechtstreeks met de ontwikkelaar of eigenaar, zonder tussenpersoon.' },
       { title: 'Wat Balinsky niet is', body: 'Wij zijn geen makelaar en geen tussenpersoon. Wij verkopen geen objecten, onderhandelen niet, rekenen geen commissie, nemen geen aanbetalingen aan, stellen noch bekrachtigen contracten, organiseren geen bezichtigingen of reizen en verlenen geen juridische, notariële, fiscale of visumdiensten. Dat alles doen de partijen zelf en de professionals die zij inschakelen — de ontwikkelaar of eigenaar, een PPAT-notaris, een jurist.' },
     ],
 
@@ -340,8 +340,8 @@ const COPY = {
   ban: {
     home: 'Beranda',
     crumb: 'Indik Balinsky',
-    h1: 'Balinsky — napi puniki tur ngudiang dados kapracaya',
-    intro: 'Balinsky inggih punika katalog properti Bali sane mandiri buat sang numbas saking dura negara: vila, apartemen, kompleks hunian, miwah sewa. Situs puniki muat proyek pangwangun sane dokumennyane sampun katureksain, genahnyane sampun karauhin, tur objeknyane sampun karekam. Aji kasurat ring USD sane anyar. Manajer pangwangun kasurat langsung ring kaca objek — Ragane mabaos sareng dané, nénten sareng tiang.',
+    h1: 'Balinsky — apa itu dan bagaimana kami bekerja',
+    intro: 'Balinsky adalah situs data properti Bali yang independen untuk pembeli asing. Kami mengumpulkan listing dari puluhan pengembang dan menaruh angka penting di samping masing-masing: harga per m² dibanding kawasan, pendapatan sewa rumah serupa di sekitar, sisa masa leasehold, dan status izin yang dilaporkan pengembang. Pengembang disebutkan di setiap halaman — Anda berurusan langsung dengan mereka, bukan dengan kami.',
 
     h2Numbers: 'Angka rahinane mangkin',
     numbersLead: 'Angka-angka puniki kaperbarui otomatis — sane cingak Ragane ring situs pateh sareng sane kapublikasi ring basis data mangkin.',
@@ -351,12 +351,12 @@ const COPY = {
     statDevs: 'pangwangun',
     statMgrs: 'manajer pangwangun',
 
-    h2How: 'Sapunapi titiang mutusang napi sane kapublikasi',
+    h2How: 'Apa yang kami periksa — dan apa yang tidak',
     standards: [
-      { Icon: FileSearch, title: 'Pameriksaan dokumen', body: 'Sabilang properti ring katalog patut madue PBG sane sah, struktur tanah sane cetha (SHM / HGB / Hak Pakai), miwah pangwangun sujati sareng registrasi PT. Yening nenten wenten punika, properti nenten jagi ngranjing ka situs.' },
-      { Icon: Video,      title: 'Video miwah foto saking genah', body: 'Buat akehan proyek, tim titiang ngrekam gambar padidi — drone, kamajuan konstruksi, wewengkon. Boya siaran pers saking pangwangun, sakewanten kahanan sujati ring tanggal sane kauningin.' },
-      { Icon: UsersRound, title: 'Manajer sareng muan', body: 'Sabilang pangwangun ring situs madue manajer sane katunjuk sareng foto, basa sane kaanggen, Telegram miwah WhatsApp langsung. Boya "departemen penjualan" anonim — sakewanten jadma sujati sane dados kahubungin video.' },
-      { Icon: BookOpen,   title: 'Daftar cutet editorial', body: 'Titiang nenten mublikasi sami. Properti, proyek, miwah pangwangun sane nenten lulus QA ring baduur nenten jagi ngranjing ka katalog.' },
+      { Icon: FileSearch, title: 'Dokumen: status, bukan jaminan', body: 'Jika pengembang memberi nomor PBG/SLF, jenis sertifikat tanah (SHM/HGB/Hak Pakai) dan syarat leasehold, kami menampilkannya di listing. Kami tidak mengesahkannya secara hukum: sebelum membayar, minta notaris PPAT atau pengacara memeriksa sertifikat dan izin di register resmi.' },
+      { Icon: BookOpen, title: 'Angka dari data, metode terbuka', body: 'Perbandingan harga memakai katalog kami; tarif sewa dari ribuan sewa liburan di Bali yang kami pantau (sumber: estatemarket.io). Setiap angka menunjukkan ukuran sampel; jika kurang dari 30 listing, angka ditandai sebagai perkiraan. Metode lengkap ada di halaman «Cara kami menghitung».' },
+      { Icon: Video, title: 'Video dari lokasi', body: 'Banyak proyek kami rekam sendiri — drone, progres konstruksi, sekitar — sehingga Anda melihat kondisi pada tanggal tertentu, bukan render.' },
+      { Icon: UsersRound, title: 'Koreksi', body: 'Menemukan kesalahan harga, tanggal, atau status izin? Kirim pesan ke bot: kesalahan yang terkonfirmasi kami perbaiki dan tanggal pembaruannya dicantumkan.' },
     ],
 
     h2Stack: 'Napi sane kapolihang Ragane',
@@ -369,7 +369,7 @@ const COPY = {
 
     h2Model: 'Peran napi sane kalaksanayang Balinsky',
     model: [
-      { title: 'Platform wantah ngamedalang', body: 'Tiang ngapupulang objek, mriksa dokumen, ngarekam genah, tur ngitung angka sewa. Peran tiang puput ring pamedalan: salanturnyane Ragane mabaos langsung sareng pangwangun utawi sang druwe, tanpa perantara.' },
+      { title: 'Platform wantah ngamedalang', body: 'Kami mengumpulkan listing, merekam lokasi, dan menghitung angka pasar. Peran kami berakhir saat publikasi: selanjutnya Anda berbicara langsung dengan pengembang atau pemilik, tanpa perantara.' },
       { title: 'Balinsky nénten napi', body: 'Tiang nénten agen properti tur nénten broker. Tiang nénten ngadol objek, nénten negosiasi, nénten nerima komisi, nénten nerima deposit, nénten nyusun tur nénten ngesahang kontrak, nénten ngatur kunjungan wiadin pamargi, tur nénten ngicén jasa hukum, notaris, pajak, utawi visa. Sami punika kalaksanayang olih para pihak padidi miwah profesional sane kaundang — pangwangun utawi sang druwe, notaris PPAT, advokat.' },
     ],
 
@@ -385,8 +385,8 @@ const COPY = {
   pl: {
     home: 'Strona główna',
     crumb: 'O Balinsky',
-    h1: 'Balinsky — czym jest i dlaczego można mu zaufać',
-    intro: 'Balinsky to niezależny katalog nieruchomości na Bali dla zagranicznych kupujących: wille, apartamenty, osiedla i najem. Zebraliśmy projekty deweloperów, których dokumenty sprawdziliśmy, których działki obeszliśmy i których obiekty nagraliśmy. Ceny podane są w aktualnych USD. Kontakt do menedżera dewelopera znajduje się wprost na stronie obiektu — piszesz do niego, nie do nas.',
+    h1: 'Balinsky — czym jest i jak pracujemy',
+    intro: 'Balinsky to niezależny serwis z danymi o nieruchomościach na Bali dla zagranicznych kupujących. Zbieramy oferty dziesiątek deweloperów i przy każdej pokazujemy liczby potrzebne do oceny: cenę za m² na tle dzielnicy, przychód z najmu podobnych domów w okolicy, liczbę lat pozostałych z dzierżawy i status pozwoleń deklarowany przez dewelopera. Deweloper jest podany na każdej stronie — rozmawiasz bezpośrednio z nim, nie z nami.',
 
     h2Numbers: 'Liczby na dziś',
     numbersLead: 'Te dane aktualizują się automatycznie — to, co widzisz na stronie, jest dokładnie tym, co jest teraz opublikowane w bazie danych.',
@@ -396,12 +396,12 @@ const COPY = {
     statDevs: 'deweloperzy',
     statMgrs: 'menedżerów deweloperów',
 
-    h2How: 'Jak decydujemy, co publikujemy',
+    h2How: 'Co sprawdzamy — a czego nie',
     standards: [
-      { Icon: FileSearch, title: 'Sprawdzenie dokumentów', body: 'Każda nieruchomość w katalogu musi mieć ważne PBG, jasną strukturę gruntu (SHM / HGB / Hak Pakai) i prawdziwego dewelopera z rejestracją PT. Bez tego zestawu nieruchomość po prostu nie trafia na stronę.' },
-      { Icon: Video,      title: 'Wideo i zdjęcia z miejsca', body: 'Dla większości projektów nasza ekipa nakręciła własny materiał — dron, postęp budowy, otoczenie. Nie komunikat prasowy dewelopera, lecz rzeczywisty stan na znaną datę.' },
-      { Icon: UsersRound, title: 'Menedżer z twarzą', body: 'Każdy deweloper na stronie ma imiennego menedżera ze zdjęciem, znanymi językami, bezpośrednim Telegramem i WhatsAppem. Nie anonimowy „dział sprzedaży” — konkretna osoba, z którą można porozmawiać na wideo.' },
-      { Icon: BookOpen,   title: 'Selekcja redakcyjna', body: 'Nie publikujemy wszystkiego. Nieruchomości, projekty i deweloperzy, którzy nie przejdą powyższej kontroli jakości, nigdy nie trafiają do katalogu.' },
+      { Icon: FileSearch, title: 'Dokumenty: status, nie gwarancja', body: 'Jeśli deweloper poda numery PBG/SLF, rodzaj tytułu do ziemi (SHM/HGB/Hak Pakai) i warunki dzierżawy, pokazujemy je w ofercie. Nie poświadczamy ich prawnie: przed płatnością poproś notariusza PPAT lub prawnika o sprawdzenie certyfikatu i pozwoleń w oficjalnych rejestrach.' },
+      { Icon: BookOpen, title: 'Liczby z danych, metoda jawna', body: 'Porównania cen opieramy na naszym katalogu, stawki najmu — na tysiącach obiektów wakacyjnych na Bali, które śledzimy (źródło: estatemarket.io). Każda liczba podaje wielkość próby; poniżej 30 obiektów jest oznaczona jako orientacyjna. Pełna metoda jest na stronie „Jak liczymy”.' },
+      { Icon: Video, title: 'Wideo z budowy', body: 'Wiele projektów filmujemy sami — dron, postęp budowy, okolica — żebyś widział stan z konkretnej daty, a nie wizualizację.' },
+      { Icon: UsersRound, title: 'Poprawki', body: 'Znalazłeś błąd w cenie, terminie lub statusie pozwolenia? Napisz do bota: potwierdzone błędy poprawiamy i podajemy datę aktualizacji.' },
     ],
 
     h2Stack: 'Co otrzymujesz',
@@ -414,7 +414,7 @@ const COPY = {
 
     h2Model: 'Jaką rolę pełni Balinsky',
     model: [
-      { title: 'Platforma wyłącznie publikuje', body: 'Zbieramy obiekty, sprawdzamy dokumenty, nagrywamy je na miejscu i liczymy wskaźniki najmu. Na publikacji nasza rola się kończy: dalej rozmawiasz bezpośrednio z deweloperem albo właścicielem, bez nikogo pośrodku.' },
+      { title: 'Platforma wyłącznie publikuje', body: 'Zbieramy oferty, filmujemy budowy i liczymy wskaźniki rynkowe. Na publikacji nasza rola się kończy: dalej rozmawiasz bezpośrednio z deweloperem lub właścicielem, bez pośredników.' },
       { title: 'Czym Balinsky nie jest', body: 'Nie jesteśmy agencją nieruchomości ani pośrednikiem. Nie sprzedajemy obiektów, nie prowadzimy negocjacji, nie pobieramy prowizji, nie przyjmujemy depozytów, nie sporządzamy ani nie poświadczamy umów, nie organizujemy oglądania ani wyjazdów i nie świadczymy usług prawnych, notarialnych, podatkowych czy wizowych. Wszystko to robią same strony i zaangażowani przez nie specjaliści — deweloper lub właściciel, notariusz PPAT, prawnik.' },
     ],
 
@@ -430,8 +430,8 @@ const COPY = {
   uk: {
     home: 'Головна',
     crumb: 'Про Balinsky',
-    h1: 'Balinsky — що це таке і чому йому можна довіряти',
-    intro: 'Balinsky — незалежний каталог нерухомості Балі для іноземців: вілли, апартаменти, житлові комплекси та оренда. На сайті зібрані проєкти забудовників, чиї документи ми перевірили, чиї ділянки обійшли і чиї обʼєкти зняли на відео. Ціни — в актуальних USD. Контакти менеджера забудовника вказані прямо в картці обʼєкта: писати ви будете йому, а не нам.',
+    h1: 'Balinsky — що це і як ми працюємо',
+    intro: 'Balinsky — незалежний сайт із даними про нерухомість Балі для іноземних покупців. Ми збираємо об’єкти десятків забудовників і ставимо поруч із кожним цифри, за якими його можна оцінити: ціна за м² проти району, скільки приносять схожі будинки поруч в оренді, скільки років лишилося за лізхолдом і який статус дозволів заявляє забудовник. Забудовник указаний на кожній сторінці — ви спілкуєтеся з ним напряму, не з нами.',
 
     h2Numbers: 'Цифри на сьогодні',
     numbersLead: 'Ці цифри оновлюються автоматично — те, що ви бачите на сайті, точно відповідає тому, що зараз опубліковано в базі даних.',
@@ -441,12 +441,12 @@ const COPY = {
     statDevs: 'забудовники',
     statMgrs: 'менеджерів забудовників',
 
-    h2How: 'Як ми вирішуємо, що публікувати',
+    h2How: 'Що ми перевіряємо — і чого не перевіряємо',
     standards: [
-      { Icon: FileSearch, title: 'Перевірка документів', body: 'Кожен обʼєкт у каталозі повинен мати чинний PBG, зрозумілу структуру землі (SHM / HGB / Hak Pakai) і реального забудовника з реєстрацією PT. Без цього набору обʼєкт просто не потрапляє на сайт.' },
-      { Icon: Video,      title: 'Відео та фото з місця', body: 'Для більшості проєктів наша команда відзняла власний матеріал — дрон, хід будівництва, околиці. Не пресреліз від забудовника, а реальний стан на відому дату.' },
-      { Icon: UsersRound, title: 'Менеджер з обличчям', body: 'У кожного забудовника на сайті є іменний менеджер з фото, мовами, якими володіє, прямими Telegram і WhatsApp. Не анонімний «відділ продажів» — конкретна людина, з якою можна поспілкуватися по відео.' },
-      { Icon: BookOpen,   title: 'Редакційний відбір', body: 'Ми публікуємо не все. Обʼєкти, проєкти та забудовники, які не проходять зазначену вище перевірку якості, ніколи не потрапляють до каталогу.' },
+      { Icon: FileSearch, title: 'Документи: статус, а не гарантія', body: 'Якщо забудовник повідомив номери PBG/SLF, тип землі (SHM/HGB/Hak Pakai) та умови лізхолду, ми показуємо їх у картці. Юридично ми їх не засвідчуємо: до оплати попросіть нотаріуса PPAT або юриста перевірити сертифікат і дозволи за офіційними реєстрами.' },
+      { Icon: BookOpen, title: 'Цифри — з даних, метод відкритий', body: 'Порівняння цін рахуємо за нашим каталогом, ставки оренди — за тисячами об’єктів подобової оренди на Балі (джерело — estatemarket.io). У кожного розрахунку вказано розмір вибірки; якщо об’єктів менше 30, цифра позначена як орієнтовна. Увесь метод описаний на сторінці «Як ми рахуємо».' },
+      { Icon: Video, title: 'Відео з майданчика', body: 'Багато проєктів ми знімаємо самі — дрон, хід будівництва, околиці. Ви бачите стан на відому дату, а не рендер.' },
+      { Icon: UsersRound, title: 'Виправлення', body: 'Знайшли помилку в ціні, строку чи статусі дозволу? Напишіть боту: підтверджені помилки виправляємо й указуємо дату оновлення.' },
     ],
 
     h2Stack: 'Що ви отримуєте',
@@ -459,7 +459,7 @@ const COPY = {
 
     h2Model: 'Яку роль відіграє Balinsky',
     model: [
-      { title: 'Майданчик лише публікує', body: 'Ми збираємо обʼєкти, перевіряємо документи, знімаємо відео і рахуємо показники з оренди. На публікації роль сайту закінчується: далі ви розмовляєте із забудовником або власником напряму, без нас посередині.' },
+      { title: 'Майданчик лише публікує', body: 'Ми збираємо об’єкти, знімаємо майданчики й рахуємо ринкові показники. На публікації роль сайту закінчується: далі ви спілкуєтеся із забудовником або власником напряму, без нас посередині.' },
       { title: 'Чим Balinsky не є', body: 'Ми не агентство нерухомості й не брокер. Ми не продаємо обʼєкти, не ведемо переговори, не беремо комісію, не приймаємо депозити, не готуємо й не посвідчуємо договори, не організовуємо покази й поїздки, не надаємо юридичних, нотаріальних, податкових і візових послуг. Усе це роблять самі сторони угоди та залучені ними фахівці — забудовник або власник, нотаріус PPAT, юрист.' },
     ],
 

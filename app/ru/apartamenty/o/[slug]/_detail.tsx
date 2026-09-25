@@ -542,8 +542,10 @@ function parseGeo(v: unknown): number | null {
   if (Array.isArray(v) && v.length > 0) return parseGeo(v[0])
   return null
 }
-function fmtUsd(n: number | null): string | null {
+function fmtUsd(n: number | null, lang: Lang = 'ru'): string | null {
   if (n == null) return null
+  // «869 800 $» reads right in Russian; English-style «$869,800» elsewhere.
+  if (lang !== 'ru' && lang !== 'uk') return '$' + Math.round(n).toLocaleString('en-US')
   return Math.round(n).toLocaleString('ru-RU').replace(/,/g, ' ') + ' $'
 }
 function cleanTitle(s: string | null): string | null {
@@ -859,7 +861,7 @@ export async function generateApartmentMetadata(slug: string, lang: Lang) {
   // Cyrillic district on /ru, raw Latin on /en. Raw is preserved for
   // Schema.org address fields where Latin is canonical.
   const district = lang === 'ru' ? districtRu(districtRaw) : districtRaw
-  const price = fmtUsd(numberOrNull(d['price_usd'] ?? d['Цена']))
+  const price = fmtUsd(numberOrNull(d['price_usd'] ?? d['Цена']), lang)
   const description = gen?.meta
     ? gen.meta.slice(0, 160).trim()
     : seoText
@@ -1001,8 +1003,8 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
   // kb.faq is EN-only (KB stores RU + EN). For non-RU pages prefer the native
   // localized c.faq(...) template so de/zh/nl/id/fr/ban don't render English.
   const faqItems = lang === 'ru'
-    ? ((kb?.faq && kb.faq.length) ? kb.faq : c.faq(title, district, fmtUsd(priceNum), lease))
-    : c.faq(title, district, fmtUsd(priceNum), lease)
+    ? ((kb?.faq && kb.faq.length) ? kb.faq : c.faq(title, district, fmtUsd(priceNum, lang), lease))
+    : c.faq(title, district, fmtUsd(priceNum, lang), lease)
   const faqJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',

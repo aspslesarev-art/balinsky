@@ -4,24 +4,23 @@ import { hreflangMap } from '@/lib/hreflang'
 export const revalidate = 3600
 
 export const metadata = {
-  title: '在巴厘岛购买房产 — 带分析数据的独立市场平台 | Balinsky',
-  description:
-    '数十家开发商的别墅、公寓和住宅项目汇聚于一个目录。经核实的证件（PBG、SLF）以及来自周边邻里数据的真实租金收益。照片、实时价格、联系方式 — 由你选择。',
+  title: '巴厘岛房产价格与租金数据 — 买前先比较 | Balinsky',
+  description: '数十家开发商的别墅和公寓，与巴厘岛数千套度假租赁对照：每平方米价格与所在区域对比、周边租金、租赁年限及许可状态。免费，无需注册。',
   alternates: {
     canonical: '/zh',
     languages: hreflangMap('/ru'),
   },
   openGraph: {
-    title: '在巴厘岛购买房产 — 带分析数据的独立市场平台',
-    description: '数十家开发商的别墅、公寓和住宅项目。经核实的证件以及来自周边邻里数据的真实租金收益 — 选择权和数据都在你这一边。',
+    title: '巴厘岛房产价格与租金数据 — 买前先比较',
+    description: '数十家开发商的别墅和公寓，与巴厘岛数千套度假租赁对照：每平方米价格与所在区域对比、周边租金、租赁年限及许可状态。免费，无需注册。',
     type: 'website',
     url: '/zh',
     images: [{ url: '/andrei.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: '在巴厘岛购买房产 — 带分析数据的市场平台',
-    description: '数十家开发商的别墅、公寓和住宅项目，附经核实的证件与真实租金收益。',
+    title: '用数据看巴厘岛房产',
+    description: '每平方米价格与区域对比、周边租金、租赁年限与许可状态 — 买前先比较。',
     images: ['/andrei.jpg'],
   },
 }

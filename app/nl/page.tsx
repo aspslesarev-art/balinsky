@@ -4,24 +4,23 @@ import { hreflangMap } from '@/lib/hreflang'
 export const revalidate = 3600
 
 export const metadata = {
-  title: 'Vastgoed kopen op Bali — onafhankelijke marktplaats met analyses | Balinsky',
-  description:
-    "Villa's, appartementen en complexen van tientallen ontwikkelaars in één catalogus. Geverifieerde documenten (PBG, SLF) en reëel huurrendement op basis van buurtdata. Foto's, actuele prijzen, contacten — de keuze is aan u.",
+  title: 'Vastgoedprijzen & huurdata Bali — vergelijk vóór u koopt | Balinsky',
+  description: 'Villa\'s en appartementen van tientallen ontwikkelaars, vergeleken met duizenden vakantieverhuur op Bali: prijs per m² tegenover de wijk, huurprijzen in de buurt, leasetermijn en vergunningsstatus. Gratis, zonder registratie.',
   alternates: {
     canonical: '/nl',
     languages: hreflangMap('/ru'),
   },
   openGraph: {
-    title: 'Vastgoed kopen op Bali — onafhankelijke marktplaats met analyses',
-    description: "Villa's, appartementen en complexen van tientallen ontwikkelaars. Geverifieerde documenten en reëel huurrendement op basis van buurtdata — de keuze en de cijfers staan aan uw kant.",
+    title: 'Vastgoedprijzen & huurdata Bali — vergelijk vóór u koopt',
+    description: 'Villa\'s en appartementen van tientallen ontwikkelaars, vergeleken met duizenden vakantieverhuur op Bali: prijs per m² tegenover de wijk, huurprijzen in de buurt, leasetermijn en vergunningsstatus. Gratis, zonder registratie.',
     type: 'website',
     url: '/nl',
     images: [{ url: '/andrei.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Vastgoed kopen op Bali — marktplaats met analyses',
-    description: "Villa's, appartementen en complexen van tientallen ontwikkelaars met geverifieerde documenten en reëel huurrendement.",
+    title: 'Vastgoed op Bali in cijfers',
+    description: 'Prijs per m² tegenover de wijk, huurprijzen in de buurt, leasetermijn en vergunningsstatus — vergelijk vóór u koopt.',
     images: ['/andrei.jpg'],
   },
 }

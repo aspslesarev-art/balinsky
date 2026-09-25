@@ -4,24 +4,23 @@ import { hreflangMap } from '@/lib/hreflang'
 export const revalidate = 3600
 
 export const metadata = {
-  title: 'Buy real estate in Bali — independent marketplace with analytics | Balinsky',
-  description:
-    'Villas, apartments and complexes from dozens of developers in one catalog. Verified documents (PBG, SLF) and real rental yield from neighbour data. Photos, current prices, contacts — your choice.',
+  title: 'Bali Property Prices & Rental Data — Compare Before You Buy | Balinsky',
+  description: 'Villas and apartments from dozens of developers, checked against thousands of Bali holiday rentals: price per m² vs the district, nearby rental rates, lease term and permit status. Free, no sign-up.',
   alternates: {
     canonical: '/ban',
     languages: hreflangMap('/ru'),
   },
   openGraph: {
-    title: 'Buy real estate in Bali — independent marketplace with analytics',
-    description: 'Villas, apartments and complexes from dozens of developers. Verified documents and real rental yield from neighbour data — the choice and the numbers are on your side.',
+    title: 'Bali Property Prices & Rental Data — Compare Before You Buy',
+    description: 'Villas and apartments from dozens of developers, checked against thousands of Bali holiday rentals: price per m² vs the district, nearby rental rates, lease term and permit status. Free, no sign-up.',
     type: 'website',
     url: '/ban',
     images: [{ url: '/andrei.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Buy real estate in Bali — marketplace with analytics',
-    description: 'Villas, apartments and complexes from dozens of developers with verified documents and real rental yield.',
+    title: 'Bali property, in numbers',
+    description: 'Price per m² vs the district, nearby rental rates, lease term and permit status — compare before you buy.',
     images: ['/andrei.jpg'],
   },
 }

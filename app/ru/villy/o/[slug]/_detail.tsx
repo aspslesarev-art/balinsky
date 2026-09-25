@@ -614,8 +614,10 @@ function numberOrNull(v: unknown): number | null {
 function parseGeo(v: unknown): number | null {
   return numberOrNull(v)
 }
-function fmtUsd(n: number | null): string | null {
+function fmtUsd(n: number | null, lang: Lang = 'ru'): string | null {
   if (n == null) return null
+  // «869 800 $» reads right in Russian; English-style «$869,800» elsewhere.
+  if (lang !== 'ru' && lang !== 'uk') return '$' + Math.round(n).toLocaleString('en-US')
   return Math.round(n).toLocaleString('ru-RU').replace(/,/g, ' ') + ' $'
 }
 
@@ -920,7 +922,7 @@ export async function generateVillaMetadata(slug: string, lang: Lang) {
   // the AI-generated H1 / SEO text. Raw Latin name is still used for
   // canonical-path matching and Schema.org address fields.
   const district = lang === 'ru' ? districtRu(districtRaw) : districtRaw
-  const price = fmtUsd(numberOrNull(d['price'] ?? d['Цена']))
+  const price = fmtUsd(numberOrNull(d['price'] ?? d['Цена']), lang)
   const description = gen?.meta
     ? gen.meta.slice(0, 160).trim()
     : seoText
@@ -1108,8 +1110,8 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   // kb.faq is EN-only (KB stores RU + EN). For non-RU pages prefer the native
   // localized c.faq(...) template so de/zh/nl/id/fr/ban don't render English.
   const faqItems = lang === 'ru'
-    ? ((kb?.faq && kb.faq.length) ? kb.faq : c.faq(title, district, fmtUsd(priceNum), lease, land))
-    : c.faq(title, district, fmtUsd(priceNum), lease, land)
+    ? ((kb?.faq && kb.faq.length) ? kb.faq : c.faq(title, district, fmtUsd(priceNum, lang), lease, land))
+    : c.faq(title, district, fmtUsd(priceNum, lang), lease, land)
   const faqJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',

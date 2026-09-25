@@ -5,15 +5,15 @@ import { hreflangMap } from '@/lib/hreflang'
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
 export const metadata: Metadata = {
-  title: 'O Balinsky — czym jesteśmy i dlaczego można nam zaufać | Balinsky',
-  description: 'Balinsky to katalog nieruchomości na Bali dla zagranicznych kupujących: zweryfikowane dokumenty, wideo z miejsca, prawdziwi menedżerowie ze zdjęciami i językami, którymi się posługują. Aktualne liczby, kto prowadzi serwis, nasze standardy redakcyjne.',
+  title: 'O Balinsky — czym jesteśmy i jak pracujemy | Balinsky',
+  description: 'Balinsky to serwis z danymi o nieruchomościach na Bali: ceny na tle dzielnicy, stawki najmu w okolicy, okresy dzierżawy. Co sprawdzamy, a czego nie, skąd liczby, jak poprawiamy błędy.',
   alternates: {
     canonical: '/pl/o-nas',
     languages: hreflangMap('/ru/o-balinsky'),
   },
   openGraph: {
     title: 'O Balinsky',
-    description: 'Katalog nieruchomości na Bali dla zagranicznych kupujących — zweryfikowane dokumenty, wideo z miejsca, prawdziwi menedżerowie.',
+    description: 'Dane o nieruchomościach na Bali: co sprawdzamy, skąd liczby.',
     url: `${SITE_URL}/pl/o-nas`,
     type: 'article',
   },

@@ -4,6 +4,7 @@
 import { Plane, Car, Waves, Mountain } from 'lucide-react'
 import type { ComplexAccess, Routes } from '@/lib/complex-access'
 import { pickCopy, type Lang } from '@/lib/i18n'
+import { translit, hasCyrillic } from '@/lib/translit'
 
 const COPY = {
   ru: { title: 'Как добраться', airport: 'Аэропорт', canggu: 'Чангу', seminyak: 'Семиньяк', ubud: 'Убуд', uluwatu: 'Улувату', sanur: 'Санур', min: 'мин', km: 'км', beach: 'До пляжа', elevation: 'Высота над морем', m: 'м' },
@@ -97,7 +98,8 @@ export function ComplexAccessBlock({ access, lang, elevationM, routes }: Props) 
             <Waves size={16} className="shrink-0 text-[var(--color-primary)]" />
             <span className="shrink-0 text-[13px] text-[var(--color-text-muted)]">{t.beach}:</span>
             <span className="truncate text-[14px] font-medium text-[#111827]">
-              {access?.nearest_beach_name}
+              {/* Google Places names are stored in Russian; other locales get Latin. */}
+              {lang !== 'ru' && lang !== 'uk' && hasCyrillic(access?.nearest_beach_name ?? '') ? translit(access?.nearest_beach_name ?? '') : access?.nearest_beach_name}
             </span>
             <span className="shrink-0 text-[14px] font-semibold text-[#111827]">
               · {access?.nearest_beach_km} {t.km}

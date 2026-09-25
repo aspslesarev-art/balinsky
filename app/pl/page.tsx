@@ -4,24 +4,23 @@ import { hreflangMap } from '@/lib/hreflang'
 export const revalidate = 3600
 
 export const metadata = {
-  title: 'Kup nieruchomość na Bali — niezależny marketplace z analityką | Balinsky',
-  description:
-    'Wille, apartamenty i kompleksy od dziesiątek deweloperów w jednym katalogu. Zweryfikowane dokumenty (PBG, SLF) i realna rentowność najmu na podstawie danych z sąsiednich obiektów. Zdjęcia, aktualne ceny, kontakty — wybór należy do Ciebie.',
+  title: 'Ceny nieruchomości i dane o najmie na Bali — porównaj przed zakupem | Balinsky',
+  description: 'Wille i apartamenty od dziesiątek deweloperów zestawione z tysiącami obiektów na wynajem na Bali: cena za m² na tle dzielnicy, stawki najmu w okolicy, okres dzierżawy i status pozwoleń. Za darmo, bez rejestracji.',
   alternates: {
     canonical: '/pl',
     languages: hreflangMap('/ru'),
   },
   openGraph: {
-    title: 'Kup nieruchomość na Bali — niezależny marketplace z analityką',
-    description: 'Wille, apartamenty i kompleksy od dziesiątek deweloperów. Zweryfikowane dokumenty i realna rentowność najmu na podstawie danych z sąsiednich obiektów — wybór i liczby są po Twojej stronie.',
+    title: 'Ceny nieruchomości i dane o najmie na Bali — porównaj przed zakupem',
+    description: 'Wille i apartamenty od dziesiątek deweloperów zestawione z tysiącami obiektów na wynajem na Bali: cena za m² na tle dzielnicy, stawki najmu w okolicy, okres dzierżawy i status pozwoleń. Za darmo, bez rejestracji.',
     type: 'website',
     url: '/pl',
     images: [{ url: '/andrei.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Kup nieruchomość na Bali — marketplace z analityką',
-    description: 'Wille, apartamenty i kompleksy od dziesiątek deweloperów ze zweryfikowanymi dokumentami i realną rentownością najmu.',
+    title: 'Nieruchomości na Bali w liczbach',
+    description: 'Cena za m² na tle dzielnicy, stawki najmu w okolicy, okres dzierżawy i status pozwoleń — porównaj przed zakupem.',
     images: ['/andrei.jpg'],
   },
 }

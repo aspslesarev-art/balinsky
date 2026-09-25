@@ -57,7 +57,11 @@ export const loadAllVideos = revisionedCache(['videos'], TTL_MS, async (): Promi
 // — keeps un-tagged legacy rows visible).
 export function matchesLang(v: VideoItem, lang: Lang | undefined): boolean {
   if (!lang) return true
-  if (!Array.isArray(v.languages) || v.languages.length === 0) return true
+  // Untagged but titled in Russian = a Russian-language video: keep it to
+  // the Cyrillic locales instead of showing a Russian title on /en and co.
+  if (!Array.isArray(v.languages) || v.languages.length === 0) {
+    return lang === 'ru' || lang === 'uk' || !/[А-Яа-яЁё]/.test(v.name ?? '')
+  }
   return asList(v.languages).includes(lang)
 }
 

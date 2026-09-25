@@ -73,6 +73,32 @@ type Row = {
   why_en: string | null
 }
 
+// unit_demand_score.zone is stored in Russian; every other locale gets the
+// Latin name (these are place names, the same in all Latin-script languages).
+const ZONE_LATIN: Record<string, string> = {
+  'Унгасан — Меласти': 'Ungasan — Melasti',
+  'Сесех — Чемаги': 'Seseh — Cemagi',
+  'Убуд': 'Ubud',
+  'Нуса-Дуа': 'Nusa Dua',
+  'Переренан': 'Pererenan',
+  'Падонан — Тумбак-Баю': 'Padonan — Tumbak Bayuh',
+  'Джимбаран': 'Jimbaran',
+  'Чангу — Бату-Болонг': 'Canggu — Batu Bolong',
+  'Берава': 'Berawa',
+  'Бингин — Паданг-Паданг': 'Bingin — Padang Padang',
+  'Умалас': 'Umalas',
+  'Улувату — Пекату': 'Uluwatu — Pecatu',
+  'Санур': 'Sanur',
+  'Сануp': 'Sanur',
+  'Нуса-Пенида — Лембонган': 'Nusa Penida — Lembongan',
+  'Кедунгу — Табанан': 'Kedungu — Tabanan',
+  'Семиньяк': 'Seminyak',
+  'Чандидаса — Карангасем': 'Candidasa — Karangasem',
+  'Прочее': 'other areas',
+  'Тегаллаланг — Паянган': 'Tegallalang — Payangan',
+  'Керобокан': 'Kerobokan',
+}
+
 function toDemand(row: Row, lang: string): UnitDemand | null {
   if (row.comps_n < MIN_TRUSTWORTHY_COMPS) return null
   const f = row.facts ?? {}
@@ -81,7 +107,7 @@ function toDemand(row: Row, lang: string): UnitDemand | null {
     airtableId: row.airtable_id,
     score: row.score,
     basis: row.basis,
-    zone: row.zone,
+    zone: lang === 'ru' ? row.zone : (ZONE_LATIN[row.zone] ?? row.zone),
     compsN: row.comps_n,
     adrVsNeighbours: f.predicted?.adr_vs_neighbours ?? null,
     expectedAdrUsd: f.predicted?.expected_adr_usd ?? null,

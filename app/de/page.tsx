@@ -4,24 +4,23 @@ import { hreflangMap } from '@/lib/hreflang'
 export const revalidate = 3600
 
 export const metadata = {
-  title: 'Immobilien auf Bali kaufen — unabhängiger Marktplatz mit Analytik | Balinsky',
-  description:
-    'Villen, Apartments und Anlagen von Dutzenden Bauträgern in einem Katalog. Geprüfte Dokumente (PBG, SLF) und reale Mietrendite aus Nachbarschaftsdaten. Fotos, aktuelle Preise, Kontakte — Ihre Wahl.',
+  title: 'Immobilienpreise & Mietdaten auf Bali — vergleichen vor dem Kauf | Balinsky',
+  description: 'Villen und Apartments von Dutzenden Bauträgern, abgeglichen mit Tausenden Ferienvermietungen auf Bali: Preis pro m² im Vergleich zum Viertel, Mieten der Nachbarn, Pachtdauer und Genehmigungsstatus. Kostenlos, ohne Anmeldung.',
   alternates: {
     canonical: '/de',
     languages: hreflangMap('/ru'),
   },
   openGraph: {
-    title: 'Immobilien auf Bali kaufen — unabhängiger Marktplatz mit Analytik',
-    description: 'Villen, Apartments und Anlagen von Dutzenden Bauträgern. Geprüfte Dokumente und reale Mietrendite aus Nachbarschaftsdaten — die Wahl und die Zahlen sprechen für Sie.',
+    title: 'Immobilienpreise & Mietdaten auf Bali — vergleichen vor dem Kauf',
+    description: 'Villen und Apartments von Dutzenden Bauträgern, abgeglichen mit Tausenden Ferienvermietungen auf Bali: Preis pro m² im Vergleich zum Viertel, Mieten der Nachbarn, Pachtdauer und Genehmigungsstatus. Kostenlos, ohne Anmeldung.',
     type: 'website',
     url: '/de',
     images: [{ url: '/andrei.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Immobilien auf Bali kaufen — Marktplatz mit Analytik',
-    description: 'Villen, Apartments und Anlagen von Dutzenden Bauträgern mit geprüften Dokumenten und realer Mietrendite.',
+    title: 'Bali-Immobilien in Zahlen',
+    description: 'Preis pro m² im Vergleich zum Viertel, Mieten der Nachbarn, Pachtdauer und Genehmigungsstatus — vor dem Kauf vergleichen.',
     images: ['/andrei.jpg'],
   },
 }

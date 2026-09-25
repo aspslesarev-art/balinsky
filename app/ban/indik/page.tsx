@@ -5,15 +5,15 @@ import { hreflangMap } from '@/lib/hreflang'
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
 export const metadata: Metadata = {
-  title: 'About Balinsky — what we are and why you can trust us | Balinsky',
-  description: 'Balinsky is a Bali property catalogue for foreign buyers: verified documents, on-the-ground video, real managers with photos and spoken languages. Live numbers, who runs the site, our editorial standards.',
+  title: 'Tentang Balinsky — apa itu dan bagaimana kami bekerja | Balinsky',
+  description: 'Balinsky adalah situs data properti Bali: harga vs kawasan, tarif sewa sekitar, masa leasehold. Apa yang kami periksa dan tidak, dari mana angkanya, bagaimana kami mengoreksi kesalahan.',
   alternates: {
     canonical: '/ban/indik',
     languages: hreflangMap('/ru/o-balinsky'),
   },
   openGraph: {
     title: 'About Balinsky',
-    description: 'Bali property catalogue for foreign buyers — verified documents, on-the-ground video, live managers.',
+    description: 'Data properti Bali: apa yang kami periksa, sumber angka, cara koreksi.',
     url: `${SITE_URL}/ban/indik`,
     type: 'article',
   },

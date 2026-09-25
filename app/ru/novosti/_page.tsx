@@ -11,18 +11,18 @@ import { hreflangMap } from '@/lib/hreflang'
 
 const COPY = {
   ru: {
-    title: 'Новости застройщиков Бали | Balinsky',
-    description: 'Свежие новости от застройщиков и о рынке недвижимости Бали.',
-    h1: 'Новости',
-    sub: (n: number) => `${n} ${n % 10 === 1 && n !== 11 ? 'новость' : n % 10 >= 2 && n % 10 <= 4 && (n < 10 || n > 20) ? 'новости' : 'новостей'} от застройщиков Бали`,
+    title: 'Новости рынка недвижимости Бали | Balinsky',
+    description: 'Что происходит на рынке недвижимости Бали: законы, туризм, инфраструктура, застройщики. Коротко, со ссылкой на источник и выводом для покупателя.',
+    h1: 'Новости рынка недвижимости Бали',
+    sub: (n: number) => `${n} ${n % 10 === 1 && n !== 11 ? 'новость' : n % 10 >= 2 && n % 10 <= 4 && (n < 10 || n > 20) ? 'новости' : 'новостей'}: рынок, законы и застройщики`,
     empty: 'Пока нет новостей.',
     locale: 'ru-RU',
   },
   en: {
-    title: 'Bali developer news | Balinsky',
-    description: 'Latest news from Bali developers and the real-estate market.',
-    h1: 'News',
-    sub: (n: number) => `${n} ${n === 1 ? 'story' : 'stories'} from Bali developers`,
+    title: 'Bali Property Market News — Regulation, Tourism, Developers | Balinsky',
+    description: 'What is happening in Bali property: regulation, tourism numbers, infrastructure and developers. Short, sourced, with what it means for buyers.',
+    h1: 'Bali property market news',
+    sub: (n: number) => `${n} ${n === 1 ? 'story' : 'stories'}: market, regulation and developers`,
     empty: 'No news yet.',
     locale: 'en-GB',
   },

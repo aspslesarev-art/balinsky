@@ -19,7 +19,7 @@ export function organizationLd() {
     logo: `${SITE}/icon-512.png`,
     image: `${SITE}/icon-512.png`,
     description:
-      'Независимый маркетплейс недвижимости на Бали: виллы, апартаменты и жилые комплексы от десятков застройщиков с проверенными документами (PBG, SLF) и аналитикой доходности по реальным данным аренды соседей.',
+      'Bali property data: villas, apartments and residential complexes from dozens of developers, compared with thousands of Bali holiday rentals — price per m², nearby rental rates, lease terms and permit status, with the method and sources published.',
     email: 'info@balinsky.info',
     areaServed: { '@type': 'Place', name: 'Bali, Indonesia' },
     sameAs: ['https://t.me/BalinskyBot'],

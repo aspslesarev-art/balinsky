@@ -97,8 +97,8 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
       // «bali property developer(s)» landed on a random developer's page —
       // the index should own that phrase. Ratings are hidden on the page, so
       // the title no longer promises them.
-      title: `Bali Property Developers — ${n} Verified Developers & Projects | Balinsky`,
-      description: `${n} property developers in Bali rated on 4 criteria: quality, experience, engineering, management. Completed projects, active builds, deals.`,
+      title: `Bali Property Developers — ${n} Developers, Projects & Track Records | Balinsky`,
+      description: `${n} property developers in Bali: completed and active projects, handover dates, unit counts and permit status for each. Profiles built from listing data, not developer pitches.`,
     },
     rental: {
       title: `Rental in Bali${n ? `: ${n} monthly & daily listings` : ': monthly & daily listings'} | Balinsky`,

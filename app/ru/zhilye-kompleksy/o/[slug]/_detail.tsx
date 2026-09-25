@@ -926,18 +926,18 @@ function minMax(nums: number[]): [number, number] | null {
 // Penthouses in Uluwatu, Bali. 50–240 m², 1–4 bedrooms, from $205,000 to
 // $799,000. Completion 2026.» against a title that already said Uluwatu,
 // 1–4 BR, from $205,000, ready 2026. The space now goes to the two things a
-// developer's own site never carries: who built it, and that someone checked.
+// developer's own site never carries: who built it, and how it compares with rentals nearby.
 const CHECK_TAIL: Record<Lang, string> = {
-  ru: 'Проверка PBG/SLF, планировки, видео с площадки и прямые контакты.',
-  en: 'PBG/SLF permits checked, floor plans, on-site video and direct contacts.',
-  id: 'Izin PBG/SLF dicek, denah, video dari lokasi, dan kontak langsung.',
-  fr: 'Permis PBG/SLF vérifiés, plans, vidéo sur place et contacts directs.',
-  de: 'PBG/SLF-Genehmigungen geprüft, Grundrisse, Video vor Ort, Direktkontakte.',
-  zh: '已核查 PBG/SLF 许可，户型图、现场视频与直接联系方式。',
-  nl: 'PBG/SLF-vergunningen gecontroleerd, plattegronden, video ter plaatse en direct contact.',
-  ban: 'Izin PBG/SLF kacek, denah, video saking genah, miwah kontak langsung.',
-  pl: 'Sprawdzone pozwolenia PBG/SLF, rzuty, wideo z miejsca i bezpośredni kontakt.',
-  uk: 'Перевірка PBG/SLF, планування, відео з майданчика та прямі контакти.',
+  ru: 'Статус PBG/SLF, планировки, видео с площадки и сравнение с арендой рядом.',
+  en: 'PBG/SLF permit status, floor plans, on-site video and nearby rental comparison.',
+  id: 'Status izin PBG/SLF, denah, video dari lokasi, dan perbandingan sewa sekitar.',
+  fr: 'Statut des permis PBG/SLF, plans, vidéo sur place et comparaison avec les locations voisines.',
+  de: 'PBG/SLF-Genehmigungsstatus, Grundrisse, Video vor Ort, Vergleich mit Mieten in der Nähe.',
+  zh: 'PBG/SLF 许可状态、户型图、现场视频及周边租金对比。',
+  nl: 'Status PBG/SLF-vergunningen, plattegronden, video ter plaatse en vergelijking met huur in de buurt.',
+  ban: 'Status izin PBG/SLF, denah, video saking genah, miwah perbandingan sewa ring sekitar.',
+  pl: 'Status pozwoleń PBG/SLF, rzuty, wideo z miejsca i porównanie z najmem w okolicy.',
+  uk: 'Статус PBG/SLF, планування, відео з майданчика та порівняння з орендою поруч.',
 }
 
 /** «от VIBE Development» — застройщик, которого в заголовке нет. */
