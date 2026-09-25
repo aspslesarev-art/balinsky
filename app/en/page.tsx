@@ -5,14 +5,14 @@ export const revalidate = 3600
 
 export const metadata = {
   title: 'Bali Property Prices & Rental Data — Compare Before You Buy | Balinsky',
-  description: 'Villas and apartments from dozens of developers, checked against thousands of Bali holiday rentals: price per m² vs the district, nearby rental rates, lease term and permit status. Free, no sign-up.',
+  description: 'Bali villas and apartments compared with the market: price per m² vs the area, nearby rental rates, lease terms and permit status. Free, no sign-up.',
   alternates: {
     canonical: '/en',
     languages: hreflangMap('/ru'),
   },
   openGraph: {
     title: 'Bali Property Prices & Rental Data — Compare Before You Buy',
-    description: 'Villas and apartments from dozens of developers, checked against thousands of Bali holiday rentals: price per m² vs the district, nearby rental rates, lease term and permit status. Free, no sign-up.',
+    description: 'Bali villas and apartments compared with the market: price per m² vs the area, nearby rental rates, lease terms and permit status. Free, no sign-up.',
     type: 'website',
     url: '/en',
     images: [{ url: '/andrei.jpg', width: 1200, height: 630 }],

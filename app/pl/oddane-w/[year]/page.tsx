@@ -20,8 +20,8 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const { year } = await params
   if (!VALID_YEARS.has(year)) return { robots: { index: false, follow: false } }
   return {
-    title: `Kompleksy mieszkaniowe na Bali oddane w ${year} — zweryfikowane projekty | Balinsky`,
-    description: `Kompleksy mieszkaniowe na Bali z rokiem oddania ${year}. Gotowe jednostki, realny harmonogram, pozwolenia PBG/SLF, kontakty do deweloperów.`,
+    title: `Kompleksy mieszkaniowe na Bali z oddaniem w ${year} | Balinsky`,
+    description: `Kompleksy mieszkaniowe na Bali, dla których deweloper deklaruje oddanie w ${year}: ceny, status pozwoleń PBG/SLF, kontakty do deweloperów.`,
     alternates: {
       canonical: `/pl/oddane-w/${year}`,
       languages: hreflangMap(`/ru/sdano/${year}`),
@@ -107,7 +107,7 @@ export default async function Page({ params }: { params: Params }) {
         <section className="max-w-3xl mb-8 text-[15px] leading-[1.7] text-[#1f2937] space-y-3">
           <p>
             {isPast
-              ? `Kompleksy mieszkaniowe na Bali, które ukończyły budowę w ${year}. Wszystkie jednostki przeszły odbiór końcowy, posiadają certyfikat SLF i mogą być legalnie wynajmowane lub zamieszkane.`
+              ? `Kompleksy mieszkaniowe na Bali, które deweloperzy podają jako oddane w ${year}. Oddanie to jeszcze nie SLF (pozwolenie na użytkowanie): sprawdź jego status na stronie kompleksu i poproś o certyfikat przed zapłatą.`
               : `Kompleksy mieszkaniowe na Bali z deklarowaną datą oddania ${year}. Niektóre projekty są na końcowym etapie budowy, inne wciąż na etapie off-plan. Zawsze weryfikuj rzeczywisty postęp z deklarowanym harmonogramem przed zawarciem transakcji.`}
           </p>
           <p>

@@ -58,7 +58,7 @@ const COPY = {
   uk: { sqm: 'm²', floor: 'Поверх', resale: 'Перепродаж', secondary: 'Вторинний ринок' },
 } as const
 
-export function ApartmentCard({ a, lang = 'ru' }: { a: ApartmentCardData; lang?: Lang }) {
+export function ApartmentCard({ a, lang = 'ru', priority = false }: { a: ApartmentCardData; lang?: Lang; priority?: boolean }) {
   const { currency } = useCurrency()
   const c = pickCopy(COPY, lang)
   const price = a.priceUsd != null && Number.isFinite(a.priceUsd)
@@ -75,7 +75,7 @@ export function ApartmentCard({ a, lang = 'ru' }: { a: ApartmentCardData; lang?:
       className="group block bg-[var(--color-card-bg)] rounded-2xl border border-[var(--color-border)] overflow-hidden"
     >
       <div className="relative">
-        <PhotoSlider photos={a.photos} alt={a.title} trackingId={`apt:${a.slug}`} />
+        <PhotoSlider photos={a.photos} alt={a.title} trackingId={`apt:${a.slug}`} priority={priority} />
         {dealLabel && (
           <span className="absolute top-3 left-3 z-10 inline-flex items-center text-[11px] font-semibold uppercase tracking-wide bg-white text-[#111827] rounded-full px-2.5 py-1 shadow-[0_1px_3px_rgba(0,0,0,0.12)]">
             {dealLabel}

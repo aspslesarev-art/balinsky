@@ -5,14 +5,14 @@ export const revalidate = 3600
 
 export const metadata = {
   title: 'Immobilienpreise & Mietdaten auf Bali — vergleichen vor dem Kauf | Balinsky',
-  description: 'Villen und Apartments von Dutzenden Bauträgern, abgeglichen mit Tausenden Ferienvermietungen auf Bali: Preis pro m² im Vergleich zum Viertel, Mieten der Nachbarn, Pachtdauer und Genehmigungsstatus. Kostenlos, ohne Anmeldung.',
+  description: 'Villen und Apartments auf Bali im Marktvergleich: Preis pro m², Mieten in der Nähe, Pachtdauer und Genehmigungsstatus. Kostenlos.',
   alternates: {
     canonical: '/de',
     languages: hreflangMap('/ru'),
   },
   openGraph: {
     title: 'Immobilienpreise & Mietdaten auf Bali — vergleichen vor dem Kauf',
-    description: 'Villen und Apartments von Dutzenden Bauträgern, abgeglichen mit Tausenden Ferienvermietungen auf Bali: Preis pro m² im Vergleich zum Viertel, Mieten der Nachbarn, Pachtdauer und Genehmigungsstatus. Kostenlos, ohne Anmeldung.',
+    description: 'Villen und Apartments auf Bali im Marktvergleich: Preis pro m², Mieten in der Nähe, Pachtdauer und Genehmigungsstatus. Kostenlos.',
     type: 'website',
     url: '/de',
     images: [{ url: '/andrei.jpg', width: 1200, height: 630 }],

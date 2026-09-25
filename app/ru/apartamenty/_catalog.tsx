@@ -227,7 +227,7 @@ export async function ApartamentyCatalog({
         ) : (
           <>
             <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-              {cards.map(c => <ApartmentCard key={c.id} a={c} lang={lang} />)}
+              {cards.map((c, i) => <ApartmentCard key={c.id} a={c} lang={lang} priority={i < 2} />)}
             </div>
 
             <InfiniteScrollClient

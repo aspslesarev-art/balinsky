@@ -5,14 +5,14 @@ export const revalidate = 3600
 
 export const metadata = {
   title: 'Harga Properti & Data Sewa Bali — Bandingkan Sebelum Membeli | Balinsky',
-  description: 'Vila dan apartemen dari puluhan pengembang, dibandingkan dengan ribuan sewa liburan di Bali: harga per m² vs kawasan, tarif sewa sekitar, masa leasehold, dan status izin. Gratis, tanpa daftar.',
+  description: 'Vila dan apartemen Bali dibandingkan dengan pasar: harga per m² vs kawasan, tarif sewa sekitar, masa leasehold, dan status izin. Gratis.',
   alternates: {
     canonical: '/id',
     languages: hreflangMap('/ru'),
   },
   openGraph: {
     title: 'Harga Properti & Data Sewa Bali — Bandingkan Sebelum Membeli',
-    description: 'Vila dan apartemen dari puluhan pengembang, dibandingkan dengan ribuan sewa liburan di Bali: harga per m² vs kawasan, tarif sewa sekitar, masa leasehold, dan status izin. Gratis, tanpa daftar.',
+    description: 'Vila dan apartemen Bali dibandingkan dengan pasar: harga per m² vs kawasan, tarif sewa sekitar, masa leasehold, dan status izin. Gratis.',
     type: 'website',
     url: '/id',
     images: [{ url: '/andrei.jpg', width: 1200, height: 630 }],

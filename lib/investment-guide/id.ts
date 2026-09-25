@@ -137,7 +137,7 @@ export const id: InvestmentGuideCopy = {
     { label: 'Direktorat Jenderal Imigrasi', href: SRC.immigration },
   ],
   district: {
-    metaTitle: n => `Investasi properti di ${n}, Bali — tarif per malam dan imbal hasil dari data kami | Balinsky`,
+    metaTitle: n => `Investasi properti di ${n}, Bali: tarif sewa dan imbal hasil | Balinsky`,
     metaDescription: n => `${n}, Bali: tarif median vila per malam, pendapatan sewa pada okupansi 65% dan perbandingannya dengan seluruh pulau — dari katalog dan basis data sewa Balinsky, dengan sumber.`,
     h1: n => `Investasi properti di ${n}, Bali — 2026`,
     caseTitle: n => `Vila 2 kamar di ${n} — apa kata data`,

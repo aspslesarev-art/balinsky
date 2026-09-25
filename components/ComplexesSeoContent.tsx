@@ -476,7 +476,7 @@ function context(f: ComplexFilterState, lang: Lang): string {
 function buildSeoTitle(f: ComplexFilterState, variant: Variant, lang: Lang): string {
   const t = pickCopy(T, lang)
   const adj: string[] = []
-  if (f.types.length === 1) adj.push(f.types[0])
+  if (f.types.length === 1) adj.push(facetLabel('type', f.types[0], lang))
   let s = adj.length ? adj.join(' ') + ' ' + t.titleBase.toLowerCase() : t.titleBase
   if (f.district.length === 1) s += t.titleInDistrict(f.district[0])
   s += variant === 'map' ? t.titleMapSuffix : t.titleListSuffix

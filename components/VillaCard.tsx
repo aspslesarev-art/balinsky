@@ -63,7 +63,7 @@ const COPY = {
   uk: { resale: 'Перепродаж',    secondary: 'Вторинний ринок', house: 'Будинок', land: 'Ділянка', sqm: 'm²' },
 } as const
 
-export function VillaCard({ a, lang = 'ru' }: { a: VillaCardData; lang?: Lang }) {
+export function VillaCard({ a, lang = 'ru', priority = false }: { a: VillaCardData; lang?: Lang; priority?: boolean }) {
   const { currency } = useCurrency()
   const copy = pickCopy(COPY, lang)
   const price = a.priceUsd != null && Number.isFinite(a.priceUsd)
@@ -79,7 +79,7 @@ export function VillaCard({ a, lang = 'ru' }: { a: VillaCardData; lang?: Lang })
       className="group block bg-[var(--color-card-bg)] rounded-2xl border border-[var(--color-border)] overflow-hidden"
     >
       <div className="relative">
-        <PhotoSlider photos={a.photos} alt={a.title} trackingId={`villa:${a.slug}`} />
+        <PhotoSlider photos={a.photos} alt={a.title} trackingId={`villa:${a.slug}`} priority={priority} />
         {dealLabel && (
           <span className="absolute top-3 left-3 z-10 inline-flex items-center text-[11px] font-semibold uppercase tracking-wide bg-white text-[#111827] rounded-full px-2.5 py-1 shadow-[0_1px_3px_rgba(0,0,0,0.12)]">
             {dealLabel}

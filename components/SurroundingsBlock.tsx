@@ -10,6 +10,7 @@
 // nothing here calls Google at render time. Server Component.
 import { Star } from 'lucide-react'
 import type { Surroundings } from '@/lib/surroundings'
+import { cdnRewrite } from '@/lib/photo-cdn'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { translit, hasCyrillic } from '@/lib/translit'
 
@@ -125,10 +126,11 @@ export function SurroundingsBlock({ data, lang }: { data: Surroundings | null; l
             return (
               <figure key={v.id} className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-white">
                 {/* Photos are already 640px WebP in our Storage — next/image
-                    would add a transform hop for nothing. */}
+                    would add a transform hop for nothing. Served through the
+                    CDN host like every other photo (Supabase egress). */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={v.photo_url!}
+                  src={cdnRewrite(v.photo_url) ?? v.photo_url!}
                   alt={displayName(v.name, lang)}
                   width={640}
                   height={480}

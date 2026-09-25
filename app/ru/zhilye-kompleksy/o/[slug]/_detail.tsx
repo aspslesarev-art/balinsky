@@ -1948,8 +1948,9 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
               footer={showSunBlock ? (
                 <div>
                   <p className="mb-3 text-[13px] leading-relaxed text-[var(--color-text-muted)]">
-                    Объёмная модель комплекса на карте: видно, куда падает тень от корпусов
-                    и заборов и сколько солнца достаётся двору с бассейном в любой день года.
+                    {lang === 'ru'
+                      ? 'Объёмная модель комплекса на карте: видно, куда падает тень от корпусов и заборов и сколько солнца достаётся двору с бассейном в любой день года.'
+                      : 'A 3D model of the complex on the map: see where the buildings and walls cast shade and how much sun the pool courtyard gets on any day of the year.'}
                   </p>
                   <SunShadowBlock
                     plan={sunPlan!}
@@ -1970,6 +1971,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
                       yardWall: sunSettings!.yardWall,
                     }}
                     title={sunPlan!.title}
+                    en={lang !== 'ru'}
                   />
                   {sunPlan!.google3d && process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY && (
                     <div className="mt-3">
@@ -1977,6 +1979,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
                         apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}
                         view={sunPlan!.google3d}
                         title={sunPlan!.title}
+                        en={lang !== 'ru'}
                       />
                     </div>
                   )}
@@ -1986,6 +1989,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             {process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY && (
               <GatedBlock kind="heatmap" lang={lang}>
                 <div className="mb-4">
+                  <LazyMount fallback={<div className="h-[420px] rounded-2xl bg-[var(--color-search-bg)]" />}>
                   <NeighborhoodHeatMap
                     apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}
                     lat={lat}
@@ -1994,6 +1998,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
                     lang={lang}
                     overlay={parseGeoOverlay(d['Geo Overlay'])}
                   />
+                  </LazyMount>
                 </div>
               </GatedBlock>
             )}

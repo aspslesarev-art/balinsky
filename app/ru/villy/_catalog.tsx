@@ -235,7 +235,7 @@ export async function VillasCatalog({
         ) : (
           <>
             <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-              {cards.map(c => <VillaCard key={c.id} a={c} lang={lang} />)}
+              {cards.map((c, i) => <VillaCard key={c.id} a={c} lang={lang} priority={i < 2} />)}
             </div>
             <VillaInfiniteScrollClient
               initialOffset={cards.length}

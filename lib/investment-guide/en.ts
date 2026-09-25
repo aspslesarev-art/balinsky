@@ -137,7 +137,7 @@ export const en: InvestmentGuideCopy = {
     { label: 'Directorate General of Immigration', href: SRC.immigration },
   ],
   district: {
-    metaTitle: n => `Investing in ${n}, Bali — nightly rates and yields from our data | Balinsky`,
+    metaTitle: n => `Investing in ${n}, Bali: Rental Rates & Yields | Balinsky`,
     metaDescription: n => `${n}, Bali: median nightly villa rate, rental revenue at 65% occupancy and how it compares with the island — from Balinsky's catalogue and rental database, with sources.`,
     h1: n => `Investing in property in ${n}, Bali — 2026`,
     caseTitle: n => `Two-bedroom villa in ${n} — what the data shows`,

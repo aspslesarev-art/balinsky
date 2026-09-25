@@ -27,6 +27,7 @@ export function PhotoSlider({
   alt,
   heightClass = 'h-[360px]',
   trackingId,
+  priority = false,
 }: {
   photos: string[]
   alt: string
@@ -35,6 +36,9 @@ export function PhotoSlider({
   // specific listing in Yandex Metrika. Optional — without it the
   // randomisation still works, just no analytics tag.
   trackingId?: string
+  /** Above the fold (first cards of a catalog): load eagerly, high priority —
+   *  a lazy first image was the page's LCP element. */
+  priority?: boolean
 }) {
   const count = photos.length
   const autoCount = Math.min(count, AUTO_PHOTOS)
@@ -207,7 +211,8 @@ export function PhotoSlider({
         alt={alt}
         fill
         sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
-        loading="lazy"
+        loading={priority ? 'eager' : 'lazy'}
+        {...(priority ? { fetchPriority: 'high' as const } : {})}
         className={`object-cover transition-opacity duration-[600ms] ${
           everActivated && autoCount > 1 ? 'opacity-0' : 'opacity-100'
         }`}

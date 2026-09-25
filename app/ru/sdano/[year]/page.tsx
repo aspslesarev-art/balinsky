@@ -25,8 +25,8 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const { year } = await params
   if (!VALID_YEARS.has(year)) return { robots: { index: false, follow: false } }
   return {
-    title: `Сданные жилые комплексы на Бали ${year} — каталог готовых ЖК | Balinsky`,
-    description: `Жилые комплексы на Бали со сроком сдачи в ${year} году. Готовые юниты, реальные сроки, документы PBG/SLF, цены и контакты застройщиков.`,
+    title: `Жилые комплексы на Бали со сроком сдачи ${year} | Balinsky`,
+    description: `Жилые комплексы на Бали, у которых застройщик заявил сдачу в ${year} году: цены, статус разрешений PBG/SLF, контакты застройщиков.`,
     alternates: {
       canonical: `/ru/sdano/${year}`,
       languages: hreflangMap(`/ru/sdano/${year}`),
@@ -112,11 +112,11 @@ export default async function Page({ params }: { params: Params }) {
         <section className="max-w-3xl mb-8 text-[15px] leading-[1.7] text-[#1f2937] space-y-3">
           <p>
             {isPast
-              ? `Жилые комплексы Бали, сданные в эксплуатацию в ${year} году. Все объекты прошли финальную инспекцию, имеют SLF и могут быть законно использованы для проживания и сдачи в аренду.`
+              ? `Жилые комплексы Бали, которые застройщики называют сданными в ${year} году. Сдача — ещё не SLF (разрешение на эксплуатацию): проверьте его статус на странице комплекса и попросите показать сертификат до оплаты.`
               : `Жилые комплексы Бали с заявленной датой сдачи в ${year} году. Часть проектов уже на финальной стадии строительства, часть — на этапе котлована. Перед сделкой обязательно сверять реальный прогресс с указанными сроками.`}
           </p>
           <p>
-            Для каждого комплекса в карточке доступны фото и видео с земли, статус документов (PBG, SLF), список застройщика и контактов менеджеров.
+            Для каждого комплекса в карточке доступны фото и видео с земли, статус документов (PBG, SLF) со слов застройщика, список застройщика и контактов менеджеров.
             Доходность по соседним объектам — через интеграцию с <a href="https://www.estatemarket.io" target="_blank" rel="nofollow noopener noreferrer" className="text-[var(--color-primary)] no-underline hover:underline">estatemarket.io</a>.
           </p>
         </section>

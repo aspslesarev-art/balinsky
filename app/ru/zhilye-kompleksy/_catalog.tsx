@@ -172,7 +172,7 @@ export async function ComplexesCatalog({
         ) : (
           <>
             <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-              {cards.map(c => <ComplexCard key={c.id} c={c} lang={lang} />)}
+              {cards.map((c, i) => <ComplexCard key={c.id} c={c} lang={lang} priority={i < 2} />)}
             </div>
 
             <ComplexInfiniteScrollClient

@@ -58,7 +58,7 @@ function fmtRange(
   return null
 }
 
-export function ComplexCard({ c, lang = 'ru' }: { c: ComplexCardData; lang?: Lang }) {
+export function ComplexCard({ c, lang = 'ru', priority = false }: { c: ComplexCardData; lang?: Lang; priority?: boolean }) {
   const { currency } = useCurrency()
   const copy = pickCopy(COPY, lang)
   const detailHref = switchLangPath(`/ru/zhilye-kompleksy/o/${c.slug}`, lang)
@@ -79,7 +79,7 @@ export function ComplexCard({ c, lang = 'ru' }: { c: ComplexCardData; lang?: Lan
       className="group flex h-full flex-col bg-[var(--color-card-bg)] rounded-2xl border border-[var(--color-border)] overflow-hidden hover:shadow-sm transition-shadow"
     >
       <div className="relative">
-        <PhotoSlider photos={slides} alt={c.name} heightClass="h-[240px] md:h-[360px]" trackingId={`complex:${c.slug}`} />
+        <PhotoSlider photos={slides} alt={c.name} heightClass="h-[240px] md:h-[360px]" trackingId={`complex:${c.slug}`} priority={priority} />
         {c.isSold && (
           <div className="absolute top-3 left-3 z-10 inline-flex items-center px-2.5 py-1 rounded-full bg-[#DC2626] text-white text-[12px] font-semibold tracking-wide shadow-md">
             {copy.sold}

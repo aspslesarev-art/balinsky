@@ -43,6 +43,8 @@ export type SunSceneProps = {
   longitude: number
   placement: Placement
   heights: ModelHeights
+  /** UI language: Russian on /ru, English everywhere else. */
+  en?: boolean
 }
 
 type SceneContext = {
@@ -59,7 +61,7 @@ type SceneContext = {
   model: ComplexModel | null
 }
 
-export function SunScene({ plan, latitude, longitude, placement, heights }: SunSceneProps) {
+export function SunScene({ plan, latitude, longitude, placement, heights, en = false }: SunSceneProps) {
   const { rowAzimuth } = placement
   const mountRef = useRef<HTMLDivElement | null>(null)
   const sceneRef = useRef<SceneContext | null>(null)
@@ -194,7 +196,7 @@ export function SunScene({ plan, latitude, longitude, placement, heights }: SunS
     backdropMaterial.polygonOffsetFactor = 4 * (wideMaps.length + 1)
     backdropMaterial.polygonOffsetUnits = 4 * (wideMaps.length + 1)
 
-    addCompass(scene, reach)
+    addCompass(scene, reach, en)
 
     const sunMarker = new THREE.Mesh(
       new THREE.SphereGeometry(2.2, 20, 14),
@@ -330,7 +332,7 @@ export function SunScene({ plan, latitude, longitude, placement, heights }: SunS
       <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-white/10 bg-[#12161c] px-4 py-3">
         <label className="flex min-w-[200px] flex-1 flex-col gap-1">
           <span className="flex justify-between text-[11px] uppercase tracking-wide text-white/50">
-            Дата
+            {en ? 'Date' : 'Дата'}
             <b className="text-[13px] normal-case tracking-normal text-white">
               {formatDayOfYear(dayOfYear, year)}
             </b>
@@ -342,13 +344,13 @@ export function SunScene({ plan, latitude, longitude, placement, heights }: SunS
             value={dayOfYear}
             onChange={(e) => setDayOfYear(Number(e.target.value))}
             className="accent-amber-400"
-            aria-label="Дата"
+            aria-label={en ? 'Date' : 'Дата'}
           />
         </label>
 
         <label className="flex min-w-[200px] flex-1 flex-col gap-1">
           <span className="flex justify-between text-[11px] uppercase tracking-wide text-white/50">
-            Время
+            {en ? 'Time' : 'Время'}
             <b className="text-[13px] normal-case tracking-normal text-white">
               {formatHours(minutes / 60)}
             </b>
@@ -361,7 +363,7 @@ export function SunScene({ plan, latitude, longitude, placement, heights }: SunS
             value={Math.round(minutes)}
             onChange={(e) => setMinutes(Number(e.target.value))}
             className="accent-amber-400"
-            aria-label="Время"
+            aria-label={en ? 'Time' : 'Время'}
           />
         </label>
 
@@ -371,7 +373,7 @@ export function SunScene({ plan, latitude, longitude, placement, heights }: SunS
             onClick={() => setPlaying((v) => !v)}
             className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white hover:bg-white/10"
           >
-            {playing ? '❚❚ Пауза' : '▶ Прогнать день'}
+            {playing ? (en ? '❚❚ Pause' : '❚❚ Пауза') : (en ? '▶ Play the day' : '▶ Прогнать день')}
           </button>
           <button
             type="button"
@@ -383,7 +385,7 @@ export function SunScene({ plan, latitude, longitude, placement, heights }: SunS
                 : 'border-white/15 text-white hover:bg-white/10'
             }`}
           >
-            Вид сверху
+            {en ? 'Top view' : 'Вид сверху'}
           </button>
         </div>
       </div>
@@ -442,13 +444,13 @@ function frameCourtyards(
   controls.update()
 }
 
-function addCompass(scene: THREE.Scene, reach = 1) {
+function addCompass(scene: THREE.Scene, reach = 1, en = false) {
   const radius = 46 * reach
   const marks: [string, number, number, string][] = [
-    ['С', 0, -radius, '#ff9a3c'],
-    ['Ю', 0, radius, '#ffffff'],
-    ['В', radius, 0, '#ffffff'],
-    ['З', -radius, 0, '#ffffff'],
+    [en ? 'N' : 'С', 0, -radius, '#ff9a3c'],
+    [en ? 'S' : 'Ю', 0, radius, '#ffffff'],
+    [en ? 'E' : 'В', radius, 0, '#ffffff'],
+    [en ? 'W' : 'З', -radius, 0, '#ffffff'],
   ]
 
   marks.forEach(([text, x, z, color]) => {

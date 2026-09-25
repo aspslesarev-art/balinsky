@@ -4,6 +4,7 @@
 import { TrendingUp, Waves, Flame, KeyRound } from 'lucide-react'
 import type { ComplexSignals, BeachZone } from '@/lib/complex-signals'
 import { pickCopy, type Lang } from '@/lib/i18n'
+import { placeName } from '@/lib/translit'
 
 type ZoneKey = `zone_${BeachZone}`
 
@@ -119,7 +120,7 @@ export function ComplexSignalsBlock({ signals, lang = 'ru' }: { signals: Complex
             Icon={Waves}
             label={c.zoneLabel}
             value={c[zoneKey]}
-            sub={zone.walkingMinutes != null ? c.walkMin(zone.walkingMinutes) : zone.beachName}
+            sub={zone.walkingMinutes != null ? c.walkMin(zone.walkingMinutes) : placeName(zone.beachName, lang)}
           />
         )}
         {occ && occValue && (

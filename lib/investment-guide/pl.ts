@@ -137,7 +137,7 @@ export const pl: InvestmentGuideCopy = {
     { label: 'Dyrekcja Generalna ds. Imigracji Indonezji', href: SRC.immigration },
   ],
   district: {
-    metaTitle: n => `Inwestowanie w ${n}, Bali — stawki za noc i rentowność z naszych danych | Balinsky`,
+    metaTitle: n => `Inwestycje w ${n}, Bali: stawki najmu i rentowność | Balinsky`,
     metaDescription: n => `${n}, Bali: mediana stawki za noc w willi, przychód z najmu przy obłożeniu 65% i porównanie z całą wyspą — z katalogu i bazy najmu Balinsky, ze źródłami.`,
     h1: n => `Inwestycje w nieruchomości w ${n}, Bali — 2026`,
     caseTitle: n => `Willa z dwiema sypialniami w ${n} — co pokazują dane`,

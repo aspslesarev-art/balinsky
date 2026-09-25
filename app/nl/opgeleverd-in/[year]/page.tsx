@@ -20,8 +20,8 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const { year } = await params
   if (!VALID_YEARS.has(year)) return { robots: { index: false, follow: false } }
   return {
-    title: `Bali residential complexes completed in ${year} — verified projects | Balinsky`,
-    description: `Bali residential complexes with completion year ${year}. Ready units, real schedule, PBG/SLF permits, developer contacts.`,
+    title: `Bali residential complexes with a ${year} handover | Balinsky`,
+    description: `Bali residential complexes whose developers state a ${year} handover: prices, permit status (PBG/SLF) and developer contacts.`,
     alternates: {
       canonical: `/nl/opgeleverd-in/${year}`,
       languages: hreflangMap(`/ru/sdano/${year}`),
@@ -107,11 +107,11 @@ export default async function Page({ params }: { params: Params }) {
         <section className="max-w-3xl mb-8 text-[15px] leading-[1.7] text-[#1f2937] space-y-3">
           <p>
             {isPast
-              ? `Bali residential complexes that completed construction in ${year}. All units passed final inspection, hold an SLF certificate, and can be legally rented out or occupied.`
+              ? `Bali residential complexes whose developers report completion in ${year}. Completion is not the same as an SLF (certificate of occupancy): check its status on each complex page and ask to see the certificate before you pay.`
               : `Bali residential complexes with a stated ${year} completion date. Some projects are in the final construction stage, others still off-plan. Always cross-check actual progress against the stated schedule before transacting.`}
           </p>
           <p>
-            Every complex card lists permits (PBG, SLF), photo and on-the-ground video, developer info and a manager contact.
+            Every complex card lists permit status (PBG, SLF) as reported by the developer, photo and on-the-ground video, developer info and a manager contact.
             Real neighbour-level rental yield via <a href="https://www.estatemarket.io" target="_blank" rel="nofollow noopener noreferrer" className="text-[var(--color-primary)] no-underline hover:underline">estatemarket.io</a> integration.
           </p>
         </section>

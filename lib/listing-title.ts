@@ -16,7 +16,9 @@ export type ListingKind = 'villa' | 'apartment'
 /** Drop the « | Balinsky» suffix the Airtable formula appended. */
 export function stripBrand(s: string | null | undefined): string | null {
   if (typeof s !== 'string') return null
-  return s.replace(/\s*\|\s*Balinsky\s*$/i, '').trim() || null
+  // Also «| Balinsky – Bali Real Estate» and similar tails the editors typed
+  // into SEO:Title — the page appends its own « | Balinsky».
+  return s.replace(/\s*[|–—-]\s*Balinsky\b.*$/i, '').trim() || null
 }
 
 /**

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Flame } from 'lucide-react'
 import { BALINSKY_MAP_STYLE } from '@/lib/google-map-style'
-import { loadGoogleMaps } from '@/lib/google-maps-loader'
+import { loadGoogleMaps, mapsUnlocked } from '@/lib/google-maps-loader'
 import { gateMapGestures } from '@/lib/map-gesture-gate'
 import { createHeatOverlay, fetchHeatCells } from '@/lib/heat-overlay'
 import { createGeoImageOverlay, type GeoImageOverlay } from '@/lib/geo-overlay'
@@ -42,6 +42,7 @@ export function NeighborhoodHeatMap({
 
   useEffect(() => {
     if (!apiKey || !containerRef.current || map) return
+    if (!mapsUnlocked()) return
     let cancelled = false
     loadGoogleMaps(apiKey).then(() => {
       if (cancelled || !containerRef.current) return

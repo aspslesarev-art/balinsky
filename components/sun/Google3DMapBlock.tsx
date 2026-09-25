@@ -18,6 +18,8 @@ export type Google3DMapBlockProps = {
   apiKey: string
   view: Google3DView
   title: string
+  /** Russian UI on /ru, English on every other locale. */
+  en?: boolean
 }
 
 /** Камера облёта: точка, вокруг которой крутимся, и положение на орбите. */
@@ -42,7 +44,7 @@ function topDown(view: Google3DView): Orbit {
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))
 
-export function Google3DMapBlock({ apiKey, view, title }: Google3DMapBlockProps) {
+export function Google3DMapBlock({ apiKey, view, title, en = false }: Google3DMapBlockProps) {
   const [status, setStatus] = useState<Status>('idle')
   const [topView, setTopView] = useState(false)
   const mountRef = useRef<HTMLDivElement | null>(null)
@@ -235,18 +237,19 @@ export function Google3DMapBlock({ apiKey, view, title }: Google3DMapBlockProps)
         className="inline-flex items-center gap-2 rounded-xl border border-sky-400/50 bg-sky-400/10 px-4 py-2.5 text-sm font-medium transition hover:bg-sky-400/20 disabled:cursor-wait disabled:opacity-60"
       >
         <span aria-hidden>🌍</span>
-        {status === 'checking' ? 'Открываю 3D-карту…' : 'Посмотреть на 3D-карте Google'}
+        {status === 'checking' ? (en ? 'Opening the 3D map…' : 'Открываю 3D-карту…') : (en ? 'See it on Google 3D map' : 'Посмотреть на 3D-карте Google')}
       </button>
 
       {status === 'limit' && (
         <p className="mt-2 text-[13px] text-[var(--color-text-muted)]">
-          3D-карта на сегодня недоступна — загляните завтра. Модель с солнцем и тенью открывается
-          как обычно.
+          {en
+            ? 'The 3D map is unavailable for today — try again tomorrow. The sun and shade model opens as usual.'
+            : '3D-карта на сегодня недоступна — загляните завтра. Модель с солнцем и тенью открывается как обычно.'}
         </p>
       )}
       {status === 'error' && (
         <p className="mt-2 text-[13px] text-[var(--color-text-muted)]">
-          Не получилось открыть 3D-карту. Проверьте интернет и попробуйте ещё раз.
+          {en ? 'Could not open the 3D map. Check your connection and try again.' : 'Не получилось открыть 3D-карту. Проверьте интернет и попробуйте ещё раз.'}
         </p>
       )}
 
@@ -254,7 +257,7 @@ export function Google3DMapBlock({ apiKey, view, title }: Google3DMapBlockProps)
         <div
           role="dialog"
           aria-modal="true"
-          aria-label={`${title} — 3D-карта Google`}
+          aria-label={`${title} — ${en ? 'Google 3D map' : '3D-карта Google'}`}
           className="fixed inset-0 z-[100] flex flex-col bg-black/80 sm:p-6"
           onClick={close}
         >
@@ -263,11 +266,11 @@ export function Google3DMapBlock({ apiKey, view, title }: Google3DMapBlockProps)
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-              <div className="text-sm font-semibold text-white">{title} — 3D-карта Google</div>
+              <div className="text-sm font-semibold text-white">{title} — {en ? 'Google 3D map' : '3D-карта Google'}</div>
               <button
                 type="button"
                 onClick={close}
-                aria-label="Закрыть"
+                aria-label={en ? 'Close' : 'Закрыть'}
                 className="rounded-lg px-2 py-1 text-white/70 hover:bg-white/10 hover:text-white"
               >
                 ✕
@@ -290,9 +293,9 @@ export function Google3DMapBlock({ apiKey, view, title }: Google3DMapBlockProps)
             <div className="flex items-center justify-between gap-3 border-t border-white/10 px-4 py-3">
               <p className="text-xs text-white/50">
                 <span className="hidden sm:inline">
-                  Тяните — вращать · колесо — приблизить · правая кнопка — сдвинуть
+                  {en ? 'Drag to rotate · wheel to zoom · right button to pan' : 'Тяните — вращать · колесо — приблизить · правая кнопка — сдвинуть'}
                 </span>
-                <span className="sm:hidden">Палец — вращать · два пальца — приблизить и сдвинуть</span>
+                <span className="sm:hidden">{en ? 'One finger to rotate · two to zoom and pan' : 'Палец — вращать · два пальца — приблизить и сдвинуть'}</span>
               </p>
               <button
                 type="button"
@@ -304,7 +307,7 @@ export function Google3DMapBlock({ apiKey, view, title }: Google3DMapBlockProps)
                     : 'border-white/15 text-white hover:bg-white/10'
                 }`}
               >
-                Вид сверху
+                {en ? 'Top view' : 'Вид сверху'}
               </button>
             </div>
           </div>

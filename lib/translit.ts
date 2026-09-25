@@ -38,3 +38,16 @@ export function translitPreserveCase(s: string): string {
   }
   return out
 }
+
+/** A place name for display: Google Places names are stored in Russian, so
+ *  every locale except RU/UK gets the Latin transliteration. */
+export function placeName(name: string | null | undefined, lang: string): string | null {
+  if (!name) return null
+  if (lang === 'ru' || lang === 'uk' || !hasCyrillic(name)) return name
+  // «Пляж Бату болонг» / «Тимбис Бич» → «Batu Bolong Beach» / «Timbis Beach»:
+  // the generic word is translated, the proper name transliterated.
+  const beach = /^пляж\s+/i.test(name) || /\s+бич$/i.test(name)
+  const core = name.replace(/^пляж\s+/i, '').replace(/\s+бич$/i, '')
+  const latin = translitPreserveCase(core.toLowerCase()).replace(/(^|[\s-])(\p{L})/gu, (_, p, c: string) => p + c.toUpperCase())
+  return beach ? `${latin} Beach` : latin
+}

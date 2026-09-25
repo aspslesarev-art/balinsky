@@ -18,7 +18,7 @@ const SunScene = dynamic(() => import('./SunScene').then((m) => m.SunScene), {
   ssr: false,
   loading: () => (
     <div className="flex h-full items-center justify-center text-sm text-white/60">
-      Загружаю 3D-модель…
+      3D…
     </div>
   ),
 })
@@ -30,6 +30,8 @@ export type SunShadowBlockProps = {
   placement: Placement
   heights: ModelHeights
   title: string
+  /** Russian UI on /ru, English on every other locale. */
+  en?: boolean
 }
 
 export function SunShadowBlock({
@@ -39,6 +41,7 @@ export function SunShadowBlock({
   placement,
   heights,
   title,
+  en = false,
 }: SunShadowBlockProps) {
   const [open, setOpen] = useState(false)
   const close = useCallback(() => setOpen(false), [])
@@ -65,14 +68,14 @@ export function SunShadowBlock({
         className="inline-flex items-center gap-2 rounded-xl border border-amber-400/50 bg-amber-400/10 px-4 py-2.5 text-sm font-medium transition hover:bg-amber-400/20"
       >
         <span aria-hidden>☀️</span>
-        Посмотреть солнце и тень в 3D
+        {en ? 'See sun and shade in 3D' : 'Посмотреть солнце и тень в 3D'}
       </button>
 
       {open && (
         <div
           role="dialog"
           aria-modal="true"
-          aria-label={`${title} — солнце и тень`}
+          aria-label={`${title} — ${en ? 'sun and shade' : 'солнце и тень'}`}
           className="fixed inset-0 z-[100] flex flex-col bg-black/80 sm:p-6"
           onClick={close}
         >
@@ -81,11 +84,11 @@ export function SunShadowBlock({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-              <div className="text-sm font-semibold text-white">{title} — солнце и тень</div>
+              <div className="text-sm font-semibold text-white">{title} — {en ? 'sun and shade' : 'солнце и тень'}</div>
               <button
                 type="button"
                 onClick={close}
-                aria-label="Закрыть"
+                aria-label={en ? 'Close' : 'Закрыть'}
                 className="rounded-lg px-2 py-1 text-white/70 hover:bg-white/10 hover:text-white"
               >
                 ✕
@@ -94,6 +97,7 @@ export function SunShadowBlock({
 
             <div className="min-h-0 flex-1">
               <SunScene
+                en={en}
                 plan={plan}
                 latitude={latitude}
                 longitude={longitude}

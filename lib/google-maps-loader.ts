@@ -30,6 +30,10 @@ export function loadGoogleMaps(apiKey: string): Promise<void> {
       key: apiKey,
       v: 'weekly',
     })
+    // Map labels in the page's language (<html lang> is set per locale);
+    // without it Google picked the browser's, e.g. Russian on /en pages.
+    const lang = document.documentElement.lang
+    if (lang) params.set('language', lang)
     const script = document.createElement('script')
     script.src = `${SDK_URL}?${params.toString()}`
     script.async = true
@@ -52,4 +56,11 @@ export function loadGoogleMaps(apiKey: string): Promise<void> {
     document.head.appendChild(script)
   })
   return window.__balinskyGmapLoader
+}
+
+/** Signed-in visitor (the flag GatedBlock's blur keys off). Maps inside a
+ *  gate are billed per load and shown blurred to everyone else, so they are
+ *  only loaded for signed-in visitors — login reloads the page. */
+export function mapsUnlocked(): boolean {
+  return typeof document !== 'undefined' && document.documentElement.getAttribute('data-auth') === '1'
 }

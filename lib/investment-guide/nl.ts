@@ -137,7 +137,7 @@ export const nl: InvestmentGuideCopy = {
     { label: 'Directoraat-Generaal Immigratie van Indonesië', href: SRC.immigration },
   ],
   district: {
-    metaTitle: n => `Beleggen in ${n}, Bali — prijzen per nacht en rendementen uit onze data | Balinsky`,
+    metaTitle: n => `Beleggen in ${n}, Bali: huurprijzen en rendement | Balinsky`,
     metaDescription: n => `${n}, Bali: mediane villaprijs per nacht, huuropbrengst bij 65% bezetting en de vergelijking met het hele eiland — uit de Balinsky-catalogus en huurdatabase, met bronnen.`,
     h1: n => `Beleggen in vastgoed in ${n}, Bali — 2026`,
     caseTitle: n => `Villa met twee slaapkamers in ${n} — wat de data laat zien`,

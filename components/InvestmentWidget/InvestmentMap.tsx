@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Flame } from 'lucide-react'
 import { BALINSKY_MAP_STYLE } from '@/lib/google-map-style'
-import { loadGoogleMaps } from '@/lib/google-maps-loader'
+import { loadGoogleMaps, mapsUnlocked } from '@/lib/google-maps-loader'
 import { gateMapGestures } from '@/lib/map-gesture-gate'
 import { createHeatOverlay, fetchHeatCells } from '@/lib/heat-overlay'
 import type { Snapshot } from './types'
@@ -492,6 +492,7 @@ export function InvestmentMap({
   useEffect(() => {
     if (!apiKey || !containerRef.current || map) return
     let cancelled = false
+    if (!mapsUnlocked()) return
     loadGoogleMaps(apiKey).then(() => {
       if (cancelled || !containerRef.current) return
       const instance = new google.maps.Map(containerRef.current, {
