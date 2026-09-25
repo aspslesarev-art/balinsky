@@ -34,6 +34,14 @@ export type NewsItem = {
   pinned: boolean
   complexNames: string[]
   developers: NewsDeveloper[]
+  // Written by hand in ru/en only (the market news digest). Other locales
+  // would fall back to transliterated Russian, so the item is hidden there —
+  // list, detail, sitemap and hreflang all honour this. Absent = all locales.
+  langs?: Lang[]
+}
+
+export function newsAvailableIn(item: Pick<NewsItem, 'langs'>, lang: Lang): boolean {
+  return !item.langs || item.langs.includes(lang)
 }
 
 type Manifest = { generatedAt: string; count: number; items: NewsItem[] }
@@ -106,7 +114,7 @@ function slugifyEn(s: string): string {
 const isPublished = (item: NewsItem): boolean => item.status !== 'draft'
 
 export async function loadAllNews(lang: Lang = 'ru'): Promise<NewsItem[]> {
-  const items = withDerivedSlugs((await loadRawNews()).filter(isPublished))
+  const items = withDerivedSlugs((await loadRawNews()).filter(n => isPublished(n) && newsAvailableIn(n, lang)))
   if (items.length === 0) return items
   // RU also loads the EN translation cache — not to translate, but to know
   // the English-derived slug and stash it in aliases. Without this, the

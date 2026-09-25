@@ -525,11 +525,19 @@ async function buildAll(): Promise<Categorized> {
   // sitemap must emit that, otherwise /en/news/<ru-slug> 308-redirects to the
   // English one → GSC "Page with redirect".
   const newsEnSlug = new Map((await loadAllNews('en')).map(n => [n.id, n.slug]))
-  const news: SitemapEntry[] = newsRows.flatMap((x, i) => newsComplex[i] ? [] : pairEntry({
-    ruPath: `/ru/novosti/${x.slug}`, enPath: `/en/news/${newsEnSlug.get(x.id) ?? x.slug}`,
-    lastModified: x.date ? new Date(x.date) : now,
-    changeFrequency: 'monthly', priority: 0.6,
-  }))
+  const news: SitemapEntry[] = newsRows.flatMap((x, i) => {
+    if (newsComplex[i]) return []
+    const ruPath = `/ru/novosti/${x.slug}`
+    const enPath = `/en/news/${newsEnSlug.get(x.id) ?? x.slug}`
+    const lastModified = x.date ? new Date(x.date) : now
+    // RU/EN-only items (NewsItem.langs): the other locales 404, so the
+    // cluster is just the pair — pairEntry would advertise all nine.
+    if (x.langs) {
+      const alternates = { languages: { ru: `${SITE_URL}${ruPath}`, en: `${SITE_URL}${enPath}`, 'x-default': `${SITE_URL}${ruPath}` } }
+      return [ruPath, enPath].map(p => ({ url: `${SITE_URL}${p}`, lastModified, changeFrequency: 'monthly' as const, priority: 0.6, alternates }))
+    }
+    return pairEntry({ ruPath, enPath, lastModified, changeFrequency: 'monthly', priority: 0.6 })
+  })
   // Истёкшие акции из карты сайта убираем: в примерах GSC висело
   // /de/angebote/…-black-friday-…-do-28-noyabrya-2025 — предложение,
   // закончившееся девять месяцев назад. Просить Google индексировать
