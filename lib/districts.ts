@@ -17,6 +17,8 @@ import districtsNl from './district-copy/nl.json'
 import districtsPl from './district-copy/pl.json'
 import districtsUk from './district-copy/uk.json'
 import districtMarketJson from './district-market.json'
+import marketIndexJson from './market-index.json'
+import { SLUG_TO_DISTRICT } from './seo-routes'
 
 export type DistrictCopy = {
   slug: string
@@ -604,17 +606,27 @@ const HERO: Record<string, Partial<Record<Lang, string>>> = {
   },
 }
 
-const MARKET_LABELS: Record<Lang, { nightly: string; rentals: string; forSale: string; price: string }> = {
-  ru: { nightly: 'Вилла 2 спальни за ночь, медиана', rentals: 'Вилл в аренде в выборке', forSale: 'Вилл на продаже', price: 'Медианная цена виллы' },
-  en: { nightly: '2-bed villa per night, median', rentals: 'Villa rentals analysed', forSale: 'Villas for sale', price: 'Median villa price' },
-  id: { nightly: 'Vila 2 kamar per malam, median', rentals: 'Vila sewa dianalisis', forSale: 'Vila dijual', price: 'Harga median vila' },
-  fr: { nightly: 'Villa 2 ch. par nuit, médiane', rentals: 'Villas en location analysées', forSale: 'Villas à vendre', price: 'Prix médian villa' },
-  de: { nightly: 'Villa 2 SZ pro Nacht, Median', rentals: 'Analysierte Mietvillen', forSale: 'Villen zum Verkauf', price: 'Medianpreis Villa' },
-  zh: { nightly: '两居室别墅每晚（中位数）', rentals: '分析的出租别墅', forSale: '在售别墅', price: '别墅中位价' },
-  nl: { nightly: 'Villa 2 slk per nacht, mediaan', rentals: "Geanalyseerde huurvilla's", forSale: "Villa's te koop", price: 'Mediaanprijs villa' },
-  ban: { nightly: 'Vila 2 kamar sawengi, median', rentals: 'Vila sewa kaanalisis', forSale: 'Vila kaadol', price: 'Aji median vila' },
-  pl: { nightly: 'Willa 2 syp. za noc, mediana', rentals: 'Analizowane wille na wynajem', forSale: 'Wille na sprzedaż', price: 'Mediana ceny willi' },
-  uk: { nightly: 'Віла 2 спальні за ніч, медіана', rentals: 'Віл в оренді у вибірці', forSale: 'Віл на продажу', price: 'Медіанна ціна віли' },
+// District cards on the hub pages — read from lib/market-index.json, the same
+// monthly-rebuilt numbers as /bali-property-prices and /bali-rent-prices, so
+// the hubs and the data pages never disagree. Thresholds follow the data
+// pages: sale figures from 10 listings, rents from 5.
+const MARKET_LABELS: Record<Lang, { price: string; perM2: string; monthly: string; nightly: string }> = {
+  ru: { price: 'Медианная цена виллы', perM2: 'Вилла, цена за м²', monthly: 'Аренда виллы 2 сп. в месяц', nightly: 'Вилла 2 сп. за ночь' },
+  en: { price: 'Median villa price', perM2: 'Villa price per m²', monthly: '2-bed villa rent / month', nightly: '2-bed villa / night' },
+  id: { price: 'Harga median vila', perM2: 'Harga vila per m²', monthly: 'Sewa vila 2 kamar / bulan', nightly: 'Vila 2 kamar / malam' },
+  fr: { price: 'Prix médian villa', perM2: 'Villa, prix au m²', monthly: 'Loyer villa 2 ch. / mois', nightly: 'Villa 2 ch. / nuit' },
+  de: { price: 'Medianpreis Villa', perM2: 'Villa, Preis pro m²', monthly: 'Miete Villa 2 SZ / Monat', nightly: 'Villa 2 SZ / Nacht' },
+  zh: { price: '别墅中位价', perM2: '别墅每平方米价格', monthly: '两居室别墅月租', nightly: '两居室别墅每晚' },
+  nl: { price: 'Mediaanprijs villa', perM2: 'Villa, prijs per m²', monthly: 'Huur villa 2 slk / maand', nightly: 'Villa 2 slk / nacht' },
+  ban: { price: 'Aji median vila', perM2: 'Aji vila per m²', monthly: 'Sewa vila 2 kamar / sasih', nightly: 'Vila 2 kamar / wengi' },
+  pl: { price: 'Mediana ceny willi', perM2: 'Willa, cena za m²', monthly: 'Najem willi 2 syp. / mies.', nightly: 'Willa 2 syp. / noc' },
+  uk: { price: 'Медіанна ціна віли', perM2: 'Віла, ціна за м²', monthly: 'Оренда віли 2 сп. на місяць', nightly: 'Віла 2 сп. за ніч' },
+}
+type Stat = { n: number; median: number | null } | undefined
+const MI = marketIndexJson as unknown as {
+  villaDistricts: Record<string, { n: number; median: number | null; perM2: number | null }>
+  monthly: { districts: Record<string, { villa2br?: Stat }> }
+  rentDistricts: Record<string, { villa2br?: Stat }>
 }
 const usd = (n: number) => '$' + n.toLocaleString('en-US')
 
@@ -623,13 +635,16 @@ export function districtMarket(slug: string): MarketRow | null {
 }
 
 function objectiveCurated(slug: string, lang: Lang, copy: DistrictCopy): DistrictCopy {
-  const m = MARKET[slug]
+  const name = SLUG_TO_DISTRICT[slug] ?? copy.name
   const L = MARKET_LABELS[lang] ?? MARKET_LABELS.en
+  const sale = MI.villaDistricts[name]
+  const monthly = MI.monthly.districts[name]?.villa2br
+  const nightly = MI.rentDistricts[name]?.villa2br
   const highlights: DistrictCopy['highlights'] = []
-  if (m?.nightly2br) highlights.push({ label: L.nightly, value: usd(m.nightly2br) })
-  if (m && m.villaRentals >= 10) highlights.push({ label: L.rentals, value: m.villaRentals.toLocaleString('en-US') })
-  if (m && m.villasForSale > 0) highlights.push({ label: L.forSale, value: String(m.villasForSale) })
-  if (m?.medianVillaPrice && m.villasForSale >= 10) highlights.push({ label: L.price, value: usd(m.medianVillaPrice) })
+  if (sale && sale.n >= 10 && sale.median) highlights.push({ label: L.price, value: usd(sale.median) })
+  if (sale && sale.n >= 10 && sale.perM2) highlights.push({ label: L.perM2, value: usd(sale.perM2) })
+  if (monthly && monthly.n >= 5 && monthly.median) highlights.push({ label: L.monthly, value: usd(monthly.median) })
+  if (nightly && nightly.n >= 5 && nightly.median) highlights.push({ label: L.nightly, value: usd(nightly.median) })
   return {
     ...copy,
     hero: HERO[slug]?.[lang] ?? copy.hero,
