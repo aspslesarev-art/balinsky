@@ -6,7 +6,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
 export const metadata: Metadata = {
   title: 'Wyjazd na oglądanie nieruchomości na Bali — zorganizuj sam | Balinsky',
-  description: 'Jak samodzielnie zaplanować wyjazd na oglądanie nieruchomości na Bali: wiza i terminy, ile dni, co sprawdzić na budowie, o co zapytać dewelopera, gdzie znaleźć niezależnego prawnika. Balinsky nie organizuje wyjazdów.',
+  description: 'Wiza, terminy, co sprawdzić na budowie, spotkania z deweloperem i niezależny prawnik — przewodnik dla samodzielnego kupującego.',
   keywords: ['Bali property tour', 'Bali real estate investment tour', 'buy villa Bali', 'Bali property foreigner', 'leasehold Bali', 'PT PMA Bali property'],
   alternates: {
     canonical: '/pl/invest-tour',

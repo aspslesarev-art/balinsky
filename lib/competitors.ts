@@ -1,3 +1,4 @@
+import { cdnManifestUrl } from './photo-cdn'
 import {
   type Competitor,
   type CompetitorWithDistance,
@@ -56,7 +57,9 @@ export async function loadCompetitors(): Promise<Competitor[]> {
   if (_inflight) return _inflight
   _inflight = (async () => {
     try {
-      const r = await fetch(MANIFEST_URL, { next: { revalidate: 600 } })
+      // Via the CDN host: ~14 MB, far over the Data Cache limit, so this
+      // fetch is never cached by Next — keep it off Supabase egress.
+      const r = await fetch(cdnManifestUrl(MANIFEST_URL, 600), { next: { revalidate: 600 } })
       if (!r.ok) return []
       const j = (await r.json()) as Manifest
       const items = Array.isArray(j.items) ? dedupCompetitors(j.items) : []

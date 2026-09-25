@@ -138,7 +138,7 @@ export const zh: InvestmentGuideCopy = {
   ],
   district: {
     metaTitle: n => `投资巴厘岛 ${n}：租金与收益率 | Balinsky`,
-    metaDescription: n => `巴厘岛 ${n}：别墅每晚中位租价、65% 入住率下的租金收入以及与全岛的比较 —— 来自 Balinsky 目录和租赁数据库，附来源。`,
+    metaDescription: n => `巴厘岛 ${n}：别墅每晚中位租价、65% 入住率下的租金收入以及与全岛的比较。`,
     h1: n => `巴厘岛 ${n} 房产投资 —— 2026`,
     caseTitle: n => `${n} 的两居室别墅 —— 数据怎么说`,
     rate: (r, n) => `每晚中位报价：${r}（${n} 套出租两居室别墅）`,

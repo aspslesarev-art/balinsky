@@ -138,7 +138,7 @@ export const id: InvestmentGuideCopy = {
   ],
   district: {
     metaTitle: n => `Investasi properti di ${n}, Bali: tarif sewa dan imbal hasil | Balinsky`,
-    metaDescription: n => `${n}, Bali: tarif median vila per malam, pendapatan sewa pada okupansi 65% dan perbandingannya dengan seluruh pulau — dari katalog dan basis data sewa Balinsky, dengan sumber.`,
+    metaDescription: n => `${n}, Bali: tarif median vila per malam, pendapatan sewa pada okupansi 65% dan perbandingannya dengan seluruh pulau.`,
     h1: n => `Investasi properti di ${n}, Bali — 2026`,
     caseTitle: n => `Vila 2 kamar di ${n} — apa kata data`,
     rate: (r, n) => `Tarif median per malam: ${r} (${n} vila 2 kamar disewakan)`,

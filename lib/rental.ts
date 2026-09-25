@@ -2,6 +2,7 @@ import { applyManifestTranslation, loadTranslations } from '@/lib/en-translation
 import { cdnManifestUrl } from '@/lib/photo-cdn'
 import { normalizeSlug } from '@/lib/slug-normalize'
 import type { Lang } from '@/lib/i18n'
+import { unstable_cache } from 'next/cache'
 
 export type RentalItem = {
   id: string
@@ -68,13 +69,31 @@ async function loadRawRental(): Promise<RentalItem[]> {
   }
 }
 
-// Returns every rental in the manifest, including ones added long ago.
-// Use for analytics / comparison contexts where stale data is still useful.
+// The manifest (~3 MB) is over Next's 2 MB Data Cache limit, so a plain
+// fetch was re-downloaded and re-parsed on every render of /arenda, of every
+// villa/apartment page with the comparison block and of the consultant.
+// Lists and comparisons never show `notes` (42% of the bytes), so they get a
+// slim copy that fits the cache; only the detail page reads the full record.
+const loadSlimRental = unstable_cache(
+  async (): Promise<RentalItem[]> => (await loadRawRental()).map(it => ({ ...it, notes: null })),
+  ['rental-slim-v1'],
+  { revalidate: 600, tags: ['content:rental'] },
+)
+
+const loadFullRentalBySlug = unstable_cache(
+  async (slug: string): Promise<RentalItem | null> => (await loadRawRental()).find(r => r.slug === slug) ?? null,
+  ['rental-item-v1'],
+  { revalidate: 3600, tags: ['content:rental'] },
+)
+
+// Returns every rental in the manifest, including ones added long ago —
+// without `notes` (see loadSlimRental). Use for lists, analytics and
+// comparison contexts where stale data is still useful.
 export async function loadAllRental(lang: Lang = 'ru'): Promise<RentalItem[]> {
-  const items = await loadRawRental()
+  const items = await loadSlimRental()
   if (lang === 'ru' || items.length === 0) return items
   const cache = await loadTranslations('rental', lang)
-  return items.map(item => applyManifestTranslation(item, cache, EN_FIELDS))
+  return items.map(item => applyManifestTranslation(item, cache, ['title'] as const))
 }
 
 // The freshest non-empty slice of the manifest — for the /arenda catalog only.
@@ -101,7 +120,8 @@ export async function loadCompareRental(lang: Lang = 'ru'): Promise<RentalItem[]
 // listing is years old. Old detail pages are kept alive for SEO and for
 // links coming from the comparison blocks on villa/apartment pages.
 export async function loadRentalBySlug(slug: string, lang: Lang = 'ru'): Promise<RentalItem | null> {
-  const all = await loadAllRental(lang)
-  const target = normalizeSlug(slug)
-  return all.find(r => r.slug === target) ?? null
+  const item = await loadFullRentalBySlug(normalizeSlug(slug))
+  if (!item || lang === 'ru') return item
+  const cache = await loadTranslations('rental', lang)
+  return applyManifestTranslation(item, cache, EN_FIELDS)
 }

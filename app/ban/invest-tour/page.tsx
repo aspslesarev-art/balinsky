@@ -6,7 +6,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
 export const metadata: Metadata = {
   title: 'Palancaran nyingakin properti Bali — atur padidi | Balinsky',
-  description: 'Sapunapi carane ngrencanayang padidi pamargi nyingakin properti ring Bali: visa miwah galah, akuda dina, napi sane katureksain ring genah, napi sane katakenang ring pangwangun, ring dija ngrereh advokat independen. Balinsky nénten ngatur pamargi.',
+  description: 'Visa, galah, sane katureksain ring genah, pasamuhan sareng pangwangun, miwah advokat independen — tuntunan buat sang numbas sane mamargi padidi.',
   keywords: ['Bali property tour', 'Bali real estate investment tour', 'buy villa Bali', 'Bali property foreigner', 'leasehold Bali', 'PT PMA Bali property'],
   alternates: {
     canonical: '/ban/invest-tour',

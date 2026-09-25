@@ -138,7 +138,7 @@ export const nl: InvestmentGuideCopy = {
   ],
   district: {
     metaTitle: n => `Beleggen in ${n}, Bali: huurprijzen en rendement | Balinsky`,
-    metaDescription: n => `${n}, Bali: mediane villaprijs per nacht, huuropbrengst bij 65% bezetting en de vergelijking met het hele eiland — uit de Balinsky-catalogus en huurdatabase, met bronnen.`,
+    metaDescription: n => `${n}, Bali: mediane villaprijs per nacht, huuropbrengst bij 65% bezetting en de vergelijking met het hele eiland.`,
     h1: n => `Beleggen in vastgoed in ${n}, Bali — 2026`,
     caseTitle: n => `Villa met twee slaapkamers in ${n} — wat de data laat zien`,
     rate: (r, n) => `Mediane prijs per nacht: ${r} (${n} verhuurde villa's met twee slaapkamers)`,

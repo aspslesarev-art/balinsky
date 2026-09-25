@@ -138,7 +138,7 @@ export const fr: InvestmentGuideCopy = {
   ],
   district: {
     metaTitle: n => `Investir à ${n}, Bali : loyers et rendements | Balinsky`,
-    metaDescription: n => `${n}, Bali : prix médian d’une villa à la nuit, revenus locatifs à 65 % d’occupation et comparaison avec l’île — d’après le catalogue et la base de location Balinsky, avec sources.`,
+    metaDescription: n => `${n}, Bali : prix médian d’une villa à la nuit, revenus locatifs à 65 % d’occupation et comparaison avec l’île.`,
     h1: n => `Investir dans l’immobilier à ${n}, Bali — 2026`,
     caseTitle: n => `Villa de deux chambres à ${n} — ce que montrent les données`,
     rate: (r, n) => `Prix médian à la nuit : ${r} (${n} villas de deux chambres en location)`,

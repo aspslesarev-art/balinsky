@@ -138,7 +138,7 @@ export const en: InvestmentGuideCopy = {
   ],
   district: {
     metaTitle: n => `Investing in ${n}, Bali: Rental Rates & Yields | Balinsky`,
-    metaDescription: n => `${n}, Bali: median nightly villa rate, rental revenue at 65% occupancy and how it compares with the island — from Balinsky's catalogue and rental database, with sources.`,
+    metaDescription: n => `${n}, Bali: median nightly villa rate, rental revenue at 65% occupancy and how it compares with the island.`,
     h1: n => `Investing in property in ${n}, Bali — 2026`,
     caseTitle: n => `Two-bedroom villa in ${n} — what the data shows`,
     rate: (r, n) => `Median listed nightly rate: ${r} (${n} two-bedroom villas for rent)`,

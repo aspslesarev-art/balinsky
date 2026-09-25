@@ -138,7 +138,7 @@ export const pl: InvestmentGuideCopy = {
   ],
   district: {
     metaTitle: n => `Inwestycje w ${n}, Bali: stawki najmu i rentowność | Balinsky`,
-    metaDescription: n => `${n}, Bali: mediana stawki za noc w willi, przychód z najmu przy obłożeniu 65% i porównanie z całą wyspą — z katalogu i bazy najmu Balinsky, ze źródłami.`,
+    metaDescription: n => `${n}, Bali: mediana stawki za noc w willi, przychód z najmu przy obłożeniu 65% i porównanie z całą wyspą.`,
     h1: n => `Inwestycje w nieruchomości w ${n}, Bali — 2026`,
     caseTitle: n => `Willa z dwiema sypialniami w ${n} — co pokazują dane`,
     rate: (r, n) => `Mediana stawki za noc: ${r} (${n} willi z dwiema sypialniami na wynajem)`,

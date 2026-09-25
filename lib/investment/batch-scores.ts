@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 import { unstable_cache } from 'next/cache'
 import { type CompetitorWithDistance, distanceKm } from '@/lib/competitor-utils'
 import { loadCompetitors } from '@/lib/competitors'
+import { cdnManifestUrl } from '@/lib/photo-cdn'
 import type { NearbyPlace } from '@/lib/nearby-places'
 import { regionFor } from './regions'
 import { matchCompetitors, type MatchResult } from './matching'
@@ -215,6 +216,9 @@ async function loadAllScoresInternal(kind: 'villa' | 'apartment' = 'villa'): Pro
     loadCompetitors(),
     fetchPlacesManifest(),
   ])
+  // An empty competitor set means the manifest fetch failed — scoring without
+  // it would cache an all-zero ranking for an hour. Throw so nothing is cached.
+  if (allComps.length === 0) throw new Error('competitors manifest empty')
   // Pre-bucketize competitors by lat/lng cell for faster lookup
   // Cell size ~0.05° (~5km), villa needs only 2km radius
   type Cell = CompetitorWithDistance[]
@@ -258,10 +262,25 @@ async function loadAllScoresInternal(kind: 'villa' | 'apartment' = 'villa'): Pro
   return map
 }
 
+// Scores are a few KB; their input (the competitors manifest) is ~14 MB and
+// over the 2 MB Data Cache limit. Caching the *result* across instances means
+// the manifest is pulled once an hour site-wide instead of on every cold
+// instance. Map isn't serializable — entries go through the cache.
+const _sharedVillaScores = unstable_cache(
+  async () => [...(await loadAllScoresInternal('villa')).entries()],
+  ['villa-scores-v1'],
+  { revalidate: 3600, tags: ['content:villas', 'content:apartments'] },
+)
+const _sharedApartmentScores = unstable_cache(
+  async () => [...(await loadAllScoresInternal('apartment')).entries()],
+  ['apartment-scores-v1'],
+  { revalidate: 3600, tags: ['content:apartments'] },
+)
+
 export async function loadAllVillaScores(): Promise<Map<string, VillaScore>> {
   if (_cache && Date.now() - _cache.ts < TTL_MS) return _cache.data
   if (_inflight) return _inflight
-  _inflight = loadAllScoresInternal('villa')
+  _inflight = _sharedVillaScores().then(entries => new Map(entries))
     .then(data => { _cache = { ts: Date.now(), data }; return data })
     .catch(err => { console.error('[batch-scores] failed:', err); return new Map() })
     .finally(() => { _inflight = null })
@@ -276,7 +295,7 @@ let _aptInflight: Promise<Map<string, VillaScore>> | null = null
 export async function loadAllApartmentScores(): Promise<Map<string, VillaScore>> {
   if (_aptCache && Date.now() - _aptCache.ts < TTL_MS) return _aptCache.data
   if (_aptInflight) return _aptInflight
-  _aptInflight = loadAllScoresInternal('apartment')
+  _aptInflight = _sharedApartmentScores().then(entries => new Map(entries))
     .then(data => { _aptCache = { ts: Date.now(), data }; return data })
     .catch(err => { console.error('[batch-scores] apartments failed:', err); return new Map() })
     .finally(() => { _aptInflight = null })
@@ -292,7 +311,7 @@ type PlacesManifest = {
 
 async function fetchPlacesManifest(): Promise<PlacesManifest | null> {
   try {
-    const r = await fetch(PLACES_MANIFEST_URL, { next: { revalidate: 1800 } })
+    const r = await fetch(cdnManifestUrl(PLACES_MANIFEST_URL, 1800), { next: { revalidate: 1800 } })
     if (!r.ok) return null
     return await r.json()
   } catch { return null }
