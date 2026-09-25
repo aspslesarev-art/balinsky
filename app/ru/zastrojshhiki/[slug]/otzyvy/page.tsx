@@ -57,6 +57,12 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 
 export const revalidate = 86400
 
+// Empty list = render on first request, then ISR-cache (without it every hit
+// is server-rendered with no-store).
+export function generateStaticParams() {
+  return []
+}
+
 export default async function Page({ params }: { params: Params }) {
   const { slug } = await params
   const row = await loadDeveloper(slug)

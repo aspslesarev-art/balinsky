@@ -1,18 +1,17 @@
-import { RentalListShell, generateRentalListMetadata, parseRentalSP } from '../../ru/arenda/_page'
-import { loadFreshRental } from '@/lib/rental'
-import { generateCategoryMeta } from '@/lib/seo'
+// Bare catalog URL — ISR-cached. Any URL with filter parameters
+// (?district=…) is rewritten by middleware.ts to ./q, the dynamic
+// version of this same page; reading searchParams here would make
+// every visit a fresh server render (Cache-Control: no-store).
+import Filtered, { generateMetadata as filteredMetadata } from './q/page'
 
 export const revalidate = 3600
 
-export async function generateMetadata() {
-  const base = generateRentalListMetadata('ban')
-  const cat = generateCategoryMeta({ category: 'rental', locale: 'ban', count: (await loadFreshRental('ban')).length })
-  return { ...base, title: cat.title, description: cat.description }
+const NO_FILTERS = Promise.resolve({})
+
+export function generateMetadata() {
+  return filteredMetadata()
 }
 
-type SP = Promise<Record<string, string | string[] | undefined>>
-
-export default async function Page({ searchParams }: { searchParams: SP }) {
-  const sp = await searchParams
-  return <RentalListShell initial={parseRentalSP(sp)} lang="ban" />
+export default function Page() {
+  return <Filtered searchParams={NO_FILTERS} />
 }

@@ -8,6 +8,7 @@ import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { ComplexCard, type ComplexCardData } from '@/components/ComplexCard'
 import { hreflangMap } from '@/lib/hreflang'
+import { yearParams } from '@/lib/static-params'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 const VALID_YEARS = new Set(['2023', '2024', '2025', '2026', '2027', '2028'])
@@ -31,6 +32,8 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 }
 
 export const revalidate = 86400
+
+export const generateStaticParams = yearParams
 
 function firstString(v: unknown): string | null {
   if (typeof v === 'string') return v.trim() || null

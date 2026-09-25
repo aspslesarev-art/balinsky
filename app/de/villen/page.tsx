@@ -1,40 +1,17 @@
-import { permanentRedirect } from 'next/navigation'
-import { VillasCatalog } from '../../ru/villy/_catalog'
-import { parseQueryFilters, buildMetadataLoc, hasAnyFilter, loadAll } from '../../ru/villy/_lib'
-import { buildCanonicalPath } from '@/lib/villa-seo-routes'
-import { generateCategoryMeta } from '@/lib/seo'
-import { villaCategoryStats } from '@/lib/category-stats'
-import { hubPath } from '@/lib/hub-routes'
+// Bare catalog URL — ISR-cached. Any URL with filter parameters
+// (?district=…) is rewritten by middleware.ts to ./q, the dynamic
+// version of this same page; reading searchParams here would make
+// every visit a fresh server render (Cache-Control: no-store).
+import Filtered, { generateMetadata as filteredMetadata } from './q/page'
 
-type SP = Promise<Record<string, string | undefined>>
+export const revalidate = 3600
 
-export async function generateMetadata({ searchParams }: { searchParams: SP }) {
-  const sp = await searchParams
-  const f = parseQueryFilters(sp)
-  // EN has no canonical sub-route tree of its own — keep canonical at the
-  // flat base path and rely on noindex for filtered combos to avoid
-  // SEO duplication.
-  const base = buildMetadataLoc(f, 'de', {
-    canonicalPath: '/de/villen',
-    noIndex: hasAnyFilter(f) && buildCanonicalPath(f) !== null,
-  })
-  // TASK-13c: commercial "number + price + USP" meta on the bare category root.
-  if (!hasAnyFilter(f)) {
-    const cat = generateCategoryMeta({ category: 'villas', locale: 'de', ...villaCategoryStats((await loadAll()).enriched) })
-    return { ...base, title: cat.title, description: cat.description }
-  }
-  return base
+const NO_FILTERS = Promise.resolve({})
+
+export function generateMetadata() {
+  return filteredMetadata({ searchParams: NO_FILTERS })
 }
 
-export default async function Page({ searchParams }: { searchParams: SP }) {
-  const sp = await searchParams
-  const filters = parseQueryFilters(sp)
-  // A filter combo that has a clean hub URL 308s onto it, so ?district=…
-  // links consolidate on the indexable hub path (lib/hub-routes.ts).
-  const canonical = buildCanonicalPath(filters)
-  const localCanonical = canonical ? hubPath(canonical, 'de') : null
-  if (localCanonical && canonical !== '/ru/villy' && hasAnyFilter(filters)) {
-    permanentRedirect(localCanonical)
-  }
-  return <VillasCatalog filters={filters} page={1} basePath="/de/villen" lang="de" />
+export default function Page() {
+  return <Filtered searchParams={NO_FILTERS} />
 }

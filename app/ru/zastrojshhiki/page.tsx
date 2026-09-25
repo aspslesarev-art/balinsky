@@ -1,34 +1,17 @@
-import { DevelopersCatalog, parseSort } from './_catalog'
-import { generateCategoryMeta } from '@/lib/seo'
-import { publishedDeveloperCount } from '@/lib/category-stats'
-import { hreflangMap } from '@/lib/hreflang'
+// Bare catalog URL — ISR-cached. Any URL with filter parameters
+// (?district=…) is rewritten by middleware.ts to ./q, the dynamic
+// version of this same page; reading searchParams here would make
+// every visit a fresh server render (Cache-Control: no-store).
+import Filtered, { generateMetadata as filteredMetadata } from './q/page'
 
 export const revalidate = 3600
 
-export async function generateMetadata() {
-  const cat = generateCategoryMeta({ category: 'developers', locale: 'ru', ...(await publishedDeveloperCount()) })
-  return { ...metadata, title: cat.title, description: cat.description }
+const NO_FILTERS = Promise.resolve({})
+
+export function generateMetadata() {
+  return filteredMetadata()
 }
 
-const metadata = {
-  title: 'Застройщики на Бали — каталог девелоперов недвижимости 2026 | Balinsky',
-  description:
-    'Каталог застройщиков Бали с действующими проектами: виллы, апартаменты, жилые комплексы. Сравнение по рейтингу, надёжности, управляющей компании. 80+ компаний.',
-  alternates: {
-    canonical: '/ru/zastrojshhiki',
-    languages: hreflangMap('/ru/zastrojshhiki'),
-  },
-  openGraph: {
-    title: 'Застройщики на Бали — каталог девелоперов 2026 | Balinsky',
-    description: 'Каталог застройщиков Бали: рейтинги, репутация, проекты, управляющие компании.',
-    type: 'website',
-    url: '/ru/zastrojshhiki',
-  },
-}
-
-type SP = Promise<Record<string, string | string[] | undefined>>
-
-export default async function Page({ searchParams }: { searchParams: SP }) {
-  const sp = await searchParams
-  return <DevelopersCatalog sort={parseSort(sp.sort)} lang="ru" />
+export default function Page() {
+  return <Filtered searchParams={NO_FILTERS} />
 }

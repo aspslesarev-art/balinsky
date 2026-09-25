@@ -1,47 +1,17 @@
-// English mirror of /ru/zhilye-kompleksy. Same component, just lang='uk'
-// — so layout, filters, sort, infinite scroll all stay identical and
-// future RU updates land in EN automatically.
+// Bare catalog URL — ISR-cached. Any URL with filter parameters
+// (?district=…) is rewritten by middleware.ts to ./q, the dynamic
+// version of this same page; reading searchParams here would make
+// every visit a fresh server render (Cache-Control: no-store).
+import Filtered, { generateMetadata as filteredMetadata } from './q/page'
 
-import { permanentRedirect } from 'next/navigation'
-import { ComplexesCatalog } from '../../ru/zhilye-kompleksy/_catalog'
-import { parseQueryFilters, buildMetadataEn, hasAnyFilter, loadAll } from '../../ru/zhilye-kompleksy/_lib'
-import { buildCanonicalPath } from '@/lib/complex-seo-routes'
-import { generateCategoryMeta } from '@/lib/seo'
-import { villaCategoryStats } from '@/lib/category-stats'
-import { hubPath } from '@/lib/hub-routes'
+export const revalidate = 3600
 
-type SP = Promise<Record<string, string | undefined>>
+const NO_FILTERS = Promise.resolve({})
 
-export async function generateMetadata({ searchParams }: { searchParams: SP }) {
-  const sp = await searchParams
-  const f = parseQueryFilters(sp)
-  const base = buildMetadataEn(f, {
-    canonicalPath: '/ua/kompleksy',
-    noIndex: hasAnyFilter(f) && buildCanonicalPath(f) !== null,
-  })
-  if (!hasAnyFilter(f)) {
-    const cat = generateCategoryMeta({ category: 'complexes', locale: 'uk', ...villaCategoryStats((await loadAll()).enriched) })
-    return { ...base, title: cat.title, description: cat.description }
-  }
-  return base
+export function generateMetadata() {
+  return filteredMetadata({ searchParams: NO_FILTERS })
 }
 
-export default async function Page({ searchParams }: { searchParams: SP }) {
-  const sp = await searchParams
-  const filters = parseQueryFilters(sp)
-  // A filter combo that has a clean hub URL 308s onto it, so ?district=…
-  // links consolidate on the indexable hub path (lib/hub-routes.ts).
-  const canonical = buildCanonicalPath(filters)
-  const localCanonical = canonical ? hubPath(canonical, 'uk') : null
-  if (localCanonical && canonical !== '/ru/zhilye-kompleksy' && hasAnyFilter(filters)) {
-    permanentRedirect(localCanonical)
-  }
-  return (
-    <ComplexesCatalog
-      filters={filters}
-      page={1}
-      basePath="/ua/kompleksy"
-      lang="uk"
-    />
-  )
+export default function Page() {
+  return <Filtered searchParams={NO_FILTERS} />
 }

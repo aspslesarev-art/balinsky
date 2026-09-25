@@ -1,34 +1,17 @@
-import { DevelopersCatalog, parseSort } from '../../ru/zastrojshhiki/_catalog'
-import { generateCategoryMeta } from '@/lib/seo'
-import { publishedDeveloperCount } from '@/lib/category-stats'
-import { hreflangMap } from '@/lib/hreflang'
+// Bare catalog URL — ISR-cached. Any URL with filter parameters
+// (?district=…) is rewritten by middleware.ts to ./q, the dynamic
+// version of this same page; reading searchParams here would make
+// every visit a fresh server render (Cache-Control: no-store).
+import Filtered, { generateMetadata as filteredMetadata } from './q/page'
 
 export const revalidate = 3600
 
-export async function generateMetadata() {
-  const cat = generateCategoryMeta({ category: 'developers', locale: 'uk', ...(await publishedDeveloperCount()) })
-  return { ...metadata, title: cat.title, description: cat.description }
+const NO_FILTERS = Promise.resolve({})
+
+export function generateMetadata() {
+  return filteredMetadata()
 }
 
-const metadata = {
-  title: 'Забудовники нерухомості на Балі — каталог 2026 | Balinsky',
-  description:
-    'Каталог забудовників Балі з активними проєктами: вілли, апартаменти, житлові комплекси. Порівнюйте за оцінкою, надійністю та управлінням після здачі. 80+ компаній.',
-  alternates: {
-    canonical: '/ua/zabudovnyky',
-    languages: hreflangMap('/ru/zastrojshhiki'),
-  },
-  openGraph: {
-    title: 'Забудовники нерухомості на Балі — каталог 2026 | Balinsky',
-    description: 'Каталог забудовників Балі: оцінки, репутація, проєкти, керуючі компанії.',
-    type: 'website',
-    url: '/ua/zabudovnyky',
-  },
-}
-
-type SP = Promise<Record<string, string | string[] | undefined>>
-
-export default async function Page({ searchParams }: { searchParams: SP }) {
-  const sp = await searchParams
-  return <DevelopersCatalog sort={parseSort(sp.sort)} lang="uk" />
+export default function Page() {
+  return <Filtered searchParams={NO_FILTERS} />
 }
