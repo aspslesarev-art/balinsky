@@ -29,24 +29,25 @@
   body{
     margin:0;background:var(--bg);color:var(--text);
     font-family:"Geist","Golos Text",system-ui,-apple-system,sans-serif;
-    font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;
+    font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;
   }
   .wrap{max-width:var(--maxw);margin:0 auto;padding-inline:var(--gut)}
-  section{padding-block:clamp(36px,5vw,60px)}
+  section{padding-block:clamp(64px,8vw,96px)}
   .band{background:var(--band)}
   h1,h2,h3{margin:0;text-wrap:balance;letter-spacing:-0.02em;font-weight:700}
   h1{font-size:clamp(25px,3.2vw,36px);line-height:1.15}
-  h2{font-size:clamp(20px,2.3vw,26px);line-height:1.2;margin-bottom:18px}
+  h2{font-size:clamp(22px,2.6vw,28px);line-height:1.2;margin-bottom:clamp(24px,3vw,32px)}
   h3{font-size:17px;line-height:1.3;font-weight:600;letter-spacing:-0.01em}
   p{margin:0}
   a{color:inherit}
-  .sub{color:var(--muted);font-size:16px}
+  .sub{color:var(--muted);font-size:16px;max-width:62ch}
   .fine{font-size:13px;color:var(--faint)}
   .num{font-variant-numeric:tabular-nums}
   .stack{display:flex;flex-direction:column;gap:16px}
+  .stack>.statrow+.statrow{margin-top:16px}
 
   /* bullet points */
-  ul.pts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
+  ul.pts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
   ul.pts li{position:relative;padding-left:26px;font-size:16px;color:var(--text)}
   ul.pts li::before{
     content:"";position:absolute;left:0;top:7px;width:14px;height:8px;
@@ -55,13 +56,13 @@
   }
   ul.pts.dim li{color:var(--muted)}
   ul.pts li b{font-weight:600;color:var(--text)}
-  ul.dots{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+  ul.dots{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
   ul.dots li{position:relative;padding-left:18px;color:var(--muted);font-size:15px}
   ul.dots li::before{content:"";position:absolute;left:2px;top:9px;width:5px;height:5px;border-radius:50%;background:var(--primary)}
 
   /* topbar */
   .topbar{border-bottom:1px solid var(--border);background:var(--band)}
-  .topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:12px}
+  .topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:16px}
   .logo{display:flex;align-items:center;gap:9px;font-weight:600;letter-spacing:-0.01em}
   .logo i{width:26px;height:26px;border-radius:7px;background:var(--brand);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-style:normal;font-weight:700;font-size:13px}
   .topbar .tag{font-size:14px;color:var(--muted)}
@@ -73,17 +74,17 @@
   .btn-note{font-size:13px;color:var(--faint);margin-top:10px}
 
   /* cards & grids */
-  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px}
-  .cols-2{display:grid;grid-template-columns:1fr 1fr;gap:clamp(18px,2.5vw,32px)}
-  .cols-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-  .cols-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:clamp(20px,2.5vw,28px)}
+  .cols-2{display:grid;grid-template-columns:1fr 1fr;gap:clamp(32px,5vw,64px)}
+  .cols-3{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(16px,2vw,24px)}
+  .cols-4{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
   .hero-grid>*,.cols-2>*,.cols-3>*,.cols-4>*{min-width:0}
 
   /* hero */
-  .hero{padding-block:clamp(32px,4.5vw,56px)}
+  .hero{padding-block:clamp(48px,7vw,96px)}
   .hero-grid{display:block}
-  .hero h1{margin-bottom:18px}
-  .hero ul.pts{margin-bottom:24px}
+  .hero h1{margin-bottom:24px}
+  .hero ul.pts{margin-bottom:32px}
   .hero ul.pts li{font-size:17px}
 
   /* images */
@@ -94,7 +95,7 @@
   .shot.r11{aspect-ratio:1/1}
   figcaption{font-size:12.5px;color:var(--faint);line-height:1.4}
   /* carousel */
-  .car-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:16px}
+  .car-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:24px}
   .car-nav{display:flex;gap:8px}
   .car-nav button{
     width:38px;height:38px;border-radius:10px;border:1px solid var(--border);background:var(--card);
@@ -119,26 +120,26 @@
     box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;
   }
   .bonus img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;object-position:top center;border-bottom:1px solid var(--border)}
-  .bonus .b-body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:8px;flex:1}
+  .bonus .b-body{padding:16px 20px 20px;display:flex;flex-direction:column;gap:8px;flex:1}
   .bonus .b-name{font-size:15.5px;font-weight:600;line-height:1.3}
   .bonus .b-price{margin-top:auto;font-size:14px;color:var(--primary);font-weight:600;font-variant-numeric:tabular-nums}
   .bonus .b-price s{color:var(--faint);font-weight:400;text-decoration:line-through;margin-right:6px}
   .hint{font-size:13px;color:var(--faint);margin-top:8px}
 
-  .mhead{display:flex;align-items:center;gap:12px}
+  .mhead{display:flex;align-items:center;flex-wrap:wrap;gap:12px}
   .mimg{display:block;width:64px;height:64px;flex:none;border-radius:50%;object-fit:cover;object-position:center 25%;border:1px solid var(--border)}
   .mph{display:flex;align-items:center;justify-content:center;width:100%;aspect-ratio:4/3;border-radius:10px;background:var(--soft);border:1px dashed #cfdbd4;color:var(--faint);font-size:13px}
   .ph{display:flex;align-items:center;justify-content:center;text-align:center;padding:18px;min-height:96px;background:var(--soft);border:1px dashed #cfdbd4;border-radius:var(--radius);color:var(--faint);font-size:13px}
 
   /* stat */
-  .statrow{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+  .statrow{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:16px}
   .stat{font-size:clamp(38px,6vw,58px);line-height:1;font-weight:700;letter-spacing:-0.03em;color:var(--primary)}
   .stat-sub{font-size:15px;color:var(--muted)}
 
   /* labels */
-  .role{align-self:flex-start;background:var(--primary-soft);color:var(--primary);font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;border-radius:999px}
+  .role{align-self:flex-start;white-space:nowrap;background:var(--primary-soft);color:var(--primary);font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;border-radius:999px}
   .ctitle{font-size:11.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
-  .price{font-size:clamp(24px,3vw,32px);line-height:1.1;font-weight:700;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;margin-bottom:10px}
+  .price{font-size:clamp(24px,3vw,32px);line-height:1.1;font-weight:700;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;margin-bottom:20px}
   .price small{font-size:14px;color:var(--faint);font-weight:500;letter-spacing:0}
   .pick{border-color:#bfdccd;background:#fbfefc}
   .pick .ctitle{color:var(--primary)}
@@ -151,17 +152,19 @@
   th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);font-weight:600;background:var(--soft)}
   td:last-child,th:last-child{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:600}
   tbody tr:last-child td{border-bottom:0}
-  .callout{background:var(--primary-soft);border:1px solid #cfe5da;border-radius:var(--radius);padding:16px 20px;font-size:16px;color:#14523a}
+  .callout{background:var(--primary-soft);border:1px solid #cfe5da;border-radius:var(--radius);padding:clamp(20px,2.5vw,24px) clamp(20px,3vw,32px);font-size:16px;line-height:1.65;color:#14523a}
   .callout b{color:var(--primary);font-weight:600}
+  .callout,.wrap>ul.pts,.wrap>.sub{max-width:760px}
 
   /* cases */
   .case .who{font-size:11.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:6px}
   .case .amount{font-size:clamp(26px,3.4vw,34px);line-height:1.05;font-weight:700;letter-spacing:-0.02em;color:var(--primary);font-variant-numeric:tabular-nums}
-  .case .period{font-size:14px;color:var(--muted);margin-top:4px}
+  .case .period{font-size:14px;color:var(--muted);margin-top:8px}
 
   /* packages */
   .pack{display:flex;flex-direction:column}
-  .pack .for{margin-top:14px;padding-top:12px;border-top:1px solid var(--border);font-size:14px;color:var(--muted)}
+  .pack ul{margin-bottom:24px}
+  .pack .for{margin-top:auto;padding-top:16px;border-top:1px solid var(--border);font-size:14px;color:var(--muted)}
   .pack .for b{color:var(--text);font-weight:600}
 
   /* steps */
@@ -171,9 +174,22 @@
   .step .t{font-size:16px;font-weight:600}
   .step .d{font-size:14px;color:var(--faint);margin-top:3px}
 
-  .final{display:flex;flex-direction:column;gap:14px;align-items:flex-start;padding:clamp(20px,3vw,32px);margin-top:22px}
+  .final{display:flex;flex-direction:column;gap:16px;align-items:flex-start;padding:clamp(24px,4vw,48px);margin-top:48px}
 
-  footer{border-top:1px solid var(--border);background:var(--band);padding-block:22px;color:var(--faint);font-size:13.5px}
+  /* agent crm card */
+  .acard{max-width:420px;width:100%;justify-self:end}
+  .acard .ahead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .ava{width:48px;height:48px;flex:none;border-radius:50%;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:600}
+  .aname{font-weight:600;line-height:1.3}
+  .aname small{display:block;font-size:13px;color:var(--faint);font-weight:400}
+  .deal{margin-left:auto;background:var(--primary);color:#fff;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;white-space:nowrap}
+  .kv{margin:24px 0 0;display:grid;grid-template-columns:auto 1fr;gap:12px 16px;font-size:14px}
+  .kv dt{color:var(--faint)}
+  .kv dd{margin:0;color:var(--text)}
+  .afoot{margin-top:24px;padding-top:16px;border-top:1px solid var(--border);font-size:13px;color:var(--muted);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  @media (max-width:880px){ .acard{justify-self:start} }
+
+  footer{border-top:1px solid var(--border);background:var(--band);padding-block:32px;color:var(--faint);font-size:13.5px}
 
   @media (max-width:880px){
     .hero-grid,.cols-2,.cols-3{grid-template-columns:1fr}
@@ -239,7 +255,7 @@
         </div>
       </div>
     </div>
-    <div class="callout" style="margin-top:18px">Мы сами скептически смотрим на то, как сейчас работают партнёрские сети. Поэтому предлагаем проверку на <b>3&nbsp;месяца</b>: работаем в полную силу, отчёт каждую неделю - и вы точно знаете, продают ли агенты ваш проект. Мы - одна из сильнейших команд на Бали: если не сработает у нас, скорее всего, не сработает ни у кого. И вы не потратите на это год.</div>
+    <div class="callout" style="margin-top:32px">Мы сами скептически смотрим на то, как сейчас работают партнёрские сети. Поэтому предлагаем проверку на <b>3&nbsp;месяца</b>: работаем в полную силу, отчёт каждую неделю - и вы точно знаете, продают ли агенты ваш проект. Мы - одна из сильнейших команд на Бали: если не сработает у нас, скорее всего, не сработает ни у кого. И вы не потратите на это год.</div>
   </div>
 </section>
 
@@ -294,7 +310,7 @@
   <div class="wrap">
     <h2>Три человека работают на ваши продажи</h2>
     <div class="cols-3">
-      <div class="card stack" style="gap:12px">
+      <div class="card stack" style="gap:20px">
         <div class="mhead">
   <img class="mimg" src="/agentskaya-set/img/vitaliy.jpg" alt="Виталий, клоузер" loading="lazy">
   <div class="role">Клоузер · Виталий</div>
@@ -305,7 +321,7 @@
           <li>Учит агентов продавать ваш проект, проводит встречи на объекте, закрывает сделку</li>
         </ul>
       </div>
-      <div class="card stack" style="gap:12px">
+      <div class="card stack" style="gap:20px">
         <div class="mhead">
   <img class="mimg" src="/agentskaya-set/img/field.jpg" alt="Полевой менеджер" loading="lazy" style="object-position:center 30%">
   <div class="role">Полевой · Андрей</div>
@@ -317,7 +333,7 @@
           <li>Ваши объекты - на сайте рядом с 2600 другими</li>
         </ul>
       </div>
-      <div class="card stack" style="gap:12px">
+      <div class="card stack" style="gap:20px">
         <div class="mhead">
   <img class="mimg" src="/agentskaya-set/img/admin.jpg" alt="Администратор" loading="lazy" style="object-position:center 25%">
   <div class="role">Администратор · Елена</div>
@@ -329,7 +345,7 @@
         </ul>
       </div>
     </div>
-    <p class="fine" style="margin-top:16px">Юрист и оформление сделки - на стороне застройщика, это не наша зона.</p>
+    <p class="fine" style="margin-top:24px">Юрист и оформление сделки - на стороне застройщика, это не наша зона.</p>
   </div>
 </section>
 
@@ -349,8 +365,47 @@
   </div>
 </section>
 
-<!-- 5 -->
+<!-- 4b -->
 <section class="band">
+  <div class="wrap">
+    <h2>Агенты под учётом - как лиды с таргета</h2>
+    <div class="cols-2">
+      <div class="stack" style="gap:32px">
+        <p class="sub">Каждый агент - карточка в CRM: статус, переписка, сделки. Вы следите за работой с агентами так же, как за своим отделом продаж.</p>
+        <div class="statrow" style="flex-direction:column;align-items:flex-start;gap:8px;margin-bottom:0">
+          <span class="stat num">187</span>
+          <span class="stat-sub">агентов в базе, 81 из них уже продавали</span>
+        </div>
+        <ul class="pts">
+          <li>Знаем, что агент пьёт, чем увлекается и какой подарок ему приятен - встреча заходит, а не проходит для галочки</li>
+          <li>Видно, кому давно не писали - ни один агент не остывает</li>
+        </ul>
+      </div>
+      <figure class="acard">
+        <div class="card">
+          <div class="ahead">
+            <div class="ava" aria-hidden="true">МК</div>
+            <div class="aname">Мария К.<small>Агентство · Чангу</small></div>
+            <span class="deal">3 сделки · $520 тыс.</span>
+          </div>
+          <dl class="kv">
+            <dt>Пьёт</dt><dd>Флэт уайт, белое вино</dd>
+            <dt>Любит</dt><dd>Японская кухня</dd>
+            <dt>Хобби</dt><dd>Сёрфинг, йога</dd>
+            <dt>Подарок</dt><dd>Кофе в зёрнах</dd>
+            <dt>Общение</dt><dd>Telegram, после 11:00</dd>
+            <dt>Не беспокоить</dt><dd>Воскресенье</dd>
+          </dl>
+          <div class="afoot"><span>Статус: в работе</span><span>Контакт: 2 дня назад</span></div>
+        </div>
+        <figcaption>Пример карточки агента, данные условные</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- 5 -->
+<section>
   <div class="wrap">
     <h2>Выгоднее, чем нанимать самому</h2>
     <div class="cols-2">
@@ -373,16 +428,16 @@
         </ul>
       </div>
     </div>
-    <p class="sub" style="margin-top:16px">Собрать такую команду самому - от $3000/мес + 3%. У нас фикс вдвое ниже, и сеть агентов уже готова.</p>
+    <p class="sub" style="margin-top:24px">Собрать такую команду самому - от $3000/мес + 3%. У нас фикс вдвое ниже, и сеть агентов уже готова.</p>
   </div>
 </section>
 
 <!-- 6 -->
-<section>
+<section class="band">
   <div class="wrap">
     <div class="car-head">
       <div>
-        <h2 style="margin-bottom:6px">Что застройщик получает</h2>
+        <h2 style="margin-bottom:8px">Что застройщик получает</h2>
         <p class="sub">Листайте вправо. Зачёркнута цена на рынке - у нас это входит в работу.</p>
       </div>
       <div class="car-nav">
@@ -474,8 +529,8 @@
       </article>
     </div>
 
-    <div class="callout" style="margin-top:18px">Отдельно это стоит <b>~$3700</b> в первый месяц и <b>$3000+</b> дальше. У нас всё входит в работу - от <b>$1500</b>.</div>
-    <ul class="pts" style="margin-top:16px">
+    <div class="callout" style="margin-top:32px">Отдельно это стоит <b>~$3700</b> в первый месяц и <b>$3000+</b> дальше. У нас всё входит в работу - от <b>$1500</b>.</div>
+    <ul class="pts" style="margin-top:24px">
       <li>Отдельно - только живая встреча с агентами на объекте, по смете заранее</li>
       <li>Онлайн-встречи и обучения - бесплатно</li>
     </ul>
@@ -483,7 +538,7 @@
 </section>
 
 <!-- 7 -->
-<section class="band">
+<section>
   <div class="wrap">
     <h2>Результаты застройщиков</h2>
     <div class="cols-3">
@@ -495,7 +550,7 @@
 </section>
 
 <!-- 8 -->
-<section>
+<section class="band">
   <div class="wrap">
     <h2>Форматы сотрудничества</h2>
     <div class="cols-3">
@@ -532,9 +587,9 @@
         <p class="for"><b>Для кого:</b> хочет проверить формат, не переплачивая на старте.</p>
       </div>
     </div>
-    <div class="callout" style="margin-top:18px">Что вы получите за первые 3 месяца (прогноз): от <b>15 новых агентов</b>, которые продают ваш проект, и <b>3 брони</b>. Дальше - рабочий темп. Итоговые цифры фиксируем под ваш проект.</div>
-    <p class="fine" style="margin-top:12px">Другие форматы - по запросу.</p>
-    <ul class="pts" style="margin-top:18px">
+    <div class="callout" style="margin-top:32px">Что вы получите за первые 3 месяца (прогноз): от <b>15 новых агентов</b>, которые продают ваш проект, и <b>3 брони</b>. Дальше - рабочий темп. Итоговые цифры фиксируем под ваш проект.</div>
+    <p class="fine" style="margin-top:16px">Другие форматы - по запросу.</p>
+    <ul class="pts" style="margin-top:32px">
       <li>Агенты получают свою комиссию полностью - наш процент идёт сверху. Поэтому им выгодно продавать именно ваш проект</li>
       <li>Сетку комиссий согласуем заранее - без сюрпризов. Сильному агентству предложим KPI или комиссию на уровне других застройщиков, чтобы оно продавало вас</li>
     </ul>
@@ -542,28 +597,28 @@
 </section>
 
 <!-- safety -->
-<section class="band">
+<section>
   <div class="wrap">
     <h2>Почему вы не потеряете деньги</h2>
     <div class="cols-3">
       <div class="card">
         <h3>Платите за результат</h3>
-        <p class="sub" style="margin-top:8px">Процент - только после первого взноса покупателя, когда деньги уже у вас. Ежемесячная оплата - от $1500, вдвое меньше своей команды.</p>
+        <p class="sub" style="margin-top:12px">Процент - только после первого взноса покупателя, когда деньги уже у вас. Ежемесячная оплата - от $1500, вдвое меньше своей команды.</p>
       </div>
       <div class="card">
         <h3>Не платите за своё</h3>
-        <p class="sub" style="margin-top:8px">Агенты, с которыми у вас были сделки за последние полгода, остаются вашими. Пришлите список - за их сделки процент не берём.</p>
+        <p class="sub" style="margin-top:12px">Агенты, с которыми у вас были сделки за последние полгода, остаются вашими. Пришлите список - за их сделки процент не берём.</p>
       </div>
       <div class="card">
         <h3>Можно выйти</h3>
-        <p class="sub" style="margin-top:8px">Не пошло за 3 месяца - расходимся без штрафов. Мы заинтересованы в продажах не меньше вас: $1500 - это на трёх человек, зарабатываем мы на сделках.</p>
+        <p class="sub" style="margin-top:12px">Не пошло за 3 месяца - расходимся без штрафов. Мы заинтересованы в продажах не меньше вас: $1500 - это на трёх человек, зарабатываем мы на сделках.</p>
       </div>
     </div>
   </div>
 </section>
 
 <!-- 10 -->
-<section>
+<section class="band">
   <div class="wrap">
     <h2>Условия</h2>
     <ul class="pts">
@@ -574,7 +629,7 @@
 </section>
 
 <!-- 11 -->
-<section class="band">
+<section>
   <div class="wrap">
     <h2>Как начинаем</h2>
     <div class="cols-4">
@@ -583,7 +638,7 @@
       <div class="step"><div class="n">Шаг 3</div><div class="t">Запуск</div><div class="d">2-4 недели</div></div>
       <div class="step"><div class="n">Шаг 4</div><div class="t">Полная работа</div><div class="d">С 2-3 месяца</div></div>
     </div>
-    <p class="fine" style="margin-top:14px">Первые агенты - через 2-4 недели, полный темп - со 2-3 месяца.</p>
+    <p class="fine" style="margin-top:16px">Первые агенты - через 2-4 недели, полный темп - со 2-3 месяца.</p>
     <div class="card final">
       <h3 style="font-size:20px">Обсудим ваш проект</h3>
       <p class="sub">Напишите - посмотрим документы и скажем, берём ли проект и чего ждать по продажам.</p>
