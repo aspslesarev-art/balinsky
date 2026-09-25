@@ -29,6 +29,10 @@ export async function POST(request: Request) {
     // through content_version (see lib/content-version.ts).
     await bumpContentRev(k).catch(e => console.error('[revalidate-content] bump:', e))
     revalidateTag(KIND_TO_TAGS[k], 'max')
+    // Scripted edits often rewrite the translation cache along with the
+    // source (EN text with its _hash) — flush it too, or EN stays stale for
+    // the translations TTL (a day).
+    revalidateTag(`translations:${k}`, 'max')
     for (const route of KIND_TO_PATHS[k]) {
       revalidatePath(route.path, route.type)
     }
