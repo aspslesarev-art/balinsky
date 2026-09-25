@@ -40,22 +40,43 @@ export async function scrapeSplan(cfg: SplanConfig): Promise<ExtractResult> {
   }
 
   const widget = dataOf(await api(`/widgets/${cfg.widgetId}?model=Obj`)) as { obj_id?: number } | null
-  const objId = Number(widget?.obj_id ?? 0)
-  if (!objId) throw new Error(`виджет splan.ru ${cfg.widgetId} не привязан к объекту`)
+  const widgetObj = Number(widget?.obj_id ?? 0)
+  if (!widgetObj) throw new Error(`виджет splan.ru ${cfg.widgetId} не привязан к объекту`)
 
-  const obj = dataOf(await api(`/objects/${objId}`)) as { obj_kind?: string; currency?: string; title?: string } | null
   const warnings: string[] = []
-  // Цены отдаются числом без валюты, поэтому доллары проверяем у объекта:
-  // рупии, записанные как доллары, испортили бы всю статистику цен.
-  const usd = String(obj?.currency ?? '').toUpperCase() === 'USD'
-  if (!usd) warnings.push(`цены объекта в ${obj?.currency ?? 'неизвестной валюте'} — в историю не пишем`)
+  const units: ScrapedUnit[] = []
+  let flats: Array<Record<string, unknown>> | null = null
+  for (const objId of OBJECTS_BY_WIDGET_OBJ[widgetObj] ?? [widgetObj]) {
+    const obj = dataOf(await api(`/objects/${objId}`)) as { obj_kind?: string; currency?: string; title?: string } | null
+    // Цены отдаются числом без валюты, поэтому доллары проверяем у объекта:
+    // рупии, записанные как доллары, испортили бы всю статистику цен.
+    const usd = String(obj?.currency ?? '').toUpperCase() === 'USD'
+    if (!usd) warnings.push(`цены объекта ${objId} в ${obj?.currency ?? 'неизвестной валюте'} — в историю не пишем`)
 
-  const units = obj?.obj_kind === 'mkd'
-    ? flatsToUnits(asArray(await api('/mkd/flats?per_page=-1&with_relations=1')), objId, usd)
-    : areasToUnits(asArray(await api(`/igs/areas/filter?per_page=-1&with_relations=1&obj_ids[]=${objId}`)), usd)
+    if (obj?.obj_kind === 'mkd') {
+      flats ??= asArray(await api('/mkd/flats?per_page=-1&with_relations=1'))
+      units.push(...flatsToUnits(flats, objId, usd))
+    } else {
+      units.push(...areasToUnits(asArray(await api(`/igs/areas/filter?per_page=-1&with_relations=1&obj_ids[]=${objId}`)), usd))
+    }
+  }
 
-  if (!units.length) throw new Error(`в объекте splan.ru ${objId} нет юнитов`)
+  if (!units.length) throw new Error(`в объекте splan.ru ${widgetObj} нет юнитов`)
   return { units, warnings }
+}
+
+// Какие объекты читать вместо того, к которому привязан виджет.
+//
+// 11.09.2026 Oceaniq удалил русские объекты генплана (449, 450, 490), а
+// русские виджеты на сайтах так и смотрят на них — API отвечает 404.
+// Живы английские копии с теми же номерами юнитов, так что история не
+// рвётся. Заодно сюда же — объекты того же комплекса, которых виджет не
+// показывал вовсе: апартаменты Nusa Dua II (507) и виллы Nusa Penida (489).
+// Номера юнитов у них с основными не пересекаются.
+const OBJECTS_BY_WIDGET_OBJ: Record<number, number[]> = {
+  449: [535],      // Nusa Dua I: виллы
+  450: [534, 507], // Nusa Dua II: виллы + апартаменты
+  490: [504, 489], // Nusa Penida: апартаменты + виллы
 }
 
 async function login(pbKey: string): Promise<string> {
