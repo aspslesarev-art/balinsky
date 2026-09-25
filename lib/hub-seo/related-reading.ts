@@ -1,5 +1,6 @@
 import { enKnowledgeSlug } from '@/lib/knowledge-en-slugs'
 import type { Lang } from '@/lib/i18n'
+import { marketPath } from '@/lib/market-index'
 
 // Contextual hub → knowledge links.
 //
@@ -109,6 +110,12 @@ const ARTICLES: Record<ReadingKind, Article[]> = {
   ],
 }
 
+const MARKET_LINK: Record<ReadingKind, (lang: 'ru' | 'en') => ReadingLink> = {
+  villas: lang => ({ href: marketPath('prices', lang), label: lang === 'ru' ? 'Цены на недвижимость Бали по районам — таблицы' : 'Bali property prices by area — the data' }),
+  apartments: lang => ({ href: marketPath('prices', lang), label: lang === 'ru' ? 'Цены на апартаменты и виллы по районам — таблицы' : 'Bali apartment and villa prices by area — the data' }),
+  rental: lang => ({ href: marketPath('rent', lang), label: lang === 'ru' ? 'Сколько стоит аренда на Бали: в месяц и за ночь по районам' : 'How much is rent in Bali: monthly and nightly, by area' }),
+}
+
 export function getRelatedReading(
   kind: ReadingKind,
   lang: Lang,
@@ -116,11 +123,13 @@ export function getRelatedReading(
   if (lang !== 'ru' && lang !== 'en') return null
   return {
     heading: HEADING[lang],
-    links: ARTICLES[kind].map(a => ({
+    // The market-data page for this hub leads: it answers the hub's own
+    // question («how much?») with the full table.
+    links: [MARKET_LINK[kind](lang), ...ARTICLES[kind].map(a => ({
       href: lang === 'ru'
         ? `/ru/znaniya/${a.slug}`
         : `/en/knowledge/${enKnowledgeSlug(a.slug)}`,
       label: lang === 'ru' ? a.ru : a.en,
-    })),
+    }))],
   }
 }
