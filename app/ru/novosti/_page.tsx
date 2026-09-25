@@ -113,7 +113,9 @@ export function generateNewsListMetadata(lang: Lang): Metadata {
 }
 
 export async function NewsList({ lang }: { lang: Lang }) {
-  const items = await loadAllNews(lang)
+  // Newest first by date. The manifest keeps the admin's «На главной» items
+  // on top, which buried the market news digest under older developer posts.
+  const items = (await loadAllNews(lang)).slice().sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''))
   const c = pickCopy(COPY, lang)
   const detailRoot = switchLangPath('/ru/novosti', lang)
   return (
