@@ -96,7 +96,7 @@ const _loadBannerRows = unstable_cache(
     return (data ?? []) as BannerRow[]
   },
   ['ad-banner-rows-v1'],
-  { revalidate: 300, tags: [BANNERS_TAG] },
+  { revalidate: 3600, tags: [BANNERS_TAG] },
 )
 
 export async function loadAllBanners(): Promise<Banner[]> {

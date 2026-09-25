@@ -27,7 +27,7 @@ async function loadKbBodyCache(lang: Lang): Promise<KbBodyCache> {
   if (cached && Date.now() - cached.ts < BODY_TTL_MS) return cached.data
   try {
     const url = `${SUPABASE_URL}/storage/v1/object/public/feeds/_kb-body-${lang}.json`
-    const r = await fetch(url, { next: { revalidate: 300 } })
+    const r = await fetch(url, { next: { revalidate: 3600 } })
     if (!r.ok) { _bodyCache.set(lang, { ts: Date.now(), data: {} }); return {} }
     const data = (await r.json()) as KbBodyCache
     _bodyCache.set(lang, { ts: Date.now(), data })

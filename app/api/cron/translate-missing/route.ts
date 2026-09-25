@@ -11,6 +11,7 @@
 //   section=villas,...  narrow to subset (default: all).
 
 import { NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { createClient } from '@supabase/supabase-js'
 import crypto from 'node:crypto'
 
@@ -160,6 +161,9 @@ async function saveCache(sb: Sb, section: string, lang: Lang, cache: Cache): Pro
     cacheControl: '300',
   })
   if (error) throw new Error(`upload ${path}: ${error.message}`)
+  // Pages cache translations for a day (lib/en-translations.ts); new ones must
+  // invalidate explicitly instead of relying on a short TTL.
+  revalidateTag(`translations:${section}:${lang}`, 'max')
 }
 
 async function loadFromTable(sb: Sb, table: string) {

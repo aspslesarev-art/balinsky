@@ -33,7 +33,7 @@ async function loadJson<T>(url: string, fallback: T, tags?: string[]): Promise<T
     // `tags` обязателен для фото-манифестов: правка в админке ревалидирует тег,
     // иначе перегенерация страницы читает копию манифеста из Data Cache —
     // ту, что была ДО записи фото, и запекает плейсхолдер в свежий ISR.
-    const r = await fetch(url, { next: { revalidate: 60, tags } })
+    const r = await fetch(url, { next: { revalidate: tags?.length ? 86400 : 3600, tags } })
     if (!r.ok) return fallback
     return (await r.json()) as T
   } catch {

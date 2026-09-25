@@ -26,7 +26,7 @@ export async function loadKbSummaryCache(lang: string): Promise<Cache> {
   const hit = _cache.get(key)
   if (hit && Date.now() - hit.ts < TTL_MS) return hit.data
   try {
-    const r = await fetch(`${SUPABASE_URL}/storage/v1/object/public/feeds/_kb-summary-${key}.json`, { next: { revalidate: 300 } })
+    const r = await fetch(`${SUPABASE_URL}/storage/v1/object/public/feeds/_kb-summary-${key}.json`, { next: { revalidate: 3600 } })
     if (!r.ok) { _cache.set(key, { ts: Date.now(), data: {} }); return {} }
     const data = (await r.json()) as Cache
     _cache.set(key, { ts: Date.now(), data })

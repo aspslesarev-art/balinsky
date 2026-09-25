@@ -58,7 +58,7 @@ const dealOf = (v: string | null): 'resale' | 'secondary' =>
 
 async function manifest(url: string): Promise<Record<string, string[]>> {
   try {
-    const r = await fetch(cdnManifestUrl(url), { next: { revalidate: 600 } })
+    const r = await fetch(cdnManifestUrl(url), { next: { revalidate: 3600 } })
     if (!r.ok) return {}
     const j = await r.json()
     return j && typeof j === 'object' ? j : {}
@@ -141,7 +141,7 @@ const loadCatalogResale = unstable_cache(
   ['resale-catalog-v1'],
   // Теги обязательны: без них правка юнита в админке не доезжает до раздела
   // весь TTL — ровно та же ловушка, что в lib/complex-units.ts.
-  { revalidate: 600, tags: ['content:villas', 'content:apartments'] },
+  { revalidate: 86400, tags: ['content:villas', 'content:apartments'] },
 )
 
 /** Объекты агентов той же формы, что карточки каталога. */

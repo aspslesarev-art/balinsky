@@ -39,7 +39,7 @@ const CANONICAL_STYLES = [
 
 export async function loadVillaStyles(): Promise<VillaStylesMap> {
   try {
-    const r = await fetch(MANIFEST_URL, { next: { revalidate: 600, tags: ['content:villa-styles'] } })
+    const r = await fetch(MANIFEST_URL, { next: { revalidate: 86400, tags: ['content:villa-styles'] } })
     if (!r.ok) return {}
     const j = await r.json() as { styles?: VillaStylesMap } | VillaStylesMap
     const raw = (j && typeof j === 'object' && 'styles' in j && j.styles)

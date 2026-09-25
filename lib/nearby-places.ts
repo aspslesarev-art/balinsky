@@ -35,7 +35,7 @@ async function loadIndex(): Promise<Index | null> {
   if (_indexInflight) return _indexInflight
   _indexInflight = (async () => {
     try {
-      const r = await fetch(INDEX_URL, { next: { revalidate: 1800 } })
+      const r = await fetch(INDEX_URL, { next: { revalidate: 3600 } })
       if (!r.ok) return null
       const j = (await r.json()) as Index
       _index = { ts: Date.now(), data: j }
@@ -56,7 +56,7 @@ export async function loadNearbyPlaces(
   if (!idx) return null
   if (!idx.ids.includes(villaId)) return null
   try {
-    const r = await fetch(LISTING_URL(villaId), { next: { revalidate: 1800 } })
+    const r = await fetch(LISTING_URL(villaId), { next: { revalidate: 3600 } })
     if (!r.ok) return null
     const byCategory = (await r.json()) as Record<string, NearbyPlace[]>
     return { categories: idx.categories, byCategory }

@@ -91,7 +91,7 @@ async function fetchOnce(section: Section, lang: Exclude<Lang, 'ru'>, key: strin
     const r = await fetch(publicUrl(section, lang), {
       // Section cache files are small (sub-MB) and only change when
       // we re-run translate-missing — give Next.js room to ISR them.
-      next: { revalidate: 300, tags: [`translations:${section}`, `translations:${section}:${lang}`] },
+      next: { revalidate: 86400, tags: [`translations:${section}`, `translations:${section}:${lang}`] },
     })
     if (!r.ok) return _cache.get(key)?.data ?? {}
     const j = (await r.json()) as SectionCache

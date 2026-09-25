@@ -854,7 +854,7 @@ const _loadDevelopersIndex = unstable_cache(
     return out
   },
   ['complex-developers-index-v2'],
-  { revalidate: 600 },
+  { revalidate: 86400, tags: ['content:developers'] },
 )
 
 async function findDeveloperLink(name: string | null): Promise<DeveloperLink | null> {

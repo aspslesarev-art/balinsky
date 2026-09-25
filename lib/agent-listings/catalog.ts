@@ -44,7 +44,7 @@ function num(v: unknown): number | null {
 
 async function photosOf(kind: ListingKind, unitId: string): Promise<string[]> {
   try {
-    const r = await fetch(cdnManifestUrl(MANIFEST[kind]), { next: { revalidate: 600 } })
+    const r = await fetch(cdnManifestUrl(MANIFEST[kind]), { next: { revalidate: 3600 } })
     if (!r.ok) return []
     const j = (await r.json()) as Record<string, string[]>
     const urls = Array.isArray(j?.[unitId]) ? j[unitId] : []

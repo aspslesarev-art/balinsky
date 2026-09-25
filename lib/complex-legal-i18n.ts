@@ -40,7 +40,7 @@ export async function loadComplexLegalCache(lang: string): Promise<Cache> {
   try {
     const r = await fetch(
       `${SUPABASE_URL}/storage/v1/object/public/feeds/_complex-legal-${key}.json`,
-      { next: { revalidate: 300 } },
+      { next: { revalidate: 3600 } },
     )
     if (!r.ok) {
       _cache.set(key, { ts: Date.now(), data: {} })

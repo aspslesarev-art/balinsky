@@ -311,7 +311,7 @@ type PlacesManifest = {
 
 async function fetchPlacesManifest(): Promise<PlacesManifest | null> {
   try {
-    const r = await fetch(cdnManifestUrl(PLACES_MANIFEST_URL, 1800), { next: { revalidate: 1800 } })
+    const r = await fetch(cdnManifestUrl(PLACES_MANIFEST_URL, 1800), { next: { revalidate: 3600 } })
     if (!r.ok) return null
     return await r.json()
   } catch { return null }

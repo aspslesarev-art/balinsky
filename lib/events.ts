@@ -36,7 +36,7 @@ function normalize(item: EventItem): EventItem {
 
 async function loadRawEvents(): Promise<EventItem[]> {
   try {
-    const r = await fetch(MANIFEST_URL, { next: { revalidate: 600, tags: ['content:events'] } })
+    const r = await fetch(MANIFEST_URL, { next: { revalidate: 86400, tags: ['content:events'] } })
     if (!r.ok) return []
     const j = (await r.json()) as Manifest
     return Array.isArray(j.items) ? j.items.map(normalize) : []

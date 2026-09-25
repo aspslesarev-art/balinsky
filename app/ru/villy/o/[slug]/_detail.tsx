@@ -670,7 +670,7 @@ async function _loadVillaById(id: string): Promise<Row | null> {
 // манифест жил в памяти инстанса до получаса и свежая вилла рисовалась
 // с плейсхолдером вместо обложки.
 const _loadManifestCached = revisionedCache(['villas'], 30 * 60 * 1000, async (): Promise<Record<string, string[]>> => {
-  const r = await fetch(cdnManifestUrl(PHOTO_MANIFEST_URL, 600), { next: { revalidate: 600, tags: ['content:villas'] } })
+  const r = await fetch(cdnManifestUrl(PHOTO_MANIFEST_URL, 600), { next: { revalidate: 86400, tags: ['content:villas'] } })
   if (!r.ok) throw new Error(`villa manifest: ${r.status}`)
   return (await r.json()) as Record<string, string[]>
 })
@@ -752,7 +752,7 @@ const _loadComplexesIndex = unstable_cache(
     // cover_url оставляем fallback'ом.
     let complexPhotos: Record<string, string[]> = {}
     try {
-      const r = await fetch(cdnManifestUrl(COMPLEX_PHOTO_MANIFEST_URL, 600), { next: { revalidate: 600, tags: ['content:complexes'] } })
+      const r = await fetch(cdnManifestUrl(COMPLEX_PHOTO_MANIFEST_URL, 600), { next: { revalidate: 86400, tags: ['content:complexes'] } })
       if (r.ok) complexPhotos = await r.json()
     } catch { /* fallback to cover_url below */ }
     const out: ComplexLite[] = []
@@ -774,7 +774,7 @@ const _loadComplexesIndex = unstable_cache(
     return out
   },
   ['villy-complex-index-v5'],
-  { revalidate: 600, tags: ['content:complexes'] },
+  { revalidate: 86400, tags: ['content:complexes'] },
 )
 
 function findParentComplex(villaTitle: string, complexes: ComplexLite[]): ComplexLite | null {
@@ -844,7 +844,7 @@ const _loadDevelopersIndex = (lang: Lang) => unstable_cache(
     return out
   },
   ['villy-developers-index-v5', lang],
-  { revalidate: 600, tags: ['content:developers'] },
+  { revalidate: 86400, tags: ['content:developers'] },
 )()
 
 function findDeveloperByName(targetName: string | null, list: DeveloperLite[]): DeveloperLite | null {

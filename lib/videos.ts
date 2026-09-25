@@ -40,7 +40,7 @@ export const loadAllVideos = revisionedCache(['videos'], TTL_MS, async (): Promi
     // statically generated — an admin edit invalidates the tag. Plain
     // cache: 'no-store' would mark this revalidate: 0, forcing every page
     // that uses it dynamic and breaking generateStaticParams.
-    const r = await fetch(MANIFEST_URL, { next: { revalidate: 1800, tags: ['content:videos'] } })
+    const r = await fetch(MANIFEST_URL, { next: { revalidate: 86400, tags: ['content:videos'] } })
     if (!r.ok) return _lastGood
     const j = (await r.json()) as Manifest
     const raw = Array.isArray(j.items) ? j.items : []

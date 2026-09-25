@@ -49,7 +49,7 @@ function decodeEntities(s: string): string {
 export async function loadLatestYouTubeVideos(limit = 6): Promise<YouTubeVideo[]> {
   try {
     const r = await fetch(FEED_URL, {
-      next: { revalidate: 1800, tags: ['youtube:feed'] },
+      next: { revalidate: 3600, tags: ['youtube:feed'] },
     })
     if (!r.ok) return []
     const xml = await r.text()

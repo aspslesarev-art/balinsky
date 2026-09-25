@@ -32,7 +32,7 @@ const MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/managers/_manager
 
 export async function loadAllManagers(): Promise<ManagerItem[]> {
   try {
-    const r = await fetch(MANIFEST_URL, { next: { revalidate: 600, tags: ['content:managers'] } })
+    const r = await fetch(MANIFEST_URL, { next: { revalidate: 86400, tags: ['content:managers'] } })
     if (!r.ok) return []
     const j = (await r.json()) as Manifest
     return Array.isArray(j.items) ? j.items : []

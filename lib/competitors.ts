@@ -59,7 +59,7 @@ export async function loadCompetitors(): Promise<Competitor[]> {
     try {
       // Via the CDN host: ~14 MB, far over the Data Cache limit, so this
       // fetch is never cached by Next — keep it off Supabase egress.
-      const r = await fetch(cdnManifestUrl(MANIFEST_URL, 600), { next: { revalidate: 600 } })
+      const r = await fetch(cdnManifestUrl(MANIFEST_URL, 3600), { next: { revalidate: 3600 } })
       if (!r.ok) return []
       const j = (await r.json()) as Manifest
       const items = Array.isArray(j.items) ? dedupCompetitors(j.items) : []
@@ -77,7 +77,7 @@ export async function loadCompetitors(): Promise<Competitor[]> {
 async function loadCellIndex(): Promise<CellIndex | null> {
   if (_cellIndex && Date.now() - _cellIndex.ts < TTL_MS) return _cellIndex.data
   try {
-    const r = await fetch(CELLS_INDEX_URL, { next: { revalidate: 600 } })
+    const r = await fetch(CELLS_INDEX_URL, { next: { revalidate: 3600 } })
     if (!r.ok) return null
     const j = (await r.json()) as CellIndex
     _cellIndex = { ts: Date.now(), data: j }
@@ -91,7 +91,7 @@ async function loadCell(key: string): Promise<Competitor[]> {
   const hit = _cellCache.get(key)
   if (hit && Date.now() - hit.ts < TTL_MS) return hit.data
   try {
-    const r = await fetch(CELL_URL(key), { next: { revalidate: 600 } })
+    const r = await fetch(CELL_URL(key), { next: { revalidate: 3600 } })
     if (!r.ok) return []
     const data = (await r.json()) as Competitor[]
     _cellCache.set(key, { ts: Date.now(), data })

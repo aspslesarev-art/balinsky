@@ -669,7 +669,7 @@ const _loadDevLookup = unstable_cache(
     return j
   },
   ['dev-lookup-detail-v2'],
-  { revalidate: 600 },
+  { revalidate: 86400, tags: ['content:developers'] },
 )
 // Full developer index (slug + logo + a few highlights) so the apartment
 // detail page can render the same rich developer card the villa page
@@ -720,7 +720,7 @@ const _loadDevelopersIndex = unstable_cache(
     return out
   },
   ['apt-developers-index-v3'],
-  { revalidate: 600, tags: ['content:developers'] },
+  { revalidate: 86400, tags: ['content:developers'] },
 )
 function findDeveloperByName(targetName: string | null, list: DeveloperLite[]): DeveloperLite | null {
   if (!targetName) return null
@@ -760,7 +760,7 @@ async function _loadAllComplexes(): Promise<ComplexRow[]> {
       // Подменяем первым фото из синк-манифеста complex-photos (как ComplexCard),
       // исходный cover_url остаётся fallback'ом.
       try {
-        const r = await fetch(cdnManifestUrl(COMPLEX_PHOTO_MANIFEST_URL, 600), { next: { revalidate: 600, tags: ['content:complexes'] } })
+        const r = await fetch(cdnManifestUrl(COMPLEX_PHOTO_MANIFEST_URL, 600), { next: { revalidate: 86400, tags: ['content:complexes'] } })
         if (r.ok) {
           const manifest = (await r.json()) as Record<string, string[]>
           for (const c of out) c.cover_url = manifest[c.airtable_id]?.[0] ?? c.cover_url

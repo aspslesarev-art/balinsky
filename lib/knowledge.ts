@@ -49,7 +49,7 @@ const EN_FIELDS = ['title', 'body'] as const
 
 async function loadRawKnowledge(): Promise<KnowledgeItem[]> {
   try {
-    const r = await fetch(MANIFEST_URL, { next: { revalidate: 600, tags: ['content:knowledge'] } })
+    const r = await fetch(MANIFEST_URL, { next: { revalidate: 86400, tags: ['content:knowledge'] } })
     if (!r.ok) return []
     const j = (await r.json()) as Manifest
     if (!Array.isArray(j.items)) return []

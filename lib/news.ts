@@ -63,7 +63,7 @@ async function loadRawNews(): Promise<NewsItem[]> {
   try {
     const rev = await contentRev('news')
     const r = await fetch(`${MANIFEST_URL}?v=${rev}`, {
-      next: { revalidate: 600, tags: ['content:news'] },
+      next: { revalidate: 86400, tags: ['content:news'] },
     })
     if (!r.ok) return []
     const j = (await r.json()) as Manifest
