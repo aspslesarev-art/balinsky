@@ -97,7 +97,7 @@ export function Header({ active }: { active?: NavKey }) {
           <Image src="/logo.svg" alt="Balinsky" width={40} height={40} className="h-10 w-10" priority />
         </Link>
 
-        <nav className="hidden md:flex items-center gap-8 h-full">
+        <nav className="hidden md:flex items-center md:gap-5 lg:gap-8 h-full">
           {NAV.filter(item => !item.ruOnly || lang === 'ru').map(({ key, labelKey, ruOnly, Icon }) => {
             const isActive = key === active
             const href = ruOnly ? ruOnly.href : `/${langToSegment(lang)}/${localizeSegment(key, lang)}`
@@ -106,9 +106,10 @@ export function Header({ active }: { active?: NavKey }) {
               <Link
                 key={key}
                 href={href}
-                className="relative flex items-center gap-2 h-full text-[15px] font-medium text-[#1F3B2F] cursor-pointer hover:text-[var(--color-primary-pressed)] transition-colors"
+                className={`relative ${ruOnly ? 'hidden lg:flex' : 'flex'} items-center gap-2 h-full whitespace-nowrap text-[14px] lg:text-[15px] font-medium text-[#1F3B2F] cursor-pointer hover:text-[var(--color-primary-pressed)] transition-colors`}
               >
-                <Icon size={18} strokeWidth={2} />
+                {/* Icons from lg up: at tablet width the four labels need the room. */}
+                <Icon size={18} strokeWidth={2} className="hidden lg:block" />
                 <span>{label}</span>
                 {isActive && (
                   <span

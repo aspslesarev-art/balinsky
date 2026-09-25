@@ -30,6 +30,7 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
         { label: 'Виллы', href: '/ru/villy' },
         { label: 'Апартаменты', href: '/ru/apartamenty' },
         { label: 'Аренда', href: '/ru/arenda' },
+        { label: 'Перепродажа', href: '/ru/pereprodazha' },
       ],
     },
     {
