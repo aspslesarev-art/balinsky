@@ -11,6 +11,7 @@ import Link from 'next/link'
 import { createClient } from '@supabase/supabase-js'
 import { requireAdmin } from '@/lib/admin-auth'
 import { AdminThemeShell } from '@/components/admin/AdminThemeShell'
+import { LANDING_SECTIONS, LANDING_SEEN_SEC, fmtDur } from '@/lib/landing-sections'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { robots: { index: false, follow: false }, title: 'Лендинг · Balinsky Admin' }
@@ -23,15 +24,8 @@ const sb = createClient(
 const PAGE = 'agentskaya-set'
 const PAGE_URL = 'https://balinsky.info/agentskaya-set/'
 
-// Порядок и названия — как в оглавлении страницы. s0 — первый экран.
-const SECTIONS: [string, string][] = [
-  ['s0', 'Первый экран'], ['s1', 'Почему сейчас'], ['s2', 'Почему мы'], ['s3', 'Спрос'],
-  ['s4', 'Команда'], ['s5', 'Отчёты'], ['s6', 'CRM агентов'], ['s7', 'Цена'],
-  ['s8', 'Бонусы'], ['s9', 'Кейсы'], ['s10', 'Форматы'], ['s11', 'Гарантии'],
-  ['s12', 'Условия'], ['s13', 'Как начинаем'],
-]
-// Меньше этого на разделе — пролистал, а не читал.
-const SEEN_SEC = 3
+const SECTIONS = LANDING_SECTIONS
+const SEEN_SEC = LANDING_SEEN_SEC
 
 type Range = '24h' | '7d' | '30d' | 'all'
 const RANGE_LABELS: Record<Range, string> = {
@@ -66,12 +60,6 @@ async function loadVisits(range: Range): Promise<{ visits: Visit[]; error: strin
   const { data, error } = await q
   if (error) return { visits: [], error: error.message }
   return { visits: (data ?? []) as Visit[], error: null }
-}
-
-function fmtDur(sec: number): string {
-  if (sec < 60) return `${sec} с`
-  const m = Math.floor(sec / 60), s = sec % 60
-  return s ? `${m} мин ${s} с` : `${m} мин`
 }
 
 function fmtWhen(iso: string): string {

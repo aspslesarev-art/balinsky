@@ -1,13 +1,14 @@
 // Счётчик для закрытых лендингов (public/agentskaya-set). Страница шлёт
 // накопленные итоги сессии раз в 15 секунд и при уходе со страницы —
 // здесь это upsert одной строки в `landing_visits` (миграция 084).
-// Первый пинг сессии (first: true) ещё и шлёт владельцу уведомление в
-// Telegram: страницу рассылают конкретным застройщикам, и момент, когда
-// её открыли, важнее любой сводки.
+// Первый пинг сессии (first: true) шлёт владельцу уведомление в Telegram,
+// а следующие пинги дописывают в это же сообщение время, прокрутку и
+// прочитанные блоки — одна живая карточка на заход, а не лента сообщений.
 
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { sendAdminAlert } from '@/lib/admin-alert'
+import { sendAdminAlertWithId, editAdminAlert } from '@/lib/admin-alert'
+import { LANDING_SECTIONS, LANDING_SEEN_SEC, fmtDur } from '@/lib/landing-sections'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -99,28 +100,75 @@ export async function POST(req: Request) {
     user_agent:   ua.slice(0, 400),
   }
 
-  const { error } = await sb.from('landing_visits').upsert(row, { onConflict: 'id' })
-  if (error) {
-    console.error('[track-landing]', error.message)
-    return NextResponse.json({ ok: false }, { status: 500 })
+  type Saved = { started_at: string; tg_message_id: number | null }
+  let saved: Saved | null = null
+  const res = await sb.from('landing_visits').upsert(row, { onConflict: 'id' })
+    .select('started_at, tg_message_id').single()
+  if (res.error) {
+    // До миграции 085 колонки tg_message_id нет — пишем визит без карточки.
+    if (!/tg_message_id/.test(res.error.message)) {
+      console.error('[track-landing]', res.error.message)
+      return NextResponse.json({ ok: false }, { status: 500 })
+    }
+    const plain = await sb.from('landing_visits').upsert(row, { onConflict: 'id' })
+    if (plain.error) {
+      console.error('[track-landing]', plain.error.message)
+      return NextResponse.json({ ok: false }, { status: 500 })
+    }
+  } else {
+    saved = res.data as Saved
   }
 
-  if (body.first) {
+  if (body.first || saved?.tg_message_id) {
     let visitNo = 1
-    if (vid) {
+    if (vid && saved) {
       const { count } = await sb.from('landing_visits')
         .select('id', { count: 'exact', head: true })
-        .eq('page', body.page).eq('visitor_id', vid)
+        .eq('page', body.page).eq('visitor_id', vid).lte('started_at', saved.started_at)
       visitNo = count ?? 1
     }
-    const where = [row.city, row.country].filter(Boolean).join(', ') || 'неизвестно'
-    await sendAdminAlert(
-      `\u{1F440} Открыли ${PAGE_TITLES[body.page] ?? body.page}\n\n`
-      + `Кто: ${who ?? 'без метки в ссылке'}${visitNo > 1 ? ` · заход №${visitNo}` : ''}\n`
-      + `Где: ${where} · ${row.device}\n\n`
-      + 'Отчёт: https://balinsky.info/admin/lending',
-    )
+    const text = card({ page: body.page, who, visitNo, row })
+    if (body.first) {
+      const messageId = await sendAdminAlertWithId(text)
+      if (messageId && saved) {
+        await sb.from('landing_visits').update({ tg_message_id: messageId }).eq('id', row.id)
+      }
+    } else if (saved?.tg_message_id) {
+      await editAdminAlert(saved.tg_message_id, text)
+    }
   }
 
   return NextResponse.json({ ok: true })
+}
+
+function card({ page, who, visitNo, row }: {
+  page: string
+  who: string | null
+  visitNo: number
+  row: { city: string | null; country: string | null; device: string; active_sec: number; max_scroll: number; sections: Record<string, number>; cta_clicks: number }
+}): string {
+  const where = [row.city, row.country].filter(Boolean).join(', ') || 'неизвестно'
+  const lines = [
+    `\u{1F440} Открыли ${PAGE_TITLES[page] ?? page}`,
+    '',
+    `Кто: ${who ?? 'без метки в ссылке'}${visitNo > 1 ? ` · заход №${visitNo}` : ''}`,
+    `Где: ${where} · ${row.device}`,
+    '',
+  ]
+  if (row.active_sec < LANDING_SEEN_SEC) {
+    lines.push('Только что открыл')
+  } else {
+    lines.push(`\u{23F1} ${fmtDur(row.active_sec)} на странице · долистал до ${row.max_scroll}%`)
+    const read = LANDING_SECTIONS
+      .filter(([k]) => (row.sections[k] ?? 0) >= LANDING_SEEN_SEC)
+      .sort((a, b) => (row.sections[b[0]] ?? 0) - (row.sections[a[0]] ?? 0))
+    if (read.length) {
+      lines.push(`\u{1F4D6} Читал ${read.length} из ${LANDING_SECTIONS.length} блоков, дольше всего:`)
+      for (const [k, label] of read.slice(0, 4)) lines.push(`   ${label} — ${fmtDur(row.sections[k] ?? 0)}`)
+    }
+  }
+  if (row.cta_clicks > 0) lines.push('\u{270D}\u{FE0F} Нажал «Написать в Telegram»')
+  const at = new Date().toLocaleTimeString('ru-RU', { timeZone: 'Asia/Makassar', hour: '2-digit', minute: '2-digit' })
+  lines.push('', `Обновлено в ${at} (Бали)`, 'Отчёт: https://balinsky.info/admin/lending')
+  return lines.join('\n')
 }
