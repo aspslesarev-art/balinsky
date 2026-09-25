@@ -28,7 +28,7 @@ export const nl: InvestmentGuideCopy = {
   },
   yields: {
     h2: 'Rendementen per gebied — onze berekening 2026',
-    method: "Villa's met twee slaapkamers: mediane vraagprijs in de Balinsky-catalogus en mediane prijs per nacht van verhuurde villa's met twee slaapkamers in hetzelfde gebied, bij 65% bezetting. Netto = na 15% platformcommissie, 20% beheer, 6% exploitatiekosten en 10% huurbelasting; vóór afschrijving van de leasehold. Volledige methode (in het Engels):",
+    method: "Villa's met twee slaapkamers: mediane vraagprijs in de Balinsky-catalogus en mediane prijs per nacht van verhuurde villa's met twee slaapkamers in hetzelfde gebied, bij 65% bezetting. Netto = na 15% platformcommissie, 20% beheer, 6% exploitatiekosten en 10% lokale verblijfsbelasting (PBJT); vóór inkomstenbelasting; vóór afschrijving van de leasehold. Volledige methode (in het Engels):",
     methodLink: "rendement van villa's op Bali per gebied",
     colArea: 'Gebied',
     colPrice: 'Prijs 2 slk, mediaan',
@@ -73,7 +73,7 @@ export const nl: InvestmentGuideCopy = {
     title: 'Villa met 2 slaapkamers op de catalogusmediaan, $322.500, leasehold van 30 jaar',
     lines: [
       "Prijs per nacht: $135 (mediaan van 1.966 verhuurde villa's met 2 slaapkamers) × 65% bezetting × 365 = ongeveer $32.000 bruto per jaar",
-      'Platformcommissie 15%, beheer 20%, exploitatiekosten 6%, huurbelasting 10%: ongeveer −$16.300',
+      'Platformcommissie 15%, beheer 20%, exploitatiekosten 6%, lokale verblijfsbelasting (PBJT) 10%: ongeveer −$16.300 (vóór inkomstenbelasting)',
       'Netto: ongeveer $15.700 per jaar — 4,9% van de prijs',
       'Afschrijving van de leasehold: $322.500 ÷ 30 jaar = $10.750 per jaar; boven het terugverdienen van uw eigen geld blijft dus ongeveer $4.950 per jaar over',
     ],
@@ -112,7 +112,7 @@ export const nl: InvestmentGuideCopy = {
   faqH2: 'Veelgestelde vragen',
   faq: [
     { q: 'Wat is in 2026 een realistisch huurrendement voor een villa op Bali?',
-      a: "Volgens de berekening van Balinsky (september 2026: 359 villa's te koop, 6.305 villa's te huur) levert een mediane villa met twee slaapkamers bij 65% bezetting ongeveer 10% bruto en ongeveer 5% netto per jaar op, een villa met één slaapkamer ongeveer 14% bruto en 7% netto. Villa's in het bovenste kwart qua prijs per nacht halen ongeveer 7–10% netto. Netto betekent na platformcommissie, beheer, exploitatiekosten en huurbelasting, vóór afschrijving van de leasehold. Sterrenhotels op Bali draaien op ongeveer 57–65% bezetting (BPS Bali)." },
+      a: "Volgens de berekening van Balinsky (september 2026: 359 villa's te koop, 6.305 villa's te huur) levert een mediane villa met twee slaapkamers bij 65% bezetting ongeveer 10% bruto en ongeveer 5% netto per jaar op, een villa met één slaapkamer ongeveer 14% bruto en 7% netto. Villa's in het bovenste kwart qua prijs per nacht halen ongeveer 7–10% netto. Netto betekent na platformcommissie, beheer, exploitatiekosten en lokale verblijfsbelasting, vóór inkomstenbelasting en afschrijving van de leasehold. Sterrenhotels op Bali draaien op ongeveer 57–65% bezetting (BPS Bali)." },
     { q: 'Leasehold of PT PMA — welke structuur past bij een buitenlandse belegger?',
       a: "Een leasehold (contractuele huur, meestal 25–30 jaar) past bij een eigen woning of één à twee huurvilla's: zonder vennootschap en zonder jaarrapportage. Een PT PMA houdt een opstalrecht (HGB, 30 + 20 + 30 jaar volgens PP 18/2021) — geen volle eigendom, die voor buitenlanders niet mogelijk is. Zij past bij een verhuurbedrijf; het vereiste gestorte kapitaal is IDR 2,5 miljard (verordening van het ministerie van Investeringen nr. 5/2025), plus jaarrapportage en 22% vennootschapsbelasting." },
     { q: 'Welke belastingen betaalt een buitenlander bij aankoop en bezit van vastgoed op Bali?',
@@ -143,7 +143,7 @@ export const nl: InvestmentGuideCopy = {
     caseTitle: n => `Villa met twee slaapkamers in ${n} — wat de data laat zien`,
     rate: (r, n) => `Mediane prijs per nacht: ${r} (${n} verhuurde villa's met twee slaapkamers)`,
     revenue: a => `Bruto-opbrengst bij 65% bezetting: ongeveer ${a} per jaar`,
-    net: a => `Na platformcommissie, beheer, exploitatiekosten en huurbelasting (ongeveer 51%): ongeveer ${a} per jaar`,
+    net: a => `Na platformcommissie, beheer, exploitatiekosten en lokale verblijfsbelasting (ongeveer 51%, vóór inkomstenbelasting): ongeveer ${a} per jaar`,
     price: (p, n) => `Mediane vraagprijs van villa's in het gebied: ${p} (${n} aanbiedingen)`,
     island: 'Ter vergelijking: op heel Bali levert een mediane villa met twee slaapkamers bij 65% bezetting ongeveer 10% bruto en 5% netto per jaar op, vóór afschrijving van de leasehold.',
     noRentals: "In dit gebied worden te weinig villa's met twee slaapkamers verhuurd voor een betrouwbare prijs — vergelijk met naburige gebieden.",

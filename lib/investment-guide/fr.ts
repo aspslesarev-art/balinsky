@@ -28,7 +28,7 @@ export const fr: InvestmentGuideCopy = {
   },
   yields: {
     h2: 'Rendements par secteur — notre calcul 2026',
-    method: 'Villas de deux chambres : prix médian au catalogue Balinsky et prix médian à la nuit des villas de deux chambres en location dans le même secteur, à 65 % d’occupation. Net = après 15 % de commissions des plateformes, 20 % de gestion, 6 % de frais d’exploitation et 10 % d’impôt sur les loyers ; avant amortissement du leasehold. Méthode complète (en anglais) :',
+    method: 'Villas de deux chambres : prix médian au catalogue Balinsky et prix médian à la nuit des villas de deux chambres en location dans le même secteur, à 65 % d’occupation. Net = après 15 % de commissions des plateformes, 20 % de gestion, 6 % de frais d’exploitation et 10 % de taxe locale d’hébergement (PBJT) ; avant impôt sur le revenu ; avant amortissement du leasehold. Méthode complète (en anglais) :',
     methodLink: 'rendement des villas à Bali par secteur',
     colArea: 'Secteur',
     colPrice: 'Prix 2 ch., médiane',
@@ -73,7 +73,7 @@ export const fr: InvestmentGuideCopy = {
     title: 'Villa de 2 chambres à la médiane du catalogue, 322 500 $, leasehold de 30 ans',
     lines: [
       'Prix à la nuit : 135 $ (médiane de 1 966 villas de 2 chambres en location) × 65 % d’occupation × 365 = environ 32 000 $ par an brut',
-      'Commissions des plateformes 15 %, gestion 20 %, frais d’exploitation 6 %, impôt sur les loyers 10 % : environ −16 300 $',
+      'Commissions des plateformes 15 %, gestion 20 %, frais d’exploitation 6 %, taxe locale d’hébergement (PBJT) 10 % : environ −16 300 $ (avant impôt sur le revenu)',
       'Net : environ 15 700 $ par an — 4,9 % du prix',
       'Amortissement du leasehold : 322 500 $ ÷ 30 ans = 10 750 $ par an, soit environ 4 950 $ par an de rendement au-delà de la récupération de votre propre capital',
     ],
@@ -112,7 +112,7 @@ export const fr: InvestmentGuideCopy = {
   faqH2: 'Questions fréquentes',
   faq: [
     { q: 'Quel est le rendement locatif réaliste d’une villa à Bali en 2026 ?',
-      a: 'Selon le calcul de Balinsky (septembre 2026 : 359 villas à vendre, 6 305 villas en location), une villa médiane de deux chambres rapporte environ 10 % brut par an et environ 5 % net à 65 % d’occupation ; une villa d’une chambre environ 14 % brut et 7 % net. Les villas du quart supérieur par prix à la nuit atteignent environ 7–10 % net. Net signifie après commissions des plateformes, gestion, frais d’exploitation et impôt sur les loyers, avant amortissement du leasehold. L’occupation des hôtels étoilés de Bali est d’environ 57–65 % (BPS Bali).' },
+      a: 'Selon le calcul de Balinsky (septembre 2026 : 359 villas à vendre, 6 305 villas en location), une villa médiane de deux chambres rapporte environ 10 % brut par an et environ 5 % net à 65 % d’occupation ; une villa d’une chambre environ 14 % brut et 7 % net. Les villas du quart supérieur par prix à la nuit atteignent environ 7–10 % net. Net signifie après commissions des plateformes, gestion, frais d’exploitation et taxe locale d’hébergement, avant impôt sur le revenu et amortissement du leasehold. L’occupation des hôtels étoilés de Bali est d’environ 57–65 % (BPS Bali).' },
     { q: 'Leasehold ou PT PMA — quelle structure choisir pour un investisseur étranger ?',
       a: 'Le leasehold (bail contractuel, généralement 25–30 ans) convient à une résidence ou à une ou deux villas locatives : pas de société ni de comptes annuels. Une PT PMA détient un droit de construire (HGB, 30 + 20 + 30 ans selon le PP 18/2021) — pas la pleine propriété, interdite aux étrangers. Elle convient à une activité locative ; le capital libéré requis est de 2,5 milliards de roupies (règlement du ministère de l’Investissement n° 5/2025), plus des déclarations annuelles et 22 % d’impôt sur les sociétés.' },
     { q: 'Quels impôts paie un étranger à l’achat et pendant la détention d’un bien à Bali ?',
@@ -143,7 +143,7 @@ export const fr: InvestmentGuideCopy = {
     caseTitle: n => `Villa de deux chambres à ${n} — ce que montrent les données`,
     rate: (r, n) => `Prix médian à la nuit : ${r} (${n} villas de deux chambres en location)`,
     revenue: a => `Revenu brut à 65 % d’occupation : environ ${a} par an`,
-    net: a => `Après commissions des plateformes, gestion, frais d’exploitation et impôt sur les loyers (environ 51 %) : environ ${a} par an`,
+    net: a => `Après commissions des plateformes, gestion, frais d’exploitation et taxe locale d’hébergement (environ 51 %, avant impôt sur le revenu) : environ ${a} par an`,
     price: (p, n) => `Prix médian des villas du secteur : ${p} (${n} annonces)`,
     island: 'À titre de comparaison, sur l’ensemble de Bali une villa médiane de deux chambres rapporte environ 10 % brut et 5 % net par an à 65 % d’occupation, avant amortissement du leasehold.',
     noRentals: 'Trop peu de villas de deux chambres sont en location dans ce secteur pour donner un prix fiable — comparez avec les secteurs voisins.',

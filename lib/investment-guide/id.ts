@@ -28,7 +28,7 @@ export const id: InvestmentGuideCopy = {
   },
   yields: {
     h2: 'Imbal Hasil per Kawasan — Perhitungan Kami 2026',
-    method: 'Vila 2 kamar tidur: harga median di katalog Balinsky dan tarif median per malam vila 2 kamar yang disewakan di kawasan yang sama, pada okupansi 65%. Bersih = setelah komisi platform 15%, manajemen 20%, biaya operasional 6% dan pajak sewa 10%; sebelum amortisasi leasehold. Metode lengkap (bahasa Inggris):',
+    method: 'Vila 2 kamar tidur: harga median di katalog Balinsky dan tarif median per malam vila 2 kamar yang disewakan di kawasan yang sama, pada okupansi 65%. Bersih = setelah komisi platform 15%, manajemen 20%, biaya operasional 6% dan pajak akomodasi daerah (PBJT) 10%; sebelum pajak penghasilan; sebelum amortisasi leasehold. Metode lengkap (bahasa Inggris):',
     methodLink: 'imbal hasil vila Bali per kawasan',
     colArea: 'Kawasan',
     colPrice: 'Harga 2 kamar, median',
@@ -73,7 +73,7 @@ export const id: InvestmentGuideCopy = {
     title: 'Vila 2 kamar pada median katalog, $322.500, leasehold 30 tahun',
     lines: [
       'Tarif: $135 per malam (median 1.966 vila 2 kamar yang disewakan) × okupansi 65% × 365 = sekitar $32.000 per tahun kotor',
-      'Komisi platform 15%, manajemen 20%, biaya operasional 6%, pajak sewa 10%: sekitar −$16.300',
+      'Komisi platform 15%, manajemen 20%, biaya operasional 6%, pajak akomodasi daerah (PBJT) 10%: sekitar −$16.300 (sebelum pajak penghasilan)',
       'Bersih: sekitar $15.700 per tahun — 4,9% dari harga',
       'Amortisasi leasehold: $322.500 ÷ 30 tahun = $10.750 per tahun, jadi sekitar $4.950 per tahun adalah hasil di atas pengembalian modal Anda sendiri',
     ],
@@ -112,7 +112,7 @@ export const id: InvestmentGuideCopy = {
   faqH2: 'Pertanyaan yang Sering Diajukan',
   faq: [
     { q: 'Berapa imbal hasil sewa yang realistis untuk vila di Bali pada 2026?',
-      a: 'Menurut perhitungan Balinsky (September 2026: 359 vila dijual, 6.305 vila disewakan), vila 2 kamar median menghasilkan sekitar 10% per tahun kotor dan sekitar 5% bersih pada okupansi 65%; vila 1 kamar sekitar 14% kotor dan 7% bersih. Vila di kuartil teratas berdasarkan tarif per malam mencapai sekitar 7–10% bersih. Bersih berarti setelah komisi platform, manajemen, biaya operasional dan pajak sewa, sebelum amortisasi leasehold. Okupansi hotel berbintang di Bali sekitar 57–65% (BPS Bali).' },
+      a: 'Menurut perhitungan Balinsky (September 2026: 359 vila dijual, 6.305 vila disewakan), vila 2 kamar median menghasilkan sekitar 10% per tahun kotor dan sekitar 5% bersih pada okupansi 65%; vila 1 kamar sekitar 14% kotor dan 7% bersih. Vila di kuartil teratas berdasarkan tarif per malam mencapai sekitar 7–10% bersih. Bersih berarti setelah komisi platform, manajemen, biaya operasional dan pajak akomodasi daerah, sebelum pajak penghasilan dan amortisasi leasehold. Okupansi hotel berbintang di Bali sekitar 57–65% (BPS Bali).' },
     { q: 'Leasehold atau PT PMA — struktur mana yang sebaiknya dipilih investor asing?',
       a: 'Leasehold (sewa berdasarkan kontrak, biasanya 25–30 tahun) cocok untuk rumah atau satu-dua vila sewa: tanpa perusahaan dan tanpa laporan tahunan. PT PMA memegang Hak Guna Bangunan (HGB, 30 + 20 + 30 tahun menurut PP 18/2021) — bukan hak milik, yang tidak bisa dimiliki orang asing. Cocok untuk bisnis sewa; modal disetor yang disyaratkan Rp2,5 miliar (Peraturan Kementerian Investasi No. 5/2025), ditambah laporan tahunan dan pajak badan 22%.' },
     { q: 'Pajak apa yang dibayar orang asing saat membeli dan memiliki properti di Bali?',
@@ -143,7 +143,7 @@ export const id: InvestmentGuideCopy = {
     caseTitle: n => `Vila 2 kamar di ${n} — apa kata data`,
     rate: (r, n) => `Tarif median per malam: ${r} (${n} vila 2 kamar disewakan)`,
     revenue: a => `Pendapatan kotor pada okupansi 65%: sekitar ${a} per tahun`,
-    net: a => `Setelah komisi platform, manajemen, biaya operasional dan pajak sewa (sekitar 51%): sekitar ${a} per tahun`,
+    net: a => `Setelah komisi platform, manajemen, biaya operasional dan pajak akomodasi daerah (sekitar 51%, sebelum pajak penghasilan): sekitar ${a} per tahun`,
     price: (p, n) => `Harga median vila di kawasan ini: ${p} (${n} listing)`,
     island: 'Sebagai perbandingan, di seluruh Bali vila 2 kamar median menghasilkan sekitar 10% kotor dan 5% bersih per tahun pada okupansi 65%, sebelum amortisasi leasehold.',
     noRentals: 'Vila 2 kamar yang disewakan di kawasan ini terlalu sedikit untuk tarif yang andal — bandingkan dengan kawasan tetangga.',

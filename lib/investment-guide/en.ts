@@ -28,7 +28,7 @@ export const en: InvestmentGuideCopy = {
   },
   yields: {
     h2: 'Yields by Area — Our 2026 Calculation',
-    method: 'Two-bedroom villas: median asking price in the Balinsky catalogue and median listed nightly rate of two-bedroom villas for rent in the same area, at 65% occupancy. Net = after 15% booking-platform commissions, 20% management, 6% running costs and 10% rental tax; before leasehold amortisation. Full method:',
+    method: 'Two-bedroom villas: median asking price in the Balinsky catalogue and median listed nightly rate of two-bedroom villas for rent in the same area, at 65% occupancy. Net = after 15% booking-platform commissions, 20% management, 6% running costs and 10% local accommodation tax (PBJT); before income tax; before leasehold amortisation. Full method:',
     methodLink: 'Bali villa rental yield by area',
     colArea: 'Area',
     colPrice: '2-bed price, median',
@@ -73,7 +73,7 @@ export const en: InvestmentGuideCopy = {
     title: '2-bed villa at the catalogue median, $322,500, 30-year leasehold',
     lines: [
       'Nightly rate: $135 (median of 1,966 two-bedroom villas for rent) × 65% occupancy × 365 = about $32,000 a year gross',
-      'Platform commissions 15%, management 20%, running costs 6%, rental tax 10%: about −$16,300',
+      'Platform commissions 15%, management 20%, running costs 6%, local accommodation tax (PBJT) 10%: about −$16,300 (before income tax)',
       'Net: about $15,700 a year — 4.9% of the price',
       'Leasehold amortisation: $322,500 ÷ 30 years = $10,750 a year, so about $4,950 a year is return above getting your own money back',
     ],
@@ -112,7 +112,7 @@ export const en: InvestmentGuideCopy = {
   faqH2: 'Frequently Asked Questions',
   faq: [
     { q: 'What is the realistic rental yield for a Bali villa in 2026?',
-      a: 'By Balinsky’s calculation (September 2026: 359 villas for sale, 6,305 villas listed for rent), a median two-bedroom villa earns about 10% a year gross and about 5% net at 65% occupancy; a one-bedroom villa about 14% gross and 7% net. Villas in the top quarter by nightly rate reach about 7–10% net. Net means after platform commissions, management, running costs and rental tax, before leasehold amortisation. Star-hotel occupancy on Bali is roughly 57–65% (BPS Bali).' },
+      a: 'By Balinsky’s calculation (September 2026: 359 villas for sale, 6,305 villas listed for rent), a median two-bedroom villa earns about 10% a year gross and about 5% net at 65% occupancy; a one-bedroom villa about 14% gross and 7% net. Villas in the top quarter by nightly rate reach about 7–10% net. Net means after platform commissions, management, running costs and local accommodation tax, before income tax and leasehold amortisation. Star-hotel occupancy on Bali is roughly 57–65% (BPS Bali).' },
     { q: 'Leasehold or PT PMA — which structure should a foreign investor pick?',
       a: 'A leasehold (a contractual lease, usually 25–30 years) suits a home or one or two rental villas: no company and no annual reporting. A PT PMA holds a Right to Build (HGB, 30 + 20 + 30 years under PP 18/2021) — not freehold, which foreigners cannot hold. It suits a rental business; the paid-up capital requirement is IDR 2.5 billion (Ministry of Investment Regulation 5/2025), plus annual reporting and 22% corporate income tax.' },
     { q: 'What taxes does a foreigner pay when buying and owning property in Bali?',
@@ -143,7 +143,7 @@ export const en: InvestmentGuideCopy = {
     caseTitle: n => `Two-bedroom villa in ${n} — what the data shows`,
     rate: (r, n) => `Median listed nightly rate: ${r} (${n} two-bedroom villas for rent)`,
     revenue: a => `Gross revenue at 65% occupancy: about ${a} a year`,
-    net: a => `After platform commissions, management, running costs and rental tax (about 51%): about ${a} a year`,
+    net: a => `After platform commissions, management, running costs and local accommodation tax (about 51%, before income tax): about ${a} a year`,
     price: (p, n) => `Median asking price of villas in the area: ${p} (${n} listings)`,
     island: 'For comparison, across Bali a median two-bedroom villa earns about 10% gross and 5% net a year at 65% occupancy, before leasehold amortisation.',
     noRentals: 'There are too few two-bedroom villas for rent in this area to state a reliable nightly rate — compare with neighbouring areas.',

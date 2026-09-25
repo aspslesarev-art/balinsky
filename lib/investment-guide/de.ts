@@ -28,7 +28,7 @@ export const de: InvestmentGuideCopy = {
   },
   yields: {
     h2: 'Renditen nach Gebiet — unsere Berechnung 2026',
-    method: 'Villen mit zwei Schlafzimmern: Medianpreis im Balinsky-Katalog und medianer Übernachtungspreis vermieteter Villen mit zwei Schlafzimmern im selben Gebiet, bei 65 % Auslastung. Netto = nach 15 % Plattformprovision, 20 % Verwaltung, 6 % Betriebskosten und 10 % Mietsteuer; vor Abschreibung des Leasehold. Vollständige Methode (auf Englisch):',
+    method: 'Villen mit zwei Schlafzimmern: Medianpreis im Balinsky-Katalog und medianer Übernachtungspreis vermieteter Villen mit zwei Schlafzimmern im selben Gebiet, bei 65 % Auslastung. Netto = nach 15 % Plattformprovision, 20 % Verwaltung, 6 % Betriebskosten und 10 % lokaler Beherbergungssteuer (PBJT); vor Einkommensteuer; vor Abschreibung des Leasehold. Vollständige Methode (auf Englisch):',
     methodLink: 'Villenrenditen auf Bali nach Gebiet',
     colArea: 'Gebiet',
     colPrice: 'Preis 2 SZ, Median',
@@ -73,7 +73,7 @@ export const de: InvestmentGuideCopy = {
     title: 'Villa mit 2 Schlafzimmern zum Katalog-Median, 322.500 $, 30 Jahre Leasehold',
     lines: [
       'Übernachtungspreis: 135 $ (Median von 1.966 vermieteten Villen mit 2 Schlafzimmern) × 65 % Auslastung × 365 = etwa 32.000 $ brutto im Jahr',
-      'Plattformprovision 15 %, Verwaltung 20 %, Betriebskosten 6 %, Mietsteuer 10 %: etwa −16.300 $',
+      'Plattformprovision 15 %, Verwaltung 20 %, Betriebskosten 6 %, lokale Beherbergungssteuer (PBJT) 10 %: etwa −16.300 $ (vor Einkommensteuer)',
       'Netto: etwa 15.700 $ im Jahr — 4,9 % des Preises',
       'Abschreibung des Leasehold: 322.500 $ ÷ 30 Jahre = 10.750 $ im Jahr; über die Rückgewinnung des eigenen Kapitals hinaus bleiben also etwa 4.950 $ im Jahr',
     ],
@@ -112,7 +112,7 @@ export const de: InvestmentGuideCopy = {
   faqH2: 'Häufige Fragen',
   faq: [
     { q: 'Welche Mietrendite ist 2026 für eine Villa auf Bali realistisch?',
-      a: 'Nach Berechnung von Balinsky (September 2026: 359 Villen im Verkauf, 6.305 Villen in der Vermietung) erzielt eine mittlere Villa mit zwei Schlafzimmern bei 65 % Auslastung etwa 10 % brutto und etwa 5 % netto im Jahr, eine Villa mit einem Schlafzimmer etwa 14 % brutto und 7 % netto. Villen im obersten Viertel nach Übernachtungspreis erreichen etwa 7–10 % netto. Netto heißt nach Plattformprovision, Verwaltung, Betriebskosten und Mietsteuer, vor Abschreibung des Leasehold. Sternehotels auf Bali sind zu etwa 57–65 % ausgelastet (BPS Bali).' },
+      a: 'Nach Berechnung von Balinsky (September 2026: 359 Villen im Verkauf, 6.305 Villen in der Vermietung) erzielt eine mittlere Villa mit zwei Schlafzimmern bei 65 % Auslastung etwa 10 % brutto und etwa 5 % netto im Jahr, eine Villa mit einem Schlafzimmer etwa 14 % brutto und 7 % netto. Villen im obersten Viertel nach Übernachtungspreis erreichen etwa 7–10 % netto. Netto heißt nach Plattformprovision, Verwaltung, Betriebskosten und lokaler Beherbergungssteuer, vor Einkommensteuer und Abschreibung des Leasehold. Sternehotels auf Bali sind zu etwa 57–65 % ausgelastet (BPS Bali).' },
     { q: 'Leasehold oder PT PMA — welche Struktur passt für ausländische Investoren?',
       a: 'Ein Leasehold (vertraglicher Pachtvertrag, meist 25–30 Jahre) passt für ein Eigenheim oder ein bis zwei Mietvillen: ohne Gesellschaft und ohne Jahresberichte. Eine PT PMA hält ein Baurecht (HGB, 30 + 20 + 30 Jahre nach PP 18/2021) — kein Volleigentum, das Ausländern verwehrt ist. Sie passt für ein Vermietungsgeschäft; das geforderte eingezahlte Kapital beträgt 2,5 Mrd. Rupiah (Verordnung des Investitionsministeriums Nr. 5/2025), dazu Jahresberichte und 22 % Körperschaftsteuer.' },
     { q: 'Welche Steuern zahlt ein Ausländer beim Kauf und Besitz einer Immobilie auf Bali?',
@@ -143,7 +143,7 @@ export const de: InvestmentGuideCopy = {
     caseTitle: n => `Villa mit zwei Schlafzimmern in ${n} — was die Daten zeigen`,
     rate: (r, n) => `Medianer Übernachtungspreis: ${r} (${n} vermietete Villen mit zwei Schlafzimmern)`,
     revenue: a => `Bruttoeinnahmen bei 65 % Auslastung: etwa ${a} im Jahr`,
-    net: a => `Nach Plattformprovision, Verwaltung, Betriebskosten und Mietsteuer (etwa 51 %): etwa ${a} im Jahr`,
+    net: a => `Nach Plattformprovision, Verwaltung, Betriebskosten und lokaler Beherbergungssteuer (etwa 51 %, vor Einkommensteuer): etwa ${a} im Jahr`,
     price: (p, n) => `Medianer Angebotspreis der Villen im Gebiet: ${p} (${n} Inserate)`,
     island: 'Zum Vergleich: Auf ganz Bali erzielt eine mittlere Villa mit zwei Schlafzimmern bei 65 % Auslastung etwa 10 % brutto und 5 % netto im Jahr, vor Abschreibung des Leasehold.',
     noRentals: 'In diesem Gebiet werden zu wenige Villen mit zwei Schlafzimmern vermietet, um einen verlässlichen Preis zu nennen — vergleichen Sie mit Nachbargebieten.',

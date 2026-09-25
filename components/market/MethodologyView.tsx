@@ -43,7 +43,7 @@ function copy(lang: Lang) {
     yield: [
       'Берём медианную ставку за ночь похожих вилл рядом (тот же тип и число спален).',
       'Умножаем на 365 и на загрузку. Базовый сценарий — 65%, рядом показываем 55% и 75%. Данные о фактической загрузке в базе ненадёжны (они считают закрытые даты календаря занятыми), поэтому мы используем сценарии, а не «реальную загрузку».',
-      'Вычитаем расходы: комиссии площадок 15%, управление 20%, эксплуатация 6%, налог на аренду 10% — всего 51% валовой выручки.',
+      'Вычитаем расходы: комиссии площадок 15%, управление 20%, эксплуатация 6%, местный налог на размещение (PBJT) 10% — всего 51% валовой выручки. Налог на доход (10% для резидента, до 20% для нерезидента) идёт сверху — он зависит от вашего статуса.',
       'Делим на цену покупки. Результат — до амортизации лизхолда: земля в аренде, и через 25–30 лет право заканчивается.',
     ],
     yieldMore: <>Расчёт по районам — в статье <Link href={SRC.yieldRu} className={A}>доходность вилл на Бали по районам</Link>.</>,
@@ -104,7 +104,7 @@ function copy(lang: Lang) {
     yield: [
       'Take the median nightly rate of similar villas nearby (same type and bedroom count).',
       'Multiply by 365 and by occupancy. The base case is 65%, with 55% and 75% shown alongside. The occupancy figures in the database are unreliable (they count blocked calendar dates as booked), so we use scenarios instead of an “actual occupancy”.',
-      'Subtract costs: platform fees 15%, management 20%, running costs 6%, rental tax 10% — 51% of gross revenue in total.',
+      'Subtract costs: platform fees 15%, management 20%, running costs 6%, local accommodation tax (PBJT) 10% — 51% of gross revenue in total. Income tax (10% for a resident, up to 20% for a non-resident) comes on top, as it depends on your status.',
       'Divide by the purchase price. The result is before leasehold amortisation: the land is leased, and the right ends after 25–30 years.',
     ],
     yieldMore: <>Area-by-area results: <Link href={SRC.yieldEn} className={A}>Bali villa rental yield by area</Link>.</>,

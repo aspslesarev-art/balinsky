@@ -28,7 +28,7 @@ export const pl: InvestmentGuideCopy = {
   },
   yields: {
     h2: 'Rentowność według okolic — nasze wyliczenie 2026',
-    method: 'Wille z dwiema sypialniami: mediana ceny w katalogu Balinsky i mediana ceny za noc willi z dwiema sypialniami na wynajem w tej samej okolicy, przy obłożeniu 65%. Netto = po 15% prowizji platform, 20% zarządzania, 6% kosztów utrzymania i 10% podatku od najmu; przed amortyzacją leasehold. Pełna metodologia (po angielsku):',
+    method: 'Wille z dwiema sypialniami: mediana ceny w katalogu Balinsky i mediana ceny za noc willi z dwiema sypialniami na wynajem w tej samej okolicy, przy obłożeniu 65%. Netto = po 15% prowizji platform, 20% zarządzania, 6% kosztów utrzymania i 10% lokalnego podatku od zakwaterowania (PBJT); przed podatkiem dochodowym; przed amortyzacją leasehold. Pełna metodologia (po angielsku):',
     methodLink: 'rentowność willi na Bali według okolic',
     colArea: 'Okolica',
     colPrice: 'Cena 2 syp., mediana',
@@ -73,7 +73,7 @@ export const pl: InvestmentGuideCopy = {
     title: 'Willa z 2 sypialniami według mediany katalogu, 322 500 $, leasehold 30 lat',
     lines: [
       'Stawka: 135 $ za noc (mediana 1966 willi z 2 sypialniami na wynajem) × obłożenie 65% × 365 = około 32 000 $ brutto rocznie',
-      'Prowizje platform 15%, zarządzanie 20%, utrzymanie 6%, podatek od najmu 10%: około −16 300 $',
+      'Prowizje platform 15%, zarządzanie 20%, utrzymanie 6%, lokalny podatek od zakwaterowania (PBJT) 10%: około −16 300 $ (przed podatkiem dochodowym)',
       'Netto: około 15 700 $ rocznie — 4,9% ceny',
       'Amortyzacja leasehold: 322 500 $ ÷ 30 lat = 10 750 $ rocznie, więc ponad zwrot własnych pieniędzy zostaje około 4950 $ rocznie',
     ],
@@ -112,7 +112,7 @@ export const pl: InvestmentGuideCopy = {
   faqH2: 'Najczęstsze pytania',
   faq: [
     { q: 'Jaka jest realna rentowność najmu willi na Bali w 2026 roku?',
-      a: 'Według wyliczeń Balinsky (wrzesień 2026: 359 willi na sprzedaż, 6305 willi na wynajem) mediana willi z dwiema sypialniami przy obłożeniu 65% daje około 10% rocznie brutto i około 5% netto, willa z jedną sypialnią około 14% brutto i 7% netto. Wille z górnej ćwiartki pod względem stawki za noc osiągają około 7–10% netto. Netto oznacza po prowizjach platform, zarządzaniu, utrzymaniu i podatku od najmu, przed amortyzacją leasehold. Obłożenie hoteli z gwiazdkami na Bali wynosi około 57–65% (BPS Bali).' },
+      a: 'Według wyliczeń Balinsky (wrzesień 2026: 359 willi na sprzedaż, 6305 willi na wynajem) mediana willi z dwiema sypialniami przy obłożeniu 65% daje około 10% rocznie brutto i około 5% netto, willa z jedną sypialnią około 14% brutto i 7% netto. Wille z górnej ćwiartki pod względem stawki za noc osiągają około 7–10% netto. Netto oznacza po prowizjach platform, zarządzaniu, utrzymaniu i lokalnym podatku od zakwaterowania, przed podatkiem dochodowym i amortyzacją leasehold. Obłożenie hoteli z gwiazdkami na Bali wynosi około 57–65% (BPS Bali).' },
     { q: 'Leasehold czy PT PMA — jaką strukturę wybrać zagranicznemu inwestorowi?',
       a: 'Leasehold (umowna dzierżawa, zwykle 25–30 lat) pasuje do domu lub jednej-dwóch willi na wynajem: bez spółki i bez corocznych sprawozdań. PT PMA posiada prawo zabudowy (HGB, 30 + 20 + 30 lat według PP 18/2021) — nie pełną własność, niedostępną dla cudzoziemców. Pasuje do biznesu najmu; wymagany kapitał wpłacony to 2,5 mld rupii (rozporządzenie Ministerstwa Inwestycji nr 5/2025), do tego coroczne sprawozdania i 22% podatku od osób prawnych.' },
     { q: 'Jakie podatki płaci cudzoziemiec przy zakupie i posiadaniu nieruchomości na Bali?',
@@ -143,7 +143,7 @@ export const pl: InvestmentGuideCopy = {
     caseTitle: n => `Willa z dwiema sypialniami w ${n} — co pokazują dane`,
     rate: (r, n) => `Mediana stawki za noc: ${r} (${n} willi z dwiema sypialniami na wynajem)`,
     revenue: a => `Przychód brutto przy obłożeniu 65%: około ${a} rocznie`,
-    net: a => `Po prowizjach platform, zarządzaniu, utrzymaniu i podatku od najmu (około 51%): około ${a} rocznie`,
+    net: a => `Po prowizjach platform, zarządzaniu, utrzymaniu i lokalnym podatku od zakwaterowania (około 51%, przed podatkiem dochodowym): około ${a} rocznie`,
     price: (p, n) => `Mediana ceny willi w okolicy: ${p} (${n} ofert)`,
     island: 'Dla porównania: na całym Bali mediana willi z dwiema sypialniami przy obłożeniu 65% daje około 10% brutto i 5% netto rocznie, przed amortyzacją leasehold.',
     noRentals: 'W tej okolicy na wynajem jest zbyt mało willi z dwiema sypialniami, by podać wiarygodną stawkę — porównaj z sąsiednimi okolicami.',

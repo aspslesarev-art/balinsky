@@ -4,7 +4,7 @@
 // Method: /en/knowledge/bali-villa-rental-yield-by-area-data.
 //
 // Two-bedroom villas, 65% occupancy. Net = gross minus 15% platform
-// commissions, 20% management, 6% running costs, 10% rental tax (51% of
+// commissions, 20% management, 6% running costs, 10% local accommodation tax PBJT (51% of
 // gross revenue); before leasehold amortisation. `indicative` marks rows with
 // fewer than 30 sale prices.
 
