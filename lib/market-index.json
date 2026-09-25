@@ -1,6 +1,6 @@
 {
  "asOf": "2026-09",
- "generatedAt": "2026-09-25T07:20:29.404Z",
+ "generatedAt": "2026-09-25T07:21:31.136Z",
  "source": "Balinsky catalogue (asking prices of published listings) and Balinsky short-term rental database (nightly rates, sourced from estatemarket.io). Rentals placed in a district by the nearest catalogue listing within 1.5 km.",
  "totals": {
   "villas": 363,
