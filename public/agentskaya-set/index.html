@@ -1,420 +1,309 @@
+<!doctype html>
+<html lang="ru">
 <meta charset="utf-8">
 <title>Агентская сеть на Бали</title>
 <meta name="robots" content="noindex, nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#17130f">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Golos+Text:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600&family=Playfair+Display:wght@500&display=swap">
+<link rel="preload" as="image" href="/agentskaya-set/img/hall.jpg">
 <style>
   :root{
-    color-scheme: light;
-    --primary:#1f8b5f;
-    --primary-hover:#197551;
-    --primary-soft:#e2f0e8;
-    --brand:#e78c3d;
-    --bg:#f8faf8;
-    --band:#eef5f1;
-    --card:#ffffff;
-    --soft:#f1f5f1;
-    --text:#111827;
-    --muted:#4b5563;
-    --faint:#8b9490;
-    --border:#e5e7eb;
-    --shadow:0 1px 2px rgb(16 40 28 / .04),0 8px 24px rgb(16 40 28 / .06);
-    --shadow-hi:0 2px 4px rgb(16 40 28 / .05),0 16px 40px rgb(16 40 28 / .10);
-    --ink:#0b1712;
-    --ink-2:#132a20;
-    --mint:#63d6a0;
+    color-scheme:light;
+    --bg:#f6f2ec; --surface:#fffdf9; --sand-2:#ede6dc; --line:#e3dace;
+    --ink:#17130f; --ink-2:#221c16;
+    --text:#1d1813; --muted:#5b5249; --faint:#736a60;
+    --accent:#e78c3d; --accent-ink:#a3551a;
+    --on-dark:#f3ede5; --on-dark-2:rgb(243 237 229 / .72); --on-dark-3:rgb(243 237 229 / .56);
+    --radius:12px; --gut:clamp(16px,4vw,40px);
+    --serif:"Playfair Display",Georgia,serif;
+    --sans:"Manrope",system-ui,-apple-system,sans-serif;
     --ease:cubic-bezier(.2,.8,.2,1);
-    --radius:12px;
-    --maxw:1200px;
-    --gut:clamp(16px,4vw,40px);
+    --shadow:0 1px 2px rgb(40 28 16 / .04),0 8px 24px rgb(40 28 16 / .06);
   }
   *{box-sizing:border-box}
-  body{
-    margin:0;background:var(--bg);color:var(--text);
-    font-family:"Geist","Golos Text",system-ui,-apple-system,sans-serif;
-    font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;
-  }
-  .wrap{max-width:var(--maxw);margin:0 auto;padding-inline:var(--gut)}
-  section{padding-block:clamp(64px,8vw,96px)}
-  .band{background:var(--band)}
-  h1,h2,h3{margin:0;text-wrap:balance;letter-spacing:-0.02em;font-weight:700}
-  h1{font-size:clamp(25px,3.2vw,36px);line-height:1.15}
-  h2{font-size:clamp(22px,2.6vw,28px);line-height:1.2;margin-bottom:clamp(24px,3vw,32px)}
-  h3{font-size:17px;line-height:1.3;font-weight:600;letter-spacing:-0.01em}
+  html{scroll-behavior:smooth;scroll-padding-top:24px}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased;font-variant-numeric:lining-nums}
+  h1,h2,h3{margin:0;text-wrap:balance}
+  h1,h2{font-family:var(--serif);font-weight:500;letter-spacing:-0.02em}
+  h2{font-size:clamp(30px,3.6vw,46px);line-height:1.1;margin-bottom:24px}
+  h3{font-size:17px;line-height:1.35;font-weight:600}
   p{margin:0}
   a{color:inherit}
-  .sub{color:var(--muted);font-size:16px;max-width:62ch}
-  .fine{font-size:13px;color:var(--faint)}
-  .num{font-variant-numeric:tabular-nums}
-  .stack{display:flex;flex-direction:column;gap:16px}
-
-  /* bullet points */
-  ul.pts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
-  ul.pts li{position:relative;padding-left:26px;font-size:16px;color:var(--text)}
-  ul.pts li::before{
-    content:"";position:absolute;left:0;top:7px;width:14px;height:8px;
-    border-left:2px solid var(--primary);border-bottom:2px solid var(--primary);
-    transform:rotate(-45deg);
-  }
-  ul.pts.dim li{color:var(--muted)}
-  ul.pts li b{font-weight:600;color:var(--text)}
-  ul.dots{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
-  ul.dots li{position:relative;padding-left:18px;color:var(--muted);font-size:15px}
-  ul.dots li::before{content:"";position:absolute;left:2px;top:9px;width:5px;height:5px;border-radius:50%;background:var(--primary)}
-
-  /* topbar */
-  .topbar{border-bottom:1px solid var(--border);background:var(--band)}
-  .topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:16px}
-  .logo{display:flex;align-items:center;gap:9px;font-weight:600;letter-spacing:-0.01em}
-  .logo i{width:26px;height:26px;border-radius:7px;background:var(--brand);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-style:normal;font-weight:700;font-size:13px}
-  .topbar .tag{font-size:14px;color:var(--muted)}
+  img{max-width:100%}
+  .muted{color:var(--muted)}
+  .fine{font-size:14px;color:var(--faint)}
+  .lead{color:var(--muted);max-width:60ch}
+  .num{font-variant-numeric:lining-nums tabular-nums}
 
   /* buttons */
-  .btn{display:inline-flex;align-items:center;gap:9px;background:var(--primary);color:#fff;font-weight:600;font-size:15px;padding:12px 22px;border-radius:10px;text-decoration:none;box-shadow:var(--shadow);transition:background .18s ease}
-  .btn:hover{background:var(--primary-hover)}
-  .btn:focus-visible{outline:2px solid var(--primary);outline-offset:3px}
-  .btn-note{font-size:13px;color:var(--faint);margin-top:10px}
-
-  /* cards & grids */
-  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:clamp(20px,2.5vw,28px)}
-  .cols-2{display:grid;grid-template-columns:1fr 1fr;gap:clamp(32px,5vw,64px)}
-  .cols-3{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(16px,2vw,24px)}
-  .cols-4{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
-  .hero-grid>*,.cols-2>*,.cols-3>*,.cols-4>*{min-width:0}
+  .btn{display:inline-flex;align-items:center;gap:10px;background:var(--accent);color:var(--ink);font-weight:600;font-size:16px;padding:14px 24px;border-radius:999px;text-decoration:none;transition:background .12s var(--ease),transform .12s var(--ease)}
+  .btn:hover{background:#f09a4e}
+  .btn:active{transform:scale(.98)}
+  .btn:focus-visible,.toc a:focus-visible,.link:focus-visible,.car-nav button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+  .btn.sm{font-size:14px;padding:9px 16px}
+  .link{color:var(--on-dark);font-weight:600;font-size:15px;text-decoration:none;border-bottom:1px solid rgb(243 237 229 / .35);padding-bottom:2px;transition:border-color .12s var(--ease)}
+  .link:hover{border-color:var(--on-dark)}
 
   /* hero */
-  .hero{padding-block:clamp(48px,7vw,96px)}
-  .hero-grid{display:grid;grid-template-columns:1.25fr 1fr;gap:clamp(32px,5vw,64px);align-items:center}
-  .hero h1{margin-bottom:24px}
-  .hero ul.pts{margin-bottom:32px}
-  .hero ul.pts li{font-size:17px}
+  .hero{position:relative;isolation:isolate;min-height:min(92vh,860px);display:flex;flex-direction:column;color:var(--on-dark);background:var(--ink);overflow:hidden}
+  .hero-img{position:absolute;inset:0;z-index:-2;width:100%;height:100%;object-fit:cover;object-position:center 40%}
+  .hero::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgb(23 19 15 / .94) 0%,rgb(23 19 15 / .82) 42%,rgb(23 19 15 / .35) 100%),linear-gradient(0deg,rgb(23 19 15 / .9) 0%,transparent 40%)}
+  .hero .top{max-width:1240px;width:100%;margin:0 auto;padding:24px var(--gut);display:flex;align-items:center;justify-content:space-between;gap:16px}
+  .brand{display:flex;align-items:center;gap:12px;font-weight:600;font-size:18px;text-decoration:none;color:inherit}
+  .brand img{width:36px;height:36px;display:block}
+  .brand small{display:block;font-size:12px;font-weight:400;color:var(--on-dark-3);letter-spacing:.02em}
+  .hero .body{max-width:1240px;width:100%;margin:auto auto 0;padding:48px var(--gut) clamp(48px,7vw,96px)}
+  .hero h1{font-size:clamp(40px,5.6vw,76px);line-height:1.04;max-width:17ch;margin-bottom:24px}
+  .hero .lead{color:var(--on-dark-2);font-size:clamp(17px,1.4vw,19px);max-width:46ch;margin-bottom:32px}
+  .hero-pts{list-style:none;margin:0 0 40px;padding:0;display:flex;flex-wrap:wrap;gap:12px 32px}
+  .hero-pts li{display:flex;align-items:center;gap:10px;color:var(--on-dark)}
+  .hero-pts li::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent)}
+  .hero-actions{display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+  .hero .note{margin-top:16px;font-size:14px;color:var(--on-dark-3)}
 
-  /* images */
-  figure{margin:0;display:flex;flex-direction:column;gap:7px}
-  .shot{display:block;width:100%;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);box-shadow:var(--shadow);object-fit:cover;object-position:top center}
-  .shot.r16{aspect-ratio:16/9}
-  .shot.r43{aspect-ratio:4/3}
-  .shot.r11{aspect-ratio:1/1}
-  figcaption{font-size:12.5px;color:var(--faint);line-height:1.4}
+  /* shell + toc */
+  .shell{max-width:1240px;margin:0 auto;padding-inline:var(--gut);display:grid;grid-template-columns:minmax(0,1fr)}
+  .toc{display:none}
+  @media (min-width:1100px){
+    .shell{grid-template-columns:200px minmax(0,1fr);gap:64px}
+    .toc{display:block;position:sticky;top:0;align-self:start;padding-block:64px 32px}
+  }
+  .toc-title{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-bottom:16px}
+  .toc ol{list-style:none;margin:0 0 32px;padding:0;border-left:1px solid var(--line)}
+  .toc a{position:relative;display:flex;gap:12px;padding:6px 0 6px 16px;font-size:14px;line-height:1.4;color:var(--faint);text-decoration:none;transition:color .12s var(--ease)}
+  .toc a span{font-variant-numeric:tabular-nums;color:var(--faint);opacity:.7}
+  .toc a:hover{color:var(--text)}
+  .toc a::before{content:"";position:absolute;left:-1px;top:6px;bottom:6px;width:2px;background:var(--accent);transform:scaleY(0);transition:transform .2s var(--ease)}
+  .toc a.on{color:var(--text);font-weight:600}
+  .toc a.on span{color:var(--accent-ink);opacity:1}
+  .toc a.on::before{transform:scaleY(1)}
+
+  /* sections */
+  .sec{padding-block:clamp(64px,8vw,112px);border-top:1px solid var(--line)}
+  .sec:first-child{border-top:0}
+  .eyebrow{display:flex;align-items:center;gap:12px;font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-ink);margin-bottom:16px}
+  .eyebrow span{font-variant-numeric:tabular-nums}
+  .eyebrow span::after{content:"";display:inline-block;width:24px;height:1px;background:currentColor;opacity:.5;vertical-align:middle;margin-left:12px}
+  .split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(32px,5vw,64px);align-items:start}
+  .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(16px,2vw,24px)}
+  .grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(16px,2vw,24px)}
+  @media (max-width:900px){ .split,.grid3{grid-template-columns:minmax(0,1fr)} .grid4{grid-template-columns:repeat(2,minmax(0,1fr))} }
+  .stack{display:flex;flex-direction:column;gap:16px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:clamp(24px,2.5vw,32px)}
+  .art{display:block;width:100%;height:auto;max-width:440px}
+  .art text{font-family:var(--sans)}
+  .ico{width:24px;height:24px;color:var(--accent-ink);display:block;margin-bottom:20px}
+
+  ul.pts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+  ul.pts li{position:relative;padding-left:28px}
+  ul.pts li::before{content:"";position:absolute;left:2px;top:9px;width:12px;height:7px;border-left:1.5px solid var(--accent-ink);border-bottom:1.5px solid var(--accent-ink);transform:rotate(-45deg)}
+  .quote{margin-top:48px;padding:4px 0 4px 24px;border-left:2px solid var(--accent);font-family:var(--serif);font-size:clamp(20px,2vw,26px);line-height:1.4;max-width:34ch}
+
+  /* big numbers */
+  .big{font-family:var(--serif);font-weight:500;font-size:clamp(40px,4.4vw,60px);line-height:1;letter-spacing:-0.02em;font-variant-numeric:lining-nums}
+  .big-sub{font-size:15px;color:var(--muted);margin-top:12px}
+
+  /* dark panel */
+  .dark{background:var(--ink);color:var(--on-dark);border-radius:20px;padding:clamp(28px,5vw,64px)}
+  .dark h2{color:var(--on-dark)}
+  .dark .lead{color:var(--on-dark-2)}
+  .dark .eyebrow{color:var(--accent)}
+  .dark .grid4{margin-top:48px;gap:0 48px;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .dark .stat{padding:24px 0 32px;border-top:1px solid rgb(243 237 229 / .16)}
+  .dark .stat .big{white-space:nowrap}
+  .dark .stat .big{color:var(--on-dark)}
+  .dark .stat .big-sub{color:var(--on-dark-3)}
+  @media (max-width:900px){ .dark .grid4{gap:0 24px} .dark .stat .big{font-size:clamp(28px,8vw,40px)} }
+
   /* carousel */
   .car-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:24px}
   .car-nav{display:flex;gap:8px}
-  .car-nav button{
-    width:38px;height:38px;border-radius:10px;border:1px solid var(--border);background:var(--card);
-    color:var(--text);font-size:16px;line-height:1;cursor:pointer;box-shadow:var(--shadow);
-    display:flex;align-items:center;justify-content:center;transition:background .15s ease,opacity .15s ease;
-  }
-  .car-nav button:hover{background:var(--soft)}
+  .car-nav button{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--text);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .12s var(--ease),opacity .12s var(--ease)}
+  .car-nav button:hover{background:var(--sand-2)}
   .car-nav button[disabled]{opacity:.35;cursor:default}
-  .car-nav button:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+  .carousel{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:8px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+  .bonus{flex:0 0 clamp(240px,70vw,290px);scroll-snap-align:start;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column}
+  .bonus img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;object-position:top center;border-bottom:1px solid var(--line)}
+  .bonus .b-body{padding:20px;display:flex;flex-direction:column;gap:8px;flex:1}
+  .bonus .b-name{font-size:16px;font-weight:600;line-height:1.35}
+  .bonus .fine{line-height:1.5}
+  .bonus .b-price{margin-top:auto;padding-top:8px;font-size:14px;color:var(--accent-ink);font-weight:600}
+  .bonus .b-price s{color:var(--faint);font-weight:400;margin-right:6px}
   .carousel.narrow .bonus{flex:0 0 clamp(190px,56vw,220px)}
-  .carousel.narrow .bonus img{aspect-ratio:3/4;object-position:top center}
-  .carousel{
-    display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;
-    scroll-padding-left:0;padding-bottom:8px;-webkit-overflow-scrolling:touch;
-    scrollbar-width:thin;scrollbar-color:#cfdbd4 transparent;
-  }
-  .carousel::-webkit-scrollbar{height:6px}
-  .carousel::-webkit-scrollbar-thumb{background:#cfdbd4;border-radius:3px}
-  .bonus{
-    flex:0 0 clamp(236px,70vw,286px);scroll-snap-align:start;
-    background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
-    box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;
-  }
-  .bonus img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;object-position:top center;border-bottom:1px solid var(--border)}
-  .bonus .b-body{padding:16px 20px 20px;display:flex;flex-direction:column;gap:8px;flex:1}
-  .bonus .b-name{font-size:15.5px;font-weight:600;line-height:1.3}
-  .bonus .b-price{margin-top:auto;font-size:14px;color:var(--primary);font-weight:600;font-variant-numeric:tabular-nums}
-  .bonus .b-price s{color:var(--faint);font-weight:400;text-decoration:line-through;margin-right:6px}
-  .hint{font-size:13px;color:var(--faint);margin-top:8px}
+  .carousel.narrow .bonus img{aspect-ratio:3/4}
 
-  .mhead{display:flex;align-items:center;flex-wrap:wrap;gap:12px}
-  .mimg{display:block;width:64px;height:64px;flex:none;border-radius:50%;object-fit:cover;object-position:center 25%;border:1px solid var(--border)}
-  .mph{display:flex;align-items:center;justify-content:center;width:100%;aspect-ratio:4/3;border-radius:10px;background:var(--soft);border:1px dashed #cfdbd4;color:var(--faint);font-size:13px}
-  .ph{display:flex;align-items:center;justify-content:center;text-align:center;padding:18px;min-height:96px;background:var(--soft);border:1px dashed #cfdbd4;border-radius:var(--radius);color:var(--faint);font-size:13px}
+  /* team */
+  .person img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:var(--radius);margin-bottom:20px;filter:saturate(.9)}
+  .role{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-ink);margin-bottom:4px}
+  .person h3{font-family:var(--serif);font-weight:500;font-size:24px;margin-bottom:16px}
 
-  /* stat */
-  .statrow{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:16px}
-  .stat{font-size:clamp(38px,6vw,58px);line-height:1;font-weight:700;letter-spacing:-0.03em;color:var(--primary)}
-  .stat.sm{font-size:clamp(30px,3.2vw,40px);white-space:nowrap}
-  .stat-sub{font-size:15px;color:var(--muted)}
+  /* figure */
+  figure{margin:0}
+  figcaption{font-size:14px;color:var(--faint);margin-top:12px}
+  .shot{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;object-position:top center;border-radius:var(--radius);border:1px solid var(--line);box-shadow:var(--shadow)}
 
-  /* labels */
-  .role{align-self:flex-start;white-space:nowrap;background:var(--primary-soft);color:var(--primary);font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;border-radius:999px}
-  .ctitle{font-size:11.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
-  .price{font-size:clamp(24px,3vw,32px);line-height:1.1;font-weight:700;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;margin-bottom:20px}
-  .price small{font-size:14px;color:var(--faint);font-weight:500;letter-spacing:0}
-  .pick{border-color:#bfdccd;background:#fbfefc}
-  .pick .ctitle{color:var(--primary)}
-
-  /* table */
-  .tbl{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
-  .tbl-scroll{overflow-x:auto}
-  table{border-collapse:collapse;width:100%;min-width:460px;font-size:15px}
-  th,td{text-align:left;padding:12px 18px;border-bottom:1px solid var(--border)}
-  th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);font-weight:600;background:var(--soft)}
-  td:last-child,th:last-child{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:600}
-  tbody tr:last-child td{border-bottom:0}
-  .callout{background:var(--primary-soft);border:1px solid #cfe5da;border-radius:var(--radius);padding:clamp(20px,2.5vw,24px) clamp(20px,3vw,32px);font-size:16px;line-height:1.65;color:#14523a}
-  .callout b{color:var(--primary);font-weight:600}
-  .callout,.wrap>ul.pts,.wrap>.sub{max-width:760px}
-
-  /* cases */
-  .case .who{font-size:11.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:6px}
-  .case .amount{font-size:clamp(26px,3.4vw,34px);line-height:1.05;font-weight:700;letter-spacing:-0.02em;color:var(--primary);font-variant-numeric:tabular-nums}
-  .case .period{font-size:14px;color:var(--muted);margin-top:8px}
-
-  /* packages */
-  .pack{display:flex;flex-direction:column}
-  .pack ul{margin-bottom:24px}
-  .pack .for{margin-top:auto;padding-top:16px;border-top:1px solid var(--border);font-size:14px;color:var(--muted)}
-  .pack .for b{color:var(--text);font-weight:600}
-
-  /* steps */
-  .step{padding-top:14px;border-top:3px solid var(--border)}
-  .step.on{border-top-color:var(--primary)}
-  .step .n{font-size:11.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--primary);margin-bottom:6px}
-  .step .t{font-size:16px;font-weight:600}
-  .step .d{font-size:14px;color:var(--faint);margin-top:3px}
-
-  .final{display:flex;flex-direction:column;gap:16px;align-items:flex-start;padding:clamp(24px,4vw,48px);margin-top:48px}
-
-  /* agent crm card */
-  .acard{max-width:420px;width:100%;justify-self:end}
-  .acard .ahead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-  .ava{width:48px;height:48px;flex:none;border-radius:50%;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:600}
+  /* crm card */
+  .acard{max-width:420px;width:100%;justify-self:end;box-shadow:var(--shadow)}
+  .ahead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .ava{width:48px;height:48px;flex:none;border-radius:50%;background:var(--sand-2);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;font-weight:600}
   .aname{font-weight:600;line-height:1.3}
   .aname small{display:block;font-size:13px;color:var(--faint);font-weight:400}
-  .deal{margin-left:auto;background:var(--primary);color:#fff;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;white-space:nowrap}
-  .kv{margin:24px 0 0;display:grid;grid-template-columns:auto 1fr;gap:12px 16px;font-size:14px}
+  .deal{margin-left:auto;background:var(--ink);color:var(--on-dark);font-size:12px;font-weight:600;padding:4px 12px;border-radius:999px;white-space:nowrap}
+  .kv{margin:24px 0 0;display:grid;grid-template-columns:auto 1fr;gap:12px 16px;font-size:15px}
   .kv dt{color:var(--faint)}
-  .kv dd{margin:0;color:var(--text)}
-  .afoot{margin-top:24px;padding-top:16px;border-top:1px solid var(--border);font-size:13px;color:var(--muted);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
-  @media (max-width:880px){ .acard{justify-self:start} }
+  .kv dd{margin:0}
+  .afoot{margin-top:24px;padding-top:16px;border-top:1px solid var(--line);font-size:13px;color:var(--muted);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  @media (max-width:900px){ .acard{justify-self:start} }
 
-  /* illustrations & icons */
-  .ico{width:48px;height:48px;flex:none;border-radius:12px;background:var(--primary-soft);color:var(--primary);display:inline-flex;align-items:center;justify-content:center}
-  .ico svg{width:24px;height:24px}
-  .ico-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
-  .art{display:block;width:100%;height:auto}
-  .art text{font-family:inherit}
-  .art-wrap{max-width:440px;width:100%;justify-self:end}
-  @media (max-width:880px){ .art-wrap{justify-self:start;max-width:380px} }
+  /* compare */
+  .price{font-family:var(--serif);font-weight:500;font-size:clamp(34px,3.4vw,44px);line-height:1.1;margin:8px 0 24px;font-variant-numeric:lining-nums}
+  .price small{font-family:var(--sans);font-size:15px;color:var(--faint);font-weight:400}
+  .label{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+  ul.dim{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px;color:var(--muted)}
+  ul.dim li{padding-left:20px;position:relative}
+  ul.dim li::before{content:"";position:absolute;left:2px;top:12px;width:8px;height:1.5px;background:var(--faint)}
 
-  .tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(16px,2vw,24px);margin-top:32px}
-  .tiles .stat{margin-bottom:8px;font-size:clamp(24px,2.4vw,32px)}
-  @media (max-width:880px){ .tiles{grid-template-columns:repeat(2,minmax(0,1fr))} }
-  footer{border-top:1px solid var(--border);background:var(--band);padding-block:32px;color:var(--faint);font-size:13.5px}
+  /* formats */
+  .plan{display:flex;flex-direction:column;position:relative}
+  .plan .pts{margin-bottom:32px}
+  .plan .for{margin-top:auto;padding-top:20px;border-top:1px solid var(--line);font-size:15px;color:var(--muted)}
+  .plan .for b{color:var(--text);font-weight:600}
+  .plan.best{background:var(--ink);border-color:var(--ink);color:var(--on-dark)}
+  .plan.best .label{color:var(--accent)}
+  .plan.best .price small,.plan.best .for{color:var(--on-dark-2)}
+  .plan.best .for{border-color:rgb(243 237 229 / .16)}
+  .plan.best .for b{color:var(--on-dark)}
+  .plan.best ul.pts li::before{border-color:var(--accent)}
+  .flag{position:absolute;top:-13px;right:24px;background:var(--accent);color:var(--ink);font-size:12px;font-weight:600;padding:4px 12px;border-radius:999px}
+  .note-line{margin-top:32px;padding-top:24px;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 32px}
+  @media (max-width:900px){ .note-line{grid-template-columns:minmax(0,1fr)} }
 
-  @media (max-width:880px){
-    .hero-grid,.cols-2,.cols-3{grid-template-columns:1fr}
-    .cols-4{grid-template-columns:1fr 1fr}
-  }
-  @media (max-width:520px){ .cols-4{grid-template-columns:1fr} }
+  /* cases */
+  .case{padding-top:24px;border-top:2px solid var(--ink)}
+  .case .who{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-bottom:12px}
+
+  /* steps */
+  .step{padding-top:20px;border-top:1px solid var(--line)}
+  .step .n{font-family:var(--serif);font-size:32px;line-height:1;color:var(--accent-ink);margin-bottom:16px}
+  .step .t{font-weight:600}
+  .step .d{font-size:15px;color:var(--faint);margin-top:4px}
+
+  .final{margin-top:64px;display:grid;grid-template-columns:minmax(0,1.4fr) auto;gap:32px;align-items:end}
+  .final h2{margin-bottom:12px}
+  @media (max-width:900px){ .final{grid-template-columns:minmax(0,1fr)} }
+
+  footer{border-top:1px solid var(--line);padding:32px var(--gut);max-width:1240px;margin:0 auto;display:flex;align-items:center;gap:12px;font-size:14px;color:var(--faint)}
+  footer img{width:24px;height:24px}
+
   /* lightbox */
   .zoomable{cursor:zoom-in}
   .lb{border:0;padding:0;margin:auto;background:transparent;max-width:100vw;max-height:100vh;overflow:visible}
-  .lb::backdrop{background:rgb(10 20 15 / .82)}
-  .lb img{display:block;max-width:min(92vw,var(--lb-max,1400px));max-height:88vh;width:auto;height:auto;border-radius:var(--radius);box-shadow:0 4px 12px rgb(0 0 0 / .2),0 24px 48px rgb(0 0 0 / .25);cursor:zoom-out}
-  .lb[open]{animation:lb-in .2s cubic-bezier(.2,.8,.2,1)}
-  @keyframes lb-in{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
-  .lb-close{position:fixed;top:16px;right:16px;width:40px;height:40px;border-radius:10px;border:0;background:rgb(255 255 255 / .92);color:var(--text);font-size:20px;line-height:1;cursor:pointer}
-  .lb-close:focus-visible{outline:2px solid #fff;outline-offset:2px}
-  @media (prefers-reduced-motion:reduce){ *{transition:none!important;animation:none!important} }
+  .lb::backdrop{background:rgb(23 19 15 / .86)}
+  .lb img{display:block;max-width:min(92vw,var(--lb-max,1400px));max-height:88vh;border-radius:var(--radius);cursor:zoom-out}
+  .lb-close{position:fixed;top:16px;right:16px;width:44px;height:44px;border-radius:50%;border:0;background:rgb(255 253 249 / .92);font-size:20px;cursor:pointer}
 
-  /* ===== premium layer ===== */
-  h2{font-size:clamp(26px,3.2vw,40px);line-height:1.12;letter-spacing:-0.03em}
-  .eyebrow{display:flex;align-items:center;gap:12px;font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--primary);margin-bottom:16px}
-  .eyebrow::before{content:"";width:24px;height:1px;background:currentColor;opacity:.6}
-
-  .topbar{position:sticky;top:0;z-index:30;background:rgb(11 23 18 / .94);border-bottom:1px solid rgb(255 255 255 / .08);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);color:#fff}
-  .topbar .tag{color:rgb(255 255 255 / .6)}
-  .topbar .right{display:flex;align-items:center;gap:24px}
-  .btn-sm{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;padding:8px 16px;border-radius:999px;background:#fff;color:var(--ink);text-decoration:none;transition:transform .12s var(--ease),background .12s var(--ease)}
-  .btn-sm:hover{background:#e6f4ec}
-  .btn-sm:active{transform:scale(.97)}
-  .btn-sm:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
-  @media (max-width:640px){ .topbar .tag{display:none} }
-
-  .hero{position:relative;isolation:isolate;overflow:hidden;background:var(--ink);color:#fff;padding-block:clamp(64px,9vw,128px)}
-  .hero::before{content:"";position:absolute;inset:0;z-index:-1;
-    background-image:linear-gradient(rgb(255 255 255 / .05) 1px,transparent 1px),linear-gradient(90deg,rgb(255 255 255 / .05) 1px,transparent 1px);
-    background-size:56px 56px;
-    -webkit-mask-image:radial-gradient(ellipse 70% 60% at 30% 30%,#000 30%,transparent 75%);mask-image:radial-gradient(ellipse 70% 60% at 30% 30%,#000 30%,transparent 75%)}
-  .spot{position:absolute;z-index:-1;border-radius:50%;pointer-events:none;filter:blur(60px);will-change:transform}
-  .spot.a{width:560px;height:560px;left:-160px;top:-240px;background:radial-gradient(circle,rgb(99 214 160 / .30),transparent 65%);animation:drift 9s ease-in-out infinite alternate}
-  .spot.b{width:480px;height:480px;right:-120px;bottom:-260px;background:radial-gradient(circle,rgb(231 140 61 / .18),transparent 65%);animation:drift 11s ease-in-out infinite alternate-reverse}
-  @keyframes drift{from{transform:translate3d(0,0,0)}to{transform:translate3d(90px,40px,0)}}
-  .hero h1{font-size:clamp(34px,4.4vw,54px);line-height:1.06;letter-spacing:-0.035em;color:#fff}
-  .hero-grid{grid-template-columns:1.5fr 1fr}
-  @media (max-width:880px){ .hero-grid{grid-template-columns:1fr} }
-  .hero .sub{color:rgb(255 255 255 / .72);font-size:clamp(16px,1.4vw,18px)}
-  .hero ul.pts li,.hero ul.pts li b{color:#fff}
-  .hero ul.pts li{color:rgb(255 255 255 / .8)}
-  .hero ul.pts li::before{border-color:var(--mint)}
-  .hero .btn{background:#fff;color:var(--ink)}
-  .hero .btn:hover{background:#e6f4ec}
-  .hero .btn-note{color:rgb(255 255 255 / .5)}
-  .hero .btn:focus-visible{outline-color:var(--mint)}
-  .hero-actions{display:flex;align-items:center;gap:24px;flex-wrap:wrap}
-  .link-ghost{color:rgb(255 255 255 / .8);font-weight:500;font-size:15px;text-decoration:none;border-bottom:1px solid rgb(255 255 255 / .25);padding-bottom:2px;transition:color .12s var(--ease),border-color .12s var(--ease)}
-  .link-ghost:hover{color:#fff;border-color:#fff}
-  .link-ghost:focus-visible{outline:2px solid var(--mint);outline-offset:4px;border-radius:2px}
-  .pill{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:rgb(255 255 255 / .75);border:1px solid rgb(255 255 255 / .14);background:rgb(255 255 255 / .04);padding:6px 14px;border-radius:999px;margin-bottom:24px}
-  .pill i{width:7px;height:7px;border-radius:50%;background:var(--mint);box-shadow:0 0 0 4px rgb(99 214 160 / .18)}
-  .hero .art-bg{fill:rgb(255 255 255 / .04);stroke:rgb(255 255 255 / .08)}
-  .hero .art-lines{stroke:var(--mint)}
-  .hero .art-chip{fill:rgb(255 255 255 / .08);stroke:rgb(255 255 255 / .14)}
-  .hero .art-chip-t{fill:#fff}
-
-  .btn{transition:background .12s var(--ease),transform .12s var(--ease),box-shadow .2s var(--ease)}
-  .btn:active{transform:scale(.98)}
-  .card,.bonus{transition:transform .2s var(--ease),box-shadow .2s var(--ease),border-color .2s var(--ease)}
-  @media (hover:hover){
-    .card:hover,.bonus:hover{transform:translateY(-2px);box-shadow:var(--shadow-hi)}
-    .acard .card:hover,.final:hover{transform:none}
-  }
-  .tiles .card{background:linear-gradient(180deg,#fff,#fbfdfc)}
-
-  /* shine border (magicui) */
-  .shine{position:relative}
-  .shine::after{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1.5px;pointer-events:none;
-    background:linear-gradient(110deg,transparent 20%,var(--primary) 40%,var(--brand) 50%,var(--primary) 60%,transparent 80%);background-size:300% 100%;
-    -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask-composite:exclude;
-    animation:shine 6s linear infinite}
-  @keyframes shine{from{background-position:100% 0}to{background-position:-200% 0}}
-  .flag{position:absolute;z-index:2;top:-12px;right:20px;background:var(--brand);color:#fff;font-size:12px;font-weight:600;padding:4px 12px;border-radius:999px;box-shadow:0 4px 12px rgb(231 140 61 / .3)}
-
-  .final{position:relative;isolation:isolate;overflow:hidden;background:var(--ink);border-color:var(--ink);color:#fff}
-  .final .sub{color:rgb(255 255 255 / .72)}
-  .final .btn{background:#fff;color:var(--ink)}
-  .final .btn:hover{background:#e6f4ec}
-  .final .btn-note{color:rgb(255 255 255 / .5)}
-  .final h3{font-size:clamp(24px,3vw,32px)!important;letter-spacing:-0.03em}
-
-  /* reveal (blur-fade) */
-  .js-rv .rv{opacity:0;transform:translateY(16px);filter:blur(6px);transition:opacity .4s var(--ease),transform .4s var(--ease),filter .4s var(--ease)}
-  .js-rv .rv.in{opacity:1;transform:none;filter:none}
-  @media (prefers-reduced-motion:reduce){ .spot,.shine::after{animation:none} .js-rv .rv{opacity:1;transform:none;filter:none} }
+  /* reveal */
+  .js-rv .rv{opacity:0;transform:translateY(16px);transition:opacity .4s var(--ease),transform .4s var(--ease)}
+  .js-rv .rv.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto} *{transition:none!important;animation:none!important} .js-rv .rv{opacity:1;transform:none} }
 </style>
 
-<header class="topbar">
-  <div class="wrap">
-    <div class="logo"><i>B</i> Balinsky</div>
-    <div class="right">
-      <div class="tag">Отдел по работе с агентами</div>
-      <a class="btn-sm" href="https://t.me/andrey_slr">Написать <span aria-hidden="true">→</span></a>
+<header class="hero">
+  <img class="hero-img" src="/agentskaya-set/img/hall.jpg" alt="Агенты Бали на нашем мероприятии" fetchpriority="high">
+  <div class="top">
+    <a class="brand" href="https://balinsky.info"><img src="/logo.svg" alt="" width="36" height="36"><span>Balinsky<small>Отдел по работе с агентами</small></span></a>
+    <a class="btn sm" href="https://t.me/andrey_slr">Написать <span aria-hidden="true">→</span></a>
+  </div>
+  <div class="body">
+    <h1>Агенты Бали продают ваш проект&nbsp;- по цене одного менеджера</h1>
+    <p class="lead">Сильнейшая команда по работе с агентами на Бали. Проверьте нас за 3 месяца&nbsp;- без штрафов на выход.</p>
+    <ul class="hero-pts">
+      <li>Приводим агентов к проекту</li>
+      <li>Доводим клиентов до брони</li>
+      <li>Отчитываемся каждую неделю</li>
+    </ul>
+    <div class="hero-actions">
+      <a class="btn" href="https://t.me/andrey_slr">Написать в Telegram <span aria-hidden="true">→</span></a>
+      <a class="link" href="#s10">Смотреть форматы</a>
     </div>
+    <p class="note">@andrey_slr · ответим в течение дня</p>
   </div>
 </header>
 
-<main>
+<div class="shell">
+  <aside class="toc" aria-label="Содержание">
+    <div class="toc-title">Содержание</div>
+    <ol>
+      <li><a href="#s1"><span>01</span>Почему сейчас</a></li>
+      <li><a href="#s2"><span>02</span>Почему мы</a></li>
+      <li><a href="#s3"><span>03</span>Спрос</a></li>
+      <li><a href="#s4"><span>04</span>Команда</a></li>
+      <li><a href="#s5"><span>05</span>Отчёты</a></li>
+      <li><a href="#s6"><span>06</span>CRM агентов</a></li>
+      <li><a href="#s7"><span>07</span>Цена</a></li>
+      <li><a href="#s8"><span>08</span>Бонусы</a></li>
+      <li><a href="#s9"><span>09</span>Кейсы</a></li>
+      <li><a href="#s10"><span>10</span>Форматы</a></li>
+      <li><a href="#s11"><span>11</span>Гарантии</a></li>
+      <li><a href="#s12"><span>12</span>Условия</a></li>
+      <li><a href="#s13"><span>13</span>Как начинаем</a></li>
+    </ol>
+    <a class="btn sm" href="https://t.me/andrey_slr">Написать <span aria-hidden="true">→</span></a>
+  </aside>
 
-<!-- 1 -->
-<section class="hero">
-  <span class="spot a" aria-hidden="true"></span><span class="spot b" aria-hidden="true"></span>
-  <div class="wrap">
-    <div class="hero-grid">
-      <div>
-        <div class="pill"><i></i>Отдел по работе с агентами · Бали</div>
-        <h1>Агенты Бали продают ваш проект&nbsp;- по цене одного менеджера</h1>
-        <p class="sub" style="margin-bottom:24px">Сильнейшая команда по работе с агентами на Бали. Проверьте нас за 3 месяца - без штрафов на выход.</p>
-        <ul class="pts">
-          <li><b>Приводим агентов</b> к вашему проекту</li>
-          <li><b>Доводим их клиентов</b> до брони</li>
-          <li><b>Отчитываемся</b> каждую неделю</li>
-        </ul>
-        <div class="hero-actions">
-          <a class="btn" href="https://t.me/andrey_slr">Написать в Telegram <span aria-hidden="true">→</span></a>
-          <a class="link-ghost" href="#formats">Смотреть форматы</a>
-        </div>
-        <p class="btn-note">@andrey_slr · ответим в течение дня</p>
+  <main>
+
+<section class="sec" id="s1">
+  <div class="eyebrow"><span>01</span>Почему сейчас</div>
+  <div class="split">
+    <div>
+      <h2>Раньше хватало комиссии. Теперь&nbsp;- нет</h2>
+      <div class="stack lead">
+        <p>Два года назад с агентами справлялся любой: поднял комиссию&nbsp;- и проект продаётся.</p>
+        <p>Сейчас так не работает. Нужен личный подход к каждому агенту и система.</p>
       </div>
-      <div class="art-wrap">
-        <svg class="art" viewBox="0 0 440 360" role="img" aria-label="Агенты вокруг вашего проекта">
-          <rect class="art-bg" x="8.5" y="8.5" width="423" height="343" rx="32"/>
-          <g class="art-lines" stroke-width="2" stroke-dasharray="4 7" stroke-linecap="round" fill="none" opacity=".5"><path d="M220 185L92 86"/><path d="M220 185L348 78"/><path d="M220 185L64 236"/><path d="M220 185L386 196"/><path d="M220 185L222 46"/></g>
-          <rect x="140" y="118" width="160" height="134" rx="16" fill="#fff" stroke="var(--border)"/>
-          <rect x="152" y="130" width="136" height="74" rx="10" fill="var(--primary-soft)"/>
-          <rect x="170" y="150" width="100" height="10" rx="3" fill="var(--primary)"/>
-          <rect x="178" y="160" width="84" height="36" fill="#fff"/>
-          <rect x="186" y="168" width="22" height="28" fill="#cfe5da"/>
-          <rect x="216" y="168" width="38" height="14" rx="2" fill="#cfe5da"/>
-          <rect x="152" y="196" width="136" height="8" fill="#a9d3bd"/>
-          <rect x="152" y="216" width="92" height="8" rx="4" fill="var(--text)" opacity=".75"/>
-          <rect x="152" y="232" width="60" height="6" rx="3" fill="var(--faint)" opacity=".6"/>
-          <g transform="translate(92 86)"><circle r="28" fill="#fff" stroke="var(--border)"/><circle cy="-7" r="8" fill="var(--primary)"/><path d="M-14 16a14 12 0 0 1 28 0" fill="var(--primary)"/></g><g transform="translate(348 78)"><circle r="28" fill="#fff" stroke="var(--border)"/><circle cy="-7" r="8" fill="var(--primary)"/><path d="M-14 16a14 12 0 0 1 28 0" fill="var(--primary)"/></g><g transform="translate(64 236)"><circle r="28" fill="#fff" stroke="var(--border)"/><circle cy="-7" r="8" fill="var(--primary)"/><path d="M-14 16a14 12 0 0 1 28 0" fill="var(--primary)"/></g><g transform="translate(386 196)"><circle r="28" fill="#fff" stroke="var(--border)"/><circle cy="-7" r="8" fill="var(--primary)"/><path d="M-14 16a14 12 0 0 1 28 0" fill="var(--primary)"/></g><g transform="translate(222 46)"><circle r="28" fill="#fff" stroke="var(--border)"/><circle cy="-7" r="8" fill="var(--primary)"/><path d="M-14 16a14 12 0 0 1 28 0" fill="var(--primary)"/></g>
-          <g transform="translate(236 266)"><rect width="128" height="38" rx="19" fill="var(--brand)"/><path d="M18 19l6 6 11-12" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><text x="44" y="25" fill="#fff" font-size="15" font-weight="600">Бронь</text></g>
-          <g transform="translate(44 290)"><rect class="art-chip" width="150" height="38" rx="19"/><text class="art-chip-t" x="18" y="25" font-size="15" font-weight="600">+15 агентов</text></g>
-        </svg>
-      </div>
+    </div>
+    <svg class="art" viewBox="0 0 400 300" role="img" aria-label="Воронка: агенты, встречи, показы, брони"><rect x="8.5" y="8.5" width="383" height="283" rx="20" fill="var(--surface)" stroke="var(--line)"/><rect x="40" y="40" width="320" height="42" rx="10" fill="var(--accent)" fill-opacity=".14"/><text x="58" y="67" font-size="15" font-weight="600" fill="var(--text)">Агенты</text><rect x="40" y="100" width="250" height="42" rx="10" fill="var(--accent)" fill-opacity=".28"/><text x="58" y="127" font-size="15" font-weight="600" fill="var(--text)">Встречи</text><rect x="40" y="160" width="180" height="42" rx="10" fill="var(--accent)" fill-opacity=".5"/><text x="58" y="187" font-size="15" font-weight="600" fill="var(--text)">Показы</text><rect x="40" y="220" width="118" height="42" rx="10" fill="var(--ink)" fill-opacity="1"/><text x="58" y="247" font-size="15" font-weight="600" fill="#fff">Брони</text><circle cx="186" cy="241" r="17" fill="var(--accent)"/><path d="M178 241l6 6 10-11" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <p class="quote">Понимаем: продажи просели, рисковать деньгами не хочется. Поэтому&nbsp;- небольшой фикс, максимум работы и бонусы сверху.</p>
+</section>
+
+<section class="sec" id="s2">
+  <div class="dark">
+    <div class="eyebrow"><span>02</span>Почему мы</div>
+    <h2>Не заработаем мы&nbsp;- не заработает никто</h2>
+    <p class="lead">Таких ресурсов нет ни у одного менеджера на острове.</p>
+    <div class="grid4">
+      <div class="stat"><div class="big num">$<span data-to="100">100</span> млн+</div><p class="big-sub">продаж через нашу сеть агентов</p></div>
+      <div class="stat"><div class="big num"><span data-to="700">700</span></div><p class="big-sub">агентов в нашем канале, ещё 300 в чате</p></div>
+      <div class="stat"><div class="big num"><span data-to="187">187</span></div><p class="big-sub">агентов в нашей CRM, 81 уже продавали</p></div>
+      <div class="stat"><div class="big num"><span data-to="10">10</span>+ лет</div><p class="big-sub">опыт основателя в B2B-продажах</p></div>
     </div>
   </div>
 </section>
 
-<!-- 1b -->
-<section class="band">
-  <div class="wrap">
-    <div class="eyebrow">01 · Рынок</div>
-    <h2>Раньше хватало комиссии. Теперь - нет</h2>
-    <div class="cols-2">
-      <div class="stack">
-        <p class="sub">Два года назад с агентами справлялся любой: поднял комиссию - и проект продаётся.</p>
-        <p class="sub">Сейчас так не работает. Нужен личный подход к каждому агенту и система.</p>
-      </div>
-      <div class="art-wrap">
-        <svg class="art" viewBox="0 0 400 300" role="img" aria-label="Воронка: агенты, встречи, показы, брони">
-          <rect x="8" y="8" width="384" height="284" rx="28" fill="#fff" stroke="var(--border)"/>
-          <rect x="40" y="40" width="320" height="42" rx="12" fill="var(--primary)" fill-opacity=".14"/><text x="58" y="67" font-size="15" font-weight="600" fill="var(--text)">Агенты</text><rect x="40" y="100" width="250" height="42" rx="12" fill="var(--primary)" fill-opacity=".28"/><text x="58" y="127" font-size="15" font-weight="600" fill="var(--text)">Встречи</text><rect x="40" y="160" width="180" height="42" rx="12" fill="var(--primary)" fill-opacity=".5"/><text x="58" y="187" font-size="15" font-weight="600" fill="var(--text)">Показы</text><rect x="40" y="220" width="118" height="42" rx="12" fill="var(--primary)" fill-opacity="1"/><text x="58" y="247" font-size="15" font-weight="600" fill="#fff">Брони</text>
-          <circle cx="186" cy="241" r="17" fill="var(--brand)"/><path d="M178 241l6 6 10-11" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </div>
+<section class="sec" id="s3">
+  <div class="eyebrow"><span>03</span>Спрос</div>
+  <div class="split" style="align-items:start">
+    <div>
+      <h2>Агенты продают. Вопрос&nbsp;- чей проект</h2>
+      <div class="big num" style="margin-top:16px">30+</div>
+      <p class="big-sub">сделок в месяц у застройщиков, за которыми следим</p>
+      <p class="lead" style="margin-top:24px">Половина продаж и больше идёт через агентов. Так говорят сами застройщики.</p>
     </div>
-    <div class="callout" style="margin-top:32px">Понимаем: продажи просели, рисковать деньгами не хочется. Поэтому у нас небольшой фикс, максимум работы и бонусы сверху.</div>
-  </div>
-</section>
-
-<!-- 1c -->
-<section>
-  <div class="wrap">
-    <div class="eyebrow">02 · Почему мы</div>
-    <h2 style="margin-bottom:8px">Не заработаем мы - не заработает никто</h2>
-    <p class="sub">Таких ресурсов нет ни у одного менеджера на острове.</p>
-    <div class="tiles">
-      <div class="card"><div class="stat sm num">$<span data-to="100">100</span> млн+</div><p class="stat-sub">продаж через нашу сеть агентов</p></div>
-      <div class="card"><div class="stat sm num"><span data-to="700">700</span></div><p class="stat-sub">агентов в нашем канале, ещё 300 в чате</p></div>
-      <div class="card"><div class="stat sm num"><span data-to="187">187</span></div><p class="stat-sub">агентов в нашей CRM, 81 уже продавали</p></div>
-      <div class="card"><div class="stat sm num"><span data-to="20">20</span>+ лет</div><p class="stat-sub">опыт основателя в B2B-продажах</p></div>
-    </div>
-  </div>
-</section>
-
-<!-- 2 -->
-<section class="band">
-  <div class="wrap">
-    <div class="eyebrow">03 · Спрос</div>
-    <h2>Агенты продают. Вопрос - чей проект</h2>
-    <div class="cols-2">
-      <div class="stack">
-        <div>
-          <div class="statrow">
-            <span class="stat num">30+</span>
-            <span class="stat-sub">сделок в месяц у застройщиков, за которыми следим</span>
-          </div>
-          <p class="sub">Половина продаж и больше идёт через агентов. Так говорят сами застройщики.</p>
+    <div>
+      <div class="car-head">
+        <p class="fine">Опросы в нашем канале</p>
+        <div class="car-nav">
+          <button type="button" class="c-prev" aria-label="Назад">←</button>
+          <button type="button" class="c-next" aria-label="Вперёд">→</button>
         </div>
       </div>
-      <div>
-        <div class="car-head" style="margin-bottom:12px">
-          <p class="fine">Опросы в нашем канале, листайте</p>
-          <div class="car-nav">
-            <button type="button" class="c-prev" aria-label="Назад">←</button>
-            <button type="button" class="c-next" aria-label="Вперёд">→</button>
-          </div>
-        </div>
-        <div class="carousel narrow" data-carousel tabindex="0" aria-label="Опросы агентов">
+      <div class="carousel narrow" data-carousel tabindex="0" aria-label="Опросы агентов">
           <article class="bonus">
             <img src="/agentskaya-set/img/poll1.jpg" alt="Опрос: сколько сделок закрыли за 30 дней" loading="lazy">
             <div class="b-body"><div class="b-name" style="font-size:14px">Сколько сделок закрыли за 30 дней</div><p class="fine">61 голос</p></div>
@@ -432,152 +321,113 @@
             <div class="b-body"><div class="b-name" style="font-size:14px">На какие чеки закрывают сделки</div><p class="fine">51 голос</p></div>
           </article>
         </div>
-      </div>
     </div>
   </div>
 </section>
 
-<!-- 3 -->
-<section>
-  <div class="wrap">
-    <div class="eyebrow">04 · Команда</div>
-    <h2>Три человека на ваши продажи</h2>
-    <div class="cols-3">
-      <div class="card stack" style="gap:20px">
-        <div class="mhead">
-  <img class="mimg" src="/agentskaya-set/img/vitaliy.jpg" alt="Виталий, клоузер" loading="lazy">
-  <div class="role">Клоузер · Виталий</div>
-        </div>
-        <ul class="pts">
-          <li>Закрывает в бронь 60% зумов</li>
-          <li>Бывший РОП, топ-продажник LOYO</li>
-        </ul>
-      </div>
-      <div class="card stack" style="gap:20px">
-        <div class="mhead">
-  <img class="mimg" src="/agentskaya-set/img/field.jpg" alt="Полевой менеджер" loading="lazy" style="object-position:center 30%">
-  <div class="role">Полевой · Андрей</div>
-        </div>
-        <ul class="pts">
-          <li>Встречается с агентами почти каждый день</li>
-          <li>Знает агентства Бали и Пхукета</li>
-        </ul>
-      </div>
-      <div class="card stack" style="gap:20px">
-        <div class="mhead">
-  <img class="mimg" src="/agentskaya-set/img/admin.jpg" alt="Администратор" loading="lazy" style="object-position:center 25%">
-  <div class="role">Админ · Елена</div>
-        </div>
-        <ul class="pts">
-          <li>Ведёт учёт - ни один агент не теряется</li>
-          <li>26 лет военной службы - порядок во всём</li>
-        </ul>
-      </div>
+<section class="sec" id="s4">
+  <div class="eyebrow"><span>04</span>Команда</div>
+  <h2>Три человека на ваши продажи</h2>
+  <div class="grid3" style="margin-top:40px">
+    <div class="person">
+      <img src="/agentskaya-set/img/vitaliy.jpg" alt="Виталий, клоузер" loading="lazy" style="object-position:center 20%">
+      <div class="role">Клоузер</div><h3>Виталий</h3>
+      <ul class="pts"><li>Закрывает в бронь 60% зумов</li><li>Бывший РОП, топ-продажник LOYO</li></ul>
     </div>
-    <p class="fine" style="margin-top:24px">Юрист и оформление сделки - на вашей стороне.</p>
+    <div class="person">
+      <img src="/agentskaya-set/img/field.jpg" alt="Андрей, полевой менеджер" loading="lazy" style="object-position:center 30%">
+      <div class="role">Полевой</div><h3>Андрей</h3>
+      <ul class="pts"><li>Встречается с агентами почти каждый день</li><li>Знает агентства Бали и Пхукета</li></ul>
+    </div>
+    <div class="person">
+      <img src="/agentskaya-set/img/admin.jpg" alt="Елена, администратор" loading="lazy" style="object-position:center 25%">
+      <div class="role">Администратор</div><h3>Елена</h3>
+      <ul class="pts"><li>Ведёт учёт&nbsp;- ни один агент не теряется</li><li>26 лет военной службы&nbsp;- порядок во всём</li></ul>
+    </div>
+  </div>
+  <p class="fine" style="margin-top:32px">Юрист и оформление сделки&nbsp;- на вашей стороне.</p>
+</section>
+
+<section class="sec" id="s5">
+  <div class="eyebrow"><span>05</span>Отчёты</div>
+  <div class="split">
+    <div>
+      <h2>Отчёт каждую неделю</h2>
+      <p class="lead">Встречи, новые агенты, брони&nbsp;- всё приходит в общий Telegram-канал. Спрашивать ничего не нужно.</p>
+    </div>
+    <figure>
+      <img class="shot" src="/agentskaya-set/img/dash.jpg" alt="Дашборд по работе с агентами" loading="lazy">
+      <figcaption>Дашборд: касания, агенты, кто и сколько написал</figcaption>
+    </figure>
   </div>
 </section>
 
-<!-- 4 -->
-<section class="band">
-  <div class="wrap">
-    <div class="eyebrow">05 · Отчёты</div>
-    <h2>Отчёт каждую неделю</h2>
-    <div class="cols-2">
-      <div class="stack">
-        <p class="sub">Встречи, новые агенты, брони - всё приходит в общий Telegram-канал. Спрашивать ничего не нужно.</p>
-      </div>
-      <figure>
-        <img class="shot r43" src="/agentskaya-set/img/dash.jpg" alt="Дашборд по работе с агентами" loading="lazy">
-        <figcaption>Дашборд: касания, агенты, кто и сколько написал</figcaption>
-      </figure>
+<section class="sec" id="s6">
+  <div class="eyebrow"><span>06</span>CRM агентов</div>
+  <div class="split">
+    <div>
+      <h2>Каждый агент&nbsp;- на учёте</h2>
+      <p class="lead" style="margin-bottom:32px">Как лиды с таргета в вашем отделе продаж: статус, переписка, сделки.</p>
+      <ul class="pts">
+        <li>Знаем, что агент пьёт и что ему подарить&nbsp;- встреча заходит</li>
+        <li>Видно, кому давно не писали&nbsp;- никто не остывает</li>
+      </ul>
     </div>
-  </div>
-</section>
-
-<!-- 4b -->
-<section>
-  <div class="wrap">
-    <div class="eyebrow">06 · CRM</div>
-    <h2>Каждый агент - на учёте</h2>
-    <div class="cols-2">
-      <div class="stack" style="gap:32px">
-        <p class="sub">Как лиды с таргета в вашем отделе продаж: статус, переписка, сделки.</p>
-        <ul class="pts">
-          <li>Знаем, что агент пьёт и что ему подарить - встреча заходит</li>
-          <li>Видно, кому давно не писали - никто не остывает</li>
-        </ul>
-      </div>
-      <figure class="acard">
-        <div class="card">
-          <div class="ahead">
-            <div class="ava" aria-hidden="true">МК</div>
-            <div class="aname">Мария К.<small>Агентство · Чангу</small></div>
-            <span class="deal">3 сделки · $520 тыс.</span>
-          </div>
-          <dl class="kv">
-            <dt>Пьёт</dt><dd>Флэт уайт, белое вино</dd>
-            <dt>Любит</dt><dd>Японская кухня</dd>
-            <dt>Хобби</dt><dd>Сёрфинг, йога</dd>
-            <dt>Подарок</dt><dd>Кофе в зёрнах</dd>
-            <dt>Общение</dt><dd>Telegram, после 11:00</dd>
-            <dt>Не беспокоить</dt><dd>Воскресенье</dd>
-          </dl>
-          <div class="afoot"><span>Статус: в работе</span><span>Контакт: 2 дня назад</span></div>
-        </div>
-        <figcaption>Пример карточки агента, данные условные</figcaption>
-      </figure>
-    </div>
-  </div>
-</section>
-
-<!-- 5 -->
-<section class="band">
-  <div class="wrap">
-    <div class="eyebrow">07 · Цена</div>
-    <h2>Выгоднее своего отдела</h2>
-    <div class="cols-2">
+    <figure class="acard">
       <div class="card">
-        <div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg></span></div>
-        <div class="ctitle">Свой менеджер</div>
-        <div class="price num">~$1000 <small>/ мес + 1%</small></div>
-        <ul class="dots">
-          <li>Сидит на входящих заявках</li>
-          <li>Агентов сам не найдёт</li>
-          <li>Проверять его некому</li>
-        </ul>
+        <div class="ahead">
+          <div class="ava" aria-hidden="true">МК</div>
+          <div class="aname">Мария К.<small>Агентство · Чангу</small></div>
+          <span class="deal">3 сделки · $520 тыс.</span>
+        </div>
+        <dl class="kv">
+          <dt>Пьёт</dt><dd>Флэт уайт, белое вино</dd>
+          <dt>Любит</dt><dd>Японская кухня</dd>
+          <dt>Хобби</dt><dd>Сёрфинг, йога</dd>
+          <dt>Подарок</dt><dd>Кофе в зёрнах</dd>
+          <dt>Общение</dt><dd>Telegram, после 11:00</dd>
+          <dt>Не беспокоить</dt><dd>Воскресенье</dd>
+        </dl>
+        <div class="afoot"><span>Статус: в работе</span><span>Контакт: 2 дня назад</span></div>
       </div>
-      <div class="card pick">
-        <div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><path d="M16 3.128a4 4 0 0 1 0 7.744" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><circle cx="9" cy="7" r="4" /></svg></span></div>
-        <div class="ctitle">Наша команда</div>
-        <div class="price num">от $1500 <small>/ мес + 4%</small></div>
-        <ul class="pts">
-          <li>Сами ходим к агентам</li>
-          <li>Сами закрываем в бронь</li>
-          <li>Вы видите всё</li>
-        </ul>
-      </div>
-    </div>
-    <p class="sub" style="margin-top:24px">Своя команда из трёх человек - от $3000/мес. У нас вдвое дешевле, и агенты уже есть.</p>
+      <figcaption>Пример карточки агента, данные условные</figcaption>
+    </figure>
   </div>
 </section>
 
-<!-- 6 -->
-<section>
-  <div class="wrap">
-    <div class="car-head">
-      <div>
-        <div class="eyebrow">08 · Бонусы</div>
-    <h2 style="margin-bottom:8px">Бонусы - за наш счёт</h2>
-        <p class="sub">Зачёркнуто - цена на рынке. Вам - бесплатно.</p>
-      </div>
-      <div class="car-nav">
-        <button type="button" class="c-prev" aria-label="Назад">←</button>
-        <button type="button" class="c-next" aria-label="Вперёд">→</button>
-      </div>
+<section class="sec" id="s7">
+  <div class="eyebrow"><span>07</span>Цена</div>
+  <h2>Выгоднее своего отдела</h2>
+  <div class="split" style="align-items:stretch;margin-top:40px">
+    <div class="card">
+      <svg class="ico" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+      <div class="label">Свой менеджер</div>
+      <div class="price num">~$1000 <small>/ мес + 1%</small></div>
+      <ul class="dim"><li>Сидит на входящих заявках</li><li>Агентов сам не найдёт</li><li>Проверять его некому</li></ul>
     </div>
+    <div class="card" style="border-color:var(--accent)">
+      <svg class="ico" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><path d="M16 3.128a4 4 0 0 1 0 7.744" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><circle cx="9" cy="7" r="4" /></svg>
+      <div class="label" style="color:var(--accent-ink)">Наша команда</div>
+      <div class="price num">от $1500 <small>/ мес + 4%</small></div>
+      <ul class="pts"><li>Сами ходим к агентам</li><li>Сами закрываем в бронь</li><li>Вы видите всё</li></ul>
+    </div>
+  </div>
+  <p class="lead" style="margin-top:32px">Своя команда из трёх человек&nbsp;- от $3000/мес. У нас вдвое дешевле, и агенты уже есть.</p>
+</section>
 
-    <div class="carousel" data-carousel tabindex="0" aria-label="Что входит в пакет">
+<section class="sec" id="s8">
+  <div class="eyebrow"><span>08</span>Бонусы</div>
+  <div class="car-head">
+    <div>
+      <h2 style="margin-bottom:8px">Бонусы&nbsp;- за наш счёт</h2>
+      <p class="lead">Зачёркнуто&nbsp;- цена на рынке. Вам&nbsp;- бесплатно.</p>
+    </div>
+    <div class="car-nav">
+      <button type="button" class="c-prev" aria-label="Назад">←</button>
+      <button type="button" class="c-next" aria-label="Вперёд">→</button>
+    </div>
+  </div>
+  <div class="carousel" data-carousel tabindex="0" aria-label="Что входит в пакет">
       <article class="bonus">
         <img src="/agentskaya-set/img/webinar.jpg" alt="Вебинар для агентов" loading="lazy">
         <div class="b-body">
@@ -622,7 +472,7 @@
         <img src="/agentskaya-set/img/calc.jpg" alt="Аналитика по юниту" loading="lazy">
         <div class="b-body">
           <div class="b-name">Аналитический отчёт по юниту</div>
-          <p class="fine">Доходность и окупаемость - агенту проще продать</p>
+          <p class="fine">Доходность и окупаемость&nbsp;- агенту проще продать</p>
           <div class="b-price"><s>$400/мес</s> входит</div>
         </div>
       </article>
@@ -638,7 +488,7 @@
         <img src="/agentskaya-set/img/chat.jpg" alt="Реклама в сообществе балийских агентов" loading="lazy">
         <div class="b-body">
           <div class="b-name">Реклама в сообществе балийских агентов</div>
-          <p class="fine">Ваш проект - в чатах агентов</p>
+          <p class="fine">Ваш проект&nbsp;- в чатах агентов</p>
           <div class="b-price"><s>$250/мес</s> входит</div>
         </div>
       </article>
@@ -646,7 +496,7 @@
         <img src="/agentskaya-set/img/report.jpg" alt="Отчёт по обратной связи агентов" loading="lazy">
         <div class="b-body">
           <div class="b-name">Отчёт по обратной связи агентов</div>
-          <p class="fine">Что мешает продажам - глазами агентов</p>
+          <p class="fine">Что мешает продажам&nbsp;- глазами агентов</p>
           <div class="b-price">входит</div>
         </div>
       </article>
@@ -659,197 +509,150 @@
         </div>
       </article>
     </div>
-
-    <div class="callout" style="margin-top:32px">Отдельно это <b>$3000+</b> в месяц. У нас входит в работу.</div>
-    <ul class="pts" style="margin-top:24px">
-      <li>Онлайн-встречи и обучения агентов - бесплатно</li>
-      <li>Встреча агентов на объекте - по смете</li>
-    </ul>
+  <div class="note-line">
+    <p><b>Отдельно это $3000+ в месяц.</b> <span class="muted">У нас входит в работу.</span></p>
+    <p class="muted">Онлайн-обучения агентов&nbsp;- бесплатно. Встреча агентов на объекте&nbsp;- по смете.</p>
   </div>
 </section>
 
-<!-- 7 -->
-<section class="band">
-  <div class="wrap">
-    <div class="eyebrow">09 · Кейсы</div>
-    <h2>Уже продали</h2>
-    <div class="cols-3">
-      <div class="card case"><div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16" /><path d="m19 9-5 5-4-4-3 3" /></svg></span></div><div class="who">Vertikal</div><div class="amount num">$3 млн</div><div class="period">за 6 месяцев</div></div>
-      <div class="card case"><div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 7h6v6" /><path d="m22 7-8.5 8.5-5-5L2 17" /></svg></span></div><div class="who">LB Group</div><div class="amount num">$40 млн</div><div class="period">за 2025 год, через нашу сеть агентов</div></div>
-      <div class="card case"><div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17 2 2a1 1 0 1 0 3-3" /><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4" /><path d="m21 3 1 11h-2" /><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3" /><path d="M3 4h8" /></svg></span></div><div class="who">KAVIAN</div><div class="amount num">11 юнитов</div><div class="period">за 6 месяцев</div></div>
+<section class="sec" id="s9">
+  <div class="eyebrow"><span>09</span>Кейсы</div>
+  <h2>Уже продали</h2>
+  <div class="grid3" style="margin-top:40px">
+    <div class="case"><div class="who">Vertikal</div><div class="big num">$3 млн</div><p class="big-sub">за 6 месяцев</p></div>
+    <div class="case"><div class="who">LB Group</div><div class="big num">$40 млн</div><p class="big-sub">за 2025 год, через нашу сеть</p></div>
+    <div class="case"><div class="who">KAVIAN</div><div class="big num">11 юнитов</div><p class="big-sub">за 6 месяцев</p></div>
+  </div>
+</section>
+
+<section class="sec" id="s10">
+  <div class="eyebrow"><span>10</span>Форматы</div>
+  <h2>Три формата</h2>
+  <div class="grid3" style="margin-top:40px">
+    <div class="card plan">
+      <svg class="ico" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z" /><path d="M5 21h14" /></svg>
+      <div class="label">А · Эксклюзив</div>
+      <div class="price num">$5000 <small>/ мес + 3%</small></div>
+      <ul class="pts"><li>Работаем только на вас</li><li>Других застройщиков не берём</li></ul>
+      <p class="for"><b>Для кого:</b> агенты должны продавать прежде всего вас.</p>
+    </div>
+    <div class="card plan">
+      <svg class="ico" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v3" /><path d="M16 2v3" /><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18" /><path d="m9 15 2 2 4-4" /></svg>
+      <div class="label">Б · Фикс</div>
+      <div class="price num">$3000 <small>/ мес + 2%</small></div>
+      <ul class="pts"><li>10-20 встреч с агентами в месяц</li><li>Отчёт после каждой встречи</li></ul>
+      <p class="for"><b>Для кого:</b> нужна система, а вы&nbsp;- на дистанции.</p>
+    </div>
+    <div class="card plan best">
+      <span class="flag">Лучше для старта</span>
+      <svg class="ico" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18" /><path d="m19 8 3 8a5 5 0 0 1-6 0zV7" /><path d="M3 7h1a17 17 0 0 0 8-2 17 17 0 0 0 8 2h1" /><path d="m5 8 3 8a5 5 0 0 1-6 0zV7" /><path d="M7 21h10" /></svg>
+      <div class="label">В · Баланс</div>
+      <div class="price num">$1500 <small>/ мес + 4%</small></div>
+      <ul class="pts"><li>Тот же объём работы</li><li>Фикс вдвое ниже</li></ul>
+      <p class="for"><b>Для кого:</b> хотите проверить с минимальным риском.</p>
     </div>
   </div>
-</section>
-
-<!-- 8 -->
-<section id="formats">
-  <div class="wrap">
-    <div class="eyebrow">10 · Форматы</div>
-    <h2>Три формата</h2>
-    <div class="cols-3">
-      <div class="card pack">
-        <div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z" /><path d="M5 21h14" /></svg></span><div class="role">А · Эксклюзив</div></div>
-        <div class="price num" style="margin-top:4px">$5000 <small>/ мес + 3%</small></div>
-        <ul class="dots">
-          <li>Работаем только на вас</li>
-          <li>Других застройщиков не берём</li>
-        </ul>
-        <p class="for"><b>Для кого:</b> агенты должны продавать прежде всего вас.</p>
-      </div>
-      <div class="card pack">
-        <div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v3" /><path d="M16 2v3" /><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18" /><path d="m9 15 2 2 4-4" /></svg></span><div class="role">Б · Фикс</div></div>
-        <div class="price num" style="margin-top:4px">$3000 <small>/ мес + 2%</small></div>
-        <ul class="dots">
-          <li>10-20 встреч с агентами в месяц</li>
-          <li>Отчёт после каждой встречи</li>
-        </ul>
-        <p class="for"><b>Для кого:</b> нужна система, а вы - на дистанции.</p>
-      </div>
-      <div class="card pack shine">
-        <span class="flag">Лучше для старта</span>
-        <div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18" /><path d="m19 8 3 8a5 5 0 0 1-6 0zV7" /><path d="M3 7h1a17 17 0 0 0 8-2 17 17 0 0 0 8 2h1" /><path d="m5 8 3 8a5 5 0 0 1-6 0zV7" /><path d="M7 21h10" /></svg></span><div class="role">В · Баланс</div></div>
-        <div class="price num" style="margin-top:4px">$1500 <small>/ мес + 4%</small></div>
-        <ul class="dots">
-          <li>Тот же объём работы</li>
-          <li>Фикс вдвое ниже</li>
-        </ul>
-        <p class="for"><b>Для кого:</b> хотите проверить с минимальным риском.</p>
-      </div>
-    </div>
-    <div class="callout" style="margin-top:32px">Прогноз на первые 3 месяца: от&nbsp;<b>15&nbsp;новых агентов</b> и <b>3&nbsp;брони</b>. Точные цифры - под ваш проект.</div>
-    <p class="fine" style="margin-top:16px">Во всех форматах - клоузер и отчёт каждую неделю. Другие форматы - по запросу.</p>
-    <ul class="pts" style="margin-top:32px">
-      <li>Агенты получают свою комиссию полностью - наш процент сверху</li>
-      <li>Сетку комиссий согласуем заранее - без сюрпризов</li>
-    </ul>
+  <p class="quote">Прогноз на первые 3 месяца: от&nbsp;15&nbsp;новых агентов и 3&nbsp;брони. Точные цифры&nbsp;- под ваш проект.</p>
+  <div class="note-line">
+    <ul class="pts"><li>Агенты получают свою комиссию полностью&nbsp;- наш процент сверху</li><li>Сетку комиссий согласуем заранее&nbsp;- без сюрпризов</li></ul>
+    <p class="fine">Во всех форматах&nbsp;- клоузер и отчёт каждую неделю. Другие форматы&nbsp;- по запросу.</p>
   </div>
 </section>
 
-<!-- safety -->
-<section class="band">
-  <div class="wrap">
-    <div class="eyebrow">11 · Гарантии</div>
-    <h2>Почему это безопасно</h2>
-    <div class="cols-3">
-      <div class="card">
-        <div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 15h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 17" /><path d="m7 21 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9" /><path d="m2 16 6 6" /><circle cx="16" cy="9" r="2.9" /><circle cx="6" cy="5" r="3" /></svg></span></div>
-        <h3>Платите за результат</h3>
-        <p class="sub" style="margin-top:12px">Процент - только когда покупатель уже заплатил вам.</p>
-      </div>
-      <div class="card">
-        <div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /><path d="m9 12 2 2 4-4" /></svg></span></div>
-        <h3>Не платите за своё</h3>
-        <p class="sub" style="margin-top:12px">Ваши агенты за последние полгода - ваши. С их сделок процент не берём.</p>
-      </div>
-      <div class="card">
-        <div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10 21H2" /><path d="M10 3H7a2 2 0 00-2 2v16" /><path d="M14 12h.01" /><path d="M19 21V5a2 2 0 00-1.675-1.974l-6.163-1.013A1 1 0 0010 3v18a1 1 0 001.124.992z" /><path d="M22 21h-3" /></svg></span></div>
-        <h3>Можно выйти</h3>
-        <p class="sub" style="margin-top:12px">Не пошло за 3 месяца - расходимся без штрафов.</p>
-      </div>
-    </div>
+<section class="sec" id="s11">
+  <div class="eyebrow"><span>11</span>Гарантии</div>
+  <h2>Почему это безопасно</h2>
+  <div class="grid3" style="margin-top:40px">
+    <div class="card"><svg class="ico" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 15h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 17" /><path d="m7 21 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9" /><path d="m2 16 6 6" /><circle cx="16" cy="9" r="2.9" /><circle cx="6" cy="5" r="3" /></svg><h3>Платите за результат</h3><p class="muted" style="margin-top:8px">Процент&nbsp;- только когда покупатель уже заплатил вам.</p></div>
+    <div class="card"><svg class="ico" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /><path d="m9 12 2 2 4-4" /></svg><h3>Не платите за своё</h3><p class="muted" style="margin-top:8px">Ваши агенты за последние полгода&nbsp;- ваши. С их сделок процент не берём.</p></div>
+    <div class="card"><svg class="ico" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 21H2" /><path d="M10 3H7a2 2 0 00-2 2v16" /><path d="M14 12h.01" /><path d="M19 21V5a2 2 0 00-1.675-1.974l-6.163-1.013A1 1 0 0010 3v18a1 1 0 001.124.992z" /><path d="M22 21h-3" /></svg><h3>Можно выйти</h3><p class="muted" style="margin-top:8px">Не пошло за 3 месяца&nbsp;- расходимся без штрафов.</p></div>
   </div>
 </section>
 
-<!-- 10 -->
-<section>
-  <div class="wrap">
-    <div class="eyebrow">12 · Условия</div>
-    <h2>Условия</h2>
-    <div class="cols-2" style="align-items:center">
+<section class="sec" id="s12">
+  <div class="eyebrow"><span>12</span>Условия</div>
+  <div class="split">
+    <div>
+      <h2>Условия</h2>
       <ul class="pts">
-        <li>Минимум 3 месяца - за это время агенты начинают продавать</li>
-        <li>Новый агент - за нами 12 месяцев</li>
+        <li>Минимум 3 месяца&nbsp;- за это время агенты начинают продавать</li>
+        <li>Новый агент&nbsp;- за нами 12 месяцев</li>
       </ul>
-      <div class="art-wrap">
-        <svg class="art" viewBox="0 0 400 212" role="img" aria-label="Три месяца работы">
-          <rect x="4" y="4" width="392" height="204" rx="28" fill="var(--band)"/>
-          <g transform="translate(24 40)"><rect width="104" height="132" rx="14" fill="#fff" stroke="var(--border)"/><path d="M0 14a14 14 0 0 1 14-14h76a14 14 0 0 1 14 14v18H0z" fill="var(--primary)"/><text x="52" y="22" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">Месяц 1</text><rect x="16" y="44" width="20" height="8" rx="4" fill="var(--primary-soft)"/><rect x="42" y="44" width="20" height="8" rx="4" fill="var(--primary-soft)"/><rect x="68" y="44" width="20" height="8" rx="4" fill="var(--primary-soft)"/><rect x="16" y="60" width="20" height="8" rx="4" fill="var(--primary-soft)"/><rect x="42" y="60" width="20" height="8" rx="4" fill="var(--primary-soft)"/><rect x="68" y="60" width="20" height="8" rx="4" fill="var(--primary-soft)"/><circle cx="52" cy="104" r="16" fill="var(--primary)"/><path d="M44 104l6 6 10-11" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g><g transform="translate(148 40)"><rect width="104" height="132" rx="14" fill="#fff" stroke="var(--border)"/><path d="M0 14a14 14 0 0 1 14-14h76a14 14 0 0 1 14 14v18H0z" fill="var(--primary)"/><text x="52" y="22" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">Месяц 2</text><rect x="16" y="44" width="20" height="8" rx="4" fill="var(--primary-soft)"/><rect x="42" y="44" width="20" height="8" rx="4" fill="var(--primary-soft)"/><rect x="68" y="44" width="20" height="8" rx="4" fill="var(--primary-soft)"/><rect x="16" y="60" width="20" height="8" rx="4" fill="var(--primary-soft)"/><rect x="42" y="60" width="20" height="8" rx="4" fill="var(--primary-soft)"/><rect x="68" y="60" width="20" height="8" rx="4" fill="var(--primary-soft)"/><circle cx="52" cy="104" r="16" fill="var(--primary)"/><path d="M44 104l6 6 10-11" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g><g transform="translate(272 40)"><rect width="104" height="132" rx="14" fill="#fff" stroke="var(--border)"/><path d="M0 14a14 14 0 0 1 14-14h76a14 14 0 0 1 14 14v18H0z" fill="var(--primary)"/><text x="52" y="22" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">Месяц 3</text><rect x="16" y="44" width="20" height="8" rx="4" fill="var(--primary-soft)"/><rect x="42" y="44" width="20" height="8" rx="4" fill="var(--primary-soft)"/><rect x="68" y="44" width="20" height="8" rx="4" fill="var(--primary-soft)"/><rect x="16" y="60" width="20" height="8" rx="4" fill="var(--primary-soft)"/><rect x="42" y="60" width="20" height="8" rx="4" fill="var(--primary-soft)"/><rect x="68" y="60" width="20" height="8" rx="4" fill="var(--primary-soft)"/><circle cx="52" cy="104" r="16" fill="var(--brand)"/><path d="M44 104l6 6 10-11" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
-        </svg>
-      </div>
     </div>
+    <svg class="art" viewBox="0 0 400 212" role="img" aria-label="Три месяца работы"><g transform="translate(24 40)"><rect x=".5" y=".5" width="103" height="131" rx="12" fill="var(--surface)" stroke="var(--line)"/><path d="M0 12a12 12 0 0 1 12-12h80a12 12 0 0 1 12 12v20H0z" fill="var(--ink)"/><text x="52" y="22" text-anchor="middle" fill="#f3ede5" font-size="13" font-weight="600">Месяц 1</text><rect x="16" y="44" width="20" height="8" rx="4" fill="var(--sand-2)"/><rect x="42" y="44" width="20" height="8" rx="4" fill="var(--sand-2)"/><rect x="68" y="44" width="20" height="8" rx="4" fill="var(--sand-2)"/><rect x="16" y="60" width="20" height="8" rx="4" fill="var(--sand-2)"/><rect x="42" y="60" width="20" height="8" rx="4" fill="var(--sand-2)"/><rect x="68" y="60" width="20" height="8" rx="4" fill="var(--sand-2)"/><circle cx="52" cy="104" r="16" fill="var(--ink)"/><path d="M44 104l6 6 10-11" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g><g transform="translate(148 40)"><rect x=".5" y=".5" width="103" height="131" rx="12" fill="var(--surface)" stroke="var(--line)"/><path d="M0 12a12 12 0 0 1 12-12h80a12 12 0 0 1 12 12v20H0z" fill="var(--ink)"/><text x="52" y="22" text-anchor="middle" fill="#f3ede5" font-size="13" font-weight="600">Месяц 2</text><rect x="16" y="44" width="20" height="8" rx="4" fill="var(--sand-2)"/><rect x="42" y="44" width="20" height="8" rx="4" fill="var(--sand-2)"/><rect x="68" y="44" width="20" height="8" rx="4" fill="var(--sand-2)"/><rect x="16" y="60" width="20" height="8" rx="4" fill="var(--sand-2)"/><rect x="42" y="60" width="20" height="8" rx="4" fill="var(--sand-2)"/><rect x="68" y="60" width="20" height="8" rx="4" fill="var(--sand-2)"/><circle cx="52" cy="104" r="16" fill="var(--ink)"/><path d="M44 104l6 6 10-11" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g><g transform="translate(272 40)"><rect x=".5" y=".5" width="103" height="131" rx="12" fill="var(--surface)" stroke="var(--line)"/><path d="M0 12a12 12 0 0 1 12-12h80a12 12 0 0 1 12 12v20H0z" fill="var(--ink)"/><text x="52" y="22" text-anchor="middle" fill="#f3ede5" font-size="13" font-weight="600">Месяц 3</text><rect x="16" y="44" width="20" height="8" rx="4" fill="var(--sand-2)"/><rect x="42" y="44" width="20" height="8" rx="4" fill="var(--sand-2)"/><rect x="68" y="44" width="20" height="8" rx="4" fill="var(--sand-2)"/><rect x="16" y="60" width="20" height="8" rx="4" fill="var(--sand-2)"/><rect x="42" y="60" width="20" height="8" rx="4" fill="var(--sand-2)"/><rect x="68" y="60" width="20" height="8" rx="4" fill="var(--sand-2)"/><circle cx="52" cy="104" r="16" fill="var(--accent)"/><path d="M44 104l6 6 10-11" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g></svg>
   </div>
 </section>
 
-<!-- 11 -->
-<section class="band">
-  <div class="wrap">
-    <div class="eyebrow">13 · Старт</div>
-    <h2>Как начинаем</h2>
-    <div class="cols-4">
-      <div class="step on"><div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /><path d="M14 2v5a1 1 0 0 0 1 1h5" /><path d="m9 15 2 2 4-4" /></svg></span></div><div class="n">Шаг 1</div><div class="t">Проверка документов</div><div class="d">Земля, стройка, IMB</div></div>
-      <div class="step on"><div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2" /></svg></span></div><div class="n">Шаг 2</div><div class="t">Берём в работу</div><div class="d">Готовим материалы для агентов</div></div>
-      <div class="step"><div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" /><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09" /><path d="M9 12a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.4 22.4 0 0 1-4 2z" /><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 .05 5 .05" /></svg></span></div><div class="n">Шаг 3</div><div class="t">Запуск</div><div class="d">2-4 недели</div></div>
-      <div class="step"><div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16" /><path d="m19 9-5 5-4-4-3 3" /></svg></span></div><div class="n">Шаг 4</div><div class="t">Полная работа</div><div class="d">С 2-3 месяца</div></div>
+<section class="sec" id="s13">
+  <div class="eyebrow"><span>13</span>Как начинаем</div>
+  <h2>Как начинаем</h2>
+  <div class="grid4" style="margin-top:40px">
+    <div class="step"><div class="n">1</div><div class="t">Проверка документов</div><div class="d">Земля, стройка, IMB</div></div>
+    <div class="step"><div class="n">2</div><div class="t">Берём в работу</div><div class="d">Готовим материалы для агентов</div></div>
+    <div class="step"><div class="n">3</div><div class="t">Запуск</div><div class="d">2-4 недели</div></div>
+    <div class="step"><div class="n">4</div><div class="t">Полная работа</div><div class="d">Со 2-3 месяца</div></div>
+  </div>
+  <div class="dark final">
+    <div>
+      <h2>Проверьте нас за 3 месяца</h2>
+      <p class="lead">Напишите&nbsp;- скажем, берём ли проект и чего ждать.</p>
     </div>
-        <div class="card final">
-      <h3 style="font-size:20px">Проверьте нас за 3 месяца</h3>
-      <p class="sub">Напишите - скажем, берём ли проект и чего ждать.</p>
+    <div>
       <a class="btn" href="https://t.me/andrey_slr">Написать в Telegram <span aria-hidden="true">→</span></a>
-      <p class="btn-note" style="margin-top:0">@andrey_slr</p>
+      <p class="fine" style="margin-top:12px;color:var(--on-dark-3)">@andrey_slr</p>
     </div>
   </div>
 </section>
 
-</main>
+  </main>
+</div>
 
-<footer>
-  <div class="wrap">Balinsky.info · Отдел по работе с агентами · Бали, Индонезия</div>
-</footer>
-
+<footer><img src="/logo.svg" alt="" width="24" height="24">Balinsky.info · Отдел по работе с агентами · Бали, Индонезия</footer>
 
 <script>
 document.querySelectorAll('[data-carousel]').forEach(function(car){
-  var head = car.previousElementSibling;
-  var prev = head && head.querySelector('.c-prev');
-  var next = head && head.querySelector('.c-next');
+  var sec=car.closest('section'); var prev=sec.querySelector('.c-prev'), next=sec.querySelector('.c-next');
   if(!prev||!next) return;
-  function step(){var c=car.querySelector('.bonus');return c?c.getBoundingClientRect().width+14:280;}
-  function upd(){
-    prev.disabled = car.scrollLeft <= 4;
-    next.disabled = car.scrollLeft >= car.scrollWidth - car.clientWidth - 4;
-  }
+  function step(){var c=car.querySelector('.bonus');return c?c.getBoundingClientRect().width+16:280;}
+  function upd(){prev.disabled=car.scrollLeft<=4;next.disabled=car.scrollLeft>=car.scrollWidth-car.clientWidth-4;}
   prev.addEventListener('click',function(){car.scrollBy({left:-step(),behavior:'smooth'});});
   next.addEventListener('click',function(){car.scrollBy({left:step(),behavior:'smooth'});});
-  car.addEventListener('scroll',upd,{passive:true});
-  window.addEventListener('resize',upd);
-  upd();
+  car.addEventListener('scroll',upd,{passive:true}); window.addEventListener('resize',upd); upd();
 });
 (function(){
   var dlg=document.createElement('dialog');dlg.className='lb';dlg.setAttribute('aria-label','Увеличенное изображение');
   dlg.innerHTML='<button type="button" class="lb-close" aria-label="Закрыть">×</button><img alt="">';
-  document.body.appendChild(dlg);
-  var big=dlg.querySelector('img');
+  document.body.appendChild(dlg); var big=dlg.querySelector('img');
   dlg.addEventListener('click',function(){dlg.close();});
   document.querySelectorAll('.carousel img, figure img').forEach(function(img){
     img.classList.add('zoomable');img.tabIndex=0;img.setAttribute('role','button');
-    function open(){
-      big.src=img.currentSrc||img.src;big.alt=img.alt;
-      // маленькие скрины (опросы) не растягиваем больше чем в 1,6 раза — иначе мыло
-      dlg.style.setProperty('--lb-max',img.naturalWidth?Math.round(img.naturalWidth*1.6)+'px':'1400px');
-      dlg.showModal();
-    }
+    function open(){big.src=img.currentSrc||img.src;big.alt=img.alt;dlg.style.setProperty('--lb-max',img.naturalWidth?Math.round(img.naturalWidth*1.6)+'px':'1400px');dlg.showModal();}
     img.addEventListener('click',open);
     img.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});
   });
 })();
 (function(){
-  var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if(reduce||!('IntersectionObserver' in window)) return;
+  // оглавление: подсвечиваем раздел, который сейчас на экране
+  var links={}; document.querySelectorAll('.toc a').forEach(function(a){links[a.getAttribute('href').slice(1)]=a;});
+  if(!('IntersectionObserver' in window)) return;
+  var cur=null;
+  var spy=new IntersectionObserver(function(es){es.forEach(function(e){
+    if(e.isIntersecting&&links[e.target.id]){ if(cur) cur.classList.remove('on'); cur=links[e.target.id]; cur.classList.add('on'); }
+  });},{rootMargin:'-40% 0px -55% 0px'});
+  document.querySelectorAll('main .sec').forEach(function(s){spy.observe(s);});
+
+  if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   document.documentElement.classList.add('js-rv');
   var items=[];
-  document.querySelectorAll('main section:not(.hero) .wrap > *').forEach(function(el){
-    if(el.classList.contains('cols-3')||el.classList.contains('cols-4')||el.classList.contains('tiles')){
+  document.querySelectorAll('main .sec > *, main .dark > *').forEach(function(el){
+    if(el.classList.contains('dark')) return;
+    if(el.classList.contains('grid3')||el.classList.contains('grid4')){
       [].forEach.call(el.children,function(c,i){c.classList.add('rv');c.style.transitionDelay=(i*80)+'ms';items.push(c);});
     } else {el.classList.add('rv');items.push(el);}
   });
-  function tick(el){
-    var to=+el.getAttribute('data-to'),t0=null,d=1200;
-    function f(t){if(!t0)t0=t;var k=Math.min(1,(t-t0)/d);k=1-Math.pow(1-k,3);el.textContent=Math.round(to*k);if(k<1)requestAnimationFrame(f);}
-    requestAnimationFrame(f);
-  }
+  function tick(el){var to=+el.getAttribute('data-to'),t0=null;function f(t){if(!t0)t0=t;var k=Math.min(1,(t-t0)/1200);k=1-Math.pow(1-k,3);el.textContent=Math.round(to*k);if(k<1)requestAnimationFrame(f);}requestAnimationFrame(f);}
   var io=new IntersectionObserver(function(es){es.forEach(function(e){
-    if(!e.isIntersecting) return;
-    e.target.classList.add('in');io.unobserve(e.target);
+    if(!e.isIntersecting) return; e.target.classList.add('in'); io.unobserve(e.target);
     e.target.querySelectorAll('[data-to]').forEach(tick);
   });},{rootMargin:'0px 0px -8% 0px'});
   items.forEach(function(el){io.observe(el);});
