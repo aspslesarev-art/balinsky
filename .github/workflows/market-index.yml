@@ -1,0 +1,48 @@
+name: Market index (monthly)
+
+# Rebuilds lib/market-index.json — the numbers behind /en/bali-property-prices,
+# /en/bali-rent-prices, /en/methodology and the homepage «in numbers» block —
+# and keeps a snapshot per month in data/market-history/. The commit triggers
+# the usual Vercel deploy. Reads Supabase only.
+
+on:
+  schedule:
+    - cron: '0 2 1 * *'
+  workflow_dispatch:
+
+concurrency:
+  group: market-index
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: Write .env.local from secrets
+        run: |
+          cat > .env.local <<ENV
+          NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY=${{ secrets.SUPABASE_SERVICE_KEY }}
+          ENV
+
+      - name: Build market index
+        run: node --import=./scripts/_fetch-retry.mjs scripts/build-market-index.mjs
+
+      - name: Commit if changed
+        run: |
+          git add lib/market-index.json data/market-history
+          if git diff --cached --quiet; then echo "no changes"; exit 0; fi
+          git config user.name "balinsky-bot"
+          git config user.email "i@balinsky.info"
+          git commit -m "chore(market): ежемесячный пересчёт индекса рынка"
+          git push

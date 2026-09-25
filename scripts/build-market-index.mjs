@@ -158,4 +158,7 @@ const out = {
   monthly: { n: monthly.length, from: monthlyDates[0]?.slice(0, 10) ?? null, to: monthlyDates.at(-1)?.slice(0, 10) ?? null, island: monthlyIsland, districts: monthlyDistricts },
 }
 fs.writeFileSync('lib/market-index.json', JSON.stringify(out, null, 1) + '\n')
+// Monthly snapshot: the history month-over-month comparisons will be built on.
+fs.mkdirSync('data/market-history', { recursive: true })
+fs.writeFileSync(`data/market-history/${out.asOf}.json`, JSON.stringify(out) + '\n')
 console.log(JSON.stringify(out.totals), Object.keys(villaDistricts).length, 'villa districts,', Object.keys(aptDistricts).length, 'apt,', Object.keys(rentDistricts).length, 'rent')
