@@ -99,7 +99,11 @@ function areasToUnits(rows: Array<Record<string, unknown>>, usd: boolean): Scrap
     if (!key) return []
     const house = (asArray(a.house_projects)[0] ?? {}) as Record<string, unknown>
     const areaM2 = num(house.total_square)
-    const priceUsd = usd ? num(a.final_with_house_price) ?? num(a.final_price) ?? num(a.total_price) : null
+    // Цена дома — первой: в английских объектах Oceaniq «цена с домом»
+    // складывает участок и дом, а у части вилл участок заведён той же
+    // суммой, что дом, — выходит ровно вдвое. Прайс до 11.09 показывал
+    // цену дома, и история цен продолжается от неё.
+    const priceUsd = usd ? num(house.total_price) ?? num(a.final_with_house_price) ?? num(a.final_price) ?? num(a.total_price) : null
     return [{
       unitKey: key,
       unitType: text(house.name) || null,
