@@ -20,9 +20,14 @@
     --muted:#4b5563;
     --faint:#8b9490;
     --border:#e5e7eb;
-    --shadow:0 1px 2px #0000000a;
+    --shadow:0 1px 2px rgb(16 40 28 / .04),0 8px 24px rgb(16 40 28 / .06);
+    --shadow-hi:0 2px 4px rgb(16 40 28 / .05),0 16px 40px rgb(16 40 28 / .10);
+    --ink:#0b1712;
+    --ink-2:#132a20;
+    --mint:#63d6a0;
+    --ease:cubic-bezier(.2,.8,.2,1);
     --radius:12px;
-    --maxw:1060px;
+    --maxw:1200px;
     --gut:clamp(16px,4vw,40px);
   }
   *{box-sizing:border-box}
@@ -218,12 +223,90 @@
   .lb-close{position:fixed;top:16px;right:16px;width:40px;height:40px;border-radius:10px;border:0;background:rgb(255 255 255 / .92);color:var(--text);font-size:20px;line-height:1;cursor:pointer}
   .lb-close:focus-visible{outline:2px solid #fff;outline-offset:2px}
   @media (prefers-reduced-motion:reduce){ *{transition:none!important;animation:none!important} }
+
+  /* ===== premium layer ===== */
+  h2{font-size:clamp(26px,3.2vw,40px);line-height:1.12;letter-spacing:-0.03em}
+  .eyebrow{display:flex;align-items:center;gap:12px;font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--primary);margin-bottom:16px}
+  .eyebrow::before{content:"";width:24px;height:1px;background:currentColor;opacity:.6}
+
+  .topbar{position:sticky;top:0;z-index:30;background:rgb(11 23 18 / .94);border-bottom:1px solid rgb(255 255 255 / .08);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);color:#fff}
+  .topbar .tag{color:rgb(255 255 255 / .6)}
+  .topbar .right{display:flex;align-items:center;gap:24px}
+  .btn-sm{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;padding:8px 16px;border-radius:999px;background:#fff;color:var(--ink);text-decoration:none;transition:transform .12s var(--ease),background .12s var(--ease)}
+  .btn-sm:hover{background:#e6f4ec}
+  .btn-sm:active{transform:scale(.97)}
+  .btn-sm:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
+  @media (max-width:640px){ .topbar .tag{display:none} }
+
+  .hero{position:relative;isolation:isolate;overflow:hidden;background:var(--ink);color:#fff;padding-block:clamp(64px,9vw,128px)}
+  .hero::before{content:"";position:absolute;inset:0;z-index:-1;
+    background-image:linear-gradient(rgb(255 255 255 / .05) 1px,transparent 1px),linear-gradient(90deg,rgb(255 255 255 / .05) 1px,transparent 1px);
+    background-size:56px 56px;
+    -webkit-mask-image:radial-gradient(ellipse 70% 60% at 30% 30%,#000 30%,transparent 75%);mask-image:radial-gradient(ellipse 70% 60% at 30% 30%,#000 30%,transparent 75%)}
+  .spot{position:absolute;z-index:-1;border-radius:50%;pointer-events:none;filter:blur(60px);will-change:transform}
+  .spot.a{width:560px;height:560px;left:-160px;top:-240px;background:radial-gradient(circle,rgb(99 214 160 / .30),transparent 65%);animation:drift 9s ease-in-out infinite alternate}
+  .spot.b{width:480px;height:480px;right:-120px;bottom:-260px;background:radial-gradient(circle,rgb(231 140 61 / .18),transparent 65%);animation:drift 11s ease-in-out infinite alternate-reverse}
+  @keyframes drift{from{transform:translate3d(0,0,0)}to{transform:translate3d(90px,40px,0)}}
+  .hero h1{font-size:clamp(34px,4.4vw,54px);line-height:1.06;letter-spacing:-0.035em;color:#fff}
+  .hero-grid{grid-template-columns:1.5fr 1fr}
+  @media (max-width:880px){ .hero-grid{grid-template-columns:1fr} }
+  .hero .sub{color:rgb(255 255 255 / .72);font-size:clamp(16px,1.4vw,18px)}
+  .hero ul.pts li,.hero ul.pts li b{color:#fff}
+  .hero ul.pts li{color:rgb(255 255 255 / .8)}
+  .hero ul.pts li::before{border-color:var(--mint)}
+  .hero .btn{background:#fff;color:var(--ink)}
+  .hero .btn:hover{background:#e6f4ec}
+  .hero .btn-note{color:rgb(255 255 255 / .5)}
+  .hero .btn:focus-visible{outline-color:var(--mint)}
+  .hero-actions{display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+  .link-ghost{color:rgb(255 255 255 / .8);font-weight:500;font-size:15px;text-decoration:none;border-bottom:1px solid rgb(255 255 255 / .25);padding-bottom:2px;transition:color .12s var(--ease),border-color .12s var(--ease)}
+  .link-ghost:hover{color:#fff;border-color:#fff}
+  .link-ghost:focus-visible{outline:2px solid var(--mint);outline-offset:4px;border-radius:2px}
+  .pill{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:rgb(255 255 255 / .75);border:1px solid rgb(255 255 255 / .14);background:rgb(255 255 255 / .04);padding:6px 14px;border-radius:999px;margin-bottom:24px}
+  .pill i{width:7px;height:7px;border-radius:50%;background:var(--mint);box-shadow:0 0 0 4px rgb(99 214 160 / .18)}
+  .hero .art-bg{fill:rgb(255 255 255 / .04);stroke:rgb(255 255 255 / .08)}
+  .hero .art-lines{stroke:var(--mint)}
+  .hero .art-chip{fill:rgb(255 255 255 / .08);stroke:rgb(255 255 255 / .14)}
+  .hero .art-chip-t{fill:#fff}
+
+  .btn{transition:background .12s var(--ease),transform .12s var(--ease),box-shadow .2s var(--ease)}
+  .btn:active{transform:scale(.98)}
+  .card,.bonus{transition:transform .2s var(--ease),box-shadow .2s var(--ease),border-color .2s var(--ease)}
+  @media (hover:hover){
+    .card:hover,.bonus:hover{transform:translateY(-2px);box-shadow:var(--shadow-hi)}
+    .acard .card:hover,.final:hover{transform:none}
+  }
+  .tiles .card{background:linear-gradient(180deg,#fff,#fbfdfc)}
+
+  /* shine border (magicui) */
+  .shine{position:relative}
+  .shine::after{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1.5px;pointer-events:none;
+    background:linear-gradient(110deg,transparent 20%,var(--primary) 40%,var(--brand) 50%,var(--primary) 60%,transparent 80%);background-size:300% 100%;
+    -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask-composite:exclude;
+    animation:shine 6s linear infinite}
+  @keyframes shine{from{background-position:100% 0}to{background-position:-200% 0}}
+  .flag{position:absolute;z-index:2;top:-12px;right:20px;background:var(--brand);color:#fff;font-size:12px;font-weight:600;padding:4px 12px;border-radius:999px;box-shadow:0 4px 12px rgb(231 140 61 / .3)}
+
+  .final{position:relative;isolation:isolate;overflow:hidden;background:var(--ink);border-color:var(--ink);color:#fff}
+  .final .sub{color:rgb(255 255 255 / .72)}
+  .final .btn{background:#fff;color:var(--ink)}
+  .final .btn:hover{background:#e6f4ec}
+  .final .btn-note{color:rgb(255 255 255 / .5)}
+  .final h3{font-size:clamp(24px,3vw,32px)!important;letter-spacing:-0.03em}
+
+  /* reveal (blur-fade) */
+  .js-rv .rv{opacity:0;transform:translateY(16px);filter:blur(6px);transition:opacity .4s var(--ease),transform .4s var(--ease),filter .4s var(--ease)}
+  .js-rv .rv.in{opacity:1;transform:none;filter:none}
+  @media (prefers-reduced-motion:reduce){ .spot,.shine::after{animation:none} .js-rv .rv{opacity:1;transform:none;filter:none} }
 </style>
 
 <header class="topbar">
   <div class="wrap">
     <div class="logo"><i>B</i> Balinsky</div>
-    <div class="tag">Отдел по работе с агентами</div>
+    <div class="right">
+      <div class="tag">Отдел по работе с агентами</div>
+      <a class="btn-sm" href="https://t.me/andrey_slr">Написать <span aria-hidden="true">→</span></a>
+    </div>
   </div>
 </header>
 
@@ -231,9 +314,11 @@
 
 <!-- 1 -->
 <section class="hero">
+  <span class="spot a" aria-hidden="true"></span><span class="spot b" aria-hidden="true"></span>
   <div class="wrap">
     <div class="hero-grid">
-      <div style="max-width:760px">
+      <div>
+        <div class="pill"><i></i>Отдел по работе с агентами · Бали</div>
         <h1>Агенты Бали продают ваш проект&nbsp;- по цене одного менеджера</h1>
         <p class="sub" style="margin-bottom:24px">Сильнейшая команда по работе с агентами на Бали. Проверьте нас за 3 месяца - без штрафов на выход.</p>
         <ul class="pts">
@@ -241,13 +326,16 @@
           <li><b>Доводим их клиентов</b> до брони</li>
           <li><b>Отчитываемся</b> каждую неделю</li>
         </ul>
-        <a class="btn" href="https://t.me/andrey_slr">Написать в Telegram <span aria-hidden="true">→</span></a>
+        <div class="hero-actions">
+          <a class="btn" href="https://t.me/andrey_slr">Написать в Telegram <span aria-hidden="true">→</span></a>
+          <a class="link-ghost" href="#formats">Смотреть форматы</a>
+        </div>
         <p class="btn-note">@andrey_slr · ответим в течение дня</p>
       </div>
       <div class="art-wrap">
         <svg class="art" viewBox="0 0 440 360" role="img" aria-label="Агенты вокруг вашего проекта">
-          <rect x="8" y="8" width="424" height="344" rx="32" fill="var(--band)"/>
-          <g stroke="var(--primary)" stroke-width="2" stroke-dasharray="4 7" stroke-linecap="round" fill="none" opacity=".5"><path d="M220 185L92 86"/><path d="M220 185L348 78"/><path d="M220 185L64 236"/><path d="M220 185L386 196"/><path d="M220 185L222 46"/></g>
+          <rect class="art-bg" x="8.5" y="8.5" width="423" height="343" rx="32"/>
+          <g class="art-lines" stroke-width="2" stroke-dasharray="4 7" stroke-linecap="round" fill="none" opacity=".5"><path d="M220 185L92 86"/><path d="M220 185L348 78"/><path d="M220 185L64 236"/><path d="M220 185L386 196"/><path d="M220 185L222 46"/></g>
           <rect x="140" y="118" width="160" height="134" rx="16" fill="#fff" stroke="var(--border)"/>
           <rect x="152" y="130" width="136" height="74" rx="10" fill="var(--primary-soft)"/>
           <rect x="170" y="150" width="100" height="10" rx="3" fill="var(--primary)"/>
@@ -259,7 +347,7 @@
           <rect x="152" y="232" width="60" height="6" rx="3" fill="var(--faint)" opacity=".6"/>
           <g transform="translate(92 86)"><circle r="28" fill="#fff" stroke="var(--border)"/><circle cy="-7" r="8" fill="var(--primary)"/><path d="M-14 16a14 12 0 0 1 28 0" fill="var(--primary)"/></g><g transform="translate(348 78)"><circle r="28" fill="#fff" stroke="var(--border)"/><circle cy="-7" r="8" fill="var(--primary)"/><path d="M-14 16a14 12 0 0 1 28 0" fill="var(--primary)"/></g><g transform="translate(64 236)"><circle r="28" fill="#fff" stroke="var(--border)"/><circle cy="-7" r="8" fill="var(--primary)"/><path d="M-14 16a14 12 0 0 1 28 0" fill="var(--primary)"/></g><g transform="translate(386 196)"><circle r="28" fill="#fff" stroke="var(--border)"/><circle cy="-7" r="8" fill="var(--primary)"/><path d="M-14 16a14 12 0 0 1 28 0" fill="var(--primary)"/></g><g transform="translate(222 46)"><circle r="28" fill="#fff" stroke="var(--border)"/><circle cy="-7" r="8" fill="var(--primary)"/><path d="M-14 16a14 12 0 0 1 28 0" fill="var(--primary)"/></g>
           <g transform="translate(236 266)"><rect width="128" height="38" rx="19" fill="var(--brand)"/><path d="M18 19l6 6 11-12" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><text x="44" y="25" fill="#fff" font-size="15" font-weight="600">Бронь</text></g>
-          <g transform="translate(44 290)"><rect width="150" height="38" rx="19" fill="#fff" stroke="var(--border)"/><text x="18" y="25" fill="var(--primary)" font-size="15" font-weight="600">+15 агентов</text></g>
+          <g transform="translate(44 290)"><rect class="art-chip" width="150" height="38" rx="19"/><text class="art-chip-t" x="18" y="25" font-size="15" font-weight="600">+15 агентов</text></g>
         </svg>
       </div>
     </div>
@@ -269,6 +357,7 @@
 <!-- 1b -->
 <section class="band">
   <div class="wrap">
+    <div class="eyebrow">01 · Рынок</div>
     <h2>Раньше хватало комиссии. Теперь - нет</h2>
     <div class="cols-2">
       <div class="stack">
@@ -290,13 +379,14 @@
 <!-- 1c -->
 <section>
   <div class="wrap">
+    <div class="eyebrow">02 · Почему мы</div>
     <h2 style="margin-bottom:8px">Не заработаем мы - не заработает никто</h2>
     <p class="sub">Таких ресурсов нет ни у одного менеджера на острове.</p>
     <div class="tiles">
-      <div class="card"><div class="stat sm num">$100 млн+</div><p class="stat-sub">продаж через нашу сеть агентов</p></div>
-      <div class="card"><div class="stat sm num">700</div><p class="stat-sub">агентов в нашем канале, ещё 300 в чате</p></div>
-      <div class="card"><div class="stat sm num">187</div><p class="stat-sub">агентов в нашей CRM, 81 уже продавали</p></div>
-      <div class="card"><div class="stat sm num">20+ лет</div><p class="stat-sub">опыт основателя в B2B-продажах</p></div>
+      <div class="card"><div class="stat sm num">$<span data-to="100">100</span> млн+</div><p class="stat-sub">продаж через нашу сеть агентов</p></div>
+      <div class="card"><div class="stat sm num"><span data-to="700">700</span></div><p class="stat-sub">агентов в нашем канале, ещё 300 в чате</p></div>
+      <div class="card"><div class="stat sm num"><span data-to="187">187</span></div><p class="stat-sub">агентов в нашей CRM, 81 уже продавали</p></div>
+      <div class="card"><div class="stat sm num"><span data-to="20">20</span>+ лет</div><p class="stat-sub">опыт основателя в B2B-продажах</p></div>
     </div>
   </div>
 </section>
@@ -304,6 +394,7 @@
 <!-- 2 -->
 <section class="band">
   <div class="wrap">
+    <div class="eyebrow">03 · Спрос</div>
     <h2>Агенты продают. Вопрос - чей проект</h2>
     <div class="cols-2">
       <div class="stack">
@@ -349,6 +440,7 @@
 <!-- 3 -->
 <section>
   <div class="wrap">
+    <div class="eyebrow">04 · Команда</div>
     <h2>Три человека на ваши продажи</h2>
     <div class="cols-3">
       <div class="card stack" style="gap:20px">
@@ -389,6 +481,7 @@
 <!-- 4 -->
 <section class="band">
   <div class="wrap">
+    <div class="eyebrow">05 · Отчёты</div>
     <h2>Отчёт каждую неделю</h2>
     <div class="cols-2">
       <div class="stack">
@@ -405,6 +498,7 @@
 <!-- 4b -->
 <section>
   <div class="wrap">
+    <div class="eyebrow">06 · CRM</div>
     <h2>Каждый агент - на учёте</h2>
     <div class="cols-2">
       <div class="stack" style="gap:32px">
@@ -440,6 +534,7 @@
 <!-- 5 -->
 <section class="band">
   <div class="wrap">
+    <div class="eyebrow">07 · Цена</div>
     <h2>Выгоднее своего отдела</h2>
     <div class="cols-2">
       <div class="card">
@@ -472,7 +567,8 @@
   <div class="wrap">
     <div class="car-head">
       <div>
-        <h2 style="margin-bottom:8px">Бонусы - за наш счёт</h2>
+        <div class="eyebrow">08 · Бонусы</div>
+    <h2 style="margin-bottom:8px">Бонусы - за наш счёт</h2>
         <p class="sub">Зачёркнуто - цена на рынке. Вам - бесплатно.</p>
       </div>
       <div class="car-nav">
@@ -575,6 +671,7 @@
 <!-- 7 -->
 <section class="band">
   <div class="wrap">
+    <div class="eyebrow">09 · Кейсы</div>
     <h2>Уже продали</h2>
     <div class="cols-3">
       <div class="card case"><div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16" /><path d="m19 9-5 5-4-4-3 3" /></svg></span></div><div class="who">Vertikal</div><div class="amount num">$3 млн</div><div class="period">за 6 месяцев</div></div>
@@ -585,8 +682,9 @@
 </section>
 
 <!-- 8 -->
-<section>
+<section id="formats">
   <div class="wrap">
+    <div class="eyebrow">10 · Форматы</div>
     <h2>Три формата</h2>
     <div class="cols-3">
       <div class="card pack">
@@ -607,7 +705,8 @@
         </ul>
         <p class="for"><b>Для кого:</b> нужна система, а вы - на дистанции.</p>
       </div>
-      <div class="card pack">
+      <div class="card pack shine">
+        <span class="flag">Лучше для старта</span>
         <div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18" /><path d="m19 8 3 8a5 5 0 0 1-6 0zV7" /><path d="M3 7h1a17 17 0 0 0 8-2 17 17 0 0 0 8 2h1" /><path d="m5 8 3 8a5 5 0 0 1-6 0zV7" /><path d="M7 21h10" /></svg></span><div class="role">В · Баланс</div></div>
         <div class="price num" style="margin-top:4px">$1500 <small>/ мес + 4%</small></div>
         <ul class="dots">
@@ -629,6 +728,7 @@
 <!-- safety -->
 <section class="band">
   <div class="wrap">
+    <div class="eyebrow">11 · Гарантии</div>
     <h2>Почему это безопасно</h2>
     <div class="cols-3">
       <div class="card">
@@ -653,6 +753,7 @@
 <!-- 10 -->
 <section>
   <div class="wrap">
+    <div class="eyebrow">12 · Условия</div>
     <h2>Условия</h2>
     <div class="cols-2" style="align-items:center">
       <ul class="pts">
@@ -672,6 +773,7 @@
 <!-- 11 -->
 <section class="band">
   <div class="wrap">
+    <div class="eyebrow">13 · Старт</div>
     <h2>Как начинаем</h2>
     <div class="cols-4">
       <div class="step on"><div class="ico-row"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /><path d="M14 2v5a1 1 0 0 0 1 1h5" /><path d="m9 15 2 2 4-4" /></svg></span></div><div class="n">Шаг 1</div><div class="t">Проверка документов</div><div class="d">Земля, стройка, IMB</div></div>
@@ -729,5 +831,27 @@ document.querySelectorAll('[data-carousel]').forEach(function(car){
     img.addEventListener('click',open);
     img.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});
   });
+})();
+(function(){
+  var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce||!('IntersectionObserver' in window)) return;
+  document.documentElement.classList.add('js-rv');
+  var items=[];
+  document.querySelectorAll('main section:not(.hero) .wrap > *').forEach(function(el){
+    if(el.classList.contains('cols-3')||el.classList.contains('cols-4')||el.classList.contains('tiles')){
+      [].forEach.call(el.children,function(c,i){c.classList.add('rv');c.style.transitionDelay=(i*80)+'ms';items.push(c);});
+    } else {el.classList.add('rv');items.push(el);}
+  });
+  function tick(el){
+    var to=+el.getAttribute('data-to'),t0=null,d=1200;
+    function f(t){if(!t0)t0=t;var k=Math.min(1,(t-t0)/d);k=1-Math.pow(1-k,3);el.textContent=Math.round(to*k);if(k<1)requestAnimationFrame(f);}
+    requestAnimationFrame(f);
+  }
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){
+    if(!e.isIntersecting) return;
+    e.target.classList.add('in');io.unobserve(e.target);
+    e.target.querySelectorAll('[data-to]').forEach(tick);
+  });},{rootMargin:'0px 0px -8% 0px'});
+  items.forEach(function(el){io.observe(el);});
 })();
 </script>
