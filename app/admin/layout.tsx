@@ -7,7 +7,7 @@ export const viewport = rootViewport
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <RootShell lang="ru">
+    <RootShell lang="ru" typography={false}>
       {children}
     </RootShell>
   )

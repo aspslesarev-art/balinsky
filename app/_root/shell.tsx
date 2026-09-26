@@ -8,6 +8,7 @@ import { WishlistProvider } from "@/components/WishlistContext";
 import { SiteChrome } from "@/components/SiteChrome";
 import { TmaModeMarker } from "@/components/TmaModeMarker";
 import { JsonLd } from "@/components/JsonLd";
+import { Typographer } from "@/components/Typographer";
 import { Analytics } from "@/components/Analytics";
 import { GTM_ID, YM_ID } from "@/lib/analytics";
 import { organizationLd, websiteLd } from "@/lib/json-ld";
@@ -86,9 +87,12 @@ const HTML_LANG: Record<Lang, string> = {
 // is a full page load.
 export function RootShell({
   lang,
+  typography = true,
   children,
 }: Readonly<{
   lang: Lang;
+  /** Typographic line-break glue (components/Typographer.tsx). Off for editors. */
+  typography?: boolean;
   children: React.ReactNode;
 }>) {
   return (
@@ -144,6 +148,7 @@ export function RootShell({
           <WishlistProvider>
             {children}
             <SiteChrome />
+            {typography && <Typographer />}
           </WishlistProvider>
         </CurrencyProvider>
       </body>

@@ -94,6 +94,21 @@ body {
   }
 }
 
+/* Line breaks, site-wide and in every language.
+   Headings: `balance` splits them into lines of similar length, so
+   "Bali property, in / numbers" becomes "Bali property, / in numbers".
+   Body text: `pretty` keeps the last word of a paragraph from sitting
+   alone on its own line. Browsers without support fall back to normal
+   wrapping. In @layer base so a Tailwind utility can still override. */
+@layer base {
+  h1, h2, h3, h4, h5, h6, dt, figcaption, blockquote, summary {
+    text-wrap: balance;
+  }
+  p, li, dd, td, th, label {
+    text-wrap: pretty;
+  }
+}
+
 /* Round Google Maps default UI controls (zoom, map/satellite, fullscreen,
    street view pegman) so they match the rest of the rounded design.
    Google sets inline styles on these — !important is required. */
