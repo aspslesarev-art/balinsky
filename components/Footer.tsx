@@ -635,7 +635,7 @@ export function Footer({ lang = 'ru' }: { lang?: Lang }) {
       <div className="max-w-[1280px] mx-auto px-6 pt-12 pb-8">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
           <div className="md:col-span-4 lg:col-span-4">
-            <Link href={lang === 'ru' ? '/' : `/${langToSegment(lang)}`} aria-label="Balinsky" className="inline-block mb-5">
+            <Link href={`/${langToSegment(lang)}`} aria-label="Balinsky" className="inline-block mb-5">
               <Image src="/logo.svg" alt="Balinsky" width={40} height={40} className="h-10 w-10" />
             </Link>
             <p className="text-[13px] leading-[1.6] text-[var(--color-text-muted)] max-w-[380px]">

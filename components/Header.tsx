@@ -93,7 +93,7 @@ export function Header({ active }: { active?: NavKey }) {
         {/* Logo — desktop only on the top bar. On mobile it lives at
             the top of the dropdown menu instead, so the bar reads as
             burger | controls without a competing brand mark. */}
-        <Link href="/" className="hidden md:flex items-center shrink-0" aria-label="Balinsky">
+        <Link href={`/${langToSegment(lang)}`} className="hidden md:flex items-center shrink-0" aria-label="Balinsky">
           <Image src="/logo.svg" alt="Balinsky" width={40} height={40} className="h-10 w-10" priority />
         </Link>
 
@@ -138,7 +138,7 @@ export function Header({ active }: { active?: NavKey }) {
                 top bar's centred logo used to play, keeps the brand
                 visible once the menu is open. */}
             <Link
-              href="/"
+              href={`/${langToSegment(lang)}`}
               onClick={() => setOpen(false)}
               className="flex items-center gap-3 px-3 py-3 mb-2 no-underline"
               aria-label="Balinsky"
