@@ -1,13 +1,16 @@
 import { AdBannerSlot } from '@/components/AdBannerSlot'
+import { RootShell, rootMetadata, rootViewport } from '../_root/shell'
 
-// Wrapping every /ru page so the ad banner sits above the footer site-wide
-// without touching individual page files. Admin stays untouched because
-// it lives under /admin, not /ru.
-export default function RuLayout({ children }: { children: React.ReactNode }) {
+// Root layout for /ru: <html lang> comes out right in the prerendered HTML.
+// See app/_root/shell.tsx for why there is no single app/layout.tsx.
+export const metadata = rootMetadata
+export const viewport = rootViewport
+
+export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <>
+    <RootShell lang="ru">
       {children}
       <AdBannerSlot />
-    </>
+    </RootShell>
   )
 }

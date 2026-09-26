@@ -1,14 +1,14 @@
-import { HtmlLangSetter } from '@/components/HtmlLangSetter'
+import { RootShell, rootMetadata, rootViewport } from '../_root/shell'
 
-// Every page under /en sets <html lang="fr"> on the client right after
-// hydration. Root layout emits lang="ru" statically (so ISR pages stay
-// prerenderable without forcing dynamic headers()), and this layout
-// corrects the attribute on EN routes.
-export default function EnLayout({ children }: { children: React.ReactNode }) {
+// Root layout for /fr: <html lang> comes out right in the prerendered HTML.
+// See app/_root/shell.tsx for why there is no single app/layout.tsx.
+export const metadata = rootMetadata
+export const viewport = rootViewport
+
+export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <>
-      <HtmlLangSetter lang="fr" />
+    <RootShell lang="fr">
       {children}
-    </>
+    </RootShell>
   )
 }

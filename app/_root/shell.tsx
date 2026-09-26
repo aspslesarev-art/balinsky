@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 // Self-hosted (app/fonts): Google-hosted fonts are downloaded during every
 // build, and a flaky fetch failed a production deploy on 2026-09-25.
 import localFont from "next/font/local";
-import "./globals.css";
+import "../globals.css";
 import { CurrencyProvider } from "@/components/CurrencyContext";
 import { WishlistProvider } from "@/components/WishlistContext";
 import { SiteChrome } from "@/components/SiteChrome";
@@ -11,9 +11,10 @@ import { JsonLd } from "@/components/JsonLd";
 import { Analytics } from "@/components/Analytics";
 import { GTM_ID, YM_ID } from "@/lib/analytics";
 import { organizationLd, websiteLd } from "@/lib/json-ld";
+import type { Lang } from "@/lib/i18n";
 
 const geistSans = localFont({
-  src: "./fonts/geist-latin.woff2",
+  src: "../fonts/geist-latin.woff2",
   weight: "100 900",
   variable: "--font-geist-sans",
   display: "swap",
@@ -25,7 +26,7 @@ const geistSans = localFont({
 // public page, where it just competes with the LCP hero image for the
 // early mobile bandwidth.
 const geistMono = localFont({
-  src: "./fonts/geist-mono-latin.woff2",
+  src: "../fonts/geist-mono-latin.woff2",
   weight: "100 900",
   variable: "--font-geist-mono",
   display: "swap",
@@ -34,7 +35,7 @@ const geistMono = localFont({
 
 // metadataBase makes every relative canonical / og:image across the app
 // resolve to an absolute URL — Google formally prefers absolute canonicals.
-export const metadata: Metadata = {
+export const rootMetadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'),
   title: 'Balinsky — недвижимость на Бали',
   description: 'Каталог вилл, апартаментов и жилых комплексов на Бали с фото, ценами и проверенными застройщиками.',
@@ -66,24 +67,33 @@ export const metadata: Metadata = {
 // device width so the existing max-w / px rules actually clamp.
 // `viewportFit: 'cover'` lets the safe-area inset paddings (notch /
 // home-indicator) work cleanly on notched devices.
-export const viewport: Viewport = {
+export const rootViewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
 };
 
-export default function RootLayout({
+/** hreflang-style code for <html lang>: Chinese is Simplified, uk is served from /ua. */
+const HTML_LANG: Record<Lang, string> = {
+  ru: 'ru', en: 'en', id: 'id', fr: 'fr', de: 'de', zh: 'zh-Hans', nl: 'nl', ban: 'ban', pl: 'pl', uk: 'uk',
+}
+
+// The document shell every root layout renders. There is no app/layout.tsx:
+// each locale folder (app/ru, app/en, …) and each non-locale section is its
+// own root layout, so <html lang> is correct in the prerendered HTML itself.
+// Reading headers() in a single root layout to pick the language would turn
+// every ISR page dynamic — this keeps them static. Cost: switching language
+// is a full page load.
+export function RootShell({
+  lang,
   children,
 }: Readonly<{
+  lang: Lang;
   children: React.ReactNode;
 }>) {
-  // <html lang="ru"> is the canonical default. EN pages override via a
-  // small `<DocumentLangSetter lang="en"/>` client script rendered from
-  // the /en route group's layout — reading `headers()` here turned
-  // every prerendered detail page dynamic and crashed ISR.
   return (
     <html
-      lang="ru"
+      lang={HTML_LANG[lang]}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>

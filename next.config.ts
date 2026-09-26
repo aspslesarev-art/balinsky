@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Several root layouts (one per locale, see app/_root/shell.tsx), so the
+  // catch-all 404 lives in app/global-not-found.tsx.
+  experimental: { globalNotFound: true },
   // Шаблон эксплорера отделки читается с диска в рантайме — без этого
   // Vercel не положит его в бандл функции.
   outputFileTracingIncludes: {
