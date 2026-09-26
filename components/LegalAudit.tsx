@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { ChevronDown, Check, TriangleAlert, Lock, Scale, Send, Minus } from 'lucide-react'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { LOGIN_URL } from '@/components/GatedBlock'
+import { EmailLoginForm } from '@/components/EmailLoginForm'
 import { LEGAL_OK_FIELD, LEGAL_QUESTIONS_FIELD, LEGAL_BALANCE_NOTES_FIELD, type AuditItem } from '@/lib/legal-audit'
 
 // Admin on-page editing: data-edit-* attrs make the whole block a click-to-edit
@@ -293,14 +294,21 @@ function GatedQuestions({
         <h3 className="text-[15px] sm:text-[16px] font-semibold text-[#111827]">{title}</h3>
       </div>
       <p className="text-[13.5px] sm:text-[14px] text-[var(--color-text)] mb-3 leading-relaxed">{c.lockLead(count)}</p>
-      <a
-        href={LOGIN_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex w-full sm:w-auto items-center justify-center gap-1.5 rounded-xl bg-[#229ED9] px-4 py-2.5 text-[14px] font-semibold text-white hover:bg-[#1b8ec2] transition-colors"
-      >
-        <Send size={15} /> {tg.tgCta}
-      </a>
+      {/* Вход по почте — как в GatedBlock: тот же флаг, чтобы форма не
+          появлялась, пока почтовый ящик не настроен. После входа страница
+          перезагружается, bx_auth открывает вопросы через reveal(). */}
+      {process.env.NEXT_PUBLIC_EMAIL_LOGIN === '1' ? (
+        <div className="[&>*]:mt-0"><EmailLoginForm lang={lang} /></div>
+      ) : (
+        <a
+          href={LOGIN_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex w-full sm:w-auto items-center justify-center gap-1.5 rounded-xl bg-[#229ED9] px-4 py-2.5 text-[14px] font-semibold text-white hover:bg-[#1b8ec2] transition-colors"
+        >
+          <Send size={15} /> {tg.tgCta}
+        </a>
+      )}
       <p className="my-2.5 text-[12.5px] text-[var(--color-text-soft)]">{tg.or}</p>
       <div className="flex flex-col sm:flex-row gap-2">
         <input value={name} onChange={e => setName(e.target.value)} placeholder={c.namePh} className={INPUT_CLS} autoComplete="name" />
