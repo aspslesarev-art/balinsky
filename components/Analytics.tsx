@@ -3,6 +3,7 @@
 import Script from "next/script";
 import { useEffect, useState } from "react";
 import { GA4_ID, GTM_ID, YM_ID, trackEvent } from "@/lib/analytics";
+import { contactChannelOf, reportContactClick } from "@/lib/contact-click";
 
 // localStorage flag that keeps this browser out of the analytics numbers.
 // Set automatically the first time the browser opens /admin/*, and manually
@@ -54,7 +55,7 @@ export function Analytics() {
     setEnabled(shouldTrack());
   }, []);
 
-  // Уход в Telegram — второй канал заявок мимо формы, и он размазан по
+  // Уход в Telegram или WhatsApp — канал связи с застройщиком, и он размазан по
   // пяти компонентам (карточка застройщика, отзывы, мероприятия, тур,
   // «о нас»). Один делегированный слушатель ловит их все разом и не
   // требует трогать каждую кнопку — включая те, что появятся позже.
@@ -65,15 +66,26 @@ export function Analytics() {
       const link = target?.closest?.("a[href]") as HTMLAnchorElement | null;
       if (!link) return;
       const href = link.getAttribute("href") ?? "";
-      if (!/^https?:\/\/(t\.me|telegram\.me)\//i.test(href)) return;
-      trackEvent("telegram_contact", {
-        link_url: href,
+      const channel = contactChannelOf(href);
+      if (!channel) return;
+      // Средняя кнопка открывает ссылку в новой вкладке — тоже переход.
+      if (event.button > 1) return;
+      trackEvent(channel === "telegram" ? "telegram_contact" : "whatsapp_contact", {
+        link_url: href.split("?")[0],
         page_path: window.location.pathname,
+        manager: link.dataset.contactManager,
+        developer: link.dataset.contactDeveloper,
       });
+      // Свой счётчик (/admin/kontakty): по менеджерам, застройщикам, страницам.
+      reportContactClick(link);
     };
     // capture: попадаем раньше, чем обработчик ссылки уведёт страницу.
     document.addEventListener("click", onClick, { capture: true });
-    return () => document.removeEventListener("click", onClick, { capture: true });
+    document.addEventListener("auxclick", onClick, { capture: true });
+    return () => {
+      document.removeEventListener("click", onClick, { capture: true });
+      document.removeEventListener("auxclick", onClick, { capture: true });
+    };
   }, [enabled]);
 
   if (!enabled) return null;

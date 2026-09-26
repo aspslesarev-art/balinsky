@@ -758,7 +758,7 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
           </div>
         </section>
 
-        {managers.length > 0 && <ManagerCard managers={managers} developerName={name} />}
+        {managers.length > 0 && <ManagerCard managers={managers} developerName={name} inquiry={{ kind: 'developer', name }} />}
 
         {extras.length > 0 && (
           <section className="mt-10 mb-10">

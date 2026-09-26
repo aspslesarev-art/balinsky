@@ -1514,7 +1514,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
           </section>
         )}
 
-        {managers.length > 0 && <ManagerCard managers={managers} developerName={developer?.name ?? developerName} />}
+        {managers.length > 0 && <ManagerCard managers={managers} developerName={developer?.name ?? developerName} inquiry={{ kind: 'villa', name: title, complexName: parentComplex?.name ?? null, priceUsd: priceNum }} />}
 
         <RentalCompareSection
           district={district}

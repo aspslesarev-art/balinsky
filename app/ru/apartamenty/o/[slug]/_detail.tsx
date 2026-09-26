@@ -1378,7 +1378,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
           </section>
         )}
 
-        {managers.length > 0 && <ManagerCard managers={managers} developerName={devName} />}
+        {managers.length > 0 && <ManagerCard managers={managers} developerName={devName} inquiry={{ kind: 'apartment', name: title, complexName: parentComplexName, priceUsd: priceNum }} />}
 
         <RentalCompareSection
           district={district}

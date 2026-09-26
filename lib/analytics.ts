@@ -17,7 +17,8 @@ export const GA4_ID = 'G-YPJC0S54ME'
 /**
  * `generate_lead`      — форма заявки успешно отправлена (это деньги).
  * `lead_form_open`     — модалка заявки открыта: даёт конверсию открытие→отправка.
- * `telegram_contact`   — уход в Telegram-бота: второй канал заявок мимо формы.
+ * `telegram_contact`   — клик по любой ссылке в Telegram (менеджер застройщика, бот).
+ * `whatsapp_contact`   — клик по ссылке в WhatsApp (менеджер застройщика).
  * `wishlist_add`       — объект добавлен в избранное: сильный сигнал интереса.
  * `presentation_open`  — сформирована PDF-презентация объекта или подборки.
  */
@@ -25,6 +26,7 @@ export type TrackedEvent =
   | 'generate_lead'
   | 'lead_form_open'
   | 'telegram_contact'
+  | 'whatsapp_contact'
   | 'wishlist_add'
   | 'presentation_open'
 

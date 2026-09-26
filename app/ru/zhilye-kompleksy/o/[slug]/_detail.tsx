@@ -2129,7 +2129,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
           </section>
         )}
 
-        {managers.length > 0 && <ManagerCard managers={managers} developerName={developerName} />}
+        {managers.length > 0 && <ManagerCard managers={managers} developerName={developerName} inquiry={{ kind: 'complex', name, priceUsd: minPrice }} />}
 
 
         {/* Блок «Документы и материалы» убран: ссылки вели во внутренние

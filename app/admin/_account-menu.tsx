@@ -50,6 +50,7 @@ const GROUPS: Group[] = [
       { href: '/admin/users',         label: 'Пользователи', Icon: Users },
       { href: '/admin/wishlist',      label: 'Лайки',        Icon: Heart },
       { href: '/admin/views',         label: 'Просмотры',    Icon: Eye },
+      { href: '/admin/kontakty',      label: 'Клики в мессенджеры', Icon: MessageCircle },
       { href: '/admin/lending',       label: 'Лендинг',      Icon: BarChart3 },
     ],
   },

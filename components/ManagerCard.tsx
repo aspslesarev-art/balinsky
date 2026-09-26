@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { Star, Languages, Video, Clock, Send, MessageCircle } from 'lucide-react'
 import type { ManagerItem } from '@/lib/managers'
 import type { Lang } from '@/lib/i18n'
+import { buildInquiryText, type ContactInquiry } from '@/lib/contact-inquiry'
 
 const COPY = {
   ru: {
@@ -95,14 +96,18 @@ const COPY = {
 // should see all of them on the page.
 // Прямые каналы оператора объекта. `telegram` в базе может лежать как
 // полной ссылкой, так и одним хэндлом — нормализуем оба варианта.
-function contactUrls(m: ManagerItem): { tgUrl: string | null; waUrl: string | null } {
+// `waText` — готовое первое сообщение («Здравствуйте! Меня интересует…»),
+// WhatsApp подставит его в поле ввода.
+function contactUrls(m: ManagerItem, waText?: string | null): { tgUrl: string | null; waUrl: string | null } {
   const handle = (m.telegramHandle ?? '').replace(/^@/, '').trim()
   const raw = m.telegram?.trim() ?? ''
   const tgUrl = raw
     ? (raw.startsWith('http') ? raw : `https://t.me/${raw.replace(/^@/, '')}`)
     : handle ? `https://t.me/${handle}` : null
   const waDigits = (m.whatsapp ?? '').replace(/[^\d]/g, '')
-  const waUrl = waDigits.length >= 8 ? `https://wa.me/${waDigits}` : null
+  const waUrl = waDigits.length >= 8
+    ? `https://wa.me/${waDigits}${waText ? `?text=${encodeURIComponent(waText)}` : ''}`
+    : null
   return { tgUrl, waUrl }
 }
 
@@ -110,14 +115,18 @@ export function ManagerCard({
   manager,
   managers,
   developerName,
+  inquiry,
 }: {
   manager?: ManagerItem | null
   managers?: ManagerItem[]
   developerName?: string | null
+  // Что именно смотрит человек — из этого собирается текст для WhatsApp.
+  inquiry?: ContactInquiry | null
 }) {
   const pathname = usePathname() ?? ''
   const lang: Lang = detectLang(pathname)
   const c = pickCopy(COPY, lang)
+  const waText = inquiry ? buildInquiryText(lang, inquiry, `https://balinsky.info${pathname}`) : null
 
   const list = managers && managers.length > 0
     ? managers
@@ -151,7 +160,7 @@ export function ManagerCard({
       </p>
       <div className="space-y-3">
         {renderable.map(m => (
-          <ManagerRow key={m.id} m={m} lang={lang} c={c} developerName={developerName ?? null} videoUrl={videoUrl} />
+          <ManagerRow key={m.id} m={m} lang={lang} c={c} developerName={developerName ?? null} videoUrl={videoUrl} waText={waText} />
         ))}
       </div>
     </section>
@@ -170,12 +179,14 @@ function ManagerRow({
   c,
   developerName,
   videoUrl,
+  waText,
 }: {
   m: ManagerItem
   lang: Lang
   c: ManagerCopy
   developerName: string | null
   videoUrl: string | null
+  waText: string | null
 }) {
   // Silent fallback to the RU value when an EN counterpart isn't
   // filled in Airtable yet — manager cards already render fine in
@@ -185,7 +196,14 @@ function ManagerRow({
     ? m.languagesEn
     : m.languages
 
-  const { tgUrl, waUrl } = contactUrls(m)
+  const { tgUrl, waUrl } = contactUrls(m, waText)
+  // Для счётчика кликов (lib/contact-click.ts, /admin/kontakty).
+  const trackAttrs = {
+    'data-contact-placement': 'manager-card',
+    'data-contact-manager': m.name,
+    'data-contact-manager-id': m.id,
+    'data-contact-developer': developerName ?? undefined,
+  }
 
   return (
     <div className="rounded-2xl border border-[var(--color-border)] bg-white p-4 md:p-6 flex flex-col sm:flex-row sm:items-center gap-4 md:gap-6">
@@ -244,6 +262,7 @@ function ManagerRow({
         {tgUrl && (
           <a
             href={tgUrl}
+            {...trackAttrs}
             target="_blank"
             rel="noopener nofollow"
             className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[14px] font-medium no-underline transition-colors"
@@ -254,6 +273,7 @@ function ManagerRow({
         {waUrl && (
           <a
             href={waUrl}
+            {...trackAttrs}
             target="_blank"
             rel="noopener nofollow"
             className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full border border-[var(--color-border)] bg-white hover:bg-[var(--color-search-bg)] text-[#111827] text-[14px] font-medium no-underline transition-colors"
