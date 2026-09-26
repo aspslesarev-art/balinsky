@@ -186,7 +186,7 @@ export async function DevelopersCatalog({
   }
 
   const [{ data: devData }, { data: complexData }] = await Promise.all([
-    sb.from('raw_developers').select(devSelect).limit(200),
+    sb.from('raw_developers').select(devSelect).limit(500),
     sb.from('raw_complexes').select(cpxSelect).limit(2000),
   ])
 

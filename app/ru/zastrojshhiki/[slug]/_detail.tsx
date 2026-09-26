@@ -90,7 +90,7 @@ const DEV_SELECT = ['airtable_id, logo_url', ...DEV_FIELDS.map(([k, a]) => `${a}
 export const _loadAllDevelopers = unstable_cache(
   async (): Promise<DeveloperRow[]> => {
     const [{ data, error }, enCache] = await Promise.all([
-      sb.from('raw_developers').select(DEV_SELECT).limit(200),
+      sb.from('raw_developers').select(DEV_SELECT).limit(500),
       loadAllTranslations('developers'),
     ])
     if (error) throw new Error(`raw_developers: ${error.message}`)
