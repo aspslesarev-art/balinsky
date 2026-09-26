@@ -5,8 +5,9 @@ export async function GET(request: Request) {
   const url = new URL(request.url)
   const sp = Object.fromEntries(url.searchParams.entries())
   const filters = parseQueryFilters(sp)
-  const { enriched, manifest } = await loadAll()
-  const all = buildAllCards(enriched, manifest, filters)
+  const { enriched, manifest, prices } = await loadAll()
+  // Prices too, or loaded cards come without them (the page passes them).
+  const all = buildAllCards(enriched, manifest, filters, prices)
 
   if (sp.offset != null) {
     const offset = Math.max(0, Math.floor(Number(sp.offset) || 0))

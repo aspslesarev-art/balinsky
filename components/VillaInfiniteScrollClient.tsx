@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { detectLang } from '@/lib/i18n'
+import { LOAD_MORE } from '@/lib/load-more-copy'
 import { usePathname } from 'next/navigation'
 import { VillaCard, type VillaCardData } from './VillaCard'
 
@@ -32,7 +33,8 @@ export function VillaInfiniteScrollClient({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const pathname = usePathname() ?? ''
-  const isEn = detectLang(pathname) !== 'ru'
+  const lang = detectLang(pathname)
+  const t = LOAD_MORE[lang]
   const sentinelRef = useRef<HTMLDivElement | null>(null)
   const inflightRef = useRef<Promise<void> | null>(null)
 
@@ -41,6 +43,7 @@ export function VillaInfiniteScrollClient({
     const params = new URLSearchParams(searchString)
     params.set('offset', String(offset))
     params.set('limit', String(LAZY_CHUNK))
+    params.set('lang', lang)
     inflightRef.current = (async () => {
       setLoading(true)
       setError(null)
@@ -58,7 +61,7 @@ export function VillaInfiniteScrollClient({
         setLoading(false)
       }
     })().finally(() => { inflightRef.current = null })
-  }, [hasMore, offset, searchString])
+  }, [hasMore, offset, searchString, lang])
 
   useEffect(() => {
     if (!hasMore) return
@@ -76,7 +79,7 @@ export function VillaInfiniteScrollClient({
     <>
       {cards.length > 0 && (
         <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-          {cards.map(c => <VillaCard key={c.id} a={c} />)}
+          {cards.map(c => <VillaCard key={c.id} a={c} lang={lang} />)}
         </div>
       )}
       {hasMore && (
@@ -89,15 +92,15 @@ export function VillaInfiniteScrollClient({
               disabled={loading}
               className={`inline-block px-6 py-3 rounded-full bg-[var(--color-card-bg)] border border-[var(--color-border)] text-[14px] font-medium text-[var(--color-text)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] transition-colors cursor-pointer ${loading ? 'opacity-60 pointer-events-none' : ''}`}
             >
-              {loading ? (isEn ? 'Loading…' : 'Загрузка…') : (isEn ? 'Show more' : 'Показать ещё')}
+              {loading ? t.loading : t.more}
             </button>
           </div>
         </>
       )}
       {error && (
         <div className="py-6 text-center text-[14px] text-[var(--color-text-muted)]">
-          Не удалось загрузить ещё.{' '}
-          <button type="button" onClick={loadNext} className="text-[var(--color-primary-pressed)] underline">Повторить</button>
+          {t.failed}{' '}
+          <button type="button" onClick={loadNext} className="text-[var(--color-primary-pressed)] underline">{t.retry}</button>
         </div>
       )}
     </>

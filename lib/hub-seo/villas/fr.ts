@@ -7,7 +7,7 @@ const copy: HubLongCopy = {
     {
       "heading": "Quel est le prix d’une villa à Bali",
       "paragraphs": [
-        "Le catalogue propose 358 villas à vendre, directement auprès de promoteurs et de propriétaires. Le prix médian est de 350 000 $, et c’est un vrai milieu de marché, pas un prix de vitrine : huit biens sur dix se situent entre 169 000 et 850 000 $. Le seuil bas commence autour de 80 000 $ pour une petite villa d’une chambre à l’intérieur de l’île, le haut atteint 6,5 млн $ pour une demeure en première ligne face à l’océan.",
+        "Le catalogue propose 358 villas à vendre, directement auprès de promoteurs et de propriétaires. Le prix médian est de 350 000 $, et c’est un vrai milieu de marché, pas un prix de vitrine : huit biens sur dix se situent entre 169 000 et 850 000 $. Le seuil bas commence autour de 80 000 $ pour une petite villa d’une chambre à l’intérieur de l’île, le haut atteint 6,5 M$ pour une demeure en première ligne face à l’océan.",
         "Le prix dépend de trois facteurs : le nombre de chambres, le quartier et l’état d’avancement du bien. Le nombre de chambres reste le critère le plus prévisible : chaque chambre supplémentaire coûte en moyenne une fois et demie plus cher que la précédente, car la surface de la maison et celle du terrain augmentent aussi."
       ]
     },

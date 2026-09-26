@@ -7,7 +7,7 @@ const copy: HubLongCopy = {
     {
       "heading": "Was kostet eine Villa auf Bali",
       "paragraphs": [
-        "Im Katalog finden Sie 358 Villen zum Verkauf von Bauträgern und Eigentümern. Der Medianpreis liegt bei $350.000, und das ist die ehrliche Mitte des Marktes, keine Schaufensterzahl: Acht von zehn Objekten liegen in der Spanne von $169.000 bis $850.000. Die Untergrenze liegt bei rund $80.000 für eine kompakte Villa mit 1 Schlafzimmer im Inselinneren, die Obergrenze bei $6,5 млн für ein Anwesen in erster Meereslinie.",
+        "Im Katalog finden Sie 358 Villen zum Verkauf von Bauträgern und Eigentümern. Der Medianpreis liegt bei $350.000, und das ist die ehrliche Mitte des Marktes, keine Schaufensterzahl: Acht von zehn Objekten liegen in der Spanne von $169.000 bis $850.000. Die Untergrenze liegt bei rund $80.000 für eine kompakte Villa mit 1 Schlafzimmer im Inselinneren, die Obergrenze bei 6,5 Mio. $ für ein Anwesen in erster Meereslinie.",
         "Den Preis bestimmen drei Faktoren: die Anzahl der Schlafzimmer, die Lage und der Fertigstellungsgrad. Die Schlafzimmer sorgen für den berechenbarsten Sprung — jedes weitere ist ungefähr eineinhalbmal teurer als das vorherige, weil damit sowohl die Wohnfläche als auch das Grundstück wachsen."
       ]
     },
@@ -15,7 +15,7 @@ const copy: HubLongCopy = {
       "heading": "Neubau oder fertiges Haus",
       "paragraphs": [
         "Von 358 Villen sind 251 im Bau und 101 bereits fertiggestellt. Ein Objekt im Bau ist spürbar günstiger als eine fertige Villa: Der Käufer übernimmt das Terminrisiko und erhält dafür einen Preisnachlass sowie eine Ratenzahlung über die Bauzeit — die Anzahlung liegt meist bei 30–50%, der Rest wird nach Baufortschritt aufgeteilt. Eine fertige Villa ist teurer, dafür kann man sie vor Ort besichtigen, die Ausführungsqualität prüfen und sofort in die Vermietung geben.",
-        "Der Medianpreis pro Quadratmeter auf der Insel liegt je nach Lage zwischen $2.000 und $3.300. Am günstigsten ist der Quadratmeter in Ubud und an der Westküste, am teuersten auf den Klippen von Bukit und in Berawa. Vergleichen sollte man Objekte sinnvollerweise именно nach dem Quadratmeterpreis: Zwei Häuser mit demselben Kaufpreis können sich in der Fläche um das Doppelte unterscheiden."
+        "Der Medianpreis pro Quadratmeter auf der Insel liegt je nach Lage zwischen $2.000 und $3.300. Am günstigsten ist der Quadratmeter in Ubud und an der Westküste, am teuersten auf den Klippen von Bukit und in Berawa. Vergleichen sollte man Objekte sinnvollerweise gerade nach dem Quadratmeterpreis: Zwei Häuser mit demselben Kaufpreis können sich in der Fläche um das Doppelte unterscheiden."
       ]
     },
     {

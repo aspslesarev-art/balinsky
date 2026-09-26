@@ -7,7 +7,7 @@ const copy: HubLongCopy = {
     {
       "heading": "Prix des appartements à Bali",
       "paragraphs": [
-        "Le catalogue propose 423 appartements à vendre dans 197 résidences. Le prix médian est de $160 000, et huit lots sur dix se situent dans une fourchette de $105 000 à $502 500. L’entrée de marché commence autour de $65 000 pour un studio dans une résidence en phase initiale de construction, tandis que le haut de gamme atteint $1,28 млн pour un penthouse en bord d’océan.",
+        "Le catalogue propose 423 appartements à vendre dans 197 résidences. Le prix médian est de $160 000, et huit lots sur dix se situent dans une fourchette de $105 000 à $502 500. L’entrée de marché commence autour de $65 000 pour un studio dans une résidence en phase initiale de construction, tandis que le haut de gamme atteint 1,28 M$ pour un penthouse en bord d’océan.",
         "Le marché des appartements à Bali fonctionne différemment de celui des villas : il s’agit principalement d’unités compactes. Huit lots sur dix sont des studios et des appartements 1 chambre, avec une surface médiane de 41 m². Les appartements 2 chambres sont déjà plus rares (72 lots), et les 3 chambres relèvent d’une offre premium très limitée."
       ]
     },

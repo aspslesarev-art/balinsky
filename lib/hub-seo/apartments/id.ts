@@ -37,7 +37,7 @@ const copy: HubLongCopy = {
       "paragraphs": [
         "Skemanya sama seperti vila: freehold penuh (Hak Milik) tidak tersedia untuk orang asing. Apartemen dibeli dengan leasehold (Hak Sewa) — di katalog, 255 unit memiliki sisa masa 26–30 tahun, 114 unit — dari 31 tahun, dan 40 unit — hingga 25 tahun. Pemegang KITAS dapat menggunakan Hak Pakai, sedangkan untuk tujuan bisnis kepemilikan bisa dilakukan melalui PT PMA dengan hak HGB.",
         "Urutan transaksi: reservasi dengan deposit, legal check kompleks dan developer, penandatanganan perjanjian di hadapan notaris PPAT, pembayaran sesuai jadwal, serah terima unit, lalu penandatanganan berita acara. Pada kompleks apartemen, perlu juga memeriksa anggaran dasar, besaran service charge, dan siapa yang akan mengelola bangunan setelah serah terima.",
-        "Biaya transaksi: PPh 2,5% dari harga dibayar penjual, BPHTB hingga 5% — pembeli saat pengurusan hak, PPN dalam harga properti baru efektif 11%. Tarif bergantung pada kabupaten dan status penjual, поэтому estimasi akhir harus dikonfirmasi notaris sebelum deposit dibayarkan."
+        "Biaya transaksi: PPh 2,5% dari harga dibayar penjual, BPHTB hingga 5% — pembeli saat pengurusan hak, PPN dalam harga properti baru efektif 11%. Tarif bergantung pada kabupaten dan status penjual, sehingga estimasi akhir harus dikonfirmasi notaris sebelum deposit dibayarkan."
       ]
     },
     {

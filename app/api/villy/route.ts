@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { langParam } from '@/lib/load-more-copy'
 import { parseQueryFilters, loadAll, buildAllCards, PAGE_SIZE, LAZY_CHUNK } from '@/app/ru/villy/_lib'
 
 export async function GET(request: Request) {
@@ -9,8 +10,12 @@ export async function GET(request: Request) {
   const { enriched, manifest } = await loadAll()
   // Always sort by investment-desc to match SSR
   const scoresMod = await import('@/lib/investment/batch-scores').catch(() => null)
-  const scores = await scoresMod?.loadAllVillaScores().catch(() => undefined)
-  const all = buildAllCards(enriched, manifest, filters, scores, 'investment-desc')
+  const [scores, devStats] = await Promise.all([
+    scoresMod?.loadAllVillaScores().catch(() => undefined),
+    (await import('@/lib/developer-stats')).loadAllDeveloperStats().catch(() => undefined),
+  ])
+  // Same card build as the server-rendered page, in the page's language.
+  const all = buildAllCards(enriched, manifest, filters, scores, 'investment-desc', devStats, langParam(sp.lang))
 
   const offset = Math.max(0, Math.floor(Number(sp.offset) || 0))
   // If `offset` provided — chunk mode. Else — legacy `page`-based mode.

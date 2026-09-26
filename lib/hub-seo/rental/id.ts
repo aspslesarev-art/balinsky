@@ -42,7 +42,7 @@ const copy: HubLongCopy = {
     {
       "heading": "Cara menyewa hunian dan hal yang perlu diperiksa",
       "paragraphs": [
-        "Opsi yang bagus biasanya tidak bertahan di platform lebih dari beberapa hari, поэтому katalog menampilkan hanya listing terbaru — tarif lama hanya menyesatkan. Melihat properti dari jarak jauh bisa lewat video, tetapi menandatangani kontrak sebaiknya setelah kunjungan langsung atau melalui orang kepercayaan."
+        "Opsi yang bagus biasanya tidak bertahan di platform lebih dari beberapa hari, sehingga katalog menampilkan hanya listing terbaru — tarif lama hanya menyesatkan. Melihat properti dari jarak jauh bisa lewat video, tetapi menandatangani kontrak sebaiknya setelah kunjungan langsung atau melalui orang kepercayaan."
       ],
       "bullets": [
         "Apa yang termasuk dalam tarif: kebersihan, perawatan kolam renang dan taman, internet — konfirmasi satu per satu, tidak ada standar tunggal.",

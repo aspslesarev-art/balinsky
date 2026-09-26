@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { langParam } from '@/lib/load-more-copy'
 import { parseQueryFilters, loadAll, buildAllCards, PAGE_SIZE, LAZY_CHUNK } from '@/app/ru/apartamenty/_lib'
 
 export async function GET(request: Request) {
@@ -8,8 +9,12 @@ export async function GET(request: Request) {
   const { enriched, manifest } = await loadAll()
   // Порядок должен совпадать с серверным рендером: без скоров подгрузка
   // отдавала бы вторую страницу в другом порядке, чем первая.
-  const scores = await (await import('@/lib/investment/batch-scores')).loadAllApartmentScores().catch(() => undefined)
-  const all = buildAllCards(enriched, manifest, filters, undefined, 'ru', scores)
+  const [scores, devStats] = await Promise.all([
+    (await import('@/lib/investment/batch-scores')).loadAllApartmentScores().catch(() => undefined),
+    (await import('@/lib/developer-stats')).loadAllDeveloperStats().catch(() => undefined),
+  ])
+  // Same card build as the server-rendered page, in the page's language.
+  const all = buildAllCards(enriched, manifest, filters, devStats, langParam(sp.lang), scores)
 
   if (sp.offset != null) {
     const offset = Math.max(0, Math.floor(Number(sp.offset) || 0))
