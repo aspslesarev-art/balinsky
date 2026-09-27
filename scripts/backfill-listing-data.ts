@@ -40,14 +40,12 @@ function num(v: unknown): number | null {
   return null
 }
 
-async function pageAll<T>(table: string, select: string, filter?: (q: any) => any): Promise<T[]> {
+async function pageAll<T>(table: string, select: string): Promise<T[]> {
   const out: T[] = []
   for (let from = 0; ; from += 1000) {
-    let q = sb.from(table).select(select).range(from, from + 999)
-    if (filter) q = filter(q)
-    const { data, error } = await q
+    const { data, error } = await sb.from(table).select(select).range(from, from + 999)
     if (error) throw new Error(`${table}: ${error.message}`)
-    out.push(...(data as T[]))
+    out.push(...(data as unknown as T[]))
     if (!data || data.length < 1000) break
   }
   return out
