@@ -58,6 +58,7 @@ import { MarketStatsBlock } from '@/components/MarketStatsBlock'
 import { DataChapter, DataGuide, type ChapterId } from '@/components/DataChapters'
 import { GatedBlock } from '@/components/GatedBlock'
 import { VillaPresentationButton } from '@/components/VillaPresentation'
+import { permitLabel } from '@/components/presentation-copy'
 import { tField, pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { normalizeSlug } from '@/lib/slug-normalize'
 import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
@@ -1000,7 +1001,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
     area != null && { Icon: Square, label: c.factArea, value: `${area} ${c.sqm}` },
     floor && { Icon: Layers, label: c.factFloor, value: floor === 'GROUND FLOOR' ? c.factGround : floor },
     yearRaw && { Icon: Calendar, label: c.factCompletion, value: status?.toLowerCase().includes('построен') ? c.completed : yearRaw },
-    permit && permit.toLowerCase() !== 'нет' && { Icon: FileCheck2, label: c.factPermits, value: permit },
+    permitLabel(permit, lang) && { Icon: FileCheck2, label: c.factPermits, value: permitLabel(permit, lang)! },
     lease && { Icon: Lock, label: c.factLeasehold, value: c.factLeaseValue(lease) },
     district && { Icon: MapPin, label: c.factDistrict, value: district },
     fmtAirportDistance(lat, lng, lang) && { Icon: Plane, label: c.factAirport, value: fmtAirportDistance(lat, lng, lang)! },

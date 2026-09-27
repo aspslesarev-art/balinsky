@@ -4,6 +4,8 @@ import type { VillaPresentationData } from '@/components/VillaPresentation'
 import { telegramUrl, whatsappUrl } from '@/lib/agent-links'
 import { formatPrice, formatPriceExact, type Currency } from '@/lib/currency'
 import { trackEvent } from '@/lib/analytics'
+import { switchLangPath, type Lang } from '@/lib/i18n'
+import { permitLabel, placeVisible, presentationCopy, presentationDistance, type PresentationCopy } from './presentation-copy'
 
 Font.register({
   family: 'Inter',
@@ -145,37 +147,18 @@ function fmtMoney(n: number | null | undefined, currency: Currency): string {
   if (n == null || !Number.isFinite(n)) return '—'
   return formatPriceExact(n, currency)
 }
-function fmtMoneyShort(n: number, currency: Currency): string {
-  return formatPrice(n, currency)
+function fmtMoneyShort(n: number, currency: Currency, lang: Lang): string {
+  return formatPrice(n, currency, lang)
 }
 function fmtPct(n: number | null | undefined, digits = 1): string {
   if (n == null || !Number.isFinite(n)) return '—'
   return (n * 100).toFixed(digits) + '%'
 }
-function fmtYears(n: number | null | undefined): string {
+function fmtYears(n: number | null | undefined, c: PresentationCopy): string {
   if (n == null || !Number.isFinite(n)) return '—'
-  return n.toFixed(n < 10 ? 1 : 0) + ' лет'
-}
-function fmtDistance(km: number): string {
-  if (km < 1) return Math.round(km * 1000) + ' м'
-  return km.toFixed(km < 10 ? 1 : 0) + ' км'
+  return c.years(n.toFixed(n < 10 ? 1 : 0))
 }
 
-const NEARBY_META: Record<string, string> = {
-  beach: 'Пляжи',
-  beachclub: 'Beach clubs',
-  international_school: 'Международные школы',
-  school: 'Школы',
-  preschool: 'Сады и ясли',
-  wellness: 'Йога и фитнес',
-  restaurant: 'Рестораны',
-  cafe: 'Кафе',
-  supermarket: 'Магазины',
-  pharmacy: 'Аптеки',
-  hospital: 'Клиники',
-  nightlife: 'Бары и клубы',
-  attraction: 'Достопримечательности',
-}
 const NEARBY_ORDER = [
   'beach', 'beachclub', 'wellness',
   'restaurant', 'cafe', 'nightlife',
@@ -316,14 +299,17 @@ export function VillaPdfDocument({ data, snap, agent, orientation = 'landscape',
   currency?: Currency;
 }) {
   const isPortrait = orientation === 'portrait'
+  const c = presentationCopy(data.lang)
+  const permit = permitLabel(data.permit, data.lang)
   const fmtUsd = (n: number | null | undefined) => fmtMoney(n, currency)
-  const fmtUsdShort = (n: number) => fmtMoneyShort(n, currency)
+  const fmtUsdShort = (n: number) => fmtMoneyShort(n, currency, data.lang ?? 'ru')
   // Each Page picks up the chosen orientation; layouts that depended on the
   // wide aspect (cover, scenarios row, photoset mosaic) flip to a vertical
   // arrangement when isPortrait is true.
   const pageProps = { size: 'A4' as const, orientation }
+  // Ссылка ведёт на страницу того же языка, с которого скачали PDF.
   const sectionPath = data.kind === 'apartment' ? '/ru/apartamenty/o/' : '/ru/villy/o/'
-  const villaUrl = `${SITE_URL}${sectionPath}${data.slug}`
+  const villaUrl = `${SITE_URL}${switchLangPath(`${sectionPath}${data.slug}`, data.lang ?? 'ru')}`
   const allPhotos = data.photos.slice(0, 12)
   const photosetPool = allPhotos.slice(1)
   const photosetGroups: { layout: 'mosaic5' | 'grid4' | 'small'; photos: string[] }[] = []
@@ -340,14 +326,14 @@ export function VillaPdfDocument({ data, snap, agent, orientation = 'landscape',
   const hasScenarios = !!snap?.scenarios
 
   const factsItems = [
-    data.bedrooms != null && { label: 'Спальни', value: `${data.bedrooms} BR` },
-    data.area != null && { label: 'Дом', value: `${data.area} м²` },
-    data.land != null && { label: 'Земля', value: `${data.land} м²` },
-    data.yearLabel && { label: 'Сдача', value: data.yearLabel },
-    data.permit && data.permit.toLowerCase() !== 'нет' && { label: 'Разрешения', value: data.permit },
-    data.lease && { label: 'Лизхолд', value: `${data.lease} лет` },
-    data.district && { label: 'Район', value: data.district },
-    data.pricePerM2 != null && { label: 'Цена за м²', value: fmtUsd(data.pricePerM2) },
+    data.bedrooms != null && { label: c.bedrooms, value: `${data.bedrooms} BR` },
+    data.area != null && { label: c.houseLabel, value: `${data.area} ${c.sqm}` },
+    data.land != null && { label: c.landLabel, value: `${data.land} ${c.sqm}` },
+    data.yearLabel && { label: c.completion, value: data.yearLabel },
+    permit && { label: c.permits, value: permit },
+    data.lease && { label: c.leasehold, value: c.years(data.lease) },
+    data.district && { label: c.district, value: data.district },
+    data.pricePerM2 != null && { label: c.pricePerSqm, value: fmtUsd(data.pricePerM2) },
   ].filter(Boolean) as { label: string; value: string }[]
 
   return (
@@ -362,18 +348,18 @@ export function VillaPdfDocument({ data, snap, agent, orientation = 'landscape',
               {allPhotos[0] && <Image src={allPhotos[0]} style={styles.coverPhotoImg} />}
             </View>
             <View style={{ flexDirection: 'column' }}>
-              {data.district && <Text style={styles.coverDistrict}>{data.district}, Бали</Text>}
+              {data.district && <Text style={styles.coverDistrict}>{data.district}, {c.bali}</Text>}
               <Text style={styles.coverTitle}>{data.title}</Text>
               <View style={styles.coverChips}>
                 {data.bedrooms != null && <Text style={styles.coverChip}>{data.bedrooms} BR</Text>}
-                {data.area != null && <Text style={styles.coverChip}>{data.area} м² дом</Text>}
-                {data.land != null && <Text style={styles.coverChip}>{data.land} м² земля</Text>}
-                {data.lease && <Text style={styles.coverChip}>Лизхолд {data.lease} лет</Text>}
+                {data.area != null && <Text style={styles.coverChip}>{data.area} {c.sqm} {c.house}</Text>}
+                {data.land != null && <Text style={styles.coverChip}>{data.land} {c.sqm} {c.land}</Text>}
+                {data.lease && <Text style={styles.coverChip}>{c.leaseYears(data.lease)}</Text>}
               </View>
               {data.priceUsd != null && (
                 <View>
                   <Text style={styles.coverPrice}>{fmtUsd(data.priceUsd)}</Text>
-                  {data.pricePerM2 != null && <Text style={styles.coverPriceM2}>{fmtUsd(data.pricePerM2)} / м²</Text>}
+                  {data.pricePerM2 != null && <Text style={styles.coverPriceM2}>{fmtUsd(data.pricePerM2)} {c.perSqm}</Text>}
                 </View>
               )}
             </View>
@@ -381,18 +367,18 @@ export function VillaPdfDocument({ data, snap, agent, orientation = 'landscape',
         ) : (
           <View style={styles.coverRoot}>
             <View style={styles.coverTextCol}>
-              {data.district && <Text style={styles.coverDistrict}>{data.district}, Бали</Text>}
+              {data.district && <Text style={styles.coverDistrict}>{data.district}, {c.bali}</Text>}
               <Text style={styles.coverTitle}>{data.title}</Text>
               <View style={styles.coverChips}>
                 {data.bedrooms != null && <Text style={styles.coverChip}>{data.bedrooms} BR</Text>}
-                {data.area != null && <Text style={styles.coverChip}>{data.area} м² дом</Text>}
-                {data.land != null && <Text style={styles.coverChip}>{data.land} м² земля</Text>}
-                {data.lease && <Text style={styles.coverChip}>Лизхолд {data.lease} лет</Text>}
+                {data.area != null && <Text style={styles.coverChip}>{data.area} {c.sqm} {c.house}</Text>}
+                {data.land != null && <Text style={styles.coverChip}>{data.land} {c.sqm} {c.land}</Text>}
+                {data.lease && <Text style={styles.coverChip}>{c.leaseYears(data.lease)}</Text>}
               </View>
               {data.priceUsd != null && (
                 <View>
                   <Text style={styles.coverPrice}>{fmtUsd(data.priceUsd)}</Text>
-                  {data.pricePerM2 != null && <Text style={styles.coverPriceM2}>{fmtUsd(data.pricePerM2)} / м²</Text>}
+                  {data.pricePerM2 != null && <Text style={styles.coverPriceM2}>{fmtUsd(data.pricePerM2)} {c.perSqm}</Text>}
                 </View>
               )}
             </View>
@@ -414,8 +400,8 @@ export function VillaPdfDocument({ data, snap, agent, orientation = 'landscape',
 
       {/* Facts */}
       <Page {...pageProps} style={[styles.page, styles.pagePadded]}>
-        <Text style={styles.h2}>Характеристики</Text>
-        <Text style={styles.subtitle}>Ключевые параметры объекта</Text>
+        <Text style={styles.h2}>{c.factsTitle}</Text>
+        <Text style={styles.subtitle}>{c.factsSub}</Text>
         <View style={styles.factsGrid}>
           {factsItems.map(it => (
             <View
@@ -435,7 +421,7 @@ export function VillaPdfDocument({ data, snap, agent, orientation = 'landscape',
       {/* Description */}
       {data.seoText && (
         <Page {...pageProps} style={[styles.page, styles.pagePadded]}>
-          <Text style={styles.h2}>О вилле</Text>
+          <Text style={styles.h2}>{c.about(data.kind)}</Text>
           <Text style={styles.descBody}>{data.seoText}</Text>
           <PageFooter title={data.title} />
         </Page>
@@ -444,10 +430,10 @@ export function VillaPdfDocument({ data, snap, agent, orientation = 'landscape',
       {/* Location */}
       {hasMap && (
         <Page {...pageProps} style={[styles.page, styles.pagePadded]}>
-          <Text style={styles.h2}>Расположение</Text>
-          <Text style={styles.subtitle}>Координаты и район</Text>
-          {data.district && <Text style={styles.locText}>Район: {data.district}, Бали</Text>}
-          <Text style={styles.locText}>Координаты: {data.lat!.toFixed(5)}, {data.lng!.toFixed(5)}</Text>
+          <Text style={styles.h2}>{c.location}</Text>
+          <Text style={styles.subtitle}>{c.locationSub}</Text>
+          {data.district && <Text style={styles.locText}>{c.districtLine(data.district)}</Text>}
+          <Text style={styles.locText}>{c.coords}: {data.lat!.toFixed(5)}, {data.lng!.toFixed(5)}</Text>
           <Text style={styles.locMuted}>https://www.google.com/maps/search/?api=1&query={data.lat},{data.lng}</Text>
           <PageFooter title={data.title} />
         </Page>
@@ -456,12 +442,13 @@ export function VillaPdfDocument({ data, snap, agent, orientation = 'landscape',
       {/* Nearby — limited to 8 categories × 3 items so it fits on one A4 landscape page */}
       {hasNearby && snap && (
         <Page {...pageProps} style={[styles.page, styles.pagePadded]}>
-          <Text style={styles.h2}>Что вокруг виллы</Text>
-          <Text style={styles.subtitle}>Топ-места поблизости по рейтингу и расстоянию</Text>
+          <Text style={styles.h2}>{c.nearbyTitle(data.kind)}</Text>
+          <Text style={styles.subtitle}>{c.nearbySub}</Text>
           <View style={styles.nearbyGrid}>
-            {NEARBY_ORDER.filter(c => (snap.nearbyByCategory[c] ?? []).length > 0).slice(0, 8).map(cat => {
-              const items = [...(snap.nearbyByCategory[cat] ?? [])].sort((a, b) => a.distanceKm - b.distanceKm).slice(0, 3)
-              const totalCount = (snap.nearbyByCategory[cat] ?? []).length
+            {NEARBY_ORDER.filter(k => (snap.nearbyByCategory[k] ?? []).some(p => placeVisible(p.name, data.lang))).slice(0, 8).map(cat => {
+              const visible = (snap.nearbyByCategory[cat] ?? []).filter(p => placeVisible(p.name, data.lang))
+              const items = [...visible].sort((a, b) => a.distanceKm - b.distanceKm).slice(0, 3)
+              const totalCount = visible.length
               return (
                 <View
                   key={cat}
@@ -469,14 +456,14 @@ export function VillaPdfDocument({ data, snap, agent, orientation = 'landscape',
                   style={isPortrait ? [styles.nearbyCard, { width: '48.5%', padding: 12 }] : styles.nearbyCard}
                 >
                   <View style={styles.nearbyTitleRow}>
-                    <Text style={isPortrait ? [styles.nearbyTitle, { fontSize: 12 }] : styles.nearbyTitle}>{NEARBY_META[cat] ?? cat}</Text>
+                    <Text style={isPortrait ? [styles.nearbyTitle, { fontSize: 12 }] : styles.nearbyTitle}>{c.nearby[cat] ?? cat}</Text>
                     <Text style={styles.nearbyCount}>{totalCount}</Text>
                   </View>
                   {items.map(p => (
                     <View key={p.id} style={styles.nearbyItem}>
                       <Text style={isPortrait ? [styles.nearbyName, { fontSize: 10 }] : styles.nearbyName}>{p.name}</Text>
                       <Text style={isPortrait ? [styles.nearbyMeta, { fontSize: 9 }] : styles.nearbyMeta}>
-                        {p.rating != null ? `★${p.rating.toFixed(1)} · ` : ''}{fmtDistance(p.distanceKm)}
+                        {p.rating != null ? `★${p.rating.toFixed(1)} · ` : ''}{presentationDistance(p.distanceKm, c)}
                       </Text>
                     </View>
                   ))}
@@ -490,31 +477,31 @@ export function VillaPdfDocument({ data, snap, agent, orientation = 'landscape',
       {/* Investment scenarios */}
       {hasScenarios && snap?.scenarios && (
         <Page {...pageProps} style={[styles.page, styles.pagePadded]}>
-          <Text style={styles.h2}>Инвестиционный потенциал</Text>
+          <Text style={styles.h2}>{c.investTitle}</Text>
           <Text style={styles.subtitle}>
-            Три сценария аренды на основе матчинга с конкурентами на Booking ({snap.competitors.length} объектов)
+            {c.investSub(snap.competitors.length, snap.zone.applied)}
           </Text>
           <View style={isPortrait ? { flexDirection: 'column', gap: 12 } : styles.scenariosRow}>
             {(['bad', 'median', 'good'] as const).map(key => {
               const e = snap.scenarios![key]
               const cardStyle = key === 'bad' ? styles.scenarioCardBad : key === 'good' ? styles.scenarioCardGood : styles.scenarioCardMedian
               const titleColor = key === 'bad' ? COLORS.scenarioBadText : key === 'good' ? COLORS.scenarioGoodText : COLORS.primaryDark
-              const title = key === 'bad' ? 'Плохой' : key === 'good' ? 'Хороший' : 'Нормальный'
+              const title = c.scenario[key]
               const baseCard = isPortrait
                 ? { borderWidth: 1, borderRadius: 12, padding: 18, width: '100%' as const }
                 : styles.scenarioCard
               return (
                 <View key={key} style={[baseCard, cardStyle]}>
                   <Text style={[styles.scenarioLabel, isPortrait ? { fontSize: 11, color: titleColor } : { color: titleColor }]}>{title}</Text>
-                  <Text style={isPortrait ? [styles.scenarioMeta, { fontSize: 10 }] : styles.scenarioMeta}>ADR {fmtUsd(e.adr)} · {Math.round(e.occupancy * 100)}%</Text>
+                  <Text style={isPortrait ? [styles.scenarioMeta, { fontSize: 10 }] : styles.scenarioMeta}>{fmtUsd(e.adr)} {c.perNight} · {Math.round(e.occupancy * 100)}%</Text>
                   <Text style={isPortrait ? [styles.scenarioNoi, { fontSize: 26 }] : styles.scenarioNoi}>{fmtUsdShort(e.noi)}</Text>
-                  <Text style={isPortrait ? [styles.scenarioNoiSuffix, { fontSize: 11, marginBottom: 12 }] : styles.scenarioNoiSuffix}>/ год NOI</Text>
+                  <Text style={isPortrait ? [styles.scenarioNoiSuffix, { fontSize: 11, marginBottom: 12 }] : styles.scenarioNoiSuffix}>{c.perYearNet}</Text>
                   <View style={isPortrait ? [styles.scenarioRow, { marginBottom: 4 }] : styles.scenarioRow}>
-                    <Text style={isPortrait ? [styles.scenarioRowKey, { fontSize: 11 }] : styles.scenarioRowKey}>Окупаемость</Text>
-                    <Text style={isPortrait ? [styles.scenarioRowVal, { fontSize: 11 }] : styles.scenarioRowVal}>{fmtYears(e.payback)}</Text>
+                    <Text style={isPortrait ? [styles.scenarioRowKey, { fontSize: 11 }] : styles.scenarioRowKey}>{c.payback}</Text>
+                    <Text style={isPortrait ? [styles.scenarioRowVal, { fontSize: 11 }] : styles.scenarioRowVal}>{fmtYears(e.payback, c)}</Text>
                   </View>
                   <View style={isPortrait ? [styles.scenarioRow, { marginBottom: 0 }] : styles.scenarioRow}>
-                    <Text style={isPortrait ? [styles.scenarioRowKey, { fontSize: 11 }] : styles.scenarioRowKey}>Cap rate</Text>
+                    <Text style={isPortrait ? [styles.scenarioRowKey, { fontSize: 11 }] : styles.scenarioRowKey}>{c.yieldPerYear}</Text>
                     <Text style={isPortrait ? [styles.scenarioRowVal, { fontSize: 11 }] : styles.scenarioRowVal}>{fmtPct(e.capRate)}</Text>
                   </View>
                 </View>
@@ -523,7 +510,7 @@ export function VillaPdfDocument({ data, snap, agent, orientation = 'landscape',
           </View>
           {data.priceUsd != null && (
             <Text style={[styles.subtitle, { marginTop: 16 }]}>
-              Расчёт от цены {fmtUsd(data.priceUsd)} с учётом комиссий, OPEX и налога 10%.
+              {c.calcNote(fmtUsd(data.priceUsd))}
             </Text>
           )}
         </Page>
@@ -535,9 +522,9 @@ export function VillaPdfDocument({ data, snap, agent, orientation = 'landscape',
           <View style={styles.agentInner}>
             {agent ? (
               <>
-                <Text style={styles.agentEyebrow}>Ваш агент</Text>
+                <Text style={styles.agentEyebrow}>{c.agentEyebrow}</Text>
                 <Text style={styles.agentName}>{agent.name}</Text>
-                <Text style={styles.agentSubtitle}>Свяжитесь напрямую — быстро отвечу и помогу с просмотром</Text>
+                <Text style={styles.agentSubtitle}>{c.agentSub}</Text>
                 {agent.telegram && (() => {
                   const tgHref = telegramUrl(agent.telegram)
                   return (
@@ -563,9 +550,9 @@ export function VillaPdfDocument({ data, snap, agent, orientation = 'landscape',
               </>
             ) : (
               <>
-                <Text style={styles.agentEyebrow}>Подробнее на сайте</Text>
+                <Text style={styles.agentEyebrow}>{c.moreEyebrow}</Text>
                 <Text style={styles.agentName}>{data.title}</Text>
-                <Text style={styles.agentSubtitle}>Полная карточка, актуальная цена и форма связи — на странице виллы</Text>
+                <Text style={styles.agentSubtitle}>{c.moreSub(data.kind)}</Text>
                 <Link src={villaUrl} style={styles.linkBox}>{villaUrl}</Link>
               </>
             )}
@@ -610,7 +597,7 @@ export async function downloadVillaPdf(
       agent: agent ? { name: agent.name, telegram: agent.telegram, whatsapp: agent.whatsapp } : null,
       orientation,
       hasAgent: !!agent,
-      lang: 'ru',
+      lang: data.lang ?? 'ru',
     }),
     keepalive: true,
   }).catch(() => {})

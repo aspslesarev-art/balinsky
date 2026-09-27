@@ -75,6 +75,7 @@ import { VideoGrid } from '@/components/VideoGrid'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { FullRecordEditor } from '@/components/FullRecordEditor'
 import { VillaPresentationButton } from '@/components/VillaPresentation'
+import { permitLabel } from '@/components/presentation-copy'
 import { tField, pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { normalizeSlug } from '@/lib/slug-normalize'
 import { resolveListingTitle } from '@/lib/listing-title'
@@ -1102,7 +1103,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
     area != null && { Icon: Square, label: c.factHouse, value: `${area} ${c.sqm}` },
     land != null && { Icon: Trees, label: c.factLand, value: `${land} ${c.sqm}` },
     yearRaw && { Icon: Calendar, label: c.factCompletion, value: status?.toLowerCase().includes('построен') ? c.completed : yearRaw },
-    permit && permit.toLowerCase() !== 'нет' && { Icon: FileCheck2, label: c.factPermits, value: permit },
+    permitLabel(permit, lang) && { Icon: FileCheck2, label: c.factPermits, value: permitLabel(permit, lang)! },
     lease && { Icon: Lock, label: c.factLeasehold, value: c.factLeaseValue(lease) },
     district && { Icon: MapPin, label: c.factDistrict, value: district },
     fmtAirportDistance(lat, lng, lang) && { Icon: Plane, label: c.factAirport, value: fmtAirportDistance(lat, lng, lang)! },
