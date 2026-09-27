@@ -2,10 +2,10 @@ import { Document, Page, Text, View, Image, Link, StyleSheet, Font, pdf } from '
 import type { Snapshot } from '@/components/InvestmentWidget/types'
 import type { VillaPresentationData } from '@/components/VillaPresentation'
 import { telegramUrl, whatsappUrl } from '@/lib/agent-links'
-import { formatPrice, formatPriceExact, type Currency } from '@/lib/currency'
+import { formatPriceExact, type Currency } from '@/lib/currency'
 import { trackEvent } from '@/lib/analytics'
-import { switchLangPath, type Lang } from '@/lib/i18n'
-import { permitLabel, placeVisible, presentationCopy, presentationDistance, type PresentationCopy } from './presentation-copy'
+import { switchLangPath } from '@/lib/i18n'
+import { permitLabel, placeVisible, presentationCopy, presentationDistance } from './presentation-copy'
 
 Font.register({
   family: 'Inter',
@@ -146,17 +146,6 @@ const styles = StyleSheet.create({
 function fmtMoney(n: number | null | undefined, currency: Currency): string {
   if (n == null || !Number.isFinite(n)) return '—'
   return formatPriceExact(n, currency)
-}
-function fmtMoneyShort(n: number, currency: Currency, lang: Lang): string {
-  return formatPrice(n, currency, lang)
-}
-function fmtPct(n: number | null | undefined, digits = 1): string {
-  if (n == null || !Number.isFinite(n)) return '—'
-  return (n * 100).toFixed(digits) + '%'
-}
-function fmtYears(n: number | null | undefined, c: PresentationCopy): string {
-  if (n == null || !Number.isFinite(n)) return '—'
-  return c.years(n.toFixed(n < 10 ? 1 : 0))
 }
 
 const NEARBY_ORDER = [
@@ -302,7 +291,6 @@ export function VillaPdfDocument({ data, snap, agent, orientation = 'landscape',
   const c = presentationCopy(data.lang)
   const permit = permitLabel(data.permit, data.lang)
   const fmtUsd = (n: number | null | undefined) => fmtMoney(n, currency)
-  const fmtUsdShort = (n: number) => fmtMoneyShort(n, currency, data.lang ?? 'ru')
   // Each Page picks up the chosen orientation; layouts that depended on the
   // wide aspect (cover, scenarios row, photoset mosaic) flip to a vertical
   // arrangement when isPortrait is true.
@@ -323,7 +311,6 @@ export function VillaPdfDocument({ data, snap, agent, orientation = 'landscape',
   }
   const hasMap = data.lat != null && data.lng != null
   const hasNearby = !!snap && Object.values(snap.nearbyByCategory ?? {}).some(arr => arr.length > 0)
-  const hasScenarios = !!snap?.scenarios
 
   const factsItems = [
     data.bedrooms != null && { label: c.bedrooms, value: `${data.bedrooms} BR` },
@@ -474,47 +461,9 @@ export function VillaPdfDocument({ data, snap, agent, orientation = 'landscape',
         </Page>
       )}
 
-      {/* Investment scenarios */}
-      {hasScenarios && snap?.scenarios && (
-        <Page {...pageProps} style={[styles.page, styles.pagePadded]}>
-          <Text style={styles.h2}>{c.investTitle}</Text>
-          <Text style={styles.subtitle}>
-            {c.investSub(snap.competitors.length, snap.zone.applied)}
-          </Text>
-          <View style={isPortrait ? { flexDirection: 'column', gap: 12 } : styles.scenariosRow}>
-            {(['bad', 'median', 'good'] as const).map(key => {
-              const e = snap.scenarios![key]
-              const cardStyle = key === 'bad' ? styles.scenarioCardBad : key === 'good' ? styles.scenarioCardGood : styles.scenarioCardMedian
-              const titleColor = key === 'bad' ? COLORS.scenarioBadText : key === 'good' ? COLORS.scenarioGoodText : COLORS.primaryDark
-              const title = c.scenario[key]
-              const baseCard = isPortrait
-                ? { borderWidth: 1, borderRadius: 12, padding: 18, width: '100%' as const }
-                : styles.scenarioCard
-              return (
-                <View key={key} style={[baseCard, cardStyle]}>
-                  <Text style={[styles.scenarioLabel, isPortrait ? { fontSize: 11, color: titleColor } : { color: titleColor }]}>{title}</Text>
-                  <Text style={isPortrait ? [styles.scenarioMeta, { fontSize: 10 }] : styles.scenarioMeta}>{fmtUsd(e.adr)} {c.perNight} · {Math.round(e.occupancy * 100)}%</Text>
-                  <Text style={isPortrait ? [styles.scenarioNoi, { fontSize: 26 }] : styles.scenarioNoi}>{fmtUsdShort(e.noi)}</Text>
-                  <Text style={isPortrait ? [styles.scenarioNoiSuffix, { fontSize: 11, marginBottom: 12 }] : styles.scenarioNoiSuffix}>{c.perYearNet}</Text>
-                  <View style={isPortrait ? [styles.scenarioRow, { marginBottom: 4 }] : styles.scenarioRow}>
-                    <Text style={isPortrait ? [styles.scenarioRowKey, { fontSize: 11 }] : styles.scenarioRowKey}>{c.payback}</Text>
-                    <Text style={isPortrait ? [styles.scenarioRowVal, { fontSize: 11 }] : styles.scenarioRowVal}>{fmtYears(e.payback, c)}</Text>
-                  </View>
-                  <View style={isPortrait ? [styles.scenarioRow, { marginBottom: 0 }] : styles.scenarioRow}>
-                    <Text style={isPortrait ? [styles.scenarioRowKey, { fontSize: 11 }] : styles.scenarioRowKey}>{c.yieldPerYear}</Text>
-                    <Text style={isPortrait ? [styles.scenarioRowVal, { fontSize: 11 }] : styles.scenarioRowVal}>{fmtPct(e.capRate)}</Text>
-                  </View>
-                </View>
-              )
-            })}
-          </View>
-          {data.priceUsd != null && (
-            <Text style={[styles.subtitle, { marginTop: 16 }]}>
-              {c.calcNote(fmtUsd(data.priceUsd))}
-            </Text>
-          )}
-        </Page>
-      )}
+      {/* Сценариев доходности в скачиваемом PDF нет: файл уходит клиенту
+          как есть, и расчётные цифры без калькулятора рядом читаются как
+          обещание дохода. Только характеристики, фото, место и что рядом. */}
 
       {/* Last page — either agent contact or villa link */}
       <Page {...pageProps} style={[styles.page, styles.pagePadded]}>
