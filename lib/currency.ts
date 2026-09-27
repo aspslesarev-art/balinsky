@@ -2,12 +2,13 @@ import type { Lang } from '@/lib/i18n'
 
 // Static cross rates against USD. Long-form rentals + Bali real estate price
 // drift slowly enough that a manually-curated rate is fine; refresh quarterly.
+// Last refreshed 2026-09-27 (open.er-api.com, rounded).
 export const CURRENCY_RATES = {
   USD: 1,
-  EUR: 0.92,
-  RUB: 100,
-  UAH: 41,
-  IDR: 16400,
+  EUR: 0.88,
+  RUB: 84,
+  UAH: 45,
+  IDR: 17900,
 } as const
 
 export type Currency = keyof typeof CURRENCY_RATES

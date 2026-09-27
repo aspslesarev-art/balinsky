@@ -18,6 +18,15 @@ function pageDefaultFor(pathname: string | null): Currency {
   return 'USD'
 }
 
+// Rupiah-by-location only on the Russian, Indonesian and Balinese versions.
+// Someone reading the English (or French, German, …) site from Bali is a
+// foreign buyer on a trip, and villa prices on the island are quoted in USD —
+// "Rp 2 132 000 000" on /en reads as noise to them.
+function geoFor(geo: Currency | null, pathname: string | null): Currency | null {
+  if (geo !== 'IDR') return geo
+  return /^\/(ru|id|ban)(\/|$)/.test(pathname ?? '') ? geo : null
+}
+
 type Ctx = {
   // Currency to render with — explicit user pick, else the country default
   // (rupiah inside Indonesia), else the page default.
@@ -67,7 +76,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   }
 
   const value: Ctx = {
-    currency: explicit ?? geo ?? pageDefaultFor(pathname),
+    currency: explicit ?? geoFor(geo, pathname) ?? pageDefaultFor(pathname),
     hasExplicit: explicit != null,
     setCurrency,
   }
