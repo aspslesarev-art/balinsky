@@ -861,7 +861,7 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
       </section>
 
       {/* === 2. Три числа ======================================== */}
-      <section className="border-b border-[var(--color-border)] bg-[var(--color-bg)]">
+      <section className="border-b border-[var(--color-border)] bg-[var(--color-surface-alt)]">
         <PageContainer>
           <div className="py-7 md:py-8 grid grid-cols-3 gap-x-5 gap-y-6">
             <TrustCell value={fmtInt(stats.objects, c.locale)} label={c.stats.objects} />
@@ -891,7 +891,7 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
               <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary-pressed)]">
                 <Icon size={22} strokeWidth={1.7} />
               </span>
-              <div className="mt-5 font-display text-[23px] md:text-[26px] font-normal text-[#0E1A14] leading-tight">{label}</div>
+              <div className="mt-5 font-display text-[22px] md:text-[24px] font-semibold tracking-[-0.02em] text-[#0E1A14] leading-tight">{label}</div>
               <p className="mt-2 text-[14.5px] leading-[1.55] text-[var(--color-text-muted)]">{note}</p>
               <span className="mt-4 inline-flex items-center text-[var(--color-primary)] group-hover:translate-x-1 transition-transform">
                 <ArrowRight size={18} />
@@ -920,7 +920,7 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
                   <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary-pressed)]">
                     {Icon && <Icon size={19} strokeWidth={1.7} />}
                   </span>
-                  <h3 className="mt-5 text-[19px] font-medium text-[#0E1A14] leading-tight">{p.title}</h3>
+                  <h3 className="mt-5 font-display text-[19px] font-semibold tracking-[-0.015em] text-[#0E1A14] leading-tight">{p.title}</h3>
                   <p className="mt-2.5 text-[15px] leading-[1.6] text-[var(--color-text-muted)]">{p.body}</p>
                 </div>
               </div>
@@ -961,7 +961,7 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
 
       {/* === 5. Подбор за три вопроса =========================== */}
       {finderItems.length > 0 && (
-        <SectionWrap className="border-t border-[var(--color-border)] bg-[var(--color-header-bg)]">
+        <SectionWrap className="border-t border-[var(--color-border)] bg-[var(--color-surface-alt)]">
           <SectionHead title={c.finder.heading} />
           <div className="mt-8 md:mt-10">
             <HomeFinder items={finderItems} lang={lang} />
@@ -971,7 +971,7 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
 
       {/* === 6. Виллы =========================================== */}
       {topVillas.length > 0 && (
-        <SectionWrap className="border-t border-[var(--color-border)] bg-[var(--color-header-bg)]">
+        <SectionWrap className="border-t border-[var(--color-border)] bg-[var(--color-surface-alt)]">
           <SectionHead title={c.villas.heading} />
           <div className="mt-8 md:mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
             {topVillas.map(v => <VillaCard key={v.slug} a={v} lang={lang} />)}
@@ -1018,7 +1018,7 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-[#091310]/85 via-[#091310]/15 to-transparent" />
                 <div className="relative p-4 md:p-5">
-                  <div className="flex items-center gap-1.5 font-display text-[20px] md:text-[22px] font-normal text-white">
+                  <div className="flex items-center gap-1.5 font-display text-[19px] md:text-[21px] font-semibold tracking-[-0.01em] text-white">
                     <MapPin size={14} className="opacity-80" /> {d.name}
                   </div>
                   <div className="mt-1 text-[13px] text-white/80 leading-[1.45]">{d.tagline}</div>
@@ -1033,7 +1033,7 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
       <section className="border-t border-[var(--color-border)] py-16 md:py-24 bg-[var(--color-bg)]">
         <PageContainer>
           <div className="max-w-[720px] mx-auto text-center">
-            <h2 className="text-[30px] md:text-[42px] leading-[1.1] font-light tracking-[-0.02em] text-[#0E1A14]">
+            <h2 className="text-[30px] md:text-[42px] leading-[1.1] font-semibold text-[#0E1A14]">
               {c.help.heading}
             </h2>
             <ul className="mt-8 grid gap-3 text-left sm:max-w-[560px] sm:mx-auto">
@@ -1079,7 +1079,7 @@ function SectionWrap({ children, className = '' }: { children: React.ReactNode; 
 function SectionHead({ title }: { title: string }) {
   return (
     <div className="max-w-[820px]">
-      <h2 className="text-[26px] md:text-[38px] leading-[1.15] font-light tracking-[-0.02em] text-[#0E1A14]">
+      <h2 className="text-[26px] md:text-[38px] leading-[1.15] font-semibold text-[#0E1A14]">
         {title}
       </h2>
     </div>
@@ -1089,7 +1089,7 @@ function SectionHead({ title }: { title: string }) {
 function TrustCell({ value, label }: { value: string; label: string }) {
   return (
     <div>
-      <div className="font-display text-[26px] md:text-[34px] font-light text-[#0E1A14] leading-none">
+      <div className="font-display text-[26px] md:text-[34px] font-semibold tracking-[-0.03em] text-[#0E1A14] leading-none">
         <NumberTicker value={value} />
       </div>
       <div className="mt-2 text-[12px] md:text-[12.5px] text-[var(--color-text-muted)] leading-[1.4]">

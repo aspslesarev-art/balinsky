@@ -2,12 +2,12 @@ import type { Metadata, Viewport } from "next";
 // Self-hosted (app/fonts): Google-hosted fonts are downloaded during every
 // build, and a flaky fetch failed a production deploy on 2026-09-25.
 import localFont from "next/font/local";
-// Onest (body) + Source Serif 4 (h1/h2, big numbers): both carry Cyrillic,
+// Onest (body) + Libre Franklin (h1/h2, big numbers): both carry Cyrillic,
 // which the old Geist file did not — Russian text used to fall back to the
 // system font. Served from node_modules, split by unicode-range, so a page
 // only downloads the alphabets it actually renders.
 import "@fontsource-variable/onest/wght.css";
-import "@fontsource-variable/source-serif-4/wght.css";
+import "@fontsource-variable/libre-franklin/wght.css";
 import "../globals.css";
 import { CurrencyProvider } from "@/components/CurrencyContext";
 import { WishlistProvider } from "@/components/WishlistContext";

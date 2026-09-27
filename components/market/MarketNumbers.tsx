@@ -88,7 +88,7 @@ export function MarketNumbers({ lang }: { lang: Lang }) {
   return (
     <div>
       <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
-        <h2 className="text-[26px] md:text-[38px] leading-[1.15] font-light tracking-[-0.02em] text-[#0E1A14]">
+        <h2 className="text-[26px] md:text-[38px] leading-[1.15] font-semibold text-[#0E1A14]">
           {c.h2}
         </h2>
         <p className="text-[13px] text-[var(--color-text-muted)]">
@@ -102,7 +102,7 @@ export function MarketNumbers({ lang }: { lang: Lang }) {
         {cards.map(card => (
           <li key={card.t}>
             <Link href={card.href} className="magic-card group block h-full rounded-2xl border border-[var(--color-border)] bg-white p-5 md:p-6 no-underline">
-              <div className="font-display text-[28px] md:text-[38px] font-light leading-none text-[#0E1A14]"><NumberTicker value={card.v} /></div>
+              <div className="font-display text-[28px] md:text-[38px] font-semibold tracking-[-0.03em] leading-none text-[#0E1A14]"><NumberTicker value={card.v} /></div>
               <div className="mt-3 text-[13.5px] leading-[1.45] text-[var(--color-text-muted)]">{card.t}</div>
             </Link>
           </li>
