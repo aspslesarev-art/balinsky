@@ -1,13 +1,11 @@
-// Lead-gated legal-audit "вопросы / что запросить" for one complex. These red
-// flags never ship in the public page HTML — the visitor leaves a contact via
-// /api/contact (which sets the httpOnly `bx_lead` cookie), and only then does
-// this endpoint return the items, translated into the requested language.
+// Legal-audit "вопросы / что запросить" for one complex, translated into the
+// requested language. Open to every visitor; it lives outside the page HTML
+// only so the red flags about a developer stay out of search indexes.
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { LEGAL_QUESTIONS_FIELD, LEGAL_BALANCE_NOTES_FIELD, firstAuditString } from '@/lib/legal-audit'
 import { loadComplexAudit } from '@/lib/complex-legal-i18n'
 import { clientIp, rateLimit } from '@/lib/rate-limit'
-import { getSessionTelegramId } from '@/lib/site-auth'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -15,20 +13,7 @@ export const dynamic = 'force-dynamic'
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY
 
-function hasLeadCookie(req: Request): boolean {
-  const raw = req.headers.get('cookie') ?? ''
-  return raw.split(';').some(c => c.trim().startsWith('bx_lead='))
-}
-
 export async function GET(req: Request, { params }: { params: Promise<{ slug: string }> }) {
-  // Два равноправных ключа от одного замка: оставленный контакт (кука
-  // bx_lead от /api/contact) либо вход через Telegram-бота. Сессия проверяется
-  // по подписи в site-auth, а не по косметическому флагу bx_auth, — иначе
-  // гейт снимался бы подделкой куки в браузере.
-  const unlocked = hasLeadCookie(req) || (await getSessionTelegramId()) !== null
-  if (!unlocked) {
-    return NextResponse.json({ error: 'locked' }, { status: 401 })
-  }
   if (!rateLimit(`legal:${clientIp(req)}`, 30, 60_000)) {
     return NextResponse.json({ error: 'rate_limited' }, { status: 429 })
   }
@@ -58,8 +43,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
   }
 
   const { questions, balance } = await loadComplexAudit(row.airtable_id, lang, null, ruQuestions, ruBalance)
-  // no-store + noindex: gated content must never be cached at the edge or
-  // picked up by a crawler that stumbles onto the endpoint.
+  // noindex: red flags about a developer stay out of search results.
   return NextResponse.json(
     { items: questions, balance },
     { headers: { 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' } },

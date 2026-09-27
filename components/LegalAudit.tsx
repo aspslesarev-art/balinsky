@@ -1,10 +1,8 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
-import { ChevronDown, Check, TriangleAlert, Lock, Scale, Send, Minus } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { ChevronDown, Check, TriangleAlert, Scale, Minus } from 'lucide-react'
 import { pickCopy, type Lang } from '@/lib/i18n'
-import { LOGIN_URL } from '@/components/GatedBlock'
-import { EmailLoginForm } from '@/components/EmailLoginForm'
 import { LEGAL_OK_FIELD, LEGAL_QUESTIONS_FIELD, LEGAL_BALANCE_NOTES_FIELD, type AuditItem } from '@/lib/legal-audit'
 
 // Admin on-page editing: data-edit-* attrs make the whole block a click-to-edit
@@ -18,71 +16,51 @@ function editAttrs(id: string | undefined, editable: boolean | undefined, field:
 }
 
 // Legal due-diligence on the complex page. Two blocks: "что в порядке" (public,
-// server-rendered, indexable) and "вопросы / что запросить" (lead-gated — the
-// red flags never ship in the public HTML; the visitor leaves a contact and the
-// items are fetched from /api/complex/[slug]/legal, which the /api/contact lead
-// cookie authorizes). Each row shows a headline and expands to its detail.
+// server-rendered, indexable) and "вопросы / что запросить" (open to everyone,
+// but the red flags never ship in the page HTML — the browser fetches them from
+// /api/complex/[slug]/legal, so crawlers don't index them). Each row shows a
+// headline and expands to its detail.
 
 const COPY = {
   ru: {
     title: 'Юридическая проверка', subtitle: 'Что мы проверили по документам объекта',
     okTitle: 'Что в порядке', qTitle: 'Вопросы и что запросить',
-    lockLead: (n: number) => `Мы нашли пункты, по которым стоит задать вопросы (${n}). Оставьте контакт — пришлём разбор.`,
-    namePh: 'Имя', phonePh: 'Телефон / WhatsApp', submit: 'Показать вопросы', sending: 'Отправляем…', err: 'Заполните имя и телефон',
   },
   en: {
     title: 'Legal check', subtitle: 'What we verified against the project documents',
     okTitle: "What's in order", qTitle: 'Questions & what to request',
-    lockLead: (n: number) => `We found points worth questioning (${n}). Leave your contact and we'll send the details.`,
-    namePh: 'Name', phonePh: 'Phone / WhatsApp', submit: 'Show the questions', sending: 'Sending…', err: 'Enter your name and phone',
   },
   id: {
     title: 'Pemeriksaan hukum', subtitle: 'Apa yang kami verifikasi dari dokumen proyek',
     okTitle: 'Yang sudah beres', qTitle: 'Pertanyaan & yang perlu diminta',
-    lockLead: (n: number) => `Kami menemukan poin yang perlu ditanyakan (${n}). Tinggalkan kontak Anda, kami kirimkan rinciannya.`,
-    namePh: 'Nama', phonePh: 'Telepon / WhatsApp', submit: 'Tampilkan pertanyaan', sending: 'Mengirim…', err: 'Isi nama dan telepon',
   },
   fr: {
     title: 'Vérification juridique', subtitle: 'Ce que nous avons vérifié dans les documents du projet',
     okTitle: 'Ce qui est en ordre', qTitle: 'Questions & documents à demander',
-    lockLead: (n: number) => `Nous avons trouvé des points à éclaircir (${n}). Laissez vos coordonnées, nous vous envoyons le détail.`,
-    namePh: 'Nom', phonePh: 'Téléphone / WhatsApp', submit: 'Voir les questions', sending: 'Envoi…', err: 'Indiquez votre nom et téléphone',
   },
   de: {
     title: 'Rechtsprüfung', subtitle: 'Was wir anhand der Projektunterlagen geprüft haben',
     okTitle: 'Was in Ordnung ist', qTitle: 'Fragen & was anzufordern ist',
-    lockLead: (n: number) => `Wir haben Punkte gefunden, die zu klären sind (${n}). Hinterlassen Sie Ihre Kontaktdaten, wir senden die Details.`,
-    namePh: 'Name', phonePh: 'Telefon / WhatsApp', submit: 'Fragen anzeigen', sending: 'Senden…', err: 'Name und Telefon angeben',
   },
   zh: {
     title: '法律核查', subtitle: '我们根据项目文件核实的内容',
     okTitle: '一切正常', qTitle: '疑问及需索取的文件',
-    lockLead: (n: number) => `我们发现了需要核实的疑点（${n}）。留下联系方式，我们把详情发给您。`,
-    namePh: '姓名', phonePh: '电话 / WhatsApp', submit: '查看疑问', sending: '发送中…', err: '请填写姓名和电话',
   },
   nl: {
     title: 'Juridische controle', subtitle: 'Wat we hebben gecontroleerd aan de projectdocumenten',
     okTitle: 'Wat in orde is', qTitle: 'Vragen & wat op te vragen',
-    lockLead: (n: number) => `We vonden punten om na te vragen (${n}). Laat uw contact achter, we sturen de details.`,
-    namePh: 'Naam', phonePh: 'Telefoon / WhatsApp', submit: 'Toon de vragen', sending: 'Versturen…', err: 'Vul naam en telefoon in',
   },
   ban: {
     title: 'Pamariksan hukum', subtitle: 'Sane sampun kacumawisang saking dokumen proyek',
     okTitle: 'Sane sampun beres', qTitle: 'Patakon & sane patut kapinta',
-    lockLead: (n: number) => `Wenten poin sane patut katakenang (${n}). Tinggalang kontak Ida, jagi kakirim rincianne.`,
-    namePh: 'Wasta', phonePh: 'Telepon / WhatsApp', submit: 'Edengang patakon', sending: 'Ngirim…', err: 'Isinin wasta lan telepon',
   },
   pl: {
     title: 'Weryfikacja prawna', subtitle: 'Co sprawdziliśmy w dokumentach projektu',
     okTitle: 'Co jest w porządku', qTitle: 'Pytania i co poprosić',
-    lockLead: (n: number) => `Znaleźliśmy kwestie do wyjaśnienia (${n}). Zostaw kontakt, prześlemy szczegóły.`,
-    namePh: 'Imię', phonePh: 'Telefon / WhatsApp', submit: 'Pokaż pytania', sending: 'Wysyłanie…', err: 'Podaj imię i telefon',
   },
   uk: {
     title: 'Юридична перевірка', subtitle: 'Що ми перевірили за документами обʼєкта',
     okTitle: 'Що в порядку', qTitle: 'Питання та що запросити',
-    lockLead: (n: number) => `Ми знайшли пункти, які варто уточнити (${n}). Залиште контакт — надішлемо розбір.`,
-    namePh: 'Імʼя', phonePh: 'Телефон / WhatsApp', submit: 'Показати питання', sending: 'Надсилаємо…', err: 'Вкажіть імʼя та телефон',
   },
 } as const
 
@@ -92,81 +70,64 @@ const BAL_COPY = {
   ru: {
     balTitle: 'Баланс договора', balBuyer: 'покупатель', balDev: 'застройщик',
     balHint: 'Как договор распределяет права и риски между сторонами. 50 / 50 — паритет.',
-    balMore: (n: number) => `Разбор по пунктам (${n}) — после заявки`,
+   
     balOpen: (n: number) => `В чём перекосы — ${n} пунктов`, balClose: 'Свернуть',
   },
   en: {
     balTitle: 'Contract balance', balBuyer: 'buyer', balDev: 'developer',
     balHint: 'How the contract splits rights and risks between the parties. 50 / 50 is parity.',
-    balMore: (n: number) => `Clause-by-clause breakdown (${n}) — after your request`,
+   
     balOpen: (n: number) => `Where the imbalance sits — ${n} points`, balClose: 'Collapse',
   },
   id: {
     balTitle: 'Keseimbangan kontrak', balBuyer: 'pembeli', balDev: 'pengembang',
     balHint: 'Bagaimana kontrak membagi hak dan risiko antara para pihak. 50 / 50 berarti seimbang.',
-    balMore: (n: number) => `Rincian per pasal (${n}) — setelah permintaan Anda`,
+   
     balOpen: (n: number) => `Di mana ketimpangannya — ${n} poin`, balClose: 'Tutup',
   },
   fr: {
     balTitle: 'Équilibre du contrat', balBuyer: 'acheteur', balDev: 'promoteur',
     balHint: 'Comment le contrat répartit droits et risques entre les parties. 50 / 50 = parité.',
-    balMore: (n: number) => `Analyse clause par clause (${n}) — après votre demande`,
+   
     balOpen: (n: number) => `Où se situe le déséquilibre — ${n} points`, balClose: 'Réduire',
   },
   de: {
     balTitle: 'Vertragsbalance', balBuyer: 'Käufer', balDev: 'Bauträger',
     balHint: 'Wie der Vertrag Rechte und Risiken zwischen den Parteien verteilt. 50 / 50 = Gleichgewicht.',
-    balMore: (n: number) => `Analyse nach Klauseln (${n}) — nach Ihrer Anfrage`,
+   
     balOpen: (n: number) => `Wo das Ungleichgewicht liegt — ${n} Punkte`, balClose: 'Einklappen',
   },
   zh: {
     balTitle: '合同平衡度', balBuyer: '买方', balDev: '开发商',
     balHint: '合同如何在双方之间分配权利与风险。50 / 50 为对等。',
-    balMore: (n: number) => `逐条解析（${n}）— 提交咨询后可见`,
+   
     balOpen: (n: number) => `失衡出在哪里 — ${n} 项`, balClose: '收起',
   },
   nl: {
     balTitle: 'Contractbalans', balBuyer: 'koper', balDev: 'ontwikkelaar',
     balHint: 'Hoe het contract rechten en risico’s verdeelt tussen de partijen. 50 / 50 is pariteit.',
-    balMore: (n: number) => `Analyse per clausule (${n}) — na uw aanvraag`,
+   
     balOpen: (n: number) => `Waar de scheefheid zit — ${n} punten`, balClose: 'Inklappen',
   },
   ban: {
     balTitle: 'Kasaimbangan kontrak', balBuyer: 'sane numbas', balDev: 'pangembang',
     balHint: 'Sapunapi kontrak ngedum hak lan resiko ring kalih pihak. 50 / 50 kasaimbangan.',
-    balMore: (n: number) => `Rincian saking pasal (${n}) — sasampun permintaan Ida`,
+   
     balOpen: (n: number) => `Ring dija ketimpanganne — ${n} poin`, balClose: 'Tutup',
   },
   pl: {
     balTitle: 'Balans umowy', balBuyer: 'kupujący', balDev: 'deweloper',
     balHint: 'Jak umowa dzieli prawa i ryzyka między strony. 50 / 50 to parytet.',
-    balMore: (n: number) => `Analiza punkt po punkcie (${n}) — po zgłoszeniu`,
+   
     balOpen: (n: number) => `Gdzie jest przechył — ${n} punktów`, balClose: 'Zwiń',
   },
   uk: {
     balTitle: 'Баланс договору', balBuyer: 'покупець', balDev: 'забудовник',
     balHint: 'Як договір розподіляє права та ризики між сторонами. 50 / 50 — паритет.',
-    balMore: (n: number) => `Розбір за пунктами (${n}) — після заявки`,
+   
     balOpen: (n: number) => `У чому перекоси — ${n} пунктів`, balClose: 'Згорнути',
   },
 } as const
-
-// Второй путь к тому же контенту — вход через бота, как в блоках аналитики.
-const TG_COPY = {
-  ru: { tgCta: 'Войти через Telegram', or: 'или оставьте контакт' },
-  en: { tgCta: 'Sign in with Telegram', or: 'or leave your contact' },
-  id: { tgCta: 'Masuk lewat Telegram', or: 'atau tinggalkan kontak' },
-  fr: { tgCta: 'Se connecter via Telegram', or: 'ou laissez vos coordonnées' },
-  de: { tgCta: 'Mit Telegram anmelden', or: 'oder Kontakt hinterlassen' },
-  zh: { tgCta: '通过 Telegram 登录', or: '或留下联系方式' },
-  nl: { tgCta: 'Inloggen met Telegram', or: 'of laat uw contact achter' },
-  ban: { tgCta: 'Ngranjing nganggen Telegram', or: 'utawi tinggalang kontak' },
-  pl: { tgCta: 'Zaloguj się przez Telegram', or: 'lub zostaw kontakt' },
-  uk: { tgCta: 'Увійти через Telegram', or: 'або залиште контакт' },
-} as const
-
-const INPUT_CLS =
-  'flex-1 min-w-0 rounded-xl border border-[var(--color-border)] bg-white px-3.5 py-2.5 text-[14px] text-[#111827] outline-none focus:border-[var(--color-primary)]'
 
 // neutral — для осей баланса: это не «хорошо» и не «плохо», а разбор.
 function Row({ item, tone }: { item: AuditItem; tone: 'ok' | 'warn' | 'neutral' }) {
@@ -210,132 +171,34 @@ function Group({ tone, title, items, edit }: { tone: 'ok' | 'warn'; title: strin
   )
 }
 
-// Один лид открывает и красные флаги, и разбор баланса, поэтому запрос к
-// гейтед-роуту живёт здесь, а не внутри блока вопросов.
-type GatedLegal = { items: AuditItem[]; balance: AuditItem[] }
+// Красные флаги и разбор баланса отдаёт отдельный роут: в HTML страницы их
+// нет, чтобы поисковик не индексировал претензии к застройщику. Открыты всем —
+// браузер забирает их сразу после загрузки страницы.
+type LegalDetails = { items: AuditItem[]; balance: AuditItem[] }
 
-function useGatedLegal(slug: string, lang: Lang) {
-  const [data, setData] = useState<GatedLegal | null>(null)
-
-  const reveal = useCallback(async () => {
-    try {
-      const r = await fetch(`/api/complex/${encodeURIComponent(slug)}/legal?lang=${lang}`, { credentials: 'same-origin' })
-      if (!r.ok) return
-      const j = (await r.json()) as Partial<GatedLegal>
-      const items = j.items ?? []
-      const balance = j.balance ?? []
-      if (items.length > 0 || balance.length > 0) setData({ items, balance })
-    } catch {
-      /* leave locked */
-    }
-  }, [slug, lang])
-
-  // Уже открывший блок посетитель: оставил контакт раньше либо вошёл через
-  // Telegram. bx_auth — читаемый флаг сессии (см. lib/site-auth), прав он не
-  // даёт: подделка лишь заставит сходить в роут, который проверит подпись.
+function useLegalDetails(slug: string, lang: Lang) {
+  const [data, setData] = useState<LegalDetails | null>(null)
   useEffect(() => {
-    try {
-      const hasLead = localStorage.getItem('bx_lead') === '1'
-      const hasAuth = document.cookie.split(';').some(c => c.trim().startsWith('bx_auth='))
-      if (hasLead || hasAuth) void reveal()
-    } catch {
-      /* ignore */
-    }
-  }, [reveal])
-
-  return { data, reveal }
-}
-
-function GatedQuestions({
-  lang, slug, count, title, items, reveal, developerName, developerSlug, edit,
-}: {
-  lang: Lang; slug: string; count: number; title: string
-  items: AuditItem[] | null; reveal: () => Promise<void>
-  developerName?: string | null; developerSlug?: string | null; edit?: EditAttrs
-}) {
-  const c = pickCopy(COPY, lang)
-  const tg = pickCopy(TG_COPY, lang)
-  const [name, setName] = useState('')
-  const [phone, setPhone] = useState('')
-  const [website, setWebsite] = useState('') // honeypot
-  const [status, setStatus] = useState<'idle' | 'sending' | 'error'>('idle')
-
-  const submit = useCallback(async () => {
-    if (!name.trim() || !phone.trim()) { setStatus('error'); return }
-    setStatus('sending')
-    try {
-      const res = await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'same-origin',
-        body: JSON.stringify({
-          name: name.trim(), phone: phone.trim(), website,
-          listingKind: 'complex', listingSlug: slug,
-          developerName: developerName ?? undefined, developerSlug: developerSlug ?? undefined,
-          page: 'legal-audit',
-          pagePath: typeof window !== 'undefined' ? window.location.pathname : undefined,
-        }),
+    let cancelled = false
+    fetch(`/api/complex/${encodeURIComponent(slug)}/legal?lang=${lang}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then((j: Partial<LegalDetails> | null) => {
+        if (!cancelled && j) setData({ items: j.items ?? [], balance: j.balance ?? [] })
       })
-      const j = (await res.json().catch(() => ({}))) as { ok?: boolean }
-      if (!res.ok || !j.ok) { setStatus('error'); return }
-      try { localStorage.setItem('bx_lead', '1') } catch { /* ignore */ }
-      await reveal()
-    } catch {
-      setStatus('error')
-    }
-  }, [name, phone, website, slug, developerName, developerSlug, reveal])
-
-  if (items && items.length > 0) return <Group tone="warn" title={title} items={items} edit={edit} />
-
-  return (
-    <div {...edit} className="rounded-2xl border border-amber-200 bg-amber-50/50 p-4 sm:p-5">
-      <div className="flex items-center gap-2 mb-1.5">
-        <TriangleAlert size={18} className="text-amber-600" />
-        <h3 className="text-[15px] sm:text-[16px] font-semibold text-[#111827]">{title}</h3>
-      </div>
-      <p className="text-[13.5px] sm:text-[14px] text-[var(--color-text)] mb-3 leading-relaxed">{c.lockLead(count)}</p>
-      {/* Вход по почте — как в GatedBlock: тот же флаг, чтобы форма не
-          появлялась, пока почтовый ящик не настроен. После входа страница
-          перезагружается, bx_auth открывает вопросы через reveal(). */}
-      {process.env.NEXT_PUBLIC_EMAIL_LOGIN === '1' ? (
-        <div className="[&>*]:mt-0"><EmailLoginForm lang={lang} /></div>
-      ) : (
-        <a
-          href={LOGIN_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex w-full sm:w-auto items-center justify-center gap-1.5 rounded-xl bg-[#229ED9] px-4 py-2.5 text-[14px] font-semibold text-white hover:bg-[#1b8ec2] transition-colors"
-        >
-          <Send size={15} /> {tg.tgCta}
-        </a>
-      )}
-      <p className="my-2.5 text-[12.5px] text-[var(--color-text-soft)]">{tg.or}</p>
-      <div className="flex flex-col sm:flex-row gap-2">
-        <input value={name} onChange={e => setName(e.target.value)} placeholder={c.namePh} className={INPUT_CLS} autoComplete="name" />
-        <input value={phone} onChange={e => setPhone(e.target.value)} placeholder={c.phonePh} className={INPUT_CLS} inputMode="tel" autoComplete="tel" />
-        <input value={website} onChange={e => setWebsite(e.target.value)} tabIndex={-1} autoComplete="off" aria-hidden className="hidden" />
-        <button
-          type="button"
-          onClick={submit}
-          disabled={status === 'sending'}
-          className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-amber-600 px-4 py-2.5 text-[14px] font-semibold text-white hover:bg-amber-700 disabled:opacity-60 cursor-pointer whitespace-nowrap"
-        >
-          {status === 'sending' ? c.sending : (<><Lock size={15} /> {c.submit}</>)}
-        </button>
-      </div>
-      {status === 'error' && <p className="text-[12.5px] text-red-600 mt-2">{c.err}</p>}
-    </div>
-  )
+      .catch(() => { /* блок останется с заголовком без пунктов */ })
+    return () => { cancelled = true }
+  }, [slug, lang])
+  return data
 }
 
 // Шкала «насколько договор клиенто-ориентирован». Само число и итог одним
 // предложением — публично (это и есть крючок, и он индексируется), разбор по
-// осям — под тем же лидом, что и красные флаги.
+// осям — с того же роута, что и красные флаги.
 function ContractBalance({
-  lang, buyer, summary, notes, notesCount, edit,
+  lang, buyer, summary, notes, edit,
 }: {
   lang: Lang; buyer: number; summary: AuditItem | null
-  notes: AuditItem[] | null; notesCount: number; edit?: EditAttrs
+  notes: AuditItem[] | null; edit?: EditAttrs
 }) {
   const c = pickCopy(BAL_COPY, lang)
   const [open, setOpen] = useState(false)
@@ -393,25 +256,20 @@ function ContractBalance({
             </div>
           )}
         </>
-      ) : notesCount > 1 && (
-        <p className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-medium text-[var(--color-text-soft)]">
-          <Lock size={14} /> {c.balMore(notesCount - 1)}
-        </p>
-      )}
+      ) : null}
     </div>
   )
 }
 
 export function LegalAudit({
-  lang, slug, okItems, questionsCount, balanceBuyer, balanceSummary, balanceNotesCount,
-  developerName, developerSlug, editId, editable,
+  lang, slug, okItems, questionsCount, balanceBuyer, balanceSummary, editId, editable,
 }: {
   lang: Lang
   slug: string
   okItems: AuditItem[]
   questionsCount: number
   // Баланс договора: число 0–100 в пользу покупателя, публичный итог одной
-  // строкой и сколько всего строк обоснования (остальные — под лидом).
+  // строкой и сколько всего строк обоснования (сами строки приходят с роута).
   balanceBuyer?: number | null
   balanceSummary?: AuditItem | null
   balanceNotesCount?: number
@@ -422,13 +280,16 @@ export function LegalAudit({
   editable?: boolean
 }) {
   const c = pickCopy(COPY, lang)
-  const { data, reveal } = useGatedLegal(slug, lang)
+  const data = useLegalDetails(slug, lang)
   // When editing, always render both blocks so an admin can add the first item
   // to an empty field; otherwise hide empty blocks from visitors.
   const hasBalance = typeof balanceBuyer === 'number'
-  if (!editable && okItems.length === 0 && questionsCount === 0 && !hasBalance) return null
+  // Счётчик со страницы бывает нулём при непустых вопросах (данные ЖК на
+  // странице кешируются отдельно), поэтому верим и тому, что пришло с роута.
+  const hasQuestions = questionsCount > 0 || (data?.items.length ?? 0) > 0
+  if (!editable && okItems.length === 0 && !hasQuestions && !hasBalance) return null
   const showOk = okItems.length > 0 || editable
-  const showQuestions = questionsCount > 0 || editable
+  const showQuestions = hasQuestions || editable
   return (
     <section className="mb-10" id="legal">
       <h2 className="text-[19px] sm:text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-1">{c.title}</h2>
@@ -436,18 +297,16 @@ export function LegalAudit({
       {hasBalance && (
         <ContractBalance
           lang={lang} buyer={balanceBuyer} summary={balanceSummary ?? null}
-          notes={data?.balance ?? null} notesCount={balanceNotesCount ?? 0}
+          notes={data?.balance ?? null}
           edit={editAttrs(editId, editable, LEGAL_BALANCE_NOTES_FIELD, 'Юр-проверка: баланс обоснование')}
         />
       )}
       <div className="grid gap-4 lg:grid-cols-2 items-start">
         {showOk && <Group tone="ok" title={c.okTitle} items={okItems} edit={editAttrs(editId, editable, LEGAL_OK_FIELD, 'Юр-проверка: в порядке')} />}
         {showQuestions && (
-          <GatedQuestions
-            lang={lang} slug={slug} count={questionsCount} title={c.qTitle}
-            items={data?.items ?? null} reveal={reveal}
-            developerName={developerName} developerSlug={developerSlug}
-            edit={editAttrs(editId, editable, LEGAL_QUESTIONS_FIELD, 'Юр-проверка: вопросы (под лидом)')}
+          <Group
+            tone="warn" title={c.qTitle} items={data?.items ?? []}
+            edit={editAttrs(editId, editable, LEGAL_QUESTIONS_FIELD, 'Юр-проверка: вопросы')}
           />
         )}
       </div>

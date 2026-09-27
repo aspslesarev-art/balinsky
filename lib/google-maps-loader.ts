@@ -57,10 +57,3 @@ export function loadGoogleMaps(apiKey: string): Promise<void> {
   })
   return window.__balinskyGmapLoader
 }
-
-/** Signed-in visitor (the flag GatedBlock's blur keys off). Maps inside a
- *  gate are billed per load and shown blurred to everyone else, so they are
- *  only loaded for signed-in visitors — login reloads the page. */
-export function mapsUnlocked(): boolean {
-  return typeof document !== 'undefined' && document.documentElement.getAttribute('data-auth') === '1'
-}

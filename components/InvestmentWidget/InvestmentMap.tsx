@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Flame } from 'lucide-react'
 import { BALINSKY_MAP_STYLE } from '@/lib/google-map-style'
-import { loadGoogleMaps, mapsUnlocked } from '@/lib/google-maps-loader'
+import { loadGoogleMaps } from '@/lib/google-maps-loader'
+import { MapLoadPrompt } from '@/components/MapLoadPrompt'
 import { gateMapGestures } from '@/lib/map-gesture-gate'
 import { createHeatOverlay, fetchHeatCells } from '@/lib/heat-overlay'
 import type { Snapshot } from './types'
@@ -460,6 +461,8 @@ export function InvestmentMap({
   // still lets the visitor turn it off.
   const [showHeat, setShowHeat] = useState(true)
   const [map, setMap] = useState<google.maps.Map | null>(null)
+  // Карта платная за каждую загрузку — грузим по нажатию, см. MapLoadPrompt.
+  const [wanted, setWanted] = useState(false)
   const containerRef = useRef<HTMLDivElement | null>(null)
   const heatRef = useRef<google.maps.OverlayView | null>(null)
   const heatDataRef = useRef<{ cells: { lat: number; lng: number; weight: number }[]; max: number } | null>(null)
@@ -492,7 +495,7 @@ export function InvestmentMap({
   useEffect(() => {
     if (!apiKey || !containerRef.current || map) return
     let cancelled = false
-    if (!mapsUnlocked()) return
+    if (!wanted) return
     loadGoogleMaps(apiKey).then(() => {
       if (cancelled || !containerRef.current) return
       const instance = new google.maps.Map(containerRef.current, {
@@ -512,7 +515,7 @@ export function InvestmentMap({
       setMap(instance)
     }).catch(() => { /* fall through to "unavailable" tile */ })
     return () => { cancelled = true }
-  }, [apiKey, snap.villa.lat, snap.villa.lng, map])
+  }, [apiKey, snap.villa.lat, snap.villa.lng, map, wanted])
 
   if (!apiKey) {
     return <div className={`${heightClass} bg-[var(--color-search-bg)] rounded-3xl flex items-center justify-center text-[var(--color-text-muted)]`}>{t.unavailable}</div>
@@ -521,6 +524,7 @@ export function InvestmentMap({
   return (
     <div className={`relative ${heightClass} bg-white rounded-3xl overflow-hidden border border-[var(--color-border)]`}>
       <div ref={containerRef} className="absolute inset-0" style={{ backgroundColor: '#F2EAD8' }} />
+      {!wanted && <MapLoadPrompt lang={lang} onLoad={() => setWanted(true)} />}
       <MapLayer map={map} snap={snap} showAllPois={showAllPois} allPois={allPois} lang={lang} />
 
       <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-sm rounded-2xl border border-[var(--color-border)] px-3 py-2 text-[12px] flex items-center gap-3 shadow-sm">

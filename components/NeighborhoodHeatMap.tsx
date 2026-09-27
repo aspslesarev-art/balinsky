@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Flame } from 'lucide-react'
 import { BALINSKY_MAP_STYLE } from '@/lib/google-map-style'
-import { loadGoogleMaps, mapsUnlocked } from '@/lib/google-maps-loader'
+import { loadGoogleMaps } from '@/lib/google-maps-loader'
+import { MapLoadPrompt } from '@/components/MapLoadPrompt'
 import { gateMapGestures } from '@/lib/map-gesture-gate'
 import { createHeatOverlay, fetchHeatCells } from '@/lib/heat-overlay'
 import { createGeoImageOverlay, type GeoImageOverlay } from '@/lib/geo-overlay'
@@ -32,6 +33,8 @@ export function NeighborhoodHeatMap({
   overlay?: GeoOverlay | null
 }) {
   const [map, setMap] = useState<google.maps.Map | null>(null)
+  // Карта платная за каждую загрузку — грузим по нажатию, см. MapLoadPrompt.
+  const [wanted, setWanted] = useState(false)
   // Tourism heat overlay is on by default on listing pages; the toggle
   // still lets the visitor turn it off.
   const [showHeat, setShowHeat] = useState(true)
@@ -42,7 +45,7 @@ export function NeighborhoodHeatMap({
 
   useEffect(() => {
     if (!apiKey || !containerRef.current || map) return
-    if (!mapsUnlocked()) return
+    if (!wanted) return
     let cancelled = false
     loadGoogleMaps(apiKey).then(() => {
       if (cancelled || !containerRef.current) return
@@ -80,7 +83,7 @@ export function NeighborhoodHeatMap({
       setMap(m)
     }).catch(() => { /* unavailable */ })
     return () => { cancelled = true }
-  }, [apiKey, lat, lng, title, map, overlay])
+  }, [apiKey, lat, lng, title, map, overlay, wanted])
 
   useEffect(() => {
     if (!map || !overlay) return
@@ -117,6 +120,7 @@ export function NeighborhoodHeatMap({
   return (
     <div className={`relative ${heightClass} bg-white rounded-3xl overflow-hidden border border-[var(--color-border)]`}>
       <div ref={containerRef} className="absolute inset-0" style={{ backgroundColor: '#F2EAD8' }} />
+      {!wanted && <MapLoadPrompt lang={lang} onLoad={() => setWanted(true)} />}
       <div className="absolute top-3 left-3 flex flex-col items-start gap-2">
         <button
           type="button"
