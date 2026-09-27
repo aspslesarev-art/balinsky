@@ -8,7 +8,7 @@
 // его, приведя результат к общему виду трекера.
 
 import { extractLbUnits, LB_SPREADSHEET_ID } from './lb-group-plan'
-import { fetchXlsxFromGoogleSheet } from '../xlsx'
+import { fetchXlsxFromGoogleSheet, type XlsxSheet } from '../xlsx'
 import type { ExtractResult, ScrapedUnit, UnitStatus } from '../types'
 
 // Block — юнит снят с продажи застройщиком, Resale — перепродажа от
@@ -26,7 +26,10 @@ export function isLbGroupSource(spreadsheetId: string | null): boolean {
 }
 
 export async function scrapeLbGroup(sourceUrl: string): Promise<ExtractResult> {
-  const cells = await fetchXlsxFromGoogleSheet(sourceUrl)
+  return scrapeLbGroupCells(await fetchXlsxFromGoogleSheet(sourceUrl))
+}
+
+export function scrapeLbGroupCells(cells: XlsxSheet): ExtractResult {
   const { units, layout, legend, warnings } = extractLbUnits(cells)
 
   const scraped: ScrapedUnit[] = units.map(u => ({

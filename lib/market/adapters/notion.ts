@@ -11,6 +11,7 @@
 import { createHash } from 'crypto'
 import type { ExtractResult, ScrapedUnit } from '../types'
 import { extractUnitsFromText } from '../text-units'
+import { withTextRefusal } from '../refusal'
 
 const MAX_CHUNKS = 12
 
@@ -36,7 +37,7 @@ export type NotionScrape = ExtractResult & { textHash: string }
 export async function scrapeNotion(
   sourceUrl: string,
   meta: { developer: string; complex: string },
-  cache: { textHash: string; units: ScrapedUnit[] } | null,
+  cache: { textHash: string; units: ScrapedUnit[]; refused?: string } | null,
 ): Promise<NotionScrape> {
   const ref = parseNotionRef(sourceUrl)
   if (!ref) throw new Error('ссылка не похожа на страницу Notion — не нашёл идентификатор страницы')
@@ -50,8 +51,10 @@ export async function scrapeNotion(
     return { units: cache.units, warnings: [], textHash }
   }
 
-  const { units, warnings } = await extractUnitsFromText(text, meta)
-  return { units, warnings, textHash }
+  return withTextRefusal(cache, textHash, async () => {
+    const { units, warnings } = await extractUnitsFromText(text, meta)
+    return { units, warnings, textHash }
+  })
 }
 
 // === текст страницы =====================================================

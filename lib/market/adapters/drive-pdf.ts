@@ -12,6 +12,7 @@ import type { ExtractResult, ScrapedUnit } from '../types'
 import { extractUnitsFromText } from '../text-units'
 import { extractPdfText, looksLikeText } from '../pdf-text'
 import { extractUnitsFromFile, type FileKind } from '../file-vision'
+import { withTextRefusal } from '../refusal'
 
 // Прайс редко бывает толще нескольких мегабайт, а презентации на Диске
 // бывают под сотню — качать их ради текста незачем.
@@ -35,7 +36,7 @@ export function isDriveSource(sourceUrl: string): boolean {
 export async function scrapeDrivePdf(
   sourceUrl: string,
   meta: { developer: string; complex: string },
-  cache: { textHash: string; units: ScrapedUnit[] } | null,
+  cache: { textHash: string; units: ScrapedUnit[]; refused?: string } | null,
 ): Promise<DrivePdfScrape> {
   const fileId = await resolveFileId(sourceUrl)
   const bytes = await fetchDriveFile(fileId)
@@ -52,16 +53,18 @@ export async function scrapeDrivePdf(
     throw new Error('по ссылке пришёл не PDF и не картинка — вероятно, Диск запросил подтверждение скачивания')
   }
 
-  if (file.mime === 'application/pdf') {
-    const text = extractPdfText(bytes)
-    if (text.length >= MIN_TEXT_LEN && looksLikeText(text)) {
-      const { units, warnings } = await extractUnitsFromText(text, meta)
-      return { units, warnings, textHash }
+  return withTextRefusal(cache, textHash, async () => {
+    if (file.mime === 'application/pdf') {
+      const text = extractPdfText(bytes)
+      if (text.length >= MIN_TEXT_LEN && looksLikeText(text)) {
+        const { units, warnings } = await extractUnitsFromText(text, meta)
+        return { units, warnings, textHash }
+      }
     }
-  }
 
-  const { units, warnings } = await extractUnitsFromFile(bytes, file, meta)
-  return { units, warnings, textHash }
+    const { units, warnings } = await extractUnitsFromFile(bytes, file, meta)
+    return { units, warnings, textHash }
+  })
 }
 
 // https://drive.google.com/file/d/<id>/view → <id>

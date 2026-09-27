@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { syncSources } from '@/lib/market/sync-sources'
 import { scanBatch } from '@/lib/market/scan'
-import { sbAdmin } from '@/lib/market/apply'
+import { sbAdmin, today } from '@/lib/market/apply'
+import { saveMasterSnapshot } from '@/lib/market/snapshots'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -29,6 +30,9 @@ export async function GET(req: Request) {
   if (url.searchParams.get('sync') === '1') {
     try {
       sync = await syncSources(sb)
+      // Раз в сутки (тик с sync=1) кладём копию самой мастер-таблицы.
+      const masterSnapshot = await saveMasterSnapshot(sb, today())
+      if (masterSnapshot) sync = { ...sync, master_snapshot_error: masterSnapshot }
     } catch (e) {
       // Обход осмысленен и на прежнем реестре, поэтому падение синка не
       // должно ронять весь тик.

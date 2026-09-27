@@ -7,6 +7,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { scrapeSource } from './scrape'
 import { applyScrape, today } from './apply'
+import { saveSheetSnapshot } from './snapshots'
+import { KnownRefusalError } from './refusal'
 import type { MarketSource } from './types'
 
 export type SourceOutcome = {
@@ -78,9 +80,16 @@ export async function scanBatch(
     // на следующем тике — расписание само его подхватит.
     if (Date.now() > deadline) { skipped++; continue }
     const label = { source_key: source.source_key, developer: source.developer, complex: source.complex }
+    // Копия листа пишется параллельно разбору и дожидается в любом исходе.
+    let snapshot: Promise<string | null> = Promise.resolve(null)
+    const onGrid = (grid: Parameters<typeof saveSheetSnapshot>[2]) => {
+      snapshot = saveSheetSnapshot(sb, { source_key: source.source_key, url: source.source_url, day: today() }, grid)
+    }
     try {
       const prevScanDay = source.last_scan_at ? String(source.last_scan_at).slice(0, 10) : null
-      const scraped = await scrapeSource(source)
+      const scraped = await scrapeSource(source, { onGrid })
+      const snapshotError = await snapshot
+      if (snapshotError) scraped.warnings.push(snapshotError)
       const applied = await applyScrape(sb, source, scraped.units, { day: today(), prevScanDay })
 
       units += applied.units
@@ -94,8 +103,12 @@ export async function scanBatch(
       })
       outcomes.push({ ...label, status: 'ok', ...applied, warnings: scraped.warnings })
     } catch (e) {
+      await snapshot
       const message = e instanceof Error ? e.message : String(e)
-      await markScanned(sb, source, { status: 'error', units: null, error: message.slice(0, 900) })
+      // Отказ модели запоминаем вместе с отпечатком страницы: пока она не
+      // изменится, модель по ней больше не зовётся.
+      const refusal = e instanceof KnownRefusalError ? { layout: e.layout, fingerprint: e.fingerprint } : {}
+      await markScanned(sb, source, { status: 'error', units: null, error: message.slice(0, 900), ...refusal })
       outcomes.push({ ...label, status: 'error', error: message })
     }
   }

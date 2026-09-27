@@ -88,6 +88,8 @@ export type TextCache = {
   kind: 'text' | 'notion'
   textHash: string
   units: ScrapedUnit[]
+  // Модель уже сказала про этот текст «юнитов нет» — повторно не спрашиваем.
+  refused?: string
 }
 
 // Что лежит в market_sources.layout: конфиг таблицы или кеш текста.

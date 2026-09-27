@@ -11,13 +11,14 @@
 import { createHash } from 'crypto'
 import type { ExtractResult, ScrapedUnit } from '../types'
 import { extractUnitsFromText } from '../text-units'
+import { withTextRefusal } from '../refusal'
 
 export type WebpageScrape = ExtractResult & { textHash: string }
 
 export async function scrapeWebpage(
   html: string,
   meta: { developer: string; complex: string },
-  cache: { textHash: string; units: ScrapedUnit[] } | null,
+  cache: { textHash: string; units: ScrapedUnit[]; refused?: string } | null,
 ): Promise<WebpageScrape> {
   const text = htmlToText(html)
   if (text.length < 200) {
@@ -29,8 +30,10 @@ export async function scrapeWebpage(
     return { units: cache.units, warnings: [], textHash }
   }
 
-  const { units, warnings } = await extractUnitsFromText(text, meta)
-  return { units, warnings, textHash }
+  return withTextRefusal(cache, textHash, async () => {
+    const { units, warnings } = await extractUnitsFromText(text, meta)
+    return { units, warnings, textHash }
+  })
 }
 
 export async function fetchHtml(url: string): Promise<string> {
