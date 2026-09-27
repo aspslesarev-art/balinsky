@@ -281,7 +281,7 @@ export function HomeFinder({ items, lang = 'ru' }: { items: FinderItem[]; lang?:
               <Link
                 key={it.slug}
                 href={`${root}/o/${it.slug}`}
-                className="group block rounded-2xl border border-[var(--color-border)] bg-white overflow-hidden no-underline text-[#111827] hover:border-[var(--color-primary)] transition-colors"
+                className="group block rounded-2xl border border-[var(--color-border)] bg-white overflow-hidden no-underline text-[var(--color-text)] hover:border-[var(--color-primary)] transition-colors"
               >
                 <div className="relative w-full aspect-[4/3] bg-[var(--color-search-bg)]">
                   {it.cover ? (

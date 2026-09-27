@@ -96,7 +96,7 @@ export default async function Page({ params }: { params: Params }) {
         ]} />
 
         <article className="mt-6 mb-16 max-w-4xl">
-          <h1 className="text-[28px] md:text-[36px] font-semibold tracking-tight text-[#111827] mb-3 leading-tight">
+          <h1 className="text-[28px] md:text-[36px] font-semibold tracking-tight text-[var(--color-text)] mb-3 leading-tight">
             Отзывы о застройщике {name} на Бали
           </h1>
           <p className="text-[15px] text-[var(--color-text-muted)] mb-8 max-w-3xl">
@@ -110,7 +110,7 @@ export default async function Page({ params }: { params: Params }) {
                   <Building2 size={14} className="text-[var(--color-primary)]" />
                   <span className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">Сданные</span>
                 </div>
-                <div className="text-[24px] font-semibold text-[#111827]">{completed}</div>
+                <div className="text-[24px] font-semibold text-[var(--color-text)]">{completed}</div>
               </div>
             )}
             {active && (
@@ -119,13 +119,13 @@ export default async function Page({ params }: { params: Params }) {
                   <HardHat size={14} className="text-[var(--color-primary)]" />
                   <span className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">Активные</span>
                 </div>
-                <div className="text-[24px] font-semibold text-[#111827]">{active}</div>
+                <div className="text-[24px] font-semibold text-[var(--color-text)]">{active}</div>
               </div>
             )}
           </section>
 
           <section className="mb-10 space-y-3 text-[16px] leading-[1.7] text-[#1f2937]">
-            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-2">Как проверить застройщика самому</h2>
+            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-2">Как проверить застройщика самому</h2>
             <p>
               Перед покупкой проверьте документы по конкретному объекту: разрешения <strong>PBG</strong> и <strong>SLF</strong>, назначение земли, срок и условия лизхолда, договор и график платежей. Это стоит делать с независимым юристом — наличие компании в каталоге не означает, что документы проверены.
             </p>
@@ -136,7 +136,7 @@ export default async function Page({ params }: { params: Params }) {
 
           {review && (
             <section className="mb-10 rounded-2xl border border-[var(--color-border)] p-5 bg-white">
-              <h2 className="text-[18px] font-semibold text-[#111827] mb-2 flex items-center gap-2">
+              <h2 className="text-[18px] font-semibold text-[var(--color-text)] mb-2 flex items-center gap-2">
                 <MessageSquare size={18} className="text-[var(--color-primary)]" /> Реальный отзыв клиента
               </h2>
               <p className="text-[14px] leading-relaxed text-[#1f2937] whitespace-pre-wrap">{review}</p>
@@ -147,7 +147,7 @@ export default async function Page({ params }: { params: Params }) {
             <div className="flex items-start gap-3">
               <AlertCircle size={22} className="text-amber-700 mt-0.5 shrink-0" />
               <div>
-                <h3 className="text-[16px] font-semibold text-[#111827] mb-2">Что важно проверить перед сделкой</h3>
+                <h3 className="text-[16px] font-semibold text-[var(--color-text)] mb-2">Что важно проверить перед сделкой</h3>
                 <ul className="space-y-2 text-[14px] text-[#1f2937] list-disc pl-5">
                   <li>PBG (разрешение на строительство) на конкретный объект — не на застройщика «в целом»</li>
                   <li>SLF (сертификат пригодности к эксплуатации) на готовые юниты</li>
@@ -161,25 +161,25 @@ export default async function Page({ params }: { params: Params }) {
 
 
           <section className="mb-10">
-            <h2 className="text-[18px] font-semibold text-[#111827] mb-3">Связанные разделы</h2>
+            <h2 className="text-[18px] font-semibold text-[var(--color-text)] mb-3">Связанные разделы</h2>
             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <li>
-                <Link href={`/ru/zastrojshhiki/${slug}`} className="block px-4 py-3 rounded-xl border border-[var(--color-border)] bg-white text-[#111827] no-underline hover:border-[var(--color-primary)] transition-colors">
+                <Link href={`/ru/zastrojshhiki/${slug}`} className="block px-4 py-3 rounded-xl border border-[var(--color-border)] bg-white text-[var(--color-text)] no-underline hover:border-[var(--color-primary)] transition-colors">
                   Полная страница застройщика {name}
                 </Link>
               </li>
               <li>
-                <a href={botLink('manager', row.airtable_id)} target="_blank" rel="noopener" className="block px-4 py-3 rounded-xl border border-[var(--color-border)] bg-white text-[#111827] no-underline hover:border-[var(--color-primary)] transition-colors">
+                <a href={botLink('manager', row.airtable_id)} target="_blank" rel="noopener" className="block px-4 py-3 rounded-xl border border-[var(--color-border)] bg-white text-[var(--color-text)] no-underline hover:border-[var(--color-primary)] transition-colors">
                   Запросить отчёт по объектам {name}
                 </a>
               </li>
               <li>
-                <Link href="/ru/zastrojshhiki" className="block px-4 py-3 rounded-xl border border-[var(--color-border)] bg-white text-[#111827] no-underline hover:border-[var(--color-primary)] transition-colors">
+                <Link href="/ru/zastrojshhiki" className="block px-4 py-3 rounded-xl border border-[var(--color-border)] bg-white text-[var(--color-text)] no-underline hover:border-[var(--color-primary)] transition-colors">
                   Все застройщики Бали
                 </Link>
               </li>
               <li>
-                <Link href="/ru/investicii-v-nedvizhimost-bali" className="block px-4 py-3 rounded-xl border border-[var(--color-border)] bg-white text-[#111827] no-underline hover:border-[var(--color-primary)] transition-colors">
+                <Link href="/ru/investicii-v-nedvizhimost-bali" className="block px-4 py-3 rounded-xl border border-[var(--color-border)] bg-white text-[var(--color-text)] no-underline hover:border-[var(--color-primary)] transition-colors">
                   Гайд по инвестициям на Бали
                 </Link>
               </li>

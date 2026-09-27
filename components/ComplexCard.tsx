@@ -76,7 +76,7 @@ export function ComplexCard({ c, lang = 'ru', priority = false }: { c: ComplexCa
   return (
     <Link
       href={detailHref}
-      className="group flex h-full flex-col bg-[var(--color-card-bg)] rounded-2xl border border-[var(--color-border)] overflow-hidden hover:shadow-sm transition-shadow"
+      className="magic-card group flex h-full flex-col bg-[var(--color-card-bg)] rounded-2xl border border-[var(--color-border)] overflow-hidden"
     >
       <div className="relative">
         <PhotoSlider photos={slides} alt={c.name} heightClass="h-[240px] md:h-[360px]" trackingId={`complex:${c.slug}`} priority={priority} />

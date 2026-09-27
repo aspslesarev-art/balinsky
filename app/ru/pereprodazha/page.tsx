@@ -29,7 +29,7 @@ type SP = Promise<Record<string, string | undefined>>
 
 const CHIP = 'rounded-full border px-4 py-2 text-[14px] transition-colors no-underline'
 const CHIP_ON = 'border-[var(--color-primary)] bg-[var(--color-primary)] text-white'
-const CHIP_OFF = 'border-[var(--color-border)] bg-white text-[#111827] hover:border-[var(--color-primary)]'
+const CHIP_OFF = 'border-[var(--color-border)] bg-white text-[var(--color-text)] hover:border-[var(--color-primary)]'
 
 function hrefWith(current: Record<string, string | undefined>, patch: Record<string, string | null>): string {
   const params = new URLSearchParams()
@@ -74,7 +74,7 @@ export default async function ResalePage({ searchParams }: { searchParams: SP })
       <PageContainer>
         <div className="flex flex-wrap items-start justify-between gap-4 pt-8">
           <div>
-            <h1 className="mb-2 text-[28px] font-semibold tracking-tight text-[#111827] md:text-[36px]">
+            <h1 className="mb-2 text-[28px] font-semibold tracking-tight text-[var(--color-text)] md:text-[36px]">
               Перепродажа
             </h1>
             <p className="max-w-2xl text-[15px] leading-relaxed text-[var(--color-text-muted)]">
@@ -167,7 +167,7 @@ export default async function ResalePage({ searchParams }: { searchParams: SP })
         )}
 
         <section className="mt-14 rounded-2xl border border-[var(--color-border)] bg-white p-6">
-          <h2 className="text-[18px] font-semibold text-[#111827]">У вас есть объект на продажу?</h2>
+          <h2 className="text-[18px] font-semibold text-[var(--color-text)]">У вас есть объект на продажу?</h2>
           <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-[var(--color-text-muted)]">
             Вход через Telegram, без пароля: бот пришлёт ссылку и код, и вы вернётесь сюда же уже
             авторизованным. Дальше выбираете комплекс и юнит — характеристики подтянутся из

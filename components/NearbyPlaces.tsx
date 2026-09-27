@@ -225,7 +225,7 @@ export function NearbyPlaces({
 
   return (
     <section className="mb-10">
-      <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-2">
+      <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-2">
         {c.h2}
       </h2>
       <div className="text-[14px] text-[var(--color-text-muted)] mb-4">
@@ -301,14 +301,14 @@ export function NearbyPlaces({
             }
           >
             <div className="flex items-start justify-between gap-3">
-              <div className="text-[15px] font-semibold leading-snug text-[#111827] line-clamp-2">{loc(p.name, lang)}</div>
+              <div className="text-[15px] font-semibold leading-snug text-[var(--color-text)] line-clamp-2">{loc(p.name, lang)}</div>
               <div className="text-[12px] text-[var(--color-text-muted)] shrink-0 mt-0.5">{fmtDistance(p.distanceKm, lang)}</div>
             </div>
             <div className="flex items-center gap-3 text-[12px] text-[var(--color-text-muted)]">
               {p.rating != null && (
                 <span className="inline-flex items-center gap-1">
                   <Star size={12} className="text-[#F59E0B] fill-[#F59E0B]" />
-                  <span className="font-medium text-[#111827]">{p.rating.toFixed(1)}</span>
+                  <span className="font-medium text-[var(--color-text)]">{p.rating.toFixed(1)}</span>
                   {p.reviews != null && <span>· {p.reviews.toLocaleString(numberLocale).replace(/,/g, ' ')}</span>}
                 </span>
               )}

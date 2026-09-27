@@ -149,7 +149,7 @@ export function ManagerCard({
 
   return (
     <section id="kontakty-operatora" className="mb-10 scroll-mt-24">
-      <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-2">
+      <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-2">
         {heading}
       </h2>
       {/* Прямо под заголовком — кто именно на том конце. Balinsky не
@@ -218,7 +218,7 @@ function ManagerRow({
           )}
         </div>
         <div className="min-w-0">
-          <div className="text-[16px] md:text-[18px] font-semibold text-[#111827] truncate">{displayName}</div>
+          <div className="text-[16px] md:text-[18px] font-semibold text-[var(--color-text)] truncate">{displayName}</div>
           <div className="text-[12px] md:text-[13px] text-[var(--color-text-muted)] truncate">
             {c.role(developerName)}
           </div>
@@ -231,7 +231,7 @@ function ManagerRow({
             {m.rating != null && (
               <span className="inline-flex items-center gap-1 text-[12px] text-[var(--color-text-muted)]">
                 <Star size={12} className="text-[#F59E0B] fill-[#F59E0B]" />
-                <span className="font-medium text-[#111827]">{m.rating.toFixed(1)}</span>
+                <span className="font-medium text-[var(--color-text)]">{m.rating.toFixed(1)}</span>
               </span>
             )}
             {lang === 'ru' && displayLanguages.length > 0 && (
@@ -276,7 +276,7 @@ function ManagerRow({
             {...trackAttrs}
             target="_blank"
             rel="noopener nofollow"
-            className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full border border-[var(--color-border)] bg-white hover:bg-[var(--color-search-bg)] text-[#111827] text-[14px] font-medium no-underline transition-colors"
+            className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full border border-[var(--color-border)] bg-white hover:bg-[var(--color-search-bg)] text-[var(--color-text)] text-[14px] font-medium no-underline transition-colors"
           >
             <MessageCircle size={16} strokeWidth={1.6} /> WhatsApp
           </a>

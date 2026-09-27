@@ -130,7 +130,7 @@ export async function RentalListShell({ initial, lang }: {
     <>
       <Header active="arenda" />
       <PageContainer>
-        <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[#111827]">
+        <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[var(--color-text)]">
           {c.h1}
         </h1>
         <div className="text-[14px] text-[var(--color-text-muted)] mb-6">{c.sub}</div>

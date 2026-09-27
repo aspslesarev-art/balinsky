@@ -69,7 +69,7 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
       <Header active="villy" />
 
       <PageContainer>
-        <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[#111827]">{buildHeadingLoc(filters, 'zh')}</h1>
+        <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[var(--color-text)]">{buildHeadingLoc(filters, 'zh')}</h1>
         <div className="text-[14px] text-[var(--color-text-muted)] mb-6">{totalPoints} 个房源在地图上{totalPoints !== groups.length && ` · ${groups.length} 个坐标点`}</div>
 
         <CatalogTabs active="map" listHref={buildListHref(filters, 'zh')} mapHref={buildMapHref(filters, 'zh')} lang="zh" />

@@ -76,7 +76,7 @@ export function UnitDemandBlock({ demand, lang = 'ru' }: { demand: UnitDemand; l
           <span className="text-[10px] sm:text-[11px] opacity-75 mt-0.5">{c.of100}</span>
         </div>
         <div className="min-w-0">
-          <h3 className="text-[16px] sm:text-[18px] font-semibold text-[#111827]">{c.title}</h3>
+          <h3 className="text-[16px] sm:text-[18px] font-semibold text-[var(--color-text)]">{c.title}</h3>
           <p className="text-[14px] text-[var(--color-text)] mt-0.5">{c.meaning(demand.score)}</p>
           <p className="text-[12px] text-[var(--color-text-muted)] mt-1">{basis}</p>
         </div>
@@ -100,7 +100,7 @@ export function UnitDemandBlock({ demand, lang = 'ru' }: { demand: UnitDemand; l
           {stats.map(s => (
             <div key={s.label} className="rounded-xl bg-[var(--color-primary-soft)] px-3 py-2.5">
               <div className="text-[11px] text-[var(--color-text-muted)] leading-tight">{s.label}</div>
-              <div className="text-[15px] font-semibold text-[#111827] mt-0.5">{s.value}</div>
+              <div className="text-[15px] font-semibold text-[var(--color-text)] mt-0.5">{s.value}</div>
               {s.hint && <div className="text-[11px] text-[var(--color-text-muted)]">{s.hint}</div>}
             </div>
           ))}

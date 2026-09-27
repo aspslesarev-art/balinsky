@@ -228,7 +228,7 @@ export async function RentalCompareSection({ district, bedrooms, villaPriceUsd, 
   return (
     <section className="mb-10">
       <div className="flex items-baseline justify-between gap-4 flex-wrap mb-2">
-        <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827]">
+        <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)]">
           {c.heading}
         </h2>
         <Link
@@ -261,7 +261,7 @@ function Stat({ label, value, hint }: { label: string; value: React.ReactNode; h
   return (
     <div className="rounded-2xl border border-[var(--color-border)] bg-white p-4">
       <div className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)] mb-1.5">{label}</div>
-      <div className="text-[20px] font-semibold text-[#111827]">{value}</div>
+      <div className="text-[20px] font-semibold text-[var(--color-text)]">{value}</div>
       {hint && <div className="text-[11px] text-[var(--color-text-muted)] mt-1">{hint}</div>}
     </div>
   )
@@ -276,7 +276,7 @@ function CompareCard({ r, lang }: { r: RentalItem; lang: Lang }) {
       href={`${root}/o/${r.slug}`}
       target="_blank"
       rel="noopener"
-      className="block rounded-xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)] transition-colors"
+      className="block rounded-xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[var(--color-text)] hover:border-[var(--color-primary)] transition-colors"
     >
       <div className="relative aspect-[4/3] bg-[var(--color-search-bg)]">
         {cover ? (
@@ -286,7 +286,7 @@ function CompareCard({ r, lang }: { r: RentalItem; lang: Lang }) {
         )}
       </div>
       <div className="p-2.5">
-        <div className="text-[14px] font-semibold text-[#111827] leading-tight">
+        <div className="text-[14px] font-semibold text-[var(--color-text)] leading-tight">
           <InlinePrice usd={r.priceMonthUsd} lang={lang} /><span className="text-[10px] font-normal text-[var(--color-text-muted)]">{perMo}</span>
         </div>
         <div className="mt-0.5 flex items-center gap-2 text-[11px] text-[var(--color-text-muted)]">

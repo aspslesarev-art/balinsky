@@ -78,7 +78,7 @@ export function InvestmentDistrict({ slug, lang, copy }: { slug: string; lang: L
 
         <article className="mt-6 mb-16 max-w-4xl">
           <header className="mb-10">
-            <h1 className="text-[32px] md:text-[44px] font-semibold tracking-tight text-[#111827] mb-4 leading-tight">{d.h1(copy.name)}</h1>
+            <h1 className="text-[32px] md:text-[44px] font-semibold tracking-tight text-[var(--color-text)] mb-4 leading-tight">{d.h1(copy.name)}</h1>
             <p className="text-[18px] text-[var(--color-text-muted)] leading-relaxed max-w-[68ch]">{copy.hero}</p>
             <p className="text-[13px] text-[var(--color-text-muted)] mt-3">{g.updated}</p>
           </header>
@@ -88,7 +88,7 @@ export function InvestmentDistrict({ slug, lang, copy }: { slug: string; lang: L
               {copy.highlights.map(h => (
                 <div key={h.label} className="rounded-xl border border-[var(--color-border)] p-4 bg-white">
                   <div className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)] mb-1">{h.label}</div>
-                  <div className="text-[20px] font-semibold text-[#111827]">{h.value}</div>
+                  <div className="text-[20px] font-semibold text-[var(--color-text)]">{h.value}</div>
                 </div>
               ))}
             </section>
@@ -129,7 +129,7 @@ export function InvestmentDistrict({ slug, lang, copy }: { slug: string; lang: L
             <div className="flex items-start gap-3">
               <AlertTriangle size={22} className="text-amber-700 mt-0.5 shrink-0" />
               <div>
-                <h3 className="text-[16px] font-semibold text-[#111827] mb-2">{d.risksH3}</h3>
+                <h3 className="text-[16px] font-semibold text-[var(--color-text)] mb-2">{d.risksH3}</h3>
                 <ul className="space-y-2 text-[14px] text-[#1f2937] list-disc pl-5">
                   {g.risks.items.map(r => <li key={r.t}><strong>{r.t}</strong> {r.d}</li>)}
                 </ul>
@@ -139,7 +139,7 @@ export function InvestmentDistrict({ slug, lang, copy }: { slug: string; lang: L
 
           {copy.bestFor.length > 0 && (
             <section className="mb-10">
-              <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">{d.bestFor}</h2>
+              <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">{d.bestFor}</h2>
               <div className="flex flex-wrap gap-2">
                 {copy.bestFor.map(tag => (
                   <span key={tag} className="inline-block text-[14px] bg-white border border-[var(--color-border)] rounded-full px-4 py-2">{tag}</span>
@@ -149,7 +149,7 @@ export function InvestmentDistrict({ slug, lang, copy }: { slug: string; lang: L
           )}
 
           <section className="mb-10">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">{d.next}</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">{d.next}</h2>
             <div className="grid sm:grid-cols-2 gap-4">
               {([
                 [localizeHubPath(`/ru/villy/${slug}`, lang), d.villas(copy.name)],
@@ -158,7 +158,7 @@ export function InvestmentDistrict({ slug, lang, copy }: { slug: string; lang: L
                 [pillar, d.guide],
               ] as const).map(([href, [t, desc]], i) => (
                 <Link key={href} href={href} className="block rounded-2xl border border-[var(--color-border)] p-5 bg-white no-underline hover:border-[var(--color-primary)] transition-colors">
-                  <h3 className="text-[16px] font-semibold text-[#111827] mb-1 inline-flex items-center gap-1.5">
+                  <h3 className="text-[16px] font-semibold text-[var(--color-text)] mb-1 inline-flex items-center gap-1.5">
                     {i === 3 && <TrendingUp size={16} className="text-[var(--color-primary)]" />}{t}
                   </h3>
                   <p className="text-[13px] text-[var(--color-text-muted)]">{desc}</p>
@@ -175,7 +175,7 @@ export function InvestmentDistrict({ slug, lang, copy }: { slug: string; lang: L
           </section>
 
           <section className="mb-10">
-            <h2 className="text-[20px] font-semibold tracking-tight text-[#111827] mb-3">{g.sourcesH2}</h2>
+            <h2 className="text-[20px] font-semibold tracking-tight text-[var(--color-text)] mb-3">{g.sourcesH2}</h2>
             <ol className="list-decimal pl-5 space-y-1.5 text-[14px] text-[#1f2937]">
               {g.sources.slice(0, 5).map(s => (
                 <li key={s.href}>

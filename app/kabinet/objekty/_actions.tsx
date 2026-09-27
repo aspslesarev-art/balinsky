@@ -44,7 +44,7 @@ export function DeleteListingButton({ id, title }: { id: string; title: string }
 
   return (
     <span className="flex flex-wrap items-center gap-3 text-[14px]">
-      <span className="text-[#111827]">Удалить «{title}»?</span>
+      <span className="text-[var(--color-text)]">Удалить «{title}»?</span>
       <button type="button" onClick={remove} disabled={busy} className="font-medium text-red-700 underline disabled:opacity-60">
         {busy ? 'Удаляю…' : 'Да, удалить'}
       </button>

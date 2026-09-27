@@ -105,7 +105,7 @@ export function ComplexSignalsBlock({ signals, lang = 'ru' }: { signals: Complex
 
   return (
     <section className="rounded-2xl border border-[var(--color-border)] bg-white p-5">
-      <h3 className="mb-4 text-[15px] font-semibold text-[#111827]">{c.title}</h3>
+      <h3 className="mb-4 text-[15px] font-semibold text-[var(--color-text)]">{c.title}</h3>
       <div className="grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-4">
         {y && (
           <Signal
@@ -155,7 +155,7 @@ function Signal({
         <Icon size={15} className="shrink-0 text-[var(--color-primary)]" />
         <span className="truncate text-[11px] uppercase tracking-wide">{label}</span>
       </div>
-      <div className={`text-[15px] font-semibold leading-tight ${tone === 'primary' ? 'text-[var(--color-primary)]' : 'text-[#111827]'}`}>
+      <div className={`text-[15px] font-semibold leading-tight ${tone === 'primary' ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]'}`}>
         {value}
       </div>
       {sub && <div className="mt-0.5 text-[11.5px] text-[var(--color-text-muted)]">{sub}</div>}

@@ -21,7 +21,7 @@ export function PriceDisplay({
   const main = formatPrice(usd, currency, lang)
   const mainCls = size === 'lg' ? 'text-[28px]' : 'text-[20px]'
   return (
-    <div className={`${mainCls} font-semibold text-[#111827]`}>
+    <div className={`${mainCls} font-semibold text-[var(--color-text)]`}>
       {main}
       {suffix && (
         <span className="text-[14px] font-normal text-[var(--color-text-muted)]"> {suffix}</span>

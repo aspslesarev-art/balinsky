@@ -93,7 +93,7 @@ export default function Page() {
 
         <article className="mt-6 mb-16 max-w-4xl">
           <header className="mb-10">
-            <h1 className="text-[32px] md:text-[44px] font-semibold tracking-tight text-[#111827] mb-4 leading-tight">
+            <h1 className="text-[32px] md:text-[44px] font-semibold tracking-tight text-[var(--color-text)] mb-4 leading-tight">
               Жизнь на Бали — гайд для переезжающих
             </h1>
             <p className="text-[18px] text-[var(--color-text-muted)] leading-relaxed">
@@ -108,14 +108,14 @@ export default function Page() {
             {SECTIONS.map(({ Icon, title, body }) => (
               <div key={title} className="rounded-2xl border border-[var(--color-border)] p-4 bg-white">
                 <Icon size={22} className="text-[var(--color-primary)] mb-2" />
-                <h3 className="text-[15px] font-semibold text-[#111827] mb-1">{title}</h3>
+                <h3 className="text-[15px] font-semibold text-[var(--color-text)] mb-1">{title}</h3>
                 <p className="text-[13px] text-[var(--color-text-muted)] leading-relaxed">{body}</p>
               </div>
             ))}
           </section>
 
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">Визы и ВНЖ — какой формат под какую ситуацию</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">Визы и ВНЖ — какой формат под какую ситуацию</h2>
             <div className="space-y-4 text-[16px] leading-[1.7] text-[#1f2937]">
               <p><strong>B211A — туристическая виза.</strong> 60 дней с возможностью продления до 6 месяцев. Подходит для пробного периода, разведки острова до решения о переезде. Стоимость $50-100 + услуги агента $50-150.</p>
               <p><strong>E33G — digital nomad visa (с октября 2025).</strong> До 1 года, требует подтверждённый доход от $60K/год извне Индонезии. Не даёт права работать на местные компании, но легализует удалёнку. Идеальна для freelance и remote workers.</p>
@@ -126,7 +126,7 @@ export default function Page() {
           </section>
 
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">Налоги для иностранца-резидента</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">Налоги для иностранца-резидента</h2>
             <div className="space-y-4 text-[16px] leading-[1.7] text-[#1f2937]">
               <p>После 183 дней пребывания в Индонезии в течение 12 месяцев — налоговый резидент. С 2025 года Индонезия применяет worldwide taxation: НДФЛ платится со всех доходов глобально, не только с местных.</p>
               <p>Прогрессивная шкала: 5% до 60 млн IDR (~$4K), 15% до 250 млн (~$16K), 25% до 500 млн (~$32K), 30% до 5 млрд (~$320K), 35% выше. Налоговый год = календарный год, декларация подаётся до 31 марта.</p>
@@ -136,7 +136,7 @@ export default function Page() {
           </section>
 
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">Школы для детей</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">Школы для детей</h2>
             <div className="space-y-4 text-[16px] leading-[1.7] text-[#1f2937]">
               <p><strong>Дошкольное образование (3-5 лет):</strong> Sunrise Preschool, Sanggar Anak Tangguh, Australian Independent (early years) — $5-10K в год. Сильные программы Монтессори, Reggio Emilia, Waldorf.</p>
               <p><strong>Начальная и средняя школа базового уровня:</strong> Sunrise School (Bumin Sanur), Australian Independent School (Sanur), Cita Hati (Denpasar), Bali Island School (Sanur) — $7-15K в год. Cambridge и International Baccalaureate программы, английский plus испанский/мандарин/индонезийский.</p>
@@ -146,7 +146,7 @@ export default function Page() {
           </section>
 
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">Медицина</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">Медицина</h2>
             <div className="space-y-4 text-[16px] leading-[1.7] text-[#1f2937]">
               <p><strong>Клиники международного уровня:</strong> BIMC Kuta (отделение Cleveland Clinic), BIMC Nusa Dua, Siloam Hospital Denpasar, Kasih Ibu Hospital. Большинство врачей англоговорящие, ряд — с международной сертификацией (US Board, AHPRA, GMC).</p>
               <p><strong>Цены без страховки:</strong> консультация специалиста $40-80, общий анализ крови $25-40, КТ/МРТ $200-400, экстренная операция средней сложности $5-15K, роды (естественные) $2-4K, кесарево $4-7K.</p>
@@ -156,7 +156,7 @@ export default function Page() {
           </section>
 
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">Реальный бюджет на жизнь</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">Реальный бюджет на жизнь</h2>
             <div className="overflow-x-auto">
               <table className="w-full text-[14px] border-collapse">
                 <thead>
@@ -182,13 +182,13 @@ export default function Page() {
           </section>
 
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
               Часто задаваемые вопросы
             </h2>
             <div className="space-y-3">
               {FAQ.map((it, i) => (
                 <details key={i} className="rounded-2xl border border-[var(--color-border)] p-4 bg-white">
-                  <summary className="cursor-pointer list-none flex items-center justify-between gap-4 text-[15px] font-semibold text-[#111827]">
+                  <summary className="cursor-pointer list-none flex items-center justify-between gap-4 text-[15px] font-semibold text-[var(--color-text)]">
                     <span>{it.q}</span>
                     <ChevronRight size={18} className="shrink-0 transition-transform [details[open]_&]:rotate-90" />
                   </summary>
@@ -199,22 +199,22 @@ export default function Page() {
           </section>
 
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">Следующие шаги</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">Следующие шаги</h2>
             <div className="grid sm:grid-cols-2 gap-4">
               <Link href="/ru/investicii-v-nedvizhimost-bali" className="block rounded-2xl border border-[var(--color-border)] p-5 bg-white no-underline hover:border-[var(--color-primary)] transition-colors">
-                <h3 className="text-[16px] font-semibold text-[#111827] mb-1">Инвестиции в недвижимость Бали</h3>
+                <h3 className="text-[16px] font-semibold text-[var(--color-text)] mb-1">Инвестиции в недвижимость Бали</h3>
                 <p className="text-[13px] text-[var(--color-text-muted)]">Доходность, лизхолд, налоги, окупаемость — полный гайд для покупателя.</p>
               </Link>
               <Link href="/ru/villy/umalas" className="block rounded-2xl border border-[var(--color-border)] p-5 bg-white no-underline hover:border-[var(--color-primary)] transition-colors">
-                <h3 className="text-[16px] font-semibold text-[#111827] mb-1">Виллы в Умалас — резидентский район</h3>
+                <h3 className="text-[16px] font-semibold text-[var(--color-text)] mb-1">Виллы в Умалас — резидентский район</h3>
                 <p className="text-[13px] text-[var(--color-text-muted)]">Тихий район для семей с детьми, школы и инфраструктура рядом.</p>
               </Link>
               <Link href="/ru/villy/sanur" className="block rounded-2xl border border-[var(--color-border)] p-5 bg-white no-underline hover:border-[var(--color-primary)] transition-colors">
-                <h3 className="text-[16px] font-semibold text-[#111827] mb-1">Виллы в Санур — спокойный курорт</h3>
+                <h3 className="text-[16px] font-semibold text-[var(--color-text)] mb-1">Виллы в Санур — спокойный курорт</h3>
                 <p className="text-[13px] text-[var(--color-text-muted)]">Семейная аудитория, прогулочный променад, low risk.</p>
               </Link>
               <Link href="/ru/kontakty" className="block rounded-2xl border border-[var(--color-border)] p-5 bg-white no-underline hover:border-[var(--color-primary)] transition-colors">
-                <h3 className="text-[16px] font-semibold text-[#111827] mb-1">Связаться</h3>
+                <h3 className="text-[16px] font-semibold text-[var(--color-text)] mb-1">Связаться</h3>
                 <p className="text-[13px] text-[var(--color-text-muted)]">Telegram, email, контакты для покупателей и партнёров.</p>
               </Link>
             </div>

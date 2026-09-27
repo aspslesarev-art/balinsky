@@ -195,7 +195,7 @@ export function MethodologyView({ lang }: { lang: Lang }) {
         <ul className="space-y-3 max-w-[68ch]">
           {rows.map(r => (
             <li key={r.key} className="rounded-xl border border-[var(--color-border)] bg-white p-4">
-              <div className="text-[16px] font-semibold text-[#111827]">{r.label}</div>
+              <div className="text-[16px] font-semibold text-[var(--color-text)]">{r.label}</div>
               <p className="mt-1 text-[14px] leading-[1.6] text-[#1f2937]">{r.cells[0]}</p>
               <p className="mt-1 text-[13px] text-[var(--color-text-muted)]">{r.cells[1]}</p>
             </li>
@@ -208,7 +208,7 @@ export function MethodologyView({ lang }: { lang: Lang }) {
         <dl className="space-y-4 max-w-[68ch]">
           {c.defs.map(([t, d]) => (
             <div key={t}>
-              <dt className="text-[16px] font-semibold text-[#111827]">{t}</dt>
+              <dt className="text-[16px] font-semibold text-[var(--color-text)]">{t}</dt>
               <dd className="mt-1 text-[15px] leading-[1.65] text-[#1f2937]">{d}</dd>
             </div>
           ))}

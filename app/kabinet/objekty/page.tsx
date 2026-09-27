@@ -33,7 +33,7 @@ export default async function MyListingsPage() {
       <>
         <Header />
         <main className="mx-auto w-full max-w-xl px-6 py-16">
-        <h1 className="text-[26px] font-semibold tracking-tight text-[#111827]">Вход</h1>
+        <h1 className="text-[26px] font-semibold tracking-tight text-[var(--color-text)]">Вход</h1>
         <p className="mt-3 text-[15px] text-[var(--color-text-muted)]">
           Свои объекты видно после входа через Telegram.
         </p>
@@ -53,7 +53,7 @@ export default async function MyListingsPage() {
       <Header />
       <main className="mx-auto w-full max-w-3xl px-5 py-10 sm:px-6 sm:py-14">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-[26px] font-semibold tracking-tight text-[#111827] sm:text-[32px]">Мои объекты</h1>
+        <h1 className="text-[26px] font-semibold tracking-tight text-[var(--color-text)] sm:text-[32px]">Мои объекты</h1>
         <Link href="/kabinet/objekty/novyj"
           className="rounded-xl bg-[var(--color-primary)] px-5 py-2.5 text-[15px] font-semibold text-white">
           Добавить объект
@@ -70,7 +70,7 @@ export default async function MyListingsPage() {
             <li key={l.id} className="rounded-2xl border border-[var(--color-border)] bg-white p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <Link href={`/ru/pereprodazha/o/${l.slug}`} className="text-[15px] font-medium text-[#111827] underline">
+                  <Link href={`/ru/pereprodazha/o/${l.slug}`} className="text-[15px] font-medium text-[var(--color-text)] underline">
                     {l.title}
                   </Link>
                   <p className="mt-1 text-[15px] font-semibold text-[var(--color-primary)]">

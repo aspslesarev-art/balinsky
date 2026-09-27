@@ -11,19 +11,19 @@
   --color-primary-pressed: #135E40;
   --color-primary-soft: #E2F0E8;
 
-  /* Surfaces */
-  --color-bg: #F8FAF8;
-  --color-header-bg: #EEF5F1;
+  /* Surfaces — warm "paper" instead of the cold green-grey that read as a
+     stock template. Neutrals carry a little of the green ink, never pure grey. */
+  --color-bg: #F6F4EF;
+  --color-header-bg: #F1EEE6;
   --color-card-bg: #FFFFFF;
-  --color-search-bg: #F1F5F1;
+  --color-search-bg: #EFEDE5;
 
-  /* Text — muted bumped from gray-500 (#6B7280, 4.0:1) to gray-600
-     (#4B5563, 5.5:1) for AA-compliant contrast on every site bg. */
-  --color-text: #111827;
-  --color-text-muted: #4B5563;
+  /* Text — ink is green-black, muted is a warm grey (6.9:1 on --color-bg). */
+  --color-text: #15201B;
+  --color-text-muted: #4D5650;
 
   /* Lines */
-  --color-border: #E5E7EB;
+  --color-border: #E3DFD4;
 
   /* Functional */
   --color-progress-low: #EF4444;
@@ -32,14 +32,35 @@
   --color-logo-bg: #ED7A3C;
   --color-brand: #E78C3D;
 
-  /* Shadows */
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-popover: 0 8px 24px rgba(0, 0, 0, 0.08);
+  /* Shadows — layered and faint, tinted with the ink. */
+  --shadow-card: 0 1px 2px rgb(21 32 27 / 0.04), 0 4px 12px rgb(21 32 27 / 0.04);
+  --shadow-popover: 0 2px 4px rgb(21 32 27 / 0.04), 0 12px 32px rgb(21 32 27 / 0.10);
+  --shadow-lift: 0 2px 4px rgb(21 32 27 / 0.04), 0 12px 28px rgb(21 32 27 / 0.08);
+
+  --ease-out: cubic-bezier(.2, .8, .2, 1);
 }
 
 @theme inline {
-  --font-sans: var(--font-geist-sans);
+  --font-sans: 'Onest Variable', system-ui, -apple-system, sans-serif;
+  --font-display: 'Source Serif 4 Variable', Georgia, 'Times New Roman', serif;
   --font-mono: var(--font-geist-mono);
+}
+
+/* Tailwind's neutral scale, re-tinted: same steps, warmed toward the paper
+   background and the green ink, so every neutral-* utility on the site
+   stops looking like a default grey. */
+@theme {
+  --color-neutral-50: #F8F7F3;
+  --color-neutral-100: #F0EEE8;
+  --color-neutral-200: #E3DFD4;
+  --color-neutral-300: #CFCAC0;
+  --color-neutral-400: #A19C92;
+  --color-neutral-500: #726E66;
+  --color-neutral-600: #56544E;
+  --color-neutral-700: #403F3A;
+  --color-neutral-800: #282A26;
+  --color-neutral-900: #181D1A;
+  --color-neutral-950: #0D110F;
 }
 
 html {
@@ -53,7 +74,7 @@ html {
 }
 
 body {
-  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sans);
   background: var(--color-bg);
   color: var(--color-text);
   /* Mobile safety net — see html rules above. Declare both overflow
@@ -337,4 +358,130 @@ html[data-auth='1'] .bx-auth-only {
 
 html[data-auth='1'] .bx-anon-only {
   display: none;
+}
+
+/* === Editorial type ===
+   Public pages only (RootShell puts .site on <html>; editors don't get it).
+   Page and section titles go to the serif, body stays in Onest. Weights
+   in the markup stay as they are: font-light on section titles reads as a
+   fine book serif, the hero's heavy weight stays legible on the photo. */
+@layer base {
+  html.site h1,
+  html.site h2 {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    letter-spacing: -0.01em;
+  }
+  html.site ::selection {
+    background: var(--color-primary-soft);
+    color: var(--color-text);
+  }
+  html.site :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+/* Paper grain — a very faint noise over the page background so large
+   empty areas don't look like a flat template fill. Fixed and
+   pointer-transparent; sits under all content. */
+html.site body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.35;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .08 0 0 0 0 .12 0 0 0 0 .1 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* === Blur-fade (Magic UI blur-fade, CSS port) ===
+   Cards ease in as they scroll into view. Hidden only once JS has marked
+   <html> with .js-reveal, so without JS (and for crawlers) everything is
+   simply visible. components/Reveal.tsx adds .is-in. */
+html.js-reveal [data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, 12px, 0);
+  filter: blur(6px);
+  transition:
+    opacity 320ms var(--ease-out),
+    transform 320ms var(--ease-out),
+    filter 320ms var(--ease-out);
+  transition-delay: calc(var(--reveal-i, 0) * 60ms);
+}
+html.js-reveal [data-reveal].is-in {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+/* === Magic card (Magic UI magic-card, CSS port) ===
+   A soft green glow on the card border that follows the pointer. The
+   position comes from --mx/--my set by components/Reveal.tsx. Desktop
+   pointers only; touch just gets the plain hover border. */
+.magic-card {
+  position: relative;
+  isolation: isolate;
+  transition: box-shadow 200ms var(--ease-out), transform 200ms var(--ease-out);
+}
+.magic-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  background: radial-gradient(320px circle at var(--mx, 50%) var(--my, 0%), rgb(31 139 95 / 0.65), transparent 60%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box exclude, linear-gradient(#fff 0 0);
+  opacity: 0;
+  transition: opacity 200ms var(--ease-out);
+  z-index: 1;
+}
+@media (hover: hover) and (pointer: fine) {
+  .magic-card:hover {
+    box-shadow: var(--shadow-lift);
+    transform: translate3d(0, -2px, 0);
+  }
+  .magic-card:hover::after { opacity: 1; }
+}
+
+/* === Border beam (Magic UI border-beam, CSS port) ===
+   A short light travelling round the hero search box — the one element on
+   the page we want the eye to land on. Rotates a conic gradient behind a
+   1.5px masked ring. The animated value is a registered angle, so only
+   that thin ring repaints. */
+.border-beam {
+  position: relative;
+  isolation: isolate;
+}
+.border-beam::before {
+  content: "";
+  position: absolute;
+  inset: -1.5px;
+  border-radius: inherit;
+  padding: 1.5px;
+  overflow: hidden;
+  pointer-events: none;
+  background: conic-gradient(from var(--beam-a, 0deg), transparent 0 72%, rgb(231 140 61 / 0.9) 82%, rgb(255 255 255 / 0.95) 88%, transparent 94%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box exclude, linear-gradient(#fff 0 0);
+  animation: border-beam 6s linear infinite;
+  z-index: 2;
+}
+@property --beam-a {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+@keyframes border-beam {
+  to { --beam-a: 360deg; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.js-reveal [data-reveal] { opacity: 1; transform: none; filter: none; transition: none; }
+  .magic-card, .magic-card:hover { transform: none; }
+  .border-beam::before { animation: none; }
 }

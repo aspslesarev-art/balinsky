@@ -198,7 +198,7 @@ export async function RentalDetail({ slug, lang }: { slug: string; lang: Lang })
         )}
 
         <section className="mb-10">
-          <h1 className="text-[26px] md:text-[40px] font-semibold tracking-tight text-[#111827] leading-[1.1] mb-3">
+          <h1 className="text-[26px] md:text-[40px] font-semibold tracking-tight text-[var(--color-text)] leading-[1.1] mb-3">
             {r.title}
           </h1>
           <div className="text-[15px] text-[var(--color-text-muted)] flex items-center flex-wrap gap-x-5 gap-y-1 mb-4">
@@ -212,7 +212,7 @@ export async function RentalDetail({ slug, lang }: { slug: string; lang: Lang })
 
         {r.notes && (
           <section className="mb-10">
-            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-3">
+            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-3">
               {c.descHeading}
             </h2>
             <div className="prose-balinsky max-w-3xl text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">

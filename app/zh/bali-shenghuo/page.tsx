@@ -91,7 +91,7 @@ export default function Page() {
 
         <article className="mt-6 mb-16 max-w-4xl">
           <header className="mb-10">
-            <h1 className="text-[32px] md:text-[44px] font-semibold tracking-tight text-[#111827] mb-4 leading-tight">
+            <h1 className="text-[32px] md:text-[44px] font-semibold tracking-tight text-[var(--color-text)] mb-4 leading-tight">
               在巴厘岛生活 — 移居指南
             </h1>
             <p className="text-[18px] text-[var(--color-text-muted)] leading-relaxed">
@@ -105,14 +105,14 @@ export default function Page() {
             {SECTIONS.map(({ Icon, title, body }) => (
               <div key={title} className="rounded-2xl border border-[var(--color-border)] p-4 bg-white">
                 <Icon size={22} className="text-[var(--color-primary)] mb-2" />
-                <h3 className="text-[15px] font-semibold text-[#111827] mb-1">{title}</h3>
+                <h3 className="text-[15px] font-semibold text-[var(--color-text)] mb-1">{title}</h3>
                 <p className="text-[13px] text-[var(--color-text-muted)] leading-relaxed">{body}</p>
               </div>
             ))}
           </section>
 
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">签证 — 哪种适合哪种情况</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">签证 — 哪种适合哪种情况</h2>
             <div className="space-y-4 text-[16px] leading-[1.7] text-[#1f2937]">
               <p><strong>B211A — 旅游签证。</strong>60天，可续期至6个月。适合决定移居前的试住期。费用50-100美元 + 代办费50-150美元。</p>
               <p><strong>E33G — 数字游民签证（2025年10月起）。</strong>最长1年，要求有来自印尼境外、经核实的年收入6万美元以上。不允许为本地公司工作，但可将远程办公合法化。非常适合自由职业者和远程办公者。</p>
@@ -123,7 +123,7 @@ export default function Page() {
           </section>
 
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">外国人的居民税费</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">外国人的居民税费</h2>
             <div className="space-y-4 text-[16px] leading-[1.7] text-[#1f2937]">
               <p>在12个月内于印尼停留183天后，你即成为税务居民。自2025年起，印尼实行全球征税：个人所得税按全部全球收入缴纳，而非仅限本地收入。</p>
               <p>累进税率：不超过6000万印尼盾（约4千美元）为5%，不超过2.5亿（约1.6万美元）为15%，不超过5亿（约3.2万美元）为25%，不超过50亿（约32万美元）为30%，超过部分为35%。纳税年度＝日历年，报税截止日为3月31日。</p>
@@ -133,7 +133,7 @@ export default function Page() {
           </section>
 
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">国际学校</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">国际学校</h2>
             <div className="space-y-4 text-[16px] leading-[1.7] text-[#1f2937]">
               <p><strong>学前班（3-5岁）：</strong>Sunrise Preschool、Sanggar Anak Tangguh、Australian Independent（幼儿部）— 每年5000-10000美元。蒙特梭利、瑞吉欧、华德福项目实力雄厚。</p>
               <p><strong>小学和中学（标准档）：</strong>Sunrise School（Bumin Sanur）、Australian Independent School（Sanur）、Cita Hati（Denpasar）、Bali Island School（Sanur）— 每年7000-15000美元。剑桥和国际文凭课程，英语外加西班牙语/中文/印尼语。</p>
@@ -143,7 +143,7 @@ export default function Page() {
           </section>
 
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">医疗</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">医疗</h2>
             <div className="space-y-4 text-[16px] leading-[1.7] text-[#1f2937]">
               <p><strong>国际水准的诊所：</strong>BIMC Kuta（Cleveland Clinic关联机构）、BIMC Nusa Dua、Siloam Hospital Denpasar、Kasih Ibu Hospital。大多数医生会讲英语，部分持有国际认证（US Board、AHPRA、GMC）。</p>
               <p><strong>自费价格：</strong>专科门诊40-80美元，全套血液检查25-40美元，CT/MRI 200-400美元，中等急诊手术5000-15000美元，顺产2000-4000美元，剖腹产4000-7000美元。</p>
@@ -153,7 +153,7 @@ export default function Page() {
           </section>
 
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">真实生活成本</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">真实生活成本</h2>
             <div className="overflow-x-auto">
               <table className="w-full text-[14px] border-collapse">
                 <thead>
@@ -179,13 +179,13 @@ export default function Page() {
           </section>
 
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
               常见问题
             </h2>
             <div className="space-y-3">
               {FAQ.map((it, i) => (
                 <details key={i} className="rounded-2xl border border-[var(--color-border)] p-4 bg-white">
-                  <summary className="cursor-pointer list-none flex items-center justify-between gap-4 text-[15px] font-semibold text-[#111827]">
+                  <summary className="cursor-pointer list-none flex items-center justify-between gap-4 text-[15px] font-semibold text-[var(--color-text)]">
                     <span>{it.q}</span>
                     <ChevronRight size={18} className="shrink-0 transition-transform [details[open]_&]:rotate-90" />
                   </summary>
@@ -196,22 +196,22 @@ export default function Page() {
           </section>
 
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">下一步</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">下一步</h2>
             <div className="grid sm:grid-cols-2 gap-4">
               <Link href="/zh/bali-fangchan-touzi" className="block rounded-2xl border border-[var(--color-border)] p-5 bg-white no-underline hover:border-[var(--color-primary)] transition-colors">
-                <h3 className="text-[16px] font-semibold text-[#111827] mb-1">巴厘岛房产投资</h3>
+                <h3 className="text-[16px] font-semibold text-[var(--color-text)] mb-1">巴厘岛房产投资</h3>
                 <p className="text-[13px] text-[var(--color-text-muted)]">收益、leasehold、税费、投资回报 — 完整的投资者指南。</p>
               </Link>
               <Link href="/zh/bieshu/umalas" className="block rounded-2xl border border-[var(--color-border)] p-5 bg-white no-underline hover:border-[var(--color-primary)] transition-colors">
-                <h3 className="text-[16px] font-semibold text-[#111827] mb-1">Umalas的别墅 — 住宅区</h3>
+                <h3 className="text-[16px] font-semibold text-[var(--color-text)] mb-1">Umalas的别墅 — 住宅区</h3>
                 <p className="text-[13px] text-[var(--color-text-muted)]">适合有孩子家庭的安静区域，学校和基础设施近在咫尺。</p>
               </Link>
               <Link href="/zh/bieshu/sanur" className="block rounded-2xl border border-[var(--color-border)] p-5 bg-white no-underline hover:border-[var(--color-primary)] transition-colors">
-                <h3 className="text-[16px] font-semibold text-[#111827] mb-1">Sanur的别墅 — 宁静海岸</h3>
+                <h3 className="text-[16px] font-semibold text-[var(--color-text)] mb-1">Sanur的别墅 — 宁静海岸</h3>
                 <p className="text-[13px] text-[var(--color-text-muted)]">家庭客群、海滨步道、低风险。</p>
               </Link>
               <Link href="/zh/lianxi" className="block rounded-2xl border border-[var(--color-border)] p-5 bg-white no-underline hover:border-[var(--color-primary)] transition-colors">
-                <h3 className="text-[16px] font-semibold text-[#111827] mb-1">联系我们</h3>
+                <h3 className="text-[16px] font-semibold text-[var(--color-text)] mb-1">联系我们</h3>
                 <p className="text-[13px] text-[var(--color-text-muted)]">Telegram、邮箱、合作伙伴联系方式。</p>
               </Link>
             </div>

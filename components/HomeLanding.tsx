@@ -18,6 +18,7 @@
 //   8. «Поможем купить» + две кнопки
 
 import Link from 'next/link'
+import { NumberTicker } from '@/components/NumberTicker'
 import Image from 'next/image'
 import { createClient } from '@supabase/supabase-js'
 import {
@@ -819,7 +820,7 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
   ]
 
   return (
-    <div className="min-h-screen bg-white text-[#111827]">
+    <div className="min-h-screen text-[var(--color-text)]">
       <Header />
 
       {/* === 1. Фото + один вопрос + поиск ======================= */}
@@ -840,7 +841,7 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
 
         <PageContainer>
           <div className="relative max-w-[720px] pt-32 pb-14 md:pt-40 md:pb-20">
-            <h1 className="text-[36px] md:text-[60px] leading-[1.05] font-extrabold tracking-[-0.015em] text-white [text-shadow:0_2px_22px_rgba(0,0,0,0.65),0_1px_3px_rgba(0,0,0,0.55)]">
+            <h1 className="text-[36px] md:text-[60px] leading-[1.05] font-semibold tracking-[-0.015em] text-white [text-shadow:0_2px_22px_rgba(0,0,0,0.65),0_1px_3px_rgba(0,0,0,0.55)]">
               {c.hero.h1}
             </h1>
             <p className="mt-4 md:mt-5 text-[18px] md:text-[24px] leading-[1.3] font-semibold text-white/95 max-w-[560px] [text-shadow:0_1px_12px_rgba(0,0,0,0.6)]">
@@ -879,17 +880,19 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
       <SectionWrap className="border-t border-[var(--color-border)]">
         <SectionHead title={c.browse.heading} />
         <div className="mt-8 md:mt-10 grid sm:grid-cols-3 gap-5">
-          {browseCards.map(({ label, note, href, Icon }) => (
+          {browseCards.map(({ label, note, href, Icon }, i) => (
             <Link
               key={label}
               href={href}
-              className="group rounded-2xl border border-[var(--color-border)] bg-white p-6 md:p-7 no-underline hover:border-[var(--color-primary)] transition-colors"
+              data-reveal=""
+              style={{ '--reveal-i': i } as React.CSSProperties}
+              className="magic-card group rounded-2xl border border-[var(--color-border)] bg-white p-6 md:p-7 no-underline"
             >
               <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary-pressed)]">
                 <Icon size={22} strokeWidth={1.7} />
               </span>
-              <div className="mt-5 text-[21px] md:text-[23px] font-medium text-[#0E1A14] leading-tight">{label}</div>
-              <p className="mt-2 text-[14.5px] leading-[1.55] text-[#4B5563]">{note}</p>
+              <div className="mt-5 font-display text-[23px] md:text-[26px] font-normal text-[#0E1A14] leading-tight">{label}</div>
+              <p className="mt-2 text-[14.5px] leading-[1.55] text-[var(--color-text-muted)]">{note}</p>
               <span className="mt-4 inline-flex items-center text-[var(--color-primary)] group-hover:translate-x-1 transition-transform">
                 <ArrowRight size={18} />
               </span>
@@ -901,7 +904,7 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
       {/* === 4. Что умеет Balinsky — витрина возможностей ======== */}
       <SectionWrap className="border-t border-[var(--color-border)]">
         <SectionHead title={c.powers.heading} />
-        <p className="mt-4 max-w-[680px] text-[16px] md:text-[17px] leading-[1.6] text-[#4B5563]">
+        <p className="mt-4 max-w-[680px] text-[16px] md:text-[17px] leading-[1.6] text-[var(--color-text-muted)]">
           {c.powers.sub}
         </p>
         <div className="mt-8 md:mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-7">
@@ -909,7 +912,7 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
             const Icon = POWER_ICONS[i]
             const Visual = POWER_VISUALS[i]
             return (
-              <div key={p.title} className="rounded-2xl border border-[var(--color-border)] bg-white overflow-hidden">
+              <div key={p.title} data-reveal="" style={{ '--reveal-i': i % 3 } as React.CSSProperties} className="magic-card rounded-2xl border border-[var(--color-border)] bg-white overflow-hidden">
                 <div className="relative h-[150px] bg-[var(--color-search-bg)] border-b border-[var(--color-border)]">
                   {Visual && <Visual lang={lang} />}
                 </div>
@@ -918,7 +921,7 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
                     {Icon && <Icon size={19} strokeWidth={1.7} />}
                   </span>
                   <h3 className="mt-5 text-[19px] font-medium text-[#0E1A14] leading-tight">{p.title}</h3>
-                  <p className="mt-2.5 text-[15px] leading-[1.6] text-[#4B5563]">{p.body}</p>
+                  <p className="mt-2.5 text-[15px] leading-[1.6] text-[var(--color-text-muted)]">{p.body}</p>
                 </div>
               </div>
             )
@@ -943,7 +946,7 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
               <Link
                 key={t.href}
                 href={t.href}
-                className="group flex items-center gap-3 rounded-xl border border-[var(--color-border)] bg-white px-4 py-3.5 no-underline hover:border-[var(--color-primary)] transition-colors"
+                className="magic-card group flex items-center gap-3 rounded-xl border border-[var(--color-border)] bg-white px-4 py-3.5 no-underline"
               >
                 <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[var(--color-search-bg)] text-[var(--color-primary-pressed)] shrink-0">
                   <t.Icon size={16} strokeWidth={1.8} />
@@ -958,7 +961,7 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
 
       {/* === 5. Подбор за три вопроса =========================== */}
       {finderItems.length > 0 && (
-        <SectionWrap className="border-t border-[var(--color-border)] bg-[#FAFCFB]">
+        <SectionWrap className="border-t border-[var(--color-border)] bg-[var(--color-header-bg)]">
           <SectionHead title={c.finder.heading} />
           <div className="mt-8 md:mt-10">
             <HomeFinder items={finderItems} lang={lang} />
@@ -968,7 +971,7 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
 
       {/* === 6. Виллы =========================================== */}
       {topVillas.length > 0 && (
-        <SectionWrap className="border-t border-[var(--color-border)] bg-[#FAFCFB]">
+        <SectionWrap className="border-t border-[var(--color-border)] bg-[var(--color-header-bg)]">
           <SectionHead title={c.villas.heading} />
           <div className="mt-8 md:mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
             {topVillas.map(v => <VillaCard key={v.slug} a={v} lang={lang} />)}
@@ -985,7 +988,7 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
       <SectionWrap className="border-t border-[var(--color-border)]">
         <SectionHead title={c.districts.heading} />
         <div className="mt-8 md:mt-12 grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {c.districts.items.map(d => {
+          {c.districts.items.map((d, i) => {
             const cover = districtCovers[d.slug.toLowerCase()]
             // Link to the crawlable canonical hub (/ru/villy/<slug>,
             // /en/villas/<slug>, /id/vila/<slug> … — all in the sitemap)
@@ -998,6 +1001,8 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
               <Link
                 key={d.name}
                 href={districtHref}
+                data-reveal=""
+                style={{ '--reveal-i': i } as React.CSSProperties}
                 className="group relative flex items-end overflow-hidden rounded-2xl aspect-[3/4] bg-[#0E1A14] no-underline"
               >
                 {cover ? (
@@ -1013,7 +1018,7 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-[#091310]/85 via-[#091310]/15 to-transparent" />
                 <div className="relative p-4 md:p-5">
-                  <div className="flex items-center gap-1.5 text-[18px] md:text-[19px] font-medium text-white">
+                  <div className="flex items-center gap-1.5 font-display text-[20px] md:text-[22px] font-normal text-white">
                     <MapPin size={14} className="opacity-80" /> {d.name}
                   </div>
                   <div className="mt-1 text-[13px] text-white/80 leading-[1.45]">{d.tagline}</div>
@@ -1048,7 +1053,7 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
               </Link>
               <Link
                 href={developersHref}
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full border border-[#D5DDD8] text-[15px] font-medium text-[#1A2620] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors no-underline"
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full border border-[var(--color-border)] bg-white text-[15px] font-medium text-[#1A2620] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors no-underline"
               >
                 <Building2 size={15} /> {c.help.secondary}
               </Link>
@@ -1084,10 +1089,10 @@ function SectionHead({ title }: { title: string }) {
 function TrustCell({ value, label }: { value: string; label: string }) {
   return (
     <div>
-      <div className="text-[22px] md:text-[26px] font-light text-[#0E1A14] tabular-nums leading-none">
-        {value}
+      <div className="font-display text-[26px] md:text-[34px] font-light text-[#0E1A14] leading-none">
+        <NumberTicker value={value} />
       </div>
-      <div className="mt-2 text-[12px] md:text-[12.5px] text-[#4B5563] leading-[1.4]">
+      <div className="mt-2 text-[12px] md:text-[12.5px] text-[var(--color-text-muted)] leading-[1.4]">
         {label}
       </div>
     </div>

@@ -39,7 +39,7 @@ export function ReservationStatusButtons({
   } else if (current === 'paid') {
     next.push({ v: 'cancelled',    label: 'Возврат / отмена', tone: 'bg-white text-[#991B1B] border border-[#FEE2E2] hover:border-[#B91C1C]' })
   } else if (current === 'expired' || current === 'cancelled') {
-    next.push({ v: 'pending',      label: 'Восстановить',    tone: 'bg-white text-[#374151] border border-[#E5E7EB] hover:border-[#9CA3AF]' })
+    next.push({ v: 'pending',      label: 'Восстановить',    tone: 'bg-white text-[#374151] border border-[var(--color-border)] hover:border-[#9CA3AF]' })
   }
 
   return (

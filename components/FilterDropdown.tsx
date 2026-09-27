@@ -78,7 +78,7 @@ export function FilterDropdown({
               type="button"
               onClick={() => setOpen(false)}
               aria-label="Закрыть"
-              className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-black/5 hover:bg-black/10 text-[#111827]"
+              className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-black/5 hover:bg-black/10 text-[var(--color-text)]"
             >
               <X size={18} />
             </button>

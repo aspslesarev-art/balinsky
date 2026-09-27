@@ -43,7 +43,7 @@ export default async function RynokPage() {
         <div className="text-[12px] uppercase tracking-wide text-[var(--color-text-muted)]">
           Прайсы застройщиков Бали
         </div>
-        <h1 className="mt-1 text-[28px] font-semibold tracking-tight text-[#111827] sm:text-[32px]">
+        <h1 className="mt-1 text-[28px] font-semibold tracking-tight text-[var(--color-text)] sm:text-[32px]">
           Движение рынка
         </h1>
         <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-[var(--color-text-muted)]">

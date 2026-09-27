@@ -215,7 +215,7 @@ export async function EventDetail({ slug, lang }: { slug: string; lang: Lang }) 
         ]} />
 
         <article className="mt-4">
-          <h1 className="text-[28px] md:text-[40px] font-semibold leading-tight tracking-tight text-[#111827] mb-4">
+          <h1 className="text-[28px] md:text-[40px] font-semibold leading-tight tracking-tight text-[var(--color-text)] mb-4">
             {e.title}
           </h1>
 
@@ -237,7 +237,7 @@ export async function EventDetail({ slug, lang }: { slug: string; lang: Lang }) 
               )
             )}
             {e.format && <span className="inline-flex items-center gap-1.5">📍 {localizeEventFormat(e.format, lang)}</span>}
-            {past && <span className="text-[10px] uppercase tracking-wide bg-[#E5E7EB] text-[#374151] px-1.5 py-0.5 rounded">{c.pastBadge}</span>}
+            {past && <span className="text-[10px] uppercase tracking-wide bg-[var(--color-border)] text-[#374151] px-1.5 py-0.5 rounded">{c.pastBadge}</span>}
           </div>
 
           {e.photo && (

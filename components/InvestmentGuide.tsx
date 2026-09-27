@@ -54,7 +54,7 @@ export function investmentGuideMetadata(lang: Lang): Metadata {
   }
 }
 
-const H2 = 'text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4'
+const H2 = 'text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4'
 const P = 'text-[16px] leading-[1.7] text-[#1f2937]'
 const A = 'text-[var(--color-primary-pressed)] underline underline-offset-2 hover:no-underline'
 
@@ -85,7 +85,7 @@ export function InvestmentGuide({ lang }: { lang: Lang }) {
 
         <article className="mt-6 mb-16 max-w-4xl">
           <header className="mb-10">
-            <h1 className="text-[32px] md:text-[44px] font-semibold tracking-tight text-[#111827] mb-4 leading-tight">{c.h1}</h1>
+            <h1 className="text-[32px] md:text-[44px] font-semibold tracking-tight text-[var(--color-text)] mb-4 leading-tight">{c.h1}</h1>
             <p className="text-[18px] text-[var(--color-text-muted)] leading-relaxed max-w-[68ch]">{c.intro}</p>
             <p className="text-[13px] text-[var(--color-text-muted)] mt-3">{c.updated}</p>
           </header>
@@ -99,7 +99,7 @@ export function InvestmentGuide({ lang }: { lang: Lang }) {
             ].map(({ Icon, n, label }) => (
               <div key={label} className="rounded-2xl border border-[var(--color-border)] p-4 bg-white">
                 <Icon size={20} className="text-[var(--color-primary)] mb-2" />
-                <div className="text-[24px] font-semibold text-[#111827]">{n}</div>
+                <div className="text-[24px] font-semibold text-[var(--color-text)]">{n}</div>
                 <div className="text-[13px] text-[var(--color-text-muted)]">{label}</div>
               </div>
             ))}
@@ -132,14 +132,14 @@ export function InvestmentGuide({ lang }: { lang: Lang }) {
             <ul className="md:hidden space-y-3">
               {YIELD_ROWS.map(r => (
                 <li key={r.key} className="rounded-2xl border border-[var(--color-border)] p-4 bg-white">
-                  <div className="text-[15px] font-semibold text-[#111827] mb-2">{c.yields.areas[r.key]}{r.indicative ? '*' : ''}</div>
+                  <div className="text-[15px] font-semibold text-[var(--color-text)] mb-2">{c.yields.areas[r.key]}{r.indicative ? '*' : ''}</div>
                   <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-[14px]">
                     <dt className="text-[var(--color-text-muted)]">{c.yields.colPrice}</dt>
                     <dd className="text-right">{usd(r.price)} <span className="text-[var(--color-text-muted)]">({r.priceN})</span></dd>
                     <dt className="text-[var(--color-text-muted)]">{c.yields.colRate}</dt>
                     <dd className="text-right">{usd(r.rate)} <span className="text-[var(--color-text-muted)]">({r.rateN.toLocaleString('en-US')})</span></dd>
                     <dt className="text-[var(--color-text-muted)]">{c.yields.colYield}</dt>
-                    <dd className="text-right font-semibold text-[#111827]">{pct(r.gross, lang)} / {pct(r.net, lang)}</dd>
+                    <dd className="text-right font-semibold text-[var(--color-text)]">{pct(r.gross, lang)} / {pct(r.net, lang)}</dd>
                   </dl>
                   {r.hub && (
                     <Link href={localizeHubPath(r.hub, lang)} className="mt-2 text-[var(--color-primary)] text-[13px] inline-flex items-center gap-1 no-underline hover:underline">
@@ -163,10 +163,10 @@ export function InvestmentGuide({ lang }: { lang: Lang }) {
                 <tbody>
                   {YIELD_ROWS.map(r => (
                     <tr key={r.key} className="border-b border-[var(--color-border)] align-top">
-                      <td className="py-3 px-3 font-semibold text-[#111827]">{c.yields.areas[r.key]}{r.indicative ? '*' : ''}</td>
+                      <td className="py-3 px-3 font-semibold text-[var(--color-text)]">{c.yields.areas[r.key]}{r.indicative ? '*' : ''}</td>
                       <td className="py-3 px-3 whitespace-nowrap">{usd(r.price)} <span className="text-[var(--color-text-muted)]">({r.priceN})</span></td>
                       <td className="py-3 px-3 whitespace-nowrap">{usd(r.rate)} <span className="text-[var(--color-text-muted)]">({r.rateN.toLocaleString('en-US')})</span></td>
-                      <td className="py-3 px-3 whitespace-nowrap font-semibold text-[#111827]">{pct(r.gross, lang)} / {pct(r.net, lang)}</td>
+                      <td className="py-3 px-3 whitespace-nowrap font-semibold text-[var(--color-text)]">{pct(r.gross, lang)} / {pct(r.net, lang)}</td>
                       <td className="py-3 px-3 text-right">
                         {r.hub && (
                           <Link href={localizeHubPath(r.hub, lang)} className="text-[var(--color-primary)] text-[13px] inline-flex items-center gap-1 no-underline hover:underline">
@@ -190,7 +190,7 @@ export function InvestmentGuide({ lang }: { lang: Lang }) {
                 { t: c.legal.pmaTitle, lead: c.legal.pmaLead, items: c.legal.pma },
               ].map(card => (
                 <div key={card.t} className="rounded-2xl border border-[var(--color-border)] p-5 bg-white">
-                  <h3 className="text-[18px] font-semibold text-[#111827] mb-2">{card.t}</h3>
+                  <h3 className="text-[18px] font-semibold text-[var(--color-text)] mb-2">{card.t}</h3>
                   <p className="text-[14px] text-[var(--color-text-muted)] mb-3">{card.lead}</p>
                   <ul className="space-y-2 text-[14px] text-[#1f2937] list-disc pl-5">
                     {card.items.map(it => <li key={it}>{it}</li>)}
@@ -224,7 +224,7 @@ export function InvestmentGuide({ lang }: { lang: Lang }) {
             <div className="flex items-start gap-3">
               <AlertTriangle size={22} className="text-amber-700 mt-0.5 shrink-0" />
               <div>
-                <h3 className="text-[16px] font-semibold text-[#111827] mb-2">{c.risks.h3}</h3>
+                <h3 className="text-[16px] font-semibold text-[var(--color-text)] mb-2">{c.risks.h3}</h3>
                 <ul className="space-y-2 text-[14px] text-[#1f2937] list-disc pl-5">
                   {c.risks.items.map(r => <li key={r.t}><strong>{r.t}</strong> {r.d}</li>)}
                 </ul>
@@ -241,7 +241,7 @@ export function InvestmentGuide({ lang }: { lang: Lang }) {
                 return (
                   <div key={card.t} className="rounded-2xl border border-[var(--color-border)] p-4 bg-white">
                     <Icon size={20} className="text-[var(--color-primary)] mb-2" />
-                    <h3 className="text-[14px] font-semibold text-[#111827] mb-1">{card.t}</h3>
+                    <h3 className="text-[14px] font-semibold text-[var(--color-text)] mb-1">{card.t}</h3>
                     <p className="text-[13px] text-[var(--color-text-muted)]">{card.d}</p>
                   </div>
                 )
@@ -262,7 +262,7 @@ export function InvestmentGuide({ lang }: { lang: Lang }) {
                 [L('/ru/kak-kupit'), c.next.howTo],
               ] as const).map(([href, [t, d]]) => (
                 <Link key={href} href={href} className="block rounded-2xl border border-[var(--color-border)] p-5 bg-white no-underline hover:border-[var(--color-primary)] transition-colors">
-                  <h3 className="text-[16px] font-semibold text-[#111827] mb-1">{t}</h3>
+                  <h3 className="text-[16px] font-semibold text-[var(--color-text)] mb-1">{t}</h3>
                   <p className="text-[13px] text-[var(--color-text-muted)]">{d}</p>
                 </Link>
               ))}
@@ -274,7 +274,7 @@ export function InvestmentGuide({ lang }: { lang: Lang }) {
             <div className="space-y-3">
               {c.faq.map(it => (
                 <details key={it.q} className="rounded-2xl border border-[var(--color-border)] p-4 bg-white">
-                  <summary className="cursor-pointer list-none flex items-center justify-between gap-4 text-[15px] font-semibold text-[#111827]">
+                  <summary className="cursor-pointer list-none flex items-center justify-between gap-4 text-[15px] font-semibold text-[var(--color-text)]">
                     <span>{it.q}</span>
                     <ChevronRight size={18} className="shrink-0 transition-transform [details[open]_&]:rotate-90" />
                   </summary>

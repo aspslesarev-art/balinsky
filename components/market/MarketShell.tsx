@@ -12,7 +12,7 @@ import { SITE_ORIGIN, hreflangMap } from '@/lib/hreflang'
 import { MARKET, MARKET_PAGES_RU, marketPath, type MarketPageKey } from '@/lib/market-index'
 import { t } from '@/lib/i18n'
 
-export const H2 = 'text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4 leading-tight'
+export const H2 = 'text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4 leading-tight'
 export const P = 'text-[16px] leading-[1.7] text-[#1f2937] max-w-[68ch]'
 export const NOTE = 'mt-3 text-[13px] leading-[1.6] text-[var(--color-text-muted)] max-w-[68ch]'
 export const A = 'text-[var(--color-primary-pressed)] underline underline-offset-2 hover:no-underline'
@@ -94,7 +94,7 @@ export function MarketShell({ pageKey, lang, crumb, h1, lead, updated, children,
         />
         <article className="mt-6 mb-16 max-w-[960px]">
           <header className="mb-10">
-            <h1 className="text-[32px] md:text-[44px] font-semibold tracking-tight text-[#111827] mb-4 leading-[1.15]">{h1}</h1>
+            <h1 className="text-[32px] md:text-[44px] font-semibold tracking-tight text-[var(--color-text)] mb-4 leading-[1.15]">{h1}</h1>
             <div className="text-[18px] leading-[1.6] text-[#374151] max-w-[68ch]">{lead}</div>
             <p className="mt-4 text-[13px] text-[var(--color-text-muted)]">{updated}</p>
           </header>
@@ -107,7 +107,7 @@ export function MarketShell({ pageKey, lang, crumb, h1, lead, updated, children,
               <div className="space-y-6 max-w-[68ch]">
                 {faq.map(f => (
                   <div key={f.q}>
-                    <h3 className="text-[17px] font-semibold text-[#111827] mb-1.5">{f.q}</h3>
+                    <h3 className="text-[17px] font-semibold text-[var(--color-text)] mb-1.5">{f.q}</h3>
                     <p className="text-[15px] leading-[1.7] text-[#1f2937]">{f.a}</p>
                   </div>
                 ))}
@@ -116,7 +116,7 @@ export function MarketShell({ pageKey, lang, crumb, h1, lead, updated, children,
           )}
 
           <section className="pt-8 border-t border-[var(--color-border)]">
-            <h2 className="text-[20px] font-semibold tracking-tight text-[#111827] mb-3">{sourcesTitle}</h2>
+            <h2 className="text-[20px] font-semibold tracking-tight text-[var(--color-text)] mb-3">{sourcesTitle}</h2>
             <ol className="list-decimal pl-5 space-y-1.5 text-[14px] text-[#1f2937] max-w-[68ch]">
               {sources.map(s => (
                 <li key={s.href}>

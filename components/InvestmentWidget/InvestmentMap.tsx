@@ -541,7 +541,7 @@ export function InvestmentMap({
             'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-medium cursor-pointer shadow-sm backdrop-blur-sm ' +
             (showHeat
               ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)]'
-              : 'bg-white/95 text-[#111827] border-[var(--color-border)] hover:border-[var(--color-primary)]')
+              : 'bg-white/95 text-[var(--color-text)] border-[var(--color-border)] hover:border-[var(--color-primary)]')
           }
         >
           <Flame size={13} className={showHeat ? 'text-white' : 'text-[#FF5A36]'} />

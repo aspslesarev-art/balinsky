@@ -231,14 +231,14 @@ export async function KnowledgeList({ lang, audience }: { lang: Lang; audience: 
   const sub = audience === 'agent' ? c.subAgent : audience === 'life' ? c.subLife : c.subInvestor
 
   const pillBase = 'inline-flex items-center px-5 py-2 rounded-full text-[14px] font-medium no-underline transition-colors border'
-  const pillActive = 'bg-[#111827] text-white border-[#111827]'
-  const pillIdle = 'bg-white text-[#111827] border-[var(--color-border)] hover:border-[var(--color-primary)]'
+  const pillActive = 'bg-[var(--color-text)] text-white border-[var(--color-text)]'
+  const pillIdle = 'bg-white text-[var(--color-text)] border-[var(--color-border)] hover:border-[var(--color-primary)]'
 
   return (
     <>
       <Header />
       <PageContainer>
-        <h1 className="pt-8 mb-4 text-[28px] md:text-[36px] font-semibold tracking-tight text-[#111827]">{h1}</h1>
+        <h1 className="pt-8 mb-4 text-[28px] md:text-[36px] font-semibold tracking-tight text-[var(--color-text)]">{h1}</h1>
         <div className="text-[14px] text-[var(--color-text-muted)] mb-6">{sub}</div>
         <div className="flex flex-wrap gap-2 mb-8">
           <Link href={listRoot} className={`${pillBase} ${audience === 'investor' ? pillActive : pillIdle}`}>
@@ -254,7 +254,7 @@ export async function KnowledgeList({ lang, audience }: { lang: Lang; audience: 
         <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {items.map(k => (
             <li key={k.id}>
-              <Link href={`${detailRoot}/${lang === 'ru' ? k.slug : enKnowledgeSlug(k.slug)}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)] transition-colors">
+              <Link href={`${detailRoot}/${lang === 'ru' ? k.slug : enKnowledgeSlug(k.slug)}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[var(--color-text)] hover:border-[var(--color-primary)] transition-colors">
                 <div className="relative w-full aspect-[16/9] bg-[var(--color-search-bg)]">
                   {k.photo ? (
                     <Image src={k.photo} alt={k.title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />

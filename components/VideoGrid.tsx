@@ -61,7 +61,7 @@ export function VideoGrid({ videos, title = 'Видео' }: { videos: VideoItem[
   }
   return (
     <section className="mb-10">
-      <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
+      <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
         {title}
       </h2>
       {/* Mobile: horizontal swipe with the next card peeking; desktop: grid. */}
@@ -74,7 +74,7 @@ export function VideoGrid({ videos, title = 'Видео' }: { videos: VideoItem[
                 href={v.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)] transition-colors group"
+                className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[var(--color-text)] hover:border-[var(--color-primary)] transition-colors group"
               >
                 <div className="relative w-full aspect-video bg-[var(--color-search-bg)]">
                   {thumb ? (

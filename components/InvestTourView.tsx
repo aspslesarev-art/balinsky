@@ -559,7 +559,7 @@ export function InvestTourView({ lang }: { lang: Lang }) {
 
         {/* HERO */}
         <section className="mt-4 mb-12 max-w-[760px]">
-          <h1 className="text-[28px] md:text-[44px] font-semibold tracking-tight text-[#111827] leading-[1.05] mb-5">
+          <h1 className="text-[28px] md:text-[44px] font-semibold tracking-tight text-[var(--color-text)] leading-[1.05] mb-5">
             {c.h1}
           </h1>
           <p className="text-[16px] md:text-[18px] leading-[1.65] text-[var(--color-text)] mb-6">
@@ -594,7 +594,7 @@ export function InvestTourView({ lang }: { lang: Lang }) {
 
         {/* WHY */}
         <section className="mb-14">
-          <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-6">
+          <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-6">
             {c.h2Why}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -610,7 +610,7 @@ export function InvestTourView({ lang }: { lang: Lang }) {
 
         {/* PLAN */}
         <section className="mb-14">
-          <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-6">
+          <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-6">
             {c.h2Plan}
           </h2>
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -630,13 +630,13 @@ export function InvestTourView({ lang }: { lang: Lang }) {
 
         {/* FAQ */}
         <section className="mb-14 max-w-[760px]">
-          <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-5">
+          <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-5">
             {c.h2Faq}
           </h2>
           <ul className="divide-y divide-[var(--color-border)] border-y border-[var(--color-border)]">
             {c.faq.map(f => (
               <li key={f.q} className="py-4">
-                <h3 className="text-[16px] font-semibold mb-1.5 text-[#111827]">{f.q}</h3>
+                <h3 className="text-[16px] font-semibold mb-1.5 text-[var(--color-text)]">{f.q}</h3>
                 <p className="text-[14px] leading-[1.65] text-[var(--color-text-muted)]">{f.a}</p>
               </li>
             ))}

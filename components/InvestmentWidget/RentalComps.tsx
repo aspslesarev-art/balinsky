@@ -125,7 +125,7 @@ export function RentalComps({ lat, lng, adr, lang }: { lat: number; lng: number;
   return (
     <div className="mt-5 rounded-2xl border border-[var(--color-border)] bg-white p-5">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-1">
-        <div className="text-[12px] uppercase tracking-wide font-semibold text-[#111827]">{c.title}</div>
+        <div className="text-[12px] uppercase tracking-wide font-semibold text-[var(--color-text)]">{c.title}</div>
         <div className="flex gap-1.5">
           {RADII.map(r => (
             <button
@@ -135,7 +135,7 @@ export function RentalComps({ lat, lng, adr, lang }: { lat: number; lng: number;
               className={`rounded-lg px-3 py-1.5 text-[12px] font-medium transition-colors ${
                 radius === r
                   ? 'bg-[var(--color-primary)] text-white'
-                  : 'border border-[var(--color-border)] text-[#111827] hover:border-[var(--color-primary)]'
+                  : 'border border-[var(--color-border)] text-[var(--color-text)] hover:border-[var(--color-primary)]'
               }`}
             >
               {r === 500 ? c.r500 : c.r1000}
@@ -182,7 +182,7 @@ export function RentalComps({ lat, lng, adr, lang }: { lat: number; lng: number;
               href={it.url ?? undefined}
               target="_blank"
               rel="noopener noreferrer nofollow"
-              className="group shrink-0 w-[210px] snap-start rounded-xl border border-[var(--color-border)] overflow-hidden no-underline text-[#111827] hover:border-[var(--color-primary)] transition-colors"
+              className="group shrink-0 w-[210px] snap-start rounded-xl border border-[var(--color-border)] overflow-hidden no-underline text-[var(--color-text)] hover:border-[var(--color-primary)] transition-colors"
             >
               {/* Фото отдаёт CDN Booking — своего egress не тратим. next/image
                   здесь не нужен: чужие картинки не оптимизируем. */}
@@ -198,7 +198,7 @@ export function RentalComps({ lat, lng, adr, lang }: { lat: number; lng: number;
                 {/* Состав объекта — то, что делает сравнение честным.
                     Площадь у Booking заполнена меньше чем у процента
                     объектов, поэтому показываем её только когда есть. */}
-                <div className="mt-1 text-[11.5px] text-[#111827]">
+                <div className="mt-1 text-[11.5px] text-[var(--color-text)]">
                   {[
                     it.unitKind ? (c.kinds[it.unitKind] ?? it.unitKind) : null,
                     it.bedrooms != null ? c.beds(it.bedrooms) : null,
@@ -223,7 +223,7 @@ export function RentalComps({ lat, lng, adr, lang }: { lat: number; lng: number;
             type="button"
             onClick={() => scrollBy(-1)}
             aria-label={c.prev}
-            className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 h-9 w-9 items-center justify-center rounded-full bg-white shadow-md ring-1 ring-black/5 text-[#111827] hover:text-[var(--color-primary)]"
+            className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 h-9 w-9 items-center justify-center rounded-full bg-white shadow-md ring-1 ring-black/5 text-[var(--color-text)] hover:text-[var(--color-primary)]"
           >
             <ChevronLeft size={18} />
           </button>
@@ -231,7 +231,7 @@ export function RentalComps({ lat, lng, adr, lang }: { lat: number; lng: number;
             type="button"
             onClick={() => scrollBy(1)}
             aria-label={c.next}
-            className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 h-9 w-9 items-center justify-center rounded-full bg-white shadow-md ring-1 ring-black/5 text-[#111827] hover:text-[var(--color-primary)]"
+            className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 h-9 w-9 items-center justify-center rounded-full bg-white shadow-md ring-1 ring-black/5 text-[var(--color-text)] hover:text-[var(--color-primary)]"
           >
             <ChevronRight size={18} />
           </button>

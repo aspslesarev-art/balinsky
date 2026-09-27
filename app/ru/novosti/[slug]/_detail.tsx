@@ -180,7 +180,7 @@ export async function NewsDetail({ slug, lang }: { slug: string; lang: Lang }) {
         ]} />
 
         <article className="mt-4">
-          <h1 className="text-[28px] md:text-[40px] font-semibold leading-tight tracking-tight text-[#111827] mb-4">
+          <h1 className="text-[28px] md:text-[40px] font-semibold leading-tight tracking-tight text-[var(--color-text)] mb-4">
             {n.title}
           </h1>
 
@@ -231,13 +231,13 @@ export async function NewsDetail({ slug, lang }: { slug: string; lang: Lang }) {
 
         {related.length > 0 && (
           <section className="mt-14">
-            <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[#111827] mb-4">
+            <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
               {c.moreFrom(n.developers[0].name)}
             </h2>
             <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {related.map(r => (
                 <li key={r.id}>
-                  <Link href={`${newsRoot}/${r.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)]">
+                  <Link href={`${newsRoot}/${r.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[var(--color-text)] hover:border-[var(--color-primary)]">
                     {r.photo ? (
                       <div className="relative w-full h-[120px]">
                         <Image src={r.photo} alt={r.title} fill sizes="(max-width: 768px) 100vw, 25vw" className="object-cover" />

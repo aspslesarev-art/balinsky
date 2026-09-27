@@ -152,7 +152,7 @@ export function ComplexVisualizationViewer({
 
   return (
     <section className="mb-10">
-      <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-2">
+      <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-2">
         {pickCopy({ ru: 'Интерактивный план', en: 'Interactive plan', id: 'Denah interaktif', fr: 'Plan interactif', de: 'Interaktiver Plan', zh: '交互式平面图', nl: 'Interactieve plattegrond', ban: 'Denah interaktif', pl: 'Plan interaktywny', uk: 'Інтерактивний план' }, lang)}
       </h2>
       <div className="text-[13px] text-[var(--color-text-muted)] mb-4">
@@ -167,7 +167,7 @@ export function ComplexVisualizationViewer({
             <button
               type="button"
               onClick={back}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur text-[13px] text-[#111827] shadow-md hover:bg-white"
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur text-[13px] text-[var(--color-text)] shadow-md hover:bg-white"
             >
               <ChevronLeft size={14} /> {COPY.back}
             </button>
@@ -187,7 +187,7 @@ export function ComplexVisualizationViewer({
                   className={`px-3 py-1.5 rounded-full text-[12px] backdrop-blur shadow-md transition-colors ${
                     active
                       ? 'bg-[#1F8B5F] text-white'
-                      : 'bg-white/90 text-[#111827] hover:bg-white'
+                      : 'bg-white/90 text-[var(--color-text)] hover:bg-white'
                   }`}
                 >
                   {l.title ?? `#${l.id}`}
@@ -196,7 +196,7 @@ export function ComplexVisualizationViewer({
             })}
           </div>
         ) : currentLayer.title ? (
-          <div className="absolute top-3 right-3 z-10 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur text-[12px] text-[#111827] shadow-md max-w-[60vw] truncate">
+          <div className="absolute top-3 right-3 z-10 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur text-[12px] text-[var(--color-text)] shadow-md max-w-[60vw] truncate">
             {currentLayer.title}
           </div>
         ) : null}
@@ -356,7 +356,7 @@ function UnitPopup({
             {statusBadge.text}
           </div>
         )}
-        <div className="text-[14px] font-semibold text-[#111827] line-clamp-2 mb-1">{popup.unit.title}</div>
+        <div className="text-[14px] font-semibold text-[var(--color-text)] line-clamp-2 mb-1">{popup.unit.title}</div>
         <div className="text-[12px] text-[var(--color-text-muted)] flex items-center gap-2 flex-wrap mb-2">
           {popup.unit.bedrooms != null && (<span className="inline-flex items-center gap-1"><BedDouble size={11} />{popup.unit.bedrooms} {copy.br}</span>)}
           {popup.unit.area != null && <span>{popup.unit.area} {copy.sqm}</span>}

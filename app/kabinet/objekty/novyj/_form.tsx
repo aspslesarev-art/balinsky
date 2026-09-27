@@ -14,8 +14,8 @@ type UnitOption = { id: string; title: string; rooms: number | null; area: numbe
 type UnitFacts = { title: string; data: Record<string, unknown>; photos: string[]; priceUsd: number | null }
 
 const INPUT =
-  'mt-1 w-full rounded-xl border border-[var(--color-border)] bg-white px-4 py-2.5 text-[15px] text-[#111827] outline-none focus:border-[var(--color-primary)]'
-const LABEL = 'text-[14px] font-medium text-[#111827]'
+  'mt-1 w-full rounded-xl border border-[var(--color-border)] bg-white px-4 py-2.5 text-[15px] text-[var(--color-text)] outline-none focus:border-[var(--color-primary)]'
+const LABEL = 'text-[14px] font-medium text-[var(--color-text)]'
 const CARD = 'rounded-2xl border border-[var(--color-border)] bg-white p-5'
 
 const STATUSES = ['Строится', 'Построен', 'Под заказ']
@@ -164,7 +164,7 @@ export default function NewListingForm() {
               className={`rounded-xl border px-5 py-2.5 text-[15px] ${
                 kind === k
                   ? 'border-[var(--color-primary)] bg-[var(--color-primary)] text-white'
-                  : 'border-[var(--color-border)] bg-white text-[#111827]'
+                  : 'border-[var(--color-border)] bg-white text-[var(--color-text)]'
               }`}
             >
               {k === 'villa' ? 'Вилла' : 'Апартаменты'}
@@ -242,7 +242,7 @@ export default function NewListingForm() {
                         : 'border-[var(--color-border)] hover:bg-[#f9fafb]'
                     }`}
                   >
-                    <span className="font-medium text-[#111827]">{u.title}</span>
+                    <span className="font-medium text-[var(--color-text)]">{u.title}</span>
                     <span className="block text-[13px] text-[var(--color-text-muted)]">
                       {[u.rooms ? `${u.rooms} спален` : null, u.area ? `${u.area} м²` : null,
                         u.priceUsd ? `от $${u.priceUsd.toLocaleString('en-US')}` : null]
@@ -272,7 +272,7 @@ export default function NewListingForm() {
             {Object.entries(facts.data).slice(0, 12).map(([k, v]) => (
               <div key={k}>
                 <dt className="text-[12px] text-[var(--color-text-muted)]">{k}</dt>
-                <dd className="text-[#111827]">{String(Array.isArray(v) ? v[0] : v)}</dd>
+                <dd className="text-[var(--color-text)]">{String(Array.isArray(v) ? v[0] : v)}</dd>
               </div>
             ))}
           </dl>
@@ -290,7 +290,7 @@ export default function NewListingForm() {
           // Юнит выбран из каталога: название и характеристики уже известны,
           // агенту остаётся цена и комментарий. Показывать ему поле названия
           // здесь — предлагать переписать то, что и так верно.
-          <p className="text-[15px] text-[#111827]">
+          <p className="text-[15px] text-[var(--color-text)]">
             <span className="text-[13px] text-[var(--color-text-muted)]">Объект</span>
             <br />
             {title}

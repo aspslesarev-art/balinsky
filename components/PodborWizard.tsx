@@ -78,7 +78,7 @@ export function PodborWizard({ items, lang = 'ru' }: { items: PodborItem[]; lang
   return (
     <div className="mx-auto max-w-2xl px-4 py-8 sm:py-12">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-[22px] sm:text-[28px] font-semibold tracking-tight text-[#111827]">{c.title}</h1>
+        <h1 className="text-[22px] sm:text-[28px] font-semibold tracking-tight text-[var(--color-text)]">{c.title}</h1>
         <Dots active={step === 'intent' ? 1 : step === 'budget' ? 2 : 3} />
       </div>
 
@@ -92,7 +92,7 @@ export function PodborWizard({ items, lang = 'ru' }: { items: PodborItem[]; lang
 
       {step === 'budget' && (
         <div>
-          <button onClick={() => setStep('intent')} className="mb-4 inline-flex items-center gap-1.5 text-[14px] text-[var(--color-text-muted)] hover:text-[#111827]">
+          <button onClick={() => setStep('intent')} className="mb-4 inline-flex items-center gap-1.5 text-[14px] text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
             <ArrowLeft size={16} /> {c.back}
           </button>
           <p className="mb-4 text-[15px] text-[var(--color-text-muted)]">{c.q2}</p>
@@ -107,10 +107,10 @@ export function PodborWizard({ items, lang = 'ru' }: { items: PodborItem[]; lang
 
       {step === 'results' && (
         <div>
-          <button onClick={() => setStep('budget')} className="mb-4 inline-flex items-center gap-1.5 text-[14px] text-[var(--color-text-muted)] hover:text-[#111827]">
+          <button onClick={() => setStep('budget')} className="mb-4 inline-flex items-center gap-1.5 text-[14px] text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
             <ArrowLeft size={16} /> {c.changeBudget}
           </button>
-          <h2 className="mb-4 text-[18px] font-semibold text-[#111827]">{c.results}</h2>
+          <h2 className="mb-4 text-[18px] font-semibold text-[var(--color-text)]">{c.results}</h2>
 
           {districts.length > 1 && (
             <div className="mb-5 flex flex-wrap gap-2">
@@ -132,7 +132,7 @@ export function PodborWizard({ items, lang = 'ru' }: { items: PodborItem[]; lang
           )}
 
           {matched.length > shown.length && (
-            <button onClick={() => setLimit((n) => n + 3)} className="mt-5 w-full rounded-xl border border-[var(--color-border)] bg-white py-3 text-[15px] font-medium text-[#111827] hover:border-[var(--color-primary)]">
+            <button onClick={() => setLimit((n) => n + 3)} className="mt-5 w-full rounded-xl border border-[var(--color-border)] bg-white py-3 text-[15px] font-medium text-[var(--color-text)] hover:border-[var(--color-primary)]">
               {c.more}
             </button>
           )}
@@ -141,7 +141,7 @@ export function PodborWizard({ items, lang = 'ru' }: { items: PodborItem[]; lang
             <p className="mt-4 text-[13px] text-[var(--color-text-muted)]">{c.neighborNote}</p>
           )}
 
-          <button onClick={restart} className="mt-6 text-[14px] text-[var(--color-text-muted)] underline hover:text-[#111827]">
+          <button onClick={restart} className="mt-6 text-[14px] text-[var(--color-text-muted)] underline hover:text-[var(--color-text)]">
             {c.restart}
           </button>
         </div>
@@ -167,7 +167,7 @@ function Door({ Icon, title, sub, onClick }: { Icon: typeof Home; title: string;
         <Icon size={28} className="text-[var(--color-primary)]" />
       </span>
       <span className="min-w-0">
-        <span className="block text-[19px] font-semibold text-[#111827]">{title}</span>
+        <span className="block text-[19px] font-semibold text-[var(--color-text)]">{title}</span>
         <span className="block text-[14px] text-[var(--color-text-muted)]">{sub}</span>
       </span>
     </button>
@@ -176,7 +176,7 @@ function Door({ Icon, title, sub, onClick }: { Icon: typeof Home; title: string;
 
 function BigChip({ label, onClick, muted }: { label: string; onClick: () => void; muted?: boolean }) {
   return (
-    <button onClick={onClick} className={`w-full rounded-2xl border border-[var(--color-border)] bg-white px-6 py-5 text-left text-[17px] font-semibold transition hover:border-[var(--color-primary)] hover:shadow-sm ${muted ? 'text-[var(--color-text-muted)]' : 'text-[#111827]'}`}>
+    <button onClick={onClick} className={`w-full rounded-2xl border border-[var(--color-border)] bg-white px-6 py-5 text-left text-[17px] font-semibold transition hover:border-[var(--color-primary)] hover:shadow-sm ${muted ? 'text-[var(--color-text-muted)]' : 'text-[var(--color-text)]'}`}>
       {label}
     </button>
   )
@@ -184,7 +184,7 @@ function BigChip({ label, onClick, muted }: { label: string; onClick: () => void
 
 function FilterChip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
-    <button onClick={onClick} className={`rounded-full px-4 py-2 text-[14px] font-medium transition ${active ? 'bg-[var(--color-primary)] text-white' : 'border border-[var(--color-border)] bg-white text-[#111827] hover:border-[var(--color-primary)]'}`}>
+    <button onClick={onClick} className={`rounded-full px-4 py-2 text-[14px] font-medium transition ${active ? 'bg-[var(--color-primary)] text-white' : 'border border-[var(--color-border)] bg-white text-[var(--color-text)] hover:border-[var(--color-primary)]'}`}>
       {label}
     </button>
   )
@@ -205,7 +205,7 @@ function ResultCard({ item, c }: { item: PodborItem; c: Copy }) {
         <div className="mb-1 flex items-center gap-1 text-[12px] text-[var(--color-text-muted)]">
           <MapPin size={12} /> {item.districtName}
         </div>
-        <div className="mb-2 line-clamp-2 text-[14px] font-medium text-[#111827]">{item.title}</div>
+        <div className="mb-2 line-clamp-2 text-[14px] font-medium text-[var(--color-text)]">{item.title}</div>
         {item.priceUsd != null && (
           <div className="text-[18px] font-semibold text-[#16A34A]">
             {c.from} {fmtUsd(item.priceUsd)}

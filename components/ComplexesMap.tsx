@@ -209,7 +209,7 @@ function CloseButton({ onClose }: { onClose: () => void }) {
       type="button"
       onClick={onClose}
       aria-label="Close"
-      className="absolute top-2 right-2 w-7 h-7 inline-flex items-center justify-center rounded-full bg-white/90 hover:bg-white text-[#6B7280] hover:text-[#111827] shadow-[0_1px_3px_rgba(0,0,0,0.12)] z-10"
+      className="absolute top-2 right-2 w-7 h-7 inline-flex items-center justify-center rounded-full bg-white/90 hover:bg-white text-[#6B7280] hover:text-[var(--color-text)] shadow-[0_1px_3px_rgba(0,0,0,0.12)] z-10"
     >
       <X size={14} strokeWidth={2.5} />
     </button>
@@ -226,7 +226,7 @@ function SinglePopup({ p, onClose, lang }: { p: ComplexPoint; onClose: () => voi
       ) : (
         <div className="w-full h-[150px] rounded-xl mb-3 bg-[#F1F5F1] flex items-center justify-center text-3xl">🏝️</div>
       )}
-      <div className="text-[15px] font-semibold leading-snug mb-1.5 line-clamp-2 text-[#111827] pr-6">{displayName(p.name, lang)}</div>
+      <div className="text-[15px] font-semibold leading-snug mb-1.5 line-clamp-2 text-[var(--color-text)] pr-6">{displayName(p.name, lang)}</div>
       <div className="flex items-center gap-2 text-[13px] text-[#6B7280] mb-3">
         {p.location && <span>{p.location}</span>}
         {p.location && p.types && <span>·</span>}
@@ -249,12 +249,12 @@ function MultiPopup({ items, onClose, lang }: { items: ComplexPoint[]; onClose: 
       <div className="text-[13px] font-medium text-[#6B7280] mb-2 pr-6">
         {`${items.length} ${pickCopy({ ru: 'комплексов в одной точке', en: 'complexes at this point', id: 'kompleks di titik ini', fr: 'complexes à cet endroit', de: 'Komplexe an diesem Punkt', zh: '个项目位于此处', nl: 'complexen op dit punt', ban: 'kompleks di titik puniki', pl: 'kompleksów w tym miejscu', uk: 'комплексів у цій точці' }, lang)}`}
       </div>
-      <ul className="max-h-[340px] overflow-y-auto -mx-1 px-1 divide-y divide-[#E5E7EB]">
+      <ul className="max-h-[340px] overflow-y-auto -mx-1 px-1 divide-y divide-[var(--color-border)]">
         {items.map(p => (
           <li key={p.id}>
             <a
               href={switchLangPath(`/ru/zhilye-kompleksy/o/${p.slug}`, lang)}
-              className="flex items-center gap-3 py-2.5 no-underline text-[#111827] hover:bg-[#F8FAF8] rounded-md px-1"
+              className="flex items-center gap-3 py-2.5 no-underline text-[var(--color-text)] hover:bg-[#F8FAF8] rounded-md px-1"
             >
               {p.coverUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element -- map InfoWindow popup, not a Next image

@@ -815,7 +815,7 @@ function UseCaseRow({ icon: Icon, label, chip, notes, notesToggle }: {
 
   const inner = (
     <>
-      <span className="inline-flex items-center gap-1.5 text-[13px] text-[#111827]">
+      <span className="inline-flex items-center gap-1.5 text-[13px] text-[var(--color-text)]">
         <Icon size={14} className="text-[var(--color-text-muted)]" />
         {label}
       </span>
@@ -852,7 +852,7 @@ function UseCaseRow({ icon: Icon, label, chip, notes, notesToggle }: {
         <ul className="list-none m-0 px-2.5 pb-2 pt-0.5 space-y-1.5">
           {notes!.map((n, i) => (
             <li key={i} className="text-[12px] leading-snug text-[var(--color-text-muted)]">
-              <span className="text-[#111827] font-medium">{n.headline}</span>
+              <span className="text-[var(--color-text)] font-medium">{n.headline}</span>
               {n.body ? `. ${n.body}` : ''}
             </li>
           ))}
@@ -984,7 +984,7 @@ export function LandProfileBlock({ data, permits = null, lang = 'ru' }: {
               </span>
             )}
           </div>
-          <div className="text-[15px] font-medium text-[#111827]">
+          <div className="text-[15px] font-medium text-[var(--color-text)]">
             {subZoneShort || (data.zona_name ?? c.none)}
           </div>
           {(facts.length > 0 || str || mixed) && (
@@ -1043,7 +1043,7 @@ export function LandProfileBlock({ data, permits = null, lang = 'ru' }: {
 
           {hasUseCases && (
             <div>
-              <div className="text-[12px] font-medium text-[#111827] mb-1.5">
+              <div className="text-[12px] font-medium text-[var(--color-text)] mb-1.5">
                 {zoneLabel ? c2.zoneLevel(zoneLabel) : c2.zoneLevelPlain}
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
@@ -1057,7 +1057,7 @@ export function LandProfileBlock({ data, permits = null, lang = 'ru' }: {
 
           {hasPermitRows && (
             <div>
-              <div className="text-[12px] font-medium text-[#111827] mb-1.5">{c2.projectLevel}</div>
+              <div className="text-[12px] font-medium text-[var(--color-text)] mb-1.5">{c2.projectLevel}</div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                 {permitBuildUses.map(({ key, entry }) => (
                   <UseCaseRow
@@ -1131,7 +1131,7 @@ export function LandProfileBlock({ data, permits = null, lang = 'ru' }: {
                     href={d.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--color-search-bg)] border border-[var(--color-border)] text-[12.5px] text-[#111827] hover:border-[var(--color-primary)] no-underline"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--color-search-bg)] border border-[var(--color-border)] text-[12.5px] text-[var(--color-text)] hover:border-[var(--color-primary)] no-underline"
                   >
                     <FileText size={12} /> {d.label}
                     <ExternalLink size={11} className="opacity-50" />
@@ -1150,7 +1150,7 @@ export function LandProfileBlock({ data, permits = null, lang = 'ru' }: {
                   href={l.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-[var(--color-border)] text-[12.5px] text-[#111827] hover:border-[var(--color-primary)] no-underline"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-[var(--color-border)] text-[12.5px] text-[var(--color-text)] hover:border-[var(--color-primary)] no-underline"
                 >
                   <MapPin size={12} /> {l.label}
                   <ExternalLink size={11} className="opacity-50" />
@@ -1173,7 +1173,7 @@ function Row({ label, value, wide = false, hint }: { label: string; value: strin
   return (
     <div className={`flex flex-col gap-0.5 ${wide ? 'sm:col-span-2' : ''}`}>
       <span className="text-[11.5px] uppercase tracking-wide text-[var(--color-text-muted)]">{label}</span>
-      <span className="text-[13.5px] text-[#111827] leading-snug" title={hint}>{value}</span>
+      <span className="text-[13.5px] text-[var(--color-text)] leading-snug" title={hint}>{value}</span>
     </div>
   )
 }

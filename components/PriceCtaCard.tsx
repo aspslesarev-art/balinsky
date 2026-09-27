@@ -273,7 +273,7 @@ export function PriceCtaCard({
           // CTAs so two visitors don't think they both have it. They can
           // still reach the operator via the bot if they want to be
           // notified when the hold lifts.
-          <div className="w-full md:w-auto md:max-w-[420px] rounded-[10px] border border-[#E5E7EB] bg-[#FEF3C7] text-[#92400E] px-4 py-3 flex items-start gap-2">
+          <div className="w-full md:w-auto md:max-w-[420px] rounded-[10px] border border-[var(--color-border)] bg-[#FEF3C7] text-[#92400E] px-4 py-3 flex items-start gap-2">
             <Lock size={16} strokeWidth={1.6} className="shrink-0 mt-0.5" />
             <div className="text-[13px] leading-snug">
               <div className="font-semibold mb-0.5">{c.reservedTitle}</div>

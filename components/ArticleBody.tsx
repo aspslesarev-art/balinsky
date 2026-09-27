@@ -44,7 +44,7 @@ function withLinks(text: string) {
         </Link>,
       )
     } else if (m[3]) {
-      out.push(<strong key={i} className="font-semibold text-[#111827]">{m[3]}</strong>)
+      out.push(<strong key={i} className="font-semibold text-[var(--color-text)]">{m[3]}</strong>)
     } else {
       // Trailing punctuation belongs to the sentence, not the URL.
       const url = m[4].replace(/[.,;:!?]+$/, '')
@@ -129,7 +129,7 @@ export function ArticleBody({ body }: { body: string }) {
       {blocks.map((b, i) => (
         <Fragment key={i}>
           {b.heading && (
-            <h2 className="text-[22px] md:text-[26px] font-semibold leading-[1.25] tracking-tight text-[#111827] mt-10 mb-3">
+            <h2 className="text-[22px] md:text-[26px] font-semibold leading-[1.25] tracking-tight text-[var(--color-text)] mt-10 mb-3">
               {b.heading}
             </h2>
           )}

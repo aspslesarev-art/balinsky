@@ -112,7 +112,7 @@ export function BalinaChatMock({ lang }: { lang: Lang }) {
         <div className="flex items-center gap-2.5 px-4 py-3 bg-[var(--color-primary-soft)] border-b border-[var(--color-border)]">
           <Image src="/andrei.jpg" alt="" width={36} height={36} className="w-9 h-9 rounded-full object-cover" />
           <div>
-            <div className="text-[14px] font-semibold text-[#111827] leading-tight">{pickCopy({ ru: 'Андрей', en: 'Andrei', id: 'Andrei', fr: 'Andrei', de: 'Andrei', zh: 'Andrei', nl: 'Andrei', ban: 'Andrei', pl: 'Andrei', uk: 'Andrei' }, lang)}</div>
+            <div className="text-[14px] font-semibold text-[var(--color-text)] leading-tight">{pickCopy({ ru: 'Андрей', en: 'Andrei', id: 'Andrei', fr: 'Andrei', de: 'Andrei', zh: 'Andrei', nl: 'Andrei', ban: 'Andrei', pl: 'Andrei', uk: 'Andrei' }, lang)}</div>
             <div className="text-[11px] text-[var(--color-text-muted)] leading-tight flex items-center gap-1">
               <ShieldCheck size={11} className="text-[var(--color-primary)]" /> {c.subtitle}
             </div>
@@ -122,7 +122,7 @@ export function BalinaChatMock({ lang }: { lang: Lang }) {
         {/* Messages */}
         <div className="px-4 py-4 bg-[var(--color-search-bg)] flex flex-col gap-3">
           {/* Andrei greeting */}
-          <div className="self-start max-w-[88%] rounded-2xl rounded-bl-md bg-white border border-[var(--color-border)] px-3.5 py-2.5 text-[13.5px] leading-relaxed text-[#111827]">
+          <div className="self-start max-w-[88%] rounded-2xl rounded-bl-md bg-white border border-[var(--color-border)] px-3.5 py-2.5 text-[13.5px] leading-relaxed text-[var(--color-text)]">
             {c.greeting}
           </div>
 
@@ -140,7 +140,7 @@ export function BalinaChatMock({ lang }: { lang: Lang }) {
           </div>
 
           {/* Andrei reply + chips */}
-          <div className="self-start max-w-[88%] rounded-2xl rounded-bl-md bg-white border border-[var(--color-border)] px-3.5 py-2.5 text-[13.5px] leading-relaxed text-[#111827]">
+          <div className="self-start max-w-[88%] rounded-2xl rounded-bl-md bg-white border border-[var(--color-border)] px-3.5 py-2.5 text-[13.5px] leading-relaxed text-[var(--color-text)]">
             {c.reply}
           </div>
           <div className="self-start flex flex-wrap gap-1.5">
@@ -157,7 +157,7 @@ export function BalinaChatMock({ lang }: { lang: Lang }) {
           <span className="flex-1 text-[13px] text-[var(--color-text-muted)] px-3 py-2.5 rounded-2xl border border-[var(--color-border)] truncate">
             {c.placeholder}
           </span>
-          <span className="shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-full bg-black/5 text-[#111827]">
+          <span className="shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-full bg-black/5 text-[var(--color-text)]">
             <Mic size={18} strokeWidth={1.8} />
           </span>
           <span className="shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-full bg-[var(--color-primary)] text-white">

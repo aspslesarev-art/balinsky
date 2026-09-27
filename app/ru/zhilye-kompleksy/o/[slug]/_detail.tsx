@@ -1824,7 +1824,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             <Link href={complexesRoot} className="hover:text-[var(--color-text)]">{copy.backToComplexes}</Link>
             {district && <> · <span>{district}</span></>}
           </div>
-          <h1 {...edit('Project', 'text', 'Название ЖК')} className="text-[20px] sm:text-[28px] md:text-[44px] font-semibold tracking-tight text-[#111827] leading-[1.2] md:leading-[1.05] [word-break:break-word] [overflow-wrap:anywhere] min-w-0 mb-2 sm:mb-3">
+          <h1 {...edit('Project', 'text', 'Название ЖК')} className="text-[20px] sm:text-[28px] md:text-[44px] font-semibold tracking-tight text-[var(--color-text)] leading-[1.2] md:leading-[1.05] [word-break:break-word] [overflow-wrap:anywhere] min-w-0 mb-2 sm:mb-3">
             {name}
           </h1>
           {isSold && (
@@ -1854,7 +1854,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
         {/* KEY FACTS */}
         {facts.length > 0 && (
           <section className="mb-10">
-            <h2 className="text-[18px] sm:text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
+            <h2 className="text-[18px] sm:text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
               {copy.keyFacts}
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -1864,7 +1864,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
                     <Icon size={16} />
                     <span className="text-[12px] uppercase tracking-wide">{label}</span>
                   </div>
-                  <div className="text-[16px] font-semibold text-[#111827]">{value}</div>
+                  <div className="text-[16px] font-semibold text-[var(--color-text)]">{value}</div>
                 </div>
               ))}
             </div>
@@ -1874,7 +1874,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
         {/* ABOUT (unique AI write-up, falls back to SEO Text) */}
         {pageBody && (
           <section className="mb-10">
-            <h2 className="text-[19px] sm:text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
+            <h2 className="text-[19px] sm:text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
               {copy.aboutPrefix} {name}
             </h2>
             <ExpandableText className="max-w-3xl" more={pickCopy({ ru: 'Подробнее', en: 'Read more', id: 'Selengkapnya', fr: 'En savoir plus', de: 'Mehr anzeigen', zh: '展开', nl: 'Meer', ban: 'Selengkapnya', pl: 'Więcej', uk: 'Докладніше' }, lang)} less={pickCopy({ ru: 'Свернуть', en: 'Show less', id: 'Tutup', fr: 'Réduire', de: 'Weniger', zh: '收起', nl: 'Minder', ban: 'Tutup', pl: 'Zwiń', uk: 'Згорнути' }, lang)}>
@@ -1905,7 +1905,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
         {/* UNITS in this complex */}
         {units.length > 0 && (
           <section className="mb-10">
-            <h2 className="text-[19px] sm:text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-2">
+            <h2 className="text-[19px] sm:text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-2">
               {copy.availableUnits}
             </h2>
             <div className="text-[14px] text-[var(--color-text-muted)] mb-5">
@@ -1941,7 +1941,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
           {/* LOCATION */}
           {lat != null && lng != null && (
             <section className="mb-10">
-              <h2 className="text-[18px] sm:text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
+              <h2 className="text-[18px] sm:text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
                 {copy.location}
               </h2>
               <div className="text-[14px] text-[var(--color-text)] mb-3">
@@ -2088,7 +2088,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             detail page so visitors get the same affordance. */}
         {developerName && (
           <section className="mb-10">
-            <h2 className="text-[18px] sm:text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
+            <h2 className="text-[18px] sm:text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
               {copy.developer}
             </h2>
             {developerLink ? (
@@ -2105,7 +2105,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] mb-1">{copy.builtBy}</div>
-                  <div className="text-[19px] font-semibold text-[#111827] truncate">{developerLink.name}</div>
+                  <div className="text-[19px] font-semibold text-[var(--color-text)] truncate">{developerLink.name}</div>
                   {devPortfolio && (
                     <div className="mt-1.5 text-[13px] text-[var(--color-text-muted)]">
                       {pickCopy({
@@ -2130,7 +2130,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             ) : (
               <div className="bg-white rounded-2xl border border-[var(--color-border)] p-6 max-w-3xl">
                 <div className="text-[13px] text-[var(--color-text-muted)] mb-1">{copy.builtBy}</div>
-                <div className="text-[20px] font-semibold text-[#111827] mb-3">{developerName}</div>
+                <div className="text-[20px] font-semibold text-[var(--color-text)] mb-3">{developerName}</div>
                 <Link
                   href={developersRoot}
                   className="inline-flex items-center gap-1 text-[14px] text-[var(--color-primary-pressed)] hover:text-[var(--color-primary)]"
@@ -2157,7 +2157,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
         {/* OTHER COMPLEXES */}
         {otherComplexes.length > 0 && district && (
           <section className="mb-10">
-            <h2 className="text-[18px] sm:text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
+            <h2 className="text-[18px] sm:text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
               {copy.otherProjectsIn(district)}
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -2175,7 +2175,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
                     )}
                   </div>
                   <div className="p-4">
-                    <div className="text-[14px] font-semibold text-[#111827] mb-1 truncate">{o.name}</div>
+                    <div className="text-[14px] font-semibold text-[var(--color-text)] mb-1 truncate">{o.name}</div>
                     {o.types && (
                       <div className="text-[12px] text-[var(--color-text-muted)] truncate">{o.types}</div>
                     )}
@@ -2188,7 +2188,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
 
         {/* INTERNAL LINKS */}
         <section className="mb-10">
-          <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[#111827] mb-4">
+          <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
             {copy.relatedHeading}
           </h2>
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2 max-w-3xl">
@@ -2216,13 +2216,13 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
 
         {/* FAQ */}
         <section className="mb-10">
-          <h2 className="text-[19px] sm:text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
+          <h2 className="text-[19px] sm:text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
             {copy.faqHeading}
           </h2>
           <div className="max-w-3xl divide-y divide-[var(--color-border)] border-t border-b border-[var(--color-border)]">
             {faqItems.map((it, i) => (
               <details key={i} className="group py-4">
-                <summary className="cursor-pointer list-none flex items-center justify-between gap-4 text-[15px] font-medium text-[#111827]">
+                <summary className="cursor-pointer list-none flex items-center justify-between gap-4 text-[15px] font-medium text-[var(--color-text)]">
                   {it.q}
                   <span className="text-[var(--color-text-muted)] text-[20px] leading-none transition-transform group-open:rotate-45">+</span>
                 </summary>

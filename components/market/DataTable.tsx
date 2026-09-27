@@ -30,7 +30,7 @@ export function DataTable({ columns, rows, linkLabel }: {
         {rows.map(r => (
           <li key={r.key} className="rounded-xl border border-[var(--color-border)] bg-white p-4">
             <div className="flex items-baseline justify-between gap-3 mb-2">
-              <span className="text-[16px] font-semibold text-[#111827]">{r.label}{r.indicative ? '*' : ''}</span>
+              <span className="text-[16px] font-semibold text-[var(--color-text)]">{r.label}{r.indicative ? '*' : ''}</span>
               {withLinks && r.href && (
                 <Link href={r.href} className="shrink-0 text-[13px] text-[var(--color-primary)] no-underline inline-flex items-center gap-0.5">
                   {linkLabel} <ChevronRight size={14} />
@@ -41,7 +41,7 @@ export function DataTable({ columns, rows, linkLabel }: {
               {r.cells.map((cell, i) => (
                 <div key={i}>
                   <dt className="text-[12px] text-[var(--color-text-muted)]">{columns[i + 1]}</dt>
-                  <dd className="text-[#111827] tabular-nums">{cell}</dd>
+                  <dd className="text-[var(--color-text)] tabular-nums">{cell}</dd>
                 </div>
               ))}
             </dl>
@@ -62,7 +62,7 @@ export function DataTable({ columns, rows, linkLabel }: {
           <tbody>
             {rows.map(r => (
               <tr key={r.key} className="border-b border-[var(--color-border)] align-top">
-                <th scope="row" className="py-3 px-3 text-left font-semibold text-[#111827] whitespace-nowrap">{r.label}{r.indicative ? '*' : ''}<SourceMark /></th>
+                <th scope="row" className="py-3 px-3 text-left font-semibold text-[var(--color-text)] whitespace-nowrap">{r.label}{r.indicative ? '*' : ''}<SourceMark /></th>
                 {r.cells.map((cell, i) => (
                   <td key={i} className="py-3 px-3 whitespace-nowrap tabular-nums text-[#1f2937]">{cell}</td>
                 ))}

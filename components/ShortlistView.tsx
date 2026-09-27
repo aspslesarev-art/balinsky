@@ -1322,7 +1322,7 @@ function DownloadShortlistModal({
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-3 mb-1">
-          <h3 id="shortlist-download-title" className="text-[20px] md:text-[22px] font-semibold tracking-tight text-[#111827]">
+          <h3 id="shortlist-download-title" className="text-[20px] md:text-[22px] font-semibold tracking-tight text-[var(--color-text)]">
             {c.pdfModalTitle}
           </h3>
           <button
@@ -1330,7 +1330,7 @@ function DownloadShortlistModal({
             onClick={onClose}
             disabled={busy}
             aria-label={c.pdfClose}
-            className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-full bg-black/5 hover:bg-black/10 text-[#111827] disabled:opacity-50"
+            className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-full bg-black/5 hover:bg-black/10 text-[var(--color-text)] disabled:opacity-50"
           >
             <X size={16} />
           </button>
@@ -1353,8 +1353,8 @@ function DownloadShortlistModal({
                     disabled={busy}
                     className={`flex-1 rounded-full px-4 py-2 text-[13px] font-medium transition-colors ${
                       isActive
-                        ? 'bg-white text-[#111827] shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
-                        : 'text-[var(--color-text-muted)] hover:text-[#111827]'
+                        ? 'bg-white text-[var(--color-text)] shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
+                        : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
                     } disabled:opacity-50`}
                   >
                     {opt.label}
@@ -1371,10 +1371,10 @@ function DownloadShortlistModal({
               >
                 <div className="flex items-center gap-3">
                   <div className="shrink-0 w-10 h-10 rounded-xl bg-[var(--color-search-bg)] flex items-center justify-center">
-                    {busy ? <Loader2 size={18} className="animate-spin text-[var(--color-text-muted)]" /> : <Download size={18} className="text-[#111827]" />}
+                    {busy ? <Loader2 size={18} className="animate-spin text-[var(--color-text-muted)]" /> : <Download size={18} className="text-[var(--color-text)]" />}
                   </div>
                   <div className="min-w-0">
-                    <div className="text-[15px] font-semibold text-[#111827]">{c.pdfSimple}</div>
+                    <div className="text-[15px] font-semibold text-[var(--color-text)]">{c.pdfSimple}</div>
                     <div className="text-[12px] text-[var(--color-text-muted)] mt-0.5">{c.pdfSimpleNote}</div>
                   </div>
                 </div>
@@ -1390,7 +1390,7 @@ function DownloadShortlistModal({
                     <UserRound size={18} className="text-[var(--color-primary-pressed)]" />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-[15px] font-semibold text-[#111827]">{c.pdfAgent}</div>
+                    <div className="text-[15px] font-semibold text-[var(--color-text)]">{c.pdfAgent}</div>
                     <div className="text-[12px] text-[var(--color-text-muted)] mt-0.5">{c.pdfAgentNote}</div>
                   </div>
                 </div>
@@ -1404,7 +1404,7 @@ function DownloadShortlistModal({
               type="button"
               onClick={() => setMode('choose')}
               disabled={busy}
-              className="text-[12px] text-[var(--color-text-muted)] hover:text-[#111827] inline-flex items-center gap-1 mb-3 disabled:opacity-50"
+              className="text-[12px] text-[var(--color-text-muted)] hover:text-[var(--color-text)] inline-flex items-center gap-1 mb-3 disabled:opacity-50"
             >
               <ChevronLeft size={13} /> {c.pdfBack}
             </button>
@@ -1472,7 +1472,7 @@ function PdfField({
         autoComplete="off"
         inputMode={inputMode}
         // 16px font-size suppresses iOS Safari's auto-zoom on focus.
-        className="w-full rounded-xl border border-[var(--color-border)] bg-white px-4 py-3 text-[16px] text-[#111827] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/30 focus:border-[var(--color-primary)]"
+        className="w-full rounded-xl border border-[var(--color-border)] bg-white px-4 py-3 text-[16px] text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/30 focus:border-[var(--color-primary)]"
       />
     </label>
   )

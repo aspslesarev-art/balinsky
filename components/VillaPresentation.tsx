@@ -173,7 +173,7 @@ function VillaPresentation({ data, onClose }: { data: VillaPresentationData; onC
       onTouchEnd={onTouchEnd}
     >
       {/* Top bar */}
-      <div className="relative z-20 flex items-center justify-between gap-4 px-4 md:px-8 py-3 text-[#111827]">
+      <div className="relative z-20 flex items-center justify-between gap-4 px-4 md:px-8 py-3 text-[var(--color-text)]">
         <div className="min-w-0 flex items-center gap-3">
           <div className="text-[12px] uppercase tracking-wider text-[var(--color-text-muted)]">
             {safeI + 1} / {total}
@@ -195,7 +195,7 @@ function VillaPresentation({ data, onClose }: { data: VillaPresentationData; onC
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-black/5 hover:bg-black/10 text-[#111827] transition-colors"
+            className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-black/5 hover:bg-black/10 text-[var(--color-text)] transition-colors"
             aria-label={c.closeAria}
           >
             <X size={18} />
@@ -240,7 +240,7 @@ function VillaPresentation({ data, onClose }: { data: VillaPresentationData; onC
           disabled={safeI === 0}
           className="hidden md:flex absolute left-0 top-0 bottom-0 w-[12%] items-center justify-start pl-3 group focus:outline-none disabled:cursor-default"
         >
-          <span className={`opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center justify-center w-10 h-10 rounded-full bg-black/5 text-[#111827] ${safeI === 0 ? 'invisible' : ''}`}>
+          <span className={`opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center justify-center w-10 h-10 rounded-full bg-black/5 text-[var(--color-text)] ${safeI === 0 ? 'invisible' : ''}`}>
             <ChevronLeft size={22} />
           </span>
         </button>
@@ -251,7 +251,7 @@ function VillaPresentation({ data, onClose }: { data: VillaPresentationData; onC
           disabled={safeI === total - 1}
           className="hidden md:flex absolute right-0 top-0 bottom-0 w-[12%] items-center justify-end pr-3 group focus:outline-none disabled:cursor-default"
         >
-          <span className={`opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center justify-center w-10 h-10 rounded-full bg-black/5 text-[#111827] ${safeI === total - 1 ? 'invisible' : ''}`}>
+          <span className={`opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center justify-center w-10 h-10 rounded-full bg-black/5 text-[var(--color-text)] ${safeI === total - 1 ? 'invisible' : ''}`}>
             <ChevronRight size={22} />
           </span>
         </button>
@@ -263,7 +263,7 @@ function VillaPresentation({ data, onClose }: { data: VillaPresentationData; onC
           type="button"
           onClick={prev}
           disabled={safeI === 0}
-          className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-black/5 text-[#111827] disabled:opacity-30"
+          className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-black/5 text-[var(--color-text)] disabled:opacity-30"
           aria-label={c.back}
         >
           <ChevronLeft size={20} />
@@ -309,7 +309,7 @@ function CoverSlide({ data }: { data: VillaPresentationData }) {
               <MapPin size={13} /> {data.district}, {c.bali}
             </div>
           )}
-          <h1 className="text-[26px] md:text-[44px] lg:text-[56px] font-semibold tracking-tight leading-[1.05] text-[#111827]">
+          <h1 className="text-[26px] md:text-[44px] lg:text-[56px] font-semibold tracking-tight leading-[1.05] text-[var(--color-text)]">
             {data.title}
           </h1>
           <div className="mt-5 md:mt-6 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[14px] md:text-[16px] text-[var(--color-text-muted)]">
@@ -320,7 +320,7 @@ function CoverSlide({ data }: { data: VillaPresentationData }) {
           </div>
           {data.priceUsd != null && (
             <div className="mt-6 md:mt-8 flex items-baseline gap-4 flex-wrap">
-              <div className="text-[26px] md:text-[40px] font-semibold text-[#111827]">{fmtUsd(data.priceUsd)}</div>
+              <div className="text-[26px] md:text-[40px] font-semibold text-[var(--color-text)]">{fmtUsd(data.priceUsd)}</div>
               {data.pricePerM2 != null && (
                 <div className="text-[13px] md:text-[15px] text-[var(--color-text-muted)]">{fmtUsd(data.pricePerM2)} {c.perSqm}</div>
               )}
@@ -408,7 +408,7 @@ function FactsSlide({ data }: { data: VillaPresentationData }) {
   return (
     <div className="absolute inset-0 overflow-auto px-6 md:px-16 py-10 md:py-14">
       <div className="max-w-5xl mx-auto">
-        <h2 className="text-[28px] md:text-[40px] font-semibold tracking-tight text-[#111827] mb-2">{c.factsTitle}</h2>
+        <h2 className="text-[28px] md:text-[40px] font-semibold tracking-tight text-[var(--color-text)] mb-2">{c.factsTitle}</h2>
         <p className="text-[15px] text-[var(--color-text-muted)] mb-8">{c.factsSub}</p>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {items.map(({ Icon, label, value }) => (
@@ -417,7 +417,7 @@ function FactsSlide({ data }: { data: VillaPresentationData }) {
                 <Icon size={16} />
                 <span className="text-[12px] uppercase tracking-wide">{label}</span>
               </div>
-              <div className="text-[18px] font-semibold text-[#111827]">{value}</div>
+              <div className="text-[18px] font-semibold text-[var(--color-text)]">{value}</div>
             </div>
           ))}
         </div>
@@ -431,7 +431,7 @@ function DescriptionSlide({ text, data }: { text: string; data: VillaPresentatio
   return (
     <div className="absolute inset-0 overflow-auto px-6 md:px-16 py-10 md:py-14">
       <div className="max-w-3xl mx-auto">
-        <h2 className="text-[28px] md:text-[40px] font-semibold tracking-tight text-[#111827] mb-6">{c.about(data.kind)}</h2>
+        <h2 className="text-[28px] md:text-[40px] font-semibold tracking-tight text-[var(--color-text)] mb-6">{c.about(data.kind)}</h2>
         <div className="text-[16px] md:text-[18px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
           {text}
         </div>
@@ -449,7 +449,7 @@ function MapSlide({ data }: { data: VillaPresentationData }) {
   return (
     <div className="absolute inset-0 flex flex-col">
       <div className="px-6 md:px-16 pt-10 pb-4">
-        <h2 className="text-[28px] md:text-[40px] font-semibold tracking-tight text-[#111827] mb-1">{c.location}</h2>
+        <h2 className="text-[28px] md:text-[40px] font-semibold tracking-tight text-[var(--color-text)] mb-1">{c.location}</h2>
         <div className="text-[15px] text-[var(--color-text-muted)] flex items-center gap-2 flex-wrap">
           {data.district && <span className="inline-flex items-center gap-1"><MapPin size={14} /> {data.district}, {c.bali}</span>}
           <a href={mapsLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[var(--color-primary)] hover:text-[var(--color-primary-pressed)]">
@@ -486,7 +486,7 @@ function NearbySlide({ snap, snapTried, data }: { snap: Snapshot | null; snapTri
   return (
     <div className="absolute inset-0 flex flex-col px-6 md:px-12 lg:px-16 py-6 md:py-10">
       <div className="shrink-0 mb-4">
-        <h2 className="text-[24px] md:text-[34px] font-semibold tracking-tight text-[#111827] mb-1">{c.nearbyTitle(data.kind)}</h2>
+        <h2 className="text-[24px] md:text-[34px] font-semibold tracking-tight text-[var(--color-text)] mb-1">{c.nearbyTitle(data.kind)}</h2>
         <p className="text-[13px] text-[var(--color-text-muted)]">
           {c.nearbySub}
         </p>
@@ -501,7 +501,7 @@ function NearbySlide({ snap, snapTried, data }: { snap: Snapshot | null; snapTri
             <div key={cat} className="rounded-xl border border-[var(--color-border)] bg-white p-3 min-h-0 flex flex-col">
               <div className="flex items-center gap-1.5 mb-2">
                 <span className="text-[14px]">{meta.icon}</span>
-                <span className="text-[12px] font-semibold text-[#111827] truncate">{meta.title}</span>
+                <span className="text-[12px] font-semibold text-[var(--color-text)] truncate">{meta.title}</span>
                 <span className="text-[10px] text-[var(--color-text-muted)] ml-auto">
                   {visibleIn(cat).length}
                 </span>
@@ -509,12 +509,12 @@ function NearbySlide({ snap, snapTried, data }: { snap: Snapshot | null; snapTri
               <ul className="space-y-1.5 min-h-0">
                 {items.map(p => (
                   <li key={p.id} className="flex items-baseline justify-between gap-2 text-[11px]">
-                    <span className="min-w-0 truncate text-[#111827]" title={p.name ?? ''}>{p.name}</span>
+                    <span className="min-w-0 truncate text-[var(--color-text)]" title={p.name ?? ''}>{p.name}</span>
                     <span className="shrink-0 inline-flex items-center gap-1 text-[10px] text-[var(--color-text-muted)]">
                       {p.rating != null && (
                         <span className="inline-flex items-center gap-0.5">
                           <Star size={9} className="text-[#F59E0B] fill-[#F59E0B]" />
-                          <span className="font-medium text-[#111827]">{p.rating.toFixed(1)}</span>
+                          <span className="font-medium text-[var(--color-text)]">{p.rating.toFixed(1)}</span>
                         </span>
                       )}
                       <span>{presentationDistance(p.distanceKm, c)}</span>
@@ -546,7 +546,7 @@ function InvestSlide({ snap, data }: { snap: Snapshot | null; data: VillaPresent
   return (
     <div className="absolute inset-0 overflow-auto px-6 md:px-16 py-10 md:py-14">
       <div className="max-w-5xl mx-auto">
-        <h2 className="text-[28px] md:text-[40px] font-semibold tracking-tight text-[#111827] mb-2">{c.investTitle}</h2>
+        <h2 className="text-[28px] md:text-[40px] font-semibold tracking-tight text-[var(--color-text)] mb-2">{c.investTitle}</h2>
         <p className="text-[15px] text-[var(--color-text-muted)] mb-8">
           {c.investSub(snap.competitors.length, snap.zone.applied)}
         </p>
@@ -559,11 +559,11 @@ function InvestSlide({ snap, data }: { snap: Snapshot | null; data: VillaPresent
                   <span>{card.title}</span>
                   <span className="text-[12px] font-normal opacity-80">{fmtUsd(e.adr)} {c.perNight} · {Math.round(e.occupancy * 100)}%</span>
                 </div>
-                <div className="text-[26px] md:text-[32px] font-semibold text-[#111827]">{fmtUsdShort(e.noi)}</div>
+                <div className="text-[26px] md:text-[32px] font-semibold text-[var(--color-text)]">{fmtUsdShort(e.noi)}</div>
                 <div className="text-[13px] text-[var(--color-text-muted)] mb-4">{c.perYearNet}</div>
                 <dl className="space-y-1.5 text-[13px]">
-                  <div className="flex justify-between"><dt className="text-[var(--color-text-muted)]">{c.payback}</dt><dd className="font-medium text-[#111827]">{fmtYears(e.payback, data.lang)}</dd></div>
-                  <div className="flex justify-between"><dt className="text-[var(--color-text-muted)]">{c.yieldPerYear}</dt><dd className="font-medium text-[#111827]">{fmtPct(e.capRate)}</dd></div>
+                  <div className="flex justify-between"><dt className="text-[var(--color-text-muted)]">{c.payback}</dt><dd className="font-medium text-[var(--color-text)]">{fmtYears(e.payback, data.lang)}</dd></div>
+                  <div className="flex justify-between"><dt className="text-[var(--color-text-muted)]">{c.yieldPerYear}</dt><dd className="font-medium text-[var(--color-text)]">{fmtPct(e.capRate)}</dd></div>
                 </dl>
               </div>
             )
@@ -647,14 +647,14 @@ function DownloadModal({ data, snap, onClose }: { data: VillaPresentationData; s
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-3 mb-1">
-          <h3 id="download-modal-title" className="text-[20px] md:text-[22px] font-semibold tracking-tight text-[#111827]">
+          <h3 id="download-modal-title" className="text-[20px] md:text-[22px] font-semibold tracking-tight text-[var(--color-text)]">
             {c.dlTitle}
           </h3>
           <button
             type="button"
             onClick={onClose}
             disabled={busy}
-            className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-full bg-black/5 hover:bg-black/10 text-[#111827] disabled:opacity-50"
+            className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-full bg-black/5 hover:bg-black/10 text-[var(--color-text)] disabled:opacity-50"
             aria-label={c.close}
           >
             <X size={16} />
@@ -680,8 +680,8 @@ function DownloadModal({ data, snap, onClose }: { data: VillaPresentationData; s
                     disabled={busy}
                     className={`flex-1 rounded-full px-4 py-2 text-[13px] font-medium transition-colors ${
                       isActive
-                        ? 'bg-white text-[#111827] shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
-                        : 'text-[var(--color-text-muted)] hover:text-[#111827]'
+                        ? 'bg-white text-[var(--color-text)] shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
+                        : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
                     } disabled:opacity-50`}
                   >
                     {opt.label}
@@ -698,10 +698,10 @@ function DownloadModal({ data, snap, onClose }: { data: VillaPresentationData; s
               >
                 <div className="flex items-center gap-3">
                   <div className="shrink-0 w-10 h-10 rounded-xl bg-[var(--color-search-bg)] flex items-center justify-center">
-                    {busy ? <Loader2 size={18} className="animate-spin text-[var(--color-text-muted)]" /> : <Download size={18} className="text-[#111827]" />}
+                    {busy ? <Loader2 size={18} className="animate-spin text-[var(--color-text-muted)]" /> : <Download size={18} className="text-[var(--color-text)]" />}
                   </div>
                   <div className="min-w-0">
-                    <div className="text-[15px] font-semibold text-[#111827]">{c.download}</div>
+                    <div className="text-[15px] font-semibold text-[var(--color-text)]">{c.download}</div>
                     <div className="text-[12px] text-[var(--color-text-muted)] mt-0.5">
                       {c.dlSimpleSub(data.kind)}
                     </div>
@@ -719,7 +719,7 @@ function DownloadModal({ data, snap, onClose }: { data: VillaPresentationData; s
                     <UserRound size={18} className="text-[var(--color-primary-pressed)]" />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-[15px] font-semibold text-[#111827]">{c.dlAgent}</div>
+                    <div className="text-[15px] font-semibold text-[var(--color-text)]">{c.dlAgent}</div>
                     <div className="text-[12px] text-[var(--color-text-muted)] mt-0.5">
                       {c.dlAgentSub}
                     </div>
@@ -735,7 +735,7 @@ function DownloadModal({ data, snap, onClose }: { data: VillaPresentationData; s
               type="button"
               onClick={() => setMode('choose')}
               disabled={busy}
-              className="text-[12px] text-[var(--color-text-muted)] hover:text-[#111827] inline-flex items-center gap-1 mb-3 disabled:opacity-50"
+              className="text-[12px] text-[var(--color-text-muted)] hover:text-[var(--color-text)] inline-flex items-center gap-1 mb-3 disabled:opacity-50"
             >
               <ChevronLeft size={13} /> {c.backToChoice}
             </button>
@@ -806,7 +806,7 @@ function Field({
         autoFocus={autoFocus}
         autoComplete="off"
         inputMode={inputMode}
-        className="w-full rounded-xl border border-[var(--color-border)] bg-white px-4 py-3 text-[15px] text-[#111827] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/30 focus:border-[var(--color-primary)]"
+        className="w-full rounded-xl border border-[var(--color-border)] bg-white px-4 py-3 text-[15px] text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/30 focus:border-[var(--color-primary)]"
       />
     </label>
   )

@@ -25,14 +25,14 @@ const BULLETS = [
 export function LoginGate() {
   return (
     <Shell>
-      <h1 className="text-[24px] font-semibold tracking-tight text-[#111827]">Движение рынка</h1>
+      <h1 className="text-[24px] font-semibold tracking-tight text-[var(--color-text)]">Движение рынка</h1>
       <p className="mt-2 text-[15px] leading-relaxed text-[var(--color-text-muted)]">
         Ежедневный обход прайсов застройщиков Бали: что продаётся, что вернулось и куда идут цены.
         Отчёт закрытый — открывается по списку.
       </p>
       <ul className="mt-4 space-y-2">
         {BULLETS.map(b => (
-          <li key={b} className="flex gap-2 text-[14px] leading-relaxed text-[#111827]">
+          <li key={b} className="flex gap-2 text-[14px] leading-relaxed text-[var(--color-text)]">
             <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-primary)]" />
             <span>{b}</span>
           </li>
@@ -50,14 +50,14 @@ export function NoAccessGate({ user, botUrl }: { user: SiteUser; botUrl: string 
   const who = user.username ? `@${user.username}` : `id ${user.telegramId}`
   return (
     <Shell>
-      <h1 className="text-[24px] font-semibold tracking-tight text-[#111827]">Отчёт закрыт</h1>
+      <h1 className="text-[24px] font-semibold tracking-tight text-[var(--color-text)]">Отчёт закрыт</h1>
       <p className="mt-2 text-[15px] leading-relaxed text-[var(--color-text-muted)]">
-        Вы вошли как <span className="font-medium text-[#111827]">{who}</span>, но этого аккаунта нет
+        Вы вошли как <span className="font-medium text-[var(--color-text)]">{who}</span>, но этого аккаунта нет
         в списке доступа к движению рынка.
       </p>
       <p className="mt-3 text-[15px] leading-relaxed text-[var(--color-text-muted)]">
         Если доступ должен быть — напишите нам и пришлите эту строку:{' '}
-        <span className="rounded-lg bg-[var(--color-search-bg)] px-2 py-0.5 font-mono text-[13px] text-[#111827]">
+        <span className="rounded-lg bg-[var(--color-search-bg)] px-2 py-0.5 font-mono text-[13px] text-[var(--color-text)]">
           {who}
         </span>
       </p>

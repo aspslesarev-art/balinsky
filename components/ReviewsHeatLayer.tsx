@@ -55,7 +55,7 @@ export function ReviewsHeatToggle({
           'inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-[13px] font-medium shadow-md backdrop-blur transition-colors cursor-pointer border ' +
           (on
             ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)]'
-            : 'bg-white/90 text-[#111827] border-[var(--color-border)] hover:border-[var(--color-primary)]')
+            : 'bg-white/90 text-[var(--color-text)] border-[var(--color-border)] hover:border-[var(--color-primary)]')
         }
       >
         <Flame size={15} className={on ? 'text-white' : 'text-[#FF5A36]'} />

@@ -138,12 +138,12 @@ export async function EventsList({ lang }: { lang: Lang }) {
     <>
       <Header />
       <PageContainer>
-        <h1 className="pt-8 mb-4 text-[28px] md:text-[36px] font-semibold tracking-tight text-[#111827]">{c.h1}</h1>
+        <h1 className="pt-8 mb-4 text-[28px] md:text-[36px] font-semibold tracking-tight text-[var(--color-text)]">{c.h1}</h1>
         <div className="text-[14px] text-[var(--color-text-muted)] mb-8">{c.sub}</div>
 
         {upcoming.length > 0 && (
           <>
-            <h2 className="text-[18px] md:text-[20px] font-semibold text-[#111827] mb-4">{c.upcoming}</h2>
+            <h2 className="text-[18px] md:text-[20px] font-semibold text-[var(--color-text)] mb-4">{c.upcoming}</h2>
             <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
               {upcoming.map(e => (<li key={e.id}><EventCard e={e} lang={lang} /></li>))}
             </ul>
@@ -152,7 +152,7 @@ export async function EventsList({ lang }: { lang: Lang }) {
 
         {past.length > 0 && (
           <>
-            <h2 className="text-[18px] md:text-[20px] font-semibold text-[#111827] mb-4">{c.past}</h2>
+            <h2 className="text-[18px] md:text-[20px] font-semibold text-[var(--color-text)] mb-4">{c.past}</h2>
             <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {past.slice(0, 24).map(e => (<li key={e.id} className="opacity-70"><EventCard e={e} lang={lang} /></li>))}
             </ul>
@@ -173,7 +173,7 @@ export async function EventsList({ lang }: { lang: Lang }) {
 function EventCard({ e, lang }: { e: EventItem; lang: Lang }) {
   const detailRoot = switchLangPath('/ru/meropriyatiya', lang)
   return (
-    <Link href={`${detailRoot}/${e.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)] transition-colors">
+    <Link href={`${detailRoot}/${e.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[var(--color-text)] hover:border-[var(--color-primary)] transition-colors">
       {e.photo ? (
         <div className="relative w-full h-[180px]">
           <Image src={e.photo} alt={e.title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
@@ -187,7 +187,7 @@ function EventCard({ e, lang }: { e: EventItem; lang: Lang }) {
             <span className="text-[11px] uppercase tracking-wide text-[var(--color-primary-pressed)] font-medium">{e.developers[0].name}</span>
           )}
           {e.format && (
-            <span className="text-[10px] uppercase tracking-wide bg-[#E5E7EB] text-[#374151] px-1.5 py-0.5 rounded">{localizeEventFormat(e.format, lang)}</span>
+            <span className="text-[10px] uppercase tracking-wide bg-[var(--color-border)] text-[#374151] px-1.5 py-0.5 rounded">{localizeEventFormat(e.format, lang)}</span>
           )}
         </div>
         <div className="text-[16px] font-semibold leading-snug mb-2 line-clamp-3">{e.title}</div>

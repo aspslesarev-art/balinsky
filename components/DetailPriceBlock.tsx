@@ -26,7 +26,7 @@ export function DetailPriceBlock({
   const updated = updatedAt ? formatUpdated(updatedAt) : null
   return (
     <div>
-      <div className="text-[28px] font-semibold text-[#111827]">
+      <div className="text-[28px] font-semibold text-[var(--color-text)]">
         {main}
         {perSqm && (
           <span className="ml-3 text-[14px] font-normal text-[var(--color-text-muted)]">

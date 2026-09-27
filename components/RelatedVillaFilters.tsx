@@ -164,7 +164,7 @@ export function RelatedVillaFilters({ filters, options, lang = 'ru' }: {
 
   return (
     <section className="mt-12 pt-8 border-t border-[var(--color-border)]">
-      <h2 className="text-[18px] md:text-[20px] font-semibold text-[#111827] mb-5">{c.sectionTitle}</h2>
+      <h2 className="text-[18px] md:text-[20px] font-semibold text-[var(--color-text)] mb-5">{c.sectionTitle}</h2>
       <div className="space-y-5">
         {sections.map(sec => (
           <div key={sec.title}>
@@ -174,7 +174,7 @@ export function RelatedVillaFilters({ filters, options, lang = 'ru' }: {
                 <li key={it.href}>
                   <Link
                     href={it.href}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-[var(--color-border)] text-[13px] text-[#111827] no-underline hover:border-[var(--color-primary)] hover:text-[var(--color-primary-pressed)] transition-colors"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-[var(--color-border)] text-[13px] text-[var(--color-text)] no-underline hover:border-[var(--color-primary)] hover:text-[var(--color-primary-pressed)] transition-colors"
                   >
                     {it.label}
                     {it.count != null && (

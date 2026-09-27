@@ -65,7 +65,7 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
       <Header active="zhilye-kompleksy" />
 
       <PageContainer>
-        <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[#111827]">{`Peta · ${buildHeadingLocalized(filters, 'id')}`}</h1>
+        <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[var(--color-text)]">{`Peta · ${buildHeadingLocalized(filters, 'id')}`}</h1>
         <div className="text-[14px] text-[var(--color-text-muted)] mb-6">{totalPoints} kompleks di peta{totalPoints !== groups.length && ` · ${groups.length} titik`}</div>
 
         <CatalogTabs active="map" listHref={buildListHref(filters, 'id')} mapHref={buildMapHref(filters, 'id')} lang="id" />

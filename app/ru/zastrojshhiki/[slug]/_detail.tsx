@@ -719,14 +719,14 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-[13px] text-[var(--color-text-muted)] mb-2">{c.devSubtitle}</div>
-              <h1 className="text-[28px] md:text-[40px] font-semibold tracking-tight text-[#111827] leading-[1.1] mb-4">
+              <h1 className="text-[28px] md:text-[40px] font-semibold tracking-tight text-[var(--color-text)] leading-[1.1] mb-4">
                 {name}
               </h1>
               <div className="flex items-center flex-wrap gap-x-6 gap-y-2">
                 {complexes.length > 0 && (
                   <div className="flex items-center gap-2">
                     <Building2 size={18} className="text-[var(--color-primary)]" />
-                    <span className="text-[15px] font-medium text-[#111827]">{complexes.length}</span>
+                    <span className="text-[15px] font-medium text-[var(--color-text)]">{complexes.length}</span>
                     <span className="text-[13px] text-[var(--color-text-muted)]">{c.projects}</span>
                   </div>
                 )}
@@ -744,13 +744,13 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
 
         {extras.length > 0 && (
           <section className="mt-10 mb-10">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-5">{c.extrasHeading}</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-5">{c.extrasHeading}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {extras.map(({ title, bullets, Icon }) => (
                 <div key={title} className="bg-white rounded-2xl border border-[var(--color-border)] p-6">
                   <div className="flex items-center gap-2 mb-4">
                     <Icon size={18} className="text-[var(--color-primary)]" />
-                    <h3 className="text-[15px] font-semibold text-[#111827]">{title}</h3>
+                    <h3 className="text-[15px] font-semibold text-[var(--color-text)]">{title}</h3>
                   </div>
                   <ul className="space-y-2 text-[14px] text-[var(--color-text)] leading-relaxed list-disc pl-5">
                     {bullets.map((b, i) => <li key={i}>{b}</li>)}
@@ -763,13 +763,13 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
 
         {dimensions.length > 0 && (
           <section className="mb-10">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-5">{c.sectionsHeading}</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-5">{c.sectionsHeading}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {dimensions.map(({ title, bullets, Icon }) => (
                 <div key={title} className="bg-white rounded-2xl border border-[var(--color-border)] p-6">
                   <div className="flex items-center gap-2 mb-4">
                     <Icon size={18} className="text-[var(--color-primary)]" />
-                    <h3 className="text-[16px] font-semibold text-[#111827]">{title}</h3>
+                    <h3 className="text-[16px] font-semibold text-[var(--color-text)]">{title}</h3>
                   </div>
                   <ul className="space-y-2 text-[14px] text-[var(--color-text)] leading-relaxed list-disc pl-5">
                     {bullets.map((b, i) => <li key={i}>{b}</li>)}
@@ -782,7 +782,7 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
 
         {aiText && (
           <section className="mb-10">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">{c.aboutHeading}</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">{c.aboutHeading}</h2>
             <ExpandableText className="max-w-3xl" more={pickCopy({ ru: 'Подробнее', en: 'Read more', id: 'Selengkapnya', fr: 'En savoir plus', de: 'Mehr anzeigen', zh: '展开', nl: 'Meer', ban: 'Selengkapnya', pl: 'Więcej', uk: 'Докладніше' }, lang)} less={pickCopy({ ru: 'Свернуть', en: 'Show less', id: 'Tutup', fr: 'Réduire', de: 'Weniger', zh: '收起', nl: 'Minder', ban: 'Tutup', pl: 'Zwiń', uk: 'Згорнути' }, lang)}>
               <div className="prose-balinsky text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
                 {aiText}
@@ -793,7 +793,7 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
 
         {complexes.length > 0 && (
           <section className="mb-10">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-2">{c.projectsHeading}</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-2">{c.projectsHeading}</h2>
             <div className="text-[14px] text-[var(--color-text-muted)] mb-5">{c.projectsSubLine(complexes.length, apartmentCount)}</div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {complexes.map(it => <ComplexCard key={it.id} c={it} lang={lang} />)}
@@ -802,7 +802,7 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
         )}
 
         <section className="mb-10">
-          <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[#111827] mb-4">{c.relatedHeading}</h2>
+          <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[var(--color-text)] mb-4">{c.relatedHeading}</h2>
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2 max-w-3xl">
             {[
               { href: devsRoot, label: c.related.allDevs },
@@ -824,11 +824,11 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
 
         {devNews.length > 0 && (
           <section className="mb-10">
-            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">{c.newsHeading(name)}</h2>
+            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-4">{c.newsHeading(name)}</h2>
             <ul className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-1 -mx-6 px-6 max-w-none md:max-w-full md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-4 md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {devNews.map(n => (
                 <li key={n.id} className="snap-start shrink-0 w-[280px] md:w-auto">
-                  <Link href={`${newsBase}/${n.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)]">
+                  <Link href={`${newsBase}/${n.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[var(--color-text)] hover:border-[var(--color-primary)]">
                     <div className="relative w-full aspect-[16/9] bg-[var(--color-search-bg)]">
                       {n.photo ? (
                         <Image src={n.photo} alt={n.title} fill sizes="(max-width: 768px) 100vw, 25vw" className="object-cover" />
@@ -846,11 +846,11 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
 
         {devPromo.length > 0 && (
           <section className="mb-10">
-            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">{c.promoHeading(name)}</h2>
+            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-4">{c.promoHeading(name)}</h2>
             <ul className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-1 -mx-6 px-6 max-w-none md:max-w-full md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-4 md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {devPromo.map(p => (
                 <li key={p.id} className="snap-start shrink-0 w-[280px] md:w-auto">
-                  <Link href={`${promoBase}/${p.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)]">
+                  <Link href={`${promoBase}/${p.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[var(--color-text)] hover:border-[var(--color-primary)]">
                     <div className="relative w-full aspect-[16/9] bg-[var(--color-search-bg)]">
                       {p.photo ? (
                         <Image src={p.photo} alt={p.title} fill sizes="(max-width: 768px) 100vw, 25vw" className="object-cover" />
@@ -868,11 +868,11 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
 
         {devEvents.length > 0 && (
           <section className="mb-10">
-            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">{c.eventsHeading(name)}</h2>
+            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-4">{c.eventsHeading(name)}</h2>
             <ul className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-1 -mx-6 px-6 max-w-none md:max-w-full md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-4 md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {devEvents.map(e => (
                 <li key={e.id} className="snap-start shrink-0 w-[280px] md:w-auto">
-                  <Link href={`${eventsBase}/${e.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)]">
+                  <Link href={`${eventsBase}/${e.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[var(--color-text)] hover:border-[var(--color-primary)]">
                     <div className="relative w-full aspect-[16/9] bg-[var(--color-search-bg)]">
                       {e.photo ? (
                         <Image src={e.photo} alt={e.title} fill sizes="(max-width: 768px) 100vw, 25vw" className="object-cover" />
@@ -889,11 +889,11 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
         )}
 
         <section className="mb-10">
-          <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">{c.faqHeading}</h2>
+          <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">{c.faqHeading}</h2>
           <div className="max-w-3xl divide-y divide-[var(--color-border)] border-t border-b border-[var(--color-border)]">
             {faqItems.map((item, i) => (
               <details key={i} className="group py-4">
-                <summary className="cursor-pointer list-none flex items-center justify-between gap-4 text-[15px] font-medium text-[#111827]">
+                <summary className="cursor-pointer list-none flex items-center justify-between gap-4 text-[15px] font-medium text-[var(--color-text)]">
                   {item.q}
                   <span className="text-[var(--color-text-muted)] text-[20px] leading-none transition-transform group-open:rotate-45">+</span>
                 </summary>

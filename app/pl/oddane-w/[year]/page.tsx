@@ -97,7 +97,7 @@ export default async function Page({ params }: { params: Params }) {
           { label: `Oddane w ${year}` },
         ]} />
 
-        <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[#111827]">
+        <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[var(--color-text)]">
           {isPast ? `Kompleksy mieszkaniowe na Bali oddane w ${year}` : `Kompleksy mieszkaniowe na Bali planowane na ${year}`}
         </h1>
         <div className="text-[14px] text-[var(--color-text-muted)] mb-6">
@@ -127,17 +127,17 @@ export default async function Page({ params }: { params: Params }) {
         )}
 
         <section className="mt-12 mb-8 max-w-3xl">
-          <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[#111827] mb-3">Zobacz również</h2>
+          <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[var(--color-text)] mb-3">Zobacz również</h2>
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {[...VALID_YEARS].filter(y => y !== year).slice(0, 6).map(y => (
               <li key={y}>
-                <Link href={`/pl/oddane-w/${y}`} className="inline-flex items-center gap-2 px-3 py-2.5 rounded-xl border border-[var(--color-border)] bg-white text-[#111827] no-underline hover:border-[var(--color-primary)] transition-colors">
+                <Link href={`/pl/oddane-w/${y}`} className="inline-flex items-center gap-2 px-3 py-2.5 rounded-xl border border-[var(--color-border)] bg-white text-[var(--color-text)] no-underline hover:border-[var(--color-primary)] transition-colors">
                   Kompleksy oddane w {y}
                 </Link>
               </li>
             ))}
             <li>
-              <Link href="/pl/inwestycje-nieruchomosci-bali" className="inline-flex items-center gap-2 px-3 py-2.5 rounded-xl border border-[var(--color-border)] bg-white text-[#111827] no-underline hover:border-[var(--color-primary)] transition-colors">
+              <Link href="/pl/inwestycje-nieruchomosci-bali" className="inline-flex items-center gap-2 px-3 py-2.5 rounded-xl border border-[var(--color-border)] bg-white text-[var(--color-text)] no-underline hover:border-[var(--color-primary)] transition-colors">
                 Przewodnik inwestora nieruchomości na Bali
               </Link>
             </li>

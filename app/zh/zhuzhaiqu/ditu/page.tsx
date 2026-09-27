@@ -65,7 +65,7 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
       <Header active="zhilye-kompleksy" />
 
       <PageContainer>
-        <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[#111827]">{`地图 · ${buildHeadingLocalized(filters, 'zh')}`}</h1>
+        <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[var(--color-text)]">{`地图 · ${buildHeadingLocalized(filters, 'zh')}`}</h1>
         <div className="text-[14px] text-[var(--color-text-muted)] mb-6">地图上 {totalPoints} 个住宅区{totalPoints !== groups.length && ` · ${groups.length} 个点位`}</div>
 
         <CatalogTabs active="map" listHref={buildListHref(filters, 'zh')} mapHref={buildMapHref(filters, 'zh')} lang="zh" />

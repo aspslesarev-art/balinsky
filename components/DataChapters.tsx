@@ -166,7 +166,7 @@ export function DataGuide({
 
   return (
     <section className="mb-16" aria-labelledby="data-guide-title">
-      <h2 id="data-guide-title" className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-2">
+      <h2 id="data-guide-title" className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-2">
         {c.guideTitle}
       </h2>
       <p className="text-[15px] leading-relaxed text-[var(--color-text-muted)] max-w-[68ch] mb-6">{c.guideSub}</p>
@@ -188,7 +188,7 @@ export function DataGuide({
                   <Icon size={16} aria-hidden />
                   {ch.title}
                 </span>
-                {t && <span className="text-[15px] font-semibold text-[#111827]">{t}</span>}
+                {t && <span className="text-[15px] font-semibold text-[var(--color-text)]">{t}</span>}
                 <span className="text-[13px] leading-snug text-[var(--color-text-muted)]">{ch.short}</span>
               </a>
             </li>

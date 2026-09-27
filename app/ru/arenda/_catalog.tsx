@@ -392,7 +392,7 @@ export function RentalCatalog({ items, initial, lang = 'ru' }: { items: RentalIt
           <button
             type="button"
             onClick={() => updateUrl({ districts: [], bedrooms: [], priceMin: null, priceMax: null })}
-            className="inline-flex items-center gap-1 text-[13px] text-[var(--color-text-muted)] hover:text-[#111827] px-3 py-2"
+            className="inline-flex items-center gap-1 text-[13px] text-[var(--color-text-muted)] hover:text-[var(--color-text)] px-3 py-2"
           >
             <X size={14} /> {COPY_L.reset}
           </button>
@@ -419,7 +419,7 @@ export function RentalCatalog({ items, initial, lang = 'ru' }: { items: RentalIt
               <button
                 type="button"
                 onClick={() => setVisible(v => Math.min(v + PAGE_SIZE, filtered.length))}
-                className="text-[13px] text-[var(--color-text-muted)] hover:text-[#111827] px-4 py-2"
+                className="text-[13px] text-[var(--color-text-muted)] hover:text-[var(--color-text)] px-4 py-2"
               >
                 {COPY_L.showingOfTotal(visibleItems.length, filtered.length)}
               </button>
@@ -463,7 +463,7 @@ function SortMenu({ current, onChange, labels }: { current: SortKey; onChange: (
               type="button"
               onClick={() => onChange(key)}
               className={`w-full text-left px-3 py-2 rounded-lg text-[13px] hover:bg-[var(--color-search-bg)] ${
-                key === current ? 'text-[var(--color-primary-pressed)] font-medium bg-[var(--color-primary-soft)]' : 'text-[#111827]'
+                key === current ? 'text-[var(--color-primary-pressed)] font-medium bg-[var(--color-primary-soft)]' : 'text-[var(--color-text)]'
               }`}
             >
               {labels[key]}
@@ -552,7 +552,7 @@ function PriceRangePopover({
               className={`text-[12px] px-2.5 py-1 rounded-full border transition-colors ${
                 active
                   ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white'
-                  : 'bg-white border-[var(--color-border)] text-[#111827] hover:border-[var(--color-primary)] disabled:opacity-40 disabled:hover:border-[var(--color-border)] disabled:cursor-not-allowed'
+                  : 'bg-white border-[var(--color-border)] text-[var(--color-text)] hover:border-[var(--color-primary)] disabled:opacity-40 disabled:hover:border-[var(--color-border)] disabled:cursor-not-allowed'
               }`}
             >
               {p.label}{!active && <span className="ml-1 opacity-60">{count}</span>}
@@ -564,7 +564,7 @@ function PriceRangePopover({
         <button
           type="button"
           onClick={() => applyPreset(null, null)}
-          className="mt-3 w-full text-[12px] text-[var(--color-text-muted)] hover:text-[#111827] py-1.5"
+          className="mt-3 w-full text-[12px] text-[var(--color-text-muted)] hover:text-[var(--color-text)] py-1.5"
         >
           {C.clear}
         </button>
@@ -620,7 +620,7 @@ function CheckboxList({
                   onChange={() => toggle(o.value)}
                   className="h-4 w-4 accent-[var(--color-primary)]"
                 />
-                <span className="text-[13px] text-[#111827] flex-1 truncate">{o.label ?? o.value}</span>
+                <span className="text-[13px] text-[var(--color-text)] flex-1 truncate">{o.label ?? o.value}</span>
                 {o.count != null && <span className="text-[11px] text-[var(--color-text-muted)]">{o.count}</span>}
               </label>
             </li>
@@ -634,7 +634,7 @@ function CheckboxList({
         <button
           type="button"
           onClick={() => onChange([])}
-          className="mt-2 w-full text-[12px] text-[var(--color-text-muted)] hover:text-[#111827] py-1.5"
+          className="mt-2 w-full text-[12px] text-[var(--color-text-muted)] hover:text-[var(--color-text)] py-1.5"
         >
           {C.clear}
         </button>
@@ -651,7 +651,7 @@ function RentalCard({ r, currency, lang, perMonth }: {
   return (
     <Link
       href={detailHref}
-      className="group block bg-[var(--color-card-bg)] rounded-2xl border border-[var(--color-border)] overflow-hidden no-underline text-[#111827]"
+      className="group block bg-[var(--color-card-bg)] rounded-2xl border border-[var(--color-border)] overflow-hidden no-underline text-[var(--color-text)]"
     >
       <div className="relative">
         <PhotoSlider photos={r.photos} alt={r.title} trackingId={`rental:${r.slug}`} />

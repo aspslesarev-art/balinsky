@@ -109,7 +109,7 @@ export function DevelopersSortToggle({ current, lang = 'ru' }: { current: Develo
           className={`text-[13px] px-3.5 py-1.5 rounded-full border transition-colors ${
             current === o.key
               ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white font-medium'
-              : 'bg-white border-[var(--color-border)] text-[#111827] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)]'
+              : 'bg-white border-[var(--color-border)] text-[var(--color-text)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)]'
           }`}
         >
           {o.label}

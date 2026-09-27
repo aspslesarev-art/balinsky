@@ -98,7 +98,7 @@ export function SurroundingsBlock({ data, lang }: { data: Surroundings | null; l
 
   return (
     <section className="mb-10">
-      <h2 className="mb-4 text-[18px] font-semibold tracking-tight text-[#111827] sm:text-[22px] md:text-[26px]">
+      <h2 className="mb-4 text-[18px] font-semibold tracking-tight text-[var(--color-text)] sm:text-[22px] md:text-[26px]">
         {t.title}
       </h2>
 
@@ -113,7 +113,7 @@ export function SurroundingsBlock({ data, lang }: { data: Surroundings | null; l
           ))}
           {data.touristShare != null && (
             <span className="text-[var(--color-text-muted)]">
-              {' '}· <strong className="font-semibold text-[#111827]">{data.touristShare}%</strong> {t.share}
+              {' '}· <strong className="font-semibold text-[var(--color-text)]">{data.touristShare}%</strong> {t.share}
             </span>
           )}
         </p>
@@ -138,7 +138,7 @@ export function SurroundingsBlock({ data, lang }: { data: Surroundings | null; l
                   className="h-28 w-full object-cover sm:h-32"
                 />
                 <figcaption className="p-2.5">
-                  <div className="truncate text-[13px] font-medium text-[#111827]">{displayName(v.name, lang)}</div>
+                  <div className="truncate text-[13px] font-medium text-[var(--color-text)]">{displayName(v.name, lang)}</div>
                   <div className="mt-1 flex items-center gap-2 text-[12px] text-[var(--color-text-muted)]">
                     {v.rating != null && (
                       <span className="inline-flex items-center gap-0.5">

@@ -332,33 +332,33 @@ export function ShortlistSeoContent({ lang }: { lang: Lang }) {
 
   return (
     <section className="mt-12 max-w-[760px] text-[15px] leading-[1.7] text-[var(--color-text)]">
-      <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[#111827] mb-3">{c.h2What}</h2>
+      <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[var(--color-text)] mb-3">{c.h2What}</h2>
       <p className="mb-6">{c.pWhat}</p>
 
-      <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[#111827] mb-3">{c.h2What2}</h2>
+      <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[var(--color-text)] mb-3">{c.h2What2}</h2>
       <p className="mb-6">{c.pWhat2}</p>
 
-      <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[#111827] mb-3">{c.h2Lease}</h2>
+      <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[var(--color-text)] mb-3">{c.h2Lease}</h2>
       <p className="mb-6">{c.pLease}</p>
 
-      <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[#111827] mb-3">{c.h2Permit}</h2>
+      <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[var(--color-text)] mb-3">{c.h2Permit}</h2>
       <p className="mb-6">{c.pPermit}</p>
 
-      <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[#111827] mb-3">{c.h2Roi}</h2>
+      <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[var(--color-text)] mb-3">{c.h2Roi}</h2>
       <p className="mb-8">{c.pRoi}</p>
 
-      <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[#111827] mb-4">{c.faqHeading}</h2>
+      <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[var(--color-text)] mb-4">{c.faqHeading}</h2>
       <ul className="mb-8 divide-y divide-[var(--color-border)] border-y border-[var(--color-border)]">
         {c.faq.map(f => (
           <li key={f.q} className="py-4">
-            <h3 className="text-[16px] font-semibold mb-1 text-[#111827]">{f.q}</h3>
+            <h3 className="text-[16px] font-semibold mb-1 text-[var(--color-text)]">{f.q}</h3>
             <p className="text-[14px] text-[var(--color-text-muted)]">{f.a}</p>
           </li>
         ))}
       </ul>
 
       <div className="mt-8">
-        <h2 className="text-[18px] font-semibold mb-3 text-[#111827]">{c.ctaHeading}</h2>
+        <h2 className="text-[18px] font-semibold mb-3 text-[var(--color-text)]">{c.ctaHeading}</h2>
         <p className="text-[14px] text-[var(--color-text-muted)] mb-3">{c.ctaText}</p>
         <div className="flex flex-wrap gap-2">
           {link(villasHref,     c.ctaVillas)}

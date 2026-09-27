@@ -720,7 +720,7 @@ export function ReservationGuide({ lang }: { lang: Lang }) {
         ]} />
 
         <article className="mt-4 max-w-[760px]">
-          <h1 className="text-[28px] md:text-[40px] font-semibold tracking-tight text-[#111827] leading-[1.1] mb-5">
+          <h1 className="text-[28px] md:text-[40px] font-semibold tracking-tight text-[var(--color-text)] leading-[1.1] mb-5">
             {c.h1}
           </h1>
           <p className="text-[16px] md:text-[17px] leading-[1.7] text-[var(--color-text)] mb-8">
@@ -739,14 +739,14 @@ export function ReservationGuide({ lang }: { lang: Lang }) {
             ].map(({ Icon, title, body }) => (
               <div key={title} className="rounded-2xl border border-[var(--color-border)] bg-white p-5">
                 <Icon size={18} strokeWidth={1.8} className="text-[var(--color-primary)] mb-2" />
-                <h2 className="text-[16px] font-semibold text-[#111827] mb-2">{title}</h2>
+                <h2 className="text-[16px] font-semibold text-[var(--color-text)] mb-2">{title}</h2>
                 <p className="text-[14px] leading-[1.65] text-[var(--color-text-muted)]">{body}</p>
               </div>
             ))}
           </div>
 
           {/* Risks block */}
-          <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-5">
+          <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-5">
             {c.h2Risks}
           </h2>
           <ul className="space-y-3 mb-12">
@@ -759,7 +759,7 @@ export function ReservationGuide({ lang }: { lang: Lang }) {
           </ul>
 
           {/* Reservation vs SPA comparison table */}
-          <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-5">
+          <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-5">
             {c.h2What2}
           </h2>
           <div className="overflow-x-auto -mx-4 px-4 mb-12">
@@ -784,13 +784,13 @@ export function ReservationGuide({ lang }: { lang: Lang }) {
           </div>
 
           {/* FAQ */}
-          <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-5">
+          <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-5">
             {c.faqHeading}
           </h2>
           <ul className="divide-y divide-[var(--color-border)] border-y border-[var(--color-border)] mb-12">
             {c.faq.map(f => (
               <li key={f.q} className="py-4">
-                <h3 className="text-[16px] font-semibold mb-1 text-[#111827]">{f.q}</h3>
+                <h3 className="text-[16px] font-semibold mb-1 text-[var(--color-text)]">{f.q}</h3>
                 <p className="text-[14px] leading-[1.65] text-[var(--color-text-muted)]">{f.a}</p>
               </li>
             ))}
@@ -800,7 +800,7 @@ export function ReservationGuide({ lang }: { lang: Lang }) {
           <div className="rounded-2xl bg-[var(--color-search-bg)] p-6 mb-8 flex items-start gap-4">
             <ShieldCheck size={28} strokeWidth={1.6} className="text-[var(--color-primary)] shrink-0 mt-0.5" />
             <div>
-              <h2 className="text-[20px] font-semibold text-[#111827] mb-2">{c.ctaHeading}</h2>
+              <h2 className="text-[20px] font-semibold text-[var(--color-text)] mb-2">{c.ctaHeading}</h2>
               <p className="text-[15px] text-[var(--color-text-muted)] mb-4">{c.ctaText}</p>
               <div className="flex flex-wrap gap-2">
                 <Link href={switchLangPath('/ru/villy', lang)}        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[13px] font-medium no-underline">{c.ctaVillas}</Link>

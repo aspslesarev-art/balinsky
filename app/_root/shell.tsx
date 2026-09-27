@@ -2,6 +2,12 @@ import type { Metadata, Viewport } from "next";
 // Self-hosted (app/fonts): Google-hosted fonts are downloaded during every
 // build, and a flaky fetch failed a production deploy on 2026-09-25.
 import localFont from "next/font/local";
+// Onest (body) + Source Serif 4 (h1/h2, big numbers): both carry Cyrillic,
+// which the old Geist file did not — Russian text used to fall back to the
+// system font. Served from node_modules, split by unicode-range, so a page
+// only downloads the alphabets it actually renders.
+import "@fontsource-variable/onest/wght.css";
+import "@fontsource-variable/source-serif-4/wght.css";
 import "../globals.css";
 import { CurrencyProvider } from "@/components/CurrencyContext";
 import { WishlistProvider } from "@/components/WishlistContext";
@@ -9,17 +15,11 @@ import { SiteChrome } from "@/components/SiteChrome";
 import { TmaModeMarker } from "@/components/TmaModeMarker";
 import { JsonLd } from "@/components/JsonLd";
 import { Typographer } from "@/components/Typographer";
+import { Reveal } from "@/components/Reveal";
 import { Analytics } from "@/components/Analytics";
 import { GTM_ID, YM_ID } from "@/lib/analytics";
 import { organizationLd, websiteLd } from "@/lib/json-ld";
 import type { Lang } from "@/lib/i18n";
-
-const geistSans = localFont({
-  src: "../fonts/geist-latin.woff2",
-  weight: "100 900",
-  variable: "--font-geist-sans",
-  display: "swap",
-});
 
 // Geist Mono (`font-mono`) is only used on /admin/* editors — never on the
 // public catalog / detail pages. Keep the CSS variable available, but
@@ -98,7 +98,7 @@ export function RootShell({
   return (
     <html
       lang={HTML_LANG[lang]}
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistMono.variable} ${typography ? "site " : ""}h-full antialiased`}
     >
       <head>
         {/* Preconnect to the photo bucket — every card's first image fetch
@@ -149,6 +149,7 @@ export function RootShell({
             {children}
             <SiteChrome />
             {typography && <Typographer />}
+            {typography && <Reveal />}
           </WishlistProvider>
         </CurrencyProvider>
       </body>

@@ -26,7 +26,7 @@ export function LangSwitch({ className = '' }: { className?: string }) {
           router.push(switchLangPath(pathname, next))
         }}
         aria-label={label}
-        className="appearance-none rounded-full border border-[var(--color-border)] bg-white pl-3 pr-7 py-1.5 text-[12px] font-medium text-[#111827] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] cursor-pointer"
+        className="appearance-none rounded-full border border-[var(--color-border)] bg-white pl-3 pr-7 py-1.5 text-[12px] font-medium text-[var(--color-text)] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] cursor-pointer"
       >
         {LANGS.map(l => (
           <option key={l} value={l}>{LANG_LABEL[l]}</option>

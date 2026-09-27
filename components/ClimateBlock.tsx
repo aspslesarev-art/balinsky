@@ -113,11 +113,11 @@ export function ClimateBlock({ climate, air, lang, footer }: Props) {
 
   return (
     <div className="mb-4 rounded-2xl border border-[var(--color-border)] bg-white p-5">
-      <h3 className="mb-3 text-[15px] font-semibold text-[#111827]">{t.title}</h3>
+      <h3 className="mb-3 text-[15px] font-semibold text-[var(--color-text)]">{t.title}</h3>
 
       <div className="flex items-baseline gap-2">
         <Sun size={18} className="shrink-0 translate-y-0.5 text-[#F59E0B]" />
-        <span className="text-[22px] font-semibold text-[#111827]">{year.sunny}</span>
+        <span className="text-[22px] font-semibold text-[var(--color-text)]">{year.sunny}</span>
         <span className="text-[13px] text-[var(--color-text-muted)]">
           {t.sunny} ({year.days})
         </span>
@@ -128,7 +128,7 @@ export function ClimateBlock({ climate, air, lang, footer }: Props) {
           <div className="flex min-w-0 items-center gap-1.5">
             <Sun size={15} className="shrink-0 text-[#F59E0B]" />
             <span className="shrink-0 text-[13px] text-[var(--color-text-muted)]">{t.best}:</span>
-            <span className="truncate text-[13px] font-medium text-[#111827]">
+            <span className="truncate text-[13px] font-medium text-[var(--color-text)]">
               {bestLabel}
               {bestAvg ? ` · ${bestAvg} ${perMonthPhrase(bestAvg, lang, t.perMonth)}` : ''}
             </span>
@@ -138,14 +138,14 @@ export function ClimateBlock({ climate, air, lang, footer }: Props) {
           <div className="flex min-w-0 items-center gap-1.5">
             <CloudRain size={15} className="shrink-0 text-[#3B82F6]" />
             <span className="shrink-0 text-[13px] text-[var(--color-text-muted)]">{t.worst}:</span>
-            <span className="truncate text-[13px] font-medium text-[#111827]">{worstLabel}</span>
+            <span className="truncate text-[13px] font-medium text-[var(--color-text)]">{worstLabel}</span>
           </div>
         )}
         {airWord && (
           <div className="flex min-w-0 items-center gap-1.5">
             <Wind size={15} className="shrink-0 text-[var(--color-primary)]" />
             <span className="shrink-0 text-[13px] text-[var(--color-text-muted)]">{t.air}:</span>
-            <span className="truncate text-[13px] font-medium text-[#111827]">{airWord}</span>
+            <span className="truncate text-[13px] font-medium text-[var(--color-text)]">{airWord}</span>
           </div>
         )}
       </div>

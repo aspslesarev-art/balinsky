@@ -118,13 +118,13 @@ export function NewsBody({ body }: { body: string }) {
         switch (b.kind) {
           case 'h2':
             return (
-              <h2 key={i} className="mt-10 mb-3 text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] first:mt-0">
+              <h2 key={i} className="mt-10 mb-3 text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] first:mt-0">
                 {renderInline(b.text)}
               </h2>
             )
           case 'h3':
             return (
-              <h3 key={i} className="mt-8 mb-2 text-[18px] md:text-[20px] font-semibold tracking-tight text-[#111827]">
+              <h3 key={i} className="mt-8 mb-2 text-[18px] md:text-[20px] font-semibold tracking-tight text-[var(--color-text)]">
                 {renderInline(b.text)}
               </h3>
             )

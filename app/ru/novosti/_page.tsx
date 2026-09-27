@@ -146,14 +146,14 @@ export async function NewsList({ lang }: { lang: Lang }) {
     <>
       <Header />
       <PageContainer>
-        <h1 className="pt-8 mb-4 text-[28px] md:text-[36px] font-semibold tracking-tight text-[#111827]">{c.h1}</h1>
+        <h1 className="pt-8 mb-4 text-[28px] md:text-[36px] font-semibold tracking-tight text-[var(--color-text)]">{c.h1}</h1>
         <div className="text-[14px] text-[var(--color-text-muted)] mb-8">{c.sub(items.length)}</div>
         <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {items.slice(0, CARD_LIMIT).map(n => {
             const title = tField((n as unknown as { data?: Record<string, unknown> }).data ?? {}, 'title', lang) ?? n.title
             return (
               <li key={n.id}>
-                <Link href={`${detailRoot}/${n.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)] transition-colors">
+                <Link href={`${detailRoot}/${n.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[var(--color-text)] hover:border-[var(--color-primary)] transition-colors">
                   {n.photo ? (
                     <div className="relative w-full h-[180px]">
                       <Image src={n.photo} alt={title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
@@ -181,7 +181,7 @@ export async function NewsList({ lang }: { lang: Lang }) {
             but 160+ photo cards (each with a srcset) no longer bloat the HTML. */}
         {items.length > CARD_LIMIT && (
           <section className="mt-16 max-w-[820px]">
-            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-6">{c.archive}</h2>
+            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-6">{c.archive}</h2>
             <div className="space-y-8">
               {archiveByMonth(items.slice(CARD_LIMIT), c.locale).map(([month, group]) => (
                 <div key={month}>
@@ -189,7 +189,7 @@ export async function NewsList({ lang }: { lang: Lang }) {
                   <ul className="divide-y divide-[var(--color-border)] border-y border-[var(--color-border)]">
                     {group.map(n => (
                       <li key={n.id}>
-                        <Link href={`${detailRoot}/${n.slug}`} className="flex items-baseline gap-4 py-3 no-underline text-[#111827] hover:text-[var(--color-primary-pressed)]">
+                        <Link href={`${detailRoot}/${n.slug}`} className="flex items-baseline gap-4 py-3 no-underline text-[var(--color-text)] hover:text-[var(--color-primary-pressed)]">
                           <span className="shrink-0 w-6 text-right text-[13px] tabular-nums text-[var(--color-text-muted)]">{n.date ? new Date(n.date).getUTCDate() : ''}</span>
                           <span className="text-[15px] leading-snug">{tField((n as unknown as { data?: Record<string, unknown> }).data ?? {}, 'title', lang) ?? n.title}</span>
                         </Link>

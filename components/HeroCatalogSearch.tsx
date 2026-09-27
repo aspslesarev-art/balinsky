@@ -74,7 +74,7 @@ export function HeroCatalogSearch({
         </button>
       </div>
 
-      <form onSubmit={submit} className="relative" data-llm-skip="">
+      <form onSubmit={submit} className="relative rounded-2xl border-beam" data-llm-skip="">
         <Search size={18} strokeWidth={1.8} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#6B7570] pointer-events-none" />
         <input
           type="text"

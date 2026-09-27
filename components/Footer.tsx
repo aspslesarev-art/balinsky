@@ -674,7 +674,7 @@ export function Footer({ lang = 'ru' }: { lang?: Lang }) {
                     <li key={l.label}>
                       <Link
                         href={switchLangPath(l.href, lang)}
-                        className="text-[14px] text-[#111827] hover:text-[var(--color-primary-pressed)] no-underline"
+                        className="text-[14px] text-[var(--color-text)] hover:text-[var(--color-primary-pressed)] no-underline"
                       >
                         {l.label}
                       </Link>

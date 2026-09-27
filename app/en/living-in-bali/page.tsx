@@ -91,7 +91,7 @@ export default function Page() {
 
         <article className="mt-6 mb-16 max-w-4xl">
           <header className="mb-10">
-            <h1 className="text-[32px] md:text-[44px] font-semibold tracking-tight text-[#111827] mb-4 leading-tight">
+            <h1 className="text-[32px] md:text-[44px] font-semibold tracking-tight text-[var(--color-text)] mb-4 leading-tight">
               Living in Bali — Relocation Guide
             </h1>
             <p className="text-[18px] text-[var(--color-text-muted)] leading-relaxed">
@@ -106,14 +106,14 @@ export default function Page() {
             {SECTIONS.map(({ Icon, title, body }) => (
               <div key={title} className="rounded-2xl border border-[var(--color-border)] p-4 bg-white">
                 <Icon size={22} className="text-[var(--color-primary)] mb-2" />
-                <h3 className="text-[15px] font-semibold text-[#111827] mb-1">{title}</h3>
+                <h3 className="text-[15px] font-semibold text-[var(--color-text)] mb-1">{title}</h3>
                 <p className="text-[13px] text-[var(--color-text-muted)] leading-relaxed">{body}</p>
               </div>
             ))}
           </section>
 
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">Visas — what fits which situation</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">Visas — what fits which situation</h2>
             <div className="space-y-4 text-[16px] leading-[1.7] text-[#1f2937]">
               <p><strong>B211A — tourist visa.</strong> 60 days with extensions up to 6 months. Fits the trial period before committing to relocation. Cost $50-100 + agent fee $50-150.</p>
               <p><strong>E33G — digital nomad visa (since October 2025).</strong> Up to 1 year, requires verified income of $60K+/year from outside Indonesia. Doesn&apos;t allow working for local companies but legalises remote work. Ideal for freelancers and remote workers.</p>
@@ -124,7 +124,7 @@ export default function Page() {
           </section>
 
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">Resident taxes for foreigners</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">Resident taxes for foreigners</h2>
             <div className="space-y-4 text-[16px] leading-[1.7] text-[#1f2937]">
               <p>After 183 days in Indonesia within 12 months, you&apos;re a tax resident. Since 2025 Indonesia applies worldwide taxation: PIT is paid on all global income, not just local.</p>
               <p>Progressive bracket: 5% up to IDR 60M (~$4K), 15% up to 250M (~$16K), 25% up to 500M (~$32K), 30% up to 5B (~$320K), 35% above. Tax year = calendar year, return due by March 31.</p>
@@ -134,7 +134,7 @@ export default function Page() {
           </section>
 
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">International schools</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">International schools</h2>
             <div className="space-y-4 text-[16px] leading-[1.7] text-[#1f2937]">
               <p><strong>Preschool (3-5 years):</strong> Sunrise Preschool, Sanggar Anak Tangguh, Australian Independent (early years) — $5-10K/year. Strong Montessori, Reggio Emilia, Waldorf programmes.</p>
               <p><strong>Primary and middle school (standard tier):</strong> Sunrise School (Bumin Sanur), Australian Independent School (Sanur), Cita Hati (Denpasar), Bali Island School (Sanur) — $7-15K/year. Cambridge and International Baccalaureate curricula, English plus Spanish/Mandarin/Indonesian.</p>
@@ -144,7 +144,7 @@ export default function Page() {
           </section>
 
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">Healthcare</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">Healthcare</h2>
             <div className="space-y-4 text-[16px] leading-[1.7] text-[#1f2937]">
               <p><strong>International-grade clinics:</strong> BIMC Kuta (Cleveland Clinic affiliate), BIMC Nusa Dua, Siloam Hospital Denpasar, Kasih Ibu Hospital. Most doctors speak English, several have international certifications (US Board, AHPRA, GMC).</p>
               <p><strong>Out-of-pocket pricing:</strong> specialist consultation $40-80, full blood panel $25-40, CT/MRI $200-400, moderate emergency surgery $5-15K, natural birth $2-4K, C-section $4-7K.</p>
@@ -154,7 +154,7 @@ export default function Page() {
           </section>
 
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">Real cost of living</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">Real cost of living</h2>
             <div className="overflow-x-auto">
               <table className="w-full text-[14px] border-collapse">
                 <thead>
@@ -180,13 +180,13 @@ export default function Page() {
           </section>
 
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
               Frequently Asked Questions
             </h2>
             <div className="space-y-3">
               {FAQ.map((it, i) => (
                 <details key={i} className="rounded-2xl border border-[var(--color-border)] p-4 bg-white">
-                  <summary className="cursor-pointer list-none flex items-center justify-between gap-4 text-[15px] font-semibold text-[#111827]">
+                  <summary className="cursor-pointer list-none flex items-center justify-between gap-4 text-[15px] font-semibold text-[var(--color-text)]">
                     <span>{it.q}</span>
                     <ChevronRight size={18} className="shrink-0 transition-transform [details[open]_&]:rotate-90" />
                   </summary>
@@ -197,22 +197,22 @@ export default function Page() {
           </section>
 
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">Next steps</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">Next steps</h2>
             <div className="grid sm:grid-cols-2 gap-4">
               <Link href="/en/bali-property-investment" className="block rounded-2xl border border-[var(--color-border)] p-5 bg-white no-underline hover:border-[var(--color-primary)] transition-colors">
-                <h3 className="text-[16px] font-semibold text-[#111827] mb-1">Bali property investment</h3>
+                <h3 className="text-[16px] font-semibold text-[var(--color-text)] mb-1">Bali property investment</h3>
                 <p className="text-[13px] text-[var(--color-text-muted)]">Yields, leasehold, taxes, ROI — full investor guide.</p>
               </Link>
               <Link href="/en/villas/umalas" className="block rounded-2xl border border-[var(--color-border)] p-5 bg-white no-underline hover:border-[var(--color-primary)] transition-colors">
-                <h3 className="text-[16px] font-semibold text-[#111827] mb-1">Villas in Umalas — residential district</h3>
+                <h3 className="text-[16px] font-semibold text-[var(--color-text)] mb-1">Villas in Umalas — residential district</h3>
                 <p className="text-[13px] text-[var(--color-text-muted)]">Quiet area for families with kids, schools and infrastructure nearby.</p>
               </Link>
               <Link href="/en/villas/sanur" className="block rounded-2xl border border-[var(--color-border)] p-5 bg-white no-underline hover:border-[var(--color-primary)] transition-colors">
-                <h3 className="text-[16px] font-semibold text-[#111827] mb-1">Villas in Sanur — calm coast</h3>
+                <h3 className="text-[16px] font-semibold text-[var(--color-text)] mb-1">Villas in Sanur — calm coast</h3>
                 <p className="text-[13px] text-[var(--color-text-muted)]">Family audience, beachfront promenade, low risk.</p>
               </Link>
               <Link href="/en/contact" className="block rounded-2xl border border-[var(--color-border)] p-5 bg-white no-underline hover:border-[var(--color-primary)] transition-colors">
-                <h3 className="text-[16px] font-semibold text-[#111827] mb-1">Contact</h3>
+                <h3 className="text-[16px] font-semibold text-[var(--color-text)] mb-1">Contact</h3>
                 <p className="text-[13px] text-[var(--color-text-muted)]">Telegram, email, partner contacts.</p>
               </Link>
             </div>

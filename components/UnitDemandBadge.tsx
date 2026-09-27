@@ -82,7 +82,7 @@ export function UnitDemandBadge({
           >
             {demand.score}
           </span>
-          <span className="text-[12px] font-semibold text-[#111827]">{c.title}</span>
+          <span className="text-[12px] font-semibold text-[var(--color-text)]">{c.title}</span>
         </span>
         <span className="mt-1.5 block text-[12px] leading-snug text-[var(--color-text)]">
           {c.meaning(demand.score)}

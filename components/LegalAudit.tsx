@@ -145,7 +145,7 @@ function Row({ item, tone }: { item: AuditItem; tone: 'ok' | 'warn' | 'neutral' 
         className={`w-full flex items-start gap-2.5 py-3 text-left ${hasBody ? 'cursor-pointer' : 'cursor-default'}`}
       >
         <Icon size={16} className={`${iconCls} shrink-0 mt-0.5`} />
-        <span className="flex-1 text-[14px] sm:text-[15px] font-medium text-[#111827] leading-snug">{item.headline}<SourceMark /></span>
+        <span className="flex-1 text-[14px] sm:text-[15px] font-medium text-[var(--color-text)] leading-snug">{item.headline}<SourceMark /></span>
         {hasBody && (
           <ChevronDown size={16} className={`shrink-0 mt-0.5 text-[var(--color-text-soft)] transition-transform ${open ? 'rotate-180' : ''}`} />
         )}
@@ -165,7 +165,7 @@ function Group({ tone, title, items, edit }: { tone: 'ok' | 'warn'; title: strin
     <div {...edit} className={`rounded-2xl border p-4 sm:p-5 ${wrap}`}>
       <div className="flex items-center gap-2 mb-1">
         <Icon size={18} className={iconCls} />
-        <h3 className="text-[15px] sm:text-[16px] font-semibold text-[#111827]">{title}</h3>
+        <h3 className="text-[15px] sm:text-[16px] font-semibold text-[var(--color-text)]">{title}</h3>
       </div>
       <div>{items.map((it, i) => <Row key={i} item={it} tone={tone} />)}</div>
     </div>
@@ -218,7 +218,7 @@ function ContractBalance({
       <div className="flex items-baseline justify-between gap-3 mb-2">
         <div className="flex items-center gap-2">
           <Scale size={16} className={numCls} />
-          <h3 className="text-[14px] sm:text-[15px] font-semibold text-[#111827]">{c.balTitle}</h3>
+          <h3 className="text-[14px] sm:text-[15px] font-semibold text-[var(--color-text)]">{c.balTitle}</h3>
         </div>
         <div className={`text-[17px] sm:text-[19px] font-semibold tabular-nums ${numCls}`}>
           {buyer} / {developer}
@@ -234,7 +234,7 @@ function ContractBalance({
       </div>
 
       {summary && (
-        <p className="mt-2 text-[13.5px] sm:text-[14px] text-[#111827] leading-snug">
+        <p className="mt-2 text-[13.5px] sm:text-[14px] text-[var(--color-text)] leading-snug">
           {[summary.headline, summary.body].filter(Boolean).join('. ')}
           <SourceMark />
         </p>
@@ -246,7 +246,7 @@ function ContractBalance({
             type="button"
             onClick={() => setOpen(o => !o)}
             aria-expanded={open}
-            className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-medium text-[var(--color-text-soft)] hover:text-[#111827] cursor-pointer"
+            className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-medium text-[var(--color-text-soft)] hover:text-[var(--color-text)] cursor-pointer"
           >
             {open ? c.balClose : c.balOpen(hidden.length)}
             <ChevronDown size={15} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
@@ -294,7 +294,7 @@ export function LegalAudit({
   const showQuestions = hasQuestions || editable
   return (
     <section className="mb-10" id="legal">
-      <h2 className="text-[19px] sm:text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-1">{c.title}</h2>
+      <h2 className="text-[19px] sm:text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-1">{c.title}</h2>
       <p className="text-[13.5px] sm:text-[14px] text-[var(--color-text-soft)] mb-4">{c.subtitle}</p>
       {hasBalance && (
         <ContractBalance

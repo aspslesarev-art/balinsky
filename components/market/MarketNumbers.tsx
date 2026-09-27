@@ -2,6 +2,7 @@
 // that explains it. Every locale; Balinese reads the Indonesian copy.
 
 import Link from 'next/link'
+import { NumberTicker } from '@/components/NumberTicker'
 import { ArrowRight } from 'lucide-react'
 import type { Lang } from '@/lib/i18n'
 import { MARKET, marketPath, usd, asOfLabel } from '@/lib/market-index'
@@ -90,7 +91,7 @@ export function MarketNumbers({ lang }: { lang: Lang }) {
         <h2 className="text-[26px] md:text-[38px] leading-[1.15] font-light tracking-[-0.02em] text-[#0E1A14]">
           {c.h2}
         </h2>
-        <p className="text-[13px] text-[#4B5563]">
+        <p className="text-[13px] text-[var(--color-text-muted)]">
           {c.data(asOfLabel(lang))}
           <Link href={marketPath('method', lang)} className="text-[var(--color-primary)] underline underline-offset-2 hover:no-underline">
             {c.how}
@@ -100,9 +101,9 @@ export function MarketNumbers({ lang }: { lang: Lang }) {
       <ul className="mt-8 md:mt-10 grid grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map(card => (
           <li key={card.t}>
-            <Link href={card.href} className="group block h-full rounded-2xl border border-[var(--color-border)] bg-white p-5 md:p-6 no-underline hover:border-[var(--color-primary)] transition-colors">
-              <div className="text-[26px] md:text-[32px] font-light tabular-nums leading-none text-[#0E1A14]">{card.v}</div>
-              <div className="mt-3 text-[13.5px] leading-[1.45] text-[#4B5563]">{card.t}</div>
+            <Link href={card.href} className="magic-card group block h-full rounded-2xl border border-[var(--color-border)] bg-white p-5 md:p-6 no-underline">
+              <div className="font-display text-[28px] md:text-[38px] font-light leading-none text-[#0E1A14]"><NumberTicker value={card.v} /></div>
+              <div className="mt-3 text-[13.5px] leading-[1.45] text-[var(--color-text-muted)]">{card.t}</div>
             </Link>
           </li>
         ))}

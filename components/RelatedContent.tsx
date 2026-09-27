@@ -151,7 +151,7 @@ export async function RelatedContent({
     <div className="mt-14 space-y-12">
       {dev && (
         <section>
-          <h2 className="text-[18px] sm:text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
+          <h2 className="text-[18px] sm:text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
             {c.developerHeading}
           </h2>
           {dev.slug ? (
@@ -168,7 +168,7 @@ export async function RelatedContent({
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] mb-1">{c.builtBy}</div>
-                <div className="text-[19px] font-semibold text-[#111827] truncate">{dev.name}</div>
+                <div className="text-[19px] font-semibold text-[var(--color-text)] truncate">{dev.name}</div>
                 <div className="mt-1 text-[13px] text-[var(--color-primary-pressed)] font-medium inline-flex items-center gap-1 group-hover:gap-2 transition-all">
                   {c.viewDeveloper} <ChevronRight size={14} />
                 </div>
@@ -177,7 +177,7 @@ export async function RelatedContent({
           ) : (
             <div className="bg-white rounded-2xl border border-[var(--color-border)] p-6 max-w-3xl">
               <div className="text-[13px] text-[var(--color-text-muted)] mb-1">{c.builtBy}</div>
-              <div className="text-[20px] font-semibold text-[#111827] mb-3">{dev.name}</div>
+              <div className="text-[20px] font-semibold text-[var(--color-text)] mb-3">{dev.name}</div>
               <Link href={developersRoot} className="inline-flex items-center gap-1 text-[14px] text-[var(--color-primary-pressed)] hover:text-[var(--color-primary)]">
                 {c.allDevelopers} <ChevronRight size={14} />
               </Link>
@@ -188,7 +188,7 @@ export async function RelatedContent({
 
       {showComplex && (
         <section>
-          <h2 className="text-[18px] sm:text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
+          <h2 className="text-[18px] sm:text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
             {c.complexHeading}
           </h2>
           <Link
@@ -200,7 +200,7 @@ export async function RelatedContent({
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] mb-1">{c.complexHeading}</div>
-              <div className="text-[19px] font-semibold text-[#111827] truncate">{complexName}</div>
+              <div className="text-[19px] font-semibold text-[var(--color-text)] truncate">{complexName}</div>
               <div className="mt-1 text-[13px] text-[var(--color-primary-pressed)] font-medium inline-flex items-center gap-1 group-hover:gap-2 transition-all">
                 {c.viewComplex} <ChevronRight size={14} />
               </div>
@@ -211,7 +211,7 @@ export async function RelatedContent({
 
       {units.length > 0 && (
         <section>
-          <h2 className="text-[18px] sm:text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-5">
+          <h2 className="text-[18px] sm:text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-5">
             {c.unitsHeading}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

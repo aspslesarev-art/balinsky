@@ -138,7 +138,7 @@ export async function ComplexesCatalog({
       <Header active="zhilye-kompleksy" />
 
       <PageContainer>
-        <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[#111827]">
+        <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[var(--color-text)]">
           {heading}
           {actualPage > 1 && (
             <span className="text-[var(--color-text-muted)] font-normal text-[20px] md:text-[24px]">

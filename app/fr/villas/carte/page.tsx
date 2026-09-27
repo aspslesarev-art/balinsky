@@ -69,7 +69,7 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
       <Header active="villy" />
 
       <PageContainer>
-        <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[#111827]">{buildHeadingLoc(filters, 'fr')}</h1>
+        <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[var(--color-text)]">{buildHeadingLoc(filters, 'fr')}</h1>
         <div className="text-[14px] text-[var(--color-text-muted)] mb-6">{totalPoints} objets sur la carte{totalPoints !== groups.length && ` · ${groups.length} points`}</div>
 
         <CatalogTabs active="map" listHref={buildListHref(filters, 'fr')} mapHref={buildMapHref(filters, 'fr')} lang="fr" />

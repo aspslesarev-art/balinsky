@@ -100,7 +100,7 @@ export function CurrencyToggle({ className = '' }: { className?: string }) {
         value={currency}
         onChange={e => setCurrency(e.target.value as Currency)}
         aria-label={label}
-        className="appearance-none rounded-full border border-[var(--color-border)] bg-white pl-3 pr-7 py-1.5 text-[12px] font-medium text-[#111827] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] cursor-pointer"
+        className="appearance-none rounded-full border border-[var(--color-border)] bg-white pl-3 pr-7 py-1.5 text-[12px] font-medium text-[var(--color-text)] hover:border-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] cursor-pointer"
       >
         {ALL_CURRENCIES.map(c => (
           <option key={c} value={c}>{c}</option>

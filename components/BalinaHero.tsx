@@ -397,7 +397,7 @@ export function BalinaHero() {
             <div className="text-[11px] md:text-[12px] uppercase tracking-wide text-[var(--color-primary-pressed)] font-semibold mb-1.5 md:mb-2">
               {c.eyebrow} · {c.name}
             </div>
-            <h1 className="text-[22px] sm:text-[26px] md:text-[42px] font-semibold tracking-tight text-[#111827] leading-[1.15] md:leading-[1.1] mb-2.5 md:mb-3">
+            <h1 className="text-[22px] sm:text-[26px] md:text-[42px] font-semibold tracking-tight text-[var(--color-text)] leading-[1.15] md:leading-[1.1] mb-2.5 md:mb-3">
               {c.title}
             </h1>
             <p className="text-[14px] md:text-[16px] text-[var(--color-text-muted)] leading-relaxed mb-4 md:mb-5 max-w-2xl mx-auto md:mx-0">
@@ -421,7 +421,7 @@ export function BalinaHero() {
                   onFocus={() => setFocused(true)}
                   onBlur={() => setFocused(false)}
                   aria-label={c.placeholderMobile}
-                  className="relative z-10 w-full bg-transparent border-0 outline-none text-[15px] md:text-[16px] leading-[1.45] text-[#111827] py-2.5 px-2.5"
+                  className="relative z-10 w-full bg-transparent border-0 outline-none text-[15px] md:text-[16px] leading-[1.45] text-[var(--color-text)] py-2.5 px-2.5"
                 />
                 {value.length === 0 && !focused && (
                   <TypewriterOverlay examples={exampleSet} />

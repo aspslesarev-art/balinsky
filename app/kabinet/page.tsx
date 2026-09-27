@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 }
 
 const INPUT =
-  'mt-1 w-full rounded-xl border border-[var(--color-border)] bg-white px-4 py-2.5 text-[15px] text-[#111827] outline-none focus:border-[var(--color-primary)]'
+  'mt-1 w-full rounded-xl border border-[var(--color-border)] bg-white px-4 py-2.5 text-[15px] text-[var(--color-text)] outline-none focus:border-[var(--color-primary)]'
 
 export default async function KabinetPage({
   searchParams,
@@ -34,7 +34,7 @@ export default async function KabinetPage({
       <>
         <Header />
         <main className="mx-auto w-full max-w-xl px-6 py-16">
-        <h1 className="text-[26px] font-semibold tracking-tight text-[#111827]">Вход</h1>
+        <h1 className="text-[26px] font-semibold tracking-tight text-[var(--color-text)]">Вход</h1>
         {sp.login === 'expired' && (
           <p className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-[14px] text-amber-900">
             Ссылка уже использована или устарела. Запросите новую — это займёт пару секунд.
@@ -61,7 +61,7 @@ export default async function KabinetPage({
     <>
       <Header />
       <main className="mx-auto w-full max-w-xl px-6 py-16">
-      <h1 className="text-[26px] font-semibold tracking-tight text-[#111827]">Личный кабинет</h1>
+      <h1 className="text-[26px] font-semibold tracking-tight text-[var(--color-text)]">Личный кабинет</h1>
       <p className="mt-2 text-[15px] text-[var(--color-text-muted)]">
         Вы вошли{user.username ? ` как @${user.username}` : ''}. Вся аналитика на сайте открыта.
       </p>
@@ -77,27 +77,27 @@ export default async function KabinetPage({
 
       <form method="POST" action="/api/account" className="mt-8 space-y-5">
         <div>
-          <label htmlFor="firstName" className="text-[14px] font-medium text-[#111827]">Имя</label>
+          <label htmlFor="firstName" className="text-[14px] font-medium text-[var(--color-text)]">Имя</label>
           <input id="firstName" name="firstName" defaultValue={user.firstName ?? ''} className={INPUT} />
         </div>
         <div>
-          <label htmlFor="lastName" className="text-[14px] font-medium text-[#111827]">Фамилия</label>
+          <label htmlFor="lastName" className="text-[14px] font-medium text-[var(--color-text)]">Фамилия</label>
           <input id="lastName" name="lastName" defaultValue={user.lastName ?? ''} className={INPUT} />
         </div>
         <div>
-          <label htmlFor="phone" className="text-[14px] font-medium text-[#111827]">Телефон</label>
+          <label htmlFor="phone" className="text-[14px] font-medium text-[var(--color-text)]">Телефон</label>
           <input id="phone" name="phone" defaultValue={contact?.phone ?? ''} placeholder="+62 …" className={INPUT} />
         </div>
         <div>
-          <label htmlFor="agency" className="text-[14px] font-medium text-[#111827]">Агентство</label>
+          <label htmlFor="agency" className="text-[14px] font-medium text-[var(--color-text)]">Агентство</label>
           <input id="agency" name="agency" defaultValue={contact?.agency ?? ''} className={INPUT} />
         </div>
         <div>
-          <label htmlFor="contactNote" className="text-[14px] font-medium text-[#111827]">Как с вами связаться</label>
+          <label htmlFor="contactNote" className="text-[14px] font-medium text-[var(--color-text)]">Как с вами связаться</label>
           <input id="contactNote" name="contactNote" defaultValue={contact?.note ?? ''}
             placeholder="Например: пишите в Telegram, отвечаю до 22:00 по Бали" className={INPUT} />
         </div>
-        <label className="flex items-start gap-3 text-[14px] text-[#111827]">
+        <label className="flex items-start gap-3 text-[14px] text-[var(--color-text)]">
           <input type="checkbox" name="isAgent" defaultChecked={user.isAgent} className="mt-1" />
           <span>
             Я агент
@@ -116,7 +116,7 @@ export default async function KabinetPage({
       </form>
 
       <div className="mt-10 rounded-2xl border border-[var(--color-border)] bg-white p-5">
-        <p className="text-[15px] font-medium text-[#111827]">Свои объекты</p>
+        <p className="text-[15px] font-medium text-[var(--color-text)]">Свои объекты</p>
         <p className="mt-1 text-[14px] text-[var(--color-text-muted)]">
           Добавьте виллу или апартаменты: характеристики подтянутся из каталога, на карточке будут ваши контакты.
         </p>

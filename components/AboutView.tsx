@@ -517,7 +517,7 @@ export async function AboutView({ lang }: { lang: Lang }) {
         ]} />
 
         <article className="mt-4 max-w-[760px]">
-          <h1 className="text-[28px] md:text-[40px] font-semibold tracking-tight text-[#111827] leading-[1.1] mb-5">
+          <h1 className="text-[28px] md:text-[40px] font-semibold tracking-tight text-[var(--color-text)] leading-[1.1] mb-5">
             {c.h1}
           </h1>
           <p className="text-[16px] md:text-[17px] leading-[1.7] text-[var(--color-text)] mb-12">
@@ -527,14 +527,14 @@ export async function AboutView({ lang }: { lang: Lang }) {
 
         {/* Live numbers — pulled from raw_* tables on every render. */}
         <section className="mb-14">
-          <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-3">{c.h2Numbers}</h2>
+          <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-3">{c.h2Numbers}</h2>
           <p className="text-[14px] text-[var(--color-text-muted)] mb-6 max-w-2xl">{c.numbersLead}</p>
           <ul className="grid grid-cols-2 md:grid-cols-5 gap-3">
             {stats.map(s => (
               <li key={s.label}>
                 <Link href={s.href} className="block rounded-2xl border border-[var(--color-border)] bg-white p-5 hover:border-[var(--color-primary)] transition-colors no-underline">
                   <s.Icon size={20} strokeWidth={1.6} className="text-[var(--color-primary)] mb-2" />
-                  <div className="text-[28px] md:text-[32px] font-semibold tabular-nums text-[#111827] leading-none mb-1">{s.n}</div>
+                  <div className="text-[28px] md:text-[32px] font-semibold tabular-nums text-[var(--color-text)] leading-none mb-1">{s.n}</div>
                   <div className="text-[12px] uppercase tracking-wide text-[var(--color-text-muted)]">{s.label}</div>
                 </Link>
               </li>
@@ -545,7 +545,7 @@ export async function AboutView({ lang }: { lang: Lang }) {
         <article className="max-w-[760px]">
           {/* Editorial standards */}
           <section className="mb-14">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-5">{c.h2How}</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-5">{c.h2How}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {c.standards.map(s => (
                 <div key={s.title} className="rounded-2xl border border-[var(--color-border)] bg-white p-5">
@@ -559,13 +559,13 @@ export async function AboutView({ lang }: { lang: Lang }) {
 
           {/* What you get */}
           <section className="mb-14">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-5">{c.h2Stack}</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-5">{c.h2Stack}</h2>
             <ul className="space-y-3">
               {c.stackItems.map(s => (
                 <li key={s.title} className="flex gap-3">
                   <ShieldCheck size={18} strokeWidth={1.8} className="text-[var(--color-primary)] shrink-0 mt-0.5" />
                   <div>
-                    <div className="text-[15px] font-semibold text-[#111827]">{s.title}</div>
+                    <div className="text-[15px] font-semibold text-[var(--color-text)]">{s.title}</div>
                     <p className="text-[14px] leading-[1.6] text-[var(--color-text-muted)] mt-0.5">{s.body}</p>
                   </div>
                 </li>
@@ -579,11 +579,11 @@ export async function AboutView({ lang }: { lang: Lang }) {
               стоит перед «историями покупателей», чтобы роль сайта
               читалась до любых упоминаний сделок. */}
           <section className="mb-14">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-5">{c.h2Model}</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-5">{c.h2Model}</h2>
             <ul className="grid gap-3 md:grid-cols-2">
               {c.model.map(m => (
                 <li key={m.title} className="rounded-2xl border border-[var(--color-border)] bg-white p-5">
-                  <div className="text-[15px] font-semibold text-[#111827] mb-1.5">{m.title}</div>
+                  <div className="text-[15px] font-semibold text-[var(--color-text)] mb-1.5">{m.title}</div>
                   <p className="max-w-[68ch] text-[14px] leading-[1.65] text-[var(--color-text-muted)]">{m.body}</p>
                 </li>
               ))}
@@ -592,7 +592,7 @@ export async function AboutView({ lang }: { lang: Lang }) {
 
           {/* Case studies — empty by design today, pitched for buyers */}
           <section className="mb-14 rounded-2xl bg-[var(--color-search-bg)] p-6">
-            <h2 className="text-[22px] font-semibold tracking-tight text-[#111827] mb-3">{c.h2Cases}</h2>
+            <h2 className="text-[22px] font-semibold tracking-tight text-[var(--color-text)] mb-3">{c.h2Cases}</h2>
             <p className="text-[15px] leading-[1.7] text-[var(--color-text)] mb-4">{c.pCases}</p>
             <a
               href={botLink('manager', '')}
@@ -606,7 +606,7 @@ export async function AboutView({ lang }: { lang: Lang }) {
 
           {/* Contact */}
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-3">{c.h2Contact}</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-3">{c.h2Contact}</h2>
             <p className="text-[15px] leading-[1.7] text-[var(--color-text)] mb-4">{c.pContact}</p>
             <div className="flex flex-wrap gap-2">
               <a

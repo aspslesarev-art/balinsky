@@ -95,7 +95,7 @@ export default async function ProductPremiumPage() {
   if (!report) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-16">
-        <h1 className="text-[24px] font-semibold text-[#111827] mb-3">
+        <h1 className="text-[24px] font-semibold text-[var(--color-text)] mb-3">
           Отчёт пересчитывается
         </h1>
         <p className="text-[15px] text-[var(--color-text-muted)]">

@@ -1154,7 +1154,7 @@ export function BuyingGuide({ lang }: { lang: Lang }) {
         ]} />
 
         <article className="mt-4 max-w-[760px]">
-          <h1 className="text-[28px] md:text-[40px] font-semibold tracking-tight text-[#111827] leading-[1.1] mb-5">
+          <h1 className="text-[28px] md:text-[40px] font-semibold tracking-tight text-[var(--color-text)] leading-[1.1] mb-5">
             {c.h1}
           </h1>
           <p className="text-[16px] md:text-[17px] leading-[1.7] text-[var(--color-text)] mb-8">
@@ -1175,7 +1175,7 @@ export function BuyingGuide({ lang }: { lang: Lang }) {
           </nav>
 
           {/* STEPS */}
-          <h2 id="steps" className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-3 scroll-mt-24">
+          <h2 id="steps" className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-3 scroll-mt-24">
             {c.h2Steps}
           </h2>
           <p className="text-[15px] leading-[1.7] text-[var(--color-text-muted)] mb-6">{c.stepsLead}</p>
@@ -1188,7 +1188,7 @@ export function BuyingGuide({ lang }: { lang: Lang }) {
                 <div>
                   <div className="flex items-baseline flex-wrap gap-x-3 gap-y-0.5">
                     <span className="text-[12px] uppercase tracking-wide text-[var(--color-text-muted)]">Step {i + 1}</span>
-                    <h3 className="text-[17px] font-semibold text-[#111827]">{title}</h3>
+                    <h3 className="text-[17px] font-semibold text-[var(--color-text)]">{title}</h3>
                     <span className="text-[12px] text-[var(--color-text-muted)]">· {time}</span>
                   </div>
                   <p className="text-[15px] leading-[1.65] text-[var(--color-text)] mt-1">{body}</p>
@@ -1198,7 +1198,7 @@ export function BuyingGuide({ lang }: { lang: Lang }) {
           </ol>
 
           {/* OWNERSHIP */}
-          <h2 id="ownership" className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-3 scroll-mt-24">
+          <h2 id="ownership" className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-3 scroll-mt-24">
             {c.h2Ownership}
           </h2>
           <p className="text-[15px] leading-[1.7] text-[var(--color-text-muted)] mb-6">{c.ownershipLead}</p>
@@ -1216,7 +1216,7 @@ export function BuyingGuide({ lang }: { lang: Lang }) {
           </div>
 
           {/* COSTS */}
-          <h2 id="costs" className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-3 scroll-mt-24">
+          <h2 id="costs" className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-3 scroll-mt-24">
             {c.h2Costs}
           </h2>
           <p className="text-[15px] leading-[1.7] text-[var(--color-text-muted)] mb-6">{c.costsLead}</p>
@@ -1239,7 +1239,7 @@ export function BuyingGuide({ lang }: { lang: Lang }) {
           <p className="text-[13px] text-[var(--color-text-muted)] mb-12 italic">{c.costsFooter}</p>
 
           {/* MISTAKES */}
-          <h2 id="mistakes" className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-5 scroll-mt-24">
+          <h2 id="mistakes" className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-5 scroll-mt-24">
             {c.h2Mistakes}
           </h2>
           <ul className="space-y-3 mb-12">
@@ -1252,7 +1252,7 @@ export function BuyingGuide({ lang }: { lang: Lang }) {
           </ul>
 
           {/* COUNTRIES */}
-          <h2 id="countries" className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-5 scroll-mt-24">
+          <h2 id="countries" className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-5 scroll-mt-24">
             {c.h2Countries}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
@@ -1268,13 +1268,13 @@ export function BuyingGuide({ lang }: { lang: Lang }) {
           </div>
 
           {/* FAQ */}
-          <h2 id="faq" className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-5 scroll-mt-24">
+          <h2 id="faq" className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-5 scroll-mt-24">
             {c.faqHeading}
           </h2>
           <ul className="divide-y divide-[var(--color-border)] border-y border-[var(--color-border)] mb-12">
             {c.faq.map(f => (
               <li key={f.q} className="py-4">
-                <h3 className="text-[16px] font-semibold mb-1 text-[#111827]">{f.q}</h3>
+                <h3 className="text-[16px] font-semibold mb-1 text-[var(--color-text)]">{f.q}</h3>
                 <p className="text-[14px] leading-[1.65] text-[var(--color-text-muted)]">{f.a}</p>
               </li>
             ))}
@@ -1282,7 +1282,7 @@ export function BuyingGuide({ lang }: { lang: Lang }) {
 
           {/* CTA */}
           <div className="rounded-2xl bg-[var(--color-search-bg)] p-6 mb-8">
-            <h2 className="text-[20px] font-semibold text-[#111827] mb-2">{c.ctaHeading}</h2>
+            <h2 className="text-[20px] font-semibold text-[var(--color-text)] mb-2">{c.ctaHeading}</h2>
             <p className="text-[15px] text-[var(--color-text-muted)] mb-4">{c.ctaText}</p>
             <div className="flex flex-wrap gap-2">
               <Link href={villasHref} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[13px] font-medium no-underline">

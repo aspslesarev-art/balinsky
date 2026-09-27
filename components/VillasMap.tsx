@@ -179,7 +179,7 @@ function CloseButton({ onClose }: { onClose: () => void }) {
       type="button"
       onClick={onClose}
       aria-label="Close"
-      className="absolute top-2 right-2 w-7 h-7 inline-flex items-center justify-center rounded-full bg-white/90 hover:bg-white text-[#6B7280] hover:text-[#111827] shadow-[0_1px_3px_rgba(0,0,0,0.12)] z-10"
+      className="absolute top-2 right-2 w-7 h-7 inline-flex items-center justify-center rounded-full bg-white/90 hover:bg-white text-[#6B7280] hover:text-[var(--color-text)] shadow-[0_1px_3px_rgba(0,0,0,0.12)] z-10"
     >
       <X size={14} strokeWidth={2.5} />
     </button>
@@ -199,7 +199,7 @@ function SinglePopup({ p, onClose, lang }: { p: VillaPoint; onClose: () => void;
       ) : (
         <div className="w-full h-[140px] rounded-xl mb-3 bg-[#F1F5F1] flex items-center justify-center text-3xl">🏝️</div>
       )}
-      <div className="text-[14px] font-semibold leading-snug mb-1.5 line-clamp-2 text-[#111827] pr-6">{title}</div>
+      <div className="text-[14px] font-semibold leading-snug mb-1.5 line-clamp-2 text-[var(--color-text)] pr-6">{title}</div>
       {price && <div className="text-[15px] font-semibold text-[#2C8E65] mb-3">{price}</div>}
       <a
         href={switchLangPath(`/ru/villy/o/${p.slug}`, lang)}
@@ -219,14 +219,14 @@ function MultiPopup({ items, onClose, lang }: { items: VillaPoint[]; onClose: ()
       <div className="text-[13px] font-medium text-[#6B7280] mb-2 pr-6">
         {`${items.length} ${pickCopy({ ru: 'вилл в одной точке', en: 'villas at this point', id: 'vila di titik ini', fr: 'villas à cet endroit', de: 'Villen an diesem Punkt', zh: '栋别墅位于此处', nl: 'villa’s op dit punt', ban: 'vila di titik puniki', pl: 'willi w tym miejscu', uk: 'вілл у цій точці' }, lang)}`}
       </div>
-      <ul className="max-h-[340px] overflow-y-auto -mx-1 px-1 divide-y divide-[#E5E7EB]">
+      <ul className="max-h-[340px] overflow-y-auto -mx-1 px-1 divide-y divide-[var(--color-border)]">
         {items.map(p => {
           const price = fmt(p.priceUsd)
           return (
             <li key={p.id}>
               <a
                 href={switchLangPath(`/ru/villy/o/${p.slug}`, lang)}
-                className="flex items-center gap-3 py-2.5 no-underline text-[#111827] hover:bg-[#F8FAF8] rounded-md px-1"
+                className="flex items-center gap-3 py-2.5 no-underline text-[var(--color-text)] hover:bg-[#F8FAF8] rounded-md px-1"
               >
                 {p.thumb ? (
                   // eslint-disable-next-line @next/next/no-img-element -- map InfoWindow popup, not a Next image

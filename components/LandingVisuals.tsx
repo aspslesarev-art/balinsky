@@ -298,7 +298,7 @@ export function StepChat({ lang }: { lang: Lang }) {
   const t = pickCopy(L, lang)
   return (
     <div className="absolute inset-0 p-4 flex flex-col justify-center gap-2">
-      <div className="self-start max-w-[82%] rounded-xl rounded-bl-sm bg-white border border-[var(--color-border)] px-3 py-1.5 text-[11.5px] leading-snug text-[#111827]">
+      <div className="self-start max-w-[82%] rounded-xl rounded-bl-sm bg-white border border-[var(--color-border)] px-3 py-1.5 text-[11.5px] leading-snug text-[var(--color-text)]">
         {t.chatAsk}
       </div>
       <div className="self-end max-w-[72%] rounded-xl rounded-br-sm bg-[var(--color-primary)] text-white px-2.5 py-1.5 flex items-center gap-1.5">
@@ -310,7 +310,7 @@ export function StepChat({ lang }: { lang: Lang }) {
       </div>
       <div className="flex items-center gap-1.5 mt-0.5">
         <div className="flex-1 h-6 rounded-full border border-[var(--color-border)] bg-white" />
-        <span className="w-6 h-6 rounded-full bg-black/5 inline-flex items-center justify-center text-[#111827]"><Mic size={11} /></span>
+        <span className="w-6 h-6 rounded-full bg-black/5 inline-flex items-center justify-center text-[var(--color-text)]"><Mic size={11} /></span>
         <span className="w-6 h-6 rounded-full bg-[var(--color-primary)] inline-flex items-center justify-center text-white"><ArrowUp size={11} strokeWidth={2.4} /></span>
       </div>
     </div>
@@ -329,8 +329,8 @@ export function StepStudy({ lang }: { lang: Lang }) {
           <div className="text-[12px] font-medium text-[#0E1A14] truncate">{t.listingTitle}</div>
           <div className="mt-1.5 flex items-center gap-1.5">
             <span className="px-1.5 py-0.5 rounded bg-[var(--color-primary-soft)] text-[var(--color-primary-pressed)] text-[10px] font-semibold">10.4%</span>
-            <span className="px-1.5 py-0.5 rounded bg-[var(--color-search-bg)] text-[#4B5563] text-[10px]">PBG</span>
-            <span className="px-1.5 py-0.5 rounded bg-[var(--color-search-bg)] text-[#4B5563] text-[10px]">SLF</span>
+            <span className="px-1.5 py-0.5 rounded bg-[var(--color-search-bg)] text-[var(--color-text-muted)] text-[10px]">PBG</span>
+            <span className="px-1.5 py-0.5 rounded bg-[var(--color-search-bg)] text-[var(--color-text-muted)] text-[10px]">SLF</span>
           </div>
         </div>
       </div>

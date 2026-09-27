@@ -136,7 +136,7 @@ export function DistrictRelatedLinks({
 
   return (
     <section className="mt-12 mb-10">
-      <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[#111827] mb-1">
+      <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[var(--color-text)] mb-1">
         {c.heading(districtName)}
       </h2>
       <p className="text-[13px] text-[var(--color-text-muted)] mb-5">{c.sub}</p>
@@ -145,7 +145,7 @@ export function DistrictRelatedLinks({
           <li key={l.href}>
             <Link
               href={l.href}
-              className="flex items-center gap-2.5 px-3 py-3 rounded-xl border border-[var(--color-border)] bg-white text-[#111827] no-underline hover:border-[var(--color-primary)] transition-colors"
+              className="flex items-center gap-2.5 px-3 py-3 rounded-xl border border-[var(--color-border)] bg-white text-[var(--color-text)] no-underline hover:border-[var(--color-primary)] transition-colors"
             >
               <l.Icon size={16} className="text-[var(--color-primary)] shrink-0" />
               <span className="text-[14px] font-medium leading-tight">{l.label}</span>

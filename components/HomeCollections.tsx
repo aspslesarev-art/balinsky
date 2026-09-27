@@ -33,7 +33,7 @@ function CollCard({ it, href, lang }: { it: CollItem; href: string; lang: Lang }
   return (
     <Link
       href={href}
-      className="group block rounded-2xl border border-[var(--color-border)] bg-white overflow-hidden no-underline text-[#111827] hover:border-[var(--color-primary)] transition-colors"
+      className="group block rounded-2xl border border-[var(--color-border)] bg-white overflow-hidden no-underline text-[var(--color-text)] hover:border-[var(--color-primary)] transition-colors"
     >
       <div className="relative w-full aspect-[4/3] bg-[var(--color-search-bg)]">
         {it.cover ? (

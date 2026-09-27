@@ -90,7 +90,7 @@ export function Villa3DPlan({ src, lang }: Props) {
 
   return (
     <section className="mb-10" ref={sectionRef}>
-      <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
+      <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
         {heading}
       </h2>
       {/* Фрейм во всю ширину окна, заголовок и ссылка остаются в колонке.

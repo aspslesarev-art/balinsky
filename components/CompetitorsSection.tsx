@@ -81,7 +81,7 @@ export function CompetitorsSection({
 
   return (
     <section className="mb-10" data-llm-skip="">
-      <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-2">
+      <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-2">
         Расположение и аренда поблизости
       </h2>
       <div className="text-[14px] text-[var(--color-text-muted)] mb-4">
@@ -89,7 +89,7 @@ export function CompetitorsSection({
       </div>
 
       <div className="mb-4 flex items-center gap-4 rounded-2xl border border-[var(--color-border)] bg-white px-5 py-4">
-        <div className="text-[13px] font-medium text-[#111827] shrink-0">Радиус</div>
+        <div className="text-[13px] font-medium text-[var(--color-text)] shrink-0">Радиус</div>
         <input
           type="range"
           min={minRadiusKm}
@@ -120,7 +120,7 @@ export function CompetitorsSection({
                 <div className="text-[12px] uppercase tracking-wide text-[var(--color-primary-pressed)] mb-1.5 font-medium">
                   Похожие на эту виллу{villa.bedrooms != null ? ` · ${villa.bedrooms} BR` : ''}{similar.matchedByArea ? ` · ~${villa.area} м²` : ''}
                 </div>
-                <div className="text-[28px] font-semibold text-[#111827] leading-tight">
+                <div className="text-[28px] font-semibold text-[var(--color-text)] leading-tight">
                   {fmtUsd(similar.median)}<span className="text-[14px] font-normal text-[var(--color-text-muted)]"> / ночь</span>
                 </div>
                 <div className="text-[13px] text-[var(--color-text-muted)] mt-1">
@@ -140,7 +140,7 @@ export function CompetitorsSection({
             )}
             <div className="rounded-2xl border border-[var(--color-border)] bg-white p-5">
               <div className="text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] mb-1.5 font-medium">Все цены поблизости</div>
-              <div className="text-[28px] font-semibold text-[#111827] leading-tight">
+              <div className="text-[28px] font-semibold text-[var(--color-text)] leading-tight">
                 {fmtUsd(stats.overall.median)}<span className="text-[14px] font-normal text-[var(--color-text-muted)]"> / ночь</span>
               </div>
               <div className="text-[13px] text-[var(--color-text-muted)] mt-1">
@@ -158,7 +158,7 @@ export function CompetitorsSection({
                 {stats.byBedrooms.map(g => (
                   <div key={g.label} className="rounded-xl bg-[var(--color-search-bg)] px-3 py-2.5">
                     <div className="text-[12px] text-[var(--color-text-muted)]">{g.label} · {g.count} {pluralRu(g.count, ['объект', 'объекта', 'объектов'])}</div>
-                    <div className="text-[16px] font-semibold text-[#111827]">{fmtUsd(g.median)}</div>
+                    <div className="text-[16px] font-semibold text-[var(--color-text)]">{fmtUsd(g.median)}</div>
                     <div className="text-[11px] text-[var(--color-text-muted)] mt-0.5">{fmtUsd(g.min)} – {fmtUsd(g.max)}</div>
                   </div>
                 ))}

@@ -65,7 +65,7 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
       <Header active="zhilye-kompleksy" />
 
       <PageContainer>
-        <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[#111827]">{`Karte · ${buildHeadingLocalized(filters, 'de')}`}</h1>
+        <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[var(--color-text)]">{`Karte · ${buildHeadingLocalized(filters, 'de')}`}</h1>
         <div className="text-[14px] text-[var(--color-text-muted)] mb-6">{totalPoints} Wohnanlagen auf der Karte{totalPoints !== groups.length && ` · ${groups.length} Punkte`}</div>
 
         <CatalogTabs active="map" listHref={buildListHref(filters, 'de')} mapHref={buildMapHref(filters, 'de')} lang="de" />

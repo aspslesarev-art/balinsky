@@ -1413,7 +1413,7 @@ export function ConsultantWidget() {
               <span className={`absolute -inset-1.5 rounded-full ring-4 ${callState === 'ringing' || isSpeaking ? 'ring-[#22C55E]/40 animate-ping' : 'ring-[#22C55E]/20'}`} />
             </div>
             <div>
-              <div className="text-[22px] font-semibold text-[#111827]">{pickCopy({ ru: 'Андрей', en: 'Andrei', id: 'Andrei', fr: 'Andrei', de: 'Andrei', zh: 'Andrei', nl: 'Andrei', ban: 'Andrei', pl: 'Andrei', uk: 'Андрій' }, lang)}</div>
+              <div className="text-[22px] font-semibold text-[var(--color-text)]">{pickCopy({ ru: 'Андрей', en: 'Andrei', id: 'Andrei', fr: 'Andrei', de: 'Andrei', zh: 'Andrei', nl: 'Andrei', ban: 'Andrei', pl: 'Andrei', uk: 'Андрій' }, lang)}</div>
               <div className="text-[14px] text-[var(--color-text-muted)] mt-1">{callStatusText}</div>
             </div>
             <button
@@ -1468,7 +1468,7 @@ export function ConsultantWidget() {
             className="flex items-center gap-2 pl-2.5 pr-1.5 py-2 text-left"
           >
             <Image src="/andrei.jpg" alt="" width={28} height={28} className="w-7 h-7 rounded-full object-cover shrink-0" />
-            <span className="text-[12.5px] leading-snug text-[#111827]">
+            <span className="text-[12.5px] leading-snug text-[var(--color-text)]">
               {pickCopy({ ru: 'Рассказать про этот объект?', en: 'Want the rundown on this one?', id: 'Mau tahu soal properti ini?', fr: 'Un aperçu de ce bien ?', de: 'Überblick zu diesem Objekt?', zh: '想了解这处房产吗？', nl: 'Meer weten over dit object?', ban: 'Meled uning indik properti puniki?', pl: 'Opowiedzieć o tym obiekcie?', uk: 'Розповісти про цей обʼєкт?' }, lang)}
             </span>
           </button>
@@ -1476,7 +1476,7 @@ export function ConsultantWidget() {
             type="button"
             onClick={dismissTeaser}
             aria-label={c.closeAria}
-            className="shrink-0 px-1.5 text-[var(--color-text-muted)] hover:text-[#111827]"
+            className="shrink-0 px-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
           >
             <X size={14} />
           </button>
@@ -1522,7 +1522,7 @@ export function ConsultantWidget() {
                   className="shrink-0 w-9 h-9 rounded-full object-cover"
                 />
                 <div>
-                  <div className="text-[14px] font-semibold text-[#111827] leading-tight">{c.title}</div>
+                  <div className="text-[14px] font-semibold text-[var(--color-text)] leading-tight">{c.title}</div>
                   <div className="text-[11px] text-[var(--color-text-muted)] leading-tight">{c.subtitle}</div>
                 </div>
               </div>
@@ -1538,7 +1538,7 @@ export function ConsultantWidget() {
                     }}
                     aria-label={pickCopy({ ru: 'Очистить чат', en: 'Clear chat', id: 'Hapus obrolan', fr: 'Effacer la conversation', de: 'Chat löschen', zh: '清除聊天', nl: 'Chat wissen', ban: 'Kaicalang obrolan', pl: 'Wyczyść czat', uk: 'Очистити чат' }, lang)}
                     title={pickCopy({ ru: 'Очистить чат', en: 'Clear chat', id: 'Hapus obrolan', fr: 'Effacer la conversation', de: 'Chat löschen', zh: '清除聊天', nl: 'Chat wissen', ban: 'Kaicalang obrolan', pl: 'Wyczyść czat', uk: 'Очистити чат' }, lang)}
-                    className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/60 hover:bg-white text-[#111827]"
+                    className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/60 hover:bg-white text-[var(--color-text)]"
                   >
                     <Trash2 size={16} />
                   </button>
@@ -1547,7 +1547,7 @@ export function ConsultantWidget() {
                   type="button"
                   onClick={() => { stopSpeaking(); setOpen(false) }}
                   aria-label={c.closeAria}
-                  className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/60 hover:bg-white text-[#111827]"
+                  className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/60 hover:bg-white text-[var(--color-text)]"
                 >
                   <X size={18} />
                 </button>
@@ -1594,7 +1594,7 @@ export function ConsultantWidget() {
                     {isLastAssistant && chips.length > 0 && !loading && (
                       <div className="self-start flex flex-wrap gap-1.5 mt-0.5 max-w-[95%]">
                         {chips.map(c => {
-                          const chipCls = 'text-[12px] px-3 py-1.5 rounded-full bg-white border border-[var(--color-border)] text-[#111827] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] transition-colors'
+                          const chipCls = 'text-[12px] px-3 py-1.5 rounded-full bg-white border border-[var(--color-border)] text-[var(--color-text)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] transition-colors'
                           // Заявок на сайте нет: любая подсказка — обычный
                           // вопрос ассистенту, контакты оператора объекта
                           // посетитель берёт на странице самого объекта.
@@ -1673,7 +1673,7 @@ export function ConsultantWidget() {
                   disabled={loading}
                   aria-label={c.voiceStartAria}
                   title={c.voiceStartTitle}
-                  className="shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-full bg-black/5 hover:bg-black/10 text-[#111827] disabled:opacity-50"
+                  className="shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-full bg-black/5 hover:bg-black/10 text-[var(--color-text)] disabled:opacity-50"
                 >
                   <Mic size={18} />
                 </button>
@@ -1718,10 +1718,10 @@ function ListingChatCard({ card, lang }: { card: ListingCard; lang: Lang }) {
         )}
       </div>
       <div className="flex-1 min-w-0 py-2 pr-3 flex flex-col justify-center">
-        <div className="text-[13px] font-semibold text-[#111827] leading-tight line-clamp-2">{card.title}</div>
+        <div className="text-[13px] font-semibold text-[var(--color-text)] leading-tight line-clamp-2">{card.title}</div>
         <div className="mt-1 flex items-center flex-wrap gap-x-2 gap-y-0.5 text-[11px] text-[var(--color-text-muted)]">
           {mainPrice && (
-            <span className="font-semibold text-[#111827] text-[12px]">
+            <span className="font-semibold text-[var(--color-text)] text-[12px]">
               {mainPrice}{priceSuffix}
             </span>
           )}
@@ -1802,7 +1802,7 @@ function Bubble({ role, children }: { role: 'user' | 'assistant'; children: Reac
       <div className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[14px] leading-relaxed ${
         isUser
           ? 'bg-[var(--color-primary)] text-white rounded-br-md whitespace-pre-wrap'
-          : 'bg-white border border-[var(--color-border)] text-[#111827] rounded-bl-md'
+          : 'bg-white border border-[var(--color-border)] text-[var(--color-text)] rounded-bl-md'
       }`}>
         {!isUser && isString ? (
           <div className="prose-chat">
@@ -1879,14 +1879,14 @@ function VoiceOverlay({
         <div className="shrink-0 w-3 h-3 rounded-full bg-[#DC2626] animate-pulse" />
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2">
-            <span className="text-[13px] font-medium text-[#111827]">{copy.recording}</span>
+            <span className="text-[13px] font-medium text-[var(--color-text)]">{copy.recording}</span>
             <span className="text-[12px] font-mono text-[#6B7280] tabular-nums">{time}</span>
           </div>
           <div className="mt-1 h-1.5 bg-black/5 rounded-full overflow-hidden">
             <div className="h-full bg-[#1F8B5F] transition-[width] duration-75" style={{ width: `${Math.min(100, Math.round(level * 200))}%` }} />
           </div>
         </div>
-        <button type="button" onClick={onCancel} className="text-[12px] text-[#6B7280] hover:text-[#111827] px-2 py-1">
+        <button type="button" onClick={onCancel} className="text-[12px] text-[#6B7280] hover:text-[var(--color-text)] px-2 py-1">
           {copy.cancelBtn}
         </button>
         <button type="button" onClick={onStop} className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#1F8B5F] hover:bg-[#197551] text-white">
@@ -1901,10 +1901,10 @@ function VoiceOverlay({
     return (
       <div className="flex items-center gap-3">
         <div className="flex-1 min-w-0">
-          <div className="text-[13px] font-medium text-[#111827]">{copy.silentTitle}</div>
+          <div className="text-[13px] font-medium text-[var(--color-text)]">{copy.silentTitle}</div>
           <div className="text-[12px] text-[#6B7280] mt-0.5">{copy.silentHint}</div>
         </div>
-        <button type="button" onClick={onCancel} className="text-[12px] text-[#6B7280] hover:text-[#111827] px-2 py-1">
+        <button type="button" onClick={onCancel} className="text-[12px] text-[#6B7280] hover:text-[var(--color-text)] px-2 py-1">
           {copy.cancelBtn}
         </button>
         <button type="button" onClick={onStop} className="px-4 h-10 rounded-full bg-[#1F8B5F] hover:bg-[#197551] text-white text-[13px] font-medium">
@@ -1919,10 +1919,10 @@ function VoiceOverlay({
     return (
       <div className="flex items-center gap-3">
         <Loader2 size={16} className="animate-spin text-[#1F8B5F]" />
-        <div className="flex-1 text-[13px] text-[#111827]">
+        <div className="flex-1 text-[13px] text-[var(--color-text)]">
           {state.attempt > 0 ? copy.retrying : copy.transcribing}
         </div>
-        <button type="button" onClick={onCancel} className="text-[12px] text-[#6B7280] hover:text-[#111827] px-2 py-1">
+        <button type="button" onClick={onCancel} className="text-[12px] text-[#6B7280] hover:text-[var(--color-text)] px-2 py-1">
           {copy.cancelBtn}
         </button>
       </div>
@@ -1933,8 +1933,8 @@ function VoiceOverlay({
   return (
     <div className="flex items-center gap-3">
       <AlertTriangle size={16} className="text-[#DC2626]" />
-      <div className="flex-1 text-[13px] text-[#111827]">{copy.failed}</div>
-      <button type="button" onClick={onCancel} className="text-[12px] text-[#6B7280] hover:text-[#111827] px-2 py-1">
+      <div className="flex-1 text-[13px] text-[var(--color-text)]">{copy.failed}</div>
+      <button type="button" onClick={onCancel} className="text-[12px] text-[#6B7280] hover:text-[var(--color-text)] px-2 py-1">
         {copy.cancelBtn}
       </button>
       <button type="button" onClick={onRetry} className="px-4 h-10 rounded-full bg-[#1F8B5F] hover:bg-[#197551] text-white text-[13px] font-medium">

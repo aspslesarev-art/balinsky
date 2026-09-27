@@ -916,7 +916,7 @@ function SectionShell({ children, lang }: { children: React.ReactNode; lang: Lan
   // edge and looked unindented.
   return (
     <section className="mt-12 mb-10" data-investment-block data-llm-skip="">
-      <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-2">
+      <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-2">
         {t.sectionH2}
       </h2>
       <div className="text-[14px] text-[var(--color-text-muted)] mb-5">
@@ -954,7 +954,7 @@ function InvestmentWidgetView({ snap, apiKey, lang }: { snap: Snapshot; apiKey: 
         {snap.flags.rentalRestricted ? (
           <Banner tone="warn" icon={<Info size={16} />}>
             <div>
-              <div className="font-medium text-[#111827] mb-1">{t.restrictedTitle}</div>
+              <div className="font-medium text-[var(--color-text)] mb-1">{t.restrictedTitle}</div>
               <div>{t.restrictedBody}</div>
             </div>
           </Banner>
@@ -1073,7 +1073,7 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
 
   return (
     <div className="mt-5 rounded-2xl border border-[var(--color-border)] bg-white p-5">
-      <div className="text-[16px] font-semibold text-[#111827]">{t.calcTitle}</div>
+      <div className="text-[16px] font-semibold text-[var(--color-text)]">{t.calcTitle}</div>
       <div className="text-[13px] text-[var(--color-text-muted)] mt-1 mb-5">{t.calcSub}</div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
@@ -1106,7 +1106,7 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
               className={`px-3 py-1 text-[12px] rounded-md cursor-pointer transition-colors ${
                 taxStatus === key
                   ? 'bg-[var(--color-primary)] text-white'
-                  : 'text-[var(--color-text-muted)] hover:text-[#111827]'
+                  : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
               }`}
             >
               {key === 'resident' ? t.taxResident : t.taxNonResident}
@@ -1117,13 +1117,13 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
       </div>
 
       <div className="mt-5 pt-4 border-t border-[var(--color-border)] flex flex-wrap items-baseline gap-x-8 gap-y-2">
-        <div className="text-[30px] font-semibold text-[#111827] leading-none">
+        <div className="text-[30px] font-semibold text-[var(--color-text)] leading-none">
           {fmtUsd(e.noi)}<span className="text-[14px] font-normal text-[var(--color-text-muted)]">{t.perYearNoi}</span>
         </div>
-        <div className="text-[13px] text-[var(--color-text-muted)]">{t.payback}: <span className="text-[#111827] font-medium">{fmtYears(e.payback, lang)}</span></div>
-        <div className="text-[13px] text-[var(--color-text-muted)]">{t.capRate}: <span className="text-[#111827] font-medium">{fmtPct(e.capRate)}</span></div>
+        <div className="text-[13px] text-[var(--color-text-muted)]">{t.payback}: <span className="text-[var(--color-text)] font-medium">{fmtYears(e.payback, lang)}</span></div>
+        <div className="text-[13px] text-[var(--color-text-muted)]">{t.capRate}: <span className="text-[var(--color-text)] font-medium">{fmtPct(e.capRate)}</span></div>
         {e.leaseholdIrr != null && (
-          <div className="text-[13px] text-[var(--color-text-muted)]">{t.irrLabel}: <span className="text-[#111827] font-medium">{fmtPct(e.leaseholdIrr)}</span></div>
+          <div className="text-[13px] text-[var(--color-text-muted)]">{t.irrLabel}: <span className="text-[var(--color-text)] font-medium">{fmtPct(e.leaseholdIrr)}</span></div>
         )}
       </div>
 
@@ -1259,7 +1259,7 @@ function SliderHead({ label, display }: { label: string; display: string }) {
   return (
     <div className="flex items-center justify-between mb-2">
       <span className="text-[13px] text-[var(--color-text-muted)]">{label}</span>
-      <span className="text-[15px] font-semibold text-[#111827] tabular-nums">{display}</span>
+      <span className="text-[15px] font-semibold text-[var(--color-text)] tabular-nums">{display}</span>
     </div>
   )
 }
@@ -1272,7 +1272,7 @@ function References({ snap, lang }: { snap: Snapshot; lang: Lang }) {
   const plural = pluralize(lang, snap.matchSampleSize, COPY.ru.object, COPY.en.object)
   return (
     <div className="mt-5 rounded-2xl border border-dashed border-[var(--color-border)] bg-white p-5">
-      <div className="flex items-center gap-2 text-[12px] uppercase tracking-wide font-semibold text-[#111827] mb-2">
+      <div className="flex items-center gap-2 text-[12px] uppercase tracking-wide font-semibold text-[var(--color-text)] mb-2">
         <Info size={14} /> {t.referencesTitle}
       </div>
       <div className="text-[13px] text-[var(--color-text-muted)] mb-4">
@@ -1280,7 +1280,7 @@ function References({ snap, lang }: { snap: Snapshot; lang: Lang }) {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {(snap.references ?? []).map(r => (
-          <a key={r.id} href={r.url ?? undefined} target="_blank" rel="noopener noreferrer nofollow" className="rounded-xl border border-[var(--color-border)] p-3 hover:border-[var(--color-primary)] no-underline text-[#111827]">
+          <a key={r.id} href={r.url ?? undefined} target="_blank" rel="noopener noreferrer nofollow" className="rounded-xl border border-[var(--color-border)] p-3 hover:border-[var(--color-primary)] no-underline text-[var(--color-text)]">
             <div className="text-[14px] font-semibold leading-snug line-clamp-2">{r.complex || r.name}</div>
             <div className="text-[12px] text-[var(--color-text-muted)] mt-1">
               {r.bedrooms ?? '?'} BR{r.area ? ` · ${r.area} ${t.sqm}` : ''} · {fmtDistance(r.distanceKm, lang)}
@@ -1299,7 +1299,7 @@ function EmergingBlock({ snap, lang }: { snap: Snapshot; lang: Lang }) {
   const plural = pluralize(lang, snap.totalCompetitorsInRadius, COPY.ru.object, COPY.en.object)
   return (
     <section className="mt-8 rounded-2xl border border-[var(--color-border)] bg-white p-5" data-llm-skip="">
-      <div className="flex items-center gap-2 text-[12px] uppercase tracking-wide font-semibold text-[#111827] mb-2">
+      <div className="flex items-center gap-2 text-[12px] uppercase tracking-wide font-semibold text-[var(--color-text)] mb-2">
         <TrendingUp size={14} className="text-[var(--color-primary)]" /> {t.newDistrictH3}
       </div>
       <div className="text-[14px] text-[var(--color-text)] leading-relaxed">

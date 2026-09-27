@@ -269,7 +269,7 @@ function SegmentCard({
   const annual = adr != null ? adr * 365 * 0.65 : null
   return (
     <div className="py-1">
-      <div className="flex items-center gap-2 text-[14px] font-semibold text-[#111827] mb-3 pb-2 border-b border-[var(--color-border)]">
+      <div className="flex items-center gap-2 text-[14px] font-semibold text-[var(--color-text)] mb-3 pb-2 border-b border-[var(--color-border)]">
         <Icon size={15} className="text-[var(--color-primary)]" />
         {label}
         <span className="ml-auto text-[12px] font-normal text-[var(--color-text-muted)]">
@@ -291,7 +291,7 @@ function Metric({ label, value, tone = 'default', hint, sub }: {
   return (
     <div title={hint ?? undefined}>
       <div className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)] leading-tight">{label}</div>
-      <div className={`text-[17px] font-semibold mt-0.5 leading-none ${tone === 'primary' ? 'text-[var(--color-primary)]' : 'text-[#111827]'}`}>
+      <div className={`text-[17px] font-semibold mt-0.5 leading-none ${tone === 'primary' ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]'}`}>
         {value}
       </div>
       {sub && <div className="text-[10.5px] text-[var(--color-text-muted)] mt-1">{sub}</div>}

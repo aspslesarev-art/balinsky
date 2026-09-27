@@ -10,7 +10,7 @@ export function YouTubeBlock({ videos }: { videos: YouTubeVideo[] }) {
   return (
     <section className="mb-12">
       <div className="flex items-baseline justify-between gap-4 flex-wrap mb-5">
-        <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827]">
+        <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)]">
           Видео с канала Balinsky
         </h2>
         <Link
@@ -30,7 +30,7 @@ export function YouTubeBlock({ videos }: { videos: YouTubeVideo[] }) {
               href={v.url}
               target="_blank"
               rel="noopener"
-              className="group block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)] transition-colors"
+              className="group block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[var(--color-text)] hover:border-[var(--color-primary)] transition-colors"
             >
               <div className="relative aspect-video bg-[var(--color-search-bg)]">
                 <Image
@@ -42,7 +42,7 @@ export function YouTubeBlock({ videos }: { videos: YouTubeVideo[] }) {
                   className="object-cover"
                 />
                 <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/15 transition-colors">
-                  <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white/95 shadow-[0_2px_8px_rgba(0,0,0,0.18)] text-[#111827]">
+                  <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white/95 shadow-[0_2px_8px_rgba(0,0,0,0.18)] text-[var(--color-text)]">
                     <Play size={20} fill="currentColor" />
                   </span>
                 </div>

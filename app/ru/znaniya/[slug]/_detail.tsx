@@ -173,7 +173,7 @@ export async function KnowledgeDetail({ slug, lang }: { slug: string; lang: Lang
         ]} />
 
         <article className="mt-4">
-          <h1 className="text-[28px] md:text-[40px] font-semibold leading-tight tracking-tight text-[#111827] mb-4">
+          <h1 className="text-[28px] md:text-[40px] font-semibold leading-tight tracking-tight text-[var(--color-text)] mb-4">
             {k.title}
           </h1>
 
@@ -188,13 +188,13 @@ export async function KnowledgeDetail({ slug, lang }: { slug: string; lang: Lang
               )}
               <div className="leading-tight">
                 {k.author && k.author.slug ? (
-                  <Link href={`${lang === 'ru' ? '/ru/avtory' : '/en/authors'}/${k.author.slug}`} className="text-[14px] font-medium text-[#111827] hover:text-[var(--color-primary-pressed)] no-underline">
+                  <Link href={`${lang === 'ru' ? '/ru/avtory' : '/en/authors'}/${k.author.slug}`} className="text-[14px] font-medium text-[var(--color-text)] hover:text-[var(--color-primary-pressed)] no-underline">
                     {authorData.name}
                   </Link>
                 ) : (
                   // No author page: the byline leads to «About», which explains
                   // what the site checks and how its numbers are calculated.
-                  <Link href={switchLangPath('/ru/o-balinsky', lang)} className="text-[14px] font-medium text-[#111827] hover:text-[var(--color-primary-pressed)] no-underline">
+                  <Link href={switchLangPath('/ru/o-balinsky', lang)} className="text-[14px] font-medium text-[var(--color-text)] hover:text-[var(--color-primary-pressed)] no-underline">
                     {authorData.name}
                   </Link>
                 )}
@@ -253,11 +253,11 @@ export async function KnowledgeDetail({ slug, lang }: { slug: string; lang: Lang
 
         {related.length > 0 && (
           <section className="mt-14">
-            <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[#111827] mb-4">{c.moreArticles}</h2>
+            <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[var(--color-text)] mb-4">{c.moreArticles}</h2>
             <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {related.map(r => (
                 <li key={r.id}>
-                  <Link href={`${knowledgeRoot}/${lang === 'ru' ? r.slug : enKnowledgeSlug(r.slug)}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[#111827] hover:border-[var(--color-primary)]">
+                  <Link href={`${knowledgeRoot}/${lang === 'ru' ? r.slug : enKnowledgeSlug(r.slug)}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[var(--color-text)] hover:border-[var(--color-primary)]">
                     <div className="relative w-full aspect-[16/9] bg-[var(--color-search-bg)]">
                       {r.photo ? (
                         <Image src={r.photo} alt={r.title} fill sizes="(max-width: 768px) 100vw, 25vw" className="object-cover" />

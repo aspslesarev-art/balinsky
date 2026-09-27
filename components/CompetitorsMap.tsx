@@ -200,7 +200,7 @@ function PopupCard({ p, onClose }: { p: CompetitorPoint; onClose: () => void }) 
         type="button"
         onClick={onClose}
         aria-label="Закрыть"
-        className="absolute top-2 right-2 w-7 h-7 inline-flex items-center justify-center rounded-full bg-white/90 hover:bg-white text-[#6B7280] hover:text-[#111827] shadow-[0_1px_3px_rgba(0,0,0,0.12)] z-10"
+        className="absolute top-2 right-2 w-7 h-7 inline-flex items-center justify-center rounded-full bg-white/90 hover:bg-white text-[#6B7280] hover:text-[var(--color-text)] shadow-[0_1px_3px_rgba(0,0,0,0.12)] z-10"
       >
         <X size={14} strokeWidth={2.5} />
       </button>
@@ -211,13 +211,13 @@ function PopupCard({ p, onClose }: { p: CompetitorPoint; onClose: () => void }) 
         <div className="w-full h-[140px] rounded-xl mb-3 bg-[#EFF4FB] flex items-center justify-center text-3xl">🏨</div>
       )}
       <div className="text-[11px] uppercase tracking-wide text-[#6B7280] mb-1 font-medium">Booking.com</div>
-      <div className="text-[14px] font-semibold leading-snug mb-1.5 line-clamp-2 text-[#111827] pr-6">
+      <div className="text-[14px] font-semibold leading-snug mb-1.5 line-clamp-2 text-[var(--color-text)] pr-6">
         {titleText}
       </div>
       {p.rating != null && (
         <div className="flex items-center gap-1 text-[12px] text-[#6B7280] mb-2">
           <Star size={12} className="text-[#F59E0B] fill-[#F59E0B]" />
-          <span className="font-medium text-[#111827]">{p.rating.toFixed(1)}</span>
+          <span className="font-medium text-[var(--color-text)]">{p.rating.toFixed(1)}</span>
           {p.reviews != null && <span>· {p.reviews} отзывов</span>}
         </div>
       )}
@@ -227,7 +227,7 @@ function PopupCard({ p, onClose }: { p: CompetitorPoint; onClose: () => void }) 
         <span>{p.distanceKm.toFixed(1)} км</span>
       </div>
       {p.unitCount > 1 && (
-        <div className="mb-3 max-h-[140px] overflow-y-auto rounded-lg border border-[#E5E7EB] divide-y divide-[#F1F3F5]">
+        <div className="mb-3 max-h-[140px] overflow-y-auto rounded-lg border border-[var(--color-border)] divide-y divide-[#F1F3F5]">
           {p.units.map(u => (
             <a
               key={u.id}
@@ -237,7 +237,7 @@ function PopupCard({ p, onClose }: { p: CompetitorPoint; onClose: () => void }) 
               className={`flex items-center justify-between gap-2 px-3 py-2 text-[12px] no-underline ${u.url ? 'hover:bg-[#F8FAFB]' : ''}`}
             >
               <div className="min-w-0 flex-1">
-                <div className="truncate text-[#111827]">{u.name}</div>
+                <div className="truncate text-[var(--color-text)]">{u.name}</div>
                 <div className="text-[11px] text-[#6B7280]">
                   {u.bedrooms != null ? `${u.bedrooms} BR` : ''}
                   {u.bedrooms != null && u.area != null ? ' · ' : ''}

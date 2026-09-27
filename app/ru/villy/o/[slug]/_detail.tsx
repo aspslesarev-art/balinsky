@@ -1280,7 +1280,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
             <Link href={villasRoot} className="hover:text-[var(--color-text)]">{c.villasCrumb}</Link>
             {district && <> · {district}</>}
           </div>
-          <h1 className="text-[18px] sm:text-[24px] md:text-[40px] font-semibold tracking-tight text-[#111827] leading-[1.25] md:leading-[1.1] mb-3 [word-break:break-word] [overflow-wrap:anywhere]">
+          <h1 className="text-[18px] sm:text-[24px] md:text-[40px] font-semibold tracking-tight text-[var(--color-text)] leading-[1.25] md:leading-[1.1] mb-3 [word-break:break-word] [overflow-wrap:anywhere]">
             {title}
           </h1>
           <div className="text-[15px] text-[var(--color-text-muted)] leading-relaxed mb-4 flex items-center flex-wrap gap-x-5 gap-y-1">
@@ -1350,7 +1350,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
 
         {facts.length > 0 && (
           <section className="mb-10">
-            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
+            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
               {c.factsHeading}
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -1360,7 +1360,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
                     <Icon size={16} />
                     <span className="text-[12px] uppercase tracking-wide">{label}</span>
                   </div>
-                  <div className="text-[16px] font-semibold text-[#111827]">{value}</div>
+                  <div className="text-[16px] font-semibold text-[var(--color-text)]">{value}</div>
                 </div>
               ))}
             </div>
@@ -1369,7 +1369,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
 
         {seoText && (
           <section className="mb-10">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
               {c.descHeading}
             </h2>
             <ExpandableText className="max-w-3xl" more={pickCopy({ ru: 'Подробнее', en: 'Read more', id: 'Selengkapnya', fr: 'En savoir plus', de: 'Mehr anzeigen', zh: '展开', nl: 'Meer', ban: 'Selengkapnya', pl: 'Więcej', uk: 'Докладніше' }, lang)} less={pickCopy({ ru: 'Свернуть', en: 'Show less', id: 'Tutup', fr: 'Réduire', de: 'Weniger', zh: '收起', nl: 'Minder', ban: 'Tutup', pl: 'Zwiń', uk: 'Згорнути' }, lang)}>
@@ -1465,7 +1465,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
                   <div className="flex items-center gap-2 text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
                     <Building2 size={14} /> {c.complexLabel}
                   </div>
-                  <div className="text-[19px] font-semibold text-[#111827] mb-2">{parentComplex.name}</div>
+                  <div className="text-[19px] font-semibold text-[var(--color-text)] mb-2">{parentComplex.name}</div>
                   <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-[13px] text-[var(--color-text-muted)] mb-4">
                     {parentComplex.district && <span>{parentComplex.district}</span>}
                     {parentComplex.types.length > 0 && <span>{parentComplex.types.map(tp => facetLabel('type', tp, lang)).join(', ')}</span>}
@@ -1506,7 +1506,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
                     <div className="flex items-center gap-2 text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
                       <HardHat size={14} /> {c.developerLabel}
                     </div>
-                    <div className="text-[19px] font-semibold text-[#111827] truncate">{developer.name}</div>
+                    <div className="text-[19px] font-semibold text-[var(--color-text)] truncate">{developer.name}</div>
                   </div>
                 </div>
                 {developer.highlights.length > 0 && (
@@ -1530,7 +1530,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
                 <div className="flex items-center gap-2 text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
                   <HardHat size={14} /> {c.developerLabel}
                 </div>
-                <div className="text-[19px] font-semibold text-[#111827]">{developerName}</div>
+                <div className="text-[19px] font-semibold text-[var(--color-text)]">{developerName}</div>
               </div>
             ) : null}
           </section>
@@ -1551,7 +1551,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
 
         {otherVillas.length > 0 && district && (
           <section className="mb-10">
-            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
+            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
               {c.otherVillas(district)}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1561,7 +1561,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
         )}
 
         <section className="mb-10">
-          <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[#111827] mb-4">{c.relatedHeading}</h2>
+          <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[var(--color-text)] mb-4">{c.relatedHeading}</h2>
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2 max-w-3xl">
             {[
               // Buy-intent anchors, not «Все виллы»: these 2300 listing pages
@@ -1605,13 +1605,13 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
         </section>
 
         <section className="mb-10">
-          <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
+          <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
             {c.faqHeading}
           </h2>
           <div className="max-w-3xl divide-y divide-[var(--color-border)] border-t border-b border-[var(--color-border)]">
             {faqItems.map((it, i) => (
               <details key={i} className="group py-4">
-                <summary className="cursor-pointer list-none flex items-center justify-between gap-4 text-[15px] font-medium text-[#111827]">
+                <summary className="cursor-pointer list-none flex items-center justify-between gap-4 text-[15px] font-medium text-[var(--color-text)]">
                   {it.q}
                   <span className="text-[var(--color-text-muted)] text-[20px] leading-none transition-transform group-open:rotate-45">+</span>
                 </summary>

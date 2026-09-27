@@ -131,8 +131,8 @@ export function InlineEditor() {
         <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/40 p-4" onClick={() => setTarget(null)}>
           <div className="w-full max-w-xl rounded-2xl bg-white p-5 shadow-2xl" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-3">
-              <div className="text-[15px] font-semibold text-[#111827]">{target.label}</div>
-              <button type="button" onClick={() => setTarget(null)} className="text-[var(--color-text-soft)] hover:text-[#111827] cursor-pointer"><X size={18} /></button>
+              <div className="text-[15px] font-semibold text-[var(--color-text)]">{target.label}</div>
+              <button type="button" onClick={() => setTarget(null)} className="text-[var(--color-text-soft)] hover:text-[var(--color-text)] cursor-pointer"><X size={18} /></button>
             </div>
             {status === 'loading' ? (
               <div className="flex items-center gap-2 py-8 text-[var(--color-text-soft)]"><Loader2 size={16} className="animate-spin" /> Загрузка…</div>
@@ -141,7 +141,7 @@ export function InlineEditor() {
                 value={value}
                 onChange={e => setValue(e.target.value)}
                 autoFocus
-                className="w-full rounded-xl border border-[var(--color-border)] px-3.5 py-2.5 text-[14px] text-[#111827] outline-none focus:border-[var(--color-primary)]"
+                className="w-full rounded-xl border border-[var(--color-border)] px-3.5 py-2.5 text-[14px] text-[var(--color-text)] outline-none focus:border-[var(--color-primary)]"
               />
             ) : (
               <textarea
@@ -149,7 +149,7 @@ export function InlineEditor() {
                 onChange={e => setValue(e.target.value)}
                 autoFocus
                 rows={12}
-                className="w-full rounded-xl border border-[var(--color-border)] px-3.5 py-2.5 text-[14px] leading-relaxed text-[#111827] outline-none focus:border-[var(--color-primary)] resize-y font-[inherit]"
+                className="w-full rounded-xl border border-[var(--color-border)] px-3.5 py-2.5 text-[14px] leading-relaxed text-[var(--color-text)] outline-none focus:border-[var(--color-primary)] resize-y font-[inherit]"
               />
             )}
             {target.kind !== 'text' && (

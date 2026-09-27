@@ -73,13 +73,13 @@ export function ComplexAccessBlock({ access, lang, elevationM, routes }: Props) 
 
   return (
     <div className="mb-4 rounded-2xl border border-[var(--color-border)] bg-white p-5">
-      <h3 className="mb-3 text-[15px] font-semibold text-[#111827]">{t.title}</h3>
+      <h3 className="mb-3 text-[15px] font-semibold text-[var(--color-text)]">{t.title}</h3>
       <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
         {rows.map(({ key, label, text, Icon }) => (
           <div key={key} className="flex min-w-0 items-center gap-1.5">
             <Icon size={16} className="shrink-0 text-[var(--color-primary)]" />
             <span className="truncate text-[13px] text-[var(--color-text-muted)]">{label}</span>
-            <span className="shrink-0 text-[14px] font-semibold text-[#111827]">
+            <span className="shrink-0 text-[14px] font-semibold text-[var(--color-text)]">
               {text} {t.min}
             </span>
           </div>
@@ -88,7 +88,7 @@ export function ComplexAccessBlock({ access, lang, elevationM, routes }: Props) 
           <div className="flex min-w-0 items-center gap-1.5">
             <Mountain size={16} className="shrink-0 text-[var(--color-primary)]" />
             <span className="truncate text-[13px] text-[var(--color-text-muted)]">{t.elevation}</span>
-            <span className="shrink-0 text-[14px] font-semibold text-[#111827]">
+            <span className="shrink-0 text-[14px] font-semibold text-[var(--color-text)]">
               {Math.round(elevationM)} {t.m}
             </span>
           </div>
@@ -97,11 +97,11 @@ export function ComplexAccessBlock({ access, lang, elevationM, routes }: Props) 
           <div className="col-span-2 flex min-w-0 items-center gap-2 sm:col-span-3">
             <Waves size={16} className="shrink-0 text-[var(--color-primary)]" />
             <span className="shrink-0 text-[13px] text-[var(--color-text-muted)]">{t.beach}:</span>
-            <span className="truncate text-[14px] font-medium text-[#111827]">
+            <span className="truncate text-[14px] font-medium text-[var(--color-text)]">
               {/* Google Places names are stored in Russian; other locales get Latin. */}
               {placeName(access?.nearest_beach_name, lang)}
             </span>
-            <span className="shrink-0 text-[14px] font-semibold text-[#111827]">
+            <span className="shrink-0 text-[14px] font-semibold text-[var(--color-text)]">
               · {access?.nearest_beach_km} {t.km}
             </span>
           </div>

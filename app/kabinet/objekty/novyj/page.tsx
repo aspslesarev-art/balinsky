@@ -20,7 +20,7 @@ export default async function NewListingPage() {
       <>
         <Header />
         <main className="mx-auto w-full max-w-xl px-6 py-16">
-        <h1 className="text-[26px] font-semibold tracking-tight text-[#111827]">Вход</h1>
+        <h1 className="text-[26px] font-semibold tracking-tight text-[var(--color-text)]">Вход</h1>
         <p className="mt-3 text-[15px] leading-relaxed text-[var(--color-text-muted)]">
           Чтобы добавить объект, войдите через Telegram — бот пришлёт одноразовую ссылку.
         </p>
@@ -44,7 +44,7 @@ export default async function NewListingPage() {
       <Link href="/kabinet/objekty" className="text-[14px] text-[var(--color-text-muted)] underline">
         ← Мои объекты
       </Link>
-      <h1 className="mt-4 text-[26px] font-semibold tracking-tight text-[#111827] sm:text-[32px]">
+      <h1 className="mt-4 text-[26px] font-semibold tracking-tight text-[var(--color-text)] sm:text-[32px]">
         Добавить объект
       </h1>
       <p className="mt-2 text-[15px] leading-relaxed text-[var(--color-text-muted)]">

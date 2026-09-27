@@ -70,7 +70,7 @@ export default async function AgentListingPage({ params }: { params: Promise<{ s
         </p>
       )}
 
-      <h1 className="text-[26px] font-semibold leading-tight tracking-tight text-[#111827] sm:text-[34px]">
+      <h1 className="text-[26px] font-semibold leading-tight tracking-tight text-[var(--color-text)] sm:text-[34px]">
         {listing.title}
       </h1>
       <p className="mt-2 text-[22px] font-semibold text-[var(--color-primary)] sm:text-[26px]">
@@ -97,7 +97,7 @@ export default async function AgentListingPage({ params }: { params: Promise<{ s
           {facts.map(f => (
             <div key={f.label}>
               <dt className="text-[13px] text-[var(--color-text-muted)]">{f.label}</dt>
-              <dd className="mt-0.5 text-[15px] font-medium text-[#111827]">{f.value}</dd>
+              <dd className="mt-0.5 text-[15px] font-medium text-[var(--color-text)]">{f.value}</dd>
             </div>
           ))}
         </dl>
@@ -105,7 +105,7 @@ export default async function AgentListingPage({ params }: { params: Promise<{ s
 
       {listing.comment && (
         <section className="mt-8">
-          <h2 className="text-[18px] font-semibold text-[#111827]">Комментарий агента</h2>
+          <h2 className="text-[18px] font-semibold text-[var(--color-text)]">Комментарий агента</h2>
           <p className="mt-2 whitespace-pre-line text-[15px] leading-relaxed text-[#374151]">
             {listing.comment}
           </p>
@@ -113,9 +113,9 @@ export default async function AgentListingPage({ params }: { params: Promise<{ s
       )}
 
       <section className="mt-10 rounded-2xl border border-[var(--color-border)] bg-white p-6">
-        <h2 className="text-[18px] font-semibold text-[#111827]">Контакты</h2>
+        <h2 className="text-[18px] font-semibold text-[var(--color-text)]">Контакты</h2>
         {contact ? (
-          <div className="mt-3 space-y-1.5 text-[15px] text-[#111827]">
+          <div className="mt-3 space-y-1.5 text-[15px] text-[var(--color-text)]">
             <p className="font-medium">{contact.name}</p>
             {contact.agency && <p className="text-[var(--color-text-muted)]">{contact.agency}</p>}
             {contact.phone && (

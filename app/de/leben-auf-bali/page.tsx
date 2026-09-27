@@ -91,7 +91,7 @@ export default function Page() {
 
         <article className="mt-6 mb-16 max-w-4xl">
           <header className="mb-10">
-            <h1 className="text-[32px] md:text-[44px] font-semibold tracking-tight text-[#111827] mb-4 leading-tight">
+            <h1 className="text-[32px] md:text-[44px] font-semibold tracking-tight text-[var(--color-text)] mb-4 leading-tight">
               Leben auf Bali — Umzugsratgeber
             </h1>
             <p className="text-[18px] text-[var(--color-text-muted)] leading-relaxed">
@@ -106,14 +106,14 @@ export default function Page() {
             {SECTIONS.map(({ Icon, title, body }) => (
               <div key={title} className="rounded-2xl border border-[var(--color-border)] p-4 bg-white">
                 <Icon size={22} className="text-[var(--color-primary)] mb-2" />
-                <h3 className="text-[15px] font-semibold text-[#111827] mb-1">{title}</h3>
+                <h3 className="text-[15px] font-semibold text-[var(--color-text)] mb-1">{title}</h3>
                 <p className="text-[13px] text-[var(--color-text-muted)] leading-relaxed">{body}</p>
               </div>
             ))}
           </section>
 
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">Visa — was passt zu welcher Situation</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">Visa — was passt zu welcher Situation</h2>
             <div className="space-y-4 text-[16px] leading-[1.7] text-[#1f2937]">
               <p><strong>B211A — Touristenvisum.</strong> 60 Tage mit Verlängerungen bis zu 6 Monate. Passend für die Probephase, bevor Sie sich zum Umzug entscheiden. Kosten 50-100 $ + Agenturgebühr 50-150 $.</p>
               <p><strong>E33G — Digital-Nomad-Visum (seit Oktober 2025).</strong> Bis zu 1 Jahr, erfordert ein nachgewiesenes Einkommen von über 60.000 $/Jahr aus dem Ausland. Erlaubt keine Arbeit für lokale Unternehmen, legalisiert aber Remote-Arbeit. Ideal für Freelancer und Remote-Mitarbeiter.</p>
@@ -124,7 +124,7 @@ export default function Page() {
           </section>
 
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">Steuern für ausländische Residenten</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">Steuern für ausländische Residenten</h2>
             <div className="space-y-4 text-[16px] leading-[1.7] text-[#1f2937]">
               <p>Nach 183 Tagen in Indonesien innerhalb von 12 Monaten sind Sie steuerlich ansässig. Seit 2025 wendet Indonesien die Welteinkommensbesteuerung an: Einkommensteuer wird auf das gesamte weltweite Einkommen gezahlt, nicht nur auf das lokale.</p>
               <p>Progressive Sätze: 5 % bis IDR 60 Mio. (~4.000 $), 15 % bis 250 Mio. (~16.000 $), 25 % bis 500 Mio. (~32.000 $), 30 % bis 5 Mrd. (~320.000 $), 35 % darüber. Steuerjahr = Kalenderjahr, Erklärung bis zum 31. März fällig.</p>
@@ -134,7 +134,7 @@ export default function Page() {
           </section>
 
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">Internationale Schulen</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">Internationale Schulen</h2>
             <div className="space-y-4 text-[16px] leading-[1.7] text-[#1f2937]">
               <p><strong>Vorschule (3-5 Jahre):</strong> Sunrise Preschool, Sanggar Anak Tangguh, Australian Independent (Frühjahre) — 5.000-10.000 $/Jahr. Starke Montessori-, Reggio-Emilia- und Waldorf-Programme.</p>
               <p><strong>Grund- und Mittelstufe (Standardklasse):</strong> Sunrise School (Bumin Sanur), Australian Independent School (Sanur), Cita Hati (Denpasar), Bali Island School (Sanur) — 7.000-15.000 $/Jahr. Cambridge- und International-Baccalaureate-Lehrpläne, Englisch plus Spanisch/Mandarin/Indonesisch.</p>
@@ -144,7 +144,7 @@ export default function Page() {
           </section>
 
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">Gesundheitsversorgung</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">Gesundheitsversorgung</h2>
             <div className="space-y-4 text-[16px] leading-[1.7] text-[#1f2937]">
               <p><strong>Kliniken auf internationalem Niveau:</strong> BIMC Kuta (Partner der Cleveland Clinic), BIMC Nusa Dua, Siloam Hospital Denpasar, Kasih Ibu Hospital. Die meisten Ärzte sprechen Englisch, mehrere haben internationale Zertifizierungen (US Board, AHPRA, GMC).</p>
               <p><strong>Selbstzahler-Preise:</strong> Facharztkonsultation 40-80 $, vollständiges Blutbild 25-40 $, CT/MRT 200-400 $, moderate Notoperation 5.000-15.000 $, natürliche Geburt 2.000-4.000 $, Kaiserschnitt 4.000-7.000 $.</p>
@@ -154,7 +154,7 @@ export default function Page() {
           </section>
 
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">Reale Lebenshaltungskosten</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">Reale Lebenshaltungskosten</h2>
             <div className="overflow-x-auto">
               <table className="w-full text-[14px] border-collapse">
                 <thead>
@@ -180,13 +180,13 @@ export default function Page() {
           </section>
 
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
               Häufig gestellte Fragen
             </h2>
             <div className="space-y-3">
               {FAQ.map((it, i) => (
                 <details key={i} className="rounded-2xl border border-[var(--color-border)] p-4 bg-white">
-                  <summary className="cursor-pointer list-none flex items-center justify-between gap-4 text-[15px] font-semibold text-[#111827]">
+                  <summary className="cursor-pointer list-none flex items-center justify-between gap-4 text-[15px] font-semibold text-[var(--color-text)]">
                     <span>{it.q}</span>
                     <ChevronRight size={18} className="shrink-0 transition-transform [details[open]_&]:rotate-90" />
                   </summary>
@@ -197,22 +197,22 @@ export default function Page() {
           </section>
 
           <section className="mb-12">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-4">Nächste Schritte</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">Nächste Schritte</h2>
             <div className="grid sm:grid-cols-2 gap-4">
               <Link href="/de/bali-immobilien-investment" className="block rounded-2xl border border-[var(--color-border)] p-5 bg-white no-underline hover:border-[var(--color-primary)] transition-colors">
-                <h3 className="text-[16px] font-semibold text-[#111827] mb-1">Immobilieninvestment auf Bali</h3>
+                <h3 className="text-[16px] font-semibold text-[var(--color-text)] mb-1">Immobilieninvestment auf Bali</h3>
                 <p className="text-[13px] text-[var(--color-text-muted)]">Renditen, Leasehold, Steuern, ROI — der vollständige Investorenratgeber.</p>
               </Link>
               <Link href="/de/villen/umalas" className="block rounded-2xl border border-[var(--color-border)] p-5 bg-white no-underline hover:border-[var(--color-primary)] transition-colors">
-                <h3 className="text-[16px] font-semibold text-[#111827] mb-1">Villen in Umalas — Wohnviertel</h3>
+                <h3 className="text-[16px] font-semibold text-[var(--color-text)] mb-1">Villen in Umalas — Wohnviertel</h3>
                 <p className="text-[13px] text-[var(--color-text-muted)]">Ruhige Gegend für Familien mit Kindern, Schulen und Infrastruktur in der Nähe.</p>
               </Link>
               <Link href="/de/villen/sanur" className="block rounded-2xl border border-[var(--color-border)] p-5 bg-white no-underline hover:border-[var(--color-primary)] transition-colors">
-                <h3 className="text-[16px] font-semibold text-[#111827] mb-1">Villen in Sanur — ruhige Küste</h3>
+                <h3 className="text-[16px] font-semibold text-[var(--color-text)] mb-1">Villen in Sanur — ruhige Küste</h3>
                 <p className="text-[13px] text-[var(--color-text-muted)]">Familienpublikum, Strandpromenade, geringes Risiko.</p>
               </Link>
               <Link href="/de/contact" className="block rounded-2xl border border-[var(--color-border)] p-5 bg-white no-underline hover:border-[var(--color-primary)] transition-colors">
-                <h3 className="text-[16px] font-semibold text-[#111827] mb-1">Kontakt</h3>
+                <h3 className="text-[16px] font-semibold text-[var(--color-text)] mb-1">Kontakt</h3>
                 <p className="text-[13px] text-[var(--color-text-muted)]">Telegram, E-Mail, Partnerkontakte.</p>
               </Link>
             </div>

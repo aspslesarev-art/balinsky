@@ -40,7 +40,7 @@ export function Card({
   return (
     <section className="rounded-2xl bg-white ring-1 ring-[var(--color-border)]">
       <div className="flex flex-wrap items-baseline gap-x-3 border-b border-[var(--color-border)] px-4 py-3 sm:px-5">
-        <h2 className="text-[17px] font-semibold text-[#111827]">{title}</h2>
+        <h2 className="text-[17px] font-semibold text-[var(--color-text)]">{title}</h2>
         {count != null && (
           <span className="rounded-full bg-[var(--color-primary-soft)] px-2 py-0.5 text-[12px] font-medium text-[var(--color-primary-pressed)]">
             {count}
@@ -80,7 +80,7 @@ function Kpi({ label, value, unit, sub }: { label: string; value: string; unit: 
     <div className="rounded-2xl bg-white p-4 ring-1 ring-[var(--color-border)]">
       <div className="text-[12px] uppercase tracking-wide text-[var(--color-text-muted)]">{label}</div>
       <div className="mt-1 flex items-baseline gap-1.5">
-        <span className="text-[24px] font-semibold tabular-nums tracking-tight text-[#111827]">{value}</span>
+        <span className="text-[24px] font-semibold tabular-nums tracking-tight text-[var(--color-text)]">{value}</span>
         <span className="text-[13px] text-[var(--color-text-muted)]">{unit}</span>
       </div>
       {sub ? <div className="text-[13px] text-[var(--color-text-muted)]">{sub}</div> : null}
@@ -91,7 +91,7 @@ function Kpi({ label, value, unit, sub }: { label: string; value: string; unit: 
 function Where({ e }: { e: EventRow }) {
   return (
     <span className="min-w-0 flex-1 basis-[240px]">
-      <span className="font-medium text-[#111827]">{e.complex}</span>
+      <span className="font-medium text-[var(--color-text)]">{e.complex}</span>
       <span className="text-[var(--color-text-muted)]"> · {e.developer}</span>
       <span className="block text-[13px] text-[var(--color-text-muted)]">
         {e.unit_key}
@@ -118,7 +118,7 @@ export function EventFeed({ rows }: { rows: EventRow[] }) {
       {rows.map((e, i) => (
         <Row key={i}>
           <Where e={e} />
-          <span className="text-right text-[15px] font-medium tabular-nums text-[#111827]">
+          <span className="text-right text-[15px] font-medium tabular-nums text-[var(--color-text)]">
             {money(e.new_price ?? e.old_price)}
           </span>
         </Row>
@@ -140,7 +140,7 @@ export function PriceFeed({ rows }: { rows: EventRow[] }) {
             <span className="text-[14px] tabular-nums text-[var(--color-text-muted)]">
               <span className="line-through">{money(e.old_price)}</span>
               {' → '}
-              <span className="font-medium text-[#111827]">{money(e.new_price)}</span>
+              <span className="font-medium text-[var(--color-text)]">{money(e.new_price)}</span>
             </span>
             <span
               className={`min-w-14 shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-center text-[13px] font-medium tabular-nums ${
@@ -163,7 +163,7 @@ export function StockList({ rows }: { rows: StockRow[] }) {
       {rows.map((s, i) => (
         <Row key={i}>
           <span className="min-w-0 flex-1 basis-[240px]">
-            <span className="font-medium text-[#111827]">{s.complex}</span>
+            <span className="font-medium text-[var(--color-text)]">{s.complex}</span>
             <span className="text-[var(--color-text-muted)]"> · {s.developer}</span>
             <span className="block text-[13px] text-[var(--color-text-muted)]">
               свободно {s.available} из {s.total}
@@ -171,7 +171,7 @@ export function StockList({ rows }: { rows: StockRow[] }) {
               {s.sold ? ` · продано ${s.sold}` : ''}
             </span>
           </span>
-          <span className="text-right text-[15px] font-medium tabular-nums text-[#111827]">
+          <span className="text-right text-[15px] font-medium tabular-nums text-[var(--color-text)]">
             {bigMoney(Number(s.available_value_usd ?? 0))}
           </span>
         </Row>

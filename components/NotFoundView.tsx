@@ -38,7 +38,7 @@ export function NotFoundView({ lang }: { lang: Lang }) {
       <PageContainer>
         <section className="pt-16 md:pt-24 pb-12 max-w-2xl">
           <div className="text-[80px] md:text-[120px] font-semibold leading-none text-[var(--color-primary)] mb-4">404</div>
-          <h1 className="text-[28px] md:text-[36px] font-semibold tracking-tight text-[#111827] mb-4">
+          <h1 className="text-[28px] md:text-[36px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
             {c.h1}
           </h1>
           <p className="text-[16px] text-[var(--color-text-muted)] leading-relaxed mb-8">
@@ -49,7 +49,7 @@ export function NotFoundView({ lang }: { lang: Lang }) {
               <li key={href}>
                 <Link
                   href={switchLangPath(href, lang)}
-                  className="flex items-center gap-3 px-5 py-4 rounded-2xl border border-[var(--color-border)] bg-white text-[#111827] no-underline hover:border-[var(--color-primary)] transition-colors"
+                  className="flex items-center gap-3 px-5 py-4 rounded-2xl border border-[var(--color-border)] bg-white text-[var(--color-text)] no-underline hover:border-[var(--color-primary)] transition-colors"
                 >
                   <Icon size={22} className="text-[var(--color-primary)]" />
                   <span className="text-[15px] font-medium">{t(key, lang)}</span>

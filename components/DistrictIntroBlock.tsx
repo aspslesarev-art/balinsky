@@ -117,7 +117,7 @@ export function DistrictIntroBlock({
         {copy.highlights.map(h => (
           <div key={h.label} className="rounded-xl border border-[var(--color-border)] p-3 bg-white">
             <div className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)] mb-1">{h.label}</div>
-            <div className="text-[16px] font-semibold text-[#111827]">{h.value}</div>
+            <div className="text-[16px] font-semibold text-[var(--color-text)]">{h.value}</div>
           </div>
         ))}
       </div>
@@ -133,7 +133,7 @@ export function DistrictIntroBlock({
       </p>
 
       <details className="rounded-2xl border border-[var(--color-border)] p-4 bg-white mb-6 [&[open]>summary]:mb-3">
-        <summary className="cursor-pointer list-none flex items-center justify-between gap-3 text-[15px] font-semibold text-[#111827]">
+        <summary className="cursor-pointer list-none flex items-center justify-between gap-3 text-[15px] font-semibold text-[var(--color-text)]">
           <span>{t.guide(copy.name)}</span>
           <ChevronRight size={18} className="shrink-0 transition-transform [details[open]_&]:rotate-90" />
         </summary>

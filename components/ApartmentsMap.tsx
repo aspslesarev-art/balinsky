@@ -244,7 +244,7 @@ function CloseButton({ onClose }: { onClose: () => void }) {
       type="button"
       onClick={onClose}
       aria-label="Закрыть"
-      className="absolute top-2 right-2 w-7 h-7 inline-flex items-center justify-center rounded-full bg-white/90 hover:bg-white text-[#6B7280] hover:text-[#111827] shadow-[0_1px_3px_rgba(0,0,0,0.12)] z-10"
+      className="absolute top-2 right-2 w-7 h-7 inline-flex items-center justify-center rounded-full bg-white/90 hover:bg-white text-[#6B7280] hover:text-[var(--color-text)] shadow-[0_1px_3px_rgba(0,0,0,0.12)] z-10"
     >
       <X size={14} strokeWidth={2.5} />
     </button>
@@ -266,7 +266,7 @@ function SinglePopup({ p, onClose, lang }: { p: MapPoint; onClose: () => void; l
           className="w-full h-[140px] object-cover rounded-xl mb-3"
         />
       )}
-      <div className="text-[14px] font-semibold leading-snug mb-1.5 line-clamp-2 text-[#111827] pr-6">
+      <div className="text-[14px] font-semibold leading-snug mb-1.5 line-clamp-2 text-[var(--color-text)] pr-6">
         {title}
       </div>
       {price && (
@@ -292,12 +292,12 @@ function MultiPopup({ items, onClose, lang }: { items: MapPoint[]; onClose: () =
       <div className="text-[13px] font-medium text-[#6B7280] mb-2 pr-6">
         {`${items.length} ${pickCopy({ ru: 'объектов в одной точке', en: 'listings at this point', id: 'listing di titik ini', fr: 'biens à cet endroit', de: 'Objekte an diesem Punkt', zh: '个房源位于此处', nl: 'objecten op dit punt', ban: 'listing di titik puniki', pl: 'obiektów w tym miejscu', uk: 'об’єктів у цій точці' }, lang)}`}
       </div>
-      <ul className="max-h-[340px] overflow-y-auto -mx-1 px-1 divide-y divide-[#E5E7EB]">
+      <ul className="max-h-[340px] overflow-y-auto -mx-1 px-1 divide-y divide-[var(--color-border)]">
         {items.map(p => (
           <li key={p.id}>
             <a
               href={switchLangPath(`/ru/apartamenty/o/${p.slug}`, lang)}
-              className="flex items-center gap-3 py-2.5 no-underline text-[#111827] hover:bg-[#F8FAF8] rounded-md px-1"
+              className="flex items-center gap-3 py-2.5 no-underline text-[var(--color-text)] hover:bg-[#F8FAF8] rounded-md px-1"
             >
               {p.thumb ? (
                 // eslint-disable-next-line @next/next/no-img-element -- map InfoWindow popup, not a Next image

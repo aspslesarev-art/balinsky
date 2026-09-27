@@ -81,7 +81,7 @@ function Row({ r }: { r: Reservation }) {
             )}
           </div>
           <div className="text-[14px] text-[var(--ax-fg)] mb-1">{r.contact_name}</div>
-          <div className="flex items-center gap-3 flex-wrap text-[12px] text-[#4B5563]">
+          <div className="flex items-center gap-3 flex-wrap text-[12px] text-[var(--color-text-muted)]">
             <a href={`mailto:${r.contact_email}`} className="inline-flex items-center gap-1 hover:text-[#1F8B5F]">
               <Mail size={12} /> {r.contact_email}
             </a>
