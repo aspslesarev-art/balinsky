@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { SourceMark } from './SourceMark'
 import type { HubLongCopy, HubSection } from '@/lib/hub-seo'
 import type { ReadingLink } from '@/lib/hub-seo/related-reading'
 
@@ -16,7 +17,7 @@ function Section({ section }: { section: HubSection }) {
       <h3 className="text-[18px] font-semibold text-[var(--color-text)] mb-3">{section.heading}</h3>
       <div className="space-y-3">
         {section.paragraphs.map((p, i) => (
-          <p key={i} className="text-[var(--color-text-muted)]">{p}</p>
+          <p key={i} className="text-[var(--color-text-muted)]">{p}<SourceMark /></p>
         ))}
       </div>
       {section.bullets && (

@@ -5,6 +5,7 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { ChevronRight } from 'lucide-react'
+import { SourceMark } from '@/components/SourceMark'
 
 export type DataRow = {
   key: string
@@ -61,7 +62,7 @@ export function DataTable({ columns, rows, linkLabel }: {
           <tbody>
             {rows.map(r => (
               <tr key={r.key} className="border-b border-[var(--color-border)] align-top">
-                <th scope="row" className="py-3 px-3 text-left font-semibold text-[#111827] whitespace-nowrap">{r.label}{r.indicative ? '*' : ''}</th>
+                <th scope="row" className="py-3 px-3 text-left font-semibold text-[#111827] whitespace-nowrap">{r.label}{r.indicative ? '*' : ''}<SourceMark /></th>
                 {r.cells.map((cell, i) => (
                   <td key={i} className="py-3 px-3 whitespace-nowrap tabular-nums text-[#1f2937]">{cell}</td>
                 ))}

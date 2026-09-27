@@ -8,6 +8,7 @@
 
 import Link from 'next/link'
 import { Fragment } from 'react'
+import { SourceMark } from './SourceMark'
 
 const HEADING = /^## (.+)$/
 const LINK = /\[([^\]]+)\]\((\/[^)\s]*)\)/g
@@ -60,6 +61,14 @@ function withLinks(text: string) {
   return out
 }
 
+/** Plain body: an invisible source mark after every paragraph (see
+ *  lib/source-mark.ts), the blank lines between them kept as they are. */
+function markParagraphs(body: string) {
+  return body.split(/(\n\s*\n)/).map((part, i) =>
+    i % 2 === 1 || !part.trim() ? part : <Fragment key={i}>{part}<SourceMark /></Fragment>,
+  )
+}
+
 /** A section's text as paragraphs and lists; other lines keep pre-wrap. */
 function SectionText({ text }: { text: string }) {
   const groups: { kind: 'ul' | 'ol' | 'p'; lines: string[] }[] = []
@@ -75,19 +84,19 @@ function SectionText({ text }: { text: string }) {
         if (g.kind === 'ul') {
           return (
             <ul key={i} className="my-3 list-disc pl-6 space-y-1.5">
-              {g.lines.map((l, j) => <li key={j}>{withLinks(l.replace(BULLET, '$1'))}</li>)}
+              {g.lines.map((l, j) => <li key={j}>{withLinks(l.replace(BULLET, '$1'))}{j === g.lines.length - 1 && <SourceMark />}</li>)}
             </ul>
           )
         }
         if (g.kind === 'ol') {
           return (
             <ol key={i} className="my-3 list-decimal pl-6 space-y-1.5">
-              {g.lines.map((l, j) => <li key={j}>{withLinks(l.replace(NUMBERED, '$1'))}</li>)}
+              {g.lines.map((l, j) => <li key={j}>{withLinks(l.replace(NUMBERED, '$1'))}{j === g.lines.length - 1 && <SourceMark />}</li>)}
             </ol>
           )
         }
         const t = g.lines.join('\n').trim()
-        return t ? <div key={i} className="whitespace-pre-wrap my-3">{withLinks(t)}</div> : null
+        return t ? <div key={i} className="whitespace-pre-wrap my-3">{withLinks(t)}<SourceMark /></div> : null
       })}
     </>
   )
@@ -98,7 +107,7 @@ export function ArticleBody({ body }: { body: string }) {
   // container, 180+ characters on desktop.
   const base = 'max-w-[70ch] text-[16px] leading-[1.7] text-[var(--color-text)]'
   if (!hasArticleMarkup(body)) {
-    return <div className={`${base} whitespace-pre-wrap`}>{body}</div>
+    return <div className={`${base} whitespace-pre-wrap`}>{markParagraphs(body)}</div>
   }
   // Split into sections at headings; everything between two headings stays a
   // pre-wrapped block, so «— » bullet lines and blank-line spacing keep working.

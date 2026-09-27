@@ -4,6 +4,7 @@
 // can keep pasting plain text without HTML.
 
 import React, { type ReactNode } from 'react'
+import { SourceMark } from './SourceMark'
 
 type Block =
   | { kind: 'h2'; text: string }
@@ -130,13 +131,13 @@ export function NewsBody({ body }: { body: string }) {
           case 'ul':
             return (
               <ul key={i} className="my-4 list-disc pl-6 space-y-2">
-                {b.items.map((it, j) => <li key={j}>{renderInline(it)}</li>)}
+                {b.items.map((it, j) => <li key={j}>{renderInline(it)}{j === b.items.length - 1 && <SourceMark />}</li>)}
               </ul>
             )
           case 'ol':
             return (
               <ol key={i} className="my-4 list-decimal pl-6 space-y-2">
-                {b.items.map((it, j) => <li key={j}>{renderInline(it)}</li>)}
+                {b.items.map((it, j) => <li key={j}>{renderInline(it)}{j === b.items.length - 1 && <SourceMark />}</li>)}
               </ol>
             )
           case 'quote':
@@ -149,6 +150,7 @@ export function NewsBody({ body }: { body: string }) {
             return (
               <p key={i} className="my-4 first:mt-0 last:mb-0">
                 {renderInline(b.text)}
+                <SourceMark />
               </p>
             )
         }

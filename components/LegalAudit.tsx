@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { ChevronDown, Check, TriangleAlert, Scale, Minus } from 'lucide-react'
 import { pickCopy, type Lang } from '@/lib/i18n'
+import { SourceMark } from '@/components/SourceMark'
 import { LEGAL_OK_FIELD, LEGAL_QUESTIONS_FIELD, LEGAL_BALANCE_NOTES_FIELD, type AuditItem } from '@/lib/legal-audit'
 
 // Admin on-page editing: data-edit-* attrs make the whole block a click-to-edit
@@ -144,13 +145,13 @@ function Row({ item, tone }: { item: AuditItem; tone: 'ok' | 'warn' | 'neutral' 
         className={`w-full flex items-start gap-2.5 py-3 text-left ${hasBody ? 'cursor-pointer' : 'cursor-default'}`}
       >
         <Icon size={16} className={`${iconCls} shrink-0 mt-0.5`} />
-        <span className="flex-1 text-[14px] sm:text-[15px] font-medium text-[#111827] leading-snug">{item.headline}</span>
+        <span className="flex-1 text-[14px] sm:text-[15px] font-medium text-[#111827] leading-snug">{item.headline}<SourceMark /></span>
         {hasBody && (
           <ChevronDown size={16} className={`shrink-0 mt-0.5 text-[var(--color-text-soft)] transition-transform ${open ? 'rotate-180' : ''}`} />
         )}
       </button>
       {hasBody && open && (
-        <div className="pl-[26px] pb-3.5 -mt-0.5 text-[13.5px] sm:text-[14px] text-[var(--color-text)] leading-relaxed">{item.body}</div>
+        <div className="pl-[26px] pb-3.5 -mt-0.5 text-[13.5px] sm:text-[14px] text-[var(--color-text)] leading-relaxed">{item.body}<SourceMark /></div>
       )}
     </div>
   )
@@ -235,6 +236,7 @@ function ContractBalance({
       {summary && (
         <p className="mt-2 text-[13.5px] sm:text-[14px] text-[#111827] leading-snug">
           {[summary.headline, summary.body].filter(Boolean).join('. ')}
+          <SourceMark />
         </p>
       )}
 
