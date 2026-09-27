@@ -33,7 +33,7 @@ const DEBOUNCE_MS = 450
 const COPY = {
   ru: {
     title: 'Что рядом сдают за эти же деньги',
-    sub: (a: number, b: number) => `Объекты Booking со ставкой $${a}–${b} за ночь — коридор вокруг вашего ADR.`,
+    sub: (a: number, b: number) => `Объекты Booking со ставкой $${a}–${b} за ночь — вокруг цены за ночь, выставленной в калькуляторе.`,
     widened: (r: number) => `Рядом в этой ставке никого, поэтому показываем в радиусе ${r < 1000 ? `${r} м` : `${r / 1000} км`}.`,
     subLoading: 'Подбираем объекты по вашей ставке…',
     empty: 'В этом радиусе и в этой цене на Booking пока никого — попробуйте больший радиус или другую ставку.',
@@ -53,7 +53,7 @@ const COPY = {
   },
   en: {
     title: 'What the same money rents nearby',
-    sub: (a: number, b: number) => `Booking listings at $${a}–${b} per night — the band around your ADR.`,
+    sub: (a: number, b: number) => `Booking listings at $${a}–${b} per night — around the nightly rate set in the calculator.`,
     widened: (r: number) => `Nothing at this rate right nearby, so we widened the search to ${r < 1000 ? `${r} m` : `${r / 1000} km`}.`,
     subLoading: 'Finding listings at your rate…',
     empty: 'Nothing on Booking in this radius at this price — try a wider radius or another rate.',

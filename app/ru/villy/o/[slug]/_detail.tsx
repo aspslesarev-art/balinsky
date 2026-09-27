@@ -35,6 +35,7 @@ import { loadMarketStats } from '@/lib/complex-market-stats'
 import { loadOneUnitDemand } from '@/lib/unit-demand'
 import { UnitDemandBlock } from '@/components/UnitDemandBlock'
 import { MarketStatsBlock } from '@/components/MarketStatsBlock'
+import { DataChapter, DataGuide, type ChapterId } from '@/components/DataChapters'
 import { GatedBlock } from '@/components/GatedBlock'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
 import { VillaCard, type VillaCardData } from '@/components/VillaCard'
@@ -1214,6 +1215,15 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   const complexesRoot = switchLangPath('/ru/zhilye-kompleksy', lang)
   const developersRoot = switchLangPath('/ru/zastrojshhiki', lang)
 
+  const landOk = !!landProfile && (landAllowsBuilding(landProfile, 'villa') || hasProjectPermits(projectPermits))
+  const marketOk = !!marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0)
+  const hasPlace = !!(geoFacts || surroundings || nearby || (districtCopy && districtSlug))
+  const hasRent = marketOk || !!demand
+  const hasYield = lat != null && lng != null
+  const chapters = ([
+    hasPlace && 'mesto', hasRent && 'arenda', hasYield && 'dokhodnost', landOk && 'uchastok',
+  ] as const).filter((x): x is ChapterId => !!x)
+
   return (
     <>
       <Header active="villy" />
@@ -1369,61 +1379,72 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
           </section>
         )}
 
-        {lat != null && lng != null && (
-          <GatedBlock kind="investment" lang={lang}>
-            <LazyMount fallback={<div className="mt-12 mb-10 min-h-[600px]" />}>
-              <InvestmentWidget villaId={v.airtable_id} apiKey={GMAPS_KEY} lang={lang} />
-            </LazyMount>
-          </GatedBlock>
-        )}
+        {/* Аналитика — четыре раздела в одном порядке: место → аренда
+            рядом → доходность → участок. Калькулятор стоит после ставок
+            соседей, потому что строится на них. Перед разделами — «карта
+            страницы» с главной цифрой каждого. */}
+        <DataGuide lang={lang} chapters={chapters} facts={{
+          airportMin: geoFacts?.routes?.airport ? Math.round(geoFacts.routes.airport.s / 60) : null,
+          neighbourAdrUsd: marketOk ? marketStats!.villa_adr_usd ?? marketStats!.apartment_adr_usd : null,
+          demandScore: demand?.score ?? null,
+          strAllowed: landOk ? landProfile!.str_likely_allowed : null,
+        }} />
 
-        {geoFacts && (
-          <>
-            <ComplexAccessBlock
-              lang={lang}
-              elevationM={geoFacts.elevation_m}
-              routes={geoFacts.routes}
-            />
-            <ClimateBlock climate={geoFacts.climate} air={geoFacts.air} lang={lang} />
-          </>
-        )}
-
-        <SurroundingsBlock data={surroundings} lang={lang} />
-
-        {nearby && (
-          <GatedBlock kind="nearby" lang={lang}>
-            <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />
-          </GatedBlock>
-        )}
-
-        {districtCopy && districtSlug && (
-          <DistrictAboutCard copy={districtCopy} lang={lang} kind="villa" hubHref={`${villasRoot}/${districtSlug}`} />
-        )}
-
-        {/* Балл востребованности — над блоком рынка: сначала вывод про сам
-            объект, потом цифры района, на которых он построен. */}
-        {demand && (
-          <section className="mb-6">
-            <UnitDemandBlock demand={demand} lang={lang} />
-          </section>
-        )}
-
-        {(
-          (landProfile && (landAllowsBuilding(landProfile, 'villa') || hasProjectPermits(projectPermits)))
-          || (marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0))
-        ) && (
-          <section className="mb-10 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-            {landProfile && (landAllowsBuilding(landProfile, 'villa') || hasProjectPermits(projectPermits)) && (
-              <LazyMount fallback={<div className="min-h-[480px] rounded-2xl bg-[var(--color-search-bg)]" />}>
-                <LandProfileBlock data={landProfile} permits={projectPermits} lang={lang} />
-              </LazyMount>
+        {hasPlace && (
+          <DataChapter id="mesto" n={chapters.indexOf('mesto') + 1} lang={lang}>
+            {geoFacts && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start [&>*]:mb-0">
+                <ComplexAccessBlock
+                  lang={lang}
+                  elevationM={geoFacts.elevation_m}
+                  routes={geoFacts.routes}
+                />
+                <ClimateBlock climate={geoFacts.climate} air={geoFacts.air} lang={lang} />
+              </div>
             )}
-            {marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0) && (
-              <GatedBlock kind="market" lang={lang}>
-                <MarketStatsBlock data={marketStats} lang={lang} />
+            <SurroundingsBlock data={surroundings} lang={lang} />
+            {nearby && (
+              <GatedBlock kind="nearby" lang={lang}>
+                <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />
               </GatedBlock>
             )}
-          </section>
+            {districtCopy && districtSlug && (
+              <DistrictAboutCard copy={districtCopy} lang={lang} kind="villa" hubHref={`${villasRoot}/${districtSlug}`} />
+            )}
+          </DataChapter>
+        )}
+
+        {hasRent && (
+          <DataChapter id="arenda" n={chapters.indexOf('arenda') + 1} lang={lang}>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+              {marketOk && (
+                <GatedBlock kind="market" lang={lang}>
+                  <MarketStatsBlock data={marketStats!} lang={lang} />
+                </GatedBlock>
+              )}
+              {demand && <UnitDemandBlock demand={demand} lang={lang} />}
+            </div>
+          </DataChapter>
+        )}
+
+        {hasYield && (
+          <DataChapter id="dokhodnost" n={chapters.indexOf('dokhodnost') + 1} lang={lang}>
+            <GatedBlock kind="investment" lang={lang}>
+              <LazyMount fallback={<div className="min-h-[600px]" />}>
+                <InvestmentWidget villaId={v.airtable_id} apiKey={GMAPS_KEY} lang={lang} />
+              </LazyMount>
+            </GatedBlock>
+          </DataChapter>
+        )}
+
+        {landOk && (
+          <DataChapter id="uchastok" n={chapters.indexOf('uchastok') + 1} lang={lang}>
+            <div className="max-w-[760px]">
+              <LazyMount fallback={<div className="min-h-[480px] rounded-2xl bg-[var(--color-search-bg)]" />}>
+                <LandProfileBlock data={landProfile!} permits={projectPermits} lang={lang} />
+              </LazyMount>
+            </div>
+          </DataChapter>
         )}
 
         {(parentComplex || developer || developerName) && (

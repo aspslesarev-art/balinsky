@@ -6,7 +6,9 @@
 
 import { TrendingUp, Hotel, Home as HomeIcon, ExternalLink } from 'lucide-react'
 import type { ComplexMarketStats } from '@/lib/complex-market-stats'
+import type { ReactNode } from 'react'
 import { pickCopy, type Lang } from '@/lib/i18n'
+import { InlinePrice } from './InlinePrice'
 
 const COPY = {
   ru: {
@@ -186,10 +188,12 @@ type Copy = { [K in keyof (typeof COPY)['ru']]: (typeof COPY)['ru'][K] extends (
 // Scenario figures to the nearest $100 — more digits would be false precision.
 const round100 = (v: number) => Math.round(v / 100) * 100
 
-function fmtUsd(v: number | null): string {
-  if (v == null) return '—'
-  if (v >= 1000) return `$${Math.round(v).toLocaleString('en-US')}`
-  return `$${Math.round(v)}`
+// В валюте посетителя, как цены по всему сайту: раньше тут всегда стояли
+// доллары, а рядом («карта страницы», калькулятор) — рупии или рубли, и
+// одна и та же ставка выглядела двумя разными числами.
+function Money({ usd, lang }: { usd: number | null; lang: Lang }) {
+  if (usd == null) return <>—</>
+  return <InlinePrice usd={Math.round(usd)} lang={lang} />
 }
 
 export function MarketStatsBlock({ data, lang = 'ru' }: { data: ComplexMarketStats; lang?: Lang }) {
@@ -213,7 +217,7 @@ export function MarketStatsBlock({ data, lang = 'ru' }: { data: ComplexMarketSta
 
         <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
           {data.villa_count > 0 && (
-            <SegmentCard
+            <SegmentCard lang={lang}
               icon={HomeIcon}
               label={c.villas}
               count={data.villa_count}
@@ -222,7 +226,7 @@ export function MarketStatsBlock({ data, lang = 'ru' }: { data: ComplexMarketSta
             />
           )}
           {data.apartment_count > 0 && (
-            <SegmentCard
+            <SegmentCard lang={lang}
               icon={Hotel}
               label={c.apartments}
               count={data.apartment_count}
@@ -249,13 +253,14 @@ export function MarketStatsBlock({ data, lang = 'ru' }: { data: ComplexMarketSta
 }
 
 function SegmentCard({
-  icon: Icon, label, count, adr, c,
+  icon: Icon, label, count, adr, c, lang,
 }: {
   icon: typeof HomeIcon
   label: string
   count: number
   adr: number | null
   c: Copy
+  lang: Lang
 }) {
   // Annual gross revenue as a scenario at 65% (55–75% alongside), the same
   // assumption as /methodology. The estatemarket «occupancy» is the share of
@@ -272,16 +277,16 @@ function SegmentCard({
         </span>
       </div>
       <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-        <Metric label={c.adr}    value={adr != null ? fmtUsd(adr) : c.fewData} hint={c.adrHint} />
-        <Metric label={c.annual} value={annual != null ? fmtUsd(round100(annual)) : '—'} tone="primary" hint={c.annualHint}
-          sub={adr != null ? `${c.range}${fmtUsd(round100(adr * 365 * 0.55))}–${fmtUsd(round100(adr * 365 * 0.75))}` : null} />
+        <Metric label={c.adr}    value={adr != null ? <Money usd={adr} lang={lang} /> : c.fewData} hint={c.adrHint} />
+        <Metric label={c.annual} value={annual != null ? <Money usd={round100(annual)} lang={lang} /> : '—'} tone="primary" hint={c.annualHint}
+          sub={adr != null ? <>{c.range}<Money usd={round100(adr * 365 * 0.55)} lang={lang} />–<Money usd={round100(adr * 365 * 0.75)} lang={lang} /></> : null} />
       </div>
     </div>
   )
 }
 
 function Metric({ label, value, tone = 'default', hint, sub }: {
-  label: string; value: string; tone?: 'default' | 'primary'; hint?: string | null; sub?: string | null
+  label: string; value: ReactNode; tone?: 'default' | 'primary'; hint?: string | null; sub?: ReactNode
 }) {
   return (
     <div title={hint ?? undefined}>

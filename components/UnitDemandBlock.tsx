@@ -22,7 +22,8 @@ const COPY = {
       zone: (n: number, zone: string) => `${n} объектов того же типа в зоне «${zone}»`,
       island: (n: number) => `${n} объектов того же типа по острову — рядом сопоставимых мало`,
     },
-    rate: 'Ставка к соседям',
+    scale: ['0 — слабее всех', '50 — средне', '100 — сильнее всех'],
+    rate: 'Цена за ночь к соседям',
     occupancy: 'Загрузка сегмента',
     idle: 'Простаивают',
     perNight: '$/ночь',
@@ -37,7 +38,8 @@ const COPY = {
       zone: (n: number, zone: string) => `${n} rentals of the same type in ${zone}`,
       island: (n: number) => `${n} rentals of the same type island-wide — few comparable ones nearby`,
     },
-    rate: 'Rate vs neighbours',
+    scale: ['0 — weakest', '50 — average', '100 — strongest'],
+    rate: 'Nightly rate vs neighbours',
     occupancy: 'Segment occupancy',
     idle: 'Sitting idle',
     perNight: '$/night',
@@ -82,6 +84,11 @@ export function UnitDemandBlock({ demand, lang = 'ru' }: { demand: UnitDemand; l
 
       <div className="mt-4 h-1.5 rounded-full bg-[var(--color-border)] overflow-hidden">
         <div className="h-full rounded-full" style={{ width: `${demand.score}%`, background: t.bar }} />
+      </div>
+      {/* Шкала под полосой: без неё «26 из 100» читалось как оценка «плохо»,
+          хотя это просто место среди соседей. */}
+      <div className="mt-1.5 flex justify-between gap-2 text-[11px] text-[var(--color-text-muted)]">
+        {c.scale.map(label => <span key={label}>{label}</span>)}
       </div>
 
       {demand.why && (

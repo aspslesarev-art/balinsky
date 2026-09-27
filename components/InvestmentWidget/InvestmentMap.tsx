@@ -30,7 +30,7 @@ const COLORS = {
 const MAP_COPY = {
   ru: {
     unavailable: 'Карта недоступна',
-    villa: 'Вилла', competitors: 'Конкуренты', anchors: 'Якоря',
+    villa: 'Вилла', competitors: 'Похожие в аренде', anchors: 'Популярные места',
     anchorsOnly: 'Только якоря', allPois: 'Все POI',
     heat: 'Карта иностранных туристов',
     perNight: ' / ночь',
@@ -44,7 +44,7 @@ const MAP_COPY = {
   },
   en: {
     unavailable: 'Map unavailable',
-    villa: 'Villa', competitors: 'Competitors', anchors: 'Anchors',
+    villa: 'Villa', competitors: 'Similar rentals', anchors: 'Points of interest',
     anchorsOnly: 'Anchors only', allPois: 'All POIs',
     heat: 'Where foreign tourists go',
     perNight: ' / night',

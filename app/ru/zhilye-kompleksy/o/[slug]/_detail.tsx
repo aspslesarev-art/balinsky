@@ -63,6 +63,7 @@ import { loadLandProfile, landAllowsBuilding } from '@/lib/land-profile'
 import { loadComplexMarketStats } from '@/lib/complex-market-stats'
 import { loadUnitDemand, type UnitDemand } from '@/lib/unit-demand'
 import { MarketStatsBlock } from '@/components/MarketStatsBlock'
+import { DataChapter, DataGuide, type ChapterId } from '@/components/DataChapters'
 import { GatedBlock } from '@/components/GatedBlock'
 import { loadComplexAccess, loadGeoFacts } from '@/lib/complex-access'
 import { loadSurroundings } from '@/lib/surroundings'
@@ -1769,6 +1770,18 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
       }
     : null
 
+
+  const landOk = !!landProfile && (landAllowsBuilding(landProfile, 'complex') || hasProjectPermits(projectPermits))
+  const marketOk = !!marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0)
+  const hasPlace = !!((lat != null && lng != null) || surroundings || nearby || (districtCopy && districtSlug) || hasAnySignal(signals))
+  // «Аренда рядом» — только когда есть ставки соседей. Без них инвест-
+  // сигналы (пляж, срок сдачи) уходят в конец раздела «Место».
+  const hasRent = marketOk
+  const chapters: ChapterId[] = []
+  if (hasPlace) chapters.push('mesto')
+  if (hasRent) chapters.push('arenda')
+  if (landOk) chapters.push('uchastok')
+
   return (
     <>
       <Header active="zhilye-kompleksy" />
@@ -1914,145 +1927,141 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
           </section>
         )}
 
-        {/* LOCATION */}
-        {lat != null && lng != null && (
-          <section className="mb-10">
-            <h2 className="text-[18px] sm:text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
-              {copy.location}
-            </h2>
-            <div className="text-[14px] text-[var(--color-text)] mb-3">
-              {/* TASK-13d: full geo chain (area → kecamatan → regency → island)
-                  so "Badung Regency" is present on the page, fixing the
-                  "Missing: badung regency" flag in our snippets. */}
-              {districtRaw ? geoChainString(districtRaw) : copy.locationLine(district)}
-            </div>
-            {access && (
-              <ComplexAccessBlock
-                access={access}
+        {/* Аналитика — те же разделы, что на странице виллы: место → аренда
+            рядом → участок. Калькулятора у комплекса нет — он на страницах
+            юнитов. Перед разделами — «карта страницы». */}
+        <DataGuide lang={lang} chapters={chapters} facts={{
+          airportMin: geoFacts?.routes?.airport ? Math.round(geoFacts.routes.airport.s / 60) : null,
+          neighbourAdrUsd: marketOk ? marketStats!.villa_adr_usd ?? marketStats!.apartment_adr_usd : null,
+          strAllowed: landOk ? landProfile!.str_likely_allowed : null,
+        }} />
+
+        {hasPlace && (
+          <DataChapter id="mesto" n={chapters.indexOf('mesto') + 1} lang={lang}>
+          {/* LOCATION */}
+          {lat != null && lng != null && (
+            <section className="mb-10">
+              <h2 className="text-[18px] sm:text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-4">
+                {copy.location}
+              </h2>
+              <div className="text-[14px] text-[var(--color-text)] mb-3">
+                {/* TASK-13d: full geo chain (area → kecamatan → regency → island)
+                    so "Badung Regency" is present on the page, fixing the
+                    "Missing: badung regency" flag in our snippets. */}
+                {districtRaw ? geoChainString(districtRaw) : copy.locationLine(district)}
+              </div>
+              {access && (
+                <ComplexAccessBlock
+                  access={access}
+                  lang={lang}
+                  elevationM={geoFacts?.elevation_m ?? null}
+                  routes={geoFacts?.routes ?? null}
+                />
+              )}
+              <ClimateBlock
+                climate={geoFacts?.climate ?? null}
+                air={geoFacts?.air ?? null}
                 lang={lang}
-                elevationM={geoFacts?.elevation_m ?? null}
-                routes={geoFacts?.routes ?? null}
+                footer={showSunBlock ? (
+                  <div>
+                    <p className="mb-3 text-[13px] leading-relaxed text-[var(--color-text-muted)]">
+                      {lang === 'ru'
+                        ? 'Объёмная модель комплекса на карте: видно, куда падает тень от корпусов и заборов и сколько солнца достаётся двору с бассейном в любой день года.'
+                        : 'A 3D model of the complex on the map: see where the buildings and walls cast shade and how much sun the pool courtyard gets on any day of the year.'}
+                    </p>
+                    <SunShadowBlock
+                      plan={sunPlan!}
+                      latitude={sunSettings!.latitude}
+                      longitude={sunSettings!.longitude}
+                      placement={{
+                        rowAzimuth: sunSettings!.rowAzimuth,
+                        modelScale: sunSettings!.modelScale,
+                        offsetX: sunSettings!.offsetX,
+                        offsetZ: sunSettings!.offsetZ,
+                        basemapOffsetX: sunSettings!.basemapOffsetX,
+                        basemapOffsetZ: sunSettings!.basemapOffsetZ,
+                        basemapScale: sunSettings!.basemapScale,
+                      }}
+                      heights={{
+                        eaveHeight: sunSettings!.eaveHeight,
+                        ridgeRise: sunSettings!.ridgeRise,
+                        yardWall: sunSettings!.yardWall,
+                      }}
+                      title={sunPlan!.title}
+                      en={lang !== 'ru'}
+                    />
+                    {sunPlan!.google3d && process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY && (
+                      <div className="mt-3">
+                        <Google3DMapBlock
+                          apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}
+                          view={sunPlan!.google3d}
+                          title={sunPlan!.title}
+                          en={lang !== 'ru'}
+                        />
+                      </div>
+                    )}
+                  </div>
+                ) : null}
               />
-            )}
-            <ClimateBlock
-              climate={geoFacts?.climate ?? null}
-              air={geoFacts?.air ?? null}
-              lang={lang}
-              footer={showSunBlock ? (
-                <div>
-                  <p className="mb-3 text-[13px] leading-relaxed text-[var(--color-text-muted)]">
-                    {lang === 'ru'
-                      ? 'Объёмная модель комплекса на карте: видно, куда падает тень от корпусов и заборов и сколько солнца достаётся двору с бассейном в любой день года.'
-                      : 'A 3D model of the complex on the map: see where the buildings and walls cast shade and how much sun the pool courtyard gets on any day of the year.'}
-                  </p>
-                  <SunShadowBlock
-                    plan={sunPlan!}
-                    latitude={sunSettings!.latitude}
-                    longitude={sunSettings!.longitude}
-                    placement={{
-                      rowAzimuth: sunSettings!.rowAzimuth,
-                      modelScale: sunSettings!.modelScale,
-                      offsetX: sunSettings!.offsetX,
-                      offsetZ: sunSettings!.offsetZ,
-                      basemapOffsetX: sunSettings!.basemapOffsetX,
-                      basemapOffsetZ: sunSettings!.basemapOffsetZ,
-                      basemapScale: sunSettings!.basemapScale,
-                    }}
-                    heights={{
-                      eaveHeight: sunSettings!.eaveHeight,
-                      ridgeRise: sunSettings!.ridgeRise,
-                      yardWall: sunSettings!.yardWall,
-                    }}
-                    title={sunPlan!.title}
-                    en={lang !== 'ru'}
-                  />
-                  {sunPlan!.google3d && process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY && (
-                    <div className="mt-3">
-                      <Google3DMapBlock
-                        apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}
-                        view={sunPlan!.google3d}
-                        title={sunPlan!.title}
-                        en={lang !== 'ru'}
-                      />
-                    </div>
-                  )}
-                </div>
-              ) : null}
-            />
-            {process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY && (
-              <GatedBlock kind="heatmap" lang={lang}>
-                <div className="mb-4">
-                  <LazyMount fallback={<div className="h-[420px] rounded-2xl bg-[var(--color-search-bg)]" />}>
-                  <NeighborhoodHeatMap
-                    apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}
-                    lat={lat}
-                    lng={lng}
-                    title={name}
-                    lang={lang}
-                    overlay={parseGeoOverlay(d['Geo Overlay'])}
-                  />
-                  </LazyMount>
-                </div>
+              {process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY && (
+                <GatedBlock kind="heatmap" lang={lang}>
+                  <div className="mb-4">
+                    <LazyMount fallback={<div className="h-[420px] rounded-2xl bg-[var(--color-search-bg)]" />}>
+                    <NeighborhoodHeatMap
+                      apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}
+                      lat={lat}
+                      lng={lng}
+                      title={name}
+                      lang={lang}
+                      overlay={parseGeoOverlay(d['Geo Overlay'])}
+                    />
+                    </LazyMount>
+                  </div>
+                </GatedBlock>
+              )}
+              <a
+                href={gmap ?? `https://www.google.com/maps?q=${lat},${lng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border border-[var(--color-border)] text-[14px] font-medium text-[var(--color-text)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)]"
+              >
+                <MapIcon size={16} className="text-[var(--color-primary)]" />
+                {copy.openInMaps}
+              </a>
+            </section>
+          )}
+            <SurroundingsBlock data={surroundings} lang={lang} />
+            {nearby && (
+              <GatedBlock kind="nearby" lang={lang}>
+                <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />
               </GatedBlock>
             )}
-            <a
-              href={gmap ?? `https://www.google.com/maps?q=${lat},${lng}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border border-[var(--color-border)] text-[14px] font-medium text-[var(--color-text)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)]"
-            >
-              <MapIcon size={16} className="text-[var(--color-primary)]" />
-              {copy.openInMaps}
-            </a>
-          </section>
-        )}
-
-        {/* Nearby places — beaches / cafes / nightlife / etc. The
-            data is keyed by villa airtable_id; we surface it on
-            the complex page using the first villa unit's nearby
-            data because units in the same complex share geo. */}
-        <SurroundingsBlock data={surroundings} lang={lang} />
-
-        {nearby && (
-          <GatedBlock kind="nearby" lang={lang}>
-            <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />
-          </GatedBlock>
-        )}
-
-        {districtCopy && districtSlug && (
-          <DistrictAboutCard copy={districtCopy} lang={lang} kind="complex" hubHref={`${complexesRoot}/${districtSlug}`} />
-        )}
-
-        {/* ИНВЕСТ-СИГНАЛЫ — синтез инвест-показателей ЖК (доходность, пляжная
-            зона, загрузка vs район, срок сдачи). Стоит над детальным блоком
-            «Сколько зарабатывают соседи» как краткая сводка. */}
-        {hasAnySignal(signals) && (
-          <section className="mb-6">
-            <ComplexSignalsBlock signals={signals} lang={lang} />
-          </section>
-        )}
-
-        {/* LAND + MARKET — two-column due-diligence row. Renders both
-            when available; collapses to one column when only one block
-            has data. Стоит ниже описания и юнитов: сперва посетитель
-            смотрит, что это за объект и что в нём есть, и только потом
-            идёт в инвест-обвязку — зонирование и доход соседей. */}
-        {(
-          (landProfile && (landAllowsBuilding(landProfile, 'complex') || hasProjectPermits(projectPermits)))
-          || (marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0))
-        ) && (
-          <section className="mb-10 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-            {landProfile && (landAllowsBuilding(landProfile, 'complex') || hasProjectPermits(projectPermits)) && (
-              <LazyMount fallback={<div className="min-h-[480px] rounded-2xl bg-[var(--color-search-bg)]" />}>
-                <LandProfileBlock data={landProfile} permits={projectPermits} lang={lang} />
-              </LazyMount>
+            {districtCopy && districtSlug && (
+              <DistrictAboutCard copy={districtCopy} lang={lang} kind="complex" hubHref={`${complexesRoot}/${districtSlug}`} />
             )}
-            {marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0) && (
+            {!hasRent && hasAnySignal(signals) && <ComplexSignalsBlock signals={signals} lang={lang} />}
+          </DataChapter>
+        )}
+
+        {hasRent && (
+          <DataChapter id="arenda" n={chapters.indexOf('arenda') + 1} lang={lang}>
+            {hasAnySignal(signals) && <ComplexSignalsBlock signals={signals} lang={lang} />}
+            {marketOk && (
               <GatedBlock kind="market" lang={lang}>
-                <MarketStatsBlock data={marketStats} lang={lang} />
+                <MarketStatsBlock data={marketStats!} lang={lang} />
               </GatedBlock>
             )}
-          </section>
+          </DataChapter>
+        )}
+
+        {landOk && (
+          <DataChapter id="uchastok" n={chapters.indexOf('uchastok') + 1} lang={lang}>
+            <div className="max-w-[760px]">
+              <LazyMount fallback={<div className="min-h-[480px] rounded-2xl bg-[var(--color-search-bg)]" />}>
+                <LandProfileBlock data={landProfile!} permits={projectPermits} lang={lang} />
+              </LazyMount>
+            </div>
+          </DataChapter>
         )}
 
         {/* LEGAL AUDIT — what's in order (public) + questions (lead-gated).

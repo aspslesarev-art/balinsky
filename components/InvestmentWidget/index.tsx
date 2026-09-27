@@ -11,7 +11,6 @@ import { fmtMoney, fmtPct, fmtYears, fmtDistance, pluralRu, pluralEn } from './u
 import type { Snapshot } from './types'
 import { useCurrency } from '../CurrencyContext'
 import { computeEconomics, type Economics, type TaxStatus } from '@/lib/investment/economics'
-import { CURRENCY_RATES } from '@/lib/currency'
 import { pickCopy, type Lang, detectLang } from '@/lib/i18n'
 
 // Сколько промежутков рисуем прямо в дорожке ползунка ADR.
@@ -20,7 +19,7 @@ const ADR_ZONES = 40
 const COPY = {
   ru: {
     sectionH2: 'Инвестиционный потенциал',
-    sectionSub: 'Оценка сценариев аренды по матчингу с Booking-конкурентами и анализу района',
+    sectionSub: 'Сколько объект может приносить, если сдавать его посуточно. Все цифры — оценка по реальным ставкам соседей, а не обещание застройщика.',
     confHigh: 'высокая уверенность',
     confMedium: 'средняя уверенность',
     confLow: 'низкая уверенность',
@@ -30,9 +29,10 @@ const COPY = {
     restaurant: ['ресторан', 'ресторана', 'ресторанов'] as [string, string, string],
     perNight: ' / ночь',
     perYear: '/год',
-    perYearNoi: ' / год NOI',
-    expandedZone: (raw: string, applied: string) =>
-      `Расширенная выборка: в исходной зоне (${raw}) не нашлось матчей, перешли на ${applied}.`,
+    perYearNoi: ' / год чистыми',
+    // Коды зон (scooter, inland) внутренние — читателю их не показываем.
+    expandedZone: (_raw: string, _applied: string) =>
+      'Рядом с объектом похожих вилл мало, поэтому сравниваем с более широкой округой.',
     threeNumbers: 'Что значат эти три цифры',
     threeNumbersBody: (count: number, similar: string, zoneLower: string) =>
       <>Считаем, сколько эта вилла может зарабатывать на посуточной аренде. За основу — {count > 0 ? <><span className="font-medium text-[var(--color-text)]">{count}</span> {similar}</> : 'похожие виллы'} в той же зоне ({zoneLower}; на карте сверху — синие точки внутри красного круга).</>,
@@ -45,10 +45,10 @@ const COPY = {
       </>,
     scenarioBad: 'Плохой', scenarioMedian: 'Нормальный', scenarioGood: 'Хороший',
     resetTitle: 'Сбросить к данным по конкурентам', reset: 'сбросить',
-    inputPrice: 'Цена', inputAdr: 'ADR', inputOccupancy: 'Загрузка', inputMgmt: 'Mgmt fee',
+    inputPrice: 'Цена', inputAdr: 'Цена за ночь', inputOccupancy: 'Загрузка', inputMgmt: 'Управляющая компания',
     calcTitle: 'Калькулятор доходности',
-    calcSub: 'Подвигайте ползунки. ADR по умолчанию — медиана похожих объектов на Booking поблизости, загрузка — сценарий 60%: надёжных данных о загрузке на Бали нет. Цену можно менять ±25%.',
-    payback: 'Окупаемость', capRate: 'Cap rate',
+    calcSub: 'Цена за ночь по умолчанию — средняя ставка похожих объектов рядом (их карточки ниже). Загрузка — 60% дней в году: надёжной статистики по Бали нет, двигайте под свой прогноз. Внизу — сколько останется владельцу после комиссий, управляющей, расходов и налога.',
+    payback: 'Окупаемость', capRate: 'Доходность в год',
     howCalced: 'Как считалось',
     revenue: 'Выручка', platform: 'Площадка', mgmt: 'Управление', opex: 'Расходы', tax: 'Налог', noi: 'Чистыми',
     phr: 'Налог на проживание', ffe: 'Резерв на износ', preTax: 'Прибыль до налога',
@@ -105,7 +105,7 @@ const COPY = {
   },
   en: {
     sectionH2: 'Investment potential',
-    sectionSub: 'Rental scenarios estimated by matching against Booking competitors and analysing the area',
+    sectionSub: 'What the property could earn as a short-term rental. Every number is an estimate built on real neighbour rates, not a developer promise.',
     confHigh: 'high confidence',
     confMedium: 'medium confidence',
     confLow: 'low confidence',
@@ -115,9 +115,9 @@ const COPY = {
     restaurant: ['restaurant', 'restaurants'] as [string, string],
     perNight: ' / night',
     perYear: '/yr',
-    perYearNoi: ' / year NOI',
-    expandedZone: (raw: string, applied: string) =>
-      `Expanded sample: no matches in the original zone (${raw}), switched to ${applied}.`,
+    perYearNoi: ' / year net',
+    expandedZone: (_raw: string, _applied: string) =>
+      'Few similar villas right next to the property, so we compare with a wider area.',
     threeNumbers: 'What these three numbers mean',
     threeNumbersBody: (count: number, similar: string, zoneLower: string) =>
       <>We estimate what this villa could earn from short-term rentals. The baseline comes from {count > 0 ? <><span className="font-medium text-[var(--color-text)]">{count}</span> {similar}</> : 'similar villas'} in the same zone ({zoneLower}; on the map above — blue dots inside the red circle).</>,
@@ -130,10 +130,10 @@ const COPY = {
       </>,
     scenarioBad: 'Bad', scenarioMedian: 'Normal', scenarioGood: 'Good',
     resetTitle: 'Reset to competitor-based defaults', reset: 'reset',
-    inputPrice: 'Price', inputAdr: 'ADR', inputOccupancy: 'Occupancy', inputMgmt: 'Mgmt fee',
+    inputPrice: 'Price', inputAdr: 'Nightly rate', inputOccupancy: 'Occupancy', inputMgmt: 'Management fee',
     calcTitle: 'Yield calculator',
-    calcSub: 'Drag the sliders. ADR defaults to the median of similar nearby Booking listings; occupancy to a 60% scenario, since reliable occupancy data for Bali does not exist. The price can be adjusted ±25%.',
-    payback: 'Payback', capRate: 'Cap rate',
+    calcSub: 'The nightly rate defaults to the typical rate of similar places nearby (their cards are below). Occupancy is 60% of the year: Bali has no reliable statistics, so move it to your own forecast. At the bottom — what the owner keeps after platform fees, management, costs and tax.',
+    payback: 'Payback', capRate: 'Yield per year',
     howCalced: 'How it was calculated',
     revenue: 'Revenue', platform: 'Platform', mgmt: 'Management', opex: 'Operating costs', tax: 'Tax', noi: 'Net to owner',
     phr: 'Accommodation tax', ffe: 'Wear-and-tear reserve', preTax: 'Profit before tax',
@@ -200,7 +200,7 @@ const COPY = {
     restaurant: ['restoran', 'restoran'] as [string, string],
     perNight: ' / malam',
     perYear: '/thn',
-    perYearNoi: ' / tahun NOI',
+    perYearNoi: ' / tahun bersih',
     expandedZone: (raw: string, applied: string) =>
       `Sampel diperluas: tidak ada kecocokan di zona awal (${raw}), beralih ke ${applied}.`,
     threeNumbers: 'Arti ketiga angka ini',
@@ -215,10 +215,10 @@ const COPY = {
       </>,
     scenarioBad: 'Buruk', scenarioMedian: 'Normal', scenarioGood: 'Baik',
     resetTitle: 'Setel ulang ke nilai default berbasis pesaing', reset: 'setel ulang',
-    inputPrice: 'Harga', inputAdr: 'ADR', inputOccupancy: 'Okupansi', inputMgmt: 'Biaya pengelolaan',
+    inputPrice: 'Harga', inputAdr: 'Tarif per malam', inputOccupancy: 'Okupansi', inputMgmt: 'Biaya pengelolaan',
     calcTitle: 'Kalkulator imbal hasil',
     calcSub: 'Geser slider. ADR secara default memakai median listing Booking serupa di sekitar; okupansi memakai skenario 60%, karena data okupansi Bali yang andal tidak ada. Harga bisa disesuaikan ±25%.',
-    payback: 'Balik modal', capRate: 'Cap rate',
+    payback: 'Balik modal', capRate: 'Imbal hasil per tahun',
     howCalced: 'Cara perhitungannya',
     revenue: 'Pendapatan', platform: 'Platform', mgmt: 'Pengelolaan', opex: 'Biaya operasional', tax: 'Pajak', noi: 'Bersih untuk pemilik',
     phr: 'Pajak hotel (PHR)', ffe: 'Cadangan penyusutan', preTax: 'Laba sebelum pajak',
@@ -285,7 +285,7 @@ const COPY = {
     restaurant: ['restaurant', 'restaurants'] as [string, string],
     perNight: ' / nuit',
     perYear: '/an',
-    perYearNoi: ' / an NOI',
+    perYearNoi: ' / an net',
     expandedZone: (raw: string, applied: string) =>
       `Échantillon élargi : aucune correspondance dans la zone initiale (${raw}), passage à ${applied}.`,
     threeNumbers: 'Ce que signifient ces trois chiffres',
@@ -300,10 +300,10 @@ const COPY = {
       </>,
     scenarioBad: 'Mauvais', scenarioMedian: 'Normal', scenarioGood: 'Bon',
     resetTitle: 'Réinitialiser aux valeurs par défaut basées sur les concurrents', reset: 'réinitialiser',
-    inputPrice: 'Prix', inputAdr: 'ADR', inputOccupancy: 'Occupation', inputMgmt: 'Frais de gestion',
+    inputPrice: 'Prix', inputAdr: 'Prix par nuit', inputOccupancy: 'Occupation', inputMgmt: 'Frais de gestion',
     calcTitle: 'Calculateur de rendement',
     calcSub: 'Déplacez les curseurs. L’ADR prend par défaut la médiane des annonces Booking similaires à proximité ; l’occupation un scénario de 60 %, faute de données fiables à Bali. Le prix est ajustable de ±25 %.',
-    payback: 'Amortissement', capRate: 'Cap rate',
+    payback: 'Amortissement', capRate: 'Rendement annuel',
     howCalced: 'Méthode de calcul',
     revenue: 'Revenus', platform: 'Plateforme', mgmt: 'Gestion', opex: 'Charges d\'exploitation', tax: 'Impôt', noi: 'Net propriétaire',
     phr: 'Taxe de séjour', ffe: 'Réserve d\'usure', preTax: 'Bénéfice avant impôt',
@@ -370,7 +370,7 @@ const COPY = {
     restaurant: ['Restaurant', 'Restaurants'] as [string, string],
     perNight: ' / Nacht',
     perYear: '/Jahr',
-    perYearNoi: ' / Jahr NOI',
+    perYearNoi: ' / Jahr netto',
     expandedZone: (raw: string, applied: string) =>
       `Erweiterte Stichprobe: keine Treffer in der ursprünglichen Zone (${raw}), gewechselt zu ${applied}.`,
     threeNumbers: 'Was diese drei Zahlen bedeuten',
@@ -385,10 +385,10 @@ const COPY = {
       </>,
     scenarioBad: 'Schlecht', scenarioMedian: 'Normal', scenarioGood: 'Gut',
     resetTitle: 'Auf wettbewerbsbasierte Standardwerte zurücksetzen', reset: 'zurücksetzen',
-    inputPrice: 'Preis', inputAdr: 'ADR', inputOccupancy: 'Auslastung', inputMgmt: 'Verwaltungsgebühr',
+    inputPrice: 'Preis', inputAdr: 'Preis pro Nacht', inputOccupancy: 'Auslastung', inputMgmt: 'Verwaltungsgebühr',
     calcTitle: 'Rendite-Rechner',
     calcSub: 'Bewegen Sie die Regler. ADR entspricht standardmäßig dem Median ähnlicher Booking-Angebote in der Nähe, die Auslastung einem Szenario von 60 % – verlässliche Auslastungsdaten für Bali gibt es nicht. Der Preis ist um ±25 % anpassbar.',
-    payback: 'Amortisation', capRate: 'Cap Rate',
+    payback: 'Amortisation', capRate: 'Rendite pro Jahr',
     howCalced: 'Wie es berechnet wurde',
     revenue: 'Umsatz', platform: 'Plattform', mgmt: 'Verwaltung', opex: 'Betriebskosten', tax: 'Steuer', noi: 'Netto für Eigentümer',
     phr: 'Beherbergungssteuer', ffe: 'Abnutzungsrücklage', preTax: 'Gewinn vor Steuern',
@@ -455,7 +455,7 @@ const COPY = {
     restaurant: ['餐厅', '餐厅'] as [string, string],
     perNight: ' / 晚',
     perYear: '/年',
-    perYearNoi: ' / 年 NOI',
+    perYearNoi: ' / 年 净收入',
     expandedZone: (raw: string, applied: string) =>
       `扩大样本：原始区域（${raw}）没有匹配，已切换到 ${applied}。`,
     threeNumbers: '这三个数字的含义',
@@ -470,10 +470,10 @@ const COPY = {
       </>,
     scenarioBad: '差', scenarioMedian: '正常', scenarioGood: '好',
     resetTitle: '重置为基于竞品的默认值', reset: '重置',
-    inputPrice: '价格', inputAdr: 'ADR', inputOccupancy: '入住率', inputMgmt: '管理费',
+    inputPrice: '价格', inputAdr: '每晚房价', inputOccupancy: '入住率', inputMgmt: '管理费',
     calcTitle: '收益计算器',
     calcSub: '拖动滑块。ADR默认取附近类似Booking房源的中位数；入住率默认取60%的情景值，因为巴厘岛没有可靠的入住率数据。价格可调整±25%。',
-    payback: '回本周期', capRate: '资本化率',
+    payback: '回本周期', capRate: '年收益率',
     howCalced: '如何计算',
     revenue: '收入', platform: '平台', mgmt: '管理', opex: '运营支出', tax: '税费', noi: '业主净收入',
     phr: '住宿税', ffe: '折旧准备金', preTax: '税前利润',
@@ -540,7 +540,7 @@ const COPY = {
     restaurant: ['restaurant', 'restaurants'] as [string, string],
     perNight: ' / nacht',
     perYear: '/jr',
-    perYearNoi: ' / jaar NOI',
+    perYearNoi: ' / jaar netto',
     expandedZone: (raw: string, applied: string) =>
       `Uitgebreide steekproef: geen matches in de oorspronkelijke zone (${raw}), overgeschakeld naar ${applied}.`,
     threeNumbers: 'Wat deze drie cijfers betekenen',
@@ -555,10 +555,10 @@ const COPY = {
       </>,
     scenarioBad: 'Slecht', scenarioMedian: 'Normaal', scenarioGood: 'Goed',
     resetTitle: 'Terugzetten naar op concurrenten gebaseerde standaardwaarden', reset: 'reset',
-    inputPrice: 'Prijs', inputAdr: 'ADR', inputOccupancy: 'Bezetting', inputMgmt: 'Beheerkosten',
+    inputPrice: 'Prijs', inputAdr: 'Prijs per nacht', inputOccupancy: 'Bezetting', inputMgmt: 'Beheerkosten',
     calcTitle: 'Rendementscalculator',
     calcSub: 'Sleep de schuifregelaars. ADR neemt standaard de mediaan van vergelijkbare Booking-advertenties in de buurt; bezetting een scenario van 60%, omdat betrouwbare bezettingsdata voor Bali ontbreken. De prijs is met ±25% aanpasbaar.',
-    payback: 'Terugverdientijd', capRate: 'Cap rate',
+    payback: 'Terugverdientijd', capRate: 'Rendement per jaar',
     howCalced: 'Hoe het is berekend',
     revenue: 'Omzet', platform: 'Platform', mgmt: 'Beheer', opex: 'Exploitatiekosten', tax: 'Belasting', noi: 'Netto voor eigenaar',
     phr: 'Verblijfsbelasting', ffe: 'Slijtagereserve', preTax: 'Winst voor belasting',
@@ -625,7 +625,7 @@ const COPY = {
     restaurant: ['restoran', 'restoran'] as [string, string],
     perNight: ' / wengi',
     perYear: '/thn',
-    perYearNoi: ' / warsa NOI',
+    perYearNoi: ' / warsa bersih',
     expandedZone: (raw: string, applied: string) =>
       `Sampel kaperluas: nenten wenten kecocokan ring zona kapertama (${raw}), magentos ka ${applied}.`,
     threeNumbers: 'Arti tetiga angka puniki',
@@ -640,10 +640,10 @@ const COPY = {
       </>,
     scenarioBad: 'Kaon', scenarioMedian: 'Normal', scenarioGood: 'Becik',
     resetTitle: 'Setel malih ka nilai default madasar saingan', reset: 'setel malih',
-    inputPrice: 'Aji', inputAdr: 'ADR', inputOccupancy: 'Okupansi', inputMgmt: 'Prabéya pangelola',
+    inputPrice: 'Aji', inputAdr: 'Aji awengi', inputOccupancy: 'Okupansi', inputMgmt: 'Prabéya pangelola',
     calcTitle: 'Kalkulator hasil',
     calcSub: 'Sred slider. ADR default nganggen median listing Booking pateh ring sisi; okupansi nganggen skenario 60%, santukan data okupansi Bali sane kapercaya nenten wenten. Aji dados kasesuaiang ±25%.',
-    payback: 'Balik modal', capRate: 'Cap rate',
+    payback: 'Balik modal', capRate: 'Imbal hasil per tahun',
     howCalced: 'Sapunapi itunganne',
     revenue: 'Pikolih', platform: 'Platform', mgmt: 'Pangelola', opex: 'Prabea operasional', tax: 'Pajak', noi: 'Bersih ring sang nuwenang',
     phr: 'Pajak hotel (PHR)', ffe: 'Cadangan panyusutan', preTax: 'Bati sadurung pajak',
@@ -710,7 +710,7 @@ const COPY = {
     restaurant: ['restauracja', 'restauracje'] as [string, string],
     perNight: ' / noc',
     perYear: '/rok',
-    perYearNoi: ' / rok NOI',
+    perYearNoi: ' / rok netto',
     expandedZone: (raw: string, applied: string) =>
       `Rozszerzona próba: brak dopasowań w pierwotnej strefie (${raw}), przełączono na ${applied}.`,
     threeNumbers: 'Co oznaczają te trzy liczby',
@@ -725,10 +725,10 @@ const COPY = {
       </>,
     scenarioBad: 'Zły', scenarioMedian: 'Normalny', scenarioGood: 'Dobry',
     resetTitle: 'Przywróć wartości domyślne oparte na konkurencji', reset: 'resetuj',
-    inputPrice: 'Cena', inputAdr: 'ADR', inputOccupancy: 'Obłożenie', inputMgmt: 'Opłata za zarządzanie',
+    inputPrice: 'Cena', inputAdr: 'Cena za noc', inputOccupancy: 'Obłożenie', inputMgmt: 'Opłata za zarządzanie',
     calcTitle: 'Kalkulator rentowności',
     calcSub: 'Przesuń suwaki. ADR domyślnie przyjmuje medianę podobnych pobliskich ogłoszeń Booking, obłożenie — scenariusz 60%, bo wiarygodnych danych o obłożeniu na Bali nie ma. Cenę można zmieniać o ±25%.',
-    payback: 'Zwrot', capRate: 'Cap rate',
+    payback: 'Zwrot', capRate: 'Rentowność roczna',
     howCalced: 'Jak to obliczono',
     revenue: 'Przychód', platform: 'Platforma', mgmt: 'Zarządzanie', opex: 'Koszty operacyjne', tax: 'Podatek', noi: 'Netto dla właściciela',
     phr: 'Podatek od zakwaterowania', ffe: 'Rezerwa na zużycie', preTax: 'Zysk przed opodatkowaniem',
@@ -795,7 +795,7 @@ const COPY = {
     restaurant: ['ресторан', 'ресторани'] as [string, string],
     perNight: ' / ніч',
     perYear: '/рік',
-    perYearNoi: ' / рік NOI',
+    perYearNoi: ' / рік чистими',
     expandedZone: (raw: string, applied: string) =>
       `Розширена вибірка: у вихідній зоні (${raw}) немає збігів, перейшли на ${applied}.`,
     threeNumbers: 'Що означають ці три цифри',
@@ -810,10 +810,10 @@ const COPY = {
       </>,
     scenarioBad: 'Поганий', scenarioMedian: 'Нормальний', scenarioGood: 'Добрий',
     resetTitle: 'Скинути до значень на основі конкурентів', reset: 'скинути',
-    inputPrice: 'Ціна', inputAdr: 'ADR', inputOccupancy: 'Заповнюваність', inputMgmt: 'Плата за управління',
+    inputPrice: 'Ціна', inputAdr: 'Ціна за ніч', inputOccupancy: 'Заповнюваність', inputMgmt: 'Плата за управління',
     calcTitle: 'Калькулятор дохідності',
     calcSub: 'Пересувайте повзунки. ADR за замовчуванням — медіана схожих сусідніх оголошень Booking, завантаження — сценарій 60%: надійних даних про завантаження на Балі немає. Ціну можна змінювати на ±25%.',
-    payback: 'Окупність', capRate: 'Cap rate',
+    payback: 'Окупність', capRate: 'Дохідність на рік',
     howCalced: 'Як це розраховано',
     revenue: 'Дохід', platform: 'Платформа', mgmt: 'Управління', opex: 'Операційні витрати', tax: 'Податок', noi: 'Чистими власнику',
     phr: 'Податок на проживання', ffe: 'Резерв на знос', preTax: 'Прибуток до податку',
@@ -997,8 +997,9 @@ function Banner({ tone, icon, children, className }: { tone: 'info' | 'danger' |
 function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
   const t = pickCopy(COPY, lang)
   const { currency } = useCurrency()
+  // fmtMoney сам переводит доллары в валюту посетителя — курс сюда не
+  // умножать: раньше перевод шёл дважды, и в рупиях цена раздувалась в 16 000 раз.
   const fmtUsd = (n: number | null | undefined) => fmtMoney(n, currency)
-  const fxRate = CURRENCY_RATES[currency]
   const sc = snap.scenarios!
   const basePrice = snap.villa.askingPrice
 
@@ -1078,10 +1079,10 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
         {basePrice != null && (
           <Slider label={t.inputPrice} value={price} min={priceLo} max={priceHi} step={500}
-            onChange={setPrice} display={fmtUsd(Math.round(price * fxRate))} />
+            onChange={setPrice} display={fmtUsd(Math.round(price))} />
         )}
         <Slider label={t.inputAdr} value={adr} min={adrLo} max={adrHi} step={1}
-          onChange={setAdr} display={fmtUsd(Math.round(adr * fxRate))}
+          onChange={setAdr} display={fmtUsd(Math.round(adr))}
           zones={adrZones} zonesLabel={t.densityScale} />
         <Slider label={t.inputOccupancy} value={occ} min={0} max={100} step={1}
           onChange={setOcc} display={`${occ}%`} />
@@ -1147,10 +1148,10 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
         <ul className="mt-2 text-[12px] text-[var(--color-text)] space-y-0.5 border-t border-[var(--color-border)] pt-2">
           <li>
             {t.revenue}: {fmtUsd(e.revenue)}
-            <span className="text-[var(--color-text-muted)]"> · {fmtUsd(Math.round(e.adr * fxRate))} × 365 × {Math.round(e.occupancy * 100)}%</span>
+            <span className="text-[var(--color-text-muted)]"> · {fmtUsd(Math.round(e.adr))} × 365 × {Math.round(e.occupancy * 100)}%</span>
           </li>
           <li className="text-[var(--color-text-muted)]">
-            {t.adrRealization}: {Math.round(snap.region.adrRealizationByScenario.median * 100)}% · {fmtUsd(Math.round(e.adrAsking * fxRate))} → {fmtUsd(Math.round(e.adr * fxRate))}
+            {t.adrRealization}: {Math.round(snap.region.adrRealizationByScenario.median * 100)}% · {fmtUsd(Math.round(e.adrAsking))} → {fmtUsd(Math.round(e.adr))}
           </li>
           <li>
             − {t.platform} ({Math.round(snap.region.platformFeePct * 100)}%): {fmtUsd(e.platformFee)}
@@ -1167,18 +1168,18 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
           <li>
             − {t.opex} ({e.opexAtFloor ? t.opexFloorNote : `${snap.region.opexPerSqmMonth} ${opexUnit}`}): {fmtUsd(e.opex)}
           </li>
-          <li className="pl-4 text-[var(--color-text-muted)]">· {t.utilities}: {fmtUsd(Math.round(e.opexParts.utilities * fxRate))}</li>
-          <li className="pl-4 text-[var(--color-text-muted)]">· {t.staff}: {fmtUsd(Math.round(e.opexParts.staff * fxRate))}</li>
-          <li className="pl-4 text-[var(--color-text-muted)]">· {t.supplies}: {fmtUsd(Math.round(e.opexParts.supplies * fxRate))}</li>
-          <li className="pl-4 text-[var(--color-text-muted)]">· {t.poolGarden}: {fmtUsd(Math.round(e.opexParts.poolGarden * fxRate))}</li>
-          <li className="pl-4 text-[var(--color-text-muted)]">· {t.otherOpex}: {fmtUsd(Math.round(e.opexParts.other * fxRate))}</li>
+          <li className="pl-4 text-[var(--color-text-muted)]">· {t.utilities}: {fmtUsd(Math.round(e.opexParts.utilities))}</li>
+          <li className="pl-4 text-[var(--color-text-muted)]">· {t.staff}: {fmtUsd(Math.round(e.opexParts.staff))}</li>
+          <li className="pl-4 text-[var(--color-text-muted)]">· {t.supplies}: {fmtUsd(Math.round(e.opexParts.supplies))}</li>
+          <li className="pl-4 text-[var(--color-text-muted)]">· {t.poolGarden}: {fmtUsd(Math.round(e.opexParts.poolGarden))}</li>
+          <li className="pl-4 text-[var(--color-text-muted)]">· {t.otherOpex}: {fmtUsd(Math.round(e.opexParts.other))}</li>
           <li>
             − {t.ffe} ({Math.round(snap.region.ffeReservePct * 100)}%): {fmtUsd(e.ffeReserve)}
             <span className="text-[var(--color-text-muted)]"> · {t.ffeHint}</span>
           </li>
           {e.pbbTax > 0 && (
             <li>
-              − {t.pbb}: {fmtUsd(Math.round(e.pbbTax * fxRate))}
+              − {t.pbb}: {fmtUsd(Math.round(e.pbbTax))}
               <span className="text-[var(--color-text-muted)]"> · {t.pbbHint}</span>
             </li>
           )}
@@ -1190,8 +1191,8 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
           <li className="pt-1 border-t border-[var(--color-border)] mt-1 font-medium">= {t.noi}: {fmtUsd(e.noi)}</li>
           {e.entryPrice != null && (
             <li className="pt-2 mt-1 border-t border-[var(--color-border)] text-[var(--color-text-muted)]">
-              {t.entryPrice}: {fmtUsd(Math.round(e.entryPrice * fxRate))} · {fmtUsd(Math.round(price * fxRate))} + {t.closing} {fmtUsd(Math.round(e.closingCost * fxRate))}
-              {e.furnishing > 0 ? ` + ${t.furnishing} ${fmtUsd(Math.round(e.furnishing * fxRate))}` : ''}
+              {t.entryPrice}: {fmtUsd(Math.round(e.entryPrice))} · {fmtUsd(Math.round(price))} + {t.closing} {fmtUsd(Math.round(e.closingCost))}
+              {e.furnishing > 0 ? ` + ${t.furnishing} ${fmtUsd(Math.round(e.furnishing))}` : ''}
             </li>
           )}
           <li className="pt-2 mt-1 border-t border-[var(--color-border)] text-[var(--color-text-muted)]">
