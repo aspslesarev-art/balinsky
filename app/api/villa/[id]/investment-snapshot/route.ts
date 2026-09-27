@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { isRecordId } from '@/lib/record-id'
 import { buildSnapshot } from '@/lib/investment/snapshot'
 
 // isr-ttl-ok: вызывается только при сборке презентации по юниту, не
@@ -11,7 +12,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params
-  if (!id || !/^rec[a-zA-Z0-9]{14,}$/.test(id)) {
+  if (!isRecordId(id)) {
     return NextResponse.json({ error: 'invalid_id' }, { status: 400 })
   }
   try {

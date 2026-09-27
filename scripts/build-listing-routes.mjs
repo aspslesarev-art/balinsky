@@ -71,7 +71,9 @@ async function loadListings() {
     rows.push(...(data ?? []))
     if (!data || data.length < 1000) break
   }
-  const kindFiltered = KINDS.length ? rows.filter(r => KINDS.includes(r.kind)) : rows
+  // Копия, а не тот же массив: ниже rows очищается, и без --kind режим
+  // --only-missing всегда получал пустой список.
+  const kindFiltered = KINDS.length ? rows.filter(r => KINDS.includes(r.kind)) : [...rows]
   if (!ONLY_MISSING) return kindFiltered
   rows.length = 0
   rows.push(...kindFiltered)

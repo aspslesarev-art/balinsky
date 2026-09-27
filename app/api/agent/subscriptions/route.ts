@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { verifyInitData } from '@/lib/telegram-webapp-auth'
+import { isRecordId } from '@/lib/record-id'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -40,7 +41,7 @@ export async function POST(req: Request) {
   let body: { developerIds?: unknown }
   try { body = await req.json() } catch { return NextResponse.json({ error: 'bad json' }, { status: 400 }) }
   if (!Array.isArray(body.developerIds)) return NextResponse.json({ error: 'developerIds[] required' }, { status: 400 })
-  const ids = body.developerIds.filter((s): s is string => typeof s === 'string' && /^rec[a-zA-Z0-9]+$/.test(s)).slice(0, 200)
+  const ids = body.developerIds.filter(isRecordId).slice(0, 200)
 
   // Two-step: delete the user's current set, insert the new set. Wrapping
   // both in a single SQL transaction would be nicer, but supabase-js can't
