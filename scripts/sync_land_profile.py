@@ -91,6 +91,50 @@ def translate_via_azure(p) -> dict | None:
     return None
 
 
+TX_FIELDS = ("kabupaten", "kecamatan", "desa", "zona_name", "subzona_name",
+             "gsb_setback", "building_height", "regulation")
+
+
+def build_translation_cache(sb, sb_url: str) -> dict[str, dict[str, dict]]:
+    """Переводы, уже сделанные для других участков: поле → исходный текст →
+    {ru, en}. Районы, деревни, зоны и регламенты повторяются, поэтому новый
+    участок почти всегда переводится без Azure."""
+    cache: dict[str, dict[str, dict]] = {f: {} for f in TX_FIELDS}
+    for _, dest in KIND_TO_TABLES.values():
+        r = sb.get(f"{sb_url}/rest/v1/{dest}?select={','.join(TX_FIELDS)},translations&translations=not.is.null&limit=20000", timeout=60)
+        if r.status_code != 200:
+            continue
+        for row in r.json():
+            tr = row.get("translations") or {}
+            ru, en = tr.get("ru") or {}, tr.get("en") or {}
+            for f in TX_FIELDS:
+                src = row.get(f)
+                if src and f in ru and f in en and src not in cache[f]:
+                    cache[f][src] = {"ru": ru[f], "en": en[f]}
+    return cache
+
+
+def translate_from_cache(p, cache) -> tuple[dict | None, list[str]]:
+    src = {
+        "kabupaten": p.Kabupaten, "kecamatan": p.Kecamatan, "desa": p.Desa,
+        "zona_name": p.Zona_Name, "subzona_name": p.Subzona_Name,
+        "gsb_setback": p.GSB_Setback, "building_height": p.Building_Height,
+        "regulation": p.Regulation,
+    }
+    ru: dict = {}
+    en: dict = {}
+    missing: list[str] = []
+    for f, v in src.items():
+        if not v:
+            continue
+        hit = cache.get(f, {}).get(v)
+        if hit:
+            ru[f], en[f] = hit["ru"], hit["en"]
+        else:
+            missing.append(f)
+    return ({"ru": ru, "en": en} if ru else None), missing
+
+
 def compute_trust_score(p) -> int:
     score = 100
     if p.Uses_Hotel == "forbidden" and p.Uses_Villa == "forbidden":
@@ -217,6 +261,7 @@ def sync_kind(kind: str, args) -> tuple[int, int]:
     )
 
     profiler = make_session()
+    tx_cache = build_translation_cache(sb, SB_URL)
     ok = 0
     failed = 0
     for i, (aid, lat, lon) in enumerate(queue, 1):
@@ -227,7 +272,13 @@ def sync_kind(kind: str, args) -> tuple[int, int]:
             failed += 1
             continue
 
-        translations = translate_via_azure(p) if p.Zona_Name else None
+        # Сначала переводы из уже переведённых участков; Azure — только с
+        # явным --allow-azure (платно) и только если чего-то не нашлось.
+        translations, missing = translate_from_cache(p, tx_cache) if p.Zona_Name else (None, [])
+        if missing and args.allow_azure:
+            translations = translate_via_azure(p) or translations
+        elif missing:
+            print(f"[{i}/{len(queue)}] {aid} без перевода: {', '.join(missing)}", file=sys.stderr)
 
         body = {
             "airtable_id": aid,
@@ -305,6 +356,7 @@ def main() -> None:
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--delay", type=float, default=0.4)
+    ap.add_argument("--allow-azure", action="store_true", help="переводить через Azure то, чего нет в уже переведённых участках (платно)")
     args = ap.parse_args()
 
     load_env_local()
