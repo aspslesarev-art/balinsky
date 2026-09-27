@@ -27,8 +27,6 @@ import { ManagerCard } from '@/components/ManagerCard'
 import { InlinePrice } from '@/components/InlinePrice'
 import { loadManagersByDeveloperName } from '@/lib/managers'
 import { getDeveloperStats } from '@/lib/developer-stats'
-import { reliabilityScore } from '@/lib/developer-reliability'
-import { StarRating } from '@/components/StarRating'
 import { VillaCard, type VillaCardData } from '@/components/VillaCard'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { distanceKm as haversineKm } from '@/lib/competitor-utils'
@@ -1512,11 +1510,10 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   const developerName = firstString(d['Developer1']) ?? firstString(d['Варианты поиска застройщика'])
   const managers = await loadManagersByDeveloperName(developerName)
   const devStats = await getDeveloperStats(developerName)
-  // TASK-13b: developer reliability index shown on the complex (trust signal
-  // for the buyer). Visible only — the rating markup lives on the developer
-  // page, not duplicated across every complex.
-  const devReliability = devStats && (devStats.ready > 0 || devStats.inProgress > 0)
-    ? { score: reliabilityScore(devStats), completed: devStats.ready }
+  // Plain portfolio counts under the developer name — facts only, no
+  // reliability score (ratings removed 2026-09-27).
+  const devPortfolio = devStats && (devStats.ready > 0 || devStats.inProgress > 0)
+    ? { completed: devStats.ready, active: devStats.inProgress }
     : null
   // Resolve the developer by name → slug + logo so we can link to
   // /ru/zastrojshhiki/<slug> directly instead of just to the
@@ -1583,7 +1580,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   ].filter(Boolean) as { Icon: typeof Building2; label: string; value: string }[]
 
   const ready = readiness(d)
-  // Инвест-сигналы 2–4 (сигнал 1 = надёжность застройщика, выше): доходность
+  // Инвест-сигналы: доходность
   // аренды, пляжная зона, загрузка vs район, срок сдачи. Синтез из уже
   // загруженных units/marketStats/access + кэшированной медианы по району.
   const districtMediansMap = await loadDistrictOccupancyMedians().catch(() => null)
@@ -2100,13 +2097,20 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
                 <div className="flex-1 min-w-0">
                   <div className="text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] mb-1">{copy.builtBy}</div>
                   <div className="text-[19px] font-semibold text-[#111827] truncate">{developerLink.name}</div>
-                  {devReliability && (
-                    <div className="mt-1.5 flex items-center gap-1.5">
-                      <StarRating value={devReliability.score} size={14} />
-                      <span className="text-[13px] font-semibold text-[#111827]">{devReliability.score.toFixed(1)}</span>
-                      <span className="text-[12px] text-[var(--color-text-muted)]">
-                        {pickCopy({ ru: `надёжность Balinsky · ${devReliability.completed} сданных`, en: `Balinsky reliability · ${devReliability.completed} completed`, id: `Keandalan Balinsky · ${devReliability.completed} selesai`, fr: `Fiabilité Balinsky · ${devReliability.completed} livrés`, de: `Balinsky-Zuverlässigkeit · ${devReliability.completed} fertiggestellt`, zh: `Balinsky 可靠性 · ${devReliability.completed} 套已交付`, nl: `Balinsky-betrouwbaarheid · ${devReliability.completed} opgeleverd`, ban: `Kapercayan Balinsky · ${devReliability.completed} pragat`, pl: `Wiarygodność Balinsky · ${devReliability.completed} ukończonych`, uk: `Надійність Balinsky · ${devReliability.completed} зданих` }, lang)}
-                      </span>
+                  {devPortfolio && (
+                    <div className="mt-1.5 text-[13px] text-[var(--color-text-muted)]">
+                      {pickCopy({
+                        ru: `Сдано проектов: ${devPortfolio.completed} · строится: ${devPortfolio.active}`,
+                        en: `Completed projects: ${devPortfolio.completed} · under construction: ${devPortfolio.active}`,
+                        id: `Proyek selesai: ${devPortfolio.completed} · dalam pembangunan: ${devPortfolio.active}`,
+                        fr: `Projets livrés : ${devPortfolio.completed} · en construction : ${devPortfolio.active}`,
+                        de: `Fertige Projekte: ${devPortfolio.completed} · im Bau: ${devPortfolio.active}`,
+                        zh: `已完成项目：${devPortfolio.completed} · 在建：${devPortfolio.active}`,
+                        nl: `Opgeleverde projecten: ${devPortfolio.completed} · in aanbouw: ${devPortfolio.active}`,
+                        ban: `Proyek puput: ${devPortfolio.completed} · kantun kakaryanin: ${devPortfolio.active}`,
+                        pl: `Ukończone projekty: ${devPortfolio.completed} · w budowie: ${devPortfolio.active}`,
+                        uk: `Зданих проєктів: ${devPortfolio.completed} · будується: ${devPortfolio.active}`,
+                      }, lang)}
                     </div>
                   )}
                   <div className="mt-1 text-[13px] text-[var(--color-primary-pressed)] font-medium inline-flex items-center gap-1 group-hover:gap-2 transition-all">

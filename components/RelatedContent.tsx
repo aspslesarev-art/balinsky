@@ -5,13 +5,11 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { Building2, HardHat, ChevronRight } from 'lucide-react'
-import { StarRating } from '@/components/StarRating'
 import { VillaCard } from '@/components/VillaCard'
 import { ApartmentCard } from '@/components/ApartmentCard'
 import { complexSlugByName, complexSlugForText, complexNameBySlug } from '@/lib/complex-index'
 import { loadUnitsForComplex } from '@/lib/complex-units'
 import { developerLogoBySlug } from '@/lib/developer-logo'
-import { reliabilityForDeveloper } from '@/lib/developer-reliability'
 import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
@@ -26,7 +24,6 @@ const COPY = {
     complexHeading: 'Жилой комплекс',
     viewComplex: 'Смотреть комплекс',
     unitsHeading: 'Объекты этого комплекса',
-    reliability: (n: number) => `надёжность Balinsky · ${n} сданных`,
   },
   en: {
     developerHeading: 'Developer',
@@ -36,7 +33,6 @@ const COPY = {
     complexHeading: 'Residential complex',
     viewComplex: 'View complex',
     unitsHeading: 'Units in this complex',
-    reliability: (n: number) => `Balinsky reliability · ${n} completed`,
   },
   id: {
     developerHeading: 'Pengembang',
@@ -46,7 +42,6 @@ const COPY = {
     complexHeading: 'Kompleks hunian',
     viewComplex: 'Lihat kompleks',
     unitsHeading: 'Unit di kompleks ini',
-    reliability: (n: number) => `keandalan Balinsky · ${n} selesai`,
   },
   fr: {
     developerHeading: 'Promoteur',
@@ -56,7 +51,6 @@ const COPY = {
     complexHeading: 'Résidence',
     viewComplex: 'Voir la résidence',
     unitsHeading: 'Biens de cette résidence',
-    reliability: (n: number) => `fiabilité Balinsky · ${n} livrés`,
   },
   de: {
     developerHeading: 'Bauträger',
@@ -66,7 +60,6 @@ const COPY = {
     complexHeading: 'Wohnanlage',
     viewComplex: 'Wohnanlage ansehen',
     unitsHeading: 'Einheiten in dieser Wohnanlage',
-    reliability: (n: number) => `Balinsky-Zuverlässigkeit · ${n} fertiggestellt`,
   },
   zh: {
     developerHeading: '开发商',
@@ -76,7 +69,6 @@ const COPY = {
     complexHeading: '住宅区',
     viewComplex: '查看住宅区',
     unitsHeading: '此住宅区的房源',
-    reliability: (n: number) => `Balinsky 可靠度 · ${n} 套已交付`,
   },
   nl: {
     developerHeading: 'Ontwikkelaar',
@@ -86,7 +78,6 @@ const COPY = {
     complexHeading: 'Wooncomplex',
     viewComplex: 'Wooncomplex bekijken',
     unitsHeading: 'Objecten in dit wooncomplex',
-    reliability: (n: number) => `Balinsky-betrouwbaarheid · ${n} opgeleverd`,
   },
   ban: {
     developerHeading: 'Pangwangun',
@@ -96,7 +87,6 @@ const COPY = {
     complexHeading: 'Kompleks hunian',
     viewComplex: 'Cingak kompleks',
     unitsHeading: 'Unit ring kompleks puniki',
-    reliability: (n: number) => `keandalan Balinsky · ${n} puput`,
   },
   pl: {
     developerHeading: 'Deweloper',
@@ -106,7 +96,6 @@ const COPY = {
     complexHeading: 'Kompleks mieszkaniowy',
     viewComplex: 'Zobacz kompleks',
     unitsHeading: 'Jednostki w tym kompleksie',
-    reliability: (n: number) => `wiarygodność Balinsky · ${n} ukończonych`,
   },
   uk: {
     developerHeading: 'Забудовник',
@@ -116,7 +105,6 @@ const COPY = {
     complexHeading: 'Житловий комплекс',
     viewComplex: 'Переглянути комплекс',
     unitsHeading: 'Об’єкти цього комплексу',
-    reliability: (n: number) => `надійність Balinsky · ${n} зданих`,
   },
 } as const
 
@@ -148,9 +136,8 @@ export async function RelatedContent({
     (await complexSlugForText(title, ...(complexNames ?? [])))
   const complexName = complexSlug ? (await complexNameBySlug(complexSlug)) ?? exactName : null
 
-  const [logoUrl, reliability, units] = await Promise.all([
+  const [logoUrl, units] = await Promise.all([
     dev?.slug ? developerLogoBySlug(dev.slug) : Promise.resolve(null),
-    dev?.name ? reliabilityForDeveloper(dev.name) : Promise.resolve(null),
     complexName ? loadUnitsForComplex(complexName, lang) : Promise.resolve([]),
   ])
 
@@ -182,13 +169,6 @@ export async function RelatedContent({
               <div className="flex-1 min-w-0">
                 <div className="text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] mb-1">{c.builtBy}</div>
                 <div className="text-[19px] font-semibold text-[#111827] truncate">{dev.name}</div>
-                {reliability && (
-                  <div className="mt-1.5 flex items-center gap-1.5">
-                    <StarRating value={reliability.score} size={14} />
-                    <span className="text-[13px] font-semibold text-[#111827]">{reliability.score.toFixed(1)}</span>
-                    <span className="text-[12px] text-[var(--color-text-muted)]">{c.reliability(reliability.completed)}</span>
-                  </div>
-                )}
                 <div className="mt-1 text-[13px] text-[var(--color-primary-pressed)] font-medium inline-flex items-center gap-1 group-hover:gap-2 transition-all">
                   {c.viewDeveloper} <ChevronRight size={14} />
                 </div>

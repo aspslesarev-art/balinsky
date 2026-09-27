@@ -69,8 +69,8 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
       description: `${n} ${ruComplex} на Бали с инфраструктурой. Статус PBG/SLF и зона земли, сроки сдачи${dev ? `, акции от ${dev} застройщиков` : ''}.`,
     },
     developers: {
-      title: `${n} застройщиков на Бали с рейтингом | Balinsky`,
-      description: `${n} застройщиков Бали с рейтингом по 4 критериям: качество, опыт, техника, УК. Сданные проекты, активные стройки, акции.`,
+      title: `${n} застройщиков на Бали — проекты и сданные объекты | Balinsky`,
+      description: `${n} застройщиков Бали: сданные проекты, активные стройки, количество юнитов, управляющие компании, акции.`,
     },
     rental: {
       title: `Аренда на Бали${n ? `: ${n} объектов` : ''} помесячно и посуточно | Balinsky`,
@@ -120,8 +120,8 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
       description: `${n} kompleks di Bali dengan infrastruktur. Status PBG/SLF dan zona tanah, tanggal serah terima${dev ? `, promo dari ${dev} pengembang` : ''}.`,
     },
     developers: {
-      title: `${n} pengembang properti di Bali dengan peringkat | Balinsky`,
-      description: `${n} pengembang properti Bali dengan peringkat 4 kriteria: kualitas, pengalaman, teknik, pengelolaan. Proyek selesai, pembangunan aktif, promo.`,
+      title: `${n} pengembang properti di Bali — proyek dan rekam jejak | Balinsky`,
+      description: `${n} pengembang properti Bali: proyek selesai, pembangunan aktif, jumlah unit, perusahaan pengelola, promo.`,
     },
     rental: {
       title: `Sewa di Bali: ${n ? `${n} properti` : 'properti'} bulanan & harian | Balinsky`,
@@ -143,8 +143,8 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
       description: `${n} résidences à Bali avec infrastructures. Statut PBG/SLF et zone du terrain, dates de livraison${dev ? `, offres de ${dev} promoteurs` : ''}.`,
     },
     developers: {
-      title: `Promoteur immobilier à Bali : ${n} promoteurs notés | Balinsky`,
-      description: `${n} promoteurs immobiliers à Bali notés sur 4 critères : qualité, expérience, ingénierie, gestion. Projets livrés, chantiers actifs, offres.`,
+      title: `Promoteur immobilier à Bali : ${n} promoteurs, projets et historique | Balinsky`,
+      description: `${n} promoteurs immobiliers à Bali : projets livrés, chantiers actifs, nombre d’unités, sociétés de gestion, offres.`,
     },
     rental: {
       title: `Location à Bali : ${n ? `${n} biens` : 'biens'} au mois et à la journée | Balinsky`,
@@ -166,8 +166,8 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
       description: `${n} Bali-Anlagen mit Infrastruktur. PBG/SLF-Status und Grundstückszone, Übergabetermine${dev ? `, Angebote von ${dev} Bauträgern` : ''}.`,
     },
     developers: {
-      title: `${n} Bali-Bauträger mit Bewertung | Balinsky`,
-      description: `${n} Bali-Bauträger bewertet nach 4 Kriterien: Qualität, Erfahrung, Technik, Verwaltung. Fertige Projekte, aktive Bauten, Angebote.`,
+      title: `${n} Bali-Bauträger — Projekte und Referenzen | Balinsky`,
+      description: `${n} Bali-Bauträger: fertige Projekte, aktive Bauten, Anzahl der Einheiten, Verwaltungsgesellschaften, Angebote.`,
     },
     rental: {
       title: `Miete auf Bali: ${n ? `${n} ` : ''}Monats- & Tagesangebote | Balinsky`,
@@ -189,8 +189,8 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
       description: `${n} 个配套齐全的巴厘岛住宅区。PBG/SLF 状态与土地分区，交房日期${dev ? `，${dev} 家开发商优惠` : ''}。`,
     },
     developers: {
-      title: `${n} 家巴厘岛开发商及评级 | Balinsky`,
-      description: `${n} 家巴厘岛开发商，按 4 项标准评级：质量、经验、工程、管理。已完工项目、在建工程、优惠。`,
+      title: `${n} 家巴厘岛开发商 — 项目与业绩 | Balinsky`,
+      description: `${n} 家巴厘岛开发商：已完工项目、在建工程、单元数量、管理公司、优惠。`,
     },
     rental: {
       title: `巴厘岛租赁：${n ? `${n} 套` : ''}月租与日租房源 | Balinsky`,
@@ -212,8 +212,8 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
       description: `${n} Bali-complexen met voorzieningen. PBG/SLF-status en grondzone, opleverdata${dev ? `, aanbiedingen van ${dev} ontwikkelaars` : ''}.`,
     },
     developers: {
-      title: `${n} vastgoedontwikkelaars op Bali met beoordeling | Balinsky`,
-      description: `${n} vastgoedontwikkelaars op Bali beoordeeld op 4 criteria: kwaliteit, ervaring, techniek, beheer. Voltooide projecten, actieve bouw, aanbiedingen.`,
+      title: `${n} vastgoedontwikkelaars op Bali — projecten en trackrecord | Balinsky`,
+      description: `${n} vastgoedontwikkelaars op Bali: voltooide projecten, actieve bouw, aantal units, beheermaatschappijen, aanbiedingen.`,
     },
     rental: {
       title: `Huur op Bali: ${n ? `${n} ` : ''}maand- & dagverhuur | Balinsky`,
@@ -236,8 +236,8 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
       description: `${n} kompleks ring Bali sareng infrastruktur. Status PBG/SLF lan zona tanah, tanggal serah terima${dev ? `, promo saking ${dev} pangwangun` : ''}.`,
     },
     developers: {
-      title: `${n} pangwangun ring Bali sareng peringkat | Balinsky`,
-      description: `${n} pangwangun Bali sareng peringkat 4 kriteria: kualitas, pengalaman, teknik, pangelolaan. Proyék sané puput, wangunan sané kantun mamargi, promo.`,
+      title: `${n} pangwangun ring Bali — proyek lan pengalaman | Balinsky`,
+      description: `${n} pangwangun Bali: proyék sané puput, wangunan sané kantun mamargi, akeh unit, perusahaan pangelola, promo.`,
     },
     rental: {
       title: `Sewa ring Bali: ${n ? `${n} ` : ''}umah sewa bulanan miwah harian | Balinsky`,
@@ -259,8 +259,8 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
       description: `${n} kompleksów na Bali z infrastrukturą. Status PBG/SLF i strefa gruntu, terminy oddania${dev ? `, promocje od ${dev} deweloperów` : ''}.`,
     },
     developers: {
-      title: `${n} deweloperów na Bali z oceną | Balinsky`,
-      description: `${n} deweloperów na Bali ocenianych według 4 kryteriów: jakość, doświadczenie, inżynieria, zarządzanie. Ukończone projekty, aktywne budowy, promocje.`,
+      title: `${n} deweloperów na Bali — inwestycje i realizacje | Balinsky`,
+      description: `${n} deweloperów na Bali: ukończone projekty, aktywne budowy, liczba lokali, firmy zarządzające, promocje.`,
     },
     rental: {
       title: `Wynajem na Bali: ${n ? `${n} ofert` : 'oferty'} miesięcznych i dobowych | Balinsky`,
@@ -282,8 +282,8 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
       description: `${n} комплексів на Балі з інфраструктурою. Статус PBG/SLF і зона землі, терміни здачі${dev ? `, акції від ${dev} забудовників` : ''}.`,
     },
     developers: {
-      title: `${n} забудовників на Балі з рейтингом | Balinsky`,
-      description: `${n} забудовників Балі з рейтингом за 4 критеріями: якість, досвід, техніка, управління. Здані проєкти, активні будівництва, акції.`,
+      title: `${n} забудовників на Балі — проєкти та здані об’єкти | Balinsky`,
+      description: `${n} забудовників Балі: здані проєкти, активні будівництва, кількість юнітів, керуючі компанії, акції.`,
     },
     rental: {
       title: `Оренда на Балі${n ? `: ${n} об'єктів` : ''} помісячно та подобово | Balinsky`,

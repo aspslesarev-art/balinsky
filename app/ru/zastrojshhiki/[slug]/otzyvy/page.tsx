@@ -1,13 +1,13 @@
 // Programmatic landing «Отзывы о застройщике X» — targets queries
 // like «BREIG отзывы», «X bali developer reviews». Surfaces the
-// developer's rating, completed-project count, manager video count
+// developer's completed-project count, manager video count
 // and «report an error» link the SEO audit recommended. Heavy lifting
 // is in lib/managers + raw_developers; this is presentation only.
 
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { Star, Building2, HardHat, MessageSquare, AlertCircle } from 'lucide-react'
+import { Building2, HardHat, MessageSquare, AlertCircle } from 'lucide-react'
 import { createClient } from '@supabase/supabase-js'
 import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
@@ -44,8 +44,8 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   if (!row) return { robots: { index: false, follow: false } }
   const name = firstString(row.data['Developer']) ?? slug
   return {
-    title: `Отзывы о застройщике ${name} на Бали — рейтинг, проекты, опыт | Balinsky`,
-    description: `Отзывы и оценка работы застройщика ${name} на Бали: рейтинг по 4 направлениям, сданные и активные проекты, реальный опыт покупателей, контакт менеджера.`,
+    title: `Отзывы о застройщике ${name} на Бали — проекты, опыт | Balinsky`,
+    description: `Отзывы о застройщике ${name} на Бали: сданные и активные проекты, опыт покупателей, контакт менеджера.`,
     alternates: {
       canonical: `/ru/zastrojshhiki/${slug}/otzyvy`,
       languages: hreflangMap(`/ru/zastrojshhiki/${slug}/otzyvy`),
@@ -70,9 +70,6 @@ export default async function Page({ params }: { params: Params }) {
   const d = row.data
   const name = firstString(d['Developer']) ?? slug
 
-  const ratingRaw = firstString(d['Общий рейтинг'])
-  const ratingNum = ratingRaw ? Number.parseFloat(ratingRaw) : NaN
-  const rating = Number.isFinite(ratingNum) ? ratingNum.toFixed(1) : null
   const completed = firstString(d['Сданные проекты'])
   const active    = firstString(d['Активные проекты'])
   const review    = firstString(d['Telegram отзыв']) ?? firstString(d['WhatsApp отзыв'])
@@ -87,19 +84,6 @@ export default async function Page({ params }: { params: Params }) {
       { '@type': 'ListItem', position: 4, name: 'Отзывы', item: `${SITE_URL}/ru/zastrojshhiki/${slug}/otzyvy` },
     ],
   }
-  const aggregateJsonLd = rating ? {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name,
-    url: `${SITE_URL}/ru/zastrojshhiki/${slug}`,
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: rating,
-      bestRating: '5',
-      ratingCount: completed || '1',
-    },
-  } : null
-
   return (
     <>
       <Header active="zastrojshhiki" />
@@ -116,19 +100,10 @@ export default async function Page({ params }: { params: Params }) {
             Отзывы о застройщике {name} на Бали
           </h1>
           <p className="text-[15px] text-[var(--color-text-muted)] mb-8 max-w-3xl">
-            Сводная оценка работы застройщика — на основе проверки документов (PBG, SLF), портфолио сданных проектов, репутации в комьюнити агентов и фактических отзывов покупателей через @BalinskyBot.
+            Справочная информация о застройщике: сданные и строящиеся проекты и отзывы покупателей, присланные через @BalinskyBot. Balinsky не присваивает застройщикам рейтингов и не оценивает их надёжность.
           </p>
 
           <section className="mb-10 grid grid-cols-2 md:grid-cols-4 gap-3">
-            {rating && (
-              <div className="rounded-xl border border-[var(--color-border)] p-4 bg-white">
-                <div className="flex items-center gap-1.5 mb-1">
-                  <Star size={14} className="text-amber-500 fill-amber-500" />
-                  <span className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">Рейтинг</span>
-                </div>
-                <div className="text-[24px] font-semibold text-[#111827]">{rating} <span className="text-[14px] text-[var(--color-text-muted)] font-normal">/ 5</span></div>
-              </div>
-            )}
             {completed && (
               <div className="rounded-xl border border-[var(--color-border)] p-4 bg-white">
                 <div className="flex items-center gap-1.5 mb-1">
@@ -150,12 +125,12 @@ export default async function Page({ params }: { params: Params }) {
           </section>
 
           <section className="mb-10 space-y-3 text-[16px] leading-[1.7] text-[#1f2937]">
-            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-2">Как мы оцениваем застройщика</h2>
+            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[#111827] mb-2">Как проверить застройщика самому</h2>
             <p>
-              Каждый застройщик в каталоге Balinsky проходит редакторский QA по 4 направлениям: <strong>качество строительства</strong> (PBG, SLF, реальный прогресс), <strong>репутация и опыт</strong> (сколько проектов сдано, отзывы агентов), <strong>техника и производство</strong> (поставщики, технологии), <strong>управляющая компания</strong> (наличие УК, фактическая загрузка после сдачи).
+              Перед покупкой проверьте документы по конкретному объекту: разрешения <strong>PBG</strong> и <strong>SLF</strong>, назначение земли, срок и условия лизхолда, договор и график платежей. Это стоит делать с независимым юристом — наличие компании в каталоге не означает, что документы проверены.
             </p>
             <p>
-              Если хотите оставить отзыв о работе с {name} — напишите в @BalinskyBot, мы приобщим к рейтингу. Если знаете об ошибке в данных по застройщику или хотите запросить пояснение — также через бот.
+              Если хотите оставить отзыв о работе с {name} — напишите в @BalinskyBot — мы опубликуем его на этой странице. Если знаете об ошибке в данных по застройщику или хотите запросить пояснение — также через бот.
             </p>
           </section>
 
@@ -213,9 +188,6 @@ export default async function Page({ params }: { params: Params }) {
         </article>
 
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
-        {aggregateJsonLd && (
-          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(aggregateJsonLd) }} />
-        )}
       </PageContainer>
       <Footer lang="ru" />
     </>

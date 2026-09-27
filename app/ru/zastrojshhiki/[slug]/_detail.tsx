@@ -11,7 +11,6 @@ import { unstable_cache } from 'next/cache'
 import { HardHat, Building2, Award, Wrench, Users, Briefcase, ChevronRight } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
-import { reliabilityForDeveloper } from '@/lib/developer-reliability'
 import { ExpandableText } from '@/components/ExpandableText'
 import { ComplexCard, type ComplexCardData } from '@/components/ComplexCard'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
@@ -25,7 +24,7 @@ import { loadVideosByDeveloperWithComplexes } from '@/lib/videos'
 import { VideoGrid } from '@/components/VideoGrid'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { FullRecordEditor } from '@/components/FullRecordEditor'
-import { tField, pickCopy, switchLangPath, langToSegment, type Lang } from '@/lib/i18n'
+import { tField, pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
 import { cleanDeveloperBullets } from '@/lib/developer-highlights'
 import { isHiddenDeveloper } from '@/lib/hidden-developers'
@@ -251,7 +250,7 @@ const COPY = {
     devSubtitle: 'Застройщик на Бали',
     projects: 'проектов',
     districts: 'Районы',
-    ratingHeading: 'Рейтинг по направлениям',
+    sectionsHeading: 'Справка по направлениям',
     aboutHeading: 'О застройщике',
     projectsHeading: 'Проекты застройщика',
     projectsSubLine: (n: number, apts: number) => `${n} жилых комплексов${apts > 0 ? ` · ${apts} апартаментов в продаже` : ''}`,
@@ -282,7 +281,7 @@ const COPY = {
     devSubtitle: 'Bali property developer',
     projects: 'projects',
     districts: 'Districts',
-    ratingHeading: 'Score by dimension',
+    sectionsHeading: 'Overview by area',
     aboutHeading: 'About the developer',
     projectsHeading: 'Projects by this developer',
     projectsSubLine: (n: number, apts: number) => `${n} residential complexes${apts > 0 ? ` · ${apts} apartments on sale` : ''}`,
@@ -313,7 +312,7 @@ const COPY = {
     devSubtitle: 'Pengembang properti Bali',
     projects: 'proyek',
     districts: 'Wilayah',
-    ratingHeading: 'Skor per dimensi',
+    sectionsHeading: 'Ikhtisar per bidang',
     aboutHeading: 'Tentang pengembang',
     projectsHeading: 'Proyek pengembang ini',
     projectsSubLine: (n: number, apts: number) => `${n} kompleks hunian${apts > 0 ? ` · ${apts} apartemen dijual` : ''}`,
@@ -344,7 +343,7 @@ const COPY = {
     devSubtitle: 'Promoteur immobilier à Bali',
     projects: 'projets',
     districts: 'Quartiers',
-    ratingHeading: 'Score par dimension',
+    sectionsHeading: 'Aperçu par domaine',
     aboutHeading: 'À propos du promoteur',
     projectsHeading: 'Projets de ce promoteur',
     projectsSubLine: (n: number, apts: number) => `${n} résidences${apts > 0 ? ` · ${apts} appartements en vente` : ''}`,
@@ -375,7 +374,7 @@ const COPY = {
     devSubtitle: 'Immobilien-Bauträger auf Bali',
     projects: 'Projekte',
     districts: 'Gegenden',
-    ratingHeading: 'Bewertung nach Dimension',
+    sectionsHeading: 'Überblick nach Bereich',
     aboutHeading: 'Über den Bauträger',
     projectsHeading: 'Projekte dieses Bauträgers',
     projectsSubLine: (n: number, apts: number) => `${n} Wohnanlagen${apts > 0 ? ` · ${apts} Apartments im Verkauf` : ''}`,
@@ -406,7 +405,7 @@ const COPY = {
     devSubtitle: '巴厘岛房地产开发商',
     projects: '个项目',
     districts: '地区',
-    ratingHeading: '各维度评分',
+    sectionsHeading: '各方面概况',
     aboutHeading: '关于开发商',
     projectsHeading: '该开发商的项目',
     projectsSubLine: (n: number, apts: number) => `${n} 个住宅区${apts > 0 ? ` · ${apts} 套公寓在售` : ''}`,
@@ -437,7 +436,7 @@ const COPY = {
     devSubtitle: 'Vastgoedontwikkelaar op Bali',
     projects: 'projecten',
     districts: 'Gebieden',
-    ratingHeading: 'Score per dimensie',
+    sectionsHeading: 'Overzicht per gebied',
     aboutHeading: 'Over de ontwikkelaar',
     projectsHeading: 'Projecten van deze ontwikkelaar',
     projectsSubLine: (n: number, apts: number) => `${n} wooncomplexen${apts > 0 ? ` · ${apts} appartementen te koop` : ''}`,
@@ -468,7 +467,7 @@ const COPY = {
     devSubtitle: 'Pangwangun properti ring Bali',
     projects: 'proyek',
     districts: 'Wewidangan',
-    ratingHeading: 'Skor manut dimensi',
+    sectionsHeading: 'Ikhtisar manut bidang',
     aboutHeading: 'Indik pangwangun',
     projectsHeading: 'Proyek pangwangun puniki',
     projectsSubLine: (n: number, apts: number) => `${n} kompleks${apts > 0 ? ` · ${apts} apartemen kaadol` : ''}`,
@@ -499,7 +498,7 @@ const COPY = {
     devSubtitle: 'Deweloper nieruchomości na Bali',
     projects: 'projekty',
     districts: 'Rejony',
-    ratingHeading: 'Ocena według wymiarów',
+    sectionsHeading: 'Przegląd według obszarów',
     aboutHeading: 'O deweloperze',
     projectsHeading: 'Projekty tego dewelopera',
     projectsSubLine: (n: number, apts: number) => `${n} kompleksów mieszkaniowych${apts > 0 ? ` · ${apts} apartamentów w sprzedaży` : ''}`,
@@ -530,7 +529,7 @@ const COPY = {
     devSubtitle: 'Забудовник нерухомості на Балі',
     projects: 'проєкти',
     districts: 'Райони',
-    ratingHeading: 'Оцінка за напрямами',
+    sectionsHeading: 'Довідка за напрямами',
     aboutHeading: 'Про забудовника',
     projectsHeading: 'Проєкти цього забудовника',
     projectsSubLine: (n: number, apts: number) => `${n} житлових комплексів${apts > 0 ? ` · ${apts} апартаментів у продажу` : ''}`,
@@ -565,16 +564,16 @@ export async function generateDeveloperMetadata(slug: string, lang: Lang) {
   // metadata was previously RU-or-English only, so de/zh/nl/id/fr/ban tabs
   // and SERP snippets showed English.
   const META: Record<Lang, { title: (n: string) => string; desc: (n: string) => string; og: (n: string) => string }> = {
-    ru: { title: n => `Застройщик ${n} на Бали — проекты, рейтинг, отзывы | Balinsky`, desc: n => `Застройщик ${n} на Бали — рейтинг по 4 направлениям, проекты, комиссия, надёжность.`, og: n => `${n} — застройщик на Бали` },
-    en: { title: n => `${n} — Bali property developer | projects, score, reviews | Balinsky`, desc: n => `${n} — Bali property developer. Score across four dimensions, projects, commission, reliability.`, og: n => `${n} — Bali property developer` },
-    de: { title: n => `${n} — Bali-Bauträger | Projekte, Bewertung, Rezensionen | Balinsky`, desc: n => `${n} — Bali-Bauträger. Bewertung in vier Dimensionen, Projekte, Provision, Zuverlässigkeit.`, og: n => `${n} — Bali-Bauträger` },
-    zh: { title: n => `${n} — 巴厘岛开发商 | 项目、评分、评价 | Balinsky`, desc: n => `${n} — 巴厘岛开发商。四个维度评分、项目、佣金、可靠性。`, og: n => `${n} — 巴厘岛开发商` },
-    nl: { title: n => `${n} — Bali-ontwikkelaar | projecten, score, reviews | Balinsky`, desc: n => `${n} — Bali-ontwikkelaar. Beoordeling op vier dimensies, projecten, commissie, betrouwbaarheid.`, og: n => `${n} — Bali-ontwikkelaar` },
-    id: { title: n => `${n} — Pengembang properti Bali | proyek, skor, ulasan | Balinsky`, desc: n => `${n} — Pengembang properti Bali. Skor empat dimensi, proyek, komisi, keandalan.`, og: n => `${n} — Pengembang properti Bali` },
-    fr: { title: n => `${n} — Promoteur immobilier à Bali | projets, note, avis | Balinsky`, desc: n => `${n} — Promoteur immobilier à Bali. Note sur quatre dimensions, projets, commission, fiabilité.`, og: n => `${n} — Promoteur immobilier à Bali` },
-    ban: { title: n => `${n} — Pangwangun properti Bali | proyek, skor, ulasan | Balinsky`, desc: n => `${n} — Pangwangun properti Bali. Skor patpat dimensi, proyek, komisi, kaandelan.`, og: n => `${n} — Pangwangun properti Bali` },
-    pl: { title: n => `${n} — deweloper na Bali | inwestycje, ocena, opinie | Balinsky`, desc: n => `${n} — deweloper na Bali. Ocena w czterech wymiarach, inwestycje, prowizja, wiarygodność.`, og: n => `${n} — deweloper na Bali` },
-    uk: { title: n => `${n} — забудовник на Балі | проєкти, рейтинг, відгуки | Balinsky`, desc: n => `${n} — забудовник на Балі. Оцінка за чотирма напрямами, проєкти, комісія, надійність.`, og: n => `${n} — забудовник на Балі` },
+    ru: { title: n => `Застройщик ${n} на Бали — проекты, районы, сданные объекты | Balinsky`, desc: n => `Застройщик ${n} на Бали — сданные и строящиеся проекты, районы, справочная информация о компании.`, og: n => `${n} — застройщик на Бали` },
+    en: { title: n => `${n} — Bali property developer | projects, districts, track record | Balinsky`, desc: n => `${n} — Bali property developer. Completed and ongoing projects, districts, company reference information.`, og: n => `${n} — Bali property developer` },
+    de: { title: n => `${n} — Bali-Bauträger | Projekte, Gebiete, Referenzen | Balinsky`, desc: n => `${n} — Bali-Bauträger. Fertige und laufende Projekte, Gebiete, Informationen zum Unternehmen.`, og: n => `${n} — Bali-Bauträger` },
+    zh: { title: n => `${n} — 巴厘岛开发商 | 项目、区域、业绩 | Balinsky`, desc: n => `${n} — 巴厘岛开发商。已完成和在建项目、区域、公司参考信息。`, og: n => `${n} — 巴厘岛开发商` },
+    nl: { title: n => `${n} — Bali-ontwikkelaar | projecten, gebieden, trackrecord | Balinsky`, desc: n => `${n} — Bali-ontwikkelaar. Opgeleverde en lopende projecten, gebieden, bedrijfsinformatie.`, og: n => `${n} — Bali-ontwikkelaar` },
+    id: { title: n => `${n} — Pengembang properti Bali | proyek, area, rekam jejak | Balinsky`, desc: n => `${n} — Pengembang properti Bali. Proyek selesai dan berjalan, area, informasi perusahaan.`, og: n => `${n} — Pengembang properti Bali` },
+    fr: { title: n => `${n} — Promoteur immobilier à Bali | projets, secteurs, historique | Balinsky`, desc: n => `${n} — Promoteur immobilier à Bali. Projets livrés et en cours, secteurs, informations sur la société.`, og: n => `${n} — Promoteur immobilier à Bali` },
+    ban: { title: n => `${n} — Pangwangun properti Bali | proyek, wewidangan, pengalaman | Balinsky`, desc: n => `${n} — Pangwangun properti Bali. Proyek puput lan sane kantun kakaryanin, wewidangan, informasi pausahaan.`, og: n => `${n} — Pangwangun properti Bali` },
+    pl: { title: n => `${n} — deweloper na Bali | inwestycje, lokalizacje, realizacje | Balinsky`, desc: n => `${n} — deweloper na Bali. Ukończone i trwające inwestycje, lokalizacje, informacje o firmie.`, og: n => `${n} — deweloper na Bali` },
+    uk: { title: n => `${n} — забудовник на Балі | проєкти, райони, здані об’єкти | Balinsky`, desc: n => `${n} — забудовник на Балі. Здані та активні проєкти, райони, довідкова інформація про компанію.`, og: n => `${n} — забудовник на Балі` },
   }
   const meta = META[lang] ?? META.en
   // CTR sprint: these pages rank (breig sat at position 7.8 on 434 impressions)
@@ -686,19 +685,6 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
   }
   if (logoUrl) orgJsonLd.logo = logoUrl
   if (aiText) orgJsonLd.description = aiText.slice(0, 500)
-  // TASK-13b (option 2): editorial "reliability index" from objective delivery
-  // data (completed/active projects) — an expert Review by Balinsky, not user
-  // reviews. Replaces the unusable 0–100 "Общий рейтинг" (77/114 = 100). The
-  // score is rendered visibly below, so the markup mirrors on-page content.
-  const reliability = await reliabilityForDeveloper(name)
-  if (reliability) {
-    orgJsonLd.review = {
-      '@type': 'Review',
-      reviewRating: { '@type': 'Rating', ratingValue: reliability.score, bestRating: 5, worstRating: 1 },
-      author: { '@type': 'Organization', name: 'Balinsky', url: `${SITE_URL}/${langToSegment(lang)}` },
-      itemReviewed: { '@type': 'RealEstateAgent', name },
-    }
-  }
 
   const home = switchLangPath('/ru', lang)
   const devsRoot = switchLangPath('/ru/zastrojshhiki', lang)
@@ -750,10 +736,6 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
                   </div>
                 )}
               </div>
-              {/* Visible star rating hidden for now — developers raised
-                  questions about how it's derived. The reliability Review
-                  JSON-LD above stays (for SERP rich snippets) until we settle
-                  on an objective, defensible rating methodology. */}
             </div>
           </div>
         </section>
@@ -781,7 +763,7 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
 
         {dimensions.length > 0 && (
           <section className="mb-10">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-5">{c.ratingHeading}</h2>
+            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[#111827] mb-5">{c.sectionsHeading}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {dimensions.map(({ title, bullets, Icon }) => (
                 <div key={title} className="bg-white rounded-2xl border border-[var(--color-border)] p-6">

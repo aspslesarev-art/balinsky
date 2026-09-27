@@ -202,7 +202,6 @@ export function developerFacts(row) {
   const name = fs1(d['Developer'])
   if (!name) return null
   const slug = fs1(d['SEO:Slug']) ?? fs1(d['Developer_key'])
-  const rating = num1(d['Общий рейтинг']) ?? num1(d['Рейтинг Митюхина'])
   const commission = fs1(d['Комиссия отображение']) ?? fs1(d['Комиссия'])
   const yieldD = num1(d['Доходность'])
   const reputation = descExcerpt(d['Репутация и опыт'], d['Репутация и опыт EN'])
@@ -215,7 +214,6 @@ export function developerFacts(row) {
   const L = []
   L.push('Тип: застройщик')
   L.push(`Название: ${name}`)
-  if (rating != null) L.push(`Рейтинг: ${rating}`)
   if (commission) L.push(`Комиссия агенту: ${commission}`)
   if (yieldD != null) L.push(`Типичная доходность объектов: ~${yieldD}%`)
   if (reputation) L.push(`Репутация и опыт: ${reputation}`)
@@ -230,7 +228,7 @@ export function developerFacts(row) {
     kind: 'developer', refId: row.airtable_id, slug: slug ?? null,
     title: name,
     url,
-    meta: { url, rating: rating ?? null, commission, claimed_yield_pct: yieldD ?? null, website: site },
+    meta: { url, commission, claimed_yield_pct: yieldD ?? null, website: site },
     factText: L.join('\n'),
   }
 }

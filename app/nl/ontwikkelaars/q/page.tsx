@@ -13,14 +13,14 @@ export async function generateMetadata() {
 const metadata = {
   title: 'Bali property developers — 2026 directory | Balinsky',
   description:
-    'Directory of Bali developers with active projects: villas, apartments, residential complexes. Compare on score, reliability and post-handover management. 80+ companies.',
+    'Directory of Bali developers with active projects: villas, apartments, residential complexes. Completed and ongoing projects, unit counts, post-handover management. 80+ companies.',
   alternates: {
     canonical: '/nl/ontwikkelaars',
     languages: hreflangMap('/ru/zastrojshhiki'),
   },
   openGraph: {
     title: 'Bali property developers — 2026 directory | Balinsky',
-    description: 'Bali developer directory: scores, reputation, projects, management companies.',
+    description: 'Bali developer directory: projects, track record, management companies.',
     type: 'website',
     url: '/nl/ontwikkelaars',
   },

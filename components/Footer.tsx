@@ -18,7 +18,7 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
     {
       title: 'Застройщики',
       links: [
-        { label: 'Рейтинг', href: '/ru/zastrojshhiki' },
+        { label: 'Каталог', href: '/ru/zastrojshhiki' },
         { label: 'Мероприятия', href: '/ru/meropriyatiya' },
         { label: 'Акции', href: '/ru/akcii' },
       ],
