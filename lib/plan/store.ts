@@ -13,10 +13,12 @@ const BALI_OFFSET_MS = 8 * 3600_000
  * задача. Точность приблизительная — снятая и заново поставленная
  * галочка сдвигает свою дату, но для счётчика серии этого достаточно.
  */
-export async function loadDoneTasks(): Promise<{ done: string[]; days: string[] }> {
-  const { data, error } = await sb.from('plan_tasks').select('task_id, updated_at').eq('done', true)
+export async function loadDoneTasks(): Promise<{ done: string[]; days: string[]; off: string[] }> {
+  const { data: all, error } = await sb.from('plan_tasks').select('task_id, done, auto_off, updated_at')
   if (error) throw new Error(`plan_tasks read failed: ${error.message}`)
-  const rows = data ?? []
+  const rows = (all ?? []).filter(r => r.done === true)
+  // Снятые руками задачи, которые иначе закрыла бы переписка.
+  const off = (all ?? []).filter(r => r.auto_off === true).map(r => r.task_id as string)
   const days = new Set<string>()
   for (const r of rows) {
     const ts = Date.parse(r.updated_at as string)
@@ -25,12 +27,17 @@ export async function loadDoneTasks(): Promise<{ done: string[]; days: string[] 
   return {
     done: rows.map(r => r.task_id as string),
     days: [...days].sort(),
+    off,
   }
 }
 
-export async function setTaskDone(taskId: string, done: boolean): Promise<void> {
+/**
+ * autoOff — галочку сняли с задачи, которую закрыла переписка: подсчёт
+ * больше её не ставит, пока владелец не отметит задачу снова.
+ */
+export async function setTaskDone(taskId: string, done: boolean, autoOff = false): Promise<void> {
   const { error } = await sb
     .from('plan_tasks')
-    .upsert({ task_id: taskId, done, updated_at: new Date().toISOString() })
+    .upsert({ task_id: taskId, done, auto_off: !done && autoOff, updated_at: new Date().toISOString() })
   if (error) throw new Error(`plan_tasks write failed: ${error.message}`)
 }

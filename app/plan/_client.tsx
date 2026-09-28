@@ -6,6 +6,8 @@ import {
   SKILLS, SKILL_ORDER, SKILL_TOTALS, levelOf, playerLevel, WAITING_TASKS,
   type PlanTask, type PlanWeek, type Skill,
 } from '@/lib/plan/data'
+import { autoProgress, type AutoProgress } from '@/lib/plan/auto'
+import { STEP_KINDS, isStepKind, type PlanStep, type StepKind } from '@/lib/plan/kinds'
 import { playAward, playCoins, playFail, playLevelUp, playTick, playUndo } from './_sound'
 import styles from './plan.module.css'
 
@@ -44,19 +46,43 @@ function plural(n: number, one: string, few: string, many: string): string {
   return many
 }
 
-async function postTask(taskId: string, done: boolean): Promise<boolean> {
+async function postTask(taskId: string, done: boolean, autoOff = false): Promise<boolean> {
   try {
     const r = await fetch('/api/plan/state', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ task_id: taskId, done }),
+      body: JSON.stringify({ task_id: taskId, done, auto_off: autoOff }),
     })
     return r.ok
   } catch { return false }
 }
 
+async function postStep(id: number, rejected: boolean): Promise<boolean> {
+  try {
+    const r = await fetch('/api/plan/steps', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, rejected }),
+    })
+    return r.ok
+  } catch { return false }
+}
+
+function parseSteps(v: unknown): PlanStep[] {
+  if (!Array.isArray(v)) return []
+  return v.filter((s): s is PlanStep =>
+    !!s && typeof s === 'object' && typeof (s as PlanStep).id === 'number' && isStepKind((s as PlanStep).kind))
+}
+
+/** Задачи, которые переписка уже закрывала при прошлом заходе: чтобы салютовать только новым. */
+const AUTO_SEEN_KEY = 'plan_auto_seen_v1'
+
 export function PlanClient({ daysLeft, today }: { daysLeft: number; today: string }) {
+  // done — галочки руками; off — снятые руками задачи, которые закрыла
+  // бы переписка; steps — шаги, найденные в переписке.
   const [done, setDone] = useState<Set<string>>(new Set())
+  const [off, setOff] = useState<Set<string>>(new Set())
+  const [steps, setSteps] = useState<PlanStep[]>([])
   const [loaded, setLoaded] = useState(false)
   const [failed, setFailed] = useState(false)
   // Недель можно держать открытыми сколько угодно — как в исходнике.
@@ -107,11 +133,13 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
     let alive = true
     fetch('/api/plan/state')
       .then(r => (r.ok ? r.json() : Promise.reject(new Error('http'))))
-      .then((j: { done?: unknown; days?: unknown }) => {
+      .then((j: { done?: unknown; days?: unknown; off?: unknown; steps?: unknown }) => {
         if (!alive) return
         const ids = Array.isArray(j.done) ? j.done.filter((v): v is string => typeof v === 'string') : []
         const next = new Set(ids)
         setDone(next)
+        setOff(new Set(Array.isArray(j.off) ? j.off.filter((v): v is string => typeof v === 'string') : []))
+        setSteps(parseSteps(j.steps))
         setDays(Array.isArray(j.days) ? j.days.filter((v): v is string => typeof v === 'string') : [])
         writeCache(next)
         setFailed(false)
@@ -121,16 +149,29 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
     return () => { alive = false }
   }, [])
 
+  // Что закрыла переписка. Снятое руками (off) не возвращается, пока
+  // задачу не отметят снова.
+  const auto = useMemo(() => autoProgress(ALL_TASKS, steps), [steps])
+  const autoDone = useMemo(() => new Set([...auto].filter(([, p]) => p.done).map(([id]) => id)), [auto])
+  const effDone = useMemo(() => {
+    const all = new Set(done)
+    for (const id of autoDone) if (!off.has(id)) all.add(id)
+    return all
+  }, [done, off, autoDone])
+
   // Как в исходнике: открыта первая незакрытая неделя.
   useEffect(() => {
     if (!loaded || autoOpened.current) return
     autoOpened.current = true
-    const first = PLAN.find(w => w.days.some(d => d.tasks.some(t => !done.has(t.id))))
+    const first = PLAN.find(w => w.days.some(d => d.tasks.some(t => !effDone.has(t.id))))
     setOpenWeeks(first ? new Set([first.n]) : new Set())
-  }, [loaded, done])
+  }, [loaded, effDone])
 
   const toggle = useCallback((taskId: string) => {
-    const wasDone = done.has(taskId)
+    const wasDone = effDone.has(taskId)
+    // Сняли задачу, которую закрыла переписка, — запоминаем, иначе
+    // подсчёт тут же поставит галочку обратно.
+    const byAuto = autoDone.has(taskId)
     const task = ALL_TASKS.find(t => t.id === taskId)
     if (task && !wasDone) {
       const key = Date.now() + Math.random()
@@ -147,27 +188,80 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
     }
     if (task) setUndo({ taskId, text: task.text, nowDone: !wasDone })
     const next = new Set(done)
-    if (wasDone) next.delete(taskId); else next.add(taskId)
+    const wasManual = done.has(taskId)
+    const wasOff = off.has(taskId)
+    const nextOff = new Set(off)
+    if (wasDone) { next.delete(taskId); if (byAuto) nextOff.add(taskId) }
+    else { next.add(taskId); nextOff.delete(taskId) }
 
     // Оптимистично: галочка красится сразу, запрос уходит следом.
     setDone(next)
+    setOff(nextOff)
     writeCache(next)
     setFailed(false)
 
-    void postTask(taskId, !wasDone).then(ok => {
+    void postTask(taskId, !wasDone, wasDone && byAuto).then(ok => {
       if (ok) return
       // Не сохранилось — возвращаем галочку как было, чтобы экран
       // не врал про сделанное.
       setDone(prev => {
         const rolled = new Set(prev)
-        if (wasDone) rolled.add(taskId); else rolled.delete(taskId)
+        if (wasManual) rolled.add(taskId); else rolled.delete(taskId)
         writeCache(rolled)
+        return rolled
+      })
+      setOff(prev => {
+        const rolled = new Set(prev)
+        if (wasOff) rolled.add(taskId); else rolled.delete(taskId)
         return rolled
       })
       setFailed(true)
       if (!mutedRef.current) playFail()
     })
-  }, [done])
+  }, [done, off, effDone, autoDone])
+
+  // «Не засчитывать» шаг из переписки — и вернуть обратно.
+  const rejectStep = useCallback((id: number, rejected: boolean) => {
+    setSteps(cur => cur.map(s => (s.id === id ? { ...s, rejected } : s)))
+    if (!mutedRef.current) (rejected ? playUndo : playTick)()
+    void postStep(id, rejected).then(ok => {
+      if (ok) return
+      setSteps(cur => cur.map(s => (s.id === id ? { ...s, rejected: !rejected } : s)))
+      setFailed(true)
+      if (!mutedRef.current) playFail()
+    })
+  }, [])
+
+  // Переписка закрыла задачи с прошлого захода — салют и «+XP», как
+  // будто галочку поставили руками. Первый заход после выката ничего
+  // не празднует: там засчитана вся история разом.
+  useEffect(() => {
+    if (!loaded) return
+    const current = [...autoDone].filter(id => !off.has(id))
+    let seen: string[] | null = null
+    try {
+      const raw = localStorage.getItem(AUTO_SEEN_KEY)
+      seen = raw ? JSON.parse(raw) : null
+    } catch { seen = null }
+    try { localStorage.setItem(AUTO_SEEN_KEY, JSON.stringify(current)) } catch { /* приватный режим */ }
+    if (!Array.isArray(seen)) return
+    const was = new Set(seen)
+    const fresh = ALL_TASKS.filter(t => current.includes(t.id) && !was.has(t.id) && !done.has(t.id))
+    if (fresh.length === 0) return
+    const xp = fresh.reduce((sum, t) => sum + t.xp, 0)
+    const money = fresh.reduce((sum, t) => sum + (t.amount ?? 0), 0)
+    const key = Date.now()
+    setPops(cur => [...cur, { key, text: `+${xp} XP`, color: '#4fd1a5' }])
+    window.setTimeout(() => setPops(cur => cur.filter(p => p.key !== key)), 1400)
+    setBanner({
+      icon: '💬',
+      title: 'Засчитано по переписке',
+      sub: fresh.length === 1 ? fresh[0].text : `${fresh.length} ${plural(fresh.length, 'задача', 'задачи', 'задач')}${money ? ` · +${fmt(money)}` : ''}`,
+    })
+    if (!mutedRef.current) (money ? playCoins : playTick)()
+    // Смотрим только на смену набора, а не на каждую галочку руками.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loaded, autoDone, off])
 
   const undoLast = useCallback(() => {
     if (!undo) return
@@ -212,7 +306,7 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
     let money = 0, doneCount = 0, deals = 0, xp = 0
     const bySkill = Object.fromEntries(SKILL_ORDER.map(sk => [sk, 0])) as Record<Skill, number>
     for (const t of ALL_TASKS) {
-      if (!done.has(t.id)) continue
+      if (!effDone.has(t.id)) continue
       doneCount++
       xp += t.xp
       bySkill[t.skill] += t.xp
@@ -220,16 +314,16 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
       if (t.deal) deals++
     }
     return { money, doneCount, deals, xp, bySkill }
-  }, [done])
+  }, [effDone])
 
   const pct = Math.min(100, (stats.money / PLAN_TARGET_USD) * 100)
   const player = playerLevel(stats.xp)
   const nextLevel = PLAN_LEVELS.find(lv => stats.money < lv.amount) ?? null
 
   const earned = useMemo(() => {
-    const state = { money: stats.money, deals: stats.deals, doneCount: stats.doneCount, done }
+    const state = { money: stats.money, deals: stats.deals, doneCount: stats.doneCount, done: effDone }
     return new Set(ACHIEVEMENTS.filter(a => a.test(state)).map(a => a.id))
-  }, [stats, done])
+  }, [stats, effDone])
 
   // Награда или новый уровень — фанфара, баннер и конфетти. Первая
   // загрузка не салютует: она лишь запоминает, что уже взято.
@@ -287,16 +381,16 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
   // Хвосты: твои действия из прошедших дней, которые так и не отмечены.
   const overdue = useMemo(
     () => PLAN.flatMap(w => w.days.flatMap(d => d.tasks))
-      .filter(t => !t.waiting && t.expected < today && !done.has(t.id)),
-    [done, today],
+      .filter(t => !t.waiting && t.expected < today && !effDone.has(t.id)),
+    [effDone, today],
   )
   // Случившиеся не исчезают из списка: иначе снять ошибочную галочку
   // будет негде — в днях этих задач нет.
   const waiting = useMemo(() => {
-    const open = WAITING_TASKS.filter(t => !done.has(t.id))
-    const closed = WAITING_TASKS.filter(t => done.has(t.id))
+    const open = WAITING_TASKS.filter(t => !effDone.has(t.id))
+    const closed = WAITING_TASKS.filter(t => effDone.has(t.id))
     return { open, closed, all: [...open, ...closed] }
-  }, [done])
+  }, [effDone])
 
   // Сегодняшний день плана. В выходные и после 14 декабря его просто нет.
   const todayBlock = useMemo(() => {
@@ -312,7 +406,17 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
     return day ? { label: day.label, tasks: day.tasks.filter(t => !t.waiting) } : null
   }, [today, todayBlock.tasks.length])
 
-  const todayDone = todayBlock.tasks.filter(t => done.has(t.id)).length
+  const todayDone = todayBlock.tasks.filter(t => effDone.has(t.id)).length
+
+  // Лента: что переписка засчитала сегодня. Пусто — последний день, где что-то было.
+  const feed = useMemo(() => {
+    const todays = steps.filter(s => s.day === today)
+    if (todays.length > 0) return { label: 'сегодня', steps: todays }
+    const last = steps.filter(s => s.day < today).at(-1)?.day
+    return last
+      ? { label: dayMonth.format(new Date(`${last}T00:00:00Z`)), steps: steps.filter(s => s.day === last) }
+      : { label: null, steps: [] as PlanStep[] }
+  }, [steps, today])
   const todayClear = todayBlock.tasks.length > 0 && todayDone === todayBlock.tasks.length
   // Акцентная рамка достаётся одному блоку — тому, где есть незакрытые дела.
   const todayHero = todayBlock.tasks.length > 0 && !todayClear
@@ -494,7 +598,7 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
             </div>
             {todayBlock.tasks.length > 0
               ? todayBlock.tasks.map(task => (
-                <Row key={task.id} task={task} done={done} onToggle={toggle} tag />
+                <Row key={task.id} task={task} done={effDone} auto={auto.get(task.id)} onToggle={toggle} tag />
               ))
               : <p className={styles.empty}>На сегодня дел в плане нет.</p>}
             {todayClear && (
@@ -504,6 +608,8 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
             )}
           </section>
 
+          <Feed label={feed.label} steps={feed.steps} onReject={rejectStep} />
+
           {nextBlock && (
             <section className={`${styles.ahead} ${todayHero ? '' : styles.accent}`} aria-label="Ближайший день">
               <div className={styles.tailsHead}>
@@ -511,7 +617,7 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
                 <span>{nextBlock.label}</span>
               </div>
               {nextBlock.tasks.map(task => (
-                <Row key={task.id} task={task} done={done} onToggle={toggle} tag />
+                <Row key={task.id} task={task} done={effDone} auto={auto.get(task.id)} onToggle={toggle} tag />
               ))}
             </section>
           )}
@@ -523,7 +629,7 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
                 <span>{overdue.length} {plural(overdue.length, 'задача', 'задачи', 'задач')} из прошедших дней</span>
               </div>
               {overdue.map(task => (
-                <Row key={task.id} task={task} done={done} onToggle={toggle} note={ageNote(task.expected, today)} />
+                <Row key={task.id} task={task} done={effDone} auto={auto.get(task.id)} onToggle={toggle} note={ageNote(task.expected, today)} />
               ))}
             </section>
           )}
@@ -543,7 +649,7 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
                 // придётся искать за кнопкой «показать все».
                 : [...waiting.open.slice(0, 5), ...waiting.closed]
               ).map(task => (
-                <Row key={task.id} task={task} done={done} onToggle={toggle} note={ageNote(task.expected, today)} />
+                <Row key={task.id} task={task} done={effDone} auto={auto.get(task.id)} onToggle={toggle} note={ageNote(task.expected, today)} />
               ))}
               {waiting.open.length > 5 && (
                 <button type="button" className={styles.waitingMore} onClick={() => setAllWaiting(v => !v)}>
@@ -562,7 +668,8 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
           <Week
             key={week.n}
             week={week}
-            done={done}
+            done={effDone}
+            auto={auto}
             open={openWeeks.has(week.n)}
             onToggleWeek={() => setOpenWeeks(cur => {
               const next = new Set(cur)
@@ -640,10 +747,109 @@ function ageNote(expected: string, today: string): string {
   return `по плану ${dayMonth.format(new Date(`${expected}T00:00:00Z`))}`
 }
 
+/**
+ * Как задачу видит переписка: «💬 3/10» — сколько набралось, «💬 Ольга,
+ * 28 сен» — чем закрыта. Задачи без правила — без пометки.
+ */
+function AutoNote({ p, checked }: { p?: AutoProgress; checked: boolean }) {
+  if (!p) return null
+  if (!p.done) {
+    return <span className={styles.auto} title="Сколько набралось по переписке">💬 {p.have}/{p.need}</span>
+  }
+  if (!checked) return <span className={styles.auto} title="Переписка закрыла задачу, но галочку сняли руками">💬 снято руками</span>
+  const e = p.evidence.at(-1)
+  const who = p.evidence.length > 1 ? `${p.evidence.length} шт.` : e?.contact ?? null
+  return (
+    <span className={`${styles.auto} ${styles.autoOn}`} title="Закрыто по переписке">
+      💬 {who ? `${who}, ` : ''}{e ? dayMonth.format(new Date(`${e.day}T00:00:00Z`)) : 'по переписке'}
+    </span>
+  )
+}
+
+/** Лента шагов из переписки: что трекер увидел сам. Любой шаг можно не засчитать. */
+function Feed({ label, steps, onReject }: {
+  label: string | null
+  steps: PlanStep[]
+  onReject: (id: number, rejected: boolean) => void
+}) {
+  // Одинаковых шагов бывает десятки за день (касания, приглашения) —
+  // от трёх и больше они свёрнуты в строку со счётчиком.
+  const groups = useMemo(() => {
+    const byKind = new Map<StepKind, PlanStep[]>()
+    for (const s of steps) {
+      const list = byKind.get(s.kind)
+      if (list) list.push(s); else byKind.set(s.kind, [s])
+    }
+    return [...byKind].sort((a, b) => a[1][0].ts.localeCompare(b[1][0].ts))
+  }, [steps])
+  return (
+    <section className={styles.feed} aria-label="Из переписки">
+      <div className={styles.tailsHead}>
+        <b>Из переписки</b>
+        <span>{label ?? 'пока пусто'}</span>
+      </div>
+      {steps.length === 0 && (
+        <p className={styles.empty}>
+          Трекер читает переписку в Telegram раз в час и сам отмечает шаги: встречи, зумы, договоры, брони.
+        </p>
+      )}
+      {groups.map(([kind, list]) => (list.length >= 3 || kind === 'ping'
+        ? <StepGroup key={kind} kind={kind} steps={list} onReject={onReject} />
+        : list.map(s => <StepRow key={s.id} step={s} onReject={onReject} />)))}
+    </section>
+  )
+}
+
+function StepGroup({ kind, steps, onReject }: {
+  kind: StepKind
+  steps: PlanStep[]
+  onReject: (id: number, rejected: boolean) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const live = steps.filter(s => !s.rejected).length
+  return (
+    <>
+      <button type="button" className={styles.stepGroup} onClick={() => setOpen(v => !v)} aria-expanded={open}>
+        <span aria-hidden="true">{STEP_KINDS[kind].icon}</span>
+        <span className={styles.stepText}><b>{STEP_KINDS[kind].label}</b> · {live}</span>
+        <span className={styles.stepMeta}>{open ? 'свернуть' : 'кто'}</span>
+      </button>
+      {open && steps.map(s => <StepRow key={s.id} step={s} onReject={onReject} />)}
+    </>
+  )
+}
+
+const timeFmt = new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Makassar' })
+
+function StepRow({ step, onReject }: { step: PlanStep; onReject: (id: number, rejected: boolean) => void }) {
+  const kind = STEP_KINDS[step.kind]
+  return (
+    <div className={`${styles.step} ${step.rejected ? styles.stepOff : ''}`}>
+      <span aria-hidden="true">{kind.icon}</span>
+      <span className={styles.stepText}>
+        <b>{kind.label}</b>
+        {step.contact && <> · {step.contact}</>}
+        {step.note && <em>{step.note}</em>}
+      </span>
+      <span className={styles.stepMeta}>{timeFmt.format(new Date(step.ts))}</span>
+      <button
+        type="button"
+        className={styles.stepBtn}
+        onClick={() => onReject(step.id, !step.rejected)}
+        title={step.rejected ? 'Вернуть в счёт' : 'Не засчитывать'}
+        aria-label={step.rejected ? 'Вернуть в счёт' : 'Не засчитывать'}
+      >
+        {step.rejected ? '↺' : '✕'}
+      </button>
+    </div>
+  )
+}
+
 /** Строка задачи вне недели: с возрастом («3 дня как ждёт») или с бейджем навыка. */
-function Row({ task, done, onToggle, note, tag }: {
+function Row({ task, done, auto, onToggle, note, tag }: {
   task: PlanTask
   done: Set<string>
+  auto?: AutoProgress
   onToggle: (taskId: string) => void
   note?: string
   tag?: boolean
@@ -655,15 +861,17 @@ function Row({ task, done, onToggle, note, tag }: {
         {task.text}
         {task.amount != null && <span className={styles.pay}>+{fmt(task.amount)}</span>}
         {tag && <span className={styles.tag}>{SKILLS[task.skill].name} +{task.xp}</span>}
+        <AutoNote p={auto} checked={done.has(task.id)} />
         {note != null && <span className={styles.age}>{note}</span>}
       </span>
     </label>
   )
 }
 
-function Week({ week, done, open, onToggleWeek, onToggleTask }: {
+function Week({ week, done, auto, open, onToggleWeek, onToggleTask }: {
   week: PlanWeek
   done: Set<string>
+  auto: Map<string, AutoProgress>
   open: boolean
   onToggleWeek: () => void
   onToggleTask: (taskId: string) => void
@@ -689,7 +897,7 @@ function Week({ week, done, open, onToggleWeek, onToggleTask }: {
       {open && (
         <div className={styles.wbody} id={bodyId}>
           {week.days.filter(d => d.tasks.some(t => !t.waiting)).map(day => (
-            <Day key={day.id} day={day} done={done} onToggleTask={onToggleTask} />
+            <Day key={day.id} day={day} done={done} auto={auto} onToggleTask={onToggleTask} />
           ))}
         </div>
       )}
@@ -697,9 +905,10 @@ function Week({ week, done, open, onToggleWeek, onToggleTask }: {
   )
 }
 
-function Day({ day, done, onToggleTask }: {
+function Day({ day, done, auto, onToggleTask }: {
   day: PlanWeek['days'][number]
   done: Set<string>
+  auto: Map<string, AutoProgress>
   onToggleTask: (taskId: string) => void
 }) {
   // «сегодня» ставим только после монтирования: на сервере и на клиенте
@@ -717,6 +926,7 @@ function Day({ day, done, onToggleTask }: {
             {task.text}
             {task.amount != null && <span className={styles.pay}>+{fmt(task.amount)}</span>}
             <span className={styles.tag}>{SKILLS[task.skill].name} +{task.xp}</span>
+            <AutoNote p={auto.get(task.id)} checked={done.has(task.id)} />
           </span>
         </label>
       ))}

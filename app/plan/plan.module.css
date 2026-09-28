@@ -229,8 +229,8 @@
 .task input:checked ~ .txt .tag { color: var(--jade); }
 
 /* Сегодня, ближайший день, хвосты и ожидания — блоки вкладки «Задачи». */
-.tails, .waiting, .today, .ahead { border: 1px solid var(--line); border-radius: 14px; padding: 12px 16px 8px; margin-bottom: 10px; }
-.waiting, .today, .ahead { background: var(--panel); }
+.tails, .waiting, .today, .ahead, .feed { border: 1px solid var(--line); border-radius: 14px; padding: 12px 16px 8px; margin-bottom: 10px; }
+.waiting, .today, .ahead, .feed { background: var(--panel); }
 /* Акцент достаётся ровно одному блоку: тому, где сейчас есть что делать. */
 .accent { background: rgba(79, 209, 165, .07); border-color: rgba(79, 209, 165, .32); }
 .accent .tailsHead b { color: var(--jade); }
@@ -406,3 +406,35 @@
   width: 7px; height: 7px; border-radius: 50%;
   background: var(--gold); box-shadow: 0 0 8px var(--gold);
 }
+
+/* Переписка сама закрывает задачи: пометка у задачи и лента шагов. */
+.auto {
+  display: inline-block; margin-left: 6px;
+  color: var(--dim); font-size: 12px; white-space: nowrap; text-decoration: none;
+}
+.autoOn { color: var(--jade); }
+.task input:checked ~ .txt .auto { text-decoration: none; }
+
+.step, .stepGroup {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 0; font-size: 13.5px; line-height: 1.4;
+  border-top: 1px solid var(--line);
+}
+.step:first-of-type, .stepGroup:first-of-type { border-top: 0; }
+.stepText { flex: 1; min-width: 0; }
+.stepText b { font-weight: 600; }
+.stepText em { display: block; font-style: normal; color: var(--dim); font-size: 12.5px; }
+.stepMeta { color: var(--dim); font-size: 12px; white-space: nowrap; }
+.stepOff .stepText { color: var(--dim); text-decoration: line-through; }
+.stepGroup {
+  width: 100%; background: none; border-left: 0; border-right: 0; border-bottom: 0;
+  color: inherit; font: inherit; font-size: 13.5px; line-height: 1.4; text-align: left; cursor: pointer;
+}
+.stepGroup:hover .stepMeta { color: var(--ink); }
+.stepBtn {
+  flex: 0 0 32px; height: 32px; border-radius: 8px;
+  background: none; border: 1px solid transparent; color: var(--dim);
+  font: inherit; font-size: 13px; cursor: pointer; transition: color .12s, border-color .12s;
+}
+.stepBtn:hover { color: var(--ink); border-color: var(--line); }
+.stepBtn:focus-visible, .stepGroup:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
