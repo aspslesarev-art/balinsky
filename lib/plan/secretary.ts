@@ -27,7 +27,7 @@ import {
   autoCloseTasks, loadAiTasks, loadComms, loadDayNotes, loadUpcoming, recentMessages, repliesByDay,
 } from './dashboard'
 import type { AiTask, CommChat, Draft } from './dash-types'
-import { DRAFT_RULES, OFFER } from './offer'
+import { DRAFT_RULES, OFFER, humanize } from './offer'
 import type { PlanStep } from './kinds'
 
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
@@ -245,7 +245,7 @@ async function writePlan(ctx: Context, json: Record<string, unknown>, mode: 'mor
     const chat = Number.isFinite(chatId) && chats.has(chatId) ? chatId : null
     const priority = t.priority === 1 || t.priority === 3 ? t.priority : 2
     const detail = typeof t.detail === 'string' && t.detail.trim() ? t.detail.trim().slice(0, 300) : null
-    const draft = chat && typeof t.draft === 'string' && t.draft.trim() ? t.draft.trim().slice(0, 1500) : null
+    const draft = chat && typeof t.draft === 'string' && t.draft.trim() ? humanize(t.draft).slice(0, 1500) : null
     const goal = chat ? goalOf(t.goal) : null
     const keep = Number(t.keep_id)
     if (Number.isFinite(keep) && existing.has(keep)) {
@@ -424,7 +424,7 @@ export async function draftFor(chatId: number): Promise<Draft> {
     lines.join('\n'),
   ].join('\n')
   const { json } = await callModel(DRAFT_SYSTEM, user)
-  const text = typeof json.draft === 'string' ? json.draft.trim().slice(0, 1500) : ''
+  const text = typeof json.draft === 'string' ? humanize(json.draft).slice(0, 1500) : ''
   if (!text) throw new Error('empty_draft')
   return { text, goal: goalOf(json.goal) ?? 'reply', why: typeof json.why === 'string' ? json.why.trim().slice(0, 200) : '' }
 }
