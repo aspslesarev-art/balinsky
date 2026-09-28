@@ -166,18 +166,27 @@ export async function ApartamentyCatalog({
         '@type': 'ItemList',
         name: heading,
         numberOfItems: totalCount,
-        itemListElement: cards.map((c, i) => ({
-          '@type': 'ListItem',
-          position: i + 1,
-          item: {
-            '@type': 'Product',
-            name: c.title,
-            url: `${SITE_ORIGIN}${switchLangPath(`/ru/apartamenty/o/${c.slug}`, lang)}`,
-            ...(c.priceUsd != null && Number.isFinite(c.priceUsd)
-              ? { offers: { '@type': 'Offer', price: c.priceUsd, priceCurrency: 'USD', availability: 'https://schema.org/InStock' } }
-              : {}),
-          },
-        })),
+        // Google's merchant-listing validator marks a Product without image
+        // as a critical error ("Отсутствует поле image"), so a card without
+        // photos is listed by URL only instead of as a Product.
+        itemListElement: cards.map((c, i) => {
+          const url = `${SITE_ORIGIN}${switchLangPath(`/ru/apartamenty/o/${c.slug}`, lang)}`
+          const image = (c.photos ?? []).slice(0, 3)
+          if (image.length === 0) return { '@type': 'ListItem', position: i + 1, url }
+          return {
+            '@type': 'ListItem',
+            position: i + 1,
+            item: {
+              '@type': 'Product',
+              name: c.title,
+              url,
+              image,
+              ...(c.priceUsd != null && Number.isFinite(c.priceUsd)
+                ? { offers: { '@type': 'Offer', price: c.priceUsd, priceCurrency: 'USD', availability: 'https://schema.org/InStock' } }
+                : {}),
+            },
+          }
+        }),
       }] : []),
     ],
   }

@@ -240,7 +240,10 @@ export async function RentalDetail({ slug, lang }: { slug: string; lang: Lang })
           </p>
         </section>
 
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }} />
+        {/* Product without image is a critical merchant-listing error. */}
+        {r.photos.length > 0 && (
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }} />
+        )}
         <div className="h-16" />
       </PageContainer>
     </>
