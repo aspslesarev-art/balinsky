@@ -8,7 +8,7 @@ import {
 } from '@/lib/plan/data'
 import { autoProgress, type AutoProgress } from '@/lib/plan/auto'
 import { STEP_KINDS, isStepKind, type PlanStep, type StepKind } from '@/lib/plan/kinds'
-import type { AiTask, CommChat, DayNote, DayScore, Draft, Upcoming } from '@/lib/plan/dash-types'
+import { GOAL_PRESETS, type AiTask, type CommChat, type DayNote, type DayScore, type Draft, type Upcoming } from '@/lib/plan/dash-types'
 import { playAward, playCoins, playFail, playLevelUp, playTick, playUndo } from './_sound'
 import styles from './plan.module.css'
 
@@ -292,6 +292,20 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
       if (!mutedRef.current) playFail()
     })
   }, [])
+
+  // Цель по человеку: сразу на экране, запрос следом.
+  const saveGoal = useCallback(async (chatId: number, goal: string): Promise<boolean> => {
+    const clean = goal.trim()
+    const before = dash.comms.find(c => c.chat_id === chatId)?.goal ?? null
+    setDash(cur => ({ ...cur, comms: cur.comms.map(c => (c.chat_id === chatId ? { ...c, goal: clean || null } : c)) }))
+    const ok = await post('/api/plan/goal', { chat_id: chatId, goal: clean })
+    if (!ok) {
+      setDash(cur => ({ ...cur, comms: cur.comms.map(c => (c.chat_id === chatId ? { ...c, goal: before } : c)) }))
+      setFailed(true)
+      if (!mutedRef.current) playFail()
+    } else if (!mutedRef.current) playTick()
+    return ok
+  }, [dash.comms])
 
   const refreshPlan = useCallback(async () => {
     setRefreshing('busy')
@@ -647,7 +661,7 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
               </div>
               {waitingMe.length === 0
                 ? <p className={styles.hint}>{loaded ? 'Никто не ждёт — все отвечены.' : 'Загружаю…'}</p>
-                : <ul className={styles.list}>{waitingMe.slice(0, 5).map(c => <CommRow key={c.chat_id} chat={c} compact onSent={load} />)}</ul>}
+                : <ul className={styles.list}>{waitingMe.slice(0, 5).map(c => <CommRow key={c.chat_id} chat={c} compact onSent={load} onGoal={saveGoal} />)}</ul>}
               {waitingMe.length > 5 && (
                 <button type="button" className={styles.linkBtn} onClick={() => setTabSaved('comms')}>
                   Ещё {waitingMe.length - 5}
@@ -667,7 +681,7 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
         </div>
       )}
 
-      {tab === 'comms' && <CommsTab comms={dash.comms} loaded={loaded} onSent={load} />}
+      {tab === 'comms' && <CommsTab comms={dash.comms} loaded={loaded} onSent={load} onGoal={saveGoal} />}
 
       {tab === 'plan' && (
         <div className={styles.weeks}>
@@ -790,7 +804,9 @@ function AiRow({ task, chat, onToggle, onSent }: {
           {task.detail && <span className={styles.detail}>{task.detail}</span>}
           <span className={styles.tags}>
             <span className={`${styles.prio} ${styles[p.cls]}`}>{p.label}</span>
-            {task.goal && <span className={styles.goalTag}>{GOAL[task.goal]}</span>}
+            {chat?.goal
+              ? <span className={styles.targetTag} title="Ваша цель с этим человеком">🎯 {chat.goal}</span>
+              : task.goal && <span className={styles.goalTag}>{GOAL[task.goal]}</span>}
             {done && task.done_by === 'chat' && <span className={styles.autoOn}>💬 закрыто ответом в чате</span>}
             {!done && task.auto_close && <span className={styles.autoTag}>💬 закроется, когда напишешь</span>}
           </span>
@@ -1110,7 +1126,9 @@ function UpcomingCard({ upcoming, today }: { upcoming: Upcoming[]; today: string
 
 const ROLE_LABEL: Record<string, string> = { agent: 'Агент', developer: 'Застройщик', client: 'Клиент' }
 
-function CommRow({ chat, compact, onSent }: { chat: CommChat; compact?: boolean; onSent: () => void }) {
+type GoalSaver = (chatId: number, goal: string) => Promise<boolean>
+
+function CommRow({ chat, compact, onSent, onGoal }: { chat: CommChat; compact?: boolean; onSent: () => void; onGoal: GoalSaver }) {
   const waiting = chat.waiting_since != null
   return (
     <li className={styles.commItem}>
@@ -1123,6 +1141,7 @@ function CommRow({ chat, compact, onSent }: { chat: CommChat; compact?: boolean;
             {!compact && chat.crm && <span className={styles.crmTag}>{chat.crm.title}</span>}
           </span>
           <span className={styles.commText}>{chat.last_dir === 'out' ? 'Вы: ' : ''}{chat.last_text || '—'}</span>
+          <GoalEditor chat={chat} onGoal={onGoal} />
         </span>
         <span className={`${styles.commWhen} ${waiting ? styles.commWait : ''}`}>
           {waiting ? `ждёт ${since(chat.waiting_since!)}` : since(chat.last_ts)}
@@ -1133,15 +1152,72 @@ function CommRow({ chat, compact, onSent }: { chat: CommChat; compact?: boolean;
   )
 }
 
+/**
+ * Цель по человеку: «🎯 Подписать фикс». По клику — поле и готовые
+ * варианты. Секретарь строит под неё план дня и черновики.
+ */
+function GoalEditor({ chat, onGoal }: { chat: CommChat; onGoal: GoalSaver }) {
+  const [editing, setEditing] = useState(false)
+  const [value, setValue] = useState(chat.goal ?? '')
+  const [saving, setSaving] = useState(false)
+
+  const save = async (goal: string) => {
+    setSaving(true)
+    const ok = await onGoal(chat.chat_id, goal)
+    setSaving(false)
+    if (ok) setEditing(false)
+  }
+
+  if (!editing) {
+    return (
+      <button
+        type="button"
+        className={chat.goal ? styles.targetBtn : styles.targetAdd}
+        onClick={() => { setValue(chat.goal ?? ''); setEditing(true) }}
+        title={chat.goal ? 'Изменить цель' : 'Поставить цель'}
+      >
+        🎯 {chat.goal ?? 'Поставить цель'}
+      </button>
+    )
+  }
+
+  return (
+    <form className={styles.goalForm} onSubmit={e => { e.preventDefault(); void save(value) }}>
+      <input
+        className={styles.goalInput}
+        value={value}
+        onChange={e => setValue(e.target.value)}
+        placeholder="Чего хотите добиться: подписать фикс до 15 октября…"
+        maxLength={300}
+        autoFocus
+        aria-label={`Цель с ${chat.name}`}
+      />
+      <div className={styles.goalPresets}>
+        {GOAL_PRESETS.map(g => (
+          <button key={g} type="button" className={styles.presetChip} onClick={() => setValue(g)}>{g}</button>
+        ))}
+      </div>
+      <div className={styles.composeBar}>
+        <button type="submit" className={styles.primaryBtn} disabled={saving || !value.trim()}>{saving ? 'Сохраняю…' : 'Сохранить'}</button>
+        {chat.goal && <button type="button" className={styles.linkBtn} onClick={() => void save('')} disabled={saving}>Убрать цель</button>}
+        <button type="button" className={styles.linkBtn} onClick={() => setEditing(false)}>Отмена</button>
+      </div>
+    </form>
+  )
+}
+
 type RoleFilter = 'all' | 'agent' | 'developer' | 'client'
 
-function CommsTab({ comms, loaded, onSent }: { comms: CommChat[]; loaded: boolean; onSent: () => void }) {
+function CommsTab({ comms, loaded, onSent, onGoal }: { comms: CommChat[]; loaded: boolean; onSent: () => void; onGoal: GoalSaver }) {
   const [role, setRole] = useState<RoleFilter>('all')
   const list = role === 'all' ? comms : comms.filter(c => c.role === role)
   const count = (r: RoleFilter) => (r === 'all' ? comms.length : comms.filter(c => c.role === r).length)
-  const waitMe = list.filter(c => c.waiting_since).sort((a, b) => a.waiting_since!.localeCompare(b.waiting_since!))
-  const waitThem = list.filter(c => !c.waiting_since && c.last_dir === 'out' && Date.now() - Date.parse(c.last_ts) > 2 * 86_400_000)
-  const shown = new Set([...waitMe, ...waitThem].map(c => c.chat_id))
+  // Сначала люди с целями — ради них всё и ведётся, дальше очереди ответов.
+  const goals = list.filter(c => c.goal)
+  const rest0 = list.filter(c => !c.goal)
+  const waitMe = rest0.filter(c => c.waiting_since).sort((a, b) => a.waiting_since!.localeCompare(b.waiting_since!))
+  const waitThem = rest0.filter(c => !c.waiting_since && c.last_dir === 'out' && Date.now() - Date.parse(c.last_ts) > 2 * 86_400_000)
+  const shown = new Set([...goals, ...waitMe, ...waitThem].map(c => c.chat_id))
   const rest = list.filter(c => !shown.has(c.chat_id))
   const filters: Array<[RoleFilter, string]> = [['all', 'Все'], ['agent', 'Агенты'], ['developer', 'Застройщики'], ['client', 'Клиенты']]
 
@@ -1157,20 +1233,25 @@ function CommsTab({ comms, loaded, onSent }: { comms: CommChat[]; loaded: boolea
       </div>
       {!loaded && <p className={styles.hint}>Загружаю переписку…</p>}
       {loaded && list.length === 0 && <p className={styles.hint}>За последний месяц переписки нет.</p>}
-      <CommGroup title="Ждут вашего ответа" hint="Написали вам — ответа ещё нет" items={waitMe} tone="warn" onSent={onSent} />
-      <CommGroup title="Ждёте вы" hint="Вы написали больше двух дней назад — ответа нет. Самое время напомнить о себе" items={waitThem} limit={10} onSent={onSent} />
-      <CommGroup title="Остальные" hint="Последний месяц, свежие сверху" items={rest} limit={20} onSent={onSent} />
+      {loaded && goals.length === 0 && list.length > 0 && (
+        <p className={styles.hint}>Нажмите «🎯 Поставить цель» у человека — секретарь будет вести разговор к ней.</p>
+      )}
+      <CommGroup title="Ваши цели" hint="Секретарь ведёт разговор с каждым к вашей цели" items={goals} onSent={onSent} onGoal={onGoal} />
+      <CommGroup title="Ждут вашего ответа" hint="Написали вам — ответа ещё нет" items={waitMe} tone="warn" onSent={onSent} onGoal={onGoal} />
+      <CommGroup title="Ждёте вы" hint="Вы написали больше двух дней назад — ответа нет. Самое время напомнить о себе" items={waitThem} limit={10} onSent={onSent} onGoal={onGoal} />
+      <CommGroup title="Остальные" hint="Последний месяц, свежие сверху" items={rest} limit={20} onSent={onSent} onGoal={onGoal} />
     </div>
   )
 }
 
-function CommGroup({ title, hint, items, tone, limit, onSent }: {
+function CommGroup({ title, hint, items, tone, limit, onSent, onGoal }: {
   title: string
   hint: string
   items: CommChat[]
   tone?: 'warn'
   limit?: number
   onSent: () => void
+  onGoal: GoalSaver
 }) {
   const [all, setAll] = useState(false)
   if (items.length === 0) return null
@@ -1179,7 +1260,7 @@ function CommGroup({ title, hint, items, tone, limit, onSent }: {
     <section className={`${styles.card} ${tone === 'warn' ? styles.warn : ''}`} aria-label={title}>
       <div className={styles.cardHead}><h2>{title}</h2><span className={styles.meta}>{items.length}</span></div>
       <p className={styles.hint}>{hint}</p>
-      <ul className={styles.list}>{shown.map(c => <CommRow key={c.chat_id} chat={c} onSent={onSent} />)}</ul>
+      <ul className={styles.list}>{shown.map(c => <CommRow key={c.chat_id} chat={c} onSent={onSent} onGoal={onGoal} />)}</ul>
       {limit && items.length > limit && (
         <button type="button" className={styles.linkBtn} onClick={() => setAll(v => !v)}>
           {all ? 'Свернуть' : `Показать все — ещё ${items.length - limit}`}

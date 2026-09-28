@@ -108,7 +108,7 @@ async function buildContext(): Promise<Context> {
     .map(m => `    ${m.direction === 'out' ? 'Андрей' : 'Он'}: ${(m.text || m.voice_transcript || `[${m.media_type ?? 'без текста'}]`).replace(/\s+/g, ' ').slice(0, 300)}`)
     .join('\n')
 
-  const who = (c: CommChat) => `${c.name}${c.username ? ` (@${c.username})` : ''}, ${c.role ? ROLE_RU[c.role] : 'роль неизвестна'}${c.crm ? `, CRM: ${c.crm.title}, статус ${c.crm.status}` : ''}; ${stageOf(c.chat_id, steps)} [chat_id ${c.chat_id}]`
+  const who = (c: CommChat) => `${c.name}${c.username ? ` (@${c.username})` : ''}, ${c.role ? ROLE_RU[c.role] : 'роль неизвестна'}${c.crm ? `, CRM: ${c.crm.title}, статус ${c.crm.status}` : ''}; ${c.goal ? `ЦЕЛЬ АНДРЕЯ: «${c.goal}»; ` : ''}${stageOf(c.chat_id, steps)} [chat_id ${c.chat_id}]`
 
   // Ждут нашего ответа: сначала те, кто в воронке, потом по давности.
   const waitingMe = comms.filter(c => c.waiting_since)
@@ -118,6 +118,9 @@ async function buildContext(): Promise<Context> {
   const waitingThem = comms.filter(c => c.last_dir === 'out' && Date.now() - Date.parse(c.last_ts) > 2 * 86_400_000)
     .sort((a, b) => Number(!!b.crm) - Number(!!a.crm) || b.last_ts.localeCompare(a.last_ts))
     .slice(0, 10)
+
+  // Люди, по которым Андрей сам поставил цель, — видны всегда, даже если молчат.
+  const withGoal = comms.filter(c => c.goal)
 
   const todaySteps = steps.filter(s => s.day === today && !s.rejected)
   const yNote = notes.find(n => n.day === yesterday)
@@ -139,6 +142,9 @@ async function buildContext(): Promise<Context> {
     '',
     'ВСТРЕЧИ ВПЕРЕДИ:',
     upcoming.map(u => `- ${u.starts_at.slice(0, 16).replace('T', ' ')} UTC · ${u.contact ?? ''} · ${u.topic ?? ''} · ${u.place ?? ''}`).join('\n') || '- нет',
+    '',
+    'ЛЮДИ, ПО КОТОРЫМ АНДРЕЙ ПОСТАВИЛ ЦЕЛЬ (главный приоритет):',
+    withGoal.map(c => `- ${who(c)}, ${c.waiting_since ? `ждёт ответа ${ago(c.waiting_since)}` : `последнее сообщение ${ago(c.last_ts)} от ${c.last_dir === 'out' ? 'Андрея' : 'него'}`}\n${tail(c.chat_id, 6)}`).join('\n') || '- целей пока нет',
     '',
     'ЖДУТ ОТВЕТА АНДРЕЯ:',
     waitingMe.map(c => `- ${who(c)}, пишет ${ago(c.waiting_since!)}\n${tail(c.chat_id, 4)}`).join('\n') || '- никто',
@@ -210,7 +216,8 @@ tasks — от 5 до 10 задач, самые важные первыми:
 - keep_id — только при пересборке: если задача совпадает с уже поставленной, верни её id, текст можно уточнить.
 - goal и draft — ТОЛЬКО для задач с chat_id: goal — к чему ведёт сообщение ("call" — созвон, "meeting" — встреча, "reply" — просто ответить), draft — готовый текст сообщения этому человеку от имени Андрея, по правилам ниже. Для остальных задач — null.
 
-Главная цель общения — поднять человека на ступень: переписка → созвон → встреча → договорённость. Ступень каждого указана в сводке.
+Если у человека стоит ЦЕЛЬ АНДРЕЯ — всё общение с ним ведёт к этой цели: пойми по переписке, где вы сейчас, что мешает и какой один следующий шаг приближает к цели; задача и черновик — про этот шаг. У каждого человека с целью должна быть задача на сегодня, если с ним сейчас уместно написать (не пиши тому, кому уже написали сегодня и ждём ответа меньше двух дней).
+Если цели нет — поднимай человека на ступень: переписка → созвон → встреча → договорённость. Ступень каждого указана в сводке.
 
 ${OFFER}
 
@@ -391,14 +398,17 @@ export async function secretaryTick(): Promise<string> {
 
 // ─── Черновик по запросу ───────────────────────────────────────────────
 
-const DRAFT_SYSTEM = `Ты — секретарь Андрея. Тебе дают его переписку с одним человеком. Напиши, что Андрею ответить или написать сейчас, чтобы поднять человека на следующую ступень: переписка → созвон → встреча → договорённость.
+const DRAFT_SYSTEM = `Ты — секретарь Андрея. Тебе дают его переписку с одним человеком и, если есть, ЦЕЛЬ Андрея с этим человеком.
+
+Если цель есть: проанализируй переписку — где вы сейчас относительно цели, что человеку важно, что мешает (сомнения, молчание, занятость) — и напиши сообщение, которое делает один следующий шаг к цели. Не прыгай сразу к цели, если до неё несколько шагов: например, для «подписать фикс» без созвона следующий шаг — созвон.
+Если цели нет: подними человека на следующую ступень: переписка → созвон → встреча → договорённость.
 
 ${OFFER}
 
 ${DRAFT_RULES}
 
 Верни JSON: {"draft": "...", "goal": "call|meeting|reply", "why": "..."}
-why — одна короткая строка для Андрея: зачем этот шаг и в чём интерес человека.`
+why — одна короткая строка для Андрея: где вы сейчас относительно цели и почему этот шаг (например «созвона не было, без него к фиксу не перейти»).`
 
 /** Черновик для любого чата — по кнопке на дашборде. Один вызов ИИ. */
 export async function draftFor(chatId: number): Promise<Draft> {
@@ -416,6 +426,7 @@ export async function draftFor(chatId: number): Promise<Draft> {
   })
   const user = [
     `Собеседник: ${c.name}${c.username ? ` (@${c.username})` : ''}, ${c.role ? ROLE_RU[c.role] : 'роль неизвестна'}${c.crm ? `, в CRM: ${c.crm.title}, статус ${c.crm.status}` : ''}.`,
+    c.goal ? `ЦЕЛЬ АНДРЕЯ с этим человеком: «${c.goal}».` : 'Цель не задана.',
     `Ступень: ${stageOf(chatId, steps)}.`,
     c.waiting_since ? `Он ждёт ответа с ${ago(c.waiting_since)}.` : `Последним писал Андрей, ${ago(c.last_ts)}.`,
     `Сейчас по Бали: ${new Date(Date.now() + BALI_OFFSET_MS).toISOString().slice(0, 16).replace('T', ' ')}.`,

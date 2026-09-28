@@ -248,6 +248,32 @@
 .commName { color: var(--ink); font-weight: 600; font-size: .875rem; text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .commName:hover { color: var(--accent-ink); text-decoration: underline; text-underline-offset: 3px; }
 
+/* Цель по человеку. */
+.targetTag, .targetBtn {
+  display: inline-block; max-width: 100%; padding: 0 8px; border-radius: 8px; line-height: 22px;
+  background: var(--gold-soft); color: var(--gold); font-size: .8125rem; font-weight: 600;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.targetBtn, .targetAdd { justify-self: start; border: 0; font-family: inherit; cursor: pointer; text-align: left; }
+.targetBtn:hover { background: color-mix(in srgb, var(--gold-soft) 70%, var(--gold) 12%); }
+.targetAdd {
+  padding: 0; background: none; color: var(--dim); font-size: .8125rem; line-height: 22px;
+}
+.targetAdd:hover { color: var(--gold); }
+.goalForm { display: grid; gap: 8px; margin-top: 4px; }
+.goalInput {
+  width: 100%; padding: 8px 12px; border-radius: 8px;
+  border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink);
+  font: inherit; font-size: .875rem;
+}
+.goalInput:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: var(--accent); }
+.goalPresets { display: flex; flex-wrap: wrap; gap: 4px; }
+.presetChip {
+  padding: 4px 8px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface);
+  color: var(--ink-2); font: inherit; font-size: .8125rem; cursor: pointer; transition: border-color .12s;
+}
+.presetChip:hover { border-color: var(--gold); color: var(--gold); }
+
 .chatLink {
   color: var(--accent-ink); font-size: .8125rem; font-weight: 600; text-decoration: none; white-space: nowrap;
   max-width: 100%; overflow: hidden; text-overflow: ellipsis;

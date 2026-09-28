@@ -35,6 +35,7 @@ function snippet(m: Msg): string {
  */
 export async function loadComms(msgs: Msg[]): Promise<CommChat[]> {
   const roles = await loadRoles()
+  const goals = await loadGoals()
   const [agents, people] = await Promise.all([
     sb.from('agents').select('id,name,status,tg_chat_id').not('tg_chat_id', 'is', null),
     sb.from('dev_people').select('tg_chat_id,partner:dev_partners(id,name,status)').not('tg_chat_id', 'is', null),
@@ -82,6 +83,7 @@ export async function loadComms(msgs: Msg[]): Promise<CommChat[]> {
       in7: recent.filter(m => m.direction === 'in').length,
       out7: recent.filter(m => m.direction === 'out').length,
       waiting_since: waiting,
+      goal: goals.get(chatId) ?? null,
     })
   }
   return out.sort((a, b) => b.last_ts.localeCompare(a.last_ts))
@@ -196,4 +198,20 @@ export async function countAiDone(): Promise<number> {
   const { count, error } = await sb.from('plan_ai_tasks').select('id', { count: 'exact', head: true }).eq('status', 'done')
   if (error) throw new Error(`plan_ai_tasks count: ${error.message}`)
   return count ?? 0
+}
+
+/** Цели владельца по собеседникам. */
+export async function loadGoals(): Promise<Map<number, string>> {
+  const { data, error } = await sb.from('plan_chat_goals').select('chat_id,goal')
+  if (error) throw new Error(`plan_chat_goals read: ${error.message}`)
+  return new Map((data ?? []).map(r => [Number(r.chat_id), r.goal as string]))
+}
+
+/** Поставить или снять (пустая строка) цель по человеку. */
+export async function setGoal(chatId: number, goal: string): Promise<void> {
+  const clean = goal.trim().slice(0, 300)
+  const { error } = clean
+    ? await sb.from('plan_chat_goals').upsert({ chat_id: chatId, goal: clean, updated_at: new Date().toISOString() })
+    : await sb.from('plan_chat_goals').delete().eq('chat_id', chatId)
+  if (error) throw new Error(`plan_chat_goals write: ${error.message}`)
 }
