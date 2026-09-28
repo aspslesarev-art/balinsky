@@ -78,6 +78,7 @@ export async function loadComms(msgs: Msg[]): Promise<CommChat[]> {
       last_ts: last.ts,
       last_dir: last.direction,
       last_text: snippet(last),
+      last_in_ts: [...list].reverse().find(m => m.direction === 'in')?.ts ?? null,
       in7: recent.filter(m => m.direction === 'in').length,
       out7: recent.filter(m => m.direction === 'out').length,
       waiting_since: waiting,

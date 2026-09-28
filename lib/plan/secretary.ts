@@ -26,7 +26,9 @@ import { DAILY_CAP_USD, baliDay, loadPlanSteps, planAiEnabled, todayPlanSpendUsd
 import {
   autoCloseTasks, loadAiTasks, loadComms, loadDayNotes, loadUpcoming, recentMessages, repliesByDay,
 } from './dashboard'
-import type { AiTask, CommChat } from './dash-types'
+import type { AiTask, CommChat, Draft } from './dash-types'
+import { DRAFT_RULES, OFFER } from './offer'
+import type { PlanStep } from './kinds'
 
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
 
@@ -46,6 +48,17 @@ function shortDate(day: string): string {
 }
 
 const ROLE_RU = { agent: 'агент', developer: 'застройщик', client: 'клиент', other: 'другое' } as const
+
+/** Созвоны и живые встречи с человеком с начала квеста — ступень лестницы. */
+const CALL_KINDS = new Set(['qual_call', 'agent_zoom', 'client_zoom', 'dev_meet'])
+function stageOf(chatId: number, steps: PlanStep[]): string {
+  const mine = steps.filter(s => s.chat_id === chatId && !s.rejected)
+  const calls = mine.filter(s => CALL_KINDS.has(s.kind)).length
+  const meets = mine.filter(s => s.kind === 'coffee').length
+  if (meets) return `живых встреч было ${meets} — вести к следующему шагу`
+  if (calls) return `созвон был (${calls}) — вести к живой встрече`
+  return 'созвона ещё не было — вести к созвону'
+}
 
 function ago(ts: string): string {
   const h = Math.round((Date.now() - Date.parse(ts)) / 3_600_000)
@@ -95,7 +108,7 @@ async function buildContext(): Promise<Context> {
     .map(m => `    ${m.direction === 'out' ? 'Андрей' : 'Он'}: ${(m.text || m.voice_transcript || `[${m.media_type ?? 'без текста'}]`).replace(/\s+/g, ' ').slice(0, 300)}`)
     .join('\n')
 
-  const who = (c: CommChat) => `${c.name}${c.username ? ` (@${c.username})` : ''}, ${c.role ? ROLE_RU[c.role] : 'роль неизвестна'}${c.crm ? `, CRM: ${c.crm.title}, статус ${c.crm.status}` : ''} [chat_id ${c.chat_id}]`
+  const who = (c: CommChat) => `${c.name}${c.username ? ` (@${c.username})` : ''}, ${c.role ? ROLE_RU[c.role] : 'роль неизвестна'}${c.crm ? `, CRM: ${c.crm.title}, статус ${c.crm.status}` : ''}; ${stageOf(c.chat_id, steps)} [chat_id ${c.chat_id}]`
 
   // Ждут нашего ответа: сначала те, кто в воронке, потом по давности.
   const waitingMe = comms.filter(c => c.waiting_since)
@@ -184,7 +197,7 @@ const PLAN_SYSTEM = `Ты — личный секретарь Андрея. Ег
 Тебе дают сводку: план квеста на сегодня, хвосты, кто ждёт ответа, кому он написал без ответа, встречи впереди, что уже сделано. Составь ему план на СЕГОДНЯ — то, что реально двигает деньги.
 
 Верни JSON строго вида:
-{"brief": "...", "tasks": [{"keep_id": 12, "title": "...", "detail": "...", "chat_id": 123, "priority": 1, "auto_close": true}]}
+{"brief": "...", "tasks": [{"keep_id": 12, "title": "...", "detail": "...", "chat_id": 123, "priority": 1, "auto_close": true, "goal": "call", "draft": "..."}]}
 
 brief — 2–3 коротких предложения: главное на сегодня и почему. Без приветствий и воды.
 
@@ -195,6 +208,13 @@ tasks — от 5 до 10 задач, самые важные первыми:
 - priority — 1: срочно (деньги, подписи, человек ждёт ответа больше суток, встреча сегодня) — не больше трёх таких; 2: важно для плана; 3: если останется время.
 - auto_close — true, если задача выполняется одним сообщением этому человеку (ответить, напомнить, отправить); false для всего остального.
 - keep_id — только при пересборке: если задача совпадает с уже поставленной, верни её id, текст можно уточнить.
+- goal и draft — ТОЛЬКО для задач с chat_id: goal — к чему ведёт сообщение ("call" — созвон, "meeting" — встреча, "reply" — просто ответить), draft — готовый текст сообщения этому человеку от имени Андрея, по правилам ниже. Для остальных задач — null.
+
+Главная цель общения — поднять человека на ступень: переписка → созвон → встреча → договорённость. Ступень каждого указана в сводке.
+
+${OFFER}
+
+${DRAFT_RULES}
 
 Правила:
 - Задачи квест-плана на сегодня и хвосты превращай в конкретику: не «10 пингов», а кому именно, из тех, кто в сводке давно молчит.
@@ -203,7 +223,11 @@ tasks — от 5 до 10 задач, самые важные первыми:
 - Не придумывай людей, суммы и договорённости, которых нет в сводке. Одного человека не упоминай в двух задачах.
 - Личное и ассистент — не задачи.`
 
-type RawTask = { keep_id?: unknown; title?: unknown; detail?: unknown; chat_id?: unknown; priority?: unknown; auto_close?: unknown }
+type RawTask = { keep_id?: unknown; title?: unknown; detail?: unknown; chat_id?: unknown; priority?: unknown; auto_close?: unknown; goal?: unknown; draft?: unknown }
+
+function goalOf(v: unknown): Draft['goal'] | null {
+  return v === 'call' || v === 'meeting' || v === 'reply' ? v : null
+}
 
 async function writePlan(ctx: Context, json: Record<string, unknown>, mode: 'morning' | 'refresh'): Promise<{ brief: string; added: AiTask[] }> {
   const brief = typeof json.brief === 'string' ? json.brief.trim().slice(0, 600) : ''
@@ -221,19 +245,21 @@ async function writePlan(ctx: Context, json: Record<string, unknown>, mode: 'mor
     const chat = Number.isFinite(chatId) && chats.has(chatId) ? chatId : null
     const priority = t.priority === 1 || t.priority === 3 ? t.priority : 2
     const detail = typeof t.detail === 'string' && t.detail.trim() ? t.detail.trim().slice(0, 300) : null
+    const draft = chat && typeof t.draft === 'string' && t.draft.trim() ? t.draft.trim().slice(0, 1500) : null
+    const goal = chat ? goalOf(t.goal) : null
     const keep = Number(t.keep_id)
     if (Number.isFinite(keep) && existing.has(keep)) {
       kept.add(keep)
       const cur = existing.get(keep)!
       if (cur.status === 'open') {
-        const { error } = await sb.from('plan_ai_tasks').update({ title, detail, priority }).eq('id', keep)
+        const { error } = await sb.from('plan_ai_tasks').update({ title, detail, priority, draft: draft ?? cur.draft, goal: goal ?? cur.goal }).eq('id', keep)
         if (error) throw new Error(error.message)
       }
       continue
     }
     inserts.push({
       day: ctx.today, title, detail, chat_id: chat, contact: chat ? nameOf.get(chat) ?? null : null,
-      priority, auto_close: t.auto_close === true && chat !== null,
+      priority, auto_close: t.auto_close === true && chat !== null, draft, goal,
     })
   }
 
@@ -361,4 +387,44 @@ export async function secretaryTick(): Promise<string> {
   const [msgs, tasks] = await Promise.all([recentMessages(), loadAiTasks(today)])
   const closed = await autoCloseTasks(tasks, msgs)
   return `закрыто по переписке: ${closed.length}`
+}
+
+// ─── Черновик по запросу ───────────────────────────────────────────────
+
+const DRAFT_SYSTEM = `Ты — секретарь Андрея. Тебе дают его переписку с одним человеком. Напиши, что Андрею ответить или написать сейчас, чтобы поднять человека на следующую ступень: переписка → созвон → встреча → договорённость.
+
+${OFFER}
+
+${DRAFT_RULES}
+
+Верни JSON: {"draft": "...", "goal": "call|meeting|reply", "why": "..."}
+why — одна короткая строка для Андрея: зачем этот шаг и в чём интерес человека.`
+
+/** Черновик для любого чата — по кнопке на дашборде. Один вызов ИИ. */
+export async function draftFor(chatId: number): Promise<Draft> {
+  const [msgs, steps] = await Promise.all([recentMessages(), loadPlanSteps()])
+  const comms = await loadComms(msgs)
+  const c = comms.find(x => x.chat_id === chatId)
+  if (!c) throw new Error('chat_not_found')
+  const { data, error } = await sb.from('tg_messages')
+    .select('direction,text,voice_transcript,media_type,ts')
+    .eq('chat_id', chatId).order('id', { ascending: false }).limit(25)
+  if (error) throw new Error(error.message)
+  const lines = (data ?? []).reverse().map(m => {
+    const when = new Date(Date.parse(m.ts) + BALI_OFFSET_MS).toISOString().slice(5, 16).replace('T', ' ')
+    return `${when} ${m.direction === 'out' ? 'Андрей' : c.name}: ${(m.text || m.voice_transcript || `[${m.media_type ?? 'без текста'}]`).replace(/\s+/g, ' ').slice(0, 600)}`
+  })
+  const user = [
+    `Собеседник: ${c.name}${c.username ? ` (@${c.username})` : ''}, ${c.role ? ROLE_RU[c.role] : 'роль неизвестна'}${c.crm ? `, в CRM: ${c.crm.title}, статус ${c.crm.status}` : ''}.`,
+    `Ступень: ${stageOf(chatId, steps)}.`,
+    c.waiting_since ? `Он ждёт ответа с ${ago(c.waiting_since)}.` : `Последним писал Андрей, ${ago(c.last_ts)}.`,
+    `Сейчас по Бали: ${new Date(Date.now() + BALI_OFFSET_MS).toISOString().slice(0, 16).replace('T', ' ')}.`,
+    '',
+    'Переписка:',
+    lines.join('\n'),
+  ].join('\n')
+  const { json } = await callModel(DRAFT_SYSTEM, user)
+  const text = typeof json.draft === 'string' ? json.draft.trim().slice(0, 1500) : ''
+  if (!text) throw new Error('empty_draft')
+  return { text, goal: goalOf(json.goal) ?? 'reply', why: typeof json.why === 'string' ? json.why.trim().slice(0, 200) : '' }
 }

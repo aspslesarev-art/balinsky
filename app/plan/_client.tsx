@@ -8,7 +8,7 @@ import {
 } from '@/lib/plan/data'
 import { autoProgress, type AutoProgress } from '@/lib/plan/auto'
 import { STEP_KINDS, isStepKind, type PlanStep, type StepKind } from '@/lib/plan/kinds'
-import type { AiTask, CommChat, DayNote, DayScore, Upcoming } from '@/lib/plan/dash-types'
+import type { AiTask, CommChat, DayNote, DayScore, Draft, Upcoming } from '@/lib/plan/dash-types'
 import { playAward, playCoins, playFail, playLevelUp, playTick, playUndo } from './_sound'
 import styles from './plan.module.css'
 
@@ -476,6 +476,8 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
       : { label: null, steps: [] as PlanStep[] }
   }, [steps, today])
 
+  const commsById = useMemo(() => new Map(dash.comms.map(c => [c.chat_id, c])), [dash.comms])
+
   const waitingMe = useMemo(
     () => dash.comms.filter(c => c.waiting_since).sort((a, b) => a.waiting_since!.localeCompare(b.waiting_since!)),
     [dash.comms],
@@ -584,7 +586,9 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
 
               {aiToday.length > 0 && (
                 <ul className={styles.list}>
-                  {aiToday.map(t => <AiRow key={t.id} task={t} onToggle={toggleAi} />)}
+                  {aiToday.map(t => (
+                    <AiRow key={t.id} task={t} chat={t.chat_id != null ? commsById.get(t.chat_id) : undefined} onToggle={toggleAi} onSent={load} />
+                  ))}
                 </ul>
               )}
 
@@ -643,7 +647,7 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
               </div>
               {waitingMe.length === 0
                 ? <p className={styles.hint}>{loaded ? 'Никто не ждёт — все отвечены.' : 'Загружаю…'}</p>
-                : <ul className={styles.list}>{waitingMe.slice(0, 5).map(c => <CommRow key={c.chat_id} chat={c} compact />)}</ul>}
+                : <ul className={styles.list}>{waitingMe.slice(0, 5).map(c => <CommRow key={c.chat_id} chat={c} compact onSent={load} />)}</ul>}
               {waitingMe.length > 5 && (
                 <button type="button" className={styles.linkBtn} onClick={() => setTabSaved('comms')}>
                   Ещё {waitingMe.length - 5}
@@ -663,7 +667,7 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
         </div>
       )}
 
-      {tab === 'comms' && <CommsTab comms={dash.comms} loaded={loaded} />}
+      {tab === 'comms' && <CommsTab comms={dash.comms} loaded={loaded} onSent={load} />}
 
       {tab === 'plan' && (
         <div className={styles.weeks}>
@@ -769,7 +773,12 @@ const PRIORITY: Record<1 | 2 | 3, { label: string; cls: 'p1' | 'p2' | 'p3' }> = 
   3: { label: 'Если успею', cls: 'p3' },
 }
 
-function AiRow({ task, onToggle }: { task: AiTask; onToggle: (id: number) => void }) {
+function AiRow({ task, chat, onToggle, onSent }: {
+  task: AiTask
+  chat?: CommChat
+  onToggle: (id: number) => void
+  onSent: () => void
+}) {
   const done = task.status === 'done'
   const p = PRIORITY[task.priority] ?? PRIORITY[2]
   return (
@@ -781,18 +790,139 @@ function AiRow({ task, onToggle }: { task: AiTask; onToggle: (id: number) => voi
           {task.detail && <span className={styles.detail}>{task.detail}</span>}
           <span className={styles.tags}>
             <span className={`${styles.prio} ${styles[p.cls]}`}>{p.label}</span>
+            {task.goal && <span className={styles.goalTag}>{GOAL[task.goal]}</span>}
             {done && task.done_by === 'chat' && <span className={styles.autoOn}>💬 закрыто ответом в чате</span>}
             {!done && task.auto_close && <span className={styles.autoTag}>💬 закроется, когда напишешь</span>}
-            {task.chat_id != null && (
-              <a className={styles.chatLink} href={`/admin/perepiska?chat=${task.chat_id}`} target="_blank" rel="noopener"
-                onClick={e => e.stopPropagation()}>
-                Открыть чат{task.contact ? ` · ${task.contact}` : ''} →
-              </a>
-            )}
           </span>
         </span>
       </label>
+      {task.chat_id != null && !done && (
+        <Composer
+          chatId={task.chat_id}
+          chat={chat}
+          initial={task.draft ? { text: task.draft, goal: task.goal ?? 'reply', why: '' } : null}
+          onSent={onSent}
+        />
+      )}
     </li>
+  )
+}
+
+const GOAL: Record<Draft['goal'], string> = { call: 'Цель: созвон', meeting: 'Цель: встреча', reply: 'Ответить' }
+
+/**
+ * Ссылка на чат в самом Telegram. Бот может написать человеку только в
+ * течение суток после его последнего сообщения, поэтому основной путь —
+ * личный чат: текст копируется, чат открывается, остаётся вставить.
+ */
+function tgHref(chatId: number, username: string | null | undefined): string {
+  return username ? `https://t.me/${username}` : `tg://user?id=${chatId}`
+}
+
+/** Окно, в которое бот ещё может ответить от имени владельца. */
+function botCanSend(chat?: CommChat): boolean {
+  return !!chat?.last_in_ts && Date.now() - Date.parse(chat.last_in_ts) < 23.5 * 3_600_000
+}
+
+/**
+ * Черновик сообщения человеку: готовый (от секретаря) или по кнопке
+ * «Что написать?». Текст можно поправить, скопировать и открыть чат в
+ * Telegram, а в окне 24 часов — отправить прямо отсюда.
+ */
+function Composer({ chatId, chat, initial, onSent }: {
+  chatId: number
+  chat?: CommChat
+  initial: Draft | null
+  onSent: () => void
+}) {
+  const [draft, setDraft] = useState<Draft | null>(initial)
+  const [text, setText] = useState(initial?.text ?? '')
+  const [open, setOpen] = useState(false)
+  const [state, setState] = useState<'idle' | 'loading' | 'sending' | 'copied' | 'sent' | 'error' | 'cap'>('idle')
+  const [error, setError] = useState<string | null>(null)
+  const href = tgHref(chatId, chat?.username)
+  const canSend = botCanSend(chat)
+
+  const ask = async () => {
+    setState('loading'); setError(null)
+    try {
+      const r = await fetch('/api/plan/draft', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatId }),
+      })
+      if (r.status === 429) { setState('cap'); return }
+      const j = await r.json() as { ok?: boolean; draft?: Draft }
+      if (!r.ok || !j.draft) { setState('error'); setError('Секретарь не ответил, попробуй ещё раз'); return }
+      setDraft(j.draft); setText(j.draft.text); setOpen(true); setState('idle')
+    } catch { setState('error'); setError('Нет связи, попробуй ещё раз') }
+  }
+
+  const copyAndOpen = async () => {
+    try { await navigator.clipboard.writeText(text) } catch { /* без буфера — хотя бы откроем чат */ }
+    setState('copied')
+    window.open(href, '_blank', 'noopener')
+  }
+
+  const send = async () => {
+    setState('sending'); setError(null)
+    try {
+      const r = await fetch(`/api/admin/perepiska/${chatId}/send`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }),
+      })
+      const j = await r.json().catch(() => null) as { ok?: boolean; error?: string } | null
+      if (!r.ok || !j?.ok) { setState('error'); setError(j?.error ?? 'Telegram не принял сообщение — открой чат и отправь сам'); return }
+      setState('sent')
+      onSent()
+    } catch { setState('error'); setError('Нет связи — открой чат и отправь сам') }
+  }
+
+  if (!draft || !open) {
+    return (
+      <div className={styles.composeBar}>
+        {draft
+          ? <button type="button" className={styles.linkBtn} onClick={() => setOpen(true)}>Черновик готов — показать</button>
+          : <button type="button" className={styles.linkBtn} onClick={() => void ask()} disabled={state === 'loading'}>
+              {state === 'loading' ? 'Пишу…' : 'Что написать?'}
+            </button>}
+        <a className={styles.linkBtn} href={href} target="_blank" rel="noopener">Открыть в Telegram</a>
+        {state === 'cap' && <span className={styles.composeNote}>Лимит на ИИ на сегодня исчерпан</span>}
+        {state === 'error' && error && <span className={styles.composeErr}>{error}</span>}
+      </div>
+    )
+  }
+
+  return (
+    <div className={styles.compose}>
+      {draft.why && (
+        <div className={styles.composeHead}>
+          <span className={styles.goalTag}>{GOAL[draft.goal]}</span>
+          <span className={styles.composeNote}>{draft.why}</span>
+        </div>
+      )}
+      <textarea
+        className={styles.composeText}
+        value={text}
+        onChange={e => { setText(e.target.value); if (state === 'copied' || state === 'sent') setState('idle') }}
+        rows={Math.min(10, Math.max(4, Math.ceil(text.length / 40)))}
+        aria-label="Текст сообщения"
+      />
+      <div className={styles.composeBar}>
+        <button type="button" className={styles.primaryBtn} onClick={() => void copyAndOpen()} disabled={!text.trim()}>
+          {state === 'copied' ? 'Скопировано — вставь в чат' : 'Скопировать и открыть в Telegram'}
+        </button>
+        {canSend && (
+          <button type="button" className={styles.ghostBtn} onClick={() => void send()} disabled={!text.trim() || state === 'sending' || state === 'sent'}>
+            {state === 'sending' ? 'Отправляю…' : state === 'sent' ? 'Отправлено ✓' : 'Отправить отсюда'}
+          </button>
+        )}
+        <button type="button" className={styles.linkBtn} onClick={() => void ask()} disabled={state === 'loading'}>
+          {state === 'loading' ? 'Пишу…' : 'Другой вариант'}
+        </button>
+        <button type="button" className={styles.linkBtn} onClick={() => setOpen(false)}>Свернуть</button>
+      </div>
+      {!canSend && <p className={styles.composeNote}>Больше суток без сообщений от человека — Telegram не даст боту ответить. Отправь из своего чата.</p>}
+      {state === 'cap' && <p className={styles.composeNote}>Лимит на ИИ на сегодня исчерпан.</p>}
+      {state === 'error' && error && <p className={styles.composeErr}>{error}</p>}
+    </div>
   )
 }
 
@@ -980,15 +1110,15 @@ function UpcomingCard({ upcoming, today }: { upcoming: Upcoming[]; today: string
 
 const ROLE_LABEL: Record<string, string> = { agent: 'Агент', developer: 'Застройщик', client: 'Клиент' }
 
-function CommRow({ chat, compact }: { chat: CommChat; compact?: boolean }) {
+function CommRow({ chat, compact, onSent }: { chat: CommChat; compact?: boolean; onSent: () => void }) {
   const waiting = chat.waiting_since != null
   return (
-    <li>
-      <a className={styles.comm} href={`/admin/perepiska?chat=${chat.chat_id}`} target="_blank" rel="noopener">
+    <li className={styles.commItem}>
+      <div className={styles.comm}>
         <span className={styles.avatar} aria-hidden="true">{chat.name.slice(0, 1).toUpperCase()}</span>
         <span className={styles.commBody}>
           <span className={styles.commTop}>
-            <b>{chat.name}</b>
+            <a className={styles.commName} href={tgHref(chat.chat_id, chat.username)} target="_blank" rel="noopener">{chat.name}</a>
             {chat.role && ROLE_LABEL[chat.role] && <span className={styles.roleTag}>{ROLE_LABEL[chat.role]}</span>}
             {!compact && chat.crm && <span className={styles.crmTag}>{chat.crm.title}</span>}
           </span>
@@ -997,14 +1127,15 @@ function CommRow({ chat, compact }: { chat: CommChat; compact?: boolean }) {
         <span className={`${styles.commWhen} ${waiting ? styles.commWait : ''}`}>
           {waiting ? `ждёт ${since(chat.waiting_since!)}` : since(chat.last_ts)}
         </span>
-      </a>
+      </div>
+      <Composer chatId={chat.chat_id} chat={chat} initial={null} onSent={onSent} />
     </li>
   )
 }
 
 type RoleFilter = 'all' | 'agent' | 'developer' | 'client'
 
-function CommsTab({ comms, loaded }: { comms: CommChat[]; loaded: boolean }) {
+function CommsTab({ comms, loaded, onSent }: { comms: CommChat[]; loaded: boolean; onSent: () => void }) {
   const [role, setRole] = useState<RoleFilter>('all')
   const list = role === 'all' ? comms : comms.filter(c => c.role === role)
   const count = (r: RoleFilter) => (r === 'all' ? comms.length : comms.filter(c => c.role === r).length)
@@ -1026,19 +1157,20 @@ function CommsTab({ comms, loaded }: { comms: CommChat[]; loaded: boolean }) {
       </div>
       {!loaded && <p className={styles.hint}>Загружаю переписку…</p>}
       {loaded && list.length === 0 && <p className={styles.hint}>За последний месяц переписки нет.</p>}
-      <CommGroup title="Ждут вашего ответа" hint="Написали вам — ответа ещё нет" items={waitMe} tone="warn" />
-      <CommGroup title="Ждёте вы" hint="Вы написали больше двух дней назад — ответа нет" items={waitThem} limit={10} />
-      <CommGroup title="Остальные" hint="Последний месяц, свежие сверху" items={rest} limit={20} />
+      <CommGroup title="Ждут вашего ответа" hint="Написали вам — ответа ещё нет" items={waitMe} tone="warn" onSent={onSent} />
+      <CommGroup title="Ждёте вы" hint="Вы написали больше двух дней назад — ответа нет. Самое время напомнить о себе" items={waitThem} limit={10} onSent={onSent} />
+      <CommGroup title="Остальные" hint="Последний месяц, свежие сверху" items={rest} limit={20} onSent={onSent} />
     </div>
   )
 }
 
-function CommGroup({ title, hint, items, tone, limit }: {
+function CommGroup({ title, hint, items, tone, limit, onSent }: {
   title: string
   hint: string
   items: CommChat[]
   tone?: 'warn'
   limit?: number
+  onSent: () => void
 }) {
   const [all, setAll] = useState(false)
   if (items.length === 0) return null
@@ -1047,7 +1179,7 @@ function CommGroup({ title, hint, items, tone, limit }: {
     <section className={`${styles.card} ${tone === 'warn' ? styles.warn : ''}`} aria-label={title}>
       <div className={styles.cardHead}><h2>{title}</h2><span className={styles.meta}>{items.length}</span></div>
       <p className={styles.hint}>{hint}</p>
-      <ul className={styles.list}>{shown.map(c => <CommRow key={c.chat_id} chat={c} />)}</ul>
+      <ul className={styles.list}>{shown.map(c => <CommRow key={c.chat_id} chat={c} onSent={onSent} />)}</ul>
       {limit && items.length > limit && (
         <button type="button" className={styles.linkBtn} onClick={() => setAll(v => !v)}>
           {all ? 'Свернуть' : `Показать все — ещё ${items.length - limit}`}

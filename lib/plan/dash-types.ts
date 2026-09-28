@@ -14,6 +14,8 @@ export type CommChat = {
   last_ts: string
   last_dir: 'in' | 'out'
   last_text: string
+  /** Последнее его сообщение: бот может написать ему только в течение суток после него. */
+  last_in_ts: string | null
   /** Сообщений за 7 дней: от него и от нас. */
   in7: number
   out7: number
@@ -35,7 +37,14 @@ export type AiTask = {
   done_by: 'owner' | 'chat' | null
   done_at: string | null
   created_at: string
+  /** Готовый текст сообщения человеку — поправить и отправить. */
+  draft: string | null
+  /** К чему ведёт сообщение: созвон, встреча или просто ответ. */
+  goal: 'call' | 'meeting' | 'reply' | null
 }
+
+/** Черновик по запросу для любого чата. */
+export type Draft = { text: string; goal: 'call' | 'meeting' | 'reply'; why: string }
 
 /** Оценка дня: из чего сложилась. Часть без данных (null) в счёт не идёт. */
 export type DayScore = {
