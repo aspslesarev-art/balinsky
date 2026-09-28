@@ -181,27 +181,15 @@ export async function VillasCatalog({
         '@type': 'ItemList',
         name: heading,
         numberOfItems: totalCount,
-        // Google's merchant-listing validator marks a Product without image
-        // as a critical error ("Отсутствует поле image"), so a card without
-        // photos is listed by URL only instead of as a Product.
-        itemListElement: cards.map((c, i) => {
-          const url = `${SITE_ORIGIN}${switchLangPath(`/ru/villy/o/${c.slug}`, lang)}`
-          const image = (c.photos ?? []).slice(0, 3)
-          if (image.length === 0) return { '@type': 'ListItem', position: i + 1, url }
-          return {
-            '@type': 'ListItem',
-            position: i + 1,
-            item: {
-              '@type': 'Product',
-              name: c.title,
-              url,
-              image,
-              ...(c.priceUsd != null && Number.isFinite(c.priceUsd)
-                ? { offers: { '@type': 'Offer', price: c.priceUsd, priceCurrency: 'USD', availability: 'https://schema.org/InStock' } }
-                : {}),
-            },
-          }
-        }),
+        // Summary-page pattern: list entries point at the detail pages by URL.
+        // Full Product markup (image, description, brand, shipping) lives on
+        // the detail page; a bare Product here was counted by Google's
+        // merchant-listing report as 551 invalid items ("Отсутствует поле image").
+        itemListElement: cards.map((c, i) => ({
+          '@type': 'ListItem',
+          position: i + 1,
+          url: `${SITE_ORIGIN}${switchLangPath(`/ru/villy/o/${c.slug}`, lang)}`,
+        })),
       }] : []),
     ],
   }
