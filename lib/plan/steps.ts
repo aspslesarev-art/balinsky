@@ -16,9 +16,11 @@
 // Найденный шаг двигает агента или застройщика по воронке (только вперёд)
 // и оставляет запись в ленте карточки.
 //
-// Деньги (владелец разрешил до $3 в месяц): gpt-5-mini, как у бота встреч.
+// Деньги (владелец разрешил до $6 в месяц на разбор и секретаря вместе):
+// gpt-5-mini, как у бота встреч.
 //   • PLAN_AI_DISABLED=1 — полный стоп без выката кода;
-//   • PLAN_AI_DAILY_USD_CAP (дефолт $0.10) — потолок на сутки, прогон
+//   • PLAN_AI_DAILY_USD_CAP (дефолт $0.20) — общий с секретарём потолок
+//     на сутки (lib/plan/secretary.ts), прогон
 //     встаёт, остаток дочитается на следующий день;
 //   • платим только за чаты, где появились новые сообщения.
 
@@ -40,7 +42,7 @@ export const PLAN_START_TS = '2026-09-15T00:00:00+08:00'
 
 const BALI_OFFSET_MS = 8 * 3600_000
 const MODEL = process.env.PLAN_AI_MODEL || 'gpt-5-mini'
-const DAILY_CAP_USD = Number(process.env.PLAN_AI_DAILY_USD_CAP ?? '0.10')
+export const DAILY_CAP_USD = Number(process.env.PLAN_AI_DAILY_USD_CAP ?? '0.20')
 const TIMEOUT_MS = 60_000
 /** Новых сообщений за один вызов модели. Остаток — следующим вызовом. */
 const BATCH = 80
@@ -61,14 +63,14 @@ export function planAiEnabled(): boolean {
   return process.env.PLAN_AI_DISABLED !== '1' && !!process.env.OPENAI_API_KEY
 }
 
-/** Потрачено на разбор переписки для плана с полуночи по Бали. */
+/** Потрачено на разбор переписки и секретаря с полуночи по Бали. */
 export async function todayPlanSpendUsd(): Promise<number> {
   const from = new Date(Date.parse(`${baliDay(Date.now())}T00:00:00+08:00`)).toISOString()
   const { data, error } = await sb
     .from('balina_usage')
     .select('cost_usd')
     .eq('feature', 'admin-ai')
-    .contains('meta', { kind: 'plan-steps' })
+    .in('meta->>kind', ['plan-steps', 'plan-secretary'])
     .gte('ts', from)
   if (error) throw new Error(`balina_usage read: ${error.message}`)
   return (data ?? []).reduce((s, r) => s + Number(r.cost_usd ?? 0), 0)
@@ -80,7 +82,7 @@ export async function todayPlanSpendUsd(): Promise<number> {
  * С кем каждый чат. Карточка в CRM главнее догадки модели: если чат
  * привязан к агенту или к человеку застройщика — так и есть.
  */
-async function loadRoles(): Promise<Map<number, ChatRole>> {
+export async function loadRoles(): Promise<Map<number, ChatRole>> {
   const roles = new Map<number, ChatRole>()
   const [scan, agents, people] = await Promise.all([
     sb.from('plan_chat_scan').select('chat_id,role'),
@@ -111,7 +113,7 @@ export type Msg = {
 export const MSG_COLS = 'id,chat_id,direction,text,voice_transcript,media_type,file_name,contact,ts'
 
 /** Все сообщения с момента since, постранично: PostgREST отдаёт максимум 1000 строк. */
-async function messagesSince(since: string, cols = MSG_COLS): Promise<Msg[]> {
+export async function messagesSince(since: string, cols = MSG_COLS): Promise<Msg[]> {
   const out: Msg[] = []
   for (let from = 0; from < 50_000; from += 1000) {
     const { data, error } = await sb

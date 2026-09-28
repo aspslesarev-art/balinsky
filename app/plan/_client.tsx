@@ -8,21 +8,35 @@ import {
 } from '@/lib/plan/data'
 import { autoProgress, type AutoProgress } from '@/lib/plan/auto'
 import { STEP_KINDS, isStepKind, type PlanStep, type StepKind } from '@/lib/plan/kinds'
+import type { AiTask, CommChat, DayNote, DayScore, Upcoming } from '@/lib/plan/dash-types'
 import { playAward, playCoins, playFail, playLevelUp, playTick, playUndo } from './_sound'
 import styles from './plan.module.css'
 
-// Источник правды — база. localStorage только для первой отрисовки:
-// на телефоне по слабому интернету он показывает вчерашнее состояние
-// сразу, а через секунду его заменяет ответ API.
+// Дашборд квеста «Гоа»: секретарь ставит задачи на день, трекер сам
+// отмечает шаги по переписке, оценка дня показывает, насколько день удался.
+//
+// Источник правды — база. localStorage только для первой отрисовки
+// галочек: на телефоне по слабому интернету он показывает вчерашнее
+// состояние сразу, а через секунду его заменяет ответ API.
 const CACHE_KEY = 'plan_done_v1'
+/** Задачи, которые переписка уже закрывала при прошлом заходе: чтобы салютовать только новым. */
+const AUTO_SEEN_KEY = 'plan_auto_seen_v1'
+/** Опыт за задачу секретаря — наравне с мелкими задачами плана. */
+const AI_TASK_XP = 10
+const TZ = 'Asia/Makassar'
 
-type Tab = 'tasks' | 'plan' | 'profile'
+type Tab = 'today' | 'comms' | 'plan' | 'results'
 
 const TABS: ReadonlyArray<readonly [Tab, string]> = [
-  ['tasks', 'Задачи'],
+  ['today', 'Сегодня'],
+  ['comms', 'Переписка'],
   ['plan', 'План'],
-  ['profile', 'Профиль'],
+  ['results', 'Итоги'],
 ]
+
+function isTab(v: unknown): v is Tab {
+  return v === 'today' || v === 'comms' || v === 'plan' || v === 'results'
+}
 
 function readCache(): string[] | null {
   try {
@@ -37,7 +51,7 @@ function writeCache(done: Set<string>): void {
   try { localStorage.setItem(CACHE_KEY, JSON.stringify([...done])) } catch { /* приватный режим — переживём */ }
 }
 
-const fmt = (n: number) => '$' + n.toLocaleString('ru-RU').replace(/\u00a0/g, ' ')
+const fmt = (n: number) => '$' + n.toLocaleString('ru-RU').replace(/ /g, ' ')
 
 function plural(n: number, one: string, few: string, many: string): string {
   const mod10 = n % 10, mod100 = n % 100
@@ -46,26 +60,30 @@ function plural(n: number, one: string, few: string, many: string): string {
   return many
 }
 
-async function postTask(taskId: string, done: boolean, autoOff = false): Promise<boolean> {
+const dayMonth = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'short', timeZone: 'UTC' })
+const weekdayLong = new Intl.DateTimeFormat('ru-RU', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' })
+const weekdayShort = new Intl.DateTimeFormat('ru-RU', { weekday: 'short', timeZone: 'UTC' })
+const timeFmt = new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit', timeZone: TZ })
+const whenFmt = new Intl.DateTimeFormat('ru-RU', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: TZ })
+
+/** «2 ч», «3 дн» — сколько прошло. */
+function since(ts: string): string {
+  const min = Math.max(0, Math.round((Date.now() - Date.parse(ts)) / 60_000))
+  if (min < 60) return `${min} мин`
+  const h = Math.round(min / 60)
+  if (h < 24) return `${h} ч`
+  return `${Math.round(h / 24)} дн`
+}
+
+async function post(url: string, body: unknown): Promise<boolean> {
   try {
-    const r = await fetch('/api/plan/state', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ task_id: taskId, done, auto_off: autoOff }),
-    })
+    const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
     return r.ok
   } catch { return false }
 }
 
-async function postStep(id: number, rejected: boolean): Promise<boolean> {
-  try {
-    const r = await fetch('/api/plan/steps', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, rejected }),
-    })
-    return r.ok
-  } catch { return false }
+function strings(v: unknown): string[] {
+  return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []
 }
 
 function parseSteps(v: unknown): PlanStep[] {
@@ -74,8 +92,16 @@ function parseSteps(v: unknown): PlanStep[] {
     !!s && typeof s === 'object' && typeof (s as PlanStep).id === 'number' && isStepKind((s as PlanStep).kind))
 }
 
-/** Задачи, которые переписка уже закрывала при прошлом заходе: чтобы салютовать только новым. */
-const AUTO_SEEN_KEY = 'plan_auto_seen_v1'
+type Dash = {
+  aiTasks: AiTask[]
+  aiDone: number
+  notes: DayNote[]
+  upcoming: Upcoming[]
+  comms: CommChat[]
+  scores: DayScore[]
+}
+
+const EMPTY_DASH: Dash = { aiTasks: [], aiDone: 0, notes: [], upcoming: [], comms: [], scores: [] }
 
 export function PlanClient({ daysLeft, today }: { daysLeft: number; today: string }) {
   // done — галочки руками; off — снятые руками задачи, которые закрыла
@@ -83,17 +109,15 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
   const [done, setDone] = useState<Set<string>>(new Set())
   const [off, setOff] = useState<Set<string>>(new Set())
   const [steps, setSteps] = useState<PlanStep[]>([])
+  const [dash, setDash] = useState<Dash>(EMPTY_DASH)
   const [loaded, setLoaded] = useState(false)
   const [failed, setFailed] = useState(false)
-  // Недель можно держать открытыми сколько угодно — как в исходнике.
   const [openWeeks, setOpenWeeks] = useState<Set<number>>(new Set())
   const [armed, setArmed] = useState(false)
-  const [allWaiting, setAllWaiting] = useState(false)
   const [days, setDays] = useState<string[]>([])
   const [muted, setMuted] = useState(false)
-  // Три экрана: «Задачи» — что делать сегодня, «План» — вся раскладка до
-  // вылета, «Профиль» — на что это всё копится.
-  const [tab, setTab] = useState<Tab>('tasks')
+  const [tab, setTab] = useState<Tab>('today')
+  const [refreshing, setRefreshing] = useState<'idle' | 'busy' | 'cap' | 'error'>('idle')
   // Баннер награды и конфетти живут пару секунд после события.
   const [banner, setBanner] = useState<{ icon: string; title: string; sub: string } | null>(null)
   const [confetti, setConfetti] = useState(0)
@@ -104,15 +128,21 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
   const seenAwards = useRef<Set<string> | null>(null)
   const seenLevel = useRef<number | null>(null)
   // Всплывашки «+25 XP»: живут пару секунд и исчезают.
-  const [pops, setPops] = useState<Array<{ key: number; text: string; color: string }>>([])
+  const [pops, setPops] = useState<Array<{ key: number; text: string }>>([])
   // Неделю открываем автоматически один раз — дальше это выбор человека.
   const autoOpened = useRef(false)
+
+  const pop = useCallback((text: string, ms = 1400) => {
+    const key = Date.now() + Math.random()
+    setPops(cur => [...cur, { key, text }])
+    window.setTimeout(() => setPops(cur => cur.filter(p => p.key !== key)), ms)
+  }, [])
 
   useEffect(() => {
     try {
       if (localStorage.getItem('plan_muted') === '1') { setMuted(true); mutedRef.current = true }
       const saved = localStorage.getItem('plan_tab')
-      if (saved === 'plan' || saved === 'profile' || saved === 'tasks') setTab(saved)
+      if (isTab(saved)) setTab(saved)
     } catch { /* приватный режим */ }
   }, [])
 
@@ -126,28 +156,50 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
     })
   }, [])
 
+  const load = useCallback(async (): Promise<boolean> => {
+    try {
+      const r = await fetch('/api/plan/state', { cache: 'no-store' })
+      if (!r.ok) throw new Error('http')
+      const j = await r.json() as Record<string, unknown>
+      const next = new Set(strings(j.done))
+      setDone(next)
+      writeCache(next)
+      setOff(new Set(strings(j.off)))
+      setDays(strings(j.days))
+      setSteps(parseSteps(j.steps))
+      setDash({
+        aiTasks: Array.isArray(j.aiTasks) ? j.aiTasks as AiTask[] : [],
+        aiDone: typeof j.aiDone === 'number' ? j.aiDone : 0,
+        notes: Array.isArray(j.notes) ? j.notes as DayNote[] : [],
+        upcoming: Array.isArray(j.upcoming) ? j.upcoming as Upcoming[] : [],
+        comms: Array.isArray(j.comms) ? j.comms as CommChat[] : [],
+        scores: Array.isArray(j.scores) ? j.scores as DayScore[] : [],
+      })
+      setFailed(false)
+      return true
+    } catch {
+      setFailed(true)
+      return false
+    } finally {
+      setLoaded(true)
+    }
+  }, [])
+
   useEffect(() => {
     const cached = readCache()
     if (cached) setDone(new Set(cached))
-
-    let alive = true
-    fetch('/api/plan/state')
-      .then(r => (r.ok ? r.json() : Promise.reject(new Error('http'))))
-      .then((j: { done?: unknown; days?: unknown; off?: unknown; steps?: unknown }) => {
-        if (!alive) return
-        const ids = Array.isArray(j.done) ? j.done.filter((v): v is string => typeof v === 'string') : []
-        const next = new Set(ids)
-        setDone(next)
-        setOff(new Set(Array.isArray(j.off) ? j.off.filter((v): v is string => typeof v === 'string') : []))
-        setSteps(parseSteps(j.steps))
-        setDays(Array.isArray(j.days) ? j.days.filter((v): v is string => typeof v === 'string') : [])
-        writeCache(next)
-        setFailed(false)
-      })
-      .catch(() => { if (alive) setFailed(true) })
-      .finally(() => { if (alive) setLoaded(true) })
-    return () => { alive = false }
-  }, [])
+    void load()
+    // Вернулся на вкладку спустя время — подтянуть свежее: переписка
+    // и секретарь меняют картину в течение дня.
+    let last = Date.now()
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible' || Date.now() - last < 60_000) return
+      last = Date.now()
+      void load()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [load])
 
   // Что закрыла переписка. Снятое руками (off) не возвращается, пока
   // задачу не отметят снова.
@@ -159,7 +211,6 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
     return all
   }, [done, off, autoDone])
 
-  // Как в исходнике: открыта первая незакрытая неделя.
   useEffect(() => {
     if (!loaded || autoOpened.current) return
     autoOpened.current = true
@@ -174,14 +225,8 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
     const byAuto = autoDone.has(taskId)
     const task = ALL_TASKS.find(t => t.id === taskId)
     if (task && !wasDone) {
-      const key = Date.now() + Math.random()
-      setPops(cur => [...cur, { key, text: `+${task.xp} XP`, color: SKILLS[task.skill].color }])
-      window.setTimeout(() => setPops(cur => cur.filter(p => p.key !== key)), 1400)
-      if (task.amount) {
-        const mk = key + 1
-        setPops(cur => [...cur, { key: mk, text: `+${fmt(task.amount!)}`, color: '#f0a93c' }])
-        window.setTimeout(() => setPops(cur => cur.filter(p => p.key !== mk)), 1600)
-      }
+      pop(`+${task.xp} XP`)
+      if (task.amount) pop(`+${fmt(task.amount)}`, 1600)
       if (!mutedRef.current) (task.amount ? playCoins : playTick)()
     } else if (task && wasDone && !mutedRef.current) {
       playUndo()
@@ -200,7 +245,7 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
     writeCache(next)
     setFailed(false)
 
-    void postTask(taskId, !wasDone, wasDone && byAuto).then(ok => {
+    void post('/api/plan/state', { task_id: taskId, done: !wasDone, auto_off: wasDone && byAuto }).then(ok => {
       if (ok) return
       // Не сохранилось — возвращаем галочку как было, чтобы экран
       // не врал про сделанное.
@@ -218,13 +263,29 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
       setFailed(true)
       if (!mutedRef.current) playFail()
     })
-  }, [done, off, effDone, autoDone])
+  }, [done, off, effDone, autoDone, pop])
+
+  const toggleAi = useCallback((id: number) => {
+    const task = dash.aiTasks.find(t => t.id === id)
+    if (!task) return
+    const nowDone = task.status !== 'done'
+    const patch = (d: boolean) => (t: AiTask): AiTask => t.id !== id ? t
+      : { ...t, status: d ? 'done' : 'open', done_by: d ? 'owner' : null, done_at: d ? new Date().toISOString() : null }
+    setDash(cur => ({ ...cur, aiTasks: cur.aiTasks.map(patch(nowDone)), aiDone: cur.aiDone + (nowDone ? 1 : -1) }))
+    if (nowDone) { pop(`+${AI_TASK_XP} XP`); if (!mutedRef.current) playTick() } else if (!mutedRef.current) playUndo()
+    void post('/api/plan/tasks', { id, done: nowDone }).then(ok => {
+      if (ok) return
+      setDash(cur => ({ ...cur, aiTasks: cur.aiTasks.map(patch(!nowDone)), aiDone: cur.aiDone + (nowDone ? -1 : 1) }))
+      setFailed(true)
+      if (!mutedRef.current) playFail()
+    })
+  }, [dash.aiTasks, pop])
 
   // «Не засчитывать» шаг из переписки — и вернуть обратно.
   const rejectStep = useCallback((id: number, rejected: boolean) => {
     setSteps(cur => cur.map(s => (s.id === id ? { ...s, rejected } : s)))
     if (!mutedRef.current) (rejected ? playUndo : playTick)()
-    void postStep(id, rejected).then(ok => {
+    void post('/api/plan/steps', { id, rejected }).then(ok => {
       if (ok) return
       setSteps(cur => cur.map(s => (s.id === id ? { ...s, rejected: !rejected } : s)))
       setFailed(true)
@@ -232,36 +293,17 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
     })
   }, [])
 
-  // Переписка закрыла задачи с прошлого захода — салют и «+XP», как
-  // будто галочку поставили руками. Первый заход после выката ничего
-  // не празднует: там засчитана вся история разом.
-  useEffect(() => {
-    if (!loaded) return
-    const current = [...autoDone].filter(id => !off.has(id))
-    let seen: string[] | null = null
+  const refreshPlan = useCallback(async () => {
+    setRefreshing('busy')
     try {
-      const raw = localStorage.getItem(AUTO_SEEN_KEY)
-      seen = raw ? JSON.parse(raw) : null
-    } catch { seen = null }
-    try { localStorage.setItem(AUTO_SEEN_KEY, JSON.stringify(current)) } catch { /* приватный режим */ }
-    if (!Array.isArray(seen)) return
-    const was = new Set(seen)
-    const fresh = ALL_TASKS.filter(t => current.includes(t.id) && !was.has(t.id) && !done.has(t.id))
-    if (fresh.length === 0) return
-    const xp = fresh.reduce((sum, t) => sum + t.xp, 0)
-    const money = fresh.reduce((sum, t) => sum + (t.amount ?? 0), 0)
-    const key = Date.now()
-    setPops(cur => [...cur, { key, text: `+${xp} XP`, color: '#4fd1a5' }])
-    window.setTimeout(() => setPops(cur => cur.filter(p => p.key !== key)), 1400)
-    setBanner({
-      icon: '💬',
-      title: 'Засчитано по переписке',
-      sub: fresh.length === 1 ? fresh[0].text : `${fresh.length} ${plural(fresh.length, 'задача', 'задачи', 'задач')}${money ? ` · +${fmt(money)}` : ''}`,
-    })
-    if (!mutedRef.current) (money ? playCoins : playTick)()
-    // Смотрим только на смену набора, а не на каждую галочку руками.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loaded, autoDone, off])
+      const r = await fetch('/api/plan/secretary', { method: 'POST' })
+      if (r.status === 429) { setRefreshing('cap'); return }
+      if (!r.ok) { setRefreshing('error'); return }
+      await load()
+      setRefreshing('idle')
+      if (!mutedRef.current) playTick()
+    } catch { setRefreshing('error') }
+  }, [load])
 
   const undoLast = useCallback(() => {
     if (!undo) return
@@ -294,7 +336,7 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
     writeCache(new Set())
     setFailed(false)
 
-    void Promise.all(toClear.map(id => postTask(id, false))).then(results => {
+    void Promise.all(toClear.map(id => post('/api/plan/state', { task_id: id, done: false }))).then(results => {
       if (results.every(Boolean)) return
       setDone(before)
       writeCache(before)
@@ -313,8 +355,10 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
       if (t.amount) money += t.amount
       if (t.deal) deals++
     }
+    // Задачи секретаря тоже дают опыт: это та же работа, только точнее.
+    xp += dash.aiDone * AI_TASK_XP
     return { money, doneCount, deals, xp, bySkill }
-  }, [effDone])
+  }, [effDone, dash.aiDone])
 
   const pct = Math.min(100, (stats.money / PLAN_TARGET_USD) * 100)
   const player = playerLevel(stats.xp)
@@ -329,19 +373,15 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
   // загрузка не салютует: она лишь запоминает, что уже взято.
   useEffect(() => {
     if (!loaded) return
-
     if (seenAwards.current === null) {
       seenAwards.current = new Set(earned)
       seenLevel.current = player.level
       return
     }
-
     const fresh = ACHIEVEMENTS.filter(a => earned.has(a.id) && !seenAwards.current!.has(a.id))
     seenAwards.current = new Set(earned)
-
     const leveledUp = seenLevel.current !== null && player.level > seenLevel.current
     seenLevel.current = player.level
-
     if (leveledUp) {
       setBanner({ icon: '⭐️', title: `Уровень ${player.level}`, sub: player.rank })
       setConfetti(c => c + 1)
@@ -353,6 +393,35 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
       if (!mutedRef.current) playAward()
     }
   }, [earned, loaded, player.level, player.rank])
+
+  // Переписка закрыла задачи с прошлого захода — «+XP» и баннер, как
+  // будто галочку поставили руками. Первый заход после выката ничего
+  // не празднует: там засчитана вся история разом.
+  useEffect(() => {
+    if (!loaded) return
+    const current = [...autoDone].filter(id => !off.has(id))
+    let seen: unknown = null
+    try {
+      const raw = localStorage.getItem(AUTO_SEEN_KEY)
+      seen = raw ? JSON.parse(raw) : null
+    } catch { seen = null }
+    try { localStorage.setItem(AUTO_SEEN_KEY, JSON.stringify(current)) } catch { /* приватный режим */ }
+    if (!Array.isArray(seen)) return
+    const was = new Set(seen)
+    const fresh = ALL_TASKS.filter(t => current.includes(t.id) && !was.has(t.id) && !done.has(t.id))
+    if (fresh.length === 0) return
+    const xp = fresh.reduce((sum, t) => sum + t.xp, 0)
+    const money = fresh.reduce((sum, t) => sum + (t.amount ?? 0), 0)
+    pop(`+${xp} XP`)
+    setBanner({
+      icon: '💬',
+      title: 'Засчитано по переписке',
+      sub: fresh.length === 1 ? fresh[0].text : `${fresh.length} ${plural(fresh.length, 'задача', 'задачи', 'задач')}${money ? ` · +${fmt(money)}` : ''}`,
+    })
+    if (!mutedRef.current) (money ? playCoins : playTick)()
+    // Смотрим только на смену набора, а не на каждую галочку руками.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loaded, autoDone, off])
 
   useEffect(() => {
     if (!undo) return
@@ -366,9 +435,9 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
     return () => window.clearTimeout(t)
   }, [banner])
 
-  // Серия: сколько дней подряд, считая от сегодня (или вчера), что-то закрывалось.
+  // Серия: сколько дней подряд, считая от сегодня (или вчера), что-то делалось.
   const streak = useMemo(() => {
-    const set = new Set(days)
+    const set = new Set([...days, ...steps.filter(s => !s.rejected).map(s => s.day)])
     const day = (shift: number) =>
       new Date(Date.parse(`${today}T00:00:00Z`) + shift * 86_400_000).toISOString().slice(0, 10)
     const start = set.has(day(0)) ? 0 : set.has(day(-1)) ? -1 : null
@@ -376,39 +445,28 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
     let n = 0
     while (set.has(day(start - n))) n++
     return n
-  }, [days, today])
+  }, [days, steps, today])
 
   // Хвосты: твои действия из прошедших дней, которые так и не отмечены.
   const overdue = useMemo(
-    () => PLAN.flatMap(w => w.days.flatMap(d => d.tasks))
-      .filter(t => !t.waiting && t.expected < today && !effDone.has(t.id)),
+    () => ALL_TASKS.filter(t => !t.waiting && t.expected < today && !effDone.has(t.id)),
     [effDone, today],
   )
-  // Случившиеся не исчезают из списка: иначе снять ошибочную галочку
-  // будет негде — в днях этих задач нет.
-  const waiting = useMemo(() => {
-    const open = WAITING_TASKS.filter(t => !effDone.has(t.id))
-    const closed = WAITING_TASKS.filter(t => effDone.has(t.id))
-    return { open, closed, all: [...open, ...closed] }
-  }, [effDone])
+  const waiting = useMemo(() => WAITING_TASKS.filter(t => !effDone.has(t.id)), [effDone])
 
-  // Сегодняшний день плана. В выходные и после 14 декабря его просто нет.
-  const todayBlock = useMemo(() => {
+  const planToday = useMemo(() => {
     const day = PLAN.flatMap(w => w.days).find(d => d.iso === today)
-    return { label: day?.label ?? null, tasks: day ? day.tasks.filter(t => !t.waiting) : [] }
+    return day ? day.tasks.filter(t => !t.waiting) : []
   }, [today])
 
-  // Если на сегодня ничего не стоит, показываем следующий день с делами:
-  // пустой экран читался бы как поломка.
-  const nextBlock = useMemo(() => {
-    if (todayBlock.tasks.length > 0) return null
-    const day = PLAN.flatMap(w => w.days).find(d => d.iso > today && d.tasks.some(t => !t.waiting))
-    return day ? { label: day.label, tasks: day.tasks.filter(t => !t.waiting) } : null
-  }, [today, todayBlock.tasks.length])
+  const aiToday = useMemo(
+    () => dash.aiTasks.filter(t => t.day === today && t.status !== 'dropped')
+      .sort((a, b) => Number(a.status === 'done') - Number(b.status === 'done') || a.priority - b.priority || a.id - b.id),
+    [dash.aiTasks, today],
+  )
+  const note = dash.notes.find(n => n.day === today) ?? null
+  const scoreToday = dash.scores.find(s => s.day === today) ?? null
 
-  const todayDone = todayBlock.tasks.filter(t => effDone.has(t.id)).length
-
-  // Лента: что переписка засчитала сегодня. Пусто — последний день, где что-то было.
   const feed = useMemo(() => {
     const todays = steps.filter(s => s.day === today)
     if (todays.length > 0) return { label: 'сегодня', steps: todays }
@@ -417,25 +475,28 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
       ? { label: dayMonth.format(new Date(`${last}T00:00:00Z`)), steps: steps.filter(s => s.day === last) }
       : { label: null, steps: [] as PlanStep[] }
   }, [steps, today])
-  const todayClear = todayBlock.tasks.length > 0 && todayDone === todayBlock.tasks.length
-  // Акцентная рамка достаётся одному блоку — тому, где есть незакрытые дела.
-  const todayHero = todayBlock.tasks.length > 0 && !todayClear
+
+  const waitingMe = useMemo(
+    () => dash.comms.filter(c => c.waiting_since).sort((a, b) => a.waiting_since!.localeCompare(b.waiting_since!)),
+    [dash.comms],
+  )
+
+  const setTabSaved = (key: Tab) => {
+    setTab(key)
+    try { localStorage.setItem('plan_tab', key) } catch { /* приватный режим */ }
+  }
 
   return (
     <div className={styles.wrap}>
       <div className={styles.pops} aria-hidden="true">
-        {pops.map(p => (
-          <span key={p.key} className={styles.pop} style={{ color: p.color }}>{p.text}</span>
-        ))}
+        {pops.map(p => <span key={p.key} className={styles.pop}>{p.text}</span>)}
       </div>
 
       {confetti > 0 && <Confetti key={confetti} />}
 
       {undo && (
         <div className={styles.undo} role="status">
-          <span className={styles.undoText}>
-            {undo.nowDone ? 'Отмечено' : 'Снято'}: {undo.text}
-          </span>
+          <span className={styles.undoText}>{undo.nowDone ? 'Отмечено' : 'Снято'}: {undo.text}</span>
           <button type="button" className={styles.undoBtn} onClick={undoLast}>Отменить</button>
         </div>
       )}
@@ -449,302 +510,290 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
           </span>
         </div>
       )}
+
       <header className={styles.header}>
-        <div className={styles.hero}>
-          <div className={styles.medal} aria-hidden="true">
-            <span className={styles.medalLv}>{player.level}</span>
-            <span className={styles.medalWord}>ур.</span>
-          </div>
-          <div className={styles.heroText}>
-            <h1 className={styles.goal}>Гоа</h1>
-            <div className={styles.rankRow}>
-              <span className={styles.rank}>{player.rank}</span>
-              <button
-                type="button"
-                className={styles.sound}
-                onClick={toggleMute}
-                aria-pressed={!muted}
-                title={muted ? 'Включить звук' : 'Выключить звук'}
-              >
-                {muted ? '🔇' : '🔊'}
-              </button>
-            </div>
-            <div className={styles.heroBar} title={`${stats.xp} XP всего`}>
-              <i style={{ width: `${(player.into / player.need) * 100}%` }} />
-            </div>
-            <div className={styles.heroMeta}>
-              <span>{stats.xp.toLocaleString('ru-RU')} XP</span>
-              {/* Деньги видны на обеих вкладках: ради них всё и затевалось. */}
-              <span className={styles.heroMoney}>{fmt(stats.money)}</span>
-              <span>до {player.level + 1} ур. — {player.need - player.into}</span>
-            </div>
-          </div>
+        <div className={styles.headMain}>
+          <p className={styles.eyebrow}>{weekdayLong.format(new Date(`${today}T00:00:00Z`))}</p>
+          <h1 className={styles.title}>Гоа через {daysLeft} {plural(daysLeft, 'день', 'дня', 'дней')}</h1>
         </div>
-
-        <div className={styles.tabs} role="tablist">
-          {TABS.map(([key, label]) => (
-            <button
-              key={key}
-              type="button"
-              role="tab"
-              aria-selected={tab === key}
-              className={`${styles.tab} ${tab === key ? styles.tabOn : ''}`}
-              onClick={() => {
-                setTab(key)
-                try { localStorage.setItem('plan_tab', key) } catch { /* приватный режим */ }
-              }}
-            >
-              {label}
-              {key === 'tasks' && overdue.length > 0 && <i className={styles.tabDot} />}
-            </button>
-          ))}
-        </div>
-
-        {tab === 'plan' && (
-          <div className={styles.quest}>
-            Старт 15 сентября. Вылет 14 декабря. 12 сделок, 4 застройщика на фиксе.
+        <div className={styles.headSide}>
+          <div className={styles.player} title={`${stats.xp} XP всего`}>
+            <span className={styles.lv}>{player.level}</span>
+            <span className={styles.playerText}>
+              <b>{player.rank}</b>
+              <span className={styles.thinBar}><i style={{ width: `${(player.into / player.need) * 100}%` }} /></span>
+              <em>{stats.xp.toLocaleString('ru-RU')} XP · до {player.level + 1} ур. {player.need - player.into}</em>
+            </span>
           </div>
-        )}
-
-        {tab === 'profile' && (
-          <>
-          <div className={styles.meter}>
-            <div className={styles.mrow}>
-              <div className={styles.msum}>{fmt(stats.money)}</div>
-              <div className={styles.mtarget}>из {fmt(PLAN_TARGET_USD)}</div>
-            </div>
-            <div className={styles.bar} role="progressbar" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100} aria-label="Прогресс по деньгам">
+          <div className={styles.money} title="Заработано по плану">
+            <b>{fmt(stats.money)}</b>
+            <span className={`${styles.thinBar} ${styles.goldBar}`} role="progressbar" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100} aria-label="Деньги от цели">
               <i style={{ width: `${pct}%` }} />
+            </span>
+            <em>из {fmt(PLAN_TARGET_USD)}</em>
+          </div>
+          <button
+            type="button"
+            className={styles.iconBtn}
+            onClick={toggleMute}
+            aria-pressed={!muted}
+            title={muted ? 'Включить звук' : 'Выключить звук'}
+            aria-label={muted ? 'Включить звук' : 'Выключить звук'}
+          >
+            {muted ? '🔇' : '🔊'}
+          </button>
+        </div>
+      </header>
+
+      <nav className={styles.tabs} role="tablist" aria-label="Разделы">
+        {TABS.map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            role="tab"
+            aria-selected={tab === key}
+            className={`${styles.tab} ${tab === key ? styles.tabOn : ''}`}
+            onClick={() => setTabSaved(key)}
+          >
+            {label}
+            {key === 'comms' && waitingMe.length > 0 && <span className={styles.count}>{waitingMe.length}</span>}
+          </button>
+        ))}
+      </nav>
+
+      {failed && (
+        <p className={styles.alert} role="alert">Не удалось загрузить или сохранить. Проверь интернет и обнови страницу.</p>
+      )}
+
+      {tab === 'today' && (
+        <div className={styles.grid}>
+          <div className={styles.col}>
+            <div className={styles.slot} style={{ order: 1 }}>
+            <section className={`${styles.card} ${styles.hero}`} aria-label="Секретарь">
+              <div className={styles.cardHead}>
+                <h2>Сегодня</h2>
+                <button type="button" className={styles.ghostBtn} onClick={() => void refreshPlan()} disabled={refreshing === 'busy'}>
+                  {refreshing === 'busy' ? 'Собираю…' : 'Пересобрать план'}
+                </button>
+              </div>
+              {refreshing === 'cap' && <p className={styles.hint}>Дневной лимит на ИИ исчерпан — план обновится завтра утром.</p>}
+              {refreshing === 'error' && <p className={styles.hint}>Секретарь не ответил. Попробуй ещё раз через минуту.</p>}
+              {note?.brief
+                ? <p className={styles.brief}>{note.brief}</p>
+                : loaded && <p className={styles.hint}>Секретарь составляет план в 8:00 по Бали. Можно не ждать — нажми «Пересобрать план».</p>}
+
+              {aiToday.length > 0 && (
+                <ul className={styles.list}>
+                  {aiToday.map(t => <AiRow key={t.id} task={t} onToggle={toggleAi} />)}
+                </ul>
+              )}
+
+              {planToday.length > 0 && (
+                <>
+                  <h3 className={styles.sub}>
+                    По плану квеста
+                    <span>{planToday.filter(t => effDone.has(t.id)).length} из {planToday.length}</span>
+                  </h3>
+                  <ul className={styles.list}>
+                    {planToday.map(task => (
+                      <Row key={task.id} task={task} done={effDone} auto={auto.get(task.id)} onToggle={toggle} />
+                    ))}
+                  </ul>
+                </>
+              )}
+            </section>
             </div>
-            <div className={styles.levels}>
-              {nextLevel
-                ? <span>До планки «{nextLevel.name}» — {fmt(nextLevel.amount - stats.money)}</span>
-                : <span>Все планки взяты</span>}
-            </div>
+
+            {overdue.length > 0 && (<div className={styles.slot} style={{ order: 5 }}>
+              <Collapsible
+                title="Хвосты"
+                meta={`${overdue.length} ${plural(overdue.length, 'задача', 'задачи', 'задач')} из прошлых дней`}
+                tone="warn"
+                items={overdue}
+                limit={5}
+                render={task => (
+                  <Row key={task.id} task={task} done={effDone} auto={auto.get(task.id)} onToggle={toggle} note={ageNote(task.expected, today)} />
+                )}
+              />
+            </div>)}
+
+            {waiting.length > 0 && (<div className={styles.slot} style={{ order: 6 }}>
+              <Collapsible
+                title="Ждут чужого решения"
+                meta={`${waiting.length} впереди`}
+                items={waiting}
+                limit={4}
+                render={task => (
+                  <Row key={task.id} task={task} done={effDone} auto={auto.get(task.id)} onToggle={toggle} note={ageNote(task.expected, today)} />
+                )}
+              />
+            </div>)}
           </div>
 
-          <div className={styles.stats}>
-            <div><span>{stats.doneCount}</span>задач закрыто</div>
-            <div><span>{stats.deals}</span>{plural(stats.deals, 'сделка', 'сделки', 'сделок')} из {PLAN_DEALS_TOTAL}</div>
-            <div><span>{daysLeft}</span>{plural(daysLeft, 'день', 'дня', 'дней')} до вылета</div>
-            <div className={streak > 0 ? styles.statHot : undefined}>
-              <span>{streak > 0 ? `🔥${streak}` : '—'}</span>
-              {streak > 0 ? `${plural(streak, 'день', 'дня', 'дней')} подряд` : 'серии нет'}
+          <div className={styles.col}>
+            <div className={styles.slot} style={{ order: 2 }}>
+              <ScoreCard today={scoreToday} scores={dash.scores} onOpen={() => setTabSaved('results')} />
             </div>
-          </div>
 
-          <section className={styles.skills} aria-label="Прокачка навыков">
-            <div className={styles.skillsHead}>
-              <b>Прокачка</b>
-              <span>{stats.xp.toLocaleString('ru-RU')} XP всего</span>
-            </div>
-            {SKILL_ORDER.map(sk => {
-              const xp = stats.bySkill[sk]
-              const { level, into, need } = levelOf(xp)
-              const { icon, name, hint, color } = SKILLS[sk]
-              return (
-                <div
-                  key={sk}
-                  className={styles.skill}
-                  style={{ '--sk': color } as React.CSSProperties}
-                  title={`${hint}. Всего в плане ${SKILL_TOTALS[sk]} XP, набрано ${xp}`}
-                >
-                  <span className={styles.skillIcon} aria-hidden="true">{icon}</span>
-                  <div className={styles.skillBody}>
-                    <div className={styles.skillTop}>
-                      <b>{name}</b>
-                      <span className={styles.skillLv}>ур. {level}</span>
-                      <span className={styles.skillXp}>{into} / {need}</span>
-                    </div>
-                    <div className={styles.skillBar}>
-                      <i style={{ width: `${(into / need) * 100}%` }} />
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </section>
-
-          <section className={styles.awards} aria-label="Достижения">
-            <div className={styles.skillsHead}>
-              <b>Добыча</b>
-              <span>{earned.size} из {ACHIEVEMENTS.length}</span>
-            </div>
-            <div className={styles.awardGrid}>
-              {ACHIEVEMENTS.map(a => {
-                const got = earned.has(a.id)
-                return (
-                  <div key={a.id} className={`${styles.award} ${got ? styles.awardGot : ''}`} title={a.hint}>
-                    <span className={styles.awardIcon} aria-hidden="true">{a.icon}</span>
-                    <span className={styles.awardName}>{a.name}</span>
-                  </div>
-                )
-              })}
-            </div>
-          </section>
-          </>
-        )}
-
-        {tab === 'tasks' && (
-          <>
-          <section className={`${styles.today} ${todayHero ? styles.accent : ''}`} aria-label="Сегодня">
-            <div className={styles.tailsHead}>
-              <b>Сегодня</b>
-              <span>
-                {todayBlock.tasks.length > 0
-                  ? `${todayBlock.label} · ${todayDone}/${todayBlock.tasks.length}`
-                  : todayBlock.label ?? 'нет в плане'}
-              </span>
-            </div>
-            {todayBlock.tasks.length > 0
-              ? todayBlock.tasks.map(task => (
-                <Row key={task.id} task={task} done={effDone} auto={auto.get(task.id)} onToggle={toggle} tag />
-              ))
-              : <p className={styles.empty}>На сегодня дел в плане нет.</p>}
-            {todayClear && (
-              <p className={styles.empty}>
-                {overdue.length > 0 ? 'День закрыт — остались хвосты ниже.' : 'День закрыт полностью.'}
-              </p>
-            )}
-          </section>
-
-          <Feed label={feed.label} steps={feed.steps} onReject={rejectStep} />
-
-          {nextBlock && (
-            <section className={`${styles.ahead} ${todayHero ? '' : styles.accent}`} aria-label="Ближайший день">
-              <div className={styles.tailsHead}>
-                <b>Ближайший день</b>
-                <span>{nextBlock.label}</span>
+            <div className={styles.slot} style={{ order: 3 }}>
+            <section className={styles.card} aria-label="Ждут ответа">
+              <div className={styles.cardHead}>
+                <h2>Ждут вашего ответа</h2>
+                <button type="button" className={styles.linkBtn} onClick={() => setTabSaved('comms')}>Вся переписка</button>
               </div>
-              {nextBlock.tasks.map(task => (
-                <Row key={task.id} task={task} done={effDone} auto={auto.get(task.id)} onToggle={toggle} tag />
-              ))}
-            </section>
-          )}
-
-          {overdue.length > 0 && (
-            <section className={styles.tails} aria-label="Хвосты">
-              <div className={styles.tailsHead}>
-                <b>Хвосты</b>
-                <span>{overdue.length} {plural(overdue.length, 'задача', 'задачи', 'задач')} из прошедших дней</span>
-              </div>
-              {overdue.map(task => (
-                <Row key={task.id} task={task} done={effDone} auto={auto.get(task.id)} onToggle={toggle} note={ageNote(task.expected, today)} />
-              ))}
-            </section>
-          )}
-
-          {waiting.all.length > 0 && (
-            <section className={styles.waiting} aria-label="В работе">
-              <div className={styles.tailsHead}>
-                <b>Ждут чужого решения</b>
-                <span>
-                  {waiting.open.length} {plural(waiting.open.length, 'ждёт', 'ждут', 'ждут')}
-                  {waiting.closed.length > 0 && ` · ${waiting.closed.length} ${plural(waiting.closed.length, 'случилось', 'случилось', 'случилось')}`}
-                </span>
-              </div>
-              {(allWaiting
-                ? waiting.all
-                // Случившиеся показываем всегда: иначе ошибочную галочку
-                // придётся искать за кнопкой «показать все».
-                : [...waiting.open.slice(0, 5), ...waiting.closed]
-              ).map(task => (
-                <Row key={task.id} task={task} done={effDone} auto={auto.get(task.id)} onToggle={toggle} note={ageNote(task.expected, today)} />
-              ))}
-              {waiting.open.length > 5 && (
-                <button type="button" className={styles.waitingMore} onClick={() => setAllWaiting(v => !v)}>
-                  {allWaiting ? 'Свернуть' : `Показать все — ещё ${waiting.open.length - 5}`}
+              {waitingMe.length === 0
+                ? <p className={styles.hint}>{loaded ? 'Никто не ждёт — все отвечены.' : 'Загружаю…'}</p>
+                : <ul className={styles.list}>{waitingMe.slice(0, 5).map(c => <CommRow key={c.chat_id} chat={c} compact />)}</ul>}
+              {waitingMe.length > 5 && (
+                <button type="button" className={styles.linkBtn} onClick={() => setTabSaved('comms')}>
+                  Ещё {waitingMe.length - 5}
                 </button>
               )}
             </section>
-          )}
-          </>
-        )}
-      </header>
+            </div>
 
-      {tab === 'plan' && (
-      <div>
-        {PLAN.map(week => (
-          <Week
-            key={week.n}
-            week={week}
-            done={effDone}
-            auto={auto}
-            open={openWeeks.has(week.n)}
-            onToggleWeek={() => setOpenWeeks(cur => {
-              const next = new Set(cur)
-              if (next.has(week.n)) next.delete(week.n); else next.add(week.n)
-              return next
-            })}
-            onToggleTask={toggle}
-          />
-        ))}
-      </div>
+            <div className={styles.slot} style={{ order: 4 }}>
+              <UpcomingCard upcoming={dash.upcoming} today={today} />
+            </div>
+
+            <div className={styles.slot} style={{ order: 7 }}>
+              <Feed label={feed.label} steps={feed.steps} onReject={rejectStep} />
+            </div>
+          </div>
+        </div>
       )}
 
-      <button
-        type="button"
-        className={`${styles.reset} ${armed ? styles.resetArmed : ''}`}
-        onClick={reset}
-        onBlur={() => setArmed(false)}
-      >
-        {armed ? 'Точно снять все галочки?' : 'Сбросить все галочки'}
-      </button>
+      {tab === 'comms' && <CommsTab comms={dash.comms} loaded={loaded} />}
 
-      <p className={styles.note} role="status">
-        {failed
-          ? 'Не сохранилось, попробуй ещё раз.'
-          : !loaded
-            ? 'Загружаю отметки…'
-            : 'Галочки сохраняются в базе — они одинаковые на всех устройствах.'}
+      {tab === 'plan' && (
+        <div className={styles.weeks}>
+          <p className={styles.hint}>Старт 15 сентября. Вылет 14 декабря. 12 сделок, 4 застройщика на фиксе.</p>
+          {PLAN.map(week => (
+            <Week
+              key={week.n}
+              week={week}
+              done={effDone}
+              auto={auto}
+              today={today}
+              open={openWeeks.has(week.n)}
+              onToggleWeek={() => setOpenWeeks(cur => {
+                const next = new Set(cur)
+                if (next.has(week.n)) next.delete(week.n); else next.add(week.n)
+                return next
+              })}
+              onToggleTask={toggle}
+            />
+          ))}
+          <button
+            type="button"
+            className={`${styles.reset} ${armed ? styles.resetArmed : ''}`}
+            onClick={reset}
+            onBlur={() => setArmed(false)}
+          >
+            {armed ? 'Точно снять все галочки?' : 'Сбросить все галочки'}
+          </button>
+        </div>
+      )}
+
+      {tab === 'results' && (
+        <div className={styles.grid}>
+          <div className={styles.col}>
+            <History scores={dash.scores} notes={dash.notes} />
+          </div>
+          <div className={styles.col}>
+            <section className={styles.card} aria-label="Деньги">
+              <div className={styles.cardHead}><h2>Деньги</h2><span className={styles.meta}>цель {fmt(PLAN_TARGET_USD)}</span></div>
+              <p className={styles.big}>{fmt(stats.money)}</p>
+              <div className={`${styles.thinBar} ${styles.goldBar}`} role="progressbar" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100} aria-label="Прогресс по деньгам">
+                <i style={{ width: `${pct}%` }} />
+              </div>
+              <p className={styles.hint}>
+                {nextLevel ? `До планки «${nextLevel.name}» — ${fmt(nextLevel.amount - stats.money)}` : 'Все планки взяты'}
+              </p>
+              <dl className={styles.stats}>
+                <div><dt>задач закрыто</dt><dd>{stats.doneCount}</dd></div>
+                <div><dt>{plural(stats.deals, 'сделка', 'сделки', 'сделок')} из {PLAN_DEALS_TOTAL}</dt><dd>{stats.deals}</dd></div>
+                <div><dt>{plural(daysLeft, 'день', 'дня', 'дней')} до вылета</dt><dd>{daysLeft}</dd></div>
+                <div><dt>{streak > 0 ? `${plural(streak, 'день', 'дня', 'дней')} подряд` : 'серии нет'}</dt><dd>{streak > 0 ? `🔥${streak}` : '—'}</dd></div>
+              </dl>
+            </section>
+
+            <section className={styles.card} aria-label="Прокачка навыков">
+              <div className={styles.cardHead}><h2>Прокачка</h2><span className={styles.meta}>{stats.xp.toLocaleString('ru-RU')} XP</span></div>
+              <ul className={styles.list}>
+                {SKILL_ORDER.map(sk => {
+                  const xp = stats.bySkill[sk]
+                  const { level, into, need } = levelOf(xp)
+                  const { icon, name, hint, color } = SKILLS[sk]
+                  return (
+                    <li key={sk} className={styles.skill} style={{ '--sk': color } as React.CSSProperties}
+                      title={`${hint}. Всего в плане ${SKILL_TOTALS[sk]} XP, набрано ${xp}`}>
+                      <span aria-hidden="true">{icon}</span>
+                      <div className={styles.skillBody}>
+                        <div className={styles.skillTop}><b>{name}</b><span>ур. {level} · {into}/{need}</span></div>
+                        <div className={styles.skillBar}><i style={{ width: `${(into / need) * 100}%` }} /></div>
+                      </div>
+                    </li>
+                  )
+                })}
+              </ul>
+            </section>
+
+            <section className={styles.card} aria-label="Достижения">
+              <div className={styles.cardHead}><h2>Добыча</h2><span className={styles.meta}>{earned.size} из {ACHIEVEMENTS.length}</span></div>
+              <div className={styles.awardGrid}>
+                {ACHIEVEMENTS.map(a => (
+                  <div key={a.id} className={`${styles.award} ${earned.has(a.id) ? styles.awardGot : ''}`} title={a.hint}>
+                    <span aria-hidden="true">{a.icon}</span>
+                    <span>{a.name}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+        </div>
+      )}
+
+      <p className={styles.footNote} role="status">
+        {!loaded ? 'Загружаю…' : 'Переписка проверяется раз в час с 8:00 до 23:00. Секретарь: план в 8:00, пересборка в 13:00 и 17:00, итог в 21:00.'}
       </p>
     </div>
   )
 }
 
-const CONFETTI_COLORS = ['#4fd1a5', '#f0a93c', '#ff5fa2', '#4cc2ff', '#b18cff']
+// ─── Блоки ─────────────────────────────────────────────────────────────
 
-/** Салют: 28 бумажек разлетаются и гаснут. Чистый CSS, без библиотек. */
-function Confetti() {
-  const bits = useMemo(
-    () => Array.from({ length: 28 }, (_, i) => ({
-      left: Math.round(Math.random() * 100),
-      delay: Math.round(Math.random() * 220),
-      drift: Math.round((Math.random() - 0.5) * 220),
-      spin: Math.round(Math.random() * 540 - 270),
-      color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-      size: 6 + Math.round(Math.random() * 6),
-    })),
-    [],
-  )
-  return (
-    <div className={styles.confetti} aria-hidden="true">
-      {bits.map((b, i) => (
-        <span
-          key={i}
-          style={{
-            left: `${b.left}%`,
-            background: b.color,
-            width: b.size,
-            height: b.size * 1.6,
-            animationDelay: `${b.delay}ms`,
-            '--drift': `${b.drift}px`,
-            '--spin': `${b.spin}deg`,
-          } as React.CSSProperties}
-        />
-      ))}
-    </div>
-  )
+const PRIORITY: Record<1 | 2 | 3, { label: string; cls: 'p1' | 'p2' | 'p3' }> = {
+  1: { label: 'Срочно', cls: 'p1' },
+  2: { label: 'Важно', cls: 'p2' },
+  3: { label: 'Если успею', cls: 'p3' },
 }
 
-const dayMonth = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'short', timeZone: 'UTC' })
-
-/** Насколько событие разошлось с плановой датой. */
-function ageNote(expected: string, today: string): string {
-  const days = Math.round((Date.parse(today) - Date.parse(expected)) / 86_400_000)
-  if (days > 0) return `${days} ${plural(days, 'день', 'дня', 'дней')} как ждёт`
-  if (days === 0) return 'по плану сегодня'
-  return `по плану ${dayMonth.format(new Date(`${expected}T00:00:00Z`))}`
+function AiRow({ task, onToggle }: { task: AiTask; onToggle: (id: number) => void }) {
+  const done = task.status === 'done'
+  const p = PRIORITY[task.priority] ?? PRIORITY[2]
+  return (
+    <li className={styles.item}>
+      <label className={styles.task}>
+        <input type="checkbox" checked={done} onChange={() => onToggle(task.id)} />
+        <span className={styles.txt}>
+          <span className={styles.taskTitle}>{task.title}</span>
+          {task.detail && <span className={styles.detail}>{task.detail}</span>}
+          <span className={styles.tags}>
+            <span className={`${styles.prio} ${styles[p.cls]}`}>{p.label}</span>
+            {done && task.done_by === 'chat' && <span className={styles.autoOn}>💬 закрыто ответом в чате</span>}
+            {!done && task.auto_close && <span className={styles.autoTag}>💬 закроется, когда напишешь</span>}
+            {task.chat_id != null && (
+              <a className={styles.chatLink} href={`/admin/perepiska?chat=${task.chat_id}`} target="_blank" rel="noopener"
+                onClick={e => e.stopPropagation()}>
+                Открыть чат{task.contact ? ` · ${task.contact}` : ''} →
+              </a>
+            )}
+          </span>
+        </span>
+      </label>
+    </li>
+  )
 }
 
 /**
@@ -753,16 +802,258 @@ function ageNote(expected: string, today: string): string {
  */
 function AutoNote({ p, checked }: { p?: AutoProgress; checked: boolean }) {
   if (!p) return null
-  if (!p.done) {
-    return <span className={styles.auto} title="Сколько набралось по переписке">💬 {p.have}/{p.need}</span>
-  }
-  if (!checked) return <span className={styles.auto} title="Переписка закрыла задачу, но галочку сняли руками">💬 снято руками</span>
+  if (!p.done) return <span className={styles.autoTag} title="Сколько набралось по переписке">💬 {p.have}/{p.need}</span>
+  if (!checked) return <span className={styles.autoTag} title="Переписка закрыла задачу, но галочку сняли руками">💬 снято руками</span>
   const e = p.evidence.at(-1)
   const who = p.evidence.length > 1 ? `${p.evidence.length} шт.` : e?.contact ?? null
   return (
-    <span className={`${styles.auto} ${styles.autoOn}`} title="Закрыто по переписке">
+    <span className={styles.autoOn} title="Закрыто по переписке">
       💬 {who ? `${who}, ` : ''}{e ? dayMonth.format(new Date(`${e.day}T00:00:00Z`)) : 'по переписке'}
     </span>
+  )
+}
+
+function Row({ task, done, auto, onToggle, note }: {
+  task: PlanTask
+  done: Set<string>
+  auto?: AutoProgress
+  onToggle: (taskId: string) => void
+  note?: string
+}) {
+  return (
+    <li className={styles.item}>
+      <label className={styles.task}>
+        <input type="checkbox" checked={done.has(task.id)} onChange={() => onToggle(task.id)} />
+        <span className={styles.txt}>
+          <span className={styles.taskTitle}>{task.text}</span>
+          <span className={styles.tags}>
+            {task.amount != null && <span className={styles.pay}>+{fmt(task.amount)}</span>}
+            <span className={styles.skillTag}>{SKILLS[task.skill].name} +{task.xp}</span>
+            <AutoNote p={auto} checked={done.has(task.id)} />
+            {note != null && <span className={styles.age}>{note}</span>}
+          </span>
+        </span>
+      </label>
+    </li>
+  )
+}
+
+/** Карточка со списком, где видны первые limit строк, остальное — по кнопке. */
+function Collapsible<T>({ title, meta, items, limit, render, tone }: {
+  title: string
+  meta: string
+  items: T[]
+  limit: number
+  render: (item: T) => React.ReactNode
+  tone?: 'warn'
+}) {
+  const [all, setAll] = useState(false)
+  const shown = all ? items : items.slice(0, limit)
+  return (
+    <section className={`${styles.card} ${tone === 'warn' ? styles.warn : ''}`} aria-label={title}>
+      <div className={styles.cardHead}><h2>{title}</h2><span className={styles.meta}>{meta}</span></div>
+      <ul className={styles.list}>{shown.map(render)}</ul>
+      {items.length > limit && (
+        <button type="button" className={styles.linkBtn} onClick={() => setAll(v => !v)}>
+          {all ? 'Свернуть' : `Показать все — ещё ${items.length - limit}`}
+        </button>
+      )}
+    </section>
+  )
+}
+
+function scoreTone(score: number): string {
+  return score >= 70 ? styles.good : score >= 40 ? styles.mid : styles.low
+}
+
+function ScoreCard({ today, scores, onOpen }: { today: DayScore | null; scores: DayScore[]; onOpen: () => void }) {
+  const avg = scores.length ? Math.round(scores.reduce((s, d) => s + d.score, 0) / scores.length) : null
+  return (
+    <section className={styles.card} aria-label="Эффективность">
+      <div className={styles.cardHead}>
+        <h2>Эффективность</h2>
+        <button type="button" className={styles.linkBtn} onClick={onOpen}>По дням</button>
+      </div>
+      <div className={styles.scoreRow}>
+        <p className={styles.big}>
+          <span className={today ? scoreTone(today.score) : undefined}>{today ? today.score : '—'}</span>
+          <span className={styles.of}> / 100 сегодня</span>
+        </p>
+        {avg !== null && <p className={styles.meta}>в среднем {avg} за {scores.length} {plural(scores.length, 'день', 'дня', 'дней')}</p>}
+      </div>
+      <Bars scores={scores} />
+      {today && <Breakdown s={today} />}
+    </section>
+  )
+}
+
+function Bars({ scores }: { scores: DayScore[] }) {
+  return (
+    <div className={styles.bars} role="img" aria-label={`Оценки по дням: ${scores.map(s => s.score).join(', ')}`}>
+      {scores.map(s => (
+        <div key={s.day} className={styles.barCol} title={`${dayMonth.format(new Date(`${s.day}T00:00:00Z`))}: ${s.score}/100`}>
+          <span className={styles.barTrack}>
+            <span className={`${styles.barFill} ${scoreTone(s.score)}`} style={{ height: `${Math.max(4, s.score)}%` }} />
+          </span>
+          <span className={styles.barDay}>{weekdayShort.format(new Date(`${s.day}T00:00:00Z`)).slice(0, 2)}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function Breakdown({ s }: { s: DayScore }) {
+  const parts: Array<[string, string]> = [
+    ['План квеста', s.plan ? `${s.plan.done} из ${s.plan.total}` : 'не было задач'],
+    ['Задачи секретаря', s.ai ? `${s.ai.done} из ${s.ai.total}` : 'не ставились'],
+    ['Результат', `${s.result.points} из ${s.result.target} · ${s.result.steps} ${plural(s.result.steps, 'шаг', 'шага', 'шагов')}`],
+    ['Ответы за сутки', s.replies ? `${s.replies.answered} из ${s.replies.total}` : 'не писали'],
+  ]
+  return (
+    <dl className={styles.breakdown}>
+      {parts.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
+    </dl>
+  )
+}
+
+function History({ scores, notes }: { scores: DayScore[]; notes: DayNote[] }) {
+  const byDay = new Map(notes.map(n => [n.day, n]))
+  const list = [...scores].reverse()
+  return (
+    <section className={styles.card} aria-label="Дни">
+      <div className={styles.cardHead}>
+        <h2>Как проходили дни</h2>
+        <span className={styles.meta}>{scores.length} {plural(scores.length, 'день', 'дня', 'дней')}</span>
+      </div>
+      <Bars scores={scores} />
+      {list.length === 0 && <p className={styles.hint}>История появится с первым днём.</p>}
+      <ul className={styles.days}>
+        {list.map(s => {
+          const n = byDay.get(s.day)
+          return (
+            <li key={s.day} className={styles.dayItem}>
+              <div className={styles.dayHead}>
+                <b>{weekdayLong.format(new Date(`${s.day}T00:00:00Z`))}</b>
+                <span className={`${styles.scorePill} ${scoreTone(s.score)}`}>{s.score}</span>
+              </div>
+              {n?.review && <p className={styles.review}>{n.review}</p>}
+              <Breakdown s={s} />
+            </li>
+          )
+        })}
+      </ul>
+    </section>
+  )
+}
+
+function UpcomingCard({ upcoming, today }: { upcoming: Upcoming[]; today: string }) {
+  // Встречи от бота плюс ближайшие дни квеста с делами.
+  const next = PLAN.flatMap(w => w.days).filter(d => d.iso > today && d.tasks.some(t => !t.waiting)).slice(0, 2)
+  return (
+    <section className={styles.card} aria-label="Ближайшее">
+      <div className={styles.cardHead}><h2>Ближайшее</h2></div>
+      {upcoming.length === 0 && next.length === 0 && <p className={styles.hint}>Впереди пусто.</p>}
+      {upcoming.length > 0 && (
+        <ul className={styles.list}>
+          {upcoming.slice(0, 6).map(u => (
+            <li key={u.id} className={styles.meet}>
+              <span className={styles.meetWhen}>{whenFmt.format(new Date(u.starts_at))}</span>
+              <span className={styles.meetWhat}>
+                <b>{u.topic ?? 'Встреча'}</b>
+                <span>{[u.contact, u.place].filter(Boolean).join(' · ')}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {next.map(d => (
+        <div key={d.id}>
+          <h3 className={styles.sub}>{d.label}<span>по плану</span></h3>
+          <ul className={styles.plainList}>
+            {d.tasks.filter(t => !t.waiting).map(t => <li key={t.id}>{t.text}</li>)}
+          </ul>
+        </div>
+      ))}
+    </section>
+  )
+}
+
+const ROLE_LABEL: Record<string, string> = { agent: 'Агент', developer: 'Застройщик', client: 'Клиент' }
+
+function CommRow({ chat, compact }: { chat: CommChat; compact?: boolean }) {
+  const waiting = chat.waiting_since != null
+  return (
+    <li>
+      <a className={styles.comm} href={`/admin/perepiska?chat=${chat.chat_id}`} target="_blank" rel="noopener">
+        <span className={styles.avatar} aria-hidden="true">{chat.name.slice(0, 1).toUpperCase()}</span>
+        <span className={styles.commBody}>
+          <span className={styles.commTop}>
+            <b>{chat.name}</b>
+            {chat.role && ROLE_LABEL[chat.role] && <span className={styles.roleTag}>{ROLE_LABEL[chat.role]}</span>}
+            {!compact && chat.crm && <span className={styles.crmTag}>{chat.crm.title}</span>}
+          </span>
+          <span className={styles.commText}>{chat.last_dir === 'out' ? 'Вы: ' : ''}{chat.last_text || '—'}</span>
+        </span>
+        <span className={`${styles.commWhen} ${waiting ? styles.commWait : ''}`}>
+          {waiting ? `ждёт ${since(chat.waiting_since!)}` : since(chat.last_ts)}
+        </span>
+      </a>
+    </li>
+  )
+}
+
+type RoleFilter = 'all' | 'agent' | 'developer' | 'client'
+
+function CommsTab({ comms, loaded }: { comms: CommChat[]; loaded: boolean }) {
+  const [role, setRole] = useState<RoleFilter>('all')
+  const list = role === 'all' ? comms : comms.filter(c => c.role === role)
+  const count = (r: RoleFilter) => (r === 'all' ? comms.length : comms.filter(c => c.role === r).length)
+  const waitMe = list.filter(c => c.waiting_since).sort((a, b) => a.waiting_since!.localeCompare(b.waiting_since!))
+  const waitThem = list.filter(c => !c.waiting_since && c.last_dir === 'out' && Date.now() - Date.parse(c.last_ts) > 2 * 86_400_000)
+  const shown = new Set([...waitMe, ...waitThem].map(c => c.chat_id))
+  const rest = list.filter(c => !shown.has(c.chat_id))
+  const filters: Array<[RoleFilter, string]> = [['all', 'Все'], ['agent', 'Агенты'], ['developer', 'Застройщики'], ['client', 'Клиенты']]
+
+  return (
+    <div className={styles.commsWrap}>
+      <div className={styles.chips} role="group" aria-label="Кто">
+        {filters.map(([key, label]) => (
+          <button key={key} type="button" aria-pressed={role === key}
+            className={`${styles.chip} ${role === key ? styles.chipOn : ''}`} onClick={() => setRole(key)}>
+            {label} <span>{count(key)}</span>
+          </button>
+        ))}
+      </div>
+      {!loaded && <p className={styles.hint}>Загружаю переписку…</p>}
+      {loaded && list.length === 0 && <p className={styles.hint}>За последний месяц переписки нет.</p>}
+      <CommGroup title="Ждут вашего ответа" hint="Написали вам — ответа ещё нет" items={waitMe} tone="warn" />
+      <CommGroup title="Ждёте вы" hint="Вы написали больше двух дней назад — ответа нет" items={waitThem} limit={10} />
+      <CommGroup title="Остальные" hint="Последний месяц, свежие сверху" items={rest} limit={20} />
+    </div>
+  )
+}
+
+function CommGroup({ title, hint, items, tone, limit }: {
+  title: string
+  hint: string
+  items: CommChat[]
+  tone?: 'warn'
+  limit?: number
+}) {
+  const [all, setAll] = useState(false)
+  if (items.length === 0) return null
+  const shown = limit && !all ? items.slice(0, limit) : items
+  return (
+    <section className={`${styles.card} ${tone === 'warn' ? styles.warn : ''}`} aria-label={title}>
+      <div className={styles.cardHead}><h2>{title}</h2><span className={styles.meta}>{items.length}</span></div>
+      <p className={styles.hint}>{hint}</p>
+      <ul className={styles.list}>{shown.map(c => <CommRow key={c.chat_id} chat={c} />)}</ul>
+      {limit && items.length > limit && (
+        <button type="button" className={styles.linkBtn} onClick={() => setAll(v => !v)}>
+          {all ? 'Свернуть' : `Показать все — ещё ${items.length - limit}`}
+        </button>
+      )}
+    </section>
   )
 }
 
@@ -783,19 +1074,16 @@ function Feed({ label, steps, onReject }: {
     return [...byKind].sort((a, b) => a[1][0].ts.localeCompare(b[1][0].ts))
   }, [steps])
   return (
-    <section className={styles.feed} aria-label="Из переписки">
-      <div className={styles.tailsHead}>
-        <b>Из переписки</b>
-        <span>{label ?? 'пока пусто'}</span>
-      </div>
+    <section className={styles.card} aria-label="Из переписки">
+      <div className={styles.cardHead}><h2>Засчитано по переписке</h2><span className={styles.meta}>{label ?? 'пока пусто'}</span></div>
       {steps.length === 0 && (
-        <p className={styles.empty}>
-          Трекер читает переписку в Telegram раз в час и сам отмечает шаги: встречи, зумы, договоры, брони.
-        </p>
+        <p className={styles.hint}>Трекер читает переписку раз в час и сам отмечает шаги: встречи, зумы, договоры, брони.</p>
       )}
-      {groups.map(([kind, list]) => (list.length >= 3 || kind === 'ping'
-        ? <StepGroup key={kind} kind={kind} steps={list} onReject={onReject} />
-        : list.map(s => <StepRow key={s.id} step={s} onReject={onReject} />)))}
+      <ul className={styles.list}>
+        {groups.map(([kind, list]) => (list.length >= 3 || kind === 'ping'
+          ? <StepGroup key={kind} kind={kind} steps={list} onReject={onReject} />
+          : list.map(s => <StepRow key={s.id} step={s} onReject={onReject} />)))}
+      </ul>
     </section>
   )
 }
@@ -809,69 +1097,46 @@ function StepGroup({ kind, steps, onReject }: {
   const live = steps.filter(s => !s.rejected).length
   return (
     <>
-      <button type="button" className={styles.stepGroup} onClick={() => setOpen(v => !v)} aria-expanded={open}>
-        <span aria-hidden="true">{STEP_KINDS[kind].icon}</span>
-        <span className={styles.stepText}><b>{STEP_KINDS[kind].label}</b> · {live}</span>
-        <span className={styles.stepMeta}>{open ? 'свернуть' : 'кто'}</span>
-      </button>
+      <li>
+        <button type="button" className={styles.stepGroup} onClick={() => setOpen(v => !v)} aria-expanded={open}>
+          <span aria-hidden="true">{STEP_KINDS[kind].icon}</span>
+          <span className={styles.stepText}><b>{STEP_KINDS[kind].label}</b> · {live}</span>
+          <span className={styles.meta}>{open ? 'свернуть' : 'кто'}</span>
+        </button>
+      </li>
       {open && steps.map(s => <StepRow key={s.id} step={s} onReject={onReject} />)}
     </>
   )
 }
 
-const timeFmt = new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Makassar' })
-
 function StepRow({ step, onReject }: { step: PlanStep; onReject: (id: number, rejected: boolean) => void }) {
   const kind = STEP_KINDS[step.kind]
   return (
-    <div className={`${styles.step} ${step.rejected ? styles.stepOff : ''}`}>
+    <li className={`${styles.step} ${step.rejected ? styles.stepOff : ''}`}>
       <span aria-hidden="true">{kind.icon}</span>
       <span className={styles.stepText}>
-        <b>{kind.label}</b>
-        {step.contact && <> · {step.contact}</>}
+        <b>{kind.label}</b>{step.contact && <> · {step.contact}</>}
         {step.note && <em>{step.note}</em>}
       </span>
-      <span className={styles.stepMeta}>{timeFmt.format(new Date(step.ts))}</span>
+      <span className={styles.meta}>{timeFmt.format(new Date(step.ts))}</span>
       <button
         type="button"
-        className={styles.stepBtn}
+        className={styles.xBtn}
         onClick={() => onReject(step.id, !step.rejected)}
         title={step.rejected ? 'Вернуть в счёт' : 'Не засчитывать'}
         aria-label={step.rejected ? 'Вернуть в счёт' : 'Не засчитывать'}
       >
         {step.rejected ? '↺' : '✕'}
       </button>
-    </div>
+    </li>
   )
 }
 
-/** Строка задачи вне недели: с возрастом («3 дня как ждёт») или с бейджем навыка. */
-function Row({ task, done, auto, onToggle, note, tag }: {
-  task: PlanTask
-  done: Set<string>
-  auto?: AutoProgress
-  onToggle: (taskId: string) => void
-  note?: string
-  tag?: boolean
-}) {
-  return (
-    <label className={styles.task}>
-      <input type="checkbox" checked={done.has(task.id)} onChange={() => onToggle(task.id)} />
-      <span className={styles.txt}>
-        {task.text}
-        {task.amount != null && <span className={styles.pay}>+{fmt(task.amount)}</span>}
-        {tag && <span className={styles.tag}>{SKILLS[task.skill].name} +{task.xp}</span>}
-        <AutoNote p={auto} checked={done.has(task.id)} />
-        {note != null && <span className={styles.age}>{note}</span>}
-      </span>
-    </label>
-  )
-}
-
-function Week({ week, done, auto, open, onToggleWeek, onToggleTask }: {
+function Week({ week, done, auto, today, open, onToggleWeek, onToggleTask }: {
   week: PlanWeek
   done: Set<string>
   auto: Map<string, AutoProgress>
+  today: string
   open: boolean
   onToggleWeek: () => void
   onToggleTask: (taskId: string) => void
@@ -883,21 +1148,24 @@ function Week({ week, done, auto, open, onToggleWeek, onToggleTask }: {
   const bodyId = `week-body-${week.n}`
 
   return (
-    <section className={`${styles.week} ${open ? styles.weekOpen : ''} ${complete ? styles.weekDone : ''}`}>
+    <section className={`${styles.week} ${complete ? styles.weekDone : ''}`}>
       <button type="button" className={styles.whead} onClick={onToggleWeek} aria-expanded={open} aria-controls={bodyId}>
         <span className={styles.wnum}>{week.n}</span>
-        <span className={styles.wtitle}>
-          <b>{week.title}</b>
-          <em>{week.dates}</em>
-        </span>
+        <span className={styles.wtitle}><b>{week.title}</b><em>{week.dates}</em></span>
         <span className={styles.wcount}>{count}/{tasks.length}</span>
-        <span className={styles.chev} aria-hidden="true">›</span>
+        <span className={`${styles.chev} ${open ? styles.chevOpen : ''}`} aria-hidden="true">›</span>
       </button>
-
       {open && (
         <div className={styles.wbody} id={bodyId}>
           {week.days.filter(d => d.tasks.some(t => !t.waiting)).map(day => (
-            <Day key={day.id} day={day} done={done} auto={auto} onToggleTask={onToggleTask} />
+            <div key={day.id} className={`${styles.day} ${day.iso === today ? styles.dayToday : ''}`}>
+              <h3 className={styles.sub}>{day.label}{day.iso === today && <span>сегодня</span>}</h3>
+              <ul className={styles.list}>
+                {day.tasks.filter(t => !t.waiting).map(task => (
+                  <Row key={task.id} task={task} done={done} auto={auto.get(task.id)} onToggle={onToggleTask} />
+                ))}
+              </ul>
+            </div>
           ))}
         </div>
       )}
@@ -905,31 +1173,40 @@ function Week({ week, done, auto, open, onToggleWeek, onToggleTask }: {
   )
 }
 
-function Day({ day, done, auto, onToggleTask }: {
-  day: PlanWeek['days'][number]
-  done: Set<string>
-  auto: Map<string, AutoProgress>
-  onToggleTask: (taskId: string) => void
-}) {
-  // «сегодня» ставим только после монтирования: на сервере и на клиенте
-  // дата может разойтись, и React ругается на несовпадение разметки.
-  const [today, setToday] = useState(false)
-  useEffect(() => { setToday(new Date().toISOString().slice(0, 10) === day.iso) }, [day.iso])
+const CONFETTI_COLORS = ['#0f7a5c', '#c98a1c', '#d24b7a', '#2f7fc1', '#7d5bc4']
 
+/** Салют: 28 бумажек разлетаются и гаснут. Чистый CSS, без библиотек. */
+function Confetti() {
+  const bits = useMemo(
+    () => Array.from({ length: 28 }, (_, i) => ({
+      left: Math.round(Math.random() * 100),
+      delay: Math.round(Math.random() * 220),
+      drift: Math.round((Math.random() - 0.5) * 220),
+      spin: Math.round(Math.random() * 540 - 270),
+      color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+      size: 6 + Math.round(Math.random() * 6),
+    })),
+    [],
+  )
   return (
-    <div className={`${styles.day} ${today ? styles.dayToday : ''}`}>
-      <div className={styles.dname}>{day.label}</div>
-      {day.tasks.filter(t => !t.waiting).map(task => (
-        <label key={task.id} className={styles.task}>
-          <input type="checkbox" checked={done.has(task.id)} onChange={() => onToggleTask(task.id)} />
-          <span className={styles.txt}>
-            {task.text}
-            {task.amount != null && <span className={styles.pay}>+{fmt(task.amount)}</span>}
-            <span className={styles.tag}>{SKILLS[task.skill].name} +{task.xp}</span>
-            <AutoNote p={auto.get(task.id)} checked={done.has(task.id)} />
-          </span>
-        </label>
+    <div className={styles.confetti} aria-hidden="true">
+      {bits.map((b, i) => (
+        <span
+          key={i}
+          style={{
+            left: `${b.left}%`, background: b.color, width: b.size, height: b.size * 1.6,
+            animationDelay: `${b.delay}ms`, '--drift': `${b.drift}px`, '--spin': `${b.spin}deg`,
+          } as React.CSSProperties}
+        />
       ))}
     </div>
   )
+}
+
+/** Насколько событие разошлось с плановой датой. */
+function ageNote(expected: string, today: string): string {
+  const days = Math.round((Date.parse(today) - Date.parse(expected)) / 86_400_000)
+  if (days > 0) return `${days} ${plural(days, 'день', 'дня', 'дней')} как ждёт`
+  if (days === 0) return 'по плану сегодня'
+  return `по плану ${dayMonth.format(new Date(`${expected}T00:00:00Z`))}`
 }

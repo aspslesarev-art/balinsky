@@ -107,6 +107,12 @@ export function Perepiska() {
   const lastIdRef = useRef<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
+  // ?chat=<id> — сразу открыть нужный чат: так на него ссылается дашборд /plan.
+  useEffect(() => {
+    const id = Number(new URLSearchParams(window.location.search).get('chat'))
+    if (Number.isFinite(id) && id !== 0) setActiveId(id)
+  }, [])
+
   useEffect(() => {
     let cancelled = false
     const load = async () => {

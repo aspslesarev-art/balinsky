@@ -1,9 +1,11 @@
 // Раз в час днём по Бали: переписка → шаги плана → воронка агентов и
-// застройщиков → сводка владельцу в Telegram. Подробности и
-// предохранители трат — в lib/plan/steps.ts.
+// застройщиков → сводка владельцу в Telegram; затем секретарь (утренний
+// план, пересборка, итог дня). Подробности и предохранители трат — в
+// lib/plan/steps.ts и lib/plan/secretary.ts.
 
 import { NextResponse } from 'next/server'
 import { runPlanScan } from '@/lib/plan/steps'
+import { secretaryTick } from '@/lib/plan/secretary'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -20,7 +22,16 @@ export async function GET(req: Request) {
   try {
     const res = await runPlanScan()
     console.log('[plan-steps]', JSON.stringify(res))
-    return NextResponse.json({ ok: true, ...res })
+    // Секретарь после разбора: ему нужны свежие шаги. Его сбой не должен
+    // прятать отчёт разбора.
+    let secretary: string
+    try {
+      secretary = await secretaryTick()
+    } catch (e) {
+      secretary = `ошибка: ${e instanceof Error ? e.message : String(e)}`
+      console.error('[plan-secretary]', secretary)
+    }
+    return NextResponse.json({ ok: true, ...res, secretary })
   } catch (e) {
     console.error('[plan-steps] run failed:', e instanceof Error ? e.message : e)
     return NextResponse.json({ ok: false, error: 'run_failed' }, { status: 500 })
