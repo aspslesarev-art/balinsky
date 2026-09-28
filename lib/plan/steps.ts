@@ -344,7 +344,10 @@ async function scanAi(roles: Map<number, ChatRole>, opts: { capUsd: number; maxC
 
       cursor = batch.at(-1)!.id
       const { error: ce } = await sb.from('plan_chat_scan').upsert({
-        chat_id: chatId, last_message_id: cursor, role: res.role ?? role ?? null, updated_at: new Date().toISOString(),
+        // Роль, записанная раньше (или исправленная владельцем), главнее
+        // новой догадки: по одной рассылке модель легко путает
+        // застройщика с агентом.
+        chat_id: chatId, last_message_id: cursor, role: role ?? res.role ?? null, updated_at: new Date().toISOString(),
       })
       if (ce) throw new Error(ce.message)
       if (batch.length < BATCH) break
