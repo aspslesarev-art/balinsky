@@ -8,7 +8,7 @@ import {
 } from '@/lib/plan/data'
 import { autoProgress, type AutoProgress } from '@/lib/plan/auto'
 import { STEP_KINDS, isStepKind, type PlanStep, type StepKind } from '@/lib/plan/kinds'
-import { GOAL_PRESETS, type AiTask, type CommChat, type DayNote, type DayScore, type Draft, type Upcoming } from '@/lib/plan/dash-types'
+import { GOAL_PRESETS, type AiTask, type CommChat, type DayNote, type DayScore, type Draft, type EventGuest, type EventInfo, type GuestStatus, type Upcoming } from '@/lib/plan/dash-types'
 import { playAward, playCoins, playFail, playLevelUp, playTick, playUndo } from './_sound'
 import styles from './plan.module.css'
 
@@ -93,6 +93,7 @@ function parseSteps(v: unknown): PlanStep[] {
 }
 
 type Dash = {
+  event: { info: EventInfo; guests: EventGuest[] } | null
   aiTasks: AiTask[]
   aiDone: number
   notes: DayNote[]
@@ -101,7 +102,7 @@ type Dash = {
   scores: DayScore[]
 }
 
-const EMPTY_DASH: Dash = { aiTasks: [], aiDone: 0, notes: [], upcoming: [], comms: [], scores: [] }
+const EMPTY_DASH: Dash = { event: null, aiTasks: [], aiDone: 0, notes: [], upcoming: [], comms: [], scores: [] }
 
 export function PlanClient({ daysLeft, today }: { daysLeft: number; today: string }) {
   // done — галочки руками; off — снятые руками задачи, которые закрыла
@@ -167,7 +168,9 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
       setOff(new Set(strings(j.off)))
       setDays(strings(j.days))
       setSteps(parseSteps(j.steps))
+      const ev = j.event as { info?: EventInfo; guests?: EventGuest[] } | undefined
       setDash({
+        event: ev?.info && Array.isArray(ev.guests) ? { info: ev.info, guests: ev.guests } : null,
         aiTasks: Array.isArray(j.aiTasks) ? j.aiTasks as AiTask[] : [],
         aiDone: typeof j.aiDone === 'number' ? j.aiDone : 0,
         notes: Array.isArray(j.notes) ? j.notes as DayNote[] : [],
@@ -306,6 +309,22 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
     } else if (!mutedRef.current) playTick()
     return ok
   }, [dash.comms])
+
+  // Статус гостя руками: ИИ его после этого не перезапишет.
+  const setGuest = useCallback((chatId: number, status: GuestStatus) => {
+    const before = dash.event?.guests.find(g => g.chat_id === chatId)?.status
+    const patch = (st: GuestStatus) => (cur: Dash): Dash => cur.event
+      ? { ...cur, event: { ...cur.event, guests: cur.event.guests.map(g => (g.chat_id === chatId ? { ...g, status: st, manual: true } : g)) } }
+      : cur
+    setDash(patch(status))
+    if (!mutedRef.current) playTick()
+    void post('/api/plan/event', { chat_id: chatId, status }).then(ok => {
+      if (ok || !before) return
+      setDash(patch(before))
+      setFailed(true)
+      if (!mutedRef.current) playFail()
+    })
+  }, [dash.event])
 
   const refreshPlan = useCallback(async () => {
     setRefreshing('busy')
@@ -649,6 +668,12 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
           </div>
 
           <div className={styles.col}>
+            {dash.event && dash.event.info.date >= today && (
+              <div className={styles.slot} style={{ order: 2 }}>
+                <EventCard info={dash.event.info} guests={dash.event.guests} today={today} commsById={commsById} onStatus={setGuest} onSent={load} />
+              </div>
+            )}
+
             <div className={styles.slot} style={{ order: 2 }}>
               <ScoreCard today={scoreToday} scores={dash.scores} onOpen={() => setTabSaved('results')} />
             </div>
@@ -1203,6 +1228,110 @@ function GoalEditor({ chat, onGoal }: { chat: CommChat; onGoal: GoalSaver }) {
         <button type="button" className={styles.linkBtn} onClick={() => setEditing(false)}>Отмена</button>
       </div>
     </form>
+  )
+}
+
+const GUEST_GROUPS: Array<{ status: GuestStatus; title: string; short: string }> = [
+  { status: 'yes', title: 'Придут', short: 'придут' },
+  { status: 'interested', title: 'Думают', short: 'думают' },
+  { status: 'invited', title: 'Без ответа', short: 'молчат' },
+  { status: 'no', title: 'Не смогут', short: 'не смогут' },
+]
+
+const GUEST_LABEL: Record<GuestStatus, string> = { yes: 'Придёт', interested: 'Думает', invited: 'Не ответил', no: 'Не сможет' }
+
+/**
+ * Мероприятие: кого позвали и кто что ответил — по переписке, раз в час.
+ * «Придут» раскрыты всегда, остальные группы — по кнопке.
+ */
+function EventCard({ info, guests, today, commsById, onStatus, onSent }: {
+  info: EventInfo
+  guests: EventGuest[]
+  today: string
+  commsById: Map<number, CommChat>
+  onStatus: (chatId: number, status: GuestStatus) => void
+  onSent: () => void
+}) {
+  const [open, setOpen] = useState<GuestStatus | null>(null)
+  const by = (st: GuestStatus) => guests.filter(g => g.status === st).sort((a, b) => a.name.localeCompare(b.name, 'ru'))
+  const yes = by('yes')
+  const heads = yes.reduce((n, g) => n + 1 + g.plus_ones, 0)
+  const daysTo = Math.round((Date.parse(`${info.date}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / 86_400_000)
+  const when = new Intl.DateTimeFormat('ru-RU', { weekday: 'short', day: 'numeric', month: 'long', timeZone: 'UTC' }).format(new Date(`${info.date}T00:00:00Z`))
+
+  return (
+    <section className={`${styles.card} ${styles.eventCard}`} aria-label={info.title}>
+      <div className={styles.cardHead}>
+        <h2>🔥 {info.title}</h2>
+        <span className={styles.meta}>{daysTo === 0 ? 'сегодня' : `через ${daysTo} ${plural(daysTo, 'день', 'дня', 'дней')}`}</span>
+      </div>
+      <p className={styles.hint}>{when}, {info.time} · {info.place}</p>
+
+      <div className={styles.eventStats}>
+        {GUEST_GROUPS.map(g => {
+          const n = by(g.status).length
+          return (
+            <button key={g.status} type="button" aria-pressed={open === g.status || (g.status === 'yes' && open === null)}
+              className={`${styles.eventStat} ${styles[`g_${g.status}`]}`}
+              onClick={() => setOpen(cur => (cur === g.status ? null : g.status))}>
+              <b>{g.status === 'yes' ? heads : n}</b>
+              <span>{g.status === 'yes' && heads !== n ? `придут (${n} + ${heads - n})` : g.short}</span>
+            </button>
+          )
+        })}
+      </div>
+
+      {guests.length === 0 && <p className={styles.hint}>Список появится, когда трекер прочитает переписку (раз в час).</p>}
+
+      {GUEST_GROUPS.filter(g => g.status === 'yes' || open === g.status).map(g => {
+        const list = by(g.status)
+        if (g.status === 'yes' && open !== null && open !== 'yes' && list.length === 0) return null
+        return (
+          <div key={g.status}>
+            <h3 className={styles.sub}>{g.title}<span>{list.length}</span></h3>
+            {list.length === 0
+              ? <p className={styles.hint}>{g.status === 'yes' ? 'Пока никто не подтвердил.' : 'Никого.'}</p>
+              : (
+                <ul className={styles.list}>
+                  {list.map(guest => (
+                    <GuestRow key={guest.chat_id} guest={guest} chat={commsById.get(guest.chat_id)} onStatus={onStatus} onSent={onSent} />
+                  ))}
+                </ul>
+              )}
+          </div>
+        )
+      })}
+    </section>
+  )
+}
+
+function GuestRow({ guest, chat, onStatus, onSent }: {
+  guest: EventGuest
+  chat?: CommChat
+  onStatus: (chatId: number, status: GuestStatus) => void
+  onSent: () => void
+}) {
+  return (
+    <li className={styles.guest}>
+      <div className={styles.guestTop}>
+        <span className={styles.guestMain}>
+          <a className={styles.commName} href={tgHref(guest.chat_id, guest.username)} target="_blank" rel="noopener">{guest.name}</a>
+          {guest.plus_ones > 0 && <span className={styles.plusOne}>+{guest.plus_ones}</span>}
+          {guest.note && <span className={styles.guestNote}>{guest.note}</span>}
+          {guest.quote && <span className={styles.guestQuote}>«{guest.quote}»</span>}
+        </span>
+        <select
+          className={styles.guestSelect}
+          value={guest.status}
+          onChange={e => onStatus(guest.chat_id, e.target.value as GuestStatus)}
+          aria-label={`Статус: ${guest.name}`}
+          title={guest.manual ? 'Поставлено вами' : 'Определено по переписке'}
+        >
+          {(Object.keys(GUEST_LABEL) as GuestStatus[]).map(st => <option key={st} value={st}>{GUEST_LABEL[st]}</option>)}
+        </select>
+      </div>
+      {guest.status !== 'no' && <Composer chatId={guest.chat_id} chat={chat ?? undefined} initial={null} onSent={onSent} />}
+    </li>
   )
 }
 

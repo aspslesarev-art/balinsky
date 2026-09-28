@@ -6,6 +6,7 @@
 import { NextResponse } from 'next/server'
 import { runPlanScan } from '@/lib/plan/steps'
 import { secretaryTick } from '@/lib/plan/secretary'
+import { scanEvent } from '@/lib/plan/event'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -22,6 +23,14 @@ export async function GET(req: Request) {
   try {
     const res = await runPlanScan()
     console.log('[plan-steps]', JSON.stringify(res))
+    // Гости мероприятия — до секретаря: он тоже смотрит, кто придёт.
+    let event: unknown
+    try {
+      event = await scanEvent()
+    } catch (e) {
+      event = `ошибка: ${e instanceof Error ? e.message : String(e)}`
+      console.error('[plan-event]', event)
+    }
     // Секретарь после разбора: ему нужны свежие шаги. Его сбой не должен
     // прятать отчёт разбора.
     let secretary: string
@@ -31,7 +40,7 @@ export async function GET(req: Request) {
       secretary = `ошибка: ${e instanceof Error ? e.message : String(e)}`
       console.error('[plan-secretary]', secretary)
     }
-    return NextResponse.json({ ok: true, ...res, secretary })
+    return NextResponse.json({ ok: true, ...res, event, secretary })
   } catch (e) {
     console.error('[plan-steps] run failed:', e instanceof Error ? e.message : e)
     return NextResponse.json({ ok: false, error: 'run_failed' }, { status: 500 })

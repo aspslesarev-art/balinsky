@@ -78,3 +78,22 @@ export type Upcoming = {
   topic: string | null
   place: string | null
 }
+
+/** Мероприятие, на которое Андрей зовёт агентов лично. */
+export type EventInfo = { key: string; title: string; date: string; time: string; place: string; hosts: number[] }
+
+/** invited — позвали, ответа по сути нет; interested — думает; yes — придёт; no — не сможет. */
+export type GuestStatus = 'invited' | 'interested' | 'yes' | 'no'
+
+export type EventGuest = {
+  chat_id: number
+  name: string
+  username: string | null
+  contact: string | null
+  status: GuestStatus
+  plus_ones: number
+  note: string | null
+  quote: string | null
+  manual: boolean
+  updated_at: string
+}

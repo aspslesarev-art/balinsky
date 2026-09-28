@@ -6,6 +6,7 @@ import { baliDay, loadPlanSteps } from '@/lib/plan/steps'
 import { autoProgress } from '@/lib/plan/auto'
 import { ALL_TASKS } from '@/lib/plan/data'
 import { scoreDays } from '@/lib/plan/score'
+import { EVENT, loadGuests } from '@/lib/plan/event'
 import {
   autoCloseTasks, countAiDone, loadAiTasks, loadComms, loadDayNotes, loadUpcoming, recentMessages, repliesByDay,
 } from '@/lib/plan/dashboard'
@@ -31,7 +32,7 @@ export async function GET() {
     // Задачи «ответить человеку» закрываются по переписке при каждом заходе,
     // не дожидаясь часового крона.
     await autoCloseTasks(aiTasks, msgs)
-    const [comms, replies, aiDone] = await Promise.all([loadComms(msgs), repliesByDay(msgs), countAiDone()])
+    const [comms, replies, aiDone, guests] = await Promise.all([loadComms(msgs), repliesByDay(msgs), countAiDone(), loadGuests()])
 
     const eff = new Set(done)
     for (const [id, p] of autoProgress(ALL_TASKS, steps)) if (p.done && !off.includes(id)) eff.add(id)
@@ -39,7 +40,7 @@ export async function GET() {
       .filter(d => d >= '2026-09-15')
     const scores = scoreDays({ days: history, tasks: ALL_TASKS, done: eff, steps, aiTasks, replies })
 
-    return NextResponse.json({ ok: true, done, days, off, steps, aiTasks, aiDone, notes, upcoming, comms, scores })
+    return NextResponse.json({ ok: true, done, days, off, steps, aiTasks, aiDone, notes, upcoming, comms, scores, event: { info: EVENT, guests } })
   } catch (e) {
     console.error('[plan-state]', e instanceof Error ? e.message : e)
     return NextResponse.json({ ok: false, error: 'read_failed' }, { status: 500 })
