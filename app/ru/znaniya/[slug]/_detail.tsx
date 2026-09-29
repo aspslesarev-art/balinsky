@@ -22,6 +22,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
 import type { KnowledgeAuthor } from '@/lib/knowledge'
 import { hreflangMap, SITE_ORIGIN } from '@/lib/hreflang'
+import { metaSnippet } from '@/lib/seo'
 
 type LangCopy = {
   home: string; knowledgeCrumb: string; source: string; moreArticles: string
@@ -105,7 +106,7 @@ export async function generateKnowledgeDetailMetadata(slug: string, lang: Lang):
   const path = lang === 'ru' ? ruPath : switchLangPath(enPath, lang)
   return {
     title: `${k.title} | Balinsky`,
-    description: plainArticleText(k.body).slice(0, 160).trim(),
+    description: metaSnippet(plainArticleText(k.body)),
     // Tourist trivia stays readable but out of the index — see
     // lib/knowledge-noindex.ts for why, and for what stays indexed.
     ...(isNoindexKnowledge(k.slug) ? { robots: { index: false, follow: true } } : {}),

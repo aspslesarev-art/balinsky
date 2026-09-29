@@ -94,6 +94,7 @@ import { facetLabel } from '@/lib/filter-i18n'
 import { hreflangMap } from '@/lib/hreflang'
 import { getVilla3DPlanUrl } from '@/lib/villa-3d-plans'
 import { Villa3DPlan } from '@/components/Villa3DPlan'
+import { metaSnippet } from '@/lib/seo'
 
 const COPY = {
   ru: {
@@ -927,9 +928,9 @@ export async function generateVillaMetadata(slug: string, lang: Lang) {
   const district = lang === 'ru' ? districtRu(districtRaw) : districtRaw
   const price = fmtUsd(numberOrNull(d['price'] ?? d['Цена']), lang)
   const description = gen?.meta
-    ? gen.meta.slice(0, 160).trim()
+    ? metaSnippet(gen.meta)
     : seoText
-      ? seoText.slice(0, 160).trim() + (seoText.length > 160 ? '…' : '')
+      ? metaSnippet(seoText)
       : c.metaFallback(title, district, price)
   const bedrooms = numberOrNull(d['Комнаты'])
   const area = numberOrNull(d['Площадь'])

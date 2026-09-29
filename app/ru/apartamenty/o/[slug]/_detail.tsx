@@ -74,6 +74,7 @@ import { getDistrictCopy, getBuyAnchor } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
 import { hreflangMap } from '@/lib/hreflang'
+import { metaSnippet } from '@/lib/seo'
 
 const AIRPORT_LAT = -8.7467
 const AIRPORT_LNG = 115.1667
@@ -866,9 +867,9 @@ export async function generateApartmentMetadata(slug: string, lang: Lang) {
   const district = lang === 'ru' ? districtRu(districtRaw) : districtRaw
   const price = fmtUsd(numberOrNull(d['price_usd'] ?? d['Цена']), lang)
   const description = gen?.meta
-    ? gen.meta.slice(0, 160).trim()
+    ? metaSnippet(gen.meta)
     : seoText
-      ? seoText.slice(0, 160).trim() + (seoText.length > 160 ? '…' : '')
+      ? metaSnippet(seoText)
       : c.metaFallback(title, district, price)
   const ruPath = `/ru/apartamenty/o/${slug}`
   const path = switchLangPath(ruPath, lang)

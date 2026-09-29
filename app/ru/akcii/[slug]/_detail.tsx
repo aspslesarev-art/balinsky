@@ -13,6 +13,7 @@ import { loadAllPromo, loadPromoBySlug } from '@/lib/promo'
 import { RelatedContent } from '@/components/RelatedContent'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { hreflangMap } from '@/lib/hreflang'
+import { metaSnippet } from '@/lib/seo'
 
 
 const COPY = {
@@ -81,7 +82,7 @@ export async function generatePromoDetailMetadata(slug: string, lang: Lang): Pro
   const path = switchLangPath(ruPath, lang)
   return {
     title: `${p.title} | Balinsky`,
-    description: p.seoDescription ?? (p.body?.slice(0, 160) ?? p.title),
+    description: p.seoDescription ?? (p.body ? metaSnippet(p.body) : p.title),
     alternates: {
       canonical: path,
       languages: hreflangMap(ruPath),

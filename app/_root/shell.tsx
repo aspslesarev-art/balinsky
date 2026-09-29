@@ -39,7 +39,7 @@ const geistMono = localFont({
 export const rootMetadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'),
   title: 'Balinsky — недвижимость на Бали',
-  description: 'Каталог вилл, апартаментов и жилых комплексов на Бали с фото, ценами и проверенными застройщиками.',
+  description: 'Недвижимость Бали в цифрах: цены, аренда, статус разрешений и сравнение с рынком.',
   // Static icon paths in /public — no Next.js hash, so Google's favicon
   // cache key stays stable across deploys. /favicon.ico must exist for
   // crawlers that ignore <link rel="icon"> and probe the root path.

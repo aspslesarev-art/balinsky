@@ -100,6 +100,7 @@ import { hasProjectPermits } from '@/lib/project-permits'
 import { loadProjectPermits } from '@/lib/project-permits-i18n'
 import { isAirtableAttachment } from '@/lib/admin/fields'
 import { hreflangMap } from '@/lib/hreflang'
+import { metaSnippet } from '@/lib/seo'
 
 const AIRPORT_LAT = -8.7467
 const AIRPORT_LNG = 115.1667
@@ -1396,10 +1397,10 @@ export async function generateComplexMetadata(slug: string, lang: Lang) {
     areas: units.map(u => Number(u.area)).filter(n => Number.isFinite(n)),
     beds: units.map(u => Number(u.bedrooms)).filter(n => Number.isFinite(n)),
   }, lang)
-  const description = gen?.meta?.slice(0, 160).trim()
+  const description = (gen?.meta ? metaSnippet(gen.meta) : undefined)
     ?? facts
     ?? (seoText
-      ? seoText.slice(0, 160).trim() + (seoText.length > 160 ? '…' : '')
+      ? metaSnippet(seoText)
       : copy.fallbackDesc(name, district, types, yearRaw))
   const ruPath = `/ru/zhilye-kompleksy/o/${slug}`
   const path = switchLangPath(ruPath, lang)

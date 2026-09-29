@@ -12,6 +12,7 @@ import { loadRentalBySlug } from '@/lib/rental'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { hreflangMap } from '@/lib/hreflang'
+import { metaSnippet } from '@/lib/seo'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
@@ -104,7 +105,7 @@ export async function generateRentalDetailMetadata(slug: string, lang: Lang): Pr
   const r = await loadRentalBySlug(slug, lang)
   if (!r) return { robots: { index: false, follow: false } }
   const c = pickCopy(COPY, lang)
-  const desc = r.notes?.slice(0, 160) ?? c.metaFallback(r.type ?? null, r.location ?? null, fmtUsd(r.priceMonthUsd))
+  const desc = (r.notes ? metaSnippet(r.notes) : null) ?? c.metaFallback(r.type ?? null, r.location ?? null, fmtUsd(r.priceMonthUsd))
   const ruPath = `/ru/arenda/o/${r.slug}`
   const path = switchLangPath(ruPath, lang)
   return {

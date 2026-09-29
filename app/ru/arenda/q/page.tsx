@@ -1,12 +1,13 @@
 import { RentalListShell, generateRentalListMetadata, parseRentalSP } from '../_page'
 import { loadFreshRental } from '@/lib/rental'
-import { generateCategoryMeta } from '@/lib/seo'
+import { generateCategoryMeta, rentalPriceStats } from '@/lib/seo'
 
 export const revalidate = 3600
 
 export async function generateMetadata() {
   const base = generateRentalListMetadata('ru')
-  const cat = generateCategoryMeta({ category: 'rental', locale: 'ru', count: (await loadFreshRental('ru')).length })
+  const rentals = await loadFreshRental('ru')
+  const cat = generateCategoryMeta({ category: 'rental', locale: 'ru', count: rentals.length, ...rentalPriceStats(rentals) })
   return { ...base, title: cat.title, description: cat.description }
 }
 

@@ -14,6 +14,8 @@ export type CategoryStats = {
   maxPriceK?: number | null // max listing price, thousands USD
   medPriceK?: number | null // median listing price, thousands USD
   devCount?: number | null
+  fromMonthUsd?: number | null // rental: 5th-percentile monthly rent, USD
+  medMonthUsd?: number | null // rental: median monthly rent, USD
 }
 
 export type CategoryMeta = { title: string; description: string }
@@ -33,6 +35,8 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
   const from = s.minPriceK && s.minPriceK > 0 ? usdK(s.minPriceK) : ''
   const to = s.maxPriceK && s.maxPriceK > 0 ? usdK(s.maxPriceK) : ''
   const med = s.medPriceK && s.medPriceK > 0 ? usdK(s.medPriceK) : ''
+  const moFrom = s.fromMonthUsd && s.fromMonthUsd > 0 ? `$${nf(s.fromMonthUsd)}` : ''
+  const moMed = s.medMonthUsd && s.medMonthUsd > 0 ? `$${nf(s.medMonthUsd)}` : ''
 
   // Русские счётные формы: `n` отформатирован через Intl и для склонения не
   // годится, форму выбираем по сырому числу. Без этого в выдаче висело
@@ -73,8 +77,8 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
       description: `${n} застройщиков Бали: сданные проекты, активные стройки, количество юнитов, управляющие компании, акции.`,
     },
     rental: {
-      title: `Аренда на Бали${n ? `: ${n} объектов` : ''} помесячно и посуточно | Balinsky`,
-      description: `${n ? `${n} вариантов аренды` : 'Аренда'} на Бали. Виллы, апартаменты, дома. Помесячно и посуточно. Прямые контакты собственников.`,
+      title: `Аренда на Бали помесячно${moFrom ? ` от ${moFrom}/мес` : ''}${n ? ` — ${n} ${pluralRu(s.count, ['объект', 'объекта', 'объектов'])}` : ''} | Balinsky`,
+      description: `${n ? `${n} вариантов аренды` : 'Аренда'} на Бали: виллы, апартаменты, дома.${moMed ? ` Медиана ${moMed} в месяц.` : ''} Помесячно и посуточно, фильтр по району, спальням и цене.`,
     },
   }
 
@@ -101,8 +105,11 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
       description: `${n} property developers in Bali: completed and active projects, handover dates, unit counts and permit status for each. Profiles built from listing data, not developer pitches.`,
     },
     rental: {
-      title: `Rental in Bali${n ? `: ${n} monthly & daily listings` : ': monthly & daily listings'} | Balinsky`,
-      description: `${n ? `${n} rental options` : 'Rental options'} in Bali. Villas, apartments, houses. Monthly and daily. Direct owner contacts.`,
+      // GSC 09.2026: the page ranks for «rent in bali per month», «bali monthly
+      // rent», «bali rent» — the old «Rental in Bali: N monthly & daily
+      // listings» said neither «monthly rent» nor a price.
+      title: `Bali Monthly Rentals${moFrom ? ` from ${moFrom}/month` : ''}${n ? ` — ${n} Villas & Apartments` : ''} | Balinsky`,
+      description: `${n ? `${n} villas, apartments and houses` : 'Villas, apartments and houses'} for rent in Bali per month or per day.${moMed ? ` Median rent ${moMed}/month.` : ''} Filter by area, bedrooms and price.`,
     },
   }
 
@@ -124,7 +131,7 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
       description: `${n} pengembang properti Bali: proyek selesai, pembangunan aktif, jumlah unit, perusahaan pengelola, promo.`,
     },
     rental: {
-      title: `Sewa di Bali: ${n ? `${n} properti` : 'properti'} bulanan & harian | Balinsky`,
+      title: `Sewa bulanan di Bali${moFrom ? ` mulai ${moFrom}/bulan` : ''}${n ? ` — ${n} vila & apartemen` : ''} | Balinsky`,
       description: `${n ? `${n} pilihan sewa` : 'Pilihan sewa'} di Bali. Vila, apartemen, rumah. Bulanan dan harian. Kontak langsung pemilik.`,
     },
   }
@@ -147,7 +154,7 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
       description: `${n} promoteurs immobiliers à Bali : projets livrés, chantiers actifs, nombre d’unités, sociétés de gestion, offres.`,
     },
     rental: {
-      title: `Location à Bali : ${n ? `${n} biens` : 'biens'} au mois et à la journée | Balinsky`,
+      title: `Location au mois à Bali${moFrom ? ` dès ${moFrom}/mois` : ''}${n ? ` — ${n} villas et appartements` : ''} | Balinsky`,
       description: `${n ? `${n} options de location` : 'Options de location'} à Bali. Villas, appartements, maisons. Au mois et à la journée. Contacts directs des propriétaires.`,
     },
   }
@@ -170,7 +177,7 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
       description: `${n} Bali-Bauträger: fertige Projekte, aktive Bauten, Anzahl der Einheiten, Verwaltungsgesellschaften, Angebote.`,
     },
     rental: {
-      title: `Miete auf Bali: ${n ? `${n} ` : ''}Monats- & Tagesangebote | Balinsky`,
+      title: `Bali Langzeitmiete${moFrom ? ` ab ${moFrom}/Monat` : ''}${n ? ` — ${n} Villen & Apartments` : ''} | Balinsky`,
       description: `${n ? `${n} Mietoptionen` : 'Mietoptionen'} auf Bali. Villen, Apartments, Häuser. Monatlich und täglich. Direkte Eigentümerkontakte.`,
     },
   }
@@ -305,4 +312,29 @@ export function generateCategoryMeta(
 ): CategoryMeta {
   const { category, locale, ...stats } = args
   return build(category, locale, stats)
+}
+
+// Rental price hooks for titles. The manifest carries junk prices ($0.001,
+// $2.67 — parser leftovers), so «from» is the 5th percentile of the real
+// ones rounded down to $50: a price real listings sit at, not an outlier.
+export function rentalPriceStats(items: { priceMonthUsd: number }[]): Pick<CategoryStats, 'fromMonthUsd' | 'medMonthUsd'> {
+  const p = items.map(r => r.priceMonthUsd).filter(n => Number.isFinite(n) && n >= 100).sort((a, b) => a - b)
+  if (p.length < 10) return {}
+  return {
+    fromMonthUsd: Math.floor(p[Math.floor(p.length * 0.05)] / 50) * 50,
+    medMonthUsd: Math.round(p[Math.floor(p.length / 2)] / 50) * 50,
+  }
+}
+
+// Meta description from free text. A hard .slice(0, 160) ended snippets
+// mid-word («…Kementerian Agraria Indonesia, lah»). Prefer the last full
+// sentence that fits; otherwise the last whole word plus an ellipsis.
+export function metaSnippet(text: string | null | undefined, max = 160): string {
+  const t = (text ?? '').replace(/\s+/g, ' ').trim()
+  if (t.length <= max) return t
+  const cut = t.slice(0, max)
+  const sentenceEnd = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('! '), cut.lastIndexOf('? '), cut.lastIndexOf('。'))
+  if (sentenceEnd >= max * 0.55) return cut.slice(0, sentenceEnd + 1).trim()
+  const space = cut.slice(0, max - 1).lastIndexOf(' ')
+  return (space > max * 0.5 ? cut.slice(0, space) : cut.slice(0, max - 1)).replace(/[\s,;:—–-]+$/, '') + '…'
 }
