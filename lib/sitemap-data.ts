@@ -87,16 +87,11 @@ function pairEntry(args: {
   // x-default = RU (the site's origin language).
   //
   // Балийский (`ban`) остаётся ВНЕ hreflang-кластера: ban — это ISO 639-3,
-  // а hreflang принимает только 639-1, поэтому объявить его нечем. Но в
-  // сам sitemap он с 16.09.2026 возвращён — прежнее основание («нулевой
-  // спрос, страницы, которые никогда не ранжируются») цифры опровергли.
-  // Из карты его убрали 20.07.2026 как раз потому, что /ban/ копил в GSC
-  // «URL unknown to Google». За 17.08–14.09, уже без всякого sitemap, эти
-  // страницы взяли 25 переходов на средней позиции ~9: /ban/kompleks — 10,
-  // /ban/vila — 8, /ban/pangwangun — 7. Google нашёл их по внутренним
-  // ссылкам из подвала и ранжирует. Раз они ранжируются, прятать их от
-  // краулера незачем — но карточки юнитов по-прежнему только ru/en/id
-  // (FULL_CATALOG_LANGS), краул-бюджет тратится на хабы и ЖК.
+  // а hreflang принимает только 639-1, поэтому объявить его нечем. С 29.09.2026
+  // /ban/ закрыт noindex и вырезается из карты в dropNoindexLocales(): без
+  // hreflang Google показывал балийскую копию англоязычным (CTR 0.7% против
+  // 6.4% у /en/ на тех же позициях). banUrl строится здесь ради порядка
+  // шардирования и отсекается фильтром.
   const alternates = {
     languages: {
       ru: ruUrl, en: enUrl, id: idUrl, fr: frUrl,
@@ -265,9 +260,23 @@ function parseSitemapId(id: string): { category: Category; shard: number } | nul
   return { category, shard }
 }
 
+// /ban/ is served with `x-robots-tag: noindex, follow` (next.config.ts), so it
+// must not be in the sitemap either — a noindexed URL in a sitemap is a GSC
+// error. Why noindex: without an ISO 639-1 code Balinese can't join the
+// hreflang cluster, so Google can't swap /ban/ for /en/ and served the
+// Balinese page to English searchers. GSC 01–28.09.2026, positions ≤12:
+// /ban/ 2803 impressions at 0.7% CTR vs /en/ 6.4% — the Balinese copies were
+// holding the spots the English pages would win clicks on.
+function dropNoindexLocales(data: Categorized): Categorized {
+  const isBan = (e: SitemapEntry) => /^https?:\/\/[^/]+\/ban(\/|$)/.test(e.url)
+  return Object.fromEntries(
+    Object.entries(data).map(([k, v]) => [k, v.filter(e => !isBan(e))]),
+  ) as Categorized
+}
+
 async function buildCategorized(): Promise<Categorized> {
   if (_memo && Date.now() - _memo.ts < MEMO_TTL_MS) return _memo.data
-  const data = await buildAll()
+  const data = dropNoindexLocales(await buildAll())
   _memo = { ts: Date.now(), data }
   return data
 }

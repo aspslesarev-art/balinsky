@@ -55,6 +55,17 @@ const nextConfig: NextConfig = {
         headers: [{ key: 'cache-control', value: 'public, max-age=31536000, immutable' }],
       },
       {
+        // Balinese stays live for readers but out of the index: it has no
+        // hreflang code, so Google ranked /ban/ for English queries in place
+        // of /en/ (0.7% CTR vs 6.4%). See dropNoindexLocales in lib/sitemap-data.ts.
+        source: '/ban',
+        headers: [{ key: 'x-robots-tag', value: 'noindex, follow' }],
+      },
+      {
+        source: '/ban/:path*',
+        headers: [{ key: 'x-robots-tag', value: 'noindex, follow' }],
+      },
+      {
         // Telegram Mini App / agent-only pages — explicitly out of the index.
         source: '/bot/:path*',
         headers: [
