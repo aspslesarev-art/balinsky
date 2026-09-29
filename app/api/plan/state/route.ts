@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { isKnownTask } from '@/lib/plan/data'
 import { hasPlanAccess } from '@/lib/plan/access'
+import { isPeopleTask } from '@/lib/plan/people'
 import { loadDoneTasks, setTaskDone } from '@/lib/plan/store'
 import { baliDay, loadPlanSteps } from '@/lib/plan/steps'
 import { autoProgress } from '@/lib/plan/auto'
@@ -26,7 +27,7 @@ export async function GET() {
     // Шаги из переписки: по ним экран сам закрывает задачи с правилом.
     const now = Date.now()
     const from = baliDay(now - (HISTORY_DAYS - 1) * 86_400_000)
-    const [{ done, days, off }, steps, msgs, aiTasks, notes, upcoming] = await Promise.all([
+    const [{ done, days, off, people }, steps, msgs, aiTasks, notes, upcoming] = await Promise.all([
       loadDoneTasks(), loadPlanSteps(), recentMessages(), loadAiTasks(from), loadDayNotes(from), loadUpcoming(),
     ])
     // Задачи «ответить человеку» закрываются по переписке при каждом заходе,
@@ -40,7 +41,7 @@ export async function GET() {
       .filter(d => d >= '2026-09-15')
     const scores = scoreDays({ days: history, tasks: ALL_TASKS, done: eff, steps, aiTasks, replies })
 
-    return NextResponse.json({ ok: true, done, days, off, steps, aiTasks, aiDone, notes, upcoming, comms, scores, event: { info: EVENT, guests } })
+    return NextResponse.json({ ok: true, done, days, off, people, steps, aiTasks, aiDone, notes, upcoming, comms, scores, event: { info: EVENT, guests } })
   } catch (e) {
     console.error('[plan-state]', e instanceof Error ? e.message : e)
     return NextResponse.json({ ok: false, error: 'read_failed' }, { status: 500 })
@@ -55,8 +56,9 @@ export async function POST(req: Request) {
 
   const taskId = typeof body.task_id === 'string' ? body.task_id : null
   const done = typeof body.done === 'boolean' ? body.done : null
-  // Чужие id в базу не пускаем: писать можно только по задачам из плана.
-  if (!taskId || done === null || !isKnownTask(taskId)) {
+  // Чужие id в базу не пускаем: писать можно только по задачам из плана
+  // и по договорённостям с людьми.
+  if (!taskId || done === null || !(isKnownTask(taskId) || isPeopleTask(taskId))) {
     return NextResponse.json({ ok: false, error: 'bad_task' }, { status: 400 })
   }
 

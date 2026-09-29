@@ -8,6 +8,7 @@ import {
 } from '@/lib/plan/data'
 import { autoProgress, type AutoProgress } from '@/lib/plan/auto'
 import { STEP_KINDS, isStepKind, type PlanStep, type StepKind } from '@/lib/plan/kinds'
+import { CLOSED, PEOPLE, PEOPLE_AS_OF, SILENT, type Person, type PersonKind, type PersonTask } from '@/lib/plan/people'
 import { GOAL_PRESETS, type AiTask, type CommChat, type DayNote, type DayScore, type Draft, type EventGuest, type EventInfo, type GuestStatus, type Upcoming } from '@/lib/plan/dash-types'
 import { playAward, playCoins, playFail, playLevelUp, playTick, playUndo } from './_sound'
 import styles from './plan.module.css'
@@ -25,17 +26,18 @@ const AUTO_SEEN_KEY = 'plan_auto_seen_v1'
 const AI_TASK_XP = 10
 const TZ = 'Asia/Makassar'
 
-type Tab = 'today' | 'comms' | 'plan' | 'results'
+type Tab = 'today' | 'comms' | 'people' | 'plan' | 'results'
 
 const TABS: ReadonlyArray<readonly [Tab, string]> = [
   ['today', 'Сегодня'],
   ['comms', 'Переписка'],
+  ['people', 'По людям'],
   ['plan', 'План'],
   ['results', 'Итоги'],
 ]
 
 function isTab(v: unknown): v is Tab {
-  return v === 'today' || v === 'comms' || v === 'plan' || v === 'results'
+  return v === 'today' || v === 'comms' || v === 'people' || v === 'plan' || v === 'results'
 }
 
 function readCache(): string[] | null {
@@ -109,6 +111,8 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
   // бы переписка; steps — шаги, найденные в переписке.
   const [done, setDone] = useState<Set<string>>(new Set())
   const [off, setOff] = useState<Set<string>>(new Set())
+  // Галочки на договорённостях с людьми — отдельно от плана и опыта.
+  const [peopleDone, setPeopleDone] = useState<Set<string>>(new Set())
   const [steps, setSteps] = useState<PlanStep[]>([])
   const [dash, setDash] = useState<Dash>(EMPTY_DASH)
   const [loaded, setLoaded] = useState(false)
@@ -166,6 +170,7 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
       setDone(next)
       writeCache(next)
       setOff(new Set(strings(j.off)))
+      setPeopleDone(new Set(strings(j.people)))
       setDays(strings(j.days))
       setSteps(parseSteps(j.steps))
       const ev = j.event as { info?: EventInfo; guests?: EventGuest[] } | undefined
@@ -267,6 +272,27 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
       if (!mutedRef.current) playFail()
     })
   }, [done, off, effDone, autoDone, pop])
+
+  const togglePerson = useCallback((taskId: string) => {
+    const wasDone = peopleDone.has(taskId)
+    if (!mutedRef.current) (wasDone ? playUndo : playTick)()
+    setPeopleDone(prev => {
+      const next = new Set(prev)
+      if (wasDone) next.delete(taskId); else next.add(taskId)
+      return next
+    })
+    setFailed(false)
+    void post('/api/plan/state', { task_id: taskId, done: !wasDone }).then(ok => {
+      if (ok) return
+      setPeopleDone(prev => {
+        const rolled = new Set(prev)
+        if (wasDone) rolled.add(taskId); else rolled.delete(taskId)
+        return rolled
+      })
+      setFailed(true)
+      if (!mutedRef.current) playFail()
+    })
+  }, [peopleDone])
 
   const toggleAi = useCallback((id: number) => {
     const task = dash.aiTasks.find(t => t.id === id)
@@ -516,6 +542,12 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
     [dash.comms],
   )
 
+  // Сколько моих обещаний со сроком сегодня или раньше ещё не закрыто.
+  const promisesDue = useMemo(
+    () => PEOPLE.reduce((n, p) => n + p.tasks.filter(t => t.who === 'me' && t.due && t.due <= today && !peopleDone.has(t.id)).length, 0),
+    [peopleDone, today],
+  )
+
   const setTabSaved = (key: Tab) => {
     setTab(key)
     try { localStorage.setItem('plan_tab', key) } catch { /* приватный режим */ }
@@ -592,6 +624,7 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
           >
             {label}
             {key === 'comms' && waitingMe.length > 0 && <span className={styles.count}>{waitingMe.length}</span>}
+            {key === 'people' && promisesDue > 0 && <span className={styles.count}>{promisesDue}</span>}
           </button>
         ))}
       </nav>
@@ -707,6 +740,8 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
       )}
 
       {tab === 'comms' && <CommsTab comms={dash.comms} loaded={loaded} onSent={load} onGoal={saveGoal} />}
+
+      {tab === 'people' && <PeopleTab done={peopleDone} today={today} commsById={commsById} onToggle={togglePerson} />}
 
       {tab === 'plan' && (
         <div className={styles.weeks}>
@@ -1395,6 +1430,222 @@ function CommGroup({ title, hint, items, tone, limit, onSent, onGoal }: {
           {all ? 'Свернуть' : `Показать все — ещё ${items.length - limit}`}
         </button>
       )}
+    </section>
+  )
+}
+
+// ─── По людям: договорённости из переписки ──────────────────────────
+
+const KIND_LABEL: Record<PersonKind, string> = {
+  agent: 'Агент', developer: 'Застройщик', client: 'Клиент', team: 'Команда', other: 'Другое',
+}
+
+type KindFilter = 'all' | 'agent' | 'developer' | 'client' | 'team'
+
+const KIND_FILTERS: Array<[KindFilter, string]> = [
+  ['all', 'Все'], ['agent', 'Агенты'], ['developer', 'Застройщики'], ['client', 'Клиенты'], ['team', 'Команда и прочие'],
+]
+
+function kindMatches(filter: KindFilter, kind: PersonKind): boolean {
+  if (filter === 'all') return true
+  if (filter === 'team') return kind === 'team' || kind === 'other'
+  return filter === kind
+}
+
+function tgLink(chat: number | null, username: string | null): string | null {
+  if (username) return `https://t.me/${username}`
+  return chat != null ? `tg://user?id=${chat}` : null
+}
+
+/** «сегодня», «до 2 окт.», «просрочено 3 дн» — от дня по Бали. */
+function dueLabel(due: string, today: string): { text: string; late: boolean } {
+  const days = Math.round((Date.parse(`${due}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / 86_400_000)
+  if (days < 0) return { text: `просрочено ${-days} ${plural(-days, 'день', 'дня', 'дней')}`, late: true }
+  if (days === 0) return { text: 'сегодня', late: true }
+  if (days === 1) return { text: 'завтра', late: false }
+  return { text: `до ${dayMonth.format(new Date(`${due}T00:00:00Z`))}`, late: false }
+}
+
+function PeopleTab({ done, today, commsById, onToggle }: {
+  done: Set<string>
+  today: string
+  commsById: Map<number, CommChat>
+  onToggle: (taskId: string) => void
+}) {
+  const [kind, setKind] = useState<KindFilter>('all')
+  const list = PEOPLE.filter(p => kindMatches(kind, p.kind))
+  const open = (p: Person) => p.tasks.filter(t => !done.has(t.id))
+  const earliest = (p: Person) => open(p).filter(t => t.who === 'me' && t.due).map(t => t.due!).sort()[0] ?? '9999'
+
+  // Горит — есть моё обещание со сроком сегодня или раньше. Дальше мои
+  // обещания без срока или с запасом, потом — где ход за человеком.
+  const burning = list.filter(p => open(p).some(t => t.who === 'me' && t.due && t.due <= today))
+    .sort((a, b) => earliest(a).localeCompare(earliest(b)))
+  const burnSet = new Set(burning)
+  const mine = list.filter(p => !burnSet.has(p) && open(p).some(t => t.who === 'me'))
+    .sort((a, b) => earliest(a).localeCompare(earliest(b)))
+  const theirs = list.filter(p => open(p).length > 0 && open(p).every(t => t.who === 'them'))
+  const finished = list.filter(p => open(p).length === 0)
+
+  const silent = SILENT.filter(s => kindMatches(kind, s.kind))
+  const closed = CLOSED.filter(c => kindMatches(kind, c.kind))
+
+  const all = PEOPLE.flatMap(p => p.tasks)
+  const myOpen = all.filter(t => t.who === 'me' && !done.has(t.id)).length
+  const theirOpen = all.filter(t => t.who === 'them' && !done.has(t.id)).length
+  const count = (f: KindFilter) => PEOPLE.filter(p => kindMatches(f, p.kind)).length
+
+  return (
+    <div className={styles.commsWrap}>
+      <p className={styles.peopleIntro}>
+        Разобрал всю переписку по {dayMonth.format(new Date(`${PEOPLE_AS_OF}T00:00:00Z`))} включительно, вместе с голосовыми.
+        {' '}<b>{myOpen}</b> {plural(myOpen, 'обещание', 'обещания', 'обещаний')} за вами, <b>{theirOpen}</b> ждём от людей.
+      </p>
+      <div className={styles.chips} role="group" aria-label="Кто">
+        {KIND_FILTERS.map(([key, label]) => (
+          <button key={key} type="button" aria-pressed={kind === key}
+            className={`${styles.chip} ${kind === key ? styles.chipOn : ''}`} onClick={() => setKind(key)}>
+            {label} <span>{count(key)}</span>
+          </button>
+        ))}
+      </div>
+      <PeopleGroup title="Горит" hint="Срок по вашему обещанию сегодня или уже прошёл" items={burning} tone="warn"
+        done={done} today={today} commsById={commsById} onToggle={onToggle} />
+      <PeopleGroup title="Обещали вы" hint="Что вы сказали, что сделаете. Сначала — у чего ближе срок" items={mine}
+        done={done} today={today} commsById={commsById} onToggle={onToggle} />
+      <PeopleGroup title="Ждёте вы" hint="Ход за человеком. Если молчит дольше пары дней — напомнить" items={theirs}
+        done={done} today={today} commsById={commsById} onToggle={onToggle} />
+      <PeopleGroup title="Всё закрыто" hint="Все договорённости выполнены" items={finished} limit={0}
+        done={done} today={today} commsById={commsById} onToggle={onToggle} />
+
+      {silent.length > 0 && (
+        <section className={styles.card} aria-label="Молчат">
+          <div className={styles.cardHead}><h2>Молчат после вашего сообщения</h2><span className={styles.meta}>{silent.length}</span></div>
+          <p className={styles.hint}>Написали первым — ответа нет. Дожать одним сообщением или отпустить</p>
+          <ul className={styles.nameList}>
+            {silent.map(s => (
+              <li key={s.chat}>
+                <a href={tgLink(s.chat, s.username)!} target="_blank" rel="noopener">{s.name}</a>
+                <span>{s.sent}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {closed.length > 0 && <ClosedCard items={closed} />}
+    </div>
+  )
+}
+
+function PeopleGroup({ title, hint, items, tone, limit, done, today, commsById, onToggle }: {
+  title: string
+  hint: string
+  items: Person[]
+  tone?: 'warn'
+  /** 0 — свёрнуто целиком, пока не нажмут. */
+  limit?: number
+  done: Set<string>
+  today: string
+  commsById: Map<number, CommChat>
+  onToggle: (taskId: string) => void
+}) {
+  const [all, setAll] = useState(false)
+  if (items.length === 0) return null
+  const shown = limit != null && !all ? items.slice(0, limit) : items
+  return (
+    <section className={`${styles.card} ${tone === 'warn' ? styles.warn : ''}`} aria-label={title}>
+      <div className={styles.cardHead}><h2>{title}</h2><span className={styles.meta}>{items.length}</span></div>
+      <p className={styles.hint}>{hint}</p>
+      {shown.length > 0 && (
+        <ul className={styles.list}>
+          {shown.map(p => <PersonRow key={p.tasks[0]?.id ?? p.name} person={p} done={done} today={today}
+            chat={p.chat != null ? commsById.get(p.chat) : undefined} onToggle={onToggle} />)}
+        </ul>
+      )}
+      {limit != null && items.length > limit && (
+        <button type="button" className={styles.linkBtn} onClick={() => setAll(v => !v)}>
+          {all ? 'Свернуть' : limit === 0 ? `Показать — ${items.length}` : `Показать все — ещё ${items.length - limit}`}
+        </button>
+      )}
+    </section>
+  )
+}
+
+function PersonRow({ person, chat, done, today, onToggle }: {
+  person: Person
+  chat?: CommChat
+  done: Set<string>
+  today: string
+  onToggle: (taskId: string) => void
+}) {
+  const href = tgLink(person.chat, person.username)
+  // Открытые сверху: сначала мои со сроком, потом без срока, потом чужие.
+  const rank = (t: PersonTask) => (done.has(t.id) ? 3 : t.who === 'me' ? (t.due ? 0 : 1) : 2)
+  const tasks = [...person.tasks].sort((a, b) => rank(a) - rank(b) || (a.due ?? '').localeCompare(b.due ?? ''))
+  const waiting = chat?.waiting_since != null
+  return (
+    <li className={styles.commItem}>
+      <div className={styles.comm}>
+        <span className={styles.avatar} aria-hidden="true">{person.name.slice(0, 1).toUpperCase()}</span>
+        <span className={styles.commBody}>
+          <span className={styles.commTop}>
+            {href
+              ? <a className={styles.commName} href={href} target="_blank" rel="noopener">{person.name}</a>
+              : <b>{person.name}</b>}
+            <span className={styles.roleTag}>{KIND_LABEL[person.kind]}</span>
+          </span>
+          <span className={styles.personAbout}>{person.about}</span>
+        </span>
+        {chat && (
+          <span className={`${styles.commWhen} ${waiting ? styles.commWait : ''}`}>
+            {waiting ? `ждёт ${since(chat.waiting_since!)}` : since(chat.last_ts)}
+          </span>
+        )}
+      </div>
+      <p className={styles.personStatus}>{person.status}</p>
+      <ul className={styles.personTasks}>
+        {tasks.map(t => {
+          const due = t.due && !done.has(t.id) ? dueLabel(t.due, today) : null
+          return (
+            <li key={t.id}>
+              <label className={styles.task}>
+                <input type="checkbox" checked={done.has(t.id)} onChange={() => onToggle(t.id)} />
+                <span className={styles.txt}>
+                  <span className={styles.taskTitle}>{t.text}</span>
+                  <span className={styles.tags}>
+                    <span className={t.who === 'me' ? styles.whoMe : styles.whoThem}>{t.who === 'me' ? 'За вами' : 'Ждём'}</span>
+                    {due && <span className={due.late ? styles.dueLate : styles.due}>{due.text}</span>}
+                  </span>
+                </span>
+              </label>
+            </li>
+          )
+        })}
+      </ul>
+    </li>
+  )
+}
+
+function ClosedCard({ items }: { items: typeof CLOSED }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <section className={styles.card} aria-label="Закрыто">
+      <div className={styles.cardHead}><h2>Разговор закрыт</h2><span className={styles.meta}>{items.length}</span></div>
+      <p className={styles.hint}>Задач нет — но видно, что никто не потерян</p>
+      {open && (
+        <ul className={styles.nameList}>
+          {items.map(c => (
+            <li key={c.chat}>
+              <a href={tgLink(c.chat, c.username)!} target="_blank" rel="noopener">{c.name}</a>
+              <span>{c.why}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <button type="button" className={styles.linkBtn} onClick={() => setOpen(v => !v)}>
+        {open ? 'Свернуть' : `Показать — ${items.length}`}
+      </button>
     </section>
   )
 }
