@@ -377,6 +377,14 @@
 .peopleIntro b { font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
 .personAbout { color: var(--dim); font-size: .8125rem; line-height: 1.4; }
 .personStatus { margin: 0 0 4px 48px; color: var(--ink-2); font-size: .875rem; line-height: 1.55; max-width: 68ch; }
+.personNext { margin: 0 0 8px 48px; font-size: .875rem; line-height: 1.55; max-width: 68ch; color: var(--ink); }
+.personNext b { font-weight: 600; color: var(--accent-ink); }
+.personDraft {
+  margin: 0 0 8px 48px; padding: 12px; border-radius: 8px; max-width: 68ch;
+  background: var(--surface-2); border: 1px solid var(--line);
+  display: grid; gap: 8px; justify-items: start;
+}
+.personDraftText { margin: 0; font-size: .875rem; line-height: 1.55; color: var(--ink-2); white-space: pre-line; }
 .personTasks { list-style: none; margin: 0 0 8px 48px; padding: 0; }
 .personTasks .task { padding: 8px 0; }
 .personTasks .taskTitle { font-size: .875rem; line-height: 1.5; }
@@ -389,7 +397,7 @@
 .dueLate { background: var(--red-soft); color: var(--red); font-weight: 600; }
 .task input:checked ~ .txt .whoMe { background: var(--surface-2); color: var(--dim); }
 @media (max-width: 480px) {
-  .personStatus, .personTasks { margin-left: 0; }
+  .personStatus, .personNext, .personDraft, .personTasks { margin-left: 0; }
 }
 
 .nameList { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 4px; }

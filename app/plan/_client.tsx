@@ -1475,11 +1475,11 @@ function PeopleTab({ done, today, commsById, onToggle }: {
   const [kind, setKind] = useState<KindFilter>('all')
   const list = PEOPLE.filter(p => kindMatches(kind, p.kind))
   const open = (p: Person) => p.tasks.filter(t => !done.has(t.id))
-  const earliest = (p: Person) => open(p).filter(t => t.who === 'me' && t.due).map(t => t.due!).sort()[0] ?? '9999'
+  const earliest = (p: Person) => open(p).filter(t => t.due).map(t => t.due!).sort()[0] ?? '9999'
 
   // Горит — есть моё обещание со сроком сегодня или раньше. Дальше мои
   // обещания без срока или с запасом, потом — где ход за человеком.
-  const burning = list.filter(p => open(p).some(t => t.who === 'me' && t.due && t.due <= today))
+  const burning = list.filter(p => open(p).some(t => t.due && t.due <= today))
     .sort((a, b) => earliest(a).localeCompare(earliest(b)))
   const burnSet = new Set(burning)
   const mine = list.filter(p => !burnSet.has(p) && open(p).some(t => t.who === 'me'))
@@ -1509,7 +1509,7 @@ function PeopleTab({ done, today, commsById, onToggle }: {
           </button>
         ))}
       </div>
-      <PeopleGroup title="Горит" hint="Срок по вашему обещанию сегодня или уже прошёл" items={burning} tone="warn"
+      <PeopleGroup title="Горит" hint="Срок сегодня или уже прошёл — ваш или человека" items={burning} tone="warn"
         done={done} today={today} commsById={commsById} onToggle={onToggle} />
       <PeopleGroup title="Обещали вы" hint="Что вы сказали, что сделаете. Сначала — у чего ближе срок" items={mine}
         done={done} today={today} commsById={commsById} onToggle={onToggle} />
@@ -1580,8 +1580,8 @@ function PersonRow({ person, chat, done, today, onToggle }: {
   onToggle: (taskId: string) => void
 }) {
   const href = tgLink(person.chat, person.username)
-  // Открытые сверху: сначала мои со сроком, потом без срока, потом чужие.
-  const rank = (t: PersonTask) => (done.has(t.id) ? 3 : t.who === 'me' ? (t.due ? 0 : 1) : 2)
+  // Открытые сверху: сначала всё со сроком, потом мои без срока, потом чужие.
+  const rank = (t: PersonTask) => (done.has(t.id) ? 3 : t.due ? 0 : t.who === 'me' ? 1 : 2)
   const tasks = [...person.tasks].sort((a, b) => rank(a) - rank(b) || (a.due ?? '').localeCompare(b.due ?? ''))
   const waiting = chat?.waiting_since != null
   return (
@@ -1604,6 +1604,8 @@ function PersonRow({ person, chat, done, today, onToggle }: {
         )}
       </div>
       <p className={styles.personStatus}>{person.status}</p>
+      <p className={styles.personNext}><b>Следующий шаг:</b> {person.next}</p>
+      {person.draft && <DraftBox text={person.draft} href={href} />}
       <ul className={styles.personTasks}>
         {tasks.map(t => {
           const due = t.due && !done.has(t.id) ? dueLabel(t.due, today) : null
@@ -1624,6 +1626,24 @@ function PersonRow({ person, chat, done, today, onToggle }: {
         })}
       </ul>
     </li>
+  )
+}
+
+/** Готовый текст: скопировать и сразу открыть чат в Telegram. */
+function DraftBox({ text, href }: { text: string; href: string | null }) {
+  const [copied, setCopied] = useState(false)
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(text); setCopied(true) } catch { setCopied(false) }
+    if (href) window.open(href, '_blank', 'noopener')
+    window.setTimeout(() => setCopied(false), 2000)
+  }
+  return (
+    <div className={styles.personDraft}>
+      <p className={styles.personDraftText}>{text}</p>
+      <button type="button" className={styles.ghostBtn} onClick={() => void copy()}>
+        {copied ? 'Скопировано' : href ? 'Скопировать и открыть чат' : 'Скопировать'}
+      </button>
+    </div>
   )
 }
 
