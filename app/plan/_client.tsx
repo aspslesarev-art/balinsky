@@ -8,6 +8,7 @@ import {
 } from '@/lib/plan/data'
 import { autoProgress, type AutoProgress } from '@/lib/plan/auto'
 import { STEP_KINDS, isStepKind, type PlanStep, type StepKind } from '@/lib/plan/kinds'
+import { FOCUS, HQ_AS_OF, PROJECTS, QUARTER, REVIEW, type Project } from '@/lib/plan/hq'
 import { CLOSED, PEOPLE, PEOPLE_AS_OF, SILENT, type Person, type PersonKind, type PersonTask } from '@/lib/plan/people'
 import { GOAL_PRESETS, type AiTask, type CommChat, type DayNote, type DayScore, type Draft, type EventGuest, type EventInfo, type GuestStatus, type Upcoming } from '@/lib/plan/dash-types'
 import { playAward, playCoins, playFail, playLevelUp, playTick, playUndo } from './_sound'
@@ -26,9 +27,10 @@ const AUTO_SEEN_KEY = 'plan_auto_seen_v1'
 const AI_TASK_XP = 10
 const TZ = 'Asia/Makassar'
 
-type Tab = 'today' | 'comms' | 'people' | 'plan' | 'results'
+type Tab = 'hq' | 'today' | 'comms' | 'people' | 'plan' | 'results'
 
 const TABS: ReadonlyArray<readonly [Tab, string]> = [
+  ['hq', 'Штаб'],
   ['today', 'Сегодня'],
   ['comms', 'Переписка'],
   ['people', 'По людям'],
@@ -37,7 +39,7 @@ const TABS: ReadonlyArray<readonly [Tab, string]> = [
 ]
 
 function isTab(v: unknown): v is Tab {
-  return v === 'today' || v === 'comms' || v === 'people' || v === 'plan' || v === 'results'
+  return v === 'hq' || v === 'today' || v === 'comms' || v === 'people' || v === 'plan' || v === 'results'
 }
 
 function readCache(): string[] | null {
@@ -121,7 +123,7 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
   const [armed, setArmed] = useState(false)
   const [days, setDays] = useState<string[]>([])
   const [muted, setMuted] = useState(false)
-  const [tab, setTab] = useState<Tab>('today')
+  const [tab, setTab] = useState<Tab>('hq')
   const [refreshing, setRefreshing] = useState<'idle' | 'busy' | 'cap' | 'error'>('idle')
   // Баннер награды и конфетти живут пару секунд после события.
   const [banner, setBanner] = useState<{ icon: string; title: string; sub: string } | null>(null)
@@ -740,6 +742,12 @@ export function PlanClient({ daysLeft, today }: { daysLeft: number; today: strin
       )}
 
       {tab === 'comms' && <CommsTab comms={dash.comms} loaded={loaded} onSent={load} onGoal={saveGoal} />}
+
+      {tab === 'hq' && (
+        <HqTab today={today} money={stats.money} deals={stats.deals} daysLeft={daysLeft} event={dash.event}
+          upcoming={dash.upcoming} score={scoreToday} waiting={waitingMe.length} done={peopleDone}
+          onToggle={togglePerson} onOpen={setTabSaved} />
+      )}
 
       {tab === 'people' && <PeopleTab done={peopleDone} today={today} commsById={commsById} onToggle={togglePerson} />}
 
@@ -1431,6 +1439,219 @@ function CommGroup({ title, hint, items, tone, limit, onSent, onGoal }: {
         </button>
       )}
     </section>
+  )
+}
+
+// ─── Штаб: главный экран ────────────────────────────────────────────
+
+/** День по Бали для метки времени. */
+function baliDayOf(ts: string): string {
+  return new Date(Date.parse(ts) + 8 * 3_600_000).toISOString().slice(0, 10)
+}
+
+function HqTab({ today, money, deals, daysLeft, event, upcoming, score, waiting, done, onToggle, onOpen }: {
+  today: string
+  money: number
+  deals: number
+  daysLeft: number
+  event: { info: EventInfo; guests: EventGuest[] } | null
+  upcoming: Upcoming[]
+  score: DayScore | null
+  waiting: number
+  done: Set<string>
+  onToggle: (taskId: string) => void
+  onOpen: (tab: Tab) => void
+}) {
+  // Обещания со сроком: сколько уже наступило и сколько из них сдержано.
+  const promises = PEOPLE.flatMap(p => p.tasks.filter(t => t.who === 'me' && t.due).map(t => ({ ...t, person: p })))
+  const dueNow = promises.filter(t => t.due! <= today)
+  const kept = dueNow.filter(t => done.has(t.id)).length
+  const late = dueNow.filter(t => !done.has(t.id) && t.due! < today).length
+  const burning = dueNow.filter(t => !done.has(t.id)).length
+  const nextPromises = promises.filter(t => !done.has(t.id)).sort((a, b) => a.due!.localeCompare(b.due!)).slice(0, 8)
+
+  const guests = event?.guests ?? []
+  const yes = guests.filter(g => g.status === 'yes').reduce((n, g) => n + 1 + g.plus_ones, 0)
+  const maybe = guests.filter(g => g.status === 'interested').length
+  const meetingsToday = upcoming.filter(u => baliDayOf(u.starts_at) === today).length
+
+  const main = FOCUS.filter(f => f.level === 'main')
+  const second = FOCUS.filter(f => f.level === 'second')
+  const focusDone = FOCUS.filter(f => done.has(f.id)).length
+
+  const eventTarget = PROJECTS.find(p => p.event)?.event?.target ?? 15
+  const badges: Array<{ icon: string; name: string; hint: string; on: boolean }> = [
+    { icon: '🎯', name: 'Фокус дня', hint: 'Три главные задачи закрыты', on: main.every(f => done.has(f.id)) },
+    { icon: '🤝', name: 'Слово держу', hint: 'Все обещания со сроком на сегодня выполнены', on: dueNow.length > 0 && burning === 0 },
+    { icon: '📭', name: 'Никто не ждёт', hint: 'Ответили всем, кто написал', on: waiting === 0 },
+    { icon: '🏡', name: 'Полный дом', hint: `${eventTarget}+ гостей подтвердили встречу`, on: yes >= eventTarget },
+    { icon: '💰', name: 'Первая сделка', hint: 'Сделка закрыта и отмечена в плане', on: deals >= 1 },
+    { icon: '🏗', name: 'Второй фикс', hint: 'Ещё один застройщик на ежемесячной оплате', on: QUARTER.fix.have >= 2 },
+  ]
+
+  return (
+    <div className={styles.grid}>
+      <div className={styles.col}>
+        <section className={`${styles.card} ${styles.hero}`} aria-label="Фокус дня">
+          <div className={styles.cardHead}>
+            <h2>Фокус дня</h2>
+            <span className={styles.meta}>{focusDone} из {FOCUS.length}</span>
+          </div>
+          <span className={styles.thinBar}><i style={{ width: `${(focusDone / FOCUS.length) * 100}%` }} /></span>
+          <p className={styles.sub}>Главное <span>без этого день не удался</span></p>
+          <ul className={styles.list}>{main.map(f => <FocusRow key={f.id} item={f} done={done} today={today} onToggle={onToggle} />)}</ul>
+          <p className={styles.sub}>Второстепенное <span>если останется время</span></p>
+          <ul className={styles.list}>{second.map(f => <FocusRow key={f.id} item={f} done={done} today={today} onToggle={onToggle} />)}</ul>
+        </section>
+
+        <section className={styles.card} aria-label="Проекты">
+          <div className={styles.cardHead}><h2>Проекты</h2><span className={styles.meta}>{PROJECTS.length}</span></div>
+          <ul className={styles.list}>
+            {PROJECTS.map(p => <ProjectRow key={p.key} project={p} today={today} yes={yes} maybe={maybe} />)}
+          </ul>
+        </section>
+
+        <section className={styles.card} aria-label="Разбор работы">
+          <div className={styles.cardHead}><h2>Разбор работы</h2><span className={styles.meta}>по переписке за 8–30 сен.</span></div>
+          <ReviewList title="Что получается" tone="good" items={REVIEW.good} />
+          <ReviewList title="Что мешает" tone="bad" items={REVIEW.bad} />
+          <ReviewList title="Что улучшить" tone="improve" items={REVIEW.improve} />
+        </section>
+      </div>
+
+      <div className={styles.col}>
+        <section className={styles.card} aria-label="Цели квартала">
+          <div className={styles.cardHead}><h2>Цели до Гоа</h2><span className={styles.meta}>{daysLeft} {plural(daysLeft, 'день', 'дня', 'дней')}</span></div>
+          <Goal label="Деньги" value={fmt(money)} of={fmt(PLAN_TARGET_USD)} pct={money / PLAN_TARGET_USD} />
+          <Goal label="Сделки" value={String(deals)} of={String(PLAN_DEALS_TOTAL)} pct={deals / PLAN_DEALS_TOTAL} />
+          <Goal label="Застройщики на фиксе" value={String(QUARTER.fix.have)} of={String(QUARTER.fix.target)} pct={QUARTER.fix.have / QUARTER.fix.target} note={QUARTER.fix.note} />
+        </section>
+
+        <section className={styles.card} aria-label="Сегодня в цифрах">
+          <div className={styles.cardHead}><h2>Сегодня в цифрах</h2></div>
+          <div className={styles.kpis}>
+            <Kpi value={score ? String(score.score) : '—'} label="оценка дня" />
+            <Kpi value={String(waiting)} label="ждут ответа" tone={waiting > 0 ? 'bad' : 'good'} onClick={() => onOpen('comms')} />
+            <Kpi value={String(burning)} label="обещаний горит" tone={burning > 0 ? 'bad' : 'good'} onClick={() => onOpen('people')} />
+            <Kpi value={String(meetingsToday)} label={plural(meetingsToday, 'встреча', 'встречи', 'встреч')} />
+          </div>
+          <p className={styles.hint}>
+            Слово держу: {dueNow.length ? `${kept} из ${dueNow.length} обещаний со сроком выполнены` : 'обещаний со сроком пока нет'}
+            {late > 0 ? `, ${late} ${plural(late, 'просрочено', 'просрочено', 'просрочено')}` : ''}
+          </p>
+          {dueNow.length > 0 && <span className={styles.thinBar}><i style={{ width: `${(kept / dueNow.length) * 100}%` }} /></span>}
+        </section>
+
+        <section className={styles.card} aria-label="Обещания">
+          <div className={styles.cardHead}>
+            <h2>Кому что обещали</h2>
+            <button type="button" className={styles.linkBtn} onClick={() => onOpen('people')}>Все по людям</button>
+          </div>
+          {nextPromises.length === 0 && <p className={styles.hint}>Все обещания со сроком выполнены</p>}
+          <ul className={styles.list}>
+            {nextPromises.map(t => {
+              const d = dueLabel(t.due!, today)
+              return (
+                <li key={t.id}>
+                  <label className={styles.task}>
+                    <input type="checkbox" checked={done.has(t.id)} onChange={() => onToggle(t.id)} />
+                    <span className={styles.txt}>
+                      <span className={styles.taskTitle}><b>{t.person.name}:</b> {t.text}</span>
+                      <span className={styles.tags}><span className={d.late ? styles.dueLate : styles.due}>{d.text}</span></span>
+                    </span>
+                  </label>
+                </li>
+              )
+            })}
+          </ul>
+        </section>
+
+        <section className={styles.card} aria-label="Значки">
+          <div className={styles.cardHead}><h2>Значки</h2><span className={styles.meta}>{badges.filter(b => b.on).length} из {badges.length}</span></div>
+          <ul className={styles.badges}>
+            {badges.map(b => (
+              <li key={b.name} className={b.on ? styles.badgeOn : styles.badgeOff} title={b.hint}>
+                <span aria-hidden="true">{b.icon}</span>
+                <b>{b.name}</b>
+                <em>{b.hint}</em>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <p className={styles.footNote}>Штаб собран по переписке на {dayMonth.format(new Date(`${HQ_AS_OF}T00:00:00Z`))} Цифры обновляются сами, фокус и разбор — по просьбе «обнови штаб»</p>
+      </div>
+    </div>
+  )
+}
+
+function FocusRow({ item, done, today, onToggle }: { item: typeof FOCUS[number]; done: Set<string>; today: string; onToggle: (id: string) => void }) {
+  const due = item.due && !done.has(item.id) ? dueLabel(item.due, today) : null
+  return (
+    <li>
+      <label className={styles.task}>
+        <input type="checkbox" checked={done.has(item.id)} onChange={() => onToggle(item.id)} />
+        <span className={styles.txt}>
+          <span className={styles.taskTitle}>{item.text}</span>
+          <span className={styles.detail}>{item.why}</span>
+          {due && <span className={styles.tags}><span className={due.late ? styles.dueLate : styles.due}>{due.text}</span></span>}
+        </span>
+      </label>
+    </li>
+  )
+}
+
+function ProjectRow({ project, today, yes, maybe }: { project: Project; today: string; yes: number; maybe: number }) {
+  const stagesDone = project.stages.filter(s => s.done).length
+  const next = project.stages.find(s => !s.done)
+  const days = project.date ? Math.round((Date.parse(`${project.date}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / 86_400_000) : null
+  return (
+    <li className={styles.project}>
+      <div className={styles.projectHead}>
+        <b>{project.title}</b>
+        {days != null && <span className={days <= 2 ? styles.dueLate : styles.due}>{days < 0 ? 'прошло' : days === 0 ? 'сегодня' : `через ${days} ${plural(days, 'день', 'дня', 'дней')}`}</span>}
+      </div>
+      <p className={styles.detail}>{project.goal}</p>
+      <div className={styles.projectBar}>
+        <span className={styles.thinBar}><i style={{ width: `${(stagesDone / project.stages.length) * 100}%` }} /></span>
+        <span className={styles.meta}>этап {Math.min(stagesDone + 1, project.stages.length)} из {project.stages.length}</span>
+      </div>
+      {project.event && (
+        <p className={styles.projectGuests}>
+          Гости: <b>{yes}</b> подтвердили из цели {project.event.target}{maybe > 0 ? `, ещё ${maybe} думают` : ''}
+        </p>
+      )}
+      {next && <p className={styles.personNext}><b>Сейчас:</b> {next.text}</p>}
+      <p className={styles.detail}>{project.now}</p>
+    </li>
+  )
+}
+
+function Goal({ label, value, of, pct, note }: { label: string; value: string; of: string; pct: number; note?: string }) {
+  return (
+    <div className={styles.goal}>
+      <div className={styles.goalHead}><span>{label}</span><b>{value} <em>из {of}</em></b></div>
+      <span className={styles.thinBar}><i style={{ width: `${Math.min(100, pct * 100)}%` }} /></span>
+      {note && <p className={styles.goalNote}>{note}</p>}
+    </div>
+  )
+}
+
+function Kpi({ value, label, tone, onClick }: { value: string; label: string; tone?: 'good' | 'bad'; onClick?: () => void }) {
+  const cls = `${styles.kpi} ${tone === 'bad' ? styles.kpiBad : tone === 'good' ? styles.kpiGood : ''}`
+  const body = <><b>{value}</b><span>{label}</span></>
+  return onClick
+    ? <button type="button" className={cls} onClick={onClick}>{body}</button>
+    : <div className={cls}>{body}</div>
+}
+
+function ReviewList({ title, tone, items }: { title: string; tone: 'good' | 'bad' | 'improve'; items: string[] }) {
+  const cls = tone === 'good' ? styles.revGood : tone === 'bad' ? styles.revBad : styles.revImprove
+  return (
+    <>
+      <p className={styles.sub}>{title}</p>
+      <ul className={`${styles.review} ${cls}`}>{items.map(t => <li key={t}>{t}</li>)}</ul>
+    </>
   )
 }
 

@@ -8,6 +8,8 @@
 //
 // Файл импортирует клиентский компонент: никаких серверных зависимостей.
 
+import { HQ_TASK_IDS } from './hq'
+
 export type PersonKind = 'agent' | 'developer' | 'client' | 'team' | 'other'
 
 export type PersonTask = {
@@ -966,7 +968,8 @@ export const CLOSED: Closed[] = [
   { chat: 107894035, name: 'Равиль Сафиуллин', username: 'RavilSaf', kind: 'other', why: 'Партнёрство по ИИ-продукту — не интересно' },
 ]
 
-const IDS = new Set(PEOPLE.flatMap(p => p.tasks.map(t => t.id)))
+// Задачи фокуса со Штаба хранятся так же — с тем же префиксом.
+const IDS = new Set([...PEOPLE.flatMap(p => p.tasks.map(t => t.id)), ...HQ_TASK_IDS])
 
 /** Галочки по людям лежат в той же таблице, что и план, — с этим префиксом. */
 export const PEOPLE_PREFIX = 'ppl:'
