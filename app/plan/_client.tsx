@@ -1486,7 +1486,7 @@ function HqTab({ today, money, deals, daysLeft, event, upcoming, score, waiting,
     { icon: '📭', name: 'Никто не ждёт', hint: 'Ответили всем, кто написал', on: waiting === 0 },
     { icon: '🏡', name: 'Полный дом', hint: `${eventTarget}+ гостей подтвердили встречу`, on: yes >= eventTarget },
     { icon: '💰', name: 'Первая сделка', hint: 'Сделка закрыта и отмечена в плане', on: deals >= 1 },
-    { icon: '🏗', name: 'Второй фикс', hint: 'Ещё один застройщик на ежемесячной оплате', on: QUARTER.fix.have >= 2 },
+    { icon: '🏗', name: 'Третий фикс', hint: 'Ещё один застройщик на ежемесячной оплате', on: QUARTER.fix.have >= 3 },
   ]
 
   return (
