@@ -54,6 +54,9 @@ export const config = {
     '/en/promo/:path*',
     '/en/events/:path*',
     '/en/knowledge/:path*',
+    // Other locales: only percent-encoded (non-ASCII) paths, so the
+    // middleware doesn't run on their regular traffic.
+    '/:lang(id|fr|de|zh|nl|ban|pl|ua)/:rest(.*%.*)',
     // Catalog roots in every locale (and their internal /q twin) — see
     // handleCatalogQuery below.
     '/ban/apartemen',
