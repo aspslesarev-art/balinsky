@@ -1238,7 +1238,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
           // Regency level dropped: it has no page, so its crumb had no `item`
           // and GSC flagged the whole BreadcrumbList. Chain goes straight to
           // the district (which does have a page).
-          ...(district ? [{ label: district, href: `${villasRoot}/${districtRaw!.toLowerCase().replace(/\s+/g, '-')}` }] : []),
+          ...(district ? [{ label: district, href: districtSlug ? `${villasRoot}/${districtSlug}` : undefined }] : []),
           { label: title },
         ]} />
 
@@ -1569,8 +1569,8 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
               // are the site's main internal-link source, so the anchor text
               // is what tells Google what the hub is for (lib/districts.ts).
               { href: villasRoot, label: getBuyAnchor('villa', lang) },
-              ...(district ? [
-                { href: `${villasRoot}/${districtRaw!.toLowerCase().replace(/\s+/g, '-')}`, label: getBuyAnchor('villa', lang, district) },
+              ...(district && districtSlug ? [
+                { href: `${villasRoot}/${districtSlug}`, label: getBuyAnchor('villa', lang, district) },
               ] : []),
               // Bedroom facet — mirrors what the apartment detail page already
               // does. Sends weight to /villy/2-spalni & co, which currently get

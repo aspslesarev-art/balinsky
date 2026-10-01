@@ -95,6 +95,8 @@ const nextConfig: NextConfig = {
       // URL. Keep the old paths alive so nothing already linked or indexed 404s.
       { source: '/uk',        destination: '/ua',        permanent: true },
       { source: '/uk/:path*', destination: '/ua/:path*', permanent: true },
+      // The developer «reviews» sub-page is gone; Google still crawls it.
+      { source: '/en/developers/:slug/reviews', destination: '/en/developers/:slug', permanent: true },
       // Root → /ru as a permanent (301) redirect. Next's automatic root
       // routing returns 307, which doesn't pass full link equity.
       { source: '/',                   destination: '/ru',                  permanent: true },

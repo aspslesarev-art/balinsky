@@ -1111,7 +1111,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
           { label: c.home, href: home },
           { label: c.aptCrumb, href: apartmentsRoot },
           // Regency crumb dropped (no page → no `item` → GSC error).
-          ...(district ? [{ label: district, href: `${apartmentsRoot}/${districtRaw!.toLowerCase().replace(/\s+/g, '-')}` }] : []),
+          ...(district ? [{ label: district, href: districtSlug ? `${apartmentsRoot}/${districtSlug}` : undefined }] : []),
           { label: title },
         ]} />
 
@@ -1427,8 +1427,8 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
               // are the site's main internal-link source, so the anchor text is
               // what tells Google what the hub is for (lib/districts.ts).
               { href: apartmentsRoot, label: getBuyAnchor('apartment', lang) },
-              ...(district ? [
-                { href: `${apartmentsRoot}/${districtRaw!.toLowerCase().replace(/\s+/g, '-')}`, label: getBuyAnchor('apartment', lang, district) },
+              ...(district && districtSlug ? [
+                { href: `${apartmentsRoot}/${districtSlug}`, label: getBuyAnchor('apartment', lang, district) },
               ] : []),
               { href: villasRoot, label: getBuyAnchor('villa', lang) },
               { href: complexesRoot, label: c.related.complexes },

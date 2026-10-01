@@ -292,11 +292,14 @@ function handleEnKnowledgeSlug(req: NextRequest): NextResponse | null {
 
 function handleDirtySlug(req: NextRequest): NextResponse | null {
   const path = req.nextUrl.pathname
-  const m = path.match(/^\/(ru|en)\/([a-z-]+)(\/.*)?$/i)
+  const m = path.match(/^\/(ru|en|id|fr|de|zh|nl|ban|pl|uk|ua)\/([a-z-]+)(\/.*)?$/i)
   if (!m) return null
   const [, lang, section, rest] = m
-  if (!KNOWN_SECTIONS.has(section)) return null
   if (!rest) return null
+  // Other locales: same Next 500, but only touch genuinely non-ASCII paths
+  // (e.g. /zh/gongyu/kedungu的公寓 — anchor text glued on by scrapers).
+  const isRuEn = lang === 'ru' || lang === 'en'
+  if (isRuEn ? !KNOWN_SECTIONS.has(section) : !/[^\x00-\x7F]/.test(decodeSegment(rest))) return null
 
   // Split the remaining path into segments, decode and normalise each.
   // Anything that survives normalizeSlug unchanged is already clean;

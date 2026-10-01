@@ -33,7 +33,7 @@ async function loadDeveloper(slug: string) {
   const { data } = await sb
     .from('raw_developers')
     .select('airtable_id, data, logo_url')
-    .limit(200)
+    .limit(500)
   const all = (data ?? []) as Array<{ airtable_id: string; data: Record<string, unknown>; logo_url: string | null }>
   return all.find(r => firstString(r.data['SEO:Slug']) === slug) ?? null
 }

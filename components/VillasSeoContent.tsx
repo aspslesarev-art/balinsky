@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { VillaFilterState } from '@/app/ru/villy/_lib'
 import { STATUS_TO_SLUG } from '@/lib/villa-seo-routes'
 import { DISTRICT_TO_SLUG, BEDROOM_TO_SLUG } from '@/lib/seo-routes'
-import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
+import { pickCopy, type Lang } from '@/lib/i18n'
 import { localizeHubPath } from '@/lib/hub-routes'
 import { getHubLongCopy, isUnfilteredHub } from '@/lib/hub-seo'
 import { getRelatedReading } from '@/lib/hub-seo/related-reading'
@@ -415,7 +415,7 @@ export function VillasSeoContent({
   const currentDistrict = filters.district[0]
   const districts = POPULAR_DISTRICTS.filter(d => d !== currentDistrict).slice(0, 6)
     .map(d => ({ name: d, slug: DISTRICT_TO_SLUG[d] })).filter(x => x.slug)
-  const complexesVillasRoot = switchLangPath('/ru/zhilye-kompleksy/villy', lang)
+  const complexesVillasRoot = localizeHubPath('/ru/zhilye-kompleksy/villy', lang)
 
   // The long-form block is the hub's ranking material for «купить виллу на
   // Бали» / «виллы на бали цены». Only the bare list hub gets it — see

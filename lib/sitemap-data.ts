@@ -483,6 +483,12 @@ async function buildAll(): Promise<Categorized> {
   // Object detail pages /o/<slug>. RU + EN pair each, with per-record
   // lastmod from Airtable's price-update timestamp where available.
   type EnrichedLike = { slug?: unknown; data?: Record<string, unknown> }
+  const firstStr = (v: unknown): string | null =>
+    typeof v === 'string' ? (v.trim() || null)
+      : typeof v === 'number' ? String(v)
+        : Array.isArray(v) ? (v.length ? firstStr(v[0]) : null)
+          : v && typeof v === 'object' && 'value' in v ? firstStr((v as { value: unknown }).value)
+            : null
   const slugOf = (e: EnrichedLike): string | null => {
     if (typeof e.slug === 'string' && e.slug) {
       const s = normalizeSlug(e.slug)
@@ -507,10 +513,16 @@ async function buildAll(): Promise<Categorized> {
     ruSection: string,
     enSection: string,
     langs?: readonly SitemapLang[],
+    locationKeys: string[] = [],
   ) => {
     const seenSlug = new Set<string>()
     for (const e of enriched ?? []) {
       const s = slugOf(e); if (!s) continue
+      // Same rule as isDataless in the detail pages' generateMetadata: such a
+      // card is served noindex, and a noindexed URL in the sitemap is a GSC error.
+      const d = e.data ?? {}
+      if (locationKeys.length && locationKeys.every(k => !firstStr(d[k]))
+        && !firstStr(d['Площадь']) && !firstStr(d['Комнаты'])) continue
       if (seenSlug.has(s)) continue
       seenSlug.add(s)
       const lm = lastmodOfObject(e.data, now)
@@ -524,8 +536,8 @@ async function buildAll(): Promise<Categorized> {
   // Карточки юнитов — только ru/en/id. ЖК остаются на всех девяти: их
   // заметно меньше, они собирают брендовые запросы («surfside uluwatu»,
   // «pandawa residence») и индексируются нормально.
-  emitObjectPair(villaObjects, vData?.enriched as EnrichedLike[] | undefined, 'villy', 'villas', FULL_CATALOG_LANGS)
-  emitObjectPair(apartmentObjects, aData?.enriched as EnrichedLike[] | undefined, 'apartamenty', 'apartments', FULL_CATALOG_LANGS)
+  emitObjectPair(villaObjects, vData?.enriched as EnrichedLike[] | undefined, 'villy', 'villas', FULL_CATALOG_LANGS, ['Location 2', 'Location'])
+  emitObjectPair(apartmentObjects, aData?.enriched as EnrichedLike[] | undefined, 'apartamenty', 'apartments', FULL_CATALOG_LANGS, ['Location filter'])
   emitObjectPair(complexObjects, cData?.enriched as EnrichedLike[] | undefined, 'zhilye-kompleksy', 'complexes')
 
   // News / promo / events / knowledge / rental — RU + EN pairs.

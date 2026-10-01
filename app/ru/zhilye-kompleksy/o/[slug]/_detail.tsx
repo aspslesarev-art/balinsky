@@ -1793,7 +1793,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
           { label: copy.home, href: home },
           { label: copy.crumbComplexes, href: complexesRoot },
           // Regency crumb dropped (no page → no `item` → GSC error).
-          ...(district ? [{ label: district, href: `${complexesRoot}/${districtRaw!.toLowerCase().replace(/\s+/g, '-')}` }] : []),
+          ...(district ? [{ label: district, href: districtSlug ? `${complexesRoot}/${districtSlug}` : undefined }] : []),
           { label: name },
         ]} />
 
@@ -2198,9 +2198,9 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
               { href: apartmentsRoot, label: copy.related.apartments },
               { href: villasRoot, label: copy.related.villas },
               { href: developersRoot, label: copy.related.developers },
-              ...(district ? [
-                { href: `${complexesRoot}/${districtRaw!.toLowerCase().replace(/\s+/g, '-')}`, label: copy.related.complexesIn(district) },
-                { href: `${apartmentsRoot}/${districtRaw!.toLowerCase().replace(/\s+/g, '-')}`, label: copy.related.apartmentsIn(district) },
+              ...(district && districtSlug ? [
+                { href: `${complexesRoot}/${districtSlug}`, label: copy.related.complexesIn(district) },
+                { href: `${apartmentsRoot}/${districtSlug}`, label: copy.related.apartmentsIn(district) },
               ] : []),
             ].map(l => (
               <li key={l.href + l.label}>

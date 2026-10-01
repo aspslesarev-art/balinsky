@@ -1,5 +1,6 @@
 import { unstable_cache } from 'next/cache'
 import { createClient } from '@supabase/supabase-js'
+import { DISTRICT_TO_SLUG } from './seo-routes'
 
 // Lightweight complex name → slug index. News items reference a complex only
 // by display name (complexNames), with no slug — this resolves that name to
@@ -59,6 +60,8 @@ export async function complexSlugByName(name: string | null | undefined): Promis
  * avoid spurious matches; returns null when nothing confident matches, so a
  * canonical is only ever set to a genuine parent.
  */
+const DISTRICT_NAMES = new Set(Object.keys(DISTRICT_TO_SLUG).map(d => d.toLowerCase()))
+
 export async function complexSlugForText(...texts: (string | null | undefined)[]): Promise<string | null> {
   const hay = texts.filter(Boolean).join(' ').toLowerCase()
   if (!hay) return null
@@ -67,6 +70,9 @@ export async function complexSlugForText(...texts: (string | null | undefined)[]
     let best: { slug: string; len: number } | null = null
     for (const [name, slug] of Object.entries(map)) {
       if (name.length < 5) continue
+      // A complex named after its area («Nusa Penida») would claim every news
+      // item that merely mentions the place.
+      if (DISTRICT_NAMES.has(name)) continue
       if (hay.includes(name) && (!best || name.length > best.len)) best = { slug, len: name.length }
     }
     return best?.slug ?? null
