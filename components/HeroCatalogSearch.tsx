@@ -8,8 +8,8 @@
 // перешита главная.
 
 import { useState } from 'react'
+import { useCatalogRouter } from '@/lib/use-catalog-router'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { Search, ArrowRight } from 'lucide-react'
 import { switchLangPath, t, type Lang } from '@/lib/i18n'
 
@@ -45,7 +45,7 @@ export function HeroCatalogSearch({
   suggestions: readonly Suggestion[]
   sendAria: string
 }) {
-  const router = useRouter()
+  const router = useCatalogRouter()
   const [value, setValue] = useState('')
   const [kind, setKind] = useState<Kind>('villy')
 

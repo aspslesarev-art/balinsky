@@ -1,7 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useCatalogRouter } from '@/lib/use-catalog-router'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { BedDouble, MapPin, X } from 'lucide-react'
 import { FilterDropdown } from '@/components/FilterDropdown'
@@ -168,7 +169,7 @@ function isSortKey(v: string | null): v is SortKey {
 }
 
 export function RentalCatalog({ items, initial, lang = 'ru' }: { items: RentalItem[]; initial?: Initial; lang?: Lang }) {
-  const router = useRouter()
+  const router = useCatalogRouter()
   const searchParams = useSearchParams()
   const COPY_L = pickCopy(COPY, lang)
   const SORT_LABELS = COPY_L.sort

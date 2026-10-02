@@ -1,6 +1,7 @@
 'use client'
 
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
+import { useCatalogRouter } from '@/lib/use-catalog-router'
 import { useCallback } from 'react'
 import type { VillaFilterState } from '@/app/ru/villy/_lib'
 import { buildListHref, buildMapHref } from '@/lib/villa-filter-href'
@@ -14,7 +15,7 @@ const EN_MAP_BASE = '/ru/villy/karta'
 export type FilterView = 'list' | 'map'
 
 export function useVillaFilterUrl(currentState: VillaFilterState, view: FilterView = 'list') {
-  const router = useRouter()
+  const router = useCatalogRouter()
   const pathname = usePathname() ?? ''
   const lang: Lang = detectLang(pathname)
 

@@ -1,6 +1,7 @@
 'use client'
 
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
+import { useCatalogRouter } from '@/lib/use-catalog-router'
 import { pickCopy, type Lang } from '@/lib/i18n'
 
 export type DevelopersSortKey =
@@ -85,7 +86,7 @@ const OPTIONS_BY_LANG: Record<Lang, Option[]> = {
 }
 
 export function DevelopersSortToggle({ current, lang = 'ru' }: { current: DevelopersSortKey; lang?: Lang }) {
-  const router = useRouter()
+  const router = useCatalogRouter()
   const searchParams = useSearchParams()
 
   const apply = (key: DevelopersSortKey) => {
