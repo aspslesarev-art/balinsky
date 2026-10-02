@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { Search, X } from 'lucide-react'
+import { useSearchDraft } from './useSearchDraft'
 import { useFilterUrl, type FilterView } from './filters/useFilterUrl'
 import type { FilterState } from './filters/FiltersBar'
 
@@ -19,7 +20,7 @@ export function CatalogSearchBar({
   placeholder?: string
 }) {
   const { apply } = useFilterUrl(current, view)
-  const [value, setValue] = useState(initial)
+  const { value, setValue, inputRef } = useSearchDraft(initial)
   // Track the last value we pushed, so URL changes don't bounce a stale push.
   const pushedRef = useRef(initial)
 
@@ -60,6 +61,7 @@ export function CatalogSearchBar({
         className="absolute left-5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] pointer-events-none"
       />
       <input
+        ref={inputRef}
         type="text"
         value={value}
         onChange={e => setValue(e.target.value)}

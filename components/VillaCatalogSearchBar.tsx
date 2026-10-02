@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { Search, X } from 'lucide-react'
+import { useSearchDraft } from './useSearchDraft'
 import { useVillaFilterUrl, type FilterView } from './villa-filters/useVillaFilterUrl'
 import type { VillaFilterState } from '@/app/ru/villy/_lib'
 
@@ -19,7 +20,7 @@ export function VillaCatalogSearchBar({
   placeholder?: string
 }) {
   const { apply } = useVillaFilterUrl(current, view)
-  const [value, setValue] = useState(initial)
+  const { value, setValue, inputRef } = useSearchDraft(initial)
   const pushedRef = useRef(initial)
 
   // Sync from URL only when the user isn't mid-typing. Without this guard,
@@ -55,6 +56,7 @@ export function VillaCatalogSearchBar({
     <div className="relative">
       <Search size={20} strokeWidth={2} className="absolute left-5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] pointer-events-none" />
       <input
+        ref={inputRef}
         type="text"
         value={value}
         onChange={e => setValue(e.target.value)}

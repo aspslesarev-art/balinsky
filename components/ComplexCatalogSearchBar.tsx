@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { Search, X } from 'lucide-react'
+import { useSearchDraft } from './useSearchDraft'
 import { useComplexFilterUrl, type FilterView } from './complex-filters/useComplexFilterUrl'
 import type { ComplexFilterState } from '@/app/ru/zhilye-kompleksy/_lib'
 
@@ -19,7 +20,7 @@ export function ComplexCatalogSearchBar({
   placeholder?: string
 }) {
   const { apply } = useComplexFilterUrl(current, view)
-  const [value, setValue] = useState(initial)
+  const { value, setValue, inputRef } = useSearchDraft(initial)
   const pushedRef = useRef(initial)
 
   // Sync from URL only when the user isn't mid-typing. Without this guard,
@@ -59,6 +60,7 @@ export function ComplexCatalogSearchBar({
         className="absolute left-5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] pointer-events-none"
       />
       <input
+        ref={inputRef}
         type="text"
         value={value}
         onChange={e => setValue(e.target.value)}
