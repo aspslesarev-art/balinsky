@@ -65,6 +65,13 @@ export type Climate = Record<string, ClimateMonth> & {
   wind?: Wind
   /** Share of land within radius_m under buildings, % by epoch year (scripts/ghsl-builtup.py). */
   built?: { src: string; radius_m: number; pct: Record<string, number>; growth_rank: number }
+  /** Buildings and roof share within radius_m per year 2016–2023 (scripts/open-buildings-temporal.py). */
+  buildings?: {
+    src: string
+    radius_m: number
+    years: Record<string, { n: number; roof_pct: number }>
+    growth_rank: number | null
+  }
   /** Metres to the nearest mostly-sea grid cell. */
   coast_m?: number
   /** Coastal flood margin, only for plots near the sea (scripts/sea-level-risk.py). */
