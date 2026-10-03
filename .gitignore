@@ -63,3 +63,5 @@ scripts/__pycache__/
 
 graphify-out/
 .tmp-era5/
+.tmp-ghsl/
+.tmp-sea/

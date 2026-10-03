@@ -60,6 +60,7 @@ import { loadGeoFacts } from '@/lib/complex-access'
 import { loadSurroundings } from '@/lib/surroundings'
 import { ComplexAccessBlock } from '@/components/ComplexAccessBlock'
 import { ClimateBlock } from '@/components/ClimateBlock'
+import { AreaBlock } from '@/components/AreaBlock'
 import { SurroundingsBlock } from '@/components/SurroundingsBlock'
 import { loadManagersByDeveloperName, loadManagersByDeveloperSlug } from '@/lib/managers'
 import { getDeveloperStats } from '@/lib/developer-stats'
@@ -1395,6 +1396,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
         {hasPlace && (
           <DataChapter id="mesto" n={chapters.indexOf('mesto') + 1} lang={lang}>
             {geoFacts && (
+              <>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start [&>*]:mb-0">
                 <ComplexAccessBlock
                   lang={lang}
@@ -1403,6 +1405,10 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
                 />
                 <ClimateBlock climate={geoFacts.climate} air={geoFacts.air} lang={lang} lat={lat} lng={lng} />
               </div>
+              <div className="mt-4">
+                <AreaBlock climate={geoFacts.climate} lang={lang} />
+              </div>
+              </>
             )}
             <SurroundingsBlock data={surroundings} lang={lang} />
             {nearby && (

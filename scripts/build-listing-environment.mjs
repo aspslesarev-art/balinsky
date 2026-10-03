@@ -82,8 +82,8 @@ async function patch(rows) {
   }
 }
 
-// climate JSON already stored per listing, so --climate and --wind can each
-// rewrite their own part without wiping the other's.
+// climate JSON already stored per listing, so each leg (and the Python
+// scripts that park wind / built-up / sea data there) rewrites only its part.
 async function loadClimates() {
   const out = new Map()
   for (let from = 0; ; from += 1000) {
@@ -313,8 +313,11 @@ if (DO_CLIMATE) {
       if (climate) {
         ok++
         for (const l of cell.listings) {
-          const wind = existing.get(`${l.kind}:${l.airtable_id}`)?.wind
-          rows.push({ kind: l.kind, airtable_id: l.airtable_id, lat: l.lat, lng: l.lng, climate: wind ? { ...climate, wind } : climate })
+          // Keep what other scripts parked in climate (wind, built, coast_m, sea…):
+          // only the months and the year summary belong to this leg.
+          const extra = Object.fromEntries(Object.entries(existing.get(`${l.kind}:${l.airtable_id}`) ?? {})
+            .filter(([k]) => !/^\d\d$/.test(k) && k !== 'year'))
+          rows.push({ kind: l.kind, airtable_id: l.airtable_id, lat: l.lat, lng: l.lng, climate: { ...climate, ...extra } })
         }
       } else fail++
     } catch (e) {

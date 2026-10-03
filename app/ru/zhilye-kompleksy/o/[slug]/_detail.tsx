@@ -68,6 +68,7 @@ import { GatedBlock } from '@/components/GatedBlock'
 import { loadComplexAccess, loadGeoFacts } from '@/lib/complex-access'
 import { loadSurroundings } from '@/lib/surroundings'
 import { ClimateBlock } from '@/components/ClimateBlock'
+import { AreaBlock } from '@/components/AreaBlock'
 import { SurroundingsBlock } from '@/components/SurroundingsBlock'
 import { ComplexAccessBlock } from '@/components/ComplexAccessBlock'
 import { ComplexSignalsBlock } from '@/components/ComplexSignalsBlock'
@@ -2006,6 +2007,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
                   </div>
                 ) : null}
               />
+              <AreaBlock climate={geoFacts?.climate ?? null} lang={lang} />
               {process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY && (
                 <GatedBlock kind="heatmap" lang={lang}>
                   <div className="mb-4">

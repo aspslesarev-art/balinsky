@@ -63,6 +63,20 @@ export type Wind = {
 export type Climate = Record<string, ClimateMonth> & {
   year?: { days: number; sunny: number; wet: number; years: number }
   wind?: Wind
+  /** Share of land within radius_m under buildings, % by epoch year (scripts/ghsl-builtup.py). */
+  built?: { src: string; radius_m: number; pct: Record<string, number>; growth_rank: number }
+  /** Metres to the nearest mostly-sea grid cell. */
+  coast_m?: number
+  /** Coastal flood margin, only for plots near the sea (scripts/sea-level-risk.py). */
+  sea?: {
+    src: string
+    station_km: number
+    twl100_1985_2014: number
+    twl100_2021_2050: number
+    msl_rise_2050: number
+    elevation_m: number
+    margin_m: number
+  }
 }
 /** Seconds with traffic, seconds on an empty road, metres. */
 export type RouteLeg = { s: number; static_s: number | null; m: number | null }
