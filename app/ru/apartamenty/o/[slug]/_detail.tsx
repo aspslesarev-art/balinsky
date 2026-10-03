@@ -670,9 +670,18 @@ const _loadDevLookup = unstable_cache(
     if (!r.ok) throw new Error(`dev-lookup http_${r.status}`)
     const j = await r.json() as Record<string, string>
     if (Object.keys(j).length === 0) throw new Error('dev-lookup returned empty — refusing to cache')
-    return j
+    // The manifest was written by the retired Airtable sync and only knows
+    // old rec ids — apartments linked since then point straight at
+    // raw_developers.airtable_id, so resolve those from the table.
+    const { data, error } = await sb.from('raw_developers').select('airtable_id, name:data->Developer').limit(1000)
+    if (error) throw new Error(`raw_developers: ${error.message}`)
+    const out: Record<string, string> = {}
+    for (const row of (data ?? []) as { airtable_id: string; name: unknown }[]) {
+      if (typeof row.name === 'string' && row.name.trim()) out[row.airtable_id] = row.name.trim()
+    }
+    return { ...out, ...j }
   },
-  ['dev-lookup-detail-v2'],
+  ['dev-lookup-detail-v3'],
   { revalidate: 86400, tags: ['content:developers'] },
 )
 // Full developer index (slug + logo + a few highlights) so the apartment
@@ -704,7 +713,7 @@ const _loadDevelopersIndex = unstable_cache(
       slug:data->"SEO:Slug",
       reputation:data->"Репутация и опыт",
       construction:data->"Строительство и недвижимость"
-    `).limit(200)
+    `).limit(1000)
     if (error) throw new Error(`raw_developers: ${error.message}`)
     const rows = (data ?? []) as DeveloperSlimRow[]
     if (rows.length === 0) throw new Error('raw_developers returned 0 rows — refusing to cache empty')
@@ -723,7 +732,7 @@ const _loadDevelopersIndex = unstable_cache(
     }
     return out
   },
-  ['apt-developers-index-v3'],
+  ['apt-developers-index-v4'],
   { revalidate: 86400, tags: ['content:developers'] },
 )
 function findDeveloperByName(targetName: string | null, list: DeveloperLite[]): DeveloperLite | null {
@@ -804,7 +813,15 @@ async function loadApartmentBySlug(slug: string): Promise<Row | null> {
 
 // Best-effort match of apartment to its parent complex by extracting the
 // complex name from the SEO:Title and finding it in raw_complexes.
-function findParentComplex(aptTitle: string, complexes: ComplexRow[]): ComplexRow | null {
+function findParentComplex(aptTitle: string, complexes: ComplexRow[], complexName?: string | null): ComplexRow | null {
+  // The «Комплекс 1» field is what the complex page lists its units by, so
+  // trust it first — the title match below misses or mislinks units whose
+  // title doesn't spell the complex name.
+  const want = complexName?.trim().toLowerCase()
+  if (want) {
+    const exact = complexes.find(c => c.name?.trim().toLowerCase() === want)
+    if (exact) return exact
+  }
   const lower = aptTitle.toLowerCase()
   let best: { c: ComplexRow; len: number } | null = null
   for (const c of complexes) {
@@ -968,7 +985,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
   const devStats = await getDeveloperStats(devName)
 
   // Parent complex (best-effort by name match in title)
-  const parentComplex = findParentComplex(title, complexes)
+  const parentComplex = findParentComplex(title, complexes, firstString(d['Комплекс 1']))
   const parentComplexName = parentComplex?.name ?? null
 
   const [otherApts, managers, activeReservation, landProfile, marketStats, developers, nearby, geoFacts, surroundings, demand] = await Promise.all([

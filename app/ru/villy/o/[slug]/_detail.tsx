@@ -781,7 +781,15 @@ const _loadComplexesIndex = unstable_cache(
   { revalidate: 86400, tags: ['content:complexes'] },
 )
 
-function findParentComplex(villaTitle: string, complexes: ComplexLite[]): ComplexLite | null {
+function findParentComplex(villaTitle: string, complexes: ComplexLite[], complexName?: string | null): ComplexLite | null {
+  // The «Комплекс 1» field is what the complex page lists its units by, so
+  // trust it first — the title match below misses or mislinks units whose
+  // title doesn't spell the complex name.
+  const want = complexName?.trim().toLowerCase()
+  if (want) {
+    const exact = complexes.find(c => c.name.trim().toLowerCase() === want)
+    if (exact) return exact
+  }
   const lower = villaTitle.toLowerCase()
   let best: { c: ComplexLite; len: number } | null = null
   for (const c of complexes) {
@@ -820,7 +828,7 @@ const _loadDevelopersIndex = (lang: Lang) => unstable_cache(
         slug:data->"SEO:Slug",
         reputation:data->"Репутация и опыт",
         construction:data->"Строительство и недвижимость"
-      `).limit(200),
+      `).limit(1000),
       loadTranslations('developers', lang),
     ])
     if (error) throw new Error(`raw_developers: ${error.message}`)
@@ -847,7 +855,7 @@ const _loadDevelopersIndex = (lang: Lang) => unstable_cache(
     }
     return out
   },
-  ['villy-developers-index-v5', lang],
+  ['villy-developers-index-v6', lang],
   { revalidate: 86400, tags: ['content:developers'] },
 )()
 
@@ -1078,7 +1086,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   const bestCapRate = villaScore?.goodCapRate ?? null
   const GMAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? ''
 
-  const parentComplex = findParentComplex(title, complexes)
+  const parentComplex = findParentComplex(title, complexes, firstString(d['Комплекс 1']))
   const developer = findDeveloperByName(developerName, developers)
   const managers = developer?.slug
     ? await loadManagersByDeveloperSlug(developer.slug)

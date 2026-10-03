@@ -841,7 +841,7 @@ const _loadDevelopersIndex = unstable_cache(
       published:data->"Публикация",
       name:data->Developer,
       slug:data->"SEO:Slug"
-    `).limit(200)
+    `).limit(1000)
     if (error) throw new Error(`raw_developers: ${error.message}`)
     const rows = (data ?? []) as DeveloperSlimRow[]
     if (rows.length === 0) throw new Error('raw_developers returned 0 rows — refusing to cache empty')
@@ -853,7 +853,7 @@ const _loadDevelopersIndex = unstable_cache(
     }
     return out
   },
-  ['complex-developers-index-v2'],
+  ['complex-developers-index-v3'],
   { revalidate: 86400, tags: ['content:developers'] },
 )
 
