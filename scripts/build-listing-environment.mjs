@@ -10,11 +10,16 @@
 //              use — unlike Open-Meteo's free tier, which is not. Sampled on a
 //              ~5 km grid: climate does not change street to street, and it
 //              keeps us polite to a free public API.
+//   --wind     NASA POWER hourly 10 m wind, folded into a wind rose (8
+//              directions, share of hours + mean speed) for the whole year and
+//              for each season. Free. Stored inside climate.wind so no schema
+//              change; --climate keeps it when it rewrites the rest.
 //   --air      Google Air Quality, 30 days of hourly history averaged. Also
 //              grid-sampled — AQI is a regional quantity.
 //
 // Usage:
 //   node scripts/build-listing-environment.mjs --climate            # free
+//   node scripts/build-listing-environment.mjs --wind               # free
 //   node scripts/build-listing-environment.mjs --air --cap=6
 //   node scripts/build-listing-environment.mjs --solar --cap=12
 import fs from 'node:fs'
@@ -34,8 +39,9 @@ const ARGS = process.argv.slice(2)
 const DO_SOLAR = ARGS.includes('--solar')
 const DO_CLIMATE = ARGS.includes('--climate')
 const DO_AIR = ARGS.includes('--air')
+const DO_WIND = ARGS.includes('--wind')
 const CAP = Number((ARGS.find(a => a.startsWith('--cap=')) || '--cap=15').split('=')[1])
-if (!DO_SOLAR && !DO_CLIMATE && !DO_AIR) { console.error('pick at least one of --solar / --climate / --air'); process.exit(1) }
+if (!DO_SOLAR && !DO_CLIMATE && !DO_AIR && !DO_WIND) { console.error('pick at least one of --solar / --climate / --wind / --air'); process.exit(1) }
 
 const SOLAR_COST = 0.010          // Building Insights, conservative
 const AIR_COST = 0.010            // one history page
@@ -74,6 +80,22 @@ async function patch(rows) {
     const { error } = await sb.from('listing_geo_facts').upsert(slice, { onConflict: 'kind,airtable_id' })
     if (error) console.error(`\n  upsert ${i} failed: ${error.message}`)
   }
+}
+
+// climate JSON already stored per listing, so --climate and --wind can each
+// rewrite their own part without wiping the other's.
+async function loadClimates() {
+  const out = new Map()
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await sb.from('listing_geo_facts')
+      .select('kind,airtable_id,climate')
+      .order('airtable_id', { ascending: true })
+      .range(from, from + 999)
+    if (error) throw new Error(`listing_geo_facts read failed: ${error.message}`)
+    for (const r of data ?? []) out.set(`${r.kind}:${r.airtable_id}`, r.climate)
+    if (!data || data.length < 1000) break
+  }
+  return out
 }
 
 // ---- solar -----------------------------------------------------------------
@@ -177,6 +199,62 @@ async function climateFor(lat, lng) {
   return out
 }
 
+// ---- wind (NASA POWER hourly) ---------------------------------------------
+// WD10M is where the wind blows FROM, in degrees. Folded into 8 compass
+// sectors (N, NE, E … NW): share of hours from each and the mean speed. Bali
+// has two seasons with opposite winds — the south-east trades from April to
+// October, the west monsoon from November to March — so a single yearly rose
+// hides the story; we keep both seasons too. MERRA-2 cells are ~50 km, so the
+// rose tells north coast from south coast, not street from street.
+const DRY_MONTHS = new Set(['04', '05', '06', '07', '08', '09', '10'])
+const CALM_MS = 0.5
+
+async function windFor(lat, lng) {
+  const end = new Date(); end.setDate(end.getDate() - 30)
+  const endStr = `${end.getFullYear()}${String(end.getMonth() + 1).padStart(2, '0')}${String(end.getDate()).padStart(2, '0')}`
+  const startStr = `${end.getFullYear() - 5}0101`
+  const url = 'https://power.larc.nasa.gov/api/temporal/hourly/point'
+    + '?parameters=WS10M,WD10M&community=RE&time-standard=LST'
+    + `&longitude=${lng}&latitude=${lat}&start=${startStr}&end=${endStr}&format=JSON`
+  const r = await fetch(url)
+  if (!r.ok) throw new Error(`nasa ${r.status}`)
+  const p = (await r.json())?.properties?.parameter
+  if (!p?.WD10M || !p?.WS10M) return null
+
+  const blank = () => ({ n: 0, calm: 0, sum: 0, cnt: Array(8).fill(0), spd: Array(8).fill(0) })
+  const acc = { all: blank(), dry: blank(), wet: blank() }
+  const years = new Set()
+  for (const [hour, wd] of Object.entries(p.WD10M)) {
+    const ws = p.WS10M[hour]
+    // POWER marks missing values as -999.
+    if (wd == null || ws == null || wd < -100 || ws < -100) continue
+    years.add(hour.slice(0, 4))
+    const sector = Math.floor(((wd + 22.5) % 360) / 45)
+    for (const b of [acc.all, DRY_MONTHS.has(hour.slice(4, 6)) ? acc.dry : acc.wet]) {
+      b.n++
+      b.sum += ws
+      if (ws < CALM_MS) { b.calm++; continue }
+      b.cnt[sector]++
+      b.spd[sector] += ws
+    }
+  }
+  if (!acc.all.n) return null
+  const fold = (b) => ({
+    pct: b.cnt.map(c => +(100 * c / b.n).toFixed(1)),
+    ms: b.cnt.map((c, i) => c ? +(b.spd[i] / c).toFixed(1) : null),
+    calm_pct: +(100 * b.calm / b.n).toFixed(1),
+    avg_ms: +(b.sum / b.n).toFixed(1),
+  })
+  return {
+    src: 'NASA POWER (MERRA-2), hourly 10 m',
+    years: years.size,
+    hours: acc.all.n,
+    all: fold(acc.all),
+    dry: fold(acc.dry),
+    wet: fold(acc.wet),
+  }
+}
+
 // ---- air quality -----------------------------------------------------------
 async function airFor(lat, lng) {
   const stats = { u: [], i: [], dom: {} }
@@ -226,6 +304,7 @@ console.log(`listings=${listings.length}  grid cells=${cells.length}`)
 
 if (DO_CLIMATE) {
   console.log('climate (NASA POWER, free) …')
+  const existing = await loadClimates()
   let ok = 0, fail = 0
   const rows = []
   for (const [idx, cell] of cells.entries()) {
@@ -233,7 +312,10 @@ if (DO_CLIMATE) {
       const climate = await climateFor(cell.lat, cell.lng)
       if (climate) {
         ok++
-        for (const l of cell.listings) rows.push({ kind: l.kind, airtable_id: l.airtable_id, lat: l.lat, lng: l.lng, climate })
+        for (const l of cell.listings) {
+          const wind = existing.get(`${l.kind}:${l.airtable_id}`)?.wind
+          rows.push({ kind: l.kind, airtable_id: l.airtable_id, lat: l.lat, lng: l.lng, climate: wind ? { ...climate, wind } : climate })
+        }
       } else fail++
     } catch (e) {
       fail++
@@ -244,6 +326,32 @@ if (DO_CLIMATE) {
   }
   await patch(rows)
   console.log(`\n  climate written for ${rows.length} listings`)
+}
+
+if (DO_WIND) {
+  console.log('wind (NASA POWER hourly, free) …')
+  const existing = await loadClimates()
+  let ok = 0, fail = 0
+  const rows = []
+  for (const [idx, cell] of cells.entries()) {
+    try {
+      const wind = await windFor(cell.lat, cell.lng)
+      if (wind) {
+        ok++
+        for (const l of cell.listings) {
+          const climate = existing.get(`${l.kind}:${l.airtable_id}`) ?? {}
+          rows.push({ kind: l.kind, airtable_id: l.airtable_id, lat: l.lat, lng: l.lng, climate: { ...climate, wind } })
+        }
+      } else fail++
+    } catch (e) {
+      fail++
+      if (fail <= 3) console.error(`\n  cell ${idx} failed: ${e.message}`)
+    }
+    process.stdout.write(`\r  cells ${idx + 1}/${cells.length}  ok=${ok} fail=${fail}`)
+    await sleep(400)   // be gentle with a free public API
+  }
+  await patch(rows)
+  console.log(`\n  wind written for ${rows.length} listings`)
 }
 
 if (DO_AIR) {

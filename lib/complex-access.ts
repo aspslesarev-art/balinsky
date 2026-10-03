@@ -41,8 +41,28 @@ export type ClimateMonth = {
   t_max: number | null
   rh: number | null
 }
+/** Wind rose for one period: 8 sectors N, NE, E … NW (where the wind blows FROM). */
+export type WindRoseData = {
+  /** Share of hours from each sector, %. */
+  pct: number[]
+  /** Mean speed per sector, m/s. */
+  ms: (number | null)[]
+  calm_pct: number
+  avg_ms: number
+}
+export type Wind = {
+  src: string
+  years: number
+  hours: number
+  all: WindRoseData
+  /** April — October, south-east trades. */
+  dry: WindRoseData
+  /** November — March, west monsoon. */
+  wet: WindRoseData
+}
 export type Climate = Record<string, ClimateMonth> & {
   year?: { days: number; sunny: number; wet: number; years: number }
+  wind?: Wind
 }
 /** Seconds with traffic, seconds on an empty road, metres. */
 export type RouteLeg = { s: number; static_s: number | null; m: number | null }

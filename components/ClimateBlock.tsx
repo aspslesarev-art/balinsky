@@ -11,6 +11,7 @@ import type { ReactNode } from 'react'
 import { Sun, CloudRain, Wind } from 'lucide-react'
 import type { Climate, ClimateMonth, GeoFacts } from '@/lib/complex-access'
 import { pickCopy, type Lang } from '@/lib/i18n'
+import { WindRose } from '@/components/WindRose'
 
 const COPY = {
   ru: { title: 'Солнце и погода', sunny: 'солнечных дней в году', best: 'Лучшие месяцы', worst: 'Сезон дождей', air: 'Воздух', airGood: 'хороший', airOk: 'умеренный', perMonth: 'солнечных дней в месяц' },
@@ -149,6 +150,12 @@ export function ClimateBlock({ climate, air, lang, footer }: Props) {
           </div>
         )}
       </div>
+
+      {climate.wind && (
+        <div className="mt-4 border-t border-[var(--color-border)] pt-4">
+          <WindRose wind={climate.wind} lang={lang} />
+        </div>
+      )}
 
       {footer && <div className="mt-4 border-t border-[var(--color-border)] pt-4">{footer}</div>}
     </div>
