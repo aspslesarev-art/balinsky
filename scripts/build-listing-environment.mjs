@@ -340,6 +340,8 @@ if (DO_WIND) {
         ok++
         for (const l of cell.listings) {
           const climate = existing.get(`${l.kind}:${l.airtable_id}`) ?? {}
+          // The finer ERA5-Land rose (scripts/era5-land-wind.py) wins over this one.
+          if (climate.wind?.src?.startsWith('ERA5') && !ARGS.includes('--force')) continue
           rows.push({ kind: l.kind, airtable_id: l.airtable_id, lat: l.lat, lng: l.lng, climate: { ...climate, wind } })
         }
       } else fail++

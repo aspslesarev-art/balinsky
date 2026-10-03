@@ -62,3 +62,4 @@ estatemarket_occupancy_*.xlsx
 scripts/__pycache__/
 
 graphify-out/
+.tmp-era5/
