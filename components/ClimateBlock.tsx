@@ -88,11 +88,14 @@ type Props = {
   climate: Climate | null
   air: GeoFacts['air']
   lang: Lang
+  /** Точка объекта — роза ветров рисуется поверх спутника вокруг неё. */
+  lat?: number | null
+  lng?: number | null
   /** Необязательный подвал карточки — например, кнопка 3D-инсоляции. */
   footer?: ReactNode
 }
 
-export function ClimateBlock({ climate, air, lang, footer }: Props) {
+export function ClimateBlock({ climate, air, lang, lat, lng, footer }: Props) {
   const t = pickCopy(COPY, lang)
   const year = climate?.year
   if (!climate || !year?.sunny) return null
@@ -153,7 +156,7 @@ export function ClimateBlock({ climate, air, lang, footer }: Props) {
 
       {climate.wind && (
         <div className="mt-4 border-t border-[var(--color-border)] pt-4">
-          <WindRose wind={climate.wind} lang={lang} />
+          <WindRose wind={climate.wind} lang={lang} lat={lat} lng={lng} />
         </div>
       )}
 

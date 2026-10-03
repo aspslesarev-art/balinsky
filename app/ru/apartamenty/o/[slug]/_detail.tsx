@@ -1249,7 +1249,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
                   elevationM={geoFacts.elevation_m}
                   routes={geoFacts.routes}
                 />
-                <ClimateBlock climate={geoFacts.climate} air={geoFacts.air} lang={lang} />
+                <ClimateBlock climate={geoFacts.climate} air={geoFacts.air} lang={lang} lat={lat} lng={lng} />
               </div>
             )}
             <SurroundingsBlock data={surroundings} lang={lang} />

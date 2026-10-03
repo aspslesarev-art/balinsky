@@ -1963,6 +1963,8 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
                 climate={geoFacts?.climate ?? null}
                 air={geoFacts?.air ?? null}
                 lang={lang}
+                lat={lat}
+                lng={lng}
                 footer={showSunBlock ? (
                   <div>
                     <p className="mb-3 text-[13px] leading-relaxed text-[var(--color-text-muted)]">
