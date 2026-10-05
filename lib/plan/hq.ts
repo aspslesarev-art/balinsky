@@ -36,7 +36,7 @@ export type Project = {
   event?: { target: number }
 }
 
-export type Review = { good: string[]; bad: string[]; improve: string[] }
+export type Review = { period: string; good: string[]; bad: string[]; improve: string[] }
 
 /** Цели квартала, которые экран не может посчитать сам. */
 export const QUARTER = {
@@ -151,6 +151,7 @@ export const PROJECTS: Project[] = [
  * (без своего аккаунта).
  */
 export const REVIEW: Review = {
+  period: '28 сен – 5 окт',
   good: [
     'Встречу брокеров провели: перенос в Баливуд за полдня, 9 продающих брокеров в закрытом чате, Поляков уже несёт объекты на сайт',
     'Отвечаете быстро: половина ответов — за 3 минуты, три из четырёх — в течение часа (389 ответов за неделю)',

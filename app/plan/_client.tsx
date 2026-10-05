@@ -1512,7 +1512,7 @@ function HqTab({ today, money, deals, daysLeft, event, upcoming, score, waiting,
         </section>
 
         <section className={styles.card} aria-label="Разбор работы">
-          <div className={styles.cardHead}><h2>Разбор работы</h2><span className={styles.meta}>по переписке за 8–30 сен.</span></div>
+          <div className={styles.cardHead}><h2>Разбор работы</h2><span className={styles.meta}>по переписке за {REVIEW.period}</span></div>
           <ReviewList title="Что получается" tone="good" items={REVIEW.good} />
           <ReviewList title="Что мешает" tone="bad" items={REVIEW.bad} />
           <ReviewList title="Что улучшить" tone="improve" items={REVIEW.improve} />
