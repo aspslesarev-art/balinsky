@@ -3,6 +3,8 @@
 # gitProviderOptions.createDeployments = disabled), push в main сайт НЕ меняет.
 # Выкладывает ровно origin/main из чистой копии, без локального мусора.
 set -euo pipefail
+# Автор последнего коммита должен быть участником команды Vercel (почта
+# asp.slesarev@gmail.com) — иначе выкладка висит в статусе Blocked.
 REPO=${0:A:h:h}
 WT=$HOME/.balinsky-ship
 git -C "$REPO" fetch -q origin main
