@@ -160,7 +160,8 @@ async function loadAgentResale(): Promise<ResaleUnit[]> {
       bedrooms: num(d['Комнаты']),
       area: num(d['Площадь']),
       photos: l.photos,
-      dealType: 'resale' as const,
+      // Агент сам указывает, готовый это объект или переуступка со стройки.
+      dealType: dealOf(str(d['Тип сделки'])),
       detailHref: `/ru/pereprodazha/o/${l.slug}`,
     }
     return l.kind === 'villa'
