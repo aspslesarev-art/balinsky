@@ -8,6 +8,7 @@ import { handleListingCallback } from '@/lib/agent-listings/moderation'
 import { handleAdminCallback } from '@/lib/balina-admin-edit'
 import { handleMeetingCallback } from '@/lib/meetings/booking'
 import { handleDevUpdateCallback, handleDevUpdateReply } from '@/lib/dev-updates'
+import { isOwnerChat } from '@/lib/balina-owners'
 import { refreshChatAvatar } from '@/lib/chat-avatars'
 import { uploadChatMedia, downloadTelegramFile, type ChatMediaKind } from '@/lib/chat-media'
 import type { Lang } from '@/lib/i18n'
@@ -33,6 +34,14 @@ type TgMessage = {
   sticker?: TgFile & { emoji?: string }
   photo?: Array<TgFile & { width: number; height: number }>
   reply_to_message?: { message_id: number }
+  media_group_id?: string
+  forward_origin?: {
+    type: string
+    chat?: { title?: string }
+    sender_chat?: { title?: string }
+    sender_user?: { first_name?: string; last_name?: string }
+    sender_user_name?: string
+  }
 }
 type TgCallbackQuery = {
   id: string
@@ -163,6 +172,7 @@ export async function POST(req: Request) {
       media_size: mediaSize,
       sender_id: isGroupKind ? msg.from?.id ?? null : null,
       sender_name: isGroupKind ? senderName : null,
+      forwarded_from: forwardedFrom(msg),
     })
     // Refresh the cached profile photo (throttled to 24h inside the
     // helper). Awaited so it actually fires on serverless. Skip in groups
@@ -178,6 +188,25 @@ export async function POST(req: Request) {
   // greets. Manager-side sends from /admin still flow through unchanged.
   if (isGroupKind) {
     return NextResponse.json({ ok: true, kind: chatType })
+  }
+
+  // Владелец переслал пост застройщика — его разберёт сервер dev-updates и
+  // пришлёт карточку статьи. Балине это не вопрос. Альбом приходит пачкой
+  // сообщений с одним media_group_id — отвечаем один раз, на подписи.
+  const fwd = forwardedFrom(msg)
+  if (fwd && isOwnerChat(msg.chat.id)) {
+    if (text || !msg.media_group_id) {
+      await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: msg.chat.id,
+          text: 'Принял, разберу и пришлю карточку статьи через пару минут.',
+          reply_to_message_id: msg.message_id,
+        }),
+      }).catch(err => console.error('[telegram] forward ack failed:', err))
+    }
+    return NextResponse.json({ ok: true, forward: true })
   }
 
   // Владелец ответил на карточку черновика статьи — это правка, не вопрос Балине.
@@ -270,6 +299,14 @@ export async function POST(req: Request) {
 export async function GET() {
   const ok = !!process.env.TELEGRAM_BOT_TOKEN
   return NextResponse.json({ ok, hint: ok ? 'webhook handler ready' : 'set TELEGRAM_BOT_TOKEN' })
+}
+
+// Откуда переслано: канал/чат по названию, человек по имени.
+function forwardedFrom(msg: TgMessage): string | null {
+  const o = msg.forward_origin
+  if (!o) return null
+  const user = [o.sender_user?.first_name, o.sender_user?.last_name].filter(Boolean).join(' ')
+  return o.chat?.title ?? o.sender_chat?.title ?? (user || o.sender_user_name || 'unknown')
 }
 
 function detectMedia(msg: TgMessage): { kind: ChatMediaKind; file: TgFile } | null {

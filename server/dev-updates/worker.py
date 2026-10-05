@@ -304,7 +304,23 @@ def developers():
             continue
         name = m.group(1).strip()
         out[r["chat_id"]] = match_developer(name, catalog) or {"name": name, "slug": None}
+    global CATALOG
+    CATALOG = catalog
     return out
+
+
+CATALOG = []
+
+
+def dev_from_title(title, devs_by_title):
+    """Застройщик по названию чата, из которого владелец переслал пост."""
+    if not title:
+        return None
+    if title in devs_by_title:
+        return devs_by_title[title]
+    m = re.match(r"^\s*(.+?)\s*[&|+]\s*(balinsky|балинский|balisnky)\s*$", title, re.I) \
+        or re.match(r"^\s*(?:balinsky|балинский)\s*[&|+]\s*(.+?)\s*$", title, re.I)
+    return match_developer(m.group(1).strip() if m else title, CATALOG)
 
 
 ALIASES = {"loyo": "LB Group (LOYO&BONDAR)", "nuanu": "Nuanu & Artem"}
@@ -443,12 +459,27 @@ def collect(dry=False):
             continue
         by_chat.setdefault(m["chat_id"], []).append(m)
 
+    # Пересланные владельцем посты (чаты, где бот глухой) — из его личного чата с ботом.
+    fwd = sb_get("bot_messages", {
+        "select": "id,chat_id,created_at,sender_id,sender_name,text,media_type,media_url,forwarded_from",
+        "chat_id": f"eq.{OWNER}", "forwarded_from": "not.is.null",
+        "direction": "eq.in", "created_at": f"gte.{since}", "order": "id.asc", "limit": "500",
+    })
+    for m in fwd:
+        if m["id"] > cursor.get(OWNER, 0):
+            m["sender_name"] = m["forwarded_from"]
+            by_chat.setdefault(OWNER, []).append(m)
+    titles = sb_get("bot_chats", {"select": "chat_id,title", "chat_id": f"in.({','.join(str(c) for c in devs)})"})
+    devs_by_title = {r["title"]: devs[r["chat_id"]] for r in titles if r.get("title")}
+
     now = datetime.now(timezone.utc)
     for chat_id, cm in by_chat.items():
-        dev = devs[chat_id]
         for b in bursts(cm):
-            if (now - datetime.fromisoformat(b[-1]["created_at"])).total_seconds() < QUIET_S:
+            quiet = 45 if chat_id == OWNER else QUIET_S  # пересылка приходит сразу целиком
+            if (now - datetime.fromisoformat(b[-1]["created_at"])).total_seconds() < quiet:
                 continue  # ещё досылают альбом
+            dev = devs.get(chat_id) or dev_from_title(b[0].get("forwarded_from"), devs_by_title) \
+                or {"name": None, "slug": None}
             if not any((m.get("text") or "").strip() for m in b) and not any(m.get("media_url") for m in b):
                 continue
             key = f"{chat_id}:{b[-1]['id']}"
@@ -481,6 +512,27 @@ def handle_burst(chat_id, dev, msgs, dry):
             n = f"photo{i + 1}.jpg"
             download(u, os.path.join(tmp, n))
             names.append(n)
+        # Видео Claude не смотрит — берём кадр. Он же станет обложкой, если фото нет.
+        for j, v in enumerate([v for v in videos if v["url"]][:3]):
+            vp, fp = os.path.join(tmp, f"v{j}.mp4"), f"video{j + 1}.jpg"
+            download(v["url"], vp)
+            subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-ss", "1", "-i", vp, "-frames:v", "1",
+                            "-q:v", "3", os.path.join(tmp, fp)], check=False)
+            if os.path.exists(os.path.join(tmp, fp)):
+                names.append(fp)
+                with open(os.path.join(tmp, fp), "rb") as f:
+                    url = storage_put("chat-media", f"dvu-frames/{chat_id}/{msgs[-1]['id']}-{j + 1}.jpg",
+                                      f.read(), "image/jpeg", "31536000")
+                photos_src.append(url)
+        if not dev["name"]:
+            known = ", ".join(sorted({c["name"] for c in CATALOG if c["name"]}))
+            d0 = claude(f"""Кто застройщик в этом посте? Пост переслан из «{msgs[0].get('forwarded_from')}».
+Текст: {' / '.join((m.get('text') or '')[:800] for m in msgs)}
+Застройщики каталога: {known}
+Ответь JSON: {{"developer": "точное имя из списка или null", "guess": "имя из поста, если в списке нет"}}""", tmp)
+            hit = next((c for c in CATALOG if c["name"] == d0.get("developer")), None)
+            dev = hit or {"name": d0.get("guess") or msgs[0].get("forwarded_from"), "slug": None}
+            complexes = complexes_of(dev["name"]) if hit else []
         d = claude(draft_prompt(dev, complexes, msgs, names, today_str()), tmp, "Read")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
