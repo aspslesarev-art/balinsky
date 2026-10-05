@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
+import { ArticleMedia, ArticleVideos } from '@/components/ArticleMedia'
 import { Calendar, ExternalLink, Building2, HardHat } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
@@ -141,14 +142,11 @@ export async function PromoDetail({ slug, lang }: { slug: string; lang: Lang }) 
             )}
           </div>
 
-          {p.photo && (
-            <div className="relative w-full mb-8 rounded-2xl overflow-hidden bg-[var(--color-search-bg)] aspect-[16/9]">
-              <Image src={p.photo} alt={p.title} fill sizes="(max-width: 768px) 100vw, 800px" priority className="object-cover" />
-            </div>
-          )}
+          <ArticleMedia photo={p.photo} photos={p.photos} alt={p.title} />
           {p.body && (
             <div className="text-[16px] leading-[1.7] text-[var(--color-text)] whitespace-pre-wrap">{p.body}</div>
           )}
+          <ArticleVideos videos={p.videos} />
           {p.externalUrl && (
             <div className="mt-6">
               <a href={p.externalUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[var(--color-primary)] text-white text-[14px] font-medium no-underline hover:bg-[var(--color-primary-hover)]">

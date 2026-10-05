@@ -3,7 +3,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
+import { ArticleMedia, ArticleVideos } from '@/components/ArticleMedia'
 import { Calendar, MapPin, HardHat, Video, Send } from 'lucide-react'
 import { botLink } from '@/lib/bot-link'
 import { Header } from '@/components/Header'
@@ -241,14 +241,11 @@ export async function EventDetail({ slug, lang }: { slug: string; lang: Lang }) 
             {past && <span className="text-[10px] uppercase tracking-wide bg-[var(--color-border)] text-[#374151] px-1.5 py-0.5 rounded">{c.pastBadge}</span>}
           </div>
 
-          {e.photo && (
-            <div className="relative w-full mb-8 rounded-2xl overflow-hidden bg-[var(--color-search-bg)] aspect-[16/9]">
-              <Image src={e.photo} alt={e.title} fill sizes="(max-width: 768px) 100vw, 800px" priority className="object-cover" />
-            </div>
-          )}
+          <ArticleMedia photo={e.photo} photos={e.photos} alt={e.title} />
           {e.body && (
             <div className="text-[16px] leading-[1.7] text-[var(--color-text)] whitespace-pre-wrap">{e.body}</div>
           )}
+          <ArticleVideos videos={e.videos} />
 
           <div className="mt-6 flex flex-wrap gap-3">
             {!past && (

@@ -7,6 +7,7 @@ import { handleReservationCallback } from '@/lib/telegram-reservation'
 import { handleListingCallback } from '@/lib/agent-listings/moderation'
 import { handleAdminCallback } from '@/lib/balina-admin-edit'
 import { handleMeetingCallback } from '@/lib/meetings/booking'
+import { handleDevUpdateCallback, handleDevUpdateReply } from '@/lib/dev-updates'
 import { refreshChatAvatar } from '@/lib/chat-avatars'
 import { uploadChatMedia, downloadTelegramFile, type ChatMediaKind } from '@/lib/chat-media'
 import type { Lang } from '@/lib/i18n'
@@ -31,6 +32,7 @@ type TgMessage = {
   video_note?: TgFile
   sticker?: TgFile & { emoji?: string }
   photo?: Array<TgFile & { width: number; height: number }>
+  reply_to_message?: { message_id: number }
 }
 type TgCallbackQuery = {
   id: string
@@ -79,6 +81,12 @@ export async function POST(req: Request) {
   // Отмена записи на встречу — кнопка под уведомлением о новой встрече.
   if (update.callback_query?.data?.startsWith('mtg:')) {
     await handleMeetingCallback(token, update.callback_query)
+    return NextResponse.json({ ok: true, callback: true })
+  }
+
+  // Черновик статьи из чата застройщика: Новость / Акция / … / Пропустить.
+  if (update.callback_query?.data?.startsWith('dvu:')) {
+    await handleDevUpdateCallback(token, update.callback_query)
     return NextResponse.json({ ok: true, callback: true })
   }
 
@@ -170,6 +178,15 @@ export async function POST(req: Request) {
   // greets. Manager-side sends from /admin still flow through unchanged.
   if (isGroupKind) {
     return NextResponse.json({ ok: true, kind: chatType })
+  }
+
+  // Владелец ответил на карточку черновика статьи — это правка, не вопрос Балине.
+  if (msg.reply_to_message && (text || media?.kind === 'voice')) {
+    const handled = await handleDevUpdateReply(
+      token, msg.chat.id, msg.reply_to_message.message_id,
+      text || null, media?.kind === 'voice' ? mediaUrl : null,
+    ).catch(err => { console.error('[telegram] dev-update reply failed:', err); return false })
+    if (handled) return NextResponse.json({ ok: true, devUpdate: true })
   }
 
   // Handover: if the manager is actively in this chat (replied within the

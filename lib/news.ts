@@ -31,6 +31,10 @@ export type NewsItem = {
   photo: string | null
   externalUrl: string | null
   videoUrl: string | null
+  // Альбом и видео из чата застройщика (lib/dev-updates.ts). photo — обложка,
+  // она же photos[0]; без photos страница показывает одну photo, как раньше.
+  photos?: string[]
+  videos?: string[]
   pinned: boolean
   complexNames: string[]
   developers: NewsDeveloper[]

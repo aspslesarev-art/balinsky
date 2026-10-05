@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { notFound, permanentRedirect } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
+import { ArticleMedia, ArticleVideos } from '@/components/ArticleMedia'
 import { Calendar, ExternalLink, Building2, HardHat } from 'lucide-react'
 import { complexSlugForText } from '@/lib/complex-index'
 import { Header } from '@/components/Header'
@@ -202,13 +203,10 @@ export async function NewsDetail({ slug, lang }: { slug: string; lang: Lang }) {
             )}
           </div>
 
-          {n.photo && (
-            <div className="relative w-full mb-8 rounded-2xl overflow-hidden bg-[var(--color-search-bg)] aspect-[16/9]">
-              <Image src={n.photo} alt={n.title} fill sizes="(max-width: 768px) 100vw, 800px" priority className="object-cover" />
-            </div>
-          )}
+          <ArticleMedia photo={n.photo} photos={n.photos} alt={n.title} />
 
           {n.body && <NewsBody body={n.body} />}
+          <ArticleVideos videos={n.videos} />
 
           {n.videoUrl && (
             <div className="mt-6">

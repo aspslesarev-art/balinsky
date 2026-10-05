@@ -11,6 +11,10 @@ export type PromoItem = {
   expiresAt: string | null
   photo: string | null
   externalUrl: string | null
+  // Альбом и видео из чата застройщика (lib/dev-updates.ts). photo — обложка,
+  // она же photos[0]; без photos страница показывает одну photo, как раньше.
+  photos?: string[]
+  videos?: string[]
   pinned: boolean
   top10: boolean
   complexNames: string[]
