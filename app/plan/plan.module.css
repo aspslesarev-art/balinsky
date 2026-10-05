@@ -423,6 +423,7 @@ button.kpi:hover { border-color: var(--line-strong); }
 .peopleIntro { margin: 0; color: var(--ink-2); font-size: .875rem; line-height: 1.6; max-width: 68ch; }
 .peopleIntro b { font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
 .personAbout { color: var(--dim); font-size: .8125rem; line-height: 1.4; }
+.personMoney { display: block; color: var(--accent-ink); font-size: .8125rem; font-weight: 600; line-height: 1.4; }
 .personStatus { margin: 0 0 4px 48px; color: var(--ink-2); font-size: .875rem; line-height: 1.55; max-width: 68ch; }
 .personNext { margin: 0 0 8px 48px; font-size: .875rem; line-height: 1.55; max-width: 68ch; color: var(--ink); }
 .personNext b { font-weight: 600; color: var(--accent-ink); }

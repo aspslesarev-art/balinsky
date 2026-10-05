@@ -9,7 +9,7 @@ import {
 import { autoProgress, type AutoProgress } from '@/lib/plan/auto'
 import { STEP_KINDS, isStepKind, type PlanStep, type StepKind } from '@/lib/plan/kinds'
 import { FOCUS, HQ_AS_OF, PROJECTS, QUARTER, REVIEW, type Project } from '@/lib/plan/hq'
-import { CLOSED, PEOPLE, PEOPLE_AS_OF, SILENT, type Person, type PersonKind, type PersonTask } from '@/lib/plan/people'
+import { CLOSED, PEOPLE, PEOPLE_AS_OF, SILENT, moneyRank, type Person, type PersonKind, type PersonTask } from '@/lib/plan/people'
 import { GOAL_PRESETS, type AiTask, type CommChat, type DayNote, type DayScore, type Draft, type EventGuest, type EventInfo, type GuestStatus, type Upcoming } from '@/lib/plan/dash-types'
 import { playAward, playCoins, playFail, playLevelUp, playTick, playUndo } from './_sound'
 import styles from './plan.module.css'
@@ -1698,15 +1698,14 @@ function PeopleTab({ done, today, commsById, onToggle }: {
   const open = (p: Person) => p.tasks.filter(t => !done.has(t.id))
   const earliest = (p: Person) => open(p).filter(t => t.due).map(t => t.due!).sort()[0] ?? '9999'
 
-  // Горит — есть моё обещание со сроком сегодня или раньше. Дальше мои
-  // обещания без срока или с запасом, потом — где ход за человеком.
-  const burning = list.filter(p => open(p).some(t => t.due && t.due <= today))
-    .sort((a, b) => earliest(a).localeCompare(earliest(b)))
-  const burnSet = new Set(burning)
-  const mine = list.filter(p => !burnSet.has(p) && open(p).some(t => t.who === 'me'))
-    .sort((a, b) => earliest(a).localeCompare(earliest(b)))
-  const theirs = list.filter(p => open(p).length > 0 && open(p).every(t => t.who === 'them'))
-  const finished = list.filter(p => open(p).length === 0)
+  // Приоритет — деньги: фикс застройщиков, потом сделки, потом возможные
+  // деньги (moneyRank). Внутри одной ступени — у кого ближе срок.
+  const byMoney = (a: Person, b: Person) => moneyRank(b) - moneyRank(a) || earliest(a).localeCompare(earliest(b))
+  const active = list.filter(p => open(p).length > 0 || p.money)
+  const paying = active.filter(p => p.money?.usd != null).sort(byMoney)
+  const maybe = active.filter(p => p.money && p.money.usd == null).sort(byMoney)
+  const rest = active.filter(p => !p.money).sort(byMoney)
+  const finished = list.filter(p => open(p).length === 0 && !p.money)
 
   const silent = SILENT.filter(s => kindMatches(kind, s.kind))
   const closed = CLOSED.filter(c => kindMatches(kind, c.kind))
@@ -1730,11 +1729,11 @@ function PeopleTab({ done, today, commsById, onToggle }: {
           </button>
         ))}
       </div>
-      <PeopleGroup title="Горит" hint="Срок сегодня или уже прошёл — ваш или человека" items={burning} tone="warn"
+      <PeopleGroup title="Деньги на столе" hint="Сумма названа. Сверху — ежемесячный фикс застройщиков, дальше разовые деньги" items={paying} tone="warn"
         done={done} today={today} commsById={commsById} onToggle={onToggle} />
-      <PeopleGroup title="Обещали вы" hint="Что вы сказали, что сделаете. Сначала — у чего ближе срок" items={mine}
+      <PeopleGroup title="Могут принести деньги" hint="Сумма пока не названа. Сначала застройщики" items={maybe}
         done={done} today={today} commsById={commsById} onToggle={onToggle} />
-      <PeopleGroup title="Ждёте вы" hint="Ход за человеком. Если молчит дольше пары дней — напомнить" items={theirs}
+      <PeopleGroup title="Остальные договорённости" hint="Денег напрямую не дают. Сначала — у чего ближе срок" items={rest}
         done={done} today={today} commsById={commsById} onToggle={onToggle} />
       <PeopleGroup title="Всё закрыто" hint="Все договорённости выполнены" items={finished} limit={0}
         done={done} today={today} commsById={commsById} onToggle={onToggle} />
@@ -1816,6 +1815,7 @@ function PersonRow({ person, chat, done, today, onToggle }: {
               : <b>{person.name}</b>}
             <span className={styles.roleTag}>{KIND_LABEL[person.kind]}</span>
           </span>
+          {person.money && <span className={styles.personMoney}>💰 {person.money.label}</span>}
           <span className={styles.personAbout}>{person.about}</span>
         </span>
         {chat && (
