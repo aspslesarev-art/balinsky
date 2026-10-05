@@ -7,7 +7,8 @@
     "prebuild": "node tools/check-isr-ttl.mjs",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "ship": "tools/ship.sh"
   },
   "dependencies": {
     "@elevenlabs/react": "^1.9.0",
