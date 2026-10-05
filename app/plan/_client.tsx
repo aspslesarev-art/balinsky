@@ -1729,7 +1729,7 @@ function PeopleTab({ done, today, commsById, onToggle }: {
           </button>
         ))}
       </div>
-      <PeopleGroup title="Деньги на столе" hint="Сумма названа. Сверху — ежемесячный фикс застройщиков, дальше разовые деньги" items={paying} tone="warn"
+      <PeopleGroup title="Деньги на столе" hint="Сумма названа. Сверху — кто уже платит, потом предложенный фикс, дальше разовые деньги" items={paying} tone="warn"
         done={done} today={today} commsById={commsById} onToggle={onToggle} />
       <PeopleGroup title="Могут принести деньги" hint="Сумма пока не названа. Сначала застройщики" items={maybe}
         done={done} today={today} commsById={commsById} onToggle={onToggle} />
