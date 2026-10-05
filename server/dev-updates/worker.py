@@ -194,6 +194,9 @@ RULES = """Ты редактор сайта balinsky.info — независим
 - Даты — абсолютные (сегодня {today}). «До конца октября» → 31 октября 2026.
 - Формат body: 3–8 коротких абзацев через пустую строку, перечни строками «- пункт».
   Без markdown (**, #). Последняя строка: «Источник: сообщение застройщика {dev}, {date}.»
+- Пиши только то, что известно. Не пиши, чего нет или что не указано («в сообщении не указано»,
+  «название не приведено»), не упоминай «сообщение», «чат», «фото приложены», каталог сайта и его
+  проценты. Не добавляй оговорок вроде «независимо не проверялось» — достаточно «по словам застройщика».
 - title — до 90 знаков, без точки в конце, по сути: что произошло и где.
 - seoDescription — 120–160 знаков, одно-два предложения.
 """
@@ -280,7 +283,44 @@ def developers():
             continue
         d = r["data"] or {}
         out[cid] = {"name": (d.get("Developer") or "").strip(), "slug": d.get("SEO:Slug")}
+    # Остальные группы — по названию чата. Группа, ставшая супергруппой,
+    # получает новый chat_id при том же названии; а у части застройщиков чат
+    # в карточке не указан вовсе. Рабочие чаты называются «X & Balinsky» /
+    # «X | Балинский» — X ищем среди застройщиков каталога.
+    groups = sb_get("bot_chats", {"select": "chat_id,title", "chat_type": "in.(group,supergroup)"})
+    by_title = {r["title"]: out[r["chat_id"]] for r in groups if r["chat_id"] in out and r.get("title")}
+    catalog = [{"name": (r["data"].get("Developer") or "").strip(), "slug": r["data"].get("SEO:Slug")}
+               for r in sb_get("raw_developers", {"select": "data"}) if r.get("data")]
+    for r in groups:
+        title = r.get("title") or ""
+        if r["chat_id"] in out:
+            continue
+        if title in by_title:
+            out[r["chat_id"]] = by_title[title]
+            continue
+        m = re.match(r"^\s*(.+?)\s*[&|+]\s*(balinsky|балинский|balisnky)\s*$", title, re.I) \
+            or re.match(r"^\s*(?:balinsky|балинский)\s*[&|+]\s*(.+?)\s*$", title, re.I)
+        if not m:
+            continue
+        name = m.group(1).strip()
+        out[r["chat_id"]] = match_developer(name, catalog) or {"name": name, "slug": None}
     return out
+
+
+ALIASES = {"loyo": "LB Group (LOYO&BONDAR)", "nuanu": "Nuanu & Artem"}
+
+
+def match_developer(name, catalog):
+    norm = lambda s: re.sub(r"[^a-z0-9а-я]+", " ", s.lower()).strip()
+    n = norm(name)
+    want = ALIASES.get(n.split(" ")[0])
+    for d in catalog:
+        dn = norm(d["name"])
+        if not dn:
+            continue
+        if (want and d["name"] == want) or dn == n or (len(dn) >= 4 and f" {dn} " in f" {n} ") or (len(n) >= 4 and f" {n} " in f" {dn} "):
+            return d
+    return None
 
 
 def complexes_of(dev_name):
