@@ -11,7 +11,7 @@ balinsky.info — a bilingual (RU primary / EN mirror) Bali real-estate site: vi
 - `npm run dev` — dev server with hot reload at http://localhost:3000. Prints a `Network:` URL for testing on a phone over Wi-Fi (most layout work here is mobile-first).
 - `npm run build && npm run start` — production build, 1:1 with what Vercel ships. Use this to catch build/type errors and real caching/perf before pushing.
 - `npm run lint` — ESLint. There is **no unit-test framework** (no jest/vitest); the only tests are ad-hoc node scripts, e.g. `node scripts/test-investment.mjs`.
-- **Deploy is MANUAL (since 2026-10-05).** Git auto-deploy is disabled in Vercel (`gitProviderOptions.createDeployments = disabled`): pushing to `main` saves work but does NOT change the live site. Every prod build resets ISR and costs money, and parallel sessions used to ship 8×/day.
+- **Deploy is MANUAL (since 2026-10-05).** Git auto-deploy is disabled (`vercel.json` → `git.deploymentEnabled: false`; do not remove it): pushing to `main` saves work but does NOT change the live site. Every prod build resets ISR and costs money, and parallel sessions used to ship 8×/day.
   - The owner reviews changes on the always-on local copy: http://localhost:3000 (launchd `com.andrei.balinsky-local`, `next dev` on this checkout, log `~/Library/Logs/balinsky-local.log`). Same Supabase data as prod.
   - Ship to prod ONLY when the owner explicitly says so ("выложи"): `npm run ship` (deploys exactly `origin/main` from a clean worktree `~/.balinsky-ship`). Exception: urgent fix of a broken prod.
   - Never run `vercel deploy --prod` or re-enable git deployments on your own.

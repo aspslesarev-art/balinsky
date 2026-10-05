@@ -35,5 +35,8 @@
       "path": "/api/cron/plan-steps",
       "schedule": "0 0-15 * * *"
     }
-  ]
+  ],
+  "git": {
+    "deploymentEnabled": false
+  }
 }
