@@ -34,7 +34,7 @@ export function ArticleVideos({ videos }: { videos?: string[] }) {
           controls
           playsInline
           preload="metadata"
-          className="w-full max-h-[80vh] rounded-2xl bg-black"
+          className="block mx-auto max-w-full max-h-[80vh] rounded-2xl bg-black"
         />
       ))}
     </div>

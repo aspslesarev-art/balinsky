@@ -270,6 +270,7 @@ def translate_prompt(d):
 Languages: en, id, fr, de, zh, nl, pl, uk. Keep project, developer and place names in Latin as in the
 source. Keep numbers, dates, currency and the line structure of body (blank lines, "- " bullets).
 Neutral journalistic tone, natural native phrasing, not a calque. No markdown.
+Every title must be at most 75 characters (the English title becomes the page URL).
 
 Source (JSON):
 {json.dumps(src, ensure_ascii=False, indent=1)}

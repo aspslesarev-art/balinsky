@@ -107,6 +107,9 @@ function slugifyEn(s: string): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 80)
+    // Обрезка на 80 может оставить дефис в конце, а такой адрес сайт
+    // перенаправляет без дефиса — и страница отдаёт 404.
+    .replace(/-+$/, '')
 }
 
 // Drafts are dropped here, before slugs are derived and translations applied —
