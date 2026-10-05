@@ -59,6 +59,7 @@ export type LogMessageInput = {
   sender_name?: string | null
   // Пересланное сообщение: откуда (см. migrations/094).
   forwarded_from?: string | null
+  forwarded_at?: string | null
 }
 
 // Plain-text preview used in the chat list for messages whose body is
@@ -95,7 +96,7 @@ export async function logMessage(m: LogMessageInput): Promise<void> {
     media_size: m.media_size ?? null,
     sender_id: m.sender_id ?? null,
     sender_name: m.sender_name ?? null,
-    ...(m.forwarded_from ? { forwarded_from: m.forwarded_from } : {}),
+    ...(m.forwarded_from ? { forwarded_from: m.forwarded_from, forwarded_at: m.forwarded_at ?? null } : {}),
   })
   if (m.direction === 'out') {
     const now = new Date().toISOString()

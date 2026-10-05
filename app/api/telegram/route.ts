@@ -37,6 +37,7 @@ type TgMessage = {
   media_group_id?: string
   forward_origin?: {
     type: string
+    date?: number
     chat?: { title?: string }
     sender_chat?: { title?: string }
     sender_user?: { first_name?: string; last_name?: string }
@@ -173,6 +174,7 @@ export async function POST(req: Request) {
       sender_id: isGroupKind ? msg.from?.id ?? null : null,
       sender_name: isGroupKind ? senderName : null,
       forwarded_from: forwardedFrom(msg),
+      forwarded_at: msg.forward_origin?.date ? new Date(msg.forward_origin.date * 1000).toISOString() : null,
     })
     // Refresh the cached profile photo (throttled to 24h inside the
     // helper). Awaited so it actually fires on serverless. Skip in groups

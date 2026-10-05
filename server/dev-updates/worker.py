@@ -165,6 +165,15 @@ def card_text(row, cx):
 # --- Claude -------------------------------------------------------------------
 
 def claude(prompt, cwd, tools=""):
+    # Изредка в ответе бьётся буква (символ �) — тогда спрашиваем ещё раз.
+    for attempt in range(3):
+        out = _claude(prompt, cwd, tools)
+        if "\ufffd" not in json.dumps(out, ensure_ascii=False) or attempt == 2:
+            return out
+        log("claude: битый символ, повтор")
+
+
+def _claude(prompt, cwd, tools=""):
     args = [CLAUDE, "-p", "--model", "sonnet", "--max-turns", "30", "--output-format", "text"]
     if tools:
         args += ["--allowedTools", tools]
@@ -205,10 +214,10 @@ RULES = """Ты редактор сайта balinsky.info — независим
 def draft_prompt(dev, complexes, msgs, photos, today):
     cx = "\n".join(f"- {c['slug']} | {c['name']} | {c['status'] or '?'} | готовность {c['ready'] if c['ready'] is not None else '?'}%"
                    for c in complexes) or "- (комплексов в каталоге нет)"
-    chat = "\n\n".join(f"[{m['created_at'][:16].replace('T', ' ')} UTC] {m.get('sender_name') or '?'}"
+    chat = "\n\n".join(f"[{(m.get('forwarded_at') or m['created_at'])[:16].replace('T', ' ')} UTC] {m.get('sender_name') or '?'}"
                        f"{' (' + m['media_type'] + ')' if m.get('media_type') else ''}:\n{m.get('text') or ''}" for m in msgs)
     ph = "\n".join(f"- {i + 1}: {p}" for i, p in enumerate(photos)) or "- (фото нет)"
-    return RULES.format(today=today, dev=dev["name"], date=msgs[-1]["created_at"][:10]) + f"""
+    return RULES.format(today=today, dev=dev["name"], date=(msgs[-1].get("forwarded_at") or msgs[-1]["created_at"])[:10]) + f"""
 Застройщик: {dev['name']}. Его комплексы в каталоге (slug | название | статус | готовность):
 {cx}
 
@@ -310,6 +319,21 @@ def developers():
 
 
 CATALOG = []
+
+
+def dev_from_complex(text):
+    """Застройщик по названию комплекса в тексте («Eighth Sense» → IJI Group)."""
+    t = " " + re.sub(r"[^a-z0-9а-я]+", " ", text.lower()) + " "
+    rows = sb_get("raw_complexes", {"select": "data->>Project,data->>Developer"})
+    hits = {}
+    for r in rows:
+        name = re.sub(r"[^a-z0-9а-я]+", " ", (r.get("Project") or "").lower()).strip()
+        if len(name) >= 5 and f" {name} " in t and r.get("Developer"):
+            hits[r["Developer"].strip()] = hits.get(r["Developer"].strip(), 0) + len(name)
+    if not hits:
+        return None
+    best = max(hits, key=hits.get)
+    return next((c for c in CATALOG if c["name"].lower() == best.lower()), {"name": best, "slug": None})
 
 
 def dev_from_title(title, devs_by_title):
@@ -461,7 +485,7 @@ def collect(dry=False):
 
     # Пересланные владельцем посты (чаты, где бот глухой) — из его личного чата с ботом.
     fwd = sb_get("bot_messages", {
-        "select": "id,chat_id,created_at,sender_id,sender_name,text,media_type,media_url,forwarded_from",
+        "select": "id,chat_id,created_at,sender_id,sender_name,text,media_type,media_url,forwarded_from,forwarded_at",
         "chat_id": f"eq.{OWNER}", "forwarded_from": "not.is.null",
         "direction": "eq.in", "created_at": f"gte.{since}", "order": "id.asc", "limit": "500",
     })
@@ -524,6 +548,9 @@ def handle_burst(chat_id, dev, msgs, dry):
                     url = storage_put("chat-media", f"dvu-frames/{chat_id}/{msgs[-1]['id']}-{j + 1}.jpg",
                                       f.read(), "image/jpeg", "31536000")
                 photos_src.append(url)
+        if not dev["name"]:
+            dev = dev_from_complex(" ".join(m.get("text") or "" for m in msgs)) or dev
+            complexes = complexes_of(dev["name"]) if dev["name"] else []
         if not dev["name"]:
             known = ", ".join(sorted({c["name"] for c in CATALOG if c["name"]}))
             d0 = claude(f"""Кто застройщик в этом посте? Пост переслан из «{msgs[0].get('forwarded_from')}».
