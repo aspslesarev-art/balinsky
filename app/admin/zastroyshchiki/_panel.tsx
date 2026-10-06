@@ -20,6 +20,7 @@ import {
   type PersonRole,
 } from '@/lib/dev-crm/types'
 import type { ChatOption, SiteFacts } from '@/lib/dev-crm/store'
+import { FIRST_MESSAGE_KEY, WriteButtons } from './_write'
 
 type ChatMessage = { id: number; direction: 'in' | 'out'; text: string | null; is_voice: boolean; media_type: string | null; ts: string }
 type ChatMeeting = { id: number; status: 'agreed' | 'scheduled' | 'cancelled'; topic: string | null; starts_at: string | null; when_text: string | null; place: string | null }
@@ -45,7 +46,7 @@ const MEETING_LABEL: Record<ChatMeeting['status'], string> = {
 
 // Поля выгрузок, которые в карточке не показываем: они уже стали
 // колонками или это служебные пометки импорта.
-const HIDDEN_DATA_FIELDS = new Set(['Источник', 'Сырые контакты'])
+const HIDDEN_DATA_FIELDS = new Set(['Источник', 'Сырые контакты', FIRST_MESSAGE_KEY])
 
 export function DeveloperPanel({
   partnerId, onClose, onPatched, onDeleted, onReload,
@@ -230,6 +231,35 @@ export function DeveloperPanel({
                   </button>
                 </div>
               )}
+
+              {p.in_work && (
+                <div className="flex flex-wrap items-center gap-3 -mb-4 text-[12.5px] text-[var(--ax-fg-muted)]">
+                  <span>В работе — карточка на доске.</span>
+                  <button
+                    type="button"
+                    onClick={() => save({ in_work: false })}
+                    className="underline underline-offset-2 hover:text-[var(--ax-fg)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4FC08D] rounded"
+                  >
+                    Убрать в «Отбор»
+                  </button>
+                </div>
+              )}
+
+              {/* Первое сообщение: текст + куда отправить. Кнопка копирует
+                  текст и открывает чат, в истории остаётся отметка. */}
+              <section>
+                <h3 className="text-[12px] font-semibold uppercase tracking-wide text-[var(--ax-fg-faint)] mb-3">Первое сообщение</h3>
+                <Editable
+                  value={p.data?.[FIRST_MESSAGE_KEY] ?? ''}
+                  onSave={v => save({ data: { ...(p.data ?? {}), [FIRST_MESSAGE_KEY]: v } })}
+                  boxed
+                  multiline
+                  placeholder="Текст, который уйдёт застройщику"
+                />
+                <div className="mt-3">
+                  <WriteButtons partner={p} onDone={async () => { await load(); await onReload() }} onError={setError} />
+                </div>
+              </section>
 
               {/* Воронка */}
               <section className="grid grid-cols-2 gap-3">

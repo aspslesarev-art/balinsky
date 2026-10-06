@@ -20,6 +20,7 @@ import {
   type DevPartnerCard, type DevStatus, type MergePair, type Prospect,
 } from '@/lib/dev-crm/types'
 import { DeveloperPanel } from './_panel'
+import { DAILY_LIMIT, FIRST_MESSAGE_KEY, WriteButtons, todayBali } from './_write'
 
 // Оттенок колонки: воронка идёт от нейтрального к зелёному, «Не
 // сложилось» — единственный красный. Цвет живёт только в тонкой полоске
@@ -429,6 +430,9 @@ export function DevelopersBoard({
       {view === 'pool' && (
         <Pool
           partners={pool}
+          writtenToday={partners.filter(p => p.last_contact === todayBali()).length}
+          onWrote={reload}
+          onError={setError}
           onOpen={setOpenId}
           onTake={takeToWork}
         />
@@ -526,9 +530,12 @@ function PartnersList({ partners, onOpen }: { partners: DevPartnerCard[]; onOpen
 // Отбор: вся база, которая в работу не взята. Сортировка — «сначала то,
 // с чем есть смысл работать»: отклик, потом наличие живых контактов.
 function Pool({
-  partners, onOpen, onTake,
+  partners, writtenToday, onWrote, onError, onOpen, onTake,
 }: {
   partners: DevPartnerCard[]
+  writtenToday: number
+  onWrote: () => Promise<void>
+  onError: (msg: string) => void
   onOpen: (id: string) => void
   onTake: (id: string) => void
 }) {
@@ -537,6 +544,10 @@ function Pool({
       const ra = a.prospect ? PROSPECT_RANK[a.prospect] : 9
       const rb = b.prospect ? PROSPECT_RANK[b.prospect] : 9
       if (ra !== rb) return ra - rb
+      // Есть готовый текст — значит, можно писать прямо сейчас.
+      const da = a.data?.[FIRST_MESSAGE_KEY] ? 1 : 0
+      const db = b.data?.[FIRST_MESSAGE_KEY] ? 1 : 0
+      if (da !== db) return db - da
       const na = a.people.filter(x => x.telegram).length
       const nb = b.people.filter(x => x.telegram).length
       if (na !== nb) return nb - na
@@ -551,7 +562,12 @@ function Pool({
           и различает «есть ник» и «уже переписываемся». */}
       <p className="text-[12.5px] text-[var(--ax-fg-muted)] max-w-[68ch] leading-relaxed">
         Вся база застройщиков, которых в работу пока не брали. Сверху — те, по кому отклик лучше
-        и есть кому написать. «Взять в работу» переносит карточку на доску в колонку «Связаться».
+        и есть кому написать. «Написать» копирует готовый текст и открывает чат — карточка сама уходит
+        на доску в «Связаться». «Взять в работу» переносит её туда без сообщения.
+      </p>
+      <p className={`text-[13px] font-medium ${writtenToday >= DAILY_LIMIT ? 'text-[var(--ax-error-fg)]' : 'text-[var(--ax-fg)]'}`}>
+        Сегодня написали: {writtenToday} из {DAILY_LIMIT}
+        {writtenToday >= DAILY_LIMIT && ' — на сегодня хватит, иначе Telegram может ограничить аккаунт'}
       </p>
 
       {list.length === 0 ? (
@@ -568,6 +584,7 @@ function Pool({
                 <th className="font-medium px-3 py-2">Кому писать</th>
                 <th className="font-medium px-3 py-2">Проекты</th>
                 <th className="font-medium px-3 py-2">Комиссия</th>
+                <th className="font-medium px-3 py-2 hidden lg:table-cell"></th>
                 <th className="font-medium px-3 py-2"></th>
               </tr>
             </thead>
@@ -593,6 +610,13 @@ function Pool({
                         <ExternalLink size={11} />
                       </a>
                     )}
+                    {/* На телефоне таблица уезжает вбок — главное действие
+                        держим под названием, чтобы оно было на экране. */}
+                    {p.data?.[FIRST_MESSAGE_KEY] && (
+                      <div className="mt-1.5 lg:hidden">
+                        <WriteButtons partner={p} compact onDone={onWrote} onError={onError} />
+                      </div>
+                    )}
                   </td>
                   <td className="px-3 py-2">{p.prospect ? <ProspectBadge value={p.prospect} /> : <span className="text-[var(--ax-fg-faint)]">—</span>}</td>
                   <td className="px-3 py-2 text-[var(--ax-fg-soft)]">
@@ -616,6 +640,11 @@ function Pool({
                   </td>
                   <td className="px-3 py-2 text-[var(--ax-fg-muted)] max-w-[30ch] truncate">{p.projects ?? '—'}</td>
                   <td className="px-3 py-2 text-[var(--ax-fg-muted)] whitespace-nowrap">{p.commission ?? '—'}</td>
+                  <td className="px-3 py-2 hidden lg:table-cell">
+                    {p.data?.[FIRST_MESSAGE_KEY]
+                      ? <WriteButtons partner={p} compact onDone={onWrote} onError={onError} />
+                      : <span className="text-[12px] text-[var(--ax-fg-faint)]">текста нет</span>}
+                  </td>
                   <td className="px-3 py-2 text-right">
                     <button
                       type="button"
