@@ -82,10 +82,18 @@ const nextConfig: NextConfig = {
         source: '/agentskaya-set',
         headers: [{ key: 'x-robots-tag', value: 'noindex, nofollow' }],
       },
+      {
+        // Шпаргалка к интервью с IJI Group (public/intervyu-iji) — только по ссылке.
+        source: '/intervyu-iji',
+        headers: [{ key: 'x-robots-tag', value: 'noindex, nofollow' }],
+      },
     ]
   },
   async rewrites() {
-    return [{ source: '/agentskaya-set', destination: '/agentskaya-set/index.html' }]
+    return [
+      { source: '/agentskaya-set', destination: '/agentskaya-set/index.html' },
+      { source: '/intervyu-iji', destination: '/intervyu-iji/index.html' },
+    ]
   },
   async redirects() {
     // 301 redirects from old Wix site (balinsky.info) → new Next routes.

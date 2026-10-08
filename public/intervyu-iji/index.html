@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Вопросы Анне, IJI Group</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700&family=Onest:wght@400;500;700&display=swap">
+<style>
+/* Шпаргалка на телефоне во время съёмки: цифры из базы, калькулятор доходности, дальше блоки вопросов по таймингу с галочкой «спросил». */
+:root {
+  --bg: #F2F5F3; --card: #FFFFFF; --ink: #13221F; --muted: #4A5B57; --line: #DCE4E0;
+  --accent: #0E6E66; --accent-ink: #FFFFFF; --soft: #E1F0EC; --warn: #8A5A00; --warnbg: #FFF1CC;
+  --display: "Unbounded", "Arial Black", sans-serif;
+  --body: "Onest", system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0F1716; --card: #18221F; --ink: #E8F0ED; --muted: #A3B4AF; --line: #2A3733;
+  --accent: #5CC2B5; --accent-ink: #0F1716; --soft: #1D332F; --warn: #F2C866; --warnbg: #3A2F12; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0F1716; --card: #18221F; --ink: #E8F0ED; --muted: #A3B4AF; --line: #2A3733;
+  --accent: #5CC2B5; --accent-ink: #0F1716; --soft: #1D332F; --warn: #F2C866; --warnbg: #3A2F12; color-scheme: dark }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 400 15px/1.55 var(--body); }
+.wrap { max-width: 720px; margin: 0 auto; padding: 32px 16px 112px; display: flex; flex-direction: column; gap: 48px; }
+header { display: flex; flex-direction: column; gap: 12px; }
+h1 { font: 700 2rem/1.15 var(--display); margin: 0; letter-spacing: -.02em; text-wrap: balance; }
+h2 { font: 600 1.25rem/1.2 var(--display); margin: 0; letter-spacing: -.01em; text-wrap: balance; }
+.lead { margin: 0; color: var(--muted); max-width: 62ch; }
+.panel { background: var(--soft); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.fact { background: var(--card); border-radius: 8px; padding: 8px 12px; display: flex; flex-direction: column; min-width: 0; }
+.fact b { font: 700 1.25rem/1.2 var(--body); font-variant-numeric: tabular-nums; }
+.fact span { color: var(--muted); font-size: .8125rem; }
+.panel ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: .875rem; }
+.src { font-size: .8125rem; color: var(--muted); margin: 0; }
+/* калькулятор */
+.calc { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; }
+.f { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.f label { font-size: .8125rem; font-weight: 500; color: var(--muted); }
+.f input { font: 500 1rem var(--body); font-variant-numeric: tabular-nums; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; width: 100%; }
+.f input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.res { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.r { background: var(--soft); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; min-width: 0; }
+.r b { font: 700 1.5rem/1.15 var(--body); font-variant-numeric: tabular-nums; color: var(--accent); }
+.r span { font-size: .8125rem; color: var(--muted); }
+table { width: 100%; border-collapse: collapse; font-size: .875rem; font-variant-numeric: tabular-nums; }
+td { padding: 6px 0; border-bottom: 1px solid var(--line); }
+td:last-child { text-align: right; white-space: nowrap; padding-left: 12px; }
+tr.tot td { font-weight: 700; border-bottom: 0; }
+/* вопросы */
+section { display: flex; flex-direction: column; gap: 12px; }
+.sh { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.time { font-size: .8125rem; font-weight: 700; color: var(--accent); letter-spacing: .04em; text-transform: uppercase; }
+.why { margin: 0; color: var(--muted); font-size: .875rem; }
+.qs { display: flex; flex-direction: column; gap: 8px; }
+.q { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; display: grid; grid-template-columns: 24px 1fr; gap: 12px; align-items: start; cursor: pointer; }
+.q input { width: 22px; height: 22px; margin: 2px 0 0; accent-color: var(--accent); }
+.q .t { font-weight: 500; min-width: 0; }
+.q .n { display: block; color: var(--muted); font-size: .875rem; font-weight: 400; margin-top: 4px; }
+.q.done { opacity: .55; }
+.q.done .t { text-decoration: line-through; text-decoration-color: var(--muted); }
+.q.key { border-color: var(--accent); }
+.badge { display: inline-block; font-size: .75rem; font-weight: 700; color: var(--accent-ink); background: var(--accent); border-radius: 4px; padding: 0 6px; margin-right: 6px; vertical-align: 2px; }
+.off { background: var(--warnbg); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+.off h2 { color: var(--warn); }
+.off ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+.q:focus-within, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.bar { position: fixed; left: 0; right: 0; bottom: 0; padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); background: var(--card); border-top: 1px solid var(--line); display: flex; gap: 12px; align-items: center; justify-content: center; }
+.bar .cnt { color: var(--muted); font-size: .875rem; font-variant-numeric: tabular-nums; }
+.bar button { font: 500 .875rem var(--body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Вопросы Анне, IJI Group</h1>
+    <p class="lead">Интервью на час, Rahya Villas, 8 октября, 15:00. Все вопросы открытые: пусть рассказывает. Каждый помогает зрителю понять, можно ли ей доверять. Отмечай галочкой, что спросил. Если время поджимает, задай хотя бы <b>главные</b>.</p>
+  </header>
+
+  <div class="panel">
+    <h2>Что у нас в базе</h2>
+    <div class="grid">
+      <div class="fact"><b>$230 000</b><span>Rahya, вилла 2 спальни, 112 м²</span></div>
+      <div class="fact"><b>$450 000</b><span>Rahya, вилла 4 спальни, 205 м²</span></div>
+      <div class="fact"><b>$82 / ночь</b><span>Пандава, 2 спальни, средняя цена</span></div>
+      <div class="fact"><b>~76%</b><span>Пандава, 2 спальни, загрузка</span></div>
+    </div>
+    <ul>
+      <li><b>Eighth Sense</b> - 73 виллы и апартамента, сдача 2027, оплата 30% + 70% на 18 мес., разрешение на стройку есть.</li>
+      <li><b>Body Sense</b> - wellness-апартаменты, 51 юнит, сдача 2028. Разрешения на стройку в нашей базе нет.</li>
+      <li>Земля у обоих: аренда 30 лет + продление 25, туристическая зона.</li>
+      <li>С их слов: 130 юнитов в стройке, 22 сдаются, своя управляющая IJI Home, модульное производство, сеть отелей Monotel, 320 сотрудников. Комиссия агенту - 5%.</li>
+    </ul>
+    <p class="src">Цены из нашей базы - от мая 2026, сверь у Анны. Рынок: 78 вилл на 2 спальни в радиусе 3 км от Пандавы, данные estatemarket.</p>
+  </div>
+
+  <div class="calc" id="calc">
+    <h2>Калькулятор доходности</h2>
+    <p class="why">Введи цифры, которые назовёт Анна. Всё считается сразу. Проценты расходов и налогов - примерные для Бали, уточни у Анны, что входит у них.</p>
+    <div class="fields">
+      <div class="f"><label for="c-price">Цена сейчас, $</label><input id="c-price" inputmode="decimal" value="230000"></div>
+      <div class="f"><label for="c-pre">Цена на пресейле, $</label><input id="c-pre" inputmode="decimal" placeholder="спроси у Анны"></div>
+      <div class="f"><label for="c-night">Цена ночи, $</label><input id="c-night" inputmode="decimal" value="82"></div>
+      <div class="f"><label for="c-occ">Загрузка, %</label><input id="c-occ" inputmode="decimal" value="76"></div>
+      <div class="f"><label for="c-ota">Комиссия Airbnb / Booking, %</label><input id="c-ota" inputmode="decimal" value="15"></div>
+      <div class="f"><label for="c-loc">Местный налог с аренды, %</label><input id="c-loc" inputmode="decimal" value="10"></div>
+      <div class="f"><label for="c-uk">Управляющая, % от выручки</label><input id="c-uk" inputmode="decimal" value="20"></div>
+      <div class="f"><label for="c-cost">Свет, уборка, ремонт, % от выручки</label><input id="c-cost" inputmode="decimal" value="10"></div>
+      <div class="f"><label for="c-inc">Налог на доход владельца, %</label><input id="c-inc" inputmode="decimal" value="10"></div>
+      <div class="f"><label for="c-lease">Осталось лет аренды земли</label><input id="c-lease" inputmode="decimal" value="30"></div>
+    </div>
+    <div class="res">
+      <div class="r"><b id="o-net">-</b><span>владельцу на руки в год</span></div>
+      <div class="r"><b id="o-roi">-</b><span>доходность от цены сейчас</span></div>
+      <div class="r"><b id="o-roipre">-</b><span>доходность от цены пресейла</span></div>
+      <div class="r"><b id="o-pay">-</b><span>окупаемость</span></div>
+    </div>
+    <table>
+      <tbody id="o-tbl"></tbody>
+    </table>
+    <p class="src" id="o-note"></p>
+  </div>
+
+  <div id="list" style="display:flex;flex-direction:column;gap:48px"></div>
+
+  <div class="off">
+    <h2>После камеры, лично</h2>
+    <ul>
+      <li>Партнёрство: как она видит работу через нашу сеть агентов? Комиссия 5% ещё в силе? Что даёт агентам: материалы, туры на стройку, своего менеджера?</li>
+      <li>Прислать для скрина в видео: отчёт управляющей по реальной вилле за 12 месяцев, прайс Rahya на пресейле и сейчас, прайсы Eighth Sense и Body Sense.</li>
+      <li>Номер разрешения на стройку по Body Sense и лицензия на посуточную аренду по сданному комплексу.</li>
+      <li>Согласовать, что попадёт в ролик, и дату выхода.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="bar"><span class="cnt" id="cnt">Спросил: 0</span><button id="reset" type="button">Сбросить галочки</button></div>
+
+<script>
+// ---------- калькулятор ----------
+function num(id) { var v = parseFloat(String(document.getElementById(id).value).replace(/\s/g, '').replace(',', '.')); return isFinite(v) ? v : 0; }
+function usd(v) { return '$' + Math.round(v).toLocaleString('ru-RU'); }
+function pct(v) { return (Math.round(v * 10) / 10).toLocaleString('ru-RU') + '%'; }
+function calc() {
+  var price = num('c-price'), pre = num('c-pre'), night = num('c-night'), occ = num('c-occ') / 100;
+  var gross = night * 365 * occ;
+  var ota = gross * num('c-ota') / 100;
+  var loc = gross * num('c-loc') / 100;
+  var uk = (gross - ota - loc) * num('c-uk') / 100;
+  var cost = gross * num('c-cost') / 100;
+  var before = gross - ota - loc - uk - cost;
+  var inc = Math.max(before, 0) * num('c-inc') / 100;
+  var net = before - inc;
+  var lease = num('c-lease');
+  var rows = [
+    ['Выручка за год: ' + usd(night) + ' × 365 × ' + pct(occ * 100), usd(gross)],
+    ['− Airbnb / Booking', usd(ota)],
+    ['− Местный налог с аренды', usd(loc)],
+    ['− Управляющая (от выручки после площадок и налога)', usd(uk)],
+    ['− Свет, уборка, ремонт', usd(cost)],
+    ['− Налог на доход владельца', usd(inc)],
+    ['Владельцу на руки', usd(net)]
+  ];
+  var tb = document.getElementById('o-tbl'); tb.textContent = '';
+  rows.forEach(function (r, i) {
+    var tr = document.createElement('tr'); if (i === rows.length - 1) tr.className = 'tot';
+    r.forEach(function (c) { var td = document.createElement('td'); td.textContent = c; tr.append(td); });
+    tb.append(tr);
+  });
+  document.getElementById('o-net').textContent = usd(net);
+  document.getElementById('o-roi').textContent = price > 0 ? pct(net / price * 100) : '-';
+  document.getElementById('o-roipre').textContent = pre > 0 ? pct(net / pre * 100) : 'введи цену';
+  document.getElementById('o-pay').textContent = net > 0 && price > 0 ? (Math.round(price / net * 10) / 10).toLocaleString('ru-RU') + ' лет' : '-';
+  var note = '';
+  if (lease > 0 && price > 0) {
+    var real = net - price / lease;
+    note = 'С учётом срока земли: через ' + lease + ' лет аренда кончается и вилла стоит около нуля. Если вычесть эту потерю (' + usd(price / lease) + ' в год), чистая доходность ' + pct(real / price * 100) + '.';
+  }
+  if (pre > 0 && price > 0) note += ' Рост цены с пресейла: ' + pct((price / pre - 1) * 100) + '.';
+  document.getElementById('o-note').textContent = note;
+}
+document.querySelectorAll('#calc input').forEach(function (i) { i.addEventListener('input', calc); });
+calc();
+
+// ---------- вопросы ----------
+// key: главный вопрос. n: подсказка для Андрея, вслух не читать.
+var BLOCKS = [
+  { h: 'Кто она', time: '0-10 мин', why: 'Разогрев и первый слой доверия: зритель видит живого человека, его деньги и его жизнь. Можно на ходу по территории.', qs: [
+    { t: 'Расскажи, как ты оказалась на Бали. Что тебе дома не сиделось?' },
+    { t: 'Чем ты занималась до Бали и почему ушла в недвижимость?' },
+    { t: 'Опиши свой обычный день: когда встаёшь, чем занимаешься, сколько времени проводишь на стройке?' },
+    { t: 'Сколько ты сама зарабатываешь в компании и как устроена твоя зарплата?', key: true, n: 'Прямо и спокойно. Как ответит - так и доверие.' },
+    { t: 'Сколько ты тратишь на жизнь на Бали в месяц и на что уходят деньги?', n: 'Зрителю полезно само по себе, и видно, честно ли отвечает.' },
+    { t: 'Какие свои деньги ты вложила в проекты IJI и в какие именно?', key: true },
+    { t: 'Расскажи про главную ошибку первого года на Бали. Чему она тебя научила?' }
+  ]},
+  { h: 'Компания', time: '10-18 мин', why: 'Масштаб, деньги и как компания ведёт себя, когда что-то идёт не так.', qs: [
+    { t: 'Расскажи, что IJI уже построила и сдала, а что сейчас в стройке.', n: 'В базе: 130 в стройке, 22 сдаются. Сверить.' },
+    { t: 'На какие деньги вы строите и что произойдёт со стройкой, если продажи остановятся?', key: true },
+    { t: 'Расскажи про проект, который пошёл не по плану. Что случилось и как вы это решили?', key: true },
+    { t: 'Как вы поступаете, когда клиент недоволен? Расскажи реальный случай.' },
+    { t: 'Как модульное производство влияет на сроки и цену для покупателя?' }
+  ]},
+  { h: 'Rahya Villas: стройка', time: '18-25 мин', why: 'Снимаем на месте, показываем, что сделано.', qs: [
+    { t: 'Покажи и расскажи, что здесь уже сделано и что осталось до сдачи.' },
+    { t: 'Сколько вилл в проекте, сколько продано и кто покупатели?' },
+    { t: 'Что получает покупатель, если сдача задержится, и как это прописано в договоре?', key: true },
+    { t: 'Что входит в цену виллы, а за что покупатель доплачивает потом?' }
+  ]},
+  { h: 'Цена и посуточная аренда', time: '25-37 мин', why: 'Сердце интервью. Цифры сразу вводи в калькулятор выше.', qs: [
+    { t: 'Сколько стоила двушка в Rahya на пресейле и сколько она стоит сейчас? Почему так выросла?', key: true, n: 'Вводи обе цены в калькулятор.' },
+    { t: 'Если я покупаю двушку сегодня и сдаю посуточно, сколько она реально будет приносить? Расскажи на примере уже сданной виллы.', key: true },
+    { t: 'Какая цена ночи и загрузка у ваших сданных объектов на Пандаве за последние 12 месяцев?', n: 'Рынок: 2 спальни - $82, ~76%. Просить цифры, не «в среднем».' },
+    { t: 'Как меняется загрузка по месяцам? Расскажи про самый слабый месяц за год.' },
+    { t: 'Откуда приходят гости и как вы добиваетесь, чтобы вилла не простаивала?' },
+    { t: 'Вы взяли под управление чужой комплекс на Пандаве. Что там изменилось после вас: загрузка, доход?', key: true }
+  ]},
+  { h: 'Управляющая компания IJI Home', time: '37-46 мин', why: 'Здесь инвестор чаще всего теряет деньги.', qs: [
+    { t: 'Расскажи, как управляющая берёт деньги: от какой суммы считается процент и сколько?', key: true },
+    { t: 'Что вычитается из выручки, прежде чем деньги дойдут до владельца?', n: 'Площадки, уборка, свет, ремонт, маркетинг, налоги. Вводи в калькулятор.' },
+    { t: 'Сколько на руки получил владелец реальной виллы за последний год? Покажи отчёт.', key: true, n: 'Попросить отчёт для скрина.' },
+    { t: 'Как владелец видит, что происходит с его виллой, и как к нему приходят деньги?' },
+    { t: 'Что будет, если владелец захочет уйти от вас к другой управляющей или сдавать сам?' }
+  ]},
+  { h: 'Документы и законность', time: '46-53 мин', why: 'Отдельным блоком. Спокойно, но конкретно.', qs: [
+    { t: 'Расскажи про землю: на сколько лет аренда, до какого года и на каких условиях её продлить?', key: true, n: 'В базе 30 лет + 25. Важно, зафиксирована ли цена продления.' },
+    { t: 'Какие разрешения уже получены по каждому проекту? Что с разрешением на стройку по Body Sense?', key: true, n: 'В нашей базе по Body Sense его нет.' },
+    { t: 'Как оформлена посуточная аренда по закону и на кого лицензия?' },
+    { t: 'Как устроена сделка: с кем покупатель подписывает договор и где лежат его деньги до сдачи?' },
+    { t: 'Какие налоги платит владелец с аренды и кто этим занимается?', n: 'Вводи в калькулятор.' }
+  ]},
+  { h: 'Wellness и выход из инвестиции', time: '53-60 мин', why: 'Новая тема и финал.', qs: [
+    { t: 'Почему вы пошли в wellness? Что показывают цифры по таким гостям?' },
+    { t: 'Как в Body Sense считается доход владельца номера?' },
+    { t: 'Как инвестор продаёт виллу через 5 лет? Расскажи про перепродажи ваших объектов.' },
+    { t: 'Если бы ты была инвестором, что бы купила у себя и почему?' },
+    { t: 'Кому, по-твоему, не стоит у вас покупать и почему?', n: 'Сильный финал: честный ответ вызывает доверие.' }
+  ]}
+];
+
+var KEY = 'idji-interview-v2', st = {};
+try { st = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { st = {}; }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} }
+function el(t, c, x) { var e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; }
+var total = 0, list = document.getElementById('list');
+
+BLOCKS.forEach(function (b, bi) {
+  var s = el('section'), sh = el('div', 'sh');
+  sh.append(el('h2', null, b.h), el('span', 'time', b.time));
+  s.append(sh, el('p', 'why', b.why));
+  var qs = el('div', 'qs');
+  b.qs.forEach(function (q, qi) {
+    total++;
+    var id = 'q' + bi + '-' + qi;
+    var lab = el('label', 'q' + (q.key ? ' key' : '') + (st[id] ? ' done' : ''));
+    var cb = el('input'); cb.type = 'checkbox'; cb.id = id; cb.checked = !!st[id];
+    var t = el('span', 't');
+    if (q.key) t.append(el('span', 'badge', 'главный'));
+    t.append(document.createTextNode(q.t));
+    if (q.n) t.append(el('span', 'n', q.n));
+    cb.addEventListener('change', function () { st[id] = cb.checked; lab.classList.toggle('done', cb.checked); save(); count(); });
+    lab.append(cb, t); qs.append(lab);
+  });
+  s.append(qs); list.append(s);
+});
+
+function count() { document.getElementById('cnt').textContent = 'Спросил: ' + Object.keys(st).filter(function (k) { return st[k]; }).length + ' из ' + total; }
+count();
+var rb = document.getElementById('reset'), armed = false;
+rb.addEventListener('click', function () {
+  if (!armed) { armed = true; rb.textContent = 'Точно сбросить?'; setTimeout(function () { armed = false; rb.textContent = 'Сбросить галочки'; }, 2500); return; }
+  st = {}; save();
+  document.querySelectorAll('.q').forEach(function (l) { l.classList.remove('done'); l.querySelector('input').checked = false; });
+  armed = false; rb.textContent = 'Сбросить галочки'; count();
+});
+</script>
+</body>
+</html>
