@@ -170,6 +170,8 @@ for (const [ru, m] of Object.entries(SEGMENT_TABLE)) {
   for (const l of ['en', 'id', 'fr', 'de', 'zh', 'nl', 'ban', 'pl', 'uk'] as const) SEG_TO_CANON[m[l]] = ru
 }
 
+const INVEST_HUB = 'investicii-v-nedvizhimost-bali'
+
 /** Convert a single path segment to `target`. Pass-through for unknowns. */
 export function localizeSegment(seg: string, target: Lang): string {
   const canon = SEG_TO_CANON[seg] ?? seg
@@ -218,6 +220,13 @@ export function switchLangPath(pathname: string, target: Lang): string {
   // Translate every section-name segment along the way; opaque tail
   // segments (slugs, IDs) pass through unchanged.
   const translated = rest.map(p => localizeSegment(p, target))
+  // District investment pages: RU keeps them under its own /ru/investicii/<d>,
+  // every other locale nests them under the investment hub segment
+  // (/en/bali-property-investment/<d>). Plain segment mapping can't express
+  // that, so it produced /en/investicii/<d> (404) in hreflang and the switcher.
+  if (rest.length >= 2 && (rest[0] === 'investicii' || SEG_TO_CANON[rest[0]] === INVEST_HUB)) {
+    translated[0] = target === 'ru' ? 'investicii' : SEGMENT_TABLE[INVEST_HUB][target]
+  }
   return '/' + [langToSegment(target), ...translated].join('/')
 }
 

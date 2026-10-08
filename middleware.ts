@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { normalizeSlug } from '@/lib/slug-normalize'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
 import { EN_KNOWLEDGE_SLUG_OVERRIDES } from '@/lib/knowledge-en-slugs'
+import { localizeSegment, segmentToLang, switchLangPath } from '@/lib/i18n'
 
 export const config = {
   matcher: [
@@ -57,6 +58,9 @@ export const config = {
     // Other locales: only percent-encoded (non-ASCII) paths, so the
     // middleware doesn't run on their regular traffic.
     '/:lang(id|fr|de|zh|nl|ban|pl|ua)/:rest(.*%.*)',
+    '/:lang(en|id|fr|de|zh|nl|ban|pl|ua|uk)/investicii/:district',
+    '/:lang(ru|en|uk)/:seg([a-z-]+%[^/]*)',
+    '/:lang(ru|en|id|fr|de|zh|nl|ban|pl|ua|uk)/:seg([a-z-]+[A-Z][^/]*)',
     // Catalog roots in every locale (and their internal /q twin) — see
     // handleCatalogQuery below.
     '/ban/apartemen',
@@ -354,6 +358,29 @@ function handleResaleLang(req: NextRequest): NextResponse | null {
   return NextResponse.redirect(new URL(`/ru/pereprodazha${m[2] ?? ''}`, req.url), 301)
 }
 
+// District investment pages used to leak into hreflang as /en/investicii/<d>
+// (404) — Google still recrawls them. 301 to the locale's real address.
+function handleInvestLang(req: NextRequest): NextResponse | null {
+  const m = req.nextUrl.pathname.match(/^\/([a-z]{2,3})\/investicii\/([^/]+)\/?$/)
+  if (!m || m[1] === 'ru') return null
+  const lang = segmentToLang(m[1])
+  if (!lang) return null
+  return NextResponse.redirect(new URL(switchLangPath(`/ru/investicii/${m[2]}`, lang), req.url), 301)
+}
+
+// Scrapers glue anchor text onto a section root: /zh/gongyu巴厘岛所有公寓,
+// /ua/vilyВілли, /en/villasVillas. The tail is never part of a real URL, so
+// 301 to the section itself instead of a 404.
+function handleGluedSection(req: NextRequest): NextResponse | null {
+  const m = decodeSegment(req.nextUrl.pathname).match(/^\/([a-z]{2,3})\/([a-z-]+?)([A-Z\u0080-￿][^/]*)\/?$/)
+  if (!m || !segmentToLang(m[1])) return null
+  const section = m[2]
+  if (section !== localizeSegment(section, 'ru') || KNOWN_SECTIONS.has(section)) {
+    return NextResponse.redirect(new URL(`/${m[1]}/${section}`, req.url), 301)
+  }
+  return null
+}
+
 // Catalog roots (/en/villas, /ru/villy, /id/vila …) are ISR-cached pages that
 // render the unfiltered catalog. A URL carrying real filter parameters is
 // rewritten to <root>/q — the same page, rendered dynamically with the
@@ -448,6 +475,12 @@ export async function middleware(req: NextRequest) {
 
   const resale = handleResaleLang(req)
   if (resale) return resale
+
+  const invest = handleInvestLang(req)
+  if (invest) return invest
+
+  const glued = handleGluedSection(req)
+  if (glued) return glued
 
   const enSlug = handleEnKnowledgeSlug(req)
   if (enSlug) return enSlug
