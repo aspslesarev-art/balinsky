@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Интервью IJI">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>Вопросы Анне, IJI Group</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700&family=Onest:wght@400;500;700&display=swap">
 <style>
@@ -276,6 +279,11 @@ rb.addEventListener('click', function () {
   document.querySelectorAll('.q').forEach(function (l) { l.classList.remove('done'); l.querySelector('input').checked = false; });
   armed = false; rb.textContent = 'Сбросить галочки'; count();
 });
+
+// Офлайн: сохраняем страницу в телефон при первом заходе.
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/intervyu-iji/sw.js', { scope: '/intervyu-iji' }).catch(function (e) { console.warn('offline cache:', e); });
+}
 </script>
 </body>
 </html>

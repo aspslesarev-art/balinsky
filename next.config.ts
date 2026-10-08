@@ -87,6 +87,14 @@ const nextConfig: NextConfig = {
         source: '/intervyu-iji',
         headers: [{ key: 'x-robots-tag', value: 'noindex, nofollow' }],
       },
+      {
+        // Сервис-воркер офлайна лежит в /intervyu-iji/, а страница — /intervyu-iji без слэша.
+        source: '/intervyu-iji/sw.js',
+        headers: [
+          { key: 'Service-Worker-Allowed', value: '/intervyu-iji' },
+          { key: 'cache-control', value: 'no-cache' },
+        ],
+      },
     ]
   },
   async rewrites() {
