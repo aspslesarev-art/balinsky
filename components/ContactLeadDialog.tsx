@@ -1,9 +1,8 @@
 'use client'
 
-// Окошко «Имя + контакт» перед переходом в Telegram / WhatsApp менеджера
-// застройщика. Заявка уходит через /api/contact (админ-чат + чат
-// застройщика, если привязан), сам чат открывается сразу по нажатию —
-// в том же жесте пользователя, иначе браузер заблокирует новое окно.
+// Форма заявки по кнопкам Telegram / WhatsApp у менеджера застройщика.
+// В мессенджер кнопки не ведут: имя и контакт уходят через /api/contact
+// только в админ-чат бота (page = 'manager-card'), дальше владелец сам.
 //
 // Имя и контакт запоминаются в браузере: второй раз поля уже заполнены.
 
@@ -18,30 +17,34 @@ export type LeadChannel = 'telegram' | 'whatsapp'
 const COPY = {
   ru: {
     title: (dev: string | null) => dev ? `Связаться с ${dev}` : 'Связаться с застройщиком',
-    lead: 'Оставьте имя и контакт - менеджер будет знать, кто пишет, и сможет ответить, если чат не откроется.',
+    lead: (ch: LeadChannel) => `Оставьте имя и ${ch === 'telegram' ? 'контакт в Telegram' : 'номер WhatsApp'} - менеджер напишет вам сам.`,
     name: 'Имя',
     namePh: 'Как к вам обращаться',
     phone: 'Номер WhatsApp',
     tg: 'Номер или ник в Telegram',
     tgPh: '+62 812 3456 7890 или @username',
-    submit: (ch: LeadChannel) => ch === 'telegram' ? 'Перейти в Telegram' : 'Перейти в WhatsApp',
-    note: 'Контакт получит только менеджер застройщика. Balinsky в переговорах и сделке не участвует.',
+    submit: 'Отправить',
+    note: 'Передадим ваш контакт менеджеру застройщика. Balinsky в переговорах и сделке не участвует.',
     close: 'Закрыть',
+    doneTitle: 'Готово',
+    done: (ch: LeadChannel) => `Менеджер напишет вам в ${ch === 'telegram' ? 'Telegram' : 'WhatsApp'} в рабочее время Бали (UTC+8).`,
     errName: 'Напишите имя',
     errPhone: 'Нужен номер с кодом страны, например +62…',
     errTg: 'Нужен номер с кодом страны или ник вида @username',
   },
   en: {
     title: (dev: string | null) => dev ? `Contact ${dev}` : 'Contact the developer',
-    lead: 'Leave your name and contact so the manager knows who is writing and can reach you if the chat doesn’t open.',
+    lead: (ch: LeadChannel) => `Leave your name and ${ch === 'telegram' ? 'Telegram contact' : 'WhatsApp number'} - the manager will message you.`,
     name: 'Name',
     namePh: 'Your name',
     phone: 'WhatsApp number',
     tg: 'Telegram number or username',
     tgPh: '+62 812 3456 7890 or @username',
-    submit: (ch: LeadChannel) => ch === 'telegram' ? 'Continue to Telegram' : 'Continue to WhatsApp',
-    note: 'Only the developer’s manager receives your contact. Balinsky takes no part in the talks or the transaction.',
+    submit: 'Send',
+    note: 'We pass your contact to the developer’s manager. Balinsky takes no part in the talks or the transaction.',
     close: 'Close',
+    doneTitle: 'Done',
+    done: (ch: LeadChannel) => `The manager will message you on ${ch === 'telegram' ? 'Telegram' : 'WhatsApp'} during Bali working hours (UTC+8).`,
     errName: 'Please enter your name',
     errPhone: 'Enter a number with country code, e.g. +62…',
     errTg: 'Enter a number with country code or a @username',
@@ -68,7 +71,6 @@ export function ContactLeadDialog({
   open,
   onClose,
   channel,
-  targetUrl,
   lang,
   developerName,
   managerName,
@@ -77,7 +79,6 @@ export function ContactLeadDialog({
   open: boolean
   onClose: () => void
   channel: LeadChannel
-  targetUrl: string
   lang: Lang
   developerName: string | null
   managerName: string
@@ -88,11 +89,13 @@ export function ContactLeadDialog({
   const [contact, setContact] = useState('')
   const [website, setWebsite] = useState('') // honeypot
   const [error, setError] = useState<string | null>(null)
+  const [done, setDone] = useState(false)
   const nameRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!open) return
     setError(null)
+    setDone(false)
     try {
       const saved = JSON.parse(localStorage.getItem(STORE_KEY) ?? 'null') as
         { name?: string; phone?: string; telegram?: string } | null
@@ -143,7 +146,6 @@ export function ContactLeadDialog({
       }))
     } catch { /* не критично */ }
 
-    // keepalive — запрос доживёт, даже если вкладка уйдёт в мессенджер.
     void fetch('/api/contact', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -162,12 +164,11 @@ export function ContactLeadDialog({
       }),
     }).catch(err => console.error('[lead] send failed', err))
 
-    window.open(targetUrl, '_blank', 'noopener')
-    onClose()
+    setDone(true)
   }
 
   const Icon = channel === 'telegram' ? Send : MessageCircle
-  const inputCls = 'w-full h-12 px-4 rounded-xl border border-[var(--color-border)] bg-white text-[16px] text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] outline-none focus-visible:border-[var(--color-primary)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]/20 transition-[border-color,box-shadow] duration-[120ms]'
+  const inputCls = 'w-full h-12 px-4 rounded-xl border border-[var(--color-border)] bg-white text-[16px] text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] placeholder:opacity-50 outline-none focus-visible:border-[var(--color-primary)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]/20 transition-[border-color,box-shadow] duration-[120ms]'
 
   return createPortal(
     <div
@@ -189,9 +190,21 @@ export function ContactLeadDialog({
           <X size={18} />
         </button>
         <h2 id="lead-dialog-title" className="pr-10 text-[20px] font-semibold tracking-tight leading-[1.2] text-[var(--color-text)]">
-          {c.title(developerName)}
+          {done ? c.doneTitle : c.title(developerName)}
         </h2>
-        <p className="mt-2 text-[14px] leading-[1.55] text-[var(--color-text-muted)]">{c.lead}</p>
+        {done ? (
+          <>
+            <p className="mt-2 text-[16px] leading-[1.55] text-[var(--color-text)]">{c.done(channel)}</p>
+            <button
+              type="button"
+              onClick={onClose}
+              className="mt-6 inline-flex w-full items-center justify-center h-12 px-5 rounded-full border border-[var(--color-border)] bg-white hover:bg-[var(--color-search-bg)] text-[var(--color-text)] text-[16px] font-medium transition-colors duration-[120ms] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
+            >
+              {c.close}
+            </button>
+          </>
+        ) : (<>
+        <p className="mt-2 text-[14px] leading-[1.55] text-[var(--color-text-muted)]">{c.lead(channel)}</p>
 
         <form onSubmit={submit} noValidate className="mt-6 space-y-4">
           <label className="block">
@@ -239,10 +252,11 @@ export function ContactLeadDialog({
             type="submit"
             className="inline-flex w-full items-center justify-center gap-2 h-12 px-5 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] active:scale-[.98] text-white text-[16px] font-medium transition-[background-color,transform] duration-[120ms] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
           >
-            <Icon size={18} strokeWidth={1.6} /> {c.submit(channel)}
+            <Icon size={18} strokeWidth={1.6} /> {c.submit}
           </button>
           <p className="text-[13px] leading-[1.55] text-[var(--color-text-muted)]">{c.note}</p>
         </form>
+        </>)}
       </div>
     </div>,
     document.body,

@@ -173,7 +173,10 @@ export async function POST(req: Request) {
   if (!isResale && !developerName && !developerSlug && body.listingKind && body.listingSlug) {
     developerName = await resolveListingDeveloperName(body.listingKind, body.listingSlug)
   }
-  const devChat = isResale ? null : await developerChatId({ name: developerName, slug: developerSlug })
+  // Форма у карточки менеджера (ContactLeadDialog) — заявки только владельцу
+  // в админ-чат, застройщику он передаёт сам.
+  const ownerOnly = isResale || body.page === 'manager-card'
+  const devChat = ownerOnly ? null : await developerChatId({ name: developerName, slug: developerSlug })
 
   const lines: string[] = [
     '🆕 <b>Новая заявка с сайта</b>',
@@ -183,7 +186,7 @@ export async function POST(req: Request) {
   if (phone) lines.push(`<b>Телефон:</b> ${escapeHtml(phone)}`)
   if (telegram) lines.push(`<b>Telegram:</b> ${escapeHtml(telegram)} (https://t.me/${telegram.slice(1)})`)
   if (email) lines.push(`<b>Email:</b> ${escapeHtml(email)}`)
-  if (channel) lines.push(`<b>Пошёл писать в:</b> ${channel}${managerName ? ` — ${escapeHtml(managerName)}` : ''}`)
+  if (channel) lines.push(`<b>Хочет связь в:</b> ${channel}${managerName ? ` (менеджер: ${escapeHtml(managerName)})` : ''}`)
   if (developerName) lines.push(`<b>Застройщик:</b> ${escapeHtml(developerName)}`)
   if (body.listingTitle) {
     lines.push('')
@@ -214,7 +217,7 @@ export async function POST(req: Request) {
   // The admin copy carries the routing verdict: a developer we identified but
   // couldn't route to (no chat linked in /admin/dev-chats) is the single most
   // common reason a lead never shows up on the developer's side.
-  const unrouted = !isResale && !devChat && (developerName || developerSlug)
+  const unrouted = !ownerOnly && !devChat && (developerName || developerSlug)
   const adminText = unrouted
     ? `${text}\n\n⚠️ <b>Чат застройщика не привязан</b> — заявка только здесь.\n${SITE_URL}/admin/dev-chats`
     : text
