@@ -1,5 +1,6 @@
 'use client'
 
+import { useCallback, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { detectLang, pickCopy } from '@/lib/i18n'
 import Image from 'next/image'
@@ -7,6 +8,7 @@ import { Star, Languages, Video, Clock, Send, MessageCircle } from 'lucide-react
 import type { ManagerItem } from '@/lib/managers'
 import type { Lang } from '@/lib/i18n'
 import { buildInquiryText, type ContactInquiry } from '@/lib/contact-inquiry'
+import { ContactLeadDialog, type LeadChannel } from '@/components/ContactLeadDialog'
 
 const COPY = {
   ru: {
@@ -153,14 +155,14 @@ export function ManagerCard({
         {heading}
       </h2>
       {/* Прямо под заголовком — кто именно на том конце. Balinsky не
-          собирает заявки и не ведёт переговоры: посетитель пишет
-          оператору объекта напрямую. */}
+          ведёт переговоры: посетитель пишет оператору объекта напрямую,
+          имя и контакт перед этим передаются застройщику (ContactLeadDialog). */}
       <p className="mb-4 max-w-[68ch] text-[13px] leading-[1.6] text-[var(--color-text-muted)]">
         {c.note}
       </p>
       <div className="space-y-3">
         {renderable.map(m => (
-          <ManagerRow key={m.id} m={m} lang={lang} c={c} developerName={developerName ?? null} videoUrl={videoUrl} waText={waText} />
+          <ManagerRow key={m.id} m={m} lang={lang} c={c} developerName={developerName ?? null} videoUrl={videoUrl} waText={waText} listingTitle={inquiry?.name ?? null} />
         ))}
       </div>
     </section>
@@ -180,6 +182,7 @@ function ManagerRow({
   developerName,
   videoUrl,
   waText,
+  listingTitle,
 }: {
   m: ManagerItem
   lang: Lang
@@ -187,7 +190,17 @@ function ManagerRow({
   developerName: string | null
   videoUrl: string | null
   waText: string | null
+  listingTitle: string | null
 }) {
+  // Перед переходом в мессенджер спрашиваем имя и контакт (ContactLeadDialog).
+  // Ссылка остаётся настоящей <a> — без JS и для счётчика кликов.
+  const [lead, setLead] = useState<{ channel: LeadChannel; url: string } | null>(null)
+  const closeLead = useCallback(() => setLead(null), [])
+  const askLead = (channel: LeadChannel, url: string) => (e: React.MouseEvent) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return
+    e.preventDefault()
+    setLead({ channel, url })
+  }
   // Silent fallback to the RU value when an EN counterpart isn't
   // filled in Airtable yet — manager cards already render fine in
   // mixed locales and a literal "Name En" placeholder would look odd.
@@ -262,6 +275,7 @@ function ManagerRow({
         {tgUrl && (
           <a
             href={tgUrl}
+            onClick={askLead('telegram', tgUrl)}
             {...trackAttrs}
             target="_blank"
             rel="noopener nofollow"
@@ -273,6 +287,7 @@ function ManagerRow({
         {waUrl && (
           <a
             href={waUrl}
+            onClick={askLead('whatsapp', waUrl)}
             {...trackAttrs}
             target="_blank"
             rel="noopener nofollow"
@@ -282,6 +297,18 @@ function ManagerRow({
           </a>
         )}
       </div>
+      {lead && (
+        <ContactLeadDialog
+          open
+          onClose={closeLead}
+          channel={lead.channel}
+          targetUrl={lead.url}
+          lang={lang}
+          developerName={developerName}
+          managerName={m.name}
+          listingTitle={listingTitle}
+        />
+      )}
     </div>
   )
 }

@@ -35,6 +35,12 @@ type Body = {
   name?: string
   email?: string
   phone?: string
+  // Ник Telegram (@username) — форма «Связаться с менеджером» принимает
+  // его вместо номера, если человек выбрал Telegram.
+  telegram?: string
+  // Через какой мессенджер человек пошёл писать и кому именно.
+  channel?: string
+  managerName?: string
   message?: string
   // Listing context (optional, set when form is on a detail page)
   listingKind?: string
@@ -122,6 +128,9 @@ export async function POST(req: Request) {
   const name = (body.name ?? '').trim()
   const email = (body.email ?? '').trim()
   const phone = (body.phone ?? '').trim()
+  const telegram = (body.telegram ?? '').trim()
+  const channel = body.channel === 'telegram' ? 'Telegram' : body.channel === 'whatsapp' ? 'WhatsApp' : null
+  const managerName = (body.managerName ?? '').trim().slice(0, 100)
   const message = (body.message ?? '').trim()
 
   if (!name || name.length > 100) {
@@ -132,7 +141,10 @@ export async function POST(req: Request) {
   if (email && !isValidEmail(email)) {
     return NextResponse.json({ ok: false, error: 'invalid_email' }, { status: 400 })
   }
-  if (!phone && !email) {
+  if (telegram && !/^@[a-zA-Z][a-zA-Z0-9_]{4,31}$/.test(telegram)) {
+    return NextResponse.json({ ok: false, error: 'invalid_telegram' }, { status: 400 })
+  }
+  if (!phone && !email && !telegram) {
     return NextResponse.json({ ok: false, error: 'no_contact' }, { status: 400 })
   }
   if (phone.length > 40) {
@@ -169,7 +181,9 @@ export async function POST(req: Request) {
     `<b>Имя:</b> ${escapeHtml(name)}`,
   ]
   if (phone) lines.push(`<b>Телефон:</b> ${escapeHtml(phone)}`)
+  if (telegram) lines.push(`<b>Telegram:</b> ${escapeHtml(telegram)} (https://t.me/${telegram.slice(1)})`)
   if (email) lines.push(`<b>Email:</b> ${escapeHtml(email)}`)
+  if (channel) lines.push(`<b>Пошёл писать в:</b> ${channel}${managerName ? ` — ${escapeHtml(managerName)}` : ''}`)
   if (developerName) lines.push(`<b>Застройщик:</b> ${escapeHtml(developerName)}`)
   if (body.listingTitle) {
     lines.push('')
