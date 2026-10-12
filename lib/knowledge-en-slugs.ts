@@ -99,6 +99,17 @@ export const EN_KNOWLEDGE_SLUG_OVERRIDES: Record<string, string> = {
   "rynok-bali-perenasyshchen-chto-eto-menyaet-dlya-pokupatelya": "bali-property-oversupply-what-it-means-for-buyers",
   "9-punktov-proverki-zastroyshchika-na-bali": "bali-developer-check-9-points",
   "tri-voprosa-prodavtsu-investitsionnoy-nedvizhimosti": "three-questions-to-ask-property-sellers",
+  // Legal guides based on t.me/BaliLawyer, fact-checked (2026-10-12).
+  "dollary-v-dogovore-na-bali-pochemu-sdelka-dolzhna-byt-v-rupiyah": "bali-contract-currency-rupiah-required",
+  "nalogovyy-rezident-indonezii-kto-platit-i-s-kakogo-dohoda": "indonesia-tax-residency-foreigners",
+  "nalog-0-5-s-oborota-v-2026-kto-ego-poteryal-posle-pp-20-2026": "indonesia-0-5-percent-turnover-tax-2026",
+  "kompaniya-inostrantsa-pt-pma-na-bali-chto-izmenilos-v-2025-2026": "pt-pma-bali-changes-2025-2026",
+  "naym-personala-na-bali-dogovory-vyplaty-shtrafy-2026": "hiring-staff-bali-contracts-payments-2026",
+  "vizy-dlya-investora-na-bali-chto-vazhno-znat-v-2026": "bali-investor-visas-kitas-golden-visa-2026",
+  "bayk-i-dtp-na-bali-chto-obyazatelno-po-zakonu": "bali-scooter-accident-law",
+  "novyy-ugolovnyy-kodeks-indonezii-2026-chto-vazhno-inostrantsu": "indonesia-new-criminal-code-2026-foreigners",
+  "dogovor-arendy-i-lizholda-na-bali-6-pravil-kotorye-zashchishchayut-dengi": "bali-leasehold-contract-6-rules",
+  "gde-na-bali-nelzya-stroit-selhozzemlya-vysota-15-m-i-moratoriy": "where-you-cannot-build-in-bali",
 }
 
 // A few keys above were copied from raw slugs that ended in «-» (titles cut
