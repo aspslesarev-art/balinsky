@@ -247,7 +247,7 @@ export function PriceCtaCard({
   void listingSlug
 
   return (
-    <div className="rounded-2xl bg-white border border-[var(--color-border)] px-5 py-5 md:px-6 md:py-[22px] grid grid-cols-1 md:grid-cols-[1fr_auto] gap-5 md:gap-6 md:items-center">
+    <div className="rounded-2xl bg-white border border-[var(--color-border)] px-5 py-5 md:px-6 md:py-[22px] grid grid-cols-1 xl:grid-cols-[1fr_auto] gap-5 md:gap-6 xl:items-center">
       {/* LEFT — price */}
       <div className="min-w-0">
         <div className="text-[30px] md:text-[32px] font-semibold tracking-[-0.02em] leading-none text-[#1A1F1C] tabular-nums">
@@ -267,7 +267,7 @@ export function PriceCtaCard({
 
       {/* RIGHT — CTAs + trust chips. Order on mobile uses CSS so the
           primary button stays at the top per spec. */}
-      <div className="flex flex-col gap-3 md:items-end">
+      <div className="flex flex-col gap-3 xl:items-end">
         {reservedUntil ? (
           // The unit is already on a 14-day hold. Hide the buy / reserve
           // CTAs so two visitors don't think they both have it. They can
