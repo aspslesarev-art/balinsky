@@ -17,6 +17,7 @@ import { ArticleBody, plainArticleText } from '@/components/ArticleBody'
 import { isRuEnOnlyKnowledge } from '@/lib/knowledge-locales'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { getBuyAnchor } from '@/lib/districts'
+import { authorPath, localizeAuthor } from '@/lib/authors'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
@@ -133,9 +134,15 @@ export async function KnowledgeDetail({ slug, lang }: { slug: string; lang: Lang
   const knowledgeRoot = switchLangPath('/ru/znaniya', lang)
 
   const all = await loadAllKnowledge(lang)
-  const related = all.filter(x => x.id !== k.id).slice(0, 4)
+  // A columnist's other pieces come first, so the column reads as a set.
+  const authorSlug = k.author?.slug ?? null
+  const others = all.filter(x => x.id !== k.id)
+  const related = [
+    ...others.filter(x => authorSlug && x.author?.slug === authorSlug),
+    ...others.filter(x => !authorSlug || x.author?.slug !== authorSlug),
+  ].slice(0, 4)
 
-  const authorData = k.author ?? c.defaultAuthor
+  const authorData = k.author ? localizeAuthor(k.author, lang) : c.defaultAuthor
   const publishedDate = fmtDate(k.createdTime, c.locale)
   const updatedDate = fmtDate(k.lastModifiedTime, c.locale)
   const articleJsonLd: Record<string, unknown> = {
@@ -151,7 +158,7 @@ export async function KnowledgeDetail({ slug, lang }: { slug: string; lang: Lang
       ...(authorData.role ? { jobTitle: authorData.role } : {}),
       ...(authorData.photo ? { image: authorData.photo } : {}),
       url: (k.author && k.author.slug)
-        ? `${SITE_URL}${lang === 'ru' ? '/ru/avtory/' : '/en/authors/'}${k.author.slug}`
+        ? `${SITE_URL}${authorPath(k.author.slug, lang)}`
         : `${SITE_URL}${switchLangPath('/ru/o-balinsky', lang)}`,
     },
     publisher: {
@@ -189,7 +196,7 @@ export async function KnowledgeDetail({ slug, lang }: { slug: string; lang: Lang
               )}
               <div className="leading-tight">
                 {k.author && k.author.slug ? (
-                  <Link href={`${lang === 'ru' ? '/ru/avtory' : '/en/authors'}/${k.author.slug}`} className="text-[14px] font-medium text-[var(--color-text)] hover:text-[var(--color-primary-pressed)] no-underline">
+                  <Link href={authorPath(k.author.slug, lang)} className="text-[14px] font-medium text-[var(--color-text)] hover:text-[var(--color-primary-pressed)] no-underline">
                     {authorData.name}
                   </Link>
                 ) : (

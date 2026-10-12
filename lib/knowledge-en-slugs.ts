@@ -91,6 +91,14 @@ export const EN_KNOWLEDGE_SLUG_OVERRIDES: Record<string, string> = {
   "deshevle-li-off-plan-na-bali-dannye-350-vill": "is-off-plan-cheaper-bali-villa-price-data",
   "zonirovanie-i-razresheniya-vill-na-bali-v-tsifrah": "bali-zoning-permits-villas-for-sale-data",
   "sroki-lizholda-na-bali-v-tsifrah-tsena-za-god": "bali-leasehold-terms-price-per-year-data",
+  // Evgeny Zhuikov's column (2026-10-12), see lib/authors.ts.
+  "skolko-nalogov-platit-investor-na-bali": "bali-property-investor-taxes-real-yield",
+  "snyat-villu-na-god-i-sdavat-posutochno-dohodnost": "bali-villa-rental-arbitrage-real-yield",
+  "plyusy-i-minusy-turisticheskoy-nedvizhimosti-bali": "bali-tourist-property-pros-and-cons",
+  "stroyashchiysya-ili-gotovyy-dom-na-bali-chto-vybrat": "off-plan-or-ready-property-bali-which-to-choose",
+  "rynok-bali-perenasyshchen-chto-eto-menyaet-dlya-pokupatelya": "bali-property-oversupply-what-it-means-for-buyers",
+  "9-punktov-proverki-zastroyshchika-na-bali": "bali-developer-check-9-points",
+  "tri-voprosa-prodavtsu-investitsionnoy-nedvizhimosti": "three-questions-to-ask-property-sellers",
 }
 
 // A few keys above were copied from raw slugs that ended in «-» (titles cut
