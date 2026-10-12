@@ -11,6 +11,7 @@ import { handleDevUpdateCallback, handleDevUpdateReply } from '@/lib/dev-updates
 import { isOwnerChat } from '@/lib/balina-owners'
 import { refreshChatAvatar } from '@/lib/chat-avatars'
 import { uploadChatMedia, downloadTelegramFile, type ChatMediaKind } from '@/lib/chat-media'
+import { parseStoriesPayload, sendStoryPack } from '@/lib/agent-stories/telegram'
 import type { Lang } from '@/lib/i18n'
 
 export const runtime = 'nodejs'
@@ -218,6 +219,15 @@ export async function POST(req: Request) {
       text || null, media?.kind === 'voice' ? mediaUrl : null,
     ).catch(err => { console.error('[telegram] dev-update reply failed:', err); return false })
     if (handled) return NextResponse.json({ ok: true, devUpdate: true })
+  }
+
+  // Сторис для агента: бот сам шлёт альбом картинок, текстовый ответ не нужен.
+  // Раньше handover: это явный запрос по кнопке, его выполняем всегда.
+  const stories = parseStoriesPayload(startPayload)
+  if (stories) {
+    await sendStoryPack(token, msg.chat.id, stories.kind, stories.id)
+      .catch(err => console.error('[telegram] stories failed:', err))
+    return NextResponse.json({ ok: true, stories: true })
   }
 
   // Handover: if the manager is actively in this chat (replied within the

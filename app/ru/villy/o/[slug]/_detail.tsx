@@ -54,6 +54,7 @@ const LandProfileBlock = dynamic(
 import { RentalCompareSection } from '@/components/RentalCompareSection'
 import { LazyMount } from '@/components/LazyMount'
 import { ManagerCard } from '@/components/ManagerCard'
+import { AgentStoriesCard } from '@/components/AgentStoriesCard'
 import { loadNearbyPlaces } from '@/lib/nearby-places'
 import { NearbyPlaces } from '@/components/NearbyPlaces'
 import { loadGeoFacts } from '@/lib/complex-access'
@@ -1552,6 +1553,8 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
         )}
 
         {managers.length > 0 && <ManagerCard managers={managers} developerName={developer?.name ?? developerName} inquiry={{ kind: 'villa', name: title, complexName: parentComplex?.name ?? null, priceUsd: priceNum }} />}
+
+        {lang === 'ru' && <AgentStoriesCard kind="villa" id={v.airtable_id} />}
 
         <RentalCompareSection
           district={district}

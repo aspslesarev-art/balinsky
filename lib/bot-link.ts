@@ -33,3 +33,10 @@ export function botLink(kind: 'manager' | 'rental' | 'event' | 'seller', id: str
   const budget = MAX_START_LEN - kind.length - 1
   return `https://t.me/${BOT_USERNAME}?start=${kind}_${sanitize(id, budget)}`
 }
+
+// st_<v|a|c>_<airtableId> → бот присылает 3 картинки сторис для агента
+// (lib/agent-stories/telegram.ts).
+export function storiesBotLink(kind: 'villa' | 'apartment' | 'complex', id: string): string {
+  const code = kind === 'villa' ? 'v' : kind === 'apartment' ? 'a' : 'c'
+  return `https://t.me/${BOT_USERNAME}?start=st_${code}_${sanitize(id, MAX_START_LEN - 5)}`
+}

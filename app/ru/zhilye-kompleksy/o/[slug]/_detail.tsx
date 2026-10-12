@@ -24,6 +24,7 @@ import { parseGeoOverlay } from '@/lib/geo-placement'
 import { ProgressBar } from '@/components/ProgressBar'
 import { ApartmentCard, type ApartmentCardData } from '@/components/ApartmentCard'
 import { ManagerCard } from '@/components/ManagerCard'
+import { AgentStoriesCard } from '@/components/AgentStoriesCard'
 import { InlinePrice } from '@/components/InlinePrice'
 import { loadManagersByDeveloperName } from '@/lib/managers'
 import { getDeveloperStats } from '@/lib/developer-stats'
@@ -2148,6 +2149,8 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
         )}
 
         {managers.length > 0 && <ManagerCard managers={managers} developerName={developerName} inquiry={{ kind: 'complex', name, priceUsd: minPrice }} />}
+
+        {lang === 'ru' && <AgentStoriesCard kind="complex" id={c.airtable_id} />}
 
 
         {/* Блок «Документы и материалы» убран: ссылки вели во внутренние
