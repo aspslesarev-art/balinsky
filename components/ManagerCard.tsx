@@ -9,6 +9,7 @@ import type { ManagerItem } from '@/lib/managers'
 import type { Lang } from '@/lib/i18n'
 import type { ContactInquiry } from '@/lib/contact-inquiry'
 import { ContactLeadDialog, type LeadChannel } from '@/components/ContactLeadDialog'
+import { reportLeadFormEvent } from '@/lib/contact-click'
 
 const COPY = {
   ru: {
@@ -239,7 +240,10 @@ function ManagerRow({
           <button
             key={ch}
             type="button"
-            onClick={() => setLead(ch)}
+            onClick={() => {
+              setLead(ch)
+              reportLeadFormEvent('click', ch, { managerId: m.id, managerName: m.name, developerName })
+            }}
             className={ch === 'telegram'
               ? 'inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[14px] font-medium transition-colors cursor-pointer'
               : 'inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full border border-[var(--color-border)] bg-white hover:bg-[var(--color-search-bg)] text-[var(--color-text)] text-[14px] font-medium transition-colors cursor-pointer'}
@@ -258,6 +262,7 @@ function ManagerRow({
           lang={lang}
           developerName={developerName}
           managerName={m.name}
+          managerId={m.id}
           listingTitle={listingTitle}
         />
       )}

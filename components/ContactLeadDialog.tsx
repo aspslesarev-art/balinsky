@@ -10,6 +10,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { X, Send, MessageCircle } from 'lucide-react'
 import { pickCopy, type Lang } from '@/lib/i18n'
+import { reportLeadFormEvent } from '@/lib/contact-click'
 
 export type LeadChannel = 'telegram' | 'whatsapp'
 
@@ -74,6 +75,7 @@ export function ContactLeadDialog({
   lang,
   developerName,
   managerName,
+  managerId,
   listingTitle,
 }: {
   open: boolean
@@ -82,6 +84,7 @@ export function ContactLeadDialog({
   lang: Lang
   developerName: string | null
   managerName: string
+  managerId: string
   listingTitle?: string | null
 }) {
   const c = pickCopy(COPY, lang)
@@ -164,6 +167,7 @@ export function ContactLeadDialog({
       }),
     }).catch(err => console.error('[lead] send failed', err))
 
+    reportLeadFormEvent('lead', channel, { managerId, managerName, developerName })
     setDone(true)
   }
 
@@ -185,7 +189,7 @@ export function ContactLeadDialog({
           type="button"
           onClick={onClose}
           aria-label={c.close}
-          className="absolute right-3 top-3 inline-flex h-10 w-10 items-center justify-center rounded-full text-[var(--color-text-muted)] hover:bg-[var(--color-search-bg)] hover:text-[var(--color-text)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] transition-colors"
+          className="absolute right-3 top-3 cursor-pointer inline-flex h-10 w-10 items-center justify-center rounded-full text-[var(--color-text-muted)] hover:bg-[var(--color-search-bg)] hover:text-[var(--color-text)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] transition-colors"
         >
           <X size={18} />
         </button>
@@ -198,7 +202,7 @@ export function ContactLeadDialog({
             <button
               type="button"
               onClick={onClose}
-              className="mt-6 inline-flex w-full items-center justify-center h-12 px-5 rounded-full border border-[var(--color-border)] bg-white hover:bg-[var(--color-search-bg)] text-[var(--color-text)] text-[16px] font-medium transition-colors duration-[120ms] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
+              className="mt-6 cursor-pointer inline-flex w-full items-center justify-center h-12 px-5 rounded-full border border-[var(--color-border)] bg-white hover:bg-[var(--color-search-bg)] text-[var(--color-text)] text-[16px] font-medium transition-colors duration-[120ms] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
             >
               {c.close}
             </button>
@@ -250,7 +254,7 @@ export function ContactLeadDialog({
           {error && <p role="alert" className="text-[14px] text-[#B42318]">{error}</p>}
           <button
             type="submit"
-            className="inline-flex w-full items-center justify-center gap-2 h-12 px-5 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] active:scale-[.98] text-white text-[16px] font-medium transition-[background-color,transform] duration-[120ms] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
+            className="cursor-pointer inline-flex w-full items-center justify-center gap-2 h-12 px-5 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] active:scale-[.98] text-white text-[16px] font-medium transition-[background-color,transform] duration-[120ms] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
           >
             <Icon size={18} strokeWidth={1.6} /> {c.submit}
           </button>

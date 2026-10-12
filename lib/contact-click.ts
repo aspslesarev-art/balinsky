@@ -83,3 +83,41 @@ export function reportContactClick(a: HTMLAnchorElement): void {
     }
   } catch { /* учёт не должен ломать переход */ }
 }
+
+/**
+ * Воронка формы заявки у карточки менеджера (ContactLeadDialog):
+ * 'click' — нажал Telegram / WhatsApp, 'lead' — отправил форму.
+ * Ссылки нет, поэтому href = 'form'; свои браузеры (bx_no_track) не считаем.
+ */
+export function reportLeadFormEvent(
+  event: 'click' | 'lead',
+  channel: 'telegram' | 'whatsapp',
+  meta: { managerId?: string | null; managerName?: string | null; developerName?: string | null },
+): void {
+  try {
+    if (localStorage.getItem('bx_no_track')) return
+  } catch { /* приватный режим — считаем */ }
+  const path = window.location.pathname
+  const { kind, slug } = pageOf(path)
+  const payload = {
+    event,
+    channel,
+    href: 'form',
+    placement: 'manager-card',
+    path,
+    pageKind: kind,
+    pageSlug: slug,
+    title: document.title,
+    managerId: meta.managerId ?? null,
+    managerName: meta.managerName ?? null,
+    developerName: meta.developerName ?? null,
+    lang: detectLang(path),
+    visitorId: visitorId(),
+  }
+  try {
+    const body = new Blob([JSON.stringify(payload)], { type: 'application/json' })
+    if (!navigator.sendBeacon?.('/api/track/contact', body)) {
+      void fetch('/api/track/contact', { method: 'POST', body, keepalive: true }).catch(() => {})
+    }
+  } catch { /* учёт не должен ломать форму */ }
+}

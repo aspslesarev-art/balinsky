@@ -10,7 +10,7 @@ import { requireAdmin } from '@/lib/admin-auth'
 import { AdminThemeShell } from '@/components/admin/AdminThemeShell'
 
 export const dynamic = 'force-dynamic'
-export const metadata = { robots: { index: false, follow: false }, title: 'Клики в мессенджеры · Balinsky Admin' }
+export const metadata = { robots: { index: false, follow: false }, title: 'Клики и заявки · Balinsky Admin' }
 
 const sb = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -30,6 +30,8 @@ function rangeStartIso(range: Range): string | null {
 type Click = {
   id: number
   created_at: string
+  // 'click' — нажатие (по ссылке или на кнопку формы), 'lead' — отправленная форма.
+  event: 'click' | 'lead' | null
   channel: 'telegram' | 'whatsapp'
   target: string
   placement: string | null
@@ -54,22 +56,24 @@ async function loadClicks(range: Range): Promise<{ rows: Click[]; error: string 
   return { rows: (data ?? []) as Click[], error: error?.message ?? null }
 }
 
-type Group = { key: string; label: string; sub: string | null; href: string | null; tg: number; wa: number; people: number; lastAt: string }
+type Group = { key: string; label: string; sub: string | null; href: string | null; tg: number; wa: number; leads: number; people: number; lastAt: string }
 
 function group(rows: Click[], keyOf: (c: Click) => { key: string; label: string; sub?: string | null; href?: string | null } | null): Group[] {
   const m = new Map<string, Group & { visitors: Set<string> }>()
   for (const c of rows) {
     const k = keyOf(c)
     if (!k) continue
-    const g = m.get(k.key) ?? { key: k.key, label: k.label, sub: k.sub ?? null, href: k.href ?? null, tg: 0, wa: 0, people: 0, lastAt: c.created_at, visitors: new Set<string>() }
-    if (c.channel === 'telegram') g.tg++; else g.wa++
+    const g = m.get(k.key) ?? { key: k.key, label: k.label, sub: k.sub ?? null, href: k.href ?? null, tg: 0, wa: 0, leads: 0, people: 0, lastAt: c.created_at, visitors: new Set<string>() }
+    if (c.event === 'lead') g.leads++
+    else if (c.channel === 'telegram') g.tg++
+    else g.wa++
     g.visitors.add(c.visitor_id ?? `row-${c.id}`)
     if (c.created_at > g.lastAt) g.lastAt = c.created_at
     m.set(k.key, g)
   }
   return [...m.values()]
     .map(({ visitors, ...g }) => ({ ...g, people: visitors.size }))
-    .sort((a, b) => (b.tg + b.wa) - (a.tg + a.wa) || b.lastAt.localeCompare(a.lastAt))
+    .sort((a, b) => b.leads - a.leads || (b.tg + b.wa) - (a.tg + a.wa) || b.lastAt.localeCompare(a.lastAt))
 }
 
 const PLACEMENT_LABELS: Record<string, string> = {
@@ -96,14 +100,19 @@ export default async function ContactClicksAdmin({
   const range = (['24h', '7d', '30d', 'all'].includes(rangeRaw) ? rangeRaw : '30d') as Range
 
   const { rows, error } = await loadClicks(range)
-  const tg = rows.filter(r => r.channel === 'telegram').length
-  const wa = rows.length - tg
+  const clicks = rows.filter(r => r.event !== 'lead')
+  const leads = rows.length - clicks.length
+  const tg = clicks.filter(r => r.channel === 'telegram').length
+  const wa = clicks.length - tg
+  // Конверсия — только по кнопкам формы (у ссылок в подвале формы нет).
+  const formClicks = clicks.filter(r => r.target === 'form').length
+  const conversion = formClicks ? Math.round((leads / formClicks) * 100) : null
   const people = new Set(rows.map(r => r.visitor_id ?? `row-${r.id}`)).size
 
   const byManager = group(rows, c => ({
     key: c.manager_id ?? c.target,
     label: c.manager_name ?? c.target,
-    sub: [c.developer_name, c.manager_name ? c.target : null].filter(Boolean).join(' · ') || null,
+    sub: [c.developer_name, c.manager_name && c.target !== 'form' ? c.target : null].filter(Boolean).join(' · ') || null,
   }))
   const byDeveloper = group(rows, c => c.developer_name ? { key: c.developer_name, label: c.developer_name } : null)
   const byPage = group(rows, c => c.page_path ? {
@@ -119,8 +128,8 @@ export default async function ContactClicksAdmin({
 
   return (
     <AdminThemeShell
-      title="Клики в мессенджеры"
-      description="Нажатия на кнопки Telegram и WhatsApp по всему сайту: у менеджеров застройщиков, в подвале и везде, где есть такие ссылки. Боты и ваши собственные браузеры не считаются. «Людей» — уникальные браузеры."
+      title="Клики и заявки"
+      description="Нажатия на кнопки Telegram и WhatsApp по всему сайту. У менеджеров застройщиков кнопка открывает форму: «Заявки» — отправленные формы, «Конверсия» — заявки к нажатиям на эти кнопки. Боты и ваши собственные браузеры не считаются. «Людей» — уникальные браузеры."
       filters={<RangeTabs range={range} />}
     >
       <div className="space-y-8 md:space-y-10">
@@ -131,8 +140,10 @@ export default async function ContactClicksAdmin({
           </div>
         )}
 
-        <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <KpiCard label="Всего кликов" value={rows.length} />
+        <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          <KpiCard label="Кликов" value={clicks.length} />
+          <KpiCard label="Заявок" value={leads} />
+          <KpiCard label="Конверсия" value={conversion == null ? '—' : `${conversion}%`} />
           <KpiCard label="Telegram" value={tg} />
           <KpiCard label="WhatsApp" value={wa} />
           <KpiCard label="Людей" value={people} />
@@ -144,7 +155,7 @@ export default async function ContactClicksAdmin({
         <GroupTable title="Где стояла кнопка" empty="Кликов пока нет." rows={byPlacement} firstCol="Место" />
 
         <section>
-          <h2 className="text-[15px] md:text-[16px] font-semibold mb-3 text-[var(--ax-fg)]">Последние клики</h2>
+          <h2 className="text-[15px] md:text-[16px] font-semibold mb-3 text-[var(--ax-fg)]">Последние клики и заявки</h2>
           {rows.length === 0 ? (
             <Empty text="Кликов пока нет." />
           ) : (
@@ -163,6 +174,7 @@ export default async function ContactClicksAdmin({
                     <tr key={c.id} className={i % 2 ? 'bg-[var(--ax-hover)]' : ''}>
                       <td className="px-4 py-2.5 whitespace-nowrap text-[var(--ax-fg-muted)]">{fmtDateTime(c.created_at)}</td>
                       <td className="px-4 py-2.5">
+                        {c.event === 'lead' && <span className="font-semibold text-[var(--color-primary)]">Заявка · </span>}
                         <span className="font-medium text-[var(--ax-fg)]">{c.channel === 'telegram' ? 'Telegram' : 'WhatsApp'}</span>
                         {' · '}{c.manager_name ?? c.target}
                         {c.developer_name && <div className="text-[11px] text-[var(--ax-fg-faint)]">{c.developer_name}</div>}
@@ -201,6 +213,7 @@ function GroupTable({ title, empty, rows, firstCol }: { title: string; empty: st
                 <th className="text-left px-4 py-2 font-medium">{firstCol}</th>
                 <th className="text-right px-4 py-2 font-medium">Telegram</th>
                 <th className="text-right px-4 py-2 font-medium">WhatsApp</th>
+                <th className="text-right px-4 py-2 font-medium">Заявки</th>
                 <th className="text-right px-4 py-2 font-medium">Людей</th>
                 <th className="text-left px-4 py-2 font-medium hidden md:table-cell">Последний</th>
               </tr>
@@ -217,6 +230,7 @@ function GroupTable({ title, empty, rows, firstCol }: { title: string; empty: st
                   </td>
                   <td className="px-4 py-2.5 text-right tabular-nums font-semibold">{g.tg}</td>
                   <td className="px-4 py-2.5 text-right tabular-nums font-semibold">{g.wa}</td>
+                  <td className={`px-4 py-2.5 text-right tabular-nums font-semibold ${g.leads ? 'text-[var(--color-primary)]' : 'text-[var(--ax-fg-muted)]'}`}>{g.leads}</td>
                   <td className="px-4 py-2.5 text-right tabular-nums text-[var(--ax-fg-muted)]">{g.people}</td>
                   <td className="px-4 py-2.5 text-[var(--ax-fg-muted)] hidden md:table-cell">{fmtDateTime(g.lastAt)}</td>
                 </tr>
@@ -255,7 +269,7 @@ function RangeTabs({ range }: { range: Range }) {
   )
 }
 
-function KpiCard({ label, value }: { label: string; value: number }) {
+function KpiCard({ label, value }: { label: string; value: number | string }) {
   return (
     <div className="rounded-2xl bg-[var(--ax-panel)] border border-[var(--ax-border)] p-4">
       <div className="text-[11px] uppercase tracking-wide text-[var(--ax-fg-muted)] font-medium">{label}</div>

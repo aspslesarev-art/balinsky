@@ -55,11 +55,14 @@ export async function POST(req: Request) {
   const channel = b.channel === 'telegram' || b.channel === 'whatsapp' ? b.channel : null
   const href = str(b.href, 2000)
   if (!channel || !href) return NextResponse.json({ ok: false, error: 'bad input' }, { status: 400 })
-  const target = normalizeTarget(channel, href)
+  // Форма заявки у менеджера (ContactLeadDialog): ссылки нет, href = 'form'.
+  const event = b.event === 'lead' ? 'lead' : 'click'
+  const target = href === 'form' ? 'form' : normalizeTarget(channel, href)
   if (!target) return NextResponse.json({ ok: false, error: 'bad href' }, { status: 400 })
 
   const lang = str(b.lang, 8)
   const row = {
+    event,
     channel,
     target: target.slice(0, 200),
     placement: str(b.placement, 80),
