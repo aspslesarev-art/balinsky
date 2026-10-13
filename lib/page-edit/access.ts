@@ -1,13 +1,15 @@
 import 'server-only'
+import { cookies } from 'next/headers'
 import { requireAdmin } from '@/lib/admin-auth'
+import { DEV_COOKIE, DEV_KEY_FIELD, parseDevToken } from './dev-session'
 import { adminSb } from '@/lib/admin/sb'
 import type { EditKind, EditorRole } from './schema'
 
 // Кто правит страницу.
 //
 // staff — команда Balinsky (вход в админку). Правит всё.
-// developer — застройщик: только свою страницу и объекты своих ЖК
-// (developerEditor, подключается вторым этапом).
+// developer — застройщик: только свою страницу и объекты своих ЖК. Входит по
+// личной ссылке (lib/page-edit/dev-session.ts), сессия — в куке.
 
 export type Editor = { role: EditorRole; developerId?: string; developerName?: string }
 
@@ -21,9 +23,14 @@ export async function currentEditor(): Promise<Editor | null> {
   return developerEditor()
 }
 
-/** Сессия застройщика. Второй этап — пока никого. */
+/** Сессия застройщика: подпись куки верна и ключ ещё не сменён. */
 async function developerEditor(): Promise<Editor | null> {
-  return null
+  const parsed = parseDevToken((await cookies()).get(DEV_COOKIE)?.value)
+  if (!parsed) return null
+  const { data } = await adminSb().from('raw_developers').select('data').eq('airtable_id', parsed.devId).maybeSingle()
+  const d = (data as { data?: Record<string, unknown> } | null)?.data
+  if (!d || str(d[DEV_KEY_FIELD]) !== parsed.key) return null
+  return { role: 'developer', developerId: parsed.devId, developerName: str(d['Developer']) }
 }
 
 const TABLE: Record<EditKind, string> = {

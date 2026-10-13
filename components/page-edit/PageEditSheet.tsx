@@ -297,6 +297,13 @@ function RecordForm({
             </Section>
           ) : null}
 
+          {role === 'staff' && view.kind === 'developer' && 'id' in view && (
+            <Section title="Доступ застройщика"
+              hint="Личная ссылка: по ней застройщик сам правит свою страницу и свои объекты. О каждой его правке придёт сообщение в Telegram. Новая ссылка отключает старую.">
+              <InviteLink id={view.id} />
+            </Section>
+          )}
+
           {role === 'staff' && !isNew && cfg && (
             <button type="button" onClick={() => setFullOpen(true)}
               className="inline-flex min-h-[44px] items-center gap-2 self-start text-[0.875rem] text-[var(--color-text-muted)] underline-offset-4 hover:text-[var(--color-text)] hover:underline cursor-pointer">
@@ -342,6 +349,36 @@ function RecordForm({
         </div>
       )}
     </>
+  )
+}
+
+function InviteLink({ id }: { id: string }) {
+  const [url, setUrl] = useState<string | null>(null)
+  const [state, setState] = useState<'idle' | 'busy' | 'copied' | 'error'>('idle')
+  const create = async () => {
+    setState('busy')
+    try {
+      const r = await fetch(`/api/page-edit/developer/${encodeURIComponent(id)}/invite`, { method: 'POST' })
+      const j = await r.json()
+      if (!r.ok || !j.url) { setState('error'); return }
+      setUrl(j.url)
+      await navigator.clipboard.writeText(j.url).then(() => setState('copied'), () => setState('idle'))
+    } catch { setState('error') }
+  }
+  return (
+    <div className="flex flex-col gap-2">
+      <button type="button" onClick={create} disabled={state === 'busy'}
+        className="inline-flex min-h-[44px] items-center gap-2 self-start rounded-xl border border-[var(--color-border)] px-3.5 text-[0.875rem] font-semibold text-[var(--color-text)] transition-colors duration-[120ms] hover:bg-[var(--color-surface-alt)] disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] cursor-pointer">
+        {state === 'busy' && <Loader2 size={16} className="animate-spin" aria-hidden />}
+        {url ? 'Создать новую ссылку' : 'Создать ссылку для застройщика'}
+      </button>
+      {url && (
+        <input readOnly value={url} onFocus={e => e.currentTarget.select()} aria-label="Ссылка для застройщика"
+          className="w-full min-h-[44px] rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-alt)] px-3 text-[0.8125rem] text-[var(--color-text)]" />
+      )}
+      {state === 'copied' && <p role="status" className="text-[0.8125rem] font-semibold text-[var(--color-primary)]">Скопировано - отправьте застройщику.</p>}
+      {state === 'error' && <p role="alert" className="text-[0.8125rem] text-red-700">Не получилось создать ссылку. Попробуйте ещё раз.</p>}
+    </div>
   )
 }
 

@@ -13,7 +13,8 @@ import { cdnBucketBase } from '@/lib/photo-cdn'
 import { inputToPercent, percentToInput } from '@/lib/admin/fields'
 import type { CollectionConfig } from '@/lib/admin/adapters/types'
 import { DEVELOPER_DESCRIPTION_FIELD } from '@/lib/developer-description'
-import { COLLECTION_OF, fieldsFor, type EditField, type EditKind } from './schema'
+import { sendAdminAlert } from '@/lib/admin-alert'
+import { COLLECTION_OF, KIND_LABEL, fieldsFor, type EditField, type EditKind } from './schema'
 import { mapsUrl } from './geo'
 import type { Editor } from './access'
 
@@ -188,6 +189,26 @@ export async function loadEdit(kind: EditKind, id: string, editor: Editor): Prom
 
 // --- запись -----------------------------------------------------------------
 
+/** Правку застройщика видит владелец: короткое сообщение в Telegram. */
+function notifyDeveloperEdit(editor: Editor, what: string): void {
+  if (editor.role !== 'developer') return
+  void sendAdminAlert(`✏️ ${editor.developerName || 'Застройщик'} поправил страницу\n${what}`)
+}
+
+function recordTitle(kind: EditKind, fields: Record<string, unknown>): string {
+  const cfg = getCollection(COLLECTION_OF[kind])
+  const t = cfg ? str(fields[cfg.titleField]).replace(/\s*\|\s*Balinsky\s*$/i, '') : ''
+  return `${KIND_LABEL[kind]}${t ? ` «${t}»` : ''}`
+}
+
+function describeValue(f: EditField, v: unknown): string {
+  if (f.input === 'map') return v ? 'новая точка на карте' : 'точка убрана'
+  if (f.input === 'toggle') return v ? 'да' : 'нет'
+  if (Array.isArray(v)) return v.length ? `${v.length} пункт.` : 'пусто'
+  const s = str(v)
+  return s ? (s.length > 60 ? `${s.slice(0, 60)}…` : s) : 'пусто'
+}
+
 const MAX_TEXT = 300
 const MAPS_LINK = /^https:\/\/(maps\.app\.goo\.gl|goo\.gl\/maps|(www\.)?google\.[a-z.]+\/maps|maps\.google\.[a-z.]+)\//i
 const MAX_LONG = 20_000
@@ -278,6 +299,9 @@ export async function saveEdit(kind: EditKind, id: string, editor: Editor, value
   const full = { ...patch, ...areaPatch, ...pricePatch }
   await adapter.update(cfg, id, full)
   await revalidateCollection(cfg, id)
+  const labels = new Map(fieldsFor(kind, editor.role).map(f => [f.key, f]))
+  notifyDeveloperEdit(editor, `${recordTitle(kind, current.fields)}\n` + Object.entries(values)
+    .map(([k, v]) => `• ${labels.get(k)?.label ?? k}: ${describeValue(labels.get(k)!, v)}`).join('\n'))
   if (kind === 'complex' && 'Geo' in full) {
     await propagateComplexGeo(id,
       { lat: current.fields['Geo'], lng: current.fields['Geo 2'] },
@@ -316,6 +340,7 @@ export async function createUnit(
   const withPrice = { ...seeded, ...priceSyncPatch(cfg, {}, seeded) }
   const row = await adapterFor(cfg).create(cfg, withPrice)
   await revalidateCollection(cfg, row.id)
+  notifyDeveloperEdit(editor, `Добавил: ${recordTitle(kind, withPrice)}`)
   return row.id
 }
 
@@ -346,6 +371,12 @@ export async function savePhotos(kind: EditKind, id: string, editor: Editor, url
   }
   await setPhotos(cfg, id, list)
   await revalidateCollection(cfg, id)
+  if (editor.role === 'developer') {
+    const row = await adapterFor(cfg).get(cfg, id).catch(() => null)
+    const added = list.filter(u => !current.has(u)).length
+    const removed = [...current].filter(u => !list.includes(u)).length
+    notifyDeveloperEdit(editor, `${recordTitle(kind, row?.fields ?? {})}\nФото: ${added ? `+${added}` : ''}${added && removed ? ', ' : ''}${removed ? `−${removed}` : ''}${!added && !removed ? 'порядок' : ''}`)
+  }
 }
 
 export async function uploadImage(kind: EditKind, editor: Editor, file: File): Promise<string> {
