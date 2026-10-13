@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 // Client-side "am I a logged-in admin?" check. The admin_session cookie is
 // httpOnly (unreadable from JS), so the browser asks the server via
 // /api/admin/whoami. Shared by the on-page editing overlays (InlineEditor,
-// FullRecordEditor) so the check lives in one place — and one place caches it.
+// the page editor) so the check lives in one place — and one place caches it.
 //
 // The result is memoised per page session in a module-scoped promise, so
 // several overlays mounting at once make a single request, not one each.

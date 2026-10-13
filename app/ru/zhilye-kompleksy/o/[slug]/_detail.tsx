@@ -75,7 +75,7 @@ import { ComplexAccessBlock } from '@/components/ComplexAccessBlock'
 import { ComplexSignalsBlock } from '@/components/ComplexSignalsBlock'
 import { computeComplexSignals, loadDistrictOccupancyMedians, hasAnySignal } from '@/lib/complex-signals'
 import { PageViewTracker } from '@/components/PageViewTracker'
-import { FullRecordEditor } from '@/components/FullRecordEditor'
+import { PageEditButton } from '@/components/page-edit/PageEditButton'
 import { tField, pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { facetLabel } from '@/lib/filter-i18n'
 import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
@@ -1789,7 +1789,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
     <>
       <Header active="zhilye-kompleksy" />
       <PageViewTracker kind="complex" slug={slug} title={name} airtableId={c.airtable_id} lang={lang} />
-      <FullRecordEditor collection="complexes" recordId={c.airtable_id} title={name} lang={lang} />
+      <PageEditButton kind="complex" id={c.airtable_id} lang={lang} />
       <PageContainer>
         <Breadcrumbs currentUrl={`${complexesRoot}/o/${slug}`} items={[
           { label: copy.home, href: home },

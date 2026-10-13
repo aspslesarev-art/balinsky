@@ -75,7 +75,7 @@ import { loadAllVillaScores } from '@/lib/investment/batch-scores'
 import { findActiveReservation } from '@/lib/reservations'
 import { VideoGrid } from '@/components/VideoGrid'
 import { PageViewTracker } from '@/components/PageViewTracker'
-import { FullRecordEditor } from '@/components/FullRecordEditor'
+import { PageEditButton } from '@/components/page-edit/PageEditButton'
 import { VillaPresentationButton } from '@/components/VillaPresentation'
 import { permitLabel } from '@/components/presentation-copy'
 import { tField, pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
@@ -1240,7 +1240,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
     <>
       <Header active="villy" />
       <PageViewTracker kind="villa" slug={slug} title={title} airtableId={v.airtable_id} lang={lang} />
-      <FullRecordEditor collection="villas" recordId={v.airtable_id} title={title} lang={lang} />
+      <PageEditButton kind="villa" id={v.airtable_id} lang={lang} />
       <PageContainer>
         <Breadcrumbs currentUrl={`${villasRoot}/o/${slug}`} items={[
           { label: c.home, href: home },

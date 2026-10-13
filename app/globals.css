@@ -473,3 +473,7 @@ html.js-reveal [data-reveal].is-in {
   .magic-card, .magic-card:hover { transform: none; }
   .border-beam::before { animation: none; }
 }
+
+/* Окно правки страницы (components/page-edit). */
+@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+@keyframes sheetIn { from { opacity: 0; transform: translateX(24px) } to { opacity: 1; transform: none } }

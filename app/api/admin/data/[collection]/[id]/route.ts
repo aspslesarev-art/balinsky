@@ -7,6 +7,7 @@ import { aiAutofillPatch } from '@/lib/admin/ai-autofill'
 import { areaSyncPatch } from '@/lib/admin/area-sync'
 import { priceSyncPatch } from '@/lib/admin/price-sync'
 import { withComplexDescription } from '@/lib/admin/complex-description'
+import { propagateComplexGeo } from '@/lib/admin/complex-geo-sync'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -57,6 +58,13 @@ export async function PATCH(req: Request, { params }: Ctx) {
     const merged = { ...(current?.fields ?? {}), ...patch, ...areaPatch, ...pricePatch }
     await adapter.update(cfg, id, { ...patch, ...areaPatch, ...pricePatch, ...(await aiAutofillPatch(cfg, merged)) })
     await revalidateCollection(cfg, id)
+    // Новая точка ЖК переезжает на его юниты — их страницы читают свою.
+    if (cfg.key === 'complexes' && ('Geo' in patch || 'Geo 2' in patch)) {
+      await propagateComplexGeo(id,
+        { lat: current?.fields['Geo'], lng: current?.fields['Geo 2'] },
+        { lat: merged['Geo'], lng: merged['Geo 2'] },
+      ).catch(e => console.error('[complex-geo-sync]', e instanceof Error ? e.message : e))
+    }
     return NextResponse.json({ ok: true })
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'update_failed' }, { status: 500 })

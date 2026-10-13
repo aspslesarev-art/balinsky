@@ -118,6 +118,8 @@ const INHERITED_FROM_COMPLEX: ReadonlyArray<readonly [unitKey: string, complexKe
   ['Leasehold', ['Leasehold']],
   ['Разрешение', ['Разрешительные документы']],
   ['Geo', ['Geo']],
+  // Без долготы точка не работает: юнит с одной широтой остаётся без карты.
+  ['Geo 2', ['Geo 2']],
   ['Developer1', ['Developer1']],
 ]
 

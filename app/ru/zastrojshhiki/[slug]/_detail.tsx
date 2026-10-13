@@ -23,7 +23,8 @@ import { loadAllEvents } from '@/lib/events'
 import { loadVideosByDeveloperWithComplexes } from '@/lib/videos'
 import { VideoGrid } from '@/components/VideoGrid'
 import { PageViewTracker } from '@/components/PageViewTracker'
-import { FullRecordEditor } from '@/components/FullRecordEditor'
+import { PageEditButton } from '@/components/page-edit/PageEditButton'
+import { DEVELOPER_DESCRIPTION_FIELD } from '@/lib/developer-description'
 import { tField, pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
 import { cleanDeveloperBullets } from '@/lib/developer-highlights'
@@ -83,6 +84,7 @@ const DEV_FIELDS = [
   ['SEO Text EN', 'f14'], ['Описание ИИ EN', 'f15'], ['Строительство и недвижимость EN', 'f16'],
   ['Репутация и опыт EN', 'f17'], ['Техника и производство EN', 'f18'], ['Управляющая компания EN', 'f19'],
   ['Команда EN', 'f20'], ['Бизнес и сервисы EN', 'f21'],
+  [DEVELOPER_DESCRIPTION_FIELD, 'f22'],
 ] as const
 const DEV_SELECT = ['airtable_id, logo_url', ...DEV_FIELDS.map(([k, a]) => `${a}:data->"${k}"`)].join(', ')
 
@@ -105,7 +107,7 @@ export const _loadAllDevelopers = unstable_cache(
       }
     })
   },
-  ['developers-all-v4'],
+  ['developers-all-v5'],
   // Tagged so the Airtable webhook / sync revalidation (revalidateTag
   // 'content:developers') actually busts this cache — otherwise edits sat
   // stale until the 1h TTL.
@@ -619,12 +621,14 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
   const nativeBody = tField(dev.data, 'SEO Text', lang)
     ?? tField(dev.data, 'Описание ИИ', lang)
   const rawBody = firstString(dev.data['AI Описание'])
+  // Ручной текст из формы правки страницы перекрывает автоматический на RU.
+  const manualBody = firstString(dev.data[DEVELOPER_DESCRIPTION_FIELD])
   const kb = await loadKbPageContent('developer', dev.airtable_id, lang)
   // Non-RU: prefer the native-language Airtable field over the KB body, which
   // only exists in RU + EN — otherwise DE/ZH/NL render the English KB body.
   // RU keeps the KB body first (unchanged).
   const aiTextResolved = lang === 'ru'
-    ? (kb?.body ?? nativeBody ?? rawBody)
+    ? (manualBody ?? kb?.body ?? nativeBody ?? rawBody)
     : (nativeBody ?? kb?.body ?? rawBody)
   // Free-text body: no Russian may leak on a non-RU page. tField already
   // translits its RU last-resort, but the `AI Описание` raw fallback and the
@@ -699,7 +703,7 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
     <>
       <Header active="zastrojshhiki" />
       <PageViewTracker kind="developer" slug={slug} title={name} airtableId={dev.airtable_id} lang={lang} />
-      <FullRecordEditor collection="developers" recordId={dev.airtable_id} title={name} lang={lang} />
+      <PageEditButton kind="developer" id={dev.airtable_id} lang={lang} />
       <PageContainer>
         <Breadcrumbs currentUrl={`${devsRoot}/${slug}`} items={[
           { label: c.home, href: home },
