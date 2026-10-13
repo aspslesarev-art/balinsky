@@ -56,9 +56,10 @@ export function matchCompetitors(
   competitors: CompetitorWithDistance[],
   target: MatchTarget,
   beaches: NearbyPlace[],
+  maxRadiusKm: number = MAX_RADIUS_KM,
 ): MatchResult {
   const isLuxury = (target.bedrooms ?? 0) >= 5
-  const inRadius = competitors.filter(c => c.distanceKm <= MAX_RADIUS_KM)
+  const inRadius = competitors.filter(c => c.distanceKm <= maxRadiusKm)
   const { zone: rawZone } = classifyZone(beaches)
 
   function applyFilters(zone: BeachZone, useZone: boolean): CompetitorWithDistance[] {

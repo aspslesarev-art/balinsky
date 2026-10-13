@@ -83,8 +83,9 @@ const COPY = {
     densityNone: 'рядом никто так не сдаёт',
     densityScale: 'Сколько соседей сдают по этой ставке',
     referencesTitle: 'Малая выборка — показываем референсы',
-    referencesBody: (n: number, plural: string) =>
-      `В радиусе 2км нашлось всего ${n} ${plural}, подходящих под характеристики виллы. Агрегаты не считаем — даём конкретные примеры.`,
+    widerRadius: (km: number) => `Похожих объектов рядом мало, поэтому расчёт по объектам в радиусе ${km} км.`,
+    referencesBody: (n: number, plural: string, km: number) =>
+      `В радиусе ${km} км нашлось всего ${n} ${plural}, подходящих под характеристики виллы. Агрегаты не считаем — даём конкретные примеры.`,
     restrictedTitle: 'Жёлтая земля — посуточная аренда не разрешена',
     restrictedBody: 'Объект на жёлтой (жилой) земле. По индонезийскому зонированию посуточная/туристическая аренда здесь нелегальна, поэтому доходность от посуточной аренды для него не считаем. Земля подходит под собственное проживание или долгосрочную аренду.',
     sqm: 'м²',
@@ -168,8 +169,9 @@ const COPY = {
     densityNone: 'no neighbours charge this',
     densityScale: 'How many neighbours charge this rate',
     referencesTitle: 'Small sample — showing reference listings',
-    referencesBody: (n: number, plural: string) =>
-      `Only ${n} ${plural} matched the villa's profile within a 2 km radius. We're not aggregating — here are concrete examples instead.`,
+    widerRadius: (km: number) => `Few similar listings nearby, so the estimate uses listings within ${km} km.`,
+    referencesBody: (n: number, plural: string, km: number) =>
+      `Only ${n} ${plural} matched the villa's profile within a ${km} km radius. We're not aggregating — here are concrete examples instead.`,
     restrictedTitle: 'Residential land — daily rental not permitted',
     restrictedBody: "This property sits on yellow (residential) land. Under Indonesian zoning, short-term / tourist rental is not legal here, so we don't compute a daily-rental yield for it. The land suits personal use or long-term rental.",
     sqm: 'm²',
@@ -253,8 +255,9 @@ const COPY = {
     densityNone: 'tidak ada tetangga pada tarif ini',
     densityScale: 'Berapa tetangga memasang tarif ini',
     referencesTitle: 'Sampel kecil — menampilkan listing referensi',
-    referencesBody: (n: number, plural: string) =>
-      `Hanya ${n} ${plural} yang cocok dengan profil vila dalam radius 2 km. Kami tidak mengagregasi — berikut contoh konkretnya.`,
+    widerRadius: (km: number) => `Listing serupa di dekatnya sedikit, jadi perhitungan memakai listing dalam radius ${km} km.`,
+    referencesBody: (n: number, plural: string, km: number) =>
+      `Hanya ${n} ${plural} yang cocok dengan profil vila dalam radius ${km} km. Kami tidak mengagregasi — berikut contoh konkretnya.`,
     restrictedTitle: 'Tanah hunian — sewa harian tidak diizinkan',
     restrictedBody: 'Properti ini berada di tanah kuning (hunian). Menurut zonasi Indonesia, sewa jangka pendek / turis tidak legal di sini, jadi kami tidak menghitung imbal hasil sewa harian untuknya. Tanah ini cocok untuk hunian pribadi atau sewa jangka panjang.',
     sqm: 'm²',
@@ -338,8 +341,9 @@ const COPY = {
     densityNone: 'aucun voisin à ce tarif',
     densityScale: 'Combien de voisins pratiquent ce tarif',
     referencesTitle: 'Échantillon réduit — annonces de référence affichées',
-    referencesBody: (n: number, plural: string) =>
-      `Seulement ${n} ${plural} correspondent au profil de la villa dans un rayon de 2 km. Nous n'agrégeons pas — voici plutôt des exemples concrets.`,
+    widerRadius: (km: number) => `Peu d'annonces similaires à proximité : le calcul porte sur un rayon de ${km} km.`,
+    referencesBody: (n: number, plural: string, km: number) =>
+      `Seulement ${n} ${plural} correspondent au profil de la villa dans un rayon de ${km} km. Nous n'agrégeons pas — voici plutôt des exemples concrets.`,
     restrictedTitle: 'Terrain résidentiel — location journalière non autorisée',
     restrictedBody: "Ce bien se situe sur un terrain jaune (résidentiel). Selon le zonage indonésien, la location courte durée / touristique n'y est pas légale, nous ne calculons donc pas de rendement locatif journalier. Le terrain convient à un usage personnel ou à la location longue durée.",
     sqm: 'm²',
@@ -423,8 +427,9 @@ const COPY = {
     densityNone: 'kein Nachbar verlangt das',
     densityScale: 'Wie viele Nachbarn diesen Preis nehmen',
     referencesTitle: 'Kleine Stichprobe — Referenzangebote werden gezeigt',
-    referencesBody: (n: number, plural: string) =>
-      `Nur ${n} ${plural} entsprachen dem Profil der Villa im Umkreis von 2 km. Wir aggregieren nicht — hier stattdessen konkrete Beispiele.`,
+    widerRadius: (km: number) => `In der Nähe gibt es wenige ähnliche Angebote, daher rechnen wir mit einem Umkreis von ${km} km.`,
+    referencesBody: (n: number, plural: string, km: number) =>
+      `Nur ${n} ${plural} entsprachen dem Profil der Villa im Umkreis von ${km} km. Wir aggregieren nicht — hier stattdessen konkrete Beispiele.`,
     restrictedTitle: 'Wohnland — Tagesvermietung nicht erlaubt',
     restrictedBody: 'Dieses Objekt liegt auf gelbem (Wohn-)Land. Nach indonesischer Zonierung ist Kurzzeit-/Touristenvermietung hier nicht legal, daher berechnen wir keine Tagesvermietungsrendite dafür. Das Land eignet sich zur Eigennutzung oder Langzeitvermietung.',
     sqm: 'm²',
@@ -508,8 +513,9 @@ const COPY = {
     densityNone: '周边无人以此价出租',
     densityScale: '多少邻近房源采用该价格',
     referencesTitle: '样本较小——展示参考房源',
-    referencesBody: (n: number, plural: string) =>
-      `在2公里半径内只有 ${n} ${plural} 符合别墅的特征。我们不做汇总——而是给出具体示例。`,
+    widerRadius: (km: number) => `附近类似房源较少，因此按 ${km} 公里半径内的房源计算。`,
+    referencesBody: (n: number, plural: string, km: number) =>
+      `在${km}公里半径内只有 ${n} ${plural} 符合别墅的特征。我们不做汇总——而是给出具体示例。`,
     restrictedTitle: '住宅用地——不允许日租',
     restrictedBody: '该房产位于黄色（住宅）用地。按印尼分区规定，此处短租/旅游出租不合法，因此我们不为其计算日租收益。该地块适合自住或长期出租。',
     sqm: 'm²',
@@ -593,8 +599,9 @@ const COPY = {
     densityNone: 'geen buur vraagt dit',
     densityScale: 'Hoeveel buren vragen dit tarief',
     referencesTitle: 'Kleine steekproef — referentieadvertenties getoond',
-    referencesBody: (n: number, plural: string) =>
-      `Slechts ${n} ${plural} kwamen overeen met het profiel van de villa binnen een straal van 2 km. We aggregeren niet — hier in plaats daarvan concrete voorbeelden.`,
+    widerRadius: (km: number) => `Weinig vergelijkbare aanbiedingen in de buurt, daarom rekenen we met een straal van ${km} km.`,
+    referencesBody: (n: number, plural: string, km: number) =>
+      `Slechts ${n} ${plural} kwamen overeen met het profiel van de villa binnen een straal van ${km} km. We aggregeren niet — hier in plaats daarvan concrete voorbeelden.`,
     restrictedTitle: 'Woongrond — dagverhuur niet toegestaan',
     restrictedBody: 'Dit object staat op gele (woon-)grond. Volgens de Indonesische bestemming is kortverhuur / toeristische verhuur hier niet legaal, dus berekenen we er geen dagverhuurrendement voor. De grond is geschikt voor eigen gebruik of langetermijnverhuur.',
     sqm: 'm²',
@@ -678,8 +685,9 @@ const COPY = {
     densityNone: 'nenten wenten tetangga ring tarif puniki',
     densityScale: 'Akuda tetangga sane nganggen tarif puniki',
     referencesTitle: 'Sampel cenik — nyinahang listing referensi',
-    referencesBody: (n: number, plural: string) =>
-      `Wantah ${n} ${plural} sane cocok sareng profil vila ring radius 2 km. Tiang nenten ngagregasi — puniki conto konkret.`,
+    widerRadius: (km: number) => `Listing sane pateh ring sampingne akidik, mawinan itungan nganggen listing ring radius ${km} km.`,
+    referencesBody: (n: number, plural: string, km: number) =>
+      `Wantah ${n} ${plural} sane cocok sareng profil vila ring radius ${km} km. Tiang nenten ngagregasi — puniki conto konkret.`,
     restrictedTitle: 'Tanah hunian — sewa harian nenten kadadosang',
     restrictedBody: 'Properti puniki wenten ring tanah kuning (hunian). Manut zonasi Indonesia, sewa jangka cutet / turis nenten legal iriki, dados tiang nenten ngitung hasil sewa harian antuk ipun. Tanah puniki cocok anggen hunian pribadi utawi sewa jangka panjang.',
     sqm: 'm²',
@@ -763,8 +771,9 @@ const COPY = {
     densityNone: 'nikt w okolicy tyle nie bierze',
     densityScale: 'Ilu sąsiadów ma taką stawkę',
     referencesTitle: 'Mała próba — pokazujemy ogłoszenia referencyjne',
-    referencesBody: (n: number, plural: string) =>
-      `Tylko ${n} ${plural} pasowało do profilu willi w promieniu 2 km. Nie agregujemy — zamiast tego oto konkretne przykłady.`,
+    widerRadius: (km: number) => `W pobliżu jest mało podobnych ofert, więc liczymy w promieniu ${km} km.`,
+    referencesBody: (n: number, plural: string, km: number) =>
+      `Tylko ${n} ${plural} pasowało do profilu willi w promieniu ${km} km. Nie agregujemy — zamiast tego oto konkretne przykłady.`,
     restrictedTitle: 'Grunt mieszkaniowy — najem dobowy niedozwolony',
     restrictedBody: 'Ta nieruchomość znajduje się na żółtym (mieszkaniowym) gruncie. Zgodnie z indonezyjskim zonowaniem najem krótkoterminowy / turystyczny jest tu nielegalny, więc nie obliczamy dla niej rentowności najmu dobowego. Grunt nadaje się do użytku własnego lub najmu długoterminowego.',
     sqm: 'm²',
@@ -848,8 +857,9 @@ const COPY = {
     densityNone: 'поруч ніхто так не здає',
     densityScale: 'Скільки сусідів здають за цією ставкою',
     referencesTitle: 'Мала вибірка — показуємо референсні оголошення',
-    referencesBody: (n: number, plural: string) =>
-      `Лише ${n} ${plural} відповідають профілю вілли в радіусі 2 км. Ми не агрегуємо — натомість ось конкретні приклади.`,
+    widerRadius: (km: number) => `Схожих об'єктів поруч мало, тому розрахунок за об'єктами в радіусі ${km} км.`,
+    referencesBody: (n: number, plural: string, km: number) =>
+      `Лише ${n} ${plural} відповідають профілю вілли в радіусі ${km} км. Ми не агрегуємо — натомість ось конкретні приклади.`,
     restrictedTitle: 'Житлова земля — добова оренда не дозволена',
     restrictedBody: 'Ця нерухомість розташована на жовтій (житловій) землі. За індонезійським зонуванням короткострокова / туристична оренда тут нелегальна, тому ми не розраховуємо дохідність від добової оренди для неї. Земля підходить для власного проживання або довгострокової оренди.',
     sqm: 'm²',
@@ -959,7 +969,14 @@ function InvestmentWidgetView({ snap, apiKey, lang }: { snap: Snapshot; apiKey: 
             </div>
           </Banner>
         ) : snap.scenarios ? (
-          <Calculator snap={snap} lang={lang} />
+          <>
+            {(snap.searchRadiusKm ?? 2) > 2 && (
+              <Banner tone="info" icon={<Info size={16} />} className="mb-4">
+                {t.widerRadius(snap.searchRadiusKm)}
+              </Banner>
+            )}
+            <Calculator snap={snap} lang={lang} />
+          </>
         ) : snap.references ? (
           <References snap={snap} lang={lang} />
         ) : null}
@@ -1276,7 +1293,7 @@ function References({ snap, lang }: { snap: Snapshot; lang: Lang }) {
         <Info size={14} /> {t.referencesTitle}
       </div>
       <div className="text-[13px] text-[var(--color-text-muted)] mb-4">
-        {t.referencesBody(snap.matchSampleSize, plural)}
+        {t.referencesBody(snap.matchSampleSize, plural, snap.searchRadiusKm ?? 2)}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {(snap.references ?? []).map(r => (

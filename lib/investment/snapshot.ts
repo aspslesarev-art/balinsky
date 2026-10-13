@@ -29,6 +29,10 @@ function numberOrNull(v: unknown): number | null {
 
 export type Confidence = 'high' | 'medium' | 'low'
 
+/** Ступени поиска похожих объектов и минимум для расчёта (как mode 'reduced' в matching.ts). */
+const SEARCH_RADII_KM = [2, 3, 5, 8] as const
+const MIN_MATCHES_FOR_CALC = 5
+
 export type InvestmentSnapshot = {
   villaId: string
   generatedAt: string
@@ -54,6 +58,8 @@ export type InvestmentSnapshot = {
   competitors: NearbyMatchCard[]
   mapCompetitors: MapCompetitor[]
   totalCompetitorsInRadius: number
+  /** Радиус, в котором нашлись похожие объекты (2 км, если хватило; иначе шире). */
+  searchRadiusKm: number
   infra: InfraScore
   anchors: NearbyPlace[]
   nearbyByCategory: Record<string, NearbyPlace[]>
@@ -127,7 +133,22 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
   ])
   const beaches = places?.byCategory.beach ?? []
   const zoneInfo = classifyZone(beaches)
-  const matchResult = matchCompetitors(allInRadius, { lat, lng, bedrooms, area, hasPool }, beaches)
+  const target = { lat, lng, bedrooms, area, hasPool }
+  let matchResult = matchCompetitors(allInRadius, target, beaches)
+  // В тихих районах (Тегаллаланг, Табанан) в 2 км бывает ноль похожих
+  // объектов, и калькулятор не считался вовсе. Расширяем радиус ступенями,
+  // пока не наберётся выборка, — и виджет говорит, в каком радиусе считали.
+  let searchRadiusKm: number = SEARCH_RADII_KM[0]
+  let compsInRadius = allInRadius
+  for (const r of SEARCH_RADII_KM.slice(1)) {
+    if (matchResult.matches.length >= MIN_MATCHES_FOR_CALC) break
+    const wider = await loadNearby(lat, lng, r)
+    const widerMatch = matchCompetitors(wider, target, beaches, r)
+    if (widerMatch.matches.length <= matchResult.matches.length) continue
+    matchResult = widerMatch
+    compsInRadius = wider
+    searchRadiusKm = r
+  }
 
   // EMERGING_MARKET proxy: <30 listings within 1km radius
   const within1km = allInRadius.filter(c => c.distanceKm <= 1).length
@@ -164,7 +185,7 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
   const matchIds = new Set(matchResult.matches.map(m => m.id))
   // Группируем все объекты в радиусе по координатам, чтобы не плодить маркеры на одной точке
   const groupedMap = new Map<string, { lat: number; lng: number; adrs: number[]; beds: number[]; ids: string[]; matchAny: boolean }>()
-  for (const c of allInRadius) {
+  for (const c of compsInRadius) {
     const key = `${c.lat.toFixed(4)},${c.lng.toFixed(4)}`
     const g = groupedMap.get(key) ?? { lat: c.lat, lng: c.lng, adrs: [], beds: [], ids: [], matchAny: false }
     g.adrs.push(c.price)
@@ -212,7 +233,8 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
     references,
     competitors,
     mapCompetitors,
-    totalCompetitorsInRadius: allInRadius.length,
+    totalCompetitorsInRadius: compsInRadius.length,
+    searchRadiusKm,
     infra,
     anchors: infra.anchors,
     nearbyByCategory: byCategoryEnriched,
