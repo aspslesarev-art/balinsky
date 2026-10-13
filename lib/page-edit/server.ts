@@ -2,7 +2,9 @@ import 'server-only'
 import { getCollection } from '@/lib/admin/collections'
 import { adapterFor } from '@/lib/admin/adapters'
 import { adminSb } from '@/lib/admin/sb'
-import { revalidateCollection } from '@/lib/admin/revalidate'
+import { revalidateCollection as revalidateCollectionLazy } from '@/lib/admin/revalidate'
+import { revalidateTag } from 'next/cache'
+import { KIND_TO_TAGS } from '@/lib/content-revalidate-map'
 import { areaSyncPatch } from '@/lib/admin/area-sync'
 import { priceSyncPatch } from '@/lib/admin/price-sync'
 import { unitCreateDefaults } from '@/lib/admin/unit-defaults'
@@ -16,6 +18,7 @@ import { DEVELOPER_DESCRIPTION_FIELD } from '@/lib/developer-description'
 import { sendAdminAlert } from '@/lib/admin-alert'
 import { COLLECTION_OF, KIND_LABEL, fieldsFor, type EditField, type EditKind } from './schema'
 import { mapsUrl } from './geo'
+import { normalizeSlug } from '@/lib/slug-normalize'
 import type { Editor } from './access'
 
 // Чтение и запись человеческой формы правки страницы.
@@ -25,6 +28,18 @@ import type { Editor } from './access'
 //   • значения приходят в «человеческом» виде (проценты 0–100, пункты списком,
 //     точка карты объектом) и переводятся в формат базы здесь;
 //   • нет ИИ-автозаполнения — сохранение формы ничего не стоит.
+
+/**
+ * Сброс кэшей после правки из формы. Обычный сброс админки — «устарело,
+ * обновится при следующем заходе»: первый показ отдаёт старую копию. Здесь
+ * справа от формы открыта сама страница, и она должна показать правку сразу,
+ * поэтому теги кэша истекают немедленно.
+ */
+async function revalidateCollection(cfg: CollectionConfig, id?: string): Promise<void> {
+  await revalidateCollectionLazy(cfg, id)
+  const tag = cfg.revalidateKind ? KIND_TO_TAGS[cfg.revalidateKind] : undefined
+  if (tag) revalidateTag(tag, { expire: 0 })
+}
 
 export class EditError extends Error {
   constructor(public code: string, public status = 400) { super(code) }
@@ -56,6 +71,8 @@ export type EditPayload = {
   /** Для юнита: из какого ЖК он, и берёт ли точку оттуда. */
   complex: { id: string; name: string } | null
   children: EditChild[]
+  /** Публичная страница записи (RU) — её показываем справа от формы. */
+  pagePath: string | null
 }
 
 function cfgOf(kind: EditKind): CollectionConfig {
@@ -184,7 +201,20 @@ export async function loadEdit(kind: EditKind, id: string, editor: Editor): Prom
     photos: cfg.photo ? await getPhotos(cfg, id) : null,
     complex,
     children: await childrenOf(kind, id, d),
+    pagePath: pagePathOf(kind, d),
   }
+}
+
+const PAGE_ROOT: Record<EditKind, string> = {
+  developer: '/ru/zastrojshhiki/',
+  complex: '/ru/zhilye-kompleksy/o/',
+  villa: '/ru/villy/o/',
+  apartment: '/ru/apartamenty/o/',
+}
+
+function pagePathOf(kind: EditKind, d: Record<string, unknown>): string | null {
+  const slug = kind === 'complex' ? str(d['slug']) : str(d['SEO:Slug'])
+  return slug ? PAGE_ROOT[kind] + encodeURIComponent(slug) : null
 }
 
 // --- запись -----------------------------------------------------------------
@@ -210,6 +240,8 @@ function describeValue(f: EditField, v: unknown): string {
 }
 
 const MAX_TEXT = 300
+const NOTICE_FIELD = '_dev_notice_at'
+const NOTICE_EVERY_MS = 15 * 60 * 1000
 const MAPS_LINK = /^https:\/\/(maps\.app\.goo\.gl|goo\.gl\/maps|(www\.)?google\.[a-z.]+\/maps|maps\.google\.[a-z.]+)\//i
 const MAX_LONG = 20_000
 
@@ -297,11 +329,19 @@ export async function saveEdit(kind: EditKind, id: string, editor: Editor, value
   const areaPatch = areaSyncPatch(cfg, current.fields, patch)
   const pricePatch = priceSyncPatch(cfg, current.fields, { ...patch, ...areaPatch })
   const full = { ...patch, ...areaPatch, ...pricePatch }
+  // Форма сохраняет сама через секунду после ввода, так что правок много.
+  // Владельцу — одно сообщение на запись за 15 минут, а не на каждое слово.
+  const lastNotice = Date.parse(str(current.fields[NOTICE_FIELD]))
+  const shouldNotify = editor.role === 'developer' && !(Date.now() - lastNotice < NOTICE_EVERY_MS)
+  if (shouldNotify) full[NOTICE_FIELD] = new Date().toISOString()
   await adapter.update(cfg, id, full)
   await revalidateCollection(cfg, id)
-  const labels = new Map(fieldsFor(kind, editor.role).map(f => [f.key, f]))
-  notifyDeveloperEdit(editor, `${recordTitle(kind, current.fields)}\n` + Object.entries(values)
-    .map(([k, v]) => `• ${labels.get(k)?.label ?? k}: ${describeValue(labels.get(k)!, v)}`).join('\n'))
+  if (shouldNotify) {
+    const labels = new Map(fieldsFor(kind, editor.role).map(f => [f.key, f]))
+    notifyDeveloperEdit(editor, `${recordTitle(kind, current.fields)}\n` + Object.entries(values)
+      .map(([k, v]) => `• ${labels.get(k)?.label ?? k}: ${describeValue(labels.get(k)!, v)}`).join('\n')
+      + '\n(следующие правки этой записи в ближайшие 15 минут - без отдельных сообщений)')
+  }
   if (kind === 'complex' && 'Geo' in full) {
     await propagateComplexGeo(id,
       { lat: current.fields['Geo'], lng: current.fields['Geo 2'] },
@@ -341,6 +381,49 @@ export async function createUnit(
   const row = await adapterFor(cfg).create(cfg, withPrice)
   await revalidateCollection(cfg, row.id)
   notifyDeveloperEdit(editor, `Добавил: ${recordTitle(kind, withPrice)}`)
+  return row.id
+}
+
+/** Новый ЖК у застройщика. Создаётся скрытым — показать его на сайте решает команда. */
+export async function createComplex(
+  developerId: string,
+  editor: Editor,
+  values: Record<string, unknown>,
+): Promise<string> {
+  const { Project: rawName, ...rest } = values
+  const name = str(rawName)
+  if (!name) throw new EditError('name_required')
+  if (name.length > 120) throw new EditError('too_long')
+  const { data: dev } = await adminSb().from('raw_developers').select('data').eq('airtable_id', developerId).maybeSingle()
+  const devName = str((dev as { data?: Record<string, unknown> } | null)?.data?.['Developer'])
+  if (!devName) throw new EditError('not_found', 404)
+
+  const cfg = cfgOf('complex')
+  // Имя с таким же названием уже есть — второй ЖК с тем же именем запутает
+  // привязку юнитов (они ищут свой ЖК и по имени).
+  const { data: same } = await adminSb().from('raw_complexes').select('airtable_id')
+    .ilike('data->>Project', name.replace(/[%_\\]/g, '\\$&')).limit(1)
+  if (same && same.length) throw new EditError('name_taken')
+
+  const fields: Record<string, unknown> = {
+    ...buildPatch('complex', editor, rest),
+    Project: name,
+    Developer: devName,
+    Developer1: devName,
+  }
+  if (!('Опубликовать' in fields)) fields['Опубликовать'] = false
+  // Адрес страницы /o/<slug> должен быть свободен.
+  const base = normalizeSlug(name) || 'complex'
+  let slug = base
+  for (let n = 2; n < 50; n++) {
+    const { data: taken } = await adminSb().from('raw_complexes').select('airtable_id').eq('slug', slug).limit(1)
+    if (!taken?.length) break
+    slug = `${base}-${n}`
+  }
+  fields.slug = slug
+  const row = await adapterFor(cfg).create(cfg, fields)
+  await revalidateCollection(cfg, row.id)
+  notifyDeveloperEdit(editor, `Добавил новый комплекс «${name}» - он скрыт, пока вы его не включите`)
   return row.id
 }
 

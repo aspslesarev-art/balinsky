@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { Pencil } from 'lucide-react'
 import type { EditKind } from '@/lib/page-edit/schema'
+import { editorStore } from './store'
 
 // Кнопка «Редактировать» на странице застройщика, ЖК, виллы, апартаментов.
 // Посетителю — ничего: один лёгкий запрос «могу ли я править эту запись?».
@@ -17,7 +18,8 @@ type Props = { kind: EditKind; id: string; lang?: string }
 
 export function PageEditButton({ kind, id, lang }: Props) {
   const [canEdit, setCanEdit] = useState(false)
-  const [open, setOpen] = useState(false)
+  // Перешли на эту страницу из открытого редактора — он открыт и здесь.
+  const [open, setOpen] = useState(() => editorStore.open)
 
   useEffect(() => {
     // Правим русскую версию — остальные языки переводятся из неё.
@@ -25,12 +27,16 @@ export function PageEditButton({ kind, id, lang }: Props) {
     let alive = true
     fetch(`/api/page-edit/access?kind=${kind}&id=${encodeURIComponent(id)}`, { credentials: 'same-origin' })
       .then(r => (r.ok ? r.json() : { canEdit: false }))
-      .then((j: { canEdit?: boolean }) => { if (alive) setCanEdit(!!j.canEdit) })
+      .then((j: { canEdit?: boolean }) => {
+        if (!alive) return
+        setCanEdit(!!j.canEdit)
+        if (!j.canEdit) { editorStore.open = false; setOpen(false) }
+      })
       .catch(() => {})
     return () => { alive = false }
   }, [kind, id, lang])
 
-  if (!canEdit) return null
+  if (!canEdit && !open) return null
   return (
     <>
       {!open && (

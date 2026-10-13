@@ -57,7 +57,24 @@ async function loadRevs(): Promise<RevMap> {
  * callers treat that as "no signal" and fall back to their TTL.
  */
 export async function contentRev(kind: string): Promise<number> {
+  // Редактор страницы (режим черновика, components/page-edit) должен видеть
+  // свою правку сразу, а не через REV_TTL_MS: справа от формы открыта эта
+  // самая страница. Свежее чтение — только для него, посетители не платят.
+  if (await inEditorPreview()) {
+    const data = await fetchRevs().catch(() => null)
+    if (data) { _revs = { ts: Date.now(), data }; return data[kind] ?? 0 }
+  }
   return (await loadRevs())[kind] ?? 0
+}
+
+async function inEditorPreview(): Promise<boolean> {
+  try {
+    const { draftMode } = await import('next/headers')
+    return (await draftMode()).isEnabled
+  } catch {
+    // Вне запроса (кэш-функции, скрипты) режима черновика нет.
+    return false
+  }
 }
 
 /** Bump a kind's revision. Called after every admin mutation. */

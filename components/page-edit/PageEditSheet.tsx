@@ -1,15 +1,20 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import dynamic from 'next/dynamic'
-import { useRouter } from 'next/navigation'
-import { ArrowLeft, ArrowRight, ChevronRight, ImagePlus, Loader2, SlidersHorizontal, Star, Trash2, X } from 'lucide-react'
-import { COLLECTION_OF, KIND_LABEL, SECTIONS, type EditKind, type EditorRole } from '@/lib/page-edit/schema'
+import { usePathname, useRouter } from 'next/navigation'
+import { ArrowLeft, ArrowRight, Check, ChevronRight, Eye, ImagePlus, Loader2, Pencil, SlidersHorizontal, Star, Trash2, X } from 'lucide-react'
+import { COLLECTION_OF, KIND_LABEL, NEW_COMPLEX_SECTION, SECTIONS, type EditKind, type EditorRole } from '@/lib/page-edit/schema'
 import { getCollection } from '@/lib/admin/collections'
 import { AddButton, Field, uploadError, type FieldValue } from './fields'
+import { editorStore, type View } from './store'
 
-// Окно правки страницы: разделы с понятными полями, фото, объекты внутри
-// (ЖК застройщика, юниты ЖК). Можно провалиться в объект и вернуться назад.
+// Редактор страницы: колонка слева, сама страница справа. Поля сохраняются
+// сами через секунду после ввода, и страница справа тут же обновляется — видно,
+// как правка выглядит на сайте. Можно провалиться в объект (ЖК → вилла):
+// справа откроется его страница. На телефоне две колонки не помещаются —
+// там редактор на весь экран с кнопкой «Посмотреть страницу».
 
 // Старая полная панель «все поля» — только для команды, грузится по кнопке.
 const RecordPanel = dynamic(
@@ -27,12 +32,11 @@ type Payload = {
   photos: string[] | null
   complex: { id: string; name: string } | null
   children: Child[]
+  pagePath: string | null
 }
 
-/** Что открыто: запись или форма нового юнита внутри ЖК. */
-type View =
-  | { kind: EditKind; id: string }
-  | { kind: 'villa' | 'apartment'; newIn: { id: string; name: string } }
+type NewKind = 'villa' | 'apartment' | 'complex'
+const NEW_TITLE: Record<NewKind, string> = { villa: 'Новая вилла', apartment: 'Новые апартаменты', complex: 'Новый комплекс' }
 
 const viewKey = (v: View) => ('id' in v ? `${v.kind}:${v.id}` : `new:${v.kind}:${v.newIn.id}`)
 
@@ -42,103 +46,193 @@ const ERRORS: Record<string, string> = {
   bad_number: 'Проверьте числа.',
   unauthorized: 'Нет доступа - войдите заново.',
   not_found: 'Запись не найдена - возможно, её удалили.',
+  name_required: 'Впишите название комплекса.',
+  name_taken: 'Комплекс с таким названием уже есть на сайте.',
 }
 const errorText = (code?: string) => (code && ERRORS[code]) || 'Не получилось сохранить. Попробуйте ещё раз.'
 
+/** Сохранить несохранённое перед уходом с записи. false — не получилось. */
+type Flush = () => Promise<boolean>
+
 export function PageEditSheet({ kind, id, onClose }: { kind: EditKind; id: string; onClose: () => void }) {
   const router = useRouter()
-  const [stack, setStack] = useState<View[]>([{ kind, id }])
-  const [dirty, setDirty] = useState(false)
-  const [askClose, setAskClose] = useState<null | 'close' | 'back'>(null)
+  const pathname = usePathname()
+  // Редактор уже был открыт на прошлой странице — продолжаем с того же места.
+  const [stack, setStackState] = useState<View[]>(() =>
+    editorStore.open && editorStore.stack.length ? editorStore.stack : [{ kind, id }])
+  const [peek, setPeek] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const [titles, setTitles] = useState<Record<string, string>>({})
-  const rememberTitle = useCallback((key: string, t: string) => setTitles(prev => ({ ...prev, [key]: t })), [])
+  const [paths, setPaths] = useState<Record<string, string | null>>({})
+  const flushRef = useRef<Flush | null>(null)
   const top = stack[stack.length - 1]
-  const title = 'newIn' in top ? (top.kind === 'villa' ? 'Новая вилла' : 'Новые апартаменты') : titles[viewKey(top)] ?? ''
+  const title = 'newIn' in top ? NEW_TITLE[top.kind as NewKind] : titles[viewKey(top)] ?? ''
+
+  const setStack = useCallback((next: (s: View[]) => View[]) => {
+    setStackState(prev => {
+      const n = next(prev)
+      editorStore.stack = n
+      return n
+    })
+  }, [])
+
+  const rememberRecord = useCallback((key: string, t: string, path: string | null) => {
+    setTitles(prev => ({ ...prev, [key]: t }))
+    setPaths(prev => ({ ...prev, [key]: path }))
+  }, [])
 
   const notify = useCallback((msg: string) => {
     setToast(msg)
     window.setTimeout(() => setToast(t => (t === msg ? null : t)), 3200)
   }, [])
 
-  // Закрытие по Esc и блокировка прокрутки страницы под окном.
+  // Открытие: режим черновика (страница без кэша) и место под колонку слева.
   useEffect(() => {
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') requestLeave('close') }
-    window.addEventListener('keydown', onKey)
-    return () => { document.body.style.overflow = prev; window.removeEventListener('keydown', onKey) }
-  })
+    editorStore.open = true
+    editorStore.stack = stack
+    const html = document.documentElement
+    html.classList.add('pe-docked')
+    // Справа — уменьшенная копия настоящей компьютерной версии, а не сжатая по
+    // ширине: так страница выглядит ровно как у посетителя на большом экране.
+    // Правило задаём отсюда: сборщик стилей выбрасывает `zoom: var(...)` из globals.css.
+    const style = document.createElement('style')
+    document.head.appendChild(style)
+    const fit = () => {
+      const panel = parseFloat(getComputedStyle(html).getPropertyValue('--pe-panel-w')) || 440
+      const zoom = Math.max(0.5, (window.innerWidth - panel) / window.innerWidth).toFixed(4)
+      style.textContent = `@media (min-width: 1024px) { html.pe-docked body > :not(#pe-root) { zoom: ${zoom}; } }`
+    }
+    fit()
+    window.addEventListener('resize', fit)
+    void fetch('/api/page-edit/preview', { method: 'POST' }).then(r => { if (r.ok) router.refresh() })
+    return () => {
+      html.classList.remove('pe-docked')
+      style.remove()
+      window.removeEventListener('resize', fit)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- один раз на открытие
+  }, [])
 
-  const leave = (how: 'close' | 'back') => {
-    setAskClose(null); setDirty(false)
-    if (how === 'back' && stack.length > 1) setStack(s => s.slice(0, -1))
-    else { onClose(); router.refresh() }
+  // Справа — страница той записи, что открыта в колонке.
+  const topPath = 'id' in top ? paths[viewKey(top)] : null
+  useEffect(() => {
+    if (topPath && topPath !== pathname) router.push(topPath, { scroll: false })
+  }, [topPath, pathname, router])
+
+  const close = async () => {
+    if (flushRef.current && !(await flushRef.current())) return
+    editorStore.open = false
+    editorStore.stack = []
+    await fetch('/api/page-edit/preview', { method: 'DELETE' }).catch(() => {})
+    onClose()
+    router.refresh()
   }
-  const requestLeave = (how: 'close' | 'back') => { if (dirty) setAskClose(how); else leave(how) }
-  const open = (v: View) => { if (dirty) { setAskClose(null); notify('Сначала сохраните изменения'); return } setStack(s => [...s, v]) }
+  const back = async () => {
+    if (flushRef.current && !(await flushRef.current())) return
+    setStack(s => (s.length > 1 ? s.slice(0, -1) : s))
+  }
+  const open = async (v: View) => {
+    if (flushRef.current && !(await flushRef.current())) return
+    setStack(s => [...s, v])
+  }
   const replaceTop = (v: View) => setStack(s => [...s.slice(0, -1), v])
 
-  return (
-    <div className="fixed inset-0 z-[10000] flex justify-end" role="dialog" aria-modal="true" aria-label="Редактирование страницы">
-      <div className="absolute inset-0 bg-[rgb(15_26_21/0.45)] motion-safe:animate-[fadeIn_200ms_var(--ease-out)]" onClick={() => requestLeave('close')} />
-      <div className="relative flex h-full w-full flex-col bg-[var(--color-bg)] shadow-[var(--shadow-popover)] sm:w-[600px] sm:rounded-l-2xl motion-safe:animate-[sheetIn_200ms_var(--ease-out)]">
-        <header className="flex items-center gap-2 border-b border-[var(--color-border)] px-4 py-3 sm:px-6">
-          {stack.length > 1 && (
-            <button type="button" onClick={() => requestLeave('back')} aria-label="Назад"
-              className="-ml-2 flex h-11 w-11 items-center justify-center rounded-xl text-[var(--color-text)] hover:bg-[var(--color-surface-alt)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] cursor-pointer">
-              <ArrowLeft size={20} />
-            </button>
-          )}
-          <div className="min-w-0 flex-1">
-            <div className="text-[0.8125rem] uppercase tracking-wide text-[var(--color-text-muted)]">
-              {'newIn' in top ? `Новый юнит · ${top.newIn.name}` : KIND_LABEL[top.kind]}
-            </div>
-            <h2 className="truncate text-[1.25rem] font-semibold leading-[1.2] tracking-tight text-[var(--color-text)]">{title || ' '}</h2>
-          </div>
-          <button type="button" onClick={() => requestLeave('close')} aria-label="Закрыть"
-            className="-mr-2 flex h-11 w-11 items-center justify-center rounded-xl text-[var(--color-text)] hover:bg-[var(--color-surface-alt)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] cursor-pointer">
-            <X size={20} />
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && !peek) void close() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  })
+
+  // Колонка живёт вне дерева страницы: страницу масштабируем, колонку — нет.
+  const portal = usePortalRoot()
+  if (!portal) return null
+
+  if (peek) {
+    // Телефон: страница на весь экран, снизу — возврат к правке.
+    return createPortal(
+      <div className="fixed inset-x-0 bottom-0 z-[10000] border-t border-[var(--color-border)] bg-[var(--color-bg)] px-4 py-3 pb-[max(12px,env(safe-area-inset-bottom))] shadow-[var(--shadow-popover)]">
+        <button type="button" onClick={() => setPeek(false)}
+          className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] text-base font-semibold text-white hover:bg-[var(--color-primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] cursor-pointer">
+          <Pencil size={18} aria-hidden /> Вернуться к правке
+        </button>
+      </div>,
+      portal,
+    )
+  }
+
+  return createPortal(
+    <aside aria-label="Редактирование страницы"
+      className="fixed inset-y-0 left-0 z-[10000] flex w-full flex-col border-r border-[var(--color-border)] bg-[var(--color-bg)] shadow-[var(--shadow-popover)] lg:w-[var(--pe-panel-w)] lg:shadow-none motion-safe:animate-[panelIn_200ms_var(--ease-out)]">
+      <header className="flex items-center gap-2 border-b border-[var(--color-border)] px-4 py-3">
+        {stack.length > 1 && (
+          <button type="button" onClick={() => void back()} aria-label="Назад"
+            className="-ml-2 flex h-11 w-11 items-center justify-center rounded-xl text-[var(--color-text)] hover:bg-[var(--color-surface-alt)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] cursor-pointer">
+            <ArrowLeft size={20} />
           </button>
-        </header>
-
-        <RecordForm
-          key={viewKey(top)}
-          view={top}
-          onDirty={setDirty}
-          onTitle={rememberTitle}
-          onOpen={open}
-          onCreated={(newKind, newId) => { replaceTop({ kind: newKind, id: newId }); notify('Юнит добавлен. Теперь добавьте фото') }}
-          notify={notify}
-          askClose={askClose}
-          onConfirmLeave={() => askClose && leave(askClose)}
-          onCancelLeave={() => setAskClose(null)}
-        />
-
-        {toast && (
-          <div role="status" className="pointer-events-none absolute inset-x-0 bottom-24 flex justify-center px-4">
-            <div className="rounded-full bg-[var(--color-text)] px-4 py-2.5 text-[0.875rem] font-semibold text-white shadow-[var(--shadow-lift)] motion-safe:animate-[fadeIn_200ms_var(--ease-out)]">
-              {toast}
-            </div>
-          </div>
         )}
-      </div>
-    </div>
+        <div className="min-w-0 flex-1">
+          <div className="text-[0.8125rem] uppercase tracking-wide text-[var(--color-text-muted)]">
+            {'newIn' in top ? `${top.kind === 'complex' ? 'Новый комплекс' : 'Новый юнит'} · ${top.newIn.name}` : KIND_LABEL[top.kind]}
+          </div>
+          <h2 className="truncate text-[1.25rem] font-semibold leading-[1.2] tracking-tight text-[var(--color-text)]">{title || ' '}</h2>
+        </div>
+        <button type="button" onClick={() => setPeek(true)}
+          className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 text-[0.875rem] font-semibold text-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] cursor-pointer lg:hidden">
+          <Eye size={18} aria-hidden /> Страница
+        </button>
+        <button type="button" onClick={() => void close()} aria-label="Закрыть редактор"
+          className="-mr-2 flex h-11 w-11 items-center justify-center rounded-xl text-[var(--color-text)] hover:bg-[var(--color-surface-alt)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] cursor-pointer">
+          <X size={20} />
+        </button>
+      </header>
+
+      <RecordForm
+        key={viewKey(top)}
+        view={top}
+        flushRef={flushRef}
+        onLoaded={rememberRecord}
+        onOpen={v => void open(v)}
+        onCreated={(newKind, newId) => {
+          replaceTop({ kind: newKind, id: newId })
+          notify(newKind === 'complex' ? 'Комплекс добавлен. Добавьте фото и точку на карте' : 'Юнит добавлен. Теперь добавьте фото')
+        }}
+        notify={notify}
+      />
+
+      {toast && (
+        <div role="status" className="pointer-events-none absolute inset-x-0 bottom-24 flex justify-center px-4">
+          <div className="rounded-full bg-[var(--color-text)] px-4 py-2.5 text-[0.875rem] font-semibold text-white shadow-[var(--shadow-lift)] motion-safe:animate-[fadeIn_200ms_var(--ease-out)]">
+            {toast}
+          </div>
+        </div>
+      )}
+    </aside>,
+    portal,
   )
 }
 
+function usePortalRoot(): HTMLElement | null {
+  const [el, setEl] = useState<HTMLElement | null>(null)
+  useEffect(() => {
+    let root = document.getElementById('pe-root')
+    if (!root) { root = document.createElement('div'); root.id = 'pe-root'; document.body.appendChild(root) }
+    setEl(root)
+  }, [])
+  return el
+}
+
+/** Пауза после последнего ввода, после которой правка уходит на сервер. */
+const AUTOSAVE_MS = 900
+
 function RecordForm({
-  view, onDirty, onTitle, onOpen, onCreated, notify, askClose, onConfirmLeave, onCancelLeave,
+  view, flushRef, onLoaded, onOpen, onCreated, notify,
 }: {
   view: View
-  onDirty: (d: boolean) => void
-  onTitle: (key: string, t: string) => void
+  flushRef: React.MutableRefObject<Flush | null>
+  onLoaded: (key: string, title: string, pagePath: string | null) => void
   onOpen: (v: View) => void
-  onCreated: (kind: 'villa' | 'apartment', id: string) => void
+  onCreated: (kind: NewKind, id: string) => void
   notify: (msg: string) => void
-  askClose: null | 'close' | 'back'
-  onConfirmLeave: () => void
-  onCancelLeave: () => void
 }) {
   const router = useRouter()
   const isNew = 'newIn' in view
@@ -148,6 +242,7 @@ function RecordForm({
   const [loadErr, setLoadErr] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [saveErr, setSaveErr] = useState<string | null>(null)
+  const [savedAt, setSavedAt] = useState<number | null>(null)
   const [fullOpen, setFullOpen] = useState(false)
   // Свежие значения для сравнения после ответа сервера (замыкание save видит старые).
   const valuesRef = useRef(values)
@@ -175,18 +270,18 @@ function RecordForm({
         for (const k of changedRef.current) next[k] = prev[k]
         return next
       })
-      onTitle(viewKey(view), j.title)
+      onLoaded(viewKey(view), j.title, j.pagePath ?? null)
     } catch { setLoadErr(errorText()) }
-  }, [view, onTitle])
+  }, [view, onLoaded])
 
   useEffect(() => { void load() }, [load])
-  useEffect(() => { onDirty(changed.size > 0) }, [changed, onDirty])
 
-  const role: EditorRole = data?.role ?? 'staff'
-  const sections = useMemo(() => SECTIONS[view.kind]
+  const role: EditorRole = data?.role ?? ('newIn' in view ? view.newIn.role : 'staff')
+  // Новому ЖК нужно имя — у существующего оно не правится (на него ссылаются по имени).
+  const sections = useMemo(() => [...(isNew && view.kind === 'complex' ? [NEW_COMPLEX_SECTION] : []), ...SECTIONS[view.kind]]
     .filter(s => !s.staffOnly || role === 'staff')
     .map(s => ({ ...s, fields: s.fields.filter(f => !f.staffOnly || role === 'staff') }))
-    .filter(s => s.fields.length > 0), [view.kind, role])
+    .filter(s => s.fields.length > 0), [view.kind, role, isNew])
 
   const set = (key: string, v: FieldValue) => {
     setValues(prev => ({ ...prev, [key]: v }))
@@ -194,40 +289,70 @@ function RecordForm({
     setSaveErr(null)
   }
 
-  const save = async () => {
-    setSaving(true); setSaveErr(null)
+  // Отправляет то, что поменяли. Для новой записи — создаёт её (по кнопке).
+  const savingRef = useRef(false)
+  const save = useCallback(async (): Promise<boolean> => {
+    if (savingRef.current) return false
+    const keys = [...changedRef.current]
+    if (keys.length === 0) return true
     const payload: Record<string, FieldValue> = {}
-    for (const k of changed) payload[k] = values[k]
+    for (const k of keys) payload[k] = valuesRef.current[k]
+    savingRef.current = true
+    setSaving(true); setSaveErr(null)
     try {
       if ('newIn' in view) {
-        const r = await fetch(`/api/page-edit/complex/${encodeURIComponent(view.newIn.id)}/units`, {
+        const url = view.kind === 'complex'
+          ? `/api/page-edit/developer/${encodeURIComponent(view.newIn.id)}/complexes`
+          : `/api/page-edit/complex/${encodeURIComponent(view.newIn.id)}/units`
+        const r = await fetch(url, {
           method: 'POST', headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ unitKind: view.kind, values: payload }),
         })
         const j = await r.json()
-        if (!r.ok) { setSaveErr(errorText(j.error)); return }
+        if (!r.ok) { setSaveErr(errorText(j.error)); return false }
         setChanged(new Set())
         onCreated(view.kind, j.id)
-        return
+        return true
       }
       const r = await fetch(`/api/page-edit/${view.kind}/${encodeURIComponent(view.id)}`, {
         method: 'PATCH', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ values: payload }),
       })
       const j = await r.json()
-      if (!r.ok) { setSaveErr(errorText(j.error)); return }
+      if (!r.ok) { setSaveErr(errorText(j.error)); return false }
       // Сбрасываем только то, что ушло на сервер: правка, сделанная во время
-      // сохранения, остаётся несохранённой.
+      // сохранения, уйдёт следующим заходом.
       setChanged(prev => new Set([...prev].filter(k => !(k in payload) || valuesRef.current[k] !== payload[k])))
-      notify('Сохранено')
+      setSavedAt(Date.now())
       router.refresh()
       void load(true)
+      return true
     } catch {
       setSaveErr(errorText())
+      return false
     } finally {
+      savingRef.current = false
       setSaving(false)
     }
-  }
+  }, [view, router, load, onCreated])
+
+  // Автосохранение: через паузу после последней правки. Новую запись создаём
+  // только по кнопке — иначе полузаполненный объект появился бы сам.
+  useEffect(() => {
+    if (isNew || changed.size === 0 || saving || saveErr) return
+    const t = window.setTimeout(() => void save(), AUTOSAVE_MS)
+    return () => window.clearTimeout(t)
+  }, [values, changed, saving, saveErr, isNew, save])
+
+  // Уходим с записи (назад, в юнит, закрыть) — сначала дописываем несохранённое.
+  useEffect(() => {
+    flushRef.current = async () => {
+      if (isNew) return true
+      for (let i = 0; i < 20 && savingRef.current; i++) await new Promise(r => setTimeout(r, 150))
+      return save()
+    }
+    return () => { flushRef.current = null }
+  }, [flushRef, isNew, save])
 
   if (!isNew && !data) {
     return (
@@ -265,12 +390,14 @@ function RecordForm({
 
           {isNew && (
             <p className="rounded-xl bg-[var(--color-surface-alt)] px-3.5 py-3 text-[0.875rem] leading-[1.55] text-[var(--color-text-muted)]">
-              Заполните главное и нажмите «Создать». Название, район и точку на карте юнит возьмёт от ЖК, фото добавите следующим шагом.
+              {view.kind === 'complex'
+                ? `Впишите название, заполните что знаете и нажмите «Создать». Фото добавите следующим шагом.${role === 'developer' ? ' На сайте комплекс появится после проверки командой Balinsky.' : ' Комплекс создаётся скрытым - включите «Показывать на сайте», когда заполните.'}`
+                : 'Заполните главное и нажмите «Создать». Название, район и точку на карте юнит возьмёт от ЖК, фото добавите следующим шагом.'}
             </p>
           )}
 
           {!isNew && data?.photos && (
-            <Section title="Фото" hint="Первое фото - обложка. Сохраняются сразу.">
+            <Section title="Фото" hint="Первое фото - обложка.">
               <Photos kind={view.kind} id={(view as { id: string }).id} photos={data.photos}
                 onChange={photos => setData(d => (d ? { ...d, photos } : d))} notify={notify} />
             </Section>
@@ -284,15 +411,18 @@ function RecordForm({
             </Section>
           ))}
 
-          {data && data.children.length > 0 || view.kind === 'complex' ? (
+          {data && (data.children.length > 0 || view.kind === 'complex' || view.kind === 'developer') ? (
             <Section title={view.kind === 'developer' ? 'Комплексы' : 'Виллы и апартаменты'}
               hint={view.kind === 'complex' ? 'Нажмите на юнит, чтобы поменять цену, фото или скрыть его.' : undefined}>
               <Children items={data?.children ?? []} onOpen={c => onOpen({ kind: c.kind, id: c.id })} />
               {view.kind === 'complex' && data && (
                 <div className="flex flex-wrap gap-2">
-                  <AddButton onClick={() => onOpen({ kind: 'villa', newIn: { id: data.id, name: data.title } })}>Добавить виллу</AddButton>
-                  <AddButton onClick={() => onOpen({ kind: 'apartment', newIn: { id: data.id, name: data.title } })}>Добавить апартаменты</AddButton>
+                  <AddButton onClick={() => onOpen({ kind: 'villa', newIn: { id: data.id, name: data.title, role } })}>Добавить виллу</AddButton>
+                  <AddButton onClick={() => onOpen({ kind: 'apartment', newIn: { id: data.id, name: data.title, role } })}>Добавить апартаменты</AddButton>
                 </div>
+              )}
+              {view.kind === 'developer' && data && (
+                <AddButton onClick={() => onOpen({ kind: 'complex', newIn: { id: data.id, name: data.title, role } })}>Добавить комплекс</AddButton>
               )}
             </Section>
           ) : null}
@@ -313,30 +443,18 @@ function RecordForm({
         </div>
       </div>
 
-      <footer className="border-t border-[var(--color-border)] bg-[var(--color-bg)] px-4 py-3 pb-[max(12px,env(safe-area-inset-bottom))] sm:px-6">
-        {askClose ? (
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <p className="flex-1 text-[0.875rem] text-[var(--color-text)]">Есть несохранённые изменения.</p>
-            <div className="flex gap-2">
-              <button type="button" onClick={onConfirmLeave}
-                className="min-h-[48px] flex-1 rounded-xl border border-[var(--color-border)] px-4 text-[0.875rem] font-semibold text-red-700 hover:bg-red-50 cursor-pointer sm:flex-none">
-                Не сохранять
-              </button>
-              <button type="button" onClick={onCancelLeave}
-                className="min-h-[48px] flex-1 rounded-xl bg-[var(--color-primary)] px-4 text-[0.875rem] font-semibold text-white hover:bg-[var(--color-primary-hover)] cursor-pointer sm:flex-none">
-                Вернуться
-              </button>
-            </div>
-          </div>
-        ) : (
+      <footer className="border-t border-[var(--color-border)] bg-[var(--color-bg)] px-4 py-3 pb-[max(12px,env(safe-area-inset-bottom))]">
+        {isNew ? (
           <div className="flex flex-col gap-2">
             {saveErr && <p role="alert" className="text-[0.875rem] text-red-700">{saveErr}</p>}
-            <button type="button" onClick={save} disabled={saving || changed.size === 0}
+            <button type="button" onClick={() => void save()} disabled={saving || changed.size === 0}
               className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] text-base font-semibold text-white transition-colors duration-[120ms] hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-pressed)] disabled:bg-[var(--color-neutral-200)] disabled:text-[var(--color-text-muted)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] cursor-pointer disabled:cursor-default">
-              {saving && <Loader2 size={18} className="animate-spin" aria-hidden />}
-              {isNew ? 'Создать' : changed.size === 0 ? 'Изменений нет' : `Сохранить${changed.size > 1 ? ` (${changed.size})` : ''}`}
+              {saving && <Loader2 size={18} className="animate-spin" aria-hidden />} Создать
             </button>
           </div>
+        ) : (
+          <SaveStatus saving={saving} pending={changed.size > 0} error={saveErr} savedAt={savedAt}
+            onRetry={() => { setSaveErr(null); void save() }} />
         )}
       </footer>
 
@@ -349,6 +467,31 @@ function RecordForm({
         </div>
       )}
     </>
+  )
+}
+
+function SaveStatus({ saving, pending, error, savedAt, onRetry }: {
+  saving: boolean; pending: boolean; error: string | null; savedAt: number | null; onRetry: () => void
+}) {
+  if (error) {
+    return (
+      <div role="alert" className="flex min-h-[44px] items-center gap-3">
+        <p className="flex-1 text-[0.875rem] text-red-700">{error}</p>
+        <button type="button" onClick={onRetry}
+          className="min-h-[44px] rounded-xl border border-[var(--color-border)] px-4 text-[0.875rem] font-semibold text-[var(--color-text)] hover:bg-[var(--color-surface-alt)] cursor-pointer">
+          Повторить
+        </button>
+      </div>
+    )
+  }
+  return (
+    <p role="status" aria-live="polite" className="flex min-h-[44px] items-center gap-2 text-[0.875rem] text-[var(--color-text-muted)]">
+      {saving || pending
+        ? <><Loader2 size={16} className="animate-spin" aria-hidden /> Сохраняю…</>
+        : savedAt
+          ? <><Check size={16} className="text-[var(--color-primary)]" aria-hidden /> Сохранено, страница обновлена</>
+          : 'Правки сохраняются сами'}
+    </p>
   )
 }
 
@@ -428,6 +571,7 @@ function Photos({ kind, id, photos, onChange, notify }: {
   const [err, setErr] = useState<string | null>(null)
   const [drag, setDrag] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+  const router = useRouter()
 
   const persist = async (next: string[]) => {
     const prev = photos
@@ -436,6 +580,7 @@ function Photos({ kind, id, photos, onChange, notify }: {
       method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ photos: next }),
     }).catch(() => null)
     if (!r?.ok) { onChange(prev); setErr('Не получилось сохранить фото. Попробуйте ещё раз.'); return false }
+    router.refresh()
     return true
   }
 
@@ -464,7 +609,7 @@ function Photos({ kind, id, photos, onChange, notify }: {
   return (
     <div className="flex flex-col gap-3">
       {photos.length > 0 && (
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <ul className="grid grid-cols-2 gap-3">
           {photos.map((u, i) => (
             <li key={u} className="group relative aspect-[4/3] overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-alt)]">
               {/* eslint-disable-next-line @next/next/no-img-element */}

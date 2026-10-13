@@ -187,6 +187,10 @@ const apartment: EditSection[] = [
   },
 ]
 
+/** Имя нового ЖК — только при создании (см. комментарий в шапке про названия). */
+export const COMPLEX_NAME_FIELD: EditField = { key: 'Project', label: 'Как комплекс называется на сайте', input: 'text', placeholder: 'Например, Green Village' }
+export const NEW_COMPLEX_SECTION: EditSection = { id: 'name', title: 'Название', fields: [COMPLEX_NAME_FIELD] }
+
 export const SECTIONS: Record<EditKind, EditSection[]> = { developer, complex, villa, apartment }
 
 export const KIND_LABEL: Record<EditKind, string> = {

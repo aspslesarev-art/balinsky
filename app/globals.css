@@ -476,4 +476,9 @@ html.js-reveal [data-reveal].is-in {
 
 /* Окно правки страницы (components/page-edit). */
 @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
-@keyframes sheetIn { from { opacity: 0; transform: translateX(24px) } to { opacity: 1; transform: none } }
+@keyframes panelIn { from { opacity: 0; transform: translateX(-24px) } to { opacity: 1; transform: none } }
+/* Редактор открыт: на широком экране страница сдвигается вправо и остаётся видна целиком. */
+:root { --pe-panel-w: 440px; }
+@media (min-width: 1024px) {
+  html.pe-docked body { padding-left: var(--pe-panel-w); }
+}
