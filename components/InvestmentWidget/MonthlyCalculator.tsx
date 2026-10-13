@@ -16,6 +16,7 @@ import { pickCopy, type Lang } from '@/lib/i18n'
 type Copy = {
   title: string
   sub: string
+  subCompare: string
   sample: (n: number, km: number, relaxed: boolean) => string
   price: string; rent: string; months: string; agent: string
   monthsUnit: string
@@ -34,6 +35,7 @@ const COPY: Record<Lang, Copy> = {
   ru: {
     title: 'Калькулятор помесячной аренды',
     sub: 'Посуточно здесь сдавать нельзя, но можно на месяцы и годы. Ставка по умолчанию — медиана объявлений долгосрочной аренды вилл с тем же числом спален рядом. Ползунки можно двигать.',
+    subCompare: 'Если сдавать не посуточно, а на месяцы и годы: меньше хлопот и ровный доход, но обычно меньше денег. Ставка по умолчанию — медиана объявлений долгосрочной аренды вилл с тем же числом спален рядом.',
     sample: (n, km, relaxed) => `${n} объявлений в радиусе ${km} км${relaxed ? ', включая виллы на спальню больше или меньше' : ''}`,
     price: 'Цена', rent: 'Аренда в месяц', months: 'Сдана в году', agent: 'Агент',
     monthsUnit: 'мес',
@@ -51,6 +53,7 @@ const COPY: Record<Lang, Copy> = {
   en: {
     title: 'Monthly rental calculator',
     sub: 'Daily rental is not allowed here, but monthly and yearly leases are. The default rent is the median of long-term villa listings nearby with the same number of bedrooms. Move the sliders to test your own case.',
+    subCompare: 'If you let it on monthly or yearly leases instead of nightly: less hassle and steadier income, but usually less money. The default rent is the median of long-term villa listings nearby with the same number of bedrooms.',
     sample: (n, km, relaxed) => `${n} listings within ${km} km${relaxed ? ', including villas with one bedroom more or less' : ''}`,
     price: 'Price', rent: 'Rent per month', months: 'Let per year', agent: 'Agent',
     monthsUnit: 'mo',
@@ -68,6 +71,7 @@ const COPY: Record<Lang, Copy> = {
   id: {
     title: 'Kalkulator sewa bulanan',
     sub: 'Sewa harian tidak diizinkan di sini, tetapi sewa bulanan dan tahunan boleh. Sewa bawaan adalah median iklan sewa jangka panjang vila terdekat dengan jumlah kamar yang sama. Geser slider untuk menguji skenario Anda.',
+    subCompare: 'Jika disewakan bulanan atau tahunan, bukan harian: lebih sedikit repot dan pendapatan stabil, tetapi biasanya lebih kecil. Sewa bawaan adalah median iklan sewa jangka panjang vila terdekat dengan jumlah kamar yang sama.',
     sample: (n, km, relaxed) => `${n} iklan dalam radius ${km} km${relaxed ? ', termasuk vila dengan satu kamar lebih atau kurang' : ''}`,
     price: 'Harga', rent: 'Sewa per bulan', months: 'Tersewa per tahun', agent: 'Agen',
     monthsUnit: 'bln',
@@ -85,6 +89,7 @@ const COPY: Record<Lang, Copy> = {
   fr: {
     title: 'Calculateur de location mensuelle',
     sub: 'La location à la nuitée est interdite ici, mais les baux au mois et à l’année sont permis. Le loyer par défaut est la médiane des annonces de location longue durée de villas voisines avec le même nombre de chambres. Déplacez les curseurs pour tester votre cas.',
+    subCompare: 'En location au mois ou à l’année plutôt qu’à la nuitée : moins de gestion et un revenu régulier, mais en général moins élevé. Le loyer par défaut est la médiane des annonces longue durée de villas voisines avec le même nombre de chambres.',
     sample: (n, km, relaxed) => `${n} annonces dans un rayon de ${km} km${relaxed ? ', y compris des villas avec une chambre de plus ou de moins' : ''}`,
     price: 'Prix', rent: 'Loyer mensuel', months: 'Loué par an', agent: 'Agent',
     monthsUnit: 'mois',
@@ -102,6 +107,7 @@ const COPY: Record<Lang, Copy> = {
   de: {
     title: 'Rechner für Monatsmiete',
     sub: 'Tagesvermietung ist hier nicht erlaubt, Monats- und Jahresmiete schon. Standardmiete ist der Median der Langzeit-Mietangebote für Villen in der Nähe mit gleicher Schlafzimmerzahl. Mit den Reglern können Sie eigene Annahmen testen.',
+    subCompare: 'Bei Monats- oder Jahresmiete statt Tagesvermietung: weniger Aufwand und gleichmäßiges Einkommen, meist aber weniger Geld. Standardmiete ist der Median der Langzeitangebote für Villen in der Nähe mit gleicher Schlafzimmerzahl.',
     sample: (n, km, relaxed) => `${n} Angebote im Umkreis von ${km} km${relaxed ? ', inkl. Villen mit einem Schlafzimmer mehr oder weniger' : ''}`,
     price: 'Preis', rent: 'Miete pro Monat', months: 'Vermietet pro Jahr', agent: 'Makler',
     monthsUnit: 'Mon.',
@@ -119,6 +125,7 @@ const COPY: Record<Lang, Copy> = {
   zh: {
     title: '月租收益计算器',
     sub: '这里不允许按天出租，但可以按月或按年出租。默认租金为附近相同卧室数别墅长租房源的中位数。可拖动滑块测试您的情况。',
+    subCompare: '如果按月或按年出租而不是按天：省心、收入稳定，但通常收入更少。默认租金为附近相同卧室数别墅长租房源的中位数。',
     sample: (n, km, relaxed) => `${km} 公里内 ${n} 条房源${relaxed ? '，含卧室多一间或少一间的别墅' : ''}`,
     price: '价格', rent: '月租金', months: '每年出租', agent: '中介',
     monthsUnit: '个月',
@@ -136,6 +143,7 @@ const COPY: Record<Lang, Copy> = {
   nl: {
     title: 'Calculator maandhuur',
     sub: 'Verhuur per nacht is hier niet toegestaan, verhuur per maand of jaar wel. De standaardhuur is de mediaan van langetermijnaanbod van villa’s in de buurt met hetzelfde aantal slaapkamers. Verschuif de schuifjes om uw eigen situatie te testen.',
+    subCompare: 'Bij verhuur per maand of jaar in plaats van per nacht: minder gedoe en een stabiel inkomen, maar meestal minder geld. De standaardhuur is de mediaan van langetermijnaanbod van villa’s in de buurt met hetzelfde aantal slaapkamers.',
     sample: (n, km, relaxed) => `${n} advertenties binnen ${km} km${relaxed ? ', inclusief villa’s met één slaapkamer meer of minder' : ''}`,
     price: 'Prijs', rent: 'Huur per maand', months: 'Verhuurd per jaar', agent: 'Makelaar',
     monthsUnit: 'mnd',
@@ -153,6 +161,7 @@ const COPY: Record<Lang, Copy> = {
   ban: {
     title: 'Kalkulator sewa bulanan',
     sub: 'Sewa harian nenten kadadosang iriki, nanging sewa bulanan miwah tahunan dados. Sewa bawaan inggih punika median iklan sewa jangka panjang vila ring sampingne sane kamarnyane pateh. Geser slider anggen nguji skenario ragane.',
+    subCompare: 'Yening kasewayang bulanan wiadin tahunan, boya harian: nenten ribet lan pikolih ajeg, nanging biasane akidik. Sewa bawaan inggih punika median iklan sewa jangka panjang vila ring sampingne sane kamarnyane pateh.',
     sample: (n, km, relaxed) => `${n} iklan ring radius ${km} km${relaxed ? ', taler vila sane kamarnyane lebih wiadin kirang asiki' : ''}`,
     price: 'Aji', rent: 'Sewa sabulan', months: 'Kasewayang setaun', agent: 'Agen',
     monthsUnit: 'bln',
@@ -170,6 +179,7 @@ const COPY: Record<Lang, Copy> = {
   pl: {
     title: 'Kalkulator najmu miesięcznego',
     sub: 'Najem na doby jest tu zabroniony, ale najem miesięczny i roczny jest dozwolony. Domyślny czynsz to mediana ogłoszeń najmu długoterminowego willi w pobliżu z tą samą liczbą sypialni. Przesuwaj suwaki, aby sprawdzić swój wariant.',
+    subCompare: 'Przy najmie miesięcznym lub rocznym zamiast na doby: mniej pracy i stały dochód, ale zwykle mniej pieniędzy. Domyślny czynsz to mediana ogłoszeń najmu długoterminowego willi w pobliżu z tą samą liczbą sypialni.',
     sample: (n, km, relaxed) => `${n} ogłoszeń w promieniu ${km} km${relaxed ? ', w tym wille z jedną sypialnią więcej lub mniej' : ''}`,
     price: 'Cena', rent: 'Czynsz miesięczny', months: 'Wynajęta w roku', agent: 'Agent',
     monthsUnit: 'mies.',
@@ -187,6 +197,7 @@ const COPY: Record<Lang, Copy> = {
   uk: {
     title: 'Калькулятор помісячної оренди',
     sub: 'Подобово тут здавати не можна, але можна на місяці й роки. Ставка за замовчуванням — медіана оголошень довгострокової оренди вілл із тією ж кількістю спалень поруч. Повзунки можна рухати.',
+    subCompare: 'Якщо здавати не подобово, а на місяці й роки: менше клопоту й рівний дохід, але зазвичай менше грошей. Ставка за замовчуванням — медіана оголошень довгострокової оренди вілл із тією ж кількістю спалень поруч.',
     sample: (n, km, relaxed) => `${n} оголошень у радіусі ${km} км${relaxed ? ', включно з віллами на спальню більше чи менше' : ''}`,
     price: 'Ціна', rent: 'Оренда на місяць', months: 'Здана на рік', agent: 'Агент',
     monthsUnit: 'міс',
@@ -204,6 +215,7 @@ const COPY: Record<Lang, Copy> = {
 }
 
 export function MonthlyCalculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
+  const restricted = snap.flags.rentalRestricted
   const t = pickCopy(COPY, lang)
   const { currency } = useCurrency()
   const fmt = (n: number | null | undefined) => fmtMoney(n, currency)
@@ -232,7 +244,7 @@ export function MonthlyCalculator({ snap, lang }: { snap: Snapshot; lang: Lang }
   return (
     <div className="mt-5 rounded-2xl border border-[var(--color-border)] bg-white p-5">
       <div className="text-[16px] font-semibold text-[var(--color-text)]">{t.title}</div>
-      <div className="mt-1 text-[13px] text-[var(--color-text-muted)]">{t.sub}</div>
+      <div className="mt-1 text-[13px] text-[var(--color-text-muted)]">{restricted ? t.sub : t.subCompare}</div>
       <div className="mt-1 mb-5 text-[12px] text-[var(--color-text-muted)]">{t.sample(m.n, m.radiusKm, m.bedroomsRelaxed)}</div>
 
       <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">

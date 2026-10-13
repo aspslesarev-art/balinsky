@@ -1954,21 +1954,31 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
                     "Missing: badung regency" flag in our snippets. */}
                 {districtRaw ? geoChainString(districtRaw) : copy.locationLine(district)}
               </div>
-              {access && (
-                <ComplexAccessBlock
-                  access={access}
+              {/* Слева дорога и район одной колонкой, справа солнце и погода.
+                  Объёмная модель солнца широкая — она идёт отдельной карточкой ниже. */}
+              <div className="mb-4 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start [&>*]:mb-0">
+                {/* Нет погоды (блок справа пуст) — дорога и район встают рядом. */}
+                <div className={geoFacts?.climate?.year?.sunny ? 'flex flex-col gap-4 [&>*]:mb-0' : 'contents [&>*]:mb-0'}>
+                  {access && (
+                    <ComplexAccessBlock
+                      access={access}
+                      lang={lang}
+                      elevationM={geoFacts?.elevation_m ?? null}
+                      routes={geoFacts?.routes ?? null}
+                    />
+                  )}
+                  <AreaBlock climate={geoFacts?.climate ?? null} lang={lang} />
+                </div>
+                <ClimateBlock
+                  climate={geoFacts?.climate ?? null}
+                  air={geoFacts?.air ?? null}
                   lang={lang}
-                  elevationM={geoFacts?.elevation_m ?? null}
-                  routes={geoFacts?.routes ?? null}
+                  lat={lat}
+                  lng={lng}
                 />
-              )}
-              <ClimateBlock
-                climate={geoFacts?.climate ?? null}
-                air={geoFacts?.air ?? null}
-                lang={lang}
-                lat={lat}
-                lng={lng}
-                footer={showSunBlock ? (
+              </div>
+              {showSunBlock && (
+                <div className="mb-4 rounded-2xl border border-[var(--color-border)] bg-white p-5">
                   <div>
                     <p className="mb-3 text-[13px] leading-relaxed text-[var(--color-text-muted)]">
                       {lang === 'ru'
@@ -2007,9 +2017,9 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
                       </div>
                     )}
                   </div>
-                ) : null}
-              />
-              <AreaBlock climate={geoFacts?.climate ?? null} lang={lang} />
+                </div>
+              )}
+
               {process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY && (
                 <GatedBlock kind="heatmap" lang={lang}>
                   <div className="mb-4">

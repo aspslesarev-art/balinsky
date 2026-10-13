@@ -21,6 +21,8 @@ const ADR_ZONES = 40
 const COPY = {
   ru: {
     sectionH2: 'Инвестиционный потенциал',
+    tabDaily: 'Посуточно',
+    tabMonthly: 'Помесячно',
     sectionSubMonthly: 'Сколько объект может приносить при помесячной аренде. Все цифры — оценка по реальным ставкам соседей, а не обещание застройщика.',
     sectionSub: 'Сколько объект может приносить, если сдавать его посуточно. Все цифры — оценка по реальным ставкам соседей, а не обещание застройщика.',
     confHigh: 'высокая уверенность',
@@ -109,6 +111,8 @@ const COPY = {
   },
   en: {
     sectionH2: 'Investment potential',
+    tabDaily: 'Nightly',
+    tabMonthly: 'Monthly',
     sectionSubMonthly: 'What the property could earn on monthly leases. Every number is an estimate built on real neighbour rents, not a developer promise.',
     sectionSub: 'What the property could earn as a short-term rental. Every number is an estimate built on real neighbour rates, not a developer promise.',
     confHigh: 'high confidence',
@@ -196,6 +200,8 @@ const COPY = {
   },
   id: {
     sectionH2: 'Potensi investasi',
+    tabDaily: 'Harian',
+    tabMonthly: 'Bulanan',
     sectionSubMonthly: 'Perkiraan pendapatan dari sewa bulanan berdasarkan sewa nyata di sekitar, bukan janji pengembang.',
     sectionSub: 'Skenario sewa diperkirakan dengan mencocokkan pesaing Booking dan menganalisis kawasan',
     confHigh: 'keyakinan tinggi',
@@ -283,6 +289,8 @@ const COPY = {
   },
   fr: {
     sectionH2: 'Potentiel d\'investissement',
+    tabDaily: 'À la nuitée',
+    tabMonthly: 'Au mois',
     sectionSubMonthly: 'Revenus estimés en location mensuelle, d’après les loyers réels du voisinage, et non une promesse du promoteur.',
     sectionSub: 'Scénarios locatifs estimés par comparaison avec les concurrents Booking et analyse du quartier',
     confHigh: 'confiance élevée',
@@ -370,6 +378,8 @@ const COPY = {
   },
   de: {
     sectionH2: 'Investitionspotenzial',
+    tabDaily: 'Tageweise',
+    tabMonthly: 'Monatlich',
     sectionSubMonthly: 'Geschätzte Erträge aus Monatsmiete, basierend auf realen Mieten in der Umgebung, kein Versprechen des Bauträgers.',
     sectionSub: 'Mietszenarien geschätzt durch Abgleich mit Booking-Wettbewerbern und Analyse der Region',
     confHigh: 'hohe Sicherheit',
@@ -457,6 +467,8 @@ const COPY = {
   },
   zh: {
     sectionH2: '投资潜力',
+    tabDaily: '按天',
+    tabMonthly: '按月',
     sectionSubMonthly: '按月出租的预估收益，基于周边真实租金，而非开发商承诺。',
     sectionSub: '通过与Booking竞品匹配并分析区域来估算租赁情景',
     confHigh: '高置信度',
@@ -544,6 +556,8 @@ const COPY = {
   },
   nl: {
     sectionH2: 'Investeringspotentieel',
+    tabDaily: 'Per nacht',
+    tabMonthly: 'Per maand',
     sectionSubMonthly: 'Geschatte opbrengst bij maandverhuur, op basis van echte huren in de buurt, geen belofte van de ontwikkelaar.',
     sectionSub: 'Huurscenario\'s geschat door vergelijking met Booking-concurrenten en analyse van de regio',
     confHigh: 'hoge zekerheid',
@@ -631,6 +645,8 @@ const COPY = {
   },
   ban: {
     sectionH2: 'Potensi investasi',
+    tabDaily: 'Harian',
+    tabMonthly: 'Bulanan',
     sectionSubMonthly: 'Perkiraan pikolih saking sewa bulanan manut sewa sujati ring sampingne, boya janji pengembang.',
     sectionSub: 'Skenario sewa kaperkiraang antuk nyocokang saingan Booking lan nganalisa wewidangan',
     confHigh: 'keyakinan tegeh',
@@ -718,6 +734,8 @@ const COPY = {
   },
   pl: {
     sectionH2: 'Potencjał inwestycyjny',
+    tabDaily: 'Na doby',
+    tabMonthly: 'Miesięcznie',
     sectionSubMonthly: 'Szacowany dochód z najmu miesięcznego na podstawie realnych czynszów w okolicy, a nie obietnica dewelopera.',
     sectionSub: 'Scenariusze najmu oszacowane przez porównanie z konkurentami z Booking i analizę okolicy',
     confHigh: 'wysoka pewność',
@@ -805,6 +823,8 @@ const COPY = {
   },
   uk: {
     sectionH2: 'Інвестиційний потенціал',
+    tabDaily: 'Подобово',
+    tabMonthly: 'Помісячно',
     sectionSubMonthly: "Скільки об'єкт може приносити при помісячній оренді. Усі цифри — оцінка за реальними ставками сусідів, а не обіцянка забудовника.",
     sectionSub: 'Сценарії оренди, оцінені шляхом зіставлення з конкурентами Booking та аналізу району',
     confHigh: 'висока впевненість',
@@ -963,6 +983,7 @@ function Skeleton() {
 
 function InvestmentWidgetView({ snap, apiKey, lang }: { snap: Snapshot; apiKey: string; lang: Lang }) {
   const t = pickCopy(COPY, lang)
+  const [rentMode, setRentMode] = useState<'daily' | 'monthly'>('daily')
   const allPois = useMemo(() => {
     const out: { lat: number; lng: number; name: string | null; category: string }[] = []
     for (const [cat, list] of Object.entries(snap.nearbyByCategory)) {
@@ -983,18 +1004,34 @@ function InvestmentWidgetView({ snap, apiKey, lang }: { snap: Snapshot; apiKey: 
             </Banner>
             {snap.monthly && <MonthlyCalculator snap={snap} lang={lang} />}
           </>
-        ) : snap.scenarios ? (
+        ) : (
           <>
-            {(snap.searchRadiusKm ?? 2) > 2 && (
-              <Banner tone="info" icon={<Info size={16} />} className="mb-4">
-                {t.widerRadius(snap.searchRadiusKm)}
-              </Banner>
+            {snap.monthly && (
+              <div role="tablist" aria-label={t.calcTitle} className="mb-1 inline-flex rounded-xl border border-[var(--color-border)] bg-white p-1">
+                {(['daily', 'monthly'] as const).map(m => (
+                  <button key={m} type="button" role="tab" aria-selected={rentMode === m} onClick={() => setRentMode(m)}
+                    className={`min-h-[40px] cursor-pointer rounded-lg px-4 text-[14px] font-semibold transition-colors duration-[120ms] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] ${rentMode === m ? 'bg-[var(--color-primary)] text-white' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'}`}>
+                    {m === 'daily' ? t.tabDaily : t.tabMonthly}
+                  </button>
+                ))}
+              </div>
             )}
-            <Calculator snap={snap} lang={lang} />
+            {rentMode === 'monthly' && snap.monthly ? (
+              <MonthlyCalculator snap={snap} lang={lang} />
+            ) : snap.scenarios ? (
+              <>
+                {(snap.searchRadiusKm ?? 2) > 2 && (
+                  <Banner tone="info" icon={<Info size={16} />} className="mt-4">
+                    {t.widerRadius(snap.searchRadiusKm)}
+                  </Banner>
+                )}
+                <Calculator snap={snap} lang={lang} />
+              </>
+            ) : snap.references ? (
+              <References snap={snap} lang={lang} />
+            ) : null}
           </>
-        ) : snap.references ? (
-          <References snap={snap} lang={lang} />
-        ) : null}
+        )}
 
         <div className="mt-4">
           <InvestmentMap apiKey={apiKey} snap={snap} allPois={allPois} lang={lang} />

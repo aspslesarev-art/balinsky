@@ -1409,16 +1409,18 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
           <DataChapter id="mesto" n={chapters.indexOf('mesto') + 1} lang={lang}>
             {geoFacts && (
               <>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start [&>*]:mb-0">
-                <ComplexAccessBlock
-                  lang={lang}
-                  elevationM={geoFacts.elevation_m}
-                  routes={geoFacts.routes}
-                />
+              {/* Слева дорога и район одной колонкой, справа солнце и погода. */}
+              <div className="mb-4 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start [&>*]:mb-0">
+                {/* Нет погоды (блок справа пуст) — дорога и район встают рядом. */}
+                <div className={geoFacts.climate?.year?.sunny ? 'flex flex-col gap-4 [&>*]:mb-0' : 'contents [&>*]:mb-0'}>
+                  <ComplexAccessBlock
+                    lang={lang}
+                    elevationM={geoFacts.elevation_m}
+                    routes={geoFacts.routes}
+                  />
+                  <AreaBlock climate={geoFacts.climate} lang={lang} />
+                </div>
                 <ClimateBlock climate={geoFacts.climate} air={geoFacts.air} lang={lang} lat={lat} lng={lng} />
-              </div>
-              <div className="mt-4">
-                <AreaBlock climate={geoFacts.climate} lang={lang} />
               </div>
               </>
             )}

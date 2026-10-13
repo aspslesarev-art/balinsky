@@ -56,7 +56,7 @@ export type InvestmentSnapshot = {
   matchSampleSize: number
   scenarios: ScenarioBundle | null
   references: NearbyMatchCard[] | null
-  /** Помесячная аренда — только для жилой земли, где посуточно нельзя. */
+  /** Помесячная аренда: на жилой земле — вместо посуточной, у вилл — для сравнения. */
   monthly: MonthlyBundle | null
   competitors: NearbyMatchCard[]
   mapCompetitors: MapCompetitor[]
@@ -164,8 +164,9 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
 
   let scenarios: ScenarioBundle | null = null
   let references: NearbyMatchCard[] | null = null
-  // Посуточно нельзя — считаем помесячную аренду (lib/investment/monthly.ts).
-  const monthly: MonthlyBundle | null = rentalRestricted
+  // Помесячная аренда (lib/investment/monthly.ts): на жилой земле — вместо
+  // посуточной, у остальных вилл — для сравнения. Ставки есть только по виллам.
+  const monthly: MonthlyBundle | null = rentalRestricted || kind === 'villa'
     ? await monthlyRentNear(lat, lng, bedrooms).catch(() => null)
     : null
   if (rentalRestricted) {
