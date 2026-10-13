@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { loadNearby } from '../competitors'
+import { monthlyRentNear, type MonthlyBundle } from './monthly'
 import { loadNearbyPlaces, type NearbyPlace } from '../nearby-places'
 import { regionFor, type RegionDefaults } from './regions'
 import { classifyZone, type BeachZone, zoneTitle } from './zones'
@@ -55,6 +56,8 @@ export type InvestmentSnapshot = {
   matchSampleSize: number
   scenarios: ScenarioBundle | null
   references: NearbyMatchCard[] | null
+  /** Помесячная аренда — только для жилой земли, где посуточно нельзя. */
+  monthly: MonthlyBundle | null
   competitors: NearbyMatchCard[]
   mapCompetitors: MapCompetitor[]
   totalCompetitorsInRadius: number
@@ -161,6 +164,10 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
 
   let scenarios: ScenarioBundle | null = null
   let references: NearbyMatchCard[] | null = null
+  // Посуточно нельзя — считаем помесячную аренду (lib/investment/monthly.ts).
+  const monthly: MonthlyBundle | null = rentalRestricted
+    ? await monthlyRentNear(lat, lng, bedrooms).catch(() => null)
+    : null
   if (rentalRestricted) {
     // leave scenarios + references null
   } else if (matchResult.mode === 'references') {
@@ -231,6 +238,7 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
     matchSampleSize: matchResult.matches.length,
     scenarios,
     references,
+    monthly,
     competitors,
     mapCompetitors,
     totalCompetitorsInRadius: compsInRadius.length,

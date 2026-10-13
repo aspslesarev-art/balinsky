@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { RentalComps } from './RentalComps'
+import { Slider } from './Slider'
+import { MonthlyCalculator } from './MonthlyCalculator'
 import { usePathname } from 'next/navigation'
 import {
   Info, ChevronDown, ChevronUp, TrendingUp,
@@ -19,6 +21,7 @@ const ADR_ZONES = 40
 const COPY = {
   ru: {
     sectionH2: 'Инвестиционный потенциал',
+    sectionSubMonthly: 'Сколько объект может приносить при помесячной аренде. Все цифры — оценка по реальным ставкам соседей, а не обещание застройщика.',
     sectionSub: 'Сколько объект может приносить, если сдавать его посуточно. Все цифры — оценка по реальным ставкам соседей, а не обещание застройщика.',
     confHigh: 'высокая уверенность',
     confMedium: 'средняя уверенность',
@@ -106,6 +109,7 @@ const COPY = {
   },
   en: {
     sectionH2: 'Investment potential',
+    sectionSubMonthly: 'What the property could earn on monthly leases. Every number is an estimate built on real neighbour rents, not a developer promise.',
     sectionSub: 'What the property could earn as a short-term rental. Every number is an estimate built on real neighbour rates, not a developer promise.',
     confHigh: 'high confidence',
     confMedium: 'medium confidence',
@@ -192,6 +196,7 @@ const COPY = {
   },
   id: {
     sectionH2: 'Potensi investasi',
+    sectionSubMonthly: 'Perkiraan pendapatan dari sewa bulanan berdasarkan sewa nyata di sekitar, bukan janji pengembang.',
     sectionSub: 'Skenario sewa diperkirakan dengan mencocokkan pesaing Booking dan menganalisis kawasan',
     confHigh: 'keyakinan tinggi',
     confMedium: 'keyakinan sedang',
@@ -278,6 +283,7 @@ const COPY = {
   },
   fr: {
     sectionH2: 'Potentiel d\'investissement',
+    sectionSubMonthly: 'Revenus estimés en location mensuelle, d’après les loyers réels du voisinage, et non une promesse du promoteur.',
     sectionSub: 'Scénarios locatifs estimés par comparaison avec les concurrents Booking et analyse du quartier',
     confHigh: 'confiance élevée',
     confMedium: 'confiance moyenne',
@@ -364,6 +370,7 @@ const COPY = {
   },
   de: {
     sectionH2: 'Investitionspotenzial',
+    sectionSubMonthly: 'Geschätzte Erträge aus Monatsmiete, basierend auf realen Mieten in der Umgebung, kein Versprechen des Bauträgers.',
     sectionSub: 'Mietszenarien geschätzt durch Abgleich mit Booking-Wettbewerbern und Analyse der Region',
     confHigh: 'hohe Sicherheit',
     confMedium: 'mittlere Sicherheit',
@@ -450,6 +457,7 @@ const COPY = {
   },
   zh: {
     sectionH2: '投资潜力',
+    sectionSubMonthly: '按月出租的预估收益，基于周边真实租金，而非开发商承诺。',
     sectionSub: '通过与Booking竞品匹配并分析区域来估算租赁情景',
     confHigh: '高置信度',
     confMedium: '中等置信度',
@@ -536,6 +544,7 @@ const COPY = {
   },
   nl: {
     sectionH2: 'Investeringspotentieel',
+    sectionSubMonthly: 'Geschatte opbrengst bij maandverhuur, op basis van echte huren in de buurt, geen belofte van de ontwikkelaar.',
     sectionSub: 'Huurscenario\'s geschat door vergelijking met Booking-concurrenten en analyse van de regio',
     confHigh: 'hoge zekerheid',
     confMedium: 'gemiddelde zekerheid',
@@ -622,6 +631,7 @@ const COPY = {
   },
   ban: {
     sectionH2: 'Potensi investasi',
+    sectionSubMonthly: 'Perkiraan pikolih saking sewa bulanan manut sewa sujati ring sampingne, boya janji pengembang.',
     sectionSub: 'Skenario sewa kaperkiraang antuk nyocokang saingan Booking lan nganalisa wewidangan',
     confHigh: 'keyakinan tegeh',
     confMedium: 'keyakinan tengah',
@@ -708,6 +718,7 @@ const COPY = {
   },
   pl: {
     sectionH2: 'Potencjał inwestycyjny',
+    sectionSubMonthly: 'Szacowany dochód z najmu miesięcznego na podstawie realnych czynszów w okolicy, a nie obietnica dewelopera.',
     sectionSub: 'Scenariusze najmu oszacowane przez porównanie z konkurentami z Booking i analizę okolicy',
     confHigh: 'wysoka pewność',
     confMedium: 'średnia pewność',
@@ -794,6 +805,7 @@ const COPY = {
   },
   uk: {
     sectionH2: 'Інвестиційний потенціал',
+    sectionSubMonthly: "Скільки об'єкт може приносити при помісячній оренді. Усі цифри — оцінка за реальними ставками сусідів, а не обіцянка забудовника.",
     sectionSub: 'Сценарії оренди, оцінені шляхом зіставлення з конкурентами Booking та аналізу району',
     confHigh: 'висока впевненість',
     confMedium: 'середня впевненість',
@@ -918,7 +930,7 @@ export function InvestmentWidget({
   return <InvestmentWidgetView snap={snap} apiKey={apiKey} lang={resolvedLang} />
 }
 
-function SectionShell({ children, lang }: { children: React.ReactNode; lang: Lang }) {
+function SectionShell({ children, lang, monthly }: { children: React.ReactNode; lang: Lang; monthly?: boolean }) {
   const t = pickCopy(COPY, lang)
   // mt-12 gives the heading breathing room from the white ContactBlock /
   // ManagerCard cards that sit immediately above on every detail page —
@@ -930,7 +942,7 @@ function SectionShell({ children, lang }: { children: React.ReactNode; lang: Lan
         {t.sectionH2}
       </h2>
       <div className="text-[14px] text-[var(--color-text-muted)] mb-5">
-        {t.sectionSub}
+        {monthly ? t.sectionSubMonthly : t.sectionSub}
       </div>
       {children}
     </section>
@@ -960,14 +972,17 @@ function InvestmentWidgetView({ snap, apiKey, lang }: { snap: Snapshot; apiKey: 
   }, [snap])
   return (
     <>
-      <SectionShell lang={lang}>
+      <SectionShell lang={lang} monthly={snap.flags.rentalRestricted && !!snap.monthly}>
         {snap.flags.rentalRestricted ? (
-          <Banner tone="warn" icon={<Info size={16} />}>
-            <div>
-              <div className="font-medium text-[var(--color-text)] mb-1">{t.restrictedTitle}</div>
-              <div>{t.restrictedBody}</div>
-            </div>
-          </Banner>
+          <>
+            <Banner tone="warn" icon={<Info size={16} />}>
+              <div>
+                <div className="font-medium text-[var(--color-text)] mb-1">{t.restrictedTitle}</div>
+                <div>{t.restrictedBody}</div>
+              </div>
+            </Banner>
+            {snap.monthly && <MonthlyCalculator snap={snap} lang={lang} />}
+          </>
         ) : snap.scenarios ? (
           <>
             {(snap.searchRadiusKm ?? 2) > 2 && (
@@ -1220,67 +1235,6 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
     </div>
   )
 }
-
-// Плотность рынка под ползунком ADR: сколько соседей реально сдают по
-// каждой ставке. Без неё ползунок двигается вслепую — видно число, но
-// не видно, подтверждено ли оно рынком. Цвет — светофорные токены
-// проекта: до медианы зелёный (так сдают многие), до p75 жёлтый,
-// выше — красный (единичные случаи).
-
-function Slider({
-  label, value, min, max, step, onChange, display, zones, zonesLabel,
-}: {
-  label: string; value: number; min: number; max: number; step: number; onChange: (v: number) => void; display: string
-  // Плотность соседей по ставке: доля от самого населённого промежутка,
-  // 0 — рядом никто так не сдаёт. Рисуется прямо в дорожке, чтобы было
-  // видно, куда тянуть ползунок, и не появлялось отдельного блока.
-  zones?: number[]
-  zonesLabel?: string
-}) {
-  const clamped = Math.min(max, Math.max(min, value))
-  const filled = max > min ? ((clamped - min) / (max - min)) * 100 : 0
-
-  // Дорожка своя у всех ползунков: родная у input range приходит с
-  // собственной рамкой и тенью, а на полоске в шесть пикселей любая
-  // окантовка выглядит грязью.
-  return (
-    <div>
-      <SliderHead label={label} display={display} />
-      <div className="relative h-4 flex items-center" role={zones?.length ? 'img' : undefined} aria-label={zones?.length ? zonesLabel : undefined}>
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-1.5 rounded-full overflow-hidden flex bg-[#F3F4F6]">
-          {zones?.length
-            ? zones.map((share, i) => (
-                <div
-                  key={i}
-                  className="flex-1"
-                  style={{
-                    background: share > 0 ? 'var(--color-progress-low)' : 'transparent',
-                    opacity: share > 0 ? Math.max(0.45, Math.min(1, share)) : 1,
-                  }}
-                />
-              ))
-            : <div className="h-full bg-[var(--color-primary)]" style={{ width: `${filled}%` }} />}
-        </div>
-        <input
-          type="range"
-          min={min} max={max} step={step} value={clamped}
-          onChange={ev => onChange(Number(ev.target.value))}
-          className="range-bare relative w-full h-4 cursor-pointer"
-        />
-      </div>
-    </div>
-  )
-}
-
-function SliderHead({ label, display }: { label: string; display: string }) {
-  return (
-    <div className="flex items-center justify-between mb-2">
-      <span className="text-[13px] text-[var(--color-text-muted)]">{label}</span>
-      <span className="text-[15px] font-semibold text-[var(--color-text)] tabular-nums">{display}</span>
-    </div>
-  )
-}
-
 
 function References({ snap, lang }: { snap: Snapshot; lang: Lang }) {
   const t = pickCopy(COPY, lang)
