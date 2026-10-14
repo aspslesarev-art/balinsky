@@ -53,10 +53,10 @@ STT = ("127.0.0.1", 10303)  # мост ElevenLabs → whisper, тот же, чт
 UA = {"User-Agent": "balinsky-tools/1.0"}
 
 KIND = {
-    "news": {"label": "Новость", "icon": "📰", "bucket": "news", "manifest": "_news.json", "photos": "news-photos", "path": "novosti", "section": "news"},
-    "construction": {"label": "Ход стройки", "icon": "🏗", "bucket": "news", "manifest": "_news.json", "photos": "news-photos", "path": "novosti", "section": "news"},
-    "promo": {"label": "Акция", "icon": "🏷", "bucket": "promo", "manifest": "_promo.json", "photos": "promo-photos", "path": "akcii", "section": "promo"},
-    "event": {"label": "Мероприятие", "icon": "📅", "bucket": "events", "manifest": "_events.json", "photos": "event-photos", "path": "meropriyatiya", "section": "events"},
+    "news": {"label": "Новость", "icon": "📰", "bucket": "news", "manifest": "_news.json", "photos": "news-photos", "path": "novosti", "en": "news", "section": "news"},
+    "construction": {"label": "Ход стройки", "icon": "🏗", "bucket": "news", "manifest": "_news.json", "photos": "news-photos", "path": "novosti", "en": "news", "section": "news"},
+    "promo": {"label": "Акция", "icon": "🏷", "bucket": "promo", "manifest": "_promo.json", "photos": "promo-photos", "path": "akcii", "en": "promo", "section": "promo"},
+    "event": {"label": "Мероприятие", "icon": "📅", "bucket": "events", "manifest": "_events.json", "photos": "event-photos", "path": "meropriyatiya", "en": "events", "section": "events"},
 }
 
 
@@ -747,6 +747,37 @@ def publish_one(row):
         msg += "\nСтраница пока не открылась — проверю ещё раз сам."
     tg("sendMessage", chat_id=OWNER, text=msg, reply_to_message_id=row["tg_message_id"], disable_web_page_preview=True)
     log("published", row["id"], url, "ok" if ok else "NOT 200")
+    try:
+        notify_source(row, k, slug)
+    except Exception as e:  # публикация уже прошла — сбой ответа в чат её не откатывает
+        log("notify error", row["id"], repr(e))
+
+
+def notify_source(row, k, slug):
+    """Отвечает в чат застройщика, откуда пришёл пост: «разместили, вот ссылка».
+    Пересланный владельцем пост ищем по названию исходного чата."""
+    msgs = sb_get("bot_messages", {"select": "id,chat_id,text,tg_message_id,forwarded_from",
+                                   "id": f"in.({','.join(str(i) for i in row['msg_ids'])})", "order": "id.asc"})
+    chat_id, reply_to = row["chat_id"], (msgs[0].get("tg_message_id") if msgs else None)
+    if chat_id == OWNER:
+        title = next((m["forwarded_from"] for m in msgs if m.get("forwarded_from")), None)
+        hit = sb_get("bot_chats", {"select": "chat_id", "title": f"eq.{title}",
+                                   "chat_type": "in.(group,supergroup)"}) if title else []
+        # переслано от человека, а не из чата — берём чат застройщика
+        ids = [h["chat_id"] for h in hit] or [c for c, d in developers().items()
+                                               if c != OWNER and row["developer_slug"] and d.get("slug") == row["developer_slug"]]
+        if not ids:
+            log("notify skip", row["id"], "чат не найден", title)
+            return
+        chat_id, reply_to = ids[0], None
+    src = " ".join((m.get("text") or "") for m in msgs)  # черновик всегда на русском — язык берём из поста
+    if re.search(r"[а-яё]", src, re.I) or not re.search(r"[a-z]", src, re.I):
+        text = f"Разместили на Balinsky, на 10 языках:\n{SITE}/ru/{k['path']}/{slug}"
+    else:
+        text = f"Published on Balinsky in 10 languages:\n{SITE}/en/{k['en']}/{slug}"
+    kw = {"reply_parameters": {"message_id": reply_to, "allow_sending_without_reply": True}} if reply_to else {}
+    j = tg("sendMessage", chat_id=chat_id, text=text, **kw)
+    log("notified", row["id"], chat_id, "ok" if j.get("ok") else j)
 
 
 def main():
