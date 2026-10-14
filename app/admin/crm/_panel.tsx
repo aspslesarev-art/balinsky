@@ -121,6 +121,12 @@ export function CrmPanel({ contact: c, onClose }: { contact: CrmContact; onClose
             </Section>
           )}
 
+          {c.mutual?.draft && (
+            <Section title={c.mutual.group === 'A' ? 'Ответить признанием' : 'Закрыть и не вкладываться'}>
+              <DraftBox text={c.mutual.draft} note={c.mutual.note} />
+            </Section>
+          )}
+
           {!c.analyzed && (
             <p className="text-[13px] text-[var(--ax-fg-muted)] leading-relaxed max-w-[68ch]">
               Короткий или односторонний чат — подробного разбора нет. Вся переписка ниже.

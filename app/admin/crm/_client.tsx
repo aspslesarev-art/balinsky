@@ -8,12 +8,12 @@
 // приезжает целиком с сервера, всё остальное считается здесь в памяти.
 
 import { useMemo, useState } from 'react'
-import { Search, Users, MessageCircleReply, HandCoins, ListChecks, Inbox, Clock, Handshake } from 'lucide-react'
+import { Search, Users, MessageCircleReply, HandCoins, ListChecks, Inbox, Clock, Handshake, Scale } from 'lucide-react'
 import { CATEGORIES, openMoney, openPromises, type CrmContact } from '@/lib/tg-crm/types'
 import { CrmPanel } from './_panel'
 import { MoneyLine, RelScore, relDay } from './_ui'
 
-type Tab = 'reply' | 'promises' | 'money' | 'offer' | 'all'
+type Tab = 'reply' | 'promises' | 'money' | 'offer' | 'mutual' | 'all'
 type RelFilter = '' | 'high' | 'mid' | 'low' | 'none'
 type Sort = 'recent' | 'relationship'
 
@@ -32,6 +32,7 @@ const hasOpenPromises = (c: CrmContact) => openPromises(c.my_promises).length > 
 const hasOpenMoney = (c: CrmContact) => openMoney(c.money).length > 0
 // «Предложить» — только сильные кандидаты (приоритет 1), остальные видны в карточке
 const hasOffer = (c: CrmContact) => c.offer?.priority === 1
+const hasMutual = (c: CrmContact) => !!c.mutual?.draft
 
 export function CrmBoard({ contacts }: { contacts: CrmContact[] }) {
   const [tab, setTab] = useState<Tab>('reply')
@@ -64,6 +65,7 @@ export function CrmBoard({ contacts }: { contacts: CrmContact[] }) {
     promises: base.filter(hasOpenPromises).length,
     money: base.filter(hasOpenMoney).length,
     offer: base.filter(hasOffer).length,
+    mutual: base.filter(hasMutual).length,
     all: base.length,
   }), [base])
 
@@ -73,6 +75,7 @@ export function CrmBoard({ contacts }: { contacts: CrmContact[] }) {
       : tab === 'promises' ? hasOpenPromises(c)
       : tab === 'money' ? hasOpenMoney(c)
       : tab === 'offer' ? hasOffer(c)
+      : tab === 'mutual' ? hasMutual(c)
       : true)
     const byRecent = (a: CrmContact, b: CrmContact) => (b.last_at ?? '').localeCompare(a.last_at ?? '')
     return list.sort(sort === 'relationship'
@@ -101,6 +104,7 @@ export function CrmBoard({ contacts }: { contacts: CrmContact[] }) {
     { id: 'promises', label: 'Я обещал', Icon: ListChecks },
     { id: 'money', label: 'Деньги', Icon: HandCoins },
     { id: 'offer', label: 'Предложить', Icon: Handshake },
+    { id: 'mutual', label: 'Взаимность', Icon: Scale },
     { id: 'all', label: 'Все', Icon: Inbox },
   ] as const
 
@@ -216,6 +220,7 @@ function EmptyState({ tab, filtered, total }: { tab: Tab; filtered: boolean; tot
       : tab === 'promises' ? 'Открытых обещаний нет.'
       : tab === 'money' ? 'Никто никому не должен.'
       : tab === 'offer' ? 'Кандидатов на сотрудничество пока нет.'
+      : tab === 'mutual' ? 'Перекосов в уважении нет.'
       : 'Пусто.'
   return <p className="py-16 text-center text-[13px] text-[var(--ax-fg-muted)] max-w-[52ch] mx-auto leading-relaxed">{text}</p>
 }
@@ -229,6 +234,9 @@ function Row({ c, tab, onOpen }: { c: CrmContact; tab: Tab; onOpen: () => void }
     tab === 'promises' && promise ? { text: promise.text, tone: 'var(--ax-fg-soft)' }
     : tab === 'money' && money.length ? null
     : tab === 'offer' && c.offer?.idea ? { text: c.offer.idea, tone: 'var(--ax-prospect-yes-fg)' }
+    : tab === 'mutual' && c.mutual ? (c.mutual.group === 'A'
+      ? { text: 'Ценит тебя больше, чем ты его - ответь признанием', tone: 'var(--ax-prospect-yes-fg)' }
+      : { text: 'Ты ценишь больше, чем он тебя - закрой хвост и не вкладывайся', tone: 'var(--ax-fg-muted)' })
     : c.awaiting_reply ? { text: c.awaiting_what || 'Ждёт твоего ответа', tone: 'var(--ax-prospect-maybe-fg)' }
     : c.status ? { text: c.status, tone: 'var(--ax-fg-muted)' }
     : null

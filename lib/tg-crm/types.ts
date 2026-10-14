@@ -35,6 +35,9 @@ export type CrmContact = {
   draft?: string | null       // черновик ответа тому, кто ждёт (Андрей отправляет сам)
   draft_note?: string | null  // что проверить или дописать в черновике
   offer?: CrmOffer | null
+  // Перекос уважения: A — меня ценят больше, чем я (ответить признанием),
+  // B — я ценю больше (закрыть хвост и не вкладываться лишний раз).
+  mutual?: { group: 'A' | 'B'; draft: string | null; note: string | null } | null
 }
 
 // Одно сообщение из архива переписки (<chat_id>.json.gz в бакете tg-crm).
