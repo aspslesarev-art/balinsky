@@ -89,6 +89,8 @@ const COPY = {
     densityScale: 'Сколько соседей сдают по этой ставке',
     referencesTitle: 'Малая выборка — показываем референсы',
     widerRadius: (km: number) => `Похожих объектов рядом мало, поэтому расчёт по объектам в радиусе ${km} км.`,
+    adrFew: (n: number) => `Похожих объектов рядом мало (${n}), поэтому ставка примерная. Подвигайте ползунки под свой вариант.`,
+    adrArea: 'Похожих объектов рядом нет, поэтому ставка взята по объявлениям с близким числом спален в радиусе 8 км и очень примерная. Подвигайте ползунки под свой вариант.',
     referencesBody: (n: number, plural: string, km: number) =>
       `В радиусе ${km} км нашлось всего ${n} ${plural}, подходящих под характеристики виллы. Агрегаты не считаем — даём конкретные примеры.`,
     restrictedTitle: 'Жёлтая земля — посуточная аренда не разрешена',
@@ -178,6 +180,8 @@ const COPY = {
     densityScale: 'How many neighbours charge this rate',
     referencesTitle: 'Small sample — showing reference listings',
     widerRadius: (km: number) => `Few similar listings nearby, so the estimate uses listings within ${km} km.`,
+    adrFew: (n: number) => `Few similar listings nearby (${n}), so the rate is a rough guide. Move the sliders to match your case.`,
+    adrArea: 'No similar listings nearby, so the rate comes from listings with a similar number of bedrooms within 8 km and is very rough. Move the sliders to match your case.',
     referencesBody: (n: number, plural: string, km: number) =>
       `Only ${n} ${plural} matched the villa's profile within a ${km} km radius. We're not aggregating — here are concrete examples instead.`,
     restrictedTitle: 'Residential land — daily rental not permitted',
@@ -267,6 +271,8 @@ const COPY = {
     densityScale: 'Berapa tetangga memasang tarif ini',
     referencesTitle: 'Sampel kecil — menampilkan listing referensi',
     widerRadius: (km: number) => `Listing serupa di dekatnya sedikit, jadi perhitungan memakai listing dalam radius ${km} km.`,
+    adrFew: (n: number) => `Listing serupa di dekatnya sedikit (${n}), jadi tarifnya perkiraan kasar. Geser slider sesuai kasus Anda.`,
+    adrArea: 'Tidak ada listing serupa di dekatnya, jadi tarif diambil dari listing dengan jumlah kamar mirip dalam radius 8 km dan sangat kasar. Geser slider sesuai kasus Anda.',
     referencesBody: (n: number, plural: string, km: number) =>
       `Hanya ${n} ${plural} yang cocok dengan profil vila dalam radius ${km} km. Kami tidak mengagregasi — berikut contoh konkretnya.`,
     restrictedTitle: 'Tanah hunian — sewa harian tidak diizinkan',
@@ -356,6 +362,8 @@ const COPY = {
     densityScale: 'Combien de voisins pratiquent ce tarif',
     referencesTitle: 'Échantillon réduit — annonces de référence affichées',
     widerRadius: (km: number) => `Peu d'annonces similaires à proximité : le calcul porte sur un rayon de ${km} km.`,
+    adrFew: (n: number) => `Peu de biens similaires à proximité (${n}) : le tarif est indicatif. Ajustez les curseurs à votre cas.`,
+    adrArea: 'Aucun bien similaire à proximité : le tarif vient d’annonces avec un nombre de chambres proche dans un rayon de 8 km et reste très indicatif. Ajustez les curseurs à votre cas.',
     referencesBody: (n: number, plural: string, km: number) =>
       `Seulement ${n} ${plural} correspondent au profil de la villa dans un rayon de ${km} km. Nous n'agrégeons pas — voici plutôt des exemples concrets.`,
     restrictedTitle: 'Terrain résidentiel — location journalière non autorisée',
@@ -445,6 +453,8 @@ const COPY = {
     densityScale: 'Wie viele Nachbarn diesen Preis nehmen',
     referencesTitle: 'Kleine Stichprobe — Referenzangebote werden gezeigt',
     widerRadius: (km: number) => `In der Nähe gibt es wenige ähnliche Angebote, daher rechnen wir mit einem Umkreis von ${km} km.`,
+    adrFew: (n: number) => `Wenige ähnliche Objekte in der Nähe (${n}), der Preis ist daher grob. Passen Sie die Regler an Ihren Fall an.`,
+    adrArea: 'Keine ähnlichen Objekte in der Nähe, daher stammt der Preis aus Angeboten mit ähnlicher Schlafzimmerzahl im Umkreis von 8 km und ist sehr grob. Passen Sie die Regler an Ihren Fall an.',
     referencesBody: (n: number, plural: string, km: number) =>
       `Nur ${n} ${plural} entsprachen dem Profil der Villa im Umkreis von ${km} km. Wir aggregieren nicht — hier stattdessen konkrete Beispiele.`,
     restrictedTitle: 'Wohnland — Tagesvermietung nicht erlaubt',
@@ -534,6 +544,8 @@ const COPY = {
     densityScale: '多少邻近房源采用该价格',
     referencesTitle: '样本较小——展示参考房源',
     widerRadius: (km: number) => `附近类似房源较少，因此按 ${km} 公里半径内的房源计算。`,
+    adrFew: (n: number) => `附近相似房源较少（${n}），房价仅供粗略参考。请拖动滑块调整为您的情况。`,
+    adrArea: '附近没有相似房源，房价取自8公里内卧室数相近的房源，仅供非常粗略的参考。请拖动滑块调整为您的情况。',
     referencesBody: (n: number, plural: string, km: number) =>
       `在${km}公里半径内只有 ${n} ${plural} 符合别墅的特征。我们不做汇总——而是给出具体示例。`,
     restrictedTitle: '住宅用地——不允许日租',
@@ -623,6 +635,8 @@ const COPY = {
     densityScale: 'Hoeveel buren vragen dit tarief',
     referencesTitle: 'Kleine steekproef — referentieadvertenties getoond',
     widerRadius: (km: number) => `Weinig vergelijkbare aanbiedingen in de buurt, daarom rekenen we met een straal van ${km} km.`,
+    adrFew: (n: number) => `Weinig vergelijkbare objecten in de buurt (${n}), dus het tarief is een ruwe schatting. Schuif de sliders naar uw situatie.`,
+    adrArea: 'Geen vergelijkbare objecten in de buurt, dus het tarief komt van aanbiedingen met een vergelijkbaar aantal slaapkamers binnen 8 km en is heel ruw. Schuif de sliders naar uw situatie.',
     referencesBody: (n: number, plural: string, km: number) =>
       `Slechts ${n} ${plural} kwamen overeen met het profiel van de villa binnen een straal van ${km} km. We aggregeren niet — hier in plaats daarvan concrete voorbeelden.`,
     restrictedTitle: 'Woongrond — dagverhuur niet toegestaan',
@@ -712,6 +726,8 @@ const COPY = {
     densityScale: 'Akuda tetangga sane nganggen tarif puniki',
     referencesTitle: 'Sampel cenik — nyinahang listing referensi',
     widerRadius: (km: number) => `Listing sane pateh ring sampingne akidik, mawinan itungan nganggen listing ring radius ${km} km.`,
+    adrFew: (n: number) => `Properti sane mirip ring sekitar akidik (${n}), tarifnyane perkiraan kasar. Geser slider manut kasus ida dane.`,
+    adrArea: 'Nenten wenten properti sane mirip ring sekitar, tarif kaambil saking iklan sane akeh kamarnyane mirip ring radius 8 km tur kasar pisan. Geser slider manut kasus ida dane.',
     referencesBody: (n: number, plural: string, km: number) =>
       `Wantah ${n} ${plural} sane cocok sareng profil vila ring radius ${km} km. Tiang nenten ngagregasi — puniki conto konkret.`,
     restrictedTitle: 'Tanah hunian — sewa harian nenten kadadosang',
@@ -801,6 +817,8 @@ const COPY = {
     densityScale: 'Ilu sąsiadów ma taką stawkę',
     referencesTitle: 'Mała próba — pokazujemy ogłoszenia referencyjne',
     widerRadius: (km: number) => `W pobliżu jest mało podobnych ofert, więc liczymy w promieniu ${km} km.`,
+    adrFew: (n: number) => `Mało podobnych obiektów w pobliżu (${n}), więc stawka jest orientacyjna. Przesuń suwaki pod swój przypadek.`,
+    adrArea: 'Brak podobnych obiektów w pobliżu, więc stawka pochodzi z ofert z podobną liczbą sypialni w promieniu 8 km i jest bardzo orientacyjna. Przesuń suwaki pod swój przypadek.',
     referencesBody: (n: number, plural: string, km: number) =>
       `Tylko ${n} ${plural} pasowało do profilu willi w promieniu ${km} km. Nie agregujemy — zamiast tego oto konkretne przykłady.`,
     restrictedTitle: 'Grunt mieszkaniowy — najem dobowy niedozwolony',
@@ -890,6 +908,8 @@ const COPY = {
     densityScale: 'Скільки сусідів здають за цією ставкою',
     referencesTitle: 'Мала вибірка — показуємо референсні оголошення',
     widerRadius: (km: number) => `Схожих об'єктів поруч мало, тому розрахунок за об'єктами в радіусі ${km} км.`,
+    adrFew: (n: number) => `Схожих об'єктів поруч мало (${n}), тому ставка орієнтовна. Посуньте повзунки під свій варіант.`,
+    adrArea: 'Схожих об\'єктів поруч немає, тому ставку взято за оголошеннями з близькою кількістю спалень у радіусі 8 км, вона дуже орієнтовна. Посуньте повзунки під свій варіант.',
     referencesBody: (n: number, plural: string, km: number) =>
       `Лише ${n} ${plural} відповідають профілю вілли в радіусі ${km} км. Ми не агрегуємо — натомість ось конкретні приклади.`,
     restrictedTitle: 'Житлова земля — добова оренда не дозволена',
@@ -1020,12 +1040,18 @@ function InvestmentWidgetView({ snap, apiKey, lang }: { snap: Snapshot; apiKey: 
               <MonthlyCalculator snap={snap} lang={lang} />
             ) : snap.scenarios ? (
               <>
-                {(snap.searchRadiusKm ?? 2) > 2 && (
+                {snap.adrBasis === 'matches' && (snap.searchRadiusKm ?? 2) > 2 && (
                   <Banner tone="info" icon={<Info size={16} />} className="mt-4">
                     {t.widerRadius(snap.searchRadiusKm)}
                   </Banner>
                 )}
+                {snap.adrBasis !== 'matches' && (
+                  <Banner tone="info" icon={<Info size={16} />} className="mt-4">
+                    {snap.adrBasis === 'few' ? t.adrFew(snap.references?.length ?? 0) : t.adrArea}
+                  </Banner>
+                )}
                 <Calculator snap={snap} lang={lang} />
+                {snap.references && snap.references.length > 0 && <References snap={snap} lang={lang} />}
               </>
             ) : snap.references ? (
               <References snap={snap} lang={lang} />

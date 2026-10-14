@@ -55,6 +55,8 @@ export type InvestmentSnapshot = {
   confidence: Confidence
   matchSampleSize: number
   scenarios: ScenarioBundle | null
+  /** Where the calculator's nightly rate comes from: similar listings, too few of them, or every listing around. */
+  adrBasis: 'matches' | 'few' | 'area'
   references: NearbyMatchCard[] | null
   /** Помесячная аренда: на жилой земле — вместо посуточной, у вилл — для сравнения. */
   monthly: MonthlyBundle | null
@@ -164,6 +166,7 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
 
   let scenarios: ScenarioBundle | null = null
   let references: NearbyMatchCard[] | null = null
+  let adrBasis: InvestmentSnapshot['adrBasis'] = 'matches'
   // Помесячная аренда (lib/investment/monthly.ts): на жилой земле — вместо
   // посуточной, у остальных вилл — для сравнения. Ставки есть только по виллам.
   const monthly: MonthlyBundle | null = rentalRestricted || kind === 'villa'
@@ -171,12 +174,37 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
     : null
   if (rentalRestricted) {
     // leave scenarios + references null
-  } else if (matchResult.mode === 'references') {
-    references = matchResult.matches.slice(0, 5).map(toCard)
   } else {
-    const pcts = adrPercentiles(matchResult.matches)
-    scenarios = buildScenarios(
-      pcts,
+    if (matchResult.mode === 'references') references = matchResult.matches.slice(0, 5).map(toCard)
+    // Калькулятор показываем всегда (решение владельца 14.10.2026): его можно
+    // покрутить и без выборки. Мало похожих — ставка по ним; ни одного — по
+    // объявлениям в самом широком радиусе с близким числом спален (без
+    // фильтров площади, бассейна и пляжа), а виджет пишет, что ставка примерная.
+    // Все объявления подряд брать нельзя: у 7-спальной виллы в Пандаве вышло
+    // $52 за ночь — это номера гостиниц.
+    let basis = matchResult.matches
+    if (basis.length === 0) {
+      const wide = await loadNearby(lat, lng, SEARCH_RADII_KM[SEARCH_RADII_KM.length - 1])
+      basis = wide
+      if (bedrooms != null) {
+        for (const tol of [1, 2, 3]) {
+          basis = wide.filter(c => c.bedrooms != null && Math.abs(c.bedrooms - bedrooms) <= tol)
+          if (basis.length >= MIN_MATCHES_FOR_CALC) break
+        }
+        // Ничего близкого (вилла на 11 спален) — десять самых близких по спальням.
+        if (basis.length === 0) {
+          basis = wide.filter(c => c.bedrooms != null)
+            .sort((a, b) => Math.abs(a.bedrooms! - bedrooms) - Math.abs(b.bedrooms! - bedrooms))
+            .slice(0, 10)
+        }
+        if (basis.length === 0) basis = wide
+      }
+      adrBasis = 'area'
+    } else if (matchResult.mode === 'references') {
+      adrBasis = 'few'
+    }
+    if (basis.length > 0) scenarios = buildScenarios(
+      adrPercentiles(basis),
       // Налоговый статус по умолчанию — нерезидент: большинство покупателей
       // не имеют индонезийского NPWP, и это консервативная сторона.
       // В виджете статус переключается.
@@ -238,6 +266,7 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
     confidence,
     matchSampleSize: matchResult.matches.length,
     scenarios,
+    adrBasis,
     references,
     monthly,
     competitors,
