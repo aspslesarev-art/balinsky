@@ -84,6 +84,16 @@ export type Climate = Record<string, ClimateMonth> & {
     elevation_m: number
     margin_m: number
   }
+  /** Slope, access road, rivers and coast at the point (scripts/plot-site.py). Distances in metres. */
+  plot?: {
+    src: string
+    slope_pct: number | null
+    road: { m: number; class: string; name: string | null; width_m: number | null; surface: string | null; lanes: string | null }
+    main_road: { m: number; class: string; name: string | null }
+    river_m: number
+    stream_m: number
+    coast_m: number
+  }
 }
 /** Seconds with traffic, seconds on an empty road, metres. */
 export type RouteLeg = { s: number; static_s: number | null; m: number | null }

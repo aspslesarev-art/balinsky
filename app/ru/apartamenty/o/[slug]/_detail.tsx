@@ -46,6 +46,7 @@ import { loadGeoFacts } from '@/lib/complex-access'
 import { ComplexAccessBlock } from '@/components/ComplexAccessBlock'
 import { ClimateBlock } from '@/components/ClimateBlock'
 import { AreaBlock } from '@/components/AreaBlock'
+import { PlotSiteBlock, plotChapterHint } from '@/components/PlotSiteBlock'
 import { loadManagersByDeveloperName } from '@/lib/managers'
 import { PriceCtaCard } from '@/components/PriceCtaCard'
 import { findActiveReservation } from '@/lib/reservations'
@@ -1109,12 +1110,13 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
 
 
   const landOk = !!landProfile && (landAllowsBuilding(landProfile, 'apartment') || hasProjectPermits(projectPermits))
+  const plotSite = geoFacts?.climate?.plot ?? null
   const marketOk = !!marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0)
   const hasPlace = !!(geoFacts || nearby || (districtCopy && districtSlug))
   const hasRent = marketOk || !!demand
   const hasYield = lat != null && lng != null
   const chapters = ([
-    hasPlace && 'mesto', hasRent && 'arenda', hasYield && 'dokhodnost', landOk && 'uchastok',
+    hasPlace && 'mesto', hasRent && 'arenda', hasYield && 'dokhodnost', (landOk || plotSite) && 'uchastok',
   ] as (ChapterId | false)[]).filter((x): x is ChapterId => !!x)
 
   return (
@@ -1312,12 +1314,15 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
           </DataChapter>
         )}
 
-        {landOk && (
-          <DataChapter id="uchastok" n={chapters.indexOf('uchastok') + 1} lang={lang}>
+        {(landOk || plotSite) && (
+          <DataChapter id="uchastok" n={chapters.indexOf('uchastok') + 1} lang={lang} hint={landOk ? undefined : plotChapterHint(lang)}>
             <div className="max-w-[760px]">
-              <LazyMount fallback={<div className="min-h-[480px] rounded-2xl bg-[var(--color-search-bg)]" />}>
-                <LandProfileBlock data={landProfile!} permits={projectPermits} lang={lang} />
-              </LazyMount>
+              {landOk && (
+                <LazyMount fallback={<div className="min-h-[480px] rounded-2xl bg-[var(--color-search-bg)]" />}>
+                  <LandProfileBlock data={landProfile!} permits={projectPermits} lang={lang} />
+                </LazyMount>
+              )}
+              <PlotSiteBlock plot={plotSite} lang={lang} />
             </div>
           </DataChapter>
         )}

@@ -120,11 +120,14 @@ export function DataChapter({
   id,
   n,
   lang,
+  hint,
   children,
 }: {
   id: ChapterId
   n: number
   lang: Lang
+  /** Replaces the stock hint when the chapter shows only part of its usual content. */
+  hint?: string
   children: ReactNode
 }) {
   const c = pickCopy(COPY, lang).chapters[id]
@@ -139,7 +142,7 @@ export function DataChapter({
             {c.title}
           </span>
         </div>
-        <p className="text-[15px] leading-relaxed text-[var(--color-text-muted)]">{c.hint}</p>
+        <p className="text-[15px] leading-relaxed text-[var(--color-text-muted)]">{hint ?? c.hint}</p>
       </div>
       <div className="flex flex-col gap-4 [&_[data-investment-block]]:mt-0 [&>section:last-child]:mb-0">{children}</div>
     </section>

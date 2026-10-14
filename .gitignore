@@ -67,3 +67,4 @@ graphify-out/
 .tmp-sea/
 .tmp-cmip6/
 .tmp-obt/
+.tmp-plot/
