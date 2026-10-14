@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { currentAdminUsername, isOwnerAdmin } from '@/lib/admin-auth'
-import { loadTranscript } from '@/lib/tg-crm/store'
+import { crmEnabled, loadTranscript } from '@/lib/tg-crm/store'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -14,6 +14,7 @@ const NO_STORE = { 'Cache-Control': 'private, no-store' }
 // Без before — последние limit сообщений. Личная переписка владельца:
 // другим админам — 403, не вошедшим — 401.
 export async function GET(req: Request, { params }: { params: Promise<{ chatId: string }> }) {
+  if (!crmEnabled()) return NextResponse.json({ ok: false }, { status: 404, headers: NO_STORE })
   if (!(await currentAdminUsername())) return NextResponse.json({ ok: false }, { status: 401, headers: NO_STORE })
   if (!(await isOwnerAdmin())) return NextResponse.json({ ok: false }, { status: 403, headers: NO_STORE })
 

@@ -4,12 +4,14 @@
 // on-page editing. No secrets in the response, just a boolean.
 import { NextResponse } from 'next/server'
 import { isOwnerAdmin, requireAdmin } from '@/lib/admin-auth'
+import { crmEnabled } from '@/lib/tg-crm/store'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
-  // owner — для меню админки: пункт «Мои контакты» видит только владелец.
+  // owner — для меню админки: пункт «Мои контакты» видит только владелец,
+  // и только там, где лежат данные CRM (его Мак).
   const [admin, owner] = await Promise.all([requireAdmin(), isOwnerAdmin()])
-  return NextResponse.json({ admin, owner }, { headers: { 'Cache-Control': 'no-store' } })
+  return NextResponse.json({ admin, owner: owner && crmEnabled() }, { headers: { 'Cache-Control': 'no-store' } })
 }

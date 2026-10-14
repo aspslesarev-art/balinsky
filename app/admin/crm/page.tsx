@@ -1,13 +1,15 @@
-import { redirect } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { isOwnerAdmin } from '@/lib/admin-auth'
 import { AdminThemeShell } from '@/components/admin/AdminThemeShell'
-import { listCrmContacts } from '@/lib/tg-crm/store'
+import { crmEnabled, listCrmContacts } from '@/lib/tg-crm/store'
 import { CrmBoard } from './_client'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { robots: { index: false, follow: false }, title: 'Мои контакты · Balinsky Admin' }
 
 export default async function CrmPage() {
+  // Данные только на Маке владельца (TG_CRM_DIR); на проде раздела нет.
+  if (!crmEnabled()) notFound()
   // Личная переписка — только владельцу. Другие админы и не вошедшие
   // уходят на /admin (там форма входа или их обычный раздел).
   if (!(await isOwnerAdmin())) redirect('/admin')
