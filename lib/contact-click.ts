@@ -91,7 +91,7 @@ export function reportContactClick(a: HTMLAnchorElement): void {
  */
 export function reportLeadFormEvent(
   event: 'click' | 'lead',
-  channel: 'telegram' | 'whatsapp',
+  channel: 'telegram' | 'whatsapp' | 'other',
   meta: { managerId?: string | null; managerName?: string | null; developerName?: string | null },
 ): void {
   try {

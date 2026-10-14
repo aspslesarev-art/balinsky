@@ -32,7 +32,7 @@ type Click = {
   created_at: string
   // 'click' — нажатие (по ссылке или на кнопку формы), 'lead' — отправленная форма.
   event: 'click' | 'lead' | null
-  channel: 'telegram' | 'whatsapp'
+  channel: 'telegram' | 'whatsapp' | 'other'
   target: string
   placement: string | null
   page_path: string | null
@@ -66,7 +66,7 @@ function group(rows: Click[], keyOf: (c: Click) => { key: string; label: string;
     const g = m.get(k.key) ?? { key: k.key, label: k.label, sub: k.sub ?? null, href: k.href ?? null, tg: 0, wa: 0, leads: 0, people: 0, lastAt: c.created_at, visitors: new Set<string>() }
     if (c.event === 'lead') g.leads++
     else if (c.channel === 'telegram') g.tg++
-    else g.wa++
+    else if (c.channel === 'whatsapp') g.wa++
     g.visitors.add(c.visitor_id ?? `row-${c.id}`)
     if (c.created_at > g.lastAt) g.lastAt = c.created_at
     m.set(k.key, g)
@@ -103,7 +103,7 @@ export default async function ContactClicksAdmin({
   const clicks = rows.filter(r => r.event !== 'lead')
   const leads = rows.length - clicks.length
   const tg = clicks.filter(r => r.channel === 'telegram').length
-  const wa = clicks.length - tg
+  const wa = clicks.filter(r => r.channel === 'whatsapp').length
   // Конверсия — только по кнопкам формы (у ссылок в подвале формы нет).
   const formClicks = clicks.filter(r => r.target === 'form').length
   const conversion = formClicks ? Math.round((leads / formClicks) * 100) : null
@@ -175,7 +175,7 @@ export default async function ContactClicksAdmin({
                       <td className="px-4 py-2.5 whitespace-nowrap text-[var(--ax-fg-muted)]">{fmtDateTime(c.created_at)}</td>
                       <td className="px-4 py-2.5">
                         {c.event === 'lead' && <span className="font-semibold text-[var(--color-primary)]">Заявка · </span>}
-                        <span className="font-medium text-[var(--ax-fg)]">{c.channel === 'telegram' ? 'Telegram' : 'WhatsApp'}</span>
+                        <span className="font-medium text-[var(--ax-fg)]">{c.channel === 'telegram' ? 'Telegram' : c.channel === 'whatsapp' ? 'WhatsApp' : 'Другой мессенджер'}</span>
                         {' · '}{c.manager_name ?? c.target}
                         {c.developer_name && <div className="text-[11px] text-[var(--ax-fg-faint)]">{c.developer_name}</div>}
                       </td>

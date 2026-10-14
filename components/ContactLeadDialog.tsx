@@ -5,50 +5,66 @@
 // только в админ-чат бота (page = 'manager-card'), дальше владелец сам.
 //
 // Имя и контакт запоминаются в браузере: второй раз поля уже заполнены.
+//
+// channel = 'other' — «Другой мессенджер»: человек выбирает свой (WeChat
+// для Китая, LINE, Viber…) и пишет ID или номер как есть.
 
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { X, Send, MessageCircle } from 'lucide-react'
+import { X, Send, MessageCircle, MessagesSquare } from 'lucide-react'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { reportLeadFormEvent } from '@/lib/contact-click'
 
-export type LeadChannel = 'telegram' | 'whatsapp'
+export type LeadChannel = 'telegram' | 'whatsapp' | 'other'
+
+// Мессенджеры для кнопки «Другой». Сервер принимает только эти названия
+// (app/api/contact/route.ts).
+export const OTHER_MESSENGERS = ['WeChat', 'LINE', 'Viber', 'KakaoTalk', 'Zalo', 'Signal'] as const
+export type OtherMessenger = typeof OTHER_MESSENGERS[number]
 
 // Тексты пока RU + EN; остальные языки берут EN (pickCopy) до согласования.
 const COPY = {
   ru: {
     title: (dev: string | null) => dev ? `Связаться с ${dev}` : 'Связаться с застройщиком',
-    lead: (ch: LeadChannel) => `Оставьте имя и ${ch === 'telegram' ? 'контакт в Telegram' : 'номер WhatsApp'} - менеджер напишет вам сам.`,
+    lead: (ch: LeadChannel, m: string) => `Оставьте имя и ${ch === 'telegram' ? 'контакт в Telegram' : ch === 'whatsapp' ? 'номер WhatsApp' : `контакт в ${m}`} - менеджер напишет вам сам.`,
     name: 'Имя',
     namePh: 'Как к вам обращаться',
     phone: 'Номер WhatsApp',
     tg: 'Номер или ник в Telegram',
     tgPh: '+62 812 3456 7890 или @username',
+    messenger: 'Мессенджер',
+    other: (m: string) => `Ваш ID или номер в ${m}`,
+    otherPh: 'ID, ник или номер с кодом страны',
     submit: 'Отправить',
     note: 'Передадим ваш контакт менеджеру застройщика. Balinsky в переговорах и сделке не участвует.',
     close: 'Закрыть',
     doneTitle: 'Готово',
-    done: (ch: LeadChannel) => `Менеджер напишет вам в ${ch === 'telegram' ? 'Telegram' : 'WhatsApp'} в рабочее время Бали (UTC+8).`,
+    done: (m: string) => `Менеджер напишет вам в ${m} в рабочее время Бали (UTC+8).`,
     errName: 'Напишите имя',
     errPhone: 'Нужен номер с кодом страны, например +62…',
     errTg: 'Нужен номер с кодом страны или ник вида @username',
+    errOther: 'Напишите ваш ID или номер',
   },
   en: {
     title: (dev: string | null) => dev ? `Contact ${dev}` : 'Contact the developer',
-    lead: (ch: LeadChannel) => `Leave your name and ${ch === 'telegram' ? 'Telegram contact' : 'WhatsApp number'} - the manager will message you.`,
+    lead: (ch: LeadChannel, m: string) => `Leave your name and ${ch === 'telegram' ? 'Telegram contact' : ch === 'whatsapp' ? 'WhatsApp number' : `${m} contact`} - the manager will message you.`,
     name: 'Name',
     namePh: 'Your name',
     phone: 'WhatsApp number',
     tg: 'Telegram number or username',
     tgPh: '+62 812 3456 7890 or @username',
+    messenger: 'Messenger',
+    other: (m: string) => `Your ${m} ID or number`,
+    otherPh: 'ID, username or number with country code',
     submit: 'Send',
     note: 'We pass your contact to the developer’s manager. Balinsky takes no part in the talks or the transaction.',
     close: 'Close',
     doneTitle: 'Done',
-    done: (ch: LeadChannel) => `The manager will message you on ${ch === 'telegram' ? 'Telegram' : 'WhatsApp'} during Bali working hours (UTC+8).`,
+    done: (m: string) => `The manager will message you on ${m} during Bali working hours (UTC+8).`,
     errName: 'Please enter your name',
     errPhone: 'Enter a number with country code, e.g. +62…',
     errTg: 'Enter a number with country code or a @username',
+    errOther: 'Please enter your ID or number',
   },
 } as const
 
@@ -72,6 +88,7 @@ export function ContactLeadDialog({
   open,
   onClose,
   channel,
+  messenger: initialMessenger = 'WeChat',
   lang,
   developerName,
   managerName,
@@ -81,6 +98,8 @@ export function ContactLeadDialog({
   open: boolean
   onClose: () => void
   channel: LeadChannel
+  // Для channel = 'other' — какой мессенджер выбран сразу.
+  messenger?: OtherMessenger
   lang: Lang
   developerName: string | null
   managerName: string
@@ -90,6 +109,7 @@ export function ContactLeadDialog({
   const c = pickCopy(COPY, lang)
   const [name, setName] = useState('')
   const [contact, setContact] = useState('')
+  const [messenger, setMessenger] = useState<OtherMessenger>(initialMessenger)
   const [website, setWebsite] = useState('') // honeypot
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
@@ -99,12 +119,14 @@ export function ContactLeadDialog({
     if (!open) return
     setError(null)
     setDone(false)
+    setMessenger(initialMessenger)
     try {
       const saved = JSON.parse(localStorage.getItem(STORE_KEY) ?? 'null') as
-        { name?: string; phone?: string; telegram?: string } | null
+        { name?: string; phone?: string; telegram?: string; other?: string } | null
       if (saved) {
         setName(saved.name ?? '')
-        setContact((channel === 'telegram' ? saved.telegram || saved.phone : saved.phone) ?? '')
+        setContact((channel === 'telegram' ? saved.telegram || saved.phone
+          : channel === 'other' ? saved.other : saved.phone) ?? '')
       }
     } catch { /* приватный режим — просто пустые поля */ }
     const t = setTimeout(() => nameRef.current?.focus(), 50)
@@ -117,7 +139,7 @@ export function ContactLeadDialog({
       document.removeEventListener('keydown', onKey)
       document.body.style.overflow = prevOverflow
     }
-  }, [open, channel, onClose])
+  }, [open, channel, initialMessenger, onClose])
 
   if (!open || typeof document === 'undefined') return null
 
@@ -128,7 +150,11 @@ export function ContactLeadDialog({
     if (!n) { setError(c.errName); return }
     let phone = ''
     let telegram = ''
-    if (channel === 'whatsapp') {
+    let other = ''
+    if (channel === 'other') {
+      if (raw.length < 3) { setError(c.errOther); return }
+      other = raw
+    } else if (channel === 'whatsapp') {
       if (!isPhone(raw)) { setError(c.errPhone); return }
       phone = raw
     } else if (isPhone(raw)) {
@@ -146,6 +172,7 @@ export function ContactLeadDialog({
         name: n,
         ...(phone ? { phone } : {}),
         ...(telegram ? { telegram } : {}),
+        ...(other ? { other } : {}),
       }))
     } catch { /* не критично */ }
 
@@ -158,6 +185,8 @@ export function ContactLeadDialog({
         phone: phone || undefined,
         telegram: telegram || undefined,
         channel,
+        messenger: other ? messenger : undefined,
+        messengerId: other || undefined,
         managerName,
         developerName: developerName ?? undefined,
         listingTitle: listingTitle ?? undefined,
@@ -171,7 +200,8 @@ export function ContactLeadDialog({
     setDone(true)
   }
 
-  const Icon = channel === 'telegram' ? Send : MessageCircle
+  const Icon = channel === 'telegram' ? Send : channel === 'whatsapp' ? MessageCircle : MessagesSquare
+  const label = channel === 'telegram' ? 'Telegram' : channel === 'whatsapp' ? 'WhatsApp' : messenger
   const inputCls = 'w-full h-12 px-4 rounded-xl border border-[var(--color-border)] bg-white text-[16px] text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] placeholder:opacity-50 outline-none focus-visible:border-[var(--color-primary)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]/20 transition-[border-color,box-shadow] duration-[120ms]'
 
   return createPortal(
@@ -198,7 +228,7 @@ export function ContactLeadDialog({
         </h2>
         {done ? (
           <>
-            <p className="mt-2 text-[16px] leading-[1.55] text-[var(--color-text)]">{c.done(channel)}</p>
+            <p className="mt-2 text-[16px] leading-[1.55] text-[var(--color-text)]">{c.done(label)}</p>
             <button
               type="button"
               onClick={onClose}
@@ -208,7 +238,7 @@ export function ContactLeadDialog({
             </button>
           </>
         ) : (<>
-        <p className="mt-2 text-[14px] leading-[1.55] text-[var(--color-text-muted)]">{c.lead(channel)}</p>
+        <p className="mt-2 text-[14px] leading-[1.55] text-[var(--color-text-muted)]">{c.lead(channel, label)}</p>
 
         <form onSubmit={submit} noValidate className="mt-6 space-y-4">
           <label className="block">
@@ -223,22 +253,42 @@ export function ContactLeadDialog({
               maxLength={100}
             />
           </label>
+          {channel === 'other' && (
+            <fieldset>
+              <legend className="mb-2 block text-[14px] font-medium text-[var(--color-text)]">{c.messenger}</legend>
+              <div className="flex flex-wrap gap-2">
+                {OTHER_MESSENGERS.map(m => (
+                  <button
+                    key={m}
+                    type="button"
+                    aria-pressed={messenger === m}
+                    onClick={() => { setMessenger(m); setError(null) }}
+                    className={`cursor-pointer h-10 px-4 rounded-full border text-[14px] font-medium transition-colors duration-[120ms] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] ${messenger === m
+                      ? 'border-[var(--color-primary)] bg-[var(--color-primary-soft)] text-[var(--color-primary-pressed)]'
+                      : 'border-[var(--color-border)] bg-white text-[var(--color-text)] hover:bg-[var(--color-search-bg)]'}`}
+                  >
+                    {m}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          )}
           <label className="block">
             <span className="mb-2 block text-[14px] font-medium text-[var(--color-text)]">
-              {channel === 'telegram' ? c.tg : c.phone}
+              {channel === 'telegram' ? c.tg : channel === 'other' ? c.other(messenger) : c.phone}
             </span>
             <input
               className={inputCls}
               value={contact}
               onChange={e => { setContact(e.target.value); setError(null) }}
-              placeholder={channel === 'telegram' ? c.tgPh : '+62 812 3456 7890'}
+              placeholder={channel === 'telegram' ? c.tgPh : channel === 'other' ? c.otherPh : '+62 812 3456 7890'}
               type={channel === 'whatsapp' ? 'tel' : 'text'}
               inputMode={channel === 'whatsapp' ? 'tel' : 'text'}
               autoComplete={channel === 'whatsapp' ? 'tel' : 'off'}
               autoCapitalize="off"
               autoCorrect="off"
               spellCheck={false}
-              maxLength={40}
+              maxLength={60}
             />
           </label>
           {/* honeypot */}

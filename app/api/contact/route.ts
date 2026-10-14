@@ -40,6 +40,9 @@ type Body = {
   telegram?: string
   // Через какой мессенджер человек пошёл писать и кому именно.
   channel?: string
+  // «Другой мессенджер»: название из списка и ID/номер как ввёл человек.
+  messenger?: string
+  messengerId?: string
   managerName?: string
   message?: string
   // Listing context (optional, set when form is on a detail page)
@@ -60,6 +63,9 @@ type Body = {
   // back to its exact source page.
   pagePath?: string
 }
+
+// Те же, что OTHER_MESSENGERS в components/ContactLeadDialog.tsx.
+const OTHER_MESSENGERS = ['WeChat', 'LINE', 'Viber', 'KakaoTalk', 'Zalo', 'Signal']
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info').replace(/\/$/, '')
 
@@ -129,7 +135,10 @@ export async function POST(req: Request) {
   const email = (body.email ?? '').trim()
   const phone = (body.phone ?? '').trim()
   const telegram = (body.telegram ?? '').trim()
-  const channel = body.channel === 'telegram' ? 'Telegram' : body.channel === 'whatsapp' ? 'WhatsApp' : null
+  const messenger = OTHER_MESSENGERS.includes(body.messenger ?? '') ? body.messenger! : null
+  const messengerId = (body.messengerId ?? '').trim()
+  const channel = body.channel === 'telegram' ? 'Telegram' : body.channel === 'whatsapp' ? 'WhatsApp'
+    : body.channel === 'other' ? messenger : null
   const managerName = (body.managerName ?? '').trim().slice(0, 100)
   const message = (body.message ?? '').trim()
 
@@ -144,7 +153,10 @@ export async function POST(req: Request) {
   if (telegram && !/^@[a-zA-Z][a-zA-Z0-9_]{4,31}$/.test(telegram)) {
     return NextResponse.json({ ok: false, error: 'invalid_telegram' }, { status: 400 })
   }
-  if (!phone && !email && !telegram) {
+  if (messengerId && (!messenger || messengerId.length > 60)) {
+    return NextResponse.json({ ok: false, error: 'invalid_messenger' }, { status: 400 })
+  }
+  if (!phone && !email && !telegram && !messengerId) {
     return NextResponse.json({ ok: false, error: 'no_contact' }, { status: 400 })
   }
   if (phone.length > 40) {
@@ -186,6 +198,7 @@ export async function POST(req: Request) {
   if (phone) lines.push(`<b>Телефон:</b> ${escapeHtml(phone)}`)
   if (telegram) lines.push(`<b>Telegram:</b> ${escapeHtml(telegram)} (https://t.me/${telegram.slice(1)})`)
   if (email) lines.push(`<b>Email:</b> ${escapeHtml(email)}`)
+  if (messenger && messengerId) lines.push(`<b>${messenger}:</b> ${escapeHtml(messengerId)}`)
   if (channel) lines.push(`<b>Хочет связь в:</b> ${channel}${managerName ? ` (менеджер: ${escapeHtml(managerName)})` : ''}`)
   if (developerName) lines.push(`<b>Застройщик:</b> ${escapeHtml(developerName)}`)
   if (body.listingTitle) {

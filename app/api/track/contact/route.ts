@@ -52,7 +52,7 @@ export async function POST(req: Request) {
   let b: Record<string, unknown>
   try { b = await req.json() } catch { return NextResponse.json({ ok: false }, { status: 400 }) }
 
-  const channel = b.channel === 'telegram' || b.channel === 'whatsapp' ? b.channel : null
+  const channel = b.channel === 'telegram' || b.channel === 'whatsapp' || (b.channel === 'other' && b.href === 'form') ? b.channel : null
   const href = str(b.href, 2000)
   if (!channel || !href) return NextResponse.json({ ok: false, error: 'bad input' }, { status: 400 })
   // Форма заявки у менеджера (ContactLeadDialog): ссылки нет, href = 'form'.
