@@ -61,3 +61,11 @@ export async function currentAdminUsername(): Promise<string | null> {
   if (!v) return null
   return listAdminAccounts().find(acc => sessionToken(acc.username) === v)?.username ?? null
 }
+
+// Владелец — основной аккаунт из ADMIN_USERNAME. Разделы с личной
+// перепиской (/admin/crm) открываются только ему: остальные админы
+// из ADMIN_ACCOUNTS видят рабочие разделы, но не его чаты.
+export async function isOwnerAdmin(): Promise<boolean> {
+  const owner = (process.env.ADMIN_USERNAME ?? 'andrei').trim().toLowerCase()
+  return (await currentAdminUsername()) === owner
+}

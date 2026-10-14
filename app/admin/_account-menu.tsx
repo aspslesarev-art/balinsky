@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   MessageCircle, Lock, Megaphone, Image as ImageIcon, FileText, Heart, Eye, Brain, Layers, BarChart3, Table, Link2,
   Users, Wallet, ListTree, Tags, Gem, KeyRound, LayoutTemplate, CalendarDays, Handshake,
-  Sun, Moon, LogOut, ChevronUp, UserRound, MessagesSquare, Building2, Fingerprint,
+  Sun, Moon, LogOut, ChevronUp, UserRound, MessagesSquare, Building2, Fingerprint, BookUser,
 } from 'lucide-react'
 import { useAdminTheme } from './_theme'
 
@@ -84,7 +84,11 @@ const GROUPS: Group[] = [
   },
 ]
 
-const ALL_ITEMS: Item[] = GROUPS.flatMap(g => g.items)
+// Личная CRM по всем чатам Telegram владельца. В общий список не кладём:
+// другим админам пункт не показываем (сама страница их тоже не пустит).
+const OWNER_ITEM: Item = { href: '/admin/crm', label: 'Мои контакты', Icon: BookUser }
+
+const ALL_ITEMS: Item[] = [...GROUPS.flatMap(g => g.items), OWNER_ITEM]
 
 // Подсветка активного раздела: берём самое длинное совпадение по префиксу,
 // иначе на /admin/market/units загорались бы сразу два пункта.
@@ -100,7 +104,24 @@ export function AdminAccountMenu({ variant = 'sidebar' }: { variant?: Variant })
   const { theme, toggle: toggleTheme } = useAdminTheme()
   const [pathname, setPathname] = useState<string>('')
 
+  const [isOwner, setIsOwner] = useState(false)
+
   useEffect(() => { setPathname(window.location.pathname) }, [])
+
+  // Владелец ли вошёл — спрашиваем сервер: сессионная кука httpOnly.
+  useEffect(() => {
+    let alive = true
+    fetch('/api/admin/whoami', { cache: 'no-store' })
+      .then(r => (r.ok ? r.json() : null))
+      .then((j: { owner?: boolean } | null) => { if (alive) setIsOwner(!!j?.owner) })
+      .catch(() => {})
+    return () => { alive = false }
+  }, [])
+
+  const groups = useMemo(
+    () => (isOwner ? GROUPS.map(g => (g.title === 'Общение' ? { ...g, items: [...g.items, OWNER_ITEM] } : g)) : GROUPS),
+    [isOwner],
+  )
 
   const activeHref = useMemo(() => activeHrefFor(pathname), [pathname])
 
@@ -173,7 +194,7 @@ export function AdminAccountMenu({ variant = 'sidebar' }: { variant?: Variant })
       {open && (
         <div className={skin.popup} role="menu">
           <div className="max-h-[calc(100vh-140px)] overflow-y-auto overscroll-contain">
-            {GROUPS.map((group, gi) => (
+            {groups.map((group, gi) => (
               <div key={group.title}>
                 {gi > 0 && <div className={`my-1 ${skin.sep}`} />}
                 <div className="px-3 pt-2 pb-0.5 text-[10.5px] uppercase tracking-wide text-[var(--ax-fg-faint)]">
