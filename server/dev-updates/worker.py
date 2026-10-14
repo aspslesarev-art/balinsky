@@ -672,7 +672,10 @@ def publish_one(row):
         slug = f"{base[:76]}-{n}"
         n += 1
 
-    photos, videos = copy_media(row, k["photos"])
+    # У новостей картинки не показываем: застройщики шлют баннеры с надписями
+    # на своём языке («Повышение цен до 5%»), на других языках сайта это мусор.
+    # Ход стройки, акции и мероприятия — с фото.
+    photos, videos = ([], []) if kind == "news" else copy_media(row, k["photos"])
     dev = {"name": row["developer_name"], "slug": row["developer_slug"]}
     now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     common = {
