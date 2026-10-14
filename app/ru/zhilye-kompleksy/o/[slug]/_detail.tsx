@@ -1078,7 +1078,7 @@ let _lastGoodComplexIndex: ComplexIndexEntry[] = []
 // away instead of 404'ing until the 30-min TTL lapses.
 const _loadComplexIndex = revisionedCache(['complexes'], COMPLEX_INDEX_TTL_MS, async (): Promise<ComplexIndexEntry[]> => {
   try {
-    const r = await fetch(COMPLEX_INDEX_URL, { next: { revalidate: 10 } })
+    const r = await fetch(COMPLEX_INDEX_URL, { next: { revalidate: 86400, tags: ['content:complexes'] } })
     if (!r.ok) return _lastGoodComplexIndex
     const j = await r.json() as { items: ComplexIndexEntry[] }
     const items = j.items ?? []
@@ -1117,7 +1117,7 @@ const _loadComplexPhotos = unstable_cache(
     } catch { return {} }
   },
   ['complex-photo-manifest-detail-v2'],
-  { revalidate: 3600, tags: ['content:complexes'] },
+  { revalidate: 86400, tags: ['content:complexes'] },
 )
 
 // Slim-проекция + DB-фильтр по подстроке в SEO:Title.

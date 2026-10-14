@@ -56,7 +56,7 @@ const _loadApartmentScoreRows = unstable_cache(
     }))
   },
   ['apartment-score-rows-v1'],
-  { revalidate: 3600, tags: ['content:apartments'] },
+  { revalidate: 86400, tags: ['content:apartments'] },
 )
 
 // Cross-instance cache of the slim rows (the module-level _cache below is only
@@ -76,7 +76,7 @@ const _loadVillaScoreRows = unstable_cache(
   },
   // v2: added "Land color" to the projection (yellow-land rental gate).
   ['villa-score-rows-v2'],
-  { revalidate: 3600, tags: ['content:villas', 'content:apartments'] },
+  { revalidate: 86400, tags: ['content:villas', 'content:apartments'] },
 )
 
 function fs1(v: unknown): string | null {
@@ -269,12 +269,12 @@ async function loadAllScoresInternal(kind: 'villa' | 'apartment' = 'villa'): Pro
 const _sharedVillaScores = unstable_cache(
   async () => [...(await loadAllScoresInternal('villa')).entries()],
   ['villa-scores-v1'],
-  { revalidate: 3600, tags: ['content:villas', 'content:apartments'] },
+  { revalidate: 86400, tags: ['content:villas', 'content:apartments'] },
 )
 const _sharedApartmentScores = unstable_cache(
   async () => [...(await loadAllScoresInternal('apartment')).entries()],
   ['apartment-scores-v1'],
-  { revalidate: 3600, tags: ['content:apartments'] },
+  { revalidate: 86400, tags: ['content:apartments'] },
 )
 
 export async function loadAllVillaScores(): Promise<Map<string, VillaScore>> {
@@ -311,7 +311,7 @@ type PlacesManifest = {
 
 async function fetchPlacesManifest(): Promise<PlacesManifest | null> {
   try {
-    const r = await fetch(cdnManifestUrl(PLACES_MANIFEST_URL, 1800), { next: { revalidate: 3600 } })
+    const r = await fetch(cdnManifestUrl(PLACES_MANIFEST_URL, 1800), { next: { revalidate: 86400 } })
     if (!r.ok) return null
     return await r.json()
   } catch { return null }

@@ -58,7 +58,7 @@ const dealOf = (v: string | null): 'resale' | 'secondary' =>
 
 async function manifest(url: string): Promise<Record<string, string[]>> {
   try {
-    const r = await fetch(cdnManifestUrl(url), { next: { revalidate: 3600 } })
+    const r = await fetch(cdnManifestUrl(url), { next: { revalidate: 86400 } })
     if (!r.ok) return {}
     const j = await r.json()
     return j && typeof j === 'object' ? j : {}

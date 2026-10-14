@@ -64,7 +64,7 @@ export async function loadVisionManifest(kind: FeatureKind): Promise<VisionManif
   if (hit && Date.now() - hit.ts < TTL) return hit.data
   try {
     const url = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET[kind]}/_vision.json`
-    const r = await fetch(url, { next: { revalidate: 3600, tags: [`vision:${kind}`] } })
+    const r = await fetch(url, { next: { revalidate: 86400, tags: [`vision:${kind}`] } })
     if (!r.ok) return _cache.get(kind)?.data ?? {}
     const data = (await r.json()) as VisionManifest
     _cache.set(kind, { ts: Date.now(), data })

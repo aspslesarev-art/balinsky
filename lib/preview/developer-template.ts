@@ -194,7 +194,7 @@ type PlacesPhotos = Record<string, { photos?: { name: string; attribution: strin
 
 async function loadPlacesPhotos(): Promise<PlacesPhotos> {
   try {
-    const r = await fetch(PLACES_PHOTOS_URL, { next: { revalidate: 3600 } })
+    const r = await fetch(PLACES_PHOTOS_URL, { next: { revalidate: 86400 } })
     if (!r.ok) return {}
     const j = (await r.json()) as { items?: PlacesPhotos }
     return j.items ?? {}
@@ -205,7 +205,7 @@ async function loadPlacesPhotos(): Promise<PlacesPhotos> {
 
 async function loadExteriorLabels(): Promise<Record<string, string>> {
   try {
-    const r = await fetch(VILLA_EXTERIOR_URL, { next: { revalidate: 3600 } })
+    const r = await fetch(VILLA_EXTERIOR_URL, { next: { revalidate: 86400 } })
     if (!r.ok) return {}
     return (await r.json()) as Record<string, string>
   } catch {
@@ -215,7 +215,7 @@ async function loadExteriorLabels(): Promise<Record<string, string>> {
 
 async function loadVision(url: string): Promise<VisionMap> {
   try {
-    const r = await fetch(url, { next: { revalidate: 3600 } })
+    const r = await fetch(url, { next: { revalidate: 86400 } })
     if (!r.ok) return {}
     return (await r.json()) as VisionMap
   } catch {
@@ -276,7 +276,7 @@ async function loadManagersFresh(devName: string): Promise<ManagerItem[]> {
 
 async function loadPlacesFallback(): Promise<PlacesFallback> {
   try {
-    const r = await fetch(PLACES_FALLBACK_URL, { next: { revalidate: 3600 } })
+    const r = await fetch(PLACES_FALLBACK_URL, { next: { revalidate: 86400 } })
     if (!r.ok) return {}
     const j = (await r.json()) as { items?: PlacesFallback }
     return j.items ?? {}
@@ -287,7 +287,7 @@ async function loadPlacesFallback(): Promise<PlacesFallback> {
 
 async function loadManifest(url: string): Promise<Record<string, string[]>> {
   try {
-    const r = await fetch(url, { next: { revalidate: 1800 } })
+    const r = await fetch(url, { next: { revalidate: 86400 } })
     if (!r.ok) return {}
     return (await r.json()) as Record<string, string[]>
   } catch {
@@ -521,7 +521,7 @@ function cachedTable(name: string, fields: readonly string[], limit: number, tag
       return rows
     },
     [`preview-tpl-${name}-v3`],
-    { revalidate: 1800, tags: [tag] },
+    { revalidate: 86400, tags: [tag] },
   )
 }
 

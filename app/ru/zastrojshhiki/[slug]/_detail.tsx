@@ -111,7 +111,7 @@ export const _loadAllDevelopers = unstable_cache(
   // Tagged so the Airtable webhook / sync revalidation (revalidateTag
   // 'content:developers') actually busts this cache — otherwise edits sat
   // stale until the 1h TTL.
-  { revalidate: 3600, tags: ['content:developers'] },
+  { revalidate: 86400, tags: ['content:developers'] },
 )
 
 export async function loadDeveloper(slug: string): Promise<DeveloperRow | null> {
@@ -155,7 +155,7 @@ const _loadAllComplexes = unstable_cache(
     })
   },
   ['complexes-all-for-dev-v2'],
-  { revalidate: 3600, tags: ['content:complexes'] },
+  { revalidate: 86400, tags: ['content:complexes'] },
 )
 
 const _loadComplexManifest = unstable_cache(
@@ -175,7 +175,7 @@ const _loadComplexManifest = unstable_cache(
   // manifest cache here — without it, freshly-synced photos for a developer's
   // complexes didn't appear on the developer page until the 1h TTL elapsed.
   ['complex-manifest-for-dev'],
-  { revalidate: 3600, tags: ['content:complexes'] },
+  { revalidate: 86400, tags: ['content:complexes'] },
 )
 
 async function loadProjectsByDeveloper(devName: string): Promise<{

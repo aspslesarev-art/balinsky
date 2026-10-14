@@ -43,7 +43,7 @@ export async function loadCopyManifest(kind: CopyKind): Promise<CopyManifest> {
   if (hit && Date.now() - hit.ts < TTL) return hit.data
   try {
     const url = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET[kind]}/_texts.json`
-    const r = await fetch(url, { next: { revalidate: 3600, tags: [`copy:${kind}`] } })
+    const r = await fetch(url, { next: { revalidate: 86400, tags: [`copy:${kind}`] } })
     if (!r.ok) return _cache.get(kind)?.data ?? {}
     const data = (await r.json()) as CopyManifest
     _cache.set(kind, { ts: Date.now(), data })

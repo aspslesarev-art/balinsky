@@ -638,7 +638,7 @@ const _loadComplexCardRows = unstable_cache(
     })
   },
   ['zhilye-complex-card-rows-v2'],
-  { revalidate: 3600, tags: ['content:complexes'] },
+  { revalidate: 86400, tags: ['content:complexes'] },
 )
 const _loadVillaPriceRows = unstable_cache(
   async (): Promise<PriceRow[]> => {
@@ -646,7 +646,7 @@ const _loadVillaPriceRows = unstable_cache(
     return (data ?? []) as unknown as PriceRow[]
   },
   ['zhilye-villa-price-rows-v2'],
-  { revalidate: 3600, tags: ['content:villas'] },
+  { revalidate: 86400, tags: ['content:villas'] },
 )
 const _loadAptPriceRows = unstable_cache(
   async (): Promise<PriceRow[]> => {
@@ -654,7 +654,7 @@ const _loadAptPriceRows = unstable_cache(
     return (data ?? []) as unknown as PriceRow[]
   },
   ['zhilye-apt-price-rows-v2'],
-  { revalidate: 3600, tags: ['content:apartments'] },
+  { revalidate: 86400, tags: ['content:apartments'] },
 )
 
 async function _loadAllInternal(): Promise<CachedAll> {

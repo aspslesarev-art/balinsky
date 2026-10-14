@@ -144,7 +144,7 @@ export const loadUnitDemand = unstable_cache(
     return out
   },
   ['unit-demand-batch'],
-  { revalidate: 3600, tags: ['unit-demand'] },
+  { revalidate: 86400, tags: ['unit-demand'] },
 )
 
 /** Балл одного юнита — для его собственной страницы. */
@@ -160,5 +160,5 @@ export const loadOneUnitDemand = unstable_cache(
     return toDemand(data as Row, lang)
   },
   ['unit-demand-one'],
-  { revalidate: 3600, tags: ['unit-demand'] },
+  { revalidate: 86400, tags: ['unit-demand'] },
 )

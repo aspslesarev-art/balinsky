@@ -39,7 +39,7 @@ async function buildFromCompetitors(): Promise<ReviewHeat> {
 
 async function build(): Promise<ReviewHeat> {
   try {
-    const r = await fetch(POIS_URL, { next: { revalidate: 3600 } })
+    const r = await fetch(POIS_URL, { next: { revalidate: 86400 } })
     if (r.ok) {
       const j = (await r.json()) as { cells?: HeatCell[]; max?: number }
       if (Array.isArray(j.cells) && j.cells.length > 0) {
@@ -53,6 +53,6 @@ async function build(): Promise<ReviewHeat> {
 }
 
 export const loadReviewHeat = unstable_cache(build, ['reviews-heat-v4-nuanu'], {
-  revalidate: 3600,
+  revalidate: 86400,
   tags: ['content:competitors'],
 })

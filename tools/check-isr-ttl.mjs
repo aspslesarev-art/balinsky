@@ -53,8 +53,32 @@ for (const file of walk(ROOT)) {
   })
 }
 
+// 14.10.2026: TTL страницы — это минимум из её `export const revalidate` и
+// всех fetch/unstable_cache внутри рендера. Индексы слагов с `revalidate: 10`
+// делали страницы объектов 10-секундными, и каждый заход краулера был
+// пересборкой (writes в 3–5 раз больше reads). Поэтому проверяем и данные:
+// всё, что рендерит страницы (app без app/api, lib, components).
+const DATA_RE = /revalidate:\s*([0-9_]+)\b/
+for (const dir of ['app', 'lib', 'components']) {
+  for (const file of walk(dir)) {
+    if (file.startsWith(path.join('app', 'api'))) continue
+    const lines = fs.readFileSync(file, 'utf8').split('\n')
+    lines.forEach((line, i) => {
+      const m = line.match(DATA_RE)
+      if (!m || line.trim().startsWith('//')) return
+      let waived = line.includes('isr-ttl-ok:')
+      for (let j = i - 1; !waived && j >= 0 && lines[j].trim().startsWith('//'); j--) {
+        if (lines[j].includes('isr-ttl-ok:')) waived = true
+      }
+      if (waived) return
+      const ttl = Number(m[1].replace(/_/g, ''))
+      if (ttl > 0 && ttl < MIN_TTL) bad.push({ file, ttl, line: i + 1 })
+    })
+  }
+}
+
 if (bad.length) {
-  console.error(`\n✖ ISR TTL ниже ${MIN_TTL} с на динамических маршрутах:\n`)
+  console.error(`\n✖ ISR TTL ниже ${MIN_TTL} с (маршрут или данные внутри рендера):\n`)
   for (const b of bad) console.error(`   ${b.file}:${b.line} — revalidate = ${b.ttl}`)
   console.error(
     '\nЭто прямой путь к перерасходу на Vercel (ISR Writes). Правки контента\n' +
@@ -65,4 +89,4 @@ if (bad.length) {
   process.exit(1)
 }
 
-console.log(`✓ ISR TTL: ${MIN_TTL}+ на всех динамических маршрутах`)
+console.log(`✓ ISR TTL: ${MIN_TTL}+ на динамических маршрутах и в данных рендера`)

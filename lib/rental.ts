@@ -83,7 +83,7 @@ const loadSlimRental = unstable_cache(
 const loadFullRentalBySlug = unstable_cache(
   async (slug: string): Promise<RentalItem | null> => (await loadRawRental()).find(r => r.slug === slug) ?? null,
   ['rental-item-v1'],
-  { revalidate: 3600, tags: ['content:rental'] },
+  { revalidate: 86400, tags: ['content:rental'] },
 )
 
 // Returns every rental in the manifest, including ones added long ago —

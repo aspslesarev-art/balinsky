@@ -638,7 +638,7 @@ let _lastGoodIndex: IndexEntry[] = []
 // is picked up within seconds instead of waiting out the 30-min TTL.
 const _loadVillaIndex = revisionedCache(['villas'], INDEX_TTL_MS, async (): Promise<IndexEntry[]> => {
   try {
-    const r = await fetch(INDEX_URL, { next: { revalidate: 10 } })
+    const r = await fetch(INDEX_URL, { next: { revalidate: 86400, tags: ['content:villas'] } })
     if (!r.ok) return _lastGoodIndex
     const j = await r.json() as { items: IndexEntry[] }
     const items = j.items ?? []

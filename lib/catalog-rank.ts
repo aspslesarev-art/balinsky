@@ -36,7 +36,7 @@ async function _viewCounts(kind: ViewKind): Promise<Record<string, number>> {
 
 export async function loadViewCounts(kind: ViewKind): Promise<Record<string, number>> {
   return unstable_cache(() => _viewCounts(kind), ['view-counts-v1', kind], {
-    revalidate: 3600,
+    revalidate: 86400,
     tags: ['content:views'],
   })()
 }

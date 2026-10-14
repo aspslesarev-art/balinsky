@@ -625,7 +625,7 @@ let _lastGoodAptIndex: AptIndexEntry[] = []
 // this in-process index instead of waiting out the 30-min TTL.
 const _loadApartmentIndex = revisionedCache(['apartments'], 30 * 60 * 1000, async (): Promise<AptIndexEntry[]> => {
   try {
-    const r = await fetch(APT_INDEX_URL, { next: { revalidate: 10 } })
+    const r = await fetch(APT_INDEX_URL, { next: { revalidate: 86400, tags: ['content:apartments'] } })
     if (!r.ok) return _lastGoodAptIndex
     const j = await r.json() as { items: AptIndexEntry[] }
     const items = j.items ?? []
@@ -649,7 +649,7 @@ const _loadApartmentById = unstable_cache(
     return { ...raw, data: mergeAllTranslations(raw.data, raw.airtable_id, enCache) }
   },
   ['apartment-by-id-detail-v3'],
-  { revalidate: 3600, tags: ['content:apartments'] },
+  { revalidate: 86400, tags: ['content:apartments'] },
 )
 const _loadAptManifest = unstable_cache(
   async (): Promise<Record<string, string[]>> => {
@@ -659,7 +659,7 @@ const _loadAptManifest = unstable_cache(
     } catch { return {} }
   },
   ['apt-manifest-detail-v2'],
-  { revalidate: 3600, tags: ['content:apartments'] },
+  { revalidate: 86400, tags: ['content:apartments'] },
 )
 const _loadDevLookup = unstable_cache(
   async (): Promise<Record<string, string>> => {
