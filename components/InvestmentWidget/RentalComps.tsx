@@ -23,6 +23,8 @@ type Item = {
   price: number | null
   star: number | null
   image: string | null
+  /** Конкретный вариант на Booking, чья цена в коридоре («One-Bedroom Villa»). */
+  roomType: string | null
   url: string | null
 }
 
@@ -195,6 +197,9 @@ export function RentalComps({ lat, lng, adr, lang }: { lat: number; lng: number;
               />
               <div className="p-2.5">
                 <div className="text-[13px] font-medium leading-snug line-clamp-2">{it.title}</div>
+                {it.roomType && (
+                  <div className="mt-0.5 text-[11.5px] leading-snug text-[var(--color-text-muted)] line-clamp-2" title={it.roomType}>{it.roomType}</div>
+                )}
                 {/* Состав объекта — то, что делает сравнение честным.
                     Площадь у Booking заполнена меньше чем у процента
                     объектов, поэтому показываем её только когда есть. */}

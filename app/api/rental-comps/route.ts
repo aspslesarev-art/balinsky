@@ -41,6 +41,7 @@ type Row = {
   star: number | null
   slug: string | null
   image: string | null
+  room_type: string | null
 }
 
 function num(v: string | null): number | null {
@@ -107,6 +108,9 @@ export async function GET(req: Request) {
       price: r.price == null ? null : Number(r.price),
       star: r.star == null ? null : Number(r.star),
       image: r.image,
+      // Вариант жилья, чья цена попала в коридор (migrations/104): у комплекса
+      // однушка и трёхспальная вилла стоят по-разному, сравниваем с конкретной.
+      roomType: r.room_type ?? null,
       // Прямая ссылка на карточку требует кода страны, которого в данных
       // нет, — часть ссылок оказалась бы битой. Поиск по названию открывает
       // тот же объект и не ломается.
