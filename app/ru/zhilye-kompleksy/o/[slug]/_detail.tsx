@@ -2077,7 +2077,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
                   <LandProfileBlock data={landProfile!} permits={projectPermits} lang={lang} />
                 </LazyMount>
               )}
-              <PlotSiteBlock plot={plotSite} lang={lang} />
+              <PlotSiteBlock plot={plotSite} hazards={geoFacts?.climate?.hazards} lang={lang} />
             </div>
           </DataChapter>
         )}

@@ -4,11 +4,19 @@
 //
 // Data: listing_geo_facts.climate.plot (scripts/plot-site.py — OpenStreetMap +
 // Copernicus DEM GLO-30). Server Component. Renders nothing without data.
-import { Mountain, Route, Droplets, Waves, AlertTriangle } from 'lucide-react'
+import { Mountain, Route, Droplets, Waves, AlertTriangle, ShieldAlert } from 'lucide-react'
 import type { Climate } from '@/lib/complex-access'
 import { pickCopy, type Lang } from '@/lib/i18n'
 
 type Plot = NonNullable<Climate['plot']>
+type Hazards = NonNullable<Climate['hazards']>
+type HazardKey = Exclude<keyof Hazards, 'src'>
+
+const HAZARD_ORDER: HazardKey[] = ['flood', 'flash_flood', 'landslide', 'tsunami', 'volcano', 'earthquake']
+// BNPB's own map classes for the 0..1 index.
+function hazardLevel(v: number): 'low' | 'mid' | 'high' {
+  return v >= 0.666 ? 'high' : v >= 0.333 ? 'mid' : 'low'
+}
 
 // Show a river or the sea only when it is close enough to matter for the plot.
 const RIVER_SHOW_M = 300
@@ -46,6 +54,20 @@ const COPY = {
     seaWarn: 'Ближе 100 м от линии прилива строить нельзя (Perpres 51/2016). Точка на карте неточная — спросите застройщика, где проходит граница и как это отражено в KKPR.',
     seaNear: 'Граница 100 м от моря близко. Уточните у застройщика, что весь проект за ней.',
     note: 'Дороги, реки и берег — OpenStreetMap, точность 10–20 м. Уклон — спутниковая карта высот Copernicus (30 м): деревья и крыши его искажают. Это подсказка, что проверить, а не замер на месте.',
+    hazards: 'Природные риски',
+    hz: { flood: 'Наводнение', flash_flood: 'Сель', landslide: 'Оползень', tsunami: 'Цунами', volcano: 'Вулкан', earthquake: 'Землетрясение' },
+    lvl: { low: 'низкий', mid: 'средний', high: 'высокий' },
+    hzHint: {
+      flood: 'Спросите застройщика про дренаж и высоту пола над землёй.',
+      flash_flood: 'Спросите, отводит ли участок воду в ливень и далеко ли русло.',
+      landslide: 'Нужны проверка грунта и подпорные стены — спросите, сделаны ли они.',
+      tsunami: 'Узнайте путь эвакуации и высоту ближайшего укрытия.',
+      volcano: 'Участок в зоне вулкана. При извержении район могут закрыть, страховка дороже.',
+     
+      earthquake: 'На Бали сейсмоопасно везде. Спросите, рассчитан ли дом по нормам SNI на землетрясения.',
+    },
+    hzNone: 'Высоких рисков нет. Землетрясения на Бали возможны везде.',
+    hzNote: 'Индексы опасности InaRISK (агентство по ЧС Индонезии, BNPB). Это модель по району, а не обследование участка.',
     road_: ROAD_RU, m: 'м', km: 'км',
   },
   en: {
@@ -63,6 +85,20 @@ const COPY = {
     seaWarn: 'No building within 100 m of the high-tide line (Perpres 51/2016). The map point is approximate — ask the developer where the line runs and how the KKPR reflects it.',
     seaNear: 'The 100 m coastal line is close. Check with the developer that the whole project is behind it.',
     note: 'Roads, rivers and coast: OpenStreetMap, accurate to 10–20 m. Slope: Copernicus satellite elevation (30 m) — trees and roofs distort it. A hint on what to check, not a site survey.',
+    hazards: 'Natural hazards',
+    hz: { flood: 'Flood', flash_flood: 'Flash flood', landslide: 'Landslide', tsunami: 'Tsunami', volcano: 'Volcano', earthquake: 'Earthquake' },
+    lvl: { low: 'low', mid: 'medium', high: 'high' },
+    hzHint: {
+      flood: 'Ask the developer about drainage and how high the floor sits above ground.',
+      flash_flood: 'Ask how the plot drains in a downpour and how close the nearest stream bed is.',
+      landslide: 'A soil survey and retaining walls are needed — ask whether they were done.',
+      tsunami: 'Find out the evacuation route and the nearest high ground.',
+      volcano: 'The plot is in a volcano zone. An eruption can close the area, and insurance costs more.',
+     
+      earthquake: 'All of Bali is seismic. Ask whether the building is designed to the SNI earthquake code.',
+    },
+    hzNone: 'No high hazards. Earthquakes are possible anywhere on Bali.',
+    hzNote: 'Hazard indices from InaRISK (Indonesia’s disaster agency, BNPB). A district-level model, not a survey of the plot.',
     road_: ROAD_EN, m: 'm', km: 'km',
   },
 } as const
@@ -100,7 +136,7 @@ function Row({ icon, label, value, hint, warn }: {
   )
 }
 
-export function PlotSiteBlock({ plot, lang }: { plot: Plot | null | undefined; lang: Lang }) {
+export function PlotSiteBlock({ plot, hazards, lang }: { plot: Plot | null | undefined; hazards?: Hazards | null; lang: Lang }) {
   if (!plot) return null
   const t = pickCopy(COPY, lang)
   const dist = (m: number) => m < 1000
@@ -127,6 +163,14 @@ export function PlotSiteBlock({ plot, lang }: { plot: Plot | null | undefined; l
   const showWater = water.m <= RIVER_SHOW_M
   const showSea = plot.coast_m <= SEA_SHOW_M
   const seaHint = plot.coast_m < SEA_WARN_M ? t.seaWarn : plot.coast_m < SEA_NEAR_M ? t.seaNear : null
+
+  // Hazards the model puts at this point, worst first; "none" ones are left out.
+  const hz = hazards
+    ? HAZARD_ORDER.filter((k) => hazards[k] != null)
+        .map((k) => ({ k, level: hazardLevel(hazards[k]!) }))
+        .sort((a, b) => ['high', 'mid', 'low'].indexOf(a.level) - ['high', 'mid', 'low'].indexOf(b.level))
+    : []
+  const hzHigh = hz.filter((h) => h.level === 'high').map((h) => h.k)
 
   return (
     <div className="mt-4 rounded-2xl border border-[var(--color-border)] bg-white p-5">
@@ -169,8 +213,28 @@ export function PlotSiteBlock({ plot, lang }: { plot: Plot | null | undefined; l
             warn={plot.coast_m < SEA_WARN_M}
           />
         )}
+        {hz.length > 0 && (
+          <Row
+            icon={<ShieldAlert size={16} />}
+            label={t.hazards}
+            value={
+              <span className="flex flex-wrap gap-1.5 pt-1">
+                {hz.map(({ k, level }) => (
+                  <span
+                    key={k}
+                    className={`rounded-md px-2 py-0.5 text-[13px] ${level === 'high' ? 'bg-[#FEF3C7] text-[#92400E]' : 'bg-[var(--color-search-bg)] text-[var(--color-text)]'}`}
+                  >
+                    {t.hz[k]} · {t.lvl[level]}
+                  </span>
+                ))}
+              </span>
+            }
+            hint={hzHigh.length ? hzHigh.map((k) => t.hzHint[k]).join(' ') : t.hzNone}
+            warn={hzHigh.length > 0}
+          />
+        )}
       </div>
-      <p className="mt-4 text-[12px] leading-snug text-[var(--color-text-muted)]">{t.note}</p>
+      <p className="mt-4 text-[12px] leading-snug text-[var(--color-text-muted)]">{t.note}{hz.length > 0 && <> {t.hzNote}</>}</p>
     </div>
   )
 }

@@ -94,6 +94,8 @@ export type Climate = Record<string, ClimateMonth> & {
     stream_m: number
     coast_m: number
   }
+  /** InaRISK (BNPB) hazard indices 0..1 at the point; null = no hazard of that kind (scripts/inarisk-hazards.py). */
+  hazards?: { src: string } & Record<'flood' | 'flash_flood' | 'landslide' | 'earthquake' | 'tsunami' | 'volcano', number | null>
 }
 /** Seconds with traffic, seconds on an empty road, metres. */
 export type RouteLeg = { s: number; static_s: number | null; m: number | null }
