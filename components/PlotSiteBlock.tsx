@@ -10,9 +10,11 @@ import { pickCopy, type Lang } from '@/lib/i18n'
 
 type Plot = NonNullable<Climate['plot']>
 type Hazards = NonNullable<Climate['hazards']>
-type HazardKey = Exclude<keyof Hazards, 'src'>
+type HazardKey = Exclude<keyof Hazards, 'src' | 'earthquake'>
 
-const HAZARD_ORDER: HazardKey[] = ['flood', 'flash_flood', 'landslide', 'tsunami', 'volcano', 'earthquake']
+// Землетрясение не показываем: индекс InaRISK скачет от «низкого» до «высокого»
+// у соседних домов (грунт в пикселе), а трясёт весь Букит одинаково.
+const HAZARD_ORDER: HazardKey[] = ['flood', 'flash_flood', 'landslide', 'tsunami', 'volcano']
 // BNPB's own map classes for the 0..1 index.
 function hazardLevel(v: number): 'low' | 'mid' | 'high' {
   return v >= 0.666 ? 'high' : v >= 0.333 ? 'mid' : 'low'
@@ -63,10 +65,8 @@ const COPY = {
       landslide: 'Нужны проверка грунта и подпорные стены — спросите, сделаны ли они.',
       tsunami: 'Узнайте путь эвакуации и высоту ближайшего укрытия.',
       volcano: 'Участок в зоне вулкана. При извержении район могут закрыть, страховка дороже.',
-     
-      earthquake: 'На Бали сейсмоопасно везде. Спросите, рассчитан ли дом по нормам SNI на землетрясения.',
     },
-    hzNone: 'Высоких рисков нет. Землетрясения на Бали возможны везде.',
+    hzNone: 'Высоких рисков нет.',
     hzNote: 'Индексы опасности InaRISK (агентство по ЧС Индонезии, BNPB). Это модель по району, а не обследование участка.',
     road_: ROAD_RU, m: 'м', km: 'км',
   },
@@ -95,9 +95,8 @@ const COPY = {
       tsunami: 'Find out the evacuation route and the nearest high ground.',
       volcano: 'The plot is in a volcano zone. An eruption can close the area, and insurance costs more.',
      
-      earthquake: 'All of Bali is seismic. Ask whether the building is designed to the SNI earthquake code.',
     },
-    hzNone: 'No high hazards. Earthquakes are possible anywhere on Bali.',
+    hzNone: 'No high hazards.',
     hzNote: 'Hazard indices from InaRISK (Indonesia’s disaster agency, BNPB). A district-level model, not a survey of the plot.',
     road_: ROAD_EN, m: 'm', km: 'km',
   },
