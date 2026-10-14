@@ -51,8 +51,13 @@ async function loadRawPromo(): Promise<PromoItem[]> {
   }
 }
 
+// Картинки не показываем, как и у новостей (lib/news.ts): у застройщиков это
+// баннеры с русскими надписями, а страница идёт на 10 языках. Фото остаются
+// в манифесте. Видео не трогаем.
+const withoutPhotos = (item: PromoItem): PromoItem => ({ ...item, photo: null, photos: [] })
+
 export async function loadAllPromo(lang: Lang = 'ru'): Promise<PromoItem[]> {
-  const items = await loadRawPromo()
+  const items = (await loadRawPromo()).map(withoutPhotos)
   if (lang === 'ru' || items.length === 0) return items
   const cache = await loadTranslations('promo', lang)
   return items.map(item => applyManifestTranslation(item, cache, EN_FIELDS))

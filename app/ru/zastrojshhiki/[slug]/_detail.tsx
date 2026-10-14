@@ -847,15 +847,8 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
             <ul className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-1 -mx-6 px-6 max-w-none md:max-w-full md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-4 md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {devPromo.map(p => (
                 <li key={p.id} className="snap-start shrink-0 w-[280px] md:w-auto">
-                  <Link href={`${promoBase}/${p.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[var(--color-text)] hover:border-[var(--color-primary)]">
-                    <div className="relative w-full aspect-[16/9] bg-[var(--color-search-bg)]">
-                      {p.photo ? (
-                        <Image src={p.photo} alt={p.title} fill sizes="(max-width: 768px) 100vw, 25vw" className="object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-2xl">🎁</div>
-                      )}
-                    </div>
-                    <div className="p-3 text-[14px] font-medium leading-snug line-clamp-3">{p.title}</div>
+                  <Link href={`${promoBase}/${p.slug}`} className="block h-full rounded-2xl border border-[var(--color-border)] bg-white no-underline text-[var(--color-text)] hover:border-[var(--color-primary)]">
+                    <div className="p-4 text-[14px] font-medium leading-snug line-clamp-4">{p.title}</div>
                   </Link>
                 </li>
               ))}
@@ -869,15 +862,8 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
             <ul className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-1 -mx-6 px-6 max-w-none md:max-w-full md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-4 md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {devEvents.map(e => (
                 <li key={e.id} className="snap-start shrink-0 w-[280px] md:w-auto">
-                  <Link href={`${eventsBase}/${e.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[var(--color-text)] hover:border-[var(--color-primary)]">
-                    <div className="relative w-full aspect-[16/9] bg-[var(--color-search-bg)]">
-                      {e.photo ? (
-                        <Image src={e.photo} alt={e.title} fill sizes="(max-width: 768px) 100vw, 25vw" className="object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-2xl">🎟️</div>
-                      )}
-                    </div>
-                    <div className="p-3 text-[14px] font-medium leading-snug line-clamp-3">{e.title}</div>
+                  <Link href={`${eventsBase}/${e.slug}`} className="block h-full rounded-2xl border border-[var(--color-border)] bg-white no-underline text-[var(--color-text)] hover:border-[var(--color-primary)]">
+                    <div className="p-4 text-[14px] font-medium leading-snug line-clamp-4">{e.title}</div>
                   </Link>
                 </li>
               ))}

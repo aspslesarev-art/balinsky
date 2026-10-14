@@ -2,7 +2,6 @@
 
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import Image from 'next/image'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { LocalDateTime } from '@/components/LocalDateTime'
@@ -173,15 +172,8 @@ export async function EventsList({ lang }: { lang: Lang }) {
 function EventCard({ e, lang }: { e: EventItem; lang: Lang }) {
   const detailRoot = switchLangPath('/ru/meropriyatiya', lang)
   return (
-    <Link href={`${detailRoot}/${e.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[var(--color-text)] hover:border-[var(--color-primary)] transition-colors">
-      {e.photo ? (
-        <div className="relative w-full h-[180px]">
-          <Image src={e.photo} alt={e.title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
-        </div>
-      ) : (
-        <div className="w-full h-[180px] bg-[var(--color-search-bg)] flex items-center justify-center text-3xl">🎟️</div>
-      )}
-      <div className="p-4">
+    <Link href={`${detailRoot}/${e.slug}`} className="block h-full rounded-2xl border border-[var(--color-border)] bg-white no-underline text-[var(--color-text)] hover:border-[var(--color-primary)] transition-colors">
+      <div className="p-5">
         <div className="flex items-center gap-2 mb-1.5">
           {e.developers[0]?.name && (
             <span className="text-[11px] uppercase tracking-wide text-[var(--color-primary-pressed)] font-medium">{e.developers[0].name}</span>

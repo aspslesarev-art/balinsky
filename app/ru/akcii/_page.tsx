@@ -2,7 +2,6 @@
 
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import Image from 'next/image'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { loadAllPromo } from '@/lib/promo'
@@ -190,15 +189,8 @@ function PromoCard({
   c: PromoCopy; detailRoot: string
 }) {
   return (
-    <Link href={`${detailRoot}/${p.slug}`} className={`block rounded-2xl overflow-hidden border bg-white no-underline text-[var(--color-text)] transition-colors ${expired ? 'border-[var(--color-border)]' : 'border-[var(--color-border)] hover:border-[var(--color-primary)]'}`}>
-      {p.photo ? (
-        <div className={`relative w-full h-[180px] ${expired ? 'grayscale' : ''}`}>
-          <Image src={p.photo} alt={p.title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
-        </div>
-      ) : (
-        <div className="w-full h-[180px] bg-[var(--color-search-bg)] flex items-center justify-center text-3xl">🎁</div>
-      )}
-      <div className="p-4">
+    <Link href={`${detailRoot}/${p.slug}`} className={`block h-full rounded-2xl border bg-white no-underline text-[var(--color-text)] transition-colors ${expired ? 'border-[var(--color-border)]' : 'border-[var(--color-border)] hover:border-[var(--color-primary)]'}`}>
+      <div className="p-5">
         <div className="flex items-center gap-2 mb-1.5">
           {p.developers[0]?.name && (
             <span className="text-[11px] uppercase tracking-wide text-[var(--color-primary-pressed)] font-medium">

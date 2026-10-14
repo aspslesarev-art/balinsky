@@ -3,7 +3,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 import { ArticleMedia, ArticleVideos } from '@/components/ArticleMedia'
 import { Calendar, ExternalLink, Building2, HardHat } from 'lucide-react'
 import { Header } from '@/components/Header'
@@ -166,15 +165,8 @@ export async function PromoDetail({ slug, lang }: { slug: string; lang: Lang }) 
             <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {related.map(r => (
                 <li key={r.id}>
-                  <Link href={`${promoRoot}/${r.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[var(--color-text)] hover:border-[var(--color-primary)]">
-                    {r.photo ? (
-                      <div className="relative w-full h-[120px]">
-                        <Image src={r.photo} alt={r.title} fill sizes="(max-width: 768px) 100vw, 25vw" className="object-cover" />
-                      </div>
-                    ) : (
-                      <div className="w-full h-[120px] bg-[var(--color-search-bg)] flex items-center justify-center text-2xl">🎁</div>
-                    )}
-                    <div className="p-3 text-[14px] font-medium leading-snug line-clamp-3">{r.title}</div>
+                  <Link href={`${promoRoot}/${r.slug}`} className="block h-full rounded-2xl border border-[var(--color-border)] bg-white no-underline text-[var(--color-text)] hover:border-[var(--color-primary)]">
+                    <div className="p-4 text-[14px] font-medium leading-snug line-clamp-4">{r.title}</div>
                   </Link>
                 </li>
               ))}
