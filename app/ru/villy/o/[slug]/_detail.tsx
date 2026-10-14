@@ -1471,8 +1471,8 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
         )}
 
         {(landOk || plotSite) && (
-          <DataChapter id="uchastok" n={chapters.indexOf('uchastok') + 1} lang={lang} hint={landOk ? undefined : plotChapterHint(lang)}>
-            <div className="max-w-[760px]">
+          <DataChapter id="uchastok" n={chapters.indexOf('uchastok') + 1} lang={lang} hint={!plotSite ? undefined : plotChapterHint(lang, landOk)}>
+            <div className={landOk && plotSite ? 'grid grid-cols-1 lg:grid-cols-2 gap-4 [&>section]:h-full [&>div>section]:h-full' : 'max-w-[760px]'}>
               {landOk && (
                 <LazyMount fallback={<div className="min-h-[480px] rounded-2xl bg-[var(--color-search-bg)]" />}>
                   <LandProfileBlock data={landProfile!} permits={projectPermits} lang={lang} />

@@ -4,7 +4,7 @@
 //
 // Data: listing_geo_facts.climate.plot (scripts/plot-site.py — OpenStreetMap +
 // Copernicus DEM GLO-30). Server Component. Renders nothing without data.
-import { Mountain, Route, Droplets, Waves, AlertTriangle, ShieldAlert } from 'lucide-react'
+import { Mountain, Route, Droplets, Waves, AlertTriangle, ShieldAlert, Compass } from 'lucide-react'
 import type { Climate } from '@/lib/complex-access'
 import { pickCopy, type Lang } from '@/lib/i18n'
 
@@ -106,28 +106,37 @@ const COPY = {
 // Chapter hint for plots with no official zoning row: the stock one promises
 // zoning, which is not there.
 const CHAPTER_HINT = {
-  ru: { hint: 'Что рядом с участком: склон, дорога, река и море — и где закон запрещает строить.' },
-  en: { hint: 'What is next to the plot: slope, road, river and sea — and where the law forbids building.' },
+  ru: {
+    hint: 'Что рядом с участком: склон, дорога, река и море — и где закон запрещает строить.',
+    both: 'Что разрешено строить на этой земле по официальной карте зон, и что вокруг: склон, дорога, вода и природные риски.',
+  },
+  en: {
+    hint: 'What is next to the plot: slope, road, river and sea — and where the law forbids building.',
+    both: 'What may be built on this land per the official zoning map, and what surrounds it: slope, road, water and natural hazards.',
+  },
 } as const
 
-export function plotChapterHint(lang: Lang): string {
-  return pickCopy(CHAPTER_HINT, lang).hint
+/** `withZoning` — the chapter also shows LandProfileBlock. */
+export function plotChapterHint(lang: Lang, withZoning = false): string {
+  const c = pickCopy(CHAPTER_HINT, lang)
+  return withZoning ? c.both : c.hint
 }
 
 const LOCALE: Record<Lang, string> = { ru: 'ru', en: 'en', id: 'id', fr: 'fr', de: 'de', zh: 'zh', nl: 'nl', ban: 'id', pl: 'pl', uk: 'uk' }
 
+// Same tile as the use-case cells in LandProfileBlock, so the two cards read as a pair.
 function Row({ icon, label, value, hint, warn }: {
   icon: React.ReactNode; label: string; value: React.ReactNode; hint?: string | null; warn?: boolean
 }) {
   return (
-    <div className="flex gap-3 py-3 first:pt-0 last:pb-0">
+    <div className="flex gap-2.5 rounded-lg bg-[var(--color-search-bg)] px-3 py-2.5">
       <span className="mt-0.5 shrink-0 text-[var(--color-primary)]">{icon}</span>
       <div className="min-w-0 flex-1">
-        <div className="text-[12px] uppercase tracking-wide text-[var(--color-text-muted)]">{label}</div>
-        <div className="text-[14px] leading-relaxed text-[var(--color-text)]">{value}</div>
+        <div className="text-[11.5px] uppercase tracking-wide text-[var(--color-text-muted)]">{label}</div>
+        <div className="text-[13.5px] leading-relaxed text-[var(--color-text)]">{value}</div>
         {hint && (
-          <p className={`mt-1 flex gap-1.5 text-[13px] leading-relaxed ${warn ? 'text-[#B45309]' : 'text-[var(--color-text-muted)]'}`}>
-            {warn && <AlertTriangle size={14} className="mt-[3px] shrink-0" />}
+          <p className={`mt-1 flex gap-1.5 text-[12.5px] leading-relaxed ${warn ? 'text-[#92400E]' : 'text-[var(--color-text-muted)]'}`}>
+            {warn && <AlertTriangle size={13} className="mt-[3px] shrink-0" />}
             <span>{hint}</span>
           </p>
         )}
@@ -173,17 +182,17 @@ export function PlotSiteBlock({ plot, hazards, lang }: { plot: Plot | null | und
   const hzHigh = hz.filter((h) => h.level === 'high').map((h) => h.k)
 
   return (
-    <div className="mt-4 rounded-2xl border border-[var(--color-border)] bg-white p-5">
-      <h3 className="mb-4 text-[15px] font-semibold text-[var(--color-text)]">{t.title}</h3>
-      <div className="divide-y divide-[var(--color-border)]">
-        {slopeLabel && (
-          <Row
-            icon={<Mountain size={16} />}
-            label={t.slope}
-            value={<>{slopeLabel} <span className="text-[var(--color-text-muted)]">· {s!.toLocaleString(LOCALE[lang] ?? 'en', { maximumFractionDigits: 0 })}%</span></>}
-            hint={s! >= 15 ? t.steepHint : null}
-          />
-        )}
+    <section className="rounded-2xl border border-[var(--color-border)] bg-white overflow-hidden">
+      <div className="px-5 py-4 flex items-start gap-3">
+        <Compass size={18} className="text-[var(--color-primary)] mt-0.5 shrink-0" />
+        <div className="flex-1 min-w-0">
+          <h3 className="text-[12px] font-normal uppercase tracking-wide text-[var(--color-text-muted)] mb-1">{t.title}</h3>
+          <div className="text-[15px] font-medium text-[var(--color-text)]">
+            {[slopeLabel, `${roadKind} ${t.roadAt(dist(r.m))}`].filter(Boolean).join(' · ')}
+          </div>
+        </div>
+      </div>
+      <div className="px-5 pb-4 space-y-1.5">
         <Row
           icon={<Route size={16} />}
           label={t.road}
@@ -195,24 +204,34 @@ export function PlotSiteBlock({ plot, hazards, lang }: { plot: Plot | null | und
           hint={roadHint}
           warn={r.m > 100}
         />
-        {showWater && (
-          <Row
-            icon={<Droplets size={16} />}
-            label={water.label}
-            value={t.riverAt(dist(water.m))}
-            hint={water.m < RIVER_WARN_M ? t.riverWarn : null}
-            warn={water.m < RIVER_WARN_M}
-          />
-        )}
-        {showSea && (
-          <Row
-            icon={<Waves size={16} />}
-            label={t.sea}
-            value={t.seaAt(dist(plot.coast_m))}
-            hint={seaHint}
-            warn={plot.coast_m < SEA_WARN_M}
-          />
-        )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+          {slopeLabel && (
+            <Row
+              icon={<Mountain size={16} />}
+              label={t.slope}
+              value={<>{slopeLabel} <span className="text-[var(--color-text-muted)]">· {s!.toLocaleString(LOCALE[lang] ?? 'en', { maximumFractionDigits: 0 })}%</span></>}
+              hint={s! >= 15 ? t.steepHint : null}
+            />
+          )}
+          {showWater && (
+            <Row
+              icon={<Droplets size={16} />}
+              label={water.label}
+              value={t.riverAt(dist(water.m))}
+              hint={water.m < RIVER_WARN_M ? t.riverWarn : null}
+              warn={water.m < RIVER_WARN_M}
+            />
+          )}
+          {showSea && (
+            <Row
+              icon={<Waves size={16} />}
+              label={t.sea}
+              value={t.seaAt(dist(plot.coast_m))}
+              hint={seaHint}
+              warn={plot.coast_m < SEA_WARN_M}
+            />
+          )}
+        </div>
         {hz.length > 0 && (
           <Row
             icon={<ShieldAlert size={16} />}
@@ -222,7 +241,7 @@ export function PlotSiteBlock({ plot, hazards, lang }: { plot: Plot | null | und
                 {hz.map(({ k, level }) => (
                   <span
                     key={k}
-                    className={`rounded-md px-2 py-0.5 text-[13px] ${level === 'high' ? 'bg-[#FEF3C7] text-[#92400E]' : 'bg-[var(--color-search-bg)] text-[var(--color-text)]'}`}
+                    className={`rounded-md px-2 py-0.5 text-[13px] ${level === 'high' ? 'bg-[#FEF3C7] text-[#92400E]' : 'bg-white text-[var(--color-text)]'}`}
                   >
                     {t.hz[k]} · {t.lvl[level]}
                   </span>
@@ -233,8 +252,8 @@ export function PlotSiteBlock({ plot, hazards, lang }: { plot: Plot | null | und
             warn={hzHigh.length > 0}
           />
         )}
+        <p className="pt-1.5 text-[11px] leading-snug text-[var(--color-text-muted)]">{t.note}{hz.length > 0 && <> {t.hzNote}</>}</p>
       </div>
-      <p className="mt-4 text-[12px] leading-snug text-[var(--color-text-muted)]">{t.note}{hz.length > 0 && <> {t.hzNote}</>}</p>
-    </div>
+    </section>
   )
 }
