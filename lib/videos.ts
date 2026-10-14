@@ -1,6 +1,7 @@
 import { asList } from './as-list'
 import type { Lang } from './i18n'
 import { revisionedCache } from './revisioned-cache'
+import { youtubeVisibleOn } from './youtube-lang'
 
 export type VideoLink = { name: string; slug: string | null }
 export type VideoItem = {
@@ -57,6 +58,9 @@ export const loadAllVideos = revisionedCache(['videos'], TTL_MS, async (): Promi
 // — keeps un-tagged legacy rows visible).
 export function matchesLang(v: VideoItem, lang: Lang | undefined): boolean {
   if (!lang) return true
+  // The language actually spoken in the video beats the editors' tag.
+  const spoken = youtubeVisibleOn(v.url, lang, v.name)
+  if (spoken != null) return spoken
   // Untagged but titled in Russian = a Russian-language video: keep it to
   // the Cyrillic locales instead of showing a Russian title on /en and co.
   if (!Array.isArray(v.languages) || v.languages.length === 0) {

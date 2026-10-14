@@ -1,5 +1,6 @@
 // Shared event-detail renderer.
 
+import { youtubeVisibleOn } from '@/lib/youtube-lang'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -258,7 +259,7 @@ export async function EventDetail({ slug, lang }: { slug: string; lang: Lang }) 
                 <MapPin size={14} /> {c.onMap}
               </a>
             )}
-            {e.videoUrl && (
+            {e.videoUrl && youtubeVisibleOn(e.videoUrl, lang) !== false && (
               <a href={e.videoUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border border-[var(--color-border)] text-[14px] hover:border-[var(--color-primary)] no-underline">
                 <Video size={14} /> {c.video}
               </a>

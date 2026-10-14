@@ -1,5 +1,6 @@
 // Shared news-detail renderer.
 
+import { youtubeVisibleOn } from '@/lib/youtube-lang'
 import type { Metadata } from 'next'
 import { notFound, permanentRedirect } from 'next/navigation'
 import Link from 'next/link'
@@ -207,7 +208,7 @@ export async function NewsDetail({ slug, lang }: { slug: string; lang: Lang }) {
           {n.body && <NewsBody body={n.body} />}
           <ArticleVideos videos={n.videos} />
 
-          {n.videoUrl && (
+          {n.videoUrl && youtubeVisibleOn(n.videoUrl, lang) !== false && (
             <div className="mt-6">
               <a href={n.videoUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[var(--color-border)] text-[14px] hover:border-[var(--color-primary)] no-underline">
                 <ExternalLink size={14} /> {c.watchVideo}
