@@ -52,6 +52,8 @@ const LandProfileBlock = dynamic(
   () => import('@/components/LandProfileBlock').then(m => ({ default: m.LandProfileBlock })),
 )
 import { RentalCompareSection } from '@/components/RentalCompareSection'
+import { saleCompsNear } from '@/lib/sale-comps'
+import { SaleCompsBlock } from '@/components/SaleCompsBlock'
 import { LazyMount } from '@/components/LazyMount'
 import { ManagerCard } from '@/components/ManagerCard'
 import { AgentStoriesButton } from '@/components/AgentStoriesButton'
@@ -1063,7 +1065,8 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   const isResale = /перепрод|resale|вторич|secondary/.test(dealTypeRaw)
   const sellerUrl = isResale ? firstString(d['Контакт продавца']) : null
 
-  const [otherVillas, complexes, developers, stylesMap, scoresMap, activeReservation, landProfile, marketStats, nearby, geoFacts, surroundings, demand] = await Promise.all([
+  const leaseYears = lease && /^\d+(\.\d+)?$/.test(lease.trim()) ? Number(lease.trim()) : null
+  const [otherVillas, complexes, developers, stylesMap, scoresMap, activeReservation, landProfile, marketStats, nearby, geoFacts, surroundings, demand, saleComps] = await Promise.all([
     loadOtherVillasInDistrict(district, v.airtable_id, lang),
     _loadComplexesIndex(),
     _loadDevelopersIndex(lang),
@@ -1076,6 +1079,9 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
     loadGeoFacts('villa', v.airtable_id).catch(() => null),
     loadSurroundings('villa', v.airtable_id).catch(() => null),
     loadOneUnitDemand('villa', v.airtable_id, lang).catch(() => null),
+    lat != null && lng != null
+      ? saleCompsNear({ lat, lng, bedrooms, areaM2: area, priceUsd: priceNum, leaseYears }).catch(() => null)
+      : null,
   ])
   // Разрешения самого проекта (KKKPR / PBG / KBLI) — второй уровень блока
   // зонирования. Переводы пока генерятся только для ЖК, поэтому на
@@ -1233,7 +1239,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   const hasRent = marketOk || !!demand
   const hasYield = lat != null && lng != null
   const chapters = ([
-    hasPlace && 'mesto', hasRent && 'arenda', hasYield && 'dokhodnost', landOk && 'uchastok',
+    hasPlace && 'mesto', saleComps && 'tseny', hasRent && 'arenda', hasYield && 'dokhodnost', landOk && 'uchastok',
   ] as const).filter((x): x is ChapterId => !!x)
 
   return (
@@ -1403,6 +1409,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
           neighbourAdrUsd: marketOk ? marketStats!.villa_adr_usd ?? marketStats!.apartment_adr_usd : null,
           demandScore: demand?.score ?? null,
           strAllowed: landOk ? landProfile!.str_likely_allowed : null,
+          saleDiffPct: saleComps?.diffPct ?? null,
         }} />
 
         {hasPlace && (
@@ -1433,6 +1440,12 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
             {districtCopy && districtSlug && (
               <DistrictAboutCard copy={districtCopy} lang={lang} kind="villa" hubHref={`${villasRoot}/${districtSlug}`} />
             )}
+          </DataChapter>
+        )}
+
+        {saleComps && (
+          <DataChapter id="tseny" n={chapters.indexOf('tseny') + 1} lang={lang}>
+            <SaleCompsBlock data={saleComps} bedrooms={bedrooms} lang={lang} />
           </DataChapter>
         )}
 

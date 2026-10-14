@@ -4,21 +4,21 @@
 // Данных на странице много (Google Maps, Booking, кадастр), и человек,
 // открывший её впервые, не понимал, с чего начать и как блоки связаны:
 // калькулятор стоял раньше, чем ставки соседей, на которых он построен.
-// Теперь порядок один на все типы объектов — место → аренда рядом →
+// Теперь порядок один на все типы объектов — место → цены рядом → аренда рядом →
 // доходность → участок, — у каждого раздела номер и строка «как читать».
 
 import type { ReactNode } from 'react'
-import { MapPin, BedDouble, Calculator, Landmark } from 'lucide-react'
+import { MapPin, Tags, BedDouble, Calculator, Landmark } from 'lucide-react'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { InlinePrice } from './InlinePrice'
 
-export type ChapterId = 'mesto' | 'arenda' | 'dokhodnost' | 'uchastok'
+export type ChapterId = 'mesto' | 'tseny' | 'arenda' | 'dokhodnost' | 'uchastok'
 
 // Классы целиком, чтобы Tailwind их увидел: карточек столько, сколько
 // у объекта разделов с данными, и сетка не должна оставлять дыру справа.
-const GRID_COLS: Record<number, string> = { 2: 'lg:grid-cols-2', 3: 'lg:grid-cols-3', 4: 'lg:grid-cols-4' }
+const GRID_COLS: Record<number, string> = { 2: 'lg:grid-cols-2', 3: 'lg:grid-cols-3', 4: 'lg:grid-cols-4', 5: 'lg:grid-cols-5' }
 
-const ICONS = { mesto: MapPin, arenda: BedDouble, dokhodnost: Calculator, uchastok: Landmark } as const
+const ICONS = { mesto: MapPin, tseny: Tags, arenda: BedDouble, dokhodnost: Calculator, uchastok: Landmark } as const
 
 const COPY = {
   ru: {
@@ -30,6 +30,11 @@ const COPY = {
         title: 'Место',
         short: 'Что вокруг, дорога, погода',
         hint: 'Что вокруг, сколько ехать до аэропорта и пляжей, какая погода. Отсюда видно, будут ли туда ехать гости.',
+      },
+      tseny: {
+        title: 'Цены рядом',
+        short: 'Почём продают похожие виллы',
+        hint: 'Похожие виллы на продаже по соседству и где цена этой относительно них. Для лизхолда сравниваем цену за м² на год владения — сроки у всех разные.',
       },
       arenda: {
         title: 'Аренда рядом',
@@ -48,6 +53,7 @@ const COPY = {
       },
     },
     neighbours: 'за ночь у соседей',
+    vsMarket: (p: number) => Math.abs(p) < 5 ? 'На уровне соседей' : p > 0 ? `Дороже соседей на ${p}%` : `Дешевле соседей на ${-p}%`,
     airport: (min: number) => `${min} мин до аэропорта`,
     demand: (score: number) => `${score} из 100 по спросу`,
     strYes: 'Сдавать посуточно можно',
@@ -64,6 +70,11 @@ const COPY = {
         title: 'Location',
         short: 'Surroundings, travel times, weather',
         hint: 'What is around, how far the airport and beaches are, what the weather is like. It shows whether guests will want to come.',
+      },
+      tseny: {
+        title: 'Prices nearby',
+        short: 'What similar villas sell for',
+        hint: 'Similar villas for sale next door and where this one’s price sits among them. For leasehold we compare price per m² per year of ownership, since lease terms differ.',
       },
       arenda: {
         title: 'Rentals nearby',
@@ -82,6 +93,7 @@ const COPY = {
       },
     },
     neighbours: 'per night at neighbours',
+    vsMarket: (p: number) => Math.abs(p) < 5 ? 'In line with neighbours' : p > 0 ? `${p}% above neighbours` : `${-p}% below neighbours`,
     airport: (min: number) => `${min} min to the airport`,
     demand: (score: number) => `${score} of 100 on demand`,
     strYes: 'Short-term rental allowed',
@@ -95,6 +107,8 @@ export type GuideFacts = {
   airportMin?: number | null
   neighbourAdrUsd?: number | null
   demandScore?: number | null
+  // На сколько % цена выше (+) или ниже (−) похожих на продаже рядом.
+  saleDiffPct?: number | null
   // Сырое значение str_likely_allowed из профиля участка.
   strAllowed?: string | null
 }
@@ -159,6 +173,7 @@ export function DataGuide({
       if (s.startsWith('no')) return c.strNo
       return c.strMaybe
     }
+    if (id === 'tseny' && facts.saleDiffPct != null) return c.vsMarket(facts.saleDiffPct)
     if (id === 'dokhodnost') return c.calcTeaser
     if (id === 'mesto' && facts.airportMin) return c.airport(facts.airportMin)
     return null

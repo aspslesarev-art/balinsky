@@ -1118,7 +1118,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
   const hasYield = lat != null && lng != null
   const chapters = ([
     hasPlace && 'mesto', hasRent && 'arenda', hasYield && 'dokhodnost', landOk && 'uchastok',
-  ] as const).filter((x): x is ChapterId => !!x)
+  ] as (ChapterId | false)[]).filter((x): x is ChapterId => !!x)
 
   return (
     <>
