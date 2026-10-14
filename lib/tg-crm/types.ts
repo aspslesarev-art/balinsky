@@ -1,8 +1,11 @@
 // Общие типы личной CRM по Telegram-чатам. Лежат отдельно от store.ts:
-// их импортирует клиентский компонент, а store тянет service-key клиент
-// Supabase, которому в браузере делать нечего.
+// их импортирует клиентский компонент, а store читает файлы с диска,
+// чему в браузере делать нечего.
 
 export type CrmPromise = { text: string; date: string | null; done: boolean | null }
+// Повод предложить постоянное сотрудничество тёплому рабочему контакту.
+export type CrmOffer = { priority: 1 | 2 | 3; why: string | null; idea: string | null; draft: string | null }
+
 export type MoneyItem = { who_owes: 'я' | 'мне'; what: string; amount: string | number | null; date: string | null; settled: boolean }
 
 export type CrmContact = {
@@ -29,6 +32,9 @@ export type CrmContact = {
   their_promises: CrmPromise[]
   money: MoneyItem[]
   next_action: string | null
+  draft?: string | null       // черновик ответа тому, кто ждёт (Андрей отправляет сам)
+  draft_note?: string | null  // что проверить или дописать в черновике
+  offer?: CrmOffer | null
 }
 
 // Одно сообщение из архива переписки (<chat_id>.json.gz в бакете tg-crm).

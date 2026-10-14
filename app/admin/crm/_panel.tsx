@@ -7,7 +7,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   X, Send, Users, Mic, Image as ImageIcon, Video, CircleDot, FileText, Sticker, Vote, Music, Film,
-  MapPin, Contact, Paperclip, Loader2, MessageCircleReply, ArrowDown, ChevronUp,
+  MapPin, Contact, Paperclip, Loader2, MessageCircleReply, ArrowDown, ChevronUp, Copy, Check,
 } from 'lucide-react'
 import { openPromises, telegramLink, type CrmContact, type CrmMessage, type CrmPromise, type TranscriptPage } from '@/lib/tg-crm/types'
 import { MoneyLine, relDay, relTint } from './_ui'
@@ -105,6 +105,20 @@ export function CrmPanel({ contact: c, onClose }: { contact: CrmContact; onClose
                 {c.awaiting_what || 'ответа'}
               </div>
             </div>
+          )}
+
+          {c.draft && (
+            <Section title="Черновик ответа">
+              <DraftBox text={c.draft} note={c.draft_note ?? null} />
+            </Section>
+          )}
+
+          {c.offer && c.offer.priority < 3 && c.offer.draft && (
+            <Section title={c.offer.priority === 1 ? 'Предложить сотрудничество' : 'Можно предложить сотрудничество'}>
+              {c.offer.idea && <p className="mb-1 text-[14px] text-[var(--ax-fg)] leading-relaxed break-words max-w-[68ch]">{c.offer.idea}</p>}
+              {c.offer.why && <p className="mb-2 text-[13px] text-[var(--ax-fg-muted)] leading-relaxed break-words max-w-[68ch]">{c.offer.why}</p>}
+              <DraftBox text={c.offer.draft} note={null} />
+            </Section>
           )}
 
           {!c.analyzed && (
@@ -218,6 +232,34 @@ function LongText({ text }: { text: string }) {
           {open ? 'Свернуть' : 'Показать полностью'}
         </button>
       )}
+    </div>
+  )
+}
+
+// Черновик сообщения: Андрей правит и отправляет сам — отсюда только копирование.
+function DraftBox({ text, note }: { text: string; note: string | null }) {
+  const [copied, setCopied] = useState(false)
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch { /* буфер недоступен — текст всё равно виден и выделяется */ }
+  }
+  return (
+    <div className="rounded-xl border border-[var(--ax-border)] bg-[var(--ax-panel)]">
+      <p className="px-3.5 pt-3 text-[14px] text-[var(--ax-fg)] leading-relaxed whitespace-pre-wrap break-words select-text">{text}</p>
+      {note && <p className="px-3.5 pt-2 text-[12.5px] text-[var(--ax-prospect-maybe-fg)] leading-snug break-words">{note}</p>}
+      <div className="flex justify-end px-2 py-2">
+        <button
+          type="button"
+          onClick={copy}
+          className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-[13px] text-[var(--ax-fg-soft)] hover:bg-[var(--ax-hover)] transition-colors duration-[120ms] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4FC08D]"
+        >
+          {copied ? <Check size={14} /> : <Copy size={14} />}
+          {copied ? 'Скопировано' : 'Скопировать'}
+        </button>
+      </div>
     </div>
   )
 }
