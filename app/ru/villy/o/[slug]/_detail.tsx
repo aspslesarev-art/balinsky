@@ -60,11 +60,9 @@ import { AgentStoriesButton } from '@/components/AgentStoriesButton'
 import { loadNearbyPlaces } from '@/lib/nearby-places'
 import { NearbyPlaces } from '@/components/NearbyPlaces'
 import { loadGeoFacts } from '@/lib/complex-access'
-import { loadSurroundings } from '@/lib/surroundings'
 import { ComplexAccessBlock } from '@/components/ComplexAccessBlock'
 import { ClimateBlock } from '@/components/ClimateBlock'
 import { AreaBlock } from '@/components/AreaBlock'
-import { SurroundingsBlock } from '@/components/SurroundingsBlock'
 import { loadManagersByDeveloperName, loadManagersByDeveloperSlug } from '@/lib/managers'
 import { getDeveloperStats } from '@/lib/developer-stats'
 import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
@@ -1066,7 +1064,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   const sellerUrl = isResale ? firstString(d['Контакт продавца']) : null
 
   const leaseYears = lease && /^\d+(\.\d+)?$/.test(lease.trim()) ? Number(lease.trim()) : null
-  const [otherVillas, complexes, developers, stylesMap, scoresMap, activeReservation, landProfile, marketStats, nearby, geoFacts, surroundings, demand, saleComps] = await Promise.all([
+  const [otherVillas, complexes, developers, stylesMap, scoresMap, activeReservation, landProfile, marketStats, nearby, geoFacts, demand, saleComps] = await Promise.all([
     loadOtherVillasInDistrict(district, v.airtable_id, lang),
     _loadComplexesIndex(),
     _loadDevelopersIndex(lang),
@@ -1077,7 +1075,6 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
     loadMarketStats('villa', v.airtable_id),
     loadNearbyPlaces(v.airtable_id).catch(() => null),
     loadGeoFacts('villa', v.airtable_id).catch(() => null),
-    loadSurroundings('villa', v.airtable_id).catch(() => null),
     loadOneUnitDemand('villa', v.airtable_id, lang).catch(() => null),
     lat != null && lng != null
       ? saleCompsNear({ lat, lng, bedrooms, areaM2: area, priceUsd: priceNum, leaseYears }).catch(() => null)
@@ -1235,7 +1232,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
 
   const landOk = !!landProfile && (landAllowsBuilding(landProfile, 'villa') || hasProjectPermits(projectPermits))
   const marketOk = !!marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0)
-  const hasPlace = !!(geoFacts || surroundings || nearby || (districtCopy && districtSlug))
+  const hasPlace = !!(geoFacts || nearby || (districtCopy && districtSlug))
   const hasRent = marketOk || !!demand
   const hasYield = lat != null && lng != null
   const chapters = ([
@@ -1431,7 +1428,6 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
               </div>
               </>
             )}
-            <SurroundingsBlock data={surroundings} lang={lang} />
             {nearby && (
               <GatedBlock kind="nearby" lang={lang}>
                 <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />

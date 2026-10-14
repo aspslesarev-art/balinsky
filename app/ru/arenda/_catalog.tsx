@@ -4,13 +4,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useCatalogRouter } from '@/lib/use-catalog-router'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { BedDouble, MapPin, X } from 'lucide-react'
+import { BedDouble, MapPin, X, CalendarDays } from 'lucide-react'
 import { FilterDropdown } from '@/components/FilterDropdown'
 import { useCurrency } from '@/components/CurrencyContext'
 import { WishlistButton } from '@/components/WishlistButton'
 import { SubscribeCTA } from '@/components/SubscribeCTA'
 import { formatPrice, type Currency } from '@/lib/currency'
 import type { RentalItem } from '@/lib/rental'
+import { fmtPostedDate } from '@/lib/rental-meta'
 import { PhotoSlider } from '@/components/PhotoSlider'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
@@ -289,9 +290,10 @@ export function RentalCatalog({ items, initial, lang = 'ru' }: { items: RentalIt
           if (priceMax != null && r.priceMonthUsd > priceMax) return false
           return true
         })
-    if (sort === 'newest') return base // manifest is already newest-first
     const arr = [...base]
     switch (sort) {
+      // Сортируем явно: объявления из Telegram дописываются в конец манифеста.
+      case 'newest':     arr.sort((a, b) => (b.createdTime ?? '').localeCompare(a.createdTime ?? '')); break
       case 'price-asc':  arr.sort((a, b) => a.priceMonthUsd - b.priceMonthUsd); break
       case 'price-desc': arr.sort((a, b) => b.priceMonthUsd - a.priceMonthUsd); break
       case 'br-asc':     arr.sort((a, b) => (a.bedrooms ?? 99) - (b.bedrooms ?? 99)); break
@@ -649,6 +651,8 @@ function RentalCard({ r, currency, lang, perMonth }: {
 }) {
   const price = formatPrice(r.priceMonthUsd, currency, lang)
   const detailHref = switchLangPath(`/ru/arenda/o/${r.slug}`, lang)
+  // Дата публикации — чтобы было видно, свежее объявление или нет.
+  const posted = fmtPostedDate(r.createdTime, lang, false)
   return (
     <Link
       href={detailHref}
@@ -686,6 +690,9 @@ function RentalCard({ r, currency, lang, perMonth }: {
           )}
           {r.location && (
             <span className="inline-flex items-center gap-1"><MapPin size={14} /> {r.location}</span>
+          )}
+          {posted && (
+            <span className="inline-flex items-center gap-1"><CalendarDays size={14} aria-hidden /> {posted}</span>
           )}
         </div>
       </div>

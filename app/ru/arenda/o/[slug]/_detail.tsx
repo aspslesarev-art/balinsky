@@ -2,7 +2,7 @@
 
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { BedDouble, MapPin, Tag } from 'lucide-react'
+import { BedDouble, MapPin, Tag, Send, MessageCircle, ExternalLink, CalendarDays } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
@@ -13,6 +13,7 @@ import { PageViewTracker } from '@/components/PageViewTracker'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { hreflangMap } from '@/lib/hreflang'
 import { metaSnippet } from '@/lib/seo'
+import { rentalContact, fmtPostedDate, daysSince } from '@/lib/rental-meta'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 
@@ -99,6 +100,27 @@ const COPY = {
   },
 } as const
 
+// Дата и контакт: тексты пока RU+EN, остальные языки берут EN.
+const META_COPY = {
+  ru: {
+    posted: (d: string) => `Опубликовано ${d}`,
+    stale: 'Объявлению больше месяца — уточните у автора, свободна ли ещё.',
+    author: 'Автор объявления',
+    viaGroup: 'Объявление опубликовала группа: контакт владельца — в самом посте.',
+    openGroup: 'Открыть группу в Telegram',
+  },
+  en: {
+    posted: (d: string) => `Posted ${d}`,
+    stale: 'This listing is over a month old — check with the author that it is still available.',
+    author: 'Listing author',
+    viaGroup: 'This listing was posted by a group: the owner’s contact is in the post itself.',
+    openGroup: 'Open the group on Telegram',
+  },
+}
+
+/** Старше этого — подсказываем уточнить, свободен ли ещё объект. */
+const STALE_DAYS = 30
+
 function fmtUsd(n: number): string { return '$' + Math.round(n).toLocaleString('en-US') }
 
 export async function generateRentalDetailMetadata(slug: string, lang: Lang): Promise<Metadata> {
@@ -128,6 +150,10 @@ export async function RentalDetail({ slug, lang }: { slug: string; lang: Lang })
   const r = await loadRentalBySlug(slug, lang)
   if (!r) notFound()
   const c = pickCopy(COPY, lang)
+  const m = pickCopy(META_COPY, lang)
+  const contact = rentalContact(r.telegram)
+  const posted = fmtPostedDate(r.createdTime, lang)
+  const age = daysSince(r.createdTime)
 
   const rentalUrl = `${SITE_URL}${switchLangPath(`/ru/arenda/o/${r.slug}`, lang)}`
   const productJsonLd: Record<string, unknown> = {
@@ -209,6 +235,30 @@ export async function RentalDetail({ slug, lang }: { slug: string; lang: Lang })
             {r.priceSegment && <span className="inline-flex items-center gap-1.5"><Tag size={14} /> {r.priceSegment}</span>}
           </div>
           <PriceDisplay usd={r.priceMonthUsd} suffix={c.perMonth} lang={lang} />
+          {posted && (
+            <p className="mt-3 inline-flex items-center gap-1.5 text-[14px] text-[var(--color-text-muted)]">
+              <CalendarDays size={14} aria-hidden /> {m.posted(posted)}
+            </p>
+          )}
+          {age != null && age > STALE_DAYS && (
+            <p className="mt-1 max-w-[68ch] text-[14px] leading-[1.6] font-medium text-[var(--color-text)]">{m.stale}</p>
+          )}
+          {contact && (
+            <div className="mt-6 flex flex-col items-start gap-2">
+              <a
+                href={contact.href}
+                target="_blank"
+                rel="nofollow noopener noreferrer"
+                className="inline-flex min-h-[48px] items-center gap-2 rounded-xl bg-[var(--color-primary)] px-5 text-[15px] font-semibold text-white no-underline transition-colors duration-[120ms] hover:bg-[var(--color-primary-pressed)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
+              >
+                {contact.kind === 'telegram' ? <Send size={18} aria-hidden /> : contact.kind === 'whatsapp' ? <MessageCircle size={18} aria-hidden /> : <ExternalLink size={18} aria-hidden />}
+                {contact.viaGroup ? m.openGroup : contact.kind === 'telegram' ? c.contactTg : contact.kind === 'whatsapp' ? c.contactWa : c.contactOther}
+              </a>
+              <span className="text-[13px] text-[var(--color-text-muted)]">
+                {contact.viaGroup ? m.viaGroup : contact.handle ? `${m.author}: ${contact.handle}` : null}
+              </span>
+            </div>
+          )}
         </section>
 
         {r.notes && (

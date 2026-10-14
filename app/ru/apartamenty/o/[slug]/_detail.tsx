@@ -43,11 +43,9 @@ import { AgentStoriesButton } from '@/components/AgentStoriesButton'
 import { loadNearbyPlaces } from '@/lib/nearby-places'
 import { NearbyPlaces } from '@/components/NearbyPlaces'
 import { loadGeoFacts } from '@/lib/complex-access'
-import { loadSurroundings } from '@/lib/surroundings'
 import { ComplexAccessBlock } from '@/components/ComplexAccessBlock'
 import { ClimateBlock } from '@/components/ClimateBlock'
 import { AreaBlock } from '@/components/AreaBlock'
-import { SurroundingsBlock } from '@/components/SurroundingsBlock'
 import { loadManagersByDeveloperName } from '@/lib/managers'
 import { PriceCtaCard } from '@/components/PriceCtaCard'
 import { findActiveReservation } from '@/lib/reservations'
@@ -989,7 +987,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
   const parentComplex = findParentComplex(title, complexes, firstString(d['Комплекс 1']))
   const parentComplexName = parentComplex?.name ?? null
 
-  const [otherApts, managers, activeReservation, landProfile, marketStats, developers, nearby, geoFacts, surroundings, demand] = await Promise.all([
+  const [otherApts, managers, activeReservation, landProfile, marketStats, developers, nearby, geoFacts, demand] = await Promise.all([
     loadOtherApartmentsInDistrict(district, a.airtable_id, lang),
     loadManagersByDeveloperName(devName),
     findActiveReservation('apartment', a.airtable_id),
@@ -998,7 +996,6 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
     _loadDevelopersIndex(),
     loadNearbyPlaces(a.airtable_id).catch(() => null),
     loadGeoFacts('apartment', a.airtable_id).catch(() => null),
-    loadSurroundings('apartment', a.airtable_id).catch(() => null),
     loadOneUnitDemand('apartment', a.airtable_id, lang).catch(() => null),
   ])
   // Разрешения самого проекта (KKKPR / PBG / KBLI) — второй уровень блока
@@ -1113,7 +1110,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
 
   const landOk = !!landProfile && (landAllowsBuilding(landProfile, 'apartment') || hasProjectPermits(projectPermits))
   const marketOk = !!marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0)
-  const hasPlace = !!(geoFacts || surroundings || nearby || (districtCopy && districtSlug))
+  const hasPlace = !!(geoFacts || nearby || (districtCopy && districtSlug))
   const hasRent = marketOk || !!demand
   const hasYield = lat != null && lng != null
   const chapters = ([
@@ -1281,7 +1278,6 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
               </div>
               </>
             )}
-            <SurroundingsBlock data={surroundings} lang={lang} />
             {nearby && (
               <GatedBlock kind="nearby" lang={lang}>
                 <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />

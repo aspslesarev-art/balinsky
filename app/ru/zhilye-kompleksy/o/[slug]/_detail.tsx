@@ -67,10 +67,8 @@ import { MarketStatsBlock } from '@/components/MarketStatsBlock'
 import { DataChapter, DataGuide, type ChapterId } from '@/components/DataChapters'
 import { GatedBlock } from '@/components/GatedBlock'
 import { loadComplexAccess, loadGeoFacts } from '@/lib/complex-access'
-import { loadSurroundings } from '@/lib/surroundings'
 import { ClimateBlock } from '@/components/ClimateBlock'
 import { AreaBlock } from '@/components/AreaBlock'
-import { SurroundingsBlock } from '@/components/SurroundingsBlock'
 import { ComplexAccessBlock } from '@/components/ComplexAccessBlock'
 import { ComplexSignalsBlock } from '@/components/ComplexSignalsBlock'
 import { computeComplexSignals, loadDistrictOccupancyMedians, hasAnySignal } from '@/lib/complex-signals'
@@ -1434,14 +1432,13 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   // Hidden developers must not appear anywhere (lib/hidden-developers.ts).
   if (isHiddenDeveloper(firstString(d['Developer1']), firstString(d['Варианты поиска застройщика']))) notFound()
 
-  const [photoManifest, units, landProfile, marketStats, access, geoFacts, surroundings] = await Promise.all([
+  const [photoManifest, units, landProfile, marketStats, access, geoFacts] = await Promise.all([
     _loadComplexPhotos(),
     loadUnitsInComplex(name, lang),
     loadLandProfile('complex', c.airtable_id),
     loadComplexMarketStats(c.airtable_id),
     loadComplexAccess(c.airtable_id),
     loadGeoFacts('complex', c.airtable_id),
-    loadSurroundings('complex', c.airtable_id).catch(() => null),
   ])
 
   // Балл востребованности грузится после units, а не в общем Promise.all:
@@ -1776,7 +1773,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
 
   const landOk = !!landProfile && (landAllowsBuilding(landProfile, 'complex') || hasProjectPermits(projectPermits))
   const marketOk = !!marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0)
-  const hasPlace = !!((lat != null && lng != null) || surroundings || nearby || (districtCopy && districtSlug) || hasAnySignal(signals))
+  const hasPlace = !!((lat != null && lng != null) || nearby || (districtCopy && districtSlug) || hasAnySignal(signals))
   // «Аренда рядом» — только когда есть ставки соседей. Без них инвест-
   // сигналы (пляж, срок сдачи) уходят в конец раздела «Место».
   const hasRent = marketOk
@@ -2047,7 +2044,6 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
               </a>
             </section>
           )}
-            <SurroundingsBlock data={surroundings} lang={lang} />
             {nearby && (
               <GatedBlock kind="nearby" lang={lang}>
                 <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />
