@@ -2,7 +2,6 @@
 
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import Image from 'next/image'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { loadAllNews } from '@/lib/news'
@@ -153,23 +152,16 @@ export async function NewsList({ lang }: { lang: Lang }) {
             const title = tField((n as unknown as { data?: Record<string, unknown> }).data ?? {}, 'title', lang) ?? n.title
             return (
               <li key={n.id}>
-                <Link href={`${detailRoot}/${n.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[var(--color-text)] hover:border-[var(--color-primary)] transition-colors">
-                  {n.photo ? (
-                    <div className="relative w-full h-[180px]">
-                      <Image src={n.photo} alt={title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
-                    </div>
-                  ) : (
-                    <div className="w-full h-[180px] bg-[var(--color-search-bg)] flex items-center justify-center text-3xl">📰</div>
-                  )}
-                  <div className="p-4">
+                <Link href={`${detailRoot}/${n.slug}`} className="flex flex-col h-full rounded-2xl border border-[var(--color-border)] bg-white no-underline text-[var(--color-text)] hover:border-[var(--color-primary)] transition-colors">
+                  <div className="flex flex-col flex-1 p-5">
                     {n.developers[0]?.name && (
                       <div className="text-[11px] uppercase tracking-wide text-[var(--color-primary-pressed)] font-medium mb-1.5">
                         {n.developers[0].name}
                       </div>
                     )}
-                    <div className="text-[16px] font-semibold leading-snug mb-2 line-clamp-3">{title}</div>
+                    <div className="text-[16px] font-semibold leading-snug mb-4 line-clamp-3">{title}</div>
                     {fmtDate(n.date, c.locale) && (
-                      <div className="text-[12px] text-[var(--color-text-muted)]">{fmtDate(n.date, c.locale)}</div>
+                      <div className="mt-auto text-[12px] text-[var(--color-text-muted)]">{fmtDate(n.date, c.locale)}</div>
                     )}
                   </div>
                 </Link>

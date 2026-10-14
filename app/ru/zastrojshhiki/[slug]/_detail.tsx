@@ -832,15 +832,8 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
             <ul className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-1 -mx-6 px-6 max-w-none md:max-w-full md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-4 md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {devNews.map(n => (
                 <li key={n.id} className="snap-start shrink-0 w-[280px] md:w-auto">
-                  <Link href={`${newsBase}/${n.slug}`} className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-white no-underline text-[var(--color-text)] hover:border-[var(--color-primary)]">
-                    <div className="relative w-full aspect-[16/9] bg-[var(--color-search-bg)]">
-                      {n.photo ? (
-                        <Image src={n.photo} alt={n.title} fill sizes="(max-width: 768px) 100vw, 25vw" className="object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-2xl">📰</div>
-                      )}
-                    </div>
-                    <div className="p-3 text-[14px] font-medium leading-snug line-clamp-3">{n.title}</div>
+                  <Link href={`${newsBase}/${n.slug}`} className="block h-full rounded-2xl border border-[var(--color-border)] bg-white no-underline text-[var(--color-text)] hover:border-[var(--color-primary)]">
+                    <div className="p-4 text-[14px] font-medium leading-snug line-clamp-4">{n.title}</div>
                   </Link>
                 </li>
               ))}

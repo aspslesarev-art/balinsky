@@ -120,8 +120,14 @@ function slugifyEn(s: string): string {
 // (lib/admin/adapters/storage-manifest.ts), so drafts stay visible there.
 const isPublished = (item: NewsItem): boolean => item.status !== 'draft'
 
+// Картинки у новостей не показываем нигде: застройщики присылают баннеры с
+// надписями на русском («Повышение цен до 5%»), а новость идёт на 10 языках.
+// Убираем здесь, в той же единой точке, — фото остаются в манифесте и
+// в админке, вернуть = удалить эту строку. Видео не трогаем.
+const withoutPhotos = (item: NewsItem): NewsItem => ({ ...item, photo: null, photos: [] })
+
 export async function loadAllNews(lang: Lang = 'ru'): Promise<NewsItem[]> {
-  const items = withDerivedSlugs((await loadRawNews()).filter(n => isPublished(n) && newsAvailableIn(n, lang)))
+  const items = withDerivedSlugs((await loadRawNews()).filter(n => isPublished(n) && newsAvailableIn(n, lang)).map(withoutPhotos))
   if (items.length === 0) return items
   // RU also loads the EN translation cache — not to translate, but to know
   // the English-derived slug and stash it in aliases. Without this, the
