@@ -1194,8 +1194,8 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
         {own && (
           <p className="md:col-span-2 -mt-1 rounded-lg bg-[var(--color-primary-soft)] px-3 py-2 text-[13px] leading-relaxed text-[var(--color-text)]">
             {own.source === 'actual' && own.period ? pickCopy({
-              ru: `Загрузка - по реальным броням этого комплекса с ${fmtDayRu(own.period.from)} по ${fmtDayRu(own.period.to)}. Цена за ночь - из его объявлений на Booking.`,
-              en: `Occupancy comes from this complex's real bookings, ${own.period.from} to ${own.period.to}. Nightly rate comes from its Booking listings.`,
+              ru: `Загрузка - по реальным броням этого комплекса с ${fmtDayRu(own.period.from)} по ${fmtDayRu(own.period.to)}. Цена за ночь - ${own.adrSource === 'revenue' ? 'из реальной выручки управляющей, пересчитана в цену витрины (до скидок и комиссии площадки)' : own.adr != null ? 'из его объявлений на Booking' : 'у похожих соседей'}.`,
+              en: `Occupancy comes from this complex's real bookings, ${own.period.from} to ${own.period.to}. Nightly rate comes from ${own.adrSource === 'revenue' ? 'the manager’s real revenue, converted to a listed rate (before discounts and platform fees)' : own.adr != null ? 'its Booking listings' : 'similar neighbours'}.`,
             }, lang) : own.occupancy == null ? pickCopy({
               ru: 'Цена за ночь - из объявлений этого комплекса на Booking. Загрузку там не видно (календарь закрыт целиком), поэтому стоит средняя по Бали.',
               en: 'Nightly rate comes from this complex\'s Booking listings. Their calendar is fully closed, so occupancy is the Bali average.',

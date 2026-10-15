@@ -67,6 +67,8 @@ export type YieldFacts = {
   ownSource?: 'actual' | 'booking'
   /** За сколько месяцев реальные брони (для ownSource 'actual'). */
   ownMonths?: number
+  /** Цена ночи из реальной выручки управляющей, а не с витрины. */
+  ownRevenue?: boolean
   /** Ставка, от которой считали: аренда в месяц или ночь, USD. */
   rateUsd: number
   pct: Record<TaxStatus, number>
@@ -113,7 +115,7 @@ export function computeYieldFacts(snap: InvestmentSnapshot | null): YieldFacts |
   const b = calc('beforeTax')
   if (b.capRate == null || b.entryPrice == null) return null
   return {
-    mode: 'daily', rateUsd: rate, ownBooking: own?.adr != null, ownSource: own?.source, ownMonths: own?.period?.months,
+    mode: 'daily', rateUsd: rate, ownBooking: own?.adr != null, ownSource: own?.source, ownMonths: own?.period?.months, ownRevenue: own?.adrSource === 'revenue',
     pct: { beforeTax: b.capRate, resident: calc('resident').capRate ?? 0, nonResident: calc('nonResident').capRate ?? 0 },
     noiBeforeTaxUsd: b.noi,
     paybackYears: b.payback,

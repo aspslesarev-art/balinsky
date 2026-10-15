@@ -83,6 +83,8 @@ export type OwnBooking = {
   occupancy: number | null
   /** Цена за ночь, USD: медиана по номерам с тем же числом спален, иначе по всем. */
   adr: number | null
+  /** 'revenue' — цена ночи пересчитана из реальной выручки управляющей. */
+  adrSource: 'booking' | 'revenue' | null
   listings: { id: number; title: string | null; occupancy: number | null }[]
 }
 
@@ -124,7 +126,7 @@ function roomKind(roomType: string | null): ListingKind | null {
 
 // Решение владельца 15.10.2026: если объект виден на Booking — считать
 // по тому, что там есть, а не по средней загрузке 60%.
-async function loadOwnBooking(complexId: string | null, complexName: string | null, title: string | null, bedrooms: number | null, kind: ListingKind): Promise<OwnBooking | null> {
+async function loadOwnBooking(complexId: string | null, complexName: string | null, title: string | null, bedrooms: number | null, kind: ListingKind, region: RegionDefaults): Promise<OwnBooking | null> {
   // Ссылка «Комплекс» у части юнитов хранит старый id из Airtable, которого
   // нет среди raw_complexes, — тогда находим комплекс по названию.
   const ids0 = complexId ? [complexId] : []
@@ -161,7 +163,7 @@ async function loadOwnBooking(complexId: string | null, complexName: string | nu
       ids0.push(...hit)
     }
   }
-  const actual = await loadActuals(ids0, kind, bedrooms)
+  const actual = await loadActuals(ids0, kind, bedrooms, region)
   if (!links.length) return actual
   const ids = links.map(l => Number(l.booking_id))
   // Загрузка — среднее по дневным снимкам (с 05.08.2026), а не последний
@@ -223,13 +225,14 @@ async function loadOwnBooking(complexId: string | null, complexName: string | nu
     priced.filter(r => roomBedrooms(r.type) == null && roomKind(r.type) === kind),
   ]
   const adr = median((tiers.find(t => t.length) ?? []).map(r => r.price))
-  if (actual) return { ...actual, adr: adr != null ? Math.round(adr) : null }
+  if (actual) return actual.adr != null ? actual : { ...actual, adr: adr != null ? Math.round(adr) : null, adrSource: adr != null ? 'booking' : null }
   if (occMed == null && adr == null) return null
   return {
     source: 'booking',
     period: null,
     occupancy: occMed != null ? Math.min(OWN_OCC_CAP, occMed / 100) : null,
     adr: adr != null ? Math.round(adr) : null,
+    adrSource: adr != null ? 'booking' : null,
     listings: (locs ?? []).map(l => ({ id: Number(l.id), title: l.title ?? null, occupancy: listingOcc(Number(l.id)) })),
   }
 }
@@ -246,10 +249,10 @@ async function pageAll<T>(q: (from: number, to: number) => PromiseLike<{ data: u
 
 // Реальные брони управляющей (migrations/113). Тот же тип и число спален,
 // иначе тот же тип, иначе весь комплекс.
-async function loadActuals(complexIds: string[], kind: ListingKind, bedrooms: number | null): Promise<OwnBooking | null> {
+async function loadActuals(complexIds: string[], kind: ListingKind, bedrooms: number | null, region: RegionDefaults): Promise<OwnBooking | null> {
   if (!complexIds.length) return null
   const { data, error } = await sb.from('complex_rental_actuals')
-    .select('unit_kind, bedrooms, period_from, period_to, nights_booked, nights_total').in('complex_id', complexIds)
+    .select('unit_kind, bedrooms, period_from, period_to, nights_booked, nights_total, revenue_usd').in('complex_id', complexIds)
   if (error) throw new Error(error.message)
   const rows = data ?? []
   const pick = [
@@ -264,7 +267,17 @@ async function loadActuals(complexIds: string[], kind: ListingKind, bedrooms: nu
   const from = pick.map(r => String(r.period_from)).sort()[0]
   const to = pick.map(r => String(r.period_to)).sort().at(-1)!
   const months = Math.round((Date.parse(to) - Date.parse(from)) / (30.44 * 86_400_000))
-  return { source: 'actual', period: { from, to, months }, occupancy: Math.min(OWN_OCC_CAP, booked / total), adr: null, listings: [] }
+  // Выручка управляющей уже за вычетом скидок и комиссии площадки, а
+  // калькулятор вычитает их сам из цены витрины — переводим обратно в цену
+  // витрины, чтобы после вычетов вышла ровно реальная выручка.
+  const withRev = pick.filter(r => r.revenue_usd != null && Number(r.nights_booked) > 0)
+  const revNights = withRev.reduce((s, r) => s + Number(r.nights_booked), 0)
+  const realAdr = revNights ? withRev.reduce((s, r) => s + Number(r.revenue_usd), 0) / revNights : null
+  const adr = realAdr != null ? Math.round(realAdr / (region.adrRealizationByScenario.median * (1 - region.platformFeePct))) : null
+  return {
+    source: 'actual', period: { from, to, months }, occupancy: Math.min(OWN_OCC_CAP, booked / total),
+    adr, adrSource: adr != null ? 'revenue' : null, listings: [],
+  }
 }
 
 export type MapCompetitor = {
@@ -326,7 +339,7 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
 
   const region = regionFor(lat, lng)
   const complexId = Array.isArray(d['Комплекс']) ? (d['Комплекс'] as unknown[]).map(String)[0] ?? null : firstString(d['Комплекс'])
-  const ownBookingP = loadOwnBooking(complexId, firstString(d['Комплекс 1']), title, bedrooms, kind).catch(() => null)
+  const ownBookingP = loadOwnBooking(complexId, firstString(d['Комплекс 1']), title, bedrooms, kind, region).catch(() => null)
 
   // Pull data: 2km competitors + nearby places + baliforum curated places
   const [allInRadius, places, baliforum] = await Promise.all([
