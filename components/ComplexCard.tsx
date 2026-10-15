@@ -1,5 +1,6 @@
 'use client'
 
+import { VerifiedYieldBadge } from './VerifiedYieldBadge'
 import Link from 'next/link'
 import { ProgressBar } from './ProgressBar'
 import { PhotoSlider } from './PhotoSlider'
@@ -11,6 +12,8 @@ import { facetLabel } from '@/lib/filter-i18n'
 import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
 
 export type ComplexCardData = {
+  /** Комплекс сам на Booking — доходность по его реальным цифрам. */
+  verifiedYield?: boolean
   slug: string
   name: string
   location: string | null
@@ -102,6 +105,7 @@ export function ComplexCard({ c, lang = 'ru', priority = false }: { c: ComplexCa
         {location && (
           <div className="text-[15px] text-[var(--color-text)] mb-3">{location}</div>
         )}
+        {c.verifiedYield && <VerifiedYieldBadge lang={lang} className="mb-3" />}
         {(villaRange || aptRange) && (
           <div className="space-y-1 mb-4 text-[14px]">
             {villaRange && (

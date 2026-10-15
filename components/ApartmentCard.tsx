@@ -1,5 +1,6 @@
 'use client'
 
+import { VerifiedYieldBadge } from './VerifiedYieldBadge'
 import Link from 'next/link'
 import { PhotoSlider } from './PhotoSlider'
 import { ApproxPrice } from './InlinePrice'
@@ -11,6 +12,8 @@ import { UnitDemandBadge } from './UnitDemandBadge'
 import type { UnitDemandView } from '@/lib/unit-demand-view'
 
 export type ApartmentCardData = {
+  /** Комплекс сам на Booking — доходность по его реальным цифрам. */
+  verifiedYield?: boolean
   // Балл востребованности в районе. Необязателен: в общих каталогах карточка
   // рендерится без него, чтобы не тянуть лишний запрос на каждый листинг.
   demand?: UnitDemandView
@@ -120,6 +123,7 @@ export function ApartmentCard({ a, lang = 'ru', priority = false }: { a: Apartme
           <div className="text-[18px] font-semibold text-[var(--color-text)] mb-3">
             {price}
             {a.priceUsd != null && <ApproxPrice usd={a.priceUsd} lang={lang} className="block text-[13px] font-normal text-[var(--color-text-muted)]" />}
+            {a.verifiedYield && <span className="mt-2 block"><VerifiedYieldBadge lang={lang} /></span>}
           </div>
         )}
 

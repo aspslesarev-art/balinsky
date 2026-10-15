@@ -62,6 +62,7 @@ import { NearbyPlaces } from '@/components/NearbyPlaces'
 import { loadGeoFacts } from '@/lib/complex-access'
 import { ComplexAccessBlock } from '@/components/ComplexAccessBlock'
 import { NeighborhoodHeatMap } from '@/components/NeighborhoodHeatMap'
+import { VerifiedYieldBadge } from '@/components/VerifiedYieldBadge'
 import { ClimateBlock } from '@/components/ClimateBlock'
 import { AreaBlock } from '@/components/AreaBlock'
 import { PlotSiteBlock } from '@/components/PlotSiteBlock'
@@ -1331,6 +1332,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
           <h1 className="text-[18px] sm:text-[24px] md:text-[40px] font-semibold tracking-tight text-[var(--color-text)] leading-[1.25] md:leading-[1.1] mb-3 [word-break:break-word] [overflow-wrap:anywhere]">
             {title}
           </h1>
+          {yields?.ownBooking && <a href="#dokhodnost" className="mb-3 inline-block"><VerifiedYieldBadge lang={lang} /></a>}
           <div className="text-[15px] text-[var(--color-text-muted)] leading-relaxed mb-4 flex items-center flex-wrap gap-x-5 gap-y-1">
             {bedrooms != null && <span>{bedrooms} BR</span>}
             {area != null && <span>{area} {c.sqm} {c.house}</span>}

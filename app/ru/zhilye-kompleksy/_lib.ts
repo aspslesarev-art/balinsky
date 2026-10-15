@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { hasVerifiedYield } from '@/lib/verified-yield'
 import { unstable_cache } from 'next/cache'
 import Fuse from 'fuse.js'
 import type { ComplexCardData } from '@/components/ComplexCard'
@@ -462,6 +463,7 @@ export function toCard(
   const p = prices?.get(e.id)
   return {
     id: e.id,
+    verifiedYield: hasVerifiedYield('complex', e.id),
     slug: e.slug,
     name: e.name,
     location: e.district,

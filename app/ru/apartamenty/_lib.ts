@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { hasVerifiedYield } from '@/lib/verified-yield'
 import Fuse from 'fuse.js'
 import type { ApartmentCardData } from '@/components/ApartmentCard'
 import type { FilterOptions, FilterState } from '@/components/filters/FiltersBar'
@@ -533,6 +534,7 @@ export function toCard(
     status: firstString(d['Статус']) ?? null,
     dealType: e.dealType === 'primary' ? null : e.dealType,
     airtableId: e.id,
+    verifiedYield: hasVerifiedYield('apartment', e.id),
   }
 }
 

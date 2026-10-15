@@ -7,6 +7,7 @@ import type { Verdict, Tone, YieldFacts, ComplexFacts } from '@/lib/listing-verd
 import type { MonthlyBundle } from '@/lib/investment/monthly'
 import { InlinePrice } from './InlinePrice'
 import { CardRail } from './CardRail'
+import { VerifiedYieldBadge } from './VerifiedYieldBadge'
 import { pluralRu } from '@/lib/plural-ru'
 
 const TONE_PILL: Record<Tone, string> = {
@@ -568,6 +569,7 @@ export function YieldSummary({ yields: y, leaseYears, calcAnchor, lang }: { yiel
   const mult = y.leaseMultiple != null ? (lang === 'ru' || lang === 'uk' ? y.leaseMultiple.toFixed(1).replace('.', ',') : y.leaseMultiple.toFixed(1)) : null
   return (
     <div className="rounded-2xl border border-[var(--color-primary)] bg-white p-5 md:p-7 flex flex-col gap-4">
+      {y.ownBooking && <VerifiedYieldBadge lang={lang} className="self-start" />}
       <p className="text-[22px] md:text-[28px] font-semibold leading-snug tracking-tight text-[var(--color-text)] max-w-[40ch]">{c.yTitle(fmt(y.pct.beforeTax))}</p>
       <p className="text-[15px] md:text-[16px] leading-relaxed text-[var(--color-text-muted)] max-w-[72ch]">
         {y.mode === 'monthly' ? c.yLeadMonthly : y.ownBooking ? c.yLeadOwn : c.yLeadDaily} <InlinePrice usd={y.rateUsd} lang={lang} /> {y.mode === 'monthly' ? c.perMonth : c.perNight}. {c.yLeadTail}

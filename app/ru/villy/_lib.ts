@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { hasVerifiedYield } from '@/lib/verified-yield'
 import Fuse from 'fuse.js'
 import type { Option } from '@/components/filters/MultiSelectFilter'
 import { translit, hasCyrillic, translitPreserveCase } from '@/lib/translit'
@@ -93,6 +94,7 @@ export type VillaCard = {
   lat: number | null
   lng: number | null
   investmentScore: number | null
+  verifiedYield?: boolean
   dealType: 'resale' | 'secondary' | null
   developerName: string | null
   developerCompletedCount: number | null
@@ -638,6 +640,7 @@ export function toCard(
     bestCapRate: null,
     interiorStyle: e.style,
     airtableId: e.id,
+    verifiedYield: hasVerifiedYield('villa', e.id),
     isTop: e.isTop,
     rentalRestricted: e.landBucket === 'residential',
     views: e.views ?? 0,
