@@ -34,6 +34,7 @@ export const loadOccDashboard = unstable_cache(
     return data as OccDashboard
   },
   ['booking-occ-dashboard-v3'],
+  // isr-ttl-ok: только /admin/booking, роботы туда не ходят — записей ISR не плодит
   { revalidate: 3600, tags: ['booking-occ'] },
 )
 
@@ -63,5 +64,6 @@ export const loadOccDrivers = unstable_cache(
     return { rows, meta: m.data as OccDriversMeta | null }
   },
   ['booking-occ-drivers-v1'],
+  // isr-ttl-ok: только /admin/booking, роботы туда не ходят — записей ISR не плодит
   { revalidate: 3600, tags: ['booking-occ'] },
 )

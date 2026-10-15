@@ -17,11 +17,12 @@ const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPAB
 export type Tone = 'plus' | 'warn' | 'minus'
 
 // Снимок для калькулятора тяжёлый (соседи, карта), а страница его
-// перестраивала бы на каждый запрос — держим час, правка объекта бампает тег.
+// перестраивала бы на каждый запрос — держим сутки (данные Booking и так
+// обновляются раз в день), правка объекта сбрасывает тег content:villas.
 export const loadVerdictSnapshot = (id: string) => unstable_cache(
   async () => buildSnapshot(id, 'villa'),
   ['verdict-snapshot-v2', id],
-  { revalidate: 3600, tags: ['content:villas'] },
+  { revalidate: 86400, tags: ['content:villas'] },
 )().catch(() => null)
 
 export type ComplexFacts = {
