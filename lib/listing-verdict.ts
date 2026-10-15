@@ -63,6 +63,10 @@ export type YieldFacts = {
   mode: 'monthly' | 'daily'
   /** Цифры из объявлений самого комплекса на Booking, а не по соседям. */
   ownBooking?: boolean
+  /** Откуда загрузка комплекса: реальные брони управляющей или витрина Booking. */
+  ownSource?: 'actual' | 'booking'
+  /** За сколько месяцев реальные брони (для ownSource 'actual'). */
+  ownMonths?: number
   /** Ставка, от которой считали: аренда в месяц или ночь, USD. */
   rateUsd: number
   pct: Record<TaxStatus, number>
@@ -109,7 +113,7 @@ export function computeYieldFacts(snap: InvestmentSnapshot | null): YieldFacts |
   const b = calc('beforeTax')
   if (b.capRate == null || b.entryPrice == null) return null
   return {
-    mode: 'daily', rateUsd: rate, ownBooking: !!own,
+    mode: 'daily', rateUsd: rate, ownBooking: own?.adr != null, ownSource: own?.source, ownMonths: own?.period?.months,
     pct: { beforeTax: b.capRate, resident: calc('resident').capRate ?? 0, nonResident: calc('nonResident').capRate ?? 0 },
     noiBeforeTaxUsd: b.noi,
     paybackYears: b.payback,

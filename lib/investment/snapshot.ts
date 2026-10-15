@@ -74,6 +74,11 @@ export type InvestmentSnapshot = {
 }
 
 export type OwnBooking = {
+  /** 'actual' — реальные брони управляющей (complex_rental_actuals), только
+   *  они дают отметку «Подтверждённая доходность»; 'booking' — витрина Booking. */
+  source: 'actual' | 'booking'
+  /** Период реальных броней (для source 'actual'). */
+  period: { from: string; to: string; months: number } | null
   /** Доля занятых ночей, 0..1, медиана по объявлениям комплекса. */
   occupancy: number | null
   /** Цена за ночь, USD: медиана по номерам с тем же числом спален, иначе по всем. */
@@ -82,8 +87,16 @@ export type OwnBooking = {
 }
 
 // 100% у estatemarket — это календарь, закрытый целиком (часто блок хозяина),
-// а не год без единой свободной ночи; выше 95% не ставим.
-const OWN_OCC_CAP = 0.95
+// а не год без единой свободной ночи. Потолок 90%: у 11 вилл BREIG с отчётом
+// управляющей за 12 месяцев (авг 2025 – июль 2026) лучшая годовая загрузка 91%,
+// средняя 81%.
+const OWN_OCC_CAP = 0.90
+// Объявление, у которого загрузка не меняется весь срок наблюдений (одно-два
+// значения на ~70 снимков) и стоит под 100%, — закрытый календарь, а не брони.
+const FROZEN_MAX_DISTINCT = 2
+const FROZEN_MIN_OCC = 95
+// Меньше 30 дневных снимков — слишком мало, чтобы говорить о загрузке.
+const MIN_SNAPSHOTS = 30
 // Ниже 20% объявление по сути не работает (снято или новое) — его не считаем.
 const OWN_OCC_MIN = 20
 // Дороже $3000 за ночь на Бали в нашем каталоге нет — это цена в рупиях.
@@ -102,9 +115,16 @@ function roomBedrooms(roomType: string | null): number | null {
   return WORD_NUM[w] ?? Number(w)
 }
 
+function roomKind(roomType: string | null): ListingKind | null {
+  const t = (roomType ?? '').toLowerCase()
+  if (/villa|house/.test(t)) return 'villa'
+  if (/apartment|studio|loft|flat|suite|room/.test(t)) return 'apartment'
+  return null
+}
+
 // Решение владельца 15.10.2026: если объект виден на Booking — считать
 // по тому, что там есть, а не по средней загрузке 60%.
-async function loadOwnBooking(complexId: string | null, complexName: string | null, title: string | null, bedrooms: number | null): Promise<OwnBooking | null> {
+async function loadOwnBooking(complexId: string | null, complexName: string | null, title: string | null, bedrooms: number | null, kind: ListingKind): Promise<OwnBooking | null> {
   // Ссылка «Комплекс» у части юнитов хранит старый id из Airtable, которого
   // нет среди raw_complexes, — тогда находим комплекс по названию.
   const ids0 = complexId ? [complexId] : []
@@ -138,29 +158,113 @@ async function loadOwnBooking(complexId: string | null, complexName: string | nu
         if (n.length >= 5 && new RegExp(`(^|[^\\p{L}\\p{N}])${esc}($|[^\\p{L}\\p{N}])`, 'u').test(t)) hit.add(String(c.airtable_id))
       }
       links = (m ?? []).filter(r => hit.has(String(r.complex_id))).map(r => ({ booking_id: Number(r.booking_id) }))
+      ids0.push(...hit)
     }
   }
-  if (!links.length) return null
+  const actual = await loadActuals(ids0, kind, bedrooms)
+  if (!links.length) return actual
   const ids = links.map(l => Number(l.booking_id))
-  const [{ data: locs }, { data: rooms }] = await Promise.all([
+  // Загрузка — среднее по дневным снимкам (с 05.08.2026), а не последний
+  // снимок: один день в сезоне сильно скачет. Цена — медиана по недельным
+  // снимкам номеров.
+  const since = new Date(Date.now() - 120 * 86_400_000).toISOString().slice(0, 10)
+  const [{ data: locs }, { data: rooms }, hist, roomHist] = await Promise.all([
     sb.from('booking_data_locations').select('id, title, occupancy, price').in('id', ids),
-    sb.from('booking_data_rooms').select('property_id, room_type, price').in('property_id', ids),
+    sb.from('booking_data_rooms').select('property_id, room_id, room_type, price').in('property_id', ids),
+    pageAll<{ property_id: number; occupancy: number | null }>((from, to) =>
+      sb.from('booking_data_history').select('property_id, occupancy').in('property_id', ids).gte('snapshot_date', since).range(from, to)),
+    pageAll<{ property_id: number; room_id: number; price: number | null }>((from, to) =>
+      sb.from('booking_data_room_history').select('property_id, room_id, price').in('property_id', ids).gte('snapshot_date', since).range(from, to)),
   ])
-  const occs = (locs ?? []).map(l => Number(l.occupancy)).filter(o => Number.isFinite(o) && o >= OWN_OCC_MIN)
+  const byId = new Map<number, number[]>()
+  for (const h of hist) {
+    const o = Number(h.occupancy)
+    if (h.occupancy == null || !Number.isFinite(o)) continue
+    const a = byId.get(Number(h.property_id)) ?? []
+    a.push(o)
+    byId.set(Number(h.property_id), a)
+  }
+  const meanOf = (xs: number[]) => xs.reduce((s, x) => s + x, 0) / xs.length
+  // Закрытый календарь: ни загрузку, ни цену такого объявления не берём —
+  // цена у него тоже застывшая.
+  const frozen = new Set([...byId].filter(([, xs]) =>
+    xs.length >= MIN_SNAPSHOTS && new Set(xs.map(x => Math.round(x))).size <= FROZEN_MAX_DISTINCT && meanOf(xs) >= FROZEN_MIN_OCC,
+  ).map(([id]) => id))
+  const listingOcc = (id: number): number | null => {
+    const xs = byId.get(id) ?? []
+    if (xs.length < MIN_SNAPSHOTS || frozen.has(id)) return null
+    const mean = meanOf(xs)
+    return mean >= OWN_OCC_MIN ? mean : null
+  }
+  const occs = ids.map(listingOcc).filter((o): o is number => o != null)
   const occMed = median(occs)
   // Цены Booking в долларах; изредка в базу попадает цена в рупиях (115 000
   // «долларов» за ночь) — такие отбрасываем, иначе доходность выходит 14 000%.
   const sane = (p: number) => p >= 10 && p <= OWN_ADR_MAX
-  const priced = (rooms ?? []).filter(r => sane(Number(r.price)))
-  const sameBeds = bedrooms != null ? priced.filter(r => roomBedrooms(r.room_type) === bedrooms) : []
-  const adr = median((sameBeds.length ? sameBeds : priced).map(r => Number(r.price)))
-    ?? median((locs ?? []).map(l => Number(l.price)).filter(sane))
+  const roomPrices = new Map<string, number[]>()
+  for (const r of roomHist) {
+    const p = Number(r.price)
+    if (!sane(p)) continue
+    const k = `${r.property_id}:${r.room_id}`
+    roomPrices.set(k, [...(roomPrices.get(k) ?? []), p])
+  }
+  const priced = (rooms ?? []).filter(r => !frozen.has(Number(r.property_id))).map(r => ({
+    type: r.room_type as string | null,
+    price: median(roomPrices.get(`${r.property_id}:${r.room_id}`) ?? []) ?? (sane(Number(r.price)) ? Number(r.price) : null),
+  })).filter((r): r is { type: string | null; price: number } => r.price != null)
+  // Цена только похожего номера: та же спальность и тип (вилла/апартаменты),
+  // иначе та же спальность, иначе тот же тип без указанных спален. Средняя по
+  // всем номерам давала студии 30 м² цену виллы на 4 спальни (35% годовых).
+  // Похожего нет — цену берёт калькулятор у соседей.
+  const fits = (t: string | null) => { const k = roomKind(t); return k == null || k === kind }
+  const tiers = [
+    priced.filter(r => bedrooms != null && roomBedrooms(r.type) === bedrooms && fits(r.type)),
+    priced.filter(r => bedrooms != null && roomBedrooms(r.type) === bedrooms),
+    priced.filter(r => roomBedrooms(r.type) == null && roomKind(r.type) === kind),
+  ]
+  const adr = median((tiers.find(t => t.length) ?? []).map(r => r.price))
+  if (actual) return { ...actual, adr: adr != null ? Math.round(adr) : null }
   if (occMed == null && adr == null) return null
   return {
+    source: 'booking',
+    period: null,
     occupancy: occMed != null ? Math.min(OWN_OCC_CAP, occMed / 100) : null,
     adr: adr != null ? Math.round(adr) : null,
-    listings: (locs ?? []).map(l => ({ id: Number(l.id), title: l.title ?? null, occupancy: l.occupancy != null ? Number(l.occupancy) : null })),
+    listings: (locs ?? []).map(l => ({ id: Number(l.id), title: l.title ?? null, occupancy: listingOcc(Number(l.id)) })),
   }
+}
+
+async function pageAll<T>(q: (from: number, to: number) => PromiseLike<{ data: unknown[] | null; error: { message: string } | null }>): Promise<T[]> {
+  const out: T[] = []
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await q(from, from + 999)
+    if (error) throw new Error(error.message)
+    out.push(...((data ?? []) as T[]))
+    if (!data || data.length < 1000) return out
+  }
+}
+
+// Реальные брони управляющей (migrations/113). Тот же тип и число спален,
+// иначе тот же тип, иначе весь комплекс.
+async function loadActuals(complexIds: string[], kind: ListingKind, bedrooms: number | null): Promise<OwnBooking | null> {
+  if (!complexIds.length) return null
+  const { data, error } = await sb.from('complex_rental_actuals')
+    .select('unit_kind, bedrooms, period_from, period_to, nights_booked, nights_total').in('complex_id', complexIds)
+  if (error) throw new Error(error.message)
+  const rows = data ?? []
+  const pick = [
+    rows.filter(r => r.unit_kind === kind && r.bedrooms === bedrooms),
+    rows.filter(r => r.unit_kind === kind),
+    rows,
+  ].find(g => g.length)
+  if (!pick) return null
+  const booked = pick.reduce((s, r) => s + Number(r.nights_booked), 0)
+  const total = pick.reduce((s, r) => s + Number(r.nights_total), 0)
+  if (!total) return null
+  const from = pick.map(r => String(r.period_from)).sort()[0]
+  const to = pick.map(r => String(r.period_to)).sort().at(-1)!
+  const months = Math.round((Date.parse(to) - Date.parse(from)) / (30.44 * 86_400_000))
+  return { source: 'actual', period: { from, to, months }, occupancy: Math.min(OWN_OCC_CAP, booked / total), adr: null, listings: [] }
 }
 
 export type MapCompetitor = {
@@ -222,7 +326,7 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
 
   const region = regionFor(lat, lng)
   const complexId = Array.isArray(d['Комплекс']) ? (d['Комплекс'] as unknown[]).map(String)[0] ?? null : firstString(d['Комплекс'])
-  const ownBookingP = loadOwnBooking(complexId, firstString(d['Комплекс 1']), title, bedrooms).catch(() => null)
+  const ownBookingP = loadOwnBooking(complexId, firstString(d['Комплекс 1']), title, bedrooms, kind).catch(() => null)
 
   // Pull data: 2km competitors + nearby places + baliforum curated places
   const [allInRadius, places, baliforum] = await Promise.all([

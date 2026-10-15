@@ -125,6 +125,7 @@ const COPY = {
     yLeadMonthly: 'Если сдавать помесячно по средней цене соседей -',
     yLeadDaily: 'Если сдавать посуточно по средней цене похожих соседей -',
     yLeadOwn: 'Если сдавать посуточно, как сейчас сдаётся этот комплекс на Booking -',
+    yLeadActual: (m: number) => `Если сдавать посуточно с той загрузкой, что была у этого комплекса по реальным броням за ${m} ${pluralRu(m, ['месяц', 'месяца', 'месяцев'])}, и по его цене на Booking -`,
     yLeadTail: 'Расходы уже вычтены. Налог зависит от статуса:',
     yBefore: 'До налогов', yRes: 'Резидент', yNon: 'Нерезидент', yResSub: 'налог 10% с аренды', yNonSub: 'налог 20% с аренды', yPerYear: 'в год',
     yMeans: 'На деле:',
@@ -228,6 +229,7 @@ const COPY = {
     yLeadMonthly: 'If you simply rent it out monthly at the neighbours’ typical price -',
     yLeadDaily: 'If you simply rent it out nightly at the typical price of similar neighbours -',
     yLeadOwn: 'If you rent it out nightly the way this complex rents on Booking now -',
+    yLeadActual: (m: number) => `If you rent it out nightly at this complex’s occupancy from real bookings over ${m} months and its Booking rate -`,
     yLeadTail: 'All running costs are already deducted; tax depends on your status:',
     yBefore: 'Before tax', yRes: 'If you are a resident', yNon: 'If you are not a resident', yResSub: '10% tax on rent', yNonSub: '20% tax on rent', yPerYear: 'a year',
     yMeans: 'What it means in practice:',
@@ -573,10 +575,10 @@ export function YieldSummary({ yields: y, leaseYears, calcAnchor, lang }: { yiel
   const mult = y.leaseMultiple != null ? (lang === 'ru' || lang === 'uk' ? y.leaseMultiple.toFixed(1).replace('.', ',') : y.leaseMultiple.toFixed(1)) : null
   return (
     <div className="rounded-2xl border border-[var(--color-primary)] bg-white p-5 md:p-7 flex flex-col gap-4">
-      {y.ownBooking && <VerifiedYieldBadge lang={lang} className="self-start" />}
+      {y.ownSource === 'actual' && <VerifiedYieldBadge lang={lang} className="self-start" />}
       <p className="text-[22px] md:text-[28px] font-semibold leading-snug tracking-tight text-[var(--color-text)] max-w-[40ch]">{c.yTitle(fmt(y.pct.beforeTax))}</p>
       <p className="text-[15px] md:text-[16px] leading-relaxed text-[var(--color-text-muted)] max-w-[72ch]">
-        {y.mode === 'monthly' ? c.yLeadMonthly : y.ownBooking ? c.yLeadOwn : c.yLeadDaily} <InlinePrice usd={y.rateUsd} lang={lang} /> {y.mode === 'monthly' ? c.perMonth : c.perNight}. {c.yLeadTail}
+        {y.mode === 'monthly' ? c.yLeadMonthly : y.ownSource === 'actual' && y.ownMonths ? c.yLeadActual(y.ownMonths) : y.ownBooking ? c.yLeadOwn : c.yLeadDaily} <InlinePrice usd={y.rateUsd} lang={lang} /> {y.mode === 'monthly' ? c.perMonth : c.perNight}. {c.yLeadTail}
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="rounded-xl bg-[var(--color-primary-soft)] px-5 py-4 flex flex-col gap-1">

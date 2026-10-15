@@ -936,6 +936,9 @@ function pluralize(lang: Lang, n: number, ruForms: [string, string, string], enF
   return lang === 'ru' ? pluralRu(n, ruForms) : pluralEn(n, enForms)
 }
 
+const MONTHS_GEN_RU = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря']
+const fmtDayRu = (iso: string) => { const [y, m, d] = iso.split('-').map(Number); return `${d} ${MONTHS_GEN_RU[m - 1]} ${y}` }
+
 export function InvestmentWidget({
   villaId,
   apiKey,
@@ -1190,9 +1193,18 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
           onChange={setOcc} display={`${occ}%`} />
         {own && (
           <p className="md:col-span-2 -mt-1 rounded-lg bg-[var(--color-primary-soft)] px-3 py-2 text-[13px] leading-relaxed text-[var(--color-text)]">
-            {pickCopy({
-              ru: `Цена за ночь и загрузка взяты из объявлений этого комплекса на Booking (${own.listings.length} шт.).`,
-              en: `Nightly rate and occupancy come from this complex's own Booking listings (${own.listings.length}).`,
+            {own.source === 'actual' && own.period ? pickCopy({
+              ru: `Загрузка - по реальным броням этого комплекса с ${fmtDayRu(own.period.from)} по ${fmtDayRu(own.period.to)}. Цена за ночь - из его объявлений на Booking.`,
+              en: `Occupancy comes from this complex's real bookings, ${own.period.from} to ${own.period.to}. Nightly rate comes from its Booking listings.`,
+            }, lang) : own.occupancy == null ? pickCopy({
+              ru: 'Цена за ночь - из объявлений этого комплекса на Booking. Загрузку там не видно (календарь закрыт целиком), поэтому стоит средняя по Бали.',
+              en: 'Nightly rate comes from this complex\'s Booking listings. Their calendar is fully closed, so occupancy is the Bali average.',
+            }, lang) : own.adr == null ? pickCopy({
+              ru: `Загрузка - из объявлений этого комплекса на Booking (с августа 2026 года, пока высокий сезон). Похожего номера там нет, поэтому цена за ночь - у похожих соседей.`,
+              en: `Occupancy comes from this complex's Booking listings (since August 2026, high season so far). It has no similar unit there, so the nightly rate is from similar neighbours.`,
+            }, lang) : pickCopy({
+              ru: `Цена за ночь и загрузка взяты из объявлений этого комплекса на Booking (${own.listings.length} шт.) с августа 2026 года - это пока высокий сезон, а не целый год.`,
+              en: `Nightly rate and occupancy come from this complex's own Booking listings (${own.listings.length}) since August 2026 - high season so far, not a full year.`,
             }, lang)}
           </p>
         )}

@@ -1,10 +1,10 @@
-// Отметка «Подтверждённая доходность» — у объектов, чей комплекс сам
-// сдаётся на Booking (lib/verified-yield.ts).
+// Отметка «Подтверждённая доходность» — у объектов комплексов с реальными
+// бронями от управляющей (lib/verified-yield.ts).
 import { pickCopy, type Lang } from '@/lib/i18n'
 
 const COPY = {
-  ru: { label: 'Подтверждённая доходность', hint: 'Доходность посчитана по реальной загрузке и цене этого комплекса на Booking' },
-  en: { label: 'Verified yield', hint: 'Yield is based on this complex’s real occupancy and rates on Booking' },
+  ru: { label: 'Подтверждённая доходность', hint: 'Загрузка взята из реальных броней этого комплекса, а не из витрины Booking' },
+  en: { label: 'Verified yield', hint: 'Occupancy comes from this complex’s real bookings, not from Booking listings' },
 }
 
 export function VerifiedYieldBadge({ lang, className = '', onPhoto = false }: { lang: Lang; className?: string; onPhoto?: boolean }) {

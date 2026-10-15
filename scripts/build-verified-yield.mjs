@@ -1,6 +1,7 @@
-// «Подтверждённая доходность»: объекты, чей комплекс сам сдаётся на Booking
-// (complex_booking_match, миграция 110). Для них калькулятор считает по
-// реальной загрузке и цене комплекса, и карточки получают отметку.
+// «Подтверждённая доходность»: объекты комплексов с реальными бронями от
+// управляющей (complex_rental_actuals, миграция 113). Витрина Booking
+// (complex_booking_match) отметку не даёт: там собрано лишь с 05.08.2026,
+// в сезон, и закрытый календарь выглядит как брони (решение владельца 15.10.2026).
 //
 // Пишет lib/verified-yield.json { complexes, villas, apartments } — список
 // маленький и меняется только с таблицей совпадений, поэтому лежит в коде:
@@ -28,14 +29,13 @@ async function all(path) {
   }
 }
 
-// Объявление ниже 20% загрузки по сути не работает — такой комплекс не отмечаем.
-const MIN_OCC = 20
+// Меньше 3 месяцев реальных броней — ещё не «подтверждено».
+const MIN_DAYS = 90
 
-const matches = await all('complex_booking_match?select=complex_id,booking_id')
-const ids = [...new Set(matches.map(m => m.booking_id))]
-const locs = await all(`booking_data_locations?select=id,occupancy&id=in.(${ids.join(',')})`)
-const live = new Set(locs.filter(l => Number(l.occupancy) >= MIN_OCC).map(l => l.id))
-const complexIds = [...new Set(matches.filter(m => live.has(m.booking_id)).map(m => m.complex_id))]
+const actuals = await all('complex_rental_actuals?select=complex_id,period_from,period_to')
+const complexIds = [...new Set(actuals
+  .filter(a => (Date.parse(a.period_to) - Date.parse(a.period_from)) / 86_400_000 >= MIN_DAYS)
+  .map(a => a.complex_id))]
 
 const cx = await all(`raw_complexes?select=airtable_id,p:data->>Project&airtable_id=in.(${complexIds.join(',')})`)
 const names = new Set(cx.map(c => String(c.p ?? '').trim().toLowerCase()).filter(Boolean))

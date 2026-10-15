@@ -1,7 +1,6 @@
-// Объекты с подтверждённой доходностью: комплекс сам сдаётся на Booking,
-// и калькулятор считает по его реальной загрузке и цене. Список строит
-// scripts/build-verified-yield.mjs (перезапускать после правки
-// complex_booking_match).
+// Объекты с подтверждённой доходностью: у комплекса есть реальные брони от
+// управляющей (complex_rental_actuals). Список строит
+// scripts/build-verified-yield.mjs (перезапускать после правки этой таблицы).
 import data from './verified-yield.json'
 
 const SETS = {
