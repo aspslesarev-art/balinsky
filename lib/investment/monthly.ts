@@ -175,7 +175,8 @@ export function computeMonthlyEconomics(i: MonthlyInput): MonthlyEconomics {
   const ffeReserve = revenue * region.ffeReservePct
   const pbbTax = i.askingPrice != null ? i.askingPrice * region.pbbAnnualPctOfPrice : 0
   // Налог с аренды в Индонезии финальный и берётся с валовой суммы.
-  const taxRate = i.taxStatus === 'resident' ? region.taxRateResident : region.taxRateNonResident
+  const taxRate = i.taxStatus === 'beforeTax' ? 0
+    : i.taxStatus === 'resident' ? region.taxRateResident : region.taxRateNonResident
   const tax = revenue * taxRate
   const noi = Math.round(revenue - agentFee - upkeep - ffeReserve - pbbTax - tax)
 

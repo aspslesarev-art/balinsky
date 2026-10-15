@@ -21,7 +21,7 @@ type Copy = {
   price: string; rent: string; months: string; agent: string
   monthsUnit: string
   perYearNoi: string; payback: string; capRate: string; irr: string
-  taxLabel: string; resident: string; nonResident: string
+  taxLabel: string; taxBefore: string; resident: string; nonResident: string
   howCalced: string
   revenue: string; agentFee: string; upkeep: string; upkeepHint: string; ffe: string; pbb: string
   tax: string; taxHintRes: string; taxHintNonRes: string; noi: string
@@ -40,7 +40,7 @@ const COPY: Record<Lang, Copy> = {
     price: 'Цена', rent: 'Аренда в месяц', months: 'Сдана в году', agent: 'Агент',
     monthsUnit: 'мес',
     perYearNoi: ' / год чистыми', payback: 'Окупаемость', capRate: 'Доходность', irr: 'Доходность за срок лизхолда',
-    taxLabel: 'Налоговый статус', resident: 'Резидент', nonResident: 'Нерезидент',
+    taxLabel: 'Налоговый статус', taxBefore: 'До налогов', resident: 'Резидент', nonResident: 'Нерезидент',
     howCalced: 'Как посчитано',
     revenue: 'Аренда за год', agentFee: 'Комиссия агента', upkeep: 'Бассейн, сад, мелкий ремонт',
     upkeepHint: 'коммунальные, уборку и расходники платит жилец', ffe: 'Износ мебели', pbb: 'Налог на землю и здание (PBB)',
@@ -58,7 +58,7 @@ const COPY: Record<Lang, Copy> = {
     price: 'Price', rent: 'Rent per month', months: 'Let per year', agent: 'Agent',
     monthsUnit: 'mo',
     perYearNoi: ' / year net', payback: 'Payback', capRate: 'Yield', irr: 'Yield over the leasehold',
-    taxLabel: 'Tax status', resident: 'Resident', nonResident: 'Non-resident',
+    taxLabel: 'Tax status', taxBefore: 'Before tax', resident: 'Resident', nonResident: 'Non-resident',
     howCalced: 'How it is calculated',
     revenue: 'Rent per year', agentFee: 'Agent commission', upkeep: 'Pool, garden, small repairs',
     upkeepHint: 'the tenant pays utilities, cleaning and supplies', ffe: 'Furniture wear', pbb: 'Land and building tax (PBB)',
@@ -76,7 +76,7 @@ const COPY: Record<Lang, Copy> = {
     price: 'Harga', rent: 'Sewa per bulan', months: 'Tersewa per tahun', agent: 'Agen',
     monthsUnit: 'bln',
     perYearNoi: ' / tahun bersih', payback: 'Balik modal', capRate: 'Imbal hasil', irr: 'Imbal hasil selama leasehold',
-    taxLabel: 'Status pajak', resident: 'Residen', nonResident: 'Non-residen',
+    taxLabel: 'Status pajak', taxBefore: 'Sebelum pajak', resident: 'Residen', nonResident: 'Non-residen',
     howCalced: 'Cara perhitungan',
     revenue: 'Sewa per tahun', agentFee: 'Komisi agen', upkeep: 'Kolam, taman, perbaikan kecil',
     upkeepHint: 'penyewa membayar listrik, air, kebersihan', ffe: 'Penyusutan perabot', pbb: 'Pajak bumi dan bangunan (PBB)',
@@ -94,7 +94,7 @@ const COPY: Record<Lang, Copy> = {
     price: 'Prix', rent: 'Loyer mensuel', months: 'Loué par an', agent: 'Agent',
     monthsUnit: 'mois',
     perYearNoi: ' / an net', payback: 'Retour sur investissement', capRate: 'Rendement', irr: 'Rendement sur la durée du bail',
-    taxLabel: 'Statut fiscal', resident: 'Résident', nonResident: 'Non-résident',
+    taxLabel: 'Statut fiscal', taxBefore: 'Avant impôt', resident: 'Résident', nonResident: 'Non-résident',
     howCalced: 'Méthode de calcul',
     revenue: 'Loyer annuel', agentFee: 'Commission d’agent', upkeep: 'Piscine, jardin, petites réparations',
     upkeepHint: 'le locataire paie les charges, le ménage et les fournitures', ffe: 'Usure du mobilier', pbb: 'Taxe foncière (PBB)',
@@ -112,7 +112,7 @@ const COPY: Record<Lang, Copy> = {
     price: 'Preis', rent: 'Miete pro Monat', months: 'Vermietet pro Jahr', agent: 'Makler',
     monthsUnit: 'Mon.',
     perYearNoi: ' / Jahr netto', payback: 'Amortisation', capRate: 'Rendite', irr: 'Rendite über die Pachtdauer',
-    taxLabel: 'Steuerstatus', resident: 'Resident', nonResident: 'Nicht-Resident',
+    taxLabel: 'Steuerstatus', taxBefore: 'Vor Steuern', resident: 'Resident', nonResident: 'Nicht-Resident',
     howCalced: 'Berechnung',
     revenue: 'Jahresmiete', agentFee: 'Maklerprovision', upkeep: 'Pool, Garten, kleine Reparaturen',
     upkeepHint: 'Nebenkosten, Reinigung und Verbrauchsmaterial zahlt der Mieter', ffe: 'Möbelverschleiß', pbb: 'Grund- und Gebäudesteuer (PBB)',
@@ -130,7 +130,7 @@ const COPY: Record<Lang, Copy> = {
     price: '价格', rent: '月租金', months: '每年出租', agent: '中介',
     monthsUnit: '个月',
     perYearNoi: ' / 年净收入', payback: '回本期', capRate: '收益率', irr: '租赁期内收益率',
-    taxLabel: '税务身份', resident: '居民', nonResident: '非居民',
+    taxLabel: '税务身份', taxBefore: '税前', resident: '居民', nonResident: '非居民',
     howCalced: '计算方式',
     revenue: '年租金', agentFee: '中介佣金', upkeep: '泳池、花园、小修',
     upkeepHint: '水电、清洁和日用品由租客承担', ffe: '家具折旧', pbb: '土地和建筑税 (PBB)',
@@ -148,7 +148,7 @@ const COPY: Record<Lang, Copy> = {
     price: 'Prijs', rent: 'Huur per maand', months: 'Verhuurd per jaar', agent: 'Makelaar',
     monthsUnit: 'mnd',
     perYearNoi: ' / jaar netto', payback: 'Terugverdientijd', capRate: 'Rendement', irr: 'Rendement over de leasetermijn',
-    taxLabel: 'Fiscale status', resident: 'Ingezetene', nonResident: 'Niet-ingezetene',
+    taxLabel: 'Fiscale status', taxBefore: 'Vóór belasting', resident: 'Ingezetene', nonResident: 'Niet-ingezetene',
     howCalced: 'Zo is het berekend',
     revenue: 'Huur per jaar', agentFee: 'Makelaarscommissie', upkeep: 'Zwembad, tuin, kleine reparaties',
     upkeepHint: 'de huurder betaalt nutsvoorzieningen, schoonmaak en benodigdheden', ffe: 'Slijtage meubels', pbb: 'Grond- en gebouwbelasting (PBB)',
@@ -166,7 +166,7 @@ const COPY: Record<Lang, Copy> = {
     price: 'Aji', rent: 'Sewa sabulan', months: 'Kasewayang setaun', agent: 'Agen',
     monthsUnit: 'bln',
     perYearNoi: ' / taun bersih', payback: 'Mulih modal', capRate: 'Imbal hasil', irr: 'Imbal hasil selami leasehold',
-    taxLabel: 'Status pajak', resident: 'Residen', nonResident: 'Non-residen',
+    taxLabel: 'Status pajak', taxBefore: 'Sebelum pajak', resident: 'Residen', nonResident: 'Non-residen',
     howCalced: 'Sapunapi ngitung',
     revenue: 'Sewa setaun', agentFee: 'Komisi agen', upkeep: 'Kolam, taman, perbaikan alit',
     upkeepHint: 'penyewa sane mayah listrik, toya, kebersihan', ffe: 'Penyusutan perabot', pbb: 'Pajak bumi miwah wangunan (PBB)',
@@ -184,7 +184,7 @@ const COPY: Record<Lang, Copy> = {
     price: 'Cena', rent: 'Czynsz miesięczny', months: 'Wynajęta w roku', agent: 'Agent',
     monthsUnit: 'mies.',
     perYearNoi: ' / rok netto', payback: 'Zwrot', capRate: 'Rentowność', irr: 'Rentowność w okresie leasehold',
-    taxLabel: 'Status podatkowy', resident: 'Rezydent', nonResident: 'Nierezydent',
+    taxLabel: 'Status podatkowy', taxBefore: 'Przed podatkiem', resident: 'Rezydent', nonResident: 'Nierezydent',
     howCalced: 'Jak liczymy',
     revenue: 'Czynsz roczny', agentFee: 'Prowizja agenta', upkeep: 'Basen, ogród, drobne naprawy',
     upkeepHint: 'media, sprzątanie i materiały opłaca najemca', ffe: 'Zużycie mebli', pbb: 'Podatek od gruntu i budynku (PBB)',
@@ -202,7 +202,7 @@ const COPY: Record<Lang, Copy> = {
     price: 'Ціна', rent: 'Оренда на місяць', months: 'Здана на рік', agent: 'Агент',
     monthsUnit: 'міс',
     perYearNoi: ' / рік чистими', payback: 'Окупність', capRate: 'Дохідність', irr: 'Дохідність за строк лізхолду',
-    taxLabel: 'Податковий статус', resident: 'Резидент', nonResident: 'Нерезидент',
+    taxLabel: 'Податковий статус', taxBefore: 'До податків', resident: 'Резидент', nonResident: 'Нерезидент',
     howCalced: 'Як пораховано',
     revenue: 'Оренда за рік', agentFee: 'Комісія агента', upkeep: 'Басейн, сад, дрібний ремонт',
     upkeepHint: 'комунальні, прибирання й витратні матеріали сплачує орендар', ffe: 'Знос меблів', pbb: 'Податок на землю та будівлю (PBB)',
@@ -229,7 +229,7 @@ export function MonthlyCalculator({ snap, lang }: { snap: Snapshot; lang: Lang }
   const [rent, setRent] = useState<number>(m.p50)
   const [months, setMonths] = useState<number>(MONTHS_RENTED.median)
   const [agent, setAgent] = useState<number>(Math.round(AGENT_FEE_PCT * 100))
-  const [taxStatus, setTaxStatus] = useState<TaxStatus>('nonResident')
+  const [taxStatus, setTaxStatus] = useState<TaxStatus>('beforeTax')
   const [open, setOpen] = useState(false)
 
   const e = useMemo(() => computeMonthlyEconomics({
@@ -263,10 +263,10 @@ export function MonthlyCalculator({ snap, lang }: { snap: Snapshot; lang: Lang }
       <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2">
         <span className="text-[13px] text-[var(--color-text-muted)]">{t.taxLabel}</span>
         <div className="inline-flex rounded-lg border border-[var(--color-border)] p-0.5">
-          {(['nonResident', 'resident'] as const).map(key => (
+          {(['beforeTax', 'resident', 'nonResident'] as const).map(key => (
             <button key={key} type="button" onClick={() => setTaxStatus(key)} aria-pressed={taxStatus === key}
               className={`cursor-pointer rounded-md px-3 py-1 text-[12px] transition-colors ${taxStatus === key ? 'bg-[var(--color-primary)] text-white' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'}`}>
-              {key === 'resident' ? t.resident : t.nonResident}
+              {key === 'beforeTax' ? t.taxBefore : key === 'resident' ? t.resident : t.nonResident}
             </button>
           ))}
         </div>
@@ -300,7 +300,7 @@ export function MonthlyCalculator({ snap, lang }: { snap: Snapshot; lang: Lang }
           <li>− {t.upkeep}: {fmt(e.upkeep)}<span className="text-[var(--color-text-muted)]"> · {t.upkeepHint}</span></li>
           <li>− {t.ffe} ({Math.round(snap.region.ffeReservePct * 100)}%): {fmt(e.ffeReserve)}</li>
           {e.pbbTax > 0 && <li>− {t.pbb}: {fmt(e.pbbTax)}</li>}
-          <li>− {t.tax} ({Math.round(e.taxRate * 100)}%): {fmt(e.tax)}<span className="text-[var(--color-text-muted)]"> · {taxStatus === 'resident' ? t.taxHintRes : t.taxHintNonRes}</span></li>
+          {taxStatus !== 'beforeTax' && <li>− {t.tax} ({Math.round(e.taxRate * 100)}%): {fmt(e.tax)}<span className="text-[var(--color-text-muted)]"> · {taxStatus === 'resident' ? t.taxHintRes : t.taxHintNonRes}</span></li>}
           <li className="mt-1 border-t border-[var(--color-border)] pt-1 font-medium">= {t.noi}: {fmt(e.noi)}</li>
           {e.entryPrice != null && (
             <li className="mt-1 border-t border-[var(--color-border)] pt-2 text-[var(--color-text-muted)]">

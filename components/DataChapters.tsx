@@ -132,7 +132,7 @@ export function DataChapter({
 }) {
   const c = pickCopy(COPY, lang).chapters[id]
   return (
-    <section id={id} className="mb-16 scroll-mt-24">
+    <section id={id} className="mb-16 mt-24 pt-12 border-t border-[var(--color-border)] scroll-mt-24">
       <div className="mb-6 max-w-[68ch]">
         <div className="flex items-center gap-2 mb-2">
           <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[var(--color-primary)] text-white text-[13px] font-semibold">

@@ -9,6 +9,7 @@ import { Tags, ArrowUpRight } from 'lucide-react'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { SOLID_N, type SaleCompsBundle, type SaleComp } from '@/lib/sale-comps'
 import { InlinePrice } from './InlinePrice'
+import { CardRail } from './CardRail'
 
 const COPY = {
   ru: {
@@ -35,6 +36,7 @@ const COPY = {
     freehold: 'фрихолд',
     km: 'км',
     open: 'Объявление',
+    prev: 'Назад', next: 'Дальше',
     asOf: (d: string) => `Данные на ${d}`,
   },
   en: {
@@ -61,6 +63,7 @@ const COPY = {
     freehold: 'freehold',
     km: 'km',
     open: 'Listing',
+    prev: 'Previous', next: 'Next',
     asOf: (d: string) => `Data as of ${d}`,
   },
 }
@@ -112,9 +115,11 @@ export function SaleCompsBlock({ data, bedrooms, lang }: { data: SaleCompsBundle
           <p className="mt-4 text-[13px] leading-relaxed text-[var(--color-text-muted)] max-w-[68ch]">{c.noVerdict}</p>
         )}
 
-        <ul className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {data.comps.map((comp, i) => <CompCard key={comp.url} comp={comp} isYear={isYear} lang={lang} hideOnPhone={i >= 3} />)}
-        </ul>
+        <div className="mt-6">
+          <CardRail prevLabel={c.prev} nextLabel={c.next}>
+            {data.comps.map(comp => <CompCard key={comp.url} comp={comp} isYear={isYear} lang={lang} />)}
+          </CardRail>
+        </div>
 
         <div className="mt-4 pt-3 border-t border-[var(--color-border)] text-[12px] text-[var(--color-text-muted)]">
           {c.asOf(fmtDate(data.asOf, lang))} · {data.source}
@@ -136,7 +141,7 @@ function Stat({ label, value, sub, tone = 'plain' }: { label: string; value: Rea
   )
 }
 
-function CompCard({ comp, isYear, lang, hideOnPhone }: { comp: SaleComp; isYear: boolean; lang: Lang; hideOnPhone: boolean }) {
+function CompCard({ comp, isYear, lang }: { comp: SaleComp; isYear: boolean; lang: Lang }) {
   const c = pickCopy(COPY, lang)
   // rumah123 отдаёт картинку в нужном размере сам — большую не тянем.
   const photo = comp.photo?.replace('/1080x720-fit/', '/720x480-fit/') ?? null
@@ -144,8 +149,6 @@ function CompCard({ comp, isYear, lang, hideOnPhone }: { comp: SaleComp; isYear:
   const metric = isYear ? comp.ppmYear : comp.ppm
   const facts = [`${comp.bedrooms} ${c.bedShort}`, comp.buildingM2 && `${comp.buildingM2} ${c.m2}`, right].filter(Boolean).join(' · ')
   return (
-    // На телефоне хватает трёх: дальше лента становится длиннее самой страницы.
-    <li className={hideOnPhone ? 'hidden sm:block' : undefined}>
       <a
         href={comp.url}
         target="_blank"
@@ -175,6 +178,5 @@ function CompCard({ comp, isYear, lang, hideOnPhone }: { comp: SaleComp; isYear:
           </div>
         </div>
       </a>
-    </li>
   )
 }

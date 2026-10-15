@@ -2,7 +2,8 @@ import type { CompetitorWithDistance } from '../competitor-utils'
 import type { RegionDefaults } from './regions'
 
 export type ScenarioKey = 'bad' | 'median' | 'good'
-export type TaxStatus = 'resident' | 'nonResident'
+/** beforeTax — показать доход до налога с аренды (ставка 0). */
+export type TaxStatus = 'beforeTax' | 'resident' | 'nonResident'
 
 export type Economics = {
   /** Ставка соседей после коэффициента реализации — то, что реально получают. */
@@ -136,7 +137,8 @@ export function computeEconomics(input: EconomicsInput): Economics {
   const pbbTax = askingPrice != null ? askingPrice * region.pbbAnnualPctOfPrice : 0
 
   const preTaxProfit = revenue - platformFee - phrTax - mgmtFee - opex - ffeReserve - pbbTax
-  const taxRate = taxStatus === 'resident' ? region.taxRateResident : region.taxRateNonResident
+  const taxRate = taxStatus === 'beforeTax' ? 0
+    : taxStatus === 'resident' ? region.taxRateResident : region.taxRateNonResident
   const tax = Math.max(0, preTaxProfit) * taxRate
   const noi = preTaxProfit - tax
 

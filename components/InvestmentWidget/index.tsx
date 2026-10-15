@@ -59,7 +59,7 @@ const COPY = {
     phr: 'Налог на проживание', ffe: 'Резерв на износ', preTax: 'Прибыль до налога',
     entryPrice: 'Цена входа', closing: 'оформление', furnishing: 'меблировка',
     adrRealization: 'реализация ставки', opexFloorNote: 'базовый минимум',
-    taxStatusLabel: 'Налоговый статус', taxResident: 'Резидент', taxNonResident: 'Нерезидент',
+    taxStatusLabel: 'Налоговый статус', taxBefore: 'До налогов', taxResident: 'Резидент', taxNonResident: 'Нерезидент',
     taxStatusHint: 'Резидент с индонезийским NPWP платит 10%, нерезидент — 20%.',
     irrLabel: 'Доходность за срок аренды',
     noCapitalReturn: 'За оставшийся срок лизхолда объект не возвращает вложенное',
@@ -150,7 +150,7 @@ const COPY = {
     phr: 'Accommodation tax', ffe: 'Wear-and-tear reserve', preTax: 'Profit before tax',
     entryPrice: 'Total entry cost', closing: 'closing', furnishing: 'furnishing',
     adrRealization: 'rate realization', opexFloorNote: 'baseline minimum',
-    taxStatusLabel: 'Tax status', taxResident: 'Resident', taxNonResident: 'Non-resident',
+    taxStatusLabel: 'Tax status', taxBefore: 'Before tax', taxResident: 'Resident', taxNonResident: 'Non-resident',
     taxStatusHint: 'A resident with an Indonesian NPWP pays 10%, a non-resident 20%.',
     irrLabel: 'Return over lease term',
     noCapitalReturn: 'Over the remaining lease the property does not return what you put in',
@@ -241,7 +241,7 @@ const COPY = {
     phr: 'Pajak hotel (PHR)', ffe: 'Cadangan penyusutan', preTax: 'Laba sebelum pajak',
     entryPrice: 'Total biaya masuk', closing: 'balik nama', furnishing: 'perabotan',
     adrRealization: 'realisasi tarif', opexFloorNote: 'minimum dasar',
-    taxStatusLabel: 'Status pajak', taxResident: 'Residen', taxNonResident: 'Non-residen',
+    taxStatusLabel: 'Status pajak', taxBefore: 'Sebelum pajak', taxResident: 'Residen', taxNonResident: 'Non-residen',
     taxStatusHint: 'Residen dengan NPWP membayar 10%, non-residen 20%.',
     irrLabel: 'Imbal hasil selama masa sewa',
     noCapitalReturn: 'Sampai masa sewa berakhir, properti tidak mengembalikan modal',
@@ -332,7 +332,7 @@ const COPY = {
     phr: 'Taxe de séjour', ffe: 'Réserve d\'usure', preTax: 'Bénéfice avant impôt',
     entryPrice: 'Coût d\'entrée total', closing: 'frais de notaire', furnishing: 'ameublement',
     adrRealization: 'réalisation du tarif', opexFloorNote: 'minimum de base',
-    taxStatusLabel: 'Statut fiscal', taxResident: 'Résident', taxNonResident: 'Non-résident',
+    taxStatusLabel: 'Statut fiscal', taxBefore: 'Avant impôt', taxResident: 'Résident', taxNonResident: 'Non-résident',
     taxStatusHint: 'Un résident avec un NPWP indonésien paie 10%, un non-résident 20%.',
     irrLabel: 'Rendement sur la durée du bail',
     noCapitalReturn: 'Sur la durée restante du bail, le bien ne rembourse pas la mise',
@@ -423,7 +423,7 @@ const COPY = {
     phr: 'Beherbergungssteuer', ffe: 'Abnutzungsrücklage', preTax: 'Gewinn vor Steuern',
     entryPrice: 'Gesamte Einstiegskosten', closing: 'Abwicklung', furnishing: 'Möblierung',
     adrRealization: 'Ratenrealisierung', opexFloorNote: 'Grundminimum',
-    taxStatusLabel: 'Steuerstatus', taxResident: 'Ansässig', taxNonResident: 'Nicht ansässig',
+    taxStatusLabel: 'Steuerstatus', taxBefore: 'Vor Steuern', taxResident: 'Ansässig', taxNonResident: 'Nicht ansässig',
     taxStatusHint: 'Ansässige mit indonesischer NPWP zahlen 10%, Nichtansässige 20%.',
     irrLabel: 'Rendite über die Pachtdauer',
     noCapitalReturn: 'Über die Restlaufzeit der Pacht kommt das eingesetzte Kapital nicht zurück',
@@ -514,7 +514,7 @@ const COPY = {
     phr: '住宿税', ffe: '折旧准备金', preTax: '税前利润',
     entryPrice: '总入手成本', closing: '过户', furnishing: '家具',
     adrRealization: '房价实现率', opexFloorNote: '基础最低值',
-    taxStatusLabel: '税务身份', taxResident: '居民', taxNonResident: '非居民',
+    taxStatusLabel: '税务身份', taxBefore: '税前', taxResident: '居民', taxNonResident: '非居民',
     taxStatusHint: '持印尼税号的居民缴纳10%，非居民缴纳20%。',
     irrLabel: '租期内回报率',
     noCapitalReturn: '在剩余租期内，该物业无法收回投入',
@@ -605,7 +605,7 @@ const COPY = {
     phr: 'Verblijfsbelasting', ffe: 'Slijtagereserve', preTax: 'Winst voor belasting',
     entryPrice: 'Totale instapkosten', closing: 'overdracht', furnishing: 'inrichting',
     adrRealization: 'tariefrealisatie', opexFloorNote: 'basisminimum',
-    taxStatusLabel: 'Fiscale status', taxResident: 'Ingezetene', taxNonResident: 'Niet-ingezetene',
+    taxStatusLabel: 'Fiscale status', taxBefore: 'Vóór belasting', taxResident: 'Ingezetene', taxNonResident: 'Niet-ingezetene',
     taxStatusHint: 'Een ingezetene met Indonesische NPWP betaalt 10%, een niet-ingezetene 20%.',
     irrLabel: 'Rendement over de pachttermijn',
     noCapitalReturn: 'Binnen de resterende pachttermijn verdient het object de inleg niet terug',
@@ -696,7 +696,7 @@ const COPY = {
     phr: 'Pajak hotel (PHR)', ffe: 'Cadangan panyusutan', preTax: 'Bati sadurung pajak',
     entryPrice: 'Total prabea ngranjing', closing: 'balik nama', furnishing: 'prabot',
     adrRealization: 'realisasi tarif', opexFloorNote: 'minimum dasar',
-    taxStatusLabel: 'Status pajak', taxResident: 'Residen', taxNonResident: 'Non-residen',
+    taxStatusLabel: 'Status pajak', taxBefore: 'Sebelum pajak', taxResident: 'Residen', taxNonResident: 'Non-residen',
     taxStatusHint: 'Residen sane madue NPWP naur 10%, non-residen 20%.',
     irrLabel: 'Asil salami masa sewa',
     noCapitalReturn: 'Kantos masa sewa puput, properti nenten mawali modal',
@@ -787,7 +787,7 @@ const COPY = {
     phr: 'Podatek od zakwaterowania', ffe: 'Rezerwa na zużycie', preTax: 'Zysk przed opodatkowaniem',
     entryPrice: 'Całkowity koszt wejścia', closing: 'formalności', furnishing: 'umeblowanie',
     adrRealization: 'realizacja stawki', opexFloorNote: 'minimum bazowe',
-    taxStatusLabel: 'Status podatkowy', taxResident: 'Rezydent', taxNonResident: 'Nierezydent',
+    taxStatusLabel: 'Status podatkowy', taxBefore: 'Przed podatkiem', taxResident: 'Rezydent', taxNonResident: 'Nierezydent',
     taxStatusHint: 'Rezydent z indonezyjskim NPWP płaci 10%, nierezydent 20%.',
     irrLabel: 'Zwrot w okresie dzierżawy',
     noCapitalReturn: 'W pozostałym okresie dzierżawy obiekt nie zwraca włożonego kapitału',
@@ -878,7 +878,7 @@ const COPY = {
     phr: 'Податок на проживання', ffe: 'Резерв на знос', preTax: 'Прибуток до податку',
     entryPrice: 'Ціна входу', closing: 'оформлення', furnishing: 'умеблювання',
     adrRealization: 'реалізація ставки', opexFloorNote: 'базовий мінімум',
-    taxStatusLabel: 'Податковий статус', taxResident: 'Резидент', taxNonResident: 'Нерезидент',
+    taxStatusLabel: 'Податковий статус', taxBefore: 'До податків', taxResident: 'Резидент', taxNonResident: 'Нерезидент',
     taxStatusHint: 'Резидент з індонезійським NPWP сплачує 10%, нерезидент — 20%.',
     irrLabel: 'Дохідність за строк оренди',
     noCapitalReturn: 'За решту строку лізхолду обʼєкт не повертає вкладене',
@@ -1132,7 +1132,7 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
   const [adr, setAdr] = useState<number>(sc.median.adrAsking)
   const [occ, setOcc] = useState<number>(Math.round(snap.region.occupancyByScenario.median * 100))
   const [mgmt, setMgmt] = useState<number>(Math.round(snap.region.mgmtFeePct * 100))
-  const [taxStatus, setTaxStatus] = useState<TaxStatus>('nonResident')
+  const [taxStatus, setTaxStatus] = useState<TaxStatus>('beforeTax')
   const [open, setOpen] = useState(false)
 
   const e: Economics = useMemo(() => computeEconomics({
@@ -1192,7 +1192,7 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
       <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2">
         <span className="text-[13px] text-[var(--color-text-muted)]">{t.taxStatusLabel}</span>
         <div className="inline-flex rounded-lg border border-[var(--color-border)] p-0.5">
-          {(['nonResident', 'resident'] as const).map(key => (
+          {(['beforeTax', 'resident', 'nonResident'] as const).map(key => (
             <button
               key={key}
               type="button"
@@ -1204,7 +1204,7 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
                   : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
               }`}
             >
-              {key === 'resident' ? t.taxResident : t.taxNonResident}
+              {key === 'beforeTax' ? t.taxBefore : key === 'resident' ? t.taxResident : t.taxNonResident}
             </button>
           ))}
         </div>
@@ -1279,10 +1279,10 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
             </li>
           )}
           <li className="pt-1 border-t border-[var(--color-border)] mt-1">= {t.preTax}: {fmtUsd(e.preTaxProfit)}</li>
-          <li>
+          {taxStatus !== 'beforeTax' && <li>
             − {t.tax} ({Math.round((taxStatus === 'resident' ? snap.region.taxRateResident : snap.region.taxRateNonResident) * 100)}%): {fmtUsd(e.tax)}
             <span className="text-[var(--color-text-muted)]"> · {taxStatus === 'resident' ? t.taxHintRes : t.taxHintNonRes}</span>
-          </li>
+          </li>}
           <li className="pt-1 border-t border-[var(--color-border)] mt-1 font-medium">= {t.noi}: {fmtUsd(e.noi)}</li>
           {e.entryPrice != null && (
             <li className="pt-2 mt-1 border-t border-[var(--color-border)] text-[var(--color-text-muted)]">
