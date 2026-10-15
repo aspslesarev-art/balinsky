@@ -83,6 +83,7 @@ export function ComplexCard({ c, lang = 'ru', priority = false }: { c: ComplexCa
     >
       <div className="relative">
         <PhotoSlider photos={slides} alt={c.name} heightClass="h-[240px] md:h-[360px]" trackingId={`complex:${c.slug}`} priority={priority} />
+        {c.verifiedYield && <VerifiedYieldBadge lang={lang} onPhoto className="absolute bottom-3 left-3 z-10" />}
         {c.isSold && (
           <div className="absolute top-3 left-3 z-10 inline-flex items-center px-2.5 py-1 rounded-full bg-[#DC2626] text-white text-[12px] font-semibold tracking-wide shadow-md">
             {copy.sold}
@@ -105,7 +106,6 @@ export function ComplexCard({ c, lang = 'ru', priority = false }: { c: ComplexCa
         {location && (
           <div className="text-[15px] text-[var(--color-text)] mb-3">{location}</div>
         )}
-        {c.verifiedYield && <VerifiedYieldBadge lang={lang} className="mb-3" />}
         {(villaRange || aptRange) && (
           <div className="space-y-1 mb-4 text-[14px]">
             {villaRange && (

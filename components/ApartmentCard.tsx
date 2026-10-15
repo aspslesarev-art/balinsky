@@ -80,6 +80,7 @@ export function ApartmentCard({ a, lang = 'ru', priority = false }: { a: Apartme
     >
       <div className="relative">
         <PhotoSlider photos={a.photos} alt={a.title} trackingId={`apt:${a.slug}`} priority={priority} />
+        {a.verifiedYield && <VerifiedYieldBadge lang={lang} onPhoto className="absolute bottom-3 left-3 z-10" />}
         {dealLabel && (
           <span className="absolute top-3 left-3 z-10 inline-flex items-center text-[11px] font-semibold uppercase tracking-wide bg-white text-[var(--color-text)] rounded-full px-2.5 py-1 shadow-[0_1px_3px_rgba(0,0,0,0.12)]">
             {dealLabel}
@@ -123,7 +124,6 @@ export function ApartmentCard({ a, lang = 'ru', priority = false }: { a: Apartme
           <div className="text-[18px] font-semibold text-[var(--color-text)] mb-3">
             {price}
             {a.priceUsd != null && <ApproxPrice usd={a.priceUsd} lang={lang} className="block text-[13px] font-normal text-[var(--color-text-muted)]" />}
-            {a.verifiedYield && <span className="mt-2 block"><VerifiedYieldBadge lang={lang} /></span>}
           </div>
         )}
 
