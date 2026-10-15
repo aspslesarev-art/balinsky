@@ -61,6 +61,7 @@ import { loadNearbyPlaces } from '@/lib/nearby-places'
 import { NearbyPlaces } from '@/components/NearbyPlaces'
 import { loadGeoFacts } from '@/lib/complex-access'
 import { ComplexAccessBlock } from '@/components/ComplexAccessBlock'
+import { NeighborhoodHeatMap } from '@/components/NeighborhoodHeatMap'
 import { ClimateBlock } from '@/components/ClimateBlock'
 import { AreaBlock } from '@/components/AreaBlock'
 import { PlotSiteBlock } from '@/components/PlotSiteBlock'
@@ -1479,6 +1480,12 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
                 <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />
               </GatedBlock>
             )}
+            {/* Карта туристов — сразу под «Что рядом»: вместе отвечают, оживлённо ли вокруг. */}
+            {lat != null && lng != null && GMAPS_KEY && (
+              <LazyMount fallback={<div className="h-[420px] rounded-2xl bg-[var(--color-search-bg)]" />}>
+                <NeighborhoodHeatMap apiKey={GMAPS_KEY} lat={lat} lng={lng} title={title} lang={lang} />
+              </LazyMount>
+            )}
             {districtCopy && districtSlug && (
               <DistrictAboutCard copy={districtCopy} lang={lang} kind="villa" hubHref={`${villasRoot}/${districtSlug}`} />
             )}
@@ -1508,7 +1515,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
             <div id="kalkulyator" className="scroll-mt-24" />
             <GatedBlock kind="investment" lang={lang}>
               <LazyMount fallback={<div className="min-h-[600px]" />}>
-                <InvestmentWidget villaId={v.airtable_id} apiKey={GMAPS_KEY} lang={lang} />
+                <InvestmentWidget villaId={v.airtable_id} apiKey={GMAPS_KEY} lang={lang} showMap={false} />
               </LazyMount>
             </GatedBlock>
           </DataChapter>

@@ -941,7 +941,8 @@ export function InvestmentWidget({
   apiKey,
   kind = 'villa',
   lang,
-}: { villaId: string; apiKey: string; kind?: 'villa' | 'apartment'; lang?: Lang }) {
+  showMap = true,
+}: { villaId: string; apiKey: string; kind?: 'villa' | 'apartment'; lang?: Lang; showMap?: boolean }) {
   // Allow explicit lang from server caller; default by URL.
   const pathname = usePathname() ?? ''
   const resolvedLang: Lang = lang ?? (detectLang(pathname))
@@ -967,7 +968,7 @@ export function InvestmentWidget({
   if (loading) return <SectionShell lang={resolvedLang}><Skeleton /></SectionShell>
   if (error || !snap) return null
 
-  return <InvestmentWidgetView snap={snap} apiKey={apiKey} lang={resolvedLang} />
+  return <InvestmentWidgetView snap={snap} apiKey={apiKey} lang={resolvedLang} showMap={showMap} />
 }
 
 function SectionShell({ children, lang, monthly }: { children: React.ReactNode; lang: Lang; monthly?: boolean }) {
@@ -1001,7 +1002,8 @@ function Skeleton() {
   )
 }
 
-function InvestmentWidgetView({ snap, apiKey, lang }: { snap: Snapshot; apiKey: string; lang: Lang }) {
+// showMap=false — страница сама показывает карту туристов в разделе «Место» (вилла, 15.10.2026).
+function InvestmentWidgetView({ snap, apiKey, lang, showMap = true }: { snap: Snapshot; apiKey: string; lang: Lang; showMap?: boolean }) {
   const t = pickCopy(COPY, lang)
   const [rentMode, setRentMode] = useState<'daily' | 'monthly'>('daily')
   const allPois = useMemo(() => {
@@ -1059,9 +1061,11 @@ function InvestmentWidgetView({ snap, apiKey, lang }: { snap: Snapshot; apiKey: 
           </>
         )}
 
-        <div className="mt-4">
-          <InvestmentMap apiKey={apiKey} snap={snap} allPois={allPois} lang={lang} />
-        </div>
+        {showMap && (
+          <div className="mt-4">
+            <InvestmentMap apiKey={apiKey} snap={snap} allPois={allPois} lang={lang} />
+          </div>
+        )}
 
         {snap.flags.expandedZone && (
           <Banner tone="info" icon={<Info size={16} />} className="mt-4">
