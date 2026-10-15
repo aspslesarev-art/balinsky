@@ -49,6 +49,9 @@ export type RegionDefaults = {
   // половины рынка.
   pbbAnnualPctOfPrice: number
   capRateThresholdWeak: number
+  /** Сколько стоит ночь на каждый доллар цены объекта: медиана по комплексам
+   *  со своими объявлениями на Booking (16.10.2026: 14 вилл, 17 апартаментов). */
+  adrPerPriceUsd: { villa: number; apartment: number }
 }
 
 export const BALI_DEFAULTS: RegionDefaults = {
@@ -64,7 +67,10 @@ export const BALI_DEFAULTS: RegionDefaults = {
   mgmtFeePct: 0.17,
   phrRatePct: 0.10,
   phrOwnerShareByScenario: { bad: 1.0, median: 0.5, good: 0.0 },
-  opexPerSqmMonth: 4,
+  // Отчёт BREIG за 12 месяцев (авг 2025 – июль 2026): содержание без капремонта
+  // $3,2–3,4 на м² в месяц у трёх вилл с известной площадью. С этим и резервом
+  // 4% модель оставляет владельцу на 7–8% меньше их реального чистого дохода.
+  opexPerSqmMonth: 3.3,
   opexBreakdown: { utilities: 0.30, staff: 0.30, supplies: 0.25, poolGarden: 0.08, other: 0.07 },
   opexFloorBase: 1500,
   opexFloorPerBedroom: 1400,
@@ -78,6 +84,7 @@ export const BALI_DEFAULTS: RegionDefaults = {
   // доходность новостроя Бали при этих допущениях около 2%, поэтому
   // прежние 6% помечали бы весь рынок без разбора.
   capRateThresholdWeak: 0.015,
+  adrPerPriceUsd: { villa: 0.00069, apartment: 0.000531 },
 }
 
 export function regionFor(_lat: number, _lng: number): RegionDefaults {

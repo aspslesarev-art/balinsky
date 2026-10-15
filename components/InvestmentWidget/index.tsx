@@ -52,7 +52,7 @@ const COPY = {
     resetTitle: 'Сбросить к данным по конкурентам', reset: 'сбросить',
     inputPrice: 'Цена', inputAdr: 'Цена за ночь', inputOccupancy: 'Загрузка', inputMgmt: 'Управляющая компания',
     calcTitle: 'Калькулятор доходности',
-    calcSub: 'Цена за ночь по умолчанию — средняя ставка похожих объектов рядом (их карточки ниже). Загрузка — 60% дней в году: надёжной статистики по Бали нет, двигайте под свой прогноз. Внизу — сколько останется владельцу после комиссий, управляющей, расходов и налога.',
+    calcSub: 'Цена за ночь по умолчанию - среднее между ставкой похожих объектов рядом (их карточки ниже) и обычной ставкой для объекта такой цены. Загрузка - как у похожих объявлений вокруг на Booking с августа 2026 года (если их меньше пяти - 60%). Двигайте под свой прогноз. Внизу - сколько останется владельцу после комиссий, управляющей, расходов и налога.',
     payback: 'Окупаемость', capRate: 'Доходность в год',
     howCalced: 'Как считалось',
     revenue: 'Выручка', platform: 'Площадка', mgmt: 'Управление', opex: 'Расходы', tax: 'Налог', noi: 'Чистыми',
@@ -143,7 +143,7 @@ const COPY = {
     resetTitle: 'Reset to competitor-based defaults', reset: 'reset',
     inputPrice: 'Price', inputAdr: 'Nightly rate', inputOccupancy: 'Occupancy', inputMgmt: 'Management fee',
     calcTitle: 'Yield calculator',
-    calcSub: 'The nightly rate defaults to the typical rate of similar places nearby (their cards are below). Occupancy is 60% of the year: Bali has no reliable statistics, so move it to your own forecast. At the bottom — what the owner keeps after platform fees, management, costs and tax.',
+    calcSub: 'The nightly rate defaults to a blend of similar places nearby (their cards are below) and the usual rate for a property at this price. Occupancy matches similar Booking listings around since August 2026 (60% if there are fewer than five). Move both to your own forecast. At the bottom - what the owner keeps after platform fees, management, costs and tax.',
     payback: 'Payback', capRate: 'Yield per year',
     howCalced: 'How it was calculated',
     revenue: 'Revenue', platform: 'Platform', mgmt: 'Management', opex: 'Operating costs', tax: 'Tax', noi: 'Net to owner',
@@ -1108,7 +1108,7 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
   // ADR slider band derived from the competitor percentiles (p25…p75),
   // widened so the user can explore a bit beyond the observed range.
   const adrLo = Math.max(1, Math.floor(sc.bad.adrAsking * 0.6))
-  const adrHi = Math.max(adrLo + 1, Math.ceil(sc.good.adrAsking * 1.5))
+  const adrHi = Math.max(adrLo + 1, Math.ceil(sc.good.adrAsking * 1.5), Math.ceil((snap.ownBooking?.adr ?? 0) * 1.2))
 
   // Ставки соседей для зон в дорожке ползунка. Берём их у того же
   // источника, что и карточки «что рядом сдают» ниже: раньше шкала
@@ -1137,7 +1137,7 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
   // применяется внутри расчёта, поэтому пользователь двигает ровно то число,
   // которое видит в карточках конкурентов ниже.
   // Комплекс сам сдаётся на Booking — стартуем с его цены и загрузки
-  // (решение владельца 15.10.2026), иначе со ставки соседей и 60%.
+  // (решение владельца 15.10.2026), иначе со ставки соседей и загрузки района.
   const own = snap.ownBooking
   const [adr, setAdr] = useState<number>(own?.adr ?? sc.median.adrAsking)
   const [occ, setOcc] = useState<number>(Math.round((own?.occupancy ?? snap.region.occupancyByScenario.median) * 100))
@@ -1288,7 +1288,7 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
             <span className="text-[var(--color-text-muted)]"> · {t.mgmtHint}</span>
           </li>
           <li>
-            − {t.opex} ({e.opexAtFloor ? t.opexFloorNote : `${snap.region.opexPerSqmMonth} ${opexUnit}`}): {fmtUsd(e.opex)}
+            − {t.opex} ({e.opexAtFloor ? t.opexFloorNote : `${lang === 'ru' ? String(snap.region.opexPerSqmMonth).replace('.', ',') : snap.region.opexPerSqmMonth} ${opexUnit}`}): {fmtUsd(e.opex)}
           </li>
           <li className="pl-4 text-[var(--color-text-muted)]">· {t.utilities}: {fmtUsd(Math.round(e.opexParts.utilities))}</li>
           <li className="pl-4 text-[var(--color-text-muted)]">· {t.staff}: {fmtUsd(Math.round(e.opexParts.staff))}</li>

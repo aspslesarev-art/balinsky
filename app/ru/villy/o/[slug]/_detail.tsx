@@ -1266,7 +1266,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
     climate: geoFacts?.climate ?? null,
     airportMin: airportS ? Math.round(airportS / 60) : null,
     monthly,
-    daily: marketOk ? { count: marketStats!.villa_count, adrUsd: marketStats!.villa_adr_usd, occupancyPct: marketStats!.villa_occupancy_pct } : null,
+    daily: marketOk ? { count: marketStats!.villa_count, adrUsd: marketStats!.villa_adr_usd, occupancyPct: verdictSnap?.marketOccupancy ? Math.round(verdictSnap.marketOccupancy.occupancy * 100) : marketStats!.villa_occupancy_pct } : null,
     yields,
     saleDiffPct: saleComps?.diffPct ?? null,
     hasPool: verdictSnap?.villa.hasPool ?? null,
@@ -1498,7 +1498,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
         {hasRent && (
           <DataChapter id="arenda" n={3} lang={lang} question={asQuestion(qh.demand)}>
             <DemandSummary verdict={verdict} monthly={monthly} bedrooms={bedrooms} lang={lang}
-              daily={marketOk ? { count: marketStats!.villa_count, adrUsd: marketStats!.villa_adr_usd, occupancyPct: marketStats!.villa_occupancy_pct } : null} />
+              daily={marketOk ? { count: marketStats!.villa_count, adrUsd: marketStats!.villa_adr_usd, occupancyPct: verdictSnap?.marketOccupancy ? Math.round(verdictSnap.marketOccupancy.occupancy * 100) : marketStats!.villa_occupancy_pct } : null} />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
               {/* На жёлтой земле «выручка посуточно» вводит в заблуждение — соседей показывает DemandSummary. */}
               {marketOk && !rentalRestricted && (

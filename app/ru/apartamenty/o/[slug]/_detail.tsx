@@ -1140,7 +1140,9 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
   const dailyFacts = marketOk ? {
     count: aptMarket ? marketStats!.apartment_count : marketStats!.villa_count,
     adrUsd: aptMarket ? marketStats!.apartment_adr_usd : marketStats!.villa_adr_usd,
-    occupancyPct: aptMarket ? marketStats!.apartment_occupancy_pct : marketStats!.villa_occupancy_pct,
+    // Та же загрузка района, что в калькуляторе (без закрытых календарей).
+    occupancyPct: verdictSnap?.marketOccupancy ? Math.round(verdictSnap.marketOccupancy.occupancy * 100)
+      : aptMarket ? marketStats!.apartment_occupancy_pct : marketStats!.villa_occupancy_pct,
   } : null
   const verdict = buildVerdict({
     status, yearRaw, permit, leaseYears, rentalRestricted, complex: complexFacts,

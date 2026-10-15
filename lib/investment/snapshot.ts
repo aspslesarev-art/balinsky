@@ -71,6 +71,15 @@ export type InvestmentSnapshot = {
   flags: { emergingMarket: boolean; weakPerformance: boolean; leaseholdRisk: boolean; isLuxury: boolean; expandedZone: boolean; rentalRestricted: boolean }
   /** Комплекс сам сдаётся на Booking (complex_booking_match): его загрузка и цена за ночь. */
   ownBooking: OwnBooking | null
+  /** Загрузка похожих объявлений вокруг — вместо средних 60%, если она есть. */
+  marketOccupancy: MarketOccupancy | null
+}
+
+export type MarketOccupancy = {
+  /** 0..1, медиана средней загрузки похожих объявлений вокруг. */
+  occupancy: number
+  listings: number
+  radiusM: number
 }
 
 export type OwnBooking = {
@@ -97,6 +106,8 @@ const OWN_OCC_CAP = 0.90
 // значения на ~70 снимков) и стоит под 100%, — закрытый календарь, а не брони.
 const FROZEN_MAX_DISTINCT = 2
 const FROZEN_MIN_OCC = 95
+// Меньше 5 похожих объявлений вокруг — загрузку района не считаем.
+const MARKET_MIN_LISTINGS = 5
 // Меньше 30 дневных снимков — слишком мало, чтобы говорить о загрузке.
 const MIN_SNAPSHOTS = 30
 // Ниже 20% объявление по сути не работает (снято или новое) — его не считаем.
@@ -165,7 +176,15 @@ async function loadOwnBooking(complexId: string | null, complexName: string | nu
   }
   const actual = await loadActuals(ids0, kind, bedrooms, region)
   if (!links.length) return actual
-  const ids = links.map(l => Number(l.booking_id))
+  const est = await bookingEstimate(links.map(l => Number(l.booking_id)), kind, bedrooms)
+  const adr = est?.adr ?? null
+  if (actual) return actual.adr != null ? actual : { ...actual, adr, adrSource: adr != null ? 'booking' : null }
+  return est
+}
+
+/** Загрузка и цена ночи по объявлениям Booking (витрина estatemarket). */
+export async function bookingEstimate(ids: number[], kind: ListingKind, bedrooms: number | null): Promise<OwnBooking | null> {
+  if (!ids.length) return null
   // Загрузка — среднее по дневным снимкам (с 05.08.2026), а не последний
   // снимок: один день в сезоне сильно скачет. Цена — медиана по недельным
   // снимкам номеров.
@@ -225,7 +244,6 @@ async function loadOwnBooking(complexId: string | null, complexName: string | nu
     priced.filter(r => roomBedrooms(r.type) == null && roomKind(r.type) === kind),
   ]
   const adr = median((tiers.find(t => t.length) ?? []).map(r => r.price))
-  if (actual) return actual.adr != null ? actual : { ...actual, adr: adr != null ? Math.round(adr) : null, adrSource: adr != null ? 'booking' : null }
   if (occMed == null && adr == null) return null
   return {
     source: 'booking',
@@ -235,6 +253,20 @@ async function loadOwnBooking(complexId: string | null, complexName: string | nu
     adrSource: adr != null ? 'booking' : null,
     listings: (locs ?? []).map(l => ({ id: Number(l.id), title: l.title ?? null, occupancy: listingOcc(Number(l.id)) })),
   }
+}
+
+/** Загрузка похожих объявлений вокруг (migrations/115): 1,5 км, мало — 3 км. */
+async function loadMarketOccupancy(lat: number, lng: number, kind: ListingKind, bedrooms: number | null): Promise<MarketOccupancy | null> {
+  const since = new Date(Date.now() - 120 * 86_400_000).toISOString().slice(0, 10)
+  for (const radius of [1500, 3000]) {
+    const { data, error } = await sb.rpc('booking_market_occupancy', { p_lat: lat, p_lng: lng, p_radius_m: radius, p_unit_kind: kind, p_bedrooms: bedrooms, p_since: since })
+    if (error) throw new Error(error.message)
+    const row = (data as { occupancy: number | null; listings: number }[] | null)?.[0]
+    if (row?.occupancy != null && row.listings >= MARKET_MIN_LISTINGS) {
+      return { occupancy: Math.min(OWN_OCC_CAP, Number(row.occupancy) / 100), listings: row.listings, radiusM: radius }
+    }
+  }
+  return null
 }
 
 async function pageAll<T>(q: (from: number, to: number) => PromiseLike<{ data: unknown[] | null; error: { message: string } | null }>): Promise<T[]> {
@@ -337,7 +369,19 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
   const hasPool = detectPool(d)
   const district = firstString(d['Location 2']) ?? firstString(d['Location'])
 
-  const region = regionFor(lat, lng)
+  const baseRegion = regionFor(lat, lng)
+  // Загрузка: вместо одних 60% для всех — загрузка похожих объявлений вокруг.
+  // Проверено 16.10.2026 на 39 комплексах со своими объявлениями на Booking:
+  // ошибка 6,5 п. против 22 п. у 60% (.tmp-rank/calib.ts).
+  const marketOccupancy = await loadMarketOccupancy(lat, lng, kind, bedrooms).catch(() => null)
+  const region: RegionDefaults = marketOccupancy ? {
+    ...baseRegion,
+    occupancyByScenario: {
+      bad: Math.max(0.3, marketOccupancy.occupancy - 0.1),
+      median: marketOccupancy.occupancy,
+      good: Math.min(OWN_OCC_CAP, marketOccupancy.occupancy + 0.1),
+    },
+  } : baseRegion
   const complexId = Array.isArray(d['Комплекс']) ? (d['Комплекс'] as unknown[]).map(String)[0] ?? null : firstString(d['Комплекс'])
   const ownBookingP = loadOwnBooking(complexId, firstString(d['Комплекс 1']), title, bedrooms, kind, region).catch(() => null)
 
@@ -414,8 +458,19 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
     } else if (matchResult.mode === 'references') {
       adrBasis = 'few'
     }
-    if (basis.length > 0) scenarios = buildScenarios(
-      adrPercentiles(basis),
+    // Цена ночи — между медианой и верхней четвертью соседей: на 31 комплексе
+    // со своими объявлениями медиана соседей занижала цену на 26%, середина
+    // p50–p75 — почти без перекоса (новые объекты сдаются дороже старых).
+    // Цена соседей — это средний старый фонд, а дорогой объект сдаётся дороже.
+    // Поэтому ставка — среднее геометрическое цены соседей и «нормы» для
+    // объекта такой стоимости (adrPerPriceUsd). На тех же комплексах ошибка
+    // дохода 25% против 33% только по соседям (.tmp-rank/calib.ts).
+    const q = basis.length > 0 ? adrPercentiles(basis) : null
+    const byPrice = askingPrice != null && askingPrice > 0 ? askingPrice * region.adrPerPriceUsd[kind] : null
+    const blend = (nb: number) => byPrice != null ? Math.sqrt(nb * byPrice) : nb
+    const pcts = q && { ...q, p25: blend(q.p50), p50: blend((q.p50 + q.p75) / 2), p75: blend(q.p75) }
+    if (pcts) scenarios = buildScenarios(
+      pcts,
       // Налоговый статус по умолчанию — нерезидент: большинство покупателей
       // не имеют индонезийского NPWP, и это консервативная сторона.
       // В виджете статус переключается.
@@ -488,6 +543,7 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
     anchors: infra.anchors,
     nearbyByCategory: byCategoryEnriched,
     ownBooking: await ownBookingP,
+    marketOccupancy,
     flags: {
       emergingMarket,
       weakPerformance,

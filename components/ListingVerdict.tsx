@@ -123,7 +123,7 @@ const COPY = {
     // Деньги
     yTitle: (p: string) => `В среднем объект приносил бы ${p} в год`,
     yLeadMonthly: 'Если сдавать помесячно по средней цене соседей -',
-    yLeadDaily: 'Если сдавать посуточно по средней цене похожих соседей -',
+    yLeadDaily: 'Если сдавать посуточно с загрузкой, как у похожих объявлений вокруг, и по цене, как у соседей и объектов такой стоимости, -',
     yLeadOwn: 'Если сдавать посуточно, как сейчас сдаётся этот комплекс на Booking -',
     yLeadActual: (m: number, own: boolean) => `Если сдавать посуточно с той загрузкой, что была у этого комплекса по реальным броням за ${m} ${pluralRu(m, ['месяц', 'месяца', 'месяцев'])}, и по ${own ? 'его цене на Booking' : 'цене похожих соседей'} -`,
     yLeadRevenue: (m: number) => `Если сдавать посуточно так, как этот комплекс сдавался по отчёту управляющей за ${m} ${pluralRu(m, ['месяц', 'месяца', 'месяцев'])}, - цена на витрине около`,
@@ -228,7 +228,7 @@ const COPY = {
     prev: 'Previous', next: 'Next', open: 'Listing',
     yTitle: (p: string) => `On average this property would earn ${p} a year today`,
     yLeadMonthly: 'If you simply rent it out monthly at the neighbours’ typical price -',
-    yLeadDaily: 'If you simply rent it out nightly at the typical price of similar neighbours -',
+    yLeadDaily: 'If you rent it out nightly at the occupancy of similar listings around and a rate in line with neighbours and properties at this price -',
     yLeadOwn: 'If you rent it out nightly the way this complex rents on Booking now -',
     yLeadActual: (m: number, own: boolean) => `If you rent it out nightly at this complex’s occupancy from real bookings over ${m} months and ${own ? 'its Booking rate' : 'the rate of similar neighbours'} -`,
     yLeadRevenue: (m: number) => `If you rent it out nightly the way this complex did in its manager’s report over ${m} months - listed rate about`,

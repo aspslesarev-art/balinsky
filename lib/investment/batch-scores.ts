@@ -130,6 +130,7 @@ function buildOneScore(
   row: Row,
   loadCompForVilla: (lat: number, lng: number) => CompetitorWithDistance[],
   byPlaces: Record<string, NearbyPlace[]> | null,
+  pageCapRate?: number,
 ): VillaScore | null {
   const d = row.data
   if (d?.['Опубликовать'] !== true) return null
@@ -170,8 +171,24 @@ function buildOneScore(
     const { median, bad, good } = scenarios
     capRate = median.capRate
     goodCapRate = good.capRate
+    // Доходность со страницы объекта (listing_yields): там загрузка района
+    // или своя на Booking, реальные брони — эта упрощённая формула нужна
+    // только объектам, которых в таблице ещё нет. Оптимистичный сценарий
+    // сдвигаем в той же пропорции.
+    if (pageCapRate != null) {
+      if (goodCapRate != null && capRate != null && capRate > 0) goodCapRate = pageCapRate * (goodCapRate / capRate)
+      else goodCapRate = pageCapRate
+      capRate = pageCapRate
+    }
     noi = median.noi
     leaseholdRisk = median.capitalReturned === false || bad.leaseholdRisk || median.leaseholdRisk
+    hasScenarios = true
+  }
+
+  // Мало похожих соседей — упрощённой формулы нет, а страница объект посчитала.
+  if (!rentalRestricted && capRate == null && pageCapRate != null) {
+    capRate = pageCapRate
+    goodCapRate = pageCapRate
     hasScenarios = true
   }
 
@@ -208,6 +225,15 @@ function buildOneScore(
     leaseholdRisk,
     rentalRestricted,
   }
+}
+
+// Нерезидентская доходность посуточной сдачи, как на странице объекта
+// (scripts/build-listing-yields.ts, раз в сутки). Не загрузилась — каталог
+// живёт на упрощённой формуле, а не падает.
+async function loadPageCapRates(kind: 'villa' | 'apartment'): Promise<Map<string, number>> {
+  const { data, error } = await sb.from('listing_yields').select('airtable_id, cap_nonres').eq('kind', kind).eq('mode', 'daily').limit(5000)
+  if (error) { console.error('[batch-scores] listing_yields:', error.message); return new Map() }
+  return new Map((data ?? []).filter(r => r.cap_nonres != null).map(r => [String(r.airtable_id), Number(r.cap_nonres)]))
 }
 
 async function loadAllScoresInternal(kind: 'villa' | 'apartment' = 'villa'): Promise<Map<string, VillaScore>> {
@@ -254,9 +280,10 @@ async function loadAllScoresInternal(kind: 'villa' | 'apartment' = 'villa'): Pro
 
   const map = new Map<string, VillaScore>()
   const placesFor = kind === 'villa' ? placesManifest?.villas : placesManifest?.apartments
+  const pageCaps = await loadPageCapRates(kind)
   for (const row of (rows ?? []) as Row[]) {
     const places = placesFor?.[row.airtable_id] ?? null
-    const score = buildOneScore(row, loadCompForVilla, places)
+    const score = buildOneScore(row, loadCompForVilla, places, pageCaps.get(row.airtable_id))
     if (score) map.set(row.airtable_id, score)
   }
   return map
@@ -268,12 +295,12 @@ async function loadAllScoresInternal(kind: 'villa' | 'apartment' = 'villa'): Pro
 // instance. Map isn't serializable — entries go through the cache.
 const _sharedVillaScores = unstable_cache(
   async () => [...(await loadAllScoresInternal('villa')).entries()],
-  ['villa-scores-v1'],
+  ['villa-scores-v2'],
   { revalidate: 86400, tags: ['content:villas', 'content:apartments'] },
 )
 const _sharedApartmentScores = unstable_cache(
   async () => [...(await loadAllScoresInternal('apartment')).entries()],
-  ['apartment-scores-v1'],
+  ['apartment-scores-v2'],
   { revalidate: 86400, tags: ['content:apartments'] },
 )
 
