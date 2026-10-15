@@ -91,8 +91,8 @@ export function OccDashboardView({ data }: { data: OccDashboard }) {
       </Panel>
 
       <Panel
-        title={`Виллы и апартаменты по спальням${z ? ` — ${z.zone}` : ''}`}
-        hint="объекты, которые сдаются целиком; «закрыто» = ночь была свободна и закрылась (бронь или блок хозяина). Ближние 2 недели закрываются бронями, дальние даты — чаще блоки хозяев"
+        title={`Сдаются целиком: виллы и апартаменты${z ? ` — ${z.zone}` : ''}`}
+        hint="спальни — по данным Booking, а если их нет — из названия, описания или адреса страницы; «Номер / комната» — гестхаусы и отели, где продаётся одна комната. «Закрыто» = ночь была свободна и закрылась (бронь или блок хозяина). Ближние 2 недели закрываются бронями, дальние даты — чаще блоки хозяев"
       >
         <VillaSegTable rows={data.villa_segments.filter(s => (z ? s.zone === z.zone : s.zone === null))} />
       </Panel>
@@ -247,7 +247,7 @@ function Bar({ v }: { v: number | null }) {
 }
 
 const SEG_ORDER = ['Номер', 'Семейный номер', 'Сьют', 'Бунгало', 'Апартаменты', 'Вилла']
-const segRank = (s: string) => { const i = SEG_ORDER.findIndex(x => s.startsWith(x)); return (i < 0 ? 99 : i) * 100 + (s.includes('не указаны') ? 50 : 0) }
+const segRank = (s: string) => { if (s.includes('сдаётся отдельно')) return 9999; const i = SEG_ORDER.findIndex(x => s.startsWith(x)); return (i < 0 ? 99 : i) * 100 + (s.includes('не указаны') ? 50 : 0) }
 
 function HotelSegTable({ rows }: { rows: OccHotelSeg[] }) {
   if (!rows.length) return <Empty>в этом районе нет отелей под наблюдением</Empty>
