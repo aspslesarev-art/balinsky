@@ -254,8 +254,13 @@ html.no-pro [data-investment-block] {
   --ax-prospect-yes-bg:   rgba(79,192,141,0.16);
   --ax-prospect-maybe-fg: #E0A93B;
   --ax-prospect-maybe-bg: rgba(224,169,59,0.16);
+  /* серии графиков (палитра dataviz, тёмная тема) */
+  --ax-series-1:          #3987e5;
+  --ax-series-2:          #d95926;
 }
 .theme-admin.theme-light {
+  --ax-series-1:        #2a78d6;
+  --ax-series-2:        #eb6834;
   --ax-bg:              #F9FAFB;
   --ax-fg:              #111827;
   --ax-fg-soft:         #4B5563;
