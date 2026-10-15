@@ -54,7 +54,7 @@ async function units(table) {
   return rows.filter(r => r.pub === 'true' && (
     (Array.isArray(r.k) && r.k.some(x => idSet.has(String(x)))) ||
     names.has(String(r.k1 ?? '').trim().toLowerCase()) ||
-    longNames.some(n => wholeName(String(r.t ?? '').toLowerCase(), n))
+    (!r.k1 && longNames.some(n => wholeName(String(r.t ?? '').toLowerCase(), n)))
   )).map(r => r.airtable_id).sort()
 }
 

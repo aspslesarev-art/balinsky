@@ -86,6 +86,8 @@ export type OwnBooking = {
 const OWN_OCC_CAP = 0.95
 // Ниже 20% объявление по сути не работает (снято или новое) — его не считаем.
 const OWN_OCC_MIN = 20
+// Дороже $3000 за ночь на Бали в нашем каталоге нет — это цена в рупиях.
+const OWN_ADR_MAX = 3000
 const median = (xs: number[]) => {
   if (!xs.length) return null
   const a = [...xs].sort((x, y) => x - y)
@@ -118,9 +120,11 @@ async function loadOwnBooking(complexId: string | null, complexName: string | nu
     if (error) return null
     links = data ?? []
   }
-  // Ссылка есть, но старая, или её нет вовсе (часть апартаментов) — ищем
-  // название комплекса из таблицы совпадений в заголовке объекта.
-  if (!links.length && title) {
+  // Ни рабочей ссылки, ни названия комплекса (часть апартаментов) — ищем
+  // название комплекса из таблицы совпадений в заголовке объекта. Если
+  // название у юнита есть, а совпадений нет — значит, его комплекса на Booking
+  // нет: «ROYAL OASIS Black Edition» не должен брать объявления «ROYAL OASIS».
+  if (!links.length && title && !complexName) {
     const { data: m } = await sb.from('complex_booking_match').select('complex_id, booking_id')
     const cids = [...new Set((m ?? []).map(r => String(r.complex_id)))]
     if (cids.length) {
@@ -144,10 +148,13 @@ async function loadOwnBooking(complexId: string | null, complexName: string | nu
   ])
   const occs = (locs ?? []).map(l => Number(l.occupancy)).filter(o => Number.isFinite(o) && o >= OWN_OCC_MIN)
   const occMed = median(occs)
-  const priced = (rooms ?? []).filter(r => Number(r.price) > 0)
+  // Цены Booking в долларах; изредка в базу попадает цена в рупиях (115 000
+  // «долларов» за ночь) — такие отбрасываем, иначе доходность выходит 14 000%.
+  const sane = (p: number) => p >= 10 && p <= OWN_ADR_MAX
+  const priced = (rooms ?? []).filter(r => sane(Number(r.price)))
   const sameBeds = bedrooms != null ? priced.filter(r => roomBedrooms(r.room_type) === bedrooms) : []
   const adr = median((sameBeds.length ? sameBeds : priced).map(r => Number(r.price)))
-    ?? median((locs ?? []).map(l => Number(l.price)).filter(p => p > 0))
+    ?? median((locs ?? []).map(l => Number(l.price)).filter(sane))
   if (occMed == null && adr == null) return null
   return {
     occupancy: occMed != null ? Math.min(OWN_OCC_CAP, occMed / 100) : null,
