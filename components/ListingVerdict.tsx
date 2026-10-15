@@ -7,21 +7,12 @@ import type { Verdict, Tone, YieldFacts, ComplexFacts } from '@/lib/listing-verd
 import type { MonthlyBundle } from '@/lib/investment/monthly'
 import { InlinePrice } from './InlinePrice'
 import { CardRail } from './CardRail'
-import { ShieldCheck, House, Users, Wallet, ClipboardCheck, Check, type LucideIcon } from 'lucide-react'
 
 const TONE_PILL: Record<Tone, string> = {
   plus: 'bg-[var(--color-primary-soft)] text-[var(--color-primary-pressed)]',
   warn: 'bg-[#FDF0DC] text-[#8A4B00]',
   minus: 'bg-[#FCE8E6] text-[#A1281C]',
 }
-// Кружок под иконку вопроса: цвет — ответ (зелёный / жёлтый / красный).
-const TONE_ICON: Record<Tone, string> = {
-  plus: 'bg-[var(--color-primary-soft)] text-[var(--color-primary-pressed)]',
-  warn: 'bg-[#FDF0DC] text-[#8A4B00]',
-  minus: 'bg-[#FCE8E6] text-[#A1281C]',
-}
-const Q_ICON: Record<'safety' | 'comfort' | 'demand' | 'money', LucideIcon> = { safety: ShieldCheck, comfort: House, demand: Users, money: Wallet }
-
 const TONE_TEXT: Record<Tone, string> = {
   plus: 'text-[var(--color-primary-pressed)]',
   warn: 'text-[#8A4B00]',
@@ -106,7 +97,8 @@ const COPY = {
     landNote: 'Иностранцы на Бали покупают не землю, а право пользоваться ею на срок. Дом всё это время ваш: можно жить, сдавать, продать.',
     landNoteYellow: ' Жёлтая зона - земля под жильё: жить и сдавать надолго можно, туристам посуточно - нельзя.',
     devT: (n: string | null) => n ? `Застройщик ${n}` : 'Застройщик', devProjects: 'Проектов на Бали', devReady: 'Сданных проектов',
-    devNone: 'не видим', devNote: 'Новый застройщик - не значит плохой, но опыта сдачи объектов у него пока не видно. Спросите, что они уже построили, и съездите посмотреть.',
+    devNone: 'не видим', devOf: (r: number, t: number) => `${r} из ${t}`, floodSlide: 'Наводнения, оползни',
+    airportChip: (m: number) => `${m} мин до аэропорта`, neighboursChip: 'Соседние виллы на Booking', yResShort: 'Резидент', yNonShort: 'Нерезидент', devNote: 'Новый застройщик - не значит плохой, но опыта сдачи объектов у него пока не видно. Спросите, что они уже построили, и съездите посмотреть.',
     devNoteOk: 'Сданные проекты можно съездить посмотреть - это лучший способ оценить качество.',
     natureT: 'Природа', natureNote: 'По официальной карте рисков Индонезии (InaRISK).',
     hz: { flood: 'Наводнения', flash_flood: 'Внезапные паводки', landslide: 'Оползни', tsunami: 'Цунами', volcano: 'Вулкан', earthquake: 'Землетрясения' } as Record<string, string>,
@@ -207,7 +199,8 @@ const COPY = {
     landNote: 'Foreigners in Bali buy not the land but the right to use it for a term. The house is yours all that time: live, rent out, sell.',
     landNoteYellow: ' Yellow zone is residential land: living and long-term rental are fine, nightly rental to tourists is not.',
     devT: (n: string | null) => n ? `Developer ${n}` : 'Developer', devProjects: 'Projects in Bali', devReady: 'Completed projects',
-    devNone: 'none seen', devNote: 'A new developer is not necessarily a bad one, but there is no track record of handovers yet. Ask what they have built and go and see it.',
+    devNone: 'none seen', devOf: (r: number, t: number) => `${r} of ${t}`, floodSlide: 'Floods, landslides',
+    airportChip: (m: number) => `${m} min to the airport`, neighboursChip: 'Neighbouring villas on Booking', yResShort: 'Resident', yNonShort: 'Non-resident', devNote: 'A new developer is not necessarily a bad one, but there is no track record of handovers yet. Ask what they have built and go and see it.',
     devNoteOk: 'You can visit their completed projects - the best way to judge quality.',
     natureT: 'Nature', natureNote: 'From Indonesia’s official hazard map (InaRISK).',
     hz: { flood: 'Floods', flash_flood: 'Flash floods', landslide: 'Landslides', tsunami: 'Tsunami', volcano: 'Volcano', earthquake: 'Earthquakes' } as Record<string, string>,
@@ -255,72 +248,158 @@ export function ToneDot({ tone }: { tone: Tone }) {
   return <span className={`inline-block w-2 h-2 rounded-full ${tone === 'plus' ? 'bg-[var(--color-primary)]' : tone === 'warn' ? 'bg-[#C77700]' : 'bg-[#C0392B]'}`} aria-hidden />
 }
 
-export function ListingVerdict({ verdict: v, yields: y, monthly, saleDiff, underConstruction, anchors, lang }: {
+// Спутниковая подложка Esri (та же, что у розы ветров): тайлы 3×2 вокруг
+// точки, чтобы карточка «Удобно» показывала само место, а не значок.
+const TILE = 256
+function satTiles(lat: number, lng: number, z = 16) {
+  const n = 2 ** z
+  const x = ((lng + 180) / 360) * n
+  const r = (lat * Math.PI) / 180
+  const y = ((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2) * n
+  const tx = Math.floor(x), ty = Math.floor(y)
+  const tiles: { src: string; dx: number; dy: number }[] = []
+  for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) {
+    tiles.push({ src: `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${ty + j}/${tx + i}`, dx: i * TILE, dy: j * TILE })
+  }
+  // Сдвиг, при котором точка объекта оказывается в центре карточки.
+  return { tiles, offX: -(x - tx) * TILE, offY: -(y - ty) * TILE }
+}
+
+const SEG_COLOR: Record<Tone, string> = { minus: 'bg-[#C0392B]', warn: 'bg-[#D08A1C]', plus: 'bg-[var(--color-primary)]' }
+function Steps({ tone }: { tone: Tone }) {
+  const on = { minus: 0, warn: 1, plus: 2 }[tone]
+  const tones: Tone[] = ['minus', 'warn', 'plus']
+  return (
+    <span className="grid grid-cols-3 gap-1" aria-hidden>
+      {tones.map((t, i) => <span key={t} className={`h-1.5 rounded-full ${i === on ? SEG_COLOR[t] : 'bg-[var(--color-border)]'}`} />)}
+    </span>
+  )
+}
+
+export function ListingVerdict({ verdict: v, yields: y, monthly, saleDiff, underConstruction, anchors, lat, lng, neighbourPhotos, dev, lang }: {
   verdict: Verdict
   yields: YieldFacts | null
   monthly: MonthlyBundle | null
   saleDiff: number | null
   underConstruction: boolean
   anchors: { safety: string; comfort: string; demand: string; money: string }
+  lat: number | null
+  lng: number | null
+  neighbourPhotos: string[]
+  dev: { total: number; ready: number } | null
   lang: Lang
 }) {
   const c = pickCopy(COPY, lang)
   const why = c.totalWhy(v, saleDiff)
+  const fmt = lang === 'ru' || lang === 'uk' ? pctFmt : pctFmtEn
   const cards = [
-    { key: 'safety' as const, n: 1, q: c.q.safety, tone: v.safety.tone, status: c.status.safety[v.safety.tone], answer: c.safetyAnswer(v), short: c.safetyShort(v, underConstruction) },
-    { key: 'comfort' as const, n: 2, q: c.q.comfort, tone: v.comfort.tone, status: c.status.comfort[v.comfort.tone], answer: c.comfortAnswer(v), short: c.comfortShort(v) },
-    { key: 'demand' as const, n: 3, q: c.q.demand, tone: v.demand.tone, status: (v.demand.monthlyOnly ? c.status.demandMonthly : c.status.demand)[v.demand.tone], answer: c.demandAnswer(v, monthly), short: c.demandShort(v, monthly) },
-    { key: 'money' as const, n: 4, q: c.q.money, tone: v.money.tone, status: c.status.money[v.money.tone], answer: c.moneyAnswer(y), short: c.moneyShort(y, saleDiff) },
+    { key: 'safety' as const, q: c.q.safety, tone: v.safety.tone, status: c.status.safety[v.safety.tone], answer: c.safetyAnswer(v), short: c.safetyShort(v, underConstruction) },
+    { key: 'comfort' as const, q: c.q.comfort, tone: v.comfort.tone, status: c.status.comfort[v.comfort.tone], answer: c.comfortAnswer(v), short: c.comfortShort(v) },
+    { key: 'demand' as const, q: c.q.demand, tone: v.demand.tone, status: (v.demand.monthlyOnly ? c.status.demandMonthly : c.status.demand)[v.demand.tone], answer: c.demandAnswer(v, monthly), short: c.demandShort(v, monthly) },
+    { key: 'money' as const, q: c.q.money, tone: v.money.tone, status: c.status.money[v.money.tone], answer: c.moneyAnswer(y), short: c.moneyShort(y, saleDiff) },
   ]
+
+  // Картинка над каждым ответом — данные этого объекта, а не значок.
+  const safetyRows = [
+    { k: c.permitRow, v: v.safety.permitMissing ? c.permitNo : null, tone: 'minus' as Tone },
+    { k: c.build, v: v.safety.notStarted ? c.notStarted : null, tone: 'minus' as Tone },
+    dev && dev.total > 0 ? { k: c.devReady, v: c.devOf(dev.ready, dev.total), tone: (dev.ready === 0 ? 'minus' : 'plus') as Tone } : null,
+    v.safety.hazards.length ? { k: c.floodSlide, v: v.safety.hazards.some(h => (h.key === 'flood' || h.key === 'landslide') && (h.level === 'medium' || h.level === 'high')) ? c.lvl.medium : c.lvl.none, tone: (v.safety.hazards.some(h => (h.key === 'flood' || h.key === 'landslide') && (h.level === 'medium' || h.level === 'high')) ? 'warn' : 'plus') as Tone } : null,
+  ].filter((r): r is { k: string; v: string; tone: Tone } => !!r && r.v != null)
+  const sat = lat != null && lng != null ? satTiles(lat, lng) : null
+  const photos = neighbourPhotos.slice(0, 3)
+  const yieldRows = y ? [
+    { k: c.yBefore, v: y.pct.beforeTax, main: true },
+    { k: c.yResShort, v: y.pct.resident, main: false },
+    { k: c.yNonShort, v: y.pct.nonResident, main: false },
+  ] : []
+  // Полоски на шкале 0–12% годовых: всё выше 12% упирается в край.
+  const barW = (p: number) => `${Math.max(4, Math.min(100, (p / 0.12) * 100))}%`
+
+  const visual = (key: 'safety' | 'comfort' | 'demand' | 'money'): ReactNode => {
+    if (key === 'safety' && safetyRows.length) return (
+      <div className="flex h-40 flex-col justify-center gap-2.5 bg-[#FBF3F2] px-6">
+        {safetyRows.map(r => (
+          <div key={r.k} className="flex justify-between gap-4 text-[15px]">
+            <span className="text-[var(--color-text)]">{r.k}</span>
+            <span className={`shrink-0 whitespace-nowrap font-semibold ${TONE_TEXT[r.tone]}`}>{r.v}</span>
+          </div>
+        ))}
+      </div>
+    )
+    if (key === 'comfort' && sat) return (
+      <div className="relative h-40 overflow-hidden bg-[var(--color-search-bg)]">
+        <div className="absolute left-1/2 top-1/2" style={{ transform: `translate(${sat.offX}px, ${sat.offY}px)` }}>
+          {sat.tiles.map(t => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img key={t.src} src={t.src} alt="" loading="lazy" width={TILE} height={TILE} className="absolute max-w-none" style={{ left: t.dx, top: t.dy }} />
+          ))}
+        </div>
+        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-5 w-5 rounded-full border-[3px] border-white bg-[var(--color-primary)] shadow" aria-hidden />
+        {v.comfort.airportMin != null && (
+          <span className="absolute left-4 bottom-4 rounded-full bg-white px-3 py-1.5 text-[14px] font-semibold text-[var(--color-text)]">{c.airportChip(v.comfort.airportMin)}</span>
+        )}
+      </div>
+    )
+    if (key === 'demand' && photos.length >= 2) return (
+      <div className="relative grid h-40 gap-0.5" style={{ gridTemplateColumns: `repeat(${photos.length}, minmax(0, 1fr))` }}>
+        {photos.map(src => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img key={src} src={src} alt="" loading="lazy" referrerPolicy="no-referrer" className="h-40 w-full object-cover" />
+        ))}
+        <span className="absolute left-4 bottom-4 rounded-full bg-white px-3 py-1.5 text-[14px] font-semibold text-[var(--color-text)]">{c.neighboursChip}</span>
+      </div>
+    )
+    if (key === 'money' && yieldRows.length) return (
+      <div className="flex h-40 flex-col justify-center gap-3 bg-[var(--color-search-bg)] px-6">
+        {yieldRows.map(r => (
+          <div key={r.k} className="grid grid-cols-[110px_minmax(0,1fr)_52px] items-center gap-3 text-[14px]">
+            <span className="text-[var(--color-text-muted)]">{r.k}</span>
+            <span className="h-2.5 overflow-hidden rounded-full bg-[var(--color-border)]"><span className={`block h-full rounded-full ${r.main ? 'bg-[var(--color-primary)]' : 'bg-[#7FB89C]'}`} style={{ width: barW(r.v) }} /></span>
+            <span className="text-right font-semibold text-[var(--color-text)]">{fmt(r.v)}</span>
+          </div>
+        ))}
+      </div>
+    )
+    return null
+  }
+
   return (
     <section className="mb-16" aria-labelledby="verdict-title">
       <h2 id="verdict-title" className="text-[28px] md:text-[36px] font-semibold tracking-tight leading-tight text-[var(--color-text)]">{c.title}</h2>
-      <p className="mt-3 text-[16px] md:text-[18px] leading-relaxed text-[var(--color-text-muted)] max-w-[68ch]">{c.sub}</p>
+      <p className="mt-3 text-[16px] md:text-[18px] leading-relaxed text-[var(--color-text-muted)] max-w-[64ch]">{c.sub}</p>
 
-      <div className="mt-8 rounded-2xl border border-[var(--color-border)] bg-white p-5 md:p-7">
-        <div className="flex items-start gap-4">
-          <span className="hidden sm:inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary-pressed)]">
-            <ClipboardCheck size={24} aria-hidden />
-          </span>
-          <div className="min-w-0">
-            <div className="text-[13px] font-semibold uppercase tracking-wide text-[var(--color-primary-pressed)]">{c.total}</div>
-            <p className="mt-2 text-[20px] md:text-[24px] font-semibold leading-snug tracking-tight text-[var(--color-text)] max-w-[52ch]">{c.totalLine(v)}</p>
-            {why && <p className="mt-2 text-[15px] md:text-[16px] leading-relaxed text-[var(--color-text-muted)] max-w-[72ch]">{why[0].toUpperCase() + why.slice(1)}.</p>}
-          </div>
+      <div className="mt-8 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_280px] gap-6 lg:gap-10 items-center rounded-[20px] bg-[var(--color-surface-alt)] p-6 md:p-8">
+        <div>
+          <div className="text-[13px] font-semibold uppercase tracking-wider text-[var(--color-primary-pressed)]">{c.total}</div>
+          <p className="mt-3 text-[20px] md:text-[26px] font-semibold leading-snug tracking-tight text-[var(--color-text)]">{c.totalLine(v)}</p>
+          {why && <p className="mt-3 text-[15px] md:text-[16px] leading-relaxed text-[var(--color-text-muted)]">{why[0].toUpperCase() + why.slice(1)}.</p>}
         </div>
-        {/* Четыре ответа одной строкой: значок вопроса в цвете ответа. */}
-        <ul className="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
-          {cards.map(card => {
-            const Icon = Q_ICON[card.key]
-            return (
-              <li key={card.key}>
-                <a href={`#${anchors[card.key]}`} className="flex h-full items-center gap-3 rounded-xl bg-[var(--color-search-bg)] p-3 transition-colors duration-[120ms] hover:bg-[var(--color-primary-soft)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">
-                  <span className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${TONE_ICON[card.tone]}`}><Icon size={20} aria-hidden /></span>
-                  <span className="min-w-0 flex flex-col">
-                    <span className="text-[13px] text-[var(--color-text-muted)]">{c.qShort[card.key]}</span>
-                    <span className={`text-[14px] font-semibold leading-tight ${TONE_TEXT[card.tone]}`}>{card.status}</span>
-                  </span>
-                </a>
-              </li>
-            )
-          })}
+        <ul className="flex flex-col gap-3">
+          {cards.map(card => (
+            <li key={card.key}>
+              <a href={`#${anchors[card.key]}`} className="flex flex-col gap-1.5 rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-primary)]">
+                <span className="flex justify-between gap-3 text-[14px]">
+                  <span className="text-[var(--color-text-muted)]">{c.qShort[card.key]}</span>
+                  <span className={`font-semibold ${TONE_TEXT[card.tone]}`}>{card.status}</span>
+                </span>
+                <Steps tone={card.tone} />
+              </a>
+            </li>
+          ))}
         </ul>
       </div>
 
       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
         {cards.map(card => (
           <a key={card.key} href={`#${anchors[card.key]}`}
-            className="group flex flex-col gap-3 rounded-2xl border border-[var(--color-border)] bg-white p-5 md:p-7 transition-colors duration-[120ms] hover:border-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">
-            <span className="flex items-center justify-between gap-3">
-              <span className="flex items-center gap-3">
-                {(() => { const Icon = Q_ICON[card.key]; return <span className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${TONE_ICON[card.tone]}`}><Icon size={22} aria-hidden /></span> })()}
-                <span className="text-[15px] font-semibold text-[var(--color-text-muted)]">{card.q}</span>
-              </span>
-              <span className={`shrink-0 rounded-full px-3 py-1 text-[13px] font-semibold ${TONE_PILL[card.tone]}`}>{card.status}</span>
+            className="group flex flex-col overflow-hidden rounded-[20px] border border-[var(--color-border)] bg-white transition-colors duration-[120ms] hover:border-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">
+            {visual(card.key)}
+            <span className="flex flex-1 flex-col gap-2 p-5 md:p-6">
+              <span className={`text-[14px] font-semibold ${TONE_TEXT[card.tone]}`}>{card.q} · {card.status}</span>
+              <span className="text-[19px] md:text-[21px] font-semibold leading-snug tracking-tight text-[var(--color-text)]">{card.answer}</span>
+              {card.short && <span className="text-[15px] leading-relaxed text-[var(--color-text-muted)]">{card.short}</span>}
             </span>
-            <span className="text-[19px] md:text-[22px] font-semibold leading-snug tracking-tight text-[var(--color-text)]">{card.answer}</span>
-            {card.short && <span className="text-[15px] md:text-[16px] leading-relaxed text-[var(--color-text-muted)]">{card.short}</span>}
-            <span className="mt-auto pt-1 text-[15px] font-medium text-[var(--color-primary-pressed)] underline underline-offset-4 decoration-[var(--color-primary)]/30 group-hover:decoration-current">{c.more} ↓</span>
           </a>
         ))}
       </div>
@@ -328,28 +407,18 @@ export function ListingVerdict({ verdict: v, yields: y, monthly, saleDiff, under
       {(v.pluses.length >= 2 || v.checks.length > 0) && (
         <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           {v.pluses.length >= 2 && (
-            <div className="rounded-2xl bg-[var(--color-primary-soft)] p-5 md:p-7">
-              <h3 className="text-[18px] md:text-[20px] font-semibold text-[var(--color-text)]">{c.pluses}</h3>
-              <ul className="mt-4 flex flex-col gap-3 text-[16px] leading-relaxed text-[var(--color-text)]">
-                {v.pluses.map(p => (
-                  <li key={p} className="flex items-start gap-3">
-                    <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)] text-white"><Check size={14} strokeWidth={3} aria-hidden /></span>
-                    {c.plus[p]}
-                  </li>
-                ))}
+            <div className="rounded-[20px] bg-[var(--color-primary-soft)] p-5 md:p-7">
+              <h3 className="text-[18px] font-semibold text-[var(--color-text)]">{c.pluses}</h3>
+              <ul className="mt-3 list-disc pl-5 flex flex-col gap-1.5 text-[16px] leading-relaxed text-[var(--color-text)] marker:text-[var(--color-primary)]">
+                {v.pluses.map(p => <li key={p}>{c.plus[p]}</li>)}
               </ul>
             </div>
           )}
           {v.checks.length > 0 && (
-            <div className="rounded-2xl bg-[#FDF4E7] p-5 md:p-7">
-              <h3 className="text-[18px] md:text-[20px] font-semibold text-[var(--color-text)]">{c.checks}</h3>
-              <ol className="mt-4 flex flex-col gap-3 text-[16px] leading-relaxed text-[var(--color-text)]">
-                {v.checks.map((k, i) => (
-                  <li key={k} className="flex items-start gap-3">
-                    <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#C77700] text-[13px] font-semibold text-white">{i + 1}</span>
-                    {c.check[k]}
-                  </li>
-                ))}
+            <div className="rounded-[20px] bg-[#FDF4E7] p-5 md:p-7">
+              <h3 className="text-[18px] font-semibold text-[var(--color-text)]">{c.checks}</h3>
+              <ol className="mt-3 list-decimal pl-5 flex flex-col gap-1.5 text-[16px] leading-relaxed text-[var(--color-text)] marker:font-semibold marker:text-[#8A4B00]">
+                {v.checks.map(k => <li key={k}>{c.check[k]}</li>)}
               </ol>
             </div>
           )}

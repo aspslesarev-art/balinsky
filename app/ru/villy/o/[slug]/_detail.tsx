@@ -1435,7 +1435,9 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
             соседей, потому что строится на них. Перед разделами — «карта
             страницы» с главной цифрой каждого. */}
         <ListingVerdict verdict={verdict} yields={yields} monthly={monthly} saleDiff={saleComps?.diffPct ?? null}
-          underConstruction={underConstruction} lang={lang}
+          underConstruction={underConstruction} lang={lang} lat={lat} lng={lng}
+          neighbourPhotos={(verdictSnap?.competitors ?? []).map(x => x.photo).filter((x): x is string => !!x)}
+          dev={devStats ? { total: devStats.total, ready: devStats.ready } : null}
           anchors={{ safety: 'uchastok', comfort: hasPlace ? 'mesto' : 'uchastok', demand: hasRent ? 'arenda' : 'dokhodnost', money: 'dokhodnost' }} />
 
         <DataChapter id="uchastok" n={1} lang={lang} question={asQuestion(qh.safety)}>
