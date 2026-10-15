@@ -1,8 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
+import { districtRu } from '@/lib/district-ru'
+import { searchCatalog } from '@/lib/catalog-search'
 import { hasVerifiedYield } from '@/lib/verified-yield'
-import Fuse from 'fuse.js'
 import type { Option } from '@/components/filters/MultiSelectFilter'
-import { translit, hasCyrillic, translitPreserveCase } from '@/lib/translit'
+import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
 import { loadVillaStyles } from '@/lib/villa-styles'
 import { loadFeatureFlagsMap, FEATURE_FLAGS, FEATURE_LABELS, loadVisionManifest } from '@/lib/listing-features'
 import { curateManifest } from '@/lib/listing-photos'
@@ -355,50 +356,20 @@ export function passes(e: EnrichedRow, f: VillaFilterState): boolean {
 // === fuzzy search ===
 
 export function applySearch(rows: EnrichedRow[], rawQuery: string): EnrichedRow[] {
-  const q = rawQuery.trim().toLowerCase()
-  if (!q) return rows
-  const queries = [q]
-  if (hasCyrillic(q)) queries.push(translit(q))
-
-  type Item = { id: string; row: EnrichedRow; haystack: string }
-  const items: Item[] = rows.map(r => {
-    const titleClean = (firstString(r.data['SEO:Title']) ?? '')
-      .replace(/\s*\|\s*Balinsky\s*$/i, '').trim()
-    const parts = [
-      titleClean,
+  // Название, комплекс, район (и по-русски) и застройщик — главное; описание
+  // — только как запасной источник слов (lib/catalog-search.ts).
+  return searchCatalog(rows.map(r => ({
+    row: r,
+    id: r.id,
+    primary: [
+      (firstString(r.data['SEO:Title']) ?? '').replace(/\s*\|\s*Balinsky\s*$/i, ''),
+      firstString(r.data['Комплекс 1']) ?? '',
       r.district ?? '',
+      districtRu(r.district) ?? '',
       r.developerName ?? '',
-      firstString(r.data['Notes']) ?? '',
-      // Airtable ID — lets agents paste a code from a saved PDF
-      // ("rec…") into the catalog search and land on the listing.
-      r.id,
-    ].filter(Boolean).join(' ')
-    const haystack = (parts + ' ' + translit(parts)).toLowerCase()
-    return { id: r.id, row: r, haystack }
-  })
-
-  const fuse = new Fuse(items, {
-    keys: ['haystack'],
-    threshold: 0.35,
-    distance: 200,
-    minMatchCharLength: 2,
-    ignoreLocation: true,
-    includeScore: true,
-  })
-
-  const bestScore = new Map<string, number>()
-  const itemById = new Map(items.map(i => [i.id, i]))
-  for (const queryStr of queries) {
-    for (const m of fuse.search(queryStr)) {
-      const s = m.score ?? 1
-      const prev = bestScore.get(m.item.id)
-      if (prev == null || s < prev) bestScore.set(m.item.id, s)
-    }
-  }
-  if (bestScore.size === 0) return []
-  return [...bestScore.entries()]
-    .sort((a, b) => a[1] - b[1])
-    .map(([id]) => itemById.get(id)!.row)
+    ],
+    secondary: [firstString(r.data['Notes']) ?? ''],
+  })), rawQuery)
 }
 
 // === options (facet counts) ===

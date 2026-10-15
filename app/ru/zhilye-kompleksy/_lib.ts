@@ -1,10 +1,11 @@
 import { createClient } from '@supabase/supabase-js'
+import { districtRu } from '@/lib/district-ru'
+import { searchCatalog } from '@/lib/catalog-search'
 import { hasVerifiedYield } from '@/lib/verified-yield'
 import { unstable_cache } from 'next/cache'
-import Fuse from 'fuse.js'
 import type { ComplexCardData } from '@/components/ComplexCard'
 import type { Option } from '@/components/filters/MultiSelectFilter'
-import { translit, hasCyrillic, translitPreserveCase } from '@/lib/translit'
+import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
 import { revisionedCache } from '@/lib/revisioned-cache'
 import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
 import { getDistrictCommercialMeta } from '@/lib/districts'
@@ -250,47 +251,13 @@ export function passes(e: EnrichedRow, f: ComplexFilterState): boolean {
 // === fuzzy search (transliterated) ===
 
 export function applySearch(rows: EnrichedRow[], rawQuery: string): EnrichedRow[] {
-  const q = rawQuery.trim().toLowerCase()
-  if (!q) return rows
-  const queries = [q]
-  if (hasCyrillic(q)) queries.push(translit(q))
-
-  type Item = { id: string; row: EnrichedRow; haystack: string }
-  const items: Item[] = rows.map(r => {
-    const parts = [
-      r.name ?? '',
-      r.district ?? '',
-      r.types.join(' '),
-      r.developerName ?? '',
-    ]
-      .filter(Boolean)
-      .join(' ')
-    const haystack = (parts + ' ' + translit(parts)).toLowerCase()
-    return { id: r.id, row: r, haystack }
-  })
-
-  const fuse = new Fuse(items, {
-    keys: ['haystack'],
-    threshold: 0.35,
-    distance: 200,
-    minMatchCharLength: 2,
-    ignoreLocation: true,
-    includeScore: true,
-  })
-
-  const bestScore = new Map<string, number>()
-  const itemById = new Map(items.map(i => [i.id, i]))
-  for (const queryStr of queries) {
-    for (const m of fuse.search(queryStr)) {
-      const s = m.score ?? 1
-      const prev = bestScore.get(m.item.id)
-      if (prev == null || s < prev) bestScore.set(m.item.id, s)
-    }
-  }
-  if (bestScore.size === 0) return []
-  return [...bestScore.entries()]
-    .sort((a, b) => a[1] - b[1])
-    .map(([id]) => itemById.get(id)!.row)
+  // См. lib/catalog-search.ts: сначала точные слова, опечатки — запасной путь.
+  return searchCatalog(rows.map(r => ({
+    row: r,
+    id: r.id,
+    primary: [r.name ?? '', r.district ?? '', districtRu(r.district) ?? '', r.developerName ?? ''],
+    secondary: [r.types.join(' ')],
+  })), rawQuery)
 }
 
 // === filter options (facet counts excluding self-dim) ===

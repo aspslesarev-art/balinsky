@@ -6,7 +6,8 @@ import { useSearchDraft } from './useSearchDraft'
 import { useFilterUrl, type FilterView } from './filters/useFilterUrl'
 import type { FilterState } from './filters/FiltersBar'
 
-const DEBOUNCE_MS = 600
+// Пауза перед поиском: 600 мс ловили короткую заминку посреди слова.
+const DEBOUNCE_MS = 900
 
 export function CatalogSearchBar({
   initial,

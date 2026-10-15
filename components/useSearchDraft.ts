@@ -8,7 +8,9 @@ import { useEffect, useRef, useState } from 'react'
 // with the debounced value only: focus gone, letters typed meanwhile lost.
 // Module state outlives the remount, so a fresh draft is restored with focus.
 let draft: { path: string; value: string; at: number } | null = null
-const FRESH_MS = 5000
+// Ответ сервера на первый поиск бывает медленным (холодный старт) — 5 с не
+// хватало, и буквы, набранные за это время, пропадали.
+const FRESH_MS = 30000
 
 export function useSearchDraft(initial: string) {
   const inputRef = useRef<HTMLInputElement>(null)

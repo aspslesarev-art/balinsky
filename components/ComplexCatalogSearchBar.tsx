@@ -6,7 +6,8 @@ import { useSearchDraft } from './useSearchDraft'
 import { useComplexFilterUrl, type FilterView } from './complex-filters/useComplexFilterUrl'
 import type { ComplexFilterState } from '@/app/ru/zhilye-kompleksy/_lib'
 
-const DEBOUNCE_MS = 600
+// Пауза перед поиском: 600 мс ловили короткую заминку посреди слова.
+const DEBOUNCE_MS = 900
 
 export function ComplexCatalogSearchBar({
   initial,

@@ -6,7 +6,8 @@ import { useSearchDraft } from './useSearchDraft'
 import { useVillaFilterUrl, type FilterView } from './villa-filters/useVillaFilterUrl'
 import type { VillaFilterState } from '@/app/ru/villy/_lib'
 
-const DEBOUNCE_MS = 600
+// Пауза перед поиском: 600 мс ловили короткую заминку посреди слова.
+const DEBOUNCE_MS = 900
 
 export function VillaCatalogSearchBar({
   initial,
