@@ -553,15 +553,6 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, lang }:
         </div>
       )}
 
-      {v.buildingsGrowthPct != null && v.buildingsGrowthPct > 0 && (
-        <div className="rounded-2xl border border-[var(--color-border)] bg-white p-5 md:p-6">
-          <h3 className="text-[17px] md:text-[18px] font-semibold text-[var(--color-text)]">{c.futureT}</h3>
-          <ul className="mt-3 list-disc pl-5 flex flex-col gap-2 text-[15px] md:text-[16px] leading-relaxed text-[var(--color-text)]">
-            <li>{c.futureBuild(v.buildingsGrowthPct)}</li>
-            <li>{c.futureData}</li>
-          </ul>
-        </div>
-      )}
     </div>
   )
 }
