@@ -257,10 +257,12 @@ html.no-pro [data-investment-block] {
   /* серии графиков (палитра dataviz, тёмная тема) */
   --ax-series-1:          #3987e5;
   --ax-series-2:          #d95926;
+  --ax-neg:               #e66767;
 }
 .theme-admin.theme-light {
   --ax-series-1:        #2a78d6;
   --ax-series-2:        #eb6834;
+  --ax-neg:             #e34948;
   --ax-bg:              #F9FAFB;
   --ax-fg:              #111827;
   --ax-fg-soft:         #4B5563;

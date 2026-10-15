@@ -101,11 +101,6 @@ export function OccDashboardView({ data }: { data: OccDashboard }) {
         <ZoneTable zones={zones} prevOk={!!data.prev_date && data.prev_date >= METHOD_SINCE} onPick={setZone} />
       </Panel>
 
-      <p className="max-w-[68ch] text-[12px] leading-relaxed text-[var(--ax-fg-muted)]">
-        Сбор каждый день в 12:00 WITA: 5,6 тыс. вилл (календарь на 60 дней) и 7,5 тыс. отелей до 40 номеров (свободные номера на сегодня).
-        Это только Booking и только активные объекты — абсолютный процент выше официального (BPS, август 2026: отели без звёзд 43%),
-        поэтому полезнее сравнения: район с районом, тип с типом, день с днём.
-      </p>
     </>
   )
 }

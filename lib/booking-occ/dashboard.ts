@@ -36,3 +36,32 @@ export const loadOccDashboard = unstable_cache(
   ['booking-occ-dashboard-v3'],
   { revalidate: 3600, tags: ['booking-occ'] },
 )
+
+// «Что влияет на загрузку»: считается раз в сутки booking_occ_drivers_refresh()
+// (pg_cron, 15:00 WITA, миграция 108) — страница только читает готовое.
+export type OccDriver = {
+  kind: 'hotel' | 'villa'; source: 'fac' | 'ph' | 'pl'; feature: string
+  n_with: number; n_without: number; occ_with: number; occ_without: number
+  lift: number; se: number; strata: number; coverage: number | null
+}
+export type OccDriversMeta = {
+  computed_at: string | null; hotel_units: number; villa_units: number; hotel_vision: number; villa_vision: number
+  days: number; first_day: string | null; last_day: string | null
+}
+
+export const loadOccDrivers = unstable_cache(
+  async (): Promise<{ rows: OccDriver[]; meta: OccDriversMeta | null }> => {
+    const sb = sbAdmin()
+    const [d, m] = await Promise.all([
+      sb.from('booking_occ_drivers').select('kind,source,feature,n_with,n_without,occ_with,occ_without,lift,se,strata,coverage').range(0, 4999),
+      sb.from('booking_occ_drivers_meta').select('*').maybeSingle(),
+    ])
+    if (d.error) throw new Error(`booking_occ_drivers: ${d.error.message}`)
+    if (m.error) throw new Error(`booking_occ_drivers_meta: ${m.error.message}`)
+    const rows = (d.data ?? []).map(r => ({ ...r, n_with: +r.n_with, n_without: +r.n_without, occ_with: +r.occ_with,
+      occ_without: +r.occ_without, lift: +r.lift, se: +r.se, strata: +r.strata })) as OccDriver[]
+    return { rows, meta: m.data as OccDriversMeta | null }
+  },
+  ['booking-occ-drivers-v1'],
+  { revalidate: 3600, tags: ['booking-occ'] },
+)
