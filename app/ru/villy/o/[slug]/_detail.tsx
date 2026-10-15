@@ -35,7 +35,7 @@ import { loadMarketStats } from '@/lib/complex-market-stats'
 import { loadOneUnitDemand } from '@/lib/unit-demand'
 import { UnitDemandBlock } from '@/components/UnitDemandBlock'
 import { MarketStatsBlock } from '@/components/MarketStatsBlock'
-import { DataChapter, DataGuide, type ChapterId } from '@/components/DataChapters'
+import { DataChapter } from '@/components/DataChapters'
 import { GatedBlock } from '@/components/GatedBlock'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
 import { VillaCard, type VillaCardData } from '@/components/VillaCard'
@@ -63,7 +63,9 @@ import { loadGeoFacts } from '@/lib/complex-access'
 import { ComplexAccessBlock } from '@/components/ComplexAccessBlock'
 import { ClimateBlock } from '@/components/ClimateBlock'
 import { AreaBlock } from '@/components/AreaBlock'
-import { PlotSiteBlock, plotChapterHint } from '@/components/PlotSiteBlock'
+import { PlotSiteBlock } from '@/components/PlotSiteBlock'
+import { loadVerdictSnapshot, loadComplexFacts, computeYieldFacts, buildVerdict } from '@/lib/listing-verdict'
+import { ListingVerdict, SafetyCards, DemandSummary, YieldSummary, questionHeaders, TONE_PILL_CLASS } from '@/components/ListingVerdict'
 import { loadManagersByDeveloperName, loadManagersByDeveloperSlug } from '@/lib/managers'
 import { getDeveloperStats } from '@/lib/developer-stats'
 import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
@@ -1073,7 +1075,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   const sellerUrl = isResale ? firstString(d['Контакт продавца']) : null
 
   const leaseYears = lease && /^\d+(\.\d+)?$/.test(lease.trim()) ? Number(lease.trim()) : null
-  const [otherVillas, complexes, developers, stylesMap, scoresMap, activeReservation, landProfile, marketStats, nearby, geoFacts, demand, saleComps] = await Promise.all([
+  const [otherVillas, complexes, developers, stylesMap, scoresMap, activeReservation, landProfile, marketStats, nearby, geoFacts, demand, saleComps, verdictSnap, complexFacts] = await Promise.all([
     loadOtherVillasInDistrict(district, v.airtable_id, lang),
     _loadComplexesIndex(),
     _loadDevelopersIndex(lang),
@@ -1088,6 +1090,8 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
     lat != null && lng != null
       ? saleCompsNear({ lat, lng, bedrooms, areaM2: area, priceUsd: priceNum, leaseYears }).catch(() => null)
       : null,
+    loadVerdictSnapshot(v.airtable_id),
+    loadComplexFacts(firstString(d['Комплекс'])).catch(() => null),
   ])
   // Разрешения самого проекта (KKKPR / PBG / KBLI) — второй уровень блока
   // зонирования. Переводы пока генерятся только для ЖК, поэтому на
@@ -1243,11 +1247,30 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   const plotSite = geoFacts?.climate?.plot ?? null
   const marketOk = !!marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0)
   const hasPlace = !!(geoFacts || nearby || (districtCopy && districtSlug))
-  const hasRent = marketOk || !!demand
+  const monthly = verdictSnap?.monthly ?? null
+  const hasRent = marketOk || !!demand || !!monthly
   const hasYield = lat != null && lng != null
-  const chapters = ([
-    hasPlace && 'mesto', saleComps && 'tseny', hasRent && 'arenda', hasYield && 'dokhodnost', (landOk || plotSite) && 'uchastok',
-  ] as const).filter((x): x is ChapterId => !!x)
+
+  // «Стоит ли брать»: страница идёт по вопросам покупателя — безопасно →
+  // удобно → спрос → деньги. Раздел «Цены рядом» ушёл в «деньги».
+  const landYellow = /yellow|жёлт|желт/i.test(firstString(d['Land color']) ?? '')
+  const rentalRestricted = !!verdictSnap?.flags.rentalRestricted || landYellow
+  const yields = computeYieldFacts(verdictSnap)
+  const airportS = geoFacts?.routes?.airport?.s
+  const underConstruction = !!status && /строит|under construction|planned/i.test(status)
+  const verdict = buildVerdict({
+    status, yearRaw, permit, leaseYears, rentalRestricted, complex: complexFacts,
+    dev: devStats ? { name: developerName, total: devStats.total, ready: devStats.ready } : null,
+    climate: geoFacts?.climate ?? null,
+    airportMin: airportS ? Math.round(airportS / 60) : null,
+    monthly,
+    daily: marketOk ? { count: marketStats!.villa_count, adrUsd: marketStats!.villa_adr_usd, occupancyPct: marketStats!.villa_occupancy_pct } : null,
+    yields,
+    saleDiffPct: saleComps?.diffPct ?? null,
+    hasPool: verdictSnap?.villa.hasPool ?? null,
+  })
+  const qh = questionHeaders(verdict, yields, monthly, saleComps?.diffPct ?? null, underConstruction, lang)
+  const asQuestion = (h: typeof qh.safety) => ({ kicker: h.kicker, title: h.title, status: h.status, pillClass: TONE_PILL_CLASS[h.tone], lead: h.lead })
 
   return (
     <>
@@ -1411,16 +1434,28 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
             рядом → доходность → участок. Калькулятор стоит после ставок
             соседей, потому что строится на них. Перед разделами — «карта
             страницы» с главной цифрой каждого. */}
-        <DataGuide lang={lang} chapters={chapters} facts={{
-          airportMin: geoFacts?.routes?.airport ? Math.round(geoFacts.routes.airport.s / 60) : null,
-          neighbourAdrUsd: marketOk ? marketStats!.villa_adr_usd ?? marketStats!.apartment_adr_usd : null,
-          demandScore: demand?.score ?? null,
-          strAllowed: landOk ? landProfile!.str_likely_allowed : null,
-          saleDiffPct: saleComps?.diffPct ?? null,
-        }} />
+        <ListingVerdict verdict={verdict} yields={yields} monthly={monthly} saleDiff={saleComps?.diffPct ?? null}
+          underConstruction={underConstruction} lang={lang}
+          anchors={{ safety: 'uchastok', comfort: hasPlace ? 'mesto' : 'uchastok', demand: hasRent ? 'arenda' : 'dokhodnost', money: 'dokhodnost' }} />
+
+        <DataChapter id="uchastok" n={1} lang={lang} question={asQuestion(qh.safety)}>
+          <SafetyCards verdict={verdict} permit={permit} status={status} yearRaw={yearRaw} complex={complexFacts}
+            leaseYears={leaseYears} landYellow={rentalRestricted}
+            dev={devStats ? { name: developerName, total: devStats.total, ready: devStats.ready } : null} lang={lang} />
+          {(landOk || plotSite) && (
+            <div className={landOk && plotSite ? 'grid grid-cols-1 lg:grid-cols-2 gap-4 [&>section]:h-full [&>div>section]:h-full' : 'max-w-[760px]'}>
+              {landOk && (
+                <LazyMount fallback={<div className="min-h-[480px] rounded-2xl bg-[var(--color-search-bg)]" />}>
+                  <LandProfileBlock data={landProfile!} permits={projectPermits} lang={lang} />
+                </LazyMount>
+              )}
+              <PlotSiteBlock plot={plotSite} hazards={geoFacts?.climate?.hazards} lang={lang} />
+            </div>
+          )}
+        </DataChapter>
 
         {hasPlace && (
-          <DataChapter id="mesto" n={chapters.indexOf('mesto') + 1} lang={lang}>
+          <DataChapter id="mesto" n={2} lang={lang} question={asQuestion(qh.comfort)}>
             {geoFacts && (
               <>
               {/* Слева дорога и район одной колонкой, справа солнце и погода. */}
@@ -1429,10 +1464,9 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
                 <div className={geoFacts.climate?.year?.sunny ? 'flex flex-col gap-4 [&>*]:mb-0' : 'contents [&>*]:mb-0'}>
                   <ComplexAccessBlock
                     lang={lang}
-                    elevationM={geoFacts.elevation_m}
                     routes={geoFacts.routes}
                   />
-                  <AreaBlock climate={geoFacts.climate} lang={lang} />
+                  <AreaBlock climate={geoFacts.climate} elevationM={geoFacts.elevation_m} lang={lang} />
                 </div>
                 <ClimateBlock climate={geoFacts.climate} air={geoFacts.air} lang={lang} lat={lat} lng={lng} />
               </div>
@@ -1449,16 +1483,13 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
           </DataChapter>
         )}
 
-        {saleComps && (
-          <DataChapter id="tseny" n={chapters.indexOf('tseny') + 1} lang={lang}>
-            <SaleCompsBlock data={saleComps} bedrooms={bedrooms} lang={lang} />
-          </DataChapter>
-        )}
-
         {hasRent && (
-          <DataChapter id="arenda" n={chapters.indexOf('arenda') + 1} lang={lang}>
+          <DataChapter id="arenda" n={3} lang={lang} question={asQuestion(qh.demand)}>
+            <DemandSummary verdict={verdict} monthly={monthly} bedrooms={bedrooms} lang={lang}
+              daily={marketOk ? { count: marketStats!.villa_count, adrUsd: marketStats!.villa_adr_usd, occupancyPct: marketStats!.villa_occupancy_pct } : null} />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-              {marketOk && (
+              {/* На жёлтой земле «выручка посуточно» вводит в заблуждение — соседей показывает DemandSummary. */}
+              {marketOk && !rentalRestricted && (
                 <GatedBlock kind="market" lang={lang}>
                   <MarketStatsBlock data={marketStats!} lang={lang} />
                 </GatedBlock>
@@ -1469,7 +1500,10 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
         )}
 
         {hasYield && (
-          <DataChapter id="dokhodnost" n={chapters.indexOf('dokhodnost') + 1} lang={lang}>
+          <DataChapter id="dokhodnost" n={4} lang={lang} question={asQuestion(qh.money)}>
+            {yields && <YieldSummary yields={yields} leaseYears={leaseYears} calcAnchor="kalkulyator" lang={lang} />}
+            {saleComps && <SaleCompsBlock data={saleComps} bedrooms={bedrooms} lang={lang} />}
+            <div id="kalkulyator" className="scroll-mt-24" />
             <GatedBlock kind="investment" lang={lang}>
               <LazyMount fallback={<div className="min-h-[600px]" />}>
                 <InvestmentWidget villaId={v.airtable_id} apiKey={GMAPS_KEY} lang={lang} />
@@ -1478,18 +1512,6 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
           </DataChapter>
         )}
 
-        {(landOk || plotSite) && (
-          <DataChapter id="uchastok" n={chapters.indexOf('uchastok') + 1} lang={lang} hint={!plotSite ? undefined : plotChapterHint(lang, landOk)}>
-            <div className={landOk && plotSite ? 'grid grid-cols-1 lg:grid-cols-2 gap-4 [&>section]:h-full [&>div>section]:h-full' : 'max-w-[760px]'}>
-              {landOk && (
-                <LazyMount fallback={<div className="min-h-[480px] rounded-2xl bg-[var(--color-search-bg)]" />}>
-                  <LandProfileBlock data={landProfile!} permits={projectPermits} lang={lang} />
-                </LazyMount>
-              )}
-              <PlotSiteBlock plot={plotSite} hazards={geoFacts?.climate?.hazards} lang={lang} />
-            </div>
-          </DataChapter>
-        )}
 
         {(parentComplex || developer || developerName) && (
           <section className="mb-10 grid grid-cols-1 md:grid-cols-2 gap-4">

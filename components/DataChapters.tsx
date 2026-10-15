@@ -121,6 +121,7 @@ export function DataChapter({
   n,
   lang,
   hint,
+  question,
   children,
 }: {
   id: ChapterId
@@ -128,9 +129,26 @@ export function DataChapter({
   lang: Lang
   /** Replaces the stock hint when the chapter shows only part of its usual content. */
   hint?: string
+  /** Раздел-вопрос («Безопасно ли это?»): крупный заголовок, метка и короткий ответ вместо подписи. */
+  question?: { kicker: string; title: string; status: string; pillClass: string; lead: string }
   children: ReactNode
 }) {
   const c = pickCopy(COPY, lang).chapters[id]
+  if (question) {
+    return (
+      <section id={id} className="mb-16 mt-24 pt-12 border-t border-[var(--color-border)] scroll-mt-24">
+        <div className="mb-8 max-w-[72ch]">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-[15px] font-semibold text-[var(--color-primary-pressed)]">{question.kicker}</span>
+            <span className={`rounded-full px-3 py-1 text-[13px] font-semibold ${question.pillClass}`}>{question.status}</span>
+          </div>
+          <h2 className="mt-3 text-[26px] md:text-[32px] font-semibold tracking-tight leading-tight text-[var(--color-text)]">{question.title}</h2>
+          <p className="mt-3 text-[16px] md:text-[18px] leading-relaxed text-[var(--color-text)]">{question.lead}</p>
+        </div>
+        <div className="flex flex-col gap-4 [&_[data-investment-block]]:mt-0 [&>section:last-child]:mb-0">{children}</div>
+      </section>
+    )
+  }
   return (
     <section id={id} className="mb-16 mt-24 pt-12 border-t border-[var(--color-border)] scroll-mt-24">
       <div className="mb-6 max-w-[68ch]">
