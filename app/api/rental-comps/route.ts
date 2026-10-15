@@ -6,10 +6,11 @@ import { createClient } from '@supabase/supabase-js'
 // вообще что снимают?», поэтому сегмент (вилла/отель, число спален) не
 // фильтруется: показываем всё, что попадает в цену и в радиус.
 //
-// Диапазон цены задаётся процентами, а не долларами: −25% / +10% от ADR.
-// На 110 это 82…121 — тот самый коридор, который просили, но при ADR 40
-// или 400 он остаётся осмысленным, тогда как фиксированные ±30$ на краях
-// шкалы либо схлопываются, либо ловят весь рынок.
+// «За эти же деньги» — всё, что сдаётся в пределах бюджета: от ставки +10%
+// вниз до половины ставки, сначала самые дорогие (просьба владельца
+// 15.10.2026: «от большего к меньшему»). Нижняя граница отсекает хостелы
+// за $12 рядом с виллой за $200 — это не конкуренты. Проценты, а не
+// доллары, чтобы коридор оставался осмысленным и при ADR 40, и при 400.
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -17,10 +18,10 @@ export const dynamic = 'force-dynamic'
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY
 
-const BAND_BELOW = 0.25
+const BAND_BELOW = 0.50
 const BAND_ABOVE = 0.10
 const ALLOWED_RADII: readonly number[] = [500, 1000]
-const LIMIT = 16
+const LIMIT = 48
 
 // Куда расширять поиск, если в запрошенном радиусе никого. Плотность
 // аренды на Бали разная: в Чангу в 500 м сотни объектов, а в Сануре
@@ -97,7 +98,9 @@ export async function GET(req: Request) {
       if (data.length) break
     }
 
-    const items = (data as Row[]).map(r => ({
+    // SQL отдаёт ближайших к середине коридора; лента — от дорогих к дешёвым.
+    const sorted = [...(data as Row[])].sort((a, b) => Number(b.price ?? 0) - Number(a.price ?? 0))
+    const items = sorted.map(r => ({
       id: r.id,
       title: r.title,
       unitKind: r.unit_kind,
