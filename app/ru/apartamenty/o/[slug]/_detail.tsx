@@ -627,13 +627,17 @@ let _lastGoodAptIndex: AptIndexEntry[] = []
 const _loadApartmentIndex = revisionedCache(['apartments'], 30 * 60 * 1000, async (): Promise<AptIndexEntry[]> => {
   try {
     const r = await fetch(APT_INDEX_URL, { next: { revalidate: 86400, tags: ['content:apartments'] } })
-    if (!r.ok) return _lastGoodAptIndex
+    if (!r.ok) throw new Error(`apartment index: ${r.status}`)
     const j = await r.json() as { items: AptIndexEntry[] }
     const items = j.items ?? []
-    if (items.length) _lastGoodAptIndex = items
+    if (!items.length) throw new Error('apartment index: empty')
+    _lastGoodAptIndex = items
     return items
-  } catch {
-    return _lastGoodAptIndex
+  } catch (e) {
+    // Пустой список не кэшируем — иначе после сбоя на холодном старте все
+    // страницы полчаса отдают 404 (см. villy/o/[slug]/_detail.tsx).
+    if (_lastGoodAptIndex.length) return _lastGoodAptIndex
+    throw e
   }
 })
 const _loadApartmentById = unstable_cache(
@@ -791,7 +795,10 @@ async function _loadAllComplexes(): Promise<ComplexRow[]> {
 // to { row, canonicalSlug }. Detail page redirects 301 when the URL
 // slug isn't already canonical.
 async function resolveApartment(urlSlug: string): Promise<{ row: Row; canonicalSlug: string } | null> {
-  const idx = await _loadApartmentIndex()
+  const idx = await _loadApartmentIndex().catch((e: unknown) => {
+    console.error('[apartment]', e instanceof Error ? e.message : e)
+    return [] as AptIndexEntry[]
+  })
   // Direct match on the canonical slug (the common case).
   let entry = idx.find(e => e.slug === urlSlug)
   if (!entry) {

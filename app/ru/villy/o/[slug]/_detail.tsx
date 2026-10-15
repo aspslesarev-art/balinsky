@@ -640,13 +640,18 @@ let _lastGoodIndex: IndexEntry[] = []
 const _loadVillaIndex = revisionedCache(['villas'], INDEX_TTL_MS, async (): Promise<IndexEntry[]> => {
   try {
     const r = await fetch(INDEX_URL, { next: { revalidate: 86400, tags: ['content:villas'] } })
-    if (!r.ok) return _lastGoodIndex
+    if (!r.ok) throw new Error(`villa index: ${r.status}`)
     const j = await r.json() as { items: IndexEntry[] }
     const items = j.items ?? []
-    if (items.length) _lastGoodIndex = items
+    if (!items.length) throw new Error('villa index: empty')
+    _lastGoodIndex = items
     return items
-  } catch {
-    return _lastGoodIndex
+  } catch (e) {
+    // Пустой список нельзя отдавать в кэш: после неудачной загрузки на холодном
+    // старте все виллы полчаса открывались как 404. Бросаем — кэш не запишется,
+    // следующий запрос попробует снова.
+    if (_lastGoodIndex.length) return _lastGoodIndex
+    throw e
   }
 })
 
@@ -687,7 +692,10 @@ async function _loadManifest(): Promise<Record<string, string[]>> {
 }
 
 async function resolveVilla(urlSlug: string): Promise<{ row: Row; canonicalSlug: string } | null> {
-  const idx = await _loadVillaIndex()
+  const idx = await _loadVillaIndex().catch((e: unknown) => {
+    console.error('[villa]', e instanceof Error ? e.message : e)
+    return [] as IndexEntry[]
+  })
   let entry = idx.find(e => e.slug === urlSlug)
   if (!entry) {
     const normalised = normalizeSlug(urlSlug)

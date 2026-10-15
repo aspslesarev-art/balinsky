@@ -1080,13 +1080,17 @@ let _lastGoodComplexIndex: ComplexIndexEntry[] = []
 const _loadComplexIndex = revisionedCache(['complexes'], COMPLEX_INDEX_TTL_MS, async (): Promise<ComplexIndexEntry[]> => {
   try {
     const r = await fetch(COMPLEX_INDEX_URL, { next: { revalidate: 86400, tags: ['content:complexes'] } })
-    if (!r.ok) return _lastGoodComplexIndex
+    if (!r.ok) throw new Error(`complex index: ${r.status}`)
     const j = await r.json() as { items: ComplexIndexEntry[] }
     const items = j.items ?? []
-    if (items.length) _lastGoodComplexIndex = items
+    if (!items.length) throw new Error('complex index: empty')
+    _lastGoodComplexIndex = items
     return items
-  } catch {
-    return _lastGoodComplexIndex
+  } catch (e) {
+    // Пустой список не кэшируем — иначе после сбоя на холодном старте все
+    // страницы полчаса отдают 404 (см. villy/o/[slug]/_detail.tsx).
+    if (_lastGoodComplexIndex.length) return _lastGoodComplexIndex
+    throw e
   }
 })
 
@@ -1192,7 +1196,10 @@ async function _loadApartmentsForComplex(complexName: string): Promise<{ rows: A
 }
 
 async function loadComplexBySlug(slug: string): Promise<ComplexRow | null> {
-  const idx = await _loadComplexIndex()
+  const idx = await _loadComplexIndex().catch((e: unknown) => {
+    console.error('[complex]', e instanceof Error ? e.message : e)
+    return [] as ComplexIndexEntry[]
+  })
   const entry = idx.find(c => c.slug === slug)
   if (!entry) return null
   return _loadComplexById(entry.id)
