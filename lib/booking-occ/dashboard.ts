@@ -33,6 +33,6 @@ export const loadOccDashboard = unstable_cache(
     if (!data?.run_date) throw new Error('booking_occ_dashboard: пустой ответ')
     return data as OccDashboard
   },
-  ['booking-occ-dashboard-v2'],
+  ['booking-occ-dashboard-v3'],
   { revalidate: 3600, tags: ['booking-occ'] },
 )
