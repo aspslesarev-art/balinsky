@@ -1133,8 +1133,11 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
   // Ползунок ходит по ставке из выдачи соседей; коэффициент реализации
   // применяется внутри расчёта, поэтому пользователь двигает ровно то число,
   // которое видит в карточках конкурентов ниже.
-  const [adr, setAdr] = useState<number>(sc.median.adrAsking)
-  const [occ, setOcc] = useState<number>(Math.round(snap.region.occupancyByScenario.median * 100))
+  // Комплекс сам сдаётся на Booking — стартуем с его цены и загрузки
+  // (решение владельца 15.10.2026), иначе со ставки соседей и 60%.
+  const own = snap.ownBooking
+  const [adr, setAdr] = useState<number>(own?.adr ?? sc.median.adrAsking)
+  const [occ, setOcc] = useState<number>(Math.round((own?.occupancy ?? snap.region.occupancyByScenario.median) * 100))
   const [mgmt, setMgmt] = useState<number>(Math.round(snap.region.mgmtFeePct * 100))
   const [taxStatus, setTaxStatus] = useState<TaxStatus>('beforeTax')
   const [open, setOpen] = useState(false)
@@ -1185,6 +1188,14 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
           zones={adrZones} zonesLabel={t.densityScale} />
         <Slider label={t.inputOccupancy} value={occ} min={0} max={100} step={1}
           onChange={setOcc} display={`${occ}%`} />
+        {own && (
+          <p className="md:col-span-2 -mt-1 rounded-lg bg-[var(--color-primary-soft)] px-3 py-2 text-[13px] leading-relaxed text-[var(--color-text)]">
+            {pickCopy({
+              ru: `Цена за ночь и загрузка взяты из объявлений этого комплекса на Booking (${own.listings.length} шт.).`,
+              en: `Nightly rate and occupancy come from this complex's own Booking listings (${own.listings.length}).`,
+            }, lang)}
+          </p>
+        )}
         <Slider label={t.inputMgmt} value={mgmt} min={0} max={80} step={1}
           onChange={setMgmt} display={`${mgmt}%`} />
       </div>

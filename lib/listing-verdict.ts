@@ -20,7 +20,7 @@ export type Tone = 'plus' | 'warn' | 'minus'
 // перестраивала бы на каждый запрос — держим час, правка объекта бампает тег.
 export const loadVerdictSnapshot = (id: string) => unstable_cache(
   async () => buildSnapshot(id, 'villa'),
-  ['verdict-snapshot-v1', id],
+  ['verdict-snapshot-v2', id],
   { revalidate: 3600, tags: ['content:villas'] },
 )().catch(() => null)
 
@@ -60,6 +60,8 @@ export async function loadComplexFacts(complexId: string | null): Promise<Comple
 
 export type YieldFacts = {
   mode: 'monthly' | 'daily'
+  /** Цифры из объявлений самого комплекса на Booking, а не по соседям. */
+  ownBooking?: boolean
   /** Ставка, от которой считали: аренда в месяц или ночь, USD. */
   rateUsd: number
   pct: Record<TaxStatus, number>
@@ -92,9 +94,12 @@ export function computeYieldFacts(snap: InvestmentSnapshot | null): YieldFacts |
     }
   }
   const sc = snap.scenarios!
+  // Как и калькулятор: если комплекс сам на Booking — его цена и загрузка.
+  const own = snap.ownBooking
+  const rate = own?.adr ?? sc.median.adrAsking
   const calc = (taxStatus: TaxStatus) => computeEconomics({
-    adr: sc.median.adrAsking,
-    occupancy: snap.region.occupancyByScenario.median,
+    adr: rate,
+    occupancy: own?.occupancy ?? snap.region.occupancyByScenario.median,
     adrRealization: snap.region.adrRealizationByScenario.median,
     phrOwnerShare: snap.region.phrOwnerShareByScenario.median,
     area: v.area, bedrooms: v.bedrooms, askingPrice: v.askingPrice,
@@ -103,7 +108,7 @@ export function computeYieldFacts(snap: InvestmentSnapshot | null): YieldFacts |
   const b = calc('beforeTax')
   if (b.capRate == null || b.entryPrice == null) return null
   return {
-    mode: 'daily', rateUsd: sc.median.adrAsking,
+    mode: 'daily', rateUsd: rate, ownBooking: !!own,
     pct: { beforeTax: b.capRate, resident: calc('resident').capRate ?? 0, nonResident: calc('nonResident').capRate ?? 0 },
     noiBeforeTaxUsd: b.noi,
     paybackYears: b.payback,

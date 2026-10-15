@@ -69,6 +69,69 @@ export type InvestmentSnapshot = {
   anchors: NearbyPlace[]
   nearbyByCategory: Record<string, NearbyPlace[]>
   flags: { emergingMarket: boolean; weakPerformance: boolean; leaseholdRisk: boolean; isLuxury: boolean; expandedZone: boolean; rentalRestricted: boolean }
+  /** Комплекс сам сдаётся на Booking (complex_booking_match): его загрузка и цена за ночь. */
+  ownBooking: OwnBooking | null
+}
+
+export type OwnBooking = {
+  /** Доля занятых ночей, 0..1, медиана по объявлениям комплекса. */
+  occupancy: number | null
+  /** Цена за ночь, USD: медиана по номерам с тем же числом спален, иначе по всем. */
+  adr: number | null
+  listings: { id: number; title: string | null; occupancy: number | null }[]
+}
+
+// 100% у estatemarket — это календарь, закрытый целиком (часто блок хозяина),
+// а не год без единой свободной ночи; выше 95% не ставим.
+const OWN_OCC_CAP = 0.95
+// Ниже 20% объявление по сути не работает (снято или новое) — его не считаем.
+const OWN_OCC_MIN = 20
+const median = (xs: number[]) => {
+  if (!xs.length) return null
+  const a = [...xs].sort((x, y) => x - y)
+  const m = Math.floor(a.length / 2)
+  return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2
+}
+const WORD_NUM: Record<string, number> = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6 }
+function roomBedrooms(roomType: string | null): number | null {
+  const m = (roomType ?? '').match(/(one|two|three|four|five|six|\d+)[- ]?bed ?room/i)
+  if (!m) return null
+  const w = m[1].toLowerCase()
+  return WORD_NUM[w] ?? Number(w)
+}
+
+// Решение владельца 15.10.2026: если объект виден на Booking — считать
+// по тому, что там есть, а не по средней загрузке 60%.
+async function loadOwnBooking(complexId: string | null, complexName: string | null, bedrooms: number | null): Promise<OwnBooking | null> {
+  // Ссылка «Комплекс» у части юнитов хранит старый id из Airtable, которого
+  // нет среди raw_complexes, — тогда находим комплекс по названию.
+  const ids0 = complexId ? [complexId] : []
+  if (complexName) {
+    // Названия в базе бывают с пробелом на конце — ищем по началу и сверяем без пробелов.
+    const name = complexName.trim().toLowerCase()
+    const { data: byName } = await sb.from('raw_complexes').select('airtable_id, p:data->>Project').ilike('data->>Project', `${name.replace(/[%_]/g, '')}%`).limit(10)
+    for (const r of byName ?? []) if (String(r.p ?? '').trim().toLowerCase() === name) ids0.push(String(r.airtable_id))
+  }
+  if (!ids0.length) return null
+  const { data: links, error } = await sb.from('complex_booking_match').select('booking_id').in('complex_id', ids0)
+  if (error || !links?.length) return null
+  const ids = links.map(l => Number(l.booking_id))
+  const [{ data: locs }, { data: rooms }] = await Promise.all([
+    sb.from('booking_data_locations').select('id, title, occupancy, price').in('id', ids),
+    sb.from('booking_data_rooms').select('property_id, room_type, price').in('property_id', ids),
+  ])
+  const occs = (locs ?? []).map(l => Number(l.occupancy)).filter(o => Number.isFinite(o) && o >= OWN_OCC_MIN)
+  const occMed = median(occs)
+  const priced = (rooms ?? []).filter(r => Number(r.price) > 0)
+  const sameBeds = bedrooms != null ? priced.filter(r => roomBedrooms(r.room_type) === bedrooms) : []
+  const adr = median((sameBeds.length ? sameBeds : priced).map(r => Number(r.price)))
+    ?? median((locs ?? []).map(l => Number(l.price)).filter(p => p > 0))
+  if (occMed == null && adr == null) return null
+  return {
+    occupancy: occMed != null ? Math.min(OWN_OCC_CAP, occMed / 100) : null,
+    adr: adr != null ? Math.round(adr) : null,
+    listings: (locs ?? []).map(l => ({ id: Number(l.id), title: l.title ?? null, occupancy: l.occupancy != null ? Number(l.occupancy) : null })),
+  }
 }
 
 export type MapCompetitor = {
@@ -129,6 +192,8 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
   const district = firstString(d['Location 2']) ?? firstString(d['Location'])
 
   const region = regionFor(lat, lng)
+  const complexId = Array.isArray(d['Комплекс']) ? (d['Комплекс'] as unknown[]).map(String)[0] ?? null : firstString(d['Комплекс'])
+  const ownBookingP = loadOwnBooking(complexId, firstString(d['Комплекс 1']), bedrooms).catch(() => null)
 
   // Pull data: 2km competitors + nearby places + baliforum curated places
   const [allInRadius, places, baliforum] = await Promise.all([
@@ -276,6 +341,7 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
     infra,
     anchors: infra.anchors,
     nearbyByCategory: byCategoryEnriched,
+    ownBooking: await ownBookingP,
     flags: {
       emergingMarket,
       weakPerformance,
