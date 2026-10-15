@@ -110,6 +110,8 @@ const FROZEN_MIN_OCC = 95
 const MARKET_MIN_LISTINGS = 5
 // Меньше 30 дневных снимков — слишком мало, чтобы говорить о загрузке.
 const MIN_SNAPSHOTS = 30
+// История Booking за год (сбор идёт с 05.08.2026).
+const HISTORY_DAYS = 365
 // Ниже 20% объявление по сути не работает (снято или новое) — его не считаем.
 const OWN_OCC_MIN = 20
 // Дороже $3000 за ночь на Бали в нашем каталоге нет — это цена в рупиях.
@@ -187,8 +189,9 @@ export async function bookingEstimate(ids: number[], kind: ListingKind, bedrooms
   if (!ids.length) return null
   // Загрузка — среднее по дневным снимкам (с 05.08.2026), а не последний
   // снимок: один день в сезоне сильно скачет. Цена — медиана по недельным
-  // снимкам номеров.
-  const since = new Date(Date.now() - 120 * 86_400_000).toISOString().slice(0, 10)
+  // снимкам номеров. Окно — год: накопится полный год, и цифра станет
+  // годовой, а не сезонной (у NEXA Townhouse ночь в августе $360–400, в октябре $170–180).
+  const since = new Date(Date.now() - HISTORY_DAYS * 86_400_000).toISOString().slice(0, 10)
   const [{ data: locs }, { data: rooms }, hist, roomHist] = await Promise.all([
     sb.from('booking_data_locations').select('id, title, occupancy, price').in('id', ids),
     sb.from('booking_data_rooms').select('property_id, room_id, room_type, price').in('property_id', ids),
@@ -234,13 +237,16 @@ export async function bookingEstimate(ids: number[], kind: ListingKind, bedrooms
     price: median(roomPrices.get(`${r.property_id}:${r.room_id}`) ?? []) ?? (sane(Number(r.price)) ? Number(r.price) : null),
   })).filter((r): r is { type: string | null; price: number } => r.price != null)
   // Цена только похожего номера: та же спальность и тип (вилла/апартаменты),
-  // иначе та же спальность, иначе тот же тип без указанных спален. Средняя по
-  // всем номерам давала студии 30 м² цену виллы на 4 спальни (35% годовых).
+  // иначе тот же тип без указанных спален. Средняя по всем номерам давала
+  // студии 30 м² цену виллы на 4 спальни (35% годовых). Номер-апартаменты
+  // вилле не годится: у вилл The Coco Boulevard так выходила цена квартир
+  // соседнего отеля ($93 за ночь при цене виллы $455 000). Апартаментам
+  // номер «вилла» с той же спальностью годится — так часто называют таунхаусы.
   // Похожего нет — цену берёт калькулятор у соседей.
   const fits = (t: string | null) => { const k = roomKind(t); return k == null || k === kind }
   const tiers = [
     priced.filter(r => bedrooms != null && roomBedrooms(r.type) === bedrooms && fits(r.type)),
-    priced.filter(r => bedrooms != null && roomBedrooms(r.type) === bedrooms),
+    priced.filter(r => kind === 'apartment' && bedrooms != null && roomBedrooms(r.type) === bedrooms),
     priced.filter(r => roomBedrooms(r.type) == null && roomKind(r.type) === kind),
   ]
   const adr = median((tiers.find(t => t.length) ?? []).map(r => r.price))
@@ -257,7 +263,7 @@ export async function bookingEstimate(ids: number[], kind: ListingKind, bedrooms
 
 /** Загрузка похожих объявлений вокруг (migrations/115): 1,5 км, мало — 3 км. */
 async function loadMarketOccupancy(lat: number, lng: number, kind: ListingKind, bedrooms: number | null): Promise<MarketOccupancy | null> {
-  const since = new Date(Date.now() - 120 * 86_400_000).toISOString().slice(0, 10)
+  const since = new Date(Date.now() - HISTORY_DAYS * 86_400_000).toISOString().slice(0, 10)
   for (const radius of [1500, 3000]) {
     const { data, error } = await sb.rpc('booking_market_occupancy', { p_lat: lat, p_lng: lng, p_radius_m: radius, p_unit_kind: kind, p_bedrooms: bedrooms, p_since: since })
     if (error) throw new Error(error.message)
@@ -462,12 +468,14 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
     // со своими объявлениями медиана соседей занижала цену на 26%, середина
     // p50–p75 — почти без перекоса (новые объекты сдаются дороже старых).
     // Цена соседей — это средний старый фонд, а дорогой объект сдаётся дороже.
-    // Поэтому ставка — среднее геометрическое цены соседей и «нормы» для
-    // объекта такой стоимости (adrPerPriceUsd). На тех же комплексах ошибка
-    // дохода 25% против 33% только по соседям (scripts/yield-check/calib.ts).
+    // Поэтому ставка — среднее геометрическое (с весом adrPriceWeight) цены
+    // соседей и «нормы» для объекта такой стоимости (adrPerPriceUsd). На тех же
+    // комплексах ошибка дохода 25% против 33% только по соседям
+    // (scripts/yield-check/eval.ts).
     const q = basis.length > 0 ? adrPercentiles(basis) : null
     const byPrice = askingPrice != null && askingPrice > 0 ? askingPrice * region.adrPerPriceUsd[kind] : null
-    const blend = (nb: number) => byPrice != null ? Math.sqrt(nb * byPrice) : nb
+    const w = region.adrPriceWeight[kind]
+    const blend = (nb: number) => byPrice != null && nb > 0 ? Math.exp((1 - w) * Math.log(nb) + w * Math.log(byPrice)) : nb
     const pcts = q && { ...q, p25: blend(q.p50), p50: blend((q.p50 + q.p75) / 2), p75: blend(q.p75) }
     if (pcts) scenarios = buildScenarios(
       pcts,

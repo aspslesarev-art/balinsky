@@ -52,6 +52,12 @@ export type RegionDefaults = {
   /** Сколько стоит ночь на каждый доллар цены объекта: медиана по комплексам
    *  со своими объявлениями на Booking (16.10.2026: 14 вилл, 17 апартаментов). */
   adrPerPriceUsd: { villa: number; apartment: number }
+  /** Вес этой «нормы» против цены соседей в ставке калькулятора (0 — только
+   *  соседи, 1 — только норма). Подобрано 16.10.2026 проверкой «без своих данных»
+   *  (scripts/yield-check/eval.ts): у апартаментов соседи — в основном номера
+   *  гостиниц, и норма по цене точнее (ошибка выручки 13% против 21% при 0,5);
+   *  у вилл 0,5 лучше всего сходится с реальным годом BREIG. */
+  adrPriceWeight: { villa: number; apartment: number }
 }
 
 export const BALI_DEFAULTS: RegionDefaults = {
@@ -84,7 +90,8 @@ export const BALI_DEFAULTS: RegionDefaults = {
   // доходность новостроя Бали при этих допущениях около 2%, поэтому
   // прежние 6% помечали бы весь рынок без разбора.
   capRateThresholdWeak: 0.015,
-  adrPerPriceUsd: { villa: 0.00069, apartment: 0.000531 },
+  adrPerPriceUsd: { villa: 0.00069, apartment: 0.00048 },
+  adrPriceWeight: { villa: 0.5, apartment: 0.75 },
 }
 
 export function regionFor(_lat: number, _lng: number): RegionDefaults {
