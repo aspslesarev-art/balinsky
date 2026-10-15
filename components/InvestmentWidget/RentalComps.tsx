@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { formatPriceExact } from '@/lib/currency'
 import { InlinePrice } from '../InlinePrice'
+import { useCurrency } from '../CurrencyContext'
 
 // «Что рядом сдают за эти же деньги»: живая подборка объектов Booking в
 // коридоре вокруг ADR, который посетитель выставил ползунком.
@@ -93,6 +94,7 @@ export function RentalComps({ lat, lng, adr, lang }: { lat: number; lng: number;
   const trackRef = useRef<HTMLDivElement | null>(null)
 
   const c = pickCopy(COPY, lang)
+  const { currency } = useCurrency()
 
   /** Прокрутка на «экран» ленты: чуть меньше её ширины, чтобы край оставался виден. */
   function scrollBy(dir: -1 | 1) {
@@ -149,7 +151,7 @@ export function RentalComps({ lat, lng, adr, lang }: { lat: number; lng: number;
       </div>
 
       <div className="text-[13px] text-[var(--color-text-muted)] mb-4">
-        {band ? c.sub(formatPriceExact(band.min, 'IDR', lang), formatPriceExact(band.max, 'IDR', lang)) : c.subLoading}
+        {band ? c.sub(formatPriceExact(band.min, currency, lang), formatPriceExact(band.max, currency, lang)) : c.subLoading}
         {usedRadius !== null && usedRadius > radius && items?.length ? ` ${c.widened(usedRadius)}` : ''}
       </div>
 

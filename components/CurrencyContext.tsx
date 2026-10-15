@@ -3,34 +3,15 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { detectLang, pickCopy } from '@/lib/i18n'
 import { usePathname } from 'next/navigation'
-import { ALL_CURRENCIES, currencyForCountry, isCurrency, type Currency } from '@/lib/currency'
-import { countryByTimezone, resolveCountry } from '@/lib/geo'
+import { ALL_CURRENCIES, isCurrency, type Currency } from '@/lib/currency'
 
 const LS_KEY = 'balinsky.currency'
 
-// Pages where USD-as-default doesn't fit; long-term rentals are quoted locally
-// in IDR, so a first-time visitor on /ru/arenda sees prices in rupiah. The
-// Indonesian and Balinese versions of the site are read from inside the
-// country — rupiah is the natural unit there too.
-function pageDefaultFor(pathname: string | null): Currency {
-  if (pathname?.startsWith('/ru/arenda')) return 'IDR'
-  if (/^\/(id|ban)(\/|$)/.test(pathname ?? '')) return 'IDR'
-  return 'USD'
-}
-
-// Rupiah-by-location only on the Russian, Indonesian and Balinese versions.
-// Someone reading the English (or French, German, …) site from Bali is a
-// foreign buyer on a trip, and villa prices on the island are quoted in USD —
-// "Rp 2 132 000 000" on /en reads as noise to them.
-function geoFor(geo: Currency | null, pathname: string | null): Currency | null {
-  if (geo !== 'IDR') return geo
-  return /^\/(ru|id|ban)(\/|$)/.test(pathname ?? '') ? geo : null
-}
-
-// С 15.10.2026 (решение владельца): основная валюта цен везде — рупии,
-// рядом мелко «≈» в валюте, которую выбрал человек. `currency` — то, чем
-// рисовать основную цену (всегда IDR), `selected` — выбор в переключателе,
-// `secondary` — валюта подписи «≈» (нет, если выбраны сами рупии).
+// С 15.10.2026 (решение владельца по правилам Банка Индонезии, SE 17/11/DKSP):
+// цены по умолчанию у всех — только в рупиях. Другая валюта — только если
+// человек сам выбрал её в переключателе, и тогда вместо рупий, а не рядом:
+// «Rp … и $…» одновременно — запрещённая двойная цена (dual quotation).
+// `secondary` оставлен для совместимости и всегда null.
 type Ctx = {
   currency: Currency
   selected: Currency
@@ -43,35 +24,15 @@ type Ctx = {
 const CurrencyContext = createContext<Ctx | null>(null)
 
 export function CurrencyProvider({ children }: { children: ReactNode }) {
-  const pathname = usePathname()
   const [explicit, setExplicit] = useState<Currency | null>(null)
-  // Country default: rupiah inside Indonesia, roubles inside Russia — whatever
-  // language version the visitor opened. Resolved in the browser because the
-  // pages themselves are static and shared by every region.
-  const [geo, setGeo] = useState<Currency | null>(null)
 
+  // Только явный выбор человека; страну больше не спрашиваем — по умолчанию
+  // у всех рупии (см. комментарий к Ctx).
   useEffect(() => {
-    let stored: Currency | null = null
     try {
       const v = localStorage.getItem(LS_KEY)
-      if (isCurrency(v)) stored = v
+      if (isCurrency(v)) setExplicit(v)
     } catch { /* SSR / private mode */ }
-    if (stored) {
-      // An explicit pick outranks geo — don't even ask where we are.
-      setExplicit(stored)
-      return
-    }
-
-    // Instant hint from the device clock, then the IP answer confirms or
-    // corrects it (traveller whose laptop still runs on home time, or a Moscow
-    // timezone set on a machine sitting abroad).
-    setGeo(currencyForCountry(countryByTimezone()))
-    let alive = true
-    resolveCountry().then(country => {
-      if (!alive || !country) return
-      setGeo(currencyForCountry(country))
-    })
-    return () => { alive = false }
   }, [])
 
   const setCurrency = (c: Currency) => {
@@ -79,13 +40,11 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     try { localStorage.setItem(LS_KEY, c) } catch { /* ignore */ }
   }
 
-  const selected = explicit ?? geoFor(geo, pathname) ?? pageDefaultFor(pathname)
+  const selected = explicit ?? 'IDR'
   const value: Ctx = {
-    currency: 'IDR',
+    currency: selected,
     selected,
-    // В Индонезии геолокация выбирает рупии — тогда подпись в долларах,
-    // общей валюте сделок; явный выбор рупий подпись убирает.
-    secondary: selected !== 'IDR' ? selected : explicit === 'IDR' ? null : 'USD',
+    secondary: null,
     hasExplicit: explicit != null,
     setCurrency,
   }
@@ -100,8 +59,8 @@ export function useCurrency(): Ctx {
   if (!ctx) {
     return {
       currency: 'IDR',
-      selected: 'USD',
-      secondary: 'USD',
+      selected: 'IDR',
+      secondary: null,
       hasExplicit: false,
       setCurrency: () => { /* no-op */ },
     }
