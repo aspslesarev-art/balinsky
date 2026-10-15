@@ -7,12 +7,21 @@ import type { Verdict, Tone, YieldFacts, ComplexFacts } from '@/lib/listing-verd
 import type { MonthlyBundle } from '@/lib/investment/monthly'
 import { InlinePrice } from './InlinePrice'
 import { CardRail } from './CardRail'
+import { ShieldCheck, House, Users, Wallet, ClipboardCheck, Check, type LucideIcon } from 'lucide-react'
 
 const TONE_PILL: Record<Tone, string> = {
   plus: 'bg-[var(--color-primary-soft)] text-[var(--color-primary-pressed)]',
   warn: 'bg-[#FDF0DC] text-[#8A4B00]',
   minus: 'bg-[#FCE8E6] text-[#A1281C]',
 }
+// Кружок под иконку вопроса: цвет — ответ (зелёный / жёлтый / красный).
+const TONE_ICON: Record<Tone, string> = {
+  plus: 'bg-[var(--color-primary-soft)] text-[var(--color-primary-pressed)]',
+  warn: 'bg-[#FDF0DC] text-[#8A4B00]',
+  minus: 'bg-[#FCE8E6] text-[#A1281C]',
+}
+const Q_ICON: Record<'safety' | 'comfort' | 'demand' | 'money', LucideIcon> = { safety: ShieldCheck, comfort: House, demand: Users, money: Wallet }
+
 const TONE_TEXT: Record<Tone, string> = {
   plus: 'text-[var(--color-primary-pressed)]',
   warn: 'text-[#8A4B00]',
@@ -29,6 +38,7 @@ const COPY = {
     total: 'Итог',
     more: 'Подробнее',
     q: { safety: 'Безопасно ли это?', comfort: 'Удобно ли там жить?', demand: 'Будет ли спрос?', money: 'Сколько принесёт?' },
+    qShort: { safety: 'Безопасность', comfort: 'Удобство', demand: 'Спрос', money: 'Доход' },
     qOf: (n: number) => `Вопрос ${n} из 4`,
     pluses: 'Чем хорош объект',
     checks: 'Что проверить до первой оплаты',
@@ -130,6 +140,7 @@ const COPY = {
     total: 'Bottom line',
     more: 'Details',
     q: { safety: 'Is it safe?', comfort: 'Is it a good place to live?', demand: 'Will there be demand?', money: 'How much will it earn?' },
+    qShort: { safety: 'Safety', comfort: 'Comfort', demand: 'Demand', money: 'Income' },
     qOf: (n: number) => `Question ${n} of 4`,
     pluses: 'What is good about it',
     checks: 'What to check before the first payment',
@@ -266,10 +277,34 @@ export function ListingVerdict({ verdict: v, yields: y, monthly, saleDiff, under
       <h2 id="verdict-title" className="text-[28px] md:text-[36px] font-semibold tracking-tight leading-tight text-[var(--color-text)]">{c.title}</h2>
       <p className="mt-3 text-[16px] md:text-[18px] leading-relaxed text-[var(--color-text-muted)] max-w-[68ch]">{c.sub}</p>
 
-      <div className="mt-8 rounded-2xl bg-[var(--color-text)] text-white p-6 md:p-8">
-        <div className="text-[13px] font-semibold uppercase tracking-wide text-[#A8D5BE]">{c.total}</div>
-        <p className="mt-3 text-[20px] md:text-[26px] font-semibold leading-snug tracking-tight max-w-[52ch]">{c.totalLine(v)}</p>
-        {why && <p className="mt-3 text-[15px] md:text-[16px] leading-relaxed text-[#C9D3CE] max-w-[72ch]">{why[0].toUpperCase() + why.slice(1)}.</p>}
+      <div className="mt-8 rounded-2xl border border-[var(--color-border)] bg-white p-5 md:p-7">
+        <div className="flex items-start gap-4">
+          <span className="hidden sm:inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary-pressed)]">
+            <ClipboardCheck size={24} aria-hidden />
+          </span>
+          <div className="min-w-0">
+            <div className="text-[13px] font-semibold uppercase tracking-wide text-[var(--color-primary-pressed)]">{c.total}</div>
+            <p className="mt-2 text-[20px] md:text-[24px] font-semibold leading-snug tracking-tight text-[var(--color-text)] max-w-[52ch]">{c.totalLine(v)}</p>
+            {why && <p className="mt-2 text-[15px] md:text-[16px] leading-relaxed text-[var(--color-text-muted)] max-w-[72ch]">{why[0].toUpperCase() + why.slice(1)}.</p>}
+          </div>
+        </div>
+        {/* Четыре ответа одной строкой: значок вопроса в цвете ответа. */}
+        <ul className="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+          {cards.map(card => {
+            const Icon = Q_ICON[card.key]
+            return (
+              <li key={card.key}>
+                <a href={`#${anchors[card.key]}`} className="flex h-full items-center gap-3 rounded-xl bg-[var(--color-search-bg)] p-3 transition-colors duration-[120ms] hover:bg-[var(--color-primary-soft)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">
+                  <span className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${TONE_ICON[card.tone]}`}><Icon size={20} aria-hidden /></span>
+                  <span className="min-w-0 flex flex-col">
+                    <span className="text-[13px] text-[var(--color-text-muted)]">{c.qShort[card.key]}</span>
+                    <span className={`text-[14px] font-semibold leading-tight ${TONE_TEXT[card.tone]}`}>{card.status}</span>
+                  </span>
+                </a>
+              </li>
+            )
+          })}
+        </ul>
       </div>
 
       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
@@ -277,7 +312,10 @@ export function ListingVerdict({ verdict: v, yields: y, monthly, saleDiff, under
           <a key={card.key} href={`#${anchors[card.key]}`}
             className="group flex flex-col gap-3 rounded-2xl border border-[var(--color-border)] bg-white p-5 md:p-7 transition-colors duration-[120ms] hover:border-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">
             <span className="flex items-center justify-between gap-3">
-              <span className="text-[15px] font-semibold text-[var(--color-text-muted)]">{card.n}. {card.q}</span>
+              <span className="flex items-center gap-3">
+                {(() => { const Icon = Q_ICON[card.key]; return <span className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${TONE_ICON[card.tone]}`}><Icon size={22} aria-hidden /></span> })()}
+                <span className="text-[15px] font-semibold text-[var(--color-text-muted)]">{card.q}</span>
+              </span>
               <span className={`shrink-0 rounded-full px-3 py-1 text-[13px] font-semibold ${TONE_PILL[card.tone]}`}>{card.status}</span>
             </span>
             <span className="text-[19px] md:text-[22px] font-semibold leading-snug tracking-tight text-[var(--color-text)]">{card.answer}</span>
@@ -292,16 +330,26 @@ export function ListingVerdict({ verdict: v, yields: y, monthly, saleDiff, under
           {v.pluses.length >= 2 && (
             <div className="rounded-2xl bg-[var(--color-primary-soft)] p-5 md:p-7">
               <h3 className="text-[18px] md:text-[20px] font-semibold text-[var(--color-text)]">{c.pluses}</h3>
-              <ul className="mt-4 list-disc pl-5 flex flex-col gap-2 text-[16px] leading-relaxed text-[var(--color-text)]">
-                {v.pluses.map(p => <li key={p}>{c.plus[p]}</li>)}
+              <ul className="mt-4 flex flex-col gap-3 text-[16px] leading-relaxed text-[var(--color-text)]">
+                {v.pluses.map(p => (
+                  <li key={p} className="flex items-start gap-3">
+                    <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)] text-white"><Check size={14} strokeWidth={3} aria-hidden /></span>
+                    {c.plus[p]}
+                  </li>
+                ))}
               </ul>
             </div>
           )}
           {v.checks.length > 0 && (
             <div className="rounded-2xl bg-[#FDF4E7] p-5 md:p-7">
               <h3 className="text-[18px] md:text-[20px] font-semibold text-[var(--color-text)]">{c.checks}</h3>
-              <ol className="mt-4 list-decimal pl-5 flex flex-col gap-2 text-[16px] leading-relaxed text-[var(--color-text)]">
-                {v.checks.map(k => <li key={k}>{c.check[k]}</li>)}
+              <ol className="mt-4 flex flex-col gap-3 text-[16px] leading-relaxed text-[var(--color-text)]">
+                {v.checks.map((k, i) => (
+                  <li key={k} className="flex items-start gap-3">
+                    <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#C77700] text-[13px] font-semibold text-white">{i + 1}</span>
+                    {c.check[k]}
+                  </li>
+                ))}
               </ol>
             </div>
           )}
