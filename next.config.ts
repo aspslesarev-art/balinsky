@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { PHASE_DEVELOPMENT_SERVER } from "next/constants";
 
 const nextConfig: NextConfig = {
   // Several root layouts (one per locale, see app/_root/shell.tsx), so the
@@ -154,4 +155,13 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Always-on local preview (launchd com.andrei.balinsky-local) grew Turbopack
+// to 3.5 GB and kept the Mac swapping. Cap it for `next dev` only — the same
+// option also applies to `next build`, where it would just slow the build.
+export default function config(phase: string): NextConfig {
+  if (phase !== PHASE_DEVELOPMENT_SERVER) return nextConfig;
+  return {
+    ...nextConfig,
+    experimental: { ...nextConfig.experimental, turbopackMemoryLimit: 1536 * 1024 * 1024 },
+  };
+}
