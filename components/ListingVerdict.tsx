@@ -454,7 +454,7 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, lang }:
           <div className={`${tile} bg-[var(--color-search-bg)]`}>
             <span className="text-[14px] font-semibold text-[var(--color-text-muted)]">{c.usualT}</span>
             <span className="text-[28px] md:text-[32px] font-semibold tracking-tight text-[var(--color-text)]"><InlinePrice usd={m.p50} lang={lang} /> <span className="text-[15px] font-medium text-[var(--color-text-muted)]">{c.perMonth}</span></span>
-            <span className="text-[15px] text-[var(--color-text-muted)]">{c.usualSub} <InlinePrice usd={m.p25} lang={lang} /> {c.to} <InlinePrice usd={m.p75} lang={lang} /></span>
+            <span className="text-[15px] text-[var(--color-text-muted)]">{c.usualSub} <InlinePrice usd={m.p25} lang={lang} approx={false} /> {c.to} <InlinePrice usd={m.p75} lang={lang} approx={false} /></span>
           </div>
         )}
         {daily?.adrUsd != null && daily.count > 0 && (

@@ -1,5 +1,6 @@
 'use client'
 
+import { ApproxPrice } from './InlinePrice'
 import { useCurrency } from './CurrencyContext'
 import { formatPrice } from '@/lib/currency'
 import type { Lang } from '@/lib/i18n'
@@ -34,6 +35,7 @@ export function DetailPriceBlock({
           </span>
         )}
       </div>
+      <ApproxPrice usd={priceUsd} lang={lang} className="block mt-1 text-[15px] text-[var(--color-text-muted)]" />
       {updated && (
         <div className="mt-1.5 text-[12px] text-[var(--color-text-muted)]">
           Цена обновлена {updated}

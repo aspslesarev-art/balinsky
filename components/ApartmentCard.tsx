@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { PhotoSlider } from './PhotoSlider'
+import { ApproxPrice } from './InlinePrice'
 import { useCurrency } from './CurrencyContext'
 import { WishlistButton } from './WishlistButton'
 import { formatPriceExact } from '@/lib/currency'
@@ -116,7 +117,10 @@ export function ApartmentCard({ a, lang = 'ru', priority = false }: { a: Apartme
         </h3>
 
         {price && (
-          <div className="text-[18px] font-semibold text-[var(--color-text)] mb-3">{price}</div>
+          <div className="text-[18px] font-semibold text-[var(--color-text)] mb-3">
+            {price}
+            {a.priceUsd != null && <ApproxPrice usd={a.priceUsd} lang={lang} className="block text-[13px] font-normal text-[var(--color-text-muted)]" />}
+          </div>
         )}
 
         {/* Балл востребованности прижат к правому краю нижней строки: это

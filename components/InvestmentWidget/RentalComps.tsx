@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { pickCopy, type Lang } from '@/lib/i18n'
+import { formatPriceExact } from '@/lib/currency'
+import { InlinePrice } from '../InlinePrice'
 
 // «Что рядом сдают за эти же деньги»: живая подборка объектов Booking в
 // коридоре вокруг ADR, который посетитель выставил ползунком.
@@ -35,7 +37,7 @@ const DEBOUNCE_MS = 450
 const COPY = {
   ru: {
     title: 'Что рядом сдают за эти же деньги',
-    sub: (a: number, b: number) => `Всё, что сдаётся на Booking в этом бюджете: от $${b} до $${a} за ночь, сначала самые дорогие.`,
+    sub: (a: string, b: string) => `Всё, что сдаётся на Booking в этом бюджете: от ${b} до ${a} за ночь, сначала самые дорогие.`,
     widened: (r: number) => `Рядом в этой ставке никого, поэтому показываем в радиусе ${r < 1000 ? `${r} м` : `${r / 1000} км`}.`,
     subLoading: 'Подбираем объекты по вашей ставке…',
     empty: 'В этом радиусе и в этой цене на Booking пока никого — попробуйте больший радиус или другую ставку.',
@@ -55,7 +57,7 @@ const COPY = {
   },
   en: {
     title: 'What the same money rents nearby',
-    sub: (a: number, b: number) => `Everything on Booking within this budget: $${b} down to $${a} per night, most expensive first.`,
+    sub: (a: string, b: string) => `Everything on Booking within this budget: ${b} down to ${a} per night, most expensive first.`,
     widened: (r: number) => `Nothing at this rate right nearby, so we widened the search to ${r < 1000 ? `${r} m` : `${r / 1000} km`}.`,
     subLoading: 'Finding listings at your rate…',
     empty: 'Nothing on Booking in this radius at this price — try a wider radius or another rate.',
@@ -147,7 +149,7 @@ export function RentalComps({ lat, lng, adr, lang }: { lat: number; lng: number;
       </div>
 
       <div className="text-[13px] text-[var(--color-text-muted)] mb-4">
-        {band ? c.sub(band.min, band.max) : c.subLoading}
+        {band ? c.sub(formatPriceExact(band.min, 'IDR', lang), formatPriceExact(band.max, 'IDR', lang)) : c.subLoading}
         {usedRadius !== null && usedRadius > radius && items?.length ? ` ${c.widened(usedRadius)}` : ''}
       </div>
 
@@ -214,7 +216,7 @@ export function RentalComps({ lat, lng, adr, lang }: { lat: number; lng: number;
                   {it.distanceM != null && fmtDistance(it.distanceM, c)}
                 </div>
                 <div className="mt-1.5 text-[14px] font-semibold text-[var(--color-primary-pressed)]">
-                  ${it.price}
+                  {it.price != null && <InlinePrice usd={it.price} lang={lang} />}
                   <span className="text-[11px] font-normal text-[var(--color-text-muted)]">{c.perNight}</span>
                 </div>
               </div>

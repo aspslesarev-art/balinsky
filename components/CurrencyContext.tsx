@@ -27,10 +27,14 @@ function geoFor(geo: Currency | null, pathname: string | null): Currency | null 
   return /^\/(ru|id|ban)(\/|$)/.test(pathname ?? '') ? geo : null
 }
 
+// С 15.10.2026 (решение владельца): основная валюта цен везде — рупии,
+// рядом мелко «≈» в валюте, которую выбрал человек. `currency` — то, чем
+// рисовать основную цену (всегда IDR), `selected` — выбор в переключателе,
+// `secondary` — валюта подписи «≈» (нет, если выбраны сами рупии).
 type Ctx = {
-  // Currency to render with — explicit user pick, else the country default
-  // (rupiah inside Indonesia), else the page default.
   currency: Currency
+  selected: Currency
+  secondary: Currency | null
   // True when the value comes from a user pick (vs the page default).
   hasExplicit: boolean
   setCurrency: (c: Currency) => void
@@ -75,8 +79,13 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     try { localStorage.setItem(LS_KEY, c) } catch { /* ignore */ }
   }
 
+  const selected = explicit ?? geoFor(geo, pathname) ?? pageDefaultFor(pathname)
   const value: Ctx = {
-    currency: explicit ?? geoFor(geo, pathname) ?? pageDefaultFor(pathname),
+    currency: 'IDR',
+    selected,
+    // В Индонезии геолокация выбирает рупии — тогда подпись в долларах,
+    // общей валюте сделок; явный выбор рупий подпись убирает.
+    secondary: selected !== 'IDR' ? selected : explicit === 'IDR' ? null : 'USD',
     hasExplicit: explicit != null,
     setCurrency,
   }
@@ -90,7 +99,9 @@ export function useCurrency(): Ctx {
   // working even on pages that haven't been wrapped yet.
   if (!ctx) {
     return {
-      currency: 'USD',
+      currency: 'IDR',
+      selected: 'USD',
+      secondary: 'USD',
       hasExplicit: false,
       setCurrency: () => { /* no-op */ },
     }
@@ -99,7 +110,7 @@ export function useCurrency(): Ctx {
 }
 
 export function CurrencyToggle({ className = '' }: { className?: string }) {
-  const { currency, setCurrency } = useCurrency()
+  const { selected: currency, setCurrency } = useCurrency()
   const pathname = usePathname() ?? ''
   const label = pickCopy({ ru: 'Валюта', en: 'Currency', id: 'Mata uang', fr: 'Devise', de: 'Währung', zh: '货币', nl: 'Valuta', ban: 'Mata uang', pl: 'Waluta', uk: 'Валюта' }, detectLang(pathname))
   return (

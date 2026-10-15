@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import { detectLang, pickCopy } from '@/lib/i18n'
 import { usePathname } from 'next/navigation'
 import { Send, FileText, MapPinned, UserRound, Lock } from 'lucide-react'
+import { ApproxPrice } from './InlinePrice'
 import { useCurrency } from './CurrencyContext'
 import { formatPriceExact } from '@/lib/currency'
 import type { Lang } from '@/lib/i18n'
@@ -253,6 +254,7 @@ export function PriceCtaCard({
         <div className="text-[30px] md:text-[32px] font-semibold tracking-[-0.02em] leading-none text-[#1A1F1C] tabular-nums">
           {main}
         </div>
+        <ApproxPrice usd={priceUsd} lang={lang} className="block mt-2 text-[15px] text-[var(--color-text-muted)]" />
         {perSqm && (
           <div className="mt-1.5 text-[13px] text-[var(--color-text-muted)]">
             {perSqm} {c.perSqm}
