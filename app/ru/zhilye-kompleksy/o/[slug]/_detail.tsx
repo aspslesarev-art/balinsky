@@ -1131,6 +1131,7 @@ const _loadComplexPhotos = unstable_cache(
 // чей SEO:Title содержит имя комплекса (1-30 строк, ~10-50КБ).
 type AptRow = {
   airtable_id: string
+  complex_name?: string | null
   title: string | null
   title_en: string | null
   slug: string | null
@@ -1159,6 +1160,7 @@ const _loadAptManifest = revisionedCache(['apartments'], 30 * 60 * 1000, async (
 })
 const APT_UNIT_SELECT = `
     airtable_id,
+    complex_name:data->"Комплекс 1",
     title:data->"SEO:Title",
     title_en:data->"SEO:Title EN",
     slug:data->"SEO:Slug",
@@ -1184,6 +1186,17 @@ function mergeUnitRows<T extends { airtable_id: string }>(...batches: (T[] | nul
   return [...byId.values()]
 }
 
+// ilike ищет кусок названия, и в «Oasis II» попадали юниты «Oasis III».
+// Оставляем только тех, у кого комплекс указан ровно этот, а если поле
+// пустое — у кого название комплекса стоит в заголовке целым словом.
+function belongsToComplex(row: { complex_name?: string | null; title: string | null }, complexName: string): boolean {
+  const name = complexName.trim().toLowerCase()
+  const linked = (row.complex_name ?? '').trim().toLowerCase()
+  if (linked) return linked === name
+  const esc = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return new RegExp(`(^|[^\\p{L}\\p{N}])${esc}($|[^\\p{L}\\p{N}])`, 'u').test((row.title ?? '').toLowerCase())
+}
+
 async function _loadApartmentsForComplex(complexName: string): Promise<{ rows: AptRow[]; manifest: Record<string, string[]> }> {
   const manifest = await _loadAptManifest()
   const needle = `%${complexName.replace(/[%_]/g, '\\$&')}%`
@@ -1192,6 +1205,7 @@ async function _loadApartmentsForComplex(complexName: string): Promise<{ rows: A
     sb.from('raw_apartments').select(APT_UNIT_SELECT).ilike(`data->>"Комплекс 1"`, needle).limit(200),
   ])
   const rows = mergeUnitRows(byTitle.data as AptRow[] | null, byLink.data as AptRow[] | null)
+    .filter(r => belongsToComplex(r, complexName))
   return { rows, manifest }
 }
 
@@ -1237,6 +1251,7 @@ async function loadOtherComplexesInDistrict(district: string | null, exceptId: s
 // держат юниты в raw_villas — это нужно догрузить рядом.
 type VillaRow = {
   airtable_id: string
+  complex_name?: string | null
   title: string | null
   title_en: string | null
   slug: string | null
@@ -1263,6 +1278,7 @@ const _loadVillaManifest = revisionedCache(['villas'], 30 * 60 * 1000, async ():
 })
 const VILLA_UNIT_SELECT = `
     airtable_id,
+    complex_name:data->"Комплекс 1",
     title:data->"SEO:Title",
     title_en:data->"SEO:Title EN",
     slug:data->"SEO:Slug",
@@ -1287,6 +1303,7 @@ async function _loadVillasForComplex(complexName: string): Promise<{ rows: Villa
     sb.from('raw_villas').select(VILLA_UNIT_SELECT).ilike(`data->>"Комплекс 1"`, needle).limit(200),
   ])
   const rows = mergeUnitRows(byTitle.data as VillaRow[] | null, byLink.data as VillaRow[] | null)
+    .filter(r => belongsToComplex(r, complexName))
   return { rows, manifest }
 }
 
