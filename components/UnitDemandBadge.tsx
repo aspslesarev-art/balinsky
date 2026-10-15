@@ -11,6 +11,7 @@
 // переходом. На тач-устройствах подсказки не будет — там остаётся сам балл,
 // а разбор целиком живёт на странице юнита.
 
+import { pluralRu } from '@/lib/plural-ru'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { demandTone, type UnitDemandView } from '@/lib/unit-demand-view'
 
@@ -19,9 +20,9 @@ const COPY = {
     title: 'Востребованность в районе',
     meaning: (pct: number) => `Ожидаемо сильнее ${pct}% объектов, которые сдаются рядом`,
     basis: {
-      zone_beds: (n: number, zone: string) => `Сравнение: ${n} объектов того же типа и размера в зоне «${zone}»`,
-      zone: (n: number, zone: string) => `Сравнение: ${n} объектов того же типа в зоне «${zone}»`,
-      island: (n: number) => `Сравнение: ${n} объектов того же типа по острову — рядом сопоставимых мало`,
+      zone_beds: (n: number, zone: string) => `Сравнение: ${n} ${pluralRu(n, ['объект', 'объекта', 'объектов'])} того же типа и размера в зоне «${zone}»`,
+      zone: (n: number, zone: string) => `Сравнение: ${n} ${pluralRu(n, ['объект', 'объекта', 'объектов'])} того же типа в зоне «${zone}»`,
+      island: (n: number) => `Сравнение: ${n} ${pluralRu(n, ['объект', 'объекта', 'объектов'])} того же типа по острову — рядом сопоставимых мало`,
     },
   },
   en: {

@@ -8,6 +8,7 @@
 // карточки живёт в components/UnitDemandBadge.tsx — он клиентский, потому что
 // подсказка раскрывается по наведению.
 
+import { pluralRu } from '@/lib/plural-ru'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { demandTone as tone } from '@/lib/unit-demand-view'
 import type { UnitDemand } from '@/lib/unit-demand'
@@ -18,9 +19,9 @@ const COPY = {
     of100: 'из 100',
     meaning: (pct: number) => `Сильнее ${pct}% объектов, которые сдаются рядом`,
     basis: {
-      zone_beds: (n: number, zone: string) => `${n} объектов того же типа и размера в зоне «${zone}»`,
-      zone: (n: number, zone: string) => `${n} объектов того же типа в зоне «${zone}»`,
-      island: (n: number) => `${n} объектов того же типа по острову — рядом сопоставимых мало`,
+      zone_beds: (n: number, zone: string) => `${n} ${pluralRu(n, ['объект', 'объекта', 'объектов'])} того же типа и размера в зоне «${zone}»`,
+      zone: (n: number, zone: string) => `${n} ${pluralRu(n, ['объект', 'объекта', 'объектов'])} того же типа в зоне «${zone}»`,
+      island: (n: number) => `${n} ${pluralRu(n, ['объект', 'объекта', 'объектов'])} того же типа по острову — рядом сопоставимых мало`,
     },
     scale: ['0 — слабее всех', '50 — средне', '100 — сильнее всех'],
     rate: 'Цена за ночь к соседям',

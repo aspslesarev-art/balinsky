@@ -3,6 +3,7 @@
 // etc.). Only mounts when getDistrictCopy returns a payload; the
 // catalog falls back to its default header otherwise.
 
+import { pluralRu } from '@/lib/plural-ru'
 import Link from 'next/link'
 import { TrendingUp, ChevronRight } from 'lucide-react'
 import type { DistrictCopy } from '@/lib/districts'
@@ -12,7 +13,7 @@ const COPY = {
   ru: {
     guide: (name: string) => `О районе ${name} — гид инвестора`,
     fullGuide: 'Полный гайд по инвестициям на Бали',
-    count: (n: number, name: string) => `Сейчас в каталоге ${n} объектов в районе ${name}. Статус разрешений (PBG, SLF) и зона земли указаны в карточке каждого объекта — проверяйте документы до оплаты.`,
+    count: (n: number, name: string) => `Сейчас в каталоге ${n} ${pluralRu(n, ['объект', 'объекта', 'объектов'])} в районе ${name}. Статус разрешений (PBG, SLF) и зона земли указаны в карточке каждого объекта — проверяйте документы до оплаты.`,
     source: 'Цифры: каталог Balinsky и база аренды, пересчитываются раз в месяц. Все районы —',
     sourceLink: 'цены',
     rentLink: 'аренда',

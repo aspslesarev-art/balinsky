@@ -2,6 +2,7 @@
 // Every number on the page is read from lib/market-index.json, so a monthly
 // rebuild of that file updates the page without touching the copy.
 
+import { pluralRu } from '@/lib/plural-ru'
 import Link from 'next/link'
 import { switchLangPath, type Lang } from '@/lib/i18n'
 import { SRC } from '@/lib/investment-guide/data'
@@ -72,7 +73,7 @@ function ruCopy(c: PriceCtx) {
     bedLabel: (b: string) => (b === '4+' ? '4 и больше' : b),
     villasH2: 'Виллы: цены по районам',
     villasCols: ['Район', 'Объектов', 'Медиана', 'Половина вилл', 'За м²', '2 спальни', 'Лизхолд', 'Строятся', 'PBG/SLF'],
-    years: (n: number) => `${n} лет`,
+    years: (n: number) => `${n} ${pluralRu(n, ['год', 'года', 'лет'])}`,
     aptsH2: 'Апартаменты: цены по районам',
     aptsCols: ['Район', 'Объектов', 'Медиана', 'Половина', 'За м²'],
     browse: 'Смотреть',

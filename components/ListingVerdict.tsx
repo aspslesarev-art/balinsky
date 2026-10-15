@@ -7,6 +7,7 @@ import type { Verdict, Tone, YieldFacts, ComplexFacts } from '@/lib/listing-verd
 import type { MonthlyBundle } from '@/lib/investment/monthly'
 import { InlinePrice } from './InlinePrice'
 import { CardRail } from './CardRail'
+import { pluralRu } from '@/lib/plural-ru'
 
 const TONE_PILL: Record<Tone, string> = {
   plus: 'bg-[var(--color-primary-soft)] text-[var(--color-primary-pressed)]',
@@ -19,21 +20,23 @@ const TONE_TEXT: Record<Tone, string> = {
   minus: 'text-[#A1281C]',
 }
 
+const yearsRu = (n: number) => `${n} ${pluralRu(n, ['год', 'года', 'лет'])}`
+const en = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
 const pctFmt = (x: number) => `${(x * 100).toFixed(1).replace('.', ',')}%`
 const pctFmtEn = (x: number) => `${(x * 100).toFixed(1)}%`
 
 const COPY = {
   ru: {
     title: 'Стоит ли брать этот объект',
-    sub: 'Четыре вопроса, которые задаёт себе каждый, кто покупает на Бали впервые. Ответы - из данных, а не из рекламы.',
+    sub: 'Четыре главных вопроса покупателя. Ответы - из данных, не из рекламы.',
     total: 'Итог',
     more: 'Подробнее',
     q: { safety: 'Безопасно ли это?', comfort: 'Удобно ли там жить?', demand: 'Будет ли спрос?', money: 'Сколько принесёт?' },
     qShort: { safety: 'Безопасность', comfort: 'Удобство', demand: 'Спрос', money: 'Доход' },
     qOf: (n: number) => `Вопрос ${n} из 4`,
-    pluses: 'Чем хорош объект',
-    checks: 'Что проверить до первой оплаты',
-    howCheck: 'Как проверить документы - простая инструкция',
+    pluses: 'Чем хорош',
+    checks: 'Что проверить до оплаты',
+    howCheck: 'Как проверить документы',
     status: {
       safety: { plus: 'Рисков не видно', warn: 'Есть вопросы', minus: 'Есть риски' },
       comfort: { plus: 'Удобно', warn: 'Тихо, но далеко', minus: 'Далеко' },
@@ -42,28 +45,28 @@ const COPY = {
       money: { plus: 'Хорошо', warn: 'Средне', minus: 'Мало' },
     },
     safetyAnswer: (v: Verdict) => v.safety.permitMissing && v.safety.notStarted
-      ? 'Стройка не начата, документов на строительство мы не видели'
-      : v.safety.permitMissing ? 'Документов на строительство мы не видели'
-      : v.safety.notStarted ? 'Стройка ещё не начата - вы платите за будущий дом'
-      : v.safety.noFinishedProjects ? 'Сданных проектов у застройщика мы пока не видим'
+      ? 'Стройка не начата, разрешения на неё мы не видели'
+      : v.safety.permitMissing ? 'Разрешения на стройку мы не видели'
+      : v.safety.notStarted ? 'Стройка не начата - вы платите за будущий дом'
+      : v.safety.noFinishedProjects ? 'Сданных проектов у застройщика мы не видим'
       : 'Явных рисков в данных нет',
     safetyShort: (v: Verdict, underConstruction: boolean) => [
-      underConstruction ? 'Большую часть цены вы заплатите, пока дом строят.' : null,
-      v.safety.hazards.length && !v.safety.hazards.some(h => h.key !== 'earthquake' && h.level === 'high') ? 'Природных рисков вроде наводнений нет.' : null,
+      underConstruction ? 'Большую часть цены вы заплатите до сдачи дома.' : null,
+      v.safety.hazards.length && !v.safety.hazards.some(h => h.key !== 'earthquake' && h.level === 'high') ? 'Наводнений и оползней нет.' : null,
     ].filter(Boolean).join(' '),
-    comfortAnswer: (v: Verdict) => v.comfort.airportBand === 'near' ? 'Аэропорт и основные районы рядом'
-      : v.comfort.airportBand === 'far' ? 'Далеко от аэропорта - больше для жизни, чем для отпуска'
-      : 'Средне по удалённости - для жизни нормально, для отпуска далековато',
+    comfortAnswer: (v: Verdict) => v.comfort.airportBand === 'near' ? 'Аэропорт и главные районы рядом'
+      : v.comfort.airportBand === 'far' ? 'Далеко - больше для жизни, чем для отпуска'
+      : 'Для жизни удобно, для отпуска далековато',
     comfortShort: (v: Verdict) => v.comfort.airportMin != null ? `До аэропорта около ${v.comfort.airportMin} мин.` : '',
     demandAnswer: (v: Verdict, m: MonthlyBundle | null) => v.demand.monthlyOnly
-      ? (m && m.n >= 10 ? 'Сдавать можно только надолго - и на это спрос рядом есть' : 'Сдавать можно только надолго, а похожих объявлений рядом мало')
-      : v.demand.tone === 'plus' ? 'Похожие объекты рядом сдаются хорошо' : 'Спрос рядом есть, но не высокий',
+      ? (m && m.n >= 10 ? 'Сдавать можно только надолго - спрос на это есть' : 'Сдавать можно только надолго, а таких предложений рядом мало')
+      : v.demand.tone === 'plus' ? 'Похожие объекты рядом сдаются хорошо' : 'Спрос есть, но не высокий',
     demandShort: (v: Verdict, m: MonthlyBundle | null) => v.demand.monthlyOnly
-      ? `Туристам посуточно нельзя по закону: земля под жильё.${m ? ` Помесячно рядом сдают ${m.n} похожих.` : ''}`
+      ? `Туристам посуточно нельзя: земля под жильё.${m ? ` Надолго рядом сдают ${m.n} ${pluralRu(m.n, ['похожий объект', 'похожих объекта', 'похожих объектов'])}.` : ''}`
       : '',
-    moneyAnswer: (y: YieldFacts | null) => y ? `Около ${pctFmt(y.pct.beforeTax)} в год до налогов, ${pctFmt(y.pct.nonResident)} - если вы не резидент` : 'Посчитать доход по этому объекту пока не из чего',
+    moneyAnswer: (y: YieldFacts | null) => y ? `Около ${pctFmt(y.pct.beforeTax)} в год до налогов, ${pctFmt(y.pct.nonResident)} - если вы не резидент` : 'Посчитать доход пока не из чего',
     moneyShort: (y: YieldFacts | null, diff: number | null) => [
-      y?.paybackYears ? `Вложения вернутся примерно за ${Math.round(y.paybackYears)} лет.` : null,
+      y?.paybackYears ? `Вложения вернутся примерно за ${yearsRu(Math.round(y.paybackYears))}.` : null,
       diff != null && diff >= 10 ? 'Цена выше похожих рядом.' : diff != null && diff <= -5 ? 'Цена ниже похожих рядом.' : null,
     ].filter(Boolean).join(' '),
     totalLine: (v: Verdict) => {
@@ -80,50 +83,50 @@ const COPY = {
       v.safety.notStarted ? 'стройка ещё не началась' : null,
     ].filter(Boolean).join(', '),
     plus: {
-      pool: 'Свой бассейн', smallComplex: 'Маленький комплекс - мало соседей', installments: 'Можно платить частями, пока идёт стройка',
+      pool: 'Свой бассейн', smallComplex: 'Маленький комплекс - мало соседей', installments: 'Можно платить частями во время стройки',
       flat: 'Ровный участок с подъездом', cheaper: 'Дешевле похожих рядом', nearAirport: 'Близко к аэропорту', strongYield: 'Доходность выше средней',
     },
     check: {
-      permit: 'Разрешение на строительство (PBG) - попросите копию', lease: 'Договор аренды земли и условия продления - у нотариуса',
-      delays: 'Что будет, если стройка задержится: сроки и штрафы в договоре', zoneMonthly: 'Земля под жильё - туристам посуточно сдавать нельзя',
+      permit: 'Разрешение на стройку (PBG) - попросите копию', lease: 'Договор аренды земли и продление - у нотариуса',
+      delays: 'Сроки сдачи и штрафы за задержку - в договоре', zoneMonthly: 'Земля под жильё - посуточно сдавать нельзя',
     },
     // Безопасность
-    docs: 'Документы и стройка', permitRow: 'Разрешение на строительство', permitNo: 'не видели', permitYes: 'есть', permitUnknown: 'нет данных',
-    build: 'Стройка', notStarted: 'ещё не начата', readiness: (p: number) => `готова на ${Math.round(p * 100)}%`, built: 'дом готов',
+    docs: 'Документы и стройка', permitRow: 'Разрешение на стройку', permitNo: 'не видели', permitYes: 'есть', permitUnknown: 'нет данных',
+    build: 'Стройка', notStarted: 'не начата', readiness: (p: number) => `готова на ${Math.round(p * 100)}%`, built: 'дом готов',
     handover: 'Сдача', payment: 'Оплата',
-    docsNote: 'Почему это важно: без разрешения стройку могут остановить, а деньги к тому времени будут уже заплачены. Попросите копию разрешения (PBG) до первой оплаты.',
-    landT: 'Земля', leaseRow: 'Аренда земли', leaseVal: (y: number) => `${y} лет`, extRow: 'Продление', extVal: (y: number) => `ещё ${y} лет`,
-    zoneRow: 'Зона', zoneHousing: 'жёлтая - для жилья',
-    landNote: 'Иностранцы на Бали покупают не землю, а право пользоваться ею на срок. Дом всё это время ваш: можно жить, сдавать, продать.',
-    landNoteYellow: ' Жёлтая зона - земля под жильё: жить и сдавать надолго можно, туристам посуточно - нельзя.',
+    docsNote: 'Без разрешения стройку могут остановить, а деньги уже будут уплачены. Попросите копию разрешения (PBG) до оплаты.',
+    landT: 'Земля', leaseRow: 'Аренда земли', leaseVal: (y: number) => yearsRu(y), extRow: 'Продление', extVal: (y: number) => `ещё ${yearsRu(y)}`,
+    zoneRow: 'Зона', zoneHousing: 'жёлтая, для жилья',
+    landNote: 'Иностранцы покупают не землю, а право пользоваться ею на срок. Дом всё это время ваш: можно жить, сдавать, продать.',
+    landNoteYellow: ' Жёлтая зона - для жилья: жить и сдавать надолго можно, посуточно - нельзя.',
     devT: (n: string | null) => n ? `Застройщик ${n}` : 'Застройщик', devProjects: 'Проектов на Бали', devReady: 'Сданных проектов',
     devNone: 'не видим', devOf: (r: number, t: number) => `${r} из ${t}`, floodSlide: 'Наводнения, оползни',
-    airportChip: (m: number) => `${m} мин до аэропорта`, neighboursChip: 'Соседние виллы на Booking', yResShort: 'Резидент', yNonShort: 'Нерезидент', devNote: 'Новый застройщик - не значит плохой, но опыта сдачи объектов у него пока не видно. Спросите, что они уже построили, и съездите посмотреть.',
-    devNoteOk: 'Сданные проекты можно съездить посмотреть - это лучший способ оценить качество.',
+    airportChip: (m: number) => `${m} мин до аэропорта`, neighboursChip: 'Соседние виллы на Booking', yResShort: 'Резидент', yNonShort: 'Нерезидент',
+    devNote: 'Сданных объектов у застройщика пока нет. Спросите, что они уже построили, и съездите посмотреть.',
+    devNoteOk: 'Съездите посмотреть сданные проекты - так проще всего оценить качество.',
     natureT: 'Природа', natureNote: 'По официальной карте рисков Индонезии (InaRISK).',
     hz: { flood: 'Наводнения', flash_flood: 'Внезапные паводки', landslide: 'Оползни', tsunami: 'Цунами', volcano: 'Вулкан', earthquake: 'Землетрясения' } as Record<string, string>,
     lvl: { none: 'нет риска', low: 'низкий риск', medium: 'средний риск', high: 'высокий риск' },
     // Спрос
-    monthlyT: 'Сдают рядом помесячно', monthlyV: (n: number) => `${n} объявлений`, monthlySub: (b: number | null, km: number) => `${b != null ? `с ${b} спальнями, ` : ''}в радиусе ${km} км`,
+    monthlyT: 'Сдают рядом помесячно', monthlyV: (n: number) => `${n} ${pluralRu(n, ['объявление', 'объявления', 'объявлений'])}`,
+    monthlySub: (b: number | null, km: number) => `${b != null ? `с ${b} ${pluralRu(b, ['спальней', 'спальнями', 'спальнями'])}, ` : ''}в радиусе ${km} км`,
     usualT: 'Обычная цена', perMonth: 'в месяц', usualSub: 'чаще всего от', to: 'до',
-    dailyT: 'Посуточно у соседей', dailyTRestricted: 'Если бы можно было посуточно', perNight: 'за ночь',
-    dailySub: (n: number, occ: number | null) => `${n} объектов на Booking${occ != null ? `, загрузка около ${Math.round(occ)}%` : ''}`,
-    dailySubRestricted: 'так сдают соседи - но этому объекту нельзя',
+    dailyT: 'Посуточно у соседей', dailyTRestricted: 'Посуточно у соседей', perNight: 'за ночь',
+    dailySub: (n: number, occ: number | null) => `${n} ${pluralRu(n, ['объект', 'объекта', 'объектов'])} на Booking${occ != null ? `, загрузка около ${Math.round(occ)}%` : ''}`,
+    dailySubRestricted: 'этому объекту так сдавать нельзя',
     monthlyCards: 'Что сдают рядом помесячно', away: 'от объекта', km: 'км', br: 'сп.',
-    futureT: 'А что будет дальше',
-    futureBuild: (p: number) => `Конкурентов станет больше: за последние годы зданий вокруг прибавилось на ${p}%.`,
-    futureData: 'Растёт спрос или падает, скажем позже: историю загрузки на Booking копим с августа 2026.',
+    futureT: '', futureBuild: (p: number) => `${p}`, futureData: '',
     prev: 'Назад', next: 'Дальше', open: 'Объявление',
     // Деньги
-    yTitle: (p: string) => `В среднем этот объект сейчас приносил бы ${p} в год`,
-    yLeadMonthly: 'Если ничего не учитывать и просто сдавать его помесячно по средней цене соседей -',
-    yLeadDaily: 'Если ничего не учитывать и сдавать посуточно по средней цене похожих соседей -',
-    yLeadTail: 'Все расходы на содержание уже вычтены, налог зависит от вашего статуса:',
-    yBefore: 'До налогов', yRes: 'Если вы резидент', yNon: 'Если вы не резидент', yResSub: 'налог 10% с аренды', yNonSub: 'налог 20% с аренды', yPerYear: 'в год',
-    yMeans: 'Что это значит на деле:',
-    yPayback: (n: number) => `вложения вернутся примерно за ${n} лет.`,
-    yMultiple: (m: string, y: number) => ` За ${y} лет аренды земли объект принесёт около ${m} ваших вложений до налогов - а потом земля вернётся хозяину.`,
-    yNote: 'Это средний ориентир, а не обещание. Свою цену аренды и загрузку поставьте в калькуляторе ниже.',
+    yTitle: (p: string) => `В среднем объект приносил бы ${p} в год`,
+    yLeadMonthly: 'Если сдавать помесячно по средней цене соседей -',
+    yLeadDaily: 'Если сдавать посуточно по средней цене похожих соседей -',
+    yLeadTail: 'Расходы уже вычтены. Налог зависит от статуса:',
+    yBefore: 'До налогов', yRes: 'Резидент', yNon: 'Нерезидент', yResSub: 'налог 10% с аренды', yNonSub: 'налог 20% с аренды', yPerYear: 'в год',
+    yMeans: 'На деле:',
+    yPayback: (n: number) => `вложения вернутся примерно за ${yearsRu(n)}.`,
+    yMultiple: (m: string, y: number) => ` За ${yearsRu(y)} аренды земли объект вернёт около ${m} вложений до налогов, потом земля уходит хозяину.`,
+    yNote: 'Это ориентир, не обещание. Свою цену и загрузку поставьте в калькуляторе.',
     yCalc: 'Открыть калькулятор',
   },
   en: {
@@ -166,7 +169,7 @@ const COPY = {
       : '',
     moneyAnswer: (y: YieldFacts | null) => y ? `About ${pctFmtEn(y.pct.beforeTax)} a year before tax, ${pctFmtEn(y.pct.nonResident)} for non-residents` : 'Not enough data to estimate income yet',
     moneyShort: (y: YieldFacts | null, diff: number | null) => [
-      y?.paybackYears ? `Pays back in about ${Math.round(y.paybackYears)} years.` : null,
+      y?.paybackYears ? `Pays back in about ${en(Math.round(y.paybackYears), 'year', 'years')}.` : null,
       diff != null && diff >= 10 ? 'Priced above similar places nearby.' : diff != null && diff <= -5 ? 'Priced below similar places nearby.' : null,
     ].filter(Boolean).join(' '),
     totalLine: (v: Verdict) => {
@@ -194,7 +197,7 @@ const COPY = {
     build: 'Construction', notStarted: 'not started', readiness: (p: number) => `${Math.round(p * 100)}% done`, built: 'house ready',
     handover: 'Handover', payment: 'Payment',
     docsNote: 'Why it matters: without a permit construction can be stopped after the money is paid. Ask for a copy of the permit (PBG) before the first payment.',
-    landT: 'Land', leaseRow: 'Land lease', leaseVal: (y: number) => `${y} years`, extRow: 'Extension', extVal: (y: number) => `${y} more years`,
+    landT: 'Land', leaseRow: 'Land lease', leaseVal: (y: number) => en(y, 'year', 'years'), extRow: 'Extension', extVal: (y: number) => `${en(y, 'more year', 'more years')}`,
     zoneRow: 'Zone', zoneHousing: 'yellow - residential',
     landNote: 'Foreigners in Bali buy not the land but the right to use it for a term. The house is yours all that time: live, rent out, sell.',
     landNoteYellow: ' Yellow zone is residential land: living and long-term rental are fine, nightly rental to tourists is not.',
@@ -205,10 +208,10 @@ const COPY = {
     natureT: 'Nature', natureNote: 'From Indonesia’s official hazard map (InaRISK).',
     hz: { flood: 'Floods', flash_flood: 'Flash floods', landslide: 'Landslides', tsunami: 'Tsunami', volcano: 'Volcano', earthquake: 'Earthquakes' } as Record<string, string>,
     lvl: { none: 'no risk', low: 'low risk', medium: 'medium risk', high: 'high risk' },
-    monthlyT: 'Rented monthly nearby', monthlyV: (n: number) => `${n} listings`, monthlySub: (b: number | null, km: number) => `${b != null ? `${b} bedrooms, ` : ''}within ${km} km`,
+    monthlyT: 'Rented monthly nearby', monthlyV: (n: number) => en(n, 'listing', 'listings'), monthlySub: (b: number | null, km: number) => `${b != null ? `${en(b, 'bedroom', 'bedrooms')}, ` : ''}within ${km} km`,
     usualT: 'Typical price', perMonth: 'per month', usualSub: 'usually from', to: 'to',
     dailyT: 'Nightly at neighbours', dailyTRestricted: 'If nightly rental were allowed', perNight: 'per night',
-    dailySub: (n: number, occ: number | null) => `${n} places on Booking${occ != null ? `, about ${Math.round(occ)}% booked` : ''}`,
+    dailySub: (n: number, occ: number | null) => `${en(n, 'place', 'places')} on Booking${occ != null ? `, about ${Math.round(occ)}% booked` : ''}`,
     dailySubRestricted: 'that is what neighbours charge - not allowed here',
     monthlyCards: 'Monthly rentals nearby', away: 'away', km: 'km', br: 'BR',
     futureT: 'What comes next',
@@ -221,7 +224,7 @@ const COPY = {
     yLeadTail: 'All running costs are already deducted; tax depends on your status:',
     yBefore: 'Before tax', yRes: 'If you are a resident', yNon: 'If you are not a resident', yResSub: '10% tax on rent', yNonSub: '20% tax on rent', yPerYear: 'a year',
     yMeans: 'What it means in practice:',
-    yPayback: (n: number) => `the money comes back in about ${n} years.`,
+    yPayback: (n: number) => `the money comes back in about ${en(n, 'year', 'years')}.`,
     yMultiple: (m: string, y: number) => ` Over the ${y}-year land lease it earns about ${m} of what you put in, before tax - then the land returns to its owner.`,
     yNote: 'An average guide, not a promise. Put your own rent and occupancy into the calculator below.',
     yCalc: 'Open the calculator',
@@ -397,8 +400,8 @@ export function ListingVerdict({ verdict: v, yields: y, monthly, saleDiff, under
             {visual(card.key)}
             <span className="flex flex-1 flex-col gap-2 p-5 md:p-6">
               <span className={`text-[14px] font-semibold ${TONE_TEXT[card.tone]}`}>{card.q} · {card.status}</span>
-              <span className="text-[19px] md:text-[21px] font-semibold leading-snug tracking-tight text-[var(--color-text)]">{card.answer}</span>
-              {card.short && <span className="text-[15px] leading-relaxed text-[var(--color-text-muted)]">{card.short}</span>}
+              <span className="text-[19px] md:text-[21px] font-semibold leading-snug tracking-tight text-[var(--color-text)] [text-wrap:balance]">{card.answer}</span>
+              {card.short && <span className="text-[15px] leading-relaxed text-[var(--color-text-muted)] [text-wrap:pretty]">{card.short}</span>}
             </span>
           </a>
         ))}

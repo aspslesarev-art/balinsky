@@ -1,6 +1,7 @@
 // Homepage block: four headline market figures, each linking to the page
 // that explains it. Every locale; Balinese reads the Indonesian copy.
 
+import { pluralRu } from '@/lib/plural-ru'
 import Link from 'next/link'
 import { NumberTicker } from '@/components/NumberTicker'
 import { ArrowRight } from 'lucide-react'
@@ -22,7 +23,7 @@ type Copy = {
 const COPY: Record<Exclude<Lang, 'ban'>, Copy> = {
   ru: {
     h2: 'Рынок Бали в цифрах', data: w => `Данные за ${w} · `, how: 'как мы считаем',
-    median: n => `медианная цена виллы, ${n} объектов`, perM2: 'за м² — медиана по виллам',
+    median: n => `медианная цена виллы, ${n} ${pluralRu(Number(String(n).replace(/\D/g, '')), ['объект', 'объекта', 'объектов'])}`, perM2: 'за м² — медиана по виллам',
     month: 'в месяц — аренда виллы с 2 спальнями', night: 'за ночь — вилла с 2 спальнями посуточно',
     prices: 'Цены по районам', rent: 'Сколько стоит аренда',
   },
