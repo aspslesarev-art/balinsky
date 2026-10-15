@@ -44,7 +44,7 @@ const COPY = {
       ? 'Стройка не начата, документов на строительство мы не видели'
       : v.safety.permitMissing ? 'Документов на строительство мы не видели'
       : v.safety.notStarted ? 'Стройка ещё не начата - вы платите за будущий дом'
-      : v.safety.noFinishedProjects ? 'Документы есть, но сданных проектов у застройщика мы не видим'
+      : v.safety.noFinishedProjects ? 'Сданных проектов у застройщика мы пока не видим'
       : 'Явных рисков в данных нет',
     safetyShort: (v: Verdict, underConstruction: boolean) => [
       underConstruction ? 'Большую часть цены вы заплатите, пока дом строят.' : null,
@@ -145,7 +145,7 @@ const COPY = {
       ? 'Construction has not started and we have not seen a building permit'
       : v.safety.permitMissing ? 'We have not seen a building permit'
       : v.safety.notStarted ? 'Construction has not started - you pay for a future house'
-      : v.safety.noFinishedProjects ? 'Documents are in place, but we see no completed projects by this developer'
+      : v.safety.noFinishedProjects ? 'We see no completed projects by this developer yet'
       : 'No obvious risks in the data',
     safetyShort: (v: Verdict, underConstruction: boolean) => [
       underConstruction ? 'You pay most of the price while the house is being built.' : null,
