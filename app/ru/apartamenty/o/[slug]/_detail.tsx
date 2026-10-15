@@ -46,7 +46,11 @@ import { loadGeoFacts } from '@/lib/complex-access'
 import { ComplexAccessBlock } from '@/components/ComplexAccessBlock'
 import { ClimateBlock } from '@/components/ClimateBlock'
 import { AreaBlock } from '@/components/AreaBlock'
-import { PlotSiteBlock, plotChapterHint } from '@/components/PlotSiteBlock'
+import { PlotSiteBlock } from '@/components/PlotSiteBlock'
+import { loadVerdictSnapshot, loadComplexFacts, computeYieldFacts, buildVerdict } from '@/lib/listing-verdict'
+import { ListingVerdict, SafetyCards, DemandSummary, YieldSummary, questionHeaders, TONE_PILL_CLASS } from '@/components/ListingVerdict'
+import { NeighborhoodHeatMap } from '@/components/NeighborhoodHeatMap'
+import { VerifiedYieldBadge } from '@/components/VerifiedYieldBadge'
 import { loadManagersByDeveloperName } from '@/lib/managers'
 import { PriceCtaCard } from '@/components/PriceCtaCard'
 import { findActiveReservation } from '@/lib/reservations'
@@ -56,7 +60,7 @@ import { loadMarketStats } from '@/lib/complex-market-stats'
 import { loadOneUnitDemand } from '@/lib/unit-demand'
 import { UnitDemandBlock } from '@/components/UnitDemandBlock'
 import { MarketStatsBlock } from '@/components/MarketStatsBlock'
-import { DataChapter, DataGuide, type ChapterId } from '@/components/DataChapters'
+import { DataChapter } from '@/components/DataChapters'
 import { GatedBlock } from '@/components/GatedBlock'
 import { VillaPresentationButton } from '@/components/VillaPresentation'
 import { permitLabel } from '@/components/presentation-copy'
@@ -995,7 +999,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
   const parentComplex = findParentComplex(title, complexes, firstString(d['Комплекс 1']))
   const parentComplexName = parentComplex?.name ?? null
 
-  const [otherApts, managers, activeReservation, landProfile, marketStats, developers, nearby, geoFacts, demand] = await Promise.all([
+  const [otherApts, managers, activeReservation, landProfile, marketStats, developers, nearby, geoFacts, demand, verdictSnap, complexFacts] = await Promise.all([
     loadOtherApartmentsInDistrict(district, a.airtable_id, lang),
     loadManagersByDeveloperName(devName),
     findActiveReservation('apartment', a.airtable_id),
@@ -1005,6 +1009,8 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
     loadNearbyPlaces(a.airtable_id).catch(() => null),
     loadGeoFacts('apartment', a.airtable_id).catch(() => null),
     loadOneUnitDemand('apartment', a.airtable_id, lang).catch(() => null),
+    loadVerdictSnapshot(a.airtable_id, 'apartment'),
+    loadComplexFacts(firstString(d['Комплекс'])).catch(() => null),
   ])
   // Разрешения самого проекта (KKKPR / PBG / KBLI) — второй уровень блока
   // зонирования. Переводы пока генерятся только для ЖК, поэтому на
@@ -1122,9 +1128,32 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
   const hasPlace = !!(geoFacts || nearby || (districtCopy && districtSlug))
   const hasRent = marketOk || !!demand
   const hasYield = lat != null && lng != null
-  const chapters = ([
-    hasPlace && 'mesto', hasRent && 'arenda', hasYield && 'dokhodnost', (landOk || plotSite) && 'uchastok',
-  ] as (ChapterId | false)[]).filter((x): x is ChapterId => !!x)
+  // «Стоит ли брать» и разделы-вопросы — как у вилл (components/ListingVerdict).
+  const monthly = verdictSnap?.monthly ?? null
+  const landYellow = /yellow|жёлт|желт/i.test(firstString(d['Land color']) ?? '')
+  const rentalRestricted = !!verdictSnap?.flags.rentalRestricted || landYellow
+  const yields = computeYieldFacts(verdictSnap)
+  const airportS = geoFacts?.routes?.airport?.s
+  const underConstruction = !!status && /строит|under construction|planned/i.test(status)
+  const leaseYears = lease && /^\d+(\.\d+)?$/.test(lease.trim()) ? Number(lease.trim()) : null
+  const aptMarket = marketOk && marketStats!.apartment_count > 0
+  const dailyFacts = marketOk ? {
+    count: aptMarket ? marketStats!.apartment_count : marketStats!.villa_count,
+    adrUsd: aptMarket ? marketStats!.apartment_adr_usd : marketStats!.villa_adr_usd,
+    occupancyPct: aptMarket ? marketStats!.apartment_occupancy_pct : marketStats!.villa_occupancy_pct,
+  } : null
+  const verdict = buildVerdict({
+    status, yearRaw, permit, leaseYears, rentalRestricted, complex: complexFacts,
+    dev: devStats ? { name: devName, total: devStats.total, ready: devStats.ready } : null,
+    climate: geoFacts?.climate ?? null,
+    airportMin: airportS ? Math.round(airportS / 60) : null,
+    monthly, daily: dailyFacts, yields, saleDiffPct: null,
+    hasPool: verdictSnap?.villa.hasPool ?? null,
+    ownOccupancy: verdictSnap?.ownBooking?.occupancy ?? null,
+  })
+  const qh = questionHeaders(verdict, yields, monthly, null, underConstruction, lang)
+  const asQuestion = (h: typeof qh.safety) => ({ kicker: h.kicker, title: h.title, status: h.status, pillClass: TONE_PILL_CLASS[h.tone], lead: h.lead })
+  const hasDemand = hasRent || !!monthly
 
   return (
     <>
@@ -1179,6 +1208,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
           <h1 className="text-[18px] sm:text-[24px] md:text-[40px] font-semibold tracking-tight text-[var(--color-text)] leading-[1.25] md:leading-[1.1] mb-3 [word-break:break-word] [overflow-wrap:anywhere]">
             {title}
           </h1>
+          {yields?.ownBooking && <a href="#dokhodnost" className="mb-3 inline-block"><VerifiedYieldBadge lang={lang} /></a>}
           <div className="text-[15px] text-[var(--color-text-muted)] leading-relaxed mb-4 flex items-center flex-wrap gap-x-5 gap-y-1">
             {bedrooms != null && <span>{bedrooms} BR</span>}
             {area != null && <span>{area} {c.sqm}</span>}
@@ -1261,15 +1291,30 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
 
         {/* Аналитика — четыре раздела в одном порядке: место → аренда
             рядом → доходность → участок (как на странице виллы). */}
-        <DataGuide lang={lang} chapters={chapters} facts={{
-          airportMin: geoFacts?.routes?.airport ? Math.round(geoFacts.routes.airport.s / 60) : null,
-          neighbourAdrUsd: marketOk ? marketStats!.apartment_adr_usd ?? marketStats!.villa_adr_usd : null,
-          demandScore: demand?.score ?? null,
-          strAllowed: landOk ? landProfile!.str_likely_allowed : null,
-        }} />
+        <ListingVerdict verdict={verdict} yields={yields} monthly={monthly} saleDiff={null}
+          underConstruction={underConstruction} lang={lang} lat={lat} lng={lng}
+          neighbourPhotos={(verdictSnap?.competitors ?? []).map(x => x.photo).filter((x): x is string => !!x)}
+          dev={devStats ? { total: devStats.total, ready: devStats.ready } : null}
+          anchors={{ safety: 'uchastok', comfort: hasPlace ? 'mesto' : 'uchastok', demand: hasDemand ? 'arenda' : 'dokhodnost', money: 'dokhodnost' }} />
+
+        <DataChapter id="uchastok" n={1} lang={lang} question={asQuestion(qh.safety)}>
+          <SafetyCards verdict={verdict} permit={permit} status={status} yearRaw={yearRaw} complex={complexFacts}
+            leaseYears={leaseYears} landYellow={rentalRestricted}
+            dev={devStats ? { name: devName, total: devStats.total, ready: devStats.ready } : null} lang={lang} />
+          {(landOk || plotSite) && (
+            <div className={landOk && plotSite ? 'grid grid-cols-1 lg:grid-cols-2 gap-4 [&>section]:h-full [&>div>section]:h-full' : 'max-w-[760px]'}>
+              {landOk && (
+                <LazyMount fallback={<div className="min-h-[480px] rounded-2xl bg-[var(--color-search-bg)]" />}>
+                  <LandProfileBlock data={landProfile!} permits={projectPermits} lang={lang} />
+                </LazyMount>
+              )}
+              <PlotSiteBlock plot={plotSite} hazards={geoFacts?.climate?.hazards} lang={lang} />
+            </div>
+          )}
+        </DataChapter>
 
         {hasPlace && (
-          <DataChapter id="mesto" n={chapters.indexOf('mesto') + 1} lang={lang}>
+          <DataChapter id="mesto" n={2} lang={lang} question={asQuestion(qh.comfort)}>
             {geoFacts && (
               <>
               {/* Слева дорога и район одной колонкой, справа солнце и погода. */}
@@ -1278,10 +1323,9 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
                 <div className={geoFacts.climate?.year?.sunny ? 'flex flex-col gap-4 [&>*]:mb-0' : 'contents [&>*]:mb-0'}>
                   <ComplexAccessBlock
                     lang={lang}
-                    elevationM={geoFacts.elevation_m}
                     routes={geoFacts.routes}
                   />
-                  <AreaBlock climate={geoFacts.climate} lang={lang} />
+                  <AreaBlock climate={geoFacts.climate} elevationM={geoFacts.elevation_m} lang={lang} />
                 </div>
                 <ClimateBlock climate={geoFacts.climate} air={geoFacts.air} lang={lang} lat={lat} lng={lng} />
               </div>
@@ -1292,16 +1336,22 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
                 <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />
               </GatedBlock>
             )}
+            {lat != null && lng != null && GMAPS_KEY && (
+              <LazyMount fallback={<div className="h-[420px] rounded-2xl bg-[var(--color-search-bg)]" />}>
+                <NeighborhoodHeatMap apiKey={GMAPS_KEY} lat={lat} lng={lng} title={title} lang={lang} />
+              </LazyMount>
+            )}
             {districtCopy && districtSlug && (
               <DistrictAboutCard copy={districtCopy} lang={lang} kind="apartment" hubHref={`${apartmentsRoot}/${districtSlug}`} />
             )}
           </DataChapter>
         )}
 
-        {hasRent && (
-          <DataChapter id="arenda" n={chapters.indexOf('arenda') + 1} lang={lang}>
+        {hasDemand && (
+          <DataChapter id="arenda" n={3} lang={lang} question={asQuestion(qh.demand)}>
+            <DemandSummary verdict={verdict} monthly={monthly} bedrooms={bedrooms} lang={lang} daily={dailyFacts} />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-              {marketOk && (
+              {marketOk && !rentalRestricted && (
                 <GatedBlock kind="market" lang={lang}>
                   <MarketStatsBlock data={marketStats!} lang={lang} />
                 </GatedBlock>
@@ -1312,27 +1362,17 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
         )}
 
         {hasYield && (
-          <DataChapter id="dokhodnost" n={chapters.indexOf('dokhodnost') + 1} lang={lang}>
+          <DataChapter id="dokhodnost" n={4} lang={lang} question={asQuestion(qh.money)}>
+            {yields && <YieldSummary yields={yields} leaseYears={leaseYears} calcAnchor="kalkulyator" lang={lang} />}
+            <div id="kalkulyator" className="scroll-mt-24" />
             <GatedBlock kind="investment" lang={lang}>
               <LazyMount fallback={<div className="min-h-[600px]" />}>
-                <InvestmentWidget villaId={a.airtable_id} apiKey={GMAPS_KEY} kind="apartment" lang={lang} />
+                <InvestmentWidget villaId={a.airtable_id} apiKey={GMAPS_KEY} kind="apartment" lang={lang} showMap={false} />
               </LazyMount>
             </GatedBlock>
           </DataChapter>
         )}
 
-        {(landOk || plotSite) && (
-          <DataChapter id="uchastok" n={chapters.indexOf('uchastok') + 1} lang={lang} hint={!plotSite ? undefined : plotChapterHint(lang, landOk)}>
-            <div className={landOk && plotSite ? 'grid grid-cols-1 lg:grid-cols-2 gap-4 [&>section]:h-full [&>div>section]:h-full' : 'max-w-[760px]'}>
-              {landOk && (
-                <LazyMount fallback={<div className="min-h-[480px] rounded-2xl bg-[var(--color-search-bg)]" />}>
-                  <LandProfileBlock data={landProfile!} permits={projectPermits} lang={lang} />
-                </LazyMount>
-              )}
-              <PlotSiteBlock plot={plotSite} hazards={geoFacts?.climate?.hazards} lang={lang} />
-            </div>
-          </DataChapter>
-        )}
 
         {(parentComplex || developer || devName) && (
           <section className="mb-10 grid grid-cols-1 md:grid-cols-2 gap-4">

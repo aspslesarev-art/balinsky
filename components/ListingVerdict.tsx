@@ -61,9 +61,11 @@ const COPY = {
     comfortShort: (v: Verdict) => v.comfort.airportMin != null ? `До аэропорта около ${v.comfort.airportMin} мин.` : '',
     demandAnswer: (v: Verdict, m: MonthlyBundle | null) => v.demand.monthlyOnly
       ? (m && m.n >= 10 ? 'Сдавать можно только надолго - спрос на это есть' : 'Сдавать можно только надолго, а таких предложений рядом мало')
+      : v.demand.ownOccupancy != null ? (v.demand.tone === 'plus' ? 'Этот комплекс уже хорошо сдаётся на Booking' : 'Комплекс сдаётся на Booking, но занят не полностью')
       : v.demand.tone === 'plus' ? 'Похожие объекты рядом сдаются хорошо' : 'Спрос есть, но не высокий',
     demandShort: (v: Verdict, m: MonthlyBundle | null) => v.demand.monthlyOnly
       ? `Туристам посуточно нельзя: земля под жильё.${m ? ` Надолго рядом сдают ${m.n} ${pluralRu(m.n, ['похожий объект', 'похожих объекта', 'похожих объектов'])}.` : ''}`
+      : v.demand.ownOccupancy != null ? `Занят примерно ${Math.round(v.demand.ownOccupancy * 100)}% ночей.`
       : '',
     moneyAnswer: (y: YieldFacts | null) => y ? `Около ${pctFmt(y.pct.beforeTax)} в год до налогов, ${pctFmt(y.pct.nonResident)} - если вы не резидент` : 'Посчитать доход пока не из чего',
     moneyShort: (y: YieldFacts | null, diff: number | null) => [
@@ -102,7 +104,7 @@ const COPY = {
     landNoteYellow: ' Жёлтая зона - для жилья: жить и сдавать надолго можно, посуточно - нельзя.',
     devT: (n: string | null) => n ? `Застройщик ${n}` : 'Застройщик', devProjects: 'Проектов на Бали', devReady: 'Сданных проектов',
     devNone: 'не видим', devOf: (r: number, t: number) => `${r} из ${t}`, floodSlide: 'Наводнения, оползни',
-    airportChip: (m: number) => `${m} мин до аэропорта`, neighboursChip: 'Соседние виллы на Booking', yResShort: 'Резидент', yNonShort: 'Нерезидент',
+    airportChip: (m: number) => `${m} мин до аэропорта`, neighboursChip: 'Соседи на Booking', yResShort: 'Резидент', yNonShort: 'Нерезидент',
     devNote: 'Сданных объектов у застройщика пока нет. Спросите, что они уже построили, и съездите посмотреть.',
     devNoteOk: 'Съездите посмотреть сданные проекты - так проще всего оценить качество.',
     natureT: 'Природа', natureNote: 'По официальной карте рисков Индонезии (InaRISK).',
@@ -165,9 +167,11 @@ const COPY = {
     comfortShort: (v: Verdict) => v.comfort.airportMin != null ? `About ${v.comfort.airportMin} min to the airport.` : '',
     demandAnswer: (v: Verdict, m: MonthlyBundle | null) => v.demand.monthlyOnly
       ? (m && m.n >= 10 ? 'Only long-term rental is allowed - and there is demand for it nearby' : 'Only long-term rental is allowed, and few similar listings nearby')
+      : v.demand.ownOccupancy != null ? (v.demand.tone === 'plus' ? 'This complex already rents well on Booking' : 'The complex rents on Booking but is not fully booked')
       : v.demand.tone === 'plus' ? 'Similar places nearby rent well' : 'There is demand nearby, but not high',
     demandShort: (v: Verdict, m: MonthlyBundle | null) => v.demand.monthlyOnly
       ? `Nightly rental to tourists is not allowed: residential land.${m ? ` ${m.n} similar places nearby rent monthly.` : ''}`
+      : v.demand.ownOccupancy != null ? `Booked about ${Math.round(v.demand.ownOccupancy * 100)}% of nights.`
       : '',
     moneyAnswer: (y: YieldFacts | null) => y ? `About ${pctFmtEn(y.pct.beforeTax)} a year before tax, ${pctFmtEn(y.pct.nonResident)} for non-residents` : 'Not enough data to estimate income yet',
     moneyShort: (y: YieldFacts | null, diff: number | null) => [
@@ -205,7 +209,7 @@ const COPY = {
     landNoteYellow: ' Yellow zone is residential land: living and long-term rental are fine, nightly rental to tourists is not.',
     devT: (n: string | null) => n ? `Developer ${n}` : 'Developer', devProjects: 'Projects in Bali', devReady: 'Completed projects',
     devNone: 'none seen', devOf: (r: number, t: number) => `${r} of ${t}`, floodSlide: 'Floods, landslides',
-    airportChip: (m: number) => `${m} min to the airport`, neighboursChip: 'Neighbouring villas on Booking', yResShort: 'Resident', yNonShort: 'Non-resident', devNote: 'A new developer is not necessarily a bad one, but there is no track record of handovers yet. Ask what they have built and go and see it.',
+    airportChip: (m: number) => `${m} min to the airport`, neighboursChip: 'Neighbours on Booking', yResShort: 'Resident', yNonShort: 'Non-resident', devNote: 'A new developer is not necessarily a bad one, but there is no track record of handovers yet. Ask what they have built and go and see it.',
     devNoteOk: 'You can visit their completed projects - the best way to judge quality.',
     natureT: 'Nature', natureNote: 'From Indonesia’s official hazard map (InaRISK).',
     hz: { flood: 'Floods', flash_flood: 'Flash floods', landslide: 'Landslides', tsunami: 'Tsunami', volcano: 'Volcano', earthquake: 'Earthquakes' } as Record<string, string>,
@@ -324,7 +328,7 @@ export function ListingVerdict({ verdict: v, yields: y, monthly, saleDiff, under
 
   const visual = (key: 'safety' | 'comfort' | 'demand' | 'money'): ReactNode => {
     if (key === 'safety' && safetyRows.length) return (
-      <div className="flex h-40 flex-col justify-center gap-2.5 bg-[#FBF3F2] px-6">
+      <div className={`flex h-40 flex-col justify-center gap-2.5 px-6 ${v.safety.tone === 'plus' ? 'bg-[var(--color-primary-soft)]' : v.safety.tone === 'warn' ? 'bg-[#FDF4E7]' : 'bg-[#FBF3F2]'}`}>
         {safetyRows.map(r => (
           <div key={r.k} className="flex justify-between gap-4 text-[15px]">
             <span className="text-[var(--color-text)]">{r.k}</span>

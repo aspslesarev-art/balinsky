@@ -41,12 +41,20 @@ const cx = await all(`raw_complexes?select=airtable_id,p:data->>Project&airtable
 const names = new Set(cx.map(c => String(c.p ?? '').trim().toLowerCase()).filter(Boolean))
 const idSet = new Set(complexIds)
 
+// Название комплекса целиком, а не кусок: «oasis ii» не должно находиться в «oasis iii».
+const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+const wholeName = (text, name) => new RegExp(`(^|[^\\p{L}\\p{N}])${esc(name)}($|[^\\p{L}\\p{N}])`, 'u').test(text)
+
 // Ссылка «Комплекс» у части юнитов хранит старый id — сверяем ещё по названию.
 async function units(table) {
-  const rows = await all(`${table}?select=airtable_id,k:data->Комплекс,k1:data->>Комплекс 1,pub:data->>Опубликовать`)
+  const rows = await all(`${table}?select=airtable_id,k:data->Комплекс,k1:data->>Комплекс 1,t:data->>%22SEO:Title%22,pub:data->>Опубликовать`)
+  // Без ссылки и названия комплекса — по названию комплекса в заголовке
+  // (так же делает lib/investment/snapshot.ts).
+  const longNames = [...names].filter(n => n.length >= 5)
   return rows.filter(r => r.pub === 'true' && (
     (Array.isArray(r.k) && r.k.some(x => idSet.has(String(x)))) ||
-    names.has(String(r.k1 ?? '').trim().toLowerCase())
+    names.has(String(r.k1 ?? '').trim().toLowerCase()) ||
+    longNames.some(n => wholeName(String(r.t ?? '').toLowerCase(), n))
   )).map(r => r.airtable_id).sort()
 }
 

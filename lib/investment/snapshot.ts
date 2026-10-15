@@ -102,7 +102,7 @@ function roomBedrooms(roomType: string | null): number | null {
 
 // Решение владельца 15.10.2026: если объект виден на Booking — считать
 // по тому, что там есть, а не по средней загрузке 60%.
-async function loadOwnBooking(complexId: string | null, complexName: string | null, bedrooms: number | null): Promise<OwnBooking | null> {
+async function loadOwnBooking(complexId: string | null, complexName: string | null, title: string | null, bedrooms: number | null): Promise<OwnBooking | null> {
   // Ссылка «Комплекс» у части юнитов хранит старый id из Airtable, которого
   // нет среди raw_complexes, — тогда находим комплекс по названию.
   const ids0 = complexId ? [complexId] : []
@@ -112,9 +112,31 @@ async function loadOwnBooking(complexId: string | null, complexName: string | nu
     const { data: byName } = await sb.from('raw_complexes').select('airtable_id, p:data->>Project').ilike('data->>Project', `${name.replace(/[%_]/g, '')}%`).limit(10)
     for (const r of byName ?? []) if (String(r.p ?? '').trim().toLowerCase() === name) ids0.push(String(r.airtable_id))
   }
-  if (!ids0.length) return null
-  const { data: links, error } = await sb.from('complex_booking_match').select('booking_id').in('complex_id', ids0)
-  if (error || !links?.length) return null
+  let links: { booking_id: number }[] = []
+  if (ids0.length) {
+    const { data, error } = await sb.from('complex_booking_match').select('booking_id').in('complex_id', ids0)
+    if (error) return null
+    links = data ?? []
+  }
+  // Ссылка есть, но старая, или её нет вовсе (часть апартаментов) — ищем
+  // название комплекса из таблицы совпадений в заголовке объекта.
+  if (!links.length && title) {
+    const { data: m } = await sb.from('complex_booking_match').select('complex_id, booking_id')
+    const cids = [...new Set((m ?? []).map(r => String(r.complex_id)))]
+    if (cids.length) {
+      const { data: cx } = await sb.from('raw_complexes').select('airtable_id, p:data->>Project').in('airtable_id', cids)
+      const t = title.toLowerCase()
+      const hit = new Set<string>()
+      for (const c of cx ?? []) {
+        const n = String(c.p ?? '').trim().toLowerCase()
+        // Целым названием: «oasis ii» не должно находиться в «oasis iii».
+        const esc = n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        if (n.length >= 5 && new RegExp(`(^|[^\\p{L}\\p{N}])${esc}($|[^\\p{L}\\p{N}])`, 'u').test(t)) hit.add(String(c.airtable_id))
+      }
+      links = (m ?? []).filter(r => hit.has(String(r.complex_id))).map(r => ({ booking_id: Number(r.booking_id) }))
+    }
+  }
+  if (!links.length) return null
   const ids = links.map(l => Number(l.booking_id))
   const [{ data: locs }, { data: rooms }] = await Promise.all([
     sb.from('booking_data_locations').select('id, title, occupancy, price').in('id', ids),
@@ -193,7 +215,7 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
 
   const region = regionFor(lat, lng)
   const complexId = Array.isArray(d['Комплекс']) ? (d['Комплекс'] as unknown[]).map(String)[0] ?? null : firstString(d['Комплекс'])
-  const ownBookingP = loadOwnBooking(complexId, firstString(d['Комплекс 1']), bedrooms).catch(() => null)
+  const ownBookingP = loadOwnBooking(complexId, firstString(d['Комплекс 1']), title, bedrooms).catch(() => null)
 
   // Pull data: 2km competitors + nearby places + baliforum curated places
   const [allInRadius, places, baliforum] = await Promise.all([

@@ -1270,6 +1270,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
     yields,
     saleDiffPct: saleComps?.diffPct ?? null,
     hasPool: verdictSnap?.villa.hasPool ?? null,
+    ownOccupancy: verdictSnap?.ownBooking?.occupancy ?? null,
   })
   const qh = questionHeaders(verdict, yields, monthly, saleComps?.diffPct ?? null, underConstruction, lang)
   const asQuestion = (h: typeof qh.safety) => ({ kicker: h.kicker, title: h.title, status: h.status, pillClass: TONE_PILL_CLASS[h.tone], lead: h.lead })

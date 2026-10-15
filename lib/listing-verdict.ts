@@ -19,10 +19,10 @@ export type Tone = 'plus' | 'warn' | 'minus'
 // Снимок для калькулятора тяжёлый (соседи, карта), а страница его
 // перестраивала бы на каждый запрос — держим сутки (данные Booking и так
 // обновляются раз в день), правка объекта сбрасывает тег content:villas.
-export const loadVerdictSnapshot = (id: string) => unstable_cache(
-  async () => buildSnapshot(id, 'villa'),
-  ['verdict-snapshot-v2', id],
-  { revalidate: 86400, tags: ['content:villas'] },
+export const loadVerdictSnapshot = (id: string, kind: 'villa' | 'apartment' = 'villa') => unstable_cache(
+  async () => buildSnapshot(id, kind),
+  ['verdict-snapshot-v3', kind, id],
+  { revalidate: 86400, tags: [kind === 'apartment' ? 'content:apartments' : 'content:villas'] },
 )().catch(() => null)
 
 export type ComplexFacts = {
@@ -140,12 +140,14 @@ export type VerdictInput = {
   yields: YieldFacts | null
   saleDiffPct: number | null
   hasPool: boolean | null
+  /** Загрузка самого комплекса на Booking (0..1), если он там сдаётся. */
+  ownOccupancy?: number | null
 }
 
 export type Verdict = {
   safety: { tone: Tone; permitMissing: boolean; notStarted: boolean; noFinishedProjects: boolean; hazards: { key: string; level: 'none' | 'low' | 'medium' | 'high' }[] }
   comfort: { tone: Tone; airportMin: number | null; airportBand: 'near' | 'mid' | 'far' | null; flat: boolean | null; roadM: number | null }
-  demand: { tone: Tone; monthlyOnly: boolean }
+  demand: { tone: Tone; monthlyOnly: boolean; ownOccupancy: number | null }
   money: { tone: Tone; pct: number | null }
   /** Сколько процентов прибавилось зданий в радиусе 1 км с первого года наблюдений. */
   buildingsGrowthPct: number | null
@@ -179,8 +181,10 @@ export function buildVerdict(i: VerdictInput): Verdict {
   const comfortTone: Tone = airportBand === 'near' ? 'plus' : airportBand === 'far' ? 'minus' : 'warn'
 
   const monthlyOnly = i.rentalRestricted
+  // Комплекс сам на Booking — спрос по его загрузке, а не по соседям.
   const demandTone: Tone = monthlyOnly
     ? (i.monthly && i.monthly.n >= 10 ? 'warn' : 'minus')
+    : i.ownOccupancy != null ? (i.ownOccupancy >= 0.7 ? 'plus' : i.ownOccupancy >= 0.5 ? 'warn' : 'minus')
     : (i.daily && i.daily.count >= 5 && (i.daily.occupancyPct ?? 0) >= 70 ? 'plus' : 'warn')
 
   const pct = i.yields?.pct.beforeTax ?? null
@@ -210,7 +214,7 @@ export function buildVerdict(i: VerdictInput): Verdict {
   return {
     safety: { tone: safetyTone, permitMissing, notStarted, noFinishedProjects, hazards },
     comfort: { tone: comfortTone, airportMin: i.airportMin, airportBand, flat, roadM: plot?.road.m ?? null },
-    demand: { tone: demandTone, monthlyOnly },
+    demand: { tone: demandTone, monthlyOnly, ownOccupancy: monthlyOnly ? null : i.ownOccupancy ?? null },
     money: { tone: moneyTone, pct },
     buildingsGrowthPct,
     pluses,
