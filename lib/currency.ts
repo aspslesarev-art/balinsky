@@ -19,12 +19,57 @@ export function isCurrency(v: unknown): v is Currency {
   return typeof v === 'string' && v in CURRENCY_RATES
 }
 
-// Валюта по стране посетителя: в Индонезии цены привычнее в рупиях, в России —
-// в рублях. Для всех остальных стран остаётся доллар — общая валюта сделок по
-// недвижимости на Бали.
+// Валюта по стране посетителя (решение владельца 15.10.2026): Индонезия —
+// рупии, Россия — рубли, США — доллары, Европа — евро, Украина — гривны.
+// Остальным — рупии: по правилам Банка Индонезии цена по умолчанию в рупиях.
+// Всегда ОДНА валюта на экране — рупии рядом с другой валютой запрещены.
 const COUNTRY_CURRENCY: Record<string, Currency> = {
   ID: 'IDR',
   RU: 'RUB',
+  US: 'USD',
+  UA: 'UAH',
+  AT: 'EUR',
+  BE: 'EUR',
+  BG: 'EUR',
+  HR: 'EUR',
+  CY: 'EUR',
+  CZ: 'EUR',
+  DK: 'EUR',
+  EE: 'EUR',
+  FI: 'EUR',
+  FR: 'EUR',
+  DE: 'EUR',
+  GR: 'EUR',
+  HU: 'EUR',
+  IE: 'EUR',
+  IT: 'EUR',
+  LV: 'EUR',
+  LT: 'EUR',
+  LU: 'EUR',
+  MT: 'EUR',
+  NL: 'EUR',
+  PL: 'EUR',
+  PT: 'EUR',
+  RO: 'EUR',
+  SK: 'EUR',
+  SI: 'EUR',
+  ES: 'EUR',
+  SE: 'EUR',
+  GB: 'EUR',
+  CH: 'EUR',
+  NO: 'EUR',
+  IS: 'EUR',
+  LI: 'EUR',
+  MC: 'EUR',
+  SM: 'EUR',
+  VA: 'EUR',
+  AD: 'EUR',
+  ME: 'EUR',
+  AL: 'EUR',
+  RS: 'EUR',
+  MK: 'EUR',
+  BA: 'EUR',
+  MD: 'EUR',
 }
 
 export function currencyForCountry(country: string | null): Currency | null {

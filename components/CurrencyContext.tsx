@@ -3,15 +3,14 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { detectLang, pickCopy } from '@/lib/i18n'
 import { usePathname } from 'next/navigation'
-import { ALL_CURRENCIES, isCurrency, type Currency } from '@/lib/currency'
+import { ALL_CURRENCIES, currencyForCountry, isCurrency, type Currency } from '@/lib/currency'
+import { countryByTimezone, resolveCountry } from '@/lib/geo'
 
 const LS_KEY = 'balinsky.currency'
 
-// С 15.10.2026 (решение владельца по правилам Банка Индонезии, SE 17/11/DKSP):
-// цены по умолчанию у всех — только в рупиях. Другая валюта — только если
-// человек сам выбрал её в переключателе, и тогда вместо рупий, а не рядом:
-// «Rp … и $…» одновременно — запрещённая двойная цена (dual quotation).
-// `secondary` оставлен для совместимости и всегда null.
+// Валюта: явный выбор человека → страна по IP (lib/currency COUNTRY_CURRENCY)
+// → рупии. На экране всегда одна валюта: «Rp … и $…» одновременно — двойная
+// цена, запрещённая Банком Индонезии (SE 17/11/DKSP). `secondary` всегда null.
 type Ctx = {
   currency: Currency
   selected: Currency
@@ -25,14 +24,20 @@ const CurrencyContext = createContext<Ctx | null>(null)
 
 export function CurrencyProvider({ children }: { children: ReactNode }) {
   const [explicit, setExplicit] = useState<Currency | null>(null)
+  const [geo, setGeo] = useState<Currency | null>(null)
 
-  // Только явный выбор человека; страну больше не спрашиваем — по умолчанию
-  // у всех рупии (см. комментарий к Ctx).
   useEffect(() => {
     try {
       const v = localStorage.getItem(LS_KEY)
-      if (isCurrency(v)) setExplicit(v)
+      if (isCurrency(v)) { setExplicit(v); return }
     } catch { /* SSR / private mode */ }
+    // Мгновенная подсказка по часовому поясу, потом IP подтверждает или поправляет.
+    setGeo(currencyForCountry(countryByTimezone()))
+    let alive = true
+    resolveCountry().then(country => {
+      if (alive && country) setGeo(currencyForCountry(country))
+    })
+    return () => { alive = false }
   }, [])
 
   const setCurrency = (c: Currency) => {
@@ -40,7 +45,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     try { localStorage.setItem(LS_KEY, c) } catch { /* ignore */ }
   }
 
-  const selected = explicit ?? 'IDR'
+  const selected = explicit ?? geo ?? 'IDR'
   const value: Ctx = {
     currency: selected,
     selected,
