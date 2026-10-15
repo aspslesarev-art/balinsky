@@ -372,7 +372,7 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
   const baseRegion = regionFor(lat, lng)
   // Загрузка: вместо одних 60% для всех — загрузка похожих объявлений вокруг.
   // Проверено 16.10.2026 на 39 комплексах со своими объявлениями на Booking:
-  // ошибка 6,5 п. против 22 п. у 60% (.tmp-rank/calib.ts).
+  // ошибка 6,5 п. против 22 п. у 60% (scripts/yield-check/calib.ts).
   const marketOccupancy = await loadMarketOccupancy(lat, lng, kind, bedrooms).catch(() => null)
   const region: RegionDefaults = marketOccupancy ? {
     ...baseRegion,
@@ -464,7 +464,7 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
     // Цена соседей — это средний старый фонд, а дорогой объект сдаётся дороже.
     // Поэтому ставка — среднее геометрическое цены соседей и «нормы» для
     // объекта такой стоимости (adrPerPriceUsd). На тех же комплексах ошибка
-    // дохода 25% против 33% только по соседям (.tmp-rank/calib.ts).
+    // дохода 25% против 33% только по соседям (scripts/yield-check/calib.ts).
     const q = basis.length > 0 ? adrPercentiles(basis) : null
     const byPrice = askingPrice != null && askingPrice > 0 ? askingPrice * region.adrPerPriceUsd[kind] : null
     const blend = (nb: number) => byPrice != null ? Math.sqrt(nb * byPrice) : nb
