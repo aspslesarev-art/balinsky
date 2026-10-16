@@ -1355,7 +1355,8 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
               {marketOk && !rentalRestricted && (
                 <GatedBlock kind="market" lang={lang}>
-                  <MarketStatsBlock data={marketStats!} lang={lang} />
+                  <MarketStatsBlock data={marketStats!} lang={lang}
+                    occupancy={verdictSnap?.marketOccupancy ? { value: verdictSnap.marketOccupancy.occupancy, kind: 'apartment' } : null} />
                 </GatedBlock>
               )}
               {demand && <UnitDemandBlock demand={demand} lang={lang} />}

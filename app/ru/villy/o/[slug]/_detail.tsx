@@ -1503,7 +1503,8 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
               {/* На жёлтой земле «выручка посуточно» вводит в заблуждение — соседей показывает DemandSummary. */}
               {marketOk && !rentalRestricted && (
                 <GatedBlock kind="market" lang={lang}>
-                  <MarketStatsBlock data={marketStats!} lang={lang} />
+                  <MarketStatsBlock data={marketStats!} lang={lang}
+                    occupancy={verdictSnap?.marketOccupancy ? { value: verdictSnap.marketOccupancy.occupancy, kind: 'villa' } : null} />
                 </GatedBlock>
               )}
               {demand && <UnitDemandBlock demand={demand} lang={lang} />}

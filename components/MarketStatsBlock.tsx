@@ -20,7 +20,7 @@ const COPY = {
     adr: 'Средняя цена за ночь',
     adrHint: 'Сколько в среднем платит гость за ночь (ADR — Average Daily Rate).',
     annual: 'Сценарий: выручка за год при 65%',
-    annualHint: 'Цена за ночь × 365 × 65%. Это сценарий, а не факт: надёжных данных о загрузке на Бали нет. До расходов на площадки, управление и налоги.',
+    annualHint: 'Цена за ночь × 365 × 65%. Это сценарий, а не факт: загрузку для конкретного объекта считаем на его странице. До расходов на площадки, управление и налоги.',
     range: 'при 55–75%: ',
     sourceTitle: 'Источник',
     estateMarket: 'estatemarket.io',
@@ -183,6 +183,17 @@ const COPY = {
   },
 } as const
 
+// Выручка по загрузке района — той же, что считает страница объекта
+// (lib/investment/snapshot.ts, marketOccupancy). Пока только по-русски:
+// для остальных языков блок показывает прежний сценарий 65%.
+const OCC_COPY: Partial<Record<Lang, { annual: (pct: number) => string; hint: (pct: number) => string; range: (lo: number, hi: number) => string }>> = {
+  ru: {
+    annual: pct => `Выручка за год при загрузке ${pct}%`,
+    hint: pct => `Цена за ночь × 365 × ${pct}%. ${pct}% - загрузка похожих объектов рядом по календарям Booking: берём уровень чуть ниже середины, новые объекты сдаются хуже раскрученных. До расходов на площадки, управление и налоги.`,
+    range: (lo, hi) => `при ${lo}–${hi}%: `,
+  },
+}
+
 type Copy = { [K in keyof (typeof COPY)['ru']]: (typeof COPY)['ru'][K] extends (...args: infer A) => infer R ? (...args: A) => R : string }
 
 // Scenario figures to the nearest $100 — more digits would be false precision.
@@ -196,8 +207,14 @@ function Money({ usd, lang }: { usd: number | null; lang: Lang }) {
   return <InlinePrice usd={Math.round(usd)} lang={lang} />
 }
 
-export function MarketStatsBlock({ data, lang = 'ru' }: { data: ComplexMarketStats; lang?: Lang }) {
+export function MarketStatsBlock({ data, lang = 'ru', occupancy = null }: {
+  data: ComplexMarketStats
+  lang?: Lang
+  /** Загрузка района для этого объекта (0..1) и к какой карточке она относится. */
+  occupancy?: { value: number; kind: 'villa' | 'apartment' } | null
+}) {
   const c = pickCopy(COPY, lang)
+  const oc = occupancy && OCC_COPY[lang] ? { ...occupancy, copy: OCC_COPY[lang]! } : null
   if (data.villa_count === 0 && data.apartment_count === 0) return null
 
   return (
@@ -222,6 +239,7 @@ export function MarketStatsBlock({ data, lang = 'ru' }: { data: ComplexMarketSta
               label={c.villas}
               count={data.villa_count}
               adr={data.villa_adr_usd}
+              occ={oc?.kind === 'villa' ? oc : null}
               c={c}
             />
           )}
@@ -231,6 +249,7 @@ export function MarketStatsBlock({ data, lang = 'ru' }: { data: ComplexMarketSta
               label={c.apartments}
               count={data.apartment_count}
               adr={data.apartment_adr_usd}
+              occ={oc?.kind === 'apartment' ? oc : null}
               c={c}
             />
           )}
@@ -253,12 +272,13 @@ export function MarketStatsBlock({ data, lang = 'ru' }: { data: ComplexMarketSta
 }
 
 function SegmentCard({
-  icon: Icon, label, count, adr, c, lang,
+  icon: Icon, label, count, adr, occ, c, lang,
 }: {
   icon: typeof HomeIcon
   label: string
   count: number
   adr: number | null
+  occ?: { value: number; copy: NonNullable<(typeof OCC_COPY)['ru']> } | null
   c: Copy
   lang: Lang
 }) {
@@ -266,7 +286,12 @@ function SegmentCard({
   // assumption as /methodology. The estatemarket «occupancy» is the share of
   // blocked calendar dates (median ~95%), not nights sold, so it is neither
   // shown nor used: RevPAR × 365 on it roughly doubled the real figure.
-  const annual = adr != null ? adr * 365 * 0.65 : null
+  // Есть загрузка района у страницы объекта — считаем по ней, ±10 п. рядом.
+  const mid = occ ? occ.value : 0.65
+  const lo = occ ? Math.max(0.3, mid - 0.1) : 0.55
+  const hi = occ ? Math.min(0.95, mid + 0.1) : 0.75
+  const pct = (v: number) => Math.round(v * 100)
+  const annual = adr != null ? adr * 365 * mid : null
   return (
     <div className="py-1">
       <div className="flex items-center gap-2 text-[14px] font-semibold text-[var(--color-text)] mb-3 pb-2 border-b border-[var(--color-border)]">
@@ -278,8 +303,9 @@ function SegmentCard({
       </div>
       <div className="grid grid-cols-2 gap-x-4 gap-y-3">
         <Metric label={c.adr}    value={adr != null ? <Money usd={adr} lang={lang} /> : c.fewData} hint={c.adrHint} />
-        <Metric label={c.annual} value={annual != null ? <Money usd={round100(annual)} lang={lang} /> : '—'} tone="primary" hint={c.annualHint}
-          sub={adr != null ? <>{c.range}<Money usd={round100(adr * 365 * 0.55)} lang={lang} />–<Money usd={round100(adr * 365 * 0.75)} lang={lang} /></> : null} />
+        <Metric label={occ ? occ.copy.annual(pct(mid)) : c.annual} value={annual != null ? <Money usd={round100(annual)} lang={lang} /> : '—'} tone="primary"
+          hint={occ ? occ.copy.hint(pct(mid)) : c.annualHint}
+          sub={adr != null ? <>{occ ? occ.copy.range(pct(lo), pct(hi)) : c.range}<Money usd={round100(adr * 365 * lo)} lang={lang} />–<Money usd={round100(adr * 365 * hi)} lang={lang} /></> : null} />
       </div>
     </div>
   )
