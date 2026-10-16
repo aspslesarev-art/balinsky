@@ -503,7 +503,7 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
             {c.whoLine(m.bedroomsRelaxed ? null : bedrooms, m.radiusKm)}: {c.avg} <span className="whitespace-nowrap"><InlinePrice usd={m.p50} lang={lang} /></span> {c.perMonth}, {c.range} <span className="whitespace-nowrap"><InlinePrice usd={m.p25} lang={lang} approx={false} /></span> {c.to} <span className="whitespace-nowrap"><InlinePrice usd={m.p75} lang={lang} approx={false} /></span>.
           </p>
           <CardRail prevLabel={c.prev} nextLabel={c.next}>
-            {m.comps.map(comp => (
+            {[...m.comps].sort((a, b) => b.rentMonthUsd - a.rentMonthUsd).map(comp => (
               <a key={`${comp.url}-${comp.rentMonthUsd}`} href={comp.url ?? undefined} target="_blank" rel="nofollow noopener noreferrer" className={cardCls}>
                 {comp.photo && (
                   // Фото из объявления rumah123 — видно, что именно сдают по соседству.
@@ -533,7 +533,7 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
             </p>
           )}
           <CardRail prevLabel={c.prev} nextLabel={c.next}>
-            {dailyComps.slice(0, 12).map(comp => (
+            {[...dailyComps].sort((a, b) => b.adr - a.adr).slice(0, 12).map(comp => (
               <a key={comp.id} href={comp.url ?? undefined} target="_blank" rel="nofollow noopener noreferrer" className={cardCls}>
                 {comp.photo && (
                   // eslint-disable-next-line @next/next/no-img-element
