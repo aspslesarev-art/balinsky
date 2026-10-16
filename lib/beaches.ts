@@ -26,6 +26,8 @@ export type BeachProfile = {
   access_note?: string | null
   vibe: string | null
   why: string | null
+  /** Заведения в radius_m от точки пляжа (scripts/build-beach-counts.ts, bali_places). */
+  nearby?: { cafes: number; restaurants: number; bars: number; beach_clubs: number; radius_m: number } | null
   sources: string[]
 }
 

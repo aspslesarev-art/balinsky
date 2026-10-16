@@ -38,7 +38,14 @@
    "https://cdn.whereismybeach.com/en/beach/pantai-nusa-dua",
    "https://ultimatebali.com/inspiration/nusa-dua-travel-guide",
    "https://novotel.accor.com/a/en/great-escape-magazine/travel/water-sports-nusa-dua-bali.html"
-  ]
+  ],
+  "nearby": {
+   "cafes": 7,
+   "restaurants": 9,
+   "bars": 7,
+   "beach_clubs": 0,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -76,7 +83,14 @@
    "https://pickyourtrail.com/attractions/karma-beach-bali",
    "https://lokalee.app/tours/karma-beach-club-shuttle-services",
    "https://da.hotels.com/see/go/indonesia/karma-beach-bali"
-  ]
+  ],
+  "nearby": {
+   "cafes": 1,
+   "restaurants": 3,
+   "bars": 3,
+   "beach_clubs": 6,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -109,7 +123,14 @@
    "https://breakfinder.surf/en/surf_spots/berawa-beach",
    "https://www.balisurfingcamp.com/?p=14092",
    "https://www.mondo.surf/surf-spot/berawa/guide/11637"
-  ]
+  ],
+  "nearby": {
+   "cafes": 4,
+   "restaurants": 14,
+   "bars": 7,
+   "beach_clubs": 2,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -143,7 +164,14 @@
    "https://baliuntold.com/things-to-do/beaches/gunung-payung/",
    "https://www.hoteles.com/go/indonesia/gunung-payung-beach",
    "https://bali-home-immo.com/blog/bali-attractions/discover-gunung-payung-beach-2026-travel-guide-tips"
-  ]
+  ],
+  "nearby": {
+   "cafes": 0,
+   "restaurants": 2,
+   "bars": 0,
+   "beach_clubs": 0,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -174,7 +202,14 @@
   "sources": [
    "https://www.baliholidaysecrets.com/best-beaches-in-canggu/",
    "https://finnsbeachclub.com/guides/berawa-beach/"
-  ]
+  ],
+  "nearby": {
+   "cafes": 15,
+   "restaurants": 32,
+   "bars": 30,
+   "beach_clubs": 2,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -206,7 +241,14 @@
    "https://kura2bus.com/blog/hidden-treasures-of-uluwatu-beaches-5-must-visit-spots/",
    "https://www.agoda.com/travel-guides/indonesia/bali/exploring-suluban-beach-the-ultimate-guide-to-balis-hidden-surf-paradise",
    "https://en.hoteles.com/go/indonesia/suluban-beach-bali"
-  ]
+  ],
+  "nearby": {
+   "cafes": 15,
+   "restaurants": 24,
+   "bars": 15,
+   "beach_clubs": 0,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -238,7 +280,14 @@
    "https://bali.com/places/echo-beach-canggu/",
    "https://en.wikipedia.org/wiki/Canggu",
    "https://www.hoteles.com/go/indonesia/echo-beach"
-  ]
+  ],
+  "nearby": {
+   "cafes": 4,
+   "restaurants": 12,
+   "bars": 20,
+   "beach_clubs": 3,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -270,7 +319,14 @@
    "https://www.balisurfingcamp.com/surf-spots/canggu/batu-bolong",
    "https://waveexplorers.com/article/canggu-beach-guide/",
    "https://bali-home-immo.com/blog/where-to-surf-in-canggu-a-complete-guide-to-batu-bolong-old-man-s-and-echo-beach"
-  ]
+  ],
+  "nearby": {
+   "cafes": 20,
+   "restaurants": 24,
+   "bars": 24,
+   "beach_clubs": 1,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -302,7 +358,14 @@
    "https://bali.com/places/sawangan-beach-nusa-dua/",
    "https://lovebali.baliprov.go.id/destination/detail/245/pantai-geger-sawangan",
    "https://30sundays.club/blog/geger-sawangan-beach"
-  ]
+  ],
+  "nearby": {
+   "cafes": 3,
+   "restaurants": 4,
+   "bars": 1,
+   "beach_clubs": 0,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -338,7 +401,14 @@
    "https://balibuddies.com/mertasari-beach/",
    "https://greatruns.com/bali-sanur-beach/",
    "https://www.balitouristic.com/?p=33369"
-  ]
+  ],
+  "nearby": {
+   "cafes": 2,
+   "restaurants": 2,
+   "bars": 2,
+   "beach_clubs": 1,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -372,7 +442,14 @@
    "https://baliuntold.com/things-to-do/beaches/thomas-beach/",
    "https://ttbeach.club/blog/thomas-beach-uluwatu-guide",
    "https://bali-home-immo.com/blog/bali-attractions/discover-thomas-beach-2026-travel-guide-tips"
-  ]
+  ],
+  "nearby": {
+   "cafes": 2,
+   "restaurants": 16,
+   "bars": 7,
+   "beach_clubs": 0,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -407,7 +484,14 @@
    "https://30sundays.club/blog/jimbaran-bay",
    "https://wanderlog.com/explore/152/jimbaran",
    "https://www.balitouristic.com/?p=6862"
-  ]
+  ],
+  "nearby": {
+   "cafes": 3,
+   "restaurants": 18,
+   "bars": 8,
+   "beach_clubs": 1,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -438,7 +522,14 @@
   "sources": [
    "https://wanderlog.com/place/details/1890159/pantai-nyanyi",
    "https://seeker.io/place/tNqLg7lXq/pantai-nyanyi-tabanan-regency-bali-indonesia"
-  ]
+  ],
+  "nearby": {
+   "cafes": 6,
+   "restaurants": 6,
+   "bars": 0,
+   "beach_clubs": 0,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -472,7 +563,14 @@
    "https://finnsbeachclub.com/guides/melasti-beach-bali/",
    "https://bali-home-immo.com/blog/bali-attractions/discover-melasti-beach-2026-travel-guide-tips",
    "https://ttbeach.club/blog/melasti-beach-guide"
-  ]
+  ],
+  "nearby": {
+   "cafes": 0,
+   "restaurants": 3,
+   "bars": 1,
+   "beach_clubs": 4,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -504,7 +602,14 @@
    "https://baliuntold.com/things-to-do/beaches/green-bowl-beach/",
    "https://www.sunshineseeker.com/destinations/green-bowl-beach-bali/",
    "https://www.balisurfingcamp.com/?p=13825"
-  ]
+  ],
+  "nearby": {
+   "cafes": 0,
+   "restaurants": 2,
+   "bars": 0,
+   "beach_clubs": 0,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -536,39 +641,14 @@
    "https://breathingtravel.com/best-beaches-in-canggu/",
    "https://canggu.holidayinnresorts.com/blog/batu-bolong-beach",
    "https://www.baliholidaysecrets.com/best-beaches-in-canggu/"
-  ]
- },
- {
-  "ids": [
-   "ChIJlxx8YbZa0i0RXiP4c1QugGI"
   ],
-  "name_ru": "Пляж Паданг-Паданг",
-  "name_en": "Padang Padang Beach (Labuan Sait)",
-  "sand": "white",
-  "sand_note": "белый песок, пляж меньше 80 м",
-  "water": "moderate",
-  "water_note": "у берега лагуна, дальше рифовая волна; важен прилив/отлив",
-  "swim": "yes",
-  "swim_note": "лагуна у берега; дальше риф",
-  "kids": "with_care",
-  "kids_note": "ступеньки и риф",
-  "surf": "advanced",
-  "surf_note": "Padang Padang (Balinese Pipeline), левая волна над рифом; Outside Corner - для экспертов",
-  "activities": [],
-  "promenade": {
-   "exists": false,
-   "length_km": null,
-   "note": "нет"
-  },
-  "access": "stairs",
-  "access_note": "около 120 ступенек, 2-3 мин; обезьяны",
-  "vibe": "серфингисты, инстаграм",
-  "why": "Маленький пляж в скалах и знаменитая волна для опытных.",
-  "sources": [
-   "https://en.wikipedia.org/wiki/Padang_Padang_Beach",
-   "https://finnsbeachclub.com/guides/padang-padang-beach-bali/",
-   "https://thesurfatlas.com/bali-surf/surfing-padang-padang/"
-  ]
+  "nearby": {
+   "cafes": 19,
+   "restaurants": 23,
+   "bars": 26,
+   "beach_clubs": 1,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -604,7 +684,14 @@
    "https://nusapenida.org/toyapakeh/",
    "https://nusapenida.org/bali-nusa-penida-diving-guide/20-best-dive-sites-bali-nusa-penida/diving-toyapakeh/",
    "https://budayabali.com/exploration-of-toya-pakeh-beach-the-best-snorkeling-spot-in-nusa-penida"
-  ]
+  ],
+  "nearby": {
+   "cafes": 6,
+   "restaurants": 15,
+   "bars": 6,
+   "beach_clubs": 3,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -636,7 +723,14 @@
    "https://www.theaureview.com/travel/resort-review-karma-kandaras-dramatic-clifftop-location-is-unforgettable/",
    "https://littlestepsasia.com/bali/stay/family-friendly-hotels/karma-kandara",
    "https://beachsearcher.fr/fr/beach/360201108/karma-kandara-private-beach"
-  ]
+  ],
+  "nearby": {
+   "cafes": 1,
+   "restaurants": 3,
+   "bars": 3,
+   "beach_clubs": 6,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -677,7 +771,14 @@
    "https://ebooks.denpasartourism.com/en/pantai-sindu/",
    "https://greatruns.com/bali-sanur-beach/",
    "https://finnsbeachclub.com/guides/things-to-do-sanur-bali/"
-  ]
+  ],
+  "nearby": {
+   "cafes": 21,
+   "restaurants": 32,
+   "bars": 21,
+   "beach_clubs": 1,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -715,7 +816,14 @@
    "https://baliuntold.com/destinations/sanur/things-to-do/",
    "https://finnsbeachclub.com/guides/things-to-do-sanur-bali/",
    "https://greatruns.com/bali-sanur-beach/"
-  ]
+  ],
+  "nearby": {
+   "cafes": 12,
+   "restaurants": 22,
+   "bars": 18,
+   "beach_clubs": 1,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -746,7 +854,14 @@
   "sources": [
    "https://bali.com/places/petitenget-beach/",
    "https://www.baliholidaysecrets.com/petitenget-beach/"
-  ]
+  ],
+  "nearby": {
+   "cafes": 4,
+   "restaurants": 8,
+   "bars": 15,
+   "beach_clubs": 1,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -780,7 +895,14 @@
    "https://budayabali.com/muaya-beach-jimbaran-savoring-honey-clams-and-grilled-fish-amidst-the-golden-sunset",
    "https://www.lonelyplanet.com/points-of-interest/pantai-jimbaran/1285553",
    "https://www.balisurfingcamp.com/?p=14455"
-  ]
+  ],
+  "nearby": {
+   "cafes": 6,
+   "restaurants": 19,
+   "bars": 10,
+   "beach_clubs": 1,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -810,7 +932,14 @@
   "why": "Безлюдный чёрный пляж с маленьким храмом на скале.",
   "sources": [
    "https://budayabali.com/behind-the-waves-of-the-indian-ocean-pigstone-beach-as-a-hidden-landscape-of-bali"
-  ]
+  ],
+  "nearby": {
+   "cafes": 0,
+   "restaurants": 2,
+   "bars": 1,
+   "beach_clubs": 2,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -847,7 +976,14 @@
    "https://www.baliholidaysecrets.com/nusa-dua-beach/",
    "https://cdn.whereismybeach.com/en/beach/pantai-nusa-dua",
    "https://ayodyaresortbali.com/get-inspired/exploring-nusa-dua-beach/"
-  ]
+  ],
+  "nearby": {
+   "cafes": 4,
+   "restaurants": 8,
+   "bars": 2,
+   "beach_clubs": 1,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -879,7 +1015,14 @@
    "https://en.wikipedia.org/wiki/Padang_Padang_Beach",
    "https://finnsbeachclub.com/guides/padang-padang-beach-bali/",
    "https://thesurfatlas.com/bali-surf/surfing-padang-padang/"
-  ]
+  ],
+  "nearby": {
+   "cafes": 10,
+   "restaurants": 13,
+   "bars": 7,
+   "beach_clubs": 0,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -911,7 +1054,14 @@
    "https://www.baliholidaysecrets.com/seminyak-beach/",
    "https://cdn.whereismybeach.com/en/beach/pantai-seminyak",
    "https://kimasurf.com/surf-spots-on-seminyak"
-  ]
+  ],
+  "nearby": {
+   "cafes": 3,
+   "restaurants": 6,
+   "bars": 7,
+   "beach_clubs": 0,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -946,7 +1096,14 @@
    "https://sita.badungkab.go.id/en/destinations/enjoying-the-beauty-of-seseh-beach-a-peaceful-destination-in-bali",
    "https://es.hoteles.com/go/indonesia/pererenan-beach-and-seseh-beach",
    "https://whatsnewindonesia.com/bali/feature/seseh-beach-bali-where-sunsets-surf-and-serenity-meet"
-  ]
+  ],
+  "nearby": {
+   "cafes": 6,
+   "restaurants": 15,
+   "bars": 1,
+   "beach_clubs": 0,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -980,7 +1137,14 @@
    "https://baliuntold.com/things-to-do/beaches/pandawa-beach/",
    "https://30sundays.club/blog/pandawa-beach",
    "https://bali-home-immo.com/blog/bali-attractions/discover-pandawa-beach-2026-travel-guide-tips"
-  ]
+  ],
+  "nearby": {
+   "cafes": 10,
+   "restaurants": 26,
+   "bars": 3,
+   "beach_clubs": 0,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -1015,7 +1179,14 @@
    "https://www.mondo.surf/surf-spot/pererenan/guide/11670",
    "https://inivie.com/discover-bali/pererenan-bali",
    "https://www.kupi.com/en-ae/explore/indonesia/denpasar/pererenan-beach"
-  ]
+  ],
+  "nearby": {
+   "cafes": 4,
+   "restaurants": 9,
+   "bars": 20,
+   "beach_clubs": 2,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -1047,7 +1218,14 @@
    "https://baliuntold.com/things-to-do/beaches/nunggalan-beach/",
    "https://droneandslr.com/travel-blog/bali/nyang-nyang-nunggalan-beach/",
    "https://www.traveloka.com/en-th/explore/destination/uluwatu-beach-bali-acc/273649"
-  ]
+  ],
+  "nearby": {
+   "cafes": 1,
+   "restaurants": 3,
+   "bars": 1,
+   "beach_clubs": 1,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -1081,7 +1259,14 @@
    "https://sita.badungkab.go.id/en/destinations/enjoying-the-beauty-of-seseh-beach-a-peaceful-destination-in-bali",
    "https://whatsnewindonesia.com/bali/feature/seseh-beach-bali-where-sunsets-surf-and-serenity-meet",
    "https://www.villanovo.com/villa-rentals/asia/indonesia/bali/south-west-seseh"
-  ]
+  ],
+  "nearby": {
+   "cafes": 6,
+   "restaurants": 16,
+   "bars": 2,
+   "beach_clubs": 0,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -1113,7 +1298,14 @@
    "https://uk.hotels.com/go/indonesia/batubelig-beach",
    "https://www.balitouristic.com/batu-belig-beach/",
    "https://bali.com/?p=10132"
-  ]
+  ],
+  "nearby": {
+   "cafes": 1,
+   "restaurants": 4,
+   "bars": 6,
+   "beach_clubs": 1,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -1148,7 +1340,14 @@
    "https://www.travelfish.org/sight_profile/indonesia/bali/bali/legian/2984",
    "https://kwx.liehendr.com/content/wikivoyage_en_all_maxi_2025-02/A/Legian",
    "https://greatruns.com/bali-kuta-beach-seminyak/"
-  ]
+  ],
+  "nearby": {
+   "cafes": 3,
+   "restaurants": 11,
+   "bars": 24,
+   "beach_clubs": 1,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -1183,7 +1382,14 @@
    "https://beaches-searcher.com/en/beach/360201104/timbis-beach",
    "https://www.pelago.co/articles/best-paragliding-spots-in-bali/",
    "https://baliuntold.com/things-to-do/beaches/pandawa-beach/"
-  ]
+  ],
+  "nearby": {
+   "cafes": 0,
+   "restaurants": 3,
+   "bars": 1,
+   "beach_clubs": 1,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -1220,7 +1426,14 @@
    "https://originaldiving.com/far-east/indonesia/bali/crystal-bay",
    "https://twooutliers.com/best-beaches-nusa-penida/",
    "https://lesglobeblogueurs.com/visiter-nusa-penida-bali/"
-  ]
+  ],
+  "nearby": {
+   "cafes": 1,
+   "restaurants": 0,
+   "bars": 0,
+   "beach_clubs": 0,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -1259,7 +1472,14 @@
    "https://lovebali.baliprov.go.id/destination/detail/247/pantai-tanjung-benoa",
    "https://www.hoteles.com/go/indonesia/tanjung-benoa-beach",
    "https://www.bali-travel-life.com/bali-parasailing-banana-boat-jet-ski/"
-  ]
+  ],
+  "nearby": {
+   "cafes": 4,
+   "restaurants": 18,
+   "bars": 10,
+   "beach_clubs": 1,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -1295,7 +1515,14 @@
    "https://www.beachatlas.com/nl/werdhapura",
    "https://bali.com/places/sanur-beach/",
    "https://themerusanur.com/?p=24396"
-  ]
+  ],
+  "nearby": {
+   "cafes": 8,
+   "restaurants": 23,
+   "bars": 10,
+   "beach_clubs": 0,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -1328,7 +1555,14 @@
    "https://www.rapturecamps.com/blog/bingin-beach",
    "https://thesurfatlas.com/bali-surf/surfing-bingin-beach/",
    "https://www.surfindonesia.com/bali-surf-spots/bingin-beach/"
-  ]
+  ],
+  "nearby": {
+   "cafes": 8,
+   "restaurants": 7,
+   "bars": 6,
+   "beach_clubs": 0,
+   "radius_m": 500
+  }
  },
  {
   "ids": [
@@ -1360,6 +1594,13 @@
    "https://www.mondo.surf/surf-spot/nelayan-beach-canggu/guide/11663",
    "https://www.balisurfingcamp.com/blog/canggu-surfing-guide",
    "https://www.cafedelmarbali.co.id/best-beach-canggu"
-  ]
+  ],
+  "nearby": {
+   "cafes": 19,
+   "restaurants": 21,
+   "bars": 22,
+   "beach_clubs": 0,
+   "radius_m": 500
+  }
  }
 ]

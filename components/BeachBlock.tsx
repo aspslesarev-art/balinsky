@@ -7,6 +7,7 @@
 import { Waves } from 'lucide-react'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import type { BeachProfile } from '@/lib/beaches'
+import { pluralRu } from '@/lib/plural-ru'
 
 const COPY = {
   ru: {
@@ -22,6 +23,14 @@ const COPY = {
     promL: 'Набережная', promYes: (km: number | null) => (km ? `есть, ${String(km).replace('.', ',')} км` : 'есть'), promNo: 'нет',
     accessL: 'Как спуститься', access: { easy: 'просто', stairs: 'по лестнице', steep_path: 'крутая тропа', via_hotel_only: 'только через отель', boat: 'на лодке' } as Record<string, string>,
     vibeL: 'Кому подходит', whyL: 'Почему туда ходят',
+    nearL: 'У пляжа',
+    near: (n: NonNullable<BeachProfile['nearby']>) => [
+      n.cafes ? `${n.cafes} ${pluralRu(n.cafes, ['кафе', 'кафе', 'кафе'])}` : null,
+      n.restaurants ? `${n.restaurants} ${pluralRu(n.restaurants, ['ресторан', 'ресторана', 'ресторанов'])}` : null,
+      n.bars ? `${n.bars} ${pluralRu(n.bars, ['бар', 'бара', 'баров'])}` : null,
+      n.beach_clubs ? `${n.beach_clubs} ${pluralRu(n.beach_clubs, ['бич-клуб', 'бич-клуба', 'бич-клубов'])}` : null,
+    ].filter(Boolean).join(', ') + ` в ${n.radius_m} м`,
+    nearNone: (r: number) => `заведений в ${r} м нет`,
     notes: true,
   },
   en: {
@@ -37,6 +46,14 @@ const COPY = {
     promL: 'Promenade', promYes: (km: number | null) => (km ? `yes, ${km} km` : 'yes'), promNo: 'no',
     accessL: 'Getting down', access: { easy: 'easy', stairs: 'stairs', steep_path: 'steep path', via_hotel_only: 'through a hotel only', boat: 'by boat' } as Record<string, string>,
     vibeL: 'Who it suits', whyL: 'Why people go',
+    nearL: 'By the beach',
+    near: (n: NonNullable<BeachProfile['nearby']>) => [
+      n.cafes ? `${n.cafes} ${n.cafes === 1 ? 'café' : 'cafés'}` : null,
+      n.restaurants ? `${n.restaurants} ${n.restaurants === 1 ? 'restaurant' : 'restaurants'}` : null,
+      n.bars ? `${n.bars} ${n.bars === 1 ? 'bar' : 'bars'}` : null,
+      n.beach_clubs ? `${n.beach_clubs} ${n.beach_clubs === 1 ? 'beach club' : 'beach clubs'}` : null,
+    ].filter(Boolean).join(', ') + ` within ${n.radius_m} m`,
+    nearNone: (r: number) => `no venues within ${r} m`,
     notes: false,
   },
 }
@@ -49,7 +66,9 @@ export function BeachBlock({ beach: b, km, lang }: { beach: BeachProfile; km: nu
   const val = (label: string, s?: string | null) => {
     if (!c.notes || !s) return label
     const n = s[0].toLowerCase() + s.slice(1)
-    return n.includes(label.toLowerCase()) ? n : `${label} - ${n}`
+    // Целым словом: «вода» содержит «да», но значения «да» в ней нет.
+    const esc = label.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    return new RegExp(`(^|[\\s,.;:-])${esc}($|[\\s,.;:-])`, 'u').test(n) ? n : `${label} - ${n}`
   }
   // Пояснение к воде часто начинается тем же словом («волны - Волны, течения…»):
   // тогда показываем только пояснение.
@@ -61,6 +80,8 @@ export function BeachBlock({ beach: b, km, lang }: { beach: BeachProfile; km: nu
   if (b.swim) rows.push({ k: c.swimL, v: val(c.swim[b.swim], b.swim_note) })
   if (b.kids) rows.push({ k: c.kidsL, v: val(c.kids[b.kids], b.kids_note) })
   if (b.surf) rows.push({ k: c.surfL, v: val(c.surf[b.surf], b.surf_note) })
+  const nb = b.nearby
+  if (nb) rows.push({ k: c.nearL, v: nb.cafes + nb.restaurants + nb.bars + nb.beach_clubs > 0 ? c.near(nb) : c.nearNone(nb.radius_m) })
   const acts = (b.activities ?? []).map(a => c.act[a]).filter(Boolean)
   if (acts.length) rows.push({ k: c.actL, v: acts.join(', ') })
   if (b.promenade?.exists != null) rows.push({ k: c.promL, v: b.promenade.exists ? c.promYes(b.promenade.length_km) + note(b.promenade.note) : c.promNo })
