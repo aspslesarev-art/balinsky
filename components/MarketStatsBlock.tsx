@@ -37,7 +37,7 @@ const COPY = {
     adr: 'Average price per night',
     adrHint: 'What a guest typically pays for one night (ADR — Average Daily Rate).',
     annual: 'Scenario: gross a year at 65%',
-    annualHint: 'Nightly price × 365 × 65%. A scenario, not a fact: reliable occupancy data for Bali does not exist. Before platform fees, management and tax.',
+    annualHint: 'Nightly price × 365 × 65%. A scenario, not a fact: occupancy for a specific property is calculated on its own page. Before platform fees, management and tax.',
     range: 'at 55–75%: ',
     sourceTitle: 'Source',
     estateMarket: 'estatemarket.io',
@@ -54,7 +54,7 @@ const COPY = {
     adr: 'Harga rata-rata per malam',
     adrHint: 'Berapa yang biasanya dibayar tamu untuk satu malam (ADR — Average Daily Rate).',
     annual: 'Skenario: setahun dengan okupansi 65%',
-    annualHint: 'Harga per malam × 365 × 65%. Ini skenario, bukan fakta: data okupansi Bali yang andal tidak tersedia. Sebelum biaya platform, pengelolaan, dan pajak.',
+    annualHint: 'Harga per malam × 365 × 65%. Ini skenario, bukan fakta: okupansi untuk properti tertentu dihitung di halamannya sendiri. Sebelum biaya platform, pengelolaan, dan pajak.',
     range: 'pada 55–75%: ',
     sourceTitle: 'Sumber',
     estateMarket: 'estatemarket.io',
@@ -71,7 +71,7 @@ const COPY = {
     adr: 'Prix moyen par nuit',
     adrHint: 'Ce qu’un client paie habituellement pour une nuit (ADR — Average Daily Rate).',
     annual: 'Scénario : une année à 65 % d’occupation',
-    annualHint: 'Prix par nuit × 365 × 65 %. Un scénario, pas un fait : il n’existe pas de données fiables d’occupation à Bali. Avant commissions, gestion et impôts.',
+    annualHint: 'Prix par nuit × 365 × 65 %. Un scénario, pas un fait : l’occupation d’un bien précis est calculée sur sa propre page. Avant commissions, gestion et impôts.',
     range: 'à 55–75 % : ',
     sourceTitle: 'Source',
     estateMarket: 'estatemarket.io',
@@ -88,7 +88,7 @@ const COPY = {
     adr: 'Durchschnittspreis pro Nacht',
     adrHint: 'Was ein Gast typischerweise für eine Nacht zahlt (ADR — Average Daily Rate).',
     annual: 'Szenario: ein Jahr bei 65 % Auslastung',
-    annualHint: 'Preis pro Nacht × 365 × 65 %. Ein Szenario, keine Tatsache: verlässliche Auslastungsdaten für Bali gibt es nicht. Vor Plattformgebühren, Verwaltung und Steuern.',
+    annualHint: 'Preis pro Nacht × 365 × 65 %. Ein Szenario, keine Tatsache: die Auslastung eines bestimmten Objekts wird auf seiner eigenen Seite berechnet. Vor Plattformgebühren, Verwaltung und Steuern.',
     range: 'bei 55–75 %: ',
     sourceTitle: 'Quelle',
     estateMarket: 'estatemarket.io',
@@ -105,7 +105,7 @@ const COPY = {
     adr: '每晚平均价格',
     adrHint: '客人通常一晚支付的金额 (ADR — Average Daily Rate)。',
     annual: '情景：入住率 65% 时的一年',
-    annualHint: '每晚价格 × 365 × 65%。这是情景而非事实：巴厘岛没有可靠的入住率数据。未扣除平台佣金、管理费和税费。',
+    annualHint: '每晚价格 × 365 × 65%。这是情景而非事实：具体房源的入住率在其页面上单独计算。未扣除平台佣金、管理费和税费。',
     range: '55–75% 时：',
     sourceTitle: '来源',
     estateMarket: 'estatemarket.io',
@@ -122,7 +122,7 @@ const COPY = {
     adr: 'Gemiddelde prijs per nacht',
     adrHint: 'Wat een gast doorgaans betaalt voor één nacht (ADR — Average Daily Rate).',
     annual: 'Scenario: een jaar bij 65% bezetting',
-    annualHint: 'Prijs per nacht × 365 × 65%. Een scenario, geen feit: betrouwbare bezettingsdata voor Bali bestaan niet. Vóór platformkosten, beheer en belasting.',
+    annualHint: 'Prijs per nacht × 365 × 65%. Een scenario, geen feit: de bezetting van een specifiek object wordt op zijn eigen pagina berekend. Vóór platformkosten, beheer en belasting.',
     range: 'bij 55–75%: ',
     sourceTitle: 'Bron',
     estateMarket: 'estatemarket.io',
@@ -139,7 +139,7 @@ const COPY = {
     adr: 'Aji rata-rata sabilang wengi',
     adrHint: 'Sapunapi akéhné tamiu mayah sabilang awengi (ADR — Average Daily Rate).',
     annual: 'Skenario: awarsa ring okupansi 65%',
-    annualHint: 'Aji awengi × 365 × 65%. Puniki skenario, boya fakta: data okupansi Bali sane kapercaya nenten wenten. Sadurung biaya platform, pangelolaan, miwah pajak.',
+    annualHint: 'Aji awengi × 365 × 65%. Puniki skenario, boya fakta: okupansi properti sane tertentu kaitung ring halamannyane. Sadurung biaya platform, pangelolaan, miwah pajak.',
     range: 'ring 55–75%: ',
     sourceTitle: 'Sumber',
     estateMarket: 'estatemarket.io',
@@ -156,7 +156,7 @@ const COPY = {
     adr: 'Średnia cena za noc',
     adrHint: 'Ile gość zwykle płaci za jedną noc (ADR — Average Daily Rate).',
     annual: 'Scenariusz: rok przy obłożeniu 65%',
-    annualHint: 'Cena za noc × 365 × 65%. To scenariusz, nie fakt: wiarygodnych danych o obłożeniu na Bali nie ma. Przed prowizjami platform, zarządzaniem i podatkiem.',
+    annualHint: 'Cena za noc × 365 × 65%. To scenariusz, nie fakt: obłożenie konkretnego obiektu liczymy na jego stronie. Przed prowizjami platform, zarządzaniem i podatkiem.',
     range: 'przy 55–75%: ',
     sourceTitle: 'Źródło',
     estateMarket: 'estatemarket.io',
@@ -173,7 +173,7 @@ const COPY = {
     adr: 'Середня ціна за ніч',
     adrHint: 'Скільки в середньому платить гість за ніч (ADR — Average Daily Rate).',
     annual: 'Сценарій: рік за завантаження 65%',
-    annualHint: 'Ціна за ніч × 365 × 65%. Це сценарій, а не факт: надійних даних про завантаження на Балі немає. До витрат на платформи, управління й податки.',
+    annualHint: 'Ціна за ніч × 365 × 65%. Це сценарій, а не факт: завантаження для конкретного об’єкта рахуємо на його сторінці. До витрат на платформи, управління й податки.',
     range: 'за 55–75%: ',
     sourceTitle: 'Джерело',
     estateMarket: 'estatemarket.io',
@@ -184,13 +184,58 @@ const COPY = {
 } as const
 
 // Выручка по загрузке района — той же, что считает страница объекта
-// (lib/investment/snapshot.ts, marketOccupancy). Пока только по-русски:
-// для остальных языков блок показывает прежний сценарий 65%.
+// (lib/investment/snapshot.ts, marketOccupancy). Без неё (страница
+// комплекса) — прежний сценарий 65%.
 const OCC_COPY: Partial<Record<Lang, { annual: (pct: number) => string; hint: (pct: number) => string; range: (lo: number, hi: number) => string }>> = {
   ru: {
     annual: pct => `Выручка за год при загрузке ${pct}%`,
     hint: pct => `Цена за ночь × 365 × ${pct}%. ${pct}% - загрузка похожих объектов рядом по календарям Booking: берём уровень чуть ниже середины, новые объекты сдаются хуже раскрученных. До расходов на площадки, управление и налоги.`,
     range: (lo, hi) => `при ${lo}–${hi}%: `,
+  },
+  en: {
+    annual: pct => `Gross a year at ${pct}% occupancy`,
+    hint: pct => `Nightly price × 365 × ${pct}%. ${pct}% is the occupancy of similar places nearby from Booking calendars, taken slightly below the middle: new places rent worse than established ones. Before platform fees, management and tax.`,
+    range: (lo, hi) => `at ${lo}–${hi}%: `,
+  },
+  id: {
+    annual: pct => `Pendapatan setahun dengan okupansi ${pct}%`,
+    hint: pct => `Harga per malam × 365 × ${pct}%. ${pct}% adalah okupansi properti serupa di sekitar menurut kalender Booking, diambil sedikit di bawah nilai tengah: properti baru lebih sulit disewakan daripada yang sudah dikenal. Sebelum biaya platform, pengelolaan, dan pajak.`,
+    range: (lo, hi) => `pada ${lo}–${hi}%: `,
+  },
+  fr: {
+    annual: pct => `Revenu annuel à ${pct} % d’occupation`,
+    hint: pct => `Prix par nuit × 365 × ${pct} %. ${pct} % est l’occupation des biens similaires alentour d’après les calendriers Booking, prise un peu sous la médiane : un bien neuf se loue moins bien qu’un bien établi. Avant commissions, gestion et impôts.`,
+    range: (lo, hi) => `à ${lo}–${hi} % : `,
+  },
+  de: {
+    annual: pct => `Jahresumsatz bei ${pct} % Auslastung`,
+    hint: pct => `Preis pro Nacht × 365 × ${pct} %. ${pct} % ist die Auslastung ähnlicher Objekte in der Nähe laut Booking-Kalendern, etwas unter der Mitte angesetzt: neue Objekte vermieten sich schlechter als etablierte. Vor Plattformgebühren, Verwaltung und Steuern.`,
+    range: (lo, hi) => `bei ${lo}–${hi} %: `,
+  },
+  zh: {
+    annual: pct => `入住率 ${pct}% 时的年收入`,
+    hint: pct => `每晚价格 × 365 × ${pct}%。${pct}% 是根据Booking日历得出的附近类似房源入住率，取略低于中位数的水平：新房源比成熟房源更难出租。未扣除平台佣金、管理费和税费。`,
+    range: (lo, hi) => `入住率 ${lo}–${hi}% 时：`,
+  },
+  nl: {
+    annual: pct => `Jaaromzet bij ${pct}% bezetting`,
+    hint: pct => `Prijs per nacht × 365 × ${pct}%. ${pct}% is de bezetting van vergelijkbare objecten in de buurt volgens Booking-agenda’s, iets onder het midden genomen: nieuwe objecten verhuren slechter dan gevestigde. Vóór platformkosten, beheer en belasting.`,
+    range: (lo, hi) => `bij ${lo}–${hi}%: `,
+  },
+  ban: {
+    annual: pct => `Pikolih awarsa ring okupansi ${pct}%`,
+    hint: pct => `Aji awengi × 365 × ${pct}%. ${pct}% inggih punika okupansi properti pateh ring sisi manut kalender Booking, kaambil akidik ring sor tengah: properti anyar kirang laris katimbang sane sampun kaloktah. Sadurung biaya platform, pangelolaan, miwah pajak.`,
+    range: (lo, hi) => `ring ${lo}–${hi}%: `,
+  },
+  pl: {
+    annual: pct => `Przychód roczny przy obłożeniu ${pct}%`,
+    hint: pct => `Cena za noc × 365 × ${pct}%. ${pct}% to obłożenie podobnych obiektów w pobliżu według kalendarzy Booking, przyjęte nieco poniżej środka: nowe obiekty wynajmują się gorzej niż znane. Przed prowizjami platform, zarządzaniem i podatkiem.`,
+    range: (lo, hi) => `przy ${lo}–${hi}%: `,
+  },
+  uk: {
+    annual: pct => `Виторг за рік за завантаження ${pct}%`,
+    hint: pct => `Ціна за ніч × 365 × ${pct}%. ${pct}% - завантаження схожих об’єктів поруч за календарями Booking, беремо рівень трохи нижче середини: нові об’єкти здаються гірше за розкручені. До витрат на платформи, управління й податки.`,
+    range: (lo, hi) => `за ${lo}–${hi}%: `,
   },
 }
 
