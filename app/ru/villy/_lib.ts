@@ -22,6 +22,8 @@ import { cdnManifestUrl } from '@/lib/photo-cdn'
 import { cdnRewriteManifest } from '@/lib/photo-cdn'
 import { pickCopy, tField, switchLangPath, type Lang } from '@/lib/i18n'
 import { hreflangMap } from '@/lib/hreflang'
+import { districtsForHeading, selectedGroup } from '@/lib/district-groups'
+import { applyCatalogSort, parseCatalogSort, pricePerSqmOf, type CatalogSort } from '@/lib/catalog-sort'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/villa-photos/_manifest.json`
@@ -65,6 +67,10 @@ export type VillaFilterState = {
   // Stored as string[] so VillaMultiSelect's StringArrayKey constraint
   // accepts it; values are validated in passes().
   dealType: string[]
+  // Явная сортировка (?sort=…, lib/catalog-sort.ts). Нет — умный порядок.
+  // Не фильтр: hasAnyFilter её не считает, а buildCanonicalPath с ней
+  // возвращает null, чтобы ссылка не уводила на чистый ISR-адрес без неё.
+  sort?: CatalogSort
 }
 
 export type VillaFilterOptions = {
@@ -119,6 +125,10 @@ export type VillaCard = {
   rentalRestricted: boolean
   // Page-view tally (last ~4 months) — a signal in the smart default sort.
   views?: number
+  // Доходность сайта до налогов при посуточной сдаче, в процентах (та же
+  // цифра, что первой стоит на странице объекта). null — не посчитана или
+  // жёлтая земля.
+  yieldPct?: number | null
 }
 
 export type SortOrder = 'price-desc' | 'investment-desc'
@@ -205,6 +215,7 @@ export function parseQueryFilters(sp: Record<string, string | undefined>): Villa
     features: asArray(sp.features).filter(v => (FEATURE_FLAGS as readonly string[]).includes(v)),
     goal: sp.goal === 'invest' || sp.goal === 'live' ? sp.goal : null,
     dealType: asArray(sp.deal).filter(v => v === 'primary' || v === 'resale' || v === 'secondary'),
+    sort: parseCatalogSort(sp.sort),
   }
 }
 
@@ -513,7 +524,9 @@ export function buildOptions(
   // Apply EN-translation pass — `value` keeps its original (URL slug or
   // RU value) so existing URLs and filter matching keep working; only
   // visible labels change for EN catalogues.
-  const district = districtRaw.map(o => ({ ...o, label: tr('district', o.label, 'Location 2') }))
+  // На русской версии районы по-русски («Берава», а не «Berawa»), как в
+  // разделе перепродажи; value остаётся латинским — на нём держатся URL.
+  const district = districtRaw.map(o => ({ ...o, label: lang === 'ru' ? (districtRu(o.label) ?? o.label) : tr('district', o.label, 'Location 2') }))
   const permit   = permitRaw  .map(o => ({ ...o, label: tr('permit',   o.label, 'Разрешение') }))
   const style    = styleRaw   .map(o => ({ ...o, label: tr('style',    o.label, 'Стиль интерьера') }))
   const status   = statusRaw  .map(o => ({ ...o, label: tr('status',   o.label, 'Статус') }))
@@ -741,6 +754,8 @@ export function buildAllCards(
     // pipe a meaningless cap rate into the comparison snapshot.
     c.investmentScore = s && !s.rentalRestricted ? s.composite : null
     c.bestCapRate = s?.goodCapRate ?? null
+    const cap = capRateOf.get(c.id)
+    c.yieldPct = cap != null && Number.isFinite(cap) ? cap * 100 : null
   }
   let sorted: VillaCard[]
   if (isSearch) sorted = mapped
@@ -778,6 +793,16 @@ export function buildAllCards(
   // search hit shouldn't be pushed past unrelated pinned listings.
   if (!isSearch) {
     sorted = [...sorted].sort((a, b) => (b.isTop ? 1 : 0) - (a.isTop ? 1 : 0))
+  }
+  // Явная сортировка из URL — поверх умного порядка (он остаётся вторым
+  // ключом при равных значениях). ТОП-закрепление здесь не действует:
+  // человек попросил «дешевле сначала» — первой должна быть самая дешёвая.
+  if (filters.sort) {
+    sorted = applyCatalogSort(sorted, filters.sort, c => ({
+      price: c.priceUsd,
+      yield: c.yieldPct ?? null,
+      pricePerSqm: pricePerSqmOf(c.priceUsd, c.area, c.pricePerSqmUsd),
+    }))
   }
   // Dedupe by airtable id only. Same slug across rows is a real case
   // (multiple physical units of one project type with different prices/land
@@ -851,8 +876,9 @@ export function buildHeading(f: VillaFilterState): string {
   const noun = adj.length || hasAnyFilter(f) ? 'виллы и дома' : 'Виллы и дома'
   let s = adj.length ? adj.join(' ') + ' ' + noun : noun
 
-  if (f.district.length === 1) s += ` в районе ${f.district[0]}`
-  else if (f.district.length > 1) s += ` в районах ${f.district.join(', ')}`
+  const ds = districtsForHeading(f.district, 'ru')
+  if (ds.length === 1) s += ` в районе ${ds[0]}`
+  else if (ds.length > 1) s += ` в районах ${ds.join(', ')}`
   else s += ' на Бали'
 
   if (f.developer.length === 1) s += ` от застройщика ${f.developer[0]}`
@@ -887,8 +913,8 @@ export function buildHeadingEn(f: VillaFilterState): string {
   const noun = adj.length || hasAnyFilter(f) ? 'villas and houses' : 'Villas and houses'
   let s = adj.length ? adj.join(' ') + ' ' + noun : noun
 
-  if (f.district.length === 1) s += ` in ${f.district[0]}`
-  else if (f.district.length > 1) s += ` in ${f.district.join(', ')}`
+  const ds = districtsForHeading(f.district, 'en')
+  if (ds.length >= 1) s += ` in ${ds.join(', ')}`
   else s += ' in Bali'
 
   if (f.developer.length === 1) s += ` by ${f.developer[0]}`
@@ -977,7 +1003,7 @@ export function buildHeadingLoc(f: VillaFilterState, lang: Lang): string {
   if (lang === 'ru') return buildHeading(f)
   if (lang === 'en') return buildHeadingEn(f)
   const T = VILLA_HEADING_TERMS[lang]
-  const loc = f.district.length >= 1 ? T.inDistrict(f.district.join(', ')) : T.inBali
+  const loc = f.district.length >= 1 ? T.inDistrict(districtsForHeading(f.district, lang).join(', ')) : T.inBali
   let s = lang === 'zh' ? `${loc}${T.noun}` : `${T.noun} ${loc}`
   const clauses: string[] = []
   if (f.status.length === 1) {
@@ -998,8 +1024,7 @@ export function buildHeadingLoc(f: VillaFilterState, lang: Lang): string {
 export function buildDescriptionEn(f: VillaFilterState, totalCount?: number): string {
   const noun = f.bedrooms.length === 1 ? `${f.bedrooms[0]}-bedroom villas and houses` : 'villas and houses'
   const where =
-    f.district.length === 1 ? `in ${f.district[0]}`
-    : f.district.length > 1 ? `in ${f.district.join(', ')}`
+    f.district.length >= 1 ? `in ${districtsForHeading(f.district, 'en').join(', ')}`
     : 'in Bali'
   let s = `${noun.charAt(0).toUpperCase()}${noun.slice(1)} for sale ${where}`
   if (f.style.length === 1) s += `, ${facetLabel('style', f.style[0], 'en')} style`
@@ -1072,8 +1097,8 @@ export function buildDescription(f: VillaFilterState, totalCount?: number): stri
     f.bedrooms.length === 1 ? `${f.bedrooms[0]}-комнатные виллы и дома`
     : 'Виллы и дома'
   const where =
-    f.district.length === 1 ? `в районе ${f.district[0]}`
-    : f.district.length > 1 ? `в районах ${f.district.join(', ')}`
+    f.district.length === 1 || selectedGroup(f.district) ? `в районе ${districtsForHeading(f.district, 'ru')[0]}`
+    : f.district.length > 1 ? `в районах ${districtsForHeading(f.district, 'ru').join(', ')}`
     : 'на Бали'
   const countPart = typeof totalCount === 'number' && totalCount > 0
     ? `${totalCount} ${nounGen}` : nounNom

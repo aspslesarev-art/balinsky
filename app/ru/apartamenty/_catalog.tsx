@@ -15,6 +15,8 @@ import { SubscribeCTA } from '@/components/SubscribeCTA'
 import { buildListHref, buildMapHref } from '@/lib/filter-href'
 import { loadCatalogPage, buildHeadingLoc } from './_lib'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
+import { CatalogSortSelect } from '@/components/CatalogSortSelect'
+import { CATALOG_SORTS, type CatalogSort } from '@/lib/catalog-sort'
 
 // Absolute origin for JSON-LD `item`/`url` — schema.org consumers want fully
 // qualified URLs. Same source as lib/sitemap-data.ts.
@@ -105,7 +107,17 @@ function toQueryString(f: FilterState): string {
   if (f.status.length) sp.set('status', f.status.join(','))
   if (f.permit.length) sp.set('permit', f.permit.join(','))
   if (f.features.length) sp.set('features', f.features.join(','))
+  // Догрузка обязана видеть ВСЕ фильтры страницы (см. villy/_catalog.tsx).
+  if (f.dealType.length) sp.set('deal', f.dealType.join(','))
+  if (f.goal) sp.set('goal', f.goal)
+  if (f.sort) sp.set('sort', f.sort)
   return sp.toString()
+}
+
+function sortHrefs(f: FilterState, lang: Lang): Record<CatalogSort | 'default', string> {
+  const out = { default: buildListHref({ ...f, sort: undefined }, lang) } as Record<CatalogSort | 'default', string>
+  for (const s of CATALOG_SORTS) out[s] = buildListHref({ ...f, sort: s }, lang)
+  return out
 }
 
 export async function ApartamentyCatalog({
@@ -216,6 +228,12 @@ export async function ApartamentyCatalog({
         <div className="mt-4">
           <FiltersBar state={filters} options={options} lang={lang} />
         </div>
+
+        {cards.length > 1 && (
+          <div className="mt-3">
+            <CatalogSortSelect current={filters.sort} hrefs={sortHrefs(filters, lang)} lang={lang} />
+          </div>
+        )}
 
         {cards.length === 0 ? (
           <div className="py-16 text-center text-[var(--color-text-muted)]">

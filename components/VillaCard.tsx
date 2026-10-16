@@ -9,6 +9,8 @@ import { WishlistButton } from './WishlistButton'
 import { formatPriceExact } from '@/lib/currency'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { UnitDemandBadge } from './UnitDemandBadge'
+import { CardYield } from './CardYield'
+import { districtRu } from '@/lib/district-ru'
 import type { UnitDemandView } from '@/lib/unit-demand-view'
 
 export type VillaCardData = {
@@ -52,6 +54,9 @@ export type VillaCardData = {
   // agent PDF can print a lookup code and the catalog search can
   // resolve a paste-back. Optional for safety against legacy callers.
   airtableId?: string | null
+  // Доходность сайта до налогов при посуточной сдаче, % (как на странице
+  // объекта). Нет или жёлтая земля — строку не показываем.
+  yieldPct?: number | null
 }
 
 const COPY = {
@@ -133,6 +138,8 @@ export function VillaCard({ a, lang = 'ru', priority = false }: { a: VillaCardDa
           </div>
         )}
 
+        <CardYield pct={a.yieldPct} lang={lang} className="-mt-1 mb-3" />
+
         {/* Балл востребованности прижат к правому краю нижней строки: это
             последнее, что читает глаз, и он не конкурирует с ценой. */}
         <div className="flex items-center justify-between gap-3">
@@ -140,7 +147,7 @@ export function VillaCard({ a, lang = 'ru', priority = false }: { a: VillaCardDa
             {a.bedrooms != null && <span>{a.bedrooms} BR</span>}
             {a.area != null && <span>{copy.house}: {a.area} {copy.sqm}</span>}
             {a.land != null && <span>{copy.land}: {a.land} {copy.sqm}</span>}
-            {a.district && <span>{a.district}</span>}
+            {a.district && <span>{lang === 'ru' ? districtRu(a.district) : a.district}</span>}
           </div>
           {a.demand && <UnitDemandBadge demand={a.demand} lang={lang} />}
         </div>

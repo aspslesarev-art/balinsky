@@ -9,6 +9,7 @@ import { WishlistButton } from './WishlistButton'
 import { formatPriceExact } from '@/lib/currency'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { UnitDemandBadge } from './UnitDemandBadge'
+import { CardYield } from './CardYield'
 import type { UnitDemandView } from '@/lib/unit-demand-view'
 
 export type ApartmentCardData = {
@@ -47,6 +48,9 @@ export type ApartmentCardData = {
   // Airtable record ID — saved into the wishlist so the agent PDF
   // can print a lookup code searchable on the catalog.
   airtableId?: string | null
+  // Доходность сайта до налогов при посуточной сдаче, % (как на странице
+  // объекта). Нет — строку не показываем.
+  yieldPct?: number | null
 }
 
 const COPY = {
@@ -126,6 +130,8 @@ export function ApartmentCard({ a, lang = 'ru', priority = false }: { a: Apartme
             {a.priceUsd != null && <ApproxPrice usd={a.priceUsd} lang={lang} className="block text-[13px] font-normal text-[var(--color-text-muted)]" />}
           </div>
         )}
+
+        <CardYield pct={a.yieldPct} lang={lang} className="-mt-1 mb-3" />
 
         {/* Балл востребованности прижат к правому краю нижней строки: это
             последнее, что читает глаз, и он не конкурирует с ценой. */}

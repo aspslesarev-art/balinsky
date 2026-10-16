@@ -5,6 +5,7 @@ import { FilterDropdown } from '../FilterDropdown'
 import { useFilterUrl, type FilterView } from './useFilterUrl'
 import type { FilterState } from './FiltersBar'
 import { pickCopy, type Lang } from '@/lib/i18n'
+import { selectedGroup, type DistrictGroup } from '@/lib/district-groups'
 
 const COPY = {
   ru: { search: 'Поиск…', noOptions: 'Нет вариантов', clear: 'Сбросить', apply: 'Применить' },
@@ -22,7 +23,7 @@ const COPY = {
 export type Option = { value: string; label: string; count?: number }
 
 type StringArrayKey = {
-  [K in keyof FilterState]: FilterState[K] extends string[] ? K : never
+  [K in keyof FilterState]-?: FilterState[K] extends string[] ? K : never
 }[keyof FilterState]
 
 export function MultiSelectFilter({
@@ -35,6 +36,7 @@ export function MultiSelectFilter({
   searchable = false,
   summaryFormatter,
   lang = 'ru',
+  groups,
 }: {
   stateKey: StringArrayKey
   label: string
@@ -45,6 +47,8 @@ export function MultiSelectFilter({
   searchable?: boolean
   summaryFormatter?: (selected: string[], options: Option[]) => string
   lang?: Lang
+  // Группы районов («Весь Чангу») — ставятся одним тапом, без «Применить».
+  groups?: DistrictGroup[]
 }) {
   const { apply } = useFilterUrl(current, view)
   const [query, setQuery] = useState('')
@@ -54,9 +58,12 @@ export function MultiSelectFilter({
   // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: deps deliberately scoped
   useEffect(() => { setDraft(selected) }, [selected.join(',')])
 
+  const activeGroup = groups?.length ? selectedGroup(selected) : null
   const summary =
     selected.length === 0
       ? ''
+      : activeGroup
+      ? groups?.find(g => g.id === activeGroup)?.label ?? ''
       : summaryFormatter
       ? summaryFormatter(selected, options)
       : selected.length === 1
@@ -74,6 +81,34 @@ export function MultiSelectFilter({
     <FilterDropdown label={label} summary={summary} active={selected.length > 0}>
       {(close) => (
         <div className="flex flex-col gap-3 min-w-[240px]">
+          {groups && groups.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {groups.map(g => {
+                const on = activeGroup === g.id
+                return (
+                  <button
+                    key={g.id}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => {
+                      const next = on ? [] : g.values
+                      setDraft(next)
+                      apply({ [stateKey]: next } as Partial<FilterState>)
+                      close()
+                    }}
+                    className={`inline-flex items-center gap-1.5 py-2 px-3 rounded-full border text-[14px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] ${
+                      on
+                        ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white font-medium'
+                        : 'bg-[var(--color-card-bg)] border-[var(--color-border)] text-[var(--color-text)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)]'
+                    }`}
+                  >
+                    {g.label}
+                    <span className={`text-[12px] ${on ? 'text-white/80' : 'text-[var(--color-text-muted)]'}`}>{g.count}</span>
+                  </button>
+                )
+              })}
+            </div>
+          )}
           {searchable && (
             <input
               type="text"
