@@ -9,18 +9,11 @@ import type { LivingFacts, LivingRow, NoiseReason } from '@/lib/living'
 import type { Tone } from '@/lib/listing-verdict'
 import { pluralRu } from '@/lib/plural-ru'
 
-const TONE_TEXT: Record<Tone, string> = {
-  plus: 'text-[var(--color-primary-pressed)]',
-  warn: 'text-[#8A4B00]',
-  minus: 'text-[#A1281C]',
-}
 const TONE_DOT: Record<Tone, string> = { plus: 'bg-[var(--color-primary)]', warn: 'bg-[#D08A1C]', minus: 'bg-[#C0392B]' }
 
 const mRound = (m: number) => Math.round(m / 10) * 10
 const kmRu = (km: number) => (km < 1 ? `${Math.round(km * 1000 / 50) * 50} м` : `${km.toFixed(1).replace('.', ',')} км`)
 const kmEn = (km: number) => (km < 1 ? `${Math.round(km * 1000 / 50) * 50} m` : `${km.toFixed(1)} km`)
-const HUB_RU = { canggu: 'Чангу', ubud: 'Убуд', uluwatu: 'Улувату', sanur: 'Санур' } as const
-const HUB_EN = { canggu: 'Canggu', ubud: 'Ubud', uluwatu: 'Uluwatu', sanur: 'Sanur' } as const
 const VOLC_RU = { agung: 'Агунг', batur: 'Батур' } as const
 const VOLC_EN = { agung: 'Agung', batur: 'Batur' } as const
 
