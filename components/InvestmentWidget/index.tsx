@@ -51,7 +51,7 @@ const COPY = {
     scenarioBad: 'Плохой', scenarioMedian: 'Нормальный', scenarioGood: 'Хороший',
     resetTitle: 'Сбросить к данным по конкурентам', reset: 'сбросить',
     inputPrice: 'Цена', inputAdr: 'Цена за ночь', inputOccupancy: 'Загрузка', inputMgmt: 'Управляющая компания',
-    calcTitle: 'Калькулятор доходности',
+    calcTitle: 'Калькулятор посуточной аренды',
     calcSub: 'Цена за ночь по умолчанию - среднее между ставкой похожих объектов рядом (их карточки ниже) и обычной ставкой для объекта такой цены. Загрузка - как у похожих объявлений вокруг на Booking с августа 2026 года, чуть ниже середины: новые объекты сдаются хуже раскрученных. Если рядом данных нет совсем - 60%. Двигайте под свой прогноз. Внизу - сколько останется владельцу после комиссий, управляющей, расходов и налога.',
     payback: 'Окупаемость', capRate: 'Доходность в год',
     howCalced: 'Как считалось',
@@ -142,7 +142,7 @@ const COPY = {
     scenarioBad: 'Bad', scenarioMedian: 'Normal', scenarioGood: 'Good',
     resetTitle: 'Reset to competitor-based defaults', reset: 'reset',
     inputPrice: 'Price', inputAdr: 'Nightly rate', inputOccupancy: 'Occupancy', inputMgmt: 'Management fee',
-    calcTitle: 'Yield calculator',
+    calcTitle: 'Daily rental calculator',
     calcSub: 'The nightly rate defaults to a blend of similar places nearby (their cards are below) and the usual rate for a property at this price. Occupancy follows similar Booking listings around since August 2026, set slightly below the middle: new places rent worse than established ones. With no data nearby at all - 60%. Move both to your own forecast. At the bottom - what the owner keeps after platform fees, management, costs and tax.',
     payback: 'Payback', capRate: 'Yield per year',
     howCalced: 'How it was calculated',
@@ -1212,10 +1212,6 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
           onChange={setMgmt} display={`${mgmt}%`} />
       </div>
 
-      {snap.villa.lat != null && snap.villa.lng != null && (
-        <RentalComps lat={snap.villa.lat} lng={snap.villa.lng} adr={adr} lang={lang} />
-      )}
-
       <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2">
         <span className="text-[13px] text-[var(--color-text-muted)]">{t.taxStatusLabel}</span>
         <div className="inline-flex rounded-lg border border-[var(--color-border)] p-0.5">
@@ -1321,6 +1317,11 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
             {t.assumptions}: {t.occupancyNote} {Math.round(e.occupancy * 100)}% — {t.occupancyHint}
           </li>
         </ul>
+      )}
+
+      {/* Соседи — ниже расчёта, как у помесячной аренды. */}
+      {snap.villa.lat != null && snap.villa.lng != null && (
+        <RentalComps lat={snap.villa.lat} lng={snap.villa.lng} adr={adr} lang={lang} />
       )}
     </div>
   )

@@ -128,8 +128,9 @@ export function RentalComps({ lat, lng, adr, lang }: { lat: number; lng: number;
     return () => { cancelled = true; ctrl.abort(); clearTimeout(timer) }
   }, [lat, lng, adr, radius])
 
+  // Внутри карточки калькулятора, под расчётом - как соседи у помесячной.
   return (
-    <div className="mt-5 rounded-2xl border border-[var(--color-border)] bg-white p-5">
+    <div className="mt-5 border-t border-[var(--color-border)] pt-4">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-1">
         <div className="text-[12px] uppercase tracking-wide font-semibold text-[var(--color-text)]">{c.title}</div>
         <div className="flex gap-1.5">
