@@ -22,7 +22,7 @@ const COPY = {
       { icon: 'file', label: 'Документы по объекту' },
     ],
     chipsPrimary: [
-      { icon: 'file', label: 'Документы и due diligence' },
+      { icon: 'file', label: 'Документы и проверка объекта' },
       { icon: 'map',  label: 'Мастер-план и планировки' },
       { icon: 'user', label: 'Прямой контакт застройщика' },
     ],

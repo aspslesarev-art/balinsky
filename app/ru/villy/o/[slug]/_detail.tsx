@@ -23,7 +23,7 @@ function fmtAirportDistance(lat: number | null, lng: number | null, lang: Lang):
   if (lat == null || lng == null) return null
   const km = haversineKm(lat, lng, AIRPORT_LAT, AIRPORT_LNG)
   if (lang !== 'ru') return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(km < 10 ? 1 : 0)} km`
-  return km < 1 ? `${Math.round(km * 1000)} м` : `${km.toFixed(km < 10 ? 1 : 0)} км`
+  return km < 1 ? `${Math.round(km * 1000)} м` : `${km.toFixed(km < 10 ? 1 : 0).replace(".", ",")} км`
 }
 import { Header } from '@/components/Header'
 import { ExpandableText } from '@/components/ExpandableText'
@@ -1128,7 +1128,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   })()
 
   const facts: { Icon: typeof BedDouble; label: string; value: ReactNode }[] = [
-    bedrooms != null && { Icon: BedDouble, label: c.factBedrooms, value: `${bedrooms} BR` },
+    bedrooms != null && { Icon: BedDouble, label: c.factBedrooms, value: lang === 'ru' ? String(bedrooms) : `${bedrooms} BR` },
     area != null && { Icon: Square, label: c.factHouse, value: `${area} ${c.sqm}` },
     land != null && { Icon: Trees, label: c.factLand, value: `${land} ${c.sqm}` },
     yearRaw && { Icon: Calendar, label: c.factCompletion, value: status?.toLowerCase().includes('построен') ? c.completed : yearRaw },
@@ -1335,7 +1335,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
           </h1>
           {yields?.ownSource === 'actual' && <a href="#dokhodnost" className="mb-3 inline-block"><VerifiedYieldBadge lang={lang} /></a>}
           <div className="text-[15px] text-[var(--color-text-muted)] leading-relaxed mb-4 flex items-center flex-wrap gap-x-5 gap-y-1">
-            {bedrooms != null && <span>{bedrooms} BR</span>}
+            {bedrooms != null && <span>{(lang === 'ru' ? `${bedrooms} ${pluralRu(bedrooms, ['спальня', 'спальни', 'спален'])}` : `${bedrooms} BR`)}</span>}
             {area != null && <span>{area} {c.sqm} {c.house}</span>}
             {land != null && <span>{land} {c.sqm} {c.land}</span>}
             {district && <span>{districtRaw ? geoChainString(districtRaw) : `${district}, ${c.bali}`}</span>}

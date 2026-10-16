@@ -1,5 +1,6 @@
 'use client'
 
+import { pluralRu } from '@/lib/plural-ru'
 import { VerifiedYieldBadge } from './VerifiedYieldBadge'
 import Link from 'next/link'
 import { PhotoSlider } from './PhotoSlider'
@@ -137,7 +138,7 @@ export function ApartmentCard({ a, lang = 'ru', priority = false }: { a: Apartme
             последнее, что читает глаз, и он не конкурирует с ценой. */}
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center flex-wrap gap-x-5 gap-y-1 text-[14px] text-[var(--color-text-muted)]">
-            {a.bedrooms != null && <span>{a.bedrooms} BR</span>}
+            {a.bedrooms != null && <span>{lang === 'ru' ? `${a.bedrooms} ${pluralRu(a.bedrooms, ['спальня', 'спальни', 'спален'])}` : `${a.bedrooms} BR`}</span>}
             {a.area != null && <span>{a.area} {c.sqm}</span>}
             {a.floor && <span>{c.floor}: {a.floor}</span>}
           </div>
