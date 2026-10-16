@@ -492,3 +492,8 @@ html.js-reveal [data-reveal].is-in {
 @media (min-width: 1024px) {
   html.pe-docked body { padding-left: var(--pe-panel-w); }
 }
+
+/* «Для жизни» на странице объекта (components/GoalSwitch.tsx): главы про аренду и
+   доходность прячутся, пока выбран этот режим. */
+html[data-goal="live"] #arenda,
+html[data-goal="live"] #dokhodnost { display: none; }

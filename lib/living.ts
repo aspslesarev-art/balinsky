@@ -39,6 +39,8 @@ export type LivingRow = {
   count?: number
   /** Для врачей — есть ли аптека рядом. */
   pharmacyKm?: number | null
+  /** Для школы — международная (а не местная). */
+  intl?: boolean
 }
 
 export type LivingFacts = {
@@ -72,6 +74,12 @@ function isClinic(p: NearbyPlace): boolean {
   return p.primaryType === 'hospital' || p.primaryType === 'medical_clinic' || p.types?.includes('hospital') || /hospital|clinic|klinik|rumah sakit|rs |bimc|siloam/i.test(p.name ?? '')
 }
 
+function isStore(p: NearbyPlace): boolean {
+  const n = p.name ?? ''
+  if (/warung|toko|traditional|kios|kiosk/i.test(n)) return false
+  return p.primaryType === 'supermarket' || /mart|market|supermarket|grocer|pepito|coco|frestive|bintang|grand lucky|carrefour|lotte|hypermart/i.test(n)
+}
+
 export function computeLivingFacts(args: {
   byCategory: Record<string, NearbyPlace[]> | null
   routes: Routes | null
@@ -88,12 +96,14 @@ export function computeLivingFacts(args: {
   const beach = nearest(b.beach)
   const clinic = nearest(b.hospital, isClinic)
   const pharmacy = nearest(b.pharmacy)
-  const shop = nearest(b.supermarket)
+  // Магазин — супермаркет или минимаркет; лавка у дороги («warung») — только
+  // если больше ничего рядом нет.
+  const shop = nearest(b.supermarket, isStore) ?? nearest(b.supermarket)
   const loud = [...(b.nightlife ?? []), ...(b.beachclub ?? [])].filter(p => p.distanceKm <= QUIET_KM)
   const loudN = new Set(loud.map(p => p.id)).size
 
   const rows: LivingRow[] = [
-    { key: 'school', tone: toneByKm(school?.distanceKm ?? null, LIMITS.school), km: school?.distanceKm ?? null, searchKm: SEARCH_KM.international_school, name: school?.name ?? null },
+    { key: 'school', tone: toneByKm(school?.distanceKm ?? null, LIMITS.school), km: school?.distanceKm ?? null, searchKm: SEARCH_KM.international_school, name: school?.name ?? null, intl: !!intl },
     { key: 'beach', tone: toneByKm(beach?.distanceKm ?? null, LIMITS.beach), km: beach?.distanceKm ?? null, searchKm: SEARCH_KM.beach, name: beach?.name ?? null },
     { key: 'health', tone: toneByKm(clinic?.distanceKm ?? null, LIMITS.health), km: clinic?.distanceKm ?? null, searchKm: SEARCH_KM.hospital, name: clinic?.name ?? null, pharmacyKm: pharmacy?.distanceKm ?? null },
     // Магазин ищется в 1,5 км: не нашли — значит дальше, это «есть минусы», а не «далеко».
