@@ -3,7 +3,7 @@
 // Тексты пока RU + EN; остальные языки берут английский до перевода.
 import type { ReactNode } from 'react'
 import { pickCopy, type Lang } from '@/lib/i18n'
-import type { Verdict, Tone, YieldFacts, ComplexFacts } from '@/lib/listing-verdict'
+import { permitOk, type Verdict, type Tone, type YieldFacts, type ComplexFacts } from '@/lib/listing-verdict'
 import type { MonthlyBundle } from '@/lib/investment/monthly'
 import { InlinePrice } from './InlinePrice'
 import { CardRail } from './CardRail'
@@ -25,6 +25,9 @@ const yearsRu = (n: number) => `${n} ${pluralRu(n, ['год', 'года', 'ле�
 const en = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
 const pctFmt = (x: number) => `${(x * 100).toFixed(1).replace('.', ',')}%`
 const pctFmtEn = (x: number) => `${(x * 100).toFixed(1)}%`
+// «Проверьте документы» в итоге: разрешения или срока аренды нет в данных,
+// стройка не начата или по безопасности уже красный флаг.
+const docsFirst = (v: Verdict) => v.safety.tone === 'minus' || !permitOk(v.safety.permit) || v.safety.leaseUnknown || v.safety.notStarted
 
 const COPY = {
   ru: {
@@ -45,10 +48,13 @@ const COPY = {
       demandMonthly: { plus: 'Только помесячно', warn: 'Только помесячно', minus: 'Только помесячно' },
       money: { plus: 'Хорошо', warn: 'Средне', minus: 'Мало' },
     },
-    safetyAnswer: (v: Verdict) => v.safety.permitMissing && v.safety.notStarted
-      ? 'Стройка не начата, разрешения на неё мы не видели'
-      : v.safety.permitMissing ? 'Разрешения на стройку мы не видели'
+    safetyAnswer: (v: Verdict) => !permitOk(v.safety.permit) && v.safety.notStarted
+      ? 'Стройка не начата, а разрешения на неё мы не видели'
       : v.safety.notStarted ? 'Стройка не начата - вы платите за будущий дом'
+      : v.safety.permit === 'unknown' ? 'Нет данных о разрешении - запросите PBG у застройщика'
+      : v.safety.permit === 'pbgApplied' ? 'Разрешения на стройку (PBG) пока нет - подана только заявка'
+      : v.safety.permit === 'slfApplied' ? 'Дом ещё не принят в эксплуатацию - на SLF подана только заявка'
+      : v.safety.leaseUnknown ? 'Нет данных о сроке аренды земли - уточните у застройщика'
       : v.safety.noFinishedProjects ? 'Сданных проектов у застройщика мы не видим'
       : 'Явных рисков в данных нет',
     safetyShort: (v: Verdict, underConstruction: boolean) => [
@@ -77,7 +83,9 @@ const COPY = {
         : v.money.tone === 'plus' && v.demand.tone === 'plus' ? 'Для заработка на аренде - сильный вариант.'
         : 'Для заработка на аренде - средний вариант.'
       const live = v.demand.monthlyOnly ? ' Подходит для жизни или долгой аренды.' : ''
-      const docs = v.safety.tone === 'minus' ? ' Сначала проверьте документы.' : ''
+      // Сильный по доходу, но документы не подтверждены — без безусловного «сильный».
+      if (docsFirst(v) && v.money.tone === 'plus' && v.demand.tone === 'plus') return 'Для заработка на аренде - сильный вариант, но сначала проверьте документы.' + live
+      const docs = docsFirst(v) ? ' Сначала проверьте документы.' : ''
       return earn + live + docs
     },
     totalWhy: (v: Verdict, diff: number | null) => [
@@ -94,10 +102,12 @@ const COPY = {
       delays: 'Сроки сдачи и штрафы за задержку - в договоре', zoneMonthly: 'Земля под жильё - посуточно сдавать нельзя',
     },
     // Безопасность
-    docs: 'Документы и стройка', permitRow: 'Разрешение на стройку', permitNo: 'не видели', permitYes: 'есть', permitUnknown: 'нет данных',
+    docs: 'Документы и стройка', permitRow: 'Разрешение на стройку', slfRow: 'Ввод в эксплуатацию (SLF)', permitApplied: 'только заявка', permitYes: 'есть', permitUnknown: 'нет данных',
     build: 'Стройка', notStarted: 'не начата', readiness: (p: number) => `готова на ${Math.round(p * 100)}%`, built: 'дом готов',
     handover: 'Сдача', payment: 'Оплата',
     docsNote: 'Без разрешения стройку могут остановить, а деньги уже будут уплачены. Попросите копию разрешения (PBG) до оплаты.',
+    docsNoteUnknown: 'Мы не знаем, есть ли у проекта разрешение. Попросите копию PBG до оплаты и проверьте номер на simbg.pu.go.id.',
+    docsNoteSlf: 'Без SLF дом нельзя легально сдавать. Спросите, когда его выдадут, и попросите копию.',
     landT: 'Земля', leaseRow: 'Аренда земли', leaseVal: (y: number) => yearsRu(y), extRow: 'Продление', extVal: (y: number) => `ещё ${yearsRu(y)}`,
     zoneRow: 'Зона', zoneHousing: 'жёлтая, для жилья',
     landNote: 'Иностранцы покупают не землю, а право пользоваться ею на срок. Дом всё это время ваш: можно жить, сдавать, продать.',
@@ -153,10 +163,13 @@ const COPY = {
       demandMonthly: { plus: 'Monthly only', warn: 'Monthly only', minus: 'Monthly only' },
       money: { plus: 'Good', warn: 'Average', minus: 'Low' },
     },
-    safetyAnswer: (v: Verdict) => v.safety.permitMissing && v.safety.notStarted
+    safetyAnswer: (v: Verdict) => !permitOk(v.safety.permit) && v.safety.notStarted
       ? 'Construction has not started and we have not seen a building permit'
-      : v.safety.permitMissing ? 'We have not seen a building permit'
       : v.safety.notStarted ? 'Construction has not started - you pay for a future house'
+      : v.safety.permit === 'unknown' ? 'No data on the building permit - ask the developer for the PBG'
+      : v.safety.permit === 'pbgApplied' ? 'No building permit (PBG) yet - only an application'
+      : v.safety.permit === 'slfApplied' ? 'The building is not certified for use yet - only an SLF application'
+      : v.safety.leaseUnknown ? 'No data on the land lease term - ask the developer'
       : v.safety.noFinishedProjects ? 'We see no completed projects by this developer yet'
       : 'No obvious risks in the data',
     safetyShort: (v: Verdict, underConstruction: boolean) => [
@@ -185,7 +198,8 @@ const COPY = {
         : v.money.tone === 'plus' && v.demand.tone === 'plus' ? 'For rental income - a strong option.'
         : 'For rental income - an average option.'
       const live = v.demand.monthlyOnly ? ' Suits living or long-term rental.' : ''
-      const docs = v.safety.tone === 'minus' ? ' Check the documents first.' : ''
+      if (docsFirst(v) && v.money.tone === 'plus' && v.demand.tone === 'plus') return 'For rental income - a strong option, but check the documents first.' + live
+      const docs = docsFirst(v) ? ' Check the documents first.' : ''
       return earn + live + docs
     },
     totalWhy: (v: Verdict, diff: number | null) => [
@@ -201,10 +215,12 @@ const COPY = {
       permit: 'Building permit (PBG) - ask for a copy', lease: 'Land lease and extension terms - with a notary',
       delays: 'What happens if construction is late: deadlines and penalties in the contract', zoneMonthly: 'Residential land - no nightly rental to tourists',
     },
-    docs: 'Documents and construction', permitRow: 'Building permit', permitNo: 'not seen', permitYes: 'yes', permitUnknown: 'no data',
+    docs: 'Documents and construction', permitRow: 'Building permit', slfRow: 'Occupancy certificate (SLF)', permitApplied: 'application only', permitYes: 'yes', permitUnknown: 'no data',
     build: 'Construction', notStarted: 'not started', readiness: (p: number) => `${Math.round(p * 100)}% done`, built: 'house ready',
     handover: 'Handover', payment: 'Payment',
     docsNote: 'Why it matters: without a permit construction can be stopped after the money is paid. Ask for a copy of the permit (PBG) before the first payment.',
+    docsNoteUnknown: 'We do not know whether the project has a permit. Ask for a copy of the PBG before paying and check its number on simbg.pu.go.id.',
+    docsNoteSlf: 'Without an SLF the building cannot be legally rented out. Ask when it will be issued and request a copy.',
     landT: 'Land', leaseRow: 'Land lease', leaseVal: (y: number) => en(y, 'year', 'years'), extRow: 'Extension', extVal: (y: number) => `${en(y, 'more year', 'more years')}`,
     zoneRow: 'Zone', zoneHousing: 'yellow - residential',
     landNote: 'Foreigners in Bali buy not the land but the right to use it for a term. The house is yours all that time: live, rent out, sell.',
@@ -315,7 +331,10 @@ export function ListingVerdict({ verdict: v, yields: y, monthly, saleDiff, under
 
   // Картинка над каждым ответом — данные этого объекта, а не значок.
   const safetyRows = [
-    { k: c.permitRow, v: v.safety.permitMissing ? c.permitNo : null, tone: 'minus' as Tone },
+    permitOk(v.safety.permit)
+      ? { k: v.safety.permit === 'slf' ? c.slfRow : c.permitRow, v: c.permitYes, tone: 'plus' as Tone }
+      : { k: v.safety.permit === 'slfApplied' ? c.slfRow : c.permitRow, v: v.safety.permit === 'unknown' ? c.permitUnknown : c.permitApplied, tone: 'warn' as Tone },
+    v.safety.leaseUnknown ? { k: c.leaseRow, v: c.permitUnknown, tone: 'warn' as Tone } : null,
     { k: c.build, v: v.safety.notStarted ? c.notStarted : null, tone: 'minus' as Tone },
     dev && dev.total > 0 ? { k: c.devReady, v: c.devOf(dev.ready, dev.total), tone: (dev.ready === 0 ? 'minus' : 'plus') as Tone } : null,
     v.safety.hazards.length ? { k: c.floodSlide, v: v.safety.hazards.some(h => (h.key === 'flood' || h.key === 'landslide') && (h.level === 'medium' || h.level === 'high')) ? c.lvl.medium : c.lvl.none, tone: (v.safety.hazards.some(h => (h.key === 'flood' || h.key === 'landslide') && (h.level === 'medium' || h.level === 'high')) ? 'warn' : 'plus') as Tone } : null,
@@ -465,7 +484,7 @@ function Card({ title, children, note }: { title: string; children: ReactNode; n
   )
 }
 
-export function SafetyCards({ verdict: v, permit, status, yearRaw, complex, leaseYears, landYellow, dev, lang }: {
+export function SafetyCards({ verdict: v, status, yearRaw, complex, leaseYears, landYellow, dev, lang }: {
   verdict: Verdict
   permit: string | null
   status: string | null
@@ -477,25 +496,28 @@ export function SafetyCards({ verdict: v, permit, status, yearRaw, complex, leas
   lang: Lang
 }) {
   const c = pickCopy(COPY, lang)
-  const permitTone: Tone | undefined = v.safety.permitMissing ? 'minus' : undefined
-  const permitVal = v.safety.permitMissing ? c.permitNo : permit ? c.permitYes : c.permitUnknown
+  const p = v.safety.permit
+  const permitTone: Tone | undefined = permitOk(p) ? undefined : 'warn'
+  const permitVal = permitOk(p) ? c.permitYes : p === 'unknown' ? c.permitUnknown : c.permitApplied
+  const permitKey = p === 'slf' || p === 'slfApplied' ? c.slfRow : c.permitRow
+  const docsNote = v.safety.notStarted || p === 'pbgApplied' ? c.docsNote : p === 'unknown' ? c.docsNoteUnknown : p === 'slfApplied' ? c.docsNoteSlf : undefined
   const built = !!status && /построен|сдан|готов|complet/i.test(status)
   const buildVal = built ? c.built : v.safety.notStarted ? c.notStarted : complex?.readiness != null ? c.readiness(complex.readiness) : status
   const docsRows = [
-    { k: c.permitRow, v: permitVal, tone: permitTone },
+    { k: permitKey, v: permitVal, tone: permitTone },
     buildVal ? { k: c.build, v: buildVal, tone: v.safety.notStarted ? ('minus' as Tone) : undefined } : null,
     yearRaw && !built ? { k: c.handover, v: yearRaw } : null,
     complex?.paymentPlan ? { k: c.payment, v: complex.paymentPlan } : null,
   ].filter(Boolean) as { k: string; v: ReactNode; tone?: Tone }[]
   const landRows = [
-    leaseYears != null ? { k: c.leaseRow, v: c.leaseVal(leaseYears) } : null,
+    leaseYears != null ? { k: c.leaseRow, v: c.leaseVal(leaseYears) } : { k: c.leaseRow, v: c.permitUnknown, tone: 'warn' as Tone },
     complex?.leaseExtension ? { k: c.extRow, v: c.extVal(complex.leaseExtension) } : null,
     landYellow ? { k: c.zoneRow, v: c.zoneHousing } : null,
-  ].filter(Boolean) as { k: string; v: ReactNode }[]
+  ].filter(Boolean) as { k: string; v: ReactNode; tone?: Tone }[]
   const hz = v.safety.hazards.filter(h => h.key !== 'flash_flood')
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <Card title={c.docs} note={v.safety.permitMissing || v.safety.notStarted ? c.docsNote : undefined}><Rows rows={docsRows} /></Card>
+      <Card title={c.docs} note={docsNote}><Rows rows={docsRows} /></Card>
       {landRows.length > 0 && <Card title={c.landT} note={c.landNote + (landYellow ? c.landNoteYellow : '')}><Rows rows={landRows} /></Card>}
       {dev && dev.total > 0 && (
         <Card title={c.devT(dev.name)} note={dev.ready === 0 ? c.devNote : c.devNoteOk}>

@@ -33,17 +33,29 @@ export type ComplexCardData = {
 }
 
 const COPY = {
-  ru: { villas: 'Виллы', apartments: 'Апартаменты', permit: 'Разрешение на строительство', noPermit: 'нет данных', readiness: 'Готовность строительства', from: 'от', to: 'до', sold: 'Продано' },
-  en: { villas: 'Villas', apartments: 'Apartments', permit: 'Building permit',                noPermit: 'no data', readiness: 'Construction progress', from: 'from', to: 'to', sold: 'Sold' },
-  id: { villas: 'Vila', apartments: 'Apartemen', permit: 'Izin mendirikan bangunan',   noPermit: 'tidak ada data', readiness: 'Kemajuan konstruksi', from: 'dari', to: 'sampai', sold: 'Terjual' },
-  fr: { villas: 'Villas', apartments: 'Appartements', permit: 'Permis de construire',      noPermit: 'non renseigné', readiness: 'Avancement des travaux', from: 'de', to: 'à', sold: 'Vendu' },
-  de: { villas: 'Villen', apartments: 'Apartments', permit: 'Baugenehmigung',              noPermit: 'keine Angaben', readiness: 'Baufortschritt', from: 'ab', to: 'bis', sold: 'Verkauft' },
-  zh: { villas: '别墅', apartments: '公寓', permit: '建筑许可',                             noPermit: '暂无数据', readiness: '施工进度', from: '从', to: '至', sold: '已售' },
-  nl: { villas: "Villa's", apartments: 'Appartementen', permit: 'Bouwvergunning',          noPermit: 'geen gegevens', readiness: 'Bouwvoortgang', from: 'vanaf', to: 'tot', sold: 'Verkocht' },
-  ban: { villas: 'Vila', apartments: 'Apartemen', permit: 'Izin ngwangun bangunan',        noPermit: 'nenten wenten data', readiness: 'Kamajuan konstruksi', from: 'saking', to: 'kantos', sold: 'Sampun kaadol' },
-  pl: { villas: 'Wille', apartments: 'Apartamenty', permit: 'Pozwolenie na budowę',        noPermit: 'brak danych', readiness: 'Postęp budowy', from: 'od', to: 'do', sold: 'Sprzedane' },
-  uk: { villas: 'Вілли', apartments: 'Апартаменти', permit: 'Дозвіл на будівництво',       noPermit: 'немає даних', readiness: 'Хід будівництва', from: 'від', to: 'до', sold: 'Продано' },
+  ru: { villas: 'Виллы', apartments: 'Апартаменты', permit: 'Разрешение на строительство (PBG)', slf: 'Ввод в эксплуатацию (SLF)', applied: 'подана заявка', has: 'есть', noPermit: 'нет данных', readiness: 'Готовность строительства', from: 'от', to: 'до', sold: 'Продано' },
+  en: { villas: 'Villas', apartments: 'Apartments', permit: 'Building permit (PBG)', slf: 'Occupancy certificate (SLF)', applied: 'applied for', has: 'yes', noPermit: 'no data', readiness: 'Construction progress', from: 'from', to: 'to', sold: 'Sold' },
+  id: { villas: 'Vila', apartments: 'Apartemen', permit: 'Persetujuan bangunan (PBG)', slf: 'Sertifikat Laik Fungsi (SLF)', applied: 'sedang diajukan', has: 'ada', noPermit: 'tidak ada data', readiness: 'Kemajuan konstruksi', from: 'dari', to: 'sampai', sold: 'Terjual' },
+  fr: { villas: 'Villas', apartments: 'Appartements', permit: 'Permis de construire (PBG)', slf: 'Certificat de conformité (SLF)', applied: 'demande déposée', has: 'obtenu', noPermit: 'non renseigné', readiness: 'Avancement des travaux', from: 'de', to: 'à', sold: 'Vendu' },
+  de: { villas: 'Villen', apartments: 'Apartments', permit: 'Baugenehmigung (PBG)', slf: 'Nutzungsgenehmigung (SLF)', applied: 'beantragt', has: 'erteilt', noPermit: 'keine Angaben', readiness: 'Baufortschritt', from: 'ab', to: 'bis', sold: 'Verkauft' },
+  zh: { villas: '别墅', apartments: '公寓', permit: '建筑许可 (PBG)', slf: '使用许可证 (SLF)', applied: '已申请', has: '已取得', noPermit: '暂无数据', readiness: '施工进度', from: '从', to: '至', sold: '已售' },
+  nl: { villas: "Villa's", apartments: 'Appartementen', permit: 'Bouwvergunning (PBG)', slf: 'Gebruiksvergunning (SLF)', applied: 'aangevraagd', has: 'verleend', noPermit: 'geen gegevens', readiness: 'Bouwvoortgang', from: 'vanaf', to: 'tot', sold: 'Verkocht' },
+  ban: { villas: 'Vila', apartments: 'Apartemen', permit: 'Izin ngwangun bangunan (PBG)', slf: 'Sertifikat Laik Fungsi (SLF)', applied: 'sampun kaajuang', has: 'wenten', noPermit: 'nenten wenten data', readiness: 'Kamajuan konstruksi', from: 'saking', to: 'kantos', sold: 'Sampun kaadol' },
+  pl: { villas: 'Wille', apartments: 'Apartamenty', permit: 'Pozwolenie na budowę (PBG)', slf: 'Pozwolenie na użytkowanie (SLF)', applied: 'złożono wniosek', has: 'jest', noPermit: 'brak danych', readiness: 'Postęp budowy', from: 'od', to: 'do', sold: 'Sprzedane' },
+  uk: { villas: 'Вілли', apartments: 'Апартаменти', permit: 'Дозвіл на будівництво (PBG)', slf: 'Введення в експлуатацію (SLF)', applied: 'подано заявку', has: 'є', noPermit: 'немає даних', readiness: 'Хід будівництва', from: 'від', to: 'до', sold: 'Продано' },
 } as const
+
+// «Разрешительные документы»: PBG — разрешение на стройку, SLF — ввод в
+// эксплуатацию (это не разрешение на строительство). «нет» в поле — значение
+// по умолчанию, а не ответ застройщика, поэтому показываем «нет данных».
+function permitLine(raw: string | null, copy: { permit: string; slf: string; applied: string; has: string; noPermit: string }, lang: Lang): string {
+  const v = (raw ?? '').trim()
+  if (!v || v.toLowerCase() === 'нет') return `${copy.permit}: ${copy.noPermit}`
+  const applied = /заявка/i.test(v)
+  if (/SLF/i.test(v)) return `${copy.slf}: ${applied ? copy.applied : copy.has}`
+  if (/PBG|IMB/i.test(v)) return `${copy.permit}: ${applied ? copy.applied : copy.has}`
+  return `${copy.permit}: ${facetLabel('permit', v, lang)}`
+}
 
 function fmtRange(
   from: number | null, to: number | null,
@@ -123,7 +135,7 @@ export function ComplexCard({ c, lang = 'ru', priority = false }: { c: ComplexCa
           </div>
         )}
         <div className="text-[14px] text-[var(--color-text-muted)]">
-          {copy.permit}: {c.permit ? (facetLabel('permit', c.permit, lang)) : copy.noPermit}
+          {permitLine(c.permit, copy, lang)}
         </div>
 
         {/* mt-auto pins the readiness block to the bottom of the card so
