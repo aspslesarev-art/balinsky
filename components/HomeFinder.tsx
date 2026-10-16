@@ -13,6 +13,7 @@ import { BedDouble, Square, TrendingUp, Check, ArrowRight, Sparkles } from 'luci
 import type { FinderItem } from '@/lib/home-finder'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { BalinaCTA } from './BalinaCTA'
+import { CardLiving } from './CardLiving'
 import { useCurrency } from './CurrencyContext'
 import { formatMoney, type Currency } from '@/lib/currency'
 
@@ -228,12 +229,23 @@ export function HomeFinder({ items, lang = 'ru' }: { items: FinderItem[]; lang?:
     if (goal === 'invest' || goal === 'both') {
       list = [...list].sort((a, b) => (b.capRatePct ?? -1) - (a.capRatePct ?? -1))
     }
+    // Для жизни — от 2 спален и по удобству жизни (школа, пляж, врачи, тишина),
+    // как фильтр «Для жизни» в каталоге.
+    if (goal === 'live') {
+      list = list.filter(it => (it.bedrooms ?? 0) >= 2)
+        .sort((a, b) => (b.livingScore ?? -1) - (a.livingScore ?? -1))
+    }
     return list
   }, [items, goal, budget, vibe])
 
   const top = results.slice(0, 6)
   const root = switchLangPath('/ru/villy', lang)
-  const seeAllHref = budget && budget > 0 ? `${root}?price_max=${budget}` : root
+  // Цель передаём дальше: каталог и страница объекта откроются в том же режиме.
+  const goalParam = goal === 'live' ? 'live' : goal === 'invest' ? 'invest' : null
+  const seeAllQuery = new URLSearchParams()
+  if (budget && budget > 0) seeAllQuery.set('price_max', String(budget))
+  if (goalParam) seeAllQuery.set('goal', goalParam)
+  const seeAllHref = seeAllQuery.size ? `${root}?${seeAllQuery}` : root
 
   const balinaText = (() => {
     const parts: string[] = [pickCopy({ ru: 'Подбери виллу', en: 'Find me a villa', id: 'Carikan saya vila', fr: 'Trouve-moi une villa', de: 'Finde mir eine Villa', zh: '帮我找一套别墅', nl: 'Vind een villa voor mij', ban: 'Alihang tiang villa', pl: 'Dobierz mi willę', uk: 'Підбери мені вілу' }, lang)]
@@ -288,7 +300,7 @@ export function HomeFinder({ items, lang = 'ru' }: { items: FinderItem[]; lang?:
             {top.map(it => (
               <Link
                 key={it.slug}
-                href={`${root}/o/${it.slug}`}
+                href={`${root}/o/${it.slug}${goal === 'live' ? '?goal=live' : ''}`}
                 className="group block rounded-2xl border border-[var(--color-border)] bg-white overflow-hidden no-underline text-[var(--color-text)] hover:border-[var(--color-primary)] transition-colors"
               >
                 <div className="relative w-full aspect-[4/3] bg-[var(--color-search-bg)]">
@@ -312,7 +324,9 @@ export function HomeFinder({ items, lang = 'ru' }: { items: FinderItem[]; lang?:
                     {it.bedrooms != null && <span className="inline-flex items-center gap-1"><BedDouble size={13} /> {it.bedrooms}</span>}
                     {it.area != null && <span className="inline-flex items-center gap-1"><Square size={12} /> {it.area} м²</span>}
                   </div>
-                  {it.yieldPct != null && (
+                  {goal === 'live' ? (
+                    <CardLiving data={{ school_km: it.schoolKm, beach_km: it.beachKm }} lang={lang} className="mt-1.5 !text-[12px] leading-snug" />
+                  ) : it.yieldPct != null && (
                     // Та же цифра и точность, что на странице объекта: «17,8%», до налогов.
                     <div title={c.yieldHint} className="mt-1.5 flex items-start gap-1 text-[12px] leading-snug font-semibold text-[var(--color-primary-pressed)]">
                       <TrendingUp size={13} /> {lang === 'en' || lang === 'zh' ? it.yieldPct.toFixed(1) : it.yieldPct.toFixed(1).replace('.', ',')}% {c.yieldHint}

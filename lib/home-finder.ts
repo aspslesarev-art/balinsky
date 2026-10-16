@@ -39,6 +39,10 @@ export type FinderItem = {
   // null when we can't stand behind a number (no comps, or yellow land).
   capRatePct: number | null
   ready: boolean
+  /** «Для жизни» (listing_living): балл для порядка и расстояния для карточки. */
+  livingScore: number | null
+  schoolKm: number | null
+  beachKm: number | null
 }
 
 const norm = (s: string) => s.trim().toLowerCase()
@@ -74,6 +78,7 @@ function badgeYield(cap: number | null | undefined, claimed: number | null | und
 async function build(lang: Lang): Promise<FinderItem[]> {
   const [villas, scores] = await Promise.all([loadVillas(), loadAllVillaScores()])
   const cards = buildVillaCards(villas.enriched, villas.manifest, VILLA_EMPTY, scores, 'investment-desc', undefined, lang)
+  const livingById = new Map(villas.enriched.map(e => [e.id, e.living ?? null]))
 
   // Raw (usually Latin) district name → canonical slug. Match against both
   // languages' display names + the slug itself, with a contains fallback for
@@ -114,6 +119,9 @@ async function build(lang: Lang): Promise<FinderItem[]> {
       yieldPct: c.rentalRestricted ? null : badgeYield(medianCap, c.claimedYieldPct),
       capRatePct: capRateOf(medianCap),
       ready: readyOf(c.status),
+      livingScore: livingById.get(c.id)?.score ?? null,
+      schoolKm: livingById.get(c.id)?.school_km ?? null,
+      beachKm: livingById.get(c.id)?.beach_km ?? null,
     })
     if (out.length >= 140) break
   }
@@ -121,7 +129,7 @@ async function build(lang: Lang): Promise<FinderItem[]> {
 }
 
 export async function loadHomeFinder(lang: Lang): Promise<FinderItem[]> {
-  return unstable_cache(() => build(lang), ['home-finder-v6', lang], {
+  return unstable_cache(() => build(lang), ['home-finder-v7', lang], {
     revalidate: 86400,
     tags: ['content:villas'],
   })()
