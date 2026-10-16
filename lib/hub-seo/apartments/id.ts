@@ -59,7 +59,7 @@ const copy: HubLongCopy = {
       "heading": "Sewa, imbal hasil, dan biaya operasional",
       "paragraphs": [
         "Patokan sewa bulanan: median $2.585 di Berawa, $2.113 di Canggu, $1.608 di Bukit, $1.300 di Ubud. Apartemen rata-rata disewakan lebih murah daripada vila, tetapi okupansinya lebih stabil — unit kompak dengan kolam renang kompleks lebih mudah disewakan di luar musim ramai.",
-        "Menurut perhitungan Balinsky sendiri (345 apartemen 1 kamar tidur dijual dan 300 apartemen disewakan, September 2026), apartemen 1 kamar tidur median menghasilkan sekitar 9% per tahun kotor dan sekitar 4,4% bersih pada okupansi 65%; okupansi hotel berbintang di Bali sekitar 57–65% (BPS Bali). Sebelum percaya angka dalam presentasi, kurangi dulu komisi perusahaan pengelola 15–25%, service charge kompleks, biaya perawatan dan pajak sewa, serta amortisasi leasehold. Periksa juga secara terpisah apakah di area Anda akan masuk lagi belasan kompleks serupa ke pasar: di Canggu, kelebihan pasokan studio yang mirip sudah mulai menekan tarif sewa."
+        "Menurut perhitungan Balinsky sendiri (Oktober 2026, 364 apartemen 1 kamar tidur di katalog), apartemen 1 kamar tidur median menghasilkan sekitar 4,7% per tahun sebelum pajak. Angka ini sudah setelah komisi platform, biaya pengelola, perawatan, dan pajak daerah atas akomodasi. Okupansi diambil dari listing serupa di sekitar di Booking. Okupansi hotel berbintang di Bali sekitar 57–65% (BPS Bali). Sebelum percaya angka dalam presentasi, periksa service charge kompleks, pajak sewa, dan amortisasi leasehold. Periksa juga secara terpisah apakah di area Anda akan masuk lagi belasan kompleks serupa ke pasar: di Canggu, kelebihan pasokan studio yang mirip sudah mulai menekan tarif sewa."
       ]
     }
   ],
