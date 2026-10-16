@@ -1,8 +1,8 @@
 'use client'
 
 import { pluralRu } from '@/lib/plural-ru'
-import { useMemo, useState } from 'react'
-import { ChevronDown, ChevronUp, ExternalLink } from 'lucide-react'
+import { useMemo, useRef, useState } from 'react'
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from 'lucide-react'
 import { Slider } from './Slider'
 import { fmtMoney, fmtPct, fmtYears } from './utils'
 import type { Snapshot } from './types'
@@ -219,6 +219,8 @@ export function MonthlyCalculator({ snap, lang }: { snap: Snapshot; lang: Lang }
   const restricted = snap.flags.rentalRestricted
   const t = pickCopy(COPY, lang)
   const { currency } = useCurrency()
+  const trackRef = useRef<HTMLDivElement>(null)
+  const scrollBy = (dir: -1 | 1) => trackRef.current?.scrollBy({ left: dir * trackRef.current.clientWidth * 0.85, behavior: 'smooth' })
   const fmt = (n: number | null | undefined) => fmtMoney(n, currency)
   const m = snap.monthly!
   const cyr = lang === 'ru' || lang === 'uk'
@@ -314,30 +316,41 @@ export function MonthlyCalculator({ snap, lang }: { snap: Snapshot; lang: Lang }
       {m.comps.length > 0 && (
         <div className="mt-5 border-t border-[var(--color-border)] pt-4">
           <div className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-[var(--color-text)]">{t.nearby}</div>
-          <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {m.comps.map((c, i) => (
-              <li key={`${c.url}-${i}`}>
-                <a href={c.url ?? undefined} target="_blank" rel="noopener noreferrer nofollow"
-                  className="flex items-center gap-3 rounded-xl border border-[var(--color-border)] p-2 pr-3 transition-colors hover:bg-[var(--color-surface-alt)]">
-                  {/* Фото из объявления — как у посуточных соседей: видно, что сдают рядом. */}
+          {/* Та же лента, что у посуточных соседей (RentalComps): карточки 210 px
+              с фото, прокрутка вбок, стрелки для мыши. */}
+          <div className="relative">
+            <div ref={trackRef} className="flex gap-3 overflow-x-auto snap-x scroll-smooth pb-1 [scrollbar-width:thin]">
+              {[...m.comps].sort((a, b) => b.rentMonthUsd - a.rentMonthUsd).map((c, i) => (
+                <a key={`${c.url}-${i}`} href={c.url ?? undefined} target="_blank" rel="noopener noreferrer nofollow"
+                  className="group shrink-0 w-[210px] snap-start rounded-xl border border-[var(--color-border)] overflow-hidden no-underline text-[var(--color-text)] hover:border-[var(--color-primary)] transition-colors">
                   {c.photo
                     // eslint-disable-next-line @next/next/no-img-element
-                    ? <img src={c.photo} alt="" loading="lazy" referrerPolicy="no-referrer" width={96} height={64} className="h-16 w-24 shrink-0 rounded-lg bg-[var(--color-search-bg)] object-cover" />
-                    : <span className="h-16 w-24 shrink-0 rounded-lg bg-[var(--color-search-bg)]" aria-hidden />}
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[13px] text-[var(--color-text)]">{c.title || c.district}</span>
-                    <span className="block text-[12px] text-[var(--color-text-muted)]">
-                      {c.bedrooms} {t.bedrooms}{c.buildingM2 ? ` · ${c.buildingM2} ${cyr ? 'м²' : 'm²'}` : ''}{c.district ? ` · ${c.district}` : ''} · {cyr ? c.distanceKm.toFixed(1).replace('.', ',') : c.distanceKm.toFixed(1)} {cyr ? 'км' : 'km'}
-                    </span>
-                  </span>
-                  <span className="flex shrink-0 items-center gap-1 text-[13px] font-semibold tabular-nums text-[var(--color-text)]">
-                    {fmt(c.rentMonthUsd)} <span className="font-normal text-[var(--color-text-muted)]">{t.perMonth}</span>
-                    <ExternalLink size={12} className="text-[var(--color-text-muted)]" aria-hidden />
-                  </span>
+                    ? <img src={c.photo} alt={c.title} loading="lazy" referrerPolicy="no-referrer" className="block w-full aspect-[4/3] object-cover" />
+                    : <div className="aspect-[4/3] bg-[var(--color-search-bg)]" aria-hidden />}
+                  <div className="p-2.5">
+                    <div className="text-[13px] font-medium leading-snug line-clamp-2">{c.title || c.district}</div>
+                    <div className="mt-1 text-[11.5px] text-[var(--color-text)]">
+                      {[`${c.bedrooms} ${t.bedrooms}`, c.buildingM2 ? `${c.buildingM2} ${cyr ? 'м²' : 'm²'}` : null].filter(Boolean).join(' · ')}
+                    </div>
+                    <div className="mt-0.5 text-[11.5px] text-[var(--color-text-muted)]">
+                      {[c.district, `${cyr ? c.distanceKm.toFixed(1).replace('.', ',') : c.distanceKm.toFixed(1)} ${cyr ? 'км' : 'km'}`].filter(Boolean).join(' · ')}
+                    </div>
+                    <div className="mt-1.5 text-[14px] font-semibold text-[var(--color-primary-pressed)]">
+                      {fmt(c.rentMonthUsd)} <span className="text-[11px] font-normal text-[var(--color-text-muted)]">{t.perMonth}</span>
+                    </div>
+                  </div>
                 </a>
-              </li>
-            ))}
-          </ul>
+              ))}
+            </div>
+            <button type="button" onClick={() => scrollBy(-1)} aria-label={cyr ? 'Назад' : 'Back'}
+              className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 h-9 w-9 items-center justify-center rounded-full bg-white shadow-md ring-1 ring-black/5 text-[var(--color-text)] hover:text-[var(--color-primary)]">
+              <ChevronLeft size={18} />
+            </button>
+            <button type="button" onClick={() => scrollBy(1)} aria-label={cyr ? 'Дальше' : 'Next'}
+              className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 h-9 w-9 items-center justify-center rounded-full bg-white shadow-md ring-1 ring-black/5 text-[var(--color-text)] hover:text-[var(--color-primary)]">
+              <ChevronRight size={18} />
+            </button>
+          </div>
           <div className="mt-2 text-[11px] text-[var(--color-text-muted)]">{t.source(asOf)}</div>
         </div>
       )}
