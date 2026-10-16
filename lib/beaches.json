@@ -1,6 +1,416 @@
 [
  {
   "ids": [
+   "ChIJPTFxOtJc0i0R530dV2s_U4c"
+  ],
+  "name_ru": "Пляж Нуса-Дуа",
+  "name_en": "Nusa Dua Beach",
+  "sand": "white",
+  "sand_note": "Белый песок",
+  "water": "calm",
+  "water_note": "Лагуна за рифом. В отлив риф обнажается",
+  "swim": "yes",
+  "swim_note": "Внутри рифа спокойно круглый год; в сильный отлив мелко",
+  "kids": "yes",
+  "kids_note": "Спокойная лагуна; в отлив не пускать на риф",
+  "surf": "none",
+  "surf_note": "Риф-брейки далеко от берега, не у пляжа",
+  "activities": [
+   "snorkeling",
+   "diving",
+   "sup",
+   "kayak",
+   "jet_ski",
+   "parasailing",
+   "banana_boat",
+   "boat_trips"
+  ],
+  "promenade": {
+   "exists": true,
+   "length_km": null,
+   "note": "Мощёная дорожка вдоль всего пляжа, открыта для всех. Длину источники дают по-разному: 4 и 7 км"
+  },
+  "access": "easy",
+  "access_note": null,
+  "vibe": "семьи, спокойный отдых",
+  "why": "Тихая чистая вода, где можно плавать с детьми, и длинная дорожка вдоль моря.",
+  "sources": [
+   "https://cdn.whereismybeach.com/en/beach/pantai-nusa-dua",
+   "https://ultimatebali.com/inspiration/nusa-dua-travel-guide",
+   "https://novotel.accor.com/a/en/great-escape-magazine/travel/water-sports-nusa-dua-bali.html"
+  ]
+ },
+ {
+  "ids": [
+   "ChIJIe3kSAVb0i0RAdoOd5n5ofA"
+  ],
+  "name_ru": "Пляж Карма Кандара (Karma Beach)",
+  "name_en": "Karma Beach (Karma Kandara)",
+  "sand": "white",
+  "sand_note": "Белый песок, небольшая бухта",
+  "water": "calm",
+  "water_note": "Лагуна за рифом",
+  "swim": "yes",
+  "swim_note": "Спокойная лагуна",
+  "kids": "with_care",
+  "kids_note": "Вода спокойная, но спуск только на фуникулёре, очереди",
+  "surf": "none",
+  "surf_note": null,
+  "activities": [
+   "snorkeling",
+   "sup",
+   "kayak",
+   "yoga"
+  ],
+  "promenade": {
+   "exists": false,
+   "length_km": null,
+   "note": null
+  },
+  "access": "via_hotel_only",
+  "access_note": "Только через отель, фуникулёр со скалы (3-4 мин). Гостям извне - вход платный с депозитом на еду (по отзывам ~500 тыс. рупий)",
+  "vibe": "тихий дорогой пляж-клуб",
+  "why": "Закрытая бухта с белым песком и спокойной водой под скалой.",
+  "sources": [
+   "https://www.theaureview.com/travel/resort-review-karma-kandaras-dramatic-clifftop-location-is-unforgettable/",
+   "https://pickyourtrail.com/attractions/karma-beach-bali",
+   "https://lokalee.app/tours/karma-beach-club-shuttle-services",
+   "https://da.hotels.com/see/go/indonesia/karma-beach-bali"
+  ]
+ },
+ {
+  "ids": [
+   "ChIJfZBWe4NH0i0RuC7-TkXdirw"
+  ],
+  "name_ru": "Пляж Берава",
+  "name_en": "Berawa Beach",
+  "sand": "black",
+  "sand_note": "Чёрный вулканический песок, днём сильно греется",
+  "water": "waves",
+  "water_note": "Волны, течения непредсказуемы; после ливня у юга образуется отбойный поток",
+  "swim": "not_recommended",
+  "swim_note": "Течения, нет спасателей",
+  "kids": "with_care",
+  "kids_note": "Только у берега под присмотром",
+  "surf": "beginner",
+  "surf_note": "Песчаный пик у берега - для новичков, рифовые участки южнее - для опытных",
+  "activities": [],
+  "promenade": {
+   "exists": false,
+   "length_km": null,
+   "note": null
+  },
+  "access": "stairs",
+  "access_note": "Короткая лестница с конца Jl. Pantai Berawa",
+  "vibe": "серферы, пляжные клубы",
+  "why": "Учиться сёрфингу и сидеть в пляжных клубах на закате.",
+  "sources": [
+   "https://finnsbeachclub.com/guides/berawa-beach/",
+   "https://breakfinder.surf/en/surf_spots/berawa-beach",
+   "https://www.balisurfingcamp.com/?p=14092",
+   "https://www.mondo.surf/surf-spot/berawa/guide/11637"
+  ]
+ },
+ {
+  "ids": [
+   "ChIJ3YgYQcRc0i0RfnsjChUffw4"
+  ],
+  "name_ru": "Пляж Гунунг Паюнг",
+  "name_en": "Gunung Payung Beach",
+  "sand": "white",
+  "sand_note": "Белый песок",
+  "water": "moderate",
+  "water_note": "Волны разбиваются далеко на рифе, у берега спокойнее",
+  "swim": "yes",
+  "swim_note": "Плавать между флагами; бывают морские ежи",
+  "kids": "with_care",
+  "kids_note": "Долгий спуск по ступеням без перил",
+  "surf": "intermediate",
+  "surf_note": "Не знаменитый спот",
+  "activities": [
+   "kayak"
+  ],
+  "promenade": {
+   "exists": false,
+   "length_km": null,
+   "note": null
+  },
+  "access": "stairs",
+  "access_note": "Около 280-300 ступеней (~9 мин вниз), есть платный шаттл от парковки",
+  "vibe": "тихо, без толпы",
+  "why": "Тихий пляж с белым песком под скалами, куда доезжают немногие.",
+  "sources": [
+   "https://baliuntold.com/things-to-do/beaches/gunung-payung/",
+   "https://www.hoteles.com/go/indonesia/gunung-payung-beach",
+   "https://bali-home-immo.com/blog/bali-attractions/discover-gunung-payung-beach-2026-travel-guide-tips"
+  ]
+ },
+ {
+  "ids": [
+   "ChIJuVB2aohH0i0RUYd4qWeJQKg"
+  ],
+  "name_ru": "Пляж Мундук Чату",
+  "name_en": "Munduk Catu Beach",
+  "sand": "black",
+  "sand_note": "Тёмный песок, полоска узкая",
+  "water": "waves",
+  "water_note": "Открытый океан, как во всём Чангу",
+  "swim": "not_recommended",
+  "swim_note": "Течения, нет спасателей",
+  "kids": "with_care",
+  "kids_note": "Только у кромки воды",
+  "surf": null,
+  "surf_note": "Своих сёрф-школ нет",
+  "activities": [],
+  "promenade": {
+   "exists": false,
+   "length_km": null,
+   "note": null
+  },
+  "access": "easy",
+  "access_note": null,
+  "vibe": "тихо, закаты",
+  "why": "Маленький тихий кусок берега рядом с оживлённым Бату Болонгом.",
+  "sources": [
+   "https://www.baliholidaysecrets.com/best-beaches-in-canggu/",
+   "https://finnsbeachclub.com/guides/berawa-beach/"
+  ]
+ },
+ {
+  "ids": [
+   "ChIJcf9SNvlP0i0RMH81CNVGFmY"
+  ],
+  "name_ru": "Пляж Сулубан (Блю Пойнт)",
+  "name_en": "Suluban Beach (Blue Point)",
+  "sand": "golden",
+  "sand_note": "Небольшой песчаный пляж в скалах и пещерах",
+  "water": "strong_currents",
+  "water_note": "Мощные волны, течения; в прилив волны заходят в пещеры",
+  "swim": "not_recommended",
+  "swim_note": "Сильные волны и течения; в отлив можно посидеть в лужах среди скал",
+  "kids": "no",
+  "kids_note": "Источники не советуют маленьким детям",
+  "surf": "advanced",
+  "surf_note": "Выход к знаменитому рифу Улувату",
+  "activities": [],
+  "promenade": {
+   "exists": false,
+   "length_km": null,
+   "note": null
+  },
+  "access": "stairs",
+  "access_note": "Бетонная лестница ~10 мин вниз, проход через пещеру",
+  "vibe": "серферы, фото",
+  "why": "Пещеры в скалах и одна из главных волн Бали для опытных серферов.",
+  "sources": [
+   "https://kura2bus.com/blog/hidden-treasures-of-uluwatu-beaches-5-must-visit-spots/",
+   "https://www.agoda.com/travel-guides/indonesia/bali/exploring-suluban-beach-the-ultimate-guide-to-balis-hidden-surf-paradise",
+   "https://en.hoteles.com/go/indonesia/suluban-beach-bali"
+  ]
+ },
+ {
+  "ids": [
+   "ChIJ62XyaXY40i0ROAMZlAIDh_I"
+  ],
+  "name_ru": "Эхо-бич (Бату Меджан)",
+  "name_en": "Echo Beach (Batu Mejan)",
+  "sand": "black",
+  "sand_note": "Чёрный песок и камни",
+  "water": "waves",
+  "water_note": "Рифовые волны",
+  "swim": "not_recommended",
+  "swim_note": "Не для спокойного купания",
+  "kids": "with_care",
+  "kids_note": "Купаться с детьми не подходит",
+  "surf": "advanced",
+  "surf_note": "Рифовые брейки Echo Beach",
+  "activities": [],
+  "promenade": {
+   "exists": false,
+   "length_km": null,
+   "note": null
+  },
+  "access": "stairs",
+  "access_note": "Несколько ступеней с небольшой скалы",
+  "vibe": "серферы, закаты",
+  "why": "Сильные волны для опытных серферов, закаты у храма и рыбные кафе.",
+  "sources": [
+   "https://bali.com/places/echo-beach-canggu/",
+   "https://en.wikipedia.org/wiki/Canggu",
+   "https://www.hoteles.com/go/indonesia/echo-beach"
+  ]
+ },
+ {
+  "ids": [
+   "ChIJfWe3JoZH0i0RZDWpFzOOg1o"
+  ],
+  "name_ru": "Пляж Бату Болонг (Чангу)",
+  "name_en": "Batu Bolong Beach (Canggu)",
+  "sand": "black",
+  "sand_note": "Тёмный вулканический песок",
+  "water": "waves",
+  "water_note": "Мягкие волны над песком, у юга - риф и сильный прибой",
+  "swim": "not_recommended",
+  "swim_note": "Отбойные течения, нет спасателей, в воде много досок",
+  "kids": "with_care",
+  "kids_note": "Только у берега",
+  "surf": "beginner",
+  "surf_note": "Batu Bolong / Old Man's - для новичков и лонгборда, лучше в средний-полный прилив",
+  "activities": [],
+  "promenade": {
+   "exists": false,
+   "length_km": null,
+   "note": null
+  },
+  "access": "easy",
+  "access_note": null,
+  "vibe": "серферы, молодёжь",
+  "why": "Главное место на Бали, где учатся сёрфингу, плюс бары на закате.",
+  "sources": [
+   "https://www.balisurfingcamp.com/surf-spots/canggu/batu-bolong",
+   "https://waveexplorers.com/article/canggu-beach-guide/",
+   "https://bali-home-immo.com/blog/where-to-surf-in-canggu-a-complete-guide-to-batu-bolong-old-man-s-and-echo-beach"
+  ]
+ },
+ {
+  "ids": [
+   "ChIJ_Qv0XcRc0i0Rof53u_VNmso"
+  ],
+  "name_ru": "Пляж Саванган",
+  "name_en": "Sawangan Beach",
+  "sand": "white",
+  "sand_note": "Белый песок",
+  "water": "strong_currents",
+  "water_note": "Высокие волны, сильные течения в общей части",
+  "swim": "not_recommended",
+  "swim_note": "Общая часть пляжа не подходит для купания",
+  "kids": "with_care",
+  "kids_note": "Купаться опасно, играть на песке можно",
+  "surf": null,
+  "surf_note": "Серферы ездят, уровень источники не дают",
+  "activities": [],
+  "promenade": {
+   "exists": null,
+   "length_km": null,
+   "note": null
+  },
+  "access": "steep_path",
+  "access_note": "Крутой съезд у отеля Hilton",
+  "vibe": "тихо, серферы",
+  "why": "Тихий белый пляж без толпы; прогулки на верблюдах для гостей Hilton.",
+  "sources": [
+   "https://bali.com/places/sawangan-beach-nusa-dua/",
+   "https://lovebali.baliprov.go.id/destination/detail/245/pantai-geger-sawangan",
+   "https://30sundays.club/blog/geger-sawangan-beach"
+  ]
+ },
+ {
+  "ids": [
+   "ChIJS4fu2pZB0i0Ryti6EuGAr3s"
+  ],
+  "name_ru": "Пляж Мертасари",
+  "name_en": "Mertasari Beach",
+  "sand": "white",
+  "sand_note": "Светлый песок",
+  "water": "calm",
+  "water_note": "Мелкая лагуна за рифом; в отлив сильно мелеет",
+  "swim": "high_tide_only",
+  "swim_note": "Мелко; источники расходятся, для плавания не лучший",
+  "kids": "yes",
+  "kids_note": "Мелко и спокойно, большой парк у пляжа",
+  "surf": "none",
+  "surf_note": "Место для кайта и виндсёрфа, ветер почти круглый год",
+  "activities": [
+   "kayak",
+   "paragliding"
+  ],
+  "promenade": {
+   "exists": true,
+   "length_km": null,
+   "note": "Южный конец пешеходной дорожки Сануру (всего 5-7 км по разным источникам)"
+  },
+  "access": "easy",
+  "access_note": null,
+  "vibe": "семьи, кайтеры, местные",
+  "why": "Мелкая спокойная вода для детей, кайтсёрфинг и рассветы.",
+  "sources": [
+   "https://bali.com/places/mertasari-beach/",
+   "https://balibuddies.com/mertasari-beach/",
+   "https://greatruns.com/bali-sanur-beach/",
+   "https://www.balitouristic.com/?p=33369"
+  ]
+ },
+ {
+  "ids": [
+   "ChIJ1WOoUVZF0i0Rfa1gH0lW56w"
+  ],
+  "name_ru": "Пляж Томас",
+  "name_en": "Thomas Beach",
+  "sand": "white",
+  "sand_note": "Белый песок, большие камни",
+  "water": "moderate",
+  "water_note": "Зависит от прилива: в отлив камни и кораллы, в прилив пляж узкий",
+  "swim": "yes",
+  "swim_note": "Лучше в средний прилив; дно песчаное, бывают водоросли",
+  "kids": "with_care",
+  "kids_note": "Крутые ступени, следить за приливом",
+  "surf": null,
+  "surf_note": null,
+  "activities": [
+   "snorkeling"
+  ],
+  "promenade": {
+   "exists": false,
+   "length_km": null,
+   "note": null
+  },
+  "access": "stairs",
+  "access_note": "Около 130 крутых ступеней, 4-10 мин; без света",
+  "vibe": "тихо, без толпы",
+  "why": "Спокойный белый пляж без толпы среди знаменитых пляжей Улувату.",
+  "sources": [
+   "https://baliuntold.com/things-to-do/beaches/thomas-beach/",
+   "https://ttbeach.club/blog/thomas-beach-uluwatu-guide",
+   "https://bali-home-immo.com/blog/bali-attractions/discover-thomas-beach-2026-travel-guide-tips"
+  ]
+ },
+ {
+  "ids": [
+   "ChIJ94vrjoxE0i0R5_zExeufWrg"
+  ],
+  "name_ru": "Пляж Джимбаран",
+  "name_en": "Jimbaran Beach",
+  "sand": "golden",
+  "sand_note": "Золотистый песок",
+  "water": "calm",
+  "water_note": "Бухта прикрыта рифом, пологий вход",
+  "swim": "yes",
+  "swim_note": "Спокойная вода, пологое дно",
+  "kids": "yes",
+  "kids_note": "Пологий вход, спокойная вода",
+  "surf": "none",
+  "surf_note": null,
+  "activities": [
+   "sup",
+   "fishing"
+  ],
+  "promenade": {
+   "exists": null,
+   "length_km": null,
+   "note": null
+  },
+  "access": "easy",
+  "access_note": null,
+  "vibe": "семьи, ужин на закате",
+  "why": "Ужин из морепродуктов на песке на закате и спокойное купание.",
+  "sources": [
+   "https://30sundays.club/blog/jimbaran-bay",
+   "https://wanderlog.com/explore/152/jimbaran",
+   "https://www.balitouristic.com/?p=6862"
+  ]
+ },
+ {
+  "ids": [
    "ChIJ-fX3FSE40i0ROo0AwaBwmJI"
   ],
   "name_ru": "Пляж Ньяньи",
@@ -68,7 +478,7 @@
   "ids": [
    "ChIJPyqq13Nb0i0RTmznt69acQA"
   ],
-  "name_ru": "Грин Боул",
+  "name_ru": "Пляж Грин Боул",
   "name_en": "Green Bowl Beach (Pantai Batu Pageh)",
   "sand": "white",
   "sand_note": "белый песок, маленький пляж с пещерами",
@@ -311,7 +721,7 @@
   "ids": [
    "ChIJEZGNwQ9H0i0Rdfw2JXSdo30"
   ],
-  "name_ru": "Пляж Петитенгет (точка между Potato Head и Ku De Ta)",
+  "name_ru": "Пляж Петитенгет",
   "name_en": "Petitenget Beach",
   "sand": "grey",
   "sand_note": "серый песок (по большинству источников)",
@@ -406,7 +816,7 @@
   "ids": [
    "ChIJdT0njsNc0i0R-LH3H9XlvnA"
   ],
-  "name_ru": "Пляж Нуса Дуа",
+  "name_ru": "Пляж Нуса-Дуа",
   "name_en": "Nusa Dua Beach",
   "sand": "white",
   "sand_note": "белый песок",
@@ -501,6 +911,455 @@
    "https://www.baliholidaysecrets.com/seminyak-beach/",
    "https://cdn.whereismybeach.com/en/beach/pantai-seminyak",
    "https://kimasurf.com/surf-spots-on-seminyak"
+  ]
+ },
+ {
+  "ids": [
+   "ChIJ05QiOg040i0Rdx2pd-oTaMs"
+  ],
+  "name_ru": "Пляж Мунггу (Сесех)",
+  "name_en": "Munggu Beach (Seseh)",
+  "sand": "black",
+  "sand_note": "Чёрный вулканический песок (одна страница Бадунга пишет «серый»).",
+  "water": "strong_currents",
+  "water_note": "Сильные волны и отбойные течения от приливов.",
+  "swim": "not_recommended",
+  "swim_note": "Источники пишут о сильных подводных течениях и скрытых рифах.",
+  "kids": "no",
+  "kids_note": "Большие волны и течения.",
+  "surf": "intermediate",
+  "surf_note": "Мощные волны, для серферов среднего уровня.",
+  "activities": [
+   "horse_riding"
+  ],
+  "promenade": {
+   "exists": false,
+   "length_km": null,
+   "note": "Набережной нет."
+  },
+  "access": "easy",
+  "access_note": "Дорога подходит к пляжу, 15-20 минут на машине от Чангу.",
+  "vibe": "тишина, серферы, закаты",
+  "why": "Тихий пляж с чёрным песком без толп, сюда едут на закат и прогулки верхом.",
+  "sources": [
+   "https://sita.badungkab.go.id/en/destinations/munggu-beach-the-exotic-and-natural-beauty-of-badungs-hidden-shore",
+   "https://sita.badungkab.go.id/en/destinations/enjoying-the-beauty-of-seseh-beach-a-peaceful-destination-in-bali",
+   "https://es.hoteles.com/go/indonesia/pererenan-beach-and-seseh-beach",
+   "https://whatsnewindonesia.com/bali/feature/seseh-beach-bali-where-sunsets-surf-and-serenity-meet"
+  ]
+ },
+ {
+  "ids": [
+   "ChIJu17hAxFb0i0RNl4IGQeu1K4"
+  ],
+  "name_ru": "Пляж Пандава",
+  "name_en": "Pandawa Beach",
+  "sand": "white",
+  "sand_note": "Белый мелкий песок, пляж ~800 м под известняковым обрывом.",
+  "water": "moderate",
+  "water_note": "Умеренные волны, риф гасит прибой; дно - песок и гладкий камень.",
+  "swim": "yes",
+  "swim_note": "Отдельная зона между красно-жёлтыми флагами в западной части, есть спасатель.",
+  "kids": "yes",
+  "kids_note": "Зона купания со спасателем, парковка в нескольких метрах от песка.",
+  "surf": "none",
+  "surf_note": "Для сёрфинга слабо, серферы едут на соседний Тимбис.",
+  "activities": [
+   "kayak"
+  ],
+  "promenade": {
+   "exists": false,
+   "length_km": null,
+   "note": "Набережной нет."
+  },
+  "access": "easy",
+  "access_note": "Дорога прорезана через скалу, парковка у пляжа. Вход 15 000 IDR, билет действует и на Тимбис.",
+  "vibe": "семьи, спокойный отдых",
+  "why": "Белый песок, спокойная вода с зоной для купания и прокат каяков.",
+  "sources": [
+   "https://baliuntold.com/things-to-do/beaches/pandawa-beach/",
+   "https://30sundays.club/blog/pandawa-beach",
+   "https://bali-home-immo.com/blog/bali-attractions/discover-pandawa-beach-2026-travel-guide-tips"
+  ]
+ },
+ {
+  "ids": [
+   "ChIJNy9rcHQ40i0RhH6etioYcAE"
+  ],
+  "name_ru": "Пляж Переренан",
+  "name_en": "Pererenan Beach",
+  "sand": "black",
+  "sand_note": "Чёрный вулканический песок, у берега камни.",
+  "water": "strong_currents",
+  "water_note": "Приливы создают сильные подводные течения.",
+  "swim": "not_recommended",
+  "swim_note": "Сильные течения; купаться только в тихие дни у поста спасателей.",
+  "kids": "no",
+  "kids_note": "Камни у берега и отбойные течения.",
+  "surf": "intermediate",
+  "surf_note": "Правая волна у устья реки над рифом и камнями; для среднего и опытного уровня.",
+  "activities": [
+   "horse_riding"
+  ],
+  "promenade": {
+   "exists": false,
+   "length_km": null,
+   "note": "Набережной нет."
+  },
+  "access": "easy",
+  "access_note": null,
+  "vibe": "серферы, спокойная альтернатива Чангу",
+  "why": "Ровная волна для серферов и тихий пляж рядом с Чангу.",
+  "sources": [
+   "https://es.hoteles.com/go/indonesia/pererenan-beach-and-seseh-beach",
+   "https://www.mondo.surf/surf-spot/pererenan/guide/11670",
+   "https://inivie.com/discover-bali/pererenan-bali",
+   "https://www.kupi.com/en-ae/explore/indonesia/denpasar/pererenan-beach"
+  ]
+ },
+ {
+  "ids": [
+   "ChIJKRHFr5Za0i0RWTA04Ft_N4w"
+  ],
+  "name_ru": "Пляж Нунгалан",
+  "name_en": "Nunggalan Beach",
+  "sand": "white",
+  "sand_note": "Белый песок, пляж тянется на несколько километров.",
+  "water": "strong_currents",
+  "water_note": "Течения сильнее в прилив; в отлив мелко, много камней и рифа.",
+  "swim": "not_recommended",
+  "swim_note": "Спасателей нет, течения сильные.",
+  "kids": "no",
+  "kids_note": "Крутой спуск 20-30 минут, нет спасателей, сильные течения.",
+  "surf": "intermediate",
+  "surf_note": "Правая рифовая волна в западной части, средний и опытный уровень; проката нет.",
+  "activities": [],
+  "promenade": {
+   "exists": false,
+   "length_km": null,
+   "note": "Набережной нет."
+  },
+  "access": "steep_path",
+  "access_note": "Тропа и каменные ступени: ~20 минут вниз, ~30 вверх. Туалетов нет.",
+  "vibe": "тишина, дикий пляж",
+  "why": "Длинный пустой пляж с белым песком и старым кораблём на берегу.",
+  "sources": [
+   "https://baliuntold.com/things-to-do/beaches/nunggalan-beach/",
+   "https://droneandslr.com/travel-blog/bali/nyang-nyang-nunggalan-beach/",
+   "https://www.traveloka.com/en-th/explore/destination/uluwatu-beach-bali-acc/273649"
+  ]
+ },
+ {
+  "ids": [
+   "ChIJASi-gg040i0RizadwF9acsM"
+  ],
+  "name_ru": "Пляж Сесех (Селасих)",
+  "name_en": "Seseh Beach (Selasih)",
+  "sand": "black",
+  "sand_note": "Чёрный вулканический песок.",
+  "water": "strong_currents",
+  "water_note": "Большие волны, подводные течения, скрытые рифы.",
+  "swim": "not_recommended",
+  "swim_note": "Сильные течения и рифы.",
+  "kids": "no",
+  "kids_note": "Волны и течения.",
+  "surf": "intermediate",
+  "surf_note": "Мощные волны рядом с Переренаном.",
+  "activities": [
+   "horse_riding"
+  ],
+  "promenade": {
+   "exists": false,
+   "length_km": null,
+   "note": "Набережной нет."
+  },
+  "access": "easy",
+  "access_note": null,
+  "vibe": "тишина, местные, закаты",
+  "why": "Спокойный пляж у рисовых полей и храма, сюда едут на закат и верхом.",
+  "sources": [
+   "https://sita.badungkab.go.id/en/destinations/enjoying-the-beauty-of-seseh-beach-a-peaceful-destination-in-bali",
+   "https://whatsnewindonesia.com/bali/feature/seseh-beach-bali-where-sunsets-surf-and-serenity-meet",
+   "https://www.villanovo.com/villa-rentals/asia/indonesia/bali/south-west-seseh"
+  ]
+ },
+ {
+  "ids": [
+   "ChIJsTGmwHRH0i0RvcqZm0roFp0"
+  ],
+  "name_ru": "Пляж Бату Белиг",
+  "name_en": "Batu Belig Beach",
+  "sand": "black",
+  "sand_note": "Тёмный серо-коричневый вулканический песок, днём сильно нагревается.",
+  "water": "strong_currents",
+  "water_note": "Волна сильнее, чем в Куте и Легиане; течения сильные и непредсказуемые.",
+  "swim": "not_recommended",
+  "swim_note": "Большинство источников называют купание опасным; только у флагов и спасателей.",
+  "kids": "with_care",
+  "kids_note": "Купаться детям не советуют, гулять по песку можно.",
+  "surf": null,
+  "surf_note": null,
+  "activities": [],
+  "promenade": {
+   "exists": false,
+   "length_km": null,
+   "note": "Набережной нет."
+  },
+  "access": "easy",
+  "access_note": null,
+  "vibe": "бары на закат, спокойнее Семиньяка",
+  "why": "Широкий тёмный пляж с барами, куда идут смотреть закат.",
+  "sources": [
+   "https://uk.hotels.com/go/indonesia/batubelig-beach",
+   "https://www.balitouristic.com/batu-belig-beach/",
+   "https://bali.com/?p=10132"
+  ]
+ },
+ {
+  "ids": [
+   "ChIJFyF7mOdG0i0Rrzw9xC_qpOw"
+  ],
+  "name_ru": "Пляж Легиан",
+  "name_en": "Legian Beach",
+  "sand": "golden",
+  "sand_note": "Широкая полоса золотистого песка.",
+  "water": "waves",
+  "water_note": "Волны и быстрые течения; в июне-октябре сильнее у отеля Padma.",
+  "swim": "yes",
+  "swim_note": "Только между красно-жёлтыми флагами; спасатели есть не по всему пляжу.",
+  "kids": "with_care",
+  "kids_note": "Волны и течения, держаться у флагов.",
+  "surf": "beginner",
+  "surf_note": "Пляжный брейк на песке, много школ сёрфинга; новичкам - у Double Six.",
+  "activities": [
+   "yoga"
+  ],
+  "promenade": {
+   "exists": true,
+   "length_km": null,
+   "note": "Мощёная пешеходная дорога вдоль пляжа; от Куты до Семиньяка ~5,6 км, отдельно для Легиана длины нет."
+  },
+  "access": "easy",
+  "access_note": null,
+  "vibe": "туристы, начинающие серферы, закаты",
+  "why": "Длинный песчаный пляж для первых уроков сёрфинга и прогулок на закате.",
+  "sources": [
+   "https://www.rapturecamps.com/blog/legian-beach-bali",
+   "https://www.travelfish.org/sight_profile/indonesia/bali/bali/legian/2984",
+   "https://kwx.liehendr.com/content/wikivoyage_en_all_maxi_2025-02/A/Legian",
+   "https://greatruns.com/bali-kuta-beach-seminyak/"
+  ]
+ },
+ {
+  "ids": [
+   "ChIJCS-6l5xc0i0RMWjOKoKOUlc"
+  ],
+  "name_ru": "Пляж Тимбис",
+  "name_en": "Timbis Beach",
+  "sand": null,
+  "sand_note": "Песчаный пляж ~500-600 м под обрывом; цвет в источниках не указан.",
+  "water": "moderate",
+  "water_note": "Риф в ~100 м гасит большие волны; пройти вдоль берега безопасно только в отлив.",
+  "swim": "high_tide_only",
+  "swim_note": "Купаться удобнее в прилив, дно пологое.",
+  "kids": "with_care",
+  "kids_note": "Мало удобств, мало тени днём, обезьяны.",
+  "surf": "intermediate",
+  "surf_note": "Для сёрфинга лучше Пандавы; уровень в источниках не указан.",
+  "activities": [
+   "paragliding"
+  ],
+  "promenade": {
+   "exists": false,
+   "length_km": null,
+   "note": "Набережной нет."
+  },
+  "access": "stairs",
+  "access_note": "Через Пандаву (20 минут вдоль берега) или через Гунунг Паюнг (короткая лестница). Вход платный через соседние пляжи.",
+  "vibe": "тишина, серферы, параплан",
+  "why": "Дикий пляж без толп рядом с Пандавой, над ним летают парапланы.",
+  "sources": [
+   "https://nashaplaneta.net/asia/indonesia/bali-plyazh-timbis-beach_en",
+   "https://beaches-searcher.com/en/beach/360201104/timbis-beach",
+   "https://www.pelago.co/articles/best-paragliding-spots-in-bali/",
+   "https://baliuntold.com/things-to-do/beaches/pandawa-beach/"
+  ]
+ },
+ {
+  "ids": [
+   "ChIJ418qTAhu0i0RY8dRJ4VbTk0"
+  ],
+  "name_ru": "Пляж Кристал-Бэй (Нуса Пенида)",
+  "name_en": "Crystal Bay",
+  "sand": "white",
+  "sand_note": "Белый песок в бухте.",
+  "water": "calm",
+  "water_note": "Внутренняя бухта спокойная; за ней и у островка сильные течения.",
+  "swim": "yes",
+  "swim_note": "Во внутренней части бухты, лучше утром; дальше не заплывать.",
+  "kids": "yes",
+  "kids_note": "Спокойная бухта, без спуска и ступеней.",
+  "surf": "none",
+  "surf_note": null,
+  "activities": [
+   "snorkeling",
+   "diving",
+   "boat_trips"
+  ],
+  "promenade": {
+   "exists": false,
+   "length_km": null,
+   "note": "Набережной нет."
+  },
+  "access": "easy",
+  "access_note": "Большая парковка прямо у пляжа. На сам остров - лодкой с Бали.",
+  "vibe": "снорклинг, дайверы, закаты",
+  "why": "Спокойная бухта для снорклинга, а дайверы ищут рыбу-луну с июля по октябрь.",
+  "sources": [
+   "https://scubadiverlife.com/dive-site-crystal-bay-nusa-penida-bali-indonesia/",
+   "https://originaldiving.com/far-east/indonesia/bali/crystal-bay",
+   "https://twooutliers.com/best-beaches-nusa-penida/",
+   "https://lesglobeblogueurs.com/visiter-nusa-penida-bali/"
+  ]
+ },
+ {
+  "ids": [
+   "ChIJyztsIghD0i0RZu0_fKWKhj0"
+  ],
+  "name_ru": "Пляж Танджунг Беноа",
+  "name_en": "Tanjung Benoa Beach",
+  "sand": "white",
+  "sand_note": "Белый песок, местами крупный.",
+  "water": "calm",
+  "water_note": "Очень спокойная вода; водные развлечения в основном утром, после полудня отлив.",
+  "swim": "yes",
+  "swim_note": "В зонах за буйками; часть берега отдана под водный спорт.",
+  "kids": "yes",
+  "kids_note": "Спокойная вода.",
+  "surf": "none",
+  "surf_note": null,
+  "activities": [
+   "snorkeling",
+   "diving",
+   "jet_ski",
+   "parasailing",
+   "banana_boat",
+   "boat_trips"
+  ],
+  "promenade": {
+   "exists": false,
+   "length_km": null,
+   "note": "Сведений о набережной нет."
+  },
+  "access": "easy",
+  "access_note": null,
+  "vibe": "семьи, водные развлечения",
+  "why": "Главное место на Бали для парасейлинга, банана-бота и гидроциклов, вода спокойная.",
+  "sources": [
+   "https://lovebali.baliprov.go.id/destination/detail/247/pantai-tanjung-benoa",
+   "https://www.hoteles.com/go/indonesia/tanjung-benoa-beach",
+   "https://www.bali-travel-life.com/bali-parasailing-banana-boat-jet-ski/"
+  ]
+ },
+ {
+  "ids": [
+   "ChIJUbR3BcxB0i0RF0mKLKnjvLw"
+  ],
+  "name_ru": "Пляж Санур (участок Вердхапура)",
+  "name_en": "Werdhapura Beach, Sanur",
+  "sand": "white",
+  "sand_note": "Светлый песок (данные по Сануру в целом).",
+  "water": "calm",
+  "water_note": "Риф в ~500 м гасит волны; в отлив очень мелко, за песком острые кораллы и ежи.",
+  "swim": "high_tide_only",
+  "swim_note": "В отлив купаться не получится.",
+  "kids": "yes",
+  "kids_note": "Мелкая спокойная вода; в коралловой зоне нужна обувь.",
+  "surf": "none",
+  "surf_note": "Рифовые волны далеко от берега и работают редко.",
+  "activities": [
+   "snorkeling",
+   "boat_trips",
+   "fishing"
+  ],
+  "promenade": {
+   "exists": true,
+   "length_km": 5.4,
+   "note": "Мощёная набережная Санура без машин, ~5,4 км от Матахари Тербит до Мертасари (по разным данным 4-7 км)."
+  },
+  "access": "easy",
+  "access_note": null,
+  "vibe": "семьи, спокойный отдых, рассветы",
+  "why": "Тихая вода за рифом, рассветы и прогулки по набережной.",
+  "sources": [
+   "https://www.beachatlas.com/nl/werdhapura",
+   "https://bali.com/places/sanur-beach/",
+   "https://themerusanur.com/?p=24396"
+  ]
+ },
+ {
+  "ids": [
+   "ChIJuTYKlEZF0i0RlR3w5pBjotw"
+  ],
+  "name_ru": "Пляж Бингин",
+  "name_en": "Bingin Beach",
+  "sand": "white",
+  "sand_note": "Короткая полоса белого песка под скалами.",
+  "water": "waves",
+  "water_note": "Рифовая волна; в отлив риф обнажается.",
+  "swim": "high_tide_only",
+  "swim_note": "В средний и высокий прилив, подальше от зоны сёрфинга; спасателей нет.",
+  "kids": "with_care",
+  "kids_note": "Много ступеней и мелкий риф - скорее для детей постарше.",
+  "surf": "advanced",
+  "surf_note": "Bingin - короткая быстрая левая труба над мелким рифом.",
+  "activities": [],
+  "promenade": {
+   "exists": false,
+   "length_km": null,
+   "note": "Набережной нет."
+  },
+  "access": "stairs",
+  "access_note": "Длинные лестницы со скалы, по разным данным 150-200 ступеней.",
+  "vibe": "серферы, расслабленная атмосфера",
+  "why": "Известная волна для опытных серферов и тихий пляж под скалами.",
+  "sources": [
+   "https://bali.com/places/bingin-beach/",
+   "https://www.rapturecamps.com/blog/bingin-beach",
+   "https://thesurfatlas.com/bali-surf/surfing-bingin-beach/",
+   "https://www.surfindonesia.com/bali-surf-spots/bingin-beach/"
+  ]
+ },
+ {
+  "ids": [
+   "ChIJ506XQIRH0i0RQgvsBtOQums"
+  ],
+  "name_ru": "Пляж Нелаян",
+  "name_en": "Nelayan Beach",
+  "sand": "black",
+  "sand_note": "Небольшая полоса чёрного песка.",
+  "water": "strong_currents",
+  "water_note": "Течения сильные; в отлив обнажается риф.",
+  "swim": "not_recommended",
+  "swim_note": "Сильные течения.",
+  "kids": "no",
+  "kids_note": "Течения и риф.",
+  "surf": "beginner",
+  "surf_note": "Пляжный брейк над песком и рифом, лево и право; подходит для всех уровней, людей меньше, чем на Бату Болонг.",
+  "activities": [],
+  "promenade": {
+   "exists": false,
+   "length_km": null,
+   "note": "Набережной нет."
+  },
+  "access": "easy",
+  "access_note": null,
+  "vibe": "серферы, тише чем Бату Болонг",
+  "why": "Менее людная волна для сёрфинга в самом центре Чангу.",
+  "sources": [
+   "https://www.mondo.surf/surf-spot/nelayan-beach-canggu/guide/11663",
+   "https://www.balisurfingcamp.com/blog/canggu-surfing-guide",
+   "https://www.cafedelmarbali.co.id/best-beach-canggu"
   ]
  }
 ]
