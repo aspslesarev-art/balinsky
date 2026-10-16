@@ -175,7 +175,9 @@ function VillaPresentation({ data, onClose }: { data: VillaPresentationData; onC
       {/* Top bar */}
       <div className="relative z-20 flex items-center justify-between gap-4 px-4 md:px-8 py-3 text-[var(--color-text)]">
         <div className="min-w-0 flex items-center gap-3">
-          <div className="text-[12px] uppercase tracking-wider text-[var(--color-text-muted)]">
+          {/* shrink-0 + nowrap: иначе на телефоне длинный заголовок рядом
+              сжимал счётчик в столбик «1 / 8» по строке на символ. */}
+          <div className="shrink-0 whitespace-nowrap tabular-nums text-[12px] uppercase tracking-wider text-[var(--color-text-muted)]">
             {safeI + 1} / {total}
           </div>
           <div className="min-w-0 truncate text-[14px] font-medium">

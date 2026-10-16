@@ -1411,8 +1411,8 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
               {facts.map(({ Icon, label, value }) => (
                 <div key={label} className="bg-white rounded-2xl border border-[var(--color-border)] p-5">
                   <div className="flex items-center gap-2 mb-2 text-[var(--color-text-muted)]">
-                    <Icon size={16} />
-                    <span className="text-[12px] uppercase tracking-wide">{label}</span>
+                    <Icon size={16} className="shrink-0" />
+                    <span className="min-w-0 text-[12px] uppercase tracking-wide [overflow-wrap:normal]">{label}</span>
                   </div>
                   <div className="text-[16px] font-semibold text-[var(--color-text)]">{value}</div>
                 </div>
