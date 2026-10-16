@@ -21,6 +21,13 @@ const TONE_TEXT: Record<Tone, string> = {
   minus: 'text-[#A1281C]',
 }
 
+// «Для жизни удобно, но бывает шумно» / «Для жизни есть минусы: далеко до школы».
+function livingLine(v: Verdict, line: Record<Tone, string>, but: string, minus: Record<string, string>): string {
+  const ms = (v.comfort.living?.minuses ?? []).map(k => minus[k]).filter(Boolean)
+  if (!ms.length) return line[v.comfort.tone]
+  return v.comfort.tone === 'plus' ? `${line.plus}, ${but} ${ms.join(', ')}` : `${line[v.comfort.tone]}: ${ms.join(', ')}`
+}
+
 const yearsRu = (n: number) => `${n} ${pluralRu(n, ['год', 'года', 'лет'])}`
 const en = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
 const pctFmt = (x: number) => `${(x * 100).toFixed(1).replace('.', ',')}%`
@@ -33,6 +40,9 @@ const COPY = {
   ru: {
     title: 'Стоит ли брать этот объект',
     sub: 'Четыре главных вопроса покупателя. Ответы - из данных, не из рекламы.',
+    titleLive: 'Подходит ли для жизни',
+    subLive: 'Два вопроса для тех, кто покупает для себя. Ответы - из данных, не из рекламы.',
+    docsFirst: 'Сначала проверьте документы.',
     total: 'Итог',
     more: 'Подробнее',
     q: { safety: 'Безопасно ли это?', comfort: 'Удобно ли там жить?', demand: 'Будет ли спрос?', money: 'Сколько принесёт?' },
@@ -44,6 +54,7 @@ const COPY = {
     status: {
       safety: { plus: 'Рисков не видно', warn: 'Есть вопросы', minus: 'Есть риски' },
       comfort: { plus: 'Удобно', warn: 'Тихо, но далеко', minus: 'Далеко' },
+      comfortLiving: { plus: 'Удобно', warn: 'Есть минусы', minus: 'Неудобно' },
       demand: { plus: 'Спрос есть', warn: 'Спрос средний', minus: 'Спрос слабый' },
       demandMonthly: { plus: 'Только помесячно', warn: 'Только помесячно', minus: 'Только помесячно' },
       money: { plus: 'Хорошо', warn: 'Средне', minus: 'Мало' },
@@ -61,10 +72,13 @@ const COPY = {
       underConstruction ? 'Большую часть цены вы заплатите до сдачи дома.' : null,
       v.safety.hazards.length && !v.safety.hazards.some(h => h.key !== 'earthquake' && h.level === 'high') ? 'Наводнений и оползней нет.' : null,
     ].filter(Boolean).join(' '),
-    comfortAnswer: (v: Verdict) => v.comfort.airportBand === 'near' ? 'Аэропорт и главные районы рядом'
+    // Есть расчёт «для жизни» — ответ по школе, пляжу, врачам, магазину и тишине.
+    comfortAnswer: (v: Verdict) => v.comfort.living
+      ? livingLine(v, { plus: 'Для жизни удобно', warn: 'Для жизни есть минусы', minus: 'Для жизни неудобно' }, 'но', { school: 'далеко до школы', beach: 'далеко до пляжа', health: 'далеко до клиники', shop: 'далеко до магазина', cafes: 'мало кафе', quiet: 'бывает шумно', quietMinus: 'шумно', volcano: 'близко вулкан' })
+      : v.comfort.airportBand === 'near' ? 'Аэропорт и главные районы рядом'
       : v.comfort.airportBand === 'far' ? 'Далеко - больше для жизни, чем для отпуска'
       : 'Для жизни удобно, для отпуска далековато',
-    comfortShort: (v: Verdict) => v.comfort.airportMin != null ? `До аэропорта около ${v.comfort.airportMin} мин.` : '',
+    comfortShort: (v: Verdict) => !v.comfort.living && v.comfort.airportMin != null ? `До аэропорта около ${v.comfort.airportMin} мин.` : '',
     demandAnswer: (v: Verdict, m: MonthlyBundle | null) => v.demand.monthlyOnly
       ? (m && m.n >= 10 ? 'Сдавать можно только надолго - спрос на это есть' : 'Сдавать можно только надолго, а таких предложений рядом мало')
       : v.demand.ownOccupancy != null ? (v.demand.tone === 'plus' ? 'Этот комплекс уже хорошо сдаётся на Booking' : 'Комплекс сдаётся на Booking, но занят не полностью')
@@ -148,6 +162,9 @@ const COPY = {
   en: {
     title: 'Is this property worth buying',
     sub: 'Four questions every first-time buyer in Bali asks. The answers come from data, not from advertising.',
+    titleLive: 'Is it good to live in',
+    subLive: 'Two questions for those buying for themselves. The answers come from data, not from advertising.',
+    docsFirst: 'Check the documents first.',
     total: 'Bottom line',
     more: 'Details',
     q: { safety: 'Is it safe?', comfort: 'Is it a good place to live?', demand: 'Will there be demand?', money: 'How much will it earn?' },
@@ -159,6 +176,7 @@ const COPY = {
     status: {
       safety: { plus: 'No visible risks', warn: 'Open questions', minus: 'Risks' },
       comfort: { plus: 'Convenient', warn: 'Quiet but far', minus: 'Far' },
+      comfortLiving: { plus: 'Convenient', warn: 'Has drawbacks', minus: 'Inconvenient' },
       demand: { plus: 'In demand', warn: 'Moderate demand', minus: 'Weak demand' },
       demandMonthly: { plus: 'Monthly only', warn: 'Monthly only', minus: 'Monthly only' },
       money: { plus: 'Good', warn: 'Average', minus: 'Low' },
@@ -176,10 +194,12 @@ const COPY = {
       underConstruction ? 'You pay most of the price while the house is being built.' : null,
       v.safety.hazards.length && !v.safety.hazards.some(h => h.key !== 'earthquake' && h.level === 'high') ? 'No natural hazards like floods.' : null,
     ].filter(Boolean).join(' '),
-    comfortAnswer: (v: Verdict) => v.comfort.airportBand === 'near' ? 'Close to the airport and main areas'
+    comfortAnswer: (v: Verdict) => v.comfort.living
+      ? livingLine(v, { plus: 'Comfortable to live in', warn: 'Liveable, with drawbacks', minus: 'Inconvenient to live in' }, 'but', { school: 'school is far', beach: 'beach is far', health: 'clinic is far', shop: 'grocery is far', cafes: 'few cafés', quiet: 'can be noisy', quietMinus: 'noisy', volcano: 'volcano nearby' })
+      : v.comfort.airportBand === 'near' ? 'Close to the airport and main areas'
       : v.comfort.airportBand === 'far' ? 'Far from the airport - better for living than for a holiday'
       : 'Average distance - fine for living, a bit far for a holiday',
-    comfortShort: (v: Verdict) => v.comfort.airportMin != null ? `About ${v.comfort.airportMin} min to the airport.` : '',
+    comfortShort: (v: Verdict) => !v.comfort.living && v.comfort.airportMin != null ? `About ${v.comfort.airportMin} min to the airport.` : '',
     demandAnswer: (v: Verdict, m: MonthlyBundle | null) => v.demand.monthlyOnly
       ? (m && m.n >= 10 ? 'Only long-term rental is allowed - and there is demand for it nearby' : 'Only long-term rental is allowed, and few similar listings nearby')
       : v.demand.ownOccupancy != null ? (v.demand.tone === 'plus' ? 'This complex already rents well on Booking' : 'The complex rents on Booking but is not fully booked')
@@ -266,7 +286,7 @@ export function questionHeaders(v: Verdict, y: YieldFacts | null, m: MonthlyBund
   const demandStatus = v.demand.monthlyOnly ? c.status.demandMonthly : c.status.demand
   return {
     safety: { n: 1, kicker: c.qOf(1), title: c.q.safety, status: c.status.safety[v.safety.tone], tone: v.safety.tone, lead: [c.safetyAnswer(v), c.safetyShort(v, underConstruction)].filter(Boolean).join('. ').replace(/\.\./g, '.') },
-    comfort: { n: 2, kicker: c.qOf(2), title: c.q.comfort, status: c.status.comfort[v.comfort.tone], tone: v.comfort.tone, lead: [c.comfortAnswer(v), c.comfortShort(v)].filter(Boolean).join('. ').replace(/\.\./g, '.') },
+    comfort: { n: 2, kicker: c.qOf(2), title: c.q.comfort, status: (v.comfort.living ? c.status.comfortLiving : c.status.comfort)[v.comfort.tone], tone: v.comfort.tone, lead: [c.comfortAnswer(v), c.comfortShort(v)].filter(Boolean).join('. ').replace(/\.\./g, '.') },
     demand: { n: 3, kicker: c.qOf(3), title: c.q.demand, status: demandStatus[v.demand.tone], tone: v.demand.tone, lead: [c.demandAnswer(v, m), c.demandShort(v, m)].filter(Boolean).join('. ').replace(/\.\./g, '.') },
     money: { n: 4, kicker: c.qOf(4), title: c.q.money, status: c.status.money[v.money.tone], tone: v.money.tone, lead: [c.moneyAnswer(y), c.moneyShort(y, saleDiff)].filter(Boolean).join('. ').replace(/\.\./g, '.') },
   } satisfies Record<string, QuestionHeader>
@@ -276,23 +296,6 @@ export const TONE_PILL_CLASS = TONE_PILL
 
 export function ToneDot({ tone }: { tone: Tone }) {
   return <span className={`inline-block w-2 h-2 rounded-full ${tone === 'plus' ? 'bg-[var(--color-primary)]' : tone === 'warn' ? 'bg-[#C77700]' : 'bg-[#C0392B]'}`} aria-hidden />
-}
-
-// Спутниковая подложка Esri (та же, что у розы ветров): тайлы 3×2 вокруг
-// точки, чтобы карточка «Удобно» показывала само место, а не значок.
-const TILE = 256
-function satTiles(lat: number, lng: number, z = 16) {
-  const n = 2 ** z
-  const x = ((lng + 180) / 360) * n
-  const r = (lat * Math.PI) / 180
-  const y = ((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2) * n
-  const tx = Math.floor(x), ty = Math.floor(y)
-  const tiles: { src: string; dx: number; dy: number }[] = []
-  for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) {
-    tiles.push({ src: `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${ty + j}/${tx + i}`, dx: i * TILE, dy: j * TILE })
-  }
-  // Сдвиг, при котором точка объекта оказывается в центре карточки.
-  return { tiles, offX: -(x - tx) * TILE, offY: -(y - ty) * TILE }
 }
 
 const SEG_COLOR: Record<Tone, string> = { minus: 'bg-[#C0392B]', warn: 'bg-[#D08A1C]', plus: 'bg-[var(--color-primary)]' }
@@ -306,7 +309,9 @@ function Steps({ tone }: { tone: Tone }) {
   )
 }
 
-export function ListingVerdict({ verdict: v, yields: y, monthly, saleDiff, underConstruction, anchors, lat, lng, neighbourPhotos, dev, lang }: {
+export function ListingVerdict({ verdict: v, yields: y, monthly, saleDiff, underConstruction, anchors, lang, mode = 'income' }: {
+  /** 'live' — для покупки «для себя»: только безопасность и удобство, итог по удобству. */
+  mode?: 'income' | 'live'
   verdict: Verdict
   yields: YieldFacts | null
   monthly: MonthlyBundle | null
@@ -320,92 +325,24 @@ export function ListingVerdict({ verdict: v, yields: y, monthly, saleDiff, under
   lang: Lang
 }) {
   const c = pickCopy(COPY, lang)
-  const why = c.totalWhy(v, saleDiff)
-  const fmt = lang === 'ru' || lang === 'uk' ? pctFmt : pctFmtEn
+  const live = mode === 'live'
+  const why = live ? null : c.totalWhy(v, saleDiff)
   const cards = [
     { key: 'safety' as const, q: c.q.safety, tone: v.safety.tone, status: c.status.safety[v.safety.tone], answer: c.safetyAnswer(v), short: c.safetyShort(v, underConstruction) },
-    { key: 'comfort' as const, q: c.q.comfort, tone: v.comfort.tone, status: c.status.comfort[v.comfort.tone], answer: c.comfortAnswer(v), short: c.comfortShort(v) },
+    { key: 'comfort' as const, q: c.q.comfort, tone: v.comfort.tone, status: (v.comfort.living ? c.status.comfortLiving : c.status.comfort)[v.comfort.tone], answer: c.comfortAnswer(v), short: c.comfortShort(v) },
     { key: 'demand' as const, q: c.q.demand, tone: v.demand.tone, status: (v.demand.monthlyOnly ? c.status.demandMonthly : c.status.demand)[v.demand.tone], answer: c.demandAnswer(v, monthly), short: c.demandShort(v, monthly) },
     { key: 'money' as const, q: c.q.money, tone: v.money.tone, status: c.status.money[v.money.tone], answer: c.moneyAnswer(y), short: c.moneyShort(y, saleDiff) },
-  ]
-
-  // Картинка над каждым ответом — данные этого объекта, а не значок.
-  const safetyRows = [
-    permitOk(v.safety.permit)
-      ? { k: v.safety.permit === 'slf' ? c.slfRow : c.permitRow, v: c.permitYes, tone: 'plus' as Tone }
-      : { k: v.safety.permit === 'slfApplied' ? c.slfRow : c.permitRow, v: v.safety.permit === 'unknown' ? c.permitUnknown : c.permitApplied, tone: 'warn' as Tone },
-    v.safety.leaseUnknown ? { k: c.leaseRow, v: c.permitUnknown, tone: 'warn' as Tone } : null,
-    { k: c.build, v: v.safety.notStarted ? c.notStarted : null, tone: 'minus' as Tone },
-    dev && dev.total > 0 ? { k: c.devReady, v: c.devOf(dev.ready, dev.total), tone: (dev.ready === 0 ? 'minus' : 'plus') as Tone } : null,
-    v.safety.hazards.length ? { k: c.floodSlide, v: v.safety.hazards.some(h => (h.key === 'flood' || h.key === 'landslide') && (h.level === 'medium' || h.level === 'high')) ? c.lvl.medium : c.lvl.none, tone: (v.safety.hazards.some(h => (h.key === 'flood' || h.key === 'landslide') && (h.level === 'medium' || h.level === 'high')) ? 'warn' : 'plus') as Tone } : null,
-  ].filter((r): r is { k: string; v: string; tone: Tone } => !!r && r.v != null)
-  const sat = lat != null && lng != null ? satTiles(lat, lng) : null
-  const photos = neighbourPhotos.slice(0, 3)
-  const yieldRows = y ? [
-    { k: c.yBefore, v: y.pct.beforeTax, main: true },
-    { k: c.yResShort, v: y.pct.resident, main: false },
-    { k: c.yNonShort, v: y.pct.nonResident, main: false },
-  ] : []
-  // Полоски на шкале 0–12% годовых: всё выше 12% упирается в край.
-  const barW = (p: number) => `${Math.max(4, Math.min(100, (p / 0.12) * 100))}%`
-
-  const visual = (key: 'safety' | 'comfort' | 'demand' | 'money'): ReactNode => {
-    if (key === 'safety' && safetyRows.length) return (
-      <div className={`flex h-40 flex-col justify-center gap-2.5 px-6 ${v.safety.tone === 'plus' ? 'bg-[var(--color-primary-soft)]' : v.safety.tone === 'warn' ? 'bg-[#FDF4E7]' : 'bg-[#FBF3F2]'}`}>
-        {safetyRows.map(r => (
-          <div key={r.k} className="flex justify-between gap-4 text-[15px]">
-            <span className="text-[var(--color-text)]">{r.k}</span>
-            <span className={`shrink-0 whitespace-nowrap font-semibold ${TONE_TEXT[r.tone]}`}>{r.v}</span>
-          </div>
-        ))}
-      </div>
-    )
-    if (key === 'comfort' && sat) return (
-      <div className="relative h-40 overflow-hidden bg-[var(--color-search-bg)]">
-        <div className="absolute left-1/2 top-1/2" style={{ transform: `translate(${sat.offX}px, ${sat.offY}px)` }}>
-          {sat.tiles.map(t => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img key={t.src} src={t.src} alt="" loading="lazy" width={TILE} height={TILE} className="absolute max-w-none" style={{ left: t.dx, top: t.dy }} />
-          ))}
-        </div>
-        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-5 w-5 rounded-full border-[3px] border-white bg-[var(--color-primary)] shadow" aria-hidden />
-        {v.comfort.airportMin != null && (
-          <span className="absolute left-4 bottom-4 rounded-full bg-white px-3 py-1.5 text-[14px] font-semibold text-[var(--color-text)]">{c.airportChip(v.comfort.airportMin)}</span>
-        )}
-      </div>
-    )
-    if (key === 'demand' && photos.length >= 2) return (
-      <div className="relative grid h-40 gap-0.5" style={{ gridTemplateColumns: `repeat(${photos.length}, minmax(0, 1fr))` }}>
-        {photos.map(src => (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img key={src} src={src} alt="" loading="lazy" referrerPolicy="no-referrer" className="h-40 w-full object-cover" />
-        ))}
-        <span className="absolute left-4 bottom-4 rounded-full bg-white px-3 py-1.5 text-[14px] font-semibold text-[var(--color-text)]">{c.neighboursChip}</span>
-      </div>
-    )
-    if (key === 'money' && yieldRows.length) return (
-      <div className="flex h-40 flex-col justify-center gap-3 bg-[var(--color-search-bg)] px-6">
-        {yieldRows.map(r => (
-          <div key={r.k} className="grid grid-cols-[110px_minmax(0,1fr)_52px] items-center gap-3 text-[14px]">
-            <span className="text-[var(--color-text-muted)]">{r.k}</span>
-            <span className="h-2.5 overflow-hidden rounded-full bg-[var(--color-border)]"><span className={`block h-full rounded-full ${r.main ? 'bg-[var(--color-primary)]' : 'bg-[#7FB89C]'}`} style={{ width: barW(r.v) }} /></span>
-            <span className="text-right font-semibold text-[var(--color-text)]">{fmt(r.v)}</span>
-          </div>
-        ))}
-      </div>
-    )
-    return null
-  }
+  ].filter(card => !live || card.key === 'safety' || card.key === 'comfort')
 
   return (
-    <section className="mb-16" aria-labelledby="verdict-title">
-      <h2 id="verdict-title" className="text-[28px] md:text-[36px] font-semibold tracking-tight leading-tight text-[var(--color-text)]">{c.title}</h2>
-      <p className="mt-3 text-[16px] md:text-[18px] leading-relaxed text-[var(--color-text-muted)] max-w-[64ch]">{c.sub}</p>
+    <section className="mb-16" aria-labelledby={live ? 'verdict-title-live' : 'verdict-title'}>
+      <h2 id={live ? 'verdict-title-live' : 'verdict-title'} className="text-[28px] md:text-[36px] font-semibold tracking-tight leading-tight text-[var(--color-text)]">{live ? c.titleLive : c.title}</h2>
+      <p className="mt-3 text-[16px] md:text-[18px] leading-relaxed text-[var(--color-text-muted)] max-w-[64ch]">{live ? c.subLive : c.sub}</p>
 
       <div className="mt-8 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_280px] gap-6 lg:gap-10 items-center rounded-[20px] bg-[var(--color-surface-alt)] p-6 md:p-8">
         <div>
           <div className="text-[13px] font-semibold uppercase tracking-wider text-[var(--color-primary-pressed)]">{c.total}</div>
-          <p className="mt-3 text-[20px] md:text-[26px] font-semibold leading-snug tracking-tight text-[var(--color-text)]">{c.totalLine(v)}</p>
+          <p className="mt-3 text-[20px] md:text-[26px] font-semibold leading-snug tracking-tight text-[var(--color-text)]">{live ? `${c.comfortAnswer(v)}.${docsFirst(v) ? ` ${c.docsFirst}` : ''}` : c.totalLine(v)}</p>
           {why && <p className="mt-3 text-[15px] md:text-[16px] leading-relaxed text-[var(--color-text-muted)]">{why[0].toUpperCase() + why.slice(1)}.</p>}
         </div>
         <ul className="flex flex-col gap-3">
@@ -423,23 +360,12 @@ export function ListingVerdict({ verdict: v, yields: y, monthly, saleDiff, under
         </ul>
       </div>
 
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-        {cards.map(card => (
-          <a key={card.key} href={`#${anchors[card.key]}`}
-            className="group flex flex-col overflow-hidden rounded-[20px] border border-[var(--color-border)] bg-white transition-colors duration-[120ms] hover:border-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">
-            {visual(card.key)}
-            <span className="flex flex-1 flex-col gap-2 p-5 md:p-6">
-              <span className={`text-[14px] font-semibold ${TONE_TEXT[card.tone]}`}>{card.q} · {card.status}</span>
-              <span className="text-[19px] md:text-[21px] font-semibold leading-snug tracking-tight text-[var(--color-text)] [text-wrap:balance]">{card.answer}</span>
-              {card.short && <span className="text-[15px] leading-relaxed text-[var(--color-text-muted)] [text-wrap:pretty]">{card.short}</span>}
-            </span>
-          </a>
-        ))}
-      </div>
+      {/* Большие карточки с ответами убраны: тот же ответ и та же картинка — в
+          заголовке и начале каждого раздела ниже, шкала выше ведёт туда. */}
 
-      {(v.pluses.length >= 2 || v.checks.length > 0) && (
+      {((!live && v.pluses.length >= 2) || v.checks.length > 0) && (
         <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-          {v.pluses.length >= 2 && (
+          {!live && v.pluses.length >= 2 && (
             <div className="rounded-[20px] bg-[var(--color-primary-soft)] p-5 md:p-7">
               <h3 className="text-[18px] font-semibold text-[var(--color-text)]">{c.pluses}</h3>
               <ul className="mt-3 list-disc pl-5 flex flex-col gap-1.5 text-[16px] leading-relaxed text-[var(--color-text)] marker:text-[var(--color-primary)]">

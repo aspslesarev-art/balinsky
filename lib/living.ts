@@ -255,3 +255,10 @@ export async function loadLivingNoise(kind: 'villa' | 'apartment', id: string): 
     volcano_km: data.volcano_km != null ? Number(data.volcano_km) : null,
   }
 }
+
+/** Минусы для итога «Удобно ли там жить?» — ключи, без цифр (они в списке). */
+export type LivingMinus = 'school' | 'beach' | 'health' | 'shop' | 'cafes' | 'quiet' | 'quietMinus' | 'volcano'
+export function livingMinuses(f: LivingFacts): LivingMinus[] {
+  return f.rows.filter(r => r.tone !== 'plus')
+    .map(r => (r.key === 'quiet' && r.tone === 'minus' ? 'quietMinus' : r.key) as LivingMinus)
+}

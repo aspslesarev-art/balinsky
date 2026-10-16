@@ -11,6 +11,7 @@ import { buildSnapshot, type InvestmentSnapshot } from './investment/snapshot'
 import { computeEconomics, type TaxStatus } from './investment/economics'
 import { computeMonthlyEconomics, MONTHS_RENTED, AGENT_FEE_PCT } from './investment/monthly'
 import type { Climate } from './complex-access'
+import { livingMinuses, type LivingFacts, type LivingMinus } from './living'
 
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
 
@@ -141,6 +142,8 @@ export type VerdictInput = {
   dev: { name: string | null; total: number; ready: number } | null
   climate: Climate | null
   airportMin: number | null
+  /** «Для жизни» объекта — ответ на «Удобно ли там жить?» (lib/living.ts). */
+  living?: LivingFacts | null
   monthly: { n: number; p25: number; p50: number; p75: number; radiusKm: number } | null
   daily: { count: number; adrUsd: number | null; occupancyPct: number | null } | null
   yields: YieldFacts | null
@@ -153,7 +156,9 @@ export type VerdictInput = {
 export type Verdict = {
   /** Разрешения: pbg/slf — документ есть; *Applied — только заявка; unknown — данных нет. */
   safety: { tone: Tone; permit: PermitState; leaseUnknown: boolean; notStarted: boolean; noFinishedProjects: boolean; hazards: { key: string; level: 'none' | 'low' | 'medium' | 'high' }[] }
-  comfort: { tone: Tone; airportMin: number | null; airportBand: 'near' | 'mid' | 'far' | null; flat: boolean | null; roadM: number | null }
+  /** living — «для жизни» (lib/living.ts): если есть, тон и ответ берутся из него,
+   *  а не из одного расстояния до аэропорта. */
+  comfort: { tone: Tone; airportMin: number | null; airportBand: 'near' | 'mid' | 'far' | null; flat: boolean | null; roadM: number | null; living: { minuses: LivingMinus[]; schoolKm: number | null; beachKm: number | null; clinicKm: number | null } | null }
   demand: { tone: Tone; monthlyOnly: boolean; ownOccupancy: number | null }
   money: { tone: Tone; pct: number | null }
   /** Сколько процентов прибавилось зданий в радиусе 1 км с первого года наблюдений. */
@@ -209,7 +214,11 @@ export function buildVerdict(i: VerdictInput): Verdict {
   const plot = i.climate?.plot
   const flat = plot?.slope_pct != null ? plot.slope_pct < 8 : null
   const airportBand = i.airportMin == null ? null : i.airportMin <= AIRPORT_NEAR_MIN ? 'near' : i.airportMin <= AIRPORT_FAR_MIN ? 'mid' : 'far'
-  const comfortTone: Tone = airportBand === 'near' ? 'plus' : airportBand === 'far' ? 'minus' : 'warn'
+  // Удобство: по школе, пляжу, врачам, магазину и тишине, если они посчитаны;
+  // иначе — по дороге до аэропорта, как раньше.
+  const comfortTone: Tone = i.living ? i.living.tone : airportBand === 'near' ? 'plus' : airportBand === 'far' ? 'minus' : 'warn'
+  const lr = (k: 'school' | 'beach' | 'health') => i.living?.rows.find(r => r.key === k)?.km ?? null
+  const living = i.living ? { minuses: livingMinuses(i.living), schoolKm: lr('school'), beachKm: lr('beach'), clinicKm: lr('health') } : null
 
   const monthlyOnly = i.rentalRestricted
   // Комплекс сам на Booking — спрос по его загрузке, а не по соседям.
@@ -244,7 +253,7 @@ export function buildVerdict(i: VerdictInput): Verdict {
 
   return {
     safety: { tone: safetyTone, permit, leaseUnknown, notStarted, noFinishedProjects, hazards },
-    comfort: { tone: comfortTone, airportMin: i.airportMin, airportBand, flat, roadM: plot?.road.m ?? null },
+    comfort: { tone: comfortTone, airportMin: i.airportMin, airportBand, flat, roadM: plot?.road.m ?? null, living },
     demand: { tone: demandTone, monthlyOnly, ownOccupancy: monthlyOnly ? null : i.ownOccupancy ?? null },
     money: { tone: moneyToneValue, pct },
     buildingsGrowthPct,
