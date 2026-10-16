@@ -22,7 +22,7 @@ async function forKind(kind: 'villa' | 'apartment', wanted: string[]): Promise<R
   // Ключ — slug или airtable id: старые сохранения id не хранят.
   const [byId, bySlug] = await Promise.all([
     sb.from(TABLE[kind]).select('airtable_id').in('airtable_id', wanted),
-    sb.from(TABLE[kind]).select('airtable_id, slug:data->>"SEO:Slug", pub:data->>"Опубликовать"').in('data->>SEO:Slug', wanted),
+    sb.from(TABLE[kind]).select('airtable_id, slug:data->>"SEO:Slug", pub:data->>"Опубликовать"').in('data->>"SEO:Slug"', wanted),
   ])
   if (byId.error) throw new Error(byId.error.message)
   if (bySlug.error) throw new Error(bySlug.error.message)
