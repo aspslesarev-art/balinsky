@@ -1146,8 +1146,6 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
     bedrooms: verdictSnap?.villa.bedrooms ?? null,
     noise: livingNoise,
     climate: geoFacts?.climate ?? null,
-    ispu: geoFacts?.air?.ispu_avg ?? null,
-    elevationM: geoFacts?.elevation_m ?? null,
   })
   const verdict = buildVerdict({
     status, yearRaw, permit, leaseYears, rentalRestricted, complex: complexFacts,

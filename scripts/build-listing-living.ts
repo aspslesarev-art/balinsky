@@ -65,7 +65,7 @@ async function main() {
         const byCategory = (await r.json()) as Record<string, NearbyPlace[]>
         const noise = u.lat != null && u.lng != null ? computeGeoNoise(u.lat, u.lng, osm, roadCells) : null
         const g = geo.get(`${u.kind}:${u.id}`)
-        const f = computeLivingFacts({ byCategory, routes: null, leaseYears: null, bedrooms: null, noise, climate: g?.climate ?? null, ispu: g?.ispu ?? null, elevationM: g?.elevation ?? null })
+        const f = computeLivingFacts({ byCategory, routes: null, leaseYears: null, bedrooms: null, noise, climate: g?.climate ?? null })
         if (!f) continue
         rows.push({ kind: u.kind, airtable_id: u.id, ...livingSummary(f), ...(noise ?? {}), computed_at: new Date().toISOString() })
       } catch (e) {

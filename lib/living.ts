@@ -1,5 +1,6 @@
 // «Для жизни»: удобно ли жить в объекте — школа, пляж, врачи, магазин, тишина,
-// кафе, пешком, воздух, жара, вулкан. Только из данных объекта: места вокруг
+// кафе, вулкан. Воздух, погода и высота — в разделе «Место» (ClimateBlock,
+// AreaBlock), здесь не повторяются. Только из данных объекта: места вокруг
 // (Google Places, scripts/sync-nearby-places.mjs — расстояние по прямой),
 // дороги, мечети и самолёты (OpenStreetMap, lib/living-geo.ts), погода и
 // воздух (listing_geo_facts), время в пути в час пик, срок аренды земли.
@@ -26,7 +27,7 @@ const LIMITS = {
 
 const NEAR_KM = 0.5
 
-export type LivingRowKey = 'school' | 'beach' | 'health' | 'shop' | 'quiet' | 'cafes' | 'walk' | 'air' | 'heat' | 'volcano'
+export type LivingRowKey = 'school' | 'beach' | 'health' | 'shop' | 'quiet' | 'cafes' | 'volcano'
 
 export type NoiseReason =
   | { k: 'bars'; n: number }
@@ -34,6 +35,7 @@ export type NoiseReason =
   | { k: 'mosque'; m: number }
   | { k: 'flight'; v: 'near' | 'path' }
   | { k: 'build' }
+  | { k: 'school'; m: number }
 
 export type LivingRow = {
   key: LivingRowKey
@@ -53,14 +55,6 @@ export type LivingRow = {
   count?: number
   coworkKm?: number | null
   gymKm?: number | null
-  /** Пешком — пляж и кафе рядом. */
-  beachKm?: number | null
-  /** Воздух — индекс ISPU (до 50 — хороший по нормам Индонезии). */
-  ispu?: number
-  /** Жара — самый жаркий месяц, средний дневной максимум; влажность; высота. */
-  tMax?: number | null
-  rh?: number | null
-  elevationM?: number | null
   /** Вулкан. */
   volcano?: 'agung' | 'batur'
 }
@@ -110,6 +104,16 @@ function isBeach(p: NearbyPlace): boolean {
   return p.primaryType === 'beach' || p.types?.includes('beach') || /beach|pantai|пляж/i.test(p.name ?? '')
 }
 
+const LOUD_TYPES = new Set(['night_club', 'bar', 'pub', 'karaoke', 'sports_bar', 'dance_hall'])
+function loudVenues(...lists: (NearbyPlace[] | undefined)[]): number {
+  const ids = new Set<string>()
+  for (const l of lists) for (const p of l ?? []) {
+    if (p.distanceKm > 0.3) continue
+    if (LOUD_TYPES.has(p.primaryType ?? '') || /beach ?club/i.test(p.name ?? '')) ids.add(p.id)
+  }
+  return ids.size
+}
+
 function uniqNear(...lists: (NearbyPlace[] | undefined)[]): number {
   const ids = new Set<string>()
   for (const l of lists) for (const p of l ?? []) if (p.distanceKm <= NEAR_KM) ids.add(p.id)
@@ -123,8 +127,6 @@ export function computeLivingFacts(args: {
   bedrooms: number | null
   noise?: GeoNoise | null
   climate?: Climate | null
-  ispu?: number | null
-  elevationM?: number | null
 }): LivingFacts | null {
   const b = args.byCategory
   if (!b) return null
@@ -138,17 +140,26 @@ export function computeLivingFacts(args: {
   const shop = nearest(b.supermarket, isStore) ?? nearest(b.supermarket)
 
   // Тишина: баллы за то, что шумит. 0 — тихо, 1–2 — бывает шумно, 3+ — шумно.
-  const bars = uniqNear(b.nightlife, b.beachclub)
+  // Шумят настоящие бары, клубы и бич-клубы в 300 м. Google относит к «барам»
+  // и рестораны, кафе, отели — у MAISON BOHEME из «13 баров» настоящим был
+  // один, а владелец подтвердил: там тихо (16.10.2026).
+  const bars = loudVenues(b.nightlife, b.beachclub)
   const reasons: NoiseReason[] = []
   let noisePts = 0
-  if (bars >= 5) { noisePts += 2; reasons.push({ k: 'bars', n: bars }) }
+  if (bars >= 4) { noisePts += 2; reasons.push({ k: 'bars', n: bars }) }
   else if (bars >= 2) { noisePts += 1; reasons.push({ k: 'bars', n: bars }) }
   const n = args.noise
   if (n?.road_m != null && n.road_class) {
-    if (n.road_class === 'big' && n.road_m <= 80) { noisePts += 2; reasons.push({ k: 'road', m: n.road_m, cls: 'big' }) }
-    else if (n.road_class === 'big' && n.road_m <= 250) { noisePts += 1; reasons.push({ k: 'road', m: n.road_m, cls: 'big' }) }
-    else if (n.road_class === 'mid' && n.road_m <= 50) { noisePts += 1; reasons.push({ k: 'road', m: n.road_m, cls: 'mid' }) }
+    // Дорогу за рядом домов почти не слышно — считаем только ту, что рядом.
+    if (n.road_class === 'big' && n.road_m <= 50) { noisePts += 2; reasons.push({ k: 'road', m: n.road_m, cls: 'big' }) }
+    else if (n.road_class === 'big' && n.road_m <= 100) { noisePts += 1; reasons.push({ k: 'road', m: n.road_m, cls: 'big' }) }
+    else if (n.road_class === 'mid' && n.road_m <= 30) { noisePts += 1; reasons.push({ k: 'road', m: n.road_m, cls: 'mid' }) }
   }
+  // Школа вплотную — шум днём на переменах.
+  const nextSchool = [...(b.school ?? []), ...(b.preschool ?? []), ...(b.international_school ?? [])]
+    .filter(p => p.primaryType === 'school' || p.primaryType === 'preschool' || p.primaryType === 'primary_school' || p.primaryType === 'secondary_school')
+    .reduce<number | null>((m, p) => (m == null || p.distanceKm < m ? p.distanceKm : m), null)
+  if (nextSchool != null && nextSchool <= 0.15) { noisePts += 1; reasons.push({ k: 'school', m: Math.round(nextSchool * 1000) }) }
   if (n?.mosque_m != null && n.mosque_m <= 250) { noisePts += 1; reasons.push({ k: 'mosque', m: n.mosque_m }) }
   if (n?.flight === 'near') { noisePts += 2; reasons.push({ k: 'flight', v: 'near' }) }
   else if (n?.flight === 'path') { noisePts += 1; reasons.push({ k: 'flight', v: 'path' }) }
@@ -161,8 +172,6 @@ export function computeLivingFacts(args: {
   const cafesTone: Tone = cafes >= 5 ? 'plus' : cafes >= 2 ? 'warn' : 'minus'
 
   const beachKm = beach?.distanceKm ?? null
-  const walkTone: Tone = beachKm != null && beachKm <= 1 && cafes >= 3 ? 'plus'
-    : (beachKm != null && beachKm <= 1.5) || cafes >= 3 ? 'warn' : 'minus'
 
   const rows: LivingRow[] = [
     { key: 'school', tone: toneByKm(school?.distanceKm ?? null, LIMITS.school), km: school?.distanceKm ?? null, searchKm: intl || !school ? SEARCH_KM.international_school : SEARCH_KM.school, name: school?.name ?? null, intl: !!intl },
@@ -172,21 +181,7 @@ export function computeLivingFacts(args: {
     { key: 'shop', tone: shop ? toneByKm(shop.distanceKm, LIMITS.shop) : 'warn', km: shop?.distanceKm ?? null, searchKm: SEARCH_KM.supermarket, name: shop?.name ?? null },
     { key: 'quiet', tone: quietTone, reasons },
     { key: 'cafes', tone: cafesTone, count: cafes, coworkKm: cowork?.distanceKm ?? null, gymKm: gym?.distanceKm ?? null },
-    { key: 'walk', tone: walkTone, beachKm, count: cafes },
   ]
-
-  // Воздух: ISPU — индекс Индонезии, до 50 «хороший», 51–100 «умеренный».
-  if (args.ispu != null) rows.push({ key: 'air', tone: args.ispu <= 50 ? 'plus' : args.ispu <= 100 ? 'warn' : 'minus', ispu: Math.round(args.ispu) })
-
-  // Жара: самый жаркий месяц по среднему дневному максимуму. Не минус —
-  // на побережье Бали жарко везде (днём 30–32°); плюс там, где до 28° — на высоте.
-  const months = Object.entries(args.climate ?? {}).filter(([k]) => /^\d{2}$/.test(k)).map(([, v]) => v as { t_max: number | null; rh: number | null })
-  const tMaxes = months.map(m => m.t_max).filter((x): x is number => x != null)
-  const rhs = months.map(m => m.rh).filter((x): x is number => x != null)
-  if (tMaxes.length) {
-    const tMax = Math.round(Math.max(...tMaxes))
-    rows.push({ key: 'heat', tone: tMax <= 28 ? 'plus' : 'warn', tMax, rh: rhs.length ? Math.round(rhs.reduce((s, x) => s + x, 0) / rhs.length) : null, elevationM: args.elevationM ?? null })
-  }
 
   // Вулкан — только ближе 25 км (lib/living-geo.ts). В 2017 году зону
   // эвакуации вокруг Агунга расширяли до 12 км.
@@ -194,8 +189,8 @@ export function computeLivingFacts(args: {
     rows.push({ key: 'volcano', tone: n.volcano_km <= 12 ? 'minus' : n.volcano_km <= 20 ? 'warn' : 'plus', km: n.volcano_km, volcano: n.volcano })
   }
 
-  // Итог: школа, пляж, врачи, магазин, тишина; воздух и вулкан — только если «далеко/плохо».
-  const core = rows.filter(r => ['school', 'beach', 'health', 'shop', 'quiet'].includes(r.key) || ((r.key === 'air' || r.key === 'volcano') && r.tone === 'minus'))
+  // Итог: школа, пляж, врачи, магазин, тишина; вулкан — только если близко.
+  const core = rows.filter(r => ['school', 'beach', 'health', 'shop', 'quiet'].includes(r.key) || (r.key === 'volcano' && r.tone === 'minus'))
   const minus = core.filter(r => r.tone === 'minus').length
   const warn = core.filter(r => r.tone === 'warn').length
   const tone: Tone = minus >= 2 ? 'minus' : minus === 1 || warn >= 3 ? 'warn' : 'plus'
@@ -209,7 +204,8 @@ export function computeLivingFacts(args: {
     rows,
     tone,
     airportMin: r?.airport?.s != null ? Math.round(r.airport.s / 60) : null,
-    hub: hubs[0] ? { key: hubs[0].key, min: Math.round(hubs[0].s / 60) } : null,
+    // Ближайший центр в 10 минутах — объект и так в нём, строка лишняя.
+    hub: hubs[0] && hubs[0].s > 600 ? { key: hubs[0].key, min: Math.round(hubs[0].s / 60) } : null,
     leaseYears: args.leaseYears,
     bedrooms: args.bedrooms,
   }
