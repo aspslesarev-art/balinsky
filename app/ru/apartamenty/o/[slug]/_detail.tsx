@@ -98,7 +98,7 @@ const COPY = {
     factArea: 'Площадь', factFloor: 'Этаж', factCompletion: 'Сдача',
     factPermits: 'Разрешения', factLeasehold: 'Лизхолд', factDistrict: 'Район',
     factAirport: 'До аэропорта', factGround: 'Цокольный',
-    factLeaseValue: (l: string) => `${l} лет`,
+    factLeaseValue: (l: string) => `${l} ${Number.isFinite(Number(l)) ? pluralRu(Number(l), ['год', 'года', 'лет']) : 'лет'}`,
     descHeading: 'Описание',
     complexLabel: 'Жилой комплекс',
     developerLabel: 'Застройщик',
@@ -126,7 +126,7 @@ const COPY = {
       { q: 'Можно ли иностранцу купить апартаменты на Бали?',
         a: 'Да. Сделка оформляется по схеме лизхолда (долгосрочной аренды) у нотариуса PPAT. Большинство застройщиков работают с международными покупателями.' },
       { q: 'Какой срок лизхолда?',
-        a: lease ? `Базовый срок — ${lease} лет. Условия продления уточняйте у застройщика.` : 'Срок лизхолда уточняйте у застройщика. Стандартно 25–80 лет с возможностью продления.' },
+        a: lease ? `Базовый срок — ${lease} ${Number.isFinite(Number(lease)) ? pluralRu(Number(lease), ['год', 'года', 'лет']) : 'лет'}. Условия продления уточняйте у застройщика.` : 'Срок лизхолда уточняйте у застройщика. Стандартно 25–80 лет с возможностью продления.' },
     ],
     metaFallback: (title: string, district: string | null, price: string | null) =>
       `${title}${district ? ` в районе ${district}` : ''} на Бали${price ? `. Цена ${price}.` : '.'} Фото, планировка, документы.`,

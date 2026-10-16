@@ -62,7 +62,7 @@ const TERMS: Record<Lang, Terms> = {
   ru: {
     from: 'от',
     ready: y => `сдача ${y}`,
-    beds: (a, b) => (a === b ? `${a} спальни` : `${a}–${b} спальни`),
+    beds: (a, b) => (a === b ? `${a} ${pluralRu(a, ['спальня', 'спальни', 'спален'])}` : `${a}–${b} ${pluralRu(b, ['спальня', 'спальни', 'спален'])}`),
     projects: n => `${n} ${pluralRu(n, ['проект', 'проекта', 'проектов'])} на Бали`,
     delivered: n => `${n} сдано`,
     building: n => `${n} строится`,

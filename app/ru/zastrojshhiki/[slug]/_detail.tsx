@@ -36,6 +36,7 @@ import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations
 import { loadVisionManifest } from '@/lib/listing-features'
 import { curateManifest } from '@/lib/listing-photos'
 import { hreflangMap } from '@/lib/hreflang'
+import { pluralRu } from '@/lib/plural-ru'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
@@ -255,7 +256,7 @@ const COPY = {
     sectionsHeading: 'Справка по направлениям',
     aboutHeading: 'О застройщике',
     projectsHeading: 'Проекты застройщика',
-    projectsSubLine: (n: number, apts: number) => `${n} жилых комплексов${apts > 0 ? ` · ${apts} апартаментов в продаже` : ''}`,
+    projectsSubLine: (n: number, apts: number) => `${n} ${pluralRu(n, ['жилой комплекс', 'жилых комплекса', 'жилых комплексов'])}${apts > 0 ? ` · ${apts} апартаментов в продаже` : ''}`,
     extrasHeading: 'Дополнительно',
     relatedHeading: 'По теме',
     videosTitle: (name: string) => `Видео о ${name}`,

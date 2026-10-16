@@ -2,6 +2,7 @@
 // nightly rates (holiday rentals) by area. Numbers from lib/market-index.json.
 
 import Link from 'next/link'
+import { pluralRu } from '@/lib/plural-ru'
 import type { Lang } from '@/lib/i18n'
 import { switchLangPath } from '@/lib/i18n'
 import { SRC } from '@/lib/investment-guide/data'
@@ -55,11 +56,11 @@ function ctxFor(lang: Lang) {
 function ruCopy(c: RentCtx) {
   return {
     metaTitle: 'Сколько стоит аренда на Бали: цены в месяц и за ночь по районам',
-    description: `Аренда виллы с 2 спальнями на Бали — медиана ${c.$(c.two.median)} в месяц (${c.two.n} объявлений), за ночь — ${c.$(c.R['2br'].median)}. Цены по районам и числу спален, данные ${c.when}.`,
+    description: `Аренда виллы с 2 спальнями на Бали — медиана ${c.$(c.two.median)} в месяц (${c.two.n} ${pluralRu(Number(c.two.n), ['объявление', 'объявления', 'объявлений'])}), за ночь — ${c.$(c.R['2br'].median)}. Цены по районам и числу спален, данные ${c.when}.`,
     crumb: 'Цены аренды',
     h1: 'Сколько стоит аренда на Бали',
     lead: <>Вилла с 2 спальнями в долгосрочную аренду — медиана <strong>{c.$(c.two.median)} в месяц</strong>, половина объявлений от {c.$(c.two.p25)} до {c.$(c.two.p75)}. Посуточно такая вилла стоит около <strong>{c.$(c.R['2br'].median)} за ночь</strong>. Ниже — цены по районам и числу спален.</>,
-    updated: `Помесячная аренда — ${c.M.n} объявлений с ${c.from} по ${c.to}; посуточная — ${c.n(c.T.villaRentals)} вилл, данные за ${c.when}`,
+    updated: `Помесячная аренда — ${c.M.n} ${pluralRu(Number(c.M.n), ['объявление', 'объявления', 'объявлений'])} с ${c.from} по ${c.to}; посуточная — ${c.n(c.T.villaRentals)} ${pluralRu(Number(c.T.villaRentals), ['вилла', 'виллы', 'вилл'])}, данные за ${c.when}`,
     takeawaysH2: 'Главное в цифрах',
     takeaways: [
       `Вилла с 1 спальней — около ${c.$(c.M.island.villa1br.median)} в месяц, с 3 спальнями — ${c.$(c.M.island.villa3br.median)}. Апартаменты — ${c.$(c.M.island.apartment.median)}.`,
@@ -88,8 +89,8 @@ function ruCopy(c: RentCtx) {
     ].filter(Boolean) as Faq[],
     sourcesH2: 'Источники и метод',
     sources: [
-      { label: `Каталог аренды Balinsky: ${c.M.n} объявлений о помесячной аренде, ${c.from} — ${c.to}`, href: c.href.catalog },
-      { label: `База посуточной аренды Balinsky: ${c.n(c.T.rentals)} объектов, источник — estatemarket.io`, href: c.href.estatemarket },
+      { label: `Каталог аренды Balinsky: ${c.M.n} ${pluralRu(Number(c.M.n), ['объявление', 'объявления', 'объявлений'])} о помесячной аренде, ${c.from} — ${c.to}`, href: c.href.catalog },
+      { label: `База посуточной аренды Balinsky: ${c.n(c.T.rentals)} ${pluralRu(Number(c.T.rentals), ['объект', 'объекта', 'объектов'])}, источник — estatemarket.io`, href: c.href.estatemarket },
       { label: 'Как мы считаем: источники, определения, ограничения', href: c.href.method },
       { label: 'Ставки аренды вилл на Бали по районам', href: c.href.rates },
       { label: 'Статистика туризма Бали (BPS)', href: c.href.bps },

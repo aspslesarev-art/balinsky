@@ -17,6 +17,7 @@ import {
   buildMetadata,
   firstString,
 } from '../_lib'
+import { pluralRu } from '@/lib/plural-ru'
 
 type SP = Promise<Record<string, string | undefined>>
 
@@ -89,8 +90,8 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
           {buildHeading(filters)}
         </h1>
         <div className="text-[14px] text-[var(--color-text-muted)] mb-6">
-          {pointCount} объектов на карте
-          {pointCount !== groups.length && ` · ${groups.length} точек`}
+          {pointCount} {pluralRu(pointCount, ['объект', 'объекта', 'объектов'])} на карте
+          {pointCount !== groups.length && ` · ${groups.length} ${pluralRu(groups.length, ['точка', 'точки', 'точек'])}`}
         </div>
 
         <CatalogTabs

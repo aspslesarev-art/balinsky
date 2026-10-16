@@ -21,6 +21,7 @@ import {
   parseBullets, firstString, numberOrNull, extractMetrics, fullUsd, plural,
   type DeveloperMetrics,
 } from '@/lib/preview/developer-metrics'
+import { pluralRu } from '@/lib/plural-ru'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const sb = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY!)
@@ -436,7 +437,7 @@ function buildFaq(dev: TplDeveloper, complexes: TplComplex[]): TplFaq[] {
       q: 'Какой юридический статус покупки: leasehold или freehold?',
       a: `Проекты продаются в leasehold. Срок аренды земли — ${leases.length > 1 && Math.min(...leases) !== Math.max(...leases)
         ? `от ${Math.min(...leases)} до ${Math.max(...leases)} лет в зависимости от комплекса`
-        : `${leases[0]} лет`}.`,
+        : `${leases[0]} ${pluralRu(Number(leases[0]), ['год', 'года', 'лет'])}`}.`,
     })
   }
   if (dev.districts.length) {

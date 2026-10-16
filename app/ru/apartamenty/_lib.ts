@@ -23,6 +23,7 @@ import { pickCopy, tField, switchLangPath, type Lang } from '@/lib/i18n'
 import { hreflangMap } from '@/lib/hreflang'
 import { districtsForHeading, selectedGroup } from '@/lib/district-groups'
 import { applyCatalogSort, parseCatalogSort, pricePerSqmOf } from '@/lib/catalog-sort'
+import { pluralRu } from '@/lib/plural-ru'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const PHOTO_MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/apartment-photos/_manifest.json`
@@ -1003,7 +1004,7 @@ export function buildMetadata(f: FilterState, opts: { canonicalPath: string; noI
     : null
   const title = districtMeta?.title
     ?? (isSectionRoot && opts.totalCount
-      ? `Апартаменты на Бали — купить квартиру в новостройке, ${opts.totalCount} объектов | Balinsky`
+      ? `Апартаменты на Бали — купить квартиру в новостройке, ${opts.totalCount} ${pluralRu(opts.totalCount, ['объект', 'объекта', 'объектов'])} | Balinsky`
       : buildTitle(f))
   const description = districtMeta?.description ?? buildDescription(f, opts.totalCount)
   return {

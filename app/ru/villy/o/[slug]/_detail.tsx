@@ -112,7 +112,7 @@ const COPY = {
     factBedrooms: 'Спальни', factHouse: 'Дом', factLand: 'Земля', factCompletion: 'Сдача',
     factPermits: 'Разрешения', factLeasehold: 'Лизхолд', factDistrict: 'Район',
     factAirport: 'До аэропорта', factStyle: 'Стиль интерьера', factPriceM2: 'Цена за м²',
-    factLeaseValue: (l: string) => `${l} лет`,
+    factLeaseValue: (l: string) => `${l} ${Number.isFinite(Number(l)) ? pluralRu(Number(l), ['год', 'года', 'лет']) : 'лет'}`,
     descHeading: 'Описание',
     complexLabel: 'Жилой комплекс',
     completedShort: 'Сдан',

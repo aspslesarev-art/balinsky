@@ -11,6 +11,7 @@ import type { DataRow } from './DataTable'
 import { MarketShell, marketMetadata, H2, P, A } from './MarketShell'
 import { METHOD_INTL } from './copy/method-intl'
 import { intlLang } from './copy/types'
+import { pluralRu } from '@/lib/plural-ru'
 
 const YIELD = 'dohodnost-vill-na-bali-po-rayonam-dannye'
 
@@ -52,7 +53,7 @@ function ruCopy(c: MethodCtx) {
     sourceCols: ['Источник', 'Что берём', 'Объём'],
     sourceRows: [
       ['Каталог Balinsky', 'Цены предложения, площадь, спальни, срок лизхолда, статус строительства и разрешений — со слов застройщика', `${c.n(c.T.villas)} вилл, ${c.n(c.T.apartments)} апартаментов`],
-      ['База посуточной аренды (estatemarket.io)', 'Ставки за ночь, тип объекта, число спален, координаты', `${c.n(c.T.rentals)} объектов у районов каталога`],
+      ['База посуточной аренды (estatemarket.io)', 'Ставки за ночь, тип объекта, число спален, координаты', `${c.n(c.T.rentals)} ${pluralRu(Number(c.T.rentals), ['объект', 'объекта', 'объектов'])} у районов каталога`],
       ['Объявления о помесячной аренде', 'Цена в месяц, тип, спальни, район', `${c.n(c.M.n)} объявлений, ${c.from} — ${c.to}`],
       ['Официальная статистика и законы', 'Турпоток и загрузка отелей (BPS Бали), права на землю (PP 18/2021), налоги', 'Ссылки — в каждом материале'],
     ],

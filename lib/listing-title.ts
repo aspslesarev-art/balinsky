@@ -79,6 +79,16 @@ export function fallbackListingTitle(args: {
   return [head.join(' '), tail.join(', ')].filter(Boolean).join(' — ')
 }
 
+// Формула заголовка в базе пишет «спальни» при любом числе: «1 спальни»,
+// «5 спальни». Чиним согласование при выводе — для русского и украинского.
+function fixBedroomPlural(s: string): string {
+  return s
+    .replace(/(^|[^\d])(\d+)\s+(спальня|спальни|спален)(?![а-яё])/gi, (_m, pre: string, n: string) =>
+      `${pre}${n} ${pluralRu(Number(n), ['спальня', 'спальни', 'спален'])}`)
+    .replace(/(^|[^\d])(\d+)\s+(спальня|спальні|спалень)(?![а-яіїєґ])/gi, (_m, pre: string, n: string) =>
+      `${pre}${n} ${pluralRu(Number(n), ['спальня', 'спальні', 'спалень'])}`)
+}
+
 /**
  * The one entry point every card / detail page / OG image should use: first
  * usable authored title, otherwise a title composed from what the row does
@@ -94,7 +104,7 @@ export function resolveListingTitle(args: {
 }): string {
   for (const candidate of args.candidates) {
     const s = stripBrand(candidate)
-    if (s && !isMalformedTitle(s)) return s
+    if (s && !isMalformedTitle(s)) return fixBedroomPlural(s)
   }
   return fallbackListingTitle(args)
 }

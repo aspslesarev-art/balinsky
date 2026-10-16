@@ -18,6 +18,7 @@ import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { CatalogSortSelect } from '@/components/CatalogSortSelect'
 import { filtersFromQuery, relaxSteps, relaxNote, alternativesCopy, type RelaxStep } from '@/lib/catalog-alternatives'
 import { CATALOG_SORTS, type CatalogSort } from '@/lib/catalog-sort'
+import { pluralRu } from '@/lib/plural-ru'
 
 // Absolute origin for JSON-LD `item`/`url` — schema.org consumers want fully
 // qualified URLs. Same source as lib/sitemap-data.ts.
@@ -26,7 +27,7 @@ const SITE_ORIGIN = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 const COPY = {
   ru: {
     page: 'страница', of: 'из',
-    objects: (n: number) => `${n} объектов`,
+    objects: (n: number) => `${n} ${pluralRu(n, ['объект', 'объекта', 'объектов'])}`,
     emptySearch: (q: string) => `По запросу «${q}» ничего не найдено`,
     emptyFilters: 'Ничего не найдено по выбранным фильтрам',
     searchPlaceholder: 'Поиск по апартаментам, районам, застройщикам…',
@@ -89,7 +90,7 @@ const COPY = {
   },
   uk: {
     page: 'сторінка', of: 'з',
-    objects: (n: number) => `${n} оголошень`,
+    objects: (n: number) => `${n} ${pluralRu(n, ['оголошення', 'оголошення', 'оголошень'])}`,
     emptySearch: (q: string) => `Нічого не знайдено за запитом «${q}»`,
     emptyFilters: 'Немає результатів за вибраними фільтрами',
     searchPlaceholder: 'Пошук апартаментів, районів, забудовників…',
