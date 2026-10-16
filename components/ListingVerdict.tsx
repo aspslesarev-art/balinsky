@@ -90,7 +90,7 @@ const COPY = {
     moneyAnswer: (y: YieldFacts | null) => y ? `Около ${pctFmt(y.pct.beforeTax)} в год до налогов, ${pctFmt(y.pct.nonResident)} - если вы не резидент` : 'Посчитать доход пока не из чего',
     moneyShort: (y: YieldFacts | null, diff: number | null) => [
       y?.paybackYears ? `Вложения вернутся примерно за ${yearsRu(Math.round(y.paybackYears))}.` : null,
-      diff != null && diff >= 10 ? 'Цена выше похожих рядом.' : diff != null && diff <= -5 ? 'Цена ниже похожих рядом.' : null,
+      diff != null && diff >= 10 ? `За м² дороже похожих вилл на продаже рядом на ${Math.round(diff)}%.` : diff != null && diff <= -5 ? `За м² дешевле похожих вилл на продаже рядом на ${Math.round(-diff)}%.` : null,
     ].filter(Boolean).join(' '),
     totalLine: (v: Verdict) => {
       const earn = v.money.tone === 'minus' || v.demand.tone === 'minus' ? 'Для заработка на аренде - слабый вариант.'
@@ -211,7 +211,7 @@ const COPY = {
     moneyAnswer: (y: YieldFacts | null) => y ? `About ${pctFmtEn(y.pct.beforeTax)} a year before tax, ${pctFmtEn(y.pct.nonResident)} for non-residents` : 'Not enough data to estimate income yet',
     moneyShort: (y: YieldFacts | null, diff: number | null) => [
       y?.paybackYears ? `Pays back in about ${en(Math.round(y.paybackYears), 'year', 'years')}.` : null,
-      diff != null && diff >= 10 ? 'Priced above similar places nearby.' : diff != null && diff <= -5 ? 'Priced below similar places nearby.' : null,
+      diff != null && diff >= 10 ? `Per m², ${Math.round(diff)}% pricier than similar villas for sale nearby.` : diff != null && diff <= -5 ? `Per m², ${Math.round(-diff)}% cheaper than similar villas for sale nearby.` : null,
     ].filter(Boolean).join(' '),
     totalLine: (v: Verdict) => {
       const earn = v.money.tone === 'minus' || v.demand.tone === 'minus' ? 'For rental income - a weak option.'
