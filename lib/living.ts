@@ -146,3 +146,14 @@ export function livingSummary(f: LivingFacts) {
     score: f.rows.reduce((s, r) => s + (r.tone === 'plus' ? 2 : r.tone === 'warn' ? 1 : 0), 0),
   }
 }
+
+/** listing_living для каталога: id → балл и расстояния. Ошибка — пустая карта
+ *  (каталог живёт без режима «Для жизни», а не падает). */
+export async function loadLivingMap(kind: 'villa' | 'apartment'): Promise<Map<string, { score: number; school_km: number | null; beach_km: number | null }>> {
+  const { createClient } = await import('@supabase/supabase-js')
+  const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
+  const { data, error } = await sb.from('listing_living').select('airtable_id, score, school_km, beach_km').eq('kind', kind).limit(5000)
+  if (error) { console.error('[living] listing_living:', error.message); return new Map() }
+  const n = (v: unknown) => (v == null ? null : Number(v))
+  return new Map((data ?? []).map(r => [String(r.airtable_id), { score: Number(r.score), school_km: n(r.school_km), beach_km: n(r.beach_km) }]))
+}

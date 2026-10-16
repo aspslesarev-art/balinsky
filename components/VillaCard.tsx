@@ -11,10 +11,13 @@ import { formatPriceExact } from '@/lib/currency'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { UnitDemandBadge } from './UnitDemandBadge'
 import { CardYield } from './CardYield'
+import { CardLiving, type CardLivingData } from './CardLiving'
 import { districtRu } from '@/lib/district-ru'
 import type { UnitDemandView } from '@/lib/unit-demand-view'
 
 export type VillaCardData = {
+  /** Режим «Для жизни»: расстояния до школы и пляжа вместо доходности (CardLiving). */
+  living?: CardLivingData | null
   /** Комплекс сам на Booking — доходность по его реальным цифрам. */
   verifiedYield?: boolean
   // Балл востребованности в районе. Необязателен: в общих каталогах карточка
@@ -139,7 +142,9 @@ export function VillaCard({ a, lang = 'ru', priority = false }: { a: VillaCardDa
           </div>
         )}
 
-        <CardYield pct={a.yieldPct} lang={lang} className="-mt-1 mb-3" />
+        {a.living
+          ? <CardLiving data={a.living} lang={lang} className="-mt-1 mb-3" />
+          : <CardYield pct={a.yieldPct} lang={lang} className="-mt-1 mb-3" />}
 
         {/* Балл востребованности прижат к правому краю нижней строки: это
             последнее, что читает глаз, и он не конкурирует с ценой. */}

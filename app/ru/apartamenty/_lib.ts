@@ -22,6 +22,7 @@ import { cdnRewriteManifest, cdnManifestUrl } from '@/lib/photo-cdn'
 import { pickCopy, tField, switchLangPath, type Lang } from '@/lib/i18n'
 import { hreflangMap } from '@/lib/hreflang'
 import { districtsForHeading, selectedGroup } from '@/lib/district-groups'
+import { loadLivingMap } from '@/lib/living'
 import { applyCatalogSort, parseCatalogSort, pricePerSqmOf } from '@/lib/catalog-sort'
 import { pluralRu } from '@/lib/plural-ru'
 
@@ -175,6 +176,8 @@ export type EnrichedRow = {
   // to the top of the catalog regardless of the active sort.
   isTop: boolean
   views?: number
+  /** «Для жизни» (listing_living): балл для сортировки и расстояния для карточки. */
+  living?: { score: number; school_km: number | null; beach_km: number | null } | null
 }
 
 function priceUpdatedMs(d: Record<string, unknown>): number {
@@ -263,7 +266,10 @@ export function passes(e: EnrichedRow, f: FilterState): boolean {
   if (f.features.length > 0 && !f.features.every(fl => e.features.includes(fl))) return false
   if (f.goal === 'invest' && e.landBucket === 'residential') return false
   if (f.goal === 'live') {
-    if (e.landBucket === 'tourism') return false
+    // Для жизни: от 2 спален и жилой метраж. Туристическую зону не отсекаем —
+    // порядок задаёт удобство жизни (listing_living), а не зона.
+    const br = Number(e.bedrooms)
+    if (!Number.isFinite(br) || br < 2) return false
     if (e.area != null && e.area < LIVE_MIN_AREA_SQM) return false
   }
   return true
@@ -562,7 +568,7 @@ function reassembleApt(raw: Record<string, unknown>): Row {
 }
 
 async function _loadAllInternal(): Promise<CachedAll> {
-  const [rowsRes, manifestRaw, devMap, enCache, viewCounts, featuresMap, visionMap] = await Promise.all([
+  const [rowsRes, manifestRaw, devMap, enCache, viewCounts, featuresMap, visionMap, livingMap] = await Promise.all([
     sb.from('raw_apartments').select(APT_SELECT).limit(1000),
     loadJson<Record<string, string[]>>(cdnManifestUrl(PHOTO_MANIFEST_URL, 600), {}, ['content:apartments']),
     loadJson<Record<string, string>>(cdnManifestUrl(DEV_LOOKUP_URL, 600), {}, ['content:apartments']),
@@ -570,6 +576,7 @@ async function _loadAllInternal(): Promise<CachedAll> {
     loadViewCounts('apartment'),
     loadFeatureFlagsMap('apartment'),
     loadVisionManifest('apartment'),
+    loadLivingMap('apartment'),
   ])
   // Фото-аудит: выбранная обложка встаёт первой, брак выкидывается.
   const manifest = curateManifest(cdnRewriteManifest(manifestRaw), visionMap)
@@ -589,7 +596,7 @@ async function _loadAllInternal(): Promise<CachedAll> {
     })
     .map(r => ({ ...r, data: mergeAllTranslations(r.data, r.airtable_id, enCache) }))
     .map(r => enrich(r, devMap, featuresMap))
-    .map(e => ({ ...e, views: viewCounts[e.id] ?? 0 }))
+    .map(e => ({ ...e, views: viewCounts[e.id] ?? 0, living: livingMap.get(e.id) ?? null }))
   return { enriched, manifest }
 }
 
@@ -646,6 +653,21 @@ export function buildAllCards(
     const s = scores.get(c.id)
     const cap = s && !s.rentalRestricted ? s.capRate : null
     c.yieldPct = cap != null && Number.isFinite(cap) ? cap * 100 : null
+  }
+  // «Для жизни»: на карточке — школа и пляж вместо доходности, порядок — по
+  // удобству жизни (listing_living), пока человек не выбрал сортировку сам.
+  // Стабильно: при равном балле остаётся прежний порядок.
+  if (filters.goal === 'live') {
+    const livingById = new Map(filtered.map(e => [e.id, e.living ?? null]))
+    for (const c of sorted) {
+      const l = livingById.get(c.id)
+      c.living = l ? { school_km: l.school_km, beach_km: l.beach_km } : null
+    }
+    if (!filters.sort) {
+      const pos = new Map(sorted.map((c, i) => [c.id, i]))
+      const score = (id: string) => livingById.get(id)?.score ?? -1
+      sorted = [...sorted].sort((a, b) => (score(b.id) - score(a.id)) || ((pos.get(a.id) ?? 0) - (pos.get(b.id) ?? 0)))
+    }
   }
   // Явная сортировка из URL — поверх умного порядка, без ТОП-закрепления
   // (см. villy/_lib.ts).

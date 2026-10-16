@@ -24,6 +24,7 @@ import { cdnRewriteManifest } from '@/lib/photo-cdn'
 import { pickCopy, tField, switchLangPath, type Lang } from '@/lib/i18n'
 import { hreflangMap } from '@/lib/hreflang'
 import { districtsForHeading, selectedGroup } from '@/lib/district-groups'
+import { loadLivingMap } from '@/lib/living'
 import { applyCatalogSort, parseCatalogSort, pricePerSqmOf, type CatalogSort } from '@/lib/catalog-sort'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -130,6 +131,8 @@ export type VillaCard = {
   // цифра, что первой стоит на странице объекта). null — не посчитана или
   // жёлтая земля.
   yieldPct?: number | null
+  /** Режим «Для жизни»: расстояния до школы и пляжа вместо доходности. */
+  living?: { school_km: number | null; beach_km: number | null } | null
 }
 
 export type SortOrder = 'price-desc' | 'investment-desc'
@@ -298,6 +301,8 @@ export type EnrichedRow = {
   // Проставляется в loadAll; enrich() его не знает, потому что суффикс
   // считается только по всему списку сразу.
   slug?: string | null
+  /** «Для жизни» (listing_living): балл для сортировки и расстояния для карточки. */
+  living?: { score: number; school_km: number | null; beach_km: number | null } | null
 }
 
 export type StylesMap = Record<string, { style: string | null }>
@@ -356,9 +361,11 @@ export function passes(e: EnrichedRow, f: VillaFilterState): boolean {
     if (e.landBucket === 'residential') return false
   }
   if (f.goal === 'live') {
-    // Yellow zoning + at least a livable area. A 20 m² studio isn't a
-    // home; nobody serious about moving in wants that.
-    if (e.landBucket === 'tourism') return false
+    // Для жизни: от 2 спален и жилой метраж. Туристическую зону не отсекаем —
+    // в Сануре, Умаласе и Нуса-Дуа семьи живут и там; порядок задаёт
+    // удобство жизни (listing_living), а не зона.
+    const br = Number(e.bedrooms)
+    if (!Number.isFinite(br) || br < 2) return false
     if (e.area != null && e.area < LIVE_MIN_AREA_SQM) return false
   }
   if (f.dealType.length > 0 && !f.dealType.includes(e.dealType)) return false
@@ -692,7 +699,7 @@ function reassembleVilla(raw: Record<string, unknown>): Row {
 }
 
 async function _loadAllInternal(): Promise<CachedAll> {
-  const [rowsRes, manifestRaw, styles, enCache, viewCounts, featuresMap, visionMap] = await Promise.all([
+  const [rowsRes, manifestRaw, styles, enCache, viewCounts, featuresMap, visionMap, livingMap] = await Promise.all([
     sb.from('raw_villas').select(VILLA_SELECT).limit(1000),
     loadJson<Record<string, string[]>>(cdnManifestUrl(PHOTO_MANIFEST_URL, 600), {}, ['content:villas']),
     loadVillaStyles(),
@@ -700,6 +707,7 @@ async function _loadAllInternal(): Promise<CachedAll> {
     loadViewCounts('villa'),
     loadFeatureFlagsMap('villa'),
     loadVisionManifest('villa'),
+    loadLivingMap('villa'),
   ])
   // Rewrite manifest URLs to the Bunny/Cloudflare CDN host at runtime so we
   // don't have to wait for the next sync-heavy to re-emit URLs.
@@ -722,7 +730,7 @@ async function _loadAllInternal(): Promise<CachedAll> {
     .filter(r => !isHiddenDeveloper(firstString(r.data['Developer1']), firstString(r.data['Developer'])))
     .map(r => ({ ...r, data: mergeAllTranslations(r.data, r.airtable_id, enCache) }))
     .map(r => enrich(r, styles, featuresMap))
-    .map(e => ({ ...e, views: viewCounts[e.id] ?? 0, slug: slugById.get(e.id) ?? null }))
+    .map(e => ({ ...e, views: viewCounts[e.id] ?? 0, slug: slugById.get(e.id) ?? null, living: livingMap.get(e.id) ?? null }))
   return { enriched, manifest }
 }
 
@@ -797,6 +805,21 @@ export function buildAllCards(
   // search hit shouldn't be pushed past unrelated pinned listings.
   if (!isSearch) {
     sorted = [...sorted].sort((a, b) => (b.isTop ? 1 : 0) - (a.isTop ? 1 : 0))
+  }
+  // «Для жизни»: на карточке — школа и пляж вместо доходности, порядок — по
+  // удобству жизни (listing_living), пока человек не выбрал сортировку сам.
+  // Стабильно: при равном балле остаётся прежний порядок.
+  if (filters.goal === 'live') {
+    const livingById = new Map(filtered.map(e => [e.id, e.living ?? null]))
+    for (const c of sorted) {
+      const l = livingById.get(c.id)
+      c.living = l ? { school_km: l.school_km, beach_km: l.beach_km } : null
+    }
+    if (!filters.sort) {
+      const pos = new Map(sorted.map((c, i) => [c.id, i]))
+      const score = (id: string) => livingById.get(id)?.score ?? -1
+      sorted = [...sorted].sort((a, b) => (score(b.id) - score(a.id)) || ((pos.get(a.id) ?? 0) - (pos.get(b.id) ?? 0)))
+    }
   }
   // Явная сортировка из URL — поверх умного порядка (он остаётся вторым
   // ключом при равных значениях). ТОП-закрепление здесь не действует:
