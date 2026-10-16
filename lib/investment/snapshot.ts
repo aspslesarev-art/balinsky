@@ -76,7 +76,7 @@ export type InvestmentSnapshot = {
 }
 
 export type MarketOccupancy = {
-  /** 0..1, медиана средней загрузки похожих объявлений вокруг. */
+  /** 0..1, 40-й процентиль средней загрузки похожих объявлений вокруг (migrations/117). */
   occupancy: number
   listings: number
   radiusM: number

@@ -54,6 +54,7 @@ async function main() {
     const adrM = s.scenarios.median.adrAsking
     const pred = adrM * keep * occM * 365
     out.push({
+      lat: s.villa.lat, lng: s.villa.lng, kind: u.kind, br: s.villa.bedrooms, own: ob.listings.map(l => l.id),
       key: key.slice(0, 34), src: ob.source, occT: occT != null ? +occT.toFixed(2) : null, occM: +occM.toFixed(2),
       adrT: ob.adr, adrM: Math.round(adrM), price: s.villa.askingPrice,
       revT: truth != null ? Math.round(truth) : null, revM: Math.round(pred), err: truth ? +(pred / truth - 1).toFixed(3) : null,
@@ -61,7 +62,7 @@ async function main() {
     process.stderr.write('.')
   }
   fs.writeFileSync('.tmp-rank/eval.json', JSON.stringify(out, null, 1))
-  console.table(out)
+  console.table(out.map(({ lat: _a, lng: _b, kind: _c, br: _d, own: _e, ...o }) => o))
   const med = (xs: number[]) => { const a = [...xs].sort((x, y) => x - y); const m = a.length >> 1; return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2 }
   for (const src of ['actual', 'booking']) {
     const rows = out.filter(o => o.src === src)

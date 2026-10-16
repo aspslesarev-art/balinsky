@@ -49,8 +49,9 @@ export type RegionDefaults = {
   // половины рынка.
   pbbAnnualPctOfPrice: number
   capRateThresholdWeak: number
-  /** Сколько стоит ночь на каждый доллар цены объекта: медиана по комплексам
-   *  со своими объявлениями на Booking (16.10.2026: 14 вилл, 17 апартаментов). */
+  /** Сколько стоит ночь на каждый доллар цены объекта: подобрано по комплексам
+   *  со своими объявлениями на Booking и реальному году BREIG (16.10.2026:
+   *  15 вилл, 17 апартаментов) вместе с загрузкой района из migrations/117. */
   adrPerPriceUsd: { villa: number; apartment: number }
   /** Вес этой «нормы» против цены соседей в ставке калькулятора (0 — только
    *  соседи, 1 — только норма). Подобрано 16.10.2026 проверкой «без своих данных»
@@ -90,7 +91,7 @@ export const BALI_DEFAULTS: RegionDefaults = {
   // доходность новостроя Бали при этих допущениях около 2%, поэтому
   // прежние 6% помечали бы весь рынок без разбора.
   capRateThresholdWeak: 0.015,
-  adrPerPriceUsd: { villa: 0.00069, apartment: 0.00048 },
+  adrPerPriceUsd: { villa: 0.0008, apartment: 0.00048 },
   adrPriceWeight: { villa: 0.5, apartment: 0.75 },
 }
 
