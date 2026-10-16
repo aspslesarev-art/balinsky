@@ -1525,7 +1525,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
         {hasYield && (
           <DataChapter id="dokhodnost" n={4} lang={lang} question={asQuestion(qh.money)}>
             {/* Три варианта вместо карточки, которая повторяла ответ раздела. */}
-            <YieldScenariosTable data={yieldScenarios(verdictSnap, saleComps ?? null)} verified={yields?.ownSource === 'actual'} lang={lang} />
+            <YieldScenariosTable data={yieldScenarios(verdictSnap, null)} verified={yields?.ownSource === 'actual'} lang={lang} />
             <div id="kalkulyator" className="scroll-mt-24" />
             <GatedBlock kind="investment" lang={lang}>
               <LazyMount fallback={<div className="min-h-[600px]" />}>

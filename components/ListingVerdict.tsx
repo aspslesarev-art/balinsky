@@ -89,10 +89,10 @@ const COPY = {
       : v.demand.ownOccupancy != null ? `Занят примерно ${Math.round(v.demand.ownOccupancy * 100)}% ночей.`
       : '',
     moneyAnswer: (y: YieldFacts | null) => y ? `Около ${pctFmt(y.pct.beforeTax)} в год до налогов, ${pctFmt(y.pct.nonResident)} - если вы не резидент` : 'Посчитать доход пока не из чего',
-    moneyShort: (y: YieldFacts | null, diff: number | null) => [
-      y?.paybackYears ? `Вложения вернутся примерно за ${yearsRu(Math.round(y.paybackYears))}.` : null,
-      diff != null && diff >= 10 ? `За м² дороже похожих вилл на продаже рядом на ${Math.round(diff)}%.` : diff != null && diff <= -5 ? `За м² дешевле похожих вилл на продаже рядом на ${Math.round(-diff)}%.` : null,
-    ].filter(Boolean).join(' '),
+    // Сравнение цены с виллами на продаже рядом убрано: это разные объекты
+    // (решение владельца 16.10.2026). Второй аргумент оставлен для совместимости.
+    moneyShort: (y: YieldFacts | null, _diff: number | null) =>
+      y?.paybackYears ? `Вложения вернутся примерно за ${yearsRu(Math.round(y.paybackYears))}.` : '',
     totalLine: (v: Verdict) => {
       const earn = v.money.tone === 'minus' || v.demand.tone === 'minus' ? 'Для заработка на аренде - слабый вариант.'
         : v.money.tone === 'plus' && v.demand.tone === 'plus' ? 'Для заработка на аренде - сильный вариант.'
@@ -215,10 +215,8 @@ const COPY = {
       : v.demand.ownOccupancy != null ? `Booked about ${Math.round(v.demand.ownOccupancy * 100)}% of nights.`
       : '',
     moneyAnswer: (y: YieldFacts | null) => y ? `About ${pctFmtEn(y.pct.beforeTax)} a year before tax, ${pctFmtEn(y.pct.nonResident)} for non-residents` : 'Not enough data to estimate income yet',
-    moneyShort: (y: YieldFacts | null, diff: number | null) => [
-      y?.paybackYears ? `Pays back in about ${en(Math.round(y.paybackYears), 'year', 'years')}.` : null,
-      diff != null && diff >= 10 ? `Per m², ${Math.round(diff)}% pricier than similar villas for sale nearby.` : diff != null && diff <= -5 ? `Per m², ${Math.round(-diff)}% cheaper than similar villas for sale nearby.` : null,
-    ].filter(Boolean).join(' '),
+    moneyShort: (y: YieldFacts | null, _diff: number | null) =>
+      y?.paybackYears ? `Pays back in about ${en(Math.round(y.paybackYears), 'year', 'years')}.` : '',
     totalLine: (v: Verdict) => {
       const earn = v.money.tone === 'minus' || v.demand.tone === 'minus' ? 'For rental income - a weak option.'
         : v.money.tone === 'plus' && v.demand.tone === 'plus' ? 'For rental income - a strong option.'
