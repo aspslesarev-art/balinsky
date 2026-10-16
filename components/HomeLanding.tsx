@@ -41,6 +41,9 @@ import {
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { localizeHubPath } from '@/lib/hub-routes'
 import { MarketNumbers } from '@/components/market/MarketNumbers'
+import { loadAll as loadAllApartments } from '@/app/ru/apartamenty/_lib'
+import { loadAll as loadAllComplexes } from '@/app/ru/zhilye-kompleksy/_lib'
+import { loadPublicDevelopers } from '@/lib/llm/catalog'
 
 // Порядок здесь = порядок COPY.powers.items во всех локалях: доход,
 // цены соседей, тепловая карта туристов, что рядом, балл востребованности,
@@ -765,19 +768,15 @@ async function loadDistrictCovers(): Promise<Record<string, string>> {
   return covers
 }
 
+// Те же списки, что выводят каталоги и разделы: в базе есть опубликованные,
+// но не показанные объекты (скрытые застройщики, без данных), и счётчик на
+// главной расходился с каталогом (932 против 408 + 494).
 async function loadStats() {
-  const [v, a, k, d] = await Promise.all([
-    // Published only — the same flags AboutView counts, so the homepage never
-    // claims drafts and withdrawn listings as catalogue.
-    sb.from('raw_villas').select('airtable_id', { count: 'exact', head: true }).eq('data->>Опубликовать', 'true' as unknown as string),
-    sb.from('raw_apartments').select('airtable_id', { count: 'exact', head: true }).eq('data->>Опубликовать', 'true' as unknown as string),
-    sb.from('raw_complexes').select('airtable_id', { count: 'exact', head: true }),
-    sb.from('raw_developers').select('airtable_id', { count: 'exact', head: true }).eq('data->>Публикация', 'true' as unknown as string),
-  ])
+  const [v, a, k, d] = await Promise.all([loadAllVillas(), loadAllApartments(), loadAllComplexes(), loadPublicDevelopers()])
   return {
-    objects: (v.count ?? 0) + (a.count ?? 0),
-    complexes: k.count ?? 0,
-    developers: d.count ?? 0,
+    objects: v.enriched.length + a.enriched.length,
+    complexes: k.enriched.length,
+    developers: d.length,
   }
 }
 
