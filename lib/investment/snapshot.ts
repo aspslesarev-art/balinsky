@@ -261,11 +261,18 @@ export async function bookingEstimate(ids: number[], kind: ListingKind, bedrooms
   }
 }
 
-/** Загрузка похожих объявлений вокруг (migrations/115): 1,5 км, мало — 3 км. */
+/** Загрузка похожих объявлений вокруг (migrations/117): та же спальность в
+ *  1,5 км, мало — в 3 км; и там мало — любая спальность в 3, потом в 5 км.
+ *  Любая спальность ошибается на 5,4 п. против 4,6 п. у той же (проверка
+ *  16.10.2026 на 44 комплексах) — всё равно куда точнее прежних 60% для
+ *  всех (22 п.), которые получали 93 объекта без соседей той же спальности. */
 async function loadMarketOccupancy(lat: number, lng: number, kind: ListingKind, bedrooms: number | null): Promise<MarketOccupancy | null> {
   const since = new Date(Date.now() - HISTORY_DAYS * 86_400_000).toISOString().slice(0, 10)
-  for (const radius of [1500, 3000]) {
-    const { data, error } = await sb.rpc('booking_market_occupancy', { p_lat: lat, p_lng: lng, p_radius_m: radius, p_unit_kind: kind, p_bedrooms: bedrooms, p_since: since })
+  const steps: [number, number | null][] = [[1500, bedrooms], [3000, bedrooms]]
+  if (bedrooms != null) steps.push([3000, null])
+  steps.push([5000, null])
+  for (const [radius, br] of steps) {
+    const { data, error } = await sb.rpc('booking_market_occupancy', { p_lat: lat, p_lng: lng, p_radius_m: radius, p_unit_kind: kind, p_bedrooms: br, p_since: since })
     if (error) throw new Error(error.message)
     const row = (data as { occupancy: number | null; listings: number }[] | null)?.[0]
     if (row?.occupancy != null && row.listings >= MARKET_MIN_LISTINGS) {

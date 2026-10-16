@@ -295,12 +295,12 @@ async function loadAllScoresInternal(kind: 'villa' | 'apartment' = 'villa'): Pro
 // instance. Map isn't serializable — entries go through the cache.
 const _sharedVillaScores = unstable_cache(
   async () => [...(await loadAllScoresInternal('villa')).entries()],
-  ['villa-scores-v2'],
+  ['villa-scores-v3'],
   { revalidate: 86400, tags: ['content:villas', 'content:apartments'] },
 )
 const _sharedApartmentScores = unstable_cache(
   async () => [...(await loadAllScoresInternal('apartment')).entries()],
-  ['apartment-scores-v2'],
+  ['apartment-scores-v3'],
   { revalidate: 86400, tags: ['content:apartments'] },
 )
 
