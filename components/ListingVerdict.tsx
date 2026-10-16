@@ -326,7 +326,6 @@ export function ListingVerdict({ verdict: v, yields: y, monthly, saleDiff, under
 }) {
   const c = pickCopy(COPY, lang)
   const live = mode === 'live'
-  const why = live ? null : c.totalWhy(v, saleDiff)
   const cards = [
     { key: 'safety' as const, q: c.q.safety, tone: v.safety.tone, status: c.status.safety[v.safety.tone], answer: c.safetyAnswer(v), short: c.safetyShort(v, underConstruction) },
     { key: 'comfort' as const, q: c.q.comfort, tone: v.comfort.tone, status: (v.comfort.living ? c.status.comfortLiving : c.status.comfort)[v.comfort.tone], answer: c.comfortAnswer(v), short: c.comfortShort(v) },
@@ -342,7 +341,6 @@ export function ListingVerdict({ verdict: v, yields: y, monthly, saleDiff, under
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_280px] gap-6 lg:gap-10 items-center rounded-[20px] bg-[var(--color-surface-alt)] p-6 md:p-8">
         <div>
           <p className="text-[20px] md:text-[26px] font-semibold leading-snug tracking-tight text-[var(--color-text)]">{live ? `${c.comfortAnswer(v)}.${docsFirst(v) ? ` ${c.docsFirst}` : ''}` : c.totalLine(v)}</p>
-          {why && <p className="mt-3 text-[15px] md:text-[16px] leading-relaxed text-[var(--color-text-muted)]">{why[0].toUpperCase() + why.slice(1)}.</p>}
         </div>
         <ul className="flex flex-col gap-3">
           {cards.map(card => (
