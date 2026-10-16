@@ -68,3 +68,11 @@ graphify-out/
 .tmp-cmip6/
 .tmp-obt/
 .tmp-plot/
+
+# Рабочие папки помощников и черновики проверок — не код сайта
+.claude/worktrees/
+.tmp-rank/
+.tmp-ud2/
+.tmp-yt/
+.preview-shots/
+.playwright-mcp/
