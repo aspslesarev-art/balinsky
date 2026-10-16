@@ -294,7 +294,8 @@ export function questionHeaders(v: Verdict, y: YieldFacts | null, m: MonthlyBund
   const c = pickCopy(COPY, lang)
   const demandStatus = v.demand.monthlyOnly ? c.status.demandMonthly : c.status.demand
   return {
-    safety: { n: 1, kicker: c.qOf(1), title: c.q.safety, status: c.status.safety[v.safety.tone], tone: v.safety.tone, lead: [c.safetyAnswer(v), c.safetyShort(v, underConstruction)].filter(Boolean).join('. ').replace(/\.\./g, '.') },
+    safety: { n: 1, kicker: c.qOf(1), title: c.q.safety, status: c.status.safety[v.safety.tone], tone: v.safety.tone, // Риски природы и прочее — в списке раздела, в ответе не повторяем.
+      lead: `${c.safetyAnswer(v)}.` },
     comfort: { n: 2, kicker: c.qOf(2), title: c.q.comfort, status: (v.comfort.living ? c.status.comfortLiving : c.status.comfort)[v.comfort.tone], tone: v.comfort.tone, lead: [c.comfortAnswer(v), c.comfortShort(v)].filter(Boolean).join('. ').replace(/\.\./g, '.') },
     demand: { n: 3, kicker: c.qOf(3), title: c.q.demand, status: demandStatus[v.demand.tone], tone: v.demand.tone, lead: [c.demandAnswer(v, m), c.demandShort(v, m)].filter(Boolean).join('. ').replace(/\.\./g, '.') },
     money: { n: 4, kicker: c.qOf(4), title: c.q.money, status: c.status.money[v.money.tone], tone: v.money.tone, lead: [c.moneyAnswer(y), c.moneyShort(y, saleDiff)].filter(Boolean).join('. ').replace(/\.\./g, '.') },
@@ -393,30 +394,13 @@ export function ListingVerdict({ verdict: v, yields: y, monthly, saleDiff, under
   )
 }
 
-function Rows({ rows }: { rows: { k: string; v: ReactNode; tone?: Tone }[] }) {
-  return (
-    <dl className="flex flex-col gap-3">
-      {rows.map(r => (
-        <div key={r.k} className="flex justify-between gap-4 border-b border-[var(--color-border)] pb-2 text-[15px]">
-          <dt className="text-[var(--color-text-muted)]">{r.k}</dt>
-          <dd className={`shrink-0 whitespace-nowrap font-semibold text-right ${r.tone ? TONE_TEXT[r.tone] : 'text-[var(--color-text)]'}`}>{r.v}</dd>
-        </div>
-      ))}
-    </dl>
-  )
-}
+// «Безопасно ли это?» одним списком: документы, стройка, земля, застройщик,
+// природа, подъезд и уклон — строка на пункт с цветной точкой. Подсказка — только
+// где нужно действие (что спросить у застройщика), без вводных абзацев.
+type Plot = NonNullable<import('@/lib/complex-access').Climate['plot']>
+const DOT: Record<Tone, string> = { plus: 'bg-[var(--color-primary)]', warn: 'bg-[#D08A1C]', minus: 'bg-[#C0392B]' }
 
-function Card({ title, children, note }: { title: string; children: ReactNode; note?: string }) {
-  return (
-    <div className="rounded-2xl border border-[var(--color-border)] bg-white p-5 md:p-6 flex flex-col gap-4">
-      <h3 className="text-[17px] md:text-[18px] font-semibold text-[var(--color-text)]">{title}</h3>
-      {children}
-      {note && <p className="text-[14px] md:text-[15px] leading-relaxed text-[var(--color-text-muted)]">{note}</p>}
-    </div>
-  )
-}
-
-export function SafetyCards({ verdict: v, status, yearRaw, complex, leaseYears, landYellow, dev, lang }: {
+export function SafetyCards({ verdict: v, status, yearRaw, complex, leaseYears, landYellow, dev, plot, lang }: {
   verdict: Verdict
   permit: string | null
   status: string | null
@@ -425,45 +409,71 @@ export function SafetyCards({ verdict: v, status, yearRaw, complex, leaseYears, 
   leaseYears: number | null
   landYellow: boolean
   dev: { name: string | null; total: number; ready: number } | null
+  /** Подъезд и уклон участка (listing_geo_facts.climate.plot). */
+  plot?: Plot | null
   lang: Lang
 }) {
   const c = pickCopy(COPY, lang)
+  const ru = lang === 'ru' || lang === 'uk'
   const p = v.safety.permit
-  const permitTone: Tone | undefined = permitOk(p) ? undefined : 'warn'
-  const permitVal = permitOk(p) ? c.permitYes : p === 'unknown' ? c.permitUnknown : c.permitApplied
-  const permitKey = p === 'slf' || p === 'slfApplied' ? c.slfRow : c.permitRow
-  const docsNote = v.safety.notStarted || p === 'pbgApplied' ? c.docsNote : p === 'unknown' ? c.docsNoteUnknown : p === 'slfApplied' ? c.docsNoteSlf : undefined
   const built = !!status && /построен|сдан|готов|complet/i.test(status)
   const buildVal = built ? c.built : v.safety.notStarted ? c.notStarted : complex?.readiness != null ? c.readiness(complex.readiness) : status
-  const docsRows = [
-    { k: permitKey, v: permitVal, tone: permitTone },
-    buildVal ? { k: c.build, v: buildVal, tone: v.safety.notStarted ? ('minus' as Tone) : undefined } : null,
-    yearRaw && !built ? { k: c.handover, v: yearRaw } : null,
-    complex?.paymentPlan ? { k: c.payment, v: complex.paymentPlan } : null,
-  ].filter(Boolean) as { k: string; v: ReactNode; tone?: Tone }[]
-  const landRows = [
-    leaseYears != null ? { k: c.leaseRow, v: c.leaseVal(leaseYears) } : { k: c.leaseRow, v: c.permitUnknown, tone: 'warn' as Tone },
-    complex?.leaseExtension ? { k: c.extRow, v: c.extVal(complex.leaseExtension) } : null,
-    landYellow ? { k: c.zoneRow, v: c.zoneHousing } : null,
-  ].filter(Boolean) as { k: string; v: ReactNode; tone?: Tone }[]
+  const docsNote = v.safety.notStarted || p === 'pbgApplied' ? c.docsNote : p === 'unknown' ? c.docsNoteUnknown : p === 'slfApplied' ? c.docsNoteSlf : undefined
+  const m = (x: number) => (x < 1000 ? `${Math.round(x / 10) * 10 || x} ${ru ? 'м' : 'm'}` : `${(x / 1000).toFixed(1).replace('.', ru ? ',' : '.')} ${ru ? 'км' : 'km'}`)
+
+  type Row = { k: string; v: ReactNode; tone: Tone | null; note?: string }
+  const rows: Row[] = []
+  rows.push({ k: p === 'slf' || p === 'slfApplied' ? c.slfRow : c.permitRow, v: permitOk(p) ? c.permitYes : p === 'unknown' ? c.permitUnknown : c.permitApplied, tone: permitOk(p) ? 'plus' : 'warn', note: docsNote })
+  if (buildVal) rows.push({ k: c.build, v: [buildVal, yearRaw && !built ? `${c.handover.toLowerCase()} ${yearRaw}` : null].filter(Boolean).join(', '), tone: v.safety.notStarted ? 'minus' : built ? 'plus' : null })
+  if (complex?.paymentPlan) rows.push({ k: c.payment, v: complex.paymentPlan, tone: null })
+  rows.push(leaseYears != null
+    ? { k: c.leaseRow, v: [c.leaseVal(leaseYears), complex?.leaseExtension ? `${c.extRow.toLowerCase()} ${c.extVal(complex.leaseExtension)}` : null].filter(Boolean).join(', '), tone: leaseYears >= 25 ? 'plus' : 'warn' }
+    : { k: c.leaseRow, v: c.permitUnknown, tone: 'warn' })
+  if (landYellow) rows.push({ k: c.zoneRow, v: c.zoneHousing, tone: 'warn' })
+  if (dev && dev.total > 0) rows.push({ k: c.devT(dev.name), v: ru ? `сдано ${dev.ready} из ${dev.total} ${pluralRu(dev.total, ['проекта', 'проектов', 'проектов'])}` : `${dev.ready} of ${dev.total} projects completed`, tone: dev.ready === 0 ? 'minus' : 'plus' })
   const hz = v.safety.hazards.filter(h => h.key !== 'flash_flood')
+  if (hz.length) {
+    const bad = hz.filter(h => h.level === 'medium' || h.level === 'high')
+    const none = hz.filter(h => h.level === 'none' || h.level === 'low').map(h => c.hz[h.key].toLowerCase())
+    rows.push({
+      k: c.natureT,
+      v: [bad.map(h => `${c.hz[h.key].toLowerCase()} - ${c.lvl[h.level]}`).join(', '), none.length ? `${ru ? 'нет риска' : 'no risk'}: ${none.join(', ')}` : null].filter(Boolean).join('; '),
+      // Землетрясения — средний риск по всему Бали, это не минус конкретного участка.
+      tone: bad.some(h => h.key !== 'earthquake') ? (bad.some(h => h.level === 'high' && h.key !== 'earthquake') ? 'minus' : 'warn') : 'plus',
+    })
+  }
+  if (plot) {
+    const r = plot.road
+    const paved = r.surface ? (['asphalt', 'concrete', 'paved', 'paving_stones'].includes(r.surface) ? (ru ? 'асфальт' : 'paved') : (ru ? 'без асфальта' : 'unpaved')) : null
+    const narrow = (r.width_m != null && r.width_m < 3.5) || r.class === 'track'
+    rows.push({ k: ru ? 'Подъезд' : 'Access', v: [`${ru ? 'улица в' : 'road'} ${m(r.m)}`, paved, r.width_m ? `${ru ? 'ширина' : 'width'} ${r.width_m} ${ru ? 'м' : 'm'}` : null].filter(Boolean).join(', '),
+      tone: r.m > 100 || narrow ? 'warn' : 'plus',
+      note: r.m > 100 ? (ru ? 'Уточните, как заезжать на участок.' : 'Ask how cars reach the plot.') : narrow ? (ru ? 'Узкая дорога: грузовик и машины гостей могут не проехать.' : 'Narrow road: trucks and guests’ cars may not get through.') : undefined })
+    if (plot.slope_pct != null) {
+      const s2 = plot.slope_pct
+      rows.push({ k: ru ? 'Уклон' : 'Slope', v: `${s2 < 5 ? (ru ? 'ровный' : 'flat') : s2 < 15 ? (ru ? 'пологий' : 'gentle') : (ru ? 'крутой' : 'steep')}, ${Math.round(s2)}%`, tone: s2 < 15 ? 'plus' : 'warn' })
+    }
+    const water = Math.min(plot.river_m, plot.stream_m)
+    if (water <= 100) rows.push({ k: ru ? 'Река или ручей' : 'River or stream', v: m(water), tone: 'warn', note: ru ? 'Спросите, заливало ли участок в сезон дождей.' : 'Ask whether the plot floods in the rainy season.' })
+  }
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <Card title={c.docs} note={docsNote}><Rows rows={docsRows} /></Card>
-      {landRows.length > 0 && <Card title={c.landT} note={c.landNote + (landYellow ? c.landNoteYellow : '')}><Rows rows={landRows} /></Card>}
-      {dev && dev.total > 0 && (
-        <Card title={c.devT(dev.name)} note={dev.ready === 0 ? c.devNote : c.devNoteOk}>
-          <Rows rows={[
-            { k: c.devProjects, v: String(dev.total) },
-            { k: c.devReady, v: dev.ready > 0 ? String(dev.ready) : c.devNone, tone: dev.ready === 0 ? 'minus' : undefined },
-          ]} />
-        </Card>
-      )}
-      {hz.length > 0 && (
-        <Card title={c.natureT} note={c.natureNote}>
-          <Rows rows={hz.map(h => ({ k: c.hz[h.key], v: c.lvl[h.level], tone: h.level === 'none' || h.level === 'low' ? ('plus' as Tone) : h.level === 'high' ? ('minus' as Tone) : undefined }))} />
-        </Card>
-      )}
+    <div className="rounded-[20px] border border-[var(--color-border)] bg-white px-5 md:px-6">
+      <dl className="divide-y divide-[var(--color-border)]">
+        {rows.map(r => (
+          <div key={r.k} className="grid grid-cols-1 gap-1 py-3 sm:grid-cols-[220px_minmax(0,1fr)] sm:gap-6">
+            <dt className="flex items-center gap-2 text-[15px] text-[var(--color-text-muted)]">
+              <span className={`h-2 w-2 shrink-0 rounded-full ${r.tone ? DOT[r.tone] : 'bg-[var(--color-border)]'}`} aria-hidden />
+              {r.k}
+            </dt>
+            <dd className="text-[16px] text-[var(--color-text)]">
+              {r.v}
+              {r.note && <span className="mt-0.5 block text-[14px] leading-snug text-[var(--color-text-muted)]">{r.note}</span>}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      <p className="pb-4 pt-1 text-[12px] text-[var(--color-text-muted)]">{ru ? 'Риски - InaRISK, дороги - OpenStreetMap, уклон - Copernicus' : 'Hazards - InaRISK, roads - OpenStreetMap, slope - Copernicus'}</p>
     </div>
   )
 }

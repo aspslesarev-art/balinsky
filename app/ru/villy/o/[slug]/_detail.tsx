@@ -68,7 +68,6 @@ import { NeighborhoodHeatMap } from '@/components/NeighborhoodHeatMap'
 import { VerifiedYieldBadge } from '@/components/VerifiedYieldBadge'
 import { ClimateBlock } from '@/components/ClimateBlock'
 import { AreaBlock } from '@/components/AreaBlock'
-import { PlotSiteBlock } from '@/components/PlotSiteBlock'
 import { loadVerdictSnapshot, loadComplexFacts, computeYieldFacts, buildVerdict, yieldScenarios } from '@/lib/listing-verdict'
 import { ListingVerdict, SafetyCards, DemandSummary, YieldScenariosTable, questionHeaders, TONE_PILL_CLASS } from '@/components/ListingVerdict'
 import { loadManagersByDeveloperName, loadManagersByDeveloperSlug } from '@/lib/managers'
@@ -1461,15 +1460,14 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
         <DataChapter id="uchastok" n={1} lang={lang} question={asQuestion(qh.safety)}>
           <SafetyCards verdict={verdict} permit={permit} status={status} yearRaw={yearRaw} complex={complexFacts}
             leaseYears={leaseYears} landYellow={rentalRestricted}
-            dev={devStats ? { name: developerName, total: devStats.total, ready: devStats.ready } : null} lang={lang} />
-          {(landOk || plotSite) && (
-            <div className={landOk && plotSite ? 'grid grid-cols-1 lg:grid-cols-2 gap-4 [&>section]:h-full [&>div>section]:h-full' : 'max-w-[760px]'}>
+            dev={devStats ? { name: developerName, total: devStats.total, ready: devStats.ready } : null} plot={plotSite} lang={lang} />
+          {landOk && (
+            <div className="max-w-[760px]">
               {landOk && (
                 <LazyMount fallback={<div className="min-h-[480px] rounded-2xl bg-[var(--color-search-bg)]" />}>
                   <LandProfileBlock data={landProfile!} permits={projectPermits} lang={lang} />
                 </LazyMount>
               )}
-              <PlotSiteBlock plot={plotSite} hazards={geoFacts?.climate?.hazards} lang={lang} />
             </div>
           )}
         </DataChapter>
