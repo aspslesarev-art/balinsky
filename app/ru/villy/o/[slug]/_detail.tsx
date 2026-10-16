@@ -1239,7 +1239,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   const marketOk = !!marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0)
   const hasPlace = !!(geoFacts || nearby || (districtCopy && districtSlug))
   const monthly = verdictSnap?.monthly ?? null
-  const hasRent = marketOk || !!demand || !!monthly
+  const hasRent = marketOk || !!demand || !!monthly || !!saleComps
   const hasYield = lat != null && lng != null
 
   // «Стоит ли брать»: страница идёт по вопросам покупателя — безопасно →
@@ -1517,13 +1517,14 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
               daily={marketOk ? { count: marketStats!.villa_count, adrUsd: marketStats!.villa_adr_usd, occupancyPct: verdictSnap?.marketOccupancy ? Math.round(verdictSnap.marketOccupancy.occupancy * 100) : marketStats!.villa_occupancy_pct } : null} />
             {/* «Почём сдают соседи» (estatemarket.io) и «Востребованность в районе» убраны
                 по решению владельца 16.10.2026: непонятны и повторяют сводку выше. */}
+            {/* Под арендой — что продаётся в этом районе, тем же видом. */}
+            {saleComps && <SaleCompsBlock data={saleComps} bedrooms={bedrooms} lang={lang} />}
           </DataChapter>
         )}
 
         {hasYield && (
           <DataChapter id="dokhodnost" n={4} lang={lang} question={asQuestion(qh.money)}>
             {yields && <YieldSummary yields={yields} leaseYears={leaseYears} calcAnchor="kalkulyator" lang={lang} />}
-            {saleComps && <SaleCompsBlock data={saleComps} bedrooms={bedrooms} lang={lang} />}
             <div id="kalkulyator" className="scroll-mt-24" />
             <GatedBlock kind="investment" lang={lang}>
               <LazyMount fallback={<div className="min-h-[600px]" />}>
