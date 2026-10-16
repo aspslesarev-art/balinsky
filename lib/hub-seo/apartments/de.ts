@@ -7,14 +7,14 @@ const copy: HubLongCopy = {
     {
       "heading": "Wie viel kosten Apartments auf Bali",
       "paragraphs": [
-        "Im Katalog stehen 423 Apartments zum Verkauf in 197 Wohnanlagen. Der Medianpreis liegt bei $160.000, acht von zehn Objekten bewegen sich in einer Spanne von $105.000 bis $502.500. Der Markteinstieg beginnt bei etwa $65.000 für ein Studio in einer Anlage in früher Bauphase, die Obergrenze liegt bei $1,28 Mio. für ein Penthouse am Ozean.",
+        "Im Katalog stehen 494 Apartments zum Verkauf in 111 Wohnanlagen. Der Medianpreis liegt bei $160.000, acht von zehn Objekten bewegen sich in einer Spanne von $105.000 bis $502.500. Der Markteinstieg beginnt bei etwa $65.000 für ein Studio in einer Anlage in früher Bauphase, die Obergrenze liegt bei $1,28 Mio. für ein Penthouse am Ozean.",
         "Der Apartmentmarkt auf Bali funktioniert anders als der Villenmarkt: Es handelt sich überwiegend um kompakte Einheiten. Acht von zehn Objekten sind Studios und Einheiten mit 1 Schlafzimmer, mit einer Medianfläche von 41 m². Apartments mit 2 Schlafzimmern sind bereits selten (72 Objekte), mit 3 Schlafzimmern ein einzelnes Premiumprodukt."
       ]
     },
     {
       "heading": "Im Bau oder fertige Anlage",
       "paragraphs": [
-        "Von 423 Apartments befinden sich 366 im Bau und nur 53 sind fertiggestellt — der Markt ist fast vollständig Primärmarkt. Daraus ergeben sich die Spielregeln: Der Kauf in der Bauphase erfolgt mit Ratenzahlung des Bauträgers (erste Anzahlung meist 30–50%, der Rest nach Baufortschritt) und mit Abschlag gegenüber dem Preis einer fertigen Einheit, allerdings mit dem Risiko von Terminverschiebungen.",
+        "Von 494 Apartments befinden sich 404 im Bau und nur 90 sind fertiggestellt — der Markt ist fast vollständig Primärmarkt. Daraus ergeben sich die Spielregeln: Der Kauf in der Bauphase erfolgt mit Ratenzahlung des Bauträgers (erste Anzahlung meist 30–50%, der Rest nach Baufortschritt) und mit Abschlag gegenüber dem Preis einer fertigen Einheit, allerdings mit dem Risiko von Terminverschiebungen.",
         "Der Medianpreis pro Quadratmeter liegt je nach Lage zwischen $3.300 und $4.700 und damit deutlich höher als bei Villen. Das ist normal: Im Quadratmeterpreis von Apartments sind Gemeinschaftspool, Lobby, Sicherheitsdienst, Aufzug und Verwaltung bereits enthalten. Objekte zwischen verschiedenen Anlagen vergleicht man sinnvoller über den Preis pro Quadratmeter und nicht über die Gesamtsumme — die Flächen von Studios unterscheiden sich um das Doppelte."
       ]
     },
@@ -97,7 +97,7 @@ const copy: HubLongCopy = {
         "$160.000"
       ]
     ],
-    "note": "Die Spanne entspricht dem 10. und 90. Perzentil auf Basis von 423 Apartments mit ausgewiesenem Preis. Katalogdaten, werden zusammen mit den Preislisten der Bauträger aktualisiert."
+    "note": "Die Spanne entspricht dem 10. und 90. Perzentil auf Basis von 494 Apartments mit ausgewiesenem Preis. Katalogdaten, werden zusammen mit den Preislisten der Bauträger aktualisiert."
   },
   "faqExtra": [
     {

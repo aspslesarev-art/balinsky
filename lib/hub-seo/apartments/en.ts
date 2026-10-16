@@ -7,14 +7,14 @@ const copy: HubLongCopy = {
     {
       "heading": "How much do apartments in Bali cost",
       "paragraphs": [
-        "The catalogue lists 423 apartments for sale across 197 residential complexes. The median price is $160,000, and eight out of ten listings fall in the range from $105,000 to $502,500. Entry starts at around $65,000 for a studio in a project at an early construction stage, while the top end reaches $1.28 million for an oceanfront penthouse.",
+        "The catalogue lists 494 apartments for sale across 111 residential complexes. The median price is $160,000, and eight out of ten listings fall in the range from $105,000 to $502,500. Entry starts at around $65,000 for a studio in a project at an early construction stage, while the top end reaches $1.28 million for an oceanfront penthouse.",
         "The apartment market in Bali works differently from the villa market: these are mostly compact units. Eight out of ten listings are studios and one-bedroom units with a median size of 41 m². Two-bedroom apartments are already relatively rare (72 listings), while three-bedroom units are a niche premium product."
       ]
     },
     {
       "heading": "Off-plan or completed complex",
       "paragraphs": [
-        "Out of 423 apartments, 366 are under construction and only 53 have been completed, so the market is almost entirely primary. That sets the rules: buying at the construction stage usually comes with developer instalments (typically a 30–50% down payment, with the balance paid by stages) and a discount versus a completed unit, but also with the risk of delays.",
+        "Out of 494 apartments, 404 are under construction and only 90 have been completed, so the market is almost entirely primary. That sets the rules: buying at the construction stage usually comes with developer instalments (typically a 30–50% down payment, with the balance paid by stages) and a discount versus a completed unit, but also with the risk of delays.",
         "The median price per square metre ranges from $3,300 to $4,700 depending on the area, noticeably higher than for villas. That is normal: the apartment price per metre includes the shared pool, lobby, security, lift, and management company. When comparing listings across complexes, price per square metre is more accurate than total price, as studio sizes can vary twofold."
       ]
     },
@@ -97,7 +97,7 @@ const copy: HubLongCopy = {
         "$160,000"
       ]
     ],
-    "note": "The range shows the 10th and 90th percentiles across 423 apartments with a listed price. Catalogue data, updated together with developer price lists."
+    "note": "The range shows the 10th and 90th percentiles across 494 apartments with a listed price. Catalogue data, updated together with developer price lists."
   },
   "faqExtra": [
     {

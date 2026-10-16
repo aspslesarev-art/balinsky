@@ -7,14 +7,14 @@ const copy: HubLongCopy = {
     {
       "heading": "Berapa harga apartemen di Bali",
       "paragraphs": [
-        "Di katalog terdapat 423 apartemen dijual di 197 kompleks hunian. Harga median — $160.000, delapan dari sepuluh unit berada dalam kisaran $105.000 hingga $502.500. Titik masuk pasar mulai sekitar $65.000 untuk studio di kompleks tahap awal pembangunan, sedangkan batas atas mencapai $1,28 juta untuk penthouse dekat laut.",
+        "Di katalog terdapat 494 apartemen dijual di 111 kompleks hunian. Harga median — $160.000, delapan dari sepuluh unit berada dalam kisaran $105.000 hingga $502.500. Titik masuk pasar mulai sekitar $65.000 untuk studio di kompleks tahap awal pembangunan, sedangkan batas atas mencapai $1,28 juta untuk penthouse dekat laut.",
         "Pasar apartemen di Bali berbeda dari pasar vila: mayoritas berupa unit kompak. Delapan dari sepuluh listing adalah studio dan 1 kamar tidur dengan luas median 41 m². Apartemen 2 kamar tidur sudah lebih jarang (72 unit), sedangkan 3 kamar tidur adalah produk premium yang sangat terbatas."
       ]
     },
     {
       "heading": "Beli saat pembangunan atau di kompleks siap huni",
       "paragraphs": [
-        "Dari 423 apartemen, 366 masih dalam pembangunan dan hanya 53 yang sudah selesai — pasar hampir sepenuhnya primer. Konsekuensinya jelas: pembelian pada tahap konstruksi biasanya disertai cicilan dari developer (uang muka umumnya 30–50%, sisanya dibayar per tahap) dan harga lebih rendah dibanding unit siap huni, tetapi ada risiko keterlambatan penyelesaian.",
+        "Dari 494 apartemen, 404 masih dalam pembangunan dan hanya 90 yang sudah selesai — pasar hampir sepenuhnya primer. Konsekuensinya jelas: pembelian pada tahap konstruksi biasanya disertai cicilan dari developer (uang muka umumnya 30–50%, sisanya dibayar per tahap) dan harga lebih rendah dibanding unit siap huni, tetapi ada risiko keterlambatan penyelesaian.",
         "Harga median per meter — dari $3.300 hingga $4.700 tergantung area, dan jelas lebih tinggi daripada vila. Ini wajar: dalam harga per meter apartemen sudah termasuk kolam renang bersama, lobi, keamanan, lift, dan perusahaan pengelola. Membandingkan unit antar-kompleks lebih tepat berdasarkan harga per meter, bukan total harga — luas studio bisa berbeda sampai dua kali lipat."
       ]
     },
@@ -97,7 +97,7 @@ const copy: HubLongCopy = {
         "$160.000"
       ]
     ],
-    "note": "Rentang — persentil ke-10 dan ke-90 untuk 423 apartemen dengan harga yang tercantum. Data katalog, diperbarui mengikuti pricelist developer."
+    "note": "Rentang — persentil ke-10 dan ke-90 untuk 494 apartemen dengan harga yang tercantum. Data katalog, diperbarui mengikuti pricelist developer."
   },
   "faqExtra": [
     {

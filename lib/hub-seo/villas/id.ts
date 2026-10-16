@@ -59,7 +59,7 @@ const copy: HubLongCopy = {
       "heading": "Sewa, hasil investasi, dan biaya operasional",
       "paragraphs": [
         "Sewa bulanan memberi dasar hitung yang jelas: median di katalog — $2.585 di Berawa, $2.113 di Canggu, $1.608 di Bukit, dan $1.300 di Ubud. Sewa harian pada high season lebih tinggi, tetapi okupansinya juga naik turun: Desember–Maret dan Juli–Agustus memberi puncak, April dan Oktober — penurunan.",
-        "Menurut perhitungan Balinsky sendiri (Oktober 2026, 422 vila di katalog), vila 2 kamar tidur median menghasilkan sekitar 6,9% per tahun sebelum pajak, vila 1 kamar tidur sekitar 7,1%. Angka ini sudah setelah komisi platform, biaya pengelola, perawatan, dan pajak daerah atas akomodasi. Okupansi diambil dari listing serupa di sekitar di Booking, bukan satu angka untuk semua. Okupansi hotel berbintang di Bali sekitar 57–65% (BPS Bali). Proyeksi developer 10–15% biasanya memakai tarif dan okupansi musim ramai. Sebelum menghitung payback, kurangi pajak sewa dan amortisasi leasehold: semakin dekat ke akhir masa berlaku, semakin murah properti saat dijual kembali."
+        "Menurut perhitungan Balinsky sendiri (Oktober 2026), vila 2 kamar tidur median menghasilkan sekitar 6,9% per tahun sebelum pajak, vila 1 kamar tidur sekitar 7,1%. Angka ini sudah setelah komisi platform, biaya pengelola, perawatan, dan pajak daerah atas akomodasi. Okupansi diambil dari listing serupa di sekitar di Booking, bukan satu angka untuk semua. Okupansi hotel berbintang di Bali sekitar 57–65% (BPS Bali). Proyeksi developer 10–15% biasanya memakai tarif dan okupansi musim ramai. Sebelum menghitung payback, kurangi pajak sewa dan amortisasi leasehold: semakin dekat ke akhir masa berlaku, semakin murah properti saat dijual kembali."
       ]
     }
   ],

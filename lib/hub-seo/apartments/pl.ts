@@ -7,14 +7,14 @@ const copy: HubLongCopy = {
     {
       "heading": "Ile kosztują apartamenty na Bali",
       "paragraphs": [
-        "W katalogu jest 423 apartamentów na sprzedaż w 197 kompleksach mieszkaniowych. Mediana ceny wynosi $160,000, osiem na dziesięć ofert mieści się w przedziale od $105,000 do $502,500. Wejście na rynek zaczyna się od około $65,000 za studio w kompleksie na wczesnym etapie budowy, a górny pułap to $1,28 mln za penthouse przy oceanie.",
+        "W katalogu są 494 apartamenty na sprzedaż w 111 kompleksach mieszkaniowych. Mediana ceny wynosi $160,000, osiem na dziesięć ofert mieści się w przedziale od $105,000 do $502,500. Wejście na rynek zaczyna się od około $65,000 za studio w kompleksie na wczesnym etapie budowy, a górny pułap to $1,28 mln za penthouse przy oceanie.",
         "Rynek apartamentów na Bali działa inaczej niż rynek willi: to głównie kompaktowe lokale. Osiem na dziesięć ofert to studia i apartamenty z 1 sypialnią o medianie powierzchni 41 m². Apartamenty z 2 sypialniami są już rzadkością (72 oferty), a 3 sypialnie to pojedynczy produkt premium."
       ]
     },
     {
       "heading": "Budowa czy gotowy kompleks",
       "paragraphs": [
-        "Spośród 423 apartamentów 366 jest w budowie, a tylko 53 zostały oddane — rynek jest niemal w całości pierwotny. Z tego wynikają zasady gry: zakup na etapie budowy odbywa się w systemie rat od dewelopera (pierwsza wpłata zwykle 30–50%, reszta według etapów) i z dyskontem względem ceny gotowego lokalu, ale z ryzykiem przesunięcia terminów.",
+        "Spośród 494 apartamentów 404 jest w budowie, a tylko 90 zostały oddane — rynek jest niemal w całości pierwotny. Z tego wynikają zasady gry: zakup na etapie budowy odbywa się w systemie rat od dewelopera (pierwsza wpłata zwykle 30–50%, reszta według etapów) i z dyskontem względem ceny gotowego lokalu, ale z ryzykiem przesunięcia terminów.",
         "Mediana ceny za metr wynosi od $3,300 do $4,700 w zależności od lokalizacji, wyraźnie więcej niż w przypadku willi. To normalne: w cenie metra apartamentu zawarte są wspólny basen, lobby, ochrona, winda i firma zarządzająca. Porównywanie ofert między kompleksami jest bardziej miarodajne według ceny za metr niż według łącznej kwoty — powierzchnie studiów różnią się nawet dwukrotnie."
       ]
     },
@@ -97,7 +97,7 @@ const copy: HubLongCopy = {
         "$160,000"
       ]
     ],
-    "note": "Przedział — 10. i 90. percentyl dla 423 apartamentów z podaną ceną. Dane katalogowe, aktualizowane razem z cennikami deweloperów."
+    "note": "Przedział — 10. i 90. percentyl dla 494 apartamentów z podaną ceną. Dane katalogowe, aktualizowane razem z cennikami deweloperów."
   },
   "faqExtra": [
     {

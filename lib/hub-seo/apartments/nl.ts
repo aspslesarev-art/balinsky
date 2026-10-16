@@ -7,14 +7,14 @@ const copy: HubLongCopy = {
     {
       "heading": "Wat kosten appartementen op Bali",
       "paragraphs": [
-        "In de catalogus staan 423 appartementen te koop in 197 wooncomplexen. De mediaanprijs is $160.000, acht op de tien objecten vallen in de bandbreedte van $105.000 tot $502.500. Instappen in de markt begint rond $65.000 voor een studio in een complex in een vroege bouwfase, de bovenkant ligt op $1,28 mln voor een penthouse aan zee.",
+        "In de catalogus staan 494 appartementen te koop in 111 wooncomplexen. De mediaanprijs is $160.000, acht op de tien objecten vallen in de bandbreedte van $105.000 tot $502.500. Instappen in de markt begint rond $65.000 voor een studio in een complex in een vroege bouwfase, de bovenkant ligt op $1,28 mln voor een penthouse aan zee.",
         "De markt voor appartementen op Bali werkt anders dan de villamarkt: het gaat vooral om compacte units. Acht op de tien objecten zijn studio's en appartementen met 1 slaapkamer met een mediane oppervlakte van 41 m². Appartementen met 2 slaapkamers zijn al zeldzamer (72 objecten), 3-slaapkamerappartementen zijn een schaars premiumproduct."
       ]
     },
     {
       "heading": "Nieuwbouw of een opgeleverd complex",
       "paragraphs": [
-        "Van de 423 appartementen zijn er 366 in aanbouw en slechts 53 opgeleverd — de markt is vrijwel volledig primair. Daar horen ook de spelregels bij: kopen in de bouwfase gaat met een betalingsregeling van de ontwikkelaar (eerste aanbetaling meestal 30–50%, het restant in termijnen per bouwfase) en met korting ten opzichte van de prijs van een opgeleverde unit, maar met het risico op uitloop van de oplevering.",
+        "Van de 494 appartementen zijn er 404 in aanbouw en slechts 90 opgeleverd — de markt is vrijwel volledig primair. Daar horen ook de spelregels bij: kopen in de bouwfase gaat met een betalingsregeling van de ontwikkelaar (eerste aanbetaling meestal 30–50%, het restant in termijnen per bouwfase) en met korting ten opzichte van de prijs van een opgeleverde unit, maar met het risico op uitloop van de oplevering.",
         "De mediane prijs per meter ligt tussen $3.300 en $4.700 afhankelijk van het gebied, merkbaar hoger dan bij villa's. Dat is normaal: in de meterprijs van appartementen zitten het gemeenschappelijke zwembad, de lobby, beveiliging, lift en beheermaatschappij inbegrepen. Objecten tussen complexen vergelijk je daarom beter op prijs per meter dan op de totale koopsom — de oppervlakte van studio's verschilt soms met een factor twee."
       ]
     },
@@ -97,7 +97,7 @@ const copy: HubLongCopy = {
         "$160.000"
       ]
     ],
-    "note": "De bandbreedte is het 10e en 90e percentiel voor 423 appartementen met vermelde prijs. Catalogusdata, bijgewerkt samen met de prijslijsten van ontwikkelaars."
+    "note": "De bandbreedte is het 10e en 90e percentiel voor 494 appartementen met vermelde prijs. Catalogusdata, bijgewerkt samen met de prijslijsten van ontwikkelaars."
   },
   "faqExtra": [
     {

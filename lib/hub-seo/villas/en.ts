@@ -59,7 +59,7 @@ const copy: HubLongCopy = {
       "heading": "Rental, yield, and running costs",
       "paragraphs": [
         "Monthly rent gives a clear basis for calculation: the catalogue median is $2,585 in Berawa, $2,113 in Canggu, $1,608 in Bukit, and $1,300 in Ubud. Daily rental in high season is higher, but occupancy also fluctuates: December–March and July–August are peak periods, while April and October are weaker.",
-        "By Balinsky's own calculation (October 2026, 422 villas in the catalogue), a median two-bedroom villa earns about 6.9% a year before tax, a one-bedroom villa about 7.1%. That is after platform commissions, management, upkeep and local accommodation tax. Occupancy comes from similar Booking listings nearby, not one figure for every villa. Star hotels on Bali run at roughly 57–65% occupancy (BPS Bali). Developer projections of 10–15% usually assume peak-season rates and occupancy. Before estimating payback, deduct rental tax and leasehold amortisation: the closer the end of the term, the cheaper the property becomes on resale."
+        "By Balinsky's own calculation (October 2026), a median two-bedroom villa earns about 6.9% a year before tax, a one-bedroom villa about 7.1%. That is after platform commissions, management, upkeep and local accommodation tax. Occupancy comes from similar Booking listings nearby, not one figure for every villa. Star hotels on Bali run at roughly 57–65% occupancy (BPS Bali). Developer projections of 10–15% usually assume peak-season rates and occupancy. Before estimating payback, deduct rental tax and leasehold amortisation: the closer the end of the term, the cheaper the property becomes on resale."
       ]
     }
   ],

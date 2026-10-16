@@ -7,14 +7,14 @@ const copy: HubLongCopy = {
     {
       "heading": "Prix des appartements à Bali",
       "paragraphs": [
-        "Le catalogue propose 423 appartements à vendre dans 197 résidences. Le prix médian est de $160 000, et huit lots sur dix se situent dans une fourchette de $105 000 à $502 500. L’entrée de marché commence autour de $65 000 pour un studio dans une résidence en phase initiale de construction, tandis que le haut de gamme atteint 1,28 M$ pour un penthouse en bord d’océan.",
+        "Le catalogue propose 494 appartements à vendre dans 111 résidences. Le prix médian est de $160 000, et huit lots sur dix se situent dans une fourchette de $105 000 à $502 500. L’entrée de marché commence autour de $65 000 pour un studio dans une résidence en phase initiale de construction, tandis que le haut de gamme atteint 1,28 M$ pour un penthouse en bord d’océan.",
         "Le marché des appartements à Bali fonctionne différemment de celui des villas : il s’agit principalement d’unités compactes. Huit lots sur dix sont des studios et des appartements 1 chambre, avec une surface médiane de 41 m². Les appartements 2 chambres sont déjà plus rares (72 lots), et les 3 chambres relèvent d’une offre premium très limitée."
       ]
     },
     {
       "heading": "Acheter sur plan ou dans une résidence livrée",
       "paragraphs": [
-        "Sur 423 appartements, 366 sont en construction et seulement 53 sont déjà livrés : le marché est presque entièrement primaire. Les règles en découlent : un achat en cours de construction se fait avec un paiement échelonné par le promoteur (acompte initial généralement de 30–50%, puis solde selon l’avancement) et avec une décote par rapport au prix d’une unité livrée, mais avec un risque de retard sur les délais.",
+        "Sur 494 appartements, 404 sont en construction et seulement 90 sont déjà livrés : le marché est presque entièrement primaire. Les règles en découlent : un achat en cours de construction se fait avec un paiement échelonné par le promoteur (acompte initial généralement de 30–50%, puis solde selon l’avancement) et avec une décote par rapport au prix d’une unité livrée, mais avec un risque de retard sur les délais.",
         "Le prix médian au mètre carré va de $3 300 à $4 700 selon la zone, sensiblement plus élevé que pour les villas. C’est normal : le prix au mètre inclut la piscine commune, le lobby, la sécurité, l’ascenseur et la société de gestion. Pour comparer des lots entre résidences, il est plus juste de regarder le prix au mètre que le montant total, car la surface des studios peut varier du simple au double."
       ]
     },
@@ -97,7 +97,7 @@ const copy: HubLongCopy = {
         "$160 000"
       ]
     ],
-    "note": "La fourchette correspond aux 10e et 90e percentiles sur 423 appartements avec prix renseigné. Données du catalogue, mises à jour avec les tarifs des promoteurs."
+    "note": "La fourchette correspond aux 10e et 90e percentiles sur 494 appartements avec prix renseigné. Données du catalogue, mises à jour avec les tarifs des promoteurs."
   },
   "faqExtra": [
     {

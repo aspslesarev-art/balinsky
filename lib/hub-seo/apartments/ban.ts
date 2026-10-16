@@ -7,14 +7,14 @@ const copy: HubLongCopy = {
     {
       "heading": "Pidan rega apartemen ring Bali",
       "paragraphs": [
-        "Ring katalog wenten 423 apartemen sane kaadol ring 197 kompleks hunian. Rega medianne — $160,000, delapan saking sapuluh lot wenten ring rentang $105,000 ngantos $502,500. Mlebet pasar kawiwitan kira-kira saking $65,000 antuk studio ring kompleks sane durung prasida rampung, wates paling duur — $1,28 juta antuk penthouse ring pasisi sagara.",
+        "Ring katalog wenten 494 apartemen sane kaadol ring 111 kompleks hunian. Rega medianne — $160,000, delapan saking sapuluh lot wenten ring rentang $105,000 ngantos $502,500. Mlebet pasar kawiwitan kira-kira saking $65,000 antuk studio ring kompleks sane durung prasida rampung, wates paling duur — $1,28 juta antuk penthouse ring pasisi sagara.",
         "Pasar apartemen ring Bali kabentukne béda saking pasar villa: puniki pinaka unit kompak. Delapan saking sapuluh lot inggih punika studio lan one-bedroom antuk lega median 41 m². Apartemen two-bedroom sampun kalebet langka (72 lot), three-bedroom dados produk premium sane terbatas."
       ]
     },
     {
       "heading": "Proyek durung rampung utawi kompleks sane sampun dados",
       "paragraphs": [
-        "Saking 423 apartemen, 366 kantun ring proses pembangunan lan 53 kemanten sane sampun kaserahang — pasar puniki meh sadayané pasar primer. Saking punika, skema pamesuan dados jelas: pamesuan ring tahap pembangunan lumrahne nganggen cicilan saking developer (DP pisan biasane 30–50%, sisane manut tahap), tur wenten diskon dibanding rega unit sane sampun dados, nanging wenten risiko molih geser ring tenggat waktu.",
+        "Saking 494 apartemen, 404 kantun ring proses pembangunan lan 90 kemanten sane sampun kaserahang — pasar puniki meh sadayané pasar primer. Saking punika, skema pamesuan dados jelas: pamesuan ring tahap pembangunan lumrahne nganggen cicilan saking developer (DP pisan biasane 30–50%, sisane manut tahap), tur wenten diskon dibanding rega unit sane sampun dados, nanging wenten risiko molih geser ring tenggat waktu.",
         "Rega median per meter — saking $3,300 ngantos $4,700 manut wilayah, tur langkung inggil ketimbang villa. Punika normal: ring rega per meter apartemen sampun kalebet kolam renang bersama, lobi, kaamanan, lift, lan perusahaan pengelola. Ngebandingang lot antarkompleks langkung trep manut rega per meter, nenten manut total rega — amargi lega studio prasida béda ngantos kaping kalih."
       ]
     },
@@ -97,7 +97,7 @@ const copy: HubLongCopy = {
         "$160,000"
       ]
     ],
-    "note": "Rentang punika persentil ka-10 lan ka-90 saking 423 apartemen sane wenten reganipun. Data katalog, kaanyarang sesarengan sareng pricelist developer."
+    "note": "Rentang punika persentil ka-10 lan ka-90 saking 494 apartemen sane wenten reganipun. Data katalog, kaanyarang sesarengan sareng pricelist developer."
   },
   "faqExtra": [
     {
