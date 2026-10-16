@@ -134,30 +134,28 @@ function hubEntries(ruPath: string, lastModified: Date): SitemapEntry[] {
 // build time; we only need the SEO:Slug field, so the full data column isn't
 // requested for the listing entries.
 async function loadDeveloperSlugs(): Promise<string[]> {
-  try {
-    const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
-    // Only the SEO:Slug is needed — comment above said as much, but the
-    // select was still pulling the whole `data` blob (~2 MB).
-    const { data } = await sb.from('raw_developers')
-      .select('slug:data->"SEO:Slug", pub:data->"Публикация", dev:data->"Developer"').limit(500)
-    const unwrap = (v: unknown): string | null =>
-      typeof v === 'string' ? v
-        : (v && typeof v === 'object' && 'value' in v && typeof (v as { value: unknown }).value === 'string')
-          ? (v as { value: string }).value
-          : null
-    const out: string[] = []
-    for (const r of (data ?? []) as { slug: unknown; pub: unknown; dev: unknown }[]) {
-      // Match what the detail page actually serves: published + not hidden.
-      // Unpublished/hidden developers 404 → GSC "Not found (404)".
-      if (r.pub !== true) continue
-      if (isHiddenDeveloper(unwrap(r.dev))) continue
-      const slug = unwrap(r.slug)
-      if (slug && !slug.startsWith('-')) out.push(slug)
-    }
-    return [...new Set(out)]
-  } catch {
-    return []
+  const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
+  // Only the SEO:Slug is needed — comment above said as much, but the
+  // select was still pulling the whole `data` blob (~2 MB).
+  const { data, error } = await sb.from('raw_developers')
+    .select('slug:data->"SEO:Slug", pub:data->"Публикация", dev:data->"Developer"').limit(500)
+  // Сбой базы бросаем: карта без застройщиков хуже, чем прошлая версия карты.
+  if (error) throw new Error(`raw_developers: ${error.message}`)
+  const unwrap = (v: unknown): string | null =>
+    typeof v === 'string' ? v
+      : (v && typeof v === 'object' && 'value' in v && typeof (v as { value: unknown }).value === 'string')
+        ? (v as { value: string }).value
+        : null
+  const out: string[] = []
+  for (const r of (data ?? []) as { slug: unknown; pub: unknown; dev: unknown }[]) {
+    // Match what the detail page actually serves: published + not hidden.
+    // Unpublished/hidden developers 404 → GSC "Not found (404)".
+    if (r.pub !== true) continue
+    if (isHiddenDeveloper(unwrap(r.dev))) continue
+    const slug = unwrap(r.slug)
+    if (slug && !slug.startsWith('-')) out.push(slug)
   }
+  return [...new Set(out)]
 }
 
 function filterIndexablePaths<T>(
@@ -452,15 +450,14 @@ async function buildAll(): Promise<Categorized> {
   let eventsRows: Awaited<ReturnType<typeof loadAllEvents>> = []
   let knowledgeRows: Awaited<ReturnType<typeof loadAllKnowledge>> = []
   let devSlugs: string[] = []
-  try {
-    ;[vData, aData, cData, newsRows, promoRows, eventsRows, knowledgeRows, devSlugs] = await Promise.all([
-      loadAllVillas(), loadAllApartments(), loadAllComplexes(),
-      loadAllNews(), loadAllPromo(), loadAllEvents(), loadAllKnowledge(),
-      loadDeveloperSlugs(),
-    ])
-  } catch {
-    // Best-effort — partial sitemap still ships.
-  }
+  // Без try/catch: раньше сбой базы молча давал карту без объектов, и её
+  // кэшировали на сутки. Теперь ошибка роняет пересборку — ISR продолжает
+  // отдавать прошлую полную карту.
+  ;[vData, aData, cData, newsRows, promoRows, eventsRows, knowledgeRows, devSlugs] = await Promise.all([
+    loadAllVillas(), loadAllApartments(), loadAllComplexes(),
+    loadAllNews(), loadAllPromo(), loadAllEvents(), loadAllKnowledge(),
+    loadDeveloperSlugs(),
+  ])
 
   // Filter-canonical hubs — every locale (/ru/villy/canggu, /en/villas/canggu, /id/vila/canggu …).
   // Drop combos with < MIN_OBJECTS_PER_FILTER_PAGE matches.

@@ -704,6 +704,9 @@ async function _loadAllInternal(): Promise<CachedAll> {
   // don't have to wait for the next sync-heavy to re-emit URLs.
   // Фото-аудит: выбранная обложка встаёт первой, брак выкидывается.
   const manifest = curateManifest(cdnRewriteManifest(manifestRaw), visionMap)
+  // Сбой базы бросаем: иначе пустой каталог закэшировался бы на весь TTL,
+  // а карта сайта молча потеряла бы все объекты.
+  if (rowsRes.error) throw new Error(`catalog rows: ${rowsRes.error.message}`)
   const rows = ((rowsRes.data ?? []) as unknown as Record<string, unknown>[]).map(reassembleVilla)
   const published = rows.filter(r => r.data?.['Опубликовать'] === true)
   // Суффиксы считаем по ВСЕМ опубликованным виллам, до отсева скрытых

@@ -573,6 +573,9 @@ async function _loadAllInternal(): Promise<CachedAll> {
   ])
   // Фото-аудит: выбранная обложка встаёт первой, брак выкидывается.
   const manifest = curateManifest(cdnRewriteManifest(manifestRaw), visionMap)
+  // Сбой базы бросаем: иначе пустой каталог закэшировался бы на весь TTL,
+  // а карта сайта молча потеряла бы все объекты.
+  if (rowsRes.error) throw new Error(`catalog rows: ${rowsRes.error.message}`)
   const rows = ((rowsRes.data ?? []) as unknown as Record<string, unknown>[]).map(reassembleApt)
   const enriched = rows
     .filter(r => r.data?.['Опубликовать'] === true)

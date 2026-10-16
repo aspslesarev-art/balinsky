@@ -684,7 +684,9 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
 
   const detailUrl = `${SITE_URL}${switchLangPath(`/ru/zastrojshhiki/${slug}`, lang)}`
   const orgJsonLd: Record<string, unknown> = {
-    '@context': 'https://schema.org', '@type': 'RealEstateAgent',
+    // Застройщик — компания, а не агентство недвижимости: RealEstateAgent
+    // выдавал бы его (и сайт) за посредника.
+    '@context': 'https://schema.org', '@type': 'Organization',
     name, url: detailUrl,
     areaServed: { '@type': 'Place', name: 'Bali, Indonesia' },
   }

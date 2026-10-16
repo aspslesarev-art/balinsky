@@ -1099,10 +1099,12 @@ async function _loadComplexById(id: string): Promise<ComplexRow | null> {
   const rev = await contentRev('complexes')
   const c = _complexByIdCache.get(id)
   if (c && c.rev === rev && Date.now() - c.ts < 5 * 60 * 1000) return c.row
-  const [{ data }, enCache] = await Promise.all([
+  const [{ data, error }, enCache] = await Promise.all([
     sb.from('raw_complexes').select('airtable_id, data, slug, cover_url').eq('airtable_id', id).maybeSingle(),
     loadAllTranslations('complexes'),
   ])
+  // Сбой базы — не «ЖК нет»: бросаем, а не кэшируем null.
+  if (error) throw new Error(`raw_complexes ${id}: ${error.message}`)
   const raw = (data as ComplexRow | null) ?? null
   // Same hand-merge as villa/apartment detail loaders — detail page
   // queries raw_complexes directly and bypasses loadAllComplexes.
@@ -1210,9 +1212,10 @@ async function _loadApartmentsForComplex(complexName: string): Promise<{ rows: A
 }
 
 async function loadComplexBySlug(slug: string): Promise<ComplexRow | null> {
+  // Индекс не загрузился (и прошлой копии нет) — это сбой, а не 404.
   const idx = await _loadComplexIndex().catch((e: unknown) => {
     console.error('[complex]', e instanceof Error ? e.message : e)
-    return [] as ComplexIndexEntry[]
+    throw e
   })
   const entry = idx.find(c => c.slug === slug)
   if (!entry) return null
@@ -1789,7 +1792,8 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
         name,
         url: detailUrl,
         category: 'Residential complex',
-        brand: { '@type': 'Brand', name: developerName ?? 'Balinsky' },
+        // Бренд и продавец — застройщик, если известен; не «Balinsky».
+        ...(developerName ? { brand: { '@type': 'Brand', name: developerName } } : {}),
         description: (seoText ?? name).slice(0, 500),
         ...(slidesPhotos.length > 0 ? { image: slidesPhotos.slice(0, 5) } : {}),
         offers: {
@@ -1798,8 +1802,8 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
           lowPrice: Math.round(Math.min(...complexPrices)),
           highPrice: Math.round(Math.max(...complexPrices)),
           offerCount: complexPrices.length,
-          availability: 'https://schema.org/InStock',
           url: detailUrl,
+          ...(developerName ? { seller: { '@type': 'Organization', name: developerName } } : {}),
         },
       }
     : null

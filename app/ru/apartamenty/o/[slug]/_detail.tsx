@@ -646,10 +646,13 @@ const _loadApartmentIndex = revisionedCache(['apartments'], 30 * 60 * 1000, asyn
 })
 const _loadApartmentById = unstable_cache(
   async (id: string): Promise<Row | null> => {
-    const [{ data }, enCache] = await Promise.all([
+    const [{ data, error }, enCache] = await Promise.all([
       sb.from('raw_apartments').select('airtable_id, data').eq('airtable_id', id).maybeSingle(),
       loadAllTranslations('apartments'),
     ])
+    // Сбой базы бросаем: unstable_cache не запишет null на сутки, а страница
+    // не станет 404.
+    if (error) throw new Error(`raw_apartments ${id}: ${error.message}`)
     const raw = (data as Row | null) ?? null
     if (!raw) return null
     // Mirror what the catalog loader does — merge cached EN translations
@@ -799,9 +802,10 @@ async function _loadAllComplexes(): Promise<ComplexRow[]> {
 // to { row, canonicalSlug }. Detail page redirects 301 when the URL
 // slug isn't already canonical.
 async function resolveApartment(urlSlug: string): Promise<{ row: Row; canonicalSlug: string } | null> {
+  // Индекс не загрузился (и прошлой копии нет) — это сбой, а не 404.
   const idx = await _loadApartmentIndex().catch((e: unknown) => {
     console.error('[apartment]', e instanceof Error ? e.message : e)
-    return [] as AptIndexEntry[]
+    throw e
   })
   // Direct match on the canonical slug (the common case).
   let entry = idx.find(e => e.slug === urlSlug)
@@ -1065,32 +1069,18 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
   if (photos.length > 0) productJsonLd.image = photos.slice(0, 5)
   productJsonLd.description = seoText?.slice(0, 500)
     ?? pickCopy(APT_PRODUCT_DESC, lang)(bedrooms, district)
-  productJsonLd.brand = { '@type': 'Brand', name: devName ?? 'Balinsky' }
+  // Бренд и продавец — только застройщик, «Balinsky» не подставляем:
+  // сайт информационный и объекты не продаёт.
+  if (devName) productJsonLd.brand = { '@type': 'Brand', name: devName }
   if (priceNum != null) {
     productJsonLd.offers = {
       '@type': 'Offer',
       price: Math.round(priceNum),
       priceCurrency: 'USD',
-      availability: 'https://schema.org/InStock',
       url: `${SITE_URL}${switchLangPath(`/ru/apartamenty/o/${slug}`, lang)}`,
-      // Real-estate sales don't ship and don't return — explicit
-      // declarations satisfy Google Merchant validator without faking
-      // e-commerce semantics.
-      shippingDetails: {
-        '@type': 'OfferShippingDetails',
-        shippingRate: { '@type': 'MonetaryAmount', value: 0, currency: 'USD' },
-        shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'ID' },
-        deliveryTime: {
-          '@type': 'ShippingDeliveryTime',
-          handlingTime: { '@type': 'QuantitativeValue', minValue: 0, maxValue: 0, unitCode: 'DAY' },
-          transitTime: { '@type': 'QuantitativeValue', minValue: 0, maxValue: 0, unitCode: 'DAY' },
-        },
-      },
-      hasMerchantReturnPolicy: {
-        '@type': 'MerchantReturnPolicy',
-        applicableCountry: 'ID',
-        returnPolicyCategory: 'https://schema.org/MerchantReturnNotPermitted',
-      },
+      // Продавец — застройщик, если известен. Balinsky объекты не продаёт:
+      // ни бренда, ни продавца «Balinsky», ни доставки с возвратом.
+      ...(devName ? { seller: { '@type': 'Organization', name: devName } } : {}),
     }
   }
 
