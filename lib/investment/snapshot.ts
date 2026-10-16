@@ -383,7 +383,10 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
   const bedrooms = numberOrNull(d['Комнаты'])
   const area = numberOrNull(d['Площадь'])
   const askingPrice = numberOrNull(d['price'] ?? d['Цена'])
-  const leaseholdYearsLeft = numberOrNull(d['Leasehold'] ?? d['Leashold'])
+  // «Leasehold» часто хранит исходный срок (30 лет), а «Leasehold до» — дату
+  // окончания: с 2053 года до неё сегодня 26 лет, а не 30. Берём меньшее —
+  // от остатка срока зависит, вернутся ли вложения.
+  const leaseholdYearsLeft = yearsLeft(numberOrNull(d['Leasehold'] ?? d['Leashold']), d['Leasehold до'])
   const hasPool = detectPool(d)
   const district = firstString(d['Location 2']) ?? firstString(d['Location'])
 
@@ -691,4 +694,13 @@ async function firstPhoto(villaId: string, kind: ListingKind): Promise<string | 
     } catch { /* ignore */ }
   }
   return _photoCache[kind]?.data[villaId]?.[0] ?? null
+}
+
+function yearsLeft(term: number | null, until: unknown): number | null {
+  const raw = Array.isArray(until) ? until[0] : until
+  const t = typeof raw === 'string' ? Date.parse(raw) : NaN
+  if (!Number.isFinite(t)) return term
+  const left = Math.round(((t - Date.now()) / (365.25 * 86_400_000)) * 10) / 10
+  if (left <= 0) return term
+  return term == null ? left : Math.min(term, left)
 }

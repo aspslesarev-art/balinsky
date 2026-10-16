@@ -121,7 +121,7 @@ async function build(lang: Lang): Promise<FinderItem[]> {
 }
 
 export async function loadHomeFinder(lang: Lang): Promise<FinderItem[]> {
-  return unstable_cache(() => build(lang), ['home-finder-v5', lang], {
+  return unstable_cache(() => build(lang), ['home-finder-v6', lang], {
     revalidate: 86400,
     tags: ['content:villas'],
   })()

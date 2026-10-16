@@ -436,7 +436,7 @@ const DISTRICTS: Record<string, DistrictBundle> = {
   },
   berawa: {
     ru: {
-      slug: 'berawa', name: 'Беравa',
+      slug: 'berawa', name: 'Берава',
       hero: 'Премиум-сегмент Чангу: дорогие виллы, beach clubs, корпоративная аудитория.',
       paragraphs: [
         'Берава — самый дорогой и развитый суб-район Чангу: на нём концентрируются Finns Beach Club, Atlas Beach Fest, La Brisa, премиальные рестораны. Цена объектов выше остального Чангу на 30-50%, но и арендные ставки выше: 2BR-вилла приносит $250-320/ночь в высокий сезон.',

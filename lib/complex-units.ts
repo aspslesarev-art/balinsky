@@ -162,7 +162,7 @@ const loadUnitsCached = unstable_cache(
         priceUsd: r.price_usd ?? r.price_rub,
         bedrooms: r.bedrooms,
         area: r.area,
-        floor: r.floor,
+        floor: floorLabel(r.floor),
         photos: aptManifest[r.airtable_id] ?? [],
       })
     }
@@ -212,4 +212,15 @@ export async function loadUnitsForComplex(
   if (!complexName || complexName.trim().length < 3) return []
   const units = await loadUnitsCached(complexName.trim(), lang)
   return units.slice(0, limit)
+}
+
+// «Этаж» в базе бывает списком этажей типа (["1","2","3"]): React склеивал его
+// в «123». Один этаж — как есть, несколько — диапазоном «1–3».
+function floorLabel(v: unknown): string | null {
+  const list = (Array.isArray(v) ? v : v == null ? [] : [v]).map(x => String(x).trim()).filter(Boolean)
+  if (!list.length) return null
+  if (list.length === 1) return list[0]
+  const nums = list.map(Number)
+  if (nums.every(Number.isFinite)) return `${Math.min(...nums)}–${Math.max(...nums)}`
+  return list.join(', ')
 }
