@@ -118,7 +118,8 @@ function toDemand(row: Row, lang: string): UnitDemand | null {
     airtableId: row.airtable_id,
     score: row.score,
     basis: row.basis,
-    zone: lang === 'ru' ? row.zone : (ZONE_LATIN[row.zone] ?? row.zone),
+    // В данных Санур записан с латинской «p» («Сануp») — по-русски показываем правильно.
+    zone: lang === 'ru' ? row.zone.replace('Сануp', 'Санур') : (ZONE_LATIN[row.zone] ?? row.zone),
     compsN: row.comps_n,
     adrVsNeighbours: f.predicted?.adr_vs_neighbours ?? null,
     expectedAdrUsd: f.predicted?.expected_adr_usd ?? null,
