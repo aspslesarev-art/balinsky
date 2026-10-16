@@ -1513,7 +1513,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
 
         {hasRent && (
           <DataChapter id="arenda" n={3} lang={lang} question={asQuestion(qh.demand)}>
-            <DemandSummary verdict={verdict} monthly={monthly} bedrooms={bedrooms} lang={lang}
+            <DemandSummary verdict={verdict} monthly={monthly} bedrooms={bedrooms} lang={lang} dailyComps={verdictSnap?.competitors ?? []}
               daily={marketOk ? { count: marketStats!.villa_count, adrUsd: marketStats!.villa_adr_usd, occupancyPct: verdictSnap?.marketOccupancy ? Math.round(verdictSnap.marketOccupancy.occupancy * 100) : marketStats!.villa_occupancy_pct } : null} />
             {/* «Почём сдают соседи» (estatemarket.io) и «Востребованность в районе» убраны
                 по решению владельца 16.10.2026: непонятны и повторяют сводку выше. */}

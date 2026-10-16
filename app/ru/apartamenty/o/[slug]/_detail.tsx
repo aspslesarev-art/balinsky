@@ -1371,7 +1371,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
 
         {hasDemand && (
           <DataChapter id="arenda" n={3} lang={lang} question={asQuestion(qh.demand)}>
-            <DemandSummary verdict={verdict} monthly={monthly} bedrooms={bedrooms} lang={lang} daily={dailyFacts} />
+            <DemandSummary verdict={verdict} monthly={monthly} bedrooms={bedrooms} lang={lang} dailyComps={verdictSnap?.competitors ?? []} daily={dailyFacts} />
             {/* «Почём сдают соседи» (estatemarket.io) и «Востребованность в районе» убраны
                 по решению владельца 16.10.2026: непонятны и повторяют сводку выше. */}
           </DataChapter>

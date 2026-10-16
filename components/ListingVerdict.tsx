@@ -5,6 +5,7 @@ import type { ReactNode } from 'react'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { permitOk, type Verdict, type Tone, type YieldFacts, type ComplexFacts } from '@/lib/listing-verdict'
 import type { MonthlyBundle } from '@/lib/investment/monthly'
+import type { NearbyMatchCard } from '@/lib/investment/snapshot'
 import { InlinePrice } from './InlinePrice'
 import { CardRail } from './CardRail'
 import { VerifiedYieldBadge } from './VerifiedYieldBadge'
@@ -142,6 +143,11 @@ const COPY = {
     dailySub: (n: number, occ: number | null) => `${n} ${pluralRu(n, ['объект', 'объекта', 'объектов'])} на Booking${occ != null ? `, загрузка около ${Math.round(occ)}%` : ''}`,
     dailySubRestricted: 'этому объекту так сдавать нельзя',
     monthlyCards: 'Что сдают рядом помесячно', away: 'от объекта', km: 'км', br: 'сп.',
+    monthlyH: 'Сдают помесячно по соседству',
+    dailyH: 'Сдают посуточно в этом районе',
+    dailyHRestricted: 'Посуточно у соседей - этому объекту так сдавать нельзя',
+    whoLine: (b: number | null, km: number) => `${b != null ? `${b} ${pluralRu(b, ['спальня', 'спальни', 'спален'])}` : 'Похожие объекты'} в радиусе ${String(km).replace('.', ',')} км`,
+    avg: 'в среднем', range: 'обычно от', occ: (p: number) => `занято около ${p}% ночей`,
     futureT: '', futureBuild: (p: number) => `${p}`, futureData: '',
     prev: 'Назад', next: 'Дальше', open: 'Объявление',
     // Деньги
@@ -258,6 +264,11 @@ const COPY = {
     dailySub: (n: number, occ: number | null) => `${en(n, 'place', 'places')} on Booking${occ != null ? `, about ${Math.round(occ)}% booked` : ''}`,
     dailySubRestricted: 'that is what neighbours charge - not allowed here',
     monthlyCards: 'Monthly rentals nearby', away: 'away', km: 'km', br: 'BR',
+    monthlyH: 'Rented monthly nearby',
+    dailyH: 'Rented nightly in this area',
+    dailyHRestricted: 'Nightly at neighbours - not allowed for this property',
+    whoLine: (b: number | null, km: number) => `${b != null ? en(b, 'bedroom', 'bedrooms') : 'Similar places'} within ${km} km`,
+    avg: 'typically', range: 'usually from', occ: (p: number) => `about ${p}% of nights booked`,
     futureT: 'What comes next',
     futureBuild: (p: number) => `More competition ahead: the number of buildings around grew by ${p}% in recent years.`,
     futureData: 'Whether demand is rising or falling we will say later: we have been collecting Booking history since August 2026.',
@@ -459,48 +470,41 @@ export function SafetyCards({ verdict: v, status, yearRaw, complex, leaseYears, 
   )
 }
 
-export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, lang }: {
+// Квартили цены по объявлениям: «в среднем» — середина (медиана), «обычно» — от 25% до 75%.
+function quartiles(xs: number[]): { p25: number; p50: number; p75: number } | null {
+  const a = xs.filter(x => Number.isFinite(x) && x > 0).sort((x, y) => x - y)
+  if (a.length < 3) return null
+  const q = (p: number) => a[Math.min(a.length - 1, Math.floor((a.length - 1) * p))]
+  return { p25: q(0.25), p50: q(0.5), p75: q(0.75) }
+}
+
+// «Будет ли спрос?»: что сдают рядом помесячно и посуточно — одной строкой цены
+// и карточками объявлений с фото, без отдельных плиток с теми же цифрами.
+export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyComps = [], lang }: {
   verdict: Verdict
   monthly: MonthlyBundle | null
   bedrooms: number | null
   daily: { count: number; adrUsd: number | null; occupancyPct: number | null } | null
+  /** Похожие объекты на Booking (снимок калькулятора) — карточки с фото. */
+  dailyComps?: NearbyMatchCard[]
   lang: Lang
 }) {
   const c = pickCopy(COPY, lang)
-  const tile = 'rounded-2xl p-5 md:p-6 flex flex-col gap-2'
+  const dec = (x: number) => (lang === 'en' || lang === 'zh' ? x.toFixed(1) : x.toFixed(1).replace('.', ','))
+  const cardCls = 'flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--color-border)] bg-white transition-colors duration-[120ms] hover:border-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]'
+  const dq = quartiles(dailyComps.map(x => x.adr))
+  const dailyKm = dailyComps.length ? Math.max(...dailyComps.map(x => x.distanceKm)) : null
   return (
-    <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {m && (
-          <div className={`${tile} bg-[var(--color-primary-soft)]`}>
-            <span className="text-[14px] font-semibold text-[var(--color-primary-pressed)]">{c.monthlyT}</span>
-            <span className="text-[28px] md:text-[32px] font-semibold tracking-tight text-[var(--color-text)]">{c.monthlyV(m.n)}</span>
-            <span className="text-[15px] text-[var(--color-text-muted)]">{c.monthlySub(m.bedroomsRelaxed ? null : bedrooms, m.radiusKm)}</span>
-          </div>
-        )}
-        {m && (
-          <div className={`${tile} bg-[var(--color-search-bg)]`}>
-            <span className="text-[14px] font-semibold text-[var(--color-text-muted)]">{c.usualT}</span>
-            <span className="text-[28px] md:text-[32px] font-semibold tracking-tight text-[var(--color-text)]"><InlinePrice usd={m.p50} lang={lang} /> <span className="text-[15px] font-medium text-[var(--color-text-muted)]">{c.perMonth}</span></span>
-            <span className="text-[15px] text-[var(--color-text-muted)]">{c.usualSub} <InlinePrice usd={m.p25} lang={lang} approx={false} /> {c.to} <InlinePrice usd={m.p75} lang={lang} approx={false} /></span>
-          </div>
-        )}
-        {daily?.adrUsd != null && daily.count > 0 && (
-          <div className={`${tile} bg-[var(--color-search-bg)]`}>
-            <span className="text-[14px] font-semibold text-[var(--color-text-muted)]">{v.demand.monthlyOnly ? c.dailyTRestricted : c.dailyT}</span>
-            <span className="text-[28px] md:text-[32px] font-semibold tracking-tight text-[var(--color-text)]"><InlinePrice usd={daily.adrUsd} lang={lang} /> <span className="text-[15px] font-medium text-[var(--color-text-muted)]">{c.perNight}</span></span>
-            <span className="text-[15px] text-[var(--color-text-muted)]">{v.demand.monthlyOnly ? c.dailySubRestricted : c.dailySub(daily.count, daily.occupancyPct)}</span>
-          </div>
-        )}
-      </div>
-
+    <div className="flex flex-col gap-10">
       {m && m.comps.length > 0 && (
         <div>
-          <h3 className="mb-4 text-[18px] md:text-[20px] font-semibold text-[var(--color-text)]">{c.monthlyCards}</h3>
+          <h3 className="text-[18px] md:text-[20px] font-semibold text-[var(--color-text)]">{c.monthlyH}</h3>
+          <p className="mt-1 mb-4 text-[16px] text-[var(--color-text)]">
+            {c.whoLine(m.bedroomsRelaxed ? null : bedrooms, m.radiusKm)}: {c.avg} <span className="whitespace-nowrap"><InlinePrice usd={m.p50} lang={lang} /></span> {c.perMonth}, {c.range} <span className="whitespace-nowrap"><InlinePrice usd={m.p25} lang={lang} approx={false} /></span> {c.to} <span className="whitespace-nowrap"><InlinePrice usd={m.p75} lang={lang} approx={false} /></span>.
+          </p>
           <CardRail prevLabel={c.prev} nextLabel={c.next}>
             {m.comps.map(comp => (
-              <a key={`${comp.url}-${comp.rentMonthUsd}`} href={comp.url ?? undefined} target="_blank" rel="nofollow noopener noreferrer"
-                className="flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--color-border)] bg-white transition-colors duration-[120ms] hover:border-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">
+              <a key={`${comp.url}-${comp.rentMonthUsd}`} href={comp.url ?? undefined} target="_blank" rel="nofollow noopener noreferrer" className={cardCls}>
                 {comp.photo && (
                   // Фото из объявления rumah123 — видно, что именно сдают по соседству.
                   // eslint-disable-next-line @next/next/no-img-element
@@ -508,11 +512,11 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, lang }:
                     className="aspect-[3/2] w-full bg-[var(--color-search-bg)] object-cover" />
                 )}
                 <span className="flex flex-1 flex-col gap-1 p-5">
-                <span className="text-[20px] font-semibold text-[var(--color-text)]"><InlinePrice usd={comp.rentMonthUsd} lang={lang} /> <span className="text-[14px] font-medium text-[var(--color-text-muted)]">{c.perMonth}</span></span>
-                <span className="text-[15px] font-medium leading-snug text-[var(--color-text)] line-clamp-2">{comp.title}</span>
-                <span className="text-[14px] text-[var(--color-text-muted)]">
-                  {[comp.bedrooms != null ? `${comp.bedrooms} ${c.br}` : null, comp.buildingM2 ? `${comp.buildingM2} м²` : null, comp.district, `${lang === 'en' || lang === 'zh' ? comp.distanceKm.toFixed(1) : comp.distanceKm.toFixed(1).replace('.', ',')} ${c.km}`].filter(Boolean).join(' · ')}
-                </span>
+                  <span className="text-[20px] font-semibold text-[var(--color-text)]"><InlinePrice usd={comp.rentMonthUsd} lang={lang} /> <span className="text-[14px] font-medium text-[var(--color-text-muted)]">{c.perMonth}</span></span>
+                  <span className="text-[15px] font-medium leading-snug text-[var(--color-text)] line-clamp-2">{comp.title}</span>
+                  <span className="text-[14px] text-[var(--color-text-muted)]">
+                    {[comp.bedrooms != null ? `${comp.bedrooms} ${c.br}` : null, comp.buildingM2 ? `${comp.buildingM2} м²` : null, comp.district, `${dec(comp.distanceKm)} ${c.km}`].filter(Boolean).join(' · ')}
+                  </span>
                 </span>
               </a>
             ))}
@@ -520,6 +524,34 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, lang }:
         </div>
       )}
 
+      {dailyComps.length > 0 && (
+        <div>
+          <h3 className="text-[18px] md:text-[20px] font-semibold text-[var(--color-text)]">{v.demand.monthlyOnly ? c.dailyHRestricted : c.dailyH}</h3>
+          {dq && (
+            <p className="mt-1 mb-4 text-[16px] text-[var(--color-text)]">
+              {c.whoLine(dailyComps.every(x => x.bedrooms === bedrooms) ? bedrooms : null, dailyKm != null ? Math.max(1, Math.ceil(dailyKm)) : 2)}: {c.avg} <span className="whitespace-nowrap"><InlinePrice usd={dq.p50} lang={lang} /></span> {c.perNight}, {c.range} <span className="whitespace-nowrap"><InlinePrice usd={dq.p25} lang={lang} approx={false} /></span> {c.to} <span className="whitespace-nowrap"><InlinePrice usd={dq.p75} lang={lang} approx={false} /></span>{daily?.occupancyPct != null && !v.demand.monthlyOnly ? `, ${c.occ(Math.round(daily.occupancyPct))}` : ''}.
+            </p>
+          )}
+          <CardRail prevLabel={c.prev} nextLabel={c.next}>
+            {dailyComps.slice(0, 12).map(comp => (
+              <a key={comp.id} href={comp.url ?? undefined} target="_blank" rel="nofollow noopener noreferrer" className={cardCls}>
+                {comp.photo && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={comp.photo} alt={comp.name} loading="lazy" referrerPolicy="no-referrer" width={480} height={320}
+                    className="aspect-[3/2] w-full bg-[var(--color-search-bg)] object-cover" />
+                )}
+                <span className="flex flex-1 flex-col gap-1 p-5">
+                  <span className="text-[20px] font-semibold text-[var(--color-text)]"><InlinePrice usd={comp.adr} lang={lang} /> <span className="text-[14px] font-medium text-[var(--color-text-muted)]">{c.perNight}</span></span>
+                  <span className="text-[15px] font-medium leading-snug text-[var(--color-text)] line-clamp-2">{comp.complex ?? comp.name}</span>
+                  <span className="text-[14px] text-[var(--color-text-muted)]">
+                    {[comp.bedrooms != null ? `${comp.bedrooms} ${c.br}` : null, comp.rating != null ? `★ ${dec(comp.rating)}` : null, `${dec(comp.distanceKm)} ${c.km}`].filter(Boolean).join(' · ')}
+                  </span>
+                </span>
+              </a>
+            ))}
+          </CardRail>
+        </div>
+      )}
     </div>
   )
 }
