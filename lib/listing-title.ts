@@ -81,7 +81,7 @@ export function fallbackListingTitle(args: {
 
 // Формула заголовка в базе пишет «спальни» при любом числе: «1 спальни»,
 // «5 спальни». Чиним согласование при выводе — для русского и украинского.
-function fixBedroomPlural(s: string): string {
+export function fixBedroomPlural(s: string): string {
   return s
     .replace(/(^|[^\d])(\d+)\s+(спальня|спальни|спален)(?![а-яё])/gi, (_m, pre: string, n: string) =>
       `${pre}${n} ${pluralRu(Number(n), ['спальня', 'спальни', 'спален'])}`)

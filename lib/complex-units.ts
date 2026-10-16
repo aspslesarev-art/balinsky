@@ -1,3 +1,4 @@
+import { fixBedroomPlural } from '@/lib/listing-title'
 import { unstable_cache } from 'next/cache'
 import { createClient } from '@supabase/supabase-js'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
@@ -153,7 +154,7 @@ const loadUnitsCached = unstable_cache(
       if (seenApt.has(r.slug)) continue
       seenApt.add(r.slug)
       const titleSource = (lang !== 'ru' ? firstString(r.title_en) : null) ?? r.title
-      const title = titleSource.replace(/\s*\|\s*Balinsky\s*$/i, '').trim()
+      const title = fixBedroomPlural(titleSource.replace(/\s*\|\s*Balinsky\s*$/i, '').trim())
       units.push({
         kind: 'apartment',
         id: r.airtable_id,
@@ -174,7 +175,7 @@ const loadUnitsCached = unstable_cache(
       if (seenVilla.has(r.airtable_id)) continue
       seenVilla.add(r.airtable_id)
       const titleSource = (lang !== 'ru' ? firstString(r.title_en) : null) ?? r.title
-      const title = titleSource.replace(/\s*\|\s*Balinsky\s*$/i, '').trim()
+      const title = fixBedroomPlural(titleSource.replace(/\s*\|\s*Balinsky\s*$/i, '').trim())
       units.push({
         kind: 'villa',
         id: r.airtable_id,
