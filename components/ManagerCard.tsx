@@ -4,7 +4,7 @@ import { useCallback, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { detectLang, pickCopy } from '@/lib/i18n'
 import Image from 'next/image'
-import { Star, Languages, Video, Clock, Send, MessageCircle, MessagesSquare } from 'lucide-react'
+import { Languages, Video, Clock, Send, MessageCircle, MessagesSquare } from 'lucide-react'
 import type { ManagerItem } from '@/lib/managers'
 import type { Lang } from '@/lib/i18n'
 import type { ContactInquiry } from '@/lib/contact-inquiry'
@@ -225,12 +225,7 @@ function ManagerRow({
             </div>
           )}
           <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
-            {m.rating != null && (
-              <span className="inline-flex items-center gap-1 text-[12px] text-[var(--color-text-muted)]">
-                <Star size={12} className="text-[#F59E0B] fill-[#F59E0B]" />
-                <span className="font-medium text-[var(--color-text)]">{m.rating.toFixed(1)}</span>
-              </span>
-            )}
+            {/* Звёзды рейтинга не показываем: сайт не ставит оценок людям и компаниям. */}
             {lang === 'ru' && displayLanguages.length > 0 && (
               <span className="inline-flex items-center gap-1 text-[12px] text-[var(--color-text-muted)]">
                 <Languages size={12} />
