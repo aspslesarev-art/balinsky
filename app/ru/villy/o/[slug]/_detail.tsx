@@ -58,7 +58,7 @@ import { LazyMount } from '@/components/LazyMount'
 import { ManagerCard } from '@/components/ManagerCard'
 import { AgentStoriesButton } from '@/components/AgentStoriesButton'
 import { loadNearbyPlaces } from '@/lib/nearby-places'
-import { computeLivingFacts } from '@/lib/living'
+import { computeLivingFacts, loadLivingNoise } from '@/lib/living'
 import { LivingVerdict } from '@/components/LivingVerdict'
 import { GoalSwitch } from '@/components/GoalSwitch'
 import { NearbyPlaces } from '@/components/NearbyPlaces'
@@ -1250,11 +1250,16 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   const airportS = geoFacts?.routes?.airport?.s
   const underConstruction = !!status && /строит|under construction|planned/i.test(status)
   // «Для жизни»: места вокруг, дорога в час пик и остаток срока аренды земли.
+  const livingNoise = await loadLivingNoise('villa', v.airtable_id).catch(() => null)
   const livingFacts = computeLivingFacts({
     byCategory: nearby?.byCategory ?? null,
     routes: geoFacts?.routes ?? null,
     leaseYears: verdictSnap?.villa.leaseholdYearsLeft ?? null,
     bedrooms: verdictSnap?.villa.bedrooms ?? null,
+    noise: livingNoise,
+    climate: geoFacts?.climate ?? null,
+    ispu: geoFacts?.air?.ispu_avg ?? null,
+    elevationM: geoFacts?.elevation_m ?? null,
   })
   const verdict = buildVerdict({
     status, yearRaw, permit, leaseYears, rentalRestricted, complex: complexFacts,
