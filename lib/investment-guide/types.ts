@@ -1,7 +1,7 @@
 // Copy for the «Bali property investment» pillar page (components/InvestmentGuide).
 //
 // Every figure on this page comes from Balinsky's own data (catalogue +
-// short-term rental database, September 2026) or from a cited primary source.
+// short-term rental database, October 2026) or from a cited primary source.
 // The data rows live in ./data.ts so all ten locales show the same numbers.
 
 export type Source = { label: string; href: string }
@@ -59,8 +59,8 @@ export type InvestmentGuideCopy = {
     h1: (name: string) => string
     caseTitle: (name: string) => string
     rate: (rate: string, n: string) => string
-    revenue: (amount: string) => string
-    net: (amount: string) => string
+    /** Медианная доходность вилл района до налогов (listing_yields) и их число. */
+    yield: (pct: string, n: string) => string
     price: (price: string, n: string) => string
     island: string
     noRentals: string
