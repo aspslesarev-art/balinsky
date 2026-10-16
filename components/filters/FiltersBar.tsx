@@ -6,6 +6,8 @@ import { PriceRangeFilter } from './PriceRangeFilter'
 import { GoalFilter } from './GoalFilter'
 import { useFilterUrl, type FilterView } from './useFilterUrl'
 import { pickCopy, type Lang } from '@/lib/i18n'
+import { buildDistrictGroups } from '@/lib/district-groups'
+import type { CatalogSort } from '@/lib/catalog-sort'
 
 const COPY = {
   ru: {
@@ -79,6 +81,8 @@ export type FilterState = {
   // 'invest' = tourism / commercial land, short-term rental allowed.
   // 'live'   = residential (yellow) zone + livable area.
   goal: 'invest' | 'live' | null
+  // Явная сортировка (?sort=…, lib/catalog-sort.ts). Нет — умный порядок.
+  sort?: CatalogSort
 }
 
 export type FilterOptions = {
@@ -141,7 +145,7 @@ export function FiltersBar({
       <div className="flex items-center gap-3 flex-wrap">
         <GoalFilter current={state} view={view} lang={lang} />
         <PriceRangeFilter label={c.price} min={state.priceMin} max={state.priceMax} current={state} view={view} lang={lang} />
-        <MultiSelectFilter stateKey="district"  label={c.district}  options={options.district}  selected={state.district}  current={state} view={view} lang={lang} searchable />
+        <MultiSelectFilter stateKey="district"  label={c.district}  options={options.district}  selected={state.district}  current={state} view={view} lang={lang} searchable groups={buildDistrictGroups(options.district, lang)} />
         <MultiSelectFilter stateKey="bedrooms"  label={c.bedrooms}  options={options.bedrooms}  selected={state.bedrooms}  current={state} view={view} lang={lang} />
         <MultiSelectFilter stateKey="floor"     label={c.floor}     options={options.floor}     selected={state.floor}     current={state} view={view} lang={lang} />
         <MultiSelectFilter stateKey="developer" label={c.developer} options={options.developer} selected={state.developer} current={state} view={view} lang={lang} searchable />

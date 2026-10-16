@@ -14,11 +14,12 @@ import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { buildListHref, buildMapHref } from '@/lib/complex-filter-href'
 import { loadCatalogPage, buildHeading, buildHeadingLocalized, type ComplexFilterState } from './_lib'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
+import { pluralRu } from '@/lib/plural-ru'
 
 const COPY = {
   ru: {
     page: 'страница', of: 'из',
-    complexes: (n: number) => `${n} комплексов`,
+    complexes: (n: number) => `${n} ${pluralRu(n, ['комплекс', 'комплекса', 'комплексов'])}`,
     emptySearch: (q: string) => `По запросу «${q}» ничего не найдено`,
     emptyFilters: 'Ничего не найдено по выбранным фильтрам',
     searchPlaceholder: 'Поиск по комплексам, районам, застройщикам…',
@@ -81,7 +82,7 @@ const COPY = {
   },
   uk: {
     page: 'сторінка', of: 'з',
-    complexes: (n: number) => `${n} житлових комплексів`,
+    complexes: (n: number) => `${n} ${pluralRu(n, ['житловий комплекс', 'житлові комплекси', 'житлових комплексів'])}`,
     emptySearch: (q: string) => `Нічого не знайдено за запитом «${q}»`,
     emptyFilters: 'Немає результатів за вибраними фільтрами',
     searchPlaceholder: 'Пошук комплексів, районів, забудовників…',

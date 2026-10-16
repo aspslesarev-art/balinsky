@@ -156,6 +156,9 @@ export function parseCleanPath(segments: string[]): FilterState | null {
 export function buildCanonicalPath(f: FilterState): string | null {
   // search query is never canonical
   if (f.q && f.q.trim().length > 0) return null
+  // Отсортированный вид живёт только в query-форме (/q, динамика): у чистых
+  // ISR-адресов сортировки нет, редирект на них её бы потерял.
+  if (f.sort) return null
   // disallowed dimensions
   if (f.floor.length > 0) return null
   if (f.developer.length > 0) return null

@@ -1,4 +1,7 @@
 @import "tailwindcss";
+/* Копии репозитория у помощников (git worktree) — не код сайта: их сохранённые
+   HTML-страницы ломали сборку стилей. */
+@source not "../.claude";
 
 :root {
   /* === Balinsky design system === */

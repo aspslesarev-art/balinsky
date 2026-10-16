@@ -99,6 +99,17 @@ const ZONE_LATIN: Record<string, string> = {
   'Керобокан': 'Kerobokan',
 }
 
+// В старых пояснениях (до 16.10.2026) есть загрузка с витрины Booking —
+// «ожидается загрузка 93%». Она считает закрытые календари занятыми и
+// противоречит загрузке калькулятора на той же странице. Такие предложения
+// выкидываем при показе; новые тексты scripts/demand-explain.mjs пишет без неё.
+const OCC_SENTENCE = /(загрузк|заполняем|простаива|заняты на|occupan|sit below|fall below)/i
+function withoutOccupancy(text: string | null): string | null {
+  if (!text) return null
+  const kept = text.split(/(?<=[.!?])\s+/).filter(s => !(OCC_SENTENCE.test(s) && /\d\s?%/.test(s)))
+  return kept.length ? kept.join(' ') : null
+}
+
 function toDemand(row: Row, lang: string): UnitDemand | null {
   if (row.comps_n < MIN_TRUSTWORTHY_COMPS) return null
   const f = row.facts ?? {}
@@ -116,7 +127,7 @@ function toDemand(row: Row, lang: string): UnitDemand | null {
     drivers: f.drivers ?? [],
     // Пояснение живёт на двух языках; остальные локали получают английское,
     // а не машинный перевод на лету — он тут дороже пользы.
-    why: (lang === 'ru' ? row.why_ru : row.why_en) ?? row.why_en ?? null,
+    why: withoutOccupancy((lang === 'ru' ? row.why_ru : row.why_en) ?? row.why_en ?? null),
   }
 }
 

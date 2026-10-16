@@ -65,9 +65,10 @@ function capRateOf(cap: number | null | undefined): number | null {
 // yield (already a percent) only so the card shows *something*. Never the sort
 // key. Returns null for rental-restricted (yellow) land — no daily yield there.
 function badgeYield(cap: number | null | undefined, claimed: number | null | undefined): number | null {
-  const ours = capRateOf(cap)
-  if (ours != null) return ours
-  return claimed != null && Number.isFinite(claimed) ? bandPct(claimed) : null
+  // Только наш расчёт: обещание застройщика рядом с нашими цифрами выглядело
+  // бы как наша оценка и спорило со страницей объекта.
+  void claimed
+  return capRateOf(cap)
 }
 
 async function build(lang: Lang): Promise<FinderItem[]> {
@@ -120,7 +121,7 @@ async function build(lang: Lang): Promise<FinderItem[]> {
 }
 
 export async function loadHomeFinder(lang: Lang): Promise<FinderItem[]> {
-  return unstable_cache(() => build(lang), ['home-finder-v4', lang], {
+  return unstable_cache(() => build(lang), ['home-finder-v5', lang], {
     revalidate: 86400,
     tags: ['content:villas'],
   })()

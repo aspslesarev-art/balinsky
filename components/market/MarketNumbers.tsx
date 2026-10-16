@@ -3,10 +3,10 @@
 
 import { pluralRu } from '@/lib/plural-ru'
 import Link from 'next/link'
-import { NumberTicker } from '@/components/NumberTicker'
+import { MoneyTicker } from '@/components/Money'
 import { ArrowRight } from 'lucide-react'
 import type { Lang } from '@/lib/i18n'
-import { MARKET, marketPath, usd, asOfLabel } from '@/lib/market-index'
+import { MARKET, marketPath, asOfLabel } from '@/lib/market-index'
 
 type Copy = {
   h2: string
@@ -81,10 +81,12 @@ export function MarketNumbers({ lang }: { lang: Lang }) {
   const V = MARKET.island.villas
   const c = COPY[lang === 'ban' ? 'id' : lang]
   const cards = [
-    { v: usd(V.median, lang), t: c.median(V.n), href: marketPath('prices', lang) },
-    { v: usd(V.perM2, lang), t: c.perM2, href: marketPath('prices', lang) },
-    { v: usd(MARKET.monthly.island.villa2br.median, lang), t: c.month, href: marketPath('rent', lang) },
-    { v: usd(MARKET.island.villaRent['2br'].median, lang), t: c.night, href: marketPath('rent', lang) },
+    // Суммы — в валюте посетителя (MoneyTicker), как в карточках ниже: одна
+    // валюта на странице. Доллары остаются только в данных.
+    { v: V.median, t: c.median(V.n), href: marketPath('prices', lang) },
+    { v: V.perM2, t: c.perM2, href: marketPath('prices', lang) },
+    { v: MARKET.monthly.island.villa2br.median, t: c.month, href: marketPath('rent', lang) },
+    { v: MARKET.island.villaRent['2br'].median, t: c.night, href: marketPath('rent', lang) },
   ]
   return (
     <div>
@@ -103,7 +105,7 @@ export function MarketNumbers({ lang }: { lang: Lang }) {
         {cards.map(card => (
           <li key={card.t}>
             <Link href={card.href} className="magic-card group block h-full rounded-2xl border border-[var(--color-border)] bg-white p-5 md:p-6 no-underline">
-              <div className="font-display text-[28px] md:text-[38px] font-semibold tracking-[-0.03em] leading-none text-[#0E1A14]"><NumberTicker value={card.v} /></div>
+              <div className="font-display text-[24px] md:text-[38px] font-semibold tracking-[-0.03em] leading-none text-[#0E1A14]">{card.v != null ? <MoneyTicker usd={card.v} lang={lang} /> : '—'}</div>
               <div className="mt-3 text-[13.5px] leading-[1.45] text-[var(--color-text-muted)]">{card.t}</div>
             </Link>
           </li>

@@ -1,35 +1,39 @@
 // Figures for the investment pillar page — one place for all locales.
-// Source: Balinsky catalogue (villas for sale) and Balinsky short-term rental
-// database (villas listed for rent, via estatemarket.io), September 2026.
-// Method: /en/knowledge/bali-villa-rental-yield-by-area-data.
+// Source: listing_yields (scripts/build-listing-yields.ts) — the same yield
+// every villa page shows — joined with the catalogue's area, October 2026.
 //
-// Two-bedroom villas, 65% occupancy. Net = gross minus 15% platform
-// commissions, 20% management, 6% running costs, 10% local accommodation tax PBJT (51% of
-// gross revenue); before leasehold amortisation. `indicative` marks rows with
-// fewer than 30 sale prices.
+// Two-bedroom villas. `cap` = median yield before income tax: rent at the
+// occupancy of similar Booking listings nearby (40th percentile, 60% when there
+// are none) and a nightly rate blended from neighbours and the property's
+// price, minus platform 16%, management 17%, half of the 10% PBJT, 4% FF&E
+// reserve, upkeep and PBB, divided by price + 5% closing + furnishing. `rate` =
+// median nightly rate used (villas rented nightly), `rateN` = how many such
+// villas; `priceN` = two-bedroom villas in the area. `indicative` marks rows
+// with fewer than 30 villas.
 
-export const GUIDE_AS_OF = '2026-09'
+export const GUIDE_AS_OF = '2026-10'
 
 export type YieldRow = {
   key: 'canggu' | 'bukit' | 'ubud' | 'nyanyi' | 'nusaDua' | 'island'
   hub: string | null // RU hub path, localised by the page
   price: number; priceN: number
   rate: number; rateN: number
-  gross: number; net: number
+  cap: number
   indicative: boolean
 }
 
+// listing_yields, 16.10.2026. Bukit also takes villas filed simply as «Bukit».
 export const YIELD_ROWS: YieldRow[] = [
-  { key: 'canggu', hub: '/ru/villy/canggu', price: 309500, priceN: 44, rate: 132, rateN: 1042, gross: 10.1, net: 5.0, indicative: false },
-  { key: 'bukit', hub: '/ru/villy/uluwatu', price: 359900, priceN: 43, rate: 164, rateN: 400, gross: 10.8, net: 5.3, indicative: false },
-  { key: 'ubud', hub: '/ru/villy/ubud', price: 277500, priceN: 14, rate: 121, rateN: 323, gross: 10.3, net: 5.1, indicative: true },
-  { key: 'nyanyi', hub: '/ru/villy/nyanyi', price: 253000, priceN: 17, rate: 116, rateN: 17, gross: 10.9, net: 5.3, indicative: true },
-  { key: 'nusaDua', hub: '/ru/villy/nusa-dua', price: 327500, priceN: 9, rate: 108, rateN: 34, gross: 7.8, net: 3.8, indicative: true },
-  { key: 'island', hub: '/ru/villy/2-spalni', price: 322500, priceN: 150, rate: 135, rateN: 1966, gross: 9.9, net: 4.9, indicative: false },
+  { key: 'canggu', hub: '/ru/villy/canggu', price: 315000, priceN: 46, rate: 219, rateN: 36, cap: 7.8, indicative: false },
+  { key: 'bukit', hub: '/ru/villy/uluwatu', price: 327900, priceN: 51, rate: 200, rateN: 39, cap: 6.2, indicative: false },
+  { key: 'ubud', hub: '/ru/villy/ubud', price: 265000, priceN: 21, rate: 188, rateN: 16, cap: 7.3, indicative: true },
+  { key: 'nyanyi', hub: '/ru/villy/nyanyi', price: 276500, priceN: 16, rate: 140, rateN: 11, cap: 5.8, indicative: true },
+  { key: 'nusaDua', hub: '/ru/villy/nusa-dua', price: 312500, priceN: 11, rate: 193, rateN: 9, cap: 5.8, indicative: true },
+  { key: 'island', hub: '/ru/villy/2-spalni', price: 305000, priceN: 171, rate: 200, rateN: 125, cap: 6.9, indicative: false },
 ]
 
 export const GUIDE_STATS = {
-  medianGross2br: '≈10%',
+  medianGross2br: '≈7%', // median yield before tax, two-bedroom villas (6.9%)
   catalogue: '806', // published villas (368) + apartments (438)
   permits: '27%', // villas with PBG or SLF on record, of 356 with a status
   rentals: '6,305', // villas listed for rent with a price

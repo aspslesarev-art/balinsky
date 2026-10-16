@@ -9,6 +9,7 @@
 // подсказка раскрывается по наведению.
 
 import { pluralRu } from '@/lib/plural-ru'
+import { Money } from './Money'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { demandTone as tone } from '@/lib/unit-demand-view'
 import type { UnitDemand } from '@/lib/unit-demand'
@@ -27,7 +28,7 @@ const COPY = {
     rate: 'Цена за ночь к соседям',
     occupancy: 'Загрузка сегмента',
     idle: 'Простаивают',
-    perNight: '$/ночь',
+    perNight: '/ночь',
     note: 'Оценка продукта по фотографиям против рынка краткосрочной аренды. Не прогноз доходности.',
   },
   en: {
@@ -43,7 +44,7 @@ const COPY = {
     rate: 'Nightly rate vs neighbours',
     occupancy: 'Segment occupancy',
     idle: 'Sitting idle',
-    perNight: '$/night',
+    perNight: '/night',
     note: 'A read of the product from its photos against the short-term rental market. Not a yield forecast.',
   },
 }
@@ -60,11 +61,11 @@ export function UnitDemandBlock({ demand, lang = 'ru' }: { demand: UnitDemand; l
     demand.adrVsNeighbours != null && {
       label: c.rate,
       value: `×${demand.adrVsNeighbours.toFixed(2)}`,
-      hint: demand.expectedAdrUsd ? `~${demand.expectedAdrUsd} ${c.perNight}` : null,
+      hint: demand.expectedAdrUsd ? demand.expectedAdrUsd : null,
     },
     // Segment occupancy and idle share are not shown: the source «occupancy»
     // counts blocked calendar dates, not nights sold (see /methodology).
-  ].filter(Boolean) as Array<{ label: string; value: string; hint: string | null }>
+  ].filter(Boolean) as Array<{ label: string; value: string; hint: number | null }>
 
   return (
     <section className="rounded-2xl border border-[var(--color-border)] bg-white p-5 sm:p-6">
@@ -102,7 +103,8 @@ export function UnitDemandBlock({ demand, lang = 'ru' }: { demand: UnitDemand; l
             <div key={s.label} className="rounded-xl bg-[var(--color-primary-soft)] px-3 py-2.5">
               <div className="text-[11px] text-[var(--color-text-muted)] leading-tight">{s.label}</div>
               <div className="text-[15px] font-semibold text-[var(--color-text)] mt-0.5">{s.value}</div>
-              {s.hint && <div className="text-[11px] text-[var(--color-text-muted)]">{s.hint}</div>}
+              {/* Ставка — в валюте посетителя, как остальные цены страницы. */}
+              {s.hint != null && <div className="text-[11px] text-[var(--color-text-muted)]">~<Money usd={s.hint} lang={lang} />{c.perNight}</div>}
             </div>
           ))}
         </div>

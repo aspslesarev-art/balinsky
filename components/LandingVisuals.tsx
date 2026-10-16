@@ -6,6 +6,8 @@
 
 import { Mic, ArrowUp, Play, MapPin, Footprints, Check, Building2, ShieldCheck, ArrowRight } from 'lucide-react'
 import { pickCopy, type Lang } from '@/lib/i18n'
+import type { ReactNode } from 'react'
+import { Money } from './Money'
 
 const L = {
   ru: {
@@ -323,7 +325,7 @@ export function StepStudy({ lang }: { lang: Lang }) {
     <div className="absolute inset-0 p-4 flex items-center">
       <div className="w-full rounded-xl bg-white border border-[var(--color-border)] overflow-hidden">
         <div className="relative h-[58px] bg-gradient-to-br from-[#cfe3d6] to-[#eef5f0]">
-          <span className="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded-full bg-black/65 text-white text-[10px] font-semibold">$285k</span>
+          <span className="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded-full bg-black/65 text-white text-[10px] font-semibold"><Money usd={285_000} lang={lang} /></span>
         </div>
         <div className="p-2.5">
           <div className="text-[12px] font-medium text-[#0E1A14] truncate">{t.listingTitle}</div>
@@ -365,7 +367,7 @@ function AirbnbChip() {
   return <span className="shrink-0 text-[8.5px] font-bold text-white bg-[#FF5A5F] px-1.5 py-[3px] rounded leading-none">airbnb</span>
 }
 
-function RentRow({ brand, price, occ, night }: { brand: 'booking' | 'airbnb'; price: string; occ: string; night: string }) {
+function RentRow({ brand, price, occ, night }: { brand: 'booking' | 'airbnb'; price: ReactNode; occ: string; night: string }) {
   return (
     <div className="flex items-center gap-2 rounded-lg bg-white border border-[var(--color-border)] px-2 py-1.5">
       {brand === 'booking' ? <BookingChip /> : <AirbnbChip />}
@@ -387,8 +389,8 @@ export function VizYield({ lang }: { lang: Lang }) {
         <span className="text-[9.5px] text-[var(--color-text-muted)]">{t.neighbours}</span>
       </div>
       <div className="grid gap-1.5">
-        <RentRow brand="booking" price="$180" occ="78%" night={t.night} />
-        <RentRow brand="airbnb" price="$165" occ="71%" night={t.night} />
+        <RentRow brand="booking" price={<Money usd={180} lang={lang} />} occ="78%" night={t.night} />
+        <RentRow brand="airbnb" price={<Money usd={165} lang={lang} />} occ="71%" night={t.night} />
       </div>
     </div>
   )
@@ -397,9 +399,10 @@ export function VizYield({ lang }: { lang: Lang }) {
 export function VizCompetitors({ lang }: { lang: Lang }) {
   const t = pickCopy(L, lang)
   const rows = [
-    { l: t.thisOne, v: '$2 850', w: 70, accent: true },
-    { l: t.nearby, v: '$3 100', w: 86, accent: false },
-    { l: t.nearby, v: '$2 640', w: 62, accent: false },
+    // Иллюстрация, но суммы — в валюте посетителя, как на всей странице.
+    { l: t.thisOne, v: 2850, w: 70, accent: true },
+    { l: t.nearby, v: 3100, w: 86, accent: false },
+    { l: t.nearby, v: 2640, w: 62, accent: false },
   ]
   return (
     <div className="absolute inset-0 p-3 flex flex-col justify-center gap-2">
@@ -410,7 +413,7 @@ export function VizCompetitors({ lang }: { lang: Lang }) {
           <span className="flex-1 h-3 rounded-full bg-[var(--color-border)] overflow-hidden">
             <span className="block h-full rounded-full" style={{ width: `${b.w}%`, background: b.accent ? 'var(--color-primary)' : '#C2D0C7' }} />
           </span>
-          <span className="text-[10px] tabular-nums w-[40px] text-right" style={{ color: b.accent ? '#0E1A14' : '#6B7570', fontWeight: b.accent ? 600 : 400 }}>{b.v}</span>
+          <span className="text-[10px] tabular-nums min-w-[40px] shrink-0 text-right" style={{ color: b.accent ? '#0E1A14' : '#6B7570', fontWeight: b.accent ? 600 : 400 }}><Money usd={b.v} lang={lang} /></span>
         </div>
       ))}
     </div>

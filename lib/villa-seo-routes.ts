@@ -84,6 +84,9 @@ export function parseCleanPath(segments: string[]): VillaFilterState | null {
 
 export function buildCanonicalPath(f: VillaFilterState): string | null {
   if (f.q && f.q.trim().length > 0) return null
+  // Отсортированный вид живёт только в query-форме (/q, динамика): у чистых
+  // ISR-адресов сортировки нет, редирект на них её бы потерял.
+  if (f.sort) return null
   if (f.permit.length > 0) return null
   if (f.year.length > 0) return null
   if (f.developer.length > 0) return null

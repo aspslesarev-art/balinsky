@@ -47,6 +47,12 @@ const MAP: Record<string, string> = {
   'Tumbak Bayuh': 'Тумбак-Баю',
 }
 
+// Все известные пары «латиница → кириллица» (разбор поисковой строки,
+// lib/catalog-query-parser.ts).
+export function districtNamePairs(): [string, string][] {
+  return Object.entries(MAP)
+}
+
 export function districtRu(latin: string | null | undefined): string | null {
   if (!latin) return null
   return MAP[latin] ?? latin

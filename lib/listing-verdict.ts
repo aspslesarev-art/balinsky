@@ -151,7 +151,8 @@ export type VerdictInput = {
 }
 
 export type Verdict = {
-  safety: { tone: Tone; permitMissing: boolean; notStarted: boolean; noFinishedProjects: boolean; hazards: { key: string; level: 'none' | 'low' | 'medium' | 'high' }[] }
+  /** Разрешения: pbg/slf — документ есть; *Applied — только заявка; unknown — данных нет. */
+  safety: { tone: Tone; permit: PermitState; leaseUnknown: boolean; notStarted: boolean; noFinishedProjects: boolean; hazards: { key: string; level: 'none' | 'low' | 'medium' | 'high' }[] }
   comfort: { tone: Tone; airportMin: number | null; airportBand: 'near' | 'mid' | 'far' | null; flat: boolean | null; roadM: number | null }
   demand: { tone: Tone; monthlyOnly: boolean; ownOccupancy: number | null }
   money: { tone: Tone; pct: number | null }
@@ -169,10 +170,25 @@ export function moneyTone(pctBeforeTax: number): Tone {
 
 const NOT_STARTED_RE = /строит|under construction|planned|проект|котлован/i
 
+export type PermitState = 'pbg' | 'slf' | 'pbgApplied' | 'slfApplied' | 'unknown'
+export const permitOk = (p: PermitState) => p === 'pbg' || p === 'slf'
+
+// «нет» в поле разрешения — не ответ застройщика, а значение по умолчанию:
+// так стоит у всех 12 комплексов Alex Villas, 8 из них уже сданы. Поэтому
+// «нет» и пусто — одинаково «нет данных», а не «разрешения нет».
+export function permitState(raw: string | null | undefined): PermitState {
+  const v = (raw ?? '').trim().toLowerCase()
+  if (!v || v === 'нет' || v === 'no') return 'unknown'
+  if (/заявка/.test(v)) return /slf/.test(v) ? 'slfApplied' : 'pbgApplied'
+  if (/slf/.test(v)) return 'slf'
+  if (/pbg|imb/.test(v)) return 'pbg'
+  return 'unknown'
+}
+
 export function buildVerdict(i: VerdictInput): Verdict {
-  // «нет» в поле разрешения — застройщик сам указал, что документов нет.
-  const permitRaw = (i.permit ?? i.complex?.permitDocs ?? '').trim().toLowerCase()
-  const permitMissing = permitRaw === 'нет' || permitRaw === 'no'
+  const permitRaw = i.permit && i.permit.trim().toLowerCase() !== 'нет' ? i.permit : i.complex?.permitDocs ?? i.permit
+  const permit = permitState(permitRaw)
+  const leaseUnknown = i.leaseYears == null
   const underConstruction = !!i.status && NOT_STARTED_RE.test(i.status)
   const notStarted = underConstruction && i.complex?.readiness === 0
   const noFinishedProjects = !!i.dev && i.dev.total > 0 && i.dev.ready === 0
@@ -184,8 +200,11 @@ export function buildVerdict(i: VerdictInput): Verdict {
     ? (['flood', 'flash_flood', 'landslide', 'tsunami', 'volcano', 'earthquake'] as const).map(key => ({ key, level: level(hz[key]) }))
     : []
   const badNature = hazards.some(h => h.key !== 'earthquake' && h.level === 'high')
-  const docRisks = [permitMissing, notStarted, noFinishedProjects].filter(Boolean).length
-  const safetyTone: Tone = permitMissing || docRisks >= 2 || badNature ? 'minus' : docRisks === 1 ? 'warn' : 'plus'
+  // Риск — когда платишь за стройку, а разрешения мы не видели. У готового
+  // дома без данных о документах — вопрос (warn), но не «рисков не видно».
+  const docRisks = [!permitOk(permit) && underConstruction, notStarted, noFinishedProjects].filter(Boolean).length
+  const docQuestions = !permitOk(permit) || leaseUnknown
+  const safetyTone: Tone = docRisks >= 2 || badNature ? 'minus' : docRisks === 1 || docQuestions ? 'warn' : 'plus'
 
   const plot = i.climate?.plot
   const flat = plot?.slope_pct != null ? plot.slope_pct < 8 : null
@@ -218,13 +237,13 @@ export function buildVerdict(i: VerdictInput): Verdict {
   if (moneyToneValue === 'plus') pluses.push('strongYield')
 
   const checks: Verdict['checks'] = []
-  if (permitMissing || underConstruction) checks.push('permit')
-  if (i.leaseYears != null) checks.push('lease')
+  if (!permitOk(permit) || underConstruction) checks.push('permit')
+  checks.push('lease')
   if (underConstruction) checks.push('delays')
   if (monthlyOnly) checks.push('zoneMonthly')
 
   return {
-    safety: { tone: safetyTone, permitMissing, notStarted, noFinishedProjects, hazards },
+    safety: { tone: safetyTone, permit, leaseUnknown, notStarted, noFinishedProjects, hazards },
     comfort: { tone: comfortTone, airportMin: i.airportMin, airportBand, flat, roadM: plot?.road.m ?? null },
     demand: { tone: demandTone, monthlyOnly, ownOccupancy: monthlyOnly ? null : i.ownOccupancy ?? null },
     money: { tone: moneyToneValue, pct },

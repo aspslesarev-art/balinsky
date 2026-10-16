@@ -12,6 +12,9 @@ import { useCatalogRouter } from '@/lib/use-catalog-router'
 import Link from 'next/link'
 import { Search, ArrowRight } from 'lucide-react'
 import { switchLangPath, t, type Lang } from '@/lib/i18n'
+import { parseCatalogQuery, parsedToSearchParams } from '@/lib/catalog-query-parser'
+import { useCurrency } from './CurrencyContext'
+import { formatMoney, type Currency } from '@/lib/currency'
 
 type Suggestion = { label: string; href?: string }
 type Kind = 'villy' | 'apartamenty'
@@ -34,6 +37,26 @@ function catalogPath(kind: Kind, lang: Lang): string {
   return switchLangPath(`/ru/${kind}`, lang)
 }
 
+// Подсказка «Виллы до $250 000» ведёт в каталог с этим фильтром (тот же
+// разбор фразы, что у поиска), а не в общий список вилл. Остаток фразы
+// («у моря») в текстовый поиск не отправляем — подсказка должна открывать
+// непустую выдачу.
+function suggestionHref(label: string, lang: Lang): string {
+  const p = parseCatalogQuery(label)
+  const base = catalogPath(p.kind ?? 'villy', lang)
+  const qs = parsedToSearchParams({ ...p, rest: '' }).toString()
+  return qs ? `${base}?${qs}` : base
+}
+
+// Сумма в подсказке — в валюте посетителя, как на всей странице:
+// «Виллы до $250 000» → «Виллы до 21 млн ₽».
+function localizeAmount(label: string, currency: Currency, lang: Lang): string {
+  return label.replace(/\$\s?(\d[\d\s.,\u00a0]*\d)/, (_m, num: string) => {
+    const usd = Number(num.replace(/[\s.,\u00a0]/g, ''))
+    return Number.isFinite(usd) && usd > 0 ? formatMoney(usd, currency, lang) : _m
+  })
+}
+
 export function HeroCatalogSearch({
   lang,
   tryLabel,
@@ -46,12 +69,23 @@ export function HeroCatalogSearch({
   sendAria: string
 }) {
   const router = useCatalogRouter()
+  const { currency } = useCurrency()
   const [value, setValue] = useState('')
   const [kind, setKind] = useState<Kind>('villy')
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
     const q = value.trim()
+    // Фраза вида «вилла 2 спальни Чангу до 300к» разбирается в фильтры
+    // каталога бесплатно, по правилам (lib/catalog-query-parser.ts); тип из
+    // фразы важнее выбранной вкладки. Остаток — обычным текстовым поиском.
+    const parsed = q ? parseCatalogQuery(q) : null
+    if (parsed?.structured) {
+      const base = catalogPath(parsed.kind ?? kind, lang)
+      const qs = parsedToSearchParams(parsed).toString()
+      router.push(qs ? `${base}?${qs}` : base)
+      return
+    }
     const base = catalogPath(kind, lang)
     router.push(q ? `${base}?q=${encodeURIComponent(q)}` : base)
   }
@@ -99,10 +133,10 @@ export function HeroCatalogSearch({
         {suggestions.map((s, i) => (
           <Link
             key={i}
-            href={switchLangPath(s.href ?? '/ru/villy', lang)}
+            href={s.href ? switchLangPath(s.href, lang) : suggestionHref(s.label, lang)}
             className="text-white/85 underline decoration-white/30 underline-offset-2 hover:decoration-white hover:text-white transition-colors"
           >
-            {s.label}
+            {localizeAmount(s.label, currency, lang)}
           </Link>
         ))}
       </div>

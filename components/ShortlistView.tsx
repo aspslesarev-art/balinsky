@@ -62,9 +62,9 @@ const COPY = {
     rowLand: 'Земля', rowDistrict: 'Район', rowFloor: 'Этаж',
     rowCompletion: 'Сдача', rowStatus: 'Статус стройки',
     rowDealType: 'Тип сделки', rowLease: 'Лизхолд', rowPermit: 'Разрешение',
-    rowYield: 'Заявленная доходность', rowLandUse: 'Назначение земли',
+    rowYield: 'Обещает застройщик', rowLandUse: 'Назначение земли',
     rowDeveloper: 'Застройщик',
-    rowBestRoi: 'ROI (наш расчёт)',
+    rowBestRoi: 'Доходность до налогов (наш расчёт)',
     rowStyle: 'Стиль интерьера',
     sqm: 'м²', years: 'лет',
     devReady: (n: number) => `${n} сдано`,
@@ -118,9 +118,9 @@ const COPY = {
     rowLand: 'Land', rowDistrict: 'District', rowFloor: 'Floor',
     rowCompletion: 'Completion', rowStatus: 'Build status',
     rowDealType: 'Deal', rowLease: 'Leasehold', rowPermit: 'Permit',
-    rowYield: 'Claimed yield', rowLandUse: 'Land use',
+    rowYield: 'Developer claims', rowLandUse: 'Land use',
     rowDeveloper: 'Developer',
-    rowBestRoi: 'ROI (our estimate)',
+    rowBestRoi: 'Yield before tax (our estimate)',
     rowStyle: 'Interior style',
     sqm: 'm²', years: 'yrs',
     devReady: (n: number) => `${n} delivered`,
@@ -176,7 +176,7 @@ const COPY = {
     rowDealType: 'Transaksi', rowLease: 'Hak sewa', rowPermit: 'Izin',
     rowYield: 'Imbal hasil klaim', rowLandUse: 'Peruntukan tanah',
     rowDeveloper: 'Pengembang',
-    rowBestRoi: 'ROI (estimasi kami)',
+    rowBestRoi: 'Imbal hasil sebelum pajak (estimasi kami)',
     rowStyle: 'Gaya interior',
     sqm: 'm²', years: 'thn',
     devReady: (n: number) => `${n} selesai`,
@@ -232,7 +232,7 @@ const COPY = {
     rowDealType: 'Transaction', rowLease: 'Bail', rowPermit: 'Permis',
     rowYield: 'Rendement annoncé', rowLandUse: 'Usage du terrain',
     rowDeveloper: 'Promoteur',
-    rowBestRoi: 'ROI (notre estimation)',
+    rowBestRoi: 'Rendement avant impôts (notre estimation)',
     rowStyle: 'Style intérieur',
     sqm: 'm²', years: 'ans',
     devReady: (n: number) => `${n} livrés`,
@@ -288,7 +288,7 @@ const COPY = {
     rowDealType: 'Geschäft', rowLease: 'Leasehold', rowPermit: 'Genehmigung',
     rowYield: 'Angegebene Rendite', rowLandUse: 'Grundstücksnutzung',
     rowDeveloper: 'Bauträger',
-    rowBestRoi: 'ROI (unsere Schätzung)',
+    rowBestRoi: 'Rendite vor Steuern (unsere Schätzung)',
     rowStyle: 'Interieurstil',
     sqm: 'm²', years: 'J.',
     devReady: (n: number) => `${n} fertiggestellt`,
@@ -344,7 +344,7 @@ const COPY = {
     rowDealType: '交易', rowLease: '租赁产权', rowPermit: '许可',
     rowYield: '宣称收益率', rowLandUse: '土地用途',
     rowDeveloper: '开发商',
-    rowBestRoi: 'ROI（我们的估算）',
+    rowBestRoi: '税前收益率（我们的估算）',
     rowStyle: '室内风格',
     sqm: 'm²', years: '年',
     devReady: (n: number) => `${n} 已交付`,
@@ -400,7 +400,7 @@ const COPY = {
     rowDealType: 'Transactie', rowLease: 'Erfpacht', rowPermit: 'Vergunning',
     rowYield: 'Opgegeven rendement', rowLandUse: 'Grondgebruik',
     rowDeveloper: 'Ontwikkelaar',
-    rowBestRoi: 'ROI (onze schatting)',
+    rowBestRoi: 'Rendement vóór belasting (onze schatting)',
     rowStyle: 'Interieurstijl',
     sqm: 'm²', years: 'jr',
     devReady: (n: number) => `${n} opgeleverd`,
@@ -456,7 +456,7 @@ const COPY = {
     rowDealType: 'Transaksi', rowLease: 'Hak sewa', rowPermit: 'Ijin',
     rowYield: 'Imbal hasil klaim', rowLandUse: 'Peruntukan tanah',
     rowDeveloper: 'Pangwangun',
-    rowBestRoi: 'ROI (estimasi tiang)',
+    rowBestRoi: 'Imbal hasil sadurung pajak (petungan tiang)',
     rowStyle: 'Gaya interior',
     sqm: 'm²', years: 'warsa',
     devReady: (n: number) => `${n} puput`,
@@ -512,7 +512,7 @@ const COPY = {
     rowDealType: 'Transakcja', rowLease: 'Dzierżawa', rowPermit: 'Pozwolenie',
     rowYield: 'Deklarowana rentowność', rowLandUse: 'Przeznaczenie gruntu',
     rowDeveloper: 'Deweloper',
-    rowBestRoi: 'ROI (nasza ocena)',
+    rowBestRoi: 'Rentowność przed podatkiem (nasza ocena)',
     rowStyle: 'Styl wnętrza',
     sqm: 'm²', years: 'lat',
     devReady: (n: number) => `${n} oddanych`,
@@ -568,7 +568,7 @@ const COPY = {
     rowDealType: 'Угода', rowLease: 'Оренда землі', rowPermit: 'Дозвіл',
     rowYield: 'Заявлена дохідність', rowLandUse: 'Призначення землі',
     rowDeveloper: 'Забудовник',
-    rowBestRoi: 'ROI (наша оцінка)',
+    rowBestRoi: 'Дохідність до податків (наша оцінка)',
     rowStyle: 'Стиль інтерʼєру',
     sqm: 'м²', years: 'р.',
     devReady: (n: number) => `${n} здано`,
@@ -597,7 +597,26 @@ function detailHref(item: WishlistItem, lang: Lang): string {
 }
 
 export function ShortlistView({ lang }: { lang: Lang }) {
-  const { items, ready, remove, clear } = useWishlist()
+  const { items: savedItems, ready, remove, clear } = useWishlist()
+  // Доходность — свежая со страницы объекта, а не снимок на момент
+  // сохранения: иначе в сравнении стояли «ROI 75%» рядом с 17,8% на странице.
+  const [liveCap, setLiveCap] = useState<{ villa: Record<string, number | null>; apartment: Record<string, number | null> } | null>(null)
+  const yieldKey = savedItems.filter(it => it.kind === 'villa' || it.kind === 'apartment').map(it => `${it.kind}:${it.airtableId ?? it.slug}`).join(',')
+  useEffect(() => {
+    if (!yieldKey) return
+    const pick = (k: string) => yieldKey.split(',').filter(x => x.startsWith(k + ':')).map(x => x.slice(k.length + 1)).join(',')
+    let alive = true
+    fetch(`/api/yields?v=${encodeURIComponent(pick('villa'))}&a=${encodeURIComponent(pick('apartment'))}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (alive && d?.villa) setLiveCap(d) })
+      .catch(() => {})
+    return () => { alive = false }
+  }, [yieldKey])
+  const items = liveCap
+    ? savedItems.map(it => it.kind === 'villa' || it.kind === 'apartment'
+      ? { ...it, bestCapRate: liveCap[it.kind][it.airtableId ?? it.slug] ?? null }
+      : it)
+    : savedItems.map(it => ({ ...it, bestCapRate: null }))
   const { currency } = useCurrency()
   const c = pickCopy(COPY, lang)
   const home = switchLangPath('/ru', lang)
@@ -660,8 +679,7 @@ export function ShortlistView({ lang }: { lang: Lang }) {
     // revenue — that one would be max-better.)
     { key: 'priceM2Year', label: c.rowPriceM2Year, cell: it => fmt(it.pricePerSqmYearUsd),
       best: 'min', num: it => it.pricePerSqmYearUsd ?? null },
-    { key: 'yield',      label: c.rowYield,      cell: it => it.claimedYieldPct != null ? `${it.claimedYieldPct}%` : null,
-      best: 'max', num: it => it.claimedYieldPct ?? null },
+    { key: 'yield',      label: c.rowYield,      cell: it => it.claimedYieldPct != null ? `${it.claimedYieldPct}%` : null },
     // Best-case ROI from our own calculator (Booking comps + good-
     // scenario occupancy). The developer's claimed yield is marketing
     // copy; this column is what the asset would actually return based

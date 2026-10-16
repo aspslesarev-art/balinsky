@@ -139,7 +139,7 @@ export function InvestmentGuide({ lang }: { lang: Lang }) {
                     <dt className="text-[var(--color-text-muted)]">{c.yields.colRate}</dt>
                     <dd className="text-right">{usd(r.rate)} <span className="text-[var(--color-text-muted)]">({r.rateN.toLocaleString('en-US')})</span></dd>
                     <dt className="text-[var(--color-text-muted)]">{c.yields.colYield}</dt>
-                    <dd className="text-right font-semibold text-[var(--color-text)]">{pct(r.gross, lang)} / {pct(r.net, lang)}</dd>
+                    <dd className="text-right font-semibold text-[var(--color-text)]">{pct(r.cap, lang)}</dd>
                   </dl>
                   {r.hub && (
                     <Link href={localizeHubPath(r.hub, lang)} className="mt-2 text-[var(--color-primary)] text-[13px] inline-flex items-center gap-1 no-underline hover:underline">
@@ -166,7 +166,7 @@ export function InvestmentGuide({ lang }: { lang: Lang }) {
                       <td className="py-3 px-3 font-semibold text-[var(--color-text)]">{c.yields.areas[r.key]}{r.indicative ? '*' : ''}</td>
                       <td className="py-3 px-3 whitespace-nowrap">{usd(r.price)} <span className="text-[var(--color-text-muted)]">({r.priceN})</span></td>
                       <td className="py-3 px-3 whitespace-nowrap">{usd(r.rate)} <span className="text-[var(--color-text-muted)]">({r.rateN.toLocaleString('en-US')})</span></td>
-                      <td className="py-3 px-3 whitespace-nowrap font-semibold text-[var(--color-text)]">{pct(r.gross, lang)} / {pct(r.net, lang)}</td>
+                      <td className="py-3 px-3 whitespace-nowrap font-semibold text-[var(--color-text)]">{pct(r.cap, lang)}</td>
                       <td className="py-3 px-3 text-right">
                         {r.hub && (
                           <Link href={localizeHubPath(r.hub, lang)} className="text-[var(--color-primary)] text-[13px] inline-flex items-center gap-1 no-underline hover:underline">

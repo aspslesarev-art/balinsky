@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { ChevronDown, Check, TriangleAlert, Scale, Minus } from 'lucide-react'
 import { pickCopy, type Lang } from '@/lib/i18n'
+import { useIsAdmin } from '@/lib/use-is-admin'
 import { SourceMark } from '@/components/SourceMark'
 import { LEGAL_OK_FIELD, LEGAL_QUESTIONS_FIELD, LEGAL_BALANCE_NOTES_FIELD, type AuditItem } from '@/lib/legal-audit'
 
@@ -283,15 +284,17 @@ export function LegalAudit({
 }) {
   const c = pickCopy(COPY, lang)
   const data = useLegalDetails(slug, lang)
-  // When editing, always render both blocks so an admin can add the first item
-  // to an empty field; otherwise hide empty blocks from visitors.
+  // Пустые блоки показываем только вошедшему админу — чтобы добавить первый
+  // пункт. Раньше editable (= любая RU-страница) показывал их всем посетителям.
+  const isAdmin = useIsAdmin()
+  const editing = !!editable && isAdmin
   const hasBalance = typeof balanceBuyer === 'number'
   // Счётчик со страницы бывает нулём при непустых вопросах (данные ЖК на
   // странице кешируются отдельно), поэтому верим и тому, что пришло с роута.
   const hasQuestions = questionsCount > 0 || (data?.items.length ?? 0) > 0
-  if (!editable && okItems.length === 0 && !hasQuestions && !hasBalance) return null
-  const showOk = okItems.length > 0 || editable
-  const showQuestions = hasQuestions || editable
+  if (!editing && okItems.length === 0 && !hasQuestions && !hasBalance) return null
+  const showOk = okItems.length > 0 || editing
+  const showQuestions = hasQuestions || editing
   return (
     <section className="mb-10" id="legal">
       <h2 className="text-[19px] sm:text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-1">{c.title}</h2>

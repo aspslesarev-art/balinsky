@@ -10,6 +10,8 @@ import { createHeatOverlay, fetchHeatCells } from '@/lib/heat-overlay'
 import type { Snapshot } from './types'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { translit, hasCyrillic } from '@/lib/translit'
+import { useCurrency } from '@/components/CurrencyContext'
+import { formatMoney, type Currency } from '@/lib/currency'
 
 // POI names/addresses come from Google Places in Russian only. Transliterate
 // to Latin on non-RU pages so infowindows don't show Cyrillic.
@@ -39,8 +41,8 @@ const MAP_COPY = {
     reviewsSuffix: ' отзывов',
     minByScooter: (min: number) => `${min} мин на скутере`,
     distLabel: 'От виллы',
-    bookingTitle: (adr: number, beds: number | null) =>
-      `Booking: ${adr} $/ночь${beds != null ? ` · ${beds} BR` : ''}`,
+    bookingTitle: (adr: string, beds: number | null) =>
+      `Booking: ${adr}/ночь${beds != null ? ` · ${beds} BR` : ''}`,
   },
   en: {
     unavailable: 'Map unavailable',
@@ -53,8 +55,8 @@ const MAP_COPY = {
     reviewsSuffix: ' reviews',
     minByScooter: (min: number) => `${min} min by scooter`,
     distLabel: 'From the villa',
-    bookingTitle: (adr: number, beds: number | null) =>
-      `Booking: $${adr}/night${beds != null ? ` · ${beds} BR` : ''}`,
+    bookingTitle: (adr: string, beds: number | null) =>
+      `Booking: ${adr}/night${beds != null ? ` · ${beds} BR` : ''}`,
   },
   id: {
     unavailable: 'Peta tidak tersedia',
@@ -67,8 +69,8 @@ const MAP_COPY = {
     reviewsSuffix: ' ulasan',
     minByScooter: (min: number) => `${min} mnt naik skuter`,
     distLabel: 'Dari vila',
-    bookingTitle: (adr: number, beds: number | null) =>
-      `Booking: $${adr}/malam${beds != null ? ` · ${beds} BR` : ''}`,
+    bookingTitle: (adr: string, beds: number | null) =>
+      `Booking: ${adr}/malam${beds != null ? ` · ${beds} BR` : ''}`,
   },
   fr: {
     unavailable: 'Carte indisponible',
@@ -81,8 +83,8 @@ const MAP_COPY = {
     reviewsSuffix: ' avis',
     minByScooter: (min: number) => `${min} min en scooter`,
     distLabel: 'Depuis la villa',
-    bookingTitle: (adr: number, beds: number | null) =>
-      `Booking : ${adr} $/nuit${beds != null ? ` · ${beds} BR` : ''}`,
+    bookingTitle: (adr: string, beds: number | null) =>
+      `Booking : ${adr}/nuit${beds != null ? ` · ${beds} BR` : ''}`,
   },
   de: {
     unavailable: 'Karte nicht verfügbar',
@@ -95,8 +97,8 @@ const MAP_COPY = {
     reviewsSuffix: ' Bewertungen',
     minByScooter: (min: number) => `${min} Min mit dem Roller`,
     distLabel: 'Von der Villa',
-    bookingTitle: (adr: number, beds: number | null) =>
-      `Booking: $${adr}/Nacht${beds != null ? ` · ${beds} BR` : ''}`,
+    bookingTitle: (adr: string, beds: number | null) =>
+      `Booking: ${adr}/Nacht${beds != null ? ` · ${beds} BR` : ''}`,
   },
   zh: {
     unavailable: '地图不可用',
@@ -109,8 +111,8 @@ const MAP_COPY = {
     reviewsSuffix: ' 条评价',
     minByScooter: (min: number) => `骑摩托${min}分钟`,
     distLabel: '距别墅',
-    bookingTitle: (adr: number, beds: number | null) =>
-      `Booking: $${adr}/晚${beds != null ? ` · ${beds} BR` : ''}`,
+    bookingTitle: (adr: string, beds: number | null) =>
+      `Booking: ${adr}/晚${beds != null ? ` · ${beds} BR` : ''}`,
   },
   nl: {
     unavailable: 'Kaart niet beschikbaar',
@@ -123,8 +125,8 @@ const MAP_COPY = {
     reviewsSuffix: ' beoordelingen',
     minByScooter: (min: number) => `${min} min met de scooter`,
     distLabel: 'Vanaf de villa',
-    bookingTitle: (adr: number, beds: number | null) =>
-      `Booking: $${adr}/nacht${beds != null ? ` · ${beds} BR` : ''}`,
+    bookingTitle: (adr: string, beds: number | null) =>
+      `Booking: ${adr}/nacht${beds != null ? ` · ${beds} BR` : ''}`,
   },
   ban: {
     unavailable: 'Peta nenten wenten',
@@ -137,8 +139,8 @@ const MAP_COPY = {
     reviewsSuffix: ' ulasan',
     minByScooter: (min: number) => `${min} menit nganggen sepéda motor`,
     distLabel: 'Saking vila',
-    bookingTitle: (adr: number, beds: number | null) =>
-      `Booking: $${adr}/wengi${beds != null ? ` · ${beds} BR` : ''}`,
+    bookingTitle: (adr: string, beds: number | null) =>
+      `Booking: ${adr}/wengi${beds != null ? ` · ${beds} BR` : ''}`,
   },
   pl: {
     unavailable: 'Mapa niedostępna',
@@ -151,8 +153,8 @@ const MAP_COPY = {
     reviewsSuffix: ' recenzji',
     minByScooter: (min: number) => `${min} min skuterem`,
     distLabel: 'Od willi',
-    bookingTitle: (adr: number, beds: number | null) =>
-      `Booking: $${adr}/noc${beds != null ? ` · ${beds} BR` : ''}`,
+    bookingTitle: (adr: string, beds: number | null) =>
+      `Booking: ${adr}/noc${beds != null ? ` · ${beds} BR` : ''}`,
   },
   uk: {
     unavailable: 'Карта недоступна',
@@ -165,8 +167,8 @@ const MAP_COPY = {
     reviewsSuffix: ' відгуків',
     minByScooter: (min: number) => `${min} хв на скутері`,
     distLabel: 'Від вілли',
-    bookingTitle: (adr: number, beds: number | null) =>
-      `Booking: $${adr}/ніч${beds != null ? ` · ${beds} BR` : ''}`,
+    bookingTitle: (adr: string, beds: number | null) =>
+      `Booking: ${adr}/ніч${beds != null ? ` · ${beds} BR` : ''}`,
   },
 } as const
 
@@ -214,8 +216,9 @@ function esc(s: string | null | undefined): string {
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;')
 }
 
-function fmtAdr(n: number): string {
-  return '$' + Math.round(n).toLocaleString('en-US')
+// Ставка соседа — в валюте посетителя, как остальные цены страницы.
+function fmtAdr(n: number, currency: Currency, lang: Lang): string {
+  return formatMoney(n, currency, lang)
 }
 
 function competitorPopupHtml(c: {
@@ -223,7 +226,7 @@ function competitorPopupHtml(c: {
   rating?: number | null; reviews?: number | null; bedrooms?: number | null;
   area?: number | null; adr: number; url?: string | null;
   distanceKm?: number | null
-}, lang: Lang): string {
+}, lang: Lang, currency: Currency): string {
   const t = pickCopy(MAP_COPY, lang)
   const sqmU = lang === 'ru' ? 'м²' : 'm²'
   const kmLabel = pickCopy({ ru: 'км', en: 'km', id: 'km', fr: 'km', de: 'km', zh: '公里', nl: 'km', ban: 'km', pl: 'km', uk: 'км' }, lang)
@@ -249,7 +252,7 @@ function competitorPopupHtml(c: {
       <div style="padding:12px">
         <div style="font-weight:600;font-size:15px;line-height:1.25;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc(title)}</div>
         <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:8px">
-          <div style="font-weight:700;color:#1D4ED8;font-size:17px;line-height:1">${fmtAdr(c.adr)}<span style="color:#6B7280;font-weight:400;font-size:11px;margin-left:2px">${t.perNight}</span></div>
+          <div style="font-weight:700;color:#1D4ED8;font-size:17px;line-height:1">${fmtAdr(c.adr, currency, lang)}<span style="color:#6B7280;font-weight:400;font-size:11px;margin-left:2px">${t.perNight}</span></div>
         </div>
         ${meta ? `<div style="font-size:12px;color:#6B7280;margin-bottom:8px">${esc(meta)}</div>` : ''}
         ${dist ? `<div style="margin-bottom:10px">${dist}</div>` : ''}
@@ -297,6 +300,7 @@ function MapLayer({ map, snap, showAllPois, allPois, lang }: { map: google.maps.
   const infoWindowRef = useRef<google.maps.InfoWindow | null>(null)
   const fitOnceRef = useRef(false)
   const t = pickCopy(MAP_COPY, lang)
+  const { currency } = useCurrency()
 
   useEffect(() => {
     if (!map) return
@@ -364,12 +368,12 @@ function MapLayer({ map, snap, showAllPois, allPois, lang }: { map: google.maps.
         icon,
         opacity: c.isMatch ? 1 : 0.75,
         zIndex: c.isMatch ? 100 : 10,
-        title: t.bookingTitle(c.adr, c.bedrooms ?? null),
+        title: t.bookingTitle(fmtAdr(c.adr, currency, lang), c.bedrooms ?? null),
       })
       m.addListener('click', () => {
         const card = compsById.get(c.id)
         const km = distanceKm(snap.villa.lat, snap.villa.lng, c.lat, c.lng)
-        iw.setContent(competitorPopupHtml({ ...(card ?? { adr: c.adr, bedrooms: c.bedrooms }), distanceKm: km }, lang))
+        iw.setContent(competitorPopupHtml({ ...(card ?? { adr: c.adr, bedrooms: c.bedrooms }), distanceKm: km }, lang, currency))
         iw.open(map, m)
       })
       ref.current.markers.push(m)
@@ -438,7 +442,7 @@ function MapLayer({ map, snap, showAllPois, allPois, lang }: { map: google.maps.
       for (const m of ref.current.markers) m.setMap(null)
       for (const c of ref.current.circles) c.setMap(null)
     }
-  }, [map, snap, showAllPois, allPois, lang, t])
+  }, [map, snap, showAllPois, allPois, lang, t, currency])
 
   return null
 }

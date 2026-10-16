@@ -128,7 +128,7 @@ const COPY = {
     factCompletionDone: 'Сдан',
     factPermits: 'Разрешения',
     factLeasehold: 'Лизхолд',
-    factLeaseValue: (l: string) => `${l} лет`,
+    factLeaseValue: (l: string) => `${l} ${Number.isFinite(Number(l)) ? pluralRu(Number(l), ['год', 'года', 'лет']) : 'лет'}`,
     factUnits: 'Юнитов',
     factDistrict: 'Район',
     factAirport: 'До аэропорта',
@@ -175,7 +175,7 @@ const COPY = {
       { q: `Где находится ${name}?`,
         a: district ? `Жилой комплекс ${name} расположен в районе ${district} на Бали, Индонезия.` : `Жилой комплекс ${name} находится на Бали, Индонезия. Точные координаты — на карте выше.` },
       { q: `Какой срок лизхолда у ${name}?`,
-        a: lease ? `Базовый срок лизхолда — ${lease} лет. Уточняйте у застройщика возможность продления.` : 'Срок лизхолда уточняйте у застройщика. Для большинства проектов на Бали — 25–80 лет с возможностью продления.' },
+        a: lease ? `Базовый срок лизхолда — ${lease} ${Number.isFinite(Number(lease)) ? pluralRu(Number(lease), ['год', 'года', 'лет']) : 'лет'}. Уточняйте у застройщика возможность продления.` : 'Срок лизхолда уточняйте у застройщика. Для большинства проектов на Бали — 25–80 лет с возможностью продления.' },
       { q: `Можно ли купить юнит в ${name} иностранцу?`,
         a: 'Да. Сделка оформляется по схеме лизхолда (долгосрочной аренды земли) у нотариуса PPAT. Иностранцы покупают так же, как и местные.' },
       { q: 'Какие документы должны быть у комплекса?',
@@ -1030,7 +1030,7 @@ function factsDescription(opts: {
     ? `${opts.name}${by}${opts.district ? ` — ${opts.district}` : ''}, Бали.`
     : `${opts.name}${by} — ${opts.phrase ?? 'жилой комплекс'}${opts.district ? ` в ${opts.district}` : ''}, Бали.`
   if (ar) parts.push(ar[0] === ar[1] ? `${ar[0]} м²` : `${ar[0]}–${ar[1]} м²`)
-  if (br && !opts.priceInTitle) parts.push(br[0] === br[1] ? `${br[0]} спальни` : `${br[0]}–${br[1]} спальни`)
+  if (br && !opts.priceInTitle) parts.push(br[0] === br[1] ? `${br[0]} ${pluralRu(br[0], ['спальня', 'спальни', 'спален'])}` : `${br[0]}–${br[1]} ${pluralRu(br[1], ['спальня', 'спальни', 'спален'])}`)
   if (pr && !opts.priceInTitle) parts.push(pr[0] === pr[1] ? usd(pr[0]) : `от ${usd(pr[0])} до ${usd(pr[1])}`)
   const facts = parts.length ? ` ${parts.join(', ')}.` : ''
   const year = opts.priceInTitle ? '' : (opts.year ? ` Сдача ${opts.year}.` : '')
@@ -1611,10 +1611,19 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   // загруженных units/marketStats/access + кэшированной медианы по району.
   const districtMediansMap = await loadDistrictOccupancyMedians().catch(() => null)
   const yearNum = yearRaw != null ? Number(yearRaw) : null
+  // Доходность юнитов — та же, что на их страницах (listing_yields).
+  const unitCaps = new Map<string, number>()
+  if (units.length) {
+    const { data: ly, error: lyErr } = await sb.from('listing_yields')
+      .select('kind, airtable_id, cap_before').eq('mode', 'daily').in('airtable_id', units.map(u => u.id))
+    if (lyErr) console.error('[complex] listing_yields:', lyErr.message)
+    for (const r of ly ?? []) if (r.cap_before != null) unitCaps.set(`${r.kind}:${r.airtable_id}`, Number(r.cap_before))
+  }
   const signals = computeComplexSignals({
     units: units.map((u) => ({
       kind: u.kind,
       priceUsd: u.priceUsd != null && Number.isFinite(Number(u.priceUsd)) ? Number(u.priceUsd) : null,
+      capBefore: unitCaps.get(`${u.kind}:${u.id}`) ?? null,
     })),
     marketStats,
     access,
@@ -1888,8 +1897,8 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
               {facts.map(({ Icon, label, value }) => (
                 <div key={label} className="bg-white rounded-2xl border border-[var(--color-border)] p-5">
                   <div className="flex items-center gap-2 mb-2 text-[var(--color-text-muted)]">
-                    <Icon size={16} />
-                    <span className="text-[12px] uppercase tracking-wide">{label}</span>
+                    <Icon size={16} className="shrink-0" />
+                    <span className="min-w-0 text-[12px] uppercase tracking-wide [overflow-wrap:normal]">{label}</span>
                   </div>
                   <div className="text-[16px] font-semibold text-[var(--color-text)]">{value}</div>
                 </div>

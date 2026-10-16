@@ -20,10 +20,11 @@ import { switchLangPath, type Lang } from '@/lib/i18n'
 import { localizeHubPath } from '@/lib/hub-routes'
 import { SLUG_TO_DISTRICT } from '@/lib/seo-routes'
 import { SRC } from '@/lib/investment-guide/data'
+import { districtVillaYield } from '@/lib/investment/district-yields'
 
 const usd = (n: number) => '$' + Math.round(n).toLocaleString('en-US')
-// Revenue estimates to the nearest $100 — more digits would be false precision.
-const usd100 = (n: number) => usd(Math.round(n / 100) * 100)
+// Как в таблице гида (components/InvestmentGuide.tsx).
+const pct1 = (x: number, lang: Lang) => (lang === 'en' || lang === 'zh' ? (x * 100).toFixed(1) : (x * 100).toFixed(1).replace('.', ',')) + '%'
 
 export function investmentDistrictPath(slug: string, lang: Lang): string {
   return lang === 'ru' ? `/ru/investicii/${slug}` : switchLangPath(`/en/bali-property-investment/${slug}`, lang)
@@ -45,7 +46,7 @@ export function investmentDistrictMetadata(slug: string, lang: Lang): Metadata {
 
 const A = 'text-[var(--color-primary-pressed)] underline underline-offset-2 hover:no-underline'
 
-export function InvestmentDistrict({ slug, lang, copy }: { slug: string; lang: Lang; copy: DistrictCopy }) {
+export async function InvestmentDistrict({ slug, lang, copy }: { slug: string; lang: Lang; copy: DistrictCopy }) {
   const g = GUIDE_COPY[lang]
   const d = g.district
   const m = districtMarket(slug)
@@ -54,7 +55,8 @@ export function InvestmentDistrict({ slug, lang, copy }: { slug: string; lang: L
   const methodHref = lang === 'ru' ? SRC.yieldRu : SRC.yieldEn
   const latinName = SLUG_TO_DISTRICT[slug] ?? copy.name
   const rate = m?.nightly2br ?? null
-  const gross = rate ? rate * 0.65 * 365 : null
+  // Доходность — та же, что на страницах вилл района (listing_yields).
+  const dy = await districtVillaYield(latinName)
 
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',
@@ -105,11 +107,10 @@ export function InvestmentDistrict({ slug, lang, copy }: { slug: string; lang: L
               <Calculator size={20} className="text-[var(--color-primary)]" />
               <strong>{d.caseTitle(copy.name)}</strong>
             </div>
-            {rate && gross ? (
+            {rate || dy ? (
               <ul className="space-y-2 text-[14px] text-[#1f2937] list-disc pl-5">
-                <li>{d.rate(usd(rate), String(m?.nightly2brN ?? ''))}</li>
-                <li>{d.revenue(usd100(gross))}</li>
-                <li>{d.net(usd100(gross * 0.49))}</li>
+                {rate && <li>{d.rate(usd(rate), String(m?.nightly2brN ?? ''))}</li>}
+                {dy && <li>{d.yield(pct1(dy.cap, lang), String(dy.n))}</li>}
                 {m?.medianVillaPrice && m.villasForSale >= 10 && (
                   <li>{d.price(usd(m.medianVillaPrice), String(m.villasForSale))}</li>
                 )}

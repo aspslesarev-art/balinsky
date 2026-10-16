@@ -4,6 +4,7 @@
 
 import type { AgentListing } from './types'
 import { districtRu } from '@/lib/district-ru'
+import { pluralRu } from '@/lib/plural-ru'
 
 export type Fact = { label: string; value: string }
 
@@ -32,7 +33,7 @@ export function listingFacts(listing: AgentListing): Fact[] {
   push('Участок', land ? `${land} м²` : null)
   push('Этаж', str(d['Этаж']))
   const leasehold = str(d['Leasehold'])
-  push('Leasehold', leasehold ? `${leasehold} лет` : null)
+  push('Leasehold', leasehold ? `${leasehold} ${Number.isFinite(Number(leasehold)) ? pluralRu(Number(leasehold), ['год', 'года', 'лет']) : 'лет'}` : null)
   push('Разрешение', str(d['Разрешение']))
   push('Статус', str(d['Статус']))
   push('Сдача', str(d['Year of completion']))

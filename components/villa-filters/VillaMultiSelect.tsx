@@ -6,6 +6,7 @@ import { useVillaFilterUrl, type FilterView } from './useVillaFilterUrl'
 import type { Option } from '../filters/MultiSelectFilter'
 import type { VillaFilterState } from '@/app/ru/villy/_lib'
 import { pickCopy, type Lang } from '@/lib/i18n'
+import { selectedGroup, type DistrictGroup } from '@/lib/district-groups'
 
 const COPY = {
   ru: { search: 'Поиск…', noOptions: 'Нет вариантов', clear: 'Сбросить', apply: 'Применить' },
@@ -21,7 +22,7 @@ const COPY = {
 } as const
 
 type StringArrayKey = {
-  [K in keyof VillaFilterState]: VillaFilterState[K] extends string[] ? K : never
+  [K in keyof VillaFilterState]-?: VillaFilterState[K] extends string[] ? K : never
 }[keyof VillaFilterState]
 
 export function VillaMultiSelect({
@@ -33,6 +34,7 @@ export function VillaMultiSelect({
   view = 'list',
   searchable = false,
   lang = 'ru',
+  groups,
 }: {
   stateKey: StringArrayKey
   label: string
@@ -42,6 +44,8 @@ export function VillaMultiSelect({
   view?: FilterView
   searchable?: boolean
   lang?: Lang
+  // Группы районов («Весь Чангу») — ставятся одним тапом, без «Применить».
+  groups?: DistrictGroup[]
 }) {
   const { apply } = useVillaFilterUrl(current, view)
   const [query, setQuery] = useState('')
@@ -51,8 +55,10 @@ export function VillaMultiSelect({
   // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: deps deliberately scoped
   useEffect(() => { setDraft(selected) }, [selected.join(',')])
 
+  const activeGroup = groups?.length ? selectedGroup(selected) : null
   const summary =
     selected.length === 0 ? '' :
+    activeGroup ? groups?.find(g => g.id === activeGroup)?.label ?? '' :
     selected.length === 1 ? options.find(o => o.value === selected[0])?.label ?? selected[0] :
     `${label}: ${selected.length}`
 
@@ -66,6 +72,34 @@ export function VillaMultiSelect({
     <FilterDropdown label={label} summary={summary} active={selected.length > 0}>
       {(close) => (
         <div className="flex flex-col gap-3 min-w-[240px]">
+          {groups && groups.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {groups.map(g => {
+                const on = activeGroup === g.id
+                return (
+                  <button
+                    key={g.id}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => {
+                      const next = on ? [] : g.values
+                      setDraft(next)
+                      apply({ [stateKey]: next } as Partial<VillaFilterState>)
+                      close()
+                    }}
+                    className={`inline-flex items-center gap-1.5 py-2 px-3 rounded-full border text-[14px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] ${
+                      on
+                        ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white font-medium'
+                        : 'bg-[var(--color-card-bg)] border-[var(--color-border)] text-[var(--color-text)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)]'
+                    }`}
+                  >
+                    {g.label}
+                    <span className={`text-[12px] ${on ? 'text-white/80' : 'text-[var(--color-text-muted)]'}`}>{g.count}</span>
+                  </button>
+                )
+              })}
+            </div>
+          )}
           {searchable && (
             <input
               type="text"

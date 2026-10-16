@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { pluralRu } from '@/lib/plural-ru'
 
 export type MapPoi = {
   id: string
@@ -57,7 +58,7 @@ export function PoiCard({ poi }: { poi: MapPoi }) {
         <div className="kicker">
           {poi.distanceM >= 1000 ? `${(poi.distanceM / 1000).toFixed(1)} км` : `${poi.distanceM} м`}
           {poi.walkMin ? ` · ${poi.walkMin} мин пешком` : ''}
-          {poi.reviews ? ` · ${poi.reviews.toLocaleString('ru-RU')} отзывов` : ''}
+          {poi.reviews ? ` · ${poi.reviews.toLocaleString('ru-RU')} ${pluralRu(poi.reviews, ['отзыв', 'отзыва', 'отзывов'])}` : ''}
         </div>
         <p style={{ margin: '10px 0 0', fontSize: 16, lineHeight: 1.5 }}>
           <strong style={{ fontWeight: 500 }}>{poi.name}</strong>
