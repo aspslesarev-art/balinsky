@@ -138,11 +138,9 @@ export function DataChapter({
     return (
       <section id={id} className="mb-16 mt-24 pt-12 border-t border-[var(--color-border)] scroll-mt-24">
         <div className="mb-8 max-w-[72ch]">
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="text-[15px] font-semibold text-[var(--color-primary-pressed)]">{question.kicker}</span>
-            <span className={`rounded-full px-3 py-1 text-[13px] font-semibold ${question.pillClass}`}>{question.status}</span>
-          </div>
-          <h2 className="mt-3 text-[26px] md:text-[32px] font-semibold tracking-tight leading-tight text-[var(--color-text)]">{question.title}</h2>
+          {/* Сразу вопрос и ответ: «Вопрос 1 из 4» и плашка со статусом повторяли
+              шкалу в итоге наверху страницы. */}
+          <h2 className="text-[26px] md:text-[32px] font-semibold tracking-tight leading-tight text-[var(--color-text)]">{question.title}</h2>
           <p className="mt-3 text-[16px] md:text-[18px] leading-relaxed text-[var(--color-text)]">{question.lead}</p>
         </div>
         <div className="flex flex-col gap-4 [&_[data-investment-block]]:mt-0 [&>section:last-child]:mb-0">{children}</div>

@@ -104,12 +104,12 @@ const COPY = {
     },
     totalWhy: (v: Verdict, diff: number | null) => [
       v.demand.monthlyOnly ? 'туристам посуточно сдавать нельзя' : null,
-      diff != null && diff >= 10 ? `цена выше похожих рядом на ${Math.round(diff)}%` : null,
+      diff != null && diff >= 10 ? `дороже похожих вилл на продаже рядом на ${Math.round(diff)}% - за м² с учётом срока аренды земли` : null,
       v.safety.notStarted ? 'стройка ещё не началась' : null,
     ].filter(Boolean).join(', '),
     plus: {
       pool: 'Свой бассейн', smallComplex: 'Маленький комплекс - мало соседей', installments: 'Можно платить частями во время стройки',
-      flat: 'Ровный участок с подъездом', cheaper: 'Дешевле похожих рядом', nearAirport: 'Близко к аэропорту', strongYield: 'Доходность выше средней',
+      flat: 'Ровный участок с подъездом', cheaper: 'Дешевле похожих вилл на продаже рядом', nearAirport: 'Близко к аэропорту', strongYield: 'Доходность выше средней',
     },
     check: {
       permit: 'Разрешение на стройку (PBG) - попросите копию', lease: 'Договор аренды земли и продление - у нотариуса',
@@ -224,12 +224,12 @@ const COPY = {
     },
     totalWhy: (v: Verdict, diff: number | null) => [
       v.demand.monthlyOnly ? 'nightly rental to tourists is not allowed' : null,
-      diff != null && diff >= 10 ? `priced ${Math.round(diff)}% above similar places nearby` : null,
+      diff != null && diff >= 10 ? `${Math.round(diff)}% pricier than similar villas for sale nearby - per m², adjusted for the land lease term` : null,
       v.safety.notStarted ? 'construction has not started' : null,
     ].filter(Boolean).join(', '),
     plus: {
       pool: 'Private pool', smallComplex: 'Small complex - few neighbours', installments: 'Pay in instalments during construction',
-      flat: 'Flat plot with road access', cheaper: 'Cheaper than similar places nearby', nearAirport: 'Close to the airport', strongYield: 'Above-average yield',
+      flat: 'Flat plot with road access', cheaper: 'Cheaper than similar villas for sale nearby', nearAirport: 'Close to the airport', strongYield: 'Above-average yield',
     },
     check: {
       permit: 'Building permit (PBG) - ask for a copy', lease: 'Land lease and extension terms - with a notary',
@@ -336,13 +336,12 @@ export function ListingVerdict({ verdict: v, yields: y, monthly, saleDiff, under
 
   return (
     <section className="mb-16" aria-labelledby={live ? 'verdict-title-live' : 'verdict-title'}>
-      <h2 id={live ? 'verdict-title-live' : 'verdict-title'} className="text-[28px] md:text-[36px] font-semibold tracking-tight leading-tight text-[var(--color-text)]">{live ? c.titleLive : c.title}</h2>
-      <p className="mt-3 text-[16px] md:text-[18px] leading-relaxed text-[var(--color-text-muted)] max-w-[64ch]">{live ? c.subLive : c.sub}</p>
+      {/* Заголовок только для экранных дикторов: на экране — сразу вывод. */}
+      <h2 id={live ? 'verdict-title-live' : 'verdict-title'} className="sr-only">{live ? c.titleLive : c.title}</h2>
 
-      <div className="mt-8 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_280px] gap-6 lg:gap-10 items-center rounded-[20px] bg-[var(--color-surface-alt)] p-6 md:p-8">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_280px] gap-6 lg:gap-10 items-center rounded-[20px] bg-[var(--color-surface-alt)] p-6 md:p-8">
         <div>
-          <div className="text-[13px] font-semibold uppercase tracking-wider text-[var(--color-primary-pressed)]">{c.total}</div>
-          <p className="mt-3 text-[20px] md:text-[26px] font-semibold leading-snug tracking-tight text-[var(--color-text)]">{live ? `${c.comfortAnswer(v)}.${docsFirst(v) ? ` ${c.docsFirst}` : ''}` : c.totalLine(v)}</p>
+          <p className="text-[20px] md:text-[26px] font-semibold leading-snug tracking-tight text-[var(--color-text)]">{live ? `${c.comfortAnswer(v)}.${docsFirst(v) ? ` ${c.docsFirst}` : ''}` : c.totalLine(v)}</p>
           {why && <p className="mt-3 text-[15px] md:text-[16px] leading-relaxed text-[var(--color-text-muted)]">{why[0].toUpperCase() + why.slice(1)}.</p>}
         </div>
         <ul className="flex flex-col gap-3">
