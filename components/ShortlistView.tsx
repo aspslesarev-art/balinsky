@@ -31,6 +31,7 @@ const COPY = {
     countOne: 'объект', countFew: 'объекта', countMany: 'объектов',
     clear: 'Очистить всё',
     sendToBot: 'Отправить в Telegram',
+    shareIntro: 'Подборка недвижимости на Бали:', shareYield: 'в год до налогов',
     downloadPdf: 'Скачать PDF',
     pdfLimit: (max: number) => `PDF можно скачать, если в подборке не больше ${max} объектов`,
     pdfTooMany: (max: number) => `PDF доступен для подборок до ${max} объектов — уберите лишнее`,
@@ -87,6 +88,7 @@ const COPY = {
     countOne: 'item', countFew: 'items', countMany: 'items',
     clear: 'Clear all',
     sendToBot: 'Send to Telegram',
+    shareIntro: 'Bali property shortlist:', shareYield: 'a year before tax',
     downloadPdf: 'Download PDF',
     pdfLimit: (max: number) => `PDF download is available when the shortlist has up to ${max} listings`,
     pdfTooMany: (max: number) => `PDF is available for shortlists up to ${max} listings — remove some first`,
@@ -143,6 +145,7 @@ const COPY = {
     countOne: 'objek', countFew: 'objek', countMany: 'objek',
     clear: 'Hapus semua',
     sendToBot: 'Kirim ke Telegram',
+    shareIntro: 'Daftar properti Bali:', shareYield: 'per tahun sebelum pajak',
     downloadPdf: 'Unduh PDF',
     pdfLimit: (max: number) => `Unduhan PDF tersedia jika daftar berisi maksimal ${max} objek`,
     pdfTooMany: (max: number) => `PDF tersedia untuk daftar hingga ${max} objek — hapus sebagian dulu`,
@@ -199,6 +202,7 @@ const COPY = {
     countOne: 'bien', countFew: 'biens', countMany: 'biens',
     clear: 'Tout effacer',
     sendToBot: 'Envoyer sur Telegram',
+    shareIntro: 'Sélection de biens à Bali :', shareYield: 'par an avant impôts',
     downloadPdf: 'Télécharger le PDF',
     pdfLimit: (max: number) => `Le téléchargement PDF est disponible lorsque la sélection contient au maximum ${max} annonces`,
     pdfTooMany: (max: number) => `Le PDF est disponible pour les sélections jusqu'à ${max} annonces — retirez-en d'abord`,
@@ -255,6 +259,7 @@ const COPY = {
     countOne: 'Objekt', countFew: 'Objekte', countMany: 'Objekte',
     clear: 'Alle löschen',
     sendToBot: 'An Telegram senden',
+    shareIntro: 'Immobilien-Auswahl auf Bali:', shareYield: 'pro Jahr vor Steuern',
     downloadPdf: 'PDF herunterladen',
     pdfLimit: (max: number) => `Der PDF-Download ist verfügbar, wenn die Merkliste höchstens ${max} Objekte enthält`,
     pdfTooMany: (max: number) => `Das PDF ist für Merklisten mit bis zu ${max} Objekten verfügbar — entfernen Sie zuerst einige`,
@@ -311,6 +316,7 @@ const COPY = {
     countOne: '项', countFew: '项', countMany: '项',
     clear: '全部清除',
     sendToBot: '发送到 Telegram',
+    shareIntro: '巴厘岛房产精选：', shareYield: '年·税前',
     downloadPdf: '下载 PDF',
     pdfLimit: (max: number) => `当收藏不超过 ${max} 项时可下载 PDF`,
     pdfTooMany: (max: number) => `PDF 仅支持最多 ${max} 项的收藏 — 请先移除一些`,
@@ -367,6 +373,7 @@ const COPY = {
     countOne: 'object', countFew: 'objecten', countMany: 'objecten',
     clear: 'Alles wissen',
     sendToBot: 'Naar Telegram sturen',
+    shareIntro: 'Selectie vastgoed op Bali:', shareYield: 'per jaar vóór belasting',
     downloadPdf: 'PDF downloaden',
     pdfLimit: (max: number) => `PDF-download is beschikbaar wanneer de favorietenlijst maximaal ${max} objecten bevat`,
     pdfTooMany: (max: number) => `PDF is beschikbaar voor lijsten tot ${max} objecten — verwijder er eerst enkele`,
@@ -423,6 +430,7 @@ const COPY = {
     countOne: 'objek', countFew: 'objek', countMany: 'objek',
     clear: 'Kosongang makasami',
     sendToBot: 'Kirim ka Telegram',
+    shareIntro: 'Pilihan properti ring Bali:', shareYield: 'awarsa sadurung pajak',
     downloadPdf: 'Unduh PDF',
     pdfLimit: (max: number) => `Unduhan PDF wenten yening daftar madaging paling akeh ${max} objek`,
     pdfTooMany: (max: number) => `PDF wenten anggen daftar kantos ${max} objek — kaonang dumun makudang`,
@@ -479,6 +487,7 @@ const COPY = {
     countOne: 'obiekt', countFew: 'obiekty', countMany: 'obiektów',
     clear: 'Wyczyść wszystko',
     sendToBot: 'Wyślij na Telegram',
+    shareIntro: 'Wybór nieruchomości na Bali:', shareYield: 'rocznie przed podatkiem',
     downloadPdf: 'Pobierz PDF',
     pdfLimit: (max: number) => `Pobieranie PDF jest dostępne, gdy lista zawiera maksymalnie ${max} ofert`,
     pdfTooMany: (max: number) => `PDF jest dostępny dla list do ${max} ofert — najpierw usuń kilka`,
@@ -535,6 +544,7 @@ const COPY = {
     countOne: 'обʼєкт', countFew: 'обʼєкти', countMany: 'обʼєктів',
     clear: 'Очистити все',
     sendToBot: 'Надіслати в Telegram',
+    shareIntro: 'Добірка нерухомості на Балі:', shareYield: 'на рік до податків',
     downloadPdf: 'Завантажити PDF',
     pdfLimit: (max: number) => `Завантаження PDF доступне, коли в списку не більше ${max} обʼєктів`,
     pdfTooMany: (max: number) => `PDF доступний для списків до ${max} обʼєктів — спершу видаліть кілька`,
@@ -621,10 +631,9 @@ export function ShortlistView({ lang }: { lang: Lang }) {
   const c = pickCopy(COPY, lang)
   const home = switchLangPath('/ru', lang)
   const [downloadOpen, setDownloadOpen] = useState(false)
-  // Cap PDF generation at a length where the comparison table still
-  // fits one landscape page (5 columns) — beyond that we'd be paginating
-  // the comparison and the per-listing pages bloat the file too.
-  const PDF_MAX_ITEMS = 5
+  // Сравнение в PDF само делится на страницы по 5 колонок (ShortlistPdf);
+  // агенту обычно нужно 5–10 объектов, больше — файл раздувается.
+  const PDF_MAX_ITEMS = 10
   const pdfDisabled = items.length > PDF_MAX_ITEMS
 
   const fmt = (v: number | null | undefined) =>
@@ -851,8 +860,16 @@ export function ShortlistView({ lang }: { lang: Lang }) {
 
   // Build the shareable Telegram message — one URL per saved item so the
   // recipient can tap straight into each detail page.
-  const shareText = items.map(it => `https://balinsky.info${detailHref(it, lang)}`).join('\n')
-  const shareHref = `https://t.me/share/url?url=${encodeURIComponent(shareText)}&text=${encodeURIComponent(c.sendToBot)}`
+  // Раньше в сообщение уходила надпись кнопки («Отправить в Telegram») и голые
+  // ссылки: получатель не видел, что ему прислали. Теперь — название, наша
+  // доходность (та же, что на странице) и ссылка на каждый объект.
+  const pct = (v: number) => (lang === 'en' || lang === 'zh' ? (v * 100).toFixed(1) : (v * 100).toFixed(1).replace('.', ','))
+  const shareLines = items.map(it => {
+    const y = it.bestCapRate != null ? ` - ≈${pct(it.bestCapRate)}% ${c.shareYield}` : ''
+    return `• ${it.title}${y}\nhttps://balinsky.info${detailHref(it, lang)}`
+  })
+  const shareText = [c.shareIntro, ...shareLines].join('\n\n')
+  const shareHref = `https://t.me/share/url?url=${encodeURIComponent(items[0] ? `https://balinsky.info${detailHref(items[0], lang)}` : 'https://balinsky.info')}&text=${encodeURIComponent(shareText)}`
 
   return (
     <>
