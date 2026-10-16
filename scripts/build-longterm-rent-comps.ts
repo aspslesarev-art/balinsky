@@ -24,6 +24,7 @@ const MONTHS_FRESH = 9
 type Row = {
   lat: number; lng: number; bedrooms: number; building_m2: number | null
   rent_month_idr: number; rent_period: string; posted: string | null; url: string | null; title: string | null; district: string | null
+  photo_url: string | null
   description: string | null
 }
 
@@ -41,7 +42,7 @@ const OUTLIER_X_BALI = 4
 
 const db = new DatabaseSync(dbPath, { readOnly: true })
 const rows = db.prepare(`
-  select lat, lng, bedrooms, building_m2, rent_month_idr, rent_period, posted, url, title, district, description
+  select lat, lng, bedrooms, building_m2, rent_month_idr, rent_period, posted, url, title, district, description, photo_url
   from listings
   where deal = 'rent' and type = 'villa'
     and rent_period in ('month', 'year')
@@ -76,7 +77,7 @@ const kept = clean.filter(r => {
 
 const cutoff = new Date(Date.now() - MONTHS_FRESH * 30 * 864e5).toISOString().slice(0, 10)
 const seen = new Set<string>()
-const items: [number, number, number, number, number | null, string | null, string | null, string, string | null][] = []
+const items: [number, number, number, number, number | null, string | null, string | null, string, string | null, string | null][] = []
 let skipped = 0
 for (const r of kept) {
   const usd = Math.round(r.rent_month_idr / IDR_PER_USD)
@@ -90,6 +91,8 @@ for (const r of kept) {
     Number(r.lat.toFixed(5)), Number(r.lng.toFixed(5)), r.bedrooms, usd,
     r.building_m2 && r.building_m2 > 10 ? Math.round(r.building_m2) : null,
     r.posted, r.url, (r.title ?? '').slice(0, 120), r.district,
+    // Фото из объявления в размере карточки (~20 КБ), а не 1080 px.
+    r.photo_url ? r.photo_url.replace(/\/\d+x\d+-(fit|crop)\//, '/480x320-crop/') : null,
   ])
 }
 
@@ -100,7 +103,7 @@ const out = {
   asOf: asOf || null,
   source: 'rumah123.com',
   idrPerUsd: IDR_PER_USD,
-  fields: ['lat', 'lng', 'bedrooms', 'rentMonthUsd', 'buildingM2', 'posted', 'url', 'title', 'district'],
+  fields: ['lat', 'lng', 'bedrooms', 'rentMonthUsd', 'buildingM2', 'posted', 'url', 'title', 'district', 'photo'],
   count: items.length,
   items,
 }

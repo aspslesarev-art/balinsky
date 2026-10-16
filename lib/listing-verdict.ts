@@ -22,7 +22,7 @@ export type Tone = 'plus' | 'warn' | 'minus'
 // обновляются раз в день), правка объекта сбрасывает тег content:villas.
 export const loadVerdictSnapshot = (id: string, kind: 'villa' | 'apartment' = 'villa') => unstable_cache(
   async () => buildSnapshot(id, kind),
-  ['verdict-snapshot-v7', kind, id],
+  ['verdict-snapshot-v9', kind, id],
   { revalidate: 86400, tags: [kind === 'apartment' ? 'content:apartments' : 'content:villas'] },
 )().catch(() => null)
 

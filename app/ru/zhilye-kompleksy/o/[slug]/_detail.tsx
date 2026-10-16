@@ -63,7 +63,6 @@ import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import { loadLandProfile, landAllowsBuilding } from '@/lib/land-profile'
 import { loadComplexMarketStats } from '@/lib/complex-market-stats'
 import { loadUnitDemand, type UnitDemand } from '@/lib/unit-demand'
-import { MarketStatsBlock } from '@/components/MarketStatsBlock'
 import { DataChapter, DataGuide, type ChapterId } from '@/components/DataChapters'
 import { GatedBlock } from '@/components/GatedBlock'
 import { loadComplexAccess, loadGeoFacts } from '@/lib/complex-access'
@@ -1815,7 +1814,8 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   const hasPlace = !!((lat != null && lng != null) || nearby || (districtCopy && districtSlug) || hasAnySignal(signals))
   // «Аренда рядом» — только когда есть ставки соседей. Без них инвест-
   // сигналы (пляж, срок сдачи) уходят в конец раздела «Место».
-  const hasRent = marketOk
+  // Блок «Почём сдают соседи» убран — глава про аренду держится на инвест-сигналах.
+  const hasRent = hasAnySignal(signals)
   const chapters: ChapterId[] = []
   if (hasPlace) chapters.push('mesto')
   if (hasRent) chapters.push('arenda')
@@ -2115,11 +2115,6 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
         {hasRent && (
           <DataChapter id="arenda" n={chapters.indexOf('arenda') + 1} lang={lang}>
             {hasAnySignal(signals) && <ComplexSignalsBlock signals={signals} lang={lang} />}
-            {marketOk && (
-              <GatedBlock kind="market" lang={lang}>
-                <MarketStatsBlock data={marketStats!} lang={lang} />
-              </GatedBlock>
-            )}
           </DataChapter>
         )}
 

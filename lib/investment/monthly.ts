@@ -31,7 +31,7 @@ export const MONTHS_RENTED = { bad: 10, median: 11, good: 12 } as const
 /** Комиссия агента по долгосрочной аренде — с суммы договора. */
 export const AGENT_FEE_PCT = 0.10
 
-type RawItem = [number, number, number, number, number | null, string | null, string | null, string, string | null]
+type RawItem = [number, number, number, number, number | null, string | null, string | null, string, string | null, (string | null)?]
 type Manifest = { generatedAt: string; asOf?: string | null; source: string; items: RawItem[] }
 
 export type MonthlyComp = {
@@ -44,6 +44,8 @@ export type MonthlyComp = {
   url: string | null
   title: string
   district: string | null
+  /** Фото из объявления rumah123 (480×320). */
+  photo: string | null
   distanceKm: number
 }
 
@@ -65,7 +67,9 @@ let _cache: { ts: number; data: Manifest | null } | null = null
 async function loadManifest(): Promise<Manifest | null> {
   if (_cache && Date.now() - _cache.ts < TTL_MS) return _cache.data
   try {
-    const r = await fetch(cdnManifestUrl(MANIFEST_URL, 3600))
+    // no-store: файл в 1,3 МБ, а кэш данных Next держал старую копию (без фото)
+    // под тем же адресом; от частых загрузок бережёт _cache процесса.
+    const r = await fetch(cdnManifestUrl(MANIFEST_URL, 3600), { cache: 'no-store' })
     const data = r.ok ? (await r.json()) as Manifest : null
     _cache = { ts: Date.now(), data }
     return data
@@ -95,7 +99,7 @@ export async function monthlyRentNear(lat: number, lng: number, bedrooms: number
   const beds = bedrooms ?? 2
   const all: MonthlyComp[] = m.items.map(i => ({
     lat: i[0], lng: i[1], bedrooms: i[2], rentMonthUsd: i[3], buildingM2: i[4],
-    posted: i[5], url: i[6], title: i[7], district: i[8], distanceKm: km(lat, lng, i[0], i[1]),
+    posted: i[5], url: i[6], title: i[7], district: i[8], photo: i[9] ?? null, distanceKm: km(lat, lng, i[0], i[1]),
   }))
 
   const pick = (radius: number, relaxed: boolean) => all

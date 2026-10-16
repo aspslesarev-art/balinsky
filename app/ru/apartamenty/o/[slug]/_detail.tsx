@@ -63,8 +63,6 @@ import { loadLandProfile, landAllowsBuilding } from '@/lib/land-profile'
 import { parseProjectPermits, hasProjectPermits } from '@/lib/project-permits'
 import { loadMarketStats } from '@/lib/complex-market-stats'
 import { loadOneUnitDemand } from '@/lib/unit-demand'
-import { UnitDemandBlock } from '@/components/UnitDemandBlock'
-import { MarketStatsBlock } from '@/components/MarketStatsBlock'
 import { DataChapter } from '@/components/DataChapters'
 import { GatedBlock } from '@/components/GatedBlock'
 import { VillaPresentationButton } from '@/components/VillaPresentation'
@@ -1374,15 +1372,8 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
         {hasDemand && (
           <DataChapter id="arenda" n={3} lang={lang} question={asQuestion(qh.demand)}>
             <DemandSummary verdict={verdict} monthly={monthly} bedrooms={bedrooms} lang={lang} daily={dailyFacts} />
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-              {marketOk && !rentalRestricted && (
-                <GatedBlock kind="market" lang={lang}>
-                  <MarketStatsBlock data={marketStats!} lang={lang}
-                    occupancy={verdictSnap?.marketOccupancy ? { value: verdictSnap.marketOccupancy.occupancy, kind: 'apartment' } : null} />
-                </GatedBlock>
-              )}
-              {demand && <UnitDemandBlock demand={demand} lang={lang} />}
-            </div>
+            {/* «Почём сдают соседи» (estatemarket.io) и «Востребованность в районе» убраны
+                по решению владельца 16.10.2026: непонятны и повторяют сводку выше. */}
           </DataChapter>
         )}
 

@@ -33,8 +33,6 @@ import { loadVillaLandProfile, landAllowsBuilding } from '@/lib/land-profile'
 import { parseProjectPermits, hasProjectPermits } from '@/lib/project-permits'
 import { loadMarketStats } from '@/lib/complex-market-stats'
 import { loadOneUnitDemand } from '@/lib/unit-demand'
-import { UnitDemandBlock } from '@/components/UnitDemandBlock'
-import { MarketStatsBlock } from '@/components/MarketStatsBlock'
 import { DataChapter } from '@/components/DataChapters'
 import { GatedBlock } from '@/components/GatedBlock'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
@@ -1517,16 +1515,8 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
           <DataChapter id="arenda" n={3} lang={lang} question={asQuestion(qh.demand)}>
             <DemandSummary verdict={verdict} monthly={monthly} bedrooms={bedrooms} lang={lang}
               daily={marketOk ? { count: marketStats!.villa_count, adrUsd: marketStats!.villa_adr_usd, occupancyPct: verdictSnap?.marketOccupancy ? Math.round(verdictSnap.marketOccupancy.occupancy * 100) : marketStats!.villa_occupancy_pct } : null} />
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-              {/* На жёлтой земле «выручка посуточно» вводит в заблуждение — соседей показывает DemandSummary. */}
-              {marketOk && !rentalRestricted && (
-                <GatedBlock kind="market" lang={lang}>
-                  <MarketStatsBlock data={marketStats!} lang={lang}
-                    occupancy={verdictSnap?.marketOccupancy ? { value: verdictSnap.marketOccupancy.occupancy, kind: 'villa' } : null} />
-                </GatedBlock>
-              )}
-              {demand && <UnitDemandBlock demand={demand} lang={lang} />}
-            </div>
+            {/* «Почём сдают соседи» (estatemarket.io) и «Востребованность в районе» убраны
+                по решению владельца 16.10.2026: непонятны и повторяют сводку выше. */}
           </DataChapter>
         )}
 

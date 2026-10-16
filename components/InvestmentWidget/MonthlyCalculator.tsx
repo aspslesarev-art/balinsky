@@ -318,11 +318,16 @@ export function MonthlyCalculator({ snap, lang }: { snap: Snapshot; lang: Lang }
             {m.comps.map((c, i) => (
               <li key={`${c.url}-${i}`}>
                 <a href={c.url ?? undefined} target="_blank" rel="noopener noreferrer nofollow"
-                  className="flex items-start justify-between gap-3 rounded-xl border border-[var(--color-border)] px-3 py-2.5 transition-colors hover:bg-[var(--color-surface-alt)]">
-                  <span className="min-w-0">
+                  className="flex items-center gap-3 rounded-xl border border-[var(--color-border)] p-2 pr-3 transition-colors hover:bg-[var(--color-surface-alt)]">
+                  {/* Фото из объявления — как у посуточных соседей: видно, что сдают рядом. */}
+                  {c.photo
+                    // eslint-disable-next-line @next/next/no-img-element
+                    ? <img src={c.photo} alt="" loading="lazy" referrerPolicy="no-referrer" width={96} height={64} className="h-16 w-24 shrink-0 rounded-lg bg-[var(--color-search-bg)] object-cover" />
+                    : <span className="h-16 w-24 shrink-0 rounded-lg bg-[var(--color-search-bg)]" aria-hidden />}
+                  <span className="min-w-0 flex-1">
                     <span className="block truncate text-[13px] text-[var(--color-text)]">{c.title || c.district}</span>
                     <span className="block text-[12px] text-[var(--color-text-muted)]">
-                      {c.bedrooms} {t.bedrooms}{c.buildingM2 ? ` · ${c.buildingM2} ${cyr ? 'м²' : 'm²'}` : ''}{c.district ? ` · ${c.district}` : ''} · {c.distanceKm.toFixed(1)} {cyr ? 'км' : 'km'}
+                      {c.bedrooms} {t.bedrooms}{c.buildingM2 ? ` · ${c.buildingM2} ${cyr ? 'м²' : 'm²'}` : ''}{c.district ? ` · ${c.district}` : ''} · {cyr ? c.distanceKm.toFixed(1).replace('.', ',') : c.distanceKm.toFixed(1)} {cyr ? 'км' : 'km'}
                     </span>
                   </span>
                   <span className="flex shrink-0 items-center gap-1 text-[13px] font-semibold tabular-nums text-[var(--color-text)]">

@@ -500,11 +500,19 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, lang }:
           <CardRail prevLabel={c.prev} nextLabel={c.next}>
             {m.comps.map(comp => (
               <a key={`${comp.url}-${comp.rentMonthUsd}`} href={comp.url ?? undefined} target="_blank" rel="nofollow noopener noreferrer"
-                className="flex h-full flex-col gap-1 rounded-2xl border border-[var(--color-border)] bg-white p-5 transition-colors duration-[120ms] hover:border-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">
+                className="flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--color-border)] bg-white transition-colors duration-[120ms] hover:border-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">
+                {comp.photo && (
+                  // Фото из объявления rumah123 — видно, что именно сдают по соседству.
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={comp.photo} alt={comp.title} loading="lazy" referrerPolicy="no-referrer" width={480} height={320}
+                    className="aspect-[3/2] w-full bg-[var(--color-search-bg)] object-cover" />
+                )}
+                <span className="flex flex-1 flex-col gap-1 p-5">
                 <span className="text-[20px] font-semibold text-[var(--color-text)]"><InlinePrice usd={comp.rentMonthUsd} lang={lang} /> <span className="text-[14px] font-medium text-[var(--color-text-muted)]">{c.perMonth}</span></span>
                 <span className="text-[15px] font-medium leading-snug text-[var(--color-text)] line-clamp-2">{comp.title}</span>
                 <span className="text-[14px] text-[var(--color-text-muted)]">
-                  {[comp.bedrooms != null ? `${comp.bedrooms} ${c.br}` : null, comp.buildingM2 ? `${comp.buildingM2} м²` : null, comp.district, `${comp.distanceKm.toFixed(1)} ${c.km}`].filter(Boolean).join(' · ')}
+                  {[comp.bedrooms != null ? `${comp.bedrooms} ${c.br}` : null, comp.buildingM2 ? `${comp.buildingM2} м²` : null, comp.district, `${lang === 'en' || lang === 'zh' ? comp.distanceKm.toFixed(1) : comp.distanceKm.toFixed(1).replace('.', ',')} ${c.km}`].filter(Boolean).join(' · ')}
+                </span>
                 </span>
               </a>
             ))}
