@@ -8,18 +8,28 @@
 //
 // A static preview token (`?preview=` or `x-llm-preview` header) lets the owner
 // and automated checks read the endpoint without pretending to be a bot.
+//
+// Исключение — OpenAI и Perplexity: у их адресов нет обратной DNS-записи
+// (OpenAI), либо она указывает на AWS (Perplexity), поэтому проверка выше их
+// всегда отбрасывала и ChatGPT/Perplexity получали «Access restricted».
+// Списков их IP в коде нет, а текстовый слой — те же публичные страницы,
+// что открыты в HTML. Поэтому для бесплатного текстового слоя (.md/.json)
+// этим ботам достаточно User-Agent (`allowUaOnly`). Платный поиск
+// (/api/llm/search, эмбеддинги Azure) по-прежнему требует проверки DNS.
 import { promises as dns } from 'node:dns'
 
 // Long, non-secret constant — this only unlocks a public text view, it guards
 // no data that isn't already reachable by a verified crawler. Rotate freely.
 export const PREVIEW_TOKEN = 'balinsky-llm-preview-9f3c1a7e42'
 
-type BotRule = { ua: RegExp; domains: string[] }
+// uaOnly: обратной DNS у бота нет или она чужая (см. шапку) — на бесплатном
+// текстовом слое пускаем по User-Agent.
+type BotRule = { ua: RegExp; domains: string[]; uaOnly?: boolean }
 
 const BOTS: BotRule[] = [
-  { ua: /GPTBot|OAI-SearchBot|ChatGPT-User/i, domains: ['openai.com'] },
+  { ua: /GPTBot|OAI-SearchBot|ChatGPT-User/i, domains: ['openai.com'], uaOnly: true },
   { ua: /ClaudeBot|Claude-SearchBot|anthropic-ai/i, domains: ['anthropic.com', 'claude.ai'] },
-  { ua: /PerplexityBot|Perplexity-User/i, domains: ['perplexity.ai'] },
+  { ua: /PerplexityBot|Perplexity-User/i, domains: ['perplexity.ai'], uaOnly: true },
   { ua: /Googlebot|Google-Extended|GoogleOther/i, domains: ['googlebot.com', 'google.com'] },
   { ua: /bingbot|BingPreview/i, domains: ['search.msn.com'] },
   { ua: /Applebot/i, domains: ['applebot.apple.com', 'apple.com'] },
@@ -60,7 +70,13 @@ async function forwardConfirm(ip: string, domains: string[]): Promise<boolean> {
   }
 }
 
-export async function gate(req: Request): Promise<GateResult> {
+export type GateOptions = {
+  /** Пускать ботов с `uaOnly` без проверки DNS. Только для бесплатных
+   *  публичных ответов — не для платного поиска. */
+  allowUaOnly?: boolean
+}
+
+export async function gate(req: Request, opts: GateOptions = {}): Promise<GateResult> {
   const url = new URL(req.url)
   const token = url.searchParams.get('preview') || req.headers.get('x-llm-preview')
   if (token && token === PREVIEW_TOKEN) return { allowed: true, bot: 'preview', reason: 'preview-token' }
@@ -68,6 +84,8 @@ export async function gate(req: Request): Promise<GateResult> {
   const ua = req.headers.get('user-agent') || ''
   const rule = BOTS.find(b => b.ua.test(ua))
   if (!rule) return { allowed: false, bot: null, reason: 'not-an-ai-crawler' }
+  const botName = rule.ua.source.split('|')[0]
+  if (rule.uaOnly && opts.allowUaOnly) return { allowed: true, bot: botName, reason: 'user-agent-public-text' }
 
   const ip = clientIp(req.headers)
   if (!ip) return { allowed: false, bot: null, reason: 'no-client-ip' }
@@ -77,7 +95,6 @@ export async function gate(req: Request): Promise<GateResult> {
   if (cached) return cached
 
   const ok = await forwardConfirm(ip, rule.domains)
-  const botName = rule.ua.source.split('|')[0]
   const result: GateResult = ok
     ? { allowed: true, bot: botName, reason: 'verified-reverse-dns' }
     : { allowed: false, bot: botName, reason: 'reverse-dns-unverified' }
