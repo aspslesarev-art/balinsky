@@ -12,6 +12,7 @@ import { useCatalogRouter } from '@/lib/use-catalog-router'
 import Link from 'next/link'
 import { Search, ArrowRight } from 'lucide-react'
 import { switchLangPath, t, type Lang } from '@/lib/i18n'
+import { parseCatalogQuery, parsedToSearchParams } from '@/lib/catalog-query-parser'
 
 type Suggestion = { label: string; href?: string }
 type Kind = 'villy' | 'apartamenty'
@@ -52,6 +53,16 @@ export function HeroCatalogSearch({
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
     const q = value.trim()
+    // Фраза вида «вилла 2 спальни Чангу до 300к» разбирается в фильтры
+    // каталога бесплатно, по правилам (lib/catalog-query-parser.ts); тип из
+    // фразы важнее выбранной вкладки. Остаток — обычным текстовым поиском.
+    const parsed = q ? parseCatalogQuery(q) : null
+    if (parsed?.structured) {
+      const base = catalogPath(parsed.kind ?? kind, lang)
+      const qs = parsedToSearchParams(parsed).toString()
+      router.push(qs ? `${base}?${qs}` : base)
+      return
+    }
     const base = catalogPath(kind, lang)
     router.push(q ? `${base}?q=${encodeURIComponent(q)}` : base)
   }

@@ -16,6 +16,7 @@ import { buildListHref, buildMapHref } from '@/lib/filter-href'
 import { loadCatalogPage, buildHeadingLoc } from './_lib'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { CatalogSortSelect } from '@/components/CatalogSortSelect'
+import { filtersFromQuery, relaxSteps, relaxNote, alternativesCopy, type RelaxStep } from '@/lib/catalog-alternatives'
 import { CATALOG_SORTS, type CatalogSort } from '@/lib/catalog-sort'
 
 // Absolute origin for JSON-LD `item`/`url` — schema.org consumers want fully
@@ -121,7 +122,7 @@ function sortHrefs(f: FilterState, lang: Lang): Record<CatalogSort | 'default', 
 }
 
 export async function ApartamentyCatalog({
-  filters,
+  filters: rawFilters,
   page = 1,
   lang = 'ru',
 }: {
@@ -130,8 +131,33 @@ export async function ApartamentyCatalog({
   basePath: string
   lang?: Lang
 }) {
-  const { cards, totalCount, totalPages, hasMore, options, page: actualPage } =
-    await loadCatalogPage(filters, page, lang)
+  // Текстовый поиск пуст — пробуем понять фразу как фильтры («вилла 2 спальни
+  // Чангу до 300к»), а если пусто и так — ищем ближайшие варианты.
+  // Цену и спальни текстовый поиск понять не может («до 100к» он ищет как
+  // слова) — если они во фразе есть, сразу идём по фильтрам.
+  let filters = rawFilters
+  const parsed = filtersFromQuery(rawFilters)
+  const strong = parsed != null && (parsed.priceMin !== rawFilters.priceMin
+    || parsed.priceMax !== rawFilters.priceMax || parsed.bedrooms !== rawFilters.bedrooms)
+  if (strong) filters = parsed
+  let pageData = await loadCatalogPage(filters, page, lang)
+  if (pageData.cards.length === 0 && page === 1 && parsed && !strong) {
+    filters = parsed
+    pageData = await loadCatalogPage(filters, page, lang)
+  }
+  const { cards, totalCount, totalPages, hasMore, options, page: actualPage } = pageData
+  let alternatives: { cards: typeof cards; note: string; href: string } | null = null
+  if (cards.length === 0 && page === 1) {
+    const done: RelaxStep[] = []
+    for (const { step, filters: relaxed } of relaxSteps(filters)) {
+      done.push(step)
+      const alt = await loadCatalogPage(relaxed, 1, lang)
+      if (alt.cards.length > 0) {
+        alternatives = { cards: alt.cards.slice(0, 4), note: relaxNote(done, lang), href: buildListHref(relaxed, lang) }
+        break
+      }
+    }
+  }
   const isSearch = filters.q.trim().length > 0
   const copy = pickCopy(COPY, lang)
 
@@ -236,9 +262,24 @@ export async function ApartamentyCatalog({
         )}
 
         {cards.length === 0 ? (
-          <div className="py-16 text-center text-[var(--color-text-muted)]">
-            {isSearch ? copy.emptySearch(filters.q) : copy.emptyFilters}
-          </div>
+          alternatives ? (
+            <section className="mt-8" aria-labelledby="catalog-alternatives">
+              <h2 id="catalog-alternatives" className="text-[20px] font-semibold tracking-tight text-[var(--color-text)]">
+                {alternativesCopy(lang).title}
+              </h2>
+              <p className="mt-1 text-[14px] text-[var(--color-text-muted)]">{alternatives.note}</p>
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                {alternatives.cards.map((c, i) => <ApartmentCard key={c.id} a={c} lang={lang} priority={i < 2} />)}
+              </div>
+              <a href={alternatives.href} className="mt-6 inline-flex items-center text-[15px] font-medium text-[var(--color-primary)] hover:underline underline-offset-2">
+                {alternativesCopy(lang).all} →
+              </a>
+            </section>
+          ) : (
+            <div className="py-16 text-center text-[var(--color-text-muted)]">
+              {isSearch ? copy.emptySearch(filters.q) : copy.emptyFilters}
+            </div>
+          )
         ) : (
           <>
             <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
