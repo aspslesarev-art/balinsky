@@ -3,7 +3,7 @@
 // Тексты пока RU + EN; остальные языки берут английский до перевода.
 import type { ReactNode } from 'react'
 import { pickCopy, type Lang } from '@/lib/i18n'
-import { permitOk, type Verdict, type Tone, type YieldFacts, type ComplexFacts } from '@/lib/listing-verdict'
+import { permitOk, type Verdict, type Tone, type YieldFacts, type ComplexFacts, type YieldScenarios, type ScenarioRow } from '@/lib/listing-verdict'
 import type { MonthlyBundle } from '@/lib/investment/monthly'
 import type { NearbyMatchCard } from '@/lib/investment/snapshot'
 import { InlinePrice } from './InlinePrice'
@@ -594,6 +594,64 @@ export function YieldSummary({ yields: y, leaseYears, calcAnchor, lang }: { yiel
         <span className="text-[14px] text-[var(--color-text-muted)] max-w-[60ch]">{c.yNote}</span>
         <a href={`#${calcAnchor}`} className="inline-flex min-h-11 items-center rounded-xl bg-[var(--color-primary)] px-5 text-[15px] font-medium text-white hover:bg-[var(--color-primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">{c.yCalc} ↓</a>
       </div>
+    </div>
+  )
+}
+
+// «Сколько принесёт?» — три варианта без повторов ответа раздела: строка на вид
+// дохода, столбцы «плохо / средне / хорошо». Подробности — в калькуляторе ниже.
+const SC_COPY = {
+  ru: {
+    cols: ['Плохо', 'Средне', 'Хорошо'] as const,
+    daily: 'Посуточная аренда', monthly: 'Помесячная аренда', resale: 'Перепродажа сейчас',
+    dailyNote: 'в год до налогов', monthlyNote: 'в год до налогов', resaleNote: 'к цене покупки, по объявлениям рядом',
+  },
+  en: {
+    cols: ['Low', 'Typical', 'High'] as const,
+    daily: 'Nightly rental', monthly: 'Monthly rental', resale: 'Resale now',
+    dailyNote: 'per year before tax', monthlyNote: 'per year before tax', resaleNote: 'vs purchase price, by listings nearby',
+  },
+}
+
+export function YieldScenariosTable({ data, verified, lang }: { data: YieldScenarios; verified?: boolean; lang: Lang }) {
+  const c = pickCopy(SC_COPY, lang)
+  const pct = (x: number, signed = false) => {
+    const s = (Math.round(x * 1000) / 10).toFixed(1)
+    const t = lang === 'en' || lang === 'zh' ? s : s.replace('.', ',')
+    return `${signed && x > 0 ? '+' : ''}${t.replace('-', '−')}%`
+  }
+  const rows = [
+    data.daily && { k: 'daily', label: c.daily, note: c.dailyNote, r: data.daily, signed: false },
+    data.monthly && { k: 'monthly', label: c.monthly, note: c.monthlyNote, r: data.monthly, signed: false },
+    data.resale && { k: 'resale', label: c.resale, note: c.resaleNote, r: data.resale, signed: true },
+  ].filter((x): x is { k: string; label: string; note: string; r: ScenarioRow; signed: boolean } => !!x)
+  if (!rows.length) return null
+  return (
+    <div className="flex flex-col gap-3">
+      {verified && <VerifiedYieldBadge lang={lang} className="self-start" />}
+      <table className="w-full border-collapse text-left">
+        <thead>
+          <tr className="text-[14px] text-[var(--color-text-muted)]">
+            <th className="py-2 pr-3 font-normal" />
+            {c.cols.map(h => <th key={h} className="py-2 px-2 text-right font-normal">{h}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(row => (
+            <tr key={row.k} className="border-t border-[var(--color-border)] align-top">
+              <th scope="row" className="py-3 pr-3 font-normal">
+                <span className="block text-[16px] font-medium text-[var(--color-text)]">{row.label}</span>
+                <span className="block text-[13px] leading-snug text-[var(--color-text-muted)]">{row.note}</span>
+              </th>
+              {([row.r.bad, row.r.mid, row.r.good] as const).map((v, i) => (
+                <td key={i} className={`py-3 px-2 text-right tabular-nums text-[16px] md:text-[18px] whitespace-nowrap ${i === 1 ? 'font-semibold text-[var(--color-text)]' : 'text-[var(--color-text-muted)]'}`}>
+                  {pct(v, row.signed)}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   )
 }

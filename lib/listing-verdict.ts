@@ -261,3 +261,57 @@ export function buildVerdict(i: VerdictInput): Verdict {
     checks,
   }
 }
+
+// «Сколько принесёт?» тремя вариантами — плохо / средне / хорошо — для посуточной
+// и помесячной сдачи (доходность в год до налогов) и для перепродажи сейчас (разница
+// с ценой покупки по ценам похожих объявлений рядом). Средний вариант посуточной —
+// та же цифра, что в ответе раздела (computeYieldFacts).
+export type ScenarioRow = { bad: number; mid: number; good: number }
+export type YieldScenarios = { daily: ScenarioRow | null; monthly: ScenarioRow | null; resale: ScenarioRow | null }
+
+export function yieldScenarios(
+  snap: InvestmentSnapshot | null,
+  sale: { metric: 'year' | 'm2'; self: number | null; median: number | null; comps: { ppm: number | null; ppmYear: number | null }[] } | null,
+): YieldScenarios {
+  const out: YieldScenarios = { daily: null, monthly: null, resale: null }
+  if (!snap || snap.villa.askingPrice == null) return out
+  const v = snap.villa
+  const base = { area: v.area, bedrooms: v.bedrooms, askingPrice: v.askingPrice, leaseholdYearsLeft: v.leaseholdYearsLeft, taxStatus: 'beforeTax' as TaxStatus, region: snap.region }
+
+  const sc = snap.scenarios
+  if (sc && !snap.flags.rentalRestricted && sc.median.adrAsking > 0) {
+    const own = snap.ownBooking
+    const rate = own?.adr ?? sc.median.adrAsking
+    const occ = own?.occupancy ?? snap.region.occupancyByScenario.median
+    const one = (adr: number, o: number, k: 'bad' | 'median' | 'good') => computeEconomics({
+      ...base, adr, occupancy: o,
+      adrRealization: snap.region.adrRealizationByScenario[k],
+      phrOwnerShare: snap.region.phrOwnerShareByScenario[k],
+    }).capRate
+    // Цена ночи — нижняя и верхняя четверть соседей, загрузка — ±10 пунктов.
+    const bad = one(rate * sc.bad.adrAsking / sc.median.adrAsking, Math.max(0.3, occ - 0.1), 'bad')
+    const mid = one(rate, occ, 'median')
+    const good = one(rate * sc.good.adrAsking / sc.median.adrAsking, Math.min(0.95, occ + 0.1), 'good')
+    if (bad != null && mid != null && good != null) out.daily = { bad, mid, good }
+  }
+
+  const m = snap.monthly
+  if (m) {
+    const one = (rent: number, k: 'bad' | 'median' | 'good') => computeMonthlyEconomics({ ...base, rentMonth: rent, monthsRented: MONTHS_RENTED[k], agentFeePct: AGENT_FEE_PCT }).capRate
+    const bad = one(m.p25, 'bad'), mid = one(m.p50, 'median'), good = one(m.p75, 'good')
+    if (bad != null && mid != null && good != null) out.monthly = { bad, mid, good }
+  }
+
+  // Перепродажа сейчас: цена за м² (на год лизхолда) у похожих объявлений против этого объекта.
+  if (sale?.self) {
+    const xs = sale.comps.map(c => (sale.metric === 'year' ? c.ppmYear : c.ppm)).filter((x): x is number => x != null && x > 0).sort((a, b) => a - b)
+    if (xs.length >= 5) {
+      const q = (p: number) => xs[Math.min(xs.length - 1, Math.floor((xs.length - 1) * p))]
+      // Середина — по всем объявлениям (как «дороже соседей на N%» в ответе раздела),
+      // разброс — по показанным, в тех же пропорциях к их середине.
+      const med = sale.median ?? q(0.5)
+      out.resale = { bad: (med * q(0.25) / q(0.5)) / sale.self - 1, mid: med / sale.self - 1, good: (med * q(0.75) / q(0.5)) / sale.self - 1 }
+    }
+  }
+  return out
+}

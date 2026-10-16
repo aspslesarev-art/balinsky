@@ -69,8 +69,8 @@ import { VerifiedYieldBadge } from '@/components/VerifiedYieldBadge'
 import { ClimateBlock } from '@/components/ClimateBlock'
 import { AreaBlock } from '@/components/AreaBlock'
 import { PlotSiteBlock } from '@/components/PlotSiteBlock'
-import { loadVerdictSnapshot, loadComplexFacts, computeYieldFacts, buildVerdict } from '@/lib/listing-verdict'
-import { ListingVerdict, SafetyCards, DemandSummary, YieldSummary, questionHeaders, TONE_PILL_CLASS } from '@/components/ListingVerdict'
+import { loadVerdictSnapshot, loadComplexFacts, computeYieldFacts, buildVerdict, yieldScenarios } from '@/lib/listing-verdict'
+import { ListingVerdict, SafetyCards, DemandSummary, YieldScenariosTable, questionHeaders, TONE_PILL_CLASS } from '@/components/ListingVerdict'
 import { loadManagersByDeveloperName, loadManagersByDeveloperSlug } from '@/lib/managers'
 import { getDeveloperStats } from '@/lib/developer-stats'
 import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
@@ -1524,7 +1524,8 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
 
         {hasYield && (
           <DataChapter id="dokhodnost" n={4} lang={lang} question={asQuestion(qh.money)}>
-            {yields && <YieldSummary yields={yields} leaseYears={leaseYears} calcAnchor="kalkulyator" lang={lang} />}
+            {/* Три варианта вместо карточки, которая повторяла ответ раздела. */}
+            <YieldScenariosTable data={yieldScenarios(verdictSnap, saleComps ?? null)} verified={yields?.ownSource === 'actual'} lang={lang} />
             <div id="kalkulyator" className="scroll-mt-24" />
             <GatedBlock kind="investment" lang={lang}>
               <LazyMount fallback={<div className="min-h-[600px]" />}>
