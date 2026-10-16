@@ -16,6 +16,7 @@ import { buildListHref, buildMapHref } from '@/lib/villa-filter-href'
 import { loadCatalogPage, buildHeadingLoc, type VillaFilterState } from './_lib'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { CatalogSortSelect } from '@/components/CatalogSortSelect'
+import { HeadingPrice } from '@/components/Money'
 import { filtersFromQuery, relaxSteps, relaxNote, alternativesCopy, type RelaxStep } from '@/lib/catalog-alternatives'
 import { CATALOG_SORTS, type CatalogSort } from '@/lib/catalog-sort'
 import { pluralRu } from '@/lib/plural-ru'
@@ -200,6 +201,10 @@ export async function VillasCatalog({
     : undefined)
     ?? (isMainHub ? getBuyHeading('villa', lang, totalCount) : undefined)
     ?? buildHeadingLoc(filters, lang)
+  // H1 с ценой из фильтра: сумма — в валюте посетителя (HeadingPrice, на
+  // клиенте), а не «до 279 330 $». Сервер строит заголовок без цены.
+  const hasPrice = filters.priceMin != null || filters.priceMax != null
+  const h1Text = hasPrice ? buildHeadingLoc({ ...filters, priceMin: null, priceMax: null }, lang) : heading
   const sectionRoot = switchLangPath('/ru/villy', lang)
 
   // Structured data for the catalog itself. Product markup already rides on
@@ -243,7 +248,8 @@ export async function VillasCatalog({
 
       <PageContainer>
         <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[var(--color-text)]">
-          {heading}
+          {h1Text}
+          {hasPrice && <HeadingPrice min={filters.priceMin} max={filters.priceMax} lang={lang} />}
           {actualPage > 1 && (
             <span className="text-[var(--color-text-muted)] font-normal text-[20px] md:text-[24px]"> — {copy.page} {actualPage}</span>
           )}

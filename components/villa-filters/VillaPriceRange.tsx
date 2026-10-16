@@ -5,7 +5,7 @@ import { FilterDropdown } from '../FilterDropdown'
 import { useVillaFilterUrl, type FilterView } from './useVillaFilterUrl'
 import type { VillaFilterState } from '@/app/ru/villy/_lib'
 import { useCurrency } from '../CurrencyContext'
-import { CURRENCY_RATES, formatPrice } from '@/lib/currency'
+import { CURRENCY_RATES, formatMoney } from '@/lib/currency'
 import { pickCopy, type Lang } from '@/lib/i18n'
 
 const COPY = {
@@ -76,19 +76,15 @@ export function VillaPriceRange({
   const active = min != null || max != null
   const summary = active
     ? [
-        min != null ? `${c.from} ${formatPrice(min, currency)}` : '',
-        max != null ? `${c.to} ${formatPrice(max, currency)}` : '',
+        min != null ? `${c.from} ${formatMoney(min, currency, lang)}` : '',
+        max != null ? `${c.to} ${formatMoney(max, currency, lang)}` : '',
       ].filter(Boolean).join(' ')
     : ''
 
   // Render a preset bracket label in the active currency.
   function presetLabel(p: { min: number | null; max: number | null }): string {
-    const fmt = (usd: number) => {
-      const v = usd * rate
-      if (v >= 1_000_000) return `${sym}${(v / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`
-      if (v >= 1_000) return `${sym}${Math.round(v / 1000)}k`
-      return `${sym}${Math.round(v)}`
-    }
+    // Валюта посетителя, язык страницы: «до 16,8 млн ₽», «Rp 3,58 млрд», «$200K».
+    const fmt = (usd: number) => formatMoney(usd, currency, lang)
     if (p.min == null && p.max != null) return `${c.to} ${fmt(p.max)}`
     if (p.min != null && p.max == null) return `${fmt(p.min)}+`
     if (p.min != null && p.max != null) return `${fmt(p.min)} – ${fmt(p.max)}`

@@ -83,16 +83,17 @@ export function parseCatalogQuery(input: string): ParsedCatalogQuery {
   const cut = (re: RegExp) => { text = text.replace(re, ' ') }
 
   // Тип объекта.
-  if (/апарт|квартир|кондо|apart|flat|condo|studio|студи/.test(text)) out.kind = 'apartamenty'
-  else if (/вилл|(^|[^а-я])дом(а|ик)?(?=$|[^а-я])|villa|house|home/.test(text)) out.kind = 'villy'
-  cut(/(апарт[a-zа-я]*|квартир[a-zа-я]*|кондо[a-zа-я]*|apartments?|flats?|condos?|studios?|студи[a-zа-я]*|вилл[a-zа-я]*|(?<![а-я])дом(?:[аы]|ик[а-я]*)?(?![а-я])|villas?|houses?|homes?)/g)
+  // Слова на всех десяти языках сайта: подсказки под поиском написаны на них.
+  if (/апарт|квартир|кондо|apart|appart|wohnung|mieszkan|flat|condo|studio|студи|公寓/.test(text)) out.kind = 'apartamenty'
+  else if (/вилл|віл|будин|(^|[^а-я])дом(а|ик)?(?=$|[^а-я])|villa|vila|villen|wille|house|home|häuser|haus|maison|huizen|huis|rumah|umah|domy|别墅|房子/.test(text)) out.kind = 'villy'
+  cut(/(апарт[a-zа-яäöüàâçéèêëîïôûùœß]*|квартир[a-zа-яäöüàâçéèêëîïôûùœß]*|кондо[a-zа-яäöüàâçéèêëîïôûùœß]*|apart[a-zа-яäöüàâçéèêëîïôûùœß]*|appart[a-zа-яäöüàâçéèêëîïôûùœß]*|wohnung[a-zа-яäöüàâçéèêëîïôûùœß]*|mieszkan[a-zа-яäöüàâçéèêëîïôûùœß]*|flats?|condos?|studios?|студи[a-zа-яäöüàâçéèêëîïôûùœß]*|вілл?[a-zа-яäöüàâçéèêëîïôûùœß]*|будин[a-zа-яäöüàâçéèêëîïôûùœß]*|вилл[a-zа-яäöüàâçéèêëîïôûùœß]*|(?<![а-я])дом(?:[аы]|ик[а-я]*)?(?![а-я])|villa[a-zа-яäöüàâçéèêëîïôûùœß]*|vila|villen|wille|houses?|homes?|häuser|haus|maisons?|huizen|huis|rumah|umah|domy|公寓|别墅|房子)/g)
 
   // Цена: «от X до Y», «X–Y», «до X», «от X», «under/below/up to X», «< X».
   const currency = currencyOf(text)
   const P = `${CUR}${NUM}${SUF}${CUR}`
   const range = new RegExp(String.raw`(?:от|from)?\s*${P}\s*(?:-|–|—|до|to)\s*${P}`, 'i')
-  const max = new RegExp(String.raw`(?:до|не дороже|дешевле|max|under|below|up to|upto|less than|<|≤)\s*${P}`, 'i')
-  const min = new RegExp(String.raw`(?:от|дороже|min|from|over|above|more than|>|≥)\s*${P}`, 'i')
+  const max = new RegExp(String.raw`(?:до|не дороже|дешевле|max|under|below|up to|upto|less than|à moins de|moins de|jusqu'à|jusqu’à|unter|bis|onder|tot|di bawah|hingga|kirang saking|nyantos|do|<|≤)\s*${P}`, 'i')
+  const min = new RegExp(String.raw`(?:от|від|дороже|min|from|over|above|more than|à partir de|ab|vanaf|mulai|od|>|≥)\s*${P}`, 'i')
   const m1 = text.match(range)
   if (m1 && (m1[2] || m1[4] || /\d{4,}/.test(m1[1]))) {
     // «300-500k»: суффикс с правой границы действует и на левую.
