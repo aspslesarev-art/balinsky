@@ -335,7 +335,30 @@
    "bars": 20,
    "beach_clubs": 3,
    "radius_m": 500
-  }
+  },
+  "photos": [
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/06-5093466857-ff49b75a86-b.jpg",
+    "kind": "beach",
+    "author": "Annie Mole",
+    "license": "CC BY 2.0",
+    "page": "https://www.flickr.com/photos/21309047@N00/5093466857"
+   },
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/06-9335858602-7c4fbe3c06-b.jpg",
+    "kind": "beach",
+    "author": "Kaeru",
+    "license": "CC BY 2.0",
+    "page": "https://www.flickr.com/photos/51035756584@N01/9335858602"
+   },
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/06-9333068101-348be6a1ee-b.jpg",
+    "kind": "beach",
+    "author": "Kaeru",
+    "license": "CC BY 2.0",
+    "page": "https://www.flickr.com/photos/51035756584@N01/9333068101"
+   }
+  ]
  },
  {
   "ids": [
@@ -1065,7 +1088,30 @@
    "bars": 15,
    "beach_clubs": 1,
    "radius_m": 500
-  }
+  },
+  "photos": [
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/20-16385272233-0465d021d6-b.jpg",
+    "kind": "beach",
+    "author": "Jnzl's Photos",
+    "license": "CC BY 2.0",
+    "page": "https://www.flickr.com/photos/102748040@N03/16385272233"
+   },
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/20-17004498051-34bfa446fd-b.jpg",
+    "kind": "beach",
+    "author": "Jnzl's Photos",
+    "license": "CC BY 2.0",
+    "page": "https://www.flickr.com/photos/102748040@N03/17004498051"
+   },
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/20-16819186299-67cc37c69e-b.jpg",
+    "kind": "beach",
+    "author": "Jnzl's Photos",
+    "license": "CC BY 2.0",
+    "page": "https://www.flickr.com/photos/102748040@N03/16819186299"
+   }
+  ]
  },
  {
   "ids": [
@@ -1938,7 +1984,23 @@
    "bars": 6,
    "beach_clubs": 0,
    "radius_m": 500
-  }
+  },
+  "photos": [
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/37-2087693022-ec9a032cee-b.jpg",
+    "kind": "beach",
+    "author": "Julia Koefender",
+    "license": "CC BY 2.0",
+    "page": "https://www.flickr.com/photos/13632213@N08/2087693022"
+   },
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/37-16560252257-6a960bd51b-b.jpg",
+    "kind": "beach",
+    "author": "Jumilla",
+    "license": "CC BY 2.0",
+    "page": "https://www.flickr.com/photos/70363447@N03/16560252257"
+   }
+  ]
  },
  {
   "ids": [
@@ -1977,6 +2039,15 @@
    "bars": 22,
    "beach_clubs": 0,
    "radius_m": 500
-  }
+  },
+  "photos": [
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/38-9335861886-6554ef732f-b.jpg",
+    "kind": "beach",
+    "author": "Kaeru",
+    "license": "CC BY 2.0",
+    "page": "https://www.flickr.com/photos/51035756584@N01/9335861886"
+   }
+  ]
  }
 ]
