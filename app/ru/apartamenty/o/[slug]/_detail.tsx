@@ -43,6 +43,8 @@ import { AgentStoriesButton } from '@/components/AgentStoriesButton'
 import { loadNearbyPlaces } from '@/lib/nearby-places'
 import { computeLivingFacts, loadLivingNoise } from '@/lib/living'
 import { LivingList } from '@/components/LivingVerdict'
+import { BeachBlock } from '@/components/BeachBlock'
+import { beachProfile } from '@/lib/beaches'
 import { GoalSwitch } from '@/components/GoalSwitch'
 import { NearbyPlaces } from '@/components/NearbyPlaces'
 import { loadGeoFacts } from '@/lib/complex-access'
@@ -1147,6 +1149,9 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
     noise: livingNoise,
     climate: geoFacts?.climate ?? null,
   })
+  // Ближайший пляж с описанием (lib/beaches.ts) — карточкой в разделе «Место».
+  const beachRow = livingFacts?.rows.find(r => r.key === 'beach') ?? null
+  const beach = beachRow && beachRow.km != null && beachRow.km <= 3 ? beachProfile(beachRow.placeId) : null
   const verdict = buildVerdict({
     living: livingFacts,
     status, yearRaw, permit, leaseYears, rentalRestricted, complex: complexFacts,
@@ -1332,7 +1337,8 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
 
         {hasPlace && (
           <DataChapter id="mesto" n={2} lang={lang} question={asQuestion(qh.comfort)}>
-            {livingFacts && <LivingList facts={livingFacts} lang={lang} />}
+            {livingFacts && <LivingList facts={livingFacts} lang={lang} hideBeach={!!beach} />}
+            {beach && beachRow?.km != null && <BeachBlock beach={beach} km={beachRow.km} lang={lang} />}
             {geoFacts && (
               <>
               {/* Слева дорога и район одной колонкой, справа солнце и погода. */}

@@ -59,7 +59,7 @@ const COPY = {
   },
 }
 
-export function LivingList({ facts: f, lang }: { facts: LivingFacts; lang: Lang }) {
+export function LivingList({ facts: f, lang, hideBeach = false }: { facts: LivingFacts; lang: Lang; /** Пляж описан отдельной карточкой (BeachBlock) — здесь не повторяем. */ hideBeach?: boolean }) {
   const c = pickCopy(COPY, lang)
   const row = (k: LivingRow['key']) => f.rows.find(r => r.key === k)
   const dist = (r: LivingRow, extra?: string | null) =>
@@ -68,7 +68,7 @@ export function LivingList({ facts: f, lang }: { facts: LivingFacts; lang: Lang 
   const lines: Line[] = []
   const school = row('school'), beach = row('beach'), health = row('health'), shop = row('shop'), cafes = row('cafes'), quiet = row('quiet'), volcano = row('volcano')
   if (school) lines.push({ key: 'school', label: school.intl ? c.labels.intl : c.labels.school, value: dist(school), tone: school.tone })
-  if (beach) lines.push({ key: 'beach', label: c.labels.beach, value: dist(beach), tone: beach.tone })
+  if (beach && !hideBeach) lines.push({ key: 'beach', label: c.labels.beach, value: dist(beach), tone: beach.tone })
   if (health) lines.push({ key: 'health', label: c.labels.health, value: dist(health, health.pharmacyKm != null ? c.pharmacy(c.km(health.pharmacyKm)) : null), tone: health.tone })
   if (shop) lines.push({ key: 'shop', label: c.labels.shop, value: dist(shop), tone: shop.tone })
   if (cafes) lines.push({ key: 'cafes', label: c.labels.cafes, value: [c.cafes(cafes.count ?? 0), cafes.coworkKm != null ? c.cowork(c.km(cafes.coworkKm)) : null].filter(Boolean).join(' · '), tone: cafes.tone })

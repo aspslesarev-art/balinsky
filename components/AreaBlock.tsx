@@ -1,221 +1,182 @@
-// "What is happening around the plot" for a buyer holding it 20–30 years:
-//  1. how fast the land within 1 km has been built over (2000 → 2020);
-//  2. for plots near the sea — how high the plot sits above the worst
-//     storm water expected once in 100 years up to 2050.
+// «Район и берег» — два коротких вывода для того, кто держит участок 20–30 лет:
+//  1. как быстро застраивается округа (здания в 1 км, 2016–2023) — вывод
+//     одной фразой и маленький график по годам;
+//  2. у моря — хватает ли высоты участка над самой высокой водой до 2050 года.
 //
-// Data: listing_geo_facts.climate.built / coast_m (scripts/ghsl-builtup.py,
-// Copernicus GHSL) and climate.sea (scripts/sea-level-risk.py, Copernicus C3S
-// sea level indicators). Server Component. Renders nothing without data.
+// Данные: listing_geo_facts.climate.buildings (scripts/open-buildings-temporal.py,
+// Google Open Buildings), .built (Copernicus GHSL — запасной, если первых нет),
+// .sea / .coast_m (Copernicus C3S). Server Component. Без данных — ничего.
 import { Building2, Waves } from 'lucide-react'
 import type { Climate } from '@/lib/complex-access'
 import { pickCopy, type Lang } from '@/lib/i18n'
 
-const SHOWN = ['2000', '2005', '2010', '2015', '2020'] as const
+type Pace = 'fast' | 'avg' | 'slow'
 
-const COPY = {
+const COPY: Record<Lang, {
+  title: string; titleInland: string
+  pace: Record<Pace, string>
+  grew: (pct: number, from: string, to: string) => string
+  sea: (coastM: number | null, heightM: number) => string
+  seaLevel: Record<'high' | 'mid' | 'low', string>
+  elevation: (m: number) => string
+  src: string
+}> = {
   ru: {
-    title: 'Район и берег', titleInland: 'Район', elevation: 'Высота над морем', mUnit: 'м', builtTitle: 'Как застраивался район', builtShare: 'земли под зданиями в радиусе 1 км', since2000: 'с 2000 года', growthFaster: (p: number) => `В 2000–2020 годах строились быстрее, чем вокруг ${p}% объектов на Бали`, growthSlower: (p: number) => `В 2000–2020 годах строились медленнее, чем вокруг ${100 - p}% объектов на Бали`, builtNote: 'Спутник Copernicus (GHSL). Последние данные — 2020 год, стройки после него сюда не попали.',
-    seaTitle: 'Океан рядом', toSea: 'до океана', height: 'высота участка', m: 'м', worst: 'Самая высокая вода раз в 100 лет до 2050 года (прилив + шторм + подъём моря)', high: 'Участок высоко над водой — запас большой', mid: 'Запас есть, но небольшой', low: 'Участок низкий — спросите застройщика о высоте и защите от воды', seaNote: 'Copernicus C3S. Волны не учтены. Высота по спутнику, погрешность несколько метров.',
-    bCount: 'зданий в радиусе 1 км', bSince: 'с 2016 года', roof: 'земли под крышами', bFaster: (p: number) => `В 2016–2023 годах строились быстрее, чем вокруг ${p}% объектов на Бали`, bSlower: (p: number) => `В 2016–2023 годах строились медленнее, чем вокруг ${100 - p}% объектов на Бали`, bNote: 'Google Open Buildings по снимкам Sentinel‑2 (Copernicus), каждое здание с точностью до 4 м. Последние данные — 2023 год.',
+    title: 'Район и берег', titleInland: 'Район',
+    pace: { fast: 'Район быстро застраивается - рядом будут стройки', avg: 'Район застраивается в обычном для Бали темпе', slow: 'Район застраивается медленно - вид и тишина сохранятся дольше' },
+    grew: (p, a, b) => `${p > 0 ? '+' : ''}${p}% зданий в радиусе 1 км за ${a}–${b}`,
+    sea: (c, h) => `${c != null ? `До океана ~${c} м, ` : ''}участок на ${h} м над морем`,
+    seaLevel: { high: 'запас от самой высокой воды до 2050 года большой', mid: 'запас от самой высокой воды до 2050 года небольшой', low: 'участок низкий - спросите застройщика о защите от воды' },
+    elevation: m => `Высота над морем ${m} м`,
+    src: 'Google Open Buildings, Copernicus',
   },
   en: {
-    title: 'Area and coast', titleInland: 'Area', elevation: 'Elevation', mUnit: 'm', builtTitle: 'How the area has been built up', builtShare: 'of land under buildings within 1 km', since2000: 'since 2000', growthFaster: (p: number) => `In 2000–2020 built up faster than around ${p}% of listings on Bali`, growthSlower: (p: number) => `In 2000–2020 built up slower than around ${100 - p}% of listings on Bali`, builtNote: 'Copernicus satellite data (GHSL). Latest data is for 2020; construction after that is not included.',
-    seaTitle: 'The ocean is close', toSea: 'to the ocean', height: 'plot height', m: 'm', worst: 'Highest water expected once in 100 years up to 2050 (tide + storm + sea level rise)', high: 'The plot sits well above the water', mid: 'There is a margin, but a small one', low: 'Low-lying plot — ask the developer about its height and flood protection', seaNote: 'Copernicus C3S. Waves not included. Height from satellite, accurate to a few metres.',
-    bCount: 'buildings within 1 km', bSince: 'since 2016', roof: 'of land under roofs', bFaster: (p: number) => `In 2016–2023 built up faster than around ${p}% of listings on Bali`, bSlower: (p: number) => `In 2016–2023 built up slower than around ${100 - p}% of listings on Bali`, bNote: 'Google Open Buildings from Sentinel‑2 imagery (Copernicus), every building to about 4 m. Latest data is for 2023.',
+    title: 'Area and coast', titleInland: 'Area',
+    pace: { fast: 'The area is building up fast - expect construction nearby', avg: 'The area is building up at a typical Bali pace', slow: 'The area is building up slowly - views and quiet will last longer' },
+    grew: (p, a, b) => `${p > 0 ? '+' : ''}${p}% buildings within 1 km in ${a}–${b}`,
+    sea: (c, h) => `${c != null ? `Ocean ~${c} m away, ` : ''}plot ${h} m above sea level`,
+    seaLevel: { high: 'a large margin above the highest water expected by 2050', mid: 'a small margin above the highest water expected by 2050', low: 'a low plot - ask the developer about flood protection' },
+    elevation: m => `Elevation ${m} m`,
+    src: 'Google Open Buildings, Copernicus',
   },
   id: {
-    title: 'Kawasan dan pantai', titleInland: 'Kawasan', elevation: 'Ketinggian', mUnit: 'm', builtTitle: 'Perkembangan bangunan di kawasan', builtShare: 'lahan tertutup bangunan dalam radius 1 km', since2000: 'sejak 2000', growthFaster: (p: number) => `Pada 2000–2020 pembangunan lebih cepat daripada di sekitar ${p}% properti di Bali`, growthSlower: (p: number) => `Pada 2000–2020 pembangunan lebih lambat daripada di sekitar ${100 - p}% properti di Bali`, builtNote: 'Data satelit Copernicus (GHSL). Data terakhir tahun 2020; pembangunan setelahnya belum tercakup.',
-    seaTitle: 'Dekat laut', toSea: 'ke laut', height: 'ketinggian lahan', m: 'm', worst: 'Air tertinggi sekali dalam 100 tahun hingga 2050 (pasang + badai + kenaikan laut)', high: 'Lahan jauh di atas air', mid: 'Ada jarak aman, tetapi kecil', low: 'Lahan rendah — tanyakan pengembang soal ketinggian dan perlindungan banjir', seaNote: 'Copernicus C3S. Ombak tidak dihitung. Ketinggian dari satelit, selisih beberapa meter.',
-    bCount: 'bangunan dalam radius 1 km', bSince: 'sejak 2016', roof: 'lahan tertutup atap', bFaster: (p: number) => `Pada 2016–2023 pembangunan lebih cepat daripada di sekitar ${p}% properti di Bali`, bSlower: (p: number) => `Pada 2016–2023 pembangunan lebih lambat daripada di sekitar ${100 - p}% properti di Bali`, bNote: 'Google Open Buildings dari citra Sentinel‑2 (Copernicus), tiap bangunan hingga ~4 m. Data terakhir tahun 2023.',
+    title: 'Kawasan dan pantai', titleInland: 'Kawasan',
+    pace: { fast: 'Kawasan cepat dibangun - akan ada proyek konstruksi di dekatnya', avg: 'Kawasan dibangun dengan laju biasa untuk Bali', slow: 'Kawasan lambat dibangun - pemandangan dan ketenangan bertahan lebih lama' },
+    grew: (p, a, b) => `${p > 0 ? '+' : ''}${p}% bangunan dalam radius 1 km pada ${a}–${b}`,
+    sea: (c, h) => `${c != null ? `Laut ~${c} m, ` : ''}lahan ${h} m di atas permukaan laut`,
+    seaLevel: { high: 'jarak aman besar dari air tertinggi hingga 2050', mid: 'jarak aman kecil dari air tertinggi hingga 2050', low: 'lahan rendah - tanyakan pengembang soal perlindungan banjir' },
+    elevation: m => `Ketinggian ${m} m`,
+    src: 'Google Open Buildings, Copernicus',
   },
   fr: {
-    title: 'Quartier et côte', titleInland: 'Quartier', elevation: 'Altitude', mUnit: 'm', builtTitle: 'Comment le quartier s’est construit', builtShare: 'du terrain bâti dans un rayon de 1 km', since2000: 'depuis 2000', growthFaster: (p: number) => `De 2000 à 2020, construit plus vite qu’autour de ${p} % des biens à Bali`, growthSlower: (p: number) => `De 2000 à 2020, construit moins vite qu’autour de ${100 - p} % des biens à Bali`, builtNote: 'Satellite Copernicus (GHSL). Dernières données : 2020 ; les chantiers postérieurs n’y figurent pas.',
-    seaTitle: 'L’océan est proche', toSea: 'jusqu’à l’océan', height: 'altitude du terrain', m: 'm', worst: 'Niveau d’eau le plus haut attendu une fois en 100 ans d’ici 2050 (marée + tempête + montée des mers)', high: 'Le terrain est bien au-dessus de l’eau', mid: 'Il y a une marge, mais faible', low: 'Terrain bas — demandez au promoteur son altitude et sa protection contre l’eau', seaNote: 'Copernicus C3S. Vagues non comprises. Altitude satellite, précision de quelques mètres.',
-    bCount: 'bâtiments dans un rayon de 1 km', bSince: 'depuis 2016', roof: 'du terrain sous toiture', bFaster: (p: number) => `De 2016 à 2023, construit plus vite qu’autour de ${p} % des biens à Bali`, bSlower: (p: number) => `De 2016 à 2023, construit moins vite qu’autour de ${100 - p} % des biens à Bali`, bNote: 'Google Open Buildings d’après les images Sentinel‑2 (Copernicus), chaque bâtiment à ~4 m près. Dernières données : 2023.',
+    title: 'Quartier et côte', titleInland: 'Quartier',
+    pace: { fast: 'Le quartier se construit vite - attendez-vous à des chantiers', avg: 'Le quartier se construit au rythme habituel de Bali', slow: 'Le quartier se construit lentement - vue et calme dureront plus longtemps' },
+    grew: (p, a, b) => `${p > 0 ? '+' : ''}${p} % de bâtiments dans un rayon de 1 km en ${a}–${b}`,
+    sea: (c, h) => `${c != null ? `Océan à ~${c} m, ` : ''}terrain à ${h} m au-dessus de la mer`,
+    seaLevel: { high: 'large marge face aux plus hautes eaux d’ici 2050', mid: 'faible marge face aux plus hautes eaux d’ici 2050', low: 'terrain bas - demandez au promoteur la protection contre l’eau' },
+    elevation: m => `Altitude ${m} m`,
+    src: 'Google Open Buildings, Copernicus',
   },
   de: {
-    title: 'Umgebung und Küste', titleInland: 'Umgebung', elevation: 'Höhe über dem Meer', mUnit: 'm', builtTitle: 'Wie die Gegend bebaut wurde', builtShare: 'der Fläche im Umkreis von 1 km bebaut', since2000: 'seit 2000', growthFaster: (p: number) => `2000–2020 schneller bebaut als rund um ${p} % der Objekte auf Bali`, growthSlower: (p: number) => `2000–2020 langsamer bebaut als rund um ${100 - p} % der Objekte auf Bali`, builtNote: 'Copernicus-Satellitendaten (GHSL). Letzter Stand 2020; spätere Bauten fehlen.',
-    seaTitle: 'Das Meer ist nah', toSea: 'bis zum Meer', height: 'Höhe des Grundstücks', m: 'm', worst: 'Höchster Wasserstand einmal in 100 Jahren bis 2050 (Flut + Sturm + Meeresanstieg)', high: 'Das Grundstück liegt weit über dem Wasser', mid: 'Es gibt Reserve, aber wenig', low: 'Tief gelegen — fragen Sie den Bauträger nach Höhe und Hochwasserschutz', seaNote: 'Copernicus C3S. Wellen nicht enthalten. Höhe aus Satellitendaten, auf einige Meter genau.',
-    bCount: 'Gebäude im Umkreis von 1 km', bSince: 'seit 2016', roof: 'der Fläche unter Dächern', bFaster: (p: number) => `2016–2023 schneller bebaut als rund um ${p} % der Objekte auf Bali`, bSlower: (p: number) => `2016–2023 langsamer bebaut als rund um ${100 - p} % der Objekte auf Bali`, bNote: 'Google Open Buildings aus Sentinel‑2-Bildern (Copernicus), jedes Gebäude auf ~4 m genau. Letzter Stand 2023.',
+    title: 'Umgebung und Küste', titleInland: 'Umgebung',
+    pace: { fast: 'Die Gegend wird schnell bebaut - mit Baustellen ist zu rechnen', avg: 'Die Gegend wird im üblichen Bali-Tempo bebaut', slow: 'Die Gegend wird langsam bebaut - Aussicht und Ruhe bleiben länger' },
+    grew: (p, a, b) => `${p > 0 ? '+' : ''}${p} % Gebäude im Umkreis von 1 km ${a}–${b}`,
+    sea: (c, h) => `${c != null ? `Meer ~${c} m entfernt, ` : ''}Grundstück ${h} m über dem Meer`,
+    seaLevel: { high: 'großer Abstand zum höchsten Wasserstand bis 2050', mid: 'kleiner Abstand zum höchsten Wasserstand bis 2050', low: 'tief gelegen - fragen Sie den Bauträger nach Hochwasserschutz' },
+    elevation: m => `Höhe ${m} m`,
+    src: 'Google Open Buildings, Copernicus',
   },
   zh: {
-    title: '周边与海岸', titleInland: '周边', elevation: '海拔', mUnit: '米', builtTitle: '周边建设速度', builtShare: '1公里范围内被建筑覆盖的土地', since2000: '自2000年起', growthFaster: (p: number) => `2000–2020年建设速度快于巴厘岛 ${p}% 房源的周边`, growthSlower: (p: number) => `2000–2020年建设速度慢于巴厘岛 ${100 - p}% 房源的周边`, builtNote: 'Copernicus 卫星数据（GHSL）。最新数据为2020年，之后的建设未包含。',
-    seaTitle: '临近海洋', toSea: '距海', height: '地块海拔', m: '米', worst: '至2050年百年一遇最高水位（潮汐+风暴+海平面上升）', high: '地块远高于水位', mid: '有余量，但不大', low: '地块较低——请向开发商询问海拔和防水措施', seaNote: 'Copernicus C3S。未计入海浪。海拔来自卫星，误差数米。',
-    bCount: '1公里范围内的建筑', bSince: '自2016年起', roof: '的土地被屋顶覆盖', bFaster: (p: number) => `2016–2023年建设速度快于巴厘岛 ${p}% 房源的周边`, bSlower: (p: number) => `2016–2023年建设速度慢于巴厘岛 ${100 - p}% 房源的周边`, bNote: 'Google Open Buildings，基于 Sentinel‑2 卫星影像（Copernicus），每栋建筑精度约4米。最新数据为2023年。',
+    title: '周边与海岸', titleInland: '周边',
+    pace: { fast: '周边建设很快——附近会有工地', avg: '周边建设速度与巴厘岛平均水平相当', slow: '周边建设缓慢——景观和安静能保持更久' },
+    grew: (p, a, b) => `${a}–${b}年 1公里内建筑${p > 0 ? '增加' : '变化'} ${Math.abs(p)}%`,
+    sea: (c, h) => `${c != null ? `距海约${c}米，` : ''}地块海拔${h}米`,
+    seaLevel: { high: '距2050年前最高水位余量充足', mid: '距2050年前最高水位余量较小', low: '地块较低——请向开发商询问防水措施' },
+    elevation: m => `海拔${m}米`,
+    src: 'Google Open Buildings, Copernicus',
   },
   nl: {
-    title: 'Omgeving en kust', titleInland: 'Omgeving', elevation: 'Hoogte boven zee', mUnit: 'm', builtTitle: 'Hoe de buurt is volgebouwd', builtShare: 'van de grond bebouwd binnen 1 km', since2000: 'sinds 2000', growthFaster: (p: number) => `In 2000–2020 sneller bebouwd dan rond ${p}% van de objecten op Bali`, growthSlower: (p: number) => `In 2000–2020 langzamer bebouwd dan rond ${100 - p}% van de objecten op Bali`, builtNote: 'Copernicus-satellietdata (GHSL). Laatste gegevens uit 2020; latere bouw ontbreekt.',
-    seaTitle: 'De oceaan is dichtbij', toSea: 'tot de oceaan', height: 'hoogte van de kavel', m: 'm', worst: 'Hoogste water eens in de 100 jaar tot 2050 (getij + storm + zeespiegelstijging)', high: 'De kavel ligt ruim boven het water', mid: 'Er is marge, maar weinig', low: 'Laaggelegen kavel — vraag de ontwikkelaar naar hoogte en waterbescherming', seaNote: 'Copernicus C3S. Golven niet meegeteld. Hoogte via satelliet, enkele meters nauwkeurig.',
-    bCount: 'gebouwen binnen 1 km', bSince: 'sinds 2016', roof: 'van de grond onder daken', bFaster: (p: number) => `In 2016–2023 sneller bebouwd dan rond ${p}% van de objecten op Bali`, bSlower: (p: number) => `In 2016–2023 langzamer bebouwd dan rond ${100 - p}% van de objecten op Bali`, bNote: 'Google Open Buildings uit Sentinel‑2-beelden (Copernicus), elk gebouw tot ~4 m. Laatste gegevens uit 2023.',
+    title: 'Omgeving en kust', titleInland: 'Omgeving',
+    pace: { fast: 'De buurt wordt snel volgebouwd - reken op bouwwerk in de buurt', avg: 'De buurt wordt in het gewone Bali-tempo bebouwd', slow: 'De buurt wordt langzaam bebouwd - uitzicht en rust blijven langer' },
+    grew: (p, a, b) => `${p > 0 ? '+' : ''}${p}% gebouwen binnen 1 km in ${a}–${b}`,
+    sea: (c, h) => `${c != null ? `Oceaan op ~${c} m, ` : ''}perceel ${h} m boven zee`,
+    seaLevel: { high: 'ruime marge boven het hoogste water tot 2050', mid: 'kleine marge boven het hoogste water tot 2050', low: 'laag perceel - vraag de ontwikkelaar naar bescherming tegen water' },
+    elevation: m => `Hoogte ${m} m`,
+    src: 'Google Open Buildings, Copernicus',
   },
   ban: {
-    title: 'Wewidangan lan pasih', titleInland: 'Wewidangan', elevation: 'Ketinggian', mUnit: 'm', builtTitle: 'Pawangunan ring wewidangan', builtShare: 'tanah kaungkulin wangunan ring radius 1 km', since2000: 'saking 2000', growthFaster: (p: number) => `Ring 2000–2020 pawangunan lebih gelis ketimbang ring sekitar ${p}% properti ring Bali`, growthSlower: (p: number) => `Ring 2000–2020 pawangunan lebih adeng ketimbang ring sekitar ${100 - p}% properti ring Bali`, builtNote: 'Data satelit Copernicus (GHSL). Data pinih untat warsa 2020.',
-    seaTitle: 'Nampek pasih', toSea: 'ka pasih', height: 'tegeh tanah', m: 'm', worst: 'Toya pinih tegeh apisan ring 100 warsa kantos 2050 (pasang + badai + pasih ngunggahang)', high: 'Tanah tegeh ring duur toya', mid: 'Wenten jarak, nanging alit', low: 'Tanah endep — takenang ring pengembang indik tegeh lan pangraksa banjir', seaNote: 'Copernicus C3S. Ombak nenten kaitung. Tegeh saking satelit.',
-    bCount: 'wangunan ring radius 1 km', bSince: 'saking 2016', roof: 'tanah kaungkulin raab', bFaster: (p: number) => `Ring 2016–2023 pawangunan lebih gelis ketimbang ring sekitar ${p}% properti ring Bali`, bSlower: (p: number) => `Ring 2016–2023 pawangunan lebih adeng ketimbang ring sekitar ${100 - p}% properti ring Bali`, bNote: 'Google Open Buildings saking citra Sentinel‑2 (Copernicus). Data pinih untat warsa 2023.',
+    title: 'Wewidangan lan pasih', titleInland: 'Wewidangan',
+    pace: { fast: 'Wewidangan gelis kawangun - pacang wenten pawangunan ring sisi', avg: 'Wewidangan kawangun manut laju biasa ring Bali', slow: 'Wewidangan adeng kawangun - panorama lan sepi kantun suwe' },
+    grew: (p, a, b) => `${p > 0 ? '+' : ''}${p}% wangunan ring radius 1 km ring ${a}–${b}`,
+    sea: (c, h) => `${c != null ? `Pasih ~${c} m, ` : ''}tanah ${h} m ring ajeng pasih`,
+    seaLevel: { high: 'jarak becik saking yeh pinih tegeh nyantos 2050', mid: 'jarak alit saking yeh pinih tegeh nyantos 2050', low: 'tanah endep - takenang pangwangun indik pangaman saking yeh' },
+    elevation: m => `Ketinggian ${m} m`,
+    src: 'Google Open Buildings, Copernicus',
   },
   pl: {
-    title: 'Okolica i wybrzeże', titleInland: 'Okolica', elevation: 'Wysokość n.p.m.', mUnit: 'm', builtTitle: 'Jak zabudowywała się okolica', builtShare: 'gruntu pod budynkami w promieniu 1 km', since2000: 'od 2000 roku', growthFaster: (p: number) => `W latach 2000–2020 zabudowa rosła szybciej niż wokół ${p}% obiektów na Bali`, growthSlower: (p: number) => `W latach 2000–2020 zabudowa rosła wolniej niż wokół ${100 - p}% obiektów na Bali`, builtNote: 'Dane satelitarne Copernicus (GHSL). Ostatnie dane z 2020 roku; późniejsza zabudowa nie jest ujęta.',
-    seaTitle: 'Ocean blisko', toSea: 'do oceanu', height: 'wysokość działki', m: 'm', worst: 'Najwyższa woda raz na 100 lat do 2050 roku (pływ + sztorm + wzrost poziomu morza)', high: 'Działka leży wysoko nad wodą', mid: 'Zapas jest, ale niewielki', low: 'Nisko położona działka — zapytaj dewelopera o wysokość i ochronę przed wodą', seaNote: 'Copernicus C3S. Bez fal. Wysokość z satelity, dokładność kilku metrów.',
-    bCount: 'budynków w promieniu 1 km', bSince: 'od 2016 roku', roof: 'gruntu pod dachami', bFaster: (p: number) => `W latach 2016–2023 zabudowa rosła szybciej niż wokół ${p}% obiektów na Bali`, bSlower: (p: number) => `W latach 2016–2023 zabudowa rosła wolniej niż wokół ${100 - p}% obiektów na Bali`, bNote: 'Google Open Buildings ze zdjęć Sentinel‑2 (Copernicus), każdy budynek z dokładnością ~4 m. Ostatnie dane z 2023 roku.',
+    title: 'Okolica i wybrzeże', titleInland: 'Okolica',
+    pace: { fast: 'Okolica szybko się zabudowuje - w pobliżu będą budowy', avg: 'Okolica zabudowuje się w zwykłym dla Bali tempie', slow: 'Okolica zabudowuje się powoli - widok i cisza zostaną na dłużej' },
+    grew: (p, a, b) => `${p > 0 ? '+' : ''}${p}% budynków w promieniu 1 km w latach ${a}–${b}`,
+    sea: (c, h) => `${c != null ? `Ocean ~${c} m, ` : ''}działka ${h} m n.p.m.`,
+    seaLevel: { high: 'duży zapas nad najwyższą wodą do 2050 roku', mid: 'mały zapas nad najwyższą wodą do 2050 roku', low: 'niska działka - zapytaj dewelopera o ochronę przed wodą' },
+    elevation: m => `Wysokość ${m} m n.p.m.`,
+    src: 'Google Open Buildings, Copernicus',
   },
   uk: {
-    title: 'Район і узбережжя', titleInland: 'Район', elevation: 'Висота над морем', mUnit: 'м', builtTitle: 'Як забудовувався район', builtShare: 'землі під будівлями в радіусі 1 км', since2000: 'з 2000 року', growthFaster: (p: number) => `У 2000–2020 роках забудовувався швидше, ніж довкола ${p}% об’єктів на Балі`, growthSlower: (p: number) => `У 2000–2020 роках забудовувався повільніше, ніж довкола ${100 - p}% об’єктів на Балі`, builtNote: 'Супутник Copernicus (GHSL). Останні дані — 2020 рік, будівництво після нього не враховане.',
-    seaTitle: 'Океан поруч', toSea: 'до океану', height: 'висота ділянки', m: 'м', worst: 'Найвища вода раз на 100 років до 2050 року (приплив + шторм + підйом моря)', high: 'Ділянка високо над водою — запас великий', mid: 'Запас є, але невеликий', low: 'Ділянка низька — запитайте забудовника про висоту й захист від води', seaNote: 'Copernicus C3S. Хвилі не враховані. Висота із супутника, похибка кілька метрів.',
-    bCount: 'будівель у радіусі 1 км', bSince: 'з 2016 року', roof: 'землі під дахами', bFaster: (p: number) => `У 2016–2023 роках забудовувався швидше, ніж довкола ${p}% об’єктів на Балі`, bSlower: (p: number) => `У 2016–2023 роках забудовувався повільніше, ніж довкола ${100 - p}% об’єктів на Балі`, bNote: 'Google Open Buildings за знімками Sentinel‑2 (Copernicus), кожна будівля з точністю ~4 м. Останні дані — 2023 рік.',
+    title: 'Район і узбережжя', titleInland: 'Район',
+    pace: { fast: 'Район швидко забудовується - поруч будуть будівництва', avg: 'Район забудовується у звичайному для Балі темпі', slow: 'Район забудовується повільно - краєвид і тиша збережуться довше' },
+    grew: (p, a, b) => `${p > 0 ? '+' : ''}${p}% будівель у радіусі 1 км за ${a}–${b}`,
+    sea: (c, h) => `${c != null ? `До океану ~${c} м, ` : ''}ділянка на ${h} м над морем`,
+    seaLevel: { high: 'запас від найвищої води до 2050 року великий', mid: 'запас від найвищої води до 2050 року невеликий', low: 'ділянка низька - запитайте забудовника про захист від води' },
+    elevation: m => `Висота над морем ${m} м`,
+    src: 'Google Open Buildings, Copernicus',
   },
-} as const
+}
 
-const LOCALE: Record<Lang, string> = { ru: 'ru', en: 'en', id: 'id', fr: 'fr', de: 'de', zh: 'zh', nl: 'nl', ban: 'id', pl: 'pl', uk: 'uk' }
-
-// Margins tuned to SRTM's few-metre error: under 3 m the error alone can eat
-// the margin, 8 m and more survives it comfortably.
+// Запас под погрешность спутниковой высоты в несколько метров: меньше 3 м
+// погрешность съедает запас целиком, от 8 м — переживает.
 function marginLevel(m: number): 'high' | 'mid' | 'low' {
   return m >= 8 ? 'high' : m >= 3 ? 'mid' : 'low'
 }
 
+// Темп застройки — по месту среди объектов Бали (growth_rank, 0–100):
+// верхняя треть — «быстро», нижняя — «медленно».
+function paceOf(rank: number | null | undefined): Pace | null {
+  if (rank == null) return null
+  return rank >= 67 ? 'fast' : rank <= 33 ? 'slow' : 'avg'
+}
+
 export function AreaBlock({ climate, lang, elevationM = null }: { climate: Climate | null; lang: Lang; elevationM?: number | null }) {
   const t = pickCopy(COPY, lang)
-  const built = climate?.built
-  const sea = climate?.sea
-  const coast = climate?.coast_m
-  if (!built?.pct && !climate?.buildings && !sea && elevationM == null) return null
-
-  const num = (n: number, digits = 1) => n.toLocaleString(LOCALE[lang] ?? 'en', { maximumFractionDigits: digits })
-  const series = built?.pct ? SHOWN.map((y) => ({ y, v: built.pct[y] ?? 0 })) : []
-  const now = built?.pct?.['2020'] ?? null
-  const then = built?.pct?.['2000'] ?? null
-  // A ratio off a near-zero base ("×12") says more about rounding than about the area.
-  const ratio = now != null && then != null && then >= 0.5 ? now / then : null
-  const maxV = Math.max(1, ...series.map((s) => s.v))
-  const rank = built?.growth_rank ?? null
-
-  // Open Buildings (2016–2023, every building) beats GHSL (to 2020) when present.
   const ob = climate?.buildings
-  const obYears = ob ? Object.keys(ob.years).sort() : []
-  const obFirst = obYears.length ? ob!.years[obYears[0]] : null
-  const obLast = obYears.length ? ob!.years[obYears[obYears.length - 1]] : null
-  const obGrowth = obFirst && obLast && obFirst.n >= 20 ? Math.round(100 * (obLast.n - obFirst.n) / obFirst.n) : null
-  const obMax = Math.max(1, ...obYears.map((y) => ob!.years[y].n))
-  const hasBuilt = !!obLast || now != null
+  const sea = climate?.sea
+  const coast = climate?.coast_m != null ? Math.round(climate.coast_m / 10) * 10 : null
 
-  const level = sea ? marginLevel(sea.margin_m) : null
-  const worst = sea ? sea.twl100_2021_2050 + sea.msl_rise_2050 : null
-  const levelColor = { high: 'var(--color-progress-hi)', mid: '#B45309', low: 'var(--color-progress-low)' } as const
+  const years = ob ? Object.keys(ob.years).sort() : []
+  const first = years.length ? ob!.years[years[0]] : null
+  const last = years.length ? ob!.years[years[years.length - 1]] : null
+  const growth = first && last && first.n >= 20 ? Math.round(100 * (last.n - first.n) / first.n) : null
+  const pace = paceOf(ob?.growth_rank ?? climate?.built?.growth_rank)
+  const ns = years.map(y => ob!.years[y].n)
+  const minN = Math.min(...ns), maxN = Math.max(...ns)
+
+  if (!pace && growth == null && !sea && elevationM == null) return null
 
   return (
     <div className="mb-4 rounded-2xl border border-[var(--color-border)] bg-white p-5">
-      {/* «Берег» в заголовке — только у объектов у моря; в Убуде это просто район. */}
       <h3 className="mb-4 text-[15px] font-semibold text-[var(--color-text)]">{sea ? t.title : t.titleInland}</h3>
-      {elevationM != null && (
-        <p className="mb-4 flex items-baseline justify-between gap-4 border-b border-[var(--color-border)] pb-3 text-[14px]">
-          <span className="text-[var(--color-text-muted)]">{t.elevation}</span>
-          <span className="font-semibold text-[var(--color-text)]">{Math.round(elevationM)} {t.mUnit}</span>
-        </p>
-      )}
 
-      {ob && obLast && obFirst ? (
-        <div>
-          <div className="mb-2 flex items-center gap-1.5">
-            <Building2 size={15} className="shrink-0 text-[var(--color-primary)]" />
-            <h4 className="text-[14px] font-semibold text-[var(--color-text)]">{t.builtTitle}</h4>
+      {(pace || growth != null) && (
+        <div className="flex items-end justify-between gap-4">
+          <div className="min-w-0">
+            <p className="flex items-start gap-2 text-[15px] font-medium leading-snug text-[var(--color-text)]">
+              <Building2 size={16} className="mt-0.5 shrink-0 text-[var(--color-primary)]" aria-hidden />
+              {pace ? t.pace[pace] : null}
+            </p>
+            {growth != null && <p className="mt-1 pl-6 text-[14px] text-[var(--color-text-muted)]">{t.grew(growth, years[0], years[years.length - 1])}</p>}
           </div>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-6">
-            <div className="flex h-[88px] items-end gap-1.5" aria-hidden="true">
-              {obYears.map((y, i) => {
-                const v = ob.years[y].n
-                const edge = i === 0 || i === obYears.length - 1
-                return (
-                  <div key={y} className="flex w-7 flex-col items-center gap-1">
-                    <span className={`whitespace-nowrap text-[11px] text-[var(--color-text-muted)] ${edge ? '' : 'invisible'}`}>{num(v, 0)}</span>
-                    <div
-                      className="w-full rounded-t-md bg-[var(--color-primary)]"
-                      style={{ height: `${Math.max(3, (v / obMax) * 48)}px`, opacity: i === obYears.length - 1 ? 0.9 : 0.4 }}
-                    />
-                    <span className="text-[11px] text-[var(--color-text-muted)]">{`’${y.slice(2)}`}</span>
-                  </div>
-                )
-              })}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[13px] leading-relaxed text-[var(--color-text)]">
-                <span className="text-[22px] font-semibold">{num(obLast.n, 0)}</span>{' '}
-                <span className="text-[var(--color-text-muted)]">{t.bCount}</span>
-                {obGrowth != null && obGrowth !== 0 && (
-                  <span className="text-[var(--color-text-muted)]"> · {obGrowth > 0 ? '+' : ''}{obGrowth}% {t.bSince}</span>
-                )}
-              </p>
-              <p className="text-[13px] leading-relaxed text-[var(--color-text-muted)]">
-                {num(obLast.roof_pct)}% {t.roof}
-              </p>
-              {ob.growth_rank != null && (
-                <p className="text-[13px] leading-relaxed text-[var(--color-text)]">
-                  {ob.growth_rank >= 50 ? t.bFaster(ob.growth_rank) : t.bSlower(ob.growth_rank)}
-                </p>
-              )}
-            </div>
-          </div>
-          <p className="mt-2 text-[12px] leading-snug text-[var(--color-text-muted)]">{t.bNote}</p>
-        </div>
-      ) : now != null && (
-        <div>
-          <div className="mb-2 flex items-center gap-1.5">
-            <Building2 size={15} className="shrink-0 text-[var(--color-primary)]" />
-            <h4 className="text-[14px] font-semibold text-[var(--color-text)]">{t.builtTitle}</h4>
-          </div>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-6">
-            <div className="flex h-[88px] items-end gap-2" aria-hidden="true">
-              {series.map((s) => (
-                <div key={s.y} className="flex w-9 flex-col items-center gap-1">
-                  <span className="text-[11px] text-[var(--color-text-muted)]">{num(s.v)}%</span>
-                  <div
-                    className="w-full rounded-t-md bg-[var(--color-primary)]"
-                    style={{ height: `${Math.max(3, (s.v / maxV) * 48)}px`, opacity: s.y === '2020' ? 0.9 : 0.4 }}
-                  />
-                  <span className="text-[11px] text-[var(--color-text-muted)]">{s.y}</span>
-                </div>
+          {years.length > 1 && (
+            // Здания в 1 км по годам: от меньшего к большему, чтобы рост был виден.
+            <div className="flex h-10 shrink-0 items-end gap-1" aria-hidden="true">
+              {years.map((y, i) => (
+                <div key={y} className="w-2 rounded-t-sm bg-[var(--color-primary)]"
+                  style={{ height: `${6 + (maxN > minN ? (ob!.years[y].n - minN) / (maxN - minN) : 1) * 34}px`, opacity: i === years.length - 1 ? 0.9 : 0.4 }} />
               ))}
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[13px] leading-relaxed text-[var(--color-text)]">
-                <span className="text-[22px] font-semibold">{num(now)}%</span>{' '}
-                <span className="text-[var(--color-text-muted)]">{t.builtShare}</span>
-                {ratio != null && ratio >= 1.05 && (
-                  <span className="text-[var(--color-text-muted)]"> · ×{num(ratio)} {t.since2000}</span>
-                )}
-              </p>
-              {rank != null && (
-                <p className="text-[13px] leading-relaxed text-[var(--color-text)]">
-                  {rank >= 50 ? t.growthFaster(rank) : t.growthSlower(rank)}
-                </p>
-              )}
-            </div>
-          </div>
-          <p className="mt-2 text-[12px] leading-snug text-[var(--color-text-muted)]">{t.builtNote}</p>
+          )}
         </div>
       )}
 
-      {sea && level && worst != null && (
-        <div className={hasBuilt ? 'mt-4 border-t border-[var(--color-border)] pt-4' : ''}>
-          <div className="mb-2 flex items-center gap-1.5">
-            <Waves size={15} className="shrink-0 text-[var(--color-primary)]" />
-            <h4 className="text-[14px] font-semibold text-[var(--color-text)]">{t.seaTitle}</h4>
-          </div>
-          <div className="flex flex-wrap gap-x-6 gap-y-1 text-[13px]">
-            {coast != null && (
-              <span><span className="font-semibold text-[var(--color-text)]">~{num(coast, 0)} {t.m}</span> <span className="text-[var(--color-text-muted)]">{t.toSea}</span></span>
-            )}
-            <span><span className="font-semibold text-[var(--color-text)]">{num(sea.elevation_m, 0)} {t.m}</span> <span className="text-[var(--color-text-muted)]">{t.height}</span></span>
-          </div>
-          <p className="mt-2 text-[13px] leading-relaxed text-[var(--color-text-muted)]">
-            {t.worst}: <span className="font-semibold text-[var(--color-text)]">{num(worst)} {t.m}</span>
-          </p>
-          <p className="mt-1 flex items-center gap-2 text-[13px] font-medium text-[var(--color-text)]">
-            <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: levelColor[level] }} />
-            {t[level]}
-          </p>
-          <p className="mt-2 text-[12px] leading-snug text-[var(--color-text-muted)]">{t.seaNote}</p>
-        </div>
+      {sea ? (
+        <p className={`flex items-start gap-2 text-[15px] leading-snug text-[var(--color-text)] ${pace || growth != null ? 'mt-4 border-t border-[var(--color-border)] pt-4' : ''}`}>
+          <Waves size={16} className="mt-0.5 shrink-0 text-[var(--color-primary)]" aria-hidden />
+          <span>{t.sea(coast, Math.round(sea.elevation_m))}: {t.seaLevel[marginLevel(sea.margin_m)]}.</span>
+        </p>
+      ) : elevationM != null && (
+        <p className={`text-[15px] text-[var(--color-text)] ${pace || growth != null ? 'mt-4 border-t border-[var(--color-border)] pt-4' : ''}`}>{t.elevation(Math.round(elevationM))}</p>
       )}
+
+      <p className="mt-4 text-[12px] text-[var(--color-text-muted)]">{t.src}</p>
     </div>
   )
 }

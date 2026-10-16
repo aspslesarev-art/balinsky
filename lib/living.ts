@@ -45,6 +45,8 @@ export type LivingRow = {
   /** Радиус поиска, км — для «дальше N км». */
   searchKm?: number
   name?: string | null
+  /** Google place id ближайшего места — для пляжа ищем его описание (lib/beaches.ts). */
+  placeId?: string | null
   /** Школа — международная (а не местная). */
   intl?: boolean
   /** Врачи — аптека рядом. */
@@ -175,7 +177,7 @@ export function computeLivingFacts(args: {
 
   const rows: LivingRow[] = [
     { key: 'school', tone: toneByKm(school?.distanceKm ?? null, LIMITS.school), km: school?.distanceKm ?? null, searchKm: intl || !school ? SEARCH_KM.international_school : SEARCH_KM.school, name: school?.name ?? null, intl: !!intl },
-    { key: 'beach', tone: toneByKm(beachKm, LIMITS.beach), km: beachKm, searchKm: SEARCH_KM.beach, name: beach?.name ?? null },
+    { key: 'beach', tone: toneByKm(beachKm, LIMITS.beach), km: beachKm, searchKm: SEARCH_KM.beach, name: beach?.name ?? null, placeId: beach?.id ?? null },
     { key: 'health', tone: toneByKm(clinic?.distanceKm ?? null, LIMITS.health), km: clinic?.distanceKm ?? null, searchKm: SEARCH_KM.hospital, name: clinic?.name ?? null, pharmacyKm: pharmacy?.distanceKm ?? null },
     // Магазин ищется в 1,5 км: не нашли — значит дальше, это «есть минусы», а не «далеко».
     { key: 'shop', tone: shop ? toneByKm(shop.distanceKm, LIMITS.shop) : 'warn', km: shop?.distanceKm ?? null, searchKm: SEARCH_KM.supermarket, name: shop?.name ?? null },
