@@ -694,7 +694,7 @@ export function ShortlistView({ lang }: { lang: Lang }) {
     // copy; this column is what the asset would actually return based
     // on observed market rates. Stored as fraction (0..1), shown as %.
     { key: 'bestRoi',    label: c.rowBestRoi,
-      cell: it => it.bestCapRate != null ? `${(it.bestCapRate * 100).toFixed(1)}%` : null,
+      cell: it => it.bestCapRate != null ? `${lang === 'en' || lang === 'zh' ? (it.bestCapRate * 100).toFixed(1) : (it.bestCapRate * 100).toFixed(1).replace('.', ',')}%` : null,
       best: 'max', num: it => it.bestCapRate ?? null },
     { key: 'lease',      label: c.rowLease,      cell: it => it.leaseYears != null ? `${it.leaseYears} ${c.years}` : null,
       best: 'max', num: it => it.leaseYears ?? null },

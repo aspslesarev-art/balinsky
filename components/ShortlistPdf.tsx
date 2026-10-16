@@ -801,7 +801,7 @@ function ItemPage({
     it.completionYear && { label: c.factCompletion, value: it.completionYear },
     dealLabel && { label: c.factDealType, value: dealLabel },
     // Наш расчёт (как на странице объекта) и отдельно — обещание застройщика.
-    it.bestCapRate != null && { label: c.rowBestRoi, value: `${(it.bestCapRate * 100).toFixed(1)}%` },
+    it.bestCapRate != null && { label: c.rowBestRoi, value: pctLabel(it.bestCapRate) },
     it.claimedYieldPct != null && { label: c.rowYield, value: `${it.claimedYieldPct}%` },
     devValue && { label: c.factDeveloper, value: devValue },
   ].filter(Boolean) as { label: string; value: string }[]
@@ -896,7 +896,7 @@ function buildCmpRows(c: Copy, agentMode: boolean, currency: Currency): CmpRow[]
       best: 'min', num: it => it.pricePerSqmYearUsd ?? null },
     { key: 'yield',       label: c.rowYield,       cell: it => it.claimedYieldPct != null ? `${it.claimedYieldPct}%` : null },
     { key: 'bestRoi',     label: c.rowBestRoi,
-      cell: it => it.bestCapRate != null ? `${(it.bestCapRate * 100).toFixed(1)}%` : null,
+      cell: it => it.bestCapRate != null ? pctLabel(it.bestCapRate) : null,
       best: 'max', num: it => it.bestCapRate ?? null },
     { key: 'lease',       label: c.rowLease,
       cell: it => it.leaseYears != null ? `${it.leaseYears} ${c.years}` : null,
@@ -1205,4 +1205,12 @@ export async function downloadShortlistPdf(
     }),
     keepalive: true,
   }).catch(() => {})
+}
+
+// Доля → «17,8%»: запятая, как на странице объекта, кроме английского и
+// китайского. PDF собирается в браузере — язык берём у открытой страницы.
+function pctLabel(v: number): string {
+  const s = (v * 100).toFixed(1)
+  const lang = typeof document !== 'undefined' ? document.documentElement.lang : 'en'
+  return `${/^(en|zh)/.test(lang) ? s : s.replace('.', ',')}%`
 }
