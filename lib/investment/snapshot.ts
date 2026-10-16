@@ -103,9 +103,12 @@ export type OwnBooking = {
 // средняя 81%.
 const OWN_OCC_CAP = 0.90
 // Объявление, у которого загрузка не меняется весь срок наблюдений (одно-два
-// значения на ~70 снимков) и стоит под 100%, — закрытый календарь, а не брони.
+// значения на ~70 снимков) и стоит высоко, — закрытый календарь, а не брони:
+// у Rumah Villa ровно 93,75% все 73 дня. Три значения под 100% — тоже
+// (Scorpia: 98,8% два месяца) — у вилл BREIG даже лучший месяц редко 100%.
 const FROZEN_MAX_DISTINCT = 2
-const FROZEN_MIN_OCC = 95
+const FROZEN_MIN_OCC = 80
+const FROZEN3_MIN_OCC = 95
 // Меньше 5 похожих объявлений вокруг — загрузку района не считаем.
 const MARKET_MIN_LISTINGS = 5
 // Меньше 30 дневных снимков — слишком мало, чтобы говорить о загрузке.
@@ -211,9 +214,11 @@ export async function bookingEstimate(ids: number[], kind: ListingKind, bedrooms
   const meanOf = (xs: number[]) => xs.reduce((s, x) => s + x, 0) / xs.length
   // Закрытый календарь: ни загрузку, ни цену такого объявления не берём —
   // цена у него тоже застывшая.
-  const frozen = new Set([...byId].filter(([, xs]) =>
-    xs.length >= MIN_SNAPSHOTS && new Set(xs.map(x => Math.round(x))).size <= FROZEN_MAX_DISTINCT && meanOf(xs) >= FROZEN_MIN_OCC,
-  ).map(([id]) => id))
+  const frozen = new Set([...byId].filter(([, xs]) => {
+    if (xs.length < MIN_SNAPSHOTS) return false
+    const dv = new Set(xs.map(x => Math.round(x))).size, m = meanOf(xs)
+    return (dv <= FROZEN_MAX_DISTINCT && m >= FROZEN_MIN_OCC) || (dv <= FROZEN_MAX_DISTINCT + 1 && m >= FROZEN3_MIN_OCC)
+  }).map(([id]) => id))
   const listingOcc = (id: number): number | null => {
     const xs = byId.get(id) ?? []
     if (xs.length < MIN_SNAPSHOTS || frozen.has(id)) return null
