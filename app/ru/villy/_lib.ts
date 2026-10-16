@@ -1,3 +1,4 @@
+import { pluralRu } from '@/lib/plural-ru'
 import { createClient } from '@supabase/supabase-js'
 import { districtRu } from '@/lib/district-ru'
 import { searchCatalog } from '@/lib/catalog-search'
@@ -869,12 +870,14 @@ export function buildHeading(f: VillaFilterState): string {
     const s = f.status[0]
     adj.push(s === 'building' ? 'Строящиеся' : s === 'built' ? 'Готовые' : 'Планируемые')
   }
-  if (f.bedrooms.length > 0) {
-    const sorted = [...f.bedrooms].sort()
-    adj.push(sorted.join('-, ') + '-комнатные')
-  }
+  // «Со спальнями», а не «комнатные»: для покупателя из России 2-комнатная -
+  // это одна спальня, а фильтр считает спальни.
+  const bedroomsTail = f.bedrooms.length > 0
+    ? ` с ${[...f.bedrooms].sort().join(', ').replace(/, ([^,]*)$/, ' и $1')} ${pluralRu(Number([...f.bedrooms].sort().slice(-1)[0]), ['спальней', 'спальнями', 'спальнями'])}`
+    : ''
   const noun = adj.length || hasAnyFilter(f) ? 'виллы и дома' : 'Виллы и дома'
   let s = adj.length ? adj.join(' ') + ' ' + noun : noun
+  s += bedroomsTail
 
   const ds = districtsForHeading(f.district, 'ru')
   if (ds.length === 1) s += ` в районе ${ds[0]}`

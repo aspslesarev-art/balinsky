@@ -718,13 +718,15 @@ export function buildHeading(f: FilterState): string {
   if (f.status.length === 1) {
     adj.push(f.status[0] === 'building' ? 'Строящиеся' : 'Готовые')
   }
-  if (f.bedrooms.length > 0) {
-    const sorted = [...f.bedrooms].sort()
-    adj.push(sorted.join('-, ') + '-комнатные')
-  }
+  // «Со спальнями», а не «комнатные»: для покупателя из России 2-комнатная -
+  // это одна спальня, а фильтр считает спальни.
+  const bedroomsTail = f.bedrooms.length > 0
+    ? ` с ${[...f.bedrooms].sort().join(', ').replace(/, ([^,]*)$/, ' и $1')} ${pluralRu(Number([...f.bedrooms].sort().slice(-1)[0]), ['спальней', 'спальнями', 'спальнями'])}`
+    : ''
 
   const base = hasAnyFilter(f) ? 'апартаменты' : 'Апартаменты и квартиры'
   let s = adj.length ? adj.join(' ') + ' ' + base : base
+  s += bedroomsTail
 
   const ds = districtsForHeading(f.district, 'ru')
   if (ds.length === 1) s += ` в районе ${ds[0]}`
